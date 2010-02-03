@@ -43,6 +43,8 @@ my $build = $class->new(
     license            => 'perl',
     create_makefile_pl => 'passthrough',
 
+    module_name        => 'SGN::Context',
+
     # current version of our core libraries distribution
     dist_version => '0.1',
     dist_author  => 'Lukas Mueller',
