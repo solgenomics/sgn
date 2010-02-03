@@ -9,8 +9,6 @@ use CXGN::Cookie;
 use CXGN::Page::UserPrefs;
 
 use CXGN::Scrap;
-$CXGN::Scrap::GLOBAL_JS{'CXGN.Effects'} = 1;
-$CXGN::Scrap::GLOBAL_JS{'CXGN.UserPrefs'} = 1;
 
 =head1 NAME
 
