@@ -2,23 +2,19 @@
   $page_title    => ''
   $extra_headers => ''
 </%args>
-<%init>
+<%once>
 use CXGN::Login ();
 use CXGN::People::Person ();
 
 #this code will not work when database connectivity is lost, or when these modules are broken.
 #since the page header is highly important and we ALWAYS expect it to work, we must continue even when that other stuff is broken.
-sub _get_session_person {
+sub get_session_person {
     my $dbh = shift;
-    return eval {
-	CXGN::People::Person->new( $dbh,
-	                           CXGN::Login->new( $dbh )
-	                                      ->has_session
-	                         )
-    };
+    my $person_id = eval{ CXGN::Login->new( $dbh )->has_session }
+	or return;
+    return eval{ CXGN::People::Person->new( $dbh, $person_id ) };
 }
-
-</%init>
+</%once>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
@@ -105,8 +101,8 @@ sub _get_session_person {
 % if( $c->get_conf('is_mirror' ) ) {    
     <a class="ghosted" style="text-decoration: none" title="Mirror site does not support login"   >log in</a>
   | <a class="ghosted" style="text-decoration: none" title="Mirror site does not support new user">new user</span> 
-% } elsif ( my $person = _get_session_person( $c->dbc->dbh ) ) {
-  <b><% $person->get_first_name %><% $person->get_last_name  || '' %></b>
+% } elsif ( my $person = get_session_person( $c->dbc->dbh ) ) {
+  <b><% $person->get_first_name || '' %> <% $person->get_last_name  || '' %></b>
   (<a class="toplink" style="text-decoration: underline" href="/solpeople/login.pl?logout=yes">log out</a>)
   <a class="mytools" href="/solpeople/top-level.pl">My SGN</a>
 % } else {
