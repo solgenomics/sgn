@@ -16,7 +16,6 @@ use CXGN::Tools::Text qw/commify_number/;
 use CXGN::MasonFactory;
 use CXGN::Scrap;
 use CXGN::Page::Widgets qw/collapser/;
-$CXGN::Scrap::GLOBAL_JS{'CXGN.Page.FormattingHelpers'} = 1;
 
 =head1 NAME
 

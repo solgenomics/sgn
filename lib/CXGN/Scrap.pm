@@ -149,14 +149,21 @@ sub get_arguments {
 
 sub jsan_use {
   my ($self,@uses) = @_;
-  $self->_jsan->add($_) foreach @uses;
+  $self->_jsan->add(my $a = $_) foreach @uses;
 }
 
 =head2 jsan_render_includes
 
   Usage: my $str = $scrap->jsan_render_includes
   Desc : render HTML script-tag includes for javascript
-         modules required with jsan_use()or GLOBAL_JS.
+         modules required with jsan_use(), plus the globally-used
+         javascript modules defined herein, currently:
+
+           CXGN.Effects
+           CXGN.Page.FormattingHelpers
+           CXGN.Page.Toolbar
+           CXGN.UserPrefs
+
   Args : none
   Ret  : a string containing zero or more newline-separated
          include statements
@@ -164,11 +171,26 @@ sub jsan_use {
 
 =cut
 
-our %GLOBAL_JS;
+my @global_js = qw(
+		   CXGN.Effects
+		   CXGN.Page.FormattingHelpers
+		   CXGN.Page.Toolbar
+		   CXGN.UserPrefs
+		  );
+
 sub jsan_render_includes {
 	my ($self) = @_;
-	$self->_jsan->add($_) foreach keys %GLOBAL_JS;
-	return join("\n",map { qq|<script language="JavaScript" src="$_" type="text/javascript"></script>| } $self->_jsan->uris);
+
+	# add in our global JS, which is used for every page
+	# JSAN::ServerSide is pretty badly written.  cannot use $_ to
+	# pass the name to add()
+	foreach my $js (@global_js) {
+	    $self->_jsan->add($js);
+	}
+
+	return join "\n",
+	       map qq|<script language="JavaScript" src="$_" type="text/javascript"></script>|,
+	       $self->_jsan->uris;
 }
 
 sub _jsan {
@@ -180,7 +202,7 @@ sub _jsan {
         -d $js_dir or die "configured js_dir '$js_dir' does not exist!\n";
 	$self->{jsan_serverside} = JSAN::ServerSide->new( js_dir => $js_dir,
 							  uri_prefix => '/js',
-						   );
+							 );
 	return $self->{jsan_serverside};
 }
 
