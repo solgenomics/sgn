@@ -24,7 +24,6 @@ use CXGN::Apache::Error;
 use CXGN::DB::Connection;
 use CXGN::Login;
 use CXGN::Page::VHost::SGN;
-use CXGN::MasonFactory;
 use CXGN::Tools::File;
 use CXGN::Tools::SVN::Info;
 
@@ -66,7 +65,7 @@ sub new {
         my @libs = ref $js ? @$js : ($js);
         $self->jsan_use(@libs);
     }
-    $self->{vhost_object} = SGN::Context->new();
+    $self->{context} = SGN::Context->new();
     $self->{project_name} = 'SGN';
 
     $self->{page_object} = CXGN::Page::VHost::SGN->new($self->get_dbh());
@@ -107,7 +106,7 @@ sub add_style {
 sub get_header {
     my $self           = shift;
 
-    return CXGN::MasonFactory->bare_render(
+    return $self->{context}->render_mason(
 	'/site/header.mas',
 	page_title => $self->{page_title},
 	extra_headers => $self->jsan_render_includes
@@ -117,7 +116,8 @@ sub get_header {
 }
 
 sub get_footer {
-    return CXGN::MasonFactory->bare_render('/site/footer.mas');
+    my $self = shift;
+    return $self->{context}->render_mason('/site/footer.mas');
 }
 
 sub simple_footer { 
