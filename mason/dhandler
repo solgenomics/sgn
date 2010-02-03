@@ -1,2 +1,1 @@
-
-The mason component referenced does not exist on this site.
+%  die 'mason component not found';
