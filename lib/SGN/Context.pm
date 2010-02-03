@@ -431,7 +431,7 @@ sub forward_to_mason_view {
 my $render_mason_outbuf;
 has '_bare_mason_interp' => ( is => 'ro', lazy_build => 1 );
 sub _build__bare_mason_interp {
-    return shift->_build_mason_interp( autohandler_name => '', #< turn off autohandlers
+    return shift->_build__mason_interp( autohandler_name => '', #< turn off autohandlers
 				       out_method       => \$render_mason_outbuf,
 				     );
 }
