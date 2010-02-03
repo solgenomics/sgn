@@ -1,0 +1,36 @@
+The files in this directory were supplied by Haiming Wang and
+Jessica Kissinger at University of Georgia's Center for Tropical & 
+Emerging Global Diseases & Department of Genetics.  There are
+two components:
+
+  1. A GUSdb adaptor (DAS::GUS) based on Bio::DB::Das::Chado in this
+  distribution.  This adaptor is written to be reasonably generic, and
+  so it may be possible to use this as a template for creating an
+  adaptor for any database.
+
+  2. A sample configuration file (plasmodb.conf) that is similar to what
+  drives the synteny tracks in the gbrowse installation at 
+  http://www.plasmodb.org/.  For an example of what the display looks like,
+  see http://www.plasmodb.org/cgi-bin/gbrowse/plasmodb/?start=101357;stop=121356;ref=MAL12;width=800;version=100;label=AnnotatedGenes-SyntenySpansVivaxMC-SyntenyGenesVivaxMC
+
+  This synteny view can use any GBrowse data adaptor, including the 
+  Bio::DB::GFF and memory adaptors. Note that SynView requires 
+  Tie::IxHash.
+
+An example dataset is also included in the MAL11 directory; this directory
+contains a GFF3 file, fasta file and a GBrowse configuration file set
+up to use the memory adaptor.
+
+This of course is a very brief introduction to SynView, for more
+information, please see http://www.apidb.org/apps/SynView/, contact
+Jessica or Haiming, or see their paper in Bioinformatics:
+
+Wang, H., Su, Y., Mackey, A., Kraemer, E., and *Kissinger, J.C.* (2006)
+SynView: A GBrowse-compatible Approach to Visualizing Comparative Genome
+Data. Bioinformatics 22(18), 2308-2309
+<http://bioinformatics.oxfordjournals.org/cgi/content/abstract/22/18/2308>
+
+Thanks,
+Scott Cain
+cain@cshl.edu
+November 6, 2006

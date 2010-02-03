@@ -1,0 +1,23 @@
+
+<%perl>
+use strict;
+use File::Spec;
+use CXGN::Tools::File;
+use CXGN::VHost;
+my $vhost_conf=CXGN::VHost->new();
+
+
+my $file=File::Spec->catfile($vhost_conf->get_conf('homepage_files_dir'), 'news.txt');
+
+my $news = qq{ <p class="boxbgcolor5"><br />News are not available at the moment. We apologize for any inconvenience. Please check back later.<br /><br /></p> };
+
+eval { 
+$news=CXGN::Tools::File::file_contents("$file")||'';
+};
+
+</%perl>
+
+<& /page/page_title.mas, title=>'All past SGN news items' &>
+
+<% $news %>
+

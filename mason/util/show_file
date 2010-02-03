@@ -1,0 +1,29 @@
+
+<%args>
+    $file            # the file to be parsed
+</%args>
+
+<%perl>
+
+    
+open (my $F, "<$file") || die "Can't open file $file";
+
+my $show_count = (<$F>);
+$show_count =~ s/.*?(\d+?).*?/$1/;
+
+my $shown = -1;
+
+while (<$F>) { 
+    chomp;
+    if (m//) { 
+	$shown++;
+    }
+    print;
+    if ($shown > $show_count) { 
+	last;
+    }
+
+}
+close($F);
+
+</%perl>

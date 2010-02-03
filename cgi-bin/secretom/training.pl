@@ -1,0 +1,137 @@
+use strict;
+use CXGN::Tools::File;
+use CXGN::Page;
+use CXGN::VHost;
+
+my $vhost_conf=CXGN::VHost->new();
+my $page=CXGN::Page->new('Secretom','john');
+$page->header('Proteomics Workshop');
+print<<END_HTML;
+<div style="width:100%; color:#303030; font-size: 1.1em; text-align:left;">
+
+<center><img src="/documents/img/secretom/secretom_logo_smaller.jpg" /></center>
+<br /><br />
+
+
+<span style="white-space:nowrap; display:block; padding:3px; background-color: #fff; text-align:center; color: #444; font-size:1.3em">
+Mass Spectrometry-based Proteomics Workshop
+</span>
+
+<center><p><strong>October 20th and 21st, 2009</strong></p></center>
+
+<center><p><em>Supported by NSF Plant Genome Program<br />
+Instruction: Drs. Jocelyn Rose and Ted Thannhauser and Sheng Zhang<br />
+Location: Cornell Proteomics & Mass Spectrometry Core Facility</em></p></center>
+
+<p>We had another extremely successful Proteomics Workshop this year that was highly oversubscribed. The workshop comprised both lectures and practical lab-based training in proteomic analysis, using advanced mass spectrometry techniques and bioinformatics and was targeted towards undergraduate and graduate students.  Based on the positive and enthusiastic feedback, a similar course will be offered next year.</p>
+
+<p><a href="/documents/secretom/MSOct09WorkshopHandouts.pdf">Handouts from the workshop</a> [pdf]</p>
+<p><a href="#schedule">Schedule</a></p>
+<p><a href="#photos">Photos from this year's workshop</a></p>
+
+<center><img src="/documents/img/secretom/spectrometer1.png"><img src="/documents/img/secretom/spectrometer2.png"></center>
+
+<br /><br /><br />
+
+<p><center><strong><a name="schedule">SCHEDULE</a></strong></center></p>
+
+<p><strong> October 20th:</strong></p>
+<p><strong>8:00am - 8:30am: Registration (badge, program handouts, breakfast</strong>) in room 130</p>
+<p><strong>8:30am - 8:35am </strong>in room 130:</p>
+<ol type="1">
+<li><strong>Program introduction</strong> by Professor Joss Rose</li>
+</ol>
+<p><strong>8:35am - 10:00am</strong> in room 141:</p>
+<ol type="1" start="2">
+<li><strong>Experimental 1:</strong> Protein denaturing, reduction and alkylation of crude cell extract samples for shotgun proteomics analysis. (Attendees divided into 4 groups)</li>
+</ol>
+<ul>Instructors: Huiming Yan (bench 1), Yong Yang (bench 2), Bob Sherwood (bench 3) and Celeste Ptak (bench 4).</ul>
+<p><strong>10:20am - 11:20am</strong> in room 130 </p>
+<ol type="1" start="3">
+<li><strong>Lecture 1 Presentation: </strong> Sample preparation and separation prior to MS analysis by Dr. Ted Thannhauser</li>
+</ol>
+<p><strong>11:30am - 12:00pm</strong> in room 141:</p>
+<ol type="1" start="4">
+<li><strong>Experimental 2: </strong> in solution trypsin digestion.</li>
+</ol>
+<p><strong>12:00pm - 1:00pm </strong> in room 130<strong>: </strong>Lunch and Break</p>
+<p><strong>1:00pm - 2:15pm</strong> in room 130:</p>
+<ol type="1" start="5">
+<li><strong>Lecture 2 Presentation: </strong> MS instrument fundamentals and Applications: (proteomics case studies) by Dr. Sheng Zhang</li>
+</ol>
+<p><strong>2:30pm - 3:30pm</strong> in room 143:</p>
+<ol type="1" start="6">
+<li><strong>Experimental 3: </strong> Lab tour and demo, split into 3 groups (20 min/rotation)</li>
+</ol>
+<ul>
+<ul type="DISC">
+<li>nanoLC-MS/MS for iTRAQ samples in 4000 Q Trap: by Dr. Celeste Ptak</li>
+<li>MALDI-TOF/TOF analysis for 2D gel-based protein IDs: by Bob Sherwood</li>
+<li>NanoLC-MS/MS analysis for 1D gel bands: by Kevin Howe</li>
+</ul>
+</ul>
+<p><strong>4:00pm - 5:00pm: </strong></p>
+<ol type="1" start="7">
+<li><strong> Experimental 4:</strong> set up nanoLC-MS/MS overnight running for in-solution digested samples with 60-min gradient for each run.</li>
+<ol type="a">
+<li>10 samples on 4000 Q Trap by Dr. Celeste Ptak</li>
+<li>10 samples on Synapt HDMS by Kevin Howe and Yong Yang</li>
+</ol>
+</ol>
+<p><strong>October 21st:</strong></p>
+<p><strong>8:00am - 8:30am: </strong> breakfast and laptop computer setup in room 130</p>
+<p><strong>8:30am - 9:00am:</strong></p>
+<ol type="1" start="8">
+<li><strong>Experimental 5:</strong> Database searching and file conversion for overnight LC-MS/MS files</li>
+</ol>
+<ul>
+<ol type="a">
+<li>Mascot Maemon search and wiff file conversion to TMP file by Dr. Celeste Ptak in room 130</li>
+</ol>
+<ol type="a" start="2">
+<li>PLGS 2.4-Mascot database search and generating PKL file by Yong Yang and Kevin Howe in room 143</li>
+</ol>
+</ul>
+<p><strong>9:30am - 10:30am: </strong></p>
+<ol type="1" start="9">
+<li><strong>Lecture 3 Presentation:</strong> Introduction to Mascot-based MS database search and data interpretation by Professor Joss Rose</li>
+</ol>
+<p><strong>10:30am - 10:45am:</strong> transfer PKL files and TMP files into individual laptop computers.</p>
+<p><strong>10:45am - 11:15am: </strong>in room 130 and room 143</p>
+<ol type="1" start="10">
+<li><strong>Experimental 6: </strong> Practice for generating PKL files and TMP files. Instructors: Celeste Ptak for TMP files, Huiming Yan and Kevin Howe for PKL files.</li>
+</ol>
+<p><strong>12:00pm - 1:00pm </strong> in room 130<strong>: </strong>Lunch and Break</p>
+<p><strong> 1:00pm - 3:00pm </strong>in room 130</p>
+<ol type="1" start="11">
+<li><strong>Experimental 7: </strong> database search practice against either Mascot public search engine or in-house licensed search engine. Assistants: Celeste Ptak, Huiming Yan, Kevin Howe and Yong Yang.</li>
+</ol>
+<p><strong>3:20pm - 4:00pm: </strong>in room 130</p>
+<ol type="1" start="12">
+<li>Summary of the group results for shotgun analysis in 4000 Q Trap and Synapt HDMS. Summary of the iTRAQ demo results for quantitative proteomics by Sheng Zhang.</li>
+</ol>
+<p><strong>4:00pm - 5:00pm:</strong> in room 130</p>
+<ol type="1" start="13">
+<li>Wrap-up comments, questions and suggestions</li>
+</ol>
+
+<br /><br /><br />
+
+<p><a name="photos">Here are some pictures of this year's workshop.</a> Thank you all for a great time!!!</p>
+
+<center><img src="/documents/img/secretom/workshop1.png"></center>
+<center><p>The Class of 2009... our brave band</p></center>
+<center><img src="/documents/img/secretom/workshop2.png"></center>
+<center><p>Bob explaining the mysteries of the MALDI TOF-TOF</p></center>
+<center><img src="/documents/img/secretom/workshop3.png"></center>
+<center><p>Celeste and the art of protein fractionation</p></center>
+<center><img src="/documents/img/secretom/workshop4.png"></center>
+<center><p>Kevin revealing some of the principles and wizardry of mass spectrometry</p></center>
+<center><img src="/documents/img/secretom/workshop5.png"></center>
+<center><p>Rapt attention as Bob demonstrates 2D gel analysis software</p></center>
+
+</div>
+
+END_HTML
+
+$page->footer();

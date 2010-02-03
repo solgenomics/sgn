@@ -1,0 +1,67 @@
+<%doc>
+  NAME: basic_info.mas
+  VERSION: 1.0
+  DESCRIPTION: This is a mason code get the data from the database and show it as table web_page; 
+  AUTHOR: Aureliano Bombarely (ab782@cornell.edu)
+</%doc>
+
+
+<%perl>
+use strict;
+use warnings;
+
+use CXGN::SEDM::Schema;
+use CXGN::Chado::Dbxref;
+use CXGN::SEDM::Platform;
+use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
+
+my $basic_info_content;
+my $expdes_accession;
+
+## If there aren't any experimental_Design_row that comes from experimental_design_detail.mas, it will return a message.
+
+if (defined $ARGS{'exp_design'}) {
+
+   ## Get the data from the object.
+   my $exp_design_name = $ARGS{'exp_design'}->get_column('experimental_design_name');
+   $expdes_accession = $exp_design_name;
+   my $exp_design_desc = $ARGS{'exp_design'}->get_column('description') || 'not available';
+   my $exp_design_type = $ARGS{'exp_design'}->get_column('design_type') || 'not available';
+   if ($exp_design_type =~ m/<>/) {
+       $exp_design_type = 'multiple comparisons';
+   } elsif ($exp_design_type =~ m/=>|<=/) {
+       $exp_design_type = 'comparisons by pairs according the follow schema:<br> '.$exp_design_type;
+   }
+   my $exp_design_id = $ARGS{'exp_design'}->get_column('experimental_design_id');   
+
+   my $schema = $ARGS{'exp_design'}->result_source()->schema();
+   my $exp_nr = $schema->resultset('Experiments')->search({ experimental_design_id => $exp_design_id })->count();
+
+
+   ## Create the HTML table
+
+   $basic_info_content = <<HTML;
+
+   <table width="100%">
+   	   <tr> <td width="25%"> <b>Experimental design name:</b>        </td> <td> $exp_design_name </td></tr>
+	   <tr> <td width="25%"> <b>Description:</b>                     </td> <td> $exp_design_desc </td></tr>
+	   <tr>	<td width="25%"> <b>Type:</b>                            </td> <td> $exp_design_type </td></tr>
+           <tr> <td width="25%"> <b>Experiments associated:</b>          </td> <td> $exp_nr </td></tr>
+   </table>
+
+HTML
+
+} else {
+   $basic_info_content = "<big>There aren't any experimental designs data for the specified parameters.</big>";
+}   
+
+my $basic_info_html;
+if (defined $expdes_accession) {
+   $basic_info_html = "<center><big><b>Expression Experimental Design: $expdes_accession</b></big></center><br>";
+}
+
+$basic_info_html .= info_section_html( title => "Experimental Design Basic Information", contents => $basic_info_content );
+
+</%perl>
+
+<% $basic_info_html %>

@@ -1,0 +1,418 @@
+
+<p>
+
+<table width="100%">
+  <tr class="searchtitle">
+    <th><a href="#selecting">Selecting Regions</a></th>
+    <th><a href="#navigation">Overview Panel</a></th>
+    <th><a href="#detail">Detail Panel</a></th>
+    <th><a href="#upload">Adding Annotations</a></th>
+    <th><a href="#quicky">Quick Uploads</a></th>
+  </tr>
+</table>
+
+
+<h1>Generic Genome Browser: General Help</h1>
+
+These are general instructions for using the Generic Genome Browser.
+This page should be customized by the administrator of this resource
+to describe site-specific features.
+
+<h2><a name="selecting">Selecting a Region of the Genome</a></h2>
+
+<p>
+
+<img src="images/help/landmark.gif" align="RIGHT">
+
+To select a region of the genome to view, enter its name in the text
+field labeled "Landmark or Region".  Recognized types of names are
+under the control of the administrator, but usually the following
+names are accepted:
+
+<dl>
+  <dt><b>a chromosome name</b>
+  <dd>For genomes that have been assembled into chromosome-length
+      segments, you can enter the name of the chromosome.  The
+      chromosome name follows the conventional nomenclature for the
+      species.  For example, <i>C. elegans</i> chromosomes are
+      indicated using roman numerals, such as III,
+      <i>D. melanogaster</i> uses chromosome arms such as 2L and 2R,
+      while <i>H. sapiens</i> uses arabic numbers such as 9.
+      <p>
+  <dt><b>a gene name</b>
+  <dd>You can enter the name of a gene using the standard nomenclature
+      for that species.
+      <p>
+  <dt><b>a contig or clone name</b>
+  <dd>You can enter the name of a structural landmark such as a
+      cosmid, BAC or contig.
+      <p>
+  <dt><b>an accession number</b>
+  <dd>You can enter a GenBank or EMBL accession number.
+      <p>
+  <dt><b>protein names, primer names, ORF IDs, author names...</b>
+  <dd>At the discretion of the administrator of the database, other
+      identifiers can be entered.  See the examples listed at the
+      top of the browser page for hints.
+</dl>
+
+<h3>The Overview and Detail Panels</h3>
+
+<p>
+
+If the landmark is found in the database, the browser will display the
+region of the genome it occupies.  The region is displayed in two
+graphical panels:
+
+<p>
+
+<center>
+<img src="images/help/overview+detail.gif" align="CENTER">
+</center>
+
+<p>
+
+<dl>
+  <dt><b>overview panel</b>
+  <dd>This panel displays the genomic context, typically an entire
+      assembled chromosome or a large portion of the sequence
+      assembly such as a scaffold or contig.  At the administrators'
+      discretion, certain important landmarks, such as a well-known
+      genetic markers or cytogenetic bands can be placed in this view.
+      A red rectangle indicates the region of the genome that is
+      displayed in the detail panel.  This rectangle may appear as
+      a single line if the detailed region is relatively small.
+      <p>
+  <dt><b>detail panel</b>
+  <dd>This panel displays a zoomed-in view of the genome corresponding
+      to the overview's red rectangle.  The detail panel consists of
+      one or more tracks showing annotations and other features that
+      have been placed on the genome.  The detail panel is described
+      at length later.      
+</dl>
+
+<p>
+
+If the requested landmark is not found, the browser will display a
+message to this effect.
+
+<h3>Specifying the Landmark Class</h3>
+
+<p>
+
+At the administrator's option, some kinds of landmarks may have to be
+qualified with their "class" using the format <i>class:landmark</i>.
+For example, to look up the PCR product sjj_K08A8.1 in the
+<i>C. elegans</i> database, you will search for
+<b>PCR_Product:sjj_K08A8.1</b>.
+
+<p>
+
+In the case of clashes between names, such as a contig and a gene both
+named c23, you can use the name class to specify which landmark you
+mean.
+
+<p>
+
+<!-- #include-classes -->
+
+<h3>Viewing a Precise Region around a Landmark</h3>
+
+<p>
+
+You can view a precise region around a landmark using the notation
+<i>landmark:start..stop</i>, where <i>start</i> and <i>stop</i> are
+the start and stop positions of the sequence relative to the landmark.
+The beginning of the feature is position 1.  In the case of complex
+features, such as genes, the "beginning" is defined by the database
+administrator.  For example, in the <i>C. elegans</i> data set,
+position 1 of a predicted gene is the AUG at the beginning of the CDS,
+so to view the region that begins 100 base pairs upstream of the AUG
+ends 500 bases downstream of it, you would search for
+<i>mek-1:-99..500</i>.
+
+<p>
+
+This offset notation will work correctly for negative strand features
+as well as positive strand features.  The coordinates are always
+relative to the feature itself.
+
+<p>
+
+To offset relative to a qualified feature name, just include the type
+name, as in <b>PCR_Product:sjj_K08A8.1:-500..500</b> (note that this
+particular example only works with the C. elegans database).
+
+<h3>Searching for Keywords</h3>
+
+<p>
+
+Anything that you type into the "Landmark or Region" textbox that
+isn't recognized as a landmark will be treated as a full text search
+across the feature database.  This will find comments or other feature
+notations that match the typed text.  Depending on how the database is
+set up, you may find gene names, gene functions, author names, or
+bibliographic references.
+
+<p>
+
+If successfull, the browser will present you with a list of possible
+matching landmarks and their comments.  You will then be asked to
+select one y to view.  To see this in action, try typing "kinase" into
+the "Landmark or Region" box.
+
+<hr>
+
+<h2><a name="navigation">Navigation</a></h2>
+
+<img src="images/help/navbar.gif" align="RIGHT">
+
+<p>
+
+Once a region is displayed, you can navigate through it in a number of
+ways:
+
+<dl>
+  <dt><b>Scroll left or right with the &lt;&lt;, &lt;,
+      &gt; and &gt;&gt; buttons</b>
+  <dd>These buttons, which appear in the "Scroll/Zoom" section of the
+      screen, will scroll the detail panel to the left or right.  The
+      <b>&lt;&lt;</b> and <b>&gt;&gt;</b> buttons scroll an entire
+      screen's worth, while <b>&lt;</b> and <b>&gt;&gt;</b> scroll a
+      half screen.
+      <p>
+  <dt><b>Zoom in or out using the "Show XXX Kbp" menu.</b>
+  <dd>Use menu that appears in the center of the "Scroll/Zoom" section
+      to change the zoom level.  The menu item name indicates the
+      number of base pairs to show in the detail panel.  For example,
+      selecting the item "100 Kbp" will zoom the detail panel so as
+      to show a region 100 Kbp wide.
+      <p>
+  <dt><b>Make fine adjustments on the zoom level using the "-" and
+      "+" buttons.</b>
+  <dd>Press the <b>-</b> and <b>+</b> buttons to change the zoom level
+      by small increments (usually 10-20%, depending on how the
+      browser is configured).
+      <p>
+  <dt><img src="images/help/detail_scale.gif" align="RIGHT">
+      <b>Recenter the detail panel by clicking on its scale</b>
+  <dd>The scale at the top of the detail panel is live.  Clicking on
+      it will recenter the detail panel around the location you
+      clicked.  This is a fast and easy way to make fine adjustments
+      in the displayed region.
+      <p>
+  <dt><b>Get information on a feature by clicking on it</b>
+  <dd>Clicking on a feature in the detail view will link to a page
+      that displays more information about it. This could be a page on
+      the browser's web site, or a page on an external web site.
+      <p>
+  <dt><img src="images/help/overview.gif" align="RIGHT">
+      <b>Jump to a new region by clicking on the overview panel</b>
+  <dd>Click on the overview panel to immediately jump
+      to the corresponding region of the genome.
+</dl>
+
+<br clear="all">
+
+<hr>
+
+<h2><a name="detail">The Detail Panel</a></h2>
+
+<p>
+
+The detailed view is composed of a number of distinct tracks which
+stretch horizontally from one end of the display to another.  Each
+track corresponds to a different type of genomic feature, and is
+distinguished by a distinctive graphical shape and color.
+
+<p>
+
+<center>
+<img src="images/help/detail.gif" align="CENTER">
+</center>
+
+<p>
+
+The key to the tracks is shown at the bottom of the detail panel.  For
+more information on the source and nature of the track, click on the
+track label in the "Search Settings" area (discussed below).
+
+<h3>Customizing the Detail Panel</h3>
+
+You can customize the detailed display in a number of ways:
+
+<p>
+
+<dl>
+  <dt><b>Turn tracks on and off using the "Search Settings" area</b>
+  <dd><img src="images/help/search+settings.gif" border="1"><p>
+      The panel labeled "Search Settings" contains a series of
+      checkboxes.  Each checkbox corresponds to a track type.  Selecting
+      the checkbox activates its type.  Select the label to the
+      right of the checkbox to display a window that provides more
+      detailed information on the track, such the algorithm used to
+      generate it, its author, or citations.
+      <p>
+  <dt><b>Change the properties of the tracks using the "Set Track Options" button</b>
+  <dd><img src="images/help/track+settings.gif" border="1"><p>
+      This will bring up a window that has detailed settings for each of the tracks.
+      Toggle the checkbox in the "Show" column to turn the track on
+      and off (this is the same as changing the checkbox in the Search
+      Settings area). Change the popup menu in the "Format" column to
+      alter the appearance of the corresponding track.  Options include:
+      <i>Compact</i> which forces all items in the track onto a single overlapping line without
+      labels or descriptions; <i>Expand</i>, which causes items to bump each other so that
+      they don't collide; and <i>Expand &amp; Label</i>, which causes items to be labeled
+      with their names and a brief description.  The default, <i>Auto</i> will choose compact
+      mode if there are too many features on the track, or one of the expanded modes if there
+      is sufficient room.  Any changes you make are remembered the next time you visit the browser.
+      Press <b>Accept Changes and Return...</b> when you are satisfied with the current options.
+      <p>
+  <dt><b>Change the order of tracks using the "Set Track Options" button</b>
+  <dd>The last column of the track options window allows you to change the order of the
+      tracks.  The popup menu lists all possible feature types in alphabetic order.  Select
+      the feature type you wish to assign to the track.  The window should refresh with the
+      adjusted order automatically, but if it doesn't, select the "Refresh" button to see the
+      new order.
+      
+</dl>
+
+<hr>
+
+<h2><a name="upload">Uploading Your Own and 3d Party Annotations</a></h2>
+
+<p>
+
+This browser supports third party annotations, both your own private
+annotations and published annotations contributed by third parties.
+
+<h3>Uploading Your Own Annotations</h3>
+
+<img src="images/help/upload.gif">
+
+<p>
+
+To view your own annotations on the displayed genome, go to the bottom
+of the screen and click on the <b>Browse...</b> button in the file
+upload area.  This will prompt you for a text file containing your
+annotations. See the <a href="$GBROWSE?help=annotation"
+target="_new">annotation format help</a> document for information on
+how to create this file.
+
+<p>
+
+Once loaded, tracks containing these annotations will appear on the
+detailed display and you can control them just like any of the
+built-in tracks.  In addition new <b>Edit</b>, <b>Delete</b> and
+<b>Download</b> buttons will appear in the file upload area.  As their
+names imply, these buttons allow you to edit the uploaded file,
+download it, or delete it completely.
+
+<p>
+
+<img src="images/help/upload+edit.gif">
+
+<p>
+
+The date at which the uploaded file was created or last modified is
+printed next to its name.  If there are a manageable number of
+annotated areas, GBrowse will create links that allow you to jump
+directly to them.
+
+<p>
+
+You may upload as many files as you wish, but be advised that the
+performance of the browser may decrease if there are many large
+uploads to process.
+
+<h3>Viewing 3d Party Annotations</h3>
+
+<p>
+
+To view 3d party annotations, the annotations must be published on a
+reachable web server and you must know the annotation file's URL.
+<p>
+
+<img src="images/help/upload+remote.gif">
+
+<p>
+
+At the bottom of the browser window is a text box labeled "Enter
+Remote Annotation URL".  Type in the URL and then press "Update URLs".
+The system will attempt to upload the indicated URL.  If successful,
+the data will appear as one or more new tracks.  Otherwise you will
+be alerted with an error message.
+
+<p>
+
+You may add as many remote URLs as you wish.  To delete one, simply
+erase it and press "Update URLs" again.
+
+<hr>
+
+<h2><a name="quicky">Quick Uploads</a></h2>
+
+<p>
+
+Another way to upload your own features is by adding an "add" argument
+to the gbrowse URL. For example, this URL will create a track named
+"MyDeletions" containing a feature named "Deletion3". Deletion3
+occupies the region on chromosome 3 between 10,050,000 and 10,051,000:
+
+</p>
+
+<blockquote>
+$GBROWSE?add=chr3+MyDeletions+Deletion3+10050000..10051000
+</blockquote>
+
+<p>
+You can have as many "add" options as you like:
+</p>
+
+<blockquote>
+$GBROWSE?add=chr3+MyDeletions+Deletion3+10050000..10051000;add=chr3+MyDeletions+Deletion4+950000..960000
+</blockquote>
+
+<p>The format is:</p>
+
+<blockquote>
+reference+trackName+featureName+start..stop,start..stop,start..stop ...
+</blockquote>
+
+<p>where "reference" is the name of the landmark that start and stop are
+relative to. You can use a chromosome name, a contig name, a gene
+name, or anything else that this browser recognizes in the search
+box. "trackName" is the name of the track to upload, "featureName" is
+the name of the feature you are uploading, and "start..stop" are the
+start and end coordinates relative to "reference". For multisegmented
+features, specify multiple start..stop pairs separated by commas.</p>
+
+<p>For more control over the way quick upload features appear, specify the "style" option to the URL:</p>
+
+<blockquote>
+$GBROWSE?style=MyDeletions+glyph=arrow+double=1+fgcolor=blue
+</blockquote>
+
+<p>This says to configure the "MyDeletions" track with the following options:
+
+<blockquote><pre>
+glyph=arrow
+double=1
+fgcolor=blue
+</pre></blockquote>
+
+<p>See <a href="$GBROWSE?help=annotation">the uploaded annotation help
+file</a> for more details</p>.
+
+<hr>
+
+<H2><A NAME="bugs">Software Bugs</A></H2>
+
+<P>As always, this software may contain bugs.  Please report any that
+you suspect to the author, along with whatever information that you can
+provide as to what you were doing when the bug appeared.</P>
+
+<P>
+<HR>
+<H1><A NAME="author">AUTHOR</A></H1>
+<P>Lincoln Stein &lt;<A HREF="mailto:lstein@cshl.org">lstein@cshl.org</A>&gt;</P>

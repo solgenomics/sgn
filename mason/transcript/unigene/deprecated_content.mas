@@ -1,0 +1,85 @@
+<%doc>
+   NAME: deprecated_content.mas
+   VERSION: 1.0
+   DESCRIPTION: This is a mason code get if a unigene is a deprecated content; 
+   AUTHOR: Aureliano Bombarely (ab782@cornell.edu)
+</%doc>
+
+
+<%perl>
+use strict;
+use warnings;
+
+use SGN::Schema;
+use CXGN::Transcript::Unigene;
+use CXGN::Transcript::UnigeneBuild;
+use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
+
+my $deprecate_content;
+
+## This code only will return something if exists the unigene
+
+if (defined $ARGS{'unigene'}) {
+
+   my $unigene = $ARGS{'unigene'};
+   my $schema = $ARGS{'schema'};
+
+   ## First get the unigene build and check its status
+
+   my $unigene_build = $unigene->get_unigene_build();
+   my $unigene_build_status = $unigene_build->get_status();
+   my $org_group_name = $unigene_build->get_organism_group_name();
+   my $build_nr = $unigene_build->get_build_nr();
+
+   ## If the status is not current, get the current unigenes
+
+   if ($unigene_build_status ne 'C') { 
+       my @updated_unigene = $unigene->get_current_unigene_ids($unigene->get_unigene_id() );
+       if (@updated_unigene) { 
+    
+	   $deprecate_content .= "<br><div style='text-align:center; padding:3px; margin-left:5px;
+                                  margin-bottom:10px; font-size:14px; border:1px dashed #772222; 
+                                  background-color:#e5e5e5;'>";
+	   $deprecate_content .= "<span style=color:#660000'>This unigene is from an out-of-date build, 
+                                  <em>$org_group_name #$build_nr</em></span>";       
+	   my ($new_build_organism, $new_build_nr) = $unigene_build->get_superseding_build_info();
+	   if(@updated_unigene == 0){ 
+	       $deprecate_content .= "<br>It does not exist"; 
+	   } elsif(@updated_unigene == 1){
+	       $deprecate_content .= "<br />It has been superseded by <a href='unigene.pl?unigene_id=";
+	       $deprecate_content .= $updated_unigene[0] . "'>SGN-U" . $updated_unigene[0] . "</a>";
+	   } elsif(@updated_unigene > 1){
+	       $deprecate_content .= "<br />It has been split into ";
+	       my $i = 0;
+	       while($i < @updated_unigene) {
+		   if ($i > 0 && @updated_unigene!=2) { 
+		       $deprecate_content .= ", "
+		   } elsif($i > 0) { 
+		       $deprecate_content .= " " 
+	           }
+		   if ($i == @updated_unigene - 1) { 
+		       $deprecate_content .= "and " 
+		   }
+		   $deprecate_content .= "<a href='unigene.pl?unigene_id=" . $updated_unigene[$i] . "'>SGN-U"; 
+		   $deprecate_content .= $updated_unigene[$i] . "</a>"; 
+		   $i++;
+	       }
+	   }
+	   $deprecate_content .= " in the current build, <em style='white-space:nowrap'>$new_build_organism #$new_build_nr</em>";
+	   $deprecate_content .= "</div>";
+       } else {
+	   my ($new_build_organism_b, $new_build_nr_b) = $unigene_build->get_superseding_build_info();
+	   $deprecate_content .= "<br><div style='text-align:center; padding:3px; margin-left:5px;
+                                  margin-bottom:10px; font-size:14px; border:1px dashed #772222; 
+                                  background-color:#e5e5e5;'>";
+	   $deprecate_content .= "<span style=color:#660000'>This unigene is from an out-of-date build, 
+                                  <em>$org_group_name #$build_nr</em></span>"; 
+	   $deprecate_content .= "<br> The current build is, <em style='white-space:nowrap'>$new_build_organism_b #$new_build_nr_b</em>";
+	   $deprecate_content .= "</div>";
+       }
+   }
+} 
+
+</%perl>
+
+<% $deprecate_content %>

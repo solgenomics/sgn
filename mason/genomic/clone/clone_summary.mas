@@ -1,0 +1,54 @@
+<%doc>
+
+=head2 clone_summary_html
+
+  Usage: my $html = clone_summary_html($clone);
+  Desc: get a snippet of html summarizing this clone
+  Args: none
+  Ret : HTML string containing a concise summary of this
+        clones vital statistics
+  Side Effects:
+
+=cut
+
+</%doc>
+
+<%init>
+use Carp;
+use CXGN::Tools::Text qw/ commify_number /;
+use CXGN::Page::FormattingHelpers qw/ info_table_html /;
+sub clone_summary_html {
+    my $this = shift;
+    @_ and croak 'summary_html takes no parameters';
+    my $length =
+      $this->estimated_length && commify_number($this->estimated_length)
+      || 'not yet estimated';
+
+    my $badclonehtml = $this->bad_clone 
+		       ? '<span style="color:red">contaminated</span>'
+		       : 'none';
+
+
+
+    my $az_name = $this->arizona_clone_name;
+    my $type = $this->clone_type_object->name;
+
+    return info_table_html( __title            => 'Clone',
+			    'Clone name'       => join('<br />',
+						       $this->arizona_clone_name,
+						       ($this->chromosome_num ? ($this->clone_name_with_chromosome) :  ()),
+						       ($this->cornell_clone_name =~ /^P/ ? ($this->cornell_clone_name) : ()),
+						      ),
+			    'Clone type'       => $type,
+			    'Contamination'    => $badclonehtml,
+			    'Estimated length' => $length,
+			  );
+}
+</%init>
+
+<%args>
+	$clone
+</%args>
+<%perl>
+        print clone_summary_html($clone);
+</%perl>

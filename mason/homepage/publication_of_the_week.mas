@@ -1,0 +1,43 @@
+<%doc>
+
+=head1 NAME 
+
+publication_of_the_week.mas - a mason module to display an html section with news, read from a file.
+
+=head1 DESCRIPTION
+
+The module does not require any parameters. If the file read does not succeed, an error message is displayed.
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>
+
+=cut
+
+</%doc>
+
+<%perl>
+
+use strict;
+use File::Spec;
+use CXGN::VHost;
+use CXGN::Tools::File;
+
+my $vh = CXGN::VHost->new();
+
+my $publications = "The publication of the week is currently unavailable.<br /><br />";
+
+eval {
+
+ $publications = CXGN::Tools::File::get_sections(File::Spec->catfile($vh->get_conf('homepage_files_dir'), "publications.txt"));
+
+};
+
+</%perl>
+
+<div class="boxbgcolor1" style="margin:0px;">
+<div class="boxheading">Featured publication</div>
+<div class="boxcontent"><% $publications %>
+<a href="oldpublications.pl">See all publications...</a></div>
+
+</div>

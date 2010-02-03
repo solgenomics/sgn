@@ -1,0 +1,28 @@
+
+<%perl>
+
+use strict;
+use CXGN::DB::Connection;
+use CXGN::Phenome::Population;
+use CXGN::Page::FormattingHelpers qw | simple_selectbox_html |;
+
+my $population_names_ref = [];
+eval { 
+  $population_names_ref = CXGN::Phenome::Population::get_all_populations( CXGN::DB::Connection->new );
+  #add an empty entry to the front of the list
+  unshift @$population_names_ref, ['', '--select a population name--'];
+};
+
+my $population = "";
+if ($@) { $population = "(The database is currently not available. Please try again later)"; }
+else { 
+  $population = simple_selectbox_html( choices  => $population_names_ref,
+					name     => 'wee9_population_id',
+					) . qq { <input type="submit" value="Submit"/> };
+}
+</%perl>
+
+<div class="boxbgcolor1" style="margin:0px;">
+  <div class="boxheading">Phenotypes</div>
+  <div class="boxcontent">Browse Solanaceae phenotypes<br /><form style="margin-bottom:0px" name="population" action="/search/phenotype_search.pl"><% $population %></form></div>
+</div>

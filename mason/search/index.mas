@@ -1,0 +1,55 @@
+
+<%doc>
+
+=head1 NAME
+
+/search/index.mas - a mason module for the main SGN search page
+
+=head1 DESCRIPTION
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>. Based on Perl code by Rob Buels and others.
+
+=cut
+
+</%doc>
+
+<%args>
+  $search => 'loci'
+  $dbh
+</%args>
+
+<%perl>
+
+my %tabcomps = (loci => '/search/forms/gene_tab.mas',
+		phenotypes => '/search/forms/phenotype_tab.mas',
+		cvterm_name => '/search/forms/cvterm_tab.mas',
+		unigene => '/search/forms/unigene_tab.mas',
+		family => '/search/forms/family_tab.mas',
+		markers => '/search/forms/marker_tab.mas',
+		bacs => '/search/forms/bac_tab.mas',
+		est_library => '/search/forms/est_library_submenu.mas',
+                images => '/search/forms/images_tab.mas',
+		directory => '/search/forms/directory_tab.mas'
+	       );
+
+
+if (!exists($tabcomps{$search})) { 
+  print qq | <p class="boxbgcolor5"><b>SGN Search Error</b><br /><br />The search type entered ("$search") is not supported. Please try to perform one of the supported searches by clicking on one of the tabs below.\n<br /></p> |;  
+  $search='loci';
+}
+
+</%perl>
+
+<br />
+<& /search/forms/searchtabs.mas, search=>$search &>
+
+<& $tabcomps{$search}, %ARGS &>
+
+
+<%cleanup>
+
+</%cleanup>
+
+

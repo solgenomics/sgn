@@ -1,0 +1,118 @@
+<%doc>
+  NAME: basic_info.mas
+  VERSION: 1.0
+  DESCRIPTION: This is a mason code get the data from the database and show it as table web_page; 
+  AUTHOR: Aureliano Bombarely (ab782@cornell.edu)
+</%doc>
+
+
+<%perl>
+use strict;
+use warnings;
+
+use CXGN::SEDM::Schema;
+use CXGN::Chado::Dbxref;
+use CXGN::People::Person;
+use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
+
+my $basic_info_content;
+my $target_accession;
+
+## If there aren't any experiment_row that comes from experimental_design_detail.mas, it will return a message.
+
+if (defined $ARGS{'target'}) {
+
+   ## Get the schema object
+   my $schema = $ARGS{'target'}->result_source()->schema();   
+
+   ## Get the data from the object.
+   my %target_data = $ARGS{'target'}->get_columns();
+   $target_accession = $target_data{'target_name'};
+
+   ## Get the experiment link
+   my $exp_id = $target_data{'experiment_id'};
+   my ($exp_row) = $schema->resultset('Experiments')->search({ experiment_id => $exp_id });
+   my $exp_name = $exp_row->get_column('experiment_name');
+   my $exp_link = '/sedm/experiment.pl?id='.$exp_id;
+   my $exp_html = "<a href=$exp_link>$exp_name</a><br>";
+      
+   ## Default values
+   my @keys = keys %target_data;
+   foreach my $key (@keys) {
+      unless (defined $target_data{$key}) {
+         $target_data{$key} = '<i><font color="gray">data not available</basefont></i>';
+      }
+   }
+
+   ## Get the sample list with links
+   my @sample_list;
+   my (%ontologies, %cvterm_id);
+   my $sample_group_id = $target_data{'sample_group_id'};
+   my @sample_ids = $schema->resultset('GroupLinkage')->search({ group_id => $sample_group_id,
+							         member_type => 'sample'       })->get_column('member_id')->all();
+   foreach my $sample_id (@sample_ids) {
+         my ($sample_row) = $schema->resultset('Samples')->search({ sample_id => $sample_id});
+	 my $sample_name = $sample_row->get_column('sample_name');
+	 my $sample_link = '/sedm/sample.pl?id='.$sample_id;
+	 my $sample_html = "<a href=$sample_link>$sample_name</a><br>";
+	 push @sample_list, $sample_html;
+
+      ## Get the PO terms associated to these samples
+         my $rs_sample_dbxref = $schema->resultset('SampleDbxref')->search({ sample_id => $sample_id});
+	 if (defined $rs_sample_dbxref) {
+	     my @dbxref_ids = $rs_sample_dbxref->get_column('dbxref_id')->all();
+	     foreach my $dbxref_id (@dbxref_ids) {
+	         my $dbxref = CXGN::Chado::Dbxref->new($schema->storage()->dbh(), $dbxref_id); 
+		 my $cvterm = $dbxref->get_cvterm();
+		 if (defined $cvterm) {
+	             my $ontology_id = $cvterm->get_db_name . ":" . $cvterm->get_accession();
+	             my $ontology_name = $cvterm->get_cvterm_name();
+		     my $cvterm_id = $cvterm->get_cvterm_id();
+		     unless (defined $ontologies{$ontology_id}) {
+			 $ontologies{$ontology_id} = $ontology_name;
+			 $cvterm_id{$ontology_id} = $cvterm_id;
+        	     }
+                 }
+             }
+         }
+   }
+   my $sample_list = join(' ', @sample_list);
+
+   ## Give format to the ontogies information
+
+   my @onto_html;
+   my @onto = sort keys %ontologies;
+   foreach my $onto (@onto) {
+       my $onto_link = '/chado/cvterm.pl?action=view&cvterm_id='.$cvterm_id{$onto};
+       my $onto_line = "<a href=$onto_link>$onto</a> ($ontologies{$onto})<br>";
+       push @onto_html, $onto_line;
+   }
+   my $onto_list = join(' ', @onto_html);
+
+   ## Create the HTML table
+
+   $basic_info_content = <<HTML;
+
+   <table width="100%">
+   	   <tr> <td width="25%"> <b>Target name:</b>            </td> <td> $target_data{'target_name'} </td></tr>
+           <tr> <td width="25%"> <b>Experiment:</b>             </td> <td> $exp_html </td></tr>
+	   <tr> <td width="25%"> <b>Dye:</b>                    </td> <td> $target_data{'dye'} </td></tr>
+	   <tr> <td width="25%"> <b>Ontology terms:</b>         </td> <td> $onto_list </td></tr>
+	   <tr> <td width="25%"> <b>Sample list:</b>            </td> <td> $sample_list</td></tr>
+	   <tr> <td width="25%"> <b>Data source link:</b>       </td> <td> $target_data{'datasource_url'} </td></tr>
+   </table>
+
+HTML
+
+} else {
+   $basic_info_content = "<big>There aren't any target data for the specified parameters.</big>";
+}   
+my $basic_info_html;
+if (defined $target_accession) {
+   $basic_info_html = "<center><big><b>Expression Target: $target_accession</b></big></center><br>";
+}
+$basic_info_html .= info_section_html( title => "Target Basic Information", contents => $basic_info_content );
+
+</%perl>
+
+<% $basic_info_html %>

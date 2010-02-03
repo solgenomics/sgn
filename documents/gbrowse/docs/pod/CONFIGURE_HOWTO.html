@@ -1,0 +1,3144 @@
+<?xml version="1.0" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>CONFIGURE_HOWTO</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rev="made" href="mailto:root@localhost" />
+</head>
+
+<body style="background-color: white">
+
+<p><a name="__index__"></a></p>
+<!-- INDEX BEGIN -->
+
+<ul>
+
+	<li><a href="#configurehowto">CONFIGURE-HOWTO</a></li>
+	<ul>
+
+		<li><a href="#contents">CONTENTS</a></li>
+	</ul>
+
+	<li><a href="#a__creating_new_databases_from_scratch">A. CREATING NEW DATABASES FROM SCRATCH</a></li>
+	<ul>
+
+		<li><a href="#a1__the_gff_file_format">A1. The GFF file format</a></li>
+		<li><a href="#a2__creating_a_gff_table">A2. Creating a GFF table</a></li>
+		<li><a href="#a3__identifying_the_reference_sequence">A3. Identifying the reference sequence</a></li>
+		<li><a href="#a4__sequence_alignments">A4. Sequence alignments</a></li>
+		<li><a href="#a6__loading_the_gff_file_into_the_database">A6. Loading the GFF file into the database</a></li>
+		<li><a href="#a5__aggregators">A5. Aggregators</a></li>
+	</ul>
+
+	<li><a href="#b__adding_a_new_database_to_the_browser">B. ADDING A NEW DATABASE TO THE BROWSER</a></li>
+	<ul>
+
+		<li><a href="#b1__the__general__section">B1. The [GENERAL] Section</a></li>
+		<li><a href="#b2__the__track_defaults__section">B2. The [TRACK DEFAULTS] section</a></li>
+		<li><a href="#b3__track_sections">B3. Track Sections</a></li>
+		<li><a href="#b4__glyphs_and_glyph_options">B4. Glyphs and Glyph Options</a></li>
+		<li><a href="#b5__adding_features_to_the_overview">B5. Adding features to the overview</a></li>
+		<li><a href="#b6__semantic_zooming">B6. Semantic Zooming</a></li>
+		<li><a href="#b7__computed_options">B7. Computed Options</a></li>
+		<li><a href="#b8__declaring_new_aggregators">B8. Declaring New Aggregators</a></li>
+		<li><a href="#b9__grouping_features">B9. GROUPING FEATURES</a></li>
+		<li><a href="#b10__controlling_the_gbrowse_details_page">B10. Controlling the gbrowse_details page</a></li>
+		<li><a href="#b11__linking_out_from_gbrowse_details">B11. Linking out from gbrowse_details</a></li>
+	</ul>
+
+	<li><a href="#c__generating_histograms">C. GENERATING HISTOGRAMS</a></li>
+	<li><a href="#d__internationalization">D. INTERNATIONALIZATION</a></li>
+	<li><a href="#e__authentication_and_authorization">E. AUTHENTICATION AND AUTHORIZATION</a></li>
+	<li><a href="#f__displaying_genetic_and_rh_maps">F. DISPLAYING GENETIC AND RH MAPS</a></li>
+	<li><a href="#g__changing_the_location_of_the_configuration_files">G. CHANGING THE LOCATION OF THE CONFIGURATION FILES</a></li>
+	<li><a href="#h__using_das__distributed_annotation_system__databases">H. USING DAS (DISTRIBUTED ANNOTATION SYSTEM) DATABASES</a></li>
+	<li><a href="#i__the_biomoby_browser">I. THE BioMOBY BROWSER</a></li>
+	<li><a href="#j__biomoby_services">J. BioMOBY Services</a></li>
+	<li><a href="#k__filtering_search_results">K. FILTERING SEARCH RESULTS</a></li>
+	<li><a href="#l__invoking_gbrowse_urls__under_construction_">L. INVOKING GBROWSE URLs (under construction)</a></li>
+	<li><a href="#m__further_information">M. FURTHER INFORMATION</a></li>
+</ul>
+<!-- INDEX END -->
+
+<hr />
+<p>
+</p>
+<h1><a name="configurehowto">CONFIGURE-HOWTO</a></h1>
+<p>This document provides information on configuring the Generic Genome
+Browser (GBrowse), part of the Generic Model Organism Systems Database
+Project (<a href="http://www.gmod.org/">http://www.gmod.org/</a>).</p>
+<p>
+</p>
+<h2><a name="contents">CONTENTS</a></h2>
+<dl>
+<dt><strong><a name="item_a_2e_creating_new_databases_from_scratch">A. CREATING NEW DATABASES FROM SCRATCH</a></strong>
+
+<dt><strong><a name="item_b_2e_adding_a_new_database_to_the_browser">B. ADDING A NEW DATABASE TO THE BROWSER</a></strong>
+
+<dt><strong><a name="item_c_2e_generating_histograms">C. GENERATING HISTOGRAMS</a></strong>
+
+<dt><strong><a name="item_d_2e_internationalization">D. INTERNATIONALIZATION</a></strong>
+
+<dt><strong><a name="item_e_2e_authentication_and_authorization">E. AUTHENTICATION AND AUTHORIZATION</a></strong>
+
+<dt><strong><a name="item_f_2e_displaying_genetic_and_rh_maps">F. DISPLAYING GENETIC AND RH MAPS</a></strong>
+
+<dt><strong><a name="item_g_2e_changing_the_location_of_the_configuration_fi">G. CHANGING THE LOCATION OF THE CONFIGURATION FILES</a></strong>
+
+<dt><strong><a name="item_das">H. USING DAS (DISTRIBUTED ANNOTATION SYSTEM) DATABASES</a></strong>
+
+<dt><strong><a name="item_i_2e_the_biomoby_browser">I. THE BioMOBY BROWSER</a></strong>
+
+<dt><strong><a name="item_j_2e_biomoby_services">J. BIOMOBY SERVICES</a></strong>
+
+<dt><strong><a name="item_k_2e_filtering_search_results">K. FILTERING SEARCH RESULTS</a></strong>
+
+<dt><strong><a name="item_l_2e_invoking_gbrowse_urls">L. INVOKING GBROWSE URLs</a></strong>
+
+<dt><strong><a name="item_m_2e_further_information">M. FURTHER INFORMATION</a></strong>
+
+</dl>
+<p>
+</p>
+<hr />
+<h1><a name="a__creating_new_databases_from_scratch">A. CREATING NEW DATABASES FROM SCRATCH</a></h1>
+<p>This section describes how to create new annotation databases from
+scratch.</p>
+<p>
+</p>
+<h2><a name="a1__the_gff_file_format">A1. The GFF file format</a></h2>
+<p>GBrowse is based around the GFF file format, which stands for ``Gene
+Finding Format'' and was invented at the Sanger Centre. The GFF format
+is a flat tab-delimited file, each line of which corresponds to an
+annotation, or feature.  Each line has nine columns and looks like
+this:</p>
+<pre>
+ Chr1  curated  CDS 365647  365963  .  +  1  Transcript &quot;R119.7&quot;</pre>
+<p>The 9 columns are as follows:</p>
+<ol>
+<li><strong><a name="item_reference_sequence">reference sequence</a></strong>
+
+<p>This is the ID of the sequence that is used to establish the
+coordinate system of the annotation.  In the example above, the
+reference sequence is ``Chr1''.</p>
+</li>
+<li><strong><a name="item_source">source</a></strong>
+
+<p>The source of the annotation.  This field describes how the
+annotation was derived.  In the example above, the source is
+``curated'' to indicate that the feature is the result of human
+curation.  The names and versions of software programs are often
+used for the source field, as in ``tRNAScan-SE/1.2''.</p>
+</li>
+<li><strong><a name="item_method">method</a></strong>
+
+<p>The annotation method, also known as type. This field describes the 
+type of the annotation, such as ``CDS''.  Together the method and source 
+describe the annotation type.</p>
+</li>
+<li><strong><a name="item_start_position">start position</a></strong>
+
+<p>The start of the annotation relative to the reference sequence.</p>
+</li>
+<li><strong><a name="item_stop_position">stop position</a></strong>
+
+<p>The stop of the annotation relative to the reference sequence.
+Start is always less than or equal to stop.</p>
+</li>
+<li><strong><a name="item_score">score</a></strong>
+
+<p>For annotations that are associated with a numeric score (for
+example, a sequence similarity), this field describes the score.
+The score units are completely unspecified, but for sequence
+similarities, it is typically percent identity.  Annotations that
+do not have a score can use ``.''</p>
+</li>
+<li><strong><a name="item_strand">strand</a></strong>
+
+<p>For those annotations which are strand-specific, this field is the
+strand on which the annotation resides.  It is ``+'' for the forward
+strand, ``-'' for the reverse strand, or ``.'' for annotations that are
+not stranded.</p>
+</li>
+<li><strong><a name="item_phase">phase</a></strong>
+
+<p>For annotations that are linked to proteins, this field describes
+the phase of the annotation on the codons.  It is a number from 0 to
+2, or ``.'' for features that have no phase.</p>
+</li>
+<li><strong><a name="item_group">group</a></strong>
+
+<p>GFF provides a simple way of generating annotation hierarchies (``is
+composed of'' relationships) by providing a group field.  The group
+field contains the class and ID of an annotation which is the
+logical parent of the current one.  In the example given above, the
+group is the Transcript named ``R119.7''.</p>
+<p>The group field is also used to store information about the target
+of sequence similarity hits, and miscellaneous notes.  See the next
+section for a description of how to describe similarity targets.</p>
+</li>
+</ol>
+<p>The sequences used to establish the coordinate system for annotations
+can correspond to sequenced clones, clone fragments, contigs or
+super-contigs.</p>
+<p>In addition to a group ID, the GFF format allows annotations to have a
+group class.  This makes sure that all groups are unique even if they
+happen to share the same name.  For example, you can have a GenBank
+accession named AP001234 and a clone named AP001234 and distinguish
+between them by giving the first one a class of Accession and the
+second a class of Clone.</p>
+<p>You should use double-quotes around the group name or class if it
+contains white space.</p>
+<p>
+</p>
+<h2><a name="a2__creating_a_gff_table">A2. Creating a GFF table</a></h2>
+<p>The first 8 fields of the GFF format are easy to understand.  The
+group field is a challenge.  It is used in three distinct ways:</p>
+<ol>
+<li>
+<p>to group together a single sequence feature that spans a discontinuous range, such as a gapped alignment.</p>
+</li>
+<li>
+<p>to name a feature, allowing it to be retrieved by name.</p>
+</li>
+<li>
+<p>to add one or more notes to the annotation.</p>
+</li>
+</ol>
+<p>1. Using the Group field for simple features</p>
+<p>For a simple feature that spans a single continuous range, choose a
+name and class for the object and give it a line in the GFF file that
+refers to its start and stop positions.</p>
+<pre>
+ Chr3   giemsa heterochromatin  4500000 6000000 . . .   Band 3q12.1</pre>
+<p>2. Using the Group field to group features that belong together</p>
+<p>For a group of features that belong together, such as the exons in a
+transcript, choose a name and class for the object.  Give each segment
+a separate line in the GFF file but use the same name for each line.
+For example:</p>
+<pre>
+ IV     curated exon    5506900 5506996 . + .   Transcript B0273.1
+ IV     curated exon    5506026 5506382 . + .   Transcript B0273.1
+ IV     curated exon    5506558 5506660 . + .   Transcript B0273.1
+ IV     curated exon    5506738 5506852 . + .   Transcript B0273.1</pre>
+<p>These four lines refer to a biological object of class ``Transcript''
+and name B0273.1.  Each of its parts uses the method ``exon'', source
+``curated''.  Once loaded, the user will be able to search the genome
+for this object by asking the browser to retrieve
+``Transcript:B0273.1''.  The browser can also be configured to allow the
+Transcript: prefix to be omitted.</p>
+<p>You can extend the idiom for objects that have heterogeneous parts,
+such as a transcript that has 5' and 3' UTRs</p>
+<pre>
+ IV     curated  mRNA   5506800 5508917 . + .   Transcript B0273.1; Note &quot;Zn-Finger&quot;
+ IV     curated  5'UTR  5506800 5508999 . + .   Transcript B0273.1
+ IV     curated  exon   5506900 5506996 . + .   Transcript B0273.1
+ IV     curated  exon   5506026 5506382 . + .   Transcript B0273.1
+ IV     curated  exon   5506558 5506660 . + .   Transcript B0273.1
+ IV     curated  exon   5506738 5506852 . + .   Transcript B0273.1
+ IV     curated  3'UTR  5506852 5508917 . + .   Transcript B0273.1</pre>
+<p>In this example, there is a single feature with method ``mRNA'' that
+spans the entire range.  It is grouped with subparts of type 5'UTR,
+3'UTR and exon.  They are all grouped together into a Transcript named
+B0273.1. Furthermore the mRNA feature has a note attached to it.</p>
+<p>*NOTE* The subparts of a feature are in absolute (chromosomal or
+contig) coordinates.  It is not currently possible to define a feature
+in absolute coordinates and then to load its subparts using
+coordinates that are relative to the start of the feature.</p>
+<p>Some annotations do not need to be individually named.  For example,
+it is probably not useful to assign a unique name to each ALU repeat
+in a vertebrate genome.  For these, just leave the Group field empty.</p>
+<p>3. Using the Group field to add a note</p>
+<p>The group field can be used to add one or more notes to an annotation.
+To do this, place a semicolon after the group name and add a Note
+field:</p>
+<pre>
+ Chr3 giemsa heterochromatin 4500000 6000000 . . . Band 3q12.1 ; Note &quot;Marfan's syndrome&quot;</pre>
+<p>You can add multiple Notes.  Just separate them by semicolons:</p>
+<pre>
+  Band 3q12.1 ; Note &quot;Marfan's syndrome&quot; ; Note &quot;dystrophic dysplasia&quot;</pre>
+<p>The Note should come AFTER the group type and name.</p>
+<p>3. Using the Group field to add an alternative name</p>
+<p>If you want the feature to be quickly searchable by an alternative
+name, you can add one or more Alias tags. A feature can have multiple
+aliases, and multiple features can share the same alias:</p>
+<pre>
+ Chr3 giemsa heterochromatin 4500000 6000000 . . . Band 3q12.1 ; Alias MFX</pre>
+<p>Searches for aliases will be both faster and more reliable than
+searches for keywords in notes, since the latter relies on whole-text
+search methods that vary somewhat from DBMS to DBMS.</p>
+<p>
+</p>
+<h2><a name="a3__identifying_the_reference_sequence">A3. Identifying the reference sequence</a></h2>
+<p>Each reference sequence in the GFF table must itself have an entry.
+This is necessary so that the length of the reference sequence is
+known.</p>
+<p>For example, if ``Chr1'' is used as a reference sequence, then the GFF
+file should have an entry for it similar to this one:</p>
+<pre>
+ Chr1 assembly chromosome 1 14972282 . + . Sequence Chr1</pre>
+<p>This indicates that the reference sequence named ``Chr1'' has length
+14972282 bp, method ``chromosome'' and source ``assembly''.  In addition,
+as indicated by the group field, Chr1 has class ``Sequence'' and name
+``Chr1''.</p>
+<p>It is suggested that you use ``Sequence'' as the class name for all
+reference sequences, since this is the default class used by the
+Bio::DB::GFF module when no more specific class is requested.  If you
+use a different class name, then be sure to indicate that fact with
+the ``reference class'' option (see below).</p>
+<p>
+</p>
+<h2><a name="a4__sequence_alignments">A4. Sequence alignments</a></h2>
+<p>There are several cases in which an annotation indicates the
+relationship between two sequences.  One common one is a similarity
+hit, where the annotation indicates an alignment.  A second common
+case is a map assembly, in which the annotation indicates that a
+portion of a larger sequence is built up from one or more smaller
+ones.</p>
+<p>Both cases are indicated by using the Target tag in the group field.
+For example, a typical similarity hit will look like this:</p>
+<pre>
+ Chr1 BLASTX similarity 76953 77108 132 + 0 Target Protein:SW:ABL_DROME 493 544</pre>
+<p>Here, the group field contains the Target tag, followed by an
+identifier for the biological object.  The GFF format uses the
+notation Class:Name for the biological object, and even though this is
+stylistically inconsistent, that's the way it's done.  The object
+identifier is followed by two integers indicating the start and stop
+of the alignment on the target sequence.</p>
+<p>Unlike the main start and stop columns, it is possible for the target
+start to be greater than the target end.  The previous example
+indicates that the the section of Chr1 from 76,953 to 77,108 aligns to
+the protein SW:ABL_DROME starting at position 493 and extending to
+position 544.</p>
+<p>A similar notation is used for sequence assembly information as shown
+in this example:</p>
+<pre>
+ Chr1        assembly Link   10922906 11177731 . . . Target Sequence:LINK_H06O01 1 254826
+ LINK_H06O01 assembly Cosmid 32386    64122    . . . Target Sequence:F49B2       6 31742</pre>
+<p>This indicates that the region between bases 10922906 and 11177731 of
+Chr1 are composed of LINK_H06O01 from bp 1 to bp 254826.  The region
+of LINK_H0601 between 32386 and 64122 is, in turn, composed of the
+bases 5 to 31742 of cosmid F49B2.</p>
+<p>
+</p>
+<h2><a name="a6__loading_the_gff_file_into_the_database">A6. Loading the GFF file into the database</a></h2>
+<p>Use the BioPerl script utilities bulk_load_gff.pl, load_gff.pl or (if
+you are brave) fast_load_gff.pl to load the GFF file into the
+database.  For example, if your database is a MySQL database on the
+local host named ``dicty'', you can load it into an empty database using
+bulk_load_gff.pl like this:</p>
+<pre>
+  bulk_load_gff.pl -c -d dicty my_data.gff</pre>
+<p>To update existing databases, use either load_gff.pl or
+fast_load_gff.pl.  The latter is somewhat experimental, so use with
+care.</p>
+<p>
+</p>
+<h2><a name="a5__aggregators">A5. Aggregators</a></h2>
+<p>The Bio::DB::GFF database (and only Bio::DB::GFF!) has a feature known
+as ``aggregators''.  These are small software packages that recognize
+certain common feature types and convert them into complex biological
+objects.  These aggregators make it possible to develop intelligent
+graphical representations of annotations, such as a gene that draws
+confirmed exons differently from predicted ones.</p>
+<p>An aggregator typically creates a new composite feature with a
+different method than any of its components.  For example, the
+standard ``alignment'' aggregator takes multiple alignments of method
+``similarity'', groups them by their name, and returns a single feature
+of method ``alignment''.</p>
+<p>The various aggregators are described in detail in the Bio::DB::GFF
+manual page.  It is easy to write new aggregators, and also possible
+to define aggregators on the fly in the gbrowse configuration file.
+It is suggested that you use the sample GFF files from the yeast,
+drosophila and C. elegans projects to see what methods to use to
+achieve the desired results.</p>
+<p>In addition to the standard aggregators that are distributed with
+BioPerl, GBrowse distributes several experimental and/or
+special-purpose aggregators:</p>
+<dl>
+<dt><strong><a name="item_match_gap">match_gap</a></strong>
+
+<dd>
+<p>This aggregator is used for GFF3 style gapped alignments, in which
+there is a single feature of method 'match' with a 'Gap' attribute.
+This aggregator was contributed by Dmitri Bichko.</p>
+</dd>
+</li>
+<dt><strong><a name="item_orf">orf</a></strong>
+
+<dd>
+<p>This aggregator aggregates raw ``ORF'' features into ``coding''
+features. It is basically identical to the ``coding'' aggregator, except
+that it looks for features of type ``ORF'' rather than ``cds''.</p>
+</dd>
+</li>
+<dt><strong><a name="item_reftranscript">reftranscript</a></strong>
+
+<dd>
+<p>This aggregator was written to make the compound feature,
+``reftranscript'' for use with Gbrowse editing software developed
+outside of the GMOD development group.  It can be used to aggregate
+``reftranscripts'' from ``refexons'', loaded as second copy features.
+These features, in contrast to ``transcripts'', are usually implemented
+as features which cannot be edited and serve as starting point
+references for annotations added using Gbrowse for feature
+visualization.</p>
+</dd>
+<dd>
+<p>Adding features to the compound feature, ``reftranscript'', can be done
+by adding to the ``part_names'' call (i.e. ``refCDS'').</p>
+</dd>
+</li>
+<dt><strong><a name="item_waba_alignment">waba_alignment</a></strong>
+
+<dd>
+<p>This aggregator handles the type of alignments produced by Jim Kent's
+WABA program, and was written to be compatible with the C elegans GFF
+files.  It aggregates the following feature types into an aggregate
+type of ``waba_alignment'':</p>
+</dd>
+<dd>
+<pre>
+   nucleotide_match:waba_weak
+   nucleotide_match:waba_strong
+   nucleotide_match:waba_coding</pre>
+</dd>
+</li>
+<dt><strong><a name="item_wormbase_gene">wormbase_gene</a></strong>
+
+<dd>
+<p>This aggregator was written to be compatible with the C elegans GFF2
+files distributed by the Sanger Institute.  It aggregates raw ``CDS'',
+``5'UTR'', ``3'UTR'', ``polyA'' and ``TSS'' features into ``transcript''
+features.  For compatibility with the idiosyncrasies of the Sanger GFF
+format, it expects that the full range of the transcript is contained
+in a main feature of type ``Sequence''.</p>
+</dd>
+<dd>
+<p>It is strongly recommended that for mirroring C. elegans annotations,
+you use the ``processed_transcript'' aggregator in conjunction with the
+GFF3 files found at:</p>
+</dd>
+<dd>
+<pre>
+ <a href="ftp://ftp.wormbase.org/pub/wormbase/genomes/elegans/genome_feature_tables/GFF3">ftp://ftp.wormbase.org/pub/wormbase/genomes/elegans/genome_feature_tables/GFF3</a></pre>
+</dd>
+</li>
+</dl>
+<p>IT IS NOT NECESSARY TO USE AGGREGATORS WITH THE CHADO, BIOSQL OR
+BIO::DB::SEQFEATURE::STORE (GFF3) DATABASES.</p>
+<p>
+</p>
+<hr />
+<h1><a name="b__adding_a_new_database_to_the_browser">B. ADDING A NEW DATABASE TO THE BROWSER</a></h1>
+<p>Each data source has a corresponding configuration file in the
+directory gbrowse.conf.  Once you've created and loaded a new
+database, you should make a copy of one of the existing configuration
+files and modify it to meet your needs.  The name of the new
+configuration file must follow the form:</p>
+<pre>
+  sourcename.conf</pre>
+<p>where ``sourcename'' is a short word that describes the data source.
+You can use this name to select the data source when linking to the
+browser.  Just construct a URL that uses ``sourcename'' as a virtual
+directory under cgi-bin/gbrowse:</p>
+<pre>
+  <a href="http://your.site.org/cgi-bin/gbrowse/sourcename/">http://your.site.org/cgi-bin/gbrowse/sourcename/</a></pre>
+<p>(Note: If you don't add the slash at the end, gbrowse will
+automatically do it for you, since the terminal slash is needed to
+work around an apparent bug in MSIE's cookie handling.)</p>
+<p>It is suggested that you use the same name as the database, although
+this isn't a requirement.  (If no ``source='' argument is given, gbrowse
+picks the first configuration file that occurs alphabetically; you can
+control this by placing numbers in front of the configuration file, as
+in ``01.yeast.conf''.)</p>
+<p>The configuration file is divided into a number of sections, each one
+introduced by a [SECTION TITLE].  The [GENERAL] section contains
+settings that are applicable to the entire application.  Other
+sections define tracks to display.1</p>
+<p>I suggest that you begin with one of the example configuration files
+provided with the distribution and modify it to suit your needs.</p>
+<p>
+</p>
+<h2><a name="b1__the__general__section">B1. The [GENERAL] Section</a></h2>
+<p>The [GENERAL] section consists of a series of name=value options.  For
+example, the beginning of the yeast.conf sample configuration file
+looks like this:</p>
+<pre>
+ [GENERAL]
+ description = S. cerevisiae (via SGD Nov 2001)
+ db_adaptor  = Bio::DB::GFF
+ db_args     = -adaptor dbi::mysql
+               -dsn     dbi:mysql:database=yeast;host=localhost
+ aggregators = transcript alignment
+ user        =
+ passwd      =</pre>
+<p>Each option is a single word or phrase, usually in lower case.  This
+is followed by an equals sign and the value of the option.  You can
+add whitespace around the equals sign in order to increase
+readability.  If a value is very long, you can continue it on
+additional lines provided that you put a tab or other whitespace on
+the continuation lines.  For example:</p>
+<pre>
+ description = S. cerevisiae annotations via SGD Nov 2001, and
+             converted using the process_sgd.pl script</pre>
+<p>Any lines that begin with a pound sign (#) are considered comments and
+ignored.</p>
+<p>During this discussion, you might want to follow along with one of the
+example configuration files.</p>
+<p>The following [GENERAL] options are recognized:</p>
+<ul>
+<li><strong><a name="item_description">description</a></strong>
+
+<p>The description of the database.  This will appear in the popup
+menu that allows users to select the data source and in the 
+header of the page.  Don't make it as long as the previous example!
+(You will want to change this.)</p>
+</li>
+<li><strong><a name="item_db_adaptor">db_adaptor</a></strong>
+
+<p>Tells GBrowse what database adaptor to use.  By using different adaptors
+you can attach gbrowse to a variety of different databases.  Currently
+the only stable adaptor you can use is Bio::DB::GFF, which is a standard
+set of adaptors contained in Bioperl.</p>
+</li>
+<li><strong><a name="item_db_args">db_args</a></strong>
+
+<p>Arguments to pass to the adaptor for it to use when making a database
+connection.  The exact format will depend on the adaptor you're using.
+For Bio::DB::GFF running on top of a MySQL database use
+a db_args like the following:</p>
+<pre>
+    db_args = -adaptor dbi::mysql
+              -dsn     dbi:mysql:database=&lt;db_name&gt;;host=&lt;db_host&gt;</pre>
+<p>replacing &lt;db_name&gt; and &lt;db_host&gt; with the database and database
+host of your choice.  For MySQL databases running on the localhost,
+you can shorten this to just ``db_name''.</p>
+<p>If the database requires you to log in with a user name and
+password, use the following db_adaptor:</p>
+<pre>
+    db_args = -adaptor dbi::mysql
+              -dsn     dbi:mysql:database=&lt;db_name&gt;;host=&lt;db_host&gt;
+              -user    &lt;username&gt;
+              -pass    &lt;password&gt;</pre>
+<p>replacing &lt;username&gt; and &lt;password&gt; with the appropriate values.
+In the example configuration files, we use a username of ``nobody''
+and an empty password.  This is appropriate if the database is
+configured to allow ``nobody'' to log in from the local machine
+without using a password.</p>
+<p>To use the Oracle version of Bio::DB::GFF, use these arguments:</p>
+<pre>
+    db_args = -adaptor dbi::oracle
+              -dsn dbi:oracle:database=db_service</pre>
+<p>Where db_description should be replaced with the name of the desired
+database service definition.  See the documentation for the Perl
+dbd::Oracle database driver for more information about the -dsn
+format.</p>
+<p>To use the in-memory version of Bio::DB::GFF, use these arguments:</p>
+<pre>
+  db_args = -adaptor memory
+            -dir   /path/to/directory</pre>
+<p>The indicated directory should contain one or more GFF and FASTA files,
+distinguished by the filename extensions .gff and .fa respectively.</p>
+</li>
+<li><strong><a name="item_aggregators">aggregators</a></strong>
+
+<p>This option is only valid when used with Bio::DB::GFF adaptors, and
+lists one or more aggregators to use for complex features.  It is
+possible to declare your own aggregator here using a special syntax
+described in ``B7. Declaring New Aggregators.''</p>
+<p>To disable the default aggregators, leave this setting blank, as in:</p>
+<pre>
+     aggregators=</pre>
+<p>To activate the default aggregators of ``transcript,'' ``clone,''
+and ``alignment,'' comment this setting out entirely:</p>
+<pre>
+    # aggregators =</pre>
+<p>Do not use aggregators with Bio::DB::SeqFeature::Store, BioSQL, or
+Chado.</p>
+</li>
+<li><strong><a name="item_user">user</a></strong>
+
+<p>The user name for the gbrowse script to log in under if you are not
+using ``nobody''.  This is exactly the same as providing the -user
+option to db_args, and is deprecated.</p>
+</li>
+<li><strong><a name="item_pass">pass</a></strong>
+
+<p>The password to use if the database is password protected.  This is
+the same as providing the -pass option to db_args, and is deprecated.</p>
+</li>
+<li><strong><a name="item_stylesheet">stylesheet</a></strong>
+
+<p>Location of the stylesheet used to create the GBrowse look and feel.
+(You probably will not need to change this.)</p>
+</li>
+<li><strong><a name="item_plugins">plugins</a></strong>
+
+<p>This is a list of plugins that you want to be available from gbrowse.
+Plugins are a way for third-party developers to add functionality to gbrowse
+without changing its core source code.  Plugins are stored on the gbrowse
+configuration directory under a subdirectory named ``plugins.''</p>
+<p>A good standard list of plugins is:</p>
+<pre>
+    plugins = SequenceDumper FastaDumper RestrictionAnnotator</pre>
+<p>See the contents of conf/plugins and contrib/plugins for more plugins
+that you can install.</p>
+</li>
+<li><strong><a name="item_quicklink_plugins">quicklink plugins</a></strong>
+
+<p>This is a list of plugins that you want to appear as links in the link
+bar (which includes the [Bookmark this] and [Link to Image] links).
+Selecting one of these links is equivalent to choosing the plugin from
+the popup menu and pressing the ``Go'' button.  The popup will continue
+to appear in the popup menu.</p>
+</li>
+<li><strong><a name="item_plugin_path">plugin_path</a></strong>
+
+<p>By default gbrowse searches for plugins in its standard location of conf/plugins.
+You can store plugins in a non-standard location by providing this option
+with a space-delimited list of additional directories to search in.</p>
+</li>
+<li><strong><a name="item_buttons">buttons</a></strong>
+
+<p>URL in which the various graphical buttons used by GBrowse are located.
+(You will probably not need to change this.)</p>
+</li>
+<li><strong><a name="item_js">js</a></strong>
+
+<p>URL in which the gbrowse javascript helper function files are located.
+(You will probably not need to change this).</p>
+</li>
+<li><strong><a name="item_tmpimages">tmpimages</a></strong>
+
+<p>URL of a writable directory in which GBrowse can write its temporary
+images. The format is:</p>
+<pre>
+  tmpimages = &lt;tmpimages_url&gt; &lt;tmpimages_path&gt;</pre>
+<p>Where &lt;tmpimages_url&gt; is the directory as it appears as a URL and
+&lt;tmpimages_path&gt; is the physical path to the directory as it appears
+to the filesystem. Usually the physical path is just the URL with the
+DocumentRoot configuration variable prepended to it, in which case
+only the URL is needed. However, if the URL is defined using an Alias
+directive, then the path argument is mandatory.</p>
+<p>The tmpimages option is mandatory.</p>
+<p>NOTE: The path argument is ignored if gbrowse is running under
+modperl, because modperl allows the URL to be translated into a
+physical directory programatically.</p>
+</li>
+<li><strong><a name="item_cachedir">cachedir</a></strong>
+
+<p>This is a writable directory that can be used for caching
+gbrowse_img-generated images. Defining it will speed up some
+operations. If not defined gbrowse_img will still work, but will
+regenerate images from scratch even if they've been used before. It is
+OK to use the same path as the tmpimages directory.</p>
+</li>
+<li><strong><a name="item_image_widths">image widths</a></strong>
+
+<p>The image widths option controls the set of image sizes to offer
+the user.  Its value is a space-delimited list of pixel widths.
+The default is probably fine.  Note that the height of the image
+depends on the number of tracks and features, and cannot be
+controlled.</p>
+</li>
+<li><strong><a name="item_default_width">default width</a></strong>
+
+<p>The default width is the image width to start off with when the
+user invokes the browser for the first time.  The default is 800.</p>
+</li>
+<li><strong><a name="item_default_features">default features</a></strong>
+
+<p>The default features option is a space-delimited list of tracks
+to turn on by default.  You will probably need to change this.
+For example:</p>
+<pre>
+     default features = Genes ORFs tRNAs Centromeres:overview</pre>
+<p>The syntax for annotation plugins is slightly different. To activate
+an annotation plugin track by default, preface the plugin's name with
+``plugin:''</p>
+<pre>
+     default features = Genes ORFs Centromeres:overview 
+                        plugin:RestrictionAnnotator</pre>
+</li>
+<li><strong><a name="item_reference_class">reference class</a></strong>
+
+<p>gbrowse needs to know the class of the reference sequences that other
+features are placed on.  The default is Sequence.  If you want to use
+another class, such as Contig, please indicate the class here (if you
+don't, certain features such as the keyword search will fail):</p>
+<pre>
+      reference class = contig</pre>
+</li>
+<li><strong><a name="item_initial_landmark">initial landmark</a></strong>
+
+<p>This option controls what feature to show when the user first visits a
+gbrowse database and has not yet performed a search. If not present,
+gbrowse displays a page with the search area and options, but no
+overview or panel.</p>
+<p>Example:</p>
+<pre>
+       initial landmark = Chr1</pre>
+</li>
+<li><strong><a name="item_truecolor">truecolor</a></strong>
+
+<p>If this option is present and true, then GBrowse will create 24-bit
+(truecolor) images. This is mainly useful when using the ``image''
+glyph, which allows you to paste arbitrary images onto the genome
+map. Do not use this option unless you need it, because it slows down
+drawing and makes the images much larger.</p>
+</li>
+<li><strong><a name="item_units_2c_unit_divider">units, unit_divider</a></strong>
+
+<p>The units option allows GBrowse to display units on an alternate scale
+(for example, (centi)Morgans), and the unit_divider provides the converstion
+factor between base pair units (which is what must be specified in the
+GFF file) and the specified units.  For example if it is known that 5010
+base pairs is equal to one Morgan, 5010 would be specified for the unit_divider.
+Note that if unit_divider is specified, max segment, default segment and
+and zoom levels will all be interpreted in terms of the specified units.</p>
+</li>
+<li><strong><a name="item_max_segment_2c_min_segment">max segment, min segment</a></strong>
+
+<p>These options control the size of segments that will be shown in the
+detailed view.</p>
+<p>The max segment option sets an upper bound on the maximum size segment
+that will be displayed on the detailed view.  Its value is in the
+selected units.  Above this limit, the user will be prompted to select
+a smaller region on the birds-eye view.  The default is 1,000,000 base
+pairs.</p>
+<p>If the user tries to view a segment smaller than the min segment
+option, then the segment will be resized to be this size. The default
+is 20 bp.</p>
+</li>
+<li><strong><a name="item_default_segment">default segment</a></strong>
+
+<p>The default segment option sets the width of the segment (bp) that
+will be displayed when the user clicks on the birds-eye view
+without previously having set a desired magnification.  You may
+want to adjust this value.</p>
+</li>
+<li><strong><a name="item_zoom_levels">zoom levels</a></strong>
+
+<p>GBrowse allows unlimited zoom levels.  This option selects the
+width of each level, in bp.  For example:</p>
+<pre>
+      zoom levels = 1000 2000 5000 10000 20000 40000 100000 200000</pre>
+</li>
+<li><strong><a name="item_region_segment">region segment</a></strong>
+
+<p>If this configuration option is set, a new ``region panel'' will appear
+that is intermediate in size between the overview and the detail
+panel. The value of this option becomes the size of the region panel
+in base pairs.</p>
+</li>
+<li><strong><a name="item_region_sizes">region sizes</a></strong>
+
+<p>This contains a space-delimited list of region panel sizes to present
+to the user in a popup menu:</p>
+<pre>
+     region sizes   = 5000 10000 20000</pre>
+</li>
+<li><strong><a name="item_show_sources">show sources</a></strong>
+
+<p>A 0 (false) or 1 (true) value which controls whether or not to show
+the popup menu displaying the defined data sources.  Set this to 0 if
+you wish for the names of the data sources to be hidden.  If not
+present, this option defaults to 1 (true).</p>
+<p>Note that all data sources will need to have this option defined in
+order for it to take effect across all databases.</p>
+</li>
+<li><strong><a name="item_default_varying">default varying</a></strong>
+
+<p>The track selection table will be sorted alphabetically, by default;
+setting this variable to true will cause the tracks to appear in the
+same order as they appear in the configuration file.</p>
+</li>
+<li><strong><a name="item_keyword_search_max">keyword search max</a></strong>
+
+<p>By default, gbrowse will limit the number of keyword search results
+to 1,000.  The order in which the 1,000 hits are returned depends on
+how the database was loaded, and so you may see odd patterns, such as
+only hits on a particular chromosome being displayed.  To raise the 
+limit on keyword search results, set ``keyword search max'' to the
+desired maximum value.</p>
+</li>
+<li><strong><a name="item_overview_units">overview units</a></strong>
+
+<p>This option controls the units that will be used on the scale for
+the birds-eye view display.  Possible values are ``bp'' (base pairs),
+``k'' (kilobases), ``M'' (megabases), and ``G'' (gigabases).  If this
+option is omitted, the browser will guess the most appropriate
+unit.</p>
+</li>
+<li><strong><a name="item_overview_bgcolor">overview bgcolor</a></strong>
+
+<p>This is the color for the background of the birds-eye view.</p>
+</li>
+<li><strong><a name="item_cache_overview">cache_overview</a></strong>
+
+<p>This option will cause the overview images to be cached on disk for a
+period of time.  This may improve performance if you are placing many
+complex tracks into the overview.  The value is the number of hours to
+keep the cached copy of the overview image before refreshing it
+(default = don't cache).</p>
+<p>You can freshen the cache and force cached copies to be ignored by
+touching the configuration file or by calling gbrowse with the CGI
+option nocache=1.</p>
+</li>
+<li><strong><a name="item_detailed_bgcolor">detailed bgcolor</a></strong>
+
+<p>This is the color for the background of the detailed view.</p>
+</li>
+<li><strong><a name="item_request_timeout">request timeout</a></strong>
+
+<p>This is the timeout value for requests.  If a user requests a large
+region and the request takes more than the indicated number of
+seconds, then the request will timeout and the user will be advised to
+choose a smaller region.  The default is 60 seconds (one minute).  You
+can make the timeout longer or shorter than this.</p>
+</li>
+<li><strong><a name="item_head">head</a></strong>
+
+<p>This is content to insert into the HTML &lt;head&gt;&lt;/head&gt; section.  It is
+the appropriate place to stick JavaScript code, etc.  It can be a code
+reference if you wish.</p>
+</li>
+<li><strong><a name="item_header">header</a></strong>
+
+<p>This is a header to print at the top of the browser page.  It is
+any valid HTML, and can span multiple lines provided that the
+continuation lines begin with white space.</p>
+<p>It is also possible to place an anonymous Perl subroutine here.
+The code will be invoked during preparation of the page and must
+return a string value to use as the header.  See COMPUTED OPTIONS
+for details.</p>
+<p>Example:</p>
+<pre>
+    header = &lt;h1&gt;Welcome to the Volvox Sequence Page&lt;/h1&gt;</pre>
+</li>
+<li><strong><a name="item_footer">footer</a></strong>
+
+<p>This is a footer to print at the top of the browser page.  It is
+any valid HTML, and can span multiple lines provided that the
+continuation lines begin with white space.</p>
+<p>It is also possible to place an anonymous Perl subroutine here.
+The code will be invoked during preparation of the page and must
+return a string value to use as the header.  See COMPUTED OPTIONS
+for details.</p>
+<p>Example:</p>
+<pre>
+    footer = &lt;hr&gt;
+        &lt;table width=&quot;100%&quot;&gt;
+        &lt;TR&gt;
+        &lt;TD align=&quot;LEFT&quot; class=&quot;databody&quot;&gt;
+        For the source code for this browser, see the &lt;a href=&quot;<a href="http://www.gmod.org">http://www.gmod.org</a>&quot;&gt;
+        Generic Model Organism Database Project.&lt;/a&gt;  For other questions, send
+        mail to &lt;a href=&quot;<a href="mailto:lstein@cshl.org">mailto:lstein@cshl.org</a>&quot;&gt;lstein@cshl.org&lt;/a&gt;.
+        &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;/table&gt;</pre>
+</li>
+<li><strong><a name="item_examples">examples</a></strong>
+
+<p>You can provide GBrowse with some canned examples of ``interesting
+regions'' for the user to click on.  The examples option, if
+present, provides a space-delimited list of interesting regions.
+For example:</p>
+<pre>
+       examples = II  NPY1 NAB2 Orf:YGL123W</pre>
+</li>
+<li><strong><a name="item_automatic_classes">automatic classes</a></strong>
+
+<p>When the user types in a search string that is not qualified by a
+class (as in EST:yk1234.5), GBrowse will automatically search for
+a matching feature of class ``Sequence''.  You can have it search
+for the name in other classes as well by defining the ``automatic
+classes'' option.</p>
+<p>Example:</p>
+<pre>
+        automatic classes = Symbol Gene Clone</pre>
+<p>When the user types in ``hb3'', the browser will search first for a
+Sequence feature of class hb3, followed in turn by matching
+features in Symbol, Gene and Clone.  The search stops when the
+first match is found.  Otherwise, the browser will proceed to a
+full text search of all the comment fields.</p>
+</li>
+<li><strong><a name="item_attributes">search attributes (Bio::DB::SeqFeature::Store adaptor only)</a></strong>
+
+<p>When the browser has searched the name and alias of features without
+success, it will do a whole database keyword search by calling the
+database's <code>search_notes()</code> method. By default this will search the text
+of all attributes, including such things as protein sequence. The
+Bio::DB::SeqFeature::Store database is a bit smarter about searching,
+and will only, by default, search attributes named ``Note''. You can
+expand the search by giving a list of attribute names to the ``search
+attributes'' option.</p>
+</li>
+<li><strong><a name="item_remote_sources">remote sources</a></strong>
+
+<p>This option allows you to add remote annotation sources to the menu of such
+sources at the bottom of the main window.  The format is:</p>
+<pre>
+      remote sources = &quot;Menu Label 1&quot; <a href="http://url1.host.com/etc/etc">http://url1.host.com/etc/etc</a>
+                       &quot;Menu Label 2&quot; <a href="http://url2.host.com/etc/etc">http://url2.host.com/etc/etc</a></pre>
+</li>
+<li><strong><a name="item_instructions_2c_search_instructions_2c_navigation_">instructions, search_instructions, navigation_instructions</a></strong>
+
+<p>You may override the default instructions (as defined in the language-specific
+configuration files in conf/lang) by setting these options.  For example:</p>
+<pre>
+         instructions = &quot;Type in the name of a contig or clone.&quot;</pre>
+</li>
+<li><strong><a name="item_no_search">no search</a></strong>
+
+<p>If you don't want the ``Landmark or Region'' textbox to appear, set this
+to true. The user will still be able to search the database by
+appending q=&lt;search term&gt; to the URL.</p>
+<pre>
+          no search = 1</pre>
+</li>
+<li><strong><a name="item_no_autosearch">no autosearch</a></strong>
+
+<p>If this option is set to a true value, then the user's previous search
+will not be automatically re-executed the next time he visits
+gbrowse. Instead, the previous search will be pasted into the
+``Landmark or Region'' box and the user will have to press ``Search'' to
+reexecute it.</p>
+</li>
+<li><strong><a name="item_category_tables">category tables</a></strong>
+
+<p>This option allows you to group the on/off checkboxes for set of
+tracks into a rectangular M x N table. It can be used to highlight the
+experimental design of a microarray or ChIP-on-Chip experiment.</p>
+<p>The format is:</p>
+<pre>
+ category tables = 'category name' 'columnlabel1 columnlabel2 columnlabel3' 'rowlabel1 rowlabel2 rowlabel3'</pre>
+<p>Where ``category name'' is the name of the track category (described in
+more detail below), ``columnlabelN'' is the label of the Nth column, and
+``rowlabelN'' is the label of the Nth row. For example:</p>
+<pre>
+ category tables = 'ArrayExpts' 'strain-A strain-B strain-C' 'temperature anaerobic aerobic'</pre>
+<p>This will set up all the tracks labeled with category ``ArrayExpts'' so
+that they are displayed in a 2x3 table like this:</p>
+<pre>
+                 temperature     anaerobic      aerobic
+   strain-A      track 1          track 4       track 7
+   strain-B      track 2          track 5       track 8
+   strain-C      track 3          track 6       track 9</pre>
+<p>``track N'' will be replaced with the name you selected for the track.</p>
+<p>Additional category tables can be specified using continuation lines:</p>
+<pre>
+ category tables = 'ArrayExpts' 'strain-A strain-B strain-C' 'temperature anaerobic aerobic'
+                   'CHiP-Chip'  'TFX1 ONE-CUT PHA4' '16-cell-stage 320-cell-stage adult'</pre>
+<p>See the tutorial for more details.</p>
+</li>
+<li><strong><a name="item_instructions_section__3ditem__2a_search_section__3">instructions section
+=item * search section
+=item * overview section
+=item * region section
+=item * details section
+=item * tracks section
+=item * display_settings section
+=item * upload_tracks section</a></strong>
+
+<p>These options control which sections are displayed and whether they
+are initially open or collapsed. Their values are one of:</p>
+<pre>
+ open     Show the section initially open
+ closed   Show the section initially collapsed
+ off      Do not show the section at all</pre>
+<p>For example ``instructions section = closed'' will initially show the
+instructions section in collapsed form when the user visits gbrowse
+for the first time. ``upload_tracks section = off'' will disable the
+uploads section entirely.</p>
+<p>Note that turning off the details section will effectively disable
+gbrowse, but you might want to do this if you want to show the
+overview section only. Turning off the search section will also
+disable the navigation buttons. If you want to disable searching
+selectively, you should use the ``no search'' option instead.</p>
+</li>
+<li><strong><a name="item_html1_2c_html2_2c_html3_2c_html4_2c_html5_2c_html6">html1, html2, html3, html4, html5, html6</a></strong>
+
+<p>These options allow you to insert HTML into the GBrowse page at
+strategic places.  Eventually this will be replaced with an HTML
+template system, but for now, this is the best we have.</p>
+<pre>
+ &lt;table&gt;
+ &lt;tr&gt;&lt;th&gt;Option&lt;/th&gt;&lt;th&gt;Where it goes&lt;/th&gt;&lt;/tr&gt;
+ &lt;tr&gt;&lt;td&gt;header&lt;/td&gt;&lt;td&gt;between the top and the instructions&lt;/td&gt;&lt;/tr&gt;
+ &lt;tr&gt;&lt;td&gt;html1 &lt;/td&gt;&lt;td&gt;between the instructions and the navigation bar&lt;/td&gt;&lt;/tr&gt;
+ &lt;tr&gt;&lt;td&gt;html2 &lt;/td&gt;&lt;td&gt;between the navigation bar and the overview&lt;/td&gt;&lt;/tr&gt;
+ &lt;tr&gt;&lt;td&gt;html3 &lt;/td&gt;&lt;td&gt;between the overview and the detail view&lt;/td&gt;&lt;/tr&gt;
+ &lt;tr&gt;&lt;td&gt;html4 &lt;/td&gt;&lt;td&gt;between the detail view and the data source panel&lt;/td&gt;&lt;/tr&gt;
+ &lt;tr&gt;&lt;td&gt;html5 &lt;/td&gt;&lt;td&gt;between the data source panel and the track list&lt;/td&gt;&lt;/tr&gt;
+ &lt;tr&gt;&lt;td&gt;html6 &lt;/td&gt;&lt;td&gt;between the track list and the annotation upload&lt;/td&gt;&lt;/tr&gt;
+ &lt;tr&gt;&lt;td&gt;footer&lt;/td&gt;&lt;td&gt;between the annotation upload and the bottom&lt;/td&gt;&lt;/tr&gt;
+ &lt;/table&gt;</pre>
+<p>These can be code references.  One useful thing to do is to use the
+language translator to insert language-specific HTML.  Here's an
+example provided by Marc Logghe:</p>
+<pre>
+    html2 = sub {
+        my $go = $main::CONFIG-&gt;tr('Go');
+        return
+        qq(
+        &lt;table width=&quot;800&quot; border=&quot;0&quot;&gt;
+        &lt;tr class=&quot;searchbody&quot;&gt;
+        &lt;td align=&quot;left&quot; colspan=&quot;3&quot; /&gt;
+        &lt;b&gt;Dump:&lt;/b&gt;&lt;input type=&quot;button&quot; value=&quot;Assembly&quot; onclick=&quot;window.open('gbrowse?plugin=AssemblyDumper;plugin_action=$go');&quot;&gt;
+        &lt;input type=&quot;button&quot; value=&quot;Reads&quot; onclick=&quot;window.open('gbrowse?plugin=ReadDumper;plugin_action=$go');&quot;&gt;
+        &lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;/table&gt;
+        );
+       }</pre>
+<p>If you use a coderef for the html options, the subroutine is passed
+two arguments.  The first argument is a Bio::Das::SegmentI object (see
+the manual page for Bio::DB::GFF::RelSegment for details).  The second
+argument is a hashref containing the user's settings for the current page.</p>
+</li>
+<li><strong><a name="item_keystyle_2c_empty_tracks">keystyle, empty_tracks</a></strong>
+
+<p>These two general options control the appearance of the keys
+printed on the detailed view.  keystyle takes one of two values
+``between'' or ``beneath''.</p>
+<pre>
+       keystyle = between
+       Print the track labels between the tracks themselves.</pre>
+<pre>
+       keystyle = beneath
+       Print the track labels at the bottom of the detailed view.</pre>
+<p>The ``empty_tracks'' option controls what to do when a track has
+no features in it.  Possible values are:</p>
+<pre>
+       empty_tracks = key
+       Print just the key (the track label).</pre>
+<pre>
+       empty_tracks = suppress
+       Suppress the track completely.</pre>
+<pre>
+       empty_tracks = line
+       Draw a solid line across the track.</pre>
+<pre>
+       empty_tracks = dashed
+       Draw a dashed line across the track.</pre>
+<p>The default value is ``key.''</p>
+</li>
+<li><strong><a name="item_background_2c_postgrid">background, postgrid</a></strong>
+
+<p>These two options can be used to place custom background images in the
+details panel and are useful for advanced operations such as
+colorizing the panel to show gaps in the assembly. Either option
+accepts either the path to a graphics file to be tiled onto the
+background, or a callback subroutine. In the case of the latter the
+callback will passed a two argument list consisting of the GD::Image
+object and the Bio::Graphics::Panel object. This gives the callback a
+chance to draw on top of the background using GD library calls.</p>
+<p>The only difference between the two options is the time that they are
+applied relative to the grid that shows base pair coordinates. The
+background option is invoked before the grid is drawn so that the grid
+appears on top of it. The postgrid option is invoked after the grid is
+drawn, so that anything the option draws appears on top of the
+grid. See
+<a href="http://sourceforge.net/mailarchive/message.php?msg_id=12116755">http://sourceforge.net/mailarchive/message.php?msg_id=12116755</a> for an
+example of using this feature to show assembly gaps as vertical gray
+regions.</p>
+<p>For a clever example of how to use postgrid calls, see the SynView
+synteny browser in the contrib directory of the GBrowse distribution.
+It uses a standard GBrowse configuration file with postgrid calls to
+draw trapezoids between glyphs to show synteny.  For an example of
+how this looks, see <a href="http://www.plasmodb.org/cgi-bin/gbrowse/plasmodb/?start=101357;stop=121356;ref=MAL12;width=800;version=100;label=AnnotatedGenes-SyntenySpansVivaxMC-SyntenyGenesVivaxMC">http://www.plasmodb.org/cgi-bin/gbrowse/plasmodb/</a>.</p>
+</li>
+<li><strong><a name="item_image_padding__3d_25">image_padding = 25</a></strong>
+
+<li><strong><a name="item_pad_left__3d_50">pad_left = 50</a></strong>
+
+<li><strong><a name="item_pad_right__3d_30">pad_right = 30</a></strong>
+
+<p>The image_padding option will add the indicated amount of whitespace
+(in pixels) to the right and left of the detail panel.  The default is
+25 pixels. You may need to adjust this if you are using the xyplot
+glyph and finding that the scale (which is printed outside the graph
+area) is being cut off.</p>
+<p>You can individually adjust the left and right padding using pad_left
+and pad_right, which, if present, will supersede image_padding.</p>
+</li>
+<li><strong><a name="item_show_track_categories">show track categories</a></strong>
+
+<p>If this option is set to a true value, then tracks that have been
+assigned to categories (using the ``category'' option described later),
+will have their categories included in their labels. For example, a
+track of key ``Protein matches'' and category ``vertebrate'' will be
+displayed in a track labeled ``Protein match (vertebrate)''.</p>
+<p>The default is false.</p>
+</li>
+<li><strong><a name="item_das_mapmaster">das mapmaster</a></strong>
+
+<p>This option, which should appear somewhere in the [GENERAL] section,
+indicates that the database should be made available as a DAS source.
+The value of the option corresponds to the URL of the DAS reference
+server for this data source, or ``SELF'' if this database is its own
+reference server.  (See <a href="http://www.biodas.org/">http://www.biodas.org/</a> for an explanation of
+what reference servers are.)</p>
+<p>Please see <a href="/gbrowse/docs/pod//DAS_HOWTO.html">the DAS_HOWTO manpage</a> for more information on using DAS with
+GBrowse.</p>
+</li>
+<li><strong><a name="item_proxy_2c_http_proxy_2c_ftp_proxy">proxy, http proxy, ftp proxy</a></strong>
+
+<p>If your web server is behind a firewall and needs to use a proxy in
+order to access remote HTTP or FTP sites, then one or more of these
+options needs to be specified in order for the ``add remote
+annotations'' feature to work (both for file-based and DAS-based remote
+annotations).  ``http proxy'' will set the proxy to use for outgoing
+HTTP connections, ``ftp proxy'' will set the proxy to use for outgoing
+FTP connections, and ``proxy'' will set both.  The value is the URL of
+the proxy:</p>
+<pre>
+   proxy = <a href="http://myproxy.myorg.com:9000">http://myproxy.myorg.com:9000</a></pre>
+</li>
+<li><strong><a name="item_session_driver">session driver</a></strong>
+
+<li><strong><a name="item_session_args">session args</a></strong>
+
+<p>These options fine-tune how gbrowse manages its state-maintaining
+sessions. GBrowse uses CGI::Session to store session data on the
+server. By default (if neither of these options is present), it uses
+CGI::Session's ``file'' driver and ``default'' serializer. The session
+files are stored in the ``sessions'' directory underneath the directory
+specified by the ``tmpimages'' option
+(e.g. /usr/local/apache/htdocs/gbrowse/tmpimages/sessions).</p>
+<p>The ``session driver'' option will be passed to CGI::Session-&gt;<code>new()</code> as
+the first argument. It specifies the driver, serializer and ID
+generator according to the syntax described in the CGI::Session manual
+page. The ``session args'' option will be passed to CGI::Session-&gt;<code>new()</code>
+as the third argument. It specifies additional parameters to be passed
+to the selected driver.</p>
+<p>For example, here is how to create session data that is stored in the
+MySQL ``test'' database under a table named ``gbrowse_sessions.'' The
+session data will be stored in binary form by the Storable module:</p>
+<pre>
+ session driver = driver:mysql;serializer:storable
+ session args   = DataSource test
+                  TableName  gbrowse_sessions</pre>
+<p>See the CGI::Session documentation for information about setting up
+the MySQL table and appropriate permissions.</p>
+<p>You might also want to read about CGI::Session::ID::salted_md5 for an
+ID generation algorithm that should be more secure (but slightly
+slower) than the default one.</p>
+<p>You will not ordinarily need to use these settings, as the defaults
+seem to work well. If you change these defaults, be sure to change
+them in <strong>all</strong> configuration files; otherwise weird stuff will happen
+when moving from one data source to another.</p>
+</li>
+<li><strong><a name="item_remember_settings_time">remember settings time</a></strong>
+
+<p>The length of time to remember page-specific settings in the format
+``+NNNu'', where NNN is a number and ``u'' is a unit (``w'' = weeks, ``d'' =
+days, ``M'' = months). For example:</p>
+<pre>
+  remember settings time = +3M   # remember settings for 3 months</pre>
+<p>The users' settings, which includes uploaded files, track options and
+plugin configuration, will be reset to the default if he or she fails
+to visit the site within the time specified.</p>
+<p>The default value is 1 month.</p>
+<p>See the CGI manual page for more information on the time format.</p>
+</li>
+<li><strong><a name="item_remember_source_time">remember source time</a></strong>
+
+<p>Like ``remember settings time'' but applies to remembering the user's
+preferred data source. ``remember source time'' should be greater or
+equal to ``remember settings time'' because the settings will expire
+when the source expires. If you have multiple sources, this option
+should be the same for each one.</p>
+<p>The default value is 3 months.</p>
+</li>
+<li><strong><a name="item_msie_hack">msie hack</a></strong>
+
+<p>GBrowse uses HTTP POST to transfer the current page settings to the
+web server. Because of the way that Microsoft Internet Explorer caches
+pages, when users of this browser press the ``Back'' button, MSIE will
+display an annoying alert that prompts the user to reload the page.</p>
+<p>When you set ``msie hack'' to a true value, Gbrowse will use the GET
+request when it detects MSIE in use. This will fix the ``Back'' button
+issue, but will put very long URLs in the Location box. It is your
+choice which of these is more annoying to your users.</p>
+</li>
+</ul>
+<p>
+</p>
+<h2><a name="b2__the__track_defaults__section">B2. The [TRACK DEFAULTS] section</a></h2>
+<p>The track defaults section specifies default values for each track.
+The following common options are recognized:</p>
+<pre>
+             glyph
+             height
+             bgcolor
+             fgcolor
+             fontcolor
+             font2color
+             strand_arrow</pre>
+<p>These options control the default graphical settings for any
+annotation types that are not explicitly specified.  See the
+section below on controlling the settings.  Any of the options
+allowed in the [track] sections described below are allowed here.</p>
+<ul>
+<li><strong><a name="item_label_density">label density</a></strong>
+
+<p>When there are too many annotations on the screen GBrowse automatically
+disables the printing of identifying labels next to the feature.
+``label density'' controls where the cutoff occurs.  The value in the
+example files is 25, meaning that labels will be turned off when
+there are more than 25 annotations of a particular type on display
+at once.</p>
+</li>
+<li><strong><a name="item_bump_density">bump density</a></strong>
+
+<p>When there are too many annotations on the screen GBrowse automatically
+disables collision control.  The ``bump density'' option controls
+where the cutoff occurs.  The value in the example files is 100,
+meaning that when there more than 100 annotations of the same type
+on the display, the browser will stop shifting them verticially to
+prevent them from colliding, but will instead allow them to
+overlap.</p>
+</li>
+<li><strong><a name="item_link">link</a></strong>
+
+<p>The link option creates a default rule for creating outgoing links
+from the GBrowse display.  When the user clicks on a feature of
+interest, he will be taken to the corresponding URL.</p>
+<p>The link option's value should be a URL containing one or more
+variables.  Variables begin with a dollar sign ($), and are
+replaced at run time with the information relating to the selected
+annotation.  Recognized variables include:</p>
+<pre>
+     $name        The feature's name (group name)
+     $id          The feature's id (eg, PK from a database)
+     $class       The feature's class (group class)
+     $method      The feature's method
+     $source      The feature's source
+     $ref         The name of the sequence segment (chromosome, contig)
+                     on which this feature is located
+     $description The feature's description (notes)
+     $start       The start position of this feature, relative to $ref
+     $end         The end position of this feature, relative to $ref
+     $segstart    The left end of $ref displayed in the detailed view
+     $segend      The right end of $ref displayed in the detailed view</pre>
+<p>For example, the wormbase.conf file uses this link rule:</p>
+<pre>
+     link = <a href="http://www.wormbase.org/db/get?name=">http://www.wormbase.org/db/get?name=</a>$name;class=$class</pre>
+<p>At run time, if the user clicks on an EST named yk1234.5, this
+will generate the URL</p>
+<pre>
+     <a href="http://www.wormbase.org/db/get?name=yk1234.5;class=EST">http://www.wormbase.org/db/get?name=yk1234.5;class=EST</a></pre>
+<p>It is possible to override the global link rule on a
+feature-by-feature basis.  See the next section for details on
+this.  It is also possible to declare a subroutine to compute the
+proper URL dynamically.  See COMPUTED OPTIONS for details.</p>
+<p>A special link type of AUTO will cause the feature to link to
+the gbrowse_details script, which summarizes information about
+the feature.  The default is not to link at all.</p>
+</li>
+<li><strong><a name="item_link_target">link_target</a></strong>
+
+<p>By default links will replace the contents of the current window.
+If you wish, you can specify a new window to pop up when the user
+clicks on a feature, or designate a named window or frame to
+receive the contents of the link.  To do this, add the ``link_target''
+option to the [TRACK DEFAULTS] section or to a track stanza.  The format
+is this:</p>
+<pre>
+       link_target = _blank</pre>
+<p>The value uses the HTML targetting rules to name/create the window
+to receive the value of the link.  The first time the link is
+accessed, a window with the specified name is created.  The next
+time the user clicks on a link with the same target, that window
+will receive the content of the link if it is still present, or it
+will be created again if it has been closed.  A target named
+``_blank'' is special and will always create a new window.</p>
+<p>The ``link_target'' option can also be computed dynamically.  See
+COMPUTED OPTIONS for details.</p>
+</li>
+<li><strong><a name="item_title">title</a></strong>
+
+<p>The title option controls the ``tooltips'' text that pops up when the
+mouse hovers over a glyph in certain browsers.  The rules for
+generating titles are the same as the ``link'' option discussed above.
+The ``title'' option can also be computed dynamically.  See COMPUTED
+OPTIONS for details.</p>
+<p>Note HTML characters such as ``&lt;'', ``&gt;'' and ``&amp;'' are not automatically
+escaped from the title. This lets you do neat stuff, such as create
+popup menus, but also means that you need to be careful. The function
+CGI::escapeHTML() is available to properly escape HTML characters in
+dynamically-generated titles.</p>
+<p>The special value ``AUTO'' causes a default description to appear
+describing the name, type and position of the feature.  This is
+also assumed if the title option is missing or blank.</p>
+</li>
+<li><strong><a name="item_landmark_padding__3d_1000">landmark_padding = 1000</a></strong>
+
+<p>The landmark_padding option will add the indicated number of base pairs
+to the right and left of all landmarks that are searched for by name.</p>
+</li>
+</ul>
+<p>
+</p>
+<h2><a name="b3__track_sections">B3. Track Sections</a></h2>
+<p>Any other [Section] in the configuration file is treated as a
+declaration of a track. The order of track sections will become the
+default order of tracks on the display (the user can change this
+later).  Here is a typical track declaration from yeast.conf:</p>
+<pre>
+ [Genes]
+ feature      = gene:sgd
+ glyph        = generic
+ bgcolor      = yellow
+ forwardcolor = yellow
+ reversecolor = turquoise
+ strand_arrow = 1
+ height       = 6
+ description  = 1
+ key          = Named gene</pre>
+<p>This track is named ``Genes''. You may use a short mnemonic if you
+prefer; this will make the URL shorter when the user bookmarks a view
+he or she likes. Track names can contain almost any character,
+including whitespace, but cannot contain the ``-'' or ``+'' signs because
+these are used to separate track names in the URL when
+bookmarking. [My Genes] is OK, but [My-Genes] is not.</p>
+<p>As in the general configuration section, the track declaration
+contains multiple name=value option pairs.</p>
+<p>Valid options are as follows:</p>
+<ol>
+<li><strong><a name="item_feature">feature</a></strong>
+
+<p>This relates the track to one or more feature types as they appear
+in the database.  Recall that each feature has a method and source.
+This is represented in the form method:source.  So, for example, a
+feature of type ``gene:sgd'' has the method ``gene'' and the source
+``sgd''.</p>
+<p>It is possible to omit the source.  A feature of type ``gene'' will
+include all features whose methods are ``gene'', regardless of the
+source field.  It is not possible to omit the method.</p>
+<p>It is possible to have several feature types displayed on a single
+track.  Simply provide the feature option with a space-delimited
+list of the features you want to include.  For example:</p>
+<pre>
+    feature = gene:sgd stRNA:sgd</pre>
+<p>This will include features of type ``gene:sgd'' and ``stRNA:sgd'' in the
+same track and display them in a similar fashion.</p>
+</li>
+<li><strong><a name="item_remote_feature">remote feature</a></strong>
+
+<p>This relates the track to a remote feature track somewhere on the
+Internet. The value is a http: or ftp: URL, and may correspond to a
+static file of features in GFF format, gbrowse upload format, a CGI
+script, or a DAS source. When this option is active, the ``feature''
+option and most of the glyph control options described below are
+ignored, but the ``citation'' and ``key'' options are honored.</p>
+<p>Example:</p>
+<pre>
+ remote feature = <a href="http://www.wormbase.org/cgi-bin/das/wormbase?type=mRNA">http://www.wormbase.org/cgi-bin/das/wormbase?type=mRNA</a></pre>
+</li>
+<li><strong><a name="item_glyph">glyph</a></strong>
+
+<p>This controls the glyph (graphical icon) that is used to represent
+the feature.  The list of glyphs and glyph-specific options are
+listed in the section GLYPHS AND GLYPH OPTIONS.  The ``generic'' glyph
+is the default.</p>
+</li>
+<li><strong><a name="item_bgcolor">bgcolor</a></strong>
+
+<p>This controls the background color of the glyph.  The format of
+colors is explained in GLYPHS AND GLYPH OPTIONS.</p>
+</li>
+<li><strong><a name="item_fgcolor">fgcolor</a></strong>
+
+<p>This controls the foreground color (outline color) of the glyph.
+The format of colors is explained in GLYPHS AND GLYPH OPTIONS.</p>
+</li>
+<li><strong><a name="item_fontcolor">fontcolor</a></strong>
+
+<p>This controls the color of the primary font of text drawn in the
+glyph.  This is the font used for the features labels drawn at the
+top of the glyph.</p>
+</li>
+<li><strong><a name="item_font2color">font2color</a></strong>
+
+<p>This controls the color of the secondary font of text drawn in
+the glyph.  This is the font used for the longish feature descriptions
+drawn at the bottom of the glyphs.</p>
+</li>
+<li><strong><a name="item_height">height</a></strong>
+
+<p>This option sets the height of the glyph.  It is expressed in
+pixels.</p>
+</li>
+<li><strong><a name="item_strand_arrow">strand_arrow</a></strong>
+
+<p>This is a true or false value, where true is 1 and false is 0.
+If this option is set to true, then the glyph will indicate the
+strandedness of the feature, usually by drawing an arrow of some
+sort.  Some glyphs are inherently stranded, or inherently
+non-stranded and simply ignore this option.</p>
+</li>
+<li><strong><a name="item_label">label</a></strong>
+
+<p>This is a true or false value, where true is 1 and false is 0.  If
+the option is set to true, then the name of the feature (i.e. its
+group name) is printed above the feature, space allowing.</p>
+</li>
+<li><strong>description</strong>
+
+<p>This is a true or false value, where true is 1 and false is 0.  If
+the option is set to true, then the description of the feature (any
+Note fields) is printed below the feature, space allowing.</p>
+</li>
+<li><strong><a name="item_key">key</a></strong>
+
+<p>This option controls the descriptive key that is drawn in the key
+area at the bottom of the image.  It also appears in the checkboxes
+that the end user uses to switch tracks on and off. If not specified, it defaults to
+the track name.</p>
+</li>
+<li><strong><a name="item_citation">citation</a></strong>
+
+<p>If present, this option creates a human-readable descriptive
+paragraph describing the feature and how it was derived.  This is
+the text information that is displayed when the user clicks on the
+track name in the checkbox group.  The value can either be a URL, in
+which case clicking on the track name invokes the corresponding URL,
+or a text paragraph, in which case clicking on the track name
+generates a page containing the text description.  Long paragraphs
+can be continued across multiple lines, provided that continuation
+lines begin with whitespace.</p>
+</li>
+<li><strong><a name="item_link_2c_title_2c_link_target">link, title, link_target</a></strong>
+
+<p>These options are identical to the similarly-named options in 
+the [GENERAL] section, but change the rules on a track-by-track basis.  
+They can be used to override the global rules.  To force a track not
+to contain any links, use a blank value.</p>
+</li>
+<li><strong><a name="item_box_subparts">box_subparts</a></strong>
+
+<p>If this option is greater than zero, then gbrowse will generate
+imagemap rectangles for each of the subparts of a feature (e.g. the
+exons within a transcript), allowing you to link each subpart
+separately. The numeric value will control the number of levels of
+subfeatures that the boxes will descend into. For example, if using
+the ``gene'' glyph, set -box_subparts to 2 to create boxes for the whole
+gene (level 0), the mRNAs (level 1) and the exons (level 2).</p>
+</li>
+<li><strong><a name="item_feature_low">feature_low</a></strong>
+
+<p>If this option is present, GBrowse will use the list of feature types
+listed here at resolution views.  (This is one of the ways that
+semantic zooming is implemented.)  This allows you, for example,
+to switch off detailed exon, UTR, promoters and other within-the-gene
+features, and just show the start and stop of the transcription
+unit.</p>
+</li>
+<li><strong><a name="item_global_feature">global feature</a></strong>
+
+<p>If this option is present and set to a true value (e.g. ``1''), GBrowse 
+will automatically generate a  pseudo-feature that starts at the 
+beginning of the currently displayed region and extends to the end.  
+This is often used in conjunction with the ``translation'' and ``dna''
+glyphs in order to display global characteristics of the sequence.
+If this option is set, then you do not need to specify a ``feature''
+option.</p>
+</li>
+<li><strong><a name="item_group_pattern">group_pattern</a></strong>
+
+<p>This option lets you connect related features by dotted lines based
+on a pattern match in the features' names.  A typical example is
+connecting the 5' and 3' read pairs from ESTs or plasmids.  See
+GROUPING FEATURES for details.</p>
+</li>
+<li><strong><a name="item_group_on">group_on</a></strong>
+
+<p>For Bio::DB::SeqFeature::Store databases <em>only</em>, the group_on field
+allows you to group features together by display_name, target or any
+other method. This is mostly useful for XY-plot data, where you may
+want to dynamically group related data points together so that they
+share the same vertical scaling.</p>
+<p>Example:</p>
+<pre>
+        group_on = display_name</pre>
+<p>(this feature is under refinement and may change in the future)</p>
+</li>
+<li><strong><a name="item_restrict">restrict</a></strong>
+
+<p>This option allows you to restrict who is allowed to view the current
+track by host name, IP address or username/password.  See
+AUTHENTICATION AND AUTHORIZATION for details.</p>
+</li>
+<li><strong><a name="item_category">category</a></strong>
+
+<p>This option allows you to group tracks into different groups on the
+GBrowse display in addition to the default group called 'General'.
+For example, if you wanted several tracks to be in a separate group
+called ``Genes'', you would add this to each of the track defintions:</p>
+<pre>
+  category = Genes</pre>
+<p>Note that it is not possible to make subcategories. If all tracks are
+categorized, then the ``General'' category will not be displayed.</p>
+<p>If you have used a ``category tables'' option in the [GENERAL] section
+of the configuration file, then the names of the tracks labeled with
+this category will be placed into a table of the appropriate
+dimensions. Tracks will be placed into the table in column-major
+format: you should first list stanzas for all rows of column 1, then
+all rows of column 2, etc.</p>
+<p>See the tutorial for more details.</p>
+</li>
+<li><strong><a name="item_das_category_2c_das_landmark_2c_das_flatten_2c_das">das category, das landmark, das flatten, das subparts, das superparts, das glyph, das type</a></strong>
+
+<p>All these options pertain to exporting the GBrowse database as a DAS
+data source.  Please see <a href="/gbrowse/docs/pod//DAS_HOWTO.html">the DAS_HOWTO manpage</a> for more information.</p>
+</li>
+</ol>
+<p>A large number of glyph-specific options are also recognized.  These
+are described in the next section.</p>
+<p>
+</p>
+<h2><a name="b4__glyphs_and_glyph_options">B4. Glyphs and Glyph Options</a></h2>
+<p>A large variety of glyphs are available, and more are being added as
+the Bio::Graphics module grows.</p>
+<p>A list of the common glyphs and their options is provided by the
+GBrowse itself.  Click on the ``[Help]'' link in the section labeled
+``Upload your own annotations''.  This page also lists the valid
+foreground and background colors.  Most of the glyphs are found in the
+BioPerl distribution, but a few are distributed directly with GBrowse.</p>
+<p>The most popular glyph types are:</p>
+<pre>
+  Glyph                 Description
+  -----                 -----------</pre>
+<pre>
+  generic               a rectangle
+  allele_tower          allele found at a SNP position
+  arrow                 an arrow
+  anchored_arrow        a span with vertical bases |---------|.  If one
+                        or the other end of the feature is off-screen, the
+                        base will be replaced by an arrow.
+  box                   another rectangle; doesn't show subparts of features
+  cds                   shows the reading frame of spliced transcripts; used
+                        in conjunction with the &quot;coding&quot; aggregator.
+  diamond               a point-like feature represented as a triangle
+  dna                   DNA and GC content
+  heterogeneous_segments a multi-segmented feature in which each segment can
+                        have a distinctive color.  For Jim Kent's WABA features,
+                        this works with the waba_alignment aggregator.
+  idiogram              this takes specially-formatted feature data and turns it
+                        into an idiogram of a Giemsa-stained metaphase chromosome
+  image                 this embeds photographic images and/or diagrams on features
+  processed_transcript  multi-purpose representation of a spliced mRNA, including
+                        positions of UTRs
+  segments              a multi-segmented feature such as an alignment
+  span                  like anchored_arrow, except that the ends are
+                        truncated at the edge of the panel, not turned
+                        into an arrow
+  trace                 reads an SCF trace file and draws a graphic representation
+  triangle              a point-like feature represented as a diamond
+  transcript            a gene model
+  transcript2           a slightly different representation of a gene model
+  translation           1-, 3- and 6-frame translations
+  wormbase_transcript   yet another gene model that can show UTR segments
+                        (for features that conform to the WormBase gene
+                        schema). Used in conjunction with the
+                        &quot;wormbase_gene&quot; aggregator.
+  xyplot                histograms and line plots</pre>
+<p>A more definitive list of glyph options can be found in the
+Bio::Graphics manual pages.  Consult the manual pages for the
+following modules:</p>
+<pre>
+  Glyph                         Manual Page
+  -----                         -----------</pre>
+<pre>
+  (common options for all)      Bio::Graphics::Glyph
+  allele_tower                  Bio::Graphics::Glyph::allele_tower
+  arrow                         Bio::Graphics::Glyph::arrow
+  anchored_arrow                Bio::Graphics::Glyph::anchored_arrow
+  box                           Bio::Graphics::Glyph::box
+  cds                           Bio::Graphics::Glyph::cds
+  crossbox                      Bio::Graphics::Glyph::crossbox
+  diamond                       Bio::Graphics::Glyph::diamond
+  dna                           Bio::Graphics::Glyph::dna
+  dot                           Bio::Graphics::Glyph::dot
+  ellipse                       Bio::Graphics::Glyph::ellipse
+  extending_arrow               Bio::Graphics::Glyph::extending_arrow
+  generic                       Bio::Graphics::Glyph::generic
+  graded_segments               Bio::Graphics::Glyph::graded_segments
+  heterogeneous_segments        Bio::Graphics::Glyph::heterogeneous_segments
+  idiogram                      Bio::Graphics::Glyph::idiogram
+  image                         Bio::Graphics::Glyph::image
+  line                          Bio::Graphics::Glyph::line
+  primers                       Bio::Graphics::Glyph::primers
+  processed_transcript          Bio::Graphics::Glyph::processed_transcript
+  rndrect                       Bio::Graphics::Glyph::rndrect
+  ruler_arrow                   Bio::Graphics::Glyph::ruler_arrow
+  segments                      Bio::Graphics::Glyph::segments
+  span                          Bio::Graphics::Glyph::span
+  toomany                       Bio::Graphics::Glyph::toomany
+  trace                         Bio::Graphics::Glyph::trace
+  transcript                    Bio::Graphics::Glyph::transcript
+  transcript2                   Bio::Graphics::Glyph::transcript2
+  translation                   Bio::Graphics::Glyph::translation
+  triangle                      Bio::Graphics::Glyph::triangle
+  wormbase_transcript           Bio::Graphics::Glyph::wormbase_transcript
+  xyplot                        Bio::Graphics::Glyph::xyplot</pre>
+<p>The ``perldoc'' command is handy for reading the documentation from the
+Unix command line.  For example:</p>
+<pre>
+   perldoc Bio::Graphics::Glyph::primers</pre>
+<p>This will provide you with a summary of the options that apply to the
+``primers'' glyph.</p>
+<p>In the manual pages, the glyph options are presented the way they are
+called from Perl.  For example, the documentation will tell you to use
+the -connect_color option to set the color to use when drawing the
+line that connects the two inward pointing arrows in the primer pair
+glyph.  This translates to the configuration file as an option named
+``connect_color''.  For example:</p>
+<pre>
+ [PCR Products]
+ glyph = primer
+ connect_color = blue</pre>
+<p>When referring to colors, you can use a variety of color names such as
+``blue'' and ``green''.  To get the full list, cut and paste the following
+magic incantation into the command line:</p>
+<pre>
+ perl -MBio::Graphics::Panel -e 'print join &quot;\n&quot;,Bio::Graphics::Panel-&gt;color_names'</pre>
+<p>or see this URL:</p>
+<pre>
+  <a href="http://www.wormbase.org/db/seq/gbrowse?help=annotation">http://www.wormbase.org/db/seq/gbrowse?help=annotation</a></pre>
+<p>Alternatively, you can use the #RRGGBB notation to specify the red,
+green and blue components of the color.  Refer to any book on HTML for
+the details on using the notation.</p>
+<p>
+</p>
+<h2><a name="b5__adding_features_to_the_overview">B5. Adding features to the overview</a></h2>
+<p>You can make any set of tracks appear in the overview by creating a
+stanza with a title of the format [&lt;label&gt;:overview], where &lt;label&gt; is
+any unique label of your choice.  The format of the stanza is
+identical to the others, but the indicated track will appear in the
+overview rather than as an option in the detailed view.  For example,
+this stanza adds to the overview a set of features of method ``gene'',
+source ``framework'':</p>
+<pre>
+ [framework:overview]
+ feature       = gene:framework
+ label         = 1
+ glyph         = generic
+ bgcolor       = lavender
+ height        = 5
+ key           = Mapped Genes</pre>
+<p>Similarly, you can make a track appear in the region panel by
+appending ``:region'' to its name:</p>
+<pre>
+ [genedensity:region]
+ feature       = gene_density
+ glyph         = xyplot
+ graph_type    = boxes
+ scale         = right
+ bgcolor       = red
+ fgcolor       = red
+ height        = 20
+ key           = SNP Density</pre>
+<p>
+</p>
+<h2><a name="b6__semantic_zooming">B6. Semantic Zooming</a></h2>
+<p>Sometimes you will want to change the appearance of a track when the
+user has zoomed out or zoomed in beyond a certain level.  To indicate
+this, create a set of ``length qualified'' stanzas of format
+[&lt;label&gt;:&lt;zoom level&gt;], where all stanzas share the same &lt;label&gt;, and
+&lt;zoom level&gt; indicates the minimum size of the region that the stanza
+will apply to.  For example:</p>
+<pre>
+  [gene]
+  feature = transcript:curated
+  glyph    = dna
+  fgcolor  = blue
+  key      = genes
+  citation = example semantic zoom track</pre>
+<pre>
+  [gene:500]
+  feature = transcript:curated
+  glyph   = transcript2</pre>
+<pre>
+  [gene:100000]
+  feature = transcript:curated
+  glyph   = arrow</pre>
+<pre>
+  [gene:500000]
+  feature = transcript:curated
+  glyph   = generic</pre>
+<p>This series of stanzas says to use the ``transcript2'' glyph when the
+segment being displayed is 500 bp or longer, to use the ``arrow'' glyph
+when the segment being displayed is 100,000 bp or longer, and the
+``generic'' glyph when the region being displayed is 500,000 bp or
+longer.  For all other segment lengths (1 to 499 bp), the ordinary
+[gene] stanza will be consulted, and the ``dna'' glyph will be
+displayed.  The bare [gene] stanza is used to set all but the
+``feature'' options for the other stanzas.  This means that the fgcolor,
+key and citation options are shared amongst all the [gene:XXXX]
+stanzas, but the ``feature'' option must be repeated.</p>
+<p>You can override any options in the length qualified stanzas.  For
+example, if you want to change the color to red in when displaying
+genes on segments between 500 and 99,999 bp, you can modify the
+[gene:500] stanza as follows:</p>
+<pre>
+  [gene:500]
+  feature = transcript:curated
+  glyph   = transcript2
+  fgcolor = red</pre>
+<p>It is also possible to display different features at different zoom
+levels, although you should handle this potentially confusing feature
+with care.</p>
+<p>If you wish to turn off a track entirely, you can use the ``hide'' flag
+to hide the track when the display exceeds a certain size:</p>
+<pre>
+  [6_frame_translation:50000]
+  hide = 1</pre>
+<p>
+</p>
+<h2><a name="b7__computed_options">B7. Computed Options</a></h2>
+<p>Some options can be computed at run time by using Perl subroutines as
+their values. These are known as ``callbacks.'' Currently this works
+with the values of the ``link'', ``title'', ``link_target'', ``header'' and
+``footer'' options, and any glyph-specific option that appears in a
+track section.</p>
+<p>You need to know the Perl programming language to take advantage of
+this.  The general format of this type of option is:</p>
+<pre>
+  option name = sub {
+              some perl code;
+              some more perl code;
+              even more perl code;
+              }</pre>
+<p>The value must begin with the sequence ``sub {'' in order to be
+recognized as a subroutine declaration.  After this, you can have one
+or more lines of Perl code followed by a closing brace.  Continuation
+lines must begin with whitespace.</p>
+<p>When the browser first encounters an option like this one, it will
+attempt to compile it into Perl runtime code.  If successful, the
+compiled code will be stored for later use and invoked whenever the
+value of the option is needed. (Otherwise, an error message will
+appear in your server error log).</p>
+<p>For options of type ``footer'' and ``header'', the subroutine is passed no
+arguments.  It is expected to produce some HTML and return it as a
+string value.</p>
+<p>For glyph-specific features, such as ``bgcolor'' the subroutine will be
+called at run time with five arguments consisting of the feature, the
+name of the option, the current part number of the feature, the total
+number of parts in this feature, and the glyph corresponding to the
+feature. Usually you will just look at the first argument.  The return
+value is treated as the value of the corresponding option.  For
+example, this bgcolor subroutine will call the feature's <code>primary_tag()</code>
+method, and return ``blue'' if it is an exon, ``orange'' otherwise:</p>
+<pre>
+  bgcolor = sub {
+          my $feature = shift;
+          return &quot;blue&quot; if $feature-&gt;primary_tag eq 'exon';
+          return &quot;orange&quot;;
+          }</pre>
+<p>See the manual page for Bio::DB::GFF::Feature for information on how
+to interrogate the feature object.</p>
+<p>For special effects, such as coloring the first and last exons
+differently, you may need access to all five arguments. Here is an
+example that draws the first and last parts of a feature in blue and
+the rest in red:</p>
+<pre>
+   sub { 
+         my($feature,$option_name,$part_no,$total_parts,$glyph) = @_;
+         return 'blue' if $part_no == 0;                # zero-based indexing!
+         return 'blue' if $part_no == $total_parts-1;   # zero-based indexing!
+         return 'red';
+         }</pre>
+<p>See the Bio::Graphics::Panel manual page for more details.</p>
+<p>Callbacks for the ``link'', ``title'', and ``link_target'' options have a
+slightly different call signature. They receive three arguments
+consisting of the feature, the Bio::Graphics::Panel object, and the
+Bio::Graphics::Glyph object corresponding to the current track within
+the panel:</p>
+<pre>
+  link = sub {
+             my ($feature, $panel, $track) = @_;
+             ... do something
+             }</pre>
+<p>Ordinarily you will only need to use the feature object. The other
+arguments are useful to look up panel-specific settings such as the
+pixel width of the panel or the state of the ``flip'' setting:</p>
+<pre>
+  title = sub {
+          my ($feature,$panel,$track) = @_;
+          my $name = $feature-&gt;display_name;
+          return $panel-&gt;flip ? &quot;$name (flipped)&quot; : $name;
+       }</pre>
+<p>Named Subroutine References
+---------------------------</p>
+<p>If you use a version of BioPerl after April 15, 2003, you can also use
+references to named subroutines as option arguments.  To use named
+subroutines, add an init_code section to the [GENERAL] section of the
+configuration file.  init_code should contain nothing but subroutine
+definitions and other initialization routines.  For example:</p>
+<pre>
+  init_code = sub score_color {
+                my $feature = shift;
+                if ($feature-&gt;score &gt; 50) { 
+                  return 'red';
+                } else {
+                  return 'green';
+                }
+              }
+              sub score_height {
+                my $feature = shift;
+                if ($feature-&gt;score &gt; 50) { 
+                  return 10;
+                } else {
+                  return 5;
+                }
+              }</pre>
+<p>Then simply refer to these subroutines using the \&amp;name syntax:</p>
+<pre>
+    [EST_ALIGNMENTS]
+    glyph = generic
+    bgcolor = \&amp;score_color
+    height  = \&amp;score_height</pre>
+<p>You can declare global variables in the init_code subroutine if you
+use ``no strict 'vars';'' at the top of the section:</p>
+<pre>
+    init_code = no strict 'vars';
+                $HEIGHT = 10;
+                sub score_height {
+                  my $feature = shift;
+                  $HEIGHT++;
+                  if ($feature-&gt;score &gt; 50) { 
+                    return $HEIGHT*2;
+                  } else {
+                    return $HEIGHT;
+                  }
+                }</pre>
+<p>Due to the way the configuration file is parsed, there must be no
+empty lines in the init_code section.  Either use comments to
+introduce white space, or ``use'' a .pm file to do anything fancy.</p>
+<p>Subroutines that you define in the init_code section, as well as
+anonymous subroutines, will go into a package that changes
+unpredictably each time you load the page. If you need a predictable
+package name, you can define it this way:</p>
+<pre>
+   init_code = package My; sub score_height { .... }</pre>
+<pre>
+   [EST_ALIGNMENTS]
+   height = \&amp;My::score_height</pre>
+<p>
+</p>
+<h2><a name="b8__declaring_new_aggregators">B8. Declaring New Aggregators</a></h2>
+<p>The Bio::DB::GFF data model recognizes a single-level of ``grouping'' of
+features, but doesn't specify how to use the group information to
+correctly assemble the various individual components into a biological
+object.  Aggregators are used to assemble this information.  For
+example, let's say that you decide that your preferred ``transcript''
+data model contains three subfeature types: a set of one or more
+features of method ``exon'', a single feature of method ``TSS'', and a
+single feature of method ``polyA''.  Optionally, the data model could
+contain a single ``main subfeature'' that runs the length of the entire
+transcript.  We might give this feature a method of ``primary_transc''
+(for ``primary transcript.'')</p>
+<p>In a GFF file, a three-exon transcript might be represented as
+follows:</p>
+<pre>
+ Chr1 confirmed primary_transc 100 500  .  +  .  Transcript &quot;ABC.1&quot;
+ Chr1 confirmed TSS            100 100  .  +  .  Transcript &quot;ABC.1&quot;
+ Chr1 confirmed exon           100 200  .  +  .  Transcript &quot;ABC.1&quot;
+ Chr1 confirmed exon           250 300  .  +  .  Transcript &quot;ABC.1&quot;
+ Chr1 confirmed exon           400 500  .  +  .  Transcript &quot;ABC.1&quot;
+ Chr1 confirmed polyA          500 500  .  +  .  Transcript &quot;ABC.1&quot;</pre>
+<p>To aggregate this, you would like to create an aggregator named
+``transcript'', whose ``main method'' is ``primary_transc'', and whose ``sub
+methods'' are ``TSS,'' ``exon,'' and ``polyA.''</p>
+<p>The way to indicate this in the configuration file is to add a
+``complex aggregator'' to the list of aggregators:</p>
+<pre>
+  aggregator = transcript{TSS,exon,polyA/primary_transc}</pre>
+<p>The format of this value is
+``aggregator_name{submethod1,submethod2,.../mainmethod}''.</p>
+<p>You can now use the name of the aggregator name as the argument of the
+``feature'' option in a track section:</p>
+<pre>
+  [Transcripts]
+  feature      = transcript
+  glyph        = segments
+  bgcolor      = wheat
+  fgcolor      = black
+  height       = 10
+  key          = Transcripts</pre>
+<p>If you do not have a main subfeature, leave off the ``/mainmethod''.
+For example:</p>
+<pre>
+  aggregator = transcript{TSS,exon,polyA}</pre>
+<p>A few formatting notes.  You are free to mix simple and complex
+aggregators in the ``aggregator'' option.  For example, you can activate
+the standard ``clone'' and ``alignment'' aggregators as well as the new
+transcript aggregator with a line like this one:</p>
+<pre>
+ aggregator = clone
+              transcript{TSS,exon,polyA/primary_transc}
+              alignment</pre>
+<p>If the complex aggregator contains whitespace or apostrophes, you must
+surround it with double-quotes, like this:</p>
+<pre>
+   &quot;transcript{TSS,5'UTR,3'UTR,exon,polyA/primary_transc}&quot;</pre>
+<p>Be aware that some glyphs look for particular method names when
+rendering aggregated features.  For example, the standard ``transcript''
+glyph is closely tied to the ``transcript'' aggregator, and looks for
+submethods named ``intron'', ``exon'' and ``CDS'', and a main method named
+``transcript.''</p>
+<p>Here is the list of available predefined aggregators:</p>
+<pre>
+     alignment
+     clone
+     coding
+     transcript
+     none
+     orf
+     waba_alignment
+     wormbase_gene</pre>
+<p>To view the documentation for any of these aggregators, run the
+command ``perldoc Bio::DB::GFF::Aggregator::aggregator_name'', where
+``aggregator_name'' is the name of the aggregator.</p>
+<p>
+</p>
+<h2><a name="b9__grouping_features">B9. GROUPING FEATURES</a></h2>
+<p>gbrowse recognizes the concept of a ``group'' of related features that
+are connected by dotted lines. The canonical example is a pair of ESTs
+that are related by being from the two ends of the same cDNA clone.
+However many feature databases, including the GFF database recommended
+for gbrowse, do not allow for arbitrary hierarchical grouping.  To
+work around this, you may specify a feature name-based regular
+expression that will be used to trigger grouping.</p>
+<p>It works like this.  Say you are working with EST feature pairs and
+they follow the nomenclature 501283.5 and 501283.3, where the suffix
+is ``5'' or ``3'' depending on whether the read was from the 5' or 3' ends
+of the insert.  To group these pairs by a dotted line, specify the
+``group_pattern'' option in the appropriate track section:</p>
+<pre>
+      group_pattern =  /\.[53]$/</pre>
+<p>At render time, gbrowse will strip off this pattern from the names of
+all features in the EST track and group those that have a common base
+name.  Hence 501283.5 and 501283.3 will be grouped together by a
+dotted line, because after the pattern is removed, they will share the
+same common name ``501283''.</p>
+<p>This works for all embedded pattern, provided that stripping out the
+pattern results in related features sharing the same name.  For
+example, if the convention were ``est.for.501283'' and ``est.rev.501283'',
+then this grouping pattern would have the desired effect:</p>
+<pre>
+      group_pattern = /\.(for|rev)\./</pre>
+<p>Don't forget to escape regular expression meta-characters and to
+consider the various ways in which the regular expression might break.
+It is entirely possible to create an invalid regular expression, in
+which case gbrowse will crash until you comment out the offending
+option.</p>
+<p>
+</p>
+<h2><a name="b10__controlling_the_gbrowse_details_page">B10. Controlling the gbrowse_details page</a></h2>
+<p>If a track definition's ``link'' option (see section B2) is set to AUTO,
+the gbrowse_details script will be invoked when the user clicks on a
+feature contained within the track.  This will generate a simple table
+of all feature information available in the database.  This includes
+the user-defined tag/value attributes set in Column 9 of the GFF for
+that feature.</p>
+<p>You can control, to some extent, the formatting of the tag value table
+by providing a configuration stanza with the following format:</p>
+<pre>
+  [feature_type:details]
+  tag1 = formatting rule
+  tag2 = formatting rule
+  tag3 = formatting rule</pre>
+<p>``feature_type'' is the type of the feature you wish to control. For
+example, ``gene:sgd'' or simply ``gene''. You may also specify a
+feature_type of ``default'' to control the formatting for all
+features. ``tag1'', ``tag2'' and so forth are the tags that you wish to
+control the formatting of. The tags ``Name,'' ``Class'', ``Type'', ``Source'',
+``Position'', and ``Length'' are valid for all features, while ``Target''
+and ``Matches'' are valid for all features that have a target
+alignment. In addition, you can use the names of any attributes that
+you have defined. Tags names are NOT case sensitive, and you may use a
+tag named ``default'' to define a formatting rule that is general to all
+tags (more specific formatting rules will override less specific ones).</p>
+<p>A formatting rule can be a string with (possible) substitution values,
+or a callback. If a string, it can contain one or more of the
+substitution variable ``$name'', ``$start'', ``$end'', ``$stop'', ``$strand'',
+``$method'', ``$type'', ``$description'' and ``$class'', which are replaced
+with the corresponding values from the current feature. In addition,
+the substitution variable ``$value'' is replaced with the current value
+of the attribute, and the variable ``$tag'' is replaced with the current
+tag (attribute) name. HTML characters are passed through.</p>
+<p>For example, here is a simple way to boldface the Type field,
+italicize the Length field, and turn the Notes into a Google
+search:</p>
+<pre>
+ [gene:details]
+ Type   = &lt;b&gt;$value&lt;/b&gt;
+ Length = &lt;i&gt;$value&lt;/b&gt;
+ Note  = &lt;a href=&quot;<a href="http://www.google.com/search?q=">http://www.google.com/search?q=</a>$value&quot;&gt;$value&lt;/a&gt;</pre>
+<p>If you provide a callback, the callback subroutine will be invoked
+with three arguments. WARNING: the three arguments are different from
+the ones passed to other callbacks, and consist of the tag value, the
+tag name, and the current feature:</p>
+<pre>
+  Note = sub {
+             my($value,$tag_name,$feature) = @_;
+             do something....
+             }</pre>
+<p>You can use this feature to format sequence attributes nicely. For
+example, if your features have a Translation attribute which contains
+their protein translations, then you are probably unsatisified with
+the default formatting of these features. You can modify this with a
+callback that word-wraps the value into lines of at most 60
+characters, and puts the whole thing in a &lt;pre&gt; section.</p>
+<pre>
+ [gene:details]
+ Translation = sub {
+                my $value = shift;
+                $value =~ s/(\S{1,60})/$1\n/g;
+                &quot;&lt;pre&gt;$value&lt;/pre&gt;&quot;;
+             }</pre>
+<p>
+</p>
+<h2><a name="b11__linking_out_from_gbrowse_details">B11. Linking out from gbrowse_details</a></h2>
+<p>The formatting rule mechanism described in the previous section is the
+recommended way of creating a link out from the gbrowse_details
+page. However, an older mechanism is available for backward
+compatibility.</p>
+<p>To use this legacy mechanism, create a stanza header named
+[TagName:DETAILS], where TagName is the name of the tag (attribute
+name) whose values you wish to turn into URLs, and where DETAILS must
+be spelled with capital letters. Put the option ``URL'' inside this
+stanza, containing a string to be transformed into the URL.</p>
+<p>For example, to link to a local cgi script from the following GFF line:</p>
+<pre>
+ IV     curated exon    518     550     . + .   Transcript B0273.1; local_id 11723</pre>
+<p>one might add the following stanza to the configuration file:</p>
+<pre>
+    [local_id:DETAILS]
+    URL   = <a href="http://localhost/cgi-bin/localLookup.cgi?tag=">http://localhost/cgi-bin/localLookup.cgi?tag=</a>$tag;id=$value</pre>
+<p>The URL option's value should be a URL containing one or more
+variables.  Variables begin with a dollar sign ($), and are
+replaced at run time with the information relating to the selected
+feature attribute.  Recognized variables are:</p>
+<pre>
+     $tag        The &quot;tag&quot; of the tag/value pair
+     $value      The &quot;value&quot; of the tag/value pair</pre>
+<p>The value of URL can also be an anonymous subroutine, in which case
+the subroutine will be invoked with a two-element argument list
+consisting of the name of the tag and its value. This example,
+provided by Cyril Pommier, will convert Dbxref tags into links to
+NCBI, provided that the value of the tag looks like an NCBI GI number:</p>
+<pre>
+ [Dbxref:DETAILS]
+ URL = sub { 
+       my ($tag,$value)=@_;
+       if ($value =~ /NCBI_gi:(.+)/){
+        return &quot;<a href="http://www.ncbi.nlm.nih.gov/gquery/gquery.fcgi?term=">http://www.ncbi.nlm.nih.gov/gquery/gquery.fcgi?term=</a>$1&quot;;
+        }
+        return;
+      }</pre>
+<p>
+</p>
+<hr />
+<h1><a name="c__generating_histograms">C. GENERATING HISTOGRAMS</a></h1>
+<p>With a little bit of additional effort, you can set one or more tracks
+up to display a density histogram of the features contained within the
+track.  For example, the human data source in GBrowse demo
+(http://www.wormbase.org/db/seq/gbrowse/human) uses density
+histograms in the chromosomal overview.  In addition, when the
+features in the SNP track become too dense to view, this track
+converts into a histogram.  To see this in action, turn on the SNP
+track and then zoom out beyond 150K.</p>
+<p>There are four steps for making histograms:</p>
+<ol>
+<li>
+<p>generate the density data using the bp_generate_histogram.pl script.</p>
+</li>
+<li>
+<p>load the density data using load_gff.pl or fast_load_gff.pl.</p>
+</li>
+<li>
+<p>declare a density aggregator to the gbrowse configuration file</p>
+</li>
+<li>
+<p>add the density aggregator to the appropriate track in the configuration file.</p>
+</li>
+</ol>
+<p>The first step is to generate the density data.  Currently this is
+done by generating a GFF file containing a set of ``bin'' feature
+types.  Use the bp_generate_histogram.pl script to do this.  You will
+find it in bioperl under the scripts/Bio-DB-GFF directory.</p>
+<p>Assuming that your database is named ``dicty'', you have a feature named
+SNP, and you wish to generate a density distribution across 10,000 bp
+bins, here is the command you would use:</p>
+<pre>
+  bp_generate_histogram.pl -merge -d dicty -bin 10000 SNP &gt;snp_density.gff</pre>
+<p>This is saying to use the ``dicty'' database (-d) option, to use 10,000
+bp bins (the -bin option) and to count the occurrences of the SNP
+feature throughout the database.  In addition, the -merge option says
+to merge all types of SNPs into a single bin.  Otherwise they will be
+stratified by their source.  The resulting GFF file contains a series
+of entries like these ones:</p>
+<pre>
+  Chr1  SNP bin 1     10000 49 + . bin Chr1:SNP
+  Chr1  SNP bin 10001 20000 29 + . bin Chr1:SNP</pre>
+<p>What this is saying is that there are now a series of pseudo-features
+of type ``bin:SNP'' that occupy successive 10,000 bp regions of the
+genome.  The score field contains the number of times a SNP was seen
+in that bin.</p>
+<p>You'll now load this file using load_gff.pl or fast_load_gff.pl:</p>
+<pre>
+  load_gff.pl -d dicty snp_density.gff</pre>
+<p>The next step is to tell GBrowse how to use this information.  You do
+this by creating a new aggregator for the SNP density information.
+Open the GBrowse configuration file and find the aggregators option.
+Add a new aggregator that looks like this:</p>
+<pre>
+  aggregators = snp_density{bin:SNP}</pre>
+<p>This is declaring a new feature named ``snp_density'' that is composed
+of subparts of type bin:SNP.</p>
+<p>The last step is to declare a track for the density information.  You
+will use the ``xyplot'' glyph, which can draw a number of graphs,
+including histograms.  To add the SNP density information as a static
+track in the overview, create a section like this one:</p>
+<pre>
+ [SNP:overview]
+ feature       = snp_density
+ glyph         = xyplot
+ graph_type    = boxes
+ scale         = right
+ bgcolor       = red
+ fgcolor       = red
+ height        = 20
+ key           = SNP Density</pre>
+<p>This is declaring a new constant track in the overview named ``SNP
+Density.''  The feature is ``snp_density'', corresponding to the
+aggregator declared earlier.  The glyph is ``xyplot'' using the graph
+type of ``boxes'' to generate a column graph.</p>
+<p>To set up a track so that the histogram appears when the user zooms
+out beyond 100,000 bp but shows the detailed information at higher
+magnifications, generate two track sections like these:</p>
+<pre>
+  [SNPs]
+  feature       = snp
+  glyph         = triangle
+  point         = 1
+  orient        = N
+  height        = 6
+  bgcolor       = blue
+  fgcolor       = blue
+  key           = SNPs</pre>
+<pre>
+  [SNPs:100000]
+  feature       = snp_density
+  glyph         = xyplot
+  graph_type    = boxes
+  scale         = right</pre>
+<p>The first track section sets up the defaults for the SNP track.  SNPs
+are represented as blue triangles pointing North.  The second track
+declaration declares that when the user zooms out to over 100K base
+pairs, GBrowse should display the snp_density feature using the xyplot
+glyph.</p>
+<p>
+</p>
+<hr />
+<h1><a name="d__internationalization">D. INTERNATIONALIZATION</a></h1>
+<p>GBrowse is partially internationalized.  End-users whose browsers are
+set to request a non-English language will see the GBrowse main and
+secondary screens in their preferred language, provided that GBrowse
+has the appropriate translation file.</p>
+<p>Translation files are located in gbrowse.conf/languages/ and use the
+standard two-letter language abbreviations, such as ``fr'' for French,
+as well as the regional abbregiations, such as fr-CA for Canadian
+French.  Currently there are translation files for French, Italian,
+and Japanese.  If your favorite language isn't supported, you are
+encouraged to create a new translation file and contribute it to the
+GBrowse development effort.  Please contact Lincoln Stein
+(<a href="mailto:lstein@cshl.org">lstein@cshl.org</a>) for help in doing this.</p>
+<p>If the end user does not specify a preferred language, GBrowse will
+default to ``en'' (English).  You can change this by placing a
+``language'' option in the configuration file somewhere inside the
+[GENERAL] section.  For example, to make Japanese the default, create
+this entry:</p>
+<pre>
+  language = ja</pre>
+<p>GBrowse will still use the end-user's preferred language in preference
+to the default if the preferred language is available.</p>
+<p>Although GBrowse automatically changes the text and button language,
+it can't automatically translate the track labels.  If you would like
+the track labels to localize, you will have to provide your own
+translations in the ``key'', ``citation'' and ``category'' options.  The
+syntax is similar to that used for semantic zooming:</p>
+<pre>
+  [gene]
+  glyph   = transcript
+  feature = transcript:curated
+  height  = 10
+  key     = Named Gene
+  key:fr  = Gènes Nommés
+  key:it  = I Geni dati un nome a
+  key:sp  = Los Genes denominados
+  category = Genes
+  category:fr = Gènes</pre>
+<p>The option is followed by a colon and the two-letter language name to
+indicate that when the page is being displayed with this language, to
+use the indicated value of the option.  The option without the colon
+is the default.  You may enter accented and umlauted characters
+directly, as shown, or use the HTML entities.  Non-English character
+sets, such as Japanese, should also work correctly, provided that the
+translation file indicates the correct character set to use.</p>
+<p>HELP FILES:</p>
+<p>The GBrowse help files are in English.  Although there is support for
+internationalizing the hep files, no one has done this yet.  If you
+are industrious and wish to translate the help files into your
+favorite language, find the two help files where they are located in
+htdocs/gbrowse/.  One is named general_help.html, while the other is
+named annotation_help.html.  Translate them, and create new files with
+the language prefix appended to the end.  For example, the French
+translation of annotation_help.html would be annotation_help.html.fr.</p>
+<p>LIMITATIONS:</p>
+<p>- There is no localization support. For example, GBrowse will print
+large numbers using commas (e.g. 1,234,567) instead of periods, even
+when talking to a European browser.</p>
+<p>- Although the HTML frame around the GBrowse genome image will use the
+appropriate character set, the overview and detail images themselves
+are limited to Latin alphabets.  This is because of limited native
+character support in the GD library used by GBrowse.  When a non-Latin
+character set is called for, such as Japanese, GBrowse will use
+Japanese for the frame, but English for the image.</p>
+<p>- The rate at which the GBrowse team adds new features to the browser
+often outstrips the ability of volunteers to update the translation
+files.  This means that new buttons and fields may be displayed in
+English on an otherwise correctly internationalized page.</p>
+<p>
+</p>
+<hr />
+<h1><a name="e__authentication_and_authorization">E. AUTHENTICATION AND AUTHORIZATION</a></h1>
+<p>You can restrict who has access to gbrowse by IP address, host name,
+domain or username and password.  Restriction can apply to the
+database as a whole, or to particular annotation tracks.</p>
+<p>To limit access to a whole database, you can use Apache's standard
+authentication and authorization.  Gbrowse uses a URL of this form to
+select which database it is set to:</p>
+<pre>
+      <a href="http://your.host/cgi-bin/gbrowse/your_database">http://your.host/cgi-bin/gbrowse/your_database</a></pre>
+<p>where ``your_database'' is the name of the currently selected database.
+For example, the yeast database is
+<a href="http://your.host/cgi-bin/gbrowse/yeast.">http://your.host/cgi-bin/gbrowse/yeast.</a></p>
+<p>To control access to the entire database, create a &lt;Location&gt; section
+in httpd.conf.  The &lt;Location&gt; section should look like this:</p>
+<pre>
+   &lt;Location /cgi-bin/gbrowse/your_database&gt;
+        Order deny,allow
+        deny from all
+        allow from localhost .cshl.edu .ebi.ac.uk
+   &lt;/Location&gt;</pre>
+<p>This denies access to everybody except for ``localhost'' and browsers
+from the domains .cshl.edu and .ebi.ac.uk.  You can also limit by IP
+address, by username and password or by combinations of these
+techniques.  See <a href="http://httpd.apache.org/docs/howto/auth.html">http://httpd.apache.org/docs/howto/auth.html</a> for
+the full details.</p>
+<p>You can also limit individual tracks to certain individuals or
+organizations.  Unless the stated requirements are met, the track will
+not appear on the main screen or any of the configuration screens.  To
+set this up, add a ``restrict'' option to the track you wish to make
+off-limits:</p>
+<pre>
+        [PROPRIETARY]
+        feature = etc
+        glyph   = etc
+        restrict = Order deny,allow
+                   deny from all
+                   allow from localhost .cshl.edu .ebi.ac.uk</pre>
+<p>The value of the restrict option is identical to the Apache
+authorization directives and can include any of the directives
+``Order,'' ``Satisfy,'' ``deny from,'' ``allow from,'' ``require valid-user'' or
+``require user.''  The only difference is that the ``require group''
+directive is not supported, since the location of Apache's group file
+is not passed to CGI scripts.  Note that username/password
+authentication must be turned on in httpd.conf and the user must have
+successfully authenticated himself in order for the username to be
+available.</p>
+<p>As with other gbrowse options, restrict can be a code subroutine.  The
+subroutine will be called with three arguments consisting of the host,
+ip address and authenticated user.  It should return a true value to
+allow access to the track, or a false value to forbid it.  This can be
+used to implement group-based authorization or more complex schemes.</p>
+<p>Here is an example that uses the Text::GenderFromName to allow access
+if the user's name sounds female and forbids access if the name sounds
+male.  (It might be useful for an X-chromosome annotation site.)</p>
+<pre>
+    restrict = sub {
+               my ($host,$ip,$user) = @_;
+               return unless defined $user;
+               use Text::GenderFromName qw(gender);
+               return gender($user) eq 'f';
+             }</pre>
+<p>You should be aware that the username will only be defined if username
+authentication is turned on and the user has successfully
+authenticated himself against Apache's user database using the correct
+password.  In addition, the hostname will only be defined if
+HostnameLookups have been turned on in httpd.conf.  In the latter
+case, you can convert the IP address into a hostname using this piece
+of code:</p>
+<pre>
+    use Socket;
+    $host = gethostbyaddr(inet_aton($addr),AF_INET);</pre>
+<p>Note that this may slow down the response time of gbrowse noticeably
+if you have a slow DNS name server.</p>
+<p>Another thing to be aware of when restricting access to an entire
+database is that that even though the database itself will not be
+accessible to unauthorized users, the name of the database will still
+be available from the popup ``Data Source'' menu.  If you wish even the
+name to be suppressed from view by unauthorized users, add the
+following line to the [GENERAL] section of the configuration file of
+the database you wish to suppress:</p>
+<pre>
+    restrict = require valid-user</pre>
+<p>The syntax described earlier for restricting access to tracks by
+hostname, IP address or username holds true for restricting the
+visibility of the database on the Data Source popup menu.</p>
+<p>
+</p>
+<hr />
+<h1><a name="f__displaying_genetic_and_rh_maps">F. DISPLAYING GENETIC AND RH MAPS</a></h1>
+<p>GBrowse can be tweaked to make it more suitable for displaying genetic
+and radiation hybrid maps.</p>
+<p>The main issue is that the Bio::DB::GFF database expects coordinates
+to be positive integers, not fractions, but genetic and RH maps use
+floating point numbers.  Working around this is a bit of an ugly hack.
+Before loading your data you must multiply all your coordinates by a
+constant power of 10 in order to convert them into integers.  For
+example, if a genetic map uses Morgan units ranging from 0 to 1.80,
+you would multiple by 100 to create a map in ranging from 0 to 180.</p>
+<p>Create a GFF file containing the markers in modified coordinates and
+load it as usual.  Now you must tell GBrowse to reverse these changes.
+Enter the following options into the [GENERAL] section of the
+configuration file:</p>
+<pre>
+ units = M
+ unit_divider = 100</pre>
+<p>These two options tell GBrowse to use ``M'' (Morgan) units, and to
+divide all coordinates by 100.  GBrowse will automatically display the
+scale using the most appropriate units, so the displayed map will
+typically be drawn using cM units.</p>
+<p>
+</p>
+<hr />
+<h1><a name="g__changing_the_location_of_the_configuration_files">G. CHANGING THE LOCATION OF THE CONFIGURATION FILES</a></h1>
+<p>If you wish to change the location of the gbrowse.conf configuration
+file directory, you must manually edit the gbrowse CGI script.  Open
+the script in a text editor, and find this section:</p>
+<pre>
+ ###################################################################
+ # Non-modperl users should change this variable if needed to point
+ # to the directory in which the configuration files are stored.
+ #
+ use constant CONF_DIR =&gt; '/usr/local/apache/conf/gbrowse.conf';
+ #
+ ###################################################################</pre>
+<p>Change the definition of CONF_DIR to the desired location of the
+configuration files.</p>
+<p>An alternative, for users of mod_perl only, is to add the GBrowseConf
+per-directory variable to the configuration for the directory in which
+the gbrowse script lives.  This variable overrides the CONF_DIR value.
+For example:</p>
+<pre>
+ &lt;Directory /usr/local/apache/cgi-perl&gt;
+   SetHandler      perl-script
+   PerlHandler     Apache::Registry
+   PerlSendHeader  On
+   Options         +ExecCGI
+   PerlSetVar      GBrowseConf /etc/gbrowse.conf
+ &lt;/Directory&gt;</pre>
+<p>
+</p>
+<hr />
+<h1><a name="h__using_das__distributed_annotation_system__databases">H. USING DAS (DISTRIBUTED ANNOTATION SYSTEM) DATABASES</a></h1>
+<p>You may insert features from a DAS source into any named track. Create
+a stanza as usual but instead of specifying the feature type using the
+``feature'' option, give the desired DAS URL using the ``remote feature'' option:</p>
+<pre>
+ remote feature = <a href="http://dev.hapmap.org/cgi-perl/das/t2d_testing?type=ldblock">http://dev.hapmap.org/cgi-perl/das/t2d_testing?type=ldblock</a></pre>
+<p>Because DAS sources specify the glyph and visualization options, most
+of the settings such as bgcolor will be ignored. However, the track
+key and citation options are honored.</p>
+<p>You can use the same syntax to load a GFF file or a feature file in
+Gbrowse upload format into a track. Just provide a URL that returns
+the desired data.</p>
+<p>You can also run GBrowse entirely off a single DAS source. To get
+this support, you must use Bio::Das version 0.90 or higher, available
+from <a href="http://www.biodas.org.">http://www.biodas.org.</a></p>
+<p>A sample [GENERAL] configuration section looks like this:</p>
+<pre>
+ [GENERAL]
+ description   = Das Example Database (dicty)
+ db_adaptor    = Bio::Das
+ db_args       = -source <a href="http://www.biodas.org/cgi-bin/das">http://www.biodas.org/cgi-bin/das</a> 
+                 -dsn    dicty</pre>
+<p>The db_adaptor option must be set to ``Bio::Das''.  The db_args option
+must contain a -source pointing to the base of the remote DAS server,
+and a -dsn pointing to the name of the annotation database.</p>
+<p>The remainder of the configuration file should be configured as
+described earlier.  The following short script will return a list of
+the feature types known to the remote DAS server.  You can use the
+output of this script as the basis for the tracks to configure.</p>
+<pre>
+ #!/usr/bin/perl</pre>
+<pre>
+ use strict;</pre>
+<pre>
+ use Bio::Das;
+ my $db = Bio::Das-&gt;new('<a href="http://localhost/cgi-bin/das">http://localhost/cgi-bin/das</a>'=&gt;'dicty');
+ print join &quot;\n&quot;,$db-&gt;types;</pre>
+<p>Limitations:</p>
+<p>The DAS implementation does not descend into subcomponents.  For
+example, if the user requests features on a chromosome, but the remote
+DAS server has annotated genes using contig coordinates, then the
+genes will not appear on the chromosome.</p>
+<p>The gbrowse_details script does not provide useful information because
+the DAS/1 protocol does not provide a way to retrieve attribute
+information on a named feature.</p>
+<p>
+</p>
+<hr />
+<h1><a name="i__the_biomoby_browser">I. THE BioMOBY BROWSER</a></h1>
+<p>The BioMOBY project aims to design and deploy platforms that
+enable and simplify biological database interoperability.</p>
+<p>To date, the MOBY-Services (MOBY-S) branch of the BioMOBY
+project has published a fairly stable API that is now being
+used by data providers worldwide to publish their data in an
+interoperable manner.  A simple MOBY browser has been written
+for Gbrowse that allows the end-user to ``surf'' out of their
+Gbrowse view and begin exploring data related to the genomic
+features displayed in Gbrowse.</p>
+<p>Configuration of the gbrowse_moby script does, at this time,
+require some VERY simple code-editing, and small modifications
+to your XX.organism.conf configuration file.  These are described
+in detail below:</p>
+<ol>
+<li><strong><a name="item_synopsis">SYNOPSIS</a></strong>
+
+<p>In 0X.organism.conf, for example:</p>
+<pre>
+ [ORIGIN]
+ link         = <a href="http://yoursite.com/cgi-bin/gbrowse_moby?source=">http://yoursite.com/cgi-bin/gbrowse_moby?source=</a>$source&amp;name=$name&amp;class=$class&amp;method=$method&amp;ref=$ref&amp;description=$description
+ feature      = origin:Sequence
+ glyph        = anchored_arrow
+ fgcolor      = orange
+ font2color   = red
+ linewidth    = 2
+ height       = 10
+ description  = 1
+ key          = Definition line
+ link_target  = _MOBY</pre>
+<p>AND/OR</p>
+<pre>
+ [db_xref:DETAILS]
+ URL = <a href="http://yoursite.com/cgi-bin/gbrowse_moby?namespace=">http://yoursite.com/cgi-bin/gbrowse_moby?namespace=</a>$tag;id=$value</pre>
+<p>Note that all you are doing in each case is to associate a
+mouse click on a particular feature type with an invocation
+of the gbrowse_moby script, passing a few of the common Gbrowse
+variables in the GET string.</p>
+<p>The gbrowse_moby script will take information passed from a click on
+a Gbrowse feature, or a click on a configured DETAILS GFF
+attribute type, and initiate a MOBY browsing session with
+information from that link.  Most information is discarded.
+The only useful information to MOBY is a ``namespace'' and an
+``id'' within that namespace.</p>
+<p>Generally speaking, namespaces in Gbrowse will have to be
+mapped to a namespace in the MOBY namespace ontology (which
+is derived from the Gene Ontology Database Cross-Reference
+Abbreviations list).  Currently, this requires editing of the
+gbrowse_moby code, where a Perl hash named %source2namespace
+maps the GFF source (column 2) to a MOBY namespace:</p>
+<pre>
+  $source2namespace{$source} = moby_namespace</pre>
+</li>
+<li><strong><a name="item_required_libraries">REQUIRED LIBRARIES</a></strong>
+
+<p>This script requires libraries from the BioMOBY project.  Currently
+these are only available from the CVS.  Anonymous checkout of the
+BioMOBY project can be accomplished as follows:</p>
+<pre>
+  cvs -d :pserver:cvs@cvs.open-bio.org:/home/repository/moby login</pre>
+<p>When prompted for a password, type ``cvs''.</p>
+<pre>
+  cvs -d :pserver:cvs@cvs.open-bio.org:/home/repository/moby co moby-live
+  cvs update -dP</pre>
+<p>You will then need to enter the moby-live/Perl folder and run ``perl
+Makefile.PL; make; make install'' to install the MOBY libraries into
+your system.</p>
+</li>
+<li><strong><a name="item_usage">USAGE</a></strong>
+
+<p>gbrowse_moby understands the following variables, some of
+which (*) may be passed from Gbrowse through a mouse-click
+into the GET string:</p>
+<pre>
+ * $source    - converted into a MOBY namespace by parsing
+              the 'source' GFF tag against the %source2namespace
+              hash.
+             (see more detailed explanation in the examples below)
+ $namespace - used verbatim as a valid MOBY namespace
+ * $name      - used verbatim as a MOBY id interpreted in the namespace
+ * $id        - used verbatim as a MOBY id interpreted in the namespace
+ * $class     - this is the GFF column 9 class; used for the page title
+ $objectclass - this should be a MOBY Class ontology term
+               (becomes Class 'Object' by default, and this
+                is usually correct)
+ $object      - contains the raw XML of a valid MOBY object</pre>
+<p>Note that you MUST at least pass a namespace-type variable (source/namespace)
+and an id-type variable (name/id) in order to have a successful MOBY
+call.</p>
+</li>
+<li><strong><a name="item_examples">EXAMPLES</a></strong>
+
+<dl>
+<dt><strong><a name="item_simple_gff">Simple GFF</a></strong>
+
+<dd>
+<p>If your GFF were:</p>
+</dd>
+<dd>
+<pre>
+      A22344  Genbank  origin  1000  2000  87  +  .</pre>
+</dd>
+<dd>
+<p>You would set your configuration file as follows:</p>
+</dd>
+<dd>
+<pre>
+     [ORIGIN]
+     link         = <a href="http://yoursite.com/cgi-bin/gbrowse_moby?source=">http://yoursite.com/cgi-bin/gbrowse_moby?source=</a>$source&amp;name=$name&amp;class=$class
+     feature      = origin:Genbank</pre>
+</dd>
+<dd>
+<p>and you would edit the gbrowse_moby script as follows:</p>
+</dd>
+<dd>
+<pre>
+      my %source2namespace = (
+         #   GFF-source           MOBY-namespace
+            'Genbank'       =&gt;      'NCBI_Acc',
+      );</pre>
+</dd>
+<dd>
+<p>this maps the GFF source tag ``Genbank'' to the MOBY namespace ``NCBI_Acc''</p>
+</dd>
+</li>
+<dt><strong><a name="item_gff_with_non_2dmoby_attributes">GFF With non-MOBY Attributes</a></strong>
+
+<dd>
+<p>If your GFF were:</p>
+</dd>
+<dd>
+<pre>
+      A22344  Genbank origin  1000  2000 87 + . Locus CDC23</pre>
+</dd>
+<dd>
+<p>You would set your configuration file as follows:</p>
+</dd>
+<dd>
+<pre>
+     [ORIGIN]
+     link         = <a href="http://yoursite.com/cgi-bin/gbrowse_moby?source=">http://yoursite.com/cgi-bin/gbrowse_moby?source=</a>$source&amp;name=$name&amp;class=$class
+     feature      = origin:Genbank</pre>
+</dd>
+<dd>
+<p>and you might also set a DETAILS call to handle the Locus Xref:
+(notice that we use the 'source' tag to force a translation of
+the foreign namespace into a MOBY namespace)</p>
+</dd>
+<dd>
+<pre>
+     [db_xref:DETAILS]
+     URL = <a href="http://brie4.cshl.org:9320/cgi-bin/gbrowse_moby?source=">http://brie4.cshl.org:9320/cgi-bin/gbrowse_moby?source=</a>$tag;id=$value</pre>
+</dd>
+<dd>
+<p>then to handle the mapping of Locus to YDB_Locus as well
+as the Genbank GFF source tag you would
+edit the source2namespace hash in gbrowse_moby to read:</p>
+</dd>
+<dd>
+<pre>
+      my %source2namespace = (
+         #   GFF-source           MOBY-namespace
+            'Genbank'       =&gt;      'NCBI_Acc',
+            'Locus'         =&gt;      'YDB_Locus',
+      );</pre>
+</dd>
+</li>
+<dt><strong><a name="item_gff_with_moby_attributes">GFF With MOBY Attributes</a></strong>
+
+<dd>
+<p>If your GFF were (NCBI_gi is a valid MOBY namespace):</p>
+</dd>
+<dd>
+<pre>
+      A22344  Genbank origin  1000  2000 87 + . NCBI_gi 118746</pre>
+</dd>
+<dd>
+<p>You would set your configuration file as follows:</p>
+</dd>
+<dd>
+<pre>
+     [ORIGIN]
+     link         = <a href="http://yoursite.com/cgi-bin/gbrowse_moby?source=">http://yoursite.com/cgi-bin/gbrowse_moby?source=</a>$source&amp;name=$name&amp;class=$class
+     feature      = origin:Genbank</pre>
+</dd>
+<dd>
+<p>and you might also set a DETAILS call to handle the NCBI_gi Xref:
+(notice that we now use the 'namespace' tag to indicate that
+the tag is already a valid MOBY namespace)</p>
+</dd>
+<dd>
+<pre>
+     [db_xref:DETAILS]
+     URL = <a href="http://brie4.cshl.org:9320/cgi-bin/gbrowse_moby?namespace=">http://brie4.cshl.org:9320/cgi-bin/gbrowse_moby?namespace=</a>$tag;id=$value</pre>
+</dd>
+<dd>
+<p>Since there is no need to map the namespace portion, we now
+only need to handle the Genbank GFF source as before:</p>
+</dd>
+<dd>
+<pre>
+      my %source2namespace = (
+         #   GFF-source           MOBY-namespace
+            'Genbank'       =&gt;      'NCBI_Acc',
+      );</pre>
+</dd>
+</li>
+</dl>
+<li><strong><a name="item_hints">HINTS</a></strong>
+
+<p>-The full listing of valid MOBY namespaces is available at:</p>
+<pre>
+    <a href="http://mobycentral.cbr.nrc.ca/cgi-bin/types/Namespaces">http://mobycentral.cbr.nrc.ca/cgi-bin/types/Namespaces</a></pre>
+<p>-A useful mapping to make is to put the organism name into the
+Global_Keyword namespace.  This will trigger discovery of MedLine
+searches for papers about that organism.</p>
+</li>
+</ol>
+<p>
+</p>
+<hr />
+<h1><a name="j__biomoby_services">J. BioMOBY Services</a></h1>
+<p>A selection of services are distributed with the Gbrowse
+package that will allow you to serve your underlying data
+using the BioMOBY Services architecture.</p>
+<p>To enable these, simply do the following:</p>
+<ol>
+<li><strong><a name="item_set_2dup_and_fill_your_database">Set-up and fill your database</a></strong>
+
+<p>as per the normal Gbrowse instructions</p>
+</li>
+<li><strong><a name="item_edit_the_moby_2econf_file">Edit the moby.conf file</a></strong>
+
+<p>in the /$CONFIG/gbrowse.conf/MobyServices folder. It
+should be set up as follows:</p>
+<dl>
+<dt><strong><a name="item_a_2e_reference">a. Reference</a></strong>
+
+<dd>
+<p>Your reference sequences will be based
+on some type of identifier - e.g. they will be from Genbank
+or from Embl or from Flybase, etc.  Look-up the BioMOBY
+namespace corresponding to the type of identifier you are
+using for your Reference sequences and put that
+identifier here.</p>
+</dd>
+<dd>
+<p>-The full listing of valid MOBY namespaces is available at:</p>
+</dd>
+<dd>
+<pre>
+    <a href="http://mobycentral.cbr.nrc.ca/cgi-bin/types/Namespaces">http://mobycentral.cbr.nrc.ca/cgi-bin/types/Namespaces</a></pre>
+</dd>
+</li>
+<dt><strong><a name="item_b_2e_authuri">b. authURI</a></strong>
+
+<dd>
+<p>You are required to identify yourself when registering MOBY
+Services.  Your authURI is a URI uniquely identifying you.
+This is generally your domain (e.g. flybase.org)</p>
+</dd>
+</li>
+<dt><strong><a name="item_c_2e_contactemail">c. contactEmail</a></strong>
+
+<dd>
+<p>You are required to provide a contact email address to which
+people can contact you v.v. the services you are providing.</p>
+</dd>
+</li>
+<dt><strong><a name="item_d_2e_cgi_url">d. CGI_URL</a></strong>
+
+<dd>
+<p>This is simply the URL to the folder from which you are serving
+your gbrowse scripts.  e.g. <a href="http://flybase.org/cgi-bin/browser/">http://flybase.org/cgi-bin/browser/</a>
+DO NOT include the script name in this parameter!  It is the 
+folder only!!</p>
+</dd>
+</li>
+<dt><strong><a name="item_e_2e__5bnamespace_class_mappings_5d">e. [Namespace_Class_Mappings]</a></strong>
+
+<dd>
+<p>This section is just a list of tuples indicating the relationship
+between various entities in your database (e.g. Genes, Transcripts)
+and their equivalent BioMOBY namespaces.  For example, if you are
+TAIR, and you have entities in your database called ``Locus'', you 
+would add the line:</p>
+</dd>
+<dd>
+<pre>
+        Locus = TAIR_Locus</pre>
+</dd>
+<dd>
+<p>to this section of the config file.  This will allow people who
+have TAIR_Locus identifiers in-hand to discover your service and
+request information about that locus from your database.</p>
+</dd>
+<dd>
+<p>You may add as many Namespace-&gt;Class mappings as you wish; one per
+line.</p>
+</dd>
+</li>
+</dl>
+<li><strong><a name="item_registering_services">REGISTERING SERVICES</a></strong>
+
+<p>To register your services with the MOBY Central web service registry
+simply run the ``register_moby_services.pl'' script, located in the 
+Generic-Genome-Browser/bin folder.  The script documentation can be
+retrieved with POD or simple documentation can be printed by simply 
+running the script with no command-line parameters.  Generally speaking
+you need only run:</p>
+<p>perl register_moby_services.pl -register</p>
+<p>As services are registered they will be added to a file:
+registeredMOBYServices.dat.  This file is used to de-register
+your services if you wish to do so.  To deregister, simply run:</p>
+<p>perl register_moby_services.pl -clean</p>
+<p>If your .dat file is not available, cleaning your services will
+be unsuccessful.</p>
+</li>
+<li><strong><a name="item_service_script">Service script</a></strong>
+
+<p>Your services are served by the script 'moby_server' in your
+cgi-bin folder.  This is auto-configured by the register_services 
+step above, so generally speaking you do not need to edit this
+script.</p>
+</li>
+</ol>
+<p>
+</p>
+<hr />
+<h1><a name="k__filtering_search_results">K. FILTERING SEARCH RESULTS</a></h1>
+<p>GBrowse provides a method to filter the contents of individual tracks based
+on information that can be obtained from feature attributes.  For example,
+suppose you have performed a blast and added all hits as similarity features
+on an entry. In gbrowse, all those features can get a little crowdy.
+The administrator can decide to show only the top 5 of the blast hits.
+This can easily be accomplished by adding the filter option in the conf file.
+It might look like this:</p>
+<pre>
+  [BLAST]
+  feature       = blast
+  glyph         = segments
+  filter = sub {
+                 my $feat = shift;
+                 (my $rank) = $feat-&gt;get_tag_values('rank'); # persistent Bio::SeqFeature::Generic features
+                 #(my $rank) = $feat-&gt;attributes('rank'); # Bio::DB::GFF::Feature
+                 $rank &lt; 6;
+               }</pre>
+<p>Another useful example is to show features coming from a plain genbank file.
+When loaded into BioSQL the source becomes 'EMBL/Genbank/SwissProt'.
+Using the Bio::DB::Das::BioSQL adaptor you have to pass the source to the
+feature option. It can be rather difficult to distinguish all the features
+when they all have the same source string. This problem can be solved using
+the filter option. In the following example the difference between the
+features is done based on the primary_tag</p>
+<pre>
+  [REGION]
+  feature      = EMBL/GenBank/SwissProt
+  filter       = sub {
+                  my $feat = shift;
+                  $feat-&gt;primary_tag =~ /region/i;
+                 }
+  key          = RefSeq Protein Domains</pre>
+<pre>
+  [SIGPEPTIDE]
+  feature      = EMBL/GenBank/SwissProt
+  filter       = sub {
+                  my $feat = shift;
+                  $feat-&gt;primary_tag =~ /sig_peptide/i;
+                 }
+  key          = RefSeq Signal Peptide</pre>
+<p>
+</p>
+<hr />
+<h1><a name="l__invoking_gbrowse_urls__under_construction_">L. INVOKING GBROWSE URLs (under construction)</a></h1>
+<p>This section describes the public CGI parameters recognized by
+GBrowse.  By setting the parameters in the URL, you can get gbrowse to
+do various useful things:</p>
+<dl>
+<dt><strong><a name="item_the_source_argument">The source argument</a></strong>
+
+<dd>
+<p>The last component of the gbrowse path is the symbolic name of the
+data source.  For example:</p>
+</dd>
+<dd>
+<pre>
+   <a href="http://www.your.site/cgi-bin/gbrowse/volvox">http://www.your.site/cgi-bin/gbrowse/volvox</a>
+   <a href="http://www.your.site/cgi-bin/gbrowse/yeast">http://www.your.site/cgi-bin/gbrowse/yeast</a>
+   <a href="http://www.your.site/cgi-bin/gbrowse/my_testing_database">http://www.your.site/cgi-bin/gbrowse/my_testing_database</a></pre>
+</dd>
+<dd>
+<p>These will correspond to config files named volvox.pm, yeast.pm and
+my_testing_database.pm respectively.</p>
+</dd>
+<dd>
+<p>As noted earlier, you can place numbers in front of the configuration
+file names in order to adjust the order in which they appear in the
+data source menu.</p>
+</dd>
+<dd>
+<p>NOTE: For obscure reasons involving Internet Explorer compatibility,
+gbrowse will add an extra slash to the end of the URL, resulting in
+URLs that look like:</p>
+</dd>
+<dd>
+<pre>
+  <a href="http://www.your.site/cgi-bin/gbrowse/yeast/?q=NAB2">http://www.your.site/cgi-bin/gbrowse/yeast/?q=NAB2</a></pre>
+</dd>
+<dd>
+<p>Don't worry about this. The URL works the same with and without the
+terminal slash.</p>
+</dd>
+</li>
+<dt><strong><a name="item_q">q</a></strong>
+
+<dd>
+<p>The argument ``q'' will set the landmark or search string:</p>
+</dd>
+<dd>
+<pre>
+    <a href="http://www.your.site/cgi-bin/gbrowse/yeast?q=NAB2">http://www.your.site/cgi-bin/gbrowse/yeast?q=NAB2</a></pre>
+</dd>
+<dd>
+<p>This will have the same effect as typing ``NAB2'' into the gbrowse
+search box.</p>
+</dd>
+<dd>
+<p>To go immediately to the multiple hits page (which shows hits on
+several overview panels), use multiple q arguments:</p>
+</dd>
+<dd>
+<pre>
+   <a href="http://www.your.site/cgi-bin/gbrowse/yeast?q=NAB2;q=NPY1">http://www.your.site/cgi-bin/gbrowse/yeast?q=NAB2;q=NPY1</a></pre>
+</dd>
+<dd>
+<p>Alternatively, you can use a single q parameter and separate each
+landmark name with a dash:</p>
+</dd>
+<dd>
+<pre>
+   <a href="http://www.your.site/cgi-bin/gbrowse/yeast?q=NAB2-NPY1">http://www.your.site/cgi-bin/gbrowse/yeast?q=NAB2-NPY1</a></pre>
+</dd>
+<dd>
+<p>The rules for specifying relative offsets and object classes are the
+same as in the main search field:</p>
+</dd>
+<dd>
+<pre>
+   <a href="http://www.your.site/cgi-bin/gbrowse/yeast?q=Gene:NAB2:1..5000">http://www.your.site/cgi-bin/gbrowse/yeast?q=Gene:NAB2:1..5000</a></pre>
+</dd>
+</li>
+<dt><strong><a name="item_ref_2c_start_2c_stop_2c_end">ref, start, stop, end</a></strong>
+
+<dd>
+<p>Together the ``ref,'' ``start'' and ``stop'' arguments specify the reference
+sequence and the start and end coordinates of the region of
+interest. The ``q'' argument, if present, overrides these settings.</p>
+</dd>
+<dd>
+<p>The ``end'' argument is a synonym for ``stop''.</p>
+</dd>
+</li>
+<dt><strong>label</strong>
+
+<dd>
+<p>The tracks to display. This parameter must contain the track names
+(i.e. the names in [brackets] in the config file) separated by ``+'' or
+``-'' characters.  For example:</p>
+</dd>
+<dd>
+<pre>
+   <a href="http://www.your.site/cgi-bin/gbrowse/yeast?labels=ORFs-tRNAs">http://www.your.site/cgi-bin/gbrowse/yeast?labels=ORFs-tRNAs</a></pre>
+</dd>
+<dd>
+<p>To use the ``+'' character you may have to URL escape it:</p>
+</dd>
+<dd>
+<pre>
+   <a href="http://www.your.site/cgi-bin/gbrowse/yeast?labels=ORFs%2BtRNAs">http://www.your.site/cgi-bin/gbrowse/yeast?labels=ORFs%2BtRNAs</a></pre>
+</dd>
+<dd>
+<p>All tracks not explicitly given by the label parameter will be closed
+(disabled).</p>
+</dd>
+</li>
+<dt><strong><a name="item_enable">enable</a></strong>
+
+<dd>
+<p>Tracks to enable. The tracks indicated by this parameter will be
+opened in addition to any tracks that were previously opened by the
+user.  The format is the same as label:</p>
+</dd>
+<dd>
+<pre>
+   <a href="http://www.your.site/cgi-bin/gbrowse/yeast?enable=ORFs-tRNAs">http://www.your.site/cgi-bin/gbrowse/yeast?enable=ORFs-tRNAs</a></pre>
+</dd>
+</li>
+<dt><strong><a name="item_disable">disable</a></strong>
+
+<dd>
+<p>Tracks to close. The tracks indicated by this parameter will be
+disabled. Tracks not mentioned by this parameter will keep their
+previous state.  The format is the same as label:</p>
+</dd>
+<dd>
+<pre>
+   <a href="http://www.your.site/cgi-bin/gbrowse/yeast?disable=ORFs-tRNAs">http://www.your.site/cgi-bin/gbrowse/yeast?disable=ORFs-tRNAs</a></pre>
+</dd>
+<dd>
+<p>When modifying track state, the ``label'' parameter is processed first,
+followed by the ``enable'' parameter and the ``disable'' parameter.</p>
+</dd>
+</li>
+<dt><strong><a name="item_flip">flip</a></strong>
+
+<dd>
+<p>Whether to flip the display. If set to a true value (flip=1), then the
+coordinates will be reversed so that forward strand features become
+reverse strand features. If set to a false value (flip=0) or absent,
+then the forward strand is displayed as per usual.</p>
+</dd>
+</li>
+<dt><strong><a name="item_width">width</a></strong>
+
+<dd>
+<p>Set the width of the overview, region and details images, in pixels.</p>
+</dd>
+</li>
+<dt><strong><a name="item_region_size">region_size</a></strong>
+
+<dd>
+<p>Set the length of the region covered by the ``region'' panel, in base
+pairs.</p>
+</dd>
+</li>
+<dt><strong><a name="item_h_feat">h_feat</a></strong>
+
+<dd>
+<p>The name of a feature to highlight in the format
+``&lt;feature_name&gt;@&lt;color_name&gt;''. Example:</p>
+</dd>
+<dd>
+<pre>
+      h_feat=SKT5@blue</pre>
+</dd>
+<dd>
+<p>You may omit ``@color'', in which case the highlight will default to
+yellow. You can specify multiple h_feat arguments in order to
+highlight several features with distinct colors.</p>
+</dd>
+<dd>
+<p>Passing an argument of h_feature=_clear_ will clear all feature
+highlighting.</p>
+</dd>
+</li>
+<dt><strong><a name="item_h_region">h_region</a></strong>
+
+<dd>
+<p>The name of a region to highlight in the format
+``&lt;seq_id&gt;:start..end@color''. Example:</p>
+</dd>
+<dd>
+<pre>
+      h_region=Chr3:200000..250000@wheat</pre>
+</dd>
+<dd>
+<p>You may omit ``@color'' in which case the highlight will default to
+lightgrey. You can specify multiple h_region arguments in order to
+highlight multiple sequence ranges with different colors.</p>
+</dd>
+<dd>
+<p>Passing an argument of h_region=_clear_ will clear all region
+highlighting.</p>
+</dd>
+</li>
+<dt><strong><a name="item_ks">ks</a></strong>
+
+<dd>
+<p>The position of the key in the detail panel. Possible values are
+``between,'' ``beneath,'' ``left'' and ``right''.</p>
+</dd>
+</li>
+<dt><strong><a name="item_sk">sk</a></strong>
+
+<dd>
+<p>The sort order of track names in the ``Tracks'' panel.  Values are
+``sorted'' (alphabetically sorted by name) and ``unsorted'' (sorted by
+the order of tracks as defined in the config file).</p>
+</dd>
+</li>
+<dt><strong><a name="item_add">add</a></strong>
+
+<dd>
+<p>Upload a feature and add it in its own track. The format is
+``reference+type+name+start..end'', where reference is the landmark for
+the coordinates (e.g. a named gene or chromosome), type is the type of
+the feature, name is the name of the feature, and start..end are the
+start and end coordinates. For a feature that has multiple segments,
+you may use multiple start..end ranges, separated by commas. Example:</p>
+</dd>
+<dd>
+<pre>
+  add=chr3+miRNA+mir144+2309229..2309300,2309501..2309589</pre>
+</dd>
+<dd>
+<p>Pass multiple ``add'' parameters to upload several features.</p>
+</dd>
+<dd>
+<p>``add'' can be abbreviated to ``a'' for terseness.</p>
+</dd>
+</li>
+<dt><strong><a name="item_style">style</a></strong>
+
+<dd>
+<p>Specify the style for features uploaded using ``add''. It is a flattened
+version of the style configuration sections described in this
+document. Lines are separated by ``+'' symbols rather than newlines. The
+first word in the argument is the feature type to configure, for
+example ``miRNA.'' Subsequent option=value pairs control the glyph and
+glyph options.</p>
+</dd>
+<dd>
+<p>For example, if you have added a ``miRNA'' annotation, then you can tell
+the renderer to use a red arrow for this glyph in this way:</p>
+</dd>
+<dd>
+<pre>
+   style=miRNA+glyph=arrow+fgcolor=red</pre>
+</dd>
+<dd>
+<p>``style'' can be abbreviated to ``s'' for terseness.</p>
+</dd>
+</li>
+<dt><strong><a name="item_track_options">track_options</a></strong>
+
+<dd>
+<p>If true, open up the track configuration page.</p>
+</dd>
+</li>
+<dt><strong><a name="item_help">help</a></strong>
+
+<dd>
+<p>Open up the specified help page. Possible values are:</p>
+</dd>
+<dd>
+<pre>
+     &quot;general&quot;    open the general help page
+     &quot;citations&quot;  open up the track description &amp; citation page
+     &quot;link_image&quot; open the page that describes how to
+                  generate an embedded image of the current view
+      &quot;svg_image&quot; the page that describes how to generate SVGs</pre>
+</dd>
+</li>
+<dt><strong><a name="item_id">id</a></strong>
+
+<dd>
+<p>The id is a unique session ID that will store persistent configuration
+information. You do not typically need to use the id parameter except
+in the circumstance in which you wish to upload an annotation file
+programatically, in which case you should choose some large
+hard-to-guess number.</p>
+</dd>
+</li>
+<dt><strong><a name="item_upload_2c_upload_annotations_2c_id">Upload, upload_annotations, id</a></strong>
+
+<dd>
+<p>These three arguments must be present in order to upload a file of
+external annotations to the server. ``Upload'' must be a true value, and
+``upload_annotations'' will contain the content of the uploaded
+file. Note that you must POST the data using MIME type
+``multipart/form-data''.</p>
+</dd>
+<dd>
+<p>The ``id'' argument is used to associated the upload with a
+session. Pick some long, hard to guess number. This will be associated
+stably with the uploaded file(s). To see the upload information,
+provide the same number in the ``id'' argument every time you access
+gbrowse.</p>
+</dd>
+</li>
+<dt><strong><a name="item_eurl">eurl</a></strong>
+
+<dd>
+<p>Specify the URL of a remote annotation source to load into the
+database. You should also supply an ``id'' argument as well, as
+described earlier, in order to be able to view the annotations.</p>
+</dd>
+</li>
+<dt><strong><a name="item_plugin_2c_plugin_do">plugin, plugin_do</a></strong>
+
+<dd>
+<p>These arguments run plugins. The ``plugin'' argument gives the name of
+the plugin to activate. The name is the last component of the plugin
+package name, e.g. FastaDumper. The ``plugin_do'' argument selects what
+to do with the plugin. Possible values are ``Configure'', ``Find'' and
+``Go''. ``Configure'' launches the plugin's configure page, ``Go'' runs
+dumper plugins' dump operation, and ``Find'' activates finder plugins'
+find function. For find operations, you should in most cases pass the
+find string in the ``q'' argument, but this depends on the particular
+plugin.</p>
+</dd>
+<dd>
+<p>Each plugin may have its own set of URL arguments. A plugin's
+arguments are preceded by the plugin's name. For example, the
+FastaDumper plugin has a parameter named ``format'' which controls the
+output format. So to invoke this plugin and make the output plain
+text, one would provide the arguments:</p>
+</dd>
+<dd>
+<pre>
+ <a href="http://www.your.site/cgi-bin/gbrowse/yeast?q=NUT21;plugin=FastaDumper">http://www.your.site/cgi-bin/gbrowse/yeast?q=NUT21;plugin=FastaDumper</a>;
+             plugin_do=Go;FastaDumper.format=text</pre>
+</dd>
+<dd>
+<p>Plugins tend not to be well documented, so you may have to read
+through the source code to figure out their arguments.</p>
+</dd>
+</li>
+</dl>
+<p>
+</p>
+<hr />
+<h1><a name="m__further_information">M. FURTHER INFORMATION</a></h1>
+<p>For further information, bug reports, etc, please consult the mailing
+lists at www.gmod.org.  The main mailing list for gbrowse support is
+&lt;a <a href="mailto:href=``mailto:gmod-gbrowse@lists.sourceforge.net''>">href=``mailto:gmod-gbrowse@lists.sourceforge.net''></a><a href="mailto:gmod-gbrowse@lists.sourceforge.net</a>">gmod-gbrowse@lists.sourceforge.net</a></a>.</p>
+<p>Have fun!</p>
+<p>Lincoln Stein &amp; the GMOD development team
+<a href="mailto:lstein@cshl.edu">lstein@cshl.edu</a></p>
+
+</body>
+
+</html>

@@ -1,0 +1,19 @@
+
+<%perl>
+
+use strict;
+use CXGN::Tools::File;
+use CXGN::VHost;
+use File::Spec;
+
+my $vh = CXGN::VHost->new();
+my $file = File::Spec->catfile($vh->get_conf('basepath'), 'documents', 'affiliated_sites.txt');
+
+print "";
+
+my $contents = CXGN::Tools::File::read_commented_file($file);
+
+</%perl>
+
+<% $contents %>
+

@@ -1,0 +1,205 @@
+<!-- COUNT	1 -->
+<!-- THIS FILE IS DEPRECATED. DO ***NOT*** EDIT THIS FILE -->
+<div class="subheading">
+<a href="http://www.sol2009.org/">SGN Workshop at the SOL 2009 Meeting</a>
+</div>
+<div class="boxsubcontent">
+The <a href="http://www.sol2009.org/">meeting for the Solanaceae community</a><br />
+Nov 8-13, 2009<br />
+New Delhi, India<br />
+</div>
+
+<div class="subheading">
+<a href="http://aspb.org/meetings/pb-2009/">ASPB Meeting 2009</a>
+</div>
+<div class="boxsubcontent">
+TAIR, PMN and SGN workshop: <em>Focus on comparative genomics and new tools</em><br />
+July 18-22, 2009<br />
+Honolulu, Hawaii<br />
+</div>
+
+<div class="subheading">
+<a href="http://www.paa2009.org/app.html">Potato Association of America Meeting 2009</a>
+</div>
+<div class="boxsubcontent">
+Aug 9-13, 2009<br />
+Fredericton, New Brunswick, Canada<br />
+</div>
+
+
+
+<!-- list past events in reverse order -->
+
+<div class="subheading">
+<a href="http://projects.eml.org/sdbv/events/BiocurationMeeting/index.html">SGN at the 3rd Int'l Biocuration Conference</a>
+</div>
+<div class="boxsubcontent">
+April 16 - 19, 2009<br />
+Berlin, Germany<br />
+</div>
+
+<div class="subheading">
+<a href="http://www.upct.es/~genetica/XWPD-PROGRAM.HTML">Petunia meeting 2009</a>
+</div>
+<div class="boxsubcontent">
+Petunia meeting<br />
+Mar 28-Apr 1, 2009<br />
+Cartagena, Spain<br />
+</div>
+
+<div class="subheading">
+<a href="http://www.intl-pag.org/">SGN at the Plant and Animal Genome XVII Conference</a>
+</div>
+<div class="boxsubcontent">
+January 10-14, 2009<br />
+San Diego, CA<br />
+</div>
+
+<div class="subheading">
+Omics viewer a training workshop by Dr Ron Caspi.<br />
+SGN and Solcyc databases a Talk by Dr Naama Menda.<br />
+Plantonoltogy database a talk by Dr Chih-Wei.<br />
+</div>
+<div class="boxsubcontent">
+Oct. 21 2008 10:00AM-1:00PM<br />
+BTI conference room
+<br />
+</div>
+
+<div class="subheading">
+<a href="http://bti.cornell.edu/seminars.php">The MetaCyc database and the BioCyc Collection of Pathway/Genome Databases</a>
+</div>
+<div class="boxsubcontent">
+Special Guest Speaker<br />
+Dr. Ron Caspi<br />
+Oct. 20 2008 1:00PM<br />
+BTI Auditorium 
+<br />
+</div>
+
+<div class="subheading">
+<a href="http://www.sol2008.org/frontend/index.php">SOL 2008 Meeting</a>
+</div>
+<div class="boxsubcontent">
+The meeting for the Solanaceae community<br />
+Oct 12-16 2008<br />
+Cologne, Germany 
+<br />
+</div>
+
+<div class="subheading">
+<a href="http://www.aspb.org/">ASPB 2008</a>
+</div>
+<div class="boxsubcontent">
+June 26-July 1, 2008<br />Merida, Mexico<br />
+</div>
+
+<div class="subheading">
+Tomato Genome Finishing Workshop
+</div>
+<div class="boxsubcontent">
+April 24-25, 2008<br />
+Wageningen, the Netherlands
+</div>
+
+<div class="subheading">
+<a href="http://intl-pag.org">PAG XVI 2008</a>
+</div>
+<div class="boxsubcontent">
+Jan 12-16, 2008<br />
+San Diego, California<br />
+</div>
+
+<div class="subheading">
+<a href="/documents/community/meetings/TBRT_brochure_2007.pdf">Tomato Breeder's Roundtable Meeting</a>
+</div>
+<div class="boxsubcontent">
+Nov 4-7, 2007<br />
+State College, PA<br />
+</div>
+
+<div class="subheading">
+<a href="http://biocurator.org/Mtg2007/index.html">Second International Biocurator Conference</a>
+</div>
+<div class="boxsubcontent">
+Oct 25-28, 2007<br />
+San Jose, California<br />
+</div>
+
+<div class="subheading">
+<a href="http://www.solanaceae2007.org/">SOL Genome Workshop 2007</a>
+</div>
+<div class="boxsubcontent">
+Sept 9-13, 2007<br />
+Ramada Hotel Jeju Island, Korea<br />
+</div>
+
+<div class="subheading">
+<a href="https://www.aspb.org/meetings/pb-2007/">ASPB Meeting 2007</a>
+</div>
+<div class="boxsubcontent">
+July 7-11, 2007<br />
+Don't miss the <a href="http://www.aspb.org/pb-2007/schedule.cfm">SGN presentation</a>. <br />
+</div>
+
+<div class="subheading">
+<a href="http://meetings.cshl.edu/meetings/plants07.shtml">Plant Genome 2007</a>
+</div>
+<div class="boxsubcontent">
+Plant Genome 2007 at CSHL<br />
+March 15-18, 2007<br />
+Cold Spring Harbour, NY, USA<br />
+</div>
+
+<div class="subheading">
+<a href="http://www.pag-intl.org/">PAG 2007</a>
+</div>
+<div class="boxsubcontent">
+Plant and Animal Genome Conference<br />
+January 13-17, 2007<br />
+San Diego, USA<br />
+</div>
+
+<div class="subheading">
+<a href="http://www.distagenomics.unibo.it/plantgems/">Plant GEM 2006</a>
+</div>
+<div class="boxsubcontent">
+The Plant Genomics European Meeting<br />
+Oct 11-14, 2006<br />
+Venice, Italy<br />
+</div>
+
+<div class="subheading">
+<a href="http://www.hort.wisc.edu/PAA-Solanaceae">The SOL
+Genome Workshop 2006</a>
+</div>
+<div class="boxsubcontent">
+July 23-27, 2006<br />
+Madison, Wisconsin, USA<br />
+</div>
+
+<div class="subheading">
+<a href="http://www.epsoweb.org/catalog/Conf2006.htm">3rd EPSO Conference: 
+"Plant Dynamics: from Molecules to Ecosystems"</a>
+</div>
+<div class="boxsubcontent">May 28 - June 1 2006<br />
+Visegrad, Hungary<br />
+</div>
+
+<div class="subheading">
+<a href="http://www.intl-pag.org">Plant &amp; Animal Genome XIV</a>
+</div>
+<div class="boxsubcontent">
+January 14-18, 2006<br />
+San Diego, CA, USA<br />
+</div>
+
+<div class="subheading">
+<a href="/documents/community/meetings/TBRT_brochure.pdf">Tomato
+Breeders Roundtable</a>
+</div>
+<div class="boxsubcontent">
+Oct 17-20, 2004<br />
+Anapolis, MD<br />
+</div>
+

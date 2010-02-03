@@ -1,0 +1,31 @@
+Deconvolution report for plate , version .
+
+========================================
+
+SUMMARY:
+
+Number of wells which cleanly match one or more BAC's: 
+Number of wells which ambiguously match one or more BAC's: 
+Number of wells which matched no BAC's: 0
+Number of empty wells: 
+----------------------
+TOTAL NUMBER OF WELLS: 
+
+Average number of cleanly matched BAC's per (non-empty) well: 
+Average number of BAC's matching this plate per (non-empty) well: 
+
+========================================
+
+WELL-FORMED ASSOCIATIONS:
+
+0
+========================================
+
+PARTIALLY MATCHED WELLS:
+
+0
+========================================
+
+UNMATCHED WELLS:
+
+0

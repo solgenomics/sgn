@@ -1,0 +1,161 @@
+<& /page/page_title.mas, title=>"SGN Comparative Viewer Help" &>
+
+  <center>
+    
+
+  <table summary="" width="720" cellpadding="0" cellspacing="0"
+  border="0">
+    <tr>
+      <td>
+        <center>
+          <table summary="" width="720" cellpadding="0"
+          cellspacing="0" border="0">
+            <tr>
+              <td>
+                The <a href="/cview/view_chromosome.pl">comparative
+                viewer</a> is a tool for displaying, browsing, and
+                comparing map information on SGN.
+
+    <h3>Map overview page</h3>
+
+    <p>When choosing a map from the map menu, the map overview page will be displayed. It shows some overview information about the map and allows the map to be queried with marker names. The basic elements on this page are:
+ <ol>
+<li>A small overview graph with all the chromosomes in the map that illustrates the marker density of each linkage group. The glyphs are clickable and will open the clicked chromosome in chromosome detail view.</li>
+<li>A text box that can be used to locate markers on the map - you can highlight multiple markers by entering marker names separated by spaces.</li>
+<li>Size increase/decrease, to change the display size of the map.
+<li>The abstract gives more details about the origins, submitters, and methodologies of the map.</li>
+<li>A list of chromosomes in the map along with the number of markers located on the map. </li>
+<li>Statistics about the marker collections, such as COSII markers.</li>
+<li>Statistics about the different assay protocols that were used to construct the map, such as RFLP markers or CAPS markers.</li>
+<li>User comments. Any logged in user can leave a comment about the map displayed. The comment feature is not available on all maps.</li>
+</ol>
+
+<div class="boxbgcolor5">
+<center>
+    <img src="/documents/img/cview_overview_screenshot1as.png" border="0" alt="cview overview page screenshot" />
+    <img src="/documents/img/cview_overview_screenshot2as.png" border="0" alt="cview overview page screenshot" />
+</center>
+</div>
+
+<h3>The chromosome view</h3>
+
+<p>Clicking on one of the chromosome glyphs on the overview page will bring up the chromosome view. In this view, a chromosome is displayed in its entirety, but most of the marker names will be hidden because on most maps there are too many markers to be displayed. To see all the markers, the map can be zoomed into by clicking on a point of interest. This will bring up a zoomed-in view alongside the chromosome. The chromosome can also be compared to another chromosome of another map by choosing a comparison chromosome from the list.</p>
+
+<div class="boxbgcolor5"><center><img src="/documents/img/cview_screenshot.jpg" alt="comparative viewer" /></center></div>
+
+    <p>A typical image from a chromosome view is shown in the figure above (the exact rendering of the buttons will depend on the platform and browser used).
+    The different screen elements are:</p>
+
+                <ol>
+                  <li><p>The reference chromosome, always shown in
+                  red. The chromosome number is given on the top
+                  and approximately a dozen selected markers are
+                  drawn according to their map position. The other
+                  markers on the chromosome are only identified by
+                  tickmarks. They can be viewed by clicking anywhere in the
+                  chromosome reference chromosome, which brings up the zoomed-in map
+                  (2), in which all markers are displayed in the
+                  given interval. For certain maps, the reference chromosome can have
+                  additional information displayed, such as IL line
+                  information, a ruler, and physical map.</p></li>
+
+                  <li><p>The zoomed in map displays a section of the
+                  reference chromosome, showing all markers at the
+                  current score cutoff. The marker names can be
+                  clicked to reach the marker detail page. A gray
+                  dot next to the marker names means that an overgo
+                  probe has been developed for this marker. A red
+                  dot means that BACs have been anchored to the
+                  overgo developed from this marker. Clicking on
+                  the red dot shows all the anchored BACs and which
+                  FPC contigs they fall into.</p></li>
+
+                  <li><p>The comparison chromosome. It can be selected
+                  using the pulldown menu in the toolbar (7), and
+                  then clicking 'compare'. Only markers that are on
+                  the reference map are displayed with their names, the other
+                  markers are shown by a tick mark only. The marker
+                  names can be clicked to view the corresponding
+                  marker detail page. If all markers are of
+                  interest in the comparison chromosome, the button
+                  'switch chromosomes' can be clicked. The
+                  comparison chromosome takes the place of the
+                  reference chromosome and vice versa.</p></li>
+
+                  <li><p>If the physical button is clicked in the
+                  toolbar (7), the physical map is displayed, which
+                  shows how many BACs have been anchored to the
+                  genetic map using the overgo process. The
+                  physical map can presently only be viewed for the
+                  Tomato EXPEN2000 and Tomato EXPEN 1992
+                  maps.</p></li>
+
+                  <li><p>If the IL button in the toolbar (7) is
+                  pressed, the chromosome sections of the
+                  corresponding IL lines are displayed. The IL
+                  lines can currently only be viewed for the Tomato
+                  EXPEN 1992 map.</p></li>
+
+                  <li><p>Rulers can be activated by pressing the ruler
+                  button in the toolbar (7).</p></li>
+
+                  <li><p>The Toolbar. It is divided into five
+                  sections.</p>
+
+                    <ul>
+                      <li><p>The marker coloring options. This line
+                      contains a button for changing the coloring
+                      either according to score of the marker or by
+                      marker type. The different LOD scores can be
+                      clicked and markers of lower LOD scores will
+                      be hidden.</p></li>
+
+                      <li><p>Scrolling and Zooming. This line contains
+                      buttons for scrolling up and down, zooming in
+                      and out, and toggling between hide and show
+                      zoomed. It also contains a link that will
+                      perform a database search for all markers on
+                      the zoomed-in chromsome section.</p></li>
+
+                      <li><p>Compare map to: A pulldown menu allows
+                      the selection of a map that shares markers
+                      with the current reference map. The pulldown
+                      menu is sorted such that the topmost entry
+                      has to most shared markers. Clicking the
+                      'compare' button will display the selected
+                      comparison map.</p></li>
+
+                      <li><p>Jump to different map or chromosome. Also
+                      contains a input box to hilite markers on the
+                      chromosome. This only hilites markers on the
+                      currently shown chromosome.</p></li>
+
+                      <li><p>show/hide functions: Allows the toggling
+                      of the rulers, ILs, and physical map, and to
+                      select the image size. The smaller image size
+                      is ideal for smaller screen, such as
+                      laptop screens.</p></li>
+                    </ul>
+                  </li>
+                </ol>
+              </td>
+            </tr>
+          </table>
+        </center>
+      </td>
+    </tr>
+  </table>
+</center>
+
+
+    <h3>The map comparison view</h3>
+
+<p>Clicking on the "view entire map" link in the chromosome view displays the map comparison view. In total, three maps can be compared at the same time. Below is a screenshot of a comparison of tomato and potato.</p>
+
+<div class="boxbgcolor5">
+<center>
+<img src="/documents/img/cview_maps1s.png" border="0" /><br />
+<img src="/documents/img/cview_maps2s.png" border="0" /><br />
+<img src="/documents/img/cview_maps3s.png" border="0" /><br />
+</center>
+</div>

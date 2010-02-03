@@ -1,0 +1,11 @@
+<div class="boxsubcontent">
+The SOL Genomics Network is a Clade Oriented Database (COD) containing genomic, genetic, phenotypic and taxonomic information for species in the Euasterid clade, including the families <a href="/about/about_solanaceae.pl">Solanaceae</a> (e.g. tomato, potato, eggplant, pepper, petunia) and Rubiaceae (<a href="/content/coffee.pl">coffee</a>). 
+Genomic information is presented in a comparative format and tied to the fully-sequenced Arabidopsis genome. SGN is also one of the centers involved in tomato genome sequencing.
+
+<div class="subheading">
+<a class="creativitylinks" href="/about/about_solanaceae.pl">What are Solanaceae?</a></div>
+<div class="subheading">
+<a class="creativitylinks" href="/solanaceae-project/index.pl">Why are the Solanaceae being studied?</a></div>
+<div class="subheading">
+<a class="creativitylinks" href="/about/tomato_sequencing.pl">Who is sequencing the tomato genome?</a></div>
+</div>

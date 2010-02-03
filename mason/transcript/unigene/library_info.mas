@@ -1,0 +1,105 @@
+<%doc>
+  NAME: library_info.mas
+  VERSION: 1.0
+  DESCRIPTION: Another piece of mason code get the unigene data (library info) from the database and show it as table web_page; 
+  AUTHOR: Aureliano Bombarely (ab782@cornell.edu)
+</%doc>
+
+
+<%perl>
+use strict;
+use warnings;
+
+use SGN::Schema;
+use Bio::Chado::Schema;
+use CXGN::DB::DBICFactory;
+use CXGN::Transcript::Unigene;
+use CXGN::Transcript::Library;
+use CXGN::Chado::Organism;
+use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
+
+my ($library_content, $library_html, @library_table);
+
+my $unigene = $ARGS{'unigene'};
+my $schema = $ARGS{'schema'};
+my $bio_chado_schema = CXGN::DB::DBICFactory->open_schema( 'Bio::Chado::Schema', search_path => ['public'] );
+## Get the object
+my $id =  $unigene->get_unigene_id();
+
+## If there aren't any unigene that comes from unigene_detail.mas, it will not do anything because the error message is given for the
+## basic_detail.mas script
+
+## To order the data before print in the table we will put into a hash using $organism_id plus $library_name. After that, we will take
+## the keys sorted and we will put all this array ref into the array used in the table
+
+my %order_line;
+
+if (defined $id) {
+
+   my @library_ids = $unigene->get_member_library_ids();
+
+   ## if don't exists any library, leave undef $library_html. The info section will print none
+
+   if (@library_ids) { 
+       foreach my $lib_id (@library_ids) { 
+           my $library = CXGN::Transcript::Library->new($schema->storage()->dbh(), $lib_id);
+	   
+           my $chado_organism_id = $library->get_chado_organism_id();
+	   
+           ## To get the link with the organism page is necesary the organism_id for chado schema
+           my ($organism_row) = $bio_chado_schema->resultset('Organism::Organism')->search({ organism_id => $chado_organism_id });
+	   my $organism_link = 'undefined';
+	   if (defined $organism_row) {
+	       my $organism_name = $organism_row->get_column('genus') . " " . $organism_row->get_column('species');
+	       $organism_link = qq { <a href="/chado/organism.pl?organism_id=$chado_organism_id">$organism_name</a> };
+	   }
+
+    	   my $library_name = $library->get_library_shortname();
+	   my $descript = " ";
+    	   my $tissue = $library->get_tissue();
+	   if (defined $tissue) {
+	       $descript .= $tissue . " ";
+	   }
+   	   my $dev_stage = $library->get_development_stage();
+	   if (defined $dev_stage) {
+	       $descript .= $dev_stage . " ";
+           }
+   	   my $lib_clone_count = $library->get_clone_count();
+    	   my $unigene_member_count = $unigene->get_unigene_member_count_in_library($library->get_library_id());
+           
+           my $library_link = qq { <a href="/content/library_info.pl?library=$library_name">$library_name</a> };
+
+	   $order_line{$chado_organism_id.$library_name} = [$organism_link, $library_link, $descript, 
+							    $lib_clone_count, $unigene_member_count];
+                                              
+        }
+          
+        my @keys_ordered = sort keys %order_line;
+	foreach my $element (@keys_ordered) {
+	    push @library_table, $order_line{$element};
+        }
+        my $headers =  ['Organism' , 'Library' , 'Description' , 'Library size (#ESTs)' , 'Ests in this Unigene' ];
+           
+        $library_html = columnar_table_html( headings =>$headers,
+                                             data     => \@library_table,
+                                             __alt_freq => 2,
+                                             __align  => ['c', 'c', 'c', 'c', 'c'],
+                                            );
+              
+   }
+  
+   ## Use columnar table to give the html format. If don't exists any data, print message.
+
+   
+
+   my $library_n = scalar(@library_table);
+   $library_content = info_section_html( title        => "Library representation (".$library_n.")", 
+                                      contents     => $library_html,
+                                      collapsible  => 1,
+                                      collapsed    => 1, );
+}
+
+
+</%perl>
+
+<% $library_content %>

@@ -1,0 +1,65 @@
+
+<%doc>
+
+=head1 NAME
+
+columnar_table.mas - a Mason module to display tables
+
+=head1 DESCRIPTION
+
+Arguments:
+
+ headings => [ col name, col name,...],
+ data     => [ [html, html, ...],
+               [ html,
+                 { onmouseover => "alert('ow!')",
+                   content => some html
+                 },
+                 html,
+                 ...
+                       ],
+                 ...
+             ],
+__align      => 'cccccc...',
+__tableattrs => 'summary="" cellspacing="0" width="100%"',
+__border     => 1,
+
+__alt_freq   => 4,
+__alt_width  => 2,
+__alt_offset => 0,
+
+=head1 AUTHORS
+
+Lukas Mueller, based on Perl code by Rob Buels
+
+=cut
+
+</%doc>
+
+<%args>
+$headings
+$data
+$__align      => undef
+$__tableattrs => undef
+$__border     => undef
+
+$__alt_freq   => undef
+$__alt_width  => undef
+$__alt_offset => undef
+
+</%args>
+
+<%perl>
+
+use CXGN::Page::FormattingHelpers qw | columnar_table_html |;
+
+my $table = columnar_table_html( headings=> $headings, data => $data, __align => $__align,
+             __tableattrs => $__tableattrs, __border => $__border, __alt_freq => $__alt_freq,
+             __alt_width => $__alt_width, __alt_offset => $__alt_offset );
+
+</%perl>
+
+<% $table %>
+
+
+

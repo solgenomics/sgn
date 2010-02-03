@@ -1,0 +1,91 @@
+<%doc>
+
+=head1 NAME
+
+info_section.mas
+
+=head1 SYNOPSIS
+
+ <& info_section, title => 'Search Results',
+                  subtitle      => '3 matches',
+                  empty_message => 'No matching monkeys found',
+                  is_subsection => 0,
+                  contents      => <% $contents %> &>
+
+
+=head1 DESCRIPTION
+
+Description: Displays a paragraph with a title bar and provides a way to collapse the content. A mason wrapper around CXGN::Page::FormattingHelpers::info_section_html.
+
+=head1 ARGUMENTS
+
+=over 14
+
+=item $title 
+
+the title to be displayed in the title bar. Required.
+
+=item $contents 
+
+everything, in html, that goes into the section. Required.
+
+=item $subtitle 
+
+a subtitle that goes next to the title. Optional.
+
+=item $empty_message 
+
+The message that should appear when $contents is empty.
+
+=item $is_collapsible 
+
+boolean - a true value adds a collapser icon.
+
+=item $collapsed
+
+boolean - a true value will draw the section in the collapsed state
+
+=item $is_subsection
+
+boolean - a true value will draw the section as a subsection, with slighly altered title bar and text rendering.
+
+=item $align 
+
+not sure what that does.
+
+=back
+
+=head1 SEE ALSO
+
+L<CXGN::Page::FormattingHelpers>
+
+=head1 AUTHOR
+
+Lukas Mueller, based on the Perl code from Rob Buels.
+
+
+=cut
+
+</%doc>
+
+<%args>
+	$title
+	$contents
+	$subtitle => ""
+	$empty_message => ""
+        $is_collapsible => 0
+        $collapsed => 0
+	$id => ""
+	$is_empty => 0
+	$is_subsection => 0
+	$align => 0
+</%args>
+
+<%perl>
+
+	use CXGN::Page::FormattingHelpers qw | info_section_html |;
+
+	my $html = info_section_html ( title=> $title, subtitle=>$subtitle, empty_message=>$empty_message, contents=>$contents, collapsible=>$is_collapsible, collapsed=>$collapsed, is_subsection=>$is_subsection, align=>$align);
+
+	print $html;
+</%perl>

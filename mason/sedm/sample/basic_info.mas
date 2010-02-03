@@ -1,0 +1,160 @@
+<%doc>
+  NAME: basic_info.mas
+  VERSION: 1.0
+  DESCRIPTION: This is a mason code get the data from the database and show it as table web_page; 
+  AUTHOR: Aureliano Bombarely (ab782@cornell.edu)
+</%doc>
+
+
+<%perl>
+use strict;
+use warnings;
+
+use CXGN::SEDM::Schema;
+use Bio::Chado::Schema;
+use CXGN::DB::DBICFactory;
+use CXGN::Chado::Dbxref;
+use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
+
+my $basic_info_content;
+my $sample_accession;
+
+## If there aren't any sample_row that comes from sample_detail.mas, it will return a message.
+
+if (defined $ARGS{'sample'}) {
+
+   ## Get the schema object
+   my $schema = $ARGS{'sample'}->result_source()->schema();
+   my $dbh = $schema->storage()->dbh();   
+   my $bio_chado_schema = CXGN::DB::DBICFactory->open_schema( 'Bio::Chado::Schema', search_path => ['public'] );
+
+   ## Get the data from the object.
+   my %sample_data = $ARGS{'sample'}->get_columns();
+   $sample_accession = $sample_data{'sample_name'};
+
+   ## Get the target links
+   my @target_list;
+   my $rs_groups = $schema->resultset('GroupLinkage')->search({ member_id => $sample_data{'sample_id'}, member_type => 'sample' });
+   if (defined $rs_groups) {
+       my @group_ids = $rs_groups->get_column('group_id')->all();
+       foreach my $group_id (@group_ids) {
+           my @target_rows = $schema->resultset('Targets')->search({ sample_group_id => $group_id });
+	   foreach my $target_row (@target_rows) {		     		     
+	       my $target_name = $target_row->get_column('target_name');
+	       my $target_id = $target_row->get_column('target_id');
+	       my $target_link = '/sedm/target.pl?id='.$target_id;
+	       my $target_html = "<a href=$target_link>$target_name</a><br>";
+	       push @target_list, $target_html;
+           }
+       }
+   }
+   my $target_list = join(' ', @target_list);       
+      
+   ## Default values
+   my @keys = keys %sample_data;
+   foreach my $key (@keys) {
+      unless (defined $sample_data{$key}) {
+         $sample_data{$key} = '<i><font color="gray">data not available</basefont></i>';
+      }
+   }
+
+   ## Get organism links (it should be replaced when the transition from sgn.organism to chado.organism will be completed)
+   my $organism_group_html = $sample_data{'organism_group_id'};
+   if ($sample_data{'organism_group_id'} =~ m/\d+/) {
+       my @organism_list;
+       my $rs_org_group = $schema->resultset('GroupLinkage')->search({ group_id    => $sample_data{'organism_group_id'}, 
+								       member_type => 'organism' });
+       my @org_ids = $rs_org_group->get_column('member_id')->all();
+       foreach my $org_id (@org_ids) {
+	   my $organism_html;
+           my ($organism_row) = $bio_chado_schema->resultset('Organism::Organism')->search({ organism_id => $org_id});
+	   if (defined $organism_row) {
+	       my $genus = $organism_row->get_column('genus');
+	       my $species = $organism_row->get_column('species');
+	       my $organism_link = '/chado/organism.pl?organism_id='.$org_id;
+	       $organism_html = "<a href=$organism_link>$species</a><br>";
+	   } else {
+	       $organism_html = '<font color="gray"><i>None defined for this sample</i></font>';
+	   }
+	   push @organism_list, $organism_html;
+       }
+       $organism_group_html = join(' ', @organism_list);
+   }
+
+   ## Get the cultivar name (it should be replaced by the right object)
+   my $cultivar_group_html = $sample_data{'cultivar_group_id'};
+   if ($sample_data{'cultivar_group_id'} =~ m/\d+/) {
+       my @cultivar_list;
+       my $rs_cul_group = $schema->resultset('GroupLinkage')->search({ group_id => $sample_data{'cultivar_group_id'} });
+       my @cul_ids = $rs_cul_group->get_column('member_id')->all();
+       foreach my $cul_id (@cul_ids) {
+           my $query2 = "SELECT common_name FROM sgn.accession WHERE accession_id = ?";
+	   my $sth2 = $dbh->prepare($query2);
+	   $sth2->execute($cul_id);
+	   my ($common_name) = $sth2->fetchrow_array();
+           my $cultivar_html = "$common_name <br>";
+           push @cultivar_list, $cultivar_html;
+       }
+       $cultivar_group_html = join(' ', @cultivar_list);
+   }
+
+   ## Get the ontology list with links
+   my (%ontologies, %cvterm_id);
+  
+   my $rs_sample_dbxref = $schema->resultset('SampleDbxref')->search({ sample_id => $sample_data{'sample_id'} });
+   if (defined $rs_sample_dbxref) {
+       my @dbxref_ids = $rs_sample_dbxref->get_column('dbxref_id')->all();
+       foreach my $dbxref_id (@dbxref_ids) {
+           my $dbxref = CXGN::Chado::Dbxref->new($schema->storage()->dbh(), $dbxref_id); 
+	   my $cvterm = $dbxref->get_cvterm();
+           if (defined $cvterm) {
+	       my $ontology_id = $cvterm->get_db_name . ":" . $cvterm->get_accession();
+	       my $ontology_name = $cvterm->get_cvterm_name();
+	       my $cvterm_id = $cvterm->get_cvterm_id();
+	       unless (defined $ontologies{$ontology_id}) {
+		   $ontologies{$ontology_id} = $ontology_name;
+		   $cvterm_id{$ontology_id} = $cvterm_id;
+               }
+           }
+       }
+   }
+
+   ## Give format to the ontogies information
+
+   my @onto_html;
+   my @onto = sort keys %ontologies;
+   foreach my $onto (@onto) {
+       my $onto_link = '/chado/cvterm.pl?action=view&cvterm_id='.$cvterm_id{$onto};
+       my $onto_line = "<a href=$onto_link>$onto</a> ($ontologies{$onto})<br>";
+       push @onto_html, $onto_line;
+   }
+   my $onto_list = join(' ', @onto_html);
+
+   ## Create the HTML table
+
+   $basic_info_content = <<HTML;
+
+   <table width="100%">
+   	   <tr> <td width="25%"> <b>Sample name:</b>            </td> <td> $sample_data{'sample_name'} </td></tr>
+           <tr> <td width="25%"> <b>Targets:</b>                </td> <td> $target_list </td></tr>
+	   <tr> <td width="25%"> <b>Organism:</b>               </td> <td> $organism_group_html </td></tr>
+	   <tr> <td width="25%"> <b>Cultivar:</b>               </td> <td> $cultivar_group_html </td></tr>
+	   <tr> <td width="25%"> <b>Description:</b>            </td> <td> $sample_data{'description'} </td></tr>
+	   <tr> <td width="25%"> <b>Ontology terms:</b>         </td> <td> $onto_list </td></tr>
+   </table>
+
+HTML
+
+} else {
+   $basic_info_content = "<big>There aren't any target data for the specified parameters.</big>";
+}   
+my $basic_info_html;
+if (defined $sample_accession) {
+   $basic_info_html = "<center><big><b>Expression Sample: $sample_accession</b></big></center><br>";
+}
+
+$basic_info_html .= info_section_html( title => "Sample Basic Information", contents => $basic_info_content );
+
+</%perl>
+
+<% $basic_info_html %>

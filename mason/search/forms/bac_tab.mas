@@ -1,0 +1,53 @@
+
+<%doc>
+
+=head1 NAME 
+
+/search/forms/bac_tab.mas - a mason module to display the BAC search form.
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>. Based on Perl code by Rob Buels.
+
+=cut 
+
+</%doc>
+
+<%perl>
+
+use CXGN::Genomic::Search::Clone;
+
+my $q    = $ARGS{q};
+
+$q ||= CXGN::Genomic::Search::Clone->new->new_query;
+
+</%perl>
+
+  <table class="search_form_title" summary=""><tr><td>
+    <span class="search_form_title">Genomic clone search</span>
+  </td><td align="right">
+    <a class="search_form_random" href="/maps/physical/clone_info.pl?random=yes">
+    Select a genomic clone at random
+    </a>
+  </td></tr></table>
+
+<form action="/maps/physical/clone_search.pl" method="get">
+  <div class="indentedcontent">
+      <% $q->to_html %>
+    <h3>Related Links:</h3>
+    <ul>
+    <li><a href="/maps/physical/list_bacs_by_plate.pl">Browse BACs by Overgo Plate</a></li>
+    <li><a href="/cview/map.pl?map_id=1&amp;physical=1">About Physical Mapping</a></li>
+    <li><a href="/maps/physical/overgo_stats.pl">Overgo Project</a></li>
+    <li><a href="/maps/physical/overgo_process_explained.pl">Overgo plating process</a></li>
+    <li><a href="http://www.genome.arizona.edu/fpc/tomato/">Tomato FPC Map at AGI</a></li>
+    <li><a href="/supplement/plantcell-14-1441/bac_annotation.pl">Old (2000) chromosome 6 tomato BAC annotation</a></li>
+    <li><a href="/solanaceae-project/seed_bac_selection.pl">Guidelines for seed BAC selection</a></li>
+    </ul>
+  </div>
+</form>
+
+
+
+
+

@@ -1,0 +1,169 @@
+<?xml version="1.0" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>GENBANK_HOWTO</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rev="made" href="mailto:root@localhost" />
+</head>
+
+<body style="background-color: white">
+
+<p><a name="__index__"></a></p>
+<!-- INDEX BEGIN -->
+
+<ul>
+
+	<li><a href="#genbank_howto">GenBank HOWTO</a></li>
+	<li><a href="#using_the_gbrowse_inmemory_database">Using the GBrowse in-memory database</a></li>
+	<ul>
+
+		<li><a href="#1__convert_from_genbank_format_into_gff_format">1. Convert from Genbank format into GFF format</a></li>
+		<li><a href="#2__install_the_gff_file_into_the_databases_directory">2. Install the GFF file into the databases directory</a></li>
+		<li><a href="#3__set_up_the_configuration_file">3. Set up the configuration file</a></li>
+		<li><a href="#4__edit_the_configuration_file_as_appropriate">4. Edit the configuration file as appropriate</a></li>
+	</ul>
+
+	<li><a href="#using_the_gbrowse_gff_database_with_mysql">Using the GBrowse GFF database with Mysql</a></li>
+	<ul>
+
+		<li><a href="#1__create_the_database">1. Create the database</a></li>
+		<li><a href="#2__convert_from_genbank_format_into_gff_format_and_load_it_into_the_database">2. Convert from Genbank format into GFF format and load it into the database</a></li>
+		<li><a href="#3__set_up_the_configuration_file">3. Set up the configuration file</a></li>
+		<li><a href="#4__edit_the_configuration_file_as_appropriate">4. Edit the configuration file as appropriate</a></li>
+		<li><a href="#note">NOTE</a></li>
+	</ul>
+
+</ul>
+<!-- INDEX END -->
+
+<hr />
+<p>
+</p>
+<h1><a name="genbank_howto">GenBank HOWTO</a></h1>
+<p>This is a quick synopsis of the steps needed to initialize a GBrowse
+database from a genbank record.  For the purposes of illustration, we
+will use the RefSeq record for M. bovis, accession NC_002945.</p>
+<p>
+</p>
+<hr />
+<h1><a name="using_the_gbrowse_inmemory_database">Using the GBrowse in-memory database</a></h1>
+<p>
+</p>
+<h2><a name="1__convert_from_genbank_format_into_gff_format">1. Convert from Genbank format into GFF format</a></h2>
+<p>Download the Genbank record and convert it into GFF format.  You can
+do this easily using the bp_genbank2gff.pl script, which is part of
+Bioperl (scripts/Bio-DB-GFF/genbank2gff.pl):</p>
+<pre>
+   bp_genbank2gff.pl -stdout -accession NC_002945 &gt; mbovis.gff</pre>
+<p>This will download the record for M. bovis (refseq NC_002945)
+and save it to the file mbovis.gff.</p>
+<p>If you already have the genbank record available as a file named
+NC_002945.gb, you can convert it like this:</p>
+<pre>
+   bp_genbank2gff.pl -stdout -file NC_002945.gb &gt; mbovis.gff</pre>
+<p>The newly-converted file uses GFF3 format, which combines feature data
+with sequence/DNA data.  This means that you do not need a separate
+FASTA file for the sequence.</p>
+<p>
+</p>
+<h2><a name="2__install_the_gff_file_into_the_databases_directory">2. Install the GFF file into the databases directory</a></h2>
+<p>Copy this file into your in-memory GFF databases directory, as
+described in the tutorial.  We will assume
+/usr/local/apache/htdocs/gbrowse/databases.</p>
+<pre>
+  mkdir /usr/local/apache/htdocs/gbrowse/databases/mbovis
+  chmod o+rwx /usr/local/apache/htdocs/gbrowse/databases/mbovis
+  cp mbovis.gff /usr/local/apache/htdocs/gbrowse/databases/mbovis</pre>
+<p>
+</p>
+<h2><a name="3__set_up_the_configuration_file">3. Set up the configuration file</a></h2>
+<p>Use the configuration file 08.genbank.conf as your starting template.
+This is located in contrib/conf_files:</p>
+<pre>
+  cp contrib/conf_files/08.genbank.conf /usr/local/apache/conf/gbrowse.conf/mb.conf</pre>
+<p>
+</p>
+<h2><a name="4__edit_the_configuration_file_as_appropriate">4. Edit the configuration file as appropriate</a></h2>
+<p>You will need to change the [GENERAL] section to use the in-memory
+adaptor and to point to the location of the M. bovis GFF file:</p>
+<pre>
+ [GENERAL]
+ description   = Mycobacterium Bovis In-Memory
+ db_adaptor    = Bio::DB::GFF
+ db_args       = -adaptor memory
+                 -dir     /usr/local/apache/htdocs/gbrowse/databases/mbovis</pre>
+<p>You might also want to change the ``examples'' tag to introduce the
+accession number for the whole genome, and a few choice gene names and
+search terms:</p>
+<pre>
+  examples = NC_002945 Mb1800 galT glucose</pre>
+<p>That's all there is to it, but since this is a pretty big chunk of DNA
+(&gt; 4 Mbp), it uses a considerable amount of memory and performance
+will be sluggish unless you have a fast machine with lots of memory.
+So you might wish to view it using a MySQL, PostgreSQL or Oracle
+database.  The following are instructions for doing this.</p>
+<p>
+</p>
+<hr />
+<h1><a name="using_the_gbrowse_gff_database_with_mysql">Using the GBrowse GFF database with Mysql</a></h1>
+<p>We will assume that you are using a MySQL database.</p>
+<p>
+</p>
+<h2><a name="1__create_the_database">1. Create the database</a></h2>
+<p>Create the database using mysqladmin:</p>
+<pre>
+  mysqladmin create mbovis</pre>
+<p>As described in the GBrowse tutorial, give yourself write permission for the
+database, and give the web server user (e.g. ``nobody'') select
+permission.</p>
+<p>
+</p>
+<h2><a name="2__convert_from_genbank_format_into_gff_format_and_load_it_into_the_database">2. Convert from Genbank format into GFF format and load it into the database</a></h2>
+<p>The bp_genbank2gff.pl script can download the accession, convert it
+into GFF and load the database directly in one smooth step:</p>
+<pre>
+  bp_genbank2gff.pl -create -dsn mbovis -accession NC_002945</pre>
+<p>If you prefer, you can do this in two steps by first creating the gff
+file as described for the in-memory adaptor, and then using Bioperl's
+bp_bulk_load_gff.pl or bp_fast_load_gff.pl.</p>
+<p>If you are using a PostgreSQL or Oracle database, you must specify the
+appropriate adaptor to bp_genbank2gff.pl:</p>
+<pre>
+  bp_genbank2gff.pl -create -dsn mbovis -adaptor dbi::oracle -accession NC_002945</pre>
+<p>
+</p>
+<h2><a name="3__set_up_the_configuration_file">3. Set up the configuration file</a></h2>
+<p>Use the configuration file 08.genbank.conf as your starting template.
+This is located in contrib/conf_files:</p>
+<pre>
+  cp contrib/conf_files/08.genbank.conf /usr/local/apache/conf/gbrowse.conf/mb.conf</pre>
+<p>
+</p>
+<h2><a name="4__edit_the_configuration_file_as_appropriate">4. Edit the configuration file as appropriate</a></h2>
+<p>You will need to change the [GENERAL] section to use the appropriate
+database adaptor:</p>
+<pre>
+ [GENERAL]
+ description   = Mycobacterium Bovis Database
+ db_adaptor    = Bio::DB::GFF
+ db_args       = -adaptor dbi::mysql
+                -dsn     dbi:mysql:database=mbovis;host=localhost
+                -user    nobody
+                -passwd  &quot;&quot;</pre>
+<p>You might also want to change the ``examples'' tag to introduce the
+accession number for the whole genome, and a few choice gene names and
+search terms:</p>
+<pre>
+  examples = NC_002945 Mb1800 galT glucose</pre>
+<p>That should be it!</p>
+<p>
+</p>
+<h2><a name="note">NOTE</a></h2>
+<p>You can load as many accessions into the database as you like.
+Each one will appear as a ``chromosome'' named after the accession
+number of the entry.</p>
+
+</body>
+
+</html>

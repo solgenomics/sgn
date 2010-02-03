@@ -1,0 +1,77 @@
+<%doc>
+  NAME: history_info.mas
+  VERSION: 1.0
+  DESCRIPTION: It is a MASON module for the unigene_build.pl script to show information about the history of the unigene builds 
+  AUTHOR: Aureliano Bombarely (ab782@cornell.edu)
+</%doc>
+
+
+<%perl>
+use strict;
+use warnings;
+
+use SGN::Schema;
+use CXGN::Transcript::UnigeneBuild;
+use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
+
+
+my $history_html;
+
+## If there aren't any unigene_build that comes from unigene_build_detail it will do nothing. 
+## The error message will returned by basic information
+
+my $unigene_build = $ARGS{'unigene_build'};
+my $unigene_build_id = $unigene_build->get_unigene_build_id();
+
+## Get the organism group id to use in a search
+
+my $organism_group_id = $unigene_build->get_organism_group_id();
+my $group_name = $unigene_build->get_organism_group_name();
+
+my $schema = $ARGS{'schema'};
+
+my @unigene_data;
+if (defined $organism_group_id) {
+
+   ## Get the data from the sgn.method table
+
+   my @unigene_build_rows = $schema->resultset('UnigeneBuild')->search({ organism_group_id => $organism_group_id }, 
+								       { order_by => 'build_date' } );
+   foreach my $unigene_build_row (@unigene_build_rows) {
+       my %unigene_data = $unigene_build_row->get_columns();
+       my $build_name = $group_name . '#' . $unigene_data{'build_nr'};
+       my $status = '<font color="red"><i>Deprecated</i></font>';
+       if ($unigene_data{'status'} eq 'C') {
+	   $status = '<font color="green"><b>CURRENT</b></font>';
+       } elsif ($unigene_data{'status'} eq 'P') {
+	   $status = '<font color="orange"><i>Previous</i></font>';
+       }
+       
+       my $build_link = '<a href=/search/unigene_build.pl?id=' . $unigene_data{'unigene_build_id'} . '>' . $build_name . '</a>';
+       if ($unigene_data{'unigene_build_id'} == $unigene_build_id) {
+	   push @unigene_data, [$unigene_data{'unigene_build_id'}, '<b>' . $build_link . '</b>', $status, $unigene_data{'build_date'}];
+       } else {
+	   push @unigene_data, [$unigene_data{'unigene_build_id'}, $build_link, $status, $unigene_data{'build_date'}];
+       }
+   }
+   ## Create the HTML table
+
+   $history_html = columnar_table_html( headings => ['Unigene build id', 'Build Name', 'Status', 'Date'],
+                                        data    => \@unigene_data );
+   
+} else {
+    $history_html = 'None history was found associated to this unigene build';
+}
+
+my $history_content;
+if (defined $unigene_build_id) {
+    $history_content = info_section_html( title         => "Unigene Build History", 
+                                           contents     => $history_html,
+   	        	                   collapsible  => 1,
+                                           collapsed    => 0, );
+
+}
+
+</%perl>
+
+<% $history_content %>

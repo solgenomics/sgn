@@ -1,0 +1,1928 @@
+<DAS>
+  <module name="GUS.pm">
+    <sqlQuery>
+      <name>get_feature_by_name</name>
+      <description>fetch features by their name</description>
+      <sql>
+<![CDATA[
+SELECT  -- trying to find genes by source_id match
+       etn.source_id ctg_name, 
+       trp.na_feature_id feature_id, 
+       'gene' type, 
+       'annotation' source, 
+       trp.source_id name, 
+       decode (trp.codon_start, 1, 1, 2, 2, 3, 3, null) phase, 
+       etn.na_sequence_id parent_id, 
+       null score, 
+       greatest(1, least(nal.start_min, nal.end_max) - 5000) startm,
+       least(etn.length, greatest(nal.start_min, nal.end_max) + 5000) end,
+       decode (nal.is_reversed, 0, '+1', 1, '-1', '.') strand 
+FROM   
+       dots.EXTERNALNASEQUENCE etn, 
+       dots.TRANSCRIPT trp, 
+       dots.GENEFEATURE gf,
+       dots.NALOCATION nal 
+WHERE  
+       etn.na_sequence_id = gf.na_sequence_id and 
+       trp.parent_id = gf.na_feature_id and 
+       trp.na_feature_id = nal.na_feature_id and 
+       upper(trp.source_id) like upper('$name')
+UNION
+SELECT -- trying to find genes by product description (at least 4 chars) match
+       etn.source_id ctg_name, 
+       trp.na_feature_id feature_id, 
+       'gene' type, 
+       'annotation' source, 
+       trp.source_id name, 
+       decode (trp.codon_start, 1, 1, 2, 2, 3, 3, null) phase, 
+       etn.na_sequence_id parent_id, 
+       null score, 
+       greatest(1, least(nal.start_min, nal.end_max) - 5000) startm,
+       least(etn.length, greatest(nal.start_min, nal.end_max) + 5000) end,
+       decode (nal.is_reversed, 0, '+1', 1, '-1', '.') strand 
+FROM   
+       dots.EXTERNALNASEQUENCE etn, 
+       dots.TRANSCRIPT trp, 
+       dots.GENEFEATURE gf,
+       dots.NALOCATION nal 
+WHERE  
+       etn.na_sequence_id = gf.na_sequence_id and 
+       trp.parent_id = gf.na_feature_id and 
+       trp.na_feature_id = nal.na_feature_id and 
+       upper(trp.product) like upper('%$name%') and
+       length('$name') >= 4
+UNION
+SELECT -- trying to find genes by chromosome/contig source_id
+       etn.source_id ctg_name, 
+       etn.na_sequence_id feature_id, 
+       'chromosome' type, 
+       'TIGR' source, 
+       etn.source_id name, 
+       null phase, 
+       null parent_id, 
+       null score, 
+       0 startm,
+       etn.length end,
+       '.' strand 
+FROM   
+       dots.EXTERNALNASEQUENCE etn,
+       sres.EXTERNALDATABASERELEASE edr,
+       sres.EXTERNALDATABASE ed
+WHERE  
+       upper(etn.source_id) like upper('$name') and
+       etn.external_database_release_id = edr.external_database_release_id and
+       edr.external_database_id = ed.external_database_id and
+       ed.name like '%P.%' and
+       (ed.name like '%hromosome%' or ed.name like '%enome%')
+]]>
+      </sql>
+    </sqlQuery>
+  </module>
+  <module name="Segment.pm">
+    <sqlQuery>
+      <name>get_sequence</name>
+       <description></description>
+       <sql>
+<![CDATA[
+SELECT ens.sequence 
+FROM   DOTS.EXTERNALNASEQUENCE ens
+WHERE  ens.na_sequence_id = $srcfeature_id
+]]>
+      </sql>
+    </sqlQuery>   
+    <sqlQuery>
+      <name>new:Segment</name>
+      <description>fetch features by their name</description>
+      <sql>
+<![CDATA[
+SELECT
+       etn.na_sequence_id srcfeature_id, 
+       1 startm, 
+       etn.length end, 
+       etn.source_id name, 
+       'chromosome' type,
+       'ID=' || etn.source_id atts
+FROM
+       dots.externalnasequence etn, jldommer.SequenceAlias sa 
+WHERE  
+       etn.source_id = sa.source_id and 
+       sa.lowercase_source_id = lower('$name')  
+]]>
+      </sql>
+    </sqlQuery>
+    <sqlQuery>
+      <name>lowcomplexity:dust</name>
+      <description></description>
+      <sql>
+<![CDATA[ 
+SELECT
+       lc.na_feature_id feature_id,
+       'lowcomplexity' type, 
+       'dust' source, 
+       lc.name name, 
+       '.' score, 
+       lc.na_sequence_id parent_id, 
+       nal.start_min startm, 
+       nal.end_max end, 
+       decode (nal.is_reversed, 0, '+1', 1, '-1', '.') strand,
+       'Note=here to work around Feature.pm bug of splitting null atts' atts
+FROM 
+       dots.LowComplexityNAFeature lc,
+       dots.NALocation nal
+WHERE
+       lc.na_feature_id = nal.na_feature_id and
+       nal.start_min <= $rend and 
+       nal.end_max >= $base_start and 
+       lc.na_sequence_id = $srcfeature_id 
+ORDER BY 
+       nal.start_min
+]]>
+      </sql>
+    </sqlQuery>
+    <sqlQuery>
+      <name>TandemRepeat:TRF</name>
+      <description></description>
+      <sql>
+<![CDATA[ 
+SELECT
+       tr.na_feature_id feature_id,
+       'TandemRepeat' type, 
+       'TRF' source, 
+       tr.name name, 
+       '.' score, 
+       tr.na_sequence_id parent_id, 
+       nal.start_min startm, 
+       nal.end_max end, 
+       decode (nal.is_reversed, 0, '+1', 1, '-1', '.') strand,
+       'Note=here to work around Feature.pm bug of splitting null atts' atts
+FROM 
+       dots.TandemRepeatFeature tr,
+       dots.NALocation nal
+WHERE
+       tr.na_feature_id = nal.na_feature_id and
+       nal.start_min <= $rend and 
+       nal.end_max >= $base_start and 
+       tr.na_sequence_id = $srcfeature_id 
+ORDER BY 
+       nal.start_min
+]]>
+      </sql>
+    </sqlQuery>
+    <sqlQuery>
+      <name>gene:annotation</name>
+      <description></description>
+      <sql>
+<![CDATA[ 
+SELECT
+       gf.na_feature_id feature_id,
+       'gene' type, 
+       'annotation' source, 
+       gf.source_id name, 
+       '.' score, 
+       gf.na_sequence_id parent_id, 
+       nal.start_min startm, 
+       nal.end_max end, 
+       decode (nal.is_reversed, 0, '+1', 1, '-1', '.') strand,
+       'Note=' || trp.product || '$dlm' ||
+       'Taxon=' || tn.name || '$dlm' ||
+       'IsPseudo=' || gf.is_pseudo || '$dlm' ||
+       'SOTerm=' || so.term_name atts
+FROM 
+       dots.GENEFEATURE gf,
+       dots.TRANSCRIPT trp,
+       dots.NALOCATION nal, 
+       dots.EXTERNALNASEQUENCE etn,
+       SRes.TaxonName tn,
+       SRes.SequenceOntology so
+WHERE 
+       trp.parent_id = gf.na_feature_id and
+       gf.na_feature_id = nal.na_feature_id and 
+       etn.na_sequence_id = gf.na_sequence_id and
+       gf.sequence_ontology_id = so.sequence_ontology_id and
+       etn.taxon_id = tn.taxon_id and
+       tn.name_class = 'scientific name' and
+       nal.start_min <= $rend and 
+       nal.end_max >= $base_start and 
+       etn.na_sequence_id = $srcfeature_id 
+ORDER BY 
+       nal.start_min
+]]>
+      </sql>
+    </sqlQuery>
+
+  <sqlQuery>
+    <name>annotation:density</name>
+    <description>Annotation density. bin size is 50K.</description>
+    <sql>
+<![CDATA[
+SELECT etn.na_sequence_id feature_id,
+       'annotation' type,
+       'density' source
+FROM   dots.EXTERNALNASEQUENCE etn
+WHERE  etn.na_sequence_id = $srcfeature_id
+]]>
+    </sql>
+  </sqlQuery>
+
+    <sqlQuery>
+      <name>match:TGI</name>
+      <description></description>
+      <sql>
+<![CDATA[ 
+SELECT
+       sim.similarity_id feature_id,
+       'match' type, 
+       'TGI' source, 
+       query.source_id name, 
+       (sim.number_positive / sim.total_match_length) score, 
+       sim.subject_id    parent_id, 
+       sim.min_subject_start startm, 
+       sim.max_subject_end   end, 
+       decode(sim.is_reversed, 0, '+1', 1, '-1', '.') strand,
+       'Note=' || query.description || '$dlm' ||
+       'TGI=' || edb.name || '$dlm' ||
+       'TGIver=' || edbr.version || '$dlm' ||
+       'TGISpecies=' || decode(edb.name, 'PvGI', 'P.vivax', 'PfGI', 'P.falciparum', 'PyGI', 'P.yoelii', 'PbGI', 'P.berghei', 'unk') atts
+FROM 
+       dots.similarity sim,
+       core.tableinfo ti,
+       dots.externalnasequence query,
+       sres.externaldatabase edb,
+       sres.externaldatabaserelease edbr
+WHERE 
+       sim.min_subject_start <= $rend and 
+       sim.max_subject_end >= $base_start and 
+       sim.subject_id = $srcfeature_id and
+       ti.table_id = sim.subject_table_id and
+       ti.table_id = sim.query_table_id and
+       ti.name = 'ExternalNASequence' and
+       query.na_sequence_id = sim.query_id and
+       query.external_database_release_id = edbr.external_database_release_id and
+       edb.external_database_id = edbr.external_database_id and
+       (
+        (edb.name = 'PfGI' and edbr.version = '8.0') or
+        (edb.name = 'PvGI' and edbr.version = '2.0') or
+        (edb.name = 'PbGI' and edbr.version = '5.0') or
+        (edb.name = 'PyGI' and edbr.version = '5.0')
+       )
+ORDER BY 
+       sim.min_subject_start
+]]>
+      </sql>
+    </sqlQuery>
+
+    <sqlQuery>
+      <name>SNP:Su</name>
+      <description></description>
+      <sql>
+<![CDATA[ 
+SELECT 
+       snp.na_feature_id          as feature_id,
+       'SNP'                      as type, 
+       'Su'                       as source, 
+       snp.source_id              as name, 
+       '.'                        as score, 
+       s.source_id                as parent_id, 
+       l.start_min                as startm, 
+       l.end_max                  as end, 
+       decode(l.is_reversed, 0, '+1', 1, '-1', '.') as strand,
+       'IsCoding=' || snp.is_coding || '$dlm' ||
+       'PositionInCDS=' || snp.position_in_CDS || '$dlm' ||
+       'PositionInProtein=' || snp.position_in_protein || '$dlm' ||
+       'RefStrain=' || snp.reference_strain || '$dlm' ||
+       'RefNA='   || snp.reference_na || '$dlm' ||
+       'RefAA='   || snp.reference_aa || '$dlm' ||
+       'NonSyn='   || snp.has_nonsynonymous_allele || '$dlm'
+        as atts
+FROM   dots.ExternalNaSequence s,
+       dots.SnpFeature snp,
+       dots.NaLocation l,
+       sres.ExternalDatabase ed,
+       sres.ExternalDatabaseRelease edr  
+WHERE  ed.name = 'Su SNPs'  
+  AND  edr.external_database_id = ed.external_database_id
+  AND  snp.external_database_release_id = edr.external_database_release_id
+  AND  s.na_sequence_id = $srcfeature_id
+  AND  snp.na_sequence_id = s.na_sequence_id
+  AND  l.na_feature_id = snp.na_feature_id
+  AND  l.start_min <= $rend
+  AND  l.end_max >= $base_start
+]]>
+      </sql>
+    </sqlQuery> 
+
+
+
+    <sqlQuery>
+      <name>match:BLASTX</name>
+      <description></description>
+      <sql>
+<![CDATA[ 
+SELECT
+       sim.similarity_id feature_id,
+       'match' type,
+       'BLASTX' source,
+       subj.source_id name,
+       sim.score score,
+       sim.query_id    parent_id,
+       sim.min_query_start startm,
+       sim.max_query_end   end,
+       decode(sim.is_reversed, 0, '+1', 1, '-1', '.') strand,
+       'Note=' || subj.description || '$dlm' ||
+       'Expect=' || sim.pvalue_mant || 'e' || sim.pvalue_exp || '$dlm' ||
+       'PercentIdentity=' || sim.number_identical / sim.total_match_length || '$dlm' ||
+       'PercentPositive=' || sim.number_positive / sim.total_match_length atts
+FROM 
+       dots.similarity sim,
+       core.tableinfo qti,
+       core.tableinfo sti,
+       dots.externalaasequence subj
+WHERE 
+       sim.min_query_start <= $rend and 
+       sim.max_query_end >= $base_start and 
+       sim.query_id = $srcfeature_id and
+       qti.table_id = sim.query_table_id and
+       qti.name = 'ExternalNASequence' and
+       sti.table_id = sim.subject_table_id and
+       sti.name = 'ExternalAASequence' and
+       subj.aa_sequence_id = sim.subject_id
+ORDER BY 
+       sim.min_query_start
+]]>
+      </sql>
+    </sqlQuery>
+
+    <sqlQuery>
+      <name>match:syntenyYoeliiMC</name>
+      <description></description>
+      <sql>
+<![CDATA[ 
+SELECT
+       synteny_id feature_id,
+       'match' type, 
+       'syntenyYoeliiMC' source, 
+       	   CASE WHEN a_na_sequence_id = $srcfeature_id THEN b.source_id ELSE a.source_id END name, 
+       '.' score, 
+       synteny_id parent_id, 
+       	   CASE WHEN a_na_sequence_id = $srcfeature_id THEN a_start ELSE b_start END startm, 
+       	   CASE WHEN a_na_sequence_id = $srcfeature_id THEN a_end ELSE b_end END end, 
+       decode(is_reversed, 0, '+1', 1, '-1', '+1') strand,
+       	   'Start=' || CASE WHEN a_na_sequence_id = $srcfeature_id THEN b_start ELSE a_start END || '$dlm' ||
+       'End=' || CASE WHEN a_na_sequence_id = $srcfeature_id THEN b_end ELSE a_end END || '$dlm' ||
+       'Length=' || CASE WHEN a_na_sequence_id = $srcfeature_id THEN b.length ELSE a.length END || '$dlm' ||
+       'Scale=' || CASE WHEN a_na_sequence_id = $srcfeature_id THEN (b_end - b_start + 1) / (a_end - a_start + 1) ELSE (a_end - a_start + 1) / (b_end - b_start + 1) END  atts
+FROM 
+       apidb.synteny syn,
+       dots.externalnasequence a,
+       dots.externalnasequence b,
+       sres.taxonname py,
+       sres.taxonname pf,
+       sres.externaldatabaserelease edr,
+       sres.externaldatabase ed
+WHERE 
+       ed.name = 'yoelii-falciparum synteny from Mercator' AND
+       ed.external_database_id = edr.external_database_id AND
+       edr.external_database_release_id = syn.external_database_release_id AND
+       syn.a_na_sequence_id = a.na_sequence_id AND
+       syn.b_na_sequence_id = b.na_sequence_id AND
+       py.name like 'Plasmodium yoelii%' AND
+       py.name_class = 'scientific name' AND
+       pf.name like 'Plasmodium falciparum%' AND
+       pf.name_class = 'scientific name' AND
+       ( ( a.taxon_id = py.taxon_id AND b.taxon_id = pf.taxon_id ) OR
+       ( b.taxon_id = py.taxon_id AND a.taxon_id = pf.taxon_id )
+       ) AND
+       ( (a_na_sequence_id = $srcfeature_id AND
+       a_start <= $rend AND a_end >= $base_start
+       ) OR 
+       (b_na_sequence_id = $srcfeature_id AND
+       b_start <= $rend AND b_end >= $base_start
+       )
+       )
+ORDER BY 
+       syn.synteny_id
+]]>
+      </sql>
+    </sqlQuery>
+
+    <sqlQuery>
+      <name>match:syntenyVivaxMC</name>
+      <description></description>
+      <sql>
+<![CDATA[ 
+SELECT
+       synteny_id feature_id,
+       'match' type, 
+       'syntenyVivaxMC' source, 
+       CASE WHEN a_na_sequence_id = $srcfeature_id THEN b.source_id ELSE a.source_id END name, 
+       '.' score, 
+       synteny_id parent_id, 
+       CASE WHEN a_na_sequence_id = $srcfeature_id THEN a_start ELSE b_start END startm, 
+       CASE WHEN a_na_sequence_id = $srcfeature_id THEN a_end ELSE b_end END end, 
+       decode(is_reversed, 0, '+1', 1, '-1', '+1') strand,
+       'Start=' || CASE WHEN a_na_sequence_id = $srcfeature_id THEN b_start ELSE a_start END || '$dlm' ||
+       'End=' || CASE WHEN a_na_sequence_id = $srcfeature_id THEN b_end ELSE a_end END || '$dlm' ||
+       'Length=' || CASE WHEN a_na_sequence_id = $srcfeature_id THEN b.length ELSE a.length END  || '$dlm' ||
+       'Scale=' || CASE WHEN a_na_sequence_id = $srcfeature_id THEN (b_end - b_start + 1) / (a_end - a_start + 1) ELSE (a_end - a_start + 1) / (b_end - b_start + 1) END atts
+FROM 
+       apidb.synteny syn,
+       dots.externalnasequence a,
+       dots.externalnasequence b,
+       sres.taxonname pv,
+       sres.taxonname pf,
+       sres.externaldatabaserelease edr,
+       sres.externaldatabase ed
+WHERE 
+       ed.name = 'vivax-falciparum synteny from Mercator' AND
+       ed.external_database_id = edr.external_database_id AND
+       edr.external_database_release_id = syn.external_database_release_id AND
+       syn.a_na_sequence_id = a.na_sequence_id AND
+       syn.b_na_sequence_id = b.na_sequence_id AND
+       pv.name like 'Plasmodium vivax%' AND
+       pv.name_class = 'scientific name' AND
+       pf.name like 'Plasmodium falciparum%' AND
+       pf.name_class = 'scientific name' AND
+       ( ( a.taxon_id = pv.taxon_id AND b.taxon_id = pf.taxon_id ) OR
+         ( b.taxon_id = pv.taxon_id AND a.taxon_id = pf.taxon_id )
+       ) AND
+       ( (a_na_sequence_id = $srcfeature_id AND
+          a_start <= $rend AND a_end >= $base_start
+         ) OR 
+         (b_na_sequence_id = $srcfeature_id AND
+          b_start <= $rend AND b_end >= $base_start
+         )
+       )
+ORDER BY 
+       syn.synteny_id
+]]>
+      </sql>
+    </sqlQuery>
+
+    <sqlQuery>
+      <name>match:syntenyBerghei</name>
+      <description></description>
+      <sql>
+<![CDATA[ 
+SELECT
+       synteny_id feature_id,
+       'match' type, 
+       'syntenyBerghei' source, 
+       	   CASE WHEN a_na_sequence_id = $srcfeature_id THEN b.source_id ELSE a.source_id END name, 
+       '.' score, 
+       synteny_id parent_id, 
+       	   CASE WHEN a_na_sequence_id = $srcfeature_id THEN a_start ELSE b_start END startm, 
+       	   CASE WHEN a_na_sequence_id = $srcfeature_id THEN a_end ELSE b_end END end, 
+       decode(is_reversed, 0, '+1', 1, '-1', '+1') strand,
+       	   'Start=' || CASE WHEN a_na_sequence_id = $srcfeature_id THEN b_start ELSE a_start END || '$dlm' ||
+       'End=' || CASE WHEN a_na_sequence_id = $srcfeature_id THEN b_end ELSE a_end END || '$dlm' ||
+       'Length=' || CASE WHEN a_na_sequence_id = $srcfeature_id THEN b.length ELSE a.length END || '$dlm' ||
+       'Scale=' || CASE WHEN a_na_sequence_id = $srcfeature_id THEN (b_end - b_start + 1) / (a_end - a_start + 1) ELSE (a_end - a_start + 1) / (b_end - b_start + 1) END  atts
+FROM 
+       apidb.synteny syn,
+       dots.externalnasequence a,
+       dots.externalnasequence b,
+       sres.taxonname py,
+       sres.taxonname pf
+WHERE 
+       syn.a_na_sequence_id = a.na_sequence_id AND
+       syn.b_na_sequence_id = b.na_sequence_id AND
+       py.name like 'Plasmodium berghei%' AND
+       py.name_class = 'scientific name' AND
+       pf.name like 'Plasmodium falciparum%' AND
+       pf.name_class = 'scientific name' AND
+       ( ( a.taxon_id = py.taxon_id AND b.taxon_id = pf.taxon_id ) OR
+       ( b.taxon_id = py.taxon_id AND a.taxon_id = pf.taxon_id )
+       ) AND
+       ( (a_na_sequence_id = $srcfeature_id AND
+       a_start <= $rend AND a_end >= $base_start
+       ) OR 
+       (b_na_sequence_id = $srcfeature_id AND
+       b_start <= $rend AND b_end >= $base_start
+       )
+       )
+ORDER BY 
+       syn.synteny_id
+]]>
+      </sql>
+    </sqlQuery>
+
+    <sqlQuery>
+      <name>match:syntenyChabaudi</name>
+      <description></description>
+      <sql>
+<![CDATA[ 
+SELECT
+       synteny_id feature_id,
+       'match' type, 
+       'syntenyChabaudi' source, 
+       	   CASE WHEN a_na_sequence_id = $srcfeature_id THEN b.source_id ELSE a.source_id END name, 
+       '.' score, 
+       synteny_id parent_id, 
+       	   CASE WHEN a_na_sequence_id = $srcfeature_id THEN a_start ELSE b_start END startm, 
+       	   CASE WHEN a_na_sequence_id = $srcfeature_id THEN a_end ELSE b_end END end, 
+       decode(is_reversed, 0, '+1', 1, '-1', '+1') strand,
+       	   'Start=' || CASE WHEN a_na_sequence_id = $srcfeature_id THEN b_start ELSE a_start END || '$dlm' ||
+       'End=' || CASE WHEN a_na_sequence_id = $srcfeature_id THEN b_end ELSE a_end END || '$dlm' ||
+       'Length=' || CASE WHEN a_na_sequence_id = $srcfeature_id THEN b.length ELSE a.length END || '$dlm' ||
+       'Scale=' || CASE WHEN a_na_sequence_id = $srcfeature_id THEN (b_end - b_start + 1) / (a_end - a_start + 1) ELSE (a_end - a_start + 1) / (b_end - b_start + 1) END  atts
+FROM 
+       apidb.synteny syn,
+       dots.externalnasequence a,
+       dots.externalnasequence b,
+       sres.taxonname py,
+       sres.taxonname pf
+WHERE 
+       syn.a_na_sequence_id = a.na_sequence_id AND
+       syn.b_na_sequence_id = b.na_sequence_id AND
+       py.name like 'Plasmodium chabaudi%' AND
+       py.name_class = 'scientific name' AND
+       pf.name like 'Plasmodium falciparum%' AND
+       pf.name_class = 'scientific name' AND
+       ( ( a.taxon_id = py.taxon_id AND b.taxon_id = pf.taxon_id ) OR
+       ( b.taxon_id = py.taxon_id AND a.taxon_id = pf.taxon_id )
+       ) AND
+       ( (a_na_sequence_id = $srcfeature_id AND
+       a_start <= $rend AND a_end >= $base_start
+       ) OR 
+       (b_na_sequence_id = $srcfeature_id AND
+       b_start <= $rend AND b_end >= $base_start
+       )
+       )
+ORDER BY 
+       syn.synteny_id
+]]>
+      </sql>
+    </sqlQuery>
+
+    <sqlQuery>
+      <name>gene:syntenyYoeliiMC</name>
+      <description></description>
+      <sql>
+<![CDATA[ 
+SELECT
+       gf.na_feature_id feature_id,
+       'gene' type, 
+       'syntenyYoeliiMC' source, 
+       gf.source_id name, 
+       '.' score, 
+       synteny_id parent_id, 
+       CASE WHEN a_na_sequence_id = $srcfeature_id
+            THEN (a_start + ( ( a_end - a_start  + 1) *
+                              ( abs( CASE WHEN syn.is_reversed = 1
+                                          THEN gfl.end_max
+                                          ELSE gfl.start_min
+                                     END  -
+                                     CASE WHEN syn.is_reversed = 1
+                                          THEN b_end
+                                          ELSE b_start
+                                     END
+                                   ) + 1
+                               ) /
+                               abs(b_end - b_start + 1)
+                            )
+                 )
+            ELSE (b_start + ( ( b_end - b_start  + 1) *
+                              ( abs( CASE WHEN syn.is_reversed = 1
+                                          THEN gfl.end_max
+                                          ELSE gfl.start_min
+                                     END  -
+                                     CASE WHEN syn.is_reversed = 1
+                                          THEN a_end
+                                          ELSE a_start
+                                     END
+                                   ) + 1
+                               ) /
+                               abs(a_end - a_start + 1)
+                             )
+                  )
+       END startm,
+      CASE WHEN a_na_sequence_id = $srcfeature_id
+                       THEN (a_start + ( ( a_end - a_start  + 1) *
+                                         ( abs( CASE WHEN syn.is_reversed = 1
+                                                     THEN gfl.start_min
+                                                     ELSE gfl.end_max
+                                                END  -
+                                                CASE WHEN syn.is_reversed = 1
+                                                     THEN b_end
+                                                     ELSE b_start
+                                                END
+       ) + 1
+       ) /
+       abs(b_end - b_start + 1)
+       )
+       )
+                       ELSE (b_start + ( ( b_end - b_start  + 1) *
+                                         ( abs( CASE WHEN syn.is_reversed = 1
+                                                    THEN gfl.start_min
+                                                    ELSE gfl.end_max
+                                               END  -
+                                               CASE WHEN syn.is_reversed = 1
+                                                    THEN a_end
+                                                    ELSE a_start
+                                               END
+       ) + 1
+       ) /
+       abs(a_end - a_start + 1)
+       )
+       )
+                  END end,
+       	   CASE WHEN syn.is_reversed = 1
+                       THEN CASE WHEN gfl.is_reversed = 1
+                                 THEN '+1'
+                                 ELSE '-1'
+                            END
+                       ELSE CASE WHEN gfl.is_reversed = 1
+                                 THEN '-1'
+                                 ELSE '+1'
+                            END
+                  END strand,
+       	   'Note=' || gf.product || '$dlm' ||
+       'SOTerm=' || so.term_name || '$dlm' ||
+       'SyntenyID=' || synteny_id || '$dlm' ||
+       'IsPseudo=' || gf.is_pseudo || '$dlm' ||
+       'Taxon=' || CASE WHEN a_na_sequence_id = $srcfeature_id THEN tnb.name ELSE tna.name END atts
+FROM 
+       apidb.synteny syn,
+       dots.externalnasequence a,
+       dots.externalnasequence b,
+       sres.taxonname py,
+       sres.taxonname pf,
+       dots.genefeature gf,
+       dots.nalocation gfl,
+       sres.sequenceontology so,
+       sres.taxonname tna,
+       sres.taxonname tnb,
+       sres.externaldatabaserelease edr,
+       sres.externaldatabase ed
+WHERE 
+       ed.name = 'yoelii-falciparum synteny from Mercator' AND
+       ed.external_database_id = edr.external_database_id AND
+       edr.external_database_release_id = syn.external_database_release_id AND
+       syn.a_na_sequence_id = a.na_sequence_id AND
+       syn.b_na_sequence_id = b.na_sequence_id AND
+       py.name like 'Plasmodium yoelii%' AND
+       py.name_class = 'scientific name' AND
+       pf.name like 'Plasmodium falciparum%' AND
+       pf.name_class = 'scientific name' AND
+       ( ( a.taxon_id = py.taxon_id AND b.taxon_id = pf.taxon_id ) OR
+       ( b.taxon_id = py.taxon_id AND a.taxon_id = pf.taxon_id )
+       ) AND
+       a.taxon_id = tna.taxon_id AND tna.name_class = 'scientific name' AND
+       b.taxon_id = tnb.taxon_id AND tnb.name_class = 'scientific name' AND
+       ( (a_na_sequence_id = $srcfeature_id AND
+       a_start <= $rend AND a_end >= $base_start
+       ) OR 
+       (b_na_sequence_id = $srcfeature_id AND
+       b_start <= $rend AND b_end >= $base_start
+       )
+       ) AND
+       gfl.na_feature_id = gf.na_feature_id AND
+       ( (a_na_sequence_id = $srcfeature_id AND
+       b.na_sequence_id = gf.na_sequence_id AND
+       gfl.start_min <= syn.b_end AND
+       gfl.end_max >= syn.b_start
+       ) OR
+       (b_na_sequence_id = $srcfeature_id AND
+       a.na_sequence_id = gf.na_sequence_id AND
+       gfl.start_min <= syn.a_end AND
+       gfl.end_max >= syn.a_start
+       )
+       ) AND
+       gf.sequence_ontology_id = so.sequence_ontology_id AND
+                  $rend >= CASE WHEN a_na_sequence_id = $srcfeature_id
+                       THEN (a_start + ( ( a_end - a_start  + 1) *
+                                         ( abs( CASE WHEN syn.is_reversed = 1
+                                                    THEN gfl.end_max
+                                                    ELSE gfl.start_min
+                                                END  -
+                                                CASE WHEN syn.is_reversed = 1
+                                                     THEN b_end
+                                                     ELSE b_start
+                                                END
+       ) + 1
+       ) /
+       abs(b_end - b_start + 1)
+       )
+       )
+                       ELSE (b_start + ( ( b_end - b_start  + 1) *
+                                         ( abs( CASE WHEN syn.is_reversed = 1
+                                                    THEN gfl.end_max
+                                                    ELSE gfl.start_min
+                                                END  -
+                                                CASE WHEN syn.is_reversed = 1
+                                                     THEN a_end
+                                                     ELSE a_start
+                                                END
+       ) + 1
+       ) /
+       abs(a_end - a_start + 1)
+       )
+       )
+                  END AND
+       	   $base_start <= CASE WHEN a_na_sequence_id = $srcfeature_id
+                       THEN (a_start + ( ( a_end - a_start  + 1) *
+                                         ( abs( CASE WHEN syn.is_reversed = 1
+                                                     THEN gfl.start_min
+                                                     ELSE gfl.end_max
+                                                END  -
+                                                CASE WHEN syn.is_reversed = 1
+                                                     THEN b_end
+                                                     ELSE b_start
+                                                END
+       ) + 1
+       ) /
+       abs(b_end - b_start + 1)
+       )
+       )
+                       ELSE (b_start + ( ( b_end - b_start  + 1) *
+                                         ( abs( CASE WHEN syn.is_reversed = 1
+                                                    THEN gfl.start_min
+                                                    ELSE gfl.end_max
+                                               END  -
+                                               CASE WHEN syn.is_reversed = 1
+                                                    THEN a_end
+                                                    ELSE a_start
+                                               END
+       ) + 1
+       ) /
+       abs(a_end - a_start + 1)
+       )
+       )
+                  END
+ORDER BY 
+       syn.synteny_id
+]]>
+      </sql>
+    </sqlQuery>
+
+    <sqlQuery>
+      <name>gene:syntenyVivaxMC</name>
+      <description></description>
+      <sql>
+<![CDATA[ 
+SELECT
+       gf.na_feature_id feature_id,
+       'gene' type, 
+       'syntenyVivaxMC' source, 
+       gf.source_id name, 
+       '.' score, 
+       synteny_id parent_id, 
+       CASE WHEN a_na_sequence_id = $srcfeature_id
+            THEN (a_start + ( ( a_end - a_start  + 1) *
+                              ( abs( CASE WHEN syn.is_reversed = 1
+                                          THEN gfl.end_max
+                                          ELSE gfl.start_min
+                                     END  -
+                                     CASE WHEN syn.is_reversed = 1
+                                          THEN b_end
+                                          ELSE b_start
+                                     END
+                                   ) + 1
+                               ) /
+                               abs(b_end - b_start + 1)
+                            )
+                  )
+             ELSE (b_start + ( ( b_end - b_start  + 1) *
+                               ( abs( CASE WHEN syn.is_reversed = 1
+                                           THEN gfl.end_max
+                                           ELSE gfl.start_min
+                                      END  -
+                                      CASE WHEN syn.is_reversed = 1
+                                           THEN a_end
+                                           ELSE a_start
+                                      END
+                                    ) + 1
+                               ) /
+                               abs(a_end - a_start + 1)
+                             )
+                   )
+       END startm,
+       CASE WHEN a_na_sequence_id = $srcfeature_id
+            THEN (a_start + ( ( a_end - a_start  + 1) *
+                             ( abs( CASE WHEN syn.is_reversed = 1
+                                                     THEN gfl.start_min
+                                                     ELSE gfl.end_max
+                                                END  -
+                                                CASE WHEN syn.is_reversed = 1
+                                                     THEN b_end
+                                                     ELSE b_start
+                                                END
+       ) + 1
+       ) /
+       abs(b_end - b_start + 1)
+       )
+       )
+                       ELSE (b_start + ( ( b_end - b_start  + 1) *
+                                         ( abs( CASE WHEN syn.is_reversed = 1
+                                                    THEN gfl.start_min
+                                                    ELSE gfl.end_max
+                                               END  -
+                                               CASE WHEN syn.is_reversed = 1
+                                                    THEN a_end
+                                                    ELSE a_start
+                                               END
+       ) + 1
+       ) /
+       abs(a_end - a_start + 1)
+       )
+       )
+                  END end,
+       	   CASE WHEN syn.is_reversed = 1
+                       THEN CASE WHEN gfl.is_reversed = 1
+                                 THEN '+1'
+                                 ELSE '-1'
+                            END
+                       ELSE CASE WHEN gfl.is_reversed = 1
+                                 THEN '-1'
+                                 ELSE '+1'
+                            END
+                  END strand,
+       	   'Note=' || gf.product || '$dlm' ||
+       'SOTerm=' || so.term_name || '$dlm' ||
+       'SyntenyID=' || synteny_id || '$dlm' ||
+       'IsPseudo=' || gf.is_pseudo || '$dlm' ||
+       'Taxon=' || CASE WHEN a_na_sequence_id = $srcfeature_id THEN tnb.name ELSE tna.name END atts
+FROM 
+       apidb.synteny syn,
+       dots.externalnasequence a,
+       dots.externalnasequence b,
+       sres.taxonname pv,
+       sres.taxonname pf,
+       dots.genefeature gf,
+       dots.nalocation gfl,
+       sres.sequenceontology so,
+       sres.taxonname tna,
+       sres.taxonname tnb,
+       sres.externaldatabaserelease edr,
+       sres.externaldatabase ed
+WHERE 
+       ed.name = 'vivax-falciparum synteny from Mercator' AND
+       ed.external_database_id = edr.external_database_id AND
+       edr.external_database_release_id = syn.external_database_release_id AND
+       syn.a_na_sequence_id = a.na_sequence_id AND
+       syn.b_na_sequence_id = b.na_sequence_id AND
+       pv.name like 'Plasmodium vivax%' AND
+       pv.name_class = 'scientific name' AND
+       pf.name like 'Plasmodium falciparum%' AND
+       pf.name_class = 'scientific name' AND
+       ( ( a.taxon_id = pv.taxon_id AND b.taxon_id = pf.taxon_id ) OR
+         ( b.taxon_id = pv.taxon_id AND a.taxon_id = pf.taxon_id )
+       ) AND
+       a.taxon_id = tna.taxon_id AND tna.name_class = 'scientific name' AND
+       b.taxon_id = tnb.taxon_id AND tnb.name_class = 'scientific name' AND
+       ( (a_na_sequence_id = $srcfeature_id AND
+          a_start <= $rend AND a_end >= $base_start
+         ) OR 
+         (b_na_sequence_id = $srcfeature_id AND
+          b_start <= $rend AND b_end >= $base_start
+         )
+       ) AND
+       gfl.na_feature_id = gf.na_feature_id AND
+       ( (a_na_sequence_id = $srcfeature_id AND
+          b.na_sequence_id = gf.na_sequence_id AND
+          gfl.start_min <= syn.b_end AND
+          gfl.end_max >= syn.b_start
+         ) OR
+         (b_na_sequence_id = $srcfeature_id AND
+          a.na_sequence_id = gf.na_sequence_id AND
+          gfl.start_min <= syn.a_end AND
+          gfl.end_max >= syn.a_start
+         )
+       ) AND
+       gf.sequence_ontology_id = so.sequence_ontology_id AND
+       $rend >= CASE WHEN a_na_sequence_id = $srcfeature_id
+                     THEN (a_start + ( ( a_end - a_start  + 1) *
+                                         ( abs( CASE WHEN syn.is_reversed = 1
+                                                    THEN gfl.end_max
+                                                    ELSE gfl.start_min
+                                                END  -
+                                                CASE WHEN syn.is_reversed = 1
+                                                     THEN b_end
+                                                     ELSE b_start
+                                                END
+       ) + 1
+       ) /
+       abs(b_end - b_start + 1)
+       )
+       )
+                       ELSE (b_start + ( ( b_end - b_start  + 1) *
+                                         ( abs( CASE WHEN syn.is_reversed = 1
+                                                    THEN gfl.end_max
+                                                    ELSE gfl.start_min
+                                                END  -
+                                                CASE WHEN syn.is_reversed = 1
+                                                     THEN a_end
+                                                     ELSE a_start
+                                                END
+       ) + 1
+       ) /
+       abs(a_end - a_start + 1)
+       )
+       )
+                  END AND
+       	   $base_start <= CASE WHEN a_na_sequence_id = $srcfeature_id
+                       THEN (a_start + ( ( a_end - a_start  + 1) *
+                                         ( abs( CASE WHEN syn.is_reversed = 1
+                                                     THEN gfl.start_min
+                                                     ELSE gfl.end_max
+                                                END  -
+                                                CASE WHEN syn.is_reversed = 1
+                                                     THEN b_end
+                                                     ELSE b_start
+                                                END
+       ) + 1
+       ) /
+       abs(b_end - b_start + 1)
+       )
+       )
+                       ELSE (b_start + ( ( b_end - b_start  + 1) *
+                                         ( abs( CASE WHEN syn.is_reversed = 1
+                                                    THEN gfl.start_min
+                                                    ELSE gfl.end_max
+                                               END  -
+                                               CASE WHEN syn.is_reversed = 1
+                                                    THEN a_end
+                                                    ELSE a_start
+                                               END
+       ) + 1
+       ) /
+       abs(a_end - a_start + 1)
+       )
+       )
+                  END 
+ORDER BY 
+       syn.synteny_id
+]]>
+      </sql>
+    </sqlQuery>
+
+    <sqlQuery>
+      <name>gene:syntenyBerghei</name>
+      <description></description>
+      <sql>
+<![CDATA[ 
+SELECT
+       gf.na_feature_id feature_id,
+       'gene' type, 
+       'syntenyBerghei' source, 
+       gf.source_id name, 
+       '.' score, 
+       synteny_id parent_id, 
+       CASE WHEN a_na_sequence_id = $srcfeature_id
+            THEN (a_start + ( ( a_end - a_start  + 1) *
+                              ( abs( CASE WHEN syn.is_reversed = 1
+                                          THEN gfl.end_max
+                                          ELSE gfl.start_min
+                                     END  -
+                                     CASE WHEN syn.is_reversed = 1
+                                          THEN b_end
+                                          ELSE b_start
+                                     END
+                                   ) + 1
+                               ) /
+                               abs(b_end - b_start + 1)
+                            )
+                  )
+             ELSE (b_start + ( ( b_end - b_start  + 1) *
+                               ( abs( CASE WHEN syn.is_reversed = 1
+                                           THEN gfl.end_max
+                                           ELSE gfl.start_min
+                                      END  -
+                                      CASE WHEN syn.is_reversed = 1
+                                           THEN a_end
+                                           ELSE a_start
+                                      END
+                                    ) + 1
+                               ) /
+                               abs(a_end - a_start + 1)
+                             )
+                   )
+       END startm,
+       CASE WHEN a_na_sequence_id = $srcfeature_id
+            THEN (a_start + ( ( a_end - a_start  + 1) *
+                             ( abs( CASE WHEN syn.is_reversed = 1
+                                                     THEN gfl.start_min
+                                                     ELSE gfl.end_max
+                                                END  -
+                                                CASE WHEN syn.is_reversed = 1
+                                                     THEN b_end
+                                                     ELSE b_start
+                                                END
+       ) + 1
+       ) /
+       abs(b_end - b_start + 1)
+       )
+       )
+                       ELSE (b_start + ( ( b_end - b_start  + 1) *
+                                         ( abs( CASE WHEN syn.is_reversed = 1
+                                                    THEN gfl.start_min
+                                                    ELSE gfl.end_max
+                                               END  -
+                                               CASE WHEN syn.is_reversed = 1
+                                                    THEN a_end
+                                                    ELSE a_start
+                                               END
+       ) + 1
+       ) /
+       abs(a_end - a_start + 1)
+       )
+       )
+                  END end,
+       	   CASE WHEN syn.is_reversed = 1
+                       THEN CASE WHEN gfl.is_reversed = 1
+                                 THEN '+1'
+                                 ELSE '-1'
+                            END
+                       ELSE CASE WHEN gfl.is_reversed = 1
+                                 THEN '-1'
+                                 ELSE '+1'
+                            END
+                  END strand,
+       	   'Note=' || gf.product || '$dlm' ||
+       'SOTerm=' || so.term_name || '$dlm' ||
+       'SyntenyID=' || synteny_id || '$dlm' ||
+       'IsPseudo=' || gf.is_pseudo || '$dlm' ||
+       'Taxon=' || CASE WHEN a_na_sequence_id = $srcfeature_id THEN tnb.name ELSE tna.name END atts
+FROM 
+       apidb.synteny syn,
+       dots.externalnasequence a,
+       dots.externalnasequence b,
+       sres.taxonname pv,
+       sres.taxonname pf,
+       dots.genefeature gf,
+       dots.nalocation gfl,
+       sres.sequenceontology so,
+       sres.taxonname tna,
+       sres.taxonname tnb
+WHERE 
+       syn.a_na_sequence_id = a.na_sequence_id AND
+       syn.b_na_sequence_id = b.na_sequence_id AND
+       pv.name like 'Plasmodium berghei%' AND
+       pv.name_class = 'scientific name' AND
+       pf.name like 'Plasmodium falciparum%' AND
+       pf.name_class = 'scientific name' AND
+       ( ( a.taxon_id = pv.taxon_id AND b.taxon_id = pf.taxon_id ) OR
+         ( b.taxon_id = pv.taxon_id AND a.taxon_id = pf.taxon_id )
+       ) AND
+       a.taxon_id = tna.taxon_id AND tna.name_class = 'scientific name' AND
+       b.taxon_id = tnb.taxon_id AND tnb.name_class = 'scientific name' AND
+       ( (a_na_sequence_id = $srcfeature_id AND
+          a_start <= $rend AND a_end >= $base_start
+         ) OR 
+         (b_na_sequence_id = $srcfeature_id AND
+          b_start <= $rend AND b_end >= $base_start
+         )
+       ) AND
+       gfl.na_feature_id = gf.na_feature_id AND
+       ( (a_na_sequence_id = $srcfeature_id AND
+          b.na_sequence_id = gf.na_sequence_id AND
+          gfl.start_min <= syn.b_end AND
+          gfl.end_max >= syn.b_start
+         ) OR
+         (b_na_sequence_id = $srcfeature_id AND
+          a.na_sequence_id = gf.na_sequence_id AND
+          gfl.start_min <= syn.a_end AND
+          gfl.end_max >= syn.a_start
+         )
+       ) AND
+       gf.sequence_ontology_id = so.sequence_ontology_id AND
+       $rend >= CASE WHEN a_na_sequence_id = $srcfeature_id
+                     THEN (a_start + ( ( a_end - a_start  + 1) *
+                                         ( abs( CASE WHEN syn.is_reversed = 1
+                                                    THEN gfl.end_max
+                                                    ELSE gfl.start_min
+                                                END  -
+                                                CASE WHEN syn.is_reversed = 1
+                                                     THEN b_end
+                                                     ELSE b_start
+                                                END
+       ) + 1
+       ) /
+       abs(b_end - b_start + 1)
+       )
+       )
+                       ELSE (b_start + ( ( b_end - b_start  + 1) *
+                                         ( abs( CASE WHEN syn.is_reversed = 1
+                                                    THEN gfl.end_max
+                                                    ELSE gfl.start_min
+                                                END  -
+                                                CASE WHEN syn.is_reversed = 1
+                                                     THEN a_end
+                                                     ELSE a_start
+                                                END
+       ) + 1
+       ) /
+       abs(a_end - a_start + 1)
+       )
+       )
+                  END AND
+       	   $base_start <= CASE WHEN a_na_sequence_id = $srcfeature_id
+                       THEN (a_start + ( ( a_end - a_start  + 1) *
+                                         ( abs( CASE WHEN syn.is_reversed = 1
+                                                     THEN gfl.start_min
+                                                     ELSE gfl.end_max
+                                                END  -
+                                                CASE WHEN syn.is_reversed = 1
+                                                     THEN b_end
+                                                     ELSE b_start
+                                                END
+       ) + 1
+       ) /
+       abs(b_end - b_start + 1)
+       )
+       )
+                       ELSE (b_start + ( ( b_end - b_start  + 1) *
+                                         ( abs( CASE WHEN syn.is_reversed = 1
+                                                    THEN gfl.start_min
+                                                    ELSE gfl.end_max
+                                               END  -
+                                               CASE WHEN syn.is_reversed = 1
+                                                    THEN a_end
+                                                    ELSE a_start
+                                               END
+       ) + 1
+       ) /
+       abs(a_end - a_start + 1)
+       )
+       )
+                  END 
+ORDER BY 
+       syn.synteny_id
+]]>
+      </sql>
+    </sqlQuery>
+
+    <sqlQuery>
+      <name>gene:syntenyChabaudi</name>
+      <description></description>
+      <sql>
+<![CDATA[ 
+SELECT
+       gf.na_feature_id feature_id,
+       'gene' type, 
+       'syntenyChabaudi' source, 
+       gf.source_id name, 
+       '.' score, 
+       synteny_id parent_id, 
+       CASE WHEN a_na_sequence_id = $srcfeature_id
+            THEN (a_start + ( ( a_end - a_start  + 1) *
+                              ( abs( CASE WHEN syn.is_reversed = 1
+                                          THEN gfl.end_max
+                                          ELSE gfl.start_min
+                                     END  -
+                                     CASE WHEN syn.is_reversed = 1
+                                          THEN b_end
+                                          ELSE b_start
+                                     END
+                                   ) + 1
+                               ) /
+                               abs(b_end - b_start + 1)
+                            )
+                  )
+             ELSE (b_start + ( ( b_end - b_start  + 1) *
+                               ( abs( CASE WHEN syn.is_reversed = 1
+                                           THEN gfl.end_max
+                                           ELSE gfl.start_min
+                                      END  -
+                                      CASE WHEN syn.is_reversed = 1
+                                           THEN a_end
+                                           ELSE a_start
+                                      END
+                                    ) + 1
+                               ) /
+                               abs(a_end - a_start + 1)
+                             )
+                   )
+       END startm,
+       CASE WHEN a_na_sequence_id = $srcfeature_id
+            THEN (a_start + ( ( a_end - a_start  + 1) *
+                             ( abs( CASE WHEN syn.is_reversed = 1
+                                                     THEN gfl.start_min
+                                                     ELSE gfl.end_max
+                                                END  -
+                                                CASE WHEN syn.is_reversed = 1
+                                                     THEN b_end
+                                                     ELSE b_start
+                                                END
+       ) + 1
+       ) /
+       abs(b_end - b_start + 1)
+       )
+       )
+                       ELSE (b_start + ( ( b_end - b_start  + 1) *
+                                         ( abs( CASE WHEN syn.is_reversed = 1
+                                                    THEN gfl.start_min
+                                                    ELSE gfl.end_max
+                                               END  -
+                                               CASE WHEN syn.is_reversed = 1
+                                                    THEN a_end
+                                                    ELSE a_start
+                                               END
+       ) + 1
+       ) /
+       abs(a_end - a_start + 1)
+       )
+       )
+                  END end,
+       	   CASE WHEN syn.is_reversed = 1
+                       THEN CASE WHEN gfl.is_reversed = 1
+                                 THEN '+1'
+                                 ELSE '-1'
+                            END
+                       ELSE CASE WHEN gfl.is_reversed = 1
+                                 THEN '-1'
+                                 ELSE '+1'
+                            END
+                  END strand,
+       	   'Note=' || gf.product || '$dlm' ||
+       'SOTerm=' || so.term_name || '$dlm' ||
+       'SyntenyID=' || synteny_id || '$dlm' ||
+       'IsPseudo=' || gf.is_pseudo || '$dlm' ||
+       'Taxon=' || CASE WHEN a_na_sequence_id = $srcfeature_id THEN tnb.name ELSE tna.name END atts
+FROM 
+       apidb.synteny syn,
+       dots.externalnasequence a,
+       dots.externalnasequence b,
+       sres.taxonname pv,
+       sres.taxonname pf,
+       dots.genefeature gf,
+       dots.nalocation gfl,
+       sres.sequenceontology so,
+       sres.taxonname tna,
+       sres.taxonname tnb
+WHERE 
+       syn.a_na_sequence_id = a.na_sequence_id AND
+       syn.b_na_sequence_id = b.na_sequence_id AND
+       pv.name like 'Plasmodium chabaudi%' AND
+       pv.name_class = 'scientific name' AND
+       pf.name like 'Plasmodium falciparum%' AND
+       pf.name_class = 'scientific name' AND
+       ( ( a.taxon_id = pv.taxon_id AND b.taxon_id = pf.taxon_id ) OR
+         ( b.taxon_id = pv.taxon_id AND a.taxon_id = pf.taxon_id )
+       ) AND
+       a.taxon_id = tna.taxon_id AND tna.name_class = 'scientific name' AND
+       b.taxon_id = tnb.taxon_id AND tnb.name_class = 'scientific name' AND
+       ( (a_na_sequence_id = $srcfeature_id AND
+          a_start <= $rend AND a_end >= $base_start
+         ) OR 
+         (b_na_sequence_id = $srcfeature_id AND
+          b_start <= $rend AND b_end >= $base_start
+         )
+       ) AND
+       gfl.na_feature_id = gf.na_feature_id AND
+       ( (a_na_sequence_id = $srcfeature_id AND
+          b.na_sequence_id = gf.na_sequence_id AND
+          gfl.start_min <= syn.b_end AND
+          gfl.end_max >= syn.b_start
+         ) OR
+         (b_na_sequence_id = $srcfeature_id AND
+          a.na_sequence_id = gf.na_sequence_id AND
+          gfl.start_min <= syn.a_end AND
+          gfl.end_max >= syn.a_start
+         )
+       ) AND
+       gf.sequence_ontology_id = so.sequence_ontology_id AND
+       $rend >= CASE WHEN a_na_sequence_id = $srcfeature_id
+                     THEN (a_start + ( ( a_end - a_start  + 1) *
+                                         ( abs( CASE WHEN syn.is_reversed = 1
+                                                    THEN gfl.end_max
+                                                    ELSE gfl.start_min
+                                                END  -
+                                                CASE WHEN syn.is_reversed = 1
+                                                     THEN b_end
+                                                     ELSE b_start
+                                                END
+       ) + 1
+       ) /
+       abs(b_end - b_start + 1)
+       )
+       )
+                       ELSE (b_start + ( ( b_end - b_start  + 1) *
+                                         ( abs( CASE WHEN syn.is_reversed = 1
+                                                    THEN gfl.end_max
+                                                    ELSE gfl.start_min
+                                                END  -
+                                                CASE WHEN syn.is_reversed = 1
+                                                     THEN a_end
+                                                     ELSE a_start
+                                                END
+       ) + 1
+       ) /
+       abs(a_end - a_start + 1)
+       )
+       )
+                  END AND
+       	   $base_start <= CASE WHEN a_na_sequence_id = $srcfeature_id
+                       THEN (a_start + ( ( a_end - a_start  + 1) *
+                                         ( abs( CASE WHEN syn.is_reversed = 1
+                                                     THEN gfl.start_min
+                                                     ELSE gfl.end_max
+                                                END  -
+                                                CASE WHEN syn.is_reversed = 1
+                                                     THEN b_end
+                                                     ELSE b_start
+                                                END
+       ) + 1
+       ) /
+       abs(b_end - b_start + 1)
+       )
+       )
+                       ELSE (b_start + ( ( b_end - b_start  + 1) *
+                                         ( abs( CASE WHEN syn.is_reversed = 1
+                                                    THEN gfl.start_min
+                                                    ELSE gfl.end_max
+                                               END  -
+                                               CASE WHEN syn.is_reversed = 1
+                                                    THEN a_end
+                                                    ELSE a_start
+                                               END
+       ) + 1
+       ) /
+       abs(a_end - a_start + 1)
+       )
+       )
+                  END 
+ORDER BY 
+       syn.synteny_id
+]]>
+      </sql>
+    </sqlQuery>
+
+    <sqlQuery>
+      <name>match:BergmanVaidyaOligos</name>
+      <description></description>
+      <sql>
+<![CDATA[ 
+SELECT
+       sim.similarity_id feature_id,
+       'match' type,
+       'BergmanVaidyaOligos' source,
+       qry.source_id name,
+       sim.score score,
+       sim.query_id    parent_id,
+       sim.min_subject_start startm,
+       sim.max_subject_end   end,
+       decode(sim.is_reversed, 0, '+1', 1, '-1', '.') strand,
+       'Note=' || subj.description || '$dlm' ||
+       'Expect=' || sim.pvalue_mant || 'e' || sim.pvalue_exp || '$dlm' ||
+       'PercentIdentity=' || sim.number_identical / sim.total_match_length || '$dlm' ||
+       'PercentPositive=' || sim.number_positive / sim.total_match_length atts
+FROM 
+       dots.similarity sim,
+       core.tableinfo qti,
+       core.tableinfo sti,
+       dots.externalnasequence subj,
+       dots.externalnasequence qry,
+       sres.externaldatabase ed1,
+       sres.externaldatabase ed2,
+       sres.externaldatabaserelease edr1,
+       sres.externaldatabaserelease edr2
+WHERE 
+       sim.min_subject_start <= $rend and 
+       sim.max_subject_end >= $base_start and
+       sim.subject_id = $srcfeature_id and
+       qti.table_id = sim.query_table_id and
+       qti.name = 'ExternalNASequence' and
+       sti.table_id = sim.subject_table_id and
+       sti.name = 'ExternalNASequence' and
+       qry.na_sequence_id = sim.query_id and
+       subj.na_sequence_id = sim.subject_id and
+       subj.external_database_release_id = edr1.external_database_release_id and
+       qry.external_database_release_id = edr2.external_database_release_id and
+       edr1.external_database_id = ed1.external_database_id and
+       edr2.external_database_id = ed2.external_database_id and
+       ed1.name = 'Jane Carlton P. yoelii chromosomes' and
+       ed2.name = 'Vaidya Bergman oligos'
+ORDER BY 
+       sim.min_query_start
+]]>
+      </sql>
+    </sqlQuery>
+  </module>
+
+
+  <module name="Feature.pm">
+   <sqlQuery>
+     <name>SNP:Su:bulkAttribute</name>
+     <description></description>
+     <sql>
+<![CDATA[
+   SELECT snp.na_feature_id as feature_id,
+          var.strain,
+          var.allele,
+          var.phenotype,
+          var.product
+FROM  dots.ExternalNaSequence s,
+      dots.SnpFeature snp,
+      dots.NaLocation l,
+      dots.SeqVariation var,
+      sres.ExternalDatabase ed,
+      sres.ExternalDatabaseRelease edr 
+WHERE ed.name = 'Su SNPs'  
+ AND  edr.external_database_id = ed.external_database_id
+ AND  snp.external_database_release_id = edr.external_database_release_id
+ AND  s.na_sequence_id = $srcfeature_id
+ AND  snp.na_sequence_id = s.na_sequence_id
+ AND  l.na_feature_id = snp.na_feature_id
+ AND  l.start_min <= $rend
+ AND  l.end_max >= $base_start
+ AND  var.parent_id = snp.na_feature_id
+ ORDER BY var.strain
+ ]]>
+     </sql>
+   </sqlQuery>
+
+    <sqlQuery>
+      <name>gene:annotation:attribute:Ortholog</name>
+      <description></description>
+      <sql>
+<![CDATA[ 
+SELECT
+       ogf.source_id
+FROM 
+       dots.GENEFEATURE gf,
+       dots.EXTERNALNASEQUENCE ens,
+       dots.GENEFEATURE ogf,
+       dots.EXTERNALNASEQUENCE oens,
+       dots.SequenceSequenceGroup ssg,
+       dots.SequenceSequenceGroup ossg
+WHERE 
+       gf.source_id = '$name'
+  AND  gf.na_sequence_id = ens.na_sequence_id
+  AND  gf.na_feature_id = ssg.sequence_id
+  AND  ssg.sequence_group_id = ossg.sequence_group_id
+  AND  ossg.sequence_id = ogf.na_feature_id
+  AND  ogf.na_sequence_id = oens.na_sequence_id
+  AND  oens.taxon_id <> ens.taxon_id
+]]>
+      </sql>
+    </sqlQuery>
+
+    <sqlQuery>
+      <name>gene:syntenyVivaxMC:attribute:Ortholog</name>
+      <description></description>
+      <sql>
+<![CDATA[ 
+SELECT
+       ogf.source_id
+FROM 
+       dots.GENEFEATURE gf,
+       dots.EXTERNALNASEQUENCE ens,
+       dots.GENEFEATURE ogf,
+       dots.EXTERNALNASEQUENCE oens,
+       dots.SequenceSequenceGroup ssg,
+       dots.SequenceSequenceGroup ossg
+WHERE 
+       gf.source_id = '$name'
+  AND  gf.na_sequence_id = ens.na_sequence_id
+  AND  gf.na_feature_id = ssg.sequence_id
+  AND  ssg.sequence_group_id = ossg.sequence_group_id
+  AND  ossg.sequence_id = ogf.na_feature_id
+  AND  ogf.na_sequence_id = oens.na_sequence_id
+  AND  oens.taxon_id <> ens.taxon_id
+]]>
+      </sql>
+    </sqlQuery>
+
+    <sqlQuery>
+      <name>gene:syntenyYoeliiMC:attribute:Ortholog</name>
+      <description></description>
+      <sql>
+<![CDATA[ 
+SELECT
+       ogf.source_id
+FROM 
+       dots.GENEFEATURE gf,
+       dots.EXTERNALNASEQUENCE ens,
+       dots.GENEFEATURE ogf,
+       dots.EXTERNALNASEQUENCE oens,
+       dots.SequenceSequenceGroup ssg,
+       dots.SequenceSequenceGroup ossg
+WHERE 
+       gf.source_id = '$name'
+  AND  gf.na_sequence_id = ens.na_sequence_id
+  AND  gf.na_feature_id = ssg.sequence_id
+  AND  ssg.sequence_group_id = ossg.sequence_group_id
+  AND  ossg.sequence_id = ogf.na_feature_id
+  AND  ogf.na_sequence_id = oens.na_sequence_id
+  AND  oens.taxon_id <> ens.taxon_id
+]]>
+      </sql>
+    </sqlQuery>
+
+    <sqlQuery>
+      <name>gene:syntenyBerghei:attribute:Ortholog</name>
+      <description></description>
+      <sql>
+<![CDATA[ 
+SELECT
+       ogf.source_id
+FROM 
+       dots.GENEFEATURE gf,
+       dots.EXTERNALNASEQUENCE ens,
+       dots.GENEFEATURE ogf,
+       dots.EXTERNALNASEQUENCE oens,
+       dots.SequenceSequenceGroup ssg,
+       dots.SequenceSequenceGroup ossg
+WHERE 
+       gf.source_id = '$name'
+  AND  gf.na_sequence_id = ens.na_sequence_id
+  AND  gf.na_feature_id = ssg.sequence_id
+  AND  ssg.sequence_group_id = ossg.sequence_group_id
+  AND  ossg.sequence_id = ogf.na_feature_id
+  AND  ogf.na_sequence_id = oens.na_sequence_id
+  AND  oens.taxon_id <> ens.taxon_id
+]]>
+      </sql>
+    </sqlQuery>
+
+    <sqlQuery>
+      <name>gene:syntenyChabaudi:attribute:Ortholog</name>
+      <description></description>
+      <sql>
+<![CDATA[ 
+SELECT
+       ogf.source_id
+FROM 
+       dots.GENEFEATURE gf,
+       dots.EXTERNALNASEQUENCE ens,
+       dots.GENEFEATURE ogf,
+       dots.EXTERNALNASEQUENCE oens,
+       dots.SequenceSequenceGroup ssg,
+       dots.SequenceSequenceGroup ossg
+WHERE 
+       gf.source_id = '$name'
+  AND  gf.na_sequence_id = ens.na_sequence_id
+  AND  gf.na_feature_id = ssg.sequence_id
+  AND  ssg.sequence_group_id = ossg.sequence_group_id
+  AND  ossg.sequence_id = ogf.na_feature_id
+  AND  ogf.na_sequence_id = oens.na_sequence_id
+  AND  oens.taxon_id <> ens.taxon_id
+]]>
+      </sql>
+    </sqlQuery>
+
+    <sqlQuery>
+      <name>gene:annotation:subfeatures</name>
+      <description> </description>
+      <sql>
+<![CDATA[ 
+SELECT
+       exf.na_feature_id feature_id, 
+       exf.name type, 
+       'annotation' source, 
+       exf.na_feature_id name, 
+       '' phase, 
+       '.' score, 
+       nal.start_min startm,            
+       nal.end_max end, 
+       decode (nal.is_reversed, 0, '+1', 1, '-1', '.') strand,
+       '' atts 
+FROM   
+       dots.EXONFEATURE exf, 
+       dots.TRANSCRIPT trp, 
+       dots.NALOCATION nal 
+WHERE  
+       exf.parent_id = trp.na_feature_id and 
+       exf.na_feature_id = nal.na_feature_id and 
+       trp.parent_id = $parent_id 
+]]>
+      </sql>
+    </sqlQuery>
+    <sqlQuery>
+      <name>gene:annotation:bulksubfeatures</name>
+      <description> </description>
+      <sql>
+<![CDATA[ 
+SELECT
+       exf.na_feature_id feature_id, 
+       exf.name type, 
+       'annotation' source, 
+       exf.na_feature_id name, 
+       gf.na_feature_id parent_id, 
+       '.' score, 
+       nal.start_min startm,            
+       nal.end_max end, 
+       decode (nal.is_reversed, 0, '+1', 1, '-1', '.') strand,
+       '' atts 
+FROM   
+       dots.EXONFEATURE exf, 
+       dots.TRANSCRIPT trp,
+       dots.GeneFeature gf,
+       dots.NALOCATION nal 
+WHERE  
+       exf.parent_id = trp.na_feature_id and
+       trp.parent_id = gf.na_feature_id and
+       exf.na_feature_id = nal.na_feature_id and 
+       nal.start_max <= $rend and 
+       nal.end_min >= $base_start and 
+       exf.na_sequence_id = $srcfeature_id 
+ORDER BY 
+       nal.start_max
+]]>
+      </sql>
+    </sqlQuery>
+
+  <sqlQuery>
+    <name>annotation:density:subfeatures</name>
+    <description>Annotation density subfeatures. Bin size is 50K.
+    </description>
+    <sql>
+<![CDATA[
+SELECT interval feature_id,
+      'test' type,
+      'test' source,
+      count(interval) score,
+      (interval - 1) * 50000 startm,
+      interval * 50000 end
+FROM (
+      SELECT ceil(nal.start_max / 50000) interval
+      FROM   dots.GENEFEATURE gf, dots.NALOCATION nal
+      WHERE  gf.na_feature_id = nal.na_feature_id
+      AND    gf.na_sequence_id = $parent_id
+ORDER BY nal.start_max)
+GROUP BY interval
+]]>
+    </sql>
+  </sqlQuery>
+
+    <sqlQuery>
+      <name>match:TGI:subfeatures</name>
+      <description> </description>
+      <sql>
+<![CDATA[ 
+SELECT
+       hsp.similarity_span_id feature_id,
+       'HSP' type, 
+       'TGI' source, 
+       query.source_id name, 
+       '' phase, 
+       hsp.number_positive / hsp.match_length score, 
+       hsp.subject_start startm,            
+       hsp.subject_end end, 
+       decode (hsp.is_reversed, 0, '+1', 1, '-1', '.') strand,
+       'QStart=' || hsp.query_start || '$dlm' ||
+       'QEnd=' || hsp.query_end  atts 
+FROM   
+       dots.similarity hit,
+       dots.similarityspan hsp,
+       dots.externalnasequence query
+WHERE  
+       hit.similarity_id = $parent_id and
+       hsp.similarity_id = $parent_id and
+       query.na_sequence_id = hit.query_id
+]]>
+      </sql>
+    </sqlQuery>
+    <sqlQuery>
+      <name>match:BLASTX:subfeatures</name>
+      <description></description>
+      <sql>
+<![CDATA[ 
+SELECT
+       hsp.similarity_span_id feature_id,
+       'HSP' type, 
+       'BLASTX' source, 
+       subj.source_id name, 
+       '' phase, 
+       hsp.score score, 
+       hsp.query_start startm,            
+       hsp.query_end end, 
+       decode (hsp.is_reversed, 0, '+1', 1, '-1', '.') strand,
+       'TStart=' || hsp.subject_start || '$dlm' ||
+       'TEnd=' || hsp.subject_end  atts 
+FROM   
+       dots.similarity hit,
+       dots.similarityspan hsp,
+       dots.externalaasequence subj
+WHERE  
+       hit.similarity_id = $parent_id and
+       hsp.similarity_id = $parent_id and
+       subj.aa_sequence_id = hit.subject_id
+ORDER BY
+       hsp.similarity_span_id asc
+]]>
+      </sql>
+    </sqlQuery>
+
+    <sqlQuery>
+      <name>gene:syntenyYoeliiMC:subfeatures</name>
+      <description></description>
+      <sql>
+<![CDATA[ 
+SELECT
+       ef.na_feature_id feature_id,
+       'exon' type, 
+       'syntenyYoeliiMC' source, 
+       gf.source_id name, 
+       '.' phase,
+       '.' score,
+       	   CASE WHEN b_na_sequence_id = gf.na_sequence_id
+                       THEN (a_start + ( ( a_end - a_start  + 1) *
+                                         ( abs( CASE WHEN syn.is_reversed = 1
+                                                    THEN efl.end_max
+                                                    ELSE efl.start_min
+                                                END  -
+                                                CASE WHEN syn.is_reversed = 1
+                                                     THEN b_end
+                                                     ELSE b_start
+                                                END
+       ) + 1
+       ) /
+       abs(b_end - b_start + 1)
+       )
+       )
+                       ELSE (b_start + ( ( b_end - b_start  + 1) *
+                                         ( abs( CASE WHEN syn.is_reversed = 1
+                                                    THEN efl.end_max
+                                                    ELSE efl.start_min
+                                                END  -
+                                                CASE WHEN syn.is_reversed = 1
+                                                     THEN a_end
+                                                     ELSE a_start
+                                                END
+       ) + 1
+       ) /
+       abs(a_end - a_start + 1)
+       )
+       )
+                  END startm,
+       	   CASE WHEN b_na_sequence_id = gf.na_sequence_id
+                       THEN (a_start + ( ( a_end - a_start  + 1) *
+                                         ( abs( CASE WHEN syn.is_reversed = 1
+                                                     THEN efl.start_min
+                                                     ELSE efl.end_max
+                                                END  -
+                                                CASE WHEN syn.is_reversed = 1
+                                                     THEN b_end
+                                                     ELSE b_start
+                                                END
+       ) + 1
+       ) /
+       abs(b_end - b_start + 1)
+       )
+       )
+                       ELSE (b_start + ( ( b_end - b_start  + 1) *
+                                         ( abs( CASE WHEN syn.is_reversed = 1
+                                                    THEN efl.start_min
+                                                    ELSE efl.end_max
+                                               END  -
+                                               CASE WHEN syn.is_reversed = 1
+                                                    THEN a_end
+                                                    ELSE a_start
+                                               END
+       ) + 1
+       ) /
+       abs(a_end - a_start + 1)
+       )
+       )
+                  END end,
+       	   CASE WHEN syn.is_reversed = 1
+                       THEN CASE WHEN efl.is_reversed = 1
+                                 THEN '+1'
+                                 ELSE '-1'
+                            END
+                       ELSE CASE WHEN efl.is_reversed = 1
+                                 THEN '-1'
+                                 ELSE '+1'
+                            END
+                  END strand,
+       'SyntenyID=' || $SyntenyID->[0] atts
+FROM 
+       apidb.synteny syn,
+       dots.genefeature gf,
+       dots.transcript trp,
+       dots.exonfeature ef,
+       dots.nalocation efl
+WHERE 
+       syn.synteny_id = $SyntenyID->[0] AND
+       gf.na_feature_id = $parent_id AND
+       ( gf.na_sequence_id = syn.a_na_sequence_id OR
+       gf.na_sequence_id = syn.b_na_sequence_id
+       ) AND
+       trp.parent_id = gf.na_feature_id AND
+       ef.parent_id = trp.na_feature_id AND
+       efl.na_feature_id = ef.na_feature_id
+ORDER BY 
+       startm
+]]>
+      </sql>
+    </sqlQuery>
+
+    <sqlQuery>
+      <name>gene:syntenyVivaxMC:subfeatures</name>
+      <description></description>
+      <sql>
+<![CDATA[ 
+SELECT
+       ef.na_feature_id feature_id,
+       'exon' type, 
+       'syntenyVivaxMC' source, 
+       gf.source_id name, 
+       '.' phase,
+       '.' score,
+       	   CASE WHEN b_na_sequence_id = gf.na_sequence_id
+                       THEN (a_start + ( ( a_end - a_start  + 1) *
+                                         ( abs( CASE WHEN syn.is_reversed = 1
+                                                    THEN efl.end_max
+                                                    ELSE efl.start_min
+                                                END  -
+                                                CASE WHEN syn.is_reversed = 1
+                                                     THEN b_end
+                                                     ELSE b_start
+                                                END
+       ) + 1
+       ) /
+       abs(b_end - b_start + 1)
+       )
+       )
+                       ELSE (b_start + ( ( b_end - b_start  + 1) *
+                                         ( abs( CASE WHEN syn.is_reversed = 1
+                                                    THEN efl.end_max
+                                                    ELSE efl.start_min
+                                                END  -
+                                                CASE WHEN syn.is_reversed = 1
+                                                     THEN a_end
+                                                     ELSE a_start
+                                                END
+       ) + 1
+       ) /
+       abs(a_end - a_start + 1)
+       )
+       )
+                  END startm,
+       	   CASE WHEN b_na_sequence_id = gf.na_sequence_id
+                       THEN (a_start + ( ( a_end - a_start  + 1) *
+                                         ( abs( CASE WHEN syn.is_reversed = 1
+                                                     THEN efl.start_min
+                                                     ELSE efl.end_max
+                                                END  -
+                                                CASE WHEN syn.is_reversed = 1
+                                                     THEN b_end
+                                                     ELSE b_start
+                                                END
+       ) + 1
+       ) /
+       abs(b_end - b_start + 1)
+       )
+       )
+                       ELSE (b_start + ( ( b_end - b_start  + 1) *
+                                         ( abs( CASE WHEN syn.is_reversed = 1
+                                                    THEN efl.start_min
+                                                    ELSE efl.end_max
+                                               END  -
+                                               CASE WHEN syn.is_reversed = 1
+                                                    THEN a_end
+                                                    ELSE a_start
+                                               END
+       ) + 1
+       ) /
+       abs(a_end - a_start + 1)
+       )
+       )
+                  END end,
+       	   CASE WHEN syn.is_reversed = 1
+                       THEN CASE WHEN efl.is_reversed = 1
+                                 THEN '+1'
+                                 ELSE '-1'
+                            END
+                       ELSE CASE WHEN efl.is_reversed = 1
+                                 THEN '-1'
+                                 ELSE '+1'
+                            END
+                  END strand,
+       'SyntenyID=' || $SyntenyID->[0] atts
+FROM 
+       apidb.synteny syn,
+       dots.genefeature gf,
+       dots.transcript trp,
+       dots.exonfeature ef,
+       dots.nalocation efl
+WHERE 
+       syn.synteny_id = $SyntenyID->[0] AND
+       gf.na_feature_id = $parent_id AND
+       ( gf.na_sequence_id = syn.a_na_sequence_id OR
+       gf.na_sequence_id = syn.b_na_sequence_id
+       ) AND
+       trp.parent_id = gf.na_feature_id AND
+       ef.parent_id = trp.na_feature_id AND
+       efl.na_feature_id = ef.na_feature_id
+ORDER BY 
+       startm
+]]>
+      </sql>
+    </sqlQuery>
+
+    <sqlQuery>
+      <name>protein:seq</name>
+       <description></description>
+       <sql>
+<![CDATA[
+SELECT tas.source_id, tas.source_id, tas.sequence 
+FROM   DOTS.TRANSLATEDAASEQUENCE tas, 
+WHERE  tas.source_id = '$id'
+]]>
+      </sql>
+    </sqlQuery>   
+  </module>
+</DAS>

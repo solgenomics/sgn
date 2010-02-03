@@ -1,0 +1,44 @@
+
+<%doc>
+
+=head1 NAME
+
+/search/form/gene_tab.mas - a mason module that displays the gene search form.
+
+=head1 DESCRIPTION
+
+Takes a optional parameter, $q, a CXGN::Phenome query object.
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>. Based on Perl code by Naama Menda and others.
+
+</%doc>
+
+<%perl>
+
+use CXGN::Phenome;
+
+my $q = $ARGS{q};
+
+$q ||= CXGN::Phenome->new->new_query;
+
+my $form = $q->to_html;
+
+#  my $quick_form = $q->to_quick_html;
+
+</%perl>
+
+
+<table class="search_form_title" summary=""><tr><td>
+  <h4><span class="search_form_title">Gene search</span></h4>
+  </td>
+  </tr></table>
+  
+  
+  <form  action= "/search/locus_search.pl" method="get">
+  <% $form %><br/>
+  
+  </form>
+
+

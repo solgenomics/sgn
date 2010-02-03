@@ -1,0 +1,23 @@
+
+<%perl>
+
+my $q = $ARGS{q};
+
+$q ||= CXGN::Phenotypes->new->new_query;
+
+my $form = $q->to_html;
+
+</%perl>
+
+<table class="search_form_title" summary=""><tr><td>
+    <h4><span class="search_form_title">Phenotype search</span></h4>
+  </td>
+  </tr></table>
+
+
+<form  action= "/search/phenotype_search.pl" method="get">
+<% $form %><br/>
+
+</form>
+
+

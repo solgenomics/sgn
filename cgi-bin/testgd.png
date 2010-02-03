@@ -1,0 +1,57 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use English;
+ 
+use GD;
+
+# create a new *TRUE-COLOR* image by passing 1 as the last argument
+my $im = GD::Image->new(400,400,1);
+
+# allocate some colors
+my $white = $im->colorAllocate(254,254,254);
+my $black = $im->colorAllocate(0,0,0);
+my $red = $im->colorAllocate(255,0,0);
+my $blue = $im->colorAllocate(0,0,0xff);
+
+#fill with the bg color, since in truecolor, first color allocated is
+#apparently not the bg color
+$im->fill(0,0,$white);
+
+
+#draw 2 sets of lines, one aliased, one antialiased
+$im->setAntiAliased($blue);
+my $spread = 130;
+my $yoffset = 50;
+for(my $i=0; $i<40;$i++) {
+  my $y1 = rand($spread) + $yoffset;
+  my $y2 = rand($spread) + $yoffset;
+  $im->line(50, $y1,     350, $y2,     $blue);
+  $im->line(50, $y1+$spread+40, 350, $y2+$spread+40, gdAntiAliased);
+}
+
+#draw text labels
+my $text_x = 10;
+$im->useFontConfig(1);
+$im->string(gdSmallFont,
+	    $text_x+100,$yoffset-15,
+	    'Normal (yucky font)',$black);
+$im->stringFT($black,'sans:bold',10,0,
+	      $text_x,$yoffset-15,
+	      'Normal (nice font)');
+$im->string(gdSmallFont,
+	    $text_x+100,
+	    $yoffset+$spread+20,
+	    'Antialiased (yucky font)',$black);
+$im->stringFT($black,'sans:bold',10,0,
+	      $text_x,$yoffset+$spread+20,
+	      'Antialiased (nice font)');
+
+# make sure we are writing to a binary stream
+#binmode STDOUT;
+
+# Convert the image to PNG and print it on standard output
+
+print "Content-Type: image/png\n\n";
+print $im->png;
+#print "foofoo\n";

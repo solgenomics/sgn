@@ -1,0 +1,54 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<title>Sample Configuraton Files</title>
+</head>
+
+<body>
+<h1>Sample Configuration Files</h1>
+
+<p>
+
+This directory contains sample configuration files for <a
+href="http://www.gmod.org/ggb">GBrowse</a>.  To use them, simply copy
+them into gbrowse.conf, and edit the name of the database, username
+and password to reflect your database set up:
+
+<pre>
+db_args       = -adaptor dbi::mysqlopt 
+	        -dsn     dbi:mysql:database=fly;host=localhost
+                                            <b>^^^change this</b>
+user          = nobody
+                <b>^^^^^^ and this</b>
+pass          = secret
+                <b>^^^^^^ and this</b>
+</pre>
+
+<p>
+
+<dl>
+  <dt><a href="01.yeast.conf">01.yeast.conf</a>
+  <dd>Saccharomyces cerevisiae from SGD
+  <dt><a href="02.wormbase.conf">02.wormbase.conf</a>
+  <dd>Caenorhabditis elegans from WormBase
+  <dt><a href="03.fly.conf">03.fly.conf</a>
+  <dd>Drosophila melanogaster from FlyBase/BDGP
+  <dt><a href="04.human.conf">04.human.conf</a>
+  <dd>Homo sapiens from various sources (download from www.gmod.org)
+  <dt><a href="05.embl.conf">05.embl.conf</a>
+  <dd>A proxy that automatically downloads whole accessions from Genbank/EMBL
+  <dt><a href="06.biosql.conf">06.biosql.conf</a>
+  <dd>Sample configuration file for users of BioSQL
+  <dt><a href="07.chado.conf">07.chado.conf</a>
+  <dd>Sample configuration file for users of Chado
+  <dt><a href="08.genbank.conf">08.genbank.conf</a>
+  <dd>Sample configuration file for data converted from GenBank/EMBL format using
+      the bp_genbank2gff.pl script.
+</dl>
+
+<hr>
+<address>Lincoln D. Stein, lstein@cshl.org<br>
+<a href="/">Cold Spring Harbor Laboratory</a></address>
+<!-- hhmts start -->
+Last modified: Tue Dec 23 17:43:27 EST 2003
+<!-- hhmts end -->
+</body> </html>

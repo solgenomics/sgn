@@ -1,0 +1,23 @@
+#!/usr/bin/perl -w
+use lib '/tmp/update-vendor-drop-jcQwDOU/FAKEROOT/conf/gbrowse.conf/';
+
+use lib '/tmp/update-vendor-drop-jcQwDOU/FAKEROOT/lib/';
+#$Id: moby_server.PLS,v 1.6 2004/08/09 14:46:18 sheldon_mckay Exp $
+use SOAP::Transport::HTTP;
+use MobyServices::GbrowseServices;
+use strict;
+
+my $x = new SOAP::Transport::HTTP::CGI;
+
+$x->dispatch_with({
+    'http://biomoby.org/#GbrowseGetReferenceSeqObj' =>  'MobyServices::GbrowseServices',
+    'http://biomoby.org/#GbrowseGetReferenceFasta' =>  'MobyServices::GbrowseServices',
+    'http://biomoby.org/#GbrowseGetReferenceGFF2' =>  'MobyServices::GbrowseServices',
+    'http://biomoby.org/#GbrowseGetReferenceGFF3' =>  'MobyServices::GbrowseServices',
+    'http://biomoby.org/#GbrowseGetFeatureSequenceObject' =>  'MobyServices::GbrowseServices',
+    'http://biomoby.org/#GbrowseGetFeatureGFF3' =>  'MobyServices::GbrowseServices',
+    'http://biomoby.org/#GbrowseGetFeatureGFF2' =>  'MobyServices::GbrowseServices',
+    
+    });
+$x->handle;
+

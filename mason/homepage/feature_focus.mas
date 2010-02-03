@@ -1,0 +1,20 @@
+
+<%perl>
+
+use strict;
+use CXGN::Tools::File;
+use CXGN::VHost;
+use File::Spec;
+
+my $vh = CXGN::VHost->new();
+my $file = File::Spec->catfile($vh->get_conf('basepath'), 'documents', 'feature_focus.txt');
+
+
+my $FEATURE_FOCUS=CXGN::Tools::File::read_commented_file("$file");
+
+</%perl>
+
+<div class="boxbgcolor5" style="border-left:1px;border-right:0px; border-top:0px;border-bottom:0px; margin:0px;">
+
+<!-- div class="boxheading">Feature Request</div --><br /><% $FEATURE_FOCUS %>
+</div>

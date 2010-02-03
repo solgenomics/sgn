@@ -1,0 +1,15 @@
+<%perl>
+
+use strict;
+use CXGN::Tools::File;
+use CXGN::VHost;
+
+my $vh = CXGN::VHost->new();
+
+my $documents_folder = $vh->get_conf('basepath')."/documents";
+
+my $OTHER_LINKS=CXGN::Tools::File::read_commented_file("$documents_folder/other_links.txt");
+
+						    print $OTHER_LINKS;
+
+</%perl>

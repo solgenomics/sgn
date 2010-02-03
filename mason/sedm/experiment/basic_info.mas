@@ -1,0 +1,161 @@
+<%doc>
+  NAME: basic_info.mas
+  VERSION: 1.0
+  DESCRIPTION: This is a mason code get the data from the database and show it as table web_page; 
+  AUTHOR: Aureliano Bombarely (ab782@cornell.edu)
+</%doc>
+
+
+<%perl>
+use strict;
+use warnings;
+
+use CXGN::SEDM::Schema;
+use CXGN::Chado::Dbxref;
+use CXGN::SEDM::Platform;
+use CXGN::People::Person;
+use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
+
+my $basic_info_content;
+my $exp_accession;
+
+## If there aren't any experiment_row that comes from experimental_design_detail.mas, it will return a message.
+
+if (defined $ARGS{'experiment'}) {
+
+   ## Get the schema object
+   my $schema = $ARGS{'experiment'}->result_source()->schema();   
+
+   ## Get the data from the object.
+   my %experiment_data = $ARGS{'experiment'}->get_columns();
+   $exp_accession = $experiment_data{'experiment_name'};
+
+   ## Get the experimental design link
+   my $expdes_id = $experiment_data{'experimental_design_id'};
+   my ($exp_design_row) = $schema->resultset('ExperimentalDesigns')->search({ experimental_design_id => $expdes_id });
+   my $expdes_name = $exp_design_row->get_column('experimental_design_name');
+   my $expdes_link = '/sedm/experimental_design.pl?id='.$expdes_id;
+   my $expdes_html = "<a href=$expdes_link>$expdes_name</a><br>";
+   
+   
+   ## Get information of the contact
+   my $person_id = $experiment_data{'contact_person_id'};
+   my ($complete_name, $contact_email);
+   if (defined $person_id) {
+       my $person = CXGN::People::Person->new($schema->storage()->dbh(), $person_id);
+       my $saludation = $person->get_salutation() || 'Dr.';
+       my $first_name = $person->get_first_name();
+       my $last_name = $person->get_last_name();
+       $contact_email = $person->get_contact_email() || 'Not available';
+       if (defined $saludation && defined $first_name && defined $last_name) {
+           $complete_name = "$saludation $first_name $last_name";
+       } else {
+           $complete_name = '<i><font color="gray">data not available</basefont></i>';
+       }
+   } else {
+      $complete_name = '<i><font color="gray">data not available</basefont></i>';
+      $contact_email = '<i><font color="gray">data not available</basefont></i>';
+   }
+
+   ## Default values
+   my @keys = keys %experiment_data;
+   foreach my $key (@keys) {
+      unless (defined $experiment_data{$key}) {
+         $experiment_data{$key} = '<i><font color="gray">data not available</basefont></i>';
+      }
+   }
+   
+   ## Get the replicates (target) list with links and their samples
+   my @target_list;
+   my (%ontologies, %cvterm_id);
+   my @target_rows = $schema->resultset('Targets')->search({experiment_id =>$experiment_data{'experiment_id'}});
+   foreach my $target_row (@target_rows) {
+      my $target_name = $target_row->get_column('target_name');
+      my $target_id = $target_row->get_column('target_id');
+      my $sample_group_id = $target_row->get_column('sample_group_id');
+      my @sample_list;
+      my @sample_ids = $schema->resultset('GroupLinkage')->search({ group_id => $sample_group_id, 
+								    member_type => 'sample'       })->get_column('member_id')->all();
+      foreach my $sample_id (@sample_ids) {
+         my ($sample_row) = $schema->resultset('Samples')->search({ sample_id => $sample_id});
+	 my $sample_name = $sample_row->get_column('sample_name');
+	 my $sample_link = '/sedm/sample.pl?id='.$sample_id;
+	 my $sample_html = "<a href=$sample_link>$sample_name</a>";
+	 push @sample_list, $sample_html;
+
+      ## Get the PO terms associated to these samples
+         my $rs_sample_dbxref = $schema->resultset('SampleDbxref')->search({ sample_id => $sample_id});
+	 if (defined $rs_sample_dbxref) {
+	     my @dbxref_ids = $rs_sample_dbxref->get_column('dbxref_id')->all();
+	     foreach my $dbxref_id (@dbxref_ids) {
+	         my $dbxref = CXGN::Chado::Dbxref->new($schema->storage()->dbh(), $dbxref_id); 
+		 my $cvterm = $dbxref->get_cvterm();
+		 if (defined $cvterm) {
+		#	 my $ontology = $cvterm->ontology();
+	             my $ontology_id = $cvterm->get_db_name . ":" . $cvterm->get_accession();
+	             my $ontology_name = $cvterm->get_cvterm_name();
+		     my $cvterm_id = $cvterm->get_cvterm_id();
+		     unless (defined $ontologies{$ontology_id}) {
+			 $ontologies{$ontology_id} = $ontology_name;
+			 $cvterm_id{$ontology_id} = $cvterm_id;
+        	     }
+                 }
+             }
+         }
+      }
+      my $sample_list = ' ';
+      if (scalar(@sample_list) > 1) {
+      	 $sample_list = "(synthesized with samples: ". join(', ', @sample_list ).")";
+      } elsif (scalar(@sample_list) == 1) {
+         $sample_list = "(synthesized with the sample: $sample_list[0])";
+      }
+       
+      my $target_link = '/sedm/target.pl?id='.$target_id; 
+      my $target_html = "<a href=$target_link>$target_name</a> $sample_list<br>";
+      push @target_list, $target_html;
+   }
+   my $target_list = join(' ', @target_list);
+
+   ## Give format to the ontogies information
+
+   my @onto_html;
+   my @onto = sort keys %ontologies;
+   foreach my $onto (@onto) {
+       my $onto_link = '/chado/cvterm.pl?action=view&cvterm_id='.$cvterm_id{$onto};
+       my $onto_line = "<a href=$onto_link>$onto</a> ($ontologies{$onto})<br>";
+       push @onto_html, $onto_line;
+   }
+   my $onto_list = join(' ', @onto_html);
+
+   ## Create the HTML table
+
+   $basic_info_content = <<HTML;
+
+   <table width="100%">
+   	   <tr> <td width="25%"> <b>Experiment name:</b>        </td> <td> $experiment_data{'experiment_name'} </td></tr>
+           <tr> <td width="25%"> <b>Experimental design:</b>    </td> <td> $expdes_html </td></tr>
+	   <tr> <td width="25%"> <b>Description:</b>            </td> <td> $experiment_data{'description'} </td></tr>
+	   <tr> <td width="25%"> <b>Ontology terms:</b>         </td> <td> $onto_list </td></tr>
+	   <tr>	<td width="25%"> <b>Colours:</b>                </td> <td> $experiment_data{'colour_nr'} </td></tr>
+           <tr>	<td width="25%"> <b>Replicates:</b>             </td> <td> $experiment_data{'replicates_nr'} </td></tr>
+	   <tr> <td width="25%"> <b>Target list:</b>            </td> <td> $target_list</td></tr>
+	   <tr> <td width="25%"> <b>Contact info:</b>           </td> <td> <b>Name:</b> $complete_name </td></tr>
+           <tr> <td width="">                                   </td> <td> <b>E-mail:</b> $contact_email </td></tr>
+   </table>
+
+HTML
+
+} else {
+   $basic_info_content = "<big>There aren't any experiment data for the specified parameters.</big>";
+}   
+
+my $basic_info_html;
+if (defined $exp_accession) {
+   $basic_info_html = "<center><big><b>Expression Experiment: $exp_accession</b></big></center><br>";
+}
+
+$basic_info_html .= info_section_html( title => "Experiment Basic Information", contents => $basic_info_content );
+
+</%perl>
+
+<% $basic_info_html %>

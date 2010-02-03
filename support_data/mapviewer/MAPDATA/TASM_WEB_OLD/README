@@ -1,0 +1,52 @@
+This README is to be annotated from an email Anita is sending to Robert.
+Further details to follow.
+
+Note on entering TASM_WEB_OLD chromosomal data into the data entry.
+* all data in () have an offset of 0 and a confidence level of I.
+* all data in () correspond to the previous marker.
+* all symbols are ignored in this particular data entry.
+* when there are more than 2 offsets within one marker section, the offsets are  corresponded with the markers that are aligned.
+* all markers that do not have an offset will automatically assumed to have an
+  offset of 1.0
+
+Individual chromosome that have missing offsets
+Chromosome 2
+* TG463
+* TG131B
+* TG645
+* TG487
+* TG337,TG518
+* CT229C
+* HTS24
+* TG167,TG204
+
+Chromosome 3
+* TG247,TG382,TG388,TG401,TG235,CT144,TG575,CT8,CT118B,TG50C,CD13A,CT212,TG509
+* CT82
+* TG414,TG288 (TG74,TG39,CD68,CD52B)
+* TG222,CT90A (CD51)
+
+Chromosome 5
+* CT202
+
+Chromosome 6
+* TG275
+* TG279,TG548,(TG477)
+
+Chromosome 7
+* T42
+* TG113A
+* CT52
+* TG576B
+* 21J7
+* TG166A,TG5,CT135A,TG452,TG210A - offset equal to 0.0
+
+Chromosome 9
+* TG79
+	TG207,CT17,TG486,TG589,TG64,TG101,TG291,PC6 - offset equal to 0.0
+* CT208
+* CT208,CT235,TG79,TG415,CT17,CD3,TG591B
+* TG390
+
+Chromosome 12
+* TG367,CD27,TG111,TG394

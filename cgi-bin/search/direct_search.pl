@@ -1,0 +1,144 @@
+use strict;
+use warnings;
+
+use CXGN::DB::Connection;
+use CXGN::Genomic::Search::Clone;
+use CXGN::Page::FormattingHelpers qw/page_title_html modesel/;
+use CXGN::Page;
+use CXGN::People;
+use CXGN::Search::CannedForms;
+
+our $page = CXGN::Page->new( "SGN Direct Search page", "Koni");
+
+my @tabs = (
+	    ['?search=loci','Genes'],
+	    ['?search=phenotypes','Phenotypes'],
+	    ['?search=cvterm_name','QTLs/Traits'],
+	    ['?search=unigene','Unigenes'],
+	    ['?search=family', 'Unigene Families' ],
+	    ['?search=markers','Markers'],
+	    ['?search=bacs','Genomic Clones'],
+	    ['?search=est_library','ESTs'],
+	    ['?search=images','Images'],	
+	    ['?search=directory','People'],    
+	   );
+my @tabfuncs = (
+		\&gene_tab,
+		\&phenotype_tab,
+		\&cvterm_tab,
+		\&unigene_tab,
+		\&family_tab,
+		\&marker_tab,
+		\&bac_tab,
+		\&est_library_submenu,
+                \&images_tab,	
+		\&directory_tab,
+	
+	       );
+
+#get the search type
+my ($search) = $page -> get_arguments("search");
+$search ||= 'unigene'; #default
+
+my $tabsel =
+  ($search =~ /loci/i)           ? 0
+  : ($search =~ /phenotypes/i)   ? 1  
+  : ($search =~ /cvterm_name/i)  ? 2
+  : ($search =~ /unigene/i)      ? 3
+  : ($search =~ /famil((y)|(ies))/i)       ? 4
+  : ($search =~ /markers/i)      ? 5
+  : ($search =~ /bacs/i)         ? 6
+  : ($search =~ /est/i)          ? 7
+  : ($search =~ /library/i)      ? 7 # yes, there are two terms linking to tab 8
+  : ($search =~ /images/i)       ? 8 # New image search
+  : ($search =~ /directory/i)    ? 9
+  : $page->error_page("Invalid search type '$search'.");
+
+$page->header('Search SGN','Search SGN');
+
+print modesel(\@tabs,$tabsel); #print out the tabs
+
+print qq|<div class="indentedcontent">\n|;
+$tabfuncs[$tabsel](); #call the right function for filler
+print qq|</div>\n|;
+
+$page->footer();
+
+sub annotation_tab {
+    print CXGN::Search::CannedForms::annotation_search_form($page);
+}
+
+#display a second level of tabs, allowing the user to choose between EST and library searches
+sub est_library_submenu {
+	my @tabs = (
+		    ['?search=est','ESTs'],
+		    ['?search=library','Libraries']);
+	my @tabfuncs = (\&est_tab, \&library_tab);
+	
+	#get the search type
+	my ($search) = $page->get_arguments("search");
+	$search ||= 'est'; #default
+	
+	my $tabsel =
+	  ($search=~ /est/i)          ? 0
+	  : ($search =~ /library/i)   ? 1
+	  : $page->error_page("Invalid submenu search type '$search'.");
+	
+	print modesel(\@tabs, $tabsel); #print out the tabs
+	
+	print qq|<div>\n|;
+	$tabfuncs[$tabsel](); #call the right function for filler
+	print qq|</div>\n|;
+}
+
+sub est_tab {
+    print CXGN::Search::CannedForms::est_search_form($page);
+}
+
+sub library_tab {
+    print CXGN::Search::CannedForms::library_search_form($page);
+}
+
+sub unigene_tab {
+    print CXGN::Search::CannedForms::unigene_search_form($page);
+}
+
+sub family_tab {
+	print CXGN::Search::CannedForms::family_search_form($page);
+}
+
+sub marker_tab {
+
+  print <<MARKERTAB;
+<h3><b>Marker search</b></h3>
+MARKERTAB
+  
+  my $dbh = CXGN::DB::Connection->new();
+  my $mform = CXGN::Search::CannedForms::MarkerSearch->new($dbh);
+  print   '<form action="/search/markers/markersearch.pl">'
+    . $mform->to_html() .
+      '</form>';
+
+}
+
+sub bac_tab {
+    print CXGN::Search::CannedForms::clone_search_form($page);
+}
+
+sub directory_tab {
+    print CXGN::Search::CannedForms::people_search_form($page);
+}
+
+sub gene_tab {
+    print CXGN::Search::CannedForms::gene_search_form($page);
+}
+sub phenotype_tab {
+    print CXGN::Search::CannedForms::phenotype_search_form($page);
+}
+sub cvterm_tab {
+    print CXGN::Search::CannedForms::cvterm_search_form($page);
+}
+
+sub images_tab {
+    print CXGN::Search::CannedForms::image_search_form($page);
+}

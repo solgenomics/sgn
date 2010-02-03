@@ -1,0 +1,81 @@
+##gff-version 3
+##sequence-region MAL11 1 2035250
+MAL11	annotation	contig	1	2035250	.	+	.	ID=MAL11;Name=MAL11
+MAL11	annotation	gene	370853	372475	.	-	.	ID=gene.30238;Name=PF11_0099;Note=heat shock protein DnaJ homologue Pfj2;Taxon=Plasmodium falciparum 3D7;SOTerm=protein_coding_gene
+MAL11	annotation	exon	370853	372475	.	-	.	ID=exon.30240;Parent=gene.30238
+MAL11	annotation	gene	375355	376011	.	+	.	ID=gene.30243;Name=PF11_0100;Note=hypothetical protein;Taxon=Plasmodium falciparum 3D7;SOTerm=protein_coding_gene
+MAL11	annotation	exon	375355	375547	.	+	.	ID=exon.30246;Parent=gene.30243
+MAL11	annotation	exon	375737	376011	.	+	.	ID=exon.30245;Parent=gene.30243
+MAL11	annotation	gene	376862	378253	.	+	.	ID=gene.30247;Name=PF11_0101;Note=hypothetical protein;Taxon=Plasmodium falciparum 3D7;SOTerm=protein_coding_gene;Ortholog=gene.85157
+MAL11	annotation	exon	376862	378253	.	+	.	ID=exon.30249;Parent=gene.30247
+MAL11	annotation	gene	380184	387067	.	-	.	ID=gene.30250;Name=PF11_0540;Note=hypothetical protein;Taxon=Plasmodium falciparum 3D7;SOTerm=protein_coding_gene
+MAL11	annotation	exon	380184	383347	.	-	.	ID=exon.30257;Parent=gene.30250
+MAL11	annotation	exon	383526	384743	.	-	.	ID=exon.30252;Parent=gene.30250
+MAL11	annotation	exon	385383	385628	.	-	.	ID=exon.30253;Parent=gene.30250
+MAL11	annotation	exon	385847	386294	.	-	.	ID=exon.30255;Parent=gene.30250
+MAL11	annotation	exon	386492	386845	.	-	.	ID=exon.30254;Parent=gene.30250
+MAL11	annotation	exon	387005	387067	.	-	.	ID=exon.30256;Parent=gene.30250
+MAL11	annotation	gene	387677	390946	.	-	.	ID=gene.30258;Name=PF11_0105;Note=hypothetical protein;Taxon=Plasmodium falciparum 3D7;SOTerm=protein_coding_gene
+MAL11	annotation	exon	387677	387732	.	-	.	ID=exon.30264;Parent=gene.30258
+MAL11	annotation	exon	388424	388540	.	-	.	ID=exon.30260;Parent=gene.30258
+MAL11	annotation	exon	388917	389022	.	-	.	ID=exon.30265;Parent=gene.30258
+MAL11	annotation	exon	389116	389286	.	-	.	ID=exon.30262;Parent=gene.30258
+MAL11	annotation	exon	389580	389948	.	-	.	ID=exon.30261;Parent=gene.30258
+MAL11	annotation	exon	390443	390946	.	-	.	ID=exon.30263;Parent=gene.30258
+MAL11	annotation	gene	394739	395390	.	+	.	ID=gene.30266;Name=PF11_0106;Note=60S Ribosomal protein L36, putative;Taxon=Plasmodium falciparum 3D7;SOTerm=protein_coding_gene
+MAL11	annotation	exon	394739	394781	.	+	.	ID=exon.30269;Parent=gene.30266
+MAL11	annotation	exon	395095	395390	.	+	.	ID=exon.30268;Parent=gene.30266
+MAL11	annotation	gene	396274	396841	.	+	.	ID=gene.30272;Name=PF11_0550;Note=hypothetical protein, conserved;Taxon=Plasmodium falciparum 3D7;SOTerm=protein_coding_gene
+MAL11	annotation	exon	396274	396300	.	+	.	ID=exon.30274;Parent=gene.30272
+MAL11	annotation	exon	396623	396841	.	+	.	ID=exon.30275;Parent=gene.30272
+MAL11	annotation	gene	398301	401519	.	+	.	ID=gene.30276;Name=PF11_0107;Note=hypothetical protein;Taxon=Plasmodium falciparum 3D7;SOTerm=protein_coding_gene
+MAL11	annotation	exon	398301	400733	.	+	.	ID=exon.30279;Parent=gene.30276
+MAL11	annotation	exon	401047	401243	.	+	.	ID=exon.30278;Parent=gene.30276
+MAL11	annotation	exon	401474	401519	.	+	.	ID=exon.30280;Parent=gene.30276
+MAL11	annotation	gene	403110	407332	.	+	.	ID=gene.30282;Name=PF11_0108;Note=hypothetical protein, conserved;Taxon=Plasmodium falciparum 3D7;SOTerm=protein_coding_gene;Ortholog=gene.85127
+MAL11	annotation	exon	403110	406689	.	+	.	ID=exon.30284;Parent=gene.30282
+MAL11	annotation	exon	406923	407332	.	+	.	ID=exon.30285;Parent=gene.30282
+MAL11	annotation	gene	407817	408335	.	-	.	ID=gene.30286;Name=PF11_0109;Note=hypothetical protein;Taxon=Plasmodium falciparum 3D7;SOTerm=protein_coding_gene
+MAL11	annotation	exon	407817	408335	.	-	.	ID=exon.30288;Parent=gene.30286
+MAL11	annotation	gene	408430	408615	.	-	.	ID=gene.30290;Name=PF11_0110;Note=hypothetical protein;Taxon=Plasmodium falciparum 3D7;SOTerm=protein_coding_gene
+MAL11	annotation	exon	408430	408615	.	-	.	ID=exon.30292;Parent=gene.30290
+MAL11	annotation	gene	412412	417171	.	+	.	ID=gene.30294;Name=PF11_0111;Note=asparagine-rich antigen;Taxon=Plasmodium falciparum 3D7;SOTerm=protein_coding_gene
+MAL11	annotation	exon	412412	412721	.	+	.	ID=exon.30298;Parent=gene.30294
+MAL11	annotation	exon	412896	413009	.	+	.	ID=exon.30296;Parent=gene.30294
+MAL11	annotation	exon	413144	417171	.	+	.	ID=exon.30297;Parent=gene.30294
+MAL11	syntenyVivaxMC	match	136665	1911408	.	+	.	ID=match.6005;Name=ctg_6977;Start=22579;End=1909453;Length=1923364;Scale=1.06318150674125394986544538254531357762
+MAL11	syntenyVivaxMC	gene	410198.7269845644253063928453130175554819	415238.318029016230539913878767803908579	.	+	.	ID=gene.85119;Name=Pv091170;Note=asparagine-rich antigen, putative;SOTerm=protein_coding_gene;SyntenyID=6005;Taxon=Plasmodium vivax SaI-1
+MAL11	syntenyVivaxMC	exon	410198.7269845644253063928453130175554819	410509.116130639284531301755548194766479	.	+	.	ID=exon.85120;Name=Pv091170;Parent=gene.85119;SyntenyID=6005
+MAL11	syntenyVivaxMC	exon	410714.1610816826763829082477641603179861	410814.8024108645246770453792646571712488	.	+	.	ID=exon.85121;Name=Pv091170;Parent=gene.85119;SyntenyID=6005
+MAL11	syntenyVivaxMC	exon	411176.9230812851937727724412056972507453	415238.318029016230539913878767803908579	.	+	.	ID=exon.85122;Name=Pv091170;Parent=gene.85119;SyntenyID=6005
+MAL11	syntenyVivaxMC	gene	403919.4605021530308049022855250082808877	404395.3905261344816164292812189466710831	.	-	.	ID=gene.85124;Name=Pv091165;Note=hypothetical protein;SOTerm=protein_coding_gene;SyntenyID=6005;Taxon=Plasmodium vivax SaI-1
+MAL11	syntenyVivaxMC	exon	403919.4605021530308049022855250082808877	404395.3905261344816164292812189466710831	.	-	.	ID=exon.85125;Name=Pv091165;Parent=gene.85124;SyntenyID=6005
+MAL11	syntenyVivaxMC	gene	399017.1931405101026830076184166942696257	403431.3030269625703875455448824113945015	.	+	.	ID=gene.85127;Name=Pv091160;Note=U5 snRNP-associated 102 kDa protein, putative;SOTerm=protein_coding_gene;SyntenyID=6005;Taxon=Plasmodium vivax SaI-1;Ortholog=gene.30282
+MAL11	syntenyVivaxMC	exon	399017.1931405101026830076184166942696257	402878.2460030473666777078502815501821795	.	+	.	ID=exon.85128;Name=Pv091160;Parent=gene.85127;SyntenyID=6005
+MAL11	syntenyVivaxMC	exon	403038.1434419344153693275919178535939053	403431.3030269625703875455448824113945015	.	+	.	ID=exon.85129;Name=Pv091160;Parent=gene.85127;SyntenyID=6005
+MAL11	syntenyVivaxMC	gene	395504.1523508446505465385889367340178867	397472.7719954951970851275256707519046042	.	+	.	ID=gene.85131;Name=Pv091155;Note=hypothetical protein;SOTerm=protein_coding_gene;SyntenyID=6005;Taxon=Plasmodium vivax SaI-1
+MAL11	syntenyVivaxMC	exon	395504.1523508446505465385889367340178867	397472.7719954951970851275256707519046042	.	+	.	ID=exon.85132;Name=Pv091155;Parent=gene.85131;SyntenyID=6005
+MAL11	syntenyVivaxMC	gene	393500.7314989069228221265319642265650878	394752.6343880755216959258032461079827758	.	+	.	ID=gene.85134;Name=Pv091150;Note=hypothetical protein;SOTerm=protein_coding_gene;SyntenyID=6005;Taxon=Plasmodium vivax SaI-1
+MAL11	syntenyVivaxMC	exon	393500.7314989069228221265319642265650878	393657.8072182842000662471016893010930772	.	+	.	ID=exon.85135;Name=Pv091150;Parent=gene.85134;SyntenyID=6005
+MAL11	syntenyVivaxMC	exon	394073.5405593905266644584299436899635641	394752.6343880755216959258032461079827758	.	+	.	ID=exon.85136;Name=Pv091150;Parent=gene.85134;SyntenyID=6005
+MAL11	syntenyVivaxMC	gene	392023.0910489566081483935077840344484929	393353.0615112288837363365352765816495528	.	+	.	ID=gene.85138;Name=Pv091145;Note=60S ribosomal protein L36, putative;SOTerm=protein_coding_gene;SyntenyID=6005;Taxon=Plasmodium vivax SaI-1
+MAL11	syntenyVivaxMC	exon	392023.0910489566081483935077840344484929	392293.9761218946671083140112620072871812	.	+	.	ID=exon.85139;Name=Pv091145;Parent=gene.85138;SyntenyID=6005
+MAL11	syntenyVivaxMC	exon	392622.2361581980788340510102683007618417	393353.0615112288837363365352765816495528	.	+	.	ID=exon.85140;Name=Pv091145;Parent=gene.85138;SyntenyID=6005
+MAL11	syntenyVivaxMC	gene	369380.6731293805895992050347797283868831	370931.6782865849619079165286518714806227	.	-	.	ID=gene.85164;Name=Pv091110;Note=DnaJ domain containing protein;SOTerm=protein_coding_gene;SyntenyID=6005;Taxon=Plasmodium vivax SaI-1
+MAL11	syntenyVivaxMC	exon	369380.6731293805895992050347797283868831	370931.6782865849619079165286518714806227	.	-	.	ID=exon.85165;Name=Pv091110;Parent=gene.85164;SyntenyID=6005
+MAL11	syntenyVivaxMC	gene	383002.9943493872143093739648890361046704	384440.1901530308049022855250082808877112	.	-	.	ID=gene.85146;Name=Pv091135;Note=hypothetical protein, conserved;SOTerm=protein_coding_gene;SyntenyID=6005;Taxon=Plasmodium vivax SaI-1
+MAL11	syntenyVivaxMC	exon	383002.9943493872143093739648890361046704	383255.0679589267969526333222921497184498	.	-	.	ID=exon.85149;Name=Pv091135;Parent=gene.85146;SyntenyID=6005
+MAL11	syntenyVivaxMC	exon	383338.7789710500165617754223252732692945	383759.2151780059622391520370983769460086	.	-	.	ID=exon.85148;Name=Pv091135;Parent=gene.85146;SyntenyID=6005
+MAL11	syntenyVivaxMC	exon	383890.895421795296455780059622391520371	384440.1901530308049022855250082808877112	.	-	.	ID=exon.85147;Name=Pv091135;Parent=gene.85146;SyntenyID=6005
+MAL11	syntenyVivaxMC	gene	380699.5306562437893342166280225240145744	382078.4109233521033454786353097052003975	.	-	.	ID=gene.85151;Name=Pv091130;Note=hypothetical protein;SOTerm=protein_coding_gene;SyntenyID=6005;Taxon=Plasmodium vivax SaI-1
+MAL11	syntenyVivaxMC	exon	380699.5306562437893342166280225240145744	382078.4109233521033454786353097052003975	.	-	.	ID=exon.85152;Name=Pv091130;Parent=gene.85151;SyntenyID=6005
+MAL11	syntenyVivaxMC	gene	378056.5200487578668433256045048029148725	380490.7234125207022192779065915866180855	.	-	.	ID=gene.85154;Name=Pv091125;Note=hypothetical protein;SOTerm=protein_coding_gene;SyntenyID=6005;Taxon=Plasmodium vivax SaI-1
+MAL11	syntenyVivaxMC	exon	378056.5200487578668433256045048029148725	380490.7234125207022192779065915866180855	.	-	.	ID=exon.85155;Name=Pv091125;Parent=gene.85154;SyntenyID=6005
+MAL11	syntenyVivaxMC	gene	374999.6572465054653858893673401788671746	376339.9740136469029479960251738986419344	.	+	.	ID=gene.85157;Name=Pv091120;Note=hypothetical protein;SOTerm=protein_coding_gene;SyntenyID=6005;Taxon=Plasmodium vivax SaI-1;Ortholog=gene.30247
+MAL11	syntenyVivaxMC	exon	374999.6572465054653858893673401788671746	376339.9740136469029479960251738986419344	.	+	.	ID=exon.85158;Name=Pv091120;Parent=gene.85157;SyntenyID=6005
+MAL11	syntenyVivaxMC	gene	373758.1006622060284862537263994700231865	374734.4156125869493209672076846637959589	.	+	.	ID=gene.85160;Name=Pv091115;Note=hypothetical protein;SOTerm=protein_coding_gene;SyntenyID=6005;Taxon=Plasmodium vivax SaI-1
+MAL11	syntenyVivaxMC	exon	373758.1006622060284862537263994700231865	373775.0309792646571712487578668433256045	.	+	.	ID=exon.85161;Name=Pv091115;Parent=gene.85160;SyntenyID=6005
+MAL11	syntenyVivaxMC	exon	374098.5881497184498178204703544219940378	374734.4156125869493209672076846637959589	.	+	.	ID=exon.85162;Name=Pv091115;Parent=gene.85160;SyntenyID=6005
+MAL11	syntenyVivaxMC	gene	387182.9015165286518714806227227558794303	388396.240905730374296124544551175886055	.	-	.	ID=gene.85142;Name=Pv091140;Note=hypothetical protein;SOTerm=protein_coding_gene;SyntenyID=6005;Taxon=Plasmodium vivax SaI-1
+MAL11	syntenyVivaxMC	exon	387182.9015165286518714806227227558794303	387239.335906724080821464060947333554157	.	-	.	ID=exon.85144;Name=Pv091140;Parent=gene.85142;SyntenyID=6005
+MAL11	syntenyVivaxMC	exon	387847.8867476647896654521364690294799603	388396.240905730374296124544551175886055	.	-	.	ID=exon.85143;Name=Pv091140;Parent=gene.85142;SyntenyID=6005

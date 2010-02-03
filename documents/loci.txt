@@ -1,0 +1,391 @@
+<!-- COUNT	1 -->
+<!-- NOTE!!!! THIS FILE IS DEPRECATED!!!!! DO ***NOT*** EDIT THIS FILE - edit the file in /data/prod/public/sgn_homepage/ -->
+
+<b><a href="phenome/locus_display.pl?locus_id=109">adh2</a></b>
+<div class="boxsubcontent">
+Tomato alcohol dehydrogenase 
+</div>
+
+<b><a href="phenome/locus_display.pl?locus_id=426">dpy</a></b>
+<div class="boxsubcontent">
+converts 6-deoxocatasterone to 6-deoxoteasterone in ... 
+</div>
+
+<b><a href="phenome/locus_display.pl?locus_id=8273">CanPI-7</a></b>
+<div class="boxsubcontent">
+Pin2-type proteinase inhibitor (PI-7)  
+</div>
+ 
+<b><a href="phenome/locus_display.pl?locus_id=8294">AGO4-1</a></b>
+<div class="boxsubcontent">
+Nicotiana benthamiana argonaute 4-1 
+</div>
+
+<b><a href="phenome/locus_display.pl?locus_id=1838">Potato R locus (dfr)</a></b>
+<div class="boxsubcontent">
+dihydroflavonol 4-reductase
+</div>
+
+<b><a href="phenome/locus_display.pl?locus_id=8253">PnMPF1</a></b>
+<div class="boxsubcontent">
+Petunia: regulates transcription factor activity
+</div>
+
+<a href="phenome/locus_display.pl?locus_id=555">flacca</a></div>
+<div class="boxsubcontent">
+molybdenum cofactor sulfurase
+</div>
+
+<a href="phenome/locus_display.pl?locus_id=5479">Ga20ox1</a></div>
+<div class="boxsubcontent">
+gibberellin 20-oxidase
+</div>
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=8239">Tomato Bs2</a></div>
+<div class="boxsubcontent">
+Bacterial spot 2
+</div>
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=1343">Tomato sft</a></div>
+<div class="boxsubcontent">
+single flower truss 
+</div>
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=8234">Leucine aminopeptidase A1</a></div>
+<div class="boxsubcontent">
+involved in late wound responses. 
+</div>
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=199">beta-carotene hydroxylase-2</a></div>
+<div class="boxsubcontent">
+involved in discoloration of flowers in tomato 
+</div>
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=8233">tip2</a></div>
+<div class="boxsubcontent">
+Tomato tonoplast intrinsic protein 2 
+</div>
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=8229">GOBLET</a></div>
+<div class="boxsubcontent">
+regulates leaflet initiation, formation and serration
+</div>
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=8223">FASCICULATE</a></div>
+<div class="boxsubcontent">
+The pepper ortholog of tomato SELF-PRUNING.
+Flowering repressor in the primary shoot and promoter
+of stem and leaf growth in the sympodial shoot. 
+</div>
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=8228">Hyoscyamine 6-beta hydroxylase</a></div>
+<div class="boxsubcontent">
+a catalyst in the scopolamine biosynthesis pathway
+</div>
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=8219">Abscisic acid induced MYB1</a></div>
+<div class="boxsubcontent">
+mediates response to biotic and abiotic stresses
+</div>
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=8220">No Apical Meristem(NAM)</a></div>
+<div class="boxsubcontent">
+regulates compound leaf development
+</div>
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=354">Cyclin A1</a></div>
+<div class="boxsubcontent">
+regulates mitotic activity
+</div>
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=301">Tomato compound inflorescence</a></div>
+<div class="boxsubcontent">
+Wuschel homeobox transcription factor
+</div>
+
+<a href="phenome/locus_display.pl?locus_id=128">anantha</a></div>
+<div class="boxsubcontent">
+Involved in transcriptional co-activation
+</div>
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=356">Cyclin A3</a></div>
+<div class="boxsubcontent">
+Regulates mitotic activity
+</div>
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=200"><i>TBG6</I></a></div>
+<div class="boxsubcontent">
+Tomato: plays a role in fruit cracking
+</div>
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=1431"><i>SULFUREA</I></a></div>
+<div class="boxsubcontent">
+Tomato: involved in auxin biosynthesis
+</div>
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=140">ag</a></div>
+<div class="boxsubcontent">
+Tomato: anthocynanin gainer
+</div>
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=1347">PRK2</a></div>
+<div class="boxsubcontent">
+regulates pollen germination and tube growth in tomato
+</div>
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=8210">GWD</a></div>
+<div class="boxsubcontent">
+affects pollen germination in tomato
+</div>
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=8209">ARF7</a></div>
+<div class="boxsubcontent">
+Negative regulator of parthenocarpy in tomato 
+</div>
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=66">IAA1</a></div>
+<div class="boxsubcontent">
+A member of the tomato Aux/IAA gene family
+</div>
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=862">GPXle1 </a></div>
+<div class="boxsubcontent">
+A tomato glutathione peroxidase like encoding 1
+</div>
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=762">Invertase 5</a></div>
+<div class="boxsubcontent">
+A tomato sink metabolism catalyst
+</div>
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=503">Expansin 4</a></div>
+<div class="boxsubcontent">
+A tomato cell wall placticity gene
+</div>
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=903">macrocalyx</a></div>
+<div class="boxsubcontent">
+A tomato APETALA1/FRUIT-FULL gene
+</div>
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=325">Coi1</a></div>
+<div class="boxsubcontent">
+Tomato Coronatine-insensitive 1
+</div
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=538"><i>fasciated</i></a></div>
+<div class="boxsubcontent">
+Tomato YABBY-like transcription factor
+</div
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=5566">TPK1b</a></div>
+<div class="boxsubcontent">
+Tomato protein kinase 1b
+</div>
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=792">CTR2</a></div>
+<div class="boxsubcontent">
+Tomato CTR1-like protein kinase 2
+</div>
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=136">ANT1</a></div>
+<div class="boxsubcontent">
+Tomato Anthocyanine 1
+</div>
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=5560">GAMYBL1</a></div>
+<div class="boxsubcontent">
+Tomato GAMYB-like 1
+</div>
+
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=5561">FLS2</a></div>
+<div class="boxsubcontent">
+Tomato Flagellin Sensing 2
+</div>
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=27">Pdk1</a></div>
+<div class="boxsubcontent">
+Tomato 3-phosphoinositide-dependent protein kinase-1
+</div>
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=447">LeEix1</a></div>
+<div class="boxsubcontent">
+Tomato ethylene-inducing xylanase receptor 1
+</div>
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=5451">DHS</a></div>
+<div class="boxsubcontent">
+Tomato deoxyhypusine synthase
+</div>
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=4614">WS-DGAT</a></div>
+<div class="boxsubcontent">
+Petunia wax synthase
+</div>
+
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=4954">IMA</a></div>
+<div class="boxsubcontent">
+Inhibitor of meristem activity in tomato
+</div>
+
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=1094">ovate</a></div>
+<div class="boxsubcontent">
+ovate: responsible for the pear-shaped fruit in tomato
+</div>
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=4509">SlDef</a></div>
+<div class="boxsubcontent">
+Deficiens: involved in ovary growth in tomato
+</div>
+
+<a href="phenome/locus_display.pl?locus_id=1434">Sun</a></div>
+<div class="boxsubcontent">
+A gene that controls the elongated fruit shape in tomato
+</div>
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=4223">At3</a></div>
+<div class="boxsubcontent">
+Pepper: putative acyl transferase
+</div>
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=482">Etr1</a></div>
+<div class="boxsubcontent">
+Ethylene receptor 1
+</div>
+
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=4505">Asr1</a></div>
+<div class="boxsubcontent">
+Protects proteins from denaturation caused by abiotic stress....
+</div>
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=2422">Bel5</a></div>
+<div class="boxsubcontent">
+ Bel5 regulates expression of genes involved in tuber formation....
+</div>
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=1305">Mi-1.2</a></div>
+<div class="boxsubcontent">
+R gene that confers resistance against specific isolates of root knot nematode, potato aphid, and white fly..
+</div>
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=4495">Cwp1</a></div>
+<div class="boxsubcontent">
+Cuticular water permeability.
+</div>
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=4487">Ny-1</a></div>
+<div class="boxsubcontent">
+Hypersensitivity resistance to common and necrotic <i>Potato virus Y</i>(PVY).
+</div>
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=4481">tag1</a></div>
+<div class="boxsubcontent">
+Tomato AGAMOUS 1 MADS box transcription factor
+</div>
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=4476">zep</a></div>
+<div class="boxsubcontent">
+Tomato zeaxanthin epoxidase.
+</div>
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=4469">style21</a></div>
+<div class="boxsubcontent">
+Tomato Style2.1 is the major quantitative trait locus responsible for style length associated with the evolution of self-pollination in cultivated tomatoes.
+</div>
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=1335">sstle1</a></div>
+<div class="boxsubcontent">
+Tomato sesquiterpene synthase 1
+</div>
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=4463">RanGAP1</a></div>
+<div class="boxsubcontent">
+Potato GTPase-activating protein
+</div>
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=4225">Monoterpene synthase 1(MTS1)</a></div>
+<div class="boxsubcontent">
+Tomato monoterpene synthase 
+</div>
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=128">anantha (an)</a></div>
+<div class="boxsubcontent">
+Tomato compound inflorescence and defects in floral meristem/organ identity
+</div>
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=1688">solanidine galactosyltransferase (sgt1)</a></div>
+<div class="boxsubcontent">
+Potato UDP-glycosyltransferase
+</div>
+
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=1238">Pseudomonas syringae (pto)</a></div>
+<div class="boxsubcontent">
+Tomato Pseudomonas syringae resistance
+</div>
+
+
+<div class="subheading">
+<a href="phenome/locus_display.pl?locus_id=197">beta-carotene (b)</a></div>
+<div class="boxsubcontent">
+Tomato chromoplast specific lycopene beta cyclase
+</div>
+

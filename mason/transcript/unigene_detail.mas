@@ -1,0 +1,108 @@
+<%doc>
+  NAME: unigene_detail.mas
+  VERSION: 1.0
+  DESCRIPTION: This is a mason code to get different sections of the unigene.pl web_page.
+               It create a unigene object using the argument get from the page 
+  AUTHOR: Aureliano Bombarely (ab782@cornell.edu)
+</%doc>
+
+
+<%perl>
+use strict;
+use warnings;
+
+use CXGN::DB::Connection;
+use SGN::Schema;
+use CXGN::Transcript::Unigene;
+use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
+
+my $dbh = CXGN::DB::Connection->new();
+
+## We need te keep the search path to sgn and public because there are some object as Unigene.pm that expect that
+## (for example for cvterm).
+
+my $schema = SGN::Schema->connect( sub { $dbh }, { on_connect_do => ['SET search_path TO sgn,public;'] }, ); 
+
+my $unigene;
+if (exists $ARGS{'id'}) {
+    my $id;
+    if ($ARGS{'id'} =~ m/^SGN-U(\d+)$/) {
+        $id = $1;
+    } elsif ($ARGS{'id'} =~ m/^\d+$/) {
+        $id = $ARGS{'id'};
+    } 
+    $unigene = CXGN::Transcript::Unigene->new($dbh, $ARGS{'id'});
+}
+
+
+</%perl>
+
+
+<& 
+   $ARGS{'path'}.'transcript/unigene/deprecated_content.mas',
+   schema => $schema,
+   unigene => $unigene 
+&>
+
+<& 
+   $ARGS{'path'}.'transcript/unigene/basic_info.mas',
+   schema => $schema,
+   unigene => $unigene 
+&>
+
+<& 
+   $ARGS{'path'}.'transcript/unigene/associated_loci.mas',
+   schema => $schema,
+   unigene => $unigene 
+&>
+
+<& 
+   $ARGS{'path'}.'transcript/unigene/library_info.mas',
+   schema => $schema,
+   unigene => $unigene 
+&>
+
+<& 
+   $ARGS{'path'}.'transcript/unigene/members_info.mas',
+   schema => $schema,
+   unigene => $unigene,
+   highlight => $ARGS{'highlight'},
+   force_image => $ARGS{'force_image'} 
+&>
+
+<& 
+   $ARGS{'path'}.'transcript/unigene/markers_info.mas',
+   schema => $schema,
+   unigene => $unigene, 
+&>
+
+<& 
+   $ARGS{'path'}.'transcript/unigene/expression_info.mas',
+   schema => $schema,
+   unigene => $unigene, 
+&>
+
+
+<& 
+   $ARGS{'path'}.'transcript/unigene/annotation_info.mas',
+   schema => $schema,
+   unigene => $unigene, 
+&>
+
+<& 
+   $ARGS{'path'}.'transcript/unigene/protein_prediction_info.mas',
+   schema => $schema,
+   unigene => $unigene, 
+&>
+
+<& 
+   $ARGS{'path'}.'transcript/unigene/gene_family_info.mas',
+   schema => $schema,
+   unigene => $unigene, 
+&>
+
+<& 
+   $ARGS{'path'}.'transcript/unigene/preceding_unigenes.mas',
+   schema => $schema,
+   unigene => $unigene, 
+&>

@@ -1,0 +1,6 @@
+1	Tomato-EXPEN 2000	12	3	../../html/mapviewer/MAPDATA/F2_2000/	L. esculentum LA925 x L. pennellii LA716 type F2, 2000.
+2	Tomato-EXPIMP 2001	12	1	../../html/mapviewer/MAPDATA/Lycopimp/	L. esculentum TA209 x L. pimpinellifolium LA1589 type RI, 2001. 
+3	Potato-TXB 1992	12	1	../../html/mapviewer/MAPDATA/HDMLMTPG_STetal_92/	S. tuberosum (2x=24) x S. berthaultii, backcrossed to S. berthaultii, type BC1, 1992.
+4	Tomato-EXHIR 1997	12	1	../../html/mapviewer/MAPDATA/IB_LExLH_DBST_97/	L. esculentum TA209 x L. hirsutum LA1777 type BC1, 1997.
+5	Tomato-EXPEN 1992	12	1	../../html/mapviewer/MAPDATA/TASM_WEB_OLD/	L.esculentum cv. VF36 x L. pennellii LA716 type F2, 1992.
+6	Test Tomato CASE	12	1	../../html/mapviewer/MAPDATA/Test/	Test case with real number offsets.

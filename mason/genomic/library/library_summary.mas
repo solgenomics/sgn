@@ -1,0 +1,60 @@
+<%doc>
+
+=head2 library_summary_html
+
+  Desc: get a chunk of HTML describing this library
+  Args: none
+  Ret : html string containing a summary of this library's vital statistics
+  Side Effects:
+  Example:
+
+=cut
+
+</%doc>
+<%init>
+sub library_summary_html {
+    my $this = shift;
+
+    my $libname = $this->name;
+#     my $superclone = $this->superclone_object;
+#    my $super_html = $superclone ? die 'not implemented' : 'none';
+    my (undef, $organism, $accession) = $this->accession_name;
+
+    my $host = $this->cloning_host;
+    my $vector = $this->cloning_vector_object->name;
+    my ($rs1,$rs2) = ($this->rs1, $this->rs2);
+
+    ($host,$vector,$rs1,$rs2) =
+      map {$_ || ''} ($host,$vector,$rs1,$rs2);
+    $vector &&= $this->cloning_vector_object->link_html;
+
+    info_table_html(#table attributes
+		    __title          => 'Library',
+		    __multicol       => 2,
+
+		    #fields that will always be there
+		    Name             => $libname,
+		    Organism         => $organism,
+		    Accession        => $accession,
+		    'Cloning host'   => $host,
+		    'Cloning vector' => $vector,
+
+		    #fields that are only sometimes there
+		    $rs1 ? $rs2 ? ('Restriction enzyme 1', $rs1)
+		                : ('Restriction enzyme'  , $rs1)
+		         : (),
+		    $rs2 ? $rs1 ? ('Restriction enzyme 2', $rs2)
+		                : ('Restriction enzyme'  , $rs2)
+		         : (),
+		    );
+
+}
+</%init>
+
+<%args>
+ $library
+</%args>
+
+<%perl>
+        print library_summary_html($library);
+</%perl>

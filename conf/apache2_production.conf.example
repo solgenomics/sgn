@@ -1,0 +1,35 @@
+<VirtualHost *:80>
+
+    ServerName       solgenomics.net
+
+    PerlWarn         Off
+    PerlTaintCheck   On
+
+    LogLevel         error
+
+    <Perl>
+       use lib '/usr/share/sgn-site/lib/perl5';
+        
+       use SGN::Apache2::Startup vhost => 1;
+
+       $SIG{__DIE__}  = \&CXGN::Apache::Error::cxgn_die_handler;
+       $SIG{__WARN__} = \&CXGN::Apache::Error::cxgn_warn_handler;
+    </Perl>
+
+</VirtualHost>
+
+# vhost for redirecting aliases of this site to the main site
+<VirtualHost *:80>
+    ServerName sgn-vm
+    ServerAlias www.solgenomics.net
+    ServerAlias solanaceae.org
+    ServerAlias www.solanaceae.org
+    ServerAlias solgenomics.org
+    ServerAlias www.solgenomics.org
+    ServerAlias solgenomics.com
+    ServerAlias www.solgenomics.com
+    ServerAlias soldb.cit.cornell.edu
+    ServerAlias sgn.cornell.edu
+    ServerAlias www.sgn.cornell.edu
+    Redirect permanent / http://solgenomics.net/
+</VirtualHost>

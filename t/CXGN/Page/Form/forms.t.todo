@@ -1,0 +1,98 @@
+# note: these tests are not yet functional.
+
+use strict;
+
+use Test::More qw |  |;
+use CXGN::Page::Form::Static;
+
+my $test = CXGN::Test->new();
+
+# build a static form
+#
+my $f = CXGN::Page::Form::Static->new();
+
+$f->add_field( screen_name => 'test1',
+               field_name  => 'test1',
+	       contents    => 'test1',
+	       length      => 10,
+	       object      => $test,
+	       getter      => 'get_test',
+	       setter      => 'set_test',
+
+    );
+
+
+
+$f->add_textarea( screen_name => 'test2',
+               field_name  => 'test2',
+	       contents    => 'test2',
+	       length      => 10,
+	       object      => $test,
+	       getter      => 'get_test',
+	       setter      => 'set_test',
+
+    );
+
+# $f->add_select(  screen_name => 'test',
+#                field_name  => 'test',
+# 	       contents    => 'test',
+# 	       length      => 10,
+# 	       object      => $test,
+# 	       getter      => 'get_test',
+# 	       setter      => 'set_test',);
+
+$f->add_hidden(  screen_name => 'test3',
+               field_name  => 'test3',
+	       contents    => 'test3',
+	       length      => 10,
+	       object      => $test,
+	       getter      => 'get_test',
+	       setter      => 'set_test',);
+
+$f->add_checkbox(  screen_name => 'test4',
+               field_name  => 'test4',
+	       contents    => 'test4',
+	       length      => 10,
+	       object      => $test,
+	       getter      => 'get_test',
+	       setter      => 'set_test',);
+
+# $f->add_radiolist(  screen_name => 'test',
+#                field_name  => 'test',
+# 	       contents    => 'test',
+# 	       length      => 10,
+# 	       object      => $test,
+# 	       getter      => 'get_test',
+# 	       setter      => 'set_test',);
+
+ok (length($f->as_table())>0, "form test");
+
+my %h = $f->get_field_hash();
+my $t = $f->as_table();
+
+foreach my $k ( qw | test1 test2 test3 test4 | ) { 
+    print STDERR "$k\n";
+#    is(exists($h{$k}), 1, "object test");
+    is($t=~/test/, /set_test/, "$k setter test");
+    is($t=~/test/, /get_test/,"$k getter test");
+
+}
+
+package CXGN::Test;
+
+sub new { 
+    my $class = shift;
+    my $self = bless {}, $class;
+
+    return $self;
+}
+
+sub get_test { 
+    my $self = shift;
+    return $self->{test};
+}
+
+sub set_test { 
+    my $self = shift;
+    $self->{test}=shift;
+}

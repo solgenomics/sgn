@@ -1,0 +1,61 @@
+
+<center>
+<a name="top"></a>
+
+
+<!-- header in -->
+<!-- begin top row -->
+<table width=720 cellpadding=0 cellspacing=0 border=0>
+<tr><td>
+
+<!-- bottom row (navbar) in -->
+<table width=720 cellpadding=0 cellspacing=0 border=0>
+<tr>
+<td valign=top><a href="/index.html"><img src="/img/nb_sgn_id.jpg" width=413 height=68 border=0 alt="SGN home" title="Home: Solanaceae Genomics Network"></a></td>
+</tr><tr>
+<td bgcolor=cccccc><img src="/img/dot_clear.gif" alt="" width=1 height=3></td>
+</tr><tr>
+<td bgcolor=eeeeee><img src="/img/dot_clear.gif" alt="" width=1 height=8></td>
+</tr><tr>
+<td valign=top bgcolor=eeeeee>
+
+
+<table width=100% cellpadding=0 cellspacing=0 border=0>
+<tr>
+<td><img src="/img/dot_clear.gif" alt="" width=50 height=1></td>
+<td><img src="/img/dot_clear.gif" alt="" width=50 height=1></td>
+<td><img src="/img/dot_clear.gif" alt="" width=50 height=1></td>
+<td><img src="/img/dot_clear.gif" alt="" width=50 height=1></td>
+<td><img src="/img/dot_clear.gif" alt="" width=50 height=1></td>
+<td><img src="/img/dot_clear.gif" alt="" width=50 height=1></td>
+<td><img src="/img/dot_clear.gif" alt="" width=50 height=1></td>
+</tr>
+<tr>
+<td valign=top align=center nowrap><font face="verdana, arial" size=2><a href="/index.html">Home</a></font></td>
+<td valign=top align=center nowrap><font face="verdana, arial" size=2><a href="/cgi-bin/SGN/search/tomato_est_search.pl">Retrieve Sequences</a></font></td>
+<td valign=top align=center nowrap><font face="verdana, arial" size=2><a href="/cgi-bin/SGN/blast/blast_search.pl">BLAST Search</a></font></td>
+<td valign=top align=center nowrap><font face="verdana, arial" size=2><a href="/cgi-bin/cview/index.pl">Browse Maps</a></font></td>
+<td valign=top align=center nowrap><font face="verdana, arial" size=2><a href="/about/about_main.html">About</a></font></td>
+<td valign=top align=center nowrap><font face="verdana, arial" size=2><a href="">Help</a></font></td>
+<td valign=top align=center nowrap><font face="verdana, arial" size=2><a href="/links/related_sites.html">Related Sites</a></font></td>
+
+</tr>
+</table>
+
+
+</td>
+</tr><tr>
+<td bgcolor=eeeeee><img src="/img/dot_clear.gif" alt="" width=1 height=8></td>
+</tr><tr>
+<td bgcolor=cccccc><img src="/img/dot_clear.gif" alt="" width=1 height=1></td>
+</tr>
+
+</table>
+<!-- bottom row (navbar) out -->
+
+</td></tr>
+</table>
+<!---- header out ---->
+
+
+</center>

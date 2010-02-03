@@ -1,0 +1,43 @@
+
+<%doc>
+
+=head1 NAME
+
+/homepage/getting_started.mas - a mason component to display a sidebar on the SGN homepage
+
+=head1 DESCRIPTION
+
+Loads and displays the file at 'homepage_files_dir'/getting_started.txt 
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>
+
+=cut
+
+</%doc>
+<%perl>
+
+use strict;
+
+use File::Spec;
+use CXGN::Tools::File;
+use SGN::Context;
+
+
+my $c = SGN::Context->new();
+my $file = File::Spec->catfile($c->get_conf('homepage_files_dir'), 'getting_started.txt');
+
+my $contents = "Sidebar contents are not available at the moment.<br /><br />";
+
+eval { 
+  $contents = CXGN::Tools::File::file_contents($file);
+};
+if ( $@ && !$c->get_conf('production_server') ) { 
+  $contents .= $@;
+}
+
+print $contents;
+
+</%perl>
+

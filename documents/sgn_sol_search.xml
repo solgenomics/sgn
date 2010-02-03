@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+ <OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/" xmlns:moz="http://www.mozilla.org/2006/browser/search/">
+   <ShortName>SGN Sol Search</ShortName>
+   <Description>Search all of SGN using SGN's Sol Search feature.</Description>
+   <Tags>sol search</Tags>
+   <Contact>sgn-feedback@sgn.cornell.edu</Contact>
+   <Url type="text/html" template="http://sgn.cornell.edu/search/quick_search.pl?term={searchTerms}"/>
+   <LongName>SGN Sol Search</LongName>
+   <Image height="16" width="16" type="image/vnd.microsoft.icon">http://sgn.cornell.edu/favicon.ico</Image>
+   <Query role="example" searchTerms="dwarf" />
+   <AdultContent>false</AdultContent>
+   <Language>en-us</Language>
+   <OutputEncoding>UTF-8</OutputEncoding>
+   <InputEncoding>UTF-8</InputEncoding>
+ </OpenSearchDescription>
