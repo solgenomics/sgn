@@ -1,0 +1,28 @@
+<%args>
+  $marker
+  $image_location
+  $image_size
+</%args>
+<%init>
+
+my $marker_id   = $marker->marker_id;
+my $marker_name = $marker->name_that_marker();
+my $width_attribute = $image_size eq 'full' ? '': 'width="740"' ;
+
+</%init>
+
+<& /page/page_title.mas, title => "RFLP image for marker $marker_name" &>
+
+<a href="/search/markers/markerinfo.pl?marker_id=<% $marker_id %>">Return to <% $marker_name %> info page</a>&nbsp;&nbsp;&nbsp;
+
+% #if we are constraining the size of the image (small image view)
+% if( $width_attribute ) {
+
+    <b>Size:</b>&nbsp;&nbsp;&nbsp;Small&nbsp;&nbsp;&nbsp;<a href="?marker_id=<% $marker_id %>&amp;size=full">Full</a><br /><br />
+
+% } else { #else we are not constraining the size of the image (large image view)
+    <b>Size:</b>&nbsp;&nbsp;&nbsp;<a href="?marker_id=<% $marker_id %>&amp;size=small">Small</a>&nbsp;&nbsp;&nbsp;Full&nbsp;&nbsp;<br /><br />
+
+% }
+
+<img src="<% $image_location %>" border="0" <% $width_attribute %> />
