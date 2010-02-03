@@ -1,0 +1,69 @@
+<%doc>
+  NAME: associated_loci.mas
+  VERSION: 1.0
+  DESCRIPTION: Another piece of mason code get the unigene data (associated loci) from the database and show it as table web_page; 
+  AUTHOR: Aureliano Bombarely (ab782@cornell.edu)
+</%doc>
+
+
+<%perl>
+use strict;
+use warnings;
+
+use SGN::Schema;
+use CXGN::Transcript::Unigene;
+use CXGN::Phenome::Locus;
+use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
+
+my ($loci_content, $loci_html, @locus_table);
+
+my $unigene = $ARGS{'unigene'};
+my $schema = $ARGS{'schema'};
+
+## Get the object
+my $id =  $unigene->get_unigene_id();
+
+## If there aren't any unigene that comes from unigene_detail.mas, it will not do anything because the error message is given for the
+## basic_detail.mas script
+
+if (defined $id) {
+
+   my @associated_loci = $unigene->get_associated_loci('f');
+
+   ## if don't exists any loci, leave undef $loci_html. The info section will print none
+
+   if (@associated_loci) { 
+       foreach my $locus (@associated_loci) { 
+           if ($locus->get_obsolete() ne 't') {
+               my $locus_id = $locus->get_locus_id();
+               my $locus_symbol = $locus->get_locus_symbol();
+
+               my $locus_link = qq { <a href="/phenome/locus_display.pl?locus_id=$locus_id">$locus_symbol</a> };
+
+               push @locus_table, [ $locus_link, $locus->get_locus_name(), $locus->get_gene_activity() ];
+           }                                   
+        
+           $loci_html = columnar_table_html( headings => [ 'Locus symbol', 'Locus name', 'Gene activity' ],
+                                             data     => \@locus_table,
+                                             __alt_freq => 2,
+                                             __align  => ['c', 'c', 'c'],
+                                            );
+              
+       }
+   }
+  
+   ## Use columnar table to give the html format. If don't exists any data, print message.
+
+   
+
+   my $loci_n = scalar(@locus_table);
+   $loci_content = info_section_html( title        => "Associated Loci (".$loci_n.")", 
+                                      contents     => $loci_html,
+                                      collapsible  => 1,
+                                      collapsed    => 0, );
+}
+
+
+</%perl>
+
+<% $loci_content %>

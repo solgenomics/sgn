@@ -1,0 +1,49 @@
+<%doc>
+  NAME: members_info.mas
+  VERSION: 1.0
+  DESCRIPTION: Another piece of mason code get the unigene data (members info) from the database and show it as table web_page; 
+  AUTHOR: Aureliano Bombarely (ab782@cornell.edu)
+</%doc>
+
+
+<%perl>
+use strict;
+use warnings;
+
+use SGN::Schema;
+use CXGN::Transcript::Unigene;
+use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
+
+my $member_content;
+
+my $unigene = $ARGS{'unigene'};
+my $schema = $ARGS{'schema'};
+my $force_image = $ARGS{'force_image'};
+my $highlight = $ARGS{'highlight'};
+
+## Get the object
+my $id =  $unigene->get_unigene_id();
+
+if (defined $id) {
+
+   my @highlight;
+   if (defined $highlight) {
+       @highlight = split(/ /, $highlight);
+   }
+
+   my $alignment_image_html = $unigene->get_unigene_member_image(\@highlight, $force_image);
+
+
+   my $member_nr = $unigene->get_nr_members();
+
+   $member_content = info_section_html( title        => "mRNA member sequences (".$member_nr.")", 
+                                        contents     => $alignment_image_html,
+					collapsible  => 1,
+					collapsed    => 1 
+                                       );
+}
+
+
+</%perl>
+
+<% $member_content %>

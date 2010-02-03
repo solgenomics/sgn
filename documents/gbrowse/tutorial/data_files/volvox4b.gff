@@ -1,0 +1,8 @@
+ctgA	example	gene	47839	49992	.	+	.	Gene abc-1 ; Type kinase ; Accession ABC123 ; Note "Archetypic gene"
+ctgA	example	UTR	47839	47900	.	+	.	Gene abc-1
+ctgA	example	CDS	47901	47998	.	+	.	Gene abc-1
+ctgA	example	CDS	48207	48595	.	+	.	Gene abc-1
+ctgA	example	CDS	48963	49396	.	+	.	Gene abc-1
+ctgA	example	CDS	49531	49553	.	+	.	Gene abc-1
+ctgA	example	CDS	49590	49800	.	+	.	Gene abc-1
+ctgA	example	UTR	49801	49992	.	+	.	Gene abc-1

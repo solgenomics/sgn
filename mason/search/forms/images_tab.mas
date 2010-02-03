@@ -1,0 +1,43 @@
+
+
+<%doc>
+
+=head1 NAME
+
+/search/forms/images_tab.mas - a mason component to display the image search form
+
+=head1 DESCRIPTION
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu> - based on SGN developed Perl code
+
+=cut 
+
+</%doc>
+
+<%perl>
+
+use CXGN::Searches::Images;
+
+my $q    = $ARGS{q};
+$q ||= CXGN::Searches::Images->new()->new_query();
+
+</%perl>
+
+
+  <table class="search_form_title"><tr><td>
+    <span class="search_form_title">Image search</span>
+  </td>
+  </tr>
+  </table>
+
+<form action="/search/image_search.pl" method="get">
+  <div class="indentedcontent">
+
+      <% $q->to_html() %>
+  </div>
+</form>
+
+
+

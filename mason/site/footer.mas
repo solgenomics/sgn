@@ -1,0 +1,39 @@
+<%init>
+	my $feedback_email = $c->get_conf('email');
+	$feedback_email = $feedback_email ? qq|<a class="footer" href="mailto:$feedback_email">$feedback_email</a>|
+	                                  : '<span style="font-weight: bold; color: red">[email not set]</b>';
+</%init>
+
+<!-- BEGIN FOOTER-->
+
+  </td></tr>
+  <tr><td id="pagecontent_footer"><table width="100%" cellspacing="0" cellpadding="0" id="pagefooter"><tr><td style="vertical-align: top; width: 370"><table><tr><td><a href="http://bti.cornell.edu/" class="footer"><img width="91" alt="Boyce Thompson Institute" src="/documents/img/bti_logo_bw.png" title="Boyce Thompson Institute" height="70" border="0" /></a> <a href="http://www.nsf.gov/" class="footer"><img width="77" alt="National Science Foundation" src="/documents/img/nsf_logo.png" title="National Science Foundation" height="76" border="0" /></a></td></tr> <tr><td><a href="http://www.nifa.usda.gov/" class="footer"><img width="250" alt="USDA CSREES" src="/documents/img/usda_nifa_h_2.jpg" title="USDA NIFA" height="44" border="0" /></a></td></tr></table></td> <td style="text-align: right; font-size: smaller">Cite SGN using <a class="footer" href="http://www.plantphysiol.org/cgi/content/abstract/138/3/1310"> Mueller et al. (2005).</a><br />
+
+SGN is supported by the <a class="footer" href="/about/tomato_project/">NSF (#0116076)</a>,<br />
+<a class="footer" href="http://www.usda.gov">USDA CSREES</a> and hosted at the <a class="footer" href="http://bti.cornell.edu">Boyce Thompson Institute.</a><br />
+<br />
+Subscribe to the <a class="footer" href="http://rubisco.sgn.cornell.edu/mailman/listinfo/sgn-announce/">sgn-announce mailing list</a> for updates<br />
+Send comments and feedback to <% $feedback_email %><br />
+<a href="/legal.pl">Disclaimer</a>
+</td></tr></table>
+
+<!-- Google Analytics Code -->
+<script src="http://www.google-analytics.com/urchin.js" type="text/javascript">
+</script>
+
+<script type="text/javascript">
+_uacct = "UA-2460904-1";
+//prevent js error on remote script load failure
+if(typeof(urchinTracker) == "function"){
+	urchinTracker();
+ }
+</script>
+
+<script language="javascript" type="text/javascript" src="/documents/inc/wz_tooltip.js"></script>
+
+  </td></tr>
+  </table>
+</div>
+</body>
+
+</html>

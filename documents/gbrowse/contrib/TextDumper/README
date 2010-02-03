@@ -1,0 +1,17 @@
+The TextDumper plugin was contributed by Don Jackson.  It provides a
+report on features in the active region as a tab-delimited text file.
+It's based on the GFFDumper, but adds a few tweaks for
+user-friendliness:
+
+  - only features from the active tracks are displayed
+
+  - the configuration page lets users select which attributes
+  (reference, start, stop, notes, etc) are displayed
+
+  - users can select a mime type for the report.  Currently the plugin
+  supports text/plain or application/vnd.ms-excel
+
+To install, copy TextDumper.pm to your plugins directory, stored
+underneath your web server configuration directory at
+gbrowse.conf/plugins.  Then add TextDumper to plugins line in the
+appropriate gbrowse.conf configuration file.

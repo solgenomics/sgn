@@ -1,0 +1,122 @@
+<?xml version="1.0" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>BIOSQL_ADAPTER_HOWTO</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rev="made" href="mailto:root@localhost" />
+</head>
+
+<body style="background-color: white">
+
+<p><a name="__index__"></a></p>
+<!-- INDEX BEGIN -->
+
+<ul>
+
+	<li><a href="#configuration_of_bio__db__das__biosql__the_adapter_code_to_bioperldb">CONFIGURATION OF Bio::DB::Das::BioSQL, THE ADAPTER CODE TO BIOPERL-DB</a></li>
+	<ul>
+
+		<li><a href="#1__prerequisites">1. PREREQUISITES</a></li>
+		<li><a href="#2__configuring_your_system">2. CONFIGURING YOUR SYSTEM</a></li>
+		<li><a href="#3__support_and_bug_reports">3. SUPPORT AND BUG REPORTS</a></li>
+	</ul>
+
+</ul>
+<!-- INDEX END -->
+
+<hr />
+<p>
+</p>
+<h1><a name="configuration_of_bio__db__das__biosql__the_adapter_code_to_bioperldb">CONFIGURATION OF Bio::DB::Das::BioSQL, THE ADAPTER CODE TO BIOPERL-DB</a></h1>
+<p>BioSQL is a Bioperl-based system for storing record-oriented
+biological objects, including GenBank/EMBL sequences and PubMed
+records, in a relational database. GBrowse provides support for
+viewing sequence annotation data stored in BioSQL. The support is
+functional, but not heavily tested, so it may still contain bugs.</p>
+<p>
+</p>
+<h2><a name="1__prerequisites">1. PREREQUISITES</a></h2>
+<dl>
+<dt><strong><a name="item_a_29_gbrowse__2d_2d_http_3a_2f_2fwww_2egmod_2eorg_">A) GBrowse -- <a href="http://www.gmod.org/">http://www.gmod.org/</a></a></strong>
+
+<dd>
+<p>Make sure that Gbrowse is correctly installed.</p>
+</dd>
+</li>
+<dt><strong><a name="item_b_29_bioperl_2ddb__2d_2d_http_3a_2f_2fcvs_2ebioper">B) Bioperl-db -- <a href="http://cvs.bioperl.org/cgi-bin/viewcvs/viewcvs.cgi/bioperl-db/?cvsroot=bioperl">http://cvs.bioperl.org/cgi-bin/viewcvs/viewcvs.cgi/bioperl-db/</a></a></strong>
+
+<dd>
+<p>Make sure that you have the latest version of Bioperl-db.</p>
+</dd>
+</li>
+<dt><strong><a name="item_c_29_biosql_2dschema__2d_2d_http_3a_2f_2fcvs_2ebio">C) Biosql-schema -- <a href="http://cvs.bioperl.org/cgi-bin/viewcvs/viewcvs.cgi/biosql-schema/?cvsroot=bioperl">http://cvs.bioperl.org/cgi-bin/viewcvs/viewcvs.cgi/biosql-schema/</a></a></strong>
+
+<dd>
+<p>Make sure that you have the latest version of Bioperl-schema.</p>
+</dd>
+</li>
+<dt><strong><a name="item_d_29_database">D) Database</a></strong>
+
+<dd>
+<p>You need to have a database (MySQL, Postgresql, Oracle) that is supported by the Perl DBI interface.</p>
+</dd>
+</li>
+</dl>
+<p>
+</p>
+<h2><a name="2__configuring_your_system">2. CONFIGURING YOUR SYSTEM</a></h2>
+<dl>
+<dt><strong><a name="item_a_29_create_a_bioperl_database">A) Create a bioperl database</a></strong>
+
+<dd>
+<p>If you plan to use MySQL, run create_mysql_db.pl (it is included in
+the bioperl-schema distribution). Other databases would use similar
+SQL commands.</p>
+</dd>
+</li>
+<dt><strong><a name="item_b_29_load_data_into_your_bioperl_database">B) Load data into your bioperl database</a></strong>
+
+<dd>
+<p>Take a Genbank file and call the script load_seqdatabase.pl from the
+bioperl distribution to load the data. For example,</p>
+</dd>
+<dd>
+<pre>
+   load_seqdatabase.pl --host somewhere.edu --dbname biosql \
+                       --namespace bioperl --format genbank \
+                       your_genbank_file</pre>
+</dd>
+<dd>
+<p>The value of ``namespace'' is arbitrary.</p>
+</dd>
+</li>
+<dt><strong><a name="item_c_29_configure_gbrowse_to_use_bioperl_2ddb">C) Configure gbrowse to use bioperl-db</a></strong>
+
+<dd>
+<p>Point a gbrowse configuration file to this database. See include
+06.biosql.conf for an example. The only nontrivial parameters in it
+are ``namespace'' and ``version''. For namespace, use the same value that
+you specified when you uploaded data. The version number is contained
+in the Genbank file.</p>
+</dd>
+</li>
+<dt><strong><a name="item_d_29_install_the_bio_3a_3adb_3a_3abiosql_files_2e">D) Install the Bio::DB::BioSQL files.</a></strong>
+
+<dd>
+<p>Until these files are uploaded into the bioperl CVS, put the attached
+files on your system in a directory accessible to Perl, for example,
+into /usr/lib/perl5/site_perl/5.8.1/</p>
+</dd>
+</li>
+</dl>
+<p>
+</p>
+<h2><a name="3__support_and_bug_reports">3. SUPPORT AND BUG REPORTS</a></h2>
+<p>Please send requests for help to <a href="mailto:simonf@cshl.edu">simonf@cshl.edu</a> or &lt;a <a href="mailto:href=``mailto:gmod-gbrowse@lists.sourceforge.net''>">href=``mailto:gmod-gbrowse@lists.sourceforge.net''></a><a href="mailto:gmod-gbrowse@lists.sourceforge.net</a>">gmod-gbrowse@lists.sourceforge.net</a></a>.</p>
+<p>Vsevolod (Simon) Ilyushchenko
+<a href="mailto:simonf@cshl.edu">simonf@cshl.edu</a></p>
+
+</body>
+
+</html>

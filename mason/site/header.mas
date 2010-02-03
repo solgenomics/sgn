@@ -1,0 +1,133 @@
+<%args>
+  $page_title    => ''
+  $extra_headers => ''
+</%args>
+<%init>
+use CXGN::Login ();
+use CXGN::People::Person ();
+
+#this code will not work when database connectivity is lost, or when these modules are broken.
+#since the page header is highly important and we ALWAYS expect it to work, we must continue even when that other stuff is broken.
+sub _get_session_person {
+    my $dbh = shift;
+    return eval {
+	CXGN::People::Person->new( $dbh,
+	                           CXGN::Login->new( $dbh )
+	                                      ->has_session
+	                         )
+    };
+}
+
+</%init>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+  <title>SOL Genomics Network</title>
+  <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+  <link rel="stylesheet" href="/documents/inc/sgn.css" type="text/css" />
+  <link rel="search" type="application/opensearchdescription+xml" title="SGN Sol Search" href="/documents/sgn_sol_search.xml" />
+
+  <script language="JavaScript" type="text/javascript">
+    var docroot = '/';
+    JSAN = {};
+    JSAN.use = function() {};
+    MochiKit = {__export__: false};
+  </script>
+
+  <script language="JavaScript" src="/documents/inc/sgn.js" type="text/javascript"></script>
+
+  <script language="JavaScript" src="/js/MochiKit/Base.js" type="text/javascript"></script>
+<script language="JavaScript" src="/js/MochiKit/Logging.js" type="text/javascript"></script>
+<script language="JavaScript" src="/js/CXGN/Effects.js" type="text/javascript"></script>
+<script language="JavaScript" src="/js/CXGN/Page/Toolbar.js" type="text/javascript"></script>
+<script language="JavaScript" src="/js/CXGN/Base.js" type="text/javascript"></script>
+<script language="JavaScript" src="/js/CXGN/Cookie.js" type="text/javascript"></script>
+
+<script language="JavaScript" src="/js/CXGN/User.js" type="text/javascript"></script>
+<script language="JavaScript" src="/js/CXGN/UserPrefs.js" type="text/javascript"></script>
+<script language="JavaScript" src="/js/MochiKit/DOM.js" type="text/javascript"></script>
+<script language="JavaScript" src="/js/MochiKit/Iter.js" type="text/javascript"></script>
+<script language="JavaScript" src="/js/MochiKit/Style.js" type="text/javascript"></script>
+<script language="JavaScript" src="/js/MochiKit/Signal.js" type="text/javascript"></script>
+<script language="JavaScript" src="/js/CXGN/Page/FormattingHelpers.js" type="text/javascript"></script>
+</head>
+
+<body>
+
+<div id="outercontainer">
+  <a name="top"></a>
+
+  <& /system_message.mas &>
+  
+  <!-- top links and quick search -->
+<table id="siteheader" cellpadding="0" cellspacing="0">
+<tr>
+  <td rowspan="3" width="10" class="sunlogo">
+    <a href="/index.pl"><img src="/documents/img/sgn_logo_icon.png" width="70" height="69" border="0" alt="SGN Home" title="SOL Genomics Network Home" id="sgnlogo" /></a>
+  </td>
+  <td style="vertical-align: bottom">
+    <a href="/index.pl"><img id="sgntext" src="/documents/img/sgn_logo_text.png" width="230" height="21" border="0" alt="SGN Home" title="SOL Genomics Network Home" /></a>
+
+  </td>
+  <td width="50%" class="clonecart">
+     <div id="clone_shoppingcart">
+         <script language="JavaScript" type="text/javascript">
+         count_clones();
+         </script>
+         clone(s) in cart (<a class="toplink" style="text-decoration: underline" href="/search/clone-order.pl">order</a>)
+     </div>
+  </td>
+  <td class="toplink" width="50%">
+
+          <a class="toplink" href="/index.pl">home</a>
+        | <a class="toplink" href="/forum/topics.pl">forum</a>
+        | <a class="toplink" href="/tools/contact.pl">contact</a>
+        | <a class="toplink" href="/help/index.pl">help</a>
+		<span id="open_developer_toolbar" style="display:none">
+
+		| <a class="toplink" href="#" onclick="openDeveloperToolbar(); return false">devbar</a>
+		</span>
+  </td>
+</tr>
+<tr>
+  <td colspan="3">
+
+  <& /site/toolbar.mas &>
+
+  </td>
+</tr>
+<tr>
+
+  <td class="toplink" colspan="3" style="text-align: right">
+
+% # if the site is a mirror, gray out the login/logout links
+% if( $c->get_conf('is_mirror' ) ) {    
+    <a class="ghosted" style="text-decoration: none" title="Mirror site does not support login"   >log in</a>
+  | <a class="ghosted" style="text-decoration: none" title="Mirror site does not support new user">new user</span> 
+% } elsif ( my $person = _get_session_person( $c->dbc->dbh ) ) {
+  <b><% $person->get_first_name %><% $person->get_last_name  || '' %></b>
+  (<a class="toplink" style="text-decoration: underline" href="/solpeople/login.pl?logout=yes">log out</a>)
+  <a class="mytools" href="/solpeople/top-level.pl">My SGN</a>
+% } else {
+    <a class="toplink" style="text-decoration: underline" href="/solpeople/login.pl"      >log in</a>
+  | <a class="toplink" style="text-decoration: underline" href="/solpeople/new-account.pl">new user</a>
+% }
+
+  </td>
+</tr>
+</table>
+
+<script language="javascript" type="text/javascript">
+<!--
+  CXGN.Page.Toolbar.hideall();
+  check_clonecart();
+  startLoad();
+-->
+</script>
+
+
+  <table id="pagecontent_t" summary="" width="740" cellpadding="0" cellspacing="0" border="0">
+  <tr><td id="pagecontent_td">
+
+<!-- END HEADER -->

@@ -1,0 +1,139 @@
+<%doc>
+  NAME: correlation_analysis.mas
+  VERSION: 1.0
+  DESCRIPTION: Check if exists or not a correlation analysis for this template, If exist, return the list; 
+  AUTHOR: Aureliano Bombarely (ab782@cornell.edu)
+</%doc>
+
+
+<%perl>
+use strict;
+use warnings;
+
+use CXGN::SEDM::Schema;
+use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
+
+
+my $corr_analysis_content;
+my $corr_n = 0;
+my $schema = $ARGS{'schema'};
+
+## If there aren't any template_row that comes from template it will do nothing. The error message will returned by basic information
+
+if (defined $ARGS{'template_row'}) {
+
+   ## Get the data from the row as hash
+
+   my %template_data = $ARGS{'template_row'}->get_columns();
+   my $template_id = $template_data{'template_id'};
+
+   ## Search correlation analysis member for this template id.
+
+   my $correlation_analysis_html;
+
+   ## Find correlation analysis id associated with this template
+
+   my $corr_analysis_rs = $ARGS{'schema'}->resultset('CorrelationAnalysisMembers')->search({ template_a_id => $template_id },
+                                                                                           { select      => 'correlation_analysis_id',
+											     group_by    => 'correlation_analysis_id'});
+   
+   if (defined $corr_analysis_rs) {   ### Mean that exists correlation analysis for this template_id.
+
+       ## It will print a table and a list of templates with correlation values per analysis so:
+       
+       my @corr_analysis_ids = $corr_analysis_rs->get_column('correlation_analysis_id')->all();
+       foreach my $corr_id (@corr_analysis_ids) {
+	   my ($corr_analysis_row) = $schema->resultset('CorrelationAnalysis')->search({ correlation_analysis_id => $corr_id });
+	   my $methodology = $corr_analysis_row->get_column('methodology') || '<font color="gray"><i>Not defined</i></font>';
+	   my $description = $corr_analysis_row->get_column('description') || '<font color="gray"><i>Not defined</i></font>';
+	   $correlation_analysis_html .= '<table width="100%">';
+	   $correlation_analysis_html .= '<tr> <td width="30%"> <b>Correlation Analisis ID: </b> </td> <td>' . $corr_id . '</td></tr>';
+	   $correlation_analysis_html .= '<tr> <td width="30%"> <b>Methodology: </b> </td> <td>' . $methodology . '</td></tr>';
+	   $correlation_analysis_html .= '<tr> <td width="30%"> <b>Description: </b> </td> <td>' . $description . '</td></tr>';
+	   $correlation_analysis_html .= '</table><br>';
+	   $corr_n++;
+	   ## Now we are going to get all the correlation values using two aprox, (positives and negatives);
+
+	   my @corr_types = ('Possitive correlations', 'Negative correlations');
+	   foreach my $corr_type (@corr_types) {
+	       my ($cond, $order);
+	       if ($corr_type =~ m/negative/i) {
+		   $cond = '<';
+		   $order = 'correlation_value ASC';
+	       } elsif ($corr_type =~ m/possitive/i) {
+		   $cond = '>';
+		   $order = 'correlation_value DESC';
+	       } else {
+		   $cond = '!=';
+		   $order = 'correlation_value';
+	       }
+	       my @corr_members_rows = $schema->resultset('CorrelationAnalysisMembers')->search( 
+		                                                                                { 
+												 template_a_id           => $template_id,
+												 correlation_analysis_id => $corr_id,
+												 correlation_value       => {$cond, 0}
+											        },
+		                                                                                { 
+											         order_by => $order,
+											        } 
+	                                                                                        );
+	       if (@corr_members_rows > 0) {
+		    my $temp_count = ' (' . scalar(@corr_members_rows) . ' templates correlated)'; 
+		    $correlation_analysis_html .= '<table width="100%">';
+		    $correlation_analysis_html .= '<tr> <td width ="2%"></td><td width="28%"> <b>Correlation Type: </b> </td>';
+		    $correlation_analysis_html .= ' <td align="left">'.$corr_type . $temp_count .'</td></tr>';
+		    $correlation_analysis_html .= '</table><br>';
+	       }
+	       my @corr_data;
+	       my ($corr_type, $template_type);
+	       foreach my $corr_member_row (@corr_members_rows) {
+		   my %corr_member_data = $corr_member_row->get_columns();
+		   $corr_type = $corr_member_data{'correlation_type'};
+		   my ($template_row) = $schema->resultset('Templates')->search({ template_id => $corr_member_data{'template_b_id'} });
+		   my $template_b_name = $template_row->get_column('template_name');
+		   my $template_link = '/sedm/template.pl?id=' . $corr_member_data{'template_b_id'};
+		   my $template_html = "<a href=$template_link>" . $template_b_name . '</a>';
+		   $template_type = 'SGN ' . $template_row->get_column('template_type');
+		   my $dbiref_type = $template_row->get_column('dbiref_type');
+		   my $dbiref_id = $template_row->get_column('dbiref_id');
+		   my ($accession, $url, $internal_link);
+		   if ($dbiref_type =~ m/unigene/i) {
+		       $accession = 'SGN-U'.$dbiref_id;
+		       $url = '/search/unigene.pl?unigene_id='.$accession;
+		       $internal_link = "<a href=$url>$accession</a>";
+		   } elsif ($dbiref_type =~ m/est|mrna/i) {
+		       $accession = 'SGN-E'.$dbiref_id;
+		       $url = '/search/est/pl?request_from=1&request_id='.$accession.'&request_type=7';
+		       $internal_link = "<a href=$url>$accession</a>";
+		   } elsif ($dbiref_type =~ m/clone/i) {
+		       $accession = 'SGN-C'.$dbiref_id;
+		       $url = '/search/est/pl?request_from=1&request_id='.$accession.'&request_type=8';
+		       $internal_link = "<a href=$url>$accession</a>";
+		   } else {
+		       $internal_link = '<font color="gray"><i>none match</i></font>';
+		   }
+		   
+		   push @corr_data, [$template_html, $corr_member_data{'correlation_value'}, $internal_link];
+	       }
+	       $correlation_analysis_html .= columnar_table_html( headings => [ 'Template', $corr_type, $template_type ],
+								  data     => \@corr_data,
+								  __align  => ['l', 'c'],
+		                                                );
+	       $correlation_analysis_html .= '<br>';
+	   }
+       }
+   } else {
+      $correlation_analysis_html = 'None correlation analysis was found associated to this template';
+   }
+   $corr_analysis_content = info_section_html( title    => "Correlation analysis (".$corr_n.")", 
+					       contents => $correlation_analysis_html,
+					       collapsible =>1,
+					       collapsed =>1, );
+ 
+}
+
+</%perl>
+
+<% $corr_analysis_content %>
+
+

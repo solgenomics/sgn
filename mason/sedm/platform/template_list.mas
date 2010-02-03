@@ -1,0 +1,66 @@
+<%doc>
+  NAME: template_list.mas
+  VERSION: 1.0
+  DESCRIPTION: This is a mason code get the all the template and the unigene associated to a platform an return the HTML as table; 
+  AUTHOR: Aureliano Bombarely (ab782@cornell.edu)
+</%doc>
+
+
+<%perl>
+use strict;
+use warnings;
+
+use CXGN::SEDM::Schema;
+use CXGN::SEDM::Platform;
+use CXGN::Chado::Dbxref;
+use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
+use Math::BigFloat;
+
+my @template_data;
+
+my $platform = $ARGS{'platform'};
+my $platform_id = $platform->get_platform_id();
+my $schema = $platform->get_schema();
+
+my @template_rows = $schema->resultset('Templates')->search({ platform_id => $platform_id });
+foreach my $template_row (@template_rows) {
+    my %template_data = $template_row->get_columns();
+    my $template_id = $template_data{'template_id'};
+    my $template_name = $template_data{'template_name'};
+    my $template_link = '/sedm/template.pl?id='.$template_id;
+    my $template_html = "<a href=$template_link>$template_name</a>";
+    my $sgn_acc_html;
+    if (defined $template_data{'dbiref_id'}) {
+        if ($template_data{'dbiref_type'} =~ m/unigene/i) {
+	    my $template_name = "SGN-U".$template_data{'dbiref_id'};
+	    my $template_link = '/search/unigene.pl?unigene_id='.$template_name; 
+            $sgn_acc_html = "<a href=$template_link>$template_name</a>";
+        }
+    } else {
+        $sgn_acc_html = '<basefont color="gray"><i>None match</basefont></i>';
+    }
+    push @template_data, [$template_html, $sgn_acc_html];
+}
+
+## Create the table using columnar_table_html
+   
+my $templates_html = columnar_table_html( headings => [ 'Template name', 'SGN database mapping'],
+                                          data     => \@template_data,
+			                  __align  => ['l', 'l'],
+                                         );
+
+## If there are any template, replace the table for a message
+my $template_number = scalar(@template_data);
+if ($template_number == 0) {
+    $templates_html = 'None template was found associated to this platform';
+}
+
+my $template_info_content = info_section_html( title       => "Template Accession List (".$template_number.")", 
+                                               contents    => $templates_html, 
+					       collapsible => 1,
+                                               collapsed   => 1 );
+
+
+</%perl>
+
+<% $template_info_content %>

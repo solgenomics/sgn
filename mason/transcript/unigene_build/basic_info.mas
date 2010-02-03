@@ -1,0 +1,107 @@
+<%doc>
+  NAME: basic_info.mas
+  VERSION: 1.0
+  DESCRIPTION: This is a mason code get the unigene build data from the database and show it as table web_page; 
+  AUTHOR: Aureliano Bombarely (ab782@cornell.edu)
+</%doc>
+
+
+<%perl>
+use strict;
+use warnings;
+
+use SGN::Schema;
+use Bio::Chado::Schema;
+use CXGN::DB::DBICFactory;
+use CXGN::Transcript::UnigeneBuild;
+use CXGN::Chado::Dbxref;
+use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
+
+my $basic_info_content;
+my $unigene_build_name;
+
+## If there aren't any unigene_build that comes from unigene_build_detail.mas, it will return a error message.
+
+if (defined $ARGS{'unigene_build'}->get_unigene_build_id) {
+
+   my $unigene_build = $ARGS{'unigene_build'};
+   my $schema = $ARGS{'schema'};
+   my $bio_chado_schema = CXGN::DB::DBICFactory->open_schema( 'Bio::Chado::Schema', search_path => ['public','sgn']);
+
+   ## Get the object
+   my $id =  $unigene_build->get_unigene_build_id();
+  
+   my $build_name = $unigene_build->get_organism_group_name();
+   my $build_nr = $unigene_build->get_build_nr();
+   $unigene_build_name = $build_name." #".$build_nr;
+   my $build_date = $unigene_build->get_build_date();
+   my $status = $unigene_build->get_status();
+   my $status_html;
+   if ($status eq 'C') {
+       $status_html = '<font color="green"><b>CURRENT</b></font>';
+   } elsif ($status eq 'P') {
+       $status_html = '<font color="orange"><i>Previous to current</i></font>';
+   } elsif ($status eq 'D') {
+       $status_html = '<font color="red"><i>Deprecated</i></font>';
+   }
+
+   my @organism_html_list;
+   my $organism_group_id = $unigene_build->get_organism_group_id();
+   my $group_linkage_rs = $schema->resultset('GroupLinkage')->search({ group_id => $organism_group_id });
+   my @organism_ids = $group_linkage_rs->get_column('member_id')->all();
+   foreach my $organism_id (@organism_ids) {
+       if ($organism_id =~ m/^\d+$/) {
+	   my @organism_rows = $bio_chado_schema->resultset('Organism::Organism')->search({ sgn_organism_id => $organism_id });
+	   foreach my $organism_row (@organism_rows) {
+	       my $org_id = $organism_row->get_column('organism_id');
+	       my $organism_name = $organism_row->get_column('genus') . ' ' . $organism_row->get_column('species'); 
+	       my $organism_link = '/chado/organism.pl?organism_id='.$organism_id;
+	       my $organism_html = "<a href=$organism_link>$organism_name</a>";
+	       if (defined $org_id) {
+		   push @organism_html_list, $organism_html;
+	       }
+	   }
+       }
+   }
+   my $organism_html_list = join('<br>', @organism_html_list);
+
+   ## Get the number of unigene, contig and singlets using DBIx::Class (this should be replaced by the right object)
+   my $unigene_nr = $schema->resultset('Unigene')->search({ unigene_build_id => $id})->count();
+
+   my $contig_nr = $schema->resultset('Unigene')->search({ unigene_build_id => $id, nr_members => {'>', 1} })->count();
+   my $singlet_nr = $schema->resultset('Unigene')->search({ unigene_build_id => $id, nr_members => {'=', 1} })->count();
+   my $member_nr = $schema->resultset('Unigene')->search({ unigene_build_id => $id }, {join => 'unigene_members'})->count();
+
+   ## Create the HTML table
+
+   $basic_info_content = <<HTML;
+
+    <table width="75%">
+    	   <tr> <td> <b>Unigene Build ID: </b>           </td> <td> $id </td></tr>
+	   <tr> <td> <b>Unigene Build Name: </b>         </td> <td> $unigene_build_name </td></tr>
+	   <tr> <td> <b>Date: </b>                       </td> <td> $build_date </td></tr>
+           <tr> <td> <b>Status: </b>                     </td> <td> $status_html </td></tr>
+           <tr> <td> <b>Organism: </b>                   </td> <td> $organism_html_list </td></tr>
+           <tr> <td> <b>Number of Unigenes: </b>         </td> <td> $unigene_nr </tr></td>
+           <tr> <td> <b>Number of Contigs: </b>	         </td> <td> $contig_nr </tr></td>
+           <tr> <td> <b>Number of Singlets: </b>         </td> <td> $singlet_nr </tr></td>
+	   <tr> <td> <b>Members Assembled:</b> </td> <td> $member_nr </tr></td>
+   </table>
+   
+   <br>
+
+HTML
+
+} else {
+   $basic_info_content = "<big>There aren't any unigene build data for the specified parameters.</big>";
+}   
+
+my $basic_info_html;
+if (defined $unigene_build_name) {
+   $basic_info_html = "<center><big><b>Unigene Build: $unigene_build_name</b></big></center><br>";
+}
+$basic_info_html .= info_section_html( title => "Unigene Build Basic Information", contents => $basic_info_content );
+
+</%perl>
+
+<% $basic_info_html %>

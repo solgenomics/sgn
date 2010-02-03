@@ -1,0 +1,26 @@
+
+<%perl>
+
+use strict;
+use File::Spec;
+use CXGN::VHost;
+use CXGN::Tools::File;
+
+my $vh = CXGN::VHost->new();
+
+
+my $loci = qq { The locus of the week is currently unavailable. <br /><br /> };
+
+eval { 
+  $loci = CXGN::Tools::File::get_sections(File::Spec->catfile($vh->get_conf("homepage_files_dir"), "loci.txt"));
+
+};
+</%perl>
+
+<div class="boxbgcolor1" style="margin:0px; ">
+<div class="boxheading">Locus of the week</div>
+<div class="boxcontent"><% $loci %>
+<a href="oldloci.pl">See previous 'loci of the week'...</a><br /><br />
+<a href="/search/direct_search.pl?search=loci">Search other loci...</a>
+</div>
+</div>

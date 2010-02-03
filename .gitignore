@@ -1,0 +1,6 @@
+*~
+documents/tempfiles/*.*
+documents/tempfiles/*/*
+logs/
+!exists
+!.exists

@@ -1,0 +1,49 @@
+<%doc>
+  NAME: unigene_build_detail.mas
+  VERSION: 1.0
+  DESCRIPTION: This is a mason code to get different sections of the unigene_build.pl web_page.
+              It create a unigene_build object
+  AUTHOR: Aureliano Bombarely (ab782@cornell.edu)
+</%doc>
+
+
+<%perl>
+use strict;
+use warnings;
+
+use CXGN::DB::Connection;
+use SGN::Schema;
+use CXGN::Transcript::UnigeneBuild;
+use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
+
+my $dbh = CXGN::DB::Connection->new();
+my $schema = SGN::Schema->connect( sub { $dbh }, { on_connect_do => ['SET search_path TO sgn,public;'] }, );
+
+my $unigene_build;
+if (exists $ARGS{'id'}) {
+    $unigene_build = CXGN::Transcript::UnigeneBuild->new($dbh, $ARGS{'id'});
+}
+
+
+</%perl>
+
+
+<br>
+
+<& 
+   $ARGS{'path'}.'transcript/unigene_build/basic_info.mas',
+   schema => $schema,
+   unigene_build => $unigene_build 
+&>
+
+<& 
+   $ARGS{'path'}.'transcript/unigene_build/history_info.mas',
+   schema => $schema,
+   unigene_build => $unigene_build 
+&>
+
+<& 
+   $ARGS{'path'}.'transcript/unigene_build/protocol_info.mas',
+   schema => $schema,
+   unigene_build => $unigene_build 
+&>

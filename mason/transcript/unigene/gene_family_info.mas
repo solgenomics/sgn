@@ -1,0 +1,70 @@
+<%doc>
+   NAME: gene_family_info.mas
+   VERSION: 1.0
+   DESCRIPTION: Another piece of mason code get the unigene data (gene family info) from the database and show it 
+                as table web_page; 
+                This code was taken from unigene.pl (originally added by Chenwei, 08/2005, slightly refactored, Lukas 9/2007)
+   AUTHOR: Aureliano Bombarely (ab782@cornell.edu)
+</%doc>
+
+<%perl>
+use strict;
+use warnings;
+
+use SGN::Schema;
+use Bio::Chado::Schema;
+use CXGN::Transcript::Unigene;
+use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
+
+my ($library_content, $library_html, @library_table);
+
+my $unigene = $ARGS{'unigene'};
+my $schema = $ARGS{'schema'};
+
+## Get the object
+my $id =  $unigene->get_unigene_id();
+
+## If there aren't any unigene that comes from unigene_detail.mas, it will not do anything because the error message is given for the
+## basic_detail.mas script
+
+my $gene_family_html_content;
+
+if (defined $id) {
+
+    my @families = $unigene->get_families();
+
+    my $gene_family_content;
+    my @family_info;
+    if (scalar(@families) > 0) {
+	foreach my $family (@families) {
+	    my ($fam_id, $ivalue, $annotation, $count) = @{$family};
+	    $annotation =~ s/;/<br>/g;
+	    $annotation =~ s/,/<br>/g;
+	    $annotation =~ s/Molecular Function/ - Molecular Function/g;
+	    $annotation =~ s/Cellular Component/ - Cellular Component/g;
+	    $annotation =~ s/Biological Process/ - Biological Process/g;
+	    my $family_link = '<a href="family.pl?family_id='.$fam_id.'">'.$fam_id."</a>";
+	    push @family_info, [$ivalue, $family_link, $annotation, $count];
+	}
+	$gene_family_content = columnar_table_html( headings => ['Family Build <br>(I value*)','Family ID', 'Annotation**','# Members'],
+						    data     => \@family_info,
+						    __align => ['c', 'c', 'l', 'c'],
+	                                           );
+
+	$gene_family_content .= '<br> *i value: controls inflation, a process to dissipate family clusters. ';
+	$gene_family_content .= 'At high i value, genes tend to be separated into different families.<br>';
+	$gene_family_content .= '**Annotation: the most common InterPro annotation(s) of the Arabidopsis members in the family.<br>';
+
+    }
+
+    my $gf_count = scalar(@families);
+    $gene_family_html_content = info_section_html( title        => "Gene Family (" . $gf_count . ")", 
+						   contents     => $gene_family_content,
+						   collapsible  => 1,
+						   collapsed    => 1, );
+}
+
+
+</%perl>
+
+<% $gene_family_html_content %>

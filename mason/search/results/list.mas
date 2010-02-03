@@ -1,0 +1,98 @@
+
+<%doc>
+
+=head1 NAME
+
+/search/result_list.mas - a Mason module to display search results
+
+=head1 DESCRIPTION
+
+Displays search results, based on an arrayref containing one "page" of results (see arguments), and displays links for moving to previous and next pages etc.
+
+Arguments:
+
+=over 10
+
+=item search_name               
+
+The name of the search
+
+=item search_parameter_hashref
+
+a hashref mapping parameter names to their values
+
+=item search_link
+
+a url, semi-absolute if possible, for the search. Needs to take a page argument.
+
+=item total_result_count
+
+The total number of results in the resultset.
+
+=item page_size
+
+How many results are presented on one page.
+
+=item current_page
+
+The current page number.
+
+=item results_arrayref
+
+An arrayref of arrayrefs containing the contents of the search result page. Each arrayref is a line in a table.
+
+=item headers_arrayref
+
+The headers of the columns for the search results; has to map to the results_arrayref.
+
+=back
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>
+
+=cut
+
+</%doc>
+
+
+<%args>
+$search_name
+$search_parameter_hashref
+$search_link
+$total_result_count
+$entries_per_page
+$current_page
+$results_arrayref
+$headers_arrayref
+</%args>
+
+<%perl>
+
+use Data::Page;
+
+my $dp = Data::Page->new();
+if (!$current_page) { $current_page=1; }
+$dp->total_entries($total_result_count);
+$dp->entries_per_page($entries_per_page);
+$dp->current_page($current_page);
+my $first = $dp->first();
+my $last = $dp->last();
+</%perl>
+
+
+<& /page/page_title.mas, title => $search_name &>
+<& /page/info_section.mas, title => $search_name, subtitle=> "Total found: $total_result_count", contents=>"" &>
+<& /page/columnar_table.mas, headings => $headers_arrayref, data => $results_arrayref &>
+
+
+
+<%perl>
+
+  foreach my $page ($first..$last) {
+    print qq { <a href="<% $search_link %> ">$page</a> };
+  }
+</%perl>
+
+
+

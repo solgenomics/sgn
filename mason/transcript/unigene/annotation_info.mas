@@ -1,0 +1,207 @@
+ <%doc>
+   NAME: annotation_info.mas
+   VERSION: 1.0
+   DESCRIPTION: Another piece of mason code get the unigene data (annotation info) from the database and show it as table web_page; 
+                There are three different sections for the annotation web page:
+                  1- Manual annotation.
+                  2- Blast annotations using different datasets as GenBank, Arabidopsis or Swissprot
+                  3- GO terms associated to the protein domains
+   AUTHOR: Aureliano Bombarely (ab782@cornell.edu)
+ </%doc>
+
+
+<%perl>
+use strict;
+use warnings;
+
+use SGN::Schema;
+use CXGN::Tools::Identifiers qw/link_identifier/;
+use CXGN::Transcript::Unigene;
+use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
+
+
+my $unigene = $ARGS{'unigene'};
+my $schema = $ARGS{'schema'};
+
+
+## Get the object
+my $id = $unigene->get_unigene_id();
+my $unigene_build_id = $unigene->get_build_id();
+
+my $annotation_html;
+my %annotation_count = ( manual => 0, blast => 0, go => 0);
+
+if (defined $id) {
+
+   ### FIRST, get the manual annotations.
+ 
+   my $manual_annot_content;
+   my @manual_annotation_list = $unigene->get_manual_annotations();
+   foreach my $man_annot (@manual_annotation_list) {
+       $annotation_count{'manual'}++;
+       my ($author_name, $date_entered, $date_modified, $annot_text, $clone_name, $clone_id) = @{$man_annot};
+       $manual_annot_content = <<EOH;
+            <table width="100%">
+            <tr><td align="left">
+                Based on clone <a href="/search/est.pl?request_type=8&request_id=$clone_id&request_from=1">$clone_name</a>, 
+                annotated by <b>$author_name</b></td><td align="right">Created $date_entered, last modified $date_modified
+            </td></tr>
+            <tr><td align="left" colspan="2">$annot_text</td></tr>
+            </table>
+EOH
+   }
+
+   unless (defined $manual_annot_content) {
+       $manual_annot_content = '<font color="gray"><i>None manual annotation was found for this unigene</i></font>';
+   }
+
+   ## And put the manual annotation data into a subsection
+    
+   $annotation_html .= info_table_html( 'Manual annotations' => $manual_annot_content,
+                                           __border               => 0,
+                                       );
+
+
+   ## SECOND, get the annotations for the blasts, previously we search if exists some blast result for a concrete blast_target
+
+   ## i> Get the blast db names and ids
+   my (%blastdb_names, %blastdb_prog);
+   my @blast_db_rows = $schema->resultset('BlastTarget')->search({});
+   foreach my $blast_db_row (@blast_db_rows) {
+       my $blast_db_id = $blast_db_row->get_column('blast_target_id');
+       my $blast_db_name = $blast_db_row->get_column('db_name');
+       $blast_db_name =~ s/\/\w+$//;
+       my $blast_program = $blast_db_row->get_column('blast_program');
+       unless (defined $blastdb_names{$blast_db_id}) {
+	   $blastdb_names{$blast_db_id} = $blast_db_name;
+       }
+       unless (defined $blastdb_prog{$blast_db_name}) {
+	   $blastdb_prog{$blast_db_id} = $blast_program;
+       }
+   }
+
+   ## ii> Get the annotations for each blast_db with evalue < 1e-10
+   my (%blast_annotations, $blast_content);
+   my @blast_db_ids = sort keys (%blastdb_names);
+   foreach my $blast_target_id (@blast_db_ids) {
+       my @blast_annot = $unigene->get_annotations($blast_target_id, 1e-10);
+       unless (defined $blast_annotations{$blast_target_id} ) {
+	   $blast_annotations{$blast_target_id} = \@blast_annot;
+       }
+   }
+
+   ## Get the unigene length
+   my $unigene_length = length($unigene->get_sequence());
+
+   ## iii> Process the annotations
+   my @blastdb_ids = sort keys (%blast_annotations);
+   my (@blast_html, @blast_descript);
+   my $blast_link = '[<a href="/search/unigene-all-blast-matches.pl?unigene_id=' . $id . '&amp;';
+   $blast_link .= 'l=' . $unigene_length . '&amp;' . 'target=blank">' . 'Show All</a>]';
+   foreach my $blastdb_id (@blastdb_ids) {
+       my @annotations = @{$blast_annotations{$blastdb_id}};
+       
+       my $subblast_content;
+       my $hits_nr = scalar(@annotations);
+       if ($hits_nr > 0) {
+	   
+	   ## Get the first match as an array reference
+	   my @first_match = @{$annotations[0]};
+	   my ($blast_target_id, $match_id, $evalue, $score, $identity, $start, $end, $defline) = @first_match;
+
+	   ## Calculate the different variables to print in the web page
+	   my $match_id_link = link_identifier($match_id) || $match_id;
+	   my $defline_format;
+	   $defline =~ s/^\|//; 
+	   if (length($defline) > 100) {
+	       $defline_format = substr($defline, 0, 95) . '&hellip';
+	   } else {
+	       $defline_format = $defline;
+	   }
+	   my $alig_length = abs($end - $start) + 1;
+	   my $span_perc = sprintf "%3.1f%%",($alig_length/$unigene_length)*100.0;
+	   my $frame;
+
+	   # This assumes BLAST start/end coordinates are adjusted to start with
+	   # index 0 for the first base, as per C and perl style string addressing
+	   # Normally, BLAST addressing indexing the first base as 1.
+	   if ($start < $end) {
+	       $frame = ($start % 3) + 1;
+	   } else {
+	       $frame = -((($unigene_length - $start - 1) % 3) + 1);
+	   }
+
+	   my $blast_html_line = ["<b>".$blastdb_names{$blastdb_id}."</b>", $blastdb_prog{$blastdb_id}, $match_id_link, $score, 
+				  $evalue, $identity, "$alig_length bp ($span_perc)", $frame];
+           push @blast_html, $blast_html_line;
+	   push @blast_html, ["<font color='gray'><b>Description:</font></b>", 
+        		      {colspan => 7, align => 'left', content => $defline_format}];
+	   $annotation_count{'blast'}++;   
+       } else {
+	   my $default = '<font color="darkslategray"><i>No significant hits ( or none blast was used over this dataset )</i></font>';
+	   my $blast_html_default = ['<b>'.$blastdb_names{$blastdb_id}.'<b>', $blastdb_prog{$blastdb_id}, 
+				    { colspan => 6, content => $default} ];
+	   push @blast_html, $blast_html_default; 
+       }
+   }
+   if (defined $blast_html[0]) {
+       ## Create the HTML code to show the data
+       my $headers =  ['Database', 'Program', 'Best Match', 'Score', 'E-value', 'Identity', 'Alignment Length', 'Frame'];           
+       my $blast_html = columnar_table_html( headings     =>$headers,
+                                             data         => \@blast_html, 
+                                            );
+
+       my $title = "Blast Annotations $blast_link";
+       $blast_content .= info_table_html (    $title       => $blast_html,  
+					      __border     => 0,
+					      __tableattrs => qq{width="700" height="100"});   
+   }
+   unless (defined $blast_content) {
+        $blast_content = '<tr><td class="center"><span class="ghosted">';
+	$blast_content .= 'No BLAST annotations have been pre-computed for this sequence. Please try our ';
+	$blast_content .= '<a href="/tools/blast/?preload_id=$unigene_id&preload_type=15">online BLAST service</a>.</td></tr>';
+   }
+   $annotation_html .= $blast_content;
+
+   ## THIRD, GO terms
+   
+   my %go_matches;
+   my @go_annotations = $unigene->gene_ontology_annotations();
+   foreach my $go (@go_annotations) { 
+       my ($go_accession, $go_description) = @$go;
+       $go_matches{$go_accession}= $go_description;
+   }
+
+   my $go_content = "";
+   if(%go_matches) {
+       $go_content = qq|<ul style="list-style: none">\n|;
+       foreach (keys %go_matches){
+	   $annotation_count{'go'}++;
+	   $go_content .= qq|<li><a href="http://www.ebi.ac.uk/ego/DisplayGoTerm?id=GO:$_" target="blank">GO:$_</a> $go_matches{$_}</li>|;
+       }
+       $go_content .= "</ul>\n";
+   } else {
+       $go_content = '<font color="gray"><i>No Gene Ontology annotation</i></font>';
+   }
+
+   my $title2 = "GO Terms Annotations";
+   $annotation_html .= info_table_html (    $title2       => $go_content,  
+					    __border     => 0,
+					    __tableattrs => qq{width="700" height="100"});   
+
+
+
+} else {
+    $annotation_html = '<span class="ghosted">None annotation data was found associated to this unigene</span>';
+}
+
+my $global_title = $ARGS{'title'} || 
+    "Annotations (manual: $annotation_count{'manual'} | blast: $annotation_count{'blast'} | go: $annotation_count{'go'} )";
+my $annotation_content = info_section_html( title      => $global_title, 
+                                           contents    => $annotation_html,
+					   collapsible => 1,
+					   collapsed   => 1);
+
+</%perl>
+
+<% $annotation_content %>

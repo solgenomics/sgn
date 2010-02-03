@@ -1,0 +1,29 @@
+
+gfcode creates genefinder features such as potential splice sites from
+DNA.  It uses code originating from Phil Green's genefinder program in
+the early 1990s, which has come via the acedb source code.  Indeed,
+the main file, gfcode.c comes from acedb source code directory w9/
+(it's acedb elements are hidden behind #ifdef ACEDB statements).
+
+The output format is gff version 2 (see www.sanger.ac.uk/Software/formats/GFF/).
+
+To make, type "make gfcode".  
+
+If you then type "gfcode" you should get the following:
+
+Usage: gfcode [opts] <tableFile> <seqFile>
+  -segs <n>    : cutoff for segment scores (default 1.0)
+  -splice3 <n> : cutoff for splice3 scores (default -2.0)
+  -splice5 <n> : cutoff for splice5 scores (default 0.0)
+  -atg <n>     : cutoff for ATG scores (default 0.0)
+  -stop <n>    : cutoff for stop scores (default -2.0)
+
+The seqFile should be a fasta file (preferred) or a bare sequence file.
+I don't know if multiple sequences in one fasta file are accepted - try!
+
+The tableFile is a genefinder directory master "tables" file, as found
+in genefinder releases or in acedb database wgf/ directories.  Note
+that if only local file name paths are given in the tableFile you will
+have to be in the same directory as them to run.
+
+Richard Durbin 5 December 2002

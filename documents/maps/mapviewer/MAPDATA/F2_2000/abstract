@@ -1,0 +1,12 @@
+
+<p>
+This map is based on 80 F2 individuals from the cross L. esculentum LA925 x L. pennellii LA716.
+</p>
+
+<p>
+The maps contains a subset of RFLP markers from the <a href='map.pl?mapName=5'>Tomato-EXPEN map.</a>  However, most of the markers are either COS (conserved ortholog set) markers derived from a comparison of the tomato EST database against the entire arabidopsis genome.  These COS markers we selected to be single/low copy and have a highly significant match with a putative orthologous locus in arabidopsis.  They are being mapped in an effort to determine the level of synteny between these tomato and arabidopsis genomes.   More detailed information about the COS markers can be found in Fulton et al (2002).   In addition to COS markers, this map also contains a significant number of SSR (simple sequence repeat) markers.  These SSRs were identified in ESTs (usually in 5' or 3' UTRs).   The primer sequences for each SSR can be found by clicking on the SSR locus of interest.
+<p>
+
+<p>
+Fulton T, van der Hoeven R, Eannetta N, Tanksley S  (2002). Identification, Analysis and Utilization of a Conserved Ortholog Set (COS) Markers for Comparative Genomics in Higher Plants.  The Plant Cell (in press)
+<p>

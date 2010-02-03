@@ -1,0 +1,203 @@
+1 METABOLISM 
+         1.01 amino-acid metabolism 
+               1.01.01 amino-acid biosynthesis 
+               1.01.04 regulation of amino-acid metabolism 
+               1.01.10 amino-acid degradation (catabolism) 
+               1.01.99 other amino-acid metabolism activities 
+         1.02 nitrogen and sulphur metabolism 
+               1.02.01 nitrogen and sulphur utilization 
+               1.02.04 regulation of nitrogen and sulphur utilization 
+               1.02.99 other nitrogen and sulphur metabolism activities 
+          1.03 nucleotide metabolism 
+               1.03.01 purine-ribonucleotide metabolism 
+               1.03.04 pyrimidine-ribonucleotide metabolism 
+               1.03.07 deoxyribonucleotide metabolism 
+               1.03.10 metabolism of cyclic and unusual nucleotides 
+               1.03.13 regulation of nucleotide metabolism 
+               1.03.16 polynucleotide degradation 
+                    1.03.16.01 RNA degradation 
+               1.03.19 nucleotide transport 
+               1.03.99 other nucleotide-metabolism activities 
+          1.04 phosphate metabolism 
+               1.04.01 phosphate utilization 
+               1.04.04 regulation of phosphate utilization 
+               1.04.07 phosphate transport 
+               1.04.99 other phosphate metabolism activities 
+          1.05 C-compound and carbohydrate metabolism 
+               1.05.01 C-compound and carbohydrate utilization 
+                    1.05.01.01 C-compound, carbohydrate catabolism 
+                         1.05.01.01.01 sugar, glucoside, polyol and carboxylate catabolism 
+                         1.05.01.01.03 C-2 compound, organic acid and fatty acid catabolism 
+                    1.05.01.03 C-compound, carbohydrate anabolism 
+                         1.05.01.03.02 polysaccharide biosynthesis 
+                         1.05.01.03.04 aminosaccharide biosynthesis 
+                    1.05.01.05 autotrophic CO2-fixation 
+               1.05.04 regulation of C-compound and carbohydrate utilization 
+               1.05.07 C-compound, carbohydrate transport 
+               1.05.99 other carbohydrate metabolism activities 
+          1.06 lipid, fatty-acid and isoprenoid metabolism 
+               1.06.01 lipid, fatty-acid and isoprenoid biosynthesis 
+                   1.06.01.01 phospholipid biosynthesis 
+                   1.06.01.05 fatty acid biosynthesis 
+                   1.06.01.07 isoprenoid biosynthesis 
+                         1.06.01.07.11 tetracyclic and pentacyclic triterpenes (steroids and hopanoids) biosynthesis 
+               1.06.04 breakdown of lipids, fatty acids and isoprenoids 
+               1.06.07 lipid, fatty-acid and isoprenoid utilization 
+               1.06.10 regulation of lipid, fatty-acid and isoprenoid biosynthesis 
+               1.06.13 lipid and fatty-acid transport 
+               1.06.99 other lipid, fatty-acid and isoprenoid metabolism activities 
+          1.07 metabolism of vitamins, cofactors, and prosthetic groups 
+               1.07.01 biosynthesis of vitamins, cofactors, and prosthetic groups 
+               1.07.04 utilization of vitamins, cofactors, and prosthetic groups 
+          1.20 secondary metabolism 
+               1.20.01 metabolism of primary metabolic sugars derivatives 
+                    1.20.01.01 biosynthesis of secondary monosaccharides 
+                    1.20.01.07 biosynthesis of glycosides 
+               1.20.13 biosynthesis of derivatives of homoisopentenyl pyrophosphate 
+               1.20.15 biosynthesis of derivatives of dehydroquinic acid, shikimic acid and chorismic acid 
+               1.20.17 biosynthesis of secondary products derived from primary amino acids 
+               1.20.35.01 biosynthesis of stilbenes, flavonoids 
+               1.20.37 biosynthesis of peptide derived compounds 
+               1.20.99 other secondary metabolism activities 
+
+     2 ENERGY 
+          2.01 glycolysis and gluconeogenesis 
+          2.07 pentose-phosphate pathway 
+               2.07.01 pentose-phosphate pathway oxidative branch 
+          2.10 tricarboxylic-acid pathway 
+          2.11 electron transport and membrane-associated energy conservation 
+               2.11.01 electron transport proteins 
+               2.11.03 ATP synthesis proteins 
+               2.11.05 accessory proteins of electron transport and membrane-associated energy conservation 
+               2.11.99 other electron transport and membrane-associated energy conservation proteins 
+          2.13 respiration 
+               2.13.01 anaerobic respiration 
+               2.13.05 aerobic respiration 
+          2.16 fermentation 
+               2.16.01 alcohol fermentation 
+          2.19 metabolism of energy reserves (glycogen, trehalose) 
+          2.22 glyoxylate cycle 
+          2.25 oxidation of fatty acids 
+          2.30 photosynthesis 
+               2.30.01electron transport proteins of photosynthesis 
+               2.30.03 accessory proteins of photosynthetic electron transport 
+          2.99 other energy generation activities 
+
+     3 CELL GROWTH, CELL DIVISION AND DNA SYNTHESIS 
+          3.13 meiosis 
+          3.16 DNA synthesis and replication 
+          3.19 recombination and DNA repair 
+          3.99 other cell growth, cell division and DNA synthesis activities 
+
+     4 TRANSCRIPTION 
+          4.01 rRNA transcription 
+               4.01.01 rRNA synthesis 
+               4.01.04 rRNA processing 
+               4.01.99 other rRNA-transcription activities 
+          4.03 tRNA transcription 
+               4.03.01 tRNA synthesis 
+               4.03.03 tRNA processing 
+               4.03.06 tRNA modification 
+               4.03.99 other tRNA-transcription activities 
+          4.05 mRNA transcription 
+               4.05.01 mRNA synthesis 
+                    4.05.01.01 general transcription activities 
+                    4.05.01.04 transcriptional control 
+               4.05.03 mRNA processing (splicing) 
+               4.05.05 mRNA processing (5'-, 3'-end processing, mRNA degradation) 
+               4.05.99 other mRNA-transcription activities 
+          4.99 other transcription activities 
+
+    5 PROTEIN SYNTHESIS 
+          5.01 ribosomal proteins 
+          5.04 translation 
+          5.07 translational control 
+          5.10 tRNA-synthetases 
+          5.99 other protein-synthesis activities 
+
+     6 PROTEIN DESTINATION 
+          6.01 protein folding and stabilization 
+          6.04 protein targeting, sorting and translocation 6.07
+          6.07 protein modification 
+          6.10 assembly of protein complexes 
+          6.13 proteolysis 
+               6.13.01 cytoplasmic and nuclear degradation 
+               6.13.04 lysosomal and vacuolar degradation 
+               6.13.07 other proteolytic degradation 
+          6.99 other protein-destination activities 
+
+    7 TRANSPORT FACILITATION 
+          7.01 channels/pores 
+          7.04 ion transporters 
+               7.04.01 metal ion transporters (Cu, Fe, etc.) 
+               7.04.03 other cation transporters (Na, K, Ca , NH4, etc.) 
+               7.04.99 anion transporters (Cl, SO4, PO4, etc.) 
+          7.07 C-compound and carbohydrate transporters 
+          7.22 transport ATPases 
+          7.25 ABC transporters 
+          7.99 other transport facilitators 
+
+     8 CELLULAR TRANSPORT AND TRANSPORT MECHANISMS 
+          8.01  nuclear transport 
+          8.02 chloroplast transport 
+          8.04 mitochondrial transport 
+          8.07 vesicular transport (Golgi network, etc.) 
+          8.10 peroxisomal transport 
+          8.13 vacuolar transport 
+          8.16 extracellular transport (secretion) 
+          8.19 cellular import 
+          8.22 cytoskeleton-dependent transport 
+          8.99 other intracellular-transport activities 
+
+    9 CELLULAR BIOGENESIS (proteins are not localized to the corresponding organelle) 
+          9.01 biogenesis of cell wall (cell envelope) 
+          9.03 biogenesis of plasma membrane 
+          9.04 biogenesis of cytoskeleton 
+          9.99 chloroplast biogenesis 
+
+     10 CELLULAR COMMUNICATION/SIGNAL TRANSDUCTION 
+         10.01 intracellular communication 
+          10.03 unspecified signal transduction 
+          10.05 receptor proteins 
+          10.99 other unspecified signal transduction activities 
+
+    11 CELL RESCUE, DEFENSE, CELL DEATH AND AGEING 
+          11.01 stress response 
+          11.03DNA repair 
+               11.03.01nucleotide excision repair 
+          11.05 Disease, virulence and defense 
+               11.05.01 resistance proteins 
+               11.05.03 defense related proteins 
+               11.05.05 virulence, disease factors 
+                     11.05.05.99   other virulence, disease factors 
+               11.05.99 other disease and defense related proteins 
+          11.07 detoxificaton 
+               11.07.01 detoxification involving cytochrome P450 
+               11.07.03 detoxification by modification 
+               11.07.99 other detoxification 
+          11.10 cell death and ageing
+          11.10.09 degradation of exogenous ester compounds 
+          11.99 other cell rescue activities 
+
+    13  IONIC HOMEOSTASIS 
+           13.04 ionic homeostasis
+
+     30 CELLULAR ORGANIZATION (proteins are localized to the corresponding organelle) 
+          30.01 organization of cell wall 
+          30.02 organization of plasma membrane 
+          30.03 organization of cytoplasm 
+          30.04 organization of cytoskeleton 
+          30.07 organization of endoplasmatic reticulum 
+          30.08 organization of Golgi 
+          30.09 organization of intracellular transport vesicles 
+          30.10 nuclear organization 
+          30.13 organization of chromosome structure 
+          30.16 mitochondrial organization 
+          30.19 peroxisomal organization 
+          30.25 vacuolar and lysosomal organization 
+          30.26 chloroplast organization 
+          30.99 other cellular organization 
+
+    98 CLASSIFICATION NOT YET CLEAR-CUT 
+
+    99 UNCLASSIFIED PROTEINS

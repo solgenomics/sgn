@@ -1,0 +1,27 @@
+
+<%perl>
+
+use strict;
+
+use File::Spec;
+use CXGN::Tools::File;
+use CXGN::VHost;
+
+
+my $vh = CXGN::VHost->new();
+my $file = File::Spec->catfile($vh->get_conf('homepage_files_dir'), 'news.txt');
+
+my $contents = "News are not available at the moment.<br /><br />";
+
+eval { 
+  $contents = CXGN::Tools::File::get_sections($file);
+};
+
+
+</%perl>
+
+<div class="boxbgcolor1" style="margin:0px;">
+<div class="boxheading">News...</div>
+<div class="boxcontent"><% $contents %></div>
+<a href="oldhighlights.pl">See all news...</a>
+</div>

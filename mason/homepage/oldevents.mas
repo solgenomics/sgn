@@ -1,0 +1,23 @@
+
+<%perl>
+use strict;
+
+use File::Spec;
+use CXGN::Tools::File;
+use CXGN::VHost;
+
+my $vh=CXGN::VHost->new();
+my $file =File::Spec->catfile($vh->get_conf('homepage_files_dir'), "events.txt");
+
+my $news = qq { <p class="boxbgcolor5"><br />The past and present SOL events are currently unavailable dur to a server problem. We apologize for any inconvenience. Please check back later.<br /><br /></p><br /><br /> };
+
+eval {
+  $news=CXGN::Tools::File::file_contents($file)||'';
+};
+
+
+</%perl>
+
+<& /page/page_title.mas, title=>'Past and present SOL Events' &>
+
+<% $news %>

@@ -1,0 +1,24 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="china_flag_svg" width="900" height="600" viewBox="0 0 30 20">
+<desc>Flag of the People's Republic of China</desc>
+<defs>
+<g id="s">
+<g id="c">
+<polyline id="t" fill="#fcd116" points="0,0 0,1 .5,1" transform="translate(0,-1) rotate(18)"/>
+<use xlink:href="#t" transform="scale(-1,1)"/>
+</g>
+<use xlink:href="#c" transform="rotate(72)"/>
+<use xlink:href="#c" transform="rotate(-72)"/>
+<use xlink:href="#c" transform="rotate(144)"/>
+<use xlink:href="#c" transform="rotate(-144)"/>
+</g>
+<use xlink:href="#s" id="r" transform="rotate(-90)"/>
+</defs>
+<rect width="30" height="20" fill="#ce1126"/>
+<use xlink:href="#s" transform="translate(5,5) scale(3)"/>
+<use xlink:href="#r" transform="translate(10,2) rotate(-30.963756532073521417107679840837)"/>
+<use xlink:href="#r" transform="translate(12,4) rotate(-8.1301023541559787031443874409066)"/>
+<use xlink:href="#r" transform="translate(12,7) rotate(15.945395900922854797657689523261)"/>
+<use xlink:href="#r" transform="translate(10,9) rotate(38.659808254090090604005862335173)"/>
+</svg>

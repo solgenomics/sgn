@@ -1,0 +1,42 @@
+
+<%doc>
+
+=head1 DESCRIPTION
+
+An example Mason component using javascript.
+
+Doesn't do much. It is just displays a number that is incremented once every second. 
+
+:-)
+
+=head1 AUTHOR
+
+Lukas Mueller
+
+=cut 
+
+</%doc>
+
+<div id="counter" style="font-size:72pt; font-weight:bold; border:1px">0</div>
+
+
+<script language="javascript">
+
+var c = 0;
+counter_div();
+
+function counter_div() { 
+      var e = document.getElementById('counter');
+
+      c++;
+      e.innerHTML=c;
+      
+      setTimeout("counter_div()", 1000);
+
+}
+
+
+
+</script>
+
+

@@ -1,0 +1,82 @@
+<%doc>
+  NAME: basic_info.mas
+  VERSION: 1.0
+  DESCRIPTION: This is a mason code get the data from the database and show it as table web_page; 
+  AUTHOR: Aureliano Bombarely (ab782@cornell.edu)
+</%doc>
+
+
+<%perl>
+use strict;
+use warnings;
+
+use CXGN::SEDM::Schema;
+use CXGN::Chado::Dbxref;
+use CXGN::SEDM::Platform;
+use CXGN::People::Person;
+use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
+
+my $basic_info_content;
+my $platform_accession;
+
+## If there aren't any platform that comes from template_detail.mas, it will return a message.
+
+if (defined $ARGS{'platform'}) {
+
+   ## Get the data from the object.
+   my $techtype_name = $ARGS{'platform'}->get_technology_type_name();
+   my $techtype_desc = $ARGS{'platform'}->get_technology_type_description();
+   my $platform_name = $ARGS{'platform'}->get_platform_name();
+   $platform_accession = $platform_name;
+   my $platform_desc = $ARGS{'platform'}->get_platform_description();
+   my $platform_id = $ARGS{'platform'}->get_platform_id();
+   my $person_id = $ARGS{'platform'}->get_contact_person_id();
+   my ($complete_name, $contact_email);
+   if (defined $person_id) {
+       my $person = CXGN::People::Person->new($ARGS{'platform'}->get_schema()->storage()->dbh(), $person_id);
+       my $saludation = $person->get_salutation() || 'Dr.';
+       my $first_name = $person->get_first_name();
+       my $last_name = $person->get_last_name();
+       $contact_email = $person->get_contact_email() || 'Not available';
+       if (defined $saludation && defined $first_name && defined $last_name) {
+           $complete_name = "$saludation $first_name $last_name";
+       } else {
+           $complete_name = '<i><font colour="gray">Data not available</font></i>';
+       }
+   } else {
+      $complete_name ='<i><font colour="gray">Data not available</font></i>';
+      $contact_email ='<i><font colour="gray">Data not available</font></i>';
+   }
+   my $templates_count = $ARGS{'platform'}->get_schema()->resultset('Templates')->search({ platform_id => $platform_id})->count();
+   my $probes_count = $ARGS{'platform'}->get_schema()->resultset('Probes')->search({ platform_id => $platform_id})->count();
+
+   ## Create the HTML table
+
+   $basic_info_content = <<HTML;
+
+    <table width="100%">
+    	   <tr> <td width="25%"> <b>Technology name:</b>        </td> <td> $techtype_name </td></tr>
+	   <tr> <td width="25%"> <b>Technology description:</b> </td> <td> $techtype_desc </td></tr>
+	   <tr>	<td width="25%"> <b>Platform name:</b>          </td> <td> $platform_name </td></tr>
+           <tr> <td width="25%"> <b>Platform description:</b>   </td> <td> $platform_desc </td></tr>
+	   <tr>	<td width="25%"> <b>Templates:</b>              </td> <td> $templates_count</td></tr>
+           <tr> <td width="25%"> <b>Probes:</b>                 </td> <td> $probes_count   </td></tr>
+	   <tr>	<td width="25%"> <b>Contact info:</b>           </td> <td> <b>Name:</b> $complete_name </td></tr>
+           <tr> <td width="">                                   </td> <td> <b>E-mail:</b> $contact_email </td></tr>
+   </table>
+
+HTML
+
+} else {
+   $basic_info_content = "<big>There aren't any platform data for the specified parameters.</big>";
+}   
+
+my $basic_info_html;
+if (defined $platform_accession) {
+   $basic_info_html = "<center><big><b>Expression Platform: $platform_accession</b></big></center><br>";
+}
+$basic_info_html .= info_section_html( title => "Platform Basic Information", contents => $basic_info_content );
+
+</%perl>
+
+<% $basic_info_html %>

@@ -1,0 +1,15 @@
+
+
+<div class="boxbgcolor5">
+<div class="boxheading">Potato Genome Sequencing Resources</div>
+<div class="boxcontent">
+
+Download BAC by BAC data: <a href="ftp://ftp.solgenomics.net/potato_genome/">SGN FTP site</a><br />
+SGN Potato BLAST <a href="/tools/blast/?db_id=89">BACs</a> | 
+<a href="/tools/blast/?db_id=90">BAC ends</a>
+<br />
+Project website and shotgun data: <a href="http://www.potatogenome.net">http://www.potatogenome.net</a> <br />
+
+</div>
+
+</div>

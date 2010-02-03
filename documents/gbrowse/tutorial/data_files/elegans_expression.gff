@@ -1,0 +1,9 @@
+##gff-version 2
+##date Tue Feb 24 06:39:41 2004
+##sequence-region C01F4 1 40000
+##source gbrowse GFFDumper plugin
+##NOTE: Selected features dumped.
+C01F4	Expr_profile	Expression	7112	8246	.	+	.	Expr_profile ZK783.1
+C01F4	Expr_profile	Expression	18295	19431	.	+	.	Expr_profile ZK783.2
+C01F4	Expr_profile	Expression	24473	25600	.	+	.	Expr_profile ZK783.3
+C01F4	Expr_profile	Expression	30791	31961	.	+	.	Expr_profile ZK783.4

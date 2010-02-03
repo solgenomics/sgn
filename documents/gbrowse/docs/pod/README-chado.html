@@ -1,0 +1,153 @@
+<?xml version="1.0" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>README-chado</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rev="made" href="mailto:root@localhost" />
+</head>
+
+<body style="background-color: white">
+
+<p><a name="__index__"></a></p>
+<!-- INDEX BEGIN -->
+
+<ul>
+
+	<li><a href="#support_for_the_chado_database_schema">Support for the chado database schema</a></li>
+	<li><a href="#creating_a_configuration_file">Creating a configuration file</a></li>
+	<ul>
+
+		<li><a href="#more_information">More Information</a></li>
+		<li><a href="#bugs">Bugs</a></li>
+	</ul>
+
+</ul>
+<!-- INDEX END -->
+
+<hr />
+<p>
+</p>
+<h1><a name="support_for_the_chado_database_schema">Support for the chado database schema</a></h1>
+<p>The chado schema (<a href="http://wiki.gmod.org/index.php/Chado">http://wiki.gmod.org/index.php/Chado</a>) is a comprehensive 
+database schema developed largely by developers at UC Berkeley and 
+Harvard working on FlyBase.  It is intended to be a generic database 
+schema for model organism use.  Its use with GBrowse is supported via 
+a limited implementation of the Das interface from BioPerl.  It is 
+limited in that it implements only parts of Chado.</p>
+<p>The chado adaptor works through three perl modules included in this 
+distribution:</p>
+<pre>
+  lib/Bio/DB/Das/Chado.pm
+  lib/Bio/DB/Das/Chado/Segment.pm
+  lib/Bio/DB/Das/Chado/Segment/Feature.pm</pre>
+<p>These files are installed the in the BioPerl infastructure when 
+'make install' is run.</p>
+<p>In addition to the standard chado schema, this adaptor requires a few
+additional views and functions.  These are found in two files in the
+chado CVS or in a gmod distribution.  These are:</p>
+<pre>
+  schema/chado/modules/sequence/gff-bridge/sequence-gff-views.sql
+  schema/chado/modules/sequence/gff-bridge/sequence-gff-funcs.plpgsql</pre>
+<p>The easiest way to get these into the chado schema is include them when 
+building the chado schema from a gmod release during `perl Makefile.PL`.
+It is currently included by default when the schema is built this way.</p>
+<p>If you already have a chado instance and want to add these items,
+the easiest way to do that is to cat the files
+to stdout and pipe that to a psql command:</p>
+<pre>
+  % cat sequence-gff-views.sql   | psql &lt;chado-database-name&gt;
+  % cat sequence-gff-funcs.pgsql | psql &lt;chado-database-name&gt;</pre>
+<p>A sample chado configuration file is included in contrib/conf_files/.  
+Since chado uses the Sequence Ontology for its controlled vocabulary, it
+is quite likely that this configuration file should work for any
+instance of chado once the database-specific parameters are set.</p>
+<p>After the tables are created, the user that is running Apache must
+be granted privileges to select on several tables.  Usually that
+user is 'nobody', although on RedHat systems using RPM installed Apache
+the user is 'apache'.  First create that user in Postgres, then in the
+psql shell grant select permissions:</p>
+<pre>
+  CREATE USER nobody;
+  GRANT SELECT ON feature_synonym      TO nobody;
+  GRANT SELECT ON synonym              TO nobody;
+  GRANT SELECT ON feature_dbxref       TO nobody;
+  GRANT SELECT ON dbxref               TO nobody;
+  GRANT SELECT ON feature              TO nobody;
+  GRANT SELECT ON featureloc           TO nobody;
+  GRANT SELECT ON cvterm               TO nobody;
+  GRANT SELECT ON feature_relationship TO nobody;
+  GRANT SELECT ON cv                   TO nobody;
+  GRANT SELECT ON feature_cvterm       TO nobody;
+  GRANT SELECT ON featureprop          TO nobody;
+  GRANT SELECT ON pub                  TO nobody;
+  GRANT SELECT ON feature_pub          TO nobody;
+  GRANT SELECT ON db                   TO nobody;</pre>
+<p>
+</p>
+<hr />
+<h1><a name="creating_a_configuration_file">Creating a configuration file</a></h1>
+<p>The GBrowse configuration file for a chado database is the same format
+as for any other data source, but there are a few notes specific to
+chado for GBrowse configuration files.  A sample configuration file
+called 07.chado.conf is included in the contrib/conf_files directory
+of this distribution, and is installed in $HTDOCS/gbrowse/contrib/conf_files.</p>
+<p>Two items specific to chado that must go into the configuration file:</p>
+<dl>
+<dt><strong><a name="item_reference_class">Reference class</a></strong>
+
+<dd>
+<p>The reference class in the configuration file must be the same 
+Sequence Ontology Feature Annotation (SOFA) type as the feature type 
+in chado of the reference sequence, like 'chromosome', 
+'region' or 'contig'.</p>
+</dd>
+<dd>
+<p>The SOFA type is usually found on line 2 of your GFF file, if
+you are using GFF for loading. For example:</p>
+</dd>
+<dd>
+<pre>
+  #sequence-region NC_001133 1 230210</pre>
+</dd>
+<dd>
+<p>This indicates that the reference class is ``region''.</p>
+</dd>
+</li>
+<dt><strong><a name="item_aggregators">Aggregators</a></strong>
+
+<dd>
+<p>Aggregators must not be used with the chado adaptor, as they are not needed
+and do not make sense in this context.  They are used in Bio::DB::GFF
+to construct complex biological objects out of the flat data in
+GFF files, for example, attaching exons to their mRNA.  In chado, this
+is not necessary since the relationship between features is clearly
+defined in the feature_relationship table, and that information
+is automatically obtained by the chado adaptor.</p>
+</dd>
+</li>
+<dt><strong><a name="item_url">URL</a></strong>
+
+<dd>
+<p>Once you are properly configured you should be able to use GBrowse 
+with an URL like <a href="http://localhost/cgi-bin/gbrowse/chado/.">http://localhost/cgi-bin/gbrowse/chado/.</a></p>
+</dd>
+</li>
+</dl>
+<p>
+</p>
+<h2><a name="more_information">More Information</a></h2>
+<p>See <a href="http://www.gmod.org">http://www.gmod.org</a> for more information on Chado and loading
+Chado for use with GBrowse.</p>
+<p>
+</p>
+<h2><a name="bugs">Bugs</a></h2>
+<p>If you encounter any bugs or problems with this chado adaptor, please
+contact the &lt;a <a href="mailto:href=``mailto:gmod-gbrowse@lists.sourceforge.net''>">href=``mailto:gmod-gbrowse@lists.sourceforge.net''></a><a href="mailto:gmod-gbrowse@lists.sourceforge.net</a>">gmod-gbrowse@lists.sourceforge.net</a></a>.</p>
+<p>Scott Cain
+<a href="mailto:cain@cshl.edu">cain@cshl.edu</a>
+2005/03/10</p>
+
+</body>
+
+</html>

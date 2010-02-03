@@ -1,0 +1,35 @@
+<div class="boxheading">SGN Feature Request</div>
+<div class="boxcontent">
+
+<center>
+<br />
+<table><tr><td width="180" >
+<a href="/breeders/"><img src="/documents/img/tomato_breeders_toolbox.jpg" width="160" border ="0" /></a><br />
+<br />
+</td><td>
+<p>We would like to improve SGN for breeders by adding a <a href="/breeders/">breeder's toolbox.</a> </p>
+<p>Please contact <a href="mailto:jv27@cornell.edu">Joyce van Eck</a> with suggestions how to improve SGN for breeders.</p>
+</td></tr></table>
+
+
+<!-- OLD
+
+<b><a href="/cview/view_chromosome.pl?map_id=9&chr_nr=4&comp_map_id=agp&comp_chr=4&show_ruler=1">Compare the AGP map and the genetic map</a></b><br /><br />
+<a href="/cview/view_chromosome.pl?map_id=9&chr_nr=4&comp_map_id=agp&comp_chr=4&show_ruler=1"><img src="/documents/img/agp_genetic_comparison_small.png" border="0" /></a>
+</center>
+<span class="tinytype"><br />
+The Accessioned Golden Path (AGP) map visualizes the location of the finished BACs in the chromosome pseudomolecules. The AGP map can now be compared with the genetic map, allowing to rapidly identify candidate BACs in the emerging tomato genome sequence from mapping intervals.</span>
+
+
+
+<center>
+<b><a href="/tools/align_viewer">Alignment Analyzer</a> and <a href="/tools/tree_browser/">Tree Browser</a><br /><br /></b>
+<a href="/tools/align_viewer"><img src="/documents/img/tree_browser_example_small.png" border="0" /></a>
+</center>
+
+<span class="tinytype"><br />The <a href="/tools/align_viewer">Alignment Analyzer</a> and <a href="/tools/tree_browser/">Tree Browser</a> can align sequences and calculate trees in real time, and results can be browsed graphically. [Oct 23, 2007]</span><br />
+<center><a href="/old_feature_highlights.pl">See previous feature highlights...</a></center>
+</div>
+
+
+-->

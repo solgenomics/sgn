@@ -1,0 +1,111 @@
+<div class="subheading">
+Portals
+</div>
+<div class="boxsubcontent">
+<a class="creativitylinks" href="/breeders/">Breeder's Toolbox</a><br />
+<a href="/outreach/">Outreach</a><br />
+</div>
+<div class="subheading">
+SGN info
+</div>
+<div class="boxsubcontent">
+<a class="creativitylinks" href="/content/sgn_data.pl">SGN data overview</a><br />
+<a class="creativitylinks" href="/about/index.pl">More about SGN</a><br />
+<a class="creativitylinks" href="/solanaceae-project/index.pl">SOL project</a> <br />
+<a class="creativitylinks" href="/solanaceae-project/index.pl#SOL_news">SOL newsletter</a><br />
+<a class="creativitylinks" href="/about/tomato_sequencing.pl">International tomato project</a><br />
+<a class="creativitylinks" href="/about/ecosol/">The ECO-SOL project</a><br />
+<a class="creativitylinks" href="/secretom/">The Secretom project</a><br />
+</div>
+<div class="subheading">
+SOL species
+</div>
+<div class="boxsubcontent">
+<i>Solanaceae</i><br />
+<a class="creativitylinks" href="/content/sgn_data.pl#Solanumlycopersicum">Tomato</a> | 
+<a class="creativitylinks" href="/content/sgn_data.pl#Solanumtuberosum">Potato</a> | 
+<a class="creativitylinks" href="/content/sgn_data.pl#Capsicumannuum">Pepper</a><br />
+<a class="creativitylinks" href="/content/sgn_data.pl#Solanummelongena">Eggplant</a> | 
+<a class="creativitylinks" href="/content/sgn_data.pl#Petuniahybrida">Petunia</a> | 
+<a class="creativitylinks" href="/content/sgn_data.pl#Nicotianatabacum">Nicotiana</a><br />
+
+<a class="creativitylinks" href=
+"/about/solanum_nomenclature.pl">Solanum nomenclature</a>
+<br />
+<table cellpadding="0" cellspacing="0">
+<tr><td>
+<i>Rubiaceae</i><br />
+<a class="creativitylinks" href="/content/coffee.pl">Coffee</a><br />
+</td>
+<td width="10">&nbsp;</td>
+<td>
+<i>Plantaginaceae</i><br />
+<a class="creativitylinks" href="/content/sgn_data.pl#Antirrhinummajus">Snapdragon</a><br />
+</td></tr></table>
+</div>
+
+<div class="subheading">
+Tomato genome
+</div>
+<div class="boxsubcontent">
+<a class="creativitylinks" href="/about/tomato_sequencing.pl">Sequencing progress</a><br />
+<a class="creativitylinks" href="/search/direct_search.pl?search=BACs">Search BACs</a><br />
+<a class="creativitylinks" href="/maps/physical/overgo_process_explained.pl">Overgo plating process</a><br />
+<a class="creativitylinks" href="/gbrowse/">Genome browser</a><br />
+<a class="creativitylinks" href="/solanaceae-project/sol-bioinformatics/">SOL bioinformatics resources</a><br />
+</div>
+<div class="subheading">
+Maps and markers
+</div>
+<div class="boxsubcontent">
+<a class="creativitylinks" href="/cview/index.pl">Available maps</a><br />
+<a class="creativitylinks" href="/search/direct_search.pl?search=Markers">Search markers</a><br />
+More about <a class="creativitylinks" href="markers/microsats.pl">SSR</a> | 
+<a class="creativitylinks" href="markers/cos_markers.pl">COS</a> | 
+<a class="creativitylinks" href="markers/cosii_markers.pl">COSII</a><br />
+<a class="creativitylinks" href="ftp://ftp.solgenomics.net/COSII/">COSII marker data (FTP)</a><br />
+</div>
+<div class="subheading">
+SOL Loci
+</div>
+<div class="boxsubcontent">
+<a class="creativitylinks" href="/search/direct_search.pl?search=loci">Search Solanaceae loci</a><br />
+<a class="creativitylinks" href="/phenome/">Submit locus annotations</a>
+</div>
+<div class="subheading">
+Phenotypes and mutants
+</div>
+<div class="boxsubcontent">
+<a class="creativitylinks" href="/search/direct_search.pl?search=phenotypes">Solanaceae phenotypes search</a><br />
+<a class="creativitylinks" href="/phenome/">Submit phenotype information</a><br />
+<!-- a class="creativitylinks" href=
+"/mutants/mutants_main.pl">Other mutant pages</a -->
+</div>
+<div class="subheading">
+Sequences
+</div>
+<div class="boxsubcontent">
+<a class="creativitylinks" href="/search/direct_search.pl?search=bacs">Search BACs and BAC ends</a><br />
+<a class="creativitylinks" href="/search/direct_search.pl?search=EST">Search ESTs</a> | 
+<a class="creativitylinks" href="/search/direct_search.pl?search=Unigene">Unigenes</a> | 
+<a class="creativitylinks" href="/search/direct_search.pl?search=Loci">Loci</a>
+<!-- a class="creativitylinks" href="/search/library_search.pl?term=">cDNA libraries</a><br /> -->
+</div>
+<div class="subheading">
+Tools
+</div>
+<div class="boxsubcontent">
+<a class="creativitylinks" href="/tools/blast/">BLAST</a> | 
+<a class="creativitylinks" href="/tools/intron_detection/find_introns.pl">Intronfinder</a><br />
+<a class="creativitylinks" href="/tools/align_viewer/">Alignment</a> &amp;&nbsp;
+<a class="creativitylinks" href="/tools/tree_browser/">tree browser</a><br />
+<a class="creativitylinks" href="/downloads/">Downloads</a> | <a class="creativitylink" href="ftp://ftp.solgenomics.net/">FTP Site</a>
+</div>
+
+<div class="subheading">
+Order cDNA &amp; BAC clones
+</div>
+<div class="boxsubcontent">
+<a class="creativitylinks" href=
+"/help/ordering/index.pl">Ordering page</a>
+</div>

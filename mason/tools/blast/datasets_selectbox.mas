@@ -1,0 +1,121 @@
+
+<%doc>
+
+=head1 NAME
+
+/tools/blast/datasets_selectbox.mas - returns html for the select box with all the current blast datasets
+
+=head1 DESCRIPTION
+
+The name of the select box is "database". 
+
+Arguments:
+
+=over 5
+
+=item db_id
+
+The id of the database to be preselected.
+
+=back
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu> - based on Perl code by Rob Buels and others.
+
+=cut
+
+</%doc>
+
+
+<%args>
+
+ $db_id
+</%args>
+
+
+<%perl>
+
+use Memoize;
+use CXGN::BlastDB;
+
+memoize '_cached_file_modtime';
+sub _cached_file_modtime {
+  shift->file_modtime
+}
+
+sub blast_db_prog_selects {
+    my $db_id = shift;
+    sub opt {
+	my $db = shift;
+	my $timestamp = _cached_file_modtime($db)
+	    or return '';
+	$timestamp = strftime(' &nbsp;(%m-%d-%y)',gmtime _cached_file_modtime($db));
+	#my $seq_count = $db->sequences_count;
+	
+	[$db->blast_db_id, $db->title.$timestamp]
+    }
+
+    my @db_choices = map {
+	my @dbs = map [$_,opt($_)], grep _cached_file_modtime($_), $_->blast_dbs( web_interface_visible => 't');
+	@dbs ? ('__'.$_->name, @dbs) : ()
+    } CXGN::BlastDB::Group->search_like(name => '%',{order_by => 'ordinal, name'});
+    
+    my @ungrouped_dbs = grep _cached_file_modtime($_),CXGN::BlastDB->search( blast_db_group_id => undef, web_interface_visible => 't', {order_by => 'title'} );
+    if(@ungrouped_dbs) {
+	push @db_choices, '__Other',  map [$_,opt($_)], @ungrouped_dbs;
+    }
+
+    @db_choices or return '<span class="ghosted">The BLAST service is temporarily unavailable, we apologize for the inconvenience</span>';
+
+    # DB select box will either the db_id supplied, or what the user last selected, or the tomato combined blast db
+    my $selected_db_id = $db_id || $prefs->get_pref('last_blast_db_id')
+	|| do {
+	    my $d = CXGN::BlastDB->retrieve( web_interface_visible => 't', file_base => 'bacs/all_tomato_seqs' );
+	    $d &&= $d->blast_db_id
+    };
+
+  #warn "got pref last_blast_db_file_base '$selected_db_file_base'\n";
+
+  my %prog_descs = ( blastn  => 'BLASTN (nucleotide to nucleotide)',
+		     blastx  => 'BLASTX (nucleotide to protein; query translated to protein)',
+		     blastp  => 'BLASTP (protein to protein)',
+		     tblastx => 'TBLASTX (protein to protein; both database and query are translated)',
+		     tblastn => 'TBLASTN (protein to nucleotide; database translated to protein)',
+		   );
+
+  my @program_choices = map {
+    my ($db) = @$_;
+    if($db->type eq 'protein') {
+      [map [$_,$prog_descs{$_}], 'blastx','blastp']
+    } else {
+      [map [$_,$prog_descs{$_}], 'blastn','tblastx','tblastn']
+    }
+  } grep ref, @db_choices;
+
+  @db_choices = map {ref($_) ? $_->[1] : $_} @db_choices;
+
+  return hierarchical_selectboxes_html( parentsel => { name => 'database',
+						       choices =>
+						       \@db_choices,
+						       $selected_db_id ? (selected => $selected_db_id) : (),
+						     },
+					childsel  => { name => 'program',
+						     },
+					childchoices => \@program_choices
+				      );
+}
+
+my ($databases, $programs, $programs_js) = blast_db_prog_selects($db_id);
+
+</%perl>
+
+$databases
+
+
+$programs
+
+$programs_js
+
+
+

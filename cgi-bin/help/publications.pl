@@ -1,0 +1,11 @@
+use strict;
+use CXGN::Tools::File;
+use CXGN::Page;
+use CXGN::VHost;
+my $vhost_conf=CXGN::VHost->new();
+my $documents_folder=$vhost_conf->get_conf('basepath').$vhost_conf->get_conf('documents_subdir');
+my $page=CXGN::Page->new('SOL Publications','john');
+my $PUBLICATIONS=CXGN::Tools::File::file_contents("$documents_folder/SGNpublications.txt")||'';
+$page->header('SGN Publications','SGN Publications');
+print $PUBLICATIONS;
+$page->footer();

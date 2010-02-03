@@ -1,0 +1,11 @@
+
+<h1>This is a test</h1>
+
+<%perl>
+
+use strict;
+
+my $message = "This is also a test ";
+print "$message\n";
+
+</%perl>

@@ -1,0 +1,31 @@
+
+<div>
+<p>SGN provides various data files for download via anonymous FTP and
+anonymous rsync.
+<!-- FIXME: a list of kinds of things to available to download should
+     go here.
+<ul>
+<li></li>
+</ul>
+-->
+</p>
+
+<p>
+For manually downloading a few files once in a while, anonymous FTP is
+particularly convenient.  From a web browser, SGN's ftp site can be
+reached at <a
+href="ftp://ftp.sgn.cornell.edu/">ftp://ftp.sgn.cornell.edu/</a>.
+From other FTP clients, when prompted for a username enter
+<em>anonymous</em> and when prompted for password enter your email
+address.
+</p>
+
+<p> For keeping a set of files up to date with the files we make
+available, <a href="http://samba.anu.edu.au/rsync/">rsync</a> is a
+useful tool.  To retrieve files from our anonymous rsync server, use
+the URL
+<em>rsync://rsync.sgn.cornell.edu/public/</em>.  For
+example, to retrieve all our map and marker data on a Unix/Linux
+shell use the command:</p>
+<pre>\$ rsync -az rsync://rsync.sgn.cornell.edu/public/maps_and_markers/ .</pre>
+</div>

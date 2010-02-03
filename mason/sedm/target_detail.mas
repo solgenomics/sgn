@@ -1,0 +1,44 @@
+<%doc>
+  NAME: target_detail.mas
+  VERSION: 1.0
+  DESCRIPTION: This is a mason code to get different sections of the target.pl web_page.
+               It get the data form the different tables using DBIx::Class objects (but they should be replaced for the 
+               second level objects as soon as they are ready) 
+  AUTHOR: Aureliano Bombarely (ab782@cornell.edu)
+</%doc>
+
+
+<%perl>
+use strict;
+use warnings;
+
+use CXGN::DB::Connection;
+use CXGN::SEDM::Schema;
+
+use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
+
+my $dbh = CXGN::DB::Connection->new();
+my $schema = CXGN::SEDM::Schema->connect( sub { $dbh }, { on_connect_do => ['SET search_path TO sed,public;'] }, );
+
+my ($target_row);
+if (exists $ARGS{'id'}) {
+   ($target_row) = $schema->resultset('Targets')->search( { target_id => $ARGS{'id'} } );
+} elsif (exists $ARGS{'name'}) {
+   ($target_row) = $schema->resultset('Targets')->search( { target_name => $ARGS{'name'} } );
+}
+
+ 
+## If do not exists the id or name it will return an undef target. The basic_info.mas will return the message error
+
+
+</%perl>
+
+
+<br>
+
+<& 
+   $ARGS{'path'}.'sedm/target/basic_info.mas', 
+   target =>$target_row 
+&>
+
+

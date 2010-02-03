@@ -1,0 +1,257 @@
+<?xml version="1.0" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>DAS_HOWTO</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rev="made" href="mailto:root@localhost" />
+</head>
+
+<body style="background-color: white">
+
+<p><a name="__index__"></a></p>
+<!-- INDEX BEGIN -->
+
+<ul>
+
+	<li><a href="#using_gbrowse_as_a_das_server___client">USING GBROWSE AS A DAS SERVER &amp; CLIENT</a></li>
+	<ul>
+
+		<li><a href="#configuring_gbrowse_to_be_a_das_server">CONFIGURING GBROWSE TO BE A DAS SERVER</a></li>
+		<li><a href="#configuring_gbrowse_to_be_a_das_client">CONFIGURING GBROWSE TO BE A DAS CLIENT</a></li>
+	</ul>
+
+	<li><a href="#support">SUPPORT</a></li>
+	<li><a href="#author">AUTHOR</a></li>
+</ul>
+<!-- INDEX END -->
+
+<hr />
+<p>
+</p>
+<h1><a name="using_gbrowse_as_a_das_server___client">USING GBROWSE AS A DAS SERVER &amp; CLIENT</a></h1>
+<p>The Distributed Annotation System (DAS; www.biodas.org) is a simple
+protocol for sharing and integrating genomic annotations.  GBrowse can
+act both as a DAS front end for visualization and as a DAS server for
+sharing your annotations.</p>
+<p>You will need to install the Perl Bio::Das module before you can use
+any of the DAS features.  This module is available from CPAN
+(<a href="http://www.cpan.org">http://www.cpan.org</a>), or via the ActiveState PPM tool.</p>
+<p>
+</p>
+<h2><a name="configuring_gbrowse_to_be_a_das_server">CONFIGURING GBROWSE TO BE A DAS SERVER</a></h2>
+<p>At installation time, the ``das'' CGI script was installed in your
+CGI-BIN directory.  This script is the core of the GBrowse DAS server.
+None of the GBrowse databases on your system are initially available
+as DAS sources until you explicitly activate them by adding the ``das
+mapmaster'' option to the configuration file.  Similarly, none of the
+tracks in a given database are exported as DAS-available tracks until
+you explicitly add a ``das category'' option to the track configuration
+stanza.  Together these two features allow you to select which
+databases will be exported as DAS-accessible databases, and which
+tracks within a DAS-accessible database will be visible to the outside
+world.</p>
+<p>The following DAS-specific options are recognized:</p>
+<dl>
+<dt><strong><a name="item_das_mapmaster">das mapmaster</a></strong>
+
+<dd>
+<p>This option, which should appear somewhere in the [GENERAL] section,
+indicates that the database should be made available as a DAS source.
+The value of the option corresponds to the URL of the DAS reference
+server for this data source, or ``SELF'' if this database is its own
+reference server.  (See <a href="http://www.biodas.org/">http://www.biodas.org/</a> for an explanation of
+what reference servers are.)</p>
+</dd>
+<dd>
+<p>Examples:</p>
+</dd>
+<dd>
+<pre>
+        das mapmaster = SELF</pre>
+</dd>
+<dd>
+<pre>
+        das mapmaster = <a href="http://www.wormbase.org/db/das/elegans">http://www.wormbase.org/db/das/elegans</a></pre>
+</dd>
+</li>
+<dt><strong><a name="item_das_category">das category</a></strong>
+
+<dd>
+<p>This option must appear in each of the track configuration stanzas
+that you wish to export as DAS-accessible data.  Note that it is not
+sufficient to define a das category in the [TRACK DEFAULTS] section.
+The value of this option should be one of:</p>
+</dd>
+<dd>
+<pre>
+    repeat
+    transcription
+    translation
+    variation
+    experimental
+    structural
+    miscellaneous</pre>
+</dd>
+<dd>
+<p>which correspond to ``DAS annotation type categories'' as explained on
+the DAS web site.</p>
+</dd>
+</li>
+<dt><strong><a name="item_das_landmark">das landmark</a></strong>
+
+<dd>
+<p>If this option appears in a track configuration stanza and is set to a
+true value (any non-zero value) then the DAS server will treat the
+features in this track as landmarks and allow remote users to search
+for these features by using their class and name.</p>
+</dd>
+</li>
+<dt><strong><a name="item_das_subparts">das subparts</a></strong>
+
+<dd>
+<p>If this option appears in a track configuration stanza and is set to a
+true (non-zero) value, then the DAS server will indicate that features
+of this type contain subparts of a genome assembly.  This relationship
+can be used to indicate that a contig contains reads, for example.
+This option is only used for reference servers that serve genomic
+assemblies and <strong>is not well tested</strong> so should probably be avoided for
+now.</p>
+</dd>
+</li>
+<dt><strong><a name="item_das_superparts">das superparts</a></strong>
+
+<dd>
+<p>If this option appears in a track configuration stanza and is set to a
+true (non-zero) value, then the DAS server will indicate that features
+of this type are themselves superparts of a genome assembly.  This
+relationship can be used to indicate that a read feature is contained
+in a contig.  This option is only used for reference servers that
+serve genomic assemblies and <strong>is not well tested</strong> so should probably
+be avoided for now.</p>
+</dd>
+</li>
+<dt><strong><a name="item_das_flatten">das flatten</a></strong>
+
+<dd>
+<p>If this option is set to true, then multipart features, such as genes,
+will be flattened into their lowest level subparts (e.g. exons). This
+is needed to get some features to display correctly on the Ensembl
+contig browser. Example:</p>
+</dd>
+<dd>
+<pre>
+ das flatten = 1</pre>
+</dd>
+</li>
+<dt><strong><a name="item_das_glyph">das glyph</a></strong>
+
+<dd>
+<p>By default the stylesheet generated by your DAS server will specify
+that the DAS browser use the same glyph as specified by the ``glyph''
+option. However, not all servers support all GBrowse glyphs. Use ``das
+glyph'' to force the glyph to one of the standard DAS glyphs.  Example:</p>
+</dd>
+<dd>
+<pre>
+ das glyph = box</pre>
+</dd>
+</li>
+<dt><strong><a name="item_das_type">das type</a></strong>
+
+<dd>
+<p>Some servers (e.g. Ensembl) reserve special behaviors for certain
+feature types, such as ``GENE''. Use ``das type'' to force the type
+reported for all features in the track. Example:</p>
+</dd>
+<dd>
+<pre>
+ das type = GENE</pre>
+</dd>
+</li>
+</dl>
+<p>
+</p>
+<h2><a name="configuring_gbrowse_to_be_a_das_client">CONFIGURING GBROWSE TO BE A DAS CLIENT</a></h2>
+<p>GBrowse can run as a DAS client as well, either on a track-by-track
+basis, or by configuring GBrowse to run entirely off a DAS
+source. However, because of a poorly characterized interaction between
+the Bio::Das module and Perl 5.6, it is recommended that you use Perl
+5.8.1 or higher for this. Otherwise you may experience out of memory
+errors.</p>
+<p>You can display individual DAS tracks in GBrowse just by typing in the
+URL of a DAS server in the ``Add remote annotations'' section of the
+GBrowse main web page.  The syntax of the URL is simple - some examples:</p>
+<dl>
+<dt><strong><a name="item_http_3a_2f_2fwww_2ewormbase_2eorg_2fdb_2fdas_2fele"><a href="http://www.wormbase.org/db/das/elegans/features?segment=I">http://www.wormbase.org/db/das/elegans/features?segment=I</a></a></strong>
+
+<dd>
+<p>Insert all features of C. elegans chromosome I</p>
+</dd>
+</li>
+<dt><strong><a href="http://www.wormbase.org/db/das/elegans/features?segment=I:1000,2000">http://www.wormbase.org/db/das/elegans/features?segment=I:1000,2000</a></strong>
+
+<dd>
+<p>Insert all features of a given segment of C. elegans chromosome I.</p>
+</dd>
+</li>
+<dt><strong><a href="http://www.wormbase.org/db/das/elegans/features?segment=I:1000,2000;category=SAGE_tag:SAGE_tag_genomic_unique">http://www.wormbase.org/db/das/elegans/features?segment=I:1000,2000;category=SAGE_tag:SAGE_tag_genomic_unique</a></strong>
+
+<dd>
+<p>Insert all unique SAGE tags from the given segment of chromosome I.</p>
+</dd>
+</li>
+<dt><strong><a name="item_http_3a_2f_2fgenome_2ecse_2eucsc_2eedu_2fcgi_2dbin"><a href="http://genome.cse.ucsc.edu/cgi-bin/das/hg18/types">http://genome.cse.ucsc.edu/cgi-bin/das/hg18/types</a></a></strong>
+
+<dd>
+<p>Insert all known types in human genome build 18.</p>
+</dd>
+</li>
+</dl>
+<p>You may wish to use the ``remote sources'' option to preconfigure a
+popup menu of remote DAS servers that users access frequently.</p>
+<p>Alternatively, you can configure GBrowse so that it runs entirely off
+a DAS server.  To do this, simply set the db_adaptor and db_args
+options to use the Bio::Das data adaptor.  For example:</p>
+<pre>
+ [GENERAL]
+ description   = Human July 2003 Genome at UCSC
+ db_adaptor    = Bio::Das
+ db_args       = -source <a href="http://genome.cse.ucsc.edu/cgi-bin/das">http://genome.cse.ucsc.edu/cgi-bin/das</a>
+                 -dsn    hg16</pre>
+<p>The db_args option expects a -source argument that points to the base
+of the DAS server, and a -dsn argument that points to the data source
+name.</p>
+<p>You will also need to configure a track for each of the feature types
+served by the remote DAS server. You can get a list of such feature
+types simply by fetching the following form of DAS URL:</p>
+<pre>
+      <a href="http://genome.cse.ucsc.edu/cgi-bin/das/hg16/types">http://genome.cse.ucsc.edu/cgi-bin/das/hg16/types</a></pre>
+<p>Alternatively, to make your life more convenient, GBrowse comes with a
+utility script called make_das_conf.pl that will create a
+rough-and-ready configuration file for you, given the URL and data
+source name of a DAS server.  Instructions on using make_das_conf.pl
+can be found using the ``perldoc'' command:</p>
+<pre>
+   % perldoc make_das_conf.pl</pre>
+<p>After generating the config file, you will probably want to customize
+it.  Particularly in need of customization are typically the glyphs
+used in the track definitions, and the aggregators.</p>
+<p>
+</p>
+<hr />
+<h1><a name="support">SUPPORT</a></h1>
+<p>For further information, bug reports, etc, please consult the mailing
+lists at www.gmod.org.  The main mailing list for gbrowse support is
+&lt;a <a href="mailto:href=``mailto:gmod-gbrowse@lists.sourceforge.net''>">href=``mailto:gmod-gbrowse@lists.sourceforge.net''></a><a href="mailto:gmod-gbrowse@lists.sourceforge.net</a>">gmod-gbrowse@lists.sourceforge.net</a></a>.</p>
+<p>For support with DAS, please subscribe to the biodas mailing list.
+Details can be found at <a href="http://www.biodas.org/">http://www.biodas.org/</a></p>
+<p>
+</p>
+<hr />
+<h1><a name="author">AUTHOR</a></h1>
+<p>Lincoln D. Stein, <a href="mailto:lstein@cshl.edu">lstein@cshl.edu</a></p>
+
+</body>
+
+</html>

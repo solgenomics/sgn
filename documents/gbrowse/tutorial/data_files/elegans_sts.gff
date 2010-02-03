@@ -1,0 +1,10 @@
+##gff-version 2
+##date Tue Feb 24 06:39:41 2004
+##sequence-region C01F4 1 40000
+##source gbrowse GFFDumper plugin
+##NOTE: Selected features dumped.
+C01F4	Orfeome_project	reagent	3319	17668	.	+	.	PCR_product mv_ZK783.1 ; Amplified 0
+C01F4	Orfeome_project	reagent	18584	20445	.	-	.	PCR_product mv_G_YK5686 ; Amplified 1
+C01F4	Orfeome_project	reagent	24509	25425	.	-	.	PCR_product mv_ZK783.3 ; Amplified 1
+C01F4	Orfeome_project	reagent	26525	33359	.	-	.	PCR_product mv_ZK783.4 ; Amplified 0
+C01F4	Orfeome_project	reagent	38660	49506	.	+	.	PCR_product mv_C18H2.1 ; Amplified 1

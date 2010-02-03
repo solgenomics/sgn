@@ -1,0 +1,622 @@
+<!-- COUNT  1 -->
+<!-- NOTE: THIS FILE IS DEPRECATED. DO ***NOT*** EDIT THIS FILE. Edit the file in /data/prod/public/sgn_homepage -->
+<div class="subheading">
+<a href="http://sgn.cornell.edu/chado/publication.pl?pub_id=18033"> HPLC Assay of Tomato Carotenoids: Validation of a Rapid Microextraction Technique.</a></div>
+<div class="boxsubcontent">
+Serino et al. J. Agric. Food Chem. (2009).  
+</div>
+
+<div class="subheading">
+<a href="http://sgn.cornell.edu/chado/publication.pl?pub_id=18031"> Brassinosteroids interact negatively with jasmonates in the formation of anti-herbivory traits in tomato</a></div>
+<div class="boxsubcontent">
+Campos et al. J. Exp. Bot (2009).  
+</div>
+
+<div class="subheading">
+<a href="http://sgn.cornell.edu/chado/publication.pl?pub_id=18027">Virus resistance induced by NB-LRR proteins involves Argonaute4-dependent translational control.</a></div>
+<div class="boxsubcontent">
+Bhattacharjee et al. The Plant J. (2009).  
+</div>
+
+<div class="subheading">
+<a href="http://sgn.cornell.edu/chado/publication.pl?pub_id=18007"> The potato R locus codes for dihydroflavonol 4-reductase. </a></div>
+<div class="boxsubcontent">
+Zhang et al. TAG. (2009).  
+</div>
+
+<div class="subheading">
+<a href="http://sgn.cornell.edu/chado/publication.pl?pub_id=17982"> Genome organization of the tomato sun locus and characterization of the unusual retrotransposon Rider. </a></div>
+<div class="boxsubcontent">
+Jiang et al. Plant J. (2009).  
+</div>
+
+<div class="subheading">
+<a href="http://sgn.cornell.edu/chado/publication.pl?pub_id=17988">A dynamic interface for capsaicinoid systems biology. </a></div>
+<div class="boxsubcontent">
+Mazourek et al. Plant Physiol. (2009).  
+</div>
+
+<div class="subheading">
+<a href="http://sgn.cornell.edu/chado/publication.pl?pub_id=17872">A Solanum lycopersicum x Solanum pimpinellifolium Linkage Map of Tomato Displaying Genomic Locations of R-Genes, RGAs, and Candidate Resistance/Defense-Response ESTs. </a></div>
+<div class="boxsubcontent">
+Sharma et al. Int J Plant Genomics (2008).  
+</div>
+
+<div class="subheading">
+<a href="http://sgn.cornell.edu/chado/publication.pl?pub_id=17941">Molecular characterization and expression analysis of two distinct putrescine N-methyltransferases from roots of Anisodus acutangulus.</a></div>
+<div class="boxsubcontent">
+Kai et al. Physiol Plant. (2009).  
+</div>
+
+<div class="subheading">
+<a href="http://sgn.cornell.edu/chado/publication.pl?pub_id=17932">The role of auxin and gibberellin in tomato fruit set.</a></div>
+<div class="boxsubcontent">
+de Jong et al. J Exp. Bot.(2009).  
+</div>
+
+<a href="http://sgn.cornell.edu/chado/publication.pl?pub_id=17878"> Durability of Resistance in Tomato and Pepper to Xanthomonads Causing Bacterial Spot.</a></div>
+<div class="boxsubcontent">
+Stall et al. Annu. Rev. Phytopathol. (2009).  
+</div>
+
+<div class="subheading">
+<a href="http://sgn.cornell.edu/chado/publication.pl?pub_id=17924">The flowering hormone florigen functions as a general systemic regulator of growth and termination.</a></div>
+<div class="boxsubcontent">
+Shalit et al. PNAS (2009).  
+</div>
+
+<div class="subheading">
+<a href="http://sgn.cornell.edu/chado/publication.pl?pub_id=17873">Leucine Aminopeptidase Regulates Defense and Wound Signaling in Tomato Downstream of Jasmonic Acid</a></div>
+<div class="boxsubcontent">
+Fowler et al. Plant Cell (2009).  
+</div>
+
+<div class="subheading">
+<a href="http://sgn.cornell.edu/chado/publication.pl?pub_id=17869">Improving plant stress tolerance and yield production: is the tonoplast aquaporin SlTIP2;2 a key to isohydric to anisohydric conversion?</a></div>
+<div class="boxsubcontent">
+Sade et al. The New phytologist (2009).  
+</div>
+
+<div class="subheading">
+<a href="http://sgn.cornell.edu/chado/publication.pl?pub_id=17864">The NAC-domain transcription factor GOBLET specifies leaflet boundaries in compound tomato leaves.</a></div>
+<div class="boxsubcontent">
+Berger et al. Development (2009).  
+</div>
+
+<div class="subheading">
+<a href="http://sgn.cornell.edu/chado/publication.pl?pub_id=17854">Co-ordinated regulation of flowering time, plant architecture and growth by FASCICULATE: the pepper orthologue of SELF PRUNING.</a></div>
+<div class="boxsubcontent">
+Elitzur et al. J Exp Bot. (2009).  
+</div>
+
+
+<div class="subheading">
+<a href="http://www3.interscience.wiley.com/journal/121587989/abstract?">Crosstalk between biotic and abiotic stress responses in tomato is mediated by the AIM1 transcription factor</a></div>
+<div class="boxsubcontent">
+AbuQamar et al. Plant J. (2008).  
+</div>
+
+<a href="http://jxb.oxfordjournals.org/cgi/content/abstract/ern294v1">Flavour compounds in tomato fruits: identification of loci and potential pathways affecting volatile composition</a></div>
+<div class="boxsubcontent">
+Mathieu et al. J Exp. Bot. (2008).  
+</div>
+
+<div class="subheading">
+<a href="/chado/publication.pl?pub_id=17849">A conserved molecular framework for compound leaf development</a></div>
+<div class="boxsubcontent">
+Blein et al. Science (2008).  
+</div>
+
+<div class="subheading">
+<a href="/chado/publication.pl?pub_id=17846">SlTPR1, a tomato tetratricopeptide repeat protein, interacts with the ethylene receptors NR and LeETR1, modulating ethylene and auxin responses and development</a></div>
+<div class="boxsubcontent">
+Lin et al. J Exp Bot. (2008).  
+</div>
+
+<div class="subheading">
+<a href="/chado/publication.pl?pub_id=17842">The Making of a Compound Inflorescence in Tomato and Related Nightshades</a></div>
+<div class="boxsubcontent">
+Lippman et al. PLoS Biology (2008).  
+</div>
+
+<a href="http://www.plantphysiol.org/cgi/content/abstract/pp.108.131367v1">Aucsia Genes Silencing Causes Parthenocarpic Fruit Development in Tomato</a></div>
+<div class="boxsubcontent">
+Molesini et al. Plant Physiol.(2000).  
+</div>
+
+<div class="subheading">
+<a href="http://www.springerlink.com/content/5fb2t6ut34ajnwg3/">Molecular characterization of the expression of distinct classes of cyclins during the early development of tomato fruit</a></div>
+<div class="boxsubcontent">
+Joubes et al. Planta (2000).  
+</div>
+
+<div class="subheading">
+<a href="http://www.nature.com/nbt/journal/vaop/ncurrent/abs/nbt.1506.html">Enrichment of tomato fruit with health-promoting anthocyanins by expression of select transcription factors</a></div>
+<div class="boxsubcontent">
+Butelli et al. Nat Biotechnol. (2008).  
+</div>
+
+<a href="http://www.springerlink.com/content/m2127743g8261878/">  Phenotypic and genetic characterization of the pistillate  mutation in tomato</a></div>
+<div class="boxsubcontent">
+Olimpieri and Mazzucato. TAG (2008).  
+</div>
+
+<div class="subheading">
+<a href="http://www.plantphysiol.org/cgi/content/abstract/pp.108.124420v1">The Pollen Receptor Kinase LePRK2 Mediates Growth-Promoting Signals and Positively Regulates Pollen Germination and Tube Growth</a></div>
+<div class="boxsubcontent">
+Zhang et al. Plant Physiol. (2008).  
+</div>
+
+<div class="subheading">
+<a href=" http://www3.interscience.wiley.com/journal/121391359/abstract">The <i>legwd</i> mutant uncovers the role of starch phosphorylation in pollen development and germination in tomato</a></div>
+<div class="boxsubcontent">
+Nashilevitz et al. Plant J. (2008).  
+</div>
+
+<div class="subheading">
+<a href="http://www3.interscience.wiley.com/journal/121398965/abstract">The Solanum lycopersicum Auxin Response Factor 7 (SlARF7) Regulates Auxin Signaling during Tomato Fruit Set and Development</a></div>
+<div class="boxsubcontent">
+de Jong et al. Plant J. (2008).  
+</div>
+
+
+<div class="subheading">
+<a href="http://www3.interscience.wiley.com/journal/120776986/abstract">High-resolution chromosome mapping of BACs using multi-colour FISH and pooled-BAC FISH as a backbone for sequencing tomato chromosome 6</a></div>
+<div class="boxsubcontent">
+Szinay et al. Plant J. (2008).  
+</div>
+
+<div class="subheading">
+<a href="http://www.springerlink.com/content/910r5l07277n4rx7/">FISH mapping and molecular organizaton of the major repetitive sequences of tomato</a></div>
+<div class="boxsubcontent">
+Chang et al. Chromosome Res. (2008).  
+</div>
+
+<div class="subheading">
+<a href="http://www3.interscience.wiley.com/journal/121377235/abstract">Auxin-induced fruit-set in tomato is mediated in part by giberrellins</a></div>
+<div class="boxsubcontent">
+Serrani et al. Plant J. (2008).  
+</div>
+
+<a href="http://genome.cshlp.org/cgi/content/abstract/gr.080127.108v1">Deep sequencing of tomato short RNAs identifies microRNAs targeting genes involved in fruit ripening</a></div>
+<div class="boxsubcontent">
+Moxon et al. Genome Res. (2008).  
+</div>
+
+<div class="subheading">
+<a href="http://jxb.oxfordjournals.org/cgi/content/abstract/59/8/2253">Interaction study of MADS-domain proteins in tomato </a></div>
+<div class="boxsubcontent">
+Leseberg et al. J Exp Bot. (2008).  
+</div>
+
+<div class="subheading">
+<a href="http://www.ncbi.nlm.nih.gov/pubmed/18640618">A snapshot of the Chinese SOL Project</a></div>
+<div class="boxsubcontent">
+Li et al. J Genet Genomics (2008).  
+</div>
+
+<div class="subheading">
+<a href="http://www.nature.com/ng/journal/v40/n6/full/ng.144.html#abs">Regulatory change in YABBY-like transcription factor led to evolution of extreme fruit size during tomato domestication</a></div>
+<div class="boxsubcontent">
+Cong et al. Nature Genetics (2008).  
+</div>
+
+<div class="subheading">
+<a href="http://www.plantcell.org/cgi/content/abstract/tpc.108.059477v2">Tomato Protein Kinase 1b Mediates Signaling of Plant Responses to Necrotrophic Fungi and Insect Herbivor</a></div>
+<div class="boxsubcontent">
+AbuQamar et al. Plant Cell (2008).  
+</div>
+
+<div class="subheading">
+<a href="http://www.springerlink.com/content/dr74356443013511/"> P19-dependent and P19-independent reversion of F1-V gene silencing in tomato</a></div>
+<div class="boxsubcontent">
+Alvarez et al. Plant Mol. Biol. (2008).  
+</div>
+
+
+<div class="subheading">
+<a href="http://jxb.oxfordjournals.org/cgi/content/full/ern153v1">Hormonal changes during salinity-induced leaf senescence in tomato (Solanum lycopersicum L.)</a></div>
+<div class="boxsubcontent">
+Ghanem et al. J Exp Bot. (2008).  
+</div>
+
+<div class="subheading">
+<a href="http://www.springerlink.com/content/du66488g5u321144">A GAMYB-like  gene in tomato and its expression during seed germination</a></div>
+<div class="boxsubcontent">
+Gong and Bewley. Planta (2008).  
+</div>
+
+<div class="subheading">
+<a href="http://www.springerlink.com/content/y2pr607243p63306"> Molecular identification and characterization of the tomato flagellin receptor LeFLS2, an orthologue of Arabidopsis  FLS2 exhibiting characteristically different perception specificities</a></div>
+<div class="boxsubcontent">
+Robatzek S. et al. Plant Mol Biol. (2007).  
+</div>
+
+<div class="subheading">
+<a href="http://www.nature.com/emboj/journal/v25/n1/full/7600910a.html">Adi3 is a Pdk1-interacting AGC kinase that negatively regulates plant cell death.</a></div>
+<div class="boxsubcontent">
+Devarenne, T. P.  et al. The EMBO J. (2006).  
+</div>
+
+
+<div class="subheading">
+<a href="http://www.springerlink.com/content/v8823pk7h7g51733/">Tissue dependent variations of DNA methylation and endoreduplication levels during tomato fruit development and ripening</a></div>
+<div class="boxsubcontent">
+Teyssier, E. et al. Planta (2008).  
+</div>
+
+
+<div class="subheading">
+<a href="http://bioinformatics.oxfordjournals.org/cgi/content/full/24/3/422">The SGN comparative map viewer</a></div>
+<div class="boxsubcontent">
+Mueller L.A. et al. Bioinformatics (2008).  
+</div>
+
+<div class="subheading">
+<a href= "http://www.biomedcentral.com/1471-2229/8/34">Comparative BAC end sequence analysis of tomato and potato reveals overrepresentation of specific gene families in potato</a></div>
+<div class="boxsubcontent">
+Datema E. et al. BMC Plant Biol. (2008).  
+</div>
+
+<div class="subheading">
+<a href= "http://www.pnas.org/cgi/content/abstract/99/20/13302">A new class of regulatory genes underlying the cause of pear-shaped tomato fruit.</a></div>
+<div class="boxsubcontent">
+Liu J et al. PNAS (2002).  
+</div>
+
+<div class="subheading">
+<a href= "http://www.blackwell-synergy.com/doi/abs/10.1111/j.1399-3054.2007.01035.x">Characterization of genes controlling stamen identity and development in a parthenocarpic tomato mutant indicates a role for the DEFICIENS ortholog in the control of fruit set</a></div>
+<div class="boxsubcontent">
+Mazzucato A. et al. Physiol. Plant (2008).  
+</div>
+
+<div class="subheading">
+<a href= "http://www.sciencemag.org/cgi/content/abstract/319/5869/1527">A Retrotransposon-Mediated Gene Duplication Underlies Morphological Variation of Tomato Fruit</a ></div>
+<div class="boxsubcontent">
+Xiao H. et al. Science (2008).  
+</div>
+
+<div class="subheading">
+<a href= "http://www.blackwell-synergy.com/doi/abs/10.1111/j.1365-313X.2005.02410.x">The Pun1 gene for pungency in pepper encodes a putative acyltransferase.</a></div>
+<div class="boxsubcontent">
+Stewart C. et al.  
+</div>
+
+<div class="subheading">
+<a href= "http://www.blackwell-synergy.com/doi/abs/10.1046/j.1365-313X.1998.00202.x">Differential regulation of the tomato ETR gene family throughout plant development</a></div>
+<div class="boxsubcontent">
+Coralie C. Lashbrook,  Denise M. Tieman & Harry J. Klee 
+</div>
+
+
+<div class="subheading">
+<a href="http://www.springerlink.com/content/u7082t0x00554128/">Synergism between the chaperone-like activity of the stress regulated ASR1 protein and the osmolyte glycine-betaine.</a></div>
+<div class="boxsubcontent">
+Zvia Konrad and Dudy Bar-Zvi
+</div>
+
+<div class="subheading">
+<a href="http://www.plantphysiol.org/cgi/content/abstract/145/4/1435">A BELL1-like gene of potato is light activated and wound inducible.</a></div>
+<div class="boxsubcontent">
+Mithu Chatterjee, Anjan K. Banerjee and David J. Hannapel
+Plant Physiology 145:1435-1443 (2007)
+</div>
+
+<div class="subheading">
+<a href="http://www.blackwell-synergy.com/doi/abs/10.1111/j.1742-4658.2007.06219.x">Phytoene synthase genes in tomato (Solanum lycopersicum L.) - new data on the structures, the deduced amino acid sequences and the expression patterns</a></div>
+<div class="boxsubcontent">
+Giovanni Giorio, Adriana Lucia Stigliani, Caterina D'Ambrosio (2008)
+FEBS Journal 275 (3), 527Ð535. 
+</div>
+
+<div class="subheading">
+<a href="http://www.springerlink.com/content/96076v7101171568/">The novel gene Ny-1  on potato chromosome IX confers hypersensitive resistance to Potato virus Y  and is an alternative to Ry  genes in potato breeding for PVY resistance</a></div>
+<div class="boxsubcontent">
+K. Szajko, M. Chrzanowska, K. Witek, D. Strzelczyk-Zyta, H. Zagórska, C. Gebhardt, J. Hennig and W. Marczewski 
+</div>
+
+<div class="subheading">
+<a href="http://www.biomedcentral.com/1471-2164/8/465">Diversity in conserved genes in tomato</a></div>
+<div class="boxsubcontent">
+Allen E Van Deynze, Kevin Stoffel, Robin C Buell, Alexander Kozik, Jia Liu, Esther van der Knaap and David Francis
+</div>
+
+<div class="subheading">
+<a href="http://www.blackwell-synergy.com/doi/abs/10.1111/j.1365-313X.2007.03283.x?ai=sx&ui=93c9&af=T">Nitric oxide accumulation is required for molecular and physiological
+responses to iron deficiency in tomato roots</a></div>
+<div class="boxsubcontent">
+Magdalena Graziano, Lorenzo Lamattina
+</div>
+	
+<div class="subheading">
+<a href="http://www.ncbi.nlm.nih.gov/sites/entrez?db=pubmed&cmd=search&term=17962563">Changes in regulation of a transcription factor lead to autogamy in cultivated tomatoes.</a></div>
+<div class="boxsubcontent">
+Chen KY, Cong B, Wing R, Vrebalov J, Tanksley SD. [Oct 26 2007]
+</div>
+	
+<div class="subheading">
+<a href="http://www.springerlink.com/content/r55007lg6r579v26">Tomato fruit set driven by pollination or by the parthenocarpic fruit allele are mediated by transcriptionally-regulated gibberellin biosynthesis.</a></div>
+<div class="boxsubcontent">
+Olimpieri I, Siligato F, Caccia R, Mariotti L, Ceccarelli N, Soressi GP, Mazzucato A [Oct 9, 2007]
+</div>
+
+<div class="subheading">
+<a href="http://www.genetics.org/cgi/content/abstract/176/4/2131">Predicting and testing physical locations of genetically mapped loci on tomato pachytene chromosome <em>1</em></a></div>
+<div class="boxsubcontent">
+S.-B. Chang, L.K. Anderson, J.D. Sherman, S.M. Royer, and S.M. Stack. [Sept 27, 2007]
+</div>
+
+<div class="subheading">
+<a href="http://www.pnas.org/cgi/content/abstract/0703203104v1">An inhibitor of viral RNA replication is encoded by a plant resistance gene</a></div>
+<div class="boxsubcontent">
+Kazuhiro Ishibashi, Kiyoshi Masuda, Satoshi Naito, Tetsuo Meshi, and Masayuki Ishikawa [Sept 4, 2007]
+</div>
+
+<div class="subheading">
+<a href="http://www.ncbi.nlm.nih.gov/sites/entrez?db=pubmed&cmd=search&term=17637671">A bacterial E3 ubiquitin ligase targets a host protein kinase to disrupt plant immunity.</a></div>
+<div class="boxsubcontent">
+Rosebrock TR, Zeng L, Brady JJ, Abramovitch RB, Xiao F, Martin GB.
+</div>
+	
+<div class="subheading">
+<a href="/documents/community/feature/papers/gerats_natgen_2007.pdf">A conserved microRNA module exerts homeotic control over Petunia hybrida and Antirrhinum majus floral organ identity</a></div>
+<div class="boxsubcontent">
+Maria Cartolano, Rosa Castillo, Nadia Efremova, Markus Kuckenberg, Jan Zethof, Tom Gerats, Zsuzsanna Schwarz-Sommer and Michiel Vandenbussche
+</div>
+
+<div class="subheading">
+<a target="_new" href="http://www.ncbi.nlm.nih.gov/sites/entrez?Db=pubmed&Cmd=ShowDetailView&TermToSearch=17587232&ordinalpos=4&itool=EntrezSystem2.PEntrez.Pubmed.Pubmed_ResultsPanel.Pubmed_RVDocSum">Capsicum annuum CCR4-associated factor CaCAF1 is necessary for plant development and defence response.</a></div>
+<div class="boxsubcontent">
+Sarowar S, Oh HW, Cho HS, Baek KH, Seong ES, Joung YH, Choi GJ, Lee S, Choi D.
+</div>
+
+<div class="subheading">
+<a href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=pubmed&cmd=Retrieve&dopt=AbstractPlus&list_uids=17486095">Regulation of LANCEOLATE by miR319 is required for compound-leaf development in tomato</a>
+</div>
+<div class="boxsubcontent">
+Ori N, Cohen AR, Etzioni A, Brand A, Yanai O, Shleizer S, Menda N, Amsellem Z, Efroni I, Pekker I, Alvarez JP, Blum E, Zamir D, Eshed Y. Nat. Genet. [May 7, 2007]
+</div>
+
+<div class="subheading">
+<a href="/documents/community/feature/papers/journal.pone.0000350.pdf">Metabolic Engineering of Potato Carotenoid Content through Tuber-Specific Overexpression of a Bacterial Mini-Pathway</a>
+</div>
+<div class="boxsubcontent">
+Diretto G, Al-Babili S, Tavazza R, Papacchioli V, Beyer P, et al. 2007. PLoS ONE 2(4): e350.
+</div>
+
+<div class="subheading">
+<a href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=pubmed&cmd=Retrieve&dopt=AbstractPlus&list_uids=16817548">The distribution of plant mating systems: study bias against obligately outcrossing species.</a>
+</div>
+<div class="boxsubcontent">
+Igic B, Kohn JR. Evolution Int J Org Evolution. 2006 May;60(5):1098-103 [Mar 21, 2007]
+</div>
+
+<div class="subheading">
+<a href="http://www.springerlink.com/content/u0740761j7683713/">Agronomic performance and transcriptional analysis of carotenoid
+biosynthesis in fruits of transgenic HighCaro and control tomato lines under
+field conditions.</a>
+</div>
+<div class="boxsubcontent">
+Giovanni Giorio, Adriana Lucia Stigliani and Caterina D'Ambrosio.
+Transgenic Res. 2006 <br />[Dec 13, 2006]
+</div>
+
+<div class="subheading">
+<a href="http://www.springerlink.com/content/45286124n3v68157/">A microsatellite marker based linkage map of tobacco</a>
+</div>
+<div class="boxsubcontent">
+Gregor Bindler, Rutger van der Hoeven, Irfan Gunduz, Jörg Plieske, Martin Ganal, Luca Rossi, Ferruccio Gadani and Paolo Donini [Dec 1, 2006]
+</div>
+
+<div class="subheading">
+<a href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed&amp;cmd=search&amp;term=Ellinger+Stehle">Tomatoes, tomato products and lycopene in the prevention and treatment of prostate cancer: do we have the evidence from intervention studies?
+</a>
+</div>
+<div class="boxsubcontent">
+Sabine Ellinger,Joerg Ellinger and Peter Stehle 
+</div>
+
+<div class="subheading">
+<a href="/documents/community/feature/papers/pepper.pdf">Characterization of Capsaicin synthase and identification of its gene (<i>csy1</i>) for pungency factor capsaicin in pepper (<i>Capsicum</i> sp.)
+</a>
+</div>
+<div class="boxsubcontent">
+B. C. Narasimha Prasad, Vinod Kumar, H. B. Gururaj, R. Parimalan, P. Giridhar, G. A. Ravishankar
+</div>
+
+<div class="subheading">
+<a href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=pubmed&amp;cmd=Retrieve&amp;dopt=AbstractPlus&amp;list_uids=16832354&amp;query_hl=2&amp;itool=pubmed_docsum">A naturally occurring epigenetic mutation in an SBP-box transcription factor inhibits tomato fruit ripening. Nature Genetics
+</a>
+</div>
+<div class="boxsubcontent">
+Manning, K., Tor, M., Poole, M., Hong, Y., Thompson, A.J., King, G.J. , Giovannoni, J.J. and Seymour, G.B.
+</div>
+
+<div class="subheading">
+<a href="/documents/community/feature/papers/taste_QTLs.pdf">Stability over genetic backgrounds, generations and years of quantitative trait locus (QTLs) for organoleptic quality in tomato
+</a>
+</div>
+<div class="boxsubcontent">
+J. Chaib, L. Lecomte, M. Buret, M. Causse
+</div>
+
+<div class="subheading">
+<a href="/documents/community/feature/papers/Granell.pdf">Agroinjection of Tomato Fruits--A Tool for Rapid Functional Analysis of Transgenes Directly in Fruit</a>
+</div>
+<div class="boxsubcontent">
+Diego Orzaez, Sophie Mirabel, Willemien H. Wieland, and Antonio Granell
+</div>
+
+<div class="subheading">
+<a href="/documents/community/feature/papers/Barry_et_al_06.pdf">Ripening in the tomato Green-ripe mutant is inhibited
+by ectopic expression of a protein that disrupts
+ethylene signaling</a>
+</div>
+<div class="boxsubcontent">
+Cornelius S. Barry and James J. Giovannoni
+</div>
+
+<div class="subheading">
+<a href="/documents/community/feature/papers/transcriptome_and_selected.pdf">Transcriptome and Selected Metabolite Analyses Reveal Multiple Points of Ethylene Control during Tomato Fruit Development</a>
+</div>
+<div class="boxsubcontent">
+Rob Alba, Paxton Payton, Zhanjun Fei, Ryan McQuinn, Paul Debbie, Gregory B. Martin,
+Steven D. Tanksley, and James J. Giovannoni
+</div>
+
+<div class="subheading">
+<a href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?cmd=Retrieve&amp;db=pubmed&amp;dopt=Abstract&amp;list_uids=16273343&amp;query_hl=1">Coffee and tomato share common gene repertoires as revealed by deep sequencing of seed and cherry transcripts.</a>
+</div>
+<div class="boxsubcontent">
+Lin C, Mueller LA, McCarthy J, Crouzillat D, Petiard V, Tanksley SD.
+<br />
+<em>Theor Appl Genet. 2005 Nov 5;:1-17</em>
+</div>
+
+<p><strong>A single domestication for potato based on multilocus amplified fragment length polymorphism genotyping.</strong><br />
+<a href="/documents/community/feature/PNAS-20051003-Spooner.pdf">David M. Spooner, Karen McLean, Gavin Ramsay, Robbie Waugh, and Glenn J. Bryan<br />
+<em>Proc Natl Acad Sci U S A.</em> 2005 Oct 3</a></p>
+
+<p><strong>New Species of Wild Tomatoes (Solanum Section Lycopersicon: Solanaceae) from Northern Peru.</strong><br />
+<a href="/documents/community/feature/Peralta_et_al_2005_newtoms.pdf">Peralta, I. E., Knapp, S., Spooner, D. M<br />
+<em>Systematic Botany</em> 2005 30(2): 424-434</a></p>
+
+<p><strong>QTLs mapping for fruit size and
+shape in chromosomes 2 and 4 in pepper and a comparison of the pepper QTL
+map with that of tomato.</strong><br />
+<a href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?cmd=Retrieve&amp;db=pubmed&amp;dopt=Abstract&amp;list_uids=15983758&amp;query_hl=5">Zygier, S., A. B. Chaim, et al.<br />
+<em>Theor Appl Genet.</em> 2005 Jun 28</a></p>
+
+<p><strong>A model system for comparative research:
+Petunia</strong><br />
+<a href=
+"http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?cmd=Retrieve&amp;db=pubmed&amp;dopt=Abstract&amp;list_uids=15882658&amp;query_hl=4">
+Gerats T, Vandenbussche M.<br />
+<em>Trends Plant Sci.</em> 2005 May; 10(5):
+251-61.</a></p>
+
+<p><strong>Comparative genomics enabled the isolation of the
+R3a late blight resistance gene in potato</strong><br />
+<a href=
+"http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?cmd=Retrieve&amp;db=pubmed&amp;dopt=Abstract&amp;list_uids=15807786">
+Huang S, van der Vossen EA, Kuang H, Vleeshouwers VG,
+Zhang N, Borm TJ, van Eck HJ, Baker B, Jacobsen E,
+Visser RG<br />
+<em>Plant J.</em> 2005 Apr; 42(2): 251-61.</a></p>
+
+<p><strong>Comparative analyses of genetic diversities
+within tomato and pepper collections detected by
+retrotransposon-based SSAP, AFLP and SSR</strong><br />
+<a href=
+"http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?cmd=Retrieve&amp;db=pubmed&amp;dopt=Abstract&amp;list_uids=15700147">
+Tam SM, Mhiri C, Vogelaar A, Kerkveld M, Pearce SR,
+Grandbastien MA<br />
+<em>Theor Appl Genet.</em> 2005 Feb 8.</a></p>
+
+<p><strong>PoMaMo--a comprehensive database for potato
+genome data</strong><br />
+<a href=
+"http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?cmd=Retrieve&amp;db=pubmed&amp;dopt=Abstract&amp;list_uids=15608284">
+Meyer S, Nagel A, Gebhardt C.<br />
+<em>Nucl. Acids Res.</em> 2005 33: D666-670</a></p>
+
+<p><strong>Zooming in on a Quantitative Trait for Tomato
+Yield Using Interespecific Introgressions.</strong><br />
+<a href=
+"http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?cmd=Retrieve&amp;db=pubmed&amp;dopt=Abstract&amp;list_uids=15375271">
+Fridman, E.; Carrari, F.; Liu, Y.; Fernie, A.R. and
+Zamir, D.<br />
+<em>Science</em> 305: 1786-1789.</a></p>
+
+<p><strong>Comprehensive EST analysis of tomato and
+comparative genomics of fruit ripening.</strong><br />
+<a href=
+"http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?cmd=Retrieve&amp;db=pubmed&amp;dopt=Abstract&amp;list_uids=15361140">
+Zhangjun Fei, Xuemei Tang, Rob M. Alba, Joseph A.
+White, Catherine M. Ronning, Gregory B. Martin, Steven
+D. Tanksley and James J. Giovannoni<br />
+<em>The Plant Journal</em> 40: 47-59.</a></p>
+
+<p><strong>Phylogenetic relationships in Nicotiana
+(Solanaceae) inferred from multiple plastid DNA
+regions.</strong><br />
+<a href=
+"http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?cmd=Retrieve&amp;db=pubmed&amp;dopt=Abstract&amp;list_uids=15324840">
+Clarkson JJ, Knapp S, Garcia VF, Olmstead RG, Leitch
+AR, Chase MW.<br />
+<em>Mol Phylogenet Evol.</em> Oct;33(1):75-90.</a></p>
+
+<p><strong>In silico screening of a saturated mutation
+library of tomato.</strong><br />
+<a href=
+"http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?cmd=Retrieve&amp;db=pubmed&amp;dopt=Abstract&amp;list_uids=15144386">
+Menda, N; Semel, Y; Peled, D; Eshed, Y; Zamir, D.<br />
+<em>The Plant Journal</em> 38: 861-872.</a></p>
+
+<p><strong>Convergent evolution within the genus
+<em>Solanum</em>: the specialized anther cone develops
+through alternative pathways.</strong><br />
+<a href=
+"http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?cmd=Retrieve&amp;db=pubmed&amp;dopt=Abstract&amp;list_uids=15094186">
+Glover, B.J.; Bunnewell, S. and Martin C.<br />
+<em>Gene</em> 331: 1-7.</a></p>
+
+<p><strong>Tubulin-based polymorphism (TBP): a new tool,
+based on funcionally relevant sequences, to assess
+genetic diversity in plant species.</strong><br />
+<a href=
+"http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?cmd=Retrieve&amp;db=pubmed&amp;dopt=Abstract&amp;list_uids=15060580">
+Bardini, M, Lee,D, Donini, P, Mariani, A, Giani, S,
+Toschi, M, Lowe, C and Breviario, D.<br />
+<em>Genome</em> 47: 281-291.</a></p>
+
+<p><strong>The tomato homolog of the gene encoding
+UV-damaged DNA binding protein 1 (DDB1) underlined as
+the gene that causes the high pigment-1 mutant
+phenotype.</strong><br />
+<a href=
+"http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?cmd=Retrieve&amp;db=pubmed&amp;dopt=Abstract&amp;list_uids=14968305">
+Lieberman M, Segev O, Gilboa N, Lalazar A, Levin
+I.<br />
+<em>Theor Appl Genet</em>. 2004 Feb 14 [Epub ahead of
+print]</a></p>
+
+<p><strong>The TIGR Plant Repeat Databases: a collective
+resource for the identification of repetitive sequences
+in plants.</strong><br />
+<a href=
+"http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?cmd=Retrieve&amp;db=pubmed&amp;dopt=Abstract&amp;list_uids=14681434">
+Ouyang, S, Buell CR.<br />
+<em>Nucleic Acids Res.</em> 32:D360-D363</a></p>
+
+<p><strong>Structure and expression of phosphoenolpyruvate
+carboxylase kinase genes in solanaceae. A novel gene
+exhibits alternative splicing.</strong><br />
+<a href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?cmd=Retrieve&amp;db=PubMed&amp;list_uids=14630963&amp;dopt=Abstract">
+Marsh JT, Sullivan S, Hartwell J, Nimmo HG.<br />
+<em>Plant Physiology</em> 133: 1-8.</a></p>
+
+<p><strong>Construction of two BAC libraries from the wild
+Mexican diploid potato, Solanum pinnatisectum, and the
+identification of clones near the late blight and
+Colorado potato beetle resistance loci.</strong><br />
+<a href=
+"http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?cmd=Retrieve&amp;db=pubmed&amp;dopt=Abstract&amp;list_uids=15067385">
+Chen Q, Sun S, Ye Q, McCuine S, Huff E, Zhang HB.<br />
+<em>Theor Appl Genet.</em> 2003 Nov 20</a></p>
+
+<p><strong>SINGLE FLOWER TRUSS regulates the transition and
+maintenance of flowering in tomato</strong><br />
+<a href=
+"http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?cmd=Retrieve&amp;db=PubMed&amp;list_uids=14504922&amp;dopt=Abstract">
+Molinero-Rosales N, Latorre A, Jamilena M, Lozano
+R.<br />
+<em>Planta</em> 2003 Sep 23 [Epub ahead of print]</a></p>
+
+<p><strong>Genetics of drought tolerance during seed
+germination in tomato: inheritance and QTL
+mapping</strong><br />
+<a href=
+"http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?cmd=Retrieve&amp;db=PubMed&amp;list_uids=12897861&amp;dopt=Abstract">
+Foolad MR, Zhang LP, Subbiah P<br />
+<em>Genome</em> 2003 Aug;46(4):536-45</a></p>

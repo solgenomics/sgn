@@ -1,0 +1,38 @@
+
+<%doc>
+
+=head1 NAME 
+
+directory_tab.mas - mason component that displays the search form for the directory search.
+
+=head1 DESCRIPTION
+
+takes an optional CXGN::Searches::People object as a parameter named q.
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>
+
+=cut
+
+</%doc>
+
+<%perl>
+
+    my $q    = $ARGS{q};
+    $q ||= CXGN::Searches::People->new()->new_query();
+
+
+</%perl>
+
+  <table class="search_form_title"><tr><td>
+    <span class="search_form_title">Directory search</span>
+  </td>
+  </tr>
+  </table>
+
+<form action="/solpeople/people_search.pl" method="get">
+  <div class="indentedcontent">
+    <% $q->to_html() %>
+  </div>
+</form>

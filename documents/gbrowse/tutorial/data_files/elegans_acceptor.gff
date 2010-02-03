@@ -1,0 +1,7 @@
+##gff-version 2
+##date Tue Feb 24 06:39:41 2004
+##sequence-region C01F4 1 40000
+##source gbrowse GFFDumper plugin
+##NOTE: Selected features dumped.
+C01F4	SL1	trans-splice_acceptor	20456	20457	.	-	.	Feature WBsf001442
+C01F4	SL1	trans-splice_acceptor	33387	33388	.	-	.	Feature WBsf001316

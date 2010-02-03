@@ -1,0 +1,3 @@
+ctgA	example	BAC	1000	20000	.	.	.	BAC b101.2 ; Note "Fingerprinted BAC with end reads"
+ctgA	example	left_end_read	1000	1500	.	+	.	BAC b101.2
+ctgA	example	right_end_read	19500	20000	.	-	.	BAC b101.2

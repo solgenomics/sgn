@@ -1,0 +1,39 @@
+<h3><font color='#ff0000'>Physical Map</font></h3>
+
+<p>
+The purpose of this project was to develop a tomato physical map  
+anchored to the genetic map and to identify the tomato BAC minimum  
+tiling path for positional cloning and whole genome sequencing.</p>
+
+<p>
+88,642 BAC clones from a Lycopersicon esculentum cv. Heinz 1706 BAC  
+library with 129,024 clones and roughly 15 genome equivalents  
+generated Unambiguous fingerprints (Arizona Genome Institute).  In  
+order to anchor the fingerprinted BACs onto the tomato genetic map,  
+overgo (overlapping oligonucleotide) probes were generated from a  
+total of 1535 sequenced, mapped markers from the <a 
+href='map.pl?map_id=MAPID'>current high density tomato map.</a></p>  
+
+<p>
+Overgo probes were multiplexed into  
+two-dimensional arrays in 96 well plates.   In order to avoid  
+potentially confounding results, overgo clones were grouped in such a  
+way that, within a single array, the genetic distance between any two  
+markers is more than 5.0 cM. Overgo hybridizations completed thus far  
+have identified unambiguous BAC matches for 180 genetic markers.  
+Currently, combining the BAC fingerprint and overgo hybridization 
+data has resulted in total of 7388 BAC contigs and 24,563 singleton BACs,  
+ with 97 contigs and 718 singleton BACs being  anchored to the genetic  
+map.</p>
+
+<p>
+The maps show the chromosome on the left and the associated BAC  
+contigs or BAC singletons. Clicking on the  contigs in the zoomed in 
+image on the right will display a page with more information on that contig.</p>
+
+<p>
+To view the <i>Fingerprint Contiging (FPC)</i> pages for the BAC's 
+collection, please visit the pages of the <a
+href='http://www.genome.arizona.edu/fpc/tomato/' target='ARIZONA'>Arizona 
+Genomics Institute</a>.</p>
+

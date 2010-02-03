@@ -1,0 +1,11 @@
+[GENERAL]
+description = Elegans vs Briggsae
+join        = WABA
+
+[wormbase]
+tracks    = CG PG
+upcase    = CG
+
+[briggsae]
+tracks    = HYB
+upcase    = HYB

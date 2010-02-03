@@ -1,0 +1,632 @@
+<!-- COUNT	4 -->
+<!-- THIS FILE IS DEPRECATED. DO ***NOT*** EDIT IT. EDIT THE FILE IN /data/prod/public/sgn-homepage/ -->
+
+<div class="subheading">
+<a href="http://www.potatogenome.net">Potato Genome Sequence Released</a>
+</div>
+<div class="boxsubcontent">
+The Potato Genome Sequencing Consortium has released the first draft sequence of the potato genome, available at <a href="http://www.potatogenome.net">www.potatogenome.net</a>. [September 23, 2009] 
+</div>
+
+<div class="subheading">
+<a href="/search/phenotype_search.pl?wee9_population_id=9">Tomato Core Collection accessions phenotyped by EUSOL</a>
+</div>
+<div class="boxsubcontent">
+More than 400 accessions were phenotyped by EUSOL, using the Solanaceae Phenotype ontology, and are now <a href="/search/phenotype_search.pl?wee9_population_id=9">available</a> at SGN, with cross-links to the EUSOL website. This data was kindly contributed by <a href="http://www.plantbreeding.wur.nl/UK/contact_staffmember.php?ID=283">Dr. Richard Finkers</a>.
+[September 22, 2009]
+</div>
+
+<div class="subheading">
+<a href="/solanaceae-project/index.pl#SOL_news">SOL newsletter September 2009 available</a>
+</div>
+<div class="boxsubcontent">
+The SOL newsletter for September 2009 is <a href="/solanaceae-project/index.pl#SOL_news">available</a> from SGN.
+[September 17, 2009]
+</div>
+
+<div class="subheading">
+<a href="ftp://ftp.sgn.cornell.edu/potato_genome">Potato Genome data on SGN</a>
+</div>
+<div class="boxsubcontent">
+BAC end and BAC sequence data from the <a href="http://www.potatogenome.net"  target="_blank">Potato Genome Sequencing Consortium</a> available on the SGN <a href="ftp://ftp.sgn.cornell.edu/potato_genome/" >FTP</a> and SGN <a href="/tools/blast/">BLAST</a> servers [Sep 15, 2009]. 
+</div>
+
+<div class="subheading">
+<a href="/tools/insilicopcr/">New in-silico PCR tool released</a>
+</div>
+<div class="boxsubcontent">
+SGN has released a new <a href="/tools/insilicopcr/">in-silico PCR tool</a> for Solanaceae sequence datasets [Aug 26, 2009]
+</div>
+
+<div class="subheading">
+<a href="/solanaceae-project/index.pl#SOL_news">SOL newsletter June 2009 available</a>
+</div>
+<div class="boxsubcontent">
+The SOL newsletter for June 2009 is <a href="/solanaceae-project/index.pl#SOL_news">available</a> from SGN.
+[June 10, 2009]
+</div>
+
+<div class="subheading">
+<a href="/content/sgn_data.pl">SGN Tomato Unigene Build Updated</a>
+</div>
+<div class="boxsubcontent">
+A new SGN unigene build for tomato species <a href="/about/release_notes/tomato_unigene_build2.pl">is available.</a> [May 1, 2009]
+</div>
+
+<div class="subheading">
+<a href="/cview/">New map added to SGN</a>
+</div>
+<div class="boxsubcontent">
+A new <a href="cview/map.pl?map_version_id=68">tomato map</a>, kindly provided by Jos&eacute; M. Jim&eacute;nez-G&oacute;mez, is available on SGN.
+[March 17, 2009]
+</div>
+
+<div class="subheading">
+<a href="/solanaceae-project/index.pl#SOL_news">SOL newsletter March 2009 available</a>
+</div>
+<div class="boxsubcontent">
+The SOL newsletter for March 2009 is <a href="/solanaceae-project/index.pl#SOL_news">available</a> from SGN.
+[March 6, 2009]
+</div>
+
+<div class="subheading">
+<a href="http://phn.huji.ac.il/RTQ/">Phenom Networks released</a>
+</div>
+<div class="boxsubcontent">
+The <a href="http://phn.huji.ac.il/RTQ/">Phenom Network</a> engine by Dani Zamir and Yaniv Semel represents knowledge of complex traits and has tomato
+ILs, barley and rose traits with more organisms being added soon.
+[February 28, 2009]
+</div>
+
+<div class="subheading">
+<a href="/search/direct_search.pl?search=cvterm_name">SGN QTL tool released</a>
+</div>
+<div class="boxsubcontent">
+SGN now allows QTL analyses to be run on <a href="/search/direct_search.pl?search=cvterm_name">populations and traits</a> in the database
+[February 12, 2009]
+</div>
+
+<div class="subheading">
+<a href="http://bioinfo.bti.cornell.edu/tool/MetGenMAP">Plant MetGenMAP Released</a>
+</div>
+<div class="boxsubcontent">
+<a href="http://bioinfo.bti.cornell.edu/tool/MetGenMAP">Plant MetGenMAP</a> is a web-based analysis package for integrating omics-type datasets with various biological information. It was developed by Dr. Zhangjun Fei's group at BTI.
+[January 27, 2009]
+</div>
+
+<div class="subheading">
+<a href="/cview/map.pl?map_version_id=58">New COSII-based pepper</a> and <a href="/cview/map.pl?map_version_id=63">eggplant maps available</a>
+</div>
+<div class="boxsubcontent">
+New COSII-based <a href="/cview/map.pl?map_version_id=58">pepper</a> and <a href="/cview/map.pl?map_version_id=63">eggplant</a> maps are available on SGN, kindly provided by Dr. Feinan Wu.
+[December 5, 2008]
+</div>
+
+<div class="subheading">
+<a href="http://solcap.msu.edu/">SolCAP project started</a>
+</div>
+<div class="boxsubcontent">
+The USDA-funded SolCAP program has started (more information on <a href="http://solcap.msu.edu/">http://solcap.msu.edu</a>).
+[November 12, 2008]
+</div>
+
+<div class="subheading">
+<a href="https://www.eu-sol.wur.nl/">EU-SOL Phenotype Database goes on-line</a>
+</div>
+<div class="boxsubcontent">
+The EU-SOL funded tomato core collection phenotype database is now available at <a href="https://www.eu-sol.wur.nl/">https://www.eu-sol.wur.nl/</a>.
+[November 12, 2008]
+</div>
+
+<div class="subheading">
+<a href="/search/direct_search.pl?search=bacs">100,000 more tomato fosmid ends available</a>
+</div>
+<div class="boxsubcontent">
+Giorgio Valle's lab has sequenced 100,000 fosmid ends and made them available on SGN.
+[October 23, 2008]
+</div>
+
+<div class="subheading">
+<a href="http://www.mitochondrialgenome.org/">Tomato mitochondrial genome sequence</a>
+</div>
+<div class="boxsubcontent">
+Fernando Carrari's lab <a href="http://www.mitochondrialgenome.org/">has released</a> a first draft of the mitochondrial genome sequence.
+[October 12, 2008]
+</div>
+
+<div class="subheading">
+<a href="/search/phenotype_search.pl?wee9_population_id=20">New pepper mutant lines</a>
+</div>
+<div class="boxsubcontent">
+SGN has added 628 pepper EMS mutants to the phenotype database. This <a href = "/phenome/population.pl?population_id=20">population</a> was generated and phenotyped at the lab of Ilan Paran, Volcani ARO, Israel.
+[September 12, 2008]
+</div>
+
+<div class="subheading">
+<a href="/search/locus_search.pl?w8e4_common_name=Tobacco">Tobacco genes are now available on SGN</a>
+</div>
+<div class="boxsubcontent">
+SGN has added 1528 tobacco locus identifiers to the locus database.
+[September, 2008]
+</div>
+
+<div class="subheading">
+<a href="/solanaceae-project/index.pl#SOL_news">SOL newsletter August 2008 available</a>
+</div>
+<div class="boxsubcontent">
+The SOL newsletter for August 2008 is <a href="/solanaceae-project/index.pl#SOL_news">available</a> from SGN.
+[August 14, 2008]
+</div>
+
+<div class="subheading">
+<a href="/tools/onto">New Ontology Browser</a>
+</div>
+<div class="boxsubcontent">
+SGN has released a new, AJAX-based <a href="/tools/onto/">ontology browser</a>.
+[Aug 10, 2008]
+</div>
+
+<div class="subheading">
+<a href="http://ted.bti.cornell.edu">Release of the Tomato Functional Genomics Database</a>
+</div>
+<div class="boxsubcontent">
+The Tomato Functional Genomics Database integrates and expands several databases by Dr. Zhangjun Fei's group at BTI, including the Tomato Expression DB, the Tomato Metabolite DB, as well as the Tomato Small RNA DB. See <a href="http://ted.bti.cornell.edu">ted.bti.cornell.edu</a>
+[July 22, 2008]
+</div>
+
+<div class="subheading">
+<a href="/solanaceae-project/index.pl#SOL_news">SOL newsletter May 2008 available</a>
+</div>
+<div class="boxsubcontent">
+The SOL newsletter for March 2008 is <a href="/solanaceae-project/index.pl#SOL_news">available</a> from SGN.
+[May 15, 2008]
+</div>
+
+<div class="subheading">
+<a href="http://www.eu-sol.net">EU-SOL project website released</a>
+</div>
+<div class="boxsubcontent">
+The website of the EU-SOL, an integrated project funded by the European Commission Framework program, was launched.
+[March 29, 2008]<br /><br />
+<a href="http://www.eu-sol.net" class="footer" ><img src="/documents/img/eusol_logo_small.jpg" border="0" /></a>
+</div>
+
+<div class="subheading">
+SGN is now hosted at the <a href="http://bti.cornell.edu/" >Boyce Thompson Institute (BTI)</a>
+</div>
+<div class="boxsubcontent">
+The SGN database group moved from Cornell to the Boyce Thompson Institute (BTI) in June, 2008.<br />
+[June 10, 2008]
+</div>
+
+<div class="subheading">
+<a href="/solanaceae-project/index.pl#SOL_news">SOL newsletter March 2008 available</a>
+</div>
+<div class="boxsubcontent">
+The SOL newsletter for March 2008 is <a href="/solanaceae-project/index.pl#SOL_news">available</a> from SGN.
+[Mar 11, 2008]
+</div>
+
+<div class="subheading">
+<a href="/search/direct_search.pl?search=bacs">100,000 tomato fosmid ends available</a>
+</div>
+<div class="boxsubcontent">
+100,000 fosmid ends were sequenced by the Sanger Centre, UK, and added to the SGN clone database (library SL_F).<br />
+[Mar 4, 2008]
+</div>
+
+<div class="subheading">
+<a href="/search/direct_search.pl?search=phenotypes">Eight new populations available</a>
+</div>
+<div class="boxsubcontent">
+Eight new populations, comprising 1130 individuals, with descriptions, trait data, genotypes, and 1800 images, were kindly submitted by Esther van der Knaap.<br />[Mar 4, 2008]
+</div>
+
+<div class="subheading">
+<a href="/documents/solanaceae-project/docs/SOL_newsletter_Nov_07.pdf">November 2007 SOL newsletter is available</a>
+</div>
+<div class="boxsubcontent">
+The SOL newsletter for November 2007 <a href="/solanaceae-project/index.pl#SOL_news">is available</a>. [Nov 20, 2007]
+</div>
+
+<div class="subheading">
+<a href="ftp://ftp.sgn.cornell.edu/tomato_genome/bacs/syngenta/">Syngenta releases updated tomato mapping information</a>
+</div>
+<div class="boxsubcontent">
+Syngenta released a new version of the BAC mapping file to the international tomato genome sequencing community (<a href="ftp://ftp.sgn.cornell.edu/tomato_genome/bacs/syngenta/">see FTP site</a>).
+[Nov 8, 2007]
+</div>
+
+<div class="subheading">
+<a href="/about/news/">China to sequence tomato chromosome 11</a>
+</div>
+<div class="boxsubcontent">
+Prof Sanwen Huang announced at the 4th SOL conference in Jeju, Korea, that his group at the Chinese Academy of Agricultural Sciences will sequence chromosome 11 of tomato.
+[Sept 17, 2007]
+</div>
+
+<div class="subheading">
+<a href="/cview/map.pl?map_id=agp">Tomato Sequencing: AGP map available</a>
+</div>
+<div class="boxsubcontent">
+The <a href="/cview/map.pl?map_id=agp">Accessioned Golden Path map</a>, showing the projected locations of BACs in the tiling path is available. [Sept 4, 2007]
+</div>
+
+<div class="subheading">
+<a href="/documents/solanaceae-project/docs/SOL_newsletter_Jul_07.pdf">July 2007 SOL newsletter is available</a>
+</div>
+<div class="boxsubcontent">
+The SOL newsletter for July 2007 <a href="/solanaceae-project/index.pl#SOL_news">is available</a>. [July 15, 2007]
+</div>
+
+<div class="subheading">
+<a href="/forum/posts.pl?topic_id=2">SGN has open postdoc and programmer positions</a>
+</div>
+<div class="boxsubcontent">
+SGN has several <a href="/forum/posts.pl?topic_id=2">open positions</a> for postdocs, programmers and a system administrator. Contact <a href="mailto:lam87@cornell.edu">SGN</a> for more information. [June 13, 2007]
+</div>
+
+<div class="subheading">
+<a href="/cview/">New maps added to SGN</a>
+</div>
+<div class="boxsubcontent">
+Several <a href="/cview/">new tomato maps</a>, such as the <a href="/cview/map.pl?map_id=il6">IL map</a>, a <a href="/cview/map.pl?map_id=c9">Contig map</a>, as well as an improved <a href="/cview/map.pl?map_id=p9">Physical map</a> were added to SGN. [June 13, 2007]
+</div>
+
+<div class="subheading">
+<a href="http://www.jspcmb.jp/english/pbcontents/pb24_1.html">Special JSOL issue published</a>
+</div>
+<div class="boxsubcontent">
+The Japanese SOL project (JSOL) contributed <a href="http://www.jspcmb.jp/english/pbcontents/pb24_1.html">a special issue</a> related to progress on tomato and Solanaceae genomics in the official <a href="http://www.jspcmb.jp/english/index.html">journal of the Japanese Society of Plant Cell and Molecular Biology</a>. [May 14, 2007] 
+</div>
+
+<div class="subheading">
+<a href="/documents/solanaceae-project/docs/SOL_newsletter_May_07.pdf">May 2007 SOL newsletter is available</a>
+</div>
+<div class="boxsubcontent">
+The SOL newsletter for May 2007 <a href="/solanaceae-project/index.pl#SOL_news">is available</a>. [May 7, 2007]
+</div>
+
+<div class="subheading">
+<a href="/tools/blast/?interface_type=1">Advanced BLAST web-interface available</a>
+</div>
+<div class="boxsubcontent">
+An new <a href="/tools/blast/?interface_type=1">advanced BLAST interface</a> is available on SGN with better control of BLAST parameters and submission of multi-fasta files. [May 2, 2007]
+</div>
+
+<div class="subheading">
+<a href="/tools/tree_browser/">Improved SGN Alignment Analyzer and SGN Tree Browser</a>
+</div>
+<div class="boxsubcontent">
+Improved versions of the <a href="/tools/align_viewer/">SGN Alignment Analyzer</a> and the <a href="/tools/tree_browser/">SGN Tree Browser</a> released. [April 4, 2007]
+</div>
+
+<div class="subheading">
+<a href="/solanaceae-project/index.pl#news">New and updated Tomato Genome Sequencing Docs</a>
+</div>
+<div class="boxsubcontent">
+New, detailed instructions for validation of BACs on ILs <a href="/documents/solanaceae-project/docs/BAC_mapping_validation_1.ppt">[ppt]</a> are available, and the Tomato Sequencing guidelines  <a href="http://docs.google.com/View?docid=dggs4r6k_1dd5p56">[google doc]</a> have been updated with new finishing guidelines. [March 29, 2007]
+</div>
+
+<div class="subheading">
+<a href="/cview/map.pl?map_id=15">New Tobacco Map added to SGN</a>
+</div>
+<div class="boxsubcontent">
+An SSR-based map of tobacco, developed and kindly provided by G. Bindler, P. Donini and co-workers has been added to SGN. [March 28, 2007]
+</div>
+
+<div class="subheading">
+<a href="ftp://ftp.sgn.cornell.edu/tomato_genome/bacs/syngenta/">Syngenta to provide resources to Tomato Sequencing Project</a>
+</div>
+<div class="boxsubcontent">
+Syngenta mapped 17,000 BACs to ILs and is making the data <a href="ftp://ftp.sgn.cornell.edu/tomato_genome/bacs/syngenta/">available</a> to the Tomato Sequencing project on SGN. [Feb 28, 2007]
+</div>
+
+<div class="subheading">
+<a href="/documents/solanaceae-project/docs/SOL_newsletter_Mar_07.pdf">March 2007 SOL Newsletter available</a>
+</div>
+<div class="boxsubcontent">
+The SOL newsletter for March 2007 is <a href="/solanaceae-project/index.pl#SOL_news">available</a>. [March 15, 2007]
+</div>
+
+<div class="subheading">
+<a href="/documents/solanaceae-project/docs/JGI-Submitted.pdf"><i>S. pennellii</i> proposal submitted to JGI</a>
+</div>
+<div class="boxsubcontent">
+Many thanks to everybody for their support on
+the proposal <a href="/documents/solanaceae-project/docs/JGI-Submitted.pdf">[pdf]</a> to sequence Solanum pennellii. [Mar 11, 2007]
+</div>
+
+<div class="subheading">
+<a href="/solanaceae-project/index.pl#news">Support <i>S. pennellii</i> sequencing at JGI</a>
+</div>
+<div class="boxsubcontent">
+A letter of intent has been approved by JGI for full proposal submission. Please support the project with a support letter <a href="/documents/solanaceae-project/docs/JGI_support_letter.doc">[Draft support letter]</a>. [Feb 7, 2007]
+</div>
+
+<div class="subheading">
+<a href="/documents/solanaceae-project/docs/SOL_newsletter_Jan_07.pdf">Jan 2007 SOL Newsletter available</a>
+</div>
+<div class="boxsubcontent">
+The SOL newsletter for January 2007 is <a href="/solanaceae-project/index.pl#SOL_news">available</a>. [Jan 10, 2007]
+</div>
+
+<div class="subheading">
+<a href="/search/direct_search.pl?search=loci">Potato Loci added</a>
+</div>
+<div class="boxsubcontent">
+1000 potato loci, including Gene Ontology and Plant Ontology annotations, have been added, complementing the 1600 tomato loci already in the SGN database. [Jan 9, 2007]
+</div>
+
+<div class="subheading">
+<a href="/search/direct_search.pl?search=phenotypes">SGN Phenotype Database</a>
+</div>
+<div class="boxsubcontent">
+A new database of populations, individuals, phenotypes and genotypes is available on SGN, including 8000 images. [Jan 9, 2007]
+</div>
+
+<div class="subheading">
+<a href="http://sgn.cenicafe.org">SGN Mirror site available</a>
+</div>
+<div class="boxsubcontent">
+An SGN mirror site has been installed at the Colombian National Coffee Research Center in Chinchina, Colombia. [Dec 5, 2006]
+</div>
+
+<div class="subheading">
+<a href="/documents/solanaceae-project/docs/SOL_newsletter_Nov_06.pdf">Nov 2006 SOL Newsletter</a>
+</div>
+<div class="boxsubcontent">
+The SOL Newsletter for Nov 2006 is <a href="/solanaceae-project/index.pl#SOL_news">available</a> [Nov 9, 2006].
+</div>
+
+<div class="subheading">
+<a href="/content/sgn_data.pl#solanumlycopersicum">SGN Tomato Unigene Build Updated</a>
+</div>
+<div class="boxsubcontent">
+A new SGN unigene build for tomato, <i>Solanum lycopersicum</i> <a href="/about/release_notes/tomato_unigene_build1.pl">is available.</a> [Oct 1, 2006]
+</div>
+
+<div class="subheading">
+<a href="http://www.eu-sol.net">EU-SOL website</a>
+</div>
+<div class="boxsubcontent">
+The website for the <a href="http://www.eu-sol.net">European SOL project (EU-SOL)</a> is now on-line [Sept 19, 2006].
+</div>
+
+<div class="subheading">
+<a href="/documents/solanaceae-project/docs/SOL_newsletter_Sep_06.pdf">Sept 2006 SOL Newsletter</a>
+</div>
+<div class="boxsubcontent">
+The SOL Newsletter for Sept 2006 is <a href="/solanaceae-project/index.pl#SOL_news">available</a> [Sept 13, 2006].
+</div>
+
+<div class="subheading">
+<a href="http://tomato.cribi.unipd.it/files/bepindex.html">New BAC extension tool</a>
+</div>
+<div class="boxsubcontent">
+A <a href="http://tomato.cribi.unipd.it/files/bepindex.html">BAC extension tool</a> for the tomato sequencing project is available from the University of Padua [July 30, 2006].
+</div>
+
+<div class="subheading">
+<a href="/search/direct_search.pl?search=Loci">New SGN loci database</a>
+</div>
+<div class="boxsubcontent">
+A <a href="/search/direct_search.pl?search=Loci">database of Solanaceae genetic loci</a> that can be updated by community members like you [July 19, 2006].
+</div>
+
+<div class="subheading">
+<a href="/tools/solcyc/">New SolCyc biochemical pathways</a>
+</div>
+<div class="boxsubcontent">
+A preliminary version of the <a href="/tools/solcyc/">SolCyc biochemical pathway databases</a> is available [July 19, 2006]
+</div>
+
+<div class="subheading">
+<a href="/solanaceae-project/index.pl#SOL_news">June 2006 SOL Newsletter</a>
+</div>
+<div class="boxsubcontent">
+The June 2006 edition of the <a href="/solanaceae-project/index.pl#SOL_news">SOL Newsletter is available</a> [June 2, 2006]
+</div>
+
+<div class="subheading">
+<a href="/solanaceae-project/index.pl#SOL_news">SOL Newsletter</a>
+</div>
+<div class="boxsubcontent">
+The April 2006 edition of the <a href="/solanaceae-project/index.pl#SOL_news">SOL Newsletter is available</a>.
+</div>
+
+<div class="subheading">
+<a href="http://www.ebi.ac.uk/cgi-bin/sva/sva.pl?view=392523033">Tomato Plastid Sequence</a>
+</div>
+<div class="boxsubcontent">
+The tomato plastid sequence has been completed by the EU-funded <a href="https://genesilico.pl/Plastomics/">Plastomics Consortium</a> [Mar 9, 2006]
+</div>
+
+<div class="subheading">
+<a href="http://cnia.inta.gov.ar/lat-sol">Lat-SOL launched</a>
+</div>
+<div class="boxsubcontent">
+A web portal for the Latin American SOL initiative (Lat-SOL) has been launched [Feb 21, 2006]
+</div>
+
+<div class="subheading">
+<a href="/solanaceae-project/index.pl#SOL_news">SOL Newsletter</a>
+</div>
+<div class="boxsubcontent">
+The SOL Newsletter for February 2006 is now available. [Feb 14, 2006]
+</div>
+
+<div class="subheading">
+<a href="/about/us_tomato_sequencing.pl">SGN Summer Intern positions</a>
+</div>
+<div class="boxsubcontent">
+Summer intern positions are available at SGN. [Jan 05, 2006]
+</div>
+
+<div class="subheading">
+<a href="/content/coffee.pl">Coffee EST data</a>
+</div>
+<div class="boxsubcontent">
+Coffee ESTs are now available on SGN [Nov 7, 2005]
+</div>
+
+<div class="subheading">
+<a href="/solanaceae-project/index.pl#SOL_news">SOL Newsletter</a>
+</div>
+<div class="boxsubcontent">
+The SOL Newsletter for November is now available [Nov 7, 2005]
+</div>
+
+<div class="subheading">
+<a href="/forum/topics.pl">New SOL Forum</a>
+</div>
+<div class="boxsubcontent">
+We've created a forum for public discussions, job listings, etc. 
+It's brand new and still under development, so feel free to try it out and let us know if you have any problems.
+<a href="/solpeople/login.pl">Log in</a> 
+to contribute.
+</div>
+
+<div class="subheading">
+<a href="http://www.affymetrix.com">Affymetrix releases Tomato gene chip</a>
+</div>
+<div class="boxsubcontent">
+10,000 probes representing 9254 transcripts.
+</div>
+
+<div class="subheading">
+New Toolbar Menu
+</div>
+<div class="boxsubcontent">
+We have updated and simplified the design of our 
+site-wide menu bar that appears at the top of every 
+page.  Links to some pages have been moved to the 
+<b>Getting Started</b> area on the left side of the 
+SGN front page. 
+<p style="margin-top: 0.5em">
+We would love to hear any comments
+you may have about the new design!  Just 
+<a href="mailto:sgn-feedback@sgn.cornell.edu">email us</a>.
+</p>
+</div>
+
+<p><strong><a href="/search/direct_search.pl?search=BACs">New BAC Search</a></strong><br />
+New BAC search features are available, with a first
+set of search criteria, currently searching 249,880
+high-quality BAC end sequences from 173,184 BACs from
+three tomato genomic libraries (HindIII, MboI, and EcoRI).
+</p>
+
+<p><strong><a href="/community/snp_consortium/index.pl">Public Tomato SNP Consortium</a></strong>
+The California Tomato Research Institute, Inc. (CTRI) would like to announce the formation of the Tomato Public SNP Consortium to facilitate more rapid development of single nucleotide polymorphisms (SNPs) predicted at USDA-ARS PGRU.
+</p>
+
+<p><strong><a href="/search/markers/markersearch.pl">New
+Marker Search</a></strong> Nov, 2004<br />
+A powerful and user-friendly new marker search is now
+available. Markers can be searched by name, position,
+	chromosome, map, species, marker type, and more.</p>
+
+	<p><strong><a href="/about/solanum_nomenclature.pl">Guide to
+	revised Solanum nomenclature</a></strong> Oct, 2004<br />
+	Lycopersicon has been (re-)integrated into Solanum. Short guide
+	to the revised nomenclature, courtesy of Sandra Knapp, Natural
+	History Museum, London, UK.</p>
+
+	<p><strong><a href="/cview/view_chromosome.pl">New
+	Comparative Mapviewer</a></strong> Aug, 2004<br />
+	A new comparative mapviewer is available on SGN that allows to
+	compare all the maps that can be viewed with the traditional
+	mapviewer, but in a comparative mode. The marker pages have
+	also been updated and present all the information on one
+	page.</p>
+
+	<p><strong><a href="/maps/pepper_korea/index.pl">New SNU2 pepper map</a></strong>
+	Aug, 2004<br />
+	A new pepper map, <a href="/maps/pepper_korea/index.pl">SNU2</a>, is
+	available on SGN. The map was submitted by Prof Kim of the
+	Seoul National Univeristy in Korea.</p>
+
+	<p><strong><a href="/cview/index.pl">Updated
+	Physical Map</a></strong> Jun, 2004<br />
+	A total of <a href="/maps/physical/overgo_stats.pl">11
+	Overgo Plates</a> have now been loaded. Overall, <a href=
+	"/maps/physical/list_bacs_by_plate.pl">4,908 BAC's</a>
+	are now anchored to the F2.2000 genetic map. Additionally, we
+	have added an <a href=
+	"/maps/physical/list_overgo_plate_probes.pl">Overgo
+	Plate browser</a> and an <a href=
+	"/maps/physical/overgo_process_explained.pl">explanation
+	page</a> describing the Overgo Plating process.</p>
+
+	<p><strong><a href=
+	"http://rubisco.sgn.cornell.edu/mailman/listinfo/sol-forum">SOL
+	Forum mailing list</a></strong> Apr, 2004<br />
+	A new mailing list for the Solanaceae community where list
+	members can post messages. <a href=
+	"http://rubisco.sgn.cornell.edu/mailman/listinfo/sol-forum">Subscribe</a>.</p>
+
+	<p><strong><a href="/cview/index.pl">Updated
+	Physical Map</a></strong> Apr, 2004<br />
+	Four more <a href=
+	"/maps/physical/overgo_stats.pl">Overgo Plates</a> have
+	been added to our collection. There are now a total of <a href=
+	"/maps/physical/list_bacs_by_plate.pl">3,999 BAC's</a>
+	anchored to the F2.2000 genetic map.</p>
+
+	<p><strong><a href="/content/sgn_data.pl">New EST Data
+	Available</a></strong> Feb, 2004<br />
+	<strong>20,738</strong> <a href=
+	"/content/sgn_data.pl#Capsicumannuum"><strong>Pepper</strong></a>
+	ESTs, courtesy of Dr. Doil Choi - <a href=
+	"http://www.kribb.re.kr/">KRIBB</a>; <strong>11,500</strong> <a href=
+	"/content/sgn_data.pl#Petuniahybrida"><strong>Petunia</strong></a>
+	ESTs, courtesy of Dr. David Clark <a href=
+	"http://www.ufl.edu">Univ. of Florida</a> and SGN; <strong>3,000</strong>
+	<a href=
+	"/content/sgn_data.pl#Solanummelongena"><strong>Eggplant</strong></a>
+	ESTs provided by SGN.</p>
+
+	<p><strong><a href=
+	"/content/sgn_data.pl#Petuniahybrida">Petunia data
+	added</a></strong> Feb, 2004<br />
+	11,500 petunia ESTs kindly provided by Dave Clarke of the
+	<a href="http://www.ufl.edu">University of Florida</a> were
+	added and a unigene set built.</p>
+
+	<p><strong><a href=
+	"/content/sgn_data.pl#Solanummelongena">Eggplant data
+	added</a></strong> Feb, 2004<br />
+	Over 3000 eggplant ESTs were added. The sequences were kindly
+	provided by <a href="http://www.cornell.edu">Cornell
+	University</a>.</p>
+
+	<p><strong>New SGN features</strong> Feb, 2004<br />
+	New features added recently include an improved user-interface
+	with pull-down menus, a quick search, a library search, and an
+	FTP site.</p>
+
+	<p><strong><a href="http://zamir.sgn.cornell.edu/mutants/">Mutants
+	Database Updated</a></strong> Nov, 2003<br />
+	Now includes 3500 tomato monogenic mutants collected in Summer
+	2003</p>
+
+	<p><strong><a href=
+	"/search/direct_search.pl?search=annotations">Full Text
+	Search</a></strong> Oct, 2003<br />
+	Keyword search of all unigene annotations, both manual and
+	automated</p>
+
+	<p><strong><a href="/cview/index.pl">BAC
+	Physical Mapping</a></strong> Sept, 2003<br />
+	Overgo based BAC anchoring to the F2-2000 tomato genetic
+	map</p>
+
+	<p><strong><a href=
+	"http://zamir.sgn.cornell.edu/Qtl/Html/home.htm">Real Time
+	QTL</a></strong> Aug, 2003<br />
+	A tool for the analysis of complex phenotypes</p>
+
+	<p><strong><a href=
+	"/content/unigene_builds/Lycopersicon_Combined.pl">Lycopersicon Combined Unigene Build Series</a></strong><br />
+	Incorporation of ESTs derived from Lycopersicon hirsutum, Lycopersion pennellii, and Lycopersion esculentum cDNA libraries constructed at Cornell University.

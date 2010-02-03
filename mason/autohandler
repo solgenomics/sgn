@@ -1,0 +1,7 @@
+
+
+<& /site/header.mas &>
+
+% $m->call_next;
+
+<& /site/footer.mas &>

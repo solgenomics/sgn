@@ -1,0 +1,157 @@
+GBROWSE TUTORIAL
+Lincoln Stein
+May 7, 2003
+
+This is a quick tutorial to take you through the main features and
+gotchas of gbrowse.  This tutorial assumes that you have successfully
+setup MySQL, Perl, GD, BioPerl and the other gbrowse dependencies, and
+that you have successfully loaded and browsed the yeast test data.
+
+We will be working with simulated Volvox genome annotation data.  The
+database will be named "volvox" and gbrowse will be invoked with this
+URL:
+
+  http://your.host/cgi-bin/gbrowse/volvox
+
+1.  THE BASICS
+
+The first step is to set up a new database named "volvox."  Using the
+mysql tool, create the database, grant yourself read/write privileges,
+and grant the "nobody" user read privileges:
+
+  % mysqladmin -uroot -p create volvox
+  Enter password: *********
+
+  mysql> create database volvox;
+  Query OK, 1 row affected (0.04 sec)
+
+  mysql> grant all privileges on volvox.* to lstein@localhost;
+  Query OK, 0 rows affected (0.00 sec)
+
+  mysql> grant select on volvox.* to nobody@localhost;
+  Query OK, 0 rows affected (0.00 sec)
+
+  mysql> quit
+  Bye
+
+Replace "lstein" with your own login name.
+
+Now load some sample data.  In the "data_files" subdirectory of this
+tutorial you will find the file volvox1.gff.  This contains a series
+of 15 simulated features
+
+% fast_load_gff.pl -d volvox -c volvox1.gff 
+Fast loading enabled
+SUCCESS: 16 features successfully loaded
+
+See volvox.conf for baseline configuration
+
+----------------
+
+2) ADDING NEW FEATURE TYPE
+
+% ./random_feature.pl motif Motif m > volvox2.gff
+Load this file.
+
+Add this to config file
+
+[Motif]
+feature      = motif:example
+glyph        = generic
+bgcolor      = blue
+height       = 6
+stranded     = 1
+description  = 1
+key          = Motifs
+
+----------------
+
+3) ADDING NOTES
+
+See volvox3.gff
+
+4) ADDING SEGMENTED FEATURES
+
+See volvox4.gff
+
+config:
+
+[Match]
+feature      = alignment:example
+glyph        = segments
+bgcolor      = orange
+connector    = solid
+height       = 6
+description  = 1
+key          = Matches
+
+5) MAKING OWN AGGREGATOR
+
+See volvox 5.gff.
+
+aggregators = transcript alignment orf MySkipper{skipper}
+
+[MySkipper]
+feature      = MySkipper:example
+glyph        = segments
+bgcolor      = red
+connector    = solid
+height       = 6
+description  = 1
+key          = MySkipper
+
+6) avoiding loss of unmapped segments
+
+See volvox6.gff
+
+aggregators = transcript alignment orf MySkipper{skipper/skipper_whole}
+
+7) Making things that look like genes
+
+[MySkipper]
+feature      = MySkipper:example
+glyph        = transcript
+bgcolor      = red
+height       = 12
+description  = 1
+key          = MySkipper
+
+8) Semantic zooming
+
+[MySkipper:20000]
+feature      = skipper_whole:example
+glyph        = generic
+stranded     = 1
+bgcolor      = red
+height       = 12
+description  = 1
+key          = MySkipper
+
+9) Placing something in the overview
+
+[MySkipper:overview]
+feature      = skipper_whole:example
+glyph        = generic
+stranded     = 1
+bgcolor      = red
+height       = 3
+description  = 1
+key          = skippers
+
+10) canonical gene
+
+See volvox7.gff
+
+aggregators = wormbase_gene alignment orf MySkipper{skipper/skipper_whole} 
+
+[Genes]
+feature      = transcript:example
+glyph        = wormbase_transcript
+forwardcolor = violet
+reversecolor = indianred
+utr_color    = gray
+bgcolor      = red
+height       = 20
+description  = 1
+key          = genes
+

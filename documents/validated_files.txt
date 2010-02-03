@@ -1,0 +1,598 @@
+FILES THAT HAVE BEEN VALIDATED FOR XHTML
+(ROOT sgn/cgi-bin)
+(Evan Herbst, Jan 2007)
+
+file                                            date   comments
+----------------------------------------------------------------------------------------
+.:
+index.pl                                        1/5
+oldevents.pl                                    1/7
+oldhighlights.pl                                1/7
+oldpublications.pl                              1/7
+testgd.pl                                       not html
+
+./about:
+Summer_Internship_2005.pl                       1/7
+about_solanaceae.pl                             1/6
+align_term.pl                                   1/7
+clone_policy.pl                                 1/7
+clustal_file.pl                                 1/7
+fam_align_analysis.pl                           1/7
+fam_tree_analysis.pl                            1/7
+family_analysis.pl                              1/7
+index.pl                                        1/8
+italy.pl                                        1/7
+release_20040301.pl                             1/7
+solanum_nomenclature.pl                         1/6
+status.pl                                            can't locate SGN.pm in @INC -- has been superseded? doesn't seem recent
+temp.pl                                              graphs server-room temperature? has been superseded?
+tomato_project_overview.pl                      1/8
+tomato_sequencing.pl                            1/8
+tomato_sequencing_scope.pl                      1/7
+us_tomato_sequencing.pl                         1/7
+
+./about/ecosol:
+index.pl                                        1/7
+
+./about/release_notes:
+tomato_unigene_build1.pl                        1/7
+
+./about/tomato_project:
+index.pl                                        1/7
+
+./about/tomato_project/nsf_9872617:
+footer.pl                                       not top-level
+index.pl                                        1/7
+members.pl                                      1/7
+progress.pl                                     1/7
+project.pl                                      1/7
+publications.pl                                 1/7
+websites.pl                                     1/7
+
+./about/tomato_sequencing:
+index.pl                                        1/7
+
+./bulk:
+display.pl                                      1/7  with and without summary=1
+download.pl                                     1/7
+index.pl                                        1/7
+input.pl                                        1/7
+
+./community:
+index.pl                                        1/6
+
+./community/feature:
+200403.pl                                       1/6
+200404.pl                                       1/6
+200405.pl                                       1/6
+200406.pl                                       1/6
+200407.pl                                       1/6
+200408.pl                                       1/6
+200409.pl                                       1/6
+200410.pl                                       1/6
+200503.pl                                       1/6
+200504.pl                                       1/6
+200507.pl                                       1/6
+200510.pl                                       1/6
+200601.pl                                       1/6
+200612.pl                                       1/6
+index.pl                                        1/6
+kjb_lab.pl                                      1/6
+paran_lab.pl                                    1/6
+
+./community/genomics_forum:
+index.pl                                        1/6
+schedule_summer_2005.pl                         1/6
+
+./community/links:
+genefinding.pl                                  1/6
+index.pl                                        1/6
+journals.pl                                     1/6
+related_sites.pl                                1/6
+seed_companies.pl                               1/6
+
+./community/meetings:
+index.pl                                        1/6
+
+./community/snp_consortium:
+Labate_tomato_tech.pl                           1/6
+index.pl                                        1/6
+
+./content:
+coffee.pl                                       1/6
+fish.pl                                         1/6
+index.pl                                        1/6
+library_info.pl                                 1/6
+map_submissions.pl                              1/6
+sgn_data.pl                                          duplicate element ID having to do with Solanum habrochaites, coming from a database; also, the 'database schema' link is broken -- 1/6
+unigene_builds.pl                               1/6
+
+./content/libraries:
+breakerfruit.pl                                 1/7
+callus.pl                                       1/7
+deficientroot.pl                                1/7
+developingfruit.pl                              1/7
+flowerbudctoa.pl                                1/7
+flowerbudctob.pl                                1/7
+flowerbudctoc.pl                                1/7
+germinatingseed.pl                              1/7
+hirsutumtrichome.pl                             1/7
+index.pl                                        1/7
+maturegreenfruit.pl                             1/7
+mixedelicitor.pl                                1/7
+openflowerctod.pl                               1/7
+ovary.pl                                        1/7
+pennelliitrichome.pl                            1/7
+pseudomonasresponse.pl                          1/7
+pseudomonasresponse_s.pl                        1/7
+quiescentseed.pl                                1/7
+rootatfruitset.pl                               1/7
+rootlibraries.pl                                1/7
+rootsatvegetative.pl                            1/7
+shoot.pl                                        1/7
+tomatoredripe.pl                                1/7
+
+./content/unigene_builds:
+Lycopersicon_Combined.pl                       1/6
+index.pl                                       1/6
+
+./cview:
+index.pl                                       1/6
+map.pl                                         1/8  try eg ?map_id=13; also, there could still be bad html in the abstracts; also the image-map ID has a '#' in it
+view_chromosome.pl                             1/6
+view_maps.pl                                   1/6
+
+./data-submit:
+check-chromas.pl                               1/6
+check-idfile-format.pl                         1/6
+confirm-chromas.pl                             1/6
+confirm-identifiers.pl                         1/6
+facility-form.pl                               1/6
+index.pl                                       1/6
+library-form.pl                                1/6
+load-identifiers.pl                            1/6
+submit-main.pl                                 1/6
+top-level.pl                                   1/6
+update-facility.pl                             1/6
+update-library.pl                              1/6
+upload_chromas.pl                              1/6
+
+./forum:
+add_post.pl                                    1/6
+add_topic.pl                                   1/6
+forum_post_delete.pl                           1/6
+index.pl                                       1/6
+posts.pl                                       1/6
+return_comments.pl                             not for viewing; a subroutine for ajax
+topics.pl                                      1/5
+
+./gbrowse:
+help.pl                                        1/5
+index.pl                                       1/6
+
+./help:
+cview.pl                                       1/5
+downloading.pl                                 1/6
+faq.pl                                         1/6
+index.pl                                       1/5
+marker_search_help.pl                          1/5
+planned_outages.pl                             1/6
+quick_search.pl                                1/5
+toolbar.pl                                     1/5
+
+./help/ordering:
+index.pl                                       1/6
+
+./image:
+add_image.pl                                   1/6
+index.pl                                       1/8  be sure to give it action=something ('new' works)
+
+./insitu:
+help.pl                                        1/6
+index.pl                                       1/6
+manage.pl                                      1/6
+search.pl                                      1/6
+
+./insitu/detail:
+add_image.pl                                   1/6
+experiment.pl                                  1/8  be sure to give it action=something ('new' works)
+image.pl                                       1/8  be sure to give it action=something ('new' works)
+organism.pl                                    1/6
+primer.pl                                      superseded by probe.pl
+probe.pl                                       1/6
+tag.pl                                         1/8  be sure to give it action=something ('new' works)
+
+./insitu/upload:
+index.pl                                       1/6
+
+./maps:
+index.pl                                       1/6
+
+./maps/lpimp_ibl:
+chromosome1.pl                                 1/6
+chromosome10.pl                                1/6
+chromosome11.pl                                1/6
+chromosome12.pl                                1/6
+chromosome2.pl                                 1/6
+chromosome3.pl                                 1/6
+chromosome4.pl                                 1/6
+chromosome5.pl                                 1/6
+chromosome6.pl                                 1/6
+chromosome7.pl                                 1/6
+chromosome8.pl                                 1/6
+chromosome9.pl                                 1/6
+index.pl                                       1/6
+
+./maps/pennellii_il:
+chr1.pl                                        1/6
+chr10.pl                                       1/6
+chr11.pl                                       1/6
+chr12.pl                                       1/6
+chr2.pl                                        1/6
+chr3.pl                                        1/6
+chr4.pl                                        1/6
+chr5.pl                                        1/6
+chr6.pl                                        1/6
+chr7.pl                                        1/6
+chr8.pl                                        1/6
+chr9.pl                                        1/6
+index.pl                                       1/6
+
+./maps/pepper_korea:
+index.pl                                       1/6
+lg1.pl                                         1/6
+lg10.pl                                        1/6
+lg11.pl                                        1/6
+lg12.pl                                        1/6
+lg13.pl                                        1/6
+lg14.pl                                        1/6
+lg15.pl                                        1/6
+lg16.pl                                        1/6
+lg2.pl                                         1/6
+lg3.pl                                         1/6
+lg4.pl                                         1/6
+lg5.pl                                         1/6
+lg6.pl                                         1/6
+lg7.pl                                         1/6
+lg9.pl                                         1/6
+
+./maps/physical:
+clone_annot_download.pl                             how to use?
+clone_info.pl                                  1/6  under 'more criteria', tried 'search in genome browser'; got that /gbrowse/gbrowse/tomato died; couldn't find something in @INC
+clone_read_info.pl                             1/6
+clone_restriction_gel_image.pl                      how to use?
+clone_search.pl                                1/8  get to from direct_search
+clone_sequence.pl                                   how to use?
+index.pl                                       1/6
+list_bacs_by_plate.pl                          1/6
+list_overgo_plate_probes.pl                    1/6
+overgo_process_explained.pl                    1/6
+overgo_stats.pl                                1/6
+vector_info.pl                                 1/6
+view_fish.pl                                        how to use?
+
+./maps/tomato_arabidopsis:
+chr10_split.pl                             1/6
+chr10a.pl                                  1/6
+chr10b.pl                                  1/6
+chr10c.pl                                  1/6
+chr10d.pl                                  1/6
+chr10e.pl                                  1/6
+chr11_split.pl                             1/6
+chr11a.pl                                  1/6
+chr11b.pl                                  1/6
+chr11c.pl                                  1/6
+chr11d.pl                                  1/6
+chr11e.pl                                  1/6
+chr12_split.pl                             1/6
+chr12a.pl                                  1/6
+chr12b.pl                                  1/6
+chr12c.pl                                  1/6
+chr12d.pl                                  1/6
+chr12e.pl                                  1/6
+chr1_split.pl                              1/6
+chr1a.pl                                   1/6
+chr1b.pl                                   1/6
+chr1c.pl                                   1/6
+chr1d.pl                                   1/6
+chr1e.pl                                   1/6
+chr2_split.pl                              1/6
+chr2a.pl                                   1/6                                
+chr2b.pl                                   1/6
+chr2c.pl                                   1/6
+chr2d.pl                                   1/6
+chr2e.pl                                   1/6
+chr3_split.pl                              1/6
+chr3a.pl                                   1/6
+chr3b.pl                                   1/6
+chr3c.pl                                   1/6
+chr3d.pl                                   1/6
+chr3e.pl                                   1/6
+chr4_split.pl                              1/6
+chr4a.pl                                   1/6
+chr4b.pl                                   1/6
+chr4c.pl                                   1/6
+chr4d.pl                                   1/6
+chr4e.pl                                   1/6
+chr5_split.pl                              1/6
+chr5a.pl                                   1/6
+chr5b.pl                                   1/6
+chr5c.pl                                   1/6
+chr5d.pl                                   1/6
+chr5e.pl                                   1/6
+chr6_split.pl                              1/6
+chr6a.pl                                   1/6
+chr6b.pl                                   1/6
+chr6c.pl                                   1/6
+chr6d.pl                                   1/6
+chr6e.pl                                   1/6
+chr7_split.pl                              1/6
+chr7a.pl                                   1/6
+chr7b.pl                                   1/6
+chr7c.pl                                   1/6
+chr7d.pl                                   1/6
+chr7e.pl                                   1/6
+chr8_split.pl                              1/6
+chr8a.pl                                   1/6
+chr8b.pl                                   1/6
+chr8c.pl                                   1/6
+chr8d.pl                                   1/6
+chr8e.pl                                   1/6
+chr9_split.pl                              1/6
+chr9a.pl                                   1/6
+chr9b.pl                                   1/6
+chr9c.pl                                   1/6
+chr9d.pl                                   1/6
+chr9e.pl                                   1/6
+index.pl                                   1/6
+
+./markers:
+cos_markers.pl                             1/5
+cosii_markers.pl                           1/6
+index.pl                                   1/6
+microsats.pl                               1/6
+
+./methods:
+index.pl                                   1/6
+
+./methods/unigene:
+index.pl                                   1/6
+unigene-builds.pl                          1/6
+unigene-methods.pl                         1/6
+unigene-precluster.pl                      1/6
+unigene-process-2.pl                       1/6
+unigene-validation.pl                      1/6
+
+./misc:
+index.pl                                   1/6
+
+./misc/codon_usage:
+codon_histogram.pl                         1/6
+codon_usage.pl                             1/6
+index.pl                                   1/6
+
+./moby:
+dispatcher.pl                              not intended to generate html
+
+./mutants:
+index.pl                                   1/6
+mutants_main.pl                            1/6
+
+./outreach:
+index.pl                                   1/7
+
+./phenome:
+allele.pl                                       how to use? can't just view
+allele_synonym.pl                               how to use? can't just view
+claim_locus_ownership.pl                   1/6
+individual.pl                                   how to use? can't just view
+locus_display.pl                           1/7
+locus_synonym.pl                           1/7
+
+./phenotype:
+display_image_and_data.pl                  1/7
+display_plants_from_genotype.pl            1/7
+display_plants_from_property.pl            1/7
+display_prop_list.pl                       1/8
+display_property_data_from_plant.pl        1/7
+display_samples_from_plant.pl              1/7
+index.pl                                   1/7
+population.pl                              1/7
+
+./search:
+all_unig_for_annot.pl                            1/8
+annotation_search_result.pl                      1/8
+clone-order.pl                                   1/14 try going to "EST details -- SGN-E362772" first to get the cart icon
+direct_search.pl                                 1/8
+est.pl                                           1/5  with and without show_hierarchy on
+family.pl                                        1/8  try ?family_id=782
+family_align.pl                                  1/8  family_id=782 is small enough to work
+family_build.pl                                  1/8
+glossarysearch.pl                                1/5
+index.pl                                         1/7
+library_search.pl                                1/8  to get to: do a quicksearch for 'lib' and check out cDNA libraries
+locus_display.pl                                       used?
+locus_search.pl                                  1/7
+phenosearch.pl                                         used? does gene + phenotype searches
+phenotype_search.pl                              1/7
+quick_search.pl                                  1/8
+route-order.pl                                         used? has to do with shopping cart
+tigrtc.pl                                        1/7   example parameters: tigr_tc=115721&tcindex_id=1
+trace_download.pl                                no html printed; actually downloads a GZ
+ug-ad2.pl                                        1/7
+unigene-all-blast-matches.pl                     1/6
+unigene-estscan-detail.pl                        1/6
+unigene.pl                                       1/5
+
+./search/markers:
+cos_list.pl                                      1/5
+index.pl                                         1/6
+markerinfo.pl                                    1/6
+markersearch.pl                                  1/6
+rflp_list.pl                                     1/6
+ssr_list.pl                                      1/6
+view_rflp.pl                                           marker image not found when tested w/ marker_id=293
+
+./secretary:
+geneview.pl
+index.pl                                               no validate link
+mylist.pl
+query.pl                                               no validate link; also 'You really shouldn't call this function directly, hence the extra magic needed (2nd parameter)! at /usr/local/lib/site_perl/CXGN/UserList/Hotlist.pm line 65'
+
+./secretary/scraps:
+hotlist.pl                                             XML Parsing Error: no element found / Location: http://henbane.sgn.cornell.edu/secretary/scraps/hotlist.pl / Line 15, Column 9
+scrap.pl                                               can't locate Page::Scrap.pm in @INC
+test.pl                                                can't locate Page::Scrap.pm in @INC
+
+./secretary/tools:
+http_error_handler.pl                                  You really shouldn't call this function directly, hence the extra magic needed (2nd parameter)! at /usr/local/lib/site_perl/CXGN/UserList/Hotlist.pm line 65
+
+./secretom:
+index.pl                                         1/7
+
+./sequencing:
+agp.pl                                           1/6
+bac_registry_discrepancies.pl                         'sorry, this page is temporarily unavailable'
+tpf.pl                                           1/6
+
+./sgn_photos:
+index.pl                                         1/6
+
+./solanaceae-project:
+call_for_BACS.pl                                 1/6
+index.pl                                         1/6
+seed_bac_selection.pl                            1/6
+summary.pl                                       1/6
+
+./solanaceae-project/docs:
+index.pl                                         1/6
+
+./solanaceae-project/meeting_2005:
+index.pl                                         1/6
+
+./solanaceae-project/sol-bioinformatics:
+ghent2006_report.pl                              1/8
+index.pl                                         1/6
+
+./solpeople:
+account-confirm.pl                               1/5
+attribute_bacs.pl                                1/5
+change-account.pl                                1/5
+contact-info.pl                                  1/5
+contact-update.pl                                1/5
+cosii_submission.pl                              1/5
+image_404_test.pl                                1/6
+index.pl                                         1/6
+login.pl                                         1/5
+new-account.pl                                   1/5
+people_detail.pl                                 1/7  there will still be noncompliant pieces of html that were previously put in the database
+people_search.pl                                 1/7
+research-info.pl                                 1/5
+research-update.pl                               1/5
+send-password.pl                                 1/5
+submit_marker.pl                                 1/5
+top-level.pl                                     1/8
+update-account.pl                                1/5
+update-bacs.pl                                   1/6
+
+./solpeople/admin:
+attribute.pl                                     1/6
+crash_test.pl                                    1/6
+create_organization.pl                           1/6
+get_person.pl                                    1/6
+quick_create_account.pl                          1/6
+stats.pl                                         1/6
+
+./supplement:
+index.pl                                         1/6
+
+./supplement/plantcell-14-1441:
+bac_annotation.pl                                1/6
+index.pl                                         1/6
+
+./supplement/plantcell-14-1441/GenPept:
+index.pl                                         1/6
+
+./supplement/plantcell-14-1441/artmenis:
+index.pl                                         1/6
+
+./supplement/plantcell-14-1441/atpath:
+index.pl                                         1/6
+
+./supplement/plantcell-14-1441/le_con_2:
+index.pl                                         1/6
+
+./supplement/plantcell-14-1441/sgn_estdb:
+index.pl                                         1/6
+
+./tag:
+index.pl                                         1/8  need to give it an action=; 'new' works
+
+./tools:
+contact.pl                                       1/5
+http_error_handler.pl                                  'does not exist on this server'
+index.pl                                         1/7
+sixframe_translate.pl                            1/5
+trace_view.pl                                          chromatogram viewer, needs an EST argument; the 'view' link for chromatograms on search/est.pl is disabled -- ?
+wait.pl                                          no validation link
+
+./tools/align_viewer:
+index.pl                                         1/6
+show_align.pl                                    1/7
+
+./tools/blast:                                         they all require the 'blastall' executable, blast it all; you'll need to set $blast_path='/usr/bin'
+blast_result.pl                                  1/8   doesn't write html except on error; also couldn't find tomato-EST database
+index.pl                                         1/8
+upload.pl                                        1/6
+upload_cron.pl
+upload_delete.pl
+upload_result.pl
+view_result.pl                                          Bio::GMOD::Blast::Graph::showGraph() doesn't do proper xhtml!
+wait_result.pl                                          superseded by tools/wait.pl?
+
+./tools/caps_designer:
+caps_input.pl                                    1/7
+find_caps.pl                                     1/7
+
+./tools/convert:
+convert.pl                                       1/7
+index.pl                                         1/7
+input.pl                                         1/7
+
+./tools/dna_digestion:
+digestion.pl                                     1/7
+
+./tools/fastmapping:
+help.pl                                          1/7
+index.pl                                         1/7
+
+./tools/intron_detection:
+display_introns.pl                               1/8
+find_introns.pl                                  1/6
+index.pl                                         1/6
+intron_finder_command_line.pl                    internal (backend)
+
+./tools/primer3:
+help.pl                                          1/7
+index.pl                                         1/7
+results.pl                                            Cannot find /data/shared/primer3/src/primer3_core executable
+results_help.pl                                  1/7
+
+./tools/seedbac:
+chr_sbfinder.pl                                  1/7
+index.pl                                         1/7
+sbfinder.pl                                      1/7
+
+./tools/sigpep_finder:
+input.pl                                         1/7
+sigpep_find.pl                                   1/8
+
+./tools/solcyc:
+index.pl                                         1/7
+
+./tools/ssr:
+index.pl                                         1/7
+show_ssr.pl                                      1/7
+
+./tools/tree_browser:
+index.pl                                         1/7

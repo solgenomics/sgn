@@ -1,0 +1,102 @@
+<%doc>
+  NAME: experiment_composition.mas
+  VERSION: 1.0
+  DESCRIPTION: Experiment composition get the data of the experiments associated to a experimental design and return the data 
+               as mason object in HTML format; 
+  AUTHOR: Aureliano Bombarely (ab782@cornell.edu)
+</%doc>
+
+
+<%perl>
+use strict;
+use warnings;
+
+use CXGN::SEDM::Schema;
+use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
+
+
+my $exp_comp_content;
+
+## If there aren't any experiment that comes from experimental design it will do nothing. 
+## The error message will returned by basic information
+
+my @exp_list;
+if (defined $ARGS{'exp_design'}) {
+
+   ## Get the data from the row as hash
+
+   my %expdes_data = $ARGS{'exp_design'}->get_columns();
+   my $schema = $ARGS{'exp_design'}->result_source()->schema();
+
+   ## Search probe data, put into an array and use columnar table to give the html format. If don't exists any data, print message.
+
+   my $experiment_composition_html;
+   my @exp_rows = $schema->resultset('Experiments')->search({ experimental_design_id => $expdes_data{'experimental_design_id'}});
+   my $exp_n = scalar(@exp_rows);
+   if ($exp_n > 0) {
+      foreach my $exp_row (@exp_rows) {
+         my %exp_data = $exp_row->get_columns();
+      	 my $exp_name = $exp_data{'experiment_name'};
+      	 my $exp_link = '/sedm/experiment.pl?id='.$exp_data{'experiment_id'};
+      	 my $colour_nr = $exp_data{'colour_nr'} || '<i><font color="gray">data not available</font></i>';
+      	 my $rep_nr = $exp_data{'replicates_nr'} || '<i><font color="gray">data not available</font></i>';
+      	 push @exp_list, [ "<a href=$exp_link>$exp_name</a>", $colour_nr, $rep_nr];
+	 my @target_rows = $schema->resultset('Targets')->search({ experiment_id => $exp_data{'experiment_id'} });	 
+	 foreach my $target_row (@target_rows) {
+	    my %target_data = $target_row->get_columns();
+	    my $target_link = '<i><font color="gray">data not available</font></i>';
+	    if (defined $target_data{'target_name'}) {
+	       my $target_const = '/sedm/target.pl?id='.$target_data{'target_id'};
+	       $target_link= "<a href=$target_const>$target_data{'target_name'}</a>";
+            }
+	    my $sample_list = '<i><font color="gray">data not available</font></i>';
+	    my $group_rs = $schema->resultset('GroupLinkage')->search({ group_id => $target_data{'sample_group_id'},
+		                                                        member_type => 'sample' });
+	    if (defined $group_rs) {
+	        my @sample_ids = $group_rs->get_column('member_id')->all();
+		my @sample_list;
+		foreach my $sample_id (@sample_ids) {
+		   my ($sample_row) = $schema->resultset('Samples')->search({ sample_id => $sample_id });
+		   if (defined $sample_row) {
+		       my $sample_name = $sample_row->get_column('sample_name');
+		       my $sample_link = '/sedm/sample.pl?id='.$sample_id;
+		       my $sample_html = "<a href=$sample_link>$sample_name</a>";
+		       push @sample_list, $sample_html;
+		   }
+		}
+		$sample_list = join (' ,', @sample_list);
+            }
+	    push @exp_list, [ undef, undef, undef, $target_link, $sample_list ];
+         }
+      }
+
+      $experiment_composition_html = columnar_table_html( headings => [ 'Experiment name', 
+                                                                        'Colour number', 
+                                                                        'Replicates number',
+									'Target name',
+									'Sample list' ],
+                                                          data     => \@exp_list,
+							  __alt_freq => 2,
+                                                          __align  => ['l', 'c', 'c', 'c', 'c'],
+                                                          __tableattrs => 'cellpadding=0, cellspacing=0
+                                                                           <colgroup span=1 width="43%" 
+                                                                           <colgroup span=2 width="3%"
+                                                                           <colgroup span=1 width="16%"
+                                                                           <colgroup span=1 width="35%"',
+                                                        );
+   } else {
+      $experiment_composition_html = 'None probe was found associated to this experimental design';
+   }
+   $exp_comp_content = info_section_html( title    => "Experimental Design Elements (".$exp_n.")", 
+                                          contents => $experiment_composition_html,
+					  collapsible =>1,
+                                          collapsed =>1, );
+ 
+
+}
+
+</%perl>
+
+<% $exp_comp_content %>
+
+

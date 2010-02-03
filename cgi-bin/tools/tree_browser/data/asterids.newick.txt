@@ -1,0 +1,70 @@
+ 
+( 
+ (
+  (
+   (Cornales:5,
+     (
+      (Tea:1, Camellias:1)Theaceae:1,
+      (blueberries:1, rhododendrons:1)Ericaceae:1)Ericales:5):3,
+      Euasterids:2 
+      (
+       (
+	Garryales:2,
+	(
+	 Solanales:1 
+	 (
+	  Hydrolea:1,
+	  Spehnoclea:1,
+	  Montiniaceae:1
+	  ):1,
+	   (
+	    (
+	     (
+	      Tomato:0.2,
+	      Potato:0.2, Eggplant:0.2)Solanum:0.8,
+	      Pepper:1,
+	      Nicotiana:1,
+	      Petunia:1
+	       )Solanaceae:1,
+		(
+		 Sweet Potato:1,
+		       Morning Glory:1
+		       ) Convolvulaceae:1
+			 )Solanales:1,
+			  
+			  ((Mimulus:1)Phrymaceae:1, Oleaceae:1 
+			   (Olives:1, Mints:1, Antirrhinum:1))
+			  Lamiales:1,
+			  (
+			   (
+			    Coffea:1,
+			    Hedyotis:1
+			    )Rubiaceae:1
+			     
+			     )Gentianiales:1
+			       ):1
+				)Euasterid-I:3,
+				 (Aquafoliales:2, 
+				  ((Gerbera:1,Sunflower:1,Daisies:1,artichokes:1,Lattuca:1)Asteraceae:1)Asterales:2,
+				  ((Carrots:1,Coriander:1)Apiaceae:1)Apiales:2 ,
+				  Dipsacales:2
+				  
+				  )Euasterid-II:3
+				   )Euasterids:3
+				    )Asterids:4
+  ,				     (
+	     Arabidopsis:10,	     
+	     Medicago:10,
+	     Poplar:10
+	     )Rosids:4
+  )Dicots:5
+ ,
+ 
+ 
+ (
+  Zea mays:14,
+      Rice:14
+      )Monocots:5
+       )
+
+  

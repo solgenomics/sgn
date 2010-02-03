@@ -1,0 +1,73 @@
+<%doc>
+
+=head1 NAME
+
+searchtabs.mas - mason module that displays the tabs for the search page
+
+=head1 DESCRIPTION
+
+takes a parameter, search, specifying which search should be highlighted in the tabbar. Defaults to 'loci'. Current legal values are 'loci', 'phenotypes', 'cvterm_name', 'unigene', 'family', 'markers', 'bacs', 'est_library', 'images', 'directory', for the different available searches.
+
+=head1 AUTHOR
+
+Lukas Mueller &st;lam87@cornell.edu&gt;. Based on Perl code by Rob Buels.
+
+=cut
+
+</%doc>
+
+<%args>
+$search => 'loci'
+</%args>
+
+<%perl>
+
+use CXGN::Page::FormattingHelpers qw/page_title_html modesel/;
+use CXGN::Search::CannedForms;
+
+my @tabs = (
+	    ['?search=loci','Genes'],
+	    ['?search=phenotypes','Phenotypes'],
+	    ['?search=cvterm_name','QTLs/Traits'],
+	    ['?search=unigene','Unigenes'],
+	    ['?search=family', 'Family' ],
+	    ['?search=markers','Markers'],
+	    ['?search=bacs','Genomic Clones'],
+	    ['?search=est_library','ESTs'],
+	    ['?search=images','Images'],	
+	    ['?search=directory','People'],    
+	   );
+my @tabfuncs = (
+		\&gene_tab,
+		\&phenotype_tab,
+		\&cvterm_tab,
+		\&unigene_tab,
+		\&family_tab,
+		\&marker_tab,
+		\&bac_tab,
+		\&est_library_submenu,
+                \&images_tab,	
+		\&directory_tab,
+	
+	       );
+
+#get the search type
+
+my $tabsel =
+  ($search =~ /loci/i)           ? 0
+  : ($search =~ /phenotypes/i)   ? 1  
+  : ($search =~ /cvterm_name/i)  ? 2
+  : ($search =~ /unigene/i)      ? 3
+  : ($search =~ /famil((y)|(ies))/i)       ? 4
+  : ($search =~ /markers/i)      ? 5
+  : ($search =~ /bacs/i)         ? 6
+  : ($search =~ /est/i)          ? 7
+  : ($search =~ /library/i)      ? 7 # yes, there are two terms linking to tab 8
+  : ($search =~ /images/i)       ? 8 # New image search
+  : ($search =~ /directory/i)    ? 9
+  : die "Invalid search $search";
+
+
+print modesel(\@tabs,$tabsel); #print out the tabs
+
+</%perl>

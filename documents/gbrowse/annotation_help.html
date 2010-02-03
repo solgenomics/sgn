@@ -1,0 +1,926 @@
+
+<p>
+
+<table width="100%">
+  <tr class="searchtitle">
+    <th><a href="#upload">Uploading</a></th>
+    <th><a href="#edit">Editing</a></th>
+    <th><a href="#other">Deleting</a></th>
+    <th><a href="#other">Downloading</a></th>
+    <th><a href="#format">File Format</a></th>
+    <th><a href="#customize">Customizing Appearance</a></th>
+    <th><a href="#numeric">Displaying Intensity Plots &amp; Other Numeric Data</a></th>
+    <th><a href="#remote">Publishing</a></th>
+  </tr>
+</table>
+
+<A NAME="intro"></A>
+<H1>Adding Annotations to the Genome</H1>
+
+<P>You can upload your own list of sequence annotations to this page
+and view them in the context of the genome.  Uploaded annotations will
+persist until you edit them or delete them.  Your annotations are
+private and will not be seen by other individuals.  If you choose to,
+you can publish your annotations and share them with your
+colleagues.</P>
+
+<p>
+
+<A NAME="upload"></A>
+<h2>To upload annotations:</h2>
+
+<ol>
+  <li>Create a text file using the format described below.  The file
+      must be <i>text only</i>.
+  <li>Use the <b>Browse...</b> button to select the file.
+  <li>Press the <b>Upload</b> button to upload the file.
+</ol>
+
+<p>
+
+The browser should now show a line of text that identifies the date
+you uploaded this file, and links to the sequence(s) which you have
+annotated:
+
+<blockquote>
+<font color="blue"><u>[your_file.txt]</u></font> <i>Last modified Mon Dec 17 08:43:36 2001. Annotated sequences:</i>
+<font color="blue"><u>T22A3</u></font>
+</blockquote>
+
+<P>From now on, whenever you browse a region covered by your
+annotations they will appear on the display. To quickly go to an
+annotated region, click on its link.  (If your file contains too many
+annotated regions they will not be shown as individual links.)</p>
+
+<hr>
+<a name="edit"></a>
+<h2>To edit annotations:</h2>
+
+<p>
+
+Your annotations will persist until you delete them, or until they are
+not accessed for a long period of time, typically 60 days.  To modify
+them, you can upload a new file, replacing the old one.
+Alternatively, you can edit them on-line.
+
+<p>
+
+<ol>
+  <li>Press the <b>Edit Data...</b> button. This will display a text field containing
+      your uploaded annotations.
+  <li>Make the changes you want.
+  <li>Press <b>Submit Changes...</b>
+</ol>
+
+<p>
+
+You can use the edit button to create an annotation file from scratch.
+Just type the annotation data into the text field or cut and paste
+from your favorite word processor.
+
+<hr>
+
+<a name="other"></a>
+<h2>To Download or Delete Annotations</h2>
+
+<ol>
+  <li>To <b>delete</b> your annotations, press the <b>Delete Data</b> button.
+  <li>To <b>download</b> your annotations as a text file, press the
+      <b>Download Data</b> button.
+  <li>Turn the display of your annotations on and off by setting the
+      <i>Uploaded Annotations</i> checkbox.
+  <li>Change the relative
+      position of your annotations using the <b>Set Track Options...</b>
+      button.
+</ol>
+
+<hr>
+
+<a name="format"></a>
+<h2>Annotation File Format</h2>
+
+<p>
+
+Annotation files must be <b>text only</b>.  Here is an example:
+
+<blockquote>
+<pre>
+reference = B0511
+EST	yk260e10.5	15569-15724
+EST	yk672a12.5	537-618,3187-3294
+EST	yk595e6.5	552-618
+EST	yk595e6.5	3187-3294
+EST	yk846e07.3	11015-11208
+SwissP	PECANEX		5513-16656	                         "From SwissProt"
+FGENESH	"Gene 1"	-1200..-500,518..616,661..735,3187..3365 "Pfam domain"
+FGENESH	"Gene 2"	16626-17396,17451-17597
+
+reference = T22A3
+FGENESH	"Gene 4"	18459-18722,18882-19176,19572-30000	"Transmembrane protein"
+</pre>
+</blockquote>
+
+<h3>The Reference Line</h3>
+
+<p>
+
+The annotation file must have at least one <b>reference = <i>landmark
+name</i></b> line.  This line tells the browser what coordinate system
+you are using.  You may use any of the landmarks accepted by this
+browser, such as chromosomes, contigs, GenBank/EMBL accessions, PCR
+primer pairs, genetic markers, or predicted genes (the acceptable
+landmark types depend on how the browser is configured; please see the
+synopsis on the main page for the list).
+
+<p>
+
+The word "reference" must be all lower-case.  There may or may not be
+whitespace before and after the "=" sign.  Examples:
+
+<blockquote>
+<pre>
+reference = Locus:let-3
+reference=Chr19
+reference= AB29191.4
+reference = PCR_Product:sjj_T22A3.2
+</pre>
+</blockquote>
+
+<p>
+
+You may have several reference lines in the file.  Each reference
+landmark will apply to all data lines located beneath it until the
+next reference line occurs.
+
+<h3>The Data Lines</h3>
+
+<p>
+
+Each annotation occupies one or more lines.  It contains three to five
+columns, delimited by tabs or spaces:
+
+<dl>
+  <dt><b>Column 1, the feature type</b>
+  <dd>The first column is the feature type.  Any description is valid,
+      but a short word, like "knockout" is better than a long one, like
+      "Transposon-mediated knockout".  Later on you can provide a long descriptive
+      name in the formatting key if you desire.  If the feature type contains white
+      space, you must surround it by double or single quotes.
+  <dt><b>Column 2, the feature name</b>
+  <dd>This is the name of the feature.  The name will be displayed
+      above the feature when there's room for it and name display is turned on.
+      Shorter names are more attractive than long ones.  If the name contains white space, you must
+      surround it by white space.  Use empty quotes ("") if there is no name to display.
+  <dt><b>Column 3, the feature position</b>
+  <dd>The third column contains one or more ranges occupied by the
+      feature.  A range has a start
+      and a stop, and is expressed either as "start..stop" or "start-stop".  Use whichever form
+      you prefer. You can express a feature that occupies a discontinuous set of ranges, such as an mRNA
+      aligned to the genome, by providing a list of ranges separated by commas.  Example:
+      <blockquote><pre>
+      1..10,49..80,110..200
+      </pre></blockquote>
+      There should be no spaces before or after the commas.  If there are, enclose the entire range
+      in quotes.
+      <p>
+      To describe an oriented feature that is on the minus strand, such as a transcribed gene,
+      simply reverse the order of the start and stop ranges.  For example:
+      <blockquote><pre>
+      200..110,80..49,10..1
+      </pre></blockquote>
+      The strandedness is only displayed when using an arrowhead glyph, such the "transcript" glyph
+      or the generic glyph  with the <b>strand_arrow=1</b> option.  See <a href="#formatting">Customizing the display</a>
+      for details.
+      <p>
+      All ranges uses the coordinate system of the most recently declared reference landmark.
+  <dt><b>Column 4, Description</b> [optional]
+  <dd>The fourth column, if present, is treated as a description.  The description will be printed at the
+      bottom of the feature.  If there is no description, either leave blank, or use empty quotes.  If there
+      is whitespace in the description, surround it with quotes.  You can also enter <i>attribute=value</i>
+      information here for processing by certain glyphs.  The only combination you are likely to use currently
+      is <i>score=XXXXX</i> where <i>XXXX</i> is some numeric value.  This is used by the <i>xyplot</i>
+      glyph to chart numeric data on the genome, such as microarray intensity values.
+      <p>
+  <dt><b>Column 5, URL</b> [optional]
+  <dd>The last column contains a URL to link to when the user clicks on the feature.
+      Rather than create a URL for each individual feature, you can create linking
+      rules that are specific for particular feature types, or for all features.  See
+      <a href="#customize">Customizing the display</a> for details.
+</dl>
+
+<p>
+
+In addition to this format, you may use the standard GFF format for
+your data.  Details can be found <a
+href="http://www.sanger.ac.uk/Users/rd/gff.html">at the Sanger
+Centre</a>.
+
+<h3>Grouping</h3>
+
+<p>
+
+You can group related features together.  The layout will attempt to
+keep grouped features together, and will connect them with a dotted or
+solid line if the <b>connector</b> option is specified.
+
+<p>
+
+A group is created using a line that contains just two columns
+consisting of the feature type and name.  This is followed by a series
+of data lines in which the feature type is blank.  For example:
+
+<blockquote>
+<PRE>
+cDNA-clone  yk53c10
+            yk53c10.5       18892-19154
+            yk53c10.3       15000-15500,15700-15800
+
+[cDNA-clone]
+glyph = segments
+connector = dashed
+</PRE>
+</blockquote>
+
+<P>
+
+This example creates a group of type "cDNA-clone" named Yk53c10.  It
+consists of two sub-features, one the 5' EST and the other the 3'
+EST.  The two configuration section that follows this group says to
+use the "segments" glyph and to connect the parts using a dashed
+line.  This is described in more detail later.
+
+<p>
+
+You can add URLs and descriptions to the components of a group, but
+not to the group as a whole.
+
+
+<h3>Comments</h3>
+
+<p>
+
+You can place a comment in the annotation file by preceding it with a
+pound sign (#).  Everything following the pound sign is ignored:
+
+<blockquote><pre>
+# this is a comment
+</pre></blockquote>
+
+<hr>
+<A NAME="customize"></a>
+<H2>Customizing the Display</H2>
+
+<P>
+
+The browser will generate a reasonable display of your annotations by
+default.  However, you can customize the appearance extensively by
+including one or more configuration sections in the annotation file.
+In addition to changing the size, color and shape of the graphical
+elements, you can attach URLs to them so that the user will be taken
+to a web page of your choice when he clicks on the feature.
+<p>
+
+Here is an example configuration section.  It can appear at the top of
+xthe file, at the bottom, or interspersed among data sections:
+
+<blockquote>
+<pre>
+ # example file
+ [general]
+ height = 12
+ strand_arrow = 1
+
+ [EST]
+ glyph = segments
+ bgcolor= yellow
+ connector = dashed
+ height = 5
+
+ [FGENES]
+ glyph = transcript2
+ bgcolor = green
+ description = 1
+</PRE>
+</blockquote>
+
+<P>
+
+The configuration section is divided into a set of sections, each one
+labeled with a <b>[section title]</b>. The <b>[general]</b> section
+specifies global options for the entire image. Other sections apply to
+particular feature types. In the example, the configuration in the
+<b>[EST]</b> section applies to features labeled as having type "EST",
+while the configuration in the <b>[FGENES]</b> section applies to
+features labeled as predictions from the FGENES gene prediction
+program. Options in more specific sections override those in the
+general section.</P>
+
+<P>Inside each section is a series of <b><i>name</i>=<i>value</i></b>
+pairs, where the name is the name of an option to set. You can put
+whitespace around the = sign to make it more readable, or even use a
+colon (:) instead if you prefer. The following option names are
+recognized:</P>
+
+<table border="1">
+  <tr class="searchtitle">
+     <th>Option</th><th>Value</th><th>Example</th>
+  </tr>
+
+   <tr class="searchbody">
+   <th>bgcolor</th>
+   <td>Background color of each element</td>
+   <td>blue</td>
+ </tr>
+
+  <tr class="searchbody">
+    <th>bump</th>
+    <td>Prevent features from colliding (0=no, 1=yes)</td>
+    <td>1</td>
+  </tr>
+
+  <tr class="searchbody">
+     <th>connector</th>
+     <td>Type of group connector (dashed, hat or solid)</td>
+     <td>dashed</td>
+  </tr>
+
+  <tr class="searchbody">
+    <th>description</th>
+    <td>Whether to print the feature's description (0=no, 1=yes)
+    <td>0</td>
+  </tr>
+
+  <tr class="searchbody">
+   <th>fgcolor</th>
+   <td>Foreground color of each element</td>
+   <td>yellow</td>
+ </tr>
+
+  <tr class="searchbody">
+   <th>glyph</th>
+   <td>Style of each graphical element (see list below)</td>
+   <td>transcript</td>
+  </tr>
+
+  <tr class="searchbody">
+    <th>height</th>
+    <td>Height of each graphical element (pixels)</td>
+    <td>10</td>
+  </tr>
+
+  <tr class="searchbody">
+    <th>key</th>
+    <td>Key to the feature.  This is a human-readable description that
+    will be printed in the key section of the display</td>
+    <td>ESTs aligned via TwinScan 1.2</td>
+  </tr>
+
+  <tr class="searchbody">
+    <th>label</th>
+    <td>Print the feature's name (0=no, 1=yes)</td>
+    <td>1</td>
+  </tr>
+
+  <tr class="searchbody">
+    <th>linewidth</th>
+    <td>Width of lines (pixels)</td>
+    <td>3</td>
+  </tr>
+
+  <tr class="searchbody">
+    <th>link</th>
+    <td>URL to link to.  This is a Web link in which certain variables
+    beginning with the "$" will be replaced with feature attributes.
+	Recognized variables are: <b>$name</b> - the name of the
+	feature, and <b>$type</b> - the type of the feature (e.g. EST).
+    </td>
+    <td>link = http://www.your.site/db/get?id=$name;type=$type</td>
+  </tr>
+
+  <tr class="searchbody">
+     <th>citation</th>
+     <td>This is a longer narrative description of the feature intended to
+	 identify the author and detailed description of the
+	 method. It can be either a text description or a link.</td>
+     <td>http://your.site.org/detailed_description.html</td>
+  </tr>
+
+  <tr class="searchbody">
+     <th>strand_arrow</th>
+     <td>Indicate feature strandedness using an arrow (0=no, 1=yes).
+	 NB: Strandedness is depicted differently by different
+	 glyphs, and in some cases is the default.</td>
+     <td>1</td>
+
+   <tr class="searchbody">
+     <th>section</th>
+     <td>Indicates where in the gbrowse window this type of feature
+	 should be placed: "details"=details panel;
+	 "overview"=overview panel; "region"=region panel (if there is
+	 one for this source);
+	 "details+overview"=both panels; "details+overview+region"=all
+	 three panels.  <p>
+	 "details" is the default.
+     </td>
+     <td>details+overview</td>
+  </tr>
+
+</table>
+
+<P>The bump option is the most important option for controlling the look
+of the image. If set to false (the number 0), then the features are
+allowed to overlap. If set to true (the number 1), then the features
+will move vertically to avoid colliding. If not specified, bump is
+turned on if the number of any given type of sequence feature is
+greater than 50.</P>
+
+<p>
+
+Unlike the data section, you do not need to put quotes around option
+values that contain white space.  In fact, you can continue long
+option values across multiple lines by putting extra space in front of
+the continuation lines:
+
+<blockquote><pre>
+[GenomeAlign]
+citation = The pseudoobscura genome was aligned to melanogaster using
+   GenomeAlign version 1.0.  High-similarity regions are shown in
+   blue, low similarity regions are shown in orange.  The work was
+   performed by Joe Postdoc, and is currently in press.
+</pre></blockquote>
+
+<p>
+
+Some glyphs also have glyph-specific options.  These are described in
+detail below.
+
+
+<h3>Colors</h3>
+
+<P>Colors are English-language color names or Web-style #RRGGBB colors
+(see any book on HTML for an explanation).  The following colors are
+recognized:
+
+<p>
+
+<table border="1" class="searchbody"> <TR>
+  <TD>white</TD> <TD>coral</TD> <TD>darkslateblue</TD> <TD>green</TD>
+  <TD>lightpink</TD> <TD>mediumslateblue</TD> <TD>paleturquoise</TD>
+  <TD>sienna</TD></TR> 
+<TR>
+  <TD>black</TD> <TD>cornflowerblue</TD> <TD>darkslategray</TD>
+  <TD>greenyellow</TD> <TD>lightsalmon</TD> <TD>mediumspringgreen</TD>
+  <TD>palevioletred</TD> <TD>silver</TD></TR> 
+<TR>
+  <TD>aliceblue</TD> <TD>cornsilk</TD> <TD>darkturquoise</TD>
+  <TD>honeydew</TD> <TD>lightseagreen</TD> <TD>mediumturquoise</TD>
+  <TD>papayawhip</TD> <TD>skyblue</TD></TR> 
+<TR>
+  <TD>antiquewhite</TD> <TD>crimson</TD> <TD>darkviolet</TD>
+  <TD>hotpink</TD> <TD>lightskyblue</TD> <TD>mediumvioletred</TD>
+  <TD>peachpuff</TD> <TD>slateblue</TD></TR> 
+<TR>
+  <TD>aqua</TD> <TD>cyan</TD> <TD>deeppink</TD> <TD>indianred</TD>
+  <TD>lightslategray</TD> <TD>midnightblue</TD> <TD>peru</TD>
+  <TD>slategray</TD></TR> 
+<TR>
+  <TD>aquamarine</TD> <TD>darkblue</TD> <TD>deepskyblue</TD>
+  <TD>indigo</TD> <TD>lightsteelblue</TD> <TD>mintcream</TD>
+  <TD>pink</TD> <TD>snow</TD></TR> 
+<TR>
+  <TD>azure</TD> <TD>darkcyan</TD> <TD>dimgray</TD> <TD>ivory</TD>
+  <TD>lightyellow</TD> <TD>mistyrose</TD> <TD>plum</TD>
+  <TD>springgreen</TD></TR> 
+<TR>
+  <TD>beige</TD> <TD>darkgoldenrod</TD> <TD>dodgerblue</TD>
+  <TD>khaki</TD> <TD>lime</TD> <TD>moccasin</TD> <TD>powderblue</TD>
+  <TD>steelblue</TD></TR> 
+<TR>
+  <TD>bisque</TD> <TD>darkgray</TD> <TD>firebrick</TD>
+  <TD>lavender</TD> <TD>limegreen</TD> <TD>navajowhite</TD>
+  <TD>purple</TD> <TD>tan</TD></TR> 
+<TR>
+  <TD>blanchedalmond</TD> <TD>darkgreen</TD> <TD>floralwhite</TD>
+  <TD>lavenderblush</TD> <TD>linen</TD> <TD>navy</TD> <TD>red</TD>
+  <TD>teal</TD></TR> 
+<TR>
+  <TD>blue</TD> <TD>darkkhaki</TD> <TD>forestgreen</TD>
+  <TD>lawngreen</TD> <TD>magenta</TD> <TD>oldlace</TD>
+  <TD>rosybrown</TD> <TD>thistle</TD></TR> 
+<TR>
+  <TD>blueviolet</TD> <TD>darkmagenta</TD> <TD>fuchsia</TD>
+  <TD>lemonchiffon</TD> <TD>maroon</TD> <TD>olive</TD>
+  <TD>royalblue</TD> <TD>tomato</TD></TR> 
+<TR>
+  <TD>brown</TD> <TD>darkolivegreen</TD> <TD>gainsboro</TD>
+  <TD>lightblue</TD> <TD>mediumaquamarine</TD> <TD>olivedrab</TD>
+  <TD>saddlebrown</TD> <TD>turquoise</TD></TR> 
+<TR>
+  <TD>burlywood</TD> <TD>darkorange</TD> <TD>ghostwhite</TD>
+  <TD>lightcoral</TD> <TD>mediumblue</TD> <TD>orange</TD>
+  <TD>salmon</TD> <TD>violet</TD></TR> 
+<TR>
+  <TD>cadetblue</TD> <TD>darkorchid</TD> <TD>gold</TD>
+  <TD>lightcyan</TD> <TD>mediumorchid</TD> <TD>orangered</TD>
+  <TD>sandybrown</TD> <TD>wheat</TD></TR> 
+<TR>
+  <TD>chartreuse</TD> <TD>darkred</TD> <TD>goldenrod</TD>
+  <TD>lightgoldenrodyellow</TD> <TD>mediumpurple</TD> <TD>orchid</TD>
+  <TD>seagreen</TD> <TD>whitesmoke</TD></TR> 
+<TR>
+  <TD>chocolate</TD> <TD>darksalmon</TD> <TD>gray</TD>
+  <TD>lightgreen</TD> <TD>mediumseagreen</TD> <TD>palegoldenrod</TD>
+  <TD>seashell</TD> <TD>yellow</TD></TR> 
+<TR>
+  <TD>coral</TD> <TD>darkseagreen</TD> <TD>green</TD>
+  <TD>lightgrey</TD> <TD>mediumslateblue</TD> <TD>palegreen</TD>
+  <TD>sienna</TD> <TD>yellowgreen</TD></TR>
+  </table>
+
+</P>
+
+<h3>Glyphs</h3>
+
+  <P>The ``glyph'' option controls how the features are rendered. The
+following glyphs are implemented:</P>
+<table border=1>
+  <tr class="searchtitle">
+  <th> Name</th><th>Description</th>
+</tr>
+<tr class="searchbody">
+  <th>generic</th>
+  <td>A filled rectangle.</td>
+</tr>
+<tr class="searchbody">
+  <th>ellipse</th>
+  <td>An oval</td>
+</tr>
+<tr class="searchbody">
+<th>arrow</th>
+<td>An arrow; can be unidirectional or
+    bidirectional.  It is also capable of displaying
+    a scale with major and minor tickmarks, and can 
+    be oriented horizontally or vertically.
+</td>
+</tr>
+<tr class="searchbody">
+<th>segments</th>
+<td>A set of filled rectangles connected by solid
+    lines. Used for interrupted features, such as 
+    gapped alignments and exon groups.
+    </td>
+</tr>
+<tr class="searchbody">
+<th>transcript</th>
+<td>Similar to segments, but the connecting line is
+                      a &quot;hat&quot; shape, and the direction of
+                      transcription is indicated by a small arrow.
+</td>
+</tr>
+
+<tr class="searchbody">
+<th>transcript2</th>
+<td>Similar to transcript, but the direction of
+    transcription is indicated by a terminal segment
+    in the shape of an arrow.
+</td>
+</tr>
+
+<tr class="searchbody">
+<th>anchored_arrow</th>
+<td>Similar to arrow, but the arrow is drawn in order to take account
+    of features whose end-point(s) are unknown, rather than to indicate
+    strandedness.
+</td>
+</tr>
+
+<tr class="searchbody">
+<th>primers</th>
+<td>Two inward pointing arrows connected by a line. Used for STSs.</td>
+</tr>
+
+<tr class="searchbody"> <th>triangle</th> <td>A triangle, used to
+represent point features like SNPs, or deletions and insertions.  May
+be oriented north, south, east or west.<td> </tr>
+
+<tr class="searchbody"> <th>xyplot</th> <td>A histogram, line plot or column chart,
+used for graphic numeric features such as microarray intensity values. To indicate
+the value you wish to chart, add a score=XXXX note to the description section:
+<blockquote><pre>
+    Intensity    expt1    15569..15724    score=192
+    Intensity    expt1    17451..17597    score=1071
+    </pre></blockquote>
+    See <a href="#numeric">Displaying Intensity Plots &amp; Other
+    Numeric Data</a> for full details.  <td> </tr>
+
+<tr class="searchbody">
+<th>trace</th>
+<td>Reads a SCF sequence file and displays the trace graph.</td>
+</tr>
+
+</table>
+
+<p>
+
+<a name="glyph_specific">The following glyph-specific options are recognized:</a>
+
+<table border="1">
+  <tr class="searchtitle">
+    <th>Glyph</th><th>Option</th><th>Description</th></tr>
+  </tr>
+
+  <tr class="searchbody">
+  <th class="searchtitle">arrow, anchored_arrow</th>
+  <td>tick</td>
+  <td>Draw major and minor ticks on arrow.
+      (0 = no ticks,
+      1 = major ticks,
+      2 = major &amp; minor ticks)
+  </td>
+
+<tr class="searchbody">
+ <td>&nbsp;</td>
+ <td>parallel</td>
+ <td>Whether to draw the arrow
+     parallel to the sequence
+     or perpendicular to it (1=parallel, 0=antiparallel).
+ </td>
+</tr>
+
+<tr class="searchbody">
+  <td>&nbsp;</td>
+  <td>northeast, east</td>
+  <td>Force a north or east
+      arrowhead.  (The two option names are synonyms.) (0=false, 1=true)
+  </td>
+</tr>
+
+<tr class="searchbody">
+<td>&nbsp;</td>
+
+<td>southwest, west</td>
+<td>Force a south or west arrowhead.  (The two option names are
+    synonyms.) (0=false, 1=true)</td>
+</tr>
+
+<tr class="searchbody">
+<td>&nbsp;</td>
+<td>double</td>
+<td>force doubleheaded arrow (0=false, 1=true)</td>
+</tr>
+
+<tr class="searchbody">
+<td>&nbsp;</td>
+<td>base</td>
+<td>Draw a vertical base at the
+    non-arrowhead side (0=false, 1=true).
+</td>
+</tr>
+
+<tr class="searchbody">
+<td>&nbsp;</td>
+<td>scale</td>
+<td>Reset the labels on the arrow
+    to reflect an externally 
+    established scale.
+    </td>
+</tr>
+
+<tr class="searchbody">
+<th class="searchtitle">primers</th>
+    <td>connect</td>
+    <td>Whether to connect the inward-pointing arrowheads by a line
+	(0=false, 1=true)</td>
+</tr>
+
+<tr class="searchbody">
+<th>&nbsp;</th>
+    <td>connect_color</td>
+    <td>Color of the connecting line</td>
+</tr>
+
+<tr class="searchbody">
+<th class="searchtitle">triangle</th>
+    <td>point</td>
+    <td>Is this a point-like feature?  If true, the triantle will be
+	drawn at the center of the range, and not scaled to the
+	feature width.  (0=false, 1=true)
+    </td>
+</tr>
+<tr class="searchbody">
+<th>&nbsp;</th>
+    <td>orient</td>
+    <td>Orientation of the triangle.  (N=north, S=south, E=east, W=west)
+    </td>
+</tr>
+
+  <tr class="searchbody">
+  <th class="searchtitle">xyplot</th>
+  <td>graph_type</td>
+  <td>Type of graph
+      (histogram, boxes, line, points, linepoints)
+  </td>
+</tr>
+
+<tr class="searchbody">
+  <td>&nbsp;</td>
+  <td>min_score</td>
+  <td>Minimum score for feature (will be level 0 on graph)  </td>
+</tr>
+
+<tr class="searchbody">
+  <td>&nbsp;</td>
+  <td>max_score</td>
+  <td>Maximum score for feature (will be level 0 on graph)  </td>
+</tr>
+
+<tr class="searchbody">
+  <td>&nbsp;</td>
+  <td>scale</td>
+  <td>Where to draw the Y axis scale, if any (left, right, both, none)</td>
+</tr>
+
+<tr class="searchbody">
+  <td>&nbsp;</td>
+  <td>point_symbol</td>
+  <td>When using points or linepoints graph types, controls the symbol to use for the data points.  One of
+    triangle, square, disc, point, or none.</td>
+</tr>
+    
+<tr class="searchbody">
+    <td>&nbsp;</td>
+  <td>point_radius</td>
+  <td>The radius of the symbols, if applicable, in pixels</td>
+</tr>
+
+<tr class="searchbody">
+  <th class="searchtitle">trace</th>
+  <td>trace</td>
+  <td> Specify the trace path or URL to use for this feature.  </td>
+</tr>
+
+<tr class="searchbody">
+  <td>&nbsp;</td>
+  <td>trace_prefix</td>
+  <td>String to prepend to each trace path. You may prepend a directory or a
+      partial URL.
+  </td>
+</tr>
+
+<tr class="searchbody">
+  <td>&nbsp;</td>
+  <td>trace_height</td>
+  <td>The height in pixels that the trace will be drawn.</td>
+</tr>
+
+<tr class="searchbody">
+  <td>&nbsp;</td>
+  <td>vertical_spacing</td>
+  <td>Vertical distance from the box that shows the physical span of the
+      feature to the top of the picture (in pixels).
+  </td>
+</tr>
+
+<tr class="searchbody">
+  <td>&nbsp;</td>
+  <td>glyph_delegate</td>
+  <td>Glyph to use when zoomed out too far for the trace to be drawn.</td>
+</tr>
+
+<tr class="searchbody">
+  <td>&nbsp;</td>
+  <td>a_color</td>
+  <td>Color of the line representing Adenine on the trace.</td>
+</tr>
+
+<tr class="searchbody">
+  <td>&nbsp;</td>
+  <td>c_color</td>
+  <td>Color of the line representing Cytosine on the trace.</td>
+</tr>
+
+<tr class="searchbody">
+  <td>&nbsp;</td>
+  <td>g_color</td>
+  <td>Color of the line representing Guanine on the trace.</td>
+</tr>
+
+<tr class="searchbody">
+  <td>&nbsp;</td>
+  <td>t_color</td>
+  <td>Color of the line representing Thymine on the trace.</td>
+</tr>
+
+<tr class="searchbody">
+  <td>&nbsp;</td>
+  <td>show_border</td>
+  <td>Show the black border from around the trace (0=false, 1=true)</td>
+</tr>
+
+</table>
+
+<hr>
+
+<H2><a name="numeric">Displaying Intensity Plots &amp; Other Numeric Data</a></H2>
+
+<p>
+
+
+You can upload microarray intensity data sets and other numeric data.
+The plot of the data will be displayed as a histogram or line chart
+superimposed on the genomic annotations.
+
+<p>
+
+Here is a simple template for you to follow. The result is shown on
+the right.
+
+<img src="images/help/numeric+data.gif" align="RIGHT">
+
+<table border="1">
+  <tr>
+    <td>
+<pre>
+[expression]
+glyph = xyplot
+graph_type=boxes
+fgcolor = black
+bgcolor = red
+height=100
+min_score=0
+max_score=110
+label=1
+key=Expression Level
+
+
+reference=B0019
+expression       liver   10000..12000    score=10
+expression       liver   12001..19999    score=50
+expression       liver   20000..25000    score=100
+
+expression       kidney   10000..12000    score=80
+expression       kidney   12001..19999    score=10
+expression       kidney   20000..25000    score=100
+</pre>
+    </td>
+  </tr>
+</table>
+
+<p>
+
+
+The [expression] section says to use the xyplot type of glyph, to set
+its type to "boxes" (a column chart), to make the fore and background
+colors black and red respectively, to set the height of the chart to
+100, and to set the minimum and maximum values for the Y axis to 0 and
+110 respectively.  We also add a label and a human-readable track key.
+
+<p>
+
+
+The data section defines two experiments to show in the track.  Both
+experiments use probes whose positions are relative to landmark B0019
+(you can of course use chromosome coordinates, or whatever you
+choose).  Both experiments are of type "expression", but one is the
+"liver" experiment and the other is the "kidney" experiment, as
+indicated in the second column.  The third column contains the
+coordinates of each assay point, and the fourth column contains the
+score=XXX attribute, where XXX is the intensity value.
+
+<p>
+
+See the <a href="#glyph_specific">chart in the previous section</a>
+for the xyplot glyph options.
+
+<hr>
+<H2><A NAME="remote">Publishing Annotations</A></H2>
+
+<p>
+
+If you have access to a web server, you can easily publish your
+annotations.  Simply take the annotation data file and place it on a
+Web server that is accessible to the Internet (or at least to the
+server on which the Genome Browser runs).
+
+<p>
+
+Type the URL of your annotation file into the <b>Enter Remote
+Annotation URL</b> text field of the genome browser screen.  Your
+annotation file be will accessed by the web server on which the genome
+browser runs, loaded and displayed.  Repeat this process to add more
+external annotation tracks to the display.  To remove a URL, just
+delete the contents of the field.
+
+<p>
+
+Right-click on the <b>bookmark this link</b> link in order to save the
+information to a URL that you can bookmark or mail to your colleagues.
+
+<hr>
+
+<H1><A NAME="bugs">BUGS IN THIS SOFTWARE</A></H1>
+<P>Please report them to the author.</P>
+<P>
+<HR>
+<H1><A NAME="author">AUTHOR</A></H1>
+<P>Lincoln Stein &lt;<A HREF="mailto:lstein@cshl.org">lstein@cshl.org</A>&gt;</P>
