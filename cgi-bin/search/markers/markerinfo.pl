@@ -213,7 +213,7 @@ sub kfg_html {
 sub rflp_html {
     my $c = shift;
   my $ihtml = ""; 
-  if ( SGN::Controller::Marker->rflp_image_link( $marker, $c->config ) )
+  if ( SGN::Controller::Marker->rflp_image_link( $c, $marker ) )
   {
       $ihtml ="<br /><a href=\"/search/markers/view_rflp.pl?marker_id=$marker_id\">[$marker_name image]</a><br />";
   }
