@@ -365,7 +365,7 @@ sub uri_for_file {
 
 =head2 forward_to_mason_view
 
-  Usage: $c->forward_to_mason_view( '/error_page', message => 'bar' );
+  Usage: $c->forward_to_mason_view( '/some/thing', foo => 'bar' );
   Desc : call a Mason view with the given arguments and exit
   Args : mason component name (with or without .mas extension),
          hash-style list of arguments for the mason component
