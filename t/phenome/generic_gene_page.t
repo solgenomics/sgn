@@ -1,20 +1,33 @@
 #!/usr/bin/perl
+use Test::More tests => 6;
+
 use strict;
 use warnings;
-use English;
+use Carp;
 
 use CXGN::VHost::Test;
+use CXGN::Phenome::GenericGenePage;
+use CXGN::DB::Connection;
 
-use Test::More tests => 3;
+$SIG{__DIE__} = \&Carp::confess;
 
+my $dbh = CXGN::DB::Connection->new;
+
+my $ggp = CXGN::Phenome::GenericGenePage
+    ->new( -id => 428,
+	   -dbh => $dbh,
+	 );
+
+test_xml( $ggp->render_xml );
+
+# now test it on the site
 my $url = '/phenome/generic_gene_page.pl';
-
 my $result = get( "$url?locus_id=428" );
-like( $result, qr/dwarf/, 'result looks OK');
-like( $result, qr/<gene/, 'result looks OK');
-like( $result, qr/<data_provider>/, 'result looks OK');
+test_xml( $result );
 
-
-
-
-
+sub test_xml {
+    my $x = shift;
+    like( $x, qr/dwarf/, 'result looks OK');
+    like( $x, qr/<gene/, 'result looks OK');
+    like( $x, qr/<data_provider>/, 'result looks OK');
+}
