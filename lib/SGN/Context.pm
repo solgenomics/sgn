@@ -402,9 +402,6 @@ sub _build__mason_interp {
 sub forward_to_mason_view {
   my ( $self, $view, %args ) = @_;
 
-  # add the .mas extension if necessary
-  $view .= '.mas' unless $view =~ /\.mas$/;
-
   $self->_mason_interp->exec( $view, %args );
   exit;
 }

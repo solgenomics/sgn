@@ -17,4 +17,4 @@ my $marker = CXGN::Marker->new( $c->dbc->dbh, $marker_id);
 my $image_location = SGN::Controller::Marker->rflp_image_link( $c, $marker )
     or $page->error_page( "RFLP image for SGN-M$marker_id not found" );
 
-$c->forward_to_mason_view( '/markers/view_rflp', marker => $marker, image_location => $image_location, image_size => $image_size );
+$c->forward_to_mason_view( '/markers/view_rflp.mas', marker => $marker, image_location => $image_location, image_size => $image_size );
