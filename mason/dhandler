@@ -1,1 +1,1 @@
-%  die 'mason component not found';
+%  die 'mason component not found: '.$m->dhandler_arg;
