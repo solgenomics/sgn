@@ -18,9 +18,9 @@ has 'context'    => ( is => 'ro', isa => 'SGN::Context', required => 1 );
 has 'conf_dir'   => ( is => 'ro', isa => 'Path::Class::Dir', lazy_build => 1 ); sub _build_conf_dir   { shift->feature_dir('gbrowse.conf')    }
 has 'static_dir' => ( is => 'ro', isa => 'Path::Class::Dir', lazy_build => 1 ); sub _build_static_dir { shift->feature_dir('www')     }
 has 'cgi_bin'    => ( is => 'ro', isa => 'Path::Class::Dir', lazy_build => 1 ); sub _build_cgi_bin    { shift->feature_dir('cgi-bin') }
-has 'tmp_dir'    => ( is => 'ro', isa => 'Path::Class::Dir', default => sub { dir( tmpdir(), 'gbrowse2' ) } );
-has 'url_base'   => ( is => 'ro', isa => 'Str', default => '/gb2'                         );
-has 'run_mode'   => ( is => 'ro', isa => 'Str', default => 'modperl'                      );
+has 'tmp_dir'    => ( is => 'ro', isa => 'Path::Class::Dir', lazy_build => 1 ); sub _build_tmp_dir    { shift->static_dir->subdir('tmp') }
+has 'url_base'   => ( is => 'ro', isa => 'Str', default => '/gb'      );
+has 'run_mode'   => ( is => 'ro', isa => 'Str', default => 'modperl'  );
 
 sub feature_name {
     my $self = shift;
@@ -31,7 +31,6 @@ sub feature_name {
 
 sub feature_dir {
     my $self = shift;
-    local $SIG{__DIE__} = \&Carp::confess;
     return dir( $self->context->path_to('features', $self->feature_name, @_ ) );
 }
 
@@ -146,6 +145,11 @@ sub setup {
 	"chown",
 	-R => $self->context->config->{'www_user'}.'.'.$self->config->{'www_group'},
 	$self->tmp_dir;
+    system
+	"chmod",
+	'0775',
+         $self->tmp_dir;
+	
 }
 
 # returns a string of apache configuration to be included during

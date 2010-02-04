@@ -1,52 +1,18 @@
-package SGN::Feature::GBrowse;
+package SGN::Feature::GBrowse2;
 use MooseX::Singleton;
-use autodie ':all';
 use namespace::autoclean;
+extends 'SGN::Feature::GBrowse';
 
-use Try::Tiny;
-
-use Cwd qw/ abs_path getcwd /;
-use File::Path;
-use File::Temp ();
-
+use Cwd;
+use Carp;
+use File::Spec::Functions qw/ tmpdir catdir file_name_is_absolute /;
 use Path::Class;
-use File::Spec::Functions qw/ catdir tmpdir file_name_is_absolute /;
-use YAML::Any qw/ LoadFile /;
 
 # our context object
-has 'context'    => ( is => 'ro', isa => 'SGN::Context', required => 1 );
-has 'conf_dir'   => ( is => 'ro', isa => 'Path::Class::Dir', lazy_build => 1 ); sub _build_conf_dir   { shift->feature_dir('conf')    }
-has 'static_dir' => ( is => 'ro', isa => 'Path::Class::Dir', lazy_build => 1 ); sub _build_static_dir { shift->feature_dir('www')     }
-has 'cgi_bin'    => ( is => 'ro', isa => 'Path::Class::Dir', lazy_build => 1 ); sub _build_cgi_bin    { shift->feature_dir('cgi-bin') }
-has 'tmp_dir'    => ( is => 'ro', isa => 'Path::Class::Dir', default => sub { dir( tmpdir(), 'gbrowse2' ) } );
-has 'url_base'   => ( is => 'ro', isa => 'Str', default => '/gb2'                         );
-has 'run_mode'   => ( is => 'ro', isa => 'Str', default => 'modperl'                      );
-has '_min_ver'   => ( is => 'ro', default => 1.99 );
-
-sub feature_name {
-    my $self = shift;
-    my $name = ref( $self ) || $self;
-    $name =~ s/.+:://;
-    return lc $name;
-}
-
-sub feature_dir {
-    my $self = shift;
-    local $SIG{__DIE__} = \&Carp::confess;
-    return dir( $self->context->path_to('features', $self->feature_name, @_ ) );
-}
-
-# called to install and configure GBrowse from svn or a downloaded tarball
-sub install {
-    my $self = shift;
-    try {
-	$self->_install(@_);
-	$self->is_installed or die "is_installed() returned false";
-    } catch {
-	# check that the installation was successful
-	die "$_\n".$self->feature_name." feature installation failed.\n";
-    }
-}
+sub _build_conf_dir   { shift->feature_dir('conf') }
+has '+url_base'   => ( default => '/gb2' );
+sub _build_tmp_dir{ dir( tmpdir(), 'gbrowse2' ) }
+has '_min_ver' => ( is => 'ro', default => 1.99 );
 
 sub _install {
     my ( $self, $build_dir ) = @_;
@@ -60,8 +26,8 @@ sub _install {
     }
 
     # check the version of GBrowse we're about to install
-    my $version = $self->_gbrowse_version( $build_dir );
-    unless( $version >= 1.99 ) {
+    my $version = $self->_find_sources_version( $build_dir );
+    unless( $version >= $self->_min_ver ) {
 	die "automatic installation not compatible with GBrowse version '$version'\n";
     }
 
@@ -93,23 +59,10 @@ sub _install {
 
 }
 
-
 sub _absolute {
     my $d = shift;
     $d = catdir( getcwd, $d ) unless file_name_is_absolute( $d );
     return $d;
-}
-
-sub _gbrowse_version {
-    my ($self, $build_dir) = @_;
-
-    my $meta = dir( $build_dir )->file('META.yml');
-    -f $meta or die "no META.yml found in GBrowse build dir '$build_dir', aborting\n";
-
-    $meta = eval { LoadFile( $meta ) }
-	or die "could not parse META.yml in GBrowse build dir '$build_dir', aborting\n";
-
-    return $meta->{version};
 }
 
 # returns boolean of whether the feature is installed in the current
@@ -122,24 +75,6 @@ sub is_installed {
      && -f $self->cgi_bin->file('gbrowse')
      && require Bio::Graphics::Browser2
      && Bio::Graphics::Browser2->VERSION >= $self->_min_ver;
-}
-
-# assembles a URI linking to gbrowse.  part of plugin role
-sub link_uri {
-    my ( $self,$conf_name, $params ) = @_;
-
-    my $uri = URI->new('/'.$self->url_base."/$conf_name/");
-    $uri->query_form( %$params );
-    return $uri;
-}
-
-# called on apache restart - should eventually be part of plugin role
-sub setup {
-    my ( $self ) = @_;
-    system
-	"chown",
-	-R => $self->context->config->{'www_user'}.'.'.$self->config->{'www_group'},
-	$self->tmp_dir;
 }
 
 # returns a string of apache configuration to be included during
@@ -210,5 +145,5 @@ $runmode_conf
 EOC
 }
 
-__PACKAGE__->meta->make_immutable;
+__PACKAGE__->meta->make_immutable( inline_constructor => 0 );
 1;
