@@ -28,7 +28,7 @@ sub new {
 sub html_head {
     my $self=shift;
     my($page_title, $extra)=@_;
-    $page_title||='SOL Genomics Network';
+    $page_title||='Sol Genomics Network';
     my $ret_html=<<EOHTMLEIEIO;
 <head>
 <title>$page_title</title>

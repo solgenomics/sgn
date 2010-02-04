@@ -23,7 +23,7 @@ sub new {
 sub html_head {
     my $self = shift;
     my ( $page_title, $extra_head_stuff ) = @_;
-    $page_title       ||= 'SOL Genomics Network';
+    $page_title       ||= 'Sol Genomics Network';
     $extra_head_stuff ||= '';
 
     my $ret_html = <<EOHTMLEIEIO;
@@ -105,10 +105,10 @@ HTML
 <table id="siteheader" cellpadding="0" cellspacing="0">
 <tr>
   <td rowspan="3" width="10" class="sunlogo">
-    <a href="/index.pl"><img src="/documents/img/sgn_logo_icon.png" width="70" height="69" border="0" alt="SGN Home" title="SOL Genomics Network Home" id="sgnlogo" /></a>
+    <a href="/index.pl"><img src="/documents/img/sgn_logo_icon.png" width="70" height="69" border="0" alt="SGN Home" title="Sol Genomics Network Home" id="sgnlogo" /></a>
   </td>
   <td style="vertical-align: bottom">
-    <a href="/index.pl"><img id="sgntext" src="/documents/img/sgn_logo_text.png" width="230" height="21" border="0" alt="SGN Home" title="SOL Genomics Network Home" /></a>
+    <a href="/index.pl"><img id="sgntext" src="/documents/img/sgn_logo_text.png" width="230" height="21" border="0" alt="SGN Home" title="Sol Genomics Network Home" /></a>
   </td>
   <td width="50%" class="clonecart">
      <div id="clone_shoppingcart">
