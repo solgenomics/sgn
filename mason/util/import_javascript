@@ -1,0 +1,30 @@
+<%doc>
+
+=head1 DESCRIPTION
+
+Produces a list of <script src=""></script> lines for a set of
+JavaScript library names, including any necessary dependencies.
+
+=head1 ARGS
+
+=item C<classes> - arrayref of JavaScript classes to import.
+
+=head1 EXAMPLE
+
+  <& /import_javascript, classes => [qw[ CXGN.Effects CXGN.Phenome.Locus MochiKit.DOM ]] &>
+
+=cut
+
+</%doc>
+<%args>
+ $classes
+</%args>
+
+<%init>
+my $uris = $c->js_import_uris( @$classes );
+</%init>
+
+% foreach my $uri ( @$uris ) {
+ <script src="<% $uri %>"></script>
+% }
+
