@@ -15,12 +15,13 @@ use YAML::Any qw/ LoadFile /;
 
 # our context object
 has 'context'    => ( is => 'ro', isa => 'SGN::Context', required => 1 );
-has 'conf_dir'   => ( is => 'ro', isa => 'Path::Class::Dir', lazy_build => 1 ); sub _build_conf_dir   { shift->feature_dir('gbrowse.conf')    }
+has 'conf_dir'   => ( is => 'ro', isa => 'Path::Class::Dir', lazy_build => 1 ); sub _build_conf_dir   { shift->feature_dir('conf')    }
 has 'static_dir' => ( is => 'ro', isa => 'Path::Class::Dir', lazy_build => 1 ); sub _build_static_dir { shift->feature_dir('www')     }
 has 'cgi_bin'    => ( is => 'ro', isa => 'Path::Class::Dir', lazy_build => 1 ); sub _build_cgi_bin    { shift->feature_dir('cgi-bin') }
 has 'tmp_dir'    => ( is => 'ro', isa => 'Path::Class::Dir', default => sub { dir( tmpdir(), 'gbrowse2' ) } );
 has 'url_base'   => ( is => 'ro', isa => 'Str', default => '/gb2'                         );
 has 'run_mode'   => ( is => 'ro', isa => 'Str', default => 'modperl'                      );
+has '_min_ver'   => ( is => 'ro', default => 1.99 );
 
 sub feature_name {
     my $self = shift;
@@ -38,9 +39,8 @@ sub feature_dir {
 # called to install and configure GBrowse from svn or a downloaded tarball
 sub install {
     my $self = shift;
-    my @args = @_;
     try {
-	$self->_install( @args );
+	$self->_install(@_);
 	$self->is_installed or die "is_installed() returned false";
     } catch {
 	# check that the installation was successful
@@ -54,44 +54,45 @@ sub _install {
     if( $build_dir ) {
 	-d $build_dir or croak "gbrowse build dir '$build_dir' does not exist";
     } else {
-	# by default, svn co a copy of GBrowse svn stable branch (1.6x)
+	# by default, svn co a copy of GBrowse 2.00
 	$build_dir = File::Temp->newdir( CLEANUP => 1 );
-	system qw| svn co http://gmod.svn.sourceforge.net/svnroot/gmod/Generic-Genome-Browser/branches/stable/ |, $build_dir;
+	system qw| svn co http://gmod.svn.sourceforge.net/svnroot/gmod/Generic-Genome-Browser/tags/release-2_00/ |, $build_dir;
     }
 
     # check the version of GBrowse we're about to install
-    my $version = $self->_find_sources_version( $build_dir );
-    $self->_valid_version( $version )
-	  or die "automatic installation not compatible with GBrowse version '$version'\n";
+    my $version = $self->_gbrowse_version( $build_dir );
+    unless( $version >= 1.99 ) {
+	die "automatic installation not compatible with GBrowse version '$version'\n";
+    }
 
+    sub _discard { catdir( tmpdir(), 'gbrowse_discard', @_ ) }
     my %build_args =
-	( 
-	  CGIBIN    => _absolute( $self->cgi_bin ),
-	  #tmp       => _absolute( $self->tmp_dir ),
-	  GBROWSE_ROOT => '/',
-	  HTDOCS    => _absolute( $self->static_dir ),
-	  CONF      => _absolute( $self->conf_dir->parent ),
-	  DO_XS     => 1,
-	  APACHE    => _absolute( $self->static_dir->parent ),
-	  #databases => _discard( 'databases' ),
-	  #wwwuser   => $self->context->config->{'www_user'},
+	( conf      => _discard( 'conf' ), #< there is a conf dir
+	  htdocs    => _absolute( $self->static_dir ),
+	  cgibin    => _absolute( $self->cgi_bin ),
+	  tmp       => _absolute( $self->tmp_dir ),
+	  databases => _discard( 'databases' ),
+	  wwwuser   => $self->context->config->{'www_user'},
 	 );
 
     my $curdir = getcwd;
     chdir $build_dir;
 
-    system "make clean" if -e 'Makefile';
-    system 'cpan', 'Bio::Graphics::Panel';
-    system 'perl', 'Makefile.PL', map "$_=$build_args{$_}", keys %build_args;
-    system "make";
-    system "make install";
+    system "./Build clean" if -x 'Build';
+    system 'perl', 'Build.PL', map "--$_=$build_args{$_}", keys %build_args;
+    system "yes n | ./Build installdeps";
+    system "yes n | ./Build install";
 
     chdir $curdir;
 
     # clean up unneeded files
-    system 'rm', -rfv => $self->feature_dir->subdir('tutorial');
-    system "find ".$self->feature_dir." -type d -and -name .svn | xargs rm -rf";
+    system 'rm', -rf => _discard();
+    system 'rm', -rfv => $self->static_dir->subdir('tutorial')->stringify;
+
+    mkdir $self->conf_dir or die "$! creating ".$self->conf_dir." dir.\n";
+
 }
+
 
 sub _absolute {
     my $d = shift;
@@ -99,7 +100,7 @@ sub _absolute {
     return $d;
 }
 
-sub _find_sources_version {
+sub _gbrowse_version {
     my ($self, $build_dir) = @_;
 
     my $meta = dir( $build_dir )->file('META.yml');
@@ -119,15 +120,8 @@ sub is_installed {
     return
 	-d $self->static_dir->subdir('js')
      && -f $self->cgi_bin->file('gbrowse')
-     && require Bio::Graphics::Browser
-     && $self->_valid_version( Bio::Graphics::Browser->VERSION );
-}
-
-# check that the given version number is valid for handling with this
-# module
-sub _valid_version {
-    my ( $self, $version ) = @_;
-    return $version > 0 && $version < 1.7;
+     && require Bio::Graphics::Browser2
+     && Bio::Graphics::Browser2->VERSION >= $self->_min_ver;
 }
 
 # assembles a URI linking to gbrowse.  part of plugin role
