@@ -174,7 +174,6 @@ sub jsan_use {
 my @global_js = qw(
 		   CXGN.Effects
 		   CXGN.Page.FormattingHelpers
-		   CXGN.Page.Toolbar
 		   CXGN.UserPrefs
 		  );
 
@@ -195,15 +194,8 @@ sub jsan_render_includes {
 
 sub _jsan {
 	my ($self) = @_;
-	#not as beautifully terse as the original code, but we shouldn't
-	#waste resources creating a VHost object if $self{jsan_serverside} exists
-	return $self->{jsan_serverside} if $self->{jsan_serverside};
-        my $js_dir = File::Spec->catfile( $self->get_conf('basepath'), $self->get_conf('global_js_lib'));
-        -d $js_dir or die "configured js_dir '$js_dir' does not exist!\n";
-	$self->{jsan_serverside} = JSAN::ServerSide->new( js_dir => $js_dir,
-							  uri_prefix => '/js',
-							 );
-	return $self->{jsan_serverside};
+
+	return $self->{jsan_serverside} ||= JSAN::ServerSide->new( %{ $self->{context}->_jsan_params } );
 }
 
 =head2 cgi_params

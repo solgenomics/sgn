@@ -20,17 +20,15 @@ use MooseX::Singleton;
 use namespace::autoclean;
 
 use Carp;
+use Cwd ();
 use File::Basename;
 use File::Spec;
 use File::Path ();
-
-use Cwd ();
-use URI ();
 use Memoize ();
+use URI ();
 
 use DBIx::Connector;
-
-use CXGN::DB::Connection;
+use JSAN::ServerSide;
 
 use SGN::Config;
 
@@ -481,6 +479,7 @@ sub render_mason {
 sub BUILD {
     my ($self) = @_;
     $self->config->{'DatabaseConnections'}->{'default'} ||= do {
+	require CXGN::DB::Connection;
 	my %conn;
 	@conn{qw| dsn user password attributes |} = CXGN::DB::Connection->new_no_connect({ config => $self->config })
 	                                                                ->get_connection_parameters;
@@ -509,7 +508,49 @@ sub dbc {
     return $conn;
 }
 
-__PACKAGE__->meta->make_immutable;
+=head2 new_jsan
+
+  Usage: $c->new_jsan
+  Desc : instantiates a new L<JSAN::ServerSide> object with the
+         correct javascript dir and uri prefix for site-global javascript
+  Args : none
+  Ret  : a new L<JSAN::ServerSide> object
+
+=cut
+has _jsan_params => ( is => 'ro', isa => 'HashRef', lazy_build => 1 );
+sub _build__jsan_params {
+  my ( $self ) = @_;
+  my $js_dir = $self->path_to( $self->get_conf('global_js_lib') );
+  -d $js_dir or die "configured global_js_dir '$js_dir' does not exist!\n";
+
+  return { js_dir     => $js_dir,
+	   uri_prefix => '/js',
+	 };
+}
+sub new_jsan {
+    SGN::Context::JSAN::ServerSide->new( %{ shift->_jsan_params } );
+}
+
+=head2 js_import_uris
+
+  Usage: $c->js_import_uris('CXGN.Effects','CXGN.Phenome.Locus');
+  Desc : generate a list of L<URI> objects to import the given
+         JavaScript modules, with dependencies.
+  Args : list of desired modules
+  Ret  : list of L<URI> objects
+
+=cut
+
+sub js_import_uris {
+    my $self = shift;
+    my $j = $self->new_jsan;
+    my @urls = @_;
+    $j->add(my $m = $_) for @urls;
+    return [ $j->uris ];
+}
+
+
+SGN::Context->meta->make_immutable;
 
 
 # tiny DBIx::Connector subclass that makes sure search paths are set
@@ -524,6 +565,20 @@ sub dbh {
     $dbh->do("SET search_path TO $dbh->{private_search_path_string}");
     $dbh->{private_search_path_is_set} = 1;
     return $dbh;
+}
+
+# tiny JSAN::ServerSide subclass to add modtimes to URIs
+package SGN::Context::JSAN::ServerSide;
+use base 'JSAN::ServerSide';
+use File::stat;
+
+# add t=<modtime> to all the URIs generated
+sub _class_to_uri {
+    my ($self, $class) = @_;
+    my $path = $self->SUPER::_class_to_file( $class );
+    my $t = eval {stat($path)->mtime} || 0;
+    my $uri  = $self->SUPER::_class_to_uri( $class );
+    return "$uri?t=$t";
 }
 
 ###

@@ -1,4 +1,6 @@
-use Test::Most tests => 6;
+use Test::Most tests => 9;
+use Carp;
+$SIG{__DIE__} = \&Carp::confess;
 
 use_ok 'SGN::Context';
 
@@ -19,3 +21,9 @@ like( $c->dbc->dbh->{private_search_path_string},
       qr/\S/,
       'private_search_path has something in it',
      );
+
+# test jsan functions
+can_ok( $c->new_jsan, 'uris' );
+my $uris = $c->js_import_uris('CXGN.Page.Toolbar');
+cmp_ok( scalar(@$uris), '>=', 1, 'got at least 1 URI to include for CXGN.Page.Toolbar' );
+like( "$uris->[0]", qr/\?t=\d{5,}/, 'uris have file modtimes appended' );

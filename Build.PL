@@ -277,7 +277,7 @@ my $build = $class->new(
         'HTML::Entities'          => 0,
         'HTML::Mason'             => 0,
         'IO::String'              => 0,
-        'JSAN::ServerSide'        => 0,
+        'JSAN::ServerSide'        => '==0.06',
         'JSON'                    => 0,
         'List::Util'              => 0,
         'LWP::UserAgent'          => 0,
