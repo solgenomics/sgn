@@ -6,7 +6,7 @@ $page->add_style(text => <<EOS);
 span.person_name {display: block}
 span.person_position {font-size: smaller}
 EOS
-$page->header('About the Sol Genomics Network','About the SOL Genomics Network');
+$page->header('About the Sol Genomics Network','About the Sol Genomics Network');
 
 print<<END_HEREDOC;
 <div class="indentedcontent">

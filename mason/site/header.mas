@@ -19,7 +19,7 @@ sub get_session_person {
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 <head>
-  <title>SOL Genomics Network</title>
+  <title>Sol Genomics Network</title>
   <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
   <link rel="stylesheet" href="/documents/inc/sgn.css" type="text/css" />
   <link rel="search" type="application/opensearchdescription+xml" title="SGN Sol Search" href="/documents/sgn_sol_search.xml" />
@@ -48,10 +48,10 @@ sub get_session_person {
 <table id="siteheader" cellpadding="0" cellspacing="0">
 <tr>
   <td rowspan="3" width="10" class="sunlogo">
-    <a href="/index.pl"><img src="/documents/img/sgn_logo_icon.png" width="70" height="69" border="0" alt="SGN Home" title="SOL Genomics Network Home" id="sgnlogo" /></a>
+    <a href="/index.pl"><img src="/documents/img/sgn_logo_icon.png" width="70" height="69" border="0" alt="SGN Home" title="Sol Genomics Network Home" id="sgnlogo" /></a>
   </td>
   <td style="vertical-align: bottom">
-    <a href="/index.pl"><img id="sgntext" src="/documents/img/sgn_logo_text.png" width="230" height="21" border="0" alt="SGN Home" title="SOL Genomics Network Home" /></a>
+    <a href="/index.pl"><img id="sgntext" src="/documents/img/sgn_logo_text.png" width="230" height="21" border="0" alt="SGN Home" title="Sol Genomics Network Home" /></a>
 
   </td>
   <td width="50%" class="clonecart">
