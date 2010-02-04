@@ -3,40 +3,48 @@ use MooseX::Singleton;
 use autodie ':all';
 use namespace::autoclean;
 
-use Cwd;
-use File::ShareDir ();
+use Cwd qw/ abs_path getcwd /;
 use File::Path;
+use File::Temp ();
+
 use Path::Class;
-use File::Spec::Functions qw/ catdir tmpdir /;
+use File::Spec::Functions qw/ catdir tmpdir file_name_is_absolute /;
 use YAML::Any qw/ LoadFile /;
 
 # our context object
 has 'context'    => ( is => 'ro', isa => 'SGN::Context', required => 1 );
-has 'conf_dir'   => ( is => 'ro', isa => 'Str', lazy_build => 1 ); sub _build_conf_dir   { shift->feature_dir('conf')    }
-has 'static_dir' => ( is => 'ro', isa => 'Str', lazy_build => 1 ); sub _build_static_dir { shift->feature_dir('www')     }
-has 'cgi_bin'    => ( is => 'ro', isa => 'Str', lazy_build => 1 ); sub _build_cgi_bin    { shift->feature_dir('cgi-bin') }
-has 'tmp_dir'    => ( is => 'ro', isa => 'Str', default => catdir( tmpdir(), 'gbrowse2' ) );
+has 'conf_dir'   => ( is => 'ro', isa => 'Path::Class::Dir', lazy_build => 1 ); sub _build_conf_dir   { shift->feature_dir('conf')    }
+has 'static_dir' => ( is => 'ro', isa => 'Path::Class::Dir', lazy_build => 1 ); sub _build_static_dir { shift->feature_dir('www')     }
+has 'cgi_bin'    => ( is => 'ro', isa => 'Path::Class::Dir', lazy_build => 1 ); sub _build_cgi_bin    { shift->feature_dir('cgi-bin') }
+has 'tmp_dir'    => ( is => 'ro', isa => 'Path::Class::Dir', default => sub { dir( tmpdir(), 'gbrowse2' ) } );
 has 'url_base'   => ( is => 'ro', isa => 'Str', default => '/gb2'                         );
 has 'run_mode'   => ( is => 'ro', isa => 'Str', default => 'modperl'                      );
+has '_min_ver'   => ( is => 'ro', default => 1.99 );
 
 sub feature_name {
     my $self = shift;
     my $name = ref( $self ) || $self;
-    $name =~ s/.+::$//;
-    return $name;
+    $name =~ s/.+:://;
+    return lc $name;
 }
 
 sub feature_dir {
     my $self = shift;
     local $SIG{__DIE__} = \&Carp::confess;
-    return $self->context->path_to('features', $self->feature_name, @_ );
+    return dir( $self->context->path_to('features', $self->feature_name, @_ ) );
 }
 
 # called to install and configure GBrowse from svn or a downloaded tarball
 sub install {
     my ( $self, $build_dir ) = @_;
-    $build_dir    or croak 'must provide path to a GBrowse source dir';
-    -d $build_dir or croak "gbrowse build dir '$build_dir' does not exist";
+
+    if( $build_dir ) {
+	-d $build_dir or croak "gbrowse build dir '$build_dir' does not exist";
+    } else {
+	# by default, svn co a copy of GBrowse 2.00
+	$build_dir = File::Temp->newdir( CLEANUP => 1 );
+	system qw| svn co http://gmod.svn.sourceforge.net/svnroot/gmod/Generic-Genome-Browser/tags/release-2_00/ |, $build_dir;
+    }
 
     # check the version of GBrowse we're about to install
     my $version = $self->_gbrowse_version( $build_dir );
@@ -47,9 +55,9 @@ sub install {
     sub _discard { catdir( tmpdir(), 'gbrowse_discard', @_ ) }
     my %build_args =
 	( conf      => _discard( 'conf' ), #< there is a conf dir
-	  htdocs    => $self->static_dir,
-	  cgibin    => $self->cgi_bin,
-	  tmp       => $self->tmp_dir,
+	  htdocs    => _absolute( $self->static_dir ),
+	  cgibin    => _absolute( $self->cgi_bin ),
+	  tmp       => _absolute( $self->tmp_dir ),
 	  databases => _discard( 'databases' ),
 	  wwwuser   => $self->context->config->{'www_user'},
 	 );
@@ -57,12 +65,35 @@ sub install {
     my $curdir = getcwd;
     chdir $build_dir;
 
+    system "./Build clean" if -x 'Build';
     system 'perl', 'Build.PL', map "--$_=$build_args{$_}", keys %build_args;
     system "yes n | ./Build installdeps";
-    system "./Build install";
-    rmtree( _discard() );
+    system "yes n | ./Build install";
 
     chdir $curdir;
+
+    # clean up unneeded files
+    system 'rm', -rf => _discard();
+    system 'rm', -rfv => $self->static_dir->subdir('tutorial')->stringify;
+
+    die $self->feature_name." feature installation failed.\n" unless $self->is_installed;
+}
+
+sub is_installed {
+    my ( $self ) = @_;
+
+    return
+	-d $self->static_dir->subdir('js')
+     && -f $self->cgi_bin->file('gbrowse')
+     && ( eval "require Bio::Graphics::Browser2" || do{ warn $@; 0 } )
+     && Bio::Graphics::Browser2->VERSION >= $self->_min_ver;
+}
+
+
+sub _absolute {
+    my $d = shift;
+    $d = catdir( getcwd, $d ) unless file_name_is_absolute( $d );
+    return $d;
 }
 
 sub _gbrowse_version {
