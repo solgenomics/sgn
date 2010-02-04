@@ -1,4 +1,4 @@
-<& /util/import_javascript, classes => ['CXGN.Page.Toolbar'] &>
+<& /util/import_javascript, classes => 'CXGN.Page.Toolbar' &>
 
 <table class="toolbar" summary="" cellspacing="0" cellpadding="0">
 <tr class="toolbar_content">
