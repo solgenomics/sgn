@@ -1,3 +1,12 @@
+<%once>
+# import the necessary toolbar javascript
+my $js_uris = $c->js_import_uris('CXGN.Page.Toolbar');
+</%once>
+
+% foreach my $uri ( @$js_uris ) {
+ <script src="<% $uri %>"></script>
+% }
+
 <table class="toolbar" summary="" cellspacing="0" cellpadding="0">
 <tr class="toolbar_content">
   <td class="toolbar_l"><img src="/documents/img/toolbar_l.gif" alt="" /></td>
