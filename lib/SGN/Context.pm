@@ -2,14 +2,20 @@
 
 SGN::Context - configuration and context object, meant to export a
 similar interface to the Catalyst context object, to help smooth our
-transition to Catalyst
+transition to Catalyst.
 
 =head1 SYNOPSIS
 
   my $c = SGN::Context->new;
+  my $c = SGN::Context->instance; # new() and instance() do the same thing
 
   # Catalyst-compatible
   print "my_conf_variable is ".$c->get_conf('my_conf_variable');
+
+=head1 DESCRIPTION
+
+Note that this object is a singleton, based on L<MooseX::Singleton>.
+There is only ever 1 instance of it.
 
 =head1 OBJECT METHODS
 
@@ -34,7 +40,7 @@ use SGN::Config;
 
 =head2 config
 
-  Usage   : my $proj = $vhost->config->{bac_project_chr_11}
+  Usage   : my $proj = $c->config->{bac_project_chr_11}
   Returns : config hashref
   Args    : none
   Side Eff: none
@@ -130,10 +136,10 @@ sub get_conf {
 
 =head2 generated_file_uri
 
-  Usage: my $dir = $page->generated_file_uri('align_viewer','temp-aln-foo.png');
+  Usage: my $dir = $c->generated_file_uri('align_viewer','temp-aln-foo.png');
   Desc : get a URI for a file in this site's web-server-accessible
          tempfiles directory, relative to the site's base dir.  Use
-         $vhost->path_to() to convert it to an absolute path if
+         $c->path_to() to convert it to an absolute path if
          necessary
   Args : path components to append to the base temp dir, just
          like the args taken by File::Spec->catfile()
@@ -144,11 +150,11 @@ sub get_conf {
 
   Example:
 
-    my $temp_rel = $vhost->generated_file_uri('align_viewer','foo.txt')
+    my $temp_rel = $c->generated_file_uri('align_viewer','foo.txt')
     # might return
     /documents/tempfiles/align_viewer/foo.txt
     # and then you might do
-    $vhost->path_to( $temp_rel );
+    $c->path_to( $temp_rel );
     # to get something like
     /data/local/cxgn/core/sgn/documents/tempfiles/align_viewer/foo.txt
 
@@ -170,10 +176,10 @@ sub generated_file_uri {
 
 =head2 tempfile
 
-  Usage   : $vhost->tempfile( TEMPLATE => 'align_viewer/bar-XXXXXX',
-                              CLEANUP => 0 );
+  Usage   : $c->tempfile( TEMPLATE => 'align_viewer/bar-XXXXXX',
+                          CLEANUP => 0 );
   Desc    : a wrapper for File::Temp->new(), which runs the TEMPLATE
-            argument through $vhost->generated_file_uri().  TEMPLATE
+            argument through $c->generated_file_uri().  TEMPLATE
             can be either just a filename, or an arrayref of path
             components.
   Returns : a File::Temp object
@@ -188,12 +194,12 @@ sub generated_file_uri {
   Side Eff: dies on error
   Example :
 
-    my ($aln_file, $aln_uri) = $vhost->tempfile( TEMPLATE =>
-                                                   ['align_viewer',
-                                                    'aln-XXXXXX'
-                                                   ],
-                                                 SUFFIX   => '.png',
-                                                );
+    my ($aln_file, $aln_uri) = $c->tempfile( TEMPLATE =>
+                                               ['align_viewer',
+                                                'aln-XXXXXX'
+                                               ],
+                                             SUFFIX   => '.png',
+                                           );
     render_image( $aln_file );
     print qq|Alignment image: <img src="$aln_uri" />|;
 
