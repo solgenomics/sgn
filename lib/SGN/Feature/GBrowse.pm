@@ -3,6 +3,8 @@ use MooseX::Singleton;
 use autodie ':all';
 use namespace::autoclean;
 
+use Try::Tiny;
+
 use Cwd qw/ abs_path getcwd /;
 use File::Path;
 use File::Temp ();
@@ -36,6 +38,17 @@ sub feature_dir {
 
 # called to install and configure GBrowse from svn or a downloaded tarball
 sub install {
+    my $self = shift;
+    try {
+	$self->_install(@_);
+	$self->is_installed or die "is_installed() returned false";
+    } catch {
+	# check that the installation was successful
+	die "$_\n".$self->feature_name." feature installation failed.\n";
+    }
+}
+
+sub _install {
     my ( $self, $build_dir ) = @_;
 
     if( $build_dir ) {
@@ -76,17 +89,8 @@ sub install {
     system 'rm', -rf => _discard();
     system 'rm', -rfv => $self->static_dir->subdir('tutorial')->stringify;
 
-    die $self->feature_name." feature installation failed.\n" unless $self->is_installed;
-}
+    mkdir $self->conf_dir or die "$! creating ".$self->conf_dir." dir.\n";
 
-sub is_installed {
-    my ( $self ) = @_;
-
-    return
-	-d $self->static_dir->subdir('js')
-     && -f $self->cgi_bin->file('gbrowse')
-     && ( eval "require Bio::Graphics::Browser2" || do{ warn $@; 0 } )
-     && Bio::Graphics::Browser2->VERSION >= $self->_min_ver;
 }
 
 
@@ -106,6 +110,18 @@ sub _gbrowse_version {
 	or die "could not parse META.yml in GBrowse build dir '$build_dir', aborting\n";
 
     return $meta->{version};
+}
+
+# returns boolean of whether the feature is installed in the current
+# site.  will be part of plugin role
+sub is_installed {
+    my ( $self ) = @_;
+
+    return
+	-d $self->static_dir->subdir('js')
+     && -f $self->cgi_bin->file('gbrowse')
+     && require Bio::Graphics::Browser2
+     && Bio::Graphics::Browser2->VERSION >= $self->_min_ver;
 }
 
 # assembles a URI linking to gbrowse.  part of plugin role
