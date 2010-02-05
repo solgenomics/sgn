@@ -1,0 +1,175 @@
+
+<%doc>
+
+=head1 NAME
+
+/cview/map/index.mas - a Mason component to display top level map web page
+
+=head1 DESCRIPTION
+
+This Mason component displays a web page with an overview graph of a map, an abstract and some statistics about the map, using map_id or map_version_id as a parameter. 
+
+Older versions of this script accepted other parameters, such as the mysterious legacy_id or the more cumbersome map short name. Support for these has been scrapped. Sorry!
+
+Also, older versions supported a parameter called "physical", which then, through some inextricable hack displayed a physical map. This parameter has been deprecated but is still supported.
+
+On the other hand, a new parameter was added, called "force", which, if set to true, will force the cached images and stats to be re-calculated. Normally, the map overview image and associated image map and the map statistics are cached.
+
+Parameters summary:
+
+=over 15
+
+=item dbh
+
+a database handle
+
+=item map_id
+
+The map_id of the map to display.
+
+=item map_version_id
+
+the map_version_id of the map to display. Note that map_id and map_version_id are mutually exclusive.
+
+=item hilite
+
+a space separated, url-encoded string that gives the markers to be highlighted.
+
+=item size
+
+the size of the map to display. 0 denotes the standard size (smallest), 10 denotes the largest size.
+
+=item force
+
+if set to true, force the image and map stats caches to be re-calculated.
+
+=back
+
+=head1 AUTHOR(S)
+
+Adapted to Mason by Lukas Mueller. Early Perl-only versions were written by Robert Ahrens, with later additions by Lukas Mueller and John Binns <zombieite@gmail.com>.
+
+Currently maintained by Lukas Mueller <lam87@cornell.edu>.
+
+=cut
+
+</%doc>
+
+<%args>
+$map_id
+$map_version_id
+$hilite => ""
+  $size => 1
+$force
+$physical
+</%args>
+
+<%perl>
+
+use strict;
+
+use Cache::File;
+use File::Spec;
+use CXGN::Cview::MapFactory;
+use CXGN::Cview::Map::Tools;
+
+
+my %marker_info;
+
+# set up a cache for the map statistics, using Cache::File
+#
+my $cache_file_dir = File::Spec->catfile($c->get_conf("basepath"), $c->get_conf("tempfiles_subdir"), "cview", "cache_file");
+
+tie %marker_info, 'Cache::File', { cache_root => $cache_file_dir };
+
+# report some unusual conditions to the user.
+#
+my $message = ""; 
+
+my $dbh = CXGN::DB::Connection->new();
+
+
+# maintain some backwards compatibility. The physical parameter is deprecated, but
+# we still support it...
+#
+if ($physical==1) { $map_id= "p".$map_id; }
+
+# if the map_id was supplied, convert immediately to map_version_id
+#
+if ($map_id && !$map_version_id) { 
+    $map_version_id = CXGN::Cview::Map::Tools::find_current_version($dbh, $map_id);
+}
+
+
+# get the map data using the CXGN::Map API.
+#
+my $map_factory = CXGN::Cview::MapFactory->new($dbh);
+my $map = $map_factory ->create({ map_version_id => $map_version_id });
+
+if (!$map) { missing_map_page(); }
+
+my $map_fullname = $map->get_long_name();
+my $short_name   = $map->get_short_name();
+
+my @hilite_markers = split /\s+|\,\s*|\;s*/, $hilite;
+
+
+sub missing_map_page { 
+
+   
+    my $title = page_title_html("The requested map could not be found.");
+    
+    print <<HTML;
+
+    $title
+
+    <p>
+    All available maps on SGN are listed on the <a href="/cview/">map index page</a>.
+    </p>
+    <p>
+    Please contact <a href="mailto:sgn-feedback\@sgn.cornell.edu">SGN</a> if you think there is a problem.
+    </p>
+
+
+HTML
+
+
+  }
+# Historic Perl comment by Robert Ahrens, ca. 2003
+#
+# sub hack_abstract ($$$) {    
+#     # Look.  This is a total hack and that's that.  Let's make no
+#     # bones about it. There is doubtlessly a good way to handle this,
+#     # but in the meantime this sub will allow us to swap in a decent
+#     # abstract for the physical mapping project w/o having to redesign
+#     # code.
+#     my ($abstract, $map, $physical) = @_;
+
+
+
+
+
+
+</%perl>
+
+
+
+<& /page/page_title.mas, title=> $short_name &>
+
+<div id=\"pagetitle2\"><center><h3><%$map_fullname%></h3></center></div>
+
+
+<& /cview/map/overview.mas, map=>$map, size=>$size,  hilite_markers => [ @hilite_markers ] &>
+
+
+% if ($message) { 
+%    print "<div class=\"boxbgcolor5\"><b>NOTE:</b><br />$message</div>\n";
+% }
+
+<& /cview/map/abstract.mas, map=>$map &>
+
+<& /cview/map/stats.mas, map=>$map &>
+
+<& /page/comments.mas, object_type=>"map", object_id=>$map_version_id &>
+
+
