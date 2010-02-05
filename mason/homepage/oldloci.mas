@@ -13,18 +13,15 @@ oldloci.mas - a mason component that shows a list of loci that have been feature
 use strict;
 use File::Spec;
 use CXGN::Tools::File;
-use CXGN::VHost;
 
-my $vh = CXGN::VHost->new();
-
-my $file=(File::Spec->catfile($vh->get_conf("homepage_files_dir"), "loci.txt"));
+my $file=(File::Spec->catfile($c->get_conf("homepage_files_dir"), "loci.txt"));
 
 my $loci = qq{ <br /><p class="boxbgcolor5"><br />The list of all loci of the week is currently unavailable due to a server problem. We apologize for any inconvenience. Please check back later.<br /><br /></p><br /><br /> };
 
 
 eval { 
 
-  $loci=CXGN::Tools::File::file_contents("$file")||'';
+  $loci = $m->file($file);
 
 };
 

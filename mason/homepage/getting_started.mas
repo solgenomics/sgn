@@ -31,13 +31,15 @@ my $file = File::Spec->catfile($c->get_conf('homepage_files_dir'), 'getting_star
 my $contents = "Sidebar contents are not available at the moment.<br /><br />";
 
 eval { 
-  $contents = CXGN::Tools::File::file_contents($file);
+  $contents = $m->file($file);
+  #$contents = CXGN::Tools::File::file_contents($file);
 };
 if ( $@ && !$c->get_conf('production_server') ) { 
   $contents .= $@;
 }
 
-print $contents;
+
 
 </%perl>
 
+<% $contents %>
