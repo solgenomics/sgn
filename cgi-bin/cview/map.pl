@@ -1,13 +1,16 @@
 
 use SGN::Context;
 use CXGN::Page;
+use CXGN::DB::Connection;
 
 my $page = CXGN::Page->new();
 my ($map_id, $map_version_id, $size, $hilite, $physical, $force) = $page->get_encoded_arguments("map_id", "map_version_id", "size", "hilite", "physical", "force");
 
+my $dbh = CXGN::DB::Connection->new();
+
 my $c = SGN::Context->new();
 
-$c->forward_to_mason_view('/cview/map/index.mas', map_version_id=>$map_version_id, map_id=>$map_id, hilite=>$hilite, physical=>$physical, size=>$size, force=>$force);
+$c->forward_to_mason_view('/cview/map/index.mas', dbh=>$dbh, map_version_id=>$map_version_id, map_id=>$map_id, hilite=>$hilite, physical=>$physical, size=>$size, force=>$force);
 
 ######################################################################
 #
