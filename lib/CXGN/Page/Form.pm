@@ -1,28 +1,6 @@
 
-
-use CXGN::Page::Form::Checkbox;
-use CXGN::Page::Form::EditableMultiSelect;
-use CXGN::Page::Form::EditableTextArea;
-use CXGN::Page::Form::MultiSelect;
-use CXGN::Page::Form::Static;
-use CXGN::Page::Form::ConfirmStore;
-use CXGN::Page::Form::EditablePasswordField;
-use CXGN::Page::Form::ElementI;
-use CXGN::Page::Form::PasswordField;
-use CXGN::Page::Form::TextArea;
-use CXGN::Page::Form::EditableCheckbox;
-use CXGN::Page::Form::Editable;
-use CXGN::Page::Form::Field;
-use CXGN::Page::Form::RadioList;
-use CXGN::Page::Form::EditableField;
-use CXGN::Page::Form::EditableRadioList;
-use CXGN::Page::Form::Hidden;
-use CXGN::Page::Form::Select;
-use CXGN::Page::Form::EditableHidden;
-use CXGN::Page::Form::EditableSelect;
-use CXGN::Page::Form::Label;             
-use CXGN::Page::Form::SimpleFormPage;
-
+use Module::Find; 
+useall CXGN::Page::Form;
 
 package CXGN::Page::Form;
 
