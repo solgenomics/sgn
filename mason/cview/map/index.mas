@@ -9,9 +9,7 @@
 
 This Mason component displays a web page with an overview graph of a map, an abstract and some statistics about the map, using map_id or map_version_id as a parameter. 
 
-Older versions of this script accepted other parameters, such as the mysterious legacy_id or the more cumbersome map short name. Support for these has been scrapped. Sorry!
-
-Also, older versions supported a parameter called "physical", which then, through some inextricable hack displayed a physical map. This parameter has been deprecated but is still supported.
+This component is based on older Perl scripts that accepted other parameters, such as the mysterious legacy_id or the more cumbersome map short name, and a 'physical' parameter that then somehow displayed a physical map. Support for these has been scrapped. Sorry!
 
 On the other hand, a new parameter was added, called "force", which, if set to true, will force the cached images and stats to be re-calculated. Normally, the map overview image and associated image map and the map statistics are cached.
 
@@ -39,6 +37,10 @@ a space separated, url-encoded string that gives the markers to be highlighted.
 
 the size of the map to display. 0 denotes the standard size (smallest), 10 denotes the largest size.
 
+=item referer
+
+the page (uri + args) that this component is called from (to be able to construct links back from the page comment feature)
+
 =item force
 
 if set to true, force the image and map stats caches to be re-calculated.
@@ -63,6 +65,7 @@ $hilite => ""
 $size => 1
 $force
 $physical
+$referer
 </%args>
 
 <%perl>
@@ -168,6 +171,7 @@ HTML
 
 <& /cview/map/stats.mas, map=>$map &>
 
-<& /page/comments.mas, object_type=>"map", object_id=>$map_version_id &>
+<& /page/comments.mas, object_type=>"map", object_id=>$map_version_id,  referer=>$referer &>
+
 
 

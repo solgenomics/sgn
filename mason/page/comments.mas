@@ -7,8 +7,29 @@
 
 =head1 DESCRIPTION
 
-Adds the page comment feature. Only show for entities that have completely 
- numeric identifiers.
+Adds the user page comment feature to a web page. Users can peruse the comments, logged-in users can provide comments.
+
+Only show for entities that have completely numeric identifiers.
+
+Note: this code depends on the sgn.js script, which should be included in every SGN page.
+
+=head2 Arguments
+
+=over 10
+
+=item object_type
+
+The type of object being commented on.
+
+=item object_id
+
+The identifier of the object being commented on.
+
+=item referer
+
+The page uri which displays these page comments.
+
+=back
 
 =head1 AUTHOR
 
@@ -21,10 +42,15 @@ Lukas Mueller <lam87@cornell.edu> - based on previous SGN Perl code.
 <%args>
 $object_id
 $object_type
-$referer => undef
+$referer
 </%args>
 
+<& /util/import_javascript.mas, classes=>'CXGN.Page.Comments' &>
+
 <%perl>
+
+our %urlencode;
+use Tie::UrlEncoder;
 
 if ($object_id!~/^\d+$/) { return; }
 
@@ -39,10 +65,11 @@ if ($object_id!~/^\d+$/) { return; }
 Please wait, checking for comments.  (If comments do not show up, access them <a href="/forum/return_comments.pl?type=$object_type&amp;id=$object_id">here</a>)}
     );
 
-#    my $referer = $self->URLEncode($referer);
+my $encoded_referer = $urlencode{$referer};
+
 
     my $html = <<EOHTML;
-<span class="noshow" id="referer">$referer</span>
+<span class="noshow" id="referer">$encoded_referer</span>
 <span class="noshow" id="commentstype">$object_type</span>
 <span class="noshow" id="commentsid">$object_id</span>
 <div id="commentsarea">
@@ -52,6 +79,9 @@ $placeholder
 EOHTML
 
 
+
+
 </%perl>
 
 <% $html %>
+
