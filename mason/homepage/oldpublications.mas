@@ -4,16 +4,16 @@ use strict;
 use File::Spec;
 use CXGN::Tools::File;
 use CXGN::Page;
-use CXGN::VHost;
-my $vhost_conf=CXGN::VHost->new();
-my $file=File::Spec->catfile($vhost_conf->get_conf('homepage_files_dir'), 'publications.txt');
+
+my $file=File::Spec->catfile($c->get_conf('homepage_files_dir'), 'publications.txt');
 my $page=CXGN::Page->new('SOL Publications','john');
 
 
 my $publications = qq { <p class="boxbgcolor5"><br />Publications are not available at the moment due to a server problem. We apologize for the inconvenience. Please check back later.<br /><br /></p><br /><br /><br /><br /> };
 
 eval { 
-  $publications =CXGN::Tools::File::file_contents($file)||'';
+
+  $publications = $m->file($file);
 
 };
 
