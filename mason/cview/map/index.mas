@@ -56,10 +56,11 @@ Currently maintained by Lukas Mueller <lam87@cornell.edu>.
 </%doc>
 
 <%args>
+$dbh
 $map_id
 $map_version_id
 $hilite => ""
-  $size => 1
+$size => 1
 $force
 $physical
 </%args>
@@ -85,9 +86,6 @@ tie %marker_info, 'Cache::File', { cache_root => $cache_file_dir };
 # report some unusual conditions to the user.
 #
 my $message = ""; 
-
-my $dbh = CXGN::DB::Connection->new();
-
 
 # maintain some backwards compatibility. The physical parameter is deprecated, but
 # we still support it...
