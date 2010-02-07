@@ -146,7 +146,7 @@ sub get_chromosome {
     my $sgn = 'sgn';
     my $physical = 'physical';
 
-    if ($self->get_id() == CXGN::Cview::Map::Tools::find_current_version($self->get_dbh(), CXGN::Map::Tools::current_tomato_map_id())) { 
+    if ($self->get_id() == CXGN::Cview::Map::Tools::find_current_version($self->get_dbh(), CXGN::Cview::Map::Tools::current_tomato_map_id())) { 
 
 	# get the sequenced BACs
 	#
