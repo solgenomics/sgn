@@ -1,0 +1,110 @@
+
+<%doc>
+
+=head1 NAME
+
+/cview/chr/index.mas - a mason component to view a chromosome with comparative features
+
+=head1 DESCRIPTION
+
+This component essentially displays the SGN comparative viewer chromosome-level page.
+
+=head2 Arguments:
+
+=over 10
+
+=item $chr_nr
+
+specifies the chromosome to be displayed.
+
+=item $map_id
+
+specifies the map to be displayed. Either map_id or map_version_id are required. Mutually exclusive with map_version_id.
+
+=item $map_version_id
+
+specifies the version of the map to be displayed. Either map_id or map_version_id are required. Mutually exclusive with map_id.
+
+=item $cM
+
+The offset (usually in cM, but not always) that should be displayed zoomed in.
+
+=item $show_offsets
+
+=back
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>
+
+=cut
+
+</%doc>
+
+<%args>
+$chr_nr
+$map_id => undef
+$map_version_id => undef
+$cM => 0
+$clicked => 0
+$zoom => 0
+$show_offsets => 0
+$show_physical => 0
+$show_ruler => 0
+$show_IL => 0
+$show_zoomed => undef
+$comp_map_id => undef
+$comp_map_version_id => undef
+$comp_chr => undef
+$color_model => undef
+$marker_type => undef
+$force => 0
+$map_chr_select => ''
+$size => undef
+$hilite => undef
+$cM_start => undef
+$cM_end => undef
+$confidence => undef
+</%args>
+
+<%perl>
+
+use CXGN::Cview::Chromosome_viewer;
+
+my $viewer = CXGN::Cview::Chromosome_viewer -> new();
+
+$viewer -> set_temp_dir(File::Spec->catfile($c->get_conf('tempfiles_subdir'), "cview"));
+$viewer -> set_basedir($c->get_conf('basepath'));
+
+$viewer -> set_show_offsets($show_offsets);
+$viewer -> set_map_id($map_id);
+$viewer -> set_map_version_id($map_version_id);
+$viewer -> set_ref_chr($chr_nr);
+$viewer -> set_cM($cM);
+$viewer -> set_clicked($clicked);
+$viewer -> set_zoom($zoom);
+$viewer -> set_show_physical($show_physical);
+$viewer -> set_show_ruler($show_ruler);
+$viewer -> set_show_IL($show_IL);
+$viewer -> set_comp_map_id($comp_map_id);
+$viewer -> set_comp_map_version_id($comp_map_version_id);
+$viewer -> set_comp_chr($comp_chr);
+$viewer -> set_color_model($color_model);
+$viewer -> set_display_marker_type($marker_type);
+$viewer -> set_force($force);
+
+if ($map_chr_select) { 
+    my ($comp_map_id, $comp_chr) = split / /, $map_chr_select; 
+    $viewer->set_comp_map_version_id($comp_map_id);
+    $viewer->set_comp_chr($comp_chr);
+}
+$viewer -> set_size($size);
+$viewer -> set_hilite($hilite);
+$viewer -> set_cM_start($cM_start);
+$viewer -> set_cM_end($cM_end);
+$viewer -> set_confidence($confidence);
+$viewer -> set_show_zoomed($show_zoomed);
+
+$viewer->generate_page();
+
+</%perl>
