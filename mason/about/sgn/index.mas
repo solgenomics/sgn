@@ -1,0 +1,32 @@
+
+
+<& /page/page_title.mas, title=>'About the Sol Genomics Network'  &>
+
+<div class="indentedcontent">
+<p>The Sol Genomics Network (SGN) is a clade oriented database dedicated to
+the biology of the Solanaceae family which includes a large
+number of closely related and many agronomically important
+species such as tomato, potato, tobacco, eggplant, pepper,
+and the ornamental <i>Petunia hybrida</i>.</p>
+
+<p>SGN is part of the International Solanaceae Initiative (SOL), which
+has the long-term goal of creating a network of resources and
+information to address key questions in plant adaptation and
+diversification.</p>
+
+<p>A key problem of the post-genomic era is the linking of the phenome to the genome, and SGN allows to track and help discover new such linkages. 
+
+</div>
+
+
+
+<& tools.mas &>
+
+<& people.mas &>
+
+<& publications.mas &>
+
+<& funding.mas &>
+
+
+

@@ -1,0 +1,51 @@
+<%perl>
+
+use CXGN::Page::FormattingHelpers qw/info_section_html info_table_html/;
+
+print info_section_html( title => 'Funding', contents => <<EOHTML);
+
+SGN gratefully acknowledges funding from the following funding sources:
+<br /><br />
+<table><tr>
+<td width="100"><a href="http://www.nsf.gov/" class="footer"><img src="/documents/img/nsf_logo.png" border="0" /></a></td>
+<td><b>National Science Foundation (USA)</b><br />
+
+    <ul>
+      <li><a href="http://www.nsf.gov/awardsearch/showAward.do?AwardNumber=0820612">#0820612</a> Tomato Chromosome 1 and 10 Sequencing, Coordination and Bioinformatics for the International Solanaceae Genome Initiative</a></li>
+      <li><a href="http://www.nsf.gov/awardsearch/showAward.do?AwardNumber=9872617">
+    \#9872617</a> - Development of Tools for Tomato Functional Genomics</li>
+    <li><a href="http://www.nsf.gov/awardsearch/showAward.do?AwardNumber=9975866">
+    \#9975866</a> - Tools for Potato Structural and Functional Genomics</li>
+    <li><a href="http://www.nsf.gov/awardsearch/showAward.do?AwardNumber=0116076">
+    \#0116076</a> - Exploitation of Tomato as a Model for Comparative and Functional Genomics</li>
+    <li><a href="http://www.nsf.gov/awardsearch/showAward.do?AwardNumber=0421634">
+    \#0421634</a> - Sequence and Annotation of the Euchromatin of Tomato.</li>
+    <li><a href="http://www.nsf.gov/awardsearch/showAward.do?AwardNumber=0606595">
+    \#0606595</a> - Characterization of the Tomato Secretome Using Integrated Functional and Computational Strategies </li>
+    </ul>
+</td></tr>
+<tr><td><a href="http://www.nifa.usda.gov/" class="footer"><img src="/documents/img/usda_nifa_v.jpg" border="0" /></a><br /><br /></td>
+<td><b>USDA</b><br /><ul><li>USDA CSREES, grant \#2007-02777</li></ul></td>
+</tr>
+<tr><td>&nbsp;</td><td><b>Nestle Corporation</b><br />
+SGN gratefully acknowledges a grant from the Nestle Corporation for generation, analysis and integration of Coffea canephora data.<br /><br />
+</td></tr>
+<tr><td><a href="http://www.bard-isus.com/" class="footer"><img src="/documents/img/BARD1.gif" border="0" /></a><br /><br /></td>
+<td><b>BARD</b><br /><ul><li>BARD, grant \#FI­370­2005  Bioinformatic links of simple and complex phenotypes with Solanaceae genomes.</li></ul></td>
+</tr>
+</table>
+
+
+</p>
+
+EOHTML
+
+ print info_section_html( title=>"Acknowledgments", contents=><<EOHTML );
+<p>Special thanks to the <a href="http://cbsu.tc.cornell.edu">Cornell Biological Services Unit</a> for making their compute clusters available for some of our analyses.</p>
+<p>Some data on SGN was obtained from EU-SOL projects. Special thanks to our colleagues at EU-SOL. <br />
+<center>
+<a href="http://www.eu-sol.net" class="footer"><img src="/documents/img/eusol_logo_small.jpg" /></a> <br />
+</center>
+
+EOHTML
+</%perl>

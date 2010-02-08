@@ -1,0 +1,83 @@
+
+<%perl>
+
+use CXGN::Page::FormattingHelpers qw/info_section_html info_table_html/;
+
+print info_section_html( title => 'Data', contents => <<EOHTML );
+<dl>
+<dt>ESTs</dt>
+<dd>SGN houses EST collections for tomato, potato, pepper, eggplant and
+petunia and corresponding unigene builds. EST sequence data and cDNA
+clone resources greatly facilitate cloning strategies based on
+sequence similarity, the study of syntenic relationships between
+species in comparative mapping projects, and are essential for
+microarray technology.
+</dd>
+<dt>Unigenes</dt>
+<dd>SGN assembles and publishes unigene builds from these EST sequences.  For more information, see <a href="/methods/unigene/index.pl">Unigene Methods</a>.</dd>
+<dt>Maps and Markers</dt>
+<dd>SGN has genetic maps and a searchable catalog of markers for
+tomato, potato, pepper, and eggplant.</dd>
+<dt>Tomato Sequencing</dt>
+<dd>SGN is the bioinformatics hub for the ongoing international project to
+fully sequence the euchromatic portion of the tomato genome.  In this role,
+we house:
+  <ul style="margin-top: 0.5em">
+    <li>a searchable catalog of tomato BACS</li>
+    <li>more than 400,000 BAC end sequences from these BACs</li>
+    <li>all BAC sequences used to assemble the tomato genome</li>
+    <li>a <a href="/gbrowse/index.pl">Genome Browser</a> for the tomato genome</li>
+  </ul>
+</dd>
+<dt>Tools</dt>
+<dd>SGN makes available a wide range of web-based bioinformatics tools
+for use by anyone, listed <a href="/tools/">here</a>.  Some of our
+most popular tools include <a href="/tools/blast/">BLAST</a> searches,
+the <a href="/tools/solcyc/">SolCyc biochemical pathways database</a>,
+a <a href="/tools/caps_designer/caps_input.pl">CAPS experiment
+designer</a>, an innovative
+<a href="/tools/intron_detection/find_introns.pl">Intron detection
+tool</a>, an advanced <a href="/tools/align_viewer/">Alignment Analyzer</a> and <a href="/tools/tree_browser/">browser for phylogenetic trees</a>.   </dd>
+
+</dl>
+
+<p>The data in SGN have been submitted by many different research
+groups around the world which are acknowledged on the corresponding
+pages on SGN.  If you have data you would like to submit for display
+on SGN, please use the <a href="/tools/contact.pl">contact us</a> web
+form, or email us at <a href="mailto:sgn-feedback\@sgn.cornell.edu">
+sgn-feedback\@sgn.cornell.edu</a>.</p>
+
+<p>For more information about SGN datasets, see the <a href= "/content/sgn_data.pl">SGN Data
+Overview</a>. Entire datasets can also be downloaded from our <a href="ftp://ftp.sgn.cornell.edu">FTP site</a>.</p>
+EOHTML
+
+print info_section_html( title => 'SGN Tools and Processing', contents => <<EOHTML);
+<ul style="margin: 0; padding-left: 1em">
+
+   <li>We attempt to process all EST sequences
+   directly from sequencing chromatograms using a custom
+   pipeline developed at SGN. The sequences are assembled into unigenes
+   using standard clustering software and in-house tools. A higher level of sequence
+   quality is obtained when sequences are uniformly base-called and
+   quality trimmed. Other software developed at SGN include the <a href="/cview/view_chromosome.pl">interactive comparative map viewer</a> for genetic and
+   physical maps, the <a href="/tools/tree_browser/">Tree Browser</a> and the <a href="/tools/align_viewer">Alignment Analyzer</a>.</li>
+
+   <li><a href="/methods/unigene/index.pl">Unigene Methods</a>
+   including assembly process, builds, cluster, and validation</li>
+
+</ul>
+EOHTML
+
+print info_section_html( title => 'SGN community-driven gene and phenotype database', contents => <<EOHTML);
+<ul style="margin: 0; padding-left: 1em">
+
+   <li>We have developed simple web interfaces for the SGN user-community to submit, annotate, and curate the Solanaceae locus and phenotype databases. Our goal is to share biological information, and have the experts in their field
+   review existing data and submit information about their favorite genes and phenotypes.</li>
+
+   <li>Please read more about the <a href="/phenome/index.pl">phenome database</a>
+    and how to submit information to SGN.</li>
+
+</ul>
+EOHTML
+</%perl>
