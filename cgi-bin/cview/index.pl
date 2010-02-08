@@ -2,10 +2,12 @@
 use strict;
 
 use SGN::Context;
+use CXGN::DB::Connection;
 
 my $c = SGN::Context->new();
+my $dbh = CXGN::DB::Connection->new();
 
-$c->forward_to_mason_view('/cview/index.mas');
+$c->forward_to_mason_view('/cview/index.mas', dbh=>$dbh);
 
 
 
