@@ -1,6 +1,6 @@
 use strict;
 
-use CXGN::MasonFactory;
+use SGN::Context;
 
-CXGN::MasonFactory->new()->exec('/help/cview.mas');
+SGN::Context->new()->forward_to_mason_view('/help/cview.mas');
 
