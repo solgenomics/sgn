@@ -1,0 +1,17 @@
+
+<%perl>
+
+use CXGN::Page::FormattingHelpers qw/info_section_html info_table_html/;
+
+print info_section_html( title=> 'Computers',
+			 contents => ul('<a href="/sgn_photos/index.pl">Photos of our server room</a>',
+                                         '<a href="/about/temp.pl">Temperature in our server room</a>'));
+
+print info_section_html( title => 'Other Pages', contents => <<EOHTML );
+<ul>
+<li><a href="/help/index.pl">SGN Help Home</a></li>
+<li><a href="about_solanaceae.pl">Solanaceae family overview</a></li>
+</ul>
+EOHTML
+
+</%perl>

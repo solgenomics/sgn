@@ -1,0 +1,126 @@
+
+
+
+
+<%perl>
+
+use CXGN::Page::FormattingHelpers qw/info_section_html info_table_html/;
+
+sub person_image {
+  my ($filebase,$name,$position) = @_;
+  $name ||= '';
+  $position ||= '';
+  return <<EOHTML
+  <a class="person" href="/static_content/sgn_photos/img/$filebase.jpg"><img src="/static_content/sgn_photos/img/${filebase}_small.jpg" alt="$name" /></a>
+  <span style="display:block">$name</span>
+  <span style="font-size:smaller">$position</span>
+EOHTML
+}
+#given a 2-d array of person records (each an array of pic,name,and position),
+#make a pretty formatted table
+sub person_set {
+  my @people = @_;
+  return qq|<table width="100%">\n|
+    .( join '',
+       map {"<tr>\n$_\n</tr>\n"}
+       map { my $colwidth = sprintf("%d",100/@$_);
+	     ( join '',
+	       map {$_ = person_image(@$_); qq|<td align="center" width="$colwidth%">\n
+$_</td>\n|}
+	       @$_
+	     )
+	   }
+       @people
+     )
+    ."</table>\n";
+}
+sub ul(@) { "<ul>\n".( join '', map {"<li>$_</li>\n"} @_ )."</ul>\n"; }
+
+print info_section_html( title => 'Staff',
+			 contents =>
+			 info_section_html( title => 'Senior Staff',
+					    is_subsection => 1,
+					    contents => person_set 
+					    ([ 
+					       ['lukas','Lukas Mueller','Director'],
+					       ['naama','Naama Menda','Postdoctoral Fellow'],
+					       ['anuradha', 'Anuradha Pujar', 'Postdoctoral Fellow' ],
+],
+[
+					       ['isaak', 'Isaak Tecle', 'Postdoctoral Fellow' ],
+					       ['tom', 'Tom York', 'Postdoctoral Fellow' ],
+                                               ['aureliano', 'Aureliano Bombarely', 'Postdoctoral Fellow' ]
+					       ],
+					     ),
+					    )
+			 .info_section_html( title => 'Bioinformatics Analysts &amp System Administration',
+					     is_subsection => 1,
+					     contents => person_set
+					     ([ 
+						['robert','Robert Buels'],
+						['adri','Adri Mills'],
+						['joseph','Joseph Gosselin'],
+						],
+					      ),
+					     )
+
+			 .info_section_html( title => 'Interns',
+					     is_subsection => 1,
+					     contents => 
+					     ul(
+                                                '<a href="/about/Summer_Internship_2008.pl">View summer 2008 intern photos &amp; projects</a>',
+                                                '<a href="/outreach/index.pl#interns">Get information about our bioinformatics summer internship program</a>',            
+                        ),
+                                           )
+
+			 .qq|<a href="/sgn_photos/index.pl"><strong>View more staff &amp; intern photos</strong></a>|
+		       );
+print info_section_html( title => 'Emeritus Staff',
+			 contents =>
+			 info_table_html( __multicol => 3, __border => 0,
+					 'Bioinformatics Analysts' =>
+					  ul(
+                                             'Beth Skwarecki',
+					     'Dean Eckstrom',
+					     'Chris Carpita',
+					     'Marty Kreuter',
+					     'Chenwei Lin',
+					     'John Binns',
+					     'Teri Solow',
+					     'Nicholas Taylor',
+					     'Dan Ilut',
+					     'Robert Ahrens',
+					     'Mark Wright',
+					    ),
+					  'Interns' =>
+					  ul(
+                                             'Mallory Freeberg',
+                                             'Carolyn Ochoa',
+					     'Johnathon Schulz',
+					     'Tim Jacobs',
+					     'Sasha Naydich',
+					     'Jessica Reuter',
+					     'Matthew Crumb',	 
+					     'Bob Albright',
+					     'Emily Hart',
+					     'Scott Bland',
+					     'Amarachukwu Enemuo',
+                                            ),
+					  '&nbsp;' =>
+					  ul(
+                                             'Benjamin Cole',
+					     'Caroline Nyenke',
+					     'Tyler Simmons',
+					     'Evan Herbst',
+					     'Emil Keyder',
+					     'Aseem Kohli',
+					     'Igor Dolgalev',
+					     'Miriam Wallace',
+					     'Jay Gadgil',
+					     'Jennifer Lee',
+					    ),
+					)
+			 .<<EOHTML);
+EOHTML
+
+</%perl>
