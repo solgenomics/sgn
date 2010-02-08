@@ -1,7 +1,7 @@
 use strict;
 
-use CXGN::MasonFactory;
+use SGN::Context;
 
-my $m = CXGN::MasonFactory->new();
-$m->exec('/tomato_genome/bac_by_bac_progress.mas');
+my $c = SGN::Context->new();
+$c->forward_to_mason_view('/tomato_genome/bac_by_bac_progress.mas');
 
