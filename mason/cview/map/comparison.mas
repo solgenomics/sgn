@@ -1,0 +1,155 @@
+
+<%doc>
+
+=head1 NAME
+
+/cview/map/comparison.mas - a Mason component for comparing entire maps
+
+=head1 DESCRIPTION
+
+Displays a comparison between 3 complete maps. 
+
+The images are cached using L<CXGN::Tools::WebImageCache>.
+
+Parameters:
+
+=over 23
+
+=item left_map
+
+the map_id of the map to be displayed in the left track.
+
+=item left_map_version_id
+
+the map_version_id of the map to be displayed in the left track. left_map and left_map_version_id are mutually exclusive.
+
+=item center_map
+
+the map_id of the map to be displayed in the center track.
+
+=item center_map_version_id
+
+the map_version_id of the map to be displayed in the center track. Mutually excludes center_map.
+
+=item right_map
+
+the map_id to be displayed in the right track.
+
+=item right_map_version_id
+
+the map_version_id of the map to be displayed in the right track. right_map and right_map_version_id are mutually exclusive.
+
+=back
+
+Notes:
+
+=over 3
+
+=item
+
+that the maps are always displayed filling the left and center slot before filling the right slot.
+
+=item 
+
+maps should be specified in links using the map_ids, as they are more stable (unless a specific map_version is desired). The map_id will be converted to the current map_version, which is used exclusively internally.
+
+=head1 AUTHOR
+
+Lukas Mueller (lam87@cornell.edu)
+
+=head1 FUNCTIONS
+
+This script contains a small class called CXGN::Cview::ViewMaps that has the following member functions:
+
+=cut
+
+</%doc>
+
+
+
+<%args>
+$dbh
+$center_map=>undef 
+$center_map_version_id=>undef
+$show_physical=>undef
+$show_ruler=>undef
+$show_IL=>undef
+$left_map=>undef
+$left_map_version_id=>undef
+$right_map=>undef
+$right_map_version_id=>undef
+$color_model=>undef
+</%args>
+
+<%perl>
+
+use strict;
+use File::Spec;
+use CXGN::Cview::ViewMaps;
+
+# adjust some inputs
+#
+if (!$left_map) { $left_map =0; }
+if (!$center_map) { $center_map = 0; }
+if (!$right_map) { $right_map = 0; }
+
+# the map object accepts only either map id or map_version_id.
+# let's have map_version_id trump map ids.
+#
+if ($left_map && $left_map_version_id) { 
+    $left_map = 0;
+}
+if ($center_map && $center_map_version_id) { 
+    $center_map =0;
+}
+if ($right_map && $right_map_version_id) { 
+    $right_map = 0;
+}
+
+if (!$left_map_version_id) { 
+    $left_map_version_id=CXGN::Cview::Map::Tools::find_current_version($dbh, $left_map); 
+}
+
+if (!$center_map_version_id) {
+    $center_map_version_id=CXGN::Cview::Map::Tools::find_current_version($dbh, $center_map);
+}
+
+if (!$right_map_version_id) { 
+    $right_map_version_id = CXGN::Cview::Map::Tools::find_current_version($dbh, $right_map);
+}
+
+my $map_factory = CXGN::Cview::MapFactory->new($dbh);
+
+my @maps = ();
+foreach my $id ($left_map_version_id, $center_map_version_id, $right_map_version_id) { 
+    if ($id) { # skip maps that are not defined...
+	#print STDERR "Generating map with map_version_id $id...";
+       push @maps, $map_factory->create( { map_version_id=>$id });
+	#print STDERR " Done.\n";
+   }
+} 
+
+print STDERR "MARKER BLABLA\n";
+my $vm = CXGN::Cview::ViewMaps -> new($dbh, $c->get_conf('basepath'), File::Spec->catfile($c->get_conf('tempfiles_subdir'), 'cview'));
+
+
+$vm -> set_maps(@maps);
+$vm -> generate_image();
+
+#my $width = int($self->{map_width}/3);
+my $select = $vm->get_select_toolbar();
+    
+print "$select";
+
+if (!$vm->get_maps()) { 
+  print "<br /><br /><center>Note: No maps are selected. Please select maps from the pull down menus above.</center>\n";
+}
+
+print $vm->get_cache()->get_image_html();
+
+
+$vm -> clean_up();
+
+</%perl>
+
+
