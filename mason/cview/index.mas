@@ -11,23 +11,39 @@
 #  
 ######################################################################
 
-=head1 Name
+=head1 NAME
 
-/cview/index.mas
+/cview/index.mas - a mason component to show information about available maps.
 
-=head1 Description
+=head1 DESCRIPTION
 
-A Mason component that displays a html page with links to all SGN maps and related information. It takes no parameters.
+A Mason component that displays an html page with links to all SGN maps and related information. 
 
-=head1 Author
+Required parameters:
 
-Initial version by Robert Ahrens, later maintainers were John Binns and/or Lukas Mueller.
+=over 2
 
-This version was written by Lukas Mueller <lam87@cornell.edu>
+=item $dbh
+
+a database handle (DBI or CXGN::DB::Connection object)
+
+=back
+
+=head1 AUTHOR
+
+Initial version by Robert Ahrens, later maintained by John Binns.
+
+Mason version by Lukas Mueller <lam87@cornell.edu>
+
+February 2010
 
 =cut
 
 </%doc>
+
+<%args>
+$dbh
+</%args>
 
 <%perl>
 
@@ -51,7 +67,7 @@ HTML
 # Show a blue section html with the system maps
 # organized by species.
 #
-my $dbh = CXGN::DB::Connection->new();
+
 
 my $current_F2_2000_map_id = CXGN::Cview::Map::Tools::current_tomato_map_id();
 
