@@ -2,10 +2,7 @@ use strict;
 use CXGN::Page;
 use CXGN::Marker;
 
-use SGN::Context;
 use SGN::Controller::Marker;
-
-my $c = SGN::Context->instance;
 
 my $page = CXGN::Page->new( "view_rflp.pl", "john" );
 

@@ -22,10 +22,7 @@ use strict;
 
 use File::Spec;
 use CXGN::Tools::File;
-use SGN::Context;
 
-
-my $c = SGN::Context->new();
 my $file = File::Spec->catfile($c->get_conf('homepage_files_dir'), 'getting_started.txt');
 
 my $contents = "Sidebar contents are not available at the moment.<br /><br />";

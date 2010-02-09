@@ -2,7 +2,6 @@
 use strict;
 
 use CXGN::Page;
-use SGN::Context;
 use CXGN::DB::Connection;
 
 print STDERR "Create page object...\n";
@@ -18,7 +17,6 @@ print STDERR "Retrieving page arguments...\n";
 
 print STDERR "Marker 2\n";
 
-my $c = SGN::Context->new();
 print STDERR "forwarding to mason view...\n";
 $c->forward_to_mason_view('/cview/map/comparison.mas',
 			  dbh=>$dbh,
