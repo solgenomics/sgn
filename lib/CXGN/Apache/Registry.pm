@@ -3,48 +3,8 @@ package CXGN::Apache::Registry;
 use strict;
 use warnings FATAL => 'all';
 
-# we try to develop so we reload ourselves without die'ing on the warning
-#no warnings qw(redefine); # XXX, this should go away in production!
-
-use base qw(ModPerl::RegistryCooker);
+use base qw(ModPerl::RegistryPrefork);
 use CXGN::Apache::Error;
-
-sub handler : method {
-    my $class = (@_ >= 2) ? shift : __PACKAGE__;
-    my $r = shift;
-    return $class->new($r)->default_handler();
-}
-
-my $parent = 'ModPerl::RegistryCooker';
-# the following code:
-# - specifies package's behavior different from default of $parent class
-# - speeds things up by shortcutting @ISA search, so even if the
-#   default is used we still use the alias
-my %aliases = (
-    new             => 'new',
-    init            => 'init',
-    default_handler => 'default_handler',
-    run             => 'run',
-    can_compile     => 'can_compile',
-    make_namespace  => 'make_namespace',
-    namespace_root  => 'namespace_root',
-    namespace_from  => 'namespace_from_filename',
-    is_cached       => 'is_cached',
-    should_compile  => 'should_compile_if_modified',
-    flush_namespace => 'NOP',
-    cache_table     => 'cache_table_common',
-    cache_it        => 'cache_it',
-    read_script     => 'read_script',
-    shebang_to_perl => 'shebang_to_perl',
-    get_script_name => 'get_script_name',
-    chdir_file      => 'NOP',
-    get_mark_line   => 'get_mark_line',
-    #compile         => 'compile',
-    error_check     => 'error_check',
-    strip_end_data_segment             => 'strip_end_data_segment',
-    convert_script_to_compiled_handler => 'convert_script_to_compiled_handler',
-);
-
 
 # #########################################################################
 # # func: error_check
@@ -122,26 +82,6 @@ sub compile {
 
     return $self->error_check;
 }
-
-
-
-# in this module, all the methods are inherited from the same parent
-# class, so we fixup aliases instead of using the source package in
-# first place.
-$aliases{$_} = $parent . "::" . $aliases{$_} for keys %aliases;
-
-__PACKAGE__->install_aliases(\%aliases);
-
-# Note that you don't have to do the aliases if you use defaults, it
-# just speeds things up the first time the sub runs, after that
-# methods are cached.
-#
-# But it's still handy, since you explicitly specify which subs from
-# the parent package you are using
-#
-
-# META: if the ISA search results are cached on the first lookup, may
-# be we need to alias only those methods that override the defaults?
 
 
 1;
