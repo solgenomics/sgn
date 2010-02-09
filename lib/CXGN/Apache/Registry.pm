@@ -5,6 +5,7 @@ use warnings FATAL => 'all';
 
 use base qw(ModPerl::RegistryPrefork);
 use CXGN::Apache::Error;
+use SGN::Context;
 
 # #########################################################################
 # # func: error_check
@@ -40,28 +41,26 @@ use CXGN::Apache::Error;
 # # efct: initializes the CODE field with the source script
 # #########################################################################
 
-# sub read_script {
-#     my $self = shift;
+    my $cxgn_script_header = <<'EOC';
+my $c = SGN::Context->instance;
+EOC
+sub read_script {
+    my $self = shift;
 
-#     my $sig_handlers_code = <<EOP;
-# local \$main::SIG{__DIE__} = \\&CXGN::Apache::Error::Purgatory::cxgn_die_handler;
-# EOP
+    $self->{CODE} = eval { my $c = $cxgn_script_header.${$self->{REQ}->slurp_filename(0)}; \$c };
+    if ($@) {
+        $self->log_error("$@");
 
-#     $self->debug("reading $self->{FILENAME}") if ModPerl::RegistryCooker::DEBUG & ModPerl::RegistryCooker::D_NOISE;
-#     $self->{CODE} = eval { my $code = $self->{REQ}->slurp_filename(0); $code = '{'.$sig_handlers_code.$$code.'}'; \$code }; # untainted
-#     if ($@) {
-#         $self->log_error("$@");
+        if (ref $@ eq 'APR::Error') {
+            return Apache2::Const::FORBIDDEN if APR::Status::is_EACCES($@);
+            return Apache2::Const::NOT_FOUND if APR::Status::is_ENOENT($@);
+        }
 
-#         if (ref $@ eq 'APR::Error') {
-#             return Apache2::Const::FORBIDDEN if APR::Status::is_EACCES($@);
-#             return Apache2::Const::NOT_FOUND if APR::Status::is_ENOENT($@);
-#         }
+        return Apache2::Const::SERVER_ERROR;
+    }
 
-#         return Apache2::Const::SERVER_ERROR;
-#     }
-
-#     return Apache2::Const::OK;
-# }
+    return Apache2::Const::OK;
+}
 
 
 sub compile {
