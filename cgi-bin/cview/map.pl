@@ -1,5 +1,4 @@
 
-use SGN::Context;
 use CXGN::Page;
 use CXGN::DB::Connection;
 
@@ -9,8 +8,6 @@ my ($map_id, $map_version_id, $size, $hilite, $physical, $force) = $page->get_en
 my $dbh = CXGN::DB::Connection->new();
 
 my $referer = $page->get_request()->uri() ."?". $page->get_request->args();
-
-my $c = SGN::Context->new();
 
 $c->forward_to_mason_view('/cview/map/index.mas', dbh=>$dbh, map_version_id=>$map_version_id, map_id=>$map_id, hilite=>$hilite, physical=>$physical, size=>$size, referer=>$referer, force=>$force);
 

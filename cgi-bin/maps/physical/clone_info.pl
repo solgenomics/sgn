@@ -44,12 +44,10 @@ use CXGN::Tools::Identifiers qw/link_identifier/;
 use CXGN::Tools::List qw/all distinct any min max str_in/;
 use CXGN::Tools::Text;
 
-use SGN::Context;
 use SGN::Controller::Clone::Genomic;
 
 # calling them $c and $self because it's very similar to what we would
 # have under catalyst
-my $c    = SGN::Context->new;
 my $self = SGN::Controller::Clone::Genomic->new;
 
 my $map_id = CXGN::DB::Physical::get_current_map_id();
