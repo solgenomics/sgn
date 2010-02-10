@@ -16,7 +16,7 @@ for my $id_input ('TC115712',"TC115712\n","TC115710") {
     $mech->get_ok( $input_page );
 
     # a few checks on the title
-    $mech->title_is( "ID Converter", "Make sure we're on ID Converter input page" );
+    $mech->title_like( qr/ID Converter/, "Make sure we're on ID Converter input page" );
 
     # a few checks on the content
     $mech->content_contains( "TIGR TC", "mentions TIGR TC" );
