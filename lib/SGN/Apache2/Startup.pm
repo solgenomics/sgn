@@ -37,12 +37,11 @@ sub import {
     my $class = shift;
     my %args = @_;
 
+    require SGN::Context;
+    my $vhost = SGN::Context->new;
+
     exists $args{vhost}
         or die "FATAL: vhost argument required for $class, e.g. 'use $class vhost => 1;'\n";
-
-    # find the path on disk of this file
-    (my $this_file = "$class.pm") =~ s{::}{/}g;
-    $this_file = $INC{$this_file};
 
     # preload a large number of modules at server startup
     unless( exists $args{module_preload} && ! $args{module_preload} ) {
@@ -51,9 +50,8 @@ sub import {
 
     my %paths;
 
-     # find the sgn/ basepath
-     ($paths{basepath} = catdir( dirname($this_file), (updir()) x 3 ))
-         =~ s{::}{/}g;
+    # find the sgn/ basepath
+    $paths{basepath} = catdir( $vhost->path_to() );
 
     # path to the root of the shipwright vessel, if we are in one
     $paths{shipwright_vessel}   = catdir($paths{basepath},updir());
@@ -79,9 +77,6 @@ sub import {
         $ENV{PATH} = "$v/sbin:$v/bin:$v/usr/sbin:$v/usr/bin:$ENV{PATH}";
         $ENV{PROJECT_NAME} = 'SGN';
     }
-
-    require SGN::Context;
-    my $vhost = SGN::Context->new;
 
     # add some other configuration to the web server
     my $root_server = my $server =  Apache2::ServerUtil->server;
