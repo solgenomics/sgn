@@ -42,6 +42,7 @@ Lukas Mueller <lam87@cornell.edu>
 </%doc>
 
 <%args>
+$dbh
 $chr_nr
 $map_id => undef
 $map_version_id => undef
@@ -71,7 +72,7 @@ $confidence => undef
 
 use CXGN::Cview::Chromosome_viewer;
 
-my $viewer = CXGN::Cview::Chromosome_viewer -> new();
+my $viewer = CXGN::Cview::Chromosome_viewer -> new($dbh);
 
 $viewer -> set_temp_dir(File::Spec->catfile($c->get_conf('tempfiles_subdir'), "cview"));
 $viewer -> set_basedir($c->get_conf('basepath'));
@@ -104,6 +105,7 @@ $viewer -> set_cM_start($cM_start);
 $viewer -> set_cM_end($cM_end);
 $viewer -> set_confidence($confidence);
 $viewer -> set_show_zoomed($show_zoomed);
+$viewer -> set_db_backend($c->{project_name});
 
 $viewer->generate_page();
 
