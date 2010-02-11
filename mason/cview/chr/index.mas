@@ -70,9 +70,9 @@ $confidence => undef
 
 <%perl>
 
-use CXGN::Cview::Chromosome_viewer;
+use CXGN::Cview::ChromosomeViewer;
 
-my $viewer = CXGN::Cview::Chromosome_viewer -> new($dbh);
+my $viewer = CXGN::Cview::ChromosomeViewer -> new($dbh);
 
 $viewer -> set_temp_dir(File::Spec->catfile($c->get_conf('tempfiles_subdir'), "cview"));
 $viewer -> set_basedir($c->get_conf('basepath'));
