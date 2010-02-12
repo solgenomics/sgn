@@ -35,6 +35,7 @@ use strict;
 package CXGN::Cview::Map::SGN::Contig;
 
 use Bio::DB::GFF;
+use File::Spec;
 use CXGN::Cview::Map::SGN::Genetic;
 use CXGN::Cview::Chromosome::Physical;
 use CXGN::Cview::Marker::Physical;
@@ -59,7 +60,8 @@ sub new {
     my $class = shift;
     my $dbh = shift;
     my $id = shift;
-
+    my $args = shift;
+    
     my $db_version_id = get_db_id($dbh, $id);
     my $self = $class -> SUPER::new($dbh, $db_version_id);
 
@@ -67,25 +69,16 @@ sub new {
     $self->set_preferred_chromosome_width(18);
     $self->set_short_name("Tomato FPC map SGN2009");
     $self->set_long_name("Solanum lycopersicum Contig Map SGN2009");
+    $self->{berkeley_db_path} = $args->{berkeley_db_path};
+    $self->{temp_dir} = $args->{temp_dir} || '/tmp';
 
-#    $self->fetch_contig_data();
-   
     $self->set_id($id);
+
+    
+
     return $self;
 }
 
-sub fetch_contig_data { 
-    my $self =shift;
-    $self->{gffdb} = Bio::DB::GFF->new( 
-					-adaptor => 'berkeleydb',
-					-dsn => '/data/prod/public/tomato_genome/physical_mapping/fpc/SGN_2009/gbrowse/curr' #'/data/prod/tomato_genome/fpc/SGN_2009'    # tomato_R12_dQ'
-					);
-
-   # foreach my $m ($chromosome->get_markers()) { 
-#	# get contig associated with $m...
-#    }
-
-}
 
 =head2 function get_chromosome()
 
@@ -111,11 +104,10 @@ sub get_chromosome {
     my $largest_offset = 0;
 
 
-    my $basepath = CXGN::VHost->new()->get_conf("basepath");
     my $gff = Bio::DB::GFF->new(
-			   -adaptor => 'berkeleydb',
-			   -dsn     => '/data/prod/public/tomato_genome/physical_mapping/fpc/SGN_2009/gbrowse/curr' #$basepath."/documents/gbrowse/databases/fpc/SGN_2009", #tomato_R12_dQ",
-			  );
+	-adaptor => 'berkeleydb',
+	-dsn     => $self->{berkeley_db_path},
+	);
 
 
     foreach my $m ($genetic->get_markers()) { 
@@ -233,18 +225,45 @@ sub get_marker_count {
     my $self = shift;
     my $chr_nr = shift;
 
-    my @markers = $self->{chr}->[$chr_nr]->get_markers();
-   
-    my $count = 0;
-    foreach my $m (@markers) { 
-	if ($m->get_marker_name()=~ /^ctg/) { 
-	    $count++;
+    my $tmp_file = "";
+
+    my @lengths = $self->cache_marker_counts(); 
+    return $lengths[$chr_nr-1];
+}
+
+sub cache_marker_counts { 
+    my $self = shift;
+    
+    my @lengths = ();
+    my $temp_file = File::Spec->catfile($self->{temp_dir}, 'contig'.$self->get_id()."_marker_counts.txt");
+					
+    if (! -e ($temp_file)) { 
+	open(my $TEMP, ">$temp_file") || die "Can't open $temp_file for writing.";
+	for my $c (1..12) { 
+	    my $count = 0;
+	    my $chr = $self->get_chromosome($c);
+	    foreach my $m ($chr->get_markers()) { 
+		if ($m->get_marker_name()=~ /^ctg/) { 
+		    $count++;
+		}
+	    }
+	    print $TEMP "$c\t$count\n";
+	    
 	}
     }
-    
-
-    return $count; 
+	
+    else { 
+	open(my $TEMP, "<$temp_file") || die "Can't open $temp_file for reading.";
+	while (<$TEMP>) { 
+	    chomp;
+	    my ($c, $length) = split /\t/;
+	    push @lengths, $length;
+	}
+	
+    }    
+    return @lengths;
 }
+
 
 sub get_map_stats { 
     my $self = shift;
