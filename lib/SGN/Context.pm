@@ -59,7 +59,7 @@ sub _new_config {
                                  {
                                   basepath => $basepath, #< basepath is the old-SGN-compatible name
                                   home     => $basepath, #< home is the catalyst-compatible name
-                                  project_name => $ENV{PROJECT_NAME},
+                                  project_name => 'SGN',
                                  }
                                );
 }
