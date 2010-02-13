@@ -20,9 +20,12 @@ BEGIN {
 #    our @page_urls;
 
     %urls = (
+	     "contig map" => "/cview/map.pl?map_id=c9",
              "map overview F2-2000" => "/cview/map.pl?map_id=9",
              "comparative mapviewer" => "/cview/view_chromosome.pl?map_version_id=39",
              "map overview FISH map" => "/cview/map.pl?map_id=13",
+	"physical map overview" => "/cview/map.pl?map_id=p9",
+	"agp map overview" => "/cview/map.pl?map_id=agp", 
              "gene search" => "/search/locus_search.pl?w8e4_any_name_matchtype=contains&w8e4_any_name=dwarf&w8e4_common_name=&w8e4_phenotype=&w8e4_locus_linkage_group=&w8e4_ontology_term=&w8e4_editor=&w8e4_genbank_accession=",
              "locus detail" => "/phenome/locus_display.pl?locus_id=428",
              "phenotype search" => "/search/phenotype_search.pl?wee9_phenotype=&wee9_individual_name=&wee9_population_name=",
