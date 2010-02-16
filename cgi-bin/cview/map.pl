@@ -11,20 +11,6 @@ my $referer = $page->get_request()->uri() ."?". $page->get_request->args();
 
 $c->forward_to_mason_view('/cview/map/index.mas', dbh=>$dbh, map_version_id=>$map_version_id, map_id=>$map_id, hilite=>$hilite, physical=>$physical, size=>$size, referer=>$referer, force=>$force);
 
-######################################################################
-#
-#  Program:  $Id$
-#  Author:   $Author$
-#  Date:     $Date$
-#  Version:  1.0
-#  CHECKOUT TAG: $Name:  $
-#  Usage:    (via Apache()) map.pl ? map_id=INT
-#
-#  This program automatically produces top pages for each of the maps
-#  handled by the SGN mapping tool, Mapviewer.
-#
-######################################################################
-
 =head1 NAME
 
 map.pl - display top level map web page
