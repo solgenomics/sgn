@@ -70,6 +70,7 @@ $link_pages{contig_page} = $link_pages{'agi_page'};
 # Start a new SGN page.
 my $page = CXGN::Page->new( 'BAC Data', 'Rob Buels');
 my $dbh = CXGN::DB::Connection->new();
+my $chado = CXGN::DB::DBICFactory->open_schema('Bio::Chado::Schema');
 
 $page->jsan_use(qw/ MochiKit.Base MochiKit.Async /);
 
@@ -698,7 +699,7 @@ EOHTML
 
       }
 
-      my $gb = $clone->genbank_accession;
+      my $gb = $clone->genbank_accession( $chado );
       $gb = $gb ? (link_identifier($gb,'genbank_accession') || $gb).' (GenBank)' : '';
       <<EOHTML
 <table width="100%"><tr>

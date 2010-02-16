@@ -37,6 +37,7 @@
 use strict;
 use warnings;
 use CXGN::Bulk;
+use CXGN::DB::DBICFactory;
 use CXGN::Genomic::CloneNameParser;
 use CXGN::Genomic::Chromat;
 use CXGN::Genomic::GSS;
@@ -134,6 +135,7 @@ sub process_ids
     my $self = shift;
     $self->{query_start_time} = time();
     my $dbh = $self->{db};
+    my $chado = CXGN::DB::DBICFactory->open_schema('Bio::Chado::Schema');
     my @output_fields = @{$self->{output_fields}};
     my @notfound = ();
     my @return_data = ();
@@ -182,7 +184,7 @@ sub process_ids
       my $qualvalue = $gss->qual;
 
 
-      print STDERR "GENBANK ACCESSION:". ref($clone->genbank_accession()) ."\n"; 
+      print STDERR "GENBANK ACCESSION:". ref($clone->genbank_accession($chado)) ."\n"; 
 #       # check which parameters were selected
 #       my @use_flags = @{$self}{qw/ bac_id
 # 				   clone_type
@@ -201,7 +203,7 @@ sub process_ids
       my $clone_type = $parsed_bac_end->{clonetype};
       my $library_name = $lib->name();
       my $estimated_length = $clone->estimated_length();
-      my $genbank_accession = $clone->genbank_accession();
+      my $genbank_accession = $clone->genbank_accession($chado);
       my $overgo = "overgo";
 
       my %field_vals = ( "bac_id" => $bac_id,

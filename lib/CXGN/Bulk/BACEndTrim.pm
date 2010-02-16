@@ -35,6 +35,7 @@
 =cut
 
 
+package CXGN::Bulk::BACEndTrim;
 use strict;
 use warnings;
 use CXGN::Bulk;
@@ -42,7 +43,8 @@ use CXGN::Genomic::CloneNameParser;
 use CXGN::Genomic::Chromat;
 use CXGN::Genomic::GSS;
 
-package CXGN::Bulk::BACEndTrim;
+use CXGN::DB::DBICFactory;
+
 use base "CXGN::Bulk";
 
 sub new
@@ -135,6 +137,7 @@ sub process_ids
     my $self = shift;
     $self->{query_start_time} = time();
     my $dbh = $self->{db};
+    my $chado = CXGN::DB::DBICFactory->open_schema('Bio::Chado::Schema');
     my @output_fields = @{$self->{output_fields}};
     my @notfound = ();
     my @return_data = ();
@@ -201,7 +204,7 @@ sub process_ids
       my $clone_type = $parsed_bac_end->{clonetype};
       my $library_name = $lib->name();
       my $estimated_length = $clone->estimated_length();
-      my $genbank_accession = $clone->genbank_accession();
+      my $genbank_accession = $clone->genbank_accession($chado);
       my $overgo = "overgo";
 
       my %field_vals = ( "bac_id" => $bac_id,

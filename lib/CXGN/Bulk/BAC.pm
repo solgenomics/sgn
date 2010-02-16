@@ -1,7 +1,8 @@
+package CXGN::Bulk::BAC;
 use strict;
 use warnings;
 
-package CXGN::Bulk::BAC;
+use CXGN::DB::DBICFactory;
 use CXGN::Genomic::Clone;
 use CXGN::Genomic::CloneIdentifiers;
 use CXGN::Genomic::Library;
@@ -77,6 +78,8 @@ sub process_ids
     my $notfoundcount=0;
     my $count=0;
 
+    my $chado = CXGN::DB::DBICFactory->open_schema('Bio::Chado::Schema');
+
     # iterate through identifiers
     foreach my $id (@{$self->{ids}}) {
       $count++;
@@ -102,7 +105,7 @@ sub process_ids
 			    $cname,
 			    $lib->name,
 			    $clone->estimated_length,
-			    $clone->genbank_accession,
+			    $clone->genbank_accession( $chado ),
 			   );
       my @dump_fields = grep $self->{$_},@field_list;
 	
