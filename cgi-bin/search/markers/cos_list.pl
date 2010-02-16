@@ -1,11 +1,4 @@
-#!/usr/bin/perl -w
-
 ######################################################################
-#
-#  Program  :  $Id$
-#  Author   :  $Author$
-#  Date     :  $Date$
-#  CHECKOUT TAG : $Name : $
 #
 #  This is the first cos_list page to take advantage of the new
 #  SGN database.  It offers reduced functionality from its 

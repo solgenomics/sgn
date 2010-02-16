@@ -1,12 +1,5 @@
 ######################################################################
 #
-#  Program:  $Id$
-#  Author:   $Author$
-#  Date:     $Date$
-#  Version:  1.0
-#  CHECKOUT TAG: $Name:  $
-#  Usage:
-#
 #  This conducts and displays the results of a BAC search.
 #
 ######################################################################
