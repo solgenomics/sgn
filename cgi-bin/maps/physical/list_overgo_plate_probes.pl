@@ -1,12 +1,5 @@
 #!/usr/bin/perl -w
 
-######################################################################
-#
-#  Program: $Id$
-#  Author:  $Author$
-#  Date:    $Date$
-#  CHECKOUT TAG: $Name$
-#
 #  This is a script to list all the probes used in the wells of
 #  an overgo plate.
 #

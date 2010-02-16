@@ -2,11 +2,6 @@
 
 ######################################################################
 #
-#  Program  :  $Id$
-#  Author   :  $Author$
-#  Date     :  $Date$
-#  CHECKOUT TAG:  $Name:  $
-#
 #  This program displays statistics on the progress of the overgo
 #  plating project as reflected by the physical database.
 #

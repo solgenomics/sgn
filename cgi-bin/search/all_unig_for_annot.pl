@@ -1,18 +1,10 @@
-#!/usr/bin/perl -w
 use strict;
 use CXGN::Page;
 use CXGN::DB::Connection;
 
-# $Id$
-# $Author$
-# $Date$
-# $Name:  $
-#
+my ($manual_annot_matches_q, $manual_clone_unig_link_q, $blast_matches_q, $blast_unig_link_q);
 
-
-our ($manual_annot_matches_q, $manual_clone_unig_link_q, $blast_matches_q, $blast_unig_link_q);
-
-our $page = CXGN::Page->new( "Annotation Search Results", "Dan");
+my $page = CXGN::Page->new( "Annotation Search Results", "Dan");
 
 &local_init;
 

@@ -2,11 +2,6 @@
 
 ######################################################################
 #
-#  Program  :  $Id$
-#  Author   :  $Author$
-#  Date     :  $Date$
-#  CHECKOUT TAG:  $Name:  $
-#
 #  This program is barely a program at all, although it does pull
 #  somewhat from the database and so ended up a program.
 #

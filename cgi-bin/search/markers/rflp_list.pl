@@ -1,11 +1,4 @@
-#!/usr/bin/perl
-
 ######################################################################
-#
-#  Program  :  $Id$
-#  Author   :  $Author$
-#  Date     :  $Date$
-#  CHECKOUT TAG : $Name : $
 #
 #  This page lists all the known RFLP markers in the SGN database.
 #

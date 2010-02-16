@@ -3,12 +3,6 @@ use CXGN::Page;
 use CXGN::DB::Connection;
 use CXGN::Tools::Text qw/to_tsquery_string/;
 
-# $Id$
-# $Author$
-# $Date$
-# $Name:  $
-#
-
 my $highlight_colour='#0000FF';
 my $desc_colour='#EEEEEE';
 my $nr_to_show=20;
