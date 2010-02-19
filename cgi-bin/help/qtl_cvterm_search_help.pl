@@ -11,7 +11,7 @@ use strict;
 use CXGN::Page;
 my $page=CXGN::Page->new('');
 $page->header('SGN: QTL/Trait search help');
-my $email = 'sgn-feed@sgn.cornell.edu';
+my $email = 'sgn-feedback@solgenomics.net';
 print <<EOHTML;
 
 <p>

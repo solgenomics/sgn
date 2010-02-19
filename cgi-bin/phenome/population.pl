@@ -67,20 +67,14 @@ sub generate_form {
     my $population_id = $self->get_object_id();
     my $type_id = $args{type_id};
     my $type=$args{type};
-
-    
-    
-    
-    my $sp_person_id= $population->get_sp_person_id();
-    my $submitter = CXGN::People::Person->new($self->get_dbh(), $population->get_sp_person_id());
-    my $submitter_name = $submitter->get_first_name()." ".$submitter->get_last_name();
-    my $submitter_link = qq |<a href="/solpeople/personal-info.pl?sp_person_id=$sp_person_id">$submitter_name </a> |;
-   
-   
+       
+    my ($submitter, $submitter_link) = $self->submitter();
+      
     my $login_user= $self->get_user();
     my $login_user_id= $login_user->get_sp_person_id();
     my $form = undef;
-    if ($self->get_action()=~/edit|store|new/ && ($login_user_id = $submitter || $self->get_user()->get_user_type() eq 'curator') ) { 
+    
+    if ($self->get_action()=~/edit|store/ && ($login_user_id = $submitter || $self->get_user()->get_user_type() eq 'curator') ) { 
 	print STDERR "Generating EditableForm..\n";
 	$form = CXGN::Page::Form::Editable->new();
     }
@@ -169,7 +163,8 @@ EOS
     my $population_name = $population->get_name();
 
     my $action = $args{action};
-    if (!$population_id && $action ne 'new' && $action ne 'store') { $self->get_page->message_page("No individual exists for this identifier"); }
+    if (!$population_id && $action ne 'new' && $action ne 'store') 
+                     { $self->get_page->message_page("No population exists for this identifier"); }
     
     #used to show certain elements to only the proper users
     my $login_user= $self->get_user();
@@ -184,38 +179,79 @@ EOS
     my $page="../phenome/population.pl?population_id=$population_id";
     $args{calling_page} = $page;
     
-    my $population_html = $self->get_edit_link_html();
-    $population_html .= $self->get_new_link_html() if $login_user_type eq 'curator';
-
+    my $population_html = $self->get_edit_link_html()."<br />";
+    
     #print all editable form  fields
     $population_html .= $self->get_form()->as_table_string(); 
 
-    #my $population= CXGN::Phenome::Population->new($self->get_dbh(), $population_id);
-   
-    #my ($pop, $obs, $count, $cvterm, $definition, $min, $max, $ave) = $population_obj->get_pop_data_summary();
-    my @cvterms= $population->get_cvterms();
-
+    
     my $phenotype = ""; 
     my @phenotype;
     my $graph_icon = qq |<img src="../documents/img/pop_graph.png"> |;
     
-   # my @cvterm_names;
-    foreach my $cvterm(@cvterms)  {
-	#my $cvterm_name = $cvterm->get_cvterm_name();
+    if ($population->get_web_uploaded()) {
+	my @traits = $population->get_cvterms();
 
-	#push @cvterm_names, $cvterm_name;
+	foreach my $trait (@traits)  {
+	    my $trait_id = $trait->get_user_trait_id();
+	    my $trait_name = $trait->get_name();
+	    my $definition = $trait->get_definition();
+	    my ($min, $max, $avg, $std, $count)= $population->get_pop_data_summary($trait_id);
 	
-	my ($min, $max, $avg, $std, $count)= $population->get_pop_data_summary($cvterm->get_cvterm_id());
-	my $cvterm_id = $cvterm->get_cvterm_id();
-	my $cvterm_name = $cvterm->get_cvterm_name();
-	if ($cvterm->get_definition()) {
-	    push  @phenotype,  [map {$_} ( (tooltipped_text( qq|<a href="/chado/cvterm.pl?cvterm_id=$cvterm_id">$cvterm_name</a>|, $cvterm->get_definition())), $min, $max, $avg, qq | <a href="/phenome/population_indls.pl?population_id=$population_id&amp;cvterm_id=$cvterm_id">$count</a> |,qq | <a href="/phenome/population_indls.pl?population_id=$population_id&amp;cvterm_id=$cvterm_id">$graph_icon</a> | ) ];
-	} else  { push  @phenotype,  [map {$_} (qq | <a href="/chado/cvterm.pl?cvterm_id=$cvterm_id">$cvterm_name</a>|, $min, $max, $avg, qq | <a href="/phenome/population_indls.pl?population_id=$population_id&amp;cvterm_id=$cvterm_id">$count</a> |, qq | <a href="/phenome/population_indls.pl?population_id=$population_id&amp;cvterm_id=$cvterm_id">$graph_icon</a> |  ) ];
-	      }
+	    if ($definition) {
+		push  @phenotype,  [map {$_} ( (tooltipped_text($trait_name, $definition)), 
+                                    $min, $max, $avg, 
+                           qq | <a href="/phenome/population_indls.pl?population_id=$population_id&amp;cvterm_id=$trait_id">
+                                 $count</a> 
+                              |,
+                           qq | <a href="/phenome/population_indls.pl?population_id=$population_id&amp;cvterm_id=$trait_id">
+                                  $graph_icon</a> 
+                              | )];
+	    } else  { push  @phenotype,  [map {$_} ($trait_name, $min, $max, $avg, 
+                          qq | <a href="/phenome/population_indls.pl?population_id=$population_id&amp;cvterm_id=$trait_id">
+                             $count</a> 
+                             |,
+                           qq | <a href="/phenome/population_indls.pl?population_id=$population_id&amp;cvterm_id=$trait_id">
+                                  $graph_icon</a> 
+                              |  )];
+	    }
+	}
     }
-   
-    my $accessions_link = qq |<a href="../search/phenotype_search.pl?wee9_population_id=$population_id">See all accessions ...</a> |;
+     else {
+	 my @cvterms = $population->get_cvterms();
+	 foreach my $cvterm(@cvterms)  {	
+	     my ($min, $max, $avg, $std, $count)= $population->get_pop_data_summary($cvterm->get_cvterm_id());
+	     my $cvterm_id = $cvterm->get_cvterm_id();
+	     my $cvterm_name = $cvterm->get_cvterm_name();
+	     if ($cvterm->get_definition()) {
+		 push  @phenotype,  [map {$_} ( (tooltipped_text( qq|<a href="/chado/cvterm.pl?cvterm_id=$cvterm_id">
+                                                                      $cvterm_name</a>
+                                                                     |, 
+                                    $cvterm->get_definition())), $min, $max, $avg, 
+		          qq | <a href="/phenome/population_indls.pl?population_id=$population_id&amp;cvterm_id=$cvterm_id">
+                             $count</a> 
+                             |,
+		          qq | <a href="/phenome/population_indls.pl?population_id=$population_id&amp;cvterm_id=$cvterm_id">
+                               $graph_icon</a> 
+                             | ) ];
+	     } else  { push  @phenotype,  [map {$_} (qq | <a href="/chado/cvterm.pl?cvterm_id=$cvterm_id">$cvterm_name</a>|, 
+                            $min, $max, $avg, 
+                     qq | <a href="/phenome/population_indls.pl?population_id=$population_id&amp;cvterm_id=$cvterm_id">
+                          $count</a> 
+                        |, 
+                     qq | <a href="/phenome/population_indls.pl?population_id=$population_id&amp;cvterm_id=$cvterm_id">
+                          $graph_icon</a> 
+                        |  ) ];
+	     }
+	 }
+     }   
+    
+    my $accessions_link = qq |<a href="../search/phenotype_search.pl?wee9_population_id=$population_id">
+                              See all accessions ...</a> 
+                             |;
+    
     my ($phenotype_data, $data_view, $data_download);
+    
     if (@phenotype) {
 	$phenotype_data = columnar_table_html(headings => [
 							   'Trait',
@@ -232,14 +268,18 @@ EOS
 					      __align =>'l',
 					      );
         
-	$data_view = html_optional_show("phenotype",
-					'View/hide phenotype data summary',
-					qq|$phenotype_data</b>|,
-					1, #<  show data by default
-					);
-	$data_download .=  qq { <span><a href="pop_download.pl?population_id=$population_id"><b>\[download population raw data\]</b></a></span> }; 
+# 	$data_view = html_optional_show("phenotype",
+# 					'View/hide phenotype data summary',
+# 					qq|$phenotype_data</b>|,
+# 					1, #<  show data by default
+# 					);
+
+	$data_download .=  qq { <span><a href="pop_download.pl?population_id=$population_id"><b>\
+                                [download population raw data\]</b></a></span> 
+                              }; 
     }
    
+    
     my $pub_subtitle;
     if ($population_name && ($login_user_type eq 'curator' || $login_user_type eq 'submitter')) { 
 	$pub_subtitle .= qq|<a href="../chado/add_publication.pl?type=population&amp;type_id=$population_id&amp;refering_page=$page&amp;action=new">[Associate publication]</a>|;
@@ -248,7 +288,7 @@ EOS
     
     else { $pub_subtitle= qq|<span class=\"ghosted\">[Associate publication]</span>|;
        
-       }
+    }
 
    
     my $pubmed;
@@ -261,7 +301,9 @@ EOS
     
 
     foreach my $pub (@publications) {
-	my ($title, $abstract, $authors, $journal, $pyear, $volume, $issue, $pages, $obsolete, $pub_id, $accession);
+	my ($title, $abstract, $authors, $journal, $pyear, 
+            $volume, $issue, $pages, $obsolete, $pub_id, $accession
+           );
 	$abstract_count++;
 
 	my @dbxref_objs = $pub->get_dbxrefs();
@@ -314,31 +356,44 @@ EOS
 	}
     }
 
+    my $is_public = $population->get_privacy_status();
+    my ($submitter_obj, $submitter_link) = $self->submitter();
     
     print info_section_html(title   => 'Population Details',
 			    contents => $population_html,
-			    );   
-    if ($data_view) {
-	print info_section_html(title   => 'Phenotype Data',
-			    contents =>$data_view ." ".$data_download, 
 			    );
-    } else {print info_section_html(title   => 'Phenotype Data',
-			    contents =>$accessions_link, 
+
+    if ($is_public || 
+        $login_user_type eq 'curator' || 
+        $login_user_id == 
+        $population->get_sp_person_id() 
+       )  {   
+	if ($phenotype_data) {
+	    print info_section_html(title    => 'Phenotype Data and QTLs',
+			            contents => $phenotype_data ." ".$data_download, 
+			    );
+	} else {
+	    print info_section_html(title    => 'Phenotype Data',
+			            contents =>$accessions_link, 
 			    );
 	}
-    
+    } else {
+	my $message = "The QTL data for this population is not public yet. 
+                       If you would like to know more about this data, 
+                       please contact the owner of the data: <b>$submitter_link</b> 
+                       or email to SGN:
+                       <a href=mailto:sgn-feedback\@sgn.cornell.edu>
+                       sgn-feedback\@sgn.cornell.edu</a>\n";
+	
+	print info_section_html(title   => 'Phenotype Data and QTLs',
+			        contents =>$message, 
+	                       );
+
+    }
     print info_section_html(title   => 'Literature Annotation',
 			    #subtitle => $pub_subtitle,
 			    contents => $pubmed, 
 			    );
- #   my ($cvterms, $cvterm_acronyms) = $population->get_cvterm_acronym($population_id);
- #   my @acronyms = @{$cvterm_acronyms};
- #   my @cvterms = @{$cvterms};
-
-
-#    for (my $i=0; $i<@cvterms; $i++) {
-#	print "cvterm: $cvterms[$i] acronym: $acronyms[$i]\n";
-#    }
     
     if ($population_name) { 
 	# change sgn_people.forum_topic.page_type and the CHECK constraint!!
@@ -370,6 +425,18 @@ sub store {
  exit(); 
 }
 
+
+sub submitter {
+    my $self = shift;    
+    my $population = $self->get_object();
+    my $sp_person_id= $population->get_sp_person_id();
+    my $submitter = CXGN::People::Person->new($self->get_dbh(), $population->get_sp_person_id());
+    my $submitter_name = $submitter->get_first_name()." ".$submitter->get_last_name();
+    my $submitter_link = qq |<a href="/solpeople/personal-info.pl?sp_person_id=$sp_person_id">$submitter_name</a> |;
+    
+    return $submitter, $submitter_link;
+
+}
 
 
 

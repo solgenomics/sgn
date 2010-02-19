@@ -39,7 +39,7 @@ my $index = $page->get_arguments("index");
 
 my $dbh= CXGN::DB::Connection->new();
 
-my ($all_traits, $all_trait_d) = CXGN::Chado::Cvterm->all_traits_with_qtl_data();
+my ($all_traits, $all_trait_d) = CXGN::Chado::Cvterm::all_traits_with_qtl_data();
 my @all_traits = @{$all_traits};    
 @all_traits = uniq (@all_traits);   
 @all_traits = sort{$a<=>$b} @all_traits;

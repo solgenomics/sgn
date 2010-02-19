@@ -6,7 +6,7 @@ use strict;
 use CXGN::Page;
 
 our $page = CXGN::Page->new("Signal Peptide Finder Input Form", "Evan");
-$page->header("Signal Peptide Finder",'Signal peptide finder');
+$page->header("Signal Peptide Finder Input Form",'Signal peptide finder');
 
 print <<HTML1;
 
