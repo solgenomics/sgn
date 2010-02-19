@@ -161,7 +161,7 @@ sub org_pop_form {
 
     my $org_sec = CXGN::Page::FormattingHelpers::info_section_html(
 	                                                           title     =>"Select Organism",
-			                                           subtitle  =>$guide . "|" . $taxon_subtitle,
+			                                           subtitle  =>$taxon_subtitle ." | ".$guide,
 			                                           contents  => $organism_form,
 			                                           id        =>"organism_search",
 			                                          );
@@ -184,28 +184,28 @@ sub org_pop_form {
      $pop_sec
      <table>
      <tr>
-	 <td>Cross type$required:</td>
+	 <td>Cross type$required</td>
 	 <td> <select name="pop_type">
 	          $cross_options
              </select>
          </td>
      </tr>
      <tr>
-	<td>Population name$required:</td>
-	<td><input type="text" name="pop_name" size=42></td>    
+	<td>Population name$required</td>
+	<td><input type="text" name="pop_name" size=43></td>    
      </tr>
      <tr>
-         <td>Population description$required:</td>
-         <td><textarea name="pop_desc" rows = 5 cols=47></textarea></td>
+         <td>Population description$required</td>
+         <td><textarea name="pop_desc" rows = 5 cols=44></textarea></td>
      </tr>  
      <tr>
-	<td>Female parent$required:</td>
+	<td>Female parent$required</td>
 	<td><input type="text" name="pop_female_parent" size=24></td>
-	<td>Male parent$required:</td> 
+	<td>Male parent$required</td> 
 	<td><input type="text" name="pop_male_parent" size=24></td> 
      </tr>
      <tr>
-	<td>Recurrent parent:</td>
+	<td>Recurrent parent</td>
 	<td><input type="text" name="pop_recurrent_parent" size=24></td>
 	<td>Donor parent</td>
 	<td><input type="text" name="pop_donor_parent" size=24></td> 	 	 
