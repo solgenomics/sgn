@@ -46,7 +46,7 @@ $gene_links .= qq{ <li>Search the SGN <a href="/search/direct_search.pl?search=l
 
 $gene_links .= qq{<li> Search the SGN <a href="/search/direct_search.pl?search=phenotypes">Phenotype database</a> for Solanaceae accessions</li> };
 
-$gene_links .= qq{<li> Search the SGN <a href="/search/direct_search.pl?search=cvterm_name">Traits/QTLs database</a> for phenotype and QTL data</li> };
+$gene_links .= qq{<li> Search the SGN <a href="/search/direct_search.pl?search=cvterm_name">Traits database</a> for phenotype and QTL data</li> };
 $gene_links .= qq{ <li>SGN gene and phenotype <a href="/phenome/">submission guide</a> </li></ul> };
 
 print info_section_html(title=>"Gene and phenotype information", contents=>$gene_links);
@@ -59,7 +59,7 @@ $tool_links .= qq{<li>Browse the SGN <a href="/search/direct_search.pl?search=ma
 $tool_links .= qq{<li>Browse available controlled vocabularies using the SGN <a href="/tools/onto/">Ontology browser</a></li> };
 $tool_links .= qq{<li>Develop CAPS markers using the <a href="/tools/caps_designer/caps_input.pl">CAPS Designer</a></li>};
 $tool_links .= qq{<li>Check intron locations in transript data using the <a href="/tools/intron_detection/find_introns.pl">Intron Finder</a></li>};
-$tool_links .= qq{<li><a href="/phenome/qtl_form.pl">QTL data submssion</a> and on-the-fly QTL analysis <a href="/search/direct_search.pl?search=cvterm_name/">for Solanaceae traits</a></li> };
+$tool_links .= qq{<li>On the fly QTL analysis <a href="/search/direct_search.pl?search=cvterm_name/">for Solanaceae traits</a></li> };
 $tool_links .="<ul>";
 
 print info_section_html(title=>"SGN tools", contents=>$tool_links);

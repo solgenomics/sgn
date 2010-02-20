@@ -1,25 +1,4 @@
-#!/usr/bin/perl -wT
-
-=head1 DESCRIPTION
-
-Creates a trait/cvterm page with a description of 
-the population on which the trait/cvterm was evaluated, 
-displays the frequency distribution of its phenotypic data
-and most importantly produces the on-the-fly  QTL analysis 
-output for the trait and more.... 
-
-=head1 AUTHOR
-
-Isaak Y Tecle (iyt2@cornell.edu)
-
-=cut
-
-
-
-
 use strict;
-
-
 
 my $population_indls_detail_page = CXGN::Phenome::PopulationIndlsDetailPage->new();
 
@@ -37,7 +16,6 @@ use CXGN::Page::FormattingHelpers qw /info_section_html
                                       /;
 
 use CXGN::Phenome::Population;
-use CXGN::Phenome::Qtl;
 use CXGN::Phenome::PopulationDbxref;
 use CXGN::Tools::WebImageCache;
 use CXGN::VHost;
@@ -45,7 +23,6 @@ use CXGN::People::PageComment;
 use CXGN::People::Person;
 use CXGN::Chado::Publication;
 use CXGN::Chado::Pubauthor;
-
 use GD;
 
 #use GD::Image;
@@ -86,8 +63,11 @@ sub new {
 
 sub define_object {
     my $self = shift;
-    
-    $self->set_dbh( CXGN::DB::Connection->new() );
+
+    # call set_object_id, set_object and set_primary_key here
+    # with the appropriate parameters.
+    #
+    $self->set_dbh( CXGN::DB::Connection->new('phenome') );
     my %args          = $self->get_args();
     my $population_id = $args{population_id};
     unless ( !$population_id || $population_id =~ m /^\d+$/ ) {
@@ -213,32 +193,15 @@ div.abstract_optional_show {
 EOS
 
     my %args = $self->get_args();
-    my $cvterm_id = $args{cvterm_id};
-    
-    my $dbh = $self->get_dbh();
-    
-    my $population = $self->get_object();
-    my $population_id = $self->get_object_id();
-    my $population_name = $population->get_name();
-        
+
     my $population      = $self->get_object();
     my $population_id   = $self->get_object_id();
     my $population_name = $population->get_name();
 
-   
-    my ($term_obj, $term_name, $term_id);
-    
-    if ($population->get_web_uploaded()) {
-	 $term_obj = CXGN::Phenome::UserTrait->new($dbh, $cvterm_id);
-	 $term_name = $term_obj->get_name();
-	 $term_id   = $term_obj->get_user_trait_id();
-    } else {
-	$term_obj = CXGN::Chado::Cvterm->new($dbh, $cvterm_id);
-	$term_name = $term_obj->get_cvterm_name();
-	$term_id = $term_obj->get_cvterm_id();
-    }
+    my $cvterm_id   = $args{cvterm_id};
+    my $cvterm      = CXGN::Chado::Cvterm->new( $self->get_dbh(), $cvterm_id );
+    my $cvterm_name = $cvterm->get_cvterm_name();
 
- 
     my $action = $args{action};
     if ( !$population_id && $action ne 'new' && $action ne 'store' ) {
         $self->get_page->message_page(
@@ -251,27 +214,32 @@ EOS
     my $login_user_type = $login_user->get_user_type();
 
     $self->get_page()
-      ->header(" SGN: $term_name values in population $population_name");
+      ->header(" SGN: $cvterm_name values in population $population_name");
 
     print page_title_html(
-        "SGN: $term_name values in population $population_name \n");
+        "SGN: $cvterm_name values in population $population_name \n");
 
     my $population_html = $self->get_edit_link_html() . "<br />";
 
     #print all editable form  fields
     $population_html .= $self->get_form()->as_table_string();
 
-    my $population_obj = $self->get_object();
+    my $population_obj =
+      CXGN::Phenome::Population->new( $self->get_dbh(), $population_id );
 
+#my ($pop, $obs, $count, $cvterm, $definition, $min, $max, $ave) = $population_obj->get_pop_data_summary();
+    my @cvterms = $population_obj->get_cvterms();
 
     my $phenotype = "";
     my @phenotype;
+
+    my @cvterm_names;
     
-    my ( $indl_id, $indl_name, $indl_value ) = $population->get_all_indls_cvterm( $term_id );
+    my ( $indl_id, $indl_name, $indl_value ) = $population->get_all_indls_cvterm( $cvterm_id );
  
 
     my ( $min, $max, $avg, $std, $count ) =
-      $population->get_pop_data_summary( $term_id );
+      $population->get_pop_data_summary( $cvterm_id );
 
     for ( my $i = 0 ; $i < @$indl_name ; $i++ ) {
 
@@ -287,7 +255,7 @@ qq | <a href="/phenome/individual.pl?individual_id=$indl_id->[$i]">$indl_name->[
     my ( $phenotype_data, $data_view, $data_download );
     my $count = scalar(@$indl_name);
 
-
+#my $cvterm_note = " <br><b>$count plant accessions were evaluated for $cvterm_name. The average, minimum, and maximum values for the trait were $avg, $min, and $max respectively.</b> <br />";
     if (@phenotype) {
         $phenotype_data = columnar_table_html(
             headings => [
@@ -313,9 +281,17 @@ qq { <span><a href="pop_download.pl?population_id=$population_id"><b>\[download 
     }
 
     my $page =
-"../phenome/population_indls.pl?population_id=$population_id&amp;cvterm_id=$term_id";
+"../phenome/population_indls.pl?population_id=$population_id&amp;cvterm_id=$cvterm_id";
     $args{calling_page} = $page;
 
+# my $pub_subtitle;
+#  if ($population_name && ($login_user_type eq 'curator' || $login_user_type eq 'submitter')) {
+# 	$pub_subtitle .= qq|<a href="../chado/add_publication.pl?type=population&amp;type_id=$population_id&amp;cvterm_id=$cvterm_id&amp;refering_page=$page&amp;action=new">[Associate publication]</a>|;
+
+#     }
+#    else { $pub_subtitle= qq|<span class=\"ghosted\">[Associate publication]</span>|;}
+
+    #my $graph = $population_obj->plot_cvterm();
 
     my $pubmed;
     my $url_pubmed = qq | http://www.ncbi.nlm.nih.gov/pubmed/|;
@@ -418,19 +394,19 @@ HTML
     my $value1 = $permu_threshold{ $keys[0] };
     my $value2 = $permu_threshold{ $keys[1] };
 
+    #my $value3 = $permu_threshold{$keys[2]};
+
     my $qtl_html .= "<table cellpadding=5><tr><td>";
     $qtl_html    .= $qtl_image;
     $qtl_html    .= "</td><td>";
 
-    my %stat_param = %{$self->stat_param_hash()};
-
     $qtl_html .= <<HTML;
-	<b>Analysis Procedure :</b> <a href=http://www.rqtl.org target=_blank>R/QTL</a><br/>
-	<b>QTL model: </b> $stat_param{"stat_qtl_model"}<br />
-	<b>Genome scan size:</b> $stat_param{"stat_step_size"} cM<br/> 
-	<b>QTL genotype probability:</b> $stat_param{"stat_prob_level"} <br/>
-	<b>LOD threshold (based on $stat_param{"stat_permu_test"} permutations at $stat_param{"stat_permu_level"} prob. level):</b> $value1  <br/> 
-	<b>Flanking markers & comparative mapviewer:</b><br/> click on graph
+	<b>Analysis Procedure:</b> <a href=http://www.rqtl.org target=_blank>R/QTL</a><br/>
+	<b>QTL Model: </b>single-QTL model<br />
+	<b>Genome Scan:</b> every 10 cM<br/> 
+	<b>Probability:</b> 0.05 <br/>
+	<b>LOD Threshold (based on 1000 permutations):</b><br />$keys[0]: $value1 <br/> 
+	<b>Flanking Markers & Comparative Mapviewer:</b><br/> click on graph
 HTML
 
     $qtl_html .= "</td></tr></table>";
@@ -471,6 +447,7 @@ HTML
         print $page_comment_obj->get_html();
     }
 
+    #$self->cvterm_qtl();
 
     $self->get_page()->footer();
 
@@ -491,28 +468,16 @@ sub store {
 }
 
 sub population_distribution {
-    my $self = shift;
+
     my $doc = CXGN::Scrap::AjaxPage->new();
 
     my ( $pop_id, $cvterm_id ) =
       $doc->get_encoded_arguments( "population_id", "cvterm_id" );
 
     my $dbh = CXGN::DB::Connection->new();
-
-    my ($term_obj, $term_name, $term_id);    
-    
-    my $pop = CXGN::Phenome::Population->new($dbh, $pop_id);
-    
-    if ($pop->get_web_uploaded()) {
-	 $term_obj = CXGN::Phenome::UserTrait->new($dbh, $cvterm_id);
-	 $term_name = $term_obj->get_name();
-	 $term_id   = $term_obj->get_user_trait_id();
-    } else {
-	$term_obj = CXGN::Chado::Cvterm->new($dbh, $cvterm_id);
-	$term_name = $term_obj->get_cvterm_name();
-	$term_id = $term_obj->get_cvterm_id();
-    } 
-  
+   
+    my $cvterm = CXGN::Chado::Cvterm->new( $dbh, $cvterm_id );
+    my $cvterm_name = $cvterm->get_cvterm_name();
 
     my $vh           = CXGN::VHost->new();
     my $basepath     = $vh->get_conf("basepath");
@@ -522,8 +487,8 @@ sub population_distribution {
     $cache->set_basedir($basepath);
     $cache->set_temp_dir( $tempfile_dir . "/temp_images" );
     $cache->set_expiration_time(259200);
-    $cache->set_key( "popluation_distribution" . $pop_id . $term_id );
-    $cache->set_map_name("popmap$pop_id$term_id");
+    $cache->set_key( "popluation_distribution" . $pop_id . $cvterm_id );
+    $cache->set_map_name("popmap$pop_id$cvterm_id");
     
     my $pop_name;
     my ( $variance, $std,     $mean );
@@ -533,7 +498,7 @@ sub population_distribution {
     if ( !$cache->is_valid() ) {
         my $pop_obj = CXGN::Phenome::Population->new( $dbh, $pop_id );
         $pop_name = $pop_obj->get_name();
-        my ( $indl_id, $indl_name, $value ) = $pop_obj->plot_cvterm($term_id);
+        my ( $indl_id, $indl_name, $value ) = $pop_obj->plot_cvterm($cvterm_id);
         my @indl_id   = @{$indl_id};
         my @indl_name = @{$indl_name};
         @value = @{$value};
@@ -599,7 +564,7 @@ sub population_distribution {
         foreach my $k (@keys_range) {
             ( $lower, $upper ) = split( /-/, $k );
             $c_html =
-qq | /phenome/indls_range_cvterm.pl?cvterm_id=$term_id&amp;lower=$lower&amp;upper=$upper&amp;population_id=$pop_id |;
+qq | /phenome/indls_range_cvterm.pl?cvterm_id=$cvterm_id&amp;lower=$lower&amp;upper=$upper&amp;population_id=$pop_id |;
             push @c_html, $c_html;
 
         }
@@ -611,7 +576,7 @@ qq | /phenome/indls_range_cvterm.pl?cvterm_id=$term_id&amp;lower=$lower&amp;uppe
         $graph->set_title_font('gdTinyFont');
         $graph->set(
             title             => " ",
-            x_label           => "Ranges for $term_name",
+            x_label           => "Ranges for $cvterm_name",
             y_label           => "Frequency",
             y_max_value       => $max,
             x_all_ticks       => 1,
@@ -634,17 +599,17 @@ qq | /phenome/indls_range_cvterm.pl?cvterm_id=$term_id&amp;lower=$lower&amp;uppe
             $graph,
             hrefs       => [ \@c_html ],
             noImgMarkup => 1,
-            mapName     => "popmap$pop_id$term_id",
+            mapName     => "popmap$pop_id$cvterm_id",
             info        => "%x: %y lines",
         );
-        $cache->set_image_map_data ( $map->imagemap( "popimage$pop_id$term_id.png", \@data ) );
+        $cache->set_image_map_data ( $map->imagemap( "popimage$pop_id$cvterm_id.png", \@data ) );
 
     }
 
     my $image_map = $cache->get_image_map_data();
     my $image     = $cache->get_image_tag();
     my $title =
-"Frequency distribution of experimental lines from population $pop_name evaluated for $term_name. Bars represent the number of experimental lines with $term_name values greater than the lower limit but less or equal to the upper limit of the range.";
+"Frequency distribution of experimental lines from population $pop_name evaluated for $cvterm_name. Bars represent the number of experimental lines with $cvterm_name values greater than the lower limit but less or equal to the upper limit of the range.";
 
     return $image, $title, $image_map;
 }
@@ -658,27 +623,16 @@ sub qtl_plot {
     my ( $pop_id, $cvterm_id ) = $doc->get_encoded_arguments( "population_id", "cvterm_id" );
     
     
-    my $dbh = $self->get_dbh();
+    my $dbh = CXGN::DB::Connection->new();
         
-    my $population = $self->get_object();
+    my $population = CXGN::Phenome::Population->new( $dbh, $pop_id );
     my $pop_name = $population->get_name();
     my $mapversion = $population->mapversion_id();
     my @linkage_groups = $population->linkage_groups();
     
-    my ($term_obj, $term_name, $term_id);
-    
-    if ($population->get_web_uploaded()) {
-	 $term_obj = CXGN::Phenome::UserTrait->new($dbh, $cvterm_id);
-	 $term_name = $term_obj->get_name();
-	 $term_id   = $term_obj->get_user_trait_id();
-    } else {
-	$term_obj = CXGN::Chado::Cvterm->new($dbh, $cvterm_id);
-	$term_name = $term_obj->get_cvterm_name();
-	$term_id = $term_obj->get_cvterm_id();
-    } 
-
-    
-    my $ac = $population->cvterm_acronym($term_name);
+    my $cvterm = CXGN::Chado::Cvterm->new( $dbh, $cvterm_id );
+    my $cvterm_name = $cvterm->get_cvterm_name();
+    my $ac = $population->cvterm_acronym($cvterm_name);
     
     my $vh           = CXGN::VHost->new();
     my $basepath     = $vh->get_conf("basepath");
@@ -804,7 +758,7 @@ sub qtl_plot {
 	    $cache_qtl_plot->set_basedir($basepath);
 	    $cache_qtl_plot->set_temp_dir($tempfile_dir."/temp_images");
 	    $cache_qtl_plot->set_expiration_time(259200);
-	    $cache_qtl_plot->set_key( "qtlplot" . $i ."small" . $pop_id . $term_id );        
+	    $cache_qtl_plot->set_key( "qtlplot" . $i ."small" . $pop_id . $cvterm_id );        
 	    $cache_qtl_plot->set_force(0);
 
 	    if ( !$cache_qtl_plot->is_valid() ) {
@@ -871,7 +825,7 @@ sub qtl_plot {
 	    $cache_qtl_plot_t->set_basedir($basepath);
 	    $cache_qtl_plot_t->set_temp_dir($tempfile_dir."/temp_images");
 	    $cache_qtl_plot_t->set_expiration_time(259200);
-	    $cache_qtl_plot_t->set_key("qtlplot_" . $i . "_thickbox_" . $pop_id . $term_id );
+	    $cache_qtl_plot_t->set_key("qtlplot_" . $i . "_thickbox_" . $pop_id . $cvterm_id );
 	    $cache_qtl_plot_t->set_force(0);
 
 	    if ( !$cache_qtl_plot_t->is_valid() ) {
@@ -906,7 +860,7 @@ sub qtl_plot {
         
 
 	    $thickbox =
-qq | <a href="$image_t_url" title="A QTL analysis for $term_name in population $pop_name <br/><b><a href=$h_marker> View and compare with genetic and/or physical maps</font></a></b>" class="thickbox" rel="gallary-qtl"> <img src="$image_url" alt="Chromosome $i $image_t_url $image_url" /> </a> |;
+qq | <a href="$image_t_url" title="A QTL analysis for $cvterm_name in population $pop_name <br/><b><a href=$h_marker> View and compare with genetic and/or physical maps</font></a></b>" class="thickbox" rel="gallary-qtl"> <img src="$image_url" alt="Chromosome $i $image_t_url $image_url" /> </a> |;
 
 	    $qtl_image .= $thickbox;
 	    $title       = "  ";
@@ -939,23 +893,12 @@ sub infile_list {
     my ( $pop_id, $cvterm_id ) =
       $doc->get_encoded_arguments( "population_id", "cvterm_id" );
     
-    my $dbh = $self->get_dbh();
-
-    my ($term_obj, $term_name, $term_id);
-    my $population = $self->get_object();
+    my $dbh = CXGN::DB::Connection->new();
+    my $cvterm = CXGN::Chado::Cvterm->new( $dbh, $cvterm_id );
+    my $cvterm_name = $cvterm->get_cvterm_name();
     
-    if ($population->get_web_uploaded()) {
-	 $term_obj = CXGN::Phenome::UserTrait->new($dbh, $cvterm_id);
-	 $term_name = $term_obj->get_name();
-	 $term_id   = $term_obj->get_user_trait_id();
-    } else {
-	$term_obj = CXGN::Chado::Cvterm->new($dbh, $cvterm_id);
-	$term_name = $term_obj->get_cvterm_name();
-	$term_id = $term_obj->get_cvterm_id();
-    } 
-    
-     
-    my $ac = $population->cvterm_acronym($term_name);
+    my $population = CXGN::Phenome::Population->new( $dbh, $pop_id );  
+    my $ac = $population->cvterm_acronym($cvterm_name);
 
     my ($prod_cache_path, $prod_temp_path, $tempimages_path) = $self->cache_temp_path();
     
@@ -1022,23 +965,13 @@ sub outfile_list {
     my ( $pop_id, $cvterm_id ) =
       $doc->get_encoded_arguments( "population_id", "cvterm_id" );
     
-    my $dbh = $self->get_dbh();
+    my $dbh = CXGN::DB::Connection->new();
     
-    my ($term_obj, $term_name, $term_id);
-    my $population = $self->get_object();
+    my $cvterm = CXGN::Chado::Cvterm->new( $dbh, $cvterm_id );
+    my $cvterm_name = $cvterm->get_cvterm_name();
     
-    if ($population->get_web_uploaded()) {
-	 $term_obj = CXGN::Phenome::UserTrait->new($dbh, $cvterm_id);
-	 $term_name = $term_obj->get_name();
-	 $term_id   = $term_obj->get_user_trait_id();
-    } else {
-	$term_obj = CXGN::Chado::Cvterm->new($dbh, $cvterm_id);
-	$term_name = $term_obj->get_cvterm_name();
-	$term_id = $term_obj->get_cvterm_id();
-    } 
-   
-    
-    my $ac = $population->cvterm_acronym($term_name);
+    my $population = CXGN::Phenome::Population->new( $dbh, $pop_id );
+    my $ac = $population->cvterm_acronym($cvterm_name);
 
     my ($prod_cache_path, $prod_temp_path, $tempimages_path) = $self->cache_temp_path();
 
@@ -1216,15 +1149,14 @@ sub phenotype_file {
 
 sub run_r {
     my $self=shift;
-    
-         
+    my $doc  = CXGN::Scrap::AjaxPage->new();
+    #my ( $pop_id, $cvterm_id ) = $doc->get_encoded_arguments( "population_id", "cvterm_id" );
+       
     my ($prod_cache_path, $prod_temp_path, $tempimages_path) = $self->cache_temp_path();
     my $prod_permu_file = $self->permu_file();
     my $file_in = $self->infile_list();
     my ($file_out, $qtl_summary, $flanking_markers) = $self->outfile_list();
-    my $stat_file = $self->stat_files();
 
-    print STDERR "stat file: $stat_file\n"; 
     
     CXGN::Tools::Run->temp_base( $prod_temp_path );
 
@@ -1239,8 +1171,6 @@ sub run_r {
     qw / in out /;
 
     #copy our R commands into a cluster-accessible tempfile
-    my $doc  = CXGN::Scrap::AjaxPage->new();
-    
     { my $r_cmd_file = $doc->path_to('/cgi-bin/phenome/cvterm_qtl.r');
       copy( $r_cmd_file, $r_in_temp )
 	  or die "could not copy '$r_cmd_file' to '$r_in_temp'";
@@ -1251,7 +1181,7 @@ sub run_r {
 	(
 	 'R', 'CMD',
 	 'BATCH',
-	 '--slave', "--args $file_in $file_out $stat_file",
+	 '--slave', "--args $file_in $file_out",
 	 $r_in_temp,
 	 $r_out_temp,       
 	 {
@@ -1296,22 +1226,14 @@ sub permu_file {
     my $population = CXGN::Phenome::Population->new( $dbh, $pop_id );
     my $pop_name = $population->get_name();
     
-    my ($term_obj, $term_name, $term_id);
     
-    if ($population->get_web_uploaded()) {
-	 $term_obj = CXGN::Phenome::UserTrait->new($dbh, $cvterm_id);
-	 $term_name = $term_obj->get_name();
-	 $term_id   = $term_obj->get_user_trait_id();
-    } else {
-	$term_obj = CXGN::Chado::Cvterm->new($dbh, $cvterm_id);
-	$term_name = $term_obj->get_cvterm_name();
-	$term_id = $term_obj->get_cvterm_id();
-    } 
-   
-    my $ac = $population->cvterm_acronym($term_name);
+    my $cvterm = CXGN::Chado::Cvterm->new( $dbh, $cvterm_id );
+    my $cvterm_name = $cvterm->get_cvterm_name();
+    my $ac = $population->cvterm_acronym($cvterm_name);
 
     my ($prod_cache_path, $prod_temp_path, $tempimages_path) = $self->cache_temp_path();
-       
+    
+    #my $cache_tempimages = Cache::File->new(cache_root=>$tempimages_path);
     my $file_cache = Cache::File->new(cache_root=>$prod_cache_path);
 
     my $key_permu = "$ac" . "_" . $pop_id . "_permu"; 
@@ -1449,32 +1371,27 @@ sub qtl_images_exist {
     my ( $pop_id, $cvterm_id ) = $doc->get_encoded_arguments( "population_id", "cvterm_id" );
     
     
-    my $dbh = $self->get_dbh();
+    my $dbh = CXGN::DB::Connection->new();
         
-    my $population = $self->get_object();
+    my $population = CXGN::Phenome::Population->new( $dbh, $pop_id );
     my $pop_name = $population->get_name();
  
+    #my $mapversion = $population->mapversion_id();
     my @linkage_groups = $population->linkage_groups();
     @linkage_groups = sort ({$a<=>$b} @linkage_groups);
     
-    my ($term_obj, $term_name, $term_id);
-    
-    if ($population->get_web_uploaded()) {
-	 $term_obj = CXGN::Phenome::UserTrait->new($dbh, $cvterm_id);
-	 $term_name = $term_obj->get_name();
-	 $term_id   = $term_obj->get_user_trait_id();
-    } else {
-	$term_obj = CXGN::Chado::Cvterm->new($dbh, $cvterm_id);
-	$term_name = $term_obj->get_cvterm_name();
-	$term_id = $term_obj->get_cvterm_id();
-    } 
-    
-    my $ac = $population->cvterm_acronym($term_name);
+    my $cvterm = CXGN::Chado::Cvterm->new( $dbh, $cvterm_id );
+    my $cvterm_name = $cvterm->get_cvterm_name();
+    my $ac = $population->cvterm_acronym($cvterm_name);
 
     my $vh           = CXGN::VHost->new();
     my $basepath     = $vh->get_conf("basepath");
     my $tempfile_dir = $vh->get_conf("tempfiles_subdir");        
-      
+  
+   
+    
+    
+    
     my ($prod_cache_path, $prod_temp_path, $tempimages_path) = $self->cache_temp_path();
           
     my $cache_tempimages = Cache::File->new(cache_root=>$tempimages_path); 			    
@@ -1488,7 +1405,7 @@ sub qtl_images_exist {
        $cache_qtl_plot->set_basedir($basepath);
        $cache_qtl_plot->set_temp_dir($tempfile_dir."/temp_images");  
        #$cache_qtl_plot->set_expiration_time(259200);	
-       my $key = "qtlplot". $lg. "small" . $pop_id . $term_id;
+       my $key = "qtlplot". $lg. "small" . $pop_id . $cvterm_id;
        $cache_qtl_plot->set_key($key);
        
        #$count++;
@@ -1509,7 +1426,7 @@ sub qtl_images_exist {
        $cache_qtl_plot_t->set_basedir($basepath);
        $cache_qtl_plot_t->set_temp_dir($tempfile_dir."/temp_images");
        #$cache_qtl_plot->set_expiration_time(259200);
-       my $key_t =	"qtlplot_". $lg. "_thickbox_" . $pop_id . $term_id;
+       my $key_t =	"qtlplot_". $lg. "_thickbox_" . $pop_id . $cvterm_id;
        $cache_qtl_plot_t->set_key($key_t);
        
        if ($cache_qtl_plot_t->is_valid) {
@@ -1518,7 +1435,7 @@ sub qtl_images_exist {
 	  $image_t_url = $cache_qtl_plot_t->get_image_url();
 	
 	   
-	  $thickbox = qq | <a href="$image_t_url" title="A QTL analysis for $term_name in population $pop_name<b><br/><a href=$h_marker> View and compare with genetic and/or physical maps</font></a></b><br/>" class="thickbox" rel="gallary-qtl"> <img src="$image_url" alt="Chromosome $lg $image_t_url $image_url" /> </a> |;		
+	  $thickbox = qq | <a href="$image_t_url" title="A QTL analysis for $cvterm_name in population $pop_name<b><br/><a href=$h_marker> View and compare with genetic and/or physical maps</font></a></b><br/>" class="thickbox" rel="gallary-qtl"> <img src="$image_url" alt="Chromosome $lg $image_t_url $image_url" /> </a> |;		
 	    	
 	
 	  $qtl_image .= $thickbox;
@@ -1534,130 +1451,4 @@ sub qtl_images_exist {
 
     return $qtl_image;
 
-}
-
-# =head2 user_stat_file
-
-#  Usage:
-#  Desc:
-#  Ret:
-#  Args:
-#  Side Effects:
-#  Example:
-
-# =cut
-
-# sub user_stat_file {
-#     my $self = shift;
-#     my $pop = $self->get_object();
-#     my $pop_id = $self->get_object_id();
-#     my $sp_person_id = $pop->get_sp_person_id();
-#     my $qtl  = CXGN::Phenome::Qtl->new($sp_person_id);
-#     #$qtl->set_population_id($pop_id);
-   
-#     my ($qtl_dir, $user_dir)  = $qtl->get_user_qtl_dir();
-
-#     my $stat_file = "$user_dir/user_stat_pop_$pop_id.txt";
-#     print STDERR "stat_file: $stat_file";
-    
-#     if (-e $stat_file) {
-# 	return $stat_file;
-#     } else {return 0;}
-
-# }
-
-
-
-=head2 stat_files
-
- Usage: my $stat_param_files = $self->stat_files();
- Desc:  creates a master file containing individual files 
-        in /data/prod/tmp/r_qtl for each statistical parameter 
-        which are feed to  R.
- Ret:  an absolute path to the statistical parameter's 
-       master file (and individual files)
- Args: None
- Side Effects:
- Example:
-
-=cut
-
-sub stat_files {
-    my $self = shift;
-    my $pop_id = $self->get_object_id();
-    my $pop = $self->get_object();
-    my $sp_person_id = $pop->get_sp_person_id();
-    my $qtl = CXGN::Phenome::Qtl->new($sp_person_id);
-    my $user_stat_file = $qtl->get_stat_file();
-    
-    my ($prod_cache_path, $prod_temp_path, $tempimages_path) = $self->cache_temp_path();
-    
-    open F, "<$user_stat_file" or die "can't open file: !$\n";
-    
-    my $stat_files;
-    
-    while(<F>) {
-	my ($parameter, $value) = split (/\t/, $_);
-	
-	
-	my $stat_temp = File::Temp->new(TEMPLATE => "${parameter}_$pop_id-XXXXXX", 
-				     DIR=>$prod_temp_path, 
-				     UNLINK=>0);
-	my $stat_file = $stat_temp->filename;
-
-	open SF, ">$stat_file" or die "can't open file: !$\n";
-	print SF $value;
-	close SF;
-
-	$stat_files .= $stat_file . "\t";
-	    
-    }
-
-    close F;
-   
-    my $stat_param_files = $prod_temp_path . "/" . "stat_temp_files_pop_id_${pop_id}";
-    
-    open STAT, ">$stat_param_files" or die "can't open file: !$\n";
-    print STAT $stat_files;
-    close STAT;
-
-    return $stat_param_files;
-
-
-}
-
-=head2 stat_param_hash
-
- Usage: my %stat_param = $self->stat_param_hash();
- Desc: creates a hash (with the statistical parameters (as key) and 
-       their corresponding values) out of a tab delimited 
-       statistical parameters file.       
- Ret: a hash statistics file
- Args: None
- Side Effects:
- Example:
-
-=cut
-
-sub stat_param_hash {
-    my $self = shift;
-    my $pop_id = $self->get_object_id();
-    my $pop = $self->get_object();
-    my $sp_person_id = $pop->get_sp_person_id();
-    my $qtl = CXGN::Phenome::Qtl->new($sp_person_id);
-    my $user_stat_file = $qtl->get_stat_file();
-
-    open F, "<$user_stat_file" or die "can't open file: !$\n";
-    
-    my %stat_param;
-    
-    while(<F>) {
-	my ($parameter, $value) = split (/\t/, $_);
-	
-	$stat_param{$parameter}=$value;    
-
-    }
-
-
-    return \%stat_param;
 }

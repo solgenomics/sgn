@@ -125,14 +125,6 @@ EOHTML
 # <a href="/data-submit/top-level.pl">Data submission start page</a>
 # EOHTML
 # }
-
-if( in( $sp->get_user_type(), qw/submitter curator/ ) )
-{
-  print info_section_html(title => 'QTL data submission', contents => <<EOHTML);
-<a href="/phenome/qtl_form.pl">Go to the QTL data submission pages</a>
-EOHTML
-}
-
 if( $sp->get_user_type() eq 'curator' )
 {
   print info_section_html(title => 'Curator Tools', contents => <<EOHTML);
