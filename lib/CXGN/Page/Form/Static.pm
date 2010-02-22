@@ -35,18 +35,23 @@ use CXGN::Page::Form::MultiSelect;
 
 =head2 new
 
- Usage:
- Desc:
- Ret:
- Args:
- Side Effects:
+ Usage:        $form = CXGN::Page::Form::Static->new($args_ref);
+ Desc:         constructor of a form object
+ Args:         a hashref with the optional fields:
+                 form_id: the id of the form (required for forms
+                          that work with javascript)
+                          (See jslib/CXGN/Page/Form/JSFormPage.js)
+ Side Effects: 
  Example:
 
 =cut
 
 sub new { 
     my $class = shift;
+    my $args = shift;
+    
     my $self = bless {}, $class;
+    $self->set_form_id($args->{form_id});
     return $self;
 }
 
@@ -735,6 +740,25 @@ sub parse_template {
 
 }
 
+=head2 accessors get_form_id, set_form_id
+
+ Usage:
+ Desc:
+ Property
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_form_id {
+  my $self = shift;
+  return $self->{form_id}; 
+}
+
+sub set_form_id {
+  my $self = shift;
+  $self->{form_id} = shift;
+}
 
 
 
