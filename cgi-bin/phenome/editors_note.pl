@@ -18,15 +18,15 @@ my $page = CXGN::Page->new();
 print page_title_html ('Note to Locus Editors');
 my $annotation_link = qq | <a href="http://docs.google.com/View?docid=ddhncntn_0cz2wj6">annotation guidelines</a> |;
 
-print  "<b>Locus editors</b> are experts with a research focus, and generally authors, on the locus. Any one interested in becoming an editor for a locus can request by clicking the 'Request editor privileges' link in the 'Locus details' subsection of the locus of interest.<br />
+print  "<b>Locus editors</b> are experts with a research focus, and generally authors, on the locus. Any one interested in becoming an editor for a locus can request by clicking the 'Request editor privileges' link under the 'Locus details' subsection of the locus of interest.<br />
 <br>&nbsp<br />
  <b>Editors:</b><br/>
 
     \t* have the privilege to edit the contents of the locus page.<br />
      \t* can add data on the locus page as new knowledge on the locus emerges. Each subsection on the locus page can be modified by clicking the edit/annotation links .<br />
-    \t* initiate discussion on accuracy of data submitted by other editors or submitters or SGN curators.<br />
+    \t* initiate discussion on accuracy of data submitted by other editors, submitters and SGN curators.<br />
    \t* can suggest ideas to in-house curators on improving the data display, annotation tools, additional subsections etc.<br />
-   \t* can create new webpage for their newly identified and documented locus.<br />
+   \t* can create new webpages for their newly identified and documented loci.<br />
    \t* can list all relevant publications on their locus of interest.<br />
 <br>&nbsp<br />
  <b>Reference</b> on how to annotate a locus can be found here: $annotation_link.<br />
@@ -34,10 +34,7 @@ print  "<b>Locus editors</b> are experts with a research focus, and generally au
 <br>&nbsp<br />
 <b>Contact</b> SGN staff by emailing to <a href=mailto:sgn-feedback\@sgn.cornell.edu>sgn-feedback\@sgn.cornell.edu</a> <br />";
 
-#print info_section_html(title =>'Note to Locus Editors  ',
-#			contents=>$content,
-#			);
-    
+
 $page->footer();
 
 exit();
