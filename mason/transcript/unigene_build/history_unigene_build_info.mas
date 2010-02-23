@@ -1,8 +1,47 @@
 <%doc>
-  NAME: history_info.mas
-  VERSION: 1.0
-  DESCRIPTION: It is a MASON module for the unigene_build.pl script to show information about the history of the unigene builds 
-  AUTHOR: Aureliano Bombarely (ab782@cornell.edu)
+
+=head1 NAME 
+ 
+ basic_unigene_build_info.mas
+ Mason code to show history data for unigene_build web_page.
+
+=cut
+
+=head1 VERSION 
+
+0.1
+
+=cut 
+
+=head1 SYNOPSIS
+
+<& '/transcript/unigene_build/history_unigene_build_info.mas', schema => $schema, unigene_build => $unigene_build &>
+
+where: $schema, a DBIx::Class::Schema object with the classes of SGN::Schema
+       $unigene_build, an CXGN::Transcript::UnigeneBuild object
+       
+=cut
+
+=head1 DESCRIPTION
+
+ It is a MASON module for the unigene_build.pl script to show information about the history of the unigene builds
+
+=cut
+ 
+=head 1 AUTHOR
+ 
+ Aureliano Bombarely (ab782@cornell.edu)
+
+=cut
+
+</%doc>
+
+
+<%args>
+$schema
+$unigene_build
+</%args>
+
 </%doc>
 
 
@@ -20,15 +59,12 @@ my $history_html;
 ## If there aren't any unigene_build that comes from unigene_build_detail it will do nothing. 
 ## The error message will returned by basic information
 
-my $unigene_build = $ARGS{'unigene_build'};
 my $unigene_build_id = $unigene_build->get_unigene_build_id();
 
 ## Get the organism group id to use in a search
 
 my $organism_group_id = $unigene_build->get_organism_group_id();
 my $group_name = $unigene_build->get_organism_group_name();
-
-my $schema = $ARGS{'schema'};
 
 my @unigene_data;
 if (defined $organism_group_id) {
@@ -75,3 +111,8 @@ if (defined $unigene_build_id) {
 </%perl>
 
 <% $history_content %>
+
+<& 
+   /util/import_javascript.mas, 
+   classes => 'CXGN.Effects' 
+&>

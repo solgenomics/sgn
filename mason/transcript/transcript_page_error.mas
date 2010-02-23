@@ -1,17 +1,53 @@
 <%doc>
-  NAME: sedm_page_error.mas
-  VERSION: 1.0
-  DESCRIPTION: This is a mason code to give the web message "None right object argument was used to search data"; 
-  AUTHOR: Aureliano Bombarely (ab782@cornell.edu)
+
+=head1 NAME 
+ 
+ transcript_page_error.mas
+ A mason page to return the message: Wrong arguments were used for search 
+
+=cut
+
+=head1 VERSION 
+
+0.1
+
+=cut 
+
+=head1 DESCRIPTION
+
+ This is a mason script to return an error message when:
+ 
+ 1) 'id' or 'unigene_id' are not used as CXGN::Page arguments
+
+ 2) $args{'id'} does not exists into the database
+
+
+=cut
+ 
+=head 1 AUTHOR
+ 
+ Aureliano Bombarely (ab782@cornell.edu)
+
+=cut 
+
 </%doc>
+
+
+<%args>
+$object
+</%args>
+
 
 <%perl>
 
-my $object = $ARGS{'object'} || ' ';
+## Parse the object name
+    
+my $name = lc(ref($object));
+$name =~ s/cxgn::transcript:://;
 
 </%perl>
 
 <h2>ERROR PAGE REQUEST:</h2>
 
-<big>Wrong arguments are been used to request the <% $object %> page</big>
+<big>Wrong arguments are been used to request the <% $name %> page.</big>
 

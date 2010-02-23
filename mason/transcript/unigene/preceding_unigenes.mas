@@ -1,17 +1,54 @@
 <%doc>
-  NAME: preceding_unigenes.mas
-  VERSION: 1.0
-  DESCRIPTION: This is a mason code get the preceding unigene data from the database.If it find precedding unigenes, it will
-               print it as section. 
-  AUTHOR: Aureliano Bombarely (ab782@cornell.edu)
+
+=head1 NAME 
+ 
+ preceding_unigenes.mas
+ Mason component to show preceding unigenes.
+
+=cut
+
+=head1 VERSION 
+
+0.1
+
+=cut 
+
+=head1 SYNOPSIS
+
+<& '/transcript/unigene/preceding_unigenes.mas', dbh => $dbh, unigene => $unigene &>
+
+where: $dbh is a database connection object
+       $unigene is CXGN::Transcript::Unigene object
+
+=cut
+
+=head1 DESCRIPTION
+
+ This is a mason code get the preceding unigene data from the database.
+ If it find precedding unigenes, it will print it as section. 
+
+=cut
+ 
+=head 1 AUTHOR
+ 
+ Aureliano Bombarely (ab782@cornell.edu)
+
+=cut  
+
 </%doc>
 
 
+<%args>
+$dbh
+$unigene
+</%args>
+
+
 <%perl>
+
 use strict;
 use warnings;
 
-use SGN::Schema;
 use CXGN::Transcript::Unigene;
 use CXGN::Transcript::UnigeneBuild;
 use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
@@ -24,9 +61,6 @@ my @preceding_unigenes = ();
 
 if (defined $ARGS{'unigene'}) {
 
-   my $unigene = $ARGS{'unigene'};
-   my $schema = $ARGS{'schema'};
-     
    my $preceding_build_name = "";
    my $preceding_build_nr = "";
 
@@ -34,8 +68,9 @@ if (defined $ARGS{'unigene'}) {
    
    if (@preceding_unigene_ids) { 
        foreach my $uid (@preceding_unigene_ids){
-	   my $preceding_u = CXGN::Transcript::Unigene->new($schema->storage()->dbh(), $uid);
-	   my $preceding_build = CXGN::Transcript::UnigeneBuild->new($schema->storage()->dbh(), $preceding_u->get_build_id());
+
+	   my $preceding_u = CXGN::Transcript::Unigene->new($dbh, $uid);
+	   my $preceding_build = CXGN::Transcript::UnigeneBuild->new($dbh, $preceding_u->get_build_id());
 	   $preceding_build_name = $preceding_build->get_organism_group_name();
 	   my $preceding_build_nr = $preceding_build->get_build_nr();
 	   my $unigene_link = "<a href=\"unigene.pl?unigene_id=SGN-U$uid\">SGN-U$uid</a>";
@@ -61,3 +96,8 @@ my $preceding_html = info_section_html( title       => "Preceding Unigenes (" . 
 </%perl>
 
 <% $preceding_html %>
+
+<& 
+   /util/import_javascript.mas, 
+   classes => 'CXGN.Effects' 
+&>

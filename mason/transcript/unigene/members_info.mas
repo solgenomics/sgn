@@ -1,25 +1,61 @@
 <%doc>
-  NAME: members_info.mas
-  VERSION: 1.0
-  DESCRIPTION: Another piece of mason code get the unigene data (members info) from the database and show it as table web_page; 
-  AUTHOR: Aureliano Bombarely (ab782@cornell.edu)
+
+=head1 NAME 
+ 
+ member_info.mas
+ mason component to show members from the database and show it as table.
+
+=cut
+
+=head1 VERSION 
+
+0.1
+
+=cut 
+
+=head1 SYNOPSIS
+
+<& '/transcript/unigene/members_info.mas', unigene => $unigene, highlight => $highlight, force_image => $force_image &>
+
+where: $unigene, an CXGN::Transcript::Unigene object
+       $highlight and $force_image are web arguments transmited to member_info.mas component
+       
+=cut
+
+
+=head1 DESCRIPTION
+
+ mason component to show members from the database and show it as table.
+
+=cut
+ 
+=head 1 AUTHOR
+ 
+ Aureliano Bombarely (ab782@cornell.edu)
+
+=cut  
+
 </%doc>
 
 
+<%args>
+$unigene
+$force_image => undef
+$highlight =>undef
+</%args>
+
+
 <%perl>
+
 use strict;
 use warnings;
 
 use SGN::Schema;
-use CXGN::Transcript::Unigene;
+
 use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
 
 my $member_content;
 
-my $unigene = $ARGS{'unigene'};
-my $schema = $ARGS{'schema'};
-my $force_image = $ARGS{'force_image'};
-my $highlight = $ARGS{'highlight'};
 
 ## Get the object
 my $id =  $unigene->get_unigene_id();
@@ -47,3 +83,8 @@ if (defined $id) {
 </%perl>
 
 <% $member_content %>
+
+<& 
+   /util/import_javascript.mas, 
+   classes => 'CXGN.Effects' 
+&>

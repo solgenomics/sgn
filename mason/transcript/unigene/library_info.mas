@@ -1,35 +1,81 @@
 <%doc>
-  NAME: library_info.mas
-  VERSION: 1.0
-  DESCRIPTION: Another piece of mason code get the unigene data (library info) from the database and show it as table web_page; 
-  AUTHOR: Aureliano Bombarely (ab782@cornell.edu)
+
+=head1 NAME 
+ 
+ library_info.mas
+ Mason component to show a list of libraries for this unigene web_page.
+
+=cut
+
+=head1 VERSION 
+
+0.1
+
+=cut 
+
+=head1 SYNOPSIS
+
+<& '/transcript/unigene/library_info.mas', dbh => $dbh, schema => $schema, unigene => $unigene &>
+
+
+where: $dbh is an standard dbi connection object
+       $schema is a schema object with Bio::Chado::Schema, CXGN::Metadata::Schema and CXGN::Biosource::Schema classes
+       $unigene, an CXGN::Transcript::Unigene object
+       
+=cut
+
+=head1 DESCRIPTION
+
+ Mason component to show a list of libraries for this unigene web_page.
+
+ It will return an html table with 5 columns:
+ 
+    + Organism
+    + Library
+    + Description
+    + Library Size
+    + Ests in this unigene
+
+=cut
+ 
+=head 1 AUTHOR
+ 
+ Aureliano Bombarely (ab782@cornell.edu)
+
+=cut  
+
 </%doc>
 
 
+<%args>
+$dbh
+$schema
+$unigene
+</%args>
+
 <%perl>
+
 use strict;
 use warnings;
 
 use SGN::Schema;
-use Bio::Chado::Schema;
-use CXGN::DB::DBICFactory;
-use CXGN::Transcript::Unigene;
+
 use CXGN::Transcript::Library;
 use CXGN::Chado::Organism;
+
 use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
 
 my ($library_content, $library_html, @library_table);
 
-my $unigene = $ARGS{'unigene'};
-my $schema = $ARGS{'schema'};
-my $bio_chado_schema = CXGN::DB::DBICFactory->open_schema( 'Bio::Chado::Schema', search_path => ['public'] );
 ## Get the object
 my $id =  $unigene->get_unigene_id();
 
-## If there aren't any unigene that comes from unigene_detail.mas, it will not do anything because the error message is given for the
+## If there aren't any unigene that comes from unigene_detail.mas, 
+## it will not do anything because the error message is given for the
 ## basic_detail.mas script
 
-## To order the data before print in the table we will put into a hash using $organism_id plus $library_name. After that, we will take
+## To order the data before print in the table we will put into a hash using $organism_id plus $library_name.
+## After that, we will take
 ## the keys sorted and we will put all this array ref into the array used in the table
 
 my %order_line;
@@ -37,20 +83,42 @@ my %order_line;
 if (defined $id) {
 
    my @library_ids = $unigene->get_member_library_ids();
+   
+   my @deprecated_ests;                                                  ###    This should be removed with a new system
+   my @ests = $unigene->get_member_ests();                                 #    by a better system to flags sequences
+   foreach my $est (@ests) {                                               #
+       my $status = $est->get_status();                                    #
+       my $flag = $est->get_flags();                                       #
+       my $est_id = $est->get_est_id();                                    #
+       if (defined $status && $status == 1) {                              #
+	   push @deprecated_ests, ['SGN-E' . $est_id, 'Legacy'];           #
+       } elsif (defined $status && $status == 2) {                         #
+	   push @deprecated_ests, ['SGN-E' . $est_id, 'Discarted'];        #
+       } elsif (defined $status && $status == 4) {                         #
+	   push @deprecated_ests, ['SGN-E' . $est_id, 'Deprecated'];       #
+       } elsif (defined $status && $status == 8) {                         #
+	   push @deprecated_ests, ['SGN-E' . $est_id, 'Censored'];         #
+       } elsif (defined $status && $status != 0) {                         #
+	   push @deprecated_ests, ['SGN-E' . $est_id, 'others reasons'];   #
+       }                                                                   #
+   }                                                                     ###
+   
 
    ## if don't exists any library, leave undef $library_html. The info section will print none
 
    if (@library_ids) { 
        foreach my $lib_id (@library_ids) { 
-           my $library = CXGN::Transcript::Library->new($schema->storage()->dbh(), $lib_id);
+           my $library = CXGN::Transcript::Library->new($dbh, $lib_id);
 	   
            my $chado_organism_id = $library->get_chado_organism_id();
 	   
            ## To get the link with the organism page is necesary the organism_id for chado schema
-           my ($organism_row) = $bio_chado_schema->resultset('Organism::Organism')->search({ organism_id => $chado_organism_id });
+           my ($organism_row) = $schema->resultset('Organism::Organism')
+	                               ->search({ organism_id => $chado_organism_id });
+	   
 	   my $organism_link = 'undefined';
 	   if (defined $organism_row) {
-	       my $organism_name = $organism_row->get_column('genus') . " " . $organism_row->get_column('species');
+	       my $organism_name = $organism_row->get_column('species');
 	       $organism_link = qq { <a href="/chado/organism.pl?organism_id=$chado_organism_id">$organism_name</a> };
 	   }
 
@@ -86,6 +154,14 @@ if (defined $id) {
                                              __align  => ['c', 'c', 'c', 'c', 'c'],
                                             );
               
+   } elsif (scalar(@deprecated_ests) > 0) {
+       $library_html .= "<font color='red'><i><b>There are not any library data. ";
+       $library_html .= "This unigene is composed by deprecated ESTs :</b></i></font><br>";
+       $library_html .= columnar_table_html( headings  => ['EST Accession', 'Deprecated by'],
+                                             data     => \@deprecated_ests,
+                                             __alt_freq => 2,
+                                             __align  => ['c', 'c'],
+                                            );
    }
   
    ## Use columnar table to give the html format. If don't exists any data, print message.
@@ -103,3 +179,8 @@ if (defined $id) {
 </%perl>
 
 <% $library_content %>
+
+<& 
+   /util/import_javascript.mas, 
+   classes => 'CXGN.Effects' 
+&>

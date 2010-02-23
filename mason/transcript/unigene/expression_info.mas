@@ -1,29 +1,63 @@
 <%doc>
-  NAME: expression_info.mas
-  VERSION: 1.0
-  DESCRIPTION: Another piece of mason code get the unigene data (expression info) from the database and show it as table web_page; 
-               There are two sources of expression data. The microarray TOM1 and the SEDM system. This script search in both and 
-              take them as different objects.
-  AUTHOR: Aureliano Bombarely (ab782@cornell.edu)
+
+=head1 NAME 
+ 
+ expression_info.mas
+ A mason component to create html code with expression data associated to an unigene
+
+=cut
+
+=head1 VERSION 
+
+0.1
+
+=cut 
+
+=head1 SYNOPSIS
+
+<& '/transcript/unigene/expression_info.mas', schema => $schema, unigene => $unigene &>
+
+where: $schema is a schema object with Bio::Chado::Schema, CXGN::Metadata::Schema and CXGN::Biosource::Schema and 
+               CXGN::GEM::Schema classes)
+       $unigene, an CXGN::Transcript::Unigene object
+       
+=cut
+
+=head1 DESCRIPTION
+
+  Mason component get the unigene data (expression info) from the database and show it as table web_page.
+ 
+  There are two sources of expression data. The microarray TOM1 and the SEDM system. 
+
+  This script search in both and take them as different objects.
+
+=cut
+ 
+=head 1 AUTHOR
+ 
+ Aureliano Bombarely (ab782@cornell.edu)
+
+=cut  
+
 </%doc>
 
 
+<%args>
+$schema
+$unigene
+</%args>
+
+
 <%perl>
+
 use strict;
 use warnings;
 
-use SGN::Schema;
-use CXGN::Transcript::Unigene;
-use CXGN::SEDM::Schema;
+use Math::BigFloat;
+use CXGN::GEM::Template;
+use CXGN::GEM::Experiment;
+
 use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
-
-
-my $unigene = $ARGS{'unigene'};
-my $schema = $ARGS{'schema'};
-
-my $sed_schema = CXGN::SEDM::Schema->connect( sub { $schema->storage()->dbh() }, 
-                                              { on_connect_do => ['SET search_path TO sed,sgn,public;'] }, );
-
 
 ## Get the object
 my $id = $unigene->get_unigene_id();
@@ -31,13 +65,13 @@ my $id = $unigene->get_unigene_id();
 my $expression_html;
 my @template_ids;
 
-
 if (defined $id) {
 
-   ## First, get the microarray data for TOM1
+   ## First, get the microarray data for TOM1 using old functions
   
    my @tom;
    my @tom_microarray_data = $unigene->get_microarray_info();
+
    foreach my $tom_match (@tom_microarray_data) { 
     
        if (!defined($tom_match->{read_dir})) {
@@ -49,16 +83,19 @@ if (defined $id) {
        }
     
        my $clone_accession = "SGN-C".$tom_match->{clone_id};
+       
        my $est_id = $tom_match->{est_id};
        my $est_link = qq|[<a href="/search/est.pl?request_id=$est_id&request_from=1&request_type=7">SGN-E$est_id</a>]|;
        my $read_dir = $tom_match->{read_dir};
        my $chip_name = $tom_match->{chip_name};
        my $prespot_id = $tom_match->{release} . "-" . $tom_match->{version} . "-" . $tom_match->{spot_id};
        my $spot_id = $prespot_id . $tom_match->{content_specific_tag};
+       
        my $order_info = qq|[<a href="http://ted.bti.cornell.edu/cgi-bin/TFGD/order/home.cgi">Order&nbsp;Array</a>]|;
        my $ted_link = '[<a href=';
        $ted_link .= "http://ted.bti.cornell.edu/cgi-bin/TFGD/array/probe_expression.cgi?array_ID=A01&probe_ID=$prespot_id";
        $ted_link .= '>TMD</a>]';
+       
        push @tom, [ $clone_accession, $est_link, $read_dir, $chip_name, $spot_id, $order_info, $ted_link];
        push @template_ids, $spot_id;
    }
@@ -78,103 +115,164 @@ if (defined $id) {
  
     }
 
-   ## Now it will take the expression data for SEDM system
+   ## Now it will take the expression data for GEM system
    ## It will take the expression data before, put into a hashes and after that order and print into a columnar table
 
-   my (%order_platform, %order_template, %order_expdes, %nr_template, %nr_expdes, %nr_hyb, %hyb_count); 
-   my @template_rows = $sed_schema->resultset('Templates')->search({ dbiref_id => $id, dbiref_type => 'CXGN::Transcript::Unigene'});
-   if (defined $template_rows[0]) {
-       foreach my $template_row (@template_rows) {
-           my $template_id = $template_row->get_column('template_id');
-           my $template_name = $template_row->get_column('template_name');
-  	   my $template_link = '<a href=/sedm/template.pl?id=' . $template_id . '>' . $template_name . '</a>'; 
- 	   my @exp_temp_rows = $sed_schema->resultset('ExpressionTemplateValues')->search({ template_id => $template_id });
- 	   foreach my $exp_temp_row (@exp_temp_rows) {
- 	       my $hyb_id = $exp_temp_row->get_column('hybridization_id');
- 	       my ($hyb_row) = $sed_schema->resultset('Hybridizations')->search({ hybridization_id => $hyb_id });
- 	       my ($platform_row) = $sed_schema->resultset('Platforms')->search({ platform_id => $hyb_row->get_column('platform_id')});
- 	       my %platf_data = $platform_row->get_columns();
- 	       my $platform_link = '<a href=/sedm/platform.pl?id='.$platf_data{'platform_id'}.'>'. $platf_data{'platform_name'}.'</a>';
-	       my $target_group_id = $hyb_row->get_column('target_group_id');
- 	       my @target_member_rows = $sed_schema->resultset('GroupLinkage')->search({ group_id => $target_group_id });
- 	       foreach my $target_member_row (@target_member_rows) {
-   	           my $target_member_id = $target_member_row->get_column('member_id');
- 	           my ($target_row) = $sed_schema->resultset('Targets')->search({ target_id => $target_member_id });
-		   my $experiment_id = $target_row->get_column('experiment_id');
- 		   my ($exp_row) = $sed_schema->resultset('Experiments')->search({ experiment_id => $experiment_id });
- 		   my $expdes_id = $exp_row->get_column('experimental_design_id');
- 		   my ($expdes_row) = $sed_schema->resultset('ExperimentalDesigns')->search({ experimental_design_id => $expdes_id });
- 		   my $expdes_name = $expdes_row->get_column('experimental_design_name');
- 		   my $expdes_link = '<a href=/sedm/experimental_design.pl?id=' . $expdes_id . '>' . $expdes_name . '</a>';
+   ## It will store the data as three hashes: 
+   ## %template_html_hash = ( $template_name => $template_html )
+   ## %platform_html_hash = ( $template_name => $platform_html )
+   ## %experiment_hash = ( $template_name => { $experiment_name => $expression_data_aref } )
+	 
+   my (%template_html_h, %platform_html_h, %experiment_html_h);  
+   
+   my ($dbipath_row) = $schema->resultset('MdDbipath')
+                              ->search( 
+                                         { 
+ 					  column_name => 'unigene_id',
+ 					  table_name  => 'unigene',
+ 					} 
+ 			              );
 
-		   ## For each template, it will put into a hash platform, experimental_design, template, experiment count and 
-                   ## hybrization count. To remove the redundancy it will use the nr_ hashes.
-		   
- 		   unless (exists $order_platform{$platform_link}) {
- 		       unless (exists $nr_template{$template_link}) {
- 			   $order_platform{$platform_link} = [$template_link];
- 			   $nr_template{$template_link} = 1;
- 		       }
-                   } else {
- 		       unless (exists $nr_template{$template_link}) {	
- 			   my @template_list = @{$order_platform{$platform_link}};
- 			   push @template_list, $template_link;
- 			   $order_platform{$platform_link} = \@template_list;
- 			   $nr_template{$template_link} = 1;
- 		       }
-                   }
-  		   unless (exists $order_template{$template_link}) {
- 		       unless (exists $nr_expdes{$expdes_link.$template_link}) {
-    		           $order_template{$template_link} = [$expdes_link];
- 			   $nr_expdes{$expdes_link.$template_link} = 1;
- 		       }
-  		   } else {
- 		       unless (exists $nr_expdes{$expdes_link.$template_link}) {
-  		           my @expdes_list = @{$order_template{$template_link}};
-  		           push @expdes_list, $expdes_link;
-  		           $order_template{$template_link} = \@expdes_list;
- 			   $nr_expdes{$expdes_link.$template_link} = 1;
- 		       }
-  		   } 
-      	
- 		   unless (exists $order_expdes{$expdes_link}) {
-      		       my @exp_rows = $sed_schema->resultset('Experiments')->search({ experimental_design_id => $expdes_id});
-      		       my $exp_count = scalar(@exp_rows);
-      		       $order_expdes{$expdes_link} = $exp_count;
-                   }
-      		   unless (exists $nr_hyb{$hyb_id}) {
-      		       $nr_hyb{$hyb_id} = 1;
-      		       $hyb_count{$expdes_link}++;
-                   }
-               }
-           }
+   my $dbiref_id;
+   
+   if (defined $dbipath_row) {
+       
+       my ($dbiref_row) = $schema->resultset('MdDbiref')
+ 	                         ->search( 
+ 	                                   { 
+ 					      iref_accession => $id,
+ 					      dbipath_id     => $dbipath_row->get_column('dbipath_id'),
+ 					   } 
+ 				         );
+        if (defined $dbiref_row) {
+ 	   $dbiref_id = $dbiref_row->get_column('dbiref_id');
         }
-       foreach my $platf_link (sort keys %order_platform) {
-           my @data;
-           my @templ_links = @{$order_platform{$platf_link}};
-      	   foreach my $templ_link (@templ_links) {
-      	       my @exp_design_links = @{$order_template{$templ_link}};
-      	       foreach my $exp_design_link (@exp_design_links) {
-      	           my $exper_count = $order_expdes{$exp_design_link};
-      		   my $hyb_count = $hyb_count{$exp_design_link};
-      		   push @data, [$templ_link, $exp_design_link, $exper_count, $hyb_count];
-		   push @template_ids, $templ_link;
-      	       }
-      	   }
-      	   my $headings = ['Template', 'Experimental design', 'Experiments', 'Hybridizations'];
-           my $exp_resources_html = columnar_table_html( headings => $headings,
-        	  			       		 data     => \@data);
-           my $exp_name = $platf_link . ' data for Unigene: SGN-U' . $id;
-           $expression_html .= info_table_html (    $exp_name   => $exp_resources_html,  
-                                                     __border     => 1,
-                                                     __tableattrs => qq{width="700" height="100"});
+   }
+
+   if (defined $dbiref_id) {
+
+       my @template_dbiref_rows = $schema->resultset('GeTemplateDbiref')
+                                         ->search( { dbiref_id => $dbiref_id } );
+ 
+       foreach my $template_dbiref_row (@template_dbiref_rows) {
+
+	   ## Get template data and create a template object
+ 
+	   my $template_id = $template_dbiref_row->get_column('template_id');
+	   my $template = CXGN::GEM::Template->new($schema, $template_id);
+	   my $template_name = $template->get_template_name();
+	   my $template_html = '<a href=/gem/template.pl?id=' . $template_id . '>' . $template_name . '</a>'; 
+
+	   push @template_ids, $template_id; ## To count how many templates are associated to this unigene
+
+	   $template_html_h{$template_name} = $template_html; 
+
+	   ## Get platform object using the template object
+
+	   my $platform = $template->get_platform();
+	   my $platform_id = $platform->get_platform_id();
+	   my $platform_name = $platform->get_platform_name();
+	   my $platform_html = '<a href=/gem/platform.pl?id=' . $platform_id . '>' . $platform_name . '</a>'; 
+
+	   $platform_html_h{$template_name} = $platform_html;
+
+	   my @expression_rows = $schema->resultset('GeExpressionByExperiment')
+	                                ->search( { template_id => $template_id } );       
+   
+	   my %expr_by_experiments = ();
+
+	   foreach my $expression_row (@expression_rows) {
+	   
+	       my %expression_data = $expression_row->get_columns();
+
+	       ## Round with sd, for sd > 1 (for example 1.2 it will round the unit)
+	 
+	       my $round = -2;
+	       my $presd = $expression_data{'standard_desviation'};
+	       if ($presd > 1) {
+		   $round = 0;
+	       }
+	       elsif ($presd > 0.1) {
+		   $round = -1;
+	       }
+
+	       my $mean = Math::BigFloat->new( $expression_data{'mean'})
+                                        ->bfround($round)
+                                        ->bstr();
+
+	       my $sd = Math::BigFloat->new( $expression_data{'standard_desviation'})
+		                      ->bfround($round)
+                                      ->bstr();
+
+	       my $experiment = CXGN::GEM::Experiment->new($schema, $expression_data{'experiment_id'});
+	       my $experiment_name = $experiment->get_experiment_name();
+	       my $experiment_id = $experiment->get_experiment_id();
+
+	       my $experiment_html = '<a href=/gem/experiment.pl?id=' . $experiment_id . '>' . $experiment_name . '</a>'; 	      
+	       $expr_by_experiments{$experiment_name} = [$experiment_html, $mean, $sd];	       
+	   }
+	   $experiment_html_h{$template_name} = \%expr_by_experiments;
+       }
+   }
+   
+   ### Order the data by template_name, platform_name and experiment name (for a template should have the same platform)
+
+   my @exp_data = ();
+   
+   foreach my $templ_name (sort keys %template_html_h) {
+       my $templ_html = $template_html_h{$templ_name};
+       my $platf_html = $platform_html_h{$templ_name};
+
+       my %expression_by_exp = %{ $experiment_html_h{$templ_name} };
+
+       my $e = 0;
+       foreach my $exp_name (sort keys %expression_by_exp) {
+	   my @experiment_data = @{ $expression_by_exp{$exp_name} };
+	   
+	   if ($e == 0) {
+	       push @exp_data, [$platf_html, $templ_html, @experiment_data];
+	       $e = 1;
+	   }
+	   else {
+	       push @exp_data, ['', '', @experiment_data];
+	   }
        }
        
+       ## Insert an empty line between templates
+       push @exp_data, ['<br>', '<br>', '<br>', '<br>', '<br>'];
+
    }
-} else {
-    $expression_html = '<span class="ghosted">None expression data was found associated to this unigene</span>';
+   if (scalar(@exp_data) > 0) {
+       my $exp_resources_html = columnar_table_html( 
+                                                      headings => [ 
+							            'Platform', 
+								    'Template', 
+								    'Experiment', 
+								    '<i>expression value mean</i>', 
+								    '<i>expression value sd</i>' 
+	                                                          ],
+	                                              data     => \@exp_data,
+                                                      __align  => ['l', 'l', 'l', 'c', 'c'] 
+                                                   );
+   
+
+       my $exp_name = 'Expression data for Unigene: SGN-U' . $id;
+       $expression_html .= info_table_html (    $exp_name    => $exp_resources_html,  
+		  			        __border     => 1,
+					        __tableattrs => qq{width="700" height="100"});
+
+   }
+ 
 }
+
+## If there are not any expression data, it will rewrite the message
+
 my $template_nr = scalar(@template_ids);
+ 
+if ($template_nr == 0) {
+    $expression_html = '<span class="ghosted">No expression data was found associated to this unigene</span>';
+}
+
 my $expression_content = info_section_html( title      => "Expression Data (" . $template_nr . ")", 
                                            contents    => $expression_html,
 					   collapsible => 1,
@@ -183,3 +281,8 @@ my $expression_content = info_section_html( title      => "Expression Data (" . 
 </%perl>
 
 <% $expression_content %>
+
+<& 
+   /util/import_javascript.mas, 
+   classes => 'CXGN.Effects' 
+&>

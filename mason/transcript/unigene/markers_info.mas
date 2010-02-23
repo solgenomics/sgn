@@ -1,24 +1,60 @@
 <%doc>
-  NAME: markers_info.mas
-  VERSION: 1.0
-  DESCRIPTION: Another piece of mason code get the unigene data (markers info) from the database and show it as table web_page; 
-  AUTHOR: Aureliano Bombarely (ab782@cornell.edu)
+
+=head1 NAME 
+ 
+ marker_info.mas
+ Mason component to create html with marker data
+
+=cut
+
+=head1 VERSION 
+
+0.1
+
+=cut 
+
+=head1 SYNOPSIS
+
+<& '/transcript/unigene/marker_info.mas', dbh => $dbh, unigene => $unigene  &>
+
+
+where: $dbh, a dbi connection object
+       $unigene, an CXGN::Transcript::Unigene object
+       
+       
+=cut
+
+
+=head1 DESCRIPTION
+
+ Mason component to create html with markers data.
+
+=cut
+ 
+=head 1 AUTHOR
+ 
+ Aureliano Bombarely (ab782@cornell.edu)
+
+=cut  
+
 </%doc>
 
 
+<%args>
+$dbh
+$unigene
+</%args>
+
 <%perl>
+
 use strict;
 use warnings;
 
-use SGN::Schema;
-use CXGN::Transcript::Unigene;
 use CXGN::Marker;
+
 use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
 
 my $markers_content;
-
-my $unigene = $ARGS{'unigene'};
-my $schema = $ARGS{'schema'};
 
 ## Get the object
 my $id =  $unigene->get_unigene_id();
@@ -39,7 +75,7 @@ if (defined $id) {
    my $markers_count = 0;
     
    foreach my $map (@mapped_member_ids) { 
-       my $marker = CXGN::Marker->new($schema->storage()->dbh(), $map->{marker_id});
+       my $marker = CXGN::Marker->new($dbh, $map->{marker_id});
        my $marker_name = 'Unknown';   ## Use unknown by default
        if($marker) {
           $marker_name = $marker->name_that_marker();
@@ -100,3 +136,8 @@ if (defined $id) {
 </%perl>
 
 <% $markers_content %>
+
+<& 
+   /util/import_javascript.mas, 
+   classes => 'CXGN.Effects' 
+&>
