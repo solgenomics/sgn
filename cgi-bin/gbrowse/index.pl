@@ -167,8 +167,6 @@ sub itag_releases_html {
 
 sub clone_sequences_html {
   my ($dbh,$chrnum) = @_;
-  my $genomic = $dbh->qualify_schema('genomic');
-  my $metadata = $dbh->qualify_schema('metadata');
 
   my $names = $dbh->selectall_arrayref(<<EOQ,undef,$chrnum);
 select f.name,(select dbx.accession
@@ -179,12 +177,12 @@ select f.name,(select dbx.accession
                  and fd.feature_id=f.feature_id),
        f.seqlen,
        c.clone_id
-from $metadata.attribution a
-join $metadata.attribution_to at
+from metadata.attribution a
+join metadata.attribution_to at
   using(attribution_id)
 join sgn_people.sp_project p
   on( at.project_id = p.sp_project_id )
-join $genomic.clone c
+join genomic.clone c
   on(a.row_id=c.clone_id)
 join clone_feature cf
   using(clone_id)
