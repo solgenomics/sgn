@@ -128,37 +128,27 @@ sub cxgn_die_handler {
   # if we are inside a non ModPerl::Registry eval, or if we are trapping 404 or 403 errors,
   # then just forward the die on without messing with it
   # THIS IS IMPORTANT
-  die @_ if $_[0] =~ /^\d+$/ && (     APR::Status::is_EACCES($_[0])
-				  ||  APR::Status::is_ENOENT($_[0])
-				)
-            || _longmess() =~ /eval [\{\']/m;
-
-
-  set_error_html_response_with_backtrace(@_);
+  set_error_html_response_with_backtrace(@_)
+      unless (
+          $_[0] !~ /\D/
+       && (    APR::Status::is_EACCES($_[0])
+            || APR::Status::is_ENOENT($_[0])
+          )
+       || _longmess() =~ /eval [\{\']/m
+      );
 
   #now die for real, with the backtrace appended to the message
   die(@_);
-};
-
-
-=head2 cxgn_warn_handler
-
-  Usage:
-  Desc :
-  Args :
-  Ret  :
-  Side Effects:
-  Example:
-
-=cut
+}
 
 sub cxgn_warn_handler {
-    my ( $warning ) = @_;
+    warn "$0: ",@_;
+#     my ( $warning ) = @_;
 
-    #say which script is doing the warning
-    my ($script_name)=CXGN::Apache::Request::full_page_name();
-    warn("[$script_name] ",@_);
-};
+#     #say which script is doing the warning
+#     my ($script_name)=CXGN::Apache::Request::full_page_name();
+#     warn("[$script_name] ",@_);
+}
 
 
 =head2 compile_error_notify
@@ -326,13 +316,8 @@ sub notify {
 
     $subject_client_name &&= "$subject_client_name found ";
 
-    my $vhost_name = CXGN::VHost->new()->get_conf('project_name') || 'UNKNOWN';
-
-    $vhost_name = $vhost_name eq 'SGN' ? ''
-                :                        "on $vhost_name ";
-
     my $subject =
-      "$subject_client_name$vhost_name$page_name $error_verb $time_of_error";
+      "$subject_client_name$page_name $error_verb $time_of_error";
 
     my $body = $developer_message;
 
