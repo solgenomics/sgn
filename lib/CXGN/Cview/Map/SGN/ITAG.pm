@@ -16,8 +16,14 @@ sub new {
     my $class = shift;
     my $dbh = shift;
     my $id = shift;
+    my $args = shift;
 
     my $self = $class->SUPER::new($dbh);
+
+    $self->set_abstract($args->{abstract} || "");
+    $self->set_short_name($args->{short_name} || "ITAG map");
+    $self->set_long_name($args->{long_name});
+    
 
     $self->set_id($id);
 
@@ -28,8 +34,6 @@ sub new {
     #print STDERR "Constructor: generating AGP chr ".$self->get_name()."\n";
 
     $self->set_chromosome_count(12);
-    $self->set_short_name("Tomato ITAG map");
-    $self->set_long_name("Tomato (Solanum lycopersicum) ITAG map");
     $self->set_units("MB");
 
     #print STDERR "Caching chromosome lengths...\n";
@@ -58,7 +62,7 @@ sub get_chromosome {
 
     my $file = $self->get_release_gff();
 
-    my $itag = CXGN::Cview::Chromosome::ITAG->new($chr_nr, 100, 10, 10, $self->get_release_gff(), $self->get_dbh());
+    my $itag = CXGN::Cview::Chromosome::ITAG->new($chr_nr, 100, 10, 10, $self->get_release_gff(), $self->get_dbh(), $self->get_temp_dir());
 
     $itag->rasterize(0);
     $itag->set_rasterize_link("");
@@ -120,11 +124,10 @@ sub get_chromosome_section {
     return $chr;
 }
 
-sub get_abstract { 
-    my $self =shift;
-    return "<p>The ITAG map shows the contig assembly and the corresponding BACs as used by the most recent annotation from the International Tomato Annotation Group (ITAG, see <a href=\"http://www.ab.wur.nl/TomatoWiki\">ITAG Wiki</a>). Clicking on the contigs will show the ITAG annotation in the genome browser.";
-
-}
+# sub get_abstract { 
+#     my $self =shift;
+#     return 
+# }
 
 
 sub show_stats { 
@@ -206,7 +209,7 @@ sub cache_chromosome_lengths {
 
 	foreach my $chr_nr (1..12) { 
 
-	    my $c = CXGN::Cview::Chromosome::ITAG->new($chr_nr, 100, 10, 10, $self->get_release_gff(), $self->get_dbh());
+	    my $c = CXGN::Cview::Chromosome::ITAG->new($chr_nr, 100, 10, 10, $self->get_release_gff(), $self->get_dbh(), $self->get_temp_dir());
 	    
 	    print $LENCACHE $chr_nr."\t".$c->get_length()."\n";
 	    push @lengths, $c->get_length();
