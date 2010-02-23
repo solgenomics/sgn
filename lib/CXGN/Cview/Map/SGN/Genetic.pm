@@ -31,6 +31,7 @@ package CXGN::Cview::Map::SGN::Genetic;
 
 use CXGN::Cview::Legend::Genetic;
 use CXGN::Cview::Map;
+use CXGN::Cview::Map::Tools;
 
 use base qw | CXGN::Cview::Map |;
 
