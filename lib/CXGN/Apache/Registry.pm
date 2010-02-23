@@ -42,7 +42,7 @@ use SGN::Context;
 # #########################################################################
 
     my $cxgn_script_header = <<'EOC';
-my $c = SGN::Context->instance;
+our $c = SGN::Context->instance;
 EOC
 sub read_script {
     my $self = shift;
