@@ -1,0 +1,65 @@
+<%doc>
+
+=head1 NAME 
+ 
+ target_detail.mas
+ Mason code to get different sections of target web_page.
+
+=cut
+
+=head1 VERSION 
+
+0.1
+
+=cut 
+
+=head1 DESCRIPTION
+
+ This mason script coordinate different mason component to create the target page.
+
+ Its controller is: target.pl
+
+=cut
+ 
+=head 1 AUTHOR
+ 
+ Aureliano Bombarely (ab782@cornell.edu)
+
+=cut 
+
+</%doc>
+
+
+
+<%args>
+$schema 
+$target 
+</%args>
+
+<%perl>
+
+ ## None code is used in target_detail.mas.
+ ## It compose the web page using mason components and args from the controller
+
+ ## The hybridization composition use a array reference of a list of target objects
+ ## For target page it have sense only with one target object, so this script
+ ## will transfer $target as array reference for this purpose.
+
+ my @target_list = ($target);
+
+</%perl>
+
+
+
+
+<br>
+
+<& 
+   '/gem/target/basic_target_info.mas', 
+   target => $target 
+&>
+
+<& 
+   '/gem/target/hybridization_composition.mas', 
+   target_list => \@target_list 
+&>

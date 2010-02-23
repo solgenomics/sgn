@@ -1,0 +1,66 @@
+<%doc>
+
+=head1 NAME 
+ 
+ experimental_design_detail.mas
+ Mason code to get different sections of the experimental design web_page.
+
+=cut
+
+=head1 VERSION 
+
+0.1
+
+=cut 
+
+=head1 DESCRIPTION
+
+ This mason script coordinate different mason component to create the experimental design page.
+
+ Its controller is: experimental_design.pl
+
+=cut
+ 
+=head 1 AUTHOR
+ 
+ Aureliano Bombarely (ab782@cornell.edu)
+
+=cut 
+
+</%doc>
+
+
+<%args>
+$schema 
+$expdesign 
+$pub_list 
+$exp_list
+</%args>
+
+<%perl>
+
+ ## None code is used in experimental_design_page.mas.
+ ## It compose the web page using mason components and args from the controller
+
+</%perl>
+
+
+<br>
+
+<& 
+   '/gem/experimental_design/basic_expdesign_info.mas', 
+   expdesign => $expdesign 
+&>
+
+<& 
+   '/biosource/sample/pub_brief.mas', 
+    schema => $schema,
+    pub_list => $pub_list,
+&>
+
+<& 
+   '/gem/experimental_design/experiment_composition.mas', 
+   exp_list => $exp_list 
+&>
+
+

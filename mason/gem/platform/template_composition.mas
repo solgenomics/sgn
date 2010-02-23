@@ -1,0 +1,101 @@
+<%doc>
+
+=head1 NAME 
+ 
+ basic_platform_info.mas
+ Mason component to show a list of templates for platform web page.
+
+=cut
+
+=head1 VERSION 
+
+0.1
+
+=cut 
+
+=head1 DESCRIPTION
+
+ Mason component to show a list of templates for platform web page.
+
+ - Mason root page = platform_detail.mas
+ - Perl controller = platform.pl
+
+
+=cut
+ 
+=head 1 AUTHOR
+ 
+ Aureliano Bombarely (ab782@cornell.edu)
+
+=cut 
+
+</%doc>
+
+
+<%args>
+$schema
+$template_list
+</%args>
+
+
+<%perl>
+use strict;
+use warnings;
+
+use CXGN::GEM::Schema;
+use CXGN::Metadata::Dbiref;
+use CXGN::Metadata::Dbipath;
+use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
+
+
+my $template_comp_content;
+
+my $default_message = '<i><font color="gray">data not available</basefont></i>';
+
+## If there aren't any experiment that comes from experimental design it will do nothing. 
+## The error message will returned by basic information
+
+my @data;
+my $template_composition_html;
+
+my @template_row_list = @{ $template_list };
+
+my %dbipath;
+
+if (scalar(@template_row_list) > 0) {
+
+    foreach my $template_row (@template_row_list) {
+	my %template_data = $template_row->get_columns();
+	my $template_id = $template_data{'template_id'};
+	my $template_name = $template_data{'template_name'};
+	my $template_link = '/gem/template.pl?id='.$template_id;
+	my $template_html = "<a href=$template_link>$template_name</a>";
+		
+	push @data, [$template_html];		    
+    }
+
+    ## Use columnar table to give the html format. If don't exists any data, print message.
+
+    $template_composition_html = columnar_table_html(  headings => [ 'Template'],
+                                                       data     => \@data,
+	       		  		               __alt_freq => 2,
+                                                       __align  => ['c'],
+                                                    );
+    my $templ_n = scalar(@data);
+    $template_comp_content = info_section_html( title        => "Templates (".$templ_n.")", 
+                                                contents     => $template_composition_html,
+	   		    	                collapsible  => 1,
+                                                collapsed    => 1, );
+ 
+
+}
+
+</%perl>
+
+<% $template_comp_content %>
+
+
+<& 
+   /util/import_javascript.mas, 
+   classes => 'CXGN.Effects' 
+&>

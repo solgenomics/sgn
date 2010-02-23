@@ -1,0 +1,75 @@
+<%doc>
+
+=head1 NAME 
+ 
+ platform_detail.mas
+ Mason code to get different sections of the platform web_page.
+
+=cut
+
+=head1 VERSION 
+
+0.1
+
+=cut 
+
+=head1 DESCRIPTION
+
+ This mason script coordinate different mason component to create the platform page.
+
+ Its controller is: platform.pl
+
+=cut
+ 
+=head 1 AUTHOR
+ 
+ Aureliano Bombarely (ab782@cornell.edu)
+
+=cut 
+
+</%doc>
+
+
+<%args>
+$dbh
+$schema 
+$platform	     
+$target_list
+$template_list
+$pub_list
+</%args>
+
+
+
+<%perl>
+
+ ## None code is used in experimental_design_page.mas.
+ ## It compose the web page using mason components and args from the controller
+
+</%perl>
+
+
+<br>
+
+<& 
+   '/gem/platform/basic_platform_info.mas',
+   dbh      => $dbh, 
+   platform => $platform, 
+&>
+
+<& 
+   '/biosource/sample/pub_brief.mas', 
+   schema   => $schema,
+   pub_list => $pub_list,   
+&>
+
+<& 
+   '/gem/target/hybridization_composition.mas', 
+   target_list => $target_list, 
+&>
+
+<& 
+   '/gem/platform/template_composition.mas', 
+   schema        => $schema,
+   template_list => $template_list,
+&>

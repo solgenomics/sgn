@@ -1,0 +1,157 @@
+<%doc>
+
+=head1 NAME 
+ 
+ experiment_composition.mas
+ Mason component to show experiment composition for experimental design web page.
+
+=cut
+
+=head1 VERSION 
+
+0.1
+
+=cut 
+
+=head1 DESCRIPTION
+
+ Mason component to show experiment composition for experimental design web page.
+
+ - Mason root page = experimental_design_detail.mas
+ - Perl controller = experimental_design.pl
+
+=cut
+ 
+=head 1 AUTHOR
+ 
+ Aureliano Bombarely (ab782@cornell.edu)
+
+=cut 
+
+</%doc>
+
+
+<%args>
+$exp_list
+</%args>
+
+
+<%perl>
+use strict;
+use warnings;
+
+use CXGN::GEM::Schema;
+use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
+
+
+my $exp_comp_content;
+
+## If there aren't any experiment that comes from experimental design it will do nothing. 
+## The error message will returned by basic information
+
+my @data;
+my $exp_composition_html;
+
+my $default_message = '<i><font color="gray">data not available</basefont></i>';
+
+my @exp_list = @{ $exp_list };
+
+if (scalar(@exp_list) > 0) {
+   
+    ## Get the schema
+    my $schema = $exp_list[0]->get_schema();
+
+    foreach my $exp (@exp_list) {
+	my $exp_id = $exp->get_experiment_id();
+	my $exp_name = $exp->get_experiment_name();
+	my $exp_link = '/gem/experiment.pl?id='.$exp_id;
+	my $exp_html = "<a href=$exp_link>$exp_name</a>";
+	
+	my (%ontologies, %cvterm_id);
+	my @target_list = $exp->get_target_list();
+	my @target_html_list;
+
+	foreach my $target (@target_list) {
+	    my $target_id = $target->get_target_id();
+	    my $target_name = $target->get_target_name();
+	    my $target_link = '/gem/target.pl?id='.$target_id;
+	    my $target_html = "<a href=$target_link>$target_name</a>";
+	    push @target_html_list, $target_html;
+	   
+	    my %target_elements = $target->get_target_elements();
+	    my @sample_html_list;
+
+	    foreach my $target_el_name (sort keys %target_elements) {
+		my %target_el_data = %{ $target_elements{$target_el_name} };
+		my $sample_id = $target_el_data{'sample_id'};
+		my $sample = CXGN::Biosource::Sample->new($schema, $sample_id);
+		my $sample_name = $sample->get_sample_name();
+
+		my %sample_element_dbxref = $sample->get_dbxref_from_sample_elements();
+                  
+		foreach my $sample_el_name (sort keys %sample_element_dbxref) {
+		    my @dbxref_ids = @{ $sample_element_dbxref{$sample_el_name} };
+		    
+		    foreach my $dbxref_id (@dbxref_ids) {
+			my ($dbxref_row) = $schema->resultset('General::Dbxref')
+			                          ->search( { dbxref_id => $dbxref_id } );
+             
+			my %dbxref_data = $dbxref_row->get_columns();
+            
+			my ($cvterm_row) = $schema->resultset('Cv::Cvterm')
+			                          ->search( { dbxref_id => $dbxref_id } );
+                
+			if (defined $cvterm_row) {
+			    my %cvterm_data = $cvterm_row->get_columns();
+                 
+			    my ($db_row) = $schema->resultset('General::Db')
+                                                  ->search( { db_id => $dbxref_data{'db_id'} } );
+
+			    my $ontology_id = $db_row->get_column('name') . ":" . $dbxref_data{'accession'};
+			    my $ontology_name = $cvterm_data{'name'};
+			    unless (defined $ontologies{$ontology_id}) {
+				$ontologies{$ontology_id} = $ontology_name;
+				$cvterm_id{$ontology_id} = $cvterm_data{'cvterm_id'};
+			    }               
+			}
+		    }
+		}
+	    }
+	}
+	my @onto_html;
+	foreach my $onto (sort keys %ontologies) {
+	    my $onto_link = '/chado/cvterm.pl?action=view&cvterm_id='.$cvterm_id{$onto};
+	    my $onto_line = "<a href=$onto_link>$onto</a> ($ontologies{$onto})";
+	    push @onto_html, $onto_line;
+	}
+	my $onto_list = join('<br>', @onto_html) || $default_message;
+	my $target_html_list = join('<br>', @target_html_list);
+
+	push @data, [$exp_html, $target_html_list, $onto_list];
+    }
+
+    ## Use columnar table to give the html format. If don't exists any data, print message.
+
+    $exp_composition_html = columnar_table_html(  headings => [ 'Experiment', 'Target', 'Ontologies'],
+                                                  data     => \@data,
+	       		  		          __alt_freq => 2,
+                                                  __align  => ['l', 'l', 'l'],
+                                               );
+    my $exp_n = scalar(@data);
+    $exp_comp_content = info_section_html( title        => "Experiments (".$exp_n.")", 
+                                           contents     => $exp_composition_html,
+	   			           collapsible  => 1,
+                                           collapsed    => 0, );
+ 
+
+}
+
+</%perl>
+
+<% $exp_comp_content %>
+
+<& 
+   /util/import_javascript.mas, 
+   classes => 'CXGN.Effects' 
+&>
+

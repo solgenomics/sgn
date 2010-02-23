@@ -1,0 +1,121 @@
+<%doc>
+
+=head1 NAME 
+ 
+ probe_composition.mas
+ Mason code to get probe composition data and show it in a web_page.
+
+=cut
+
+=head1 VERSION 
+
+0.1
+
+=cut 
+
+=head1 DESCRIPTION
+
+ Mason code to get probe composition data and show it in a web_page.
+
+ Its controller is: template_design.pl
+
+=cut
+ 
+=head 1 AUTHOR
+ 
+ Aureliano Bombarely (ab782@cornell.edu)
+
+=cut 
+
+</%doc>
+
+
+<%args>
+$template
+</%args>
+
+<%perl>
+use strict;
+use warnings;
+
+use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
+
+
+my $probe_comp_content;
+my $probe_composition_html;
+
+my $default_message = '<i><font color="gray">data not available</font></i>';
+
+## If there aren't any template_row that comes from template it will do nothing. The error message will returned by basic information
+
+my @probe_list;
+my $probe_n = 0;
+
+if (defined $template->get_template_id() ) {
+
+    ## Get schema
+    
+    my $schema = $template->get_schema();
+    
+    ## Get the data from the row as hash
+     
+    my $template_id = $template->get_template_id();
+     
+    ## Search probe data, put into an array and use columnar table to give the html format. If don't exists any data, print message.
+
+     
+    my @probes_rows = $schema->resultset('GeProbe')
+ 	                     ->search( { template_id => $template_id } );
+
+    $probe_n = scalar(@probes_rows);
+
+    if ($probe_n > 0) {
+ 	foreach my $probe_row (@probes_rows) {
+        
+ 	    my %probe_data = $probe_row->get_columns();
+ 	    my $probe_name = $probe_data{'probe_name'};
+
+ 	    my $probe_link = '/sedm/probe.pl?id='.$probe_data{'probe_id'};   ## It will be used when the
+	                                                                     ## when the code to get sequences
+                                                                             ## will be developed
+
+ 	    my $probe_type = $probe_data{'probe_type'} || $default_message;
+ 	    my $start_coord = $probe_data{'template_start'} || $default_message;
+ 	    my $end_coord = $probe_data{'template_end'} || $default_message;
+
+ 	    my @spots = $schema->resultset('GeProbeSpot')
+ 		               ->search( { probe_id => $probe_data{'probe_id'} } );
+	    
+ 	    my $spots_n = scalar(@spots) || $default_message;
+
+ 	    push @probe_list, [ $probe_name, $probe_type, $start_coord, $end_coord, $spots_n];
+       }
+
+       $probe_composition_html = columnar_table_html( headings => [ 'Probe name', 
+ 								   'Probe type', 
+ 								   'Template start coord', 
+ 								   'Template end coord',
+ 								   'Spots' ],
+                                                       data     => \@probe_list,
+						       __align  => ['l', 'c', 'c', 'c', 'c'],
+	                                            );
+    } else {
+      $probe_composition_html = 'None probe was found associated to this template';
+   }
+   $probe_comp_content = info_section_html( title       => "Probe Composition (". $probe_n .")", 
+                                            contents    => $probe_composition_html,
+					    collapsible =>1,
+                                            collapsed   =>1, );
+ 
+
+}
+
+</%perl>
+
+<% $probe_comp_content %>
+
+
+<& 
+   /util/import_javascript.mas, 
+   classes => 'CXGN.Effects' 
+&>
