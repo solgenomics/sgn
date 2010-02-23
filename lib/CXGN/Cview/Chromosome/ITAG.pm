@@ -25,7 +25,6 @@ package CXGN::Cview::Chromosome::ITAG;
 
 use File::Spec;
 use CXGN::Cview::Chromosome;
-use CXGN::VHost;
 use CXGN::Cview::Marker::AGP;
 
 use base qw | CXGN::Cview::Chromosome |;
@@ -55,7 +54,7 @@ our $SCALE = 1000000; #= 1 MB
 sub new {
     my $class = shift;
     
-    my ($chr_nr, $height, $x, $y, $file, $dbh) = @_;
+    my ($chr_nr, $height, $x, $y, $file, $dbh, $cache_dir) = @_;
     my $self = $class->SUPER::new($chr_nr, $height, $x, $y);
     
     $self->set_name($chr_nr);
@@ -64,10 +63,9 @@ sub new {
     $self->set_rasterize_link("");
     $self->set_url("");
     $self->{dbh}= $dbh;
-    my $vh = CXGN::VHost->new();
 
     if ($ENV{MOD_PERL}) { 
-	$self->set_cache_dir(File::Spec->catfile($vh->get_conf("basepath"), $vh->get_conf("tempfiles_subdir"), "cview"));
+	$self->set_cache_dir($cache_dir);
     }
     else { 
 	$self->set_cache_dir("/tmp");
