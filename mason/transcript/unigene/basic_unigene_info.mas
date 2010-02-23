@@ -1,0 +1,162 @@
+<%doc>
+
+=head1 NAME 
+ 
+ basic_unigene_info.mas
+ Mason component to create html section to show basic info for unigene web_page.
+
+=cut
+
+=head1 VERSION 
+
+0.1
+
+=cut 
+
+=head1 SYNOPSIS
+
+<& '/transcript/unigene/basic_unigene_info.mas', sgn_schema => $sgn_schema, schema => $schema, unigene => $unigene &>
+
+where: $schema is a schema object with Bio::Chado::Schema, CXGN::Metadata::Schema and CXGN::Biosource::Schema classes
+               (aditionally, for expression data should contain CXGN::GEM::Schema classes)
+       $sgn_schema, a schema with SGN::Schema classes
+       $unigene, an CXGN::Transcript::Unigene object
+       
+=cut
+
+=head1 DESCRIPTION
+
+ Mason component to create html section to show basic info for unigene web_page.
+
+=cut
+ 
+=head 1 AUTHOR
+ 
+ Aureliano Bombarely (ab782@cornell.edu)
+
+=cut  
+
+</%doc>
+
+
+<%args>
+$sgn_schema
+$schema
+$unigene
+</%args>
+
+
+<%perl>
+
+use strict;
+use warnings;
+
+use CXGN::Transcript::Unigene;
+use CXGN::Chado::Dbxref;
+
+use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
+
+my $basic_info_content;
+my $accession;
+
+## If there aren't any unigene that comes from unigene_detail.mas, it will return a message.
+
+if (defined $ARGS{'unigene'}) {
+
+   ## Get the object
+   my $id =  $unigene->get_unigene_id();
+   $accession = $unigene->get_sgn_id();
+  
+   my $unigene_build = $unigene->get_unigene_build();
+   my $build_name = $unigene_build->get_organism_group_name();
+   my $build_id = $unigene_build->get_unigene_build_id();
+   my $build_nr = $unigene_build->get_build_nr();
+
+   my $unigene_build_name = $build_name." #".$build_nr;
+   my $unigene_build_name_html = "<a href=/search/unigene_build.pl?id=$build_id>$unigene_build_name</a>";
+
+   my $build_date = $unigene_build->get_build_date();
+
+   my $member_nr = $unigene->get_nr_members();
+
+   my @organism_html_list;
+   my $organism_group_id = $unigene_build->get_organism_group_id();
+   my $group_linkage_rs = $sgn_schema->resultset('GroupLinkage')
+                                     ->search( { group_id => $organism_group_id } );
+
+   my @organism_ids = $group_linkage_rs->get_column('member_id')
+                                       ->all();
+
+   foreach my $organism_id (@organism_ids) {
+       
+       if ($organism_id =~ m/^\d+$/) {
+	
+	   my @organism_rows = $schema->resultset('Organism::Organism')
+	                              ->search({ sgn_organism_id => $organism_id });
+	   
+	   foreach my $organism_row (@organism_rows) {
+	   
+	       my $organism_name = $organism_row->get_column('abbreviation');
+	       my $chado_organism_id = $organism_row->get_column('organism_id');
+	
+	       my $organism_html = "<a href=/chado/organism.pl?organism_id=" . $chado_organism_id . ">". $organism_name. "</a>";
+	       push @organism_html_list, $organism_html;	       
+	   }
+       }
+   }
+   my $organism_html_list = join('<br>', @organism_html_list) || '<font color="gray"><i>none</i></font>';
+
+
+   my $unigene_alternate_id = $unigene->get_alternate_identifier() || '<font color=gray><i>none</i></font>';
+   my $seq = $unigene->get_sequence();
+   my $seq_length = length($seq);
+   my $seq_html = uc(html_break_string($seq, 90));
+
+   ## It will create some tools links
+
+   my $blast_html = "<a href='/tools/blast/?preload_id=" . $id . "&preload_type=15'>Blast</a>";
+   my $transl_orf_html = "<a href='/tools/sixframe_translate.pl?unigene_id=" . $id . "'>AA Translation</a>";
+
+   ## Create the HTML table
+
+   $basic_info_content = <<HTML;
+
+    <table width="100%">
+    	   <tr> <td width="25%"> <b>Unigene ID: </b>      </td> <td> $accession </td></tr>
+	   <tr> <td width="25%"> <b>Unigene Build: </b>   </td> <td> $unigene_build_name_html </td></tr>
+	   <tr> <td width="25%"> <b>Date: </b>            </td> <td> $build_date </td></tr>
+           <tr> <td width="25%"> <b>Organism: </b>        </td> <td> $organism_html_list </td><td>
+	   <tr> <td width="25%"> <b>Alternative ID:</b>   </td> <td> $unigene_alternate_id </td><td>
+	   <tr> <td width="25%"> <b>mRNA sequence:</b>    </td> <td> Length: $seq_length bp </td><td>
+   </table>
+   
+   <br>
+   >$accession $unigene_build_name ($member_nr members)<br>
+   <font style="font-family: monospace"> $seq_html</font>
+   <br>
+   <br>
+   [$blast_html] [$transl_orf_html]
+
+HTML
+
+} else {
+   $basic_info_content = "<big>There aren't any unigene data for the specified parameters.</big>";
+}   
+
+my $basic_info_html;
+
+if (defined $accession) {
+   $basic_info_html = "<center><big><b>Unigene $accession</b></big></center><br>";
+}
+$basic_info_html .= info_section_html( title    => "Unigene Basic Information", 
+				       contents => $basic_info_content 
+                                     );
+
+</%perl>
+
+<% $basic_info_html %>
+
+<& 
+   /util/import_javascript.mas, 
+   classes => 'CXGN.Effects' 
+&>

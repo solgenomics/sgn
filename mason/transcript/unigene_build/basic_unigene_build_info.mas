@@ -1,18 +1,57 @@
 <%doc>
-  NAME: basic_info.mas
-  VERSION: 1.0
-  DESCRIPTION: This is a mason code get the unigene build data from the database and show it as table web_page; 
-  AUTHOR: Aureliano Bombarely (ab782@cornell.edu)
+
+=head1 NAME 
+ 
+ basic_unigene_build_info.mas
+ Mason code to show basic data for  unigene_build web_page.
+
+=cut
+
+=head1 VERSION 
+
+0.1
+
+=cut 
+
+=head1 SYNOPSIS
+
+<& '/transcript/unigene_build/basic_unigene_build_info.mas', schema => $schema, unigene_build => $unigene_build &>
+
+where: $bcs, a DBIx::Class::Schema object with the classes of Bio::Chado::Schema
+       $schema, a DBIx::Class::Schema object with the classes of SGN::Schema
+       $unigene_build, an CXGN::Transcript::UnigeneBuild object
+       
+=cut
+
+=head1 DESCRIPTION
+
+ This mason script coordinate different mason component to create the unigene build page.
+
+ Its controller is: unigene_build.pl
+
+=cut
+ 
+=head 1 AUTHOR
+ 
+ Aureliano Bombarely (ab782@cornell.edu)
+
+=cut
+
 </%doc>
 
 
+<%args>
+$bcs
+$schema
+$unigene_build
+</%args>
+
+
 <%perl>
+
 use strict;
 use warnings;
 
-use SGN::Schema;
-use Bio::Chado::Schema;
-use CXGN::DB::DBICFactory;
 use CXGN::Transcript::UnigeneBuild;
 use CXGN::Chado::Dbxref;
 use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
@@ -23,11 +62,7 @@ my $unigene_build_name;
 ## If there aren't any unigene_build that comes from unigene_build_detail.mas, it will return a error message.
 
 if (defined $ARGS{'unigene_build'}->get_unigene_build_id) {
-
-   my $unigene_build = $ARGS{'unigene_build'};
-   my $schema = $ARGS{'schema'};
-   my $bio_chado_schema = CXGN::DB::DBICFactory->open_schema( 'Bio::Chado::Schema', search_path => ['public','sgn']);
-
+   
    ## Get the object
    my $id =  $unigene_build->get_unigene_build_id();
   
@@ -47,14 +82,21 @@ if (defined $ARGS{'unigene_build'}->get_unigene_build_id) {
 
    my @organism_html_list;
    my $organism_group_id = $unigene_build->get_organism_group_id();
-   my $group_linkage_rs = $schema->resultset('GroupLinkage')->search({ group_id => $organism_group_id });
+   my $group_linkage_rs = $schema->resultset('GroupLinkage')
+                                 ->search({ group_id => $organism_group_id });
+   
    my @organism_ids = $group_linkage_rs->get_column('member_id')->all();
+   
    foreach my $organism_id (@organism_ids) {
+
        if ($organism_id =~ m/^\d+$/) {
-	   my @organism_rows = $bio_chado_schema->resultset('Organism::Organism')->search({ sgn_organism_id => $organism_id });
+	   my @organism_rows = $bcs->resultset('Organism::Organism')
+	                           ->search({ sgn_organism_id => $organism_id });
+
 	   foreach my $organism_row (@organism_rows) {
+
 	       my $org_id = $organism_row->get_column('organism_id');
-	       my $organism_name = $organism_row->get_column('genus') . ' ' . $organism_row->get_column('species'); 
+	       my $organism_name = $organism_row->get_column('species'); 
 	       my $organism_link = '/chado/organism.pl?organism_id='.$organism_id;
 	       my $organism_html = "<a href=$organism_link>$organism_name</a>";
 	       if (defined $org_id) {
@@ -66,11 +108,22 @@ if (defined $ARGS{'unigene_build'}->get_unigene_build_id) {
    my $organism_html_list = join('<br>', @organism_html_list);
 
    ## Get the number of unigene, contig and singlets using DBIx::Class (this should be replaced by the right object)
-   my $unigene_nr = $schema->resultset('Unigene')->search({ unigene_build_id => $id})->count();
 
-   my $contig_nr = $schema->resultset('Unigene')->search({ unigene_build_id => $id, nr_members => {'>', 1} })->count();
-   my $singlet_nr = $schema->resultset('Unigene')->search({ unigene_build_id => $id, nr_members => {'=', 1} })->count();
-   my $member_nr = $schema->resultset('Unigene')->search({ unigene_build_id => $id }, {join => 'unigene_members'})->count();
+   my $unigene_nr = $schema->resultset('Unigene')
+                           ->search({ unigene_build_id => $id})
+			   ->count();
+
+   my $contig_nr = $schema->resultset('Unigene')
+                          ->search({ unigene_build_id => $id, nr_members => {'>', 1} })
+			  ->count();
+
+   my $singlet_nr = $schema->resultset('Unigene')
+                           ->search({ unigene_build_id => $id, nr_members => {'=', 1} })
+			   ->count();
+
+   my $member_nr = $schema->resultset('Unigene')
+                          ->search({ unigene_build_id => $id }, {join => 'unigene_members'})
+			  ->count();
 
    ## Create the HTML table
 
@@ -105,3 +158,8 @@ $basic_info_html .= info_section_html( title => "Unigene Build Basic Information
 </%perl>
 
 <% $basic_info_html %>
+
+<& 
+   /util/import_javascript.mas, 
+   classes => 'CXGN.Effects' 
+&>

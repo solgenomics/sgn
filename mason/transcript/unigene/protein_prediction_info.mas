@@ -1,35 +1,65 @@
 <%doc>
-   NAME: protein_prediction_info.mas
-   VERSION: 1.0
-   DESCRIPTION: Another piece of mason code get the unigene data (protein prediction info) from the database and show it 
-                as table web_page; 
-                This code was taken from unigene.pl (this part was made by Chenwei in June 30, 2005)
-   AUTHOR: Aureliano Bombarely (ab782@cornell.edu)
+
+=head1 NAME 
+ 
+ portein_prediction.mas
+ Mason component to show the protein prediction
+
+=cut
+
+=head1 VERSION 
+
+0.1
+
+=cut 
+
+=head1 SYNOPSIS
+
+<& '/transcript/unigene/protein_prediction_info.mas', 
+ schema => $schema, unigene => $unigene, basepath => $basepath, temp_dir => $temp_dir &>
+
+where: $schema is a schema object with Bio::Chado::Schema, CXGN::Metadata::Schema and CXGN::Biosource::Schema classes
+       $unigene, an CXGN::Transcript::Unigene object
+       $basepath and $temp_dir are vhost configuration arguments transmited to protein_prediction_info.mas component 
+       
+=cut
+
+=head1 DESCRIPTION
+
+  Another piece of mason code get the unigene data (protein prediction info) from the database and show it 
+  as table web_page; 
+                
+  This code was taken from unigene.pl (this part was made by Chenwei in June 30, 2005)
+
+=cut
+ 
+=head 1 AUTHOR
+ 
+ Aureliano Bombarely (ab782@cornell.edu)
+
+=cut  
+
 </%doc>
+
+
+<%args>
+$schema
+$unigene
+$basepath
+$temp_dir
+</%args>
+
 
 <%perl>
 use strict;
 use warnings;
 
-use SGN::Schema;
-use Bio::Chado::Schema;
-use CXGN::VHost;
-use CXGN::Transcript::Unigene;
 use CXGN::Phylo::Alignment;
 use File::Temp;
 use File::Spec;
 use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
 
 my ($library_content, $library_html, @library_table);
-
-my $unigene = $ARGS{'unigene'};
-my $schema = $ARGS{'schema'};
-
-## Get from the environment variable files the data to create the alignment files
-
-my $vhost_conf = CXGN::VHost->new();
-my $basepath = $vhost_conf->get_conf('basepath');
-my $tmpdir = File::Spec->catdir($vhost_conf->get_conf('tempfiles_subdir'), 'unigene_images' );
 
 
 ## Get the object
@@ -150,7 +180,10 @@ if (defined $id) {
 	if(%domain_matches_description) {
         
 	    #Generate an align object
-	    my $domain_align = CXGN::Phylo::Alignment->new( align_name => 'ipr', width => 500, height => 2000, type => 'pep' );
+	    my $domain_align = CXGN::Phylo::Alignment->new( align_name => 'ipr', 
+							    width      => 500, 
+							    height     => 2000, 
+							    type       => 'pep' );
 	    foreach (keys %domain_matches_seq) {
 		my $len = length $domain_matches_seq{$_};
 		my $member = CXGN::Phylo::Alignment::Member->new( horizontal_offset => 0,
@@ -159,19 +192,21 @@ if (defined $id) {
 								  height            => 15,
 								  start_value       => 1, 
 								  end_value         => $len, 
-								  id                => $_, 
+	        						  id                => $_, 
 								  seq               => $domain_matches_seq{$_}, 
 								  species           => ' '
-		                                                 );
+		                                                );
 		$domain_align->add_member($member);
 	    }
         
 	    #Render image
-	    my $tmp_image = new File::Temp( DIR    => File::Spec->catfile($basepath,$tmpdir),
+
+	    my $tmp_image = new File::Temp( DIR    => File::Spec->catfile($basepath, $temp_dir),
 					    SUFFIX => '.png',
 					    UNLINK => 0,
 		                          );
 	    close $tmp_image;
+	
 	    $domain_align -> render_png_file($tmp_image, 'a');
 	    $tmp_image =~ s/$basepath//;
         
@@ -182,7 +217,8 @@ if (defined $id) {
 	    }
 	    $ipr_content .= "</ul>\n";
 	    $ipr_content .= "<center><img src=\"$tmp_image\" alt=\"\" /></center>\n";
-	} else {
+	} 
+	else {
 	    $ipr_content = '<br /><span class="ghosted">No InterPro domain matches or not analyzed.</span><br /><br />';
 	}
 
@@ -204,3 +240,8 @@ if (defined $id) {
 </%perl>
 
 <% $protein_html_content %>
+
+<& 
+   /util/import_javascript.mas, 
+   classes => 'CXGN.Effects' 
+&>

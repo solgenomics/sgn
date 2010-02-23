@@ -1,25 +1,57 @@
 <%doc>
-   NAME: gene_family_info.mas
-   VERSION: 1.0
-   DESCRIPTION: Another piece of mason code get the unigene data (gene family info) from the database and show it 
-                as table web_page; 
-                This code was taken from unigene.pl (originally added by Chenwei, 08/2005, slightly refactored, Lukas 9/2007)
-   AUTHOR: Aureliano Bombarely (ab782@cornell.edu)
+
+=head1 NAME 
+ 
+ gene_family.mas
+ Mason component to show gene family data associated to an unigene
+
+=cut
+
+=head1 VERSION 
+
+0.1
+
+=cut 
+
+=head1 SYNOPSIS 
+
+<& '/transcript/unigene/gene_family_info.mas', unigene => $unigene &>
+
+ where $unigene is CXGN::Transcript::Unigene object 
+
+=cut 
+
+=head1 DESCRIPTION
+
+ Another piece of mason code get the unigene data (gene family info) from the database and show it 
+ as table web_page; 
+ This code was taken from unigene.pl (originally added by Chenwei, 08/2005, slightly refactored, Lukas 9/2007)
+
+=cut
+ 
+=head 1 AUTHOR
+ 
+ Aureliano Bombarely (ab782@cornell.edu)
+
+=cut  
+
 </%doc>
 
+
+<%args>
+$unigene
+</%args>
+
+
 <%perl>
+
 use strict;
 use warnings;
 
-use SGN::Schema;
-use Bio::Chado::Schema;
-use CXGN::Transcript::Unigene;
 use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
 
 my ($library_content, $library_html, @library_table);
 
-my $unigene = $ARGS{'unigene'};
-my $schema = $ARGS{'schema'};
 
 ## Get the object
 my $id =  $unigene->get_unigene_id();
@@ -68,3 +100,8 @@ if (defined $id) {
 </%perl>
 
 <% $gene_family_html_content %>
+
+<& 
+   /util/import_javascript.mas, 
+   classes => 'CXGN.Effects' 
+&>
