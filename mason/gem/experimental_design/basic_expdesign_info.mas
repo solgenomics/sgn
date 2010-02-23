@@ -1,0 +1,121 @@
+<%doc>
+
+=head1 NAME 
+ 
+ basic_expdesign_info.mas
+ Mason component to show the basic information for experimental design web page.
+
+=cut
+
+=head1 VERSION 
+
+0.1
+
+=cut 
+
+=head1 DESCRIPTION
+
+ Mason component to show the basic information for experimental design web page.
+
+ - Mason root page = experimental_design_detail.mas
+ - Perl controller = experimental_design.pl
+
+=cut
+ 
+=head 1 AUTHOR
+ 
+ Aureliano Bombarely (ab782@cornell.edu)
+
+=cut 
+
+</%doc>
+
+
+<%args>
+$expdesign
+</%args>
+
+
+<%perl>
+use strict;
+use warnings;
+
+use CXGN::GEM::Schema;
+use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
+
+my $basic_info_content;
+my $expdesign_accession;
+
+my $default_message = '<i><font color="gray">data not available</basefont></i>';
+
+## If there aren't any experiment_row that comes from experimental_design_detail.mas, it will return a message.
+
+if (defined $expdesign->get_experimental_design_id()) {
+   
+    my $schema = $expdesign->get_schema();
+
+    my $expdesign_name = $expdesign->get_experimental_design_name();
+    $expdesign_accession = $expdesign_name;
+
+    my $expdesign_type = $expdesign->get_design_type();
+    my $description = $expdesign->get_description();
+
+    ## Get the external links
+
+    my @dbxref_list_id = $expdesign->get_dbxref_list();
+    my @dbxref_html_list = ();
+
+    foreach my $dbxref_id (@dbxref_list_id) {
+	my ($dbxref_row) = $schema->resultset('General::Dbxref')
+	                          ->search({ dbxref_id => $dbxref_id });
+
+	if (defined $dbxref_row) {
+	    my ($db_row) = $schema->resultset('General::Db')
+                                  ->search({ db_id => $dbxref_row->get_column('db_id') });
+            
+	    my $dbxref_link = $db_row->get_column('urlprefix') . 
+		              $db_row->get_column('url') . 
+			      $dbxref_row->get_column('accession');
+
+	    my $dbxref_html = $db_row->get_column('name') . 
+                              ": <a href=$dbxref_link>" . 
+			      $dbxref_row->get_column('accession')."</a>";
+
+	    push @dbxref_html_list, $dbxref_html;
+	}
+    }
+    
+    my $dbxref_html_list = join('<br>', @dbxref_html_list) || $default_message;
+
+    ## Create the HTML table
+
+    $basic_info_content = <<HTML;
+
+    <table width="100%">
+	<tr> <td width="25%"> <b>Experimental design name:</b>   </td> <td> $expdesign_name </td></tr>
+	<tr> <td width="25%"> <b>Experimental design type:</b>   </td> <td> $expdesign_type </td></tr>
+	<tr> <td width="25%"> <b>Description:</b>                </td> <td> $description </td></tr>
+	<tr> <td width="25%"> <b>Experimental design links:</b>  </td> <td> $dbxref_html_list </td></tr>
+   </table>
+
+HTML
+
+} else {
+   $basic_info_content = "<big>There aren't any experimental design data for the specified parameters.</big>";
+}   
+
+my $basic_info_html;
+if (defined $expdesign_accession) {
+   $basic_info_html = "<center><big><b>Expression Experimental Design: $expdesign_accession</b></big></center><br>";
+}
+
+$basic_info_html .= info_section_html( title => "Experimental Design Basic Information", contents => $basic_info_content );
+
+</%perl>
+
+<% $basic_info_html %>
+
+<& 
+   /util/import_javascript.mas, 
+   classes => 'CXGN.Effects' 
+&>

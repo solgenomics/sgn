@@ -1,0 +1,405 @@
+<%doc>
+
+=head1 NAME 
+ 
+ expression_info.mas
+ Mason component to take the expression data associated to a template web_page.
+
+=cut
+
+=head1 VERSION 
+
+0.1
+
+=cut 
+
+=head1 DESCRIPTION
+
+ Mason component to take the expression data associated to a template web_page.
+
+ It will return two sections:
+
+   1) By hybridization
+ 
+   2) By Experiment (where the expression will be a median or mean of the hybridization values)
+
+=cut
+ 
+=head 1 AUTHOR
+ 
+ Aureliano Bombarely (ab782@cornell.edu)
+
+=cut 
+
+</%doc>
+
+
+<%args>
+$template
+</%args>
+
+
+<%perl>
+
+use strict;
+use warnings;
+
+use Math::BigFloat;
+use CXGN::GEM::Hybridization;
+
+use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
+
+
+my $experiment_info_content;
+
+my @test;
+
+## define a hash with keys=experiment_id and values=experiment_name
+
+my %experiments;
+
+## If there aren't any template_row that comes from template_detail.mas, it will return nothing 
+## (the message is returned by basic_info.mas).
+
+if (defined $template->get_template_id() ) {
+
+    ## Get schema
+
+    my $schema = $template->get_schema();
+
+    ## Get the template_id and all the expression_experiment_values associated to them with the experimental design
+
+    my (%exp_info, %expdes_info);
+
+    my $template_id = $template->get_template_id();
+
+    my @exp_exp_values_rows = $schema->resultset('GeExpressionByExperiment')
+	                             ->search( { template_id => $template_id } );
+
+    ## declare the array to order
+
+    my %order_by_po = ();
+
+    foreach my $expexp_value_row (@exp_exp_values_rows) {
+
+	my %exp_values = $expexp_value_row->get_columns();
+
+	my $rep_used = $exp_values{'replicates_used'} || 'none';
+
+	my $mean = Math::BigFloat->new( $exp_values{'mean'})
+	                         ->ffround(-2)
+			         ->bstr();
+ 
+	my $median = Math::BigFloat->new( $exp_values{'median'} )
+	                           ->ffround(-2)
+				   ->bstr();
+
+	my $sd = Math::BigFloat->new($exp_values{'standard_desviation'})
+	                       ->ffround(-2)
+			       ->bstr();
+
+	my $cv = Math::BigFloat->new($exp_values{'coefficient_of_variance'})
+	                       ->ffround(-2)
+			       ->bstr();
+
+	if ($rep_used eq 'none') {
+	    my $def1 = '<font color=gray>NA</font>';
+	    ($mean, $median, $sd, $cv) = ($def1, $def1, $def1, $def1);
+	} elsif ($rep_used == 1) {
+	    my $def2 = '<font color=darkcyan>NA</font>';
+	    ($sd, $cv) = ($def2, $def2);
+	    $mean = '<b><font color=darkcyan>'.$mean.'</font></b>';
+	    $median = '<b><font color=darkcyan>'.$median.'</font></b>';
+	} else {
+	    if ($sd < 0.5) {
+		$mean = '<b><font color=darkblue>'.$mean.'</font></b>';
+		$median = '<b><font color=darkblue>'.$median.'</font></b>';
+		$sd = '<b><font color=darkblue>'.$sd.'</font></b>';
+		$cv = '<b><font color=darkblue>'.$cv.'</font></b>';
+	    } elsif ($sd < 1) {
+		$mean = '<font color=darkblue>'.$mean.'</font>';
+		$median = '<font color=darkblue>'.$median.'</font>';
+		$sd = '<font color=darkorange>'.$sd.'</font>';
+		$cv = '<font color=darkblue>'.$cv.'</font>';
+	    } else {
+		$mean = '<font color=darkblue>'.$mean.'</font>';
+		$median = '<font color=darkblue>'.$median.'</font>';
+		$sd = '<font color=darkred>'.$sd.'</font>';
+		$cv = '<font color=darkblue>'.$cv.'</font>';
+	    }
+	}
+	  
+	my $exp_id = $exp_values{'experiment_id'};
+
+	my $experiment = CXGN::GEM::Experiment->new($schema, $exp_id);
+
+	if (defined $experiment->get_experiment_id() ) {
+
+	    my $exp_name = $experiment->get_experiment_name();
+	  
+	    $experiments{$exp_id} = $exp_name;
+	    my $exp_link = '/gem/experiment.pl?id='.$exp_id;
+	    my $exp_html = "<a href=$exp_link>$exp_name</a>";
+	  
+	    my $exp_rep = $experiment->get_replicates_nr();
+
+	    my $expdesign = $experiment->get_experimental_design();
+
+	    ## It will take po terms to identify the tissue
+	    ## It will choose the shorter term to take
+	   
+	    my $chooser = 1000;
+	    my $p_onto = '';
+
+	    my @target_list = $experiment->get_target_list();
+	    
+	    foreach my $target (@target_list) {
+ 		my @sample_list = $target->get_sample_list();
+		
+ 		foreach my $sample (@sample_list) {
+ 		    my %po = $sample->get_dbxref_related();
+		    
+ 		    foreach my $sample_el (keys %po) {
+ 			my @dbxref_po = @{ $po{$sample_el} };
+
+ 			foreach my $dbxref_po_href (@dbxref_po) {
+ 			    my %dbxref_po = %{ $dbxref_po_href };
+ 			    my $po_name = $dbxref_po{'cvterm.name'};
+ 			    if (length($po_name) < $chooser) {
+ 				$chooser = length($po_name);
+ 				my $onto_link = '/chado/cvterm.pl?action=view&cvterm_id=' . $dbxref_po{'cvterm.cvterm_id'};
+ 				my $onto_html = "<a href=$onto_link>$po_name</a>";
+				
+ 				$p_onto = $onto_html;
+				
+				my @opo = split(/ /, $po_name);
+				my $opo_name = join(' ', reverse(@opo));
+
+				unless (exists $order_by_po{$opo_name}) {
+				    $order_by_po{$opo_name} = [$exp_name];
+				}
+				else {
+				    push @{$order_by_po{$opo_name}}, $exp_name;
+				}
+ 			    } 
+ 			}
+ 		    }
+ 		}
+ 	    }
+
+	    if (defined $expdesign->get_experimental_design_id() ) {
+
+		my $expdesign_id = $expdesign->get_experimental_design_id();
+		my $expdesign_name = $expdesign->get_experimental_design_name();
+
+		my $expdesign_link = '/gem/experimental_design.pl?id='.$expdesign_id;
+		my $expdesign_html = "<a href=$expdesign_link>$expdesign_name</a>";
+
+		## Check if exists or not the experimental design. If exists, use " instead the name. Store in an array.
+
+		if (exists $exp_info{$exp_name}) {
+		  
+		    push @{ $exp_info{$exp_name} }, ['"', $exp_html, $p_onto, $exp_rep, $rep_used, $mean, $median, $sd, $cv];
+                  
+		    push @{ $expdes_info{$expdesign_name} }, $exp_name;
+		    
+		} else {
+		    $exp_info{$exp_name} = [ [ $expdesign_html, $exp_html, $p_onto, $exp_rep, $rep_used, $mean, $median, $sd, $cv] ];
+
+		    if (exists $expdes_info{$expdesign_name} ) {
+			
+			push @{ $expdes_info{$expdesign_name} }, $exp_name;
+		    }
+		    else {
+
+			$expdes_info{$expdesign_name} = [$exp_name];
+		    }
+		}
+	    }
+	}
+    }
+
+    ## Create the array to order the experiments if they have PO terms
+
+    my @exp_order = ();
+    my %exp_check = ();
+
+    foreach my $po (sort keys %order_by_po) {
+	if (defined $order_by_po{$po}) {
+	    my @exp_o_list = @{ $order_by_po{$po} }; 
+
+	    foreach my $exp_o_name (sort @exp_o_list) {
+		unless (defined $exp_check{$exp_o_name}) {
+		    push @exp_order, $exp_o_name;
+		    $exp_check{$exp_o_name} = 1;
+		}
+	    }
+	}
+    }
+ 
+    ## Build the array for the table ordened
+
+    my %firstdata;
+    my @expression_data;
+    foreach my $exper_design (keys %expdes_info) {
+	my @experid_list = @{ $expdes_info{$exper_design} };
+
+	if (scalar(@experid_list) == scalar(@exp_order)) {
+	    @experid_list = @exp_order;
+	}
+
+	foreach my $exp_o (@experid_list) {
+	    my $expdata_aref = $exp_info{$exp_o};
+	    
+	    if (defined $expdata_aref) {
+		my @exp_single_list = @{$expdata_aref};
+		
+		foreach my $single_exp (@exp_single_list) {
+		    my $first = $single_exp->[0];
+		    if (exists $firstdata{$first}) {
+			$single_exp->[0] = ' ';
+		    } else {
+			$firstdata{$first} = 1;
+		    }
+		    push @expression_data, $single_exp;
+		} 
+	    }
+	}
+    }
+
+    ## Create the table using columnar_table_html
+   
+    my $experiments_html = columnar_table_html( headings => [ 'Experimental design name', 
+                                                              'Experiment name',
+							      'Tissue',
+                                                              'Experiment replicates', 
+                                                              'Replicates pValue<0.05', 
+                                                              'Mean', 
+                                                              'Median', 
+                                                              'SD', 
+                                                              'CV' ],
+						data     => \@expression_data,
+						__align  => ['l', 'l', 'l', 'c', 'c', 'c', 'c', 'c'],
+                                               );
+
+   ## If there are any experiment, replace the table for a message
+   my $exp_number = scalar(@expression_data);
+   if ($exp_number == 0) {
+       $experiments_html = 'No experiment was found associated to this template';
+   }
+
+    $experiment_info_content = info_section_html( title       => "Expression Data by Experiments (".$exp_number.")", 
+                                                  contents    => $experiments_html, 
+	 					  collapsible => 1,
+                                                  collapsed   => 1 );
+
+
+## Now we are going to add the expression data by targets (experiment replicates)
+
+    my (%exptemp_info);
+    my ($template_signal_type, $statistical_signal_type);
+
+    my @exptemp_values_rows = $schema->resultset('GeTemplateExpression')
+	                             ->search({ template_id => $template_id });
+
+    foreach my $exptemp_values_row (@exptemp_values_rows) {
+	my %exp_temp_values = $exptemp_values_row->get_columns();
+
+	$template_signal_type = $exp_temp_values{'template_signal_type'};
+	$statistical_signal_type = $exp_temp_values{'statistical_value_type'};
+	my $signal = $exp_temp_values{'template_signal'};
+	my $stats = $exp_temp_values{'statistical_value'};
+	
+	my $fstats;
+	if (defined $stats) {
+
+	    my $number = Math::BigFloat->new($stats);
+	
+	    ## Change the colour of the html depending of the value
+
+	    if ($number->bcmp(0.05) < 0) {
+		
+		if ($number->bcmp(0.001) < 0) {
+		    my $cvalue = $number->fround(1)->bsstr();
+		    $fstats = '<b><font color=green>'.$cvalue.'</font></b>';
+		} 
+		else {
+		    my $nvalue = $number->ffround(-3)->bstr();
+		    $fstats = '<b><font color=green>'.$nvalue.'</font></b>';  
+		}
+	    } 
+	    else {
+		my $mvalue = $number->ffround(-3)->bstr();
+		$fstats = '<b><font color=red>'.$mvalue.'</font></b>';
+	    }
+	}
+
+	my $hyb = CXGN::GEM::Hybridization->new($schema, $exp_temp_values{'hybridization_id'});
+
+	my $htarget = $hyb->get_target();
+	my $htarget_name = $htarget->get_target_name();
+	my $htarget_id = $htarget->get_target_id();
+	my $htarget_html = '<a href=/gem/target.pl?id=' . $htarget_id . '>' . $htarget_name . '</a>';
+
+	my $hexper = $htarget->get_experiment();
+	my $hexper_name = $hexper->get_experiment_name();
+	my $hexper_id = $hexper->get_experiment_id();
+	my $hexper_html = '<a href=/gem/experiment.pl?id=' . $hexper_id . '>' . $hexper_name . '</a>';
+
+	if (exists $exptemp_info{$hexper_name}) {
+	    push @{ $exptemp_info{$hexper_name} }, [' ', $htarget_html, $signal, $fstats, $exp_temp_values{'flag'}];
+	} 
+	else {
+	    $exptemp_info{$hexper_name} = [ [$hexper_html, $htarget_html, $signal, $fstats, $exp_temp_values{'flag'}] ];
+	}
+    
+    }	 
+
+    ## Now define the array for the table. If it has the same number of experiments that
+    ## the @exp_order array made using the PO terms, it will use that as order list
+
+    my @expression_targ_list;
+    my @experiment_list = keys %exptemp_info;
+    if (scalar(@experiment_list) == scalar(@exp_order)) {
+        @experiment_list = @exp_order;
+    } 
+    foreach my $exp_t (@experiment_list) {
+        if (exists $exptemp_info{$exp_t} ) {
+            my @target_list = @{ $exptemp_info{$exp_t}};
+      	   foreach my $target_data (@target_list) {
+                push @expression_targ_list, $target_data;
+            }
+        }
+    }
+
+
+    my $experiments_by_targets_html;
+    my $exprep_n = scalar(@expression_targ_list);
+    if ($exprep_n == 0) {
+        $experiments_by_targets_html = 'No hybridization target data was found associated to this template';
+    } else {
+        $experiments_by_targets_html = columnar_table_html( headings => [ 'Experiment name', 
+									  'Target name', 
+									  $template_signal_type, 
+									  $statistical_signal_type, 
+									  'flag' ],
+                                                            data     => \@expression_targ_list,
+ 					                    __align  => ['l', 'l', 'c', 'c', 'c'],
+                                                           );
+    }
+    $experiment_info_content .= info_section_html( title    => "Expression Data by Targets (experiment replicates) ($exprep_n)", 
+                                                   contents => $experiments_by_targets_html,
+						   collapsible =>1,
+                                                   collapsed =>1 );
+   
+
+}
+
+</%perl>
+
+<% $experiment_info_content %>
+
+<& 
+   /util/import_javascript.mas, 
+   classes => 'CXGN.Effects' 
+&>

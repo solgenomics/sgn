@@ -1,0 +1,227 @@
+<%doc>
+
+=head1 NAME 
+ 
+ basic_target_info.mas
+ Mason component to show the basic information for target web page.
+
+=cut
+
+=head1 VERSION 
+
+0.1
+
+=cut 
+
+=head1 DESCRIPTION
+
+ Mason component to show the basic information for target web page.
+
+ - Mason root page = target_detail.mas
+ - Perl controller = target.pl
+
+=cut
+ 
+=head 1 AUTHOR
+ 
+ Aureliano Bombarely (ab782@cornell.edu)
+
+=cut 
+
+</%doc>
+
+
+<%args>
+$target
+</%args>
+
+
+<%perl>
+use strict;
+use warnings;
+
+use CXGN::GEM::Schema;
+use CXGN::Chado::Dbxref;
+use CXGN::Biosource::Sample;
+use CXGN::Biosource::Protocol;
+
+use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
+
+my $basic_info_content;
+my $element_info_content;
+my $target_accession;
+
+my $default_message = '<i><font color="gray">data not available</basefont></i>';
+
+## If there aren't any experiment_row that comes from experimental_design_detail.mas, it will return a message.
+
+if ($target->get_target_id() ) {
+
+    ## Get the target object
+
+    my $target_name = $target->get_target_name();
+    $target_accession = $target_name;
+
+
+    ## Get the schema object
+
+    my $schema = $target->get_schema();   
+
+    ## Get the experiment link:
+
+    my $experiment = $target->get_experiment();
+
+    my $exp_id = $experiment->get_experiment_id();   
+    my $exp_name = $experiment->get_experiment_name();
+    my $exp_link = '/gem/experiment.pl?id='.$exp_id;
+    my $exp_html = "<a href=$exp_link>$exp_name</a><br>";
+      
+    ## Get the experimental design link
+
+    my $expdesign = $target->get_experimental_design();
+
+    my $expdesign_id = $expdesign->get_experimental_design_id();   
+    my $expdesign_name = $expdesign->get_experimental_design_name();
+    my $expdesign_link = '/gem/experimental_design.pl?id='.$expdesign_id;
+    my $expdesign_html = "<a href=$expdesign_link>$expdesign_name</a>";
+
+    ## Get the external links
+
+    my @dbxref_list_id = $target->get_dbxref_list();
+    my @dbxref_html_list = ();
+
+    foreach my $dbxref_id (@dbxref_list_id) {
+	my ($dbxref_row) = $schema->resultset('General::Dbxref')
+	                          ->search({ dbxref_id => $dbxref_id });
+
+	if (defined $dbxref_row) {
+	    my ($db_row) = $schema->resultset('General::Db')
+	                          ->search({ db_id => $dbxref_row->get_column('db_id') });
+	    
+	    my $dbxref_link = $db_row->get_column('urlprefix') . $db_row->get_column('url') . $dbxref_row->get_column('accession');
+	    my $dbxref_html = $db_row->get_column('name') . ": <a href=$dbxref_link>".$dbxref_row->get_column('accession')."</a>";
+	    push @dbxref_html_list, $dbxref_html;
+	}
+    }
+    
+    my $dbxref_html_list = join('<br>', @dbxref_html_list) || $default_message;
+	
+    ## Get the target elements
+
+    my %target_elements = $target->get_target_elements();
+
+    ## It will create a table with target_elements as target_element_name, dye, sample_name (with links), protocol_name (with
+    ## links too) and GO
+
+    my @target_el_html_list = ();
+
+    foreach my $target_el_name (sort keys %target_elements) {
+	my %target_el_data = %{ $target_elements{$target_el_name} };
+	
+	my $dye = $target_el_data{'dye'};
+	
+	my $sample_html;
+	my $sample_id = $target_el_data{'sample_id'};
+	my $sample = CXGN::Biosource::Sample->new($schema, $sample_id);
+	my $sample_name = $sample->get_sample_name();
+	unless (defined $sample_name) {
+	    $sample_html = $default_message;
+	}
+	else {
+	    my $sample_link = '/biosource/sample.pl?id=' . $sample_id;
+	    $sample_html = "<a href=$sample_link>$sample_name</a>";
+	}
+
+	my $protocol_html;
+	my $protocol_id = $target_el_data{'protocol_id'};
+	my $protocol = CXGN::Biosource::Protocol->new($schema, $protocol_id);
+	my $protocol_name = $protocol->get_protocol_name();
+	unless (defined $protocol_name) {
+	    $protocol_html = $default_message;
+	}
+	else {
+	    my $protocol_link = '/biosource/protocol.pl?id=' . $protocol_id;
+	    $protocol_html = "<a href=$protocol_link>$protocol_name</a>";
+	}
+
+	## Get the sample_element_dbxref (GO and PO terms)
+	
+	my %dbxref_related = $sample->get_dbxref_related();
+ 
+	## It remove the redundancy using a hash
+	
+	my %onto_html;
+	foreach my $sample_el_name (keys %dbxref_related) {
+
+	    if (defined $dbxref_related{$sample_el_name} ) {
+		my @dbxref_related_el = @{ $dbxref_related{$sample_el_name} };
+		
+		foreach my $dbxref_rel_el (@dbxref_related_el) {
+		    my %dbxref_rel_data = %{ $dbxref_rel_el };
+		    
+		    my $onto_accession = $dbxref_rel_data{'db.name'} . ":" . $dbxref_rel_data{'dbxref.accession'};
+		    my $onto_descr = $dbxref_rel_data{'cvterm.name'};
+		    my $onto_link = '/chado/cvterm.pl?action=view&cvterm_id='.$dbxref_rel_data{'cvterm.cvterm_id'};
+		    my $onto_line = "<a href=$onto_link>$onto_accession</a> ($onto_descr)<br>";
+		    
+		    unless (defined $onto_html{$onto_line}) {
+			$onto_html{$onto_line} = 1;
+		    }
+		}
+	    }
+	}
+	my $onto_list = join(' ', keys %onto_html) || $default_message;
+	
+	push @target_el_html_list, [$target_el_name, $dye, $sample_html, $protocol_html, $onto_list];
+    }
+    
+    my $target_el_composition_html = columnar_table_html( headings   => [ 'Target element name',
+									  'Dye',
+                                                                          'Sample',
+							                  'Protocol', 
+							                  'Ontologies',
+							                ],
+                                                           data       => \@target_el_html_list,
+                                                           __align    => ['c', 'c', 'c', 'c', 'l'],
+                                                           __alt_freq => 1,
+                                                          );
+   
+    
+    ## Create the HTML table
+    
+    $basic_info_content = <<HTML;
+
+    <table width="100%">
+   	   <tr> <td width="25%"> <b>Target name:</b>              </td> <td> $target_name </td></tr>
+           <tr> <td width="25%"> <b>Experiment name:</b>          </td> <td> $exp_html </td></tr>
+	   <tr> <td width="25%"> <b>Experimental design name:</b> </td> <td> $expdesign_html</td></tr>
+	   <tr> <td width="25%"> <b>Target external links:</b>    </td> <td> $dbxref_html_list</td></tr>
+    </table>
+
+    <br>
+
+HTML
+
+$element_info_content .= $target_el_composition_html;
+
+} else {
+   $basic_info_content = "<big>There aren't any target data for the specified parameters.</big>";
+}   
+my $basic_info_html;
+if (defined $target_accession) {
+   $basic_info_html = "<center><big><b>Expression Target: $target_accession</b></big></center><br>";
+}
+$basic_info_html .= info_section_html( title => "Target Basic Information", contents => $basic_info_content );
+
+if (defined $target_accession) {
+    $basic_info_html .= info_section_html( title => "Target Element Information", contents => $element_info_content );
+}
+
+</%perl>
+
+<% $basic_info_html %>
+
+<& 
+   /util/import_javascript.mas, 
+   classes => 'CXGN.Effects' 
+&>

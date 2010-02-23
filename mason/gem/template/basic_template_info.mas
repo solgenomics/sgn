@@ -1,0 +1,178 @@
+<%doc>
+
+=head1 NAME 
+ 
+ basic_template_info.mas
+ Mason component to show the basic information for template web page.
+
+=cut
+
+=head1 VERSION 
+
+0.1
+
+=cut 
+
+=head1 DESCRIPTION
+
+ Mason component to show the basic information for template web page.
+
+ - Mason root page = template_detail.mas
+ - Perl controller = template.pl
+
+=cut
+ 
+=head 1 AUTHOR
+ 
+ Aureliano Bombarely (ab782@cornell.edu)
+
+=cut 
+
+</%doc>
+
+
+<%args>
+$template
+</%args>
+
+
+<%perl>
+
+use strict;
+use warnings;
+
+use CXGN::GEM::Schema;
+use CXGN::Chado::Dbxref;
+use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
+
+my $basic_info_content;
+my $element_info_content;
+my $template_accession;
+
+my $default_message = '<i><font color="gray">data not available</basefont></i>';
+
+## If there aren't any template that comes from template_detail.mas, it will return a message.
+
+if (defined $template->get_template_id() ) {
+
+    ## Get the template object
+
+    my $template_name = $template->get_template_name();
+    $template_accession = $template_name;
+
+    my $template_type = $template->get_template_type();
+
+    ## Get the schema object
+
+    my $schema = $template->get_schema();   
+
+    ## Get the platform link:
+
+    my $platform = $template->get_platform();
+
+    my $platform_id = $platform->get_platform_id();   
+    my $platform_name = $platform->get_platform_name();
+    my $platform_link = '/gem/platform.pl?id='.$platform_id;
+    my $platform_html = "<a href=$platform_link>$platform_name</a><br>";
+    
+    ## Get dbiref links
+
+    my @dbirefs = $template->get_dbiref_obj_list();
+    my @dbiref_html_list = ();
+
+    foreach my $dbiref (@dbirefs) {
+	my $accession = $dbiref->get_accession();
+	my @dbipath = $dbiref->get_dbipath_obj()
+	                     ->get_dbipath();
+	
+	my $dbipath = join('.', @dbipath);
+	
+	## Define dbiref_html as accession and change depending of the dbiref type
+
+	my $dbiref_html = $accession;
+
+	if ($dbipath eq 'sgn.unigene.unigene_id') {
+	    unless ($accession =~ m/SGN-U/) {
+		$dbiref_html = '<a href=/search/unigene.pl?unigene_id=SGN-U' . $accession . '>SGN-U' . $accession . '</a>';
+	    }
+	    else {
+		$dbiref_html = '<a href=/search/unigene.pl?unigene_id=' . $accession . '>' . $accession . '</a>';
+	    }
+	}
+	elsif ($dbipath eq 'sgn.est.est_id') {
+	    unless ($accession =~ m/SGN-E/) {
+		$dbiref_html = '<a href=/search/est.pl?est_id=SGN-E' . $accession . '>SGN-E' . $accession . '</a>';
+	    }
+	    else {
+		$dbiref_html = '<a href=/search/est.pl?est_id=SGN-U' . $accession . '>SGN-E' . $accession . '</a>';
+	    }
+	}
+	push @dbiref_html_list, $dbiref_html;
+    }
+    my $dbiref_html_list = join('<br>', @dbiref_html_list) || $default_message;
+
+  
+    ## Get the external links
+
+    my @dbxref_list_id = $template->get_dbxref_list();
+    my @dbxref_html_list = ();
+
+    foreach my $dbxref_id (@dbxref_list_id) {
+	my ($dbxref_row) = $schema->resultset('General::Dbxref')
+	                          ->search({ dbxref_id => $dbxref_id });
+
+	if (defined $dbxref_row) {
+	    my ($db_row) = $schema->resultset('General::Db')
+	                          ->search({ db_id => $dbxref_row->get_column('db_id') });
+	    
+	    my $db_name = $db_row->get_column('name');
+	    
+	    ## Filter the db names
+	    if ($db_name =~ m/DB:GenBank_Accession/i ) {
+		$db_name = 'GenBank';
+	    }
+
+	    my $dbxref_link = $db_row->get_column('urlprefix') . $db_row->get_column('url') . $dbxref_row->get_column('accession');
+	    my $dbxref_html = $db_name . ": <a href=$dbxref_link>".$dbxref_row->get_column('accession')."</a>";
+	    push @dbxref_html_list, $dbxref_html;
+	}
+    }
+    
+    my $dbxref_html_list = join('<br>', @dbxref_html_list) || $default_message;
+	
+    ## Create the HTML table
+    
+    $basic_info_content = <<HTML;
+
+    <table width="100%">
+   	   <tr> <td width="25%"> <b>Template name:</b>              </td> <td> $template_name </td></tr>
+           <tr> <td width="25%"> <b>Template type:</b>              </td> <td> $template_type </td></tr>
+	   <tr> <td width="25%"> <b>Platform:</b>                   </td> <td> $platform_html</td></tr>
+	   <tr> <td width="25%"> <b>Internal db links:</b>             </td> <td> $dbiref_html_list</td></tr>
+	   <tr> <td width="25%"> <b>External db links:</b>             </td> <td> $dbxref_html_list</td></tr>
+    </table>
+
+    <br>
+
+HTML
+
+
+} else {
+   $basic_info_content = "<big>There aren't any template data for the specified parameters.</big>";
+}   
+
+my $basic_info_html;
+if (defined $template_accession) {
+   $basic_info_html = "<center><big><b>Expression Template: $template_accession</b></big></center><br>";
+}
+$basic_info_html .= info_section_html( title => "Template Basic Information", contents => $basic_info_content );
+
+
+</%perl>
+
+<% $basic_info_html %>
+
+<& 
+   /util/import_javascript.mas, 
+   classes => 'CXGN.Effects' 
+&>

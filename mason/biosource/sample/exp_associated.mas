@@ -1,0 +1,99 @@
+<%doc>
+
+=head1 NAME 
+ 
+ exp_associated.mas
+ mason component to take experiment data associated to a sample from the database and return it as html
+
+=cut
+
+=head1 VERSION 
+
+0.1
+
+=cut 
+
+=head1 DESCRIPTION
+
+ A mason component to take experiment data associated to a sample from the database and return it as html. 
+  
+
+=cut
+ 
+=head 1 AUTHOR
+ 
+ Aureliano Bombarely (ab782@cornell.edu)
+
+=cut 
+
+</%doc>
+
+
+<%args>
+$schema
+$target_list
+</%args>
+
+<%perl>
+use strict;
+use warnings;
+
+use CXGN::GEM::Schema;
+use CXGN::GEM::Target;
+use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
+
+my $exp_content;
+my @target_list = @{ $target_list };
+
+## Only return something if it is defined $sample and it have a sample_id
+
+if (scalar(@target_list) > 0 ) {
+    
+    my @exp_list;
+
+    foreach my $target (@target_list) {
+	
+	my $target_id = $target->get_target_id();
+	my $target_name = $target->get_target_name();		
+	my $target_link = '/gem/target.pl?id=' . $target_id;
+	my $target_html = "<a href=$target_link>$target_name</a><br>";
+		
+	my $experiment = $target->get_experiment();
+	my $exp_id = $experiment->get_experiment_id();
+	my $exp_name = $experiment->get_experiment_name();		
+	my $exp_link = '/gem/experiment.pl?id=' . $exp_id;
+	my $exp_html = "<a href=$exp_link>$exp_name</a><br>";
+
+	push @exp_list, [$exp_html, $target_html];	    	
+    }
+
+
+    ## Use columnar table to give the html format. If don't exists any data, print message.
+    
+    my $exp_composition_html = columnar_table_html( headings => [ 'Experiment', 'Target' ],
+                                                    data     => \@exp_list,
+       		        	                    __alt_freq => 2,
+                                                    __align  => ['c', 'c'], );
+
+
+    my $exp_n = scalar(@exp_list);                                              
+    if ($exp_n == 0) {
+	$exp_composition_html = 'None experiment was found associated to this sample';
+    }
+
+    $exp_content = info_section_html( title        => "Expression Experiments (".$exp_n.")", 
+                                      contents     => $exp_composition_html,
+		    	   	      collapsible  => 1,
+                                      collapsed    => 0, );
+ 
+}
+
+</%perl>
+
+<% $exp_content %>
+
+<& 
+   /util/import_javascript.mas, 
+   classes => 'CXGN.Effects' 
+&>
+   

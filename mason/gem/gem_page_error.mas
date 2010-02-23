@@ -1,0 +1,54 @@
+<%doc>
+
+=head1 NAME 
+ 
+ gem_page_error.mas
+ A mason page to return the message: Wrong arguments were used for search 
+
+=cut
+
+=head1 VERSION 
+
+0.1
+
+=cut 
+
+=head1 DESCRIPTION
+
+ This is a mason script to return an error message when:
+ 
+ 1) 'id' or 'name' are not used as CXGN::Page arguments
+
+ 2) $args{'id'} or $args{'name'} does not exists into the database
+
+
+=cut
+ 
+=head 1 AUTHOR
+ 
+ Aureliano Bombarely (ab782@cornell.edu)
+
+=cut 
+
+</%doc>
+
+
+<%args>
+$schema
+$object
+</%args>
+
+
+<%perl>
+
+## Parse the object name
+    
+my $name = lc(ref($object));
+$name =~ s/cxgn::gem:://;
+
+</%perl>
+
+<h2>ERROR PAGE REQUEST:</h2>
+
+<big>Wrong arguments are been used to request the <% $name %> page.</big>
+

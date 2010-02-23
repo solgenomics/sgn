@@ -1,0 +1,64 @@
+<%doc>
+
+=head1 NAME 
+ 
+ sample_detail.mas
+ Mason code to get different sections of the sample.pl web_page.
+
+=cut
+
+=head1 VERSION 
+
+0.1
+
+=cut 
+
+=head1 DESCRIPTION
+
+ This mason script coordinate different mason component to create the sample.pl page
+
+=cut
+ 
+=head 1 AUTHOR
+ 
+ Aureliano Bombarely (ab782@cornell.edu)
+
+=cut 
+
+</%doc>
+
+
+<%args>
+$schema
+$sample
+$pub_list
+$target_list
+</%args>
+
+<%perl>
+
+## None perl code, sample_detail.mas pass the arguments from the controller to the 
+## different mason components
+
+</%perl>
+
+
+<br>
+
+<& 
+    '/biosource/sample/basic_sample_info.mas',
+    schema => $schema, 
+    sample => $sample,
+&>
+
+<& 
+   '/biosource/sample/pub_brief.mas', 
+    schema => $schema,
+    pub_list => $pub_list,
+&>
+
+<& 
+    '/biosource/sample/exp_associated.mas', 
+    schema => $schema,
+    target_list => $target_list,
+&>

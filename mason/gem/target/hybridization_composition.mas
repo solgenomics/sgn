@@ -1,0 +1,125 @@
+<%doc>
+
+=head1 NAME 
+ 
+ hybridization_composition.mas
+ Mason component to show data about hybridizations.
+
+=cut
+
+=head1 VERSION 
+
+0.1
+
+=cut 
+
+=head1 DESCRIPTION
+
+ Mason component to show information for hybridization web page.
+ This component is used by platform, experiment and target
+ Use as argument an array reference composed by CXGN::GEM::Target objects.
+
+ - Mason root page = platform_detail.mas, experiment_detail.mas, target_detail.mas
+ - Perl controller = platform.pl, experiment.pl, target.pl
+
+=cut
+ 
+=head 1 AUTHOR
+ 
+ Aureliano Bombarely (ab782@cornell.edu)
+
+=cut 
+
+</%doc>
+
+
+<%args>
+$target_list
+</%args>
+
+
+<%perl>
+use strict;
+use warnings;
+
+use CXGN::GEM::Schema;
+use CXGN::GEM::Platform;
+
+use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
+
+
+my $hyb_comp_content;
+
+## If there aren't any experiment that comes from experimental design it will do nothing. 
+## The error message will returned by basic information
+
+my @data;
+my $hyb_composition_html;
+
+my @target_list = @{ $target_list };
+
+if (scalar(@target_list) > 0) {
+   
+    ## Get the schema
+    my $schema = $target_list[0]->get_schema();
+
+    foreach my $target (@target_list) {
+	my $target_id = $target->get_target_id();
+	my $target_name = $target->get_target_name();
+	my $target_link = '/gem/target.pl?id='.$target_id;
+	my $target_html = "<a href=$target_link>$target_name</a>";
+
+	my $exp = $target->get_experiment();
+	my $exp_id = $exp->get_experiment_id();	
+	my $exp_name = $exp->get_experiment_name();
+	my $exp_link = '/gem/experiment.pl?id='.$exp_id;
+	my $exp_html = "<a href=$exp_link>$exp_name</a>";	
+
+	my @hyb_rows = $schema->resultset('GeHybridization')
+	                      ->search({ target_id => $target_id });
+   
+	foreach my $hyb_row (@hyb_rows) {
+	    my $hyb_id = $hyb_row->get_column('hybridization_id');
+	    my $platform_id = $hyb_row->get_column('platform_id');
+	    my $platform = CXGN::GEM::Platform->new($schema, $platform_id);
+   
+	    my $platform_name = $platform->get_platform_name();
+	    my $platform_link = '/gem/platform.pl?id='.$platform_id;
+	    my $platform_html = "<a href=$platform_link>$platform_name</a>";
+	
+	    push @data, [$hyb_id, $platform_html, $exp_html, $target_html];
+	}
+	    
+    }
+
+    ## Use columnar table to give the html format. If don't exists any data, print message.
+
+    $hyb_composition_html = columnar_table_html(  headings => [ 'Hybridization id', 'Platform', 'Experiment', 'Target'],
+                                                  data     => \@data,
+	       		  		          __alt_freq => 2,
+                                                  __align  => ['c', 'l', 'l', 'l'],
+                                               );
+    
+ 
+
+}
+else {
+    $hyb_composition_html = "No hybridization associated with this element <br>";
+}
+
+my $hyb_n = scalar(@data);
+    $hyb_comp_content = info_section_html( title        => "Hybridizations (".$hyb_n.")", 
+                                           contents     => $hyb_composition_html,
+	   			           collapsible  => 1,
+                                           collapsed    => 1, );
+
+
+</%perl>
+
+<% $hyb_comp_content %>
+
+
+<& 
+   /util/import_javascript.mas, 
+   classes => 'CXGN.Effects' 
+&>

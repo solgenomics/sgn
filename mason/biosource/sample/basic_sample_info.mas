@@ -1,0 +1,180 @@
+<%doc>
+
+=head1 NAME 
+ 
+ basic_sample_info.mas
+ mason component to take basic sample data from the database and return it as html
+
+=cut
+
+=head1 VERSION 
+
+0.1
+
+=cut 
+
+=head1 DESCRIPTION
+
+ A mason component to take basic sample data from the database and return it as html
+
+=cut
+ 
+=head 1 AUTHOR
+ 
+ Aureliano Bombarely (ab782@cornell.edu)
+
+=cut 
+
+</%doc>
+
+
+<%args>
+$schema
+$sample
+</%args>
+
+<%perl>
+use strict;
+use warnings;
+
+use CXGN::Biosource::Schema;
+use CXGN::GEM::Schema;
+use Bio::Chado::Schema;
+use CXGN::Chado::Dbxref;
+use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
+
+my $basic_info_content;
+my $element_info_content;
+my $sample_accession;
+my $default_message = '<i><font color="gray">Data not available</basefont></i>';
+
+## If there aren't any sample_row that comes from sample_detail.mas, it will return a message.
+
+if (defined $sample->get_sample_id() ) {
+
+    ## The basic info will be divided into two section, sample information (simple table) 
+    ## and sample element information (columnar html table) 
+
+    ## Get the data from the object.
+    my $sample = $ARGS{'sample'};
+    my $sample_name = $sample->get_sample_name();
+    my $sample_type = $sample->get_sample_type();
+    my $description = $sample->get_description();
+
+    my @sample_el_list;
+    
+    ## Get sample_elements, it will put them in a columnar table 
+
+    my %sample_elements = $sample->get_sample_elements(); 
+    my %sample_element_dbxref = $sample->get_dbxref_from_sample_elements();
+    my %dbxref_related = $sample->get_dbxref_related();
+
+
+    foreach my $sample_el_name (sort keys %sample_elements) {
+	 my %sample_el_data = %{$sample_elements{$sample_el_name} };
+	 my $sample_el_name_html = $sample_el_data{'alternative_name'} || $sample_el_data{'sample_element_name'};
+
+	 ## Translate organism_id to organism_names with links
+
+	 my $organism_html;
+	 my $organism_id = $sample_el_data{'organism_id'};
+	 my ($organism_row) = $schema->resultset('Organism::Organism')
+    	                             ->search( { organism_id => $organism_id } );
+
+	 if (defined $organism_row) {
+	     my $genus = $organism_row->get_column('genus');
+	     my $species = $organism_row->get_column('species');
+	     my $organism_link = '/chado/organism.pl?organism_id='.$organism_id;
+	     $organism_html = "<a href=$organism_link>$species</a><br>";
+	 } else {
+	     $organism_html = '<font color="gray"><i>None defined for this sample element</i></font>';
+	 }
+	
+	 ## Same thing with protocol (it haven't any web yet)
+
+	 my $protocol_html;
+	 my $protocol_id = $sample_el_data{'protocol_id'};
+	 my ($protocol_row) = $schema->resultset('BsProtocol')
+   	                             ->search( { protocol_id => $protocol_id } );
+
+	 if (defined $protocol_row) {
+	     my $protocol_name = $protocol_row->get_column('protocol_name');
+	     ## my $protocol_link = '/biosource/protocol.pl?protocol_id='.$protocol_id;
+	     ## $protocol_html = "<a href=$protocol_link>$protocol_name</a><br>";
+	     $protocol_html = $protocol_name;
+	 } else {
+	     $protocol_html = '<font color="gray"><i>None defined for this sample element</i></font>';
+	 }
+	 
+	 ## Get the sample_element_dbxref (GO and PO terms)
+	 
+	 my (@onto_html);
+	 if (defined $dbxref_related{$sample_el_name} ) {
+	     my @dbxref_related_el = @{ $dbxref_related{$sample_el_name} };
+	     
+	     foreach my $dbxref_rel_el (@dbxref_related_el) {
+		 my %dbxref_rel_data = %{ $dbxref_rel_el };
+	
+		 my $onto_accession = $dbxref_rel_data{'db.name'} . ":" . $dbxref_rel_data{'dbxref.accession'};
+		 my $onto_descr = $dbxref_rel_data{'cvterm.name'};
+		 my $onto_link = '/chado/cvterm.pl?action=view&cvterm_id='.$dbxref_rel_data{'cvterm.cvterm_id'};
+		 my $onto_line = "<a href=$onto_link>$onto_accession</a> ($onto_descr)<br>";
+		 push @onto_html, $onto_line;
+	     }
+	 }
+	 my $onto_list = join(' ', @onto_html) || $default_message;
+
+	 push @sample_el_list, [ 
+	                         $sample_el_name_html,  
+                                 $organism_html, 
+                                 $protocol_html, 
+                                 $onto_list,
+	                       ];
+    }
+	
+    my $sample_el_composition_html = columnar_table_html( headings   => [ 'Sample element name', 
+                                                                          'Organism', 
+                                                                          'Protocol',
+                                                                          'Ontologies',
+							                ],
+                                                           data       => \@sample_el_list,
+                                                           __align    => ['l', 'c', 'c', 'l'],
+							   __alt_freq => 1,
+                                                          );
+
+   
+    ## Create the HTML table
+
+    $basic_info_content = <<HTML;
+
+    <table width="100%">
+    	   <tr> <td width="25%"> <b>Sample name:</b>            </td> <td> $sample_name </td></tr>
+           <tr> <td width="25%"> <b>Sample type:</b>            </td> <td> $sample_type </td></tr>
+ 	   <tr> <td width="25%"> <b>Description:</b>            </td> <td> $description </td></tr>
+    </table>
+    <br>
+
+HTML
+
+    $element_info_content .= $sample_el_composition_html;
+
+} else {
+   $basic_info_content = "<big>There aren't any sample data for the specified parameters.</big>";
+}   
+
+my $basic_info_html;
+if (defined $sample_accession) {
+   $basic_info_html = "<center><big><b>Sample: $sample_accession</b></big></center><br>";
+}
+
+$basic_info_html .= info_section_html( title => "Sample Basic Information", contents => $basic_info_content );
+$basic_info_html .= info_section_html( title => "Element Basic Information", contents => $element_info_content );
+
+</%perl>
+
+<% $basic_info_html %>
+
+<& 
+   /util/import_javascript.mas, 
+   classes => 'CXGN.Effects' 
+&>
