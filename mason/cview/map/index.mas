@@ -47,11 +47,11 @@ if set to true, force the image and map stats caches to be re-calculated.
 
 =back
 
-=head1 AUTHOR(S)
+=head1 AUTHORS
 
 Adapted to Mason by Lukas Mueller. Early Perl-only versions were written by Robert Ahrens, with later additions by Lukas Mueller and John Binns <zombieite@gmail.com>.
 
-Currently maintained by Lukas Mueller <lam87@cornell.edu>.
+Currently maintained by Lukas Mueller <lam87\@cornell.edu>.
 
 =cut
 
@@ -61,11 +61,12 @@ Currently maintained by Lukas Mueller <lam87@cornell.edu>.
 $dbh
 $map_id
 $map_version_id
-$hilite => ""
+$hilite => undef
 $size => 1
 $force
 $physical
 $referer
+$tempdir
 </%args>
 
 <%perl>
@@ -77,12 +78,11 @@ use File::Spec;
 use CXGN::Cview::MapFactory;
 use CXGN::Cview::Map::Tools;
 
-
 my %marker_info;
 
 # set up a cache for the map statistics, using Cache::File
 #
-my $cache_file_dir = File::Spec->catfile($c->get_conf("basepath"), $c->get_conf("tempfiles_subdir"), "cview", "cache_file");
+my $cache_file_dir = File::Spec->catfile($tempdir, "cache_file");
 
 tie %marker_info, 'Cache::File', { cache_root => $cache_file_dir };
 
@@ -135,7 +135,10 @@ sub missing_map_page {
 HTML
 
 
-  }
+}
+
+
+
 # Historic Perl comment by Robert Ahrens, ca. 2003
 #
 # sub hack_abstract ($$$) {    
@@ -153,11 +156,13 @@ HTML
 
 </%perl>
 
+<h1> BLABLA </h1>
+
 
 
 <& /page/page_title.mas, title=> $short_name &>
 
-<div id=\"pagetitle2\"><center><h3><%$map_fullname%></h3></center></div>
+<div id="pagetitle2"><center><h3><%$map_fullname%></h3></center></div>
 
 
 <& /cview/map/overview.mas, map=>$map, size=>$size,  hilite_markers => [ @hilite_markers ] &>
