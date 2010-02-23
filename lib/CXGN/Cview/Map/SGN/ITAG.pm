@@ -22,7 +22,7 @@ sub new {
     $self->set_id($id);
 
     $self->set_chromosome_names( "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12");
-    print STDERR "ITAG map constructor...\n";
+    #print STDERR "ITAG map constructor...\n";
 
     #print STDERR "FILENAMES = ". (join " ", (map  {$_.":".$self->get_files()->{$_} } keys %{$self->get_files()}) ) ."\n";
     #print STDERR "Constructor: generating AGP chr ".$self->get_name()."\n";
@@ -32,7 +32,7 @@ sub new {
     $self->set_long_name("Tomato (Solanum lycopersicum) ITAG map");
     $self->set_units("MB");
 
-    print STDERR "Caching chromosome lengths...\n";
+    #print STDERR "Caching chromosome lengths...\n";
     my @ITAG_releases = CXGN::ITAG::Release->find();
 
     # if we can't find any ITAG releases, just return
@@ -48,7 +48,7 @@ sub new {
     return $self;
 }
 
-our $SCALE=1000000;
+our $SCALE=1_000_000;
 our $INTER_CONTIG_DISTANCE=100_000;
 
 
@@ -197,8 +197,8 @@ sub can_zoom {
 sub cache_chromosome_lengths { 
     my $self=shift;
 
-    my $vh = CXGN::VHost->new();
-    my $len_cache_path = $vh->get_conf("basepath")."/".$vh->get_conf("tempfiles_subdir")."/cview/itag_map_chr_len_cache.txt";
+#    my $vh = CXGN::VHost->new();
+    my $len_cache_path = File::Spec->catfile($self->get_temp_dir(), "itag_map_chr_len_cache.txt");
     
     my @lengths = ();
       if (! -e $len_cache_path) { 
