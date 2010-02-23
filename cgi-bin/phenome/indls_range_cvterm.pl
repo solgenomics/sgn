@@ -1,3 +1,19 @@
+#!/usr/bin/perl -wT
+
+=head1 DESCRIPTION
+
+generates a page with the list of individual
+plant accessions (and their corresponding trait values)
+falling within a phenotypic range in a population.
+ 
+=head1 AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+
+
 use strict;
 
 my $individuals_range_detail_page = CXGN::Phenome::IndividualsRangeDetailPage->new();
@@ -46,10 +62,7 @@ sub new {
 
 sub define_object { 
     my $self = shift;
-    
-    # call set_object_id, set_object and set_primary_key here
-    # with the appropriate parameters.
-    #
+     
     $self->set_dbh(CXGN::DB::Connection->new('phenome'));
     my %args = $self->get_args();
     my $population_id= $args{population_id};
@@ -164,16 +177,10 @@ EOS
 
 
 
-    my %args = $self->get_args();
-    
+    my %args = $self->get_args();    
     my $population = $self->get_object();
     my $population_id = $self->get_object_id();
-    my $population_name = $population->get_name();
-
-   # my $action = $args{action};
-   # if (!$population_id && $action ne 'new' && $action ne 'store') { $self->get_page->message_page("No individual exists for this identifier"); }
-    
-    #used to show certain elements to only the proper users
+    my $population_name = $population->get_name();   
     my $login_user= $self->get_user();
     my $login_user_id= $login_user->get_sp_person_id();
     my $login_user_type= $login_user->get_user_type(); 
@@ -182,19 +189,9 @@ EOS
     $self->get_page()->header("SGN Population name: $population_name");
     
     print page_title_html("SGN population: $population_name \n");
-    
-   
-    
-    #my $population_html = $self->get_edit_link_html()."<br />";
-    
-    #print all editable form  fields
+ 
     my $population_html .= $self->get_form()->as_table_string(); 
-
-   # my $population_obj = CXGN::Phenome::Population->new($self->get_dbh(), $population_id);
    
-    #my ($pop, $obs, $count, $cvterm, $definition, $min, $max, $ave) = $population_obj->get_pop_data_summary();
-    #my @cvterms= $population->indls_range_cvterm($cvterm_id, $lower, $upper);
-
     my $phenotype = ""; 
     my @phenotype;
     
@@ -222,7 +219,12 @@ EOS
    
     my ($phenotype_data, $data_view, $data_download);
     
-    my $cvterm_note = " <br><b>$indls_count plant accessions had $cvterm_name values >$lower but <= $upper. The population average, minimum, and maximum values for the trait were $avg, $min, and $max, respectively.</b> <br />";   
+    my $cvterm_note = " <br><b>$indls_count plant accessions had 
+                            $cvterm_name values >$lower but <= $upper. 
+                            The population average, minimum, and maximum 
+                            values for the trait were $avg, $min, and $max, 
+                            respectively.</b> <br />";   
+    
     if (@phenotype) {
 	$phenotype_data = columnar_table_html(headings => [
 							   'Plant accession',
@@ -247,20 +249,7 @@ EOS
     my $page="../phenome/indls_range_cvterm.pl?cvterm_id=$cvterm_id&amp;lower=$lower&amp;upper=$upper&amp;population_id=$population_id ";
     $args{calling_page} = $page;
 
-   # my $pub_subtitle;
-   #  if ($population_name && ($login_user_type eq 'curator' || $login_user_type eq 'submitter')) { 
-# 	$pub_subtitle .= qq|<a href="../chado/add_publication.pl?type=population&amp;type_id=$population_id&amp;cvterm_id=$cvterm_id&amp;refering_page=$page&amp;action=new">[Associate publication]</a>|;
-	
-#     }
-#    else { $pub_subtitle= qq|<span class=\"ghosted\">[Associate publication]</span>|;}
-
    
-    
-    
-
-   
-   
- 
     my $pubmed;
     my $url_pubmed = qq | http://www.ncbi.nlm.nih.gov/pubmed/|;
 
@@ -290,7 +279,7 @@ EOS
 	$pages = $pub->get_pages();
 	$issue = $pub->get_issue();
 	$accession = $dbxref_obj->get_accession();
-	my $pub_info = qq|<div><a href="/chado/publication.pl?pub_id=$pub_id" >PMID:$accession</a> |;
+	my $pub_info = qq|<a href="/chado/publication.pl?pub_id=$pub_id" >PMID:$accession</a> |;
 	my @authors;
 	my $authors;
 	if ($pub_id) {  
@@ -303,7 +292,7 @@ EOS
 	       my $first_names = $pubauthor_obj->get_givennames();
 	       my @first_names = split (/,/, $first_names);
 	       $first_names = shift (@first_names);
-	       push @authors, ("$last_name" ."  ". "$first_names");
+	       push @authors, ("$first_names" ."  ". "$last_name");
 	       $authors = join (", ", @authors);
 	   }
        }     
@@ -322,16 +311,7 @@ EOS
      $pubmed .= qq|<div><a href="$url_pubmed$accession" target="blank">$pub_info</a> $title $abstract_view </div> |;
     }
 }
-#     my ($image, $title, $plot_html);
-#     ($image, $title) = population_distribution($population_id);
-#     $plot_html .= "<table cellpadding = 5><tr><td>";
-#     $plot_html .= $image;
-#     $plot_html .= "</td><td cellpadding = 200>";
-#     $plot_html .= $title;
-#     $plot_html .= "</td></tr></table>";
 
-    my $test = qq | <a href ="../phenome/test_map.pl?population_id=$population_id&amp;cvterm_id=$cvterm_id">test map</a> |;
- my $anchor = qq |<a name ="graph"> </a>|;
     print info_section_html(title   => 'Population details',
 			    contents => $population_html,
 			    );   
@@ -340,10 +320,7 @@ EOS
 			    contents =>$cvterm_note . $data_view ." ".$data_download, 
 			    );
     
-#    print info_section_html(title   => 'Figure',
-#			    contents => $plot_html . $anchor . $test, 
-#			    );
-    
+
     
     print info_section_html(title   => 'Literature annotation',
 			    #subtitle => $pub_subtitle,
@@ -352,7 +329,6 @@ EOS
     
     
     if ($population_name) { 
-	# change sgn_people.forum_topic.page_type and the CHECK constraint!!
 	my $page_comment_obj = CXGN::People::PageComment->new($self->get_dbh(), "population", $population_id);  
 	print $page_comment_obj->get_html();
     }
@@ -365,23 +341,6 @@ EOS
     exit();
 }
 
-
-
-
-
-
-# override store to check if a locus with the submitted symbol/name already exists in the database
-
-# sub store { 
-#    my $self = shift;
-#    my $population = $self->get_object();
-#    my $population_id = $self->get_object_id();
-#    my %args = $self->get_args();
-  
-#    $self->SUPER::store(0); 
-
-#  exit(); 
-# }
 
 
 
