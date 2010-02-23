@@ -20,7 +20,8 @@ my @tabs = (
 	    ['?search=bacs','Genomic Clones'],
 	    ['?search=est_library','ESTs'],
 	    ['?search=images','Images'],	
-	    ['?search=directory','People'],    
+	    ['?search=directory','People'],
+            ['?search=template_experiment_platform', 'Expression']
 	   );
 my @tabfuncs = (
 		\&gene_tab,
@@ -33,6 +34,7 @@ my @tabfuncs = (
 		\&est_library_submenu,
                 \&images_tab,	
 		\&directory_tab,
+                \&template_experiment_platform_submenu,
 	
 	       );
 
@@ -52,6 +54,9 @@ my $tabsel =
   : ($search =~ /library/i)      ? 7 # yes, there are two terms linking to tab 8
   : ($search =~ /images/i)       ? 8 # New image search
   : ($search =~ /directory/i)    ? 9
+  : ($search =~ /template/i)     ? 10 ## There are 3 terms linking to search for expression 
+  : ($search =~ /experiment/i)   ? 10
+  : ($search =~ /platform/i)     ? 10
   : $page->error_page("Invalid search type '$search'.");
 
 $page->header('Search SGN','Search SGN');
@@ -141,4 +146,40 @@ sub cvterm_tab {
 
 sub images_tab {
     print CXGN::Search::CannedForms::image_search_form($page);
+}
+
+sub template_experiment_platform_submenu {
+        my @tabs = (
+                    ['?search=template','Templates'],
+                    ['?search=experiment','Experiments'],
+                    ['?search=platform', 'Platforms']);
+        my @tabfuncs = (\&template_tab, \&experiment_tab, \&platform_tab);
+        
+        #get the search type
+        my ($search) = $page->get_arguments("search");
+        $search ||= 'template'; #default
+        
+        my $tabsel =
+          ($search=~ /template/i)          ? 0
+          : ($search =~ /experiment/i)   ? 1
+          : ($search =~ /platform/i)     ? 2
+          : $page->error_page("Invalid submenu search type '$search'.");
+        
+        print modesel(\@tabs, $tabsel); #print out the tabs
+        
+        print qq|<div>\n|;
+        $tabfuncs[$tabsel](); #call the right function for filler
+        print qq|</div>\n|;
+}
+
+sub template_tab {
+    print CXGN::Search::CannedForms::expr_template_search_form($page);
+}
+
+sub experiment_tab {
+    print CXGN::Search::CannedForms::expr_experiment_search_form($page);
+}
+
+sub platform_tab {
+    print CXGN::Search::CannedForms::expr_platform_search_form($page);
 }
