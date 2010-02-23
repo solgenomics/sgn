@@ -51,6 +51,7 @@ sub new {
     my $class = shift;
     my $dbh = shift;
     my $id = shift;
+    my $args = shift;
 
     # hardcode some stuff (BAAAAAD!)
     if ($id !~ /il6/) { return undef; }
@@ -60,6 +61,15 @@ sub new {
     $self->set_id($id);
     my ($population_id, $reference_map_id) = $self->get_db_ids();
 
+    if (exists($args->{short_name})) { 
+	$self->set_short_name($args->{short_name});
+    }
+    if (exists($args->{long_name})) { 
+	$self->set_long_name($args->{long_name});
+    }
+    if (exists($args->{abstract})) { 
+	$self->set_abstract($args->{abstract});
+    }
 
     
     if (!defined($self)) { return undef; }
@@ -87,64 +97,64 @@ sub new {
     return $self;
 }
 
-=head2 function get_short_name()
+# =head2 function get_short_name()
 
-  Synopsis:	
-  Arguments:	
-  Returns:	
-  Side effects:	
-  Description:	
+#   Synopsis:	
+#   Arguments:	
+#   Returns:	
+#   Side effects:	
+#   Description:	
 
-=cut
+# =cut
 
-sub get_short_name {
-    return "Tomato IL map";
-}
+# sub get_short_name {
+#     return "Tomato IL map";
+# }
 
-=head2 function get_long_name()
+# =head2 function get_long_name()
 
-  Synopsis:	
-  Arguments:	
-  Returns:	
-  Side effects:	
-  Description:	
+#   Synopsis:	
+#   Arguments:	
+#   Returns:	
+#   Side effects:	
+#   Description:	
 
-=cut
+# =cut
 
-sub get_long_name {
-    my $self = shift;
-    my ($population_id, $map_id) = $self->get_db_ids();
-    my $map = "ExPEN2000";
-    if ($map_id == 5) { 
-	$map="ExPEN1992";
-    }
-    return "<i>Solanum lycopersicum</i> Zamir Introgression Lines (IL) based on $map";
-}
+# sub get_long_name {
+#     my $self = shift;
+#     my ($population_id, $map_id) = $self->get_db_ids();
+#     my $map = "ExPEN2000";
+#     if ($map_id == 5) { 
+# 	$map="ExPEN1992";
+#     }
+#     return "<i>Solanum lycopersicum</i> Zamir Introgression Lines (IL) based on $map";
+# }
 
-=head2 function get_abstract()
+# =head2 function get_abstract()
 
-  Synopsis:	
-  Arguments:	
-  Returns:	
-  Side effects:	
-  Description:	
+#   Synopsis:	
+#   Arguments:	
+#   Returns:	
+#   Side effects:	
+#   Description:	
 
-=cut
+# =cut
 
-sub get_abstract {
-    my $self = shift;
-    my $abstract = 
-	"The tomato Introgression lines (ILs) are a set of nearly isogenic lines (NILs) developed by Dani Zamir through a succession of backcrosses, where each line carries a single genetically defined chromosome segment from a divergent genome. The ILs, representing whole-genome coverage of S. pennellii in overlapping segments in the genetic background of S. lycopersicum cv. M82, were first phenotyped in 1993, and presently this library consists of 76 genotypes. ";
+# sub get_abstract {
+#     my $self = shift;
+#     my $abstract = 
+# 	"The tomato Introgression lines (ILs) are a set of nearly isogenic lines (NILs) developed by Dani Zamir through a succession of backcrosses, where each line carries a single genetically defined chromosome segment from a divergent genome. The ILs, representing whole-genome coverage of S. pennellii in overlapping segments in the genetic background of S. lycopersicum cv. M82, were first phenotyped in 1993, and presently this library consists of 76 genotypes. ";
 
-    my ($population_id, $map_id) = $self->get_db_ids();
-    if ($map_id == 9) { 
-	$abstract .= " This IL map is based on markers of the F2-2000 map. ILs have also been mapped <a href=\"map.pl?map_id=il6.5&amp;show_ruler=1&amp;show_offsets=1\" >with the ExPEN1992 map as a reference</a>.";
-    }
-    elsif ($map_id ==5) { 
-	$abstract .= " The IL lines on this map have been characterized based on the markers on the 1992 tomato map. ILs have also been mapped <a href=\"map.pl?map_id=il6.9&amp;show_ruler=1&amp;show_offsets=1\" >with the ExPEN2000 map as a reference</a>. ";
-    }
+#     my ($population_id, $map_id) = $self->get_db_ids();
+#     if ($map_id == 9) { 
+# 	$abstract .= " This IL map is based on markers of the F2-2000 map. ILs have also been mapped <a href=\"map.pl?map_id=il6.5&amp;show_ruler=1&amp;show_offsets=1\" >with the ExPEN1992 map as a reference</a>.";
+#     }
+#     elsif ($map_id ==5) { 
+# 	$abstract .= " The IL lines on this map have been characterized based on the markers on the 1992 tomato map. ILs have also been mapped <a href=\"map.pl?map_id=il6.9&amp;show_ruler=1&amp;show_offsets=1\" >with the ExPEN2000 map as a reference</a>. ";
+#     }
 
-}
+# }
 
 =head2 function get_chromosome()
 

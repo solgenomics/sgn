@@ -17,6 +17,7 @@ sub new {
     my $class = shift;
     my $dbh = shift;
     my $id = shift;
+    my $args = shift;
 
     my $self = $class->SUPER::new($dbh);
 
@@ -24,15 +25,19 @@ sub new {
     $self->set_chromosome_names( "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12");
     my @lengths = ();
 
+
+    $self->set_chromosome_count(12);
+    $self->set_short_name($args->{short_name});
+    $self->set_long_name($args->{long_name});
+    $self->set_abstract($args->{abstract});
+    $self->set_temp_dir($args->{temp_dir} || "/tmp");
+    $self->set_units("MB");
+
     # we need to cache the chromosome length information on the filesystem...
     $self->cache_chromosome_lengths();
     #print STDERR "FILENAMES = ". (join " ", (map  {$_.":".$self->get_files()->{$_} } keys %{$self->get_files()}) ) ."\n";
     #print STDERR "Constructor: generating AGP chr ".$self->get_name()."\n";
 
-    $self->set_chromosome_count(12);
-    $self->set_short_name("Tomato AGP map");
-    $self->set_long_name("Tomato (Solanum lycopersicum) Accessioned Golden Path map");
-    $self->set_units("MB");
     return $self;
 }
 
@@ -125,11 +130,7 @@ sub get_chromosome_section {
     return $chr;
 }
 
-sub get_abstract { 
-    my $self =shift;
-    return "<p>The AGP map shows the sequencing progress of the international tomato genome sequencing project by listing all finished clones by estimated physical map position . Each sequencing center generates one or more AGP (Accessioned Golden Path) files and uploads them to SGN. These files contain all the sequenced BACs, their position on the chromosome, the overlaps with other BACs and other information. For a complete specification, please refer to the <a href=\"http://www.sanger.ac.uk/Projects/C_elegans/DOCS/agp_files.shtml\">Sanger AGP specification</a>. The AGP files can also be downloaded from the SGN FTP site, at <a href=\"ftp://ftp.sgn.cornell.edu/tomato_genome/agp/\">ftp://ftp.sgn.cornell.edu/tomato_genome/agp/</a>.</p> <p>Note that this map is in testing (beta), and not all features may be functional.</p>";
 
-}
 
 
 sub show_stats { 
@@ -286,8 +287,8 @@ sub can_zoom {
 
 sub cache_chromosome_lengths { 
     my $self  =shift;
-    my $vh = CXGN::VHost->new();
-    my $chr_len_cache = File::Spec->catfile($vh->get_conf("basepath"), $vh->get_conf("tempfiles_subdir"), "cview", "agp_chr_len_cache.txt");
+#    my $vh = CXGN::VHost->new();
+    my $chr_len_cache = File::Spec->catfile($self->get_temp_dir(), "agp_chr_len_cache.txt");
 
     my $LENCACHE;
     my @lengths = ();

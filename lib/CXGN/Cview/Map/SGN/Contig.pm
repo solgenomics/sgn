@@ -67,11 +67,12 @@ sub new {
 
 #    if (!defined($self)) { return undef; }
     $self->set_preferred_chromosome_width(18);
-    $self->set_short_name("Tomato FPC map SGN2009");
-    $self->set_long_name("Solanum lycopersicum Contig Map SGN2009");
+    $self->set_short_name($args->{short_name});
+    $self->set_long_name($args->{long_name});
     $self->{berkeley_db_path} = $args->{berkeley_db_path};
     $self->{temp_dir} = $args->{temp_dir} || '/tmp';
-
+    $self->set_abstract($args->{abstract});
+    $self->{marker_link} = $args->{marker_link};
     $self->set_id($id);
 
     
@@ -133,10 +134,10 @@ sub get_chromosome {
 	    $contig->set_name($c);
 	    
 	    #my $url = "/gbrowse/gbrowse/sanger_tomato_fpc/?name=$c";
-	    my $url = "/gbrowse/gbrowse/fpc_tomato_sgn_2009/?name=$c";
+	    my $url = $self->{marker_link};
 	    $contig->set_marker_name($c);
 	    $contig->set_marker_type("contig");
-	    $contig->set_url("$url");
+	    $contig->set_url("$url$c");
 	    $contig->set_offset($m->get_offset());
 	    $contig->get_label()->set_name($c);
 	    $contig->get_label()->set_url($url);
@@ -289,30 +290,17 @@ sub get_map_stats {
 
 =cut
 
-sub get_abstract {
+# sub get_abstract {
 
 
 
-#<p>This map shows the contig positions of the Sanger 2006 combined HindIII/MboI contigs, based on the information in the FPC build files. The marker positions are shown as they appear on the most current <a href="/cview/map.pl?map_id=9">EXPEN2000</a> map. </p>
-
-    return <<ABSTRACT;
-
-<p>This map shows the contig positions of the SGN2009 physical map constructed at the Arizona Genome Institute in late 2009. The marker positions shown are from the latest <a href="/cview/map.pl?map_id=9">EXPEN2000 map</a>.</p>
-
-<p>This physical map contains clones from the HindIII, EcoRI, MboI and sheared BAC library.</p>
-
-<p>This overview shows the counts of contigs along the chromosome. Click on any chromosome to view the individual contigs. More information on each contig can be obtained by by clicking on a specific contig.
-
-<p>Specific contig IDs, including contigs that are not mapped, can be searched on the <a href="/gbrowse/gbrowse/fpc_tomato_sgn_2009/">FPC viewer page</a>.</p>
-<br />
+# #<p>This map shows the contig positions of the Sanger 2006 combined HindIII/MboI contigs, based on the information in the FPC build files. The marker positions are shown as they appear on the most current <a href="/cview/map.pl?map_id=9">EXPEN2000</a> map. </p>
 
 
 
-ABSTRACT
 
 
-
-}
+# }
 
 
 

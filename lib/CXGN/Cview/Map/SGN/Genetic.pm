@@ -1,27 +1,19 @@
 
-
-
 =head1 NAME
-           
-           
-=head1 SYNOPSYS
 
-         
+CXGN::Cview::Map::SGN::Genetic - a class implementing a genetic map           
+           
 =head1 DESCRIPTION
 
+This class implements a genetic map populated from the SGN database. This class inherits from L<CXGN::Cview::Map>. 
 
 =head1 AUTHOR(S)
 
-
-=head1 VERSION
- 
-
-=head1 LICENSE
-
+Lukas Mueller <lam87@cornell.edu>
 
 =head1 FUNCTIONS
 
-This class implements the following functions:
+This class implements the following functions (for more information, see L<CXGN::Cview::Map>):
 
 =cut
 
@@ -141,6 +133,8 @@ sub get_chromosome {
 #    if (!$marker_confidence_cutoff) { $marker_confidence_cutoff=-1; }
 
     my $chromosome = CXGN::Cview::Chromosome->new();
+    $chromosome->set_name($chr_nr);
+    $chromosome->set_caption($chr_nr);
 
     my %seq_bac = ();
 

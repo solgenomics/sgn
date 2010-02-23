@@ -11,13 +11,16 @@ use CXGN::Cview::Chromosome::Glyph;
 
 sub new { 
     my $class = shift;
+    my $args = shift;
+
     my $self = $class->SUPER::new(@_);
+
 
     $self->set_chromosome_names("1", "2", "3", "4", "5", "6", "7", "8", "9" ,"10", "11", "12");
     $self->set_chromosome_lengths( (100)x12 );
     $self->set_chromosome_count(12);
-    $self->set_short_name("Tomato Sequencing");
-    $self->set_long_name("Tomato Sequencing Statistics by Chromosome");
+    $self->set_short_name($args->{short_name});
+    $self->set_long_name($args->{long_name});
     $self->set_type("project_overview");
     $self->set_units("%");
     $self->set_preferred_chromosome_width(12);
