@@ -6,7 +6,6 @@ use CXGN::People;
 use CXGN::Contact;
 use CXGN::Cookie;
 use CXGN::UserPrefs;
-use CXGN::Apache::Request;
 use CXGN::DB::Connection;
 use CXGN::Page::Widgets;
 use HTML::Entities;
