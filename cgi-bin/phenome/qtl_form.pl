@@ -192,11 +192,11 @@ sub org_pop_form {
      </tr>
      <tr>
 	<td>Population name$required:</td>
-	<td><input type="text" name="pop_name" size=42></td>    
+	<td><input type="text" name="pop_name" size=43></td>    
      </tr>
      <tr>
          <td>Population description$required:</td>
-         <td><textarea name="pop_desc" rows = 5 cols=47></textarea></td>
+         <td><textarea name="pop_desc" rows = 5 cols=44></textarea></td>
      </tr>  
      <tr>
 	<td>Female parent$required:</td>
