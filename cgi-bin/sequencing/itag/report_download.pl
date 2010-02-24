@@ -16,7 +16,9 @@ my %content_types = ( gamexml => 'text/xml',
 		      gz => 'application/octet-stream',
 		    );
 
-$pipe = CXGN::ITAG::Pipeline->open(version => $pipe);
+$pipe = CXGN::ITAG::Pipeline->open( version => $pipe,
+                                    basedir => $c->config->{'CXGN::ITAG'}->{'itag_pipeline_base'},
+                                   );
 $batch = $pipe->batch($batch);
 my $analysis = $pipe->analysis($atag);
 my $cache_dir = "CXGN::ITAG::Pipeline::Analysis::OutputValidator::$valname"->cache_dir($analysis,$batch);

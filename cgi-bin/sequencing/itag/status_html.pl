@@ -92,7 +92,10 @@ EOH
   					       },
   				   childchoices => [
   						    map {
-  						      my $p = CXGN::ITAG::Pipeline->open(version => $_);
+  						      my $p = CXGN::ITAG::Pipeline->open(
+                                                          version => $_,
+                                                          basedir => $c->config->{'CXGN::ITAG'}->{'itag_pipeline_base'},
+                                                         );
   						      [sort {$b+0 <=> $a+0} $p->list_batches]
   						    } @pipelines
   						   ],
@@ -166,7 +169,9 @@ $page->footer;
 #given a pipeline version and batch number, return a bunch of html showing its status
 sub get_status {
   my ($pipever,$batchnum) = @_;
-  my $pipe = CXGN::ITAG::Pipeline->open(version => $pipever);
+  my $pipe = CXGN::ITAG::Pipeline->open( version => $pipever,
+                                         basedir => $c->config->{'CXGN::ITAG'}->{'itag_pipeline_base'},
+                                        );
 
   my $retstring;
   my $batch = $pipe->batch($batchnum);

@@ -65,7 +65,10 @@ sub get_pipe_and_batch {
 sub get_pipe {
   my ($ver) = $page->get_encoded_arguments('pipe');
   my @args = defined $ver ? (version => $ver+0) : ();
-  my $pipe = CXGN::ITAG::Pipeline->open(@args)
+  my $pipe = CXGN::ITAG::Pipeline->open(
+      @args,
+      basedir => $c->config->{'CXGN::ITAG'}->{'itag_pipeline_base'},
+     )
     or die 'pipeline version $ver not found';
   return $pipe;
 }
