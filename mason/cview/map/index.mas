@@ -77,6 +77,9 @@ use Cache::File;
 use File::Spec;
 use CXGN::Cview::MapFactory;
 use CXGN::Cview::Map::Tools;
+use CXGN::Phenome::Population;
+use CXGN::People::Person;
+use CXGN::Login;
 
 my %marker_info;
 
@@ -107,8 +110,11 @@ if ($map_id && !$map_version_id) {
 my $map_factory = CXGN::Cview::MapFactory->new($dbh);
 my $map = $map_factory ->create({ map_version_id => $map_version_id });
 
+
 if (!$map) { missing_map_page(); }
 
+my $private = data_is_private($dbh, $map_version_id);
+ 
 my $map_fullname = $map->get_long_name();
 my $short_name   = $map->get_short_name();
 
@@ -137,7 +143,47 @@ HTML
 
 }
 
+sub data_is_private {     
+    my $dbh = shift;
+    my $map_version_id = shift;
+    
+    my $genetic_map = CXGN::Map->new($dbh, {map_version_id=>$map_version_id}); 
 
+    my $pop_id = $genetic_map->get_population_id();
+    my $pop = CXGN::Phenome::Population->new($dbh, $pop_id);
+    my $is_public = $pop->get_privacy_status();
+
+    my ($login_id, $user_type) = CXGN::Login->new($dbh)->has_session();
+    
+    print STDERR "$is_public\n";
+    
+    if ($is_public ||             
+	    $user_type eq 'curator' || 
+	    $login_id == 
+	    $pop->get_sp_person_id() 
+       )  {
+          return undef;
+    } else {
+       
+	   my $owner_id = $pop->get_sp_person_id(); 
+    
+
+	   my $submitter = CXGN::People::Person->new($dbh, $owner_id);
+    	   my $submitter_name = $submitter->get_first_name()." ".$submitter->get_last_name();
+    	   my $submitter_link = qq |<a href="/solpeople/personal-info.pl?sp_person_id=$owner_id">$submitter_name</a> |;
+       
+	   my $private = qq | <p>This genetic map is not public yet. 
+       	              If you would like to know more about this data, 
+                      please contact the owner of the data: <b>$submitter_link</b> 
+                      or email to SGN:
+                      <a href=mailto:sgn-feedback\@sgn.cornell.edu>
+                      sgn-feedback\@sgn.cornell.edu</a>\n"
+                    </p> |;
+
+         return $private;
+	 } 
+    
+}
 
 # Historic Perl comment by Robert Ahrens, ca. 2003
 #
@@ -160,9 +206,12 @@ HTML
 
 <div id="pagetitle2"><center><h3><%$map_fullname%></h3></center></div>
 
+% if ($private) {
+% print $private;
+%} 
+%else {
 
 <& /cview/map/overview.mas, map=>$map, size=>$size,  hilite_markers => [ @hilite_markers ] &>
-
 
 % if ($message) { 
 %    print "<div class=\"boxbgcolor5\"><b>NOTE:</b><br />$message</div>\n";
@@ -174,5 +223,5 @@ HTML
 
 <& /page/comments.mas, object_type=>"map", object_id=>$map_version_id,  referer=>$referer &>
 
-
+%}
 
