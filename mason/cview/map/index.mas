@@ -156,10 +156,6 @@ HTML
 
 </%perl>
 
-<h1> BLABLA </h1>
-
-
-
 <& /page/page_title.mas, title=> $short_name &>
 
 <div id="pagetitle2"><center><h3><%$map_fullname%></h3></center></div>
