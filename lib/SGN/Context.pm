@@ -31,6 +31,7 @@ use File::Basename;
 use File::Spec;
 use File::Path ();
 use Memoize ();
+use Scalar::Util qw/blessed/;
 use URI ();
 
 use DBIx::Connector;
@@ -39,6 +40,7 @@ use JSAN::ServerSide;
 use HTML::Mason::Interp;
 
 use SGN::Config;
+use SGN::Exception;
 
 =head2 config
 
@@ -555,8 +557,70 @@ sub js_import_uris {
 }
 
 
-SGN::Context->meta->make_immutable;
+=head2 error_notify
 
+  Usage: $c->error_notify( 'died', 'omglol it died so hard' );
+  Desc : If configured as a production_server, sends an email to the
+         development team with the given error message, plus a stack
+         backtrace and full information about the current web request.
+  Args : error verb (e.g. 'died'), message to send to website developers
+  Ret  : nothing
+  Side Effects: sends email to development team
+  Example:
+
+   $c->error_notify( 'made a little mistake', <<EOM );
+  My program made a little mistake. See backtrace and request data below.
+  EOM
+
+=cut
+
+sub error_notify {
+    my ( $self, $error_verb, @args ) = @_;
+
+    return unless $self->get_conf('production_server');
+
+    $error_verb ||=
+      'died or errorpaged (cause of death not indicated by caller)';
+
+    my $developer_message = @_ ? "@_"
+        : 'CXGN::Apache::Error::notify called. The error may or may not have been anticipated (no information provided by caller).';
+
+    my $page_name = basename( $0 );
+
+    CXGN::Contact::send_email(
+        "$page_name $error_verb",
+        $developer_message,
+        'bugs_email',
+       );
+
+    return;
+}
+
+sub handle_exception {
+    my $self = shift;
+
+    my ($exception) = @_;
+    if( blessed( $exception )) {
+        $self->error_notify('died',@_)
+            unless $exception->can('notify') && ! $exception->notify;
+
+        $self->forward_to_mason_view( '/site/error/exception.mas', exception => $exception );
+    } else {
+        $self->error_notify('died',@_);
+    }
+
+}
+
+sub throw {
+    my $self = shift;
+    die SGN::Exception->new( @_ );
+}
+
+__PACKAGE__->meta->make_immutable;
+
+
+
+##############################################################################3
 
 # tiny DBIx::Connector subclass that makes sure search paths are set
 # on database handles before returning them

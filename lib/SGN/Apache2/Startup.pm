@@ -26,7 +26,6 @@ use Apache::DBI;
 
 #use CXGN::Apache::Registry for request dispatch to our cgi-style scripts
 use CXGN::Apache::Registry;
-use CXGN::Apache::Error;
 
 ################
 
@@ -92,8 +91,9 @@ sub import {
     # directory.  with no arguments, will make and chmod the main
     # tempfiles directory
     my $temp_subdir = $vhost->path_to( $vhost->tempfiles_subdir() );
-    $vhost->chown_generated_dir( $temp_subdir ); #< force-set the permissions
-                                        #  on the main tempfiles dir
+    $vhost->chown_generated_dir( $temp_subdir ); #< force-set the
+                                                 # permissions on the
+                                                 # main tempfiles dir
 
     # also chown any subdirs that are in the temp dir.
     # this line should be removed eventually, the application itself should take
@@ -140,15 +140,41 @@ EOS
             ._apache_access_control_str( $cfg )
             ."</Directory>\n",
 
+
+            # set up HTML backtraces if this is not a production server
+            ( $cfg->{production_server} ? () : <<EOS ),
+             <Perl>
+                use CGI::Carp::DebugScreen
+                       debug => 1,
+                       environment => 1,
+                       style => qq|<style type="text/css">\n\\\@import url("$cfg->{static_site_files_url}/inc/debugscreen.css");\n</style>|;
+             </Perl>
+EOS
+            # set up our site-specific die handlers to chain in front
+            # of any existing die handlers that are set up
+            <<'EOS',
+            <Perl>
+               { my $old_die = $SIG{__DIE__} || sub {}; #< might be set by DebugScreen above
+                 $SIG{__DIE__} = sub {
+                     SGN::Context->instance->handle_exception(@_);
+                     $old_die->(@_);
+                 };
+               }
+            </Perl>
+EOS
+
+            # email address for apache to include in really bad error messages
+            qq|ServerAdmin $cfg->{email}|,
+
             #when a page is not found, go here
-            "ErrorDocument 404 $cfg->{error_document}",
+            "ErrorDocument 404 $cfg->{error_document}?code=404",
 
             # when a script dies, go here. this should usually not be
             # needed, since dies will be handled by
             # CXGN::Apache::Registry, but sometimes things break
             # badly. LEAVE THE INITIAL QUOTE IN (unless replacing this
             # with a path to a file)
-            'ErrorDocument 500 "Internal server error: The server encountered an internal error or misconfiguration and was unable to complete your request. Please feel free to contact us at sgn-feedback@sgn.cornell.edu and inform us of the error."',
+            "ErrorDocument 500 $cfg->{error_document}?code=500",
 
 
             # serve files directly from /data/shared if configured

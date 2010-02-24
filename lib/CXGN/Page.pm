@@ -288,109 +288,35 @@ sub client_redirect {
 }
 
 
-=head2 message_page_html
-
-returns an html string with a header, message header and message body, and footer to the user and stops execution, without sending an error email. $message_header cannot contain HTML. $message_body is optional and can contain HTML.
-
-	#Example
-	$page->message_page($message_header,$message_body);
-
-=cut
-
-# this message function added by john because some errors are expected and not
-# worthy of an email. entities are encoded because sometimes a message may
-# contain parameters submitted by user, which can contain evil things. for the
-# message itself, i have removed encoding because it's nice to be able to
-# provide a link in this area sometimes (like a link to the new marker search
-# page).
-sub message_page_html {
-    my $self = shift;
-    my ( $message_header, $message_body ) = @_;
-    $message_header ||= 'message_page called';
-    $message_header = encode_entities($message_header);
-    my $html = $self->header_html( 'Message page', $message_header );
-    if ($message_body) {
-        $html.= "$message_body<br /><br />";
-    }
-    $html .= $self->get_footer();
-    return $html;
-}
-
 =head2 message_page
 
-just calls print on $self->message_page_html(@_)
+deprecated. do not use in new code.
 
 =cut
 
 sub message_page {
-    my $self = shift;
-    $self->send_content_type_header();
-    print $self->message_page_html(@_);
-    exit(0);
-}
+    my ( $self, $message_header, $message_body ) = @_;
+    SGN::Context->instance->throw( title    => $message_header,
+                                   message  => $message_body,
+                                   is_error => 0,
+                                 );
 
-=head2 error_page_html
-
-Uses CXGN::Apache::Error::notify and message_page to print a header, error explanation, and footer, and send an email to us if (and only if) we are configured as the production server. $client_message_body is optional, can contain HTML, and is a more explanatory message for the client. $error_verb is optional and can be something like "found invalid ID". $developer_message is optional and is just a more descriptive message to be seen only by the developers, not the user.
-
-	#Example
-	$page->error_page($client_message_header,$client_message_body,$error_verb,$developer_message);
-
-=cut
-
-sub error_page_html {
-    my $self = shift;
-    my ( $message_header, $message_body, $error_verb, $developer_message ) = @_;
-    $message_header ||= 'Sorry, there was an error handling your request.';
-    $message_body ||= 'An error report has been sent to the development team.';
-    $error_verb   ||= "errorpaged";
-    $developer_message ||= $message_header;
-    my $anticipated = "Anticipated error\n-----------------\n";
-    if ( $error_verb eq 'died' ) {
-        $anticipated = "Unanticipated error\n-------------------\n";
-    }
-    $developer_message = "$anticipated$developer_message\n";
-    if ( $self->{name} ) {
-        $developer_message .= "in $self->{name}\n";
-    }
-    if ( $self->{author} ) {
-        $developer_message .= "by $self->{author}\n";
-    }
-    my ( $subject, $body, $time_of_error ) =
-      CXGN::Apache::Error::notify( $error_verb, $developer_message );
-
-    # for development sites, print lots of debug information
-    my $vhost_conf = SGN::Context->new();
-    unless ( $vhost_conf->get_conf('production_server') ) {
-        $body .= CXGN::Apache::Request::as_verbose_string();
-        $subject = newlines_to_brs( encode_entities($subject) );
-        $body = newlines_to_brs( encode_entities($body) );
-        $message_body .=
-"<div class=\"developererrorbox\">Detailed error report (development sites only):<br /><br /><span class=\"monospace\">$subject<br /><br />$body</span></div>";
-    }
-
-    # print a form so that a user can comment on the error they received
-    my $encoded_subject = uri_escape($subject);
-
-#the following link is hardcoded with an absolute path to SGN because ALL sites may use this module and they may not have an error submission page available at /tools/contact.pl
-    $message_body .=
-"If you wish to provide us with more information and be notified when this error is fixed, please <a href=\"http://www.sgn.cornell.edu/tools/contact.pl?referred=1&amp;subject=$encoded_subject\">contact us</a>.";
-
-    # ok, now just call message page with what we've accumulated
-    return $self->message_page_html( $message_header, $message_body );
 }
 
 =head2 error_page
 
-just calls print on error_page_html(@_)
+deprecated, do not use in new code.
 
 =cut
 
 sub error_page {
     my $self = shift;
-    $self->send_content_type_header('text/html');
+    my ( $message_header, $message_body, $error_verb, $developer_message ) = @_;
 
-    print $self->error_page_html(@_);
+    SGN::Context->instance->throw( message => $message_body,
+                                   developer_message => $developer_message,
+                                   title => $message_header,
+                                 );
 }
 
 =head1 OTHER METHODS

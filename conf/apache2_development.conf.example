@@ -14,8 +14,6 @@
         
        use SGN::Apache2::Startup vhost => 1;
 
-       $SIG{__DIE__}  = \&CXGN::Apache::Error::cxgn_die_handler;
-       $SIG{__WARN__} = \&CXGN::Apache::Error::cxgn_warn_handler;
     </Perl>
 
 </VirtualHost>

@@ -92,6 +92,9 @@ my $build = $class->new(
         #         'Bio::Tools::Run::Primer3' => 0,
         'Cache::File' => 0,
 
+        'CGI'                 => 0,
+        'CGI::Carp::DebugScreen' => '0.16',
+
         #         'CXGN::Accession' => 0,
         #         'CXGN::Accession::Tools' => 0,
         #         'CXGN::Alignment' => 0,
@@ -279,6 +282,7 @@ my $build = $class->new(
         'IO::String'              => 0,
         'JSAN::ServerSide'        => '==0.06',
         'JSON'                    => 0,
+        'JSON::XS'                => '2.24',
         'List::Util'              => 0,
         'LWP::UserAgent'          => 0,
         'Math::Round::Var'        => 0,
@@ -296,6 +300,7 @@ my $build = $class->new(
         'Tie::Function'           => 0,
         'Tie::UrlEncoder'         => 0,
         'Time::HiRes'             => 0,
+        'Try::Tiny'               => 0,
         'URI'                     => 0,
         'URI::Escape'             => 0,
         'XML::Generator'          => 0,
