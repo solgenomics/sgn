@@ -587,6 +587,7 @@ sub error_notify {
 
     my $page_name = basename( $0 );
 
+    require CXGN::Contact;
     CXGN::Contact::send_email(
         "$page_name $error_verb",
         $developer_message,
