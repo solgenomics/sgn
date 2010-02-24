@@ -65,6 +65,8 @@ my $id = $unigene->get_unigene_id();
 my $expression_html;
 my @template_ids;
 
+my $default_message = '<i><font color="gray">data not available</basefont></i>';
+
 if (defined $id) {
 
    ## First, get the microarray data for TOM1 using old functions
@@ -223,19 +225,30 @@ if (defined $id) {
        my $templ_html = $template_html_h{$templ_name};
        my $platf_html = $platform_html_h{$templ_name};
 
-       my %expression_by_exp = %{ $experiment_html_h{$templ_name} };
+       if (defined $experiment_html_h{$templ_name}) {
+	   my %expression_by_exp = %{ $experiment_html_h{$templ_name} };
+	   my @exp_list = keys %expression_by_exp;
 
-       my $e = 0;
-       foreach my $exp_name (sort keys %expression_by_exp) {
-	   my @experiment_data = @{ $expression_by_exp{$exp_name} };
+	   my $e = 0;
+	   if (defined $exp_list[0]) {
+	       foreach my $exp_name (sort keys %expression_by_exp) {
+		   my @experiment_data = @{ $expression_by_exp{$exp_name} };
 	   
-	   if ($e == 0) {
-	       push @exp_data, [$platf_html, $templ_html, @experiment_data];
-	       $e = 1;
+		   if ($e == 0) {
+		       push @exp_data, [$platf_html, $templ_html, @experiment_data];
+		       $e = 1;
+		   }
+		   else {
+		       push @exp_data, ['', '', @experiment_data];
+		   }
+	       }
 	   }
 	   else {
-	       push @exp_data, ['', '', @experiment_data];
+	       push @exp_data, [$platf_html, $templ_html, $default_message, $default_message, $default_message];
 	   }
+       }
+       else {
+	   push @exp_data, [$platf_html, $templ_html, $default_message, $default_message, $default_message];
        }
        
        ## Insert an empty line between templates
