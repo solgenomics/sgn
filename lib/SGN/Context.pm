@@ -36,6 +36,8 @@ use URI ();
 use DBIx::Connector;
 use JSAN::ServerSide;
 
+use HTML::Mason::Interp;
+
 use SGN::Config;
 
 =head2 config
