@@ -90,7 +90,7 @@ sub send_email {
 "CXGN::Contact: Email notification sent from $mailfrom to $mailto.\n";
             }
             else {
-                print STDERR "CXGN::Contact: UNABLE TO SEND EMAIL NOTIFICATION";
+                print STDERR "CXGN::Contact: UNABLE TO SEND EMAIL NOTIFICATION\n";
             }
         }
     }
