@@ -286,6 +286,7 @@ my $build = $class->new(
         'JSON::Any'               => 0,
         'List::Util'              => 0,
         'LWP::UserAgent'          => 0,
+        'Mail::Sendmail'          => 0,
         'Math::Round::Var'        => 0,
         'Memoize'                 => 0,
         'Module::Build'           => '0.36',
