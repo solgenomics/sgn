@@ -193,7 +193,7 @@ elsif ($args{action} eq "store") {
     # check stuff
 
     # do stuff
-    store($dbh, $page, $image, %args);
+    store($dbh, $page, $image, %args, $sp_person_id);
 }
 else { 
     $page->message_page("No valid parameters were supplied.");
@@ -359,7 +359,7 @@ sub confirm {
 
 #  store($dbh, $page, $file, $image, $type, $type_id, $refering_page, $sp_person_id);
 sub store { 
-    my ($dbh, $page, $image, %args) = @_;
+    my ($dbh, $page, $image, %args, $sp_person_id) = @_;
     my $vh = CXGN::VHost->new();
     my $temp_image_dir = $vh->get_conf("basepath")."/".$vh->get_conf("tempfiles_subdir") ."/temp_images";
     $image -> set_sp_person_id($sp_person_id);
