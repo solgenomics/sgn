@@ -575,7 +575,8 @@ sub js_import_uris {
 =cut
 
 sub error_notify {
-    my ( $self, $error_verb, @args ) = @_;
+    my $self       = shift;
+    my $error_verb = shift;
 
     return unless $self->get_conf('production_server');
 
@@ -597,10 +598,12 @@ sub error_notify {
     return;
 }
 
+# called by the $SIG{__DIE__} handler with the same arguments as die.
+# handles exception objects as well as regular dies.
 sub handle_exception {
     my $self = shift;
 
-    my ($exception) = @_;
+    my ( $exception ) = @_;
     if( blessed( $exception )) {
         $self->error_notify('died',@_)
             unless $exception->can('notify') && ! $exception->notify;
@@ -609,16 +612,42 @@ sub handle_exception {
     } else {
         $self->error_notify('died',@_);
     }
-
 }
+
+=head2 throw
+
+  Usage: $c->throw( message => 'There was a special error',
+                    developer_message => 'the frob was not in place',
+                    notify => 0,
+                  );
+  Desc : creates and throws an L<SGN::Exception> with the given attributes
+  Args : key => val to set in the new L<SGN::Exception>,
+         or if just a single argument is given, just calls die @_
+  Ret  : nothing.
+  Side Effects: throws an exception
+  Example :
+
+      $c->throw('foo'); #equivalent to die 'foo';
+
+      $c->throw( title => 'Special Thing',
+                 message => 'This is a very strange thing, you see ...',
+                 developer_message => 'the froozle was 1, but fog was 0',
+                 notify => 0,   #< does not send an error email
+                 is_error => 0, #< is not really an error, more of a message
+               );
+
+=cut
 
 sub throw {
     my $self = shift;
-    die SGN::Exception->new( @_ );
+    if( @_ > 1 ) {
+        die SGN::Exception->new( @_ );
+    } else {
+        die @_;
+    }
 }
 
 __PACKAGE__->meta->make_immutable;
-
 
 
 ##############################################################################3
