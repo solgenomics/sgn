@@ -283,6 +283,7 @@ my $build = $class->new(
         'JSAN::ServerSide'        => '==0.06',
         'JSON'                    => 0,
         'JSON::XS'                => '2.24',
+        'JSON::Any'               => 0,
         'List::Util'              => 0,
         'LWP::UserAgent'          => 0,
         'Math::Round::Var'        => 0,

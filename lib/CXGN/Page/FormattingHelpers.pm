@@ -8,7 +8,8 @@ use HTML::Entities;
 use Storable qw/dclone/;
 use Config::General;
 
-use JSON;
+use JSON::Any;
+my $json = JSON::Any->new;
 
 use CXGN::Tools::List qw/max all/;
 use CXGN::Tools::Text qw/commify_number/;
@@ -1454,7 +1455,7 @@ sub _ml_render {
     $button_html .= qq|<div id="$group_id" class="multilevel_modesel_level_$depth multilevel_modesel$active"> <table style="width: $width_rel"><tr>$group_html</tr></table></div>\n|;
   }
 
-  my $js_idx = to_json(\%id_based_index);
+  my $js_idx = $json->to_json(\%id_based_index);
 
 #   my $js_parents = objToJson(\%parent_ids);
 #   my $js_children = objToJson(do {
@@ -1465,8 +1466,8 @@ sub _ml_render {
 #     }
 #     $children
 #   });
-  my $js_active_buttons = to_json( \@active_button_ids );
-  my $js_active_groups  = to_json( \@active_group_ids  );
+  my $js_active_buttons = $json->to_json( \@active_button_ids );
+  my $js_active_groups  = $json->to_json( \@active_group_ids  );
 
   return <<EOH;
 <script>
