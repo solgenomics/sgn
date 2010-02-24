@@ -17,18 +17,18 @@ if( $error_code == 404 ) {
         # try to send the dev team an email before displaying the 404
         # page
         try {
-            require Mail::SendMail;
-            Mail::SendMail::sendmail(
+            require Mail::Sendmail;
+            Mail::Sendmail::sendmail(
                 To      => $c->get_conf('bugs_email'),
                 From    => 'www@'.$ENV{HTTP_HOST},
                 Subject => "Broken link on $ENV{HTTP_REFERER}: $ENV{REQUEST_URI}",
                 Body    => format_env( %ENV ),
-               );
+               ) or die $Mail::Sendmail::error;
         } catch {
-            warn __PACKAGE__.": could not send 404 broken link email";
+            warn "$0: could not send 404 broken link email: $_";
         };
 
-        $c->forward_to_mason_view( '/site/error/404.mas', message => 'An error report has been sent to the development team' );
+        $c->forward_to_mason_view( '/site/error/404.mas', message => 'We apologize for the inconvenience. An error report has been sent to the development team.' );
     } else {
         $c->forward_to_mason_view( '/site/error/404.mas', message => 'You may want to contact the referring site and inform them of this error.');
     }
