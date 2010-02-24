@@ -150,14 +150,19 @@ EOS
                        style => qq|<style type="text/css">\n\\\@import url("$cfg->{static_site_files_url}/inc/debugscreen.css");\n</style>|;
              </Perl>
 EOS
+
             # set up our site-specific die handlers to chain in front
-            # of any existing die handlers that are set up
+            # of any existing die handlers that are set up, and make a
+            # backtrace
             <<'EOS',
             <Perl>
                { my $old_die = $SIG{__DIE__} || sub {}; #< might be set by DebugScreen above
                  $SIG{__DIE__} = sub {
                      SGN::Context->instance->handle_exception(@_);
-                     $old_die->(@_);
+                     my $mess = Carp::longmess();
+                     $mess =~ s|[^\n]+\n||;
+                     $mess =~ s|[^\n]+RegistryCooker.+||s;
+                     $old_die->( @_, $mess );
                  };
                }
             </Perl>
