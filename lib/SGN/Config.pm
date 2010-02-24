@@ -93,5 +93,10 @@ my $defaults =
      #path to mason global lib relative to site basepath
      global_mason_lib         => '../cxgn-mason',
 
+     # itag pipeline paths
+     'CXGN::ITAG' => {
+         itag_pipeline_base       => '/data/shared/tomato_genome/itagpipeline/itag',
+     },
+
     };
 sub defaults { shift->SUPER::defaults( $defaults, @_ )}
