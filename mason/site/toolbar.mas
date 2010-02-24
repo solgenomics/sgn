@@ -21,6 +21,7 @@
 
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/glossarysearch.pl">Glossary</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/direct_search.pl?search=images">Images</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/direct_search.pl?search=template">Expression</a></td></tr>
     </table>
 
     </div>
