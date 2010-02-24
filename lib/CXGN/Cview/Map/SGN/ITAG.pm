@@ -23,7 +23,7 @@ sub new {
     $self->set_abstract($args->{abstract} || "");
     $self->set_short_name($args->{short_name} || "ITAG map");
     $self->set_long_name($args->{long_name});
-    
+    $self->set_temp_dir($args->{temp_dir});
 
     $self->set_id($id);
 
