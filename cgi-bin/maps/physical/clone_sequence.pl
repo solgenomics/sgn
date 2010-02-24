@@ -1,6 +1,7 @@
 use strict;
 use CXGN::Genomic::Clone;
 use CXGN::Tools::Text;
+use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw/page_title_html html_break_string/;
 use CXGN::Genomic::Tools qw/clone_annotation_sequence/;
 

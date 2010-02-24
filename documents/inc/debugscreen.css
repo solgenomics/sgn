@@ -1,0 +1,108 @@
+body {
+  font-family: "Bitstream Vera Sans", "Trebuchet MS", Verdana,
+  Tahoma, Arial, helvetica, sans-serif;
+  color: #000;
+  background-color: #fff;
+  margin: 0px;
+  padding: 0px;
+}
+:link, :link:hover, :visited, :visited:hover {
+  color: #333;
+}
+div#page {
+  position: relative;
+  background-color: #fff;
+  border: 1px solid #600;
+  padding: 10px;
+  margin: 10px;
+  -moz-border-radius: 10px;
+}
+div.navi {
+  color: #333;
+  padding: 0 4px;
+}
+div.box {
+  background-color: #fff;
+  border: 3px solid #fc9;
+  padding: 8px;
+  margin: 4px;
+  margin-bottom: 10px;
+  -moz-border-radius: 10px;
+}
+h1 {
+  margin: 0;
+  color: #666;
+}
+h2 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: medium;
+  font-weight: bold;
+  text-decoration: underline;
+}
+table.code {
+  font-size: .8em;
+  line-height: 120%;
+  font-family: 'Courier New', Courier, monospace;
+  background-color: #fc9;
+  color: #333;
+  border: 1px dotted #600;
+  margin: 8px;
+  width: 90%;
+  border-collapse: collapse;
+}
+table.code tr.hit {
+  font-weight: bold;
+  color: #000;
+  background-color: #f90;
+}
+table.code td {
+  padding-left: 1em;
+  line-height: 130%;
+}
+table.code td.num {
+  width: 4em;
+  text-align:right
+}
+table.watch {
+  line-height: 120%;
+}
+table.watch th {
+  font-weight: normal;
+  color: #000;
+  background-color: #fc9;
+  padding: 0 1em;
+}
+table.watch td {
+  line-height: 130%;
+  padding: 2px;
+}
+div.scrollable {
+  font-size: .8em;
+  overflow: auto;
+  margin-left: 1em;
+}
+pre.raw_error {
+  background-color: #fff;
+  border: 3px solid #fc9;
+  padding: 8px;
+  margin: 4px;
+  margin-bottom: 10px;
+  -moz-border-radius: 10px;
+  font-size: .8em;
+  line-height: 120%;
+  font-family: 'Courier New', Courier, monospace;
+  overflow: auto;
+}
+ul#stacktraces, ul#traces, ul#modules ul#watch {
+  margin: 1em 1em;
+  padding: 0 1em;
+}
+table#environment {
+  margin: 0 1em;
+}
+p.footer {
+  margin: 0 1em;
+  font-size: .8em;
+  text-align:right;
+}
