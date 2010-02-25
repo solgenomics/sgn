@@ -129,9 +129,18 @@ EOHTML
 if( in( $sp->get_user_type(), qw/submitter curator/ ) )
 {
   print info_section_html(title => 'QTL data submission', contents => <<EOHTML);
-<a href="/phenome/qtl_form.pl">Go to the QTL data submission pages</a>
+<a href="/phenome/qtl_form.pl">Upload and analyse your QTL data</a>
 EOHTML
 }
+
+my @pops = CXGN::Phenome::Population->my_populations($sp_person_id);
+    
+if (@pops) {
+    my $pop_list = my_populations();
+    print info_section_html(title => 'Populations', contents => $pop_list);
+}
+   
+
 
 if( $sp->get_user_type() eq 'curator' )
 {
@@ -176,7 +185,8 @@ if ($sp->get_user_type() =~ /submitter|curator|sequencer/i) {
 	$locus_editor_info .= qq { <a href="/phenome/locus_display.pl?locus_id=$locus_id&amp;action=view">$symbol</a> };
     }
     if ($more) { $locus_editor_info .=  qq|<br><b>and <a href="/search/locus_search.pl?w8e4_editor=$sp_person_id">$more more</a></b><br />|; }
-    
+   
+
     print info_section_html(title => 'Loci with Editor Privileges', contents => $locus_editor_info);
 
      my @annotated_loci = CXGN::Phenome::Locus::get_locus_ids_by_annotator($dbh, $sp_person_id);
@@ -287,3 +297,18 @@ sub tpf_agp_upload_forms {
 EOHTML
 }
 
+
+sub my_populations {
+    my $pop = shift;
+    my $pop_list;
+    
+    foreach my $pops (@pops) {
+	my $pop_name = $pops->get_name();
+	my $pop_id = $pops->get_population_id();
+	my $is_public = $pops->get_privacy_status();
+	if ($is_public) {$is_public = 'is publicly available';}
+	if (!$is_public) {$is_public = 'is not publicly available yet';}
+	$pop_list .= qq |<a href="/phenome/population.pl?population_id=$pop_id">$pop_name</a> <i>($is_public)</i><br/>|;	   
+    }
+    return $pop_list;
+}
