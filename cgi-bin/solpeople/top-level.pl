@@ -136,7 +136,7 @@ EOHTML
 my @pops = CXGN::Phenome::Population->my_populations($sp_person_id);
     
 if (@pops) {
-    my $pop_list = my_populations();
+    my $pop_list = my_populations(@pops);
     print info_section_html(title => 'Populations', contents => $pop_list);
 }
    
@@ -299,7 +299,7 @@ EOHTML
 
 
 sub my_populations {
-    my $pop = shift;
+    my @pops = @_;
     my $pop_list;
     
     foreach my $pops (@pops) {
