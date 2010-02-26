@@ -84,7 +84,7 @@
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/tools/fastmapping/">Fast Mapping</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/tools/caps_designer/caps_input.pl">CAPS Designer</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/tools/seedbac/">Seed BAC Finder</a></td></tr>
-
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/qtl">QTL Mapping</a></td></tr>
        <tr><td class="toolbar_item"><span class="toolbar_item">Molecular Biology</span></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/tools/sigpep_finder/input.pl">Signal Peptide Finder</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/tools/insilicopcr">In Silico PCR</a></td></tr>
