@@ -128,10 +128,7 @@ sub itag_releases_html {
     my $conf_name = $tag.'_genomic';
     my $modtime = strftime('%b %e, %Y',gmtime($r->dir_modtime));
     my $conf_file = $r->get_file_info('gbrowse_genomic_conf');
-    my $ftp_link = $r->dir;
-    my $ftpsite_root = $page->get_conf('ftpsite_root');
-    $ftp_link =~ s!^$ftpsite_root/*!!;
-    $ftp_link = a({href=>"ftp://ftp.sgn.cornell.edu/$ftp_link"},'[FTP]');
+    my $ftp_link = itag_release_ftp_link($r);
     my $gb_root = "gbrowse/$conf_name/";
     my $loading_span = span({class=>'ghosted'},'loading');
     my $gb_link   = -f $conf_file->{file} ? a({href => $gb_root},'[GBrowse]')
@@ -164,6 +161,20 @@ sub itag_releases_html {
   }
 }
 
+sub itag_release_ftp_link {
+    my ($r) = @_;
+
+    #return ghosted link if files are not world-readable
+    return '<span class="ghosted" title="bulk files not publicly released">[FTP]</span>'
+        unless (stat($r->get_file_info('combi_genomic_gff3')->{file}))[2] & 04;
+
+    my $ftp_link = $r->dir;
+    my $ftpsite_root = $page->get_conf('ftpsite_root');
+    $ftp_link =~ s!^$ftpsite_root/*!!;
+    $ftp_link = a({href=>"ftp://ftp.sgn.cornell.edu/$ftp_link"},'[FTP]');
+
+    return $ftp_link;
+}
 
 sub clone_sequences_html {
   my ($dbh,$chrnum) = @_;
