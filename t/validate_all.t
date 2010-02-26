@@ -64,7 +64,19 @@ BEGIN {
              "insitu search page" => "/insitu/search.pl",
              "insitu search" => "/insitu/search.pl?w773_experiment_name=&w773_exp_tissue=&w773_exp_stage=&w773_exp_description=&w773_probe_name=&w773_probe_identifier=&w773_image_name=&w773_image_description=&w773_person_first_name=&w773_person_last_name=&w773_organism_name=&w773_common_name=#",
              "insitu detail page" => "/insitu/detail/experiment.pl?experiment_id=89&action=view",
-             "alignment viewer input page" => "/tools/align_viewer/",
+	     "alignment viewer input page" => "/tools/align_viewer/",
+	     "gem search page for templates" => "/search/direct_search.pl?search=template",
+	     "gem search page for experiments" => "/search/direct_search.pl?search=experiment",
+	     "gem search page for platforms" => "/search/direct_search.pl?search=platform",
+	     "gem results page for templates" => "/search/gem_template_search.pl?w616_template_parameters=AB",
+	     "gem results page for experiments" => "/search/gem_experiment_search.pl?w932_experiment_parameters=leaf",
+	     "gem results page for platforms" => "/search/gem_platform_search.pl?w4b9_template_parameters=affy",
+	     "gem detail page for template" => "/gem/template.pl?id=13",
+	     "gem detail page for platform" => "/gem/platform.pl?id=1",
+	     "gem detail page for experimental design" => "/gem/experimental_design.pl?id=1",
+	     "gem detail page for experiment" => "/gem/experiment.pl?id=1",
+	     "gem detail page for target" => "/gem/target.pl?id=49",
+	     "biosource detail page for sample" => "/biosource/sample.pl?id=1",
 	    );
 
 
