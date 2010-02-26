@@ -182,14 +182,14 @@ EOH
  		my $blast_html_line = ["<b>".$blastdb_names{$blastdb_id}."</b>", $blastdb_prog{$blastdb_id}, $match_id_link, $score, 
  				       $evalue, $identity, "$alig_length bp ($span_perc)", $frame];
  		push @blast_html, $blast_html_line;
- 		push @blast_html, ["<font color='gray'><b>Description:</font></b>", 
- 				   {colspan => 7, align => 'left', content => $defline_format}];
+ 		push @blast_html, ["<font color='gray'><b>Description:</b></font>", 
+ 				   {colspan => 7, content => $defline_format}];
  		$annotation_count{'blast'}++;   
 
  	    } else {
  		my $default = '<font color="darkslategray"><i>No significant hits (or none blast was used over this dataset)</i></font>';
  		my $blast_html_default = [ 
-		                           '<b>' . $blastdb_names{$blastdb_id} . '<b>', 
+		                           '<b>' . $blastdb_names{$blastdb_id} . '</b>', 
                                            $blastdb_prog{$blastdb_id}, 
  					   { 
                                              colspan => 6, 

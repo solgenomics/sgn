@@ -54,7 +54,7 @@ use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columna
 my $basic_info_content;
 my $exp_accession;
 
-my $default_message = '<i><font color="gray">data not available</basefont></i>';
+my $default_message = '<i><font color="gray">data not available</font></i>';
 
 ## If there aren't any experiment_row that comes from experimental_design_detail.mas, it will return a message.
 

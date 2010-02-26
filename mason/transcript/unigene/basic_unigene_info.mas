@@ -125,9 +125,9 @@ if (defined $ARGS{'unigene'}) {
     	   <tr> <td width="25%"> <b>Unigene ID: </b>      </td> <td> $accession </td></tr>
 	   <tr> <td width="25%"> <b>Unigene Build: </b>   </td> <td> $unigene_build_name_html </td></tr>
 	   <tr> <td width="25%"> <b>Date: </b>            </td> <td> $build_date </td></tr>
-           <tr> <td width="25%"> <b>Organism: </b>        </td> <td> $organism_html_list </td><td>
-	   <tr> <td width="25%"> <b>Alternative ID:</b>   </td> <td> $unigene_alternate_id </td><td>
-	   <tr> <td width="25%"> <b>mRNA sequence:</b>    </td> <td> Length: $seq_length bp </td><td>
+           <tr> <td width="25%"> <b>Organism: </b>        </td> <td> $organism_html_list </td></tr>
+	   <tr> <td width="25%"> <b>Alternative ID:</b>   </td> <td> $unigene_alternate_id </td></tr>
+	   <tr> <td width="25%"> <b>mRNA sequence:</b>    </td> <td> Length: $seq_length bp </td></tr>
    </table>
    
    <br>
