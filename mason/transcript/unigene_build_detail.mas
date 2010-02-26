@@ -55,7 +55,6 @@ $unigene_build
 </%perl>
 
 
-<br>
 
 <& 
    '/transcript/unigene_build/basic_unigene_build_info.mas',

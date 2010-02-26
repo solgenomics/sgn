@@ -68,7 +68,7 @@ if (defined $ARGS{'unigene_build'}->get_unigene_build_id) {
   
    my $build_name = $unigene_build->get_organism_group_name();
    my $build_nr = $unigene_build->get_build_nr();
-   $unigene_build_name = $build_name." #".$build_nr;
+   $unigene_build_name = $build_name." ".$build_nr;
    my $build_date = $unigene_build->get_build_date();
    my $status = $unigene_build->get_status();
    my $status_html;
@@ -135,17 +135,18 @@ if (defined $ARGS{'unigene_build'}->get_unigene_build_id) {
 	   <tr> <td> <b>Date: </b>                       </td> <td> $build_date </td></tr>
            <tr> <td> <b>Status: </b>                     </td> <td> $status_html </td></tr>
            <tr> <td> <b>Organism: </b>                   </td> <td> $organism_html_list </td></tr>
-           <tr> <td> <b>Number of Unigenes: </b>         </td> <td> $unigene_nr </tr></td>
-           <tr> <td> <b>Number of Contigs: </b>	         </td> <td> $contig_nr </tr></td>
-           <tr> <td> <b>Number of Singlets: </b>         </td> <td> $singlet_nr </tr></td>
-	   <tr> <td> <b>Members Assembled:</b> </td> <td> $member_nr </tr></td>
+           <tr> <td> <b>Number of Unigenes: </b>         </td> <td> $unigene_nr </td></tr>
+           <tr> <td> <b>Number of Contigs: </b>	         </td> <td> $contig_nr </td></tr>
+           <tr> <td> <b>Number of Singlets: </b>         </td> <td> $singlet_nr </td></tr>
+	   <tr> <td> <b>Members Assembled:</b> </td> <td> $member_nr </td></tr>
    </table>
    
    <br>
 
 HTML
 
-} else {
+} 
+else {
    $basic_info_content = "<big>There aren't any unigene build data for the specified parameters.</big>";
 }   
 
