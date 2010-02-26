@@ -29,7 +29,7 @@ sub default_toolbar_data {
                 {
                     name => 'QTLs/Traits[beta]',
                     link => '/search/direct_search.pl?search=cvterm_name',
-                    desc => 'Search solanaceae traits with or with out QTLs.'
+                    desc => 'A web interface for uploading QTL raw data, on-the-fly QTL mapping and search interface for QTLs.'
                 },
                 {
                     name => 'Unigenes',
@@ -303,7 +303,12 @@ sub default_toolbar_data {
                     desc =>
 'Lists all anchored BACs for a given chromosome to help identify seed BACs, or suggests a seed BAC given a marker name. '
                 },
-
+		{
+                    name => 'QTL Mapping',
+                    link => '/qtl/',
+                    desc =>
+'A web interface for uploading QTL raw data, on-the-fly QTL mapping and search interface for QTLs.'
+                },
                 #Molecular Biology
                 { name => "Molecular Biology" },
 
