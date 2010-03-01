@@ -26,7 +26,7 @@ eval {
 	       lbs   => sub { my ($p,$b) = get_pipe_and_batch(); $b->seqlist},
 	       lb    => sub { get_pipe()->list_batches },
 	       la    => sub { get_pipe()->list_analyses },
-	       lp    => sub { map {sprintf("%03d",$_)} CXGN::ITAG::Pipeline->list_pipelines },
+	       lp    => sub { map {sprintf("%03d",$_)} eval{ CXGN::ITAG::Pipeline->list_pipelines }},
 	     );
 
   $ops{$op} or die "unknown operation.  valid operations are: ".join(',',sort keys %ops)."\n";
