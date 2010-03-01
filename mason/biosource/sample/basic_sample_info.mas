@@ -61,6 +61,8 @@ if (defined $sample->get_sample_id() ) {
     my $sample_type = $sample->get_sample_type();
     my $description = $sample->get_description();
 
+    $sample_accession = $sample_name;
+
     my @sample_el_list;
     
     ## Get sample_elements, it will put them in a columnar table 
