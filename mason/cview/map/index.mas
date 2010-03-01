@@ -148,12 +148,13 @@ sub data_is_private {
     my $dbh = shift;
     my $map_version_id = shift;
     
-    my $genetic_map = CXGN::Map->new($dbh, {map_version_id=>$map_version_id}); 
-
+    if ($map_version_id!~/^\d+$/) { return undef; }
+    my $mf = CXGN::Cview::MapFactory->new($dbh);
+    my $genetic_map = $mf->create( {map_version_id=>$map_version_id}); 
     my $pop_id = $genetic_map->get_population_id();
     my $pop = CXGN::Phenome::Population->new($dbh, $pop_id);
     my $is_public = $pop->get_privacy_status();
-
+    
     my ($login_id, $user_type) = CXGN::Login->new($dbh)->has_session();
     
     print STDERR "$is_public\n";
