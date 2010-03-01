@@ -111,7 +111,7 @@ my $map_list = info_table_html('Available maps' => $maps || $na,
     );
 
 my $loci_count = $organism->get_loci_count() ;
-my $loci_list = qq|<a href= "/search/locus_search.pl?&w8e4_common_name=$common_name">$loci_count</a>| ;
+my $loci_list = qq|<a href= "/search/locus_search.pl?&w8e4_common_name=$common_name">$loci_count loci</a>| ;
 $loci_list = $na if !$loci_count;
 my $loci = info_table_html("Available loci (for $common_name species)" => $loci_list, "__border" => 0);
 
