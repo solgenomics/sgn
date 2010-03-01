@@ -350,6 +350,22 @@ sub _cached_file_modtime {
   shift->file_modtime
 }
 
+
+{ #set up file-based caching of the blast db selectbox generation
+
+  my $filename = $c->path_to( $c->generated_file_uri('blast','choices_cache.dat') );
+  tie my %cache => 'DB_File', $filename, O_RDWR|O_CREAT, 0666;
+
+  memoize 'blast_db_prog_selects' => (
+      # use the db file for storing values
+      SCALAR_CACHE => [HASH => \%cache],
+
+      # cache is good for 17 minutes. (>>11 is equivalent to int(
+      # time/(2**11) )
+      NORMALIZER => sub { time >> 10 },
+     );
+}
+
 sub blast_db_prog_selects {
     my $db_id = shift;
 
@@ -395,44 +411,30 @@ sub blast_db_prog_selects {
 				      );
 }
 
+sub blast_db_choices {
+    my @db_choices = map {
+        my @dbs = map [ $_, bdb_opt($_) ],
+            grep _cached_file_modtime($_), #filter for dbs that are on disk
+                $_->blast_dbs( web_interface_visible => 't'); #get all dbs in this group
+        @dbs ? ('__'.$_->name, @dbs) : ()
+    } CXGN::BlastDB::Group->search_like(name => '%',{order_by => 'ordinal, name'});
 
+    my @ungrouped_dbs =
+        grep _cached_file_modtime($_),
+        CXGN::BlastDB->search(
+            blast_db_group_id => undef,
+            web_interface_visible => 't',
+            { order_by => 'title' }
+           );
 
-{
-  my $filename = $c->path_to( $c->generated_file_uri('blast','choices_cache.dat') );
-  tie my %cache => 'DB_File', $filename, O_RDWR|O_CREAT, 0666;
-  memoize 'blast_db_choices' => (
-      # use the db file for storing values
-      SCALAR_CACHE => [HASH => \%cache],
+    push @db_choices, ( '__Other',
+                        map [$_,bdb_opt($_)],
+                        @ungrouped_dbs
+                       );
 
-      # cache is good for 17 minutes. (>>11 is equivalent to int(
-      # time/(2**11) )
-      NORMALIZER => sub { time >> 10 },
-     );
-
-  sub blast_db_choices {
-      my @db_choices = map {
-          my @dbs = map [ $_, bdb_opt($_) ],
-              grep _cached_file_modtime($_), #filter for dbs that are on disk
-                  $_->blast_dbs( web_interface_visible => 't'); #get all dbs in this group
-          @dbs ? ('__'.$_->name, @dbs) : ()
-      } CXGN::BlastDB::Group->search_like(name => '%',{order_by => 'ordinal, name'});
-
-      my @ungrouped_dbs =
-          grep _cached_file_modtime($_),
-          CXGN::BlastDB->search(
-              blast_db_group_id => undef,
-              web_interface_visible => 't',
-              {order_by => 'title'}
-             );
-
-      push @db_choices, ( '__Other',
-                          map [$_,bdb_opt($_)],
-                          @ungrouped_dbs
-                        );
-
-      return \@db_choices;
-  }
+    return \@db_choices;
 }
+
 sub bdb_opt {
     my $db = shift;
     my $timestamp = _cached_file_modtime($db)
