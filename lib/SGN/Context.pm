@@ -604,8 +604,9 @@ sub handle_exception {
     my $self = shift;
 
     my ( $exception ) = @_;
-    if( blessed( $exception )) {
-        $self->error_notify('died',@_)
+    my $exception_type =  blessed( $exception );
+    if( $exception_type && $exception_type->can('message') && $exception_type->can('title') ) {
+        $self->error_notify('threw exception',@_)
             unless $exception->can('notify') && ! $exception->notify;
 
         $self->forward_to_mason_view( '/site/error/exception.mas', exception => $exception );
