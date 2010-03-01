@@ -1,7 +1,15 @@
 <& /page/page_title.mas, title => 'Tomato Genome Shotgun Sequence Prerelease' &>
 
-January 25, 2010
 <div style="margin-top:8px;margin-bottom:8px">
+
+Februray 26, 2010<br /><br />
+
+<b>ITAG annotation released</b>. The ITAG tomato genome annotation, based on as\
+sembly v1.00 has been released and is available in the <a href="/gbrowse">SGN g\
+enome browser</a> and in <a href="/tools/blast/">SGN BLAST</a>. The same data agreement as for the genome sequence applies (see below). Please note that these annotations will be updated frequently.<br /><br />
+
+January 25, 2010
+
 <p>Version 1.03 of the genome assembly has been released. Identifiers are <b>not</b> stable across releases! 
 </p>
 <p>The <a href="/about/tomato_sequencing.pl">International Tomato Sequencing Project</a> is happy to announce the pre-release of the tomato genome, produced by a whole genome shotgun approach using 454 sequencing, Sanger shotgun sequences, and BAC/fosmid end sequences.</p>
