@@ -21,13 +21,13 @@ use Apache2::RequestUtil ();
 use Apache2::Request;
 use Apache2::Upload;
 use HTML::Entities;
-use CXGN::VHost;
 use Carp;
 use CGI;
 
 use File::Path ();
 
 use JSAN::ServerSide;
+use SGN::Context;
 
 =head1 OBJECT METHODS
 
@@ -46,7 +46,7 @@ sub new {
   $self->{request} ||= Apache2::RequestUtil->request();
   $self->{apache_request} ||= Apache2::Request->new($self->{request});
   $self->{content_type} = 'text/html';
-  $self->{vhost} = CXGN::VHost->new();
+  $self->{vhost} = SGN::Context->instance;
   return $self;
 }
 
