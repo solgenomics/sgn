@@ -5,15 +5,22 @@ use Carp;
 use File::Spec;
 use IPC::Cmd qw/ can_run /;
 
-
+use List::MoreUtils qw/ all /;
 use Test::More;
 use Test::WWW::Mechanize;
 
 use CXGN::DB::Connection;
 use CXGN::Page;
+use CXGN::BlastDB;
+
+my $test_blastdb_id = 34;
+my $bdb = CXGN::BlastDB->retrieve($test_blastdb_id);
 
 unless( can_run('qsub') ) {
     plan skip_all => 'qsub not found in path';
+}
+unless( all { -f } $bdb->list_files ) {
+    plan skip_all => "blast db ".$bdb->file_base." not present on disk";
 }
 
 my $server = $ENV{SGN_TEST_SERVER} or BAIL_OUT('no SGN_TEST_SERVER env var set');
@@ -42,7 +49,7 @@ my %form = (
 		productLength => '5000',
 		allowedMismatches => '0',
 		output_format => '8',
-		database => 34,
+		database => $test_blastdb_id,
 		program => 'blastn',
 		expect => '1e-10',
 		matrix => 'BLOSUM62',
