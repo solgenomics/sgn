@@ -1,17 +1,13 @@
-#!/usr/bin/perl
-
 package CXGN::Page::Session;
-
 use strict;
+use warnings;
 no strict 'refs';
 use Carp;
+
 use CXGN::Cookie;
-use CXGN::VHost;
 use CXGN::Login;
 use CXGN::DB::Connection;
-#use CXGN::Class::DBI;
 use URI::Escape qw/uri_escape uri_unescape/;
-#use base qw/CXGN::Class::DBI/;
 
 use base qw | CXGN::DB::Object |;
 
@@ -96,9 +92,7 @@ sub new {
 			$self->parse_settings_string($cookie_string);
 		}
 		else {
-			print STDERR "Time lag:\n
-				 Cookie:  $ts\n
-				 DB:      $db_ts\n";
+                    $self->d( "Time lag:\nCookie:  $ts\nDB:      $db_ts\n");
 		}
 	}
 	$self->save();
