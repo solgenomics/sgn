@@ -9,7 +9,7 @@ use Cwd qw/ realpath /;
 use File::Spec::Functions;
 use File::NFSLock qw/uncache/;
 
-use CXGN::VHost;
+use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw/ page_title_html blue_section_html /;
 use CXGN::Tools::Run;
 
@@ -30,7 +30,6 @@ if( $out_file_override ) {
 
 my ($message) = $page->get_arguments("message");
 
-my $vhost_conf = CXGN::VHost->new();
 
 my $d = CXGN::Debug->new;
 
