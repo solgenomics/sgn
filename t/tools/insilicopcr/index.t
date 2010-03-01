@@ -14,15 +14,11 @@ use CXGN::Page;
 
 unless( can_run('qsub') ) {
     plan skip_all => 'qsub not found in path';
-} else {
-    plan tests => 4;
 }
 
-my $mech = Test::WWW::Mechanize->new;
-#my $server = $ENV{SGN_TEST_SERVER}|| "http://sgn-devel.sgn.cornell.edu";
-my $server = $ENV{SGN_TEST_SERVER}|| "http://sgn.localhost.localdomain";
-diag "Using server $ENV{SGN_TEST_SERVER}\n";
+my $server = $ENV{SGN_TEST_SERVER} or BAIL_OUT('no SGN_TEST_SERVER env var set');
 
+my $mech = Test::WWW::Mechanize->new;
 my $new_page = $server."/tools/insilicopcr/index.pl";
 $mech->get_ok($new_page);
 $mech->content_contains("In Silico PCR");
@@ -53,18 +49,14 @@ my %form = (
 		filterq => 'checked'
     }
     );
-    
 
 $mech->submit_form_ok(\%form, "PCR  job submit form" );
-$mech->content_contains("Running");
 
-print STDERR "Waiting";
-
-while ($mech->content() != /PCR Results/) { 
-    print STDERR ".\n";
-    $mech->reload();	
-    sleep(3);    
-
+if ( $mech->content =~ /Running/ ) {
+    while ( $mech->content !~ /PCR Results/ ) {
+        sleep 1;
+        $mech->reload;	
+    }
 }
 
 $mech->content_contains("PCR Results");
@@ -77,3 +69,5 @@ unless ($mech->content()=~/No PCR Product Found/){
     $mech->content_contains("Agarose");
     $mech->content_contains("SGN-U510886");
 }
+
+done_testing;
