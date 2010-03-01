@@ -69,10 +69,15 @@ my $dbh   = CXGN::DB::Connection->new;
 my $prefs = CXGN::Page::UserPrefs->new( $dbh );
 
 my %params;
-@params{qw/preload_id preload_type seq interface_type db_id/} = $page->get_encoded_arguments("preload_id","preload_type","seq","interface_type", "db_id");
+@params{qw/preload_id preload_type seq interface_type db_id flush_cache/} = $page->get_encoded_arguments("preload_id","preload_type","seq","interface_type", "db_id", 'flush_cache');
 
 $params{interface_type} ||= 0;
 
+
+my $choices_cache_filename = $c->path_to( $c->generated_file_uri('blast','choices_cache.dat') );
+if( $params{flush_cache} ) {
+    unlink $choices_cache_filename;
+}
 
 
 my $blast_path = $vhost_conf->get_conf('blast_path');
@@ -353,8 +358,7 @@ sub _cached_file_modtime {
 
 { #set up file-based caching of the blast db selectbox generation
 
-  my $filename = $c->path_to( $c->generated_file_uri('blast','choices_cache.dat') );
-  tie my %cache => 'DB_File', $filename, O_RDWR|O_CREAT, 0666;
+  tie my %cache => 'DB_File', $choices_cache_filename, O_RDWR|O_CREAT, 0666;
 
   memoize 'blast_db_prog_selects' => (
       # use the db file for storing values
