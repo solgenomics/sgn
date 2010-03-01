@@ -426,7 +426,7 @@ sub blast_db_prog_selects {
              );
 
       push @db_choices, ( '__Other',
-                          map [$_,opt($_)],
+                          map [$_,bdb_opt($_)],
                           @ungrouped_dbs
                         );
 
