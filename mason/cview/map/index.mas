@@ -80,6 +80,7 @@ use CXGN::Cview::Map::Tools;
 use CXGN::Phenome::Population;
 use CXGN::People::Person;
 use CXGN::Login;
+use CXGN::Map;
 
 my %marker_info;
 
