@@ -50,6 +50,7 @@ use POSIX;
 use English;
 
 use Memoize;
+use DB_File;
 
 use Tie::UrlEncoder;
 our %urlencode;
@@ -351,27 +352,11 @@ sub _cached_file_modtime {
 
 sub blast_db_prog_selects {
     my $db_id = shift;
-    sub opt {
-	my $db = shift;
-	my $timestamp = _cached_file_modtime($db)
-	    or return '';
-	$timestamp = strftime(' &nbsp;(%m-%d-%y)',gmtime _cached_file_modtime($db));
-	#my $seq_count = $db->sequences_count;
-	
-	[$db->blast_db_id, $db->title.$timestamp]
-    }
 
-    my @db_choices = map {
-	my @dbs = map [$_,opt($_)], grep _cached_file_modtime($_), $_->blast_dbs( web_interface_visible => 't');
-	@dbs ? ('__'.$_->name, @dbs) : ()
-    } CXGN::BlastDB::Group->search_like(name => '%',{order_by => 'ordinal, name'});
-    
-    my @ungrouped_dbs = grep _cached_file_modtime($_),CXGN::BlastDB->search( blast_db_group_id => undef, web_interface_visible => 't', {order_by => 'title'} );
-    if(@ungrouped_dbs) {
-	push @db_choices, '__Other',  map [$_,opt($_)], @ungrouped_dbs;
-    }
+    my $db_choices = blast_db_choices();
 
-    @db_choices or return '<span class="ghosted">The BLAST service is temporarily unavailable, we apologize for the inconvenience</span>';
+    return '<span class="ghosted">The BLAST service is temporarily unavailable, we apologize for the inconvenience</span>'
+        unless @$db_choices;
 
     # DB select box will either the db_id supplied, or what the user last selected, or the tomato combined blast db
     my $selected_db_id = $db_id || $prefs->get_pref('last_blast_db_id')
@@ -396,17 +381,64 @@ sub blast_db_prog_selects {
     } else {
       [map [$_,$prog_descs{$_}], 'blastn','tblastx','tblastn']
     }
-  } grep ref, @db_choices;
+  } grep ref, @$db_choices;
 
-  @db_choices = map {ref($_) ? $_->[1] : $_} @db_choices;
+  @$db_choices = map {ref($_) ? $_->[1] : $_} @$db_choices;
 
   return hierarchical_selectboxes_html( parentsel => { name => 'database',
-						       choices =>
-						       \@db_choices,
-						       $selected_db_id ? (selected => $selected_db_id) : (),
+						       choices => $db_choices,
+						       ( $selected_db_id ? (selected => $selected_db_id) : () ),
 						     },
 					childsel  => { name => 'program',
 						     },
 					childchoices => \@program_choices
 				      );
+}
+
+
+
+{
+  my $filename = $c->path_to( $c->generated_file_uri('blast','choices_cache.dat') );
+  tie my %cache => 'DB_File', $filename, O_RDWR|O_CREAT, 0666;
+  memoize 'blast_db_choices' => (
+      # use the db file for storing values
+      SCALAR_CACHE => [HASH => \%cache],
+
+      # cache is good for 17 minutes. (>>11 is equivalent to int(
+      # time/(2**11) )
+      NORMALIZER => sub { time >> 10 },
+     );
+
+  sub blast_db_choices {
+      my @db_choices = map {
+          my @dbs = map [ $_, bdb_opt($_) ],
+              grep _cached_file_modtime($_), #filter for dbs that are on disk
+                  $_->blast_dbs( web_interface_visible => 't'); #get all dbs in this group
+          @dbs ? ('__'.$_->name, @dbs) : ()
+      } CXGN::BlastDB::Group->search_like(name => '%',{order_by => 'ordinal, name'});
+
+      my @ungrouped_dbs =
+          grep _cached_file_modtime($_),
+          CXGN::BlastDB->search(
+              blast_db_group_id => undef,
+              web_interface_visible => 't',
+              {order_by => 'title'}
+             );
+
+      push @db_choices, ( '__Other',
+                          map [$_,opt($_)],
+                          @ungrouped_dbs
+                        );
+
+      return \@db_choices;
+  }
+}
+sub bdb_opt {
+    my $db = shift;
+    my $timestamp = _cached_file_modtime($db)
+        or return '';
+	$timestamp = strftime(' &nbsp;(%m-%d-%y)',gmtime _cached_file_modtime($db));
+    #my $seq_count = $db->sequences_count;
+	
+    [$db->blast_db_id, $db->title.$timestamp]
 }
