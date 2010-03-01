@@ -8,10 +8,16 @@
 
       <div class="boxcontent">
          The <span style="font-weight: bold">International Tomato Genome Sequencing Project</span> is happy to make available a prerelease version of the <span style="font-weight: bold">Tomato Genome Shotgun Sequence</span> to the community. <a href="/tomato/">More...</a>
-<br /><br />
-<b>Note:</b> Assembly v1.03 has been released. Includes better screening for <i>E. coli</i> sequences, two more 454 runs, and latest release of assembly software. [Jan 24, 2010]
+
 </td></tr>
 <tr><td colspan="2">
+<b>News</b>
+<ul>
+<li>Tomato <b>annotation released</b> for assembly <b>version 1.00</b>, available in the <a href="/gbrowse">SGN genome browser</a> and <a href="/tools/blast/">SGN BLAST</a>. Annotations have also been mapped to the version 1.03 assembly. [Feb 26, 2010]</li>
+
+<li><b>Assembly v1.03</b> has been released. Includes better screening for <i>E. coli</i> sequences, two more 454 runs, and latest release of assembly software. [Jan 24, 2010]</li>
+</ul>
+
         <div style="text-align: center; margin: 1.5em 0 0 1em"><a href="/tomato/#disclaimer">Data Agreement and Disclaimer</a> | 
 	  <a href="/tomato/">Tomato Whole Genome Shotgun data</a> 
 	  <br /> <a href="/about/tomato_sequencing.pl">BAC by BAC progress overview</a> |
