@@ -9,13 +9,13 @@ Other Links
 
 <!-- EUSOL Sites -->
 
-<a class="footer" href="http://www.eu-sol.net/"><img src="/img/eusol_logo_small.jpg" border="0"></a><br />
+<a class="footer" href="http://www.eu-sol.net/"><img src="/img/eusol_logo_small.jpg" border="0" /></a><br />
 <b>Affiliated sites from the <a href="http://cordis.europa.eu/fetch?CALLER=FP6_PROJ&ACTION=D&DOC=12&CAT=PROJ&QUERY=011d000af831:8cd8:061152b7&RCN=79812">European Union Framework 6 EU-SOL</a> project</b><br />
 <a href="http://www.eu-sol.net/">EU-SOL Home</a><br /> | <a href="https://www.eu-sol.wur.nl/">Tomato Core Collection Phenotype Database</a><br /><br />
 
 <!-- Sites in Japan -->
 
-<a href="http://tomato.nbrp.jp/indexEn.html" class="footer"><img src="documents/img/nbrp_logo.jpg" border="0"></a><br />   
+<a href="http://tomato.nbrp.jp/indexEn.html" class="footer"><img src="documents/img/nbrp_logo.jpg" border="0" /></a><br />   
 <b>Resources in Japan</b><br />
 <a href="http://www.kazusa.or.jp/jsol/microtom/">MiBase</a> | <a href="http://www.pgb.kazusa.or.jp/kaftom/">KafTom</a> | <a href="http://tomatoma.nbrp.jp/index.jsp">TOMATOMA</a>
 </div>
