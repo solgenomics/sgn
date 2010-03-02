@@ -1071,7 +1071,7 @@ qq|<img src="$image_url" usemap="#chr_arm_map" border="0" alt="" />|;
         }
     }
 
-    $location_html .= "</tr></table>";
+    $location_html .= "</td></tr></table>";
     return $location_html;
 }    #get_location
 
