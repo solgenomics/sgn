@@ -383,7 +383,7 @@ EOS
                        please contact the owner of the data: <b>$submitter_link</b> 
                        or email to SGN:
                        <a href=mailto:sgn-feedback\@sgn.cornell.edu>
-                       sgn-feedback\@sgn.cornell.edu</a>\n";
+                       sgn-feedback\@sgn.cornell.edu</a>.\n";
 	
 	print info_section_html(title   => 'Phenotype Data and QTLs',
 			        contents =>$message, 
