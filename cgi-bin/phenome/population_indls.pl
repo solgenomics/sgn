@@ -305,7 +305,7 @@ qq | <a href="/phenome/individual.pl?individual_id=$indl_id->[$i]">$indl_name->[
         $data_view = html_optional_show(
             "phenotype",
             'View/hide phenotype data summary',
-            qq|$phenotype_data</b>|,
+            qq |$phenotype_data|,
             0,    #<  show data by default
         );
         $data_download .=
@@ -425,9 +425,9 @@ HTML
     my %stat_param = %{$self->stat_param_hash()};
 
     $qtl_html .= <<HTML;
-	<b>Analysis Procedure :</b> <a href=http://www.rqtl.org target=_blank>R/QTL</a><br/>
+	<b>Analysis Procedure:</b> <a href=http://www.rqtl.org target=_blank>R/QTL</a><br/>
 	<b>QTL model: </b> $stat_param{"stat_qtl_model"}<br />
-	<b>Genome scan size:</b> $stat_param{"stat_step_size"} cM<br/> 
+	<b>Genome scan size:</b> $stat_param{"stat_step_size"} cM <br/> 
 	<b>QTL genotype probability:</b> $stat_param{"stat_prob_level"} <br/>
 	<b>LOD threshold (based on $stat_param{"stat_permu_test"} permutations at $stat_param{"stat_permu_level"} prob. level):</b> $value1  <br/> 
 	<b>Flanking markers & comparative mapviewer:</b><br/> click on graph

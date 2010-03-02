@@ -273,7 +273,7 @@ sub display_page {
 	$individual_html .= $history_data; 
     }
     ####### print associated loci
-    $individual_html .=  qq { <br /><br /><b />Associated loci:</b />  };
+    $individual_html .=  qq { <br /><br /><b>Associated loci:</b>  };
     my @loci = $individual->get_loci();
     foreach my $locus (@loci) {
 	unless ($locus->get_obsolete() eq 't') { 
@@ -299,7 +299,7 @@ sub display_page {
     ##############images:
     
     my $image_html;
-    $image_html .=qq|<table><tr valign="top">|;
+    #$image_html .=qq|<table><tr valign="top">|;
     my @images = $individual->get_image_ids();  #array of associated image objects
     my $image_count = 0;
     
@@ -368,7 +368,7 @@ sub display_page {
 	    
 	    $data_view = html_optional_show("phenotype",
 					    'View/hide phenotype data summary',
-					    qq|$phenotype_data </b>|,
+					    qq|$phenotype_data|,
 					    1, #<  show data by default
 					    );  
 	}
@@ -404,7 +404,7 @@ sub display_page {
 	my $phenotype = $allele->get_allele_phenotype();
 	
 	push @allele_data, [map {$_} ( qq|<a href= "locus_display.pl?locus_id=$locus_id">$locus_name</a>|,
-				       $allele->get_allele_symbol(), qq|<div align="left"><a href= "allele.pl?allele_id=$allele_id">$phenotype</a>|,)
+				       $allele->get_allele_symbol(), qq|<div align="left"><a href= "allele.pl?allele_id=$allele_id">$phenotype</a></div>|,)
 			    ];
     }
 
@@ -744,7 +744,7 @@ sub abstract_view {
     my $pages=$pub->get_pages();
     my $abstract_view = html_optional_show("abstracts$abs_count",
 					   'Show/hide abstract',
-					   qq|$abstract <b> <i>$authors.</i> $journal. $pyear. $volume($issue). $pages.</b>|,
+					   qq|$abstract <b> <i>$authors.</i> $journal. $pyear. $volume($issue). $pages. </b>|,
 					   0, #< do not show by default
 					   'abstract_optional_show', #< don't use the default button-like style
 					   );
