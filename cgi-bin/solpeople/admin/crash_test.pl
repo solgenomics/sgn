@@ -48,7 +48,7 @@ if( !$is_production_server || $logged_in_user_type eq 'curator') {
     }
     $page->footer();
   } else { #no arguments
-    &plain_page();
+    &plain_page($page, $message);
   }
 }
 else {
@@ -60,6 +60,8 @@ sub rube_goldberg {
 }
 
 sub plain_page {
+    my $page = shift;
+    my $message = shift;
     $page->header();
     print <<EOF;
 <a href="?test=1&amp;message=$message">Test anticipated error</a>
