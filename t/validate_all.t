@@ -28,7 +28,7 @@ BEGIN {
 	"physical map overview" => "/cview/map.pl?map_id=p9",
 	"agp map overview" => "/cview/map.pl?map_id=agp", 
              "gene search" => "/search/locus_search.pl?w8e4_any_name_matchtype=contains&w8e4_any_name=dwarf&w8e4_common_name=&w8e4_phenotype=&w8e4_locus_linkage_group=&w8e4_ontology_term=&w8e4_editor=&w8e4_genbank_accession=",
-             "locus detail" => "/phenome/locus_display.pl?locus_id=428",
+             "locus detail" => "/phenome/locus_display.pl?locus_id=1599",
              "phenotype search" => "/search/phenotype_search.pl?wee9_phenotype=&wee9_individual_name=&wee9_population_name=",
 	     "phenotype individual detail" => "/phenome/individual.pl?individual_id=7530",
 	     "phenotype population detail" => "/phenome/population.pl?population_id=12", 
