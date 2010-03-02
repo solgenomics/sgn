@@ -6,6 +6,7 @@ Displays a small section about the breeders toolbox.
 Does not require any parameters.
 
 </%doc>
+
 <div class="boxbgcolor5" style="margin-bottom:2px" >
 <div class="boxheading">SGN Breeder's Toolbox</div>
 <div class="boxcontent">
@@ -15,7 +16,7 @@ Does not require any parameters.
 </td><td>
 <b>Access the SGN <a href="/breeders/">Breeder's Toolbox.</a></b>
 </td></tr>
-
 </table>
+
 </div>
 </div>
