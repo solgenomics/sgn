@@ -32,13 +32,11 @@ $schema
 
 
 <tr><td colspan="3"><div class="boxbgcolor5"><table cellpadding="10"><tr><td><& homepage/affiliated_sites.mas &></td><td><& homepage/other_links.mas &></td></tr></table></div></td></tr>
-<tr><td colspan="3"><& homepage/what_is_sgn.mas, what=>'textbox' &></td><td></tr>
+<tr><td colspan="3"><& homepage/what_is_sgn.mas, what=>'textbox' &></td></tr>
 
 </table>
 
-<!-- tr><td colspan="3"><& counter.mas &></td></tr -->
 
-</table>
 
 
 
