@@ -1,0 +1,21 @@
+
+<%doc>
+
+Displays a small section about the breeders toolbox. 
+
+Does not require any parameters.
+
+</%doc>
+<div class="boxbgcolor5" style="margin-bottom:2px" >
+<div class="boxheading">SGN Breeder's Toolbox</div>
+<div class="boxcontent">
+<table cellpadding="0" cellspacing="0"><tr><td width="60" >
+<a href="/breeders/"><img src="/documents/img/tomato_breeders_toolbox.jpg" width="50" border ="0" /></a><br />
+<br />
+</td><td>
+<b>Access the SGN <a href="/breeders/">Breeder's Toolbox.</a></b>
+</td></tr>
+
+</table>
+</div>
+</div>
