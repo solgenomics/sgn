@@ -187,7 +187,7 @@ EOS
     
     my $phenotype = ""; 
     my @phenotype;
-    my $graph_icon = qq |<img src="../documents/img/pop_graph.png"> |;
+    my $graph_icon = qq |<img src="../documents/img/pop_graph.png"/> |;
     
     if ($population->get_web_uploaded()) {
 	my @traits = $population->get_cvterms();
