@@ -586,7 +586,7 @@ sub error_notify {
     my $developer_message = @_ ? "@_"
         : 'CXGN::Apache::Error::notify called. The error may or may not have been anticipated (no information provided by caller).';
 
-    my $page_name = basename( $0 );
+    my $page_name = $ENV{SCRIPT_NAME};
 
     require CXGN::Contact;
     CXGN::Contact::send_email(
