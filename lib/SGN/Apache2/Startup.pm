@@ -156,13 +156,19 @@ EOS
             # backtrace
             <<'EOS',
             <Perl>
-               { my $old_die = $SIG{__DIE__} || sub {}; #< might be set by DebugScreen above
+               { my $old_die = $SIG{__DIE__} || sub { die @_ }; #< might be set by DebugScreen above
                  $SIG{__DIE__} = sub {
-                     SGN::Context->instance->handle_exception(@_);
+
                      my $mess = Carp::longmess();
-                     $mess =~ s|[^\n]+\n||;
-                     $mess =~ s|[^\n]+RegistryCooker.+||s;
-                     $old_die->( @_, $mess );
+                     $mess =~ s|[^\n]+\n||; # remove first line
+                     $mess =~ s|[^\n]+RegistryCooker.+||s; # remove any apache registry lines
+
+                     unless( $mess =~ m'eval \{' ) {
+                       SGN::Context->instance->handle_exception( @_ );
+                       push @_, $mess;
+                     }
+
+                     $old_die->( @_ );
                  };
                }
             </Perl>
