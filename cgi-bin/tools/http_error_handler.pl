@@ -18,11 +18,14 @@ if( $error_code == 404 ) {
         # page
         try {
             require Mail::Sendmail;
+
+            my $script_name = $ENV{HTTP_REFERER};
+            $script_name =~ s|.+\/||;
             Mail::Sendmail::sendmail(
                 To      => $c->get_conf('bugs_email'),
                 From    => 'www@'.$ENV{HTTP_HOST},
-                Subject => "Broken link on $ENV{HTTP_REFERER}: $ENV{REQUEST_URI}",
-                Body    => format_env( %ENV ),
+                Subject => "Broken link on $script_name: $ENV{REQUEST_URI}",
+                Body    => "Broken link $ENV{REQUEST_URI} on page $ENV{HTTP_REFERER}.\n\nEnvironment:\n".format_env( %ENV ),
                ) or die $Mail::Sendmail::error;
         } catch {
             warn "$0: could not send 404 broken link email: $_";
