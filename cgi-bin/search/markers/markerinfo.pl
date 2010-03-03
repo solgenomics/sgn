@@ -399,7 +399,7 @@ sub cos_html {
     $trace_name="<span class=\"ghosted\">None</span>";
   }
   my $vhtml = <<EOT;
-<b><a href="/markers/role_categories.txt">MIPS Category</a>: </b>$r->{mips_cat}<br />
+<b><a href="/documents/markers/role_categories.txt">MIPS Category</a>: </b>$r->{mips_cat}<br />
 <b>Tomato EST read:</b> $trace_name<br />
 <b>Arabidopsis best BAC match:</b> <a href="$at_page$bac_id">$at_match</a><br />
 <b>Arabidopsis position:</b> $at_posn<br />
