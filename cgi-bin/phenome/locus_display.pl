@@ -1685,71 +1685,84 @@ sub itag_genomic_annots_html {
     my @releases = CXGN::ITAG::Release->find
       or return '<span class="ghosted">temporarily unavailable</span>';
 
-    my @matches = map {
-        my $rel = $_;
-        if ( $rel->has_gbrowse_dbs ) {
-            my $db = $rel->get_annotation_db('genomic')
-              or die 'error, this point should not be reached';
-            my @f = $db->features(
-                -types      => ['match:ITAG_sgn_loci'],
-                -attributes => { sgn_locus_id => $locus_id },
-            );
-
-            #group the features by contig regions
-            my %regions;
-            foreach my $f (@f) {
-                my $region_key =
-                  join( ':', $f->sourceseq, $f->attributes('cdna_seq_name') );
-                my $r = $regions{$region_key} ||= [];
-                push @$r, $f;
-            }
-
-           #and now generate a list of html strings, one for each matched region
-            map {
-                my $feats          = $regions{$_};
-                my @locus_seqnames = distinct map {
-                    my $f = $_;
-                    my $p =
-                      parse_identifier( $f->target->sourceseq,
-                        'sgn_locus_sequence' )
-                      or die "cannot parse " . $f->target->sourcese;
-                    $p->{ext_id}
-                } @$feats;
-                my $s = @locus_seqnames > 1 ? 's' : '';
-
-                my $gb_img_width     = 600;
-                my $gb_img_realwidth = 652;
-                my $conf_name        = $rel->release_tag . '_genomic';
-                my $ctg              = $feats->[0]->sourceseq;
-                my ( $start, $end ) = ( $feats->[0]->start, $feats->[0]->end );
-                ( $start, $end ) = ( $end, $start ) if $start > $end;
-                my $gblink =
-                  "/gbrowse/gbrowse/$conf_name/?ref=$ctg&start=$start&end=$end";
-                my $gbrowse_img =
-qq|<a href="$gblink"><img width="$gb_img_realwidth" style="border: 1px solid #ddd; border-top: 0; padding: 1em 0; margin:0;" src="/gbrowse/gbrowse_img/$conf_name/?name=$ctg:$start..$end;type=genespan+mrna+sgn_loci+tilingpath;width=$gb_img_width;keystyle=between;grid=on" /></a>|;
-
-                qq|<div style="text-align: center">\n|
-                  . info_table_html(
-                    __multicol       => 3,
-                    'Genome release' => $rel->release_name,
-                    'Predicted cDNA matched' =>
-                      $feats->[0]->attributes('cdna_seq_name'),
-                    Contig               => $ctg,
-                    "Sequence$s matched" => join( ', ', @locus_seqnames ),
-                    __tableattrs =>
-qq|summary="" style="margin: 1em auto -1px auto; border-bottom: 0; width: ${gb_img_realwidth}px"|,
-                  )
-                  . qq|$gbrowse_img</div>|
-            } sort keys %regions;
-        }
-        else {
-            ();
-        }
-    } @releases;
+    my @matches = map _find_itag_matches($_,$locus_id), @releases;
 
     return join( "\n", @matches ) if @matches;
     return '<span class="ghosted">None</span>';
 }
+sub _find_itag_matches {
+    my ($rel, $locus_id) = @_;
+
+    return unless $rel->has_gbrowse_dbs;
+
+    my $db = $rel->get_annotation_db('genomic')
+        or die 'error, no genomic blast db, this point should not have been reached';
+
+    # search for features in the blast db
+    my @f = $db->features(
+        -types      => ['match:ITAG_sgn_loci'],
+        -attributes => { sgn_locus_id => $locus_id },
+       );
+
+    #group the features by contig regions
+    my %regions;
+    foreach my $f (@f) {
+        my $region_key =
+            join( ':', $f->sourceseq, $f->attributes('cdna_seq_name') );
+        my $r = $regions{$region_key} ||= [];
+        push @$r, $f;
+    }
+
+    # and now convert each of the matched regions into HTML strings
+    # that display them
+    return map _itag_features_to_html( $rel, $regions{$_} ),
+           sort keys %regions;
+
+}
+
+sub _itag_features_to_html {
+    my ($rel, $feats) = @_;
+
+    # look up all the matching locus sequence names
+    my @locus_seqnames = distinct map {
+        my $f = $_;
+        my $p =
+            parse_identifier( $f->target->sourceseq,
+                              'sgn_locus_sequence' )
+                or die "cannot parse " . $f->target->sourcese;
+        $p->{ext_id}
+    } @$feats;
+
+    my $gb_img_width     = 600;
+    my $gb_img_realwidth = 652;
+    my $conf_name        = $rel->release_tag . '_genomic';
+    my $ctg              = $feats->[0]->sourceseq;
+    my ( $start, $end ) = ( $feats->[0]->start, $feats->[0]->end );
+    ( $start, $end ) = ( $end, $start ) if $start > $end;
+    my $gblink =
+        "/gbrowse/gbrowse/$conf_name/?ref=$ctg&start=$start&end=$end";
+    my $gbrowse_img =
+        qq|<a href="$gblink"><img width="$gb_img_realwidth" style="border: 1px solid #ddd; border-top: 0; padding: 1em 0; margin:0;" src="/gbrowse/gbrowse_img/$conf_name/?name=$ctg:$start..$end;type=genespan+mrna+sgn_loci+tilingpath;width=$gb_img_width;keystyle=between;grid=on" /></a>|;
+
+
+    my $sequences_matched = @locus_seqnames > 1 ? 'Sequences matched' : 'Sequence matched';
+
+    return qq|<div style="text-align: center">\n|
+                  . info_table_html(
+                      __multicol       => 3,
+                      'Genome release' => $rel->release_name,
+                      'Predicted cDNA matched' =>
+                          $feats->[0]->attributes('cdna_seq_name'),
+                      Contig               => $ctg,
+                      $sequences_matched => join( ', ', @locus_seqnames ),
+                      __tableattrs =>
+                          qq|summary="" style="margin: 1em auto -1px auto; border-bottom: 0; width: ${gb_img_realwidth}px"|,
+                     )
+                  . $gbrowse_img
+           .qq|/div>\n|
+}
+
+
 
 ############# end of javascript functions
 
