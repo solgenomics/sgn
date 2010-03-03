@@ -1734,7 +1734,6 @@ sub _itag_features_to_html {
     } @$feats;
 
     my $gb_img_width     = 600;
-    my $gb_img_realwidth = 652;
     my $conf_name        = $rel->release_tag . '_genomic';
     my $ctg              = $feats->[0]->sourceseq;
     my ( $start, $end ) = ( $feats->[0]->start, $feats->[0]->end );
@@ -1742,7 +1741,7 @@ sub _itag_features_to_html {
     my $gblink =
         "/gbrowse/gbrowse/$conf_name/?ref=$ctg&start=$start&end=$end";
     my $gbrowse_img =
-        qq|<a href="$gblink"><img width="$gb_img_realwidth" style="border: 1px solid #ddd; border-top: 0; padding: 1em 0; margin:0;" src="/gbrowse/gbrowse_img/$conf_name/?name=$ctg:$start..$end;type=genespan+mrna+sgn_loci+tilingpath;width=$gb_img_width;keystyle=between;grid=on" /></a>|;
+        qq|<a href="$gblink"><img style="border: 1px solid #ddd; border-top: 0; padding: 1em 0; margin:0;" src="/gbrowse/gbrowse_img/$conf_name/?name=$ctg:$start..$end;type=genespan+mrna+sgn_loci+tilingpath;width=$gb_img_width;keystyle=between;grid=on" /></a>|;
 
 
     my $sequences_matched = @locus_seqnames > 1 ? 'Sequences matched' : 'Sequence matched';
@@ -1759,7 +1758,7 @@ sub _itag_features_to_html {
                           qq|summary="" style="margin: 1em auto -1px auto; border-bottom: 0; width: ${gb_img_realwidth}px"|,
                      )
                   . $gbrowse_img
-           .qq|/div>\n|
+           .qq|</div>\n|
 }
 
 
