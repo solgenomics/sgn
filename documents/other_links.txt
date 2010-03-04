@@ -11,7 +11,7 @@ Other Links
 
 <a class="footer" href="http://www.eu-sol.net/"><img src="/img/eusol_logo_small.jpg" border="0" /></a><br />
 <b>Affiliated sites from the <a href="http://cordis.europa.eu/fetch?CALLER=FP6_PROJ&ACTION=D&DOC=12&CAT=PROJ&QUERY=011d000af831:8cd8:061152b7&RCN=79812">European Union Framework 6 EU-SOL</a> project</b><br />
-<a href="http://www.eu-sol.net/">EU-SOL Home</a><br /> | <a href="https://www.eu-sol.wur.nl/">Tomato Core Collection Phenotype Database</a><br /><br />
+<a href="http://www.eu-sol.net/">EU-SOL Home</a> | <a href="https://www.eu-sol.wur.nl/">Tomato Core Collection Phenotype Database</a> | <a href="http://www.agrobios.it/tilling">LycoTILL tomato cv <i>Red Setter</i> EMS mutant database</a><br /><br />
 
 <!-- Sites in Japan -->
 
