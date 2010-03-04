@@ -32,9 +32,13 @@ use base qw / CXGN::Page::Form::Static /;
 sub new {
 	my $class = shift;
 	my $self = $class->SUPER::new(@_);
+	my $args=shift;
+	$self->set_form_id($args->{form_id}); #optional. Set a form id. Required for javasctipt forms
+	$self->set_no_buttons($args->{no_buttons}); #optional. Used in javascript forms, which should generate their own 'store' and 'reset form' buttons.
 	$self->set_reset_button_text("Reset form");
 	$self->set_submit_button_text("Store");
 	$self->set_submit_method(); #use hardcoded default
+
 	return $self;
 }
 
@@ -166,10 +170,7 @@ sub validate {
 sub store { 
     my $self = shift; 
     my %args = @_;
-    #print STDERR "args hash before in the store function: \n";
-#    while (my ($key, $value) = each(%args)) { print STDERR "$key $value\n"; }
-    #print STDERR "STORING FORM DATA...\n";
-    
+      
     $self->propagate_input(%args);
    
   
@@ -424,11 +425,13 @@ sub add_multiselect
 
 sub get_form_start { 
     my $self = shift;
-    return "<form method=\"" . $self->get_submit_method() . "\" action=\"\">"; #must have action parameter for xhtml 1.0+ -- Evan, 1/7/07
+    
+    return "<form id =\"" . $self->get_form_id() . "\" method=\"" . $self->get_submit_method() . "\" action=\"\">"; #must have action parameter for xhtml 1.0+ -- Evan, 1/7/07
 }
 
 sub get_form_end { 
     my $self = shift;
+    return undef if $self->get_no_buttons();
     return "<input type=\"submit\" value=\"" . $self->get_submit_button_text() . "\" /> 
             <input type=\"reset\" value=\"" . $self->get_reset_button_text() . "\" />
             </form>";
@@ -506,14 +509,14 @@ sub set_submit_button_text
  Ret:
  Args:         
 	       Note: as table does not call validate itself to give some
-               more control on the appearance (you don't wan't the 
+               more control on the appearance (you don't want the 
                new input field to appear with error messages).
  Side Effects:
  Example:
 
 =cut
 
-sub as_table_string { 
+sub as_table_string {
     my $self = shift;
     my $string = "";
 

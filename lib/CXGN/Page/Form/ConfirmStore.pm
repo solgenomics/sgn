@@ -20,7 +20,7 @@ use CXGN::Page::Form::Editable;
 
 package CXGN::Page::Form::ConfirmStore;
 
-use base qw / CXGN::Page::Form::Static /;
+use base qw / CXGN::Page::Form::Editable /;
 
 sub new {
 	my $class = shift;
@@ -83,16 +83,16 @@ sub store {
       if ($obj->can("exists_in_database")) { 
 	  my $message = $obj->exists_in_database();
 	 if ($message) { 
-	 	my $text = "This object (" . ref($obj) . ") already seems to exist in the database and violates constraints. Please correct your input.";
-		$message = "" unless ($message =~ /[a-zA-Z]/);
- 	    CXGN::Page->new()->message_page($text, $message);
-	}
+	     my $text = "This object (" . ref($obj) . ") already seems to exist in the database and violates constraints. Please correct your input.";
+	     $message = "" unless ($message =~ /[a-zA-Z]/);
+	     CXGN::Page->new()->message_page($text, $message);
+	 }
       }
     }
     foreach my $k (keys %distinct_objects) { 
 	#print STDERR " DUMP:" .Data::Dumper::Dumper($distinct_objects{$k});
 	#print STDERR " STORING OBJECT: ".ref($distinct_objects{$k})."\n";
-       
+	
 	my $id = $distinct_objects{$k}->store();
 	$self->set_insert_id($k, $id);
     }
