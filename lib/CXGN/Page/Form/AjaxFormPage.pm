@@ -2,15 +2,15 @@
 
 =head1 NAME
 
-SimpleFormPage.pm -- an abstract class that implements a simple webpage that can be use to add, view and modify information in the database.
+AjaxFormPage.pm -- an abstract class that implements a simple Ajax form that can be use to add, view and modify information in the database.
 
 =head1 DESCRIPTION
 
-SimpleFormPage.pm works with the CXGN::Page::Form classes and user-defined database classes that have to follow certain guidelines for this class to work properly (in essence, the database classes need to follow the rules for the CXGN::Page::Form framework. For more information, see the documentation of the L<CXGN::Page::Form> classes).
+AjaxFormPage.pm works with the CXGN::Page::Form classes and user-defined database classes that have to follow certain guidelines for this class to work properly (in essence, the database classes need to follow the rules for the CXGN::Page::Form framework. For more information, see the documentation of the L<CXGN::Page::Form> classes).
 
-SimpleFormPage.pm implements a simple authentication for the calls that modify database content. The function check_modify_privileges should return 1 if the current user had edit/delete privileges, otherwise it should return 0. The default implementation returns 1 for the owner and any logged in curators, 0 for all others.
+AjaxFormPage.pm implements a simple authentication for the calls that modify database content. The function check_modify_privileges should return 1 if the current user had edit/delete privileges, otherwise it should return 0. The default implementation returns 1 for the owner and any logged in curators, 0 for all others.
 
-SimpleFormPage contains a number of pre-populated accessors for often used CXGN features, such as CXGN::Page (get_page()), CXGN::DB::Connection (get_dbh()), and CXGN::Login (get_user()). 
+AjaxFormPage contains a number of pre-populated accessors for often used CXGN features, such as CXGN::Page (get_page()), CXGN::DB::Connection (get_dbh()), and CXGN::Login (get_user()). 
 
 When creating a derived class, you need to override the following functions:
 
@@ -20,11 +20,11 @@ C<sub generate_form()>
 
 If you want to create a page layout different from the default layout, you can also override:
 
-C<sub display_page()>
+C<sub display_form()>
 
 =head1 AUTHOR(S)
 
-Lukas Mueller (lam87@cornell.edu)
+Naama Menda (nm249@cornell.edu)
 
 
 =head1 FUNCTIONS AND INTERFACES
@@ -34,12 +34,15 @@ The following is a list of object functions. Some of these functions are used in
 =cut
 
 use strict;
+use Carp;
 
 use CXGN::Tools::Text qw | sanitize_string |;
-use CXGN::Page;
+
 use CXGN::Page::Form::Static;
 use CXGN::Page::Form::Editable;
 use CXGN::Page::Form::ConfirmStore;
+
+use CXGN::Scrap::AjaxPage;
 
 use CXGN::Login;
 use CXGN::DB::Connection;
@@ -47,10 +50,13 @@ use CXGN::DB::Connection;
 use CXGN::People;
 use CXGN::People::Person;
 
-package CXGN::Page::Form::SimpleFormPage;
+use CXGN::Contact;
+use CXGN::Feed;
+use JSON;
 
-use CXGN::Page::FormattingHelpers qw / page_title_html blue_section_html /;
+package CXGN::Page::Form::AjaxFormPage;
 
+use base qw /CXGN::Debug/ ;
 =head2 new
 
  Usage:        my $s = CXGN::Page::SimpleFormPageSubClass->new();
@@ -67,42 +73,46 @@ use CXGN::Page::FormattingHelpers qw / page_title_html blue_section_html /;
 
 sub new { 
     my $class = shift;
-    my $schema= shift;
     my $self = bless {}, $class;
-
+    
     my $primary_key = shift;
+    
+    __PACKAGE__->SUPER::new();
+    
+    my $dbh = CXGN::DB::Connection->new();
+    $self->set_ajax_page(CXGN::Scrap::AjaxPage->new() );
+   
 
-    $self->set_page(CXGN::Page->new("SGN", "Lukas"));
-    my $dbh=$self->get_page()->get_dbh(); # reuse the dbh from the Page object
+    my $dbh=CXGN::DB::Connection->new();###$self->get_page()->get_dbh(); # reuse the dbh from the Page object
     $self->set_dbh($dbh);
-    $dbh->add_search_path("$schema");
     
     $self->set_login(CXGN::Login->new($self->get_dbh()));
-    $self->get_page->{request}->no_cache(1);
-    my %args = $self->get_page()->cgi_params(); #multi-valued parameters have values in a string, delimited by \0
-
+    $self->get_ajax_page->{request}->no_cache(1);
+    my %args = $self->get_ajax_page()->get_all_encoded_arguments(); ##
+    
     # sanitize the inputs, we don't want to end up like bobby tables school.
     #
     foreach my $k (keys (%args)) { 
 	$args{$k} = CXGN::Tools::Text::sanitize_string($args{$k});
     }
-
+    
     $self->set_args(%args);
-
+    
     $self->define_object();
 
     $self->set_action($args{action});
-
+    
     if (!$self->get_action()) { 
 	$self->set_action("view");
     }
-
+    
     if (!$self->get_object_id() && $self->get_action()!~/new|store|confirm_store/) { 
-	$self->get_page()->message_page("No identifier provided to display data of this page for action view.");
+	$self->set_json_hash({error=>'No identifier provided to display data of this page for action view.'}); 
+	
     }
     else { 
 	if ($self->get_action()!~/new|view|edit|store|delete|confirm_delete|confirm_store/) { 
-	    $self->get_page()->error_page("Undefined input. Cannot proceed. Sorry.\n");
+	    $self->set_json_hash({error=>'No identifier provided'}); 
 	}	 
     }
     
@@ -120,27 +130,13 @@ sub new {
  	$self->add();
     }
     elsif ($self->get_action() eq "store") { 
-
- 	$self->store();
-     }
-    elsif ($self->get_action() eq "confirm_delete") { 
- 	my $id = $args{$self->get_primary_key()};
- 	if (!$id) { 
- 	    $self->get_page()->error_page("need an id for deleting");
- 	}
- 	$self->delete_dialog("Delete", "Object", 
- 			     $self->get_primary_key(), 
- 			     $id,
- 			     "<a href=\"".$self->get_script_name()."?".$self->get_primary_key()."=".$id."&amp;action=view\">Go back to detail page without deleting</a>");
-    
-     }
-     elsif ($self->get_action() eq "delete") { 
- 	$self->delete();
-     }
-    elsif ($self->get_action() eq "confirm_store") { 
 	
- 	$self->confirm_store();
-     }
+ 	$self->store();
+    }
+    elsif ($self->get_action() eq "confirm_delete") {
+	$self->delete();
+    }
+    ##action delete is being handled by the JSFormPage javascript object
     return $self;
 }
 
@@ -164,37 +160,29 @@ sub new {
 
 sub check_modify_privileges { 
     my $self = shift;
-
+    my %json_hash= $self->get_json_hash();
     # implement quite strict access controls by default
     # 
-    my $person_id = $self->get_login()->verify_session();
-    my $user =  CXGN::People::Person->new($self->get_dbh(), $person_id);
-    my $user_id = $user->get_sp_person_id();
-    if ($user->get_user_type() eq 'curator') {
-        return 0;
+    my ($person_id, $user_type)=$self->get_login()->has_session();
+    
+    if ($user_type eq 'curator') {
+	return 0;
     }
-    if ($user->get_user_type() !~ /submitter|sequencer|curator/) { 
-	$self->get_page()->message_page("You must have an account of type submitter to be able to submit data. Please contact SGN to change your account type.");
+    if ($user_type !~ /submitter|sequencer|curator/) { 
+	$json_hash{error} = 'You must have an account of type submitter to be able to submit data. Please contact SGN to change your account type.';
     }
     
     my @owners = $self->get_owners();
-    if ((@owners) && (!(grep { $_ =~ /^$user_id$/ } @owners) )) {
+    if ((@owners) && (!(grep { $_ =~ /^$person_id$/ } @owners) )) {
 	# check the owner only if the action is not new
 	#
-	#my $owner_id = $self->get_object_owner();
-	#  if (($owner_id) && ($owner_id != $user_id))
-	#  {
+	$json_hash{error} = 'You do not have rights to modify this database entry because you do not own it. [$person_id, @owners]';
 	
-
-	$self->get_page()->message_page("You do not have rights to modify this database entry because you do not own it. [$user_id, @owners]");
-    }
-    else { 
-	return 0;
-    }
-    
+    }else { $self->set_is_owner(1); }
     
     # override to check privileges for edit, store, delete.
     # return 0 for allow, 1 for not allow.
+    $self->set_json_hash(%json_hash);
     return 0;
     
 }
@@ -218,6 +206,7 @@ sub define_object {
     $self->set_object();
     $self->set_object_id();
     $self->set_primary_key();
+    $self->set_owners();
 }
 
 
@@ -228,7 +217,7 @@ sub edit {
     my $self = shift;
     $self->check_modify_privileges();
     $self->generate_form();
-    $self->display_page();
+    $self->display_form();
 }
 
 # add is an internally used function to generate an 'emtpy' form.
@@ -238,7 +227,7 @@ sub add {
     my $self = shift;
     $self->check_modify_privileges();
     $self->generate_form();
-    $self->display_page();
+    $self->display_form();
     
 }
 
@@ -263,7 +252,7 @@ sub add {
 sub store { 
     my $self = shift;
     my $dont_show_form = shift;
-
+    my %json_hash= $self->get_json_hash();
     $self->check_modify_privileges();
 
     # for the store we need a properly formatted form so that we can
@@ -273,12 +262,11 @@ sub store {
 
     # validate the form
     my %errors = $self->get_form()->validate($self->get_args());
-    if (!%errors)
-	 {
-	 
-	 #give the user the opportunity to modify, add or remove form parameters before committing them
-	 #(this needs to be done after validate() because that assumes it'll have the parameters given on the form as displayed)
-	 $self->validate_parameters_before_store();
+    if (!%errors) {
+	
+	#give the user the opportunity to modify, add or remove form parameters before committing them
+	#(this needs to be done after validate() because that assumes it'll have the parameters given on the form as displayed)
+	$self->validate_parameters_before_store();
 	
 	# the form validated. Now let's check if it passes the uniqueness
 	# constraints.
@@ -286,26 +274,15 @@ sub store {
 	# CXGN::DB::Modifiable and thus has a exists_in_database
 	# function - but don't make it a requirement. If it doesn't -- never mind.
 	#
-# 	if ($self->get_object()->can("exists_in_database")) { 
-# 	    if ($self->get_object()->exists_in_database()) { 
-# 		$self->get_page()->message_page("Some fields in this object must be unique in the database. 
-#                                     Please modify your input and try to submit again.");
-# 	    }
-# 	}
-
-#	eval
-#	{
-	 #print STDERR "**** about to call the get_form->store() ****";
-		$self->get_form()->store($self->get_args());
-	 
-		#give the user the opportunity to do anything related to the form after storing
-		$self->process_parameters_after_store();
-#	};
-#	if ($@) { 
-#	    $self->get_page()->message_page("An error occurred while attempting to store data. Please verify your input and try again. $@");
-#	}
-
-	# was it an insert? get the insert id
+ 	
+	$self->d("**** about to call the get_form->store() ****");
+	$self->get_form()->store($self->get_args());
+	
+	#give the user the opportunity to do anything related to the form after storing
+	$self->process_parameters_after_store();
+	
+	
+        # was it an insert? get the insert id
 	#
 	if (!$self->get_object_id()) { 
 	    my $id = $self->get_form()->get_insert_id();
@@ -313,27 +290,15 @@ sub store {
 	}
 	my %args = $self->get_args();
 	
-	# if we are supposed to show the form, redirect to the
-	# script this script with the appropriate parameters,
-	# the object_id, and the action = view.
-	#
-	if (!$dont_show_form) { 
-	    my $url = 
-		$self->get_script_name()."?".
-		$self->get_primary_key()."=".
-		$self->get_object_id()."&action=view";
-	    
-	    $self->get_page()->client_redirect($url);
-	}
-	
     }
     else { 
 	# if there was an error, re-display the same page.
 	# the errors will be displayed on the page for each
 	# field that did not validate.
 	#
-	$self->display_page();
-	exit();
+	$json_hash{html} = $self->get_form()->as_table_string();
+	$self->set_json_hash(%json_hash);
+	
     }
 
 }
@@ -341,7 +306,7 @@ sub store {
 
 =head2 view
 
-  Description: Displays the page in the 'view' mode.
+  Description: Displays the form in the 'view' mode.
 
 =cut
 
@@ -351,9 +316,9 @@ sub view {
     # make sure we get a static form.
     #
     $self->set_action("view");
-
+    
     $self->generate_form();
-    $self->display_page();
+    $self->display_form();
 }
 
 =head2 get_user()
@@ -395,39 +360,6 @@ sub generate_form {
     warn "Please subclass 'generate_form' function!\n";
 }
 
-=head2 delete_dialog
-
- Desc:         Displays a verification dialog for a delete action.
-
-=cut
-
-sub delete_dialog { 
-    my $self = shift;
-    $self->check_modify_privileges();
-    my $title = shift;
-    my $object_name = shift;
-    my $field_name = shift;
-    my $object_id = shift;
-    my $back_link = shift;
-
-    $self->get_page()->header();
-
-    page_title_html("$title");
-    print qq { 
-	<form>
-	Delete database object $object_name (id=$object_id)? 
-	<input type="hidden" name="action" value="delete" />
-	<input type="hidden" name="$field_name" value="$object_id" />
-	<input type="submit" value="Delete" />
-	</form>
-	
-	$back_link
-
-    };
-
-    $self->get_page()->footer();
-
-}
 
 =head2 delete
 
@@ -446,45 +378,17 @@ sub delete {
     my $self = shift;
     warn "Override 'delete' function in derived class\n";
 
-    $self->get_page()->message_page("Deleting is not implemented for this object");
-
+    my $error="Deleting is not implemented for this object";
+    my %json_hash=$self->get_json_hash();
+    $json_hash{error} = $error;
+    $self->set_json_hash(%json_hash);
 }
 
-=head2 confirm_store
+=head2 display_form
 
- Desc:         displays a confirmation dialog for before certain store
-               operations.
-
-=cut
-
-sub confirm_store {
-
-    my $self=shift;
-    $self->get_page()->header();
-    
-    
-    page_title_html("Confirm store");
-    print qq { 
-	<form>
-	Store object in the database? 
-	<input type="hidden" name="action" value="store" />
-	
-	<input type="submit" value="Store" />
-	</form>
-	
-	<a href="javascript:history.back(1)">Go back without storing the object</a>
-	
-    };
-
-    $self->get_page()->footer();
-
-}
-
-=head2 display_page
-
- Usage:        $s->display_page()
+ Usage:        $s->display_form()
  Desc:         can be overridden in the subclass. In the default
-               implementation, displays the header and footer, the
+               implementation, displays the
                appropriate edit links and the form in table format,
                in the appropriate Editable or Static form.
  Ret:
@@ -494,22 +398,19 @@ sub confirm_store {
 
 =cut
 
-sub display_page { 
+sub display_form { 
     my $self=shift;
     
-    $self->get_page()->header();
-    print $self->get_edit_links();
+    # edit links are printed from the javascript object! See JSFormPage.js
+    #print $self->get_edit_links();
     $self->get_form()->as_table();
-    
-    $self->get_page()->footer();
-    
 }
 
 
-=head2 get_page, set_page
+=head2 get_ajax_page, set_ajax_page
 
- Usage:        $p = $s->get_page();
- Desc:         get the page object of the current page.
+ Usage:        $p = $s->get_ajax_page();
+ Desc:         get the ajax page object of the current page.
                the simple form page automatically initializes
                this property.
  Ret:
@@ -519,15 +420,15 @@ sub display_page {
 
 =cut
 
-sub get_page {
+sub get_ajax_page {
   my $self=shift;
-  return $self->{page};
+  return $self->{ajax_page};
 
 }
 
-sub set_page {
+sub set_ajax_page {
   my $self=shift;
-  $self->{page}=shift;
+  $self->{ajax_page}=shift;
 }
 
 =head2 get_dbh
@@ -628,6 +529,27 @@ sub set_object {
   $self->{object}=shift;
 }
 
+=head2 accessors get_object_name, set_object_name
+
+ Usage:
+ Desc:
+ Property
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_object_name {
+  my $self = shift;
+  return $self->{object_name}; 
+}
+
+sub set_object_name {
+  my $self = shift;
+  $self->{object_name} = shift;
+}
+
+
 =head2 get_owners
 
  Usage:  my @owners = $self->get_owners()
@@ -717,20 +639,20 @@ sub set_primary_key {
 =cut
 
 sub get_script_name {
-  my $self=shift;
-  if (!exists($self->{script_name})) { 
-      #return CXGN::Apache::Request::page_name();
-      return $ENV{SCRIPT_NAME};
-  }
-  else { 
-      return $self->{script_name};
-  }
-      
+    my $self=shift;
+    if (!exists($self->{script_name})) { 
+	#return CXGN::Apache::Request::page_name();
+	return $ENV{SCRIPT_NAME};
+    }
+    else { 
+	return $self->{script_name};
+    }
+    
 }
 
 sub set_script_name {
-  my $self=shift;
-  $self->{script_name}=shift;
+    my $self=shift;
+    $self->{script_name}=shift;
 }
 
 =head2 get_object_id, set_object_id
@@ -783,6 +705,48 @@ sub set_form {
   $self->{form}=shift;
 }
 
+=head2 accessors get_json_hash, set_json_hash
+
+ Usage:
+ Desc:
+ Property
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_json_hash {
+  my $self=shift;
+  if (!$self->{json_hash}) { %{$self->{json_hash}} = (); }
+  return %{$self->{json_hash}};
+
+}
+
+sub set_json_hash {
+  my $self=shift;
+  %{$self->{json_hash}}=@_;
+}
+
+=head2 accessors get_is_owner, set_is_owner
+
+ Usage:
+ Desc:
+ Property
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_is_owner {
+  my $self = shift;
+  return $self->{is_owner}; 
+}
+
+sub set_is_owner {
+  my $self = shift;
+  $self->{is_owner} = shift;
+}
+
 =head2 init_form
 
  Usage:        $s->init_form()
@@ -798,9 +762,10 @@ sub set_form {
 
 sub init_form {
     my $self = shift;
+    my $form_id = shift;
     
     if ($self->get_action() =~/edit|^store|new/) { 
-	$self->set_form( CXGN::Page::Form::Editable -> new() );
+	$self->set_form( CXGN::Page::Form::Editable -> new({no_buttons=>1, form_id=>$form_id} ) ) ;
 	
     }elsif ($self->get_action() =~/confirm_store/) {
 	$self->set_form( CXGN::Page::Form::ConfirmStore->new() ) ; 
@@ -868,122 +833,72 @@ sub validate_parameters_before_store {
 sub process_parameters_after_store {
 }
 
-=head2 get_edit_links
 
- Usage:        my $edit_links = $s->get_edit_links()
- Desc:         gets a string corresponding to the edit links to be placed
-               on the page, as appropriate for the current action. The edit
-               link, for example, is replaced with a 'cancel edit' in edit mode
-               etc.
- Ret:
- Args:
- Side Effects:
+sub return_json {
+    my $self=shift;
+    my %results= $self->get_json_hash();
+    
+    if ($results{die_error} ) { 
+	CXGN::Contact::send_email('AjaxFormPage died',$results{"error"} );
+    }
+    my $json = JSON->new();
+    my $jobj = $json->encode(\%results);
+    print  $jobj;
+}
+
+=head2 send_form_email
+
+ Usage: $self->send_form_email( { subject=>foo, mailing_list=>bar, referring_page=>my_page.pl, acion=>delete});
+ Desc:  send an email after the user stored something in the database
+ Ret:   nothing
+ Args:  hash with the following optional keys
+    subject       => the subject row of the email
+    mailing_list  => defaults to sgn-bugs. Usually curation emails should go to sgn-db-curation
+    referring_page=> your page would show as a link in the email
+    action        => 'delete' value will send an 'object $id was obsoleted...'
+ Side Effects:  send an email with an informative message about the nature of the database change.
  Example:
 
 =cut
 
-
-sub get_edit_links {
-    my $self =shift;
-    my $form_name = shift;
-    return $self->get_new_link_html($form_name)." ".
-	$self->get_edit_link_html($form_name)." ".$self->get_delete_link_html($form_name);
-
-}
-
-=head2 function get_new_link_html
-
-  Synopsis:	
-  Description: Creates an appropriate 'new' link for the edit links.
-
-=cut
-
-sub get_new_link_html {
-    my $self = shift;
-    my $form_name = shift;
-
-    my $script_name = $self->get_script_name();
-    my $primary_key = $self->get_primary_key();
-    my $object_id = $self->get_object_id();
-
-    my $new_link = qq { <a href="$script_name?action=new&amp;form=$form_name">[New]</a> };
-    if ($self->get_action() eq "edit") { 
-	$new_link = qq { <span class="ghosted">[New]</span> };
-    }
-    if ($self->get_action() eq "new") { 
-	$new_link = qq { <a onClick="history.go(-1)">[Cancel]</a> };
-    }
-    return $new_link;
-}
-
-=head2 function get_edit_link_html
-
-  Description:	Creates an appropriate 'edit' link for the edit links.
-
-=cut
-
-sub get_edit_link_html {
-    my $self = shift;
-    my $form_name = shift;
-
-    my $edit_link = "";
-    my $script_name = $self->get_script_name();
-    my $primary_key = $self->get_primary_key();
-    my $object_id = $self->get_object_id();
-   
-    my $user_id= $self->get_user()->get_sp_person_id();
-    my @owners= $self->get_owners();
-    if (($self->get_user()->get_user_type() eq "curator") || grep{/^$user_id$/} @owners ) {
-	 $edit_link = qq { <a href="$script_name?action=edit&amp;form=$form_name&amp;$primary_key=$object_id">[Edit]</a> };
-
-     }else {
-	 $edit_link = qq { <span class="ghosted">[Edit]</span> };
-     }
-
-
-    if ($self->get_action() eq "edit") { 
-	$edit_link = qq { <a href="$script_name?action=view&amp;form=$form_name&amp;$primary_key=$object_id">[Cancel Edit]</a> };
-    }
-
-    if ($self->get_action() eq "new") { 
-	$edit_link = qq { <span class="ghosted">[Edit]</span> };
-    }
-
-    return $edit_link;
-}
-
-=head2 function get_delete_link_html
-
-  Description: Generates and appropriate 'delete' link for the edit links.
-
-=cut
-
-sub get_delete_link_html {
-    my $self = shift;
-    my $form_name = shift;
-
-    my $delete_link = "";
-    my $script_name = $self->get_script_name();
-    my $primary_key = $self->get_primary_key();
-    my $object_id = $self->get_object_id();
-    my $user_id= $self->get_user()->get_sp_person_id();
-    my @owners= $self->get_owners();
-    if (($self->get_user()->get_user_type() eq "curator") || grep{/^$user_id$/} @owners ) {
-   
-	$delete_link = qq { <a href="$script_name?action=confirm_delete&amp;form=$form_name&amp;$primary_key=$object_id">[Delete]</a> };
+sub send_form_email {
+    my $self   = shift;
+    my %opts=shift;
+    my $subject=$opts{subject};
+    my $mailing_list = $opts{mailing_list};
+    my $referring_page_link = $opts{referring_page};
+    my $action = $opts{action};
     
-    }else {
-	$delete_link = qq { <span class="ghosted">[Delete]</span> };
+    my $user=$self->get_user();
+    
+    my $object_id = $self->get_object_id();
+    
+    my $username =
+        $user->get_first_name() . " "
+	. $user->get_last_name();
+    my $sp_person_id = $user->get_sp_person_id();
+    
+    
+    my $user_link =
+	qq |http://www.sgn.cornell.edu/solpeople/personal-info.pl?sp_person_id=$sp_person_id|;
+    
+    my $usermail = $user->get_private_email();
+    my $fdbk_body;
+    if ( $action eq 'delete' ) {
+        $fdbk_body =
+	    "$username ($user_link) has obsoleted " . $self->get_object_name() . "  $object_id ($referring_page_link) \n  $usermail";
     }
-
-    if ($self->get_action() eq "edit") { 
-	$delete_link = qq { <span class="ghosted">[Delete]</span> };
+    elsif ( $object_id == 0 ) {
+        $fdbk_body =
+	    "$username ($user_link) has submitted a new ". $self->get_object_name()  . "   \n$usermail ";
     }
-
-    if ($self->get_action() eq "new") { 
-	$delete_link = qq { <span class="ghosted">[Delete]</span> };
+    else {
+        $fdbk_body =
+	    "$username ($user_link) has submitted data for ." . $self->get_object_name() ." ($referring_page_link) \n $usermail";
     }
-    return $delete_link;
+    
+    CXGN::Contact::send_email( $subject, $fdbk_body,$mailing_list );
+    CXGN::Feed::update_feed( $subject, $fdbk_body );
 }
 
 

@@ -481,16 +481,15 @@ sub validate {
 
 sub from_request {
     my $self = shift;
-	 my %args = @_;
-	 
-	foreach my $f ($self->get_fields())
+    my %args = @_;
+    foreach my $f ($self->get_fields())
+    {
+	my $field_name = $f->get_field_name();
+	if (exists($args{$field_name}))
 	{
-		my $field_name = $f->get_field_name();
-		if (exists($args{$field_name}))
-		{
-			$f->set_from_external($args{$field_name});
-		}
+	    $f->set_from_external($args{$field_name});
 	}
+    }
 }
 
 =head2 from_database
@@ -661,7 +660,7 @@ sub get_insert_id {
     my $object_type = ref($object);
     if (!exists($self->{insert_id}) || !exists($self->{insert_id}->{object_type})) { 
 	
-	print STDERR "last insert id for object_type $object_type unknown!\n";
+	#print STDERR "last insert id for object_type $object_type unknown!\n";
     }
     else { 
 	return $self->{insert_id}{object_type};
@@ -761,5 +760,24 @@ sub set_form_id {
 }
 
 
+=head2 accessors get_no_buttons, set_no_buttons
+
+ Usage:
+ Desc:
+ Property
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_no_buttons {
+  my $self = shift;
+  return $self->{no_buttons}; 
+}
+
+sub set_no_buttons {
+  my $self = shift;
+  $self->{no_buttons} = shift;
+}
 
 return 1;
