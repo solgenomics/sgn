@@ -428,7 +428,7 @@ sub validate_image_filename {
 
 
   my $ext; 
-  if ($fn =~ m/^(.*)(\.\S{1,4})$/) {
+  if ($fn =~ m/^(.*)(\.\S{1,4})\r*$/) {
       $ext = lc ($2);
       print STDERR "Upload Attempt with disallowed filename extension: $fn Extension: $ext\n";
       return "File Type must be one of: .png, .jpg, .jpeg, .gif, .pdf, .ps, or .eps" unless exists $file_types{$ext};
