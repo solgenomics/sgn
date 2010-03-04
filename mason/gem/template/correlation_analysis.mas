@@ -1,0 +1,283 @@
+<%doc>
+
+=head1 NAME 
+ 
+ correlation_analysis.mas
+ Mason component to show the correlation analysis data for template web page.
+
+=cut
+
+=head1 VERSION 
+
+0.1
+
+=cut 
+
+=head1 DESCRIPTION
+
+ Mason component to show the basic information for template web page.
+
+ - Mason root page = template_detail.mas
+ - Perl controller = template.pl
+
+=cut
+ 
+=head 1 AUTHOR
+ 
+ Aureliano Bombarely (ab782@cornell.edu)
+
+=cut 
+
+</%doc>
+
+
+<%args>
+$schema
+$template
+</%args>
+
+
+<%perl>
+
+use strict;
+use warnings;
+
+use CXGN::Metadata::Dbiref;
+use CXGN::Metadata::Dbipath;
+use CXGN::GEM::Template;
+use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
+
+
+my $corr_analysis_content;
+my $corr_n = 0;
+
+## Define the default message
+
+my $default_message = '<font color="gray"><i>No available</i></font>';
+
+## Define the internal links associated to the internal accessions
+## This should be replace for other system
+
+my %internal_prelinks = ( 
+                          unigene => ['<a href=/search/unigene.pl?unigene_id=', '', '>SGN-U', '', '</a>'],
+                          est     => ['<a href=/search/est/pl?request_from=1&request_id=', '', '&request_type=7>SGN-E', '', '</a>'],
+                          clone   => ['<a href=/search/est/pl?request_from=1&request_id=', '', '&request_type=8>SGN-C', '', '</a>'],
+                        );
+
+
+
+## If there aren't any template that comes from template it will do nothing. The error message will returned by basic information
+
+if (defined $template) {
+
+   ## Get the data from the template object
+
+   my $template_id = $template->get_template_id();
+
+   ## Search correlation analysis member for this template id.
+
+   my $corr_analysis_html;
+
+   ## Find correlation analysis id associated with this template
+
+   my $corr_analysis_rs = $schema->resultset('GeCorrelationMember')
+                                 ->search(
+                                            [ 
+                                               { template_a_id => $template_id },
+                                               { template_b_id => $template_id }
+  					    ],
+                                             {
+  					       select   => 'correlation_analysis_id',
+  					       group_by => 'correlation_analysis_id'
+  					    }
+  				          );
+   
+   my @corr_analysis_ids = $corr_analysis_rs->get_column('correlation_analysis_id')
+                                            ->all();
+
+
+   if (scalar(@corr_analysis_ids) > 0) {   ### Mean that exists correlation analysis for this template_id.
+
+       ## It will print a table and a list of templates with correlation values per analysis so:
+       
+       foreach my $corr_id (@corr_analysis_ids) {
+
+  	   my ($corr_analysis_row) = $schema->resultset('GeCorrelationAnalysis')
+  	                                    ->search(
+ 	                                              { 
+  						        correlation_analysis_id => $corr_id 
+  						      }
+  					            );
+
+  	   my $methodology = $corr_analysis_row->get_column('methodology') || 
+  	       $default_message;
+	   
+  	   my $description = $corr_analysis_row->get_column('description') || 
+  	       $default_message;
+	   
+  	   ## Construct the table for the data
+
+  	   $corr_analysis_html .= '<table width="100%">';
+  	   $corr_analysis_html .= '<tr> <td width="30%"> <b>Correlation Analisis ID: </b> </td> <td>' . $corr_id     . '</td></tr>';
+  	   $corr_analysis_html .= '<tr> <td width="30%"> <b>Methodology:             </b> </td> <td>' . $methodology . '</td></tr>';
+  	   $corr_analysis_html .= '<tr> <td width="30%"> <b>Description:             </b> </td> <td>' . $description . '</td></tr>';
+  	   $corr_analysis_html .= '</table><br>';
+  	   $corr_n++;
+
+  	   ## Now we are going to get all the correlation values using two aprox, (positives and negatives);
+
+  	   my @corr_types = ('Possitive correlations', 'Negative correlations');
+  	   foreach my $corr_type (@corr_types) {
+
+  	       my ($cond, $order);
+  	       if ($corr_type =~ m/negative/i) {
+  		   $cond = '<';
+  		   $order = 'correlation_value ASC';
+  	       } 
+ 	       elsif ($corr_type =~ m/possitive/i) {
+  		   $cond = '>';
+ 		   $order = 'correlation_value DESC';
+  	       } 
+ 	       else {
+  		   $cond = '!=';
+  		   $order = 'correlation_value';
+  	       }
+	       
+ 	       ## When the condition is set, it will take the data from the database, searching for template_a_id
+ 	       ## OR template_b_id (Should not be duplicated, but anyway the duplications will be removed later)
+	       
+  	       my @corr_members_rows = $schema->resultset('GeCorrelationMember')
+  		                              ->search( 
+  		                                        [
+  							  { 
+  							    template_a_id           => $template_id,
+  							    correlation_analysis_id => $corr_id,
+  							    correlation_value       => {$cond, 0}
+  							  },
+  							  { 
+  							    template_b_id           => $template_id,
+  							    correlation_analysis_id => $corr_id,
+  							    correlation_value       => {$cond, 0}
+  							  }
+  							],
+  		                                        { 
+  							    order_by => $order,
+  							} 
+  					              );
+
+  	       if (@corr_members_rows > 0) {
+
+  		    my $temp_count = ' (' . scalar(@corr_members_rows) . ' templates correlated)'; 
+  		    $corr_analysis_html .= '<table width="100%">';
+  		    $corr_analysis_html .= '<tr> <td width ="2%"></td><td width="28%"> <b>Correlation Type: </b> </td>';
+  		    $corr_analysis_html .= ' <td align="left">'.$corr_type . $temp_count .'</td></tr>';
+  		    $corr_analysis_html .= '</table><br>';
+  	       }
+
+  	       my @corr_data;
+  	       my ($corr_type, $corr_template_type);
+
+  	       ## Now it will get the template_id (a or b) and to put in the same order in an array
+              
+  	       my @corr_member_ids;
+  	       my %member;
+
+  	       foreach my $corr_member_row (@corr_members_rows) {
+
+  		   my %corr_member_data = $corr_member_row->get_columns();
+  		   $corr_type = $corr_member_data{'correlation_type'};
+
+  		   my $templ_a_id = $corr_member_data{'template_a_id'};
+  		   my $templ_b_id = $corr_member_data{'template_b_id'};
+		   
+  		   ## It will take the data diff
+
+  		   if ($templ_a_id == $template_id) {
+  		       unless (exists $member{$templ_b_id}) {
+  			   $member{$templ_b_id} = $corr_member_data{'correlation_value'};
+  			   push @corr_member_ids, $templ_b_id;
+  		       }
+  		   }
+  		   elsif ($templ_b_id == $template_id) {
+  		       unless (exists $member{$templ_a_id}) {
+  			   $member{$templ_a_id} = $corr_member_data{'correlation_value'};
+  			   push @corr_member_ids, $templ_a_id;
+  		       }
+  		   }
+  	       }
+
+  	       ## With the list of template_ids it will take them using CXGN::GEM::Template object
+	       
+	       
+	       my @test;
+  	       foreach my $corr_template_id (@corr_member_ids) {
+
+  		   ## Create the link for the new template_id
+
+  		   my $corr_template = CXGN::GEM::Template->new($schema, $corr_template_id);
+  		   my $corr_template_name = $corr_template->get_template_name();
+		   my $corr_template_type = $corr_template->get_template_type();
+  		   my $corr_template_link = '/gem/template.pl?id=' . $corr_template_id;
+  		   my $corr_template_html = "<a href=$corr_template_link>" . $corr_template_name . '</a>';
+		   
+
+  		   ## Get the SGN-internal link
+		   
+		   my @dbiref_list_id = $corr_template->get_dbiref_list();
+
+		   if (scalar(@dbiref_list_id) > 0) {
+		       
+		       foreach my $dbiref_id (@dbiref_list_id) {
+
+			   my $dbiref = CXGN::Metadata::Dbiref->new($schema, $dbiref_id);
+			   my $dbipath = CXGN::Metadata::Dbipath->new($schema, $dbiref->get_dbipath_id() );
+
+			   my $itype = $dbipath->get_table_name();
+
+			   my $prelink_aref = $internal_prelinks{$itype};
+			   my @prelink = @{$prelink_aref};
+		       
+			   ## Define the link with the accession for positions 1 and 3 in the array
+		       
+			   $prelink[1] = $dbiref->get_accession();
+			   $prelink[3] = $dbiref->get_accession();
+
+			   my $internal_link = join('', @prelink);
+			   push @corr_data, [$corr_template_html, $member{$corr_template_id}, $internal_link];
+		       }		   
+		   }
+		   else {
+		       push @corr_data, [$corr_template_html, $member{$corr_template_id}, $default_message];
+		   }
+  	       }
+
+	       my $test = join('<br>', @test);
+  	       $corr_analysis_html .= columnar_table_html( headings => [ 'Template', $corr_type, 'Internal Mapping' ],
+  							   data     => \@corr_data,
+  							   __align  => ['l', 'c', 'c'],
+  		                                         );
+  	       $corr_analysis_html .= '<br>';
+  	   }
+       }
+   }
+   else {
+       $corr_analysis_html = 'No correlation analysis was found associated to this template';
+   }
+   $corr_analysis_content = info_section_html( 
+                                               title       => "Correlation analysis (".$corr_n.")", 
+					       contents    => $corr_analysis_html,
+					       collapsible => 1,
+					       collapsed   => 1, 
+                                             );
+ 
+}
+
+</%perl>
+
+<% $corr_analysis_content %>
+
+<& 
+   /util/import_javascript.mas, 
+   classes => 'CXGN.Effects' 
+&>
+
