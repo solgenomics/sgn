@@ -62,3 +62,9 @@ $unigene_list
    '/gem/template/expression_info.mas', 
    template => $template, 
 &>
+
+<& 
+   '/gem/template/correlation_analysis.mas', 
+   schema   => $schema,
+   template => $template, 
+&>
