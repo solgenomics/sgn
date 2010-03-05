@@ -588,19 +588,17 @@ sub store_traits {
 	    while (<F>) { 
 		chomp;
 		my (@values) = split /\t/;
-		print STDERR "$values[0] ....\n";
-
+	
 		$trait = CXGN::Phenome::UserTrait->new_with_name($dbh, $values[0]);	
-		
+	
 	 	if (!$trait) {		 
 		    $trait = CXGN::Phenome::UserTrait->new($dbh);
+		    
 		    $trait->set_cv_id(17);
 		    $trait->set_name($values[0]);
 		    $trait->set_definition($values[1]);		       
 		    $trait->set_sp_person_id($sp_person_id);
-		    $trait->store();
-		    
-		    $trait_id = $dbh->last_insert_id("user_trait", "phenome");
+		    $trait_id = $trait->store();
 		    
 		    $trait = CXGN::Phenome::UserTrait->new($dbh, $trait_id);
 		    $trait_id = $trait->get_user_trait_id();
@@ -608,12 +606,14 @@ sub store_traits {
 		   unless (!$values[2]) {
 		       $unit_id  = $trait->get_unit_id($values[2]);
 			if (!$unit_id) {
-			    $unit_id = $trait->insert_unit_($values[2]);
-			}		
-		   }
-		   unless (!$unit_id) {
-			$trait->insert_user_trait_id($trait_id, $unit_id, $pop_id);
-		   }
+			    $unit_id = $trait->insert_unit($values[2]);			    			    
+			    } 
+			    
+			}
+		    if (($trait_id) && ($pop_id) && ($unit_id)) {
+			$trait->insert_user_trait_unit($trait_id, $unit_id, $pop_id);
+		        
+		   }		
 		  
 		}  else {
 		    
@@ -621,19 +621,24 @@ sub store_traits {
 			$trait_id = $trait->get_user_trait_id();
 			$unit_id  = $trait->get_unit_id($values[2]);
 			if (!$unit_id) {
-			    $unit_id = $trait->insert_unit($values[2]);
+			    $unit_id = $trait->insert_unit($values[2]);			   
+			    
+			}
+			if (($trait_id) && ($pop_id) && ($unit_id)) {
+			    $trait->insert_user_trait_unit($trait_id, $unit_id, $pop_id);
 			}
 			
-			if (($trait_id) && ($pop_id) && ($unit_id)) {
-			     $trait->insert_user_trait_unit($trait_id, $unit_id, $pop_id);
-			}
+			
 		    }
 			  
 		}
 	    
 	    }
 
-	    if ($@) { 
+	    
+	
+	};
+	if ($@) { 
 		$dbh->rollback();
 		print STDERR "An error occurred storing traits: $@\n";
 		return 0;	        
@@ -643,8 +648,6 @@ sub store_traits {
 		return 1;
 		#$dbh->commit();
 	    }
-	
-	};
     
     }
 }
