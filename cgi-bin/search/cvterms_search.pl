@@ -9,7 +9,6 @@
 use strict;
 
 use CXGN::Cvterms;
-#use CXGN::Phenome::Individual;
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw/blue_section_html
                                      info_section_html
@@ -20,7 +19,6 @@ use CXGN::Search::CannedForms;
 use CXGN::DB::Connection;
 #################################################
 
-# Start a new SGN page.
 
 my $page=CXGN::Page->new("SGN QTLs/Traits search results","Isaak");
 $page->header();
@@ -55,7 +53,6 @@ if (%params) {
     while(my $r = $result->next_result) {
 	print STDERR "cvterm_result: $r->[0]\n";
         my $cv=CXGN::Chado::Cvterm->new($dbh, $r->[0]);
-	#my $definition = $cv->get_definition(); 
 	my $has_qtl = $cv->is_from_qtl();
 	my $qtl_mark; 
 	my $tickmark = "&#10003;";
@@ -64,14 +61,12 @@ if (%params) {
 	    $qtl_mark = qq |<font size=4 color="#0033FF">$tickmark</font> |;
 	} else {$qtl_mark = qq|<font size=4 color="red">$x</font> |;}
 	
-	#if($has_qtl) {
 	push @results, [map {$_} ('<a href="/chado/cvterm.pl?cvterm_id='.$r->[0].'">'.$r->[1]. '</a>', 
                                   $r->[2],                               
 				  $r->[3],
 				  $qtl_mark
 				  )
 			];
-    #}
     
  }   
 #build the HTML to output
