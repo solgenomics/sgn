@@ -2,15 +2,15 @@
  $exception
 </%args>
 
-<h2><% $exception->title || 'Error' %></h2>
+<h2><% $exception->title || ( $exception->is_error ? 'Error' : '' ) %></h2>
 
-<div>
+<div style="text-align: center">
   <% $exception->message %>
 </div>
 
 % if( $exception->can('developer_message') && !$c->get_conf('production_server') ) {
 <div style="margin: 1em 0">
-  <b>Developer message:</b>
-    <% defined $exception->developer_message ? $exception->developer_message : 'none' %>
+  <h3>Developer message:</h3>
+    <% defined $exception->developer_message ? $exception->developer_message : 'none provided' %>
 </div>
 % }
