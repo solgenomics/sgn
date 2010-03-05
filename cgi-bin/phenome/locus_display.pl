@@ -1755,7 +1755,7 @@ sub _itag_features_to_html {
                       Contig               => $ctg,
                       $sequences_matched => join( ', ', @locus_seqnames ),
                       __tableattrs =>
-                          qq|summary="" style="margin: 1em auto -1px auto; border-bottom: 0; width: ${gb_img_realwidth}px"|,
+                          qq|summary="" style="margin: 1em auto -1px auto; border-bottom: 0"|,
                      )
                   . $gbrowse_img
            .qq|</div>\n|
