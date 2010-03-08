@@ -292,6 +292,7 @@ my $build = $class->new(
         'Module::Build'           => '0.36',
         'Module::Find'            => 0,
         'Moose'                   => 0,
+        'MooseX::Method::Signatures' => '0.30',
         'MooseX::Singleton'       => 0,
         'namespace::autoclean'    => 0,
         'SOAP::Transport::HTTP'   => 0,
