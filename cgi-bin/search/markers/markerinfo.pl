@@ -73,7 +73,7 @@ print ssr_html($marker_id);
 print cos_html($marker_id);
 print cosii_orthologs_html($marker);
 print derivations_html($marker);
-print locations_html($marker);
+print locations_html($marker, $display_name);
 print polymorphisms_html($marker);
 print unigene_match_html($marker_id);
 print overgo_html($marker_id);
@@ -555,6 +555,7 @@ sub cosii_orthologs_html {
 
 sub locations_html {
     my $marker = shift;
+    my $display_name = shift;
     my $locations_html='';
 
     my @displayed_locs=();
@@ -636,7 +637,7 @@ sub locations_html {
 		    my $map=$map_factory->create({map_version_id=>$map_version_id});
 		    my $map_version_id=$map->get_id();
 		    my $map_name=$map->get_short_name();
-		    my $hilite_name = $marker_name;
+		    my $hilite_name = $display_name;
 		    if ($subscript) {
 			$hilite_name.=$subscript;
 		    }
