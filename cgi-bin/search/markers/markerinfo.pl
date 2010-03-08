@@ -13,20 +13,17 @@ use CXGN::Map;
 use CXGN::Cview::ChrMarkerImage;
 use CXGN::Cview::MapFactory;
 use CXGN::Unigene::Tools;
-my $dbh=CXGN::DB::Connection->new("sgn");
+my $dbh=CXGN::DB::Connection->new();
 my $page=CXGN::Page->new("markerinfo.pl","john and beth");
 $page->jsan_use('MochiKit.Base', 'MochiKit.Async');
 my($marker_id,$id,$name)=$page->get_encoded_arguments("marker_id","id","name");
-my @displayed_locs=();
-my @displayed_pcr=();
-if($id and !$name)
-{
+
+
+if($id and !$name) {
     $name=$id;
 }
-unless($marker_id and $marker_id=~/^\d+$/ and $marker_id>0)
-{
-    if($name)
-    {
+unless($marker_id and $marker_id=~/^\d+$/ and $marker_id>0) {
+    if($name) {
         $page->message_page("This marker's page has moved.","<a href=\"/search/markers/markersearch.pl?w822_nametype=starts+with&w822_marker_name=$name&w822_submit=Search&w822_species=Any&w822_protos=Any&w822_colls=Any&w822_chromos=Any&w822_pos_start=&w822_pos_end=&w822_confs=-1&w822_maps=Any\">[Search new marker pages for $name]</a>");
     }
     else
@@ -34,30 +31,27 @@ unless($marker_id and $marker_id=~/^\d+$/ and $marker_id>0)
         $page->message_page('Marker ID is invalid',"Please try your <a href=\"/search/markers/markersearch.pl\">marker search</a> again.");
     }
 }
-our $marker=CXGN::Marker->new($dbh,$marker_id);
-unless($marker)
-{
+my $marker=CXGN::Marker->new($dbh,$marker_id);
+unless($marker) {
     my $current_id=CXGN::Marker::Tools::legacy_id_to_id($dbh,$marker_id);
-    if($current_id)
-    {
+    if($current_id) {
         $marker=CXGN::Marker->new($dbh,$current_id);
-        unless($marker)
-        {
+        unless($marker) {
             $page->error_page('Marker not found',"Please try your <a href=\"/search/markers/markersearch.pl\">marker search</a> again.",'exploded',"CXGN::Marker::Tools returned a current ID of '$current_id' for a legacy ID of '$marker_id', but a marker object could not be created from the current ID.");
         }
         $page->message_page("This marker's ID and detail page have changed.","It can now be viewed at the <a href=\"?marker_id=$current_id\">".$marker->name_that_marker()." (SGN-M$current_id) detail page</a>.");
     }
     $page->message_page('No marker exists with this ID',"Please try your <a href=\"/search/markers/markersearch.pl\">marker search</a> again.");
 }
-our @marker_names=$marker->name_that_marker();
-our($marker_name,@other_names)=@marker_names;
+my @marker_names=$marker->name_that_marker();
+my($marker_name,@other_names)=@marker_names;
 my $display_name=$marker_name;
 if(@other_names)
 {
     $display_name.=" (also known as ".CXGN::Tools::Text::list_to_string(@other_names).")";
 }
 my $collections_string='';
-our $collections_description='';
+my $collections_description='';
 my $collections=$marker->collections();
 if($collections and @{$collections})
 {
@@ -72,28 +66,28 @@ $page->header(
 	      $collections_string."Marker $display_name (SGN-M$marker_id)",
 	      $collections_string."Marker $display_name");
 print"<div class=\"center\">SGN-M$marker_id<br />$collections_description";
-print kfg_html();
+print kfg_html($marker_id);
 print "</div><br />\n";
-print rflp_html( $c );
-print ssr_html();
-print cos_html();
-print cosii_orthologs_html();
-print derivations_html();
-print locations_html();
-print polymorphisms_html();
-print unigene_match_html();
-print overgo_html();
-print cosii_polymorphisms_html();
-print cosii_files_html($c);
-print attributions_html();
-print comments_html();
-print page_comment_html();
+print rflp_html($marker, $c );
+print ssr_html($marker_id);
+print cos_html($marker_id);
+print cosii_orthologs_html($marker);
+print derivations_html($marker);
+print locations_html($marker);
+print polymorphisms_html($marker);
+print unigene_match_html($marker_id);
+print overgo_html($marker_id);
+print cosii_polymorphisms_html($marker);
+print cosii_files_html($marker, $c);
+print attributions_html($marker_id);
+print comments_html($marker);
+print page_comment_html($marker_id);
 $page->footer();
 
 
 
-sub derivations_html
-{
+sub derivations_html {
+    my $marker = shift;
     #sgn id, collections, and sources
     my $about_html='';
     my $sources=$marker->derived_from_sources();
@@ -189,6 +183,8 @@ END_HTML
 
 
 sub kfg_html {
+    
+    my $marker_id = shift;
   # prints a link to the gene page if this marker maps to a gene 
   # (KFG = Known Function Gene)
 
@@ -209,6 +205,7 @@ sub kfg_html {
 
 
 sub rflp_html {
+    my $marker = shift;
     my $c = shift;
   my $ihtml = ""; 
   if ( SGN::Controller::Marker->rflp_image_link( $c, $marker ) )
@@ -315,8 +312,9 @@ EOT
 
 
 
-sub ssr_html 
-{
+sub ssr_html  {
+    my $marker_id = shift;
+
     my $html = "";
     my $query = 'SELECT repeat_motif, reapeat_nr FROM ssr_repeats WHERE marker_id='.$marker_id;
     my $repeats = $dbh->selectall_arrayref($query);
@@ -370,7 +368,7 @@ sub ssr_html
 
 
 sub cos_html {
-
+    my $marker_id = shift;
   my $cos_query = q{SELECT c.cos_marker_id, c.marker_id, c.cos_id, c.at_match, 
 	    c.at_position, c.bac_id, c.best_gb_prot_hit, c.at_evalue, 
 	    c.at_identities, c.mips_cat, c.description, c.comment, 
@@ -409,9 +407,9 @@ EOT
   ###################
   # At orthology info
 
-  our $at_page = 'http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?cmd=Retrieve&db=Nucleotide&dopt=GenBank&list_uids=';
+ my $at_page = 'http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?cmd=Retrieve&db=Nucleotide&dopt=GenBank&list_uids=';
 
-  our $orth = <<EOT;
+  my $orth = <<EOT;
 <b>Arabidopsis identities: </b>$r->{at_identities}<br />
 EOT
   ;
@@ -419,7 +417,7 @@ EOT
   ##########################
   # GenBank protein hit info
 
-  our $genbank = <<EOT;
+  my $genbank = <<EOT;
 <b>Best GenBank protein hit: </b><a href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=Protein&amp;cmd=search&amp;term=$r->{best_gb_prot_hit}">$r->{best_gb_prot_hit}</a><br />
 <b>Evalue: </b>$r->{gbprot_evalue}<br />
 <b>Identities: </b>$r->{gbprot_identities}<br />
@@ -437,8 +435,8 @@ EOT
 
 
 
-sub cosii_orthologs_html
-{
+sub cosii_orthologs_html {
+    my $marker = shift;
     unless($marker->is_in_collection('COSII')){return'';}
     use constant DESC_ALIGNED2AA=>'Alignment of DNA and translated peptides from Arabidopsis CDS and edited Asterid unigenes, plain text';
     use constant DESC_CDS_FASTA=>'Amplicon sequence alignment, FASTA';
@@ -555,46 +553,40 @@ sub cosii_orthologs_html
 
 
 
-sub locations_html
-{
+sub locations_html {
+    my $marker = shift;
     my $locations_html='';
 
+    my @displayed_locs=();
+    my @displayed_pcr=();
     #if we have some experiments, and they are an arrayref, and there is at least one location in them
     my $experiments=$marker->current_mapping_experiments();    
-    if($experiments and @{$experiments} and grep {$_->{location}} @{$experiments})
-    {
+    if($experiments and @{$experiments} and grep {$_->{location}} @{$experiments}) {
         my $count = 1;
-	for my $experiment(@{$experiments})
-        {
+	for my $experiment(@{$experiments}) {
 
             #make sure we have a location before we go about showing location data--some experiments do not have locations
-            if(my $loc=$experiment->{location})
-            {
+            if(my $loc=$experiment->{location}) {
                 #make sure we haven't displayed a location entry with the same location ID already
-                unless(grep {$_==$loc->location_id()} @displayed_locs)
-                {
+                unless(grep {$_==$loc->location_id()} @displayed_locs) {
                     push(@displayed_locs,$loc->location_id());
                     if ($count > 1) {
-    		    $locations_html .= '<br /><br /><br />';
-    		}
-			$locations_html.='<table width="100%" cellspacing="0" cellpadding="0" border="0"><tr>';
+			$locations_html .= '<br /><br /><br />';
+		    }
+		    $locations_html.='<table width="100%" cellspacing="0" cellpadding="0" border="0"><tr>';
                     #make a section detailing the location
                     my $protocol='';
                     my $pcr=$experiment->{pcr_experiment};
                     my $rflp=$experiment->{rflp_experiment};
                     $protocol=$experiment->{protocol};
-                    unless($protocol)
-                    {
-                        if($pcr)
-                        {
+                    unless($protocol) {
+                        if($pcr) {
                             $protocol='PCR';
                         }
-                        elsif($rflp)
-                        {
+                        elsif($rflp) {
                             $protocol='RFLP';
                         }
-                        else
-                        {
+                        else {
                             $protocol='<span class="ghosted">Unknown</span>';
                         }
                     }
@@ -609,18 +601,15 @@ sub locations_html
                     my $map_id='';
                     my $map_name='';
     
-    		    if($map_version_id)
-                    {
+    		    if($map_version_id) {
                         my $map=CXGN::Map->new($dbh,{map_version_id=>$map_version_id});
                         $map_id=$map->map_id();
                         $map_name=$map->short_name();
-                        if($map_id and $map_name and defined($lg_name) and defined($position))
-                        {
+                        if($map_id and $map_name and defined($lg_name) and defined($position)) {
                             $map_url="<a href=\"/cview/view_chromosome.pl?map_id=$map_id&amp;chr_nr=$lg_name&amp;cM=$position&amp;hilite=$marker_name$subscript&amp;zoom=1\">$map_name v$map_version_id</a>";
                         }
                     }
-                    else
-                    {
+                    else {
                         $map_url='<span class="ghosted">Map data not available</span>';
                     }
                     my $multicol=1;
@@ -636,8 +625,7 @@ sub locations_html
                         'Confidence'=>$loc->confidence(),
                         'Protocol'=>$protocol
                     );
-                    if($subscript)
-                    {
+                    if($subscript) {
                         push(@locations,('Subscript'=>$subscript));
                     }
                     $locations_html.='<td width = "25%">';
@@ -645,52 +633,48 @@ sub locations_html
                     $locations_html.='</td>';
                     $locations_html.='<td align="center">';
 		    my $map_factory = CXGN::Cview::MapFactory->new($dbh);
-    		my $map=$map_factory->create({map_version_id=>$map_version_id});
-    		my $map_version_id=$map->get_id();
-    		my $map_name=$map->get_short_name();
-    		my $hilite_name = $marker_name;
-    		if ($subscript)
-    		{
-            	    $hilite_name.=$subscript;
-    		}
-    		my $chromosome= CXGN::Cview::ChrMarkerImage->new("", 150,150,$dbh, $lg_name, $map, $hilite_name);
-    		my ($image_path, $image_url)=$chromosome->get_image_filename();
-    		my $chr_link= qq|<img src="$image_url" usemap="#map$count" border="0" alt="" />|;
-    		$chr_link .= $chromosome->get_image_map("map$count");
-    		$chr_link .= '<br />' . $map_name;
-    		$count++;
-    		$locations_html .= '<br />';
-    	        $locations_html .= $chr_link;
+		    my $map=$map_factory->create({map_version_id=>$map_version_id});
+		    my $map_version_id=$map->get_id();
+		    my $map_name=$map->get_short_name();
+		    my $hilite_name = $marker_name;
+		    if ($subscript) {
+			$hilite_name.=$subscript;
+		    }
+		    my $chromosome= CXGN::Cview::ChrMarkerImage->new("", 150,150,$dbh, $lg_name, $map, $hilite_name);
+		    my ($image_path, $image_url)=$chromosome->get_image_filename();
+		    my $chr_link= qq|<img src="$image_url" usemap="#map$count" border="0" alt="" />|;
+		    $chr_link .= $chromosome->get_image_map("map$count");
+		    $chr_link .= '<br />' . $map_name;
+		    $count++;
+		    $locations_html .= '<br />';
+		    $locations_html .= $chr_link;
                     $locations_html.='</td></tr></table>';
             
                     #if we have a pcr experiment that was used to map this marker to this location, make a section for this experiment's data
-                    if($pcr and !grep {$_==$pcr->pcr_experiment_id()} @displayed_pcr)
-                    {
+                    if($pcr and !grep {$_==$pcr->pcr_experiment_id()} @displayed_pcr) {
                         $locations_html .= '<table width="100%" cellspacing="0" cellpadding="0" border="0"><tr>';
-    		    my $pcr_bands=$pcr->pcr_bands_hash_of_strings();
+			my $pcr_bands=$pcr->pcr_bands_hash_of_strings();
                         my $digest_bands=$pcr->pcr_digest_bands_hash_of_strings();
                         my $pcr_bands_html = CXGN::Page::FormattingHelpers::info_table_html
-			  ( __border => 0, __sub => 1,
-			    map {
-			      my $accession_name = CXGN::Accession->new($dbh,$_)->verbose_name;
-			      $accession_name => $pcr_bands->{$_}
-			    } keys %$pcr_bands,
-			  );
+			    ( __border => 0, __sub => 1,
+			      map {
+				  my $accession_name = CXGN::Accession->new($dbh,$_)->verbose_name;
+				  $accession_name => $pcr_bands->{$_}
+			      } keys %$pcr_bands,
+			    );
                         my $digest_bands_html = CXGN::Page::FormattingHelpers::info_table_html
-			  ( __border => 0, __sub => 1,
-			    map {
-			      my $accession_name=CXGN::Accession->new($dbh,$_)->verbose_name();
-			      $accession_name => $digest_bands->{$_};
-			    } keys %$digest_bands,
-			  );
+			    ( __border => 0, __sub => 1,
+			      map {
+				  my $accession_name=CXGN::Accession->new($dbh,$_)->verbose_name();
+				  $accession_name => $digest_bands->{$_};
+			      } keys %$digest_bands,
+			    );
                         my $mg='';
-                        if($pcr->mg_conc())
-                        {    
+                        if($pcr->mg_conc()) {    
                             $mg=$pcr->mg_conc().'mM';
                         }
                         my $temp='';
-                        if($pcr->temp())
-                        {    
+                        if($pcr->temp()) {    
                             $temp=$pcr->temp().'&deg;C';
                         }                    
                         $locations_html.='<td>';
@@ -701,8 +685,7 @@ sub locations_html
                         $temp||='<span class="ghosted">Unknown</span>';
                         $mg||='<span class="ghosted">Unknown</span>';
                         my $digest_title="Digested band sizes (using $enz)";
-                        unless($digest_bands_html)
-                        {
+                        unless($digest_bands_html) {
                             $digest_title='&nbsp;'; 
                             $digest_bands_html='&nbsp;'; 
                         }
@@ -742,9 +725,10 @@ sub locations_html
 
 
 
-sub polymorphisms_html
-{
+sub polymorphisms_html {
+    my $marker = shift;
     my $polymorphisms_html='';
+    my @displayed_pcr=();
     my $experiments=$marker->experiments();    
     if($experiments and @{$experiments})
     {
@@ -835,6 +819,7 @@ sub polymorphisms_html
 
 
 sub overgo_html {
+    my $marker_id = shift;
 	my $phys_html;
 
 	#some page locations that may change
@@ -845,8 +830,8 @@ sub overgo_html {
 	# New! Improved! Now uses SGN-managed $dbh rather than physical_tools
 
 	#get the physical info, if any
-	our ($overgo_version) = $dbh->selectrow_array("SELECT overgo_version FROM physical.overgo_version WHERE current=1;");
-	our $physical_stm = q{  SELECT  pm.overgo_probe_id,               
+	my ($overgo_version) = $dbh->selectrow_array("SELECT overgo_version FROM physical.overgo_version WHERE current=1;");
+	my $physical_stm = q{  SELECT  pm.overgo_probe_id,               
                                         op.plate_number,
                                      	pm.overgo_plate_row,
 					pm.overgo_plate_col,
@@ -972,8 +957,8 @@ sub overgo_html {
 
 
 
-sub cosii_polymorphisms_html
-{
+sub cosii_polymorphisms_html {
+    my $marker = shift;
     unless($marker->is_in_collection('COSII'))
     {
         return'';
@@ -1182,8 +1167,8 @@ sub cosii_polymorphisms_html
 
 
 
-sub cosii_files_html
-{
+sub cosii_files_html {
+    my $marker = shift;
     my $c = shift;
     unless($marker->is_in_collection('COSII')){return'';}
     my($html,$html1,$html2,$html3,$html4,$html5,$html6)=('','','','','','');
@@ -1317,7 +1302,7 @@ sub get_information {
     my ($marker,$ending) = @_;
 
     my $vhost_conf = CXGN::VHost->new();
-    our $cosii_file = $vhost_conf->get_conf('cosii_files');
+    my $cosii_file = $vhost_conf->get_conf('cosii_files');
 
     my $table = "forward_amplicon_sequence_information";
     my $html;
@@ -1354,7 +1339,7 @@ sub get_information {
 
 
 sub unigene_match_html {
-
+    my $marker_id = shift;
   my $html='';
 
   my $unigene_matches = $dbh->selectcol_arrayref("SELECT DISTINCT unigene_id FROM primer_unigene_match WHERE marker_id=$marker_id");
@@ -1375,8 +1360,9 @@ sub unigene_match_html {
 
 
 
-sub attributions_html
-{
+sub attributions_html {
+    my $marker_id = shift;
+
     my $att = CXGN::Metadata::Attribution->new("sgn","markers",$marker_id);
 
     my $db_name = 'sgn';
@@ -1405,8 +1391,8 @@ sub attributions_html
 
 
 
-sub comments_html
-{
+sub comments_html {
+    my $marker = shift;
 
     my $comments=$marker->comments();
     if($comments)
@@ -1421,15 +1407,16 @@ sub comments_html
 
 
 
-sub page_comment_html
-{
+sub page_comment_html {
 #    return CXGN::People::PageComment->new("marker",$marker_id)->get_html();
 #  return qq{<span class="noshow" id="commentstype">marker</span>
 #<span class="noshow" id="commentsid">$marker_id</span>
 #<div id="commentsarea" style="padding: 1em; color: #666; border: thin solid #666;">I wonder if there are any comments</div>};
 
-my $referer = $page->{request}->uri()."?".$page->{request}->args();
-return $page->comments_html('marker', $marker_id, $referer);
+    my $marker_id = shift;
+    
+    my $referer = $page->{request}->uri()."?".$page->{request}->args();
+    return $page->comments_html('marker', $marker_id, $referer);
 
 }
 
