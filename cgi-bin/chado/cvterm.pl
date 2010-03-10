@@ -269,17 +269,21 @@ sub qtl_populations {
     }
       
     my $user_trait = CXGN::Phenome::UserTrait->new_with_name($self->get_dbh(), $cvterm_name);
-    my $trait_id = $user_trait->get_user_trait_id();
-    my @pops2 = $user_trait->get_all_populations_trait();
+
+    my @pops2;   
+    if ($user_trait) {
+	my $trait_id = $user_trait->get_user_trait_id();
+	@pops2 = $user_trait->get_all_populations_trait();
 
 
-    foreach my $pop (@pops2) {
-	my $pop_id = $pop->get_population_id();
-	my $pop_name = $pop->get_name();
+	foreach my $pop (@pops2) {
+	    my $pop_id = $pop->get_population_id();
+	    my $pop_name = $pop->get_name();
 	
-	$pop_list .= qq |<a href="../phenome/population_indls.pl?population_id=$pop_id&amp;cvterm_id=$trait_id">$pop_name</a> <br />|;
-    }  
-   
+	    $pop_list .= qq |<a href="../phenome/population_indls.pl?population_id=$pop_id&amp;cvterm_id=$trait_id">$pop_name</a> <br />|;
+	}  
+    }
+    
     my $pop_count = @pops1 + @pops2;
     if ($pop_count > 0) { 
 	$pop_count .= " " . 'populations';
