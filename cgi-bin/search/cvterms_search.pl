@@ -52,8 +52,8 @@ if (%params) {
     
     while(my $r = $result->next_result) {
 	print STDERR "cvterm_result: $r->[0]\n";
-        my $cv=CXGN::Chado::Cvterm->new($dbh, $r->[0]);
-	my $has_qtl = $cv->is_from_qtl();
+        my $cv=CXGN::Phenome::Qtl::Tools->new();
+	my $has_qtl = $cv->is_from_qtl($r->[0]);
 	my $qtl_mark; 
 	my $tickmark = "&#10003;";
 	my $x = 'x';
