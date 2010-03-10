@@ -21,6 +21,7 @@ use CXGN::Page::FormattingHelpers qw/info_section_html
                                     /;
    
 use CXGN::Chado::Cvterm;
+use CXGN::Phenome::UserTrait;
 use CXGN::People::PageComment;
 use CXGN::Tools::Onto;
    
@@ -107,28 +108,22 @@ sub display_page {
  			    contents => $cvterm_html,
 			    );
     
-    my @pops = $cvterm->get_all_populations_cvterm();
-    my $pop_list;
-    my $pop_count= scalar(@pops);
-    if ($pop_count > 0) { 
-	$pop_count .= " " . 'populations';
-    }
-    foreach my $pop (@pops) {
-	my $pop_id = $pop->get_population_id();
-	my $pop_name = $pop->get_name();
-	
-	$pop_list .= qq | Population: <a href="../phenome/population_indls.pl?population_id=$pop_id&amp;cvterm_id=$cvterm_id">$pop_name</a> <br />|;
-    }
-            
+
+
     ####embedded ontology browser
     my $browser=CXGN::Tools::Onto->new($self->get_page() ) ;
     print info_section_html(title => 'Ontology browser',
 			    contents => $browser->get_parentage_string($cvterm->get_full_accession()),			    );
-    print info_section_html(title    => "Phenotype data/QTLs ($pop_count)",
+   
+    my ($pop_count, $pop_list) = $self->qtl_populations();
+ 
+    if ($pop_count) {
+	print info_section_html(title    => "Phenotype data/QTLs ($pop_count)",
  			    contents => $pop_list,
  			    collapsible=>1,
 			    collapsed=>1,
-			    );  
+			    );
+    }  
     
     #loci
     my ($loci_count, $loci_annot) = loci_annot($cvterm); 
@@ -244,3 +239,57 @@ sub individual_annot {
 				    ));
     }else { return (0,undef); }
 }
+
+=head2 qtl_populations
+
+ Usage: my ($pop_c, $pop_list) = $self->qtl_populations();
+ Desc: creates links to the qtl pages of cvterms and user submitted traits 
+    
+ Ret: pop count and qtl links in list context or false
+ Args: none
+ Side Effects:
+ Example:
+
+=cut
+
+sub qtl_populations {
+    my $self = shift;
+    my $cvterm = $self->get_object();
+    my $cvterm_name = $cvterm->get_cvterm_name();
+    my $cvterm_id = $cvterm->get_cvterm_id();
+    
+    my @pops1 = $cvterm->get_all_populations_cvterm();   
+    my $pop_list;
+   
+    foreach my $pop (@pops1) {
+	my $pop_id = $pop->get_population_id();
+	my $pop_name = $pop->get_name();
+	
+	$pop_list .= qq |<a href="../phenome/population_indls.pl?population_id=$pop_id&amp;cvterm_id=$cvterm_id">$pop_name</a> <br />|;
+    }
+      
+    my $user_trait = CXGN::Phenome::UserTrait->new_with_name($self->get_dbh(), $cvterm_name);
+    my $trait_id = $user_trait->get_user_trait_id();
+    my @pops2 = $user_trait->get_all_populations_trait();
+
+
+    foreach my $pop (@pops2) {
+	my $pop_id = $pop->get_population_id();
+	my $pop_name = $pop->get_name();
+	
+	$pop_list .= qq |<a href="../phenome/population_indls.pl?population_id=$pop_id&amp;cvterm_id=$trait_id">$pop_name</a> <br />|;
+    }  
+   
+    my $pop_count = @pops1 + @pops2;
+    if ($pop_count > 0) { 
+	$pop_count .= " " . 'populations';
+
+	return $pop_count, $pop_list;
+    } else {
+	return 0;
+    }
+
+
+}
+
+
