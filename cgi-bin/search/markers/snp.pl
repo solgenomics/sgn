@@ -1,52 +1,17 @@
 use strict;
+use warnings;
+use CGI;
+use CXGN::DB::DBICFactory;
 
-use DBIx::Class;
 use CXGN::Marker::SNP::Snp;
 use CXGN::Marker::SNP::Schema;
-use CXGN::DB::Connection;
-use CXGN::Page;
-use CXGN::VHost;
-use CXGN::Scrap;
-use CXGN::Page::FormattingHelpers qw /info_section_html
-                                      page_title_html/;
 
-#Start a new SGN page
-my $page = CXGN::Page->new("SGN SNP display results", "Homa");
+my $schema = CXGN::DB::DBICFactory->open_schema('CXGN::Marker::SNP::Schema');
 
-#my $prefs = CXGN::Page::UserPrefs->new;
-#my $vhost_conf = CXGN::VHost->new();
+my ($snp_id) = CGI->new->param("snp_id");
+$c->throw( message => 'Must provide a valid SNP id', notify => 0 ) unless $snp_id + 0 eq $snp_id;
 
-my $snp_id = $page->get_encoded_arguments('snp_id');
+my $snp = CXGN::Marker::SNP::Snp->new( $schema, $snp_id )
+    or $c->throw( message => "SNP not found", developer_message => "snp_id was '$snp_id'", is_error => 0 );
 
-
-#Create a database handle 
-my $dbh = CXGN::DB::Connection->new();
-
-#Create a schema object
-CXGN::Marker::SNP::Schema->can('connect')
-    or BAIL_OUT('Could not load the CXGN::Marker::SNP::Schema module');
-
-my $schema = CXGN::Marker::SNP::Schema->connect(sub{$dbh->get_actual_dbh() },
-                                                   {on_connect_do => ['SET search_path TO marker;']},
-                                               );
-my ($snp_id) = $page->get_encoded_arguments("snp_id");
-
-
-my $snp = CXGN::Marker::SNP::Snp->new($schema, $snp_id);
-
-if (!$snp->get_snp_id()) { 
-    $page->message_page("The SNP with the id $snp_id is not defined. Sorry :-( ");
-}
-
-my $html = info_section_html(title    => 'SNP',
-                             contents => '$snp_id',
-    );
-
-
-$page->header();
-
-print page_title_html('SNP database');
-print $html;
-$page->footer();
-
- 
+$c->forward_to_mason_view('/markers/snp/detail.mas', snp => $snp );
