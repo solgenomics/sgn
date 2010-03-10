@@ -80,6 +80,11 @@ sub request {
     die "SGN_TEST_SERVER env var must begin with http://\n"
         unless $ENV{SGN_TEST_SERVER} =~ m!^http://!;
 
+    ## Added an enviromental variable SGN_SERVER_TIMEOUT. In some machines load some pages
+    ## needs more than 60 s, so if it is better if it can be changed
+
+    my $timeout = $ENV{SGN_SERVER_TIMEOUT} || 60;
+
     require LWP::UserAgent;
 
     my $request = Catalyst::Utils::request( shift(@_) );
@@ -125,7 +130,7 @@ sub request {
         $agent = LWP::UserAgent->new(
             keep_alive   => 1,
             max_redirect => 0,
-            timeout      => 60,
+            timeout      => $timeout,
         );
 
         $agent->env_proxy;
