@@ -38,14 +38,15 @@ my $index = $page->get_arguments("index");
 
 
 my $dbh= CXGN::DB::Connection->new();
-
-my ($all_traits, $all_trait_d) = CXGN::Chado::Cvterm::all_traits_with_qtl_data();
+my $qtl_tools =CXGN::Phenome::Qtl::Tools->new(); 
+my ($all_traits, $all_trait_d) = $qtl_tools->all_traits_with_qtl_data();
 my @all_traits = @{$all_traits};    
 @all_traits = uniq (@all_traits);   
 @all_traits = sort{$a<=>$b} @all_traits;
  
 my @index_traits;
 foreach my $trait (@all_traits) {
+    print STDERR "traits: $trait\n";
     if ($trait =~ /^$index/i) {
 	push @index_traits, $trait; 
 		   
@@ -57,17 +58,21 @@ my @traits_list;
 if (@index_traits) {
     foreach my $trait (@index_traits) {
 	my $cvterm = CXGN::Chado::Cvterm::get_cvterm_by_name($dbh, $trait);
-	my $trait_id = $cvterm->get_cvterm_id();
-	push @traits_list, [ map {$_} (qq |<a href=/chado/cvterm.pl?cvterm_id=$trait_id>$trait</a> |) ];
-
+	my $cvterm_id = $cvterm->get_cvterm_id();
+	if ($cvterm_id) {	   
+	    push @traits_list, [ map {$_} (qq |<a href=/chado/cvterm.pl?cvterm_id=$cvterm_id>$trait</a> |) ];
+	} else {
+	    my $t = CXGN::Phenome::UserTrait->new_with_name($dbh, $trait);
+	    my $trait_id = $t->get_user_trait_id();
+	    push @traits_list, [ map {$_} (qq |<a href=/phenome/trait.pl?trait_id=$trait_id>$trait</a> |) ];
 	
-	print STDERR "cvterm: $trait : cvterm_id: $trait_id\n";
+	}
 
     }
 
 }
 
-my $links = CXGN::Chado::Cvterm->browse_traits();
+my $links = $qtl_tools->browse_traits();
 print qq |<table align=center cellpadding=20px><tr><td><b>Browse Traits: $links<b></td></tr></table>|;
 print info_section_html(
                        title=>"Traits $index-",
