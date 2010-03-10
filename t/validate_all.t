@@ -75,7 +75,7 @@ BEGIN {
 	     "gem results page for templates" => "/search/gem_template_search.pl?w616_template_parameters=AB",
 	     "gem results page for experiments" => "/search/gem_experiment_search.pl?w932_experiment_parameters=leaf",
 	     "gem results page for platforms" => "/search/gem_platform_search.pl?w4b9_template_parameters=affy",
-	     "gem detail page for template" => "/gem/template.pl?id=13",
+	     "gem detail page for template" => "/gem/template.pl?id=65",
 	     "gem detail page for platform" => "/gem/platform.pl?id=1",
 	     "gem detail page for experimental design" => "/gem/experimental_design.pl?id=1",
 	     "gem detail page for experiment" => "/gem/experiment.pl?id=1",
