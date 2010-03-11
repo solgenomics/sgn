@@ -33,6 +33,7 @@ use warnings;
 use constant DEBUG => 0;
 
 use CXGN::Page;
+use CXGN::DB::Connection;
 
 use CXGN::Bulk::BAC;
 use CXGN::Bulk::UnigeneConverter;
@@ -45,15 +46,19 @@ use CXGN::Bulk::ArraySpotEST;
 use CXGN::Bulk::ArraySpotUnigene;
 use CXGN::Bulk::UnigeneMemberInfo;
 
+
 my $page = CXGN::Page->new();
 
-my $bulk = undef;
 my $params = get_parameters($page);
+
+$params->{dbc}     = CXGN::DB::Connection->new;
+$params->{tempdir} = $c->tempfiles_subdir('bulk');
 
 #create correct bulk object
 my $idType = $params->{idType}
   or die "must give idType in params";
 
+my $bulk;
 if ( $idType eq "bac" ) {
     $bulk = CXGN::Bulk::BAC->new($params);
 }
@@ -221,10 +226,9 @@ sub get_parameters {
 
 =cut
 
-sub debug(@) {
-  #print messages if debug flag is set
-  if ( DEBUG ) {
-    print STDERR qq|<pre style="display: block">|.join(' ',@_).qq|</pre>\n|;
+{ my $d = CXGN::Debug->new;
+  sub debug(@) {
+      $d->debug(qq|<pre style="display: block">|.join(' ',@_).qq|</pre>\n|);
   }
 }
 
