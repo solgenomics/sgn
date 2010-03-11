@@ -56,6 +56,7 @@ sub new
 
   Modifies some of the parameters received set in get_parameters. Preparing
   data for the database query.
+
 =cut
 
 sub process_parameters
@@ -86,7 +87,7 @@ sub process_parameters
 	    if ($value eq "on")
 	    {
 		push @output_fields, $o;
-	        warn ("FIELD TO OUTPUT: $o");
+	        #warn ("FIELD TO OUTPUT: $o");
 	    }
 	}
     }
@@ -148,7 +149,7 @@ sub process_ids
     my $in_ids = 'IN ('.join(',',(map {$db->quote($_)} @{$self->{ids}})).')'; #makes fragment of SQL query
     my $query = get_query($in_ids, $self->{build_id});
 
-    warn "using query \n",$query;
+    #warn "using query \n",$query;
 
     my $sth = $db->prepare($query);
 

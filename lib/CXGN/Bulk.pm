@@ -11,13 +11,12 @@
 
 =cut
 
+package CXGN::Bulk;
 use strict;
 use warnings;
-use CXGN::Page;
-use CXGN::VHost;
+use Carp;
 use CXGN::DB::Connection;
 
-package CXGN::Bulk;
 
 =head2 new
 
@@ -39,13 +38,10 @@ sub new {
     foreach ( keys %$params ) {
         $self->{$_} = $params->{$_};
     }
-    my $vhost_conf = CXGN::VHost->new();
-    $self->{tempdir} =
-        $vhost_conf->get_conf('basepath')
-      . $vhost_conf->get_conf('tempfiles_subdir') . "/bulk";
+    $self->{tempdir} or confess "must provide a tempdir argument to bulk constructor";
     $self->{content} = "";    # the content of the page
-    $self->{dbc}  = CXGN::DB::Connection->new('sgn');
-    $self->{db}   = $self->{dbc};
+    $self->{db} = $self->{dbc}
+        or confess "must provide a dbc argument (database handle) to bulk constructor";
 
     my @empty_array = ();
     $self->{data} = \@empty_array;
@@ -327,9 +323,9 @@ sub check_ids {
     my @ids  = ();
 
     #do some simple parameter checking
-    if ( !exists( $self->{idType} ) ) { print STDERR "NOT EXISTS!"; }
-    if ( $self->{idType} eq undef ) { print STDERR "UNDEF!!!!"; }
-    if ( $self->{idType} eq "" )    { print STDERR "EMTPY STRING!"; }
+#     if ( !exists( $self->{idType} ) ) { print STDERR "NOT EXISTS!"; }
+#     if ( ! defined  $self->{idType} eq undef ) { print STDERR "UNDEF!!!!"; }
+#     if ( $self->{idType} eq "" )    { print STDERR "EMTPY STRING!"; }
 
     #print STDERR $self->{idType}."\n";
 

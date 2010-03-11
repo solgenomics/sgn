@@ -74,7 +74,7 @@ sub process_parameters
     $self->{output_fields} = \@output_fields;
 
     my @ids = $self->check_ids();
-    if (@ids == ()) {return 0;}
+    return 0 unless @ids;
     $self->debug("IDs to be processed:");
     foreach my $i (@ids) {
 	# we want only numbers for unigene and microarray ids.
@@ -158,19 +158,18 @@ sub process_ids
     my @notfound = ();
     my ($dump_fh, $notfound_fh) = $self -> create_dumpfile();
     # start querying the database
-    my $current_time= time() - $self -> {query_start_time};
-    $self->debug("Time point 6: $current_time");
+    $self->debug("Time point 6: ".time);
 
     my $in_ids = 'IN ('.join(',',(map {$db->quote($_)} @{$self->{ids}})).')'; #makes fragment of SQL query
     my $query = process_query_data($in_ids);
 
-    warn "using query \n",$query;
+    #warn "using query \n",$query;
 
     my $sth = $db -> prepare($query);
 
     $self -> {query_start_time} = time();
     $sth -> execute();
-    $current_time = time() - $self->{query_start_time};
+    my $current_time = time() - $self->{query_start_time};
 
     # execute the query and get the data.
     while (my $row = $sth -> fetchrow_hashref()) {

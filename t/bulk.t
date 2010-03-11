@@ -8,14 +8,20 @@ use warnings;
 
 # Bulk.pm and UnigeneConverter.pm need modification for test to run properly.
 
-use Test::More 'no_plan';
-use CXGN::Bulk::UnigeneConverter;
+use Test::More;
+use File::Temp;
 use Data::Dumper;
 
+use CXGN::Bulk::UnigeneConverter;
+
+$SIG{__DIE__} = \&Carp::confess;
+
+my $tempdir = File::Temp->newdir;
 my $params = {};
 $params->{idType} = "unigene_convert";
 $params->{ids_string} = "SGN-U243120 SGN-U243522";
-$params->{db} = CXGN::DB::Connection->new('sgn');
+$params->{dbc} = CXGN::DB::Connection->new;
+$params->{tempdir} = "$tempdir";
 
 # Testing constructor.
 my $bulk = CXGN::Bulk::UnigeneConverter->new($params);
@@ -29,14 +35,13 @@ my $pp = $bulk->process_parameters();
 
 is($pp, 1, "parameters are ok (process_parameters returned 1)");
 
-my @values = qw/243120 243522/;
-my $numbers = \@values;
-print Dumper($numbers) . "\n";
-is(Dumper($bulk->{ids}), Dumper($numbers), "id list is ok");
+is_deeply( $bulk->{ids}, [243120, 243522], "id list is ok" );
 
 # Testing process_ids method.
 $bulk->process_ids();
 
-my $result = "SGN-U243522\tSolanum tuberosum - 3\tSolanum tuberosum - 4\tSGN-U268707\n";
-is($bulk->{query_result_str}, $result, "result list  is ok");
+$params->{dbc}->disconnect;
+
+done_testing;
+
 
