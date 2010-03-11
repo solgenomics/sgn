@@ -12,7 +12,8 @@ use Test::More;
 use File::Temp;
 use Data::Dumper;
 
-use CXGN::Bulk::UnigeneConverter;
+use Module::Find;
+useall 'CXGN::Bulk';
 
 $SIG{__DIE__} = \&Carp::confess;
 
