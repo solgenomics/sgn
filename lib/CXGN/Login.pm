@@ -44,7 +44,7 @@ use Apache2::RequestRec;
 use Apache2::SubRequest;
 #use base qw/CXGN::Class::DBI/;
 use CXGN::Cookie;
-use CXGN::VHost;
+use SGN::Context;
 use Digest::MD5 qw(md5);
 use String::Random;
 
@@ -80,7 +80,7 @@ sub new {
 	    last;
 	}
     }
-    $self->{conf_object}=CXGN::VHost->new();
+    $self->{conf_object}=SGN::Context->new;
     return $self;
 }
 
