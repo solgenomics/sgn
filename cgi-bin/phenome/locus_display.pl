@@ -1,29 +1,11 @@
-#####################################################################
-#
-#  Displays a locus detail page.
-#
-######################################################################
-
-#############NOTES BY TIM THE INTERN######################################
-#
-#Things that should be thought about/done with the ajax used on this page and others:
-##
-# - Generate the ajax request in JSON rather than just strings
-# - Add errback functions to the ajax requests in case the request fails
-# - Implement a better way to notify user of a database error (or other error)
-#   generated from the server side scripts.
-#   Either figure out how to generate an errback or create a JSON error response
-#
-#
-##########################################################################
-
-my $locus_detail_page = CXGN::Phenome::LocusDetailPage->new();
-
-package CXGN::Phenome::LocusDetailPage;
-
-use base qw/CXGN::Page::Form::SimpleFormPage  /;
-
 use strict;
+use warnings;
+
+#my $locus_detail_page = CXGN::Phenome::LocusDetailPage->new();
+
+#package CXGN::Phenome::LocusDetailPage;
+
+#use base qw/CXGN::Page::Form::SimpleFormPage  /;
 
 use CXGN::Page;
 
@@ -43,225 +25,215 @@ use CXGN::Page::FormattingHelpers qw/info_section_html
 use CXGN::Page::Widgets qw / collapser /;
 use CXGN::Phenome::Locus;
 use CXGN::Phenome::Locus::LinkageGroup;
+
 use CXGN::Cview::ChrMarkerImage;
 use CXGN::Cview::MapFactory;
 use CXGN::Marker;
 use CXGN::Cview::Marker::RangeMarker;
 use CXGN::Map;
+
 use CXGN::Chado::CV;
 use CXGN::Chado::Feature;
 use CXGN::Chado::Publication;
 use CXGN::Chado::Pubauthor;
-use CXGN::Tools::Organism;
 
-#use CXGN::Phenome::Locus2Locus; #deprecated . Replaced by LocusgroupMember and LocusGroup
-use CXGN::Phenome::LocusgroupMember;
-use CXGN::Phenome::LocusGroup;
+
+
 use CXGN::Sunshine::Browser;
 use CXGN::ITAG::Release;
 use CXGN::Tools::Identifiers qw/parse_identifier/;
 use CXGN::Tools::List qw/distinct/;
-use CXGN::Feed;
-use CXGN::Phenome::Locus::LocusPage;
 
+use CXGN::Phenome::Locus::LocusPage;
 use SGN::Image; 
 
-sub new {
-    my $class  = shift;
-    my $schema = 'phenome';
-    my $self   = $class->SUPER::new(@_);
-    return $self;
+my $d = CXGN::Debug->new();
+##$d->set_debug( 1 );
+
+
+my $page= CXGN::Page->new("Locus display", "Naama");
+my $dbh=$page->get_dbh();
+
+my $time = time();
+$d->d("start time = $time ! \n");
+
+my %args = $page->cgi_params();
+my $locus_id = $args{locus_id};
+
+my $person_id = CXGN::Login->new($dbh)->has_session();
+my $user = CXGN::People::Person->new($dbh, $person_id);
+my $user_type = $user->get_user_type();
+my $script = "/phenome/locus_display.pl?locus_id=$locus_id";
+
+unless ( ( $locus_id =~ m /^\d+$/ ) || ($args{action} eq 'new' && !$locus_id) ) {
+    $c->throw(is_error=>0,
+	      message=>"No locus exists for identifier $locus_id",
+	);
+    $d->d("No locus exists for identifier $locus_id");
 }
 
-sub define_object {
-    my $self = shift;
-    $self->get_dbh->add_search_path(qw /phenome sgn /);
-    my %args      = $self->get_args();
-    my $locus_id  = $args{locus_id};
-    my $user_type = $self->get_user()->get_user_type();
-    $self->set_object_id($locus_id);
-    $self->set_object(
-        CXGN::Phenome::Locus->new( $self->get_dbh, $self->get_object_id ) );
-    if ( $self->get_object()->get_obsolete() eq 't' && $user_type ne 'curator' )
-    {
-        $self->get_page->message_page("Locus $locus_id is obsolete!");
-    }
-    unless ( ( $locus_id =~ m /^\d+$/ ) || $args{action} eq 'new' ) {
-        $self->get_page->message_page(
-            "No locus exists for identifier $locus_id");
-    }
-    $self->set_primary_key("locus_id");
-    $self->set_owners( $self->get_object()->get_owners() );
-}
-
-sub display_page {
-    my $self = shift;
-
-    my $time = time();
-    print STDERR "start time = $time ! \n";
-    my $locus      = $self->get_object();
-    my $locus_id   = $self->get_object_id();
-    my $locus_name = $locus->get_locus_name();
-    my $organism   = $locus->get_common_name();
-
-    $self->get_page->jsan_use("CXGN.Phenome.Tools");
-    $self->get_page->jsan_use("CXGN.Phenome.Locus");
-    $self->get_page->jsan_use("MochiKit.DOM");
-    $self->get_page->jsan_use("Prototype");
-    $self->get_page->jsan_use("jQuery");
-    $self->get_page->jsan_use("thickbox");
-    $self->get_page->jsan_use("MochiKit.Async");
-    $self->get_page->jsan_use("CXGN.Sunshine.NetworkBrowser");
-    $self->get_page->jsan_use("CXGN.Phenome.Locus.LocusPage");
-    #$self->get_page->jsan_use("CXGN.Page.Form.JSFormPage");
-
-    #used to show certain elements to only the proper users
-    my $login_user      = $self->get_user();
-    my $login_user_id   = $login_user->get_sp_person_id() || "";
-    my $login_user_type = $login_user->get_user_type() || "";
-    my @object_owners   = $locus->get_owners();
-
-    my %args   = $self->get_args();
-    my $action = $args{action};
-
-    if ( !$locus->get_locus_id() && $action ne 'new' && $action ne 'store' ) {
-        $self->get_page->message_page("No locus exists for this identifier");
-    }
-
-    $self->get_page->header("SGN $organism locus: $locus_name");
-    my $page = "/phenome/locus_display.pl?locus_id=$locus_id";
-    print page_title_html("$organism \t'$locus_name'\n");
-
-    print CXGN::Phenome::Locus::LocusPage::initialize($locus_id);
-
-    ####
-    #initialize the form (set objecName and objectId)
-    #print CXGN::Phenome::Locus::LocusPage::init_locus_form($locus_id);
-    #print the javascript form 
-    #print CXGN::Phenome::Locus::LocusPage::include_locus_form();
+my $locus= CXGN::Phenome::Locus->new( $dbh, $locus_id  );
+if ( $locus->get_obsolete() eq 't' && $user_type ne 'curator' )
+{
+    $d->d("locus is obsolete!!" );
     
-    #####
-    print STDERR "!!!Printing page title :  " . ( time() - $time ) . "\n";
-####################################################
-    #get all dbxref  annotations: pubmed, ncbi sequences, GO, PO, tgrc link
-####################################################
-    my @allele_objs = $locus->get_alleles();    #array of allele objects
-    my ( $tgrc, $pubs, $pub_count, $genbank, $gb_count, $onto_ref ) =
-      $self->get_dbxref_info(@allele_objs);
+    $c->throw(is_error=>1, 
+	      title => 'Obsolete locus',
+	      message=>"Locus $locus_id is obsolete!",
+	      developer_message => 'only curators can see obsolete loci',
+	      notify => 1,   #< does not send an error email
+	);
+    #$page->message_page("Locus $locus_id is obsolete!");
+}
 
-    print STDERR "!!!Got all dbxrefs! :  " . ( time() - $time ) . "\n";
+
+my $locus_name = $locus->get_locus_name();
+my $organism   = $locus->get_common_name();
+
+$page->jsan_use("CXGN.Phenome.Tools");
+$page->jsan_use("CXGN.Phenome.Locus");
+$page->jsan_use("MochiKit.DOM");
+$page->jsan_use("Prototype");
+$page->jsan_use("jQuery");
+$page->jsan_use("thickbox");
+$page->jsan_use("MochiKit.Async");
+$page->jsan_use("CXGN.Sunshine.NetworkBrowser");
+$page->jsan_use("CXGN.Phenome.Locus.LocusPage");
+$page->jsan_use("CXGN.Page.Form.JSFormPage");
+
+#used to show certain elements to only the proper users
+
+my @owners   = $locus->get_owners();
+
+my $action = $args{action};
+
+if ( !$locus->get_locus_id() && $action ne 'new' && $action ne 'store' ) {
+    $c->throw(is_error=>0, message=>'No locus exists for this identifier',);
+    $d->d('No locus exists for this identifier');
+    #$page->message_page("No locus exists for this identifier");
+}
+
+$page->header("SGN $organism locus: $locus_name");
+
+print page_title_html("$organism \t'$locus_name'\n");
+
+print CXGN::Phenome::Locus::LocusPage::initialize($locus_id);
+
+$d->d("!!!Printing page title :  " . ( time() - $time ) . "\n");
+####################################################
+#get all dbxref  annotations: pubmed, ncbi sequences, GO, PO, tgrc link
+####################################################
+my @allele_objs = $locus->get_alleles();    #array of allele objects
+my ( $tgrc, $pubs, $pub_count, $genbank, $gb_count, $onto_ref ) =
+    get_dbxref_info($locus, @allele_objs);
+
+$d->d( "!!!Got all dbxrefs! :  " . ( time() - $time ) . "\n");
 
 ##############################
     #display locus details section
 #############################
-    my $curator_html;
-    my ( $synonyms, $symbol, $symbol_link, $activity, $description, $lg_name,
-        $arm, $locus_details );
-    my $editor_note =
-      qq |<a href="/phenome/editors_note.pl">Note to Editors</a>|;
-    my $guide_html =
-qq|<a href="http://docs.google.com/View?docid=ddhncntn_0cz2wj6">Annotation guidelines</a>|;
-    my $locus_html =
-        qq| <table width="100%"><tr><td>|
-      . $self->get_edit_links()
-      . "<br />"
-      . $self->get_form()->as_table_string();
+my $curator_html;
+my ( $synonyms, $symbol, $symbol_link, $activity, $description, $lg_name,
+     $arm, $locus_details );
+my $editor_note =
+    qq |<a href="/phenome/editors_note.pl">Note to Editors</a>|;
+my $guide_html =
+    qq|<a href="http://docs.google.com/View?docid=ddhncntn_0cz2wj6">Annotation guidelines</a>|;
 
+my $locus_html= qq| <table width="100%"><tr><td>|
+    . CXGN::Phenome::Locus::LocusPage::init_locus_form($locus_id);
 #Only show if you are a curator or the object owner and there is no registry already assocaited with the locus
-    if (
-        (
-            $login_user_type eq 'curator'
-            || grep { /^$login_user_id$/ } @object_owners
-        )
-        && !( $locus->get_associated_registry() )
-      )
-    {
-        if ($locus_name) { $locus_html .= $self->associate_registry(); }
-        else {
-            $curator_html .=
-              qq |<span class = "ghosted"> [Associate registry name]</span> |;
-        }
+if (
+    (
+     $user_type eq 'curator'
+	 || grep { /^$person_id$/ } @owners
+    )
+    && !( $locus->get_associated_registry() )
+    )
+{
+    if ($locus_name) { $locus_html .= associate_registry($locus, $person_id); }
+    else {
+	$curator_html .=
+	    qq |<span class = "ghosted"> [Associate registry name]</span> |;
     }
+}
 
-    #merge locus form
-    if ( $login_user_type eq 'curator' ) {
-        $curator_html .= "<br />" . $self->merge_locus();
-    }
+#merge locus form
+if ( $user_type eq 'curator' ) {
+    $curator_html .= "<br />" . merge_locus($locus, $person_id);
+}
 
-    my $locus_synonym_count = scalar( $locus->get_locus_aliases('f', 'f') ) || "";
+my $locus_synonym_count = scalar( $locus->get_locus_aliases('f', 'f') ) || "";
+$locus_html .=
+    qq { <br /><br /><b>Locus synonyms</b> <b>$locus_synonym_count:</b> };
+
+foreach my $synonym ( $locus->get_locus_aliases('f','f') ) {
+    $locus_html .= $synonym->get_locus_alias() . "  ";
+}
+
+if ($locus_name) {
     $locus_html .=
-      qq { <br /><br /><b>Locus synonyms</b> <b>$locus_synonym_count:</b> };
-
-    foreach my $synonym ( $locus->get_locus_aliases('f','f') ) {
-        $locus_html .= $synonym->get_locus_alias() . "  ";
+	qq|<a href="locus_synonym.pl?locus_id=$locus_id&amp;action=new">[Add/Remove]</a><br />|;
+    
+    $locus_html .= "<br />" . $tgrc;
+    
+    #print editors info
+    $locus_html .= print_locus_editor_info($locus) . "<br>";
+    
+    #change ownership:
+    if ( $user_type eq 'curator' ) {
+	$curator_html .= assign_owner($locus);
     }
-
-    if ($locus_name) {
-        $locus_html .=
-qq|<a href="locus_synonym.pl?locus_id=$locus_id&amp;action=new">[Add/Remove]</a><br />|;
-
-        $locus_html .= "<br />" . $tgrc;
-
-        #print editors info
-        $locus_html .= $self->print_locus_editor_info() . "<br>";
-
-        #change ownership:
-        if ( $login_user_type eq 'curator' ) {
-            $curator_html .= $self->assign_owner();
-        }
-        my @owners  = $locus->get_owners();
-        my $user_id = $self->get_user()->get_sp_person_id();
-        if (   ( !( grep { $_ =~ /^$user_id$/ } @owners ) )
-            && ( $login_user_type ne 'curator' ) )
-        {
-
-     #if ($locus->get_sp_person_id() != $self->get_user()->get_sp_person_id()) {
-            $locus_html .=
-qq|<a href="claim_locus_ownership.pl?locus_id=$locus_id&amp;action=confirm"> [Request editor privileges]</a><br /><br />|;
-        }
-
-        my $created_date = $self->get_object()->get_create_date();
-        $created_date = substr $created_date, 0, 10;
-        my $modified_date = $self->get_object()->get_modification_date() || "";
-        $modified_date = substr $modified_date, 0, 10;
-
-        my $updated_by = $locus->get_updated_by();
-        my $updated =
-          CXGN::People::Person->new( $self->get_dbh(), $updated_by );
-        my $u_first_name = $updated->get_first_name();
-        my $u_last_name  = $updated->get_last_name();
-        $locus_html .= qq |Created on: $created_date |;
-        if ($modified_date) {
-            $locus_html .=
-qq |  Last updated on: $modified_date  by  <a href="/solpeople/personal-info.pl?sp_person_id=$updated_by">$u_first_name $u_last_name</a><br />|;
-        }
-
-        #build a chromosome, map/s and marker/s objects
-        $locus_html .= $self->get_location($locus);
+    if (   ( !( grep { $_ =~ /^$person_id$/ } @owners ) )
+	   && ( $user_type ne 'curator' ) )
+    {
+	
+	$locus_html .=
+	    qq|<a href="claim_locus_ownership.pl?locus_id=$locus_id&amp;action=confirm"> [Request editor privileges]</a><br /><br />|;
     }
-
-    my $name = $locus->get_associated_registry();
-    if ($name) {
-        $locus_html .= "This locus is associated with registry name: $name<br />";
+    
+    my $created_date = $locus->get_create_date();
+    $created_date = substr $created_date, 0, 10;
+    my $modified_date = $locus->get_modification_date() || "";
+    $modified_date = substr $modified_date, 0, 10;
+    
+    my $updated_by = $locus->get_updated_by();
+    my $updated =
+	CXGN::People::Person->new( $locus->get_dbh(), $updated_by );
+    my $u_first_name = $updated->get_first_name();
+    my $u_last_name  = $updated->get_last_name();
+    $locus_html .= qq |Created on: $created_date |;
+    if ($modified_date) {
+	$locus_html .=
+	    qq |  Last updated on: $modified_date  by  <a href="/solpeople/personal-info.pl?sp_person_id=$updated_by">$u_first_name $u_last_name</a><br />|;
     }
+    
+    #build a chromosome, map/s and marker/s objects
+    $locus_html .= get_location($locus);
+}
+
+my $name = $locus->get_associated_registry();
+if ($name) {
+    $locus_html .= "This locus is associated with registry name: $name<br />";
+}
 
 ##############history ############
 
-    if ( $login_user_type eq 'curator'
-        || grep { /^$login_user_id$/ } @object_owners )
-    {
-        my $history_data = $self->print_locus_history($locus) || "";
-        $locus_html .= $history_data;
-    }
-    my $locus_xml = $locus_id ? qq |<a href = "generic_gene_page.pl?locus_id=$locus_id">Download GMOD XML</a>|
-                              : qq |<span class="ghosted">Download GMOD XML</span>|;
+if ( $user_type eq 'curator'
+     || grep { /^$person_id$/ } @owners )
+{
+    my $history_data = print_locus_history($locus) || "";
+    $locus_html .= $history_data;
+}
+my $locus_xml = $locus_id ? qq |<a href = "generic_gene_page.pl?locus_id=$locus_id">Download GMOD XML</a>|
+    : qq |<span class="ghosted">Download GMOD XML</span>|;
 
     #print locus details section
     print info_section_html(
         title    => 'Locus details',
         subtitle => $locus_xml . " |" . " "
-          . $editor_note . " " . "|" . " "
-          . $guide_html,
+	. $editor_note . " " . "|" . " "
+	. $guide_html,
         contents => $locus_html,
     );
     if ($curator_html) {
@@ -284,17 +256,16 @@ qq |  Last updated on: $modified_date  by  <a href="/solpeople/personal-info.pl?
     my $figure_subtitle = "";
     my $figures_count;
     my @more_is;
-    my $figure_html     = "";
-    my $figure_subtitle = "";
+    
 
     if (
         $locus_name
-        && (   $login_user_type eq 'submitter'
-            || $login_user_type eq 'curator'
-            || $login_user_type eq 'sequencer' )
+        && (   $user_type eq 'submitter'
+            || $user_type eq 'curator'
+            || $user_type eq 'sequencer' )
       )
     {
-        $figure_subtitle .= $self->associated_figures();
+        $figure_subtitle .= associated_figures($locus, $person_id);
     }
     else {
         $figure_subtitle .=
@@ -363,20 +334,20 @@ qq|<a href="$figure_img"  title="<a href=$image_page>Go to image page ($figure_n
     my $ind_subtitle     = "";
     if (
         $locus_name
-        && (   $login_user_type eq 'curator'
-            || $login_user_type eq 'submitter'
-            || $login_user_type eq 'sequencer' )
+        && (   $user_type eq 'curator'
+            || $user_type eq 'submitter'
+            || $user_type eq 'sequencer' )
       )
     {
         $ind_subtitle .=
 qq| <a href="javascript:Tools.toggleContent('associateIndividualForm', 'locus_accessions')">[Associate accession]</a> |;
-        $individuals_html = $self->associate_individual();
+        $individuals_html = associate_individual($locus, $person_id);
     }
     else {
         $ind_subtitle .=
           qq|<span class= "ghosted">[Associate accession]</span> |;
     }
-    my ( $html, $ind_count ) = $self->get_individuals_html();
+    my ( $html, $ind_count ) = get_individuals_html($locus, $user_type);
     $individuals_html .= $html;
 
     print info_section_html(
@@ -402,9 +373,9 @@ qq| <a href="javascript:Tools.toggleContent('associateIndividualForm', 'locus_ac
     my $allele_subtitle;
     if (
         $locus_name
-        && (   $login_user_type eq 'submitter'
-            || $login_user_type eq 'curator'
-            || $login_user_type eq 'sequencer' )
+        && (   $user_type eq 'submitter'
+            || $user_type eq 'curator'
+            || $user_type eq 'sequencer' )
       )
     {
         $allele_subtitle .=
@@ -427,7 +398,7 @@ qq { <a href="allele.pl?locus_id=$locus_id&amp;action=new">[Add new allele]</a>}
         if ( !$allele_synonyms ) { $allele_synonyms = "[add new]"; }
         my $allele_synonym_link =
 qq |<a href= "allele_synonym.pl?allele_id=$allele_id&amp;action=new">$allele_synonyms</a> |;
-        my $allele_edit_link = $self->get_allele_edit_links($a);
+        my $allele_edit_link = get_allele_edit_links($a, $user);
         my $phenotype        = $a->get_allele_phenotype();
         my @individuals      = $a->get_individuals();
         my $individual_link  = "";
@@ -486,437 +457,223 @@ qq|<div align="left"><a href="allele.pl?action=view&amp;allele_id=$allele_id"> |
     my $associate_locus_form;
     if (
         (
-               $login_user_type eq 'curator'
-            || $login_user_type eq 'submitter'
-            || $login_user_type eq 'sequencer'
+               $user_type eq 'curator'
+            || $user_type eq 'submitter'
+            || $user_type eq 'sequencer'
         )
       )
     {
 
         if ($locus_name) {
             $associated_locus_sub .=
-qq |<a href="javascript:Tools.toggleContent('associateLocusForm', 'locus2locus');Tools.getOrganisms()">[Associate new locus]</a> |;
+		qq |<a href="javascript:Tools.toggleContent('associateLocusForm', 'locus2locus');Tools.getOrganisms()">[Associate new locus]</a> |;
             $associate_locus_form =
-              CXGN::Phenome::Locus::LocusPage::associate_locus_form($locus_id);
+		CXGN::Phenome::Locus::LocusPage::associate_locus_form($locus_id);
         }
     }
-    else {
-        $associated_locus_sub .=
-          qq |<span class ="ghosted"> [Associate new locus] </span> |;
-    }
+else {
+    $associated_locus_sub .=
+	qq |<span class ="ghosted"> [Associate new locus] </span> |;
+}
 
-    #printing associated loci section dynamically
-    my $dyn = CXGN::Phenome::Locus::LocusPage::include_locus_network();
+#printing associated loci section dynamically
+my $dyn = CXGN::Phenome::Locus::LocusPage::include_locus_network();
 
-    print info_section_html(
-        title       => "Associated loci ($al_count) ",
-        subtitle    => $associated_locus_sub,
-        contents    => $associate_locus_form . $dyn,
-        id          => 'locus2locus',
-        collapsible => 1,
-        collapsed   => 1,
+print info_section_html(
+    title       => "Associated loci ($al_count) ",
+    subtitle    => $associated_locus_sub,
+    contents    => $associate_locus_form . $dyn,
+    id          => 'locus2locus',
+    collapsible => 1,
+    collapsed   => 1,
     );
 
-    print STDERR "!!!Printing locus2locus :  " . ( time() - $time ) . "\n";
+$d->d( "!!!Printing locus2locus :  " . ( time() - $time ) . "\n");
 
-    ##################  SUNSHINE BROWSER
+##################  SUNSHINE BROWSER
 
-    my $locus2locus_graph =
-      CXGN::Sunshine::Browser::include_on_page( 'locus', $locus_id );
+my $locus2locus_graph =
+    CXGN::Sunshine::Browser::include_on_page( 'locus', $locus_id );
 
-    my $networkbrowser_link =
-qq { View <b>$locus_name</b> relationships in the stand-alone <a href="/tools/networkbrowser/?type=locus&name=$locus_id">network browser</a>. Please note that this tool is a prototype.<br /><br /><br /> };
+my $networkbrowser_link =
+    qq { View <b>$locus_name</b> relationships in the stand-alone <a href="/tools/networkbrowser/?type=locus&name=$locus_id">network browser</a>. Please note that this tool is a prototype.<br /><br /><br /> };
 
-    if ( $al_count > 0 ) {
-        print info_section_html(
-            title       => "Associated loci - graphical view [beta version]",
-            contents    => $networkbrowser_link . $locus2locus_graph,
-            id          => 'locus2locus_graph',
-            collapsible => 1,
-            collapsed   => 1,
+if ( $al_count > 0 ) {
+    print info_section_html(
+	title       => "Associated loci - graphical view [beta version]",
+	contents    => $networkbrowser_link . $locus2locus_graph,
+	id          => 'locus2locus_graph',
+	collapsible => 1,
+	collapsed   => 1,
         );
-    }
-    else {
-        print info_section_html(
-            title       => "Associated loci - graphical view",
-            collapsible => 0,
-            collapsed   => 1,
-            id          => 'locus2locus_graph'
+}
+else {
+    print info_section_html(
+	title       => "Associated loci - graphical view",
+	collapsible => 0,
+	collapsed   => 1,
+	id          => 'locus2locus_graph'
         );
-
-    }
+    
+}
 
 
 #####################           UNIGENES AND SOLCYC
 
-    my @unigenes = $locus->get_unigenes();
-    my $unigene_count=0;
-    my $solcyc_count=0;
-    foreach (@unigenes) { 
-	$unigene_count++ if $_->get_status eq 'C'; 
+my @unigenes = $locus->get_unigenes();
+my $unigene_count=0;
+my $solcyc_count=0;
+foreach (@unigenes) { 
+    $unigene_count++ if $_->get_status eq 'C'; 
+}
+
+my $dyn_solcyc = CXGN::Phenome::Locus::LocusPage::include_solcyc_links();
+
+print info_section_html(
+    title       => "SolCyc links",
+    contents    => $dyn_solcyc,
+    id          => 'solcyc',
+    collapsible => 1,
+    collapsed   => 1,
+    );
+$d->d( "!!!Got SolCyc links :  " . ( time() - $time ) . "\n");
+
+my $associate_unigene_form;
+if (
+    (
+     $user_type eq 'curator'
+     || $user_type eq 'submitter'
+     || $user_type eq 'sequencer'
+    )
+    )
+{
+    if ($locus_name) { 
+	$associate_unigene_form= qq|<a href="javascript:Tools.toggleContent('associateUnigeneForm', 'unigenes' )">[Associate new unigene]</a> |;
+	$associate_unigene_form .= 
+	    CXGN::Phenome::Locus::LocusPage::associate_unigene_form($locus_id);
     }
+}
+my $sequence_links;
+if ($locus_name) {
+    if ( !$genbank ) {
+	$genbank = qq|<span class=\"ghosted\">none </span>|;
+    }
+    $genbank .=
+	qq|<a href="/chado/add_feature.pl?type=locus&amp;type_id=$locus_id&amp;&amp;refering_page=$page&amp;action=new">[Associate new genbank sequence]</a><br />|;
     
-    my $dyn_solcyc = CXGN::Phenome::Locus::LocusPage::include_solcyc_links();
-      
-    print info_section_html(
-        title       => "SolCyc links",
-        contents    => $dyn_solcyc,
-	id          => 'solcyc',
-        collapsible => 1,
-        collapsed   => 1,
+    
+    #printing associated unigenes section dynamically
+    my $dyn_unigenes = CXGN::Phenome::Locus::LocusPage::include_locus_unigenes();
+    $d->d( "!!!Got unigenes :  " . ( time() - $time ) . "\n");
+    
+    $sequence_links = info_table_html(
+	'SGN Unigenes'       => $dyn_unigenes . $associate_unigene_form,
+	'GenBank accessions' => $genbank,
+	'Tomato genome'      => itag_genomic_annots_html($locus),
+	__border             => 0,
 	);
-    print STDERR "!!!Got SolCyc links :  " . ( time() - $time ) . "\n";
-    
-    my $associate_unigene_form;
-    if (
-        (
-	 $login_user_type eq 'curator'
-	 || $login_user_type eq 'submitter'
-	 || $login_user_type eq 'sequencer'
-        )
-	)
-    {
-        if ($locus_name) { 
-	    $associate_unigene_form= qq|<a href="javascript:Tools.toggleContent('associateUnigeneForm', 'unigenes' )">[Associate new unigene]</a> |;
-	    $associate_unigene_form .= 
-		CXGN::Phenome::Locus::LocusPage::associate_unigene_form($locus_id);
-	}
-    }
-    my $sequence_links;
-    if ($locus_name) {
-        if ( !$genbank ) {
-            $genbank = qq|<span class=\"ghosted\">none </span>|;
-        }
-        $genbank .=
-	    qq|<a href="/chado/add_feature.pl?type=locus&amp;type_id=$locus_id&amp;&amp;refering_page=$page&amp;action=new">[Associate new genbank sequence]</a><br />|;
-	
-	
-	#printing associated unigenes section dynamically
-	my $dyn_unigenes = CXGN::Phenome::Locus::LocusPage::include_locus_unigenes();
-	print STDERR "!!!Got unigenes :  " . ( time() - $time ) . "\n";
-	
-	$sequence_links = info_table_html(
-            'SGN Unigenes'       => $dyn_unigenes . $associate_unigene_form,
-            'GenBank accessions' => $genbank,
-            'Tomato genome'      => $self->itag_genomic_annots_html,
-            __border             => 0,
-	    );
-    }
-    my $seq_count = $gb_count + $unigene_count;
-    print info_section_html(
-        title       => "Sequence annotations ($seq_count)",
-        contents    => $sequence_links,
-	id          => 'unigenes',
-        collapsible => 1,
-        collapsed   => 1,
-	);
-    print STDERR "!!!got sequence :  " . ( time() - $time ) . "\n";
-    
+}
+my $seq_count = $gb_count + $unigene_count;
+print info_section_html(
+    title       => "Sequence annotations ($seq_count)",
+    contents    => $sequence_links,
+    id          => 'unigenes',
+    collapsible => 1,
+    collapsed   => 1,
+    );
+$d->d("!!!got sequence :  " . ( time() - $time ) . "\n");
+
 ##########literature ########################################
-    my ( $pub_links, $pub_subtitle );
-    if ($pubs) {
-        $pub_links = info_table_html(
-            "  "     => $pubs,
-            __border => 0,
+my ( $pub_links, $pub_subtitle );
+if ($pubs) {
+    $pub_links = info_table_html(
+	"  "     => $pubs,
+	__border => 0,
         );
-    }
+}
 
-    if (
-        $locus_name
-        && (   $login_user_type eq 'curator'
-            || $login_user_type eq 'submitter'
-            || $login_user_type eq 'sequencer' )
-      )
-    {
-        $pub_subtitle .=
-qq|<a href="/chado/add_publication.pl?type=locus&amp;type_id=$locus_id&amp;refering_page=$page&amp;action=new"> [Associate publication] </a>|;
-    }
-    else {
-        $pub_subtitle =
-          qq|<span class=\"ghosted\">[Associate publication]</span>|;
-    }
-
-    my $disabled = "true";
-    if ($login_user_id) { $disabled = "false"; }
+if (
+    $locus_name
+    && (   $user_type eq 'curator'
+	   || $user_type eq 'submitter'
+	   || $user_type eq 'sequencer' )
+    )
+{
     $pub_subtitle .=
-qq | <a href="javascript:void(0)"onclick="window.open('locus_pub_rank.pl?locus_id=$locus_id','publication_list','width=600,height=400,status=1,location=1,scrollbars=1')">[Matching publications]</a> |;
+	qq|<a href="/chado/add_publication.pl?type=locus&amp;type_id=$locus_id&amp;refering_page=$page&amp;action=new"> [Associate publication] </a>|;
+}
+else {
+    $pub_subtitle =
+	qq|<span class=\"ghosted\">[Associate publication]</span>|;
+}
 
-    print STDERR "!!!Printing pub links :  " . ( time() - $time ) . "\n";
+my $disabled = "true";
+if ($person_id) { $disabled = "false"; }
+$pub_subtitle .=
+    qq | <a href="javascript:void(0)"onclick="window.open('locus_pub_rank.pl?locus_id=$locus_id','publication_list','width=600,height=400,status=1,location=1,scrollbars=1')">[Matching publications]</a> |;
 
-    print info_section_html(
-        title       => "Literature annotation ($pub_count)",
-        subtitle    => $pub_subtitle,
-        contents    => $pub_links,
-        collapsible => 1,
-        collapsed   => 1,
+$d->d("!!!Printing pub links :  " . ( time() - $time ) . "\n");
+
+print info_section_html(
+    title       => "Literature annotation ($pub_count)",
+    subtitle    => $pub_subtitle,
+    contents    => $pub_links,
+    collapsible => 1,
+    collapsed   => 1,
     );
 
-    ######################################## Ontology details ##############
+######################################## Ontology details ##############
 
-    my $ont_count = $locus->count_ontology_annotations(); #= scalar(@$onto_ref);
+my $ont_count = $locus->count_ontology_annotations(); #= scalar(@$onto_ref);
 
-    my $ontology_add_link = "";
-    my $ontology_subtitle;
-    if (
-        (
-               $login_user_type eq 'curator'
-            || $login_user_type eq 'submitter'
-            || $login_user_type eq 'sequencer'
-        )
-      )
-    {
-        if ($locus_name) {
-            $ontology_subtitle .=
-qq|<a href="javascript:Tools.toggleContent('associateOntologyForm', 'locus_ontology')">[Add ontology annotations]</a> |;
-            $ontology_add_link =
-              CXGN::Phenome::Locus::LocusPage::associate_ontology_form(
+my $ontology_add_link = "";
+my $ontology_subtitle;
+if (
+    (
+     $user_type eq 'curator'
+     || $user_type eq 'submitter'
+     || $user_type eq 'sequencer'
+    )
+    )
+{
+    if ($locus_name) {
+	$ontology_subtitle .=
+	    qq|<a href="javascript:Tools.toggleContent('associateOntologyForm', 'locus_ontology')">[Add ontology annotations]</a> |;
+	$ontology_add_link =
+	    CXGN::Phenome::Locus::LocusPage::associate_ontology_form(
                 $locus_id);
-        }
     }
-    else {
-        $ontology_subtitle =
-          qq |<span class = "ghosted"> [Add ontology annotations]</span> |;
-    }
+}
+else {
+    $ontology_subtitle =
+	qq |<span class = "ghosted"> [Add ontology annotations]</span> |;
+}
 
-    my $dyn_ontology_info =
-      CXGN::Phenome::Locus::LocusPage::include_locus_ontology();
+my $dyn_ontology_info =
+    CXGN::Phenome::Locus::LocusPage::include_locus_ontology();
 
-    print info_section_html(
-        title       => "Ontology annotations ($ont_count)",
-        subtitle    => $ontology_subtitle,
-        contents    => $ontology_add_link . $dyn_ontology_info,
-        id          => "locus_ontology",
-        collapsible => 1,
-        collapsed   => 1,
+print info_section_html(
+    title       => "Ontology annotations ($ont_count)",
+    subtitle    => $ontology_subtitle,
+    contents    => $ontology_add_link . $dyn_ontology_info,
+    id          => "locus_ontology",
+    collapsible => 1,
+    collapsed   => 1,
     );
 
-    print STDERR "!!!Printing ontology links! :  " . ( time() - $time ) . "\n";
+$d->d( "!!!Printing ontology links! :  " . ( time() - $time ) . "\n");
 
 ####add page comments
-    if ($locus_name) {
-        my $page_comment_obj =
-          CXGN::People::PageComment->new( $self->get_dbh(), "locus",
-            $locus_id );
-        print $page_comment_obj->get_html();
-    }
-
-    $self->get_page->footer();
-
-}    #display_page
-
-sub generate_form {
-    my $self = shift;
-    $self->init_form();
-
-    my $locus = $self->get_object();
-    my %args  = $self->get_args();
-
-    my ( $organism_names_ref, $organism_ids_ref ) =
-      CXGN::Tools::Organism::get_all_organisms( $self->get_dbh() );
-    my ($lg_names_ref) =
-      CXGN::Phenome::Locus::LinkageGroup::get_all_lgs( $self->get_dbh() );
-    my ($lg_arms_ref) =
-      CXGN::Phenome::Locus::LinkageGroup::get_lg_arms( $self->get_dbh() );
-
-    if ( $self->get_action =~ /new|store/ ) {
-        $self->get_form()->add_select(
-            display_name       => "Organism ",
-            field_name         => "common_name_id",
-            contents           => $locus->get_common_name_id(),
-            length             => 20,
-            object             => $locus,
-            getter             => "get_common_name_id",
-            setter             => "set_common_name_id",
-            select_list_ref    => $organism_names_ref,
-            select_id_list_ref => $organism_ids_ref,
-        );
-    }
-    if ( $locus->get_obsolete() eq 't' ) {
-        $self->get_form()->add_label(
-            display_name => "Status",
-            field_name   => "obsolete_stat",
-            contents     => 'OBSOLETE',
-        );
-    }
-    $self->get_form()->add_field(
-        display_name => "Locus name ",
-        field_name   => "locus_name",
-        object       => $locus,
-        getter       => "get_locus_name",
-        setter       => "set_locus_name",
-        validate     => 'string',
-    );
-
-    $self->get_form()->add_field(
-        display_name => "Symbol ",
-        field_name   => "locus_symbol",
-        object       => $locus,
-        getter       => "get_locus_symbol",
-        setter       => "set_locus_symbol",
-        validate     => 'token',
-	formatting   => '<i>*</i>',
-    );
-
-    $self->get_form()->add_field(
-        display_name => "Gene activity ",
-        field_name   => "gene_activity",
-        object       => $locus,
-        getter       => "get_gene_activity",
-        setter       => "set_gene_activity",
-        length       => '50',
-    );
-
-    $self->get_form()->add_textarea(
-        display_name => "Description ",
-        field_name   => "description",
-        object       => $locus,
-        getter       => "get_description",
-        setter       => "set_description",
-        columns      => 40,
-        rows         => => 4,
-    );
-
-    $self->get_form()->add_select(
-        display_name       => "Chromosome ",
-        field_name         => "lg_name",
-        contents           => $locus->get_linkage_group(),
-        length             => 10,
-        object             => $locus,
-        getter             => "get_linkage_group",
-        setter             => "set_linkage_group",
-        select_list_ref    => $lg_names_ref,
-        select_id_list_ref => $lg_names_ref,
-    );
-
-    $self->get_form()->add_select(
-        display_name       => "Arm",
-        field_name         => "lg_arm",
-        contents           => $locus->get_lg_arm(),
-        length             => 10,
-        object             => $locus,
-        getter             => "get_lg_arm",
-        setter             => "set_lg_arm",
-        select_list_ref    => $lg_arms_ref,
-        select_id_list_ref => $lg_arms_ref,
-    );
-
-    $self->get_form()->add_hidden(
-        field_name => "locus_id",
-        contents   => $args{locus_id},
-    );
-
-    $self->get_form()->add_hidden(
-        field_name => "action",
-        contents   => "store",
-    );
-
-    $self->get_form()->add_hidden(
-        field_name => "sp_person_id",
-        contents   => $self->get_user()->get_sp_person_id(),
-        object     => $locus,
-        setter     => "set_sp_person_id",
-
-    );
-    $self->get_form()->add_hidden(
-        field_name => "updated_by",
-        contents   => $self->get_user()->get_sp_person_id(),
-        object     => $locus,
-        setter     => "set_updated_by",
-    );
-
-    if ( $self->get_action =~ /view|edit/ ) {
-        $self->get_form->from_database();
-        $self->get_form()->add_hidden(
-            field_name => "common_name_id",
-            contents   => $locus->get_common_name_id(),
-        );
-
-    }
-    elsif ( $self->get_action =~ /store/ ) {
-        $self->get_form->from_request( $self->get_args() );
-    }
-
+if ($locus_name) {
+    my $page_comment_obj =
+	CXGN::People::PageComment->new( $locus->get_dbh(), "locus",
+					$locus_id );
+    print $page_comment_obj->get_html();
 }
 
-sub delete {
-    my $self = shift;
-    $self->check_modify_privileges();
-    my $locus      = $self->get_object();
-    my $locus_name = $locus->get_locus_name();
-    $locus->delete();
-    $self->send_locus_email('delete');
-    $self->get_page()->message_page("The locus $locus_name has been deleted.");
-}
+$page->footer();
 
-sub delete_dialog {
 
-    my $self = shift;
-    $self->check_modify_privileges();
-    my %args        = $self->get_args();
-    my $title       = shift;
-    my $object_name = shift;
-    my $field_name  = shift;
-    my $object_id   = shift;
-    my $locus_id    = $args{locus_id};
-    my $back_link =
-        "<a href=\""
-      . $self->get_script_name() . "?"
-      . $self->get_primary_key() . "="
-      . $object_id
-      . "\">Go back to locus page without deleting</a>";
-
-    $self->get_page()->header();
-
-    page_title_html("$title");
-    print qq { 	
-	<form>
-	Delete locus (id=$object_id)? 
-	<input type="hidden" name="action" value="delete" />
-	<input type="hidden" name="$field_name" value="$object_id" />
-	<input type="submit" value="Delete" />
-	</form>
-	
-	$back_link
-
-    };
-
-    $self->get_page()->footer();
-}
-
-# override store to check if a locus with the submitted symbol/name already exists in the database
-
-sub store {
-    my $self     = shift;
-    my $locus    = $self->get_object();
-    my $locus_id = $self->get_object_id();
-    my %args     = $self->get_args();
-    print STDERR "...overriding store in locus_display.pl....*********\n";
-    $locus->set_common_name_id( $args{common_name_id} );
-    my ($message) =
-      $locus->exists_in_database( $args{locus_name}, $args{locus_symbol} );
-
-    print STDERR "!!!!!!locus_display.pl store:  locus_id: $locus_id..."
-      . $args{locus_name} . " \n";
-    if ($message) {    #&& $name_id!= $locus_id && $name_obsolete==0 ) {
-        $self->get_page()->header();
-
-        print
-qq| Locus $args{locus_name} (symbol=  $args{locus_symbol} ) already exists in the database <BR/>|;
-        print
-          qq { <a href="javascript:history.back(1)">back to locus page</a> };
-        $self->get_page()->footer();
-        print STDERR
-          "locus_display.pl store: locus name or symbol exists in database!\n";
-        exit();
-    }
-    else {
-        print STDERR
-"*_*_*_locus_display.pl store: calling store function in SimpleFormPage!\n";
-
-        $self->send_locus_email();
-        $self->SUPER::store(0);
-    }
-}
 
 #########################################################
 #functions used in the locus page:
@@ -924,30 +681,30 @@ qq| Locus $args{locus_name} (symbol=  $args{locus_symbol} ) already exists in th
 
 sub empty_search {
     my ($page) = @_;
-
+    
     #  $page->header();
-
+    
     print <<EOF;
-
+    
   <b>No locus was specified or this locus ID does not exist</b>
 
 EOF
 
-    # $page->footer();
-    exit 0;
+exit 0;
 }
 
 sub get_allele_edit_links {
-    my $self     = shift;
     my $allele   = shift;
-    my $locus    = $self->get_object();
+    my $user= shift;
+    my $login_user_id    = $user->get_sp_person_id();
+    my $locus    = $allele->get_locus();
     my $locus_id = $locus->get_locus_id();
 
     my $allele_edit_link = "";
-    my $login_user_id    = $self->get_user()->get_sp_person_id();
+   
     my $allele_id        = $allele->get_allele_id();
     if (   ( $allele->get_sp_person_id() == $login_user_id )
-        || ( $self->get_user()->get_user_type() eq 'curator' ) )
+        || ( $user->get_user_type() eq 'curator' ) )
     {
         $allele_edit_link =
 qq | <a href="allele.pl?action=edit&amp;allele_id=$allele_id">[Edit]</a> |;
@@ -956,59 +713,58 @@ qq | <a href="allele.pl?action=edit&amp;allele_id=$allele_id">[Edit]</a> |;
 }
 
 sub get_location {
-    my $self  = shift;
     my $locus = shift;
 
     my $lg_name = $locus->get_linkage_group();
     my $arm     = $locus->get_lg_arm();
     my $location_html;
     my @locus_marker_objs =
-      $locus->get_locus_markers();    #array of locus_marker objects
+	$locus->get_locus_markers();    #array of locus_marker objects
     foreach my $lmo (@locus_marker_objs) {
         my $marker_id = $lmo->get_marker_id();    #{marker_id};
         my $marker =
-          CXGN::Marker->new( $self->get_dbh(), $marker_id )
-          ;                                       #a new marker object
-
+	    CXGN::Marker->new( $locus->get_dbh(), $marker_id )
+	    ;                                       #a new marker object
+	
         my $marker_name = $marker->name_that_marker();
         my $experiments = $marker->current_mapping_experiments();
         if (    $experiments
-            and @{$experiments}
-            and grep { $_->{location} } @{$experiments} )
+		and @{$experiments}
+		and grep { $_->{location} } @{$experiments} )
         {
             my $count = 1;
             for my $experiment ( @{$experiments} ) {
                 if ( my $loc = $experiment->{location} ) {
                     my $map_version_id = $loc->map_version_id();
                     my $lg_name        = $loc->lg_name();
-
+		    
                     if ($map_version_id) {
                         my $map_factory =
-                          CXGN::Cview::MapFactory->new( $self->get_dbh() );
+			    CXGN::Cview::MapFactory->new( $locus->get_dbh() );
                         my $map = $map_factory->create(
                             { map_version_id => $map_version_id } );
                         my $map_version_id = $map->get_id();
                         my $map_name       = $map->get_short_name();
-
+			
                         my $chromosome =
-                          CXGN::Cview::ChrMarkerImage->new( "", 100, 150,
-                            $self->get_dbh(), $lg_name, $map, $marker_name );
+			    CXGN::Cview::ChrMarkerImage->new( "", 100, 150,
+							      $locus->get_dbh(), $lg_name, $map, $marker_name );
                         my ( $image_path, $image_url ) =
-                          $chromosome->get_image_filename();
+			    $chromosome->get_image_filename();
                         my $chr_link =
-qq|<img src="$image_url" usemap="#map$count" border="0" alt="" />|;
+			    qq|<img src="$image_url" usemap="#map$count" border="0" alt="" />|;
                         $chr_link .=
-                          $chromosome->get_image_map("map$count") . "<br />";
+			    $chromosome->get_image_map("map$count") . "<br />";
                         $chr_link .= $map_name;
                         $count++;
-
+			
                         $location_html .= "<td>" . $chr_link . "</td>";
                     }
                 }
             }
         }
     }
-
+    
 #draw chromosome with marker-range for loci w/o associated marker, only a chromosome arm annotation
     if ( scalar(@locus_marker_objs) == 0 && $lg_name ) {
         my $organism = $locus->get_common_name();
@@ -1017,25 +773,25 @@ qq|<img src="$image_url" usemap="#map$count" border="0" alt="" />|;
             'Potato'   => 3,
             'Eggplant' => 6,
             'Pepper'   => 10
-        );
+	    );
         my $map_id      = $org_hash{$organism};
-        my $map_factory = CXGN::Cview::MapFactory->new( $self->get_dbh() );
-
+        my $map_factory = CXGN::Cview::MapFactory->new( $locus->get_dbh() );
+	
         my $map = $map_factory->create( { map_id => $map_id } );
         if ($map) {
             my $map_name = $map->get_short_name();
             my ( $north, $south, $center ) = $map->get_centromere($lg_name);
-
+	    
             my $dummy_name;
             $dummy_name = "$arm arm" if $arm;
             my $chr_image =
-              CXGN::Cview::ChrMarkerImage->new( "", 150, 150, $self->get_dbh(),
-                $lg_name, $map, $dummy_name );
-
+		CXGN::Cview::ChrMarkerImage->new( "", 150, 150, $locus->get_dbh(),
+						  $lg_name, $map, $dummy_name );
+	    
             my ($chr) = $chr_image->get_chromosomes();
-
+	    
             my $range_marker = CXGN::Cview::Marker::RangeMarker->new($chr);
-
+	    
             my ( $offset, $nrange, $srange );
             if ( $arm eq 'short' ) {
                 $offset = $nrange = $srange = $center / 2;
@@ -1045,40 +801,38 @@ qq|<img src="$image_url" usemap="#map$count" border="0" alt="" />|;
                 $offset = ( $center + $stelomere ) / 2;
                 $nrange = $srange = ( $stelomere - $center ) / 2;
             }
-
+	    
             $range_marker->set_offset($offset);    #center of north/south arm
             $range_marker->set_north_range($nrange);
             $range_marker->set_south_range($srange);
             $range_marker->set_marker_name($dummy_name);
             if ( !$dummy_name ) { $range_marker->hide_label(); }
-
+	    
             #$range_marker->show_label();
             #}else {
             $range_marker->set_label_spacer(20);
-
+	    
             $range_marker->get_label()->set_name($dummy_name);
             $range_marker->get_label->set_stacking_level(2);
-
+	    
             $chr->add_marker($range_marker);
-
+	    
             my ( $image_path, $image_url ) = $chr_image->get_image_filename();
             my $chr_link =
-qq|<img src="$image_url" usemap="#chr_arm_map" border="0" alt="" />|;
+		qq|<img src="$image_url" usemap="#chr_arm_map" border="0" alt="" />|;
             $chr_link .= $chr_image->get_image_map("chr_arm_map") . "<br />";
             $chr_link .= $map_name;
-
+	    
             $location_html .= "<td>" . $chr_link . "</td>";
         }
     }
-
+    
     $location_html .= "</td></tr></table>";
     return $location_html;
 }    #get_location
 
 sub print_locus_history {
-    my $self  = shift;
     my $locus = shift;
-
     my @history;
     my $history_data;
     my $print_history;
@@ -1092,25 +846,25 @@ sub print_locus_history {
         my $history_id    = $h->{locus_history_id};
         my $updated_by_id = $h->{updated_by};
         my $updated =
-          CXGN::People::Person->new( $self->get_dbh(), $updated_by_id );
+	    CXGN::People::Person->new( $locus->get_dbh(), $updated_by_id );
         my $u_first_name = $updated->get_first_name();
         my $u_last_name  = $updated->get_last_name();
         my $up_person_link =
-qq |<a href="/solpeople/personal-info.pl?sp_person_id=$updated_by_id">$u_first_name $u_last_name</a> ($created_date)|;
-
+	    qq |<a href="/solpeople/personal-info.pl?sp_person_id=$updated_by_id">$u_first_name $u_last_name</a> ($created_date)|;
+	
         push @history,
-          [
-            map { $_ } (
-                $h->get_locus_symbol,  $h->get_locus_name,
-                $h->get_gene_activity, $h->get_description,
-                $h->get_linkage_group, $h->get_lg_arm,
-                $up_person_link,
-            )
-          ];
+	[
+	 map { $_ } (
+	     $h->get_locus_symbol,  $h->get_locus_name,
+	     $h->get_gene_activity, $h->get_description,
+	     $h->get_linkage_group, $h->get_lg_arm,
+	     $up_person_link,
+	 )
+	];
     }
-
+    
     if (@history) {
-
+	
         $history_data .= columnar_table_html(
             headings => [
                 'Symbol',     'Name', 'Activity', 'Description',
@@ -1120,41 +874,40 @@ qq |<a href="/solpeople/personal-info.pl?sp_person_id=$updated_by_id">$u_first_n
             __alt_freq   => 2,
             __alt_width  => 1,
             __alt_offset => 3,
-        );
+	    );
         $print_history = html_optional_show(
             'locus_history',
             'Show locus history',
             qq|<div class="minorbox">$history_data</div> |,
-        );
+	    );
     }
-
+    
     return $print_history;
 }    #print_locus_history
 
 sub get_dbxref_info {
-    my $self       = shift;
-    my $locus      = $self->get_object();
+    my $locus      = shift;
     my $locus_name = $locus->get_locus_name();
     my %dbs        = $locus->get_dbxref_lists()
-      ;    #hash of arrays. keys=dbname values= dbxref objects
+	;    #hash of arrays. keys=dbname values= dbxref objects
     my (@alleles) = @_;    #$locus->get_alleles();
-                           #add the allele dbxrefs to the locus dbxrefs hash...
-      #This way the alleles associated publications and sequences are also printed on the locus page
-      #it might be a good idea to pring a link to the allele next to each allele-derived annotation
-
+    #add the allele dbxrefs to the locus dbxrefs hash...
+    #This way the alleles associated publications and sequences are also printed on the locus page
+    #it might be a good idea to pring a link to the allele next to each allele-derived annotation
+    
     foreach my $a (@alleles) {
         my %a_dbs = $a->get_dbxref_lists();
-
+	
         foreach my $a_db_name ( keys %a_dbs )
         {    #add allele_dbxrefs to the locus_dbxrefs list
             my %seen = ()
-              ; #hash for assisting filtering of duplicated dbxrefs (from allele annotation)
+		; #hash for assisting filtering of duplicated dbxrefs (from allele annotation)
             foreach ( @{ $dbs{$a_db_name} } ) {
                 $seen{ $_->[0]->get_accession() }++;
             }    #populate with the locus_dbxrefs
             foreach ( @{ $a_dbs{$a_db_name} } ) {    #and filter duplicates
                 push @{ $dbs{$a_db_name} }, $_
-                  unless $seen{ $_->[0]->get_accession() }++;
+		    unless $seen{ $_->[0]->get_accession() }++;
             }
         }
     }
@@ -1165,47 +918,46 @@ sub get_dbxref_info {
             my $url       = $_->[0]->get_urlprefix() . $_->[0]->get_url();
             my $accession = $_->[0]->get_accession();
             $tgrc .=
-qq|$locus_name is a <a href="$url$accession" target="blank">TGRC gene</a><br />|;
+		qq|$locus_name is a <a href="$url$accession" target="blank">TGRC gene</a><br />|;
         }
     }
-
+    
     my $abs_count = 0;
     foreach ( @{ $dbs{'PMID'} } ) {
         if ( $_->[1] eq '0' ) {    #if the pub is not obsolete
-            $pubs .= $self->get_pub_info( $_->[0], 'PMID', $abs_count++ );
+            $pubs .= get_pub_info( $_->[0], 'PMID', $abs_count++ );
         }
     }
     foreach ( @{ $dbs{'SGN_ref'} } ) {
-        $pubs .= $self->get_pub_info( $_->[0], 'SGN_ref', $abs_count++ )
-          if $_->[1] eq '0';
+        $pubs .= get_pub_info( $_->[0], 'SGN_ref', $abs_count++ )
+	    if $_->[1] eq '0';
     }
-
+    
     my $gb_count = 0;
     foreach ( @{ $dbs{'DB:GenBank_GI'} } ) {
         if ( $_->[1] eq '0' ) {
             $gb_count++;
             my $url = $_->[0]->get_urlprefix() . $_->[0]->get_url();
             my $gb_accession =
-              $self->CXGN::Chado::Feature::get_feature_name_by_gi(
-                $_->[0]->get_accession() );
+		$locus->CXGN::Chado::Feature::get_feature_name_by_gi(
+		    $_->[0]->get_accession() );
             my $description = $_->[0]->get_description();
             $genbank .=
-qq|<a href="$url$gb_accession" target="blank">$gb_accession</a> $description<br />|;
+		qq|<a href="$url$gb_accession" target="blank">$gb_accession</a> $description<br />|;
         }
     }
     my @ont_annot;
-
+    
     # foreach ( @{$dbs{'GO'}}) { push @ont_annot, $_; }
     # foreach ( @{$dbs{'PO'}}) { push @ont_annot, $_; }
     # foreach ( @{$dbs{'SP'}}) { push @ont_annot, $_; }
-
+    
     return ( $tgrc, $pubs, $abs_count, $genbank, $gb_count, \@ont_annot );
 }
 
 ########################
 
 sub abstract_view {
-    my $self          = shift;
     my $pub           = shift;
     my $abs_count     = shift;
     my $abstract      = $pub->get_abstract();
@@ -1218,15 +970,14 @@ sub abstract_view {
     my $abstract_view = html_optional_show(
         "abstracts$abs_count",
         'Show/hide abstract',
-qq|$abstract <b> <i>$authors.</i> $journal. $pyear. $volume($issue). $pages.</b>|,
+	qq|$abstract <b> <i>$authors.</i> $journal. $pyear. $volume($issue). $pages.</b>|,
         0,                           #< do not show by default
         'abstract_optional_show',    #< don't use the default button-like style
-    );
+	);
     return $abstract_view;
 }    #
 
 sub get_pub_info {
-    my $self = shift;
     my ( $dbxref, $db, $count ) = @_;
     my $pub_info;
     my $accession = $dbxref->get_accession();
@@ -1234,32 +985,33 @@ sub get_pub_info {
     my $year= $dbxref->get_publication()->get_pyear();
     my $pub_id    = $dbxref->get_publication()->get_pub_id();
     my $abstract_view =
-      $self->abstract_view( $dbxref->get_publication(), $count );
+	abstract_view( $dbxref->get_publication(), $count );
     $pub_info =
-qq|<div><a href="/chado/publication.pl?pub_id=$pub_id" >$db:$accession</a> $pub_title ($year). $abstract_view </div> |;
+	qq|<div><a href="/chado/publication.pl?pub_id=$pub_id" >$db:$accession</a> $pub_title ($year). $abstract_view </div> |;
     return $pub_info;
 }    #
 
 sub print_locus_editor_info {
-    my $self   = shift;
+    my $locus=shift;
     my $html   = "Locus editors: ";
-    my @owners = $self->get_object()->get_owners();
+    my @owners = $locus->get_owners();
     foreach my $id (@owners) {
-        my $person = CXGN::People::Person->new( $self->get_dbh(), $id );
-
+        my $person = CXGN::People::Person->new( $locus->get_dbh(), $id );
+	
         my $first_name = $person->get_first_name();
         my $last_name  = $person->get_last_name();
-
+	
         $html .=
-qq |<a href="/solpeople/personal-info.pl?sp_person_id=$id">$first_name $last_name</a>;|;
+	    qq |<a href="/solpeople/personal-info.pl?sp_person_id=$id">$first_name $last_name</a>;|;
     }
     chop $html;
     return $html;
 }
 
 sub get_individuals_html {
-    my $self        = shift;
-    my @individuals = $self->get_object()->get_individuals();
+    my $locus        = shift;
+    my $user_type=shift;
+    my @individuals = $locus->get_individuals();
 
     my $html;
     my %imageHoA
@@ -1306,7 +1058,7 @@ sub get_individuals_html {
             $ind_count++;
             my $individual_name = $individualHash{$individual_id};
             my $individual_obsolete_link =
-              $self->get_individual_obsolete_link($individual_id);
+              get_individual_obsolete_link($locus,$individual_id, $user_type);
             my $link =
 qq|<a href="individual.pl?individual_id=$individual_id">$individual_name </a>  |;
             if ( $ind_count < 4 )
@@ -1327,7 +1079,7 @@ qq|<tr valign="top"><td>$link</td> <td> $individual_obsolete_link </td>|;
             for my $i ( 0 .. $image_count ) {
                 my $image_id = $imageHoA{$individual_id}[$i];
                 #my $image    = $imageHash{$image_id};
-                my $image = SGN::Image->new($self->get_dbh(), $image_id);
+                my $image = SGN::Image->new($locus->get_dbh(), $image_id);
                 my $small_image  = $image->get_image_url("thumbnail");
                 my $medium_image = $image->get_image_url("medium");
                 my $image_page   = "/image/index.pl?image_id=$image_id";
@@ -1352,7 +1104,7 @@ qq|<tr valign="top"><td>$link</td> <td> $individual_obsolete_link </td>|;
             foreach my $individual_id (@no_image) {
                 $no_image_count++;
                 my $individual_obsolete_link =
-		    $self->get_individual_obsolete_link($individual_id);
+		    get_individual_obsolete_link($locus, $individual_id, $user_type);
                 if ( $no_image_count < 26 ) {
                     $individual_name = $individualHash{$individual_id};
                     $html .=
@@ -1369,7 +1121,7 @@ qq|<tr valign="top"><td>$link</td> <td> $individual_obsolete_link </td>|;
             foreach my $individual_id (@no_image) {
                 $more++;
                 my $individual_obsolete_link =
-		    $self->get_individual_obsolete_link($individual_id);
+		    get_individual_obsolete_link($locus, $individual_id, $user_type);
                 my $individual_name = $individualHash{$individual_id};
                 $more_html .=
 		    qq|<a href="individual.pl?individual_id=$individual_id">$individual_name</a>&nbsp$individual_obsolete_link |;
@@ -1393,51 +1145,12 @@ qq|<tr valign="top"><td>$link</td> <td> $individual_obsolete_link </td>|;
     return ( $html, scalar(@individuals) );
 }    #get_individuals_html
 
-sub send_locus_email {
-    my $self   = shift;
-    my $action = shift;
-    
-    my $locus_id = $self->get_object()->get_locus_id();
-    my $name     = $self->get_object()->get_locus_name();
-    my $symbol   = $self->get_object()->get_locus_symbol();
-
-    my $subject = "[New locus details stored] locus $locus_id";
-    my $username =
-        $self->get_user()->get_first_name() . " "
-      . $self->get_user()->get_last_name();
-    my $sp_person_id = $self->get_user()->get_sp_person_id();
-
-    my $locus_link =
-qq |http://www.sgn.cornell.edu/phenome/locus_display.pl?locus_id=$locus_id|;
-    my $user_link =
-qq |http://www.sgn.cornell.edu/solpeople/personal-info.pl?sp_person_id=$sp_person_id|;
-
-    my $usermail = $self->get_user()->get_private_email();
-    my $fdbk_body;
-    if ( $action eq 'delete' ) {
-        $fdbk_body =
-"$username ($user_link) has obsoleted locus  $name ($locus_link) \n  $usermail";
-    }
-    elsif ( $locus_id == 0 ) {
-        $fdbk_body =
-"$username ($user_link) has submitted a new locus  \n$name ($locus_link)\nLocus symbol: $symbol\n $usermail ";
-    }
-    else {
-        $fdbk_body =
-"$username ($user_link) has submitted data for locus $name ($locus_link) \nLocus symbol: $symbol\n $usermail";
-    }
-
-    CXGN::Contact::send_email( $subject, $fdbk_body,
-        'sgn-db-curation@sgn.cornell.edu' );
-    CXGN::Feed::update_feed( $subject, $fdbk_body );
-}
-
 ############################javascript code
 
 sub associate_registry {
-    my $self         = shift;
-    my $locus_id     = $self->get_object_id();
-    my $sp_person_id = $self->get_user->get_sp_person_id();
+    my $locus         = shift;
+    my $locus_id     = $locus->get_locus_id();
+    my $sp_person_id = shift;
 
     my $associate = qq^
 	
@@ -1488,10 +1201,10 @@ sub associate_registry {
 }
 
 sub associate_individual {
-
-    my $self         = shift;
-    my $locus_id     = $self->get_object_id();
-    my $sp_person_id = $self->get_user->get_sp_person_id();
+    
+    my $locus         = shift;
+    my $locus_id     = $locus->get_locus_id();
+    my $sp_person_id = shift;
 
     my $associate_html = qq^
 
@@ -1523,19 +1236,10 @@ sub associate_individual {
     return $associate_html;
 }
 
-#############MOVED TO LocusPage.pm!!!!!!!!!!!#############
-###################################################################
-##############sub associate_ontology_term{
-
-###########################################################################
-#########################locus2locus ###################
-##MOVED TO LocusPage.pm see sub associate_locus_form####
-########################################################
-
 
 sub assign_owner {
-    my $self        = shift;
-    my $locus_id    = $self->get_object_id();
+    my $locus        = shift;
+    my $locus_id    = $locus->get_locus_id();
     my $object_type = "locus";
 
     my $assign = qq^
@@ -1569,9 +1273,9 @@ sub assign_owner {
 
 sub associated_figures {
 
-    my $self         = shift;
-    my $locus_id     = $self->get_object_id();
-    my $sp_person_id = $self->get_user->get_sp_person_id();
+    my $locus         = shift;
+    my $locus_id     = $locus->get_locus_id();
+    my $sp_person_id = shift;
 
     my $associate_html = qq^
        <span>
@@ -1582,44 +1286,16 @@ sub associated_figures {
     return $associate_html;
 }
 
-sub get_unigene_obsolete_links {
-    my $self                  = shift;
-    my $locus                 = $self->get_object();
-    my $unigene_id            = shift;
-    my $unigene_obsolete_link = "";
-    my $locus_unigene_id      = $locus->get_locus_unigene_id($unigene_id);
-    if (   ( $self->get_user()->get_user_type() eq 'submitter' )
-        || ( $self->get_user()->get_user_type() eq 'curator' )
-        || ( $self->get_user()->get_user_type() eq 'sequencer' ) )
-    {
-        $unigene_obsolete_link = qq| 
-	    <a href="javascript:Locus.obsoleteLocusUnigene('$locus_unigene_id')">[Remove]</a>
-	    
-	    <div id='obsoleteLocusUnigeneForm' style="display: none">
-            <div id='locus_unigene_id_hidden'>
-	    <input type="hidden" 
-	    value=$locus_unigene_id
-	    id="$locus_unigene_id">
-	    </div>
-	    </div>
-	    |;
-
-    }
-    else {
-        $unigene_obsolete_link = qq | <span class="ghosted">[Remove]</span> |;
-    }
-    return $unigene_obsolete_link;
-}
 
 sub get_individual_obsolete_link {
-    my $self                     = shift;
-    my $locus                    = $self->get_object();
+    my $locus                    = shift;
     my $individual_id            = shift;
+    my $user_type = shift;
     my $individual_obsolete_link = "";
     my $individual_allele_id = $locus->get_individual_allele_id($individual_id);
-    if (   ( $self->get_user()->get_user_type() eq 'submitter' )
-        || ( $self->get_user()->get_user_type() eq 'curator' )
-        || ( $self->get_user()->get_user_type() eq 'sequencer' ) )
+    if (   ( $user_type eq 'submitter' )
+	   || ( $user_type eq 'curator' )
+	   || ( $user_type eq 'sequencer' ) )
     {
         $individual_obsolete_link = qq| 
 	    <a href="javascript:Locus.obsoleteIndividualAllele('$individual_allele_id')">[Remove]</a>
@@ -1632,16 +1308,16 @@ sub get_individual_obsolete_link {
 	    </div>
 	    </div>
 	    |;
-
+	
     }
     return $individual_obsolete_link;
 }
 
 sub merge_locus {
-    my $self        = shift;
-    my $locus_id    = $self->get_object_id();
+    my $locus        = shift;
+    my $locus_id    = $locus->get_locus_id();
     my $object_type = "locus";
-    my $common_name = $self->get_object()->get_common_name();
+    my $common_name = $locus->get_common_name();
     my $merge       = qq^
 	<a href=javascript:Tools.toggleMergeFormDisplay()>[Merge locus]</a> Warning: Merged locus will be set to obsolete! Unobsoleting is possible only directly via the database! <br>
 	<div id='mergeLocusForm' style="display:none">
@@ -1677,10 +1353,9 @@ sub merge_locus {
 
 #returns string html listing of locus sequence matches found in ITAG gbrowse DBs
 sub itag_genomic_annots_html {
-    my ($self) = @_;
-
-    my $locus    = $self->get_object;
-    my $locus_id = $locus->get_locus_id;
+    
+    my $locus    = shift;
+    my $locus_id = $locus->get_locus_id();
 
     my @releases = CXGN::ITAG::Release->find
       or return '<span class="ghosted">temporarily unavailable</span>';
@@ -1760,9 +1435,3 @@ sub _itag_features_to_html {
                   . $gbrowse_img
            .qq|</div>\n|
 }
-
-
-
-############# end of javascript functions
-
-##
