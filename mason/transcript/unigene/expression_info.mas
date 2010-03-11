@@ -27,7 +27,7 @@ where: $schema is a schema object with Bio::Chado::Schema, CXGN::Metadata::Schem
 
   Mason component get the unigene data (expression info) from the database and show it as table web_page.
  
-  There are two sources of expression data. The microarray TOM1 and the SEDM system. 
+  There are two sources of expression data. The microarray TOM1 and the GEM system. 
 
   This script search in both and take them as different objects.
 
