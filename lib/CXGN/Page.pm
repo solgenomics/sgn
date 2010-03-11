@@ -25,7 +25,6 @@ use CXGN::DB::Connection;
 use CXGN::Login;
 use CXGN::Page::VHost::SGN;
 use CXGN::Tools::File;
-use CXGN::Tools::SVN::Info;
 
 use SGN::Context;
 
