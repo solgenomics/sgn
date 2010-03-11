@@ -6,6 +6,7 @@ use CXGN::Login;
 use CXGN::People::Person;
 use CXGN::Phenome::Locus;
 use CXGN::Feed;
+use CXGN::Contact;
 
 use JSON;
 
@@ -34,11 +35,11 @@ if ($login_user_type eq 'curator') {
 	    my $message=  "merging locus failed!\n $fail ";
 	    CXGN::Contact::send_email('Merging locus failed' ,$message, 'sgn-bugs@sgn.cornell.edu');
 	    $error{"error"} =  $message;
-	    my $jobj = $json->encode(\%error);
-	    print  $jobj;
+	   
 	}
     
 	else  { 
+	    $error{reload} = 1;
 	    my $subject="[New locus merged] locus $locus_id";
 	    my $person= CXGN::People::Person->new($dbh, $login_person_id);
 	    my $user=$person->get_first_name()." ".$person->get_last_name();
@@ -50,6 +51,8 @@ if ($login_user_type eq 'curator') {
 	    CXGN::Feed::update_feed($subject,$fdbk_body);
 	}
     }
+    my $jobj = $json->encode(\%error);
+    print  $jobj;
 }
 
 
