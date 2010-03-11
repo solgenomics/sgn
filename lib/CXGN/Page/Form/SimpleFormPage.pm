@@ -34,6 +34,7 @@ The following is a list of object functions. Some of these functions are used in
 =cut
 
 use strict;
+use Carp;
 
 use CXGN::Tools::Text qw | sanitize_string |;
 use CXGN::Page;

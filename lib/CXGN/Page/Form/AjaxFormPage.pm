@@ -89,7 +89,7 @@ sub new {
     $self->set_login(CXGN::Login->new($self->get_dbh()));
     $self->get_ajax_page->{request}->no_cache(1);
     my %args = $self->get_ajax_page()->get_all_encoded_arguments(); ##
-    
+    my %json_hash=();
     # sanitize the inputs, we don't want to end up like bobby tables school.
     #
     foreach my $k (keys (%args)) { 
@@ -107,12 +107,12 @@ sub new {
     }
     
     if (!$self->get_object_id() && $self->get_action()!~/new|store|confirm_store/) { 
-	$self->set_json_hash({error=>'No identifier provided to display data of this page for action view.'}); 
+	$json_hash{error}='No identifier provided to display data of this page for action view.'; 
 	
     }
     else { 
 	if ($self->get_action()!~/new|view|edit|store|delete|confirm_delete|confirm_store/) { 
-	    $self->set_json_hash({error=>'No identifier provided'}); 
+	    $json_hash{error}='No identifier provided'; 
 	}	 
     }
     
@@ -127,16 +127,19 @@ sub new {
 	my %args = $self->get_args();
 	$args{$self->get_primary_key()}=0;
 	$self->set_args(%args);
- 	$self->add();
+	$self->add();
     }
     elsif ($self->get_action() eq "store") { 
-	
  	$self->store();
     }
     elsif ($self->get_action() eq "confirm_delete") {
 	$self->delete();
     }
     ##action delete is being handled by the JSFormPage javascript object
+    
+    $self->set_json_hash(%json_hash);
+    $self->get_ajax_page()->send_http_header();
+    
     return $self;
 }
 
@@ -165,18 +168,24 @@ sub check_modify_privileges {
     # 
     my ($person_id, $user_type)=$self->get_login()->has_session();
     
+    #my $person_id = $self->get_login()->verify_session();
+    #my $user =  CXGN::People::Person->new($self->get_dbh(), $person_id);
+    #my $user_id = $user->get_sp_person_id();
+    #my $user_type = $user->get_user_type();
+    
     if ($user_type eq 'curator') {
 	return 0;
     }
-    if ($user_type !~ /submitter|sequencer|curator/) { 
-	$json_hash{error} = 'You must have an account of type submitter to be able to submit data. Please contact SGN to change your account type.';
+    if (!$person_id) { $json_hash{login} = 1 ; }
+    if ($user_type !~ /submitter|sequencercurator/) { 
+	$json_hash{error} = "You must have an account of type submitter to be able to submit data. Please contact SGN to change your account type.";
     }
     
     my @owners = $self->get_owners();
     if ((@owners) && (!(grep { $_ =~ /^$person_id$/ } @owners) )) {
 	# check the owner only if the action is not new
 	#
-	$json_hash{error} = 'You do not have rights to modify this database entry because you do not own it. [$person_id, @owners]';
+	$json_hash{error} = "You do not have rights to modify this database entry because you do not own it. [$person_id, @owners]";
 	
     }else { $self->set_is_owner(1); }
     
@@ -296,11 +305,10 @@ sub store {
 	# the errors will be displayed on the page for each
 	# field that did not validate.
 	#
+	$json_hash{validate} = 1;
 	$json_hash{html} = $self->get_form()->as_table_string();
 	$self->set_json_hash(%json_hash);
-	
     }
-
 }
 
 
@@ -833,6 +841,17 @@ sub validate_parameters_before_store {
 sub process_parameters_after_store {
 }
 
+=head2 return_json
+
+ Usage: $self->return_json()
+ Desc:  print a json object. To be used  in the javascript JSFormPage object.
+ Ret:   nothing
+ Args:  none
+ Side Effects: prints encoded JSON object
+ Example:
+
+=cut
+
 
 sub return_json {
     my $self=shift;
@@ -863,11 +882,12 @@ sub return_json {
 
 sub send_form_email {
     my $self   = shift;
-    my %opts=shift;
-    my $subject=$opts{subject};
-    my $mailing_list = $opts{mailing_list};
-    my $referring_page_link = $opts{referring_page};
-    my $action = $opts{action};
+    my $opts=shift;
+    $opts ||= {};
+    my $subject=$opts->{subject};
+    my $mailing_list = $opts->{mailing_list};
+    my $referring_page_link = $opts->{referring_page};
+    my $action = $opts->{action};
     
     my $user=$self->get_user();
     
@@ -894,7 +914,7 @@ sub send_form_email {
     }
     else {
         $fdbk_body =
-	    "$username ($user_link) has submitted data for ." . $self->get_object_name() ." ($referring_page_link) \n $usermail";
+	    "$username ($user_link) has submitted data for " . $self->get_object_name() ." ($referring_page_link) \n $usermail";
     }
     
     CXGN::Contact::send_email( $subject, $fdbk_body,$mailing_list );
