@@ -29,8 +29,8 @@ Computational prediction of secreted proteins
 <tr>
 <td align="center"><a href="ftp://ftp.sgn.cornell.edu/secretom/Tair8.pep.1.sptp.fasta"><strong><em>Arabidopsis thaliana</em></strong></a></td>
 <td align="center"><a href="ftp://ftp.sgn.cornell.edu/secretom/Rice.pep.1.sptp.fasta"><strong>Rice (<em>Oryza sativa</em>)</a></strong></td>
-<td align="center"><a href="ftp://ftp.sgn.cornell.edu/secretom/Brachy.pep.1.sptp.fasta"><strong><em>Brachypodium distachyon</em></strong></td>
-<td align="center"><strong><em>Solanum lycopersicum</em></strong></td>
+<td align="center"><a href="ftp://ftp.sgn.cornell.edu/secretom/Brachy.pep.1.sptp.fasta"><strong><em>Brachypodium distachyon</em></strong></a></td>
+<td align="center"><a href="ftp://ftp.sgn.cornell.edu/secretom/ITAG1.pep.sptp.fasta"><strong><em>Solanum lycopersicum</em></strong></a></td>
 </tr>
 <td><img src="/documents/img/secretom/arabidopsisthaliana.png"></td>
 <td><img src="/documents/img/secretom/oryzasativa.png"></td>
