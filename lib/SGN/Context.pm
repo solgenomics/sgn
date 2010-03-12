@@ -591,7 +591,7 @@ sub error_notify {
     require CXGN::Contact;
     CXGN::Contact::send_email(
         "$page_name $error_verb",
-        $developer_message,
+        "$developer_message\n",
         'bugs_email',
        );
 
