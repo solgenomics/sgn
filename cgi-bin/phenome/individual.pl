@@ -50,15 +50,36 @@ sub define_object {
 	my $individual_by_name = (CXGN::Phenome::Individual->new_with_name($self->get_dbh(), $individual_name))[0];
 	if ($individual_by_name) { $individual_id = $individual_by_name->get_individual_id(); }
     }
-    $self->set_object_id($individual_id);
-    $self->set_object(CXGN::Phenome::Individual->new($self->get_dbh(),$self->get_object_id()));
-    $self->set_primary_key("individual_id");	
    
-    unless ($self->get_object() || ($args{action} eq 'new') ) { 
-	$self->get_page->message_page("No accession exists for identifier $individual_id"); 
-    }  
+    unless ( ( $individual_id =~ m /^\d+$/  ) || ($args{action} eq 'new' && !$individual_id) ) 
+    {
+	$c->throw(is_error=>0,
+		  message=>"No accession exists for identifier $individual_id",
+	    );
+    }
+    my $individual=CXGN::Phenome::Individual->new($self->get_dbh(),$individual_id ) ;
+    $self->set_object_id($individual_id);
+    $self->set_object($individual);
+    $self->set_primary_key("individual_id");	
+    
+    
+    if ( $individual->get_obsolete() eq 't' && $self->get_user()->get_user_type() ne 'curator' ) 
+    {
+	$c->throw(is_error=>0, 
+		  title => 'Obsolete accession',
+		  message=>"Accession $individual_id is obsolete!",
+		  developer_message => 'only curators can see obsolete accessions',
+		  notify => 0,   #< does not send an error email
+	    );
+    }
+    my $action= $args{action};
+    if ( !$individual->get_individual_id() && $action ne 'new'  ) {
+	$c->throw(is_error=>0, message=>'No accession exists for this identifier',);
+    }
+    
     $self->set_owners($self->get_object()->get_owners());
 }
+
 
 sub delete {
     my $self = shift;
@@ -109,11 +130,9 @@ sub generate_form {
     
     my $form = undef;
     if ($self->get_action()=~/new|edit|store/ ) { 
-	print STDERR "Generating EditableForm..\n";
 	$form = CXGN::Page::Form::Editable->new();
     }
     else { 
-	print STDERR "Generating static Form...\n";
 	$form = CXGN::Page::Form::Static->new();
     }
        
@@ -600,11 +619,10 @@ sub store {
    my $individual = $self->get_object();
    my $individual_id = $self->get_object_id();
    my %args = $self->get_args();
-   print STDERR "...overriding store in individual.pl....*********\n";
+   
   
    my $message = $individual->exists_in_database( $args{name} );
    
-   print STDERR "!!!!!!individual.pl store: individual_id: $individual_id, name:" .$args{name}  . " \n";
    if ($message ) {#&& $name_id!= $locus_id && $name_obsolete==0 ) { 
        $self->get_page()->message_page($message);
    } else { 
