@@ -52,7 +52,7 @@ If you have used <a href="/tools/onto/">'Solanaceae Phenotype'</a> terms for des
 </pre>
 
 
-<b>We will gladly add inforation and features to the phenotype database <a href="mailto:sgn-feedback\@solgenomics.net">upon request!</a> </b>
+<b>We will gladly add information and features to the phenotype database <a href="mailto:sgn-feedback\@solgenomics.net">upon request!</a> </b>
 
 END_HEREDOC
 $page->footer();
