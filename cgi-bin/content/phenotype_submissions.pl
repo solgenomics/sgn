@@ -8,7 +8,7 @@ print<<END_HEREDOC;
 <p>
 SGN hosts a <a href="/search/direct_search.pl?search=phenotypes/">phenotype database</a> for displaying individual plant accessions scored for phenotypic attributes and more (links to genetic maps, QTLs, locus associations).<br>
 Each accession is associated with a population, such as introgression lines, mutants, and mapping populations.<br>
-SGN users may upload <a href="/phenome/individual.pl?action=new">new accessions</a> using our web interface (you will be prompt to login first, and an SGN submitter account is required. Please <a href="mailto:sgn-feedback\@sgn.cornell.edu">contact us</a> for for obtaining submitter privileges). <br/>
+SGN users may upload <a href="/phenome/individual.pl?action=new">new accessions</a> using our web interface (you will be prompt to login first, and an SGN submitter account is required. Please <a href="mailto:sgn-feedback\@solgenomics.net">contact us</a> for for obtaining submitter privileges). <br/>
 For large datasets we accept batch submissions of files with the following details:
 
 <ul>
@@ -27,7 +27,7 @@ For large datasets we accept batch submissions of files with the following detai
 We will upload your accessions and have the contact person assigned as the owner of all information.<br><br>
 
 You may also submit any number of images for each one of your accession. Images can be added or deleted from the database at any time.
-For a large number of images please <a href="mailto:sgn-feedback\@sgn.cornell.edu">contact us</a> for mailing a CD or uploading your images to the SGN ftp site. If your filenames do not include the accession name (usually as a prefix, e.g. myAccession1_leaf.jpg) We also require a file with information on your images:
+For a large number of images please <a href="mailto:sgn-feedback\@solgenomics.net">contact us</a> for mailing a CD or uploading your images to the SGN ftp site. If your filenames do not include the accession name (usually as a prefix, e.g. myAccession1_leaf.jpg) We also require a file with information on your images:
 
 <pre>
   filename1   accession1
@@ -39,7 +39,7 @@ For a large number of images please <a href="mailto:sgn-feedback\@sgn.cornell.ed
 </pre> 
 
 
-If you have used <a href="/tools/Onto/">'Solanaceae Phenotype'</a> terms for describing your accessions you can submit the annotation in the following format:
+If you have used <a href="/tools/onto/">'Solanaceae Phenotype'</a> terms for describing your accessions you can submit the annotation in the following format:
 
 <pre> 
     accession1  SP000000X
@@ -52,7 +52,7 @@ If you have used <a href="/tools/Onto/">'Solanaceae Phenotype'</a> terms for des
 </pre>
 
 
-<b>We will gladly add inforation and features to the phenotype database <a href="mailto:sgn-feedback\@sgn.cornell.edu">upon request!</a> </b>
+<b>We will gladly add inforation and features to the phenotype database <a href="mailto:sgn-feedback\@solgenomics.net">upon request!</a> </b>
 
 END_HEREDOC
 $page->footer();
