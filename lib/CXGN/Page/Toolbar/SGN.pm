@@ -238,7 +238,7 @@ sub default_toolbar_data {
                 },
                 {
                     name => 'Browse Tomato Genome Data',
-                    link => '/gbrowse/',
+                    link => '/tomato/genome_data.pl',
                     desc => 'Browse tomato genomic sequences and annotations.',
                 },
             ]

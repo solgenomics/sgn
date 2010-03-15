@@ -63,7 +63,7 @@
 
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/solanaceae-project/index.pl">Solanaceae project (SOL)</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/about/us_tomato_sequencing.pl">U.S. tomato sequencing project</a></td></tr>
-       <tr><td class="toolbar_item"><a class="toolbar_item" href="/gbrowse/">Browse Tomato Genome Data</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/tomato/genome_data.pl">Browse Tomato Genome Data</a></td></tr>
     </table>
 
     </div>
