@@ -267,12 +267,11 @@ EOH
     Alias $cfg->{static_content_url}     $cfg->{static_content_path}
     Alias $cfg->{static_site_files_url}  $paths->{basepath}/$cfg->{static_site_files_path}
 
-    # stopgap alias for gbrowse - will be unnecessary once we upgrade it
-    Alias /gbrowse/images/buttons $paths->{basepath}/documents/gbrowse/images/buttons
-
     #insitu image locations
     Alias  /fullsize_images   $cfg->{static_datasets_path}/images/insitu/processed
     Alias  /thumbnail_images  $cfg->{static_datasets_path}/images/insitu/display
+
+    Redirect 301 /gbrowse/index.pl /tomato/genome_data.pl
 
     RewriteEngine On
     RewriteLogLevel 1
@@ -292,7 +291,6 @@ EOH
     #anything SOLANDINO now goes to a single place
     RewriteRule SOLANDINO http://www.sgn.cornell.edu/about/ecosol/
 
-
     #############################################
     #pages that have moved
     #############################################
@@ -300,7 +298,7 @@ EOH
     RewriteRule ^/help/about/(.*) http://www.sgn.cornell.edu/about/\$1 [L,R=301]
 
     #this page has moved
-    RewriteRule /tools/blast/simple.pl(.*) http://www.sgn.cornell.edu/tools/blast/index.pl\$1 [L,R=301]    
+    RewriteRule /tools/blast/simple.pl(.*) http://www.sgn.cornell.edu/tools/blast/index.pl\$1 [L,R=301]
 
     # new map viewer
     RewriteCond %{QUERY_STRING}  (.*)map_id=1(.*)
