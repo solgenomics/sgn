@@ -46,6 +46,7 @@ use CXGN::Tools::List qw/distinct/;
 
 use CXGN::Phenome::Locus::LocusPage;
 use SGN::Image; 
+use HTML::Entities;
 
 my $d = CXGN::Debug->new();
 ##$d->set_debug( 1 );
@@ -77,11 +78,11 @@ if ( $locus->get_obsolete() eq 't' && $user_type ne 'curator' )
 {
     $d->d("locus is obsolete!!" );
     
-    $c->throw(is_error=>1, 
+    $c->throw(is_error=>0, 
 	      title => 'Obsolete locus',
 	      message=>"Locus $locus_id is obsolete!",
 	      developer_message => 'only curators can see obsolete loci',
-	      notify => 1,   #< does not send an error email
+	      notify => 0,   #< does not send an error email
 	);
     #$page->message_page("Locus $locus_id is obsolete!");
 }
@@ -960,8 +961,8 @@ sub get_dbxref_info {
 sub abstract_view {
     my $pub           = shift;
     my $abs_count     = shift;
-    my $abstract      = $pub->get_abstract();
-    my $authors       = $pub->get_authors_as_string();
+    my $abstract      = encode_entities($pub->get_abstract() );
+    my $authors       = encode_entities($pub->get_authors_as_string() );
     my $journal       = $pub->get_series_name();
     my $pyear         = $pub->get_pyear();
     my $volume        = $pub->get_volume();

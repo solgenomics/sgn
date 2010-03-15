@@ -25,6 +25,7 @@ use CXGN::Contact;
 use CXGN::Feed;
 use CXGN::Tools::Organism;
 use JSAN::ServerSide;
+use HTML::Entities;
 
 use base qw / CXGN::Page::Form::SimpleFormPage /;
 
@@ -753,8 +754,8 @@ sub abstract_view {
     my $self=shift;
     my $pub=shift;
     my $abs_count=shift;
-    my $abstract=$pub->get_abstract();
-    my $authors=$pub->get_authors_as_string();#self->author_info($pub->get_pub_id());
+    my $abstract=encode_entities($pub->get_abstract());
+    my $authors=encode_entities($pub->get_authors_as_string() ) ;#self->author_info($pub->get_pub_id());
     my $journal=$pub->get_series_name() ; 
     my $pyear=$pub->get_pyear();
     my $volume=$pub->get_volume() ;
