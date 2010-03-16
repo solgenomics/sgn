@@ -133,6 +133,8 @@ use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw / blue_section_html page_title_html / ;
 use SGN::Image;
 use CXGN::People::Person;
+
+
 # get the parameters.
 # legal parameters are: 
 #  action: new upload
@@ -152,7 +154,7 @@ my %args = $page->get_all_encoded_arguments;
 
 # get db connection
 #
-my $dbh = CXGN::DB::Connection->new("metadata");
+my $dbh = CXGN::DB::Connection->new();
 
 # get the sp_person_id if user is logged in for actions add and upload.
 #
@@ -193,7 +195,8 @@ elsif ($args{action} eq "store") {
     # check stuff
 
     # do stuff
-    store($dbh, $page, $image, %args, $sp_person_id);
+    $args{sp_person_id} = $sp_person_id ; 
+    store($dbh, $page, $image, %args);
 }
 else { 
     $page->message_page("No valid parameters were supplied.");
@@ -265,7 +268,6 @@ sub confirm {
     my $page = shift;
     my %args = @_;
 
-    print STDERR "uploading...\n";
 
     # deal with the upload options
     #
@@ -274,7 +276,6 @@ sub confirm {
    
     if (defined $upload) { 
 
-	print STDERR "upload is defined... we continue...\n";
 
 	$args{temp_file} = $image->apache_upload_image($upload);
 	#if ($temp_file eq "-1") { 
@@ -288,7 +289,7 @@ sub confirm {
         
         my $filename_validation_msg =  validate_image_filename($temp_file_base);
         if ( $filename_validation_msg )  { #if non-blank, there is a problem with Filename, print messages
-            print STDERR "Invalid Upload Filename Attempt: $temp_file_base, $filename_validation_msg \n";
+            #print STDERR "Invalid Upload Filename Attempt: $temp_file_base, $filename_validation_msg \n";
 	    print qq { There is a problem with the image file you selected: $temp_file_base <br />};
             print qq { Error:  };
             print $filename_validation_msg; 
@@ -359,9 +360,11 @@ sub confirm {
 
 #  store($dbh, $page, $file, $image, $type, $type_id, $refering_page, $sp_person_id);
 sub store { 
-    my ($dbh, $page, $image, %args, $sp_person_id) = @_;
+    my ($dbh, $page, $image, %args) = @_;
+    my $sp_person_id = $args{sp_person_id};
     my $vh = CXGN::VHost->new();
     my $temp_image_dir = $vh->get_conf("basepath")."/".$vh->get_conf("tempfiles_subdir") ."/temp_images";
+   
     $image -> set_sp_person_id($sp_person_id);
 
     if ((my $err = $image->process_image($temp_image_dir."/".$args{temp_file}, $args{type}, $args{type_id}))<=0) { 
@@ -371,7 +374,7 @@ sub store {
     
     # set some image attributes...
     # the image owner...
-    print STDERR "Setting the submitter information in the image object...\n";
+    #print STDERR "Setting the submitter information in the image object...\n";
 
     $image -> set_name($args{file});
     
@@ -420,7 +423,7 @@ sub validate_image_filename {
   my $test_fn = $fn;
   $test_fn =~ s/[^$OK_CHARS]/_/go;
   if ( $fn ne $test_fn ) {
-      print STDERR "Upload Attempt with bad shell characters: $fn \n";
+      #print STDERR "Upload Attempt with bad shell characters: $fn \n";
        return "Invalid characters found in filename, must not contain
 	characters <b>\& ; : \` \' \\ \| \* \? ~ ^ < > ( ) [ ] { } \$</b>" ;
      }
@@ -430,10 +433,10 @@ sub validate_image_filename {
   my $ext; 
   if ($fn =~ m/^(.*)(\.\S{1,4})\r*$/) {
       $ext = lc ($2);
-      print STDERR "Upload Attempt with disallowed filename extension: $fn Extension: $ext\n";
+      #print STDERR "Upload Attempt with disallowed filename extension: $fn Extension: $ext\n";
       return "File Type must be one of: .png, .jpg, .jpeg, .gif, .pdf, .ps, or .eps" unless exists $file_types{$ext};
     } else {
-      print STDERR "Upload Attempt with filename extension we could not parse: $fn \n";
+      #print STDERR "Upload Attempt with filename extension we could not parse: $fn \n";
       return "File Type must be one of: .png, .jpg, .jpeg, .gif, .pdf, .ps, or .eps";
     }
 
@@ -487,5 +490,5 @@ sub send_image_email {
     }
     
     CXGN::Contact::send_email($subject,$fdbk_body, 'sgn-db-curation@sgn.cornell.edu');
-    print STDERR "sending email $image_link ............... ";
+    
 }
