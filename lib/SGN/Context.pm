@@ -42,6 +42,8 @@ use HTML::Mason::Interp;
 use SGN::Config;
 use SGN::Exception;
 
+#with 'SGN::SiteFeatures';
+
 =head2 config
 
   Usage   : my $proj = $c->config->{bac_project_chr_11}
@@ -58,49 +60,55 @@ use SGN::Exception;
 has 'config' => ( is => 'ro', isa => 'HashRef', default => \&_new_config );
 
 sub _new_config {
-    my $basepath = _find_basepath();
+    my $self = shift;
     my $cfg = SGN::Config->load( add_vals =>
                                  {
-                                  basepath => $basepath, #< basepath is the old-SGN-compatible name
-                                  home     => $basepath, #< home is the catalyst-compatible name
+                                  basepath => $self->_basepath, #< basepath is the old-SGN-compatible name
+                                  home     => $self->_basepath, #< home is the catalyst-compatible name
                                   project_name => 'SGN',
                                  }
                                );
-}
-
-
-Memoize::memoize('_find_basepath');
-# takes no args, looks for the site basepath, starting from the location where this module was installed
-sub _find_basepath {
-    # find the path on disk of this file, then find the basename from that
-    my @basepath_strategies = (
-	# 0. maybe somebody has set an SGN_SITE_ROOT environment variable
-	sub {
-	    return $ENV{SGN_SITE_ROOT} || '';
-	},
-	# 1. search down the directory tree until we find a dir that contains ./sgn/cgi-bin
-	sub {
-	    my $this_file = _path_to_this_pm_file();
-	    my $dir = File::Basename::dirname($this_file);
-	    until( -d File::Spec->catdir( $dir, 'sgn', 'cgi-bin' ) ) {
-		$dir = File::Spec->catdir( $dir, File::Spec->updir );
-	    }
-	    $dir = File::Spec->catdir( $dir, 'sgn' );
-	    return $dir;
-	},
-    );
-
-    my $basepath;
-    foreach my $basepath_strategy ( @basepath_strategies ) {
-	$basepath = $basepath_strategy->();
-	last if -d File::Spec->catfile($basepath,'cgi-bin');
+    for (values %$cfg) {
+        s|__HOME__|$self->path_to()|eg;
+        s|__path_to\(([^\)]+\))__|$self->path_to( split /,/, $1) |eg;
     }
-
-    -d File::Spec->catfile( $basepath, 'cgi-bin' )
-	or die "could not find basepath starting from this file ("._path_to_this_pm_file().")";
-
-    return $basepath;
+    return $cfg;
 }
+
+has '_basepath' => (
+    is => 'ro',
+    lazy_build => 1,
+   ); sub _build__basepath {
+    # find the path on disk of this file, then find the basename from that
+       my @basepath_strategies = (
+           # 0. maybe somebody has set an SGN_SITE_ROOT environment variable
+           sub {
+               return $ENV{SGN_SITE_ROOT} || '';
+           },
+           # 1. search down the directory tree until we find a dir that contains ./sgn/cgi-bin
+           sub {
+               my $this_file = _path_to_this_pm_file();
+               my $dir = File::Basename::dirname($this_file);
+               until ( -d File::Spec->catdir( $dir, 'sgn', 'cgi-bin' ) ) {
+                   $dir = File::Spec->catdir( $dir, File::Spec->updir );
+               }
+               $dir = File::Spec->catdir( $dir, 'sgn' );
+               return $dir;
+           },
+          );
+
+       my $basepath;
+       foreach my $basepath_strategy ( @basepath_strategies ) {
+           $basepath = $basepath_strategy->();
+           last if -d File::Spec->catfile($basepath,'cgi-bin');
+       }
+
+       -d File::Spec->catfile( $basepath, 'cgi-bin' )
+           or die "could not find basepath starting from this file ("._path_to_this_pm_file().")";
+
+       return $basepath;
+   }
+
 sub _path_to_this_pm_file {
     (my $this_file = __PACKAGE__.".pm") =~ s{::}{/}g;
     $this_file = $INC{$this_file};
@@ -330,7 +338,7 @@ sub path_to {
 
     @relpath = map "$_", @relpath; #< stringify whatever was passed
 
-    my $basepath = $self->get_conf('basepath')
+    my $basepath = $self->_basepath
       or die "no base path conf variable defined";
     -d $basepath or die "base path '$basepath' does not exist!";
 
@@ -602,8 +610,9 @@ sub error_notify {
     return;
 }
 
-# called by the $SIG{__DIE__} handler with the same arguments as die.
-# handles exception objects as well as regular dies.
+# called by the site-wide $SIG{__DIE__} handler with the same
+# arguments as die.  handles exception objects as well as regular
+# dies.
 sub handle_exception {
     my $self = shift;
 
@@ -671,7 +680,8 @@ sub dbh {
     return $dbh;
 }
 
-# tiny JSAN::ServerSide subclass to add modtimes to URIs
+##############################################################################
+# tiny JSAN::ServerSide subclass to add modtimes to JSAN::ServerSide URIs
 package SGN::Context::JSAN::ServerSide;
 use base 'JSAN::ServerSide';
 use File::stat;
