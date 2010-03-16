@@ -339,7 +339,7 @@ sub display_page {
     }
     $image_html .= "</tr></table>";
     #link for adding new images
-    if ($individual_name) { $image_html .= qq|<br /><a href="../image/add_image.pl?type_id=$individual_id&amp;action=new&amp;type=individual&amp;refering_page=$page">[Add new image]</a>|; } 
+    if ($individual_name) { $image_html .= qq|<br /><a href="../image/add_image.pl?type_id=$individual_id&amp;action=new&amp;type=individual&amp;referring_page=$page">[Add new image]</a>|; } 
 
     
     print info_section_html(title   => 'Images',
@@ -455,7 +455,7 @@ sub display_page {
     }
     
     if ($individual_name && ($login_user_type eq 'curator' || $login_user_type eq 'submitter' || $login_user_type eq 'sequencer')) { 
-	$pub_subtitle .= qq|<a href="/chado/add_publication.pl?type=individual&amp;type_id=$individual_id&amp;refering_page=$page&amp;action=new"> [Associate publication] </a>|; 
+	$pub_subtitle .= qq|<a href="/chado/add_publication.pl?type=individual&amp;type_id=$individual_id&amp;referring_page=$page&amp;action=new"> [Associate publication] </a>|; 
     }else { $pub_subtitle= qq|<span class=\"ghosted\">[Associate publication]</span>|;}
     
     
