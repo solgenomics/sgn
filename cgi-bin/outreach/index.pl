@@ -68,7 +68,7 @@ my $activities = blue_section_html("Activities and Materials", <<ACTIVITIES);
     <li><a href="/about/Summer_Internship_2007.pl">2007 summer interns</a></li>
     <li><a href="/about/Summer_Internship_2008.pl">2008 summer interns</a></li>
 </ul>
-<li>You can find information about the 2010 summer internships <a href="/about/us_tomato_sequencing.pl#internships">here</a>.</li>
+<!-- <li>You can find information about the 2010 summer internships <a href="/about/us_tomato_sequencing.pl#internships">here</a>.</li> -->
 </ul>
 </span>
 
