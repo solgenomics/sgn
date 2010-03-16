@@ -39,6 +39,7 @@ sub new {
         $self->{$_} = $params->{$_};
     }
     $self->{tempdir} or confess "must provide a tempdir argument to bulk constructor";
+    -d $self->{tempdir} or confess "no such directory $self->{tempdir}";
     $self->{content} = "";    # the content of the page
     $self->{db} = $self->{dbc}
         or confess "must provide a dbc argument (database handle) to bulk constructor";
