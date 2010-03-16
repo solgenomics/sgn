@@ -30,7 +30,6 @@ use Cwd ();
 use File::Basename;
 use File::Spec;
 use File::Path ();
-use Memoize ();
 use Scalar::Util qw/blessed/;
 use URI ();
 
