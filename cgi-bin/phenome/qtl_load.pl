@@ -88,6 +88,8 @@ sub process_data {
 
 
     my %args = $page->get_all_encoded_arguments();
+    $args{pop_common_name_id} = $self->common_name_id();
+   
     my $type = $args{type};
     my $pop_id = $args{pop_id};
     my $args_ref = \%args;
@@ -348,7 +350,7 @@ sub trait_upload {
 	 my $qtlfiles={};	 	
 	 $qtlfiles->{trait_file}=$name;	 	 
 	 store ($qtlfiles, "$user_dir/qtlfiles");
-	 #$qtlfiles =  retrieve("$user_dir/qtlfiles");
+	 
 	 
     } else {
 	die "Apache2::Upload object for trait file not defined."
@@ -379,32 +381,15 @@ sub load_pop_details {
     my $donor    = $pop_details{pop_donor_parent};
     my $comment  = $pop_details{pop_comment};
     my $is_public = $pop_details{pop_is_public};
+    my $common_name_id = $pop_details{pop_common_name_id};
+
     
     my $dbh = $self->get_dbh();
     my $login = CXGN::Login->new($dbh);
     my $sp_person_id = $login->verify_session();
- 
-    if ($sp_person_id) {
-	my $qtl = CXGN::Phenome::Qtl->new($sp_person_id);
-	my ($temp_qtl, $temp_user) = $qtl->create_user_qtl_dir();
-    }
-   #  else {
-# 	my $page = CXGN::Phenome::Page->new("SGN", "isaak");
-# 	$page->header();
- 	
-# 	print "Failed to created user directory! <br/>
-#                Please go back to the previous page, 
-#                <a href="/phenome/qtl_form.pl?type=pop_form">login</a> 
-#                and try to upload your data again.\n";
-	
-#  	$page->footer();
-#     }	
+
    
-    my $common_name_id = $self->common_name_id();
-
-    print STDERR "load_pop_details: common_name_id: $common_name_id\n";
     my ($female_id, $male_id, $recurrent_id, $donor_id);
-
 
     my $population = CXGN::Phenome::Population->new_with_name($dbh, $name);
     $self->population_exists($population, $name);
@@ -1056,8 +1041,7 @@ sub store_marker_and_position {
 	    my $inserts = $marker_obj->store_new_data();
 
         if ($inserts and @{$inserts}) { 
-	   # print STDERR "New marker data inserted:\n";
-	   # print STDERR $loc->as_string();
+	 
 	}
 
         else { 
@@ -1334,16 +1318,20 @@ sub common_name_id {
     my ($qtl_dir, $user_qtl_dir) = $qtl->get_user_qtl_dir();
     
     my $id;
-    open C, "<$user_qtl_dir/organism.txt" or die "Can't open file: !$\n";
+    if (-e "$user_qtl_dir/organism.txt") {
+	open C, "<$user_qtl_dir/organism.txt" or die "Can't open file: !$\n";
 
-    my $row = <C>;
-    if ($row =~/(\d)/) {
-	$id = $1;	    
-    }
+	my $row = <C>;
+	if ($row =~/(\d)/) {
+	    $id = $1;	    
+	}
 
-    close C;
+	close C;
    
-    return $id;
+	return $id;
+    } else { 
+	return 0;
+    }
 
 }
 
@@ -1586,4 +1574,5 @@ sub compare_file_names {
 
       
 }
+
 
