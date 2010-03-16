@@ -337,8 +337,6 @@ sub path_to {
     return File::Spec->catfile( $basepath, @relpath );
 }
 
-
-
 =head2 uri_for_file
 
   Usage: $page->uri_for_file( $absolute_file_path );
@@ -384,30 +382,32 @@ sub uri_for_file {
 
 =cut
 
-has '_mason_interp' => ( is => 'ro', lazy_build => 1 );
-sub _build__mason_interp {
-    my $self = shift;
-    my %params = @_;
+has '_mason_interp' => (
+    is => 'ro',
+    lazy_build => 1,
+   ); sub _build__mason_interp {
+       my $self = shift;
+       my %params = @_;
 
-    my $global_mason_root = $self->path_to( $self->get_conf('global_mason_lib') );
-    my $site_mason_root  = $self->path_to( 'mason' );
+       my $global_mason_root = $self->path_to( $self->get_conf('global_mason_lib') );
+       my $site_mason_root  = $self->path_to( 'mason' );
 
-    $params{comp_root} = [ [ "site", $site_mason_root     ],
-			   [ "global", $global_mason_root ],
-			 ];
+       $params{comp_root} = [ [ "site", $site_mason_root     ],
+                              [ "global", $global_mason_root ],
+                             ];
 
-    my $data_dir = $self->path_to( $self->tempfiles_subdir('data') );
+       my $data_dir = $self->path_to( $self->tempfiles_subdir('data') );
 
-    $params{data_dir}  = join ":", grep $_, ($data_dir, $params{data_dir});
+       $params{data_dir}  = join ":", grep $_, ($data_dir, $params{data_dir});
 
-    # have a global $self for the SGN::Context (later to be Catalyst object)
-    my $interp = HTML::Mason::Interp->new( allow_globals => [qw[ $c ]],
-					   %params,
-					  );
-    $interp->set_global( '$c' => $self );
+       # have a global $self for the SGN::Context (later to be Catalyst object)
+       my $interp = HTML::Mason::Interp->new( allow_globals => [qw[ $c ]],
+                                              %params,
+                                             );
+       $interp->set_global( '$c' => $self );
 
-    return $interp;
-}
+       return $interp;
+   }
 
 sub forward_to_mason_view {
   my ( $self, $view, %args ) = @_;
@@ -434,12 +434,16 @@ sub forward_to_mason_view {
 =cut
 
 my $render_mason_outbuf;
-has '_bare_mason_interp' => ( is => 'ro', lazy_build => 1 );
-sub _build__bare_mason_interp {
-    return shift->_build__mason_interp( autohandler_name => '', #< turn off autohandlers
-				       out_method       => \$render_mason_outbuf,
-				     );
-}
+has '_bare_mason_interp' => (
+    is => 'ro',
+    lazy_build => 1,
+   ); sub _build__bare_mason_interp {
+       return shift->_build__mason_interp(
+           autohandler_name => '', #< turn off autohandlers
+           out_method       => \$render_mason_outbuf,
+          );
+   }
+
 sub render_mason {
     my $self = shift;
     my $view = shift;
