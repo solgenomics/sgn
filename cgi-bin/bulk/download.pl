@@ -50,7 +50,7 @@ my $page = CXGN::Page->new();
 my $params = get_parameters($page);
 
 $params->{dbc}     = CXGN::DB::Connection->new;
-$params->{tempdir} = $c->tempfiles_subdir('bulk');
+$params->{tempdir} = $c->path_to( $c->tempfiles_subdir('bulk') );
 
 #create correct bulk object
 my $idType = $params->{idType}
