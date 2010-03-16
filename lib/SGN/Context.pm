@@ -17,19 +17,23 @@ transition to Catalyst.
 Note that this object is a singleton, based on L<MooseX::Singleton>.
 There is only ever 1 instance of it.
 
+=head1 ROLES
+
+Does: L<SGN::SiteFeatures>
+
 =head1 OBJECT METHODS
 
 =cut
 
 package SGN::Context;
 use MooseX::Singleton;
-use namespace::autoclean;
 
 use Carp;
 use Cwd ();
 use File::Basename;
 use File::Spec;
 use File::Path ();
+use namespace::autoclean;
 use Scalar::Util qw/blessed/;
 use URI ();
 
@@ -40,8 +44,6 @@ use HTML::Mason::Interp;
 
 use SGN::Config;
 use SGN::Exception;
-
-#with 'SGN::SiteFeatures';
 
 =head2 config
 
@@ -68,6 +70,7 @@ sub _new_config {
                                  }
                                );
     for (values %$cfg) {
+        no warnings 'uninitialized';
         s|__HOME__|$self->path_to()|eg;
         s|__path_to\(([^\)]+\))__|$self->path_to( split /,/, $1) |eg;
     }
@@ -659,6 +662,11 @@ sub throw {
         die @_;
     }
 }
+
+
+
+with 'SGN::SiteFeatures';
+
 
 __PACKAGE__->meta->make_immutable;
 
