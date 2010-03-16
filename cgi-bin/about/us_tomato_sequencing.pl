@@ -6,9 +6,8 @@ $page->header(('About the US Tomato Sequencing Project') x 2);
 
 print <<EOH;
 <p>The US Tomato Sequencing project is part of the larger <a href="/about/tomato_sequencing.pl">International Tomato Sequencing Project</a>, which is in turn part of the broad <a href="/solanaceae-project/index.pl">International Solanaceae Genome (SOL) Project</a>.</p>
-<p class="boxbgcolor5"><b>Note:</b> Summer 2010 Internship Positions are available!
-Please see <a href="#internships">below</a>!<br />
-</p>
+<!-- <p class="boxbgcolor5"><b>Note:</b> Summer 2010 Internship Positions are available!
+Please see <a href="#internships">below</a>!<br /></p> -->
 
 EOH
 
@@ -161,7 +160,7 @@ print info_section_html(title => 'Educational Outreach',
           names/e-mail addresses of at least 2 references by e-mail
           to: Joyce Van Eck, <a href="mailto:jv27\@cornell.edu">jv27\@cornell.edu</a>.</p>
 			
-    <h4>Summer 2010 Internships</h4>
+<!--    <h4>Summer 2010 Internships</h4>
 
 <p>Summer internships will be available at the <a href="/index.pl">Sol Genomics Network</a> for college undergraduates.</p>
 
@@ -172,7 +171,7 @@ print info_section_html(title => 'Educational Outreach',
     <li>Recommendation form <a href="/documents/help/about/internships_2010/2010_recommendation_form.pdf">[pdf]</a></li>
 	
 </ul>	  
-<p>Application materials are due by March 08, 2010.</p>
+<p>Application materials are due by March 08, 2010.</p> -->
 
 EOH
 		       );
