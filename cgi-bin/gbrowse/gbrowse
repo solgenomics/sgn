@@ -21,6 +21,7 @@ use Bio::Graphics::Browser::PluginSet;
 use Bio::Graphics::Browser::UploadSet;
 use Bio::Graphics::Browser::RemoteSet;
 use Bio::Graphics::Browser::PageSettings;
+use CXGN::Page;
 use CXGN::Genomic::Clone;
 use CXGN::Genomic::CloneIdentifiers qw/parse_clone_ident/;
 use Digest::MD5 'md5_hex';
