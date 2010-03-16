@@ -9,7 +9,8 @@ my ($error_code) = CGI->new->param('code');
 if( $error_code == 404 ) {
 
 
-    if(    $ENV{HTTP_REFERER} =~ m|http://[^/]*$ENV{HTTP_HOST}|
+    if(    $ENV{HTTP_REFERER}
+        && $ENV{HTTP_REFERER} =~ m|http://[^/]*$ENV{HTTP_HOST}|
         && $c->get_conf('production_server')
        ) {
 
