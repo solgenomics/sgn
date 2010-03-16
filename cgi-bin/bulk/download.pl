@@ -30,8 +30,6 @@
 use strict;
 use warnings;
 
-use constant DEBUG => 0;
-
 use CXGN::Page;
 use CXGN::DB::Connection;
 
@@ -148,8 +146,8 @@ sub get_parameters {
 
     # if this is true, the summary page is displayed again.
     $params->{summary} = $page->get_arguments("summary");
-    debug( "Build id to deal with:" . ( $params->{build_id} ) . "!" );
-    debug( "seq_type = " .            ( $params->{seq_type} ) );
+    ### Build id to deal with:  $params->{build_id}
+    ### seq_type:$params->{seq_type}
     $params->{group_by_unigene} = $page->get_arguments("group_by_unigene");
     $params->{unigene_mode}     = $page->get_arguments("unigene_mode");
     $params->{associated_loci}  = $page->get_arguments("associated_loci");
@@ -204,33 +202,18 @@ sub get_parameters {
     if ( defined $upload ) {
         my $fh = $upload->fh;
         if ($fh) {
-            debug("Uploading file...");
+            ### Uploading file...
             while (<$fh>) {
                 $params->{ids_string} .= $_;
             }
         }
     }
 
-    debug( "size of uploaded ids_string: " . length $params->{ids_string} );
+    ### size of uploaded ids_string: length $params->{ids_string}
 
     return $params;
 }
 
-=head2 debug
-
-  Desc: sub debug
-  Args: string; example. $self->debug("input_ok: Input is NOT OK!");
-  Ret : n/a
-
-  Function for printing adds break and new line to messages.
-
-=cut
-
-{ my $d = CXGN::Debug->new;
-  sub debug(@) {
-      $d->debug(qq|<pre style="display: block">|.join(' ',@_).qq|</pre>\n|);
-  }
-}
 
 sub post_only {
   my ($page) = @_;
