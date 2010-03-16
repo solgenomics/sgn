@@ -384,8 +384,21 @@ sub load_pop_details {
     my $login = CXGN::Login->new($dbh);
     my $sp_person_id = $login->verify_session();
  
-    my $qtl = CXGN::Phenome::Qtl->new($sp_person_id);
-    my ($temp_qtl, $temp_user) = $qtl->create_user_qtl_dir();
+    if ($sp_person_id) {
+	my $qtl = CXGN::Phenome::Qtl->new($sp_person_id);
+	my ($temp_qtl, $temp_user) = $qtl->create_user_qtl_dir();
+    }
+   #  else {
+# 	my $page = CXGN::Phenome::Page->new("SGN", "isaak");
+# 	$page->header();
+ 	
+# 	print "Failed to created user directory! <br/>
+#                Please go back to the previous page, 
+#                <a href="/phenome/qtl_form.pl?type=pop_form">login</a> 
+#                and try to upload your data again.\n";
+	
+#  	$page->footer();
+#     }	
    
     my $common_name_id = $self->common_name_id();
 
