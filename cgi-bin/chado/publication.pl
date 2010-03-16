@@ -75,7 +75,7 @@ sub display_page {
     print info_section_html(title    => 'Publication details',
                             contents => $pub_html ,
 			    );
-    if ($args{refering_page}) { print qq |<a href="$args{refering_page}">Go back to refering page.</a><br />|; }
+    if ($args{referring_page}) { print qq |<a href="$args{referring_page}">Go back to referring page.</a><br />|; }
     
     my $dbxref_html=$self->get_dbxref_html($publication->get_dbxrefs());
     
@@ -127,9 +127,9 @@ sub store {
     my %args = $self->get_args();
       
     my $action=$args{action};
-    my $refering_page=$args{refering_page};
+    my $referring_page=$args{referring_page};
     my $type= $args{type};  #locus or allele or...?
-    my $type_id = $args{type_id}; #the database id of the refering object (locus..)
+    my $type_id = $args{type_id}; #the database id of the referring object (locus..)
    
     my $script_name= $self->get_script_name();    
     my $db_name= "SGN_ref";
@@ -160,8 +160,8 @@ sub store {
 	}
     }
     my $pub_id= $publication->get_pub_id();
-    if ($refering_page) {
-	$self->get_page()->client_redirect("/chado/add_publication.pl?type=$type&type_id=$type_id&refering_page=$refering_page&action=new");
+    if ($referring_page) {
+	$self->get_page()->client_redirect("/chado/add_publication.pl?type=$type&type_id=$type_id&referring_page=$referring_page&action=new");
     }else {
 	$self->get_page()->client_redirect("/chado/publication.pl?pub_id=$pub_id");
     }
@@ -175,7 +175,7 @@ sub generate_form {
     my %args=$self->get_args();
     my $type = $args{type};
     my $type_id = $args{type_id};
-    my $refering_page= $args{refering_page};
+    my $referring_page= $args{referring_page};
     
    my $author_example = tooltipped_text('Authors', 'Author names should be entered in the order of  last name, followed by "," then first name followed by ".". e.g Darwin, Charles. van Rijn, Henk. Giorgio,AB'); 
 
@@ -271,8 +271,8 @@ sub generate_form {
 				   contents   =>$type_id,
 				   );                            
     $self->get_form()->add_hidden( 
-				   field_name=>"refering_page", 
-				   contents=>$refering_page,
+				   field_name=>"referring_page", 
+				   contents=>$referring_page,
 				   );				  
     
     
@@ -398,9 +398,9 @@ sub send_publication_email {
 
     my $self=shift;
     my %args= $self->get_args();
-    my $refering_page=$args{refering_page};
+    my $referring_page=$args{referring_page};
     my $type= $args{type};  #locus or...?
-    my $type_id = $args{type_id}; #the database id of the refering object (locus..)
+    my $type_id = $args{type_id}; #the database id of the referring object (locus..)
     my $accession= $args{accession};
    
     
