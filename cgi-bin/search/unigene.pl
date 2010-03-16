@@ -83,6 +83,42 @@ if (defined $args{'unigene_id'}) {
     $args{'id'} =~ s/^SGN-U//;    
 }
 
+## Random function will get at random unigene from the latest unigene build
+
+if (defined $args{'random'}) {
+    if ($args{'random'} =~ m/^yes$/i) {
+	my $last_unigene_build_id = $sgn_schema->resultset('UnigeneBuild')
+	                                       ->search(
+	                                                 undef, 
+	                                                 { 
+							    order_by => 'unigene_build_id DESC', 
+							    limit => 1 
+							 }
+					               )
+					       ->first()
+					       ->get_column('unigene_build_id');
+	
+        ## Now get all the unigene_id for this unigene_build_id
+
+	my $random_unigene_id = $sgn_schema->resultset('Unigene')
+	                                   ->search(
+	                                              { 
+							unigene_build_id => $last_unigene_build_id 
+						      }, 
+	                                              { 
+							order_by => 'random()', 
+							limit    => 1
+						      }
+					           )
+					   ->first()
+					   ->get_column('unigene_id');
+
+	## It will replace $args{'id'}
+
+	$args{'id'} = $random_unigene_id;
+    }
+}
+
 ## Now it will take the unigene object based in the unigene_id (it will create an empty object by default)
 
 my $unigene = CXGN::Transcript::Unigene->new($dbh);
