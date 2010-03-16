@@ -13,8 +13,6 @@ use Path::Class;
 
 use autodie qw/:all/;
 
-#use Data::Dumper;
-
 ###############
 
 # reuse database connections rather than getting new ones every
@@ -108,7 +106,7 @@ sub generate_apache_config {
 
     my $rewrite_logfile = check_logfile($c, $cfg->{rewrite_log} );
 
-    return  map {[split /\n/, $_]}
+    return map {[split /\n/, $_]}
 
             'PerlSetEnv PROJECT_NAME SGN',
 
@@ -258,6 +256,10 @@ EOH
              #if this is not a production server, enable apache debugging routines
              ( $cfg->{production_server} ? () : _apache_debugging() ),
 
+
+             # load apache configurations for all enabled SGN::Feature objects
+             feature_apache_confs( $c ),
+
 	     # now add several other aliases for images, javascript, etc
              <<END_HEREDOC,
     Alias /img       $paths->{basepath}/$cfg->{static_site_files_path}/img
@@ -271,8 +273,11 @@ EOH
     Alias  /fullsize_images   $cfg->{static_datasets_path}/images/insitu/processed
     Alias  /thumbnail_images  $cfg->{static_datasets_path}/images/insitu/display
 
-    Redirect 301 /gbrowse/index.pl /tomato/genome_data.pl
+END_HEREDOC
 
+             # and now a bunch of rewrites for old stuff that used to
+             # be here, these can probably be removed
+             <<END_HEREDOC,
     RewriteEngine On
     RewriteLogLevel 1
     RewriteLog $rewrite_logfile
@@ -344,6 +349,12 @@ EOH
 
 END_HEREDOC
 
+}
+
+# given the context obj, return list of apache conf strings for each
+# of the activated features
+sub feature_apache_confs {
+    map $_->apache_conf, @{ shift->enabled_features }
 }
 
 
@@ -465,8 +476,15 @@ sub check_logfile {
 }
 
 sub tee(@) {
-    print "$_\n" for @_;
-    return @_;
+    my @args = @_;
+    for( @args ) {
+        if( ref ) {
+            print Dumper $_;
+        } else {
+            print "$_\n"
+        }
+    }
+    return @args;
 }
 
 # =head1 NAME
