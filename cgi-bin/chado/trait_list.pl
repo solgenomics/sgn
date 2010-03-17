@@ -29,9 +29,9 @@ use CXGN::Search::CannedForms;
 #################################################
 
 
-my $page=CXGN::Page->new("Traits","Isaak");
-print page_title_html('SGN QTL Traits');
+my $page=CXGN::Page->new("SGN QTL/Traits","Isaak");
 $page->header();
+#print page_title_html('SGN QTL Traits');
 my $index = $page->get_arguments("index");
 
 
