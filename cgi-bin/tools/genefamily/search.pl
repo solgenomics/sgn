@@ -7,7 +7,7 @@ use Tie::UrlEncoder;
 
 our %urlencode;
 
-my  $DIR =  '/home/mueller/dutch_tomato_assembly/tomato_ara_rice_comparison/';
+my  $DIR = $c->get_conf('genefamily_dir'); # '/home/mueller/dutch_tomato_assembly/tomato_ara_rice_comparison/';
 my $page = CXGN::Page->new();
 
 my ($genefamily_id, $member_id) = $page->get_encoded_arguments("genefamily_id", "member_id");
