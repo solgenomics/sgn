@@ -1,0 +1,13 @@
+
+<%doc>
+
+</%doc>
+
+<& /page/page_title.mas, title=>"Tomato Genefamily Annotation Resources" &>
+<div class="boxbgcolor2">
+Submit a new gene family<br /><br />
+</div>
+<br />
+<div class="boxbgcolor2">
+<a href="search.pl">Search gene families</a><br /><br />
+</div>

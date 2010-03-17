@@ -1,0 +1,16 @@
+
+<%doc>
+
+</%doc>
+
+<h1>Submit a Genefamily</h1>
+
+<form>
+<table>
+<tr><td>Name:</td><td> <input name="gfname" size="20" /></td></tr>
+<tr><td>Description</td><td><input name="gfdesc" size="80" /></td></tr>
+<tr><td>Members:</td><td><textarea cols="30" rows="10" /></textarea></td></tr>
+<tr><td colspan="2"><input type="submit" value="submit genefamily" /></td></tr>
+</table>
+</form>
+
