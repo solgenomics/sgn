@@ -55,12 +55,12 @@ A.bred            { color: #FFFFFF;
                     font-size : small;
                     text-align: center;
 		  }
-BODY              { background-color: #F7FBFF;
+BODY              { 
                     font-family: sans-serif;
 	            font-size: small;
                   }
 DIV               { margin: 0 }
-H1                { color: navy;
+H1                { 
 		    font-size: medium;
                     font-family: sans-serif; 
                   }
@@ -143,8 +143,23 @@ BODY              {
                     font-family: sans-serif;
 	            font-size: small;
                   }
-.datatitle        { background-color: rgba(224,224,224,0.4);
-		   }
+.datatitle        {}
+#actionmenu {
+  border-bottom: 1px solid #444;
+  margin-bottom: 5px;
+  
+}
+#banner_panel { 
+  color: black;
+}
+#main_page { 
+  padding: 0 3px 0 3px;
+  border: 1px solid #444;
+}
+#slider_form { 
+  white-space: nowrap;
+}
+
 .databody         { background-color: rgba(240,240,240,0.4);
 		  }
 .multiplechoicetitle  { background-color: lightblue;
@@ -157,9 +172,7 @@ BODY              {
 		    margin-left:   1em;
 		    margin-right:  1em;
 }
-.searchbody       { background-color: rgb(224,224,224);
-		    background:       url(/gbrowse2/images/buttons/dark_0.4_pixel.png);
-		    background-color: rgba(224,224,224,0.4);
+.searchbody       { 
 		    margin-left:   1em;
 		    margin-right:  1em;
 		    margin-bottom: 3px;
@@ -197,10 +210,15 @@ BODY              {
   margin-right:  1em;
   font-size: small;
 }
+#tabbed_menu { 
+  margin-top: 10px;
+  margin-bottom: -1px;
+}
+
 .tabmenu_active   {
   cursor: pointer;
   color: black;
-  background-color: rgba(224,224,224,0.4);
+  background-color: #eee;
   font-size: 10pt;
   font-weight: bold;
   font-family: sans-serif;
@@ -210,8 +228,8 @@ BODY              {
   border-top:  thin solid;
   border-left: thin solid;
   border-right: thin solid;
-  border-bottom: thin solid;
-  border-bottom-color: beige;
+  border-bottom: none;
+  border-color: #444;
   z-index: 10;
 }
 .tabmenu_inactive {
