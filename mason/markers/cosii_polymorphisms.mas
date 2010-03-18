@@ -1,0 +1,206 @@
+
+<%doc>
+
+=head1 NAME
+
+/markers/cosii_polymorphisms.mas - a Mason component displaying information about associated cosii polymorphism data
+
+=head1 DESCRIPTION
+
+parameters 
+
+=over 5
+
+=item *
+
+$marker - a CXGN::Marker object.
+
+=back
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>
+
+=cut
+
+</%doc>
+
+<%args>
+$marker
+</%args>
+
+<%perl>
+
+  my $marker_name = $marker->get_name();
+my $dbh = $marker->{dbh};
+
+unless($marker->is_in_collection('COSII')) {
+  return'';
+}
+my $html='<span class="ghosted">No additional PCR data found.</span>';
+
+#if we have some experiments, and they are an arrayref, and there is at least one location in them
+my $experiments=$marker->upa_experiments();
+if($experiments and @{$experiments}) {
+  
+  #what we want here is just two or four primers: forward and reverse iUPA and/or forward and reverse eUPA primers for ALL of the experiments that will follow.
+  #they all SHOULD share the same primers, so we only want to display them once, up on the top.
+  #so here, we are going to walk through all of the experiments and grab the first forward and reverse iUPAs and eUPAs we see.
+  #since this is not a bottleneck for speed in page loading, we are then going to continue on and do some data integrity checking as well with every page load.
+#we're going to check our assumption that all of these experiments will have the same primers.
+#we may later want to write a trigger in the database to check this instead.
+#we'll continue walking through all experiments and if any of them have non-matching primers, we'll notify the developers of this error.
+#whether the error turns out to be that our assumption was wrong, or that the data was wrong, will have to be determined by the developers.
+  my $fwd_iupa='';
+  my $rev_iupa='';
+  my $fwd_eupa='';
+  my $rev_eupa='';
+  my $non_mapping_experiments=0;
+  my $possible_error_email='';
+  for my $marker_experiment(@{$experiments}) {
+    
+    #keep track if we have any non mapping experiments to display, for use the next time we go through them
+    unless($marker_experiment->{location}) {
+      $non_mapping_experiments++;
+    }
+    
+    my $exp=$marker_experiment->{pcr_experiment};
+    
+    #if it is an iUPA experiment, set or check iUPA primers
+    if($exp->primer_type() eq 'iUPA') {
+      if($exp->fwd_primer()) {
+	if($fwd_iupa) {
+	  if($fwd_iupa ne $exp->fwd_primer()) {
+	    $possible_error_email.="Found unmatched fwd iUPA primers '$fwd_iupa' and '".$exp->fwd_primer()."' for '$marker_name'\n";
+	  }
+	}
+	else {
+	  $fwd_iupa=$exp->fwd_primer();
+	}
+      }            
+      if($exp->rev_primer()) {
+	if($rev_iupa) {
+	  if($rev_iupa ne $exp->rev_primer()) {
+	    $possible_error_email.="Found unmatched rev iUPA primers '$rev_iupa' and '".$exp->rev_primer()."' for '$marker_name'\n";
+	  }
+	}
+	else {
+	  $rev_iupa=$exp->rev_primer();
+	}
+      }   
+    }
+    #else if it is an eUPA experiment, set or check eUPA primers
+    elsif($exp->primer_type eq 'eUPA') {
+    if($exp->fwd_primer()) {
+      if($fwd_eupa) {
+	if($fwd_eupa ne $exp->fwd_primer()) {
+	  $possible_error_email.="Found unmatched fwd eUPA primers '$fwd_eupa' and '".$exp->fwd_primer()."' for '$marker_name'\n";
+	}
+      }
+      else {
+	$fwd_eupa=$exp->fwd_primer();
+      }
+    }            
+    if($exp->rev_primer()) {
+      if($rev_eupa) {
+	if($rev_eupa ne $exp->rev_primer()) {
+	  $possible_error_email.="Found unmatched rev eUPA primers '$rev_eupa' and '".$exp->rev_primer()."' for '$marker_name'\n";
+	}
+      }
+      else {
+	$rev_eupa=$exp->rev_primer();
+      }
+    }                 
+  }
+    #else we got data we don't know how to display yet
+    else {
+      CXGN::Apache::Error::notify('found a primer which could not be displayed',"Experiments of type '".$exp->primer_type()."' cannot yet be displayed.");
+    }
+  }
+  if($possible_error_email) {
+    CXGN::Apache::Error::notify('found unmatched primers for $marker_name',$possible_error_email);    
+  }
+  
+  #now we're done looking for primers. 
+  #if we found any non-mapping experiments above, then it's time to display them.
+  if($non_mapping_experiments) {
+    my %display_hash;
+    for my $marker_experiment(@{$experiments}) {
+      
+      #experiments without locations are the ones we want to display here
+      unless($marker_experiment->{location}) {
+	my $exp=$marker_experiment->{pcr_experiment};
+	my $bands_hash=$exp->pcr_bands_hash_of_strings();
+	my($accession_id)=keys(%{$bands_hash});
+	my $accession=CXGN::Accession->new($dbh,$accession_id);
+	my $key_string="<b>".$accession->organism_common_name()."</b> ".$accession->verbose_name();
+	if($exp->primer_type() eq 'iUPA') {
+	  $display_hash{$key_string}->{iUPA}->{bands}=$bands_hash->{$accession_id};
+	  $display_hash{$key_string}->{iUPA}->{temp}=$exp->temp();
+	  $display_hash{$key_string}->{iUPA}->{mg_conc}=$exp->mg_conc();
+	}
+	elsif($exp->primer_type() eq 'eUPA') {
+	  $display_hash{$key_string}->{eUPA}->{bands}=$bands_hash->{$accession_id};
+	  $display_hash{$key_string}->{eUPA}->{temp}=$exp->temp();
+	  $display_hash{$key_string}->{eUPA}->{mg_conc}=$exp->mg_conc();
+	}
+      }
+    }
+  $html="<table border=\"1\" cellpadding=\"2\" cellspacing=\"0\" width=\"720\">";
+    $html.="<tr>";
+    $html.="<td><b>Testing intronic and exonic universal primers for Asterid species</b></td>";
+    $html.="<td colspan=\"3\">";
+    if($fwd_iupa) {
+    $html.="<b>Forward <a href=\"/markers/cosii_markers.pl\">Intronic UPA</a> (5'-3'):</b> <span class=\"sequence\">$fwd_iupa</span><br />";
+  }
+    else {
+      $html.="&nbsp;<br /><br />";
+  }
+    if($rev_iupa) {
+      $html.="<b>Reverse <a href=\"/markers/cosii_markers.pl\">Intronic UPA</a> (5'-3'):</b> <span class=\"sequence\">$rev_iupa</span><br />";
+    }
+    else {
+    $html.="&nbsp;<br /><br />";
+  }
+    $html.="</td>";
+    $html.="<td colspan=\"3\">";
+    if($fwd_eupa)
+      {
+	$html.="<b>Forward <a href=\"/markers/cosii_markers.pl\">Exonic UPA</a> (5'-3'):</b> <span class=\"sequence\">$fwd_eupa</span><br />";
+    }
+    else {
+      $html.="&nbsp;<br /><br />";
+    }
+    if($rev_eupa) {
+      $html.="<b>Reverse <a href=\"/markers/cosii_markers.pl\">Exonic UPA</a> (5'-3'):</b> <span class=\"sequence\">$rev_eupa</span><br />";
+    }
+    else {
+    $html.="&nbsp;<br /><br />";
+  }
+    $html.="</td>";
+    $html.="</tr>";
+    $html.="<tr><td><b>Accession</b></td><td><b>PCR size(s)</b></td><td><b>Anneal temp.</b></td><td><b>Mg<sup>+2</sup> conc. (mM)</b></td><td><b>PCR size(s)</b></td><td><b>Anneal temp.</b></td><td><b>Mg<sup>+2</sup> conc. (mM)</b></td></tr>";
+    for my $accession_name(sort {$a cmp $b} keys(%display_hash)) {
+      $display_hash{$accession_name}->{iUPA}->{bands}||='&nbsp;';
+    $display_hash{$accession_name}->{iUPA}->{temp}||='&nbsp;';
+      $display_hash{$accession_name}->{iUPA}->{mg_conc}||='&nbsp;';
+      $display_hash{$accession_name}->{eUPA}->{bands}||='&nbsp;';
+    $display_hash{$accession_name}->{eUPA}->{temp}||='&nbsp;';
+      $display_hash{$accession_name}->{eUPA}->{mg_conc}||='&nbsp;';
+      $html.="<tr>";
+      $html.="<td>$accession_name</td>";
+      $html.="<td>$display_hash{$accession_name}->{iUPA}->{bands}</td>";
+    $html.="<td>$display_hash{$accession_name}->{iUPA}->{temp}</td>";
+      $html.="<td>$display_hash{$accession_name}->{iUPA}->{mg_conc}</td>";
+      $html.="<td>$display_hash{$accession_name}->{eUPA}->{bands}</td>";
+      $html.="<td>$display_hash{$accession_name}->{eUPA}->{temp}</td>";
+      $html.="<td>$display_hash{$accession_name}->{eUPA}->{mg_conc}</td>";
+      $html.="</tr>";
+    }
+    $html.="</table>";
+  }
+}
+
+</%perl>
+
+<& /page/info_section.mas, title=>'Universal primers for Asterid species', contents=>$html &>

@@ -1,0 +1,69 @@
+
+<%doc>
+
+=head1 NAME
+
+/markers/derivation.mas - a Mason component displaying information about how a marker was derived.
+
+=head1 DESCRIPTION
+
+parameters 
+
+=over 5
+
+=item *
+
+$marker - a CXGN::Marker object.
+
+=back
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>
+
+=cut
+
+</%doc>
+
+<%args>
+$marker
+</%args>
+
+<%perl>
+  
+use CXGN::Page::FormattingHelpers qw | info_section_html |;  
+  #sgn id, collections, and sources
+  my $about_html='';
+my $sources=$marker->derived_from_sources();
+if($sources and @{$sources}) {
+  for my $source(@{$sources}) {
+    my $link='';
+    if($source->{id_in_source}) {
+      if($source->{source_name} eq 'SGN unigene') {
+	$link="<a href=\"/search/unigene.pl?unigene_id=$source->{id_in_source}\">$source->{source_name} SGN-U$source->{id_in_source}</a>";
+      }
+      elsif($source->{source_name} eq 'EST read') {
+	$link="<a href=\"/search/est.pl?request_from=0&amp;request_id=SGN-E$source->{id_in_source}&amp;request_type=7&amp;search=search\">EST read SGN-E$source->{id_in_source}</a>";
+      }
+      elsif($source->{source_name} eq 'EST clone') {
+	$link="<a href=\"/search/est.pl?request_from=0&amp;request_id=SGN-C$source->{id_in_source}&amp;request_type=8&amp;search=search\">EST clone SGN-C$source->{id_in_source}</a>";
+      }
+      elsif($source->{source_name} eq 'BAC') {
+	my $clone=CXGN::Genomic::Clone->retrieve($source->{id_in_source});
+	my $bac_name=$clone->clone_name();
+	$link="<a href=\"/maps/physical/clone_info.pl?id=$source->{id_in_source} \">BAC $bac_name</a>";
+      }
+    }
+    else {
+      $link="a(n) $source->{source_name} (ID unknown)";
+    }
+    if($link) {
+      $about_html.="This marker was derived from $link<br />";
+    }
+  }
+}
+if($about_html) {
+  print info_section_html(title=>'Derivations',contents=>$about_html);
+}
+
+</%perl>

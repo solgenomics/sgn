@@ -1,0 +1,41 @@
+
+<%doc>
+
+=head1 NAME
+
+/markers/overgo.mas - a Mason component displaying information about comments on markers stored in the database
+
+=head1 DESCRIPTION
+
+parameters 
+
+=over 5
+
+=item *
+
+$marker - a CXGN::Marker object.
+
+=back
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>
+
+=cut
+
+</%doc>
+
+<%args>
+$marker
+</%args>
+
+<%perl>
+my $comments=$marker->comments();
+if($comments) {
+  return blue_section_html('Comments', newlines_to_brs($comments));
+}
+else {
+  return'';
+}
+
+</%perl>

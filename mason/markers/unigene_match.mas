@@ -1,0 +1,52 @@
+
+<%doc>
+
+=head1 NAME
+
+/markers/unigene_match.mas - a Mason component displaying the unigene matches associated with a marker
+
+=head1 DESCRIPTION
+
+parameters 
+
+=over 5
+
+=item *
+
+$marker - a CXGN::Marker object.
+
+=back
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>
+
+=cut
+
+</%doc>
+
+<%args>
+$marker
+</%args>
+
+<%perl>
+
+my $marker_id = $marker->marker_id();
+my $html='';
+
+my $unigene_matches = $marker->primer_unigene_matches(); #$dbh->selectcol_arrayref("SELECT DISTINCT unigene_id FROM primer_unigene_match WHERE marker_id=$marker_id");
+
+foreach my $ug (@$unigene_matches){
+  
+  $html .= qq{<a href="/search/unigene.pl?unigene_id=SGN-U$ug">SGN-U$ug</a><br>};
+  
+}
+
+if ($html){
+  $html = CXGN::Page::FormattingHelpers::blue_section_html('Unigene blast matches for primers',$html);
+} 
+
+
+</%perl>
+
+<& /page/info_section.mas, title=>'Unigene blast matches for primers', contents=>$html &>

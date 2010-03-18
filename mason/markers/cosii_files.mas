@@ -1,0 +1,252 @@
+
+<%doc>
+
+=head1 NAME
+
+/markers/cosii_files.mas - a Mason component displaying information about cosii associated information in files
+
+=head1 DESCRIPTION
+
+parameters 
+
+=over 5
+
+=item *
+
+$marker - a CXGN::Marker object.
+
+=back
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>
+
+=cut
+
+</%doc>
+
+<%args>
+$marker
+</%args>
+
+<%perl>
+
+my $marker_name = $marker->get_name();
+my $dbh = $marker->{dbh};
+  unless($marker->is_in_collection('COSII')){return'';}
+my($html,$html1,$html2,$html3,$html4,$html5,$html6)=('','','','','','');
+my $header = "<hr />";
+my $cosii_files=cosii_data_files( $marker, $c->config )->{all_other_data_files};
+
+for my $additional_data_file(sort {$a cmp $b} @{$cosii_files}) {
+  my $description='';
+  my $real_location=$additional_data_file;
+  my $data_shared_website_path=$c->config->{'static_datasets_path'};
+  $real_location=~s/$data_shared_website_path//;
+  $real_location=URI::Escape::uri_escape($real_location);
+  my $display_name=$additional_data_file;
+  my $view_link='';
+  if($additional_data_file=~/([^\/]+)$/){$display_name=$1;}
+  if($display_name=~/\.blastx$/) {
+    $description=DESC_BLASTX;
+    $html1.="<a href=\"$additional_data_file\">$description</a><br />";
+  }
+  elsif($display_name=~/[^FRfr]+\.cds\.fasta$/) {
+    $description=DESC_FR_CDS_FASTA;
+    $html2.="<a href=\"$additional_data_file\">$description</a><br />";
+  }
+  elsif($display_name=~/\.aligned2aa$/) {
+    $description=DESC_ALIGNED2AA;
+    $html2.="<a href=\"$additional_data_file\">$description</a><br />";
+  }
+  elsif($display_name=~/\.pep\.aln$/) {
+    $description=DESC_PEP_ALN;
+    $html2.="<a href=\"$additional_data_file\">$description</a><br />";
+  }
+  elsif($display_name=~/\.pep\.fasta$/) {
+    $description=DESC_PEP_FASTA;
+    $html2.="<a href=\"$additional_data_file\">$description</a><br />";
+  }
+  elsif($display_name=~/\.cds\.nex$/) {
+    $description=DESC_CDS_NEX;
+    $html3.="<a href=\"$additional_data_file\">$description</a><br />";
+  } 
+  elsif($display_name=~/\.ml\.tre$/) {
+    $description=DESC_ML_TRE;
+    $html3.="<a href=\"$additional_data_file\">$description</a><br />";
+    my $file_url=URI::Escape::uri_escape($additional_data_file);
+    $html3.="<a href=\"$additional_data_file\">$description</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<a href=\"/tools/tree_browser/?shared_file=$file_url\">[View]</a><br />"; 
+  }
+  elsif($display_name=~/\.cds\.fasta$/) {
+    $description=DESC_CDS_FASTA;
+    $html4.="<a href=\"$additional_data_file\">$description</a><br />";
+  }
+  elsif($display_name=~/\.txt$/ or $display_name=~/\.seq$/) {
+    $description=&_cosii_additional_description($dbh, $display_name).", ".DESC_TXT;
+    $html4.="<a href=\"$additional_data_file\">$description</a><br />";
+  }
+  elsif($display_name=~/\.pdf$/) {
+    $description=&_cosii_additional_description($dbh, $display_name).", ".DESC_PDF;
+    $html4.="<a href=\"$additional_data_file\">$description</a><br />";
+  }
+  elsif($display_name=~/\.ab1$/) {
+    $description=&_cosii_additional_description($dbh, $display_name).", ".DESC_AB1;
+    $view_link=" - <a href=\"/tools/trace_view.pl?file=$real_location\">[View]</a>";
+    $html4.="<a href=\"$additional_data_file\">$description</a> $view_link<br />";
+  }
+  elsif($display_name=~/\.cds\.txt$/) {
+    $description=DESC_CDS_TXT;
+    #display nothing
+  }
+  else {
+    $description=$display_name;
+    $html6.="<a href=\"$additional_data_file\">$description</a><br />";
+  }
+}
+
+my $html7 = &cosii_files_html_2($dbh, $marker_name);
+
+if($html1){$html.=$header.$html1;}
+if($html2){$html.=$header.$html2;}
+if($html3){$html.=$header.$html3;}
+if($html4){$html.=$header.$html4;}
+if($html5){$html.=$header.$html5;}
+if($html6){$html.=$header.$html6;}
+if($html7){$html.=$html7;}
+if($html){$html.=$header;}
+if($html) {
+  print  CXGN::Page::FormattingHelpers::blue_section_html('Other COSII sequence data',$html);
+}
+else{ print '';}
+
+sub cosii_files_html_2 {
+  my $dbh = shift;
+  my $marker_name = shift;
+
+
+    $marker_name =~ s/C2_At//;
+    my $html;
+
+    my $table = "forward_amplicon_sequence_markers";
+
+    my $select = "select ending from $table where marker_name = '$marker_name' order by ending;";
+
+    my $sth = $dbh->prepare("$select");
+    $sth->execute;
+    
+    while (my $ending = $sth->fetchrow()) {
+	$html .= &get_information($dbh, $marker_name, $ending);
+    }
+
+    $sth->finish;
+
+    return $html;
+}
+
+
+sub get_information {
+    my ($dbh, $marker,$ending) = @_;
+
+    my $vhost_conf = CXGN::VHost->new();
+    my $cosii_file = $vhost_conf->get_conf('cosii_files');
+
+    my $table = "forward_amplicon_sequence_information";
+    my $html;
+
+    my ($number, $dashnumber, $parennumber) = "";
+    if ($ending =~ /(\w+)-(\d+)/) {
+	$ending = $1;
+	$number = $2;
+	$dashnumber = "-$number";
+	$parennumber = " ($number)";
+    }
+    my $select = "select organism_name, accession_id, plant_number "
+	. "from $table where ending = '$ending';";
+    my $sth = $dbh->prepare("$select");
+    $sth->execute;
+    my ($organism, $accession, $plant) = $sth->fetchrow();
+    
+    ($plant eq '0') ? ($plant="") : ($plant = " plant #$plant");
+	($accession eq '0') ? ($accession="") : ($accession=" $accession");
+    
+    my $ab1 = "$cosii_file/ab1/$marker-$ending$dashnumber.ab1";
+    my $seq = "$cosii_file/seq/$marker-$ending$dashnumber.seq";
+    my $text = "Forward amplicon sequence for $organism$accession$plant$parennumber,";
+
+    $html .= "<a href=\"$ab1\">$text AB1 chromatogram</a> - "
+	. "<a href=\"/tools/trace_view.pl?file=$ab1\">[View]</a><br />"
+	. "<a href=\"$seq\">$text plain text</a><br />";
+    $sth->finish;
+    
+    return $html;
+}
+
+sub _cosii_additional_description {
+    my($dbh, $display_name)=@_;
+    my $additional_description='';
+    if($display_name=~/([FRfr])(\d+)[\-\.]/) {
+        my $direction=$1;
+        my $accession_abbr=$2;
+
+        if($direction=~/[fF]/){$additional_description='Forward';}
+        if($direction=~/[rR]/){$additional_description='Reverse';}
+        if($accession_abbr) {
+            my @accession_ids=CXGN::Accession::Tools::partial_name_to_ids($dbh,$accession_abbr);
+            if(@accession_ids==1) {
+                my $accession_object=CXGN::Accession->new($dbh,$accession_ids[0]);
+                $additional_description.=' amplicon sequence for '.$accession_object->verbose_name();
+            }
+            else {
+                $additional_description.=" sequence for $accession_abbr";
+            }
+        }
+    }
+    else {
+        $additional_description=$display_name;
+    }
+    return $additional_description;
+}
+
+
+
+sub cosii_data_files {
+    my ($marker, $conf) = @_;
+
+    unless($marker->is_in_collection('COSII')){return;}
+    my $cosii_data_files={};
+    my $seq_file_search_string=CXGN::Marker::Tools::cosii_name_to_seq_file_search_string($marker->name_that_marker());
+    my $data_shared_website_path=$conf->{'static_datasets_path'};
+    my $additional_data_files_string=`find $data_shared_website_path/cosii -type f -iregex ".*$seq_file_search_string.*"`;
+    my @files=split("\n",$additional_data_files_string);
+    my @edited_seq_files;
+    my @peptide_seq_files;
+    my @intron_seq_files;
+    my @all_other_data_files;
+    for my $file(@files) {
+        my $data_shared_url=$conf->{'static_datasets_url'};
+        $file=~s/$data_shared_website_path/$data_shared_url/;
+        if($file=~/\.cds\.txt\.modify$/) {
+            push(@edited_seq_files,$file);
+        }
+        elsif($file=~/\.pep\.txt$/) {
+            push(@peptide_seq_files,$file);
+        }
+        elsif($file=~/\.intron.txt$/) {
+            push(@intron_seq_files,$file);
+        }
+        else {
+            push(@all_other_data_files,$file);
+        }
+    }
+    $cosii_data_files->{edited_seq_files}=\@edited_seq_files;
+    $cosii_data_files->{peptide_seq_files}=\@peptide_seq_files;
+    $cosii_data_files->{intron_seq_files}=\@intron_seq_files;
+    $cosii_data_files->{all_other_data_files}=\@all_other_data_files;
+    $cosii_data_files->{all_files}=\@files;
+    return $cosii_data_files;
+}
+
+
+</%perl>
+
+$html

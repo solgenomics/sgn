@@ -1,0 +1,109 @@
+
+<%doc>
+
+=head1 NAME
+
+/markers/polymorphisms.mas - a Mason component displaying information about map polymorphisms of marker product lengths
+
+=head1 DESCRIPTION
+
+parameters 
+
+=over 5
+
+=item *
+
+$marker - a CXGN::Marker object.
+
+
+=back
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>
+
+=cut
+
+</%doc>
+
+<%args>
+$marker
+</%args>
+
+<%perl>
+  my $polymorphisms_html='';
+my $dbh = $marker->{dbh};
+my @displayed_pcr=();
+my $experiments=$marker->experiments();    
+if($experiments and @{$experiments}) {
+  for my $experiment(@{$experiments}) {
+    my $pcr=$experiment->{pcr_experiment};
+    my $rflp=$experiment->{rflp_experiment};
+    if($pcr and !grep {$_==$pcr->pcr_experiment_id()} @displayed_pcr) {
+      my $pcr_bands=$pcr->pcr_bands_hash_of_strings();
+      my $digest_bands=$pcr->pcr_digest_bands_hash_of_strings();
+      my $pcr_bands_html='';
+      my $digest_bands_html='';
+      for my $accession_id(keys(%{$pcr_bands})) {
+	my $accession_name=CXGN::Accession->new($dbh,$accession_id)->verbose_name();
+	$pcr_bands_html.="<b>$accession_name:</b> $pcr_bands->{$accession_id}<br />";
+      }
+      for my $accession_id(keys(%{$digest_bands})) {
+	my $accession_name=CXGN::Accession->new($dbh,$accession_id)->verbose_name();
+	$digest_bands_html.="<b>$accession_name:</b> $digest_bands->{$accession_id}<br />";
+      }
+      my $mg='';
+      if($pcr->mg_conc()) {    
+	$mg=$pcr->mg_conc().'mM';
+      }
+      my $temp='';
+      if($pcr->temp()) { 
+	$temp=$pcr->temp().'&deg;C';
+      }                    
+      $polymorphisms_html.='<tr><td width="100%">';
+      my $fwd=$pcr->fwd_primer();
+      my $rev=$pcr->rev_primer();
+      if($fwd) {
+	$fwd='<span class="sequence">'.$fwd.'</span>';
+      }
+      else {
+	$fwd='<span class="ghosted">Unknown</span>';
+      }
+      if($rev) {
+	$rev='<span class="sequence">'.$rev.'</span>';
+      }
+      else {
+	$rev='<span class="ghosted">Unknown</span>';
+      }  
+      my $enz=$pcr->enzyme()||'unknown enzyme';                 
+      $temp||='<span class="ghosted">Unknown</span>';
+      $mg||='<span class="ghosted">Unknown</span>';
+      my $digest_title="Digested band sizes (using $enz)";
+      unless($digest_bands_html) {
+	$digest_title='&nbsp;'; 
+	$digest_bands_html='&nbsp;'; 
+      }
+      $polymorphisms_html.=CXGN::Page::FormattingHelpers::info_table_html
+	(
+	 '__title'=>"PCR data&nbsp;&nbsp;&nbsp;<span class=\"tinytype\">Exp. ID ".$pcr->pcr_experiment_id."</span>",
+	 "Forward primer (5'-3')"=>"<span class=\"sequence\">$fwd</span>",
+	 "Reverse primer (5'-3')"=>"<span class=\"sequence\">$rev</span>",
+	 'Accessions and product sizes'=>$pcr_bands_html,
+	 $digest_title=>$digest_bands_html,
+	 'Approximate temperature'=>$temp,
+	 'Mg<sup>+2</sup> concentration'=>$mg,
+	 '__multicol'=>3,
+	 '__tableattrs'=>"width=\"100%\"",
+	);
+      $polymorphisms_html.='</td></tr>';
+    }
+  }
+}
+if($polymorphisms_html) {
+ print  info_section_html(title=>'Other PCR data',contents=>'<table width="100%" cellspacing="0" cellpadding="0" border="0">'.$polymorphisms_html.'</table>');
+}
+else {
+  return '';
+}
+
+</%perl>

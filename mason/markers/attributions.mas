@@ -1,0 +1,62 @@
+
+<%doc>
+
+=head1 NAME
+
+/markers/attributions.mas - a Mason component displaying attribution information
+
+=head1 DESCRIPTION
+
+parameters 
+
+=over 5
+
+=item *
+
+$marker - a CXGN::Marker object.
+
+=back
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>
+
+=cut
+
+</%doc>
+
+<%args>
+$marker
+</%args>
+
+<%perl>
+
+my $marker_id = $marker->marker_id();
+
+my $att = CXGN::Metadata::Attribution->new("sgn","markers",$marker_id);
+
+my $db_name = 'sgn';
+my $table_name = 'markers';
+my $row_id = $marker_id;
+
+my @a = $att -> get_attributions();
+
+my $html = "";
+foreach my $a (@a) { 
+  if ($a->{role}) { $html .= "<h4>$a->{role}</h4>"; }
+  if ($a->{person}->get_last_name()) { $html .= "<b>Name:</b> ".$a->{person}->get_first_name()." ".$a->{person}->get_last_name()."<br />"; }
+  if ($a->{organization}) { $html .= "<b>Organization:</b> ".$a->{organization}." <br />"; }
+  if ($a->{project}) { $html .= "<b>Project:</b> ".$a->{project}." <br /><br />"; }
+}
+
+if($html) {
+  $html =  CXGN::Page::FormattingHelpers::blue_section_html("Attributions", $html);
+}
+else {
+  return'';
+}
+
+
+</%perl>
+
+$html

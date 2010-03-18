@@ -1,0 +1,77 @@
+
+<%doc>
+
+=head1 NAME
+
+/markers/ssr.mas - a Mason component displaying information about ssr markers
+
+=head1 DESCRIPTION
+
+parameters 
+
+=over 5
+
+=item *
+
+$marker - a CXGN::Marker object.
+
+=back
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>
+
+=cut
+
+</%doc>
+
+<%args>
+$marker
+</%args>
+
+<%perl>
+
+  if (!$marker->is_in_collection('ssr')) { return; }
+  my $marker_id = $marker->marker_id();
+
+my $html = "";
+#my $query = 'SELECT repeat_motif, reapeat_nr FROM ssr_repeats WHERE marker_id='.$marker_id;
+#my $repeats = $dbh->selectall_arrayref($query);
+my $contig_page='/search/unigene.pl?type=legacy&';
+my $est_page='/search/est.pl?request_type=automatic&amp;request_from=1&amp;request_id=';
+my $ssr_page='/search/markers/markerinfo.pl?marker_id=';
+#my @ssr_list;
+
+my ($ssr_id, $ssr_name, $est_trace, $start_primer, $end_primer, $pcr_length, $ann_high, $ann_low) = $marker->ssr_data();
+    
+    
+
+  $ann_high ||= "n/a";
+  $ann_low ||= "n/a";
+  # Get the repeat motifs.
+#  my @repeat_motifs=();
+#  my @repeat_numbers=();
+
+   $html.="<br /><b>Annealing temperatures:</b> <b>Low:</b> " . $ann_low . " <b>High:</b> " . $ann_high;  
+
+my @motifs = $marker->ssr_motif_info($ssr_id);
+foreach my $m (@motifs) { 
+  my ($motif, $r_nr)  = ($m->[0], $m->[1]);
+  
+  $html.="<br /><b>Repeat motif:</b> <span class=\"sequence\">$motif</span>&nbsp;&nbsp;&nbsp;<b>Repeat number:</b> $r_nr";
+}
+$html.="<br /><b>Forward primer:</b> <span class=\"sequence\">$start_primer</span>";
+$html.="<br /><b>Reverse primer:</b> <span class=\"sequence\">$end_primer</span>";
+$html.="<br /><b>Predicted size:</b> $pcr_length";
+
+if($html) {
+  $html =  CXGN::Page::FormattingHelpers::blue_section_html('SSR info',$html)
+}
+else {
+  $html = '';
+}
+
+
+</%perl>
+
+<% $html %>

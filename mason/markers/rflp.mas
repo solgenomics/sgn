@@ -1,0 +1,116 @@
+
+<%doc>
+
+=head1 NAME
+
+/markers/rflp.mas - a Mason component displaying information about rflp (known function genes) markers
+
+=head1 DESCRIPTION
+
+parameters 
+
+=over 5
+
+=item *
+
+$marker - a CXGN::Marker object.
+
+=item *
+
+$c - (what is this??)
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>
+
+=cut
+
+</%doc>
+
+<%args>
+$marker
+</%args>
+
+<%perl>
+
+  use SGN::Controller::Marker;
+
+if (!$marker->is_in_collection('rflp')) { return; }
+my $marker_id = $marker->marker_id();
+my $marker_name = $marker->get_name();
+my $ihtml = ""; 
+if ( SGN::Controller::Marker->rflp_image_link( $c, $marker ) ) {
+  $ihtml ="<br /><a href=\"/search/markers/view_rflp.pl?marker_id=$marker_id\">[$marker_name image]</a><br />";
+}
+
+my $r = $marker->rflp_data();
+
+my $vhtml = <<EOT;
+<b>Insert size: </b>$r->{insert_size}<br />
+  <b>Vector: </b>$r->{vector}<br />
+  <b>Cutting Site: </b>$r->{cutting_site}<br />
+  <b>Drug Resistance: </b>$r->{drug_resistance}<br />
+EOT
+
+
+  my $fs_html='<span class="ghosted">No forward sequence known.</span><br />';
+my $rs_html='<span class="ghosted">No reverse sequence known.</span><br />';
+if($r->{forward_seq}) {
+  $fs_html = '<br /><b>Forward sequence:</b><br /><span class="sequence">'.CXGN::Page::FormattingHelpers::html_break_string($r->{forward_seq},90).'</span><br />';
+}
+if($r->{reverse_seq}) {
+  $rs_html = '<br /><b>Reverse sequence:</b><br /><span class="sequence">'.CXGN::Page::FormattingHelpers::html_break_string($r->{reverse_seq},90).'</span><br /><br />';
+}
+
+
+
+# unigene blast matches
+#
+my $uhtml = '';
+
+my $unigene_page = '/search/unigene.pl?unigene_id=';
+my $rflp_name = $marker_name;
+my $e_val_blast_cutoff = '1.0e-4';
+
+
+my ($forward_unigene_matches, $reverse_unigene_matches) = $marker->rflp_unigene_matches($r->{forward_seq_id}, $r->{reverse_seq_id});
+
+my $html = '';
+foreach my $h (@$forward_unigene_matches) { 
+  $html .= qq|<tr><td><a href="$unigene_page$h->[0]">$h->[0]</a></td><td align="center">$h->[1]</td><td align="center">$h->[2]</td></tr>\n|;
+}
+
+foreach my $h(@$reverse_unigene_matches) { 
+  $html .= qq|<tr><td><a href="$unigene_page$h->[0]">SGN-U$h->[0]</a></td><td align="center">$h->[1]</td><td align="center">$h->[2]</td></tr>\n|;
+}
+
+$uhtml .= "$rflp_name was matched against the Lycopersicon combined unigene build and produced the following matches:\n";
+$uhtml .= qq|<table border="0" width="100%" align="center">\n|;
+$uhtml .= qq|<tr>\n<td width="40%"><b>Forward sequence matches</b></td>\n<td width="30%" align="center"><b>e value</b></td>\n<td width="30%" align="center"><b>Alignment length (bp)</b></td>\n</tr>\n|;
+
+if (@$forward_unigene_matches) {
+  foreach my $m (@$forward_unigene_matches) {
+    $uhtml .= "" . join " ", ($m->[0], $m->[1], $m->[2]);
+  }
+} else {
+  $uhtml .= qq|<tr><td colspan="3" align="center">No matches with e-value below $e_val_blast_cutoff were found for this sequence.</td></tr>\n|;
+}
+$uhtml .= qq|<tr><td colspan="3"><br /></td></tr>\n|;
+$uhtml .= qq|<tr><td width="40%"><b>Reverse sequence matches</b></td>\n<td width="30%" align="center"><b>e value</b></td>\n<td width="30%" align="center"><b>Alignment length (bp)</b></td>\n</tr>\n|;
+
+if (@$reverse_unigene_matches) {
+  foreach my $m (sort {$a <=> $b} @$reverse_unigene_matches) {
+    $uhtml .= "" . join " ", ($m->[0], $m->[1], $m->[2]);
+  }
+} else {
+  $uhtml .= qq|<tr><td colspan="3" align="center">No matches with e-value below $e_val_blast_cutoff were found for this sequence.</td></tr>\n|;
+}
+
+$uhtml .= "</table>\n";
+
+$html=$ihtml.$vhtml.$fs_html.$rs_html.$uhtml;
+if($html) {
+  print CXGN::Page::FormattingHelpers::info_section_html(title=>'RFLP information',contents=>$html);  
+}
+
+</%perl>
