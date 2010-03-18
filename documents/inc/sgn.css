@@ -838,6 +838,7 @@ a.stealth {
 /***********   TOOLBARS W/DROPDOWN MENUS ****************/
 
 table#siteheader { 
+  margin-bottom: 3px;
 }
 
 table.toolbar { 
