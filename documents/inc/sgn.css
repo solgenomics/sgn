@@ -9,8 +9,10 @@ body {
   text-align: center;
 }
 #outercontainer { 
+}
+#pagecontent_t { 
+  margin: auto;
   width: 730px;
-  margin: 0 auto;
 }
 table {
   font-family: verdana, arial, helvetica, sans-serif;
@@ -838,7 +840,8 @@ a.stealth {
 /***********   TOOLBARS W/DROPDOWN MENUS ****************/
 
 table#siteheader { 
-  margin-bottom: 3px;
+  margin: 0 auto 3px auto;
+  width: 740px;
 }
 
 table.toolbar { 
