@@ -8,6 +8,8 @@ use strict;
 use warnings;
 use CGI ();
 
-if( my $component_name = CGI->new->path_info ) {
+my $cgi = CGI->new;
+if( my $component_name = $cgi->path_info ) {
+    print "\n\n";
     print $c->render_mason( $component_name );
 }
