@@ -77,26 +77,3 @@ function check_clonecart()
     return;
 }
 
-
-//////////////////////////////////////////////////////////////////////
-// page load indicator
-//////////////////////////////////////////////////////////////////////
-//turn spinning loady things on and off, set toolbar visible and
-//invisible
-function finishLoad() {
-  var logo = document.getElementById('sgnlogo');
-  logo.src = docroot + "documents/img/sgn_logo_icon.png";
-}
-function startLoad() {
-  var logo1 = document.getElementById('sgnlogo');
-  logo1.src=docroot + 'documents/img/sgn_logo_animated.gif';
-}
-/* remove loading messages and animations on page load*/
-
-if(window.onload) {
-   var old = window.onload;
-   window.onload = function () { old(); finishLoad(); };
-} else {
-   window.onload=finishLoad;
-}
-
