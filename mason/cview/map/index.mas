@@ -112,7 +112,7 @@ my $map_factory = CXGN::Cview::MapFactory->new($dbh);
 my $map = $map_factory ->create({ map_version_id => $map_version_id });
 
 
-if (!$map) { missing_map_page(); }
+if (!$map) { missing_map_page(); return; }
 
 my $private = data_is_private($dbh, $map_version_id);
  
@@ -125,7 +125,7 @@ my @hilite_markers = split /\s+|\,\s*|\;s*/, $hilite;
 sub missing_map_page { 
 
    
-    my $title = page_title_html("The requested map could not be found.");
+  my $title = "<h1>The requested map could not be found</h1>";
     
     print <<HTML;
 
