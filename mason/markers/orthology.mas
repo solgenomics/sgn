@@ -1,0 +1,40 @@
+
+
+<%doc>
+
+=head1 NAME
+
+/markers/ssr.mas - a Mason component displaying information about cos markers
+
+=head1 DESCRIPTION
+
+parameters 
+
+=over 5
+
+=item *
+
+$marker - a CXGN::Marker object.
+
+=back
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>
+
+=cut
+
+</%doc>
+
+<%args>
+$marker
+</%args>
+
+<%perl>
+
+
+
+
+
+
+</%perl>

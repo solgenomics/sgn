@@ -1,0 +1,79 @@
+
+<%doc>
+
+=head1 NAME
+
+/markers/index.mas - a Mason component displaying a marker detail page.
+
+=head1 DESCRIPTION
+
+The following parameters are required: 
+
+=over 5
+
+=item *
+
+$dbh - a database handle
+
+=item *
+
+$marker_id - the id of a marker in the SGN database
+
+=back
+
+This component is based on Perl code developed by John Binns.
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>
+
+=cut
+
+</%doc>
+
+<%args>
+$dbh
+$marker_id
+</%args>
+
+<%perl>
+
+use CXGN::Marker;
+my $marker = CXGN::Marker->new($dbh, $marker_id);
+
+my $display_name = '';
+</%perl>
+
+<& /markers/basic_marker_info.mas, marker=>$marker, dbh=>$dbh &>
+
+<& /markers/kfg.mas, marker=>$marker &>
+
+<& /markers/rflp.mas, marker=>$marker &>
+
+<& /markers/ssr.mas, marker=>$marker &>
+
+<& /markers/cos.mas, marker=>$marker &>
+
+<& /markers/cosii_orthologs.mas, marker=>$marker &>
+
+<& /markers/derivation.mas, marker=>$marker &>
+
+<& /markers/locations.mas, marker=>$marker &>
+
+<& /markers/polymorphisms.mas, marker=>$marker &>
+
+<& /markers/unigene_match.mas, marker=>$marker &>
+
+<& /markers/overgo.mas, marker=>$marker &>
+
+<& /markers/cosii_polymorphisms.mas, marker=>$marker &>
+
+<& /markers/cosii_files.mas, marker=>$marker &>
+
+<& /markers/attributions.mas, marker=>$marker &>
+
+<& /markers/comments.mas, marker=>$marker &>
+
+% my $referer = '/search/markers/markerinfo.pl?marker_id=';
+% my $object_id = $marker->marker_id();
+<& /page/comments.mas, object_type=>'marker', object_id=>$marker_id, referer=>$referer &>

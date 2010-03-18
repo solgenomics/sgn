@@ -1,0 +1,136 @@
+
+<%doc>
+
+=head1 NAME
+
+/markers/cosii_orthologs.mas - a Mason component displaying information about cos ortholog markers
+
+=head1 DESCRIPTION
+
+parameters 
+
+=over 5
+
+=item *
+
+$marker - a CXGN::Marker object.
+
+=back
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>
+
+=cut
+
+</%doc>
+
+<%args>
+$marker
+</%args>
+
+<%perl>
+
+my $marker_name = $marker->get_name();
+unless ($marker->is_in_collection('COSII')) { return''; }
+use constant DESC_ALIGNED2AA=>'Alignment of DNA and translated peptides from Arabidopsis CDS and edited Asterid unigenes, plain text';
+use constant DESC_CDS_FASTA=>'Amplicon sequence alignment, FASTA';
+use constant DESC_CDS_NEX=>'Input file for PAUP, NEXUS format';
+use constant DESC_CDS_TXT=>'Original unigene seqs and Arabidopsis CDS seq, FASTA';
+use constant DESC_FR_CDS_FASTA=>'Alignment of Arabidopsis CDS and edited Asterid unigenes, FASTA';
+use constant DESC_ML_TRE=>'Phylogenetic tree';
+use constant DESC_PEP_ALN=>'Alignment of translated peptides from Arabidopsis CDS and edited Asterid unigenes, ClustalW';
+use constant DESC_PEP_FASTA=>'Alignment of translated peptides from Arabidopsis CDS and edited Asterid unigenes, FASTA';
+use constant DESC_AB1=>'AB1 chromatogram';
+use constant DESC_PDF=>'PDF chromatogram';
+use constant DESC_TXT=>'plain text';
+use constant DESC_BLASTX=>'BLASTX result of original unigene sequences against Arabidopsis protein database';
+use constant SEQUENCE_WIDTH=>90;
+use constant SEQUENCE_DATA_PRIVATE=>'Not available';
+use constant SEQUENCE_NAME_NOT_AVAILABLE=>'Name not available';
+use constant SEQUENCE_NOT_AVAILABLE=>'&nbsp;';
+use constant NO_UNIGENE_ID=>'Not available';
+use constant SINGLE_COPY=>'Single';
+use constant MULTIPLE_COPIES=>'Multiple';
+use constant NO_COPIES=>'No copies data found';
+my $cosii_data_files=cosii_data_files($marker, $c);
+my @unigenes=$marker->cosii_unigenes();
+my $html='';
+$html.="<br /><table border=\"1\" cellpadding=\"2\" cellspacing=\"0\" width=\"720\">";
+$html.="<tr><td>Species</td><td>Copies</td><td>Sequence ID</td><td>CDS/Edited sequence</td><td>Peptide sequence</td><td>Predicted introns</td></tr>";
+for(0..$#unigenes) {
+  if($unigenes[$_]->{copies} eq 'S') {
+    $unigenes[$_]->{copies}=SINGLE_COPY;
+  }
+  elsif($unigenes[$_]->{copies} eq 'M') {
+    $unigenes[$_]->{copies}=MULTIPLE_COPIES;
+  }
+  else {
+    $unigenes[$_]->{copies}=NO_COPIES;
+  }
+  if(!defined($unigenes[$_]->{sequence_name}) or $unigenes[$_]->{sequence_name} eq '') {
+    $unigenes[$_]->{sequence_name}=CXGN::Marker::Tools::cosii_to_arab_name($marker_name);
+  }
+  if(!defined($unigenes[$_]->{organism}) or $unigenes[$_]->{organism} eq '') {
+    $unigenes[$_]->{organism}=$unigenes[$_]->{database_name};
+  }
+  if(defined($unigenes[$_]->{unigene_id})) {
+    if($unigenes[$_]->{organism}=~/Coffee/i) {
+      my $new_sgn_id=CXGN::Unigene::Tools::cgn_id_to_sgn_id($marker->{dbh},$unigenes[$_]->{unigene_id});
+      my $old_coffee_id=$unigenes[$_]->{unigene_id};
+      $unigenes[$_]->{unigene_id}="<a href=\"/search/unigene.pl?unigene_id=$new_sgn_id\">$new_sgn_id (SGN)</a><br /><span class=\"ghosted\">$old_coffee_id (CGN)</span>";
+    }
+    else {
+      $unigenes[$_]->{unigene_id}="<a href=\"/search/unigene.pl?unigene_id=$unigenes[$_]->{unigene_id}\">$unigenes[$_]->{unigene_id}</a>";
+    }
+  }
+  else {
+    $unigenes[$_]->{unigene_id}=NO_UNIGENE_ID;
+  }
+  my $organism_name_for_uri=URI::Escape::uri_escape($unigenes[$_]->{organism});
+  my($ed_desc,$pep_desc,$int_desc)=('Edited','Peptide','Introns');
+  $html.="<tr>";
+  $html.="<td><b>$unigenes[$_]->{organism}</b></td>";
+  $html.="<td>$unigenes[$_]->{copies}</td>";
+  if($unigenes[$_]->{organism}=~/Arabidopsis/i) {
+    $html.="<td>".CXGN::Marker::Tools::tair_gene_search_link($unigenes[$_]->{sequence_name})."</td>";
+    $ed_desc='CDS from TAIR';
+    $pep_desc='Peptide from TAIR';
+    $int_desc='Introns from TAIR';
+  }
+  else {
+    $html.="<td>$unigenes[$_]->{unigene_id}</td>";
+  }
+  $html.="<td>";
+  if ($cosii_data_files->{edited_seq_files}->[0]) {
+    for my $file (@{$cosii_data_files->{edited_seq_files}}) {
+      $html.="<a href=\"$file\">$ed_desc</a>";
+    }
+  }
+  else {
+    $html.=SEQUENCE_NOT_AVAILABLE;
+  }
+  $html.="</td><td>";
+  if ($cosii_data_files->{peptide_seq_files}->[0]) { 
+    for my $file(@{$cosii_data_files->{peptide_seq_files}}) {
+      $html.="<a href=\"$file\">$pep_desc</a>";
+    }
+  }
+  else{
+    $html .= SEQUENCE_NOT_AVAILABLE;
+  }
+  $html.="</td><td>";
+  if($cosii_data_files->{intron_seq_files}->[0]) {
+    for my $file(@{$cosii_data_files->{intron_seq_files}}) {
+      $html.="<a href=\"$file\">$int_desc</a>";
+    }
+  }
+  else{
+    $html.=SEQUENCE_NOT_AVAILABLE;
+  }
+}
+$html.="</td></tr>";
+$html.='</table>';
+print  blue_section_html('Orthologs in this COSII group',$html);
+
+</%perl>

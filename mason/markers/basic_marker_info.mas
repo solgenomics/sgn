@@ -1,0 +1,64 @@
+
+<%doc>
+
+=head1 NAME
+
+/markers/rflp.mas - a Mason component displaying information about rflp (known function genes) markers
+
+=head1 DESCRIPTION
+
+parameters 
+
+=over 5
+
+=item *
+
+$marker - a CXGN::Marker object.
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>
+
+=cut
+
+</%doc>
+
+<%args>
+$marker
+</%args>
+
+<%perl>
+
+use CXGN::Tools::Text;
+use CXGN::Marker::Tools;
+
+
+my @marker_names = $marker->get_name();
+my $dbh = $marker->{dbh};
+my $marker_id = $marker->marker_id();
+
+my ($marker_name, @other_names) = @marker_names;
+
+my $display_name = $marker_name;
+
+$display_name .=  "(also known as ".CXGN::Tools::Text::list_to_string(@other_names).")";
+
+my $collections_string='';
+my $collections_description='';
+my $collections = $marker->collections();
+
+if($collections and @{$collections}) {
+    $collections_string=CXGN::Tools::Text::list_to_string(@{$collections})." ";
+    for my $collection(@{$collections}) {
+        $collections_description.="$collection markers are ".CXGN::Marker::Tools::collection_name_to_description($dbh,$collection)."<br />";
+    }
+}
+
+
+
+
+
+</%perl>
+
+<& /page/page_title.mas, title=> 'SGN-M'.$marker_id &>
+<% $collections_description %>

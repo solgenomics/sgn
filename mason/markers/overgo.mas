@@ -1,0 +1,172 @@
+
+
+
+<%doc>
+
+=head1 NAME
+
+/markers/overgo.mas - a Mason component displaying information about associated overgo data
+
+=head1 DESCRIPTION
+
+parameters 
+
+=over 5
+
+=item *
+
+$marker - a CXGN::Marker object.
+
+=back
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>
+
+=cut
+
+</%doc>
+
+<%args>
+$marker
+</%args>
+
+<%perl>
+
+  use CXGN::Page::FormattingHelpers qw | html_break_string html_optional_show info_section_html |;
+
+my $marker_id = $marker->marker_id();
+my $marker_name = $marker->get_name();
+my $dbh = $marker->{dbh};
+my $phys_html;
+
+#some page locations that may change
+my $bac_page = '/maps/physical/clone_info.pl?id=';
+my $overgo_plate_page = '/maps/physical/list_overgo_plate_probes.pl?plate_no=';
+my $plausible_definition_page = '/maps/physical/overgo_process_explained.pl#plausible';
+
+# New! Improved! Now uses SGN-managed $dbh rather than physical_tools
+
+#get the physical info, if any
+my ($overgo_version) = $dbh->selectrow_array("SELECT overgo_version FROM physical.overgo_version WHERE current=1;");
+my $physical_stm = q{  SELECT  pm.overgo_probe_id,               
+		       op.plate_number,
+		       pm.overgo_plate_row,
+		       pm.overgo_plate_col,
+		       b.bac_id,
+		       b.cornell_clone_name,
+		       oap.plausible,
+		       pm.overgo_seq_A,
+		       pm.overgo_seq_B,
+		       pm.overgo_seq_AB,
+		       pm.marker_seq
+		       FROM physical.probe_markers AS pm
+		       LEFT JOIN physical.overgo_plates AS op
+		       ON pm.overgo_plate_id=op.plate_id
+		       LEFT JOIN physical.overgo_associations AS oa
+		       ON (pm.overgo_probe_id=oa.overgo_probe_id AND oa.overgo_version=?)
+		       LEFT JOIN physical.oa_plausibility AS oap
+		       ON (oap.overgo_assoc_id=oa.overgo_assoc_id)
+		       LEFT JOIN physical.bacs AS b
+		       ON oa.bac_id=b.bac_id
+		       WHERE pm.marker_id=?
+		    };
+my $physical_sth = $dbh->prepare($physical_stm);
+$physical_sth->execute($overgo_version, $marker_id);
+
+#go over the results from the query above and load the results into memory,
+#getting rid of duplicates and suchlike chaff, avoiding duplicates mostly 
+#by storing things as keys in a hash instead of in a simple array
+
+my %overgos;  #hash by platelocation => a hash of sequence info
+my %plausible_BAC_matches;
+my %other_BAC_matches;
+while (my ($probeid, $platenum, $row, $col, $bacid, $bacname, $plausible, $seqA, $seqB, $seqAB, $markerseq) = $physical_sth->fetchrow_array) {
+  
+  ### sock away the info on this overgo probe (location and sequences)
+  
+  $overgos{$probeid}{loc} = {plate=>$platenum,coords=>$row.$col};
+  
+  if($seqA || $seqB || $seqAB || $markerseq) {
+    $overgos{$probeid}{seqs} =
+      {seqA=>$seqA,seqB=>$seqB,seqAB=>$seqAB,markerseq=>$markerseq};
+  }
+  
+  #if we have BACs associated with it, remember them
+  if ($bacid) {
+    my $baclink = qq|<a href="$bac_page$bacid">$bacname</a>|;
+    #store these as hash keys to prevent duplicates
+    if ($plausible) {
+      $overgos{$probeid}{plausible}{$baclink}=1;
+    } else {
+      $overgos{$probeid}{unplausible}{$baclink}=1;
+    }
+  }
+}
+
+#if we found some overgo stuff, output it
+if (%overgos) {
+  #go over the overgos we found and output info in HTML for each of them
+  my @overgoinfo; #array of html overgo info nuggets
+  while(my ($probeid,$thisprobe) = each %overgos) {
+    my $overgo_html;
+    $overgo_html .= qq|$marker_name was used as an overgo probe on <a href="$overgo_plate_page$thisprobe->{loc}{plate}&amp;highlightwell=$thisprobe->{loc}{coords}">plate $thisprobe->{loc}{plate}</a> [well $thisprobe->{loc}{coords}]<br />|;
+    
+    #output the plausible BACs
+    $overgo_html .= qq{<p><b><a href="$plausible_definition_page">Plausible</a> BAC Matches:</b>&nbsp;&nbsp;&nbsp;}
+      .($thisprobe->{plausible} ? join(",&nbsp;&nbsp;\n", keys %{$thisprobe->{plausible}}) : 'None')
+	."</p>\n";
+    
+    #output the nonplausible BACs
+    if ($thisprobe->{unplausible}) {
+      $overgo_html .= html_optional_show("np$probeid",'<i>Non-Plausible</i> BAC matches',
+					 join (",&nbsp;&nbsp;\n",
+					       keys %{$thisprobe->{unplausible}})
+					);
+    }
+    
+    #output the sequences for this overgo probe
+    my $seqhtml;
+    $seqhtml .= '<b>A Sequence</b><br />'
+      .html_break_string($thisprobe->{seqs}{seqA})
+	.'<br /><br />';
+    
+    $seqhtml .= '<b>B Sequence</b><br />'
+      .html_break_string($thisprobe->{seqs}{seqB})
+	.'<br /><br />';
+    
+    $seqhtml .= '<b>AB Sequence</b><br />'
+      .html_break_string($thisprobe->{seqs}{seqAB})
+	.'<br /><br />';
+    
+    $seqhtml .= '<b>Marker Sequence</b><br />'
+      .html_break_string($thisprobe->{seqs}{markerseq})
+	.'<br />';
+    
+    $overgo_html .= html_optional_show("seq$probeid",'<i>Overgo Sequences</i>',"<div>$seqhtml</div>");
+    push @overgoinfo, $overgo_html;
+  }
+  
+  #now join together the over info units, putting <hr>s between them
+  $phys_html .= join "<hr />\n", @overgoinfo;
+  
+  # 	  my @loclist = map  {my ($plateno,$row,$col) = split (/:/,$_); 
+  # 			       qq|<a href="$overgo_plate_page$plateno&highlightwell=$row$col">plate $plateno</a> [well $row$col]|;
+  # 			      } (keys %overgos);
+  #loclist is now a list of link strings made of the plate
+	  #locations that were stored above as keys of %overgos
+
+# 	  $phys_html .= "<p>$marker_name was used as a probe on ";
+# 	  $phys_html .= list_to_string(@loclist);
+# 	  $phys_html .= " of the Overgo Physical mapping process.</p>\n";
+
+
+} 
+
+# End of ugly code.
+#############################################
+if($phys_html) {
+  print  info_section_html(title=>'Overgo hybridization and physical mapping', contents=>$phys_html);
+}
+
+</%perl>

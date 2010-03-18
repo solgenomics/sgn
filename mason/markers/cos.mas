@@ -1,0 +1,93 @@
+
+<%doc>
+
+=head1 NAME
+
+/markers/ssr.mas - a Mason component displaying information about cos markers
+
+=head1 DESCRIPTION
+
+parameters 
+
+=over 5
+
+=item *
+
+$marker - a CXGN::Marker object.
+
+=back
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>
+
+=cut
+
+</%doc>
+
+<%args>
+$marker
+</%args>
+
+<%perl>
+
+#   my $cos_query = q{SELECT c.cos_marker_id, c.marker_id, c.cos_id, c.at_match, 
+# 	    c.at_position, c.bac_id, c.best_gb_prot_hit, c.at_evalue, 
+# 	    c.at_identities, c.mips_cat, c.description, c.comment, 
+# 	    c.gbprot_evalue, c.gbprot_identities, s.trace_name 
+# 	    FROM cos_markers AS c LEFT JOIN seqread AS s ON 
+# 	    c.est_read_id=s.read_id WHERE c.marker_id = ?};
+
+#   my $cos_sth = $dbh->prepare($cos_query);
+#   $cos_sth->execute($marker_id);
+#   my $r = $cos_sth->fetchrow_hashref();
+
+  my $r = $marker->cos_data();
+
+  unless($r->{cos_marker_id}){return'';}
+
+  my $at_page='http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?cmd=Retrieve&amp;db=Nucleotide&amp;dopt=GenBank&amp;list_uids=';
+  my $map_link='/search/markers/markerinfo.pl?marker_id=';
+  my $est_read_page='/search/est.pl?request_from=0&amp;request_type=automatic&amp;search=Search&amp;request_id=';
+  my $cos_page='/search/markers/markerinfo.pl?marker_id=';
+  my $at_match=$r->{at_match};
+  my $bac_id=$r->{bac_id};
+  my $trace_name=$r->{trace_name};
+  my $at_posn=$r->{at_position};
+  if($trace_name) {
+    $trace_name="<a href=\"$est_read_page$trace_name\">$trace_name</a>"
+  }
+  else {
+    $trace_name="<span class=\"ghosted\">None</span>";
+  }
+  my $vhtml = <<EOT;
+EOT
+  ;
+
+  my $orth = <<EOT;
+<b>Arabidopsis identities: </b>$r->{at_identities}<br />
+EOT
+  ;
+
+  my $genbank = <<EOT;
+<b>Best GenBank protein hit: </b><a href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=Protein&amp;cmd=search&amp;term=$r->{best_gb_prot_hit}">$r->{best_gb_prot_hit}</a><br />
+<b>Evalue: </b>$r->{gbprot_evalue}<br />
+<b>Identities: </b>$r->{gbprot_identities}<br />
+<b>Description: </b>$r->{description}<br />
+<b>Comment: </b>$r->{comment}<br />
+More information about COS markers can be found on the <a href="/markers/cos_markers.pl">COS markers</a> page.
+EOT
+  ;
+
+
+</%perl>
+
+<b><a href="/documents/markers/role_categories.txt">MIPS Category</a>: </b>$r->{mips_cat}<br />
+<b>Tomato EST read:</b> $trace_name<br />
+<b>Arabidopsis best BAC match:</b> <a href="$at_page$bac_id">$at_match</a><br />
+<b>Arabidopsis position:</b> $at_posn<br />
+
+
+
+
+% print  CXGN::Page::FormattingHelpers::blue_section_html('COS information', $vhtml.$orth.$genbank);

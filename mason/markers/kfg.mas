@@ -1,0 +1,42 @@
+
+<%doc>
+
+=head1 NAME
+
+/markers/kfg.mas - a Mason component displaying information about kfg (known function genes) markers
+
+=head1 DESCRIPTION
+
+takes the parameter $marker - a CXGN::Marker object.
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>
+
+=cut
+
+</%doc>
+
+<%args>
+$marker
+</%args>
+
+<%perl>
+
+
+  # prints a link to the gene page if this marker maps to a gene 
+  # (KFG = Known Function Gene)
+
+  my @loci = $marker->associated_loci();
+
+my $html = '';
+foreach my $l (@loci) { 
+  my ($locus_id, $locus_name) = ($l->[0], $l->[1]);
+
+    $html .= qq{This marker is associated with the <a href="/phenome/locus_display.pl?locus_id=$locus_id">$locus_name</a> locus.<br />};
+  }
+
+  return $html.'<br />';
+
+
+</%perl>
