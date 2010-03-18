@@ -1,0 +1,241 @@
+/* These css rules are necessary for autocomplete to work */
+
+div.autocomplete {
+  position:absolute;
+  background-color: white;
+  border:2px solid #888;
+  margin:0;
+  padding:0;
+  z-index:20;
+  width:500px;
+/*
+  left:-100px;
+  top:-100px;
+*/
+}
+div.autocomplete ul {
+  list-style-type:none;
+  white-space:nowrap;
+  margin:0;
+  padding:0;
+}
+div.autocomplete ul li.selected { background-color: #ffb;}
+div.autocomplete ul li {
+  list-style-type:none;
+  display:block;
+  margin:0;
+  padding:1px;
+  height:16px;
+  cursor:pointer;
+}
+
+
+/* These are basic CSS rules shared by other stylesheets */
+A:link            { text-decoration: none; 
+                    color: #0000FF;
+                  }
+A:visited         { text-decoration: none; 
+                    color: #AA0088;
+                  }
+A:hover           { text-decoration: underline; 
+		    color: black;
+		    background:lightsteelblue;
+                  }
+A.banner          { color  : #FFFFFF;
+                    font-size : small;
+                    text-decoration : none;
+                  }
+A.bblue           { color: #FFFFFF;
+                    background-color: #9999FF;
+                    font-size : small;
+                    text-align: center;
+                  }
+A.bred            { color: #FFFFFF;
+                    background-color: #FF6666;
+                    font-size : small;
+                    text-align: center;
+		  }
+BODY              { background-color: #F7FBFF;
+                    font-family: sans-serif;
+	            font-size: small;
+                  }
+DIV               { margin: 0 }
+H1                { color: navy;
+		    font-size: medium;
+                    font-family: sans-serif; 
+                  }
+H2                { color: navy;
+                    font-family: sans-serif; 
+                  }
+H3                { color: navy;
+                    font-family: sans-serif; 
+                  }
+H4                { color: navy;
+                    font-family: sans-serif; 
+                  }
+INPUT             { background-color: white; }
+P                 { font-family: sans-serif; }
+SELECT            { background-color: white; }
+TABLE             { padding: 0;              }
+TD                { font-family: sans-serif; 
+                    padding: 0; 
+	            font-size: small;
+		  }
+TH                { font-family: sans-serif; 
+                    padding: 0; 
+	            font-size: small;
+                  }
+table.padded-table td { padding-left:10px; padding-right:10px}
+TH.linkmenu       { 
+                    font-family: sans-serif;
+                    padding: 0;
+                    font-size: 9pt;
+                  }
+.reset_button     { color: red;           
+		    font-weight: bold;
+                  }
+.technicalinfo    { background-color: #FFFFFF; }
+.toggle           { color: #E0E0E0; }
+.error            { color: red; }
+.errorpanel       { background-color: lightyellow;    
+		    margin:   -8px 8px  8px  -8px;
+		  }
+.note             { color: red; }
+.pre              { font-family: monospace; }
+.popup            { COLOR: #9F141A;
+                    CURSOR: help;
+                    TEXT-DECORATION: none
+                  }
+.ctl_visible,
+.ctl_hidden       { z-index:10; }
+
+span.tctl         { cursor: pointer }
+.menutitle {
+    color: blue;
+    font-size: 10pt;
+    background-color: transparent;
+    font-weight: bold;
+    font-family: sans-serif;
+    cursor:        pointer;
+    padding-top:   5px;
+    padding-left:  5px;
+    padding-right: 5px;
+}
+.menutitle:hover {
+    text-decoration: underline;
+}
+img.figure {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    padding-top: 6px;
+    padding-left: 6px;
+    padding-right: 6px;
+    padding-bottom: 6px;
+    background-color: lightgray;
+    border: double;
+}
+
+
+/* These declarations give gbrowse a funky transparent look */
+
+BODY              {
+                    font-family: sans-serif;
+	            font-size: small;
+                  }
+.datatitle        { background-color: rgba(224,224,224,0.4);
+		   }
+.databody         { background-color: rgba(240,240,240,0.4);
+		  }
+.multiplechoicetitle  { background-color: lightblue;
+		        font-size: small;
+}
+.searchtitle      { background-color: rgb(240,240,240);
+		    background:       url(/gbrowse2/images/buttons/grey_0.4_pixel.png);
+		    background-color: rgba(240,240,240,0.4);
+	            font-size: small;
+		    margin-left:   1em;
+		    margin-right:  1em;
+}
+.searchbody       { background-color: rgb(224,224,224);
+		    background:       url(/gbrowse2/images/buttons/dark_0.4_pixel.png);
+		    background-color: rgba(224,224,224,0.4);
+		    margin-left:   1em;
+		    margin-right:  1em;
+		    margin-bottom: 3px;
+	            font-size: small;
+}
+.settingstitle    {
+ background-color: rgb(224,224,224);
+		    background:       url(/gbrowse2/images/buttons/dark_0.4_pixel.png);
+		    background-color: rgba(224,224,224,0.4);
+		    margin-left:   1em;
+		    margin-right:  1em;
+	            font-size: small;
+}
+.settingsbody     {
+ background-color: rgb(240,240,240);
+		    background:       url(/gbrowse2/images/buttons/grey_0.4_pixel.png);
+		    background-color: rgba(240,240,240,0.4);
+		    margin-left:  1em;
+		    margin-right: 1em;
+	            font-size: small;
+}
+.uploadtitle {
+  background-color: rgb(224,224,224);
+  background:  url(/gbrowse2/images/buttons/dark_0.4_pixel.png);
+  background-color: rgba(224,224,224,0.4);
+  margin-left:  1em;
+  margin-right: 1em;
+  font-size: small;
+}
+.uploadbody  {
+  background-color: rgb(240,240,240);
+  background:       url(/gbrowse2/images/buttons/grey_0.4_pixel.png);
+  background-color: rgba(240,240,240,0.4);
+  margin-left:   1em;
+  margin-right:  1em;
+  font-size: small;
+}
+.tabmenu_active   {
+  cursor: pointer;
+  color: black;
+  background-color: rgba(224,224,224,0.4);
+  font-size: 10pt;
+  font-weight: bold;
+  font-family: sans-serif;
+  padding-top: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top:  thin solid;
+  border-left: thin solid;
+  border-right: thin solid;
+  border-bottom: thin solid;
+  border-bottom-color: beige;
+  z-index: 10;
+}
+.tabmenu_inactive {
+  cursor: pointer;
+  color: blue;
+  font-size: 10pt;
+  background-color: transparent;
+  font-weight: bold;
+  font-family: sans-serif;
+  padding-top:   5px;
+  padding-left:  5px;
+  padding-right: 5px;
+}
+.tabmenu_inactive:hover {
+  text-decoration: underline;
+}
+.tabbed {
+  background-color: transparent;
+}
+.tabmenu {
+  background-color: transparent;
+}
+.tabbody {
+  background-color: rgba(224,224,224,0.4);
+  padding-top: 5px;
+  border:   thin solid;
+}
