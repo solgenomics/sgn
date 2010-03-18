@@ -273,6 +273,8 @@ EOH
     Alias  /fullsize_images   $cfg->{static_datasets_path}/images/insitu/processed
     Alias  /thumbnail_images  $cfg->{static_datasets_path}/images/insitu/display
 
+    Redirect 301 /gbrowse/index.pl /tomato/genome_data.pl
+
 END_HEREDOC
 
              # and now a bunch of rewrites for old stuff that used to
