@@ -72,7 +72,7 @@ my @coords =
     map {
         my ($s, $e) = split "-", $_;
         defined $_ or die 'parse error' for $s, $e;
-        [ $s-1, $e-1 ]
+        [ $s, $e ]
     }
     grep length,
     split ',',
