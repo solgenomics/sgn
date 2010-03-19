@@ -116,11 +116,19 @@ sub seq_html {
     return join '',
        # and extract those lines
        map {
-           my $window_start = commify_number( $_->start*$width + 1 );
-           my $window_end   = commify_number( min( $seq->length, ($_->end+1)*$width ) );
-           info_section_html( title => "within sequence region $window_start-$window_end",
+           my $window_start = $_->start*$width + 1;
+           my $window_end   = min( $seq->length, ($_->end+1)*$width );
+           info_section_html( title => "showing residues ".commify_number($window_start).' - '.commify_number($window_end),
                               is_subsection => 1,
-                              contents => '<span class="sequence">'.join( "<br />\n", @lines[ $_->start .. $_->end ] ).'</span>',
+                              contents => join ( '',
+						 '<span class="sequence">',
+						 '&gt;',
+						 $seq->id,
+						 ":$window_start..$window_end  ",
+						 "<br />",
+						 join( "<br />\n", @lines[ $_->start .. $_->end ] ),
+						 '</span>',
+					       ),
                              )
        }
        # calculate 0-based non-overlapping ranges of lines we need
@@ -135,8 +143,6 @@ sub seq_html {
                                   POSIX::floor( ($r->end-1)/$width )+$line_window_expand
                                 ),
                   );
-               $match->{original_range} = $r;
-               $match;
         } @ranges
        );
 }
@@ -173,7 +179,7 @@ sub round_to_nearest_line_beginning {
                                                   __border      => 0,
                                                  )
                                 .info_table_html( 'Description' => $seq->desc,
-                                                  ( $whole_seq ? 'Sequence' : 'Matching Regions' ),
+                                                  ( $whole_seq ? 'Sequence' : 'Matches' ),
                                                     seq_html( $seq, $coords, $width, $whole_seq ),
                                                   __border      => 0,
                                                  ),
