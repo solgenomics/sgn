@@ -65,7 +65,7 @@ use CXGN::Page::FormattingHelpers qw(
 
 use CXGN::Tools::Text qw/ commify_number /;
 
-sub seq_html_2 {
+sub seq_html {
 
     my $seq       = shift;
     my $coords    = shift;
@@ -116,8 +116,8 @@ sub seq_html_2 {
     return join '',
        # and extract those lines
        map {
-           my $window_start = $_->start*$width + 1;
-           my $window_end   = min( $seq->length, ($_->end+1)*$width+1 );
+           my $window_start = commify_number( $_->start*$width + 1 );
+           my $window_end   = commify_number( min( $seq->length, ($_->end+1)*$width ) );
            info_section_html( title => "within sequence region $window_start-$window_end",
                               is_subsection => 1,
                               contents => '<span class="sequence">'.join( "<br />\n", @lines[ $_->start .. $_->end ] ).'</span>',
@@ -174,7 +174,7 @@ sub round_to_nearest_line_beginning {
                                                  )
                                 .info_table_html( 'Description' => $seq->desc,
                                                   ( $whole_seq ? 'Sequence' : 'Matching Regions' ),
-                                                    seq_html_2( $seq, $coords, $width, $whole_seq ),
+                                                    seq_html( $seq, $coords, $width, $whole_seq ),
                                                   __border      => 0,
                                                  ),
                      ) %>
