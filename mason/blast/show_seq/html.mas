@@ -1,0 +1,23 @@
+<%args>
+  $seq
+  $highlight_coords
+  $source
+  $format_links => []
+</%args>
+
+<& /page/page_title.mas, title => $seq->id &>
+
+<div style="text-align: right; margin: 0 10px 1em 0">
+  <% join ' | ',
+     map {
+           my ($name,$link) = @$_;
+           qq|<a href="$link">$name</a>|
+     } @$format_links
+  %>
+</div>
+
+<& /tools/sequence.mas,
+   seq    => $seq,
+   coords => $highlight_coords,
+   source => $source
+ &>

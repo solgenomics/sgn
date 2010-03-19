@@ -1,0 +1,21 @@
+<& /page/page_title.mas, title => 'Display a sequence from a BLAST database' &>
+
+<form>
+<table cellpadding="5" cellspacing="5" alt=""><tr>
+<td><b>Dataset</b></td><td> <select name="blast_db_id">
+<option value="93">Tomato WGS Sequence</option>
+<option value="56">Tomato BAC contigs</option>
+</select></td></tr>
+
+<td><b>Id</b></td><td> <input type="text" name="id" size="10"/><br /></td></tr>
+
+<tr><td colspan="3"><b>Highlight coordinates (enter as: 1-100,200-300)</b></td></tr>
+<tr><td><b>Coordinates: </b></td><td> <input type="text" name="hilite_coords" size="10" /><br /></td></tr>
+
+<tr><td><b>Format</b></td><td><select name="format"><option value="html">html</option><option value="text">text</option></select></td></tr>
+
+</table>
+
+<input type="submit" />
+</form>
+

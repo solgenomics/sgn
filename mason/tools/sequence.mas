@@ -33,46 +33,35 @@ Lukas Mueller <lam87@cornell.edu>
 
 <%args>
 $seq
-$title => 'Sequence'
 $format => 'html'
-$coords => [ ];
-$width => 90
+$coords => [ ]
+$width  => 90
+$source => '<span class="ghosted">not recorded</span>'
 </%args>
 
-<%perl>
+<%init>
 
 use Bio::Seq;
-use CXGN::Page::FormattingHelpers qw | html_string_linebreak_and_highlight info_section_html html_break_string |;
+use CXGN::Page::FormattingHelpers qw | html_string_linebreak_and_highlight info_section_html html_break_string info_table_html |;
 
-my $seq_html = html_string_linebreak_and_highlight($seq->seq(), $coords, 'news', $width);
+my $seq_html = html_string_linebreak_and_highlight( $seq->seq(), $coords, 'news', $width);
 
-my $output = info_section_html(
-			       title=> "Sequence: ".$seq->id(),
-			       contents=> "<font style=\"font-family:monospace\">".$seq_html."</font>",
-			       subtitle=> $seq->desc()." (".length($seq->seq())." residues)",
-			       #collapsible => 1,
-			       collapsed => undef,
-			      );
-
-</%perl>
-
-
+</%init>
 
 <%perl>
 
-if ($format eq "text") {
-	$output = ">".($seq->id())."\n".html_break_string($seq->seq(), $width, "\n");
-        print "$output\n";
-}else{
-
-  </%perl>
-<& /page/page_title.mas, title=>$title &>
-  <%perl>
-	
-#	print "<a href=\"show_match_seq.pl?id=".$seq->id()."&amp;format=text\">Show result in text format</a><br />\n";
-        print "$output";
-
-}
+    print info_section_html( title    => $seq->id,
+                             contents=> info_table_html( 'Sequence ID' => $seq->id,
+                                                         'Length'      => $seq->length,
+                                                         'Source'      => $source,
+                                                         __multicol    => 3,
+                                                         __border      => 0,
+                                                       )
+                                       .info_table_html( 'Description' => $seq->desc,
+                                                         'Sequence'   => qq|<font style="font-family:monospace">$seq_html</font>|,
+                                                         __border      => 0,
+                                                        ),
+                            );
 
 </%perl>
 
