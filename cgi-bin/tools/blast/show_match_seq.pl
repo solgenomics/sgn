@@ -42,112 +42,79 @@ Lukas Mueller <lam87@cornell.edu>
 =cut
 
 use strict;
+use warnings;
 
-use CXGN::Page;
+use CGI ();
+
 use CXGN::BlastDB;
-use CXGN::Tools::Text;
+use CXGN::Tools::Text qw/ sanitize_string /;
 use CXGN::MasonFactory;
-use CXGN::Tools::Run;
+
 use CXGN::Page::FormattingHelpers qw | info_section_html html_break_string html_string_linebreak_and_highlight | ;
 
-my $page = CXGN::Page->new("BLAST Sequence Detail Page", "Lukas");
+my $cgi = CGI->new;
 
+#get params
+my ( $id            ) = $cgi->param( 'id'            );
+my ( $blast_db_id   ) = $cgi->param( 'blast_db_id'   );
+my ( $format        ) = $cgi->param( 'format'        );
+my ( $hilite_coords ) = $cgi->param( 'hilite_coords' );
 
-my ($id, $blast_db_id, $format, $hilite_coords) = $page->get_arguments("id", "blast_db_id", "format", "hilite_coords");
+#sanitize params
+$format      ||= 'html';
+$blast_db_id +=  0;
+$id          =   sanitize_string( $id );
 
-if (!$blast_db_id) { 
-    show_form($page);
-    return;
+$c->forward_to_mason('/blast/show_seq/input.mas') unless $blast_db_id && defined $id;
+
+# parse the coords param
+my @coords =
+    map {
+        my ($s, $e) = split "-", $_;
+        defined $_ or die 'parse error' for $s, $e;
+        [ $s-1, $e-1 ]
+    }
+    grep length,
+    split ',',
+    ( $hilite_coords || '' );
+
+#die("hilite_coords $hilite_coords. ".(join ",", @coords)."\n");
+
+# look up our blastdb
+my $bdbo = CXGN::BlastDB->from_id( $blast_db_id )
+    or $c->throw( is_error => 0,
+                  message => "The blast database with id $blast_db_id could not be found (please set the blast_db_id parameter).");
+
+my $seq = $bdbo->get_sequence( $id ) # returns a Bio::Seq object.
+    or $c->throw( is_error => 0,
+                  message => "The sequence could not be found in the blast database with id $blast_db_id.");
+
+# dispatch to the proper view
+if ( $format eq 'html' ) {
+    my $view_link     = do { $cgi->param( format => 'fasta_text'); '?'.$cgi->query_string };
+    my $download_link = do { $cgi->param( format => 'fasta_file'); '?'.$cgi->query_string };
+
+    $c->forward_to_mason_view(
+        '/blast/show_seq/html.mas',
+        seq              => $seq,
+        highlight_coords => \@coords,
+        source           => '"'.$bdbo->title.'" BLAST dataset ',
+        format_links     => [
+            [ 'View FASTA'     => $view_link     ],
+            [ 'Download FASTA' => $download_link ],
+           ],
+       );
+
+} elsif( $format eq 'fasta_file' || $format eq 'fasta_text' ) {
+
+    require Bio::SeqIO;
+
+    print "Content-Type: text/plain\n";
+    my $attachment = $format eq 'fasta_file' ? 'attachment;' : '';
+    print "Content-Disposition: $attachment filename=$id.fa\n";
+    print "\n";
+    Bio::SeqIO->new( -fh => \*STDOUT, -format => 'fasta' )
+              ->write_seq( $seq )
 }
-
-if (!$format) { 
-    $format = 'html';
-}
-
-$id = CXGN::Tools::Text::sanitize_string($id);
-$blast_db_id = CXGN::Tools::Text::sanitize_string($blast_db_id);
-
-my @coords = ();
-my @start_end = split ",", $hilite_coords;
-foreach my $se (@start_end) { 
-    my ($s, $e) = split "-", $hilite_coords;
-    push @coords, [ $s-1, $e-1 ];
-}
-
-my $bdbo;
-my $seq;
-#$page->message_page("hilite_coords $hilite_coords. ".(join ",", @coords)."\n");
-
-$bdbo = CXGN::BlastDB->from_id($blast_db_id);
-
-if (!defined($bdbo)) { 
-    $page->message_page("The blast database with the id $blast_db_id could not be found (please set the blast_db_id parameter).");
-}
-
-$seq = $bdbo->get_sequence($id); # returns a Bio::Seq object.
-
-if (!$seq) { 
-    $page->message_page("The sequence could not be found in the blast database with id $blast_db_id.\n");
-}
-
-
-my $output = CXGN::MasonFactory->bare_render('/tools/sequence.mas', seq => $seq, coords => \@coords, format=>$format, title=>$id." from BLAST dataset '".$bdbo->title()."'" );
-
-if ($format eq 'html') { 
-    $page->header();
-    
-    print qq | <a href="?blast_db_id=$blast_db_id&amp;id=$id&amp;format=text">Output as text</a><br />\n |;
-    
-    
-    print $output;
-    
-    $page->footer();
-}
-else { 
-     print "Content-Type: text/html\n\n";
-    print $output;
-}
-
-
-
-
-sub show_form { 
-    my $page = shift;
-    
-    $page->header();
-    
-    print <<HTML;
-    
-    <h1>Display sequence from BLAST database</h1>
-
-	<form>
-	<table cellpadding="5" cellspacing="5" alt=""><tr>
-	<td><b>Dataset</b></td><td> <select name="blast_db_id">
-	<option value="93">Tomato WGS Sequence</option>
-	<option value="56">Tomato BAC contigs</option>
-	</select></td></tr>
-	
-	<td><b>Id</b></td><td> <input type="text" name="id" size="10"/><br /></td></tr>
-
-	<tr><td colspan="3"><b>Highlight coordinates (enter as: 1-100,200-300)</b></td></tr>
-	<tr><td><b>Coordinates: </b></td><td> <input type="text" name="hilite_coords" size="10" /><br /></td></tr>
-	
-	<tr><td><b>Format</b></td><td><select name="format"><option value="html">html</option><option value="text">text</option></select></td></tr>
-	
-	</table>
-	
-	<input type="submit"  />
-	</form>
-	
-	
-HTML
-
-     $page->footer();
-
-}
-
-
-
-
 
 
