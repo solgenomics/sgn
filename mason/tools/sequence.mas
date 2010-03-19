@@ -1,7 +1,6 @@
-
 <%doc>
 
-=head1 NAME 
+=head1 NAME
 
 /tools/sequence.mas - mason module to display a sequence, either as fasta text or as nicely formatted html, with optional highlighting of sub-regions.
 
@@ -15,7 +14,14 @@ the sequence [Bio::Seq object]
 
 =item coords
 
-a list of refs to start/end coords, as [start, end], [start, end], ...
+a list of ONE-BASED refs to start/end coords, [start, end], [start,
+end], ...  Will be highlighted and sequence will be trimmed to show
+only a window around these regions, unless whole_seq is set below.
+
+=item whole_seq
+
+Display the entire sequence, do not cut out windows around the
+matches.  Default false.
 
 =item width
 
@@ -38,36 +44,140 @@ Lukas Mueller <lam87@cornell.edu>
 
 <%args>
 $seq
-$coords => [ ]
-$width  => 90
-$source => '<span class="ghosted">not recorded</span>'
+$coords    => [ ]
+$width     => 100
+$source    => '<span class="ghosted">not recorded</span>'
+$whole_seq => 0
 </%args>
 
 <%init>
 
-use Bio::Seq;
-use CXGN::Page::FormattingHelpers qw | html_string_linebreak_and_highlight info_section_html html_break_string info_table_html |;
+use List::Util qw/ min max /;
+use POSIX;
 
-my $seq_html = html_string_linebreak_and_highlight( $seq->seq(), $coords, 'news', $width);
+use Bio::Range ();
+
+use CXGN::Page::FormattingHelpers qw(
+   html_string_linebreak_and_highlight
+   info_section_html
+   info_table_html
+  );
+
+use CXGN::Tools::Text qw/ commify_number /;
+
+sub seq_html_2 {
+
+    my $seq       = shift;
+    my $coords    = shift;
+    my $width     = shift;
+    my $whole_seq = shift;
+
+    my $seq_string = $seq->seq;
+    return $seq_string unless @$coords;
+
+    # change the coords into ranges and sort by start coord,
+    # also clamping them to the sequence length if needed
+    my @ranges =
+        map {
+            Bio::Range->new( -start => max( 1, $_->[0]), -end => min( $seq->length, $_->[1] ) )
+          }
+      sort { $a->[0] <=> $b->[0] }
+      @$coords;
+
+    # merge any overlapping ranges
+    @ranges = Bio::Range->unions( @ranges );
+
+    my @lines = $seq_string =~ /.{1,$width}/gs;
+    my @matches;
+    foreach (@$coords) {
+        my ($s,$e) = @$_;
+        my @lines_used;
+        $s--; $e--; #convert to 0-based for this
+        my ( $s_line, $s_col ) = line_col( $s, $width );
+        my ( $e_line, $e_col ) = line_col( $e, $width );
+
+        #mark up the lines we're using
+        if( $s_line == $e_line ) {
+            my $ins_width = $e_col-$s_col+1;
+            $lines[$s_line] =~ s|^(.{$s_col})(.{$ins_width})(.*)$|$1<span class="highlighted">$2</span>$3|s;
+        } else {
+            $lines[$s_line] =~ s|^(.{$s_col})(.*)$|$1<span class="highlighted">$2|s;
+            my $ecol_n = $e_col+1;
+            $lines[$e_line] =~ s|^(.{1,$ecol_n})(.*)$|$1</span>$2|s;
+        }
+    }
+
+    # return all the lines if we're using the whole seq
+    return '<span class="sequence">'.join("<br />\n", @lines).'</span>' if $whole_seq;
+
+    my $line_window_expand = 5;
+
+    # return just the lines in our window if not using the whole seq
+    return join '',
+       # and extract those lines
+       map {
+           my $window_start = $_->start*$width + 1;
+           my $window_end   = min( $seq->length, ($_->end+1)*$width+1 );
+           info_section_html( title => "within sequence region $window_start-$window_end",
+                              is_subsection => 1,
+                              contents => '<span class="sequence">'.join( "<br />\n", @lines[ $_->start .. $_->end ] ).'</span>',
+                             )
+       }
+       # calculate 0-based non-overlapping ranges of lines we need
+       Bio::Range->unions(
+           map {
+               my $r = $_;
+               my $match = Bio::Range->new(
+                   -start => max( 0,
+                                  POSIX::floor(($r->start-1)/$width)-$line_window_expand
+                                ),
+                   -end   => min( POSIX::floor( $seq->length/$width ),
+                                  POSIX::floor( ($r->end-1)/$width )+$line_window_expand
+                                ),
+                  );
+               $match->{original_range} = $r;
+               $match;
+        } @ranges
+       );
+}
+
+# 0-based line number and column number of the given $index in a
+# string broken into lines of width $width
+sub line_col {
+    my ($index,$width) = @_;
+    my $line = POSIX::floor( $index/$width  );
+    my $col  = POSIX::fmod ( $index, $width );
+    return ($line,$col);
+}
+
+sub ranges2coords(@) {
+    [ map [ $_->start-1, $_->end-1 ], @{$_[0]} ]
+}
+
+sub round_to_nearest_line_beginning {
+    my ( $base_number, $line_width, $factor ) = @_;
+    $base_number--;
+    $base_number += $factor*$line_width; #< convert to 0-based for this calculation
+    my $lines_before = POSIX::floor( $base_number / $line_width );
+    return $lines_before * $line_width + 1;
+}
 
 </%init>
 
-<%perl>
 
-    print info_section_html( title    => $seq->id,
-                             contents=> info_table_html( 'Sequence ID' => $seq->id,
-                                                         'Length'      => $seq->length,
-                                                         'Source'      => $source,
-                                                         __multicol    => 3,
-                                                         __border      => 0,
-                                                       )
-                                       .info_table_html( 'Description' => $seq->desc,
-                                                         'Sequence'   => qq|<font style="font-family:monospace">$seq_html</font>|,
-                                                         __border      => 0,
-                                                        ),
-                            );
-
-</%perl>
+<% info_section_html( title    => $seq->id,
+                      contents=> info_table_html( 'Sequence ID' => $seq->id,
+                                                  'Length'      => commify_number( $seq->length ),
+                                                  'Source'      => $source,
+                                                  __multicol    => 3,
+                                                  __border      => 0,
+                                                 )
+                                .info_table_html( 'Description' => $seq->desc,
+                                                  ( $whole_seq ? 'Sequence' : 'Matching Regions' ),
+                                                    seq_html_2( $seq, $coords, $width, $whole_seq ),
+                                                  __border      => 0,
+                                                 ),
+                     ) %>
 
 
 
