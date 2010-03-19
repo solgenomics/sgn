@@ -13,13 +13,18 @@
 
 the sequence [Bio::Seq object]
 
-=item format
+=item coords
 
-the format to render, either 'text' or 'html'
+a list of refs to start/end coords, as [start, end], [start, end], ...
 
-=item hilite
+=item width
 
-a list of refs to start/end coords
+width in characters to render the sequence, default 90
+
+=item source
+
+optional source name for the sequence, example "BLAST database such
+and such", or "Tomato unigene build blah blah"
 
 =back
 
@@ -33,7 +38,6 @@ Lukas Mueller <lam87@cornell.edu>
 
 <%args>
 $seq
-$format => 'html'
 $coords => [ ]
 $width  => 90
 $source => '<span class="ghosted">not recorded</span>'
