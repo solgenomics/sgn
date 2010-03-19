@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 use strict;
 use CXGN::Page;
-use CXGN::Genomic;
+use CXGN::Genomic::Chromat;
 use CXGN::VHost;
 use CXGN::DB::Connection;
 # KONI 2003 August 4
