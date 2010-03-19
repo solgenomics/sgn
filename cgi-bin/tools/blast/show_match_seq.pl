@@ -100,8 +100,8 @@ if ( $format eq 'html' ) {
         highlight_coords => \@coords,
         source           => '"'.$bdbo->title.'" BLAST dataset ',
         format_links     => [
-            [ 'View FASTA'     => $view_link     ],
-            [ 'Download FASTA' => $download_link ],
+            ( $seq->length > 500_000 ? () : [ 'View as FASTA' => $view_link ] ),
+            [ 'Download as FASTA' => $download_link ],
            ],
        );
 

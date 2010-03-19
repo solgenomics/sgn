@@ -6,8 +6,14 @@
 </%args>
 
 <& /page/page_title.mas, title => $seq->id &>
-
-<div style="text-align: right; margin: -10px 10px 1em 0">
+<%once>
+	use Number::Bytes::Human ();
+</%once>
+<%init>
+	my $seq_bytes = $seq->length*1.02;
+</%init>
+<div style="text-align: right; margin: 0 10px 1em 0">
+  <b>Whole sequence (<% Number::Bytes::Human::format_bytes($seq_bytes) %>):</b>
   <% join ' | ',
      map {
            my ($name,$link) = @$_;
