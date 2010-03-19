@@ -369,8 +369,8 @@ span.bgcolorselected a {
 .news { 
 	color: #ff0000;
 }
-/* used to highlight bad regions of sequences */
-.badseq { 
+/* used to highlight things in yellow, like bad regions of sequences */
+.highlighted, .badseq { 
 	background: yellow;
 }
 /* used to indicate something is disabled or relatively unimportant. just like, um, ghosts */
