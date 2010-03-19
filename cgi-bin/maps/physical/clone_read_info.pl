@@ -1,7 +1,9 @@
 use strict;
 use warnings;
 use CXGN::Page;
-use CXGN::Genomic;
+use CXGN::Genomic::Chromat;
+use CXGN::Genomic::BlastQuery;
+
 use CXGN::Page::FormattingHelpers
     qw(
        info_section_html

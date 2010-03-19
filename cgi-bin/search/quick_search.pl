@@ -37,7 +37,6 @@ use CXGN::Page;
 use CXGN::DB::Connection;
 use CXGN::Page::FormattingHelpers qw/blue_section_html page_title_html info_table_html/;
 use CXGN::Tools::Text qw/to_tsquery_string trim/;
-use CXGN::Genomic;
 use CXGN::Tools::Identifiers qw/identifier_url link_identifier clean_identifier identifier_namespace/;
 use CXGN::Marker::Tools;
 

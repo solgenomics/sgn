@@ -4,7 +4,6 @@ use warnings;
 use English;
 use CXGN::Page;
 use CXGN::Search::CannedForms;
-use CXGN::Genomic;
 use CXGN::Genomic::Search::Clone;
 
 use CXGN::Page::FormattingHelpers qw/blue_section_html page_title_html commify_number columnar_table_html/;
