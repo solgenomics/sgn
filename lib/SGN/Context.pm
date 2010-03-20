@@ -108,7 +108,7 @@ has '_basepath' => (
        -d File::Spec->catfile( $basepath, 'cgi-bin' )
            or die "could not find basepath starting from this file ("._path_to_this_pm_file().")";
 
-       return $basepath;
+       return Cwd::abs_path( $basepath )
    }
 
 sub _path_to_this_pm_file {
