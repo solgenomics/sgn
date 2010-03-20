@@ -1,9 +1,9 @@
 stylesheet          = /documents/inc/gbrowse2_sgn.css
 hilite fill         = beige
 hilite outline      = red
-overview bgcolor    = white
-region bgcolor      = white
-detail bgcolor      = white
+overview bgcolor    = #fcfcfc
+region bgcolor      = #fcfcfc
+detail bgcolor      = #fcfcfc
 grid color          = paleturquoise
 grid major color    = skyblue
 overview grid       = 0

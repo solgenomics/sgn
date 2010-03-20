@@ -218,7 +218,7 @@ BODY              {
 .tabmenu_active   {
   cursor: pointer;
   color: black;
-  background-color: #fafafa;
+  background-color: #fcfcfc;
   font-size: 10pt;
   font-weight: bold;
   font-family: sans-serif;
@@ -253,7 +253,7 @@ BODY              {
   background-color: transparent;
 }
 .tabbody {
-  background-color: #fafafa;
+  background-color: #fcfcfc;
   padding-top: 5px;
   border:   thin solid;
 }
