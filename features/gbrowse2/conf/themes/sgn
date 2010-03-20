@@ -1,0 +1,11 @@
+stylesheet          = /documents/inc/gbrowse2_sgn.css
+hilite fill         = beige:0.8
+hilite outline      = red:0.8
+overview bgcolor    = white:0.5
+region bgcolor      = white:0.5
+detail bgcolor      = white:0.8
+grid color          = paleturquoise
+grid major color    = skyblue
+overview grid       = 0
+region grid         = 0
+detail grid         = 1

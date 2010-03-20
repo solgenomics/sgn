@@ -20,7 +20,7 @@ sub apache_conf {
     my $conf        = $self->conf_dir;
     my $cgibin      = $self->cgi_bin;
     my $inc         = $self->perl_inc;
-    my $fcgi_inc    = @$inc ? "DefaultInitEnv PERL5LIB ".join(':',@$inc) : '';
+    my $fcgi_inc    = @$inc ? "DefaultInitEnv PERL5LIB \"".join(':',@$inc).'"' : '';
     my $cgi_inc    =  @$inc ? "SetEnv PERL5LIB ".join(':',@$inc) : '';
     my $cgi_url     = $self->cgi_url;
     my $tmp         = $self->tmp_dir;
@@ -41,7 +41,7 @@ sub apache_conf {
     SetHandler   fcgid-script
     Options      ExecCGI
   </Location>
-  DefaultInitEnv GBROWSE_CONF $conf
+  DefaultInitEnv GBROWSE_CONF "$conf"
   $fcgi_inc
 
 	cgi => <<"",
@@ -51,12 +51,12 @@ ScriptAlias $cgi_url  "$cgibin"
   SetEnv GBROWSE_CONF "$conf"
 </Directory>
 
-);
+       );
 
     my $runmode_conf = $runmode_conf{ $self->run_mode }
 	or confess "invalid run mode '".$self->run_mode."'";
 
-    return <<EOC; die 'break';
+    return <<EOC;
 Alias        "$static_url/i/" "$tmp/images/"
 Alias        "$static_url"    "$static_dir"
 
