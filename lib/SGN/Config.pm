@@ -103,7 +103,7 @@ my $defaults =
          'enabled'    => 0,
          'run_mode'   => 'fcgi',
 
-         'conf_dir'   => '/etc/cxgn/SGN/gbrowse',
+         #'conf_dir'   => '/etc/cxgn/SGN/gbrowse',
          'tmp_dir'    => '/var/tmp/gbrowse',
 
          'static_url' => '/gbrowse/static',

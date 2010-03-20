@@ -22,7 +22,7 @@ has 'conf_dir' => ( documentation => 'directory where GBrowse will look for its 
     isa => 'Path::Class::Dir',
     coerce => 1,
     lazy_build => 1,
-   ); sub _build_conf_dir   { shift->feature_dir('gbrowse.conf') }
+   ); sub _build_conf_dir { shift->path_to('conf') }
 
 has 'static_url' => ( documentation => 'URL base for GBrowse static files',
     is => 'ro',
