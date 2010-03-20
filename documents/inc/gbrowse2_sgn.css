@@ -30,17 +30,6 @@ div.autocomplete ul li {
 }
 
 
-/* These are basic CSS rules shared by other stylesheets */
-A:link            { text-decoration: none; 
-                    color: #0000FF;
-                  }
-A:visited         { text-decoration: none; 
-                    color: #AA0088;
-                  }
-A:hover           { text-decoration: underline; 
-		    color: black;
-		    background:lightsteelblue;
-                  }
 A.banner          { color  : #FFFFFF;
                     font-size : small;
                     text-decoration : none;
