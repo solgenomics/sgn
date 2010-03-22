@@ -304,7 +304,7 @@ qq | <a href="/phenome/individual.pl?individual_id=$indl_id->[$i]">$indl_name->[
 
         $data_view = html_optional_show(
             "phenotype",
-            'View/hide phenotype data summary',
+            'View/hide phenotype raw data',
             qq |$phenotype_data|,
             0,    #<  show data by default
         );
@@ -439,16 +439,16 @@ HTML
         contents => $population_html,
     );
 
-    print info_section_html(
-        title    => 'Phenotype Frequency Distribution',
-        contents => $plot_html . $normal_dist,
-    );
-
+   
     print info_section_html(
         title    => 'QTL(s)',
         contents => $qtl_html,
     );
 
+ print info_section_html(
+        title    => 'Phenotype Frequency Distribution',
+        contents => $plot_html . $normal_dist,
+    );
 
     print info_section_html(
         title    => 'Phenotype Data',
