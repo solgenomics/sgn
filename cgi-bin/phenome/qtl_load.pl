@@ -51,6 +51,8 @@ use CXGN::Phenome::GenotypeExperiment;
 use CXGN::Phenome::Genotype;
 use CXGN::Phenome::GenotypeRegion;
 use CXGN::Login;
+use CXGN::Contact;
+use CXGN::People::Person;
 use CXGN::Page;
 use Bio::Chado::Schema;
 use Storable qw /store retrieve/;
@@ -104,14 +106,13 @@ sub process_data {
 	$qtl_obj->set_population_id($pop_id);
     }
 
-    my ($pop_name, $desc, $pop_detail);
- 
-
-   
+    my ($pop_name, $desc, $pop_detail, $message);
+     
      if ($type eq 'begin') {
 	 $type = 'pop_form';
-	 $page->client_redirect("$referring_page?type=$type");
-    
+	 $message = 'A user is at the QTL data upload Step 0 of 5';
+	 $self->send_email('[QTL upload: Step 0]', $message, 'NA');	 
+	 $page->client_redirect("$referring_page?type=$type");	 	 	 
      }
 
     elsif ($type eq 'pop_form') {
@@ -124,6 +125,8 @@ sub process_data {
 	    ($pop_id, $pop_name, $desc) = $self->load_pop_details($pop_detail);
 	}
 	unless (!$pop_id) {
+	    $message = 'QTL population data uploaded: Step 1 of 5';
+	    $self->send_email('[QTL upload: Step 1]', $message, $pop_id);
 	    $type = 'trait_form';
 	    $page->client_redirect("$referring_page?pop_id=$pop_id&amp;type=$type");    
 	}
@@ -139,6 +142,8 @@ sub process_data {
 	    $self->error_page('Traits file');
 	}
 	unless (!-e $trait_file || !$trait_to_db) {
+	    $message = 'QTL traits uploaded: Step 2 of 5';
+	    $self->send_email('[QTL upload: Step 2]', $message, $pop_id);
 	    $type = 'pheno_form';
 	    $page->client_redirect("$referring_page?pop_id=$pop_id&amp;type=$type");
     
@@ -164,6 +169,8 @@ sub process_data {
 	}
 
 	unless (!-e $pheno_file || !$trait_values_to_db) {
+	    $message = 'QTL phenotype data uploaded : Step 3 of 5';
+	    $self->send_email('[QTL upload: Step 3]', $message, $pop_id);
 	    $type = 'geno_form';
 	    $page->client_redirect("$referring_page?pop_id=$pop_id&amp;type=$type");
     	}
@@ -184,6 +191,8 @@ sub process_data {
 		unless (!$result) {
 		    my $genotype_uploaded = $self->store_genotype($geno_file, $map_version_id);
 		    if ($genotype_uploaded) {
+			$message = 'QTL genotype data uploaded : Step 4 of 5';
+			$self->send_email('[QTL upload: Step 4]', $message, $pop_id);
 			$type = 'stat_form';
 			$page->client_redirect("$referring_page?pop_id=$pop_id&amp;type=$type");
 		    } 
@@ -209,6 +218,9 @@ sub process_data {
 	    $stat_file = $qtl_obj->get_stat_file();
 	}
 	unless (!-e $stat_file) {
+	    $message = 'QTL statistical parameters set : Step 5 of 5' . qq | \nQTL data upload for http://solgenomics.net/phenome/population.pl?pop_id=$pop_id" is completed|;
+	    $self->send_email('[QTL upload: Step 5]', $message, $pop_id);
+	    
 	    $type = 'confirm';
 	    $page->client_redirect("$referring_page?pop_id=$pop_id&amp;type=$type");    
 	}
@@ -1575,4 +1587,33 @@ sub compare_file_names {
       
 }
 
+
+=head2 send_email
+
+ Usage: $self->send_email($subj, $message, $pop_id);
+ Desc:  sends email at each step of the qtl data upload
+        process.. 
+ Ret: nothing
+ Args: subject, message, population_id
+ Side Effects:
+ Example:
+
+=cut
+
+sub send_email {
+    my $self = shift;
+    my ($subj, $message, $pop_id) = @_;
+    my $dbh = $self->get_dbh();
+    my $sp_person_id = $self->get_sp_person_id();
+    my $person = CXGN::People::Person->new($dbh, $sp_person_id);
+	    
+    my $user_profile = qq |http://solgenomics.net/solpeople/personal-info.pl?sp_person_id=$sp_person_id |;
+	        
+    my $username= $person->get_first_name()." ".$person->get_last_name();
+    $message .= qq |\nQTL population id: $pop_id \nQTL data owner: $username ($user_profile) |;
+
+    print STDERR "\n$subj\n$message\n";
+    CXGN::Contact::send_email($subj,$message, 'sgn-db-curation@sgn.cornell.edu');
+    
+}
 
