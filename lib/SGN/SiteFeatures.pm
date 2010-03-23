@@ -31,7 +31,7 @@ has 'features' => (
 
        my @feature_objects;
        foreach my $class (@feature_classes) {
-           my $cfg = $self->config->{$class} || {};
+           my $cfg = $self->config->{feature}{$class} || {};
            if( $cfg->{enabled} ) {
                try {
                    my $f = $class->new( %$cfg,
