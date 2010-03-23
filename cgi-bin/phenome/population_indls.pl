@@ -380,55 +380,7 @@ qq|<div><a href="$url_pubmed$accession" target="blank">$pub_info</a> $title $abs
         }
     }
 
-    my ( $image_pheno, $title_pheno, $image_map_pheno, $plot_html, $normal_dist );
-    ( $image_pheno, $title_pheno, $image_map_pheno ) = population_distribution($population_id);
-    $plot_html .= "<table  cellpadding = 5><tr><td>";
-    $plot_html .= $image_pheno . $image_map_pheno;
-    $plot_html .= "</td><td>";
-    $plot_html .= $title_pheno . "<br/>";
-    $plot_html .= <<HTML;
-        <b>Data Summay:</b><br />
-	<b>No. of observation units:</b> $count<br /> 
-        <b>Minimum:</b> $min<br /> 
-        <b>Maximum:</b> $max <br /> 
-        <b>Mean:</b> $avg <br /> 
-        <b>Standard deviation:</b> $std<br />
-HTML
-
-    $plot_html .= "</td></tr></table>";
-
    
-    my $qtl_image = $self->qtl_plot();
-    my $permu_threshold_ref = $self->permu_values();
-    my %permu_threshold = %$permu_threshold_ref;
-
-    my @keys;
-
-    foreach my $key ( keys %permu_threshold ) {
-        if ( $key =~ m/^\d./ ) {
-            push @keys, $key;
-        }
-
-    }
-    my $value1 = $permu_threshold{ $keys[0] };
-    my $value2 = $permu_threshold{ $keys[1] };
-
-    my $qtl_html .= "<table cellpadding=5><tr><td>";
-    $qtl_html    .= $qtl_image;
-    $qtl_html    .= "</td><td>";
-
-    my %stat_param = %{$self->stat_param_hash()};
-
-    $qtl_html .= <<HTML;
-	<b>Analysis Procedure:</b> <a href=http://www.rqtl.org target=_blank>R/QTL</a><br/>
-	<b>QTL model: </b> $stat_param{"stat_qtl_model"}<br />
-	<b>Genome scan size:</b> $stat_param{"stat_step_size"} cM <br/> 
-	<b>QTL genotype probability:</b> $stat_param{"stat_prob_level"} <br/>
-	<b>LOD threshold (based on $stat_param{"stat_permu_test"} permutations at $stat_param{"stat_permu_level"} prob. level):</b> $value1  <br/> 
-	<b>Flanking markers & comparative mapviewer:</b><br/> click on graph
-HTML
-
-    $qtl_html .= "</td></tr></table>";
     
 
     print info_section_html(
@@ -445,15 +397,70 @@ HTML
         $population->get_sp_person_id() 
 	)  
     {   
-	    print info_section_html(
-		title    => 'QTL(s)',
-		contents => $qtl_html,
-		);
 
-	    print info_section_html(
-		title    => 'Phenotype Frequency Distribution',
-		contents => $plot_html . $normal_dist,
-		);    
+	my ( $image_pheno, $title_pheno, $image_map_pheno, $plot_html, $normal_dist );
+	( $image_pheno, $title_pheno, $image_map_pheno ) = population_distribution($population_id);
+	$plot_html .= "<table  cellpadding = 5><tr><td>";
+	$plot_html .= $image_pheno . $image_map_pheno;
+	$plot_html .= "</td><td>";
+	$plot_html .= $title_pheno . "<br/>";
+	$plot_html .= <<HTML;
+        <b>Data Summay:</b><br />
+	<b>No. of observation units:</b> $count<br /> 
+        <b>Minimum:</b> $min<br /> 
+        <b>Maximum:</b> $max <br /> 
+        <b>Mean:</b> $avg <br /> 
+        <b>Standard deviation:</b> $std<br />
+HTML
+
+$plot_html .= "</td></tr></table>";
+
+   
+	my $qtl_image = $self->qtl_plot();
+	my $permu_threshold_ref = $self->permu_values();
+	my %permu_threshold = %$permu_threshold_ref;
+
+	my @keys;
+
+	foreach my $key ( keys %permu_threshold ) 
+	{
+	    if ( $key =~ m/^\d./ ) 
+	    {
+		push @keys, $key;
+	    }
+
+	}
+	my $value1 = $permu_threshold{ $keys[0] };
+	my $value2 = $permu_threshold{ $keys[1] };
+
+	my $qtl_html .= "<table cellpadding=5><tr><td>";
+	$qtl_html    .= $qtl_image;
+	$qtl_html    .= "</td><td>";
+
+	my %stat_param = %{$self->stat_param_hash()};
+
+	$qtl_html .= <<HTML;
+	<b>Analysis Procedure:</b> <a href=http://www.rqtl.org target=_blank>R/QTL</a><br/>
+	<b>QTL model: </b> $stat_param{"stat_qtl_model"}<br />
+	<b>Genome scan size:</b> $stat_param{"stat_step_size"} cM <br/> 
+	<b>QTL genotype probability:</b> $stat_param{"stat_prob_level"} <br/>
+	<b>LOD threshold (based on $stat_param{"stat_permu_test"} permutations at $stat_param{"stat_permu_level"} prob. level):</b> $value1  <br/> 
+	<b>Flanking markers & comparative mapviewer:</b><br/> click on graph
+HTML
+
+$qtl_html .= "</td></tr></table>";
+
+
+
+	print info_section_html(
+	    title    => 'QTL(s)',
+	    contents => $qtl_html,
+	    );
+
+	print info_section_html(
+	    title    => 'Phenotype Frequency Distribution',
+	    contents => $plot_html . $normal_dist,
+	    );    
     } else
     {
 	my $message = "The QTL data for this trait in this population is not public yet. 
