@@ -30,11 +30,9 @@ my $name = $pop->get_name();
 
 
 
-print "Pragma: \"no-cache\"\nContent-Disposition: filename=population_data.txt 
-               \nContent-type: application/data\n\n";
+print "Pragma: \"no-cache\"\nContent-Disposition:filename=population_data.txt\nContent-type:application/data\n\n";
 
 #print "Content-Type: text/plain\n\n";
-
 
 print "Population: $name\t";
 print "\n";
@@ -45,11 +43,11 @@ my @individuals = $pop->get_individuals();
 my (@pop_id, @name, @obs_id, @cvterm, @definition, @value);
 
 
-my $individual_obj = @individuals[1];
+my $individual_obj = $individuals[1];
 
-my $ind_id = $individual_obj->get_individual_id();
+my $indv_id = $individual_obj->get_individual_id();
 
-my @cvterms = $individual_obj->get_unique_cvterms($ind_id);
+my @cvterms = $individual_obj->get_unique_cvterms($indv_id);
 
 
 print "Lines \t";
