@@ -1,5 +1,4 @@
 [GENERAL]
-description   = Tomato FPC (Sanger 2006)
 database      = main
 
 #initial landmark = chrI:143000..180000
