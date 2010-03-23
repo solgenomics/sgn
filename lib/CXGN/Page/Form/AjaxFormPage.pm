@@ -177,17 +177,18 @@ sub check_modify_privileges {
 	return 0;
     }
     if (!$person_id) { $json_hash{login} = 1 ; }
-    if ($user_type !~ /submitter|sequencercurator/) { 
+    if ($user_type !~ /submitter|sequencer|curator/) { 
 	$json_hash{error} = "You must have an account of type submitter to be able to submit data. Please contact SGN to change your account type.";
     }
-    
+
     my @owners = $self->get_owners();
+
     if ((@owners) && (!(grep { $_ =~ /^$person_id$/ } @owners) )) {
 	# check the owner only if the action is not new
 	#
 	$json_hash{error} = "You do not have rights to modify this database entry because you do not own it. [$person_id, @owners]";
 	
-    }else { $self->set_is_owner(1); }
+    }else {  $self->set_is_owner(1); }
     
     # override to check privileges for edit, store, delete.
     # return 0 for allow, 1 for not allow.
@@ -577,7 +578,7 @@ sub set_object_name {
 sub get_owners {
   my $self=shift;
   return @{$self->{owners}};
-
+  
 }
 
 sub set_owners {
