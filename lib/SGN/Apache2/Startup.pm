@@ -35,7 +35,7 @@ sub import {
     my %args = @_;
 
     require SGN::Context;
-    my $vhost = SGN::Context->new;
+    my $c = SGN::Context->new;
 
     exists $args{vhost}
         or die "FATAL: vhost argument required for $class, e.g. 'use $class vhost => 1;'\n";
@@ -48,7 +48,7 @@ sub import {
     my %paths;
 
     # find the sgn/ basepath
-    $paths{basepath} = catdir( $vhost->path_to() );
+    $paths{basepath} = catdir( $c->path_to() );
 
     # path to the root of the shipwright vessel, if we are in one
     $paths{shipwright_vessel}   = catdir($paths{basepath},updir());
@@ -75,10 +75,13 @@ sub import {
         $ENV{PROJECT_NAME} = 'SGN';
     }
 
+    # run setup() on each of our site features
+    $_->setup( $c ) for @{ $c->enabled_features };
+
     # add some other configuration to the web server
     my $root_server = my $server =  Apache2::ServerUtil->server;
     $server = $server->next if $args{mod_perl_vhost};
-    $server->add_config( $_ ) for generate_apache_config( \%paths, $vhost );
+    $server->add_config( $_ ) for generate_apache_config( \%paths, $c );
 
     # make and chown the tempfiles dir.
     # note that this mkdir and chown is going to be running as root.
@@ -88,15 +91,15 @@ sub import {
     # the tempfiles_subdir() function makes and chmods the given
     # directory.  with no arguments, will make and chmod the main
     # tempfiles directory
-    my $temp_subdir = $vhost->path_to( $vhost->tempfiles_subdir() );
-    $vhost->chown_generated_dir( $temp_subdir ); #< force-set the
-                                                 # permissions on the
-                                                 # main tempfiles dir
+    my $temp_subdir = $c->path_to( $c->tempfiles_subdir() );
+    $c->chown_generated_dir( $temp_subdir ); #< force-set the
+                                             # permissions on the
+                                             # main tempfiles dir
 
     # also chown any subdirs that are in the temp dir.
     # this line should be removed eventually, the application itself should take
     # care of creating temp dirs if it wants.
-    $vhost->chown_generated_dir( $_ ) for glob "$temp_subdir/*/";
+    $c->chown_generated_dir( $_ ) for glob "$temp_subdir/*/";
 }
 
 sub generate_apache_config {
