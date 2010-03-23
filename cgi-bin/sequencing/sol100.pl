@@ -19,7 +19,7 @@ my $schema= Bio::Chado::Schema->connect(  sub { $dbh->get_actual_dbh() },
 					  { on_connect_do => ['SET search_path TO public'],
 					  },);
 
-my @species= ('Solanum lycopersicum', 'Solanum pennellii', 'Solanum pimpinellifolium',  'Solanum galapogense');
+my @species= ('Solanum lycopersicum', 'Solanum pennellii', 'Solanum pimpinellifolium',  'Solanum galapagense');
 my $info;
 my @details;
 foreach my $s (@species ) {

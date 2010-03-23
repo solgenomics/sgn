@@ -996,14 +996,18 @@ sub print_locus_editor_info {
     my $locus=shift;
     my $html   = "Locus editors: ";
     my @owners = $locus->get_owners();
+   
     foreach my $id (@owners) {
         my $person = CXGN::People::Person->new( $locus->get_dbh(), $id );
 	
         my $first_name = $person->get_first_name();
         my $last_name  = $person->get_last_name();
-	
-        $html .=
-	    qq |<a href="/solpeople/personal-info.pl?sp_person_id=$id">$first_name $last_name</a>;|;
+	if ($person->get_user_type() eq 'curator' && scalar(@owners) == 1  ) {
+	    $html .= '<b>No editor assigned</b>';
+	} else {
+	    $html .=
+		qq |<a href="/solpeople/personal-info.pl?sp_person_id=$id">$first_name $last_name</a>;|;
+	}
     }
     chop $html;
     return $html;

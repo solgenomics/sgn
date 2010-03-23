@@ -47,12 +47,13 @@ sub define_object {
 	$json_hash{error}="Locus $locus_id is obsolete!";
     }
     unless ( ( $locus_id =~ m /^\d+$/ || !$locus_id  )  ) {
-        print STDERR "ERROR:: 'No locus exists for identifier $locus_id'\n\n";
+        #print STDERR "ERROR:: 'No locus exists for identifier $locus_id'\n\n";
 	$json_hash{error}="No locus exists for identifier $locus_id";
     }
     $self->set_json_hash(%json_hash);
     $self->set_primary_key("locus_id");
     $self->set_owners( $self->get_object()->get_owners() );
+   
     $self->return_json() if $json_hash{error};
 }
 
@@ -61,9 +62,11 @@ sub display_form {
     my %json_hash = $self->get_json_hash();
     
     if (!($json_hash{html}) ) { $json_hash{html} = $self->get_form()->as_table_string() ; }		
+    $self->check_modify_privileges();
     
     $json_hash{"user_type"} = $self->get_user()->get_user_type();
     $json_hash{"is_owner"} = $self->get_is_owner();
+    
     $json_hash{"editable_form_id"} = $self->get_form()->get_form_id();
    
     
