@@ -499,7 +499,7 @@ sub render_mason {
 # with dbconn info from the legacy conf interface if necessary,
 sub BUILD {
     my ($self) = @_;
-    $self->config->{'DatabaseConnections'}->{'default'} ||= do {
+    $self->config->{'DatabaseConnection'}->{'default'} ||= do {
 	require CXGN::DB::Connection;
 	my %conn;
 	@conn{qw| dsn user password attributes |} = CXGN::DB::Connection->new_no_connect({ config => $self->config })
@@ -514,7 +514,7 @@ sub dbc {
     my ( $self, $profile_name ) = @_;
     $profile_name ||= 'default';
 
-    my $profile = $self->config->{'DatabaseConnections'}->{$profile_name}
+    my $profile = $self->config->{'DatabaseConnection'}->{$profile_name}
 	or croak "connection profile '$profile_name' not defined";
 
     # generate the string to set as the search path for this profile,
