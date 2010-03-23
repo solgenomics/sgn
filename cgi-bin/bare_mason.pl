@@ -11,5 +11,5 @@ use CGI ();
 my $cgi = CGI->new;
 if( my $component_name = $cgi->path_info ) {
     print "\n\n";
-    print $c->render_mason( $component_name );
+    print $c->render_mason( $component_name, bare_render => 1 );
 }
