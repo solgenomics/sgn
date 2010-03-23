@@ -99,20 +99,22 @@ my $defaults =
      },
 
      # default GBrowse2 configuration, for a Debian gbrowse2 installation
-     'SGN::Feature::GBrowse2' => {
-         'enabled'    => 0,
-         'run_mode'   => 'fcgi',
+     feature => { 'SGN::Feature::GBrowse2' =>
+                       {
+                           'enabled'    => 1,
+                           'run_mode'   => 'fcgi',
 
-         #'conf_dir'   => '/etc/cxgn/SGN/gbrowse',
-         'tmp_dir'    => '/var/tmp/gbrowse',
+                           #'conf_dir'   => '/etc/cxgn/SGN/gbrowse',
+                           'tmp_dir'    => '/var/tmp/gbrowse',
 
-         'static_url' => '/gbrowse/static',
-         'static_dir' => '/usr/share/gbrowse/htdocs',
+                           'static_url' => '/gbrowse/static',
+                           'static_dir' => '/usr/share/gbrowse/htdocs',
 
-         'cgi_url'    => '/gbrowse/bin',
-         'cgi_bin'    => '/usr/share/gbrowse/cgi-bin',
-         'perl_inc'   => ['/usr/share/gbrowse/lib/perl5'],
-     },
+                           'cgi_url'    => '/gbrowse/bin',
+                           'cgi_bin'    => '/usr/share/gbrowse/cgi-bin',
+                           'perl_inc'   => ['/usr/share/gbrowse/lib/perl5'],
+                       },
+               },
 
     };
 sub defaults { shift->SUPER::defaults( $defaults, @_ )}
