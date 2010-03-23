@@ -1,7 +1,10 @@
 [GENERAL]
-description = ITAG 1 Release: Genomic Annotations
-adaptor  = dbi::cxgn_pg
-db_args  = -db ITAG1_release.genomic
+[main:database]
+db_adaptor = Bio::DB::SeqFeature::Store
+db_adaptor  = dbi::pg
+db_args     = -dsn 'dbi:Pg:host=<% $feature->default_db_host %>;dbname=ITAG1_genomic'
+              -user '<% $feature->default_db_user %>'
+              -password '<% $feature->default_db_password %>'
 
 plugins = AttributeHiliter
 

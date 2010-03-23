@@ -3,11 +3,11 @@
 # as the various constants formerly scattered amongst scripts and libraries
 
 [GENERAL]
-config_base            = /usr/share/gbrowse/example_conf   # overridden by environment variable GBROWSE_CONF
-htdocs_base            = /usr/share/gbrowse/htdocs
-url_base               = /gbrowse/static
-db_base                = /usr/share/gbrowse/example_data
-tmp_base               = /var/tmp/gbrowse
+config_base            = <% $feature->conf_dir   %>
+htdocs_base            = <% $feature->static_dir %>
+url_base               = <% $feature->static_url %>
+db_base                = <% $feature->conf_dir   %>
+tmp_base               = <% $feature->tmp_dir    %>
 
 # These paths are relative to the url base
 buttons       = images/buttons
@@ -32,12 +32,12 @@ session lock type = default
 # Override driver guessing by setting these options
 # The safest, but slowest session driver...
 #session driver    = driver:file;serializer:default
-#session args      = Directory /var/tmp/gbrowse2/sessions
+#session args      = Directory <% $feature->tmp_dir->subdir('sessions') %>
 
 # to use the berkeley DB driver comment out the previous
 # line and uncomment these two
 #session driver = driver:db_file;serializer:default
-#session args   = FileName /var/tmp/gbrowse2/sessions.db
+#session args   = FileName <% $feature->tmp_dir->file('sessions.db') %>
 
 # DBI backend to use for uploaded userdata.
 # The SQLite option is better tested
@@ -101,13 +101,13 @@ too many landmarks  = 100
 link          = AUTO
 
 # HTML to insert inside the <head></head> section
-head   = sub{ require LWP::Simple; LWP::Simple::get('http://sgn.localhost.localdomain/bare_mason.pl/site/header/head.mas') }
+head   = sub{ require LWP::Simple; LWP::Simple::get("http://$ENV{HTTP_HOST}/bare_mason.pl/site/header/head.mas") }
 
 # At the top of the HTML...
-header = sub{ require LWP::Simple; LWP::Simple::get('http://sgn.localhost.localdomain/bare_mason.pl/site/header/body.mas') }
+header = sub{ require LWP::Simple; LWP::Simple::get("http://$ENV{HTTP_HOST}/bare_mason.pl/site/header/body.mas") }
 
 # At the footer
-footer = sub{ require LWP::Simple; LWP::Simple::get('http://sgn.localhost.localdomain/bare_mason.pl/site/footer/body.mas') }
+footer = sub{ require LWP::Simple; LWP::Simple::get("http://$ENV{HTTP_HOST}/bare_mason.pl/site/footer/body.mas") }
 
 # Various places where you can insert your own HTML -- see configuration docs
 html1 = 
