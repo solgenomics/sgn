@@ -220,12 +220,7 @@ EOS
     my $population = $self->get_object();
     my $population_id = $self->get_object_id();
     my $population_name = $population->get_name();
-        
-    my $population      = $self->get_object();
-    my $population_id   = $self->get_object_id();
-    my $population_name = $population->get_name();
-
-   
+           
     my ($term_obj, $term_name, $term_id);
     
     if ($population->get_web_uploaded()) {
@@ -434,26 +429,45 @@ HTML
 HTML
 
     $qtl_html .= "</td></tr></table>";
+    
+
     print info_section_html(
         title    => 'Population Details',
         contents => $population_html,
-    );
+	);
 
-   
-    print info_section_html(
-        title    => 'QTL(s)',
-        contents => $qtl_html,
-    );
+    my $is_public = $population->get_privacy_status();
+    my ($submitter_obj, $submitter_link) = $self->submitter();
+ 
+    if ($is_public || 
+        $login_user_type eq 'curator' || 
+        $login_user_id == 
+        $population->get_sp_person_id() 
+	)  
+    {   
+	    print info_section_html(
+		title    => 'QTL(s)',
+		contents => $qtl_html,
+		);
 
- print info_section_html(
-        title    => 'Phenotype Frequency Distribution',
-        contents => $plot_html . $normal_dist,
-    );
-
-    print info_section_html(
-        title    => 'Phenotype Data',
-        contents => $data_view . " " . $data_download,
-    );
+	    print info_section_html(
+		title    => 'Phenotype Frequency Distribution',
+		contents => $plot_html . $normal_dist,
+		);    
+    } else
+    {
+	my $message = "The QTL data for this trait in this population is not public yet. 
+                       If you would like to know more about this data, 
+                       please contact the owner of the data: <b>$submitter_link</b> 
+                       or email to SGN:
+                       <a href=mailto:sgn-feedback\@sgn.cornell.edu>
+                       sgn-feedback\@sgn.cornell.edu</a>.\n";
+	
+	print info_section_html(
+	    title    => 'QTL(s)',
+	    contents => $message
+	    );
+    }
 
     print info_section_html(
         title => 'Literature Annotation',
@@ -1660,4 +1674,17 @@ sub stat_param_hash {
 
 
     return \%stat_param;
+}
+
+
+sub submitter {
+    my $self = shift;    
+    my $population = $self->get_object();
+    my $sp_person_id= $population->get_sp_person_id();
+    my $submitter = CXGN::People::Person->new($self->get_dbh(), $population->get_sp_person_id());
+    my $submitter_name = $submitter->get_first_name()." ".$submitter->get_last_name();
+    my $submitter_link = qq |<a href="/solpeople/personal-info.pl?sp_person_id=$sp_person_id">$submitter_name</a> |;
+    
+    return $submitter, $submitter_link;
+
 }
