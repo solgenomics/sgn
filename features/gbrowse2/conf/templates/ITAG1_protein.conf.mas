@@ -1,5 +1,5 @@
 [GENERAL]
-
+database  = main
 plugins   = FastaDumper SequenceDumper TrackDumper
 
 reference class = Sequence
