@@ -1,12 +1,4 @@
-#!/usr/bin/perl
-
 ######################################################################
-#
-#  Program: $Id$
-#  Author:  $Author$
-#  Date:    $Date$
-#  Version: 1.0
-#  CHECKOUT TAG: $Name:  $
 #
 #  This is a script to list BACs from the database.  It will perform
 #  various types of BAC listing operations, depending on the calling
