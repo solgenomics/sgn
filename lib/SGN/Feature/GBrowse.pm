@@ -100,6 +100,11 @@ has 'default_db_password' => (
    }
 
 
+sub local_inc {
+    'local @INC = ( '.join(', ',map "'$_'",@INC).' );';
+}
+
+
 # assembles a URI linking to gbrowse.
 sub link_uri {
     my ( $self, $conf_name, $params ) = @_;

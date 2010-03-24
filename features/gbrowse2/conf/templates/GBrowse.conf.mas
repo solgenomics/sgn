@@ -184,8 +184,8 @@ description  = ITAG Development Snapshot: protein annotations
 path         = ITAG_devel_protein.conf
 
 [tomato_bacs]
-description  = ITAG Development Snapshot: protein annotations
-path         = ITAG_devel_protein.conf
+description  = Tomato BACs - SGN Preliminary Annotation
+path         = tomato_bacs.conf
 
 [fpc_tomato_sgn_2009]
 description  = Tomato FPC (SGN 2009)
