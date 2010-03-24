@@ -76,11 +76,16 @@ sub seq_html {
     my @lines = $seq_string =~ /.{1,$width}/gs;
 
     unless( @$coords ) {
-        return join '',
-                    '<span class="sequence">',
-                    join('<br />',@lines),
-                    '</span>';
+        return info_table_html( 'Sequence' =>
+                                    join( '',
+                                          '<span class="sequence">',
+                                          join('<br />',@lines),
+                                          '</span>'
+                                         ),
+                                __border      => 0,
+                               );
     }
+
 
     # change the coords into ranges and sort by start coord,
     # also clamping them to the sequence length if needed
@@ -114,12 +119,16 @@ sub seq_html {
     }
 
     # return all the lines if we're using the whole seq
-    return '<span class="sequence">'.join("<br />\n", @lines).'</span>' if $whole_seq;
+    if( $whole_seq ) {
+        return info_table_html( 'Sequence' => '<span class="sequence">'.join("<br />\n", @lines).'</span>',
+                                __border      => 0,
+                               );
+    }
 
     my $line_window_expand = 5;
 
     # return just the lines in our window if not using the whole seq
-    return join '',
+    my $match_regions = join '',
        # and extract those lines
        map {
            my $window_start = $_->start*$width + 1;
@@ -151,6 +160,11 @@ sub seq_html {
                   );
         } @ranges
        );
+
+    return info_table_html( 'Matches' => $match_regions,
+                            __border      => 0,
+                           );
+
 }
 
 # 0-based line number and column number of the given $index in a
@@ -184,11 +198,10 @@ sub round_to_nearest_line_beginning {
                                                   __multicol    => 3,
                                                   __border      => 0,
                                                  )
-                                .info_table_html( 'Description' => $seq->desc,
-                                                  ( !@$coords || $whole_seq ? 'Sequence' : 'Matches' ),
-                                                    seq_html( $seq, $coords, $width, $whole_seq ),
-                                                  __border      => 0,
-                                                 ),
+                                . info_table_html( 'Description' => $seq->desc,
+                                                   __border => 0,
+                                                  )
+                                . seq_html( $seq, $coords, $width, $whole_seq ),
                      ) %>
 
 
