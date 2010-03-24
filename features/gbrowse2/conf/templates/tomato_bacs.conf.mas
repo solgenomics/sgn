@@ -1,35 +1,12 @@
 [GENERAL]
-description = SGN Tomato Preliminary Annotation
-adaptor  = dbi::cxgn_pg
-db_args       = -adaptor berkeleydb
-                -db cxgn_conf:bacs_bio_db_gff_dbname
 
-plugins = AttributeHiliter
+plugins   = FastaDumper RestrictionAnnotator SequenceDumper TrackDumper
 
 reference class = Sequence
 
 aggregators = gappedmatch{match_part/match} processed_transcript
 # "automatic" classes to try when an unqualified identifier is given
 automatic classes = Sequence clone match nucleotide_motif
-
-# Web site configuration info
-stylesheet  = /documents/gbrowse/gbrowse.css
-buttons     = /documents/gbrowse/images/buttons
-tmpimages   = /documents/tempfiles/gbrowse
-js          = /documents/gbrowse/js
-cachedir    = /documents/tempfiles/gbrowse
-help        = /documents/gbrowse
-
-# Default glyph settings
-glyph       = generic
-height      = 8
-bgcolor     = cyan
-fgcolor     = cyan
-label density = 25
-bump density  = 10000
-
-# where to link to when user clicks in detailed view
-link        = AUTO
 
 # what image widths to offer
 image widths  = 450 680 980 1550 2400
@@ -81,8 +58,26 @@ html6 =
 ### DAS CONFIGURATION ####
 das mapmaster = SELF
 
+[main:database]
+description = SGN Tomato Preliminary Annotation
+db_adaptor  = Bio::DB::GFF
+db_args     = -adaptor dbi::pg
+              -dsn 'dbi:Pg:host=<% $feature->default_db_host %>;dbname=bacs_bio_db_gff.138'
+              -user '<% $feature->default_db_user %>'
+              -password '<% $feature->default_db_password %>'
+
+
 ### TRACK CONFIGURATION ####
 # the remainder of the sections configure individual tracks
+
+# Default glyph settings
+[TRACK DEFAULTS]
+glyph       = generic
+height      = 8
+bgcolor     = cyan
+fgcolor     = cyan
+label density = 25
+bump density  = 10000
 
 [GT_Exon_SGN_E_tomato]
 feature      = processed_transcript:GenomeThreader_SGN_E_tomato
@@ -187,13 +182,16 @@ citation     = This track shows alignments against SGN marker sequences, which c
 [match:details]
 Name       = sub {
 		my ($value,$tag_name,$feature) = @_;
-		use CXGN::Tools::Identifiers qw/link_identifier/;
-		$value =~ s/(\S+)/link_identifier($1) || $1/e;
+                <% $feature->local_inc %>
+		require CXGN::Tools::Identifiers;
+		$value =~ s/(\S+)/CXGN::Tools::Identifiers::link_identifier($1) || $1/e;
                 $value
 	      }
 synonym    = sub {
 		my ($value,$tag_name,$feature) = @_;
-		$value =~ s/(\S+)/link_identifier($1) || $1/e;
+                <% $feature->local_inc %>
+		require CXGN::Tools::Identifiers;
+		$value =~ s/(\S+)/CXGN::Tools::Identifiers::link_identifier($1) || $1/e;
 		$value
 	      }
 
@@ -292,7 +290,9 @@ west         = sub
    unless( $f->primary_tag =~ /clone_/ ) {
      return $f->strand == -1;
    }
-   use CXGN::Genomic::CloneIdentifiers;
+
+   <% $feature->local_inc %>
+   require CXGN::Genomic::CloneIdentifiers;
    my $t = $f->target;
    my $rev = $t->start > $t->stop;
    my $name = $f->name; $name =~ s/[^\-]+\-//;
@@ -306,7 +306,9 @@ east         = sub
    unless( $f->primary_tag =~ /clone_/ ) {
      return $f->strand == 1;
    }
-   use CXGN::Genomic::CloneIdentifiers;
+
+   <% $feature->local_inc %>
+   require CXGN::Genomic::CloneIdentifiers;
    my $t = $f->target;
    my $rev = $t->start > $t->stop;
    my $name = $f->name; $name =~ s/[^\-]+\-//;
