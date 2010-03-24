@@ -73,7 +73,14 @@ sub seq_html {
     my $whole_seq = shift;
 
     my $seq_string = $seq->seq;
-    return $seq_string unless @$coords;
+    my @lines = $seq_string =~ /.{1,$width}/gs;
+
+    unless( @$coords ) {
+        return join '',
+                    '<span class="sequence">',
+                    join('<br />',@lines),
+                    '</span>';
+    }
 
     # change the coords into ranges and sort by start coord,
     # also clamping them to the sequence length if needed
@@ -87,7 +94,6 @@ sub seq_html {
     # merge any overlapping ranges
     @ranges = Bio::Range->unions( @ranges );
 
-    my @lines = $seq_string =~ /.{1,$width}/gs;
     my @matches;
     foreach (@$coords) {
         my ($s,$e) = @$_;
@@ -179,7 +185,7 @@ sub round_to_nearest_line_beginning {
                                                   __border      => 0,
                                                  )
                                 .info_table_html( 'Description' => $seq->desc,
-                                                  ( $whole_seq ? 'Sequence' : 'Matches' ),
+                                                  ( !@$coords || $whole_seq ? 'Sequence' : 'Matches' ),
                                                     seq_html( $seq, $coords, $width, $whole_seq ),
                                                   __border      => 0,
                                                  ),
