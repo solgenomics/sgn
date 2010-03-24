@@ -10,10 +10,10 @@
 	use Number::Bytes::Human ();
 </%once>
 <%init>
-	my $seq_bytes = $seq->length*1.02;
+	my $seq_bytes = $seq->length*1.018+length($seq->id)+length($seq->desc)+1;
 </%init>
 <div style="text-align: right; margin: 0 10px 1em 0">
-  <b>Whole sequence (<% Number::Bytes::Human::format_bytes($seq_bytes) %>):</b>
+  <b>Whole sequence (<% Number::Bytes::Human::format_bytes($seq_bytes) %>B):</b>
   <% join ' | ',
      map {
            my ($name,$link) = @$_;
