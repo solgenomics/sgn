@@ -23,7 +23,7 @@ use CXGN::Scrap::AjaxPage;
 use CXGN::DB::Connection;
 use CXGN::Login;
 use CXGN::Phenome::Qtl;
-
+use SGN::Context;
 
 my $doc = CXGN::Scrap::AjaxPage->new();
 $doc->send_http_header();
@@ -89,7 +89,8 @@ sub associate_organism {
     my $sp_person_id = shift;
     
     my $qtl = CXGN::Phenome::Qtl->new($sp_person_id);
-    my ($temp_qtl_dir, $temp_user_dir) = $qtl->create_user_qtl_dir(); 
+    my $c = SGN::Context->new();
+    my ($temp_qtl_dir, $temp_user_dir) = $qtl->create_user_qtl_dir($c); 
     print STDERR "created user qtl dir...organism select..\n";
 
     my $org_file = "$temp_user_dir/organism.txt";

@@ -339,7 +339,10 @@ sub display_page {
     }
     $image_html .= "</tr></table>";
     #link for adding new images
-    if ($individual_name) { $image_html .= qq|<br /><a href="../image/add_image.pl?type_id=$individual_id&amp;action=new&amp;type=individual&amp;referring_page=$page">[Add new image]</a>|; } 
+    if ($individual_name) 
+    { $image_html .= 
+	  qq|<br /><a href="../image/add_image.pl?type_id=$individual_id&amp;action=new&amp;type=individual&amp;referring_page=$page">[Add new image]</a>|; 
+    } 
 
     
     print info_section_html(title   => 'Images',
@@ -351,48 +354,88 @@ sub display_page {
 
    
     my @phenotypes= $individual->get_phenotypes();
-    my $population_obj = $individual->get_population();
-           
+    my $population_obj = $individual->get_population();          
     my @phenotype;
-    my $data_view;
+    my ($data_view, $term_obj, $term_name, $term_id, $min, $max, $ave, $value);
     
-    foreach my $p(@phenotypes) {
-	my $cvterm=CXGN::Chado::Cvterm->new($self->get_dbh(), $p->get_observable_id());
-	my $cvterm_name = $cvterm->get_cvterm_name();
-	my $cvterm_id=$cvterm->get_cvterm_id();
-	my ($min, $max, $ave) = $population_obj->get_pop_data_summary($cvterm_id);
-	my $value = $p->get_value();
-	if (!defined($value)) {$value= 'N/A';}
-	elsif ($value == 0) {$value = '0.0';}
-	if ($cvterm->get_definition() ) {
-	    push  @phenotype,  [map {$_} ((tooltipped_text(qq|<a href="/chado/cvterm.pl?cvterm_id=$cvterm_id">$cvterm_name</a>|, $cvterm->get_definition() )), $value, $min, $max, $ave) ]; 	
-	}else {
-	    push  @phenotype,  [map {$_} qq|<a href="/chado/cvterm.pl?cvterm_id=$cvterm_id">$cvterm_name</a>|, $value, $min, $max, $ave ]; 
-	}
+    foreach my $p (@phenotypes) 
+    {
+
+	if (!$population_obj->get_web_uploaded()) 
+	{
+	    $term_obj  = CXGN::Chado::Cvterm->new( $self->get_dbh(), $p->get_observable_id());
+	    $term_name = $term_obj->get_cvterm_name();
+	    $term_id   = $term_obj->get_cvterm_id();
+	    ($min, $max, $ave) = $population_obj->get_pop_data_summary($term_id);
+	    $value = $p->get_value();
+	    if (!defined($value)) {$value= 'N/A';}
+	    elsif ($value == 0) {$value = '0.0';}
+
+
+	} else 
+	{
+	    $term_obj  = CXGN::Phenome::UserTrait->new($self->get_dbh(), $p->get_observable_id());
+	    $term_name = $term_obj->get_name();
+	    $term_id   = $term_obj->get_user_trait_id();
+	    ($min, $max, $ave) = $population_obj->get_pop_data_summary($term_id);
+	    $value = $p->get_value();
+	}    
+
+	$term_obj  = CXGN::Chado::Cvterm::get_cvterm_by_name( $self->get_dbh(), $term_name);
+	my $cvterm_id = $term_obj->get_cvterm_id();
 	
-	if (@phenotype) {
-	    my $phenotype_data .= columnar_table_html(headings => [
-								   'Trait',
-								   'Value',
-								   'Pop min',
-								   'Pop max',
-								   'Pop mean',
-								   
-								   ],
-						      data     =>\@phenotype, 
-						      __alt_freq   =>2,
-						      __alt_width  =>1,
-						      __alt_offset =>3,
-						      __align =>'l',
-						      );
-	    
-	    $data_view = html_optional_show("phenotype",
-					    'View/hide phenotype data summary',
-					    qq|$phenotype_data|,
-					    1, #<  show data by default
-					    );  
+	if ($cvterm_id)	
+	{
+	    $term_id = $term_obj->get_cvterm_id();
+	    if ($term_obj->get_definition() ) 
+	    {
+		push  @phenotype,  [map {$_} 
+				    ((tooltipped_text(qq|<a href="/chado/cvterm.pl?cvterm_id=$term_id">$term_name</a>|, 
+						      $term_obj->get_definition() )), $value, $min, $max, $ave) ]; 	
+	    }else 
+	    {
+		push  @phenotype,  [map {$_} qq|<a href="/chado/cvterm.pl?cvterm_id=$term_id">$term_name</a>|, 
+				    $value, $min, $max, $ave ]; 
+	    }
 	}
-    }  
+	else 
+	{
+	    if ($term_obj->get_definition() ) 
+	    {
+		push  @phenotype,  [map {$_} 
+				    ((tooltipped_text(qq|<a href="/phenome/trait.pl?trait_id=$term_id">$term_name</a>|, 
+						      $term_obj->get_definition() )), $value, $min, $max, $ave) ]; 	
+	    }else {
+		push  @phenotype,  [map {$_} qq|<a href="/phenome/trait.pl?trait_id=$term_id">$term_name</a>|, 
+				    $value, $min, $max, $ave ]; 
+	    }
+	}
+    }
+  
+    if (@phenotype) {
+	my $phenotype_data .= columnar_table_html(
+	                                        headings  => 
+	                                            [
+						    'Trait',
+						    'Value',
+						    'Pop min',
+						    'Pop max',
+						    'Pop mean',								   
+	                                            ],
+	                                           data     =>\@phenotype, 
+						  __alt_freq   =>2,
+						  __alt_width  =>1,
+						  __alt_offset =>3,
+						  __align =>'l',
+					          );
+	    
+	$data_view = html_optional_show("phenotype",
+					'View/hide phenotype data summary',
+					qq|$phenotype_data|,
+					1, #<  show data by default
+	    );  
+    }
+    
     print info_section_html(title   => 'Phenotype data',
 			    contents => $data_view,
 			    );

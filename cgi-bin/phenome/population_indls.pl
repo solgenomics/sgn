@@ -373,7 +373,7 @@ qq|<div><a href="$url_pubmed$accession" target="blank">$pub_info</a> $title $abs
 	}
 
 	my ( $phenotype_data, $data_view, $data_download );
-	my $count = scalar(@$indl_name);
+	my $all_indls_count = scalar(@$indl_name);
 
 	if (@phenotype)
 	{
@@ -413,7 +413,7 @@ qq { <span><a href="pop_download.pl?population_id=$population_id"><b>\[download 
         $plot_html .= $title_pheno . "<br/>";
         $plot_html .= <<HTML;
         <b>Data Summay:</b><br />
-	<b>No. of observation units:</b> $count<br /> 
+	<b>No. of observation units:</b> $all_indls_count<br /> 
         <b>Minimum:</b> $min<br /> 
         <b>Maximum:</b> $max <br /> 
         <b>Mean:</b> $avg <br /> 
@@ -746,7 +746,7 @@ sub qtl_plot
     my $round1 = Math::Round::Var->new(0.1);
     my $round2 = Math::Round::Var->new(1);
 
-    my $qtl_image  = $self->qtl_images_exist();
+    $qtl_image  = $self->qtl_images_exist();
     my $permu_data = $self->permu_values_exist();
 
     unless ( $qtl_image && $permu_data )
@@ -779,7 +779,7 @@ sub qtl_plot
         open MARKERS, "<$flanking_markers"
           or die "can't open $flanking_markers: !$\n";
 
-        my $header = <MARKERS>;
+        $header = <MARKERS>;
         while ( my $row = <MARKERS> )
         {
 
@@ -796,9 +796,8 @@ sub qtl_plot
         my $h_marker;
         my @chromosomes;
 
-        #my $chr_c = 1;
         my @lk_groups = @linkage_groups;
-        my @lk_groups = sort ( { $a <=> $b } @lk_groups );
+        @lk_groups = sort ( { $a <=> $b } @lk_groups );
         for ( my $i = 0 ; $i < @left ; $i++ )
         {
             my $lg           = shift(@lk_groups);
@@ -1168,7 +1167,7 @@ sub cache_temp_path
     mkdir $prod_temp_path;
     my $prod_cache_path = "$prod_temp_path/cache";
     mkdir $prod_cache_path;
-    my $prod_temp_path = "$prod_temp_path/tempfiles";
+    $prod_temp_path = "$prod_temp_path/tempfiles";
     mkdir $prod_temp_path;
     -d $prod_temp_path
       or die "temp dir '$prod_temp_path' not found, and could not create!";
@@ -1690,7 +1689,8 @@ sub stat_files
     my $pop            = $self->get_object();
     my $sp_person_id   = $pop->get_sp_person_id();
     my $qtl            = CXGN::Phenome::Qtl->new($sp_person_id);
-    my $user_stat_file = $qtl->get_stat_file();
+    my $c = SGN::Context->new();
+    my $user_stat_file = $qtl->get_stat_file($c);
 
     my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
       $self->cache_temp_path();
@@ -1751,7 +1751,8 @@ sub stat_param_hash
     my $pop            = $self->get_object();
     my $sp_person_id   = $pop->get_sp_person_id();
     my $qtl            = CXGN::Phenome::Qtl->new($sp_person_id);
-    my $user_stat_file = $qtl->get_stat_file();
+    my $c = SGN::Context->new();
+    my $user_stat_file = $qtl->get_stat_file($c);
 
     open F, "<$user_stat_file" or die "can't open file: !$\n";
 

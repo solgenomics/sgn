@@ -198,8 +198,24 @@ EOS
 	    my $definition = $trait->get_definition();
 	    my ($min, $max, $avg, $std, $count)= $population->get_pop_data_summary($trait_id);
 	
+	    my $cvterm_obj  = CXGN::Chado::Cvterm::get_cvterm_by_name( $self->get_dbh(), $trait_name);
+	    my $trait_link;	    
+	    my $cvterm_id = $cvterm_obj->get_cvterm_id();
+	    if ($cvterm_id)
+	    {
+	
+		print STDERR "cvterm_id: $cvterm_id\n";
+		$trait_link = qq |<a href="/chado/cvterm.pl?cvterm_id=$cvterm_id">$trait_name</a>|; 
+
+	    } else
+	    {	
+		print STDERR "trait_id: $trait_id\n";
+		$trait_link = qq |<a href="/phenome/trait.pl?trait_id=$trait_id">$trait_name</a>|; 
+	    }
+	    
+
 	    if ($definition) {
-		push  @phenotype,  [map {$_} ( (tooltipped_text($trait_name, $definition)), 
+		push  @phenotype,  [map {$_} ( (tooltipped_text($trait_link, $definition)), 
                                     $min, $max, $avg, 
                            qq | <a href="/phenome/population_indls.pl?population_id=$population_id&amp;cvterm_id=$trait_id">
                                  $count</a> 
