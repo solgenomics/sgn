@@ -19,7 +19,7 @@ package CXGN::Phenome::QtlLoadDetailPage;
 
 
 use File::Spec;
-use CXGN::VHost;
+use SGN::Context;
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw /info_section_html 
                                       page_title_html
@@ -97,7 +97,8 @@ sub process_data {
     my $args_ref = \%args;
 
     my $qtl_obj = CXGN::Phenome::Qtl->new($sp_person_id, $args_ref);
-    $qtl_obj->create_user_qtl_dir();
+    my $c = SGN::Context->new();
+    $qtl_obj->create_user_qtl_dir($c);
     my $qtl_tools = CXGN::Phenome::Qtl::Tools->new();
     my $page = CXGN::Page->new("SGN", "Isaak");
    
@@ -250,12 +251,13 @@ sub pheno_upload {
     
     
     my $p= CXGN::Page->new();
+    my $c = SGN::Context->new();
     my $phe_upload = $p->get_upload(); 
     
     if (defined $phe_upload) {
 	 $name = $phe_upload->filename;
 	 
-	 my ($qtl_dir, $user_dir) = $qtl->get_user_qtl_dir();	
+	 my ($qtl_dir, $user_dir) = $qtl->get_user_qtl_dir($c);	
 	 my $qtlfiles = retrieve("$user_dir/qtlfiles");
 	
 	 my $trait_file = $qtlfiles->{trait_file};	 
@@ -270,7 +272,7 @@ sub pheno_upload {
     
     if ($p_file eq $name ) {
 #here, call apache_upload_files	
-    $temp_pheno_file = $qtl->apache_upload_file($phe_upload);    
+    $temp_pheno_file = $qtl->apache_upload_file($phe_upload, $c);    
     return $temp_pheno_file;
    
     } 
@@ -301,12 +303,13 @@ sub geno_upload {
     }
     
     my $p = CXGN::Page->new();
+    my $c = SGN::Context->new();
     my $gen_upload = $p->get_upload();      
     
     if (defined $gen_upload) {
 	 $name = $gen_upload->filename;
 	 
-	 my ($qtl_dir, $user_dir) = $qtl->get_user_qtl_dir();
+	 my ($qtl_dir, $user_dir) = $qtl->get_user_qtl_dir($c);
 	 my $qtlfiles = retrieve("$user_dir/qtlfiles");
 	
 	 my $trait_file = $qtlfiles->{trait_file};
@@ -324,7 +327,7 @@ sub geno_upload {
     }
     
     if ($g_file eq $name ) {
-	$temp_geno_file = $qtl->apache_upload_file($gen_upload);    
+	$temp_geno_file = $qtl->apache_upload_file($gen_upload, $c);    
 	return $temp_geno_file;
     } 
     else {return 0};    
@@ -353,12 +356,13 @@ sub trait_upload {
     }
    
     my $p = CXGN::Page->new();
+    my $c = SGN::Context->new();
     my $trait_upload = $p->get_upload();      
     
     if (defined $trait_upload) {
 	 $name = $trait_upload->filename;
 	 
-	 my ($qtl_dir, $user_dir) = $qtl->get_user_qtl_dir();
+	 my ($qtl_dir, $user_dir) = $qtl->get_user_qtl_dir($c);
 	 my $qtlfiles={};	 	
 	 $qtlfiles->{trait_file}=$name;	 	 
 	 store ($qtlfiles, "$user_dir/qtlfiles");
@@ -370,7 +374,7 @@ sub trait_upload {
     }
     
     if ($c_file eq $name ) {
-	$temp_trait_file = $qtl->apache_upload_file($trait_upload);    
+	$temp_trait_file = $qtl->apache_upload_file($trait_upload, $c);    
 	return $temp_trait_file;
     } 
     else {return 0};    
@@ -1327,7 +1331,8 @@ sub common_name_id {
     my $self = shift;
     my $sp_person_id = $self->get_sp_person_id();
     my $qtl = CXGN::Phenome::Qtl->new($sp_person_id);
-    my ($qtl_dir, $user_qtl_dir) = $qtl->get_user_qtl_dir();
+    my $c = SGN::Context->new();
+    my ($qtl_dir, $user_qtl_dir) = $qtl->get_user_qtl_dir($c);
     
     my $id;
     if (-e "$user_qtl_dir/organism.txt") {
