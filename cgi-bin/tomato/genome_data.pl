@@ -81,7 +81,7 @@ print info_section_html( title => 'Clone preliminary annotations',
                                                   },
                                                   '[FTP]'
                                                 );
-                             my $gb_root   = 'gbrowse/tomato_bacs/';
+                             my $gb_root   = '/gbrowse/gbrowse/tomato_bacs/';
                              my $gb_link   = a( { href => $gb_root }, '[GBrowse]' );
 
                              info_table_html(
@@ -129,7 +129,7 @@ sub itag_releases_html {
     my $modtime = strftime('%b %e, %Y',gmtime($r->dir_modtime));
     my $conf_file = $r->get_file_info('gbrowse_genomic_conf');
     my $ftp_link = itag_release_ftp_link($r);
-    my $gb_root = "gbrowse/$conf_name/";
+    my $gb_root = "/gbrowse/gbrowse/$conf_name/";
     my $loading_span = span({class=>'ghosted'},'loading');
     my $gb_link   = -f $conf_file->{file} ? a({href => $gb_root},'[GBrowse]')
                                           : $loading_span;
@@ -278,7 +278,7 @@ EOQ
        qq|<a style="color: black" href="$details_url">$clone_seqs->{seqname}</a>|,
        $clone_seqs->{accession} ? link_identifier($clone_seqs->{accession}) : '-',
        phase_html($clone_seqs->{phase}),
-       qq(<a href="gbrowse/tomato_bacs/?ref=$fragnames[0]&start=1&end=$clone_seqs->{seqlen}">[browse]</a>),
+       qq(<a href="/gbrowse/gbrowse/tomato_bacs/?ref=$fragnames[0]&start=1&end=$clone_seqs->{seqlen}">[browse]</a>),
        $details_url ? qq(&nbsp;<a href="$details_url">[details]</a>) : '',
       ]
     }
