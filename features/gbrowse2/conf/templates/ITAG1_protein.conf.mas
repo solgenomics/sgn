@@ -65,7 +65,7 @@ das mapmaster = SELF
 [main:database]
 db_adaptor = Bio::DB::SeqFeature::Store
 db_args     = -adaptor DBI::Pg
-              -dsn 'dbi:Pg:host=<% $feature->default_db_host %>;dbname=ITAG1_protein'
+              -dsn 'dbi:Pg:host=<% $feature->default_db_host %>;dbname=sfs_ITAG1_protein'
               -user '<% $feature->default_db_user %>'
               -password '<% $feature->default_db_password %>'
 
