@@ -35,7 +35,7 @@ use CXGN::Phenome::Population;
 use CXGN::Phenome::Qtl;
 use CXGN::Phenome::PopulationDbxref;
 use CXGN::Tools::WebImageCache;
-use CXGN::VHost;
+use SGN::Context;
 use CXGN::People::PageComment;
 use CXGN::People::Person;
 use CXGN::Chado::Publication;
@@ -263,55 +263,7 @@ EOS
 
     my $population_obj = $self->get_object();
 
-    my $phenotype = "";
-    my @phenotype;
-
-    my ( $indl_id, $indl_name, $indl_value ) =
-      $population->get_all_indls_cvterm($term_id);
-
-    my ( $min, $max, $avg, $std, $count ) =
-      $population->get_pop_data_summary($term_id);
-
-    for ( my $i = 0 ; $i < @$indl_name ; $i++ )
-    {
-
-        push @phenotype,
-          [
-            map { $_ } (
-qq | <a href="/phenome/individual.pl?individual_id=$indl_id->[$i]">$indl_name->[$i]</a>|,
-                $indl_value->[$i]
-            )
-          ];
-    }
-
-    my ( $phenotype_data, $data_view, $data_download );
-    my $count = scalar(@$indl_name);
-
-    if (@phenotype)
-    {
-        $phenotype_data = columnar_table_html(
-            headings => [
-                'Plant accession',
-                'Value',
-
-                        ],
-            data         => \@phenotype,
-            __alt_freq   => 2,
-            __alt_width  => 1,
-            __alt_offset => 3,
-            __align      => 'l',
-                                             );
-
-        $data_view = html_optional_show(
-                      "phenotype",
-                      'View/hide phenotype raw data',
-                      qq |$phenotype_data|,
-                      0,                                #<  show data by default
-                                       );
-        $data_download .=
-qq { <span><a href="pop_download.pl?population_id=$population_id"><b>\[download population raw data\]</b></a></span> };
-    }
-
+    
     my $page =
 "../phenome/population_indls.pl?population_id=$population_id&amp;cvterm_id=$term_id";
     $args{calling_page} = $page;
@@ -399,6 +351,56 @@ qq|<div><a href="$url_pubmed$accession" target="blank">$pub_info</a> $title $abs
          || $login_user_id == $population->get_sp_person_id() )
     {
 
+	my $phenotype = "";
+	my @phenotype;
+
+	my ( $indl_id, $indl_name, $indl_value ) =
+	    $population->get_all_indls_cvterm($term_id);
+
+	my ( $min, $max, $avg, $std, $count ) =
+	    $population->get_pop_data_summary($term_id);
+
+	for ( my $i = 0 ; $i < @$indl_name ; $i++ )
+	{
+
+	    push @phenotype,
+	    [
+	     map { $_ } (
+		 qq | <a href="/phenome/individual.pl?individual_id=$indl_id->[$i]">$indl_name->[$i]</a>|,
+                $indl_value->[$i]
+	     )
+	    ];
+	}
+
+	my ( $phenotype_data, $data_view, $data_download );
+	my $count = scalar(@$indl_name);
+
+	if (@phenotype)
+	{
+	    $phenotype_data = columnar_table_html(
+		headings => [
+		    'Plant accession',
+		    'Value',
+
+		],
+		data         => \@phenotype,
+		__alt_freq   => 2,
+		__alt_width  => 1,
+		__alt_offset => 3,
+		__align      => 'l',
+                                             );
+
+	    $data_view = html_optional_show(
+                      "phenotype",
+                      'View/hide phenotype raw data',
+                      qq |$phenotype_data|,
+                      0,                                #<  show data by default
+                                       );
+	    $data_download .=
+qq { <span><a href="pop_download.pl?population_id=$population_id"><b>\[download population raw data\]</b></a></span> };
+    }
+
+
         my (
              $image_pheno, $title_pheno, $image_map_pheno,
              $plot_html,   $normal_dist
@@ -454,11 +456,21 @@ HTML
 
         $qtl_html .= "</td></tr></table>";
 
-        print info_section_html( title    => 'QTL(s)',
-                                 contents => $qtl_html, );
+        print info_section_html( 
+                                title    => 'QTL(s)',
+                                contents => $qtl_html, 
+                                );
 
-        print info_section_html( title    => 'Phenotype Frequency Distribution',
-                                 contents => $plot_html . $normal_dist, );
+        print info_section_html( 
+	                        title    => 'Phenotype Frequency Distribution',
+                                contents => $plot_html . $normal_dist, 
+                               );
+   
+	print info_section_html( 
+	                        title    => 'Phenotype Data', 
+	 	                contents => $data_view . " " . $data_download, 
+	 	               ); 
+
     }
     else
     {
@@ -537,7 +549,7 @@ sub population_distribution
         $term_id   = $term_obj->get_cvterm_id();
     }
 
-    my $vh           = CXGN::VHost->new();
+    my $vh           = SGN::Context->new();
     my $basepath     = $vh->get_conf("basepath");
     my $tempfile_dir = $vh->get_conf("tempfiles_subdir");
 
@@ -711,7 +723,7 @@ sub qtl_plot
 
     my $ac = $population->cvterm_acronym($term_name);
 
-    my $vh           = CXGN::VHost->new();
+    my $vh           = SGN::Context->new();
     my $basepath     = $vh->get_conf("basepath");
     my $tempfile_dir = $vh->get_conf("tempfiles_subdir");
 
@@ -1145,7 +1157,7 @@ sub outfile_list
 
 sub cache_temp_path
 {
-    my $vh           = CXGN::VHost->new();
+    my $vh           = SGN::Context->new();
     my $basepath     = $vh->get_conf("basepath");
     my $tempfile_dir = $vh->get_conf("tempfiles_subdir");
 
@@ -1555,7 +1567,7 @@ sub qtl_images_exist
 
     my $ac = $population->cvterm_acronym($term_name);
 
-    my $vh           = CXGN::VHost->new();
+    my $vh           = SGN::Context->new();
     my $basepath     = $vh->get_conf("basepath");
     my $tempfile_dir = $vh->get_conf("tempfiles_subdir");
 
