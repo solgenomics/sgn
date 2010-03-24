@@ -106,7 +106,7 @@ print info_section_html( title    => "Other Chromosome $chr Resources",
 			 contents =>  <<EOHTML,
 <ul>
 <li>Tomato maps: <a href="/cview/index.pl">Genetic</a> | <a href="/cview/map.pl?map_id=9&amp;physical=1">Physical</a> | <a href="/cview/map.pl?map_id=13">BAC FISH results</a></li>
-<li><a href="/gbrowse/index.pl?chr=$chr">Chromosome $chr BACs in Genome Browser</a></li>
+<li><a href="/tomato/genome_data.pl?chr=$chr">Chromosome $chr BACs in Genome Browser</a></li>
 <li><a href="agp.pl?chr=$chr">Chromosome $chr Assembly (AGP)</a></li>
 </ul>
 EOHTML
