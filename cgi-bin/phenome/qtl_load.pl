@@ -216,7 +216,8 @@ sub process_data {
 	if (@missing) {
 	    $self->error_page(@missing);
 	} else {
-	    $stat_file = $qtl_obj->get_stat_file();
+	    my $c = SGN::Context->new();
+	    $stat_file = $qtl_obj->get_stat_file($c);
 	}
 	unless (!-e $stat_file) {
 	    $message = 'QTL statistical parameters set : Step 5 of 5' . qq | \nQTL data upload for http://solgenomics.net/phenome/population.pl?pop_id=$pop_id" is completed|;
