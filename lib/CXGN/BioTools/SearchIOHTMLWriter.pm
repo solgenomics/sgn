@@ -53,7 +53,7 @@ sub default_hit_link_desc {
         "hilite_coords="
        .join ',',
         map $_->start('subject').'-'.$_->end('subject'),
-        hit->hsps;
+        $hit->hsps;
 
     my $id = $hit->name();
     return qq{<a href="show_match_seq.pl?blast_db_id=$db_id&amp;id=$id&amp;$coords_string">$id</a>};
