@@ -24,6 +24,7 @@
 
 <& /tools/sequence.mas,
    seq    => $seq,
-   coords => $highlight_coords,
-   source => $source
+   source => $source,
+   highlight_coords      => $highlight_coords,
+   highlight_description => 'BLAST matches',
  &>

@@ -12,6 +12,11 @@
 
 the sequence [Bio::Seq object]
 
+=item highlight_description
+
+short plain-text description of the meaning of the highlighted regions,
+defaults to 'matches'
+
 =item coords
 
 a list of ONE-BASED refs to start/end coords, [start, end], [start,
@@ -44,7 +49,8 @@ Lukas Mueller <lam87@cornell.edu>
 
 <%args>
 $seq
-$coords    => [ ]
+$highlight_description => 'matches'
+$highlight_coords      => [ ]
 $width     => 100
 $source    => '<span class="ghosted">not recorded</span>'
 $whole_seq => 0
@@ -65,6 +71,46 @@ use CXGN::Page::FormattingHelpers qw(
 
 use CXGN::Tools::Text qw/ commify_number /;
 
+# sanitize the coords array (add 0 to all the numbers in it, forcing them to be purely numeric)
+$highlight_coords = [ map [map $_+0, @$_], @$highlight_coords ];
+
+</%init>
+
+<% info_section_html( title    => $seq->id,
+                      contents => info_table_html( 'Sequence ID' => $seq->id,
+                                                   'Length'      => commify_number( $seq->length ),
+                                                   'Source'      => $source,
+                                                   __multicol    => 3,
+                                                   __border      => 0,
+                                                  )
+                                . info_table_html( 'Description' => $seq->desc,
+                                                   highlighted_regions( $highlight_coords, $highlight_description ),
+                                                   __border => 0,
+                                                  )
+                                . seq_html( $seq, $highlight_coords, $width, $whole_seq ),
+                     ) %>
+
+
+
+<%once>
+
+sub whole_seq_info_table {
+    my ( $seq, $lines, $coords, $highlight_description,  ) = @_;
+
+    return info_table_html( 'Sequence' =>
+                                join( '',
+                                      '<span class="sequence">',
+                                      ( '&gt;',
+                                        $seq->id,
+                                        "<br />",
+                                        join('<br />',@$lines),
+                                      ),
+                                      '</span>'
+                                     ),
+                            __border      => 0,
+                           );
+}
+
 sub seq_html {
 
     my $seq       = shift;
@@ -75,23 +121,16 @@ sub seq_html {
     my $seq_string = $seq->seq;
     my @lines = $seq_string =~ /.{1,$width}/gs;
 
-    unless( @$coords ) {
-        return info_table_html( 'Sequence' =>
-                                    join( '',
-                                          '<span class="sequence">',
-                                          join('<br />',@lines),
-                                          '</span>'
-                                         ),
-                                __border      => 0,
-                               );
-    }
-
+    @$coords
+        or return whole_seq_info_table($seq, \@lines);
 
     # change the coords into ranges and sort by start coord,
     # also clamping them to the sequence length if needed
     my @ranges =
         map {
-            Bio::Range->new( -start => max( 1, $_->[0]), -end => min( $seq->length, $_->[1] ) )
+            Bio::Range->new( -start => max( 1, $_->[0]),
+                             -end   => min( $seq->length, $_->[1] ),
+                            )
           }
       sort { $a->[0] <=> $b->[0] }
       @$coords;
@@ -120,32 +159,12 @@ sub seq_html {
 
     # return all the lines if we're using the whole seq
     if( $whole_seq ) {
-        return info_table_html( 'Sequence' => '<span class="sequence">'.join("<br />\n", @lines).'</span>',
-                                __border      => 0,
-                               );
+        return whole_seq_info_table( $seq, \@lines, $coords );
     }
 
     my $line_window_expand = 5;
 
-    # return just the lines in our window if not using the whole seq
-    my $match_regions = join '',
-       # and extract those lines
-       map {
-           my $window_start = $_->start*$width + 1;
-           my $window_end   = min( $seq->length, ($_->end+1)*$width );
-           info_section_html( title => "showing residues ".commify_number($window_start).' - '.commify_number($window_end),
-                              is_subsection => 1,
-                              contents => join ( '',
-						 '<span class="sequence">',
-						 '&gt;',
-						 $seq->id,
-						 ":$window_start..$window_end  ",
-						 "<br />",
-						 join( "<br />\n", @lines[ $_->start .. $_->end ] ),
-						 '</span>',
-					       ),
-                             )
-       }
+    my @windows =
        # calculate 0-based non-overlapping ranges of lines we need
        Bio::Range->unions(
            map {
@@ -158,13 +177,53 @@ sub seq_html {
                                   POSIX::floor( ($r->end-1)/$width )+$line_window_expand
                                 ),
                   );
-        } @ranges
+           } @ranges
        );
+
+    # special case: if the matches plus the windows actually case the
+    # whole sequence to be displayed, display a bit differently
+    if( @windows == 1 && $windows[0]->start == 0 && $windows[0]->end == $#lines ) {
+        return whole_seq_info_table( $seq, \@lines, $coords );
+    }
+
+    # return just the lines in our window if not using the whole seq
+    my $match_regions =
+       # and extract those lines
+       join '',
+       map {
+           my $window_start = $_->start*$width + 1;
+           my $window_end   = min( $seq->length, ($_->end+1)*$width );
+           info_section_html( title => "showing residues ".commify_number($window_start).' - '.commify_number($window_end),
+                              is_subsection => 1,
+                              contents => join ( '',
+						 '<span class="sequence">',
+						 ( '&gt;',
+                                                   $seq->id,
+                                                   ":$window_start..$window_end  ",
+                                                   "<br />",
+                                                   join( "<br />\n", @lines[ $_->start .. $_->end ] ),
+                                                  ),
+						 '</span>',
+					       ),
+                             )
+       } @windows;
+
 
     return info_table_html( 'Matches' => $match_regions,
                             __border      => 0,
                            );
 
+}
+
+sub highlighted_regions {
+    my ( $coords, $highlight_description ) = @_;
+    return unless $coords && @$coords;
+
+    return
+        "Highlighted Regions ($highlight_description)" =>
+        join ', ',
+        map "$_->[0]-$_->[1]",
+        @$coords;
 }
 
 # 0-based line number and column number of the given $index in a
@@ -188,21 +247,4 @@ sub round_to_nearest_line_beginning {
     return $lines_before * $line_width + 1;
 }
 
-</%init>
-
-
-<% info_section_html( title    => $seq->id,
-                      contents=> info_table_html( 'Sequence ID' => $seq->id,
-                                                  'Length'      => commify_number( $seq->length ),
-                                                  'Source'      => $source,
-                                                  __multicol    => 3,
-                                                  __border      => 0,
-                                                 )
-                                . info_table_html( 'Description' => $seq->desc,
-                                                   __border => 0,
-                                                  )
-                                . seq_html( $seq, $coords, $width, $whole_seq ),
-                     ) %>
-
-
-
+</%once>
