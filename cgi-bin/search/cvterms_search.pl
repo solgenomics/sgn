@@ -24,7 +24,7 @@ my $page=CXGN::Page->new("SGN QTLs/Traits search results","Isaak");
 $page->header();
 
 print page_title_html('QTL/Trait search results');
-my $dbh= CXGN::DB::Connection->new("public");
+my $dbh= CXGN::DB::Connection->new();
 
 #create the search and query objects
 my $search = CXGN::Cvterms->new;
@@ -51,7 +51,7 @@ if (%params) {
     
     
     while(my $r = $result->next_result) {
-	print STDERR "cvterm_result: $r->[0]\n";
+	
         my $cv=CXGN::Phenome::Qtl::Tools->new();
 	my $has_qtl = $cv->is_from_qtl($r->[0]);
 	my $qtl_mark; 
