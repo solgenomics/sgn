@@ -11,7 +11,7 @@ use CXGN::DB::Connection;
 
 $SIG{__DIE__} = \&Carp::confess;
 
-my $dbh = CXGN::DB::Connection->new;
+my $dbh = CXGN::DB::Connection->new({ dbargs => {AutoCommit => 1} });
 
 my $ggp = CXGN::Phenome::GenericGenePage
     ->new( -id => 428,
