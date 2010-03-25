@@ -29,15 +29,13 @@ start1-end1,start2-end2,start3-end3
 
 either "text" or "html" to output fasta text or a nicely ;-) formatted html page.
 
-=back 
-
-=head1 Implementation 
-
-Calls a mason component, /tools/sequence.mas, to display the sequence.
+=back
 
 =head1 AUTHOR
 
 Lukas Mueller <lam87@cornell.edu>
+
+Robert Buels <rmb32@cornelle.edu>
 
 =cut
 
