@@ -276,6 +276,9 @@ EOH
     Alias  /fullsize_images   $cfg->{static_datasets_path}/images/insitu/processed
     Alias  /thumbnail_images  $cfg->{static_datasets_path}/images/insitu/display
 
+    # stopgap alias for gbrowse - will be unnecessary once we upgrade it
+    Alias /gbrowse/images/buttons $paths->{basepath}/documents/gbrowse/images/buttons
+
     Redirect 301 /gbrowse/index.pl /tomato/genome_data.pl
 
 END_HEREDOC
