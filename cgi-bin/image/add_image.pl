@@ -9,7 +9,7 @@ uploads an image to the SGN image database (the image table in the metadata sche
 
 =head2 IMPORTANT NOTE
 
-The uploaded images will be stored using the SGN::Image object. This object stores meta-information in the SGN database, and the image on disk. The file location is given by the CXGN::VHost variable "image_dir". On the production server, this should be set to "/data/shared/website/image/image_files". To prevent different image to clobber the image_dir, that variable needs to be set to "/data/shared/website/image/image_files_sandbox" for the devel server. When the cxgn database is copied to sandbox, the corresponding image_dir needs to be copied over as well. Check these variables before adding images.
+The uploaded images will be stored using the SGN::Image object. This object stores meta-information in the SGN database, and the image on disk. The file location is given by the $c SGN:Context  variable "image_dir". On the production server, this should be set to "/data/shared/website/image/image_files". To prevent different image to clobber the image_dir, that variable needs to be set to "/data/shared/website/image/image_files_sandbox" for the devel server. When the cxgn database is copied to sandbox, the corresponding image_dir needs to be copied over as well. Check these variables before adding images.
 
 =head1 USAGE
 
@@ -133,7 +133,7 @@ use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw / blue_section_html page_title_html / ;
 use SGN::Image;
 use CXGN::People::Person;
-
+use CXGN::Contact;
 
 # get the parameters.
 # legal parameters are: 
@@ -143,10 +143,8 @@ use CXGN::People::Person;
 #  upload_file: the file to be uploaded, if action=upload.
 #
 
-
 my $request = shift;
 
-my $tempdir = CXGN::VHost->new()->get_conf("temp_dir")."/temp_images";
 
 my $page = CXGN::Page->new();
 
@@ -362,8 +360,8 @@ sub confirm {
 sub store { 
     my ($dbh, $page, $image, %args) = @_;
     my $sp_person_id = $args{sp_person_id};
-    my $vh = CXGN::VHost->new();
-    my $temp_image_dir = $vh->get_conf("basepath")."/".$vh->get_conf("tempfiles_subdir") ."/temp_images";
+    
+    my $temp_image_dir = $c->get_conf("basepath")."/".$c->get_conf("tempfiles_subdir") ."/temp_images";
    
     $image -> set_sp_person_id($sp_person_id);
 
