@@ -1,7 +1,7 @@
 
 =head1 NAME
 
-SGN::Image.pm - a class to deal the SGN VHost configuration for
+SGN::Image.pm - a class to deal the SGN Context  configuration for
 uploading images on SGN.
 
 =head1 DESCRIPTION
@@ -48,7 +48,7 @@ use File::Temp qw / tempfile tempdir /;
 use File::Copy qw / copy move /;
 use File::Basename qw / basename /;
 use CXGN::DB::Connection;
-use CXGN::VHost;
+use SGN::Context;
 use CXGN::Tag;
 
 package SGN::Image;
@@ -80,7 +80,7 @@ sub new {
 
     my $self = $class->SUPER::new( $dbh, @_ );
 
-    $self->set_configuration_object( CXGN::VHost->new() );
+    $self->set_configuration_object( SGN::Context->new() );
     $self->set_dbh($dbh);
     $self->set_upload_dir();
 
@@ -154,7 +154,7 @@ sub get_image_dir {
     my $dir = $self->get_configuration_object()->get_conf("image_dir");
     if ( !$dir ) {
         die
-"Need a configuration variable called image_dir set in SGN.HostConf or in CXGN::Configuration::VHost::SGN.pm. Please contact SGN for help.";
+"Need a configuration variable called image_dir set in SGN.conf  Please contact SGN for help.";
     }
     if ( $which eq "full" ) {
         $dir =
@@ -754,7 +754,7 @@ sub iconify_file {
 
     my $basename = File::Basename::basename($file_name);
 
-    my $self = CXGN::VHost->new()
+    my $self = SGN::Context->new()
       ;    # merely used to retrieve correct temp dir on this host
     my $temp_dir =
         $self->get_conf("basepath") . "/"
