@@ -5,6 +5,7 @@ use Try::Tiny;
 use List::Util qw/max/;
 
 my ($error_code) = CGI->new->param('code');
+$error_code ||= 500;
 
 if( $error_code == 404 ) {
 
@@ -39,7 +40,6 @@ if( $error_code == 404 ) {
 
 
 } else {
-
     $c->forward_to_mason_view( '/site/error/'.($error_code+0).'.mas' );
 }
 
