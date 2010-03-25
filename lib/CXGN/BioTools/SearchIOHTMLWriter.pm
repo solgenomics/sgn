@@ -49,16 +49,15 @@ sub default_hit_link_desc {
     my $result = shift;
     my $db_id = shift;
 
-    my $coords_string = "hilite_coords=";
-    while (my $hsp = $hit->next_hsp()) {
-	$coords_string .= $hsp->start('subject')."-".$hsp->end('subject').","
-    }
+    my $coords_string = 
+        "hilite_coords="
+       .join ',',
+        map $_->start('subject').'-'.$_->end('subject'),
+        hit->hsps;
+
     my $id = $hit->name();
-    return qq { <a href="show_match_seq.pl?blast_db_id=$db_id&amp;id=$id&amp;$coords_string">$id</a> };
-
-
+    return qq{<a href="show_match_seq.pl?blast_db_id=$db_id&amp;id=$id&amp;$coords_string">$id</a>};
 }
-    
 
 ###
 1;#do not remove
