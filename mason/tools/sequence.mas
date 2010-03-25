@@ -69,6 +69,7 @@ use CXGN::Page::FormattingHelpers qw(
    info_table_html
   );
 
+use CXGN::Tools::Identifiers qw/ link_identifier /;
 use CXGN::Tools::Text qw/ commify_number /;
 
 # sanitize the coords array (add 0 to all the numbers in it, forcing them to be purely numeric)
@@ -77,7 +78,7 @@ $highlight_coords = [ map [map $_+0, @$_], @$highlight_coords ];
 </%init>
 
 <% info_section_html( title    => $seq->id,
-                      contents => info_table_html( 'Sequence ID' => $seq->id,
+                      contents => info_table_html( 'Sequence ID' => link_identifier($seq->id) || $seq->id,
                                                    'Length'      => commify_number( $seq->length ),
                                                    'Source'      => $source,
                                                    __multicol    => 3,
