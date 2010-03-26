@@ -6,11 +6,11 @@ reference class = Sequence
 
 default features = genespan mrna cds
 
-aggregators =
-	gappedmatch{match_part/match}
-	eugtranscript{five_prime_UTR,CDS,three_prime_UTR}
-	eugcds{CDS}
-        italymatch{match}
+#aggregators =
+#	gappedmatch{match_part/match}
+#	eugtranscript{five_prime_UTR,CDS,three_prime_UTR}
+#	eugcds{CDS}
+#        italymatch{match}
 # "automatic" classes to try when an unqualified identifier is given
 automatic classes = Sequence clone match nucleotide_motif
 
@@ -75,7 +75,7 @@ height      = 8
 bgcolor     = cyan
 fgcolor     = black
 label density = 25
-bump density  = 10000
+bump density  = 100
 
 #track to show DNA and GC content
 [DNA]
@@ -110,7 +110,6 @@ glyph        = segments
 fgcolor      = black
 bgcolor      = darkorange
 stranded     = 1
-description  = sub { <% $feature->local_inc %> require CXGN::Page::FormattingHelpers;  CXGN::Page::FormattingHelpers::truncate_string((shift->attributes('functional_description'))[0], 20, '...') }
 font2color   = blue
 title        = sub { (shift->attributes('functional_description'))[0] }
 category     = Gene Model features
@@ -120,11 +119,12 @@ height       = 10
 citation     = This track shows the spans of gene models annotated by EuGene, the integrative gene predictor for ITAG. (see <a href="http://www.ab.wur.nl/TomatoWiki/AnEugene000">EuGene on ITAG Wiki</a>, <a href="http://www.inra.fr/internet/Departements/MIA/T//EuGene/index.html">EuGene main page</a>)
 
 [mrna]
-feature      = eugtranscript:ITAG_renaming
+feature      = mRNA:ITAG_renaming
 key          = mRNA
 glyph        = processed_transcript
 fgcolor      = black
 bgcolor      = goldenrod
+description  = sub { <% $feature->local_inc %>; require URI::Escape; require CXGN::Page::FormattingHelpers;  URI::Escape::uri_unescape( CXGN::Page::FormattingHelpers::truncate_string((shift->attributes('functional_description'))[0], 50, '...')) }
 stranded     = 1
 font2color   = blue
 category     = Gene Model features
@@ -134,10 +134,10 @@ height       = 10
 citation     = This track shows the mRNAs for gene models annotated by EuGene, the integrative gene predictor for ITAG. (see <a href="http://www.ab.wur.nl/TomatoWiki/AnEugene000">EuGene on ITAG Wiki</a>, <a href="http://www.inra.fr/internet/Departements/MIA/T//EuGene/index.html">EuGene main page</a>)
 
 [cds]
-feature      = eugcds:ITAG_renaming
+feature      = CDS:ITAG_renaming
 key          = CDS - click models to browse protein domains
 title        = sub { my $n = shift->display_name; $n =~ s/(mRNA|CDS)://;  $n =~ s/(\.\d+)\.\d+$/$1/; "click to browse annotations on $n protein product"}
-glyph        = segments
+glyph        = CDS
 fgcolor      = black
 bgcolor      = yellow
 label        = sub { my $n = shift->display_name; $n =~ s/mRNA:/CDS:/; $n }
@@ -145,12 +145,12 @@ stranded     = 1
 category     = Gene Model features
 das category = transcription
 strand_arrow = 1
-link         = sub { my $n = shift->display_name; $n =~ s/(mRNA|CDS)://; $n =~ s/(\.\d+)\.\d+$/$1/; "/gbrowse/gbrowse/ITAG1_protein/?name=$n" }
-height       = 10
+link         = sub { my $n = shift->display_name; $n =~ s/(mRNA|CDS)://; $n =~ s/(\.\d+)\.\d+$/$1/; "<% $feature->cgi_url %>/gbrowse/ITAG1_protein/?name=$n" }
+height       = 20
 citation     = This track shows the CDS sequences for gene models annotated by EuGene, the integrative gene predictor for ITAG.  Provided by Stephane Rombauts and Jeffrey Fawcett, <a class="http" href="http://bioinformatics.psb.ugent.be/">Bioinformatics and Evolutionary Genomics</a>, <a class="http" href="http://www.psb.ugent.be">Plant Systems Biology, VIB, Ghent University</a>.  (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnEugene000">EuGene on ITAG Wiki</a>, <a href="http://www.inra.fr/internet/Departements/MIA/T//EuGene/index.html">EuGene main page</a>)
 
 [cdna_tom]
-feature      = italymatch:ITAG_transcripts_tomato
+feature      = match:ITAG_transcripts_tomato
 key          = ESTs and cDNAs - Tomato
 category     = Genome data and reagents
 glyph        = segments
@@ -159,7 +159,7 @@ link         = http://www.ebi.ac.uk/ebisearch/search.ebi?db=nucleotideSequences&
 citation     = This track shows regions of similarity with EST and other cDNA sequences from Tomato. Provided by <a href="http://cab.unina.it/index2.php">CAB group</a> at <a href="http://www.unina.it">UNINA</a>. (see <a href="http://www.ab.wur.nl/TomatoWiki/AnEST000">ITAG Wiki</a>)
 
 [cdna_sol]
-feature      = italymatch:ITAG_transcripts_sol
+feature      = match:ITAG_transcripts_sol
 key          = ESTs and cDNAs - Other Solanaceae
 category     = Genome data and reagents
 glyph        = segments
@@ -177,18 +177,18 @@ link         = http://sgn.cornell.edu/search/quick_search.pl?term=$name
 citation     = This track shows regions of similarity with SGN Unigene (SGN-U) sequences.  (see <a href="http://www.ab.wur.nl/TomatoWiki/AnSgnUnigenes000">ITAG Wiki</a>)
 
 [augustus]
-feature      = processed_transcript:
+feature      = transcript:ITAG_augustus
 key          = AUGUSTUS (de novo, Tomato trained)
 category     = Prediction Features
-glyph        = processed_transcript
+glyph        = transcript
 stranded     = 1
 citation      = <i>De novo</i> gene predictions from the AUGUSTUS gene predictor, trained on Tomato.  Provided by SGN.  (see <a href="http://www.ab.wur.nl/TomatoWiki/AnAUGUSTUS000">ITAG Wiki</a>)
 
 [geneid_tomato]
-feature      = processed_transcript:ITAG_geneid_tomato
+feature      = gene:ITAG_geneid_tomato
 key          = GeneID (de novo, Tomato trained)
 category     = Prediction Features
-glyph        = processed_transcript
+glyph        = gene
 stranded     = 1
 citation     = <i>De novo</i> predictions from <a href="http://genome.imim.es/software/geneid/">GeneID</a>, trained on Tomato.  Provided by Francisco Camara, <a href="http://genome.crg.es">Genome Bioinformatics Research Lab - Gene Prediction Group, Center for Genomic Regulation (CRG) - Spain</a>. (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnGeneID000">ITAG Wiki</a>)
 
@@ -201,15 +201,15 @@ stranded     = 1
 citation     = <i>De novo</i> predictions from <a href="http://exon.gatech.edu/GeneMark/">GeneMark</a>, trained on Arabidopsis.  Provided by the <a href="http://mips.gsf.de/proj/plant/jsf/tomato/index.jsp">MIPS Tomato genome database</a>. (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnGeneMark000">ITAG Wiki</a>)
 
 [glimmerhmm_ath]
-feature      = processed_transcript:ITAG_glimmerhmm_ath
+feature      = mRNA:ITAG_glimmerhmm_ath
 key          = GlimmerHMM (de novo, Arabidopsis trained)
 category     = Prediction Features
-glyph        = processed_transcript
+glyph        = gene
 stranded     = 1
 citation     = <i>De novo</i> predictions from <a href="http://www.genomics.jhu.edu/GlimmerHMM/">GlimmerHMM</a>, trained on Arabidopsis.  Provided by Erwin Datema at <a href="http://appliedbioinformatics.wur.nl/">WUR</a>. (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnGlimmerHMM000">ITAG Wiki</a>)
 
 [glimmerhmm_tomato]
-feature      = processed_transcript:ITAG_glimmerhmm_tomato
+feature      = mRNA:ITAG_glimmerhmm_tomato
 key          = GlimmerHMM (de novo, Tomato trained)
 category     = Prediction Features
 glyph        = processed_transcript
@@ -250,6 +250,7 @@ citation     = This track shows regions of similarity of Eugene-predicted cDNA s
 
 [sgn_markers]
 feature      = match:ITAG_sgn_markers
+glyph        = CDS
 key          = SGN Marker Sequences
 category     = Genetic Loci
 stranded     = 1
