@@ -63,7 +63,7 @@ $format      ||= 'html';
 $blast_db_id +=  0;
 $id          =   sanitize_string( $id );
 
-$c->forward_to_mason('/blast/show_seq/input.mas') unless $blast_db_id && defined $id;
+$c->forward_to_mason_view('/blast/show_seq/input.mas') unless $blast_db_id && defined $id;
 
 # parse the coords param
 my @coords =
