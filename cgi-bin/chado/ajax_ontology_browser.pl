@@ -14,10 +14,7 @@ my $dbh = CXGN::DB::Connection->new();
 
 my ($node, $action, $db_name, $term_name) = $s->get_encoded_arguments("node", "action", "db_name", "term_name");
 
-#my ($namespace, $id) = split/\:/, $parent;
 
-
-#my $cv = CXGN::Chado::Ontology->new_with_name($dbh, $namespace);
 my $cvterm = CXGN::Chado::Cvterm->new_with_accession($dbh, $node);
 
 my $empty_cvterm=CXGN::Chado::Cvterm->new($dbh);
@@ -109,11 +106,11 @@ if ($error) {
     $response = $error;
 }
 else { 
-#print "CV ID: ".$cv->get_cv_id()."\n";
+
     foreach my $n (@response_nodes) { 
 	my $has_children = 0;
 	if ($n->[0]->count_children() > 0) { $has_children = 1; }
-	push @response_list, ($n->[0]->get_full_accession())."\%".($n->[0]->get_cvterm_name()."\%".($n->[0]->get_cvterm_id())."\%$has_children" . "\%" . $n->[1]->get_cvterm_name());
+	push @response_list, ($n->[0]->get_full_accession())."\*".($n->[0]->get_cvterm_name()."\*".($n->[0]->get_cvterm_id())."\*$has_children" . "\*" . $n->[1]->get_cvterm_name());
     }
 }
 
@@ -121,7 +118,7 @@ $response = join "#",  @response_list;
 
 
 print STDERR "AJAX ONTOLOGY BROWSER RETURNS: $response\n";
-#print $s->header();
+
 print "Content-Type: text/html\n\n";
 print $response;
-#print $s->footer();
+
