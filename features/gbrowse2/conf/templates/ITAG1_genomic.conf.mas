@@ -4,7 +4,7 @@ plugins   = FastaDumper RestrictionAnnotator SequenceDumper TrackDumper
 
 reference class = Sequence
 
-search attributes = functional_description
+search attributes = description
 
 default features = genespan mrna cds
 
@@ -101,6 +101,7 @@ height         = 40
 do_gc          = 1
 fgcolor        = red
 category       = DNA
+gc_window      = auto
 axis_color     = blue
 strand         = both
 key            = DNA/GC Content
@@ -127,7 +128,7 @@ fgcolor      = black
 bgcolor      = darkorange
 stranded     = 1
 font2color   = blue
-title        = sub { (shift->attributes('functional_description'))[0] }
+title        = sub { (shift->attributes('description'))[0] }
 category     = Gene Model features
 das category = transcription
 strand_arrow = 1
@@ -140,7 +141,7 @@ key          = mRNA
 glyph        = processed_transcript
 fgcolor      = black
 bgcolor      = goldenrod
-description  = sub { <% $feature->local_inc %>; require URI::Escape; require CXGN::Page::FormattingHelpers;  URI::Escape::uri_unescape( CXGN::Page::FormattingHelpers::truncate_string((shift->attributes('functional_description'))[0], 50, '...')) }
+description  = sub { <% $feature->local_inc %>; require CXGN::Page::FormattingHelpers; CXGN::Page::FormattingHelpers::truncate_string((shift->attributes('description'))[0] || '', 50, '...') }
 stranded     = 1
 font2color   = blue
 category     = Gene Model features
@@ -238,10 +239,11 @@ stranded     = 1
 citation     = <i>De novo</i> predictions from <a href="http://www.genomics.jhu.edu/GlimmerHMM/">GlimmerHMM</a>, trained on Tomato.  Provided by Erwin Datema at <a href="http://appliedbioinformatics.wur.nl/">WUR</a>. (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnGlimmerHMM000">ITAG Wiki</a>)
 
 [infernal]
-feature      = tRNA:ITAG_infernal snoRNA:ITAG_infernal U6atac_snRNA:ITAG_infernal miRNA:ITAG_infernal antisense_RNA:ITAG_infernal snRNA:ITAG_infernal 5_snRNA:ITAG_infernal 13_snRNA:ITAG_infernal 10_snRNA:ITAG_infernal snRNA:ITAG_infernal 11_snRNA:ITAG_infernal 6_snRNA:ITAG_infernal snoRNA:ITAG_infernal 12_snRNA:ITAG_infernal U1_snRNA:ITAG_infernal group_I_intron:ITAG_infernal 7_snRNA:ITAG_infernal UTR_region:ITAG_infernal group_II_intron:ITAG_infernal miRNA:ITAG_infernal SRP_RNA:ITAG_infernal snRNA:ITAG_infernal snoRNA:ITAG_infernal 14_snRNA:ITAG_infernal 4_snRNA:ITAG_infernal miRNA:ITAG_infernal U2_snRNA:ITAG_infernal 9_snRNA:ITAG_infernal rRNA_5.8S:ITAG_infernal 8_snRNA:ITAG_infernal RNAi_reagent:ITAG_infernal
+feature      = ncRNA:ITAG_infernal tRNA:ITAG_infernal snoRNA:ITAG_infernal U6atac_snRNA:ITAG_infernal miRNA:ITAG_infernal antisense_RNA:ITAG_infernal snRNA:ITAG_infernal 5_snRNA:ITAG_infernal 13_snRNA:ITAG_infernal 10_snRNA:ITAG_infernal snRNA:ITAG_infernal 11_snRNA:ITAG_infernal 6_snRNA:ITAG_infernal snoRNA:ITAG_infernal 12_snRNA:ITAG_infernal U1_snRNA:ITAG_infernal group_I_intron:ITAG_infernal 7_snRNA:ITAG_infernal UTR_region:ITAG_infernal group_II_intron:ITAG_infernal miRNA:ITAG_infernal SRP_RNA:ITAG_infernal snRNA:ITAG_infernal snoRNA:ITAG_infernal 14_snRNA:ITAG_infernal 4_snRNA:ITAG_infernal miRNA:ITAG_infernal U2_snRNA:ITAG_infernal 9_snRNA:ITAG_infernal rRNA_5.8S:ITAG_infernal 8_snRNA:ITAG_infernal RNAi_reagent:ITAG_infernal
 key          = Infernal
 category     = Prediction Features
 glyph        = segments
+description  = sub { (shift->attributes('Alias'))[0] }
 stranded     = 1
 citation     = This track shows RNA regions inferred by <a href="http://infernal.janelia.org/">Infernal</a>.  Provided by Daniel Buchan, <a href="http://www.srcuk.org/">SRCUK</a>.
 
