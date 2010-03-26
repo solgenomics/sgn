@@ -13,7 +13,7 @@ use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw/blue_section_html
                                      info_section_html
 				     page_title_html
-				     columnar_table_html
+				     columnar_table_html                                 
                                   /;
 use CXGN::Search::CannedForms;
 use CXGN::DB::Connection;
@@ -29,27 +29,21 @@ my $dbh= CXGN::DB::Connection->new();
 #create the search and query objects
 my $search = CXGN::Cvterms->new;
 my $query = $search->new_query;
-$search->page_size(15); #set 10 cvterms per page
+$search->page_size(15); 
 
 
 
 #get the parameters
 my %params = $page->get_all_encoded_arguments;
 my $cvterm_name = $page->get_encoded_arguments("cvterm_name");
-#my $cvterm_synonym = $page->get_encoded_arguments("cvterm_synonym");
 $query->from_request(\%params);
 
 
 
 if (%params) {
-    $query->order_by( cvterm_name=> '');
-    
-    my $result = $search->do_search($query);  #execute the search
-
-   
-    my @results;
-    
-    
+    $query->order_by( cvterm_name=> '');    
+    my $result = $search->do_search($query);  #execute the search   
+    my @results;   
     while(my $r = $result->next_result) {
 	
         my $cv=CXGN::Phenome::Qtl::Tools->new();
@@ -93,17 +87,19 @@ EOH
 
 
 	if (@results) {
-	    print blue_section_html('QTL/Trait search results', ,sprintf('<span class="paginate_summary">%s matches </span>', $result->total_results,$result->time),$results_html);
+	    print blue_section_html('QTL/Trait search results', sprintf('<span class="paginate_summary">%s matches </span>', $result->total_results,$result->time),$results_html);
 	}else {
 	    print '<h4>No matches found</h4>';
 	}
 
-    print info_section_html(title    => 'Search again', 
-			  contents =>CXGN::Search::CannedForms::cvterm_search_form($page, $query)
+    print info_section_html(
+	                  title    => 'Search again', 
+			  contents => CXGN::Search::CannedForms::cvterm_search_form($page, $query),
+			  collapsible => 1,
+			  collapsed => 1,
 			  );
   
 }
-
 
 
 $page->footer();
