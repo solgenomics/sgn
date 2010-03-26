@@ -13,7 +13,7 @@ my ($query) = $page->get_encoded_arguments("query");
 
 my $secretom_file_dir = '/data/prod/public/secretom/';
 
-my $tabfile = 'Tair9RiceBrachy.tab';
+my $tabfile = 'Tair9RiceBrachyITAG1.tab';
 
 $page->header();
 
