@@ -4,6 +4,8 @@ plugins   = FastaDumper RestrictionAnnotator SequenceDumper TrackDumper
 
 reference class = Sequence
 
+search attributes = functional_description
+
 default features = genespan mrna cds
 
 #aggregators =
@@ -64,7 +66,7 @@ db_args     = -adaptor DBI::Pg
               -dsn 'dbi:Pg:host=<% $feature->default_db_host %>;dbname=sfs_ITAG1_genomic'
               -user '<% $feature->default_db_user %>'
               -password '<% $feature->default_db_password %>'
-search options = default +autocomplete
+search options = default +autocomplete +fulltext
 
 
 ### TRACK CONFIGURATION ####
