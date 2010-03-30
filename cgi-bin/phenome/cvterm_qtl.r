@@ -113,16 +113,27 @@ permuproblevel<-as.numeric(permuproblevel)
 infile<-scan(file=infile,  what="character")#container for the ff
 
 cvtermfile<-infile[1]#file that contains the cvtername
-popdata<-infile[2]#population dataset identifier
+popid<-infile[2]#population dataset identifier
 genodata<-infile[3] #file name for genotype dataset
 phenodata<-infile[4] #file name for phenotype dataset
 permufile<-infile[5]
-popid<-popdata
+crossfile<-infile[6]
+
+print(crossfile)
+cross<-scan(crossfile, what="character", sep="\n")
+print(cross)
+
+popdata<-c()
+if (cross == "f2") {
+  popdata<- read.cross("csvs", genfile=genodata, phefile=phenodata, na.strings=c("NA"), genotypes=c("1", "2", "3", "4", "5"), estimate.map=TRUE, convertXdata=TRUE)
+  popdata<-jittermap(popdata)
+} else
+if (cross == "bc") {
+  popdata<- read.cross("csvs", genfile=genodata, phefile=phenodata, na.strings=c("NA"), genotypes=c("1", "2"), estimate.map=TRUE, convertXdata=TRUE)
+  popdata<-jittermap(popdata)
+}  
 
 
-popdata<- read.cross("csvs", genfile=genodata, phefile=phenodata, na.strings=c("NA"), genotypes=c("1", "2", "3", "4", "5"), estimate.map=TRUE, convertXdata=TRUE)
-
-popdata<-jittermap(popdata)
 
 if (genoprobmethod == "Calculate") {
   popdata<-calc.genoprob(popdata, step=stepsize, error.prob=genoproblevel)
@@ -141,8 +152,6 @@ cv<-find.pheno(popdata, cvterm)#returns the col no. of the cvterm
 
 permuvalues<-scan(file=permufile, what="character")
 
-
-print("permu values 1 and 2")
 permuvalue1<-permuvalues[1]
 permuvalue2<-permuvalues[2]
 if ((is.logical(permuvalue1) == FALSE)) {
