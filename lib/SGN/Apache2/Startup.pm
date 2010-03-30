@@ -76,7 +76,7 @@ sub import {
     }
 
     # run setup() on each of our site features
-    $_->setup( $c ) for @{ $c->enabled_features };
+    $_->setup( $c ) for $c->enabled_features;
 
     # add some other configuration to the web server
     my $root_server = my $server =  Apache2::ServerUtil->server;
@@ -362,7 +362,7 @@ END_HEREDOC
 # given the context obj, return list of apache conf strings for each
 # of the activated features
 sub feature_apache_confs {
-    map $_->apache_conf, @{ shift->enabled_features }
+    map $_->apache_conf, shift->enabled_features
 }
 
 

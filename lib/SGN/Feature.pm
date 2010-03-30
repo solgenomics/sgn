@@ -43,6 +43,14 @@ sub setup {
     #my ( $self ) = @_;
 }
 
+# return one or more SGN::SiteFeature::CrossReference objects for the
+# given input (input can be anything) or nothing if the query is not
+# handled by this Feature.  note that a CrossReference object should
+# always be returned, it just might be empty
+sub xrefs {
+    return unless shift->enabled;
+}
+
 sub apache_conf {
     return ''
 }

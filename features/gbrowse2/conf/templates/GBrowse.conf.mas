@@ -182,6 +182,7 @@ path         = ITAG_devel_genomic.conf
 [ITAG_devel_protein]
 description  = ITAG Development Snapshot: protein annotations
 path         = ITAG_devel_protein.conf
+restrict_xrefs = sub { 0 } # do not make any xrefs to itag proteins
 
 [tomato_bacs]
 description  = Tomato BACs - SGN Preliminary Annotation
@@ -190,9 +191,14 @@ path         = tomato_bacs.conf
 [fpc_tomato_sgn_2009]
 description  = Tomato FPC (SGN 2009)
 path         = fpc_tomato_sgn_2009.conf
+restrict_xrefs = sub { +shift =~ /^(SGN-M|(LE_|SL_|C\d\d))/  }
 
 [sanger_tomato_fpc]
 description  = Tomato FPC (Sanger 2006)
 path         = sanger_tomato_fpc.conf
+restrict_xrefs = sub { +shift =~ /^(SGN-M|(LE|SL|C\d\d))/  }
 
+# [yeast]
+# description = Test
+# path = yeast_simple.conf
 
