@@ -101,7 +101,7 @@ my $defaults =
      # default GBrowse2 configuration, for a Debian gbrowse2 installation
      feature => { 'SGN::Feature::GBrowse2' =>
                        {
-                           'enabled'    => 1,
+                           'enabled'    => 0,
                            'run_mode'   => 'fcgi',
 
                            #'conf_dir'   => '/etc/cxgn/SGN/gbrowse',
