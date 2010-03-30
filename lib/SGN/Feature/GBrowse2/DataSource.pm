@@ -46,7 +46,7 @@ sub xref {
 
     return SGN::SiteFeatures::CrossReference->new(
         text => qq|search for "$q" in GBrowse: |.$self->description,
-        url  => $self->gbrowse->cgi_url.'/'.$self->name.'/?name='.uri_escape($q),
+        url  => $self->url.'/?name='.uri_escape($q),
         feature => $self->gbrowse,
        );
 }

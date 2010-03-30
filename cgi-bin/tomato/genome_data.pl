@@ -45,28 +45,11 @@ print info_section_html( title => 'Physical Maps',
 			 subtitle => 'locate clones on the genome',
 			 contents =>
 			 '<ul>'
-			 .qq|<li><a href="/sequencing/agp.pl">Tomato AGP File Viewer</a> &ndash; chromosome assembly data files</li>|
-			 .do {
-			   my $map_factory = CXGN::Cview::MapFactory->new($dbh);
-			   my %maps = ( c9  => 'clones anchored in FPC contigs from Sanger 2006 FPC build (Tomato HindIII and MboI libraries)',
-					p9  => 'clones anchored with overgo, computational, or manual methods',
-					13  => 'clones anchored with FISH',
-					agp => 'clones anchored in manually-curated final chromosome assemblies',
-				      );
-			   join('',
-				( map {
-				  my $mid = $_;
-				  my $mvid = CXGN::Cview::Map::Tools::find_current_version($dbh, $mid)
-				    or die "no map_version_id found for map_id $mid\n";
-				  my $m = $map_factory->create({map_version_id => $mvid})
-				    or die "no map found with map_version_id $mvid\n";
-				  my $sn = $m->get_short_name;
-				  qq|<li><a href="/cview/map.pl?map_id=$mid">$sn</a> &ndash; $maps{$mid}</li>|;
-				} sort keys %maps ),
-			       )
-			 }
-			 .'<li><a href="/gbrowse/gbrowse/fpc_tomato_sgn_2009/">SGN 2009 FPC browser</a> &ndash; browse FPC contigs from SGN 2009 FPC build (Tomato HindIII, EcoRI, MboI, and random sheared libraries)</li>'
-			 .'<li><a href="/gbrowse/gbrowse/sanger_tomato_fpc/">Sanger 2006 FPC browser</a> &ndash; browse FPC contigs from Sanger 2006 FPC build (Tomato HindIII and MboI libraries)</li>'
+                         .join('', map "<li>$_</li>\n",
+                               qq|<a href="/sequencing/agp.pl">Tomato AGP File Viewer</a> &ndash; chromosome assembly data files</li>|,
+                               cview_map_links( $dbh ),
+                               gbrowse_fpc_links(),
+                              )
 			 .'</ul>'
 		       );
 
@@ -81,12 +64,11 @@ print info_section_html( title => 'Clone preliminary annotations',
                                                   },
                                                   '[FTP]'
                                                 );
-                             my $gb_root   = '/gbrowse/gbrowse/tomato_bacs/';
-                             my $gb_link   = a( { href => $gb_root }, '[GBrowse]' );
+                             my $gb_link   = a( { href => gbrowse_url('tomato_bacs') }, '[GBrowse]' );
 
                              info_table_html(
                                              Browse => "$ftp_link $gb_link",
-                                             'Search Annotations' => gb_searchbox($gb_root),
+                                             'Search Annotations' => gb_searchbox( gbrowse_url('tomato_bacs') ),
                                              __multicol => 2,
                                              __border => 0,
                                             );
@@ -103,6 +85,20 @@ $page->footer();
 
 exit;
 
+
+sub gbrowse_url {
+    my ($ds_name,@args) = @_;
+    my $gb2 = $c->enabled_feature('gbrowse2');
+    if( $gb2 and my $ds = $gb2->data_source('tomato_bacs') ) {
+        if( @args ) {
+            return map $_->url, $ds->xref( @args );
+        } else {
+            return $ds->url;
+        }
+    } else {
+        return "/gbrowse/gbrowse/$ds_name/".( @args ? "?name=$args[0]" : '' );
+    }
+}
 
 ########## SUBROUTINES #######
 
@@ -129,7 +125,7 @@ sub itag_releases_html {
     my $modtime = strftime('%b %e, %Y',gmtime($r->dir_modtime));
     my $conf_file = $r->get_file_info('gbrowse_genomic_conf');
     my $ftp_link = itag_release_ftp_link($r);
-    my $gb_root = "/gbrowse/gbrowse/$conf_name/";
+    my $gb_root = gbrowse_url($conf_name);
     my $loading_span = span({class=>'ghosted'},'loading');
     my $gb_link   = -f $conf_file->{file} ? a({href => $gb_root},'[GBrowse]')
                                           : $loading_span;
@@ -254,7 +250,7 @@ EOQ
        qq|<a style="color: black" href="$details_url">$clone_seqs->{seqname}</a>|,
        $clone_seqs->{accession} ? link_identifier($clone_seqs->{accession},'genbank_accession') : '-',
        phase_html($clone_seqs->{phase}),
-       ( qq|<form method="get" action="/gbrowse/gbrowse/tomato_bacs/">\n|
+       ( qq|<form method="get" action="|.gbrowse_url('tomato_bacs').qq|">\n|
 	 .simple_selectbox_html( choices  => [ [ '', '-' ],
 					       sort {$a->[1] <=> $b->[1]}
 					       map  {[$_,parse_clone_ident($_,'versioned_bac_seq')->{fragment}]}
@@ -278,7 +274,7 @@ EOQ
        qq|<a style="color: black" href="$details_url">$clone_seqs->{seqname}</a>|,
        $clone_seqs->{accession} ? link_identifier($clone_seqs->{accession}) : '-',
        phase_html($clone_seqs->{phase}),
-       qq(<a href="/gbrowse/gbrowse/tomato_bacs/?ref=$fragnames[0]&start=1&end=$clone_seqs->{seqlen}">[browse]</a>),
+       CGI->a({href => gbrowse_url('tomato_bacs',$fragnames[0])}, '[browse]' ),
        $details_url ? qq(&nbsp;<a href="$details_url">[details]</a>) : '',
       ]
     }
@@ -338,4 +334,45 @@ HTML
 
   return $seqs_and_annots_html;
 
+}
+
+sub cview_map_links {
+    my ($dbh) = @_;
+    my $map_factory = CXGN::Cview::MapFactory->new($dbh);
+    my %maps = ( c9  => 'clones anchored in FPC contigs from Sanger 2006 FPC build (Tomato HindIII and MboI libraries)',
+                 p9  => 'clones anchored with overgo, computational, or manual methods',
+                 13  => 'clones anchored with FISH',
+                 agp => 'clones anchored in manually-curated final chromosome assemblies',
+                );
+
+    return map {
+        my $mid = $_;
+        my $mvid = CXGN::Cview::Map::Tools::find_current_version($dbh, $mid)
+            or die "no map_version_id found for map_id $mid\n";
+        my $m = $map_factory->create({map_version_id => $mvid})
+            or die "no map found with map_version_id $mvid\n";
+        my $sn = $m->get_short_name;
+        qq|<a href="/cview/map.pl?map_id=$mid">$sn</a> &ndash; $maps{$mid}|;
+    }
+    sort keys %maps
+}
+
+sub gbrowse_fpc_links {
+
+    # if gbrowse2 is installed and enabled, link to data sources that match 'tomato' and 'fpc'
+    my $gb2 = $c->feature('gbrowse2');
+    if( $gb2 && $gb2->enabled ) {
+        return
+            map { CGI->a({ href => $_->url }, "browse ".$_->description ) }
+            grep $_->description =~ /tomato/i && $_->description =~ /FPC/i,
+            $gb2->data_sources;
+
+    }
+    # otherwise, use the old links to gbrowse1
+    else {
+        return ( '<a href="/gbrowse/gbrowse/fpc_tomato_sgn_2009/">SGN 2009 FPC browser</a> &ndash; browse FPC contigs from SGN 2009 FPC build (Tomato HindIII, EcoRI, MboI, and random sheared libraries)',
+                 '<a href="/gbrowse/gbrowse/sanger_tomato_fpc/">Sanger 2006 FPC browser</a> &ndash; browse FPC contigs from Sanger 2006 FPC build (Tomato HindIII and MboI libraries)',
+                );
+
+    }
 }

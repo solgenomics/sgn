@@ -11,9 +11,9 @@ my $gb2 = $c->feature('gbrowse2')
 
 eval { $gb2->setup }; #< may fail if web server has done it already
 
-my @xrefs = $gb2->xrefs('Serine');
+my @sources = $gb2->data_sources;
 
-can_ok( $_, 'is_empty', 'text', 'url') for @xrefs;
+can_ok( $_, 'url', 'name', 'description') for @sources;
 
 #use Data::Dumper;
 #diag Dumper(\@xrefs);

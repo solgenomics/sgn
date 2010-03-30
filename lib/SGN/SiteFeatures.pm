@@ -55,6 +55,12 @@ sub enabled_features {
     grep $_->enabled,
       shift->features
 }
+sub enabled_feature {
+    my $f = shift->feature(shift)
+        or return;
+    return unless $f->enabled;
+    return $f;
+}
 
 sub feature_xrefs {
     map $_->xrefs( @_ ),  shift->enabled_features

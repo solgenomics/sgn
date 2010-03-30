@@ -17,6 +17,7 @@ has '_data_sources' => (
     lazy_build => 1,
     handles => {
         data_sources => 'values',
+        data_source  => 'get',
     },
    ); sub _build__data_sources {
        my $self = shift;
