@@ -166,12 +166,12 @@ sub itag_release_ftp_link {
 
     #return ghosted link if files are not world-readable
     return '<span class="ghosted" title="bulk files not publicly released">[FTP]</span>'
-        unless (stat($r->get_file_info('combi_genomic_gff3')->{file}))[2] & 04;
+        unless (stat( $r->dir ))[2] & 04;
 
     my $ftp_link = $r->dir;
-    my $ftpsite_root = $page->get_conf('ftpsite_root');
+    my $ftpsite_root = $c->get_conf('ftpsite_root');
     $ftp_link =~ s!^$ftpsite_root/*!!;
-    $ftp_link = a({href=>"ftp://ftp.sgn.cornell.edu/$ftp_link"},'[FTP]');
+    $ftp_link = a({href=> $c->get_conf('ftpsite_url')."/$ftp_link"},'[FTP]');
 
     return $ftp_link;
 }
