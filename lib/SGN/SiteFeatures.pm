@@ -11,16 +11,20 @@ use Module::Pluggable::Object;
 use namespace::autoclean;
 use Try::Tiny;
 
-
 requires 'config';
 
 # lazy accessor, returns arrayref of instantiated and configured
 # SGN::Feature objects
-has 'features' => (
-    is => 'ro',
-    isa => 'ArrayRef',
+has '_features' => (
+    is         => 'ro',
+    isa        => 'HashRef[SGN::Feature]',
+    traits     => ['Hash'],
     lazy_build => 1,
-   ); sub _build_features {
+    handles => {
+        features => 'values',
+        feature  => 'get',
+    },
+   ); sub _build__features {
        my $self = shift;
        my @feature_classes =
            Module::Pluggable::Object
@@ -29,7 +33,7 @@ has 'features' => (
                      )
                ->plugins;
 
-       my @feature_objects;
+       my %feature_objects;
        foreach my $class (@feature_classes) {
            my $cfg = $self->config->{feature}{$class} || {};
            if( $cfg->{enabled} ) {
@@ -37,29 +41,64 @@ has 'features' => (
                    my $f = $class->new( %$cfg,
                                         'context' => $self,
                                        );
-                   push @feature_objects, $f;
-                   $self->_feature_map->{ $f->feature_name } = $f;
+                   $feature_objects{$f->feature_name} = $f;
                } catch {
                    warn "WARNING: failed to configure $class : $_";
                }
            }
        }
 
-       return \@feature_objects;
+       return \%feature_objects;
    }
 
 sub enabled_features {
-    [ grep $_->enabled, @{ shift->features } ]
+    grep $_->enabled,
+      shift->features
 }
 
-has '_feature_map' => (
+sub feature_xrefs {
+    map $_->xrefs( @_ ),  shift->enabled_features
+}
+
+
+package SGN::SiteFeatures::CrossReference;
+use Moose;
+use MooseX::Types::URI 'Uri';
+
+has 'url' => ( documentation => <<'',
+the absolute or relative URL where the full resource can be accessed, e.g. /unigenes/search.pl?q=SGN-U12
+
+    is  => 'ro',
+    isa => Uri,
+    required => 1,
+    coerce => 1,
+   );
+
+
+has 'text' => ( documentation => <<'',
+a short text description of the contents of the resource referenced, for example "6 SGN Unigenes"
+
+    is  => 'ro',
+    isa => 'Str',
+    required => 1,
+   );
+
+
+has 'is_empty' => ( documentation => <<'',
+true if the cross reference is empty, may be used as a rendering hint
+
+    is  => 'ro',
+    isa => 'Bool',
+    default => 0,
+   );
+
+has 'feature' => ( documentation => <<'',
+the site feature object this cross reference points to
+
     is => 'ro',
-    isa => 'HashRef',
-    default => sub { {} },
-);
+    required => 1,
+   );
 
-sub feature {
-    shift->_feature_map->{ +shift }
-}
-
+__PACKAGE__->meta->make_immutable;
 1;
+

@@ -82,7 +82,6 @@ my $build = $class->new(
         #         'Bio::AlignIO' => 0,
         #         'Bio::DB::GenBank' => 0,
         #         'Bio::GMOD::Blast::Graph' => 0,
-        #         'Bio::Graphics::Gel' => 0,
         #         'Bio::Range' => 0,
         #         'Bio::Restriction::Analysis' => 0,
         #         'Bio::SearchIO' => 0,
@@ -90,6 +89,10 @@ my $build = $class->new(
         #         'Bio::SeqIO' => 0,
         #         'Bio::Tools::Primer3' => 0,
         #         'Bio::Tools::Run::Primer3' => 0,
+        #         'Bio::Graphics::Gel' => 0,
+
+        'Bio::Graphics::FeatureFile' => 0,
+
         'Cache::File' => 0,
 
         'CGI'                 => 0,
@@ -295,6 +298,7 @@ my $build = $class->new(
         'Moose'                   => 0,
         'MooseX::Method::Signatures' => '0.30',
         'MooseX::Types::Path::Class' => 0,
+        'MooseX::Types::URI'      => 0,
         'MooseX::Singleton'       => 0,
         'namespace::autoclean'    => 0,
         'SOAP::Transport::HTTP'   => 0,

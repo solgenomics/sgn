@@ -73,7 +73,6 @@ has 'run_mode' => (
    );
 
 
-
 # default database connection info used by gbrowse
 has 'default_db_host' => (
     is  => 'ro',
@@ -118,14 +117,26 @@ sub link_uri {
 sub setup {
     my ( $self, $c ) = @_;
 
-    $self->_render_configs;
+    $self->render_all_configs;
+}
+
+sub xrefs {
+    return unless @_ == 2;
+    my ( $self, $q ) = @_;
+
+    # go through each data source and give it a crack at it.  if multiple handlers, give 
+    return map $_->xref($q), $self->data_sources;
+}
+
+sub data_sources {
+    die 'data_sources not yet implemented for gbrowse 1.x';
 }
 
 
 # for each .mas file in the $self->conf_template_dir directory, run
 # templating on it and put the output in $self->conf_dir under the
 # same filename, without the ending .mas
-sub _render_configs {
+sub render_all_configs {
     my $self = shift;
 
     # all .mas files in the conf_template_dir
@@ -143,21 +154,27 @@ sub _render_configs {
             $self->conf_dir->file( $bn );
         };
 
-        # render the template into the target file
-        my $outbuf;
-        my $mason = HTML::Mason::Interp
-            ->new( allow_globals => [qw[ $c $feature ]],
-                   autohandler_name => '',
-                   comp_root => [['conf_templates', $self->conf_template_dir->stringify ]],
-                   out_method => \$outbuf,
-                  );
-        $mason->set_global( '$c'       => $self->context );
-        $mason->set_global( '$feature' => $self          );
-
-        $mason->exec( '/'.$template_file->basename ); #< mason's default search path is current working directory
-
-        $render_target->openw->print( $outbuf );
+        $self->render_config_template( $template_file => $render_target );
     }
+}
+
+sub render_config_template {
+    my ( $self, $template_file, $render_target ) = @_;
+
+        # render the template into the target file
+    my $outbuf;
+    my $mason = HTML::Mason::Interp
+        ->new( allow_globals => [qw[ $c $feature ]],
+               autohandler_name => '',
+               comp_root => [['conf_templates', $self->conf_template_dir->stringify ]],
+               out_method => \$outbuf,
+              );
+    $mason->set_global( '$c'       => $self->context );
+    $mason->set_global( '$feature' => $self          );
+
+    $mason->exec( '/'.$template_file->basename ); #< mason's default search path is current working directory
+
+    $render_target->openw->print( $outbuf );
 }
 
 # # returns a string of apache configuration to be included during

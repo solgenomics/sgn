@@ -9,6 +9,58 @@ use MooseX::Singleton;
 use namespace::autoclean;
 extends 'SGN::Feature::GBrowse';
 
+
+has '_data_sources' => (
+    is         => 'ro',
+    isa        => 'HashRef',
+    traits     => ['Hash'],
+    lazy_build => 1,
+    handles => {
+        data_sources => 'values',
+    },
+   ); sub _build__data_sources {
+       my $self = shift;
+
+       return {} unless $self->config_master;
+
+       my $ds_class =  __PACKAGE__.'::DataSource';
+       Class::MOP::load_class( $ds_class );
+
+       my %sources;
+       foreach my $type ( $self->config_master->configured_types ) {
+
+           # absolutify the path from the config file
+           my $path = $self->config_master->setting( $type => 'path' )
+               or die "no path configured for [$type] in ".$self->config_master."\n";
+           $path = Path::Class::File->new( $path );
+           unless( $path->is_absolute ) {
+               $path->absolute( $self->conf_dir );
+           }
+
+           $sources{$type} = $ds_class->new(
+               name    => $type,
+               path    => $path,
+               gbrowse => $self,
+               description => $self->config_master->setting( $type => 'description' ),
+              );
+       }
+
+       return \%sources;
+   }
+
+has 'config_master' => (
+    is => 'ro',
+    lazy_build => 1,
+   ); sub _build_config_master {
+
+       my $master_file = shift->conf_dir->file('GBrowse.conf');
+       return unless -f $master_file;
+
+       my $ff = Bio::Graphics::FeatureFile->new( -file => "$master_file" );
+       $ff->safe( 1 ); #< mark the file as safe, so we can use code refs
+       return $ff;
+   }
+
 # returns a string of apache configuration to be included during
 # startup. will be part of plugin role
 sub apache_conf {
