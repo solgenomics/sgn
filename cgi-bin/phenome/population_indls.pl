@@ -1,4 +1,4 @@
-#!/usr/bin/perl -wT
+#!/usr/bin/perl -w
 
 =head1 DESCRIPTION
 
@@ -748,7 +748,7 @@ sub qtl_plot
 
     $qtl_image  = $self->qtl_images_exist();
     my $permu_data = $self->permu_values_exist();
-
+    
     unless ( $qtl_image && $permu_data )
     {
 
@@ -1023,7 +1023,8 @@ sub infile_list
     my $prod_permu_file  = $self->permu_file();
     my $gen_dataset_file = $self->genotype_file();
     my $phe_dataset_file = $self->phenotype_file();
-
+    my $crosstype_file   = $self->crosstype_file();
+    print STDERR "cross type file: $crosstype_file\n";
     my $input_file_list_temp =
       File::Temp->new(
                        TEMPLATE => "infile_list_${ac}_$pop_id-XXXXXX",
@@ -1046,7 +1047,7 @@ sub infile_list
     my $file_in_list = join( "\t",
                              $file_cv_in,       "P$pop_id",
                              $gen_dataset_file, $phe_dataset_file,
-                             $prod_permu_file, );
+                             $prod_permu_file, $crosstype_file);
 
     open FI, ">$file_in" or die "can't open $file_in: $!\n";
     print FI $file_in_list;
@@ -1269,6 +1270,49 @@ sub phenotype_file
 
 }
 
+=head2 crosstype_file
+
+ Usage: my $gen_file = $self->crosstype_file();
+ Desc: creates the crosstype file in the /data/prod/tmp/r_qtl/temp, 
+      
+ Ret: crossotype filename (with abosolute path)
+ Args: none
+ Side Effects:
+ Example:
+
+=cut
+
+sub crosstype_file
+{
+    my $self       = shift;
+    my $pop_id     = $self->get_object_id();
+    my $population = $self->get_object();
+ 
+    my $cross_type = 'bc' if ($population->get_cross_type_id() == 2);
+    $cross_type = 'f2' if ($population->get_cross_type_id() == 1);
+    
+    my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
+	$self->cache_temp_path();
+
+    my $cross_temp = File::Temp->new(
+	                             TEMPLATE => "cross_type_${pop_id}-XXXXXX",
+                                     DIR      => $prod_temp_path,
+                                     UNLINK   => 0,
+	                            );
+   
+
+    my $cross_file = $cross_temp->filename;
+    
+    open CF, ">$cross_file" or die "can't open $cross_file: $!\n";
+    print CF $cross_type;
+    close FO; 
+
+    return $cross_file;
+
+}
+
+
+
 =head2 run_r
 
  Usage: my ($qtl_summary, $flanking_markers) = $self->run_r();
@@ -1343,7 +1387,7 @@ sub run_r
 
 }
 
-=head2 genotype_file
+=head2 permu_file
 
  Usage: my $permu_file = $self->permu_file();
  Desc: creates the permutation file in the /data/prod/tmp/r_qtl/cache, 
