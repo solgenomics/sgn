@@ -206,7 +206,7 @@ if ($type eq 'ontology') {
 	}
 	#display ontology annotation form
 	
-	if (($login_user_type eq 'curator' || $login_user_type eq 'submitter' || $login_user_type eq 'sequencer') ) {
+	if ( $login_user && (grep $login_user_type eq $_, qw| curator submitter sequencer |) ) {
 	    if (@obs_annot) { $ontology_links .=print_obsoleted(@obs_annot) } ; 
 	}
 
