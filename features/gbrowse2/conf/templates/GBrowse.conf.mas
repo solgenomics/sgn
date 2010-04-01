@@ -93,7 +93,7 @@ region grid         = 0
 detail grid         = 1
 image widths        = 450 640 800 1024
 default width       = 800
-pad_left            = 60
+pad_left            = 30
 pad_right           = 30
 too many landmarks  = 100
 
