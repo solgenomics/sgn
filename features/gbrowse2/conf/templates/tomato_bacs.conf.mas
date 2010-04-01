@@ -8,11 +8,7 @@ aggregators = gappedmatch{match_part/match} processed_transcript
 # "automatic" classes to try when an unqualified identifier is given
 automatic classes = Sequence clone match nucleotide_motif
 
-# what image widths to offer
-image widths  = 450 680 980 1550 2400
-
 # default width of detailed view (pixels)
-default width = 680
 default features = Cross_match_vector GT_align_SGN_markers GT_Exon_SGN_E_tomato_potato RepeatMasker tRNAscanSE BLAST_tomato_bac_ends BLAST_tomato_bacs  AUGUSTUS_tom_pot_cdna
 upload_tracks section = closed
 display_settings section = closed
@@ -20,14 +16,6 @@ display_settings section = closed
 # max and default segment sizes for detailed view
 #max segment     = 500000
 #default segment = 50000
-
-# zoom levels
-zoom levels    = 100 200 1000 2000 5000 10000 20000 40000 100000 200000 500000 1000000
-
-# colors of the overview, detailed map and key
-overview bgcolor = white
-detailed bgcolor = white
-key bgcolor      = beige
 
 # examples to show in the introduction
 examples=sub

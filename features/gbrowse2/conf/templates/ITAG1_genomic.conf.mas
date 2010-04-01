@@ -6,7 +6,7 @@ reference class = Sequence
 
 search attributes = description
 
-default features = genespan mrna cds
+default features = mrna sgn_loci sgn_unigenes
 
 #aggregators =
 #	gappedmatch{match_part/match}
