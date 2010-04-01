@@ -35,7 +35,7 @@ has '_data_sources' => (
                or die "no path configured for [$type] in ".$self->config_master."\n";
            $path = Path::Class::File->new( $path );
            unless( $path->is_absolute ) {
-               $path->absolute( $self->conf_dir );
+               $path = $self->conf_dir->file( $path );
            }
 
            $sources{$type} = $ds_class->new(

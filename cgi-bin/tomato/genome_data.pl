@@ -91,9 +91,9 @@ sub gbrowse_url {
     my $gb2 = $c->enabled_feature('gbrowse2');
     if( $gb2 and my $ds = $gb2->data_source('tomato_bacs') ) {
         if( @args ) {
-            return map $_->url, $ds->xref( @args );
+            return map $_->url, $ds->xrefs( @args );
         } else {
-            return $ds->url;
+            return $ds->view_url;
         }
     } else {
         return "/gbrowse/gbrowse/$ds_name/".( @args ? "?name=$args[0]" : '' );
@@ -360,10 +360,9 @@ sub cview_map_links {
 sub gbrowse_fpc_links {
 
     # if gbrowse2 is installed and enabled, link to data sources that match 'tomato' and 'fpc'
-    my $gb2 = $c->feature('gbrowse2');
-    if( $gb2 && $gb2->enabled ) {
+    if( my $gb2 = $c->enabled_feature('gbrowse2') ) {
         return
-            map { CGI->a({ href => $_->url }, "browse ".$_->description ) }
+            map { CGI->a({ href => $_->view_url }, "browse ".$_->description ) }
             grep $_->description =~ /tomato/i && $_->description =~ /FPC/i,
             $gb2->data_sources;
 

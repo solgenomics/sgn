@@ -124,8 +124,8 @@ sub xrefs {
     return unless @_ == 2;
     my ( $self, $q ) = @_;
 
-    # go through each data source and give it a crack at it.  if multiple handlers, give 
-    return map $_->xref($q), $self->data_sources;
+    # go through each data source and give it a crack at it
+    return map $_->xrefs($q), $self->data_sources;
 }
 
 sub data_sources {
