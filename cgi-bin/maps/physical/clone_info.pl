@@ -656,7 +656,7 @@ sub sequencing_content {
     if( $chr eq 'unmapped' ) {
       qq|<div class="specialnote">This clone is registered to be sequenced, but has not been successfully mapped to any chromosome.</div>|;
     } elsif( $chr ) {
-      qq|This clone is being sequenced by the Chromosome $chr Sequencing Project. (<a href="/help/about/tomato_sequencing.pl">View projects</a>)|
+      qq|This clone is being sequenced by the Chromosome $chr Sequencing Project. (<a href="/about/tomato_sequencing.pl">View projects</a>)|
     } else {
       "This clone is not assigned to any sequencing project.\n";
     }
