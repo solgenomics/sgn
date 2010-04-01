@@ -1,9 +1,11 @@
 package SGN::Feature::GBrowse::DataSource;
 use Moose;
 use namespace::autoclean;
+use Carp;
 use MooseX::Types::Path::Class;
-use MooseX::Types::URI qw/ Uri /;
 use URI;
+use URI::Escape;
+use URI::FromHash qw/ uri /;
 
 use Bio::Graphics::FeatureFile;
 
@@ -30,17 +32,62 @@ GBrowse Feature object this data source belongs to
     required => 1,
   );
 
-has 'url' => ( documentation => <<'',
-the base URL for this GBrowse data source, usually cgi_url/datasource_name/
+has 'path' => ( documentation => <<'',
+absolute path to the data source's config file
 
-     is         => 'ro',
-     isa        => Uri,
-     coerce     => 1,
-     lazy_build => 1,
-   ); sub _build_url {
-       my $self = shift;
-       URI->new( $self->gbrowse->cgi_url.'/gbrowse/'.$self->name )
+    is  => 'ro',
+    isa => 'Path::Class::File',
+    required => 1,
+   );
+
+has 'config' => ( documentation => <<'',
+the parsed config of this data source, a Bio::Graphics::FeatureFile
+
+    is  => 'ro',
+    isa => 'Bio::Graphics::FeatureFile',
+    lazy_build => 1,
+   ); sub _build_config {
+       Bio::Graphics::FeatureFile->new(
+           -file => shift->path->stringify,
+           -safe => 1,
+          );
    }
+
+has '_databases' => (
+    is => 'ro',
+    isa => 'HashRef',
+    traits => ['Hash'],
+    lazy_build => 1,
+    handles => {
+        databases => 'values',
+        database  => 'get',
+    },
+   ); sub _build__databases {
+       die 'database parsing not implemented for gbrowse 1.x';
+   }
+
+
+sub view_url {
+    shift->_url( 'gbrowse', @_ );
+}
+
+sub img_url {
+    my ( $self, $q ) = @_;
+    $q ||= {};
+    $q->{width}    ||= 600;
+    $q->{keystyle} ||= 'between',
+    $q->{grid}     ||= 'on',
+    return $self->_url( 'gbrowse_img', $q );
+}
+
+sub _url {
+    my ( $self, $script, $query ) = @_;
+    return uri( path  => join( '', $self->gbrowse->cgi_url, '/', $script, '/', $self->name ),
+                ($query ? (query => $query) : ()),
+               );
+}
+
+
 
 __PACKAGE__->meta->make_immutable;
 1;
