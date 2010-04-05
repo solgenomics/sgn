@@ -13,6 +13,7 @@
 <tr><td colspan="2">
 <b>News</b>
 <ul>
+<li>CABOG assembly <a href="ftp://ftp.solgenomics.net/tomato_genome/wgs/assembly/cabog_1.00/">released</a>. [March 26, 2010]</li>
 <li>Tomato <b>annotation released</b> for assembly <b>version 1.00</b>, available in the <a href="/gbrowse">SGN genome browser</a> and <a href="/tools/blast/">SGN BLAST</a>. [Feb 26, 2010]</li>
 
 <li><b>Assembly v1.03</b> has been released. Includes better screening for <i>E. coli</i> sequences, two more 454 runs, and latest release of assembly software. [Jan 24, 2010]</li>
