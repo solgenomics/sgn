@@ -499,7 +499,7 @@ sub process_image {
     #   thumbnail processing
 
 ##    my @image_pages = system("/usr/bin/identify", "$dest_name");  #returns rc, not comtents
-    my @image_pages = `/usr/bin/identify $dest_name`;
+    my @image_pages = `/usr/bin/identify "$dest_name"`;
 
     if ( $#image_pages > 0 ) {    # multipage, pdf, ps or eps
 
