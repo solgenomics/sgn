@@ -191,7 +191,7 @@ sub generated_file_uri {
 =head2 tempfile
 
   Usage   : $c->tempfile( TEMPLATE => 'align_viewer/bar-XXXXXX',
-                          CLEANUP => 0 );
+                          UNLINK => 0 );
   Desc    : a wrapper for File::Temp->new(), which runs the TEMPLATE
             argument through $c->generated_file_uri().  TEMPLATE
             can be either just a filename, or an arrayref of path
@@ -201,7 +201,7 @@ sub generated_file_uri {
 
               - TEMPLATE is relative to the site tempfiles base path,
                   and can be an arrayref of path components,
-              - CLEANUP defaults to 0, which means that by default
+              - UNLINK defaults to 0, which means that by default
                   this temp file WILL NOT be automatically deleted
                   when it goes out of scope
 
@@ -222,7 +222,7 @@ sub generated_file_uri {
 sub tempfile {
   my ( $self, %args ) = @_;
 
-  $args{CLEANUP} = 0 unless exists $args{CLEANUP};
+  $args{UNLINK} = 0 unless exists $args{UNLINK};
 
   my @path_components = ref $args{TEMPLATE} ? @{$args{TEMPLATE}}
                                             : ($args{TEMPLATE});
