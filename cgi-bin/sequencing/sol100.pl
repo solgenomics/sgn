@@ -36,7 +36,8 @@ my @unique_nodes=();
 my $tree =  CXGN::Phylo::Tree->new(); # $newick_string ) ;
 
 my $root_node = $tree->get_root();#CXGN::Phylo::Node->new();
-
+$root_node->set_name($root_o->get_species());
+$root_node->set_link($organism_link . $root_o_id);
 #$root_node->set_name('Solanaceae');
 #$root_node->set_link($organism_link . $root_o_id);
 
@@ -76,24 +77,32 @@ foreach (keys %nodes) {
 
 recursive_children( $nodes{$root_o_id}, $root_node ) ;
 
+#$tree->set_show_labels(1);
+#$tree->set_show_species_in_label(1);
 
 
+$tree->get_root()->recursive_implicit_names();    # needed?
+$tree->get_root()->recursive_implicit_species();
+
+$tree->update_label_names();
 my $newick= $tree->generate_newick();
-#my $file =$c->get_conf("tempfiles_subdir") . "/tree_browser/tmpfile.png"; 
 
-my $file = $c->tempfile( TEMPLATE =>
-				 ['tree_browser',
-				  'tree-XXXXXX'
-				 ],
-				 SUFFIX   => '.png',
+#a File::Temp object
+my $file = $c->tempfile( TEMPLATE =>'tree_browser/tree-XXXXX',
+			 SUFFIX   => '.png',
+			 UNLINK => 0,
     );
 
-my $uri = $c->uri_for_file($file); 
+
 
 my $filename = $file->filename();
-print STDERR "\n\nfilename = $filename, uri = $uri\n\n";
+my $uri = $c->uri_for_file($file); 
+$filename=$c->path_to($uri);
 
-$tree->render_png($uri);
+
+##print STDERR "\n\nfilename = $filename, uri = $uri\n\n";
+
+$tree->render_png($filename);
 
 # foreach (@unique_nodes) {
     
@@ -130,7 +139,7 @@ print info_section_html(
 
 print info_section_html(
     title       => 'Tree',
-    contents     =>  $newick . $uri . qq| <img src="$file" border="1" alt="tree_browser" />|,
+    contents     =>  $newick . qq| <br><img src="$uri" border="0" alt="tree_browser" />|,
     collapsible => 1,
     );
 
@@ -140,21 +149,26 @@ $page->footer();
 sub recursive_children {
     my $o= shift; #CXGN::Chado::Organism object
     my $n = shift; # CXGN::Phylo::Node object
+    $n->set_hide_label(0);
     my @children = $o->get_direct_children;
+    $n->set_name($o->get_species());
+    $n->get_label()->set_link("/chado/organism.pl?organism_id=" . $o->get_organism_id());
+    $n->set_species($n->get_name());
     foreach my $child (@children) {
 	
 	if ( exists( $nodes{$child->get_organism_id() } ) && defined( $nodes{$child->get_organism_id()} ) ) {
 	    my $new_node=$n->add_child();
-	   # $new_node->set_tree($n->get_tree());
-
+	    # $new_node->set_tree($n->get_tree());
+	    
 	    print STDERR "Found child id " . $child->get_organism_id() . " name = " . $child->get_species() . " for parent node " . $n->get_name() . "\n\n";
-	    $new_node->set_name($child->get_species());
-	    $new_node->set_link("/chado/organism.pl?organism_id=" . $child->get_organism_id());
-	    #$new_node->set_hide_label(0);
-	   
+	    #$new_node->set_name($child->get_species());
+	    #$new_node->set_link("/chado/organism.pl?organism_id=" . $child->get_organism_id());
+	    $new_node->set_hide_label(0);
+	    $new_node->set_hilited(1);
 	    recursive_children($child, $new_node);
 	}
     }
+    #if (scalar(@children) == 0 ) { $n->set_hilited(1) ; }
 }
 
 
