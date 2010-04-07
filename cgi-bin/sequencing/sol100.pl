@@ -28,6 +28,7 @@ my @details;
 my $root= 'Solanaceae';
 my $root_o = CXGN::Chado::Organism->new_with_species($schema, $root);
 my $root_o_id = $root_o->get_organism_id();
+
 my $organism_link =   "/chado/organism.pl?organism_id="; 
 
 our %nodes={};
@@ -36,11 +37,9 @@ my @unique_nodes=();
 my $tree =  CXGN::Phylo::Tree->new(); # $newick_string ) ;
 
 my $root_node = $tree->get_root();#CXGN::Phylo::Node->new();
-$root_node->set_name($root_o->get_species());
-$root_node->set_link($organism_link . $root_o_id);
-#$root_node->set_name('Solanaceae');
-#$root_node->set_link($organism_link . $root_o_id);
 
+#$root_node->set_name($root_o->get_species());
+#$root_node->set_link($organism_link . $root_o_id);
 
 
 foreach my $s (@species ) {
@@ -49,9 +48,7 @@ foreach my $s (@species ) {
     if ($o) {
 	my $organism_id = $o->get_organism_id();
 	$nodes{$organism_id}=$o;
-
 	find_recursive_parent($o);
-	
 	
 	push @details,
 	[
@@ -60,7 +57,7 @@ foreach my $s (@species ) {
 	     "PROJECT METADATA",
 	 )
 	];
-    
+	
 	
     } else {
 	print STDERR "NO ORGANISM FOUND FOR SPECIES $s  !!!!!!!!!!!\n\n";
@@ -70,19 +67,18 @@ foreach my $s (@species ) {
 @unique_nodes = values %nodes;
 foreach (keys %nodes) { 
     if ($nodes{$_} ) {
-	print STDERR "Found organism " . $nodes{$_}->get_species() . " (id = $_ ) \n" ; 
+	#print STDERR "Found organism " . $nodes{$_}->get_species() . " (id = $_ ) \n" ; 
     }
 }
 
 
 recursive_children( $nodes{$root_o_id}, $root_node ) ;
 
-#$tree->set_show_labels(1);
-#$tree->set_show_species_in_label(1);
 
-
-$tree->get_root()->recursive_implicit_names();    # needed?
+$tree->get_root()->recursive_implicit_names();   ##
 $tree->get_root()->recursive_implicit_species();
+$tree->set_show_labels(1);
+#$tree->set_show_species_in_label(1);
 
 $tree->update_label_names();
 my $newick= $tree->generate_newick();
@@ -101,21 +97,13 @@ $filename=$c->path_to($uri);
 
 
 ##print STDERR "\n\nfilename = $filename, uri = $uri\n\n";
+$tree->standard_layout();
+
+my $renderer = CXGN::Phylo::PNG_tree_renderer->new($tree); 
+my $image_map = $renderer->get_html_image_map("tree_map", $filename, $filename);
+$tree->set_renderer($renderer);
 
 $tree->render_png($filename);
-
-# foreach (@unique_nodes) {
-    
-#     my $node= CXGN::Phylo::Node->new();
-#     $node->set_name( $_->get_species() );
-#     $node->set_link($organism_link . $_->get_organism_id());
-    
-#     $node->set_tree($tree);
-    
-#     my $newick= $tree->generate_newick();
-#     print STDERR $newick . "\n" ; 
-# }
-
 
 $info = columnar_table_html(
     headings => [
@@ -139,7 +127,7 @@ print info_section_html(
 
 print info_section_html(
     title       => 'Tree',
-    contents     =>  $newick . qq| <br><img src="$uri" border="0" alt="tree_browser" />|,
+    contents     =>   qq| <br><img src="$uri" border="0" alt="tree_browser" USEMAP="#tree_map"/><br> | . $image_map,
     collapsible => 1,
     );
 
@@ -153,22 +141,21 @@ sub recursive_children {
     my @children = $o->get_direct_children;
     $n->set_name($o->get_species());
     $n->get_label()->set_link("/chado/organism.pl?organism_id=" . $o->get_organism_id());
+    $n->get_label()->set_name($n->get_name());
+    #print STDERR "THE label name is ... " . $n->get_label()->get_link() . "\n\n";
     $n->set_species($n->get_name());
+    $n->get_label()->set_hidden(0);
     foreach my $child (@children) {
 	
 	if ( exists( $nodes{$child->get_organism_id() } ) && defined( $nodes{$child->get_organism_id()} ) ) {
 	    my $new_node=$n->add_child();
-	    # $new_node->set_tree($n->get_tree());
 	    
-	    print STDERR "Found child id " . $child->get_organism_id() . " name = " . $child->get_species() . " for parent node " . $n->get_name() . "\n\n";
-	    #$new_node->set_name($child->get_species());
-	    #$new_node->set_link("/chado/organism.pl?organism_id=" . $child->get_organism_id());
-	    $new_node->set_hide_label(0);
-	    $new_node->set_hilited(1);
+	    #print STDERR "Found child id " . $child->get_organism_id() . " name = " . $child->get_species() . " for parent node " . $n->get_name() . "\n\n";
+	    
 	    recursive_children($child, $new_node);
 	}
     }
-    #if (scalar(@children) == 0 ) { $n->set_hilited(1) ; }
+    if ($n->is_leaf() ) { $n->set_hilited(1) ; }
 }
 
 
@@ -179,13 +166,13 @@ sub find_recursive_parent {
 	my $id = $parent->get_organism_id();
 	
 	if (!$nodes{$id} ) {
-	    print STDERR "Found parent id $id for organism " . $parent->get_species() . "\n";
+	    #print STDERR "Found parent id $id for organism " . $parent->get_species() . "\n";
 	    $nodes{$id} = $parent ;
 	    find_recursive_parent($parent);
 	} 
     }
     else { 
-	print STDERR "NO PARENT FOR ORGANISM " . $organism->get_species() . " This must be the root of your tree :-) \n\n";
+	#print STDERR "NO PARENT FOR ORGANISM " . $organism->get_species() . " This must be the root of your tree :-) \n\n";
 	return;
     }
     
