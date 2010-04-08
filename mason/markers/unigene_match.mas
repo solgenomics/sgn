@@ -42,10 +42,9 @@ foreach my $ug (@$unigene_matches){
   
 }
 
-if ($html){
-  $html = CXGN::Page::FormattingHelpers::blue_section_html('Unigene blast matches for primers',$html);
-} 
-
+# don't show anything if there is no data...
+#
+if (!$html) { return; }
 
 </%perl>
 

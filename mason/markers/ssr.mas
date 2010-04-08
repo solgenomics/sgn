@@ -21,6 +21,8 @@ $marker - a CXGN::Marker object.
 
 Lukas Mueller <lam87@cornell.edu>
 
+Based on old SGN code.
+
 =cut
 
 </%doc>
@@ -31,8 +33,9 @@ $marker
 
 <%perl>
 
-  if (!$marker->is_in_collection('ssr')) { return; }
-  my $marker_id = $marker->marker_id();
+  if (!$marker->ssr_data()) { return; }
+
+my $marker_id = $marker->marker_id();
 
 my $html = "";
 #my $query = 'SELECT repeat_motif, reapeat_nr FROM ssr_repeats WHERE marker_id='.$marker_id;
@@ -65,7 +68,7 @@ $html.="<br /><b>Reverse primer:</b> <span class=\"sequence\">$end_primer</span>
 $html.="<br /><b>Predicted size:</b> $pcr_length";
 
 if($html) {
-  $html =  CXGN::Page::FormattingHelpers::blue_section_html('SSR info',$html)
+  $html =  CXGN::Page::FormattingHelpers::info_section_html(title=>'SSR info',contents=>$html)
 }
 else {
   $html = '';

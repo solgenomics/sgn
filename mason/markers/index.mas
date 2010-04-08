@@ -33,15 +33,33 @@ Lukas Mueller <lam87@cornell.edu>
 
 <%args>
 $dbh
-$marker_id
+$marker_id => undef
 </%args>
 
 <%perl>
 
 use CXGN::Marker;
+use SGN::Exception;
+
+
+
+my $e = undef;
+
+if (!$marker_id) { 
+  $e = SGN::Exception->new(title=>'Maker detail page error: marker_id is a required argument');
+  $m->comp('/site/error/exception.mas',  exception=>$e );
+  return;
+}
+
 my $marker = CXGN::Marker->new($dbh, $marker_id);
 
-my $display_name = '';
+if (!$marker) { 
+  $e = SGN::Exception->new(title=>"Marker detail page error: Marker with marker_id $marker_id does not exist in the database");
+ $m->comp('/site/error/exception.mas', exception=>$e);
+  return;
+  
+}
+
 </%perl>
 
 <& /markers/basic_marker_info.mas, marker=>$marker, dbh=>$dbh &>
@@ -74,6 +92,7 @@ my $display_name = '';
 
 <& /markers/comments.mas, marker=>$marker &>
 
-% my $referer = '/search/markers/markerinfo.pl?marker_id=';
-% my $object_id = $marker->marker_id();
-<& /page/comments.mas, object_type=>'marker', object_id=>$marker_id, referer=>$referer &>
+
+% my $referer = '/search/markers/markerinfo.pl?marker_id='.$marker->marker_id();
+
+<& /page/comments.mas, object_type=>"marker", object_id=>$marker_id, referer=>$referer &>
