@@ -31,9 +31,11 @@ Lukas Mueller <lam87@cornell.edu>
 $marker
 </%args>
 
+<& /util/import_javascript.mas, classes=> [ "CXGN.Page.FormattingHelpers" ] &>
+
 <%perl>
 
-  use CXGN::Page::FormattingHelpers qw | html_break_string html_optional_show info_section_html |;
+use CXGN::Page::FormattingHelpers qw | html_break_string html_optional_show info_section_html |;
 
 my $marker_id = $marker->marker_id();
 my $marker_name = $marker->get_name();
@@ -165,7 +167,8 @@ if (%overgos) {
 
 # End of ugly code.
 #############################################
-if($phys_html) {
+
+if ($phys_html) {
   print  info_section_html(title=>'Overgo hybridization and physical mapping', contents=>$phys_html);
 }
 
