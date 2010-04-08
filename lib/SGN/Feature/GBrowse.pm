@@ -123,6 +123,7 @@ sub setup {
 sub xrefs {
     return unless @_ == 2;
     my ( $self, $q ) = @_;
+    return unless defined $q;
 
     # go through each data source and give it a crack at it
     return map $_->xrefs($q), $self->data_sources;

@@ -36,7 +36,6 @@ print info_section_html( title => 'Official Annotation',
 			 subtitle => 'browse genome contigs and official annotations',
 			 contents => <<EOH
 			 <table><tr><td>The official annotation for the tomato genome is provided by the <a href="http://www.ab.wur.nl/TomatoWiki">International Tomato Annotation Group (ITAG)</a>, a multinational consortium, funded in part by the <a href="http://www.eu-sol.net">EU-SOL project</a>.</td><td><a class="footer" href="http://www.eu-sol.net"><img src="/img/eusol_logo_small.jpg" border="0" /></a></td></tr></table>
-<h3 style="margin-left: -1em">Currently available genome releases</h3>
 EOH
 			 .itag_releases_html( $page )
 		       );
@@ -89,7 +88,9 @@ exit;
 sub gbrowse_url {
     my ($ds_name,@args) = @_;
     my $gb2 = $c->enabled_feature('gbrowse2');
-    if( $gb2 and my $ds = $gb2->data_source('tomato_bacs') ) {
+    if( $gb2 ) {
+        my $ds = $gb2->data_source($ds_name)
+            or return;
         if( @args ) {
             return map $_->url, $ds->xrefs( @args );
         } else {
@@ -106,62 +107,53 @@ sub gbrowse_url {
 # box to search it
 sub gb_searchbox {
     my ($gb_root) = @_;
-    return start_form( -action => $gb_root ).textfield(-name => 'name').submit('Search','Search').end_form()
+    return
+        start_form( -style => 'display: inline', -action => $gb_root )
+       .textfield( -name => 'name', -value => 'search by exact name (e.g. TG154)', -onfocus => 'this.select()', -size => 30)
+       .submit('Search','Search')
+       .end_form()
 }
 
 sub itag_releases_html {
-    my ($page) = @_;
 
-  my @releases = CXGN::ITAG::Release->find();
+    return join( "\n",
+                 map {
+                     my $r = $_;
+                     my $dev = $r->is_devel_release ? '(development snapshot)' : '';
+                     my $pre = $r->is_pre_release ? '(pre-release)' : '';
+                     my $tag = $r->release_tag;
+                     my $official = $dev || $pre ? '' : '(official release)';
+                     my $modtime = strftime('%b %e, %Y',gmtime($r->dir_modtime));
+                     my $conf_file = $r->get_file_info('gbrowse_genomic_conf');
+                     my $ftp_link = itag_release_ftp_link($r);
 
-  my @release_rows = map {
-    my $r = $_;
-    my $dev = $r->is_devel_release ? '(development snapshot)' : '';
-    my $pre = $r->is_pre_release ? '(pre-release)' : '';
-    my $official = $dev || $pre ? '' : '(official release)';
-    my $tag = $r->release_tag;
-    my $dir = $r->dir_basename;
-    my $conf_name = $tag.'_genomic';
-    my $modtime = strftime('%b %e, %Y',gmtime($r->dir_modtime));
-    my $conf_file = $r->get_file_info('gbrowse_genomic_conf');
-    my $ftp_link = itag_release_ftp_link($r);
-    my $gb_root = gbrowse_url($conf_name);
-    my $loading_span = span({class=>'ghosted'},'loading');
-    my $gb_link   = -f $conf_file->{file} ? a({href => $gb_root},'[GBrowse]')
-                                          : $loading_span;
-
-    my $gb_search = -f $conf_file->{file} ? gb_searchbox($gb_root)
-                                          : $loading_span;
-    [$modtime,
-     "$tag  $dev$pre$official",
-     $ftp_link,
-     $gb_search,
-     $gb_link,
-    ]
-  } @releases;
-
-  if(@release_rows) {
-      return join "\n", map {
-      my ($modtime,$relname, $ftp_link, $gb_search, $gb_link) = @$_;
-      info_table_html(
-                      Browse => "$ftp_link $gb_link",
-                      'Search Annotations' => $gb_search,
-                      __multicol => 2,
-                      __title => table({style => 'width: 100%'},Tr(td($relname),td({style => 'text-align: right'},$modtime))),
-                     ),
-
-      } @release_rows;
-
-  } else {
-    return '<span class="ghosted">temporarily unavailable</span>'
-  }
+                     info_section_html(
+                         title => "$tag  $dev$pre$official",
+                         subtitle => "last modified $modtime",
+                         is_subsection => 1,
+                         contents => info_table_html (
+                             'Bulk download' => $ftp_link,
+                             map {
+                                 $_->description =>
+                                    span({style => "font-weight: bold; font-size: 110%"},a({href =>$_->view_url},'Browse'),'or')
+                                   .gb_searchbox($_->view_url),
+                             }
+                             grep $_->description =~ /$tag/,
+                             map  $_->data_sources,
+                             $c->enabled_feature('gbrowse2')
+                            ),
+                        )
+                 }
+                 CXGN::ITAG::Release->find
+             )
+           || '<span class="ghosted">temporarily unavailable</span>'
 }
 
 sub itag_release_ftp_link {
     my ($r) = @_;
 
     #return ghosted link if files are not world-readable
-    return '<span class="ghosted" title="bulk files not publicly released">[FTP]</span>'
+    return '<span class="ghosted" title="bulk files not publicly released, pending publication">[FTP not available]</span>'
         unless (stat( $r->dir ))[2] & 04;
 
     my $ftp_link = $r->dir;

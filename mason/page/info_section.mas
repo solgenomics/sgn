@@ -70,22 +70,19 @@ Lukas Mueller, based on the Perl code from Rob Buels.
 
 <%args>
 	$title
-	$contents
-	$subtitle => ""
-	$empty_message => ""
+	$subtitle       => ""
+	$empty_message  => ""
         $is_collapsible => 0
-        $collapsed => 0
-	$id => ""
-	$is_empty => 0
-	$is_subsection => 0
-	$align => 0
+        $collapsed      => 0
+	$id             => ""
+	$is_empty       => 0
+	$is_subsection  => 0
+	$align          => 0
 </%args>
 
-<%perl>
 
-	use CXGN::Page::FormattingHelpers qw | info_section_html |;
+<%once>
+ use CXGN::Page::FormattingHelpers 'info_section_html';
+</%once>
 
-	my $html = info_section_html ( title=> $title, subtitle=>$subtitle, empty_message=>$empty_message, contents=>$contents, collapsible=>$is_collapsible, collapsed=>$collapsed, is_subsection=>$is_subsection, align=>$align);
-
-	print $html;
-</%perl>
+<% info_section_html( %ARGS, contents => $m->content ) %>

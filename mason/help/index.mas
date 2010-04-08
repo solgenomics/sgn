@@ -18,7 +18,7 @@ The Sol Genomics Network (SGN) is a database and website dedicated to the genomi
 <li><a href="/help/gene_search_help.pl">Gene search</a></li>
 <li><a href="/help/phenotype_search_help.pl">Phenotype search</a></li>
 <li><a href="/help/qtl_cvterm_search_help.pl">QTL search</a></li>
-<li><a href="/gbrowse/help.pl">GBrowse annotation viewer</a></li>
+<li><a href="/help/gbrowse.pl">GBrowse annotation viewer</a></li>
 <li><a href="/help/cview.pl">Comparative viewer</a></li>
 <li><a href="/help/marker_search_help.pl">Marker search</a></li>
 <ul>

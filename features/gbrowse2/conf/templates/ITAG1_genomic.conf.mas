@@ -4,23 +4,12 @@ plugins   = FastaDumper RestrictionAnnotator SequenceDumper TrackDumper
 
 reference class = Sequence
 
-search attributes = description
+search attributes = Note
 
-default features = mrna sgn_loci sgn_unigenes
+default features = mrna sgn_loci sgn_unigenes Markers:overview Genes:region
 
-#aggregators =
-#	gappedmatch{match_part/match}
-#	eugtranscript{five_prime_UTR,CDS,three_prime_UTR}
-#	eugcds{CDS}
-#        italymatch{match}
 # "automatic" classes to try when an unqualified identifier is given
 automatic classes = Sequence clone match nucleotide_motif
-
-# what image widths to offer
-image widths  = 450 680 980 1550 2400
-
-# default width of detailed view (pixels)
-default width = 680
 
 # max and default segment sizes for detailed view
 max segment     = 500000
@@ -29,44 +18,37 @@ default segment = 50000
 # zoom levels
 zoom levels    = 100 200 1000 2000 5000 10000 20000 40000 100000 200000 500000 1000000
 
-# colors of the overview, detailed map and key
-overview bgcolor = white
-detailed bgcolor = white
-key bgcolor      = beige
+examples = SL1.00sc00002_16.1.1 "Sulfite oxidase" TG154 C2_At3g02060
 
-# a footer
-# Various places where you can insert your own HTML -- see configuration docs
-html1 =
-html2 =
-html3 =
-html4 =
-#html4 = <div style="border: 1px solid red; padding: 4px"><b>Troubleshooting tip:</b> if the browser seems to be acting strangely, try hitting the <a class="reset_button" href="?reset=1"><b>[Reset]</b></a> link.</div>
-html5 =
-html6 =
-
-### defaults examples sub, works for any of them
-examples=sub
-    {
-        my ($dbgff) = @_;
-        if($dbgff && $dbgff->can('features_db') ) {
-          my $dbh = $dbgff->features_db;
-          my $examples = $dbh->selectall_arrayref('select fref,seqlen from fdata join (select fref,max(foffset) as seqlen from fdna group by fref having max(foffset) <=500000 order by seqlen desc limit 70) as lens using(fref) group by fref,seqlen order by seqlen desc limit 4 offset 2');
-          return map $_->[0],@$examples
-        } else {
-          return ();
-        }
-    }
-
-### DAS CONFIGURATION ####
 das mapmaster = SELF
+
+#these two little subroutines add links to some of the text on gbrowse_detail pages for GeneSeqer alignments
+[match:details]
+default  = sub {
+		my ($value,$tag_name,$feature) = @_;
+                <% $feature->local_inc %>
+		require CXGN::Tools::Identifiers;
+		$value =~ s/(\S+)/CXGN::Tools::Identifiers::link_identifier($1) || $1/ge;
+                $value
+	      }
+
+[mRNA:details]
+default = sub {
+		my ($value,$tag_name,$feature) = @_;
+                <% $feature->local_inc %>
+		require CXGN::Tools::Identifiers;
+		$value =~ s/(\S+)/CXGN::Tools::Identifiers::link_identifier($1) || $1/ge;
+		$value
+	      }
+
 
 [main:database]
 db_adaptor = Bio::DB::SeqFeature::Store
 db_args     = -adaptor DBI::Pg
-              -dsn 'dbi:Pg:host=<% $feature->default_db_host %>;dbname=sfs_ITAG1_genomic'
+              -dsn 'dbi:Pg:host=<% $feature->default_db_host %>;dbname=sfs_itag1_genomic'
               -user '<% $feature->default_db_user %>'
               -password '<% $feature->default_db_password %>'
-search options = default +autocomplete +fulltext
+search options = default +autocomplete +fulltext 
 
 
 ### TRACK CONFIGURATION ####
@@ -120,51 +102,66 @@ translation    = 6frame
 key            = 6-frame translation
 citation       = This track displays a six-frame translation of the reference DNA sequence.
 
-[genespan]
+[Genes:region]
 feature      = gene:ITAG_renaming
-key          = Gene span
+key          = Genes
 glyph        = segments
 fgcolor      = black
 bgcolor      = darkorange
 stranded     = 1
 font2color   = blue
 title        = sub { (shift->attributes('description'))[0] }
-category     = Gene Model features
+category     = Gene models
 das category = transcription
 strand_arrow = 1
-height       = 10
+height       = 7
 citation     = This track shows the spans of gene models annotated by EuGene, the integrative gene predictor for ITAG. (see <a href="http://www.ab.wur.nl/TomatoWiki/AnEugene000">EuGene on ITAG Wiki</a>, <a href="http://www.inra.fr/internet/Departements/MIA/T//EuGene/index.html">EuGene main page</a>)
 
 [mrna]
 feature      = mRNA:ITAG_renaming
-key          = mRNA
+key          = Gene models
 glyph        = processed_transcript
 fgcolor      = black
 bgcolor      = goldenrod
-description  = sub { <% $feature->local_inc %>; require CXGN::Page::FormattingHelpers; CXGN::Page::FormattingHelpers::truncate_string((shift->attributes('description'))[0] || '', 50, '...') }
+description  = sub { <% $feature->local_inc %>; require CXGN::Page::FormattingHelpers; CXGN::Page::FormattingHelpers::truncate_string((shift->attributes('Note'))[0] || '', 50, '...') }
 stranded     = 1
 font2color   = blue
-category     = Gene Model features
+category     = Gene models
 das category = transcription
 strand_arrow = 1
 height       = 10
 citation     = This track shows the mRNAs for gene models annotated by EuGene, the integrative gene predictor for ITAG. (see <a href="http://www.ab.wur.nl/TomatoWiki/AnEugene000">EuGene on ITAG Wiki</a>, <a href="http://www.inra.fr/internet/Departements/MIA/T//EuGene/index.html">EuGene main page</a>)
 
 [cds]
-feature      = CDS:ITAG_renaming
-key          = CDS - click to browse protein annotations
-title        = sub { my $n = shift->display_name; $n =~ s/(mRNA|CDS)://;  $n =~ s/(\.\d+)\.\d+$/$1/; "click to browse annotations on $n protein product"}
+feature      = mRNA:ITAG_renaming
+key          = CDS - click to browse protein
+title        = sub { my $n = shift->display_name; "click to browse annotations on $n protein product"}
 glyph        = CDS
 fgcolor      = black
 bgcolor      = yellow
-label        = sub { my $n = shift->display_name; $n =~ s/mRNA:/CDS:/; $n }
+cds_only     = 1
+#label        = sub { shift->displa || (; $n =~ s/mRNA:/CDS:/; $n }
 stranded     = 1
-category     = Gene Model features
+category     = Gene models
 das category = transcription
 strand_arrow = 1
-link         = sub { my $n = shift->display_name; $n =~ s/(mRNA|CDS)://; $n =~ s/(\.\d+)\.\d+$/$1/; "<% $feature->cgi_url %>/gbrowse/ITAG1_protein/?name=$n" }
+link         = sub { my $n = shift->display_name; $n =~ s/(\.\d+)\.\d+$/$1/; "<% $feature->cgi_url %>/gbrowse/ITAG1_protein/?name=$n" }
 height       = 20
 citation     = This track shows the CDS sequences for gene models annotated by EuGene, the integrative gene predictor for ITAG.  Provided by Stephane Rombauts and Jeffrey Fawcett, <a class="http" href="http://bioinformatics.psb.ugent.be/">Bioinformatics and Evolutionary Genomics</a>, <a class="http" href="http://www.psb.ugent.be">Plant Systems Biology, VIB, Ghent University</a>.  (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnEugene000">EuGene on ITAG Wiki</a>, <a href="http://www.inra.fr/internet/Departements/MIA/T//EuGene/index.html">EuGene main page</a>)
+
+#track to show DNA and GC content
+[peptides]
+feature        = CDS:ITAG_renaming
+glyph          = protein
+global feature = 1
+height         = 40
+do_gc          = 1
+fgcolor        = red
+category       = Gene models
+axis_color     = blue
+strand         = both
+key            = KD Plot/Peptides
+citation       = This track displays a Kyte-Doolittle hydropathy plot of the protein sequence at low magnifications and the peptide sequence itself at higher magnifications.
 
 [cdna_tom]
 feature      = match:ITAG_transcripts_tomato
@@ -277,6 +274,7 @@ citation     = This track shows regions of similarity of Eugene-predicted cDNA s
 
 [Markers:overview]
 feature      = match:ITAG_sgn_markers
+ignore_sub_part = match_part
 key          = Markers
 fgcolor      = black
 bgcolor      = yellow

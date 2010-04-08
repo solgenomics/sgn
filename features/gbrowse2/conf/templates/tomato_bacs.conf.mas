@@ -4,12 +4,14 @@ plugins   = FastaDumper RestrictionAnnotator SequenceDumper TrackDumper
 
 reference class = Sequence
 
-aggregators = gappedmatch{match_part/match} processed_transcript
+# turn off region segment
+region segment = 0
+
 # "automatic" classes to try when an unqualified identifier is given
 automatic classes = Sequence clone match nucleotide_motif
 
 # default width of detailed view (pixels)
-default features = Cross_match_vector GT_align_SGN_markers GT_Exon_SGN_E_tomato_potato RepeatMasker tRNAscanSE BLAST_tomato_bac_ends BLAST_tomato_bacs  AUGUSTUS_tom_pot_cdna
+default features = Cross_match_vector GT_align_SGN_markers GT_Exon_SGN_E_tomato_potato GT_align_SGN_E_tomato_potato
 upload_tracks section = closed
 display_settings section = closed
 
@@ -18,42 +20,20 @@ display_settings section = closed
 #default segment = 50000
 
 # examples to show in the introduction
-examples=sub
-    {
-        my ($dbgff) = @_;
-        if($dbgff && $dbgff->can('features_db') ) {
-          my $dbh = $dbgff->features_db;
-          my $examples = $dbh->selectall_arrayref('select fref,seqlen from fdata join (select fref,max(foffset) as seqlen from fdna group by fref having max(foffset) <=500000 order by seqlen desc limit 70) as lens using(fref) group by fref,seqlen order by seqlen desc limit 4 offset 2');
-          return map $_->[0],@$examples
-        } else {
-          return ();
-        }
-    }
-
+examples = C00HBa0027J19.1  At1G10850 C2_At1g16250 cLEF-57-H10 
 
 language = en
-
-# a footer
-# Various places where you can insert your own HTML -- see configuration docs
-html1 = 
-html2 = 
-html3 = 
-html4 =
-#html4 = <div style="border: 1px solid red; padding: 4px"><b>Troubleshooting tip:</b> if the browser seems to be acting strangely, try hitting the <a class="reset_button" href="?reset=1"><b>[Reset]</b></a> link.</div>
-html5 = 
-html6 =
 
 ### DAS CONFIGURATION ####
 das mapmaster = SELF
 
 [main:database]
 description = SGN Tomato Preliminary Annotation
-db_adaptor  = Bio::DB::GFF
-db_args     = -adaptor dbi::pg
-              -dsn 'dbi:Pg:host=<% $feature->default_db_host %>;dbname=bacs_bio_db_gff.138'
+db_adaptor  = Bio::DB::SeqFeature::Store
+db_args     = -adaptor DBI::Pg
+              -dsn 'dbi:Pg:host=<% $feature->default_db_host %>;dbname=sfs_tomato_bacs'
               -user '<% $feature->default_db_user %>'
               -password '<% $feature->default_db_password %>'
-
 
 ### TRACK CONFIGURATION ####
 # the remainder of the sections configure individual tracks
@@ -68,10 +48,9 @@ label density = 25
 bump density  = 10000
 
 [GT_Exon_SGN_E_tomato]
-feature      = processed_transcript:GenomeThreader_SGN_E_tomato
-#sub_part     = exon:GenomeThreader_SGN_E_tomato CDS:GenomeThreader_SGN_E_tomato
+feature      = mRNA:GenomeThreader_SGN_E_tomato
 key          = GenomeThreader vs SGN tomato ESTs predicted gene locations
-glyph        = segments
+glyph        = processed_transcript
 fgcolor      = blue
 bgcolor      = blue
 stranded     = 1
@@ -82,9 +61,7 @@ height       = 10
 citation     = This track shows Predicted Gene Locations (PGLs) selected by the GenomeThreader program based on alignments of SGN tomato ESTs.  Each PGL is an overlapping cluster of alignments.  Within  each  PGL, alternative  exon/intron  assignments  are labeled as multiple AGS's (Alternative Gene Structures).  For more on GenomeThreader, see <a href="http://www.genomethreader.org/">http://www.genomethreader.org/</a>.  Parameters used: <tt>-xmlout -minalignmentscore 0.90 -mincoverage 0.90 -seedlength 16 -species arabidopsis -cdna <sgn tomato ests file> -genomic bac_sequence_file</tt>
 
 [GT_align_SGN_E_tomato]
-feature      = gappedmatch:GenomeThreader_SGN_E_tomato
-#sub_part     = match_part:GenomeThreader_SGN_E_tomato
-#draw_target  = 1
+feature      = match:GenomeThreader_SGN_E_tomato
 show_mismatch = 1
 category     = GenomeThreader
 das category = similarity
@@ -96,10 +73,9 @@ key          = GenomeThreader vs SGN tomato ESTs supporting alignments
 citation     = This track shows the SGN tomato EST alignments used to compute the PGLs shown in the GenomeThreader vs SGN tomato ESTs track.
 
 [GT_Exon_SGN_E_tomato_potato]
-feature      = processed_transcript:GenomeThreader_SGN_E_tomato_potato
-#sub_part     = exon:GenomeThreader_SGN_E_tomato_potato CDS:GenomeThreader_SGN_E_tomato_potato
+feature      = mRNA:GenomeThreader_SGN_E_tomato_potato
 key          = GenomeThreader vs SGN tomato and potato ESTs predicted gene locations
-glyph        = segments
+glyph        = processed_transcript
 fgcolor      = blue
 bgcolor      = blue
 stranded     = 1
@@ -110,9 +86,7 @@ height       = 10
 citation     = This track shows Predicted Gene Locations (PGLs) selected by the GenomeThreader program based on alignments of SGN tomato <i>and</i> potato ESTs.  Each PGL is an overlapping cluster of alignments.  Within  each  PGL, alternative  exon/intron  assignments  are labeled as multiple AGS's (Alternative Gene Structures).  For more on GenomeThreader, see <a href="http://www.genomethreader.org/">http://www.genomethreader.org/</a>. Parameters used: <tt>-xmlout -minalignmentscore 0.90 -mincoverage 0.90 -seedlength 16 -species arabidopsis -cdna <sgn tomato and potato ests file> -genomic bac_sequence_file</tt>
 
 [GT_align_SGN_E_tomato_potato]
-feature      = gappedmatch:GenomeThreader_SGN_E_tomato_potato
-#sub_part     = match_part:GenomeThreader_SGN_E_tomato_potato
-#draw_target  = 1
+feature      = match:GenomeThreader_SGN_E_tomato_potato
 show_mismatch = 1
 category     = GenomeThreader
 das category = similarity
@@ -124,10 +98,9 @@ key          = GenomeThreader vs SGN tomato and potato ESTs supporting alignment
 citation     = This track shows the SGN tomato and potato EST alignments used to compute the PGLs shown in the GenomeThreader vs SGN ESTs track.
 
 [GT_Exon_SGN_U_tomato]
-feature      = processed_transcript:GenomeThreader_SGN_U_tomato
-#sub_part     = exon:GenomeThreader_SGN_U_tomato CDS:GenomeThreader_SGN_U_tomato
+feature      = mRNA:GenomeThreader_SGN_U_tomato
 key          = GenomeThreader vs SGN tomato unigenes predicted gene locations
-glyph        = segments
+glyph        = processed_transcript
 fgcolor      = blue
 bgcolor      = blue
 stranded     = 1
@@ -139,9 +112,7 @@ citation     = This track shows Predicted Gene Locations (PGLs) selected by the 
 
 
 [GT_align_SGN_U_tomato]
-feature      = gappedmatch:GenomeThreader_SGN_U_tomato
-#sub_part     = match_part:GenomeThreader_SGN_U_tomato
-#draw_target  = 1
+feature      = match:GenomeThreader_SGN_U_tomato
 show_mismatch = 1
 category     = GenomeThreader
 das category = similarity
@@ -153,12 +124,19 @@ key          = GenomeThreader vs SGN tomato unigenes supporting alignments
 citation     = This track shows the SGN unigene alignments used to compute the PGLs shown in the GenomeThreader vs SGN tomato unigenes track.
 
 [GT_align_SGN_markers]
-feature      = gappedmatch:GenomeThreader_SGN_markers
-#sub_part     = match_part:GenomeThreader_SGN_markers
-#draw_target  = 1
+feature      = match:GenomeThreader_SGN_markers
 show_mismatch = 1
 category     = Alignments
 das category = structural
+glyph        = segments
+stranded     = 1
+fgcolor      = black
+bgcolor      = yellow
+key          = SGN markers
+citation     = This track shows alignments against SGN marker sequences, which can provide a good indication of this sequence's position on the physical chromosome.  Alignments were generated with GenomeThreader.  Parameters used: <tt>-xmlout -minalignmentscore 0.90 -mincoverage 0.90 -seedlength 16 -species arabidopsis -cdna <sgn marker sequences file> -genomic bac_sequence_file</tt>
+
+[GT_align_SGN_markers:overview]
+feature      = match:GenomeThreader_SGN_markers
 glyph        = segments
 stranded     = 1
 fgcolor      = black
@@ -184,8 +162,9 @@ synonym    = sub {
 	      }
 
 [AUGUSTUS_tom_cdna]
-feature      = processed_transcript:AUGUSTUS_tom_cdna
+feature      = transcript:AUGUSTUS_tom_cdna
 glyph        = processed_transcript
+ignore_sub_part = intron
 stranded     = 1
 height       = 10
 category     = Gene Prediction
@@ -197,8 +176,9 @@ citation     = This track shows gene predictions generated by AUGUSTUS (<a href=
 
 
 [AUGUSTUS_tom_pot_cdna]
-feature      = processed_transcript:AUGUSTUS_tom_pot_cdna
+feature      = transcript:AUGUSTUS_tom_pot_cdna
 glyph        = processed_transcript
+ignore_sub_part = intron
 stranded     = 1
 height       = 10
 category     = Gene Prediction
@@ -209,8 +189,9 @@ key          = AUGUSTUS with Tomato and Potato EST hints
 citation     = This track shows gene predictions generated by AUGUSTUS (<a href="http://augustus.gobics.de/">http://augustus.gobics.de</a>), using BLAT alignments of Tomato and Potato ESTs as hints.  The sequence of commands to generate this track were: <div style="margin-left: 1em; white-space: nowrap; overflow: show; width: 600px"><tt>blat --minIdentity=92 bac.seq all_tomato_and_potato_ests.seq hints.psl<br />blat2hints.pl --in=hints.psl --out=hints.gff<br />augustus --species=human --hintsfile=hints.gff --extrinsicCfgFile=extrinsic.ME.cfg --gff3=on bac.seq > result.gff3</tt></div>
 
 [AUGUSTUS_tom_ugs]
-feature      = processed_transcript:AUGUSTUS_tom_ugs
+feature      = transcript:AUGUSTUS_tom_ugs
 glyph        = processed_transcript
+ignore_sub_part = intron
 stranded     = 1
 height       = 10
 category     = Gene Prediction
@@ -222,8 +203,9 @@ citation     = This track shows gene predictions generated by AUGUSTUS (<a href=
 
 
 [AUGUSTUS_ab_initio]
-feature      = processed_transcript:AUGUSTUS_ab_initio
+feature      = transcript:AUGUSTUS_ab_initio
 glyph        = processed_transcript
+ignore_sub_part = intron
 stranded     = 1
 height       = 10
 category     = Gene Prediction
@@ -384,18 +366,6 @@ bgcolor      = sub { my $s = $_[0]->score; $s > 0.95 ? 'red' : $s > 0.8 ? 'orang
 key          = SNPs (PolyBayes)
 citation     = This track shows SNPs predicted by the <a href="http://genome.wustl.edu/tools/software/polybayes.cgi">PolyBayes</a> tool, using SGN unigenes as preclusters.
 
-#show the layout of contigs, if BAC is unfinished
-[Contigs]
-feature      = contig:Contigs
-glyph        = generic
-stranded     = 0
-category     = Other
-das category = structural
-fgcolor      = blue
-bgcolor      = blue
-key          = Contigs
-citation     = If this clone sequence is not yet finished, this track shows the layout of the fragments.
-
 #track to show DNA and GC content
 [DNA]
 glyph          = dna
@@ -404,10 +374,25 @@ height         = 40
 do_gc          = 1
 fgcolor        = red
 category       = Other
+gc_window      = auto
 axis_color     = blue
 strand         = both
 key            = DNA/GC Content
 citation       = This track displays a GC content graph of the reference sequence at low magnifications and the DNA sequence itself at higher magnifications.
+#track to show DNA and GC content
+
+[GC:overview]
+glyph          = dna
+global feature = 1
+height         = 30
+do_gc          = 1
+fgcolor        = red
+gc_window      = auto
+key            = GC
+category       = Other
+axis_color     = blue
+strand         = both
+citation       = GC content graph
 
 #track to show a 6-frame translation of the sequence
 [Translation]

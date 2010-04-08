@@ -4,11 +4,10 @@ plugins   = FastaDumper SequenceDumper TrackDumper
 
 reference class = Sequence
 
-default features =
-aggregators =
+default features = blastp_trembl blastp_refseq_pep blastp_rice_pep blastp_swissprot blastp_ath_pep interpro rpsblast 
 
 # "automatic" classes to try when an unqualified identifier is given
-automatic classes = Sequence clone match nucleotide_motif
+automatic classes = match
 
 # where to link to when user clicks in detailed view
 link        = AUTO
@@ -16,48 +15,18 @@ link        = AUTO
 # what image widths to offer
 image widths  = 450 680 980 1550 2400
 
-# default width of detailed view (pixels)
-default width = 680
-upload_tracks section = closed
-display_settings section = closed
-
 # max and default segment sizes for detailed view
-max segment     = 500000
-default segment = 50000
+max segment     = 5000
+default segment = 200
 
 # zoom levels
-zoom levels    = 100 200 1000 2000 5000 10000 20000 40000 100000 200000 500000 1000000
-
-# colors of the overview, detailed map and key
-overview bgcolor = white
-detailed bgcolor = white
-key bgcolor      = beige
+zoom levels    = 100 200 1000 2000
 
 language = en
 
-# a footer
-# Various places where you can insert your own HTML -- see configuration docs
-html1 =
-html2 =
-html3 =
-html4 =
-#html4 = <div style="border: 1px solid red; padding: 4px"><b>Troubleshooting tip:</b> if the browser seems to be acting strangely, try hitting the <a class="reset_button" href="?reset=1"><b>[Reset]</b></a> link.</div>
-html5 =
-html6 =
+region segment = 0
 
-### defaults examples sub, works for any of them
-examples=sub
-    {
-        my ($dbgff) = @_;
-        if($dbgff && $dbgff->can('features_db') ) {
-          my $dbh = $dbgff->features_db;
-          my $examples = $dbh->selectall_arrayref('select fref,seqlen from fdata join (select fref,max(foffset) as seqlen from fdna group by fref having max(foffset) <=500000 order by seqlen desc limit 70) as lens using(fref) group by fref,seqlen order by seqlen desc limit 4 offset 2');
-          return map $_->[0],@$examples
-        } else {
-          return ();
-        }
-    }
-
+examples = copper Q9SGA4_ARATH PF00270 SL1.00sc00002_14.1.1
 
 ### DAS CONFIGURATION ####
 das mapmaster = SELF
@@ -65,7 +34,7 @@ das mapmaster = SELF
 [main:database]
 db_adaptor = Bio::DB::SeqFeature::Store
 db_args     = -adaptor DBI::Pg
-              -dsn 'dbi:Pg:host=<% $feature->default_db_host %>;dbname=sfs_ITAG1_protein'
+              -dsn 'dbi:Pg:host=<% $feature->default_db_host %>;dbname=sfs_itag1_protein'
               -user '<% $feature->default_db_user %>'
               -password '<% $feature->default_db_password %>'
 
@@ -80,44 +49,34 @@ fgcolor     = black
 label density = 25
 bump density  = 10000
 
-#track to show DNA and GC content
-[peptides]
-glyph          = protein
-global feature = 1
-height         = 40
-do_gc          = 1
-fgcolor        = red
-category       = General
-axis_color     = blue
-strand         = both
-key            = Peptides/KD Plot
-citation       = This track displays a Kyte-Doolittle hydropathy plot of the protein sequence at low magnifications and the peptide sequence itself at higher magnifications.
-
 [blastp_trembl]
 feature      = match:ITAG_blastp_trembl
 key          = TrEMBL
 category     = Similarity
 glyph        = segments
-stranded     = 1
+description  = 1
+stranded     = 0
 citation     = This track shows similarities with sequences in TrEMBL (see <a href="http://www.ebi.ac.uk/trembl/">http://www.ebi.ac.uk/trembl/</a>), as detected by BLAST (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnBlastP000">ITAG Wiki</a>)
 bgcolor      = lightgreen
 
 [blastp_refseq_pep]
 feature      = match:ITAG_blastp_refseq_pep
-key          = RefSeq Peptides
+key          = RefSeq Polypeptides
 category     = Similarity
 bgcolor      = lightgreen
+description  = 1
 glyph        = segments
-stranded     = 1
+stranded     = 0
 citation     = This track shows similarities with peptide sequences in RefSeq (see <a href="http://www.ncbi.nlm.nih.gov/RefSeq/">http://www.ncbi.nlm.nih.gov/RefSeq/</a>), as detected by BLAST (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnBlastP000">ITAG Wiki</a>)
 
 [blastp_rice_pep]
 feature      = match:ITAG_blastp_rice_pep
-key          = Rice Peptides
+key          = Rice Polypeptides
 category     = Similarity
 bgcolor      = cyan
+description  = 1
 glyph        = segments
-stranded     = 1
+stranded     = 0
 citation     = This track shows similarities with Rice peptide sequences from RAP-DB (see <a href="http://rapdb.dna.affrc.go.jp/rapdownload/">http://rapdb.dna.affrc.go.jp/rapdownload/</a>), as detected by BLAST (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnBlastP000">ITAG Wiki</a>)
 
 [blastp_swissprot]
@@ -125,34 +84,60 @@ feature      = match:ITAG_blastp_swissprot
 key          = SwissProt
 category     = Similarity
 bgcolor      = lightgreen
+description  = 1
 glyph        = segments
-stranded     = 1
+stranded     = 0
 citation     = This track shows similarities with peptide sequences in SwissProt (see <a href="http://www.expasy.ch/sprot/">http://www.expasy.ch/sprot/</a>), as detected by BLAST (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnBlastP000">ITAG Wiki</a>)
 
 [blastp_ath_pep]
 feature      = match:ITAG_blastp_ath_pep
-key          = Arabidopsis Peptides
+key          = Arabidopsis Polypeptides
+description  = 1
 category     = Similarity
 glyph        = segments
 bgcolor      = cyan
-stranded     = 1
+stranded     = 0
 citation     = This track shows similarities with peptide sequences from <i>Arabidopsis thaliana</i> (see <a href="ftp://ftp.arabidopsis.org/home/tair/Sequences/blast_datasets/TAIR8_blastsets">ftp://ftp.arabidopsis.org/home/tair/Sequences/blast_datasets/TAIR8_blastsets</a>), as detected by BLAST (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnBlastP000">ITAG Wiki</a>)
 
 [interpro]
 feature      = polypeptide_region:ITAG_interpro
-key          = Interpro
+key          = InterProScan
 bgcolor      = blue
-category     = Protein Domain Similarities
+description  = sub { shift->get_Annotations('Dbxref') }
+category     = Similarity
 glyph        = segments
-stranded     = 1
+stranded     = 0
 citation     = Protein domains found by Interproscan (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnInterpro000">ITAG Wiki</a>)
 
 [rpsblast]
 feature      = match:ITAG_rpsblast
 key          = RPS-BLAST
 bgcolor      = lightblue
-category     = Protein Domain Similarities
+category     = Similarity
 glyph        = segments
-stranded     = 1
+stranded     = 0
 citation     = Protein domain matches found by RPS-BLAST (see <a href="http://www.ab.wur.nl/TomatoWiki/AnRPSBlast000">ITAG Wiki</a>)
 
+# [Peptides]
+# glyph          = dna
+# global feature = 1
+# height         = 40
+# do_gc          = 0
+# fgcolor        = red
+# category       = General
+# axis_color     = blue
+# key            = Peptides
+# citation       = This track displays the individual peptides of the protein.
+
+[peptides]
+glyph          = dna
+global feature = 1
+height         = 40
+do_gc          = 0
+fgcolor        = red
+category       = General
+gc_window      = auto
+axis_color     = blue
+strand         = both
+key            = Peptides
+citation       = Displays polypeptide sequence at higher magnifications.

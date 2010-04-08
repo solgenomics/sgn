@@ -168,35 +168,31 @@ email_address          = noreply@gmod.org
 default source = ITAG1_genomic
 
 [ITAG1_genomic]
-description   = ITAG1 Release: genomic annotations
 path          = ITAG1_genomic.conf
+description   = ITAG1 Release: genomic annotations
+extended_description = Tomato release 1 annotations on genomic sequences by the International Tomato Annotation Group (ITAG).
 
 [ITAG1_protein]
-description   = ITAG1 Release: protein annotations
 path          = ITAG1_protein.conf
-
-[ITAG_devel_genomic]
-description  = ITAG Development Snapshot: genomic annotations
-path         = ITAG_devel_genomic.conf
-
-[ITAG_devel_protein]
-description  = ITAG Development Snapshot: protein annotations
-path         = ITAG_devel_protein.conf
-restrict_xrefs = sub { 0 } # do not make any xrefs to itag proteins
+description   = ITAG1 Release: protein annotations
+extended_description = Tomato release 1 annotations on protein sequences by the International Tomato Annotation Group (ITAG).
 
 [tomato_bacs]
-description  = Tomato BACs - SGN Preliminary Annotation
 path         = tomato_bacs.conf
+description  = Tomato Preliminary BAC Annotations (SGN)
+extended_description = Preliminary automatic annotations on tomato BACs, no manual validation.
 
 [fpc_tomato_sgn_2009]
-description  = Tomato FPC (SGN 2009)
 path         = fpc_tomato_sgn_2009.conf
-restrict_xrefs = sub { +shift =~ /^(SGN-M|(LE_|SL_|C\d\d))/  }
+description  = Tomato FPC (SGN 2009)
+extended_description = Tomato fingerprint contigs, 2009 build (from the Arizona Genomics Institute).
+restrict_xrefs = sub { my ($q) = @_; my $r = ref $q; return $r && $r eq 'HASH' || $q =~ /^(SGN-M|LE|SL|C\d\d)/  }
 
 [sanger_tomato_fpc]
-description  = Tomato FPC (Sanger 2006)
 path         = sanger_tomato_fpc.conf
-restrict_xrefs = sub { +shift =~ /^(SGN-M|(LE|SL|C\d\d))/  }
+description  = Tomato FPC (Sanger 2006)
+extended_description = Tomato fingerprint contigs, 2006 build (from the Sanger Centre).
+restrict_xrefs = sub { my ($q) = @_; my $r = ref $q; return $r && $r eq 'HASH' || $q =~ /^(SGN-M|LE|SL|C\d\d)/  }
 
 # [yeast]
 # description = Test

@@ -43,6 +43,7 @@ has '_data_sources' => (
                path    => $path,
                gbrowse => $self,
                description => $self->config_master->setting( $type => 'description' ),
+               extended_description => $self->config_master->setting( $type => 'extended_description' ),
               );
        }
 
@@ -61,6 +62,13 @@ has 'config_master' => (
        $ff->safe( 1 ); #< mark the file as safe, so we can use code refs
        return $ff;
    }
+
+sub fpc_data_sources {
+    return
+        sort { my ($ad,$bd) = map $_->description =~ m|(20\d\d)|,$a,$b; $bd <=> $ad }
+        grep $_->description =~ /FPC/i,
+        shift->data_sources;
+}
 
 # returns a string of apache configuration to be included during
 # startup. will be part of plugin role
@@ -95,6 +103,8 @@ sub apache_conf {
     Options      ExecCGI
   </Location>
   DefaultInitEnv GBROWSE_CONF "$conf"
+  BusyTimeout 360
+  IPCCommTimeout 300
   $fcgi_inc
 
 	cgi => <<"",

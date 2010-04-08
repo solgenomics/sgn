@@ -21,15 +21,21 @@ extends 'SGN::Feature::GBrowse::DataSource';
 #       return Bio::Graphics::FeatureFile->new( -file => $self->conf_dir->file( $self->path ) );
 #   }
 
-has 'discriminator' => (
+has 'xref_discriminator' => (
     is => 'ro',
     isa => 'CodeRef',
     lazy_build => 1,
-   ); sub _build_discriminator {
+   ); sub _build_xref_discriminator {
        my ( $self ) = @_;
        return $self->gbrowse->config_master->code_setting( $self->name => 'restrict_xrefs' )
               || sub { 1 }
    }
+
+has 'debug' => (
+    is => 'rw',
+    isa => 'Bool',
+    default => 0,
+   );
 
 sub _build__databases {
     my $self = shift;
@@ -42,9 +48,10 @@ sub _build__databases {
                 or confess "no db adaptor for [$_] in ".$self->path->basename;
             my @args = shellwords( $conf->setting( $dbname => 'db_args' ));
             Class::MOP::load_class( $adaptor );
-            my $conn = eval { $adaptor->new( @args ) };
+            my $conn = eval { local $SIG{__WARN__}; $adaptor->new( @args ) };
             if( $@ ) {
-                warn $self->path->basename." [$dbname]: open failed\n$@";
+                warn $self->path->basename." [$dbname]: open failed\n";
+                warn $@ if $self->debug;
                 ()
             } else {
                 $dbname =~ s/:database$//;
@@ -59,41 +66,42 @@ sub _build__databases {
 sub xrefs {
     my ($self, $q) = @_;
 
-    return unless $self->discriminator->($q);
+    return unless $self->xref_discriminator->($q);
 
+    my @features;
     if( my $ref =  ref $q ) {
         return unless $ref eq 'HASH';
 
-        return $self->_feature_search_xrefs( $q );
-
+        # search for features in all our DBs
+        @features =
+            map $_->features( %$q ),
+                $self->databases;
     } else {
-        return $self->_make_cross_ref(
-            text       => qq|search for "$q" in GBrowse: |.$self->description,
-            url        => $self->view_url({ name=> $q }),
-            feature    => $self->gbrowse,
-            datasource => $self,
-           );
+        @features =
+            map $_->get_feature_by_name( $q ),
+            $self->databases;
     }
+
+    return unless @features;
+    return $self->_make_feature_xrefs( \@features );
 }
 
-sub _feature_search_xrefs {
-    my ( $self, $q ) = @_;
-
-
-    # search for features in all our DBs
-    my @features =
-        map $_->features( %$q ),
-        $self->databases;
-
+sub _make_feature_xrefs {
+    my ( $self, $features ) = @_;
 
     # group the features by source sequence
     my %src_sequence_matches;
-    push @{$src_sequence_matches{$_->seq_id}{features}}, $_ for @features;
+    push @{$src_sequence_matches{$_->seq_id}{features}}, $_ for @$features;
 
     # group the features for each src sequence into non-overlapping regions
     for my $src ( values %src_sequence_matches ) {
-        # make a set of non-overlapping regions
-        my @regions = map { {range => $_} } Bio::Range->unions( @{$src->{features}} );
+
+        # if the features are Bio::DB::GFF::Features, union() is buggy, so convert them
+        # to Bio::Range to perform the union calculation
+        my $ranges = $src->{features}->[0]->isa('Bio::DB::GFF::Feature')
+            ? [ map Bio::Range->new( -start => $_->start, -end => $_->end ), @{$src->{features}} ]
+            : $src->{features};
+        my @regions =  map { {range => $_} } Bio::Range->unions( @$ranges );
 
         # assign the features to each region
       FEATURE:
@@ -113,7 +121,6 @@ sub _feature_search_xrefs {
     return  map $self->_make_region_xref( $_ ),
             map @{$_->{regions}},
             values %src_sequence_matches;
-
 }
 
 sub _make_cross_ref {
@@ -128,21 +135,30 @@ sub _make_region_xref {
     ( $start, $end ) = ( $end, $start ) if $start > $end;
 
     return $self->_make_cross_ref(
-        text       => join('', 'GBrowse - ', $self->description, ' matches: ', join ',', map $_->display_name || $_->primary_id, @{$region->{features}}),
-        url        =>
+        text => join( '',
+            'view ',
+            (  join ', ', map $_->display_name || $_->primary_id, @{$region->{features}}),
+            ' in GBrowse - ',
+            $self->description,
+           ),
+        url =>
             $self->view_url({ ref   => $region->{features}->[0]->seq_id,
                               start => $start,
                               end   => $end,
+                              ( @{$region->{features}} == 1 # highlight our feature or region if we can
+                                    ? ( h_feat => $region->{features}->[0]->display_name )
+                                    : ( h_region =>  $region->{features}->[0]->seq_id.':'.$region->{range}->start.'..'.$region->{range}->end )
+                              )
                           }),
-        preview_img_url =>
-            $self->img_url(  { ref      => $region->{features}->[0]->seq_id,
+        preview_image_url =>
+            $self->image_url(  { ref      => $region->{features}->[0]->seq_id,
                                start    => $start,
                                end      => $end,
                              },
                            ),
-        preview_seqfeatures => $region->{features},
-        feature    => $self->gbrowse,
-        datasource => $self,
+        seqfeatures  => $region->{features},
+        feature      => $self->gbrowse,
+        data_source  => $self,
        );
 }
 
@@ -152,9 +168,10 @@ use Moose;
 use MooseX::Types::URI qw/ Uri /;
 extends 'SGN::SiteFeatures::CrossReference';
 
-has 'datasource'         => ( is => 'ro', required => 1 );
-has 'preview_img_url'    => ( is => 'ro', isa => Uri, coerce => 1 );
-has 'preview_seqfeatures' => ( is => 'ro', isa => 'ArrayRef' );
+with 'SGN::SiteFeatures::CrossReference::WithPreviewImage',
+     'SGN::SiteFeatures::CrossReference::WithSeqFeatures';
+
+has 'data_source' => ( is => 'ro', required => 1 );
 
 __PACKAGE__->meta->make_immutable;
 1;

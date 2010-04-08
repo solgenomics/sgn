@@ -1,0 +1,43 @@
+% unless( my $g = $c->enabled_feature('gbrowse2') ) {
+
+<h2>GBrowse not installed.</h2>
+No help available.
+
+% } else {
+<& .gbrowse_info, gb => $g &>
+% }
+
+
+<%def .gbrowse_info>
+<%args>
+  $gb
+</%args>
+
+<& /page/page_title.mas, title => 'GBrowse help' &>
+
+<&| /page/info_section.mas, title => 'About' &>
+  <p>
+    <% $c->site_name %> uses the Generic Genome Browser (GBrowse),
+    produced by the <a href="http://gmod.org">GMOD project</a>, for
+    providing browsable sequence annotations.
+  </p>
+
+  <p>See the <a href="http://gmod.org/wiki/GBrowse#On-line_documentation">GBrowse online documentation</a> for instructions on how to use GBrowse.</p>
+</&>
+
+<&| /page/info_section.mas, title => 'Available GBrowse Datasets' &>
+
+% my @sources = sort {$a->description cmp $b->description} $gb->data_sources;
+% if( @sources ) {
+%    foreach my $ds (@sources) {
+   <dt><a style="display: block" href="<% $ds->view_url %>"><% $ds->description %></a></dt>
+%      if( $ds->extended_description ) {
+   <dd><% $ds->extended_description %></dd>
+%      }
+%   }
+% } else {
+  <strong>no sources available</strong>
+% }
+</&>
+
+</%def>

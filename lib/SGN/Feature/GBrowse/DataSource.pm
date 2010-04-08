@@ -10,7 +10,7 @@ use URI::FromHash qw/ uri /;
 use Bio::Graphics::FeatureFile;
 
 has 'name' => ( documentation => <<'',
-name of the data source, case sensitive
+name of the data source
 
     is  => 'ro',
     isa => 'Str',
@@ -18,11 +18,18 @@ name of the data source, case sensitive
   );
 
 has 'description' => ( documentation => <<'',
-plaintext description of this data source, interpolated into the gbrowse conf
+short description of this data source - one line
 
     is => 'ro',
     isa => 'Str',
     required => 1,
+  );
+
+has 'extended_description' => ( documentation => <<'',
+fuller description of this data source, 1-2 sentences
+
+    is => 'ro',
+    isa => 'Maybe[Str]',
   );
 
 has 'gbrowse' => ( documentation => <<'',
@@ -71,7 +78,7 @@ sub view_url {
     shift->_url( 'gbrowse', @_ );
 }
 
-sub img_url {
+sub image_url {
     my ( $self, $q ) = @_;
     $q ||= {};
     $q->{width}    ||= 600;
