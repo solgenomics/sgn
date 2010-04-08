@@ -39,16 +39,7 @@ bump density  = 5000
 ### TRACK CONFIGURATION ####
 # the remainder of the sections configure individual tracks
 
-[frameworkmarker:overview]
-feature       = frameworkmarker:FPC
-bgcolor       = red
-glyph         = dot
-fgcolor       = black
-height        = 8
-point         = 1
-key           = Framework Markers
-
-[Markers]
+[Markers:overview]
 feature       = marker:FPC frameworkmarker:FPC electronicmarker:FPC placementmarker:FPC
 bgcolor       = black
 glyph         = dot
@@ -63,7 +54,7 @@ fgcolor       = sub {
                     }
 height        = 5
 point         = 1
-key           = All Markers
+key           = Markers
 citation      = Markers from FPC (Framework markers are in red, electronic markers are in yellow, placement markers are in blue and other markers are represented in green)
 
 [BACs]

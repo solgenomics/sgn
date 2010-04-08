@@ -82,7 +82,9 @@ sub _is_potato {
 sub _clone_seq_project_name {
     my ( $self, $clone ) = @_;
     if( $self->_is_tomato( $clone ) ) {
-	return "Chromosome ".$clone->chromosome_num;
+        my $chr = $clone->chromosome_num;
+        return "Chromosome $chr" if defined $chr;
+        return 'none';
     } elsif( $self->_is_potato( $clone ) ) {
 	return $clone->seqprops->{project_country} || 'unknown';
     } else {

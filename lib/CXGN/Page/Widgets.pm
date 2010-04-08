@@ -106,6 +106,7 @@ sub collapser {
 		$show_save_js = "UserPrefs.set(\"$id\", \"dsp\");UserPrefs.setCookie();";
 	}
 	$hide_state_linktext ||= $linktext;
+        no warnings 'uninitialized';
 	my $link = <<HTML;
 	<a class="collapser collapser_show" target="$alt_target" href="$alt_href" style="$linkstyle;$on_display" onclick=" 
 		Effects.swapElements('${id}_offswitch', '${id}_onswitch'); 

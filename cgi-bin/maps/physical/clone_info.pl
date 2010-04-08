@@ -18,7 +18,6 @@ use CXGN::DB::DBICFactory;
 use CXGN::Fish; # helper routines for FISH data.
 
 use CXGN::Genomic::Search::Clone;
-use CXGN::ITAG::Release;
 use CXGN::Login;
 use CXGN::Map;
 use CXGN::Marker;
@@ -49,8 +48,6 @@ use SGN::Controller::Clone::Genomic;
 # calling them $c and $self because it's very similar to what we would
 # have under catalyst
 my $self = SGN::Controller::Clone::Genomic->new;
-
-my $map_id = CXGN::DB::Physical::get_current_map_id();
 
 my %link_pages = ( marker_page        => '/search/markers/markerinfo.pl?marker_id=',
 		   map_page           => '/cview/map.pl?map_id=',
@@ -233,158 +230,12 @@ print info_section_html(title   => 'Clone &amp; library',
 		       );
 
 
-#### FPC INFO
 
-# Get FPC Contigging data.
-my ($fpc_version, $fpc_date) = CXGN::DB::Physical::get_current_fpc_version_and_date($dbh);
-my $fpc_sth = $dbh->prepare_cached(<<EOQ);
-SELECT	bc.bac_contig_id,
-        bc.contig_name,
-	bap.plausible
-FROM physical.bac_associations AS ba
-INNER JOIN physical.ba_plausibility AS bap
-  ON bap.bac_assoc_id=ba.bac_assoc_id
-INNER JOIN physical.bac_contigs AS bc
-  ON ba.bac_contig_id=bc.bac_contig_id
-WHERE ba.bac_id=? AND bc.fpc_version=?
-EOQ
-$fpc_sth->execute($clone->clone_id, $fpc_version);
-my $contig_sth = $dbh->prepare_cached(<<EOQ);
-SELECT 	ba.bac_id
-FROM physical.bac_associations AS ba
-INNER JOIN physical.ba_plausibility AS bap
-   USING (bac_assoc_id)
-INNER JOIN physical.bacs AS b
-   ON ba.bac_id=b.bac_id
-WHERE ba.bac_contig_id=?
-   AND bap.map_id=?
-EOQ
-my @coherent_ctgs;
-my @incoherent_ctgs; 
-while (my ($ctg_id, $contig, $coherent) = $fpc_sth->fetchrow_array) {
-    if ($coherent) {
-	my @ctg_members;
-	$contig_sth->execute($ctg_id, $map_id);
-	while (my ($thisbacid) = $contig_sth->fetchrow_array) {
-	  my $thisbac = CXGN::Genomic::Clone->retrieve($thisbacid);
-	  my $thisbacname = $thisbac->clone_name_with_chromosome || $thisbac->clone_name;
-	  if ($thisbacid == $clone_id) {
-	    push @ctg_members, qq{<b><span style="color:red">$thisbacname</span></b>};
-	  } else {
-	    push @ctg_members, qq{<a href="$link_pages{bac_page}$thisbacid">$thisbacname</a>};
-	  }
-	}
-	push @coherent_ctgs, qq{<b>$contig :</b> [<span style="color: red">coherent</span>], }.((scalar @ctg_members)). qq{ members: <br />\n};
-	push @coherent_ctgs, "" . join(",\n", @ctg_members) . "<br />\n";
-    } else {
-	my @ctg_members;
-	$contig_sth->execute($ctg_id, $map_id);
-	while (my ($thisbacid) = $contig_sth->fetchrow_array) {
-	  ($thisbacid == $clone_id) && next;
-	  my $thisbac = CXGN::Genomic::Clone->retrieve($thisbacid);
-	  my $thisbacname = $thisbac->clone_name_with_chromosome || $thisbac->clone_name;
-	  push @ctg_members, qq{<a href="$link_pages{bac_page}$thisbacid">$thisbacname</a>};
-	}
-	push @incoherent_ctgs, qq{<b>$contig :</b> [<span style="color: red">incoherent</span>], } . ((scalar @ctg_members) ) . qq{ members:<br />\n};
-	push @incoherent_ctgs, "" . join(",\n", @ctg_members) . "<br />\n";
-    }
-}
-$fpc_sth->finish;
-$contig_sth->finish;
 
-my $fpchtml = join "\n",(@coherent_ctgs,@incoherent_ctgs);
-
-my $overgo_html = do {
-# Get Overgo Plating data.
-  my $overgo_version = CXGN::DB::Physical::get_current_overgo_version($dbh);
-  my $op_sth = $dbh->prepare("SELECT oap.plausible,
-                                   pm.overgo_plate_row,
-				   pm.overgo_plate_col,
-				   marker_id,
-                                   map_id,
-				   op.plate_number
-			    FROM  physical.overgo_associations AS oa
-                            INNER JOIN physical.oa_plausibility AS oap
-                                  ON oap.overgo_assoc_id=oa.overgo_assoc_id
-			    INNER JOIN physical.probe_markers AS pm
-				  ON oa.overgo_probe_id=pm.overgo_probe_id
-			    INNER JOIN physical.overgo_plates AS op
-				  ON pm.overgo_plate_id=op.plate_id
-			    WHERE oa.bac_id=?
-                                  AND oa.overgo_version=?
-                                  AND oap.map_id=?
-");
-  $op_sth->execute($clone->clone_id, $overgo_version, $map_id);
-
-  #format the overgo plating data into html
-  sub fmt_overgo {
-    my ($dbh,$plausible,$row,$col,$marker_id,$map_id,$plateno) = @_;
-    my ($map_name,$marker_name)=('','');
-    if (my $marker=CXGN::Marker->new($dbh,$marker_id)) {
-      $marker_name = $marker->name_that_marker();
-    }
-    if (my $map=CXGN::Map->new($dbh,{map_id=>$map_id})) {
-      $map_name=$map->short_name();
-    }
-    [ qq|<a href="$link_pages{marker_page}$marker_id">$marker_name</a>|,
-      qq|<a href="$link_pages{map_page}$map_id">$map_name</a>|,
-      qq|<a href="$link_pages{plate_design_page}$plateno&highlightwell=$row$col">plate $plateno</a>|,
-      qq|<a href="$link_pages{plate_design_page}$plateno&highlightwell=$row$col">$row$col</a>|
-    ];
-  }
-  my @matches = @{$op_sth->fetchall_arrayref};
-  my @plausible_matches  = map { fmt_overgo($dbh,@$_) } grep {  $_->[0]} @matches;
-  my @conflicted_matches = map { fmt_overgo($dbh,@$_) } grep {! $_->[0]} @matches;
-
-  #output overgo information
-  my @matches_headings = qw/Probe Map Plate Well/;
-  my $plausible_matches_html =  @plausible_matches  ? columnar_table_html( headings   => \@matches_headings,
-									   data       => \@plausible_matches,
-									   __border   => 1,
-									 )
-                                                    : undef;
-  my $conflicted_matches_html = @conflicted_matches ? columnar_table_html( headings => \@matches_headings,
-									   data     => \@conflicted_matches,
-									   __border   => 1,
-									 )
-                                                    : undef;
-  if($plausible_matches_html || $conflicted_matches_html) {
-    info_table_html( 'Plausible matches'  =>
-		     $plausible_matches_html || '<span class="ghosted">None</span>',
-		     'Conflicted matches' =>
-		     $conflicted_matches_html || '<span class="ghosted">None</span>',
-		     'Additional Info'    => qq|<a href="$link_pages{overgo_report_page}">Overgo Plating Progress Report</a>|,
-		     __border => 0,
-		     __multicol => 2,
-		   )
-  } else {
-    ''
-  }
-};
+my $overgo_html = render_overgo( $clone, $dbh );
 
 #get data on our computational associations with markers
-my $computational_associations_html = do {
-  my $cas = $dbh->selectall_arrayref(<<EOSQL,undef,$clone->clone_id);
-select marker_id,e_value,identity,score,parameters
-from physical.computational_associations
-where clone_id = ?
-EOSQL
-
-  if( $cas and @$cas ) {
-    #alter the data to make it more suitable for display
-    foreach my $r (@$cas) {
-      #change the marker ID to an html link
-      $r->[0] = qq|<a href="$link_pages{marker_page}$r->[0]">|.CXGN::Marker->new($dbh,$r->[0])->name_that_marker.'</a>';
-      $r->[3] = sprintf('%0.2f',$r->[3]);
-    }
-
-    columnar_table_html( headings => ['Marker','Evalue','Identity %','Score','Params'],
-		         data => $cas,
-		       );
-  } else {
-    ''
-  }
-};
+my $computational_associations_html = render_computational_associations( $clone, $dbh );
 
 #get data on manual associations
 my $manual_associations_html = do {
@@ -453,46 +304,60 @@ if( $self->_is_tomato( $clone ) ) {
     print info_section_html(title    => 'Physical mapping',
 			    collapsible => 1,
 			    contents =>
-			    info_section_html( title          => 'SGN 2009 FPC',
-					       is_subsection  => 1,
-					       contents       => do {
-						   my $name = $clone->clone_name;
-						   qq|<a href="/gbrowse/gbrowse/fpc_tomato_sgn_2009/?name=$name">search SGN 2009 FPC in genome browser</a><br />|
-					       }
-					     )
-			    .info_section_html( title          => 'Sanger 2006 FPC',
-						is_subsection  => 1,
-						contents       => do {
-						    my $name = $clone->clone_name;
-						    qq|<a href="/gbrowse/gbrowse/sanger_tomato_fpc/?name=$name">search Sanger FPC in genome browser</a><br />|
-						}
+                             info_section_html( title         => 'Fingerprint Contig Builds (FPC)',
+                                                is_subsection => 1,
+                                                contents      => join "\n",
+                                                  '<dl class="fpc_results">',
+                                                  ( sort { my ($ad,$bd) = map m|(20\d\d).+</dt>|,$a,$b; $bd <=> $ad } #< sort by date in the FPC desc
+                                                    ( map { #< do a search and render links for each gbrowse FPC data source
+                                                        my $ds = $_;
+                                                        my @x = $ds->xrefs({ -attributes => { Name => $clone->clone_name }});
+                                                        my $ext_desc = ($ds->extended_description || 'no extended description');
+
+                                                        if( @x ) {
+                                                            map { join '', (
+                                                                '<dt><a href="',
+                                                                $_->url,
+                                                                '">',
+                                                                $ds->description,
+                                                                '</a></dt> ',
+                                                                '<dd>',
+                                                                $ext_desc,
+                                                                '</dd>',
+                                                               )} @x
+                                                        }
+                                                        else {
+                                                            '<dt class="ghosted">not present in '.$ds->description.'</dt><dd class="ghosted">'.$ext_desc.'</dd>'
+                                                        }
+                                                      }
+                                                      grep $_->description =~ /FPC/i, #< select list of GBrowse FPC data sources
+                                                      map  $_->data_sources,
+                                                      $c->enabled_feature('gbrowse2')
+                                                     ),
+                                                     render_old_arizona_fpc( $dbh ),
+                                                   ),
+                                                   '</dl>',
+                                                 )
+			    .info_section_html( title          =>
+					        qq|Marker matches - overgo <a class="context_help" href="/maps/physical/overgo_process_explained.pl">what's this?</a>|,
+					        contents       => $overgo_html,
+					        is_subsection  => 1,
 					      )
-			    .info_section_html( title          => "AGI 2005 FPC",
-						subtitle       => $fpc_date,
-						contents       => $fpchtml ? info_table_html( __border => 0,"Contig Membership" => $fpchtml) :  undef,
-						empty_message  => "$az_name is not in an FPC contig",
-						is_subsection  => 1,
+			    .info_section_html( title          =>
+					        qq|Marker matches - BLAST|,
+					        contents       => $computational_associations_html,
+					        is_subsection  => 1,
 					      )
-			    .info_section_html(title          =>
-					       qq|Marker matches - overgo <a class="context_help" href="/maps/physical/overgo_process_explained.pl">what's this?</a>|,
-					       contents       => $overgo_html,
-					       is_subsection  => 1,
+			    .info_section_html( title          =>
+					        qq|Marker matches - manual|,
+					        contents       => $manual_associations_html,
+					        is_subsection  => 1,
 					      )
-			    .info_section_html(title          =>
-					       qq|Marker matches - computational (BLAST)|,
-					       contents       => $computational_associations_html,
-					       is_subsection  => 1,
-					      )
-			    .info_section_html(title          =>
-					       qq|Marker matches - manual|,
-					       contents       => $manual_associations_html,
-					       is_subsection  => 1,
-					      )
-			    .info_section_html(title          =>
-					       qq|Physical map (from marker matches)|,
-					       contents       => $physical_map_link,
-					       empty_message  => 'Not on Physical Map',
-					       is_subsection  => 1,
+			    .info_section_html( title          =>
+					        qq|Physical map (from marker matches)|,
+					        contents       => $physical_map_link,
+					        empty_message  => 'Not on Physical Map',
+					        is_subsection  => 1,
 					      )
 			    .info_section_html( title         => "FISH map",
 						contents      => $fish_link,
@@ -529,7 +394,7 @@ if( $self->_is_tomato( $clone ) ) {
 					    ,
 					    is_subsection => 1,
 					  )
-			,
+			
 		       );
 } else {
     print info_section_html(title => 'Physical mapping',
@@ -545,33 +410,25 @@ print info_section_html(title   => 'Sequencing',
 			contents => sequencing_content( $self, $c, $clone, $person, $dbh ),
 		       );
 
+
 # compute content for prelim. annot section
 my $latest_seq = $clone->latest_sequence_name;
-my $prelim_annot_section = $latest_seq && $self->_is_tomato($clone)
-    ? tomato_preliminary_annot( $c, $clone )
-    : '';
 
-# compute content for the ITAG section
-my $itag_annot_section = $latest_seq && $self->_is_tomato($clone) ? itag_annot_section() : '';
-
-print info_section_html(title   => 'Annotations',
-			collapsible => 1,
-			contents =>
-			( $self->_is_tomato($clone)
-			     ? info_section_html( title => 'ITAG',
-						  collapsible => 1,
-						  contents => $itag_annot_section,
-						  is_subsection => 1,
-						)
-			       .info_section_html( title => 'SGN Preliminary',
-						   collapsible => 1,
-						   contents => $prelim_annot_section,
-						   is_subsection => 1,
-						 )
-			     : ''
-			)
-		       );
-
+print info_section_html(
+    title   => 'Sequence Annotations',
+    collapsible => 1,
+    contents => info_table_html(
+        __border => 0,
+        Browse =>  join( "\n",
+                          map '<a href="'.$_->url.'">'.$_->text.'</a>',
+                          map { $_->xrefs( $latest_seq ), $_->xrefs( $clone->clone_name ) }
+                              $c->enabled_feature('gbrowse2')
+                       )
+                   || '<span class="ghosted">'.$clone->clone_name.' has no browsable sequence annotations',
+        Download => ( $self->_is_tomato($clone) ? render_tomato_bac_annot_download($c,$clone)
+                          : '<span class="ghosted">not available</span>' ),
+       ),
+   );
 
 #print field for page comments
 print CXGN::People::PageComment->new($dbh, "BAC", $clone->clone_id)->get_html();
@@ -920,11 +777,8 @@ return
 
 }
 
-sub tomato_preliminary_annot {
+sub render_tomato_bac_annot_download {
     my ($c, $clone) = @_;
-
-  #figure out how to draw the computational analysis downloads form
-  my $dl_form = do {
 
     #look at the keys in the sequencing_files hash to figure out the
     #analysis formats we have available.
@@ -947,8 +801,7 @@ sub tomato_preliminary_annot {
 					     );
       my $id = $clone->clone_id;
 
-      #RETURN
-      <<EOHTML
+      return <<EOHTML
 <form method="GET" action="clone_annot_download.pl">
 <table><tr><td><label for="annot_set_selector">Analysis:</label></td><td>$set_select</td></tr>
        <tr><td><label for="annot_format_selector">Format:</label></td><td>$type_select <input type="hidden" name="id" value="$id" /><input type="submit" value="Download" /></td></tr>
@@ -957,56 +810,10 @@ sub tomato_preliminary_annot {
 </form>
 EOHTML
     } else {
-      #RETURN
-      qq|<span class="ghosted">temporarily unavailable</span>|
+        return qq|<span class="ghosted">temporarily unavailable</span>|;
     }
-  };
-
-  #recall: latest_sequence_name() returns the seqs in descending order of sequence length,
-  #so for unfinished bacs, $latest_seq will be the longest fragment
-  my $seqlen = $clone->seqlen;
-  my $gblink = "/gbrowse/gbrowse/tomato_bacs/?ref=$latest_seq&start=1&end=$seqlen";
-  my $gbrowse_img = qq|<a href="$gblink"><img style="border: 2px outset #666666" src="/gbrowse/gbrowse_img/tomato_bacs/?name=$latest_seq:1..$seqlen;type=GT_align_SGN_markers+GT_Exon_SGN_E_tomato_potato+Cross_match_vector+BLAST_E_coli_K12+BLAST_tomato_chloroplast+BLAST_tomato_bacs;width=600;keystyle=between;grid=on" /></a>|;
-
-  #RETURN
-  return
-      qq|<div align="left">\n|
-     .info_table_html( __multicol => 2, __border => 0,
-		       View => qq|<a href="$gblink">in Genome Browser</a>|,
-		       'Download Computational Analysis Results' => $dl_form,
-		     )
-    #.$gbrowse_img
-     .qq|</div>\n|;
 
 } # end prelim annot section
-
-
-sub itag_annot_section {
-  my @release_rows = map {
-      my $release = $_;
-      my $modtime = strftime('%b %e, %Y',gmtime($release->dir_modtime));
-
-      my $title = '<b>'.$release->text_description." ($modtime)</b>";
-      my $annot_link = do {
-	my $contig_file = $release->get_file_info('contig_gff3')->{file};
-	my $got_contig = `grep $latest_seq $contig_file`;
-	if( $got_contig =~ /\S/ ) {
-	  my $contig_url = '/gbrowse/gbrowse/'.$release->release_tag.'_genomic/?name='.$latest_seq;
-	  qq|<a href="$contig_url">[view]</a>|
-	} else {
-	  qq|<span class="ghosted">$latest_seq not included</span>|
-	}
-      };
-      [ $title, $annot_link]
-    } CXGN::ITAG::Release->find;
-
-  return columnar_table_html( headings => ['Release','Annotation'],
-		       data => \@release_rows,
-		       __border => 1,
-		       __align => 'll',
-		       __tableattrs => 'summary="" width="70%" cellspacing="0"',
-		     );
-}
 
 
 # NOTE: this function used to be in CXGN::Genomic::Clone
@@ -1051,3 +858,177 @@ sub agp_positions {
   grep /$name/,
   <$agp>;
 }
+
+
+sub render_old_arizona_fpc {
+    my ( $dbh ) = @_;
+
+    my $map_id = CXGN::DB::Physical::get_current_map_id();
+
+    # Get FPC Contigging data.
+    my ($fpc_version, $fpc_date) = CXGN::DB::Physical::get_current_fpc_version_and_date($dbh);
+    my $fpc_sth = $dbh->prepare_cached(<<EOQ);
+      SELECT  bc.bac_contig_id,
+              bc.contig_name,
+      	bap.plausible
+      FROM physical.bac_associations AS ba
+      INNER JOIN physical.ba_plausibility AS bap
+        ON bap.bac_assoc_id=ba.bac_assoc_id
+      INNER JOIN physical.bac_contigs AS bc
+        ON ba.bac_contig_id=bc.bac_contig_id
+      WHERE ba.bac_id=? AND bc.fpc_version=?
+EOQ
+
+    $fpc_sth->execute($clone->clone_id, $fpc_version);
+    my $contig_sth = $dbh->prepare_cached(<<EOQ);
+      SELECT ba.bac_id
+      FROM physical.bac_associations AS ba
+      INNER JOIN physical.ba_plausibility AS bap
+         USING (bac_assoc_id)
+      INNER JOIN physical.bacs AS b
+         ON ba.bac_id=b.bac_id
+      WHERE ba.bac_contig_id=?
+         AND bap.map_id=?
+EOQ
+
+    my @coherent_ctgs;
+    my @incoherent_ctgs; 
+    while ( my ($ctg_id, $contig, $coherent) = $fpc_sth->fetchrow_array ) {
+        if ($coherent) {
+            my @ctg_members;
+            $contig_sth->execute($ctg_id, $map_id);
+            while ( my ($thisbacid) = $contig_sth->fetchrow_array ) {
+                my $thisbac = CXGN::Genomic::Clone->retrieve($thisbacid);
+                my $thisbacname = $thisbac->clone_name_with_chromosome || $thisbac->clone_name;
+                if ($thisbacid == $clone_id) {
+                    push @ctg_members, qq{<b><span style="color:red">$thisbacname</span></b>};
+                } else {
+                    push @ctg_members, qq{<a href="$link_pages{bac_page}$thisbacid">$thisbacname</a>};
+                }
+            }
+            push @coherent_ctgs, qq{<b>$contig :</b> [<span style="color: red">coherent</span>], }.(scalar @ctg_members). qq{ members: <br />\n};
+            push @coherent_ctgs, "" . join(",\n", @ctg_members) . "<br />\n";
+        } else {
+            my @ctg_members;
+            $contig_sth->execute($ctg_id, $map_id);
+            while (my ($thisbacid) = $contig_sth->fetchrow_array) {
+                ($thisbacid == $clone_id) && next;
+                my $thisbac = CXGN::Genomic::Clone->retrieve($thisbacid);
+                my $thisbacname = $thisbac->clone_name_with_chromosome || $thisbac->clone_name;
+                push @ctg_members, qq{<a href="$link_pages{bac_page}$thisbacid">$thisbacname</a>};
+            }
+            push @incoherent_ctgs, qq{<b>$contig :</b> [<span style="color: red">incoherent</span>], } . (scalar @ctg_members) . qq{ members:<br />\n};
+            push @incoherent_ctgs, "" . join(",\n", @ctg_members) . "<br />\n";
+        }
+    }
+    $fpc_sth->finish;
+    $contig_sth->finish;
+
+    if( @coherent_ctgs || @incoherent_ctgs ) {
+        return join "\n", (
+            '<dt>Tomato FPC (AGI 2005)</dt>',
+            '<dd>',
+            @coherent_ctgs,
+            @incoherent_ctgs,
+            '</dd>',
+           );
+    } else {
+        return '<dt class="ghosted">not present in Tomato FPC (AGI 2005)</dt><dd class="ghosted"></dd>';
+    }
+}
+
+sub render_overgo {
+    my ( $clone, $dbh ) = @_;
+
+    # Get Overgo Plating data.
+    my $map_id = CXGN::DB::Physical::get_current_map_id();
+
+    my $overgo_version = CXGN::DB::Physical::get_current_overgo_version($dbh);
+    my $op_sth = $dbh->prepare("SELECT oap.plausible,
+                                   pm.overgo_plate_row,
+				   pm.overgo_plate_col,
+				   marker_id,
+                                   map_id,
+				   op.plate_number
+			    FROM  physical.overgo_associations AS oa
+                            INNER JOIN physical.oa_plausibility AS oap
+                                  ON oap.overgo_assoc_id=oa.overgo_assoc_id
+			    INNER JOIN physical.probe_markers AS pm
+				  ON oa.overgo_probe_id=pm.overgo_probe_id
+			    INNER JOIN physical.overgo_plates AS op
+				  ON pm.overgo_plate_id=op.plate_id
+			    WHERE oa.bac_id=?
+                                  AND oa.overgo_version=?
+                                  AND oap.map_id=?
+    ");
+    $op_sth->execute($clone->clone_id, $overgo_version, $map_id);
+
+    #format the overgo plating data into html
+    sub fmt_overgo {
+        my ($dbh,$plausible,$row,$col,$marker_id,$map_id,$plateno) = @_;
+        my ($map_name,$marker_name)=('','');
+        if (my $marker=CXGN::Marker->new($dbh,$marker_id)) {
+            $marker_name = $marker->name_that_marker();
+        }
+        if (my $map=CXGN::Map->new($dbh,{map_id=>$map_id})) {
+            $map_name=$map->short_name();
+        }
+        [ qq|<a href="$link_pages{marker_page}$marker_id">$marker_name</a>|,
+          qq|<a href="$link_pages{map_page}$map_id">$map_name</a>|,
+          qq|<a href="$link_pages{plate_design_page}$plateno&highlightwell=$row$col">plate $plateno</a>|,
+          qq|<a href="$link_pages{plate_design_page}$plateno&highlightwell=$row$col">$row$col</a>|
+         ];
+    }
+    my @matches = @{$op_sth->fetchall_arrayref};
+    my @plausible_matches  = map { fmt_overgo($dbh,@$_) } grep {  $_->[0]} @matches;
+    my @conflicted_matches = map { fmt_overgo($dbh,@$_) } grep {! $_->[0]} @matches;
+
+  #output overgo information
+    my @matches_headings = qw/Probe Map Plate Well/;
+    my $plausible_matches_html =  @plausible_matches  ? columnar_table_html( headings   => \@matches_headings,
+                                                                             data       => \@plausible_matches,
+                                                                             __border   => 1,
+                                                                            )
+        : undef;
+    my $conflicted_matches_html = @conflicted_matches ? columnar_table_html( headings => \@matches_headings,
+                                                                             data     => \@conflicted_matches,
+                                                                             __border   => 1,
+                                                                            )
+        : undef;
+    if ($plausible_matches_html || $conflicted_matches_html) {
+        info_table_html( 'Plausible matches'  =>
+                             $plausible_matches_html || '<span class="ghosted">None</span>',
+                         'Conflicted matches' =>
+                             $conflicted_matches_html || '<span class="ghosted">None</span>',
+                         'Additional Info'    => qq|<a href="$link_pages{overgo_report_page}">Overgo Plating Progress Report</a>|,
+                         __border => 0,
+                         __multicol => 2,
+                        )
+    } else {
+        ''
+    }
+}
+
+sub render_computational_associations {
+    my ( $clone, $dbh ) = @_;
+  my $cas = $dbh->selectall_arrayref(<<EOSQL,undef,$clone->clone_id);
+select marker_id,e_value,identity,score,parameters
+from physical.computational_associations
+where clone_id = ?
+EOSQL
+
+  if( $cas and @$cas ) {
+    #alter the data to make it more suitable for display
+    foreach my $r (@$cas) {
+      #change the marker ID to an html link
+      $r->[0] = qq|<a href="$link_pages{marker_page}$r->[0]">|.CXGN::Marker->new($dbh,$r->[0])->name_that_marker.'</a>';
+      $r->[3] = sprintf('%0.2f',$r->[3]);
+    }
+
+    columnar_table_html( headings => ['Marker','Evalue','Identity %','Score','Params'],
+		         data => $cas,
+		       );
+  } else {
+    ''
+  }
+};

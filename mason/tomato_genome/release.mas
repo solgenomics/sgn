@@ -4,7 +4,9 @@
 
 February 26, 2010<br /><br />
 
-<b>ITAG annotation released</b>. The ITAG tomato genome annotation, based on assembly v1.00 has been released and is available in the <a href="/gbrowse">SGN genome browser</a> and in <a href="/tools/blast/">SGN BLAST</a>. The same data agreement as for the genome sequence applies (see below). Please note that these annotations will be updated frequently.<br /><br />
+% my ($gbrowse_link) = map $_->view_url, grep $_->description =~ /ITAG1.+genomic/, map $_->data_sources, $c->enabled_feature('gbrowse2');
+
+<b>ITAG annotation released</b>. The ITAG tomato genome annotation, based on assembly v1.00 has been released and is available in the <a href="<% $gbrowse_link %>">SGN genome browser</a> and in <a href="/tools/blast/">SGN BLAST</a>. The same data agreement as for the genome sequence applies (see below). Please note that these annotations will be updated frequently.<br /><br />
 
 January 25, 2010
 

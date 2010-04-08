@@ -210,7 +210,7 @@ sub process_ids {
 
     #warn "using query \n",$query;
 
-    my $sth = $db -> prepare($query);
+    $sth = $db->prepare($query);
 
     $self -> {query_start_time} = time();
     $sth -> execute();

@@ -80,7 +80,6 @@
 <!--
   CXGN.Page.Toolbar.hideall();
   check_clonecart();
-  startLoad();
 -->
 </script>
 

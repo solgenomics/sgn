@@ -1,6 +1,5 @@
 use strict;
 use warnings;
-
 #my $locus_detail_page = CXGN::Phenome::LocusDetailPage->new();
 
 #package CXGN::Phenome::LocusDetailPage;
@@ -14,14 +13,15 @@ use CXGN::DB::Connection;
 use CXGN::People::PageComment;
 use CXGN::People;
 use CXGN::Contact;
-use CXGN::Page::FormattingHelpers qw/info_section_html
-  page_title_html
-  columnar_table_html
-  info_table_html
-  html_optional_show
-  html_alternate_show
-  tooltipped_text
-  /;
+use CXGN::Page::FormattingHelpers qw(
+        info_section_html
+        page_title_html
+        columnar_table_html
+        info_table_html
+        html_optional_show
+        html_alternate_show
+        tooltipped_text
+      );
 use CXGN::Page::Widgets qw / collapser /;
 use CXGN::Phenome::Locus;
 use CXGN::Phenome::Locus::LinkageGroup;
@@ -38,14 +38,12 @@ use CXGN::Chado::Publication;
 use CXGN::Chado::Pubauthor;
 
 
-
 use CXGN::Sunshine::Browser;
-use CXGN::ITAG::Release;
 use CXGN::Tools::Identifiers qw/parse_identifier/;
 use CXGN::Tools::List qw/distinct/;
 
 use CXGN::Phenome::Locus::LocusPage;
-use SGN::Image; 
+use SGN::Image;
 use HTML::Entities;
 
 my $d = CXGN::Debug->new();
@@ -566,13 +564,13 @@ if ($locus_name) {
     #printing associated unigenes section dynamically
     my $dyn_unigenes = CXGN::Phenome::Locus::LocusPage::include_locus_unigenes();
     $d->d( "!!!Got unigenes :  " . ( time() - $time ) . "\n");
-    
+
     $sequence_links = info_table_html(
 	'SGN Unigenes'       => $dyn_unigenes . $associate_unigene_form,
-	'GenBank accessions' => $genbank,
-	'Tomato genome'      => itag_genomic_annots_html($locus),
-	__border             => 0,
-	);
+	'GenBank Accessions' => $genbank,
+        'Genome Matches'     => genomic_annots_html($locus),
+        __border             => 0,
+       );
 }
 my $seq_count = $gb_count + $unigene_count;
 print info_section_html(
@@ -1357,86 +1355,69 @@ sub merge_locus {
 }
 
 #returns string html listing of locus sequence matches found in ITAG gbrowse DBs
-sub itag_genomic_annots_html {
-    
+sub genomic_annots_html {
+
     my $locus    = shift;
     my $locus_id = $locus->get_locus_id();
 
-    my @releases = CXGN::ITAG::Release->find
-      or return '<span class="ghosted">temporarily unavailable</span>';
 
-    my @matches = map _find_itag_matches($_,$locus_id), @releases;
+    # look up any gbrowse cross-refs for this locus id, if any
+    my @xrefs = map {
+        $_->xrefs({ -types      => ['match'],
+                    -attributes => { sgn_locus_id => $locus_id },
+                 }),
+    } $c->enabled_feature('gbrowse2');
 
-    return join( "\n", @matches ) if @matches;
-    return '<span class="ghosted">None</span>';
-}
-sub _find_itag_matches {
-    my ($rel, $locus_id) = @_;
+    return '<span class="ghosted">None</span>'
+        unless @xrefs;
 
-    return unless $rel->has_gbrowse_dbs;
-
-    my $db = $rel->get_annotation_db('genomic')
-        or die 'error, no genomic blast db, this point should not have been reached';
-
-    # search for features in the blast db
-    my @f = $db->features(
-        -types      => ['match:ITAG_sgn_loci'],
-        -attributes => { sgn_locus_id => $locus_id },
-       );
-
-    #group the features by contig regions
-    my %regions;
-    foreach my $f (@f) {
-        my $region_key =
-            join( ':', $f->sourceseq, $f->attributes('cdna_seq_name') );
-        my $r = $regions{$region_key} ||= [];
-        push @$r, $f;
-    }
 
     # and now convert each of the matched regions into HTML strings
     # that display them
-    return map _itag_features_to_html( $rel, $regions{$_} ),
-           sort keys %regions;
-
+    return join "\n", map _render_genomic_xref( $_ ), @xrefs;
 }
 
-sub _itag_features_to_html {
-    my ($rel, $feats) = @_;
+sub _render_genomic_xref {
+    my ( $xref ) = @_;
 
     # look up all the matching locus sequence names
-    my @locus_seqnames = distinct map {
-        my $f = $_;
-        my $p =
-            parse_identifier( $f->target->sourceseq,
-                              'sgn_locus_sequence' )
-                or die "cannot parse " . $f->target->sourcese;
-        $p->{ext_id}
-    } @$feats;
+    my @locus_seqnames =
+        distinct
+        map {
+            my $f = $_;
+            my $p = parse_identifier(
+                $f->target->seq_id,
+                'sgn_locus_sequence'
+               ) or die "cannot parse " . $f->target->seq_id;
+            $p->{ext_id}
+        }
+        @{$xref->seqfeatures};
 
-    my $gb_img_width     = 600;
-    my $conf_name        = $rel->release_tag . '_genomic';
-    my $ctg              = $feats->[0]->sourceseq;
-    my ( $start, $end ) = ( $feats->[0]->start, $feats->[0]->end );
-    ( $start, $end ) = ( $end, $start ) if $start > $end;
-    my $gblink =
-        "/gbrowse/gbrowse/$conf_name/?ref=$ctg&start=$start&end=$end";
-    my $gbrowse_img =
-        qq|<a href="$gblink"><img style="border: 1px solid #ddd; border-top: 0; padding: 1em 0; margin:0;" src="/gbrowse/gbrowse_img/$conf_name/?name=$ctg:$start..$end;type=genespan+mrna+sgn_loci+tilingpath;width=$gb_img_width;keystyle=between;grid=on" /></a>|;
+    my $linked_img = CGI->a( { href => $xref->url },
+                              CGI->img({ #style => "border: 1px solid #ddd; border-top: 0; padding: 1em 0; margin:0",
+                                         style => 'border: none',
+                                         src   => $xref->preview_image_url })
+                            );
 
 
-    my $sequences_matched = @locus_seqnames > 1 ? 'Sequences matched' : 'Sequence matched';
+    my $sequences_matched =
+        @locus_seqnames > 1 ? 'Sequences matched'
+                            : 'Sequence matched';
 
-    return qq|<div style="text-align: center">\n|
-                  . info_table_html(
-                      __multicol       => 3,
-                      'Genome release' => $rel->release_name,
-                      'Predicted cDNA matched' =>
-                          $feats->[0]->attributes('cdna_seq_name'),
-                      Contig               => $ctg,
-                      $sequences_matched => join( ', ', @locus_seqnames ),
-                      __tableattrs =>
-                          qq|summary="" style="margin: 1em auto -1px auto; border-bottom: 0"|,
-                     )
-                  . $gbrowse_img
-           .qq|</div>\n|
+    return join('',
+                 '<div style="border: 1px solid #777; padding-bottom: 10px">',
+                 info_table_html(
+                     'Annotation Set'     => $xref->data_source->description,
+                     'Feature(s) matched' => join( ', ', map $_->display_name || $_->primary_id, @{$xref->seqfeatures} ),
+                     'Reference Sequence' => $xref->seqfeatures->[0]->seq_id,
+                     $sequences_matched   => join( ', ', @locus_seqnames ),
+                     #__tableattrs         => qq|summary="" style="margin: 1em auto -1px auto"|,
+                     __border             => 0,
+                     __multicol           => 3,
+                    ),
+                 '<hr style="width: 95%" />',
+                 $linked_img,
+                 '</div>',
+                );
 }
+

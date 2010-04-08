@@ -1,9 +1,8 @@
+<%once>
+  use CXGN::Page::FormattingHelpers qw/info_table_html/;
+</%once>
 
-<%perl>
-
-use CXGN::Page::FormattingHelpers qw/info_section_html info_table_html/;
-
-print info_section_html( title => 'Data', contents => <<EOHTML );
+<&| /page/info_section.mas, title => 'Data' &>
 <dl>
 <dt>ESTs</dt>
 <dd>SGN houses EST collections for tomato, potato, pepper, eggplant and
@@ -26,7 +25,9 @@ we house:
     <li>a searchable catalog of tomato BACS</li>
     <li>more than 400,000 BAC end sequences from these BACs</li>
     <li>all BAC sequences used to assemble the tomato genome</li>
-    <li>a <a href="/gbrowse/index.pl">Genome Browser</a> for the tomato genome</li>
+% if( my $g = $c->enabled_feature('gbrowse2') ) {
+    <li>a <a href="<% $g->cgi_url.'/gbrowse' %>">Genome Browser</a> for sequence annotations</li>
+% }
   </ul>
 </dd>
 <dt>Tools</dt>
@@ -67,9 +68,9 @@ print info_section_html( title => 'SGN Tools and Processing', contents => <<EOHT
    including assembly process, builds, cluster, and validation</li>
 
 </ul>
-EOHTML
+</&>
 
-print info_section_html( title => 'SGN community-driven gene and phenotype database', contents => <<EOHTML);
+<&| /page/info_section.mas, title => 'SGN community-driven gene and phenotype database' &>
 <ul style="margin: 0; padding-left: 1em">
 
    <li>We have developed simple web interfaces for the SGN user-community to submit, annotate, and curate the Solanaceae locus and phenotype databases. Our goal is to share biological information, and have the experts in their field
@@ -79,5 +80,4 @@ print info_section_html( title => 'SGN community-driven gene and phenotype datab
     and how to submit information to SGN.</li>
 
 </ul>
-EOHTML
-</%perl>
+</&>
