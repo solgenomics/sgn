@@ -59,6 +59,7 @@ search options = default +autocomplete +fulltext
 glyph       = generic
 height      = 8
 bgcolor     = cyan
+link         = /search/quick_search.pl?term=$name
 fgcolor     = black
 label density = 25
 bump density  = 100
@@ -123,7 +124,7 @@ key          = Gene models
 glyph        = processed_transcript
 fgcolor      = black
 bgcolor      = goldenrod
-description  = sub { <% $feature->local_inc %>; require CXGN::Page::FormattingHelpers; CXGN::Page::FormattingHelpers::truncate_string((shift->attributes('Note'))[0] || '', 50, '...') }
+description  = sub { <% $feature->local_inc %>; require CXGN::Page::FormattingHelpers; CXGN::Page::FormattingHelpers::truncate_string((shift->attributes('Note'))[0] || '', 70, '...') }
 stranded     = 1
 font2color   = blue
 category     = Gene models
@@ -191,7 +192,6 @@ glyph        = segments
 bgcolor      = red
 fgcolor      = red
 stranded     = 1
-link         = http://sgn.cornell.edu/search/quick_search.pl?term=$name
 citation     = This track shows regions of similarity with SGN Unigene (SGN-U) sequences.  (see <a href="http://www.ab.wur.nl/TomatoWiki/AnSgnUnigenes000">ITAG Wiki</a>)
 
 [augustus]
@@ -268,7 +268,6 @@ key          = SGN Locus Sequences
 category     = Genetic Loci
 glyph        = segments
 bgcolor      = #ea00ea
-link         = /search/quick_search.pl?term=$name
 stranded     = 1
 citation     = This track shows regions of similarity of Eugene-predicted cDNA sequences with known sequences associated with SGN genetic loci, as detected by BLAT (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnSGNLoci000">ITAG Wiki</a>)
 
