@@ -451,7 +451,7 @@ HTML
 	<b>Genome scan size:</b> $stat_param{"stat_step_size"} cM <br/> 
 	<b>QTL genotype probability:</b> $stat_param{"stat_prob_level"} <br/>
 	<b>LOD threshold (based on $stat_param{"stat_permu_test"} permutations at $stat_param{"stat_permu_level"} prob. level):</b> $value1  <br/> 
-	<b>Flanking markers & comparative mapviewer:</b><br/> click on graph
+	<b>Flanking markers (95% CI<br/> based on Bayesian Credible Interval estimation)</br> & comparative mapviewer:</b><br/> click on graph
 HTML
 
         $qtl_html .= "</td></tr></table>";
@@ -737,7 +737,7 @@ sub qtl_plot
     $cache_tempimages->purge();
 
     my ( @marker,  @chr,  @pos,   @lod );
-    my ( @chr_qtl, @left, @right, @closest );
+    my ( @chr_qtl, @left, @right, @peak );
     my ( $qtl_image, $image, $image_t, $image_url, $image_html, $image_t_url,
          $thickbox, $title );
 
@@ -781,13 +781,14 @@ sub qtl_plot
 
         $header = <MARKERS>;
         while ( my $row = <MARKERS> )
+	   
         {
-
-            my ( $chr_qtl, $left, $right, $closest ) = split( /\t/, $row );
+	    chomp($row);
+            my ($trash, $chr_qtl, $left, $peak, $right ) = split( /\t/, $row );
             push @chr_qtl, $chr_qtl;
             push @left,    $left;
             push @right,   $right;
-            push @closest, $closest;
+            push @peak, $peak;
         }
 
         close MARKERS;
@@ -810,13 +811,14 @@ sub qtl_plot
                 push @chromosomes, $lg;
                 my $l_m = $left[$i];
                 my $r_m = $right[$i];
+		my $p_m = $peak[$i];
                 my $l_pos =
                   $population->get_marker_position( $mapversion, $l_m );
                 my $r_pos =
                   $population->get_marker_position( $mapversion, $r_m );
 
                 $h_marker =
-qq |../cview/view_chromosome.pl?map_version_id=$mapversion&chr_nr=$lg&show_ruler=1&show_IL=&show_offsets=1&comp_map_version_id=&comp_chr=&color_model=&show_physical=&size=&show_zoomed=1&confidence=-2&hilite=$l_m+$r_m&marker_type=&cM_start=$l_pos&cM_end=$r_pos |;
+qq |../cview/view_chromosome.pl?map_version_id=$mapversion&chr_nr=$lg&show_ruler=1&show_IL=&show_offsets=1&comp_map_version_id=&comp_chr=&color_model=&show_physical=&size=&show_zoomed=1&confidence=-2&hilite=$l_m+$p_m+$r_m&marker_type=&cM_start=$l_pos&cM_end=$r_pos |;
 
                 $cache_tempimages->set( $key_h_marker, $h_marker, '30 days' );
             }
