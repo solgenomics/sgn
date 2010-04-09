@@ -212,7 +212,7 @@ stranded     = 1
 citation     = <i>De novo</i> predictions from <a href="http://genome.imim.es/software/geneid/">GeneID</a>, trained on Tomato.  Provided by Francisco Camara, <a href="http://genome.crg.es">Genome Bioinformatics Research Lab - Gene Prediction Group, Center for Genomic Regulation (CRG) - Spain</a>. (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnGeneID000">ITAG Wiki</a>)
 
 [genemark_ath]
-feature      = processed_transcript:ITAG_genemark_ath
+feature      = mRNA:ITAG_genemark_ath
 key          = GeneMark (de novo, Arabidopsis trained)
 category     = Prediction Features
 glyph        = processed_transcript
