@@ -12,9 +12,6 @@ automatic classes = match
 # where to link to when user clicks in detailed view
 link        = AUTO
 
-# what image widths to offer
-image widths  = 450 680 980 1550 2400
-
 # max and default segment sizes for detailed view
 max segment     = 5000
 default segment = 200
