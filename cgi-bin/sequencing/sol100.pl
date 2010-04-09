@@ -34,12 +34,9 @@ my $organism_link =   "/chado/organism.pl?organism_id=";
 our %nodes={};
 my @unique_nodes=();
 
-my $tree =  CXGN::Phylo::Tree->new(); # $newick_string ) ;
+my $tree =  CXGN::Phylo::Tree->new(); #;
 
 my $root_node = $tree->get_root();#CXGN::Phylo::Node->new();
-
-#$root_node->set_name($root_o->get_species());
-#$root_node->set_link($organism_link . $root_o_id);
 
 
 foreach my $s (@species ) {
@@ -67,21 +64,28 @@ foreach my $s (@species ) {
 @unique_nodes = values %nodes;
 foreach (keys %nodes) { 
     if ($nodes{$_} ) {
-	#print STDERR "Found organism " . $nodes{$_}->get_species() . " (id = $_ ) \n" ; 
     }
 }
 
 
-recursive_children( $nodes{$root_o_id}, $root_node ) ;
+recursive_children( $nodes{$root_o_id}, $root_node , 1) ;
 
 
-$tree->get_root()->recursive_implicit_names();   ##
-$tree->get_root()->recursive_implicit_species();
+#$tree->get_root()->recursive_implicit_names();   ##
+#$tree->get_root()->recursive_implicit_species();
 $tree->set_show_labels(1);
 #$tree->set_show_species_in_label(1);
 
-$tree->update_label_names();
-my $newick= $tree->generate_newick();
+#$tree->update_label_names();
+
+
+$root_node->set_name($root_o->get_species());
+$root_node->set_link($organism_link . $root_o_id);
+$tree->set_root($root_node);
+
+print STDERR "FOUND organism " . $nodes{$root_o_id} . " root node: " .  $root_node->get_name() . "\n\n";
+
+my $newick= $tree->generate_newick($root_node, 1);
 
 #a File::Temp object
 my $file = $c->tempfile( TEMPLATE =>'tree_browser/tree-XXXXX',
@@ -127,7 +131,7 @@ print info_section_html(
 
 print info_section_html(
     title       => 'Tree',
-    contents     =>   qq| <br><img src="$uri" border="0" alt="tree_browser" USEMAP="#tree_map"/><br> | . $image_map,
+    contents     =>   $newick . qq| <br><img src="$uri" border="0" alt="tree_browser" USEMAP="#tree_map"/><br> | . $image_map,
     collapsible => 1,
     );
 
@@ -137,20 +141,40 @@ $page->footer();
 sub recursive_children {
     my $o= shift; #CXGN::Chado::Organism object
     my $n = shift; # CXGN::Phylo::Node object
-    $n->set_hide_label(0);
-    my @children = $o->get_direct_children;
+    my $is_root=shift;
+   
     $n->set_name($o->get_species());
     $n->get_label()->set_link("/chado/organism.pl?organism_id=" . $o->get_organism_id());
     $n->get_label()->set_name($n->get_name());
-    #print STDERR "THE label name is ... " . $n->get_label()->get_link() . "\n\n";
-    $n->set_species($n->get_name());
-    $n->get_label()->set_hidden(0);
-    foreach my $child (@children) {
-	
-	if ( exists( $nodes{$child->get_organism_id() } ) && defined( $nodes{$child->get_organism_id()} ) ) {
-	    my $new_node=$n->add_child();
 	    
-	    #print STDERR "Found child id " . $child->get_organism_id() . " name = " . $child->get_species() . " for parent node " . $n->get_name() . "\n\n";
+    $n->set_species($n->get_name());
+	    
+    $n->set_hide_label(0);
+    $n->get_label()->set_hidden(0);
+    #if (!$is_root) {
+    
+    my @cl=$n->get_children();
+   
+    print STDERR "is_root = $is_root, node = " . $n->get_name() . " tree = " . $n->get_tree() . "\n" if $is_root; 
+    my @children = $o->get_direct_children;
+    foreach my $child (@children) {
+
+	if ( exists( $nodes{$child->get_organism_id() } ) && defined( $nodes{$child->get_organism_id()} ) ) {
+	    
+	    my $new_node=$n->add_child();
+	   #  $new_node->set_name($o->get_species());
+# 	    $new_node->get_label()->set_link("/chado/organism.pl?organism_id=" . $o->get_organism_id());
+# 	    $new_node->get_label()->set_name($new_node->get_name());
+	    
+# 	    $new_node->set_species($new_node->get_name());
+	    
+# 	    $new_node->set_hide_label(0);
+# 	    $new_node->get_label()->set_hidden(0);
+	    # }
+	    
+	    
+	   # print STDERR " !! Child node is " . $child->get_species() . "\n"; 
+	    print STDERR "Found child id " . $child->get_organism_id() . " name = " . $child->get_species() . " for parent node " . $n->get_name() . "\n\n";
 	    
 	    recursive_children($child, $new_node);
 	}
