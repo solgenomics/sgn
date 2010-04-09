@@ -76,6 +76,9 @@ if (userpermuvalue == "None") {
 }
 userpermuvalue<-as.numeric(userpermuvalue)
 
+#####for test only
+#userpermuvalue<-c(0)
+
 ######genome step size############
 stepsizefile<-grep("stat_step_size", statfiles, ignore.case=TRUE, fixed = FALSE, value=TRUE)
 stepsize<-scan(stepsizefile, what="numeric", dec = ".", sep="\n")
@@ -205,7 +208,8 @@ for (ch in chrlist) {
 chrno<-1
 
 datasummary<-c()
-peakmarkers<-c()
+confidenceints<-c()
+
 
 for (i in chrdata){
  
@@ -218,29 +222,33 @@ for (i in chrdata){
   
   p<-position[2]
   p<-p[1, ]
-  peakmarker<-find.flanking(popdata, chr=chrno, pos=p)
-  
+  peakmarker<-find.marker(popdata, chr=chrno, pos=p)  
+  confidenceint<-bayesint(i, chr=chrno, prob=0.95, expandtomarkers=TRUE)
+  confidenceint<-rownames(confidenceint)
+  confidenceint<-c(chrno, confidenceint)
   if (chrno==1) { 
-  datasummary<-i
-  peakmarkers<-peakmarker
- 
+    datasummary<-i
+    confidenceints<-confidenceint
 }
   if (chrno > 1 ) {
     datasummary<-rbind(datasummary, i)
-    peakmarkers<-rbind(peakmarkers, peakmarker)
-    
+    confidenceints<-rbind(confidenceints, confidenceint)   
   }
 
 chrno<-chrno + 1;
 
 }
+print("cis")
+print(confidenceints)
+print("data summary")
+print(datasummary)
 
 outfiles<-scan(file=outfile,  what="character")
 qtlfile<-outfiles[1]
-peakfile<-outfiles[2]
+confidenceintfile<-outfiles[2]
 
 write.table(datasummary, file=qtlfile, sep="\t", col.names=NA, quote=FALSE, append=FALSE)
-write.table(peakmarkers, file=peakfile, sep="\t", col.names=NA, quote=FALSE, append=FALSE)
+write.table(confidenceints, file=confidenceintfile, sep="\t", col.names=NA, quote=FALSE, append=FALSE)
 
 if (userpermuvalue != 0) {
   if ((is.logical(permuvalue1) == FALSE)) {
