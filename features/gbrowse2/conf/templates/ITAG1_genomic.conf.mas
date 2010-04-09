@@ -26,6 +26,7 @@ das mapmaster = SELF
 [match:details]
 default  = sub {
 		my ($value,$tag_name,$feature) = @_;
+                return $value if $tag_name eq 'Position';
                 <% $feature->local_inc %>
 		require CXGN::Tools::Identifiers;
 		$value =~ s/(\S+)/CXGN::Tools::Identifiers::link_identifier($1) || $1/ge;

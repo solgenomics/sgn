@@ -46,6 +46,16 @@ fgcolor     = black
 label density = 25
 bump density  = 10000
 
+[match:details]
+default  = sub {
+		my ($value,$tag_name,$feature) = @_;
+                return $value if $tag_name eq 'Position';
+                <% $feature->local_inc %>
+		require CXGN::Tools::Identifiers;
+		$value =~ s/(\S+)/CXGN::Tools::Identifiers::link_identifier($1) || $1/ge;
+                $value
+	      }
+
 [blastp_trembl]
 feature      = match:ITAG_blastp_trembl
 key          = TrEMBL
@@ -111,6 +121,17 @@ feature      = match:ITAG_rpsblast
 key          = RPS-BLAST
 bgcolor      = lightblue
 category     = Similarity
+description  = sub {
+  my ($f) = @_;
+  join ', ',
+    map {
+        my ($a) = $f->get_Annotations($_);
+         s/^rpsblast_//;
+         "$_: $a"
+    }
+    grep /^rpsblast_/,
+    $f->get_all_tags;
+ }
 glyph        = segments
 stranded     = 0
 citation     = Protein domain matches found by RPS-BLAST (see <a href="http://www.ab.wur.nl/TomatoWiki/AnRPSBlast000">ITAG Wiki</a>)
