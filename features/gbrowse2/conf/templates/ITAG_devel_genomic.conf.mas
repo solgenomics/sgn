@@ -1,0 +1,297 @@
+[GENERAL]
+database  = main
+plugins   = FastaDumper RestrictionAnnotator SequenceDumper TrackDumper
+
+reference class = Sequence
+
+search attributes = functional_description
+
+default features = mrna sgn_loci sgn_unigenes Markers:overview Genes:region
+
+# "automatic" classes to try when an unqualified identifier is given
+automatic classes = Sequence clone match nucleotide_motif
+
+# max and default segment sizes for detailed view
+max segment     = 500000
+default segment = 50000
+
+# zoom levels
+zoom levels    = 100 200 1000 2000 5000 10000 20000 40000 100000 200000 500000 1000000
+
+examples = C00.1_contig13 Cupredoxin Q9CA94 At4g34215 SGN-M7116 SGN-U338454
+
+das mapmaster = SELF
+
+#these two little subroutines add links to some of the text on gbrowse_detail pages for GeneSeqer alignments
+[match:details]
+default  = sub {
+		my ($value,$tag_name,$feature) = @_;
+                <% $feature->local_inc %>
+		require CXGN::Tools::Identifiers;
+		$value =~ s/(\S+)/CXGN::Tools::Identifiers::link_identifier($1) || $1/ge;
+                $value
+	      }
+
+[mRNA:details]
+default = sub {
+		my ($value,$tag_name,$feature) = @_;
+                <% $feature->local_inc %>
+		require CXGN::Tools::Identifiers;
+		$value =~ s/(\S+)/CXGN::Tools::Identifiers::link_identifier($1) || $1/ge;
+		$value
+	      }
+
+
+[main:database]
+db_adaptor = Bio::DB::SeqFeature::Store
+db_args     = -adaptor DBI::Pg
+              -dsn 'dbi:Pg:host=<% $feature->default_db_host %>;dbname=sfs_itag_devel_genomic'
+              -user '<% $feature->default_db_user %>'
+              -password '<% $feature->default_db_password %>'
+search options = default +autocomplete +fulltext 
+
+
+### TRACK CONFIGURATION ####
+# the remainder of the sections configure individual tracks
+
+# Default glyph settings
+[TRACK DEFAULTS]
+glyph       = generic
+height      = 8
+link         = /search/quick_search.pl?term=$name
+bgcolor     = cyan
+fgcolor     = black
+label density = 25
+bump density  = 100
+
+[GC:region]
+glyph        = dna
+global feature = 1
+database     = main
+height       = 40
+gc_window    = auto
+do_gc        = 1
+strand       = both
+fgcolor      = red
+axis_color   = blue
+key          = GC Content
+
+#track to show DNA and GC content
+[DNA]
+glyph          = dna
+global feature = 1
+height         = 40
+do_gc          = 1
+fgcolor        = red
+category       = DNA
+gc_window      = auto
+axis_color     = blue
+strand         = both
+key            = DNA/GC Content
+citation       = This track displays a GC content graph of the reference sequence at low magnifications and the DNA sequence itself at higher magnifications.
+
+#track to show a 6-frame translation of the sequence
+[Translation]
+glyph          = translation
+global feature = 1
+height         = 40
+fgcolor        = purple
+category       = DNA
+start_codons   = 0
+stop_codons    = 1
+translation    = 6frame
+key            = 6-frame translation
+citation       = This track displays a six-frame translation of the reference DNA sequence.
+
+[Genes:region]
+feature      = gene:ITAG_renaming
+key          = Genes
+glyph        = segments
+fgcolor      = black
+bgcolor      = darkorange
+stranded     = 1
+font2color   = blue
+title        = sub { (shift->attributes('description'))[0] }
+category     = Gene models
+das category = transcription
+strand_arrow = 1
+height       = 7
+citation     = This track shows the spans of gene models annotated by EuGene, the integrative gene predictor for ITAG. (see <a href="http://www.ab.wur.nl/TomatoWiki/AnEugene000">EuGene on ITAG Wiki</a>, <a href="http://www.inra.fr/internet/Departements/MIA/T//EuGene/index.html">EuGene main page</a>)
+
+[mrna]
+feature      = mRNA:ITAG_renaming
+key          = Gene models
+glyph        = processed_transcript
+fgcolor      = black
+bgcolor      = goldenrod
+description  = sub { <% $feature->local_inc %>; require CXGN::Page::FormattingHelpers; CXGN::Page::FormattingHelpers::truncate_string((shift->attributes('functional_description'))[0] || '', 70, '...') }
+stranded     = 1
+font2color   = blue
+category     = Gene models
+das category = transcription
+strand_arrow = 1
+height       = 10
+citation     = This track shows the mRNAs for gene models annotated by EuGene, the integrative gene predictor for ITAG. (see <a href="http://www.ab.wur.nl/TomatoWiki/AnEugene000">EuGene on ITAG Wiki</a>, <a href="http://www.inra.fr/internet/Departements/MIA/T//EuGene/index.html">EuGene main page</a>)
+
+[cds]
+feature      = mRNA:ITAG_renaming
+key          = CDS - click to 
+title        = sub { my $n = shift->display_name; "click to browse annotations on $n protein product"}
+glyph        = CDS
+fgcolor      = black
+bgcolor      = yellow
+cds_only     = 1
+link         = sub { my $n = shift->display_name; $n =~ s/(\.\d+)\.\d+$/$1/; "<% $feature->cgi_url %>/gbrowse/ITAG_devel_protein/?name=$n" }
+#label        = sub { shift->display || (; $n =~ s/mRNA:/CDS:/; $n }
+stranded     = 1
+category     = Gene models
+das category = transcription
+strand_arrow = 1
+height       = 20
+citation     = This track shows the CDS sequences for gene models annotated by EuGene, the integrative gene predictor for ITAG.  Provided by Stephane Rombauts and Jeffrey Fawcett, <a class="http" href="http://bioinformatics.psb.ugent.be/">Bioinformatics and Evolutionary Genomics</a>, <a class="http" href="http://www.psb.ugent.be">Plant Systems Biology, VIB, Ghent University</a>.  (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnEugene000">EuGene on ITAG Wiki</a>, <a href="http://www.inra.fr/internet/Departements/MIA/T//EuGene/index.html">EuGene main page</a>)
+
+#track to show DNA and GC content
+[peptides]
+feature        = CDS:ITAG_renaming
+glyph          = protein
+global feature = 1
+height         = 40
+do_gc          = 1
+fgcolor        = red
+link           = 0
+category       = Gene models
+axis_color     = blue
+strand         = both
+key            = KD Plot/Peptides
+citation       = This track displays a Kyte-Doolittle hydropathy plot of the protein sequence at low magnifications and the peptide sequence itself at higher magnifications.
+
+[cdna_tom]
+feature      = match:ITAG_transcripts_tomato
+key          = ESTs and cDNAs - Tomato
+category     = Genome data and reagents
+glyph        = segments
+bgcolor        = red
+stranded     = 1
+link         = http://www.ebi.ac.uk/ebisearch/search.ebi?db=nucleotideSequences&t=$name
+citation     = This track shows regions of similarity with EST and other cDNA sequences from Tomato. Provided by <a href="http://cab.unina.it/index2.php">CAB group</a> at <a href="http://www.unina.it">UNINA</a>. (see <a href="http://www.ab.wur.nl/TomatoWiki/AnEST000">ITAG Wiki</a>)
+
+[cdna_sol]
+feature      = match:ITAG_transcripts_sol
+key          = ESTs and cDNAs - Other Solanaceae
+category     = Genome data and reagents
+bgcolor        = orange
+glyph        = segments
+stranded     = 1
+link         = http://www.ebi.ac.uk/ebisearch/search.ebi?db=nucleotideSequences&t=$name
+citation     = This track shows regions of similarity with EST and other cDNA sequences taken from species in the Solanaceae other than Tomato. Provided by <a href="http://cab.unina.it/index2.php">CAB group</a> at <a href="http://www.unina.it">UNINA</a>. (see <a href="http://www.ab.wur.nl/TomatoWiki/AnEST000">ITAG Wiki</a>)
+
+[sgn_unigenes]
+feature      = match:ITAG_sgn_unigenes
+key          = SGN Unigenes
+category     = Genome data and reagents
+glyph        = segments
+bgcolor      = red
+fgcolor      = red
+stranded     = 1
+citation     = This track shows regions of similarity with SGN Unigene (SGN-U) sequences.  (see <a href="http://www.ab.wur.nl/TomatoWiki/AnSgnUnigenes000">ITAG Wiki</a>)
+
+[augustus]
+feature      = transcript:ITAG_augustus
+key          = AUGUSTUS (de novo, Tomato trained)
+category     = Prediction Features
+ignore_sub_part = intron
+glyph        = transcript
+stranded     = 1
+citation      = <i>De novo</i> gene predictions from the AUGUSTUS gene predictor, trained on Tomato.  Provided by SGN.  (see <a href="http://www.ab.wur.nl/TomatoWiki/AnAUGUSTUS000">ITAG Wiki</a>)
+
+[geneid_tomato]
+feature      = gene:ITAG_geneid_tomato
+key          = GeneID (de novo, Tomato trained)
+category     = Prediction Features
+glyph        = gene
+stranded     = 1
+citation     = <i>De novo</i> predictions from <a href="http://genome.imim.es/software/geneid/">GeneID</a>, trained on Tomato.  Provided by Francisco Camara, <a href="http://genome.crg.es">Genome Bioinformatics Research Lab - Gene Prediction Group, Center for Genomic Regulation (CRG) - Spain</a>. (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnGeneID000">ITAG Wiki</a>)
+
+# [genemark_ath]
+# feature      = mRNA:ITAG_genemark_ath
+# key          = GeneMark (de novo, Arabidopsis trained)
+# category     = Prediction Features
+# glyph        = processed_transcript
+# stranded     = 1
+# citation     = <i>De novo</i> predictions from <a href="http://exon.gatech.edu/GeneMark/">GeneMark</a>, trained on Arabidopsis.  Provided by the <a href="http://mips.gsf.de/proj/plant/jsf/tomato/index.jsp">MIPS Tomato genome database</a>. (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnGeneMark000">ITAG Wiki</a>)
+
+[glimmerhmm_ath]
+feature      = mRNA:ITAG_glimmerhmm_ath
+key          = GlimmerHMM (de novo, Arabidopsis trained)
+category     = Prediction Features
+glyph        = gene
+stranded     = 1
+citation     = <i>De novo</i> predictions from <a href="http://www.genomics.jhu.edu/GlimmerHMM/">GlimmerHMM</a>, trained on Arabidopsis.  Provided by Erwin Datema at <a href="http://appliedbioinformatics.wur.nl/">WUR</a>. (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnGlimmerHMM000">ITAG Wiki</a>)
+
+[glimmerhmm_tomato]
+feature      = mRNA:ITAG_glimmerhmm_tomato
+key          = GlimmerHMM (de novo, Tomato trained)
+category     = Prediction Features
+glyph        = processed_transcript
+stranded     = 1
+citation     = <i>De novo</i> predictions from <a href="http://www.genomics.jhu.edu/GlimmerHMM/">GlimmerHMM</a>, trained on Tomato.  Provided by Erwin Datema at <a href="http://appliedbioinformatics.wur.nl/">WUR</a>. (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnGlimmerHMM000">ITAG Wiki</a>)
+
+[infernal]
+feature      = ncRNA:ITAG_infernal tRNA:ITAG_infernal snoRNA:ITAG_infernal U6atac_snRNA:ITAG_infernal miRNA:ITAG_infernal antisense_RNA:ITAG_infernal snRNA:ITAG_infernal 5_snRNA:ITAG_infernal 13_snRNA:ITAG_infernal 10_snRNA:ITAG_infernal snRNA:ITAG_infernal 11_snRNA:ITAG_infernal 6_snRNA:ITAG_infernal snoRNA:ITAG_infernal 12_snRNA:ITAG_infernal U1_snRNA:ITAG_infernal group_I_intron:ITAG_infernal 7_snRNA:ITAG_infernal UTR_region:ITAG_infernal group_II_intron:ITAG_infernal miRNA:ITAG_infernal SRP_RNA:ITAG_infernal snRNA:ITAG_infernal snoRNA:ITAG_infernal 14_snRNA:ITAG_infernal 4_snRNA:ITAG_infernal miRNA:ITAG_infernal U2_snRNA:ITAG_infernal 9_snRNA:ITAG_infernal rRNA_5.8S:ITAG_infernal 8_snRNA:ITAG_infernal RNAi_reagent:ITAG_infernal
+key          = Infernal
+category     = Prediction Features
+glyph        = segments
+description  = sub { (shift->attributes('Alias'))[0] }
+stranded     = 1
+citation     = This track shows RNA regions inferred by <a href="http://infernal.janelia.org/">Infernal</a>.  Provided by Daniel Buchan, <a href="http://www.srcuk.org/">SRCUK</a>.
+
+[trnascanse]
+feature      = tRNA:ITAG_trnascanse
+key          = tRNAscanSE
+category     = Prediction Features
+glyph        = segments
+label        = sub { my ($f) = @_; my ($n) = map $f->get_Annotations($_),qw| amino_acid ID load_id |; $n =~ s/-i\d+$//; $n }
+stranded     = 1
+citation     = This track shows transfer RNAs predicted by the tRNAscan-SE program.  For more on tRNAscan-SE, see <a href="http://selab.janelia.org/software#trnascanse">http://selab.janelia.org/software#trnascanse</a>.  (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnTRNAScanSE000">ITAG Wiki</a>)
+
+[tRNA:overview]
+feature      = tRNA:ITAG_trnascanse
+key          = tRNAscanSE
+category     = Prediction Features
+glyph        = segments
+stranded     = 1
+label        = sub { my ($f) = @_; my ($n) = map $f->get_Annotations($_),qw| amino_acid ID load_id |; $n =~ s/-i\d+$//; $n }
+label density = 
+citation     = This track shows transfer RNAs predicted by the tRNAscan-SE program.  For more on tRNAscan-SE, see <a href="http://selab.janelia.org/software#trnascanse">http://selab.janelia.org/software#trnascanse</a>.  (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnTRNAScanSE000">ITAG Wiki</a>)
+
+[sgn_loci]
+feature      = match:ITAG_sgn_loci
+key          = SGN Locus Sequences
+category     = Genetic Loci
+glyph        = segments
+bgcolor      = #ea00ea
+stranded     = 1
+citation     = This track shows regions of similarity of Eugene-predicted cDNA sequences with known sequences associated with SGN genetic loci, as detected by BLAT (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnSGNLoci000">ITAG Wiki</a>)
+
+[Markers:overview]
+feature      = match:ITAG_sgn_markers
+ignore_sub_part = match_part
+key          = Markers
+fgcolor      = black
+bgcolor      = yellow
+glyph        = generic
+label density = 250
+bump density  = 100
+ignore_sub_part = match_part
+
+[sgn_markers]
+feature      = match:ITAG_sgn_markers
+glyph        = alignment
+key          = SGN Markers
+category     = Genetic Loci
+stranded     = 1
+fgcolor      = black
+bgcolor      = yellow
+stranded     = 1
+citation     = This track shows regions of similarity of the genomic sequence with known sequences associated with SGN genetic markers, as detected by GenomeThreader (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnSgnMarkers000">ITAG Wiki</a>)
+
