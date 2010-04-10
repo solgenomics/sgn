@@ -424,7 +424,7 @@ print info_section_html(
                           map { $_->xrefs( $latest_seq ), $_->xrefs( $clone->clone_name ) }
                               $c->enabled_feature('gbrowse2')
                        )
-                   || '<span class="ghosted">'.$clone->clone_name.' has no browsable sequence annotations',
+                   || '<span class="ghosted">'.$clone->clone_name.' has no browsable sequence annotations</span>',
         Download => ( $self->_is_tomato($clone) ? render_tomato_bac_annot_download($c,$clone)
                           : '<span class="ghosted">not available</span>' ),
        ),
