@@ -45,7 +45,7 @@ print info_section_html( title => 'Physical Maps',
 			 contents =>
 			 '<ul>'
                          .join('', map "<li>$_</li>\n",
-                               qq|<a href="/sequencing/agp.pl">Tomato AGP File Viewer</a> &ndash; chromosome assembly data files</li>|,
+                               qq|<a href="/sequencing/agp.pl">Tomato AGP File Viewer</a> &ndash; chromosome assembly data files|,
                                cview_map_links( $dbh ),
                                gbrowse_fpc_links(),
                               )
