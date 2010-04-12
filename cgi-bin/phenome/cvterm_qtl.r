@@ -31,15 +31,15 @@ statfile<-grep("stat", allargs, ignore.case=TRUE, perl=TRUE, value=TRUE)
 
 ##### stat files
 statfiles<-scan(statfile, what="character")
-print(statfiles)
+#print(statfiles)
 
 ###### QTL mapping method ############
 qtlmethodfile<-grep("stat_qtl_method", statfiles, ignore.case=TRUE, fixed = FALSE, value=TRUE)
 qtlmethod<-scan(qtlmethodfile, what="character", sep="\n")
-print(qtlmethod)
+#print(qtlmethod)
 if (qtlmethod == "Maximum Likelihood") {
   qtlmethod<-c("em")
-  print(qtlmethod)
+  #print(qtlmethod)
 
 } else
 
@@ -55,9 +55,9 @@ if (qtlmethod == "Multiple Imputation") {
 
 ###### QTL model ############
 qtlmodelfile<-grep("stat_qtl_model", statfiles, ignore.case=TRUE, fixed = FALSE, value=TRUE)
-print(qtlmodelfile)
+#print(qtlmodelfile)
 qtlmodel<-scan(qtlmodelfile, what="character", sep="\n")
-print(qtlmodel)
+#print(qtlmodel)
 if (qtlmodel == "Single-QTL Scan") {
   qtlmodel<-c("scanone")
 
@@ -68,9 +68,9 @@ if  (qtlmodel == "Two-QTL Scan") {
 
 ###### permutation############
 userpermufile<-grep("stat_permu_test", statfiles, ignore.case=TRUE, fixed = FALSE, value=TRUE)
-print(userpermufile)
+#print(userpermufile)
 userpermuvalue<-scan(userpermufile, what="numeric", dec = ".", sep="\n")
-print(userpermuvalue)
+#print(userpermuvalue)
 if (userpermuvalue == "None") {
   userpermuvalue<-c(0)
 }
@@ -124,7 +124,7 @@ crossfile<-infile[6]
 
 print(crossfile)
 cross<-scan(crossfile, what="character", sep="\n")
-print(cross)
+#print(cross)
 
 popdata<-c()
 if (cross == "f2") {
@@ -166,7 +166,7 @@ if ((is.logical(permuvalue1) == FALSE)) {
     if (userpermuvalue != 0) {
       popdataperm<-scanone(popdata, pheno.col=cv, model="normal", n.perm = userpermuvalue, method=qtlmethod)
       permu<-summary(popdataperm, alpha=permuproblevel)
-      print(permu)
+      #print(permu)
     }
   }else
   if (qtlmodel == "scantwo") {
@@ -177,7 +177,7 @@ if ((is.logical(permuvalue1) == FALSE)) {
     if (userpermuvalue != 0) {
       popdataperm<-scantwo(popdata, pheno.col=cv, model="normal", n.perm = userpermuvalue, method=qtlmethod)
       permu<-summary(popdataperm, alpha=permuproblevel)
-      print(permu) 
+      #print(permu) 
     
     } 
   }
@@ -238,10 +238,10 @@ for (i in chrdata){
 chrno<-chrno + 1;
 
 }
-print("cis")
-print(confidenceints)
-print("data summary")
-print(datasummary)
+#print("cis")
+#print(confidenceints)
+#print("data summary")
+#print(datasummary)
 
 outfiles<-scan(file=outfile,  what="character")
 qtlfile<-outfiles[1]
