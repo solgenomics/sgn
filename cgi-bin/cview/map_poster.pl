@@ -10,7 +10,7 @@ my $map_id = 9;
 
 my $dbh = CXGN::DB::Connection->new();
 my $map_factory = CXGN::Cview::MapFactory->new($dbh);
-my $map = $map_factory->create({map_id=>$map_id}); 
+my $map = $map_factory->create({map_id=>$map_id, context => $c }); 
 my $overview = CXGN::Cview::Map_overviews::Generic->new($map);
 
 $overview->set_image_width(2400);
