@@ -107,7 +107,7 @@ my $renderer = CXGN::Phylo::PNG_tree_renderer->new($tree);
 my $image_map = $renderer->get_html_image_map("tree_map", $filename, $filename);
 $tree->set_renderer($renderer);
 
-$tree->render_png($filename);
+$tree->render_png($filename, 1);
 
 $info = columnar_table_html(
     headings => [
@@ -123,15 +123,16 @@ $page->header();
 
 print page_title_html("SOL100 sequencing project\n");
 
-print info_section_html(
-    title       => 'Species',
-    contents     => $info ,
-    collapsible => 1,
-    );
+#print info_section_html(
+#    title       => 'Species',
+#    contents     => $info ,
+#    collapsible => 1,
+#    );
 
 print info_section_html(
     title       => 'Tree',
-    contents     =>   $newick . qq| <br><img src="$uri" border="0" alt="tree_browser" USEMAP="#tree_map"/><br> | . $image_map,
+    subtitle    => 'Click on the node name to see more details',
+    contents     =>   qq| <br><img src="$uri" border="0" alt="tree_browser" USEMAP="#tree_map"/><br> | . $image_map,
     collapsible => 1,
     );
 
@@ -146,7 +147,7 @@ sub recursive_children {
     $n->set_name($o->get_species());
     $n->get_label()->set_link("/chado/organism.pl?organism_id=" . $o->get_organism_id());
     $n->get_label()->set_name($n->get_name());
-	    
+    $n->set_tooltip($n->get_name);
     $n->set_species($n->get_name());
 	    
     $n->set_hide_label(0);
