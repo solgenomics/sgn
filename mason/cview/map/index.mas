@@ -109,7 +109,7 @@ if ($map_id && !$map_version_id) {
 # get the map data using the CXGN::Map API.
 #
 my $map_factory = CXGN::Cview::MapFactory->new($dbh);
-my $map = $map_factory ->create({ map_version_id => $map_version_id });
+my $map = $map_factory ->create({ map_version_id => $map_version_id, context => $c });
 
 
 if (!$map) { missing_map_page(); return; }
