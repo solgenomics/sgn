@@ -124,7 +124,7 @@ my @maps = ();
 foreach my $id ($left_map_version_id, $center_map_version_id, $right_map_version_id) { 
     if ($id) { # skip maps that are not defined...
 	#print STDERR "Generating map with map_version_id $id...";
-       push @maps, $map_factory->create( { map_version_id=>$id, context => $c });
+       push @maps, $map_factory->create( { map_version_id=>$id });
 	#print STDERR " Done.\n";
    }
 } 
