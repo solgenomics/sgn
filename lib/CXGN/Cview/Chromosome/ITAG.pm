@@ -202,7 +202,7 @@ sub add_contig {
     $contig_marker->set_marker_name($contig_name);
     $contig_marker->get_label()->set_name($contig_name);
     $contig_marker->set_color(255,0,0);
-    $contig_marker->set_url("/gbrowse/gbrowse/ITAG_devel_genomic/?name=$contig_name");
+#    $contig_marker->set_url("/gbrowse/gbrowse/ITAG_devel_genomic/?name=$contig_name");
     $self->{contigs}->{$contig_name}=$contig_marker; # keep a hash for fast access.
     $self->add_marker($contig_marker);
     #print STDERR "Added new contig: $contig_name offset=".(($offset)/$SCALE)." \n";    
