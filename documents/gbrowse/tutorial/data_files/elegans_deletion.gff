@@ -1,8 +1,0 @@
-##gff-version 2
-##date Tue Feb 24 06:39:41 2004
-##sequence-region C01F4 1 40000
-##source gbrowse GFFDumper plugin
-##NOTE: Selected features dumped.
-C01F4	Allele	Deletion_allele	27101	28837	.	+	.	Allele ok722
-C01F4	Allele	Deletion_allele	18720	19202	.	+	.	Allele ok818
-
