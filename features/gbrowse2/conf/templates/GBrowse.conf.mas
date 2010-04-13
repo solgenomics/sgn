@@ -195,8 +195,8 @@ extended_description = Preliminary automatic annotations on tomato BACs, no manu
 [fpc_tomato_sgn_2009]
 path         = fpc_tomato_sgn_2009.conf
 description  = Tomato FPC (SGN 2009)
-extended_description = Tomato fingerprint contigs, 2009 build (from the Arizona Genomics Institute).
 restrict_xrefs = sub { my ($q) = @_; my $r = ref $q; return $r && $r eq 'HASH' || $q =~ /^(SGN-M|LE|SL|C\d\d)/  }
+extended_description = <p>This map shows the contig positions of the SGN2009 physical map constructed at the Arizona Genome Institute in late 2009. The marker positions shown are from the latest <a href="/cview/map.pl?map_id=9">EXPEN2000 map</a>.</p>  <p>This physical map contains clones from the HindIII, EcoRI, MboI and sheared BAC library.</p>
 
 [sanger_tomato_fpc]
 path         = sanger_tomato_fpc.conf
