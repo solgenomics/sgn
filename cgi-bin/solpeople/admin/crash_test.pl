@@ -43,6 +43,8 @@ if( !$is_production_server || $logged_in_user_type eq 'curator') {
       }
     } elsif ($test == 4) {
       $page->message_page($message,'message body');
+    } elsif ($test == 5) {
+      $c->forward_to_mason_view('/test/error_test.mas');
     } else {
       $page->message_page('Deeerrrrrrrr....');
     }
@@ -72,6 +74,9 @@ Just call die().)
 <a href="?test=2">Test unanticipated error</a>
 (Note: the notion of &quot;unanticipated&quot; error is deprecated.
 Just call die().)
+<br /><br />
+
+<a href="?test=5">Test Mason-handled error</a>
 <br /><br />
 
 <a href="page_that_doesnt_compile.pl">Test compile-time error</a>
