@@ -9,6 +9,7 @@ use MooseX::Singleton;
 use namespace::autoclean;
 extends 'SGN::Feature::GBrowse';
 
+use Bio::Graphics::FeatureFile;
 
 has '_data_sources' => (
     is         => 'ro',
