@@ -79,6 +79,7 @@ my $build = $class->new(
         #        'Apache2::Request' => 0,
         'Bio::Chado::Schema' => '0.04000',
 
+	'Bio::Root::Version'     => '1.006001',
         #         'Bio::AlignIO' => 0,
         #         'Bio::DB::GenBank' => 0,
         #         'Bio::GMOD::Blast::Graph' => 0,
