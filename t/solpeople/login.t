@@ -3,10 +3,8 @@ use strict;
 use Test::More tests => 17;
 use Test::WWW::Mechanize;
 
-BEGIN {
-    use_ok("CXGN::DB::Connection");
-    use_ok("CXGN::People::Person");
-}
+use_ok("CXGN::DB::Connection");
+use_ok("CXGN::People::Person");
 
 my $dbh = CXGN::DB::Connection->new();
 
@@ -17,6 +15,10 @@ my $server = $ENV{SGN_TEST_SERVER}
 
 # generate a new user for testing purposes
 # (to be deleted right afterwards)
+
+if( my $u_id = CXGN::People::Person->get_person_by_username( $dbh, "testusername" ) ) {
+    CXGN::People::Person->new( $dbh, $u_id )->hard_delete;
+}
 #
 my $p = CXGN::People::Person->new($dbh);
 $p->set_first_name("testfirstname");
@@ -32,9 +34,7 @@ $login->store();
 
 $dbh->commit();
 
-my $u_id =
-    CXGN::People::Person->get_person_by_username( $dbh, "testusername" );
-
+my $u_id = CXGN::People::Person->get_person_by_username( $dbh, "testusername" );
 my $u = CXGN::People::Person->new( $dbh, $u_id );
 
 is( $u->get_first_name(), "testfirstname", "Test first name test" );
