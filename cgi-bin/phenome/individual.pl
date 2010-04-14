@@ -761,7 +761,7 @@ sub get_dbxref_info {
 	if ($_->[1] eq '0') {
 	    my $url= $_->[0]->get_urlprefix() . $_->[0]->get_url();
 	    my $accession= $_->[0]->get_accession();
-	    $xref_source .= qq|<br />Contributed by  <br /><a href="$url$accession" target="blank"><img src= "/documents/img/eusol_logo_small.jpg" border="0" /></a><br />|; 
+	    $xref_source .= qq|<br />Available at  <br /><a href="$url$accession" target="blank"><img src= "/documents/img/eusol_logo_small.jpg" border="0" /></a><br />|; 
 	}
     }
     my $abs_count=0;
