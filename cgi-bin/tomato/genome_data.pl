@@ -6,7 +6,6 @@ use CXGN::DB::Connection;
 
 use CGI qw/-compile :standard/;
 
-
 use CXGN::Cview::MapFactory;
 use CXGN::Cview::Map::Tools;
 
@@ -109,7 +108,7 @@ sub gb_searchbox {
     my ($gb_root) = @_;
     return
         start_form( -style => 'display: inline', -action => $gb_root )
-       .textfield( -name => 'name', -value => 'search by exact name (e.g. TG154)', -onfocus => 'this.select()', -size => 30)
+       .textfield( -name => 'name', -value => 'search names/descriptions (e.g. TG154)', -onfocus => 'this.select()', -size => 30)
        .submit('Search','Search')
        .end_form()
 }
@@ -153,7 +152,7 @@ sub itag_release_ftp_link {
     my ($r) = @_;
 
     #return ghosted link if files are not world-readable
-    return '<span class="ghosted" title="bulk files not publicly released, pending publication">[FTP not available]</span>'
+    return '<span class="ghosted" title="bulk files not publicly released pending publication">[FTP not available]</span>'
         unless (stat( $r->dir ))[2] & 04;
 
     my $ftp_link = $r->dir;
