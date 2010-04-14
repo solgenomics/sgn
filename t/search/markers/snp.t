@@ -8,8 +8,6 @@ use Test::More qw | no_plan |;
 use Test::WWW::Mechanize;
 use CXGN::DB::Connection;
 use CXGN::Page;
-use CXGN::VHost;
-
 
 my $mech = Test::WWW::Mechanize->new;
 my $server = $ENV{SGN_TEST_SERVER}|| "http://sgn-devel.sgn.cornell.edu";
