@@ -18,7 +18,8 @@ use Mail::Sendmail;
 
 use CXGN::Apache::Request;
 use CXGN::Tools::Text;
-use CXGN::VHost;
+
+use SGN::Context;
 
 =head2 send_email
 
@@ -44,7 +45,7 @@ use CXGN::VHost;
 sub send_email {
     my ( $subject, $body, $mailto, $replyto ) = @_;
     my $request_info = "";
-    my $vhost_conf   = CXGN::VHost->new();
+    my $vhost_conf   = SGN::Context->new;
     my $hostname     = `hostname`;
     chomp($hostname);
     my $dnsdomainname = `dnsdomainname`;
