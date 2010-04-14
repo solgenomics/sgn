@@ -179,12 +179,12 @@ extended_description = Tomato release 1 annotations on protein sequences by the 
 
 [ITAG_devel_genomic]
 path          = ITAG_devel_genomic.conf
-description   = ITAG development snapshot: BAC-based genomic annotations
+description   = ITAG_devel snapshot: BAC-based genomic annotations
 extended_description = Annotations on BAC-based genomic sequences by the International Tomato Annotation Group (ITAG).
 
 [ITAG_devel_protein]
 path          = ITAG_devel_protein.conf
-description   = ITAG development snapshot: BAC-based protein annotations
+description   = ITAG_devel snapshot: BAC-based protein annotations
 extended_description = Annotations on protein sequences by the International Tomato Annotation Group (ITAG).
 
 [tomato_bacs]
