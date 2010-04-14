@@ -54,7 +54,7 @@ sub send_email {
 
 #if we are specifying a mailto as a vhost configuration variable (such as 'bugs_email'), then use that variable's value, and append the request info.
 #mailto can also be specified normally (such as 'John Binns <zombieite@gmail.com>').
-    if ( $mailto and $vhost_conf->get_conf($mailto) ) {
+    if ( $mailto and eval{ $vhost_conf->get_conf($mailto)} ) {
         $mailto = $vhost_conf->get_conf($mailto);
         $request_info .= CXGN::Apache::Request::as_verbose_string();
     }
