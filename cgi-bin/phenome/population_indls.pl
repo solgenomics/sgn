@@ -42,19 +42,12 @@ use CXGN::Chado::Publication;
 use CXGN::Chado::Pubauthor;
 
 use GD;
-
-#use GD::Image;
 use GD::Graph::bars;
 use GD::Graph::lines;
 use GD::Graph::points;
 use GD::Graph::Map;
 use Statistics::Descriptive;
-
-#use Statistics::Descriptive::Sparse;
 use Math::Round::Var;
-
-#use Math::SymbolicX::Statistics::Distributions qw /normal_distribution
-#                                                                    /;
 use File::Temp qw /tempfile tempdir/;
 use File::Copy;
 use File::Spec;
@@ -63,11 +56,8 @@ use File::stat;
 use Cache::File;
 use CXGN::Scrap::AjaxPage;
 use CXGN::Contact;
-
 use Storable qw / store /;
 
-#use Tie::UrlEncoder;
-#our %urlencode;
 
 use CXGN::Page::UserPrefs;
 use base qw / CXGN::Page::Form::SimpleFormPage CXGN::Phenome::Main/;
@@ -487,16 +477,12 @@ HTML
     }
 
     print info_section_html(
-        title => 'Literature Annotation',
-
-        #subtitle => $pub_subtitle,
-        contents => $pubmed,
+                           title => 'Literature Annotation',
+                           contents => $pubmed,
                            );
 
     if ($population_name)
     {
-
-        # change sgn_people.forum_topic.page_type and the CHECK constraint!!
         my $page_comment_obj =
           CXGN::People::PageComment->new( $self->get_dbh(), "population",
                                           $population_id );
@@ -582,9 +568,6 @@ sub population_distribution
 
         my $stat_para = Statistics::Descriptive::Sparse->new();
         $stat_para->add_data(@value);
-
-        #$variance = int (($stat_para->variance()) + .5);
-
         $std  = $stat_para->standard_deviation();
         $mean = $stat_para->mean();
 
@@ -594,16 +577,9 @@ sub population_distribution
 
         for ( sort { $a <=> $b } keys %f )
         {
-
-            # if (!$f{$_} == 0){
-
             my $key = $round->round($_);
-
             push @keys,   $key;
             push @counts, $f{$_};
-
-            # }
-
         }
 
         my $min = $stat->min();
@@ -729,10 +705,6 @@ sub qtl_plot
 
     my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
       $self->cache_temp_path();
-
-    #my $file_cache = Cache::File->new(cache_root=>$prod_cache_path);
-    #$file_cache->purge();
-
     my $cache_tempimages = Cache::File->new( cache_root => $tempimages_path );
     $cache_tempimages->purge();
 
@@ -740,8 +712,6 @@ sub qtl_plot
     my ( @chr_qtl, @left, @right, @peak );
     my ( $qtl_image, $image, $image_t, $image_url, $image_html, $image_t_url,
          $thickbox, $title );
-
-#my ( $flanking_markers_file, $qtl_summary_file, $permu_file, $permu_data, $cv_file_out, $peak_markers );
 
     my $round1 = Math::Round::Var->new(0.1);
     my $round2 = Math::Round::Var->new(1);
@@ -759,8 +729,6 @@ sub qtl_plot
         my $header = <QTLSUMMARY>;
         while ( my $row = <QTLSUMMARY> )
         {
-
-            #chomp($row);
             my ( $marker, $chr, $pos, $lod ) = split( /\t/, $row );
             push @marker, $marker;
             push @chr,    $chr;
