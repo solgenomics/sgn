@@ -7,12 +7,12 @@ $schema
 <table cellpadding="0">
 
 <tr><td rowspan="3">
-<& /homepage/breeders_toolbox.mas &>
-<& /homepage/getting_started.mas &>
+<& homepage/breeders_toolbox.mas &>
+<& homepage/getting_started.mas &>
 </td><td colspan="2">
-<& /tomato_genome/announcements/prerelease_20100104.mas &>
+<& homepage/tomato_genome_info.mas &>
 <!-- & tomato_genome/tomato_genome_overview.mas & -->
-<& potato_genome/potato_genome_overview.mas &>
+<& homepage/potato_genome_info.mas &>
 <& homepage/phenotypes.mas &>
 </td></tr>
 
