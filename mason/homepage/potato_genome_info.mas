@@ -1,0 +1,23 @@
+
+
+<%doc>
+
+Mason module that displays div of potato genome status information, based on the contents of a file.
+Takes no arguments.
+
+</%doc>
+
+<%perl>
+
+use File::Spec;
+
+my $file;
+my $html = "(Potato genome information currently not available)";
+
+eval { $file = File::Spec->catfile($c->get_conf('homepage_files_dir'), 'potato_genome_info.txt');
+$html = $m->file($file);
+};
+
+</%perl>
+
+<% $html %>
