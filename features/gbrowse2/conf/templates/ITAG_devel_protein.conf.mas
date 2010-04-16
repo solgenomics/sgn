@@ -83,7 +83,6 @@ key          = Rice Polypeptides
 category     = Similarity
 bgcolor      = cyan
 description  = 1
-label        = sub { my $n = shift->display_name; $n =~ s/#.+$//; $n }
 glyph        = segments
 stranded     = 0
 citation     = This track shows similarities with Rice peptide sequences from RAP-DB (see <a href="http://rapdb.dna.affrc.go.jp/rapdownload/">http://rapdb.dna.affrc.go.jp/rapdownload/</a>), as detected by BLAST (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnBlastP000">ITAG Wiki</a>)
