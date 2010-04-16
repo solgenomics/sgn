@@ -60,7 +60,6 @@ search options = default +autocomplete +fulltext
 glyph       = generic
 height      = 8
 bgcolor     = cyan
-link         = /search/quick_search.pl?term=$name
 fgcolor     = black
 label density = 25
 bump density  = 100
@@ -267,6 +266,7 @@ citation     = This track shows transfer RNAs predicted by the tRNAscan-SE progr
 feature      = match:ITAG_sgn_loci
 key          = SGN Locus Sequences
 category     = Genetic Loci
+link         = /search/quick_search.pl?term=$name
 glyph        = segments
 bgcolor      = #ea00ea
 stranded     = 1
