@@ -114,11 +114,10 @@ sub link_uri {
 }
 
 
-sub setup {
+after setup => sub {
     my ( $self, $c ) = @_;
-
     $self->render_all_configs;
-}
+};
 
 sub xrefs {
     return unless @_ == 2;

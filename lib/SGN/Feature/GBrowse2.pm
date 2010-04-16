@@ -73,8 +73,10 @@ sub fpc_data_sources {
 
 # returns a string of apache configuration to be included during
 # startup. will be part of plugin role
-sub apache_conf {
-    my ( $self ) = @_;
+around apache_conf => sub {
+    my ( $orig, $self ) = @_;
+
+    my $upstream_conf = $self->$orig();
 
     my $static_dir  = $self->static_dir;
     my $static_url  = $self->static_url;
@@ -120,7 +122,7 @@ ScriptAlias $cgi_url  "$cgibin"
     my $runmode_conf = $runmode_conf{ $self->run_mode }
 	or confess "invalid run mode '".$self->run_mode."'";
 
-    return <<EOC;
+    return $upstream_conf.<<EOC;
 Alias        "$static_url/i/" "$tmp/images/"
 Alias        "$static_url"    "$static_dir"
 
@@ -131,6 +133,6 @@ Alias        "$static_url"    "$static_dir"
 $runmode_conf
 EOC
 
-}
+};
 
 1;
