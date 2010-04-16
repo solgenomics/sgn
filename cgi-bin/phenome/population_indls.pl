@@ -441,7 +441,10 @@ HTML
 	<b>Genome scan size:</b> $stat_param{"stat_step_size"} cM <br/> 
 	<b>QTL genotype probability:</b> $stat_param{"stat_prob_level"} <br/>
 	<b>LOD threshold (based on $stat_param{"stat_permu_test"} permutations at $stat_param{"stat_permu_level"} prob. level):</b> $value1  <br/> 
-	<b>Flanking markers (95% CI<br/> based on Bayesian Credible Interval estimation)</br> & comparative mapviewer:</b><br/> click on graph
+	<b>Flanking markers (95% CI<br/> 
+           based on Bayesian Credible <br/>
+           Interval estimation) & comparative mapviewer:</b><br/> 
+           click on graph
 HTML
 
         $qtl_html .= "</td></tr></table>";
