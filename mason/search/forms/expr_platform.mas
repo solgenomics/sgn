@@ -1,0 +1,33 @@
+
+
+<%doc>
+
+=head2 expr_platform_search_form
+
+  Desc: canned html for the SGN expr_platform search form
+  Args: CXGN::Page object
+  Ret : string of HTML that will make an expr_platform search form
+
+=cut
+</%doc>
+
+<%args>
+$q => undef
+</%args>
+
+<%perl>
+$q ||= CXGN::Searches::GemPlatform->new()->new_query();
+</%perl>
+
+  <table class="search_form_title"><tr><td>
+    <span class="search_form_title">Expression search by platform</span>
+  </td>
+  </tr>
+  </table>
+
+<form action="/search/gem_platform_search.pl" method="get">
+  <div class="indentedcontent">
+      <% $q->to_html() %>
+  </div>
+</form>
+
