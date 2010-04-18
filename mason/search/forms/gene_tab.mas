@@ -15,6 +15,10 @@ Lukas Mueller <lam87@cornell.edu>. Based on Perl code by Naama Menda and others.
 
 </%doc>
 
+<%args>
+$form_args_hashref => undef;
+</%args>
+
 <%perl>
 
 use CXGN::Phenome;
@@ -29,6 +33,7 @@ my $form = $q->to_html;
 
 </%perl>
 
+<& /util/import_javascript.mas, classes=>"CXGN.Page.FormattingHelpers" &> 
 
 <table class="search_form_title" summary=""><tr><td>
   <h4><span class="search_form_title">Gene search</span></h4>

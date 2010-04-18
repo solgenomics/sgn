@@ -9,6 +9,8 @@ my $form = $q->to_html;
 
 </%perl>
 
+<& /util/import_javascript.mas, classes=>"CXGN.Page.FormattingHelpers" &> 
+
 <table class="search_form_title" summary=""><tr><td>
     <h4><span class="search_form_title">Phenotype search</span></h4>
   </td>

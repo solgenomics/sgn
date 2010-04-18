@@ -1,0 +1,34 @@
+
+<%doc>
+
+=head2 expr_experiment_search_form
+
+  Desc: canned html for the SGN expr_experiment search form
+  Args: CXGN::Page object
+  Ret : string of HTML that will make an expr_experiment search form
+
+=cut
+
+</%doc>
+
+<%args>
+$q => undef
+</%args>
+
+<%perl>
+    $q ||= CXGN::Searches::GemExperiment->new()->new_query();
+</%perl>
+
+  <table class="search_form_title"><tr><td>
+    <span class="search_form_title">Expression search by experiment</span>
+  </td>
+  </tr>
+  </table>
+
+<form action="/search/gem_experiment_search.pl" method="get">
+  <div class="indentedcontent">
+
+      <% $q->to_html() %>
+  </div>
+</form>
+

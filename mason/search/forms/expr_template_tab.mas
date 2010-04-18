@@ -1,0 +1,32 @@
+
+
+<%doc>
+
+</%doc>
+
+<%args>
+$q
+</%args>
+
+<%perl>
+
+$q ||= CXGN::Searches::GemTemplate->new()->new_query();
+
+</%perl>
+
+<table class="search_form_title"><tr><td>
+      <span class="search_form_title">Expression search by template</span>
+    </td>
+  </tr>
+</table>
+
+<form action="/search/gem_template_search.pl" method="get">
+  <div class="indentedcontent">
+
+<% $q->to_html()  %>
+			  </div>
+</form>
+
+
+
+
