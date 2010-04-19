@@ -48,4 +48,6 @@ if (!$html) { return; }
 
 </%perl>
 
-<& /page/info_section.mas, title=>'Unigene blast matches for primers', contents=>$html &>
+<&| /page/info_section.mas, title=>'Unigene blast matches for primers' &>
+  <% $html %>
+</&>

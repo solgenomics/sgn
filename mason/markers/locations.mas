@@ -205,5 +205,6 @@ if($experiments and @{$experiments} and grep {$_->{location}} @{$experiments}) {
 ###print blue_section_html('Mapped locations',$locations_html);
 </%perl>
 
-
-<& /page/info_section.mas, title=>'Mapped locations', contents=>$locations_html &>
+<&| /page/info_section.mas, title=>'Mapped locations' &>
+  <% $locations_html %>
+</&>

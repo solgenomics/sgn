@@ -82,17 +82,14 @@ my $last = $dp->last();
 
 
 <& /page/page_title.mas, title => $search_name &>
-<& /page/info_section.mas, title => $search_name, subtitle=> "Total found: $total_result_count", contents=>"" &>
-<& /page/columnar_table.mas, headings => $headers_arrayref, data => $results_arrayref &>
+<&| /page/info_section.mas, title => $search_name, subtitle=> "Total found: $total_result_count" &>
+  <& /page/columnar_table.mas, headings => $headers_arrayref, data => $results_arrayref &>
+</&>
 
 
-
-<%perl>
-
-  foreach my $page ($first..$last) {
-    print qq { <a href="<% $search_link %> ">$page</a> };
-  }
-</%perl>
+% foreach my $page ($first..$last) {
+  <a href="<% $search_link %> "><% $page %></a>
+% }
 
 
 
