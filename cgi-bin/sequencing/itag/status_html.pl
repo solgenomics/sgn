@@ -16,18 +16,20 @@ use CXGN::Tools::Identifiers qw/link_identifier/;
 use CXGN::ITAG::Pipeline;
 use CXGN::Tools::List qw/all/;
 
-use CXGN::VHost;
+my $itag_feature = $c->enabled_feature('itag')
+    or $c->forward_to_mason_view('/itag/not_enabled.mas');
 
 my $page = CXGN::Page->new('ITAG Pipeline Status Viewer','Robert Buels');
 $page->jsan_use('MochiKit.Base','MochiKit.Async');
 
-my ($mode,$pipe,$batch) = $page->get_encoded_arguments('mode','pipe','batch');
-if($mode eq 'async') {
-  $ENV{CXGNITAGPIPELINEANALYSISTESTING}=1 unless CXGN::VHost->new->get_conf('production_server');
-  my $s = get_status($pipe,$batch+0);
+my ($mode,$pipe,$batch) = $page->get_encoded_arguments(qw( mode pipe batch ));
+if( $mode && $mode eq 'async' ) {
+  $ENV{CXGNITAGPIPELINEANALYSISTESTING}=1 unless $c->get_conf('production_server');
+  my $pipe_obj = $itag_feature->pipeline( version => $pipe );
+  my $s = get_status( $pipe_obj, $batch+0 );
   print "Content-type: text/html\n\n$s";
   exit;
-} elsif($mode eq 'async_ainfo') {
+} elsif( $mode && $mode eq 'async_ainfo' ) {
   my ($aname) = $page->get_encoded_arguments('aname');
   my $ainfo = get_analysis_info($pipe,$aname);
   print "Content-type: text/html\n\n$ainfo";
@@ -40,12 +42,16 @@ $page->header(('ITAG Pipeline Status Viewer') x 2);
 print <<EOHTML;
 <style>
 div#loading_indicator {
-  background: red;
+  background: #eee;
   font-weight: bold;
-  color: white;
-  padding: 0.2em 0.4em 0.2em 0.4em;
+  color: black;
+  padding: 3px;
   display: inline;
   visibility: hidden;
+}
+div#loading_indicator > img {
+  position: relative;
+  top: 2px;
 }
 
 ul.errlist {
@@ -63,6 +69,11 @@ span.owner {
 span.depends,span.produces, span.tagname, span.owner {
  font-family: monospace;
 }
+
+#viewer {
+ border: 1px solid #888;
+}
+
 </style>
 EOHTML
 
@@ -71,9 +82,9 @@ print <<EOHTML;
 EOHTML
 
 
-my @pipelines = sort {$b <=> $a} CXGN::ITAG::Pipeline->list_pipelines;
+my @pipelines = $itag_feature->list_pipelines;
 print <<EOH
-  <table align="center" cellspacing="0" width="100%" ><tr><td style="padding: 0.3em; background: #ccc;">
+  <table id="viewer" align="center" cellspacing="0" width="100%" ><tr><td style="padding: 0.3em; background: #ccc;">
     <form name="batch_selector">
 EOH
       .hierarchical_selectboxes_html(
@@ -92,17 +103,14 @@ EOH
   					       },
   				   childchoices => [
   						    map {
-  						      my $p = CXGN::ITAG::Pipeline->open(
-                                                          version => $_,
-                                                          basedir => $c->config->{'CXGN::ITAG'}->{'itag_pipeline_base'},
-                                                         );
+                                                      my $p = $itag_feature->pipeline( version => $_ );
   						      [sort {$b+0 <=> $a+0} $p->list_batches]
   						    } @pipelines
   						   ],
   				  )
     .<<EOH
-    <input type="button" style="background: url(/documents/img/refresh.png)" value="" onclick="this.blur(); updateStatusContents()" />
-    <div id="loading_indicator">Loading...</div>
+    <input type="button" style="background: url(/documents/img/refresh.png)" name="refresh" value="" onclick="this.blur(); updateStatusContents()" />
+    <div id="loading_indicator">Loading... <img src="/documents/img/spinner.gif" /></div>
     </form>
   </td></tr>
   <tr><td id="pipestatus_contents" style="border: 2px solid #bbb; padding: 0.5em;">
@@ -113,28 +121,51 @@ EOH
 
 print <<EOS;
 <script type="text/javascript">
+  var refresh_bg = document.batch_selector.refresh.style.background;
+
   var updateStatusContents = function() {
     var loading_ind = document.getElementById('loading_indicator');
 
     var pipesel = document.batch_selector.pipever;
     var batchsel = document.batch_selector.batchnum;
+    var refresh_button = document.batch_selector.refresh
 
+    var controls_disabled = function(disabled) {
+        pipesel.disabled =
+          batchsel.disabled =
+             refresh_button.disabled = disabled;
+        if( disabled ) {
+          refresh_button.style.background = null;
+        } else {
+          refresh_button.style.background = refresh_bg;
+        }
+    };
 
     var set_loading = function(is_on) {
       if(is_on) {
         loading_ind.style.visibility = 'visible';
-        pipesel.disabled = true;
-        batchsel.disabled = true;
+        controls_disabled(true);
       } else {
         loading_ind.style.visibility = 'hidden';
-        pipesel.disabled = false;
-        batchsel.disabled = false;
+        controls_disabled(false);
       }
     };
 
-    set_loading(true);
-
     var contentarea = document.getElementById('pipestatus_contents');
+
+    // don't update if we don't have any pipeline or batches
+    if( !pipesel.options.length ) {
+      controls_disabled(true);
+      contentarea.innerHTML = 'no pipelines available';
+      return;
+    }
+    if( !batchsel.options.length ) {
+      batchsel.disabled = refresh_button.disabled = true;
+      contentarea.innerHTML = 'no batches available in pipeline ' + pipesel.value
+      return;
+    }
+
+    set_loading(true);
 
     var set = function(req) {
       contentarea.innerHTML = req.responseText;
@@ -168,10 +199,7 @@ $page->footer;
 
 #given a pipeline version and batch number, return a bunch of html showing its status
 sub get_status {
-  my ($pipever,$batchnum) = @_;
-  my $pipe = CXGN::ITAG::Pipeline->open( version => $pipever,
-                                         basedir => $c->config->{'CXGN::ITAG'}->{'itag_pipeline_base'},
-                                        );
+  my ( $pipe, $batchnum ) = @_;
 
   my $retstring;
   my $batch = $pipe->batch($batchnum);

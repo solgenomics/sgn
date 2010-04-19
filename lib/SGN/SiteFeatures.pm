@@ -56,7 +56,7 @@ sub enabled_features {
       shift->features
 }
 sub enabled_feature {
-    my $f = shift->feature(shift)
+    my $f = shift->feature(lc shift)
         or return;
     return unless $f->enabled;
     return $f;

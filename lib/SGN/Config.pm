@@ -93,28 +93,29 @@ my $defaults =
      #path to mason global lib relative to site basepath
      global_mason_lib         => '../cxgn-mason',
 
-     # itag pipeline paths
-     'CXGN::ITAG' => {
-         itag_pipeline_base       => '/data/shared/tomato_genome/itagpipeline/itag',
-     },
-
      # default GBrowse2 configuration, for a Debian gbrowse2 installation
-     feature => { 'SGN::Feature::GBrowse2' =>
-                       {
-                           'enabled'    => 1,
-                           'run_mode'   => 'fcgi',
+     feature => {
+         'SGN::Feature::GBrowse2' =>
+             {
+                 'enabled'    => 1,
+                 'run_mode'   => 'fcgi',
 
-                           #'conf_dir'   => '/etc/cxgn/SGN/gbrowse',
-                           'tmp_dir'    => '/var/tmp/gbrowse',
+                 #'conf_dir'   => '/etc/cxgn/SGN/gbrowse',
+                 'tmp_dir'    => '/var/tmp/gbrowse',
 
-                           'static_url' => '/gbrowse/static',
-                           'static_dir' => '/usr/share/gbrowse/htdocs',
+                 'static_url' => '/gbrowse/static',
+                 'static_dir' => '/usr/share/gbrowse/htdocs',
 
-                           'cgi_url'    => '/gbrowse/bin',
-                           'cgi_bin'    => '/usr/share/gbrowse/cgi-bin',
-                           'perl_inc'   => ['/usr/share/gbrowse/lib/perl5'],
-                       },
-               },
+                 'cgi_url'    => '/gbrowse/bin',
+                 'cgi_bin'    => '/usr/share/gbrowse/cgi-bin',
+                 'perl_inc'   => ['/usr/share/gbrowse/lib/perl5'],
+             },
+         'SGN::Feature::ITAG' =>
+             {
+                 'enabled'       => 1,
+                 'pipeline_base' => '/data/shared/tomato_genome/itagpipeline/itag',
+             },
+     },
 
     };
 sub defaults { shift->SUPER::defaults( $defaults, @_ )}
