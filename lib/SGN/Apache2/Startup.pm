@@ -202,6 +202,18 @@ EOC
 
              ( $cfg->{executable_subdir} ? <<END_HEREDOC : () ),
 
+        <Directory />
+            # the favicon is expected to be right under document root, but don't execute it as a script!
+            <Files favicon.ico>
+                SetHandler none
+            </Files>
+
+            # the robots.txt file is expected to be right under document root, but don't execute it as a script!
+            <Files robots.txt>
+                SetHandler none
+            </Files>
+        </Directory>
+
         #in our cgi-bin (or equivalent) directory...
         <Directory $paths->{basepath}/$cfg->{executable_subdir}>
 
@@ -229,16 +241,6 @@ EOC
             # the output of our perl scripts is to be interpreted as text/html
             DefaultType text/html
     	    AddType text/html .pl
-
-            # the favicon is expected to be right under document root, but don't execute it as a script!
-            <Files favicon.ico>
-                SetHandler none
-            </Files>
-
-            # the robots.txt file is expected to be right under document root, but don't execute it as a script!
-            <Files robots.txt>
-                SetHandler none
-            </Files>
 
             # use CXGN custom error handlers to make appropriate crash pages (on production)
             # or send errors to browser (on devel)
