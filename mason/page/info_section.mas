@@ -6,11 +6,17 @@ info_section.mas
 
 =head1 SYNOPSIS
 
- <& info_section, title => 'Search Results',
-                  subtitle      => '3 matches',
-                  empty_message => 'No matching monkeys found',
-                  is_subsection => 0,
-                  contents      => <% $contents %> &>
+ <&| info_section.mas, title => 'Search Results',
+                      subtitle      => '3 matches',
+                      empty_message => 'No matching monkeys found',
+                      is_subsection => 0 
+  &>
+
+  HTML and Mason contents of the info section,
+  as much stuff as you want.
+
+ </&>
+
 
 
 =head1 DESCRIPTION
@@ -25,10 +31,6 @@ Description: Displays a paragraph with a title bar and provides a way to collaps
 
 the title to be displayed in the title bar. Required.
 
-=item $contents 
-
-everything, in html, that goes into the section. Required.
-
 =item $subtitle 
 
 a subtitle that goes next to the title. Optional.
@@ -36,6 +38,10 @@ a subtitle that goes next to the title. Optional.
 =item $empty_message 
 
 The message that should appear when $contents is empty.
+
+=item $is_empty
+
+if true, forces this info_section to be drawn in the empty state, content will not be shown.
 
 =item $is_collapsible 
 
