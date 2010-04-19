@@ -6,15 +6,15 @@ Takes no arguments.
 
 </%doc>
 
-<%perl>
+% if( -r $file ) {
+  <% $m->file( $file ) %>
+% } else {
+ <div class="ghosted">Tomato genome information temporarily unavailable</div>
+% }
 
+
+<%init>
 use File::Spec;
-
-my $file = File::Spec->catfile($c->get_conf('homepage_files_dir'), 'tomato_genome_info.txt');
-my $html = $m->file($file);
-
-</%perl>
-
-<% $html %>
-
+my $file = File::Spec->catfile( $c->get_conf('homepage_files_dir'), 'tomato_genome_info.txt');
+</%init>
 
