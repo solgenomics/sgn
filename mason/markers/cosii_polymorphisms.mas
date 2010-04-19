@@ -203,4 +203,7 @@ if($experiments and @{$experiments}) {
 
 </%perl>
 
-<& /page/info_section.mas, title=>'Universal primers for Asterid species', contents=>$html &>
+<&| /page/info_section.mas, title=>'Universal primers for Asterid species'&>
+  <% $html %>
+</&>
+

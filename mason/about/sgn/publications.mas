@@ -1,5 +1,5 @@
 
-<& /page/info_section.mas, title => 'Selected Publications', contents => " 
+<&| /page/info_section.mas, title => 'Selected Publications' &>
 	<ul>
 	  <li>Mueller LA, et al., (2009). A snapshot of the emerging tomato genome sequence. Plant Gen. March 2009 2:78-92; doi:10.3835/plantgenome2008.08.0005</li>
 	  <li>Menda N, Buels RM, Tecle I, Mueller LA (2008). A community-based annotation framework for linking solanaceae genomes with phenomes.
@@ -16,6 +16,4 @@ Genetics. 2006 Nov;174(3):1407-20. </li>
 	Coffee and tomato share common gene repertoires as revealed by deep sequencing of seed and cherry transcripts.
 Theor Appl Genet. 2005 Dec;112(1):114-30.</li>
 	</ul>
-
-"
- &>
+</&>
