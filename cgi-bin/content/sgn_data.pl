@@ -87,21 +87,27 @@ my ($sol_uri, $sol_image_map, $sol_map) = get_tree_uri('Solanaceae', $sol);
 my ($rub_uri, $rub_image_map, $rub_map) = get_tree_uri('Rubiaceae' , $rub);
 my ($planta_uri, $planta_image_map, $planta_map) = get_tree_uri('Plantaginaceae' , $planta);
 
-
+print qq | <a name = "sol"> |;
 print  info_section_html(title=>"Solanaceae", 
-			 contents=> qq| <br><img src="$sol_uri" border="0" alt="tree_browser" USEMAP="#$sol_map"/><br> | . $sol_image_map,
+			 contents=> qq|<br><img src="$sol_uri" border="0" alt="tree_browser" USEMAP="#$sol_map"/><br> | . $sol_image_map ,
 			 collapsible => 1,
     );
+print qq |</a>|;
+
+print qq | <a name = "rub"> |;
 print  info_section_html(title=>"Rubiaceae", 
-			 contents=> qq| <br><img src="$rub_uri" border="0" alt="tree_browser" USEMAP="#$rub_map"/><br> | . $rub_image_map,
+			 contents=> qq|<br><img src="$rub_uri" border="0" alt="tree_browser" USEMAP="#$rub_map"/><br> | . $rub_image_map ,
 			 collapsible => 1,
     );
 
+print qq |</a>|;
+
+print qq | <a name = "planta"> |;
 print  info_section_html(title=>"Plantaginaceae", 
 			 contents=> qq| <br><img src="$planta_uri" border="0" alt="tree_browser" USEMAP="#$planta_map"/><br> | . $planta_image_map,
 			 collapsible => 1,
     );
-
+print qq |</a>|;
 
 
 $page->footer();
@@ -158,7 +164,7 @@ sub get_tree_uri  {
     print STDERR "FOUND organism " . $nodes->{$root_o_id} . " root node: " .  $root_node->get_name() . "\n\n";
     
     my $newick= $tree->generate_newick($root_node, 1);
-    
+    #print STDERR "$newick \n";
     #a File::Temp object
     my $file = $c->tempfile( TEMPLATE =>'tree_browser/tree-XXXXX',
 			     SUFFIX   => '.png',
