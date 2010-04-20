@@ -45,7 +45,7 @@ height      = 8
 bgcolor     = cyan
 fgcolor     = cyan
 label density = 25
-bump density  = 10000
+bump density  = 25
 
 [GT_Exon_SGN_E_tomato]
 feature      = mRNA:GenomeThreader_SGN_E_tomato
