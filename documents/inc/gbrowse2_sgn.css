@@ -155,7 +155,6 @@ BODY              {
 		        font-size: small;
 }
 .searchtitle      { background-color: rgb(240,240,240);
-		    background:       url(/gbrowse2/images/buttons/grey_0.4_pixel.png);
 		    background-color: rgba(240,240,240,0.4);
 	            font-size: small;
 		    margin-left:   1em;
@@ -169,7 +168,6 @@ BODY              {
 }
 .settingstitle    {
  background-color: rgb(224,224,224);
-		    background:       url(/gbrowse2/images/buttons/dark_0.4_pixel.png);
 		    background-color: rgba(224,224,224,0.4);
 		    margin-left:   1em;
 		    margin-right:  1em;
@@ -177,7 +175,6 @@ BODY              {
 }
 .settingsbody     {
  background-color: rgb(240,240,240);
-		    background:       url(/gbrowse2/images/buttons/grey_0.4_pixel.png);
 		    background-color: rgba(240,240,240,0.4);
 		    margin-left:  1em;
 		    margin-right: 1em;
@@ -185,7 +182,6 @@ BODY              {
 }
 .uploadtitle {
   background-color: rgb(224,224,224);
-  background:  url(/gbrowse2/images/buttons/dark_0.4_pixel.png);
   background-color: rgba(224,224,224,0.4);
   margin-left:  1em;
   margin-right: 1em;
@@ -193,7 +189,6 @@ BODY              {
 }
 .uploadbody  {
   background-color: rgb(240,240,240);
-  background:       url(/gbrowse2/images/buttons/grey_0.4_pixel.png);
   background-color: rgba(240,240,240,0.4);
   margin-left:   1em;
   margin-right:  1em;
