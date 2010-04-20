@@ -50,10 +50,12 @@ use POSIX;
 use English;
 
 use Memoize;
-use DB_File;
+use Storable qw/ retrieve nstore /;
 
 use Tie::UrlEncoder;
 our %urlencode;
+
+use File::Flock;
 
 use CXGN::Page;
 use CXGN::VHost;
@@ -349,30 +351,8 @@ sub _cached_file_modtime {
   shift->file_modtime
 }
 
-
-{ #set up file-based caching of the blast db selectbox generation
-
-    my $choices_cache_filename = $c->path_to( $c->generated_file_uri('blast','choices_cache.dat') );
-    if( $params{flush_cache} ) {
-        unlink $choices_cache_filename;
-    }
-    #warn "using choices cache '$choices_cache_
-    tie my %cache => 'DB_File', $choices_cache_filename, O_RDWR|O_CREAT, 0666;
-
-    memoize 'blast_db_prog_selects' => (
-        # use the db file for storing values
-        SCALAR_CACHE => [HASH => \%cache],
-
-        # cache is good for 17 minutes. (>>11 is equivalent to int(
-        # time/(2**11) )
-        NORMALIZER => sub { time >> 10 },
-       );
-}
-
 sub blast_db_prog_selects {
     my $db_id = shift;
-
-    sleep 2;
 
     my $db_choices = blast_db_choices();
 
@@ -410,14 +390,38 @@ sub blast_db_prog_selects {
     return hierarchical_selectboxes_html( parentsel => { name => 'database',
                                                          choices => $db_choices,
                                                          ( $selected_db_id ? (selected => $selected_db_id) : () ),
-						     },
-                                          childsel  => { name => 'program',
-						     },
+						       },
+                                          childsel  => { name => 'program' },
                                           childchoices => \@program_choices
                                          );
 }
 
 sub blast_db_choices {
+
+    my $choices_cache_filename = $c->path_to( $c->generated_file_uri('blast','choices_cache.dat') );
+    my $lockfile = "$choices_cache_filename.lock";
+
+    unless( $params{flush_cache} ) {
+        my $l = File::Flock->new($lockfile,'shared');
+        my $cache_modtime = (stat($choices_cache_filename))[9];
+
+        if( $cache_modtime && $cache_modtime > time - 15*60 ) {
+            my $data = retrieve( $choices_cache_filename );
+            return $data if $data;
+        }
+    }
+
+    my $l = File::Flock->new($lockfile);
+    my $choices = _build_blast_db_choices();
+    nstore( $choices, $choices_cache_filename )
+        or warn "WARNING: $! caching blast db choices in file '$choices_cache_filename'";
+    return $choices;
+}
+
+sub _build_blast_db_choices {
+
+    sleep 5;
+
     my @db_choices = map {
         my @dbs = map [ $_, bdb_opt($_) ],
             grep _cached_file_modtime($_), #filter for dbs that are on disk
