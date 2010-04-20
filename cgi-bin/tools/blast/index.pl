@@ -74,12 +74,6 @@ my %params;
 $params{interface_type} ||= 0;
 
 
-my $choices_cache_filename = $c->path_to( $c->generated_file_uri('blast','choices_cache.dat') );
-if( $params{flush_cache} ) {
-    unlink $choices_cache_filename;
-}
-
-
 my $blast_path = $vhost_conf->get_conf('blast_path');
 my $blast_version = do {
   unless( -x "$blast_path/blastall") {
@@ -358,20 +352,27 @@ sub _cached_file_modtime {
 
 { #set up file-based caching of the blast db selectbox generation
 
-  tie my %cache => 'DB_File', $choices_cache_filename, O_RDWR|O_CREAT, 0666;
+    my $choices_cache_filename = $c->path_to( $c->generated_file_uri('blast','choices_cache.dat') );
+    if( $params{flush_cache} ) {
+        unlink $choices_cache_filename;
+    }
+    #warn "using choices cache '$choices_cache_
+    tie my %cache => 'DB_File', $choices_cache_filename, O_RDWR|O_CREAT, 0666;
 
-  memoize 'blast_db_prog_selects' => (
-      # use the db file for storing values
-      SCALAR_CACHE => [HASH => \%cache],
+    memoize 'blast_db_prog_selects' => (
+        # use the db file for storing values
+        SCALAR_CACHE => [HASH => \%cache],
 
-      # cache is good for 17 minutes. (>>11 is equivalent to int(
-      # time/(2**11) )
-      NORMALIZER => sub { time >> 10 },
-     );
+        # cache is good for 17 minutes. (>>11 is equivalent to int(
+        # time/(2**11) )
+        NORMALIZER => sub { time >> 10 },
+       );
 }
 
 sub blast_db_prog_selects {
     my $db_id = shift;
+
+    sleep 2;
 
     my $db_choices = blast_db_choices();
 
@@ -379,40 +380,41 @@ sub blast_db_prog_selects {
         unless @$db_choices;
 
     # DB select box will either the db_id supplied, or what the user last selected, or the tomato combined blast db
-    my $selected_db_id = $db_id || $prefs->get_pref('last_blast_db_id')
+    my $selected_db_id = $db_id #|| $prefs->get_pref('last_blast_db_id')
 	|| do {
-	    my $d = CXGN::BlastDB->retrieve( web_interface_visible => 't', file_base => 'bacs/all_tomato_seqs' );
-	    $d &&= $d->blast_db_id
-    };
+	    my ($d) = map $_->blast_db_id,
+                      grep _cached_file_modtime($_),
+                      grep $_->web_interface_visible,
+                      CXGN::BlastDB->search_ilike( title => '%SGN Tomato Combined%' );
+            $d;
+        };
 
-  #warn "got pref last_blast_db_file_base '$selected_db_file_base'\n";
+    my %prog_descs = ( blastn  => 'BLASTN (nucleotide to nucleotide)',
+                       blastx  => 'BLASTX (nucleotide to protein; query translated to protein)',
+                       blastp  => 'BLASTP (protein to protein)',
+                       tblastx => 'TBLASTX (protein to protein; both database and query are translated)',
+                       tblastn => 'TBLASTN (protein to nucleotide; database translated to protein)',
+                      );
 
-  my %prog_descs = ( blastn  => 'BLASTN (nucleotide to nucleotide)',
-		     blastx  => 'BLASTX (nucleotide to protein; query translated to protein)',
-		     blastp  => 'BLASTP (protein to protein)',
-		     tblastx => 'TBLASTX (protein to protein; both database and query are translated)',
-		     tblastn => 'TBLASTN (protein to nucleotide; database translated to protein)',
-		   );
+    my @program_choices = map {
+        my ($db) = @$_;
+        if ($db->type eq 'protein') {
+            [map [$_,$prog_descs{$_}], 'blastx','blastp']
+        } else {
+            [map [$_,$prog_descs{$_}], 'blastn','tblastx','tblastn']
+        }
+    } grep ref, @$db_choices;
 
-  my @program_choices = map {
-    my ($db) = @$_;
-    if($db->type eq 'protein') {
-      [map [$_,$prog_descs{$_}], 'blastx','blastp']
-    } else {
-      [map [$_,$prog_descs{$_}], 'blastn','tblastx','tblastn']
-    }
-  } grep ref, @$db_choices;
+    @$db_choices = map {ref($_) ? $_->[1] : $_} @$db_choices;
 
-  @$db_choices = map {ref($_) ? $_->[1] : $_} @$db_choices;
-
-  return hierarchical_selectboxes_html( parentsel => { name => 'database',
-						       choices => $db_choices,
-						       ( $selected_db_id ? (selected => $selected_db_id) : () ),
+    return hierarchical_selectboxes_html( parentsel => { name => 'database',
+                                                         choices => $db_choices,
+                                                         ( $selected_db_id ? (selected => $selected_db_id) : () ),
 						     },
-					childsel  => { name => 'program',
+                                          childsel  => { name => 'program',
 						     },
-					childchoices => \@program_choices
-				      );
+                                          childchoices => \@program_choices
+                                         );
 }
 
 sub blast_db_choices {
