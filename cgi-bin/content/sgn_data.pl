@@ -13,8 +13,8 @@ use CXGN::Chado::Organism;
 
 use CXGN::DB::DBICFactory;
 
-use CXGN::Phylo::Tree;
-use CXGN::Phylo::Node;
+use CXGN::Phylo::OrganismTree;
+
 
 
 
@@ -35,7 +35,6 @@ my $schema = CXGN::DB::DBICFactory
 
 
 $page->header("SGN data overview");
-print  page_title_html("SGN data overview");
 
 
 print <<EOF;
@@ -46,7 +45,7 @@ print <<EOF;
 	    for more details about available maps, loci, libraries, ESTs, metabolic annotation and 
 	    phenotypes accessions, see the species of interest.
 	    </p>
-    <b>List of species currently in the database</b><br /><br />
+    <b>List of species currently in the database</b> (click on the organism  name to see more details) <br /><br />
 
 EOF
 
@@ -139,7 +138,7 @@ sub get_tree_uri  {
 		    );
 	    }
 	    $nodes->{$organism_id}=$o;
-	    $nodes = find_recursive_parent($o, $nodes);
+	    $nodes = CXGN::Phylo::OrganismTree::find_recursive_parent($o, $nodes);
 	} else {
 	    print STDERR "NO ORGANISM FOUND FOR SPECIES $s  !!!!!!!!!!!\n\n";
 	}
@@ -147,7 +146,7 @@ sub get_tree_uri  {
     
     
     
-    recursive_children( $nodes,  $nodes->{$root_o_id}, $root_node , 1) ;
+    CXGN::Phylo::OrganismTree::recursive_children( $nodes,  $nodes->{$root_o_id}, $root_node , 1) ;
     
     $tree->set_show_labels(1);
     
@@ -178,7 +177,7 @@ sub get_tree_uri  {
     my $renderer = CXGN::Phylo::PNG_tree_renderer->new($tree); 
     
     my $leaf_count= $tree->get_leaf_count();
-    my $image_height =   $leaf_count*20 ; # > 160  ? $leaf_count*20  : 160 ;
+    my $image_height =   $leaf_count*20  > 160  ? $leaf_count*20  : 160 ;
 
     $tree->get_layout->set_image_height($image_height);
     $tree->get_layout->set_image_width(800);
@@ -197,53 +196,6 @@ sub get_tree_uri  {
 }
 
 
-sub recursive_children {
-    my $nodes=shift;
-    my $o= shift; #CXGN::Chado::Organism object
-    my $n = shift; # CXGN::Phylo::Node object
-    my $is_root=shift;
-   
-    $n->set_name($o->get_species());
-    $n->get_label()->set_link("/chado/organism.pl?organism_id=" . $o->get_organism_id());
-    $n->get_label()->set_name($n->get_name());
-    $n->set_tooltip($n->get_name);
-    $n->set_species($n->get_name());
-	    
-    $n->set_hide_label(0);
-    $n->get_label()->set_hidden(0);
-        
-    my @cl=$n->get_children();
-   
-    
-    my @children = $o->get_direct_children;
-    foreach my $child (@children) {
-
-	if ( exists( $nodes->{$child->get_organism_id() } ) && defined( $nodes->{$child->get_organism_id()} ) ) {
-	    
-	    my $new_node=$n->add_child();
-	    recursive_children($nodes, $child, $new_node);
-	}
-    }
-    if ($n->is_leaf()  ) { $n->set_hilited(1) ; }
-    return $nodes;
-}
-
-
-sub find_recursive_parent {
-    my $organism=shift ; 
-    my $nodes= shift; # hash ref
-    my $parent = $organism->get_parent;
-    if ($parent) {
-	my $id = $parent->get_organism_id();
-	
-	if (!$nodes->{$id} ) {
-	    $nodes->{$id} = $parent ;
-	    find_recursive_parent($parent, $nodes);
-	} 
-    }
-    else { return; }
-    return $nodes;
-}
 
 
 __END__
