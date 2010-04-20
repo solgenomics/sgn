@@ -62,7 +62,7 @@ link         = /search/quick_search.pl?term=$name
 bgcolor     = cyan
 fgcolor     = black
 label density = 25
-bump density  = 100
+bump density  = 25
 
 [GC:region]
 glyph        = dna
@@ -261,7 +261,6 @@ category     = Prediction Features
 glyph        = segments
 stranded     = 1
 label        = sub { my ($f) = @_; my ($n) = map $f->get_Annotations($_),qw| amino_acid ID load_id |; $n =~ s/-i\d+$//; $n }
-label density = 
 citation     = This track shows transfer RNAs predicted by the tRNAscan-SE program.  For more on tRNAscan-SE, see <a href="http://selab.janelia.org/software#trnascanse">http://selab.janelia.org/software#trnascanse</a>.  (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnTRNAScanSE000">ITAG Wiki</a>)
 
 [sgn_loci]
@@ -280,7 +279,7 @@ key          = Markers
 fgcolor      = black
 bgcolor      = yellow
 glyph        = generic
-label density = 250
+label density = 100
 bump density  = 100
 ignore_sub_part = match_part
 
