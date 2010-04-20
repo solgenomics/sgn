@@ -274,6 +274,7 @@ my $build = $class->new(
         #        'DBI' => 0,
         'DBIx::Class'             => 0,
         'DBIx::Connector'         => 0,
+        'File::Flock'             => 0,
         'File::NFSLock'           => 0,
         'File::Temp'              => 0,
         'Number::Bytes::Human'    => '0.07',
