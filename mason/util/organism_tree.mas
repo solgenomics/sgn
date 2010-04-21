@@ -1,0 +1,66 @@
+<%doc>
+=head1 NAME 
+
+organism_tree.mas - mason component for printing organism phylo trees 
+
+=head1 DESCRIPTION
+
+Queries the database for web_visible (see chado: organismprop table ) sgn organisms, and buids a species tree from the phylonode table  using the L<CXGN::Phylo::Tree> framework
+
+=head1 AUTHOR
+
+Naama Menda <nm249@cornell.edu>
+
+=cut 
+
+
+</%doc>
+
+
+<%args>
+
+$schema
+$root
+$species_hashref
+$uri_dir
+$tmp_dir
+
+</%args>
+
+<%perl>
+
+use CXGN::Phylo::OrganismTree;
+use CXGN::Tools::WebImageCache;
+use CXGN::Page::FormattingHelpers qw /info_section_html / ;
+
+my $cache = CXGN::Tools::WebImageCache->new();
+$cache->set_temp_dir($uri_dir);
+$cache->set_basedir($tmp_dir);
+$cache->set_key($root . "-" . (join '-', keys %$species_hashref) );
+$cache->set_expiration_time(86400);
+my $map_name= $root . "_map";
+
+$cache->set_map_name($map_name);
+
+if ( !$cache->is_valid() ) {
+
+  my $tree = CXGN::Phylo::OrganismTree->new($schema);
+  $tree->build_tree($root, $species_hashref);
+
+  my $image_map = $tree->get_renderer()->get_html_image_map($map_name);
+  my $image_png = $tree->render_png(undef, 1);
+#qq|<br><img src="$sol_uri" border="0" alt="tree_browser" USEMAP="#$sol_map"/><br> | . $sol_image_map ,
+
+ $cache->set_image_data($image_png);
+ $cache->set_image_map_data($image_map);
+}
+
+my $image_html= $cache->get_image_html();
+
+</%perl>
+
+<% info_section_html(title=>$root, 
+contents=> $image_html,
+collapsible => 0,
+)
+%>
