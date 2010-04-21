@@ -183,11 +183,11 @@ sub get_tree_uri  {
     my $renderer = CXGN::Phylo::PNG_tree_renderer->new($tree); 
     
     my $leaf_count= $tree->get_leaf_count();
-    my $image_height =   $leaf_count*20  > 160  ? $leaf_count*20  : 160 ;
+    my $image_height =   $leaf_count*20  > 120  ? $leaf_count*20  : 120 ;
 
     $tree->get_layout->set_image_height($image_height);
     $tree->get_layout->set_image_width(800);
-    
+    $tree->get_layout->set_top_margin(20);
     $tree->set_renderer($renderer);
     #$tree->get_layout->layout();
     $tree->get_renderer->render();
