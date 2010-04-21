@@ -393,19 +393,16 @@ sub stat_form {
 		     <option>5
 		     <option>10
 	      </select>
-	 </td>
-     </tr>
-     <tr>
-        <td>$no_draws</td>
-	<td><select name="stat_no_draws">
+	 </td>    
+         <td>$no_draws</td>
+	 <td><select name="stat_no_draws">
 	            <option>
 	            <option>5
                     <option>10
 		    <option>15
 		    <option>20
 	    </select>	
-       </td>
-       
+        </td>       
     </tr>
     <tr>
        <td>No. of permutations:</td>
