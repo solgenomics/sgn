@@ -5,7 +5,7 @@ use strict;
 use CXGN::Page;
 use CXGN::Login;
 use CXGN::People;
-use CXGN::VHost;
+use CXGN::Page::WebForm;
 
 use CXGN::Phenome::Locus;
 use CXGN::Page::FormattingHelpers qw/info_section_html
@@ -162,7 +162,7 @@ sub print_results {
     
     foreach my $allele(@{$locus_edits{alleles} } ) {
 	my $allele_id=$allele->get_allele_id();
-	my $locus_name=$allele->get_common_name() ." " . $allele->get_locus_name();
+	my $locus_name=$allele->get_locus()->get_common_name() ." " . $allele->get_locus_name();
 	my $allele_name= $allele->get_allele_name();
 	my $allele_symbol=$allele->get_allele_symbol();
 	my $allele_owner=  $allele->get_sp_person_id();
@@ -290,7 +290,7 @@ sub print_results {
 	my $allele=$list->[1];
 	my $ind_id=$ind->get_individual_id();
 	my $ind_name= $ind->get_name() ;
-	my $locus_name=$allele->get_common_name() ." " . $allele->get_locus_name();
+	my $locus_name=$allele->get_locus()->get_common_name() ." " . $allele->get_locus_name();
 	my $locus_id=$allele->get_locus_id();
 	my $owner=  $list->[2];
 	my $person= get_person_info($dbh, $owner);
