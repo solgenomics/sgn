@@ -375,7 +375,7 @@ sub stat_form {
                       <option>Simulate
 	      </select>
 	 </td>
-         <td>Genotype probability significance level:</td>
+         <td>QTL genotype probability significance level:</td>
          <td><select name="stat_prob_level">
 	            <option>
                     <option>0.001
