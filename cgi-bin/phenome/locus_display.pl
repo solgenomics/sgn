@@ -1,11 +1,5 @@
 use strict;
 use warnings;
-#my $locus_detail_page = CXGN::Phenome::LocusDetailPage->new();
-
-#package CXGN::Phenome::LocusDetailPage;
-
-#use base qw/CXGN::Page::Form::SimpleFormPage  /;
-
 use CXGN::Page;
 
 use CXGN::Apache::Error;
