@@ -30,6 +30,7 @@ use strict;
 
 use CXGN::DB::DBICFactory;
 use CXGN::Chado::Organism;
+use CXGN::Tools::WebImageCache;
 
 package CXGN::Phylo::OrganismTree;
 
@@ -47,10 +48,12 @@ use base qw / CXGN::Phylo::Tree / ;
 
 sub new {
     my $class = shift;
-    my $schema = shift || CXGN::DB::DBICFactory
-	->open_schema( 'Bio::Chado::Schema');
-    
+    my $schema = shift || die "NO SCHEMA OBJECT PROVIDED!!\n";
+
     my $self = $class->SUPER::new();
+    
+    $self->set_schema($schema);
+       
     return $self;
 }
 
@@ -58,23 +61,10 @@ sub new {
 
 #######
 
-=head2 get_tree_uri
-
- Usage: $self->get_tree_uri($root, $species_hash)
- Desc:  function for generating a tree file uri
- Ret:   ($uri, $image_map, $map_name)
- Args:  root node name (from the organism table), hashref of species names (keys), values = organism ids
- Side Effects:
- Example:
-
-=cut
-
-
-
 
 =head2 recursive_children
 
- Usage: recursive_children($nodes_hashref, $organism, $node, $is_root)
+ Usage: $self->recursive_children($nodes_hashref, $organism, $node, $is_root)
  Desc:  recursively add child nodes starting from root.
  Ret:   nothing
  Args:  $nodes_hashref (organism_id => CXGN::Chado::Organism), $organism object for your root, $node object for your root, 1 (boolean)
@@ -85,7 +75,7 @@ sub new {
 
 
 sub recursive_children {
-        
+    my $self=shift;
     my $nodes=shift;
     my $o= shift; #CXGN::Chado::Organism object
     my $n = shift; # CXGN::Phylo::Node object
@@ -109,7 +99,7 @@ sub recursive_children {
 	if ( exists( $nodes->{$child->get_organism_id() } ) && defined( $nodes->{$child->get_organism_id()} ) ) {
 	    
 	    my $new_node=$n->add_child();
-	    recursive_children($nodes, $child, $new_node);
+	    $self->recursive_children($nodes, $child, $new_node);
 	}
     }
     if ($n->is_leaf()  ) { $n->set_hilited(1) ; }
@@ -118,7 +108,7 @@ sub recursive_children {
 
 =head2 find_recursive_parent
 
- Usage: find_recursive_parent($organism, $nodes_hashref)
+ Usage: $self->find_recursive_parent($organism, $nodes_hashref)
  Desc:  populate $nodes_hashref  (organism_id=> CXGN::Chado::organism) with recursive parent organisms 
  Ret:   $nodes_hashref
  Args:  $organism object, $nodes_hashref
@@ -130,21 +120,101 @@ sub recursive_children {
 
 
 sub find_recursive_parent {
-    
+    my $self=shift;
     my $organism=shift ; 
     my $nodes= shift; # hash ref
+    
     my $parent = $organism->get_parent;
     if ($parent) {
 	my $id = $parent->get_organism_id();
 	
 	if (!$nodes->{$id} ) {
 	    $nodes->{$id} = $parent ;
-	    find_recursive_parent($parent, $nodes);
+	    $self->find_recursive_parent($parent, $nodes);
 	} 
     }
     else { return; }
     return $nodes;
 }
+
+
+=head2 build_tree
+
+ Usage:  $self->build_tree($root_species_name, $species_hashref)
+ Desc:   builds an organism tree starting from $root with a list of species
+ Ret:    $self
+ Args:   $root_species_name, $species_hashref
+ Side Effects:  sets tree nodes names and lables, and renders the tree  (see L<CXGN::Phylo::Renderer> )
+ Example:
+
+=cut
+
+sub build_tree  {
+    
+    my $self=shift;
+    my $root= shift; #'Solanaceae';
+   
+    my $species_hash=  shift;
+    
+    my $schema = $self->get_schema();
+    my $root_o = CXGN::Chado::Organism->new_with_species($schema, $root);
+    my $root_o_id = $root_o->get_organism_id();
+    
+    my $organism_link =   "/chado/organism.pl?organism_id="; 
+    
+    my $nodes=();
+    
+        
+    my $root_node = $self->get_root();#CXGN::Phylo::Node->new();
+
+    
+    foreach my $s (keys %$species_hash ) {
+	
+	my $o =  CXGN::Chado::Organism->new_with_species($schema, $s);
+	if ($o) {
+	    my $organism_id = $o->get_organism_id();
+	    #if ($organism_id != $species_hash->{$s} ) { 
+	#	
+	#    }
+	    $nodes->{$organism_id}=$o;
+	    $nodes = $self->find_recursive_parent($o, $nodes);
+	} else {
+	    $self->d( "NO ORGANISM FOUND FOR SPECIES $s  !!!!!!!!!!!\n\n");
+	}
+    }
+    
+    $self->recursive_children( $nodes,  $nodes->{$root_o_id}, $root_node , 1) ;
+    
+    $self->set_show_labels(1);
+    
+    
+    $root_node->set_name($root_o->get_species());
+    $root_node->set_link($organism_link . $root_o_id);
+    $self->set_root($root_node);
+    
+    $self->d( "FOUND organism " . $nodes->{$root_o_id} . " root node: " .  $root_node->get_name() . "\n\n");
+    
+    my $newick= $self->generate_newick($root_node, 1);
+       
+        
+    $self->standard_layout();
+    
+    my $renderer = CXGN::Phylo::PNG_tree_renderer->new($self); 
+    
+    my $leaf_count= $self->get_leaf_count();
+    my $image_height =   $leaf_count*20  > 120  ? $leaf_count*20  : 120 ;
+
+    $self->get_layout->set_image_height($image_height);
+    $self->get_layout->set_image_width(800);
+    $self->get_layout->set_top_margin(20);
+    $self->set_renderer($renderer);
+    #$tree->get_layout->layout();
+    $self->get_renderer->render();
+    
+    return $self;
+}
+
+
 
 
 ##########
