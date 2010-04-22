@@ -31,7 +31,6 @@ $tmp_dir
 
 use CXGN::Phylo::OrganismTree;
 use CXGN::Tools::WebImageCache;
-use CXGN::Page::FormattingHelpers qw /info_section_html / ;
 
 my $cache = CXGN::Tools::WebImageCache->new();
 $cache->set_temp_dir($uri_dir);
@@ -59,8 +58,16 @@ my $image_html= $cache->get_image_html();
 
 </%perl>
 
-<% info_section_html(title=>$root, 
-contents=> $image_html,
-collapsible => 0,
-)
-%>
+<&| /page/info_section.mas, 
+  title         => $root,
+  subtitle      => 'click on organism name to see more details ',
+  empty_message => 'Tree not available',
+  is_subsection => 0,
+  collapsible   =>1,
+  collapsed  =>0
+  &>
+  
+ <% $image_html %>
+  
+</&>
+ 
