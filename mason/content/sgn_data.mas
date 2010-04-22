@@ -19,8 +19,7 @@ $planta
 
 <%perl>
 
-#my $uri_dir=$c->get_conf('/home/naama/cxgn/sgn/documents/tempfiles/') . 'tree_browser';
-my $uri_dir='/documents/tempfiles/' . 'tree_browser/';
+my $uri_dir=$c->get_conf('tempfiles_subdir') . '/tree_browser';
 
 my $tmp_dir=$c->get_conf('basepath'); 
     
