@@ -225,7 +225,9 @@ for (i in chrdata){
   peakmarker<-find.marker(popdata, chr=chrno, pos=p)  
   confidenceint<-bayesint(i, chr=chrno, prob=0.95, expandtomarkers=TRUE)
   confidenceint<-rownames(confidenceint)
-  confidenceint<-c(chrno, confidenceint)
+  print (confidenceint)
+  confidenceint<-c(chrno, confidenceint, peakmarker)
+  print(confidenceint)
   if (chrno==1) { 
     datasummary<-i
     confidenceints<-confidenceint
