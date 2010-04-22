@@ -228,13 +228,6 @@ EOS
         $term_id   = $term_obj->get_cvterm_id();
     }
 
-    my $action = $args{action};
-    if ( !$population_id && $action ne 'new' && $action ne 'store' )
-    {
-        $self->get_page->message_page(
-                                    "No individual exists for this identifier");
-    }
-
     #used to show certain elements to only the proper users
     my $login_user      = $self->get_user();
     my $login_user_id   = $login_user->get_sp_person_id();
@@ -413,41 +406,9 @@ HTML
         $plot_html .= "</td></tr></table>";
 
         my $qtl_image           = $self->qtl_plot();
-        my $permu_threshold_ref = $self->permu_values();
-        my %permu_threshold     = %$permu_threshold_ref;
-
-        my @keys;
-
-        foreach my $key ( keys %permu_threshold )
-        {
-            if ( $key =~ m/^\d./ )
-            {
-                push @keys, $key;
-            }
-
-        }
-        my $value1 = $permu_threshold{ $keys[0] };
-        my $value2 = $permu_threshold{ $keys[1] };
-
-        my $qtl_html .= "<table cellpadding=5><tr><td>";
-        $qtl_html    .= $qtl_image;
-        $qtl_html    .= "</td><td>";
-
-        my %stat_param = %{ $self->stat_param_hash() };
-
-        $qtl_html .= <<HTML;
-	<b>Analysis Procedure:</b> <a href=http://www.rqtl.org target=_blank>R/QTL</a><br/>
-	<b>QTL model: </b> $stat_param{"stat_qtl_model"}<br />
-	<b>Genome scan size:</b> $stat_param{"stat_step_size"} cM <br/> 
-	<b>QTL genotype probability:</b> $stat_param{"stat_prob_level"} <br/>
-	<b>LOD threshold (based on $stat_param{"stat_permu_test"} permutations at $stat_param{"stat_permu_level"} prob. level):</b> $value1  <br/> 
-	<b>Flanking markers (95% CI<br/> 
-           based on Bayesian Credible <br/>
-           Interval estimation) & comparative mapviewer:</b><br/> 
-           click on graph
-HTML
-
-        $qtl_html .= "</td></tr></table>";
+  
+	my $legend = $self->legend($population);
+	my $qtl_html = "<table><tr><td width=70%>$qtl_image</td><td width=30%>$legend</td></tr></tr>";
 
         print info_section_html( 
                                 title    => 'QTL(s)',
@@ -685,6 +646,7 @@ sub qtl_plot
     my $mapversion     = $population->mapversion_id();
     my @linkage_groups = $population->linkage_groups();
 
+ 
     my ( $term_obj, $term_name, $term_id );
 
     if ( $population->get_web_uploaded() )
@@ -714,7 +676,7 @@ sub qtl_plot
     my ( @marker,  @chr,  @pos,   @lod );
     my ( @chr_qtl, @left, @right, @peak );
     my ( $qtl_image, $image, $image_t, $image_url, $image_html, $image_t_url,
-         $thickbox, $title );
+         $thickbox, $title, $l_m, $p_m, $r_m );
 
     my $round1 = Math::Round::Var->new(0.1);
     my $round2 = Math::Round::Var->new(1);
@@ -755,53 +717,69 @@ sub qtl_plot
 	   
         {
 	    chomp($row);
-            my ($trash, $chr_qtl, $left, $peak, $right ) = split( /\t/, $row );
+            my ($trash, $chr_qtl, $left, $peak, $right, $peakmarker ) = split( /\t/, $row );
             push @chr_qtl, $chr_qtl;
             push @left,    $left;
             push @right,   $right;
-            push @peak, $peak;
+            push @peak, $peakmarker;
         }
 
         close MARKERS;
+	my (@h_markers, @chromosomes, @lk_groups);
+	my $h_marker;
 
-        my @h_markers;
-        my $h_marker;
-        my @chromosomes;
 
-        my @lk_groups = @linkage_groups;
-        @lk_groups = sort ( { $a <=> $b } @lk_groups );
-        for ( my $i = 0 ; $i < @left ; $i++ )
-        {
-            my $lg           = shift(@lk_groups);
-            my $key_h_marker = "$ac" . "_pop_" . "$pop_id" . "_chr_" . $lg;
-            $h_marker = $cache_tempimages->get($key_h_marker);
+	@lk_groups = @linkage_groups;
+	@lk_groups = sort ( { $a <=> $b } @lk_groups );
+	for ( my $i = 0 ; $i < @left ; $i++ )
+	{
+	    my $lg           = shift(@lk_groups);
+	    my $key_h_marker = "$ac" . "_pop_" . "$pop_id" . "_chr_" . $lg;
+	    $h_marker = $cache_tempimages->get($key_h_marker);
 
-            unless ($h_marker)
-            {
+	    unless ($h_marker)
+	    {
 
-                push @chromosomes, $lg;
-                my $l_m = $left[$i];
-                my $r_m = $right[$i];
-		my $p_m = $peak[$i];
-                my $l_pos =
-                  $population->get_marker_position( $mapversion, $l_m );
-                my $r_pos =
-                  $population->get_marker_position( $mapversion, $r_m );
+		push @chromosomes, $lg;
+		$l_m = $left[$i];
+		$r_m = $right[$i];
+		$p_m = $peak[$i];
+		my $l_pos =
+		    $population->get_marker_position( $mapversion, $l_m );
+		my $r_pos =
+		    $population->get_marker_position( $mapversion, $r_m );
 
-                $h_marker =
-qq |../cview/view_chromosome.pl?map_version_id=$mapversion&chr_nr=$lg&show_ruler=1&show_IL=&show_offsets=1&comp_map_version_id=&comp_chr=&color_model=&show_physical=&size=&show_zoomed=1&confidence=-2&hilite=$l_m+$p_m+$r_m&marker_type=&cM_start=$l_pos&cM_end=$r_pos |;
 
-                $cache_tempimages->set( $key_h_marker, $h_marker, '30 days' );
-            }
 
-            #	$chr_c++;
-            push @h_markers, $h_marker;
-        }
+		my $permu_threshold_ref = $self->permu_values();
+		my %permu_threshold     = %$permu_threshold_ref;
+		my @p_keys;
+		foreach my $key ( keys %permu_threshold )
+		{
+		    if ( $key =~ m/^\d./ )
+		    {
+			push @p_keys, $key;
+		    }
 
+		}
+		my $lod1 = $permu_threshold{ $p_keys[0] };
+		# my $log2 = $permu_threshold{ $p_keys[1] };           
+		
+		$h_marker = 
+		    qq |/phenome/qtl.pl?population_id=$pop_id&amp;term_id=$term_id&amp;chr=$lg&amp;l_marker=$l_m&amp;p_marker=$p_m&amp;r_marker=$r_m&amp;lod=$lod1|;
+ #$h_marker =
+#qq |../cview/view_chromosome.pl?map_version_id=$mapversion&chr_nr=$lg&show_ruler=1&show_IL=&show_offsets=1&comp_map_version_id=&comp_chr=&color_model=&show_physical=&size=&show_zoomed=1&confidence=-2&hilite=$l_m+$p_m+$r_m&marker_type=&cM_start=$l_pos&cM_end=$r_pos |;
+
+		$cache_tempimages->set( $key_h_marker, $h_marker, '30 days' );
+	    }
+
+	    push @h_markers, $h_marker;
+	}
+       
         my $count       = 0;
         my $old_chr_chr = 1;
         my (
-             $c,         $chr_chr, $image,     $image_t,
+             $chr_chr, $image,     $image_t,
              $thickbox,  $max_chr, $chr_chr_e, $marker_chr_e,
              $pos_chr_e, $lod_chr_e
            );
@@ -894,7 +872,7 @@ qq |../cview/view_chromosome.pl?map_version_id=$mapversion&chr_nr=$lg&show_ruler
 
             $image      = $cache_qtl_plot->get_image_tag();
             $image_url  = $cache_qtl_plot->get_image_url();
-            $image_html = qq |<a href ="$h_marker">$image</a>|;
+           # $image_html = qq |<a href ="$h_marker&qtl=$image_url">$image</a>|;
 
 ###########thickbox
             my $cache_qtl_plot_t = CXGN::Tools::WebImageCache->new(1);
@@ -935,9 +913,9 @@ qq |../cview/view_chromosome.pl?map_version_id=$mapversion&chr_nr=$lg&show_ruler
 
             $image_t     = $cache_qtl_plot_t->get_image_tag();
             $image_t_url = $cache_qtl_plot_t->get_image_url();
-
+	  #title="A QTL analysis for $term_name in population $pop_name <br/><br/>	
             $thickbox =
-qq | <a href="$image_t_url" title="A QTL analysis for $term_name in population $pop_name <br/><b><a href=$h_marker> View and compare with genetic and/or physical maps</font></a></b>" class="thickbox" rel="gallary-qtl"> <img src="$image_url" alt="Chromosome $i $image_t_url $image_url" /> </a> |;
+qq | <a href="$image_t_url" title="<a href=$h_marker&amp;qtl=$image_t_url><font color=#f87431><b>>>>Go to the QTL page>>>> </b></font></a>" class="thickbox" rel="gallary-qtl"> <img src="$image_url" alt="Chromosome $i $image_t_url $image_url" /> </a> |;
 
             $qtl_image .= $thickbox;
             $title       = "  ";
@@ -997,7 +975,7 @@ sub infile_list
     my $gen_dataset_file = $self->genotype_file();
     my $phe_dataset_file = $self->phenotype_file();
     my $crosstype_file   = $self->crosstype_file();
-    print STDERR "cross type file: $crosstype_file\n";
+  
     my $input_file_list_temp =
       File::Temp->new(
                        TEMPLATE => "infile_list_${ac}_$pop_id-XXXXXX",
@@ -1450,12 +1428,7 @@ sub permu_values
 
     my %permu_threshold = {};
 
-    #my $filename_permu = "$ac" ."_permu" .  $pop_id . ".txt";
-    #my $permu_file = "$tempimages_path/$filename_permu";
-
-    my $permu_file = fileparse($prod_permu_file);
-
-    # $cache_tempimages->set($key_permu, $permu_file, '30 days');
+    my $permu_file = fileparse($prod_permu_file);   
     my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
       $self->cache_temp_path();
     $permu_file = File::Spec->catfile( $tempimages_path, $permu_file );
@@ -1603,12 +1576,9 @@ sub qtl_images_exist
         my $cache_qtl_plot = CXGN::Tools::WebImageCache->new(1);
         $cache_qtl_plot->set_basedir($basepath);
         $cache_qtl_plot->set_temp_dir( $tempfile_dir . "/temp_images" );
-
-        #$cache_qtl_plot->set_expiration_time(259200);
+      
         my $key = "qtlplot" . $lg . "small" . $pop_id . $term_id;
         $cache_qtl_plot->set_key($key);
-
-        #$count++;
 
         my $key_h_marker = "$ac" . "_pop_" . "$pop_id" . "_chr_" . $lg;
         my $h_marker     = $cache_tempimages->get($key_h_marker);
@@ -1617,7 +1587,7 @@ sub qtl_images_exist
         {
             $image      = $cache_qtl_plot->get_image_tag();
             $image_url  = $cache_qtl_plot->get_image_url();
-            $image_html = qq |<a href ="$h_marker">$image</a>|;
+           # $image_html = qq |<a href ="$h_marker&$image_url">$image</a>|;
 
         }
 
@@ -1625,7 +1595,6 @@ sub qtl_images_exist
         $cache_qtl_plot_t->set_basedir($basepath);
         $cache_qtl_plot_t->set_temp_dir( $tempfile_dir . "/temp_images" );
 
-        #$cache_qtl_plot->set_expiration_time(259200);
         my $key_t = "qtlplot_" . $lg . "_thickbox_" . $pop_id . $term_id;
         $cache_qtl_plot_t->set_key($key_t);
 
@@ -1636,7 +1605,7 @@ sub qtl_images_exist
             $image_t_url = $cache_qtl_plot_t->get_image_url();
 
             $thickbox =
-qq | <a href="$image_t_url" title="A QTL analysis for $term_name in population $pop_name<b><br/><a href=$h_marker> View and compare with genetic and/or physical maps</font></a></b><br/>" class="thickbox" rel="gallary-qtl"> <img src="$image_url" alt="Chromosome $lg $image_t_url $image_url" /> </a> |;
+qq | <a href="$image_t_url" title= "<a href=$h_marker&amp;qtl=$image_t_url><font color=#f87431><b>>>>Go to the QTL page>>>> </b></font></a>"  class="thickbox" rel="gallary-qtl"> <img src="$image_url" alt="Chromosome $lg $image_t_url $image_url" /> </a> |;
 
             $qtl_image .= $thickbox;
             $title = "  ";
@@ -1707,7 +1676,7 @@ sub stat_files
     my $sp_person_id   = $pop->get_sp_person_id();
     my $qtl            = CXGN::Phenome::Qtl->new($sp_person_id);
     my $c = SGN::Context->new();
-    my $user_stat_file = $qtl->get_stat_file($c);
+    my $user_stat_file = $qtl->get_stat_file($c, $pop_id);
 
     my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
       $self->cache_temp_path();
@@ -1769,7 +1738,7 @@ sub stat_param_hash
     my $sp_person_id   = $pop->get_sp_person_id();
     my $qtl            = CXGN::Phenome::Qtl->new($sp_person_id);
     my $c = SGN::Context->new();
-    my $user_stat_file = $qtl->get_stat_file($c);
+    my $user_stat_file = $qtl->get_stat_file($c, $pop_id);
 
     open F, "<$user_stat_file" or die "can't open file: !$\n";
 
@@ -1799,5 +1768,85 @@ sub submitter
 qq |<a href="/solpeople/personal-info.pl?sp_person_id=$sp_person_id">$submitter_name</a> |;
 
     return $submitter, $submitter_link;
+
+}
+
+#move to qtl or population object
+sub legend {
+    my $self = shift;
+    my $pop = shift;
+    my $sp_person_id   = $pop->get_sp_person_id();
+    my $qtl            = CXGN::Phenome::Qtl->new($sp_person_id);
+    my $stat_file = $qtl->get_stat_file($c, $pop->get_population_id());
+    my @stat;
+    
+    open $_, "<", $stat_file or die "$! reading $stat_file\n";
+    while (my $row = <$_>)
+    {
+        my ( $parameter, $value ) = split( /\t/, $row );
+	if ($parameter =~/qtl_method/) {$parameter = 'Mapping method';}
+	if ($parameter =~/qtl_model/) {$parameter = 'Mapping model';}
+	if ($parameter =~/prob_method/) {$parameter = 'QTL genotype probablity method';}
+	if ($parameter =~/step_size/) {$parameter = 'Genome scan size (cM)';}
+	if ($parameter =~/permu_level/) {$parameter = 'Permutation significance level';}
+	if ($parameter =~/permu_test/) {$parameter = 'No. of permutations';}
+	if ($parameter =~/prob_level/) {$parameter = 'QTL genotype signifance level';}
+
+	
+	push @stat, [map{$_} ($parameter, $value)];
+
+    }
+    
+
+
+    my $permu_threshold_ref = $self->permu_values();
+    my %permu_threshold     = %$permu_threshold_ref;
+
+    my @keys;
+
+    foreach my $key ( keys %permu_threshold )
+    {
+	if ( $key =~ m/^\d./ )
+	{
+	    push @keys, $key;
+	}
+
+    }
+    my $lod1 = $permu_threshold{ $keys[0] };
+    my $lod2 = $permu_threshold{ $keys[1] };
+
+    if  (!$lod1) 
+    {
+	$lod1 = qq |<i>Not calculated</i>|;
+    }
+        
+    push @stat, 
+    [
+     map {$_} ('LOD threshold', $lod1)
+    ];
+    push @stat, 
+    [
+     map {$_} ('Confidence interval', 'Based on 95% Bayesian Credible Interval')
+    ];
+    push @stat, 
+    [
+     map {$_} ('QTL software', "<a href=http://www.rqtl.org>R/QTL</a>")
+    ];
+    my $legend_data = columnar_table_html (
+	                                   headings    => [
+		                                          ' ',
+		                                          ' ',
+
+		                                         ],
+		                           data        => \@stat,
+		                          __alt_freq   => 2,
+		                          __alt_width  => 1,
+		                          __alt_offset => 3,
+		                          __align      => 'l',
+                                             
+                                          );
+
+
+    return $legend_data;
 
 }
