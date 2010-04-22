@@ -24,6 +24,7 @@ $root
 $species_hashref
 $uri_dir
 $tmp_dir
+$image_only => 0
 
 </%args>
 
@@ -35,39 +36,53 @@ use CXGN::Tools::WebImageCache;
 my $cache = CXGN::Tools::WebImageCache->new();
 $cache->set_temp_dir($uri_dir);
 $cache->set_basedir($tmp_dir);
-$cache->set_key($root . "-" . (join '-', keys %$species_hashref) );
+
+my $file_key_name = $root . "-" . (join '-', keys %$species_hashref);
+$cache->set_key($file_key_name);
 $cache->set_expiration_time(86400);
 my $map_name= $root . "_map";
 
 $cache->set_map_name($map_name);
 
+my $newick_file  = $tmp_dir . "/" . $uri_dir . "/" . $root . ".newick";
+
 if ( !$cache->is_valid() ) {
 
   my $tree = CXGN::Phylo::OrganismTree->new($schema);
-  $tree->build_tree($root, $species_hashref);
+  my $newick_string = $tree->build_tree($root, $species_hashref);
 
+  open(my $FH, ">$newick_file" ) or die $! . "cannot open file $newick_file for writing! \n\n";
+  print $FH $newick_string;
+  close $FH;
   my $image_map = $tree->get_renderer()->get_html_image_map($map_name);
   my $image_png = $tree->render_png(undef, 1);
-#qq|<br><img src="$sol_uri" border="0" alt="tree_browser" USEMAP="#$sol_map"/><br> | . $sol_image_map ,
 
- $cache->set_image_data($image_png);
- $cache->set_image_map_data($image_map);
+  $cache->set_image_data($image_png);
+  $cache->set_image_map_data($image_map);
 }
 
 my $image_html= $cache->get_image_html();
 
+open( my $MF, "<$newick_file" );
+my $tree_string = "";
+$tree_string .= $_ while <$MF>;
+close($MF);
+
+if ($image_only) { print $image_html; return; }
 </%perl>
+
 
 <&| /page/info_section.mas, 
   title         => $root,
   subtitle      => 'click on organism name to see more details ',
   empty_message => 'Tree not available',
-  is_subsection => 0,
   collapsible   =>1,
   collapsed  =>0
   &>
   
+  <form action="/tools/tree_browser/" method="post"><input type="hidden" name="tree_string" value=" <% $tree_string %> "><input type="submit" value="show in treebrowser" /></form> 
  <% $image_html %>
   
 </&>
+
  
