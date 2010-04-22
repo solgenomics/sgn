@@ -142,9 +142,10 @@ sub find_recursive_parent {
 
  Usage:  $self->build_tree($root_species_name, $species_hashref)
  Desc:   builds an organism tree starting from $root with a list of species
- Ret:    $self
+ Ret:    a newick representation of the tree
  Args:   $root_species_name, $species_hashref
  Side Effects:  sets tree nodes names and lables, and renders the tree  (see L<CXGN::Phylo::Renderer> )
+                calls $tree->generate_newick($root_node, 1)
  Example:
 
 =cut
@@ -211,7 +212,7 @@ sub build_tree  {
     #$tree->get_layout->layout();
     $self->get_renderer->render();
     
-    return $self;
+    return $newick;
 }
 
 
