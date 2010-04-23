@@ -58,9 +58,9 @@ sub store {
     
    
     my $action=$args{action};
-    my $referring_page=$args{referring_page};
+    my $refering_page=$args{refering_page};
     my $type= $args{type};  #locus or allele or population...?
-    my $type_id = $args{type_id}; #the database id of the referring object (locus..)
+    my $type_id = $args{type_id}; #the database id of the refering object (locus..)
     my $accession= sanitize_string($args{accession});
     my $script_name= $self->get_script_name();
     
@@ -112,7 +112,7 @@ sub store {
 	if (!$type && !$type_id) {
 	    $self->get_page()->client_redirect("/chado/publication.pl?pub_id=$pub_id"); 
 	} else {
-	    $self->get_page()->client_redirect("$script_name?type=$type&amp;type_id=$type_id&amp;referring_page=$referring_page&amp;action=new");
+	    $self->get_page()->client_redirect("$script_name?type=$type&amp;type_id=$type_id&amp;refering_page=$refering_page&amp;action=new");
 	}
     }
     #fetch the publication from pubmed:
@@ -132,7 +132,7 @@ sub store {
     
     $self->send_publication_email();	
     if ($type && $type_id) { #if the publication is also associated with another object 
-	$self->get_page()->client_redirect("$script_name?type=$type&amp;type_id=$type_id&amp;referring_page=$referring_page&amp;action=new"); 
+	$self->get_page()->client_redirect("$script_name?type=$type&amp;type_id=$type_id&amp;refering_page=$refering_page&amp;action=new"); 
     }else { 
 	my $pub_id  = $publication->get_pub_id();
 	$self->get_page()->client_redirect("/chado/publication.pl?pub_id=$pub_id"); 
@@ -147,7 +147,7 @@ sub delete {
     my %args= $self->get_args();
     my $type= $args{type};
     my $type_id= $args{type_id};
-    my $referring_page=$args{referring_page};
+    my $refering_page=$args{refering_page};
 
     my $publication = $self->get_object();
     
@@ -171,7 +171,7 @@ sub delete {
     }else { print qq | <h3> What are you trying to delete here? </h3>| };
     
     $self->send_publication_email(); 
-    $self->get_page()->client_redirect("$script_name?type=$type&amp;type_id=$type_id&amp;referring_page=$referring_page&amp;action=new");
+    $self->get_page()->client_redirect("$script_name?type=$type&amp;type_id=$type_id&amp;refering_page=$refering_page&amp;action=new");
     
 }
 
@@ -229,7 +229,7 @@ sub delete_dialog {
 	    <input type="hidden" name="type" value="$type" />
 	    <input type="hidden" name="type_id" value="$type_id" />
 	    <input type="hidden" name="object_dbxref_id" value="$object_dbxref_id" />
-	    <input type="hidden" name="referring_page" value="$args{referring_page}" />	
+	    <input type="hidden" name="refering_page" value="$args{refering_page}" />	
 	    <input type="submit" value="Delete" />
 	    </form>
 	    
@@ -279,8 +279,8 @@ sub generate_form {
     $self->get_form()->add_hidden( field_name=>"type", 
 				   contents=>$args{type}  );
 
-    $self->get_form()->add_hidden( field_name=>"referring_page", 
-				   contents=>$args{referring_page}  );
+    $self->get_form()->add_hidden( field_name=>"refering_page", 
+				   contents=>$args{refering_page}  );
 
      
     if ($self->get_action()=~/store/i) {
@@ -359,7 +359,7 @@ sub display_page {
 	}
 	if ($db_name eq 'SGN_ref') { $accession= $pub_id; }
 	if ($obsolete eq 'f') {
-	    if ($pub_id && $object_dbxref_id) {print "<a href= /chado/publication.pl?pub_id=$pub_id>$db_name:$accession</a>" . $pub->get_title() . " (" . $pub->get_pyear() . ") <b>" . $pub->get_authors_as_string() . "</b>" . qq { \n <a href="add_publication.pl?pub_id=$pub_id&amp;type=$args{type}&amp;type_id=$args{type_id}&amp;object_dbxref_id=$object_dbxref_id&amp;action=confirm_delete&amp;referring_page=$args{referring_page}">[Remove]</a> <br />\n }; } 
+	    if ($pub_id && $object_dbxref_id) {print "<a href= /chado/publication.pl?pub_id=$pub_id>$db_name:$accession</a>" . $pub->get_title() . " (" . $pub->get_pyear() . ") <b>" . $pub->get_authors_as_string() . "</b>" . qq { \n <a href="add_publication.pl?pub_id=$pub_id&amp;type=$args{type}&amp;type_id=$args{type_id}&amp;object_dbxref_id=$object_dbxref_id&amp;action=confirm_delete&amp;refering_page=$args{refering_page}">[Remove]</a> <br />\n }; } 
 	}elsif($pub_id)  {
 	    push @obsoleted, [$pub, $object_dbxref_id] ; #an array of obsoletes pub objects
 	}
@@ -376,15 +376,10 @@ sub display_page {
     
     print qq { </center> };
 
-    print qq {<br /> <br /><b> For publications not in Pubmed <a href="../chado/publication.pl?&action=new&amp;type=$args{type}&amp;type_id=$args{type_id}&amp;referring_page=$args{referring_page}">click here</a> <br /> };
+    print qq {<br /> <br /><b> For publications not in Pubmed <a href="../chado/publication.pl?&action=new&amp;type=$args{type}&amp;type_id=$args{type_id}&amp;refering_page=$args{refering_page}">click here</a> <br /> };
     
-     # if ( $args{type} eq 'population') {
-#  	if ($args{referring_page}) { print qq |<a href="../phenome/population_indls.pl?population_id=$args{type_id}&amp;cvterm_id=$args{cvterm_id}">[Go back]</a>| }
-#      } else {
 	
-    if ($args{referring_page}) { print "<a href=\"$args{referring_page}\">[Go back]</a><br /><br />\n"; }
-#}
-    
+    if ($args{refering_page}) { print "<a href=\"$args{refering_page}\">[Go back]</a><br /><br />\n"; }
    
     $self->get_page()->footer();
     
@@ -444,9 +439,9 @@ sub confirm_store {
 
     my $self=shift;
     my %args=$self->get_args();
-    my $referring_page=$args{referring_page};
+    my $refering_page=$args{refering_page};
     my $type= $args{type};  #locus or allele or population...?
-    my $type_id = $args{type_id}; #the database id of the referring object (locus..)
+    my $type_id = $args{type_id}; #the database id of the refering object (locus..)
     my $accession= sanitize_string($args{accession});
     
     my $publication= $self->get_object();
@@ -487,9 +482,9 @@ sub confirm_store {
 sub print_confirm_form {
     my $self=shift;
     my %args= $self->get_args();
-    my $referring_page=$args{referring_page};
+    my $refering_page=$args{refering_page};
     my $type= $args{type};  #locus or...?
-    my $type_id = $args{type_id}; #the database id of the referring object (locus..)
+    my $type_id = $args{type_id}; #the database id of the refering object (locus..)
     my $accession= sanitize_string($args{accession});
     
     my $script_name= $self->get_script_name();
@@ -510,7 +505,7 @@ sub print_confirm_form {
     #add pubmed verification step	
     if ( !$pub_title ) {
 	print  qq |<h3> $accession is not a valid pubmed ID. </h3>  |;
-	print  qq |<a href="$script_name?type=$type&amp;type_id=$type_id&amp;referring_page=$referring_page&amp;action=new">Go back</a>|;
+	print  qq |<a href="$script_name?type=$type&amp;type_id=$type_id&amp;refering_page=$refering_page&amp;action=new">Go back</a>|;
 	$self->get_page()->footer();		   
 	exit(0);
     }
@@ -558,7 +553,7 @@ sub print_confirm_form {
     $self->get_form()->add_hidden( field_name=>"accession", contents=>$accession );
     $self->get_form()->add_hidden( field_name=>"type", contents=>$args{type} );
     $self->get_form()->add_hidden( field_name=>"type_id", contents=>$args{type_id} );
-    $self->get_form()->add_hidden( field_name=>"referring_page", contents=>$args{referring_page} );
+    $self->get_form()->add_hidden( field_name=>"refering_page", contents=>$args{refering_page} );
     
     
     $self->get_form()->add_hidden( field_name=>"action", contents=>"store" );
@@ -585,9 +580,9 @@ sub send_publication_email {
 
     my $self=shift;
     my %args= $self->get_args();
-    my $referring_page=$args{referring_page};
+    my $refering_page=$args{refering_page};
     my $type= $args{type};  #locus or...?
-    my $type_id = $args{type_id}; #the database id of the referring object (locus..)
+    my $type_id = $args{type_id}; #the database id of the refering object (locus..)
     my $accession= sanitize_string($args{accession});
     my $deleted_pubid = $args{pub_id};
 
