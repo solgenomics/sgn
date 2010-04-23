@@ -868,13 +868,13 @@ sub return_json {
 
 =head2 send_form_email
 
- Usage: $self->send_form_email( { subject=>foo, mailing_list=>bar, referring_page=>my_page.pl, acion=>delete});
+ Usage: $self->send_form_email( { subject=>foo, mailing_list=>bar, refering_page=>my_page.pl, acion=>delete});
  Desc:  send an email after the user stored something in the database
  Ret:   nothing
  Args:  hash with the following optional keys
     subject       => the subject row of the email
     mailing_list  => defaults to sgn-bugs. Usually curation emails should go to sgn-db-curation
-    referring_page=> your page would show as a link in the email
+    refering_page=> your page would show as a link in the email
     action        => 'delete' value will send an 'object $id was obsoleted...'
  Side Effects:  send an email with an informative message about the nature of the database change.
  Example:
@@ -887,7 +887,7 @@ sub send_form_email {
     $opts ||= {};
     my $subject=$opts->{subject};
     my $mailing_list = $opts->{mailing_list};
-    my $referring_page_link = $opts->{referring_page};
+    my $refering_page_link = $opts->{refering_page};
     my $action = $opts->{action};
     
     my $user=$self->get_user();
@@ -907,7 +907,7 @@ sub send_form_email {
     my $fdbk_body;
     if ( $action eq 'delete' ) {
         $fdbk_body =
-	    "$username ($user_link) has obsoleted " . $self->get_object_name() . "  $object_id ($referring_page_link) \n  $usermail";
+	    "$username ($user_link) has obsoleted " . $self->get_object_name() . "  $object_id ($refering_page_link) \n  $usermail";
     }
     elsif ( $object_id == 0 ) {
         $fdbk_body =
@@ -915,7 +915,7 @@ sub send_form_email {
     }
     else {
         $fdbk_body =
-	    "$username ($user_link) has submitted data for " . $self->get_object_name() ." ($referring_page_link) \n $usermail";
+	    "$username ($user_link) has submitted data for " . $self->get_object_name() ." ($refering_page_link) \n $usermail";
     }
     
     CXGN::Contact::send_email( $subject, $fdbk_body,$mailing_list );
