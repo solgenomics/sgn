@@ -552,8 +552,8 @@ if ($locus_name) {
 	$genbank = qq|<span class=\"ghosted\">none </span>|;
     }
     $genbank .=
-	qq|<a href="/chado/add_feature.pl?type=locus&amp;type_id=$locus_id&amp;&amp;referring_page=$script&amp;action=new">[Associate new genbank sequence]</a><br />|;
-    
+	qq|<a href="/chado/add_feature.pl?type=locus&amp;type_id=$locus_id&amp;refering_page=$script&amp;action=new">[Associate new genbank sequence]</a><br />|;
+    	
     
     #printing associated unigenes section dynamically
     my $dyn_unigenes = CXGN::Phenome::Locus::LocusPage::include_locus_unigenes();
@@ -593,7 +593,7 @@ if (
     )
 {
     $pub_subtitle .=
-	qq|<a href="/chado/add_publication.pl?type=locus&amp;type_id=$locus_id&amp;referring_page=$script&amp;action=new"> [Associate publication] </a>|;
+	qq|<a href="/chado/add_publication.pl?type=locus&amp;type_id=$locus_id&amp;refering_page=$script&amp;action=new"> [Associate publication] </a>|;
 }
 else {
     $pub_subtitle =

@@ -106,9 +106,9 @@ sub store {
     $validate= $json_hash{validate};
     $json_hash{error} = $error if $error;
     
-    my $referring_page="/phenome/locus_display.pl?locus_id=$locus_id";
-    $self->send_form_email({subject=>"[New locus details stored] locus $locus_id", mailing_list=>'sgn-db-curation@sgn.cornell.edu', referring_page=>"www.solgenomics.net".$referring_page}) if (!$validate && !$json_hash{error});
-    $json_hash{referring_page}=$referring_page if !$initial_locus_id && !$validate && !$error;
+    my $refering_page="/phenome/locus_display.pl?locus_id=$locus_id";
+    $self->send_form_email({subject=>"[New locus details stored] locus $locus_id", mailing_list=>'sgn-db-curation@sgn.cornell.edu', refering_page=>"www.solgenomics.net".$refering_page}) if (!$validate && !$json_hash{error});
+    $json_hash{refering_page}=$refering_page if !$initial_locus_id && !$validate && !$error;
     
     $self->set_json_hash(%json_hash);
     
@@ -127,7 +127,7 @@ sub delete {
     my $locus_name = $locus->get_locus_name();
     my $locus_id = $locus->get_locus_id();
     my %json_hash= $self->get_json_hash();
-    my $referring_page="/phenome/locus_display.pl?locus_id=$locus_id";
+    my $refering_page="/phenome/locus_display.pl?locus_id=$locus_id";
     
     if (!$json_hash{error} ) {
 	try {
@@ -137,7 +137,7 @@ sub delete {
 	};
 	$json_hash{reload} = 1;
     }
-    $self->send_form_email({subject=>"Locus obsoleted ($locus_name)", mailing_list=>'sgn-db-curation@sgn.cornell.edu', referring_page=>"www.solgenomics.net".$referring_page, action=>'delete'}) if (!$json_hash{error});
+    $self->send_form_email({subject=>"Locus obsoleted ($locus_name)", mailing_list=>'sgn-db-curation@sgn.cornell.edu', refering_page=>"www.solgenomics.net".$refering_page, action=>'delete'}) if (!$json_hash{error});
     $self->set_json_hash(%json_hash);
     $self->return_json();
 }
