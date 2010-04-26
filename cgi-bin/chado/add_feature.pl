@@ -15,16 +15,22 @@ use CXGN::Phenome::Allele;
 
 use CXGN::Tools::FeatureFetch;
 use CXGN::Tools::Pubmed;
+use CXGN::Chado::Organism;
+use Bio::Chado::Schema;
 
 use CXGN::Chado::Publication;
 use CXGN::Tools::Text qw / sanitize_string /;
 use base qw / CXGN::Page::Form::SimpleFormPage /;
 
+
 sub new { 
     my $class = shift;
     my $self = $class->SUPER::new(@_);
     $self->set_script_name("add_feature.pl");
+    
+    #my $schema= CXGN::DB::DBICFactory->open_schema( 'Bio::Chado::Schema') ;
 
+    # $self->set_schema($schema);
     return $self; 
 }
 
@@ -483,15 +489,14 @@ sub print_confirm_form {
     }
 
     #check to see if the sequence has a valid organism (one that is already in our database)
-    my $organism_query= $self->get_dbh()->prepare("SELECT organism_id FROM public.organism WHERE genbank_taxon_id = ?");
-    my $organism_taxon_id = $feature->get_organism_taxon_id();
-    my $organism_name = $feature->get_organism_name();
-    $organism_query->execute($organism_taxon_id);
-    my ($organism_id) = $organism_query->fetchrow_array();
-    if(!$organism_id){
+       
+    my $organism = CXGN::Chado::Organism->new_with_taxon_id($self->get_dbh(), $feature->get_organism_taxon_id() );
+    
+    if( !$organism->get_organism_id() ){
+	my $organism_name = $feature->get_organism_name();
 	print  qq |<h3> The requested sequence ($GBaccession) corresponds to an unsubmittable organism: $organism_name. If you think this organism should be submittable please contact <a href="mailto:sgn-feedback\@sgn.cornell.edu">sgn-feedback\@sgn.cornell.edu</a></h3>  |;
 	print qq |<a href="$script_name?type=$type&amp;type_id=$type_id&amp;refering_page=$refering_page&amp;action=new">Go back</a><br />|;
-	if ($user_type eq 'curator') { print qq|Curator link: <a href="/chado/organism.pl?action=new&amp;refering_page=$refering_page">add organism page</a>|; }
+	
 	$self->get_page()->footer();		   
 	exit(0);
     }
