@@ -174,12 +174,12 @@ EOS
     
     $self->get_page()->header("SGN Population name: $population_name");
     
-    print page_title_html("SGN population: $population_name \n");
+    print page_title_html("Population: $population_name \n");
     
     my $page="../phenome/population.pl?population_id=$population_id";
     $args{calling_page} = $page;
     
-    my $population_html = $self->get_edit_link_html()."<br />";
+    my $population_html = $self->get_edit_link_html(). "\t[<a href=/phenome/qtl_form.pl>New QTL Population</a>] <br />";
     
     #print all editable form  fields
     $population_html .= $self->get_form()->as_table_string(); 
