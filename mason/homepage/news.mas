@@ -7,13 +7,12 @@ use File::Spec;
 use CXGN::Tools::File;
 use CXGN::VHost;
 
-
 my $vh = CXGN::VHost->new();
 my $file = File::Spec->catfile($vh->get_conf('homepage_files_dir'), 'news.txt');
 
-my $contents = "News are not available at the moment.<br /><br />";
+my $contents = "News is not available at the moment.<br /><br />";
 
-eval { 
+eval {
   $contents = CXGN::Tools::File::get_sections($file);
 };
 
