@@ -87,7 +87,7 @@ sub genetic_map
     my $map      = CXGN::Map->new( $dbh, { map_version_id => $mapv_id } );
     my $map_name = $map->get_long_name();
     my $genetic_map =
-      qq | <a href=/cview/map.pl?map_version_id=$mapv_id>$map_name</a>|;
+      qq | <a href=/cview/map.pl?map_version_id=$mapv_id&hilite=$l_m+$p_m+$r_m>$map_name</a>|;
 
     return $genetic_map;
 
