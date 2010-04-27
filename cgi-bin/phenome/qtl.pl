@@ -49,34 +49,6 @@ my $legend       = &legend();
 
 $c->forward_to_mason_view('/qtl/qtl.mas', qtl_image=>$qtl_image, pop_name=>$pop_name, trait_name=>$trait_name, cmv_link=>$cmv_link, gbrowse_link=>$gbrowse_link, marker_link=>$marker_link, genetic_map=>$genetic_link, legend=>$legend);
 
-# $qtl_image = qq |<img src=$qtl_image width=320 height=320> |;
-# my $qtl_table = qq |<table align=center cellpadding=20><tr><td align=left>$qtl_image</td><td align=right>$legend</td></tr></table>|;
-
-# $page->header("SGN: QTL for $trait_name in population $pop_name\n");
-
-# print page_title_html( "QTL for $trait_name in population $pop_name\n" );
-
-# print info_section_html( title    => "QTL map for $trait_name",
-#                          contents => $qtl_table
-#                        );
-
-
-# print info_section_html( title    => "QTL markers' detail",
-#                          contents => $marker_link );
-# print info_section_html( title => "QTL markers' genetic positions and Comparative Map Viewer",
-#                         contents => $cmv_link 
-#                        );
-
-# print info_section_html( title    => "Marker genome positions",
-#                          contents => $gbrowse_link 
-#                        );
-# print info_section_html( title    => "Population genetic map",
-#                          contents => $genetic_link 
-#                        );
-
-# $page->footer();
-
-
 
 sub marker_positions
 {
@@ -200,20 +172,7 @@ sub legend {
      map {$_} ('Confidence interval', 'Based on 95% Bayesian Credible Interval')
     ];
 
-   #  my $legend_data = columnar_table_html (
-# 	                                   headings    => [
-# 		                                          ' ',
-# 		                                          ' ',
-
-# 		                                         ],
-# 		                           data        => \@stat,
-# 		                          __alt_freq   => 2,
-# 		                          __alt_width  => 1,
-# 		                          __alt_offset => 3,
-# 		                          __align      => 'l',
-                                             
-#                                           );
-
+  
 
      return \@stat;
 
