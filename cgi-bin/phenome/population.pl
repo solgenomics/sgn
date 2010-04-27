@@ -374,7 +374,7 @@ EOS
 
     my $is_public = $population->get_privacy_status();
     my ($submitter_obj, $submitter_link) = $self->submitter();
-    
+    my $map_link = $self->genetic_map();
     print info_section_html(title   => 'Population Details',
 			    contents => $population_html,
 			    );
@@ -386,13 +386,20 @@ EOS
        )  {   
 	if ($phenotype_data) {
 	    print info_section_html(title    => 'Phenotype Data and QTLs',
-			            contents => $phenotype_data ." ".$data_download, 
-			    );
+			            contents => $phenotype_data ." ".$data_download 
+		                   );
 	} else {
 	    print info_section_html(title    => 'Phenotype Data',
-			            contents =>$accessions_link, 
-			    );
+			            contents => $accessions_link 
+	                           );
 	}
+    
+	unless (!$map_link) {
+	    print info_section_html( title    => 'Genetic Map',
+				     contents => $map_link 
+		                   );
+	}	
+
     } else {
 	my $message = "The QTL data for this population is not public yet. 
                        If you would like to know more about this data, 
@@ -454,7 +461,23 @@ sub submitter {
 
 }
 
+sub genetic_map {
+    my $self     = shift;
+    my $mapv_id  = $self->get_object()->mapversion_id();
 
+    if ($mapv_id) {
+	my $map      = CXGN::Map->new( $self->get_dbh(), { map_version_id => $mapv_id } );
+	my $map_name = $map->get_long_name();
+	my $genetic_map =
+	    qq | <a href=/cview/map.pl?map_version_id=$mapv_id>$map_name</a>|;
+
+   	return $genetic_map;
+    }
+    else { 
+	return; 
+    }
+
+}
 
 	        
 
