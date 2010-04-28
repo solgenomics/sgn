@@ -41,7 +41,7 @@ has 'notify' => (
 sub stringify {
     my $self = shift;
     return
-        $self->message."\n"
+        ($self->message || '') . "\n"
         .'Developer message: '
         .($self->developer_message || 'none');
 }
