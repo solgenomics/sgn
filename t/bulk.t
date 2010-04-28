@@ -10,10 +10,8 @@ use warnings;
 
 use Test::More;
 use File::Temp;
-use Data::Dumper;
-
-use Module::Find;
-useall 'CXGN::Bulk';
+use CXGN::DB::Connection;
+use CXGN::Bulk::UnigeneConverter;
 
 $SIG{__DIE__} = \&Carp::confess;
 
