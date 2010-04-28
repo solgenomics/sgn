@@ -46,17 +46,18 @@ use CXGN::Bulk::UnigeneMemberInfo;
 
 
 my $page = CXGN::Page->new();
+my $params = {};
+$params->{idType} = $page->get_arguments("idType");
 
-my $params = get_parameters($page);
+_invalid_params() unless $params->{idType};
 
+$params = get_parameters($page);
 $params->{dbc}     = CXGN::DB::Connection->new;
 $params->{tempdir} = $c->path_to( $c->tempfiles_subdir('bulk') );
 
 #create correct bulk object
-my $idType = $params->{idType}
-  or die "must give idType in params";
-
 my $bulk;
+my $idType = $params->{idType};
 if ( $idType eq "bac" ) {
     $bulk = CXGN::Bulk::BAC->new($params);
 }
@@ -95,7 +96,7 @@ elsif ( $idType eq "unigene" ) {
         $bulk = CXGN::Bulk::UnigeneMemberInfo->new($params);
     }
 } else {
-  die "invalid idtype '$idType'";
+    die "invalid idtype '$idType'";
 }
 
 if ( $bulk->process_parameters() ) {
@@ -125,7 +126,6 @@ sub get_parameters {
     my $page = shift;
 
     my $params = {  page => $page };
-    $params->{idType}               = $page->get_arguments("idType");
     $params->{outputType}           = $page->get_arguments("outputType");
     $params->{debug}                = $page->get_arguments("debug");
     $params->{fasta}                = $page->get_arguments("fasta");
@@ -218,6 +218,15 @@ sub get_parameters {
 sub post_only {
   my ($page) = @_;
   $page->error_page('This page can only accept HTTP POST requests. Please go to <a href="input.pl">Bulk Download</a> to make your selections.');
+}
+
+sub _invalid_params {
+    $c->throw(
+        title    => "An Error has occured",
+        message  => "ID Type must be provided",
+        notify   => 0,
+        is_error => 0,
+    );
 }
 
 1;
