@@ -23,7 +23,7 @@ use CXGN::Chado::Publication;
 use CXGN::Chado::Pubauthor;
 
 use CXGN::Contact;
-
+use CXGN::Map;
 
 
 use base qw / CXGN::Page::Form::SimpleFormPage CXGN::Phenome::Main/;
