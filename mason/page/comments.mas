@@ -45,7 +45,7 @@ $object_type
 $referer
 </%args>
 
-<& /util/import_javascript.mas, classes=>'CXGN.Page.Comments' &>
+<& /util/import_javascript.mas, classes=>[ 'CXGN.Page.Comments', 'MochiKit.Async' ] &>
 
 <%perl>
 
@@ -68,20 +68,15 @@ Please wait, checking for comments.  (If comments do not show up, access them <a
 my $encoded_referer = $urlencode{$referer};
 
 
-    my $html = <<EOHTML;
-<span class="noshow" id="referer">$encoded_referer</span>
-<span class="noshow" id="commentstype">$object_type</span>
-<span class="noshow" id="commentsid">$object_id</span>
-<div id="commentsarea">
-$placeholder
-</div>
-
-EOHTML
-
-
-
 
 </%perl>
 
-<% $html %>
+
+<span class="noshow" id="referer"><% $encoded_referer %></span>
+<span class="noshow" id="commentstype"><% $object_type %></span>
+<span class="noshow" id="commentsid"><% $object_id %></span>
+<div id="commentsarea">
+<% $placeholder %>
+
+
 
