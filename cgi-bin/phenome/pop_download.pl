@@ -30,8 +30,8 @@ print
 
 #print "Content-Type: text/plain\n\n";
 
-print "Population: $name\t";
-print "\n";
+print "Phenotype data for $name\n\n\n";
+
 
 my @individuals = $pop->get_individuals();
 
