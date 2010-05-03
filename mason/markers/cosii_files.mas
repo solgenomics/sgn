@@ -249,4 +249,4 @@ sub cosii_data_files {
 
 </%perl>
 
-$html
+<% $html %>
