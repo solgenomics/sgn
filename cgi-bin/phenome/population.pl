@@ -290,8 +290,9 @@ EOS
 # 					1, #<  show data by default
 # 					);
 
-	$data_download .=  qq { <span><a href="pop_download.pl?population_id=$population_id"><b>\
-                                [download population raw data\]</b></a></span> 
+	$data_download .=  qq { <span><br/><br/>Download:<a href="pop_download.pl?population_id=$population_id"><b>\
+                                [Phenotype raw data][<a href="genotype_download.pl?population_id=$population_id">\
+                                [Genotype raw data\]</b></a></span> 
                               }; 
     }
    

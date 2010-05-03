@@ -689,7 +689,7 @@ sub qtl_plot
 
         my ( $qtl_summary, $flanking_markers ) = $self->run_r();
 
-        open QTLSUMMARY, "<$qtl_summary" or die "can't open $qtl_summary: !$\n";
+        open QTLSUMMARY, "<$qtl_summary" or die "can't open $qtl_summary: $!\n";
 
         my $header = <QTLSUMMARY>;
         while ( my $row = <QTLSUMMARY> )
