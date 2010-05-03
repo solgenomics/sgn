@@ -47,7 +47,7 @@ if (-e $g_file) {
     } 
 
 ### genotype code substitution needs to be modified when QTL analysis 
-### is enabled for 4-cross way cross population
+### is enabled for 4-way cross population
 
     while (my $genotype=<$f>) {
 	$genotype =~ s/,1/\ta/g;
