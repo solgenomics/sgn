@@ -239,11 +239,10 @@ EOS
     print page_title_html(
                     "SGN: $term_name values in population $population_name \n");
 
-    my $population_html = $self->get_edit_link_html() . "<br />";
+    my $population_html = $self->get_edit_link_html() . qq |<a href="qtl_form.pl">[New QTL Population]</a><br/>|;
 
     #print all editable form  fields
     $population_html .= $self->get_form()->as_table_string();
-
     my $population_obj = $self->get_object();
 
     
@@ -913,7 +912,7 @@ sub qtl_plot
 
             $image_t     = $cache_qtl_plot_t->get_image_tag();
             $image_t_url = $cache_qtl_plot_t->get_image_url();
-	  #title="A QTL analysis for $term_name in population $pop_name <br/><br/>	
+	  	
             $thickbox =
 qq | <a href="$image_t_url" title="<a href=$h_marker&amp;qtl=$image_t_url><font color=#f87431><b>>>>Go to the QTL page>>>> </b></font></a>" class="thickbox" rel="gallary-qtl"> <img src="$image_url" alt="Chromosome $i $image_t_url $image_url" /> </a> |;
 
