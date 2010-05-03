@@ -31,6 +31,8 @@ $marker
 
 <%perl>
 
+  use CXGN::Unigene::Tools;
+
 my $marker_name = $marker->get_name();
 unless ($marker->is_in_collection('COSII')) { return''; }
 use constant DESC_ALIGNED2AA=>'Alignment of DNA and translated peptides from Arabidopsis CDS and edited Asterid unigenes, plain text';
@@ -131,6 +133,58 @@ for(0..$#unigenes) {
 }
 $html.="</td></tr>";
 $html.='</table>';
-print  blue_section_html('Orthologs in this COSII group',$html);
+
+
+sub cosii_data_files {
+    my ($marker, $conf) = @_;
+
+    unless($marker->is_in_collection('COSII')){return;}
+    my $cosii_data_files={};
+    my $seq_file_search_string=CXGN::Marker::Tools::cosii_name_to_seq_file_search_string($marker->name_that_marker());
+    my $data_shared_website_path=$conf->{'static_datasets_path'};
+    my $additional_data_files_string=`find $data_shared_website_path/cosii -type f -iregex ".*$seq_file_search_string.*"`;
+    my @files=split("\n",$additional_data_files_string);
+    my @edited_seq_files;
+    my @peptide_seq_files;
+    my @intron_seq_files;
+    my @all_other_data_files;
+    for my $file(@files)
+    {
+        my $data_shared_url=$conf->{'static_datasets_url'};
+        $file=~s/$data_shared_website_path/$data_shared_url/;
+        if($file=~/\.cds\.txt\.modify$/)
+        {
+            push(@edited_seq_files,$file);
+        }
+        elsif($file=~/\.pep\.txt$/)
+        {
+            push(@peptide_seq_files,$file);
+        }
+        elsif($file=~/\.intron.txt$/)
+        {
+            push(@intron_seq_files,$file);
+        }
+        else
+        {
+            push(@all_other_data_files,$file);
+        }
+    }
+    $cosii_data_files->{edited_seq_files}=\@edited_seq_files;
+    $cosii_data_files->{peptide_seq_files}=\@peptide_seq_files;
+    $cosii_data_files->{intron_seq_files}=\@intron_seq_files;
+    $cosii_data_files->{all_other_data_files}=\@all_other_data_files;
+    $cosii_data_files->{all_files}=\@files;
+    return $cosii_data_files;
+}
+
+
+
+####print  blue_section_html('Orthologs in this COSII group',$html);
+
+
+
+
 
 </%perl>
+
+<& /page/info_section.mas, title=>"Orthologs in this COSII group", contents=>$html &>
