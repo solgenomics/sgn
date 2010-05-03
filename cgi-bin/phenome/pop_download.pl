@@ -20,13 +20,13 @@ use CXGN::Scrap;
 my $scrap = CXGN::Scrap->new();
 my $dbh   = CXGN::DB::Connection->new();
 
-my ($population_id) = $scrap->get_encoded_arguments("population_id");
+my $population_id = $scrap->get_encoded_arguments("population_id");
 
 my $pop = CXGN::Phenome::Population->new( $dbh, $population_id );
 my $name = $pop->get_name();
 
 print
-"Pragma: \"no-cache\"\nContent-Disposition:filename=population_data.txt\nContent-type:application/data\n\n";
+"Pragma: \"no-cache\"\nContent-Disposition:filename=phenotype_data_${population_id}.txt\nContent-type:application/data\n\n";
 
 #print "Content-Type: text/plain\n\n";
 
