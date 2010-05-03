@@ -44,7 +44,7 @@ $marker
 
   my $r = $marker->cos_data();
 
-  unless($r->{cos_marker_id}){return'';}
+  unless($r->{cos_marker_id}) { return''; }
 
   my $at_page='http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?cmd=Retrieve&amp;db=Nucleotide&amp;dopt=GenBank&amp;list_uids=';
   my $map_link='/search/markers/markerinfo.pl?marker_id=';
@@ -83,12 +83,13 @@ More information about COS markers can be found on the <a href="/markers/cos_mar
 EOT
   ;
 
+### print  CXGN::Page::FormattingHelpers::blue_section_html('COS information', $basic.$orth.$genbank);
 
 </%perl>
 
 
+<& | /page/info_section.mas, title=>'COS information' &> $basic.$orth.$genbank &>
 
 
 
 
-% print  CXGN::Page::FormattingHelpers::blue_section_html('COS information', $basic.$orth.$genbank);
