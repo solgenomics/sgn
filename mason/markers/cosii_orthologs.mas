@@ -31,7 +31,7 @@ $marker
 
 <%perl>
 
-  use CXGN::Unigene::Tools;
+use CXGN::Unigene::Tools;
 
 my $marker_name = $marker->get_name();
 unless ($marker->is_in_collection('COSII')) { return''; }
@@ -55,11 +55,13 @@ use constant NO_UNIGENE_ID=>'Not available';
 use constant SINGLE_COPY=>'Single';
 use constant MULTIPLE_COPIES=>'Multiple';
 use constant NO_COPIES=>'No copies data found';
+
 my $cosii_data_files=cosii_data_files($marker, $c);
 my @unigenes=$marker->cosii_unigenes();
 my $html='';
 $html.="<br /><table border=\"1\" cellpadding=\"2\" cellspacing=\"0\" width=\"720\">";
 $html.="<tr><td>Species</td><td>Copies</td><td>Sequence ID</td><td>CDS/Edited sequence</td><td>Peptide sequence</td><td>Predicted introns</td></tr>";
+
 for(0..$#unigenes) {
   if($unigenes[$_]->{copies} eq 'S') {
     $unigenes[$_]->{copies}=SINGLE_COPY;
@@ -148,24 +150,19 @@ sub cosii_data_files {
     my @peptide_seq_files;
     my @intron_seq_files;
     my @all_other_data_files;
-    for my $file(@files)
-    {
+    for my $file(@files) {
         my $data_shared_url=$conf->{'static_datasets_url'};
         $file=~s/$data_shared_website_path/$data_shared_url/;
-        if($file=~/\.cds\.txt\.modify$/)
-        {
+        if($file=~/\.cds\.txt\.modify$/) {
             push(@edited_seq_files,$file);
         }
-        elsif($file=~/\.pep\.txt$/)
-        {
+        elsif($file=~/\.pep\.txt$/) {
             push(@peptide_seq_files,$file);
         }
-        elsif($file=~/\.intron.txt$/)
-        {
+        elsif($file=~/\.intron.txt$/) {
             push(@intron_seq_files,$file);
         }
-        else
-        {
+        else {
             push(@all_other_data_files,$file);
         }
     }
@@ -187,4 +184,4 @@ sub cosii_data_files {
 
 </%perl>
 
-<& /page/info_section.mas, title=>"Orthologs in this COSII group", contents=>$html &>
+<& | /page/info_section.mas, title=>"Orthologs in this COSII group" &> $html &>
