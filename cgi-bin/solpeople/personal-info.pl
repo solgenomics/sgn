@@ -533,8 +533,34 @@ EOHTML
 	    print "Locus editor assignments:&nbsp;\n";
 	    print $locus_annotations;
 	}
-
-	
+	 
+	my $pop_list = $self->owner_populations();
+	if ($pop_list) {
+	    print "<hr />\n $pop_list";
+	}
 
 	$page->footer();
+}
+
+sub owner_populations {
+    my $self = shift;
+    my $sp_person_id = $self->get_object_id();
+    my @pops = CXGN::Phenome::Population->my_populations($sp_person_id);
+    my $pop_list = 'Populations:<br/>';
+   
+    if (@pops) {   
+	foreach my $pops (@pops) {
+	    my $pop_name = $pops->get_name();
+	    my $pop_id = $pops->get_population_id();
+	    my $is_public = $pops->get_privacy_status();
+	    #if ($is_public) {$is_public = 'is publicly available';}
+	    #if (!$is_public) {$is_public = 'is not publicly available yet';}
+	    $pop_list .= qq |<a href="/phenome/population.pl?population_id=$pop_id">$pop_name</a><br/>|;	   
+	}
+   	return $pop_list;
+     
+    } else { 
+	return;
+    }
+
 }
