@@ -159,17 +159,22 @@ EOS
             <Perl>
                { my $old_die = $SIG{__DIE__} || sub { die @_ }; #< might be set by DebugScreen above
                  $SIG{__DIE__} = sub {
-
+                     my  $die_scalar = shift;
                      my $mess = Carp::longmess();
                      $mess =~ s|[^\n]+\n||; # remove first line
                      $mess =~ s|[^\n]+RegistryCooker.+||s; # remove any apache registry lines
 
                      unless( $mess =~ m'eval \{' ) {
-                       SGN::Context->instance->handle_exception( @_ );
+                       SGN::Context->instance->handle_exception( $die_scalar, @_ );
                        push @_, $mess;
                      }
+                     if( $die_scalar =~ s/Stack: \[//) {
+                       # reformat Mason stack traces to be parsable by the debugscreen
+                       $die_scalar =~ s/\[//g;
+                       $die_scalar =~ s/\],//g;
+                     }
 
-                     $old_die->( @_ );
+                     $old_die->( $die_scalar, @_ );
                  };
                }
             </Perl>
