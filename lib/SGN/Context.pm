@@ -421,9 +421,10 @@ has '_mason_interp' => (
 sub forward_to_mason_view {
   my ( $self, $view, %args ) = @_;
 
-  $self->_mason_interp->exec( $view, %args );
+  $self->_trap_mason_error( sub { $self->_mason_interp->exec( $view, %args ) } );
   exit;
 }
+
 
 =head2 render_mason
 
@@ -456,11 +457,24 @@ has '_bare_mason_interp' => (
 sub render_mason {
     my $self = shift;
     my $view = shift;
+    my @args = @_;
 
     $render_mason_outbuf = '';
-    $self->_bare_mason_interp->exec( $view, @_ );
+    $self->_trap_mason_error( sub { $self->_bare_mason_interp->exec( $view, @args ) });
 
     return $render_mason_outbuf;
+}
+
+sub _trap_mason_error {
+    my ( $self, $sub ) = @_;
+
+    eval { $sub->() };
+    if( $@ ) {
+        if( ref $@ && $@->can('as_brief') ) {
+            die $@->as_text;
+        }
+        die $@;
+    }
 }
 
 
