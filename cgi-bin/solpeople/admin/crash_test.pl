@@ -45,6 +45,8 @@ if( !$is_production_server || $logged_in_user_type eq 'curator') {
       $page->message_page($message,'message body');
     } elsif ($test == 5) {
       $c->forward_to_mason_view('/test/error_test.mas');
+    } elsif ($test == 6) {
+      $c->render_mason('/test/error_test.mas');
     } else {
       $page->message_page('Deeerrrrrrrr....');
     }
@@ -76,7 +78,9 @@ Just call die().)
 Just call die().)
 <br /><br />
 
-<a href="?test=5">Test Mason-handled error</a>
+<a href="?test=5">Test Mason-handled error 1</a>
+<br /><br />
+<a href="?test=6">Test Mason-handled error 2</a>
 <br /><br />
 
 <a href="page_that_doesnt_compile.pl">Test compile-time error</a>
