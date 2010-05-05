@@ -36,18 +36,18 @@ my ( $pop_id, $trait_id, $lg, $l_m, $p_m, $r_m, $lod, $qtl_image ) =
                                 "p_marker",      "r_marker",
                                 "lod",            "qtl"
                               );
-my $dbh        = CXGN::DB::Connection->new();
-my $pop        = CXGN::Phenome::Population->new( $dbh, $pop_id );
-my $pop_name   = $pop->get_name();
+my $dbh          = CXGN::DB::Connection->new();
+my $pop          = CXGN::Phenome::Population->new( $dbh, $pop_id );
+my $pop_name     = $pop->get_name();
 my $trait_name   = &trait_name( $pop, $trait_id );
 my $genetic_link = &genetic_map($pop);
 my $cmv_link     = &marker_positions( $pop, $lg, $l_m, $p_m, $r_m );
 my $gbrowse_link = &genome_positions( $l_m, $p_m, $r_m );
 my $marker_link  = &marker_detail( $l_m, $p_m, $r_m );
 my $legend       = &legend();
+my $comment      = &comment();
 
-
-$c->forward_to_mason_view('/qtl/qtl.mas', qtl_image=>$qtl_image, pop_name=>$pop_name, trait_name=>$trait_name, cmv_link=>$cmv_link, gbrowse_link=>$gbrowse_link, marker_link=>$marker_link, genetic_map=>$genetic_link, legend=>$legend);
+$c->forward_to_mason_view('/qtl/qtl.mas', qtl_image=>$qtl_image, pop_name=>$pop_name, trait_name=>$trait_name, cmv_link=>$cmv_link, gbrowse_link=>$gbrowse_link, marker_link=>$marker_link, genetic_map=>$genetic_link, legend=>$legend, comment=>$comment);
 
 
 sub marker_positions
@@ -175,5 +175,15 @@ sub legend {
   
 
      return \@stat;
+
+}
+
+sub comment {
+    my $comment;
+    if ($pop_id) {  
+	my $page_comment_obj = CXGN::People::PageComment->new($dbh, "population", $pop_id);  
+	$comment = $page_comment_obj->get_html();
+    }
+    return $comment;
 
 }
