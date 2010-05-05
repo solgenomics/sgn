@@ -4,3 +4,6 @@ documents/tempfiles/*/*
 logs/
 !exists
 !.exists
+_build
+Build
+MYMETA.yml
