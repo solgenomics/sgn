@@ -407,7 +407,7 @@ HTML
         my $qtl_image           = $self->qtl_plot();
   
 	my $legend = $self->legend($population);
-	my $qtl_html = "<table><tr><td width=70%>$qtl_image</td><td width=30%>$legend</td></tr></tr>";
+	my $qtl_html = "<table><tr><td width=70%>$qtl_image</td><td width=30%>$legend</td></tr></table>";
 
         print info_section_html( 
                                 title    => 'QTL(s)',
