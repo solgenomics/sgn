@@ -24,7 +24,7 @@ $comment
 
 <%perl>
 
-$qtl_image = qq |<img src="$qtl_image" width=320 height=320> |;
+$qtl_image = qq |<img src="$qtl_image" width=320 height=320 alt="QTL for $trait_name"> |;
 
 </%perl>
 
