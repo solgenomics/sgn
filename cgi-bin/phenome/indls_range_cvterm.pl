@@ -240,7 +240,7 @@ EOS
         
 	$data_view = html_optional_show("phenotype",
 					'View/hide phenotype data summary',
-					qq|$phenotype_data</b>|,
+					qq|<b>$phenotype_data</b>|,
 					1, #<  show data by default
 					);
 	$data_download .=  qq { <span><a href="pop_download.pl?population_id=$population_id"><b>\[download population raw data\]</b></a></span> }; 
