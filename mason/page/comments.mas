@@ -2,7 +2,6 @@
 <%doc>
 
 =head1 NAME
-
 /page/comments.mas - a mason component to provide page comments
 
 =head1 DESCRIPTION
@@ -76,7 +75,8 @@ my $encoded_referer = $urlencode{$referer};
 <span class="noshow" id="commentstype"><% $object_type %></span>
 <span class="noshow" id="commentsid"><% $object_id %></span>
 <div id="commentsarea">
-<% $placeholder %>
+  <% $placeholder %>
+</div>
 
 
 
