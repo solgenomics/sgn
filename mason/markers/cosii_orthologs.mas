@@ -132,8 +132,8 @@ for(0..$#unigenes) {
   else{
     $html.=SEQUENCE_NOT_AVAILABLE;
   }
+  $html.="</td></tr>";
 }
-$html.="</td></tr>";
 $html.='</table>';
 
 
