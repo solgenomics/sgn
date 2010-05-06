@@ -140,7 +140,7 @@ END_HEREDOC
       <ul>
 
       <li><b>Before</b> creating a new account, please check if you <b>already have an account</b> using the <a href="/search/direct_search.pl?search=directory">directory search</a>. </li>
-      <li>An link will be emailed to you. Please click on it to activate the account.</li>
+      <li>A link will be emailed to you. Please click on it to activate the account.</li>
       <li><b>All fields are required.</b></li>
       </div>
 
