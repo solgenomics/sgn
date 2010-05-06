@@ -21,6 +21,7 @@ use CXGN::Page::FormattingHelpers qw /info_section_html
   html_alternate_show
   /;
 
+use CXGN::People::PageComment;
 use CXGN::Phenome::Population;
 use CXGN::Phenome::UserTrait;
 use CXGN::Phenome::Qtl;
