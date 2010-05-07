@@ -114,7 +114,7 @@ if (defined $id) {
 	 if ($preferred eq 't') {
 	     $method_text .= " <br>(<i>preferred protein</i> for the protein prediction methods) ($preferred)";
 	 }
-         $protein_content .= "<b>- Prediction based on $method_text</b>\n <br><br>\>$protein_id ($protein_length Aa)<br>";
+         $protein_content .= "<b>Prediction based on $method_text</b>\n <br><br>\>$protein_id ($protein_length Aa)<br>";
          my $i=0;
          my $protein_display = '';
 	 my ($nn_d, $nn_ypos, $nn_score) = $cds->get_signalp_info();    ## Get Signal-P info to link with the protein info
