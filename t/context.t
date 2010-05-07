@@ -1,4 +1,4 @@
-use Test::Most tests => 9;
+use Test::Most;
 use Carp;
 $SIG{__DIE__} = \&Carp::confess;
 
@@ -22,8 +22,21 @@ like( $c->dbc->dbh->{private_search_path_string},
       'private_search_path has something in it',
      );
 
+# test dbic_schema method
+
+my $schema = $c->dbic_schema('Test::Schema');
+can_ok( $schema, 'resultset', 'storage' );
+ok( $schema->storage->dbh->ping, 'dbic storage is connected' );
+
 # test jsan functions
 can_ok( $c->new_jsan, 'uris' );
 my $uris = $c->js_import_uris('CXGN.Page.Toolbar');
 cmp_ok( scalar(@$uris), '>=', 1, 'got at least 1 URI to include for CXGN.Page.Toolbar' );
 like( "$uris->[0]", qr/\?t=\d{5,}/, 'uris have file modtimes appended' );
+
+done_testing;
+
+package Test::Schema;
+
+use base 'DBIx::Class::Schema';
+
