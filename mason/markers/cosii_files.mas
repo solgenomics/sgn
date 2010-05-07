@@ -31,6 +31,8 @@ $marker
 
 <%perl>
 
+use CXGN::Accession::Tools;
+
 my $marker_name = $marker->get_name();
 my $dbh = $marker->{dbh};
   unless($marker->is_in_collection('COSII')){return'';}
