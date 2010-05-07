@@ -20,7 +20,8 @@ use Cache::File;
 my $scrap = CXGN::Scrap->new();
 my $dbh   = CXGN::DB::Connection->new();
 
-my $population_id = $scrap->get_encoded_arguments("population_id");
+my %args = $scrap->get_all_encoded_arguments();
+my $population_id = $args{population_id};
 
 my $pop = CXGN::Phenome::Population->new( $dbh, $population_id );
 my $name = $pop->get_name();
