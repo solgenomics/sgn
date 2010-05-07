@@ -1,8 +1,8 @@
 #!/usr/bin/perl -wT
 
 =head1 DESCRIPTION
-A small script for downloading population 
-phenotype raw data in tab delimited format.
+A script for downloading population 
+genotype raw data in tab delimited format.
 
 =head1 AUTHOR(S)
 
@@ -14,13 +14,14 @@ use strict;
 
 use CXGN::DB::Connection;
 use CXGN::Phenome::Population;
-use CXGN::Phenome::Individual;
 use CXGN::Scrap;
+use Cache::File;
 
 my $scrap = CXGN::Scrap->new();
 my $dbh   = CXGN::DB::Connection->new();
 
-my $population_id = $scrap->get_encoded_arguments("population_id");
+my %args = $scrap->get_all_encoded_arguments();
+my $population_id = $args{population_id};
 
 my $pop = CXGN::Phenome::Population->new( $dbh, $population_id );
 my $name = $pop->get_name();
@@ -30,44 +31,31 @@ print
 
 #print "Content-Type: text/plain\n\n";
 
-print "Phenotype data for $name\n\n\n";
 
 
-my @individuals = $pop->get_individuals();
+my $p_file = &phenotype_file();
 
-my ( @pop_id, @name, @obs_id, @cvterm, @definition, @value );
-
-my $individual_obj = $individuals[1];
-
-my $indv_id = $individual_obj->get_individual_id();
-
-my @cvterms = $individual_obj->get_unique_cvterms($indv_id);
-
-print "Lines \t";
-print join( "\t", @cvterms );
-
-my ( $pop_id, $pop_name, $ind_id, $ind_name, $obs_id, $cvterm, $definition,
-     $value )
-  = $pop->get_pop_raw_data();
-
-my $old_ind_id = "";
-
-for ( my $i = 0 ; $i < @$pop_id ; $i++ )
-{
-    if ( $old_ind_id ne $ind_id->[$i] )
-    {
-
-        print "\n$ind_name->[$i]\t";
+if (-e $p_file) {
+    print "phenotype data for $name\n\n\n";
+ 
+    open my $f, "<$p_file" or die "can't open file $p_file: $!\n";
+  
+    while (my $row=<$f>) {  
+	print "$row\n";
     }
 
-    foreach my $t (@cvterms)
-    {
-        my $term = $cvterm->[$i];
-        if ( $t =~ /^$term$/i )
-        {
-            print "$value->[$i]\t";
-        }
-    }
-    $old_ind_id = $ind_id->[$i];
+}
+else {
+    print "phenotype file for this population is not cached 
+           or does not exist!\n";
 }
 
+sub phenotype_file {
+    my $prod_temp_path = $c->get_conf('r_qtl_temp_path'); 
+    my $file_cache = Cache::File->new( cache_root => $prod_temp_path . "/cache" ); 
+    my $key_phe          = "popid_" . $population_id . "_phenodata";
+    my $phe_dataset_file = $file_cache->get($key_phe); 
+    print STDERR "pheno file: $phe_dataset_file\nkey: $key_phe\npop_id:$population_id\n";
+    return $phe_dataset_file;
+
+}
