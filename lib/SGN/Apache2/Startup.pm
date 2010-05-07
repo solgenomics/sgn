@@ -80,6 +80,10 @@ sub import {
 
     # add some other configuration to the web server
     my $root_server = my $server =  Apache2::ServerUtil->server;
+    unless( $c->config->{production_server} ) {
+        $server->add_config(['MaxRequestsPerChild 1']);
+    }
+
     $server = $server->next if $args{mod_perl_vhost};
     $server->add_config( $_ ) for generate_apache_config( \%paths, $c );
 
