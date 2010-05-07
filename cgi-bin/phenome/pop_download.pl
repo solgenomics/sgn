@@ -40,7 +40,8 @@ if (-e $p_file) {
  
     open my $f, "<$p_file" or die "can't open file $p_file: $!\n";
   
-    while (my $row=<$f>) {  
+    while (my $row=<$f>) {
+	$row =~ s/,/\t/g;
 	print "$row\n";
     }
 
