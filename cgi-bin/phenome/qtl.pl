@@ -26,6 +26,8 @@ use CXGN::Phenome::Population;
 use CXGN::Phenome::UserTrait;
 use CXGN::Phenome::Qtl;
 use CXGN::Marker;
+use CXGN::Map;
+use CXGN::DB::Connection;
 use CXGN::Chado::Cvterm;
 use List::MoreUtils qw /uniq/;
 
