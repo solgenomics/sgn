@@ -42,7 +42,7 @@ if (-e $p_file) {
   
     while (my $row=<$f>) {
 	$row =~ s/,/\t/g;
-	print "$row\n";
+	print "$row";
     }
 
 }

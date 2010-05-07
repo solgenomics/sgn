@@ -58,7 +58,7 @@ if (-e $g_file) {
 	$genotype =~ s/,5/\tc/g;
 	$genotype =~ s/,NA/\tNA/g;
     
-	print "$genotype\n";
+	print "$genotype";
     }
 
 }
