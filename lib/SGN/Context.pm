@@ -419,10 +419,10 @@ has '_mason_interp' => (
    }
 
 sub forward_to_mason_view {
-  my ( $self, $view, %args ) = @_;
-
-  $self->_trap_mason_error( sub { $self->_mason_interp->exec( $view, %args ) } );
-  exit;
+    my $self = shift;
+    my @args = @_;
+    $self->_trap_mason_error( sub { $self->_mason_interp->exec( @args ) } );
+    exit;
 }
 
 
