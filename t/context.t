@@ -27,6 +27,7 @@ like( $c->dbc->dbh->{private_search_path_string},
 my $schema = $c->dbic_schema('Test::Schema');
 can_ok( $schema, 'resultset', 'storage' );
 ok( $schema->storage->dbh->ping, 'dbic storage is connected' );
+is( search_path( $schema->storage->dbh), search_path( $c->dbc->dbh ), 'schema and dbc should have same search path' );
 
 # test jsan functions
 can_ok( $c->new_jsan, 'uris' );
@@ -35,6 +36,13 @@ cmp_ok( scalar(@$uris), '>=', 1, 'got at least 1 URI to include for CXGN.Page.To
 like( "$uris->[0]", qr/\?t=\d{5,}/, 'uris have file modtimes appended' );
 
 done_testing;
+
+
+sub search_path {
+    my ($dbh) = @_;
+    my ($sp) = $dbh->selectrow_array('show search_path');
+    return $sp;
+}
 
 package Test::Schema;
 

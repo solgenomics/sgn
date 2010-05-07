@@ -549,6 +549,18 @@ sub _dbc_profile {
 
     return $profile;
 }
+# called on database handles to make sure they are setting the right
+# search path
+sub _ensure_dbh_search_path_is_set {
+    my ($dbh) = @_;
+    return $dbh if $dbh->{private_search_path_is_set};
+
+    $dbh->do("SET search_path TO $dbh->{private_search_path_string}");
+    #warn "SET search_path TO $dbh->{private_search_path_string}";
+
+    $dbh->{private_search_path_is_set} = 1;
+    return $dbh;
+}
 
 
 =head2 dbic_schema
@@ -567,10 +579,13 @@ sub dbic_schema {
     my ( $self, $schema_name, $profile_name ) = @_;
 
     $schema_name or croak "must provide a schema package name to dbic_schema";
+    Class::MOP::load_class( $schema_name );
 
     my $profile = $self->_dbc_profile( $profile_name );
 
-    return $schema_name->connect( @{$profile}{qw| dsn user password attributes |} );
+    return $schema_name->connect( @{$profile}{qw| dsn user password attributes |},
+                                  { on_connect_call => sub { _ensure_dbh_search_path_is_set( shift->dbh ) } },
+                                 );
 }
 
 
@@ -630,10 +645,7 @@ use base 'DBIx::Connector';
 
 sub dbh {
     my $dbh = shift->SUPER::dbh(@_);
-    return $dbh if $dbh->{private_search_path_is_set};
-
-    $dbh->do("SET search_path TO $dbh->{private_search_path_string}");
-    $dbh->{private_search_path_is_set} = 1;
+    SGN::Context::_ensure_dbh_search_path_is_set( $dbh );
     return $dbh;
 }
 
