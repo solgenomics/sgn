@@ -527,6 +527,17 @@ sub dbc {
     my ( $self, $profile_name ) = @_;
     $profile_name ||= 'default';
 
+    my $profile = $self->_dbc_profile( $profile_name );
+
+    my $conn = $self->_connections->{$profile_name} ||=
+	SGN::Context::Connector->new( @{$profile}{qw| dsn user password attributes |} );
+
+    return $conn;
+}
+sub _dbc_profile {
+    my ( $self, $profile_name ) = @_;
+    $profile_name ||= 'default';
+
     my $profile = $self->config->{'DatabaseConnection'}->{$profile_name}
 	or croak "connection profile '$profile_name' not defined";
 
@@ -536,11 +547,32 @@ sub dbc {
 	||= $profile->{search_path} ? join ',',map qq|"$_"|, @{$profile->{'search_path'}}  :
 	                              'public';
 
-    my $conn = $self->_connections->{$profile_name} ||=
-	SGN::Context::Connector->new( @{$profile}{qw| dsn user password attributes |} );
-
-    return $conn;
+    return $profile;
 }
+
+
+=head2 dbic_schema
+
+  Usage: my $schema = $c->dbic_schema( 'Schema::Package', 'connection_name' );
+  Desc : get a L<DBIx::Class::Schema> with the proper connection
+         parameters for the given connection name
+  Args : L<DBIx::Class> schema package name,
+         (optional) connection name to use
+  Ret  : schema object
+  Side Effects: dies on failure
+
+=cut
+
+sub dbic_schema {
+    my ( $self, $schema_name, $profile_name ) = @_;
+
+    $schema_name or croak "must provide a schema package name to dbic_schema";
+
+    my $profile = $self->_dbc_profile( $profile_name );
+
+    return $schema_name->connect( @{$profile}{qw| dsn user password attributes |} );
+}
+
 
 =head2 new_jsan
 
