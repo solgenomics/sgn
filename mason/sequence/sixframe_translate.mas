@@ -1,0 +1,41 @@
+<%doc>
+
+=head1 NAME
+
+sixframe_translate.mas - display the six-frame translation of a sequence
+
+=head1 ARGS
+
+=head2 seq
+
+The L<Bio::SeqI>-compliant nucleotide sequence to translate and display.
+
+=head2 blast_url
+
+If passed, display 'Blast' forms for each translation that will post
+that translation to the given URL
+
+=cut
+
+</%doc>
+
+<%args>
+  $seq
+  $blast_url => undef
+</%args>
+
+<%init>
+# do the 6-frame translation with bioperl
+
+my $revcom = $seq->revcom;
+
+</%init>
+
+
+<table>
+% for my $frame ( 0 .. 2 ) {
+
+<tr><td><% $frame %></td><td><% $seq->translate( -frame => $frame )->seq %></td></tr>
+
+% }
+</table>

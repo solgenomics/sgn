@@ -22,7 +22,7 @@
   %>
 </div>
 
-<& /tools/sequence.mas,
+<& /sequence/highlighted.mas,
    seq    => $seq,
    source => $source,
    highlight_coords      => $highlight_coords,
