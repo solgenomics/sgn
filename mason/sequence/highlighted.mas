@@ -17,7 +17,7 @@ the sequence [Bio::Seq object]
 short plain-text description of the meaning of the highlighted regions,
 defaults to 'matches'
 
-=item coords
+=item highlight_coords
 
 a list of ONE-BASED refs to start/end coords, [start, end], [start,
 end], ...  Will be highlighted and sequence will be trimmed to show
@@ -84,7 +84,7 @@ $highlight_coords = [ map [map $_+0, @$_], @$highlight_coords ];
                                                    __multicol    => 3,
                                                    __border      => 0,
                                                   )
-                                . info_table_html( 'Description' => $seq->desc,
+                                . info_table_html( 'Description' => $seq->desc || '<span class="ghosted">none</span>',
                                                    highlighted_regions( $highlight_coords, $highlight_description ),
                                                    __border => 0,
                                                   )
@@ -139,11 +139,10 @@ sub seq_html {
     # merge any overlapping ranges
     @ranges = Bio::Range->unions( @ranges );
 
-    my @matches;
-    foreach (@$coords) {
-        my ($s,$e) = @$_;
+    # put the highlighting span tags in the line-broken sequence
+    foreach (@ranges) {
+        my ($s,$e) = ($_->start - 1, $_->end - 1); #< convert to 0-based for this
         my @lines_used;
-        $s--; $e--; #convert to 0-based for this
         my ( $s_line, $s_col ) = line_col( $s, $width );
         my ( $e_line, $e_col ) = line_col( $e, $width );
 
