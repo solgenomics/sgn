@@ -144,7 +144,7 @@ sub display_page {
 
     ####add page comments
     if ($cvterm_name) {
-	my $page_comment_obj = CXGN::People::PageComment->new($self->get_dbh(), "cvterm", $cvterm_id); 
+	my $page_comment_obj = CXGN::People::PageComment->new($self->get_dbh(), "cvterm", $cvterm_id, $self->get_page()->{request}->uri()."?".$self->get_page()->{request}->args() );
 	print $page_comment_obj->get_html();
     }
     

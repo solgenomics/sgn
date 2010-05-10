@@ -349,7 +349,7 @@ qq|<a href="../chado/add_publication.pl?type=allele&amp;type_id=$allele_id&amp;&
     if ($allele_symbol) {
         my $page_comment_obj =
           CXGN::People::PageComment->new( $self->get_dbh(), "allele",
-            $allele_id );
+            $allele_id, $self->get_page()->{request}->uri()."?".$self->get_page()->{request}->args() );
         print $page_comment_obj->get_html();
     }
 

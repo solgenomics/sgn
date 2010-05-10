@@ -447,8 +447,10 @@ HTML
     if ($population_name)
     {
         my $page_comment_obj =
-          CXGN::People::PageComment->new( $self->get_dbh(), "population",
-                                          $population_id );
+	    CXGN::People::PageComment->new( $self->get_dbh(), "population",
+					    $population_id,
+					    $self->get_page()->{request}->uri()."?".$self->get_page()->{request}->args()
+	    );
         print $page_comment_obj->get_html();
     }
 
