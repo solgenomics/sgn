@@ -46,12 +46,15 @@ use CXGN::Bulk::UnigeneMemberInfo;
 
 
 my $page = CXGN::Page->new();
-my $params = {};
-$params->{idType} = $page->get_arguments("idType");
+#my $params = {};
+#$params->{idType} = $page->get_arguments("idType");
+
+my $params = get_parameters($page);
+print STDERR "IDTYPE: $params->{idType}\n";
 
 _invalid_params() unless $params->{idType};
 
-$params = get_parameters($page);
+
 $params->{dbc}     = CXGN::DB::Connection->new;
 $params->{tempdir} = $c->path_to( $c->tempfiles_subdir('bulk') );
 
@@ -126,6 +129,7 @@ sub get_parameters {
     my $page = shift;
 
     my $params = {  page => $page };
+    $params->{idType}               = $page->get_arguments("idType");
     $params->{outputType}           = $page->get_arguments("outputType");
     $params->{debug}                = $page->get_arguments("debug");
     $params->{fasta}                = $page->get_arguments("fasta");
