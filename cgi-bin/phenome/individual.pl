@@ -599,7 +599,8 @@ sub display_page {
     ###########Page comments############
     if ($individual_name) { 
 	# change sgn_people.forum_topic.page_type and the CHECK constraint!!
-	my $page_comment_obj = CXGN::People::PageComment->new($self->get_dbh(), "individual", $individual_id);  
+	my $page_comment_obj = CXGN::People::PageComment->new($self->get_dbh(), "individual", $individual_id,
+	    $self->get_page()->{request}->uri()."?".$self->get_page()->{request}->args() );  
 	print $page_comment_obj->get_html();
     }
     ######################################3

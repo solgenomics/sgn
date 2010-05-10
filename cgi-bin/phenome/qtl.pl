@@ -184,7 +184,7 @@ sub legend {
 sub comment {
     my $comment;
     if ($pop_id) {  
-	my $page_comment_obj = CXGN::People::PageComment->new($dbh, "population", $pop_id);  
+	my $page_comment_obj = CXGN::People::PageComment->new($dbh, "population", $pop_id, "/phenome/qtl.pl?population_id=$pop_id");  
 	$comment = $page_comment_obj->get_html();
     }
     return $comment;

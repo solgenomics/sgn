@@ -660,7 +660,7 @@ $d->d( "!!!Printing ontology links! :  " . ( time() - $time ) . "\n");
 if ($locus_name) {
     my $page_comment_obj =
 	CXGN::People::PageComment->new( $locus->get_dbh(), "locus",
-					$locus_id );
+					$locus_id, $page->{request}->uri()."?".$page->{request}->args() );
     print $page_comment_obj->get_html();
 }
 
