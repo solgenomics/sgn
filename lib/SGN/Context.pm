@@ -405,7 +405,7 @@ has '_mason_interp' => (
                               [ "global", $global_mason_root ],
                              ];
 
-       my $data_dir = $self->path_to( $self->tempfiles_subdir('data') );
+       my $data_dir = $self->path_to( $self->tempfiles_subdir('mason_'.getpwuid($>)) );
 
        $params{data_dir}  = join ":", grep $_, ($data_dir, $params{data_dir});
 
