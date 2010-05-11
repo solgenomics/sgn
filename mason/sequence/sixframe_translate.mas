@@ -24,18 +24,17 @@ that translation to the given URL
   $blast_url => undef
 </%args>
 
-<%init>
-# do the 6-frame translation with bioperl
 
-my $revcom = $seq->revcom;
+<%perl>
+use CXGN::Page::FormattingHelpers qw/info_table_html/;
 
-</%init>
+my $forward;
+$m->comp( { store => \$forward }, '/sequence/threeframe_translate.mas', %ARGS );
+my $reverse;
+$m->comp( { store => \$reverse }, '/sequence/threeframe_translate.mas', %ARGS, seq => $seq->revcom );
 
+print info_table_html(
+    Forward => $forward, Reverse => $reverse,
+);
 
-<table>
-% for my $frame ( 0 .. 2 ) {
-
-<tr><td><% $frame %></td><td><% $seq->translate( -frame => $frame )->seq %></td></tr>
-
-% }
-</table>
+</%perl>

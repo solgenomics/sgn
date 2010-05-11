@@ -1,0 +1,118 @@
+<%doc>
+
+=head1 NAME
+
+threeframe_translate.mas - display the three-frame translation of a sequence
+
+=head1 ARGS
+
+=head2 seq
+
+The L<Bio::SeqI>-compliant nucleotide sequence to translate and display.
+
+=head2 blast_url
+
+If passed, display 'BLAST' forms for each translation that will post
+that translation to the given URL
+
+=cut
+
+</%doc>
+
+<%args>
+  $seq
+  $blast_url => undef
+</%args>
+
+<%perl>
+
+# translate the sequences and annotate it with methionines,
+# stop_codons, and ORFs
+my @annotated_translations = map {
+    my $frame = $_;
+    my $translation = $seq->translate( -frame => $frame );
+    my @annotations = (
+        ( map ['methionine', @$_], all_indexes( $translation->seq, 'M' ) ),
+        ( map ['stop_codon', @$_], all_indexes( $translation->seq, '*' ) ),
+        ( map ['orf', @$_],        find_orfs( $translation->seq )        ),
+       );
+
+    { frame => $frame, sequence => $translation, annotations => \@annotations }
+#    { frame => $frame, sequence => $translation, annotations => [['methionine', 1,2],['stop_codon',1,2],['orf',0,2]] }
+} 0..2;
+
+# find the longest orf, and change its type (in the annotations data
+# structure) to 'longest_orf'
+{ my $longest_orf;
+  my $longest_orf_len = 0;
+  foreach my $annotation ( map @{$_->{annotations}}, @annotated_translations ) {
+      next unless $annotation->[0] eq 'orf';
+      my $orf_len = $annotation->[2] -  $annotation->[1];
+      if( $orf_len > $longest_orf_len ) {
+          $longest_orf = $annotation;
+          $longest_orf_len = $orf_len;
+      }
+  }
+  $longest_orf->[0] = 'longest_orf' if $longest_orf;
+}
+
+my $markup_styles = {
+    map { $_ => [qq'<span class="$_">', '</span>'] }
+        qw| methionine stop_codon orf longest_orf |
+   };
+
+</%perl>
+
+<table class="threeframe_translate">
+%   for my $translation (@annotated_translations) {
+   <tr>
+      <td class="frame"><% $translation->{frame} %></td>
+      <td class="sequence">
+       <& /sequence/with_markup.mas,
+          styles  => $markup_styles,
+          seq     => $translation->{sequence},
+          regions => $translation->{annotations},
+        &>
+      </td>
+   </tr>
+% }
+<tr><td colspan="2">
+<div style="width: 20em; margin: -0.2em 0 0 auto; font-size: 90%">
+  <span class="sequence"><span class="orf" style="border: 1px solid black">&nbsp;</span></span> open reading frame<br />
+  <span class="sequence"><span class="longest_orf" style="border: 1px solid black">&nbsp;</span></span> longest open reading frame
+</div>
+</td></tr>
+</table>
+
+
+<%init>
+use Data::Dumper;
+use POSIX;
+
+use JSON::Any; my $json = JSON::Any->new;
+
+# given a string and substring, return arrayrefs of the start and end
+# (half-open) coordinates of all occurrences of that index for
+# example, [ 0,1 ] means the letter only at position 0 in the string
+# is included
+sub all_indexes {
+    my ($string,$substring) = @_;
+    my $len = length $substring
+        or return;
+    my @indexes;
+    my $pos = 0;
+    while( -1 != (my $inx = index($string,$substring,$pos))) {
+        push @indexes, [$inx,$inx+$len];
+        $pos = $inx+1;
+    }
+    return @indexes;
+}
+
+# return the (half-open) coordinates of all open reading frames in the sequence
+sub find_orfs {
+    my ($string) = @_;
+    my @orfs;
+    push @orfs, [ $-[0], $+[0] ] while $string =~ /M[^\*]+/gi;
+    return @orfs;
+}
+</%init>
