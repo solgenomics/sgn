@@ -111,7 +111,7 @@ sub display_page {
 				);
     }
     #######
-    my $page_comment_obj = CXGN::People::PageComment->new($self->get_dbh(), "pub", $pub_id); 
+    my $page_comment_obj = CXGN::People::PageComment->new($self->get_dbh(), "pub", $pub_id, $self->get_page()->{request}->uri()."?".$self->get_page()->{request}->args()); 
     print $page_comment_obj->get_html();
     
     $self->get_page()->footer();
