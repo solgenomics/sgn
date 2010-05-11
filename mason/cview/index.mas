@@ -126,8 +126,8 @@ $d = <<HTML;
 
 
 <br />
-<a href="/cview/view_chromosome.pl"><b>Interactive comparative map viewer</b></a>
-View two chromosomes from two different maps at the same time, displaying the relationships between the chromosomes and additional information such as associated physical map, inbred lines, and rulers.<br /><br />
+<a href="/cview/view_chromosome.pl"><b>Interactive comparative map viewer</b></a>: 
+View two chromosomes from two different maps at the same time; it displays the relationships between the chromosomes and additional information such as associated physical map, inbred lines, and rulers.<br /><br />
 <b>Examples</b>: 
 <ul>
 <li><a href="/cview/view_chromosome.pl?show_IL=1&amp;map_id=5&amp;chr_nr=1&amp;comp_map_id=3&amp;comp_chr=1">Tomato EXPEN 1992 vs Potato TXB 1992</a><br /></li>
@@ -135,7 +135,7 @@ View two chromosomes from two different maps at the same time, displaying the re
 <li><a href="/cview/view_chromosome.pl?map_id=3&amp;chr_nr=1&amp;comp_map_id=6&amp;comp_chr=1&amp;show_ruler=1">Potato TXB 1992 vs Eggplant-LXM 2002</a></li>
 </ul>
 
-<a href="/cview/view_maps.pl?center_map=$current_F2_2000_map_id&amp;right_map=3"><b>Compare entire maps</b></a>
+<a href="/cview/view_maps.pl?center_map=$current_F2_2000_map_id&amp;right_map=3"><b>Compare entire maps</b></a>:
 To get a better view how two (or three) maps relate to each other, take a zoomed out view of the entire map. A maximum of 3 maps can be shown together at one time. The maps to be displayed can be selected on the top of the display.  <br /><br />
 <b>Examples</b>:
 <ul>
@@ -143,7 +143,7 @@ To get a better view how two (or three) maps relate to each other, take a zoomed
 <li><a href="/cview/view_maps.pl?left_map=5&amp;center_map=3&amp;right_map=6">Eggplant LXM 2002 vs Tomato EXPEN 1992 vs Potato TXB 1992 (three-way comparison)</a></li>
 </ul>
 <br />
-Comparative viewer <a href="/help/cview.pl">help page</a>
+For more on the comparative map viewer, read the <a href="/help/cview.pl">help page</a>.
 
 
 HTML
