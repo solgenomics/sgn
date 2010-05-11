@@ -612,7 +612,7 @@ sub _build__jsan_params {
 	 };
 }
 sub new_jsan {
-    SGN::Context::JSAN::ServerSide->new( %{ shift->_jsan_params } );
+    JSAN::ServerSide->new( %{ shift->_jsan_params } );
 }
 
 =head2 js_import_uris
@@ -650,21 +650,6 @@ sub dbh {
     my $dbh = shift->SUPER::dbh(@_);
     SGN::Context::_ensure_dbh_search_path_is_set( $dbh );
     return $dbh;
-}
-
-##############################################################################
-# tiny JSAN::ServerSide subclass to add modtimes to JSAN::ServerSide URIs
-package SGN::Context::JSAN::ServerSide;
-use base 'JSAN::ServerSide';
-use File::stat;
-
-# add t=<modtime> to all the URIs generated
-sub _class_to_uri {
-    my ($self, $class) = @_;
-    my $path = $self->SUPER::_class_to_file( $class );
-    my $t = eval {stat($path)->mtime} || 0;
-    my $uri  = $self->SUPER::_class_to_uri( $class );
-    return "$uri?t=$t";
 }
 
 ###
