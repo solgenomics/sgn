@@ -30,6 +30,8 @@ Lukas Mueller <lam87@cornell.edu>
 $marker
 </%args>
 
+<& /util/import_javascript.mas, classes => [ "CXGN.Effects" ] &>
+
 <%perl>
 
   use CXGN::Cview::MapFactory;
@@ -88,7 +90,7 @@ if($experiments and @{$experiments} and grep {$_->{location}} @{$experiments}) {
 	  $map_id=$map->get_id();
 
 	  if($map_id and $map_name and defined($lg_name) and defined($position)) {
-	    $map_url="<a href=\"/cview/view_chromosome.pl?map_id=$map_id&amp;chr_nr=$lg_name&amp;cM=$position&amp;hilite=$marker_name$subscript&amp;zoom=1\">$map_name v$map_version_id</a>";
+	    $map_url="<a href=\"/cview/view_chromosome.pl?map_version_id=$map_version_id&amp;chr_nr=$lg_name&amp;cM=$position&amp;hilite=$marker_name$subscript&amp;zoom=1\">$map_name v$map_version_id</a>";
 	  }
 	}
 	else {
@@ -205,6 +207,6 @@ if($experiments and @{$experiments} and grep {$_->{location}} @{$experiments}) {
 ###print blue_section_html('Mapped locations',$locations_html);
 </%perl>
 
-<&| /page/info_section.mas, title=>'Mapped locations' &>
+<&| /page/info_section.mas, title=>'Mapped locations', collapsible=>1, collapsed=>0 &>
   <% $locations_html %>
 </&>
