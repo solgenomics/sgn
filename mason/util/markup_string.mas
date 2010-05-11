@@ -1,0 +1,61 @@
+<%doc>
+
+=head1 NAME
+
+markup_string.mas - display an arbitrary string, marked up for display using Text.Markup
+
+=head1 ARGS
+
+=head2 string
+
+the string to display
+
+=head2 id
+
+optional unique HTML id for the string
+
+=head2 styles
+
+hashref of Text.Markup style definitions to use
+
+=head2 regions
+
+arrayref of Text.Markup regions of the string to apply said styles
+
+=cut
+
+</%doc>
+
+<%args>
+  $string
+  $id     => undef
+  $styles  => {}
+  $regions => []
+</%args>
+
+% if( $styles && %$styles && $regions && @$regions ) {
+%   $id ||= next_auto_id();
+
+<span id="<% $id %>"><% $string %></span>
+<script type="text/javascript">
+  var markup = new Text.Markup(<% $json->encode($styles) %>);
+  var markup_el = document.getElementById('<% $id %>');
+  markup_el.innerHTML = markup.markup( <% $json->encode($regions) %>, markup_el.textContent );
+</script>
+
+% } else {
+
+<% $string %>
+
+% }
+
+
+<%init>
+use JSON::Any;
+my $json = JSON::Any->new;
+sub next_auto_id {
+  our $auto_id;
+  'markup_string_'.($auto_id++)
+}
+</%init>
+
