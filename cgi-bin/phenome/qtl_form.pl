@@ -390,6 +390,7 @@ sub stat_form {
                      <option>
 	             <option>0
 		     <option>1
+                     <option>2.5
 		     <option>5
 		     <option>10
 	      </select>
