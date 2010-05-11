@@ -39,6 +39,7 @@ BEGIN {
              "unigene search" => "/search/ug-ad2.pl?w9e3_page=0&w9e3_sequence_name=SGN-U231977&w9e3_clone_name=&w9e3_membersrange=gt&w9e3_members1=&w9e3_members2=&w9e3_annotation=&w9e3_annot_type=blast&w9e3_lenrange=gt&w9e3_len1=&w9e3_len2=&w9e3_unigene_build_id=any",
              "unigene detail" => "/search/unigene.pl?unigene_id=SGN-U231977&w9e3_page=0&w9e3_annot_type=blast&w9e3_unigene_build_id=any",
              "unigene build" => "/search/unigene_build.pl?id=46",
+             'unigene standalone six-frame translation' => '/tools/sixframe_translate.pl?unigene_id=573435',
              "marker search page" => "/search/direct_search.pl?search=markers",
              "marker search" => "/search/markers/markersearch.pl?w822_nametype=starts+with&w822_marker_name=&w822_mapped=on&w822_species=Any&w822_protos=Any&w822_colls=Any&w822_chromos=Any&w822_pos_start=&w822_pos_end=&w822_confs=-1&w822_maps=Any&w822_submit=Search",
              "marker detail rflp" => "/search/markers/markerinfo.pl?marker_id=109",
