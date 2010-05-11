@@ -471,9 +471,12 @@ sub _trap_mason_error {
     eval { $sub->() };
     if( $@ ) {
         if( ref $@ && $@->can('as_brief') ) {
-            die $@->as_text;
+            my $t = $@->as_text;
+            # munge mason compilation errors for better backtraces on devel debug screens
+            $t =~ s/^Error during compilation of[^\n]+\n// unless $self->get_conf('production_server');
+            die $t;
         }
-        die $@;
+        die $@ if $@;
     }
 }
 
