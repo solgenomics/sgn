@@ -29,7 +29,7 @@ given URL
 
 <&| /page/info_section.mas, title => 'Nucleotide Sequence' &>
   <div style="margin-left: 3em">
-    <& /sequence/with_markup.mas, seq => $seq, width => 80, subdiv => undef &>
+    <& /sequence/with_markup.mas, seq => $seq, width => 80, subdiv => undef, blast_url => $blast_url  &>
   </div>
 </&>
 

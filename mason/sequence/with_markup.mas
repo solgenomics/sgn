@@ -29,16 +29,22 @@ line breaking and subdividing)
 
 Text.Markup regions to apply the styles onto.
 
+=head2 blast_url
+
+If passed, will provide a 'BLAST' button that will POST the sequence
+to the given URL as `seq`
+
 =cut
 
 </%doc>
 
 <%args>
   $seq
-  $styles  => undef
-  $regions => undef
-  $width   => 80
-  $subdiv  => 10
+  $styles    => undef
+  $regions   => undef
+  $width     => 80
+  $subdiv    => 10
+  $blast_url => undef
 </%args>
 
 <%perl>
@@ -59,10 +65,16 @@ Text.Markup regions to apply the styles onto.
 </%perl>
 
 <span class="sequence">
-  ><% $seq->id %> <% $seq->desc %><br />
+  ><% $seq->id %> <% $seq->desc %>
+% if( $blast_url ) {
+    <form style="display: inline" method="POST" action="<% $blast_url %>"><input type="hidden" name="seq" value="<% '>'.$seq->id."\n".$seq->seq | h %>" /><input style="padding: 0; line-height: 0.8" type="submit" value="BLAST" /></form>
+% }
+
+  <br />
   <& /util/markup_string.mas,
      styles  => $styles,
      string  => $seq->seq,
      regions => $regions,
   &>
 </span>
+
