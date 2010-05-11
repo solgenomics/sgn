@@ -31,7 +31,9 @@ use CXGN::Page::FormattingHelpers qw/info_table_html/;
 my $forward;
 $m->comp( { store => \$forward }, '/sequence/threeframe_translate.mas', %ARGS );
 my $reverse;
-$m->comp( { store => \$reverse }, '/sequence/threeframe_translate.mas', %ARGS, seq => $seq->revcom );
+my $revcom = $seq->revcom;
+$revcom->id( $revcom->id.':rev' );
+$m->comp( { store => \$reverse }, '/sequence/threeframe_translate.mas', %ARGS, seq => $revcom );
 
 print info_table_html(
     Forward => $forward, Reverse => $reverse,

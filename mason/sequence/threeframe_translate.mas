@@ -30,7 +30,7 @@ that translation to the given URL
 # stop_codons, and ORFs
 my @annotated_translations = map {
     my $frame = $_;
-    my $translation = $seq->translate( -frame => $frame );
+    my $translation = translate( $seq, $frame );
     my @annotations = (
         ( map ['methionine', @$_], all_indexes( $translation->seq, 'M' ) ),
         ( map ['stop_codon', @$_], all_indexes( $translation->seq, '*' ) ),
@@ -69,9 +69,10 @@ my $markup_styles = {
       <td class="frame"><% $translation->{frame} %></td>
       <td class="sequence">
        <& /sequence/with_markup.mas,
-          styles  => $markup_styles,
-          seq     => $translation->{sequence},
-          regions => $translation->{annotations},
+          styles    => $markup_styles,
+          seq       => $translation->{sequence},
+          regions   => $translation->{annotations},
+          blast_url => $blast_url,
         &>
       </td>
    </tr>
@@ -114,5 +115,13 @@ sub find_orfs {
     my @orfs;
     push @orfs, [ $-[0], $+[0] ] while $string =~ /M[^\*]+/gi;
     return @orfs;
+}
+
+sub translate {
+    my ($seq,$frame) = @_;
+    my $t = $seq->translate( -frame => $frame );
+    # add the translation frame to the seq name
+    $t->id( $t->id.':fs'.$frame);
+    return $t;
 }
 </%init>
