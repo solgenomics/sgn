@@ -92,7 +92,8 @@ foreach my $map (@maps) {
     $d .= qq{ <a href="map.pl?map_version_id=$id">$short_name</a>: $long_name<br />\n };
 }
 
-print blue_section_html("Interactive maps", $d);
+my $submit = qq | <b>[<a href="/content/map_submissions.pl">Submit New Map</a>]</b> |;
+print blue_section_html("Interactive maps", $submit, $d);
 
 # User map section
 
