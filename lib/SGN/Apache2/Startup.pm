@@ -172,11 +172,6 @@ EOS
                        SGN::Context->instance->handle_exception( $die_scalar, @_ );
                        push @_, $mess;
                      }
-                     if( $die_scalar =~ s/Stack: \[//) {
-                       # reformat Mason stack traces to be parsable by the debugscreen
-                       $die_scalar =~ s/\[//g;
-                       $die_scalar =~ s/\],//g;
-                     }
 
                      $old_die->( $die_scalar, @_ );
                  };
