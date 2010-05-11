@@ -17,7 +17,7 @@ Lukas Mueller
 =cut
 
 use strict;
-use Test::More tests => 16;
+use Test::More tests => 20;
 use Test::WWW::Mechanize;
 die "Need to set the CXGN_SERVER environment variable" if (!defined($ENV{SGN_TEST_SERVER}));
 
@@ -59,5 +59,33 @@ die "Need to set the CXGN_SERVER environment variable" if (!defined($ENV{SGN_TES
                },
     };
     $mech->submit_form_ok($params, "Submit to BAC bulkform from input.pl");
+    $mech->content_contains("download summary");
+}
+{
+    my $mech = Test::WWW::Mechanize->new;
+    $mech->get($ENV{SGN_TEST_SERVER}."/bulk/input.pl?mode=clone_search");
+    my $params =  {
+               form_name => "bulkform",
+               fields    => {
+                   build_id     => 'all',
+                   ids          => 'cLEB-1-A2', 
+                   idType       => 'clone',
+               },
+    };
+    $mech->submit_form_ok($params, "Submit to clone_search bulkform from input.pl");
+    $mech->content_contains("download summary");
+}
+{
+    my $mech = Test::WWW::Mechanize->new;
+    $mech->get($ENV{SGN_TEST_SERVER}."/bulk/input.pl?mode=microarray");
+    my $params =  {
+               form_name => "bulkform",
+               fields    => {
+                   build_id     => 'all',
+                   ids          => '1-1-1.2.3.4', 
+                   idType       => 'microarray',
+               },
+    };
+    $mech->submit_form_ok($params, "Submit to microarray bulkform from input.pl");
     $mech->content_contains("download summary");
 }
