@@ -33,7 +33,6 @@ is( search_path( $schema->storage->dbh), search_path( $c->dbc->dbh ), 'schema an
 can_ok( $c->new_jsan, 'uris' );
 my $uris = $c->js_import_uris('CXGN.Page.Toolbar');
 cmp_ok( scalar(@$uris), '>=', 1, 'got at least 1 URI to include for CXGN.Page.Toolbar' );
-like( "$uris->[0]", qr/\?t=\d{5,}/, 'uris have file modtimes appended' );
 
 done_testing;
 
