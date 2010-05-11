@@ -1,7 +1,7 @@
 
 use strict;
 
-use Test::More qw| no_plan |;
+use Test::More;
 use CXGN::DB::Connection;
 
 use_ok('CXGN::Cview::MapFactory');
@@ -19,10 +19,12 @@ my $mf = CXGN::Cview::MapFactory->new($dbh);
 foreach my $k (keys %maps) { 
     #print STDERR "testing $k...\n";
     my $map = $mf->create( {map_id=>$k});
-    
-    is(ref($map), $maps{$k}, "map type test");
 
-    is(scalar($map->get_chromosome_names()), 12, "chromosome count test");
+    if( $map ) {
+        is(ref($map), $maps{$k}, "map type test");
+        is(scalar($map->get_chromosome_names()), 12, "chromosome count test");
+    }
 }
 
 
+done_testing;
