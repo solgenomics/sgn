@@ -267,9 +267,28 @@ pre {
 	line-height: 13px;
 }
 /* sequences should be displayed in a monospace font */
-.sequence,.monospace { 
+.sequence, .monospace { 
 	font-family: bitstream vera sans mono, monospace;
 }
+.sequence .methionine { 
+  color: #0033cc;
+  font-weight: bold;
+}
+.sequence .stop_codon { 
+  color: red;
+  font-weight: bold;
+}
+.sequence .orf { 
+  background: #ddd;
+}
+.sequence .longest_orf { 
+  background: yellow;
+}
+.threeframe_translate .frame { 
+  font-weight: bold;
+}
+
+
 /*some old style used by koni in est.pl and unigene.pl*/
 .fix {
 	letter-spacing: 0px;

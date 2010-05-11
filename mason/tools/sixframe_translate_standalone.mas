@@ -1,0 +1,40 @@
+<%doc>
+
+=head1 NAME
+
+/sixframe_translate_standalone.mas - standalone page that displays the
+six-frame translation of the L<Bio::SeqI> you pass it
+
+=head1 ARGS
+
+=head2 seq - a Bio::SeqI
+
+=head2 blast_url - optional URL for posting BLAST requests - if
+passed, will render buttons that post a form with the sequence to the
+given URL
+
+=cut
+
+</%doc>
+
+<%args>
+  $seq
+  $blast_url
+</%args>
+
+
+<& /page/page_title.mas, title => 'Six-Frame Translation: '.$seq->id &>
+
+<& /util/import_javascript.mas, classes => 'Text.Markup' &>
+
+<&| /page/info_section.mas, title => 'Nucleotide Sequence' &>
+  <div style="margin-left: 3em">
+    <& /sequence/with_markup.mas, seq => $seq, width => 80, subdiv => undef &>
+  </div>
+</&>
+
+<&| /page/info_section.mas, title => 'Six-frame Translation' &>
+  <& /sequence/sixframe_translate.mas, %ARGS &>
+</&>
+
+
