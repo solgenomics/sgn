@@ -121,7 +121,7 @@ sub translate {
     my ($seq,$frame) = @_;
     my $t = $seq->translate( -frame => $frame );
     # add the translation frame to the seq name
-    $t->id( $t->id.':fs'.$frame);
+    $t->id( $t->id.':tr'.$frame);
     return $t;
 }
 </%init>
