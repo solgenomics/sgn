@@ -362,6 +362,7 @@ sub stat_form {
            <td>QTL mapping method:</td>
 	   <td><select name="stat_qtl_method">	         
 	            <option>
+                    <option>Marker Regression
                     <option>Maximum Likelihood 
 		    <option>Haley-Knott Regression
                     <option>Multiple Imputation
@@ -388,7 +389,7 @@ sub stat_form {
          <td>Genome scan size (cM):</td>
          <td><select name="stat_step_size">
                      <option>
-	             <option>0
+	             <option>zero
 		     <option>1
                      <option>2.5
 		     <option>5

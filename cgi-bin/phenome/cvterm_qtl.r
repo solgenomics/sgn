@@ -1,7 +1,7 @@
 
 ##SNOPSIS
 
-##A banch of r and r/qtl commands for reading input data,
+##A bunch of r and r/qtl commands for reading input data,
 ##running qtl analysis, and writing output data. Input data are feed to R
 ##from and output data from R feed to a perl script called
 ##../phenome/population_indls.
@@ -51,13 +51,14 @@ if (qtlmethod == "Haley-knott Regression") {
 if (qtlmethod == "Multiple Imputation") {
   qtlmethod<-c("imp")
 
+} else
+if (qtlmethod == "Marker Regression") {
+  qtlmethod<-c("mr")
 }
 
 ###### QTL model ############
 qtlmodelfile<-grep("stat_qtl_model", statfiles, ignore.case=TRUE, fixed = FALSE, value=TRUE)
-#print(qtlmodelfile)
 qtlmodel<-scan(qtlmodelfile, what="character", sep="\n")
-#print(qtlmodel)
 if (qtlmodel == "Single-QTL Scan") {
   qtlmodel<-c("scanone")
 
@@ -68,9 +69,7 @@ if  (qtlmodel == "Two-QTL Scan") {
 
 ###### permutation############
 userpermufile<-grep("stat_permu_test", statfiles, ignore.case=TRUE, fixed = FALSE, value=TRUE)
-#print(userpermufile)
 userpermuvalue<-scan(userpermufile, what="numeric", dec = ".", sep="\n")
-#print(userpermuvalue)
 if (userpermuvalue == "None") {
   userpermuvalue<-c(0)
 }
@@ -78,12 +77,16 @@ userpermuvalue<-as.numeric(userpermuvalue)
 
 #####for test only
 #userpermuvalue<-c(0)
+#####
+
 
 ######genome step size############
 stepsizefile<-grep("stat_step_size", statfiles, ignore.case=TRUE, fixed = FALSE, value=TRUE)
 stepsize<-scan(stepsizefile, what="numeric", dec = ".", sep="\n")
+if (stepsize == "zero") {
+  stepsize<-c(0)
+}
 stepsize<-as.numeric(stepsize)
-
 
 ######genotype calculation method############
 genoprobmethodfile<-grep("stat_prob_method", statfiles, ignore.case=TRUE, fixed = FALSE, value=TRUE)
@@ -124,7 +127,6 @@ crossfile<-infile[6]
 
 print(crossfile)
 cross<-scan(crossfile, what="character", sep="\n")
-#print(cross)
 
 popdata<-c()
 if (cross == "f2") {
@@ -137,16 +139,16 @@ if (cross == "bc") {
 }  
 
 
-
-if (genoprobmethod == "Calculate") {
-  popdata<-calc.genoprob(popdata, step=stepsize, error.prob=genoproblevel)
+if (qtlmethod != "mr") {
+  if (genoprobmethod == "Calculate") {
+    popdata<-calc.genoprob(popdata, step=stepsize, error.prob=genoproblevel)
   #calculates the qtl genotype probablity at the specififed step size and probability level
-} else
-if (genoprobmethod == "Simulate") {
-  popdata<-sim.genoprob(popdata, n.draws= drawsno, step=stepsize, error.prob=genoproblevel, stepwidth="fixed")
+  } else
+  if (genoprobmethod == "Simulate") {
+    popdata<-sim.genoprob(popdata, n.draws= drawsno, step=stepsize, error.prob=genoproblevel, stepwidth="fixed")
   #calculates the qtl genotype probablity at the specififed step size
+  }
 }
-
 
 
 cvterm<-scan(file=cvtermfile, what="character") #reads the cvterm
@@ -169,17 +171,19 @@ if ((is.logical(permuvalue1) == FALSE)) {
       #print(permu)
     }
   }else
-  if (qtlmodel == "scantwo") {
-    if (userpermuvalue == 0 ) {
-      popdataperm<-scantwo(popdata, pheno.col=cv, model="normal", method=qtlmethod)
-      #permu<-summary(popdataperm)
-    } else
-    if (userpermuvalue != 0) {
-      popdataperm<-scantwo(popdata, pheno.col=cv, model="normal", n.perm = userpermuvalue, method=qtlmethod)
-      permu<-summary(popdataperm, alpha=permuproblevel)
-      #print(permu) 
+  if (qtlmethod != "mr") {
+    if (qtlmodel == "scantwo") {
+      if (userpermuvalue == 0 ) {
+        popdataperm<-scantwo(popdata, pheno.col=cv, model="normal", method=qtlmethod)
+        #permu<-summary(popdataperm)
+      } else
+      if (userpermuvalue != 0) {
+        popdataperm<-scantwo(popdata, pheno.col=cv, model="normal", n.perm = userpermuvalue, method=qtlmethod)
+        permu<-summary(popdataperm, alpha=permuproblevel)
+        #print(permu) 
     
-    } 
+      }
+    }
   }
 }
 
