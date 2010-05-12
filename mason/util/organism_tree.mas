@@ -71,6 +71,7 @@ close($MF);
 if ($image_only) { print $image_html; return; }
 </%perl>
 
+<a name="$root"></a>  
 
 <&| /page/info_section.mas, 
   title         => $root,
