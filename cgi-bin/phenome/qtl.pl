@@ -141,25 +141,48 @@ sub legend {
 
    my $sp_person_id   = $pop->get_sp_person_id();
    my $qtl            = CXGN::Phenome::Qtl->new($sp_person_id);
-    my $user_stat_file = $qtl->get_stat_file($c, $pop_id);
-    my @stat;
+   my $user_stat_file = $qtl->get_stat_file($c, $pop_id);
+   my @stat;
+   my $ci;
     
     open $_, "<", $user_stat_file or die "$! reading $user_stat_file\n";
     while (my $row = <$_>)
     {
         my ( $parameter, $value ) = split( /\t/, $row );
+	
 	if ($parameter =~/qtl_method/) {$parameter = 'Mapping method';}
 	if ($parameter =~/qtl_model/) {$parameter = 'Mapping model';}
-	if ($parameter =~/prob_method/) {$parameter = 'QTL genotype probablity method';}
+	if ($parameter =~/prob_method/) {$parameter = 'QTL genotype probability method';}
 	if ($parameter =~/step_size/) {$parameter = 'Genome scan size (cM)';}
 	if ($parameter =~/permu_level/) {$parameter = 'Permutation significance level';}
 	if ($parameter =~/permu_test/) {$parameter = 'No. of permutations';}
-	if ($parameter =~/prob_level/) {$parameter = 'QTL genotype signifance level';}
+	if ($parameter =~/prob_level/) {$parameter = 'QTL genotype significance level';}
 
+	if ($value eq 'zero' || $value eq 'Marker Regression') {$ci = 'none';}
+	
+	unless (($parameter=~/no_draws/ && $value ==' ') ||
+	       ($parameter =~/QTL genotype probability/ && $value==' ')
+	       ) 
 
-	push @stat, [map{$_} ($parameter, $value)];
-
+	{
+	    push @stat, [map{$_} ($parameter, $value)];
+	}
     }
+
+
+    foreach my $st (@stat) {
+	foreach my $i (@$st) {
+	    if ($i =~/zero/)  { 
+		foreach my $s (@stat) {     		
+		    foreach my $j (@$s) {
+			$j =~ s/Maximum Likelihood/Marker Regression/;
+			$ci = 'none';
+		    }
+		}
+	    }
+	}
+    }
+
     
     if  (!$lod) 
     {
@@ -170,12 +193,13 @@ sub legend {
     [
      map {$_} ('LOD threshold', $lod)
     ];
-    push @stat, 
-    [
-     map {$_} ('Confidence interval', 'Based on 95% Bayesian Credible Interval')
-    ];
 
-  
+   unless ($ci) {
+       push @stat, 
+       [
+	map {$_} ('Confidence interval', 'Based on 95% Bayesian Credible Interval')
+       ];
+   }  
 
      return \@stat;
 

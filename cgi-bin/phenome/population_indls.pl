@@ -1780,27 +1780,47 @@ sub legend {
     my $qtl            = CXGN::Phenome::Qtl->new($sp_person_id);
     my $stat_file = $qtl->get_stat_file($c, $pop->get_population_id());
     my @stat;
-    
+    my $ci;
+
     open $_, "<", $stat_file or die "$! reading $stat_file\n";
     while (my $row = <$_>)
     {
         my ( $parameter, $value ) = split( /\t/, $row );
 	if ($parameter =~/qtl_method/) {$parameter = 'Mapping method';}
 	if ($parameter =~/qtl_model/) {$parameter = 'Mapping model';}
-	if ($parameter =~/prob_method/) {$parameter = 'QTL genotype probablity method';}
+	if ($parameter =~/prob_method/) {$parameter = 'QTL genotype probability method';}
 	if ($parameter =~/step_size/) {$parameter = 'Genome scan size (cM)';}
 	if ($parameter =~/permu_level/) {$parameter = 'Permutation significance level';}
 	if ($parameter =~/permu_test/) {$parameter = 'No. of permutations';}
 	if ($parameter =~/prob_level/) {$parameter = 'QTL genotype signifance level';}
-
 	
-	push @stat, [map{$_} ($parameter, $value)];
+	if ($value eq 'zero' || $value eq 'Marker Regression') {$ci = 'none';}
+	
+	unless (($parameter=~/no_draws/ && $value==' ') ||
+	       ($parameter =~/QTL genotype probability/ && $value==' ')
+	       ) 
+	{
+	    push @stat, [map{$_} ($parameter, $value)];
+	}
 
     }
+
+    my $sm;
+    foreach my $st (@stat) {
+	foreach my $i (@$st) {
+	    if ($i =~/zero/)  { 
+		foreach my $s (@stat) {     		
+		    foreach my $j (@$s) {
+			$j =~ s/Maximum Likelihood/Marker Regression/;
+			$ci = 'none';		
+		    }
+		}
+	    }
+	}
+    }
+
     
-
-
-    my $permu_threshold_ref = $self->permu_values();
+my $permu_threshold_ref = $self->permu_values();
     my %permu_threshold     = %$permu_threshold_ref;
 
     my @keys;
@@ -1825,10 +1845,14 @@ sub legend {
     [
      map {$_} ('LOD threshold', $lod1)
     ];
-    push @stat, 
-    [
-     map {$_} ('Confidence interval', 'Based on 95% Bayesian Credible Interval')
-    ];
+    
+
+    unless ($ci) {
+	push @stat, 
+	[
+	 map {$_} ('Confidence interval', 'Based on 95% Bayesian Credible Interval')
+	];
+    }
     push @stat, 
     [
      map {$_} ('QTL software', "<a href=http://www.rqtl.org>R/QTL</a>")
