@@ -2,7 +2,7 @@
 
 =head1 DESCRIPTION
 A script for downloading population 
-genotype raw data in tab delimited format.
+phenotype raw data in tab delimited format.
 
 =head1 AUTHOR(S)
 
