@@ -30,7 +30,6 @@ use CXGN::Page::FormattingHelpers qw /info_section_html
                                       tooltipped_text
                                       html_alternate_show
                                       /;
-use CXGN::Page::Form::SimpleFormPage;
 use CXGN::DB::Connection;
 use CXGN::Phenome::Qtl;
 use CXGN::Phenome::Qtl::Tools;
