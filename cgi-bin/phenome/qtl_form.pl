@@ -30,6 +30,7 @@ use CXGN::Page::FormattingHelpers qw /info_section_html
                                       tooltipped_text
                                       html_alternate_show
                                       /;
+use CXGN::Page::Form::SimpleFormPage;
 use CXGN::DB::Connection;
 use CXGN::Phenome::Qtl;
 use CXGN::Phenome::Qtl::Tools;
@@ -345,6 +346,7 @@ sub stat_form {
                                                                   subtitle => $guide,
 			                                          contents => " ",
 	                                                          ); 
+ 
 
     my $stat_form = qq^    
     <form action="qtl_load.pl" method="POST" enctype="MULTIPART/FORM-DATA">  
@@ -356,7 +358,7 @@ sub stat_form {
 	    <td> <select name="stat_qtl_model">
 	                 <option>
                          <option>Single-QTL Scan
-			 <option>Two-QTL Scan
+			 <option style="color: #FF0000;text-decoration: line-through">Two-QTL Scan--currently not available
 			 </select>
 	   </td>
            <td>QTL mapping method:</td>
