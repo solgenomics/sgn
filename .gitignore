@@ -1,11 +1,9 @@
 *~
 documents/tempfiles/*.*
 documents/tempfiles/*/*
-features/gbrowse2/conf/rendered_conf/*.conf
 logs/
 !exists
 !.exists
 _build
 Build
 MYMETA.yml
-*.sw?

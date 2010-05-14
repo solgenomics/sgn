@@ -174,11 +174,38 @@ HTML
 $d = <<HTML;
 
 <a name='searching'></a>
-<a href='/search/markers/markersearch.pl'>click here to search SGN maps by marker</a> 
+
+To view all mapped locations for any given marker, enter its name. A <a href='/search/markers/markersearch.pl'>more advanced marker search</a> is also available.
+
+<form action="/search/markers/markersearch.pl">
+<br />
+<b>Marker</b>&nbsp;&nbsp;&nbsp;<input type="text" name="w822_marker_name" value="" />
+<input type="hidden" name="w822_nametype" value="starts+with" / >
+<input type="hidden" name="w822_chromos" value="Any" />
+<input type="hidden" name="w822_colls" value="Any" />
+<input type="hidden" name="w822_confs" value="-1" />
+<input type="hidden" name="w822_maps" value="Any" />
+<input type="hidden" name="w822_mapped" value="on" />
+<input type="hidden" name="w822_submit" value="Search" />
+
+
+&nbsp;&nbsp;&nbsp;<input type="submit" value="Search" />\n
+
+</form>
+
+
 HTML
 
 print blue_section_html("Search maps by markers", $d);
 
+
+# JavaScript function for help files.
+print "<script language='javascript' type=\"text/javascript\">\n";
+print "<!--\n";
+print "function commercial(Page)\n{\n";
+print "    var new_win = open(Page, 'EXTRA', \"scrollbars=yes,resizable=yes,height=500,width=720\")\n";
+print "}\n// -->\n";
+print "</script>";
 print "</td></tr></table>";
 print "</td></tr></table>";
 
