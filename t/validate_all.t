@@ -21,7 +21,6 @@ BEGIN {
 
     %urls = (
 	     "homepage" => "/",
-	     "cview index page" => "/cview/index.pl",
 	     "contig map" => "/cview/map.pl?map_id=c9",
              "map overview F2-2000" => "/cview/map.pl?map_id=9",
              "comparative mapviewer" => "/cview/view_chromosome.pl?map_version_id=39",

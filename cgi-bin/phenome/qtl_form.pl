@@ -335,16 +335,21 @@ sub stat_form {
     my $guide = $self->guideline();
     my $no_draws = tooltipped_text('No. of draws', 'required only if the 
                                     Simulate method is selected for the 
-                                    calculation of QTL genotype probability method');
+                                    calculation of QTL genotype probability method and Multiple Imputation');
     my $permu_level = tooltipped_text('Significance level of permutation test', 
                                       'required only if permutation analysis 
                                       (LOD threshold) is run');
+    my $genome_scan = tooltipped_text('Genome scan size (cM):', 'not required for Marker Regression'
+                                      );
+     my $qtl_prob = tooltipped_text('QTL genotype probablity method:', 'not required for Marker Regression' 
+                                      );
 
     my $stat_sec =CXGN::Page::FormattingHelpers::info_section_html(
                                                                   title   => 'Statistical Parameters',
                                                                   subtitle => $guide,
 			                                          contents => " ",
 	                                                          ); 
+ 
 
     my $stat_form = qq^    
     <form action="qtl_load.pl" method="POST" enctype="MULTIPART/FORM-DATA">  
@@ -356,7 +361,7 @@ sub stat_form {
 	    <td> <select name="stat_qtl_model">
 	                 <option>
                          <option>Single-QTL Scan
-			 <option>Two-QTL Scan
+			 <option style="color: #FF0000;text-decoration: line-through">Two-QTL Scan--currently not available
 			 </select>
 	   </td>
            <td>QTL mapping method:</td>
@@ -369,7 +374,7 @@ sub stat_form {
 		</select>
 	   </td>
       </tr>
-      <tr><td>QTL genotype probablity method:</td>
+      <tr><td>$qtl_prob</td>
           <td><select name="stat_prob_method">
                       <option>
 	              <option>Calculate
@@ -386,7 +391,7 @@ sub stat_form {
          </td>
          </tr>
          <tr>
-         <td>Genome scan size (cM):</td>
+         <td>$genome_scan</td>
          <td><select name="stat_step_size">
                      <option>
 	             <option>zero
