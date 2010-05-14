@@ -1,0 +1,20 @@
+
+<%doc>
+
+</%doc>
+
+
+<& /page/page_title.mas, title=>"<i>Solanum pimpinellifolium</i> genome" &>
+
+<div class="boxbgcolor1">
+<a href="/chado/organism.pl?organism_id=770"><i>Solanum pimpinellifolium</i></a> is the wild tomato that is most closely related to the domesticated <a href="chado/organism.pl?organism_id=1"><i>Solanum lycopersicum</i></a>. <i>Solanum pimpinellifolium</i> was sequenced by a group of scientists at the <a href="http://cshl.org">Cold Spring Harbor Laboratory</a>.
+<br /><br />
+Data currently available: genomic contigs <a href="ftp://ftp.solgenomics.net/genomes/Solanum_pimpinellifolium/assemblies/A-1.0/">FTP site</a> | <a href="/tools/blast/">BLAST</a>
+<br />
+<br />
+</div>
+
+<&| /page/info_section.mas, title=>"Disclaimers and data access agreement" &>
+WILD TOMATO SPECIES GENOME SEQUENCE RELEASE. PLEASE READ BEFORE ACCESSING THE PRE-PUBLICATION SEQUENCE OF SOLANUM PIMPINELLIFOLIUM: The research groups of D. Ware, W.R. McCombie, and Z. B. Lippman at Cold Spring Harbor Laboratory are pleased to provide to the Solanaceae and broader plant biology communities a pre-publication draft genome sequence of the Solanum pimpinellifolium wild tomato species genome. S. pimpinellifolium is the proposed wild progenitor of domesticated tomato, and its draft sequence provides a rich resource of genomic data for biological discovery of the processes of plant domestication and evolution. The sequence was generated using Illumina/Solexa sequencing technology to obtain approximately 20-fold genome coverage, and combined with mRNA-seq data to enrich for gene space. The data are provided freely for both public and private use, but with the understanding that users will respect the rights of Cold Spring Harbor Laboratory to describe the genome and its comparison to the domesticated Heinz tomato genome in a peer-reviewed publication. This description includes genome level analyses on genes, gene families, repetitive sequences, SNP diversity, etc. We encourage users to review NIH-NHGRI guidelines on distribution and use of pre-publication genome sequence at http://www.genome.gov/page.cfm?pageID=10506537. Any use of the S. pimpinellifolium genome sequence prior to its publication should credit "D. Ware, W. R. McCombie, and Z. B. Lippman at Cold Spring Harbor Laboratory". Please contact D. Ware or Z. B. Lippman (E-mail: ware@cshl.edu or lippman@cshl.edu) with any questions.
+
+</&>
