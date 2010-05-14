@@ -41,9 +41,9 @@ The <a href="/search/direct_search.pl?search=cvterm_name">QTL/Trait search</a> r
 <img src="/documents/help/screenshots/qtl_cvterm_qtl_graphs.png" alt="screenshot of qtl plots" style="margin: auto; border: 1px solid black;" />
 </p>
 
-<h4>6.Clicking the "view and compare.." link displays the QTL location of the trait of interest including the flanking markers.</h4>
+<h4>6.Clicking the "Go to the QTL page" generates the QTL detail page where among others the QTL confidence interval, links to the genome positions of the markers, marker detail pages, and comparative map viewer are displayed.</h4>
 
-<p>
+<p>Example of data cross-referenced from the QTL detail page is:
 <img src="/documents/help/screenshots/qtl_cvterm_qtl_chrloc.png" alt="screenshot of qtl plots" style="margin: auto; border: 1px solid black;" />
 </p>
 <p>
