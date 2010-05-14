@@ -8,3 +8,4 @@ logs/
 _build
 Build
 MYMETA.yml
+*.sw?
