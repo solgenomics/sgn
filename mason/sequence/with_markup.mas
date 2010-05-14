@@ -2,7 +2,8 @@
 
 =head1 NAME
 
-sequence/with_markup.mas - display a sequence formatted with Text.Markup
+sequence/with_markup.mas - display a sequence formatted on the client
+side with Text.Markup javascript
 
 =head1 ARGS
 
@@ -22,12 +23,43 @@ default 10, set 0 or undef to disable.
 
 =head2 styles
 
-Hashref of Text.Markup styles for use on the sequence (beyond the
-line breaking and subdividing)
+Hashref of Text.Markup styles for use on the sequence.  Styles can be
+either single strings, which will insert that string at the given
+(single) coordinate, or arrayrefs of two strings that will be inserted
+at either side of a region.  Note that this component will add 'break'
+and 'space' styles to your styles if you don't already have them,
+which are defined as in the example below.
+
+Example styles definition:
+
+ { methionine => ['<span class="methionine">','</span>'],
+   stop_codon => ['<b>','</b>'],
+   break      => '<br />',
+   space      => ' ',
+ }
 
 =head2 regions
 
-Text.Markup regions to apply the styles onto.
+Text.Markup regions to apply the styles onto. Regions coordinates are
+numbered using space-oriented coordinates, which means that start=0
+means to insert in front of the first base pair, and an end equal to
+the sequence length will insert after the last base pair:
+
+  0 1 2 3 4 5 6 7     perl string coordinates (0-based)
+  1 2 3 4 5 6 7 8     sequence coordinates    (1-based)
+  g a t c g a t c     sequence
+ 0 1 2 3 4 5 6 7 8    space coordinates
+
+Example regions (using example styles above):
+
+  [ ['methionine', 23,24], #< highlight the single base at index 23
+                           #< (the 24th base) with the methionine style
+
+    ['orf', 23,54 ],       #< highlight bases 24-54 with the ORF style
+
+    ['break', 43 ],        #< insert the string from the 'break' style before
+                           #< the 44th base
+  ]
 
 =head2 blast_url
 
