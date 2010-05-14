@@ -924,6 +924,14 @@ td.toolbar_item_divider {
    height: 8px;
 }
 
+td.toolbar_item_title { 
+    background-color:#dddddd;
+    padding: 4px 2px 2px 2px;
+    font-weight: bold;
+    font-size:12px;
+color: #8888AA;
+}
+
 span.toolbar_item {
   font-weight: bold;
   padding-left: 0.1em;

@@ -59,11 +59,12 @@
     <a class="toolbar_menuname" href="/about/tomato_sequencing/">genomes</a>
     <div style="position: relative; text-align: left">
     <table cellspacing="0" cellpadding="0" id="sequencing" class="toolbar_popmenu">
+       <tr><td class="toolbar_item_title" >Projects</td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/genomes/Solanum_lycopersicum.pl">International Tomato Sequencing Project</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/genomes/Solanum_pimpinellifolium.pl"><i>Solanum pimpinellifolium</i> Project (CSHL)</a></td></tr>
-       <tr><td class="toolbar_item_divider" ></td></tr>
+       <tr><td class="toolbar_item_title" >Browse</td></tr>
 <tr><td class="toolbar_item"><a class="toolbar_item" href="/tomato/genome_data.pl">Genome Browser</a></td></tr>
-       <tr><td class="toolbar_item_divider" ></td></tr>
+       <tr><td class="toolbar_item_title" >More information</td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/solanaceae-project/index.pl">Solanaceae project (SOL)</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/about/us_tomato_sequencing.pl">U.S. tomato sequencing project</a></td></tr>
        
@@ -76,29 +77,29 @@
     <a class="toolbar_menuname" href="/tools/">tools</a>
     <div style="position: relative; text-align: left">
     <table cellspacing="0" cellpadding="0" id="tools" class="toolbar_popmenu">
-       <tr><td class="toolbar_item"><span class="toolbar_item">Sequence Analysis</span></td></tr>
+       <tr><td class="toolbar_item_title">Sequence Analysis</td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/tools/blast/">BLAST</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/tools/align_viewer/">Alignment Analyzer</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/tools/tree_browser/">Tree Browser</a></td></tr>
 
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/tools/intron_detection/find_introns.pl">Intron Finder</a></td></tr>
-       <tr><td class="toolbar_item"><span class="toolbar_item">Mapping</span></td></tr>
+       <tr><td class="toolbar_item_title">Mapping</td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/cview/view_chromosome.pl?show_offsets=1&amp;show_ruler=1&amp;show_offsets=1">Comparative Viewer</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/tools/fastmapping/">Fast Mapping</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/tools/caps_designer/caps_input.pl">CAPS Designer</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/tools/seedbac/">Seed BAC Finder</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/qtl">QTL Mapping</a></td></tr>
-       <tr><td class="toolbar_item"><span class="toolbar_item">Molecular Biology</span></td></tr>
+       <tr><td class="toolbar_item_title">Molecular Biology</td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/tools/sigpep_finder/input.pl">Signal Peptide Finder</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/tools/insilicopcr">In Silico PCR</a></td></tr>
-       <tr><td class="toolbar_item"><span class="toolbar_item">Systems Biology</span></td></tr>
+       <tr><td class="toolbar_item_title">Systems Biology</td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/tools/solcyc/">SolCyc Biochemical Pathways</a></td></tr>
-       <tr><td class="toolbar_item"><span class="toolbar_item">Bulk Query</span></td></tr>
+       <tr><td class="toolbar_item_title">Bulk Query</td></tr>
 
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/bulk/input.pl">Unigene and BAC information</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/bulk/input.pl?mode=ftp">FTP Site</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/tools/convert/input.pl">ID Converter (SGN <=> TIGR)</a></td></tr>
-       <tr><td class="toolbar_item"><span class="toolbar_item">Other</span></td></tr>
+       <tr><td class="toolbar_item_title">Other</td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/tools/onto/">SGN Ontology Browser [beta]</a></td></tr>
     </table>
 
