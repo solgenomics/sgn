@@ -215,8 +215,3 @@ sub comment {
 
 }
 
-
-sub test {
-    my $testing= 'git';
-
-}
