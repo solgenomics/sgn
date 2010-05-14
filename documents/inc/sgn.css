@@ -917,6 +917,13 @@ a.toolbar_item, a.toolbar_item:link, a.toolbar_item:visited, a.toolbar_item:acti
   font-size: 12px;
   white-space: nowrap;
 }
+
+td.toolbar_item_divider {
+   background-color:#dddddd;
+   padding: 1px 1px 1px 1px;
+   height: 8px;
+}
+
 span.toolbar_item {
   font-weight: bold;
   padding-left: 0.1em;
