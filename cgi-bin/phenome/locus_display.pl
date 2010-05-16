@@ -163,7 +163,6 @@ $locus_html .=
 foreach my $synonym ( $locus->get_locus_aliases('f','f') ) {
     $locus_html .= $synonym->get_locus_alias() . "  ";
 }
-my $chr_glyph;
 
 if ($locus_name) {
     $locus_html .=
@@ -228,7 +227,7 @@ my $locus_xml = $locus_id ? qq |<a href = "generic_gene_page.pl?locus_id=$locus_
         subtitle => $locus_xml . " |" . " "
 	. $editor_note . " " . "|" . " "
 	. $guide_html,
-        contents => $locus_html . $chr_glyph ,
+        contents => $locus_html,
     );
     if ($curator_html) {
         print info_section_html(
@@ -824,7 +823,7 @@ sub get_location {
             $location_html .= "<td>" . $chr_link . "</td>";
         }
     }
-    $location_html .= "</tr></table>";
+    $location_html .= "</tr></table></td>";
     $location_html .= "</td></tr></table>";
     
     return $location_html;
