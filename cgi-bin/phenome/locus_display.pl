@@ -163,6 +163,7 @@ $locus_html .=
 foreach my $synonym ( $locus->get_locus_aliases('f','f') ) {
     $locus_html .= $synonym->get_locus_alias() . "  ";
 }
+my $chr_glyph;
 
 if ($locus_name) {
     $locus_html .=
@@ -227,7 +228,7 @@ my $locus_xml = $locus_id ? qq |<a href = "generic_gene_page.pl?locus_id=$locus_
         subtitle => $locus_xml . " |" . " "
 	. $editor_note . " " . "|" . " "
 	. $guide_html,
-        contents => $locus_html,
+        contents => $locus_html . $chr_glyph ,
     );
     if ($curator_html) {
         print info_section_html(
@@ -707,10 +708,10 @@ qq | <a href="allele.pl?action=edit&amp;allele_id=$allele_id">[Edit]</a> |;
 
 sub get_location {
     my $locus = shift;
-
+    my $maps = 1;
     my $lg_name = $locus->get_linkage_group();
     my $arm     = $locus->get_lg_arm();
-    my $location_html;
+    my $location_html = qq|<td><table><tr>|;
     my @locus_marker_objs =
 	$locus->get_locus_markers();    #array of locus_marker objects
     foreach my $lmo (@locus_marker_objs) {
@@ -750,9 +751,13 @@ sub get_location {
 			    $chromosome->get_image_map("map$count") . "<br />";
                         $chr_link .= $map_name;
                         $count++;
-			
-                        $location_html .= "<td>" . $chr_link . "</td>";
-                    }
+			if ($maps > 2) {
+			    $maps = 1;
+			    $location_html .= "</tr><tr>" ;
+			}
+			$maps++;
+			$location_html .= "<td>" . $chr_link . "</td>";
+		    }
                 }
             }
         }
@@ -819,8 +824,9 @@ sub get_location {
             $location_html .= "<td>" . $chr_link . "</td>";
         }
     }
-    
+    $location_html .= "</tr></table>";
     $location_html .= "</td></tr></table>";
+    
     return $location_html;
 }    #get_location
 
