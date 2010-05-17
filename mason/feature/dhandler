@@ -1,0 +1,71 @@
+<%args>
+    $feature
+    $blast_url => undef
+</%args>
+
+<%init>
+    use aliased 'SGN::View::Feature';
+    use Bio::Seq;
+</%init>
+
+<& /page/page_title.mas, title => 'Feature Viewer: '. $feature->id &>
+
+<& /util/import_javascript.mas, classes => 'Text.Markup' &>
+<%perl>
+    #my $f = Feature->new;
+    #print "Residue: $residues\n";
+    #print $f->render($c,$feature);
+    my $seq = Bio::PrimarySeq->new(
+        -seq => $feature->residues,
+        -alphabet => 'dna',
+    );
+    my $organism = $feature->organism;
+    my $species = $organism->species;
+    $species    =~ s!(\S+) !<i>$1</i> !;
+</%perl>
+
+<&| /page/info_section.mas,
+    title => 'Feature Data',
+&>
+Feature Type: <% $feature->type->name %><br/>
+Analysis: <% $feature->is_analysis ? 'Yes' : 'No' %><br/>
+Obsolete: <% $feature->is_obsolete ? 'Yes' : 'No' %><br/>
+Accession Time: <% $feature->timeaccessioned %><br/>
+<a href="
+<%
+ $feature->dbxref->db->urlprefix .
+ $feature->dbxref->db->url .
+ $feature->dbxref->dbxref_id
+%>
+">
+<% $feature->dbxref->db->name . ':' . $feature->dbxref->accession %>
+</a><br/>
+
+</&>
+
+<&| /page/info_section.mas,
+    title => 'Organism',
+    collapsible => 1,
+&>
+   <% $species%> (<%ucfirst($organism->common_name) %>)<p/>
+   Comment: <% $organism->comment %>
+</&>
+
+
+<&| /page/info_section.mas,
+        title => 'Nucleotide Sequence',
+        collapsible => 1,
+        collapsed => 0,
+&>
+  Length : <% $seq->length %><br/>
+  MD5 : <% $feature->md5checksum %>
+  <p/>
+  <div style="margin-left: 3em">
+    <& /sequence/with_markup.mas,
+        seq => $seq,
+        width => 80,
+        subdiv => undef,
+        blast_url => $blast_url
+    &>
+  </div>
+</&>
