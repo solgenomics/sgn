@@ -509,26 +509,8 @@ sub sequencing_content {
   };
 
   my $chr = $clone->chromosome_num;
-  my $sequencing_project_html = do {
-    if( $chr eq 'unmapped' ) {
-      qq|<div class="specialnote">This clone is registered to be sequenced, but has not been successfully mapped to any chromosome.</div>|;
-    } elsif( $chr ) {
-      qq|This clone is being sequenced by the Chromosome $chr Sequencing Project. (<a href="/about/tomato_sequencing.pl">View projects</a>)|
-    } else {
-      "This clone is not assigned to any sequencing project.\n";
-    }
-  }
-  .'<br />'
-  .do {
-    if ($user_type eq 'curator' or $user_type eq 'sequencer') {
-      my $q =  CXGN::Genomic::Search::Clone->new->new_query;
-      $q->clone_id('=?',$clone->clone_id);
-      my $clone_reg_link = 'clone_reg.pl?'.$q->to_query_string;
-      qq| To change this clone's sequencing project assignment or other registry information, use the <a href="$clone_reg_link">Clone Registry Editor</a>.|;
-    } else {
-      qq|<span class="ghosted">Log in as a curator or sequencer to edit this clone's registry information.</span>|
-    }
-  };
+
+  my $sequencing_project_html = sequencing_project_html( $user_type, $chr, $clone );
 
   my $latest_seq       = $clone->latest_sequence_name;
   my $seqlen           = $clone->seqlen;
@@ -776,6 +758,35 @@ return
   ;
 
 }
+
+sub sequencing_project_html {
+    my ( $user_type, $chr, $clone ) = @_;
+
+    my (undef, $organism, $accession) = $clone->library_object->accession_name;
+    return '' unless $organism =~ /lycopersicum/i;
+
+    return
+        do {
+            if ( $chr eq 'unmapped' ) {
+                qq|<div class="specialnote">This clone is registered to be sequenced, but has not been successfully mapped to any chromosome.</div>|;
+            } elsif ( $chr ) {
+                qq|This clone is being sequenced by the Chromosome $chr Sequencing Project. (<a href="/about/tomato_sequencing.pl">View projects</a>)|
+            } else {
+                "This clone is not assigned to any sequencing project.\n";
+            }
+        }
+        .'<br />'
+        .do {
+            if ($user_type eq 'curator' or $user_type eq 'sequencer') {
+                my $q =  CXGN::Genomic::Search::Clone->new->new_query;
+                $q->clone_id('=?',$clone->clone_id);
+                my $clone_reg_link = 'clone_reg.pl?'.$q->to_query_string;
+                qq| To change this clone's sequencing project assignment or other registry information, use the <a href="$clone_reg_link">Clone Registry Editor</a>.|;
+            } else {
+                qq|<span class="ghosted">Log in as a curator or sequencer to edit this clone's registry information.</span>|
+            }
+        }
+    }
 
 sub render_tomato_bac_annot_download {
     my ($c, $clone) = @_;
