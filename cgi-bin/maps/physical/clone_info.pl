@@ -421,7 +421,7 @@ print info_section_html(
         __border => 0,
         Browse =>  join( "\n",
                           map '<a href="'.$_->url.'">'.$_->text.'</a>',
-                          map { $_->xrefs( $latest_seq ), $_->xrefs( $clone->clone_name ) }
+                          map { my $gb = $_; $gb->xrefs( $latest_seq ), $gb->xrefs( $clone->clone_name ) }
                               $c->enabled_feature('gbrowse2')
                        )
                    || '<span class="ghosted">'.$clone->clone_name.' has no browsable sequence annotations</span>',
