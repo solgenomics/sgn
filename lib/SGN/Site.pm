@@ -69,8 +69,14 @@ sub handle_exception {
 
         $self->forward_to_mason_view( '/site/error/exception.mas', exception => $exception );
     } else {
-        $self->error_notify('died',@_);
+        $self->error_notify('died',@_) unless $self->_error_is_non_notify( @_ );
     }
+}
+
+# takes the whole set of die args, returns true if this error does not
+# merit notifying the site maintainers
+sub _error_is_non_notify {
+    $_[0] =~ /Software caused connection abort/;
 }
 
 =head2 throw
