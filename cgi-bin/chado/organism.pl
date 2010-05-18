@@ -52,7 +52,7 @@ my $details = info_table_html('Name'     => "$name ($taxon)",
     );
 
 $page->header("SGN Organism page for $taxon $name");
-print  page_title_html("SGN organism $taxon $name");
+print  page_title_html("Organism: $name".($taxon ? " ($taxon)" : ''));
 
 print  info_section_html(title=>"Organism details", contents=>$details);
 
