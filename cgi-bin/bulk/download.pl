@@ -45,12 +45,8 @@ use CXGN::Bulk::ArraySpotUnigene;
 use CXGN::Bulk::UnigeneMemberInfo;
 
 
-my $page = CXGN::Page->new();
-#my $params = {};
-#$params->{idType} = $page->get_arguments("idType");
-
+my $page   = CXGN::Page->new();
 my $params = get_parameters($page);
-print STDERR "IDTYPE: $params->{idType}\n";
 
 _invalid_params() unless $params->{idType};
 
