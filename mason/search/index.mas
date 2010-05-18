@@ -7,6 +7,20 @@
 
 =head1 DESCRIPTION
 
+Arguments:
+
+=over 5 
+
+=item * 
+
+$search - the search form to display. One of: loci, phenotypes, cvterm_name, unigene, family, markers, bacs, est_library, images, directory,template_experiment_platform
+
+=item * 
+
+$dbh - a database handle.
+
+=back
+
 =head1 AUTHOR
 
 Lukas Mueller <lam87@cornell.edu>. Based on Perl code by Rob Buels and others.

@@ -40,7 +40,7 @@ arrayref of Text.Markup regions of the string to apply said styles
 <script type="text/javascript">
   var markup = new Text.Markup(<% $json->encode($styles) %>);
   var markup_el = document.getElementById('<% $id %>');
-  markup_el.innerHTML = markup.markup( <% $json->encode($regions) %>, markup_el.textContent );
+  markup_el.innerHTML = markup.markup( <% $json->encode($regions) %>, document.all ? markup_el.innerText : markup_el.textContent );
 </script>
 
 % } else {
