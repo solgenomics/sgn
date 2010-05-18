@@ -1,6 +1,5 @@
 
-
-=head1 NAME 
+=head1 NAME
 
 bulk.t - a website-level test of the bulk download
 
@@ -18,7 +17,7 @@ Lukas Mueller
 
 use strict;
 
-use Test::More 'no_plan';
+use Test::More tests => 8;
 use Test::WWW::Mechanize;
 
 my $b = Test::WWW::Mechanize->new();
@@ -29,16 +28,12 @@ $b->get_ok($ENV{SGN_TEST_SERVER}."/bulk/input.pl?mode=unigene");
 
 $b->content_contains("Download unigene information");
 
-#my $form = $b->form_name('bulkform');
-
-my %params = ( form_name => "bulkform",
-	       fields    => {  
-		   ids          => 'SGN-U444444
-                                    SGN-U555555' ,
-		       
-		       
-	       },
-	       
+my %params = (
+        form_name => "bulkform",
+        fields    => {
+                  ids   => 'SGN-U444444
+                                SGN-U555555',
+        },
     );
 
 $b->submit_form_ok(\%params, "Form submit test");
@@ -47,8 +42,8 @@ $b->content_contains("Bulk download summary", "Result page title check");
 $b->content_like(qr/The query you submitted contained .*2.*/, "Result check 1");
 $b->content_like(qr/Your query resulted in .*2.* lines/, "Result check 2");
 
-
+$b->back;
 $b->submit_form_ok( \%params, "Submit unigene bulk download");
 
-$b->content_like("Your query resulted in 3 lines being read from the database");
+$b->content_like(qr/Your query resulted in .*\d+.* lines being read from the database/, "Unigene bulk download returns content");
 
