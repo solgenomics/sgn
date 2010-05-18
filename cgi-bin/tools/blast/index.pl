@@ -447,10 +447,10 @@ sub _build_blast_db_choices {
 
 sub bdb_opt {
     my $db = shift;
-    my $timestamp = _cached_file_modtime($db)
-        or return '';
-	$timestamp = strftime(' &nbsp;(%F)',gmtime _cached_file_modtime($db));
-    #my $seq_count = $db->sequences_count;
+#     my $timestamp = _cached_file_modtime($db)
+#         or return;
+#     $timestamp = strftime(' &nbsp;(%F)',gmtime _cached_file_modtime($db));
+    my $seq_count = $db->sequences_count;
 	
-    [$db->blast_db_id, $db->title.$timestamp]
+    [$db->blast_db_id, $db->title ]
 }
