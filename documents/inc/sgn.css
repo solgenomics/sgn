@@ -148,9 +148,14 @@ table.devbar {
 }
 
 /* general div to make something a little more indented */
-div.indentedcontent { 
+div.indentedcontent, div.page_introduction {
   margin: 0.4em 1em 2em 2em;
 }
+div.page_introduction {
+  background: #f0f0f0;
+  padding: 1em;
+}
+
 /* same effect as above, except for table cells.  Don't make new pages that use this. */
 td.indentedcontent {
   padding: 1em 1em 2em 2em;
@@ -903,7 +908,6 @@ table.toolbar_popmenu {
   margin-left: auto;
   margin-right: auto;
   background: #f2f2f2;
-  font-size: 100%;
   line-height: 1.1;
 }
 a.toolbar_item_first, a.toolbar_item_first:link, a.toolbar_item_first:visited, a.toolbar_item_first:active,
@@ -911,12 +915,19 @@ a.toolbar_item, a.toolbar_item:link, a.toolbar_item:visited, a.toolbar_item:acti
   text-decoration: none;
   color: #222;
   border: 1px solid #f2f2f2;
-  padding: 0.2em 0.5em 0.2em 0.4em;
+  padding: 0.2em 0.5em 0.2em 0.5em;
   margin: 0;
   display: block;
   font-size: 12px;
   white-space: nowrap;
 }
+
+td.toolbar_item_title { 
+  padding: 4px 2px 2px 2px;
+  font-weight: bold;
+  color: #373737;
+}
+
 span.toolbar_item {
   font-weight: bold;
   padding-left: 0.1em;
