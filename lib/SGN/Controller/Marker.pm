@@ -21,7 +21,7 @@ sub rflp_image_link {
 
     my $source = catfile( $c->get_conf('image_path'), 'rflp', $dir, "$marker_name.jpg" );
 
-    #return unless -f $source;
+    return unless -f $source;
 
     return catfile( $c->get_conf('static_datasets_url'), 'images','rflp', $dir, "$marker_name.jpg" );
 }
