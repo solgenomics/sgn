@@ -107,7 +107,6 @@ sub process_parameters
     $self->{output_fields} = \@output_fields;
 
     my @ids = $self ->check_ids();
-    if (@ids == ()) {return 0;}
     $self->debug("IDs to be processed:");
     my $has_valid_id = 0;
 
