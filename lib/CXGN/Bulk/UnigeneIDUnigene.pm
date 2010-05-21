@@ -26,6 +26,10 @@ package CXGN::Bulk::UnigeneIDUnigene;
 use strict;
 use warnings;
 
+use Scalar::Util qw/ blessed /;
+
+use Bio::PrimarySeq;
+
 use CXGN::Bulk;
 use CXGN::Transcript::Unigene;
 use CXGN::Transcript::CDS;
@@ -241,26 +245,9 @@ sub process_ids {
 	    }
 
             # TODO: This needs to be fixed up.
-	    elsif($field eq "longest6frame_seq"){
-
-		my $filename = $self->{tempdir}."/longest6frameseq";
-
-		open (FASTA_WRITER, ">$filename") or die "cannot open $filename: $!\n";
-		print FASTA_WRITER ">lcl|identifier\n".$unigene->get_sequence();
-		close FASTA_WRITER;
-
-		my $returnCode = system("get_longest_protein.pl $filename");
-
-		if ( $returnCode != 0 ) { 
-		    die "Failed executing get_longest_protein.pl: $returnCode: $!\n";    
-		}
-
-		open PROTEIN_READER, "$filename.protein" or die "cannot open $filename.protein: $!\n";
-		my $sequence;
-		while(<PROTEIN_READER>){
-		    chomp($sequence .= $_) unless(/^>/);
-		}
-		push(@return_data, $sequence) or  push(@return_data, "None.");
+	    elsif($field eq "longest6frame_seq") {
+                my ($longest_orf) = $self->_find_orfs( $unigene->get_sequence );
+		push @return_data, $longest_orf || "no ORFs found";
 	    }
 	    elsif($field eq "preferred_protein_seq"){
 	        if(my $cds_id = $unigene->get_preferred_protein()){
@@ -281,50 +268,23 @@ sub process_ids {
     close($notfound_fh);
 
     $self->{query_time} = time() - $self -> {query_start_time};
+}
 
-    # my $in_ids = 'IN ('.join(',',(map {$db->quote($_)} @{$self->{ids}})).')'; #makes fragment of SQL query
-#     my $query = get_query($in_ids);
+# given a sequence, return all the ORFs in descending order of length
+sub _find_orfs {
+    my ($self,$sequence) = @_;
 
-#     warn "using query \n",$query;
+    # convert to a Bio::PrimarySeq if necessary
+    $sequence = Bio::PrimarySeq->new( -id => 'fake_id', -seq => "$sequence" )
+        unless blessed( $sequence ) && $sequence->can('translate') && $sequence->can('seq');
 
-#     my $sth = $db -> prepare($query);
-
-#     $self -> {query_start_time} = time();
-#     $sth -> execute();
-#     $current_time = time() - $self->{query_start_time};
-
-#     # execute the query and get the data.
-#     while (my $row = $sth -> fetchrow_hashref()) {
-#       # crop est_seq if qc_report data is available
-
-#       if ( defined($row->{start}) && defined($row->{length}) ) {
-# 	my $start = $row->{start};
-# 	my $length = $row->{length};
-# 	$row->{"est_seq"}=substr($row->{est_seq}, $start, $length);
-#       }
-
-#       $row->{sgn_u}="SGN-U$row->{sgn_u}" if defined($row->{sgn_u});
-
-#       # if the required unigene seq does not exist (because it is a singlet) replace
-#       # it with the cropped est sequence.
-#       if ($row->{unigene_seq} eq "") {
-# 	$row->{unigene_seq} = $row->{est_seq};
-#       }
-
-#       @return_data = map ($row->{lc($_)}, @{$self -> {output_fields}});
-#       # the pesky manual annotation field contains carriage returns!!!
-#       foreach my $r (@return_data) {
-# 	$r =~ s/\n//g;
-#       }
-      
-#       print STDERR "^^^^^^^^^^^^^^^^^^^^^^^UNIGENE ID UNIGENE:".(join "\t", @return_data)."\n\n"; 
-#       print $dump_fh (join "\t", @return_data)."\n";
-#     }
-#     close($notfound_fh);
-#     close($dump_fh);
-
-#    $self->{query_time} = time() - $self -> {query_start_time};
-
+    # translate in 3 frames, regex to find ORFs, sort by ORF length
+    # descending
+    return
+        sort { length($b) <=> length($a)  }
+        map /(M[^\*]+(?:\*|$))/g,
+        map $sequence->translate(-frame => $_)->seq,
+        0..2;
 }
 
 

@@ -14,7 +14,7 @@ Lukas Mueller, Jonathan "Duke" Leto
 =cut
 
 use strict;
-use Test::More tests => 24;
+use Test::More tests => 26;
 use Test::WWW::Mechanize;
 die "Need to set the CXGN_SERVER environment variable" unless defined($ENV{SGN_TEST_SERVER});
 
@@ -49,12 +49,24 @@ my $base_url = $ENV{SGN_TEST_SERVER};
 }
 {
     my $mech = Test::WWW::Mechanize->new;
+    $mech->get("$base_url/bulk/input.pl?mode=unigene");
+    my $params =  {
+               form_name => "bulkform",
+               fields    => {
+                   ids          => "SGN-U444444\nSGN-U555555\n",
+                   seq_mode => "longest6frame_seq",
+               },
+    };
+    $mech->submit_form_ok($params, "Submit to Unigene bulkform from input.pl");
+    $mech->content_contains("download summary");
+}
+{
+    my $mech = Test::WWW::Mechanize->new;
     $mech->get("$base_url/bulk/input.pl?mode=bac");
     my $params =  {
                form_name => "bulkform",
                fields    => {
                    ids          => 'LE_HBa0033F11',
-                   idType       => 'bac',
                },
     };
     $mech->submit_form_ok($params, "Submit to BAC bulkform from input.pl");
@@ -82,7 +94,6 @@ my $base_url = $ENV{SGN_TEST_SERVER};
                fields    => {
                    build_id     => 'all',
                    ids          => '1-1-1.2.3.4',
-                   idType       => 'microarray',
                },
     };
     $mech->submit_form_ok($params, "Submit to microarray bulkform from input.pl");
@@ -95,7 +106,6 @@ my $base_url = $ENV{SGN_TEST_SERVER};
                form_name => "bulkform",
                fields    => {
                    ids          => 'LE_HBa0011C24_SP6_121022',
-                   idType       => 'bac_end',
                },
     };
     $mech->submit_form_ok($params, "Submit to bac_end bulkform from input.pl");
@@ -108,7 +118,6 @@ my $base_url = $ENV{SGN_TEST_SERVER};
                form_name => "bulkform",
                fields    => {
                    ids          => 'SGN-U268057',
-                   idType       => 'unigene_convert',
                },
     };
     $mech->submit_form_ok($params, "Submit to unigene_convert bulkform from input.pl");
