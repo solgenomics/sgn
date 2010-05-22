@@ -126,7 +126,7 @@ sub generate_form {
 				 object=>$locus_synonym, 
 				 getter=>"get_locus_alias", 
 				 setter=>"set_locus_alias", 
-				 validate=>"token"
+				 validate=>"string"
 				 );
     
    
