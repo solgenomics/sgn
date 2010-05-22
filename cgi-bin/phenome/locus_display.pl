@@ -110,6 +110,7 @@ $page->header("SGN $organism locus: $locus_name");
 
 print page_title_html("$organism \t'$locus_name'\n");
 
+#move this to mason!
 print CXGN::Phenome::Locus::LocusPage::initialize($locus_id);
 
 $d->d("!!!Printing page title :  " . ( time() - $time ) . "\n");

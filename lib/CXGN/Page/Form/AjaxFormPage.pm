@@ -212,11 +212,19 @@ sub check_modify_privileges {
 sub define_object { 
     my $self = shift;
     
+    my %json_hash= $self->get_json_hash();
     # in the subclass, instantiate your object here and  call
     $self->set_object();
     $self->set_object_id();
+    $self->set_object_name();
     $self->set_primary_key();
     $self->set_owners();
+    
+    if ( $self->get_object()->get_obsolete() eq 't' ) { 
+	$json_hash{error} = "Object is obsolete!";
+	$self->set_json_hash(%json_hash);
+	$self->print_json();
+    }
 }
 
 
@@ -249,11 +257,16 @@ sub add {
                and all the form fields are validated for correctness. If this fails,
                the input form is shown again with an appropriate error message.
                Else, the store is issued for the object (set using set_object). 
-               If this succeeds, the page is re-directed to the same page, but with
+               If this succeeds, the form div is updated  but with
                the 'view' action parameter.
  Ret:
  Args:
- Side Effects:
+ Side Effects: If the form fails validation, 
+               the 'validate' key in $self->get_json_hash is set to '1',
+               and the form is re-printed with the relevant error message.
+               If validation passes, $form->store is called. 
+               If this was an insert of a new object, 
+               sets $self->set_object_id($last)insert_id)  
  Example:
 
 =cut
@@ -280,10 +293,6 @@ sub store {
 	
 	# the form validated. Now let's check if it passes the uniqueness
 	# constraints.
-	# Assume that the database accessor class inherits from 
-	# CXGN::DB::Modifiable and thus has a exists_in_database
-	# function - but don't make it a requirement. If it doesn't -- never mind.
-	#
  	
 	$self->d("**** about to call the get_form->store() ****");
 	$self->get_form()->store($self->get_args());
@@ -298,11 +307,9 @@ sub store {
 	    my $id = $self->get_form()->get_insert_id();
 	    $self->set_object_id($id);
 	}
-	my %args = $self->get_args();
-	
     }
     else { 
-	# if there was an error, re-display the same page.
+	# if there was an error, re-display the same forms.
 	# the errors will be displayed on the page for each
 	# field that did not validate.
 	#
@@ -366,7 +373,12 @@ sub get_user {
 
 sub generate_form { 
     my $self = shift;
-    warn "Please subclass 'generate_form' function!\n";
+    my $error=  "Please subclass 'generate_form' function!\n";
+    warn $error;
+    my %json_hash=$self->get_json_hash();
+    $json_hash{error} = $error;
+    $self->set_json_hash(%json_hash);
+    $self->print_json();
 }
 
 
@@ -387,7 +399,7 @@ sub delete {
     my $self = shift;
     warn "Override 'delete' function in derived class\n";
 
-    my $error="Deleting is not implemented for this object";
+    my $error="Deleting is not implemented for this object. Override 'delete' function in derived class.";
     my %json_hash=$self->get_json_hash();
     $json_hash{error} = $error;
     $self->set_json_hash(%json_hash);
@@ -398,21 +410,34 @@ sub delete {
  Usage:        $s->display_form()
  Desc:         can be overridden in the subclass. In the default
                implementation, displays the
-               appropriate edit links and the form in table format,
+               form in table format,
                in the appropriate Editable or Static form.
  Ret:
  Args:
- Side Effects:
+ Side Effects: Sets user_type, is_owner, and editable_form_id keys for 
+               $self->get_json_hash() to be used in the javascript object
+               (See CXGN/Page/Form/JSFormPage.js ) 
  Example:
 
 =cut
 
 sub display_form { 
     my $self=shift;
-    
+    my %json_hash= $self->get_json_hash();
     # edit links are printed from the javascript object! See JSFormPage.js
     #print $self->get_edit_links();
-    $self->get_form()->as_table();
+     
+    if (!($json_hash{html}) ) { $json_hash{html} = $self->get_form()->as_table_string() ; }		
+    $self->check_modify_privileges();
+    
+    $json_hash{"user_type"} = $self->get_user()->get_user_type();
+    $json_hash{"is_owner"} = $self->get_is_owner();
+    
+    $json_hash{"editable_form_id"} = $self->get_form()->get_form_id();
+   
+    
+    $self->set_json_hash(%json_hash);
+    $self->print_json();
 }
 
 
@@ -716,7 +741,24 @@ sub set_form {
 
 =head2 accessors get_json_hash, set_json_hash
 
- Usage:
+ Usage: my %json_hash= $self->get_json_hash() ;
+        
+        # the store function in this class sets the validate key to 1
+        #if the form fields pass permissions and validation
+        my $validate = $json_hahs{validate};
+        
+         $json_hash{error} = "this is an error";
+         $json_hash{html} = $self->get_form()->as_table_string();
+         $json_hash{user_type} = $user_type;
+         
+         $json_hash{is_owner} = 1;
+         $json_hash{editable_form_id} = $self->get_form()->get_form_id();
+         $json_hash{refering_page} = "/my_page.pl?id=$id";
+
+         #Force page reloading (e.g. after deleting an object)  
+         $json_hash{reload} = 1; 
+         
+         $self->set_json_hash(%json_hash)
  Desc:
  Property
  Side Effects:
@@ -842,9 +884,9 @@ sub validate_parameters_before_store {
 sub process_parameters_after_store {
 }
 
-=head2 return_json
+=head2 print_json
 
- Usage: $self->return_json()
+ Usage: $self->print_json()
  Desc:  print a json object. To be used  in the javascript JSFormPage object.
  Ret:   nothing
  Args:  none
@@ -854,7 +896,7 @@ sub process_parameters_after_store {
 =cut
 
 
-sub return_json {
+sub print_json {
     my $self=shift;
     my %results= $self->get_json_hash();
     
