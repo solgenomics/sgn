@@ -76,7 +76,7 @@ sub handle_exception {
 # takes the whole set of die args, returns true if this error does not
 # merit notifying the site maintainers
 sub _error_is_non_notify {
-    $_[0] =~ /Software caused connection abort/;
+    $_[1] =~ /Software caused connection abort/;
 }
 
 =head2 throw
