@@ -324,11 +324,6 @@ sub check_ids {
     my @ids  = ();
 
     #do some simple parameter checking
-#     if ( !exists( $self->{idType} ) ) { print STDERR "NOT EXISTS!"; }
-#     if ( ! defined  $self->{idType} eq undef ) { print STDERR "UNDEF!!!!"; }
-#     if ( $self->{idType} eq "" )    { print STDERR "EMTPY STRING!"; }
-
-    #print STDERR $self->{idType}."\n";
 
     return @ids if ( $self->{idType} eq "" );
     return @ids if ( $self->{ids_string} !~ /\w/ );

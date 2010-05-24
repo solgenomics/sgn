@@ -75,14 +75,13 @@ sub process_parameters
     # @output_fields is the sub-set of fields that will actually be output.
     foreach my $o (@output_list)
     {
-	if (my $value = $self->{$o})
-	{
-	    if ($value eq "on")
-	    {
-		push @output_fields, $o;
-	        warn ("FIELD TO OUTPUT: $o");
-	    }
-	}
+        if (my $value = $self->{$o})
+        {
+            if ($value eq "on")
+            {
+                push @output_fields, $o;
+            }
+        }
     }
 
     if ($self->{sequence} eq "on")
