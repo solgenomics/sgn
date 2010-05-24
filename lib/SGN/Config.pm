@@ -58,6 +58,7 @@ my $defaults =
      # relative URL and absoluate path for static site content
      static_content_url       => '/static_content',
      static_content_path      => '/data/prod/public/sgn_static_content',
+     homepage_files_dir       => '/data/prod/public/sgn_static_content/homepage',
 
      # relative URL and relative path for static site files
      static_site_files_url    => '/documents',
@@ -74,7 +75,6 @@ my $defaults =
      support_data_subdir      => '/support_data',
      document_root_subdir     => '/cgi-bin',
      executable_subdir        => '/cgi-bin',
-     homepage_files_dir       => '/data/prod/public/sgn_homepage',
 
      #in case of missing pages where we should go
      error_document           => '/tools/http_error_handler.pl',
