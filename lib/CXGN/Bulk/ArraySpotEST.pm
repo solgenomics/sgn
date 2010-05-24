@@ -64,26 +64,21 @@ sub process_parameters
     my $self = shift;
 
     #do some simple parameter checking
-    if (!exists($self -> {idType})) { print STDERR "NOT EXISTS!"; }
-    if ($self -> {idType} == undef) { print STDERR "UNDEF!!!!"; }
-    if ($self -> {idType} eq "") { print STDERR "EMTPY STRING!"; }
-
-    print STDERR $self->{idType}."\n";
 
     return 0 if ($self->{idType} eq "");
     return 0 if ($self->{ids_string} !~ /\w/);
 
     # @output_list defines the identity on order of all fields that can be output
-    
-    my @output_list = ( 'SGN_S', 'chipname', 'TUS', 'clone_name',
-                                    'SGN_C', 'SGN_T', 'SGN_E', 'SGN_U', 'build_nr',
-                                    'manual_annotation', 'automatic_annotation',
-                                    'evalue');
-    
-    my %links = (clone_name =>
-             "/search/est.pl?request_type=10&search=Search&request_id=",
-		   SGN_U  => "/search/unigene.pl?unigene_id=",
-		   );
+
+    my @output_list = qw/ SGN_S chipname TUS clone_name
+                          SGN_C SGN_T SGN_E SGN_U build_nr
+                          manual_annotation automatic_annotation
+                          evalue /;
+
+    my %links = (
+                    clone_name => "/search/est.pl?request_type=10&search=Search&request_id=",
+                    SGN_U      => "/search/unigene.pl?unigene_id=",
+    );
 
     $self->{links} = \%links;
     my @output_fields = ();
