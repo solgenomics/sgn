@@ -27,7 +27,7 @@ my $image = SGN::Image->new($dbh, $object_id);
 
 <&| /page/info_section.mas, title=>"Image data" &>
 
-<& /page/form.mas, object_type=>'image', object_id=>"$object_id", form_name=> 'image_form', server_side_script => '/image/image_ajax_form.pl', form_div_name=>'image_info_div', js_object_name=> 'image_form', page_url => '/image/index.pl', alternate_new_button => '' &>
+<& /page/form.mas, object_type=>'image', object_id=>"$object_id", form_name=> 'image_form', server_side_script => '/image/ajax/image_ajax_form.pl', form_div_name=>'image_info_div', js_object_name=> 'image_form', page_url => '/image/index.pl', alternate_new_button => '' &>
 
 </&>
 
