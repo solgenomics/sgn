@@ -1,0 +1,89 @@
+
+
+<%doc>
+
+=head1 NAME
+
+/page/form.mas - a component for displaying static and editable forms for user input
+
+=head1 DESCRIPTION
+
+The form component is based on an ajax implementation and requires some backend scripts to be implemented for a given form.
+
+Parameters:
+
+=over 5
+
+=item object_type
+
+The type of object the form is associated with - for example, 'locus' for a locus page, or 'image' for an image page, etc.
+
+=item object_id
+
+The ID of the object to be displayed
+
+=item form_name
+
+The name of the form. Should be unique for the entire page.
+
+=item server_side_script
+
+The url of the server side script that handles the ajax requests
+
+=item form_div_name
+
+The name of the div to be used for displaying the forms.
+
+=item js_object_name
+
+The javascript variable name to be used in the form.
+
+=item page_url
+
+The semi-absolute url of the page that displays the form.
+
+=item alternate_new_button
+
+An alternate link for the 'new' button of the form.
+
+
+=back
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>, based on Perl code by Naama Menda.
+
+=cut 
+
+</%doc>
+
+<%args>
+$object_type 
+$object_id => undef
+$form_name
+$server_side_script
+$form_div_name
+$js_object_name
+$page_url
+$alternate_new_button => undef
+</%args>
+
+<& /util/import_javascript.mas, classes => ["CXGN.Page.Form.JSFormPage", "MochiKit.Logging"] &>
+
+
+
+<table><tr><td><div id="<% $form_div_name %>_buttons" >[loading edit links...]</div>
+</td></tr></table>
+<table><tr><td><div id="<% $form_div_name %>" >[loading...]</div>
+</td></tr></table>
+<script language="javascript" type="text/javascript">
+
+  var <% $js_object_name %> = new CXGN.Page.Form.JSFormPage( '<% $object_id %>' , '<% $object_type %>', '<% $server_side_script %>', '<% $form_div_name %>', '<% $js_object_name %>','<% $page_url %>');
+% if (defined($alternate_new_button)) { 
+     <% $js_object_name %>.setNewButton('<% $alternate_new_button %>');
+% }
+  <% $js_object_name %>.render();
+  
+</script>  
+
+

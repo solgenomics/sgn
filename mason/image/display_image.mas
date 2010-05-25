@@ -1,0 +1,135 @@
+
+
+<%doc>
+
+
+</%doc>
+
+
+
+<%args>
+$image => undef
+$person_id => undef
+$size => 'large'
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'CXGN.Image', 'Prototype' ] &>
+
+
+<div id="image_size_toolbar">
+</div>
+<br />
+<div id="image_div">
+</div>
+
+<script language="javascript">
+
+
+  function renderContent(image_id, size) { 
+     showTabsMenu(image_id, size);
+  //alert('Im there');
+     getImage(image_id, size);
+  
+  }
+
+  function getImage(image_id, size) { 
+
+     var image = new CXGN.Image;
+  
+     image.set_image_id(image_id);
+     image.image_html('image_div', size);
+  }
+
+  function showTabsMenu(image_id, size) { 
+//          alert('size = '+size);
+    var html = "<center>";
+    var mydiv = document.getElementById('image_size_toolbar');
+    var tabList = new Array('thumbnail', 'small', 'medium', 'large', 'original');
+	  
+    for (var i=0; i<tabList.length; i++ ) { 
+				 item=tabList[i];
+  //alert('I = '+i);
+      if (size == item) { 
+
+        html = html + item + " ";
+      }
+      else { 
+        html = html + '<a href=\"javascript:renderContent('+image_id+', \''+item+'\'); ">'+item+'</a>'+ ' ';
+      }
+    }
+    html = html + "</center>";
+    mydiv.innerHTML = html;
+
+  }
+  
+    
+
+  
+</script>
+
+<%perl>
+
+#use JSON;
+use SGN::Image;
+use CXGN::Phenome::Individual;
+use CXGN::Page::FormattingHelpers qw | modesel |;
+
+my $image_full_size_url = $image->get_image_url("large");
+my $object_id = $image->get_image_id();
+
+if ($size!~/thumbnail|small|medium|large|original/ ) { $size="medium"; }
+
+#my @tabs = qw | thumbnail small medium large original |;
+
+# my %tab_html = ();
+# my @tab_defs = ();
+# my $json_tabs = "";
+
+# foreach my $hilite_tab (@tabs) { 
+
+#   my $selected = undef;  
+
+#   foreach my $tab (0..@tabs-1) { 
+#     if ($hilite_tab eq $tab) { 
+      
+#       $selected = $tab;
+#     }
+#     push @tab_defs, [ "javascript:render($object_id, \'$tabs[$tab]\'); ", $tabs[$tab] ];
+    
+#   }
+#   $tab_html{$hilite_tab} = modesel([ @tab_defs ], $selected);
+
+#  $json_tabs = to_json( [ %tab_html ] );
+  
+# }
+
+# #foreach my $t (keys %tab_html) { 
+# #  print $tab_html{$t}."<br />";}
+
+
+</%perl>
+
+<br />
+
+<script language="javascript">
+//  alert('im here');
+  renderContent(<% $object_id %>, '<% $size %>' ); 
+</script>
+
+<!-- <br /><a href="<% $image_full_size_url %>"> -->
+<!-- <center><% $image->get_img_src_tag($size) %></center> -->
+<!-- </a><br /><br /> -->
+
+<center><table><tr><td class="boxbgcolor5"><b>Note:</b> The above image may be subject to copyright. Please contact the submitter about permissions to use the image.</td></tr></table></center><br />
+
+% my $tag_count = scalar($image->get_tags());
+<br><b>Associated tags</b> [<a href="/tag/index.pl?image_id=$object_id&amp;action=new">add/remove</a>]: <% $tag_count %>
+
+% foreach my $tag ($image->get_tags()) { 
+%    print $tag->get_name()."  ";
+% }
+
+<br /><br /><b>Associated objects</b>: <br />
+
+% print $image->get_associated_object_links();
+
