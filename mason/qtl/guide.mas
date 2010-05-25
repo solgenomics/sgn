@@ -1,0 +1,18 @@
+<%doc>
+
+=head1 NAME 
+guide.mas - a mason component for qtl/guide.pl
+ 
+=AUTHOR
+Isaak Y Tecle (iyt2@cornell.edu)
+=cut
+
+</%doc>
+
+<%args>
+
+$redir
+
+</%args>
+
+<% $redir %>
