@@ -317,9 +317,6 @@ sub store {
 	$json_hash{html} = $self->get_form()->as_table_string();
 	$self->set_json_hash(%json_hash);
     }
-
-    
-    $self->print_json();
 }
 
 
