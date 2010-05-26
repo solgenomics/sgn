@@ -179,33 +179,38 @@ sub org_pop_form {
 	$cross_options .= qq |<option value="$key">$cross_types{$key} |;	     
     }
 
+
+    my $parent_m = tooltipped_text('Male parent', 'format eg. Solanum lycopersicum cv moneymaker'); 
+                                     
+    my $parent_f = tooltipped_text('Female parent', 'format eg. Solanum lycopersicum cv micro tom');
+
     my $pop_form = qq^  
     <form action="qtl_load.pl" method="POST" enctype="MULTIPART/FORM-DATA">        
      $pop_sec
      <table>
      <tr>
-	 <td>Cross type$required:</td>
+	 <td>Cross type$required</td>
 	 <td> <select name="pop_type">
 	          $cross_options
              </select>
          </td>
      </tr>
      <tr>
-	<td>Population name$required:</td>
-	<td><input type="text" name="pop_name" size=43></td>    
+	<td>Population name$required</td>
+	<td><input type="text" name="pop_name" size=42></td>    
      </tr>
      <tr>
-         <td>Population description$required:</td>
+         <td>Population description$required</td>
          <td><textarea name="pop_desc" rows = 5 cols=44></textarea></td>
      </tr>  
      <tr>
-	<td>Female parent$required:</td>
+	<td>$parent_f$required</td>
 	<td><input type="text" name="pop_female_parent" size=24></td>
-	<td>Male parent$required:</td> 
+	<td>$parent_m$required</td> 
 	<td><input type="text" name="pop_male_parent" size=24></td> 
      </tr>
      <tr>
-	<td>Recurrent parent:</td>
+	<td>Recurrent parent</td>
 	<td><input type="text" name="pop_recurrent_parent" size=24></td>
 	<td>Donor parent</td>
 	<td><input type="text" name="pop_donor_parent" size=24></td> 	 	 
@@ -333,7 +338,7 @@ sub stat_form {
     my $self = shift;
     my $pop_id = shift;
     my $guide = $self->guideline();
-    my $no_draws = tooltipped_text('No. of draws', 'required only if the 
+    my $no_draws = tooltipped_text('No. of imputations', 'required only if the 
                                     Simulate method is selected for the 
                                     calculation of QTL genotype probability method and Multiple Imputation');
     my $permu_level = tooltipped_text('Significance level of permutation test', 
@@ -341,9 +346,9 @@ sub stat_form {
                                       (LOD threshold) is run');
     my $genome_scan = tooltipped_text('Genome scan size (cM):', 'not required for Marker Regression'
                                       );
-     my $qtl_prob = tooltipped_text('QTL genotype probablity method:', 'not required for Marker Regression' 
+    my $qtl_prob = tooltipped_text('QTL genotype probablity method:', 'not required for Marker Regression' 
                                       );
-
+    
     my $stat_sec =CXGN::Page::FormattingHelpers::info_section_html(
                                                                   title   => 'Statistical Parameters',
                                                                   subtitle => $guide,
