@@ -2,6 +2,35 @@
 
 <%doc>
 
+=head1 NAME
+
+/image/display_image.mas - a mason component to display an image, initially written for the image detail page
+
+=head DESCRIPTION
+
+parameters:
+
+=over 5
+
+=item $image
+
+a CXGN::Image object for the image to be displayed.
+
+=item $person_id
+
+the user who is currently logged in.
+
+=item $size
+
+The size of the image to display initially
+
+=back
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>
+
+=cut
 
 </%doc>
 
