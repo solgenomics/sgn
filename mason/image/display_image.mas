@@ -6,7 +6,7 @@
 
 /image/display_image.mas - a mason component to display an image, initially written for the image detail page
 
-=head DESCRIPTION
+=head1 DESCRIPTION
 
 parameters:
 
