@@ -16,19 +16,18 @@ Lukas Mueller <lam87@cornell.edu>. Based on Perl code by many at SGN.
 
 </%doc>
 
-<& '/tomato_genome/announcements/prerelease_20100104.mas' &>
-
-<p> The International Tomato Genome Sequencing Project aims to
+<!-- p> The International Tomato Genome Sequencing Project aims to
 sequence the gene-rich euchromatic portions of the twelve tomato
 chromosomes.  An international consortium of sequencing centers is
 performing most of the genomic sequencing.  Each chromosome is
 assigned to a sequencing center.  The genome is split into manageable
 chunks known as BACs (Bacterial Artificial Chromosomes), which are
-sequenced separately, then assembled together.
+sequenced separately, then assembled together. 
 
 <a style="padding-left: 1em" href="/about/tomato_project_overview.pl">more...</a>
-</p>
+</p -->
 
+<h2>BAC by BAC sequencing statistics</h2>
 
 <%perl>
 
