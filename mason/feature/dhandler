@@ -10,7 +10,9 @@
 
 <& /page/page_title.mas, title => 'Feature Viewer: '. $feature->id &>
 
-<& /util/import_javascript.mas, classes => 'Text.Markup' &>
+<& /util/import_javascript.mas,
+    classes => [qw(Text.Markup CXGN.Effects CXGN.Phenome.Locus MochiKit.DOM) ]
+&>
 <%perl>
     #my $f = Feature->new;
     #print "Residue: $residues\n";
