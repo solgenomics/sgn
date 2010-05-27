@@ -240,8 +240,3 @@ if (defined $id) {
 </%perl>
 
 <% $protein_html_content %>
-
-<& 
-   /util/import_javascript.mas, 
-   classes => 'CXGN.Effects' 
-&>

@@ -102,7 +102,3 @@ if (defined $id) {
 
 <% $loci_content %>
 
-<& 
-   /util/import_javascript.mas, 
-   classes => 'CXGN.Effects' 
-&>

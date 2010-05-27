@@ -294,8 +294,3 @@ my $expression_content = info_section_html( title      => "Expression Data (" . 
 </%perl>
 
 <% $expression_content %>
-
-<& 
-   /util/import_javascript.mas, 
-   classes => 'CXGN.Effects' 
-&>

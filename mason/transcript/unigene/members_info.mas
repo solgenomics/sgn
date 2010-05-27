@@ -84,7 +84,3 @@ if (defined $id) {
 
 <% $member_content %>
 
-<& 
-   /util/import_javascript.mas, 
-   classes => 'CXGN.Effects' 
-&>
