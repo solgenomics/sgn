@@ -1,6 +1,8 @@
 <%args>
     $feature
     $blast_url => undef
+    $children  => undef
+    $parents   => undef
 </%args>
 
 <%init>
@@ -34,16 +36,21 @@ Feature Type: <% $feature->type->name %><br/>
 Analysis: <% $feature->is_analysis ? 'Yes' : 'No' %><br/>
 Obsolete: <% $feature->is_obsolete ? 'Yes' : 'No' %><br/>
 Accession Time: <% $feature->timeaccessioned %><br/>
-<a href="
 <% defined $dbxref ?  '<a href="' . $dbxref->db->urlprefix .  $dbxref->db->url .  $dbxref->dbxref_id . '">dbxref</a>' : '' %>
-">
 </a><br/>
+% if (@$children) {
+1st Child Feature: <% $children->[0]->type->name %>
+% }
+% if (@$parents) {
+1st Parent Feature: <% $parents->[0]->type->name %>
+% }
 
 </&>
 
 <&| /page/info_section.mas,
     title       => 'Organism',
     collapsible => 1,
+    collapsed   => 1,
 &>
    <% $species%> (<%ucfirst($organism->common_name) %>)<p/>
    Comment: <% $organism->comment %>

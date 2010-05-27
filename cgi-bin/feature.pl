@@ -23,12 +23,16 @@ if ( defined $feature_name ) {
     $c->throw( message => "feature $feature_name not found") if $count < 1;
 
     my $feature   = $matching_features->next;
+    my @children  = $feature->child_features;
+    my @parents   = $feature->parent_features;
     my $type_name = $feature->type->name;
 
     $c->forward_to_mason_view(
         "/feature/$type_name.mas",
         type    => $type_name,
         feature => $feature,
+        children=> \@children,
+        parents => \@parents,
     );
 } else {
     $c->forward_to_mason_view(
