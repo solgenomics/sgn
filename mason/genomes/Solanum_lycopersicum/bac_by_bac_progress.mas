@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-/tomato_genome/bac_by_bac_progress.mas - a component that displays information about the bac-by-bac progress
+/genomes/Solanum_lycopersicum/bac_by_bac_progress.mas - a component that displays information about the bac-by-bac progress
 
 =head1 DESCRIPTION
 
@@ -238,7 +238,7 @@ print info_section_html(title => "Tomato Sequencing Data on SGN", contents => <<
 <li><a href="/tomato/genome_data.pl">Browse Tomato Genome Data</a></li>
 <li><a href="/sequencing/tpf.pl">View chromosome tiling path (TPF) files</a></li>
 <li><a href="/sequencing/agp.pl">View chromosome assembly (AGP) files</a></li>
-<li><a href="ftp://ftp.sgn.cornell.edu/tomato_genome/">Download tomato genomic data (FTP)</a></li>
+<li><a href="ftp://ftp.sgn.cornell.edu/genomes/Solanum_lycopersicum/">Download tomato genomic data (FTP)</a></li>
 <li><a href="http://docs.google.com/View?docid=dggs4r6k_1dd5p56">Tomato Sequencing and Bioinformatics Guidelines</a> (Google doc)</li> 
 </ul>
 DATA_SECTION
@@ -258,7 +258,7 @@ print info_section_html(title => 'Tomato Sequencing Tools on the Web', contents 
 </ul>
 OTHER_TOOLS_SECTION
 
-    my $related_publications = qq { See the <a href="tomato_genome_publications.pl">tomato genome publications</a> page. };
+    my $related_publications = qq { See the <a href="/genomes/Solanum_lycopersicum/tomato_genome_publications.pl">tomato genome publications</a> page. };
 
 print info_section_html(title => 'Related Publications', contents => $related_publications);
 

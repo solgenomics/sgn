@@ -35,7 +35,7 @@ January 25, 2010
 
 <h1>Download</h1>
 <div class="boxbgcolor5">
-<a href="ftp://ftp.solgenomics.net/tomato_genome/wgs/assembly/">ftp://ftp.solgenomics.net/tomato_genome/wgs/assembly/</a>
+<a href="ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/wgs/assembly/">ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/wgs/assembly/</a>
 </div>
 
 
@@ -60,7 +60,7 @@ o Sanger SBM shotgun (Kazusa): <i>ca.</i> <b>4x</b><br />
 <br />
 <div class="boxbgcolor5">
 <center>We are grateful to the funding agencies in the following countries for their support: <br /><br /></center>
-<& /tomato_genome/flags.mas &>
+<& /genomes/Solanum_lycopersicum/flags.mas &>
 <br />
 <center>
 and <br /><br />
