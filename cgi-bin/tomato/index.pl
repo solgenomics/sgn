@@ -1,9 +1,7 @@
 
 use strict;
 
-use CXGN::MasonFactory;
+require CGI;
 
-my $m = CXGN::MasonFactory->new();
-
-$m->exec('/tomato_genome/release.mas');
+CGI->new->redirect( -status => 301, -uri => '/genomes/Solanum_lycopersicum.pl');
 
