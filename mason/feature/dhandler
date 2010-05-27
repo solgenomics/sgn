@@ -8,6 +8,7 @@
 <%init>
     use aliased 'SGN::View::Feature';
     use Bio::Seq;
+    use Data::Dumper;
 </%init>
 
 <& /page/page_title.mas, title => 'Feature Viewer: '. $feature->id &>
@@ -24,9 +25,12 @@
         -alphabet => 'dna',
     );
     my $organism = $feature->organism;
-    my $species = $organism->species;
+    my $species  = $organism->species;
     $species    =~ s!(\S+) !<i>$1</i> !;
     my $dbxref = $feature->dbxref;
+
+    my @cvs = $feature->feature_cvterms;
+    die Dumper [ @cvs ];
 </%perl>
 
 <&| /page/info_section.mas,
