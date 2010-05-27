@@ -1,0 +1,28 @@
+
+
+<h2>Whole genome shotgun builds</h2>
+
+<%perl>
+
+use CXGN::Page::FormattingHelpers qw | columnar_table_html |;
+
+my $headings = [  "Release", "Date", "Description", "Annotation", "Download" ];
+
+my $data = [ [ "1.00", "Dec&nbsp;2009", "initial build, based on the Newbler assembler and containing only 454 sequencing data", "<a href=\"/gbrowse\">Browse</a>", "<a href=\"ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/wgs/assembly/build_1.00/S_lycopersicum_scaffolds.1.00.fa.gz\">scaffolds</a><br /><a href=\"ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/annotation/ITAG1_release/ITAG1_proteins.fasta\">proteins</a><br /><a href=\"ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/annotation/ITAG1_release/ITAG1_cds.fasta\">cds</a>" ],
+
+	     [ "1.03", "Jan&nbsp;2010", "like 1.00, but with additional 454 runs and improved contamination screen", "No", "<a href=\"ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/wgs/assembly/build_1.03/S_lycopersicum_scaffolds.1.03.fa.gz\">scaffolds</a>" ],
+	     [ "cabog1.00", "Mar&nbsp;2010", "All 454 data, bac end and fosmid end data, assembled using the cabog assembler", "No", "<a href=\"ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/wgs/assembly/cabog_1.00/S_lycopersicum_scaffolds.cabog1.00.fa.gz\">scaffolds</a>" ],
+	     [ "1.50", "Apr&nbsp;2010", "Includes all 454 data, bac ends, fosmis ends, polishing with Solexa and SOLiD data", "No", "<a href=\"ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/wgs/assembly/build_1.50/S_lycopersicum_scaffolds.1.50.fa.gz\">scaffolds</a>" ],
+	     [ "2.00", "TBA", "", "", "" ],
+	   ];
+
+
+print columnar_table_html( headings=> $headings, data=>$data );
+  
+
+
+</%perl>
+
+<br /><br />
+
+
