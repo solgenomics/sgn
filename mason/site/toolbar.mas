@@ -60,10 +60,10 @@
     <div style="position: relative; text-align: left">
     <table cellspacing="0" cellpadding="0" id="sequencing" class="toolbar_popmenu">
        <tr><td class="toolbar_item_title" >Projects</td></tr>
-       <tr><td class="toolbar_item"><a class="toolbar_item" href="/genomes/Solanum_lycopersicum.pl">International Tomato Sequencing Project</a></td></tr>
-       <tr><td class="toolbar_item"><a class="toolbar_item" href="/genomes/Solanum_pimpinellifolium.pl"><i>Solanum pimpinellifolium</i> Project (CSHL)</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/genomes/Solanum_lycopersicum/">International Tomato Sequencing Project</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/genomes/Solanum_pimpinellifolium/"><i>Solanum pimpinellifolium</i> Project (CSHL)</a></td></tr>
        <tr><td class="toolbar_item_title" >Browse</td></tr>
-<tr><td class="toolbar_item"><a class="toolbar_item" href="/tomato/genome_data.pl">Genome Browser</a></td></tr>
+<tr><td class="toolbar_item"><a class="toolbar_item" href="/genomes/Solanum_lycopersicum/genome_data.pl">Genome Browser</a></td></tr>
        <tr><td class="toolbar_item_title" >More information</td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/solanaceae-project/index.pl">Solanaceae project (SOL)</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/about/us_tomato_sequencing.pl">U.S. tomato sequencing project</a></td></tr>
