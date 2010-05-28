@@ -27,6 +27,7 @@ Does: L<SGN::SiteFeatures>, L<SGN::Site>
 
 package SGN::Context;
 use MooseX::Singleton;
+use warnings FATAL => 'all';
 
 use Carp;
 use Cwd ();
@@ -398,12 +399,15 @@ has '_mason_interp' => (
        my $self = shift;
        my %params = @_;
 
-       my $global_mason_root = $self->path_to( $self->get_conf('global_mason_lib') );
        my $site_mason_root  = $self->path_to( 'mason' );
 
-       $params{comp_root} = [ [ "site", $site_mason_root     ],
-                              ( $global_mason_root ? [ "global", $global_mason_root ] : () ),
-                             ];
+       $params{comp_root} = [ [ "site", $site_mason_root ] ];
+
+       # add a global mason root if defined
+       if( my $global_mason_root = $self->get_conf('global_mason_lib') ) {
+           push @{$params{comp_root}}, [ "global", $global_mason_root ];
+       }
+
 
        my $data_dir = $self->path_to( $self->tempfiles_subdir('mason_'.getpwuid($>)) );
 
