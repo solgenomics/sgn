@@ -75,6 +75,8 @@ $size => 'large'
     var mydiv = document.getElementById('image_size_toolbar');
     var tabList = new Array('thumbnail', 'small', 'medium', 'large', 'original');
 	  
+    var item = '';
+
     for (var i=0; i<tabList.length; i++ ) { 
 				 item=tabList[i];
   //alert('I = '+i);
