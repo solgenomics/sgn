@@ -402,7 +402,7 @@ has '_mason_interp' => (
        my $site_mason_root  = $self->path_to( 'mason' );
 
        $params{comp_root} = [ [ "site", $site_mason_root     ],
-                              [ "global", $global_mason_root ],
+                              ( $global_mason_root ? [ "global", $global_mason_root ] : () ),
                              ];
 
        my $data_dir = $self->path_to( $self->tempfiles_subdir('mason_'.getpwuid($>)) );
