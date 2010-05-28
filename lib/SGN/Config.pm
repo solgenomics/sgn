@@ -88,10 +88,10 @@ my $defaults =
      dt_livesite              => 'http://www.sgn.cornell.edu/',
 
      #path to jslib relative to site basepath
-     global_js_lib            => '../cxgn-jslib',
+     global_js_lib            => 'js',
 
      #path to mason global lib relative to site basepath
-     global_mason_lib         => '../cxgn-mason',
+     global_mason_lib         => undef,
 
      # default GBrowse2 configuration, for a Debian gbrowse2 installation
      feature => {
