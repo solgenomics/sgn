@@ -7,21 +7,43 @@ my $q = new CGI;
 my %args = (
     schema => CXGN::DB::DBICFactory->open_schema('Bio::Chado::Schema')
 );
+my $bcs = $args{schema};
 
 # Feature types
 # DNA, snRNA, scRNA, rRNA, genomic_clone, mRNA, assembly, repeat_family, protein, RNA, BAC_clone, EST
 
-my $feature_name = $q->param('feature');
+my ($feature_name,$feature_id) = ($q->param('name'), $q->param('id'));
+if ( defined $feature_id ) {
+    my $matching_features = $bcs->resultset('Sequence::Feature')
+                                ->search({ feature_id => $feature_id });
+    validate($matching_features, feature_id => $feature_id );
+    delegate_component($matching_features);
 
-if ( defined $feature_name ) {
-    my $bcs = $args{schema};
+} elsif ( defined $feature_name ) {
     my $matching_features = $bcs->resultset('Sequence::Feature')
                                 ->search({ name => $feature_name });
 
-    my $count = $matching_features->count;
-    $c->throw( message => "too many features for $feature_name") if $count > 1;
-    $c->throw( message => "feature $feature_name not found") if $count < 1;
+    validate($matching_features,feature_name => $feature_name);
+    delegate_component($matching_features);
 
+} else {
+    $c->forward_to_mason_view(
+        "/feature/main.mas",
+        %args
+    );
+}
+
+sub validate
+{
+    my ($matching_features,$key, $val) = @_;
+    my $count = $matching_features->count;
+#   EVIL HACK: We need a disambiguation process before merging
+#   $c->throw( message => "too many features where $key='$val'") if $count > 1;
+    $c->throw( message => "feature with attribute $key='$val' not found") if $count < 1;
+}
+sub delegate_component
+{
+    my ($matching_features) = @_;
     my $feature   = $matching_features->next;
     my @children  = $feature->child_features;
     my @parents   = $feature->parent_features;
@@ -34,9 +56,5 @@ if ( defined $feature_name ) {
         children=> \@children,
         parents => \@parents,
     );
-} else {
-    $c->forward_to_mason_view(
-        "/feature/main.mas",
-        %args
-    );
+
 }

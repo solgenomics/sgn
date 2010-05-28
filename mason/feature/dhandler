@@ -29,8 +29,8 @@
     $species    =~ s!(\S+) !<i>$1</i> !;
     my $dbxref = $feature->dbxref;
 
-    my @cvs = $feature->feature_cvterms;
-    die Dumper [ @cvs ];
+    #my @cvs = $feature->feature_cvterms;
+    #die Dumper [ @cvs ];
 </%perl>
 
 <&| /page/info_section.mas,
@@ -42,11 +42,11 @@ Obsolete: <% $feature->is_obsolete ? 'Yes' : 'No' %><br/>
 Accession Time: <% $feature->timeaccessioned %><br/>
 <% defined $dbxref ?  '<a href="' . $dbxref->db->urlprefix .  $dbxref->db->url .  $dbxref->dbxref_id . '">dbxref</a>' : '' %>
 </a><br/>
-% if (@$children) {
-1st Child Feature: <% $children->[0]->type->name %>
+% for my $child (@$children) {
+Child Feature: <% $child->srcfeature->type->name %><br>
 % }
-% if (@$parents) {
-1st Parent Feature: <% $parents->[0]->type->name %>
+% for my $parent (@$parents) {
+Parent Feature: <% $parents->srcfeature->type->name %><br>
 % }
 
 </&>
