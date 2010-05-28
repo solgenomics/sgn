@@ -26,6 +26,7 @@ use CXGN::Feed;
 use CXGN::Tools::Organism;
 use JSAN::ServerSide;
 use HTML::Entities;
+use Number::Format;
 
 use base qw / CXGN::Page::Form::SimpleFormPage /;
 
@@ -323,7 +324,7 @@ sub display_page {
     my @images = $individual->get_image_ids();  #array of associated image objects
     my $image_count = 0;
     
-    $image_html .=qq|<table><tr valign="top">|;
+    $image_html .=qq|<table><tr valign="top">| if @images;
     
     foreach my $image_id (@images) {
 	$image_count ++;
@@ -337,15 +338,17 @@ sub display_page {
 	my $image_page= "/image/index.pl?image_id=$image_id";
 	$image_html .=qq|<td><a href="$medium_image" title="<a href=$image_page>Go to image page </a>" class="thickbox" rel="gallery-images"><img src="$small_image" alt="" /></a></td> |;
     }
-    $image_html .= "</tr></table>";
+    $image_html .= "</tr></table>" if @images;
     #link for adding new images
+    my $new_image;
     if ($individual_name) 
-    { $image_html .= 
-	  qq|<br /><a href="../image/add_image.pl?type_id=$individual_id&amp;action=new&amp;type=individual&amp;refering_page=$page">[Add new image]</a>|; 
+    { $new_image = 
+	  qq|<a href="../image/add_image.pl?type_id=$individual_id&amp;action=new&amp;type=individual&amp;refering_page=$page">[Add new image]</a>|; 
     } 
-
+    
     
     print info_section_html(title   => 'Images',
+			    subtitle => $new_image,
 			    contents => $image_html,
 			    );
     
@@ -356,7 +359,7 @@ sub display_page {
     my @phenotypes= $individual->get_phenotypes();
     my $population_obj = $individual->get_population();          
     my @phenotype;
-    my ($data_view, $term_obj, $term_name, $term_id, $min, $max, $ave, $value);
+    my ($term_obj, $term_name, $term_id, $min, $max, $ave, $value);
     
     foreach my $p (@phenotypes) 
     {
@@ -370,8 +373,7 @@ sub display_page {
 	    $value = $p->get_value();
 	    if (!defined($value)) {$value= 'N/A';}
 	    elsif ($value == 0) {$value = '0.0';}
-
-
+	    
 	} else 
 	{
 	    $term_obj  = CXGN::Phenome::UserTrait->new($self->get_dbh(), $p->get_observable_id());
@@ -380,7 +382,13 @@ sub display_page {
 	    ($min, $max, $ave) = $population_obj->get_pop_data_summary($term_id);
 	    $value = $p->get_value();
 	}    
-
+	# round 3 digit precision
+	my $x = new Number::Format;
+	$value = $x->round($value,3);
+	$min = $x->round($min,3);
+	$max = $x->round($max,3);
+	$ave = $x->round($ave,3);
+	
 	$term_obj  = CXGN::Chado::Cvterm::get_cvterm_by_name( $self->get_dbh(), $term_name);
 	my $cvterm_id = $term_obj->get_cvterm_id();
 	
@@ -411,9 +419,9 @@ sub display_page {
 	    }
 	}
     }
-  
+    my $phenotype_data;
     if (@phenotype) {
-	my $phenotype_data .= columnar_table_html(
+	$phenotype_data .= columnar_table_html(
 	                                        headings  => 
 	                                            [
 						    'Trait',
@@ -429,15 +437,17 @@ sub display_page {
 						  __align =>'l',
 					          );
 	    
-	$data_view = html_optional_show("phenotype",
-					'View/hide phenotype data summary',
-					qq|$phenotype_data|,
-					1, #<  show data by default
-	    );  
+	#$data_view = html_optional_show("phenotype",
+	#				'View/hide phenotype data summary',
+	#				qq|$phenotype_data|,
+	#				1, #<  show data by default
+	#    );  
     }
     
     print info_section_html(title   => 'Phenotype data',
-			    contents => $data_view,
+			    subtitle => '',
+			    contents => $phenotype_data,
+			    collapsible => 1,
 			    );
     
  ######## map:
