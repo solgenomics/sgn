@@ -1,6 +1,7 @@
 use strict;
 use CGI qw();
 use CXGN::DB::DBICFactory;
+use Data::Dumper;
 
 our $c;
 my $q = new CGI;
@@ -12,14 +13,17 @@ my $bcs = $args{schema};
 # Feature types
 # DNA, snRNA, scRNA, rRNA, genomic_clone, mRNA, assembly, repeat_family, protein, RNA, BAC_clone, EST
 
-my ($feature_name,$feature_id) = ($q->param('name'), $q->param('id'));
-if ( defined $feature_id ) {
+my $params = $q->Vars;
+
+if ( $params->{id} ) {
+    my $feature_id = $params->{id};
     my $matching_features = $bcs->resultset('Sequence::Feature')
                                 ->search({ feature_id => $feature_id });
     validate($matching_features, feature_id => $feature_id );
     delegate_component($matching_features);
 
-} elsif ( defined $feature_name ) {
+} elsif ( $params->{name} ) {
+    my $feature_name = $params->{name};
     my $matching_features = $bcs->resultset('Sequence::Feature')
                                 ->search({ name => $feature_name });
 
@@ -39,7 +43,7 @@ sub validate
     my $count = $matching_features->count;
 #   EVIL HACK: We need a disambiguation process before merging
 #   $c->throw( message => "too many features where $key='$val'") if $count > 1;
-    $c->throw( message => "feature with attribute $key='$val' not found") if $count < 1;
+    $c->throw( message => "feature with $key='$val' not found") if $count < 1;
 }
 sub delegate_component
 {
