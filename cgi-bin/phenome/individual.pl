@@ -383,7 +383,7 @@ sub display_page {
 	    $value = $p->get_value();
 	}    
 	# round 3 digit precision
-	my $x = new Number::Format;
+	my $x = Number::Format->new();
 	$value = $x->round($value,3);
 	$min = $x->round($min,3);
 	$max = $x->round($max,3);
