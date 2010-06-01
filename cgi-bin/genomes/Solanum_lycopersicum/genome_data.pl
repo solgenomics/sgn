@@ -17,7 +17,7 @@ use CXGN::Page::FormattingHelpers qw/columnar_table_html modesel simple_selectbo
 use CXGN::Tools::Identifiers qw/identifier_url identifier_namespace link_identifier/;
 use CXGN::Tools::List qw/max/;
 
-my $page = CXGN::Page->new("Tomato Genome Data","rob");
+my $page = CXGN::Page->new("Tomato genome data","rob");
 my ($chrnum) = $page->get_encoded_arguments('chr');
 $chrnum ||= 1;
 $page->header("Tomato Genome Data","Tomato Genome Data");
@@ -145,7 +145,7 @@ sub itag_releases_html {
                  }
                  CXGN::ITAG::Release->find
              )
-           || '<span class="ghosted">temporarily unavailable</span>'
+           || '<span class="ghosted">annotation data temporarily unavailable</span>'
 }
 
 sub itag_release_ftp_link {

@@ -7,7 +7,7 @@
             [ "<b>1.00</b>",
               "Dec&nbsp;2009",
               "initial build, based on the Newbler assembler and containing only 454 sequencing data",
-              "<a href=\"/gbrowse\">Browse</a>",
+              "<a href=\"/genomes/Solanum_lycopersicum/genome_data.pl\">Browse</a>",
               "<a href=\"ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/wgs/assembly/build_1.00/S_lycopersicum_scaffolds.1.00.fa.gz\">scaffolds</a><br /><a href=\"ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/annotation/ITAG1_release/ITAG1_proteins.fasta\">proteins</a><br /><a href=\"ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/annotation/ITAG1_release/ITAG1_cds.fasta\">cds</a>"
              ],
             

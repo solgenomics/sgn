@@ -27,8 +27,6 @@ sequenced separately, then assembled together.
 <a style="padding-left: 1em" href="/about/tomato_project_overview.pl">more...</a>
 </p -->
 
-<h2>BAC by BAC sequencing statistics</h2>
-
 <%perl>
 
 use POSIX;
