@@ -27,11 +27,11 @@ $page->header("Tomato Genome Data","Tomato Genome Data");
 
 my $dbh = CXGN::DB::Connection->new();
 
-print info_section_html( title => 'Full Datasets',
-			 contents => '<a href="ftp://ftp.sgn.cornell.edu/tomato_genome">download from the Tomato Genome FTP repository</a>',
+print info_section_html( title => 'Tomato genome sequence builds',
+			 contents => $c->render_mason('/genomes/Solanum_lycopersicum/wgs_builds_table.mas'),
 		       );
 
-print info_section_html( title => 'Official Annotation',
+print info_section_html( title => 'Official annotation',
 			 subtitle => 'browse genome contigs and official annotations',
 			 contents => <<EOH
 			 <table class="indentedcontent"><tr><td>The official annotation for the tomato genome is provided by the <a href="http://www.ab.wur.nl/TomatoWiki">International Tomato Annotation Group (ITAG)</a>, a multinational consortium, funded in part by the <a href="http://www.eu-sol.net">EU-SOL project</a>.</td><td><a class="footer" href="http://www.eu-sol.net"><img src="/img/eusol_logo_small.jpg" border="0" /></a></td></tr></table>
@@ -39,7 +39,7 @@ EOH
 			 .itag_releases_html( $page )
 		       );
 
-print info_section_html( title => 'Physical Maps',
+print info_section_html( title => 'Physical maps',
 			 subtitle => 'locate clones on the genome',
 			 contents =>
 			 '<ul>'
