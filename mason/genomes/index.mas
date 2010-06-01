@@ -1,0 +1,31 @@
+
+<%doc>
+
+</%doc>
+
+<%perl>
+
+my @ls = `ls`;
+
+my @dirs = ();
+foreach my $d (@ls) { 
+  chomp($d);
+  ####print STDERR "DIR: $d\n";
+   if (-d $d) { 
+    
+      push @dirs, $d;
+   }
+}
+
+my $html = "";
+foreach my $d (@dirs) { 
+   $html .= qq | <a href="$d"><i>$d</i></a><br /> |
+}
+
+</%perl>
+
+<& /page/page_title.mas, title=>"Available Genome Projects" &>
+
+The following genome project data is available:<br /><br />
+
+<% $html %>
