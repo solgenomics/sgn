@@ -179,8 +179,3 @@ if (defined $id) {
 </%perl>
 
 <% $library_content %>
-
-<& 
-   /util/import_javascript.mas, 
-   classes => 'CXGN.Effects' 
-&>

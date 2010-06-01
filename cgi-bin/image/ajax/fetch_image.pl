@@ -1,5 +1,6 @@
 
 use strict;
+use warnings;
 
 use CGI;
 use JSON;

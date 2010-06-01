@@ -155,8 +155,3 @@ $basic_info_html .= info_section_html( title    => "Unigene Basic Information",
 </%perl>
 
 <% $basic_info_html %>
-
-<& 
-   /util/import_javascript.mas, 
-   classes => 'CXGN.Effects' 
-&>

@@ -9,3 +9,4 @@ _build
 Build
 MYMETA.yml
 *.sw?
+test.sh

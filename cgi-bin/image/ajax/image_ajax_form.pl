@@ -1,5 +1,6 @@
 
 use strict;
+use warnings;
 
 my $image_ajax_form = CXGN::ImageAjaxForm->new();
 

@@ -1,0 +1,61 @@
+
+/** 
+* @class Locus
+* Function used in locus_display.pl
+* @author Naama Menda <nm249@cornell.edu>
+*
+*/
+
+
+
+function getImage() { 
+
+    document.write("");
+
+    var NetworkBrowser = { 
+	
+	update	Image: function (name, type, level) { 
+	    
+	    if (!name && !type) { alert("No name or type supplied. How am I supposed to do anything????"); }
+	    var x = MochiKit.DOM.getElement("network_browser");
+	    new Ajax.Request("ajax_image_request.pl", {
+		parameters: { 
+		    name: name, 
+			      type: type, 
+			      level: level}, 
+				onSuccess: this.processImageResponse
+					       });
+	    
+	},
+	
+	
+	processImageResponse: function (request) { 
+	    var responseText = request.responseText;
+	    var e = MochiKit.DOM.getElement("network_browser").innerHTML=responseText;
+	    var r = responseText;
+	    //alert(responseText);
+	    // document.write();
+	}
+    }
+}
+
+function display () { 
+
+
+
+    document.write("
+</script>
+    <table><tr><td height="500" width="700">
+    
+    <div id="network_browser" >[loading...]</div>
+    
+    </td></tr></table>
+    ");
+
+    if (MochiKit.DOM.getElement("network_browser").innerHTML == "[loading...]") { 
+	document.write(MochiKit.DOM.getElement("network_browser").innerHTML);
+	document.write("Getting the image...");
+	NetworkBrowser.updateImage("$name", "$type", "$level");
+	//alert(MochiKit.DOM.getElement("network_browser").innerHTML);
+    }
+}

@@ -15,7 +15,7 @@ use CXGN::Tools::Text ;
 
 use Bio::Chado::Schema;
 
-my $page = CXGN::Page->new("SGN organism detail page", "Naama");
+my $page = CXGN::Page->new("SGN Organism detail", "Naama");
 my ($organism_id, $force) = $page->get_encoded_arguments("organism_id", "force");
     
 
@@ -44,7 +44,7 @@ my $synonym_list;
 foreach my $synonym ( @synonyms) {
     $synonym_list .= $synonym . "<br />";
 }
-my $details = info_table_html('Name'     => "$name ($taxon)",
+my $details = info_table_html('Name'     => $name.($taxon ? " ($taxon)" : ''),
 			      'Common name' => $common_name,
 			      'Description' => $description,
 			      'Synonyms'    => $synonym_list,
@@ -52,9 +52,9 @@ my $details = info_table_html('Name'     => "$name ($taxon)",
     );
 
 $page->header("SGN Organism page for $taxon $name");
-print  page_title_html("Organism: $name".($taxon ? " ($taxon)" : ''));
+print  page_title_html(($taxon ? ucfirst($taxon).": $name" : $name));
 
-print  info_section_html(title=>"Organism details", contents=>$details);
+print  info_section_html(title=> 'Basic information', contents=>$details);
 
 
 our $taxonomy=undef;

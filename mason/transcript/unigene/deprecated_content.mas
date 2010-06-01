@@ -131,8 +131,3 @@ if (defined $unigene->get_unigene_id() ) {
 </%perl>
 
 <% $deprecate_content %>
-
-<& 
-   /util/import_javascript.mas, 
-   classes => 'CXGN.Effects' 
-&>

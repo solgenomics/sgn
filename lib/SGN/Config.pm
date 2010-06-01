@@ -58,6 +58,7 @@ my $defaults =
      # relative URL and absoluate path for static site content
      static_content_url       => '/static_content',
      static_content_path      => '/data/prod/public/sgn_static_content',
+     homepage_files_dir       => '/data/prod/public/sgn_static_content/homepage',
 
      # relative URL and relative path for static site files
      static_site_files_url    => '/documents',
@@ -74,7 +75,6 @@ my $defaults =
      support_data_subdir      => '/support_data',
      document_root_subdir     => '/cgi-bin',
      executable_subdir        => '/cgi-bin',
-     homepage_files_dir       => '/data/prod/public/sgn_homepage',
 
      #in case of missing pages where we should go
      error_document           => '/tools/http_error_handler.pl',
@@ -88,10 +88,10 @@ my $defaults =
      dt_livesite              => 'http://www.sgn.cornell.edu/',
 
      #path to jslib relative to site basepath
-     global_js_lib            => '../cxgn-jslib',
+     global_js_lib            => 'js',
 
      #path to mason global lib relative to site basepath
-     global_mason_lib         => '../cxgn-mason',
+     global_mason_lib         => undef,
 
      # default GBrowse2 configuration, for a Debian gbrowse2 installation
      feature => {

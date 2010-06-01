@@ -31,13 +31,11 @@ my $tmp_dir=$c->get_conf('basepath');
 <& /page/page_title.mas, title=>"SGN data overview" &>
 
 
-<p>
+<div class="page_introduction">
 This page presents a summary of all currently available data on SGN sorted by species.
-For a view of our database schema, go <a href="/data/schemas/index.html">here</a>.
-For more details about available maps, loci, libraries, ESTs, metabolic annotation and
-phenotyped accessions, see the species of interest.
-</p>
-<b>List of species currently in the database</b> (click on the organism  name to see more details.) <br /><br />
+Click a species name for details about available its available maps, loci, libraries, ESTs, metabolic annotation and
+phenotyped accessions.
+</div>
 
 <& /util/organism_tree.mas, schema=>$schema, root=>"Solanaceae", species_hashref=>$sol, uri_dir=>$uri_dir, tmp_dir=>$tmp_dir &>
 <& /util/organism_tree.mas, schema=>$schema, root=>"Rubiaceae", species_hashref=>$rub,  uri_dir=>$uri_dir, tmp_dir=>$tmp_dir &>

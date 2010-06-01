@@ -140,3 +140,7 @@ $temp_dir
    dbh     => $dbh,
    unigene => $unigene, 
 &>
+<&
+   /util/import_javascript.mas,
+   classes => 'CXGN.Effects'
+&>

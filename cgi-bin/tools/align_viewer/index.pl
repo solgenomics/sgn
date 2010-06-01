@@ -1,4 +1,6 @@
 use strict;
+
+use SGN::Context;
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw/  page_title_html
                                        blue_section_html  /;
@@ -17,7 +19,7 @@ my ($seq_data, $id_data, $format, $title, $type,
 
 my ($intro_content, $input_content);
 
-my $vhost_conf = CXGN::VHost->new();
+my $vhost_conf = SGN::Context->new();
 our $HTML_ROOT = $vhost_conf->get_conf('basepath');
 our $DOC_PATH =  $vhost_conf->get_conf('tempfiles_subdir').'/align_viewer';
 our $PATH = $HTML_ROOT . $DOC_PATH;

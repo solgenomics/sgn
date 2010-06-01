@@ -1,0 +1,48 @@
+
+/** 
+* @class Browser
+* Functions used by System Browser
+* @author Lukas Mueller <lam87@cornell.edu>
+*
+*/
+
+
+
+	
+var NetworkBrowser = { 
+    
+    updateImage: function (name, type, level) { 
+	
+	alert("HELLO");
+	if (!name && !type) { alert("No name or type supplied. How am I supposed to do anything????"); }
+	var x = MochiKit.DOM.getElement("network_browser");
+	new Ajax.Request("ajax_image_request.pl", {
+	    parameters: { 
+		name: name, 
+			  type: type, 
+			  level: level}, 
+			    onSuccess: this.processImageResponse
+					   });
+	
+    },
+    
+    
+    processImageResponse: function (request) { 
+	var responseText = request.responseText;
+	var e = MochiKit.DOM.getElement("network_browser").innerHTML=responseText;
+	var r = responseText;
+	//alert(responseText);
+	// document.write();
+    },
+    
+    display: function(name, type, level) { 
+	
+	if (MochiKit.DOM.getElement("network_browser").innerHTML == "[loading...]") { 
+	    document.write(MochiKit.DOM.getElement("network_browser").innerHTML);
+	    document.write("Getting the image...");
+	    NetworkBrowser.updateImage(name, type, level);
+	    
+	}
+    }
+}
+
