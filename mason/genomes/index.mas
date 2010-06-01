@@ -1,6 +1,16 @@
 
 <%doc>
 
+=head1 NAME
+
+/genome/index.mas - display an index page for the available genomes
+
+=head1 AUTHOR
+
+Lukas Mueller
+
+=cut
+
 </%doc>
 
 <%perl>
