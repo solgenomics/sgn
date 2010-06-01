@@ -9,7 +9,10 @@
 <br />
 <img src="/documents/img/tomato_varieties.png" border="0" width="720" />
 
+<h2>Whole-genome shotgun builds</h2>
+
 <& /genomes/Solanum_lycopersicum/wgs_builds_table.mas &>
+<br /><br />
 
 <& /genomes/Solanum_lycopersicum/disclaimer.mas &>
 
