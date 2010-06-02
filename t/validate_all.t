@@ -35,6 +35,8 @@ BEGIN {
 	     "phenotype population detail" => "/phenome/population.pl?population_id=12", 
 	     "QTL analysis page" => "/phenome/population_indls.pl?population_id=12&cvterm_id=47515",
 	     "QTL detail page"=>"/phenome/qtl.pl?population_id=12&term_id=47515&chr=7&l_marker=SSR286&p_marker=SSR286&r_marker=CD57&lod=3.9&qtl=/documents/tempfiles/temp_images/1a1a5391641c653884fbc9d6d8be5c90.png",
+             'tomato bac tpf' => '/sequencing/agp.pl',
+             'tomato bac tpf' => '/sequencing/tpf.pl',
 	     "QTL individuals list page"=>"/phenome/indls_range_cvterm.pl?cvterm_id=47515&lower=151.762&upper=162.011&population_id=12",
 	     "qtl/traits search" => "/search/direct_search.pl?search=cvterm_name",
              "unigene search" => "/search/ug-ad2.pl?w9e3_page=0&w9e3_sequence_name=SGN-U231977&w9e3_clone_name=&w9e3_membersrange=gt&w9e3_members1=&w9e3_members2=&w9e3_annotation=&w9e3_annot_type=blast&w9e3_lenrange=gt&w9e3_len1=&w9e3_len2=&w9e3_unigene_build_id=any",
