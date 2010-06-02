@@ -19,7 +19,7 @@ sub ACTION_install {
    my $self = shift;
    $self->SUPER::ACTION_install(@_);
 
-   my @install_dirs = qw|cgi-bin conf documents mason programs support_data t features |;
+   my @install_dirs = qw|cgi-bin conf documents mason programs support_data t features js |;
 
    require File::Spec;
    my $tgt_dir = File::Spec->catdir($self->install_base,'sgn');
