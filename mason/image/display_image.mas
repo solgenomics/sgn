@@ -154,7 +154,7 @@ if ($size!~/thumbnail|small|medium|large|original/ ) { $size="medium"; }
 <center><table><tr><td class="boxbgcolor5"><b>Note:</b> The above image may be subject to copyright. Please contact the submitter about permissions to use the image.</td></tr></table></center><br />
 
 % my $tag_count = scalar($image->get_tags());
-<br><b>Associated tags</b> [<a href="/tag/index.pl?image_id=$object_id&amp;action=new">add/remove</a>]: <% $tag_count %>
+<br><b>Associated tags</b> [<a href="/tag/index.pl?image_id=<% $object_id %>&amp;action=new">add/remove</a>]: <% $tag_count %>
 
 % foreach my $tag ($image->get_tags()) { 
 %    print $tag->get_name()."  ";
