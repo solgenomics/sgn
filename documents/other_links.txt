@@ -17,5 +17,5 @@ Other Links
 
 <a href="http://tomato.nbrp.jp/indexEn.html" class="footer"><img src="documents/img/nbrp_logo.jpg" border="0" /></a><br />   
 <b>Resources in Japan</b><br />
-<a href="http://www.kazusa.or.jp/jsol/microtom/">MiBase</a> | <a href="http://www.pgb.kazusa.or.jp/kaftom/">KafTom</a> | <a href="http://tomatoma.nbrp.jp/index.jsp">TOMATOMA</a>
+<a href="http://www.pgb.kazusa.or.jp/mibase/">MiBase</a> | <a href="http://www.pgb.kazusa.or.jp/kaftom/">KafTom</a> | <a href="http://tomatoma.nbrp.jp/index.jsp">TOMATOMA</a>
 </div>
