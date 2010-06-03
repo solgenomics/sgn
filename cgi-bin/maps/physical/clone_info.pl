@@ -533,7 +533,7 @@ EOHTML
       if( $sequencing_files{tar} ) {
 	  my $tarsize = sprintf("%0.2f",(-s $sequencing_files{tar})/1_000_000);
 	  $dl_links .= <<EOHTML
-    <a href="clone_annot_download.pl?id=$clone_id&amp;annot_set=all&amp;annot_format=tar">[Download assembly]</a> ($tarsize MB)
+    <a href="clone_annot_download.pl?id=$clone_id&amp;annot_set=all&amp;annot_format=tar">[Download full submission]</a> ($tarsize MB)
 EOHTML
 
       }
