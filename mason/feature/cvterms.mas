@@ -5,5 +5,10 @@
 # of CV Terms: <% scalar @cvterms %><br/>
 % for my $term (@cvterms) {
     <% $term->cvterm->name %>
+% my @xrefs = $term->feature_cvterm_dbxrefs;
+% if (@xrefs) { ### XXX Should render all
+    <& /feature/dbxref.mas, dbxref => $xrefs[0],
+    &>
+% }
     <br/>
 % }

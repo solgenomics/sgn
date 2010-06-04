@@ -23,8 +23,6 @@
     my $organism = $feature->organism;
     my $species  = $organism->species;
     $species    =~ s!(\S+) !<i>$1</i> !;
-    my $dbxref = $feature->dbxref;
-
 </%perl>
 
 <&| /page/info_section.mas,
@@ -34,8 +32,9 @@
     Analysis: <% $feature->is_analysis ? 'Yes' : 'No' %><br/>
     Obsolete: <% $feature->is_obsolete ? 'Yes' : 'No' %><br/>
     Accession Time: <% $feature->timeaccessioned %><br/>
-    <% defined $dbxref ?  '<a href="' . $dbxref->db->urlprefix .  $dbxref->db->url .  $dbxref->dbxref_id . '">dbxref</a>' : '' %>
-    </a><br/>
+    <& /feature/dbxref.mas,
+        dbxref => $feature->dbxref,
+    &>
     <& /feature/related_features.mas,
         children  => $children,
         parents   => $parents,
