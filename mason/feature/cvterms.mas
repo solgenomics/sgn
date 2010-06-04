@@ -1,0 +1,9 @@
+<%args>
+    $feature
+</%args>
+% my @cvterms = $feature->feature_cvterms;
+# of CV Terms: <% scalar @cvterms %><br/>
+% for my $term (@cvterms) {
+    <% $term->cvterm->name %>
+    <br/>
+% }

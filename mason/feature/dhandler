@@ -25,24 +25,33 @@
     $species    =~ s!(\S+) !<i>$1</i> !;
     my $dbxref = $feature->dbxref;
 
-    #my @cvs = $feature->feature_cvterms;
-    #die Dumper [ @cvs ];
 </%perl>
 
 <&| /page/info_section.mas,
     title => 'Feature Data',
 &>
-Feature Type: <% $feature->type->name %><br/>
-Analysis: <% $feature->is_analysis ? 'Yes' : 'No' %><br/>
-Obsolete: <% $feature->is_obsolete ? 'Yes' : 'No' %><br/>
-Accession Time: <% $feature->timeaccessioned %><br/>
-<% defined $dbxref ?  '<a href="' . $dbxref->db->urlprefix .  $dbxref->db->url .  $dbxref->dbxref_id . '">dbxref</a>' : '' %>
-</a><br/>
-<& /feature/related_features.mas,
-    children  => $children,
-    parents   => $parents,
-&>
+    Feature Type: <% $feature->type->name %><br/>
+    Analysis: <% $feature->is_analysis ? 'Yes' : 'No' %><br/>
+    Obsolete: <% $feature->is_obsolete ? 'Yes' : 'No' %><br/>
+    Accession Time: <% $feature->timeaccessioned %><br/>
+    <% defined $dbxref ?  '<a href="' . $dbxref->db->urlprefix .  $dbxref->db->url .  $dbxref->dbxref_id . '">dbxref</a>' : '' %>
+    </a><br/>
+    <& /feature/related_features.mas,
+        children  => $children,
+        parents   => $parents,
+    &>
 </&>
+
+<&| /page/info_section.mas,
+        title       => 'Ontology Annotations',
+        collapsible => 1,
+        collapsed   => 1,
+&>
+    <& /feature/cvterms.mas,
+        feature   => $feature
+    &>
+</&>
+
 
 <&| /page/info_section.mas,
     title       => 'Organism',
