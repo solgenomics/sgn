@@ -31,10 +31,12 @@
     Feature Type: <% $feature->type->name %><br/>
     Analysis: <% $feature->is_analysis ? 'Yes' : 'No' %><br/>
     Obsolete: <% $feature->is_obsolete ? 'Yes' : 'No' %><br/>
+    Accession: <% $feature->accession %><br/>
     Accession Time: <% $feature->timeaccessioned %><br/>
+    Description: <% $feature->description %><br/>
     <& /feature/dbxref.mas,
         dbxref => $feature->dbxref,
-    &>
+    &><br/>
     <& /feature/related_features.mas,
         children  => $children,
         parents   => $parents,
