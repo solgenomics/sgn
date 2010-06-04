@@ -109,7 +109,7 @@ EOH
   						   ],
   				  )
     .<<EOH
-    <input type="button" style="background: url(/documents/img/refresh.png)" name="refresh" value="" onclick="this.blur(); updateStatusContents()" />
+    <input type="button" style="background: url(/documents/img/refresh.png); width: 22px; height: 21px" name="refresh" value="" onclick="this.blur(); updateStatusContents()" />
     <div id="loading_indicator">Loading... <img src="/documents/img/spinner.gif" /></div>
     </form>
   </td></tr>
