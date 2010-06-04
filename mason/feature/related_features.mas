@@ -1,0 +1,22 @@
+<%args>
+    $children => undef
+    $parents  => undef
+</%args>
+% my $c = 0;
+% for my $child (@$children) {
+% # This should be ->feature, but that returns itself => bug in BCS
+% my $f = $child->srcfeature;
+Child Feature:
+    <& /feature/link.mas, feature => $f, &>
+is a <% $f->type->name %><br>
+% last if ++$c > 10;
+% }
+% $c = 0;
+% for my $parent (@$parents) {
+% my $f = $parent->feature;
+Parent Feature:
+    <& /feature/link.mas, feature => $f, &>
+    is a <% $f->type->name %><br>
+
+% last if ++$c > 10;
+% }
