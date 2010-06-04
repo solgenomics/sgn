@@ -2,6 +2,16 @@
     $children
     $parents
 </%args>
+<%perl>
+    sub related_stats {
+       my ($features) = @_;
+       my $stats = {};
+       for my $f (@$features) {
+            $stats->{$f->feature->type->name}++;
+       }
+       return $stats;
+    }
+</%perl>
 % my $c = 0;
 % for my $child (@$children) {
 % # This should be ->feature, but that returns itself => bug in BCS
