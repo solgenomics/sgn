@@ -38,10 +38,9 @@ Obsolete: <% $feature->is_obsolete ? 'Yes' : 'No' %><br/>
 Accession Time: <% $feature->timeaccessioned %><br/>
 <% defined $dbxref ?  '<a href="' . $dbxref->db->urlprefix .  $dbxref->db->url .  $dbxref->dbxref_id . '">dbxref</a>' : '' %>
 </a><br/>
-STUFF
 <& /feature/related_features.mas,
-    children => $children,
-    parent   => $parents,
+    children  => $children,
+    parents   => $parents,
 &>
 </&>
 

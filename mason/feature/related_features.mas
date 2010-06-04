@@ -1,6 +1,6 @@
 <%args>
-    $children => undef
-    $parents  => undef
+    $children
+    $parents
 </%args>
 % my $c = 0;
 % for my $child (@$children) {
