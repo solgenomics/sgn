@@ -37,9 +37,9 @@ my $search_again_html = info_section_html(
     contents => CXGN::Search::CannedForms::people_search_form( $page, $query )
 );
 
-# set additional criteria to not return people that have not set their first name or last name
-$query->last_name('&t NOT LIKE ? AND &t IS NOT NULL','%contact-info.pl%');
-$query->first_name('&t NOT LIKE ? AND &t IS NOT NULL','%contact-info.pl%');
+
+_add_to_param( $query, $_, '&t NOT LIKE ? AND &t IS NOT NULL', '%contact-info.pl%')
+    for 'last_name', 'first_name';
 
 my $result = $search->do_search($query);    #execute the search
 my @results;
@@ -90,3 +90,15 @@ else {
 print $search_again_html;
 
 $page->footer();
+
+#### helper subs ######
+
+# set additional criteria to not return people that have not set their
+# first name or last name
+sub _add_to_param {
+    my ($query,$param,$cond,@bind) = @_;
+    my $curr = $query->param_val($param) || ['true'];
+    my $curr_exp = shift @$curr;
+    $curr_exp = "&t $curr_exp" unless $curr_exp =~ /(&t|^true$)/;
+    $query->param_set($param => ["$curr_exp AND $cond",@$curr,@bind]);
+}
