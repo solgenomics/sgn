@@ -27,6 +27,7 @@ use CXGN::Tools::Organism;
 use JSAN::ServerSide;
 use HTML::Entities;
 use Number::Format;
+use Statistics::Descriptive;
 
 use base qw / CXGN::Page::Form::SimpleFormPage /;
 
@@ -356,35 +357,39 @@ sub display_page {
 ############################### PHENOTYPE DATA 
 
    
-    my @phenotypes= $individual->get_phenotypes();
+    my %phenotypes= $individual->get_phenotypes();
     my $population_obj = $individual->get_population();          
     my @phenotype;
-    my ($term_obj, $term_name, $term_id, $min, $max, $ave, $value);
+    my ($term_obj, $term_name, $term_id, $min, $max, $ave, $mean_value);
     
-    foreach my $p (@phenotypes) 
+    for my $observable_id (keys %phenotypes) 
     {
 
 	if (!$population_obj->get_web_uploaded()) 
 	{
-	    $term_obj  = CXGN::Chado::Cvterm->new( $self->get_dbh(), $p->get_observable_id());
+	    $term_obj  = CXGN::Chado::Cvterm->new( $self->get_dbh(), $observable_id);
 	    $term_name = $term_obj->get_cvterm_name();
 	    $term_id   = $term_obj->get_cvterm_id();
-	    ($min, $max, $ave) = $population_obj->get_pop_data_summary($term_id);
-	    $value = $p->get_value();
-	    if (!defined($value)) {$value= 'N/A';}
-	    elsif ($value == 0) {$value = '0.0';}
 	    
 	} else 
 	{
-	    $term_obj  = CXGN::Phenome::UserTrait->new($self->get_dbh(), $p->get_observable_id());
+	    $term_obj  = CXGN::Phenome::UserTrait->new($self->get_dbh(), $observable_id);
 	    $term_name = $term_obj->get_name();
 	    $term_id   = $term_obj->get_user_trait_id();
-	    ($min, $max, $ave) = $population_obj->get_pop_data_summary($term_id);
-	    $value = $p->get_value();
 	}    
+	
+	($min, $max, $ave) = $population_obj->get_pop_data_summary($term_id);
+	my @values = map ($_->get_value() , @{ $phenotypes{$observable_id} } );
+	my $stat = Statistics::Descriptive::Sparse->new();
+        $stat->add_data(@values);
+	$mean_value = $stat->mean();
+	
+	if (!defined($mean_value)) {$mean_value= 'N/A';}
+	elsif ($mean_value == 0) {$mean_value = '0.0';}
+	
 	# round 3 digit precision
 	my $x = Number::Format->new();
-	$value = $x->round($value,3);
+	$mean_value = $x->round($mean_value,3);
 	$min = $x->round($min,3);
 	$max = $x->round($max,3);
 	$ave = $x->round($ave,3);
@@ -399,11 +404,11 @@ sub display_page {
 	    {
 		push  @phenotype,  [map {$_} 
 				    ((tooltipped_text(qq|<a href="/chado/cvterm.pl?cvterm_id=$term_id">$term_name</a>|, 
-						      $term_obj->get_definition() )), $value, $min, $max, $ave) ]; 	
+						      $term_obj->get_definition() )), $mean_value, $min, $max, $ave) ]; 	
 	    }else 
 	    {
 		push  @phenotype,  [map {$_} qq|<a href="/chado/cvterm.pl?cvterm_id=$term_id">$term_name</a>|, 
-				    $value, $min, $max, $ave ]; 
+				    $mean_value, $min, $max, $ave ]; 
 	    }
 	}
 	else 
@@ -412,10 +417,10 @@ sub display_page {
 	    {
 		push  @phenotype,  [map {$_} 
 				    ((tooltipped_text(qq|<a href="/phenome/trait.pl?trait_id=$term_id">$term_name</a>|, 
-						      $term_obj->get_definition() )), $value, $min, $max, $ave) ]; 	
+						      $term_obj->get_definition() )), $mean_value, $min, $max, $ave) ]; 	
 	    }else {
 		push  @phenotype,  [map {$_} qq|<a href="/phenome/trait.pl?trait_id=$term_id">$term_name</a>|, 
-				    $value, $min, $max, $ave ]; 
+				    $mean_value, $min, $max, $ave ]; 
 	    }
 	}
     }
