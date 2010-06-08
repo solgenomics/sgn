@@ -3,7 +3,7 @@ use Moose;
 use namespace::autoclean;
 
 use HTML::FormFu;
-use YAML;
+use YAML::Any;
 
 has 'schema' => (
     is       => 'ro',
@@ -11,7 +11,7 @@ has 'schema' => (
     required => 1,
 );
 
-# the HTML::FormFu form that we use for editing news stories
+# the HTML::FormFu search form
 sub _build_form {
     my ($self) = @_;
 
@@ -66,6 +66,7 @@ sub _do_organism_search {
     if( my $species = $form->param_value('species') ) {
         $rs = $rs->search({ 'lower(species)' => {  like => '%'.lc( $species ).'%' }});
     }
+
     if( my $common = $form->param_value('common_name') ) {
         $rs = $rs->search({ 'lower(common_name)' => {  like => '%'.lc( $common ).'%' }});
     }
