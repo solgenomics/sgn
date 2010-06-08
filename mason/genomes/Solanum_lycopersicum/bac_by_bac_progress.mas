@@ -87,7 +87,7 @@ print join '', map { flag_td(@$_) }
   [qw(India Flag_of_India http://www.genomeindia.org/tomato/index.html)],
   ['Nether- lands', qw(Flag_of_the_Netherlands http://www.biosystemsgenomics.nl/)],
   [qw(France Flag_of_France http://gbf.ensat.fr/)],
-  [qw(Japan Flag_of_Japan japan.pl )],
+  [qw(Japan Flag_of_Japan /about/japan.pl )],
   [qw(Spain Flag_of_Spain /about/spain.pl)],
   [qw(USA Flag_of_the_United_States /about/us_tomato_sequencing.pl)],
   [qw(China Flag_of_China)],
