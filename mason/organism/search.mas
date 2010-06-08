@@ -5,6 +5,24 @@
 
 <& /page/page_title.mas, title => 'Organism Search' &>
 
+<style>
+
+#organism_search_form .checkboxgroup span span {
+  white-space: nowrap;
+  float: left;
+  width: 10em;
+}
+#organism_search_form div label, #organism_search_form legend {
+  font-weight: bold;
+}
+#organism_search_form div.text label {
+  float: left;
+  width: 10em;
+}
+
+
+</style>
+
 % if( $results ) {
   <&| /page/info_section.mas, title => 'Search Results', subtitle => $results->count.' results' &>
   <% columnar_table_html(
