@@ -7,15 +7,13 @@ use CXGN::Page::FormattingHelpers qw/  page_title_html
 use HTML::Entities;
 #Get input, if this page is loaded from find_caps.pl
 our $page = CXGN::Page->new( "Align Browser", "Chenwei");
-my ($seq_data, $id_data, $format, $title, $type, 
-	$show_prot_example, $show_cds_example, $show_id_example,
-	$temp_file, $maxiters
-	) = 
-	$page->get_arguments(
-	"seq_data", "id_data", "format", "title", "type", 
-	"show_prot_example", "show_cds_example", "show_id_example",
-	"temp_file", "maxiters"
-	);
+my ($seq_data, $id_data, $format, $title, $type,
+    $show_prot_example, $show_cds_example, $show_id_example,
+    $temp_file, $maxiters) = $page->get_arguments(
+    qw/seq_data id_data format title type
+    show_prot_example show_cds_example show_id_example
+    temp_file maxiters/
+);
 
 my ($intro_content, $input_content);
 
