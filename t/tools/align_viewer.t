@@ -2,7 +2,7 @@ package Test::AlignViewer;
 
 =head1 NAME
 
-bulk.t - a website-level test of the align_viewer
+t/tools/align_viewer.t - a website-level test of the align_viewer
 
 =head1 DESCRIPTION
 
