@@ -1,0 +1,24 @@
+<%args>
+  $results
+  $form
+</%args>
+
+<& /page/page_title.mas, title => 'Organism Search' &>
+
+% if( $results ) {
+  <&| /page/info_section.mas, title => 'Search Results', subtitle => $results->count.' results' &>
+  <% columnar_table_html(
+         headings => ['Species', 'Common name'],
+         data     => [ map [$_->species,$_->common_name], $results->all ],
+     )
+   %>
+  </&>
+% }
+
+<&| /page/info_section.mas, title => 'Search' &>
+  <% $form->render %>
+</&>
+
+<%init>
+  use CXGN::Page::FormattingHelpers qw/ columnar_table_html /;
+</%init>
