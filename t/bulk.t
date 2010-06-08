@@ -16,7 +16,7 @@ Lukas Mueller, Jonathan "Duke" Leto
 use strict;
 use Test::More tests => 26;
 use Test::WWW::Mechanize;
-die "Need to set the CXGN_SERVER environment variable" unless defined($ENV{SGN_TEST_SERVER});
+die "Need to set the SGN_TEST_SERVER environment variable" unless defined($ENV{SGN_TEST_SERVER});
 
 my $base_url = $ENV{SGN_TEST_SERVER};
 
