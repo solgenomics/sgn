@@ -77,8 +77,6 @@ sub _build_form {
             name: submit
 EOY
 
-    $form->stash->{schema} = $self->schema;
-
     # set the taxa multi-select choices from the db
     $form->get_element({ name => 'taxa'})
          ->options( $self->_taxa_choices );
