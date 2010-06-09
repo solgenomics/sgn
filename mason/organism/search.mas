@@ -64,11 +64,15 @@ div.paginate_nav {
                                           .'-'.$pager->last
                                           .' of '.Number::Format->new->format_number($pager->total_entries)
    &>
+%   if( $results->count ) {
      <% columnar_table_html(
             headings => ['Taxon name','Common name'],
             data     => [ map [$_->species,$_->common_name], $results->all ],
         )
       %>
+%   } else {
+     <h3 style="text-align: center">no matching results found</h3>
+%   }
   </&>
 
   <& /page/pagination_control.mas, pager => $pager, link_maker => $pagination_link_maker &>
