@@ -321,6 +321,7 @@ my $build = $class->new(
         'XML::Generator'          => 0,
         'XML::Twig'               => 0,
         'YAML::Any'               => 0,
+        'File::Slurp'             => 0,
     },
 );
 $build->create_build_script;

@@ -1,5 +1,6 @@
 use strict;
 
+use File::Slurp qw/slurp/;
 use SGN::Context;
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw/  page_title_html
@@ -26,9 +27,7 @@ unless($temp_file =~ /\//){
 }
 
 if(-f $temp_file){
-	open(FH, $temp_file);
-	$seq_data .= $_ while (<FH>);
-	close(FH);
+    $seq_data = slurp($temp_file);
 }
 
 
