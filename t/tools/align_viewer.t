@@ -17,8 +17,12 @@ Jonathan "Duke" Leto
 use strict;
 use warnings;
 use base 'Test::Class';
-use Test::More tests => 9;
+use constant HAS_MUSCLE => sub { no warnings; system "muscle"; $? == 0 ? 1 : 0 }->();
+use constant MUSCLE_TESTS => HAS_MUSCLE ? 3 : 0;
+
+use Test::More tests => 9 + MUSCLE_TESTS;
 use Test::WWW::Mechanize;
+
 
 die "Need to set the SGN_TEST_SERVER environment variable" unless defined($ENV{SGN_TEST_SERVER});
 my $base_url = $ENV{SGN_TEST_SERVER};
@@ -77,7 +81,22 @@ sub INVALID_FASTA_INPUT : Tests {
 
 sub ALIGNMENT_EXAMPLE : Tests {
     my $self = shift;
-    $self->get_ok("/tools/align_viewer/index.pl?&format=fasta&title=Alignment%20Example&type=pep&show_prot_example=1");
+    my $url = "/tools/align_viewer/index.pl?&format=fasta&title=Alignment%20Example&type=pep&show_prot_example=1";
+
+    $self->get_ok($url);
+    my $params = {
+               form_name => "aligninput",
+    };
+    $self->submit_form_ok($params, "Submit Alignment Example form");
+    $self->content_contains("View and Analyze Alignment");
+}
+
+sub UNALINGED_EXAMPLE : Tests {
+    return unless HAS_MUSCLE;
+    my $self = shift;
+    my $url = "/tools/align_viewer/index.pl?&format=fasta_unaligned&maxiters=1&title=CDS%20Example&type=cds&show_cds_example=1";
+
+    $self->get_ok($url);
     my $params = {
                form_name => "aligninput",
     };
