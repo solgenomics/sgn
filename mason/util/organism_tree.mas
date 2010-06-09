@@ -71,7 +71,7 @@ close($MF);
 if ($image_only) { print $image_html; return; }
 </%perl>
 
-<a name="$root"></a>  
+<a name=<%$root%> ></a>
 
 <&| /page/info_section.mas, 
   title         => $root,
@@ -80,7 +80,7 @@ if ($image_only) { print $image_html; return; }
   collapsible   =>1,
   collapsed  =>0
   &>
-  
+
   <form action="/tools/tree_browser/" method="post"><input type="hidden" name="tree_string" value=" <% $tree_string %> "><input type="submit" value="show in treebrowser" /></form> 
  <% $image_html %>
   
