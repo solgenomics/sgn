@@ -3,6 +3,7 @@ use Moose;
 use namespace::autoclean;
 
 use HTML::FormFu;
+use URI::FromHash 'uri';
 use YAML::Any;
 
 has 'schema' => (
@@ -10,6 +11,11 @@ has 'schema' => (
     isa      => 'DBIx::Class::Schema',
     required => 1,
 );
+
+has 'default_page_size' => (
+    is => 'ro',
+    default => 20,
+   );
 
 
 sub search {
@@ -28,6 +34,9 @@ sub search {
         '/organism/search.mas',
         form    => $form,
         results => $results,
+        pagination_link_maker => sub {
+            return uri( query => { %{$form->params}, page => shift } );
+        },
        );
 }
 
@@ -46,6 +55,14 @@ sub _build_form {
             name: species
             label: Species
             size: 30
+
+        # hidden form values for page and page size
+          - type: Hidden
+            name: page
+            default: 1
+          - type: Hidden
+            name: page_size
+            default: 20
 
           - type: Text
             name: common_name
@@ -71,19 +88,25 @@ EOY
 
 # assembles a DBIC resultset for the search based on the submitted
 # form values
+#
+# notice that this is very similar to the old search framework's
+# from_request() method
 sub _make_organism_search_rs {
     my ( $self, $c, $form ) = @_;
 
     my $rs = $self->schema->resultset('Organism::Organism');
 
+    # species
     if( my $species = $form->param_value('species') ) {
         $rs = $rs->search({ 'lower(species)' => {  like => '%'.lc( $species ).'%' }});
     }
 
+    # common_name
     if( my $common = $form->param_value('common_name') ) {
         $rs = $rs->search({ 'lower(common_name)' => {  like => '%'.lc( $common ).'%' }});
     }
 
+    # taxa
     if( my @taxa = $form->param_list('taxa') ) {
         $rs = $rs->search({ 'type.cvterm_id' => \@taxa },
                           { join => {
@@ -94,6 +117,14 @@ sub _make_organism_search_rs {
                           },
                          );
     }
+
+    # page number and page size, and order by species name
+    $rs = $rs->search( undef,
+                       { page     => $form->param_value('page')      || 1,
+                         rows     => $form->param_value('page_size') || $self->default_page_size,
+                         order_by => 'species',
+                       },
+                     );
 
     return $rs;
 }

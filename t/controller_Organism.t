@@ -13,7 +13,7 @@ my $urlbase = "$ENV{SGN_TEST_SERVER}/search/organism.pl";
 my $mech = Test::WWW::Mechanize->new;
 
 $mech->get_ok($urlbase);
-$mech->content_contains('Organism Search');
+$mech->content_contains('Organism/Taxon search');
 $mech->submit_form_ok({
     form_name => 'organism_search_form',
     fields => {
