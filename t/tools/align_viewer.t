@@ -17,7 +17,7 @@ Jonathan "Duke" Leto
 use strict;
 use warnings;
 use base 'Test::Class';
-use Test::More tests => 6;
+use Test::More tests => 9;
 use Test::WWW::Mechanize;
 
 die "Need to set the SGN_TEST_SERVER environment variable" unless defined($ENV{SGN_TEST_SERVER});
@@ -73,6 +73,16 @@ sub INVALID_FASTA_INPUT : Tests {
     };
     $self->submit_form_ok($params, "Submit align form");
     $self->content_contains("FASTA must have at least two valid sequences","Form requires at least 2 valid sequences");
+}
+
+sub ALIGNMENT_EXAMPLE : Tests {
+    my $self = shift;
+    $self->get_ok("/tools/align_viewer/index.pl?&format=fasta&title=Alignment%20Example&type=pep&show_prot_example=1");
+    my $params = {
+               form_name => "aligninput",
+    };
+    $self->submit_form_ok($params, "Submit Alignment Example form");
+    $self->content_contains("View and Analyze Alignment");
 }
 
 Test::Class->runtests;
