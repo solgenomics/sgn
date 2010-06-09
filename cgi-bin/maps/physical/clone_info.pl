@@ -252,7 +252,12 @@ EOSQL
       my $marker = CXGN::Marker->new($dbh,$marker_id);
       '<div style="border: 1px solid #bbb">'
       .info_table_html( Marker => qq|<a href="$link_pages{marker_page}$marker_id">|.$marker->name_that_marker.'</a>',
-		       Publication => $pubmed_id ? "PubMed $pubmed_id" : '<span class="ghosted">unpublished</span>',
+		       Publication => (
+                           $pubmed_id
+                               ? qq|<a href="http://www.ncbi.nlm.nih.gov/pubmed/$pubmed_id">PubMed $pubmed_id</a>|
+                               : '<span class="ghosted">unpublished</span>'
+                              ),
+
 		       'Submitted by' => "$fname $lname ".($org ? "($org)" : ''),
 		       __multicol => 3,
 		       __border => 0,
