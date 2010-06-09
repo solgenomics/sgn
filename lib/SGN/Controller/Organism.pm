@@ -59,7 +59,7 @@ sub _build_form {
         # hidden form values for page and page size
           - type: Hidden
             name: page
-            default: 1
+            value: 1
           - type: Hidden
             name: page_size
             default: 20
