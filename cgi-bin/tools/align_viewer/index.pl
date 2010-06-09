@@ -104,10 +104,10 @@ Make sure all the spaces in the id and species are replaced by '_'.<br />
 HTML
 
 if($show_prot_example){
-	$seq_data = seq_from_file($page->path_to("cgi-bin/tools/align_viewer/data/prot_example.txt"));
+	$seq_data = slurp($page->path_to("cgi-bin/tools/align_viewer/data/prot_example.txt"));
 }
 elsif($show_cds_example){
-	$seq_data = seq_from_file($page->path_to("cgi-bin/tools/align_viewer/data/cds_example.txt"));
+	$seq_data = slurp($page->path_to("cgi-bin/tools/align_viewer/data/cds_example.txt"));
 }
 elsif($show_id_example){
 	$id_data = <<HEREDOC;
@@ -164,13 +164,3 @@ print blue_section_html(
 
 
 $page->footer();
-
-
-sub seq_from_file {
-	my $file = shift;
-	my $seq = "";
-	open(FH, $file) or return "File not found";
-	$seq .= $_ while(<FH>);
-	close FH;
-	return $seq;
-}
