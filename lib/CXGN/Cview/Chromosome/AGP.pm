@@ -93,9 +93,7 @@ sub fetch {
     
     #print STDERR "Constructor: generating AGP chr ".$self->get_name()."\n";
 
-    my $AGP = undef;
-    
-    open ($AGP, "<$agp_file") || die "Can't open $agp_file\n";
+    open (my $AGP, '<', $agp_file) || die "Can't open $agp_file: $!";
 
     my $largest_offset = 0;
     while (<$AGP>) { 
