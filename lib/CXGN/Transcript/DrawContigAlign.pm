@@ -214,8 +214,7 @@ method writeImageToFile (Str $imageFilename!, Str $mapFilename!, Str $linkBasena
     $self->drawLegend($image, $panes[$LEGEND], $font, $imageName, $depths[$#depths]->position);
 
     #prints the image
-    my $IMAGEFILE;
-    open $IMAGEFILE, ">" . $imageFilename;
+    open my $IMAGEFILE, ">" , $imageFilename or die "Could not create image file: $!";
     print $IMAGEFILE $image->png;
     close $IMAGEFILE;
 }
@@ -520,8 +519,7 @@ method drawInfo (Ref $image!, Object $pane!, Ref $font!,
     
     my $west = $pane->west + (2 * $font->width);
 
-    my $MAPFILE;
-    open $MAPFILE, ">" . $mapFilename;
+    open my $MAPFILE, ">" , $mapFilename or die "Could not create map file: $!";
 
     print $MAPFILE "<map name=\"contigmap_$imageName\">";
 
