@@ -1,0 +1,290 @@
+
+
+<%doc>
+
+</%doc>
+
+
+<& /util/import_javascript.mas, classes=>["hoverScript"] &>
+
+<style type="text/css">
+
+
+
+img {
+	border: none;
+}
+
+#nav, #nav ul { /* all lists */
+	padding: 0;
+	margin: 0;
+	list-style: none;
+	line-height: 1;
+}
+
+#nav a {
+	display: block;
+	width: 10em;
+}
+
+#nav li { /* all list items */
+	float: left; 
+	/* width: 10em; width needed or else Opera goes nuts */
+}
+
+#nav li ul { /* second-level lists */
+	position: absolute;
+	left: -999em; /* using left instead of display to hide menus because display: none isn't read by screen readers */
+}
+
+#nav li ul li {
+	margin-left: 15px;
+}
+
+#nav li:hover ul, #nav li.sfhover ul { /* lists nested under hovered list items */
+	left: auto;
+}
+
+#content {
+	clear: left;
+	color: #ccc;
+}
+
+.Background {
+        font-family: arial, helvetica, serif;  
+        background-image: url(/documents/img/soliconmenu/background.jpg); 
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+}
+
+.MapsMarkersSubMenu, .GenesSubMenu, .PhenotypesSubMenu, .GenomesSequencesSubMenu, .PathwaysSubMenu {
+        background-color: #eeffee;
+        filter:alpha(opacity=80); /* IE */
+        opacity: 0.8; /* standard */	
+	width: 227px;
+        padding: 10px;
+        font-size: 12px;
+        line-height: 16px; 
+        white-space: nowrap;
+	z-index: 1;
+}
+
+.MapsMarkers {
+        position: relative; 
+	top: 80px;
+	left: 50px;
+}
+
+.MapsMarkersSubMenu {
+        position: relative;
+	left: 190px;
+	top: -160px;
+	width: 220px;
+        height: 300px;
+}
+
+.MapsMarkersSubMenu a {
+ /* padding-left: 15px; */
+}
+
+.Genes {
+	position: relative; 
+        top: 40px; 
+	left: 220px;
+}
+
+.GenesSubMenu {
+	width: 227px;
+	height: 80px;
+	position: relative;
+	top: -120px;
+	left: 100px;
+}
+
+.GenesSubMenu a {
+/* padding-left: 15px; */
+ }
+
+.Phenotypes {
+	position: relative; 
+	top: 80px;
+	left: 300px;
+}
+
+.PhenotypesSubMenu {
+	width: 227px;
+	height: 80px; 
+	position: relative;
+	top: -110px;
+	left: 115px;
+}
+
+
+.BreedersToolBox {
+	position: relative; 
+	top: 250px;
+	left: -250px;
+}
+
+.BreedersToolBoxSubMenu {
+	width: 227px;
+	height: 341px;
+	padding-top: 15px;
+	position: relative;
+	top: -110px;
+	left: 115px;
+}
+
+.GenomesSequences {
+	position: relative; 
+	top: 320px;
+	left: -230px;
+}
+
+.GenomesSequencesSubMenu {
+	width: 227px;
+	height: 90px;
+	padding-top: 15px;
+	position: relative;
+	top: -110px;
+	left: 200px;
+}
+
+.Pathways {
+	position: relative; 
+	top: 250px;
+	left: -80px;
+}
+
+.PathwaysSubMenu {
+	width: 227px;
+	height: 341px;
+	position: relative;
+	top: -110px;
+	left: 115px;
+}
+
+.subMenu {
+        background-color: #eeffee;
+        filter:alpha(opacity=70); /* IE */
+        opacity: 0.7; /* standard */
+	width: 227px;
+        font-size: 12px;
+        line-height: 16px; 
+        margin: 0;
+        padding: 0;
+        z-index: 1;
+}
+
+.subMenuTop {
+	/* background-image: url("/documents/img/soliconmenu/subMenuTop.png"); /*
+	height: 16px;
+	width: 227px;
+        padding: 0;
+        margin: 0;
+}
+
+
+.subMenuBottom {
+/* background-image: url("/documents/img/soliconmenu/subMenuBottom.png"); */
+	height: 35px;
+	width: 227px;
+}
+
+
+</style>
+
+
+
+
+
+<table border="0" width="800px" height="520px" cellpadding="0" cellspacing="0"><tr><td style="background-image: url(/documents/img/soliconmenu/background.jpg);">
+
+<ul id="nav">
+
+	<li class="MapsMarkers"><a href="/cview/" ><img src="/documents/img/soliconmenu/MapsMarkers.png" title="Maps and Markers" /></a>
+
+   		<ul>
+        	  <div class="MapsMarkersSubMenu">
+                    <li><a href="/cview/map.pl?map_id=9">Tomato ExPEN 2000</a></li>
+                    <li><a href="/cview/map.pl?map_id=p9">Tomato physical map</a></li>
+                    <li><a href="/cview/map.pl?map_id=c9">Tomato FPC contigs</a></li>
+                    <li><a href="/cview/map.pl?map_id=il6">Tomato/pennellii IL map</a></li>
+                    <li><a href="/cview/map.pl?map_id=13">Tomato FISH map</a></li>
+                    <li><a href="/cview/map.pl?map_id=agp">Tomato AGP map</a></li>
+                    <li><a href="/cview/map.pl?map_id=itag">Tomato ITAG BAC map</a></li>
+                    <li><a href="/cview/map.pl?map_version_id=58">Pepper COSII map</a></li>
+                    <li><a href="/cview/map.pl?map_id=11">Pepper AC99 map</a></li>
+                    <li><a href="/cview/map.pl?map_id=10">Pepper FA03 map</a></li>
+                    <li><a href="/cview/map.pl?map_id=3">Potato TxB 1992 map</a></li>
+                    <li><a href="/cview/map.pl?map_id=6">Eggplant LxM 2002 map</a></li>
+                    <li><a href="/cview/map.pl?map_id=15">Tobacco SSR 2007 map</a></li>
+		    <li><a href="/cview/map.pl?map_id=7">Arabidopsis COSII map</a></li>
+		  </div>
+		</ul>
+		
+	</li>
+
+	<li class="Genes"><a href="/search/direct_search.pl?search=loci" style="background: none"><img src="/documents/img/soliconmenu/Genes.png" title="Genes" /></a>
+	  <ul>
+            <div class="GenesSubMenu"  >
+              <li><a href="/search/direct_search.pl?search=loci">Search loci...</a></li>
+              <li><a href="/search/direct_search.pl?search=unigene">Search unigenes...</a></li>
+              <li><a href="/genomes/Solanum_lycopersicum/genome_data.pl">Search/browse tomato genome</a></li>
+              
+	      </div>
+	      
+	  </ul>
+
+
+
+	<li class="Phenotypes"><a href="/phenome/" style="background: none"><img src="/documents/img/soliconmenu/Phenotypes.png" alt="Phenotypes" title="Phenotypes" /></a>
+	  <ul>
+	    <div class="PhenotypesSubMenu">
+              <li><a href="/search/direct_search.pl?search=phenotypes">Search phenotypes...</a></li>
+              <li><a href="/qtl/">Analyze QTLs...</a></li>
+              <li><a href="/tools/onto/">Ontology browser...</a></li>
+            </div>
+          </ul>
+
+	</li>
+    
+    <li class="BreedersToolBox"><a href="/breeders/"><img src="/documents/img/soliconmenu/BreedersToolBox.png" alt="Breeders Toolbox" title="Click to access the Breeder's toolbox" /></a>
+    	<!--
+		<ul>
+            <div class="BreedersToolBoxSubMenu">
+            	<li><a href="#">Test...1</a></li>
+                <li><a href="#">Test...2</a></li>
+                <li><a href="#">Test...3</a></li>
+            </div>
+        </ul>
+        -->
+	</li>
+    
+    <li class="GenomesSequences"><a href="#"><img src="/documents/img/soliconmenu/GenomesSequences.png" alt="GenomesSequences" alt="Genomes and Sequences" title="Genomes and Sequences" /></a>
+      <ul>
+            <div class="GenomesSequencesSubMenu">
+            	<li><a href="/genomes/Solanum_lycopersicum">Tomato Genome Project</a></li>
+                <li><a href="/genomes/Solanum_lycopersicum/genome_data.pl">Search/browse tomato genome</a></li>
+                <li><a href="/genomes/Solanum_pimpinellifolium/">Solanum pimpinellifolium genome</a></li>
+            </div>
+        </ul>
+
+	</li>
+    
+    <li class="Pathways"><a href="http://solcyc.solgenomics.net/"><img src="/documents/img/soliconmenu/Pathways.png" alt="Pathways" alt="Pathways" title="Click to access SolCyc" /></a>
+    	<!--
+		<ul>
+            <div class="PathwaysSubMenu">
+            	<li><a href="#">Test...1</a></li>
+                <li><a href="#">Test...2</a></li>
+                <li><a href="#">Test...3</a></li>
+            </div>
+        </ul>
+        -->
+	</li>
+    
+    
+</ul>
+
+</td></tr></table>
