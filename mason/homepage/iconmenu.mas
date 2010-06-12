@@ -2,6 +2,24 @@
 
 <%doc>
 
+=head1 NAME
+
+/homepage/iconmenu.mas - a graphical way to present information on SGN
+
+=head1 DESCRIPTION
+
+Displays an icon-based menu of top level option. Mousing over the icons pops up menus with further links to guide the users to useful pages.
+
+=head1 AUTHORS
+
+ Camilo Rosero
+ Lukas Mueller (integration into SGN, some changes to the menus)
+
+ June 9, 2010
+
+=cut
+
+
 </%doc>
 
 
@@ -95,7 +113,7 @@ img {
 
 .GenesSubMenu {
 	width: 227px;
-	height: 80px;
+	height: 100px;
 	position: relative;
 	top: -120px;
 	left: 100px;
@@ -113,7 +131,7 @@ img {
 
 .PhenotypesSubMenu {
 	width: 227px;
-	height: 80px; 
+	height: 100px; 
 	position: relative;
 	top: -110px;
 	left: 115px;
@@ -164,6 +182,12 @@ img {
 	left: 115px;
 }
 
+.Divider { 
+        line-height:4px;
+        font-size: 4px;
+}
+
+/* no longer used css styles - will be deleted 
 .subMenu {
         background-color: #eeffee;
         filter:alpha(opacity=70); /* IE */
@@ -191,6 +215,7 @@ img {
 	width: 227px;
 }
 
+*/
 
 </style>
 
@@ -220,6 +245,8 @@ img {
                     <li><a href="/cview/map.pl?map_id=6">Eggplant LxM 2002 map</a></li>
                     <li><a href="/cview/map.pl?map_id=15">Tobacco SSR 2007 map</a></li>
 		    <li><a href="/cview/map.pl?map_id=7">Arabidopsis COSII map</a></li>
+		    <li><a href="">&nbsp;</a></li>
+		    <li><a href="/content/map_submissions.pl">Submit map information to SGN</a></li>
 		  </div>
 		</ul>
 		
@@ -231,7 +258,8 @@ img {
               <li><a href="/search/direct_search.pl?search=loci">Search loci...</a></li>
               <li><a href="/search/direct_search.pl?search=unigene">Search unigenes...</a></li>
               <li><a href="/genomes/Solanum_lycopersicum/genome_data.pl">Search/browse tomato genome</a></li>
-              
+	      <li><a href=""></a>&nbsp;<br /></li>
+	      <li><a href="/phenome/">Become an SGN locus editor</a></li>              
 	      </div>
 	      
 	  </ul>
@@ -242,8 +270,11 @@ img {
 	  <ul>
 	    <div class="PhenotypesSubMenu">
               <li><a href="/search/direct_search.pl?search=phenotypes">Search phenotypes...</a></li>
+
               <li><a href="/qtl/">Analyze QTLs...</a></li>
               <li><a href="/tools/onto/">Ontology browser...</a></li>
+	      <li><a href="">&nbsp;</a></li>
+	      <li><a href="/phenome/">Submit phenotype data...</a></li>
             </div>
           </ul>
 
@@ -267,6 +298,8 @@ img {
             	<li><a href="/genomes/Solanum_lycopersicum">Tomato Genome Project</a></li>
                 <li><a href="/genomes/Solanum_lycopersicum/genome_data.pl">Search/browse tomato genome</a></li>
                 <li><a href="/genomes/Solanum_pimpinellifolium/">Solanum pimpinellifolium genome</a></li>
+		<li><a href=""></a>&nbsp;<li>
+		<li><a href="/sequencing/sol100.pl">Add a genome...</a></li>
             </div>
         </ul>
 
