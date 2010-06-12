@@ -6,33 +6,26 @@ $schema
 
 <table cellpadding="0">
 
-<tr><td rowspan="3">
-<& homepage/breeders_toolbox.mas &>
-<& homepage/getting_started.mas &>
-</td><td colspan="2">
-<& homepage/tomato_genome_info.mas &>
-<!-- & tomato_genome/tomato_genome_overview.mas & -->
-<& homepage/potato_genome_info.mas &>
-<& homepage/phenotypes.mas &>
+<tr><td colspan="2">
+<& homepage/iconmenu.mas &>
 </td></tr>
 
-<tr><td style="border-right:1px solid #559;" width="250">
+<tr><td colspan="2"><br /><& homepage/what_is_sgn.mas, what=>'textbox' &></td></tr>
+<tr>
+<td width="300"><& homepage/news.mas &><br />
 
 <& homepage/locus_of_the_week.mas &> <br />
+<& homepage/labs.mas &>
+</td><td width="300">
+<& homepage/events.mas &>
 <& homepage/publication_of_the_week.mas &><br />
 <& homepage/image_of_the_week.mas &><br />
-<& homepage/forum.mas &><br />
-<& homepage/labs.mas &>
-
-</td><td width="240"><& homepage/news.mas &><br />
-<& homepage/events.mas &>
 </td></tr>
-
 <tr><td colspan="2"></td><td>&nbsp;</td></tr>
 
 
-<tr><td colspan="3"><div class="boxbgcolor5"><table cellpadding="10"><tr><td><& homepage/affiliated_sites.mas &></td><td><& homepage/other_links.mas &></td></tr></table></div></td></tr>
-<tr><td colspan="3"><& homepage/what_is_sgn.mas, what=>'textbox' &></td></tr>
+<tr><td colspan="2"><div class="boxbgcolor5"><table cellpadding="10"><tr><td><& homepage/affiliated_sites.mas &></td><td><& homepage/other_links.mas &></td></tr></table></div></td></tr>
+
 
 </table>
 

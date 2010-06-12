@@ -1,7 +1,28 @@
 
+<%doc>
+
+=head1 NAME
+
+/homepage/what_is_sgn.mas - shows a "More about SGN" collapser that the user can open with a click to reveal more information about SGN.
+
+=head1 DESCRIPTION
+
+takes a what parameter. Either 'textbox' or 'link'. Will result in different rendering.
+
+=head1 AUTHOR
+
+Lukas Mueller
+
+=cut 
+
+</%doc>
+
+
 <%args>
 $what
 </%args>
+
+<& /util/import_javascript.mas, classes=>["CXGN.Effects"] &>
 
 <%perl>
 
@@ -26,10 +47,13 @@ my ($what_is_link, $what_is_content) = collapser({
 if ($what eq "textbox") { 
 
 print qq {
-<div style="border:1px solid #888; background-color:#ffffff; padding:10px;">
-  <div class="boxcontent"><b>What is SGN?</b> Find out about the Solanaceae as model system for diversity and how they can be used to link genotypes to phenotypes... $what_is_link </div>
-  $what_is_content
+<div class="boxbgcolor1">
+<div class="boxheading">
+  <b>More about SGN...</b> $what_is_link 
+  </div>
 </div>
+  $what_is_content
+
 };
 
 }
