@@ -74,7 +74,7 @@ img {
         font-family: arial, helvetica, serif;  
         background-image: url(/documents/img/soliconmenu/background.jpg); 
         background-repeat: no-repeat;
-        background-attachment: fixed;
+ 
 }
 
 .MapsMarkersSubMenu, .GenesSubMenu, .PhenotypesSubMenu, .GenomesSequencesSubMenu, .PathwaysSubMenu {
@@ -226,7 +226,7 @@ img {
 
 
 
-<table border="0" width="800px" height="520px" cellpadding="0" cellspacing="0"><tr><td style="background-image: url(/documents/img/soliconmenu/background.jpg);">
+<table border="0" width="800px" height="520px" cellpadding="0" cellspacing="0"><tr><td class="Background"> <!--  style="background-image: url(/documents/img/soliconmenu/background.jpg);" -->
 
 <ul id="nav">
 
