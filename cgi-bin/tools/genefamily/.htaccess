@@ -1,0 +1,5 @@
+
+AuthName "Login to the genefamily curator area"
+AuthType Basic
+AuthUserFile /etc/cxgn/htpasswd-sgn
+Require user tomato 
