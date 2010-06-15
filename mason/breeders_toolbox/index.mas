@@ -173,6 +173,8 @@ img {
 
 </style>
 
+<& /page/page_title.mas, title=>'SGN Breeders Toolbox' &>
+
 <table width="720" height="520" border="0" cellpadding="0" cellspacing="0"><tr><td class="Background" align="center">
 
 <ul id="nav">
@@ -231,15 +233,7 @@ img {
 
 <div class="boxbgcolor1">The purpose of this page is to give breeders direct links to breeder-relevant tools and data on SGN. It is a work in progress and your feedback or suggestions are welcome to build this into a comprehensive, easy to use and breeder-friendly resource.<br /><br />Please contact <a href="mailto:jv27\@cornell.edu">Joyce van Eck</a> for suggestions. <br /><br /></div><br />
 
-<&| /page/info_section.mas, title=>'Gene and phenotype information' &>
-  <ul>
-    <li>Search the SGN <a href="/search/direct_search.pl?search=loci">Locus database</a> for your favorite gene</li>
-    <li> Search the SGN <a href="/search/direct_search.pl?search=phenotypes">Phenotype database</a> for Solanaceae accessions</li>
-    <li> Search the SGN <a href="/search/direct_search.pl?search=cvterm_name">Traits/QTLs database</a> for phenotype and QTL data</li>
     
-    <li>SGN gene and phenotype <a href="/phenome/">submission guide</a> </li></ul>
-  </ul>
-</&>
 
 <&| /page/info_section.mas, title=>'SGN tools' &>
 <ul>
@@ -248,6 +242,7 @@ img {
   <li>Develop CAPS markers using the <a href="/tools/caps_designer/caps_input.pl">CAPS Designer</a></li>
   <li>Check intron locations in transript data using the <a href="/tools/intron_detection/find_introns.pl">Intron Finder</a></li>
   <li><a href="/phenome/qtl_form.pl">QTL data submssion</a> and on-the-fly QTL analysis <a href="/search/direct_search.pl?search=cvterm_name/">for Solanaceae traits</a></li>
+    <li>SGN gene and phenotype <a href="/phenome/">submission guide</a> </li></ul>
 </ul>
 </&>
 
