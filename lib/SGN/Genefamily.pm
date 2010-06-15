@@ -51,7 +51,7 @@ has 'members' => (is=>'ro', isa=>'ArrayRef', default=>sub { [] });
 =head2 files_dir
 
  Usage:        my $dir = $gf->files_dir()
- Desc:         sets dthe directory where the genefamilies are located.
+ Desc:         sets the directory where the genefamilies are located.
  Property:     a path
  Side Effects: used for retrieving gene family information
  Example:
@@ -64,9 +64,9 @@ has 'files_dir' => (is=>'rw');
 
  Usage:        my $d = $gf->dataset()
  Desc:         under the genefamily dir (files_dir), a number of sub-dirs
-               should be present, each of which represents a separate 
-               gene family clustering (for example, based on different 
-               species or different clustering parameters). 
+               should be present, each of which represents a separate
+               gene family clustering (for example, based on different
+               species or different clustering parameters).
  Property:     the dataset name [string]
  Side Effects:
  Example:
@@ -90,10 +90,10 @@ sub get_alignment {
     my $self = shift;
     my $file = catfile($self->get_path(), "alignments", $self->name().".fa.align");
 
-    if (! -e $file) { 
+    if (! -e $file) {
 	die "No alignment file available for family ".$self->name();
     }
-    
+
     return slurp($file);
 }
 
@@ -112,8 +112,8 @@ sub get_alignment {
 sub get_fasta {
     my $self = shift;
     my $file = catfile($self->get_path(),"fasta", $self->name().".fa");
-    if (! -e $file) { 
-	die "The fasta information for family ".$self->name()." cannot be found"; 
+    if (! -e $file) {
+	die "The fasta information for family ".$self->name()." cannot be found";
     }
     return slurp($file);
 }
@@ -122,9 +122,9 @@ sub get_fasta {
 =head2 get_seqs
 
  Usage:        my $fasta = $gf->get_seqs()
- Desc:         returns the sequences of a gene family as a list of 
+ Desc:         returns the sequences of a gene family as a list of
                Bio::Seq objects
- Ret:          
+ Ret:
  Args:         none
  Side Effects: dies if the fasta information is not available.
  Example:
@@ -134,12 +134,12 @@ sub get_fasta {
 sub get_seqs {
     my $self = shift;
     my $file = catfile($self->get_path(),"fasta", $self->name().".fa");
-    if (! -e $file) { 
-        die "The fasta information for family ".$self->name()." cannot be found"; 
+    if (! -e $file) {
+        die "The fasta information for family ".$self->name()." cannot be found";
     }
     my @seqs = ();
     my $io = Bio::SeqIO->new(-format=>'fasta', -file=>$file);
-    while (my $seq = $io->next_seq()) { 
+    while (my $seq = $io->next_seq()) {
         push @seqs, $seq;
     }
     return @seqs;
@@ -157,18 +157,18 @@ sub get_seqs {
 
 =cut
 
-sub get_tree { 
+sub get_tree {
     my $self = shift;
     my $file = catfile($self->get_path(),"/trees/".$self->name().".tree");
-    if (! -e $file) { 
+    if (! -e $file) {
 	die "The tree information for family ".$self->name()." cannot be found";
     }
     return slurp($file);
 }
 
-sub get_member_ids { 
+sub get_member_ids {
     my $self = shift;
-    
+
 }
 
 =head2 get_available_datasets
@@ -177,19 +177,19 @@ sub get_member_ids {
  Desc:         a class function that returns the available datasets
  Ret:          a list of dataset names
  Args:         the $DIR where the datasets are located.
- Side Effects: 
- Example:      
+ Side Effects:
+ Example:
 
 =cut
 
-sub get_available_datasets { 
+sub get_available_datasets {
     my $class = shift;
     my $path = shift;
     my @dirs = map { basename($_) } grep '-d', glob "$path/*";
     return @dirs;
 }
 
-sub get_path { 
+sub get_path {
     my $self = shift;
     return catfile($self->files_dir(), $self->dataset());
 }
