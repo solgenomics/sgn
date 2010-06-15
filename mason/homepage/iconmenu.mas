@@ -33,6 +33,10 @@ img {
 	border: none;
 }
 
+a.external, a[href ^="http:"] {
+        background: none;
+}
+
 #nav, #nav ul { /* all lists */
 	padding: 0;
 	margin: 0;
