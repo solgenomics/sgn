@@ -242,7 +242,7 @@ eval {
 	    $protocol =~ tr/[a-z]/[A-Z]/; 
             unless ($protocol eq 'AFLP' or $protocol eq 'CAPS' or $protocol eq 'RAPD' 
 		    or $protocol eq 'SNP' or $protocol eq 'SSR' 
-		    or $protocol eq 'RFLP' or $protocol eq 'PCR' or $protocol eq 'DCAPS') 
+		    or $protocol eq 'RFLP' or $protocol eq 'PCR' or $protocol eq 'DCAPS' or $protocol =~/DArt/i or $protocol =~ /OPA/i ) 
 	    {
                 $protocol = 'unknown';
             }
