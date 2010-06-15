@@ -33,9 +33,6 @@ img {
 	border: none;
 }
 
-a.external, a[href ^="http:"] {
-        background: none;
-}
 
 #nav, #nav ul { /* all lists */
 	padding: 0;
@@ -47,6 +44,7 @@ a.external, a[href ^="http:"] {
 #nav a {
 	display: block;
 	width: 10em;
+        background: none;
 }
 
 #nav li { /* all list items */
