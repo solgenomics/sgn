@@ -34,19 +34,6 @@ Displays an icon-based menu of top level option. Mousing over the icons pops up 
         margin-top: -20px;
     }
 
-    .MapsMarkersSubMenu, .GenesSubMenu, .PhenotypesSubMenu, .GenomesSequencesSubMenu, .PathwaysSubMenu {
-            background-color: #eeffee;
-            filter:alpha(opacity=80); /* IE */
-            opacity: 0.8; /* standard */	
-    	width: 227px;
-            padding: 10px;
-            font-size: 12px;
-            font-weight: bold;
-            line-height: 16px; 
-            white-space: nowrap;
-    	z-index: 1;
-    }
-
     .MapsMarkers {
             position: relative; 
     	top: 80px;
@@ -154,7 +141,7 @@ Displays an icon-based menu of top level option. Mousing over the icons pops up 
 	<li class="MapsMarkers"><a href="/cview/" ><img src="/documents/img/soliconmenu/MapsMarkers.png" title="Maps and Markers" /></a>
 
    		<ul>
-        	  <div class="MapsMarkersSubMenu">
+        	  <div class="submenu MapsMarkersSubMenu">
                     <li><a href="/cview/map.pl?map_id=9">Tomato ExPEN 2000</a></li>
                     <li><a href="/cview/map.pl?map_id=p9">Tomato physical map</a></li>
                     <li><a href="/cview/map.pl?map_id=c9">Tomato FPC contigs</a></li>
@@ -178,7 +165,7 @@ Displays an icon-based menu of top level option. Mousing over the icons pops up 
 
 	<li class="Genes"><a href="/search/direct_search.pl?search=loci" style="background: none"><img src="/documents/img/soliconmenu/Genes.png" title="Genes" /></a>
 	  <ul>
-            <div class="GenesSubMenu"  >
+            <div class="submenu GenesSubMenu"  >
               <li><a href="/search/direct_search.pl?search=loci">Search loci...</a></li>
               <li><a href="/search/direct_search.pl?search=unigene">Search unigenes...</a></li>
               <li><a href="/genomes/Solanum_lycopersicum/genome_data.pl">Search/browse tomato genome</a></li>
@@ -192,7 +179,7 @@ Displays an icon-based menu of top level option. Mousing over the icons pops up 
 
 	<li class="Phenotypes"><a href="/phenome/" style="background: none"><img src="/documents/img/soliconmenu/Phenotypes.png" alt="Phenotypes" title="Phenotypes" /></a>
 	  <ul>
-	    <div class="PhenotypesSubMenu">
+	    <div class="submenu PhenotypesSubMenu">
               <li><a href="/search/direct_search.pl?search=phenotypes">Search phenotypes...</a></li>
 
               <li><a href="/qtl/">Analyze QTLs...</a></li>
@@ -207,7 +194,7 @@ Displays an icon-based menu of top level option. Mousing over the icons pops up 
     <li class="BreedersToolBox"><a href="/breeders/"><img src="/documents/img/soliconmenu/BreedersToolBox.png" alt="Breeders Toolbox" title="Click to access the Breeder's toolbox" /></a>
     	<!--
 		<ul>
-            <div class="BreedersToolBoxSubMenu">
+            <div class="submenu BreedersToolBoxSubMenu">
             	<li><a href="#">Test...1</a></li>
                 <li><a href="#">Test...2</a></li>
                 <li><a href="#">Test...3</a></li>
@@ -218,7 +205,7 @@ Displays an icon-based menu of top level option. Mousing over the icons pops up 
     
     <li class="GenomesSequences"><a href="#"><img src="/documents/img/soliconmenu/GenomesSequences.png" alt="GenomesSequences" alt="Genomes and Sequences" title="Genomes and Sequences" /></a>
       <ul>
-            <div class="GenomesSequencesSubMenu">
+            <div class="submenu GenomesSequencesSubMenu">
             	<li><a href="/genomes/Solanum_lycopersicum">Tomato Genome Project</a></li>
                 <li><a href="/genomes/Solanum_lycopersicum/genome_data.pl">Search/browse tomato genome</a></li>
                 <li><a href="/genomes/Solanum_pimpinellifolium/">Solanum pimpinellifolium genome</a></li>
@@ -232,7 +219,7 @@ Displays an icon-based menu of top level option. Mousing over the icons pops up 
     <li class="Pathways"><a href="http://solcyc.solgenomics.net/"><img src="/documents/img/soliconmenu/Pathways.png" alt="Pathways" alt="Pathways" title="Click to access SolCyc" /></a>
     	<!--
 		<ul>
-            <div class="PathwaysSubMenu">
+            <div class="submenu PathwaysSubMenu">
             	<li><a href="#">Test...1</a></li>
                 <li><a href="#">Test...2</a></li>
                 <li><a href="#">Test...3</a></li>

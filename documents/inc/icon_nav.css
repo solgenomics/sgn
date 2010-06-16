@@ -41,3 +41,16 @@
  
 }
 
+#icon_nav .submenu {
+        background-color: #eeffee;
+        filter:alpha(opacity=80); /* IE */
+        opacity: 0.8; /* standard */	
+	width: 227px;
+        padding: 10px;
+        font-size: 12px;
+        font-weight: bold;
+        line-height: 16px; 
+        white-space: nowrap;
+	z-index: 1;
+}
+
