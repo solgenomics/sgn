@@ -1,21 +1,15 @@
 use strict;
 use warnings;
-use English;
-
-use Data::Dumper;
-
 use File::Find;
 use FindBin;
 use File::Spec::Functions;
 use File::Basename;
 use File::Temp;
-
 use HTML::Lint;
 use List::Util qw/min shuffle/;
+use CXGN::VHost::Test;
 
 my %urls;
-my %forbidden_urls;
-my $forbidden_file;
 BEGIN {
     %urls = (
             "homepage"                                 => "/",
@@ -106,25 +100,14 @@ BEGIN {
             );
     }
 
-    ### open and parse the list of all the URLs that should return 403 Forbidden
-    $forbidden_file = $FindBin::RealBin.'/validate_all.expect403';
-    open my $fu, '<', $forbidden_file or die "$! opening $forbidden_file";
-    while(<$fu>) {
-        chomp;
-        $forbidden_urls{$_} = 1;
-    }
-    close $fu;
-
 }
 
-use CXGN::VHost::Test;
 
 my $iteration_count;
-use Test::More tests =>
-	 scalar(keys %urls)*3*($iteration_count = $ENV{ITERATIONS} || 1)
-	 + scalar(keys %forbidden_urls)*0;
+use Test::More tests => scalar(keys %urls)*3*($iteration_count = $ENV{ITERATIONS} || 1);
 
 my $dump_tempdir;
+
 sub make_dump_tempdir {
     my $d = File::Temp->newdir( catdir( File::Spec->tmpdir, 'validate_error_dump-XXXXXX'), CLEANUP => 0 );
     diag "made dump tempdir '$d'";
@@ -133,11 +116,10 @@ sub make_dump_tempdir {
 
 for my $test_name ( shuffle((sort keys %urls) x $iteration_count) ) {
     my $url = $urls{$test_name};
-    my $r = request( $url );
-
+    my $r  = request( $url );
     my $rc = $r->code;
 
-    ok( $rc == 200 || $rc == 403, "$test_name returned either OK or forbidden" )
+    ok( $rc == 200, "$test_name returned OK" )
         or do {
             diag "fetch actually returned code '$rc': $ENV{SGN_TEST_SERVER}$url";
             if( $ENV{DUMP_ERROR_CONTENT} ) {
@@ -182,17 +164,9 @@ for my $test_name ( shuffle((sort keys %urls) x $iteration_count) ) {
             unlike( $r->content, qr/timed out/i, "$test_name does not seem to have timed out" )
                 or diag "fetch from URL $url seems to have timed out";
         }
-
-    } elsif( $rc == 403 ) {
-        ok( $forbidden_urls{$url}, "$test_name returned 403, and its url is correctly listed in $forbidden_file" );
-        ok( $r->content =~ /Forbidden/ && length($r->content) < 1000, 'content looks appropriately forbidding' );
-    }
-    else {
+    } else {
         SKIP: { skip 'because of invalid return code '.$rc, 2 };
     }
 }
 
-$dump_tempdir
-    and diag "failing output dumped to $dump_tempdir"
-
-
+$dump_tempdir and diag "failing output dumped to $dump_tempdir"
