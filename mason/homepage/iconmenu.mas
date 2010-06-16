@@ -27,12 +27,9 @@ Displays an icon-based menu of top level option. Mousing over the icons pops up 
 
 <style type="text/css">
 
-
-
 img {
 	border: none;
 }
-
 
 #nav, #nav ul { /* all lists */
 	padding: 0;
