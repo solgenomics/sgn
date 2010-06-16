@@ -180,7 +180,7 @@ img {
 <ul id="nav">
 	
     
-	<li class="SNPTool"><a href="#"><img src="/documents/img/breedericonmenu/SNPTool.png" alt="SNP Tool" title="SNP Tool" /></a>
+	<li class="SNPTool"><!-- a href="#" --><img src="/documents/img/breedericonmenu/SNPTool.png" alt="SNP Tool" title="SNP Tool (under development)" ><!-- /a -->
     	<!--
 		<ul>
             <div class="SNPToolSubMenu">
@@ -192,7 +192,7 @@ img {
         -->
 	</li>
     
-     <li class="Markers"><a href="#"><img src="/documents/img/breedericonmenu/Markers.png" alt="Markers" title="Maps &amp; Markers"  /></a>
+     <li class="Markers"><a href="/search/markers/markersearch.pl"><img src="/documents/img/breedericonmenu/Markers.png" alt="Markers" title="Maps &amp; Markers"  /></a>
     	<!--
 		<ul>
             <div class="MarkersSubMenu">
@@ -204,7 +204,7 @@ img {
         -->
 	</li>
 	
-	<li class="Traits"><a href="#"><img src="/documents/img/breedericonmenu/Traits.png" alt="Traits" title="Traits &amp; Phenotypes" /></a>
+	<li class="Traits"><a href="/search/direct_search.pl?search=phenotypes"><img src="/documents/img/breedericonmenu/Traits.png" alt="Traits" title="Traits &amp; Phenotypes" /></a>
     	<!--
 		<ul>
             <div class="TraitsSubMenu">
@@ -216,7 +216,7 @@ img {
         -->
 	</li>
     
-	<li class="QTLTool"><a href="#"><img src="/documents/img/breedericonmenu/QTLTool.png" alt="QTL Tool" title="Access QTL data" /></a>
+	<li class="QTLTool"><a href="/search/direct_search.pl?search=cvterm_name"><img src="/documents/img/breedericonmenu/QTLTool.png" alt="QTL Tool" title="Access QTL data" /></a>
     	<!--
    		<ul>
             <div class="QTLToolSubMenu">
