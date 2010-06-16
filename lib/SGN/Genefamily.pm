@@ -185,7 +185,7 @@ sub get_member_ids {
 sub get_available_datasets {
     my $class = shift;
     my $path = shift;
-    my @dirs = map { basename($_) } grep '-d', glob "$path/*";
+    my @dirs = map { basename($_) } grep -d, glob "$path/*";
     return @dirs;
 }
 
