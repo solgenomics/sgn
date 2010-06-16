@@ -42,9 +42,9 @@ my ( $pop_id, $trait_id, $lg, $l_m, $p_m, $r_m, $lod, $qtl_image ) =
                                 "p_marker",      "r_marker",
                                 "lod",            "qtl"
                               );
-if (!$pop_id) {
+if (!$pop_id || !$trait_id || !$lg || !$l_m || !$p_m || !$r_m || !$lod || !$qtl_image) {
   die SGN::Exception->new(
-    title => 'Maker detail page error: pop_id is a required argument'
+    title => 'QTL detail page error:  A required argument is missing'
   );
 }
 
@@ -108,8 +108,6 @@ sub genetic_map
 sub marker_detail
 {
     my ($pop, $l_m, $p_m, $r_m) = @_;
-    print STDERR "markers: $l_m\t$p_m\t$r_m\n";
-
     my @markers = uniq ($l_m, $p_m, $r_m);
     my $mapv_id = $pop->mapversion_id();
 
