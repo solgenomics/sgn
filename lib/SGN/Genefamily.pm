@@ -194,4 +194,4 @@ sub get_path {
     return catfile($self->files_dir(), $self->dataset());
 }
 
-return 1;
+1;
