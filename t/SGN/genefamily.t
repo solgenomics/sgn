@@ -1,20 +1,22 @@
-
 use strict;
 use warnings;
 
-use Test::More tests=>7;
+use Test::More tests => 7;
+use FindBin;
+use File::Spec::Functions;
 
 use_ok('SGN::Genefamily');
 
-my $gf = SGN::Genefamily->new( files_dir => 'genefamily_data', 
-			       dataset   => 'test', 
+my $test_dir = catdir($FindBin::Bin,'genefamily_data');
+my $gf = SGN::Genefamily->new( files_dir => $test_dir,
+			       dataset   => 'test',
 			       name      => 'family_0'
     );
 
 is($gf->name(), "family_0", "name test");
 is($gf->dataset(), "test", "dataset test");
-is($gf->files_dir(), "genefamily_data", "files_dir test");
-is($gf->get_path(), "genefamily_data/test", "get_path test");
+is($gf->files_dir(), $test_dir, "files_dir test");
+is($gf->get_path(), catdir($test_dir,'test'), "get_path test");
 my $aln = $gf->get_alignment();
 like($aln, qr/KLSILKDV-----------NDKSCV/, "alignment test");
 
