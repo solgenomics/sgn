@@ -13,10 +13,10 @@
 	display: block;
 	width: 10em;
         background: none;
-        color: #000066;
+        color: #000099;
 }
 #icon_nav a:visited {
-        color: #000066;
+        color: #000099;
 }
 
 #icon_nav li { /* all list items */
