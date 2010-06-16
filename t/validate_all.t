@@ -83,26 +83,6 @@ BEGIN {
     );
 
 
-    ### adds to the urls all of the .pl scripts in cgi-bin
-    # this is off by default, turn on with AUTO_URLS=1 env variable
-    if( $ENV{AUTO_URLS} ) {
-        my $cgi_bin = "$FindBin::RealBin/../cgi-bin";
-        die "cgi-bin dir $cgi_bin does not exist" unless -d $cgi_bin;
-        find( { wanted => sub {
-                    if( /\.pl$/ ) {
-                        s/^$cgi_bin//;
-                        $urls{"zz(auto) $_"} = $_;
-                    }
-                },
-                no_chdir => 1,
-              },
-              $cgi_bin
-            );
-    }
-
-}
-
-
 my $iteration_count;
 use Test::More tests => scalar(keys %urls)*3*($iteration_count = $ENV{ITERATIONS} || 1);
 
