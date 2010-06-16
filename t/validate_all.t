@@ -131,7 +131,7 @@ sub make_dump_tempdir {
     return $d;
 }
 
-foreach my $test_name ( shuffle((sort keys %urls) x $iteration_count) ) {
+for my $test_name ( shuffle((sort keys %urls) x $iteration_count) ) {
     my $url = $urls{$test_name};
     my $r = request( $url );
 
@@ -190,10 +190,6 @@ foreach my $test_name ( shuffle((sort keys %urls) x $iteration_count) ) {
     else {
         SKIP: { skip 'because of invalid return code '.$rc, 2 };
     }
-#     unlike( $content,
-#             qr/Sorry, there was an error handling your request/,
-
-#         );
 }
 
 $dump_tempdir
