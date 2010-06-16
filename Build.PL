@@ -11,9 +11,6 @@ sub ACTION_build {
    $? and die "make failed\n";
 }
 
-# disable tests, since they are not self-contained
-sub ACTION_test {}
-
 # override install to just copy the whole dir into the install_base
 sub ACTION_install {
    my $self = shift;
