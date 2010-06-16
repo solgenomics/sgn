@@ -100,6 +100,8 @@ sub genetic_map
 sub marker_detail
 {
     my ($pop, $l_m, $p_m, $r_m) = @_;
+    print STDERR "markers: $l_m\t$p_m\t$r_m\n";
+
     my @markers = uniq ($l_m, $p_m, $r_m);
     my $mapv_id = $pop->mapversion_id();
 
@@ -114,12 +116,13 @@ sub marker_detail
 	{
 	    $m_id = $marker->marker_id();
 	    my $m_pos = $pop->get_marker_position( $mapv_id, $markers[$i] );
-	    
+
+	    my $remark = 'Peak marker' if ($p_m eq $markers[$i]);
 	    push @marker_html, 
 	    [ 
 	      map {$_} 
 	      ( 
-		qq | <a href="/search/markers/markerinfo.pl?marker_id=$m_id">$markers[$i]</a>|, $rnd->round($m_pos)
+		qq | <a href="/search/markers/markerinfo.pl?marker_id=$m_id">$markers[$i]</a>|, $rnd->round($m_pos), $remark
 	      ) 
 	    ];       
 	} 
