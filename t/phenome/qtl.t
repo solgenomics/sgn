@@ -24,5 +24,5 @@ my $base_url = $ENV{SGN_TEST_SERVER};
     my $mech = Test::WWW::Mechanize->new;
 
     $mech->get_ok("$base_url/cgi-bin/phenome/qtl.pl");
-    $mech->content_contains("pop_id is a required argument");
+    $mech->content_contains("A required argument is missing");
 }
