@@ -32,6 +32,7 @@ Displays an icon-based menu of top level option. Mousing over the icons pops up 
         width: 720px;
         height: 520px;
         margin-top: -20px;
+        margin-left: -20px;
     }
 
     .MapsMarkers {
