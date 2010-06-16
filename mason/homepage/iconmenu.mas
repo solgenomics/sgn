@@ -166,8 +166,8 @@ Displays an icon-based menu of top level option. Mousing over the icons pops up 
 	<li class="Genes"><a href="/search/direct_search.pl?search=loci" style="background: none"><img src="/documents/img/soliconmenu/Genes.png" title="Genes" /></a>
 	  <ul>
             <div class="submenu GenesSubMenu"  >
-              <li><a href="/search/direct_search.pl?search=loci">Search loci...</a></li>
-              <li><a href="/search/direct_search.pl?search=unigene">Search unigenes...</a></li>
+              <li><a href="/search/direct_search.pl?search=loci">Search loci</a></li>
+              <li><a href="/search/direct_search.pl?search=unigene">Search unigenes</a></li>
               <li><a href="/genomes/Solanum_lycopersicum/genome_data.pl">Search/browse tomato genome</a></li>
 	      <li><a href=""></a>&nbsp;<br /></li>
 	      <li><a href="/phenome/">Become an SGN locus editor</a></li>              
@@ -180,12 +180,12 @@ Displays an icon-based menu of top level option. Mousing over the icons pops up 
 	<li class="Phenotypes"><a href="/phenome/" style="background: none"><img src="/documents/img/soliconmenu/Phenotypes.png" alt="Phenotypes" title="Phenotypes" /></a>
 	  <ul>
 	    <div class="submenu PhenotypesSubMenu">
-              <li><a href="/search/direct_search.pl?search=phenotypes">Search phenotypes...</a></li>
+              <li><a href="/search/direct_search.pl?search=phenotypes">Search phenotypes</a></li>
 
-              <li><a href="/qtl/">Analyze QTLs...</a></li>
-              <li><a href="/tools/onto/">Ontology browser...</a></li>
+              <li><a href="/qtl/">Analyze QTLs</a></li>
+              <li><a href="/tools/onto/">Ontology browser</a></li>
 	      <li><a href="">&nbsp;</a></li>
-	      <li><a href="/phenome/">Submit phenotype data...</a></li>
+	      <li><a href="/phenome/">Submit phenotype data</a></li>
             </div>
           </ul>
 
@@ -195,9 +195,9 @@ Displays an icon-based menu of top level option. Mousing over the icons pops up 
     	<!--
 		<ul>
             <div class="submenu BreedersToolBoxSubMenu">
-            	<li><a href="#">Test...1</a></li>
-                <li><a href="#">Test...2</a></li>
-                <li><a href="#">Test...3</a></li>
+            	<li><a href="#">Test1</a></li>
+                <li><a href="#">Test2</a></li>
+                <li><a href="#">Test3</a></li>
             </div>
         </ul>
         -->
@@ -210,7 +210,7 @@ Displays an icon-based menu of top level option. Mousing over the icons pops up 
                 <li><a href="/genomes/Solanum_lycopersicum/genome_data.pl">Search/browse tomato genome</a></li>
                 <li><a href="/genomes/Solanum_pimpinellifolium/">Solanum pimpinellifolium genome</a></li>
 		<li><a href=""></a>&nbsp;<li>
-		<li><a href="/sequencing/sol100.pl">Add a genome...</a></li>
+		<li><a href="/sequencing/sol100.pl">Add a genome</a></li>
             </div>
         </ul>
 
@@ -220,9 +220,9 @@ Displays an icon-based menu of top level option. Mousing over the icons pops up 
     	<!--
 		<ul>
             <div class="submenu PathwaysSubMenu">
-            	<li><a href="#">Test...1</a></li>
-                <li><a href="#">Test...2</a></li>
-                <li><a href="#">Test...3</a></li>
+            	<li><a href="#">Test1</a></li>
+                <li><a href="#">Test2</a></li>
+                <li><a href="#">Test3</a></li>
             </div>
         </ul>
         -->
