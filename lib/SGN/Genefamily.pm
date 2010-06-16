@@ -33,7 +33,7 @@ use File::Basename qw/basename/;
 
 =cut
 
-has 'name' => (is=>'rw');
+has 'name' => ( is => 'rw' );
 
 =head2 members
 
@@ -46,7 +46,7 @@ has 'name' => (is=>'rw');
 
 =cut
 
-has 'members' => (is=>'ro', isa=>'ArrayRef', default=>sub { [] });
+has 'members' => ( is => 'ro', isa => 'ArrayRef', default => sub { [] } );
 
 =head2 files_dir
 
@@ -58,7 +58,7 @@ has 'members' => (is=>'ro', isa=>'ArrayRef', default=>sub { [] });
 
 =cut
 
-has 'files_dir' => (is=>'rw');
+has 'files_dir' => ( is => 'rw' );
 
 =head2 dataset
 
@@ -73,8 +73,7 @@ has 'files_dir' => (is=>'rw');
 
 =cut
 
-has 'dataset' => (is=>'rw');
-
+has 'dataset' => ( is => 'rw' );
 
 =head2 get_alignment
 
@@ -88,10 +87,11 @@ has 'dataset' => (is=>'rw');
 
 sub get_alignment {
     my $self = shift;
-    my $file = catfile($self->get_path(), "alignments", $self->name().".fa.align");
+    my $file =
+      catfile( $self->get_path(), "alignments", $self->name() . ".fa.align" );
 
-    if (! -e $file) {
-	die "No alignment file available for family ".$self->name();
+    if ( !-e $file ) {
+        die "No alignment file available for family " . $self->name();
     }
 
     return slurp($file);
@@ -111,13 +111,14 @@ sub get_alignment {
 
 sub get_fasta {
     my $self = shift;
-    my $file = catfile($self->get_path(),"fasta", $self->name().".fa");
-    if (! -e $file) {
-	die "The fasta information for family ".$self->name()." cannot be found";
+    my $file = catfile( $self->get_path(), "fasta", $self->name() . ".fa" );
+    if ( !-e $file ) {
+        die "The fasta information for family "
+          . $self->name()
+          . " cannot be found";
     }
     return slurp($file);
 }
-
 
 =head2 get_seqs
 
@@ -133,18 +134,19 @@ sub get_fasta {
 
 sub get_seqs {
     my $self = shift;
-    my $file = catfile($self->get_path(),"fasta", $self->name().".fa");
-    if (! -e $file) {
-        die "The fasta information for family ".$self->name()." cannot be found";
+    my $file = catfile( $self->get_path(), "fasta", $self->name() . ".fa" );
+    if ( !-e $file ) {
+        die "The fasta information for family "
+          . $self->name()
+          . " cannot be found";
     }
     my @seqs = ();
-    my $io = Bio::SeqIO->new(-format=>'fasta', -file=>$file);
-    while (my $seq = $io->next_seq()) {
+    my $io = Bio::SeqIO->new( -format => 'fasta', -file => $file );
+    while ( my $seq = $io->next_seq() ) {
         push @seqs, $seq;
     }
     return @seqs;
 }
-
 
 =head2 get_tree
 
@@ -159,9 +161,12 @@ sub get_seqs {
 
 sub get_tree {
     my $self = shift;
-    my $file = catfile($self->get_path(),"/trees/".$self->name().".tree");
-    if (! -e $file) {
-	die "The tree information for family ".$self->name()." cannot be found";
+    my $file =
+      catfile( $self->get_path(), "/trees/" . $self->name() . ".tree" );
+    if ( !-e $file ) {
+        die "The tree information for family "
+          . $self->name()
+          . " cannot be found";
     }
     return slurp($file);
 }
@@ -184,14 +189,14 @@ sub get_member_ids {
 
 sub get_available_datasets {
     my $class = shift;
-    my $path = shift;
-    my @dirs = map { basename($_) } grep -d, glob "$path/*";
+    my $path  = shift;
+    my @dirs  = map { basename($_) } grep -d, glob "$path/*";
     return @dirs;
 }
 
 sub get_path {
     my $self = shift;
-    return catfile($self->files_dir(), $self->dataset());
+    return catfile( $self->files_dir(), $self->dataset() );
 }
 
 1;
