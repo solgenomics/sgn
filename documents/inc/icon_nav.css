@@ -1,0 +1,43 @@
+#icon_nav img {
+	border: none;
+}
+
+#icon_nav, #icon_nav ul { /* all lists */
+	padding: 0;
+	margin: 0;
+	list-style: none;
+	line-height: 1;
+}
+
+#icon_nav a {
+	display: block;
+	width: 10em;
+        background: none;
+}
+
+#icon_nav li { /* all list items */
+	float: left; 
+	/* width: 10em; width needed or else Opera goes nuts */
+}
+
+#icon_nav li ul { /* second-level lists */
+	position: absolute;
+	left: -999em; /* using left instead of display to hide menus because display: none isn't read by screen readers */
+}
+
+#icon_nav li ul li {
+	margin-left: 15px;
+        font-family: verdana, arial, helvetica, serif;  
+}
+
+#icon_nav li:hover ul, #icon_nav li.sfhover ul { /* lists nested under hovered list items */
+	left: auto;
+}
+
+#icon_nav {
+        font-family: arial, helvetica, serif;  
+        background-image: url("/documents/img/soliconmenu/background.jpg"); 
+        background-repeat: no-repeat;
+ 
+}
+

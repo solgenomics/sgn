@@ -26,209 +26,131 @@ Displays an icon-based menu of top level option. Mousing over the icons pops up 
 <& /util/import_javascript.mas, classes=>["hoverScript"] &>
 
 <style type="text/css">
+    @import url("/documents/inc/icon_nav.css");
 
-img {
-	border: none;
-}
+    #icon_nav {
+        width: 720px;
+        height: 520px;
+        margin-top: -20px;
+    }
 
-#nav, #nav ul { /* all lists */
-	padding: 0;
-	margin: 0;
-	list-style: none;
-	line-height: 1;
-}
+    .MapsMarkersSubMenu, .GenesSubMenu, .PhenotypesSubMenu, .GenomesSequencesSubMenu, .PathwaysSubMenu {
+            background-color: #eeffee;
+            filter:alpha(opacity=80); /* IE */
+            opacity: 0.8; /* standard */	
+    	width: 227px;
+            padding: 10px;
+            font-size: 12px;
+            font-weight: bold;
+            line-height: 16px; 
+            white-space: nowrap;
+    	z-index: 1;
+    }
 
-#nav a {
-	display: block;
-	width: 10em;
-        background: none;
-}
+    .MapsMarkers {
+            position: relative; 
+    	top: 80px;
+    	left: 50px;
+    }
 
-#nav li { /* all list items */
-	float: left; 
-	/* width: 10em; width needed or else Opera goes nuts */
-}
+    .MapsMarkersSubMenu {
+            position: relative;
+    	left: 190px;
+    	top: -160px;
+    	width: 220px;
+            height: 300px;
+    }
 
-#nav li ul { /* second-level lists */
-	position: absolute;
-	left: -999em; /* using left instead of display to hide menus because display: none isn't read by screen readers */
-}
+    .MapsMarkersSubMenu a {
+     /* padding-left: 15px; */
+    }
 
-#nav li ul li {
-	margin-left: 15px;
-        font-family: verdana, arial, helvetica, serif;  
-}
+    .Genes {
+    	position: relative; 
+            top: 40px; 
+    	left: 220px;
+    }
 
-#nav li:hover ul, #nav li.sfhover ul { /* lists nested under hovered list items */
-	left: auto;
-}
+    .GenesSubMenu {
+    	width: 227px;
+    	height: 100px;
+    	position: relative;
+    	top: -120px;
+    	left: 100px;
+    }
 
-#content {
-	clear: left;
-	color: #ccc;
+    .GenesSubMenu a {
+    /* padding-left: 15px; */
+     }
 
-}
+    .Phenotypes {
+    	position: relative; 
+    	top: 80px;
+    	left: 300px;
+    }
 
-.Background {
-        font-family: arial, helvetica, serif;  
-        background-image: url(/documents/img/soliconmenu/background.jpg); 
-        background-repeat: no-repeat;
- 
-}
-
-.MapsMarkersSubMenu, .GenesSubMenu, .PhenotypesSubMenu, .GenomesSequencesSubMenu, .PathwaysSubMenu {
-        background-color: #eeffee;
-        filter:alpha(opacity=80); /* IE */
-        opacity: 0.8; /* standard */	
-	width: 227px;
-        padding: 10px;
-        font-size: 12px;
-        font-weight: bold;
-        line-height: 16px; 
-        white-space: nowrap;
-	z-index: 1;
-}
-
-.MapsMarkers {
-        position: relative; 
-	top: 80px;
-	left: 50px;
-}
-
-.MapsMarkersSubMenu {
-        position: relative;
-	left: 190px;
-	top: -160px;
-	width: 220px;
-        height: 300px;
-}
-
-.MapsMarkersSubMenu a {
- /* padding-left: 15px; */
-}
-
-.Genes {
-	position: relative; 
-        top: 40px; 
-	left: 220px;
-}
-
-.GenesSubMenu {
-	width: 227px;
-	height: 100px;
-	position: relative;
-	top: -120px;
-	left: 100px;
-}
-
-.GenesSubMenu a {
-/* padding-left: 15px; */
- }
-
-.Phenotypes {
-	position: relative; 
-	top: 80px;
-	left: 300px;
-}
-
-.PhenotypesSubMenu {
-	width: 227px;
-	height: 100px; 
-	position: relative;
-	top: -110px;
-	left: 115px;
-}
+    .PhenotypesSubMenu {
+    	width: 227px;
+    	height: 100px; 
+    	position: relative;
+    	top: -110px;
+    	left: 115px;
+    }
 
 
-.BreedersToolBox {
-	position: relative; 
-	top: 250px;
-	left: -250px;
-}
+    .BreedersToolBox {
+    	position: relative; 
+    	top: 250px;
+    	left: -250px;
+    }
 
-.BreedersToolBoxSubMenu {
-	width: 227px;
-	height: 341px;
-	padding-top: 15px;
-	position: relative;
-	top: -110px;
-	left: 115px;
-}
+    .BreedersToolBoxSubMenu {
+    	width: 227px;
+    	height: 341px;
+    	padding-top: 15px;
+    	position: relative;
+    	top: -110px;
+    	left: 115px;
+    }
 
-.GenomesSequences {
-	position: relative; 
-	top: 320px;
-	left: -230px;
-}
+    .GenomesSequences {
+    	position: relative; 
+    	top: 320px;
+    	left: -230px;
+    }
 
-.GenomesSequencesSubMenu {
-	width: 227px;
-	height: 90px;
-	padding-top: 15px;
-	position: relative;
-	top: -110px;
-	left: 200px;
-}
+    .GenomesSequencesSubMenu {
+    	width: 227px;
+    	height: 90px;
+    	padding-top: 15px;
+    	position: relative;
+    	top: -110px;
+    	left: 200px;
+    }
 
-.Pathways {
-	position: relative; 
-	top: 120px;
-	left: 40px;
-}
+    .Pathways {
+    	position: relative; 
+    	top: 120px;
+    	left: 40px;
+    }
 
-.PathwaysSubMenu {
-	width: 227px;
-	height: 341px;
-	position: relative;
-	top: -110px;
-	left: 115px;
-}
+    .PathwaysSubMenu {
+    	width: 227px;
+    	height: 341px;
+    	position: relative;
+    	top: -110px;
+    	left: 115px;
+    }
 
-.Divider { 
-        line-height:4px;
-        font-size: 4px;
-}
-
-/* no longer used css styles - will be deleted 
-.subMenu {
-        background-color: #eeffee;
-        filter:alpha(opacity=70); /* IE */
-        opacity: 0.7; /* standard */
-	width: 227px;
-        font-size: 12px;
-        line-height: 16px; 
-        margin: 0;
-        padding: 0;
-        z-index: 1;
-}
-
-.subMenuTop {
-	/* background-image: url("/documents/img/soliconmenu/subMenuTop.png"); /*
-	height: 16px;
-	width: 227px;
-        padding: 0;
-        margin: 0;
-}
-
-
-.subMenuBottom {
-/* background-image: url("/documents/img/soliconmenu/subMenuBottom.png"); */
-	height: 35px;
-	width: 227px;
-}
-
-*/
+    .Divider { 
+            line-height:4px;
+            font-size: 4px;
+    }
 
 </style>
 
-
-
-
-
-<table border="0" width="720px" height="520px" cellpadding="0" cellspacing="0"><tr><td class="Background"> <!--  style="background-image: url(/documents/img/soliconmenu/background.jpg);" -->
-
-<ul id="nav">
-
+<div id="icon_nav">
+<ul>
 	<li class="MapsMarkers"><a href="/cview/" ><img src="/documents/img/soliconmenu/MapsMarkers.png" title="Maps and Markers" /></a>
 
    		<ul>
@@ -322,4 +244,4 @@ img {
     
 </ul>
 
-</td></tr></table>
+</div>

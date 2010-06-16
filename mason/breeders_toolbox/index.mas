@@ -6,181 +6,106 @@
 <& /util/import_javascript.mas, classes=>["hoverScript"] &>
 
 <style type="text/css">
+    @import url("/documents/inc/icon_nav.css");
 
-img {
-	border: none;
-}
+    #icon_nav {
 
-#nav, #nav ul { /* all lists */
-	padding: 0;
-	margin: 0;
-	list-style: none;
-	line-height: 1;
-}
+        width: 720px;
+        height: 520px;
+        margin-top: -60px;
+    }
 
-#nav a {
-	display: block;
-	width: 10em;
-}
+    .SNPTool {
+    	position: relative; 
+    	top: 150px;
+    	left: 70px;
+    }
 
-#nav li { /* all list items */
-	float: left; 
-	/* width: 10em; width needed or else Opera goes nuts */
-}
-
-#nav li ul { /* second-level lists */
-	position: absolute;
-	left: -999em; /* using left instead of display to hide menus because display: none isn't read by screen readers */
-}
-
-#nav li ul li {
-	margin-left: 15px;
-        font-family: verdana, arial, helvetica, serif;  
-}
-
-#nav li:hover ul, #nav li.sfhover ul { /* lists nested under hovered list items */
-	left: auto;
-}
-
-#content {
-	clear: left;
-	color: #ccc;
-
-}
-
-.Background {
-        font-family: arial, helvetica, serif;  
-        background-image: url(/documents/img/soliconmenu/background.jpg); 
-        background-repeat: no-repeat;
-
-}
-
-img {
-	border: none;
-}
-
-#nav, #nav ul { /* all lists */
-	padding: 0;
-	margin: 0;
-	list-style: none;
-	line-height: 1;
-}
-
-#nav a {
-	display: block;
-	width: 10em;
-}
-
-#nav li { /* all list items */
-	float: left;
-	width: 10em; /* width needed or else Opera goes nuts */
-}
-
-#nav li ul { /* second-level lists */
-	position: absolute;
-	left: -999em; /* using left instead of display to hide menus because display: none isn't read by screen readers */
-}
-
-#nav li ul li {
-	margin-left: 15px;
-}
-
-#nav li:hover ul, #nav li.sfhover ul { /* lists nested under hovered list items */
-	left: auto;
-}
-
-#content {
-	clear: left;
-	color: #ccc;
-}
+    .SNPToolSubMenu {
+    	background-image: url(../images/MapsMarkersSub.png);
+    	width: 227px;
+    	height: 341px;
+    	padding-top: 15px;
+    	position: relative;
+    	top: 0px;
+    	left: 0px;
+    	z-index: 1;
+    }
 
 
 
-/* ------------------------------------------------       Sub Menu Images           ----------------------------------------------- */
+    .Markers {
+    	position: relative; 
+    	top: 160px;
+    	left: 410px;
+    }
 
-.SNPTool {
-	position: relative; 
-	top: 150px;
-	left: 70px;
-}
-
-.SNPToolSubMenu {
-	background-image: url(../images/MapsMarkersSub.png);
-	width: 227px;
-	height: 341px;
-	padding-top: 15px;
-	position: relative;
-	top: 0px;
-	left: 0px;
-	z-index: 1;
-}
+    .MarkersSubMenu {
+    	background-image: url(../images/MapsMarkersSub.png);
+    	width: 227px;
+    	height: 341px;
+    	padding-top: 15px;
+    	position: relative;
+    	top: 0px;
+    	left: 0px;
+    }
 
 
+    .Traits {
+    	position: relative; 
+    	top: 50px;
+    	left: 70px;
+    }
 
-.Markers {
-	position: relative; 
-	top: 160px;
-	left: 410px;
-}
-
-.MarkersSubMenu {
-	background-image: url(../images/MapsMarkersSub.png);
-	width: 227px;
-	height: 341px;
-	padding-top: 15px;
-	position: relative;
-	top: 0px;
-	left: 0px;
-}
-
-
-.Traits {
-	position: relative; 
-	top: 50px;
-	left: 70px;
-}
-
-.TraitsSubMenu {
-	background-image: url(../images/MapsMarkersSub.png);
-	width: 227px;
-	height: 341px;
-	padding-top: 15px;
-	position: relative;
-	top: 0px;
-	left: 0px;
-}
+    .TraitsSubMenu {
+    	background-image: url(../images/MapsMarkersSub.png);
+    	width: 227px;
+    	height: 341px;
+    	padding-top: 15px;
+    	position: relative;
+    	top: 0px;
+    	left: 0px;
+    }
 
 
 
 
-.QTLTool {
-	position: relative; 
-	top: 300px;
-	left: -50px;
-}
+    .QTLTool {
+    	position: relative; 
+    	top: 300px;
+    	left: -50px;
+    }
 
-.QTLToolSubMenu {
-	background-image: url(../images/MapsMarkersSub.png);
-	width: 227px;
-	height: 341px;
-	padding-top: 15px;
-	position: relative;
-	top: 0px;
-	left: 0px;
-	z-index: 1;
-}
-
+    .QTLToolSubMenu {
+    	background-image: url(../images/MapsMarkersSub.png);
+    	width: 227px;
+    	height: 341px;
+    	padding-top: 15px;
+    	position: relative;
+    	top: 0px;
+    	left: 0px;
+    	z-index: 1;
+    }
 
 </style>
 
 <& /page/page_title.mas, title=>'SGN Breeders Toolbox' &>
 
-<table width="720" height="520" border="0" cellpadding="0" cellspacing="0"><tr><td class="Background" align="center">
+<div class="page_introduction">
+<p>The purpose of this page is to give breeders direct links to
+breeder-relevant tools and data on SGN. It is a work in progress and
+your feedback or suggestions are welcome to build this into a
+comprehensive, easy to use and breeder-friendly resource.</p>
 
-<ul id="nav">
+<p>We love feedback!  Please contact <a href="mailto:jv27\@cornell.edu">Joyce van Eck</a>
+with suggestions for improvements!</p>
+</div>
+
+<div id="icon_nav">
+<ul>
 	
     
-	<li class="SNPTool"><!-- a href="#" --><img src="/documents/img/breedericonmenu/SNPTool.png" alt="SNP Tool" title="SNP Tool (under development)" ><!-- /a -->
+	<li class="SNPTool"><!-- a href="#" --><img src="/documents/img/breedericonmenu/SNPTool.png" alt="SNP Tool" title="SNP Tool (coming soon)" ><!-- /a -->
     	<!--
 		<ul>
             <div class="SNPToolSubMenu">
@@ -229,11 +154,7 @@ img {
 	</li>
 
 </ul>
-</td></tr></table>
-
-<div class="boxbgcolor1">The purpose of this page is to give breeders direct links to breeder-relevant tools and data on SGN. It is a work in progress and your feedback or suggestions are welcome to build this into a comprehensive, easy to use and breeder-friendly resource.<br /><br />Please contact <a href="mailto:jv27\@cornell.edu">Joyce van Eck</a> for suggestions. <br /><br /></div><br />
-
-    
+</div>
 
 <&| /page/info_section.mas, title=>'SGN tools' &>
 <ul>
