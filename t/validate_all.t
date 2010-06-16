@@ -17,7 +17,6 @@ my %urls = (
         "phenotype search"                         => "/search/phenotype_search.pl?wee9_phenotype=&wee9_individual_name=&wee9_population_name=",
         "phenotype individual detail"              => "/phenome/individual.pl?individual_id=7530",
         "phenotype population detail"              => "/phenome/population.pl?population_id=12",
-        "QTL analysis page"                        => "/phenome/population_indls.pl?population_id=12&cvterm_id=47515",
         "QTL detail page"                          => "/phenome/qtl.pl?population_id=12&term_id=47515&chr=7&l_marker=SSR286&p_marker=SSR286&r_marker=CD57&lod=3.9&qtl=/documents/tempfiles/temp_images/1a1a5391641c653884fbc9d6d8be5c90.png",
         'tomato bac tpf'                           => '/sequencing/agp.pl',
         'tomato bac tpf'                           => '/sequencing/tpf.pl',

@@ -22,6 +22,7 @@ sub make_dump_tempdir {
 sub validate_urls {
     my ($urls, $iteration_count) = @_;
     local $Test::Builder::Level = $Test::Builder::Level + 1;
+    $iteration_count ||= 1;
 
     for my $test_name ( shuffle((sort keys %$urls) x $iteration_count) ) {
         my $url = $urls->{$test_name};
