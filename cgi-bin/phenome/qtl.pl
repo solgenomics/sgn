@@ -31,7 +31,9 @@ use CXGN::DB::Connection;
 use CXGN::Chado::Cvterm;
 use List::MoreUtils qw /uniq/;
 use Math::Round::Var;
+use SGN::Exception;
 
+our $c;
 my $page = CXGN::Page->new( "qtl", "isaak" );
 my ( $pop_id, $trait_id, $lg, $l_m, $p_m, $r_m, $lod, $qtl_image ) =
   $page->get_encoded_arguments(
@@ -40,16 +42,22 @@ my ( $pop_id, $trait_id, $lg, $l_m, $p_m, $r_m, $lod, $qtl_image ) =
                                 "p_marker",      "r_marker",
                                 "lod",            "qtl"
                               );
+if (!$pop_id) {
+  die SGN::Exception->new(
+    title => 'Maker detail page error: pop_id is a required argument'
+  );
+}
+
 my $dbh          = CXGN::DB::Connection->new();
 my $pop          = CXGN::Phenome::Population->new( $dbh, $pop_id );
 my $pop_name     = $pop->get_name();
-my $trait_name   = &trait_name( $pop, $trait_id );
-my $genetic_link = &genetic_map($pop);
-my $cmv_link     = &marker_positions( $pop, $lg, $l_m, $p_m, $r_m );
-my $gbrowse_link = &genome_positions( $l_m, $p_m, $r_m );
-my $marker_link  = &marker_detail($pop, $l_m, $p_m, $r_m);
-my $legend       = &legend();
-my $comment      = &comment();
+my $trait_name   = trait_name( $pop, $trait_id );
+my $genetic_link = genetic_map($pop);
+my $cmv_link     = marker_positions( $pop, $lg, $l_m, $p_m, $r_m );
+my $gbrowse_link = genome_positions( $l_m, $p_m, $r_m );
+my $marker_link  = marker_detail($pop, $l_m, $p_m, $r_m);
+my $legend       = legend();
+my $comment      = comment();
 
 $c->forward_to_mason_view('/qtl/qtl.mas', qtl_image=>$qtl_image, pop_name=>$pop_name, trait_name=>$trait_name, cmv_link=>$cmv_link, gbrowse_link=>$gbrowse_link, marker_link=>$marker_link, genetic_map=>$genetic_link, legend=>$legend, comment=>$comment);
 
