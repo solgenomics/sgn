@@ -121,7 +121,7 @@ sub get_alignment {
 sub get_fasta {
     my $self = shift;
     my $file = catfile( $self->get_path(), "fasta", $self->name() . ".fa" );
-    if ( !-e $file ) {
+    unless( -f $file ) {
         die "The fasta information for family "
           . $self->name()
           . " cannot be found";
