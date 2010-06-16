@@ -20,6 +20,7 @@ Methods in this class include:
 package SGN::Genefamily;
 
 use Moose;
+use namespace::autoclean;
 use File::Slurp qw/slurp/;
 use File::Spec::Functions;
 use File::Basename qw/basename/;
