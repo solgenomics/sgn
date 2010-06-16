@@ -30,7 +30,7 @@ Displays an icon-based menu of top level option. Mousing over the icons pops up 
 
     #icon_nav {
         width: 720px;
-        height: 520px;
+        height: 480px;
         margin-top: -20px;
         margin-left: -20px;
     }
