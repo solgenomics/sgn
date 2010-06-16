@@ -33,7 +33,10 @@ use File::Basename qw/basename/;
 
 =cut
 
-has 'name' => ( is => 'rw' );
+has 'name' => (
+    is       => 'rw',
+    required => 1,
+   );
 
 =head2 members
 
@@ -58,7 +61,10 @@ has 'members' => ( is => 'ro', isa => 'ArrayRef', default => sub { [] } );
 
 =cut
 
-has 'files_dir' => ( is => 'rw' );
+has 'files_dir' => (
+    is       => 'rw',
+    required => 1,
+   );
 
 =head2 dataset
 
@@ -73,7 +79,10 @@ has 'files_dir' => ( is => 'rw' );
 
 =cut
 
-has 'dataset' => ( is => 'rw' );
+has 'dataset' => (
+    is       => 'rw',
+    required => 1,
+   );
 
 =head2 get_alignment
 
