@@ -27,16 +27,16 @@
 
 	     [ "<b>1.50</b>",
                "Apr&nbsp;2010",
-               "Includes all 454 data, bac ends, fosmis ends, polishing with Solexa and SOLiD data",
+               "Includes all 454 data, bac ends, fosmid ends, polishing with Solexa and SOLiD data",
                "No",
                "<a href=\"ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/wgs/assembly/build_1.50/S_lycopersicum_scaffolds.1.50.fa.gz\">scaffolds</a>",
               ],
 
 	     [ "<b>2.00</b>",
-               "TBA",
-               "-",
-               "-",
-               "-",
+               "Jun&nbsp;2010",
+               "Additional scaffold linking using clone ends.  First build to include whole-chromosome pseudomolecules.  Scaffolds oriented and placed using multiple physical maps.",
+               "No",
+               "<a href=\"ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/wgs/assembly/build_2.00/S_lycopersicum_scaffolds.2.00.fa.gz\">scaffolds</a>",
               ],
 
 	   ],
