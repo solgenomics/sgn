@@ -468,7 +468,6 @@ eval {
           $dbh->pg_rollback_to($saveptnm);
           next RECORD;
 	}
-        next RECORD;
 	if (@extfiles) {
 	    count ("row");
 	    foreach my $filename (@extfiles) {
