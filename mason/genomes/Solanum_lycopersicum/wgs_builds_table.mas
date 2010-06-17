@@ -1,49 +1,17 @@
 <% columnar_table_html(
-        __align => 'cllcc',
+        __align  => 'cllcc',
         headings => [qw[ Release Date Description Annotation Download ]],
-    
-        data => [
-            
-            [ "<b>1.00</b>",
-              "Dec&nbsp;2009",
-              "initial build, based on the Newbler assembler and containing only 454 sequencing data",
-              "<a href=\"/genomes/Solanum_lycopersicum/genome_data.pl\">Browse</a>",
-              "<a href=\"ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/wgs/assembly/build_1.00/S_lycopersicum_scaffolds.1.00.fa.gz\">scaffolds</a><br /><a href=\"ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/annotation/ITAG1_release/ITAG1_proteins.fasta\">proteins</a><br /><a href=\"ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/annotation/ITAG1_release/ITAG1_cds.fasta\">cds</a>"
-             ],
-            
-	     [ "<b>1.03</b>",
-               "Jan&nbsp;2010",
-               "like 1.00, but with additional 454 runs and improved contamination screen",
-               "No",
-               "<a href=\"ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/wgs/assembly/build_1.03/S_lycopersicum_scaffolds.1.03.fa.gz\">scaffolds</a>",
-              ],
-
-	     [ "<b>cabog1.00</b>",
-               "Mar&nbsp;2010",
-               "All 454 data, bac end and fosmid end data, assembled using the CABOG assembler",
-               "No",
-               "<a href=\"ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/wgs/assembly/cabog_1.00/S_lycopersicum_scaffolds.cabog1.00.fa.gz\">scaffolds</a>",
-              ],
-
-	     [ "<b>1.50</b>",
-               "Apr&nbsp;2010",
-               "Includes all 454 data, bac ends, fosmid ends, polishing with Solexa and SOLiD data",
-               "No",
-               "<a href=\"ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/wgs/assembly/build_1.50/S_lycopersicum_scaffolds.1.50.fa.gz\">scaffolds</a>",
-              ],
-
-	     [ "<b>2.00</b>",
-               "Jun&nbsp;2010",
-               "Additional scaffold linking using clone ends.  First build to include whole-chromosome pseudomolecules.  Scaffolds oriented and placed using multiple physical maps.",
-               "No",
-               "<a href=\"ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/wgs/assembly/build_2.00/S_lycopersicum_scaffolds.2.00.fa.gz\">scaffolds</a>",
-              ],
-
-	   ],
+        data     =>
+           eval{ LoadFile( $build_description_file ) }
+             || [[('-')x2, '<span class="ghosted">release list temporarily unavailable</span>', ('-')x2]],
    )
 %>
 
 <%init>
+use YAML::Any 'LoadFile';
 use CXGN::Page::FormattingHelpers qw | columnar_table_html |;
-</%init>
+use File::Spec::Functions;
 
+my $build_description_file =
+    catfile( $c->get_conf('static_content_path'), 'genomes','Solanum_lycopersicum','genome_builds.yaml' );
+</%init>
