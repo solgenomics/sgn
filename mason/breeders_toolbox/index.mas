@@ -1,0 +1,183 @@
+
+<%doc>
+
+</%doc>
+
+<& /util/import_javascript.mas, classes=>["hoverScript"] &>
+
+<style type="text/css">
+    @import url("/documents/inc/icon_nav.css");
+
+    #icon_nav {
+
+        width: 720px;
+        height: 520px;
+        margin-top: -60px;
+    }
+
+    .SNPTool {
+    	position: relative; 
+    	top: 150px;
+    	left: 70px;
+    }
+
+    .SNPToolSubMenu {
+    	background-image: url(../images/MapsMarkersSub.png);
+    	width: 227px;
+    	height: 341px;
+    	padding-top: 15px;
+    	position: relative;
+    	top: 0px;
+    	left: 0px;
+    	z-index: 1;
+    }
+
+
+
+    .Markers {
+    	position: relative; 
+    	top: 160px;
+    	left: 410px;
+    }
+
+    .MarkersSubMenu {
+    	background-image: url(../images/MapsMarkersSub.png);
+    	width: 227px;
+    	height: 341px;
+    	padding-top: 15px;
+    	position: relative;
+    	top: 0px;
+    	left: 0px;
+    }
+
+
+    .Traits {
+    	position: relative; 
+    	top: 50px;
+    	left: 70px;
+    }
+
+    .TraitsSubMenu {
+    	background-image: url(../images/MapsMarkersSub.png);
+    	width: 227px;
+    	height: 341px;
+    	padding-top: 15px;
+    	position: relative;
+    	top: 0px;
+    	left: 0px;
+    }
+
+
+
+
+    .QTLTool {
+    	position: relative; 
+    	top: 300px;
+    	left: -50px;
+    }
+
+    .QTLToolSubMenu {
+    	background-image: url(../images/MapsMarkersSub.png);
+    	width: 227px;
+    	height: 341px;
+    	padding-top: 15px;
+    	position: relative;
+    	top: 0px;
+    	left: 0px;
+    	z-index: 1;
+    }
+
+</style>
+
+<& /page/page_title.mas, title=>'SGN Breeders Toolbox' &>
+
+<div class="page_introduction">
+<p>The purpose of this page is to give breeders direct links to
+breeder-relevant tools and data on SGN. It is a work in progress and
+your feedback or suggestions are welcome to build this into a
+comprehensive, easy to use and breeder-friendly resource.</p>
+
+<p>We love feedback!  Please contact <a href="mailto:jv27\@cornell.edu">Joyce van Eck</a>
+with suggestions for improvements!</p>
+</div>
+
+<div id="icon_nav">
+<ul>
+	
+    
+	<li class="SNPTool"><!-- a href="#" --><img src="/documents/img/breedericonmenu/SNPTool.png" alt="SNP Tool" title="SNP Tool (coming soon)" ><!-- /a -->
+    	<!--
+		<ul>
+            <div class="SNPToolSubMenu">
+                <li><a href="#">Test...1</a></li>
+                <li><a href="#">Test...2</a></li>
+                <li><a href="#">Test...3</a></li>
+            </div>
+        </ul>
+        -->
+	</li>
+    
+     <li class="Markers"><a href="/search/markers/markersearch.pl"><img src="/documents/img/breedericonmenu/Markers.png" alt="Markers" title="Maps &amp; Markers"  /></a>
+    	<!--
+		<ul>
+            <div class="MarkersSubMenu">
+            	<li><a href="#">Test...1</a></li>
+                <li><a href="#">Test...2</a></li>
+                <li><a href="#">Test...3</a></li>
+            </div>
+        </ul>
+        -->
+	</li>
+	
+	<li class="Traits"><a href="/search/direct_search.pl?search=phenotypes"><img src="/documents/img/breedericonmenu/Traits.png" alt="Traits" title="Traits &amp; Phenotypes" /></a>
+    	<!--
+		<ul>
+            <div class="TraitsSubMenu">
+            	<li><a href="#">Test...1</a></li>
+                <li><a href="#">Test...2</a></li>
+                <li><a href="#">Test...3</a></li>
+            </div>
+        </ul>
+        -->
+	</li>
+    
+	<li class="QTLTool"><a href="/search/direct_search.pl?search=cvterm_name"><img src="/documents/img/breedericonmenu/QTLTool.png" alt="QTL Tool" title="Access QTL data" /></a>
+    	<!--
+   		<ul>
+            <div class="QTLToolSubMenu">
+                <li><a href="#">Test...1</a></li>
+                <li><a href="#">Test...2</a></li>
+                <li><a href="#">Test...3</a></li>
+            </div>
+        </ul>
+        -->
+	</li>
+
+</ul>
+</div>
+
+<&| /page/info_section.mas, title=>'SGN tools' &>
+<ul>
+  <li>Browse the SGN <a href="/search/direct_search.pl?search=markers/">Markers database</a></li>
+  <li>Browse available controlled vocabularies using the SGN <a href="/tools/onto/">Ontology browser</a></li>
+  <li>Develop CAPS markers using the <a href="/tools/caps_designer/caps_input.pl">CAPS Designer</a></li>
+  <li>Check intron locations in transript data using the <a href="/tools/intron_detection/find_introns.pl">Intron Finder</a></li>
+  <li><a href="/phenome/qtl_form.pl">QTL data submssion</a> and on-the-fly QTL analysis <a href="/search/direct_search.pl?search=cvterm_name/">for Solanaceae traits</a></li>
+    <li>SGN gene and phenotype <a href="/phenome/">submission guide</a> </li></ul>
+</ul>
+</&>
+
+<&| /page/info_section.mas, title=>'Tools in development' &>
+<ul><li>SNP discovery tool. This will be part of the <a href="https://www.msu.edu/~douchesd/solcapwebpage.htm">SolCAP</a> project.</li></ul>
+</&>
+
+<&| /page/info_section.mas, title=>'Links' &>
+<ul>
+<li><a href="http://www.tomatomap.net/">TomatoMap.Net</a> - a site for Tomato Genetics at Ohio State University.</li>
+<li><a href="http://solcap.msu.edu/">SolCAP</a> - the official SolCAP website at Michigan State University.</li>
+<li><a href="http://www.oardc.ohio-state.edu/vanderknaap/tomato_analyzer.htm">Tomato Analyzer</a> - software for scoring fruit shape and other shapes.</li>
+<li><a href="/help/index.pl#submit">Submitting data to SGN</a> - instruction for data submissions to SGN.</li>
+</ul>
+</&>
+
+

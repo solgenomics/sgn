@@ -20,7 +20,7 @@ eval {
 </%perl>
 
 <div class="boxbgcolor1" style="margin:0px;">
-<div class="boxheading">News...</div>
+<div class="boxheading">News</div>
 <div class="boxcontent"><% $contents %></div>
 <a href="oldhighlights.pl">See all news...</a>
 </div>
