@@ -1,8 +1,5 @@
 use strict;
-
-use CGI;
-use CXGN::Genefamily;
-
+use CGI ();
 my $cgi = CGI->new();
 
 $c->forward_to_mason_view(
