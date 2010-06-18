@@ -11,10 +11,8 @@ $action => undef
 </%args>
 
 <& /page/page_title.mas, title=>'Gene family search' &>
- 
-<%perl>
 
-#print STDERR "G2: $genefamily_id M2: $member_id, D2: $dataset\n";
+<%perl>
 
 use SGN::Genefamily;
 use Tie::UrlEncoder;
@@ -24,11 +22,13 @@ our %urlencode;
 
 my  $DIR = $c->get_conf('genefamily_dir'); # '/home/mueller/dutch_tomato_assembly/tomato_ara_rice_comparison/';
 
-my $gf;
+if ($genefamily_id) {
+    my $gf = SGN::Genefamily->new(
+        name      => "family_$genefamily_id",
+        dataset   => $dataset,
+        files_dir => $DIR,
+       );
 
-if ($genefamily_id) { 
-  #die "DATASET ID NOT DEFINED" if (!$dataset);
-    $gf = SGN::Genefamily->new(name=>"family_$genefamily_id", dataset=>$dataset, files_dir=>$DIR);
     my $seq_data ="";
     my $fasta_data = "";
     my $tree_data = "";
@@ -42,43 +42,41 @@ if ($genefamily_id) {
 
     my $errors = "";
 
-    eval { 
+    eval {
       $seq_data = $gf->get_alignment();
     };
-    if ($@) { 
+    if ($@) {
       $errors .= "Alignment data not available. ";
       $align_link_disabled="disabled";
     }
-    eval { 
+    eval {
       $fasta_data = $gf->get_fasta();
     };
-    if ($@) { 
+    if ($@) {
       $errors .= "Sequence data not available. ";
       $fasta_link_disabled = "disabled";
     }
-    eval {   
+    eval {
       $tree_data = $gf->get_tree();
     };
-    if ($@) { 
+    if ($@) {
       $errors .= "Tree data not available. ";
       $tree_link_disabled = "disabled"
     }
     eval {
       $annot_data = $gf->get_annotation();
     };
-    if ($@) { 
+    if ($@) {
       $errors .= "Annotation data not available. ";
       $annot_data = "(No annotation data available)";
     }
-    eval { 
+    eval {
       $errors .= "Expression data not available. ";
       $exp_data = $gf->get_expression();
     };
-    if ($@) { 
+    if ($@) {
       $exp_link_disabled = "disabled";
     }
-      
-
 
 </%perl>
 
@@ -96,14 +94,14 @@ if ($genefamily_id) {
 	<input type="hidden" name="format" value="fasta" />
       </form>
     </td>
-    
+
     <td>
       <form method="post" action="/tools/tree_browser/">
 	<input type="hidden" name="" value="<% $tree_data %>" />
 	<input type="submit" value="Tree" <% $tree_link_disabled %> />
       </form>
     </td>
-    
+
 
 
     </tr>
@@ -113,70 +111,66 @@ if ($genefamily_id) {
 Sequences in fasta:<br />
       <pre><% $fasta_data %></pre>
 </td></tr></table>
-  
+
 
 </form>
 
 <%perl>
-    
 }
 
-if ($member_id) { 
-  my $member_file = "<$DIR/genefamily_defs.txt"; 
+if ($member_id) {
+  my $member_file = "<$DIR/genefamily_defs.txt";
     open (my $F, "<", $member_file) || die "can't open family file $member_file";
     my $family_nr = 0;
     my $found = 0;
-    while(<$F>) { 
+    while(<$F>) {
 	$family_nr++;
-	if ($_=~/\b$member_id\b/i) { 
+	if ($_=~/\b$member_id\b/i) {
 	    $found=1;
 	    last();
 	}
     }
-    
 
-    if ($found) { 
+
+    if ($found) {
 	print qq | <form>
         In dataset <b>"$dataset"</b>, sequence $member_id is in family $family_nr.
         <input type="hidden" name="genefamily_id" value="$family_nr" />
-	<input type="hidden" name="dataset" value="$dataset" /> 
+	<input type="hidden" name="dataset" value="$dataset" />
 	  <input type="submit" value="view family $family_nr" />
         </form> |;
-	  
+
     }
-    else { 
+    else {
 	print qq | $member_id was not found in any family. |;
     }
 
 
 
-    
+
 }
 
 my @datasets = SGN::Genefamily->get_available_datasets($DIR);
 
 my $select = '<select name="dataset">';
 my $selected = "";
-foreach my $d (@datasets) { 
+foreach my $d (@datasets) {
   if ($d eq $dataset) { $selected="selected=\"selected\" "; }
   else { $selected= ""; }
   $select .= qq | <option value="$d" $selected>$d</option> |;
 }
 $select .= "</select>";
-	    
-if (!$member_id && !$genefamily_id) { 
-    
-</%perl>
 
+if (!$member_id && !$genefamily_id) {
+
+</%perl>
 
 	<form>
 	  <table><tr><td>Choose dataset</td><td><% $select %></td></tr>
-	    <tr><td>Genefamily id</td><td><input name="genefamily_id" />(a number)</td></tr> 
+	    <tr><td>Genefamily id</td><td><input name="genefamily_id" />(a number)</td></tr>
 	    <tr><td colspan="2">-OR-</td></tr>
 	    <tr><td>Member id</td><td><input name="member_id" /> (e.g. At1g01060)</td></tr></table>
 	<input type="submit" />
 	</form>
 
-<%perl>
-}
-</%perl>
+% }
