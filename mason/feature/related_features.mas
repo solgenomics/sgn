@@ -3,14 +3,18 @@
     $parents
 </%args>
 <%perl>
-    sub related_stats {
-       my ($features) = @_;
-       my $stats = {};
-       for my $f (@$features) {
+sub related_stats {
+    my ($features) = @_;
+    my $stats = { };
+    for my $f (@$features) {
             $stats->{$f->feature->type->name}++;
-       }
-       return $stats;
     }
+    my $data = [ ];
+    for my $k (sort keys %$stats) {
+        push @$data, [ $k => $stats->{$k} ];
+    }
+    return $data;
+}
 </%perl>
 % my $c = 0;
 % for my $child (@$children) {
@@ -30,3 +34,11 @@ Parent Feature:
 
 % last if ++$c > 10;
 % }
+<& /page/columnar_table.mas,
+    headings => [ "Child Feature Type", "Number" ],
+    data     => related_stats($children),
+&>
+<& /page/columnar_table.mas,
+    headings => [ "Parent Feature Type", "Number" ],
+    data     => related_stats($parents),
+&>

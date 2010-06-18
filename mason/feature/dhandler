@@ -27,6 +27,7 @@
 
 <&| /page/info_section.mas,
     title => 'Feature Data',
+    collapsible => 1,
 &>
     Feature Type: <% $feature->type->name %><br/>
     Analysis: <% $feature->is_analysis ? 'Yes' : 'No' %><br/>
@@ -37,6 +38,10 @@
     <& /feature/dbxref.mas,
         dbxref => $feature->dbxref,
     &><br/>
+</&>
+<&| /page/info_section.mas, title => 'Related Features',
+    collapsible => 1,
+&>
     <& /feature/related_features.mas,
         children  => $children,
         parents   => $parents,
@@ -72,9 +77,9 @@
   Length : <% $seq->length %><br/>
   <% $feature->md5checksum ?  'MD5 :' . $feature->md5checksum : '' %>
   <p/>
+    <& /feature/sequence.mas,
+            feature => $feature,
+            seq     => $seq,
+            blast_url => $blast_url,
+    &>
 </&>
-<& /feature/sequence.mas,
-        feature => $feature,
-        seq     => $seq,
-        blast_url => $blast_url,
-&>
