@@ -272,7 +272,6 @@ sub pheno_upload {
     }
     
     if ($p_file eq $name ) {
-#here, call apache_upload_files	
     $temp_pheno_file = $qtl->apache_upload_file($phe_upload, $c);    
     return $temp_pheno_file;
    
@@ -592,7 +591,7 @@ sub store_traits {
 
     if ($fields[0] ne "traits" || $fields[1] ne "definition" || $fields[2] ne "unit")  {
 	my $error = "Data columns in the traits file need to be in the order of: 
-                    <b>trait -> definition -> unit</b>. <br/>
+                    <b>traits -> definition -> unit</b>. <br/>
                     Now they are in the order of <b><i>$fields[0] -> $fields[1] 
                     -> $fields[2]</i></b>.\n";
      
@@ -692,9 +691,7 @@ sub store_individual {
     my @individuals = CXGN::Phenome::Individual->new_with_name($dbh, $ind_name, $pop_id);
  
     eval { 
-	if (scalar(@individuals) == 0) { 
-	   # print STDERR "Individual with name $ind_name does not 
-           #               exist! Storing it now...\n"; 
+	if (scalar(@individuals) == 0) { 	   
 	    $individual = CXGN::Phenome::Individual->new($dbh);
 	    $individual->set_name($ind_name);
 	    $individual->set_population_id($pop_id);
@@ -713,8 +710,7 @@ sub store_individual {
                  for the same genotype $ind_name. I can't store 
                  duplicate phenotype data. So I am quitting..\n";
 	}
-	elsif (scalar(@individuals) > 0) {
-	    # print STDERR "There are more than 1 individuals with the name 
+	elsif (scalar(@individuals) > 0) {	   
 	    die "There are two genotypes with the same name ($ind_name)
               in the population: $pop_id.\n";   
 	}
@@ -765,10 +761,7 @@ sub store_trait_values {
 
     $trait[$i] = CXGN::Phenome::UserTrait->new_with_name($dbh, $fields[$i]);
     $trait_name = $trait[$i]->get_name();
-    $trait_id = $trait[$i]->get_user_trait_id();
-   # print STDERR "Created trait object $fields[$i] \n";
-   # print STDERR "Got the user_trait_id: $trait_id\n";
-   # print STDERR "population id: $pop_id\n";
+    $trait_id = $trait[$i]->get_user_trait_id();  
 
 }
 eval { 
@@ -849,10 +842,7 @@ sub store_map {
     $acc = CXGN::Accession->new($dbh, $parent_m);
     my $male_name = $acc->accession_common_name();
     my $chado_org_id_m = $acc->chado_organism_id();
-   
-
- ### put some control here if map already exists...
-     
+        
     my $existing_map_id = CXGN::Map::Tools::population_map($dbh, $pop_id);
     
     my ($map, $map_id, $map_version_id);    
@@ -882,9 +872,7 @@ sub store_map {
     $map->{population_id}=$pop_id;
     $map_id = $map->store();
     
-   
-
-    print STDERR " map_version_id: $map_version_id\n";
+    
     my $lg_result;
     if ($map_version_id) {
 	$lg_result = $self->store_lg($map_version_id, $file);
@@ -956,16 +944,13 @@ sub store_lg {
     my $chr = <F>;
     chomp($chr);
     close F;
-
-    #print STDERR "chromosomes: $chr\n";
+    
     my @chrs = split /\t/, $chr;
     @chrs  = uniq @chrs;
     
    
      die "The first cell of 2nd row must be empty."  unless !$chrs[0]; 
-     shift(@chrs);
-   
-   # print STDERR "chromosome 1: $chrs[0]\n";
+     shift(@chrs);  
 
     my $lg = CXGN::LinkageGroup->new($dbh, $map_version_id, \@chrs);
     my $result = $lg->store();
@@ -1031,15 +1016,13 @@ sub store_marker_and_position {
 		$marker_obj->set_marker_name($marker_name);
 		my $inserts = $marker_obj->store_new_data();
 		
-		if ($inserts and @{$inserts}) { 
-		   # print STDERR "New marker inserted: $marker_name\n"
+		if ($inserts and @{$inserts}) { 		  
 		}
 		else { 
 		    die "Oops, I thought I was inserting some new data";
 		}
 		$marker_id=$marker_obj->marker_id();
-	    }
-	   # print STDERR $marker_obj->name_that_marker()."\n";
+	    }	   
 	    my $loc=$marker_obj->new_location();
 	    my $pos = $positions[$i];	    
 	    my $conf ='uncalculated';
@@ -1118,16 +1101,11 @@ sub store_genotype {
     my $pop = CXGN::Phenome::Population->new($dbh, $pop_id);
     my $pop_name = $pop->get_name();
     my $sp_person_id = $pop->get_sp_person_id();
-
-    #print STDERR "sp_person_id: $sp_person_id\n";
+   
     my $map = CXGN::Map->new($dbh, {map_version_id=>$map_version_id});
     my $map_id = $map->get_map_id();
 
-    my $linkage = CXGN::LinkageGroup->new($dbh, $map_version_id);
-
-   # if ($linkage) {print STDERR "linkage group... \n";}
-
-   # print STDERR " map_id in store_genotype: $map_id\n";
+    my $linkage = CXGN::LinkageGroup->new($dbh, $map_version_id);  
  
     unless ($map_id) {
 	die "I need a valid reference map before I can 
@@ -1137,70 +1115,51 @@ sub store_genotype {
 
  eval {
 
-     my $experiment = CXGN::Phenome::GenotypeExperiment->new($dbh);
-     #print STDERR "store_genotype: created an experiment object!..\n";
+     my $experiment = CXGN::Phenome::GenotypeExperiment->new($dbh);     
      $experiment->set_background_accession_id(100);
      $experiment->set_experiment_name($pop_name);
      $experiment->set_reference_map_id($map_id);
      $experiment->set_sp_person_id($sp_person_id);
      $experiment->set_preferred(1);
      my $experiment_id = $experiment->store();
-     #print STDERR "store_genotypes: experiment_id: $experiment_id\n";
-
-     
+    
     
      while (my $row = <F>) {
 	 chomp($row);
 	 my @plant_genotype = split /\t/, $row;
-	 my $plant_name = shift(@plant_genotype);
-	# print STDERR "plant name: $plant_name\n";
-
-	 
+	 my $plant_name = shift(@plant_genotype);	 
 	 my @individual = CXGN::Phenome::Individual->new_with_name($dbh, $plant_name, $pop_id);
-	# my $population_id = $individual[0]->get_population_id();
+
 	 my $individual_id = $individual[0]->get_individual_id();
-	# print STDERR "plant population id: $pop_id\n";
-	 
+
 	 die "There are two genotypes with the same name or no genotypes 
               in the same population. Can't assign genotype values." 
 	 unless (scalar(@individual) == 1);
 
 
 	 if ($individual[0]) {	
-	     #if ($population_id != $pop_id) { 		
-	#	 die "Individual $plant_genotype[0] is not from population $pop_id\n";
-	 #    }
-	     #print STDERR "Individual $plant_genotype[0] is not from population $pop_id\n";
+	   
 	     my $genotype = CXGN::Phenome::Genotype->new($dbh);
-	
-	    # print STDERR "experiment_id is $experiment_id\n";
+		   
 	     $genotype->set_genotype_experiment_id($experiment_id);
-	     $genotype->set_individual_id($individual_id);
-	    # print STDERR "individual_id: $individual_id\n";
+	     $genotype->set_individual_id($individual_id);	    
 	     #$genotype->set_experiment_name($pop_name);
 	     #$genotype->set_reference_map_id($map_id);
 	     #$genotype->set_sp_person_id($sp_person_id);
 	     my $genotype_id = $genotype->store();
 
-	     #print STDERR "store_genotype: genotype_id: $genotype_id\n";
 	     
 	     my $mapmaker_genotype;
 	     for (my $i=0; $i<@plant_genotype; $i++) { 
 		 my $genotype_region = CXGN::Phenome::GenotypeRegion->new($dbh);
-		 # print STDERR "counting $i\n";   
+		
 		 my $marker_name = CXGN::Marker::Tools::clean_marker_name($markers[$i]);
-		 my $marker = CXGN::Marker->new_with_name($dbh, $marker_name);
-		 #print STDERR "marker: $marker_name\n";
-		 my $c = $chrs[$i];
-		 #print STDERR "linkage_name: $c\n";
+		 my $marker = CXGN::Marker->new_with_name($dbh, $marker_name);		
+		 my $c = $chrs[$i];		 
 		 my $lg_id = $linkage->get_lg_id($chrs[$i]);
-		 
-		 #print STDERR "store_genotype: lg_id: $lg_id\n";    
-		 if (!$plant_genotype[$i] || ($plant_genotype[$i] =~/\-/)) { 
-			# print STDERR "No zygocity information for: 
-                        #               $plant_name\t$markers[$i]\t$chrs[$i] 
-                        #               .....Skipping...\n";
-			 next();
+		 		    
+		 if (!$plant_genotype[$i] || ($plant_genotype[$i] =~/\-/)) { 		
+		     next();
 		 }	    
 		     
 		     
@@ -1211,9 +1170,7 @@ sub store_genotype {
 		 $genotype_region->set_marker_id_ss($marker->marker_id());
 		 $genotype_region->set_lg_id($lg_id);
 		 $genotype_region->set_sp_person_id($sp_person_id);   
-		# print STDERR "Setting genotype values: $plant_name\t$markers[$i]\t
-                #               $chrs[$i]\t$plant_genotype[$i]\n";
-		
+	
 		 if ($i == 0) { 
 		     if ($plant_genotype[$i] =~/\d/) {
 			 $mapmaker_genotype = 1;
