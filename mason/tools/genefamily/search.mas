@@ -119,7 +119,8 @@ Sequences in fasta:<br />
 }
 
 if ($member_id) {
-  my $member_file = "<$DIR/genefamily_defs.txt";
+    die 'must provide dataset' unless $dataset;
+    my $member_file = catfile($DIR,$dataset,'genefamily_defs.txt');
     open (my $F, "<", $member_file) || die "can't open family file $member_file";
     my $family_nr = 0;
     my $found = 0;
@@ -133,23 +134,22 @@ if ($member_id) {
 
 
     if ($found) {
-	print qq | <form>
-        In dataset <b>"$dataset"</b>, sequence $member_id is in family $family_nr.
-        <input type="hidden" name="genefamily_id" value="$family_nr" />
-	<input type="hidden" name="dataset" value="$dataset" />
-	  <input type="submit" value="view family $family_nr" />
-        </form> |;
+</%perl>
 
-    }
-    else {
-	print qq | $member_id was not found in any family. |;
-    }
+        <form>
+        In dataset <b><% $dataset %></b>, sequence <% $member_id %> is in family <% $family_nr %>.
+        <input type="hidden" name="genefamily_id" value="<% $family_nr %>" />
+	<input type="hidden" name="dataset" value="<% $dataset %>" />
+	  <input type="submit" value="view family <% $family_nr %>" />
+        </form>
 
+%   }
+%   else {
+        <% $member_id %> was not found in any family.
+%   }
+%}
 
-
-
-}
-
+<%perl>
 my @datasets = SGN::Genefamily->get_available_datasets($DIR);
 
 my $select = '<select name="dataset">';
@@ -168,9 +168,13 @@ if (!$member_id && !$genefamily_id) {
 	<form>
 	  <table><tr><td>Choose dataset</td><td><% $select %></td></tr>
 	    <tr><td>Genefamily id</td><td><input name="genefamily_id" />(a number)</td></tr>
-	    <tr><td colspan="2">-OR-</td></tr>
+	    <tr><td colspan="2"><b>-OR-</b></td></tr>
 	    <tr><td>Member id</td><td><input name="member_id" /> (e.g. At1g01060)</td></tr></table>
 	<input type="submit" />
 	</form>
 
 % }
+
+<%init>
+use File::Spec::Functions;
+</%init>
