@@ -46,7 +46,6 @@ has 'name' => (
  Property:     the members of the gene family
  Side Effects:
  Example:
- Status:       NOT YET IMPLEMENTED!!!!
 
 =cut
 
