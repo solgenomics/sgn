@@ -8,6 +8,7 @@
 <p>This is a temporary interface to make the gene families from the tomato genome sequencing project available to gene family curators.</p>
 <p>You can search in different gene family builds, both for a specific family, and for a gene family member. You can then view the fasta, alignments, and trees, if available.</p>
 <p>More functionality will be added later.</p>
+<p>To continue, you need to log in with a special username and password that was provided to you.</p>
 
 
 <!-- div class="boxbgcolor2">

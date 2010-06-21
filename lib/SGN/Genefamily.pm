@@ -36,7 +36,7 @@ use File::Basename qw/basename/;
 
 has 'name' => (
     is       => 'rw',
-    required => 1,
+#    required => 1,
    );
 
 =head2 members
