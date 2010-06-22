@@ -212,7 +212,7 @@ Displays an icon-based menu of top level option. Mousing over the icons pops up 
                 <li><a href="/genomes/Solanum_lycopersicum/genome_data.pl">Search/browse tomato genome</a></li>
                 <li><a href="/genomes/Solanum_pimpinellifolium/">Solanum pimpinellifolium genome</a></li>
 		<li><a href=""></a>&nbsp;<li>
-		<li><a href="/sequencing/sol100.pl">Add a genome</a></li>
+		<li><a href="/sequencing/sol100.pl">Add a SOL100 genome</a></li>
             </div>
         </ul>
 
