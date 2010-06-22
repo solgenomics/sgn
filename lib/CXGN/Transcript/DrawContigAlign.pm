@@ -519,7 +519,7 @@ method drawInfo (Ref $image!, Object $pane!, Ref $font!,
     
     my $west = $pane->west + (2 * $font->width);
 
-    open my $MAPFILE, ">" , $mapFilename or die "Could not create map file: $!";
+    open my $MAPFILE, ">" , $mapFilename or die "$! writing map file $mapFilenamess";
 
     print $MAPFILE "<map name=\"contigmap_$imageName\">";
 
