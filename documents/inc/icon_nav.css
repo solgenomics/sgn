@@ -39,13 +39,14 @@
         z-index: 10;
 }
 #icon_nav img {
-        border: none;
+        border: 1px solid transparent;
         padding: 2px;
         -webkit-border-radius: 13px;
         -moz-border-radius: 13px;
 }
 #icon_nav li:hover > a > img, #icon_nav li.sfhover > a > img { 
         background: #e6e6e6;
+        border: 1px solid #ccc;
 }
 
 #icon_nav {
