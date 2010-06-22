@@ -90,6 +90,7 @@ Displays an icon-based menu of top level option. Mousing over the icons pops up 
     	position: relative; 
     	top: 250px;
     	left: -250px;
+        z-index: 1;
     }
 
     .BreedersToolBoxSubMenu {
