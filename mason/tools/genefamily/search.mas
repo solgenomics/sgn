@@ -118,9 +118,6 @@ Sequences in fasta:<br />
       <pre><% $fasta_data %></pre>
 </td></tr></table>
 
-
-</form>
-
 <%perl>
 }
 
