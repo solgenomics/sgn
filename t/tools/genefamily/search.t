@@ -15,7 +15,7 @@ my $server = $ENV{SGN_TEST_SERVER} || die "need SGN_TEST_SERVER set";
 
 $m->get_ok($server."/tools/genefamily/search.pl");
 
-$m->content_contains('do not have the privileges');
+$m->content_contains('Please log in as the correct user');
 
 $m->get_ok($server."/solpeople/login.pl");
 
@@ -44,7 +44,7 @@ my %form = (
         username => 'genefamily_test_editor',
         pd       => 'testpassword',
     },
-    );
+);
 
 $m->submit_form_ok( \%form, "Login with special user..." );
 
@@ -63,7 +63,7 @@ $m->submit_form_ok(\%search_form, "submit search...");
 
 
 $m->content_contains('is in family 0');
-   
+
 $m->form_name('genefamily_display_form');
 $m->click('view_family');
 
