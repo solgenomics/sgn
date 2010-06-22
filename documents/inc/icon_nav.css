@@ -1,5 +1,8 @@
 #icon_nav img {
-	border: none;
+	border: 2px solid transparent;
+        -webkit-border-radius: 13px;
+        -moz-border-radius: 13px;
+        padding: 2px;
 }
 
 #icon_nav, #icon_nav ul { /* all lists */
@@ -39,6 +42,9 @@
 
 #icon_nav li:hover ul, #icon_nav li.sfhover ul { /* lists nested under hovered list items */
 	left: auto;
+}
+#icon_nav li:hover > a > img, #icon_nav li.sfhover > a > img { 
+        border: 2px solid #d40000;
 }
 
 #icon_nav {
