@@ -13,7 +13,7 @@ Jonathan "Duke" Leto
 =cut
 
 use strict;
-use Test::More tests => 1;
+use Test::More tests => 3;
 use Test::WWW::Mechanize;
 BAIL_OUT "Need to set the SGN_TEST_SERVER environment variable" unless $ENV{SGN_TEST_SERVER};
 use SGN::Test qw/validate_urls/;
