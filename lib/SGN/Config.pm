@@ -90,6 +90,9 @@ my $defaults =
      #path to jslib relative to site basepath
      global_js_lib            => 'js',
 
+     # where the genefamily info is stored
+     genefamily_dir           => '/data/prod/private/genomes/genefamily/',
+
      #path to mason global lib relative to site basepath
      global_mason_lib         => undef,
 
