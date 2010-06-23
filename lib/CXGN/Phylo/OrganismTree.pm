@@ -28,9 +28,13 @@ This is a subcass of L<CXGN::Phylo::Tree>
 
 use strict;
 
+
+#use CXGN::Page;
+use CXGN::Page::FormattingHelpers qw/tooltipped_text/;
 use CXGN::DB::DBICFactory;
 use CXGN::Chado::Organism;
 use CXGN::Tools::WebImageCache;
+use CXGN::Phylo::Node;
 
 package CXGN::Phylo::OrganismTree;
 
@@ -79,12 +83,21 @@ sub recursive_children {
     my $nodes=shift;
     my $o= shift; #CXGN::Chado::Organism object
     my $n = shift; # CXGN::Phylo::Node object
-    my $is_root=shift;
+ my $species_cache=shift;   
+ my $is_root=shift;
    
     $n->set_name($o->get_species());
+    my $orgkey = "\"//".$o->get_organism_id()." ";
+   # print STDERR "OrganismTree.pm : key is $orgkey and value = ". $species_cache->get($orgkey)." \n";
     $n->get_label()->set_link("/chado/organism.pl?organism_id=" . $o->get_organism_id());
-    $n->get_label()->set_name($n->get_name());
-    $n->set_tooltip($n->get_name);
+    my $text_test=$species_cache->get($orgkey);
+    $text_test=~ s/|/\n/g; 
+    $n->set_tooltip($text_test ." ");
+    #$full_code =~ s/"/ /g;
+    $n->get_label()->set_tooltip($text_test." ");
+    
+    $n->get_label()->set_name($o->get_genus()." ".$o->get_species());
+    
     $n->set_species($n->get_name());
 	    
     $n->set_hide_label(0);
@@ -99,7 +112,7 @@ sub recursive_children {
 	if ( exists( $nodes->{$child->get_organism_id() } ) && defined( $nodes->{$child->get_organism_id()} ) ) {
 	    
 	    my $new_node=$n->add_child();
-	    $self->recursive_children($nodes, $child, $new_node);
+	    $self->recursive_children($nodes, $child, $new_node,$species_cache);
 	}
     }
     if ($n->is_leaf()  ) { $n->set_hilited(1) ; }
@@ -140,7 +153,7 @@ sub find_recursive_parent {
 
 =head2 build_tree
 
- Usage:  $self->build_tree($root_species_name, $species_hashref)
+ Usage:  $self->build_tree($root_species_name, $species_hashref,$speciesinfo_cache)
  Desc:   builds an organism tree starting from $root with a list of species
  Ret:    a newick representation of the tree
  Args:   $root_species_name, $species_hashref
@@ -156,11 +169,11 @@ sub build_tree  {
     my $root= shift; #'Solanaceae';
    
     my $species_hash=  shift;
-    
+    my $species_cache= shift;
+   
     my $schema = $self->get_schema();
     my $root_o = CXGN::Chado::Organism->new_with_species($schema, $root);
     my $root_o_id = $root_o->get_organism_id();
-    
     my $organism_link =   "/chado/organism.pl?organism_id="; 
     
     my $nodes=();
@@ -184,7 +197,7 @@ sub build_tree  {
 	}
     }
     
-    $self->recursive_children( $nodes,  $nodes->{$root_o_id}, $root_node , 1) ;
+    $self->recursive_children( $nodes,  $nodes->{$root_o_id}, $root_node , $species_cache,1) ;
     
     $self->set_show_labels(1);
     
