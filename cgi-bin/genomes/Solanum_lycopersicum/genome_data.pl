@@ -31,6 +31,8 @@ print info_section_html( title => 'Tomato genome sequence builds',
 			 contents => $c->render_mason('/genomes/Solanum_lycopersicum/wgs_builds_table.mas'),
 		       );
 
+
+print qq|<a name="annotation"></a>\n|;
 print info_section_html( title => 'Official annotation',
 			 subtitle => 'browse genome contigs and official annotations',
 			 contents => <<EOH
