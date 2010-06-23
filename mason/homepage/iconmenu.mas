@@ -54,9 +54,9 @@ Displays an icon-based menu of top level option. Mousing over the icons pops up 
     }
 
     .Genes {
-    	position: relative; 
-            top: 40px; 
-    	left: 220px;
+    	position: relative;
+        top: 40px; 
+    	left: 120px;
     }
 
     .GenesSubMenu {
@@ -74,7 +74,7 @@ Displays an icon-based menu of top level option. Mousing over the icons pops up 
     .Phenotypes {
     	position: relative; 
     	top: 80px;
-    	left: 300px;
+    	left: 100px;
     }
 
     .PhenotypesSubMenu {
@@ -88,8 +88,8 @@ Displays an icon-based menu of top level option. Mousing over the icons pops up 
 
     .BreedersToolBox {
     	position: relative; 
-    	top: 250px;
-    	left: -250px;
+    	top: 140px;
+    	left: -360px;
         z-index: 1;
     }
 
@@ -98,14 +98,14 @@ Displays an icon-based menu of top level option. Mousing over the icons pops up 
     	height: 341px;
     	padding-top: 15px;
     	position: relative;
-    	top: -110px;
+    	top: -100px;
     	left: 115px;
     }
 
     .GenomesSequences {
     	position: relative; 
-    	top: 320px;
-    	left: -230px;
+    	top: 40px;
+    	left: 260px;
     }
 
     .GenomesSequencesSubMenu {
@@ -119,8 +119,8 @@ Displays an icon-based menu of top level option. Mousing over the icons pops up 
 
     .Pathways {
     	position: relative; 
-    	top: 120px;
-    	left: 40px;
+    	top: -10px;
+    	left: 310px;
     }
 
     .PathwaysSubMenu {

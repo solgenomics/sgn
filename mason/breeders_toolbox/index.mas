@@ -18,7 +18,7 @@
     .SNPTool {
     	position: relative; 
     	top: 150px;
-    	left: 70px;
+    	left: 100px;
     }
 
     .SNPToolSubMenu {
@@ -54,7 +54,7 @@
     .Traits {
     	position: relative; 
     	top: 50px;
-    	left: 70px;
+    	left: -30px;
     }
 
     .TraitsSubMenu {
@@ -72,8 +72,8 @@
 
     .QTLTool {
     	position: relative; 
-    	top: 300px;
-    	left: -50px;
+    	top: 160px;
+    	left: 190px;
     }
 
     .QTLToolSubMenu {
