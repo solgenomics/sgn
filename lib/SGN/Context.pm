@@ -653,7 +653,7 @@ sub req {
 }
 
 
-with 'SGN::SiteFeatures', 'SGN::Site';
+with 'SGN::Role::Site::SiteFeatures', 'SGN::Role::Site::ExceptionHandling';
 
 __PACKAGE__->meta->make_immutable;
 

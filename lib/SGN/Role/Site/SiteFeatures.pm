@@ -1,10 +1,10 @@
 =head1 NAME
 
-SGN::SiteFeatures - role for a context class that lets it find, load, and configure SGN::Feature objects
+SGN::Role::Site::SiteFeatures - role for a context class that lets it find, load, and configure SGN::Feature objects
 
 =cut
 
-package SGN::SiteFeatures;
+package SGN::Role::Site::SiteFeatures;
 use Moose::Role;
 
 use Module::Pluggable::Object;

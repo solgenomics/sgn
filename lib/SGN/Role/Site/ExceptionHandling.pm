@@ -1,11 +1,34 @@
-package SGN::Site;
+=head1 NAME
+
+SGN::Role::Site::ExceptionHandling - Moose role for site exception handling
+
+
+=cut
+
+package SGN::Role::Site::ExceptionHandling;
 use Moose::Role;
 
 use CXGN::Contact;
 
 use SGN::Exception;
 
+=head1 REQUIRES
+
+=head2 get_conf
+
+=head2 forward_to_mason_view
+
+=cut
+
 requires 'get_conf', 'forward_to_mason_view';
+
+=head1 ATTRIBUTES
+
+=head2 site_name
+
+This site's short plaintext name, such as 'SGN'
+
+=cut
 
 has 'site_name' => (
     is => 'ro',
@@ -13,6 +36,8 @@ has 'site_name' => (
    ); sub _build_site_name {
        shift->get_conf('project_name')
    }
+
+=head1 METHODS
 
 =head2 error_notify
 
