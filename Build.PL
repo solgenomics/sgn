@@ -282,6 +282,7 @@ my $build = $class->new(
         'HTML::Entities'          => 0,
         'HTML::Mason'             => 0,
         'IO::String'              => 0,
+        'Image::Size'             => 0,
         'JSAN::ServerSide'        => '==0.06',
         'JSON'                    => 0,
         'JSON::XS'                => '2.24',
