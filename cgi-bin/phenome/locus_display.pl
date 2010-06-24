@@ -922,7 +922,10 @@ sub get_dbxref_info {
     }
     
     my $abs_count = 0;
-    my @sorted = sort { $a->[0]->get_accession() <=> $b->[0]->get_accession() } @{ $dbs{PMID} } ;
+    my @sorted;
+ 
+    @sorted = sort { $a->[0]->get_accession() <=> $b->[0]->get_accession() } @{ $dbs{PMID} } if  defined @{ $dbs{PMID} } ;
+ 
     foreach ( @sorted  ) {
         if ( $_->[1] eq '0' ) {    #if the pub is not obsolete
             $pubs .= get_pub_info( $_->[0], 'PMID', $abs_count++ );
