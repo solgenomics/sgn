@@ -316,10 +316,8 @@ sub store {
 	$json_hash{validate} = 1;
 	$json_hash{html} = $self->get_form()->as_table_string();
 	$self->set_json_hash(%json_hash);
+	$self->print_json();
     }
-
-    
-    $self->print_json();
 }
 
 
@@ -908,6 +906,9 @@ sub print_json {
     }
     my $json = JSON->new();
     my $jobj = $json->encode(\%results);
+    print STDERR "print_json printing json object \n\n $jobj\n\n";
+    $self->get_ajax_page()->send_http_header();
+    
     print  $jobj;
 }
 
