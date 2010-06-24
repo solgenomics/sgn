@@ -43,5 +43,6 @@ my $base_url = $ENV{SGN_TEST_SERVER};
     $test_id = $test_locus->locus_id() if $test_locus;
     $mech->get_ok("$base_url/cgi-bin/phenome/locus_display.pl?locus_id=$test_id");
     
-    
+    $mech->content_contains("Locus editor");
+
 }
