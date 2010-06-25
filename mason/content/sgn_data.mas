@@ -18,10 +18,61 @@ $planta
 </%args>
 
 <%perl>
+use Cache::File;
+use File::Slurp;
+use Cache::Entry;
 
 my $uri_dir=$c->get_conf('tempfiles_subdir') . '/tree_browser';
 
 my $tmp_dir=$c->get_conf('basepath');
+
+my $sicache_dir =$c->get_conf('basepath')."/". $c->get_conf('tempfiles_subdir') . '/organism_data';
+   
+
+################## Gather Data About Species ######################
+################## And Write To a Temp File  ######################
+###################################################################
+my $dbh = CXGN::DB::Connection->new();
+#my $schema = CXGN::Chado::Schema->connect(sub{$dbh->get_actual_dbh()},{
+#on_connect_do=>['SET search_path TO public'];
+
+my $speciesinfo_cache = Cache::File->new( cache_root=>$sicache_dir,
+                                              default_expires =>'16000 sec'
+                                                  );
+my %data_hash;
+
+my %hashrefs= (
+sol =>$sol,
+rub =>$rub,
+planta =>$planta
+);
+# For each loop goes through each value(organism_id) and obtains all the
+# information of that organism. Stores it in the array called temp_hash;
+# After temp_hash is created, it is stored into data_hash as a value of
+# key(organism_id).
+for my $species_hashref (values %hashrefs){
+for my $organism (keys %$species_hashref){
+    my $org_id =$species_hashref->{$organism};
+    my $org = CXGN::Chado::Organism -> new ($schema, $org_id);
+       $org_id="".$org_id."";
+    # info_text contains information about an organism ($org_id) in the following order:
+    # 1.Name
+    # 2.Common Name
+    # 3.Loci Count
+    # 4.Phenotype Count
+    # 5.Is genome information available? yes/no
+    # 6.Is a map available? yes/no
+    # 7.Libraries Count
+    # All information is separated by a delimiter [:] - a colon
+    my $info_text="|"."name: ".$org->get_species()."|"."Common Name:".$org->get_group_common_name()."|"."Loci Num:".$org->get_loci_count()."|"."Phenotype Count:".$org->get_phenotype_count()."|"."Maps Available:".$org->has_avail_map()."|"."Genome Information:".$org->has_avail_genome()."|"."Library Num:".(scalar $org->get_library_list())."";
+  $speciesinfo_cache->set($org_id, $info_text, '16000 sec'); 
+my $tester = $speciesinfo_cache->get($org_id);
+print STDERR "*********************************************************%%%%%%%%%%%%   $tester %%%%%%%%%%%%%%%%%******************";
+  }
+}
+
+################################################################################################################################################################
+
 
 
 </%perl>
@@ -30,14 +81,28 @@ my $tmp_dir=$c->get_conf('basepath');
 
 <& /page/page_title.mas, title=>"SGN data overview" &>
 
+<script language="javascript" type="text/javascript" src="/js/popup.js"></script>
 
+<div id="popup" style="visibility:hidden; position:absolute; top:0; left:0;">
+<table id="xtratbl">
+<tr><td><font color="#000000">Title Goes Here</font></td></tr>
+<tr><td bgcolor="#ffffff">
+Information Goes Here:
+<ul>
+<li> Point one here: information here</li>
+<li> Point two here: information here </li>
+<li> Point three here: information here </li>
+</ul>
+
+</td></tr></table>
+</div>
 <div class="page_introduction">
 This page presents a summary of all currently available data on SGN sorted by species.
 Click a species name for details about available its available maps, loci, libraries, ESTs, metabolic annotation and
 phenotyped accessions.
 </div>
 
-<& /util/organism_tree.mas, schema=>$schema, root=>"Solanaceae", species_hashref=>$sol, uri_dir=>$uri_dir, tmp_dir=>$tmp_dir &>
-<& /util/organism_tree.mas, schema=>$schema, root=>"Rubiaceae", species_hashref=>$rub,  uri_dir=>$uri_dir, tmp_dir=>$tmp_dir &>
-<& /util/organism_tree.mas, schema=>$schema, root=>"Plantaginaceae", species_hashref=>$planta,  uri_dir=>$uri_dir, tmp_dir=>$tmp_dir &>
+<& /util/organism_tree.mas, schema=>$schema, root=>"Solanaceae",speciesinfo_cache=>$speciesinfo_cache, species_hashref=>$sol, uri_dir=>$uri_dir, tmp_dir=>$tmp_dir, sicache_dir=>$sicache_dir &>
+<& /util/organism_tree.mas, schema=>$schema, root=>"Rubiaceae",speciesinfo_cache=>$speciesinfo_cache, species_hashref=>$rub,  uri_dir=>$uri_dir, tmp_dir=>$tmp_dir, sicache_dir=>$sicache_dir &>
+<& /util/organism_tree.mas, schema=>$schema, root=>"Plantaginaceae",speciesinfo_cache=>$speciesinfo_cache, species_hashref=>$planta,  uri_dir=>$uri_dir, tmp_dir=>$tmp_dir, sicache_dir=>$sicache_dir &>
 

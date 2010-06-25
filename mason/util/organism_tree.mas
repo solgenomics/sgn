@@ -22,7 +22,9 @@ Naama Menda <nm249@cornell.edu>
 $schema
 $root
 $species_hashref
+$speciesinfo_cache
 $uri_dir
+$sicache_dir
 $tmp_dir
 $image_only => 0
 
@@ -32,6 +34,9 @@ $image_only => 0
 
 use CXGN::Phylo::OrganismTree;
 use CXGN::Tools::WebImageCache;
+use Cache::File;
+use File::Slurp;
+use Cache::Entry;
 
 my $cache = CXGN::Tools::WebImageCache->new();
 $cache->set_temp_dir($uri_dir);
@@ -49,7 +54,7 @@ my $newick_file  = $tmp_dir . "/" . $uri_dir . "/" . $root . ".newick";
 if ( !$cache->is_valid() ) {
 
   my $tree = CXGN::Phylo::OrganismTree->new($schema);
-  my $newick_string = $tree->build_tree($root, $species_hashref);
+  my $newick_string = $tree->build_tree($root, $species_hashref, $speciesinfo_cache);
 
   open(my $FH, ">$newick_file" ) or die $! . "cannot open file $newick_file for writing! \n\n";
   print $FH $newick_string;
