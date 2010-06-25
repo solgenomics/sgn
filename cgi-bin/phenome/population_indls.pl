@@ -745,6 +745,10 @@ sub qtl_plot
 		$l_m = $left[$i];
 		$r_m = $right[$i];
 		$p_m = $peak[$i];
+		$l_m =~ s/\s//g;
+		$r_m =~ s/\s//g;
+		$p_m =~ s/\s//g;
+
 		my $l_pos =
 		    $population->get_marker_position( $mapversion, $l_m );
 		my $r_pos =
@@ -1610,6 +1614,7 @@ qq | <a href="$image_t_url" title= "<a href=$h_marker&amp;qtl=$image_t_url><font
 
             $qtl_image .= $thickbox;
             $title = "  ";
+	   
 
         }
         else
