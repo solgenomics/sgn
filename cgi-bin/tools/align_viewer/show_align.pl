@@ -1215,7 +1215,7 @@ sub run_muscle {
         my ( $enc_title, $enc_type ) =
           map { HTML::Entities::encode($_) } ( $title, $type );
         my $message =
-          "Running Muscle v3.6 ($SEQ_COUNT sequences) on SGN Linux Cluster...";
+          "Running Muscle v3.6 ($SEQ_COUNT sequences), please wait ...";
 
         chdir $old_wd;
 
