@@ -191,6 +191,7 @@ category     = Genome data and reagents
 glyph        = alignment
 bgcolor      = red
 fgcolor      = red
+link         = /search/quick_search.pl?term=$name
 stranded     = 1
 citation     = This track shows regions of similarity with SGN Unigene (SGN-U) sequences.  (see <a href="http://www.ab.wur.nl/TomatoWiki/AnSgnUnigenes000">ITAG Wiki</a>)
 
