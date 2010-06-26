@@ -6,13 +6,16 @@
 sub related_stats {
     my ($features) = @_;
     my $stats = { };
+    my $total = 0;
     for my $f (@$features) {
             $stats->{$f->feature->type->name}++;
     }
     my $data = [ ];
     for my $k (sort keys %$stats) {
         push @$data, [ $k => $stats->{$k} ];
+        $total += $stats->{$k};
     }
+    push @$data, [ "Total" => $total ];
     return $data;
 }
 </%perl>
