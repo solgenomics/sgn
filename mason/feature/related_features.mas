@@ -34,11 +34,15 @@ Parent Feature:
 
 % last if ++$c > 10;
 % }
+%if (@$children) {
 <& /page/columnar_table.mas,
     headings => [ "Child Feature Type", "Number" ],
     data     => related_stats($children),
 &>
+% }
+%if (@$parents) {
 <& /page/columnar_table.mas,
     headings => [ "Parent Feature Type", "Number" ],
     data     => related_stats($parents),
 &>
+%}
