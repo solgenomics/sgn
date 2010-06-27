@@ -464,6 +464,18 @@ sub _ensure_dbh_search_path_is_set {
     return $dbh;
 }
 
+{ # tiny DBIx::Connector subclass that makes sure search paths are set
+  # on database handles before returning them
+  package SGN::Context::Connector;
+  use base 'DBIx::Connector';
+
+  sub dbh {
+      my $dbh = shift->SUPER::dbh(@_);
+      SGN::Context::_ensure_dbh_search_path_is_set( $dbh );
+      return $dbh;
+  }
+  package SGN::Context;
+}
 
 =head2 dbic_schema
 
@@ -555,19 +567,6 @@ with qw(
 
 __PACKAGE__->meta->make_immutable;
 
-
-##############################################################################3
-
-# tiny DBIx::Connector subclass that makes sure search paths are set
-# on database handles before returning them
-package SGN::Context::Connector;
-use base 'DBIx::Connector';
-
-sub dbh {
-    my $dbh = shift->SUPER::dbh(@_);
-    SGN::Context::_ensure_dbh_search_path_is_set( $dbh );
-    return $dbh;
-}
 
 ###
 1;#do not remove
