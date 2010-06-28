@@ -17,6 +17,11 @@ $sol
 </%args>
 
 <%perl>
+use Bio::Chado::Schema;
+use strict;
+use warnings;
+use JSON;
+use CXGN::Page;
 
 my $uri_dir=$c->get_conf('tempfiles_subdir') . '/tree_browser';
 
@@ -29,12 +34,108 @@ my $tmp_dir=$c->get_conf('basepath');
 
 <& /page/page_title.mas, title=>"SOL100 sequencing project" &>
 
-
 <p>
 This page presents a summary of all species being sequenced as part of the SOL100 sequencing project
-</p>
- (click on the organism  name to see more details.) <br /><br />
+</p>(click on the organism  name to see more details.)<br /><br />
+
+<head>
+<script>
+
+function update_result(){
+<!-- 	new Ajax.Request("dbquery.pl", { -->
+<!-- 	parameters: {@string}, -->
+<!-- 	onSuccess: function(response){ -->
+<!-- alert("Hello");		 -->
+<!-- var json = response.responseText; -->
+<!-- 		var x = eval("("+json+")"); -->
+<!-- 		MochiKit.Loggin.log("the response is ." , json);} -->
+		
+<!-- 		}); -->
+<!-- } -->
+
+var mydiv=document.getElementById('mydiv');
+mydiv.innerHTML="TESTING 123";
+}
+
+</script>
+</head>
 
 <& /util/organism_tree.mas, schema=>$schema, root=>"Solanaceae", species_hashref=>$sol, uri_dir=>$uri_dir, tmp_dir=>$tmp_dir, image_only=>1 &>
 
 
+<div id = "mydiv">
+
+<form action="/sequencing/sol100.pl" method = "get">
+<p>To add an organism to this tree, enter it below.</p><br>
+<input type="text" name="species" /><br></input>
+<input type="submit" value="search"><br></input>
+</div>
+
+
+
+<html>
+<head>
+<script type="text/javascript">
+function showHint(str)
+{
+if (str.length==0)
+  { 
+  document.getElementById("txtHint").innerHTML="";
+  return;
+  }
+if (window.XMLHttpRequest)
+  {// code for IE7+, Firefox, Chrome, Opera, Safari
+  xmlhttp=new XMLHttpRequest();
+  }
+else
+  {// code for IE6, IE5
+  xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+  }
+xmlhttp.onreadystatechange=function()
+  {
+  if (xmlhttp.readyState==4 && xmlhttp.status==200)
+    {
+    document.getElementById("txtHint").innerHTML=xmlhttp.responseText;
+    }
+  }
+xmlhttp.open("POST","sol100.mas",true);
+xmlhttp.send("$string");
+}
+</script>
+</head>
+<body>
+
+<h3>Start typing a name in the input field below:</h3>
+<form action=""> 
+First name: <input type="text" id="txt1" onkeyup="showHint(this.value)" />
+</form>
+<p>Suggestions: <span id="txtHint"></span></p> 
+
+
+<%perl>
+
+#my $page = CXGN::Page->new();
+
+#if(defined($page->get_arguments("species"))){
+    search_db;
+#}
+
+sub search_db{
+my $json = JSON->new();
+
+my $schema = Bio::Chado::Schema->connect("dbi:Pg:dbname='cxgn'; host='localhost'",'postgres', 'c0d3r!!', {AutoCommit => 0, RaiseError =>1});
+
+my $string;
+
+my $org_rs = $schema->resultset("Organism::Organism")->search({species=>{'ilike'=>'%'.$string.'%'}});
+
+print "Dean<br>Bobo<br>";
+
+while (my $org = $org_rs->next){
+
+    print $org->species."<br>";
+
+}
+}
+
+</%perl>
