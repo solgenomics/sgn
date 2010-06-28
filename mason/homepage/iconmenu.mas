@@ -170,8 +170,8 @@ Displays an icon-based menu of top level option. Mousing over the icons pops up 
             <div class="submenu GenesSubMenu"  >
               <li><a href="/search/direct_search.pl?search=loci">Search loci</a></li>
               <li><a href="/search/direct_search.pl?search=unigene">Search unigenes</a></li>
+              <li><a href="/search/direct_search.pl?search=template">Expression</a></li>
               <li><a href="/genomes/Solanum_lycopersicum/genome_data.pl">Search/browse tomato genome</a></li>
-	      <li><a href=""></a>&nbsp;<br /></li>
 	      <li><a href="/phenome/">Become an SGN locus editor</a></li>              
 	      </div>
 	      
