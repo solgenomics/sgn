@@ -462,7 +462,6 @@ sub set_error_hash {
 sub validate {
     my $self = shift;
     my %args = @_;
-    print STDERR "Static Form - no validation\n";
 }
 
 =head2 from_request
@@ -635,9 +634,8 @@ sub get_error_message {
 
 =cut
 
-sub store { 
+sub store {
     my $self = shift;
-    print STDERR "Static Form: Nothing saved.\n";
 }
 
 =head2 get_insert_id
@@ -660,7 +658,6 @@ sub get_insert_id {
     my $object_type = ref($object);
     if (!exists($self->{insert_id}) || !exists($self->{insert_id}->{object_type})) { 
 	
-	#print STDERR "last insert id for object_type $object_type unknown!\n";
     }
     else { 
 	return $self->{insert_id}{object_type};
