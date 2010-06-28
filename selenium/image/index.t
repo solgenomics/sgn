@@ -3,13 +3,14 @@ use strict;
 use Test::More tests=>4;
 use Test::WWW::Selenium;
 
-my $server = 'http://pg83-devel.sgn.cornell.edu'; #$ENV{SGN_TEST_SERVER};
-$server || die "need SGN_TEST_SERVER environment variable set";
+my $server = $ENV{SELENIUM_TEST_SERVER} || die "Need the ENV SELENIUM_TEST_SERVER set";
+my $host   = $ENV{SELENIUM_HOST} || die "Need the ENV SELENIUM_HOST set";
+my $browser = $ENV{SELENIUM_BROWSER} || die "Need the ENV SELENIUM_BROWSER set";
 
 my $s = Test::WWW::Selenium->new(
-    host        => 'selenium.sgn.cornell.edu',
+    host        => $host,
     port        => 4444,
-    browser     => "*firefox",
+    browser     => $browser,
     browser_url => $server."/image/index.pl?image_id=1",
     );
 
