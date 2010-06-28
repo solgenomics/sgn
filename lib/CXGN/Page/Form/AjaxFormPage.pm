@@ -900,16 +900,14 @@ sub process_parameters_after_store {
 sub print_json {
     my $self=shift;
     my %results= $self->get_json_hash();
-    
-    if ($results{die_error} ) { 
-	CXGN::Contact::send_email('AjaxFormPage died',$results{"error"} );
+
+    if ($results{die_error} ) {
+        CXGN::Contact::send_email('AjaxFormPage died',$results{"error"} );
     }
     my $json = JSON->new();
-    my $jobj = $json->encode(\%results);
-    print STDERR "print_json printing json object \n\n $jobj\n\n";
     $self->get_ajax_page()->send_http_header();
-    
-    print  $jobj;
+
+    print $json->encode(\%results);
 }
 
 =head2 send_form_email
