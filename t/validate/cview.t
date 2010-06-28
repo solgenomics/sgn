@@ -25,7 +25,7 @@ SKIP: {
     my $mech = Test::WWW::Mechanize->new;
     $mech->get("$base_url/$url");
     if ($mech->content =~ m/No database found/) {
-        skip "Skipping Contig map due to missing database" , 1;
+        skip "Skipping Contig map due to missing database" , 3;
     } else {
         validate_urls({ "Contig map" => $url });
     }
