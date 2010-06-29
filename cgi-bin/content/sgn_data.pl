@@ -25,24 +25,6 @@ my $schema = CXGN::DB::DBICFactory
 my $type = 'web visible'; # we want only the leaf organisms with 'web visible' organismprop
 my $cvterm = $schema->resultset("Cv::Cvterm")->search( { name => $type } )->first();
 
-#print <<HTML;
-#<script language="javascript" type="text/javascript" src="/js/popup.js"></script>
-
-#<div id="popup" style="visibility:hidden; position:absolute; top:0; left:0;">
-#<table id="xtratbl">
-#<tr><td><font color="#000000">Title Goes Here</font></td></tr>
-#<tr><td bgcolor="#ffffff">
-#Information Goes Here:
-#<ul>
-#<li> Point one here: information here</li>
-#<li> Point two here: information here </li>
-#<li> Point three here: information here </li>
-#</ul>
-
-#</td></tr></table>
-#</div>
-#HTML
-
 my $sol=();
 my $rub=();
 my $planta=();
