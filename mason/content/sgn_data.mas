@@ -33,14 +33,9 @@ my $sicache_dir =$c->get_conf('basepath')."/". $c->get_conf('tempfiles_subdir') 
 ################## And Write To a Temp File  ######################
 ###################################################################
 my $dbh = CXGN::DB::Connection->new();
-#my $schema = CXGN::Chado::Schema->connect(sub{$dbh->get_actual_dbh()},{
-#on_connect_do=>['SET search_path TO public'];
-
 my $speciesinfo_cache = Cache::File->new( cache_root=>$sicache_dir,
                                               default_expires =>'16000 sec'
                                                   );
-my %data_hash;
-
 my %hashrefs= (
 sol =>$sol,
 rub =>$rub,
@@ -64,14 +59,14 @@ for my $organism (keys %$species_hashref){
     # 6.Is a map available? yes/no
     # 7.Libraries Count
     # All information is separated by a delimiter [:] - a colon
-    my $info_text="|"."name: ".$org->get_species()."|"."Common Name:".$org->get_group_common_name()."|"."Loci Num:".$org->get_loci_count()."|"."Phenotype Count:".$org->get_phenotype_count()."|"."Maps Available:".$org->has_avail_map()."|"."Genome Information:".$org->has_avail_genome()."|"."Library Num:".(scalar $org->get_library_list())."";
+    my $info_text="?"."Name: ".$org->get_species()."?"."Common Name: ".$org->get_group_common_name()."?"."Loci Num: ".$org->get_loci_count()."?"."Phenotype Count: ".$org->get_phenotype_count()."?"."Maps Available: ".$org->has_avail_map()."?"."Genome Information: ".$org->has_avail_genome()."?"."Library Num: ".(scalar $org->get_library_list())."";
   $speciesinfo_cache->set($org_id, $info_text, '16000 sec'); 
 my $tester = $speciesinfo_cache->get($org_id);
-print STDERR "*********************************************************%%%%%%%%%%%%   $tester %%%%%%%%%%%%%%%%%******************";
   }
 }
 
-################################################################################################################################################################
+#####################################################################
+#####################################################################
 
 
 
@@ -85,14 +80,9 @@ print STDERR "*********************************************************%%%%%%%%%
 
 <div id="popup" style="visibility:hidden; position:absolute; top:0; left:0;">
 <table id="xtratbl">
-<tr><td><font color="#000000">Title Goes Here</font></td></tr>
-<tr><td bgcolor="#ffffff">
-Information Goes Here:
-<ul>
-<li> Point one here: information here</li>
-<li> Point two here: information here </li>
-<li> Point three here: information here </li>
-</ul>
+<tr><td id="org_title"><font color="#000000">Title Goes Here</font></td></tr>
+<tr><td id="org_content" bgcolor="#ffffff">
+Organism content goes here
 
 </td></tr></table>
 </div>
