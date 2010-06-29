@@ -16,6 +16,7 @@ my $s = Test::WWW::Selenium->new(
 
 $s->open_ok($server."/image/index.pl?image_id=1");
 
+sleep(4); # wait for the page to load completely (AJAX actions)
 my $source    = $s->get_html_source();
 my $body_text = $s->get_body_text();
 
