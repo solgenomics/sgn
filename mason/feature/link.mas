@@ -1,0 +1,6 @@
+<%args>
+    $feature
+</%args>
+<a href="/cgi-bin/feature.pl?id=<% $feature->feature_id %>">
+    <% $feature->name %>
+</a>

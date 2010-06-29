@@ -74,7 +74,7 @@ my $build = $class->new(
         'Apache::DBI'         => 0,
 
         #        'Apache2::Request' => 0,
-        'Bio::Chado::Schema' => '0.04000',
+        'Bio::Chado::Schema' => '0.05801',
 
 	'Bio::Root::Version'     => '1.006001',
         #         'Bio::AlignIO' => 0,
@@ -296,6 +296,7 @@ my $build = $class->new(
         'Module::Find'            => 0,
         'Module::Pluggable::Object' => 0,
         'Moose'                   => 0,
+        'MooseX::Declare'         => 0,
         'MooseX::Method::Signatures' => '0.30',
         'MooseX::Types::Path::Class' => 0,
         'MooseX::Types::URI'      => 0,
