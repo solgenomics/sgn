@@ -1,0 +1,191 @@
+
+<& /util/import_javascript.mas, classes=>["CXGN.Effects"] &>
+
+<style type="text/css">
+div.main{
+  background-color:#EFEFFF;
+  text-align:center;
+  font-size:16px;
+  color:#7700BB;
+  width:600px;
+  height:auto;
+  margin:20px;
+  margin-left:auto;
+  margin-right:auto;
+  padding-top:15px;
+  padding-bottom:15px;
+}
+div.box{
+  background-color:#EFEFEF;
+  text-align:center;
+  font-size:16px;
+  color:#7700BB;
+  width:520px;
+  height:auto;
+  border:5px ridge gray;
+  margin:20px;
+  margin-left:auto;
+  margin-right:auto;
+  padding-top:15px;
+  padding-left:15px;
+  padding-right:15px;
+}
+div.head{
+  text-align:center;
+  font-size:18px;
+}
+table.more{
+  text-align:left;
+  font-size:14px;
+  width:400px;
+  height:auto;
+  border:3px double gray;
+  margin-left:auto;
+  margin-right:auto;
+  padding-left:10px;
+  visibility: collapse;
+}
+table.year{
+  text-align:center;
+  width:auto;
+  height:auto;
+  margin-left:auto;
+  margin-right:auto;
+  visibility:collapse;
+}
+td.width{
+  width:60px;
+}
+</style>
+
+<script type="text/javascript">
+function display(pub_id){
+  if (document.getElementById(pub_id).style.visibility == "visible"){
+     document.getElementById(pub_id).style.visibility="collapse";
+     document.getElementById("link").innerHTML = "Show more";
+     
+  }
+  else{
+    document.getElementById(pub_id).style.visibility="visible";
+    document.getElementById("link").innerHTML = "Click to hide";
+  }
+}
+</script>
+
+<div class="head">Tomato Genome Publications</div>
+
+
+<!--get pubprop with corresponding year-->
+
+<%perl>
+
+use Bio::Chado::Schema;
+use CXGN::Page::FormattingHelpers;
+
+my $schema = Bio::Chado::Schema->connect("dbi:Pg:dbname='cxgn'; host='localhost'", 'postgres', 'c0d3r!!', { AutoCommit => 1, RaiseError => 1 });
+
+my @all_pubs = $schema->resultset('Cv::Cvterm')->find({name => 'tomato genome publication'})->search_related('pubprops', {})->search_related('pub', {});
+
+my $p;
+my @years;
+foreach $p(@all_pubs){
+    push(@years, $p->pyear);
+}
+
+#---sort the years in descending order---
+@years = reverse(sort @years);
+
+#---remove the undef at the end of the array---
+
+my @unique_years;
+$unique_years[0] = $years[0];
+
+for(my $i = 0; $i < @years; $i++){
+    if ($years[$i+1] != $years[$i]){
+	push(@unique_years, $years[$i+1]);
+    }
+}
+
+</%perl>
+
+% my $year;
+% my $pub;
+% my @author;
+% my $a;
+
+<&| /page/info_section.mas, title=>'Expand All', collapsible => 1 &>
+
+
+% foreach $year(@unique_years){
+<&| /page/info_section.mas, title=>"$year", collapsible => 1,
+    is_subsection => 1 &>
+<div class="main">
+<b>
+% print $year;
+</b>
+<br />
+<br />
+<a id="link" href="javascript:display(<% $year %>)">Click to see more</a>
+<table id=<% $year %> class="year">
+% foreach $pub(@all_pubs){
+%   if ($pub->pyear == $year){
+<tr>
+<td>
+% my $pub_id = $pub->pub_id;
+<div class="box">
+<b>
+% print $pub->pyear; 
+</b>
+<br />
+<br />
+<b>
+% print $pub->title;
+</b>
+<br />
+<br />
+<table id=<% $pub_id %> class="more">
+<tr>
+<td class="width">Author(s):</td>
+<td>
+% @author = $pub->search_related('pubauthors', {});
+% foreach $a(reverse @author){
+%   print $a->givennames." ".$a->surname.", ";
+% }
+</td>
+</tr>
+<tr>
+<td class="width">Journal:</td>
+<td>
+% print $pub->series_name;
+</td>
+</tr>
+<tr>
+<td class="width">Volume:</td>
+<td>
+% print $pub->volume;
+</td>
+</tr>
+<tr>
+<td class="width">Pages:</td>
+<td>
+% print $pub->pages;
+</td>
+</tr>
+</table>
+<br />
+<a href="javascript:display(<% $pub_id %>)">Click for more information</a>
+<br />
+</div>
+</td>
+</tr>
+%     }
+%   }
+</table>
+</div>
+</&>
+% }
+
+</&>
+
+
+
