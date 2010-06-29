@@ -30,7 +30,7 @@ use strict;
 
 
 #use CXGN::Page;
-use CXGN::Page::FormattingHelpers qw/tooltipped_text/;
+#use CXGN::Page::FormattingHelpers qw/tooltipped_text/;
 use CXGN::DB::DBICFactory;
 use CXGN::Chado::Organism;
 use CXGN::Tools::WebImageCache;
@@ -87,19 +87,17 @@ sub recursive_children {
  my $is_root=shift;
    
     $n->set_name($o->get_species());
-    my $orgkey = "\"//".$o->get_organism_id()." ";
-   # print STDERR "OrganismTree.pm : key is $orgkey and value = ". $species_cache->get($orgkey)." \n";
+    my $orgkey ="".$o->get_organism_id()."";
     $n->get_label()->set_link("/chado/organism.pl?organism_id=" . $o->get_organism_id());
-    my $text_test=$species_cache->get($orgkey);
-    $text_test=~ s/|/\n/g; 
-    $n->set_tooltip($text_test ." ");
-    #$full_code =~ s/"/ /g;
-    $n->get_label()->set_tooltip($text_test." ");
-    
-    $n->get_label()->set_name($o->get_genus()." ".$o->get_species());
-    
-    $n->set_species($n->get_name());
-	    
+    my $content=$species_cache->get($orgkey);
+    $content=~ s/\?/<br\/>/g; 
+    $n->set_tooltip($n->get_name());
+    $n->set_onmouseover("javascript:showPopUp('popup','".$content."','<b>".$o->get_species()."</b>')");
+    $n->set_onmouseout("javascript:hidePopUp('popup');");
+    $n->get_label()->set_name(" ".$o->get_species());
+    $n->get_label()->set_onmouseover("javascript:showPopUp('popup','".$content."','<b>".$o->get_species()."</b>')");
+    $n->get_label()->set_onmouseout("javascript:hidePopUp('popup');");
+    $n->set_species($n->get_name());	    
     $n->set_hide_label(0);
     $n->get_label()->set_hidden(0);
         
