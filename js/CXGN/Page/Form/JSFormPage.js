@@ -177,9 +177,8 @@ CXGN.Page.Form.JSFormPage.prototype = {
 	if (action == 'new' || action == 'view') { 
 	    buttonHTML = this.getGhostedNewButton() + this.getGhostedEditButton() + this.getGhostedDeleteButton();
 	}
-
-
-	if (action == 'view' &&  ((this.getUserType() == 'curator') || (this.getIsOwner == 1))) { 
+	
+	if (action == 'view' &&  ((this.getUserType() == 'curator') || (this.getIsOwner() == 1))) { 
 	    buttonHTML = this.getNewButton() + this.getEditButton() + this.getDeleteButton();
 	}
 
