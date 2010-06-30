@@ -1,0 +1,207 @@
+
+<& /util/import_javascript.mas, classes=>["CXGN.Effects"] &>
+
+<!--css styles-->
+<style type="text/css">
+table.more{
+  background-color:#FFFFEE;
+  text-align:left;
+  font-size:14px;
+  width:400px;
+  height:auto;
+  border:3px double gray;
+  margin-left:auto;
+  margin-right:auto;
+  padding-left:10px;
+}
+table.year{
+  background-color:#FFFFCC;
+  text-align:center;
+  font-size:14px;
+  color:black;
+  width:520px;
+  height:auto;
+  border:2px outset gray;
+  margin:20px;
+  margin-left:auto;
+  margin-right:auto;
+  padding-top:15px;
+  padding-left:15px;
+  padding-right:15px;
+}
+td.width{
+  width:60px;
+  color:#AA0000;
+}
+tr.author{
+  visibility:collapse;
+}
+</style>
+
+<!--javascript for changing the visibility of boxes and the text of links-->
+<script type="text/javascript">
+function display(pub_id){
+  if (document.getElementById(pub_id).style.visibility == "visible"){
+     document.getElementById(pub_id).style.visibility="collapse";
+  }
+  else{
+    document.getElementById(pub_id).style.visibility="visible";  
+  }
+}
+
+function message(link_id, pub_id){
+    if (document.getElementById(pub_id).style.visibility == "visible"){
+	document.getElementById(link_id).innerHTML = "more authors";
+    }
+    else{
+	document.getElementById(link_id).innerHTML = "show less";
+    }
+}
+</script>
+
+<!--title-->
+<& /page/page_title.mas, title => "Tomato Genome Publications" &>
+
+
+<%perl>
+use Bio::Chado::Schema;
+use CXGN::Page::FormattingHelpers;
+use List::MoreUtils qw/uniq/;
+
+#---get all publications from pubprop database---
+my $schema = Bio::Chado::Schema->connect("dbi:Pg:dbname='cxgn'; host='localhost'", 'postgres', 'c0d3r!!', { AutoCommit => 1, RaiseError => 1 });
+
+my @all_pubs = $schema->resultset('Cv::Cvterm')->find({name => 'tomato genome publication'})->search_related('pubprops', {})->search_related('pub', {});
+
+#---get the publication years in descending order and remove duplicates---
+my $p;      #holds each element of the foreach loop while storing years
+my @years;  #stores the list of years
+
+foreach $p(@all_pubs){
+    push(@years, $p->pyear);
+}
+
+@years = reverse(sort @years);    #sorts the years in descending order
+my @unique_years = uniq(@years);  #removes duplicate years
+
+</%perl>
+
+
+<!--creates the main heading-->
+<&| /page/info_section.mas, title=>'See All Publications', collapsible => 1 &>
+
+
+% my $year;         #holds each element of the list of unique years
+% my $pub;          #holds each element of the list of publications
+% my $link_id = 1;  #is incremented so that each link has a different id
+
+<!--creates the main body of publication info-->
+<!--creates a new subsection for each year-->
+% foreach $year(@unique_years){
+<&| /page/info_section.mas, title=>"$year", collapsible => 1,
+    is_subsection => 1 &>
+<br />
+
+<!--creates a new table for each publication-->
+<%perl>
+foreach $pub(@all_pubs){
+
+    my $pub_id = $pub->pub_id;
+    my $title = $pub->title;
+    my $series = $pub->series_name;
+    my $volume = $pub->volume;
+    my $issue = $pub->issue;
+    my $pages = $pub->pages;
+    my $pmid = $pub->find_related('pub_dbxrefs', {})->find_related('dbxref', {})->accession;
+
+    #---getting authors - if the list is too long, only show the first 10,
+    #---the rest of the authors are shown once a link is clicked 
+    my @author = reverse($pub->search_related('pubauthors', {}));
+    my @names;
+    if ($#author <= 10){
+        foreach my $a(@author){
+            push(@names, $a->givennames." ".$a->surname.", ");
+         }
+    } else {
+        for(my $i = 0; $i <= 10; $i++){
+            push(@names, $author[$i]->givennames." ".
+		 $author[$i]->surname.", ");
+        }
+    }
+
+    my @extra_names;
+    if ($#author > 10){
+        for(my $i = 11; $i <= $#author; $i++){
+            push(@extra_names, $author[$i]->givennames." ".
+		 $author[$i]->surname.", ");
+        }
+    }
+</%perl>
+
+% #---creates new inner table to hold information about each publication,
+% #---including the authors, journal, volume, issue, pages, and pubmed links
+% if ($pub->pyear == $year){
+<table class="year">
+<tr><td><br /><b><% $title %></b></td></tr>
+<tr>
+  <td>
+    <br />
+    <table class="more">
+      <tr>
+	<td class="width">Author(s):</td>
+	<td><% @names %>
+% if(@extra_names != undef){
+	  <a id=<% $link_id %> 
+	      href="javascript:display(<% $pub_id %>);" 
+	      onclick="message(<% $link_id %>, <% $pub_id %>);">
+	      more authors
+	      </a>
+	  <tr id=<% $pub_id %> class="author">
+	    <td> </td>
+	    <td><% @extra_names %></td>
+	  </tr>
+%  }
+	</td>
+      </tr>
+      <tr>
+	<td class="width">Journal:</td>
+	<td><% $series %></td>
+      </tr>
+      <tr>
+	<td class="width">Volume:</td>
+	<td><% $volume %></td>
+      </tr>
+      <tr>
+	<td class="width">Issue:</td>
+	<td><% $issue %></td>
+      </tr>
+      <tr>
+	<td class="width">Pages:</td>
+	<td><% $pages %></td>
+      </tr>
+% if (int($pmid)){
+      <tr>
+	<td class="width">Pubmed:</td>
+	<td><a target="_blank"
+	href="http://www.ncbi.nlm.nih.gov/sites/pubmed/<% $pmid %>">
+	Click to see article in Pubmed
+	</a>
+	</td>
+      </tr>
+% }
+    </table>
+    <br />
+    <br />
+% $link_id++;
+  </td>
+</tr>
+</table>
+%   }
+%  }
+</&>
+% }
+
+</&>
+
+
+
