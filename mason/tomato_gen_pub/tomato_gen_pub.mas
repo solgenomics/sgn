@@ -62,6 +62,9 @@ function message(link_id, pub_id){
 <!--title-->
 <& /page/page_title.mas, title => "Tomato Genome Publications" &>
 
+<%args>
+$schema
+</%args>
 
 <%perl>
 use Bio::Chado::Schema;
@@ -69,17 +72,15 @@ use CXGN::Page::FormattingHelpers;
 use List::MoreUtils qw/uniq/;
 
 #---get all publications from pubprop database---
-my $schema = $c->dbic_schema('Bio::Chado::Schema');
-
 my @all_pubs = $schema->resultset('Cv::Cvterm')->find({name => 'tomato genome publication'})->search_related('pubprops', {})->search_related('pub', {});
 
 #---get the publication years in descending order and remove duplicates---
-my $p;         #holds each element of the foreach loop while storing years
 my @years;     #stores the list of years
 
-foreach $p(@all_pubs){
+foreach my $p(@all_pubs){
     push(@years, $p->pyear);
 }
+
 @years = reverse(sort(uniq(@years)));    #sorts the years in descending order
                                          #and removes duplicate years
 </%perl>
