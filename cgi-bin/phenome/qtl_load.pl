@@ -1,3 +1,5 @@
+package CXGN::Phenome::QtlLoadDetailPage;
+
 =head1 DESCRIPTION
 processes and loads qtl data obtained from the the web forms 
 (qtl_form.pl) on the user specific directory and the database.
@@ -8,14 +10,10 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 =cut
 
-
 use strict;
+use warnings;
 
 my $qtl_load_detail_page = CXGN::Phenome::QtlLoadDetailPage->new();
-
-package CXGN::Phenome::QtlLoadDetailPage;
-
-
 
 
 use File::Spec;
