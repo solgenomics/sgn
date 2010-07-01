@@ -86,7 +86,7 @@ BEGIN {
             "gem detail page for experiment"           => "/gem/experiment.pl?id=1",
             "gem detail page for target"               => "/gem/target.pl?id=49",
             "biosource detail page for sample"         => "/biosource/sample.pl?id=1",
-	    "tomato genome publication page"           => "/tomato_gen_pub/tomato_gen_pub.pl",
+	    "tomato genome publication page"           => "/genomes/Solanum_lycopersicum/publications.pl",
     );
 
 
