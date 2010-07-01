@@ -69,7 +69,7 @@ use CXGN::Page::FormattingHelpers;
 use List::MoreUtils qw/uniq/;
 
 #---get all publications from pubprop database---
-my $schema = Bio::Chado::Schema->connect("dbi:Pg:dbname='cxgn'; host='localhost'", 'postgres', 'c0d3r!!', { AutoCommit => 1, RaiseError => 1 });
+my $schema = $c->dbic_schema('Bio::Chado::Schema');
 
 my @all_pubs = $schema->resultset('Cv::Cvterm')->find({name => 'tomato genome publication'})->search_related('pubprops', {})->search_related('pub', {});
 
