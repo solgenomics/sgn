@@ -14,6 +14,13 @@ body {
   margin: auto;
   width: 730px;
 }
+#xtratbl {
+background-color:#CCCCFF;
+border: 1px solid #C0C0C0;
+}
+#org_content{
+border:1px solid #C0C0C0;
+}
 table {
   font-family: verdana, arial, helvetica, sans-serif;
   font-size: 12px;
