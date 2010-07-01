@@ -63,8 +63,8 @@ CXGN.Page.Form.JSFormPage.prototype = {
 		parameters: $(editableForm).serialize(true) ,
 		    onSuccess: function(response) {
 		    var json = response.responseText;
-		    var x = jQuery.parseJSON( json ); 
-		    //var x = eval("("+json+")");
+		    //var x = jQuery.parseJSON( json ); 
+		    var x = eval("("+json+")");
 		    //alert("ajax request succeeded: " + x);
 				    
 		    if (x.error) { 
@@ -77,7 +77,8 @@ CXGN.Page.Form.JSFormPage.prototype = {
 		    //alert("Script " + form.getAjaxScript() + " failed!!!" ) ;
 		    alert("Action '" + action +"'  failed for storing this " + this.getObjectName() + "!!" ) ;
 		    var json = response.responseText;
-		    var x = jQuery.parseJSON( json );
+		    //var x = jQuery.parseJSON( json );
+		    var x = eval("("+json+")");
 		},
 		    });
     },
