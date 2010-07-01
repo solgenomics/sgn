@@ -408,7 +408,10 @@ sub load_pop_details {
     my ($female_id, $male_id, $recurrent_id, $donor_id);
 
     my $population = CXGN::Phenome::Population->new_with_name($dbh, $name);
-    $self->population_exists($population, $name);
+    my $population_id = $population->get_population_id();
+    if ($population_id) {
+	$self->population_exists($population, $name);
+    }
    	
     print STDERR "storing parental accessions...\n";
    
@@ -1413,7 +1416,7 @@ sub check_organism {
                             
 =head2 population_exists
 
- Usage: $self->population_exists($population);
+ Usage: $self->population_exists($population, $population_name);
  Desc: checks if there is already a population with the same name
        and if so it generates a page with the appropriate advice to the user
 
