@@ -6,14 +6,19 @@ use Test::More;
 
 my $base = '/sequencing/itag/status.pl';
 
-my $lp = get('/sequencing/itag/status.pl?op=lp');
-like( $lp, qr/^(\d+\n)*$/, 'lp looks OK')
-    or diag $lp;
-
-chomp $lp;
-my @pipelines = map $_+0, split /\n/,$lp;
+#also, just make sure the status_html.pl page doesn't crash
+my $status_page = get('/sequencing/itag/status_html.pl');
+like( $status_page, qr/ITAG feature not enabled|Pipeline Status/, 'status_html.pl does not crash' );
 
 SKIP: {
+    skip 'ITAG web feature not enabled, skipping tests', 6 if $status_page =~ /ITAG feature not enabled/;
+
+    my $lp = get('/sequencing/itag/status.pl?op=lp');
+    like( $lp, qr/^(\d+\n)*$/, 'lp looks OK')
+        or diag $lp;
+    chomp $lp;
+    my @pipelines = map $_+0, split /\n/,$lp;
+
     skip 'no ITAG pipelines found, skipping rest of tests', 5 unless @pipelines;
 
     my $testpipe = $pipelines[0];
@@ -40,9 +45,5 @@ SKIP: {
             or diag $la;
     }
 }
-
-
-#also, just make sure the status_html.pl page doesn't crash
-like( get('/sequencing/itag/status_html.pl'), qr/Pipeline Status/ );
 
 done_testing;

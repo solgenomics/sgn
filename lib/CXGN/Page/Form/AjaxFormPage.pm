@@ -316,10 +316,8 @@ sub store {
 	$json_hash{validate} = 1;
 	$json_hash{html} = $self->get_form()->as_table_string();
 	$self->set_json_hash(%json_hash);
+	$self->print_json();
     }
-
-    
-    $self->print_json();
 }
 
 
@@ -902,13 +900,14 @@ sub process_parameters_after_store {
 sub print_json {
     my $self=shift;
     my %results= $self->get_json_hash();
-    
-    if ($results{die_error} ) { 
-	CXGN::Contact::send_email('AjaxFormPage died',$results{"error"} );
+
+    if ($results{die_error} ) {
+        CXGN::Contact::send_email('AjaxFormPage died',$results{"error"} );
     }
     my $json = JSON->new();
-    my $jobj = $json->encode(\%results);
-    print  $jobj;
+    $self->get_ajax_page()->send_http_header();
+
+    print $json->encode(\%results);
 }
 
 =head2 send_form_email

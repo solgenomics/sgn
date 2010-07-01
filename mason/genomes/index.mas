@@ -15,13 +15,15 @@ Lukas Mueller
 
 <& /page/page_title.mas, title=>"Available Genome Projects" &>
 
-<h3>Available genome projects</h3>
+<div style="width: 30em; margin: 0 auto">
 
-<% map {
-     my $url = $_;
-     s/_/ /g;
-     qq|<a href="$url" style="font-style: italic; display: block">$_</a>|
-   }
-   grep -d,
-   glob '*'
-%>
+  <% map {
+       my $url = $_;
+       s/_/ /g;
+       qq|<a href="$url" style="font-style: italic; display: block">$_</a>|
+     }
+     grep -d,
+     glob '*'
+  %>
+
+</div>

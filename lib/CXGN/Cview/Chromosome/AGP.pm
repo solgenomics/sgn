@@ -1,8 +1,9 @@
+package CXGN::Cview::Chromosome::AGP;
 
 =head1 NAME
 
-CXGN::Cview::Chromosome::AGP - a chromosome class visualizing the AGP file           
-           
+CXGN::Cview::Chromosome::AGP - a chromosome class visualizing the AGP file
+
 =head1 DESCRIPTION
 
 The AGP chromosome object is populated by flat files that the sequencing projects upload to SGN and that are available from the SGN FTP site. 
@@ -22,12 +23,10 @@ This class implements the following functions:
 =cut
 
 use strict;
-
-package CXGN::Cview::Chromosome::AGP;
+use warnings;
 
 use File::Spec;
 use CXGN::Cview::Chromosome;
-use CXGN::VHost;
 use CXGN::Cview::Marker::AGP;
 
 use base qw | CXGN::Cview::Chromosome |;
@@ -93,9 +92,7 @@ sub fetch {
     
     #print STDERR "Constructor: generating AGP chr ".$self->get_name()."\n";
 
-    my $AGP = undef;
-    
-    open ($AGP, "<$agp_file") || die "Can't open $agp_file\n";
+    open (my $AGP, '<', $agp_file) || die "Can't open $agp_file: $!";
 
     my $largest_offset = 0;
     while (<$AGP>) { 

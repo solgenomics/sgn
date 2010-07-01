@@ -92,6 +92,9 @@ sub import {
 
     umask 000002; #< all files written by web server will be group-writable by default
 
+    # delete mason cached tempfiles
+    $c->clear_mason_tempfiles;
+
     # the tempfiles_subdir() function makes and chmods the given
     # directory.  with no arguments, will make and chmod the main
     # tempfiles directory
@@ -104,6 +107,7 @@ sub import {
     # this line should be removed eventually, the application itself should take
     # care of creating temp dirs if it wants.
     $c->chown_generated_dir( $_ ) for glob "$temp_subdir/*/";
+
 }
 
 sub generate_apache_config {

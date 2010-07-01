@@ -57,24 +57,29 @@ my %form = (
     }
     );
 
-$mech->submit_form_ok(\%form, "PCR  job submit form" );
+SKIP: {
+    skip 'set INTENSIVE_TESTS=1 to run an actual in-silico PCR calculation', 1
+        unless $ENV{INTENSIVE_TESTS};
 
-if ( $mech->content =~ /Running/ ) {
-    while ( $mech->content !~ /PCR Results/ ) {
-        sleep 1;
-        $mech->reload;	
+    $mech->submit_form_ok(\%form, "PCR  job submit form" );
+
+    if ( $mech->content =~ /Running/ ) {
+        while ( $mech->content !~ /PCR Results/ ) {
+            sleep 1;
+            $mech->reload;	
+        }
     }
-}
 
-$mech->content_contains("PCR Results");
-$mech->content_contains("Note:");
-$mech->content_contains("PCR Report");
-$mech->content_contains("BLAST OUTPUT");
+    $mech->content_contains("PCR Results");
+    $mech->content_contains("Note:");
+    $mech->content_contains("PCR Report");
+    $mech->content_contains("BLAST OUTPUT");
 
-unless ($mech->content()=~/No PCR Product Found/){
+    unless ($mech->content() =~ /No PCR Product Found/){
 
-    $mech->content_contains("Agarose");
-    $mech->content_contains("SGN-U510886");
+        $mech->content_contains("Agarose");
+        $mech->content_contains("SGN-U510886");
+    }
 }
 
 done_testing;

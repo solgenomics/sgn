@@ -922,7 +922,11 @@ sub get_dbxref_info {
     }
     
     my $abs_count = 0;
-    foreach ( @{ $dbs{'PMID'} } ) {
+    my @sorted;
+ 
+    @sorted = sort { $a->[0]->get_accession() <=> $b->[0]->get_accession() } @{ $dbs{PMID} } if  defined @{ $dbs{PMID} } ;
+ 
+    foreach ( @sorted  ) {
         if ( $_->[1] eq '0' ) {    #if the pub is not obsolete
             $pubs .= get_pub_info( $_->[0], 'PMID', $abs_count++ );
         }
@@ -986,7 +990,7 @@ sub get_pub_info {
     my $abstract_view =
 	abstract_view( $dbxref->get_publication(), $count );
     $pub_info =
-	qq|<div><a href="/chado/publication.pl?pub_id=$pub_id" >$db:$accession</a> $pub_title ($year). $abstract_view </div> |;
+	qq|<div><a href="/chado/publication.pl?pub_id=$pub_id" >$db:$accession</a> $pub_title ($year) $abstract_view </div><br /> |;
     return $pub_info;
 }    #
 

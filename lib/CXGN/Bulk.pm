@@ -16,6 +16,7 @@ use strict;
 use warnings;
 use Carp;
 use CXGN::DB::Connection;
+use File::Slurp qw/slurp/;
 
 
 =head2 new
@@ -76,10 +77,10 @@ sub create_dumpfile {
         $self->{dumpfile} = "bulk-$date-$$";
         $self->debug( "FILENAME: " . $self->{dumpfile} );
         my $filepath = $self->{tempdir} . "/" . $self->{dumpfile};
-        open( $self->{dump_fh}, ">$filepath" )
+        open( $self->{dump_fh}, '>', $filepath )
           || $self->{page}->error_page("Can't open $filepath");
         $self->{notfoundfile} = $self->{dumpfile} . ".notfound";
-        open( $self->{notfound_fh}, ">$self->{tempdir}/$self->{notfoundfile}" )
+        open( $self->{notfound_fh}, '>', "$self->{tempdir}/$self->{notfoundfile}" )
           || $self->{page}->error_page("Can't open $self -> {notfoundfile}");
 
         # write file header
@@ -110,7 +111,7 @@ sub result_summary_page {
 
     # open file for writing the result summary page
     open( my $summary_fh, '>', $summary_file )
-      or die "Can't open .summary file for writing!";
+      or die "Can't open .summary file for writing! : $!";
 
     my $lines_read =
       ( $self->getFileLines( $self->{tempdir} . "/" . $self->{dumpfile} ) ) - 1;
@@ -209,12 +210,9 @@ EOHTML
 
     close($summary_fh);
 
-    open $summary_fh, $summary_file
-      or die "$! opening $summary_file";
-
     $self->{page}->header;
-    print while <$summary_fh>;
-    close($summary_fh);
+
+    print slurp( $summary_file);
 
     $self->{page}->footer;
 }

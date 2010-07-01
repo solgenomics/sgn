@@ -98,7 +98,7 @@ else {
 sub display_not_finished { 
 
 	my $message = shift;
-	$message ||= "Running the job on the SGN Linux Cluster... please be patient";
+	$message ||= "Job running ... please be patient";
 #    $page->header();
 
     my $title = page_title_html($message);

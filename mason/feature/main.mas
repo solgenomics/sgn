@@ -1,0 +1,19 @@
+<%args>
+    $feature
+</%args>
+
+<%doc>
+=head2 Main component for cgi-bin/feature.pl
+
+  Desc: Render feature.pl
+=cut
+
+</%doc>
+<%init>
+    use aliased qw/
+        SGN::View::Feature
+    /;
+</%init>
+<%perl>
+    Feature->new->render;
+</%perl>

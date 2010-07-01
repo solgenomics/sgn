@@ -10,7 +10,7 @@
 *JSFormPage.js object is instantiated from CXGN::Page::Form::JSFormPage.pm
 */
 
-//JSAN.use('jQuery');
+JSAN.use('jQuery');
 JSAN.use('Prototype');
 
 if (!CXGN) CXGN = function() {};
@@ -63,15 +63,21 @@ CXGN.Page.Form.JSFormPage.prototype = {
 		parameters: $(editableForm).serialize(true) ,
 		    onSuccess: function(response) {
 		    var json = response.responseText;
-		    var x = eval ("("+json+")");
+		    var x = jQuery.parseJSON( json ); 
+		    //var x = eval("("+json+")");
+		    //alert("ajax request succeeded: " + x);
+				    
 		    if (x.error) { 
 			alert(x.error); 
-		    } else if (x.refering_page) { window.location = x.refering_page ; } 
+		    } else if (x.refering_page) {  window.location = x.refering_page ; } 
 		    else if (x.html) { $(form.getFormId() ).innerHTML = x.html + form.getFormButtons(); }
 		    else { form.printForm("view"); }
 		},
 		    onFailure: function(response) {
-		    alert("Script " + form.getAjaxScript() + " failed!!!" ) ;
+		    //alert("Script " + form.getAjaxScript() + " failed!!!" ) ;
+		    alert("Action '" + action +"'  failed for storing this " + this.getObjectName() + "!!" ) ;
+		    var json = response.responseText;
+		    var x = jQuery.parseJSON( json );
 		},
 		    });
     },
@@ -111,7 +117,7 @@ CXGN.Page.Form.JSFormPage.prototype = {
 			}
 		    },
 			onFailure: function(response) {
-			alert("Script " + form.getAjaxScript() + " failed!!!" ) ;
+			alert("Action '" + action +"'  failed for storing this " + this.getObjectName() + "!!" ) ;
 		    },
 			});
 	}
