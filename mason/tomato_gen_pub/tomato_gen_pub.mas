@@ -74,16 +74,14 @@ my $schema = Bio::Chado::Schema->connect("dbi:Pg:dbname='cxgn'; host='localhost'
 my @all_pubs = $schema->resultset('Cv::Cvterm')->find({name => 'tomato genome publication'})->search_related('pubprops', {})->search_related('pub', {});
 
 #---get the publication years in descending order and remove duplicates---
-my $p;      #holds each element of the foreach loop while storing years
-my @years;  #stores the list of years
+my $p;         #holds each element of the foreach loop while storing years
+my @years;     #stores the list of years
 
 foreach $p(@all_pubs){
     push(@years, $p->pyear);
 }
-
-@years = reverse(sort @years);    #sorts the years in descending order
-my @unique_years = uniq(@years);  #removes duplicate years
-
+@years = reverse(sort(uniq(@years)));    #sorts the years in descending order
+                                         #and removes duplicate years
 </%perl>
 
 
@@ -97,7 +95,7 @@ my @unique_years = uniq(@years);  #removes duplicate years
 
 <!--creates the main body of publication info-->
 <!--creates a new subsection for each year-->
-% foreach $year(@unique_years){
+% foreach $year(@years){
 <&| /page/info_section.mas, title=>"$year", collapsible => 1,
     is_subsection => 1 &>
 <br />
