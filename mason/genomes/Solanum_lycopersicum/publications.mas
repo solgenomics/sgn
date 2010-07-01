@@ -72,7 +72,11 @@ use CXGN::Page::FormattingHelpers;
 use List::MoreUtils qw/uniq/;
 
 #---get all publications from pubprop database---
-my @all_pubs = $schema->resultset('Cv::Cvterm')->search({name => 'tomato genome publication'})->search_related('pubprops', {})->search_related('pub', {});
+my @all_pubs =
+    $schema->resultset('Cv::Cvterm')
+           ->search({name => 'tomato genome publication'})
+           ->search_related('pubprops', {})
+           ->search_related('pub', {});
 
 #---get the publication years in descending order and remove duplicates---
 my @years;     #stores the list of years
