@@ -18,11 +18,7 @@ my @titles = ('A Snapshot of the Emerging Tomato Genome Sequence', 'Estimation o
 
 
 #---connect to schema---
-my $dbdsn = 'dbi:Pg:host=' . $c->get_conf('dbhost') . 
-            ':dbname=' . $c->get_conf('dbname');
-
-my $schema = Bio::Chado::Schema->connect($dbdsn, $c->get_conf('dbuser'), $c->get_conf('dbpass'), { AutoCommit => 1, RaiseError => 1 });
-
+my $schema = $c->dbic_schema('Bio::Chado::Schema');
 
 #---add pubmed publications to pubprop---
 my ($db) = $schema->resultset('General::Db')->find({name => 'PMID'});
