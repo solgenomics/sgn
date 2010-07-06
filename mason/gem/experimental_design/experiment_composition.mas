@@ -87,33 +87,29 @@ if (scalar(@exp_list) > 0) {
 		my $sample = CXGN::Biosource::Sample->new($schema, $sample_id);
 		my $sample_name = $sample->get_sample_name();
 
-		my %sample_element_dbxref = $sample->get_dbxref_from_sample_elements();
-                  
-		foreach my $sample_el_name (sort keys %sample_element_dbxref) {
-		    my @dbxref_ids = @{ $sample_element_dbxref{$sample_el_name} };
+		my @dbxref_ids_list = $sample->get_dbxref_list();
 		    
-		    foreach my $dbxref_id (@dbxref_ids) {
-			my ($dbxref_row) = $schema->resultset('General::Dbxref')
-			                          ->search( { dbxref_id => $dbxref_id } );
+		foreach my $dbxref_id (@dbxref_ids_list) {
+		    my ($dbxref_row) = $schema->resultset('General::Dbxref')
+			                      ->search( { dbxref_id => $dbxref_id } );
              
-			my %dbxref_data = $dbxref_row->get_columns();
+		    my %dbxref_data = $dbxref_row->get_columns();
             
-			my ($cvterm_row) = $schema->resultset('Cv::Cvterm')
-			                          ->search( { dbxref_id => $dbxref_id } );
+		    my ($cvterm_row) = $schema->resultset('Cv::Cvterm')
+			                      ->search( { dbxref_id => $dbxref_id } );
                 
-			if (defined $cvterm_row) {
-			    my %cvterm_data = $cvterm_row->get_columns();
+		    if (defined $cvterm_row) {
+			my %cvterm_data = $cvterm_row->get_columns();
                  
-			    my ($db_row) = $schema->resultset('General::Db')
-                                                  ->search( { db_id => $dbxref_data{'db_id'} } );
+			my ($db_row) = $schema->resultset('General::Db')
+                                              ->search( { db_id => $dbxref_data{'db_id'} } );
 
-			    my $ontology_id = $db_row->get_column('name') . ":" . $dbxref_data{'accession'};
-			    my $ontology_name = $cvterm_data{'name'};
-			    unless (defined $ontologies{$ontology_id}) {
-				$ontologies{$ontology_id} = $ontology_name;
-				$cvterm_id{$ontology_id} = $cvterm_data{'cvterm_id'};
-			    }               
-			}
+			my $ontology_id = $db_row->get_column('name') . ":" . $dbxref_data{'accession'};
+			my $ontology_name = $cvterm_data{'name'};
+			unless (defined $ontologies{$ontology_id}) {
+			    $ontologies{$ontology_id} = $ontology_name;
+			    $cvterm_id{$ontology_id} = $cvterm_data{'cvterm_id'};
+			}               
 		    }
 		}
 	    }

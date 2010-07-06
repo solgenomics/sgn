@@ -130,22 +130,18 @@ if (defined $experiment->get_experiment_id()) {
 
 	   my %dbxref_related = $sample->get_dbxref_related();
 	   
-	   foreach my $sample_el_name (keys %dbxref_related) {
+	   foreach my $dbxref_id (keys %dbxref_related) {
 
-	       if (defined $dbxref_related{$sample_el_name} ) {
-		   my @dbxref_related_el = @{ $dbxref_related{$sample_el_name} };
-	   
-		   foreach my $dbxref_rel_el (@dbxref_related_el) {
-		       my %dbxref_rel_data = %{ $dbxref_rel_el };
+	       if (defined $dbxref_related{$dbxref_id} ) {
+		   my %dbxref_rel_data = %{ $dbxref_related{$dbxref_id} };
+	   	       
+		   my $onto_accession = $dbxref_rel_data{'db.name'} . ":" . $dbxref_rel_data{'dbxref.accession'};
+		   my $onto_descr = $dbxref_rel_data{'cvterm.name'};
+		   my $onto_link = '/chado/cvterm.pl?action=view&cvterm_id='.$dbxref_rel_data{'cvterm.cvterm_id'};
+		   my $onto_line = "<a href=$onto_link>$onto_accession</a> ($onto_descr)<br>";
 		       
-		       my $onto_accession = $dbxref_rel_data{'db.name'} . ":" . $dbxref_rel_data{'dbxref.accession'};
-		       my $onto_descr = $dbxref_rel_data{'cvterm.name'};
-		       my $onto_link = '/chado/cvterm.pl?action=view&cvterm_id='.$dbxref_rel_data{'cvterm.cvterm_id'};
-		       my $onto_line = "<a href=$onto_link>$onto_accession</a> ($onto_descr)<br>";
-		       
-		       unless (defined $onto_html{$onto_line}) {
-			   $onto_html{$onto_line} = 1;
-		       }
+		   unless (defined $onto_html{$onto_line}) {
+		       $onto_html{$onto_line} = 1;
 		   }
 	       }
 	   }
