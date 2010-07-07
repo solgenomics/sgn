@@ -71,6 +71,7 @@ my %urls = (
         "gem detail page for experiment"           => "/gem/experiment.pl?id=1",
         "gem detail page for target"               => "/gem/target.pl?id=49",
         "biosource detail page for sample"         => "/biosource/sample.pl?id=1",
+        "Locus ajax form"                          => "/jsforms/locus_ajax_form.pl",
 );
 my $iteration_count;
 
