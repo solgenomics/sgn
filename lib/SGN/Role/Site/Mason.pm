@@ -1,10 +1,9 @@
 package SGN::Role::Site::Mason;
+
 use Moose::Role;
 use namespace::autoclean;
-
 use File::Path;
 use Path::Class;
-
 use HTML::Mason::Interp;
 
 requires
@@ -29,33 +28,35 @@ requires
 =cut
 
 has '_mason_interp' => (
-    is => 'ro',
+    is         => 'ro',
     lazy_build => 1,
-   ); sub _build__mason_interp {
-       my $self = shift;
-       my %params = @_;
+   ); 
 
-       my $site_mason_root  = $self->path_to( 'mason' );
+sub _build__mason_interp {
+    my $self = shift;
+    my %params = @_;
 
-       $params{comp_root} = [ [ "site", $site_mason_root ] ];
+    my $site_mason_root  = $self->path_to( 'mason' );
 
-       # add a global mason root if defined
-       if( my $global_mason_root = $self->get_conf('global_mason_lib') ) {
-           push @{$params{comp_root}}, [ "global", $global_mason_root ];
-       }
+    $params{comp_root} = [ [ "site", $site_mason_root ] ];
 
-       my $data_dir = $self->path_to( $self->tempfiles_subdir('mason_cache_'.getpwuid($>)) );
+    # add a global mason root if defined
+    if( my $global_mason_root = $self->get_conf('global_mason_lib') ) {
+        push @{$params{comp_root}}, [ "global", $global_mason_root ];
+    }
 
-       $params{data_dir}  = join ":", grep $_, ($data_dir, $params{data_dir});
+    my $data_dir = $self->path_to( $self->tempfiles_subdir('mason_cache_'.getpwuid($>)) );
 
-       # have a global $self for the SGN::Context (later to be Catalyst object)
-       my $interp = HTML::Mason::Interp->new( allow_globals => [qw[ $c ]],
-                                              %params,
-                                             );
-       $interp->set_global( '$c' => $self );
+    $params{data_dir}  = join ":", grep $_, ($data_dir, $params{data_dir});
 
-       return $interp;
-   }
+    # have a global $self for the SGN::Context (later to be Catalyst object)
+    my $interp = HTML::Mason::Interp->new( allow_globals => [qw[ $c ]],
+                                            %params,
+                                            );
+    $interp->set_global( '$c' => $self );
+
+    return $interp;
+}
 
 sub forward_to_mason_view {
     my $self = shift;
@@ -84,14 +85,16 @@ sub forward_to_mason_view {
 
 my $render_mason_outbuf;
 has '_bare_mason_interp' => (
-    is => 'ro',
+    is         => 'ro',
     lazy_build => 1,
-   ); sub _build__bare_mason_interp {
-       return shift->_build__mason_interp(
-           autohandler_name => '', #< turn off autohandlers
-           out_method       => \$render_mason_outbuf,
-          );
-   }
+);
+
+sub _build__bare_mason_interp {
+    return shift->_build__mason_interp(
+        autohandler_name => '', #< turn off autohandlers
+        out_method       => \$render_mason_outbuf,
+        );
+}
 
 sub render_mason {
     my $self = shift;
@@ -137,7 +140,4 @@ sub clear_mason_tempfiles {
   rmtree( $_ ) for glob $self->path_to( $self->tempfiles_subdir('mason_cache_*') );
 }
 
-
 1;
-
-
