@@ -109,12 +109,12 @@ foreach my $p(@all_pubs){
 foreach $pub(@all_pubs){
 
     my $pub_id = $pub->pub_id;
-    my $title = $pub->title;
+    my $title  = $pub->title;
     my $series = $pub->series_name;
     my $volume = $pub->volume;
-    my $issue = $pub->issue;
-    my $pages = $pub->pages;
-    my $pmid = $pub->find_related('pub_dbxrefs', {})->find_related('dbxref', {})->accession;
+    my $issue  = $pub->issue;
+    my $pages  = $pub->pages;
+    my $pmid   = $pub->find_related('pub_dbxrefs', {})->find_related('dbxref', {})->accession;
 
     #---getting authors - if the list is too long, only show the first 10,
     #---the rest of the authors are shown once a link is clicked 
@@ -152,7 +152,7 @@ foreach $pub(@all_pubs){
       <tr>
 	<td class="width">Author(s):</td>
 	<td><% @names %>
-% if(@extra_names != undef){
+% if( @extra_names ){
 	  <a id=<% $link_id %> 
 	      href="javascript:display(<% $pub_id %>);" 
 	      onclick="message(<% $link_id %>, <% $pub_id %>);">
@@ -181,7 +181,7 @@ foreach $pub(@all_pubs){
 	<td class="width">Pages:</td>
 	<td><% $pages %></td>
       </tr>
-% if (int($pmid)){
+% if( $pmid ){
       <tr>
 	<td class="width">Pubmed:</td>
 	<td><a target="_blank"
