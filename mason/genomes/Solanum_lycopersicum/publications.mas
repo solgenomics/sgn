@@ -67,7 +67,6 @@ $schema
 </%args>
 
 <%perl>
-use Bio::Chado::Schema;
 use CXGN::Page::FormattingHelpers;
 use List::MoreUtils qw/uniq/;
 
