@@ -472,7 +472,7 @@ else {
 }
 
 #printing associated loci section dynamically
-my $dyn = CXGN::Phenome::Locus::LocusPage::include_locus_network();
+my $dyn = $c->render_mason("/locus/network.mas");
 
 print info_section_html(
     title       => "Associated loci ($al_count) ",
