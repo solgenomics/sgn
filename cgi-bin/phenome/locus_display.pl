@@ -40,9 +40,9 @@ use CXGN::Phenome::Locus::LocusPage;
 use SGN::Image;
 use HTML::Entities;
 
+our $c;
 my $d = CXGN::Debug->new();
 ##$d->set_debug( 1 );
-
 
 my $page= CXGN::Page->new("Locus display", "Naama");
 my $dbh=$page->get_dbh();
@@ -110,8 +110,9 @@ $page->header("SGN $organism locus: $locus_name");
 
 print page_title_html("$organism \t'$locus_name'\n");
 
-#move this to mason!
-print CXGN::Phenome::Locus::LocusPage::initialize($locus_id);
+print $c->render_mason("/locus/initialize.mas",
+            locus_id => $locus_id
+);
 
 $d->d("!!!Printing page title :  " . ( time() - $time ) . "\n");
 ####################################################
@@ -712,13 +713,10 @@ sub get_location {
     my $lg_name = $locus->get_linkage_group();
     my $arm     = $locus->get_lg_arm();
     my $location_html = qq|<td><table><tr>|;
-    my @locus_marker_objs =
-	$locus->get_locus_markers();    #array of locus_marker objects
+    my @locus_marker_objs = $locus->get_locus_markers();    #array of locus_marker objects
     foreach my $lmo (@locus_marker_objs) {
         my $marker_id = $lmo->get_marker_id();    #{marker_id};
-        my $marker =
-	    CXGN::Marker->new( $locus->get_dbh(), $marker_id )
-	    ;                                       #a new marker object
+        my $marker = CXGN::Marker->new( $locus->get_dbh(), $marker_id ); #a new marker object
 	
         my $marker_name = $marker->name_that_marker();
         my $experiments = $marker->current_mapping_experiments();
