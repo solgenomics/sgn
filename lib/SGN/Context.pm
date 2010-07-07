@@ -37,6 +37,7 @@ use File::Spec;
 use File::Path ();
 use namespace::autoclean;
 use Scalar::Util qw/blessed/;
+use Storable ();
 use URI ();
 
 use DBIx::Connector;
@@ -422,6 +423,16 @@ sub BUILD {
 	$conn{search_path} = $self->config->{'dbsearchpath'} || ['public'];
 	\%conn
     };
+
+    # make a second profile 'sgn_chado' that removes the sgn search path
+    # from the beginning
+    $self->config->{'DatabaseConnection'}->{'sgn_chado'} ||= do {
+        my $c = Storable::dclone( $self->config->{'DatabaseConnection'}->{'default'} );
+        if( $c->{search_path}->[0] eq 'sgn' ) {
+            push @{$c->{search_path}}, shift @{$c->{search_path}};
+        }
+        $c
+    }
 }
 
 has '_connections' => ( is => 'ro', isa => 'HashRef', default => sub { {} } );
