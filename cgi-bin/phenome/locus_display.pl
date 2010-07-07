@@ -632,11 +632,10 @@ if (
     )
 {
     if ($locus_name) {
-	$ontology_subtitle .=
-	    qq|<a href="javascript:Tools.toggleContent('associateOntologyForm', 'locus_ontology')">[Add ontology annotations]</a> |;
-	$ontology_add_link =
-	    CXGN::Phenome::Locus::LocusPage::associate_ontology_form(
-                $locus_id);
+        $ontology_subtitle .= qq|<a href="javascript:Tools.toggleContent('associateOntologyForm', 'locus_ontology')">[Add ontology annotations]</a> |;
+        $ontology_add_link = $c->render_mason("/locus/associate_ontology.mas",
+            locus_id => $locus_id
+        );
     }
 }
 else {
