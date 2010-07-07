@@ -4,37 +4,37 @@
 <!--css styles-->
 <style type="text/css">
 table.more{
-  background-color:#FFFFEE;
-  text-align:left;
-  font-size:14px;
-  width:400px;
-  height:auto;
-  border:3px double gray;
-  margin-left:auto;
-  margin-right:auto;
-  padding-left:10px;
+  background-color: #FFFFEE;
+  text-align: left;
+  font-size: 14px;
+  width: 400px;
+  height: auto;
+  border: 3px double gray;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 10px;
 }
 table.year{
-  background-color:#FFFFCC;
-  text-align:center;
-  font-size:14px;
-  color:black;
-  width:520px;
-  height:auto;
-  border:2px outset gray;
-  margin:20px;
-  margin-left:auto;
-  margin-right:auto;
-  padding-top:15px;
-  padding-left:15px;
-  padding-right:15px;
+  background-color: #FFFFCC;
+  text-align: center;
+  font-size: 14px;
+  color: black;
+  width: 520px;
+  height: auto;
+  border: 2px outset gray;
+  margin: 20px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-top: 15px;
+  padding-left: 15px;
+  padding-right: 15px;
 }
 td.width{
-  width:60px;
-  color:#AA0000;
+  width: 60px;
+  color: #AA0000;
 }
 tr.author{
-  visibility:collapse;
+  visibility: collapse;
 }
 </style>
 
