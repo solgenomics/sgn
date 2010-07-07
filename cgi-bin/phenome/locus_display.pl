@@ -644,8 +644,7 @@ else {
 	qq |<span class = "ghosted"> [Add ontology annotations]</span> |;
 }
 
-my $dyn_ontology_info =
-    CXGN::Phenome::Locus::LocusPage::include_locus_ontology();
+my $dyn_ontology_info = $c->render_mason("/locus/ontology.mas");
 
 print info_section_html(
     title       => "Ontology annotations ($ont_count)",

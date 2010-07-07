@@ -1,0 +1,10 @@
+<%args>
+</%args>
+<table><tr><td><div id="locus_ontology" >[loading...]</div>
+</td></tr></table>
+
+<script language="javascript" type="text/javascript">
+<!--
+    locusPage.printLocusOntology();
+-->
+</script>
