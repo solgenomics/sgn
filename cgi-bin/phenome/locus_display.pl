@@ -522,7 +522,7 @@ foreach (@unigenes) {
     $unigene_count++ if $_->get_status eq 'C'; 
 }
 
-my $dyn_solcyc = CXGN::Phenome::Locus::LocusPage::include_solcyc_links();
+my $dyn_solcyc = $c->render_mason("/locus/solcyc.mas");
 
 print info_section_html(
     title       => "SolCyc links",
