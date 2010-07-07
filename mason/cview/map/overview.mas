@@ -19,6 +19,10 @@ a CXGN::Cview::Map object (or subclass thereof)
 
 a list of marker names, which will be highlighted on the map.
 
+=item @map_items
+
+a list of positions (numeric) and names, separated by newline. These will be mapped and shown highlighted on the map. Good for drawing positions of gene families etc.
+
 =item size
 
 the size of the chromosomes, as a value of 1..10. defaults to 1.
@@ -45,15 +49,19 @@ Lukas Mueller <lam87@cornell.edu>
   $map              # a CXGN::Cview::Map object
   $image_width  => 820
   @hilite_markers => ()
+  @map_items => ()
   $force => 0
   $size => 1
+  $dbh 
+  $basepath
+  $tempdir
 </%args>
 
 <%perl>
 
 use URI::Escape;
 use CXGN::Page::FormattingHelpers qw | tooltipped_text |;
-use CXGN::Cview::Map_overviews::Generic;
+use CXGN::Cview::MapOverviews::Generic;
 
 my $message = "";
 
@@ -92,7 +100,12 @@ $image_height = $image_height + $image_height * $size /2;
 # create an appropriate overview diagram - physical or generic
 # (the generic will also provide an appropriate overview for the fish map).
 #
-my $map_overview = CXGN::Cview::Map_overviews::Generic -> new($map, $force);
+my $map_overview = CXGN::Cview::MapOverviews::Generic -> new($map, { 
+								    force   => $force,
+								    basedir => $basepath,
+								    tempdir => $tempdir,
+								    dbh     => $dbh,
+								    });
 
 $map_overview->set_image_height($image_height);
 $map_overview->set_image_width($image_width);
@@ -106,6 +119,8 @@ foreach my $hm (@hilite_markers) {
     #print STDERR "Hilite marker $hm...\n";
     $map_overview -> hilite_marker($hm);
 }
+
+$map_overview->add_map_items(@map_items);
 
 # generate the marker list for use in the URL links
 #

@@ -1,4 +1,35 @@
 
+<%doc>
+
+=head1 NAME
+
+/genomes/Solanum_lcyopersicum.mas - a mason component to display information about sequencing progess for tomato
+
+=head1 DESCRIPTION
+
+Arguments:
+
+=over 5
+
+=item $dbh
+
+A database handle
+
+=back
+
+=head1 AUTHOR
+
+Lukas Mueller, based on SGN Perl code
+
+=cut
+
+</%doc>
+
+<%args>
+$dbh
+</%args>
+
+
 <& /page/page_title.mas, title => 'International Tomato Genome Sequencing Project' &>
 
 <div style="padding-left: 7px; margin-bottom: 2em">
@@ -20,6 +51,8 @@ note that all data is released under the data release agreement below.
   <img style="display: block" src="/documents/img/tomato_varieties.png" border="0" width="720" />
 
 </div>
+
+% if ($dbh->isa('CXGN::DB::Connection')) { print STDERR "marker 2. yes.\n"; }
 
 <&| /page/info_section.mas, title => 'Data Access Agreement' &>
   <& /genomes/Solanum_lycopersicum/disclaimer.mas &>
@@ -47,5 +80,8 @@ note that all data is released under the data release agreement below.
 
 <& /page/info_section.mas, title => 'BAC-by-BAC sequencing statistics', empty_message => '&nbsp;' &>
 
-<& /genomes/Solanum_lycopersicum/bac_by_bac_progress.mas &>
+<& /genomes/Solanum_lycopersicum/bac_by_bac_progress.mas, 
+  dbh              => $dbh, 
+  basepath         => $c->get_conf('basepath'),
+  tempfiles_subdir => $c->get_conf('tempfiles_subdir'), &>
 

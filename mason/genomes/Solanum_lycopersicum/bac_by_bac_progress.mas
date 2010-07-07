@@ -6,7 +6,23 @@
 
 =head1 DESCRIPTION
 
-This component does not take any arguments. Sections on this page should be further subdivided into other components.
+Arguments:
+
+=over 5
+
+=item $dbh
+
+A database handle
+
+=item basepath
+
+the base path of the apache installation
+
+=item tempfiles_subdir
+
+the location of the tempfiles subdirectory from the basepath onwards
+
+=back
 
 =head1 AUTHORS
 
@@ -15,6 +31,12 @@ Lukas Mueller <lam87@cornell.edu>. Based on Perl code by many at SGN.
 =cut
 
 </%doc>
+
+<%args>
+$dbh
+$basepath
+$tempfiles_subdir
+</%args>
 
 <!-- p> The International Tomato Genome Sequencing Project aims to
 sequence the gene-rich euchromatic portions of the twelve tomato
@@ -32,19 +54,15 @@ sequenced separately, then assembled together.
 use POSIX;
 use List::Util qw/sum/;
 use HTML::Entities;
-
-use CXGN::DB::Connection;
 use CXGN::Page::FormattingHelpers qw / info_section_html page_title_html info_table_html commify_number/;
 use CXGN::Genomic::Search::Clone;
 use CXGN::MasonFactory;
 use CXGN::People::BACStatusLog;
-use CXGN::Cview::Map_overviews::ProjectStats;
+use CXGN::Cview::MapOverviews::ProjectStats;
 
 #my $page=CXGN::Page->new('tomato_sequencing.html','html2pl converter');
 #$page->add_style(text => "img.flag {border: 2px outset #666666;}");
 #$page->header(('International Tomato Sequencing Project Home') x 2);
-
-my $dbh = CXGN::DB::Connection->new();
 
 sub flag_html {
   my ($country,$flagimg,$url) = @_;
@@ -58,15 +76,22 @@ EOHTML
 EOHTML
   }
 }
+
 sub flag_td {
   return qq|<td width="50" align="center" class="tinytype">\n|
     .flag_html(@_)
       ."</td>\n";
 }
 
-my $overview = CXGN::Cview::Map_overviews::ProjectStats->new();
+my $overview = CXGN::Cview::MapOverviews::ProjectStats->new({ dbh      => $dbh,
+							      basepath => $basepath,
+							      tempfiles_subdir => $tempfiles_subdir,
+							    });
+
+
 $overview->render_map();
 my $overview_image_html = $overview->get_image_html();
+
 
 
 print <<EOH;
@@ -103,6 +128,7 @@ print <<EOHTML;
 <tr><td colspan="12"><table><tr><td width="100">&nbsp;</td><td width="15"><span style="background:#cccccc">&nbsp;&nbsp;</span></td><td>in progress</td><td width="10">&nbsp;</td><td width="15"><span style="background:#446644">&nbsp;&nbsp;</span></td><td bgcolor="ffffff">complete</td><td width="10">&nbsp;</td><td width="15"><span style="background:#aaffaa">&nbsp;&nbsp;</span></td><td>available</td><td width="10">&nbsp;</td><td width="15"><span style="background:#00ff00">&nbsp;&nbsp;</span></td><td>available HTGS3</td></tr></table><br /><br /></td></tr>
 <tr><th>BACs</th><td colspan="12"></td><th>Total</th></tr>
 EOHTML
+
 
 my $log = CXGN::People::BACStatusLog->new($dbh);
 my (undef,@to_be_sequenced) = $log->get_number_bacs_to_complete;
@@ -174,10 +200,6 @@ print '<tr>',
     ( map qq|<td style="text-align: right; padding-right: 0.65em">$_%</td>|, @finished ),
     '<td>&nbsp;</td>',
     "</tr>\n";
-
-
-
-
 
 #calculate the proportion of current tomato unigenes that have matches to BAC sequences
 
