@@ -12,8 +12,8 @@
 
 <& /util/import_javascript.mas,
     classes => [qw(
-        Text.Markup CXGN.Effects CXGN.Phenome.Locus  CXGN.Phenome.Tools
-        MochiKit.DOM Prototype jQuery thickbox
+        Prototype jQuery Text.Markup CXGN.Effects CXGN.Phenome.Locus  CXGN.Phenome.Tools
+        MochiKit.DOM thickbox
         MochiKit.Async CXGN.Sunshine.NetworkBrowser
         CXGN.Phenome.Locus.LocusPage CXGN.Page.Form.JSFormPage
     )]
