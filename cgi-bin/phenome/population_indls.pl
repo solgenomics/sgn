@@ -389,14 +389,15 @@ qq { Download population: <span><a href="pop_download.pl?population_id=$populati
            );
         ( $image_pheno, $title_pheno, $image_map_pheno ) =
           population_distribution($population_id);
-        $plot_html .= qq |<table  cellpadding = 5><tr><td> |;
+        $plot_html .= qq | <table  cellpadding = 5><tr><td> |;
         $plot_html .= $image_pheno . $image_map_pheno;
         $plot_html .= qq | </td><td> |;
         $plot_html .= $title_pheno . qq | <br/> |;
 
 	my @phe_summ =  ( [ 'No. of obs units', $all_indls_count ], 
                           [ 'Minimum', $min ], 
-                          [ 'Maximum', $max ], 
+                          [ 'Maximum', $max ],
+			  [ 'Mean', $avg ],
                           [ 'Standard deviation', $std ]
                         );
 
@@ -416,13 +417,13 @@ qq { Download population: <span><a href="pop_download.pl?population_id=$populati
 
 
 	$plot_html .= $summ_data;
-	$plot_html .= qq |</td></tr></table> |;
+	$plot_html .= qq | </td></tr></table> |;
 
 
         my $qtl_image = $self->qtl_plot();
   
 	my $legend = $self->legend($population);
-	my $qtl_html = "<table><tr><td width=70%>$qtl_image</td><td width=30%>$legend</td></tr></table>";
+	my $qtl_html = qq | <table><tr><td width=70%>$qtl_image</td><td width=30%>$legend</td></tr></table> |;
 
         print info_section_html( 
                                 title    => 'QTL(s)',
