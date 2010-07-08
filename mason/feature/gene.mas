@@ -11,8 +11,15 @@
 <& /page/page_title.mas, title => 'Gene: '. $feature->id &>
 
 <& /util/import_javascript.mas,
-    classes => [qw(Text.Markup CXGN.Effects CXGN.Phenome.Locus MochiKit.DOM)]
+    classes => [qw(
+        Text.Markup CXGN.Effects CXGN.Phenome.Locus  CXGN.Phenome.Tools
+        MochiKit.DOM Prototype jQuery thickbox
+        MochiKit.Async CXGN.Sunshine.NetworkBrowser
+        CXGN.Phenome.Locus.LocusPage CXGN.Page.Form.JSFormPage
+    )]
 &>
+<& /locus/initialize.mas, locus_id => 428 &>
+
 <%perl>
     my $seq = Bio::PrimarySeq->new(
         -seq => $feature->residues,
@@ -88,11 +95,7 @@
 &>
 </&>
 
-<&| /page/info_section.mas,
-    title => 'SolCyc',
-    collapsible => 1,
-&>
-</&>
+<& /locus/solcyc.mas, &>
 
 <&| /page/info_section.mas,
     title => 'Alternate Splicing',
