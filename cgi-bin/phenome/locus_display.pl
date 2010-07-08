@@ -512,15 +512,8 @@ foreach (@unigenes) {
     $unigene_count++ if $_->get_status eq 'C'; 
 }
 
-my $dyn_solcyc = $c->render_mason("/locus/solcyc.mas");
+print $c->render_mason("/locus/solcyc.mas");
 
-print info_section_html(
-    title       => "SolCyc links",
-    contents    => $dyn_solcyc,
-    id          => 'solcyc',
-    collapsible => 1,
-    collapsed   => 1,
-    );
 $d->d( "!!!Got SolCyc links :  " . ( time() - $time ) . "\n");
 
 my $associate_unigene_form;

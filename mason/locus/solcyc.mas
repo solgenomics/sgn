@@ -1,11 +1,16 @@
 <%args>
 </%args>
 
-<table><tr><td><div id="solcyc_links" >[loading...]</div>
-</td></tr></table>
-
-<script language="javascript" type="text/javascript">
-<!--
-    locusPage.printSolcycLinks();
--->
-</script>
+<&| /page/info_section.mas,
+    title       => "SolCyc links",
+    id          => 'solcyc',
+    collapsible => 1,
+    collapsed   => 1,
+&>
+    <div id="solcyc_links" >[loading...]</div>
+    <script language="javascript" type="text/javascript">
+    <!--
+        locusPage.printSolcycLinks();
+    -->
+    </script>
+</&>
