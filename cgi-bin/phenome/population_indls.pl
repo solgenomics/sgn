@@ -504,7 +504,7 @@ sub population_distribution
     my $basepath     = $vh->get_conf("basepath");
     my $tempfile_dir = $vh->get_conf("tempfiles_subdir");
 
-    my $cache = CXGN::Tools::WebImageCache->new(1);
+    my $cache = CXGN::Tools::WebImageCache->new();
     $cache->set_basedir($basepath);
     $cache->set_temp_dir( $tempfile_dir . "/temp_images" );
     $cache->set_expiration_time(259200);
@@ -806,7 +806,7 @@ sub qtl_plot
                 push @lod_chr, $lod_chr_e;
             }
 
-            my $cache_qtl_plot = CXGN::Tools::WebImageCache->new(1);
+            my $cache_qtl_plot = CXGN::Tools::WebImageCache->new();
             $cache_qtl_plot->set_basedir($basepath);
             $cache_qtl_plot->set_temp_dir( $tempfile_dir . "/temp_images" );
             $cache_qtl_plot->set_expiration_time(259200);
@@ -878,7 +878,7 @@ sub qtl_plot
            # $image_html = qq |<a href ="$h_marker&qtl=$image_url">$image</a>|;
 
 ###########thickbox
-            my $cache_qtl_plot_t = CXGN::Tools::WebImageCache->new(1);
+            my $cache_qtl_plot_t = CXGN::Tools::WebImageCache->new();
             $cache_qtl_plot_t->set_basedir($basepath);
             $cache_qtl_plot_t->set_temp_dir( $tempfile_dir . "/temp_images" );
             $cache_qtl_plot_t->set_expiration_time(259200);
@@ -1576,7 +1576,7 @@ sub qtl_images_exist
 
   IMAGES: foreach my $lg (@linkage_groups)
     {
-        my $cache_qtl_plot = CXGN::Tools::WebImageCache->new(1);
+        my $cache_qtl_plot = CXGN::Tools::WebImageCache->new();
         $cache_qtl_plot->set_basedir($basepath);
         $cache_qtl_plot->set_temp_dir( $tempfile_dir . "/temp_images" );
       
@@ -1594,7 +1594,7 @@ sub qtl_images_exist
 
         }
 
-        my $cache_qtl_plot_t = CXGN::Tools::WebImageCache->new(1);
+        my $cache_qtl_plot_t = CXGN::Tools::WebImageCache->new();
         $cache_qtl_plot_t->set_basedir($basepath);
         $cache_qtl_plot_t->set_temp_dir( $tempfile_dir . "/temp_images" );
 
