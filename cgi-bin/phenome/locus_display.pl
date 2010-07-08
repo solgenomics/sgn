@@ -226,9 +226,7 @@ my $locus_xml = $locus_id ? qq |<a href = "generic_gene_page.pl?locus_id=$locus_
     #print locus details section
     print info_section_html(
         title    => 'Locus details',
-        subtitle => $locus_xml . " |" . " "
-	. $editor_note . " " . "|" . " "
-	. $guide_html,
+        subtitle => "$locus_xml | $editor_note | $guide_html",
         contents => $locus_html,
     );
     if ($curator_html) {
@@ -240,7 +238,6 @@ my $locus_xml = $locus_id ? qq |<a href = "generic_gene_page.pl?locus_id=$locus_
             collapsed   => 1,
         );
     }
-    print STDERR "!!!Printing locus_details :  " . ( time() - $time ) . "\n";
 
 ##########
 ## Notes and Figures
@@ -319,8 +316,6 @@ qq|<a href="$figure_img"  title="<a href=$image_page>Go to image page ($figure_n
         collapsible => 1,
         collapsed   => 1,
     );
-    print STDERR "!!!Printing notes and figures :  "
-      . ( time() - $time ) . "\n";
 
 #################################
     #display individuals section
@@ -353,8 +348,6 @@ qq| <a href="javascript:Tools.toggleContent('associateIndividualForm', 'locus_ac
         collapsible => 1,
         collapsed   => 1,
     );
-    print STDERR "!!!Printing individuas section :  "
-      . ( time() - $time ) . "\n";
 
 #################################
     #display alleles section
@@ -439,9 +432,6 @@ qq|<div align="left"><a href="allele.pl?action=view&amp;allele_id=$allele_id"> |
         collapsible => 1,
         collapsed   => 1,
     );
-    print STDERR "!!!Printing alleles :  " . ( time() - $time ) . "\n";
-
-
 
     ###########################               ASSOCIATED LOCI
     #my @locus_groups= $locus->get_locusgroups();
