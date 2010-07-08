@@ -1,8 +1,9 @@
 
 use strict;
+use warnings;
 
 use CXGN::DB::Connection;
-use Test::More tests=> 8;
+use Test::More tests => 8;
 use Test::WWW::Mechanize;
 
 use CXGN::People::Person;
@@ -37,7 +38,6 @@ $login->store();
 
 $dbh->commit();
 
-
 my %form = (
     form_name => 'login',
     fields    => {
@@ -53,21 +53,26 @@ $m->get_ok($server."/tools/genefamily/search.pl");
 
 my %search_form = (
     form_name  => 'member_search_form',
-    fields     => { 
-	dataset       => 'test',
-	member_id     => 'AT5G22680',
+    fields     => {
+        dataset       => 'test',
+        member_id     => 'AT5G22680',
     },
-    );
+);
 
-$m->submit_form_ok(\%search_form, "submit search...");
+$m->submit_form(%search_form);
+SKIP : {
+    if ($m->content =~ /can't open family file/) {
+        skip "gene family file not available", 3;
+    } else {
+        ok($m->success, "Search form submission");
+    }
 
+    $m->content_contains('is in family 0');
 
-$m->content_contains('is in family 0');
+    $m->form_name('genefamily_display_form');
+    $m->click('view_family');
 
-$m->form_name('genefamily_display_form');
-$m->click('view_family');
-
-$m->content_contains('detail for family 0');
-
+    $m->content_contains('detail for family 0');
+}
 
 END { $p->hard_delete() if $p }
