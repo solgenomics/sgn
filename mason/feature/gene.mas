@@ -77,11 +77,9 @@
 &>
 </&>
 
-<&| /page/info_section.mas,
-    title => 'Ontology Annotations',
-    collapsible => 1,
+<& /locus/ontology.mas,
+    feature   => $feature,
 &>
-</&>
 
 <&| /page/info_section.mas,
     title => 'Gene Families',
