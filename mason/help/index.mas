@@ -74,7 +74,7 @@ Submitters are always accredited on each information page related to theur work 
 
 <li>To submit fluorescence in-situ hybridization (FISH) data, please follow the <a href="/content/fish.pl">these guidelines</a>.</li>
 <li>To submit genetic map data, please see the <a href="/content/map_submissions.pl">map and marker submission guidelines</a>.</li>
-<li>To submit genotypic and phenotypic data from a QTL study, please see the <a href="/phenome/submit_qtl_data.pl">QTL data submission guidelines</a>.</li>
+<li>To submit genotypic and phenotypic data from a QTL study, please see the <a href="/qtl/guide.pl">QTL data submission guidelines</a>.</li>
 
 <li>If you would like to add sequence, marker or other information to this database, or have any comments or suggestions, please send email to <a href="mailto:sgn-feedback\@sgn.cornell.edu">sgn-feedback\@sgn.cornell.edu</a>.</li>
 </ul>
