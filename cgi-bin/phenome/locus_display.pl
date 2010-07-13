@@ -44,21 +44,36 @@ our $c;
 my $d = CXGN::Debug->new();
 ##$d->set_debug( 1 );
 
-my $page= CXGN::Page->new("Locus display", "Naama");
-my $dbh=$page->get_dbh();
+#my $page= CXGN::Page->new("Locus display", "Naama");
+#my $dbh=$page->get_dbh();
+#####################
+use CGI;
+use CXGN::DB::Connection;
+use CXGN::Login;
 
+my $q = CGI->new();
+my $dbh = CXGN::DB::Connection->new();
+my $login = CXGN::Login->new($dbh);
+
+my $person_id = $login->has_session();
+
+my ($locus_id, $action) = ($q->param("locus_id"), $q->param("action"));
+
+$c->forward_to_mason_view('/locus/index.mas', locus_id=>$locus_id, action=> $action,  person_id=>$person_id, dbh=>$dbh);
+
+
+
+#############
 my $time = time();
 $d->d("start time = $time ! \n");
 
-my %args = $page->cgi_params();
-my $locus_id = $args{locus_id};
 
-my $person_id = CXGN::Login->new($dbh)->has_session();
+
 my $user = CXGN::People::Person->new($dbh, $person_id);
 my $user_type = $user->get_user_type();
 my $script = "/phenome/locus_display.pl?locus_id=$locus_id";
 
-unless ( ( $locus_id =~ m /^\d+$/ ) || ($args{action} eq 'new' && !$locus_id) ) {
+unless ( ( $locus_id =~ m /^\d+$/ ) || ($action eq 'new' && !$locus_id) ) {
     $c->throw(is_error=>0,
 	      message=>"No locus exists for identifier $locus_id",
 	);
@@ -76,37 +91,35 @@ if ( $locus->get_obsolete() eq 't' && $user_type ne 'curator' )
 	      developer_message => 'only curators can see obsolete loci',
 	      notify => 0,   #< does not send an error email
 	);
-    #$page->message_page("Locus $locus_id is obsolete!");
 }
 
 
 my $locus_name = $locus->get_locus_name();
 my $organism   = $locus->get_common_name();
 
-$page->jsan_use("CXGN.Phenome.Tools");
-$page->jsan_use("CXGN.Phenome.Locus");
-$page->jsan_use("MochiKit.DOM");
-$page->jsan_use("Prototype");
-$page->jsan_use("jQuery");
-$page->jsan_use("thickbox");
-$page->jsan_use("MochiKit.Async");
-$page->jsan_use("CXGN.Sunshine.NetworkBrowser");
-$page->jsan_use("CXGN.Phenome.Locus.LocusPage");
-$page->jsan_use("CXGN.Page.Form.JSFormPage");
+#$page->jsan_use("CXGN.Phenome.Tools");
+#$page->jsan_use("CXGN.Phenome.Locus");
+#$page->jsan_use("MochiKit.DOM");
+#$page->jsan_use("Prototype");
+#$page->jsan_use("jQuery");
+#$page->jsan_use("thickbox");
+#$page->jsan_use("MochiKit.Async");
+#$page->jsan_use("CXGN.Sunshine.NetworkBrowser");
+#$page->jsan_use("CXGN.Phenome.Locus.LocusPage");
+#$page->jsan_use("CXGN.Page.Form.JSFormPage");
 
+#$c->
 #used to show certain elements to only the proper users
 
 my @owners   = $locus->get_owners();
 
-my $action = $args{action};
 
 if ( !$locus->get_locus_id() && $action ne 'new' && $action ne 'store' ) {
     $c->throw(is_error=>0, message=>'No locus exists for this identifier',);
     $d->d('No locus exists for this identifier');
-    #$page->message_page("No locus exists for this identifier");
 }
 
-$page->header("SGN $organism locus: $locus_name");
+#$page->header("SGN $organism locus: $locus_name");
 
 print page_title_html("$organism \t'$locus_name'\n");
 
@@ -135,8 +148,10 @@ my $editor_note =
 my $guide_html =
     qq|<a href="http://docs.google.com/View?docid=ddhncntn_0cz2wj6">Annotation guidelines</a>|;
 
-my $locus_html= qq| <table width="100%"><tr><td>|
-    . CXGN::Phenome::Locus::LocusPage::init_locus_form($locus_id);
+my $locus_html= qq| <table width="100%"><tr><td>|;
+
+$locus_html .= $c->render_mason('/locus/init_locus_form.mas', locus_id=>$locus_id);
+
 #Only show if you are a curator or the object owner and there is no registry already assocaited with the locus
 if (
     (
@@ -640,14 +655,16 @@ print info_section_html(
 $d->d( "!!!Printing ontology links! :  " . ( time() - $time ) . "\n");
 
 ####add page comments
-if ($locus_name) {
-    my $page_comment_obj =
-	CXGN::People::PageComment->new( $locus->get_dbh(), "locus",
-					$locus_id, $page->{request}->uri()."?".$page->{request}->args() );
-    print $page_comment_obj->get_html();
-}
+my $comments;
 
-$page->footer();
+if ($locus_name) {
+
+    $comments = $c->render_mason('/page/comments.mas', object_type=>'locus', object_id=>$locus_id, referer=>$script);
+    
+}
+print $comments;
+
+#$page->footer();
 
 
 

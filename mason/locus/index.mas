@@ -1,0 +1,75 @@
+<%doc>
+
+=head1 NAME
+
+/locus/index.mas - a page for displaying locus details
+
+=head1 DESCRIPTION
+
+parameters:
+
+=over 4
+
+=item $locus_id
+
+The id of the locus in the database
+
+=item $dbh
+
+a database handle
+
+=item $person_id
+
+the person logged into the system right now
+
+
+=back
+
+=head1 AUTHOR
+
+Naama Menda <nm249@cornell.edu>
+
+=cut
+
+</%doc>
+
+
+
+<%args>
+
+$locus_id => 0
+$action => 'view'
+$person_id
+$dbh
+
+</%args>
+
+
+<%perl>
+
+
+
+use CXGN::Phenome::Locus;
+
+unless ( ( $locus_id =~ m /^\d+$/ ) || ($action eq 'new' && !$locus_id) ) {
+$c->throw(is_error=>0,
+message=>"No locus exists for identifier $locus_id",
+);
+}
+
+my $locus = CXGN::Phenome::Locus->new($dbh, $locus_id);
+
+
+</%perl>
+
+<& /page/page_title.mas, title=>"SGN locus ".$locus->get_locus_name() &>
+  
+<&| /page/info_section.mas, title=>"Locus details" &>
+
+    <& /page/form.mas, object_type=>'locus', object_id=>"$locus_id", form_name=> 'locus_form', server_side_script => '/jsforms/locus_ajax_form.pl', form_div_name=>'locus_details', js_object_name=> 'locusForm', page_url => '/phenome/locus_display.pl'  &>
+
+</&>
+
+<&| /page/info_section.mas, title=>"Curator tools" &>
+    
+</&>
