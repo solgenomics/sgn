@@ -6,6 +6,12 @@ use SGN::Context;
 
 my $c = SGN::Context->new();
 
+#---connect to schema---
+my $schema = $c->dbic_schema('Bio::Chado::Schema');
+
+#---add pubmed publications to pubprop---
+my $db = $schema->resultset('General::Db')->find({name => 'PMID'});
+
 #---arrays of pubmed ids and titles of publications---
 my @pmid = (
     18254380,
@@ -24,15 +30,6 @@ my @pmid = (
     8653264,
     8647403,
 );
-
-my @titles = ('A Snapshot of the Emerging Tomato Genome Sequence', 'Estimation of nuclear DNA content of plants by flow cytometry');
-
-#---connect to schema---
-my $schema = $c->dbic_schema('Bio::Chado::Schema');
-
-#---add pubmed publications to pubprop---
-my $db = $schema->resultset('General::Db')->find({name => 'PMID'});
-
 foreach my $item ( @pmid ) {
     my $dbxref = $db->find_related(
         'dbxrefs',
@@ -47,6 +44,11 @@ foreach my $item ( @pmid ) {
 }
 
 #---add other publications manually---
+my @titles = (
+    'A Snapshot of the Emerging Tomato Genome Sequence',
+    'Estimation of nuclear DNA content of plants by flow cytometry',
+   );
+
 foreach my $title ( @titles ) {
     my $pub = $schema
         ->resultset( "Pub::Pub" )
