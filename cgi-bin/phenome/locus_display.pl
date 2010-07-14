@@ -47,7 +47,7 @@ my $d = CXGN::Debug->new();
 #my $page= CXGN::Page->new("Locus display", "Naama");
 #my $dbh=$page->get_dbh();
 #####################
-use CGI;
+use CGI qw / param /;
 use CXGN::DB::Connection;
 use CXGN::Login;
 
@@ -57,9 +57,10 @@ my $login = CXGN::Login->new($dbh);
 
 my $person_id = $login->has_session();
 
-my ($locus_id, $action) = ($q->param("locus_id"), $q->param("action"));
+my $locus_id = $q->param("locus_id") ;
+my $action =  $q->param("action");
 
-$c->forward_to_mason_view('/locus/index.mas', locus_id=>$locus_id, action=> $action,  person_id=>$person_id, dbh=>$dbh);
+$c->forward_to_mason_view('/locus/index.mas',  action=> $action,  locus_id => $locus_id , person_id=>$person_id, dbh=>$dbh);
 
 
 

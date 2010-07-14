@@ -37,8 +37,8 @@ Naama Menda <nm249@cornell.edu>
 
 <%args>
 
-$locus_id => 0
 $action => 'view'
+$locus_id => 0
 $person_id
 $dbh
 
@@ -48,21 +48,44 @@ $dbh
 <%perl>
 
 
-
 use CXGN::Phenome::Locus;
+use CXGN::People::Person;
 
+# print message if locus_id os not valid 
 unless ( ( $locus_id =~ m /^\d+$/ ) || ($action eq 'new' && !$locus_id) ) {
-$c->throw(is_error=>0,
-message=>"No locus exists for identifier $locus_id",
+  $c->throw(is_error=>0,
+  message=>"No locus exists for identifier $locus_id",
 );
 }
 
+
+my $user = CXGN::People::Person->new($dbh, $person_id);
+my $user_type = $user->get_user_type();
+
 my $locus = CXGN::Phenome::Locus->new($dbh, $locus_id);
+
+# print message if the locus is obsolete 
+if ( $locus->get_obsolete() eq 't' && $user_type ne 'curator' )
+{
+      $c->throw(is_error=>0, 
+	      title => 'Obsolete locus',
+	      message=>"Locus $locus_id is obsolete!",
+	      developer_message => 'only curators can see obsolete loci',
+	      notify => 0,   #< does not send an error email
+	);
+}
+
+# print message if locus_id does not exist
+
+if ( !$locus->get_locus_id() && $action ne 'new' && $action ne 'store' ) {
+    $c->throw(is_error=>0, message=>'No locus exists for this identifier',);
+  }
 
 
 </%perl>
 
 <& /page/page_title.mas, title=>"SGN locus ".$locus->get_locus_name() &>
+
   
 <&| /page/info_section.mas, title=>"Locus details" &>
 
