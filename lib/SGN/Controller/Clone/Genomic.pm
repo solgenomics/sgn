@@ -5,9 +5,9 @@ use Carp;
 
 use Memoize;
 use File::Basename;
+use File::Slurp qw/slurp/;
 
 use CXGN::DB::DBICFactory;
-
 use CXGN::Genomic::Clone;
 use CXGN::Page;
 use CXGN::PotatoGenome::Config;
@@ -51,15 +51,14 @@ sub clone_annot_download {
 	    or $page->error_page('No Annotations found','No annotation files were found for that clone');
 
     if (my $file = $files{$set eq 'all' ? $format : $set.'_'.$format}) {
-	my $type = $content_types{$format} || 'text/plain';
-	my $basename = basename($file);
-	print "Content-Type: $type\n";
-	print "Content-Disposition: attachment; filename=$basename\n";
-	print "\n";
-	open my $f,$file or die "could not open '$file': $!";
-	print while <$f>;
+        my $type = $content_types{$format} || 'text/plain';
+        my $basename = basename($file);
+        print "Content-Type: $type\n";
+        print "Content-Disposition: attachment; filename=$basename\n";
+        print "\n";
+        print slurp($file);
     } elsif ( !$page->is_bot_request) {
-	$page->error_page('Not Available',"No annotation set is available in format $format for analysis $set");
+        $page->error_page('Not Available',"No annotation set is available in format $format for analysis $set");
     }
 }
 

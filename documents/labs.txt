@@ -15,7 +15,7 @@
 
 <div class="subheading"><a href="/community/feature/200612.pl">Cenicafe Bioinformatics Group, Chinchina, Colombia</a></div><br />
 
-<div class="subheading"><a href="/documents/community/feature/labs/doganlarfrary/index.htm">Doganlar/Frary Lab, Izmir Institute of Technology Urla, Izmir Turkey</a></div><br />
+<div class="subheading"><a href="/static_content/community/feature/labs/doganlarfrary/index.htm">Doganlar/Frary Lab, Izmir Institute of Technology Urla, Izmir Turkey</a></div><br />
 
 <div class="subheading"><a href="/community/feature/200601.pl">The Petunia Lab at Radboud University, Nijmegen</a></div><br />
 

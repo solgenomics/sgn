@@ -31,6 +31,8 @@ print info_section_html( title => 'Tomato genome sequence builds',
 			 contents => $c->render_mason('/genomes/Solanum_lycopersicum/wgs_builds_table.mas'),
 		       );
 
+
+print qq|<a name="annotation"></a>\n|;
 print info_section_html( title => 'Official annotation',
 			 subtitle => 'browse genome contigs and official annotations',
 			 contents => <<EOH
@@ -108,7 +110,7 @@ sub gb_searchbox {
     my ($gb_root) = @_;
     return
         start_form( -style => 'display: inline', -action => $gb_root )
-       .textfield( -name => 'name', -value => 'search names/descriptions (e.g. TG154)', -onfocus => 'this.select()', -size => 30)
+       .textfield( -name => 'name', -value => 'search (e.g. TG154 or ARP2)', -onfocus => 'this.select()', -size => 30)
        .submit('Search','Search')
        .end_form()
 }

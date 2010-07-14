@@ -404,16 +404,11 @@ sub apache_upload_image {
     # # only copy file if it doesn't already exist
     # #
     if ( -e $temp_file ) {
-
-# #die "The file $temp_file already exists. You cannot upload a file more than once\n";
         unlink $temp_file;
     }
 
-    #print STDERR "Uploading file to location: $temp_file\n";
+    open UPLOADFILE, '>', $temp_file or die "Could not write to $temp_file: $!\n";
 
-    open UPLOADFILE, ">$temp_file" or die "Could not write to $temp_file: $!\n";
-
-    #warn "could open filename $temp_filename...\n";
     binmode UPLOADFILE;
     while (<$upload_fh>) {
 
@@ -688,12 +683,6 @@ sub process_image {
 sub copy_image_resize {
     my $self = shift;
     my ( $original_image, $new_image, $width ) = @_;
-
-#$debug and warn "\tCopying $original_image to $new_image and resizing it to $width px wide\n";
-
-    #debug
-    #print STDERR
-"copy_image_resize: $original_image to $new_image and resizing it to $width px wide\n";
 
     # first copy the file
     my $copy = "cp '$original_image' '$new_image'";

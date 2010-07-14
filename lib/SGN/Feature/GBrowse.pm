@@ -140,20 +140,23 @@ sub render_all_configs {
     my $self = shift;
 
     # all .mas files in the conf_template_dir
-    my @template_files =
-        grep /\.mas$/ && -f,
-        $self->conf_template_dir->children;
+    my @template_files;
+    $self->conf_template_dir->recurse(
+        callback => sub {
+            my ($child) = @_;
+            return if $child->is_dir || $child !~ /\.mas$/;
+            push @template_files, $child;
+        });
 
     foreach my $template_file (@template_files) {
 
         # assemble our target filename, which is the same file name
         # (minus the .mas), in the $self->conf_dir directory
-        my $render_target = do {
-            my $bn = $template_file->basename;
-            $bn =~ s/\.mas$//;
-            $self->conf_dir->file( $bn );
-        };
+        my $render_target_relative = $template_file->relative( $self->conf_template_dir );
+        $render_target_relative =~ s/\.mas$//;
+        my $render_target = $self->conf_dir->file( $render_target_relative );
 
+        $render_target->dir->mkpath;
         $self->render_config_template( $template_file => $render_target );
     }
 }
@@ -161,7 +164,7 @@ sub render_all_configs {
 sub render_config_template {
     my ( $self, $template_file, $render_target ) = @_;
 
-        # render the template into the target file
+    # render the template into the target file
     my $outbuf;
     my $mason = HTML::Mason::Interp
         ->new( allow_globals => [qw[ $c $feature ]],
@@ -172,7 +175,7 @@ sub render_config_template {
     $mason->set_global( '$c'       => $self->context );
     $mason->set_global( '$feature' => $self          );
 
-    $mason->exec( '/'.$template_file->basename ); #< mason's default search path is current working directory
+    $mason->exec( '/'.$template_file->relative( $self->conf_template_dir) ); #< mason's default search path is current working directory
 
     $render_target->openw->print( $outbuf );
 }

@@ -30,7 +30,10 @@ use CXGN::Map;
 use CXGN::DB::Connection;
 use CXGN::Chado::Cvterm;
 use List::MoreUtils qw /uniq/;
+use Math::Round::Var;
+use SGN::Exception;
 
+our $c;
 my $page = CXGN::Page->new( "qtl", "isaak" );
 my ( $pop_id, $trait_id, $lg, $l_m, $p_m, $r_m, $lod, $qtl_image ) =
   $page->get_encoded_arguments(
@@ -39,16 +42,22 @@ my ( $pop_id, $trait_id, $lg, $l_m, $p_m, $r_m, $lod, $qtl_image ) =
                                 "p_marker",      "r_marker",
                                 "lod",            "qtl"
                               );
+if (!$pop_id || !$trait_id || !$lg || !$l_m || !$p_m || !$r_m || !$lod || !$qtl_image) {
+  die SGN::Exception->new(
+    title => 'QTL detail page error:  A required argument is missing'
+  );
+}
+
 my $dbh          = CXGN::DB::Connection->new();
 my $pop          = CXGN::Phenome::Population->new( $dbh, $pop_id );
 my $pop_name     = $pop->get_name();
-my $trait_name   = &trait_name( $pop, $trait_id );
-my $genetic_link = &genetic_map($pop);
-my $cmv_link     = &marker_positions( $pop, $lg, $l_m, $p_m, $r_m );
-my $gbrowse_link = &genome_positions( $l_m, $p_m, $r_m );
-my $marker_link  = &marker_detail( $l_m, $p_m, $r_m );
-my $legend       = &legend();
-my $comment      = &comment();
+my $trait_name   = trait_name( $pop, $trait_id );
+my $genetic_link = genetic_map($pop);
+my $cmv_link     = marker_positions( $pop, $lg, $l_m, $p_m, $r_m );
+my $gbrowse_link = genome_positions( $l_m, $p_m, $r_m );
+my $marker_link  = marker_detail($pop, $l_m, $p_m, $r_m);
+my $legend       = legend();
+my $comment      = comment();
 
 $c->forward_to_mason_view('/qtl/qtl.mas', qtl_image=>$qtl_image, pop_name=>$pop_name, trait_name=>$trait_name, cmv_link=>$cmv_link, gbrowse_link=>$gbrowse_link, marker_link=>$marker_link, genetic_map=>$genetic_link, legend=>$legend, comment=>$comment);
 
@@ -89,8 +98,9 @@ sub genetic_map
     my $mapv_id  = $pop->mapversion_id();
     my $map      = CXGN::Map->new( $dbh, { map_version_id => $mapv_id } );
     my $map_name = $map->get_long_name();
+    my $map_sh_name = $map->get_short_name();
     my $genetic_map =
-      qq | <a href=/cview/map.pl?map_version_id=$mapv_id&hilite=$l_m+$p_m+$r_m>$map_name</a>|;
+      qq | <a href=/cview/map.pl?map_version_id=$mapv_id&hilite=$l_m+$p_m+$r_m>$map_name ($map_sh_name)</a>|;
 
     return $genetic_map;
 
@@ -98,21 +108,36 @@ sub genetic_map
 
 sub marker_detail
 {
-    my @markers = @_;
-    my ( $m_link, $desc );
+    my ($pop, $l_m, $p_m, $r_m) = @_;
+    my @markers = uniq ($l_m, $p_m, $r_m);
+    my $mapv_id = $pop->mapversion_id();
+
+    my @marker_html;
+    my $rnd = Math::Round::Var->new(0.01);
     for ( my $i = 0 ; $i < @markers ; $i++ )
     {
         my $marker = CXGN::Marker->new_with_name( $dbh, $markers[$i] );
-        my $m_id = $marker->marker_id() unless !$marker;
-        if ( $i == 0 ) { $desc = "Left flanking marker:"; }
-        if ( $i == 1 ) { $desc = "Peak (<i>or the closest</i>) marker:"; }
-        if ( $i == 2 ) { $desc = "Right flanking marker:"; }
-        $m_link .=
-qq |<br/>$desc <a href="/search/markers/markerinfo.pl?marker_id=$m_id">$markers[$i]</a>|
-          unless !$marker;
-    }
+	my ($m_id, $m_pos);
+	
+	unless (!$marker) 
+	{
+	    $m_id = $marker->marker_id();
+	    my $m_pos = $pop->get_marker_position( $mapv_id, $markers[$i] );
 
-    return $m_link;
+	    my $remark = 'Peak marker' if ($p_m eq $markers[$i]);
+	    push @marker_html, 
+	    [ 
+	      map {$_} 
+	      ( 
+		qq | <a href="/search/markers/markerinfo.pl?marker_id=$m_id">$markers[$i]</a>|, $rnd->round($m_pos), $remark
+	      ) 
+	    ];       
+	} 
+
+    }  
+
+    return \@marker_html;
+
 }
 
 sub trait_name

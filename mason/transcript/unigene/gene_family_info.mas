@@ -68,13 +68,15 @@ if (defined $id) {
     my $gene_family_content;
     my @family_info;
     if (scalar(@families) > 0) {
-	foreach my $family (@families) {
+	for my $family (@families) {
 	    my ($fam_id, $ivalue, $annotation, $count) = @{$family};
-	    $annotation =~ s/;/<br>/g;
-	    $annotation =~ s/,/<br>/g;
-	    $annotation =~ s/Molecular Function/ - Molecular Function/g;
-	    $annotation =~ s/Cellular Component/ - Cellular Component/g;
-	    $annotation =~ s/Biological Process/ - Biological Process/g;
+        if ($annotation) {
+            $annotation =~ s/;/<br>/g;
+            $annotation =~ s/,/<br>/g;
+            $annotation =~ s/Molecular Function/ - Molecular Function/g;
+            $annotation =~ s/Cellular Component/ - Cellular Component/g;
+            $annotation =~ s/Biological Process/ - Biological Process/g;
+        }
 	    my $family_link = '<a href="family.pl?family_id='.$fam_id.'">'.$fam_id."</a>";
 	    push @family_info, [$ivalue, $family_link, $annotation, $count];
 	}

@@ -40,9 +40,9 @@ use CXGN::Phenome::Locus::LocusPage;
 use SGN::Image;
 use HTML::Entities;
 
+our $c;
 my $d = CXGN::Debug->new();
 ##$d->set_debug( 1 );
-
 
 my $page= CXGN::Page->new("Locus display", "Naama");
 my $dbh=$page->get_dbh();
@@ -110,8 +110,9 @@ $page->header("SGN $organism locus: $locus_name");
 
 print page_title_html("$organism \t'$locus_name'\n");
 
-#move this to mason!
-print CXGN::Phenome::Locus::LocusPage::initialize($locus_id);
+print $c->render_mason("/locus/initialize.mas",
+            locus_id => $locus_id
+);
 
 $d->d("!!!Printing page title :  " . ( time() - $time ) . "\n");
 ####################################################
@@ -225,9 +226,7 @@ my $locus_xml = $locus_id ? qq |<a href = "generic_gene_page.pl?locus_id=$locus_
     #print locus details section
     print info_section_html(
         title    => 'Locus details',
-        subtitle => $locus_xml . " |" . " "
-	. $editor_note . " " . "|" . " "
-	. $guide_html,
+        subtitle => "$locus_xml | $editor_note | $guide_html",
         contents => $locus_html,
     );
     if ($curator_html) {
@@ -239,7 +238,6 @@ my $locus_xml = $locus_id ? qq |<a href = "generic_gene_page.pl?locus_id=$locus_
             collapsed   => 1,
         );
     }
-    print STDERR "!!!Printing locus_details :  " . ( time() - $time ) . "\n";
 
 ##########
 ## Notes and Figures
@@ -318,8 +316,6 @@ qq|<a href="$figure_img"  title="<a href=$image_page>Go to image page ($figure_n
         collapsible => 1,
         collapsed   => 1,
     );
-    print STDERR "!!!Printing notes and figures :  "
-      . ( time() - $time ) . "\n";
 
 #################################
     #display individuals section
@@ -352,8 +348,6 @@ qq| <a href="javascript:Tools.toggleContent('associateIndividualForm', 'locus_ac
         collapsible => 1,
         collapsed   => 1,
     );
-    print STDERR "!!!Printing individuas section :  "
-      . ( time() - $time ) . "\n";
 
 #################################
     #display alleles section
@@ -438,9 +432,6 @@ qq|<div align="left"><a href="allele.pl?action=view&amp;allele_id=$allele_id"> |
         collapsible => 1,
         collapsed   => 1,
     );
-    print STDERR "!!!Printing alleles :  " . ( time() - $time ) . "\n";
-
-
 
     ###########################               ASSOCIATED LOCI
     #my @locus_groups= $locus->get_locusgroups();
@@ -471,7 +462,7 @@ else {
 }
 
 #printing associated loci section dynamically
-my $dyn = CXGN::Phenome::Locus::LocusPage::include_locus_network();
+my $dyn = $c->render_mason("/locus/network.mas");
 
 print info_section_html(
     title       => "Associated loci ($al_count) ",
@@ -521,15 +512,8 @@ foreach (@unigenes) {
     $unigene_count++ if $_->get_status eq 'C'; 
 }
 
-my $dyn_solcyc = CXGN::Phenome::Locus::LocusPage::include_solcyc_links();
+print $c->render_mason("/locus/solcyc.mas");
 
-print info_section_html(
-    title       => "SolCyc links",
-    contents    => $dyn_solcyc,
-    id          => 'solcyc',
-    collapsible => 1,
-    collapsed   => 1,
-    );
 $d->d( "!!!Got SolCyc links :  " . ( time() - $time ) . "\n");
 
 my $associate_unigene_form;
@@ -631,11 +615,10 @@ if (
     )
 {
     if ($locus_name) {
-	$ontology_subtitle .=
-	    qq|<a href="javascript:Tools.toggleContent('associateOntologyForm', 'locus_ontology')">[Add ontology annotations]</a> |;
-	$ontology_add_link =
-	    CXGN::Phenome::Locus::LocusPage::associate_ontology_form(
-                $locus_id);
+        $ontology_subtitle .= qq|<a href="javascript:Tools.toggleContent('associateOntologyForm', 'locus_ontology')">[Add ontology annotations]</a> |;
+        $ontology_add_link = $c->render_mason("/locus/associate_ontology.mas",
+            locus_id => $locus_id
+        );
     }
 }
 else {
@@ -643,8 +626,7 @@ else {
 	qq |<span class = "ghosted"> [Add ontology annotations]</span> |;
 }
 
-my $dyn_ontology_info =
-    CXGN::Phenome::Locus::LocusPage::include_locus_ontology();
+my $dyn_ontology_info = $c->render_mason("/locus/ontology.mas");
 
 print info_section_html(
     title       => "Ontology annotations ($ont_count)",
@@ -712,13 +694,10 @@ sub get_location {
     my $lg_name = $locus->get_linkage_group();
     my $arm     = $locus->get_lg_arm();
     my $location_html = qq|<td><table><tr>|;
-    my @locus_marker_objs =
-	$locus->get_locus_markers();    #array of locus_marker objects
+    my @locus_marker_objs = $locus->get_locus_markers();    #array of locus_marker objects
     foreach my $lmo (@locus_marker_objs) {
         my $marker_id = $lmo->get_marker_id();    #{marker_id};
-        my $marker =
-	    CXGN::Marker->new( $locus->get_dbh(), $marker_id )
-	    ;                                       #a new marker object
+        my $marker = CXGN::Marker->new( $locus->get_dbh(), $marker_id ); #a new marker object
 	
         my $marker_name = $marker->name_that_marker();
         my $experiments = $marker->current_mapping_experiments();
@@ -922,7 +901,11 @@ sub get_dbxref_info {
     }
     
     my $abs_count = 0;
-    foreach ( @{ $dbs{'PMID'} } ) {
+    my @sorted;
+ 
+    @sorted = sort { $a->[0]->get_accession() <=> $b->[0]->get_accession() } @{ $dbs{PMID} } if  defined @{ $dbs{PMID} } ;
+ 
+    foreach ( @sorted  ) {
         if ( $_->[1] eq '0' ) {    #if the pub is not obsolete
             $pubs .= get_pub_info( $_->[0], 'PMID', $abs_count++ );
         }
@@ -986,7 +969,7 @@ sub get_pub_info {
     my $abstract_view =
 	abstract_view( $dbxref->get_publication(), $count );
     $pub_info =
-	qq|<div><a href="/chado/publication.pl?pub_id=$pub_id" >$db:$accession</a> $pub_title ($year). $abstract_view </div> |;
+	qq|<div><a href="/chado/publication.pl?pub_id=$pub_id" >$db:$accession</a> $pub_title ($year) $abstract_view </div><br /> |;
     return $pub_info;
 }    #
 

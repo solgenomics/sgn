@@ -1,3 +1,4 @@
+package CXGN::Page;
 
 =head1 NAME
 
@@ -12,9 +13,9 @@ This is now a subclass of CXGN::Scrap, which handles all of the argument-retriev
 
 =cut
 
-package CXGN::Page;
-use base qw/CXGN::Scrap/;
+use base qw/ CXGN::Scrap /;
 use strict;
+use warnings;
 use Apache2::RequestUtil ();
 use Apache2::Cookie;
 use HTML::Entities qw/encode_entities/;

@@ -1,0 +1,236 @@
+
+
+<%doc>
+
+=head1 NAME
+
+/homepage/iconmenu.mas - a graphical way to present information on SGN
+
+=head1 DESCRIPTION
+
+Displays an icon-based menu of top level option. Mousing over the icons pops up menus with further links to guide the users to useful pages.
+
+=head1 AUTHORS
+
+ Camilo Rosero
+ Lukas Mueller (integration into SGN, some changes to the menus)
+
+ June 9, 2010
+
+=cut
+
+
+</%doc>
+
+
+<& /util/import_javascript.mas, classes=>["hoverScript"] &>
+
+<style type="text/css">
+    @import url("/documents/inc/icon_nav.css");
+
+    #icon_nav {
+        width: 720px;
+        height: 480px;
+        margin-top: -20px;
+        margin-left: -20px;
+    }
+
+    .MapsMarkers {
+            position: relative; 
+    	top: 80px;
+    	left: 50px;
+    }
+
+    .MapsMarkersSubMenu {
+            position: relative;
+    	left: 190px;
+    	top: -160px;
+    	width: 220px;
+            height: 300px;
+    }
+
+    .MapsMarkersSubMenu a {
+     /* padding-left: 15px; */
+    }
+
+    .Genes {
+    	position: relative;
+        top: 40px; 
+    	left: 120px;
+    }
+
+    .GenesSubMenu {
+    	width: 227px;
+    	height: 100px;
+    	position: relative;
+    	top: -120px;
+    	left: 100px;
+    }
+
+    .GenesSubMenu a {
+    /* padding-left: 15px; */
+     }
+
+    .Phenotypes {
+    	position: relative; 
+    	top: 80px;
+    	left: 100px;
+    }
+
+    .PhenotypesSubMenu {
+    	width: 227px;
+    	height: 100px; 
+    	position: relative;
+    	top: -110px;
+    	left: 115px;
+    }
+
+
+    .BreedersToolBox {
+    	position: relative; 
+    	top: 140px;
+    	left: -360px;
+        z-index: 1;
+    }
+
+    .BreedersToolBoxSubMenu {
+    	width: 227px;
+    	height: 341px;
+    	padding-top: 15px;
+    	position: relative;
+    	top: -100px;
+    	left: 115px;
+    }
+
+    .GenomesSequences {
+    	position: relative; 
+    	top: 40px;
+    	left: 260px;
+    }
+
+    .GenomesSequencesSubMenu {
+    	width: 227px;
+    	height: 90px;
+    	padding-top: 15px;
+    	position: relative;
+    	top: -110px;
+    	left: 200px;
+    }
+
+    .Pathways {
+    	position: relative; 
+    	top: -10px;
+    	left: 310px;
+    }
+
+    .PathwaysSubMenu {
+    	width: 227px;
+    	height: 341px;
+    	position: relative;
+    	top: -110px;
+    	left: 115px;
+    }
+
+    .Divider { 
+            line-height:4px;
+            font-size: 4px;
+    }
+
+</style>
+
+<div id="icon_nav">
+<ul>
+	<li class="MapsMarkers"><a href="/cview/" ><img src="/documents/img/soliconmenu/MapsMarkers.png" title="Maps and Markers" /></a>
+
+   		<ul>
+        	  <div class="submenu MapsMarkersSubMenu">
+                    <li><a href="/cview/map.pl?map_id=9">Tomato ExPEN 2000</a></li>
+                    <li><a href="/cview/map.pl?map_id=p9">Tomato physical map</a></li>
+                    <li><a href="/cview/map.pl?map_id=c9">Tomato FPC contigs</a></li>
+                    <li><a href="/cview/map.pl?map_id=il6">Tomato/pennellii IL map</a></li>
+                    <li><a href="/cview/map.pl?map_id=13">Tomato FISH map</a></li>
+                    <li><a href="/cview/map.pl?map_id=agp">Tomato AGP map</a></li>
+                    <li><a href="/cview/map.pl?map_id=itag">Tomato ITAG BAC map</a></li>
+                    <li><a href="/cview/map.pl?map_version_id=58">Pepper COSII map</a></li>
+                    <li><a href="/cview/map.pl?map_id=11">Pepper AC99 map</a></li>
+                    <li><a href="/cview/map.pl?map_id=10">Pepper FA03 map</a></li>
+                    <li><a href="/cview/map.pl?map_id=3">Potato TxB 1992 map</a></li>
+                    <li><a href="/cview/map.pl?map_id=6">Eggplant LxM 2002 map</a></li>
+                    <li><a href="/cview/map.pl?map_id=15">Tobacco SSR 2007 map</a></li>
+		    <li><a href="/cview/map.pl?map_id=7">Arabidopsis COSII map</a></li>
+		    <li><a href="">&nbsp;</a></li>
+		    <li><a href="/content/map_submissions.pl">Submit map information to SGN</a></li>
+		  </div>
+		</ul>
+		
+	</li>
+
+	<li class="Genes"><a href="/search/direct_search.pl?search=loci" style="background: none"><img src="/documents/img/soliconmenu/Genes.png" title="Genes" /></a>
+	  <ul>
+            <div class="submenu GenesSubMenu"  >
+              <li><a href="/search/direct_search.pl?search=loci">Search loci</a></li>
+              <li><a href="/search/direct_search.pl?search=unigene">Search unigenes</a></li>
+              <li><a href="/search/direct_search.pl?search=template">Expression</a></li>
+              <li><a href="/genomes/Solanum_lycopersicum/genome_data.pl">Search/browse tomato genome</a></li>
+	      <li><a href="/phenome/">Become an SGN locus editor</a></li>              
+	      </div>
+	      
+	  </ul>
+
+
+
+	<li class="Phenotypes"><a href="/phenome/" style="background: none"><img src="/documents/img/soliconmenu/Phenotypes.png" alt="Phenotypes and QTLs" title="Phenotypes and QTLs" /></a>
+	  <ul>
+	    <div class="submenu PhenotypesSubMenu">
+              <li><a href="/search/direct_search.pl?search=phenotypes">Search phenotypes</a></li>
+
+              <li><a href="/qtl/">Analyze QTLs</a></li>
+              <li><a href="/tools/onto/">Ontology browser</a></li>
+	      <li><a href="">&nbsp;</a></li>
+	      <li><a href="/phenome/">Submit phenotype data</a></li>
+            </div>
+          </ul>
+
+	</li>
+    
+    <li class="BreedersToolBox"><a href="/breeders/"><img src="/documents/img/soliconmenu/BreedersToolBox.png" alt="Breeders Toolbox" title="Click to access the Breeder's toolbox" /></a>
+    	<!--
+		<ul>
+            <div class="submenu BreedersToolBoxSubMenu">
+            	<li><a href="#">Test1</a></li>
+                <li><a href="#">Test2</a></li>
+                <li><a href="#">Test3</a></li>
+            </div>
+        </ul>
+        -->
+	</li>
+    
+    <li class="GenomesSequences"><a href="/genomes"><img src="/documents/img/soliconmenu/GenomesSequences.png" alt="GenomesSequences" alt="Genomes and Sequences" title="Genomes and Sequences" /></a>
+      <ul>
+            <div class="submenu GenomesSequencesSubMenu">
+            	<li><a href="/genomes/Solanum_lycopersicum">Tomato Genome Project</a></li>
+                <li><a href="/genomes/Solanum_lycopersicum/genome_data.pl">Search/browse tomato genome</a></li>
+                <li><a href="/genomes/Solanum_pimpinellifolium/">Solanum pimpinellifolium genome</a></li>
+		<li><a href=""></a>&nbsp;<li>
+		<li><a href="/sequencing/sol100.pl">SOL100 genomes</a></li>
+            </div>
+        </ul>
+
+	</li>
+    
+    <li class="Pathways"><a href="http://solcyc.solgenomics.net/"><img src="/documents/img/soliconmenu/Pathways.png" alt="Pathways" alt="Pathways" title="Click to access SolCyc" /></a>
+    	<!--
+		<ul>
+            <div class="submenu PathwaysSubMenu">
+            	<li><a href="#">Test1</a></li>
+                <li><a href="#">Test2</a></li>
+                <li><a href="#">Test3</a></li>
+            </div>
+        </ul>
+        -->
+	</li>
+    
+    
+</ul>
+
+</div>

@@ -178,7 +178,7 @@ citation     = This track shows regions of similarity with EST and other cDNA se
 feature      = match:ITAG_transcripts_sol
 key          = ESTs and cDNAs - Other Solanaceae
 category     = Genome data and reagents
-bgcolor        = orange
+bgcolor      = orange
 glyph        = segments
 stranded     = 1
 link         = http://www.ebi.ac.uk/ebisearch/search.ebi?db=nucleotideSequences&t=$name
@@ -188,9 +188,10 @@ citation     = This track shows regions of similarity with EST and other cDNA se
 feature      = match:ITAG_sgn_unigenes
 key          = SGN Unigenes
 category     = Genome data and reagents
-glyph        = segments
+glyph        = alignment
 bgcolor      = red
 fgcolor      = red
+link         = /search/quick_search.pl?term=$name
 stranded     = 1
 citation     = This track shows regions of similarity with SGN Unigene (SGN-U) sequences.  (see <a href="http://www.ab.wur.nl/TomatoWiki/AnSgnUnigenes000">ITAG Wiki</a>)
 
@@ -280,7 +281,6 @@ bgcolor      = yellow
 glyph        = generic
 label density = 100
 bump density  = 100
-ignore_sub_part = match_part
 
 [sgn_markers]
 feature      = match:ITAG_sgn_markers
@@ -290,6 +290,5 @@ category     = Genetic Loci
 stranded     = 1
 fgcolor      = black
 bgcolor      = yellow
-stranded     = 1
 citation     = This track shows regions of similarity of the genomic sequence with known sequences associated with SGN genetic markers, as detected by GenomeThreader (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnSgnMarkers000">ITAG Wiki</a>)
 

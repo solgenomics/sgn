@@ -16,7 +16,7 @@ my $contents = CXGN::Tools::File::get_sections($file);
 </%perl>
 
 <div class="boxbgcolor1" style="border:0px; ">
-<div class="boxheading">Featured lab...</div>
+<div class="boxheading">Featured lab</div>
 <div class="boxcontent"><% $contents %></div>
 <a href="/community/feature/index.pl">See all featured labs...</a>
 </div>

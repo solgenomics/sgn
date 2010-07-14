@@ -1,0 +1,8 @@
+<& /page/page_title.mas, title => 'Input Tomato BAC Contig Name' &>
+
+<div style="width: 50%; margin: auto">
+  <form method="GET">
+    <label for="contig">Contig name:</label><input name="contig" value="C00.9_contig59" onfocus="this.select()" />
+    <input type="submit" />
+  </form>
+</div>

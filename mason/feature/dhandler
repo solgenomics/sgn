@@ -1,0 +1,85 @@
+<%args>
+    $feature
+    $blast_url => undef
+    $children  => undef
+    $parents   => undef
+</%args>
+
+<%init>
+    use Bio::Seq;
+    use Data::Dumper;
+</%init>
+
+<& /page/page_title.mas, title => 'Feature Viewer: '. $feature->id &>
+
+<& /util/import_javascript.mas,
+    classes => [qw(Text.Markup CXGN.Effects CXGN.Phenome.Locus MochiKit.DOM)]
+&>
+<%perl>
+    my $seq = Bio::PrimarySeq->new(
+        -seq => $feature->residues,
+        -alphabet => 'dna',
+    );
+    my $organism = $feature->organism;
+    my $species  = $organism->species;
+    $species    =~ s!(\S+) !<i>$1</i> !;
+</%perl>
+
+<&| /page/info_section.mas,
+    title => 'Feature Data',
+    collapsible => 1,
+&>
+    Feature Type: <% $feature->type->name %><br/>
+    Analysis: <% $feature->is_analysis ? 'Yes' : 'No' %><br/>
+    Obsolete: <% $feature->is_obsolete ? 'Yes' : 'No' %><br/>
+    Accession: <% $feature->accession %><br/>
+    Accession Time: <% $feature->timeaccessioned %><br/>
+    Description: <% $feature->description %><br/>
+    <& /feature/dbxref.mas,
+        dbxref => $feature->dbxref,
+    &><br/>
+</&>
+<&| /page/info_section.mas, title => 'Related Features',
+    collapsible => 1,
+&>
+    <& /feature/related_features.mas,
+        children  => $children,
+        parents   => $parents,
+    &>
+</&>
+
+<&| /page/info_section.mas,
+        title       => 'Ontology Annotations',
+        collapsible => 1,
+        collapsed   => 1,
+&>
+    <& /feature/cvterms.mas,
+        feature   => $feature
+    &>
+</&>
+
+
+<&| /page/info_section.mas,
+    title       => 'Organism',
+    collapsible => 1,
+    collapsed   => 1,
+&>
+   <% $species%> (<%ucfirst($organism->common_name) %>)<p/>
+   Comment: <% $organism->comment %>
+</&>
+
+
+<&| /page/info_section.mas,
+        title       => 'Nucleotide Sequence',
+        collapsible => 1,
+        collapsed   => 0,
+&>
+  Length : <% $seq->length %><br/>
+  <% $feature->md5checksum ?  'MD5 :' . $feature->md5checksum : '' %>
+  <p/>
+    <& /feature/sequence.mas,
+            feature => $feature,
+            seq     => $seq,
+            blast_url => $blast_url,
+    &>
+</&>
