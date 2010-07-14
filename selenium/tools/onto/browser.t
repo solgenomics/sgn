@@ -1,7 +1,7 @@
 
 use strict;
 
-use Test::More qw | no_plan |;
+use Test::More tests=>8;
 
 use Test::WWW::Selenium;
 
