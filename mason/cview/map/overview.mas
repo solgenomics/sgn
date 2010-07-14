@@ -101,10 +101,10 @@ $image_height = $image_height + $image_height * $size /2;
 # (the generic will also provide an appropriate overview for the fish map).
 #
 my $map_overview = CXGN::Cview::MapOverviews::Generic -> new($map, { 
-								    force   => $force,
-								    basedir => $basepath,
-								    tempdir => $tempdir,
-								    dbh     => $dbh,
+								    force            => $force,
+								    basepath         => $basepath,
+								    tempfiles_subdir => $tempdir,
+								    dbh              => $dbh,
 								    });
 
 $map_overview->set_image_height($image_height);
