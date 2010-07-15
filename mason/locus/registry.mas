@@ -1,0 +1,93 @@
+
+
+<%doc>
+
+=head1 NAME
+
+/page/registry.mas - a component for locus registry form
+
+=head1 DESCRIPTION
+
+
+Parameters:
+
+=over 2
+
+=item person_id
+
+The ID of the logged in person 
+
+=item locus_id
+
+a locus id
+
+
+=back
+
+=head1 AUTHOR
+
+Naama Menda <nm249@cornell.edu>
+
+=cut 
+
+</%doc>
+
+<%args>
+
+$person_id
+$locus_id
+
+</%args>
+
+
+<%perl>
+
+</%perl>
+
+
+<& /util/import_javascript.mas, classes => ["CXGN.Phenome.Locus", "MochiKit.Logging"] &>
+
+	
+<a href="javascript:Locus.toggleAssociateRegistry()">[Associate a registry name with this locus]</a><br>
+
+<div id="associateRegistryForm" style="display: none">
+  <div id="registry_search">
+    Registry Name:
+    <input type="text" 
+	   style="width: 50%"
+	   id="registry_input"
+	   onkeyup="Locus.getRegistries(this.value)">
+    <input type="button"
+	   id="associate_registry_button"
+	   value="associate registry"
+	   disabled="true"
+	   onclick="Locus.associateRegistry('<% $locus_id %>','<% $person_id %>');this.disabled=false;">
+    
+    <select id="registry_select"
+	    style="width: 100%"
+	    name="registry_select"
+	    size="10" 
+	    onchange="Locus.updateRegistryInput()">
+      
+    </select>
+    
+    Click <a href="javascript:Locus.addRegistryView()">here</a> to add a new registry name to our database
+  </div>
+  
+  <div id="registry_add" style="display: none">
+    <b>Please enter the values for the new registry name below (* is required)</b><br><br>
+    <table cellspacing="0" cellpadding="0">
+      <tr><td>*Registry Symbol: </td><td width="20">&nbsp;</td>
+	<td><input type="text" id="registry_symbol" onblur="Locus.enableButton();" onchange="Locus.enableButton();"></td></tr>
+      <tr><td>*Registry Name: </td><td width="20">&nbsp;</td>
+	<td><input type="text" id="registry_name" onblur="Locus.enableButton();" onchange="Locus.enableButton();"></td></tr>
+    </table>
+    Registry Description:<br>
+    <textarea id="registry_description" style="width: 100%"></textarea><br>
+    <input type="button" disabled="true" id="add_registry_button" value="Add New Registry" onclick="Locus.addRegistry('<% $locus_id %> ', '<% $person_id %> ');this.disabled=true;"><br>
+    Click <a href="javascript:Locus.searchRegistries()">here</a> to go back to the registry search
+  </div>
+</div>
+
+
+
