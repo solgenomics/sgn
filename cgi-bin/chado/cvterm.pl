@@ -259,24 +259,47 @@ sub qtl_populations {
     my $cvterm_id = $cvterm->get_cvterm_id();
     
     my @pops1 = $cvterm->get_all_populations_cvterm();   
-    my $pop_list;
-   
-    foreach my $pop (@pops1) {
+    my ($pop_list, $is_qtl_pop);
+
+    my $qtltool = CXGN::Phenome::Qtl::Tools->new();
+    my @qtlpops = $qtltool->has_qtl_data();
+
+       
+    foreach my $pop (@pops1) 
+    {
 	my $pop_id = $pop->get_population_id();
 	my $pop_name = $pop->get_name();
+
+	foreach my $qtlpop (@qtlpops) 
+	{
+	    my $qtlpop_id = $qtlpop->get_population_id();
+	    if ($qtlpop_id == $pop_id) 
+	    {
+		$is_qtl_pop = 1;
+	    }
+	}  
+
+	if ($is_qtl_pop) 
+	{
 	
-	$pop_list .= qq |<a href="../phenome/population_indls.pl?population_id=$pop_id&amp;cvterm_id=$cvterm_id">$pop_name</a> <br />|;
+	    $pop_list .= qq | <a href="../phenome/population_indls.pl?population_id=$pop_id&amp;cvterm_id=$cvterm_id">$pop_name</a> <br />|;
+	} else 
+	{
+	    $pop_list .= qq | <a href="../phenome/population.pl?population_id=$pop_id>$pop_name</a> <br />|;
+	}
     }
       
     my $user_trait = CXGN::Phenome::UserTrait->new_with_name($self->get_dbh(), $cvterm_name);
 
     my @pops2;   
-    if ($user_trait) {
+    if ($user_trait) 
+    {
 	my $trait_id = $user_trait->get_user_trait_id();
 	@pops2 = $user_trait->get_all_populations_trait();
 
 
-	foreach my $pop (@pops2) {
+	foreach my $pop (@pops2) 
+	{
 	    my $pop_id = $pop->get_population_id();
 	    my $pop_name = $pop->get_name();
 	
@@ -285,11 +308,13 @@ sub qtl_populations {
     }
     
     my $pop_count = @pops1 + @pops2;
-    if ($pop_count > 0) { 
+    if ($pop_count > 0) 
+    { 
 	$pop_count .= " " . 'populations';
 
 	return $pop_count, $pop_list;
-    } else {
+    } else 
+    {
 	return 0;
     }
 
