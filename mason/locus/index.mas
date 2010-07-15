@@ -81,16 +81,24 @@ if ( !$locus->get_locus_id() && $action ne 'new' && $action ne 'store' ) {
     $c->throw(is_error=>0, message=>'No locus exists for this identifier',);
   }
 
+my $locus_xml = $locus_id ? qq |<a href = "generic_gene_page.pl?locus_id=$locus_id">Download GMOD XML</a>|
+  : qq |<span class="ghosted">Download GMOD XML</span>|;
+my $editor_note =
+  qq |<a href="/phenome/editors_note.pl">Note to Editors</a>|;
+my $guide_html =
+  qq|<a href="http://docs.google.com/View?docid=ddhncntn_0cz2wj6">Annotation guidelines</a>|;
 
 </%perl>
 
-<& /page/page_title.mas, title=>"SGN locus ".$locus->get_locus_name() &>
+<& /page/page_title.mas, title=>$locus->get_common_name() . " \t' " . $locus->get_locus_name() . "'\n" &>
 
   
-<&| /page/info_section.mas, title=>"Locus details" &>
-
-    <& /page/form.mas, object_type=>'locus', object_id=>"$locus_id", form_name=> 'locus_form', server_side_script => '/jsforms/locus_ajax_form.pl', form_div_name=>'locus_details', js_object_name=> 'locusForm', page_url => '/phenome/locus_display.pl'  &>
-
+<&| /page/info_section.mas, title=>"Locus details" , subtitle => "$locus_xml | $editor_note | $guide_html" &>
+  
+  <& /page/form.mas, object_type=>'locus', object_id=>"$locus_id", form_name=> 'locus_form', server_side_script => '/jsforms/locus_ajax_form.pl', form_div_name=>'locus_details', js_object_name=> 'locusForm', page_url => '/phenome/locus_display.pl'  &>
+    
+    <& /locus/registry.mas , person_id=>"$person_id", locus_id=>"$locus_id" &>
+      
 </&>
 
 <&| /page/info_section.mas, title=>"Curator tools" &>
