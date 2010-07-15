@@ -1,4 +1,5 @@
 use strict;
+use warnings;
 
 my $population_detail_page = CXGN::Phenome::PopulationDetailPage->new();
 
@@ -75,11 +76,9 @@ sub generate_form {
     my $form = undef;
     
     if ($self->get_action()=~/edit|store/ && ($login_user_id = $submitter || $self->get_user()->get_user_type() eq 'curator') ) { 
-	print STDERR "Generating EditableForm..\n";
 	$form = CXGN::Page::Form::Editable->new();
     }
     else { 
-	print STDERR "Generating static Form...\n";
 	$form = CXGN::Page::Form::Static->new();
     }
        
@@ -176,7 +175,6 @@ EOS
     
     print page_title_html("Population: $population_name \n");
     
-    my $page="../phenome/population.pl?population_id=$population_id";
     $args{calling_page} = $page;
     
     my $population_html = $self->get_edit_link_html(). "\t[<a href=/phenome/qtl_form.pl>New QTL Population</a>] <br />";

@@ -1,3 +1,4 @@
+package CXGN::Page::Form::AjaxFormPage;
 
 
 =head1 NAME
@@ -34,6 +35,7 @@ The following is a list of object functions. Some of these functions are used in
 =cut
 
 use strict;
+use warnings;
 use Carp;
 
 use CXGN::Tools::Text qw | sanitize_string |;
@@ -54,7 +56,6 @@ use CXGN::Contact;
 use CXGN::Feed;
 use JSON;
 
-package CXGN::Page::Form::AjaxFormPage;
 
 use base qw /CXGN::Debug/ ;
 =head2 new
@@ -83,7 +84,6 @@ sub new {
     $self->set_ajax_page(CXGN::Scrap::AjaxPage->new() );
    
 
-    my $dbh=CXGN::DB::Connection->new();###$self->get_page()->get_dbh(); # reuse the dbh from the Page object
     $self->set_dbh($dbh);
     
     $self->set_login(CXGN::Login->new($self->get_dbh()));
@@ -967,5 +967,5 @@ sub send_form_email {
 }
 
 
-return 1;
+1;
 

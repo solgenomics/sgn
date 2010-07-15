@@ -15,7 +15,9 @@ Isaak Y Tecle (iyt2@cornell.edu)
 =cut
 
 use strict;
+use warnings;
 
+our $c;
 my $population_indls_detail_page =
   CXGN::Phenome::PopulationIndlsDetailPage->new();
 
@@ -126,12 +128,10 @@ qq |<a href="/solpeople/personal-info.pl?sp_person_id=$sp_person_id">$submitter_
               || $self->get_user()->get_user_type() eq 'curator' )
        )
     {
-        print STDERR "Generating EditableForm..\n";
         $form = CXGN::Page::Form::Editable->new();
     }
     else
     {
-        print STDERR "Generating static Form...\n";
         $form = CXGN::Page::Form::Static->new();
     }
 
@@ -1307,8 +1307,6 @@ sub run_r
     my $file_in         = $self->infile_list();
     my ( $file_out, $qtl_summary, $flanking_markers ) = $self->outfile_list();
     my $stat_file = $self->stat_files();
-
-    print STDERR "stat file: $stat_file\n";
 
     CXGN::Tools::Run->temp_base($prod_temp_path);
 

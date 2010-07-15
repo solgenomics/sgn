@@ -15,6 +15,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 
 use strict;
+use warnings;
 
 my $individuals_range_detail_page = CXGN::Phenome::IndividualsRangeDetailPage->new();
 
@@ -34,7 +35,6 @@ use CXGN::Page::FormattingHelpers qw /info_section_html
 use CXGN::Phenome::Population;
 use CXGN::Phenome::PopulationDbxref;
 use CXGN::Tools::WebImageCache;
-use CXGN::VHost;
 use CXGN::People::PageComment;
 use CXGN::People::Person;
 use CXGN::Chado::Publication;
@@ -100,11 +100,9 @@ sub generate_form {
     my $login_user_id= $login_user->get_sp_person_id();
     my $form = undef;
     if ($self->get_action()=~/edit|store/ && ($login_user_id = $submitter || $self->get_user()->get_user_type() eq 'curator') ) { 
-	print STDERR "Generating EditableForm..\n";
 	$form = CXGN::Page::Form::Editable->new();
     }
     else { 
-	print STDERR "Generating static Form...\n";
 	$form = CXGN::Page::Form::Static->new();
     }
        
@@ -208,7 +206,7 @@ EOS
     
     my $cvterm = CXGN::Chado::Cvterm->new($self->get_dbh(), $args{cvterm_id});
     my $cvterm_name = $cvterm->get_cvterm_name();
-    my $cvterm_id = $args{cvterm_id};		
+    $cvterm_id = $args{cvterm_id};		
     my ($min, $max, $avg, $count)= $population->get_pop_data_summary($cvterm_id);
 	
 	    for (my $i=0; $i<@$indl_name; $i++) {
