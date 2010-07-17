@@ -285,7 +285,7 @@ sub qtl_populations {
 	    $pop_list .= qq | <a href="../phenome/population_indls.pl?population_id=$pop_id&amp;cvterm_id=$cvterm_id">$pop_name</a> <br />|;
 	} else 
 	{
-	    $pop_list .= qq | <a href="../phenome/population.pl?population_id=$pop_id>$pop_name</a> <br />|;
+	    $pop_list .= qq | <a href="../phenome/population.pl?population_id=$pop_id">$pop_name</a> <br />|;
 	}
     }
       
