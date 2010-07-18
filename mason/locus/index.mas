@@ -88,6 +88,13 @@ my $editor_note =
 my $guide_html =
   qq|<a href="http://docs.google.com/View?docid=ddhncntn_0cz2wj6">Annotation guidelines</a>|;
 
+my @owners = $locus->get_owners();
+my $owner;
+if ( $locus->get_locus_name() && ($user_type eq 'curator' || grep { /^$person_id$/ } @owners  ) )
+    # && !( $locus->get_associated_registry() ) )
+     {  $owner = 1; }
+my $registry = $locus->get_associated_registry();
+
 </%perl>
 
 <& /page/page_title.mas, title=>$locus->get_common_name() . " \t' " . $locus->get_locus_name() . "'\n" &>
@@ -97,7 +104,7 @@ my $guide_html =
   
   <& /page/form.mas, object_type=>'locus', object_id=>"$locus_id", form_name=> 'locus_form', server_side_script => '/jsforms/locus_ajax_form.pl', form_div_name=>'locus_details', js_object_name=> 'locusForm', page_url => '/phenome/locus_display.pl'  &>
     
-    <& /locus/registry.mas , person_id=>"$person_id", locus_id=>"$locus_id" &>
+    <& /locus/registry.mas , person_id=>"$person_id", locus_id=>"$locus_id" , owner=>"$owner", registry=>"$registry" &>
       
 </&>
 

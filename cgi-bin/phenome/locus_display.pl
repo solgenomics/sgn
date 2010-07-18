@@ -153,21 +153,8 @@ my $locus_html= qq| <table width="100%"><tr><td>|;
 
 $locus_html .= $c->render_mason('/locus/init_locus_form.mas', locus_id=>$locus_id);
 
-#Only show if you are a curator or the object owner and there is no registry already assocaited with the locus
-if (
-    (
-     $user_type eq 'curator'
-	 || grep { /^$person_id$/ } @owners
-    )
-    && !( $locus->get_associated_registry() )
-    )
-{
-    if ($locus_name) { $locus_html .= associate_registry($locus, $person_id); }
-    else {
-	$curator_html .=
-	    qq |<span class = "ghosted"> [Associate registry name]</span> |;
-    }
-}
+################3
+
 
 #merge locus form
 if ( $user_type eq 'curator' ) {
@@ -223,10 +210,6 @@ if ($locus_name) {
     $locus_html .= get_location($locus);
 }
 
-my $name = $locus->get_associated_registry();
-if ($name) {
-    $locus_html .= "This locus is associated with registry name: $name<br />";
-}
 
 ##############history ############
 
@@ -1151,58 +1134,7 @@ qq|<tr valign="top"><td>$link</td> <td> $individual_obsolete_link </td>|;
 
 ############################javascript code
 
-sub associate_registry {
-    my $locus         = shift;
-    my $locus_id     = $locus->get_locus_id();
-    my $sp_person_id = shift;
 
-    my $associate = qq^
-	
-	<a href=javascript:Locus.toggleAssociateRegistry()>[Associate a registry name with this locus]</a><br>
-	<div id='associateRegistryForm' style="display: none">
-            <div id='registry_search'>
-	        Registry Name:
-	        <input type="text" 
-		       style="width: 50%"
-		       id="registry_input"
-		       onkeyup="Locus.getRegistries(this.value)">
-		<input type="button"
-	               id="associate_registry_button"
-		       value="associate registry"
-		       disabled="true"
-		       onclick="Locus.associateRegistry('$locus_id','$sp_person_id');this.disabled=false;">
-		 
-	        <select id="registry_select"
-	                style="width: 100%"
-			name="registry_select"
-			size=10 
-			onchange="Locus.updateRegistryInput()">
-                   
-		</select>
-		     
-	        Click <a href=javascript:Locus.addRegistryView()>here</a> to add a new registry name to our database
-	    </div>
-		     
-	    <div id="registry_add" style="display: none">
-	        <b>Please enter the values for the new registry name below (* is required)</b><br><br>
-		<table cellspacing="0" cellpadding="0">
-		    <tr><td>*Registry Symbol: </td><td width="20">&nbsp;</td>
-		    <td><input type="text" id="registry_symbol" onblur="Locus.enableButton();" onchange="Locus.enableButton();"></td></tr>
-		    <tr><td>*Registry Name: </td><td width="20">&nbsp;</td>
-		    <td><input type="text" id="registry_name" onblur="Locus.enableButton();" onchange="Locus.enableButton();"></td></tr>
-		</table>
-		Registry Description:<br>
-		<textarea id="registry_description" style="width: 100%"></textarea><br>
-		<input type="button" disabled="true" id="add_registry_button" value="Add New Registry" onclick="Locus.addRegistry('$locus_id', '$sp_person_id');this.disabled=true;"><br>
-		Click <a href=javascript:Locus.searchRegistries()>here</a> to go back to the registry search
-            </div>
-	</div>
-
-	
-^;
-
-    return $associate;
-}
 
 sub associate_individual {
     
