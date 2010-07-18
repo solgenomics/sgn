@@ -1,0 +1,156 @@
+<%doc>
+
+=head1 NAME
+
+/locus/map_location.mas - a component for displaying locus chromosome/map/marker location/s
+
+=head1 DESCRIPTION
+
+parameters:
+
+=over 2
+
+=item $locus
+
+=item $person_id
+
+
+=back
+
+=head1 AUTHOR
+
+Naama Menda <nm249@cornell.edu>
+
+=cut
+
+</%doc>
+
+
+
+<%args>
+
+$person_id
+$locus
+
+</%args>
+
+
+<%perl>
+
+
+use CXGN::Phenome::Locus;
+use CXGN::Marker;
+use CXGN::Cview::MapFactory;
+use CXGN::Cview::ChrMarkerImage;
+
+
+
+my $maps = 1;
+my $lg_name = $locus->get_linkage_group();
+my $arm     = $locus->get_lg_arm();
+my $location_html = qq|<table><tr>|;
+
+my @locus_marker_objs = $locus->get_locus_markers();    #array of locus_marker objects
+foreach my $lmo (@locus_marker_objs) {
+  my $marker_id = $lmo->get_marker_id();    #{marker_id};
+  my $marker = CXGN::Marker->new( $locus->get_dbh(), $marker_id ); #a new marker object
+  my $marker_name = $marker->name_that_marker();
+  my $experiments = $marker->current_mapping_experiments();
+  if (    $experiments
+	  and @{$experiments}
+	  and grep { $_->{location} } @{$experiments} )
+    {
+      my $count = 1;
+      for my $experiment ( @{$experiments} ) {
+	if ( my $loc = $experiment->{location} ) {
+	  my $map_version_id = $loc->map_version_id();
+	  my $lg_name        = $loc->lg_name();
+	  if ($map_version_id) {
+	    my $map_factory =
+	      CXGN::Cview::MapFactory->new( $locus->get_dbh() );
+	    my $map = $map_factory->create(
+					   { map_version_id => $map_version_id } );
+	    my $map_version_id = $map->get_id();
+	    my $map_name       = $map->get_short_name();
+	    my $chromosome =
+	      CXGN::Cview::ChrMarkerImage->new( "", 100, 150,
+						$locus->get_dbh(), $lg_name, $map, $marker_name );
+	    my ( $image_path, $image_url ) =
+	      $chromosome->get_image_filename();
+	    my $chr_link =
+	      qq|<img src="$image_url" usemap="#map$count" border="0" alt="" />|;
+	    $chr_link .=
+	      $chromosome->get_image_map("map$count") . "<br />";
+	    $chr_link .= $map_name;
+	    $count++;
+	    if ($maps > 2) {
+	      $maps = 1;
+	      $location_html .= "</tr><tr>" ;
+	    }
+	    $maps++;
+	    $location_html .= "<td>" . $chr_link . "</td>";
+	  }
+	}
+      }
+    }
+}
+
+#draw chromosome with marker-range for loci w/o associated marker, only a chromosome arm annotation
+if ( scalar(@locus_marker_objs) == 0 && $lg_name ) {
+  my $organism = $locus->get_common_name();
+  my %org_hash = (
+		  'Tomato'   => 9,    #F2 2000 map
+		  'Potato'   => 3,
+		  'Eggplant' => 6,
+		  'Pepper'   => 10
+		 );
+  my $map_id      = $org_hash{$organism};
+  my $map_factory = CXGN::Cview::MapFactory->new( $locus->get_dbh() );
+  
+  my $map = $map_factory->create( { map_id => $map_id } );
+  if ($map) {
+    my $map_name = $map->get_short_name();
+    my ( $north, $south, $center ) = $map->get_centromere($lg_name);
+
+    my $dummy_name;
+    $dummy_name = "$arm arm" if $arm;
+    my $chr_image =
+      CXGN::Cview::ChrMarkerImage->new( "", 150, 150, $locus->get_dbh(),
+						  $lg_name, $map, $dummy_name );
+
+    my ($chr) = $chr_image->get_chromosomes();
+
+    my $range_marker = CXGN::Cview::Marker::RangeMarker->new($chr);
+    my ( $offset, $nrange, $srange );
+    if ( $arm eq 'short' ) {
+      $offset = $nrange = $srange = $center / 2;
+    }
+    elsif ( $arm eq 'long' ) {
+      my $stelomere = $chr->get_length();
+      $offset = ( $center + $stelomere ) / 2;
+      $nrange = $srange = ( $stelomere - $center ) / 2;
+    }
+    $range_marker->set_offset($offset);    #center of north/south arm
+    $range_marker->set_north_range($nrange);
+    $range_marker->set_south_range($srange);
+    $range_marker->set_marker_name($dummy_name);
+    if ( !$dummy_name ) { $range_marker->hide_label(); }
+    $range_marker->set_label_spacer(20);
+    $range_marker->get_label()->set_name($dummy_name);
+    $range_marker->get_label->set_stacking_level(2);
+    $chr->add_marker($range_marker);
+    my ( $image_path, $image_url ) = $chr_image->get_image_filename();
+    my $chr_link =
+      qq|<img src="$image_url" usemap="#chr_arm_map" border="0" alt="" />|;
+    $chr_link .= $chr_image->get_image_map("chr_arm_map") . "<br />";
+    $chr_link .= $map_name;
+    $location_html .= "<td>" . $chr_link . "</td>";
+  }
+}
+$location_html .= "</tr></table>";
+
+ 
+</%perl>
+
+
+<% $location_html %>
