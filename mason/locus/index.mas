@@ -88,16 +88,18 @@ my $editor_note =
 my $guide_html =
   qq|<a href="http://docs.google.com/View?docid=ddhncntn_0cz2wj6">Annotation guidelines</a>|;
 
+my $common_name = $locus->get_common_name();
 my @owners = $locus->get_owners();
 my $owner;
-if ( $locus->get_locus_name() && ($user_type eq 'curator' || grep { /^$person_id$/ } @owners  ) )
-    # && !( $locus->get_associated_registry() ) )
-     {  $owner = 1; }
+if ( $locus->get_locus_name() && ($user_type eq 'curator' || grep { /^$person_id$/ } @owners  ) ) {  $owner = 1; }
 my $registry = $locus->get_associated_registry();
+
+my @synonyms = $locus->get_locus_aliases('f','f');
+
 
 </%perl>
 
-<& /page/page_title.mas, title=>$locus->get_common_name() . " \t' " . $locus->get_locus_name() . "'\n" &>
+<& /page/page_title.mas, title=>$common_name . " \t' " . $locus->get_locus_name() . "'\n" &>
 
   
 <&| /page/info_section.mas, title=>"Locus details" , subtitle => "$locus_xml | $editor_note | $guide_html" &>
@@ -105,9 +107,26 @@ my $registry = $locus->get_associated_registry();
   <& /page/form.mas, object_type=>'locus', object_id=>"$locus_id", form_name=> 'locus_form', server_side_script => '/jsforms/locus_ajax_form.pl', form_div_name=>'locus_details', js_object_name=> 'locusForm', page_url => '/phenome/locus_display.pl'  &>
     
     <& /locus/registry.mas , person_id=>"$person_id", locus_id=>"$locus_id" , owner=>"$owner", registry=>"$registry" &>
+      <& /locus/synonym.mas ,  locus_id=>"$locus_id" , synonyms=>\@synonyms &>
+	
       
+<table><tr><td>
+<table>
+<tr><td>
+
+</td></tr>
+</table>
+</td>
+
+<td><table><tr><td>
+  <& /locus/map_location.mas, person_id=>"$person_id", locus=>$locus  &>
+  </td></tr></table>
+</table>
+
 </&>
 
 <&| /page/info_section.mas, title=>"Curator tools" &>
-    
+  <& /locus/merge_locus.mas , locus_id=>"$locus_id" , common_name=>"$common_name" &>
+      
+
 </&>

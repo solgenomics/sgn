@@ -4,7 +4,7 @@
 
 =head1 NAME
 
-/page/registry.mas - a component for locus registry form
+/locus/registry.mas - a component for locus registry form
 
 =head1 DESCRIPTION
 
@@ -42,7 +42,7 @@ $registry => undef
 </%args>
 
 <%perl>
-    
+
 </%perl>
 
 % if (!$owner) { 
@@ -52,7 +52,7 @@ $registry => undef
 % } else {
 
 
-<& /util/import_javascript.mas, classes => ["CXGN.Phenome.Locus", "MochiKit.Logging"] &>
+<& /util/import_javascript.mas, classes => ["CXGN.Phenome.Locus"] &>
   
   
   <a href="javascript:Locus.toggleAssociateRegistry()">[Associate a registry name with this locus]</a><br>

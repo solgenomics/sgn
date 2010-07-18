@@ -2,8 +2,7 @@ use strict;
 use warnings;
 use CXGN::Page;
 
-use CXGN::Apache::Error;
-use CXGN::DB::Connection;
+
 use CXGN::People::PageComment;
 use CXGN::People;
 use CXGN::Contact;
@@ -20,11 +19,6 @@ use CXGN::Page::Widgets qw / collapser /;
 use CXGN::Phenome::Locus;
 use CXGN::Phenome::Locus::LinkageGroup;
 
-use CXGN::Cview::ChrMarkerImage;
-use CXGN::Cview::MapFactory;
-use CXGN::Marker;
-use CXGN::Cview::Marker::RangeMarker;
-use CXGN::Map;
 
 use CXGN::Chado::CV;
 use CXGN::Chado::Feature;
@@ -42,10 +36,8 @@ use HTML::Entities;
 
 our $c;
 my $d = CXGN::Debug->new();
-##$d->set_debug( 1 );
 
-#my $page= CXGN::Page->new("Locus display", "Naama");
-#my $dbh=$page->get_dbh();
+
 #####################
 use CGI qw / param /;
 use CXGN::DB::Connection;
@@ -64,71 +56,29 @@ $c->forward_to_mason_view('/locus/index.mas',  action=> $action,  locus_id => $l
 
 
 
+
 #############
 my $time = time();
-$d->d("start time = $time ! \n");
-
 
 
 my $user = CXGN::People::Person->new($dbh, $person_id);
 my $user_type = $user->get_user_type();
 my $script = "/phenome/locus_display.pl?locus_id=$locus_id";
 
-unless ( ( $locus_id =~ m /^\d+$/ ) || ($action eq 'new' && !$locus_id) ) {
-    $c->throw(is_error=>0,
-	      message=>"No locus exists for identifier $locus_id",
-	);
-    $d->d("No locus exists for identifier $locus_id");
-}
-
 my $locus= CXGN::Phenome::Locus->new( $dbh, $locus_id  );
-if ( $locus->get_obsolete() eq 't' && $user_type ne 'curator' )
-{
-    $d->d("locus is obsolete!!" );
-    
-    $c->throw(is_error=>0, 
-	      title => 'Obsolete locus',
-	      message=>"Locus $locus_id is obsolete!",
-	      developer_message => 'only curators can see obsolete loci',
-	      notify => 0,   #< does not send an error email
-	);
-}
-
 
 my $locus_name = $locus->get_locus_name();
 my $organism   = $locus->get_common_name();
 
-#$page->jsan_use("CXGN.Phenome.Tools");
-#$page->jsan_use("CXGN.Phenome.Locus");
-#$page->jsan_use("MochiKit.DOM");
-#$page->jsan_use("Prototype");
-#$page->jsan_use("jQuery");
-#$page->jsan_use("thickbox");
-#$page->jsan_use("MochiKit.Async");
-#$page->jsan_use("CXGN.Sunshine.NetworkBrowser");
-#$page->jsan_use("CXGN.Phenome.Locus.LocusPage");
-#$page->jsan_use("CXGN.Page.Form.JSFormPage");
-
-#$c->
-#used to show certain elements to only the proper users
-
 my @owners   = $locus->get_owners();
 
 
-if ( !$locus->get_locus_id() && $action ne 'new' && $action ne 'store' ) {
-    $c->throw(is_error=>0, message=>'No locus exists for this identifier',);
-    $d->d('No locus exists for this identifier');
-}
-
 #$page->header("SGN $organism locus: $locus_name");
-
-print page_title_html("$organism \t'$locus_name'\n");
 
 print $c->render_mason("/locus/initialize.mas",
             locus_id => $locus_id
 );
 
-$d->d("!!!Printing page title :  " . ( time() - $time ) . "\n");
 ####################################################
 #get all dbxref  annotations: pubmed, ncbi sequences, GO, PO, tgrc link
 ####################################################
@@ -136,30 +86,22 @@ my @allele_objs = $locus->get_alleles();    #array of allele objects
 my ( $tgrc, $pubs, $pub_count, $genbank, $gb_count, $onto_ref ) =
     get_dbxref_info($locus, @allele_objs);
 
-$d->d( "!!!Got all dbxrefs! :  " . ( time() - $time ) . "\n");
-
 ##############################
     #display locus details section
 #############################
 my $curator_html;
 my ( $synonyms, $symbol, $symbol_link, $activity, $description, $lg_name,
      $arm, $locus_details );
-my $editor_note =
-    qq |<a href="/phenome/editors_note.pl">Note to Editors</a>|;
-my $guide_html =
-    qq|<a href="http://docs.google.com/View?docid=ddhncntn_0cz2wj6">Annotation guidelines</a>|;
 
 my $locus_html= qq| <table width="100%"><tr><td>|;
 
 $locus_html .= $c->render_mason('/locus/init_locus_form.mas', locus_id=>$locus_id);
 
-################3
 
 
-#merge locus form
-if ( $user_type eq 'curator' ) {
-    $curator_html .= "<br />" . merge_locus($locus, $person_id);
-}
+#########################
+#####################################
+
 
 my $locus_synonym_count = scalar( $locus->get_locus_aliases('f', 'f') ) || "";
 $locus_html .=
@@ -219,24 +161,7 @@ if ( $user_type eq 'curator'
     my $history_data = print_locus_history($locus) || "";
     $locus_html .= $history_data;
 }
-my $locus_xml = $locus_id ? qq |<a href = "generic_gene_page.pl?locus_id=$locus_id">Download GMOD XML</a>|
-    : qq |<span class="ghosted">Download GMOD XML</span>|;
 
-    #print locus details section
-    print info_section_html(
-        title    => 'Locus details',
-        subtitle => "$locus_xml | $editor_note | $guide_html",
-        contents => $locus_html,
-    );
-    if ($curator_html) {
-        print info_section_html(
-            title       => 'Curator tools',
-            subtitle    => "",
-            contents    => $curator_html,
-            collapsible => 1,
-            collapsed   => 1,
-        );
-    }
 
 ##########
 ## Notes and Figures
@@ -636,7 +561,6 @@ print info_section_html(
     collapsed   => 1,
     );
 
-$d->d( "!!!Printing ontology links! :  " . ( time() - $time ) . "\n");
 
 ####add page comments
 my $comments;
@@ -648,27 +572,11 @@ if ($locus_name) {
 }
 print $comments;
 
-#$page->footer();
-
 
 
 #########################################################
 #functions used in the locus page:
 ##
-
-sub empty_search {
-    my ($page) = @_;
-    
-    #  $page->header();
-    
-    print <<EOF;
-    
-  <b>No locus was specified or this locus ID does not exist</b>
-
-EOF
-
-exit 0;
-}
 
 sub get_allele_edit_links {
     my $allele   = shift;
@@ -689,126 +597,8 @@ qq | <a href="allele.pl?action=edit&amp;allele_id=$allele_id">[Edit]</a> |;
     else { $allele_edit_link = qq | <span class="ghosted">[Edit]</span> |; }
 }
 
-sub get_location {
-    my $locus = shift;
-    my $maps = 1;
-    my $lg_name = $locus->get_linkage_group();
-    my $arm     = $locus->get_lg_arm();
-    my $location_html = qq|<td><table><tr>|;
-    my @locus_marker_objs = $locus->get_locus_markers();    #array of locus_marker objects
-    foreach my $lmo (@locus_marker_objs) {
-        my $marker_id = $lmo->get_marker_id();    #{marker_id};
-        my $marker = CXGN::Marker->new( $locus->get_dbh(), $marker_id ); #a new marker object
-	
-        my $marker_name = $marker->name_that_marker();
-        my $experiments = $marker->current_mapping_experiments();
-        if (    $experiments
-		and @{$experiments}
-		and grep { $_->{location} } @{$experiments} )
-        {
-            my $count = 1;
-            for my $experiment ( @{$experiments} ) {
-                if ( my $loc = $experiment->{location} ) {
-                    my $map_version_id = $loc->map_version_id();
-                    my $lg_name        = $loc->lg_name();
-		    
-                    if ($map_version_id) {
-                        my $map_factory =
-			    CXGN::Cview::MapFactory->new( $locus->get_dbh() );
-                        my $map = $map_factory->create(
-                            { map_version_id => $map_version_id } );
-                        my $map_version_id = $map->get_id();
-                        my $map_name       = $map->get_short_name();
-			
-                        my $chromosome =
-			    CXGN::Cview::ChrMarkerImage->new( "", 100, 150,
-							      $locus->get_dbh(), $lg_name, $map, $marker_name );
-                        my ( $image_path, $image_url ) =
-			    $chromosome->get_image_filename();
-                        my $chr_link =
-			    qq|<img src="$image_url" usemap="#map$count" border="0" alt="" />|;
-                        $chr_link .=
-			    $chromosome->get_image_map("map$count") . "<br />";
-                        $chr_link .= $map_name;
-                        $count++;
-			if ($maps > 2) {
-			    $maps = 1;
-			    $location_html .= "</tr><tr>" ;
-			}
-			$maps++;
-			$location_html .= "<td>" . $chr_link . "</td>";
-		    }
-                }
-            }
-        }
-    }
-    
-#draw chromosome with marker-range for loci w/o associated marker, only a chromosome arm annotation
-    if ( scalar(@locus_marker_objs) == 0 && $lg_name ) {
-        my $organism = $locus->get_common_name();
-        my %org_hash = (
-            'Tomato'   => 9,    #F2 2000 map
-            'Potato'   => 3,
-            'Eggplant' => 6,
-            'Pepper'   => 10
-	    );
-        my $map_id      = $org_hash{$organism};
-        my $map_factory = CXGN::Cview::MapFactory->new( $locus->get_dbh() );
-	
-        my $map = $map_factory->create( { map_id => $map_id } );
-        if ($map) {
-            my $map_name = $map->get_short_name();
-            my ( $north, $south, $center ) = $map->get_centromere($lg_name);
-	    
-            my $dummy_name;
-            $dummy_name = "$arm arm" if $arm;
-            my $chr_image =
-		CXGN::Cview::ChrMarkerImage->new( "", 150, 150, $locus->get_dbh(),
-						  $lg_name, $map, $dummy_name );
-	    
-            my ($chr) = $chr_image->get_chromosomes();
-	    
-            my $range_marker = CXGN::Cview::Marker::RangeMarker->new($chr);
-	    
-            my ( $offset, $nrange, $srange );
-            if ( $arm eq 'short' ) {
-                $offset = $nrange = $srange = $center / 2;
-            }
-            elsif ( $arm eq 'long' ) {
-                my $stelomere = $chr->get_length();
-                $offset = ( $center + $stelomere ) / 2;
-                $nrange = $srange = ( $stelomere - $center ) / 2;
-            }
-	    
-            $range_marker->set_offset($offset);    #center of north/south arm
-            $range_marker->set_north_range($nrange);
-            $range_marker->set_south_range($srange);
-            $range_marker->set_marker_name($dummy_name);
-            if ( !$dummy_name ) { $range_marker->hide_label(); }
-	    
-            #$range_marker->show_label();
-            #}else {
-            $range_marker->set_label_spacer(20);
-	    
-            $range_marker->get_label()->set_name($dummy_name);
-            $range_marker->get_label->set_stacking_level(2);
-	    
-            $chr->add_marker($range_marker);
-	    
-            my ( $image_path, $image_url ) = $chr_image->get_image_filename();
-            my $chr_link =
-		qq|<img src="$image_url" usemap="#chr_arm_map" border="0" alt="" />|;
-            $chr_link .= $chr_image->get_image_map("chr_arm_map") . "<br />";
-            $chr_link .= $map_name;
-	    
-            $location_html .= "<td>" . $chr_link . "</td>";
-        }
-    }
-    $location_html .= "</tr></table></td>";
-    $location_html .= "</td></tr></table>";
-    
-    return $location_html;
-}    #get_location
+
+#######################
 
 sub print_locus_history {
     my $locus = shift;
@@ -1249,44 +1039,8 @@ sub get_individual_obsolete_link {
     return $individual_obsolete_link;
 }
 
-sub merge_locus {
-    my $locus        = shift;
-    my $locus_id    = $locus->get_locus_id();
-    my $object_type = "locus";
-    my $common_name = $locus->get_common_name();
-    my $merge       = qq^
-	<a href=javascript:Tools.toggleMergeFormDisplay()>[Merge locus]</a> Warning: Merged locus will be set to obsolete! Unobsoleting is possible only directly via the database! <br>
-	<div id='mergeLocusForm' style="display:none">
 
-	<div id='locus_merge'>
-	     <input type="hidden" 
-	     value=$common_name
-	     id ="common_name"
-	     >
-	     locus name
-	        <input type="text" 
-		       style="width: 50%"
-		       id="locus_input"
-		       onkeyup="Locus.getMergeLocus(this.value, $locus_id)">
-		<input type="button"
-	               id="merge_locus_button"
-		       value="merge locus"
-                       disabled="true"
-		       onclick="Locus.mergeLocus('$locus_id');this.disabled=false;">
-		 
-	        <select id="locus_list"
-	                style="width: 100%"
-			onchange= "Locus.enableMergeButton();"
-	      	        size=5> 
-                 </select>
-	      </div>
-	   </div>
-	   <BR>
-
-^;
-    return $merge;
-}
-
+#######################################################
 #returns string html listing of locus sequence matches found in ITAG gbrowse DBs
 sub genomic_annots_html {
 

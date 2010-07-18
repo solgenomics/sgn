@@ -458,62 +458,62 @@ var Locus = {
 		new Ajax.Request('individual_browser.pl', {parameters: 
 		{type: type, individual_allele_id: individual_allele_id}, onSuccess: Tools.reloadPage });		
 	},
-	//Make an ajax response that finds all loci  with names/synonyms/symbols like the current value of the locus input
-    	getMergeLocus: function(str, object_id) {
-		if(str.length == 0){
-	    		var select = MochiKit.DOM.getElement('locus_merge');
-            		select.length=0;
-	    		$('associate_locus_button').disabled = true;
-		}else{
-	    		var type = 'browse locus';
-			var organism = $('common_name').value;
-			new Ajax.Request("locus_browser.pl", {parameters: 
-	 	{type: type, locus_name: str,object_id: object_id, organism: organism}, onSuccess: this.updateLocusSelect });		}
-    	},
-
-        //Parse the ajax response and update the locus select box accordingly
-    	updateLocusSelect: function(request) {
-        	var select = $('locus_list');
-		$('merge_locus_button').disabled = true;
-	
-	        var responseText = request.responseText;
-       		var responseArray = responseText.split("|");
-
-		//the last element of the array is empty. Dont want this in the select box
-		responseArray.pop();
-
-	        select.length = responseArray.length;
-        	for (i=0; i < responseArray.length; i++) {
-	    		var locusObject = responseArray[i].split("*");
-	    
-	   		select[i].value = locusObject[0];
-	    		if (typeof(locusObject[1]) != "undefined"){
-				select[i].text = locusObject[1];
-	    		}
- 		}
-    	},
-	
-	//Logic on when to enable the merge locus button
-    	enableMergeButton: function() {
-		MochiKit.DOM.getElement("merge_locus_button").disabled=false;	    
-    	},
-
-	//make an ajax response to merge locus x with the current locus
-	mergeLocus: function(locus_id) {
-		var merged_locus_id = MochiKit.DOM.getElement('locus_list').value;
-		new Ajax.Request('merge_locus.pl', {
-			parameters: { merged_locus_id: merged_locus_id, locus_id: locus_id}, 
-			    onSuccess: function(response) {
-			    var json  = response.responseText;
-			    var x = eval ("("+json+")"); 
-			    MochiKit.Logging.log("mergeLocus response:  " , json);
-			    if (x.error) { alert(x.error); }
-			    else {  window.location.reload() ; } 
-			},
-		   });
-			    
+    //Make an ajax response that finds all loci  with names/synonyms/symbols like the current value of the locus input
+    getMergeLocus: function(str, object_id) {
+	if(str.length == 0){
+	    var select = $('locus_merge');
+	    select.length=0;
+	    $('associate_locus_button').disabled = true;
+	}else{
+	    var type = 'browse locus';
+	    var organism = $('common_name').value;
+	    new Ajax.Request("/phenome/locus_browser.pl", {parameters: 
+		    {type: type, locus_name: str,object_id: object_id, organism: organism}, onSuccess: this.updateLocusSelect });		}
     },
+    
+    //Parse the ajax response and update the locus select box accordingly
+    updateLocusSelect: function(request) {
+	var select = $('locus_list');
+	$('merge_locus_button').disabled = true;
 	
+	var responseText = request.responseText;
+	var responseArray = responseText.split("|");
+	
+	//the last element of the array is empty. Dont want this in the select box
+	responseArray.pop();
+	
+	select.length = responseArray.length;
+	for (i=0; i < responseArray.length; i++) {
+	    var locusObject = responseArray[i].split("*");
+	    
+	    select[i].value = locusObject[0];
+	    if (typeof(locusObject[1]) != "undefined"){
+		select[i].text = locusObject[1];
+	    }
+	}
+    },
+    
+    //Logic on when to enable the merge locus button
+    enableMergeButton: function() {
+	$("merge_locus_button").disabled=false;	    
+    },
+    
+    //make an ajax response to merge locus x with the current locus
+    mergeLocus: function(locus_id) {
+	var merged_locus_id = $('locus_list').value;
+	new Ajax.Request('merge_locus.pl', {
+		parameters: { merged_locus_id: merged_locus_id, locus_id: locus_id}, 
+		    onSuccess: function(response) {
+		    var json  = response.responseText;
+		    var x = eval ("("+json+")"); 
+		    MochiKit.Logging.log("mergeLocus response:  " , json);
+		    if (x.error) { alert(x.error); }
+		    else {  window.location.reload() ; } 
+		},
+		    });
+	
+    },
+    
     toggleVisible:function(elem){
         MochiKit.DOM.toggleElementClass("invisible", elem);
 	MochiKit.Logging.log("toggling visible element : " , elem);
