@@ -1,0 +1,69 @@
+
+
+<%doc>
+
+=head1 NAME
+
+/phenome/assign_owner.mas - a component for printing assign locus owner form
+
+=head1 DESCRIPTION
+
+
+Parameters:
+
+=over 1
+
+=item object_id
+
+object  id
+
+=item  object_type
+
+the type of the object (e.g. 'locus')
+
+=back
+
+=head1 AUTHOR
+
+Naama Menda <nm249@cornell.edu>
+
+=cut 
+
+</%doc>
+
+<%args>
+
+$object_id
+$object_type
+
+</%args>
+
+<%perl>
+</%perl>
+
+
+
+<& /util/import_javascript.mas, classes => ["CXGN.Phenome.Tools"] &>
+  
+  <a href="javascript:Tools.toggleAssignFormDisplay()">[Assign owner]</a> Notice: 'user' account will be updated to 'submitter' <br>
+  <div id='assignOwnerForm' style="display:none">
+  <div id='user_search'>
+  First name or last name:
+<input type="text" 
+  style="width: 50%"
+  id="user_input"
+  onkeyup="Tools.getUsers(this.value)">
+  <input type="button"
+  id="associate_button"
+  value="assign owner"
+  disabled="true"
+  onclick="Tools.assignOwner('<% $object_id %>', '<% $object_type %>');this.disabled=false;">
+
+  <select id="user_select"
+  style="width: 100%"
+  onchange= "Tools.enableButton('associate_button');"
+  size=5> 
+  </select>
+  </div>
+  </div>
+  <BR>
