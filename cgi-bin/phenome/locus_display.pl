@@ -49,10 +49,13 @@ my $login = CXGN::Login->new($dbh);
 
 my $person_id = $login->has_session();
 
+my $user = CXGN::People::Person->new($dbh, $person_id);
+my $user_type = $user->get_user_type();
+
 my $locus_id = $q->param("locus_id") ;
 my $action =  $q->param("action");
 
-$c->forward_to_mason_view('/locus/index.mas',  action=> $action,  locus_id => $locus_id , person_id=>$person_id, dbh=>$dbh);
+$c->forward_to_mason_view('/locus/index.mas',  action=> $action,  locus_id => $locus_id , person_id=>$person_id, user_type=>$user_type, dbh=>$dbh);
 
 
 
@@ -61,8 +64,6 @@ $c->forward_to_mason_view('/locus/index.mas',  action=> $action,  locus_id => $l
 my $time = time();
 
 
-my $user = CXGN::People::Person->new($dbh, $person_id);
-my $user_type = $user->get_user_type();
 my $script = "/phenome/locus_display.pl?locus_id=$locus_id";
 
 my $locus= CXGN::Phenome::Locus->new( $dbh, $locus_id  );
@@ -90,78 +91,24 @@ my ( $tgrc, $pubs, $pub_count, $genbank, $gb_count, $onto_ref ) =
     #display locus details section
 #############################
 my $curator_html;
-my ( $synonyms, $symbol, $symbol_link, $activity, $description, $lg_name,
-     $arm, $locus_details );
 
 my $locus_html= qq| <table width="100%"><tr><td>|;
-
-$locus_html .= $c->render_mason('/locus/init_locus_form.mas', locus_id=>$locus_id);
-
 
 
 #########################
 #####################################
 
 
-my $locus_synonym_count = scalar( $locus->get_locus_aliases('f', 'f') ) || "";
-$locus_html .=
-    qq { <br /><br /><b>Locus synonyms</b> <b>$locus_synonym_count:</b> };
-
-foreach my $synonym ( $locus->get_locus_aliases('f','f') ) {
-    $locus_html .= $synonym->get_locus_alias() . "  ";
-}
-
 if ($locus_name) {
-    $locus_html .=
-	qq|<a href="locus_synonym.pl?locus_id=$locus_id&amp;action=new">[Add/Remove]</a><br />|;
-    
+    my $locus_html;
     $locus_html .= "<br />" . $tgrc;
-    
-    #print editors info
-    $locus_html .= print_locus_editor_info($locus) . "<br>";
     
     #change ownership:
     if ( $user_type eq 'curator' ) {
 	$curator_html .= assign_owner($locus);
     }
-    if (   ( !( grep { $_ =~ /^$person_id$/ } @owners ) )
-	   && ( $user_type ne 'curator' ) )
-    {
-	
-	$locus_html .=
-	    qq|<a href="claim_locus_ownership.pl?locus_id=$locus_id&amp;action=confirm"> [Request editor privileges]</a><br /><br />|;
-    }
     
-    my $created_date = $locus->get_create_date();
-    $created_date = substr $created_date, 0, 10;
-    my $modified_date = $locus->get_modification_date() || "";
-    $modified_date = substr $modified_date, 0, 10;
-    
-    my $updated_by = $locus->get_updated_by();
-    my $updated =
-	CXGN::People::Person->new( $locus->get_dbh(), $updated_by );
-    my $u_first_name = $updated->get_first_name();
-    my $u_last_name  = $updated->get_last_name();
-    $locus_html .= qq |Created on: $created_date |;
-    if ($modified_date) {
-	$locus_html .=
-	    qq |  Last updated on: $modified_date  by  <a href="/solpeople/personal-info.pl?sp_person_id=$updated_by">$u_first_name $u_last_name</a><br />|;
-    }
-    
-    #build a chromosome, map/s and marker/s objects
-    $locus_html .= get_location($locus);
-}
-
-
-##############history ############
-
-if ( $user_type eq 'curator'
-     || grep { /^$person_id$/ } @owners )
-{
-    my $history_data = print_locus_history($locus) || "";
-    $locus_html .= $history_data;
-}
-
+ }
 
 ##########
 ## Notes and Figures
@@ -600,60 +547,6 @@ qq | <a href="allele.pl?action=edit&amp;allele_id=$allele_id">[Edit]</a> |;
 
 #######################
 
-sub print_locus_history {
-    my $locus = shift;
-    my @history;
-    my $history_data;
-    my $print_history;
-    my @history_objs = $locus->show_history();   #array of locus_history objects
-
-    foreach my $h (@history_objs) {
-
-        my $created_date = $h->get_create_date();
-        $created_date = substr $created_date, 0, 10;
-
-        my $history_id    = $h->{locus_history_id};
-        my $updated_by_id = $h->{updated_by};
-        my $updated =
-	    CXGN::People::Person->new( $locus->get_dbh(), $updated_by_id );
-        my $u_first_name = $updated->get_first_name();
-        my $u_last_name  = $updated->get_last_name();
-        my $up_person_link =
-	    qq |<a href="/solpeople/personal-info.pl?sp_person_id=$updated_by_id">$u_first_name $u_last_name</a> ($created_date)|;
-	
-        push @history,
-	[
-	 map { $_ } (
-	     $h->get_locus_symbol,  $h->get_locus_name,
-	     $h->get_gene_activity, $h->get_description,
-	     $h->get_linkage_group, $h->get_lg_arm,
-	     $up_person_link,
-	 )
-	];
-    }
-    
-    if (@history) {
-	
-        $history_data .= columnar_table_html(
-            headings => [
-                'Symbol',     'Name', 'Activity', 'Description',
-                'Chromosome', 'Arm',  'Updated by',
-            ],
-            data         => \@history,
-            __alt_freq   => 2,
-            __alt_width  => 1,
-            __alt_offset => 3,
-	    );
-        $print_history = html_optional_show(
-            'locus_history',
-            'Show locus history',
-            qq|<div class="minorbox">$history_data</div> |,
-	    );
-    }
-    
-    return $print_history;
-}    #print_locus_history
-
 sub get_dbxref_info {
     my $locus      = shift;
     my $locus_name = $locus->get_locus_name();
@@ -764,26 +657,6 @@ sub get_pub_info {
     return $pub_info;
 }    #
 
-sub print_locus_editor_info {
-    my $locus=shift;
-    my $html   = "Locus editors: ";
-    my @owners = $locus->get_owners();
-   
-    foreach my $id (@owners) {
-        my $person = CXGN::People::Person->new( $locus->get_dbh(), $id );
-	
-        my $first_name = $person->get_first_name();
-        my $last_name  = $person->get_last_name();
-	if ($person->get_user_type() eq 'curator' && scalar(@owners) == 1  ) {
-	    $html .= '<b>No editor assigned</b>';
-	} else {
-	    $html .=
-		qq |<a href="/solpeople/personal-info.pl?sp_person_id=$id">$first_name $last_name</a>;|;
-	}
-    }
-    chop $html;
-    return $html;
-}
 
 sub get_individuals_html {
     my $locus        = shift;

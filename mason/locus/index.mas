@@ -22,6 +22,9 @@ a database handle
 
 the person logged into the system right now
 
+=item $user_type
+
+the user type of the logged-in user
 
 =back
 
@@ -40,6 +43,7 @@ Naama Menda <nm249@cornell.edu>
 $action => 'view'
 $locus_id => 0
 $person_id
+$user_type => undef
 $dbh
 
 </%args>
@@ -49,7 +53,7 @@ $dbh
 
 
 use CXGN::Phenome::Locus;
-use CXGN::People::Person;
+
 
 # print message if locus_id os not valid 
 unless ( ( $locus_id =~ m /^\d+$/ ) || ($action eq 'new' && !$locus_id) ) {
@@ -57,10 +61,6 @@ unless ( ( $locus_id =~ m /^\d+$/ ) || ($action eq 'new' && !$locus_id) ) {
   message=>"No locus exists for identifier $locus_id",
 );
 }
-
-
-my $user = CXGN::People::Person->new($dbh, $person_id);
-my $user_type = $user->get_user_type();
 
 my $locus = CXGN::Phenome::Locus->new($dbh, $locus_id);
 
@@ -90,6 +90,8 @@ my $guide_html =
 
 my $common_name = $locus->get_common_name();
 my @owners = $locus->get_owners();
+my $owner_objects= $locus->get_owners(1);
+
 my $owner;
 if ( $locus->get_locus_name() && ($user_type eq 'curator' || grep { /^$person_id$/ } @owners  ) ) {  $owner = 1; }
 my $registry = $locus->get_associated_registry();
@@ -106,27 +108,42 @@ my @synonyms = $locus->get_locus_aliases('f','f');
   
   <& /page/form.mas, object_type=>'locus', object_id=>"$locus_id", form_name=> 'locus_form', server_side_script => '/jsforms/locus_ajax_form.pl', form_div_name=>'locus_details', js_object_name=> 'locusForm', page_url => '/phenome/locus_display.pl'  &>
     
-    <& /locus/registry.mas , person_id=>"$person_id", locus_id=>"$locus_id" , owner=>"$owner", registry=>"$registry" &>
-      <& /locus/synonym.mas ,  locus_id=>"$locus_id" , synonyms=>\@synonyms &>
-	
+    
       
 <table><tr><td>
-<table>
-<tr><td>
-
-</td></tr>
-</table>
-</td>
-
-<td><table><tr><td>
+      <table>
+	<tr><td>
+	    <& /locus/registry.mas , person_id=>"$person_id", locus_id=>"$locus_id" , owner=>"$owner", registry=>"$registry" &>
+	      <& /locus/synonym.mas ,  locus_id=>"$locus_id" , synonyms=>\@synonyms &>
+		
+  <& /locus/locus_editor.mas, owners=>$owner_objects  &>
+    <a href="claim_locus_ownership.pl?locus_id=<% $locus_id %>&amp;action=confirm"> [Request editor privileges]</a><br /><br />
+    
+    <& /locus/edits_info.mas, locus=>$locus  &>
+ 
+	</td></tr>
+      </table>
+    </td>
+    
+    <td><table><tr><td>
   <& /locus/map_location.mas, person_id=>"$person_id", locus=>$locus  &>
-  </td></tr></table>
+      </td></tr></table>
 </table>
 
 </&>
 
-<&| /page/info_section.mas, title=>"Curator tools" &>
-  <& /locus/merge_locus.mas , locus_id=>"$locus_id" , common_name=>"$common_name" &>
       
-
+% if($owner) {
+    <&| /page/info_section.mas, title=>"Locus history", collapsible=>1, collapsed=>1 &>
+      <& /locus/history.mas, locus=>$locus  &>
 </&>
+
+% } 
+
+<&| /page/info_section.mas, title=>"Curator tools",  collapsible=>1, collapsed=>1 &>
+  <& /locus/merge_locus.mas , locus_id=>"$locus_id" , common_name=>"$common_name" &>
+    <& /phenome/assign_owner.mas , object_id=>"$locus_id" , object_type=>"locus" &>
+      
+    
+</&>
+      	
