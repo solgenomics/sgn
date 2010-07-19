@@ -90,7 +90,6 @@ my ( $tgrc, $pubs, $pub_count, $genbank, $gb_count, $onto_ref ) =
 ##############################
     #display locus details section
 #############################
-my $curator_html;
 
 my $locus_html= qq| <table width="100%"><tr><td>|;
 
@@ -103,17 +102,12 @@ if ($locus_name) {
     my $locus_html;
     $locus_html .= "<br />" . $tgrc;
     
-    #change ownership:
-    if ( $user_type eq 'curator' ) {
-	$curator_html .= assign_owner($locus);
-    }
-    
- }
+}
 
 ##########
 ## Notes and Figures
 ##########
-    #
+   
     my $figure_html     = "";
     my $m_figure_html   = "";
     my $figure_subtitle = "";
@@ -835,40 +829,6 @@ sub associate_individual {
     return $associate_html;
 }
 
-
-sub assign_owner {
-    my $locus        = shift;
-    my $locus_id    = $locus->get_locus_id();
-    my $object_type = "locus";
-
-    my $assign = qq^
-	<a href=javascript:Tools.toggleAssignFormDisplay()>[Assign a locus owner]</a> Notice: 'user' account will be updated to 'submitter' <br>
-	<div id='assignOwnerForm' style="display:none">
-            <div id='user_search'>
-	        First name or last name:
-	        <input type="text" 
-		       style="width: 50%"
-		       id="user_input"
-		       onkeyup="Tools.getUsers(this.value)">
-		<input type="button"
-	               id="associate_button"
-		       value="assign owner"
-                       disabled="true"
-		       onclick="Tools.assignOwner('$locus_id', '$object_type');this.disabled=false;">
-		 
-	        <select id="user_select"
-	                style="width: 100%"
-			onchange= "Tools.enableButton('associate_button');"
-	      	        size=5> 
-                 </select>
-		
-           </div>
-	   </div>
-	   <BR>
-
-^;
-    return $assign;
-}
 
 sub associated_figures {
 

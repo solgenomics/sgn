@@ -81,6 +81,7 @@ if ( !$locus->get_locus_id() && $action ne 'new' && $action ne 'store' ) {
     $c->throw(is_error=>0, message=>'No locus exists for this identifier',);
   }
 
+my $this_page = "/phenome/locus_display.pl?locus_id=$locus_id";
 my $locus_xml = $locus_id ? qq |<a href = "generic_gene_page.pl?locus_id=$locus_id">Download GMOD XML</a>|
   : qq |<span class="ghosted">Download GMOD XML</span>|;
 my $editor_note =
@@ -97,9 +98,16 @@ if ( $locus->get_locus_name() && ($user_type eq 'curator' || grep { /^$person_id
 my $registry = $locus->get_associated_registry();
 
 my @synonyms = $locus->get_locus_aliases('f','f');
+my @figures = $locus->get_figures();
 
+my $figure_subtitle =
+  !(grep { /^$user_type$/ } ('curator', 'submitter', 'sequencer') ) ?
+  '<span class= "ghosted">[Add notes, figures or images]</span> '
+  : ' <a href="/image/add_image.pl?type_id=$locus_id&type=locus&action=new&refering_page=$this_page">[ Add notes, figures or images]</a>' ;
 
 </%perl>
+
+
 
 <& /page/page_title.mas, title=>$common_name . " \t' " . $locus->get_locus_name() . "'\n" &>
 
@@ -143,7 +151,12 @@ my @synonyms = $locus->get_locus_aliases('f','f');
 <&| /page/info_section.mas, title=>"Curator tools",  collapsible=>1, collapsed=>1 &>
   <& /locus/merge_locus.mas , locus_id=>"$locus_id" , common_name=>"$common_name" &>
     <& /phenome/assign_owner.mas , object_id=>"$locus_id" , object_type=>"locus" &>
-      
-    
+       
+</&>
+      	
+
+<&| /page/info_section.mas , title=>"Notes and figures (" .  scalar(@figures)  . ")", subtitle => "$figure_subtitle", collapsible=>1, collapsed=>1 &>
+    <& /phenome/print_images.mas , images=>\@figures &>
+       
 </&>
       	
