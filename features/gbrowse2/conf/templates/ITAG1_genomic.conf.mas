@@ -20,6 +20,8 @@ zoom levels    = 100 200 1000 2000 5000 10000 20000 40000 100000 200000 500000 1
 
 examples = SL1.00sc00002_16.1.1 "Sulfite oxidase" TG154 C2_At3g02060
 
+# DAS configuration
+
 das mapmaster = SELF
 
 #these two little subroutines add links to some of the text on gbrowse_detail pages for GeneSeqer alignments
@@ -54,6 +56,16 @@ search options = default +autocomplete +fulltext
 
 ### TRACK CONFIGURATION ####
 # the remainder of the sections configure individual tracks
+
+# das category allowable values
+#  repeat
+#  transcription
+#  translation
+#  variation
+#  experimental
+#  structural
+#  miscellaneous
+
 
 # Default glyph settings
 [TRACK DEFAULTS]
@@ -144,7 +156,7 @@ cds_only     = 1
 #label        = sub { shift->displa || (; $n =~ s/mRNA:/CDS:/; $n }
 stranded     = 1
 category     = Gene models
-das category = transcription
+das category = translation
 strand_arrow = 1
 link         = sub { my $n = shift->display_name; $n =~ s/(\.\d+)\.\d+$/$1/; "<% $feature->cgi_url %>/gbrowse/ITAG1_protein/?name=$n" }
 height       = 20
@@ -173,6 +185,7 @@ bgcolor        = red
 stranded     = 1
 link         = http://www.ebi.ac.uk/ebisearch/search.ebi?db=nucleotideSequences&t=$name
 citation     = This track shows regions of similarity with EST and other cDNA sequences from Tomato. Provided by <a href="http://cab.unina.it/index2.php">CAB group</a> at <a href="http://www.unina.it">UNINA</a>. (see <a href="http://www.ab.wur.nl/TomatoWiki/AnEST000">ITAG Wiki</a>)
+das category = similarity
 
 [cdna_sol]
 feature      = match:ITAG_transcripts_sol
@@ -183,6 +196,7 @@ glyph        = segments
 stranded     = 1
 link         = http://www.ebi.ac.uk/ebisearch/search.ebi?db=nucleotideSequences&t=$name
 citation     = This track shows regions of similarity with EST and other cDNA sequences taken from species in the Solanaceae other than Tomato. Provided by <a href="http://cab.unina.it/index2.php">CAB group</a> at <a href="http://www.unina.it">UNINA</a>. (see <a href="http://www.ab.wur.nl/TomatoWiki/AnEST000">ITAG Wiki</a>)
+das category = similarity
 
 [sgn_unigenes]
 feature      = match:ITAG_sgn_unigenes
@@ -194,6 +208,7 @@ fgcolor      = red
 link         = /search/quick_search.pl?term=$name
 stranded     = 1
 citation     = This track shows regions of similarity with SGN Unigene (SGN-U) sequences.  (see <a href="http://www.ab.wur.nl/TomatoWiki/AnSgnUnigenes000">ITAG Wiki</a>)
+das category = similarity
 
 [augustus]
 feature      = transcript:ITAG_augustus
@@ -203,6 +218,7 @@ ignore_sub_part = intron
 glyph        = transcript
 stranded     = 1
 citation      = <i>De novo</i> gene predictions from the AUGUSTUS gene predictor, trained on Tomato.  Provided by SGN.  (see <a href="http://www.ab.wur.nl/TomatoWiki/AnAUGUSTUS000">ITAG Wiki</a>)
+das category = transcription
 
 [geneid_tomato]
 feature      = gene:ITAG_geneid_tomato
@@ -211,6 +227,7 @@ category     = Prediction Features
 glyph        = gene
 stranded     = 1
 citation     = <i>De novo</i> predictions from <a href="http://genome.imim.es/software/geneid/">GeneID</a>, trained on Tomato.  Provided by Francisco Camara, <a href="http://genome.crg.es">Genome Bioinformatics Research Lab - Gene Prediction Group, Center for Genomic Regulation (CRG) - Spain</a>. (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnGeneID000">ITAG Wiki</a>)
+das category = transcription
 
 [genemark_ath]
 feature      = mRNA:ITAG_genemark_ath
@@ -219,6 +236,7 @@ category     = Prediction Features
 glyph        = processed_transcript
 stranded     = 1
 citation     = <i>De novo</i> predictions from <a href="http://exon.gatech.edu/GeneMark/">GeneMark</a>, trained on Arabidopsis.  Provided by the <a href="http://mips.gsf.de/proj/plant/jsf/tomato/index.jsp">MIPS Tomato genome database</a>. (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnGeneMark000">ITAG Wiki</a>)
+das category = transcription
 
 [glimmerhmm_ath]
 feature      = mRNA:ITAG_glimmerhmm_ath
@@ -227,6 +245,7 @@ category     = Prediction Features
 glyph        = gene
 stranded     = 1
 citation     = <i>De novo</i> predictions from <a href="http://www.genomics.jhu.edu/GlimmerHMM/">GlimmerHMM</a>, trained on Arabidopsis.  Provided by Erwin Datema at <a href="http://appliedbioinformatics.wur.nl/">WUR</a>. (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnGlimmerHMM000">ITAG Wiki</a>)
+das category = transcription
 
 [glimmerhmm_tomato]
 feature      = mRNA:ITAG_glimmerhmm_tomato
@@ -235,6 +254,7 @@ category     = Prediction Features
 glyph        = processed_transcript
 stranded     = 1
 citation     = <i>De novo</i> predictions from <a href="http://www.genomics.jhu.edu/GlimmerHMM/">GlimmerHMM</a>, trained on Tomato.  Provided by Erwin Datema at <a href="http://appliedbioinformatics.wur.nl/">WUR</a>. (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnGlimmerHMM000">ITAG Wiki</a>)
+das category = transcription
 
 [infernal]
 feature      = ncRNA:ITAG_infernal tRNA:ITAG_infernal snoRNA:ITAG_infernal U6atac_snRNA:ITAG_infernal miRNA:ITAG_infernal antisense_RNA:ITAG_infernal snRNA:ITAG_infernal 5_snRNA:ITAG_infernal 13_snRNA:ITAG_infernal 10_snRNA:ITAG_infernal snRNA:ITAG_infernal 11_snRNA:ITAG_infernal 6_snRNA:ITAG_infernal snoRNA:ITAG_infernal 12_snRNA:ITAG_infernal U1_snRNA:ITAG_infernal group_I_intron:ITAG_infernal 7_snRNA:ITAG_infernal UTR_region:ITAG_infernal group_II_intron:ITAG_infernal miRNA:ITAG_infernal SRP_RNA:ITAG_infernal snRNA:ITAG_infernal snoRNA:ITAG_infernal 14_snRNA:ITAG_infernal 4_snRNA:ITAG_infernal miRNA:ITAG_infernal U2_snRNA:ITAG_infernal 9_snRNA:ITAG_infernal rRNA_5.8S:ITAG_infernal 8_snRNA:ITAG_infernal RNAi_reagent:ITAG_infernal
@@ -244,6 +264,7 @@ glyph        = segments
 description  = sub { (shift->attributes('Alias'))[0] }
 stranded     = 1
 citation     = This track shows RNA regions inferred by <a href="http://infernal.janelia.org/">Infernal</a>.  Provided by Daniel Buchan, <a href="http://www.srcuk.org/">SRCUK</a>.
+das category = experimental
 
 [trnascanse]
 feature      = tRNA:ITAG_trnascanse
@@ -252,6 +273,7 @@ category     = Prediction Features
 glyph        = segments
 stranded     = 1
 citation     = This track shows transfer RNAs predicted by the tRNAscan-SE program.  For more on tRNAscan-SE, see <a href="http://selab.janelia.org/software#trnascanse">http://selab.janelia.org/software#trnascanse</a>.  (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnTRNAScanSE000">ITAG Wiki</a>)
+das category = experimental
 
 [tRNA:overview]
 feature      = tRNA:ITAG_trnascanse
@@ -271,6 +293,7 @@ glyph        = segments
 bgcolor      = #ea00ea
 stranded     = 1
 citation     = This track shows regions of similarity of Eugene-predicted cDNA sequences with known sequences associated with SGN genetic loci, as detected by BLAT (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnSGNLoci000">ITAG Wiki</a>)
+das category = similarity
 
 [Markers:overview]
 feature      = match:ITAG_sgn_markers
@@ -291,4 +314,5 @@ stranded     = 1
 fgcolor      = black
 bgcolor      = yellow
 citation     = This track shows regions of similarity of the genomic sequence with known sequences associated with SGN genetic markers, as detected by GenomeThreader (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnSgnMarkers000">ITAG Wiki</a>)
+das category = similarity
 
