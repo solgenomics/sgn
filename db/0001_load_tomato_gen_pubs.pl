@@ -195,13 +195,13 @@ foreach my $item ( @pmid ) {
 
 #---add other publications manually---
 foreach my $title ( @titles ) {
-    my $pub = $schema
-        ->resultset( "Pub::Pub" )
-        ->find({ title => $title })
-        ->create_pubprops(
-            {'tomato genome publication' => '1'},
-            {autocreate => 1}
-           );
+    my $pub = $schema->resultset( "Pub::Pub" )->find({ title => $title })
+        or die "no publication found with title '$title'";
+
+    $pub->create_pubprops(
+        {'tomato genome publication' => '1'},
+        {autocreate => 1}
+       );
 }
 
 ## Now it will add this new patch information to the md_version table.  It did the dbversion object before and
