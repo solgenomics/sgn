@@ -93,7 +93,7 @@ foreach my $p(@all_pubs){
 
 
 <!--creates the main heading-->
-<&| /page/info_section.mas, title=>'See All Publications', collapsible => 1 &>
+<&| /page/info_section.mas, title=>'Publications', collapsible => 0 &>
 
 
 % my $year;         #holds each element of the list of unique years
