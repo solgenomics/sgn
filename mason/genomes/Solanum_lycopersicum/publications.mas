@@ -95,19 +95,17 @@ my @years =
 <&| /page/info_section.mas, title=>'Publications', collapsible => 0 &>
 
 
-% my $year;         #holds each element of the list of unique years
-% my $pub;          #holds each element of the list of publications
 % my $link_id = 1;  #is incremented so that each link has a different id
 
 <!--creates the main body of publication info-->
 <!--creates a new subsection for each year-->
-% foreach $year(@years){
+% for my $year ( @years ) {
 <&| /page/info_section.mas, title=>"$year", collapsible => 1, is_subsection => 1 &>
 <br />
 
 <!--creates a new table for each publication-->
 <%perl>
-foreach $pub(@all_pubs){
+for my $pub (@all_pubs) {
 
     my $pmid = $pub->search_related('pub_dbxrefs', {})
                    ->search_related('dbxref', {})
