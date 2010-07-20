@@ -68,42 +68,55 @@
   $schema
 </%args>
 
-<%perl>
-
+<%init>
 use CXGN::Page::FormattingHelpers;
 use List::MoreUtils qw/uniq/;
 
-#---get all publications from pubprop database---
-my @all_pubs =
+### get all publications from pubprop database, then index them by pub year
+my @pubs =
     $schema->resultset('Cv::Cvterm')
            ->search({name => 'tomato genome publication'})
            ->search_related('pubprops', {})
-           ->search_related('pub', {});
+           ->search_related('pub', {}, 
+                            { prefetch => { pub_dbxrefs => 'dbxref' },
+                            }
+                           );
 
-#---get the publication years in descending order and remove duplicates---
-# get the list of years, sorted in descending order
-my @years =
-         sort {$b <=> $a}
-         uniq
-         map $_->pyear,
-         @all_pubs;
+# index the publications in a hash by year
+my %pubs_by_year;
+for my $pub (@pubs) {
+  push @{ $pubs_by_year{ $pub->pyear } }, $pub;
+}
+</%init>
 
-</%perl>
-
-
-<!--creates the main heading-->
 <&| /page/info_section.mas, title=>'Publications', collapsible => 0 &>
 
-<!--creates the main body of publication info-->
-<!--creates a new subsection for each year-->
-% for my $year ( @years ) {
-<&| /page/info_section.mas, title=>"$year", collapsible => 1, is_subsection => 1 &>
-<br />
+%  # for each year, print out the pubs associated with it
+%   for my $year (sort {$b <=> $a} keys %pubs_by_year ) {
+%     my $pubs = $pubs_by_year{$year};
+      <&| /page/info_section.mas, title         => $year,
+                                  subtitle      => @$pubs.' publication'.(@$pubs > 1 ? 's' : ''),
+                                  collapsible   => 1,
+                                  is_subsection => 1,
+         &>
 
-<!--creates a new table for each publication-->
+%        # render each of the publications for this year
+%        for my $pub ( @$pubs ) {
+            <& .publication, pub => $pub &>
+%        }
+      </&>
+%   }
+</&>
+
+
+% ############ SUBCOMPONENTS #################
+% # subcomponent that displays a publication
+<%def .publication >
+<%args>
+  $pub
+</%args>
+
 <%perl>
-for my $pub (@all_pubs) {
-
     my $pmid = $pub->search_related('pub_dbxrefs', {})
                    ->search_related('dbxref', {})
                    ->first
@@ -111,7 +124,7 @@ for my $pub (@all_pubs) {
 
     #---getting authors - if the list is too long, only show the first 10,
     #---the rest of the authors are shown once a link is clicked
-    my @author = reverse($pub->search_related('pubauthors', {}));
+    my @author = reverse $pub->search_related('pubauthors', {});
     my @names;
     if ( $#author <= 10 ){
         foreach my $a ( @author ){
@@ -133,11 +146,8 @@ for my $pub (@all_pubs) {
     }
 </%perl>
 
-% #---creates new inner table to hold information about each publication,
-% #---including the authors, journal, volume, issue, pages, and pubmed links
-% if ($pub->pyear == $year){
 <table class="year">
-<tr><td><br /><b><% $pub->title %></b></td></tr>
+<tr><td><b><% $pub->title %></b></td></tr>
 <tr>
   <td>
     <br />
@@ -191,12 +201,5 @@ for my $pub (@all_pubs) {
   </td>
 </tr>
 </table>
-%   }
-%  }
-</&>
-% }
 
-</&>
-
-
-
+</%def>
