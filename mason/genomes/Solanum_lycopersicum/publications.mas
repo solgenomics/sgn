@@ -81,14 +81,13 @@ my @all_pubs =
            ->search_related('pub', {});
 
 #---get the publication years in descending order and remove duplicates---
-my @years;     #stores the list of years
+# get the list of years, sorted in descending order
+my @years =
+         sort {$b <=> $a}
+         uniq
+         map $_->pyear,
+         @all_pubs;
 
-foreach my $p(@all_pubs){
-    push(@years, $p->pyear);
-}
-
-@years = reverse(sort(uniq(@years)));    #sorts the years in descending order
-                                         #and removes duplicate years
 </%perl>
 
 
