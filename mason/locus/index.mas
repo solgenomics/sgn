@@ -119,14 +119,23 @@ my $allele_subtitle =
   : '<a href="/phenome/allele.pl?locus_id=$locus_id&amp;action=new">[Add new allele]</a>';
 
 
+my $al_subtitle =
+  !(grep { /^$user_type$/ } ('curator', 'submitter', 'sequencer') ) ?
+  '<span class="ghosted">[Associate new locus]</span>'
+  : '<a href="javascript:Tools.toggleContent(\'associateLocusForm\', \'locus2locus\');Tools.getOrganisms()">[Associate new locus]</a> ';
+
+
 </%perl>
 
-<& /util/import_javascript.mas, classes => ["jQuery", "thickbox", "CXGN.Page.FormattingHelpers"] &>
+<& /util/import_javascript.mas, classes => ["jQuery", "thickbox", "CXGN.Page.FormattingHelpers", "CXGN.Phenome.Locus", "CXGN.Phenome.Tools", "CXGN.Phenome.Locus.LocusPage"] &>
 
+
+<& /locus/initialize.mas, locus_id=>$locus_id  &>
 
 <& /page/page_title.mas, title=>$common_name . " \t' " . $locus->get_locus_name() . "'\n" &>
 
-  
+
+
 <&| /page/info_section.mas, title=>"Locus details" , subtitle => "$locus_xml | $editor_note | $guide_html" &>
   
   <& /page/form.mas, object_type=>'locus', object_id=>"$locus_id", form_name=> 'locus_form', server_side_script => '/jsforms/locus_ajax_form.pl', form_div_name=>'locus_details', js_object_name=> 'locusForm', page_url => '/phenome/locus_display.pl'  &>
@@ -185,6 +194,15 @@ my $allele_subtitle =
 <&| /page/info_section.mas, title=>"Alleles (" .  scalar(@alleles)  . ")", subtitle => "$allele_subtitle", collapsible=>1, collapsed=>1 &>
   
   <& /phenome/allele.mas, alleles=>\@alleles, user=>$user &>
+
+</&>
+
+
+<&| /page/info_section.mas, title=>"Associated loci (" .  $locus->count_associated_loci() . ")", subtitle => "$al_subtitle", id=>"locus2locus", collapsible=>1, collapsed=>1 &>
+  
+  <& /locus/associate_locus.mas, locus_id=>$locus_id &>
+    <& /locus/network.mas  &>
+
 
 </&>
 

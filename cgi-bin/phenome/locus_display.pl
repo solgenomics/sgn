@@ -55,6 +55,10 @@ my $user_type = $user->get_user_type();
 my $locus_id = $q->param("locus_id") ;
 my $action =  $q->param("action");
 
+#print $c->render_mason("/locus/initialize.mas",
+#            locus_id => $locus_id
+#);
+
 $c->forward_to_mason_view('/locus/index.mas',  action=> $action,  locus_id => $locus_id , user=>$user, dbh=>$dbh);
 
 
@@ -74,11 +78,9 @@ my $organism   = $locus->get_common_name();
 my @owners   = $locus->get_owners();
 
 
-#$page->header("SGN $organism locus: $locus_name");
-
-print $c->render_mason("/locus/initialize.mas",
-            locus_id => $locus_id
-);
+#print $c->render_mason("/locus/initialize.mas",
+#            locus_id => $locus_id
+#);
 
 ####################################################
 #get all dbxref  annotations: pubmed, ncbi sequences, GO, PO, tgrc link
@@ -105,55 +107,6 @@ if ($locus_name) {
     
 }
 
-##########################################
-#################################
-    #display individuals section
-#################################
-
-###        id          => "locus_accessions", ##########this is important for the 'associate' form
-   
-#
-    ###########################               ASSOCIATED LOCI
-    #my @locus_groups= $locus->get_locusgroups();
-    #my $direction;
-    my $al_count = $locus->count_associated_loci();
-
-    my $associated_locus_sub;
-    my $associate_locus_form;
-    if (
-        (
-               $user_type eq 'curator'
-            || $user_type eq 'submitter'
-            || $user_type eq 'sequencer'
-        )
-      )
-    {
-
-        if ($locus_name) {
-            $associated_locus_sub .=
-		qq |<a href="javascript:Tools.toggleContent('associateLocusForm', 'locus2locus');Tools.getOrganisms()">[Associate new locus]</a> |;
-            $associate_locus_form =
-		CXGN::Phenome::Locus::LocusPage::associate_locus_form($locus_id);
-        }
-    }
-else {
-    $associated_locus_sub .=
-	qq |<span class ="ghosted"> [Associate new locus] </span> |;
-}
-
-#printing associated loci section dynamically
-my $dyn = $c->render_mason("/locus/network.mas");
-
-print info_section_html(
-    title       => "Associated loci ($al_count) ",
-    subtitle    => $associated_locus_sub,
-    contents    => $associate_locus_form . $dyn,
-    id          => 'locus2locus',
-    collapsible => 1,
-    collapsed   => 1,
-    );
-
-$d->d( "!!!Printing locus2locus :  " . ( time() - $time ) . "\n");
 
 ##################  SUNSHINE BROWSER
 
@@ -163,6 +116,7 @@ my $locus2locus_graph =
 my $networkbrowser_link =
     qq { View <b>$locus_name</b> relationships in the stand-alone <a href="/tools/networkbrowser/?type=locus&name=$locus_id">network browser</a>. Please note that this tool is a prototype.<br /><br /><br /> };
 
+my $al_count;
 if ( $al_count > 0 ) {
     print info_section_html(
 	title       => "Associated loci - graphical view [beta version]",
@@ -322,26 +276,6 @@ print info_section_html(
 #functions used in the locus page:
 ##
 
-sub get_allele_edit_links {
-    my $allele   = shift;
-    my $user= shift;
-    my $login_user_id    = $user->get_sp_person_id();
-    my $locus    = $allele->get_locus();
-    my $locus_id = $locus->get_locus_id();
-
-    my $allele_edit_link = "";
-   
-    my $allele_id        = $allele->get_allele_id();
-    if (   ( $allele->get_sp_person_id() == $login_user_id )
-        || ( $user->get_user_type() eq 'curator' ) )
-    {
-        $allele_edit_link =
-qq | <a href="allele.pl?action=edit&amp;allele_id=$allele_id">[Edit]</a> |;
-    }
-    else { $allele_edit_link = qq | <span class="ghosted">[Edit]</span> |; }
-}
-
-
 #######################
 
 sub get_dbxref_info {
@@ -453,50 +387,6 @@ sub get_pub_info {
 	qq|<div><a href="/chado/publication.pl?pub_id=$pub_id" >$db:$accession</a> $pub_title ($year) $abstract_view </div><br /> |;
     return $pub_info;
 }    #
-
-
-############################javascript code
-
-
-
-sub associate_individual {
-    
-    my $locus         = shift;
-    my $locus_id     = $locus->get_locus_id();
-    my $sp_person_id = shift;
-
-    my $associate_html = qq^
-
-<div id="associateIndividualForm" style="display: none">
-    Accession name:
-    <input type="text"
-           style="width: 50%"
-           id="locus_name"
-           onkeyup="Locus.getIndividuals(this.value, '$locus_id');">
-    <input type="button"
-           id="associate_individual_button"
-           value="associate accession"
-	   disabled="true"
-           onclick="Locus.associateAllele('$sp_person_id');this.disabled=true;">
-    <select id="individual_select"
-            style="width: 100%"
-	    onchange="Locus.getAlleles('$locus_id')"
-            size=10>
-       </select>
-
-    <b>Would you Like to specify an allele?</b>
-    <select id="allele_select"
-            style="width: 100%">
-    </select>
-
-</div>
-^;
-
-    return $associate_html;
-}
-
-
-
 
 
 #######################################################

@@ -60,7 +60,7 @@ CXGN.Phenome.Locus.LocusPage.prototype = {
     processLocusNetworkResponse: function (request) { 
 	var json = request.responseText;
 	var x =eval ("("+json+")");
-	var e = MochiKit.DOM.getElement("locus_network").innerHTML=x.response;
+	var e = $("locus_network").innerHTML=x.response;
 	//alert('processing locus network...' );
 	if ( x.error() ) { alert(x.error) ; }
     },
@@ -70,10 +70,10 @@ CXGN.Phenome.Locus.LocusPage.prototype = {
     associateLocus: function(locus_id) {
 	if (!locus_id)  locus_id = this.getLocusId(); 
 	var type = 'associate locus';
-	var object_id = MochiKit.DOM.getElement('locus_select').value;
-	var locus_relationship_id = MochiKit.DOM.getElement('locus_relationship_select').value;
-	var locus_evidence_code_id = MochiKit.DOM.getElement('locus_evidence_code_select').value;
-	var locus_reference_id = MochiKit.DOM.getElement('reference_select').value ;
+	var object_id = $('locus_select').value;
+	var locus_relationship_id = $('locus_relationship_select').value;
+	var locus_evidence_code_id = $('locus_evidence_code_select').value;
+	var locus_reference_id = $('locus_reference_select').value ;
 	
 	new Ajax.Request('locus_browser.pl', {
 		parameters: {type: type, locus_id: locus_id, object_id: object_id, locus_relationship_id: locus_relationship_id, locus_evidence_code_id: locus_evidence_code_id, locus_reference_id: locus_reference_id}, 
@@ -119,7 +119,7 @@ CXGN.Phenome.Locus.LocusPage.prototype = {
 		    onSuccess: function(response) {
 		    var json = response.responseText;
 		    var x =eval ("("+json+")");
-		    var e = MochiKit.DOM.getElement("locus_ontology").innerHTML=x.response;
+		    var e = $("locus_ontology").innerHTML=x.response;
 		    //alert('processing locus ontology...' );
 		    if ( x.error ) { alert(x.error) ; }
 		}
@@ -195,8 +195,8 @@ CXGN.Phenome.Locus.LocusPage.prototype = {
      processLocusUnigenesResponse: function (request) { 
 	var json = request.responseText;
 	var x =eval ("("+json+")");
-	var e = MochiKit.DOM.getElement("locus_unigenes").innerHTML=x.response;
-	var s = MochiKit.DOM.getElement("solcyc_links").innerHTML=x.solcyc;
+	var e = $("locus_unigenes").innerHTML=x.response;
+	var s = $("solcyc_links").innerHTML=x.solcyc;
 	if ( x.error() ) { alert(x.error) ; }
     },
     
@@ -205,7 +205,7 @@ CXGN.Phenome.Locus.LocusPage.prototype = {
     associateUnigene: function(locus_id, sp_person_id) {
 	if (!locus_id)  locus_id = this.getLocusId(); 
       	var type = 'associate';
-	var unigene_id = MochiKit.DOM.getElement('unigene_select').value;
+	var unigene_id = $('unigene_select').value;
 	
 	new Ajax.Request('unigene_browser.pl', { parameters:
 	{type: type, locus_id: locus_id, unigene_id: unigene_id, sp_person_id: sp_person_id}, 
@@ -243,9 +243,9 @@ CXGN.Phenome.Locus.LocusPage.prototype = {
     //Make an ajax response that finds all the unigenes with unigene ids like the current value of the unigene id input
     getUnigenes: function(unigene_id, locus_id) {
 	if(unigene_id.length==0){
-	    var select = MochiKit.DOM.getElement('unigene_select');
+	    var select = $('unigene_select');
 	    select.length=0;	
-	    MochiKit.DOM.getElement('associate_unigene_button').disabled = true;
+	    $('associate_unigene_button').disabled = true;
 	} else {	
 	    var type = 'browse';
 	    new Ajax.Request('unigene_browser.pl', { parameters:
@@ -256,7 +256,7 @@ CXGN.Phenome.Locus.LocusPage.prototype = {
     
     //Parse the ajax response and update the unigene  select box accordingly
     updateUnigeneSelect: function(response) {
-	var select = MochiKit.DOM.getElement('unigene_select');
+	var select = $('unigene_select');
 	//MochiKit.DOM.getElement('associate_unigene_button').disabled = true;
 	var json  = response.responseText;
 	var x = eval ("("+json+")"); 

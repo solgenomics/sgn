@@ -86,7 +86,7 @@ if ( $type eq 'network' ) {
                       qq | <span class="ghosted">[Remove]</span> |;
                     if ( privileged($login_user_type) ) {
                         $lgm_obsolete_link =
-                            CXGN::Phenome::Locus::LocusPage::obsolete_locusgroup_member($lgm_id);
+			    $c->render_mason("/locus/obsolete_locusgroup_member.mas", lgm_id=>$lgm_id);
                     }
                     ###########
 
