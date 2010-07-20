@@ -1,72 +1,75 @@
-
 <& /util/import_javascript.mas, classes=>["CXGN.Effects"] &>
 
-<!--css styles-->
 <style type="text/css">
-table.more{
-  background-color: #FFFFEE;
-  text-align: left;
-  font-size: 14px;
-  width: 400px;
-  height: auto;
-  border: 3px double gray;
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: 10px;
-}
-table.year{
-  background-color: #FFFFCC;
-  text-align: center;
-  font-size: 14px;
-  color: black;
-  width: 520px;
-  height: auto;
-  border: 2px outset gray;
-  margin: 20px;
-  margin-left: auto;
-  margin-right: auto;
-  padding-top: 15px;
-  padding-left: 15px;
-  padding-right: 15px;
-}
-td.width{
-  width: 60px;
-  color: #AA0000;
-}
-tr.author{
-  visibility: collapse;
-}
+
+  table.more{
+    background-color: #FFFFEE;
+    text-align: left;
+    font-size: 14px;
+    width: 400px;
+    height: auto;
+    border: 3px double gray;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 10px;
+  }
+
+  table.year{
+    background-color: #FFFFCC;
+    text-align: center;
+    font-size: 14px;
+    color: black;
+    width: 520px;
+    height: auto;
+    border: 2px outset gray;
+    margin: 20px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-top: 15px;
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+
+  td.width{
+    width: 60px;
+    color: #AA0000;
+  }
+
+  tr.author{
+    visibility: collapse;
+  }
+
 </style>
 
-<!--javascript for changing the visibility of boxes and the text of links-->
-<script type="text/javascript">
-function display(pub_id){
-  if (document.getElementById(pub_id).style.visibility == "visible"){
-     document.getElementById(pub_id).style.visibility="collapse";
-  }
-  else{
-    document.getElementById(pub_id).style.visibility="visible";  
-  }
-}
 
-function message(link_id, pub_id){
+<script type="text/javascript">
+  function display(pub_id){
     if (document.getElementById(pub_id).style.visibility == "visible"){
-	document.getElementById(link_id).innerHTML = "more authors";
+       document.getElementById(pub_id).style.visibility="collapse";
     }
     else{
-	document.getElementById(link_id).innerHTML = "show less";
+      document.getElementById(pub_id).style.visibility="visible";
     }
-}
+  }
+
+  function message(link_id, pub_id){
+      if (document.getElementById(pub_id).style.visibility == "visible"){
+        document.getElementById(link_id).innerHTML = "more authors";
+      }
+      else{
+        document.getElementById(link_id).innerHTML = "show less";
+      }
+  }
 </script>
 
-<!--title-->
 <& /page/page_title.mas, title => "Tomato Genome Publications" &>
 
 <%args>
-$schema
+  $schema
 </%args>
 
 <%perl>
+
 use CXGN::Page::FormattingHelpers;
 use List::MoreUtils qw/uniq/;
 
@@ -100,8 +103,7 @@ foreach my $p(@all_pubs){
 <!--creates the main body of publication info-->
 <!--creates a new subsection for each year-->
 % foreach $year(@years){
-<&| /page/info_section.mas, title=>"$year", collapsible => 1,
-    is_subsection => 1 &>
+<&| /page/info_section.mas, title=>"$year", collapsible => 1, is_subsection => 1 &>
 <br />
 
 <!--creates a new table for each publication-->
@@ -117,7 +119,7 @@ foreach $pub(@all_pubs){
     my $pmid   = $pub->find_related('pub_dbxrefs', {})->find_related('dbxref', {})->accession;
 
     #---getting authors - if the list is too long, only show the first 10,
-    #---the rest of the authors are shown once a link is clicked 
+    #---the rest of the authors are shown once a link is clicked
     my @author = reverse($pub->search_related('pubauthors', {}));
     my @names;
     if ($#author <= 10){
@@ -153,11 +155,12 @@ foreach $pub(@all_pubs){
 	<td class="width">Author(s):</td>
 	<td><% @names %>
 % if( @extra_names ){
-	  <a id=<% $link_id %> 
-	      href="javascript:display(<% $pub_id %>);" 
-	      onclick="message(<% $link_id %>, <% $pub_id %>);">
+	  <a id=<% $link_id %>
+	      href="javascript:display(<% $pub_id %>);"
+	      onclick="message(<% $link_id %>, <% $pub_id %>);"
+          >
 	      more authors
-	      </a>
+	  </a>
 	  <tr id=<% $pub_id %> class="author">
 	    <td> </td>
 	    <td><% @extra_names %></td>
