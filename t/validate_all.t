@@ -75,6 +75,7 @@ my %urls = (
         "biosource detail page for sample"         => "/biosource/sample.pl?id=1",
         "Locus ajax form"                          => "/jsforms/locus_ajax_form.pl",
         "Locus editors"                            => "/phenome/editors_note.pl",
+        "SGN data overview"                        => "/content/sgn_data.pl",
 );
 my $iteration_count;
 
