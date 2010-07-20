@@ -39,6 +39,8 @@ my %urls = (
         "est search page"                          => "/search/direct_search.pl?search=est",
         "est search"                               => "/search/est.pl?request_from=0&request_id=SGN-E234234&request_type=7&search=Search",
         "est detail page"                          => "/search/est.pl?request_from=0&request_id=SGN-E234234&request_type=7&search=Search",
+        'chado cvterm page'                        => '/chado/cvterm.pl?cvterm_id=47499',
+        'sol100 page'                              => '/sequencing/sol100.pl',
         "family search page"                       => "/search/direct_search.pl?search=family",
         "family search"                            => "/search/family_search.pl?wa82_family_id=22081",
         "family detail page"                       => "/search/family.pl?family_id=22081",
