@@ -33,7 +33,7 @@ Naama Menda <nm249@cornell.edu>
 use CXGN::Phylo::OrganismTree;
 use CXGN::Tools::WebImageCache;
 use Cache::File;
-use File::Slurp;
+use File::Slurp qw/slurp/;
 use Cache::Entry;
 
 my $cache = CXGN::Tools::WebImageCache->new();
@@ -66,10 +66,7 @@ if ( !$cache->is_valid() ) {
 
 my $image_html= $cache->get_image_html();
 
-open( my $MF, "<$newick_file" );
-my $tree_string = "";
-$tree_string .= $_ while <$MF>;
-close($MF);
+my $tree_string = slurp($newick_file);
 
 if ($image_only) { print $image_html; return; }
 </%perl>
