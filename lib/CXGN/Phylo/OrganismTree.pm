@@ -82,6 +82,7 @@ sub recursive_children {
     my $orgkey ="".$o->get_organism_id()."";
     $n->get_label()->set_link("/chado/organism.pl?organism_id=" . $o->get_organism_id());
     my $content = $species_cache ? $species_cache->get($orgkey) : '';
+    $content ||= '';
 
     $content=~ s/\?/<br\/>/g;
     $n->set_tooltip($n->get_name());
