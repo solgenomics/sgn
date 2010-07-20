@@ -110,13 +110,10 @@ foreach my $p(@all_pubs){
 <%perl>
 foreach $pub(@all_pubs){
 
-    my $pub_id = $pub->pub_id;
-    my $title  = $pub->title;
-    my $series = $pub->series_name;
-    my $volume = $pub->volume;
-    my $issue  = $pub->issue;
-    my $pages  = $pub->pages;
-    my $pmid   = $pub->find_related('pub_dbxrefs', {})->find_related('dbxref', {})->accession;
+    my $pmid = $pub->search_related('pub_dbxrefs', {})
+                   ->search_related('dbxref', {})
+                   ->first
+                   ->accession;
 
     #---getting authors - if the list is too long, only show the first 10,
     #---the rest of the authors are shown once a link is clicked
@@ -146,7 +143,7 @@ foreach $pub(@all_pubs){
 % #---including the authors, journal, volume, issue, pages, and pubmed links
 % if ($pub->pyear == $year){
 <table class="year">
-<tr><td><br /><b><% $title %></b></td></tr>
+<tr><td><br /><b><% $pub->title %></b></td></tr>
 <tr>
   <td>
     <br />
@@ -156,12 +153,12 @@ foreach $pub(@all_pubs){
 	<td><% @names %>
 % if( @extra_names ){
 	  <a id=<% $link_id %>
-	      href="javascript:display(<% $pub_id %>);"
-	      onclick="message(<% $link_id %>, <% $pub_id %>);"
+	      href="javascript:display(<% $pub->pub_id %>);"
+	      onclick="message(<% $link_id %>, <% $pub->pub_id %>);"
           >
 	      more authors
 	  </a>
-	  <tr id=<% $pub_id %> class="author">
+	  <tr id=<% $pub->pub_id %> class="author">
 	    <td> </td>
 	    <td><% @extra_names %></td>
 	  </tr>
@@ -170,19 +167,19 @@ foreach $pub(@all_pubs){
       </tr>
       <tr>
 	<td class="width">Journal:</td>
-	<td><% $series %></td>
+	<td><% $pub->series_name %></td>
       </tr>
       <tr>
 	<td class="width">Volume:</td>
-	<td><% $volume %></td>
+	<td><% $pub->volume %></td>
       </tr>
       <tr>
 	<td class="width">Issue:</td>
-	<td><% $issue %></td>
+	<td><% $pub->issue %></td>
       </tr>
       <tr>
 	<td class="width">Pages:</td>
-	<td><% $pages %></td>
+	<td><% $pub->pages %></td>
       </tr>
 % if( $pmid ){
       <tr>
