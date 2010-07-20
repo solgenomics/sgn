@@ -18,16 +18,14 @@ Naama Menda <nm249@cornell.edu>
 
 
 <%args>
-
-$schema
-$root
-$species_hashref
-$speciesinfo_cache
-$uri_dir
-$sicache_dir
-$tmp_dir
-$image_only => 0
-
+    $schema
+    $root
+    $species_hashref
+    $speciesinfo_cache => undef
+    $uri_dir
+    $sicache_dir => undef
+    $tmp_dir
+    $image_only => 0
 </%args>
 
 <%perl>

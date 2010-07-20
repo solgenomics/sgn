@@ -79,17 +79,15 @@ sub new {
 
 
 sub recursive_children {
-    my $self=shift;
-    my $nodes=shift;
-    my $o= shift; #CXGN::Chado::Organism object
-    my $n = shift; # CXGN::Phylo::Node object
- my $species_cache=shift;   
- my $is_root=shift;
-   
+    my ($self,$nodes, $o, $n, $species_cache, $is_root) = @_;
+    # $o is a CXGN::Chado::Organism object
+    # $n is a CXGN::Phylo::Node object
+
     $n->set_name($o->get_species());
     my $orgkey ="".$o->get_organism_id()."";
     $n->get_label()->set_link("/chado/organism.pl?organism_id=" . $o->get_organism_id());
-    my $content=$species_cache->get($orgkey);
+    my $content = $species_cache ? $species_cache->get($orgkey) : '';
+
     $content=~ s/\?/<br\/>/g; 
     $n->set_tooltip($n->get_name());
     $n->set_onmouseover("javascript:showPopUp('popup','".$content."','<b>".$o->get_species()."</b>')");
