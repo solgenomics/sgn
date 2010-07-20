@@ -1,0 +1,107 @@
+
+
+<%doc>
+
+=head1 NAME
+
+/phenome/alleles.mas - a component for printing the alleles section
+
+=head1 DESCRIPTION
+
+
+Parameters:
+
+=over 1
+
+=item alleles
+
+arrayref of CXGN::Phenome::Allele objects
+
+=item user
+
+logged in user (CXGN::People::Person object)
+
+
+=back
+
+=head1 AUTHOR
+
+Naama Menda <nm249@cornell.edu>
+
+=cut 
+
+</%doc>
+
+<%args>
+
+$alleles
+$user => undef
+
+</%args>
+
+<%perl>
+
+use CXGN::Page::FormattingHelpers qw / columnar_table_html /;
+
+my @allele_data;
+my $data;
+
+foreach my $a (@$alleles) {
+
+  my $allele_id = $a->{allele_id};
+  my $allele_synonyms;
+  my @allele_aliases = $a->get_allele_aliases();
+  foreach my $a_synonym (@allele_aliases) {
+    $allele_synonyms .= $a_synonym->get_allele_alias() . "  ";
+  }
+  if ( !$allele_synonyms ) { $allele_synonyms = "[add new]"; }
+  my $allele_synonym_link =
+    qq |<a href= "/phenome/allele_synonym.pl?allele_id=$allele_id&amp;action=new">$allele_synonyms</a> |;
+  
+my $allele_edit_link=
+  ( ( $a->get_sp_person_id() == $user->get_sp_person_id )
+    || ( $user->get_user_type() eq 'curator' ) ) ?
+      '<a href="allele.pl?action=edit&amp;allele_id=$allele_id">[Edit]</a> '
+	: '<span class="ghosted">[Edit]</span> ';
+
+my $phenotype        = $a->get_allele_phenotype();
+my @individuals      = $a->get_individuals();
+my $individual_link  = "";
+my $ind_count        = scalar(@individuals);
+
+$individual_link .=
+    qq|<a href="/phenome/allele.pl?action=view&amp;allele_id=$allele_id">$ind_count </a>|;
+
+push @allele_data,
+  [
+   map { $_ } (
+	       "<i>" . $a->get_allele_symbol . "</i>",
+	       $a->get_allele_name,
+	       $allele_synonym_link,
+	       qq|<div align="left"><a href="/phenome/allele.pl?action=view&amp;allele_id=$allele_id"> |
+	       . $phenotype
+	       . "</a></div>",
+	       $individual_link,
+	       $allele_edit_link,
+	      )
+  ];
+
+}
+if (@allele_data) {
+  $data = columnar_table_html(
+			      headings => [
+					   'Allele symbol', 'Allele name',
+					   'Synonyms',      'Phenotype',
+					   'Accessions',
+					  ],
+			      data         => \@allele_data,
+			      __alt_freq   => 2,
+			      __alt_width  => 1,
+			      __alt_offset => 3,
+			     );
+}
+
+</%perl>
+
+
+<% $data %>
