@@ -1,0 +1,183 @@
+
+
+<%doc>
+
+=head1 NAME
+
+/phenome/associated_accessions.mas - a component for printing accessions (aka individuals) associated with your favorite object (locus etc.)
+
+=head1 DESCRIPTION
+
+Requires the following javascript classes:
+<& /util/import_javascript.mas, classes => ["jQuery", "thickbox", "CXGN.Page.FormattingHelpers"] &>
+
+
+
+Parameters:
+
+=over 1
+
+=item accessions
+
+=item user_type (default undef)
+
+
+arrayref of CXGN::Phenome::Individual objects
+
+
+
+=back
+
+=head1 AUTHOR
+
+Naama Menda <nm249@cornell.edu>
+
+=cut 
+
+</%doc>
+
+<%args>
+
+$accessions
+$dbh
+$user_type => undef
+
+</%args>
+
+<%perl>
+
+use CXGN::Page::FormattingHelpers qw / html_optional_show /;
+
+
+my $html;
+
+
+my %individualHash;
+my %imageHash;
+my @no_image;
+my $more_html;
+my $more;    #count the number of accessions in the optional_show box
+my $count
+  ; # a scalar for checking if there are accessions with images in the optional box
+
+if (@$accessions) {
+  $html      .= "<table>";
+  $more_html .= "<table>";
+  
+  # hash of image arrays. Keys are individual ids values are arrays of image ids
+  my %imageHoA;
+  
+  foreach my $i (@$accessions) {
+    my $individual_id   = $i->get_individual_id();
+    my $individual_name = $i->get_name();
+    $individualHash{$individual_id} = $individual_name;
+    
+    my @images =
+      $i->get_images();    #array of all associated image objects
+    foreach my $image (@images) {
+      my $image_id = $image->get_image_id();
+      
+      $imageHash{$image_id} = $image;
+      push @{ $imageHoA{$individual_id} }, $image_id;
+    }
+    
+    #if there are no associated images with this individual:
+    if ( !@images ) { push @no_image, $individual_id; }
+  }
+  my $ind_count = 0;
+  
+  # Print the whole thing sorted by number of members and name.
+  for
+    my $individual_id ( sort { @{ $imageHoA{$b} } <=> @{ $imageHoA{$a} } }
+			keys %imageHoA )
+      {
+	$ind_count++;
+	my $individual_name = $individualHash{$individual_id};
+	#my $individual_obsolete_link =
+	#  get_individual_obsolete_link($locus,$individual_id, $user_type);
+	my $link =
+	  qq|<a href="/phenome/individual.pl?individual_id=$individual_id">$individual_name </a>  |;
+	if ( $ind_count < 4 )
+	  { #print the first 3 individuals by default. The rest will be hidden
+	    $html .=
+	      qq|<tr valign="top"><td>$link</td> <td> </td>|;###$individual_obsolete_link </td>|;
+	  }
+	else {
+	  $count++;
+	  $more++;
+	  $more_html .=
+	    qq|<tr><td>$link </td><td> </td>|;###$individual_obsolete_link</td> |;
+	}
+	
+        #print only 5 images, if there are more write the number of total images
+	my $image_count = ( $#{ $imageHoA{$individual_id} } );    #+1;
+	if ( $image_count > 4 ) { $image_count = 4; }
+	for my $i ( 0 .. $image_count ) {
+	  my $image_id = $imageHoA{$individual_id}[$i];
+	  
+	  my $image = SGN::Image->new($dbh, $image_id);
+	  my $small_image  = $image->get_image_url("thumbnail");
+	  my $medium_image = $image->get_image_url("medium");
+	  my $image_page   = "/image/index.pl?image_id=$image_id";
+	  my $thickbox =
+	    qq|<a href="$medium_image" title="<a href=$image_page>Go to image page </a>" class="thickbox" rel="gallery-images"><img src="$small_image" alt="" /></a> |;
+	  if ( $ind_count < 4 ) { $html .= qq|<td>$thickbox</td>|; }
+	  else                  { $more_html .= qq|<td>$thickbox</td>|; }
+	  $image_count--;
+	}
+	if ( $#{ $imageHoA{$individual_id} } > 4 ) {
+	  my $image_count = ( $#{ $imageHoA{$individual_id} } ) + 1;
+	  $html .= qq|<td>... (Total $image_count images)</td>|;
+	}
+	if   ( $ind_count < 4 ) { $html      .= "</tr>"; }
+	else                    { $more_html .= "</tr>"; }
+      }
+  $html      .= "</table><br />";
+  $more_html .= "</table><br />";
+  if ( !$count ) {
+    my $individual_name;
+    my $no_image_count = 0;
+    foreach my $individual_id (@no_image) {
+      $no_image_count++;
+      #my $individual_obsolete_link =
+#	get_individual_obsolete_link($locus, $individual_id, $user_type);
+      if ( $no_image_count < 26 ) {
+	$individual_name = $individualHash{$individual_id};
+	$html .=
+	  qq|<a href="individual.pl?individual_id=$individual_id">$individual_name</a>&nbsp|;###$individual_obsolete_link |;
+      }
+      else {
+	$more++;
+	$more_html .=
+	  qq|<a href="individual.pl?individual_id=$individual_id">$individual_name</a>&nbsp|;###$individual_obsolete_link |;
+      }
+    }
+  }
+  else {
+    foreach my $individual_id (@no_image) {
+      $more++;
+      #my $individual_obsolete_link =
+	#get_individual_obsolete_link($locus, $individual_id, $user_type);
+      my $individual_name = $individualHash{$individual_id};
+      $more_html .=
+	qq|<a href="/phenome/individual.pl?individual_id=$individual_id">$individual_name</a>&nbsp|;###$individual_obsolete_link |;
+    }
+  }
+  }
+
+if ($more) {
+  $html .= html_optional_show(
+			      "Accessions",
+			      "<b>See $more more accessions</b>",
+			      qq| $more_html |,
+			      0, #< do not show by default
+			      'abstract_optional_show', #< don't use the default button-like style
+			     );
+}
+
+</%perl>
+
+
+<& /util/import_javascript.mas, classes => ["jQuery", "thickbox", "CXGN.Page.FormattingHelpers"] &>
+
+<% $html %>
