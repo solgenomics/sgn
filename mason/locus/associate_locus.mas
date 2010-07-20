@@ -1,0 +1,78 @@
+<%doc>
+
+=head1 NAME
+
+/locus/associate_locus.mas - a component for printing an 'associate_locus' javasript form
+
+=head1 DESCRIPTION
+
+this component has dependencies on CXGN.Phenome.Locus and CXGN.Phenome.Tools
+you will have to import these javascript classes in your code that uses this component.
+
+<& /util/import_javascript.mas, classes => [CXGN.Phenome.Locus", "CXGN.Phenome.Tools"] &>
+
+
+Parameters:
+
+=over 1
+
+=item locus_id
+
+a database id
+
+
+
+
+=back
+
+=head1 AUTHOR
+
+Naama Menda <nm249@cornell.edu>
+
+=cut 
+
+
+</%doc>
+
+<%args>
+
+$locus_id
+
+</%args>
+
+<div id='associateLocusForm' style="display: none">
+  <div id='locus_search'>
+    <input type="text" 
+	   style="width: 50%"
+	   id="locus_input"
+	   onkeyup="Tools.getLoci(this.value, <% $locus_id %>)" />
+    <select id = "organism_select"  onchange="Tools.getLoci( $('locus_input').value, <% $locus_id %>)"> 
+    </select> 
+    
+    <input type="button"
+	   id="associate_locus_button"
+	   value="Associate locus"
+	   disabled="true"
+	   onclick="locusPage.associateLocus('<% $locus_id %>');this.disabled=true;" />	
+    <select id="locus_select"
+ 	    style="width: 100%"
+ 	    name="locus_select"
+	    size=10 
+	    onchange="Locus.getLocusRelationship()">
+    </select>
+    
+    <b>Relationship type:</b>
+    <select id="locus_relationship_select" style="width: 100%"
+	    onchange="Locus.getLocusEvidenceCode()">
+    </select>
+    <b>Evidence code:</b>
+    <select id="locus_evidence_code_select" style="width: 100%"
+	    onchange="Locus.getLocusReference('<% $locus_id %>');$('associate_locus_button').disabled=false">
+    </select>	
+    <b>Reference:</b>
+    <select id="locus_reference_select" style="width: 100%">
+    </select>	
+    
+  </div>
+</div>
+
