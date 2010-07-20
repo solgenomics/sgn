@@ -1,15 +1,13 @@
 use strict;
+use warnings;
 
 use CXGN::Page;
-
 use CXGN::Chado::Organism;
 use CXGN::DB::DBICFactory;
 
 my $page   =  CXGN::Page->new("SOL100 sequencing project","Naama");
 
-my $schema =  
-    CXGN::DB::DBICFactory
-    ->open_schema( 'Bio::Chado::Schema' );
+my $schema = CXGN::DB::DBICFactory->open_schema( 'Bio::Chado::Schema' );
 
 my @species= ('Solanum lycopersicum', 'Solanum pennellii', 'Solanum pimpinellifolium',  'Solanum galapagense');
 

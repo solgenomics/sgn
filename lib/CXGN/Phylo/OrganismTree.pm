@@ -1,3 +1,5 @@
+package CXGN::Phylo::OrganismTree;
+
 =head1 NAME
 
 CXGN::Phylo::OrgnanismTree - an object to handle SGN organism  trees
@@ -17,26 +19,19 @@ CXGN::Phylo::OrgnanismTree - an object to handle SGN organism  trees
 
 This is a subcass of L<CXGN::Phylo::Tree>
 
-
-
 =head1 AUTHORS
 
  Naama Menda (nm249@cornell.edu)
 
-
 =cut
 
 use strict;
+use warnings;
 
-
-#use CXGN::Page;
-#use CXGN::Page::FormattingHelpers qw/tooltipped_text/;
 use CXGN::DB::DBICFactory;
 use CXGN::Chado::Organism;
 use CXGN::Tools::WebImageCache;
 use CXGN::Phylo::Node;
-
-package CXGN::Phylo::OrganismTree;
 
 use base qw / CXGN::Phylo::Tree / ;
 
@@ -88,9 +83,9 @@ sub recursive_children {
     $n->get_label()->set_link("/chado/organism.pl?organism_id=" . $o->get_organism_id());
     my $content = $species_cache ? $species_cache->get($orgkey) : '';
 
-    $content=~ s/\?/<br\/>/g; 
+    $content=~ s/\?/<br\/>/g;
     $n->set_tooltip($n->get_name());
-    $n->set_onmouseover("javascript:showPopUp('popup','".$content."','<b>".$o->get_species()."</b>')");
+    $n->set_onmouseover("javascript:showPopUp('popup','$content','<b>.$o->get_species()</b>')");
     $n->set_onmouseout("javascript:hidePopUp('popup');");
     $n->get_label()->set_name(" ".$o->get_species());
     $n->get_label()->set_onmouseover("javascript:showPopUp('popup','".$content."','<b>".$o->get_species()."</b>')");
@@ -100,7 +95,6 @@ sub recursive_children {
     $n->get_label()->set_hidden(0);
         
     my @cl=$n->get_children();
-   
     
     my @children = $o->get_direct_children;
     foreach my $child (@children) {
@@ -160,43 +154,28 @@ sub find_recursive_parent {
 =cut
 
 sub build_tree  {
-    
-    my $self=shift;
-    my $root= shift; #'Solanaceae';
-   
-    my $species_hash=  shift;
-    my $species_cache= shift;
-   
+    my ($self, $root, $species_hash, $species_cache) = @_; 
     my $schema = $self->get_schema();
     my $root_o = CXGN::Chado::Organism->new_with_species($schema, $root);
     my $root_o_id = $root_o->get_organism_id();
     my $organism_link =   "/chado/organism.pl?organism_id="; 
-    
     my $nodes=();
-    
-        
     my $root_node = $self->get_root();#CXGN::Phylo::Node->new();
-
     
     foreach my $s (keys %$species_hash ) {
-	
-	my $o =  CXGN::Chado::Organism->new_with_species($schema, $s);
-	if ($o) {
-	    my $organism_id = $o->get_organism_id();
-	    #if ($organism_id != $species_hash->{$s} ) { 
-	#	
-	#    }
-	    $nodes->{$organism_id}=$o;
-	    $nodes = $self->find_recursive_parent($o, $nodes);
-	} else {
-	    $self->d( "NO ORGANISM FOUND FOR SPECIES $s  !!!!!!!!!!!\n\n");
-	}
+        my $o =  CXGN::Chado::Organism->new_with_species($schema, $s);
+        if ($o) {
+            my $organism_id = $o->get_organism_id();
+            $nodes->{$organism_id}=$o;
+            $nodes = $self->find_recursive_parent($o, $nodes);
+        } else {
+            $self->d( "NO ORGANISM FOUND FOR SPECIES $s  !!!!!!!!!!!\n\n");
+        }
     }
     
     $self->recursive_children( $nodes,  $nodes->{$root_o_id}, $root_node , $species_cache,1) ;
     
     $self->set_show_labels(1);
-    
     
     $root_node->set_name($root_o->get_species());
     $root_node->set_link($organism_link . $root_o_id);
@@ -206,13 +185,11 @@ sub build_tree  {
     
     my $newick= $self->generate_newick($root_node, 1);
        
-        
     $self->standard_layout();
     
-    my $renderer = CXGN::Phylo::PNG_tree_renderer->new($self); 
-    
-    my $leaf_count= $self->get_leaf_count();
-    my $image_height =   $leaf_count*20  > 120  ? $leaf_count*20  : 120 ;
+    my $renderer     = CXGN::Phylo::PNG_tree_renderer->new($self);
+    my $leaf_count   = $self->get_leaf_count();
+    my $image_height = $leaf_count*20  > 120  ? $leaf_count*20  : 120 ;
 
     $self->get_layout->set_image_height($image_height);
     $self->get_layout->set_image_width(800);

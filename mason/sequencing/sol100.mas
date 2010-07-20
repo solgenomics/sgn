@@ -9,26 +9,43 @@ sol100.mas - SGN page for sol100 project organism data overview in a tree format
 </%doc>
 
 <%args>
-
-$schema
-$sol
-
-
+    $schema
+    $sol
 </%args>
 
 <%perl>
 
-my $uri_dir=$c->get_conf('tempfiles_subdir') . '/tree_browser';
+my $uri_dir     = $c->get_conf('tempfiles_subdir') . '/tree_browser';
+my $tmp_dir     = $c->get_conf('basepath');
+my $sicache_dir = $c->get_conf('basepath')."/". $c->get_conf('tempfiles_subdir') . '/organism_data';
 
-my $tmp_dir=$c->get_conf('basepath');
+my $speciesinfo_cache = Cache::File->new(
+                            cache_root=>$sicache_dir,
+                            default_expires =>'16000 sec'
+                        );
 
+for my $org_id (values %$sol) {
+    my $org = CXGN::Chado::Organism->new($schema, $org_id);
+    my $info_text="?"."Name: ".$org->get_species()."?"."Common Name: ".$org->get_group_common_name()."?"."Loci Num: ".$org->get_loci_count()."?"."Phenotype Count: ".$org->get_phenotype_count()."?"."Maps Available: ".$org->has_avail_map()."?"."Genome Information: ".$org->has_avail_genome()."?"."Library Num: ".(scalar $org->get_library_list())."";
+    $speciesinfo_cache->set($org_id, $info_text, '16000 sec');
+}
 
 </%perl>
 
-<& /util/import_javascript.mas, classes=>["CXGN.Page.FormattingHelpers", "CXGN.Effects"] &>
+<& /util/import_javascript.mas,
+    classes=>["CXGN.Page.FormattingHelpers", "CXGN.Effects"]
+&>
 
 <& /page/page_title.mas, title=>"SOL100 sequencing project" &>
 <script language="javascript" type="text/javascript" src="/js/popup.js"></script>
+<div id="popup" style="visibility:hidden; position:absolute; top:0; left:0;">
+<table id="xtratbl">
+<tr><td id="org_title"><font color="#000000">Title Goes Here</font></td></tr>
+<tr><td id="org_content" bgcolor="#ffffff">
+Organism content goes here
+
+</td></tr></table>
+</div>
 
 
 <p>
@@ -38,11 +55,18 @@ This page presents a summary of all species being sequenced as part of the SOL10
 
 %if ($sol) { 
 (click on the organism  name to see more details.) <br /><br />
-  <& /util/organism_tree.mas, schema=>$schema, root=>"Solanaceae", species_hashref=>$sol, uri_dir=>$uri_dir, tmp_dir=>$tmp_dir, image_only=>1 &>
+  <& /util/organism_tree.mas,
+    schema          => $schema,
+    root            => "Solanaceae",
+    species_hashref => $sol,
+    speciesinfo_cache => $speciesinfo_cache,
+    sicache_dir     => $sicache_dir,
+    uri_dir         => $uri_dir,
+    tmp_dir         => $tmp_dir,
+    image_only      => 1
+  &>
 %    } else {
     <p>
-      No organisms found ! 
+      No organisms found !
       </p>
 %    }
-
-

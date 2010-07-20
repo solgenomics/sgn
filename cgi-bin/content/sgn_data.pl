@@ -1,9 +1,11 @@
 use strict;
+use warnings;
 
 use CXGN::Page;
-
 use CXGN::Chado::Organism;
 use CXGN::DB::DBICFactory;
+our $c;
+
 print "Content-type: text/html\n\n";
 
 # Script to display the major data content of sgn
@@ -12,13 +14,11 @@ print "Content-type: text/html\n\n";
 
 
 my $page = CXGN::Page->new("SGN data overview page", "Naama");
-#my ($force) = $page->get_encoded_arguments("force");
-
 
 my $schema = CXGN::DB::DBICFactory
     ->open_schema( 'Bio::Chado::Schema',
-                                  search_path => ['public'],
-    );
+	search_path => ['public'],
+);
 
 
 
