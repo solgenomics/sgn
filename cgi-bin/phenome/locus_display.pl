@@ -55,7 +55,7 @@ my $user_type = $user->get_user_type();
 my $locus_id = $q->param("locus_id") ;
 my $action =  $q->param("action");
 
-$c->forward_to_mason_view('/locus/index.mas',  action=> $action,  locus_id => $locus_id , person_id=>$person_id, user_type=>$user_type, dbh=>$dbh);
+$c->forward_to_mason_view('/locus/index.mas',  action=> $action,  locus_id => $locus_id , user=>$user, dbh=>$dbh);
 
 
 
@@ -84,6 +84,7 @@ print $c->render_mason("/locus/initialize.mas",
 #get all dbxref  annotations: pubmed, ncbi sequences, GO, PO, tgrc link
 ####################################################
 my @allele_objs = $locus->get_alleles();    #array of allele objects
+
 my ( $tgrc, $pubs, $pub_count, $genbank, $gb_count, $onto_ref ) =
     get_dbxref_info($locus, @allele_objs);
 
@@ -104,200 +105,14 @@ if ($locus_name) {
     
 }
 
-##########
-## Notes and Figures
-##########
-   
-    my $figure_html     = "";
-    my $m_figure_html   = "";
-    my $figure_subtitle = "";
-    my $figures_count;
-    my @more_is;
-    
-
-    if (
-        $locus_name
-        && (   $user_type eq 'submitter'
-            || $user_type eq 'curator'
-            || $user_type eq 'sequencer' )
-      )
-    {
-        $figure_subtitle .= associated_figures($locus, $person_id);
-    }
-    else {
-        $figure_subtitle .=
-          qq|<span class= "ghosted">[Add notes, figures or images]</span> |;
-    }
-
-    my @figures = $locus->get_figure_ids();
-
-    if (@figures) {    # don't display anything for empty list of figures
-        $figure_html .= qq|<table cellpadding="5">|;
-        foreach my $figure_id (@figures) {
-            $figures_count++;
-	    my $figure= SGN::Image->new($locus->get_dbh(), $figure_id);
-	    my $figure_name        = $figure->get_name();
-            my $figure_description = $figure->get_description();
-            my $figure_img  = $figure->get_image_url("medium");
-            my $small_image = $figure->get_image_url("thumbnail");
-            my $image_page  = "/image/index.pl?image_id=$figure_id";
-	    
-            my $thickbox =
-qq|<a href="$figure_img"  title="<a href=$image_page>Go to image page ($figure_name)</a>" class="thickbox" rel="gallery-figures"><img src="$small_image" alt="$figure_description" /></a> |;
-            my $fhtml =
-                qq|<tr><td width=120>|
-              . $thickbox
-              . $figure_name
-              . "</td><td>"
-              . $figure_description
-              . "</td></tr>";
-            if ( $figures_count < 3 ) { $figure_html .= $fhtml; }
-            else {
-                push @more_is, $fhtml;
-            }    #more than 3 figures- show these in a hidden div
-        }
-        $figure_html .= "</table>";  #close the table tag or the first 3 figures
-    }
-    $m_figure_html .=
-      "<table cellpadding=5>";  #open table tag for the hidden figures #4 and on
-    my $more = scalar(@more_is);
-    foreach (@more_is) { $m_figure_html .= $_; }
-
-    $m_figure_html .= "</table>";    #close tabletag for the hidden figures
-    my $more_images;
-    if (@more_is) {    #html_optional_show if there are more than 3 figures
-        $more_images = html_optional_show(
-            "Images",
-            "<b>See $more more figures...</b>",
-            qq| $m_figure_html |,
-            0,                        #< do not show by default
-            'abstract_optional_show', #< don't use the default button-like style
-        );
-    }
-    print info_section_html(
-        title       => "Notes and figures (" . scalar(@figures) . ")",
-        subtitle    => $figure_subtitle,
-        contents    => $figure_html . $more_images,
-        collapsible => 1,
-        collapsed   => 1,
-    );
-
+##########################################
 #################################
     #display individuals section
 #################################
-    my $individuals_html = "";
-    my $ind_subtitle     = "";
-    if (
-        $locus_name
-        && (   $user_type eq 'curator'
-            || $user_type eq 'submitter'
-            || $user_type eq 'sequencer' )
-      )
-    {
-        $ind_subtitle .=
-qq| <a href="javascript:Tools.toggleContent('associateIndividualForm', 'locus_accessions')">[Associate accession]</a> |;
-        $individuals_html = associate_individual($locus, $person_id);
-    }
-    else {
-        $ind_subtitle .=
-          qq|<span class= "ghosted">[Associate accession]</span> |;
-    }
-    my ( $html, $ind_count ) = get_individuals_html($locus, $user_type);
-    $individuals_html .= $html;
 
-    print info_section_html(
-        title       => "Accessions and images  ($ind_count)",
-        subtitle    => $ind_subtitle,
-        contents    => $individuals_html,
-        id          => "locus_accessions",
-        collapsible => 1,
-        collapsed   => 1,
-    );
-
-#################################
-    #display alleles section
-#################################
-
-    my $allele_count = scalar(@allele_objs);
-
-    #map the allele objects to an array ref of the alleles data
-    my @allele_data;
-    my $allele_data;
-    my $allele_subtitle;
-    if (
-        $locus_name
-        && (   $user_type eq 'submitter'
-            || $user_type eq 'curator'
-            || $user_type eq 'sequencer' )
-      )
-    {
-        $allele_subtitle .=
-qq { <a href="allele.pl?locus_id=$locus_id&amp;action=new">[Add new allele]</a>};
-    }
-    else {
-        $allele_subtitle .=
-          qq | <span class="ghosted">[Add new Allele]</span> |;
-    }
-
-    foreach my $a (@allele_objs) {
-
-        my $allele_id = $a->{allele_id};
-
-        my $allele_synonyms;
-        my @allele_aliases = $a->get_allele_aliases();
-        foreach my $a_synonym (@allele_aliases) {
-            $allele_synonyms .= $a_synonym->get_allele_alias() . "  ";
-        }
-        if ( !$allele_synonyms ) { $allele_synonyms = "[add new]"; }
-        my $allele_synonym_link =
-qq |<a href= "allele_synonym.pl?allele_id=$allele_id&amp;action=new">$allele_synonyms</a> |;
-        my $allele_edit_link = get_allele_edit_links($a, $user);
-        my $phenotype        = $a->get_allele_phenotype();
-        my @individuals      = $a->get_individuals();
-        my $individual_link  = "";
-        my $ind_count        = scalar(@individuals);
-
-        $individual_link .=
-qq|<a href="allele.pl?action=view&amp;allele_id=$allele_id">$ind_count </a>|;
-
-        push @allele_data,
-          [
-            map { $_ } (
-                "<i>" . $a->get_allele_symbol . "</i>",
-                $a->get_allele_name,
-                $allele_synonym_link,
-qq|<div align="left"><a href="allele.pl?action=view&amp;allele_id=$allele_id"> |
-                  . $phenotype
-                  . "</a></div>",
-                $individual_link,
-                $allele_edit_link,
-            )
-          ];
-
-    }
-    if (@allele_data) {
-
-        $allele_data .= columnar_table_html(
-            headings => [
-                'Allele symbol', 'Allele name',
-                'Synonyms',      'Phenotype',
-                'Accessions',
-            ],
-            data         => \@allele_data,
-            __alt_freq   => 2,
-            __alt_width  => 1,
-            __alt_offset => 3,
-        );
-    }
-
-    print info_section_html(
-        title       => "Known alleles ($allele_count)",
-        subtitle    => $allele_subtitle,
-        contents    => $allele_data,
-        collapsible => 1,
-        collapsed   => 1,
-    );
-
+###        id          => "locus_accessions", ##########this is important for the 'associate' form
+   
+#
     ###########################               ASSOCIATED LOCI
     #my @locus_groups= $locus->get_locusgroups();
     #my $direction;
@@ -503,18 +318,6 @@ print info_section_html(
     );
 
 
-####add page comments
-my $comments;
-
-if ($locus_name) {
-
-    $comments = $c->render_mason('/page/comments.mas', object_type=>'locus', object_id=>$locus_id, referer=>$script);
-    
-}
-print $comments;
-
-
-
 #########################################################
 #functions used in the locus page:
 ##
@@ -652,143 +455,6 @@ sub get_pub_info {
 }    #
 
 
-sub get_individuals_html {
-    my $locus        = shift;
-    my $user_type=shift;
-    my @individuals = $locus->get_individuals();
-
-    my $html;
-    my %imageHoA
-      ; # hash of image arrays. Keys are individual_ids, values are arrays of image_ids
-    my %individualHash;
-    my %imageHash;
-    my @no_image;
-    my $more_html;
-    my $more;    #count the number of accessions in the optional_show box
-    my $count
-      ; # a scalar for checking if there are accessions with images in the optional box
-
-    if (@individuals) {
-        $html      .= "<table>";
-        $more_html .= "<table>";
-
-        my %imageHoA
-          ; # hash of image arrays. Keys are individual ids values are arrays of image ids
-        foreach my $i (@individuals) {
-            my $individual_id   = $i->get_individual_id();
-            my $individual_name = $i->get_name();
-            $individualHash{$individual_id} = $individual_name;
-
-            my @images =
-              $i->get_images();    #array of all associated image objects
-            foreach my $image (@images) {
-                my $image_id = $image->get_image_id();
-
-                #my $img_src_tag= $image->get_img_src_tag("thumbnail");
-                $imageHash{$image_id} = $image;
-                push @{ $imageHoA{$individual_id} }, $image_id;
-            }
-
-            #if there are no associated images with this individual:
-            if ( !@images ) { push @no_image, $individual_id; }
-        }
-        my $ind_count = 0;
-
-        # Print the whole thing sorted by number of members and name.
-        for
-          my $individual_id ( sort { @{ $imageHoA{$b} } <=> @{ $imageHoA{$a} } }
-            keys %imageHoA )
-        {
-            $ind_count++;
-            my $individual_name = $individualHash{$individual_id};
-            my $individual_obsolete_link =
-              get_individual_obsolete_link($locus,$individual_id, $user_type);
-            my $link =
-qq|<a href="individual.pl?individual_id=$individual_id">$individual_name </a>  |;
-            if ( $ind_count < 4 )
-            { #print the first 3 individuals by default. The rest will be hidden
-                $html .=
-qq|<tr valign="top"><td>$link</td> <td> $individual_obsolete_link </td>|;
-            }
-            else {
-                $count++;
-                $more++;
-                $more_html .=
-                  qq|<tr><td>$link </td><td> $individual_obsolete_link</td> |;
-            }
-
-        #print only 5 images, if there are more write the number of total images
-            my $image_count = ( $#{ $imageHoA{$individual_id} } );    #+1;
-            if ( $image_count > 4 ) { $image_count = 4; }
-            for my $i ( 0 .. $image_count ) {
-                my $image_id = $imageHoA{$individual_id}[$i];
-                #my $image    = $imageHash{$image_id};
-                my $image = SGN::Image->new($locus->get_dbh(), $image_id);
-                my $small_image  = $image->get_image_url("thumbnail");
-                my $medium_image = $image->get_image_url("medium");
-                my $image_page   = "/image/index.pl?image_id=$image_id";
-                my $thickbox =
-		    qq|<a href="$medium_image" title="<a href=$image_page>Go to image page </a>" class="thickbox" rel="gallery-images"><img src="$small_image" alt="" /></a> |;
-                if ( $ind_count < 4 ) { $html .= qq|<td>$thickbox</td>|; }
-                else                  { $more_html .= qq|<td>$thickbox</td>|; }
-                $image_count--;
-            }
-            if ( $#{ $imageHoA{$individual_id} } > 4 ) {
-                my $image_count = ( $#{ $imageHoA{$individual_id} } ) + 1;
-                $html .= qq|<td>... (Total $image_count images)</td>|;
-            }
-            if   ( $ind_count < 4 ) { $html      .= "</tr>"; }
-            else                    { $more_html .= "</tr>"; }
-        }
-        $html      .= "</table><br />";
-        $more_html .= "</table><br />";
-        if ( !$count ) {
-            my $individual_name;
-            my $no_image_count = 0;
-            foreach my $individual_id (@no_image) {
-                $no_image_count++;
-                my $individual_obsolete_link =
-		    get_individual_obsolete_link($locus, $individual_id, $user_type);
-                if ( $no_image_count < 26 ) {
-                    $individual_name = $individualHash{$individual_id};
-                    $html .=
-			qq|<a href="individual.pl?individual_id=$individual_id">$individual_name</a>&nbsp$individual_obsolete_link |;
-                }
-                else {
-                    $more++;
-                    $more_html .=
-			qq|<a href="individual.pl?individual_id=$individual_id">$individual_name</a>&nbsp$individual_obsolete_link |;
-                }
-            }
-        }
-        else {
-            foreach my $individual_id (@no_image) {
-                $more++;
-                my $individual_obsolete_link =
-		    get_individual_obsolete_link($locus, $individual_id, $user_type);
-                my $individual_name = $individualHash{$individual_id};
-                $more_html .=
-		    qq|<a href="individual.pl?individual_id=$individual_id">$individual_name</a>&nbsp$individual_obsolete_link |;
-            }
-        }
-    }
-    
-    if ($more) {
-        my ( $more_link, $contents ) = collapser(
-            {
-                linktext => "<b> See $more more accessions </b>",
-		
-                #hide_state_linktext => $title,
-                content   => $more_html,
-                collapsed => 1,
-                id        => "more_individuals_display"
-            }
-	    );
-        $html .= "$more_link\n$contents";
-    }
-    return ( $html, scalar(@individuals) );
-}    #get_individuals_html
-
 ############################javascript code
 
 
@@ -830,47 +496,7 @@ sub associate_individual {
 }
 
 
-sub associated_figures {
 
-    my $locus         = shift;
-    my $locus_id     = $locus->get_locus_id();
-    my $sp_person_id = shift;
-
-    my $associate_html = qq^
-       <span>
-       <a href="/image/add_image.pl?type_id=$locus_id&type=locus&action=new&refering_page=/phenome/locus_display.pl?locus_id=$locus_id"> 
-       [Add notes, figures or images]</a></span>
-^;
-
-    return $associate_html;
-}
-
-
-sub get_individual_obsolete_link {
-    my $locus                    = shift;
-    my $individual_id            = shift;
-    my $user_type = shift;
-    my $individual_obsolete_link = "";
-    my $individual_allele_id = $locus->get_individual_allele_id($individual_id);
-    if (   ( $user_type eq 'submitter' )
-	   || ( $user_type eq 'curator' )
-	   || ( $user_type eq 'sequencer' ) )
-    {
-        $individual_obsolete_link = qq| 
-	    <a href="javascript:Locus.obsoleteIndividualAllele('$individual_allele_id')">[Remove]</a>
-	    
-	    <div id='obsoleteIndividualAlleleForm' style="display: none">
-            <div id='individual_allele_id_hidden'>
-	    <input type="hidden" 
-	    value=$individual_allele_id
-	    id="$individual_allele_id">
-	    </div>
-	    </div>
-	    |;
-	
-    }
-    return $individual_obsolete_link;
-}
 
 
 #######################################################

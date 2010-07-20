@@ -9,15 +9,20 @@
 =head1 DESCRIPTION
 
 
+Requires the following javascript classes:
+<& /util/import_javascript.mas, classes => ["jQuery", "thickbox", "CXGN.Page.FormattingHelpers"] &>
+
 Parameters:
 
-=over 1
+=over 2
 
 =item images
 
-arrayref of CXGN::Image objects
+arrayref of image ids 
 
+=item dbh
 
+dstabase handle (for instantiating new SGN::Image objects)
 
 =back
 
@@ -32,6 +37,7 @@ Naama Menda <nm249@cornell.edu>
 <%args>
 
 $images
+$dbh
 
 </%args>
 
@@ -46,9 +52,9 @@ my @more_is;
 
 if (@$images) {    # don't display anything for empty list of images
   $image_html .= qq|<table cellpadding="5">|;
-  foreach my $image (@$images) {
+  foreach my $image_id (@$images) {
             $count++;
-	    my $image_id = $image->get_image_id();
+	    my $image = SGN::Image->new($dbh, $image_id);
 	    my $image_name        = $image->get_name();
             my $image_description = $image->get_description();
             my $image_img  = $image->get_image_url("medium");
@@ -90,6 +96,5 @@ if (@more_is) {    #html_optional_show if there are more than 3 figures
 
 </%perl>
 
-<& /util/import_javascript.mas, classes => ["jQuery", "thickbox", "CXGN.Page.FormattingHelpers"] &>
 
 <% $image_html %>
