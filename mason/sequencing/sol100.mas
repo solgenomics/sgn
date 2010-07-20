@@ -28,6 +28,7 @@ my $tmp_dir=$c->get_conf('basepath');
 <& /util/import_javascript.mas, classes=>["CXGN.Page.FormattingHelpers", "CXGN.Effects"] &>
 
 <& /page/page_title.mas, title=>"SOL100 sequencing project" &>
+<script language="javascript" type="text/javascript" src="/js/popup.js"></script>
 
 
 <p>
