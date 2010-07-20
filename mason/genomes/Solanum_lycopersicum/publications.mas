@@ -94,9 +94,6 @@ my @years =
 <!--creates the main heading-->
 <&| /page/info_section.mas, title=>'Publications', collapsible => 0 &>
 
-
-% my $link_id = 1;  #is incremented so that each link has a different id
-
 <!--creates the main body of publication info-->
 <!--creates a new subsection for each year-->
 % for my $year ( @years ) {
@@ -149,9 +146,9 @@ for my $pub (@all_pubs) {
 	<td class="width">Author(s):</td>
 	<td><% @names %>
 % if( @extra_names ){
-	  <a id=<% $link_id %>
+	  <a id=<% $pub->pub_id %>
 	      href="javascript:display(<% $pub->pub_id %>);"
-	      onclick="message(<% $link_id %>, <% $pub->pub_id %>);"
+	      onclick="message(<% $pub->pub_id %>, <% $pub->pub_id %>);"
           >
 	      more authors
 	  </a>
@@ -191,7 +188,6 @@ for my $pub (@all_pubs) {
     </table>
     <br />
     <br />
-% $link_id++;
   </td>
 </tr>
 </table>
