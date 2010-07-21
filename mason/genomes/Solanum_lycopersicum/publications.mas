@@ -177,6 +177,7 @@ for my $pub (@pubs) {
 	<td class="width">Volume:</td>
 	<td><% $pub->volume %></td>
       </tr>
+% if( $pub->issue ) {
       <tr>
 	<td class="width">Issue:</td>
 	<td><% $pub->issue %></td>
@@ -185,6 +186,7 @@ for my $pub (@pubs) {
 	<td class="width">Pages:</td>
 	<td><% $pub->pages %></td>
       </tr>
+% }
 % if( $pmid ){
       <tr>
 	<td class="width">Pubmed:</td>
