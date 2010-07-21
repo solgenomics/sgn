@@ -85,13 +85,12 @@ sub recursive_children {
     $content =~ s/\?/<br\/>/g;
     $n->set_tooltip( $n->get_name() );
     $n->set_onmouseover(
-        "javascript:showPopUp('popup','$content','<b>.$o->get_species()</b>')");
+        "javascript:showPopUp('popup','$content','<b>" . $o->get_species()
+        . "</b>')");
     $n->set_onmouseout("javascript:hidePopUp('popup');");
     $n->get_label()->set_name( " " . $o->get_species() );
     $n->get_label()
-      ->set_onmouseover( "javascript:showPopUp('popup','" 
-          . $content 
-          . "','<b>"
+      ->set_onmouseover( "javascript:showPopUp('popup','$content','<b>"
           . $o->get_species()
           . "</b>')" );
     $n->get_label()->set_onmouseout("javascript:hidePopUp('popup');");
@@ -128,9 +127,7 @@ sub recursive_children {
 =cut
 
 sub find_recursive_parent {
-    my $self     = shift;
-    my $organism = shift;
-    my $nodes    = shift;    # hash ref
+    my ($self, $organism, $nodes) = @_;
 
     my $parent = $organism->get_parent;
     if ($parent) {
