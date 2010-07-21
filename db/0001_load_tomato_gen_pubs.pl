@@ -178,13 +178,16 @@ my @titles = ('A Snapshot of the Emerging Tomato Genome Sequence', 'Estimation o
 
 
 #---add pubmed publications to pubprop---
-my $db = $schema->resultset('General::Db')->find({name => 'PMID'});
+my $pmdb = $schema->resultset('General::Db')->find({name => 'PMID'})
+    or die "no db found with name 'PMID'";
 
 foreach my $item ( @pmid ) {
-    my $dbxref = $db->find_related(
+    my $dbxref = $pmdb->find_related(
         'dbxrefs',
         {accession => $item}
-       );
+       )
+        or die "no dbxref found for PMID $item";
+
     my $pub = $dbxref->find_related('pub_dbxrefs', {})
                      ->find_related('pub', {})
                      ->create_pubprops(
