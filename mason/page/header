@@ -1,7 +1,0 @@
-
-   
-%   use CXGN::Page;
-%   my $page = CXGN::Page->new();
-%   $page->header();
-
-
