@@ -190,13 +190,13 @@ for my $pub (@pubs) {
 % if( $pubmed
 %      and  my $pm_dbx = $pub->search_related('pub_dbxrefs', {})
 %                            ->search_related('dbxref', { db_id => $pubmed->db_id } )
-%                           ->first
+%                            ->first
 %    ) {
       <tr>
 	<td class="width">Pubmed:</td>
 	<td><a target="_blank"
 	href="http://www.ncbi.nlm.nih.gov/sites/pubmed/<% $pm_dbx->accession %>">
-	Click to see article in Pubmed
+	Pubmed ID <% $pm_dbx->accession %>
 	</a>
 	</td>
       </tr>
