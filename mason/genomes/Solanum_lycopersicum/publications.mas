@@ -72,6 +72,9 @@
 use CXGN::Page::FormattingHelpers;
 use List::MoreUtils qw/uniq/;
 
+my $pubmed = $schema->resultset('General::Db')
+                    ->find({ name => 'PMID' });
+
 ### get all publications from pubprop database, then index them by pub year
 my @pubs =
     $schema->resultset('Cv::Cvterm')
@@ -102,7 +105,7 @@ for my $pub (@pubs) {
 
 %        # render each of the publications for this year
 %        for my $pub ( @$pubs ) {
-            <& .publication, pub => $pub &>
+            <& .publication, pub => $pub, pubmed => $pubmed &>
 %        }
       </&>
 %   }
@@ -114,13 +117,10 @@ for my $pub (@pubs) {
 <%def .publication >
 <%args>
   $pub
+  $pubmed
 </%args>
 
 <%perl>
-    my $pmid = $pub->search_related('pub_dbxrefs', {})
-                   ->search_related('dbxref', {})
-                   ->first
-                   ->accession;
 
     #---getting authors - if the list is too long, only show the first 10,
     #---the rest of the authors are shown once a link is clicked
@@ -182,16 +182,20 @@ for my $pub (@pubs) {
 	<td class="width">Issue:</td>
 	<td><% $pub->issue %></td>
       </tr>
+% }
       <tr>
 	<td class="width">Pages:</td>
 	<td><% $pub->pages %></td>
       </tr>
-% }
-% if( $pmid ){
+% if( $pubmed
+%      and  my $pm_dbx = $pub->search_related('pub_dbxrefs', {})
+%                            ->search_related('dbxref', { db_id => $pubmed->db_id } )
+%                           ->first
+%    ) {
       <tr>
 	<td class="width">Pubmed:</td>
 	<td><a target="_blank"
-	href="http://www.ncbi.nlm.nih.gov/sites/pubmed/<% $pmid %>">
+	href="http://www.ncbi.nlm.nih.gov/sites/pubmed/<% $pm_dbx->accession %>">
 	Click to see article in Pubmed
 	</a>
 	</td>
