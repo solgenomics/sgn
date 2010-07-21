@@ -43,23 +43,28 @@
 
 
 <script type="text/javascript">
-  function display(pub_id){
-    if (document.getElementById(pub_id).style.visibility == "visible"){
-       document.getElementById(pub_id).style.visibility="collapse";
-    }
-    else{
-      document.getElementById(pub_id).style.visibility="visible";
-    }
-  }
+function get_author_elements( id_base ) {
+  return {
+      fewer_link: document.getElementById( "fewer_"   + id_base ),
+      all_link:   document.getElementById( "all_"   + id_base ),
+      authors: document.getElementById( "extra_" + id_base )
+ };
+}
+function authors_on( id_base ) {
+  var stuff = get_author_elements( id_base );
 
-  function message(link_id, pub_id){
-      if (document.getElementById(pub_id).style.visibility == "visible"){
-        document.getElementById(link_id).innerHTML = "more authors";
-      }
-      else{
-        document.getElementById(link_id).innerHTML = "show less";
-      }
-  }
+  stuff.fewer_link.style.display = "inline";
+  stuff.all_link.style.display   = "none";
+  stuff.authors.style.display    = "inline";
+}
+function authors_off( id_base ) {
+  var stuff = get_author_elements( id_base );
+
+  stuff.fewer_link.style.display = "none";
+  stuff.all_link.style.display   = "inline";
+  stuff.authors.style.display    = "none";
+}
+
 </script>
 
 <& /page/page_title.mas, title => "Tomato Genome Publications" &>
@@ -151,16 +156,10 @@ for my $pub (@pubs) {
 	<td class="width">Author(s):</td>
 	<td><% $names %>
 % if( $extra_names ){
-	  <a id="<% $pub->pub_id %>"
-	     href="javascript:display(<% $pub->pub_id %>);"
-             onclick="message(<% $pub->pub_id %>, <% $pub->pub_id %>);"
-          >
-	      more authors
-	  </a>
-	  <tr id=<% $pub->pub_id %> class="author">
-	    <td> </td>
-	    <td><% $extra_names %></td>
-	  </tr>
+%   my $id = $pub->pub_id;
+          <span style="display: none" id="extra_<% $id %>"><% $extra_names %></span>
+          <a style="display: none" id="fewer_<% $id %>" href="javascript:authors_off(<% $id %>)">show fewer</a>
+          <a id="all_<% $id %>" href="javascript:authors_on(<% $id %>)">show all</a>
 %  }
 	</td>
       </tr>
