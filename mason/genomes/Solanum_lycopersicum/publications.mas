@@ -124,26 +124,19 @@ for my $pub (@pubs) {
 
     #---getting authors - if the list is too long, only show the first 10,
     #---the rest of the authors are shown once a link is clicked
-    my @author = reverse $pub->search_related('pubauthors', {});
-    my @names;
-    if ( $#author <= 10 ){
-        foreach my $a ( @author ){
-            push( @names, $a->givennames." ".$a->surname.", ");
-         }
-    } else {
-        for (my $i = 0; $i <= 10; $i++){
-            push( @names, $author[$i]->givennames." ".
-                  $author[$i]->surname.", ");
-        }
-    }
+    my @authors = $pub->search_related('pubauthors', {}, { order_by => 'rank' });
+    my @names =
+          join ', ',
+          map $_->givennames." ".$_->surname,
+          grep $_,
+          @authors[ 0..9 ];
 
-    my @extra_names;
-    if ($#author > 10){
-        for(my $i = 11; $i <= $#author; $i++){
-            push(@extra_names, $author[$i]->givennames." ".
-		 $author[$i]->surname.", ");
-        }
-    }
+    my @extra_names =
+          join ', ',
+          map $_->givennames." ".$_->surname,
+          grep $_,
+          @authors[ 10..$#authors ];
+
 </%perl>
 
 <table class="year">
