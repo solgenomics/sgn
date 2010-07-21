@@ -17,7 +17,7 @@ load_map_data.pl - a script to load maps into the SGN database.
 
 =head1 DESCRIPTION
 
-usage: load_map_data -H dbhost -D dbname [-r] -i map_id <map file>
+usage: load_map_data -H dbhost -D dbname [-r] [-n "map name"] [-i map_id] <map file>
 
 example: load_map_data.pl -H devel -D sandbox -r -i 9 map-file.csv
 
@@ -35,11 +35,15 @@ the name of the database
 
 =item -r
 
-if present, rollback after the script terminates. Database should not be affected. Good for test runs.
+(optional) if present, rollback after the script terminates. Database should not be affected. Good for test runs.
 
-=item -i 
+=item -i
 
-the map_id. If not present, will insert a brand new map (confirm dialog).
+(optional) the map_id. If not present, will insert a brand new map (confirm dialog).
+
+=item -n
+
+required if -i is not used. Provides the map name.
 
 =back
 
@@ -47,7 +51,7 @@ The tab-delimited map file has the following columns:
 
  Marker 
  Confidence 
- Chromosome 
+ Linkage_group 
  Position 
  Protocol
 
@@ -75,14 +79,9 @@ use CXGN::DB::InsertDBH;
 use Data::Dumper;
 
 
-our ($opt_H, $opt_D, $opt_i, $opt_r);
+our ($opt_H, $opt_D, $opt_i, $opt_r, $opt_n);
 
-getopts('H:D:i:r');
-
-
-CXGN::DB::Connection->verbose(0);
-
-
+getopts('H:D:i:rn:');
 
 my $map_id;
 my $map_file;
@@ -129,13 +128,9 @@ eval {
 	if ($key =~ /Y/i) { 
 	    print "Inserting a new map...\n";
 	    
-	    my $map = CXGN::Map->new($dbh);
+	    my $map = CXGN::Map->new_map($dbh, $opt_n);
 	    
-	    $map->set_short_name('New untitled map');
-	    $map->set_abstract('No abstract yet');
-	    $map->set_map_type('genetic');
-	    
-	    $map_id = $map->store();
+	    $map_id = $map->get_map_id();
 	    
 	    print "New map_id: $map_id\n";
 	    
@@ -228,7 +223,13 @@ eval {
 	my $conf;
 	# get confidence from spreadsheet
         $conf = $ss->value_at($dirty_marker_name,'CONFIDENCE') or $conf='uncalculated';
-
+	if ($conf=~/^(\d+)$/) { 
+	    if ($conf == 0) { $conf = "I"; }
+	    elsif ($conf == 1) { $conf = "I(LOD2)"; }
+	    elsif ($conf == 2) { $conf = "CF(LOD3)"; }
+	    elsif ($conf == 3) { $conf = "F(LOD3)"; }
+	    else { $conf = "uncalculated"; }
+	}
 	# get protocol from spreadsheet
         my $protocols_string=uc($ss->value_at($dirty_marker_name,'PROTOCOL'));
 	# some entries have been mapped to the same location by more than 
@@ -259,10 +260,13 @@ eval {
 	    # else how would it be able to know different linkage groups on 
 	    # different map versions from each other, when they all have the same names?)
             $loc->lg_name($chromosome);
+
 	    #set the position of the marker on this linkage group
             $loc->position($position);
+
 	    # set the confidence with which this marker is mapped at this position
             $loc->confidence($conf);
+
 	    # set the subscript for this location, because the same marker 
 	    # can be mapped to multiple locations, and these locations must be distinguishable
             $loc->subscript($subscript);
