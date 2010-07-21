@@ -149,9 +149,9 @@ for my $pub (@pubs) {
 	<td class="width">Author(s):</td>
 	<td><% @names %>
 % if( @extra_names ){
-	  <a id=<% $pub->pub_id %>
-	      href="javascript:display(<% $pub->pub_id %>);"
-	      onclick="message(<% $pub->pub_id %>, <% $pub->pub_id %>);"
+	  <a id="<% $pub->pub_id %>"
+	     href="javascript:display(<% $pub->pub_id %>);"
+             onclick="message(<% $pub->pub_id %>, <% $pub->pub_id %>);"
           >
 	      more authors
 	  </a>
