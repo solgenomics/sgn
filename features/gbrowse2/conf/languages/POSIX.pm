@@ -48,13 +48,15 @@ END
 
    BOOKMARK => 'Bookmark this',
 
+   CHROM_SIZES => 'Get chrom sizes',
+
    EXPORT => 'Export as...',
 
-   IMAGE_LINK => '...low-res image',
+   IMAGE_LINK => '...low-res PNG image',
 
-   SVG_LINK   => '...high-res image',
+   SVG_LINK   => '...editable SVG image',
 
-   PDF_LINK   => '...PDF',
+   PDF_LINK   => '...high-res PDF',
    
    DUMP_GFF   => '...GFF annotation table',
 
@@ -149,6 +151,8 @@ END
 
    TRACKS   => 'Tracks',
 
+   SELECT_TRACKS   => 'Select Tracks',
+
    TRACK_SELECT   => 'Search for Specific Tracks',
 
    TRACK_NAME     => 'Track name',
@@ -167,7 +171,9 @@ END
 
    HELP_WITH_BROWSER     => 'Help with this browser',
 
-   HELP_FORMAT => 'Help with uploading',
+   HELP_FORMAT_UPLOAD => 'Help with uploading custom tracks',
+
+   HELP_FORMAT_IMPORT => 'Help with importing custom tracks',
 
    CANCEL   => 'Cancel',
 
@@ -185,7 +191,9 @@ END
 
    CONFIGURE_TRACKS   => 'Configure tracks...',
 
-   SELECT_SUBTRACKS   => 'Click to select subtracks...',
+   SUBTRACK_INSTRUCTIONS   => 'Select the tracks you wish to display. Sort the tracks by clicking on the column headings, or by clicking and dragging rows into position.',
+
+   SELECT_SUBTRACKS   => '%d of %d subtracks selected',
 
    EDIT       => 'Edit File...',
 
@@ -442,6 +450,10 @@ END
 
  ADD_YOUR_OWN_TRACKS => 'Add custom tracks',
 
+ ADD_DESCRIPTION    => 'Click to add a description',
+
+ CONFIGURATION     => 'Configuration',
+
  INVALID_SOURCE    => 'The source named %s is invalid.',
 
  NO_SEGMENT        => 'No genomic region selected.',
@@ -455,6 +467,34 @@ END
  PACKING          => 'Packing',
 
  GLYPH            => 'Shape',
+
+ XYPLOT_TYPE      => 'xyplot subtype',
+
+ WHISKERS_TYPE      => 'whiskers subtype',
+
+ BICOLOR_PIVOT    => 'Switch colors when value crosses',
+
+ BICOLOR_PIVOT_VALUE    => 'Switch point value',
+
+ BICOLOR_PIVOT_POS_COLOR    => 'Color above switch point',
+
+ BICOLOR_PIVOT_NEG_COLOR    => 'Color below switch point',
+
+ WHISKER_MEAN_COLOR    => 'Color from 0 to mean value',
+
+ WHISKER_STDEV_COLOR    => 'Color from mean to stdev value',
+
+ WHISKER_MAX_COLOR    => 'Color from stdev to min/max value',
+
+ SCALE_MIN        => 'Minimum scale value',
+
+ SCALE_MAX        => 'Maximum scale value',
+
+ SHOW_VARIANCE    => 'Show variance band',
+
+ APPLY_CONFIG     => 'Apply this config when region >=',
+
+ SHOW_SUMMARY     => 'Show summary when region >=',
 
  LINEWIDTH        => 'Line width',
 
@@ -482,11 +522,15 @@ END
 
  SHOW_OR_HIDE_TRACK => '<b>Show or hide this track</b>',
 
- KILL_THIS_TRACK    => '<b>Turn off this track.</b>',
+ KILL_THIS_TRACK    => '<b>Turn off this track</b>',
 
- CONFIGURE_THIS_TRACK   => '<b>Click to configure this track.</b>',
+ CONFIGURE_THIS_TRACK   => '<b>Configure this track</b>',
 
- SUBTRACKS_SHOWN    => 'This track contains selectable subtracks:',
+ DOWNLOAD_THIS_TRACK   => '<b>Download this track</b>',
+
+ ABOUT_THIS_TRACK   => '<b>About this track</b>',
+
+ SUBTRACKS_SHOWN    => 'This track contains selectable subtracks. Click to modify the selection or change subtrack order.',
 
  SHOW_SUBTRACKS     => '<b>Select subtracks</b>',
 
@@ -499,7 +543,7 @@ END
  SHARE              => 'Share %s',
 
  SHARE_INSTRUCTIONS_BOOKMARK => <<END,
-To <b>share</b this track with another user, copy the URL below and
+To <b>share</b> this track with another user, copy the URL below and
 send it to him or her.
 END
 
@@ -537,5 +581,9 @@ END
     MAIN_PAGE          => 'Browser',
     CUSTOM_TRACKS_PAGE => 'Upload and Share Tracks',
     SETTINGS_PAGE      => 'Preferences',
+
+    DOWNLOAD_TRACK_DATA_REGION => 'Download track data across region %s',
+    DOWNLOAD_TRACK_DATA_CHROM => 'Download track data across ENTIRE chromosome %s',
+    DOWNLOAD_TRACK_DATA_ALL => 'Download ALL DATA for this track',
 
 };

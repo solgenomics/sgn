@@ -39,24 +39,26 @@ $search->page_size(15);
 
 my @results;
 
-
+my $qtl_mark;
 if (%params)
 {
 
-    my $cv      = CXGN::Phenome::Qtl::Tools->new();    
-    my $tickmark = "&#10003;";
-    my $qtl_mark = qq |<font size=4 color="#0033FF">$tickmark</font> |;
+    my $cv       = CXGN::Phenome::Qtl::Tools->new();    
+    my $tickmark = qq| &#10003;|;
+    my $x        = 'X';    
     $query->order_by( cvterm_name => '' );
     my $result = $search->do_search($query);    #execute the search
     while ( my $r = $result->next_result )
     {      
-        my $has_qtl = $cv->is_from_qtl( $r->[0] );      
-        my $x        = 'x';
-        if (!$has_qtl)
+        my $has_qtl = $cv->is_from_qtl( $r->[0] );	       
+        if ($has_qtl)
         { 
+	    $qtl_mark = qq |<font size=4 color="#0033FF">$tickmark</font> |; 
+	} else {
 	    $qtl_mark = qq|<font size=4 color="red">$x</font> |; 
+	   
 	}
-
+	
         push @results,
           [
             map { $_ } (

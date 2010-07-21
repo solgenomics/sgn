@@ -19,18 +19,23 @@ my $repos = CXGN::PotatoGenome::FileRepository->new( "$tempdir" );
 
 my $ctl = SGN::Controller::Clone::Genomic->new;
 my $clone = CXGN::Genomic::Clone->retrieve_from_clone_name( 'RH123D21' );
-my $test_vf = $repos->get_vf( class => 'SingleCloneSequence',
-			      sequence_name => $clone->latest_sequence_name,
-			      format => 'fasta',
-			      project => $clone->seqprops->{project_country} );
-$repos->publish( $test_vf->publish_new_version( $tempfile->filename ) );
 
 SKIP: {
-    skip 'could not retrieve clone, cannot test _potato_seq_files', 2
-	unless $clone;
+    my $test_vf;
+    eval {
+        $test_vf = $repos->get_vf( class => 'SingleCloneSequence',
+                        sequence_name => $clone->latest_sequence_name,
+                        format => 'fasta',
+                        project => $clone->seqprops->{project_country} );
+    };
+    skip 'could not retrieve clone, cannot test _potato_seq_files', 1 unless $test_vf;
+
+    $repos->publish( $test_vf->publish_new_version( $tempfile->filename ) );
+
+    skip 'could not retrieve clone, cannot test _potato_seq_files', 1 unless $clone;
 
     my %files = $ctl->_potato_seq_files( undef, $clone, $tempdir );
     ok( -f $files{seq}, 'got a potato seq file' )
-	or diag Dumper { files =>  \%files, find => scalar(`find $tempdir`) };
+    or diag Dumper { files =>  \%files, find => scalar(`find $tempdir`) };
 }
 

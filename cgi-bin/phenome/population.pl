@@ -1,4 +1,5 @@
 use strict;
+use warnings;
 
 my $population_detail_page = CXGN::Phenome::PopulationDetailPage->new();
 
@@ -75,11 +76,9 @@ sub generate_form {
     my $form = undef;
     
     if ($self->get_action()=~/edit|store/ && ($login_user_id = $submitter || $self->get_user()->get_user_type() eq 'curator') ) { 
-	print STDERR "Generating EditableForm..\n";
 	$form = CXGN::Page::Form::Editable->new();
     }
     else { 
-	print STDERR "Generating static Form...\n";
 	$form = CXGN::Page::Form::Static->new();
     }
        
@@ -176,7 +175,6 @@ EOS
     
     print page_title_html("Population: $population_name \n");
     
-    my $page="../phenome/population.pl?population_id=$population_id";
     $args{calling_page} = $page;
     
     my $population_html = $self->get_edit_link_html(). "\t[<a href=/phenome/qtl_form.pl>New QTL Population</a>] <br />";
@@ -185,10 +183,22 @@ EOS
     $population_html .= $self->get_form()->as_table_string(); 
 
     
-    my $phenotype = ""; 
+    my ($phenotype, $is_qtl_pop); 
     my @phenotype;
     my $graph_icon = qq |<img src="../documents/img/pop_graph.png"/> |;
     
+    my $qtltool = CXGN::Phenome::Qtl::Tools->new();
+    my @pops = $qtltool->has_qtl_data();
+
+    foreach my $pops (@pops) 
+    {
+	my $pops_id = $pops->get_population_id();
+	if ($pops_id == $population_id) 
+	{
+	    $is_qtl_pop = 1;
+	}
+    }
+
     if ($population->get_web_uploaded()) {
 	my @traits = $population->get_cvterms();
 
@@ -202,20 +212,19 @@ EOS
 	    my $trait_link;	    
 	    my $cvterm_id = $cvterm_obj->get_cvterm_id();
 	    if ($cvterm_id)
-	    {
-	
-		print STDERR "cvterm_id: $cvterm_id\n";
+	    {		
 		$trait_link = qq |<a href="/chado/cvterm.pl?cvterm_id=$cvterm_id">$trait_name</a>|; 
 
 	    } else
-	    {	
-		print STDERR "trait_id: $trait_id\n";
+	    {		
 		$trait_link = qq |<a href="/phenome/trait.pl?trait_id=$trait_id">$trait_name</a>|; 
 	    }
 	    
-
-	    if ($definition) {
-		push  @phenotype,  [map {$_} ( (tooltipped_text($trait_link, $definition)), 
+	    if ($is_qtl_pop) 
+	    {	    
+		if ($definition) 
+		{
+		    push  @phenotype,  [map {$_} ( (tooltipped_text($trait_link, $definition)), 
                                     $min, $max, $avg, 
                            qq | <a href="/phenome/population_indls.pl?population_id=$population_id&amp;cvterm_id=$trait_id">
                                  $count</a> 
@@ -223,24 +232,41 @@ EOS
                            qq | <a href="/phenome/population_indls.pl?population_id=$population_id&amp;cvterm_id=$trait_id">
                                   $graph_icon</a> 
                               | )];
-	    } else  { push  @phenotype,  [map {$_} ($trait_name, $min, $max, $avg, 
+		} else  
+		{ 
+		    push  @phenotype,  [map {$_} ($trait_name, $min, $max, $avg, 
                           qq | <a href="/phenome/population_indls.pl?population_id=$population_id&amp;cvterm_id=$trait_id">
                              $count</a> 
                              |,
                            qq | <a href="/phenome/population_indls.pl?population_id=$population_id&amp;cvterm_id=$trait_id">
                                   $graph_icon</a> 
                               |  )];
+		}
+	    } else 
+	    {
+		if ($definition) 
+		{
+		    push  @phenotype,  [map {$_} ( (tooltipped_text( $trait_link, $definition )), 
+                                    $min, $max, $avg, $count )];
+		} else  
+		{ push  @phenotype,  [map {$_} ( $trait_name, $min, $max, $avg, $count )];
+		}
 	    }
 	}
     }
      else {
 	 my @cvterms = $population->get_cvterms();
-	 foreach my $cvterm(@cvterms)  {	
+	 foreach my $cvterm(@cvterms)  
+	 {	
 	     my ($min, $max, $avg, $std, $count)= $population->get_pop_data_summary($cvterm->get_cvterm_id());
 	     my $cvterm_id = $cvterm->get_cvterm_id();
 	     my $cvterm_name = $cvterm->get_cvterm_name();
-	     if ($cvterm->get_definition()) {
-		 push  @phenotype,  [map {$_} ( (tooltipped_text( qq|<a href="/chado/cvterm.pl?cvterm_id=$cvterm_id">
+	     
+	     if ($is_qtl_pop) 
+	     {
+		 if ($cvterm->get_definition()) 
+		 {
+		     push  @phenotype,  [map {$_} ( (tooltipped_text( qq|<a href="/chado/cvterm.pl?cvterm_id=$cvterm_id">
                                                                       $cvterm_name</a>
                                                                      |, 
                                     $cvterm->get_definition())), $min, $max, $avg, 
@@ -250,7 +276,8 @@ EOS
 		          qq | <a href="/phenome/population_indls.pl?population_id=$population_id&amp;cvterm_id=$cvterm_id">
                                $graph_icon</a> 
                              | ) ];
-	     } else  { push  @phenotype,  [map {$_} (qq | <a href="/chado/cvterm.pl?cvterm_id=$cvterm_id">$cvterm_name</a>|, 
+		 } else  
+		 { push  @phenotype,  [map {$_} (qq | <a href="/chado/cvterm.pl?cvterm_id=$cvterm_id">$cvterm_name</a>|, 
                             $min, $max, $avg, 
                      qq | <a href="/phenome/population_indls.pl?population_id=$population_id&amp;cvterm_id=$cvterm_id">
                           $count</a> 
@@ -258,6 +285,20 @@ EOS
                      qq | <a href="/phenome/population_indls.pl?population_id=$population_id&amp;cvterm_id=$cvterm_id">
                           $graph_icon</a> 
                         |  ) ];
+		 }
+	     } else 
+	     {
+		 if ($cvterm->get_definition()) 
+		 {
+		     push  @phenotype,  [map {$_} ( (tooltipped_text( qq|<a href="/chado/cvterm.pl?cvterm_id=$cvterm_id">
+                                                                      $cvterm_name</a>
+                                                                     |, 
+                                    $cvterm->get_definition())), $min, $max, $avg, $count) ];
+		 } else  
+		 { 
+		     push  @phenotype,  [map {$_} (qq | <a href="/chado/cvterm.pl?cvterm_id=$cvterm_id">$cvterm_name</a>|, 
+                            $min, $max, $avg, $count ) ];
+		 }
 	     }
 	 }
      }   
@@ -268,8 +309,10 @@ EOS
     
     my ($phenotype_data, $data_view, $data_download);
     
-    if (@phenotype) {
-	$phenotype_data = columnar_table_html(headings => [
+    if (@phenotype) 
+    {
+	if ($is_qtl_pop) {
+	    $phenotype_data = columnar_table_html(headings => [
 							   'Trait',
 							   'Minimum',
 							   'Maximum',
@@ -283,17 +326,37 @@ EOS
 					      __alt_offset =>3,
 					      __align =>'l',
 					      );
-        
-# 	$data_view = html_optional_show("phenotype",
-# 					'View/hide phenotype data summary',
-# 					qq|$phenotype_data</b>|,
-# 					1, #<  show data by default
-# 					);
-
-	$data_download .=  qq { <span><br/><br/>Download:<a href="pop_download.pl?population_id=$population_id"><b>\
-                                [Phenotype raw data]</b></a><a href="genotype_download.pl?population_id=$population_id">\
-                                <b>[Genotype raw data\]</b></a></span> 
+	    
+	    $data_download .=  qq { <span><br/><br/>Download:<a href="pop_download.pl?population_id=$population_id"><b>\
+                                [Phenotype raw data]</b></a> <a href="genotype_download.pl?population_id=$population_id"><b>\
+                                [Genotype raw data]</b></a></span> 
                               }; 
+	    
+
+	} else 
+	{
+	    $phenotype_data = columnar_table_html(headings => [
+							   'Trait',
+							   'Minimum',
+							   'Maximum',
+							   'Average',
+							   'No. of lines',							  
+							   ],
+					      data     =>\@phenotype,
+					      __alt_freq   =>2,
+					      __alt_width  =>1,
+					      __alt_offset =>3,
+					      __align =>'l',
+					      );
+
+	    $data_download .=  qq { <span><br/><br/>Download:<a href="pop_download.pl?population_id=$population_id"><b>\
+                                [Phenotype raw data]</b></a></span> 
+                              }; 
+
+	}
+
+	
+	
     }
    
     
@@ -469,8 +532,9 @@ sub genetic_map {
     if ($mapv_id) {
 	my $map      = CXGN::Map->new( $self->get_dbh(), { map_version_id => $mapv_id } );
 	my $map_name = $map->get_long_name();
+	my $map_sh_name = $map->get_short_name();
 	my $genetic_map =
-	    qq | <a href=/cview/map.pl?map_version_id=$mapv_id>$map_name</a>|;
+	    qq | <a href=/cview/map.pl?map_version_id=$mapv_id>$map_name ($map_sh_name)</a>|;
 
    	return $genetic_map;
     }

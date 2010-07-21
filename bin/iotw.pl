@@ -8,6 +8,7 @@
 
 use strict;
 use SGN::Config;
+use Image::Size;
 
 BEGIN {
 	$ENV{'PROJECT_NAME'} = "SGN";
@@ -79,10 +80,13 @@ my $text;
 ($image, $text) = split(/::/,  $image);
 chop($text = $text);
 
+my $desired_x = 200;
+my ($size_x, $size_y) = imgsize($fullpath.$image);
+my $scaled_y = sprintf( '%0.0f', $size_y * $desired_x / $size_x );
 my $outdesc = $fullpath . "desc.txt";
 open DESC, ">$outdesc" or die "Couldn't open $outdesc: $!\n";
 print DESC <<"EOF";
-<img width="200" hspace="0" vspace="0" border="0" src="$webpath$image" alt="IOTW, week $curr">
+<img width="$desired_x" height="$scaled_y" hspace="0" vspace="0" border="0" src="$webpath$image" alt="IOTW, week $curr">
 <br />
 $text
 

@@ -1,0 +1,72 @@
+<%doc>
+
+</%doc>
+
+<%args>
+$locus_id
+</%args>
+
+<div id='associateOntologyForm' style="display: none">
+  <div id='ontology_search'>
+    
+    Ontology term:
+    <input type="text"
+           style="width: 50%"
+           id="ontology_input"
+           onkeyup="Tools.getOntologies(this.value)">
+    <select id = "cv_select" onchange="Tools.getOntologies($('ontology_input').value)">
+      <option value="GO">GO (gene ontology)</option>
+      <option value="PO">PO (plant ontology)</option>
+      <option value="SP">SP (Solanaceae phenotypes)</option>
+    </select><br>
+    
+    <select id="ontology_select"
+            style="width: 100%"
+            name="ontology_select"
+            size=10
+            onchange="Tools.getRelationship()">
+    </select>
+    
+    Click <a href="javascript:Locus.getCvtermsList('<% $locus_id %>')">here</a> to see suggested term list
+  </div>
+  
+  <div id="cvterm_list" style="display: none">
+    <select id="cvterm_list_select"
+            style="width: 100%" size=10
+            onfocus="Tools.getRelationship()">
+    </select>
+    
+    Click <a href="javascript:Locus.searchCvterms()">here</a> to go back to ontology term search
+  </div>
+  
+  <div id ="ontology_evidence">
+    
+    <b>Relationship type:</b>
+    <select id="relationship_select" style="width: 100%"
+	    onchange="Tools.getEvidenceCode()">
+    </select>
+    <b>Evidence code:</b>
+    <select id="evidence_code_select" style="width: 100%"
+	    onchange="Tools.getEvidenceDescription();Locus.getEvidenceWith('<% $locus_id %>');Locus.getReference('<% $locus_id %>')">
+    </select>
+    
+    <b>Evidence description:</b>
+    <select id="evidence_description_select" style="width: 100%">
+    </select>
+    
+    <b>Evidence with:</b>
+    <select id="evidence_with_select" style="width: 100%">
+    </select>
+    
+    <b>Reference:</b>
+    <select id="reference_select" style="width: 100%">
+    </select>
+    <div id="ontology_select_button">
+      <input type="button"
+             id="associate_ontology_button"
+             value="associate ontology"
+             disabled="true"
+             onclick="locusPage.associateOntology('<% $locus_id %>');this.disabled=true;">
+    </div>
+  </div>
+</div>

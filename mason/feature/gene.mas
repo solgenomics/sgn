@@ -1,0 +1,105 @@
+<%args>
+    $feature
+    $blast_url => undef
+    $children  => undef
+    $parents   => undef
+</%args>
+<%init>
+    use Bio::Seq;
+    use Data::Dumper;
+</%init>
+<& /page/page_title.mas, title => 'Gene: '. $feature->id &>
+
+<& /util/import_javascript.mas,
+    classes => [qw(
+        Prototype jQuery Text.Markup CXGN.Effects CXGN.Phenome.Locus  CXGN.Phenome.Tools
+        MochiKit.DOM thickbox
+        MochiKit.Async CXGN.Sunshine.NetworkBrowser
+        CXGN.Phenome.Locus.LocusPage CXGN.Page.Form.JSFormPage
+    )]
+&>
+<& /locus/initialize.mas, locus_id => 428 &>
+
+<%perl>
+    my $seq = Bio::PrimarySeq->new(
+        -seq => $feature->residues,
+        -alphabet => 'dna',
+    );
+    my $organism = $feature->organism;
+    my $species  = $organism->species;
+    $species    =~ s!(\S+) !<i>$1</i> !;
+</%perl>
+
+<&| /page/info_section.mas,
+    title       => "Feature " . $feature->name . " (Gene)",
+    collapsible => 1,
+    collapsed   => 1,
+&>
+   <% $species%> (<%ucfirst($organism->common_name) %>)<p/>
+   Comment: <% $organism->comment %>
+</&>
+<&| /page/info_section.mas,
+        title       => 'cDNA Sequence',
+        collapsible => 1,
+        collapsed   => 1,
+&>
+  Length : <% $seq->length %><br/>
+  <% $feature->md5checksum ?  'MD5 :' . $feature->md5checksum : '' %>
+  <p/>
+    <& /feature/sequence.mas,
+            feature => $feature,
+            seq     => $seq,
+            blast_url => $blast_url,
+    &>
+</&>
+
+<&| /page/info_section.mas,
+    title => 'Exon Structure',
+    collapsible => 1,
+&>
+</&>
+
+<&| /page/info_section.mas,
+    title => 'Protein sequence',
+    collapsible => 1,
+&>
+</&>
+
+<&| /page/info_section.mas,
+    title => 'Protein domains',
+    collapsible => 1,
+&>
+</&>
+
+<&| /page/info_section.mas,
+    title => 'BLAST Annotation',
+    collapsible => 1,
+&>
+</&>
+
+<& /locus/ontology.mas,
+    feature   => $feature,
+&>
+
+<&| /page/info_section.mas,
+    title => 'Gene Families',
+    collapsible => 1,
+&>
+</&>
+
+<&| /page/info_section.mas,
+    title => 'SNPs',
+    collapsible => 1,
+&>
+</&>
+
+<& /locus/solcyc.mas, &>
+
+<&| /page/info_section.mas,
+    title => 'Alternate Splicing',
+    collapsible => 1,
+&>
+</&>
+
+
+
