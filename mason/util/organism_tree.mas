@@ -43,8 +43,6 @@ $cache->set_basedir($tmp_dir);
 my $file_key_name = $root . "-" . (join '-', sort keys %$species_hashref);
 $cache->set_key($file_key_name);
 
-print STDERR "File key name: $file_key_name\n";
-
 $cache->set_expiration_time(86400);
 my $map_name= $root . "_map";
 
@@ -65,8 +63,6 @@ if ( !$cache->is_valid() ) {
     $cache->set_image_data($image_png);
     $cache->set_image_map_data($image_map);
 }
-
-print STDERR "Cache name is ".$cache->get_cache_name()."\n";
 
 my $image_html= $cache->get_image_html();
 
