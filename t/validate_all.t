@@ -1,5 +1,6 @@
 use strict;
 use warnings;
+
 use SGN::Test qw/validate_urls/;
 use Test::More;
 
@@ -76,7 +77,9 @@ my %urls = (
         "Locus ajax form"                          => "/jsforms/locus_ajax_form.pl",
         "Locus editors"                            => "/phenome/editors_note.pl",
         "SGN data overview"                        => "/content/sgn_data.pl",
+        "tomato genome publication page"           => "/genomes/Solanum_lycopersicum/publications.pl",
 );
+
 my $iteration_count;
 
 plan( tests => scalar(keys %urls)*3*($iteration_count = $ENV{ITERATIONS} || 1));
