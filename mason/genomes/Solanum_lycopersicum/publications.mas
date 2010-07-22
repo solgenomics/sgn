@@ -120,7 +120,7 @@ for my $pub (@pubs) {
 
 </%perl>
 
-<table class="year">
+<table>
 <tr>
   <td><a style="color:black" 
   target="_blank" 
@@ -131,8 +131,7 @@ for my $pub (@pubs) {
 </tr>
 <tr>
   <td>
-    <br />
-    <table class="more">
+    <table>
       <tr>
 	<td class="width">Author(s):</td>
 	<td><% $names %>
