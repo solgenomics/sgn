@@ -40,8 +40,11 @@ my $cache = CXGN::Tools::WebImageCache->new();
 $cache->set_temp_dir($uri_dir);
 $cache->set_basedir($tmp_dir);
 
-my $file_key_name = $root . "-" . (join '-', keys %$species_hashref);
+my $file_key_name = $root . "-" . (join '-', sort keys %$species_hashref);
 $cache->set_key($file_key_name);
+
+print STDERR "File key name: $file_key_name\n";
+
 $cache->set_expiration_time(86400);
 my $map_name= $root . "_map";
 
@@ -49,8 +52,7 @@ $cache->set_map_name($map_name);
 
 my $newick_file  = $tmp_dir . "/" . $uri_dir . "/" . $root . ".newick";
 
-# disabling the cache temporarily, it does not work correctly
-#if ( !$cache->is_valid() ) {
+if ( !$cache->is_valid() ) {
     my $tree = CXGN::Phylo::OrganismTree->new($schema);
     my $newick_string = $tree->build_tree($root, $species_hashref, $speciesinfo_cache);
 
@@ -62,7 +64,9 @@ my $newick_file  = $tmp_dir . "/" . $uri_dir . "/" . $root . ".newick";
 
     $cache->set_image_data($image_png);
     $cache->set_image_map_data($image_map);
-#}
+}
+
+print STDERR "Cache name is ".$cache->get_cache_name()."\n";
 
 my $image_html= $cache->get_image_html();
 

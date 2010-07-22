@@ -187,8 +187,7 @@ sub get_parentage {
 	my $taxon= $parent->get_taxon();
 	my $comma = ", " if $parent->get_parent() || '';
 	$taxonomy = $comma . tooltipped_text($species, $taxon) . $taxonomy ;
-	
-	$taxonomy = get_parentage($parent);
+       	$taxonomy = get_parentage($parent);
     }
     return  $taxonomy;
 }
