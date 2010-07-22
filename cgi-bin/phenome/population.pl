@@ -269,19 +269,13 @@ EOS
 		     push  @phenotype,  [map {$_} ( (tooltipped_text( qq|<a href="/chado/cvterm.pl?cvterm_id=$cvterm_id">
                                                                       $cvterm_name</a>
                                                                      |, 
-                                    $cvterm->get_definition())), $min, $max, $avg, 
-		          qq | <a href="/phenome/population_indls.pl?population_id=$population_id&amp;cvterm_id=$cvterm_id">
-                             $count</a> 
-                             |,
+                                    $cvterm->get_definition())), $min, $max, $avg, $count,
 		          qq | <a href="/phenome/population_indls.pl?population_id=$population_id&amp;cvterm_id=$cvterm_id">
                                $graph_icon</a> 
                              | ) ];
 		 } else  
 		 { push  @phenotype,  [map {$_} (qq | <a href="/chado/cvterm.pl?cvterm_id=$cvterm_id">$cvterm_name</a>|, 
-                            $min, $max, $avg, 
-                     qq | <a href="/phenome/population_indls.pl?population_id=$population_id&amp;cvterm_id=$cvterm_id">
-                          $count</a> 
-                        |, 
+                            $min, $max, $avg, $count, 
                      qq | <a href="/phenome/population_indls.pl?population_id=$population_id&amp;cvterm_id=$cvterm_id">
                           $graph_icon</a> 
                         |  ) ];
