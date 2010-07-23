@@ -170,8 +170,8 @@ sub legend {
    my @stat;
    my $ci;
     
-    open $_, "<", $user_stat_file or die "$! reading $user_stat_file\n";
-    while (my $row = <$_>)
+    open my $uf, "<", $user_stat_file or die "$! reading $user_stat_file\n";
+    while ( my $row = <$uf> )
     {
         my ( $parameter, $value ) = split( /\t/, $row );
 	
@@ -185,8 +185,8 @@ sub legend {
 
 	if ($value eq 'zero' || $value eq 'Marker Regression') {$ci = 'none';}
 	
-	unless (($parameter=~/no_draws/ && $value ==' ') ||
-	       ($parameter =~/QTL genotype probability/ && $value==' ')
+	unless (($parameter=~/no_draws/ && !$value ) ||
+	       ($parameter =~/QTL genotype probability/ && !$value )
 	       ) 
 
 	{
