@@ -385,7 +385,7 @@ qq { Download population: <span><a href="pop_download.pl?population_id=$populati
 
         my (
              $image_pheno, $title_pheno, $image_map_pheno,
-             $plot_html,   $normal_dist
+             $plot_html
            );
         ( $image_pheno, $title_pheno, $image_map_pheno ) =
           population_distribution($population_id);
@@ -433,7 +433,7 @@ qq { Download population: <span><a href="pop_download.pl?population_id=$populati
 
         print info_section_html( 
 	                        title    => 'Phenotype Frequency Distribution',
-                                contents => $plot_html . $normal_dist, 
+                                contents => $plot_html, 
                                );
    
 	print info_section_html( 
@@ -782,13 +782,10 @@ sub qtl_plot
 		    }
 
 		}
-		my $lod1 = $permu_threshold{ $p_keys[0] };
-		# my $log2 = $permu_threshold{ $p_keys[1] };           
-		
+		my $lod1 = $permu_threshold{ $p_keys[0] };	         		
 		$h_marker = 
 		    qq |/phenome/qtl.pl?population_id=$pop_id&amp;term_id=$term_id&amp;chr=$lg&amp;l_marker=$l_m&amp;p_marker=$p_m&amp;r_marker=$r_m&amp;lod=$lod1|;
- #$h_marker =
-#qq |../cview/view_chromosome.pl?map_version_id=$mapversion&chr_nr=$lg&show_ruler=1&show_IL=&show_offsets=1&comp_map_version_id=&comp_chr=&color_model=&show_physical=&size=&show_zoomed=1&confidence=-2&hilite=$l_m+$p_m+$r_m&marker_type=&cM_start=$l_pos&cM_end=$r_pos |;
+ 
 
 		$cache_tempimages->set( $key_h_marker, $h_marker, '30 days' );
 	    }
@@ -892,7 +889,7 @@ sub qtl_plot
 
             $image      = $cache_qtl_plot->get_image_tag();
             $image_url  = $cache_qtl_plot->get_image_url();
-           # $image_html = qq |<a href ="$h_marker&qtl=$image_url">$image</a>|;
+          
 
 ###########thickbox
             my $cache_qtl_plot_t = CXGN::Tools::WebImageCache->new();
@@ -1101,9 +1098,6 @@ sub outfile_list
         "\t",
         $qtl_summary,
         $flanking_markers,
-
-        #$qtl_summary_file,
-        #$flanking_markers_file
                             );
     open FO, ">$file_out" or die "can't open $file_out: $!\n";
     print FO $file_out_list;
@@ -1586,8 +1580,7 @@ sub qtl_images_exist
 
     my ( $qtl_image, $image, $image_t, $image_url, $image_html, $image_t_url,
          $thickbox, $title );
-
-    # my $chrs = scalar(@linkage_groups) + 1;
+  
 
   IMAGES: foreach my $lg (@linkage_groups)
     {
@@ -1604,9 +1597,7 @@ sub qtl_images_exist
         if ( $cache_qtl_plot->is_valid )
         {
             $image      = $cache_qtl_plot->get_image_tag();
-            $image_url  = $cache_qtl_plot->get_image_url();
-           # $image_html = qq |<a href ="$h_marker&$image_url">$image</a>|;
-
+            $image_url  = $cache_qtl_plot->get_image_url();           
         }
 
         my $cache_qtl_plot_t = CXGN::Tools::WebImageCache->new();
@@ -1800,8 +1791,8 @@ sub legend {
     my @stat;
     my $ci;
 
-    open $_, "<", $stat_file or die "$! reading $stat_file\n";
-    while (my $row = <$_>)
+    open my $sf, "<", $stat_file or die "$! reading $stat_file\n";
+    while (my $row = <$sf>)
     {
         my ( $parameter, $value ) = split( /\t/, $row );
 	if ($parameter =~/qtl_method/) {$parameter = 'Mapping method';}
@@ -1814,8 +1805,8 @@ sub legend {
 	
 	if ($value eq 'zero' || $value eq 'Marker Regression') {$ci = 'none';}
 	
-	unless (($parameter=~/no_draws/ && $value==' ') ||
-	       ($parameter =~/QTL genotype probability/ && $value==' ')
+	unless (($parameter=~/no_draws/ && !$value) ||
+	       ($parameter =~/QTL genotype probability/ && !$value)
 	       ) 
 	{
 	    push @stat, [map{$_} ($parameter, $value)];
@@ -1852,7 +1843,7 @@ my $permu_threshold_ref = $self->permu_values();
 
     }
     my $lod1 = $permu_threshold{ $keys[0] };
-    my $lod2 = $permu_threshold{ $keys[1] };
+   # my $lod2 = $permu_threshold{ $keys[1] };
 
     if  (!$lod1) 
     {
