@@ -30,14 +30,11 @@
     $species    =~ s!(\S+) !<i>$1</i> !;
 </%perl>
 
-<&| /page/info_section.mas,
-    title       => "Feature " . $feature->name . " (Gene)",
-    collapsible => 1,
-    collapsed   => 1,
+<& /feature/feature_data.mas,
+    feature => $feature,
+    title => "Feature " . $feature->name . " (Gene)",
 &>
-   <% $species%> (<%ucfirst($organism->common_name) %>)<p/>
-   Comment: <% $organism->comment %>
-</&>
+
 <&| /page/info_section.mas,
         title       => 'cDNA Sequence',
         collapsible => 1,
