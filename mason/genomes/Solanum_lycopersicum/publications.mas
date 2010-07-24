@@ -120,12 +120,18 @@ for my $pub (@pubs) {
 
 </%perl>
 
-<table class="year">
-<tr><td><b><% $pub->title %></b></td></tr>
+<table>
+<tr>
+  <td><a style="color:black" 
+  target="_blank" 
+  href="/chado/publication.pl?pub_id=<% $pub->pub_id %>">
+  <b><% $pub->title %></b>
+  </a>
+  </td>
+</tr>
 <tr>
   <td>
-    <br />
-    <table class="more">
+    <table>
       <tr>
 	<td class="width">Author(s):</td>
 	<td><% $names %>
