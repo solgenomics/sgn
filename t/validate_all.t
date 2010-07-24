@@ -78,6 +78,7 @@ my %urls = (
         "Locus editors"                            => "/phenome/editors_note.pl",
         "SGN data overview"                        => "/content/sgn_data.pl",
         "tomato genome publication page"           => "/genomes/Solanum_lycopersicum/publications.pl",
+        "tomato genome index page"                 => "/genomes/Solanum_lycopersicum/",
 );
 
 my $iteration_count;
