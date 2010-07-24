@@ -2,13 +2,17 @@
 
 <style type="text/css">
 
-  td.width{
+  td.width {
     width: 60px;
     color: #AA0000;
   }
 
-  tr.author{
+  tr.author {
     visibility: collapse;
+  }
+
+  .publication {
+    margin-bottom: 0.75em;
   }
 
 </style>
@@ -120,7 +124,7 @@ for my $pub (@pubs) {
 
 </%perl>
 
-<table>
+<table class="publication">
 <tr>
   <td><a style="color:black" 
   target="_blank" 
@@ -176,8 +180,6 @@ for my $pub (@pubs) {
       </tr>
 % }
     </table>
-    <br />
-    <br />
   </td>
 </tr>
 </table>
