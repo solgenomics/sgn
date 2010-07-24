@@ -130,6 +130,16 @@ my $collapsed = $locus->count_associated_loci() ? 1 : 0 ;
 my $network_sub = $collapsed ?
  "View <b>$locus_name</b> relationships in the stand-alone <a href=\"/tools/networkbrowser/?type=locus&name=$locus_id\">network browser</a>" : '';
 
+#get list of current unigenes 
+my @unigenes= $locus->get_unigenes({ current=>1});
+
+
+my $new_unigene_link =
+  !(grep { /^$user_type$/ } ('curator', 'submitter', 'sequencer') ) ?
+  '<span class= "ghosted">[Associate new unigene]</span> '
+  : '<a href="javascript:Tools.toggleContent(\'associateUnigeneForm\', \'unigenes\' )">[Associate new unigene]</a>';
+
+
 </%perl>
 
 <& /util/import_javascript.mas, classes => ["jQuery", "thickbox", "CXGN.Page.FormattingHelpers", "CXGN.Phenome.Locus", "CXGN.Phenome.Tools", "CXGN.Phenome.Locus.LocusPage", "CXGN.Sunshine.NetworkBrowser"] &>
@@ -219,5 +229,24 @@ my $network_sub = $collapsed ?
   
 </&>
 
+
+<&| /page/info_section.mas,
+    title       => "SolCyc links",
+  id          => 'solcyc',
+  collapsible => 1,
+  collapsed   => 1,
+  &>
+  <& /locus/solcyc.mas , locus_id=>$locus_id  &>
+    
+</&>
+
+    
+<&| /page/info_section.mas, title=>"Sequence annotations", id=>"unigenes" , collapsible=>1, collapsed=>$collapsed &>
+  <% $new_unigene_link %>
+  <& /locus/associate_unigene.mas, locus_id=>$locus_id &>
+   
+  
+  
+</&>
 
 <& /page/comments.mas, object_type=>'locus', object_id=>$locus_id, referer=>$this_page &>

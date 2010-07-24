@@ -105,30 +105,13 @@ if ($locus_name) {
 
 my @unigenes = $locus->get_unigenes();
 my $unigene_count=0;
-my $solcyc_count=0;
+
 foreach (@unigenes) { 
     $unigene_count++ if $_->get_status eq 'C'; 
 }
 
-print $c->render_mason("/locus/solcyc.mas");
 
-$d->d( "!!!Got SolCyc links :  " . ( time() - $time ) . "\n");
 
-my $associate_unigene_form;
-if (
-    (
-     $user_type eq 'curator'
-     || $user_type eq 'submitter'
-     || $user_type eq 'sequencer'
-    )
-    )
-{
-    if ($locus_name) { 
-	$associate_unigene_form= qq|<a href="javascript:Tools.toggleContent('associateUnigeneForm', 'unigenes' )">[Associate new unigene]</a> |;
-	$associate_unigene_form .= 
-	    CXGN::Phenome::Locus::LocusPage::associate_unigene_form($locus_id);
-    }
-}
 my $sequence_links;
 if ($locus_name) {
     if ( !$genbank ) {
@@ -140,10 +123,9 @@ if ($locus_name) {
     
     #printing associated unigenes section dynamically
     my $dyn_unigenes = CXGN::Phenome::Locus::LocusPage::include_locus_unigenes();
-    $d->d( "!!!Got unigenes :  " . ( time() - $time ) . "\n");
-
+    
     $sequence_links = info_table_html(
-	'SGN Unigenes'       => $dyn_unigenes . $associate_unigene_form,
+	'SGN Unigenes'       => $dyn_unigenes,
 	'GenBank Accessions' => $genbank,
         'Genome Matches'     => genomic_annots_html($locus),
         __border             => 0,
