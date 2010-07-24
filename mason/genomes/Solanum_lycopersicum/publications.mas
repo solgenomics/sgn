@@ -129,7 +129,7 @@ for my $pub (@pubs) {
   <td><a style="color:black" 
   target="_blank" 
   href="/chado/publication.pl?pub_id=<% $pub->pub_id %>">
-  <b><% $pub->title %></b>
+  <b><% $pub->title | h %></b>
   </a>
   </td>
 </tr>
@@ -138,7 +138,7 @@ for my $pub (@pubs) {
     <table>
       <tr>
 	<td class="width">Author(s):</td>
-	<td><% $names %>
+	<td><% $names | h %>
 % if( $extra_names ){
 %   my $id = $pub->pub_id;
           <span style="display: none" id="extra_<% $id %>"><% $extra_names %></span>
@@ -149,21 +149,21 @@ for my $pub (@pubs) {
       </tr>
       <tr>
 	<td class="width">Journal:</td>
-	<td><% $pub->series_name %></td>
+	<td><% $pub->series_name | h %></td>
       </tr>
       <tr>
 	<td class="width">Volume:</td>
-	<td><% $pub->volume %></td>
+	<td><% $pub->volume | h %></td>
       </tr>
 % if( $pub->issue ) {
       <tr>
 	<td class="width">Issue:</td>
-	<td><% $pub->issue %></td>
+	<td><% $pub->issue | h %></td>
       </tr>
 % }
       <tr>
 	<td class="width">Pages:</td>
-	<td><% $pub->pages %></td>
+	<td><% $pub->pages | h %></td>
       </tr>
 % if( $pubmed
 %      and  my $pm_dbx = $pub->search_related('pub_dbxrefs', {})
