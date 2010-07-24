@@ -79,6 +79,7 @@ my %urls = (
         "SGN data overview"                        => "/content/sgn_data.pl",
         "tomato genome publication page"           => "/genomes/Solanum_lycopersicum/publications.pl",
         "tomato genome index page"                 => "/genomes/Solanum_lycopersicum/",
+        "outreach index"                           => "/outreach",
 );
 
 my $iteration_count;
