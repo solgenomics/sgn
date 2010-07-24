@@ -50,7 +50,7 @@ $dbh
 
 
 use CXGN::Phenome::Locus;
-
+use CXGN::Sunshine::Browser;
 
 # print message if locus_id os not valid 
 unless ( ( $locus_id =~ m /^\d+$/ ) || ($action eq 'new' && !$locus_id) ) {
@@ -92,8 +92,9 @@ my $common_name = $locus->get_common_name();
 my @owners = $locus->get_owners();
 my $owner_objects= $locus->get_owners(1);
 
+my $locus_name = $locus->get_locus_name();
 my $owner;
-if ( $locus->get_locus_name() && ($user_type eq 'curator' || grep { /^$person_id$/ } @owners  ) ) {  $owner = 1; }
+if ( $locus_name && ($user_type eq 'curator' || grep { /^$person_id$/ } @owners  ) ) {  $owner = 1; }
 my $registry = $locus->get_associated_registry();
 
 my @synonyms = $locus->get_locus_aliases('f','f');
@@ -124,10 +125,14 @@ my $al_subtitle =
   '<span class="ghosted">[Associate new locus]</span>'
   : '<a href="javascript:Tools.toggleContent(\'associateLocusForm\', \'locus2locus\');Tools.getOrganisms()">[Associate new locus]</a> ';
 
+my $collapsed = $locus->count_associated_loci() ? 1 : 0 ;
+
+my $network_sub = $collapsed ?
+ "View <b>$locus_name</b> relationships in the stand-alone <a href=\"/tools/networkbrowser/?type=locus&name=$locus_id\">network browser</a>" : '';
 
 </%perl>
 
-<& /util/import_javascript.mas, classes => ["jQuery", "thickbox", "CXGN.Page.FormattingHelpers", "CXGN.Phenome.Locus", "CXGN.Phenome.Tools", "CXGN.Phenome.Locus.LocusPage"] &>
+<& /util/import_javascript.mas, classes => ["jQuery", "thickbox", "CXGN.Page.FormattingHelpers", "CXGN.Phenome.Locus", "CXGN.Phenome.Tools", "CXGN.Phenome.Locus.LocusPage", "CXGN.Sunshine.NetworkBrowser"] &>
 
 
 <& /locus/initialize.mas, locus_id=>$locus_id  &>
@@ -205,5 +210,14 @@ my $al_subtitle =
 
 
 </&>
+
+
+    
+<&| /page/info_section.mas, title=>"Associated loci - graphical view", subtitle=>$network_sub, collapsible=>1, collapsed=>$collapsed &>
+
+%  print CXGN::Sunshine::Browser::include_on_page( 'locus', $locus_id ) if $network_sub ; 
+  
+</&>
+
 
 <& /page/comments.mas, object_type=>'locus', object_id=>$locus_id, referer=>$this_page &>

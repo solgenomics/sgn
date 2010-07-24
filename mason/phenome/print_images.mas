@@ -44,6 +44,7 @@ $dbh
 <%perl>
 
 use CXGN::Page::FormattingHelpers qw / html_optional_show /;
+use SGN::Image;
 
 my $image_html     = "";
 my $m_image_html   = "";

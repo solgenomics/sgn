@@ -3,7 +3,6 @@ use warnings;
 use CXGN::Page;
 
 
-use CXGN::People::PageComment;
 use CXGN::People;
 use CXGN::Contact;
 use CXGN::Page::FormattingHelpers qw(
@@ -26,12 +25,10 @@ use CXGN::Chado::Publication;
 use CXGN::Chado::Pubauthor;
 
 
-use CXGN::Sunshine::Browser;
 use CXGN::Tools::Identifiers qw/parse_identifier/;
 use CXGN::Tools::List qw/distinct/;
 
 use CXGN::Phenome::Locus::LocusPage;
-use SGN::Image;
 use HTML::Entities;
 
 our $c;
@@ -78,10 +75,6 @@ my $organism   = $locus->get_common_name();
 my @owners   = $locus->get_owners();
 
 
-#print $c->render_mason("/locus/initialize.mas",
-#            locus_id => $locus_id
-#);
-
 ####################################################
 #get all dbxref  annotations: pubmed, ncbi sequences, GO, PO, tgrc link
 ####################################################
@@ -104,35 +97,6 @@ my $locus_html= qq| <table width="100%"><tr><td>|;
 if ($locus_name) {
     my $locus_html;
     $locus_html .= "<br />" . $tgrc;
-    
-}
-
-
-##################  SUNSHINE BROWSER
-
-my $locus2locus_graph =
-    CXGN::Sunshine::Browser::include_on_page( 'locus', $locus_id );
-
-my $networkbrowser_link =
-    qq { View <b>$locus_name</b> relationships in the stand-alone <a href="/tools/networkbrowser/?type=locus&name=$locus_id">network browser</a>. Please note that this tool is a prototype.<br /><br /><br /> };
-
-my $al_count;
-if ( $al_count > 0 ) {
-    print info_section_html(
-	title       => "Associated loci - graphical view [beta version]",
-	contents    => $networkbrowser_link . $locus2locus_graph,
-	id          => 'locus2locus_graph',
-	collapsible => 1,
-	collapsed   => 1,
-        );
-}
-else {
-    print info_section_html(
-	title       => "Associated loci - graphical view",
-	collapsible => 0,
-	collapsed   => 1,
-	id          => 'locus2locus_graph'
-        );
     
 }
 
