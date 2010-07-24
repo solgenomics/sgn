@@ -69,7 +69,7 @@ for my $pub (@pubs) {
 }
 </%init>
 
-<&| /page/info_section.mas, title=>'Publications', collapsible => 0 &>
+<&| /page/info_section.mas, title=>'Publications', collapsible => 0, empty_message => 'temporarily unavailable' &>
 
 %  # for each year, print out the pubs associated with it
 %   my @sorted_years =  sort {$b <=> $a} keys %pubs_by_year; 
