@@ -140,6 +140,8 @@ my $new_unigene_link =
   : '<a href="javascript:Tools.toggleContent(\'associateUnigeneForm\', \'unigenes\' )">[Associate new unigene]</a>';
 
 
+my %dbxrefs = $locus->get_all_dbxrefs();
+
 </%perl>
 
 <& /util/import_javascript.mas, classes => ["jQuery", "thickbox", "CXGN.Page.FormattingHelpers", "CXGN.Phenome.Locus", "CXGN.Phenome.Tools", "CXGN.Phenome.Locus.LocusPage", "CXGN.Sunshine.NetworkBrowser"] &>
@@ -232,7 +234,7 @@ my $new_unigene_link =
 
 <&| /page/info_section.mas,
     title       => "SolCyc links",
-  id          => 'solcyc',
+  id          => "solcyc",
   collapsible => 1,
   collapsed   => 1,
   &>
@@ -244,9 +246,22 @@ my $new_unigene_link =
 <&| /page/info_section.mas, title=>"Sequence annotations", id=>"unigenes" , collapsible=>1, collapsed=>$collapsed &>
   <% $new_unigene_link %>
   <& /locus/associate_unigene.mas, locus_id=>$locus_id &>
-   
+   <& /locus/locus_unigenes.mas &>
   
   
 </&>
+
+<&| /page/info_section.mas, title=>"Literature annotations", id=>"publications" , collapsible=>1, collapsed=>1 &>
+  
+% my $pub_count = 0;
+% foreach my $pub ( @( $dbxrefs{PMID} ) , @( $dbxrefs{SGN_ref} ) ) {
+%  if ( $_->[1] eq '0' ) {    #if the pub is not obsolete
+  <& /chado/publication.mas, pub=>$pub, count=>$pub_count++ &>
+    
+%  }
+% }
+
+</&>
+
 
 <& /page/comments.mas, object_type=>'locus', object_id=>$locus_id, referer=>$this_page &>

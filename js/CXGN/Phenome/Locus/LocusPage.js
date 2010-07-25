@@ -186,7 +186,6 @@ CXGN.Phenome.Locus.LocusPage.prototype = {
     printLocusUnigenes: function(locus_id) {	
 	if (!locus_id) locus_id = this.getLocusId();
 	var type = "unigenes";
-	alert("calling print_locus_page " + type );x
 	new Ajax.Request("/phenome/locus_page/print_locus_page.pl", {
 		parameters: { type: type, locus_id: locus_id},
 		    onSuccess: this.processLocusUnigenesResponse
@@ -281,12 +280,12 @@ CXGN.Phenome.Locus.LocusPage.prototype = {
     printSolcycLinks: function(locus_id) {	
 	
 	if (!locus_id) locus_id = this.getLocusId();
-	//this.printLocusUnigenes;
-	var type = "solcyc";
-	new Ajax.Request("/phenome/locus_page/print_locus_page.pl", {
-		parameters: { type: type, locus_id: locus_id},
-		    onSuccess: this.processLocusUnigenesResponse
-		    });
+	this.printLocusUnigenes;
+	//var type = "solcyc";
+	//new Ajax.Request("/phenome/locus_page/print_locus_page.pl", {
+	//parameters: { type: type, locus_id: locus_id},
+	//    onSuccess: this.processLocusUnigenesResponse
+	//    });
     },
     /////////////////////////////////////////////
     
