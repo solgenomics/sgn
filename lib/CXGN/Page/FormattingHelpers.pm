@@ -1184,7 +1184,8 @@ sub tooltipped_text {
   $tooltip =~ s/'/\\'/g;
   $tooltip =~ s!\n! !g;
   $tooltip = HTML::Entities::encode_entities($tooltip);
-  return qq{<span class="$class" onmouseover="return escape($tooltip)">$text</span>};
+
+  return qq{<span class="$class" onmouseover="return escape('$tooltip')">$text</span>};
 
 }
 

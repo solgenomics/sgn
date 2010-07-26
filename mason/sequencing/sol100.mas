@@ -15,8 +15,8 @@ sol100.mas - SGN page for sol100 project organism data overview in a tree format
 
 <%perl>
 
-my $uri_dir = $c->get_conf('tempfiles_subdir') . '/tree_browser';
-my $tmp_dir = $c->get_conf('basepath');
+my $uri_dir     = $c->get_conf('tempfiles_subdir') . '/tree_browser';
+my $tmp_dir     = $c->get_conf('basepath');
 my $sicache_dir = $c->get_conf('basepath')."/". $c->get_conf('tempfiles_subdir') . '/organism_data';
 
 my $speciesinfo_cache = Cache::File->new(
@@ -53,20 +53,20 @@ This page presents a summary of all species being sequenced as part of the SOL10
 </p>
  
 
-%if ($sol) {
-(click on the organism name to see more details.) <br /><br />
+%if ($sol) { 
+(click on the organism  name to see more details.) <br /><br />
   <& /util/organism_tree.mas,
-    schema => $schema,
-    root => "Solanaceae",
+    schema          => $schema,
+    root            => "Solanaceae",
     species_hashref => $sol,
     speciesinfo_cache => $speciesinfo_cache,
-    sicache_dir => $sicache_dir,
-    uri_dir => $uri_dir,
-    tmp_dir => $tmp_dir,
-    image_only => 1
+    sicache_dir     => $sicache_dir,
+    uri_dir         => $uri_dir,
+    tmp_dir         => $tmp_dir,
+    image_only      => 1
   &>
-% } else {
+%    } else {
     <p>
       No organisms found !
       </p>
-% }
+%    }
