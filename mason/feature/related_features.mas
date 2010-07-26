@@ -1,8 +1,10 @@
 <%args>
     $children
     $parents
+    $title => 'Related Features'
 </%args>
 <%perl>
+
 sub related_stats {
     my ($features) = @_;
     my $stats = { };
@@ -19,6 +21,10 @@ sub related_stats {
     return $data;
 }
 </%perl>
+<&| /page/info_section.mas, 
+    title => $title,
+    collapsible => 1,
+&>
 % my $c = 0;
 % for my $child (@$children) {
 % # This should be ->feature, but that returns itself => bug in BCS
@@ -49,3 +55,4 @@ Parent Feature:
     data     => related_stats($parents),
 &>
 %}
+</&>

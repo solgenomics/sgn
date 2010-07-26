@@ -27,14 +27,10 @@
 
 <& /feature/feature_data.mas, feature => $feature &>
 
-<&| /page/info_section.mas, title => 'Related Features',
-    collapsible => 1,
+<& /feature/related_features.mas,
+    children => $children,
+    parents => $parents
 &>
-    <& /feature/related_features.mas,
-        children  => $children,
-        parents   => $parents,
-    &>
-</&>
 
 <&| /page/info_section.mas,
         title       => 'Ontology Annotations',

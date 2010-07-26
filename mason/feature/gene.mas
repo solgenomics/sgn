@@ -35,6 +35,11 @@
     title => "Feature " . $feature->name . " (Gene)",
 &>
 
+<& /feature/related_features.mas,
+    children => $children,
+    parents => $parents
+&>
+
 <&| /page/info_section.mas,
         title       => 'cDNA Sequence',
         collapsible => 1,
