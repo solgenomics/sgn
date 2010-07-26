@@ -5,7 +5,9 @@ organism_tree.mas - mason component for printing organism phylo trees
 
 =head1 DESCRIPTION
 
-Queries the database for web_visible (see chado: organismprop table ) sgn organisms, and buids a species tree from the phylonode table  using the L<CXGN::Phylo::Tree> framework
+Queries the database for web_visible (see chado: organismprop table )
+sgn organisms, and buids a species tree from the phylonode table using
+the L<CXGN::Phylo::Tree> framework
 
 =head1 AUTHOR
 
@@ -59,7 +61,7 @@ unless( $cache->is_valid ) {
 
     my $image_map = $tree->get_renderer()
                          ->get_html_image_map( $map_name );
-    my $image_png = $tree->render_png(undef, 1);
+    my $image_png = $tree->render_png( undef, 1 );
 
     $cache->set_image_data($image_png);
     $cache->set_image_map_data($image_map);
@@ -87,8 +89,11 @@ my $tree_string = $newick_file->slurp;
     collapsed     => 0,
     &>
 
-    <form action="/tools/tree_browser/" method="post"><input type="hidden" name="tree_string" value="<% $tree_string %>"><input type="submit" value="show in treebrowser" /></form> 
-   <% $image_html %>
-  </&>
+    <form action="/tools/tree_browser/" method="post">
+       <input type="hidden" name="tree_string" value="<% $tree_string %>" />
+       <input type="submit" value="show in treebrowser" />
+    </form>
+    <% $image_html %>
+ </&>
 
 % }
