@@ -77,7 +77,7 @@ my $tree_string = $newick_file->slurp;
 
 % } else {
 
-<a name="<% $root %>"></a>
+  <a name="<% $root %>"></a>
 
   <&| /page/info_section.mas,
     title         => $root,
