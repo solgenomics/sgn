@@ -42,7 +42,7 @@ my ( $pop_id, $trait_id, $lg, $l_m, $p_m, $r_m, $lod, $qtl_image ) =
                                 "p_marker",      "r_marker",
                                 "lod",            "qtl"
                               );
-if (!$pop_id || !$trait_id || !$lg || !$l_m || !$p_m || !$r_m || !$lod || !$qtl_image) {
+if (!$pop_id || !$trait_id || !$lg || !$l_m || !$p_m || !$r_m || !$qtl_image) {
   die SGN::Exception->new(
     title => 'QTL detail page error:  A required argument is missing'
   );
@@ -170,11 +170,12 @@ sub legend {
    my @stat;
    my $ci;
     
-    open $_, "<", $user_stat_file or die "$! reading $user_stat_file\n";
-    while (my $row = <$_>)
+    open my $uf, "<", $user_stat_file or die "$! reading $user_stat_file\n";
+    while ( my $row = <$uf> )
     {
+	chomp($row);
         my ( $parameter, $value ) = split( /\t/, $row );
-	
+
 	if ($parameter =~/qtl_method/) {$parameter = 'Mapping method';}
 	if ($parameter =~/qtl_model/) {$parameter = 'Mapping model';}
 	if ($parameter =~/prob_method/) {$parameter = 'QTL genotype probability method';}
@@ -182,15 +183,17 @@ sub legend {
 	if ($parameter =~/permu_level/) {$parameter = 'Permutation significance level';}
 	if ($parameter =~/permu_test/) {$parameter = 'No. of permutations';}
 	if ($parameter =~/prob_level/) {$parameter = 'QTL genotype significance level';}
-
+	if ($parameter =~/stat_no_draws/) {$parameter = 'No. of imputations';}
 	if ($value eq 'zero' || $value eq 'Marker Regression') {$ci = 'none';}
 	
-	unless (($parameter=~/no_draws/ && $value ==' ') ||
-	       ($parameter =~/QTL genotype probability/ && $value==' ')
+	unless (($parameter =~/No. of imputations/ && !$value ) ||
+	        ($parameter =~/QTL genotype probability/ && !$value ) ||
+                ($parameter =~/Permutation significance level/ && !$value)
 	       ) 
 
 	{
 	    push @stat, [map{$_} ($parameter, $value)];
+	   
 	}
     }
 

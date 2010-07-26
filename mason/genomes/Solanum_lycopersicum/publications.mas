@@ -1,0 +1,187 @@
+<& /util/import_javascript.mas, classes=>["CXGN.Effects"] &>
+
+<style type="text/css">
+
+  td.width {
+    width: 60px;
+    color: #AA0000;
+  }
+
+  tr.author {
+    visibility: collapse;
+  }
+
+  .publication {
+    margin-bottom: 0.75em;
+  }
+
+</style>
+
+
+<script type="text/javascript">
+function get_author_elements( id_base ) {
+  return {
+      fewer_link: document.getElementById( "fewer_"   + id_base ),
+      all_link:   document.getElementById( "all_"   + id_base ),
+      authors: document.getElementById( "extra_" + id_base )
+ };
+}
+function authors_on( id_base ) {
+  var stuff = get_author_elements( id_base );
+
+  stuff.fewer_link.style.display = "inline";
+  stuff.all_link.style.display   = "none";
+  stuff.authors.style.display    = "inline";
+}
+function authors_off( id_base ) {
+  var stuff = get_author_elements( id_base );
+
+  stuff.fewer_link.style.display = "none";
+  stuff.all_link.style.display   = "inline";
+  stuff.authors.style.display    = "none";
+}
+
+</script>
+
+<& /page/page_title.mas, title => "Tomato Genome Publications" &>
+
+<%args>
+  $schema
+</%args>
+
+<%init>
+use CXGN::Page::FormattingHelpers;
+use List::MoreUtils qw/uniq/;
+
+my $pubmed = $schema->resultset('General::Db')
+                    ->find({ name => 'PMID' });
+
+### get all publications from pubprop database, then index them by pub year
+my @pubs =
+    $schema->resultset('Cv::Cvterm')
+           ->search({name => 'tomato genome publication'})
+           ->search_related('pubprops', {})
+           ->search_related('pub', {}, 
+                            { prefetch => { pub_dbxrefs => 'dbxref' },
+                            }
+                           );
+
+# index the publications in a hash by year
+my %pubs_by_year;
+for my $pub (@pubs) {
+  push @{ $pubs_by_year{ $pub->pyear } }, $pub;
+}
+</%init>
+
+<&| /page/info_section.mas, title=>'Publications', collapsible => 0, empty_message => 'temporarily unavailable' &>
+
+%  # for each year, print out the pubs associated with it
+%   my @sorted_years =  sort {$b <=> $a} keys %pubs_by_year; 
+%   for my $year ( @sorted_years ) {
+%     my $pubs = $pubs_by_year{$year};
+      <&| /page/info_section.mas, title         => $year,
+                                  subtitle      => @$pubs.' publication'.(@$pubs > 1 ? 's' : ''),
+                                  collapsible   => 1,
+                                  collapsed     => ($year == $sorted_years[0] || $year == $sorted_years[1] ? 0 : 1),
+                                  is_subsection => 1,
+         &>
+
+%        # render each of the publications for this year
+%        for my $pub ( @$pubs ) {
+            <& .publication, pub => $pub, pubmed => $pubmed &>
+%        }
+      </&>
+%   }
+</&>
+
+
+% ############ SUBCOMPONENTS #################
+% # subcomponent that displays a publication
+<%def .publication >
+<%args>
+  $pub
+  $pubmed
+</%args>
+
+<%perl>
+
+    #---getting authors - if the list is too long, only show the first 10,
+    #---the rest of the authors are shown once a link is clicked
+    my @authors = $pub->search_related('pubauthors', {}, { order_by => 'rank' });
+    my $names =
+          join ', ',
+          map $_->givennames." ".$_->surname,
+          grep $_,
+          @authors[ 0..9 ];
+
+    my $extra_names =
+          join ', ',
+          map $_->givennames." ".$_->surname,
+          grep $_,
+          @authors[ 10..$#authors ];
+
+    $names .= ', ' if $extra_names;
+
+</%perl>
+
+<table class="publication">
+<tr>
+  <td><a style="color:black" 
+  target="_blank" 
+  href="/chado/publication.pl?pub_id=<% $pub->pub_id %>">
+  <b><% $pub->title | h %></b>
+  </a>
+  </td>
+</tr>
+<tr>
+  <td>
+    <table>
+      <tr>
+	<td class="width">Author(s):</td>
+	<td><% $names | h %>
+% if( $extra_names ){
+%   my $id = $pub->pub_id;
+          <span style="display: none" id="extra_<% $id %>"><% $extra_names %></span>
+          <a style="display: none" id="fewer_<% $id %>" href="javascript:authors_off(<% $id %>)">show fewer</a>
+          <a id="all_<% $id %>" href="javascript:authors_on(<% $id %>)">show all</a>
+%  }
+	</td>
+      </tr>
+      <tr>
+	<td class="width">Journal:</td>
+	<td><% $pub->series_name | h %></td>
+      </tr>
+      <tr>
+	<td class="width">Volume:</td>
+	<td><% $pub->volume | h %></td>
+      </tr>
+% if( $pub->issue ) {
+      <tr>
+	<td class="width">Issue:</td>
+	<td><% $pub->issue | h %></td>
+      </tr>
+% }
+      <tr>
+	<td class="width">Pages:</td>
+	<td><% $pub->pages | h %></td>
+      </tr>
+% if( $pubmed
+%      and  my $pm_dbx = $pub->search_related('pub_dbxrefs', {})
+%                            ->search_related('dbxref', { db_id => $pubmed->db_id } )
+%                            ->first
+%    ) {
+      <tr>
+	<td class="width">Pubmed:</td>
+	<td><a target="_blank"
+	href="http://www.ncbi.nlm.nih.gov/sites/pubmed/<% $pm_dbx->accession %>">
+	Pubmed ID <% $pm_dbx->accession %>
+	</a>
+	</td>
+      </tr>
+% }
+    </table>
+  </td>
+</tr>
+</table>
+
+</%def>

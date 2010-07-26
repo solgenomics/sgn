@@ -204,8 +204,8 @@ sub generated_file_uri {
               - UNLINK defaults to 0, which means that by default
                   this temp file WILL NOT be automatically deleted
                   when it goes out of scope
-
-  Side Eff: dies on error
+  Side Eff: dies on error, attempts to create the tempdir if it does
+            not exist.
   Example :
 
     my ($aln_file, $aln_uri) = $c->tempfile( TEMPLATE =>
