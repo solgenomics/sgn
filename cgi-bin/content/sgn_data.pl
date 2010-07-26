@@ -23,36 +23,39 @@ my $schema = CXGN::DB::DBICFactory
 
 
 my $type = 'web visible'; # we want only the leaf organisms with 'web visible' organismprop
-my $cvterm = $schema->resultset("Cv::Cvterm")->search( { name => $type } )->first();
-
-my $sol=();
-my $rub=();
-my $planta=();
 
 
-if ($cvterm) {
-    my $cvterm_id = $cvterm->get_column('cvterm_id');
+my %sol;
+my %rub;
+my %planta;
 
-    my @organisms= $schema->resultset("Organism::Organismprop")->search(
-	{ type_id => $cvterm_id } )->search_related('organism');
-   
-    foreach my $organism(@organisms) {
+my $organisms = $schema->resultset("Cv::Cvterm")
+                       ->search({ name => 'web visible' })
+                       ->search_related('organismprops')
+                       ->search_related('organism');
 
-	my $species = $organism->get_column('species');
-	my $genus= $organism->get_column('genus');
-	my $organism_id = $organism->get_column('organism_id');
-	my $o=CXGN::Chado::Organism->new($schema, $organism_id);
-	my $root_tax=$o->get_organism_by_tax('family');
-	if ($root_tax) {
-	    my $family = $root_tax->species();
-	    $sol->{$species}= $organism_id if $family eq 'Solanaceae' ;
-	    $rub->{$species}= $organism_id if $family eq  'Rubiaceae' ;
-	    $planta->{$species}= $organism_id if $family eq  'Plantaginaceae' ;
-	}
+while( my $organism = $organisms->next ) {
+    my $organism_id = $organism->get_column('organism_id');
+    my $root_tax = CXGN::Chado::Organism
+                          ->new($schema, $organism_id)
+                          ->get_organism_by_tax('family');
+    if( $root_tax ) {
+        my $species  = $organism->species;
+        my $family   = $root_tax->species;
+        $sol{$species}   = $organism_id if $family eq 'Solanaceae' ;
+        $rub{$species}   = $organism_id if $family eq  'Rubiaceae' ;
+        $planta{$species}= $organism_id if $family eq  'Plantaginaceae' ;
     }
 }
+
+
 ##########
 
-$c->forward_to_mason_view("/content/sgn_data.mas" , schema=>$schema, sol=>$sol, rub=>$rub, planta=>$planta );
+$c->forward_to_mason_view( "/content/sgn_data.mas",
+    schema => $schema,
+    sol    => \%sol,
+    rub    => \%rub,
+    planta => \%planta,
+   );
 
 	
