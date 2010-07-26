@@ -24,13 +24,11 @@ my $uri_dir=$c->get_conf('tempfiles_subdir') . '/tree_browser';
 my $tmp_dir=$c->get_conf('basepath');
 my $sicache_dir =$c->get_conf('basepath')."/". $c->get_conf('tempfiles_subdir') . '/organism_data';
 
-if (!(-e $sicache_dir)){ 
-     mkdir $sicache_dir;
-}
+mkdir $sicache_dir unless -e $sicache_dir;
 
 my $speciesinfo_cache = Cache::File->new( 
-                                           cache_root=>$sicache_dir,
-                                           default_expires =>'16000 sec'
+                                           cache_root      => $sicache_dir,
+                                           default_expires => '16000 sec'
                                         );
 my %hashrefs= (
 
