@@ -27,11 +27,11 @@ my $cache = Cache::File->new(
             no warnings 'uninitialized';
             my $info = join '?', (
                 "Common Name: ".$org->get_group_common_name(),
-                "Loci Num: ".$org->get_loci_count(),
-                "Phenotype Count: ".$org->get_phenotype_count(),
+                "Loci: ".$org->get_loci_count(),
+                "Phenotypes: ".$org->get_phenotype_count(),
                 "Maps Available: ".$org->has_avail_map(),
                 "Genome Information: ".$org->has_avail_genome(),
-                "Library Num: ".scalar( $org->get_library_list ),
+                "Libraries: ".scalar( $org->get_library_list ),
                );
             return $info;
         }
