@@ -1,7 +1,7 @@
 <%doc>
-=head1 NAME 
+=head1 NAME
 
-organism_tree.mas - mason component for printing organism phylo trees 
+organism_tree.mas - mason component for printing organism phylo trees
 
 =head1 DESCRIPTION
 
@@ -13,7 +13,7 @@ the L<CXGN::Phylo::Tree> framework
 
 Naama Menda <nm249@cornell.edu>
 
-=cut 
+=cut
 
 
 </%doc>
@@ -78,7 +78,7 @@ my $tree_string = $newick_file->slurp;
 
 % } else {
 
-  <a name="<% $root %>"></a>
+  <a name="<% $root |h %>"></a>
 
   <&| /page/info_section.mas,
     title         => $root,
@@ -89,7 +89,7 @@ my $tree_string = $newick_file->slurp;
     &>
 
     <form action="/tools/tree_browser/" method="post">
-       <input type="hidden" name="tree_string" value="<% $tree_string %>" />
+       <input type="hidden" name="tree_string" value="<% $tree_string |h %>" />
        <input type="submit" value="show in treebrowser" />
     </form>
     <% $image_html %>
