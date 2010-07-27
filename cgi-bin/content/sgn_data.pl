@@ -2,6 +2,7 @@ use strict;
 use warnings;
 
 use Cache::File;
+use Storable ();
 
 use CXGN::Chado::Organism;
 
@@ -19,19 +20,20 @@ my $cache = Cache::File->new(
 
         # we will store the species hash in the cache also, under a special key
         if( $cache_entry->key eq 'species_data' ) {
-            $cache_entry->freeze( _make_species_hashref( $schema, @families_to_display ) );
+            my $species =  _make_species_hashref( $schema, @families_to_display );
+            return Storable::nfreeze( $species );
         } else {
             my $org = CXGN::Chado::Organism->new( $schema, $cache_entry->key );
-            $cache_entry->set( join '', map "?$_", (
-                "Name: ".$org->get_species(),
+            no warnings 'uninitialized';
+            my $info = join '?', (
                 "Common Name: ".$org->get_group_common_name(),
                 "Loci Num: ".$org->get_loci_count(),
                 "Phenotype Count: ".$org->get_phenotype_count(),
                 "Maps Available: ".$org->has_avail_map(),
                 "Genome Information: ".$org->has_avail_genome(),
                 "Library Num: ".scalar( $org->get_library_list ),
-               )
-            );
+               );
+            return $info;
         }
     },
 
