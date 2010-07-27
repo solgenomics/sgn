@@ -69,7 +69,8 @@ sub _make_species_hashref {
                         { join => { type => 'cv' } },
                      );
 
-        # find the child organisms of this family that are also web-visible
+        # use the family phylonode to find the child organisms of this
+        # family (that are also web-visible)
         my $organisms =
             _child_phylonodes( $family_phylonodes )
                 ->search_related('phylonode_organism')
