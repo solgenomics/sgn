@@ -1148,8 +1148,8 @@ sub cache_temp_path
 
  Usage: my $gen_file = $self->genotype_file();
  Desc: creates the genotype file in the /data/prod/tmp/r_qtl/cache, 
-       if it does not exist yet and caches it for R.
- Ret: genotype filename (with abosolute path)
+       if it does not exist yet, and caches it for R.
+ Ret: genotype filename (with absolute path)
  Args: none
  Side Effects:
  Example:
@@ -1192,10 +1192,10 @@ sub genotype_file
 
 =head2 phenotype_file
 
- Usage: my $gen_file = $self->phenotype_file();
+ Usage: my $phe_file = $self->phenotype_file();
  Desc: creates the phenotype file in the /data/prod/tmp/r_qtl/cache, 
-       if it does not exist yet and caches it for R.
- Ret: phenotype filename (with abosolute path)
+       if it does not exist yet, and caches it for R.
+ Ret: phenotype filename (with absolute path)
  Args: none
  Side Effects:
  Example:
@@ -1237,10 +1237,10 @@ sub phenotype_file
 
 =head2 crosstype_file
 
- Usage: my $gen_file = $self->crosstype_file();
+ Usage: my $cross_file = $self->crosstype_file();
  Desc: creates the crosstype file in the /data/prod/tmp/r_qtl/temp, 
       
- Ret: crossotype filename (with abosolute path)
+ Ret: crosstype filename (with absolute path)
  Args: none
  Side Effects:
  Example:
