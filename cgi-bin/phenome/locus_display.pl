@@ -9,7 +9,8 @@ use CXGN::DB::Connection;
 use CXGN::Login;
 
 
-#our $c;
+our $c;
+
 my $q = CGI->new();
 my $dbh = CXGN::DB::Connection->new();
 my $login = CXGN::Login->new($dbh);
