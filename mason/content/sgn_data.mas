@@ -10,6 +10,8 @@ sgn_data.mas - SGN page for organism data overview in a tree format
 
 <%args>
     $species
+    $cache
+    $schema
 </%args>
 
 <%perl>
@@ -38,8 +40,13 @@ sgn_data.mas - SGN page for organism data overview in a tree format
   phenotyped accessions.
 </div>
 
-% while( my ($category, $tree_args) = each %$species ) {
+% for my $category (reverse sort keys %$species) {
+%    my $tree_args = $species->{$category};
 
-  <& /util/organism_tree.mas, %$tree_args &>
-      
+    <& /util/organism_tree.mas,
+      speciesinfo_cache => $cache,
+      schema => $schema,
+      %$tree_args,
+     &>
+
 % }
