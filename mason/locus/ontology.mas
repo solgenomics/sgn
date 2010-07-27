@@ -2,8 +2,8 @@
 
 </%args>
 
-    <div id="locus_ontology" >[loading...]</div>
-</&>
+<div id="locus_ontology" >[loading...]</div>
+
 
 <script language="javascript" type="text/javascript">
 <!--
