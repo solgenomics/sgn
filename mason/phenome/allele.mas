@@ -74,16 +74,16 @@ $individual_link .=
 
 push @allele_data,
   [
-   map { $_ } (
-	       "<i>" . $a->get_allele_symbol . "</i>",
-	       $a->get_allele_name,
-	       $allele_synonym_link,
-	       qq|<div align="left"><a href="/phenome/allele.pl?action=view&amp;allele_id=$allele_id"> |
-	       . $phenotype
-	       . "</a></div>",
-	       $individual_link,
-	       $allele_edit_link,
-	      )
+   (
+    "<i>" . $a->get_allele_symbol . "</i>",
+    $a->get_allele_name,
+    $allele_synonym_link,
+    qq|<div align="left"><a href="/phenome/allele.pl?action=view&amp;allele_id=$allele_id"> |
+    . $phenotype
+    . "</a></div>",
+    $individual_link,
+    $allele_edit_link,
+   )
   ];
 
 }

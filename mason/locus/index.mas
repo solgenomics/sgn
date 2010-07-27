@@ -159,7 +159,7 @@ my @sorted_pubs =  defined @{ $dbxrefs{PMID} } ? sort { $a->[0]->get_accession()
 my @sgn_ref =  defined ( @{ $dbxrefs{SGN_ref} } ) ? @{ $dbxrefs{SGN_ref} } : () ;
 
 @sorted_pubs = ( @sorted_pubs, @sgn_ref );
-my $pub_count = scalar ( map($_->[1]  , @sorted_pubs ) ) ;
+my $pub_count = scalar (@sorted_pubs) ;
 
 my $pub_subtitle = !(grep { /^$user_type$/ } ('curator', 'submitter', 'sequencer') ) ? 	qq|<span class=\"ghosted\">[Associate publication]</span>|
   : qq|<a href="/chado/add_publication.pl?type=locus&amp;type_id=$locus_id&amp;refering_page=$this_page&amp;action=new"> [Associate publication] </a>|;
