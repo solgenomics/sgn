@@ -16,10 +16,10 @@ JSAN.use('Prototype');
 var Locus = {
     //update the registry input box when an option is selected. Not sure if we should do this or not
     updateRegistryInput:  function() {
-	var select_box = MochiKit.DOM.getElement('registry_select');
+	var select_box = $('registry_select');
 	for (i=0; i < select_box.length; i++){
 	    if(select_box.options[i].selected) {
-		MochiKit.DOM.getElement('associate_registry_button').disabled = false;
+		$('associate_registry_button').disabled = false;
 	    }
 	}
     },
@@ -27,19 +27,21 @@ var Locus = {
     //Make an ajax response that finds all the registries with names or symbols like the current value of the registry input
     getRegistries: function(str)  {
 	if(str.length==0){
-	    var select = MochiKit.DOM.getElement('registry_select');
+	    var select = $('registry_select');
 	    select.length=0;
-	    MochiKit.DOM.getElement('associate_registry_button').disabled = true;
+	    $('associate_registry_button').disabled = true;
 	} else{
-	    var d = new MochiKit.Async.doSimpleXMLHttpRequest("registry_browser.pl", {registry_name: str});
-	    d.addCallbacks(this.updateRegistrySelect);
-	}	
+	    new Ajax.Request("/phenome/registry_browser.pl", {
+		    parameters: { registry_name: str },
+		    onSuccess: this.updateRegistrySelect
+		});
+	}
     },
     
     //Parse the ajax response and update the registry select box accordingly
     updateRegistrySelect: function(request) {
-	var select =  MochiKit.DOM.getElement('registry_select');
-	MochiKit.DOM.getElement('associate_registry_button').disabled = true;
+	var select =  $('registry_select');
+	$('associate_registry_button').disabled = true;
 	var responseText = request.responseText;
 	var responseArray = responseText.split("|");
 	
@@ -55,40 +57,50 @@ var Locus = {
 	}
     },
     
-    //Make an ajax response that associates the selected registry with this locus
-    associateRegistry: function(locus_id, sp_person_id) {
-	var registry_id =  MochiKit.DOM.getElement('registry_select').value;
-	var d = new MochiKit.Async.doSimpleXMLHttpRequest("associate_registry.pl", {registry_id: registry_id, locus_id: locus_id, sp_person_id: sp_person_id});
-	d.addCallbacks(Tools.reloadPage);
-    },
     
-    
+        
     //Make an ajax response that adds a registry to the database and associates it with this locus
     addRegistry: function(locus_id, sp_person_id) {
-	var registry_name = MochiKit.DOM.getElement('registry_name').value;
-	var registry_symbol = MochiKit.DOM.getElement('registry_symbol').value;
-	var registry_description = MochiKit.DOM.getElement('registry_description').value;
+	var registry_name = $('registry_name').value;
+	var registry_symbol = $('registry_symbol').value;
+	var registry_description = $('registry_description').value;
 	
 	if(registry_symbol == ""){
-	    MochiKit.DOM.getElement("add_registry_button").disabled=false;	    
+	    $("add_registry_button").disabled=false;	    
 	    alert("You must enter a symbol for the new registry");
 	    return false;
 	}else if(registry_name == ""){
-	    MochiKit.DOM.getElement("add_registry_button").disabled=false;
+	    $("add_registry_button").disabled=false;
 	    alert("You must enter a name for the new registry");
 	    return false;
 	}
-	var d = new MochiKit.Async.doSimpleXMLHttpRequest("add_registry.pl", {registry_symbol: registry_symbol, registry_name: registry_name, registry_description: registry_description, sp_person_id: sp_person_id, locus_id: locus_id});
-	d.addCallbacks(this.registry_exists);
+	new Ajax.Request("/phenome/add_registry.pl", {
+		parameters: { registry_symbol: registry_symbol, registry_name: registry_name, registry_description: registry_description, sp_person_id: sp_person_id, locus_id: locus_id},
+		
+		onSuccess: function(response) {
+		    //create an alert if the ajax request for adding a registry finds that the registry already exists
+		    if (response.responseText == "already exists") {
+			alert('That registry already exists');
+		    } else{
+			this.associateRegistry(locus_id, sp_person_id);
+		    }
+		}
+	    });
     },
-    
-    //create an alert if the ajax request for adding a registry finds that the registry already exists
-    registry_exists: function(request) {
-	if(request.responseText == "already exists"){
-	    alert('That registry already exists');
-	} else{
-	    this.associateRegistry();
-	}
+
+//Make an ajax response that associates the selected registry with this locus
+    associateRegistry: function(locus_id, sp_person_id) {
+	var registry_id =  $('registry_select').value;
+	new Ajax.Request("/phenome/associate_registry.pl", {
+		parameters: { registry_id: registry_id, locus_id: locus_id, sp_person_id: sp_person_id },
+		    onSuccess: Tools.reloadPage() //change this to
+		    //onSuccess: function(response) {
+		    //var json = response.responseText;
+		    //var x =eval ("("+json+")");
+		    //var e = $("locus_registry").innerHTML=x.response;
+		    //if ( x.error ) { alert(x.error) ; }
+		    //}
+		    });
     },
     
     addRegistryView: function()  {	
@@ -103,27 +115,27 @@ var Locus = {
     
     //Logic on when to enable the add registry button
     enableButton: function() {
-	var registry_name = MochiKit.DOM.getElement('registry_name').value;
-	var registry_symbol = MochiKit.DOM.getElement('registry_symbol').value;
+	var registry_name = $('registry_name').value;
+	var registry_symbol = $('registry_symbol').value;
 	if(registry_symbol != "" && registry_name != ""){
-	    MochiKit.DOM.getElement("add_registry_button").disabled=false;	    
+	    $("add_registry_button").disabled=false;	    
 	} 
 	else{
-	    MochiKit.DOM.getElement("add_registry_button").disabled=true;
+	    $("add_registry_button").disabled=true;
 	}
     },
     
     //Make an ajax request that finds all the alleles related to the currently selected individual
     getAlleles: function(locus_id) {
-	MochiKit.DOM.getElement("associate_individual_button").disabled=false;
-	var individual_id = MochiKit.DOM.getElement('individual_select').value;
+	$("associate_individual_button").disabled=false;
+	var individual_id = $('individual_select').value;
 	var d = new MochiKit.Async.doSimpleXMLHttpRequest("allele_browser.pl", {locus_id: locus_id, individual_id: individual_id});
 	d.addCallbacks(this.updateAlleleSelect);
     },
     
     //Parse the ajax response to update the allele select box
     updateAlleleSelect: function(request) {
-	var select = MochiKit.DOM.getElement('allele_select');
+	var select = $('allele_select');
 	var responseText = request.responseText;
 	var responseArray = responseText.split("|");
 	//the last element of the array is empty. Dont want this in the select box
@@ -174,9 +186,9 @@ var Locus = {
     getIndividuals: function(str, locus_id) {
 	var type = 'browse';
 	if(str.length==0){
-	    var select = MochiKit.DOM.getElement('individual_select');
+	    var select = $('individual_select');
 	    select.length=0;
-	    MochiKit.DOM.getElement('associate_individual_button').disabled = true;
+	    $('associate_individual_button').disabled = true;
 	}
         else{
 	    var d = new MochiKit.Async.doSimpleXMLHttpRequest("individual_browser.pl", {individual_name: str, locus_id: locus_id, type: type});
@@ -199,8 +211,8 @@ var Locus = {
     
     //Parse the ajax response to update the individuals select box
     updateIndividualsSelect: function(request) {
-        var select = MochiKit.DOM.getElement('individual_select');
-	MochiKit.DOM.getElement('associate_individual_button').disabled = true;
+        var select = $('individual_select');
+	$('associate_individual_button').disabled = true;
 	
         var responseText = request.responseText;
         var responseArray = responseText.split("|");
@@ -351,13 +363,13 @@ var Locus = {
     getLocusRelationship: function() {
 	//MochiKit.DOM.getElement("associate_locus_button").disabled=false;
 	var type = 'locus_relationship'; 
-	var locus_relationship_id = MochiKit.DOM.getElement('locus_relationship_select').value;
+	var locus_relationship_id = $('locus_relationship_select').value;
 	var d = new MochiKit.Async.doSimpleXMLHttpRequest("locus_browser.pl", {type: type} );	
 	d.addCallbacks(this.updateLocusRelationshipSelect);
     },
 
     updateLocusRelationshipSelect: function(request) {
-	var select = MochiKit.DOM.getElement('locus_relationship_select');
+	var select = $('locus_relationship_select');
 		
         var responseText = request.responseText;
         var responseArray = responseText.split("|");
@@ -383,13 +395,13 @@ var Locus = {
     getLocusEvidenceCode: function() {
     	//MochiKit.DOM.getElement("associate_locus_button").disabled=false;
 	var type = 'locus_evidence_code';
-	var locus_evidence_code_id = MochiKit.DOM.getElement('locus_evidence_code_select').value;
+	var locus_evidence_code_id = $('locus_evidence_code_select').value;
 	var d = new MochiKit.Async.doSimpleXMLHttpRequest("locus_browser.pl", {type: type}  );	
 	d.addCallbacks(this.updateLocusEvidenceCodeSelect);
     },
     
     updateLocusEvidenceCodeSelect: function(request) {
-	var select = MochiKit.DOM.getElement('locus_evidence_code_select');
+	var select = $('locus_evidence_code_select');
 	
         var responseText = request.responseText;
         var responseArray = responseText.split("|");
@@ -417,9 +429,9 @@ var Locus = {
     //Make an ajax response that finds all the unigenes with unigene ids like the current value of the unigene id input
     getUnigenes: function(unigene_id, locus_id) {
 	if(unigene_id.length==0){
-	    var select = MochiKit.DOM.getElement('unigene_select');
+	    var select = $('unigene_select');
 	    select.length=0;	
-	    MochiKit.DOM.getElement('associate_unigene_button').disabled = true;
+	    $('associate_unigene_button').disabled = true;
 	} else {	
 	    var type = 'browse';
 	    new Ajax.Request('unigene_browser.pl', { parameters:
@@ -430,7 +442,7 @@ var Locus = {
     
     //Parse the ajax response and update the unigene  select box accordingly
     updateUnigeneSelect: function(response) {
-	var select = MochiKit.DOM.getElement('unigene_select');
+	var select = $('unigene_select');
 	//MochiKit.DOM.getElement('associate_unigene_button').disabled = true;
 	var json  = response.responseText;
 	var x = eval ("("+json+")"); 
@@ -566,7 +578,7 @@ var Locus = {
 		    MochiKit.Logging.log("getCvtermsList response:  " , json);
 		    if (x.error) { alert(x.error); }
 		    else { 
-			var select = MochiKit.DOM.getElement('cvterm_list_select');
+			var select = $('cvterm_list_select');
 			var keyCount=0;
 			//first count the # of hash keys. Need to declare first the length of the select menu 
 			for (key in x) keyCount++; 
