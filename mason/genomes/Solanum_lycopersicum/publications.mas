@@ -141,7 +141,7 @@ for my $pub (@pubs) {
 	<td><% $names | h %>
 % if( $extra_names ){
 %   my $id = $pub->pub_id;
-          <span style="display: none" id="extra_<% $id %>"><% $extra_names %></span>
+          <span style="display: none" id="extra_<% $id %>"><% $extra_names |h %></span>
           <a style="display: none" id="fewer_<% $id %>" href="javascript:authors_off(<% $id %>)">show fewer</a>
           <a id="all_<% $id %>" href="javascript:authors_on(<% $id %>)">show all</a>
 %  }
