@@ -34,7 +34,8 @@ Naama Menda <nm249@cornell.edu>
 
 $pub
 $count
-
+$db => undef
+$accession => undef
 </%args>
 
 <%perl>
@@ -45,8 +46,6 @@ use CXGN::Page::FormattingHelpers qw / html_optional_show /;
 use HTML::Entities;
 
 
-#my ( $dbxref, $db, $count ) = @_;
-my $accession = $pub->get_accession();
 my $pub_title = $pub->get_title();
 my $year = $pub->get_pyear();
 my $pub_id = $pub->get_pub_id();
@@ -61,12 +60,12 @@ my $pages         = $pub->get_pages();
 my $abstract_view = html_optional_show(
         "abstracts$count",
         'Show/hide abstract',
-	qq|$abstract <b> <i>$authors.</i> $journal. $pyear. $volume($issue). $pages.</b>|,
+	qq|$abstract <b> <i>$authors.</i> $journal. $year. $volume($issue). $pages.</b>|,
         0,                           #< do not show by default
         'abstract_optional_show',    #< don't use the default button-like style
 	);
 
-$pub_info =
+my $pub_info =
   qq|<div><a href="/chado/publication.pl?pub_id=$pub_id" >$db:$accession</a> $pub_title ($year) $abstract_view </div> |;
 
 
