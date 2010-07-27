@@ -1179,7 +1179,7 @@ sub tooltipped_text {
 
   my ($text, $tooltip, $class) = @_;
 
-  $class||='help';
+  $class||='information';
 
   $tooltip =~ s/'/\\'/g;
   $tooltip =~ s!\n! !g;
@@ -1188,7 +1188,6 @@ sub tooltipped_text {
   return qq{<span class="$class" onmouseover="return escape('$tooltip')">$text</span>};
 
 }
-
 
 =head2 multilevel_mode_selector_html
 
@@ -1503,7 +1502,7 @@ sub _ml_render {
       ml_unset_active(d,activelist);
     }
     activelist[depth] = el.id;
-    el.className += '_active';
+m    el.className += '_active';
   }
 
   var ml_choose_$thisml = function( clicked_id ) {
