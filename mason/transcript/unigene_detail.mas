@@ -136,12 +136,6 @@ $temp_dir
 &>
 
 <& 
-   '/transcript/unigene/assembly_analysis.mas',
-   sgn_schema=>$sgn_schema,
-   unigene => $unigene, 
-&>
-
-<& 
    '/transcript/unigene/preceding_unigenes.mas',
    dbh     => $dbh,
    unigene => $unigene, 
