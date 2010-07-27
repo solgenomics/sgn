@@ -13,7 +13,7 @@ my @families_to_display = qw( Solanaceae  Rubiaceae  Plantaginaceae );
 my $cache = Cache::File->new(
 
     cache_root      => $c->path_to( $c->tempfiles_subdir('sgn_data_pl') ),
-    default_expires => '1 day',
+    default_expires => '6 hours',
 
     load_callback   => sub {
         my $cache_entry = shift;
