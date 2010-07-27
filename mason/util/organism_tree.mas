@@ -24,7 +24,6 @@ Naama Menda <nm249@cornell.edu>
     $species_hashref
     $speciesinfo_cache => undef
     $uri_dir
-    $sicache_dir => undef
     $tmp_dir
     $image_only => 0
 </%args>
