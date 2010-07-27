@@ -1,10 +1,7 @@
 <%args>
-    $title => 'Ontology Annotations'
+
 </%args>
-<&| /page/info_section.mas,
-    title       => $title,
-    collapsible => 1,
-&>
+
     <div id="locus_ontology" >[loading...]</div>
 </&>
 
