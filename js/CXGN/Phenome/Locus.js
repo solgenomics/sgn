@@ -11,7 +11,7 @@ JSAN.use('MochiKit.Async');
 
 JSAN.use('CXGN.Effects');
 JSAN.use('CXGN.Phenome.Tools');
-
+JSAN.use('Prototype');
 
 var Locus = {
     //update the registry input box when an option is selected. Not sure if we should do this or not

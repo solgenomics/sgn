@@ -4,7 +4,6 @@ use CXGN::Page;
 
 
 use CXGN::People;
-use CXGN::Contact;
 use CXGN::Page::FormattingHelpers qw(
         info_section_html
         page_title_html
@@ -14,15 +13,12 @@ use CXGN::Page::FormattingHelpers qw(
         html_alternate_show
         tooltipped_text
       );
-use CXGN::Page::Widgets qw / collapser /;
+
 use CXGN::Phenome::Locus;
-use CXGN::Phenome::Locus::LinkageGroup;
 
 
 use CXGN::Chado::CV;
 use CXGN::Chado::Feature;
-use CXGN::Chado::Publication;
-use CXGN::Chado::Pubauthor;
 
 
 use CXGN::Tools::Identifiers qw/parse_identifier/;
@@ -80,7 +76,7 @@ my @owners   = $locus->get_owners();
 ####################################################
 my @allele_objs = $locus->get_alleles();    #array of allele objects
 
-my ( $tgrc, $pubs, $pub_count, $genbank, $gb_count, $onto_ref ) =
+my ( $tgrc ) =
     get_dbxref_info($locus, @allele_objs);
 
 ##############################
@@ -103,35 +99,25 @@ if ($locus_name) {
 
 #####################           UNIGENES AND SOLCYC
 
-my @unigenes = $locus->get_unigenes();
-my $unigene_count=0;
-
-foreach (@unigenes) { 
-    $unigene_count++ if $_->get_status eq 'C'; 
-}
-
-
 
 my $sequence_links;
 if ($locus_name) {
+    my $genbank;
     if ( !$genbank ) {
 	$genbank = qq|<span class=\"ghosted\">none </span>|;
     }
-    $genbank .=
-	qq|<a href="/chado/add_feature.pl?type=locus&amp;type_id=$locus_id&amp;refering_page=$script&amp;action=new">[Associate new genbank sequence]</a><br />|;
-    	
     
-    #printing associated unigenes section dynamically
-    my $dyn_unigenes = CXGN::Phenome::Locus::LocusPage::include_locus_unigenes();
+    my $dyn_unigenes;
     
     $sequence_links = info_table_html(
 	'SGN Unigenes'       => $dyn_unigenes,
 	'GenBank Accessions' => $genbank,
         'Genome Matches'     => genomic_annots_html($locus),
         __border             => 0,
-       );
+	);
 }
-my $seq_count = $gb_count + $unigene_count;
+
+my $seq_count;# = $gb_count + $unigene_count;
 print info_section_html(
     title       => "Sequence annotations ($seq_count)",
     contents    => $sequence_links,
@@ -139,50 +125,12 @@ print info_section_html(
     collapsible => 1,
     collapsed   => 1,
     );
-$d->d("!!!got sequence :  " . ( time() - $time ) . "\n");
+
 
 ##########literature ########################################
-my ( $pub_links, $pub_subtitle );
-if ($pubs) {
-    $pub_links = info_table_html(
-	"  "     => $pubs,
-	__border => 0,
-        );
-}
 
-if (
-    $locus_name
-    && (   $user_type eq 'curator'
-	   || $user_type eq 'submitter'
-	   || $user_type eq 'sequencer' )
-    )
-{
-    $pub_subtitle .=
-	qq|<a href="/chado/add_publication.pl?type=locus&amp;type_id=$locus_id&amp;refering_page=$script&amp;action=new"> [Associate publication] </a>|;
-}
-else {
-    $pub_subtitle =
-	qq|<span class=\"ghosted\">[Associate publication]</span>|;
-}
 
-my $disabled = "true";
-if ($person_id) { $disabled = "false"; }
-$pub_subtitle .=
-    qq | <a href="javascript:void(0)"onclick="window.open('locus_pub_rank.pl?locus_id=$locus_id','publication_list','width=600,height=400,status=1,location=1,scrollbars=1')">[Matching publications]</a> |;
-
-$d->d("!!!Printing pub links :  " . ( time() - $time ) . "\n");
-
-print info_section_html(
-    title       => "Literature annotation ($pub_count)",
-    subtitle    => $pub_subtitle,
-    contents    => $pub_links,
-    collapsible => 1,
-    collapsed   => 1,
-    );
-
-######################################## Ontology details ##############
-
-my $ont_count = $locus->count_ontology_annotations(); #= scalar(@$onto_ref);
+my $ont_count = $locus->count_ontology_annotations();
 
 my $ontology_add_link = "";
 my $ontology_subtitle;
@@ -250,7 +198,7 @@ sub get_dbxref_info {
             }
         }
     }
-    my ( $tgrc, $pubs, $genbank );
+    my ( $tgrc,$genbank );
     ##tgrc
     foreach ( @{ $dbs{'tgrc'} } ) {
         if ( $_->[1] eq '0' ) {
@@ -261,80 +209,11 @@ sub get_dbxref_info {
         }
     }
     
-    my $abs_count = 0;
-    my @sorted;
- 
-    @sorted = sort { $a->[0]->get_accession() <=> $b->[0]->get_accession() } @{ $dbs{PMID} } if  defined @{ $dbs{PMID} } ;
- 
-    foreach ( @sorted  ) {
-        if ( $_->[1] eq '0' ) {    #if the pub is not obsolete
-            $pubs .= get_pub_info( $_->[0], 'PMID', $abs_count++ );
-        }
-    }
-    foreach ( @{ $dbs{'SGN_ref'} } ) {
-        $pubs .= get_pub_info( $_->[0], 'SGN_ref', $abs_count++ )
-	    if $_->[1] eq '0';
-    }
-    
-    my $gb_count = 0;
-    foreach ( @{ $dbs{'DB:GenBank_GI'} } ) {
-        if ( $_->[1] eq '0' ) {
-            $gb_count++;
-            my $url = $_->[0]->get_urlprefix() . $_->[0]->get_url();
-            my $gb_accession =
-		$locus->CXGN::Chado::Feature::get_feature_name_by_gi(
-		    $_->[0]->get_accession() );
-            my $description = $_->[0]->get_description();
-            $genbank .=
-		qq|<a href="$url$gb_accession" target="blank">$gb_accession</a> $description<br />|;
-        }
-    }
-    my @ont_annot;
-    
-    # foreach ( @{$dbs{'GO'}}) { push @ont_annot, $_; }
-    # foreach ( @{$dbs{'PO'}}) { push @ont_annot, $_; }
-    # foreach ( @{$dbs{'SP'}}) { push @ont_annot, $_; }
-    
-    return ( $tgrc, $pubs, $abs_count, $genbank, $gb_count, \@ont_annot );
+     
+    return ( $tgrc );
 }
 
 ########################
-
-sub abstract_view {
-    my $pub           = shift;
-    my $abs_count     = shift;
-    my $abstract      = encode_entities($pub->get_abstract() );
-    my $authors       = encode_entities($pub->get_authors_as_string() );
-    my $journal       = $pub->get_series_name();
-    my $pyear         = $pub->get_pyear();
-    my $volume        = $pub->get_volume();
-    my $issue         = $pub->get_issue();
-    my $pages         = $pub->get_pages();
-    my $abstract_view = html_optional_show(
-        "abstracts$abs_count",
-        'Show/hide abstract',
-	qq|$abstract <b> <i>$authors.</i> $journal. $pyear. $volume($issue). $pages.</b>|,
-        0,                           #< do not show by default
-        'abstract_optional_show',    #< don't use the default button-like style
-	);
-    return $abstract_view;
-}    #
-
-sub get_pub_info {
-    my ( $dbxref, $db, $count ) = @_;
-    my $pub_info;
-    my $accession = $dbxref->get_accession();
-    my $pub_title = $dbxref->get_publication()->get_title();
-    my $year= $dbxref->get_publication()->get_pyear();
-    my $pub_id    = $dbxref->get_publication()->get_pub_id();
-    my $abstract_view =
-	abstract_view( $dbxref->get_publication(), $count );
-    $pub_info =
-	qq|<div><a href="/chado/publication.pl?pub_id=$pub_id" >$db:$accession</a> $pub_title ($year) $abstract_view </div><br /> |;
-    return $pub_info;
-}    #
-
-
 #######################################################
 #returns string html listing of locus sequence matches found in ITAG gbrowse DBs
 sub genomic_annots_html {

@@ -19,6 +19,7 @@ JSAN.use('MochiKit.Visual');
 JSAN.use('MochiKit.Async');
 
 JSAN.use('CXGN.Phenome.Tools');
+JSAN.use('Prototype');
 
 if (!CXGN) CXGN = function() {};
 if (!CXGN.Phenome) CXGN.Phenome = function() {};
@@ -243,7 +244,7 @@ CXGN.Phenome.Locus.LocusPage.prototype = {
     //Make an ajax response that finds all the unigenes with unigene ids like the current value of the unigene id input
     getUnigenes: function(unigene_id, locus_id) {
 	if(unigene_id.length==0){
-	    var select = $('unigene_select');
+	    var select = MochiKit.DOM.getElement('unigene_select');
 	    select.length=0;	
 	    $('associate_unigene_button').disabled = true;
 	} else {	

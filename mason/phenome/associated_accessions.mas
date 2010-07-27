@@ -178,6 +178,5 @@ if ($more) {
 </%perl>
 
 
-<& /util/import_javascript.mas, classes => ["jQuery", "thickbox", "CXGN.Page.FormattingHelpers"] &>
 
 <% $html %>

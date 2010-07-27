@@ -51,6 +51,8 @@ $dbh
 
 use CXGN::Phenome::Locus;
 use CXGN::Sunshine::Browser;
+use CXGN::Page::FormattingHelpers qw / html_optional_show info_table_html /;
+
 
 # print message if locus_id os not valid 
 unless ( ( $locus_id =~ m /^\d+$/ ) || ($action eq 'new' && !$locus_id) ) {
@@ -142,9 +144,46 @@ my $new_unigene_link =
 
 my %dbxrefs = $locus->get_all_dbxrefs();
 
+my $tgrc;
+foreach ( @{ $dbxrefs{'tgrc'} } ) {
+  if ( $_->[1] eq '0' ) {
+    my $url       = $_->[0]->get_urlprefix() . $_->[0]->get_url();
+    my $accession = $_->[0]->get_accession();
+    $tgrc .=
+      qq|<br>$locus_name is a <a href="$url$accession" target="blank">TGRC gene</a><br />|;
+  }
+}
+
+my @sorted_pubs =  defined @{ $dbxrefs{PMID} } ? sort { $a->[0]->get_accession() <=> $b->[0]->get_accession() } @{ $dbxrefs{PMID} } : () ;
+
+my @sgn_ref =  defined ( @{ $dbxrefs{SGN_ref} } ) ? @{ $dbxrefs{SGN_ref} } : () ;
+
+@sorted_pubs = ( @sorted_pubs, @sgn_ref );
+my $pub_count = scalar ( map($_->[1]  , @sorted_pubs ) ) ;
+
+my $pub_subtitle = !(grep { /^$user_type$/ } ('curator', 'submitter', 'sequencer') ) ? 	qq|<span class=\"ghosted\">[Associate publication]</span>|
+  : qq|<a href="/chado/add_publication.pl?type=locus&amp;type_id=$locus_id&amp;refering_page=$this_page&amp;action=new"> [Associate publication] </a>|;
+
+$pub_subtitle .=
+  qq | <a href="javascript:void(0)"onclick="window.open('locus_pub_rank.pl?locus_id=$locus_id','publication_list','width=600,height=400,status=1,location=1,scrollbars=1')">[Matching publications]</a> |;
+
+my ($genbank, $gb_count);
+foreach  my $g  ( @{ $dbxrefs{'DB:GenBank_GI'} } )  {
+  if ( $g->[1] eq '0' ) {
+    my $url = $g->[0]->get_urlprefix() . $g->[0]->get_url();
+    my $gb_accession =
+      $locus->CXGN::Chado::Feature::get_feature_name_by_gi( $g->[0]->get_accession() );
+    my $description = $g->[0]->get_description();
+    $genbank .=
+      qq|<a href="$url$gb_accession" target="blank">$gb_accession</a> $description<br />|;
+    $gb_count++;
+  }
+}
+my $seq_count = $gb_count + scalar(@unigenes);
+
 </%perl>
 
-<& /util/import_javascript.mas, classes => ["jQuery", "thickbox", "CXGN.Page.FormattingHelpers", "CXGN.Phenome.Locus", "CXGN.Phenome.Tools", "CXGN.Phenome.Locus.LocusPage", "CXGN.Sunshine.NetworkBrowser"] &>
+<& /util/import_javascript.mas, classes => ["Prototype", "jQuery", "thickbox", "CXGN.Page.FormattingHelpers", "CXGN.Phenome.Locus", "CXGN.Phenome.Tools", "CXGN.Phenome.Locus.LocusPage", "CXGN.Sunshine.NetworkBrowser"] &>
 
 
 <& /locus/initialize.mas, locus_id=>$locus_id  &>
@@ -164,24 +203,21 @@ my %dbxrefs = $locus->get_all_dbxrefs();
 	<tr><td>
 	    <& /locus/registry.mas , person_id=>"$person_id", locus_id=>"$locus_id" , owner=>"$owner", registry=>"$registry" &>
 	      <& /locus/synonym.mas ,  locus_id=>"$locus_id" , synonyms=>\@synonyms &>
-		
+
+<% $tgrc %>
+
   <& /locus/locus_editor.mas, owners=>$owner_objects  &>
-    <a href="claim_locus_ownership.pl?locus_id=<% $locus_id %>&amp;action=confirm"> [Request editor privileges]</a><br /><br />
-    
-    <& /locus/edits_info.mas, locus=>$locus  &>
- 
-	</td></tr>
+  <a href="claim_locus_ownership.pl?locus_id=<% $locus_id %>&amp;action=confirm"> [Request editor privileges]</a><br /><br />
+  <& /locus/edits_info.mas, locus=>$locus  &>
+  </td></tr>
       </table>
     </td>
-    
-    <td><table><tr><td>
+  <td><table><tr><td>
   <& /locus/map_location.mas, person_id=>"$person_id", locus=>$locus  &>
-      </td></tr></table>
+  </td></tr></table>
 </table>
+  </&>
 
-</&>
-
-      
 % if($owner) {
     <&| /page/info_section.mas, title=>"Locus history", collapsible=>1, collapsed=>1 &>
       <& /locus/history.mas, locus=>$locus  &>
@@ -243,21 +279,47 @@ my %dbxrefs = $locus->get_all_dbxrefs();
 </&>
 
     
-<&| /page/info_section.mas, title=>"Sequence annotations", id=>"unigenes" , collapsible=>1, collapsed=>$collapsed &>
-  <% $new_unigene_link %>
-  <& /locus/associate_unigene.mas, locus_id=>$locus_id &>
-   <& /locus/locus_unigenes.mas &>
+<&| /page/info_section.mas, title=>"Sequence annotations ($seq_count)" , collapsible=>1, collapsed=>1 &>
+  <&| /page/info_section.mas, title => "SGN Unigenes",
+    id => 'unigenes',
+    subtitle => $new_unigene_link,
+    collapsible => 1,
+    collapsed =>  0 ,
+    is_subsection => 1,
+    &>
+    <& /locus/associate_unigene.mas, locus_id=>$locus_id &>
+      <& /locus/locus_unigenes.mas &>
+      </&>
+      <&| /page/info_section.mas, title => "GenBank accessions",
+	subtitle => qq|<a href="/chado/add_feature.pl?type=locus&amp;type_id=$locus_id&amp;refering_page=$this_page&amp;action=new">[Associate new genbank sequence]</a>|,
+	collapsible => 1,
+	collapsed =>  0 ,
+	is_subsection => 1,
+	&>
+	
+	<% $genbank %>
+</&>
+<&| /page/info_section.mas, title => "Genome matches",
+  subtitle => '',
+  collapsible => 1,
+  collapsed =>  0 ,
+  is_subsection => 1,
+  &>
   
-  
+  <& /locus/locus_genomic_annotations.mas, locus_id=>$locus_id &>
+    
 </&>
 
-<&| /page/info_section.mas, title=>"Literature annotations", id=>"publications" , collapsible=>1, collapsed=>1 &>
+</&>
+
+<&| /page/info_section.mas, title=>"Literature annotations ($pub_count)" , subtitle=>$pub_subtitle, id=>"publications" , collapsible=>1, collapsed=>1 &>
   
 % my $pub_count = 0;
-% foreach my $pub ( @( $dbxrefs{PMID} ) , @( $dbxrefs{SGN_ref} ) ) {
-%  if ( $_->[1] eq '0' ) {    #if the pub is not obsolete
-  <& /chado/publication.mas, pub=>$pub, count=>$pub_count++ &>
-    
+% foreach my $d ( @sorted_pubs ) {
+%  if ( $d->[1] eq '0') { #if the dbxref is not obsolete
+%   my $pub = CXGN::Chado::Publication->new($dbh, $d->[0]->get_publication()->get_pub_id() );
+  <& /chado/publication.mas, pub=>$pub, count=>$pub_count++, db=>$d->[0]->get_db_name(), accession=>$d->[0]->get_accession() &>
+    <br >
 %  }
 % }
 

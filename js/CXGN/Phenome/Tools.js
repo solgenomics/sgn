@@ -11,7 +11,7 @@ JSAN.use('MochiKit.Async');
 
 JSAN.use('CXGN.Effects');
 JSAN.use('CXGN.Phenome.Locus');
-
+JSAN.use('Prototype');
 
 var Tools = {
     
@@ -319,8 +319,8 @@ var Tools = {
 	var onswitch= span + "_onswitch";
 	var offswitch= span + "_offswitch";
 	
-	var form_disp=$(form).style.display;
-	var content_disp= $(content).style.display; 
+	var form_disp=MochiKit.DOM.getElement(form).style.display;
+	var content_disp= MochiKit.DOM.getElement(content).style.display; 
 	
 	MochiKit.Logging.log('content display =', content_disp);    
 	//MochiKit.Logging.log('form display=' , form_disp);
