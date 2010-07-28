@@ -19,7 +19,6 @@ $sel->type_ok("species","Solanum lycopersicum");
 
 #---- click "update result" button on page ----#
 $sel->click_ok("update_result");
-#$sel->wait_for_page_to_load_ok(10000);
 
 sleep(2);
 
