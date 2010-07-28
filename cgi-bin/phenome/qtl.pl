@@ -10,6 +10,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 =cut
 
 use strict;
+use warnings;
 
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw /info_section_html
@@ -170,7 +171,7 @@ sub legend {
    my @stat;
    my $ci;
     
-    open my $uf, "<", $user_stat_file or die "$! reading $user_stat_file\n";
+    open my $uf, "<", $user_stat_file or die "$! reading $user_stat_file";
     while ( my $row = <$uf> )
     {
 	chomp($row);
@@ -192,7 +193,7 @@ sub legend {
 	       ) 
 
 	{
-	    push @stat, [map{$_} ($parameter, $value)];
+	    push @stat, [ $parameter, $value ];
 	   
 	}
     }
