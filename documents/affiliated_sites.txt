@@ -1,4 +1,16 @@
 <div class="boxheading">
+Projects
+</div>
+<div class="boxcontent">
+<a href="/secretom">Secretom Project</a><br /><br />
+</div>
+<div class="boxheading">
+Mirror Site
+</div>
+<div class="boxcontent">
+<a href="http://solgenomics.wur.nl">http://solgenomics.wur.nl</a><br /><br />
+</div>
+<div class="boxheading">
 Affiliated Sites
 </div>
 <div class="boxcontent">

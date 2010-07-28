@@ -51,7 +51,16 @@ $qtl_image = qq |<img src="$qtl_image" width=320 height=320 alt="QTL for $trait_
   </table>
 </&>
 
-<&| /page/info_section.mas, title => "QTL markers' detail"&><%$marker_link%></&>
+<&| /page/info_section.mas, title => "QTL markers' detail" &>  
+  <& /page/columnar_table.mas,
+     headings=>["Marker", " Position (cM)", "Remark"],
+    data=>$marker_link,
+    __alt_freq   =>2,
+    __alt_width  => 1,
+    __alt_offset => 3,
+    __align=> 'l'
+    &>
+</&>
 <&| /page/info_section.mas, title => "QTL markers' genetic positions and Comparative Map Viewer"&><%$cmv_link%></&>
 <&| /page/info_section.mas, title => "Marker genome positions"&><%$gbrowse_link%></&>
 <&| /page/info_section.mas, title => "Population genetic map"&><%$genetic_map%></&>

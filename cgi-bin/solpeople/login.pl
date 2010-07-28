@@ -1,3 +1,4 @@
+
 #!/usr/bin/perl -w
 use strict;
 
@@ -65,7 +66,7 @@ unless ( $page->{request}->is_initial_req()
 }
 
 
-if ( $logout eq "yes" )              #if we are in the process of logging out
+if ( $logout && $logout eq "yes" )              #if we are in the process of logging out
 {
     $login_controller->logout_user();
     $page->message_page(

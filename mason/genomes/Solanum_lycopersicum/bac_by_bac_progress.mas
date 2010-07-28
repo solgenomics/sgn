@@ -16,17 +16,6 @@ Lukas Mueller <lam87@cornell.edu>. Based on Perl code by many at SGN.
 
 </%doc>
 
-<!-- p> The International Tomato Genome Sequencing Project aims to
-sequence the gene-rich euchromatic portions of the twelve tomato
-chromosomes.  An international consortium of sequencing centers is
-performing most of the genomic sequencing.  Each chromosome is
-assigned to a sequencing center.  The genome is split into manageable
-chunks known as BACs (Bacterial Artificial Chromosomes), which are
-sequenced separately, then assembled together. 
-
-<a style="padding-left: 1em" href="/about/tomato_project_overview.pl">more...</a>
-</p -->
-
 <%perl>
 
 use POSIX;
@@ -227,37 +216,5 @@ print info_table_html( __border => 0, __multicol => 3,
 EOHTML
 );
 
-print "<br /><br />\n";
-print info_section_html(title => "Tomato Sequencing Data on SGN", contents => <<DATA_SECTION);
-<ul>
-<li><a href="/about/tomato_project_overview.pl">Project Details</a></li>
-<li><a href="/search/direct_search.pl?search=bacs">Search BACS</a></li>
-<li>Tomato maps: <a href="/cview/map.pl?map_id=9">EXPEN-2000</a> | <a href="/cview/map.pl?map_id=p9">Physical</a> | <a href="/cview/map.pl?map_id=c9">Contig</a> | <a href="/cview/map.pl?map_id=13">FISH</a> | <a href="/cview/map.pl?map_id=agp">Accessioned Golden Path (AGP)</a></li>
-<li><a href="/tomato/genome_data.pl">Browse Tomato Genome Data</a></li>
-<li><a href="/sequencing/tpf.pl">View chromosome tiling path (TPF) files</a></li>
-<li><a href="/sequencing/agp.pl">View chromosome assembly (AGP) files</a></li>
-<li><a href="ftp://ftp.sgn.cornell.edu/genomes/Solanum_lycopersicum/">Download tomato genomic data (FTP)</a></li>
-<li><a href="http://docs.google.com/View?docid=dggs4r6k_1dd5p56">Tomato Sequencing and Bioinformatics Guidelines</a> (Google doc)</li> 
-</ul>
-DATA_SECTION
-
-print info_section_html(title => 'Tomato Sequencing Tools on the Web', contents => <<OTHER_TOOLS_SECTION);
-<ul>
-<li><a href="http://tgrc.ucdavis.edu/Data/Acc/AccDetail.aspx?AccessionNum=LA4345">Heinz 1706 order link at TGRC</a> (the variety used in tomato genome sequencing project)</li>
-<li><a href="http://tomato.cribi.unipd.it/files/bepindex.html">BAC Extension Tool</a> at the University of Padua, Italy.</li>
-<li><a href="http://www.genome.arizona.edu/fpc/tomato/">Tomato FPC pages</a> at University of Arizona, USA.</li>
-<li>Sanger FTP site with <a href="ftp://ftp.sanger.ac.uk/pub/tomato/map/">MboI BAC library FPC build</a></li>
-<li><a href="http://tomato.genetics.ac.cn/TomatoFPC/">FPC builds</a> produced at the Chinese Academy of Sciences.</li>
-<li><a href="http://www.sanger.ac.uk/Software/">Software links at Sanger</a></li>
-<li>The <a href="http://biosrv.cab.unina.it">Tomato Genome Annotation pages</a> at the <a href="http://cab.unina.it">computational biology group</a> of the <a href="http://www.unina.it">University of Naples</a>, Italy.</li>
-<li><a href="http://www.mitochondrialgenome.org">Tomato mitochondrial genome resource</a></li>
-<li><a href="http://www.ncbi.nlm.nih.gov/entrez/viewer.fcgi?db=nuccore&id=149384932">Tomato chloroplast sequence (Genbank)</a></li>
-
-</ul>
-OTHER_TOOLS_SECTION
-
-    my $related_publications = qq { See the <a href="/genomes/Solanum_lycopersicum/tomato_genome_publications.pl">tomato genome publications</a> page. };
-
-print info_section_html(title => 'Related Publications', contents => $related_publications);
-
 </%perl>
+

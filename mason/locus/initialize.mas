@@ -1,0 +1,10 @@
+<%args>
+    $locus_id
+</%args>
+
+<script language="javascript" type="text/javascript">
+<!--
+    var locusPage = new CXGN.Phenome.Locus.LocusPage();
+    locusPage.setLocusId( <% $locus_id %> );
+-->
+</script>

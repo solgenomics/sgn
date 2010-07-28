@@ -17,7 +17,7 @@ Jonathan "Duke" Leto
 use strict;
 use warnings;
 use base 'Test::Class';
-use constant HAS_MUSCLE => sub { no warnings; system "muscle"; $? == 0 ? 1 : 0 }->();
+use constant HAS_MUSCLE => sub { no warnings; system "muscle -version &>/dev/null"; $? == 0 ? 1 : 0 }->();
 use constant MUSCLE_TESTS => HAS_MUSCLE ? 3 : 0;
 
 use Test::More tests => 9 + MUSCLE_TESTS;

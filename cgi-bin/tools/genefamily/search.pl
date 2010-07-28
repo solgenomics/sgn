@@ -1,88 +1,28 @@
-
 use strict;
+use CGI ();
+use CXGN::DB::Connection;
+use CXGN::People::Person;
+use CXGN::Login;
 
-use CXGN::Genefamily;
-use CXGN::Page;
-use Tie::UrlEncoder;
+my $cgi = CGI->new();
+my $dbh = CXGN::DB::Connection->new();
 
-our %urlencode;
+my $login        = CXGN::Login->new($dbh);
+my $sp_person_id = $login->has_session();
+my $person       = CXGN::People::Person->new($dbh, $sp_person_id);
 
-my  $DIR = $c->get_conf('genefamily_dir'); # '/home/mueller/dutch_tomato_assembly/tomato_ara_rice_comparison/';
-my $page = CXGN::Page->new();
-
-my ($genefamily_id, $member_id) = $page->get_encoded_arguments("genefamily_id", "member_id");
-
-my $gf;
-if ($genefamily_id) { 
-    $gf = CXGN::Genefamily->new(name=>$genefamily_id, files_dir=>$DIR);
-    my $seq_data = $gf->get_alignment();
-
-    $page->header();
-  
-    
-    print "<table><tr><td>Family: $genefamily_id</td>\n";
-    print <<HTML;
-
-    <td><form method="post" action="/tools/align_viewer/">
-	<input type="hidden" name="seq_data" value="$seq_data" />
-	<input type="submit" value="view" />
-	<input type="hidden" name="format" value="fasta" />
-	</td></tr></table>
-
-</form>
-
-HTML
-	
-$page->footer();
-    
-    
+unless( $person->get_user_type eq 'genefamily_editor' ) {
+    $c->throw(
+        message  => 'Please log in as the correct user to access the gene families',
+        is_error => 0,
+       );
 }
 
-if ($member_id) { 
-    open (my $F, "<$DIR/dump.out.tomato_rar_rice_pep_self_e-10.m8.I11s2") || die "can't open family file";
-    my $family_nr = 0;
-    my $found = 0;
-    while(<$F>) { 
-	$family_nr++;
-	if ($_=~/\b$member_id\b/i) { 
-	    $found=1;
-	    last();
-	}
-    }
-    
-    $page->header();
-
-    if ($found) { 
-	print qq | $member_id is in family <a href="?genefamily_id=$family_nr">$family_nr</a>. |;
-    }
-    else { 
-	print qq | $member_id was not found. |;
-    }
-
-    $page->footer();
-
-
-    
-}
-	    
-	    
-if (!$member_id && !$genefamily_id) { 
-    
-    $page->header();
-    
-    print <<HTML;
-
-    <h1>Search Gene families</h1>
-	<form>
-	Genefamily id <input name="genefamily_id" />(a number)<br /> 
-	-OR-<br />
-	Member id <input name="member_id" /> (e.g. At1g01060)<br />
-	<input type="submit" />
-	</form>
-
-HTML
-
-$page->footer();
-
-}
+$c->forward_to_mason_view(
+    '/tools/genefamily/search.mas',
+    genefamily_id => $cgi->param('genefamily_id') || '',
+    dataset       => $cgi->param('dataset')       || '',
+    member_id     => $cgi->param('member_id')     || '',
+    action        => $cgi->param('action')        || '',
+   );
 

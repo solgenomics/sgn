@@ -15,7 +15,9 @@ Isaak Y Tecle (iyt2@cornell.edu)
 =cut
 
 use strict;
+use warnings;
 
+our $c;
 my $population_indls_detail_page =
   CXGN::Phenome::PopulationIndlsDetailPage->new();
 
@@ -126,12 +128,10 @@ qq |<a href="/solpeople/personal-info.pl?sp_person_id=$sp_person_id">$submitter_
               || $self->get_user()->get_user_type() eq 'curator' )
        )
     {
-        print STDERR "Generating EditableForm..\n";
         $form = CXGN::Page::Form::Editable->new();
     }
     else
     {
-        print STDERR "Generating static Form...\n";
         $form = CXGN::Page::Form::Static->new();
     }
 
@@ -385,29 +385,46 @@ qq { Download population: <span><a href="pop_download.pl?population_id=$populati
 
         my (
              $image_pheno, $title_pheno, $image_map_pheno,
-             $plot_html,   $normal_dist
+             $plot_html
            );
         ( $image_pheno, $title_pheno, $image_map_pheno ) =
           population_distribution($population_id);
-        $plot_html .= "<table  cellpadding = 5><tr><td>";
+        $plot_html .= qq | <table  cellpadding = 5><tr><td> |;
         $plot_html .= $image_pheno . $image_map_pheno;
-        $plot_html .= "</td><td>";
-        $plot_html .= $title_pheno . "<br/>";
-        $plot_html .= <<HTML;
-        <b>Data Summay:</b><br />
-	<b>No. of observation units:</b> $all_indls_count<br /> 
-        <b>Minimum:</b> $min<br /> 
-        <b>Maximum:</b> $max <br /> 
-        <b>Mean:</b> $avg <br /> 
-        <b>Standard deviation:</b> $std<br />
-HTML
+        $plot_html .= qq | </td><td> |;
+        $plot_html .= $title_pheno . qq | <br/> |;
+       
 
-        $plot_html .= "</td></tr></table>";
+	my @phe_summ =  ( [ 'No. of obs units', $all_indls_count ], 
+			  [ 'Minimum', $min ], 
+			  [ 'Maximum', $max ],
+			  [ 'Mean', $avg ],
+			  [ 'Standard deviation', $std ]
+	                );
+
+	my @summ;
+	foreach my $phe_summ ( @phe_summ ) 
+	{      
+	    push @summ, [ map { $_ } ( $phe_summ->[0], $phe_summ->[1] ) ];
+	}
+
+	my $summ_data  = columnar_table_html(
+                                              headings   => [ '',  ''],
+                                              data       => \@summ,
+                                              __alt_freq   => 2,
+                                              __alt_width  => 1,
+                                              __alt_offset => 3,
+                                              __align      => 'l',
+                                            );
+
+
+        $plot_html .= $summ_data;
+	$plot_html .= qq | </td></tr></table> |;
 
         my $qtl_image           = $self->qtl_plot();
   
 	my $legend = $self->legend($population);
-	my $qtl_html = "<table><tr><td width=70%>$qtl_image</td><td width=30%>$legend</td></tr></table>";
+	my $qtl_html = qq | <table><tr><td width=70%>$qtl_image</td><td width=30%>$legend</td></tr></table> |;
 
         print info_section_html( 
                                 title    => 'QTL(s)',
@@ -416,7 +433,7 @@ HTML
 
         print info_section_html( 
 	                        title    => 'Phenotype Frequency Distribution',
-                                contents => $plot_html . $normal_dist, 
+                                contents => $plot_html, 
                                );
    
 	print info_section_html( 
@@ -504,7 +521,7 @@ sub population_distribution
     my $basepath     = $vh->get_conf("basepath");
     my $tempfile_dir = $vh->get_conf("tempfiles_subdir");
 
-    my $cache = CXGN::Tools::WebImageCache->new(1);
+    my $cache = CXGN::Tools::WebImageCache->new();
     $cache->set_basedir($basepath);
     $cache->set_temp_dir( $tempfile_dir . "/temp_images" );
     $cache->set_expiration_time(259200);
@@ -626,7 +643,7 @@ qq | /phenome/indls_range_cvterm.pl?cvterm_id=$term_id&amp;lower=$lower&amp;uppe
     my $image_map = $cache->get_image_map_data();
     my $image     = $cache->get_image_tag();
     my $title =
-"Frequency distribution of experimental lines from population $pop_name evaluated for $term_name. Bars represent the number of experimental lines with $term_name values greater than the lower limit but less or equal to the upper limit of the range.";
+qq | Frequency distribution of experimental lines evaluated for $term_name. Bars represent the number of experimental lines with $term_name values greater than the lower limit but less or equal to the upper limit of the range. |;
 
     return $image, $title, $image_map;
 }
@@ -745,6 +762,8 @@ sub qtl_plot
 		$l_m = $left[$i];
 		$r_m = $right[$i];
 		$p_m = $peak[$i];
+		s/\s//g for $l_m, $r_m, $p_m;
+
 		my $l_pos =
 		    $population->get_marker_position( $mapversion, $l_m );
 		my $r_pos =
@@ -763,13 +782,10 @@ sub qtl_plot
 		    }
 
 		}
-		my $lod1 = $permu_threshold{ $p_keys[0] };
-		# my $log2 = $permu_threshold{ $p_keys[1] };           
-		
+		my $lod1 = $permu_threshold{ $p_keys[0] };	         		
 		$h_marker = 
 		    qq |/phenome/qtl.pl?population_id=$pop_id&amp;term_id=$term_id&amp;chr=$lg&amp;l_marker=$l_m&amp;p_marker=$p_m&amp;r_marker=$r_m&amp;lod=$lod1|;
- #$h_marker =
-#qq |../cview/view_chromosome.pl?map_version_id=$mapversion&chr_nr=$lg&show_ruler=1&show_IL=&show_offsets=1&comp_map_version_id=&comp_chr=&color_model=&show_physical=&size=&show_zoomed=1&confidence=-2&hilite=$l_m+$p_m+$r_m&marker_type=&cM_start=$l_pos&cM_end=$r_pos |;
+ 
 
 		$cache_tempimages->set( $key_h_marker, $h_marker, '30 days' );
 	    }
@@ -804,7 +820,7 @@ sub qtl_plot
                 push @lod_chr, $lod_chr_e;
             }
 
-            my $cache_qtl_plot = CXGN::Tools::WebImageCache->new(1);
+            my $cache_qtl_plot = CXGN::Tools::WebImageCache->new();
             $cache_qtl_plot->set_basedir($basepath);
             $cache_qtl_plot->set_temp_dir( $tempfile_dir . "/temp_images" );
             $cache_qtl_plot->set_expiration_time(259200);
@@ -873,10 +889,10 @@ sub qtl_plot
 
             $image      = $cache_qtl_plot->get_image_tag();
             $image_url  = $cache_qtl_plot->get_image_url();
-           # $image_html = qq |<a href ="$h_marker&qtl=$image_url">$image</a>|;
+          
 
 ###########thickbox
-            my $cache_qtl_plot_t = CXGN::Tools::WebImageCache->new(1);
+            my $cache_qtl_plot_t = CXGN::Tools::WebImageCache->new();
             $cache_qtl_plot_t->set_basedir($basepath);
             $cache_qtl_plot_t->set_temp_dir( $tempfile_dir . "/temp_images" );
             $cache_qtl_plot_t->set_expiration_time(259200);
@@ -1082,9 +1098,6 @@ sub outfile_list
         "\t",
         $qtl_summary,
         $flanking_markers,
-
-        #$qtl_summary_file,
-        #$flanking_markers_file
                             );
     open FO, ">$file_out" or die "can't open $file_out: $!\n";
     print FO $file_out_list;
@@ -1288,8 +1301,6 @@ sub run_r
     my $file_in         = $self->infile_list();
     my ( $file_out, $qtl_summary, $flanking_markers ) = $self->outfile_list();
     my $stat_file = $self->stat_files();
-
-    print STDERR "stat file: $stat_file\n";
 
     CXGN::Tools::Run->temp_base($prod_temp_path);
 
@@ -1569,12 +1580,11 @@ sub qtl_images_exist
 
     my ( $qtl_image, $image, $image_t, $image_url, $image_html, $image_t_url,
          $thickbox, $title );
-
-    # my $chrs = scalar(@linkage_groups) + 1;
+  
 
   IMAGES: foreach my $lg (@linkage_groups)
     {
-        my $cache_qtl_plot = CXGN::Tools::WebImageCache->new(1);
+        my $cache_qtl_plot = CXGN::Tools::WebImageCache->new();
         $cache_qtl_plot->set_basedir($basepath);
         $cache_qtl_plot->set_temp_dir( $tempfile_dir . "/temp_images" );
       
@@ -1587,12 +1597,10 @@ sub qtl_images_exist
         if ( $cache_qtl_plot->is_valid )
         {
             $image      = $cache_qtl_plot->get_image_tag();
-            $image_url  = $cache_qtl_plot->get_image_url();
-           # $image_html = qq |<a href ="$h_marker&$image_url">$image</a>|;
-
+            $image_url  = $cache_qtl_plot->get_image_url();           
         }
 
-        my $cache_qtl_plot_t = CXGN::Tools::WebImageCache->new(1);
+        my $cache_qtl_plot_t = CXGN::Tools::WebImageCache->new();
         $cache_qtl_plot_t->set_basedir($basepath);
         $cache_qtl_plot_t->set_temp_dir( $tempfile_dir . "/temp_images" );
 
@@ -1610,6 +1618,7 @@ qq | <a href="$image_t_url" title= "<a href=$h_marker&amp;qtl=$image_t_url><font
 
             $qtl_image .= $thickbox;
             $title = "  ";
+	   
 
         }
         else
@@ -1782,9 +1791,10 @@ sub legend {
     my @stat;
     my $ci;
 
-    open $_, "<", $stat_file or die "$! reading $stat_file\n";
-    while (my $row = <$_>)
+    open my $sf, "<", $stat_file or die "$! reading $stat_file\n";
+    while (my $row = <$sf>)
     {
+	chomp($row);
         my ( $parameter, $value ) = split( /\t/, $row );
 	if ($parameter =~/qtl_method/) {$parameter = 'Mapping method';}
 	if ($parameter =~/qtl_model/) {$parameter = 'Mapping model';}
@@ -1793,16 +1803,20 @@ sub legend {
 	if ($parameter =~/permu_level/) {$parameter = 'Permutation significance level';}
 	if ($parameter =~/permu_test/) {$parameter = 'No. of permutations';}
 	if ($parameter =~/prob_level/) {$parameter = 'QTL genotype signifance level';}
+	if ($parameter =~/stat_no_draws/) {$parameter = 'No. of imputations';}
 	
 	if ($value eq 'zero' || $value eq 'Marker Regression') {$ci = 'none';}
 	
-	unless (($parameter=~/no_draws/ && $value==' ') ||
-	       ($parameter =~/QTL genotype probability/ && $value==' ')
+	unless (($parameter =~/No. of imputations/ && !$value ) ||
+	        ($parameter =~/QTL genotype probability/ && !$value ) ||
+                ($parameter =~/Permutation significance level/ && !$value)
 	       ) 
+
 	{
 	    push @stat, [map{$_} ($parameter, $value)];
+	    
 	}
-
+	
     }
 
     my $sm;
@@ -1834,7 +1848,7 @@ my $permu_threshold_ref = $self->permu_values();
 
     }
     my $lod1 = $permu_threshold{ $keys[0] };
-    my $lod2 = $permu_threshold{ $keys[1] };
+   # my $lod2 = $permu_threshold{ $keys[1] };
 
     if  (!$lod1) 
     {

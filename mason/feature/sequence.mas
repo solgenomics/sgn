@@ -1,0 +1,17 @@
+<%args>
+    $feature
+    $seq
+    $blast_url
+</%args>
+% if( $seq->length > 30_000) {
+    <a href="/cgi-bin/feature_sequence_as_fasta.pl?feature_id=<% $feature->feature_id %>">Download as FASTA</a>
+% } else {
+  <div style="margin-left: 3em">
+    <& /sequence/with_markup.mas,
+        seq       => $seq,
+        width     => 80,
+        subdiv    => undef,
+        blast_url => $blast_url
+    &>
+  </div>
+% }

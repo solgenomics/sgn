@@ -54,7 +54,7 @@ sub define_object {
 	if ($individual_by_name) { $individual_id = $individual_by_name->get_individual_id(); }
     }
    
-    unless ( ( $individual_id =~ m /^\d+$/  ) || ($args{action} eq 'new' && !$individual_id) ) 
+    unless ( ( $individual_id =~ m /^\d+$/  ) || ($args{action} eq 'new' && !$individual_id) || ($args{action} eq 'store' && !$individual_id) ) 
     {
 	$c->throw(is_error=>0,
 		  message=>"No accession exists for identifier $individual_id",
@@ -76,10 +76,7 @@ sub define_object {
 	    );
     }
     my $action= $args{action};
-    if ( !$individual->get_individual_id() && $action ne 'new'  ) {
-	$c->throw(is_error=>0, message=>'No accession exists for this identifier',);
-    }
-    
+       
     $self->set_owners($self->get_object()->get_owners());
 }
 

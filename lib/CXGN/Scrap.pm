@@ -1,3 +1,4 @@
+package CXGN::Scrap;
 
 =head1 NAME
 
@@ -14,8 +15,8 @@
 =cut
 
 
-package CXGN::Scrap;
 use strict;
+use warnings;
 use Clone;
 use Apache2::RequestUtil ();
 use Apache2::Request;

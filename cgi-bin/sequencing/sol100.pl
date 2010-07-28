@@ -1,5 +1,6 @@
 use strict;
 use warnings;
+<<<<<<< HEAD
 use CXGN::Page;
 use CXGN::Login;
 
@@ -11,6 +12,16 @@ my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 my $cvterm = $schema->resultset("Cv::Cvterm")->search( { name => 'sol100' } );
 my $o_props;
 my $organism_res;
+=======
+
+use CXGN::Page;
+use CXGN::Chado::Organism;
+use CXGN::DB::DBICFactory;
+
+my $page   =  CXGN::Page->new("SOL100 sequencing project","Naama");
+
+my $schema = CXGN::DB::DBICFactory->open_schema( 'Bio::Chado::Schema' );
+>>>>>>> master
 
 $o_props= $cvterm->search_related('organismprops') if $cvterm;
 

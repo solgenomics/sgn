@@ -1,0 +1,11 @@
+<%args>
+</%args>
+
+<table><tr><td><div id="locus_network" >[loading...]</div>
+</td></tr></table>
+
+<script language="javascript" type="text/javascript">
+<!--
+    locusPage.printLocusNetwork();
+-->
+</script>

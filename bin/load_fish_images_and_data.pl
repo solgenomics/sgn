@@ -468,7 +468,6 @@ eval {
           $dbh->pg_rollback_to($saveptnm);
           next RECORD;
 	}
-        next RECORD;
 	if (@extfiles) {
 	    count ("row");
 	    foreach my $filename (@extfiles) {
@@ -528,16 +527,8 @@ Skipped\t".check("skip")."
 Expected to skip ".check("spreadsheet")." lines.
 
 ";
-  print "Commit?\n(yes|no, default no)> ";
-  if (<STDIN> =~ m/^y(es)?/i) {
-    print "Committing...";
-    $dbh->commit;
-    print "okay.\n";
-  } else {
-    print "Rolling back...";
-    $dbh->rollback;
-    print "done.\n";
-  }
+
+$dbh->commit;
 };
 if ($@) {
   print "Some sort of unhandled error in transaction.\n";

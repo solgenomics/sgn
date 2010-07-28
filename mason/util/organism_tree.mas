@@ -1,89 +1,98 @@
 <%doc>
-=head1 NAME 
+=head1 NAME
 
-organism_tree.mas - mason component for printing organism phylo trees 
+organism_tree.mas - mason component for printing organism phylo trees
 
 =head1 DESCRIPTION
 
-Queries the database for web_visible (see chado: organismprop table ) sgn organisms, and buids a species tree from the phylonode table  using the L<CXGN::Phylo::Tree> framework
+Queries the database for web_visible (see chado: organismprop table )
+sgn organisms, and buids a species tree from the phylonode table using
+the L<CXGN::Phylo::Tree> framework
 
 =head1 AUTHOR
 
 Naama Menda <nm249@cornell.edu>
 
-=cut 
+=cut
 
 
 </%doc>
 
-
 <%args>
-
-$schema
-$root
-$species_hashref
-$uri_dir
-$tmp_dir
-$image_only => 0
-
+    $schema
+    $root
+    $species_hashref
+    $speciesinfo_cache => undef
+    $uri_dir
+    $tmp_dir
+    $image_only => 0
 </%args>
 
 <%perl>
+use Cache::File;
+use Path::Class;
 
 use CXGN::Phylo::OrganismTree;
 use CXGN::Tools::WebImageCache;
 
 my $cache = CXGN::Tools::WebImageCache->new();
-$cache->set_temp_dir($uri_dir);
-$cache->set_basedir($tmp_dir);
+$cache->set_temp_dir( $uri_dir );
+$cache->set_basedir( $tmp_dir );
 
-my $file_key_name = $root . "-" . (join '-', keys %$species_hashref);
-$cache->set_key($file_key_name);
-$cache->set_expiration_time(86400);
+my $file_key_name = join '-', $root, sort keys %$species_hashref;
+$cache->set_key( $file_key_name );
+$cache->set_expiration_time( 86400 );
+
 my $map_name= $root . "_map";
 
-$cache->set_map_name($map_name);
+$cache->set_map_name( $map_name );
 
-my $newick_file  = $tmp_dir . "/" . $uri_dir . "/" . $root . ".newick";
+$uri_dir = dir( $tmp_dir, $uri_dir );
+$uri_dir->mkpath;
+my $newick_file = $uri_dir->file( "$root.newick" );
 
-if ( !$cache->is_valid() ) {
+unless( $cache->is_valid ) {
 
-  my $tree = CXGN::Phylo::OrganismTree->new($schema);
-  my $newick_string = $tree->build_tree($root, $species_hashref);
+    my $tree = CXGN::Phylo::OrganismTree->new( $schema );
+    my $newick_string = $tree->build_tree( $root, $species_hashref, $speciesinfo_cache );
 
-  open(my $FH, ">$newick_file" ) or die $! . "cannot open file $newick_file for writing! \n\n";
-  print $FH $newick_string;
-  close $FH;
-  my $image_map = $tree->get_renderer()->get_html_image_map($map_name);
-  my $image_png = $tree->render_png(undef, 1);
+    $newick_file->openw->print( $newick_string );
 
-  $cache->set_image_data($image_png);
-  $cache->set_image_map_data($image_map);
+    my $image_map = $tree->get_renderer()
+                         ->get_html_image_map( $map_name );
+    my $image_png = $tree->render_png( undef, 1 );
+
+    $cache->set_image_data($image_png);
+    $cache->set_image_map_data($image_map);
+
 }
 
-my $image_html= $cache->get_image_html();
+my $image_html  = $cache->get_image_html();
+my $tree_string = $newick_file->slurp;
 
-open( my $MF, "<$newick_file" );
-my $tree_string = "";
-$tree_string .= $_ while <$MF>;
-close($MF);
-
-if ($image_only) { print $image_html; return; }
 </%perl>
 
-<a name=<%$root%> ></a>
+% if( $image_only ) {
 
-<&| /page/info_section.mas, 
-  title         => $root,
-  subtitle      => 'click on organism name to see more details ',
-  empty_message => 'Tree not available',
-  collapsible   =>1,
-  collapsed  =>0
-  &>
+  <% $image_html %>
 
-  <form action="/tools/tree_browser/" method="post"><input type="hidden" name="tree_string" value=" <% $tree_string %> "><input type="submit" value="show in treebrowser" /></form> 
- <% $image_html %>
-  
-</&>
+% } else {
 
- 
+  <a name="<% $root |h %>"></a>
+
+  <&| /page/info_section.mas,
+    title         => $root,
+    subtitle      => 'click on organism name to see more details ',
+    empty_message => 'Tree not available',
+    collapsible   => 1,
+    collapsed     => 0,
+    &>
+
+    <form action="/tools/tree_browser/" method="post">
+       <input type="hidden" name="tree_string" value="<% $tree_string |h %>" />
+       <input type="submit" value="show in treebrowser" />
+    </form>
+    <% $image_html %>
+ </&>
+
+% }

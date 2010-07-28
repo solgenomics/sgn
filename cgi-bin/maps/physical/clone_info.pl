@@ -424,7 +424,7 @@ print info_section_html(
     collapsible => 1,
     contents => info_table_html(
         __border => 0,
-        Browse =>  join( "\n",
+        Browse =>  join( "<br />\n",
                           map '<a href="'.$_->url.'">'.$_->text.'</a>',
                           map { my $gb = $_; $gb->xrefs( $latest_seq ), $gb->xrefs( $clone->clone_name ) }
                               $c->enabled_feature('gbrowse2')

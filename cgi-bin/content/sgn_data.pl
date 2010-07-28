@@ -1,59 +1,115 @@
 use strict;
+use warnings;
 
-use CXGN::Page;
+use Cache::File;
+use Storable ();
 
 use CXGN::Chado::Organism;
-use CXGN::DB::DBICFactory;
 
 
-# Script to display the major data content of sgn
-# Naama Menda, April 2010
-#
+my $schema   = $c->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' );
+my @families_to_display = qw( Solanaceae  Rubiaceae  Plantaginaceae );
+
+my $cache = Cache::File->new(
+
+    cache_root      => $c->path_to( $c->tempfiles_subdir('sgn_data_pl') ),
+    default_expires => '6 hours',
+
+    load_callback   => sub {
+        my $cache_entry = shift;
+
+        # we will store the species hash in the cache also, under a special key
+        if( $cache_entry->key eq 'species_data' ) {
+            my $species =  _make_species_hashref( $schema, @families_to_display );
+            return Storable::nfreeze( $species );
+        } else {
+            my $org = CXGN::Chado::Organism->new( $schema, $cache_entry->key );
+            no warnings 'uninitialized';
+            my $info = join '?', (
+                "Common Name: ".$org->get_group_common_name(),
+                "Loci: ".$org->get_loci_count(),
+                "Phenotypes: ".$org->get_phenotype_count(),
+                "Maps Available: ".$org->has_avail_map(),
+                "Genome Information: ".$org->has_avail_genome(),
+                "Libraries: ".scalar( $org->get_library_list ),
+               );
+            return $info;
+        }
+    },
+
+   );
 
 
-my $page = CXGN::Page->new("SGN data overview page", "Naama");
-#my ($force) = $page->get_encoded_arguments("force");
+$c->forward_to_mason_view( "/content/sgn_data.mas",
+    schema  => $schema,
+    cache   => $cache,
+    species => $cache->thaw('species_data'),
+);
 
+####### helper subs ##########
 
-my $schema = CXGN::DB::DBICFactory
-    ->open_schema( 'Bio::Chado::Schema',
-                                  search_path => ['public'],
-    );
+# returns hashref like:
+#   'Solanaceae' => { arguments for organism_tree.mas },
+#   'Rubiaceae' => (same),
+#   .....
+sub _make_species_hashref {
+    my ( $schema, @families ) = @_;
 
+    my %species;
 
+    for my $family ( @families ) {
 
-my $type = 'web visible'; # we want only the leaf organisms with 'web visible' organismprop
-my $cvterm = $schema->resultset("Cv::Cvterm")->search( { name => $type } )->first();
+        # find the phylonode(s) for this family
+        my $family_phylonodes =
+            $schema->resultset('Organism::Organism')
+                   ->search({ 'me.species' => $family })
+                   ->search_related('phylonode_organisms')
+                   ->search_related('phylonode',
+                        { 'cv.name' => 'taxonomy' },
+                        { join => { type => 'cv' } },
+                     );
 
+        # use the family phylonode to find the child organisms of this
+        # family (that are also web-visible)
+        my $organisms =
+            _child_phylonodes( $family_phylonodes )
+                ->search_related('phylonode_organism')
+                ->search_related('organism',
+                                 { 'cv.name' => 'local',
+                                   'type.name' => 'web visible',
+                                 },
+                                 { join => { organismprops => { type => 'cv' }}},
+                                );
 
-my $sol=();
-my $rub=();
-my $planta=();
+        $species{$family} = {
+            root   => $family,
+            uri_dir => $c->tempfiles_subdir('sgn_data_pl'),
+            tmp_dir => $c->path_to(),
+        };
 
-
-if ($cvterm) {
-    my $cvterm_id = $cvterm->get_column('cvterm_id');
-
-    my @organisms= $schema->resultset("Organism::Organismprop")->search(
-	{ type_id => $cvterm_id } )->search_related('organism');
-   
-    foreach my $organism(@organisms) {
-
-	my $species = $organism->get_column('species');
-	my $genus= $organism->get_column('genus');
-	my $organism_id = $organism->get_column('organism_id');
-	my $o=CXGN::Chado::Organism->new($schema, $organism_id);
-	my $root_tax=$o->get_organism_by_tax('family');
-	if ($root_tax) {
-	    my $family = $root_tax->species();
-	    $sol->{$species}= $organism_id if $family eq 'Solanaceae' ;
-	    $rub->{$species}= $organism_id if $family eq  'Rubiaceae' ;
-	    $planta->{$species}= $organism_id if $family eq  'Plantaginaceae' ;
-	}
+        while( my $organism = $organisms->next ) {
+            $species{$family}{species_hashref}{ $organism->species } = $organism->organism_id;
+        }
     }
+
+    return \%species;
 }
-##########
 
-$c->forward_to_mason_view("/content/sgn_data.mas" , schema=>$schema, sol=>$sol, rub=>$rub, planta=>$planta );
+# take a resultset of phylonodes, construct a resultset of the child
+# phylonodes.  this method should be integrated into
+# Bio::Chado::Schema.
+sub _child_phylonodes {
+    my $phylonodes = shift;
 
-	
+    my %child_phylonode_conditions;
+    while( my $pn = $phylonodes->next ) {
+        push @{ $child_phylonode_conditions{ '-or' }} => {
+            'left_idx'  => { '>' => $pn->left_idx  },
+            'right_idx' => { '<' => $pn->right_idx },
+        };
+    }
+
+    return $phylonodes->result_source->resultset
+        ->search( \%child_phylonode_conditions );
+}
+
