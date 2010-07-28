@@ -12,7 +12,7 @@ sol100.mas - SGN page for sol100 project organism data overview in a tree format
 
 $schema
 $sol
-
+$user_type =>undef
 
 </%args>
 
@@ -104,7 +104,7 @@ $("species").value=species_name;
 
 </div>
 
-
+%if ($user_type eq 'submitter' || $user_type eq 'curator' || $user_type eq 'sequencer'){
 <h3>Add an organism to this tree:</h3>
 
 <input type="text" id="species" />
@@ -116,5 +116,5 @@ $("species").value=species_name;
 <div id = "result_space"></div>
 
 <div id = "messages"></div>
-
+%}
 
