@@ -5,15 +5,18 @@ use CXGN::Scrap::AjaxPage;
 use CXGN::DB::Connection;
 use CXGN::Login;
 
+
 my $dbh = CXGN::DB::Connection->new();
-my ( $login_person_id, $login_user_type ) =
-  CXGN::Login->new($dbh)->verify_session();
 
-if ( $login_user_type eq 'curator' || $login_user_type eq 'submitter' ) {
+my ( $person_id, $user_type ) =
+    CXGN::Login->new($dbh)->has_session();
 
+if ( grep { /^$user_type$/ } ('curator', 'submitter', 'sequencer') ) {
+    my $doc = CXGN::Scrap::AjaxPage->new();
+    $doc->send_http_header();
+    
     my $response = undef;
 
-    my $doc = CXGN::Scrap::AjaxPage->new();
     my ( $registry_symbol, $registry_name, $registry_description, $sp_person_id,
         $locus_id )
       = $doc->get_encoded_arguments(

@@ -1,0 +1,42 @@
+<%doc>
+
+=head1 NAME
+
+obsolete_locus_unigene.mas
+
+=head1 DESCRIPTION
+
+component for printing a link for obsoleting locus-unigene link 
+
+Parameters:
+
+=over 1
+
+=item id
+
+locus_unigene database id 
+
+=back
+
+=head1 AUTHOR
+
+Naama Menda <nm249@cornell.edu>
+
+=cut 
+
+
+
+</%doc>
+
+<%args>
+
+$id
+
+</%args>
+
+<a href="javascript:locusPage.obsoleteLocusUnigene('<% $id %>')">[Remove]</a>
+<div id='obsoleteLocusUnigeneForm' style="display: none">
+  <div id='locus_unigene_id_hidden'>
+    <input type="hidden"  value=<% $id %> id="<% $id %>"> 
+  </div>
+</div>

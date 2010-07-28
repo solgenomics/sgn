@@ -11,15 +11,15 @@ JSAN.use('MochiKit.Async');
 
 JSAN.use('CXGN.Effects');
 JSAN.use('CXGN.Phenome.Locus');
-
+JSAN.use('Prototype');
 
 var Tools = {
     
     //Find the selected sgn users from the locus select box and call and AJAX request to find the corresponding user type
     getUsers: function(user_info) {
 	if (user_info.length==0) {
-	    var select = MochiKit.DOM.getElement('user_select');
-	    MochiKit.DOM.getElement('associate_button').disabled = true;
+	    var select = $('user_select');
+	    $('associate_button').disabled = true;
 	}
 	else {
 	    var d = new MochiKit.Async.doSimpleXMLHttpRequest("assign_owner.pl", {user_info: user_info});
@@ -34,10 +34,10 @@ var Tools = {
     //
     updateUserSelect: function(request) {
 	
-	var select = MochiKit.DOM.getElement('user_select');
+	var select = $('user_select');
 	
 	//disable the button until an option is selected
-	MochiKit.DOM.getElement('associate_button').disabled=true;
+	$('associate_button').disabled=true;
 	var responseText = request.responseText;
 	var responseArray = responseText.split("|");
 	
@@ -64,7 +64,7 @@ var Tools = {
     },
     
     assignOwner: function(object_id, object_type) {
-	var sp_person_id = MochiKit.DOM.getElement('user_select').value;
+	var sp_person_id = $('user_select').value;
 	var d = new MochiKit.Async.doSimpleXMLHttpRequest("assign_owner.pl", {sp_person_id: sp_person_id, object_id: object_id, object_type: object_type});
 	d.addCallbacks(this.reloadPage);
     },
@@ -107,7 +107,7 @@ var Tools = {
     getLoci: function(locus_name, object_id) {
 	MochiKit.Logging.log("getLoci is getting locus_name input ...", locus_name);
 	if(locus_name.length == 0){
-	    var select = MochiKit.DOM.getElement('locus_select');
+	    var select = $('locus_select');
 	    select.length=0;
 	    $('associate_locus_button').disabled = true;
 	}else{
@@ -319,8 +319,8 @@ var Tools = {
 	var onswitch= span + "_onswitch";
 	var offswitch= span + "_offswitch";
 	
-	var form_disp=$(form).style.display;
-	var content_disp= $(content).style.display; 
+	var form_disp = $(form).style.display;
+	var content_disp = $(content).style.display; 
 	
 	MochiKit.Logging.log('content display =', content_disp);    
 	//MochiKit.Logging.log('form display=' , form_disp);

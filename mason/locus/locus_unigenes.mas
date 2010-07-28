@@ -1,0 +1,14 @@
+
+<%args>
+
+$locus_id=>undef
+</%args>     
+
+<div id="locus_unigenes" >[loading...]</div>
+
+<script language="javascript" type="text/javascript">
+  <!--
+      locusPage.printLocusUnigenes( <% $locus_id %> ); 
+    -->
+</script>  
+

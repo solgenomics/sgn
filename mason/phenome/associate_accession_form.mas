@@ -1,0 +1,74 @@
+
+
+<%doc>
+
+=head1 NAME
+
+/phenome/associate_accession_form.mas - a component for js code for associating accession
+
+=head1 DESCRIPTION
+
+
+Parameters:
+
+=over 2
+
+=item locus_id
+
+a locus id
+
+
+=item person_id
+
+The ID of the logged in person 
+
+
+
+=back
+
+=head1 AUTHOR
+
+Naama Menda <nm249@cornell.edu>
+
+=cut 
+
+</%doc>
+
+<%args>
+
+
+$locus_id
+$person_id
+
+
+</%args>
+
+<%perl>
+
+</%perl>
+
+
+<div id="associateIndividualForm" style="display: none">
+  Accession name:
+  <input type="text"
+         style="width: 50%"
+         id="locus_name"
+         onkeyup="Locus.getIndividuals(this.value, '<% $locus_id %>');">
+  <input type="button"
+         id="associate_individual_button"
+         value="associate accession"
+	 disabled="true"
+         onclick="Locus.associateAllele('<% $person_id %>');this.disabled=true;">
+  <select id="individual_select"
+          style="width: 100%"
+	  onchange="Locus.getAlleles('<% $locus_id %>')"
+          size=10>
+  </select>
+  
+  <b>Would you Like to specify an allele?</b>
+  <select id="allele_select"
+          style="width: 100%">
+  </select>
+  
+</div>
+
