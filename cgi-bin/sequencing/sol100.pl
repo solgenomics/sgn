@@ -2,10 +2,15 @@ use strict;
 use warnings;
 
 use CXGN::Page;
+use CXGN::Login;
 
 
 my $page = CXGN::Page->new("SOL100 sequencing project","Naama");
+my $dbh = $page->get_dbh;
 
+#my $login = CXGN::Login->new($dbh);
+#my ($person_id) = $login->verify_session('submitter');
+my ($person_id, $user_type)=CXGN::Login->new($dbh)->has_session();
 my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
 #my @species= ('Solanum lycopersicum', 'Solanum pennellii', 'Solanum pimpinellifolium', 'Solanum galapagense');
@@ -38,7 +43,7 @@ while(my $o_prop=$o_props->next){
 # 	}
 #     }
 
-$c->forward_to_mason_view("/sequencing/sol100.mas" , schema=>$schema, sol=>$sol );
+$c->forward_to_mason_view("/sequencing/sol100.mas" , user_type=>$user_type, schema=>$schema, sol=>$sol );
 
 
 
