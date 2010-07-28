@@ -95,17 +95,19 @@ var species = $("species").value;
           onSuccess: function(response){
                var json = response.responseText;
                var result = eval("("+json+")");
-               var status = "";
                
                for (var x in result){
-                    status=(result[x]);
-               }
-
-               alert(status);  
+                    status=(result[x])
+                    if (x == 'fail'){
+                        alert(status);
+                    }
+               window.location.reload(true);
+	       
+               }     
           }
      });
 
-$("species")=$("species").innerHTML;
+
 }
 
 
