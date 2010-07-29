@@ -32,7 +32,6 @@ SolCyc links
 Sequence annotations
 Literature annotation
 Ontology annotations
-User comments
 SUBSECTIONS
 
 my $mech = Test::WWW::Mechanize->new;
