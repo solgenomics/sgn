@@ -17,10 +17,13 @@
                  <a href="http://www.nsf.gov/" class="footer">
                     <img width="77" alt="National Science Foundation" src="/documents/img/nsf_logo.png" title="National Science Foundation" height="76" border="0" />
                  </a>
+                 <a href="http://www.gmod.org/" class="footer">
+                    <img width="150" alt="Powered by GMOD" src="/documents/img/powered_by_gmod_150x71.png" title="Powered by GMOD" height="71" border="0" />
+                 </a>
               </td></tr>
               <tr><td>
                  <a href="http://www.nifa.usda.gov/" class="footer">
-                    <img width="250" alt="USDA CSREES" src="/documents/img/usda_nifa_h_2.jpg" title="USDA NIFA" height="44" border="0" />
+                    <img width="250" alt="USDA NIFA" src="/documents/img/usda_nifa_h_2.jpg" title="USDA NIFA" height="44" border="0" />
                  </a>
               </td></tr>
               </table>
