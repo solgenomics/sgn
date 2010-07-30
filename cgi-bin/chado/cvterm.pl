@@ -119,7 +119,7 @@ sub display_page {
 
     ####embedded ontology browser
 
-    print $c->render_mason("/ontology/browser.mas", cvterm => $cvterm);
+    print $c->render_mason("/ontology/embedded_browser.mas", cvterm => $cvterm);
 
     my ( $pop_count, $pop_list ) = $self->qtl_populations();
 

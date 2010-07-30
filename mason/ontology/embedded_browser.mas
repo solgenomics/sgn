@@ -1,5 +1,6 @@
 <%args>
     $title => 'Ontology browser'
+    $cvterm
 </%args>
 <&| /page/info_section.mas,
     title       => $title,
@@ -16,14 +17,5 @@
         'CXGN.Page.FormattingHelpers',
      ]
 &>
-<script language="javascript" type="text/javascript"  >
-<!--
-    var o = new CXGN.Onto.Browser();
-    o.setUpBrowser();
-    o.initializeBrowser();
-    o.renderSearchById();
-    o.renderSearchByName();
-    o.render();
--->
-</script>
+<& /ontology/parentage.mas, accession => $cvterm->get_full_accession &>
 </&>

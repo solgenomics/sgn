@@ -2,14 +2,13 @@ use strict;
 use warnings;
 
 use CXGN::Page;
-use CXGN::Tools::Onto;
 
+our $c;
 my $p = CXGN::Page->new("Ontology Browser", "Lukas");
 
-my $onto = CXGN::Tools::Onto->new($p);
 
 $p->header("Ontology Browser", "Browse Ontologies");
 
-$onto->browse();
+print $c->render_mason("/ontology/browser.mas");
 
 $p->footer();
