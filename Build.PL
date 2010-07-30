@@ -251,7 +251,6 @@ my $build = $class->new(
         #         'CXGN::Tools::Gene' => 0,
         #         'CXGN::Tools::Identifiers' => 0,
         #         'CXGN::Tools::List' => 0,
-        #         'CXGN::Tools::Onto' => 0,
         #         'CXGN::Tools::Organism' => 0,
         #         'CXGN::Tools::Param' => 0,
         #         'CXGN::Tools::Pubmed' => 0,

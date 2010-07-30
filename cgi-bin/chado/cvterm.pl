@@ -24,7 +24,6 @@ use CXGN::Page::FormattingHelpers qw/info_section_html
 use CXGN::Chado::Cvterm;
 use CXGN::Phenome::UserTrait;
 use CXGN::People::PageComment;
-use CXGN::Tools::Onto;
 
 sub new {
     my $class  = shift;
