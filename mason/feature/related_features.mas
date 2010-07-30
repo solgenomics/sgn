@@ -11,13 +11,14 @@ sub related_stats {
     my $total = 0;
     for my $f (@$features) {
             $stats->{$f->type->name}++;
+            $total++;
     }
     my $data = [ ];
     for my $k (sort keys %$stats) {
-        push @$data, [ $k => $stats->{$k} ];
-        $total += $stats->{$k};
+        my $percent = $stats->{$k} / $total;
+        push @$data, [ $k => $stats->{$k} , sprintf("%.02f%%",100 * $percent) ];
     }
-    push @$data, [ "Total" => $total ];
+    push @$data, [ "Total" => $total, "100%" ];
     return $data;
 }
 </%perl>
@@ -42,13 +43,13 @@ Parent Feature:
 % }
 %if (@$children) {
 <& /page/columnar_table.mas,
-    headings => [ "Child Feature Type", "Number" ],
+    headings => [ "Child Feature Type", "Number", "%" ],
     data     => related_stats($children),
 &>
 % }
 %if (@$parents) {
 <& /page/columnar_table.mas,
-    headings => [ "Parent Feature Type", "Number" ],
+    headings => [ "Parent Feature Type", "Number", "%" ],
     data     => related_stats($parents),
 &>
 %}
