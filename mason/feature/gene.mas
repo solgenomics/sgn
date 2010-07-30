@@ -12,13 +12,12 @@
 
 <& /util/import_javascript.mas,
     classes => [qw(
-        Prototype jQuery Text.Markup CXGN.Effects CXGN.Phenome.Locus  CXGN.Phenome.Tools
+        Prototype jQuery Text.Markup CXGN.Effects
         MochiKit.DOM thickbox
         MochiKit.Async CXGN.Sunshine.NetworkBrowser
-        CXGN.Phenome.Locus.LocusPage CXGN.Page.Form.JSFormPage
+        CXGN.Page.Form.JSFormPage
     )]
 &>
-<& /locus/initialize.mas, locus_id => 428 &>
 
 <%perl>
     my $seq = Bio::PrimarySeq->new(
@@ -28,6 +27,7 @@
     my $organism = $feature->organism;
     my $species  = $organism->species;
     $species    =~ s!(\S+) !<i>$1</i> !;
+    my $cvterm_id = $feature->type_id;
 </%perl>
 
 <& /feature/feature_data.mas,
@@ -65,7 +65,7 @@
 </&>
 
 <& /feature/cvterms.mas,
-	cvterm_id   => $feature->type_id,
+	cvterm_id   => $cvterm_id,
 &>
 
 <&| /page/info_section.mas,
@@ -74,11 +74,6 @@
 &>
 
 </&>
-
-<& /locus/ontology.mas,
-    locus_id => 428,
-    title    => 'Locus Ontology'
-&>
 
 <&| /page/info_section.mas,
     title => 'Gene Families',
@@ -92,13 +87,8 @@
 &>
 </&>
 
-<& /locus/solcyc.mas, locus_id => 428 &>
-
 <&| /page/info_section.mas,
     title => 'Alternate Splicing',
     collapsible => 1,
 &>
 </&>
-
-
-

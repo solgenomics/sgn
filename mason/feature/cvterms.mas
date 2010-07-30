@@ -13,5 +13,5 @@
 
 <& /ontology/embedded_browser.mas,
 	cvterm => $cvterm,
-	title => 'Ontology Annotations',
+	title => 'Cvterm Ontology',
 &>
