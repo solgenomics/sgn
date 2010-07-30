@@ -53,17 +53,8 @@
 </&>
 
 
-<&| /page/info_section.mas,
-        title       => 'Nucleotide Sequence',
-        collapsible => 1,
-        collapsed   => 0,
+<& /feature/sequence.mas,
+        feature   => $feature,
+        seq       => $seq,
+        blast_url => $blast_url,
 &>
-  Length : <% $seq->length %><br/>
-  <% $feature->md5checksum ?  'MD5 :' . $feature->md5checksum : '' %>
-  <p/>
-    <& /feature/sequence.mas,
-            feature => $feature,
-            seq     => $seq,
-            blast_url => $blast_url,
-    &>
-</&>

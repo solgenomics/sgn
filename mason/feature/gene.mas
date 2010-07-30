@@ -95,7 +95,7 @@
 &>
 </&>
 
-<& /locus/solcyc.mas, &>
+<& /locus/solcyc.mas, locus_id => 428 &>
 
 <&| /page/info_section.mas,
     title => 'Alternate Splicing',
