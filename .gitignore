@@ -12,3 +12,4 @@ MYMETA.yml
 test.sh
 blib/*
 .#*
+*.bak

@@ -1,3 +1,4 @@
+our $c;
 package CXGN::Chado::CvtermDetailPage;
 
 use base qw/CXGN::Page::Form::SimpleFormPage/;
@@ -117,12 +118,8 @@ sub display_page {
     );
 
     ####embedded ontology browser
-    my $browser = CXGN::Tools::Onto->new( $self->get_page() );
-    print info_section_html(
-        title => 'Ontology browser',
-        contents =>
-          $browser->get_parentage_string( $cvterm->get_full_accession() ),
-    );
+
+    print $c->render_mason("/ontology/browser.mas", cvterm => $cvterm);
 
     my ( $pop_count, $pop_list ) = $self->qtl_populations();
 

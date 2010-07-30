@@ -14,10 +14,7 @@ JSAN.use('MochiKit.Logging');
 JSAN.use('MochiKit.Async');
 JSAN.use('Prototype');
 JSAN.use('CXGN.Effects');
-//JSAN.use('CXGN');
-//JSAN.use('CXGN.Onto');
 JSAN.use('CXGN.Onto.Browser');
-//JSAN.use('CXGN.Phenome.Tools');
 
 
 CXGN = function () {};
@@ -27,14 +24,6 @@ CXGN.Onto.Browser = function () {
 
     this.nodelist = new Array();
     this.resetNodeKey();
-    //this.workingMessage(false);
-    //document.write('<p id="ontology_browser">&nbsp;</p>');
-    //var dom = MochiKit.DOM.getElement('ontology_browser');
-    //MochiKit.Logging.log('DOM: '+dom);
-    //this.setDOMElement(dom);
-    
-    //MochiKit.Logging.log('In browser constructor.');
-
 };
 
 CXGN.Onto.Browser.prototype = {
@@ -110,7 +99,6 @@ CXGN.Onto.Browser.prototype = {
     },
 
     fetchRoots: function() { 
-	//MochiKit.Logging.log('THis in fetchRoots: ' + this);
 	
 	new Ajax.Request("/chado/ajax_ontology_browser.pl", {
 	    parameters:   { action: 'roots' }, 
@@ -390,7 +378,7 @@ CXGN.Onto.Browser.prototype = {
     },
     
     showParentage: function(accession) {
-	MochiKit.Logging.log('the accession is :', accession );
+	//MochiKit.Logging.log('the accession is :', accession );
 	this.setSearchTerm(accession);
 	if (accession.length < 5) { 
 	    alert('The search text must be longer than 4 characters');
@@ -1011,8 +999,6 @@ Node.prototype = {
 	    parameters: { node: childNode.getAccession(), action: 'parents' }, 
 	      asynchronous: false,
 	      onSuccess: function(request) {
-		  
-		  //MochiKit.Logging.log('HELLO WORLD!');
 		  
 		  var responseText = request.responseText;
 		  
