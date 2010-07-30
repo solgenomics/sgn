@@ -325,10 +325,11 @@ my $ontology_subtitle =  !(grep { /^$user_type$/ } ('curator', 'submitter', 'seq
 
 </&>
 
-  <&| /page/info_section.mas, title=>"Ontology annotations ($ont_count)" , subtitle=>$ontology_subtitle, id=>"locus_ontology" , collapsible=>1, collapsed=>1 &>
-  <& /locus/associate_ontology.mas, locus_id => $locus_id &>
-  <& /locus/ontology.mas &>
-
-  </&>
+<& /locus/ontology.mas,
+	title     => "Ontology annotations ($ont_count)" ,
+	subtitle  => $ontology_subtitle,
+	collapsed => 1,
+	locus_id  => $locus_id,
+&>
 
 <& /page/comments.mas, object_type=>'locus', object_id=>$locus_id, referer=>$this_page &>

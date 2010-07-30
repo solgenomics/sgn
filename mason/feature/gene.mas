@@ -64,14 +64,20 @@
 &>
 </&>
 
+<& /feature/cvterms.mas,
+	cvterm_id   => $feature->type_id,
+&>
+
 <&| /page/info_section.mas,
     title => 'BLAST Annotation',
     collapsible => 1,
 &>
+
 </&>
 
 <& /locus/ontology.mas,
-    feature   => $feature,
+    locus_id => 428,
+    title    => 'Locus Ontology'
 &>
 
 <&| /page/info_section.mas,

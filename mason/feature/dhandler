@@ -32,15 +32,9 @@
     parents => $parents
 &>
 
-<&| /page/info_section.mas,
-        title       => 'Ontology Annotations',
-        collapsible => 1,
-        collapsed   => 1,
+<& /feature/cvterms.mas,
+	cvterm_id   => $feature->type_id,
 &>
-    <& /feature/cvterms.mas,
-        feature   => $feature
-    &>
-</&>
 
 
 <&| /page/info_section.mas,
