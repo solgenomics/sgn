@@ -17,6 +17,7 @@ use CXGN::Page::FormattingHelpers qw/columnar_table_html modesel simple_selectbo
 use CXGN::Tools::Identifiers qw/identifier_url identifier_namespace link_identifier/;
 use CXGN::Tools::List qw/max/;
 
+our $c = $c;
 my $page = CXGN::Page->new("Tomato genome data","rob");
 my ($chrnum) = $page->get_encoded_arguments('chr');
 $chrnum ||= 1;
