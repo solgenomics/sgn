@@ -22,9 +22,7 @@ my ($organism_id, $force) = $page->get_encoded_arguments("organism_id", "force")
 
 my $dbh = CXGN::DB::Connection->new();
 
-my $schema= Bio::Chado::Schema->connect(  sub { $dbh->get_actual_dbh() },
-					  { on_connect_do => ['SET search_path TO public'],
-					  },);
+my $schema = $c->dbic_schema('Bio::Chado::Schema');
 
 my $organism = CXGN::Chado::Organism->new($schema, $organism_id);
 if (!$organism) { $page->message_page("No organism exists for identifier $organism_id!"); }

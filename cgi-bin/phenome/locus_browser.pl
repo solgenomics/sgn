@@ -24,10 +24,7 @@ my ($type, $locus_name, $object_id, $organism, $subject_id,  $relationship_id, $
 
 
 my $dbh = CXGN::DB::Connection->new();
-my $schema=  CXGN::Phenome::Schema->connect(  sub { $dbh->get_actual_dbh() },
-					      { on_connect_do => ['SET search_path TO phenome, public;'],
-					      },
-    );
+my $schema=  $c->dbic_schema('CXGN::Phenome::Schema');
 
 my ($login_person_id, $login_user_type)=CXGN::Login->new($dbh)->verify_session();
 
