@@ -17,7 +17,6 @@ my $simple_input = "$urlbase/index.pl";
 my $advanced_input = "$urlbase/index.pl?interface_type=1";
 
 my @good_seqs = (
-    'TTCGAGGGAATAGATAATGTGGCAAACCCGACGTTCCATTGAAGCTCTGCTTTGAGAAATTAGAACAAGTTTGCTCTTACAAGTTTATCCATCCATGGCCGCTGCAAAGGCCTCCCTCTTCTTCTCTCCCTCGGAGTGCTTTCTCACAACTCGTCTCTGCAAACTCTTCTCCACTACTCAAAAACCCTCTTTTCCCTCTCCCTCCTCCTCTTCTATTACCTTAACCAATGTCCTCAATGCCGATGCTGTACATACCAAATTGCCTCCCCGACTACGGAATGCAAGACAGGAGCAAGAGCGAGACGCCATTTCTCTACTCAACGAGCGAATTCGCCGGGAGCATGCTAAGAGAGATCACTCCCCTCTTAGACCGGCCATGGATTCCGAGGAGGCTGATAAGTACATTCAGCTCGTGAAAGAGCAGCAGCAAAGGGGCCTTCAGAAGCTCAAAAGCGACAGAGCCAGACAAGGTGCTCCACATGATGCAGCTCAACCTACCTTTAGTTACAAGGTGGACCCTTACACTCTCCGTTCCGGCGATTA', #< this is a piece of the marker C2_At3g02060
     "\n\n > initial_whitespace  and a defline man!\nGAGCAAGAGCGAGACGCCATTTCTCTACTCAACGAGCGAATTCGCCGGGAGCATGCTAAGAGAGATCACTCCCCTCTTAGACCGGCCA\n",
 );
 
@@ -38,6 +37,12 @@ for my $seq (@good_seqs) {
                             },
                               "blast a single sequence: '$seq'",
                              );
+
+        while( $mech->content =~ qr/job running/i ) {
+            sleep 1;
+            $mech->get( $mech->base );
+        }
+
         $mech->content_contains('Graphics');
         $mech->content_contains('BLAST Report');
         $mech->content_contains('View / download raw report');
