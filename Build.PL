@@ -94,8 +94,14 @@ my $build = $class->new(
 
         'Cache::File' => 0,
 
-        'CGI'                 => 0,
-        'CGI::Carp::DebugScreen' => '0.16',
+
+        'Catalyst::Runtime'                => '5.80024',
+        'Catalyst::Action::RenderView'     => 0,
+        'Catalyst::Plugin::Static::Simple' => 0,
+        'Catalyst::View::Mason'            => 0,
+
+        'CGI'                              => 0,
+        'CGI::Carp::DebugScreen'           => '0.16',
 
         #         'CXGN::Accession' => 0,
         #         'CXGN::Accession::Tools' => 0,

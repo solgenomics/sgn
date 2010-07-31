@@ -3,6 +3,17 @@ use base 'CXGN::Config';
 my $defaults =
     {
 
+     name => 'SGN',
+
+     # Disable deprecated behavior needed by old Catalyst applications
+     disable_component_resolution_regex_fallback => 1,
+
+     # Static::Simple configuration
+     root   => File::Spec->curdir,
+     static => {
+         dirs => ['documents'],
+     },
+
      dbsearchpath             => [qw[
                                      sgn
                                      public
