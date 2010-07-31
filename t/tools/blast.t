@@ -18,8 +18,7 @@ my $advanced_input = "$urlbase/index.pl?interface_type=1";
 
 my @good_seqs = (
     'TTCGAGGGAATAGATAATGTGGCAAACCCGACGTTCCATTGAAGCTCTGCTTTGAGAAATTAGAACAAGTTTGCTCTTACAAGTTTATCCATCCATGGCCGCTGCAAAGGCCTCCCTCTTCTTCTCTCCCTCGGAGTGCTTTCTCACAACTCGTCTCTGCAAACTCTTCTCCACTACTCAAAAACCCTCTTTTCCCTCTCCCTCCTCCTCTTCTATTACCTTAACCAATGTCCTCAATGCCGATGCTGTACATACCAAATTGCCTCCCCGACTACGGAATGCAAGACAGGAGCAAGAGCGAGACGCCATTTCTCTACTCAACGAGCGAATTCGCCGGGAGCATGCTAAGAGAGATCACTCCCCTCTTAGACCGGCCATGGATTCCGAGGAGGCTGATAAGTACATTCAGCTCGTGAAAGAGCAGCAGCAAAGGGGCCTTCAGAAGCTCAAAAGCGACAGAGCCAGACAAGGTGCTCCACATGATGCAGCTCAACCTACCTTTAGTTACAAGGTGGACCCTTACACTCTCCGTTCCGGCGATTA', #< this is a piece of the marker C2_At3g02060
-    "> with_strange_identifier   and a defline man!\nACCCGACGTTCCATTGAAGCTCTGCTTTGAGAAATTAGAACAAGTTTGCTCTTACAAGTTTATCCATCCATGGCCGCTGCAAAGGCCTCCCTCTTCTTCTCTCCCTCGGAGTGCTTTCTCACAACTCGTCTCTGCAAACTCTTCTCCACTACTCAAAAACCCTCTTTTCCCTCTCCCTCCTCCTCTTCTATTACCTTAACCAATGTCCTCAATG",
-    "\n\n > initial_whitespace\nGAGCAAGAGCGAGACGCCATTTCTCTACTCAACGAGCGAATTCGCCGGGAGCATGCTAAGAGAGATCACTCCCCTCTTAGACCGGCCA\n",
+    "\n\n > initial_whitespace  and a defline man!\nGAGCAAGAGCGAGACGCCATTTCTCTACTCAACGAGCGAATTCGCCGGGAGCATGCTAAGAGAGATCACTCCCCTCTTAGACCGGCCA\n",
 );
 
 
@@ -37,7 +36,7 @@ for my $seq (@good_seqs) {
                                     sequence => $seq,
                                 },
                             },
-                              'blast a single sequence'
+                              "blast a single sequence: '$seq'",
                              );
         $mech->content_contains('Graphics');
         $mech->content_contains('BLAST Report');
@@ -46,7 +45,12 @@ for my $seq (@good_seqs) {
 }
 
 # test that an empty seq results in an input error message
-{
+my %errors  = (
+    ">foo\n" => encode_entities('Sequence "foo" is empty'),
+    ">foo\nZZZZZZZ.Z" => 'contains invalid',
+);
+
+while( my ($input,$error) = each %errors ) {
 
   my $mech = Test::WWW::Mechanize->new;
   $mech->get_ok( $advanced_input );
@@ -54,13 +58,13 @@ for my $seq (@good_seqs) {
   $mech->submit_form_ok({ form_name => 'blastform',
                           fields    => {
                               database => $test_blast_db->blast_db_id,
-                              sequence => ">foo\n",
+                              sequence => $input,
                              },
                         },
                         'blast an empty sequence'
                        );
 
-  $mech->content_contains( encode_entities('Sequence "foo" is empty') );
+  $mech->content_contains( $error, "got right error message for input '$input'" );
 }
 
 done_testing;
