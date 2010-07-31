@@ -82,9 +82,9 @@ print '<pre>';
 my $output;
 require lib;
 lib->import($page->path_to(qw/ cgi-bin tools intron_detection lib/));
-require IntronFinder::Homology;
+require SGN::IntronFinder::Homology;
 
-IntronFinder::Homology::find_introns_txt
+SGN::IntronFinder::Homology::find_introns_txt
     ( IO::Scalar->new( \$input  ),
       IO::Scalar->new( \$output ),
       $blast_e_val,

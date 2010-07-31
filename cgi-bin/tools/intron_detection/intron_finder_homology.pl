@@ -17,10 +17,7 @@ use Pod::Usage;
 use CXGN::Tools::Script qw/ in_fh out_fh /;
 #use CXGN::VHost;
 
-
-# use the intron finder module
-use lib $FindBin::RealBin."/lib";
-use IntronFinder::Homology;
+use SGN::sIntronFinder::Homology;
 
 
 ###### DEFAULTS ##########
@@ -83,7 +80,7 @@ my $tempfile_dir = defined $opt{t} ? $opt{t} : File::Spec->tmpdir;
 -w $tempfile_dir or die "tempfile dir '$tempfile_dir' is not writable\n";
 
 # fake-assedly factor this out into a module
-IntronFinder::Homology::find_introns_txt( $in_fh, $out_fh, $max_evalue, $gene_feature_file, $tempfile_dir, $protein_db_base );
+SGN::IntronFinder::Homology::find_introns_txt( $in_fh, $out_fh, $max_evalue, $gene_feature_file, $tempfile_dir, $protein_db_base );
 
 __END__
 

@@ -1,4 +1,4 @@
-package IntronFinder::Homology;
+package SGN::IntronFinder::Homology;
 
 use strict;
 use warnings;
