@@ -41,6 +41,7 @@ sub wrap_perl_cgi {
                 , q{open DATA, '<', \$data;}
                 , qq{local \$0 = "\Q$cgi\E";}
                 , q/my $rv = eval {/
+                , "#line 1 $cgi"
                 , $code
                 , q/};/
                 , q{
