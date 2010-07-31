@@ -96,6 +96,7 @@ my $build = $class->new(
 
 
         'Catalyst::Runtime'                => '5.80024',
+        'Catalyst::Controller::CGIBin'     => '0.0030',
         'Catalyst::Action::RenderView'     => 0,
         'Catalyst::Plugin::Static::Simple' => 0,
         'Catalyst::View::Mason'            => 0,

@@ -5,14 +5,31 @@ my $defaults =
 
      name => 'SGN',
 
+     default_view => 'Mason',
+
      # Disable deprecated behavior needed by old Catalyst applications
      disable_component_resolution_regex_fallback => 1,
 
      # Static::Simple configuration
-     root   => File::Spec->curdir,
+     root   => 'documents',
      static => {
-         dirs => ['documents'],
      },
+
+     'Controller::CGIAdaptor' => {
+         cgi_root_path => '',
+         cgi_dir       => '__path_to(cgi-bin)__',
+         #cgi_chain_root   /optional/private/path/to/Chained/root
+         cgi_file_pattern => '*.pl',
+         CGI => {
+             #username_field username # used for REMOTE_USER env var
+             pass_env => [qw[ PERL5LIB
+                              PATH
+                            ]
+                         ],
+           },
+
+        },
+
 
      dbsearchpath             => [qw[
                                      sgn
