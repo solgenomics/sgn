@@ -11,8 +11,9 @@ my $defaults =
      disable_component_resolution_regex_fallback => 1,
 
      # Static::Simple configuration
-     root   => 'documents',
+     root   => File::Spec->curdir,
      static => {
+         dirs => ['documents'],
      },
 
      'Controller::CGIAdaptor' => {
