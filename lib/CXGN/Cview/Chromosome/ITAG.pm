@@ -64,7 +64,7 @@ sub new {
     $self->set_url("");
     $self->{dbh}= $dbh;
 
-    if ($ENV{MOD_PERL}) { 
+    if ( $ENV{MOD_PERL} || $ENV{GATEWAY_INTERFACE} || $ENV{CATALYST_ENGINE} ) {
 	$self->set_cache_dir($cache_dir);
     }
     else { 
