@@ -20,10 +20,11 @@ with qw(
         SGN::Role::Site::DBConnector
         SGN::Role::Site::DBIC
         SGN::Role::Site::Mason
+        SGN::Role::Site::SiteFeatures
        );
 
 
-# if on a dev setup, on startup symlink the static_datasets and
+# on startup, if on a dev setup, symlink the static_datasets and
 # static_content in the root dir so that
 # Catalyst::Plugin::Static::Simple can serve them.  in production,
 # these will be served directly by Apache
