@@ -37,7 +37,6 @@ use CXGN::Phenome::Population;
 use CXGN::Phenome::Qtl;
 use CXGN::Phenome::PopulationDbxref;
 use CXGN::Tools::WebImageCache;
-use SGN::Context;
 use CXGN::People::PageComment;
 use CXGN::People::Person;
 use CXGN::Chado::Publication;
@@ -517,9 +516,8 @@ sub population_distribution
         $term_id   = $term_obj->get_cvterm_id();
     }
 
-    my $vh           = SGN::Context->new();
-    my $basepath     = $vh->get_conf("basepath");
-    my $tempfile_dir = $vh->get_conf("tempfiles_subdir");
+    my $basepath     = $c->get_conf("basepath");
+    my $tempfile_dir = $c->get_conf("tempfiles_subdir");
 
     my $cache = CXGN::Tools::WebImageCache->new();
     $cache->set_basedir($basepath);
@@ -682,9 +680,8 @@ sub qtl_plot
 
     my $ac = $population->cvterm_acronym($term_name);
 
-    my $vh           = SGN::Context->new();
-    my $basepath     = $vh->get_conf("basepath");
-    my $tempfile_dir = $vh->get_conf("tempfiles_subdir");
+    my $basepath     = $c->get_conf("basepath");
+    my $tempfile_dir = $c->get_conf("tempfiles_subdir");
 
     my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
       $self->cache_temp_path();
@@ -1122,14 +1119,13 @@ sub outfile_list
 
 sub cache_temp_path
 {
-    my $vh           = SGN::Context->new();
-    my $basepath     = $vh->get_conf("basepath");
-    my $tempfile_dir = $vh->get_conf("tempfiles_subdir");
+    my $basepath     = $c->get_conf("basepath");
+    my $tempfile_dir = $c->get_conf("tempfiles_subdir");
 
     my $tempimages_path =
       File::Spec->catfile( $basepath, $tempfile_dir, "temp_images" );
 
-    my $prod_temp_path = $vh->get_conf('r_qtl_temp_path');
+    my $prod_temp_path = $c->get_conf('r_qtl_temp_path');
     mkdir $prod_temp_path;
     my $prod_cache_path = "$prod_temp_path/cache";
     mkdir $prod_cache_path;
@@ -1568,9 +1564,8 @@ sub qtl_images_exist
 
     my $ac = $population->cvterm_acronym($term_name);
 
-    my $vh           = SGN::Context->new();
-    my $basepath     = $vh->get_conf("basepath");
-    my $tempfile_dir = $vh->get_conf("tempfiles_subdir");
+    my $basepath     = $c->get_conf("basepath");
+    my $tempfile_dir = $c->get_conf("tempfiles_subdir");
 
     my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
       $self->cache_temp_path();
@@ -1685,7 +1680,6 @@ sub stat_files
     my $pop            = $self->get_object();
     my $sp_person_id   = $pop->get_sp_person_id();
     my $qtl            = CXGN::Phenome::Qtl->new($sp_person_id);
-    my $c = SGN::Context->new();
     my $user_stat_file = $qtl->get_stat_file($c, $pop_id);
 
     my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
@@ -1747,7 +1741,6 @@ sub stat_param_hash
     my $pop            = $self->get_object();
     my $sp_person_id   = $pop->get_sp_person_id();
     my $qtl            = CXGN::Phenome::Qtl->new($sp_person_id);
-    my $c = SGN::Context->new();
     my $user_stat_file = $qtl->get_stat_file($c, $pop_id);
 
     open F, "<$user_stat_file" or die "can't open file: !$\n";

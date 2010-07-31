@@ -1,13 +1,12 @@
 use strict;
 
 use File::Slurp qw/slurp/;
-use SGN::Context;
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw/  page_title_html
                                        blue_section_html  /;
 use HTML::Entities;
 #Get input, if this page is loaded from find_caps.pl
-our $page = CXGN::Page->new( "Align Browser", "Chenwei");
+my $page = CXGN::Page->new( "Align Browser", "Chenwei");
 my ($seq_data, $id_data, $format, $title, $type,
     $show_prot_example, $show_cds_example, $show_id_example,
     $temp_file, $maxiters) = $page->get_arguments(
@@ -18,10 +17,9 @@ my ($seq_data, $id_data, $format, $title, $type,
 
 my ($intro_content, $input_content);
 
-my $vhost_conf = SGN::Context->new();
-our $HTML_ROOT = $vhost_conf->get_conf('basepath');
-our $DOC_PATH =  $vhost_conf->get_conf('tempfiles_subdir').'/align_viewer';
-our $PATH = $HTML_ROOT . $DOC_PATH;
+my $HTML_ROOT = $c->get_conf('basepath');
+my $DOC_PATH =  $c->get_conf('tempfiles_subdir').'/align_viewer';
+my $PATH = $HTML_ROOT . $DOC_PATH;
 unless($temp_file =~ /\//){
 	$temp_file = $PATH . "/" . $temp_file;
 }

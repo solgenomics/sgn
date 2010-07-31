@@ -17,7 +17,6 @@ my $qtl_load_detail_page = CXGN::Phenome::QtlLoadDetailPage->new();
 
 
 use File::Spec;
-use SGN::Context;
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw /info_section_html 
                                       page_title_html
@@ -95,7 +94,6 @@ sub process_data {
     my $args_ref = \%args;
 
     my $qtl_obj = CXGN::Phenome::Qtl->new($sp_person_id, $args_ref);
-    my $c = SGN::Context->new();
     $qtl_obj->create_user_qtl_dir($c);
     my $qtl_tools = CXGN::Phenome::Qtl::Tools->new();
     my $page = CXGN::Page->new("SGN", "Isaak");
@@ -214,7 +212,6 @@ sub process_data {
 	if (@missing) {
 	    $self->error_page(@missing);
 	} else {
-	    my $c = SGN::Context->new();
 	    $stat_file = $qtl_obj->get_stat_file($c, $pop_id);
 	}
 	unless (!-e $stat_file) {
@@ -250,7 +247,6 @@ sub pheno_upload {
     
     
     my $p= CXGN::Page->new();
-    my $c = SGN::Context->new();
     my $phe_upload = $p->get_upload(); 
     
     if (defined $phe_upload) {
@@ -301,7 +297,6 @@ sub geno_upload {
     }
     
     my $p = CXGN::Page->new();
-    my $c = SGN::Context->new();
     my $gen_upload = $p->get_upload();      
     
     if (defined $gen_upload) {
@@ -354,7 +349,6 @@ sub trait_upload {
     }
    
     my $p = CXGN::Page->new();
-    my $c = SGN::Context->new();
     my $trait_upload = $p->get_upload();      
     
     if (defined $trait_upload) {
@@ -1286,7 +1280,6 @@ sub common_name_id {
     my $self = shift;
     my $sp_person_id = $self->get_sp_person_id();
     my $qtl = CXGN::Phenome::Qtl->new($sp_person_id);
-    my $c = SGN::Context->new();
     my ($qtl_dir, $user_qtl_dir) = $qtl->get_user_qtl_dir($c);
     
     my $id;

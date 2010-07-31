@@ -21,7 +21,6 @@ use CXGN::Genomic::Search::Clone;
 use CXGN::Login;
 use CXGN::Map;
 use CXGN::Marker;
-use CXGN::MasonFactory;
 use CXGN::Page;
 
 use CXGN::Page::FormattingHelpers qw/ page_title_html
@@ -218,9 +217,9 @@ print info_section_html(title   => 'Clone &amp; library',
 			collapsible => 1,
 			contents =>
 			'<table style="margin: 0 auto"><tr><td>'
-			. CXGN::MasonFactory->bare_render('/genomic/clone/clone_summary.mas', clone => $clone )
+			. $c->render_mason('/genomic/clone/clone_summary.mas', clone => $clone )
 			. '</td><td>'
-			. CXGN::MasonFactory->bare_render('/genomic/library/library_summary.mas', library => $clone->library_object)
+			. $c->render_mason('/genomic/library/library_summary.mas', library => $clone->library_object)
                         . info_table_html
                            ( __title => 'Ordering Information',
                              'BAC Clones' => 'BAC clones can be ordered from the <a href="http://ted.bti.cornell.edu/cgi-bin/TFGD/order/order.cgi?item=clone">clone ordering page at TFGD</a>',
