@@ -22,8 +22,10 @@ extends 'Catalyst';
 
 with qw(
         SGN::Role::Site::Config
+        SGN::Role::Site::Files
         SGN::Role::Site::DBConnector
         SGN::Role::Site::DBIC
+        SGN::Role::Site::Mason
        );
 
 our $VERSION = '0.01';
@@ -78,6 +80,8 @@ sub js_import_uris {
     $j->add(my $m = $_) for @urls;
     return [ $j->uris ];
 }
+
+
 
 
 =head1 NAME

@@ -17,7 +17,7 @@ my $defaults =
      },
 
      'Controller::CGIAdaptor' => {
-         cgi_root_path => '',
+         cgi_root_path => '/',
          cgi_dir       => '__path_to(cgi-bin)__',
          #cgi_chain_root   /optional/private/path/to/Chained/root
          cgi_file_pattern => '*.pl',
