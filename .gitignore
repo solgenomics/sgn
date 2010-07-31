@@ -13,3 +13,5 @@ test.sh
 blib/*
 .#*
 *.bak
+data
+static_content

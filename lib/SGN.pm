@@ -3,20 +3,14 @@ use Moose;
 use namespace::autoclean;
 
 use Catalyst::Runtime 5.80;
-
-# Set flags and add plugins for the application
-#
-#         -Debug: activates the debug mode for very useful log messages
-#   ConfigLoader: will load the configuration from a Config::General file in the
-#                 application's home directory
-# Static::Simple: will serve static files from the application's root
-#                 directory
-
 use Catalyst qw/
     -Debug
     ConfigLoader
     Static::Simple
 /;
+
+
+use JSAN::ServerSide;
 
 extends 'Catalyst';
 
@@ -28,17 +22,30 @@ with qw(
         SGN::Role::Site::Mason
        );
 
-our $VERSION = '0.01';
-$VERSION = eval $VERSION;
+
+# if on a dev setup, on startup symlink the static_datasets and
+# static_content in the root dir so that
+# Catalyst::Plugin::Static::Simple can serve them.  in production,
+# these will be served directly by Apache
+after 'setup_finalize' => sub {
+    my $self = shift;
+    unless( $self->config->{production_server} ) {
+        for (qw( static_content static_datasets )) {
+            my @link = (
+                $self->config->{$_.'_path'},
+                File::Spec->catfile( $self->config->{root}, $self->config->{$_.'_url'} )
+            );
+            unlink $link[1];
+            symlink( $link[0], $link[1] )
+                or die "$! symlinking $link[0] => $link[1]";
+        }
+    }
+};
+
 
 # Start the application
 __PACKAGE__->setup();
 
-
-
-
-
-use JSAN::ServerSide;
 
 =head2 new_jsan
 
@@ -81,12 +88,9 @@ sub js_import_uris {
     return [ $j->uris ];
 }
 
-
-
-
 =head1 NAME
 
-SGN - Catalyst based application
+SGN - Catalyst-based application to run the SGN website.
 
 =head1 SYNOPSIS
 
