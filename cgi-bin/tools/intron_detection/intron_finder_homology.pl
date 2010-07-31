@@ -17,7 +17,7 @@ use Pod::Usage;
 use CXGN::Tools::Script qw/ in_fh out_fh /;
 #use CXGN::VHost;
 
-use SGN::sIntronFinder::Homology;
+use SGN::IntronFinder::Homology;
 
 
 ###### DEFAULTS ##########
