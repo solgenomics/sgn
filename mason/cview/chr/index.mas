@@ -105,7 +105,6 @@ $viewer -> set_cM_start($cM_start);
 $viewer -> set_cM_end($cM_end);
 $viewer -> set_confidence($confidence);
 $viewer -> set_show_zoomed($show_zoomed);
-$viewer -> set_db_backend($c->{project_name});
 
 $viewer->generate_page();
 
