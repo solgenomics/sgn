@@ -235,7 +235,7 @@ sub path_to {
 
     @relpath = map "$_", @relpath; #< stringify whatever was passed
 
-    my $basepath = $self->_basepath
+    my $basepath = $self->get_conf('basepath')
       or die "no base path conf variable defined";
     -d $basepath or die "base path '$basepath' does not exist!";
 

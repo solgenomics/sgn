@@ -470,9 +470,7 @@ sub store_accession {
     $species = ucfirst($species);
    
     print STDERR "$accession: species:$species, cultivar:$cultivar\n";
-    my $schema= Bio::Chado::Schema->connect(  sub { $dbh->get_actual_dbh() },
-					    { on_connect_do => ['SET search_path TO public'],
-					  },);
+    my $schema= $c->dbic_schema('Bio::Chado::Schema');
 
     my $organism = CXGN::Chado::Organism->new_with_species($schema, $species);    
     $self->check_organism($organism, $species, $cultivar);
@@ -913,9 +911,7 @@ sub species {
     my $org_id = shift;
     my $dbh = $self->get_dbh();
 
-    my $schema= Bio::Chado::Schema->connect(  sub { $dbh->get_actual_dbh() },
-					    { on_connect_do => ['SET search_path TO public'],
-					  },);
+    my $schema= $c->dbic_schema('Bio::Chado::Schema');
 
     my $org = CXGN::Chado::Organism->new($schema, $org_id);
    

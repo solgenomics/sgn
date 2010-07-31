@@ -32,7 +32,7 @@ sub dbic_schema {
     my $profile = $self->dbc_profile( $profile_name );
 
     return $schema_name->connect( @{$profile}{qw| dsn user password attributes |},
-                                  { on_connect_call => sub { _ensure_dbh_search_path_is_set( shift->dbh ) } },
+                                  { on_connect_call => sub { $self->_ensure_dbh_search_path_is_set( shift->dbh ) } },
                                  );
 }
 

@@ -73,7 +73,7 @@ sub dbc {
     my $profile = $self->dbc_profile( $profile_name );
 
     my $conn = $self->_connections->{$profile_name} ||=
-	__PACKAGE__.'::Connector'->new( @{$profile}{qw| dsn user password attributes |} );
+	SGN::Role::Site::DBConnector::Connector->new( @{$profile}{qw| dsn user password attributes |} );
 
     return $conn;
 }
@@ -95,7 +95,7 @@ sub dbc_profile {
 # called on database handles to make sure they are setting the right
 # search path
 sub _ensure_dbh_search_path_is_set {
-    my ($dbh) = @_;
+    my ($self,$dbh) = @_;
     return $dbh if $dbh->{private_search_path_is_set};
 
     $dbh->do("SET search_path TO $dbh->{private_search_path_string}");
@@ -115,7 +115,7 @@ sub _ensure_dbh_search_path_is_set {
 
   sub dbh {
       my $dbh = shift->SUPER::dbh(@_);
-      SGN::Context::_ensure_dbh_search_path_is_set( $dbh );
+      SGN::Role::Site::DBConnector->_ensure_dbh_search_path_is_set( $dbh );
       return $dbh;
   }
 }
