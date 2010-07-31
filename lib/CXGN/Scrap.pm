@@ -18,9 +18,6 @@ package CXGN::Scrap;
 use strict;
 use warnings;
 use Clone;
-use Apache2::RequestUtil ();
-use Apache2::Request;
-use Apache2::Upload;
 use HTML::Entities;
 use Carp;
 use CGI;
@@ -44,10 +41,9 @@ my $scrap=CXGN::Scrap->new();
 sub new {
   my $class=shift;
   my $self = bless {},$class;
-  $self->{request} ||= Apache2::RequestUtil->request();
-  $self->{apache_request} ||= Apache2::Request->new($self->{request});
   $self->{content_type} = 'text/html';
   $self->{vhost} = SGN::Context->instance;
+  $self->{cgi} = CGI->new;
   return $self;
 }
 
@@ -83,11 +79,9 @@ WARNING: this method does not work for POSTs of type multipart/form-data, partic
 sub get_all_encoded_arguments {
   my ($self) = @_;
   my $r = $self->{apache_request};
-  my @paramnames = $r->param;
-  return map {
-    my $p = $self->get_arguments($_);
-    $_ => HTML::Entities::encode_entities($p,"<>&'\";");
-  } @paramnames;
+  my %vars = %{$self->{cgi}->Vars};
+  $_ = HTML::Entities::encode_entities($_,"<>&'\";") for values %vars;
+  return %vars;
 }
 
 
@@ -122,9 +116,8 @@ Gets arguments which are being sent in via GET or POST (doesn't matter which). D
 # --john
 sub get_arguments {
 	my($self,@items)=@_;
-	my $apr = $self->{apache_request};
 	my @args = map {
-	  my @p = $apr->param($_);
+	  my @p = $self->{cgi}->param($_);
 	  if(@p > 1) {
 	    carp "WARNING: multiple parameters returned for argument '$_'";
 	    \@p
@@ -212,14 +205,14 @@ Wrapper for CGI->new()->Vars(). Used when you have many arguments with the same 
 # handle that yourself using this function which returns a hash (not
 # hash reference)
 sub cgi_params {
-	return CGI->new()->Vars();
+	return shift->{cgi}->Vars();
 }
 
 =head2 get_hostname
 
   Usage: my $hostname = $page->hostname();
   Desc : get the hostname in the current page request (from
-         Apache::Request::hostname())
+         CGI::server_name())
   Args : none
   Ret  : hostname string
   Side Effects: none
@@ -227,13 +220,13 @@ sub cgi_params {
 =cut
 
 sub get_hostname {
-  shift->{request}->hostname();
+  shift->{cgi}->server_name();
 }
 
 =head2 get_request
 
   Usage: my $req = $page->get_request();
-  Desc : get the Apache->request() object for the current page
+  Desc : get the CGI object for the current page
          request
   Args : none
   Ret  : an Apache object
@@ -242,7 +235,7 @@ sub get_hostname {
 =cut
 
 sub get_request {
-  shift->{request};
+  shift->{cgi};
 }
 
 
@@ -299,7 +292,7 @@ sub is_bot_request {
 
 sub send_content_type_header {
     my ( $self, $type ) = @_;
-    $self->{request}->content_type( $type || $self->{content_type} || 'text/html');
+    print "Content-type: ".($type || $self->{content_type} || 'text/html')."\n\n";
 }
 
 
