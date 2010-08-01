@@ -719,7 +719,6 @@ sub set_primary_key {
 sub get_script_name {
   my $self=shift;
   if (!exists($self->{script_name})) { 
-      #return CXGN::Apache::Request::page_name();
       return $ENV{SCRIPT_NAME};
   }
   else { 

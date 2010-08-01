@@ -7,10 +7,9 @@ package CXGN::Scrap;
 =head1 DESCRIPTION
 
  Simplified page object, now a superclass of CXGN::Page.  Also changed
- to be a singleton class.  Provides the apache_request bindings for
- argument retrieval, but doesn't do much else.  The motivation for this
- module was to create a subclass of a simple page object for AJAX
- requests.
+ to be a singleton class.  Provides the bindings for argument
+ retrieval, but doesn't do much else.  The motivation for this module
+ was to create a subclass of a simple page object for AJAX requests.
 
 =cut
 
@@ -78,7 +77,6 @@ WARNING: this method does not work for POSTs of type multipart/form-data, partic
 
 sub get_all_encoded_arguments {
   my ($self) = @_;
-  my $r = $self->{apache_request};
   my %vars = %{$self->{cgi}->Vars};
   $_ = HTML::Entities::encode_entities($_,"<>&'\";") for values %vars;
   return %vars;
@@ -239,22 +237,6 @@ sub get_request {
 }
 
 
-=head2 get_apache_request
-
-  Usage: my $areq = $page->apache_request();
-  Desc : get the Apache::Request for this request, equivalent to
-         Apache::Request->instance( $page->request() )
-  Args : none
-  Ret  : an L<Apache::Request> object
-  Side Effects: none
-
-=cut
-
-sub get_apache_request {
-  shift->{apache_request}
-}
-
-
 =head2 is_bot_request
 
   Usage: print "it's a bot" if $page->is_bot_request;
@@ -267,7 +249,7 @@ sub get_apache_request {
 =cut
 
 sub is_bot_request {
-  my $user_agent = shift->get_request->headers_in->{'User-Agent'};
+  my $user_agent = shift->get_request->user_agent;
 
   return 1 if
     ( $user_agent =~ m|bot/\d|i #< will get google, msn
