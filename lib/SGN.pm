@@ -31,14 +31,22 @@ with qw(
 after 'setup_finalize' => sub {
     my $self = shift;
     unless( $self->config->{production_server} ) {
-        for (qw( static_content static_datasets )) {
-            my @link = (
-                $self->config->{$_.'_path'},
-                File::Spec->catfile( $self->config->{root}, $self->config->{$_.'_url'} )
-            );
-            unlink $link[1];
-            symlink( $link[0], $link[1] )
-                or die "$! symlinking $link[0] => $link[1]";
+        my @links = (
+
+            # make symlink for /img
+            [ $self->path_to('documents','img'), $self->path_to('img') ],
+
+            # make symlinks for static_content and static_datasets
+            ( map [ $self->config->{$_.'_path'} =>  File::Spec->catfile( $self->config->{root}, $self->config->{$_.'_url'} ) ],
+                  qw( static_content static_datasets )
+            ),
+
+           );
+
+        for my $link (@links) {
+            unlink $link->[1];
+            symlink( $link->[0], $link->[1] )
+                or die "$! symlinking $link->[0] => $link->[1]";
         }
     }
 };

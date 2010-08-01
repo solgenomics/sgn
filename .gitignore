@@ -15,3 +15,5 @@ blib/*
 *.bak
 data
 static_content
+img
+
