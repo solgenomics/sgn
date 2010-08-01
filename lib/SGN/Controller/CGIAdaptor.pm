@@ -36,7 +36,7 @@ sub wrap_perl_cgi {
             } }
             package Catalyst::Controller::CGIBin::_CGIs_::'.$action_name.';
             sub {'
-                , 'my $c = shift;'
+                , 'our $c = shift;'
                 , 'local *DATA;'
                 , q{open DATA, '<', \$data;}
                 , qq{local \$0 = "\Q$cgi\E";}
