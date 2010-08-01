@@ -47,21 +47,6 @@ else {
     $goto_url ||= $ENV{HTTP_REFERER};
 }
 
-unless ( $page->{request}->is_initial_req()
-    && ( $goto_url !~ /account-confirm/ ) ) {
-
-    # if they were redirected here by a page, then save where they came
-    # from so we can send them back
-
-    my $prev_r = $page->{request}->prev();
-    $goto_url = $prev_r->uri();
-    if ( $prev_r->args() ) {
-        $goto_url = $goto_url . "?" . $prev_r->args();
-        $goto_url =~ s/&/&amp;/g;    #allow to use this as a url parameter
-    }
-
-}
-
 
 if ( $logout && $logout eq "yes" )              #if we are in the process of logging out
 {

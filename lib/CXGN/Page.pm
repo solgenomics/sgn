@@ -248,15 +248,6 @@ sub client_redirect {
         die("Can't redirect to null location.");
     }
 
-    # Attempt to catch some potential looping -- the uri() method does not
-    # give the query string for GET request, so this may not match even when
-    # it should. I didn't use a reg-exp match here because that may match even
-    # when it should not.
-    my ( undef, $my_uri ) = split /\s/, $self->{request}->the_request();
-    if ( $url eq $my_uri ) {
-        die("Attempt to redirect to url identical to calling url\n");
-    }
-
     if ( $url =~ m|http://| ) {
         print "Location: $url\n\n";
     }
