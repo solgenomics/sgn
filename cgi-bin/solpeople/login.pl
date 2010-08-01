@@ -1,6 +1,5 @@
-
-#!/usr/bin/perl -w
 use strict;
+use warnings;
 
 use CXGN::DB::Connection;
 use CXGN::Page;
