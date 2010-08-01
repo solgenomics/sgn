@@ -244,39 +244,7 @@ Sends client to another location.
 
 sub client_redirect {
     my ( $self, $url ) = @_;
-    unless ($url) {
-        die("Can't redirect to null location.");
-    }
-
-    if ( $url =~ m|http://| ) {
-        print "Location: $url\n\n";
-    }
-    else {
-
-        # build the full url
-        my $prev_url = $self->{request}->uri();
-        my $full_url;
-        if ( $url =~ m|^/| ) {
-
-            # rooted
-            $full_url = $prev_url;
-
-            # WARNING: Look-behinds ahead! :)
-            $full_url =~ s|(?<!/)/(?!/).*|$url|
-              ; # replace everything including and after the first non-doubled slash  with the contents of $url.
-
-        }
-        else {
-
-            #relative
-            $full_url = $prev_url;
-            $full_url =~ s|[^/]+$|$url|;
-        }
-
-        $full_url = "http://" . $ENV{HTTP_HOST} . $full_url;
-
-        print "Location: $full_url\n\n";
-    }
+    CGI->new->redirect( -status => 302, -uri => $url );
     exit;
 }
 
