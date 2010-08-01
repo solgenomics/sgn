@@ -84,7 +84,7 @@ if ($username) {
   $new_person->set_last_name($last_name);
   $new_person->store();
   
-  my $host=$page->{request}->hostname();
+  my $host = CGI->new->server_name;
   my $subject="[SGN] Email Address Confirmation Request";
   my $body=<<END_HEREDOC;
 
