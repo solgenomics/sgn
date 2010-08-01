@@ -79,7 +79,6 @@ sub new {
     $dbh->add_search_path("$schema");
     
     $self->set_login(CXGN::Login->new($self->get_dbh()));
-    $self->get_page->{request}->no_cache(1);
     my %args = $self->get_page()->cgi_params(); #multi-valued parameters have values in a string, delimited by \0
 
     # sanitize the inputs, we don't want to end up like bobby tables school.

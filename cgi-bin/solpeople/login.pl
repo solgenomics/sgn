@@ -26,9 +26,6 @@ if ( !$login_controller->login_allowed() ) {
     );
 }
 
-$page->{request}->no_cache(1)
-  ; #not sure if this is needed--just a bit of old code which probably can't hurt
-
 my ( $username, $password, $goto_url, $logout ) =
   $page->get_arguments( "username", "pd", "goto_url", "logout" );
 
