@@ -1,4 +1,5 @@
 *~
+TAGS
 documents/tempfiles/*.*
 documents/tempfiles/*/*
 features/gbrowse2/conf/rendered_conf/*.conf
@@ -16,4 +17,3 @@ blib/*
 data
 static_content
 img
-
