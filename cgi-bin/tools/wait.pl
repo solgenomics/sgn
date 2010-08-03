@@ -13,6 +13,8 @@ use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw/ page_title_html blue_section_html /;
 use CXGN::Tools::Run;
 
+our $c;
+
 my $page = CXGN::Page->new("Generic SGN Cluster Job Waiting Page", "Lukas");
 
 #extra_params added since I couldn't prevent encoding/decoding merges
@@ -41,8 +43,10 @@ $job_file = catfile($tmpdir,$job_file);
 $d->d("Arguments: job_file = $job_file redirect = $redirect");
 
 unless( -f $job_file ) {
-  $page->message_page("Job not found.  Has it already been executed and the results retrieved?");
-  return;
+  $c->throw( message => "Job not found.  Has it already been executed and the results retrieved?",
+             is_error => 0,
+             developer_message => "Job file was '$job_file'\n",
+            );
 }
 
 
@@ -78,7 +82,7 @@ else {
     # rather than STDOUT from the job.  Use the out_file_override
     # parameter if this is the case.
     my $out_file = $out_file_override || $job->out_file();
-    system("ls /data/prod/tmp");
+    system("ls /data/prod/tmp 2>&1 >/dev/null");
     copy($out_file, $apache_temp)
         or die "Can't copy result file '$out_file' to temp dir $!";
 
