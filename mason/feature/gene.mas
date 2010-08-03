@@ -27,7 +27,6 @@
     my $organism = $feature->organism;
     my $species  = $organism->species;
     $species    =~ s!(\S+) !<i>$1</i> !;
-    my $cvterm_id = $feature->type_id;
 </%perl>
 
 <& /feature/feature_data.mas,
@@ -64,10 +63,6 @@
     collapsible => 1,
 &>
 </&>
-
-<& /feature/cvterms.mas,
-	cvterm_id   => $cvterm_id,
-&>
 
 <&| /page/info_section.mas,
     title => 'BLAST Annotation',

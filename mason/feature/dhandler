@@ -32,11 +32,6 @@
     parents => $parents
 &>
 
-<& /feature/cvterms.mas,
-	cvterm_id   => $feature->type_id,
-&>
-
-
 <&| /page/info_section.mas,
     title       => 'Organism',
     collapsible => 1,
@@ -47,8 +42,10 @@
 </&>
 
 
+% if ($seq->length > 0) {
 <& /feature/sequence.mas,
         feature   => $feature,
         seq       => $seq,
         blast_url => $blast_url,
 &>
+% }
