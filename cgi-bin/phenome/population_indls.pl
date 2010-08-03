@@ -60,7 +60,6 @@ use CXGN::Contact;
 use Storable qw / store /;
 
 
-use CXGN::Page::UserPrefs;
 use base qw / CXGN::Page::Form::SimpleFormPage CXGN::Phenome::Main/;
 
 sub new
