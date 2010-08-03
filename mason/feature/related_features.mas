@@ -46,7 +46,7 @@ is a <% $child->type->name %><br>
 &>
 %}
 %if (@$children) {
-<& /page/columnar_table.as,
+<& /page/columnar_table.mas,
     headings => [ "Child Feature Type", "Number" ],
     data     => related_stats($children),
 &>
