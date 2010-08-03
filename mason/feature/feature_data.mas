@@ -1,6 +1,7 @@
 <%args>
     $feature
     $title => 'Feature Data'
+    $species => undef
 </%args>
 <&| /page/info_section.mas,
     title       => $title,
@@ -9,8 +10,12 @@
 &>
     <b>Name</b>: <% $feature->name %><br/>
     <b>Feature Type</b>: <% $feature->type->name %><br/>
-    <b>Analysis</b>: <% $feature->is_analysis ? 'Yes' : 'No' %><br/>
     <b>Description</b>: <% $feature->description %><br/>
+    <b>Analysis</b>: <% $feature->is_analysis ? 'Yes' : 'No' %><br/>
+    <b>Organism Name</b>: <& /feature/organism_link.mas,
+                                organism => $feature->organism,
+                                text => $species
+                           &>
     <& /feature/dbxref.mas,
         dbxref => $feature->dbxref,
     &><br/>

@@ -31,7 +31,8 @@
 
 <& /feature/feature_data.mas,
     feature => $feature,
-    title => "Gene Data",
+    title   => "Gene Data",
+    species => $species,
 &>
 
 <& /feature/related_features.mas,
