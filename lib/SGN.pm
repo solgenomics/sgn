@@ -21,6 +21,7 @@ with qw(
         SGN::Role::Site::DBIC
         SGN::Role::Site::Mason
         SGN::Role::Site::SiteFeatures
+        SGN::Role::Site::ExceptionHandling
        );
 
 
