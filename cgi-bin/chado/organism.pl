@@ -23,7 +23,7 @@ my ( $organism_id, $force ) =
 
 my $dbh = CXGN::DB::Connection->new();
 
-my $schema = $c->dbic_schema('Bio::Chado::Schema');
+my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
 my $organism = CXGN::Chado::Organism->new( $schema, $organism_id );
 if ( !$organism ) {
