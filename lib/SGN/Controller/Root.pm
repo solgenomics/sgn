@@ -42,8 +42,17 @@ Standard 404 error page
 
 sub default :Path {
     my ( $self, $c ) = @_;
-    $c->response->body( 'Page not found' );
-    $c->response->status(404);
+
+    my $path = $c->req->path;
+    unless( $path =~ m|/index\.pl$| ) {
+        # look for an index.pl if not found
+        $path =~ s!/+$!!;
+        $path = "/$path/index.pl";
+        $c->response->redirect($path);
+    } else {
+        $c->response->body( 'Page not found' );
+        $c->response->status(404);
+    }
 }
 
 =head2 end
