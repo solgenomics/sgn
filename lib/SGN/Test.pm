@@ -33,23 +33,23 @@ sub validate_urls {
             or do {
                 diag "fetch actually returned code '$rc': $ENV{SGN_TEST_SERVER}$url";
                 if( $ENV{DUMP_ERROR_CONTENT} ) {
-                    if( eval { require Digest::Crc32 } ) {
-                    $dump_tempdir ||= make_dump_tempdir();
-                    my $script = $r->request->uri->path;
-                    $script =~ s/.//;
-                    $script =~ s/\W+/_/g;
-                    my $params = $r->request->uri->query;
-                    $params = $params ? sprintf('%x',Digest::Crc32->new->strcrc32($params)) : '0';
-                    my $dump_filename = "${script}_${params}.dump";
-                    $dump_filename = catfile( $dump_tempdir, $dump_filename);
-                    my $dump_out = IO::File->new( $dump_filename, 'w')
-                        or die "$! opening dumpfile $dump_filename for diagnostic dump\n";
-                    $dump_out->print("FROM URL: $url\n\n");
-                    $dump_out->print($r->content);
-                    diag "fetched content dumped to $dump_filename";
-                } else {
-                    diag "Cannot include Digest::CRC32 for error content dump.  Skipping.";
-                }
+                    if ( eval { require Digest::Crc32 } ) {
+                        $dump_tempdir ||= make_dump_tempdir();
+                        my $script = $r->request->uri->path;
+                        $script =~ s/.//;
+                        $script =~ s/\W+/_/g;
+                        my $params = $r->request->uri->query;
+                        $params = $params ? sprintf('%x',Digest::Crc32->new->strcrc32($params)) : '0';
+                        my $dump_filename = "${script}_${params}.dump";
+                        $dump_filename = catfile( $dump_tempdir, $dump_filename);
+                        my $dump_out = IO::File->new( $dump_filename, 'w')
+                            or die "$! opening dumpfile $dump_filename for diagnostic dump\n";
+                        $dump_out->print("FROM URL: $url\n\n");
+                        $dump_out->print($r->content);
+                        diag "fetched content dumped to $dump_filename";
+                    } else {
+                        diag "Cannot include Digest::CRC32 for error content dump.  Skipping.";
+                    }
                 } else {
                     diag "error dump skipped, set DUMP_ERROR_CONTENT=1 to enable error dump files\n";
                 }
