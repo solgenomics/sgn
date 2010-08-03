@@ -27,8 +27,6 @@ use CXGN::Login;
 use CXGN::Page::VHost::SGN;
 use CXGN::Tools::File;
 
-use SGN::Context;
-
 
 use Data::Dumper;
 $Data::Dumper::Varname = 'VAR_DUMP';
@@ -67,7 +65,7 @@ sub new {
         my @libs = ref $js ? @$js : ($js);
         $self->jsan_use(@libs);
     }
-    $self->{context} = SGN::Context->new();
+    $self->{context} = $c;
     $self->{project_name} = 'SGN';
 
     $self->{page_object} = CXGN::Page::VHost::SGN->new($self->get_dbh());
@@ -256,10 +254,16 @@ deprecated. do not use in new code.
 
 sub message_page {
     my ( $self, $message_header, $message_body ) = @_;
-    SGN::Context->instance->throw( title    => $message_header,
-                                   message  => $message_body,
-                                   is_error => 0,
-                                 );
+
+    unless( length $message_body ) {
+        $message_body = $message_header;
+        $message_header = undef;
+    }
+
+    $c->throw( title    => $message_header,
+               message  => $message_body,
+               is_error => 0,
+              );
 
 }
 
@@ -273,10 +277,15 @@ sub error_page {
     my $self = shift;
     my ( $message_header, $message_body, $error_verb, $developer_message ) = @_;
 
-    SGN::Context->instance->throw( message => $message_body,
-                                   developer_message => $developer_message,
-                                   title => $message_header,
-                                 );
+    unless( length $message_body ) {
+        $message_body = $message_header;
+        $message_header = undef;
+    }
+
+    $c->throw( message => $message_body,
+               developer_message => $developer_message,
+               title => $message_header,
+              );
 }
 
 =head1 OTHER METHODS
