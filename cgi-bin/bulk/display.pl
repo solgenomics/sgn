@@ -13,56 +13,15 @@
 
 =cut
 
-use CXGN::Page;
-use Apache2::Request;
 use strict;
+
+bulk_display->new->display_page;
+
+package bulk_display;
+use CGI ();
+use CXGN::Page;
 use CXGN::VHost;
-my $vhost_conf = CXGN::VHost->new();
-
-=head2 display_main
-
-  Desc: package display_main
-  Args: n/a
-  Ret : n/a
-
-  Contains the display main method.
-
-=cut
-
-display_main();
-
-=head2 display_main
-
-  Desc: sub display_main
-  Args: $ARGV[0];
-  Ret : n/a
-
-  This subroutine creates a new display object (see package display and
-  method new). Calls display_page() method on display object.
-
-=cut
-
-sub display_main {
-
-    my $display = display->new( $ARGV[0] );
-    $display->display_page();
-
-}
-
-=head2 display
-
-  Desc: package display
-  Args: n/a
-  Ret : 1
-
-  Contains all the methods of the display package.
-
-=cut
-
-package display;
 use CXGN::Page::FormattingHelpers qw/ html_break_string/;
-
-return 1;
 
 =head2 new
 
@@ -71,31 +30,29 @@ return 1;
   Ret : $args, $class;
 
   When implemented creates a new display object that the methods in the display
-  package can be called on. Retrives parameters from apache.
+  package can be called on.
 
 =cut
 
 sub new {
     my $class   = shift;
-    my $request = shift;
+    my $c       = shift;
     my $args    = {};
 
     # define some constants
     $args->{pagesize} = 50;
     $args->{content}  = "";
-    $args->{tempdir} =
-        $vhost_conf->get_conf('basepath')
-      . $vhost_conf->get_conf('tempfiles_subdir') . "/bulk";
+    $args->{tempdir} = $c->path_to( $c->tempfiles_subdir('bulk') );
 
     # get cgi arguments
-    $args->{apache}      = Apache2::Request->new($request);
-    $args->{dumpfile}    = $args->{apache}->param("dumpfile");
-    $args->{page_number} = $args->{apache}->param("page_number");
-    $args->{outputType}  = $args->{apache}->param("outputType");
-    $args->{seq_type}    = $args->{apache}->param("seq_type");
-    $args->{idType}      = $args->{apache}->param("idType");
-    $args->{summary}     = $args->{apache}->param("summary");
-    $args->{download}    = $args->{apache}->param("download");
+    $args->{cgi}         = my $cgi = CGI->new;
+    $args->{dumpfile}    = $cgi->param("dumpfile");
+    $args->{page_number} = $cgi->param("page_number");
+    $args->{outputType}  = $cgi->param("outputType");
+    $args->{seq_type}    = $cgi->param("seq_type");
+    $args->{idType}      = $cgi->param("idType");
+    $args->{summary}     = $cgi->param("summary");
+    $args->{download}    = $cgi->param("download");
     $args->{page} = CXGN::Page->new( "Browse Bulk Results", "Lukas Mueller" );
 
     return bless $args, $class;

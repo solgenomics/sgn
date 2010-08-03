@@ -365,7 +365,6 @@ if ($preset) {
 # get an upload object to upload a file, copy the
 # file to a temp location
 #
-#my $upload = Apache2::Request->new($request)->upload();
 my $upload = $page->get_apache_request()->upload($file);
 
 my ( $temp_fh, $temp_file ) =
