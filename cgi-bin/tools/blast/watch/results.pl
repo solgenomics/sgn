@@ -1,33 +1,26 @@
 #!/usr/bin/perl
 
+use strict;
+
 use CXGN::Page;
 use CXGN::VHost;
 use File::Spec;
 use CXGN::DB::Connection;
 use CXGN::BlastWatch;
-use strict;
 
-our $page = CXGN::Page->new( "BLAST watch results", "Adri");
+use CGI ();
 
-# get arguments
-my $r = Apache2::RequestUtil->request;
-$r->content_type("text/html");
-my $req = Apache2::Request->new($r);
+our $c;
 
-my $bw_query_id;
+my $page = CXGN::Page->new( "BLAST watch results", "Adri");
 
-if ($r->method eq 'POST') {
-    $bw_query_id = $req->body("query");
-}
-else {
-    my $args = $r->args;
-    $args =~ /query=(\d+)/;
-    $bw_query_id = $1;
-}
+my $cgi = CGI->new;
+
+my $bw_query_id = $cgi->param('query');
 
 my $dbh = CXGN::DB::Connection->new();
 
-if (!$bw_query_id) {&user_error("No query chosen.") }
+$c->throw( message => "No query chosen.", is_error => 0 ) unless $bw_query_id;
 
 my $select = "SELECT sequence, program, database, matrix, evalue, num_results "
     . "FROM blastwatch_queries where blastwatch_queries_id = ?";
