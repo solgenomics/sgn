@@ -255,7 +255,7 @@ deprecated. do not use in new code.
 sub message_page {
     my ( $self, $message_header, $message_body ) = @_;
 
-    unless( length $message_body ) {
+    unless( defined $message_body ) {
         $message_body = $message_header;
         $message_header = undef;
     }
