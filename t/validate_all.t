@@ -80,6 +80,7 @@ my %urls = (
         "tomato genome publication page"           => "/genomes/Solanum_lycopersicum/publications.pl",
         "tomato genome index page"                 => "/genomes/Solanum_lycopersicum/",
         "outreach index"                           => "/outreach/",
+        "organism page for tomato",                => "/chado/organism.pl?organism_id=1",
 );
 
 my $iteration_count;
