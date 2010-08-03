@@ -295,6 +295,7 @@ sub send_content_type_header {
 # =cut
 
 sub path_to {
+    shift;
     $c->path_to(@_)
 }
 
