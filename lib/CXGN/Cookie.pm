@@ -2,6 +2,8 @@ package CXGN::Cookie;
 use strict;
 use warnings;
 
+use CatalystX::GlobalContext '$c';
+
 =head1 CXGN::Cookie
 
  Functions for using CXGN cookies.  Deprecated.
@@ -9,12 +11,11 @@ use warnings;
 =cut
 
 sub get_cookie {
-    CGI->new->cookie(shift);
+    $c->req->cookie(shift);
 }
 
 sub set_cookie {
-    die "set_cookie does not support multi-valued setting" unless @_ == 2;
-    CGI->new->cookie( -name => shift, -value => @_ );
+    $c->response->cookies->{+shift} = { value => shift };
 }
 
 1;
