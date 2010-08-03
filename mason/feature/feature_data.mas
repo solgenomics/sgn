@@ -3,15 +3,14 @@
     $title => 'Feature Data'
 </%args>
 <&| /page/info_section.mas,
-    title => $title,
+    title       => $title,
+    subtitle    => $feature->is_obsolete ? 'WARNING: This feature is obsolete' : '',
     collapsible => 1,
 &>
-    Feature Type: <% $feature->type->name %><br/>
-    Analysis: <% $feature->is_analysis ? 'Yes' : 'No' %><br/>
-    Obsolete: <% $feature->is_obsolete ? 'Yes' : 'No' %><br/>
-    Accession: <% $feature->accession %><br/>
-    Accession Time: <% $feature->timeaccessioned %><br/>
-    Description: <% $feature->description %><br/>
+    <b>Name</b>: <% $feature->name %><br/>
+    <b>Feature Type</b>: <% $feature->type->name %><br/>
+    <b>Analysis</b>: <% $feature->is_analysis ? 'Yes' : 'No' %><br/>
+    <b>Description</b>: <% $feature->description %><br/>
     <& /feature/dbxref.mas,
         dbxref => $feature->dbxref,
     &><br/>
