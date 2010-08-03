@@ -27,13 +27,6 @@ sub related_stats {
     collapsible => 1,
 &>
 % my $c = 0;
-% for my $child (@$children) {
-Child Feature:
-    <& /feature/link.mas, feature => $child, &>
-is a <% $child->type->name %><br>
-% last if ++$c > 10;
-% }
-% $c = 0;
 % for my $parent (@$parents) {
 Parent Feature:
     <& /feature/link.mas, feature => $parent, &>
@@ -41,11 +34,12 @@ Parent Feature:
 
 % last if ++$c > 10;
 % }
-%if (@$children) {
-<& /page/columnar_table.mas,
-    headings => [ "Child Feature Type", "Number", "%" ],
-    data     => related_stats($children),
-&>
+% $c = 0;
+% for my $child (@$children) {
+Child Feature:
+    <& /feature/link.mas, feature => $child, &>
+is a <% $child->type->name %><br>
+% last if ++$c > 10;
 % }
 %if (@$parents) {
 <& /page/columnar_table.mas,
@@ -53,4 +47,10 @@ Parent Feature:
     data     => related_stats($parents),
 &>
 %}
+%if (@$children) {
+<& /page/columnar_table.mas,
+    headings => [ "Child Feature Type", "Number", "%" ],
+    data     => related_stats($children),
+&>
+% }
 </&>

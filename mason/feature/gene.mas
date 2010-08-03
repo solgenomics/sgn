@@ -32,7 +32,7 @@
 
 <& /feature/feature_data.mas,
     feature => $feature,
-    title => "Feature " . $feature->name . " (Gene)",
+    title => "Gene Data",
 &>
 
 <& /feature/related_features.mas,
@@ -40,12 +40,13 @@
     parents => $parents
 &>
 
+% if ($seq->length > 0) {
 <& /feature/sequence.mas,
 	feature => $feature,
 	seq     => $seq,
 	blast_url => $blast_url,
 &>
-
+% }
 <&| /page/info_section.mas,
     title => 'Exon Structure',
     collapsible => 1,
