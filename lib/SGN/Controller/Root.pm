@@ -47,7 +47,7 @@ sub default :Path {
     my ( $self, $c ) = @_;
 
     my $path = $c->req->path;
-    unless( $path =~ m|/index\.pl$| ) {
+    unless( $path =~ m|\.\w{2,4}$| ) {
         # look for an index.pl if not found
         $path =~ s!/+$!!;
         $path = "/$path/index.pl";
