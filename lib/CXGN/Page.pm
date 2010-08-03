@@ -33,6 +33,8 @@ use SGN::Context;
 use Data::Dumper;
 $Data::Dumper::Varname = 'VAR_DUMP';
 
+use CatalystX::GlobalContext '$c';
+
 ## STDERR Capture for the Logger, by Developer Preference ####
 our $STDERR_BUFFER  = '';
 our $STDERR_CAPTURE = 0;
@@ -241,7 +243,7 @@ Sends client to another location.
 
 sub client_redirect {
     my ( $self, $url ) = @_;
-    CGI->new->redirect( -status => 302, -uri => $url );
+    print "Location: $url\n";
     exit;
 }
 
