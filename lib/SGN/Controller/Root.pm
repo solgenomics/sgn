@@ -2,6 +2,8 @@ package SGN::Controller::Root;
 use Moose;
 use namespace::autoclean;
 
+use CatalystX::GlobalContext ();
+
 BEGIN { extends 'Catalyst::Controller' }
 
 #
@@ -54,6 +56,20 @@ sub default :Path {
         $c->response->status(404);
     }
 }
+
+
+=head2 auto
+
+Run for every request to the site.
+
+=cut
+
+sub auto : Private {
+    my ($self, $c) = @_;
+    CatalystX::GlobalContext->set_context( $c );
+    1;
+}
+
 
 =head2 end
 

@@ -100,6 +100,7 @@ my $build = $class->new(
         'Catalyst::Action::RenderView'     => 0,
         'Catalyst::Plugin::Static::Simple' => 0,
         'Catalyst::View::Mason'            => 0,
+        'CatalystX::GlobalContext'         => 0,
 
         'CGI'                              => 0,
         'CGI::Carp::DebugScreen'           => '0.16',
