@@ -8,17 +8,13 @@ use CXGN::DB::Connection;
 use CXGN::BlastWatch;
 use CXGN::Page::FormattingHelpers qw/page_title_html modesel info_table_html hierarchical_selectboxes_html simple_selectbox_html/;
 
-our $page = CXGN::Page->new( "BLAST watch submission", "Adri");
+my $page = CXGN::Page->new( "BLAST watch submission", "Adri");
 
 # get arguments from index.pl
+our $c;
+post_only() unless $c->req->method eq 'POST';
 
-#my $r = Apache->request();
-my $r = Apache2::RequestUtil->request;
-$r->content_type("text/html");
-
-my $req = Apache2::Request->new($r);
-
-my $params = $r->method eq 'POST' ? $req->body : &post_only;
+my $params = $c->req->params;
 
 # dehash, because it's easier later..
 my $database = $params->{database};

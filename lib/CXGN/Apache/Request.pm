@@ -34,10 +34,7 @@ john binns - John Binns <zombieite@gmail.com>
 package CXGN::Apache::Request;
 use strict;
 
-use Apache2::RequestUtil ();
-use Apache2::Connection ();
-
-#use CXGN::Login;
+use Data::Dumper;
 use URI::Escape;
 use Socket;    #used to get hostname from IP
 our $CORNELL_IP_MATCH = '132.236.157.';
@@ -47,8 +44,7 @@ our $OTHER_KNOWN_IPS  = {
 };
 
 sub as_verbose_string {
-    my $verbose_string = "";
-    my $request        = Apache2::RequestUtil->request();
+    my $verbose_string = '';
     my $time           = &time();
     my ( $client_name, $cornell_client_name ) = &client_name();
     my ( $page_name,   $parameters )          = &page_name();
@@ -58,16 +54,17 @@ sub as_verbose_string {
         $parameters =~ s/;/\n/g;
     }
 
-    #    my $login=CXGN::Login->new();
-    #    my $id=$login->has_session();
-    $verbose_string .= "\nApache request\n--------------\n";
-    $verbose_string .=
-      "$page_name on SGN requested by $client_name at $time\n\n";
-    if ($parameters) { $verbose_string .= "with parameters:\n$parameters\n\n"; }
+     #    my $login=CXGN::Login->new();
+     #    my $id=$login->has_session();
+     $verbose_string .= "\nrequest\n--------------\n";
+     $verbose_string .=
+       "$page_name on SGN requested by $client_name at $time\n\n";
+     if ($parameters) { $verbose_string .= "with parameters:\n$parameters\n\n"; }
 
-    #    if($id){$verbose_string.="with login ID: $id\n\n";}
-    $verbose_string .= $request->as_string();
-    return ($verbose_string);
+#     #    if($id){$verbose_string.="with login ID: $id\n\n";}
+    $verbose_string .= "Request Environment:\n";
+    $verbose_string .= Dumper(\%ENV);
+    return $verbose_string;
 }
 
 sub time {
@@ -80,17 +77,7 @@ sub time {
 }
 
 sub client_name {
-    my $request     = Apache2::RequestUtil->request();
-    my $remote_host = $request->connection->get_remote_host();
-    my $client_name =
-      gethostbyaddr( inet_aton($remote_host), AF_INET )
-      ;    #see perldoc -f gethostbyaddr
-    if ($client_name) {
-        $client_name .= ' (' . $remote_host . ')';
-    }
-    else {
-        $client_name = $remote_host;
-    }
+    my $client_name = my $remote_host = CGI->new->remote_host;
     my $known_client_name;
     if ( $remote_host =~ /$CORNELL_IP_MATCH/ ) {
         if ( $client_name =~ /(\w+)\.sgn\.cornell\.edu/ ) {
@@ -110,8 +97,7 @@ sub full_page_name {
     my ($request_string) = @_
       ; #you can send in a string if you want (does_not_exist.pl does this for reasons of its own)
     my $parameter_string = '';
-    $request_string ||=
-      Apache2::RequestUtil->request()->the_request();    #or we can get it ourselves
+    $request_string ||= CGI->new->url( -query => 1 );
     if ( $request_string =~ / (.+) /i
       ) #if the request says "GET /cgi-bin/mypage.pl?arg=1 HTTP/1.1" we want the "/cgi-bin/mypage.pl?arg=1" between the space characters
     {
