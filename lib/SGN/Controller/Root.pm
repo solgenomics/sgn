@@ -18,7 +18,7 @@ SGN::Controller::Root - Root Controller for SGN
 
 =head1 DESCRIPTION
 
-[enter your description here]
+Web application to run the SGN web site.
 
 =head1 METHODS
 
@@ -38,7 +38,8 @@ sub index :Path :Args(0) {
 
 =head2 default
 
-Standard 404 error page
+Attempt to find index.pl pages, and prints standard 404 error page if
+nothing could be found.
 
 =cut
 
