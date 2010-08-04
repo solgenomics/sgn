@@ -10,31 +10,24 @@
     title => $title,
     collapsible => 1,
 &>
-% my $c = 0;
-% for my $parent (@$parents) {
-Parent Feature:
-    <& /feature/link.mas, feature => $parent, &>
-    is a <% $parent->type->name %><br>
-
-% last if ++$c > 10;
-% }
-% $c = 0;
-% for my $child (@$children) {
-Child Feature:
-    <& /feature/link.mas, feature => $child, &>
-is a <% $child->type->name %><br>
-% last if ++$c > 10;
-% }
 %if (@$parents) {
 <& /page/columnar_table.mas,
     headings => [ "Parent Feature Type", "Number"  ],
     data     => related_stats($parents),
 &>
 %}
+<& /feature/feature_list.mas,
+    features => $parents,
+&>
+<br/>
 %if (@$children) {
 <& /page/columnar_table.mas,
     headings => [ "Child Feature Type", "Number" ],
     data     => related_stats($children),
 &>
 % }
+<& /feature/feature_list.mas,
+    features => $children,
+&>
+
 </&>

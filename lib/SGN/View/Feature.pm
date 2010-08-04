@@ -1,6 +1,12 @@
 package SGN::View::Feature;
 use base 'Exporter';
-our @EXPORT_OK = qw/related_stats/;
+use strict;
+use warnings;
+use SGN::Context;
+
+our @EXPORT_OK = qw/related_stats feature_table/;
+our $c = SGN::Context->new;
+
 sub related_stats {
     my ($features) = @_;
     my $stats = { };
@@ -13,6 +19,19 @@ sub related_stats {
         push @$data, [ $k => $stats->{$k} ];
     }
     push @$data, [ "Total" => $total ];
+    return $data;
+}
+
+sub feature_table {
+    my ($features) = @_;
+    my $data = [];
+    for my $f (@$features) {
+        push @$data, [
+            $c->render_mason(
+                "/feature/link.mas",
+                feature => $f,
+            ), $f->type->name ];
+    }
     return $data;
 }
 
