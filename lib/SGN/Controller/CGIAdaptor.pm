@@ -1,9 +1,18 @@
+=head1 NAME
+
+SGN::Controller::CGI - run SGN CGI scripts
+
+=cut
+
 package SGN::Controller::CGIAdaptor;
 
 use Moose;
 use namespace::autoclean;
 
 extends 'Catalyst::Controller::CGIBin';
+
+# NOTE: 90% of the code below will go away, with new features I am
+# adding to the Catalyst::Controller::CGIBin base class.
 
 use Carp;
 use File::Basename;
@@ -149,9 +158,7 @@ sub wrap_cgi {
 
     select($old);
 
-    Catalyst::Exception->throw(
-        message => "CGI invocation failed: $saved_error"
-    ) if $saved_error;
+    die $saved_error if $saved_error;
   }
 
   return $env->response;
