@@ -37,7 +37,7 @@ sub feature_table {
                 ),
                 $f->type->name,
                 join(",", $fmin, $fmax),
-                $fmax-$fmin,
+                $fmax-$fmin . " bp",
                 $loc->strand,
                 $loc->phase,
                 $loc->rank,

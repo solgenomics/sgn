@@ -3,6 +3,14 @@
     $title => 'Feature Data'
     $species => undef
 </%args>
+<%perl>
+    my @locations = $feature->featureloc_features->all;
+    my $length = 0;
+    for my $l (@locations) {
+        $length += $l->fmax - $l->fmin;
+    }
+</%perl>
+
 <&| /page/info_section.mas,
     title       => $title,
     subtitle    => $feature->is_obsolete ? 'WARNING: This feature is obsolete' : '',
@@ -15,7 +23,8 @@
     <b>Organism Name</b>: <& /feature/organism_link.mas,
                                 organism => $feature->organism,
                                 text => $species
-                           &>
+                           &><br/>
+    <b>Length</b>: <% $length %> bp in <% scalar @locations %> location(s)<br/>
     <& /feature/dbxref.mas,
         dbxref => $feature->dbxref,
     &><br/>
