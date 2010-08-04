@@ -6,7 +6,7 @@
 % for my $e (@$exception) {
 
 <h1 style="text-align: center">
-   <% $e->title || ( $e->is_error ? 'Server Error' : '' ) %>
+   <% $e->title || ( $e->is_server_error ? 'Server Error' : '' ) %>
 </h1>
 
 <div style="margin: auto; width: 90%">
@@ -28,7 +28,7 @@
     Please also feel free to contact us at
     <a href="mailto:<% $f %>"><% $f %></a> and inform us of the
     problem, and
-%   if( $e->is_error ) {
+%   if( $e->is_server_error ) {
       we will keep you informed of our progress in resolving it.
 %   } else {
       we will work with you to resolve it.

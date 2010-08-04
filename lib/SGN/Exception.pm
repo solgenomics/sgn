@@ -34,10 +34,27 @@ has 'title' => (
     isa => 'Maybe[Str]',
    );
 
-has 'is_error' => (
+has 'is_server_error' => (
     is  => 'ro',
     isa => 'Bool',
     default => 1,
+);
+
+has 'is_client_error' => (
+    is  => 'ro',
+    isa => 'Bool',
+    default => 0,
+);
+
+has 'http_status' => (
+    is  => 'ro',
+    isa => 'Int',
+    default => sub {
+        my $self = shift;
+        $self->is_server_error ? 500 :
+        $self->is_client_error ? 400 :
+                                 200
+        },
 );
 
 has 'notify' => (
@@ -45,7 +62,7 @@ has 'notify' => (
     isa => 'Bool',
     lazy_build => 1,
    ); sub _build_notify {
-       shift->is_error
+       shift->is_server_error
    }
 
 around 'BUILDARGS' => sub {
