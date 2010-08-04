@@ -5,6 +5,7 @@
 </%args>
 <%perl>
     my @locations = $feature->featureloc_features->all;
+    my $locations = scalar @locations;
     my $length = 0;
     for my $l (@locations) {
         $length += $l->fmax - $l->fmin;
@@ -24,7 +25,7 @@
                                 organism => $feature->organism,
                                 text => $species
                            &><br/>
-    <b>Length</b>: <% $length %> bp in <% scalar @locations %> location(s)<br/>
+    <b>Length</b>: <% $length %> bp in <% $locations %> location<% $locations > 1 ? 's' : '' %> <br/>
     <& /feature/dbxref.mas,
         dbxref => $feature->dbxref,
     &><br/>
