@@ -30,12 +30,13 @@ my ( $username, $password, $goto_url, $logout ) =
 
 my $message = "Already have an account? Please log in using the form below.";
 
-if ( $ENV{HTTP_REFERER} =~ m|http://[^/]+/index.pl| ) {
+my $referer = $ENV{HTTP_REFERER} || '';
+if ( $referer =~ m|http://[^/]+/index.pl| ) {
 
     # if they were on the front page, send them to "My SGN"
     $goto_url ||= "/solpeople/top-level.pl";
 }
-elsif ( $ENV{HTTP_REFERER} =~ m|account-confirm.pl| ) {
+elsif ( $referer =~ m|account-confirm.pl| ) {
 
     # if they just confirmed their account, send them to "My SGN"
     $goto_url = "/solpeople/top-level.pl";
@@ -43,7 +44,7 @@ elsif ( $ENV{HTTP_REFERER} =~ m|account-confirm.pl| ) {
 else {
 
     # if they were anywhere else, send them to the referring page
-    $goto_url ||= $ENV{HTTP_REFERER};
+    $goto_url ||= $referer;
 }
 
 
