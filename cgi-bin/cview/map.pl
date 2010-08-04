@@ -5,6 +5,8 @@ use warnings;
 use CXGN::Page;
 use CXGN::DB::Connection;
 
+our $c;
+
 my $page = CXGN::Page->new();
 my ( $map_id, $map_version_id, $size, $hilite, $physical, $force ) =
   $page->get_encoded_arguments( "map_id", "map_version_id", "size", "hilite",
@@ -12,7 +14,7 @@ my ( $map_id, $map_version_id, $size, $hilite, $physical, $force ) =
 
 my $dbh = CXGN::DB::Connection->new;
 
-my $referer = $page->get_request->self_url;
+my $referer = $c->request->referer;
 
 my $tempdir = $c->path_to( $c->tempfiles_subdir('cview') );
 
