@@ -232,21 +232,6 @@ sub get_hostname {
     return $n;
 }
 
-# =head2 get_request
-
-#   Usage: my $req = $page->get_request();
-#   Desc : get the CGI object for the current page
-#          request
-#   Args : none
-#   Ret  : an Apache object
-#   Side Effects: none
-
-# =cut
-
-sub get_request {
-    $c->req
-}
-
 
 # =head2 is_bot_request
 
