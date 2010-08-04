@@ -13,3 +13,4 @@ test.sh
 blib/*
 .#*
 *.bak
+cover_db
