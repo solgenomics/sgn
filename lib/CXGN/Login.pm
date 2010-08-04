@@ -47,6 +47,8 @@ use String::Random;
 use CXGN::Cookie;
 use SGN::Context;
 
+use CatalystX::GlobalContext '$c';
+
 use base qw | CXGN::DB::Object |;
 
 our $LOGIN_COOKIE_NAME = 'sgn_session_id';
@@ -427,9 +429,8 @@ sub get_login_cookie {
 
 sub login_page_and_exit {
     my $self = shift;
-    Apache2::RequestUtil->request()->internal_redirect($LOGIN_PAGE)
-      unless $self->{no_redirect};
-    exit 0;
+    print "Location: $LOGIN_PAGE\n";
+    exit;
 }
 
 ###
