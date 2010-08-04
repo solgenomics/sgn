@@ -5,16 +5,45 @@
 % $exception = [ $exception ] unless ref $exception eq 'ARRAY';
 % for my $e (@$exception) {
 
-  <h2 style="text-align: center"><% $e->title || ( $e->is_error ? 'Error' : '' ) %></h2>
+<h1 style="text-align: center"><% $e->title || ( $e->is_error ? 'Server Error' : '' ) %></h1>
 
-  <div style="text-align: center">
+    <p>
+% if( $e->public_message ) {
     <% $e->public_message %>
-  </div>
+% } else {
+    Our apologies, there was an error processing your request.  
+% }
+
+% if( $e->notify ) {
+    An error report has been sent to the SGN development team.
+% }
+
+    </p>
+
+% if( my $f = $c->config->{feedback_email} ) {
+
+   <p>Please also feel free to contact us at
+      <a href="mailto:<% $f %>"><% $f %></a> and inform us of the
+      error, and we will keep you informed of our progress in
+      resolving it.
+   </p>
+
+% }
 
 %   if( $e->can('developer_message') && defined $e->developer_message && !$c->get_conf('production_server') ) {
+    <style>
+       pre {
+            white-space: pre-wrap;       /* css-3 */
+            white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+            white-space: -pre-wrap;      /* Opera 4-6 */
+            white-space: -o-pre-wrap;    /* Opera 7 */
+            word-wrap: break-word;       /* Internet Explorer 5.5+ */
+        }
+     </style>
+
     <div style="margin: 1em 0; border: 2px solid orange; padding: 0 1em 1em 1em">
       <h3>Developer message:</h3>
-        <% defined $e->developer_message ? $e->developer_message : 'none provided' %>
+        <pre><% defined $e->developer_message ? $e->developer_message : 'none provided' %></pre>
     </div>
 %   }
 % }

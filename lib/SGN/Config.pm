@@ -74,7 +74,8 @@ my $defaults =
      system_message_file      => undef,
 
      #should we send emails, if we are a production server? this can be used to turn off emails if we are being bombarded.
-     bugs_email               => 'sgn-bugs@sgn.cornell.edu',
+     feedback_email           => 'sgn-feedback@solgenomics.net',
+     bugs_email               => 'sgn-bugs@solgenomics.net',
      disable_emails           => 0,
 
      #who is the apache user for chowning and emailing
