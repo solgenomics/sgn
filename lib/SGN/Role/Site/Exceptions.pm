@@ -49,7 +49,7 @@ sub throw {
     my $self = shift;
     if( @_ > 1 ) {
         my %args = @_;
-        #$args{public_message} ||= delete $args{message};
+        $args{public_message} ||= $args{message};
         die SGN::Exception->new( %args );
     } else {
         die @_;
