@@ -37,6 +37,10 @@ a space separated, url-encoded string that gives the markers to be highlighted.
 
 the size of the map to display. 0 denotes the standard size (smallest), 10 denotes the largest size.
 
+=item map_items
+
+items to add to the map, as a multi-line string with chr offset name
+
 =item referer
 
 the page (uri + args) that this component is called from (to be able to construct links back from the page comment feature)
@@ -67,6 +71,7 @@ $map_id
 $map_version_id
 $hilite => undef
 $size => 1
+$map_items
 $force
 $physical
 $referer
@@ -207,7 +212,15 @@ sub data_is_private {
 %} 
 %else {
 
-<& /cview/map/overview.mas, dbh => $dbh, map => $map, size => $size,  hilite_markers => [ @hilite_markers ], basepath => $basepath, tempdir => $tempdir &>
+<& /cview/map/overview.mas, 
+  dbh => $dbh, 
+  map => $map, 
+  size => $size,  
+  hilite_markers => [ @hilite_markers ], 
+  map_items=> $map_items, 
+  basepath => $basepath, 
+  tempdir => $tempdir 
+&>
 
 % if ($message) { 
 %    print "<div class=\"boxbgcolor5\"><b>NOTE:</b><br />$message</div>\n";

@@ -6,7 +6,7 @@ use CXGN::Page;
 use CXGN::DB::Connection;
 
 my $page = CXGN::Page->new();
-my ($map_id, $map_version_id, $size, $hilite, $physical, $force) = $page->get_encoded_arguments("map_id", "map_version_id", "size", "hilite", "physical", "force");
+my ($map_id, $map_version_id, $size, $hilite, $physical, $force, $map_items) = $page->get_encoded_arguments("map_id", "map_version_id", "size", "hilite", "physical", "force", "map_items");
 
 my $dbh = CXGN::DB::Connection->new();
 
@@ -15,7 +15,19 @@ my $referer = ($page->get_request()->uri()) ."?". ($page->get_request->args());
 my $tempdir = $c->tempfiles_subdir('cview');
 
 
-$c->forward_to_mason_view('/cview/map/index.mas', dbh=>$dbh, map_version_id=>$map_version_id, map_id=>$map_id, hilite=>$hilite, physical=>$physical, size=>$size, referer=>$referer, force=>$force, tempdir=>$tempdir, basepath => $c->get_conf('basepath'));
+$c->forward_to_mason_view('/cview/map/index.mas', 
+			  dbh => $dbh, 
+			  map_version_id => $map_version_id, 
+			  map_id => $map_id, 
+			  hilite => $hilite, 
+			  physical => $physical, 
+			  size => $size, 
+			  referer => $referer, 
+			  force => $force, 
+			  map_items => $map_items,  
+			  tempdir => $tempdir, 
+			  basepath => $c->get_conf('basepath'),
+    );
 
 =head1 NAME
 

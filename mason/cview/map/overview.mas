@@ -12,16 +12,16 @@ Arguments:
 =over 10
 
 =item $map
-
+ 
 a CXGN::Cview::Map object (or subclass thereof)
 
 =item @hilite_markers
 
 a list of marker names, which will be highlighted on the map.
 
-=item @map_items
+=item $map_items
 
-a list of positions (numeric) and names, separated by newline. These will be mapped and shown highlighted on the map. Good for drawing positions of gene families etc.
+a scalar with a list of chromosomes, positions (numeric), and names, separated by newline. These will be mapped and shown highlighted on the map. Good for drawing positions of gene families etc.
 
 =item size
 
@@ -49,7 +49,7 @@ Lukas Mueller <lam87@cornell.edu>
   $map              # a CXGN::Cview::Map object
   $image_width  => 820
   @hilite_markers => ()
-  @map_items => ()
+  $map_items => '';
   $force => 0
   $size => 1
   $dbh 
@@ -79,7 +79,7 @@ if ($size <= 0) {
     $shrink_button_disabled = qq { disabled="1" };
     $smaller_size = $size;
 }
-else { 
+else {
     $smaller_size = $size - 1;
 }
 
@@ -115,12 +115,20 @@ $map_overview->set_image_width($image_width);
 #
 
 
+
+my @map_items = split /\n/, $map_items;
+print STDERR  "map items = $map_items\n";
+
+$map_overview->add_map_items(@map_items);
+
+
 foreach my $hm (@hilite_markers) {
     #print STDERR "Hilite marker $hm...\n";
     $map_overview -> hilite_marker($hm);
 }
 
-$map_overview->add_map_items(@map_items);
+
+
 
 # generate the marker list for use in the URL links
 #
@@ -131,7 +139,6 @@ my $hilite_encoded = URI::Escape::uri_escape(join (" ", @hilite_markers));
 $map_overview -> render_map();
 
 my $map_overview_html = $map_overview->get_image_html();
-
 
 # get the markers that could not be hilited
 #
@@ -145,10 +152,9 @@ if (@markers_not_found) {
     $message .= "<br />\n";
 }
 
-
 #
 # add the input box and form for the hilite marker feature
-#    
+#
 my $hilite_tooltip = tooltipped_text("Highlight marker(s)", "You can highlight markers on the overview graphic by entering them here, separated by spaces");
 my $size_tooltip = tooltipped_text("Image size", "You can increase the size of the overview graph by clicking on the (+) button and decrease it by clicking on (-).");
 
@@ -173,10 +179,10 @@ if ($message) {  $message_html = qq | <div class="boxbgcolor2">$message<br /></d
 </td></tr></table>
 
 
-<table><tr><td align="left">
+<table alt="" border="0"><tr><td align="left">
     <div class="indentedcontent">
     
-  <form>
+  <form action="/cview/map.pl" >
   <% $hilite_tooltip %>: <input type="text" name="hilite" value="<% $hilite %>" size="40" />
   <input type="hidden" name="map_version_id" value="<% $map_version_id %>" />
   <input type="hidden" name="size" value="<% $size %>" />
@@ -185,20 +191,36 @@ if ($message) {  $message_html = qq | <div class="boxbgcolor2">$message<br /></d
     </div>
     </td><td width=100 align="right"><% $size_tooltip %>:
 </td><td align="right">
-    <form>
+    <form action="/cview/map.pl">
     <input type="hidden" name="map_version_id" value="<% $map_version_id %>" />
     <input type="hidden" name="size" value="<% $smaller_size %>" />
     <input type="hidden" name="hilite" value="<% $hilite %>" />
     <input type="submit" value="-" <% $shrink_button_disabled %> />
     </form>
 </td><td>
-    <form>
+    <form action="/cview/map.pl" >
     <input type="hidden" name="map_version_id" value="<% $map_version_id %>" />
     <input type="hidden" name="hilite" value="<% $hilite %>" />
     <input type="hidden" name="size" value="<% $larger_size %>" />
     <input type="submit" value="+" <% $enlarge_button_disabled %> />
     </form>
 </td></tr></table>
+
+<&| /page/info_section.mas, title=>'Overlay information', collapsible=>1, collapsed=>0 &>
+      <table><tr><td width="50">&nbsp;</td><td>
+      <form action="/cview/map.pl">
+	Enter the chromosome, offset and a name to overlay on the map:<br /><br />
+	<textarea name="map_items" cols="50" rows="5"><% $map_items %>
+	</textarea>
+	<input type="hidden" name="map_version_id" value="<% $map_version_id%>" />
+	<input type="hidden" name="size" value="<% $size %>" />
+	<input type="hidden" name="hilite" value="<% $hilite %>" />
+	<input type="hidden" name="force" value="1" /><br />
+	<input type="submit" value="overlay information" />
+      </form>
+      </td></tr></table>
+</&>
+
 
 
 
