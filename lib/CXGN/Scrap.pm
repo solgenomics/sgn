@@ -26,6 +26,7 @@ use warnings;
 use Clone;
 use HTML::Entities;
 use Carp;
+use CGI ();
 
 use File::Path ();
 
@@ -97,10 +98,15 @@ sub get_all_encoded_arguments {
 # =cut
 
 sub get_upload {
-  my ($field)  = $c->req->upload
-      or return;
-  my @uploads = $c->req->upload($field);
-  return wantarray ? @uploads : $uploads[0];
+    # use catalyst to list file uploads
+    my ($field)  = $c->req->upload
+        or return;
+
+    # and use CGI to actually read them, because they have been
+    # spooled for CGI's benefit by the catalyst CGI adaptor
+    my $cgi = CGI->new;
+    my @uploads = map fake_apache_upload->new( cgi_upload => $_ ), CGI->new->upload( $field );
+    return wantarray ? @uploads : $uploads[0];
 }
 
 # =head2 get_arguments
@@ -328,6 +334,19 @@ sub get_conf {
   my $self = shift;
   return $c->get_conf(@_);
 }
+
+
+package fake_apache_upload;
+use Moose;
+use namespace::autoclean;
+
+has 'cgi_upload' => ( is => 'ro', required => 1 );
+
+sub fh {
+    return shift->cgi_upload;
+}
+
+__PACKAGE__->meta->make_immutable;
 
 ####
 1; # do not remove
