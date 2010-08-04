@@ -158,7 +158,10 @@ sub wrap_cgi {
 
     select($old);
 
-    die $saved_error if $saved_error;
+    if( $saved_error ) {
+        die $saved_error if ref $saved_error;
+        Catalyst::Exception->throw( message => $saved_error );
+    }
   }
 
   return $env->response;

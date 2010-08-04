@@ -6,21 +6,18 @@ use Moose;
   $Catalyst::Exception::CATALYST_EXCEPTION_CLASS = __PACKAGE__;
 }
 
+with 'Catalyst::Exception::Basic';
+
 use overload
   (
    q[""] => 'stringify',
    fallback => 1,
   );
 
-
 has 'public_message' => (
     is  => 'ro',
     isa => 'Maybe[Str]',
    );
-
-{ no warnings 'once';
-  *message = \&public_message;
-}
 
 has 'developer_message' => (
     is  => 'ro',
@@ -28,8 +25,8 @@ has 'developer_message' => (
    );
 
 has 'explanation' => (
-    is   => 'ro',
-    isa  => 'Maybe[Str]',
+    is  => 'ro',
+    isa => 'Maybe[Str]',
    );
 
 has 'title' => (
@@ -38,13 +35,13 @@ has 'title' => (
    );
 
 has 'is_error' => (
-    is => 'ro',
+    is  => 'ro',
     isa => 'Bool',
     default => 1,
 );
 
 has 'notify' => (
-    is => 'ro',
+    is  => 'ro',
     isa => 'Bool',
     lazy_build => 1,
    ); sub _build_notify {
@@ -53,16 +50,15 @@ has 'notify' => (
 
 around 'BUILDARGS' => sub {
     my ($orig,$class,%args) = @_;
-    $args{public_message} = $args{message}
-        unless defined $args{public_message};
+    $args{developer_message} ||= $args{message};
 
-    return $class->$orig(%args);
+    return $class->$orig( %args );
 };
 
 sub stringify {
     my $self = shift;
     return
-        ($self->message || '') . "\n"
+        ($self->public_message || '') . "\n"
         .'Developer message: '
         .($self->developer_message || 'none');
 }

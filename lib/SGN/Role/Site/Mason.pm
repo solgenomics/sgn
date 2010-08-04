@@ -69,8 +69,7 @@ sub forward_to_mason_view {
     } else {
         $self->stash->{template} = $comp;
         %{$self->stash} = ( %{$self->stash}, @args );
-
-        $self->forward('View::Mason');
+        $self->view('Mason')->process( $self );
     }
 }
 

@@ -2,15 +2,19 @@
  $exception
 </%args>
 
-<h2 style="text-align: center"><% $exception->title || ( $exception->is_error ? 'Error' : '' ) %></h2>
+% $exception = [ $exception ] unless ref $exception eq 'ARRAY';
+% for my $e (@$exception) {
 
-<div style="text-align: center">
-  <% $exception->message %>
-</div>
+  <h2 style="text-align: center"><% $e->title || ( $e->is_error ? 'Error' : '' ) %></h2>
 
-% if( $exception->can('developer_message') && !$c->get_conf('production_server') ) {
-<div style="margin: 1em 0; border: 2px solid orange; padding: 0 1em 1em 1em">
-  <h3>Developer message:</h3>
-    <% defined $exception->developer_message ? $exception->developer_message : 'none provided' %>
-</div>
+  <div style="text-align: center">
+    <% $e->public_message %>
+  </div>
+
+%   if( $e->can('developer_message') && defined $e->developer_message && !$c->get_conf('production_server') ) {
+    <div style="margin: 1em 0; border: 2px solid orange; padding: 0 1em 1em 1em">
+      <h3>Developer message:</h3>
+        <% defined $e->developer_message ? $e->developer_message : 'none provided' %>
+    </div>
+%   }
 % }

@@ -21,7 +21,8 @@ my $defaults =
 
      # keep Plugin::ErrorCatcher on all the time too
      'Plugin::ErrorCatcher' => {
-         enable => 1,
+         enable     => 1,
+         always_log => 1,
 
          # SGN.pm will set the emit_module dynamically according to
          # whether production_server is set
@@ -31,16 +32,16 @@ my $defaults =
      'Plugin::ErrorCatcher::Email' => {
          use_tags => 1,
 
-         to       => 'sgn-bugs@solgenomics.net',
+         to       => 'rmb32@cornell.edu',
+         #to       => 'sgn-bugs@solgenomics.net',
          from     => 'sgn-bugs@solgenomics.net',
          subject  => '%n error - %f',
         },
 
 
      'Controller::CGIAdaptor' => {
-         cgi_root_path => '/',
-         cgi_dir       => '__path_to(cgi-bin)__',
-         #cgi_chain_root   /optional/private/path/to/Chained/root
+         cgi_root_path    => '/',
+         cgi_dir          => '__path_to(cgi-bin)__',
          cgi_file_pattern => '*.pl',
          CGI => {
              #username_field username # used for REMOTE_USER env var

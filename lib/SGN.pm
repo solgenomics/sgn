@@ -2,6 +2,8 @@ package SGN;
 use Moose;
 use namespace::autoclean;
 
+use SGN::Exception;
+
 use Catalyst::Runtime 5.80;
 use Catalyst qw/
     ConfigLoader
@@ -22,7 +24,7 @@ with qw(
         SGN::Role::Site::DBIC
         SGN::Role::Site::Mason
         SGN::Role::Site::SiteFeatures
-        SGN::Role::Site::ExceptionHandling
+        SGN::Role::Site::Exceptions
        );
 
 
