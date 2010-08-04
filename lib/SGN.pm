@@ -5,6 +5,7 @@ use namespace::autoclean;
 use Catalyst::Runtime 5.80;
 use Catalyst qw/
     ConfigLoader
+    ErrorCatcher
     Static::Simple
     StackTrace
 /;
@@ -25,13 +26,25 @@ with qw(
        );
 
 
-# on startup, if on a dev setup, symlink the static_datasets and
-# static_content in the root dir so that
-# Catalyst::Plugin::Static::Simple can serve them.  in production,
-# these will be served directly by Apache
+# on startup, do some dynamic configuration
 after 'setup_finalize' => sub {
     my $self = shift;
-    unless( $self->config->{production_server} ) {
+
+    ###  for production servers
+    if( $self->config->{production_server} ) {
+
+        $self->config->{'Plugin::ErrorCatcher'}{'emit_module'} = 'Catalyst::Plugin::ErrorCatcher::Email';
+
+    }
+
+    ### for dev servers
+    else {
+
+        # if on a dev setup, symlink the static_datasets and
+        # static_content in the root dir so that
+        # Catalyst::Plugin::Static::Simple can serve them.  in production,
+        # these will be served directly by Apache
+
         my @links = (
 
             # make symlink for /img

@@ -16,6 +16,27 @@ my $defaults =
          dirs => ['documents'],
      },
 
+     # enable stack traces all the time
+     stacktrace => { enable => 1, verbose => 1 },
+
+     # keep Plugin::ErrorCatcher on all the time too
+     'Plugin::ErrorCatcher' => {
+         enable => 1,
+
+         # SGN.pm will set the emit_module dynamically according to
+         # whether production_server is set
+         #emit_module => 'Catalyst::Plugin::ErrorCatcher::Email',
+        },
+
+     'Plugin::ErrorCatcher::Email' => {
+         use_tags => 1,
+
+         to       => 'sgn-bugs@solgenomics.net',
+         from     => 'sgn-bugs@solgenomics.net',
+         subject  => '%n error - %f',
+        },
+
+
      'Controller::CGIAdaptor' => {
          cgi_root_path => '/',
          cgi_dir       => '__path_to(cgi-bin)__',
