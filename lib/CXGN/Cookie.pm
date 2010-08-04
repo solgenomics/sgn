@@ -11,11 +11,15 @@ use CatalystX::GlobalContext '$c';
 =cut
 
 sub get_cookie {
-    $c->req->cookie(shift);
+    my $cookie = $c->req->cookie(shift)
+        or return;
+    return $cookie->value;
 }
 
 sub set_cookie {
-    $c->response->cookies->{+shift} = { value => shift };
+    my ( $name, $value ) = @_;
+    $value = '' unless defined $value;
+    $c->response->cookies->{$name} = { value => $value };
 }
 
 1;
