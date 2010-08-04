@@ -218,7 +218,7 @@ my $ontology_subtitle =  !(grep { /^$user_type$/ } ('curator', 'submitter', 'seq
     </td>
   <td><table><tr><td>
   <& /locus/map_location.mas, person_id=>"$person_id", locus=>$locus  &>
-  </td></tr></table>
+  </td></tr></table></td></tr>
 </table>
   </&>
  
