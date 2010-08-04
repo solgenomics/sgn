@@ -11,6 +11,7 @@ use namespace::autoclean;
 
 use List::MoreUtils qw/ part /;
 use Scalar::Util;
+use Try::Tiny;
 
 use SGN::Exception;
 
@@ -60,17 +61,31 @@ sub throw {
 sub finalize_error {
     my ( $self ) = @_;
 
-    local $SIG{__DIE__} = \&Carp::confess;
-
     my @errors = @{ $self->error };
 
     # render the message page for all the errors
     $self->stash->{template}  = '/site/error/exception.mas';
     $self->stash->{exception} = \@errors;
-    $self->view('Mason')->process( $self );
+    unless( $self->view('Mason')->process( $self ) ) {
+        # there must have been an error in the message page, try a
+        # backup
+        $self->stash->{template} = '/site/error/500.mas';
+        unless( $self->view('Mason')->process( $self ) ) {
+            # whoo, really bad.  set the body and status manually
+            $self->response->status(500);
+            $self->response->content_type('text/plain');
+            $self->response->body(
+                'Our apologies, a severe error has occurred.  Please email '
+               .($self->config->{feedback_email} || "this site's maintainers")
+               .' and report this error.'
+              );
+        }
+    };
 
     my ($no_notify, $notify) =
-        part { $_->notify ? 1 : 0 } @errors;
+        part { ($_->can('notify') && !$_->notify) ? 0 : 1 } @{ $self->error };
+
+
 
 };
 
