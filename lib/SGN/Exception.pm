@@ -1,6 +1,11 @@
 package SGN::Exception;
 use Moose;
 
+# make catalyst use this exception class
+{ no warnings 'once';
+  $Catalyst::Exception::CATALYST_EXCEPTION_CLASS = __PACKAGE__;
+}
+
 use overload
   (
    q[""] => 'stringify',
@@ -8,14 +13,23 @@ use overload
   );
 
 
-has 'message' => (
+has 'public_message' => (
     is  => 'ro',
     isa => 'Maybe[Str]',
    );
 
+{ no warnings 'once';
+  *message = \&public_message;
+}
+
 has 'developer_message' => (
     is  => 'ro',
     isa => 'Maybe[Str]',
+   );
+
+has 'explanation' => (
+    is   => 'ro',
+    isa  => 'Maybe[Str]',
    );
 
 has 'title' => (
@@ -37,6 +51,13 @@ has 'notify' => (
        shift->is_error
    }
 
+around 'BUILDARGS' => sub {
+    my ($orig,$class,%args) = @_;
+    $args{public_message} = $args{message}
+        unless defined $args{public_message};
+
+    return $class->$orig(%args);
+};
 
 sub stringify {
     my $self = shift;
