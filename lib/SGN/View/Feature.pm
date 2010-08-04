@@ -26,11 +26,23 @@ sub feature_table {
     my ($features) = @_;
     my $data = [];
     for my $f (@$features) {
-        push @$data, [
-            $c->render_mason(
-                "/feature/link.mas",
-                feature => $f,
-            ), $f->type->name ];
+        my @locations = $f->featureloc_features->all;
+        # Add a row for every featureloc
+        for my $loc (@locations) {
+            my ($fmin,$fmax) = ($loc->fmin, $loc->fmax);
+            push @$data, [
+                $c->render_mason(
+                    "/feature/link.mas",
+                    feature => $f,
+                ),
+                $f->type->name,
+                join(",", $fmin, $fmax),
+                $fmax-$fmin,
+                $loc->strand,
+                $loc->phase,
+                $loc->rank,
+            ];
+        }
     }
     return $data;
 }

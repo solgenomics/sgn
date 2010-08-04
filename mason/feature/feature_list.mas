@@ -7,6 +7,6 @@
 </%init>
 
 <& /page/columnar_table.mas,
-    headings => [ "Feature", "Type" ],
+    headings => [ "Feature", "Type", "Coords", "Length", "Strand", "Phase", "Rank" ],
     data     => feature_table($features),
 &>
