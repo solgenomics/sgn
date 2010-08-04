@@ -5,30 +5,39 @@
 % $exception = [ $exception ] unless ref $exception eq 'ARRAY';
 % for my $e (@$exception) {
 
-<h1 style="text-align: center"><% $e->title || ( $e->is_error ? 'Server Error' : '' ) %></h1>
+<h1 style="text-align: center">
+   <% $e->title || ( $e->is_error ? 'Server Error' : '' ) %>
+</h1>
 
+<div style="margin: auto; width: 90%">
     <p>
 % if( $e->public_message ) {
     <% $e->public_message %>
 % } else {
     Our apologies, there was an error processing your request.  
 % }
-
-% if( $e->notify ) {
-    An error report has been sent to the SGN development team.
-% }
-
     </p>
+
+    <p>
+% if( $e->notify ) {
+    An error report has been sent to the <% $c->config->{name} || '' %> development team.
+% }
 
 % if( my $f = $c->config->{feedback_email} ) {
 
-   <p>Please also feel free to contact us at
-      <a href="mailto:<% $f %>"><% $f %></a> and inform us of the
-      error, and we will keep you informed of our progress in
-      resolving it.
+    Please also feel free to contact us at
+    <a href="mailto:<% $f %>"><% $f %></a> and inform us of the
+    problem, and
+%   if( $e->is_error ) {
+      we will keep you informed of our progress in resolving it.
+%   } else {
+      we will work with you to resolve it.
+%   }
    </p>
 
 % }
+
+</div>
 
 %   if( $e->can('developer_message') && defined $e->developer_message && !$c->get_conf('production_server') ) {
     <style>
