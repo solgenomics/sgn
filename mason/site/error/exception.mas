@@ -6,10 +6,10 @@
 % for my $e (@$exception) {
 
 <h1 style="text-align: center">
-   <% $e->title || ( $e->is_server_error ? 'Server Error' : '' ) %>
+   <% $e->title || ( $e->is_server_error ? 'Server Error' : $e->is_client_error ? 'Error' : '' ) %>
 </h1>
 
-<div style="margin: auto; width: 90%">
+<div style="margin: auto; width: 80%">
     <p>
 % if( $e->public_message ) {
     <% $e->public_message %>
@@ -23,7 +23,7 @@
     An error report has been sent to the <% $c->config->{name} || '' %> development team.
 % }
 
-% if( my $f = $c->config->{feedback_email} ) {
+% if( $e->is_client_error || $e->is_server_error and my $f = $c->config->{feedback_email} ) {
 
     Please also feel free to contact us at
     <a href="mailto:<% $f %>"><% $f %></a> and inform us of the
