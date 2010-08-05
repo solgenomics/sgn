@@ -46,22 +46,49 @@ nothing could be found.
 sub default :Path {
     my ( $self, $c ) = @_;
 
+    return 1 if $self->_do_redirects($c);
+
+    # other
+    $c->response->body( 'Page not found' );
+    $c->response->status(404);
+}
+
+sub _do_redirects {
+    my ($self, $c) = @_;
     my $path = $c->req->path;
-    unless( $path =~ m|\.\w{2,4}$| ) {
-        # look for an index.pl if not found
-        $path =~ s!/+$!!;
-        if( my $cgi = $c->controller('CGIAdaptor') ) {
-            my $action_name = $cgi->cgi_action("$path/index.pl");
-            $c->log->debug("checking for CGI index action $action_name");
-            if( my $index_action = $cgi->action_for( $action_name ) ) {
-                $c->log->debug("dispatching to CGI index action '$index_action'");
-                $c->go( $index_action );
-            }
+
+    # try an internal redirect for index.pl files if the url has not
+    # already been found and does not have an extension
+    if( $path !~ m|\.\w{2,4}$| ) {
+        if( my $index_action = $self->_find_cgi_action( $c, "$path/index.pl" ) ) {
+            $c->go( $index_action );
         }
     }
 
-    $c->response->body( 'Page not found' );
-    $c->response->status(404);
+    # redirect away from cgi-bin URLs
+    elsif( $path =~ s!cgi-bin/!! ) {
+        $c->res->redirect( "/$path", 301 );
+        return 1;
+    }
+
+}
+
+sub _find_cgi_action {
+    my ($self,$c,$path) = @_;
+
+    $path =~ s!/+!/!g;
+     my $cgi = $c->controller('CGIAdaptor')
+         or return;
+
+    my $action_name = $cgi->cgi_action($path);
+    $c->log->debug("checking for CGI index action $action_name");
+
+    my $index_action = $cgi->action_for( $action_name )
+        or return;
+
+    $c->log->debug("found CGI index action '$index_action'");
+
+    return $index_action;
 }
 
 

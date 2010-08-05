@@ -13,7 +13,7 @@ my $defaults =
      # Static::Simple configuration
      root   => File::Spec->curdir,
      static => {
-         dirs => ['documents'],
+         ignore_dirs => ['cgi-bin','mason','features','db','t','lib','conf','programs','selenium'],
      },
 
      # enable stack traces all the time
