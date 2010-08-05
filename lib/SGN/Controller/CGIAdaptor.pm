@@ -9,7 +9,7 @@ package SGN::Controller::CGIAdaptor;
 use Moose;
 use namespace::autoclean;
 
-extends 'Catalyst::Controller::CGIBin';
+BEGIN{ extends 'Catalyst::Controller::CGIBin'; }
 
 # NOTE: 90% of the code below will go away, with new features I am
 # adding to the Catalyst::Controller::CGIBin base class.
@@ -52,6 +52,7 @@ sub wrap_perl_cgi {
                 , qq{local \$0 = "\Q$cgi\E";}
                 , q/my $rv = eval {/
                 , "#line 1 $cgi"
+                , '$SIG{__DIE__} = \&Carp::confess;'
                 , $code
                 , q/};/
                 , q{
@@ -178,7 +179,6 @@ sub is_perl_cgi {
     return 0 if $skip{ basename($path) };
     return $path =~ /\.pl$/;
 } #< all our cgis are perl
-
 
 1;
 
