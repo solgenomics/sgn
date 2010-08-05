@@ -11,6 +11,7 @@ use namespace::autoclean;
 
 BEGIN{ extends 'Catalyst::Controller::CGIBin'; }
 
+use Carp;
 use File::Basename;
 
 my %skip = map { $_ => 1 } qw(
@@ -23,5 +24,13 @@ sub is_perl_cgi {
     return 0 if $skip{ basename($path) };
     return $path =~ /\.pl$/;
 } #< all our cgis are perl
+
+around 'wrap_cgi' => sub {
+    my $orig = shift;
+    my $self = shift;
+    local $SIG{__DIE__} = \&Carp::confess;
+    $self->$orig( @_ );
+};
+
 
 1;
