@@ -36,7 +36,7 @@ use SGN::Exception;
 
 our $c;
 my $page = CXGN::Page->new( "qtl", "isaak" );
-my ( $pop_id, $trait_id, $lg, $l_m, $p_m, $r_m, $lod, $qtl_image ) =
+our ( $pop_id, $trait_id, $lg, $l_m, $p_m, $r_m, $lod, $qtl_image ) =
   $page->get_encoded_arguments(
                                 "population_id", "term_id",
                                 "chr",           "l_marker",
@@ -47,8 +47,8 @@ if (!$pop_id || !$trait_id || !$lg || !$l_m || !$p_m || !$r_m || !$qtl_image) {
   die 'QTL detail page error:  A required argument is missing';
 }
 
-my $dbh          = CXGN::DB::Connection->new();
-my $pop          = CXGN::Phenome::Population->new( $dbh, $pop_id );
+our $dbh          = CXGN::DB::Connection->new();
+our $pop          = CXGN::Phenome::Population->new( $dbh, $pop_id );
 my $pop_name     = $pop->get_name();
 my $trait_name   = trait_name( $pop, $trait_id );
 my $genetic_link = genetic_map($pop);
