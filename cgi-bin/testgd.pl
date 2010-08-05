@@ -1,1 +1,0 @@
-testgd.png
