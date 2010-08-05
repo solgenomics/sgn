@@ -26,13 +26,15 @@ sub is_perl_cgi {
     return $path =~ /\.pl$/;
 }
 
-around 'wrap_cgi' => sub {
-    my $orig = shift;
-    my $self = shift;
-    my ($c) = @_;
-    local $SIG{__DIE__} = $c->debug ? \&Carp::confess : $SIG{__DIE__};
-    $self->$orig( @_ );
-};
-
+# force CGI backtrace only if app is starting, and is in debug mode
+if( eval{ SGN->debug } ) {
+    around 'wrap_cgi' => sub {
+        my $orig = shift;
+        my $self = shift;
+        my ($c) = @_;
+        local $SIG{__DIE__} = $c->debug ? \&Carp::confess : $SIG{__DIE__};
+        $self->$orig( @_ );
+    };
+}
 
 1;
