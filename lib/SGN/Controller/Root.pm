@@ -50,12 +50,18 @@ sub default :Path {
     unless( $path =~ m|\.\w{2,4}$| ) {
         # look for an index.pl if not found
         $path =~ s!/+$!!;
-        $path = "/$path/index.pl";
-        $c->response->redirect($path);
-    } else {
-        $c->response->body( 'Page not found' );
-        $c->response->status(404);
+        if( my $cgi = $c->controller('CGIAdaptor') ) {
+            my $action_name = $cgi->cgi_action("$path/index.pl");
+            $c->log->debug("checking for CGI index action $action_name");
+            if( my $index_action = $cgi->action_for( $action_name ) ) {
+                $c->log->debug("dispatching to CGI index action '$index_action'");
+                $c->go( $index_action );
+            }
+        }
     }
+
+    $c->response->body( 'Page not found' );
+    $c->response->status(404);
 }
 
 
