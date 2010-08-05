@@ -91,7 +91,7 @@ sub _find_cgi_action {
     my ($self,$c,$path) = @_;
 
     $path =~ s!/+!/!g;
-     my $cgi = $c->controller('CGIAdaptor')
+     my $cgi = $c->controller('CGI')
          or return;
 
     my $action_name = $cgi->cgi_action($path);
