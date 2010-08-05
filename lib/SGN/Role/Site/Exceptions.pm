@@ -15,7 +15,7 @@ use Try::Tiny;
 
 use SGN::Exception;
 
-requires 'finalize_error';
+requires 'finalize_error', 'error', 'stash', 'view', 'res' ;
 
 $SIG{ __DIE__ } = sub {
     return if blessed $_[ 0 ];
