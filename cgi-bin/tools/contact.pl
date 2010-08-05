@@ -12,7 +12,7 @@ my $login = CXGN::Login->new($dbh);
 my $username;
 my $useremail;
 if ( my $user_id = $login->has_session() ) {
-    my $user = CXGN::People::Person->new($user_id);
+    my $user = CXGN::People::Person->new( $dbh, $user_id );
     $username  = $user->get_first_name() . " " . $user->get_last_name();
     $useremail = $user->get_private_email();
 }
