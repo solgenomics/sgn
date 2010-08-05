@@ -103,8 +103,6 @@ around 'finalize_error' => sub {
     $self->error( $no_notify ) if $self->debug;
     $self->error( $notify );
 
-    $self->log->debug('errors: '.Data::Dumper::Dumper( $self->error ) );
-
     # if we have any errors that need notification, call the rest of the error plugins
     if( @{ $self->error } ) {
 
