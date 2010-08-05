@@ -515,13 +515,11 @@ HTML
 =cut
 
 sub get_dbh {
-  my $self = shift;
-  return $self->{dbh}; 
+    $c->dbc->dbh
 }
 
 sub set_dbh {
-  my $self = shift;
-  $self->{dbh} = shift;
+    confess "don't set me.";
 }
 
 
