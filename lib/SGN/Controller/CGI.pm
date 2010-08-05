@@ -19,16 +19,18 @@ my %skip = map { $_ => 1 } qw(
   page_with_syntax_error.pl
 );
 
+# all our .pl cgis are perl
 sub is_perl_cgi {
     my ($self,$path) = @_;
     return 0 if $skip{ basename($path) };
     return $path =~ /\.pl$/;
-} #< all our cgis are perl
+}
 
 around 'wrap_cgi' => sub {
     my $orig = shift;
     my $self = shift;
-    local $SIG{__DIE__} = \&Carp::confess;
+    my ($c) = @_;
+    local $SIG{__DIE__} = $c->debug ? \&Carp::confess : $SIG{__DIE__};
     $self->$orig( @_ );
 };
 
