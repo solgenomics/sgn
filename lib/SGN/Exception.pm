@@ -1,5 +1,6 @@
 package SGN::Exception;
 use Moose;
+use Scalar::Util ();
 
 # make catalyst use this exception class
 { no warnings 'once';
@@ -68,6 +69,7 @@ has 'notify' => (
 around 'BUILDARGS' => sub {
     my ($orig,$class,%args) = @_;
     $args{developer_message} ||= $args{message};
+    $args{message}           ||= $args{developer_message};
 
     return $class->$orig( %args );
 };

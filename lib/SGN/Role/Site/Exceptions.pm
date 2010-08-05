@@ -17,11 +17,6 @@ use SGN::Exception;
 
 requires 'finalize_error', 'error', 'stash', 'view', 'res' ;
 
-$SIG{ __DIE__ } = sub {
-    return if blessed $_[ 0 ];
-    SGN::Exception->throw( developer_message => join '', @_ );
-};
-
 =head2 throw
 
   Usage: $c->throw( public_message => 'There was a special error',
@@ -59,12 +54,22 @@ sub throw {
     }
 }
 
+# convert all the errors to objects if they are not already
+sub _error_objects {
+    my $self = shift;
+
+    return
+        map {
+            ref($_) ? $_ : SGN::Exception->new( developer_message => $_ )
+        } @{ $self->error };
+}
+
 around 'finalize_error' => sub {
     my ( $orig, $self ) = @_;
 
     # render the message page for all the errors
     $self->stash->{template}  = '/site/error/exception.mas';
-    $self->stash->{exception} = $self->error;
+    $self->stash->{exception} = [ $self->_error_objects ];
     unless( $self->view('Mason')->process( $self ) ) {
         # there must have been an error in the message page, try a
         # backup
@@ -84,24 +89,32 @@ around 'finalize_error' => sub {
     # set our http status to the most severe error we have
     my ($worst_status ) =
         sort { $b <=> $a }
-        map _exception_status($_),
-        @{ $self->error };
+        map $_->http_status,
+        $self->_error_objects;
 
     $self->res->status( $worst_status );
 
     # now decide which errors to actually notify about
     my ($no_notify, $notify) =
-        part { ($_->can('notify') && !$_->notify) ? 0 : 1 } @{ $self->error };
+        part { ($_->can('notify') && !$_->notify) ? 0 : 1 } $self->_error_objects;
     $_ ||= [] for $no_notify, $notify;
 
+    $self->clear_errors;
+    $self->error( $no_notify ) if $self->debug;
+    $self->error( $notify );
+
+    $self->log->debug('errors: '.Data::Dumper::Dumper( $self->error ) );
+
     # if we have any errors that need notification, call the rest of the error plugins
-    if( @{ $self->error } = @$notify ) {
+    if( @{ $self->error } ) {
 
         my $save_status = $self->res->status;
         my $save_body   = $self->res->body;
         $self->$orig();
 
         unless( $self->debug ) {
+            $self->error( $notify );
+
             $self->res->status( $save_status );
             $self->res->body( $save_body );
         }
