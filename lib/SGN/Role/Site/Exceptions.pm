@@ -48,7 +48,7 @@ sub throw {
         my %args = @_;
         $args{public_message}  ||= $args{message};
         $args{is_server_error} ||= $args{is_error};
-        die SGN::Exception->new( %args );
+        die Catalyst::Exception->new( %args );
     } else {
         die @_;
     }
@@ -60,7 +60,7 @@ sub _error_objects {
 
     return
         map {
-            ref($_) ? $_ : SGN::Exception->new( developer_message => $_ )
+            blessed($_) && $_->isa('Catalyst::Exception') ? $_ : Catalyst::Exception->new( message => "$_" )
         } @{ $self->error };
 }
 
@@ -118,12 +118,6 @@ around 'finalize_error' => sub {
         }
     }
 };
-
-sub _exception_status {
-    my $e = shift;
-    return $e->http_status if blessed($e) && $e->can('http_status');
-    return 500;
-}
 
 
 1;
