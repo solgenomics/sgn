@@ -10,6 +10,7 @@
     for my $l (@locations) {
         $length += $l->fmax - $l->fmin;
     }
+    my ($description) = map { $_->value } grep { $_->type->name eq 'Note' } $feature->featureprops->all;
 </%perl>
 
 <&| /page/info_section.mas,
@@ -19,7 +20,7 @@
 &>
     <b>Name</b>: <% $feature->name %><br/>
     <b>Feature Type</b>: <% $feature->type->name %><br/>
-    <b>Description</b>: <% $feature->description %><br/>
+    <b>Description</b>: <% $description %><br/>
     <b>Analysis</b>: <% $feature->is_analysis ? 'Yes' : 'No' %><br/>
     <b>Organism Name</b>: <& /feature/organism_link.mas,
                                 organism => $feature->organism,
