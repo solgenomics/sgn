@@ -56,11 +56,13 @@ sub default :Path {
 sub _do_redirects {
     my ($self, $c) = @_;
     my $path = $c->req->path;
+    my $query = $c->req->uri->query || '';
+    $query = "?$query" if $query;
 
     # if the path has multiple // in it, collapse them and redirect to
     # the result
     if( $path =~ s!/{2,}!/!g ) {
-        $c->res->redirect( "/$path", 301 );
+        $c->res->redirect( "/$path$query", 301 );
         return 1;
     }
 
@@ -74,7 +76,7 @@ sub _do_redirects {
 
     # redirect away from cgi-bin URLs
     elsif( $path =~ s!cgi-bin/!! ) {
-        $c->res->redirect( "/$path", 301 );
+        $c->res->redirect( "/$path$query", 301 );
         return 1;
     }
 
