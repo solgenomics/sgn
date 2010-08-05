@@ -60,6 +60,9 @@ my $defaults =
 
         },
 
+     'View::Mason' => {
+         comp_root => '__path_to(mason)__',
+     },
 
      dbsearchpath             => [qw[
                                      sgn

@@ -7,7 +7,6 @@ use parent 'Catalyst::View::Mason';
 
 __PACKAGE__->config(
     use_match => 0,
-    comp_root => SGN->path_to('mason'),
    );
 
 =head1 NAME
