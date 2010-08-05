@@ -19,18 +19,6 @@ extends 'Catalyst';
 
 with 'SGN::Role::Site::Config';
 
-__PACKAGE__->setup;
-
-with qw(
-        SGN::Role::Site::Files
-        SGN::Role::Site::DBConnector
-        SGN::Role::Site::DBIC
-        SGN::Role::Site::Mason
-        SGN::Role::Site::SiteFeatures
-        SGN::Role::Site::Exceptions
-       );
-
-
 # on startup, do some dynamic configuration
 after 'setup_finalize' => sub {
     my $self = shift;
@@ -69,6 +57,18 @@ after 'setup_finalize' => sub {
         }
     }
 };
+
+__PACKAGE__->setup;
+
+with qw(
+        SGN::Role::Site::Files
+        SGN::Role::Site::DBConnector
+        SGN::Role::Site::DBIC
+        SGN::Role::Site::Mason
+        SGN::Role::Site::SiteFeatures
+        SGN::Role::Site::Exceptions
+       );
+
 
 =head2 new_jsan
 
