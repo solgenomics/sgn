@@ -59,9 +59,8 @@ sub throw {
     }
 }
 
-
-sub finalize_error {
-    my ( $self ) = @_;
+around 'finalize_error' => sub {
+    my ( $orig, $self ) = @_;
 
     # render the message page for all the errors
     $self->stash->{template}  = '/site/error/exception.mas';
@@ -90,9 +89,23 @@ sub finalize_error {
 
     $self->res->status( $worst_status );
 
+    # now decide which errors to actually notify about
     my ($no_notify, $notify) =
         part { ($_->can('notify') && !$_->notify) ? 0 : 1 } @{ $self->error };
-}
+
+    # if we have any errors that need notification, call the rest of the error plugins
+    if( @{ $self->error } = @$notify ) {
+
+        my $save_status = $self->res->status;
+        my $save_body   = $self->res->body;
+        $self->$orig();
+
+        unless( $self->debug ) {
+            $self->res->status( $save_status );
+            $self->res->body( $save_body );
+        }
+    }
+};
 
 sub _exception_status {
     my $e = shift;

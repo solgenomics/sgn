@@ -7,8 +7,8 @@ use SGN::Exception;
 use Catalyst::Runtime 5.80;
 use Catalyst qw/
     ConfigLoader
-    ErrorCatcher
     Static::Simple
+    ErrorCatcher
     StackTrace
 /;
 
@@ -17,8 +17,11 @@ use JSAN::ServerSide;
 
 extends 'Catalyst';
 
+with 'SGN::Role::Site::Config';
+
+__PACKAGE__->setup;
+
 with qw(
-        SGN::Role::Site::Config
         SGN::Role::Site::Files
         SGN::Role::Site::DBConnector
         SGN::Role::Site::DBIC
@@ -66,11 +69,6 @@ after 'setup_finalize' => sub {
         }
     }
 };
-
-
-# Start the application
-__PACKAGE__->setup();
-
 
 =head2 new_jsan
 

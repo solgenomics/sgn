@@ -17,17 +17,24 @@ my $defaults =
      },
 
      # enable stack traces all the time
-     stacktrace => { enable => 1, verbose => 1 },
+     stacktrace => {
+         enable  => 1,
+         verbose => 1,
+        },
 
      # keep Plugin::ErrorCatcher on all the time too
      'Plugin::ErrorCatcher' => {
          enable     => 1,
-         always_log => 1,
 
          # SGN.pm will set the emit_module dynamically according to
          # whether production_server is set
          #emit_module => 'Catalyst::Plugin::ErrorCatcher::Email',
+         #emit_module => 'Catalyst::Plugin::ErrorCatcher::File',
         },
+
+#      'Plugin::ErrorCatcher::File' => {
+#          dir => '/tmp',
+#         },
 
      'Plugin::ErrorCatcher::Email' => {
          use_tags => 1,
