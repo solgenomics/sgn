@@ -92,6 +92,7 @@ around 'finalize_error' => sub {
     # now decide which errors to actually notify about
     my ($no_notify, $notify) =
         part { ($_->can('notify') && !$_->notify) ? 0 : 1 } @{ $self->error };
+    $_ ||= [] for $no_notify, $notify;
 
     # if we have any errors that need notification, call the rest of the error plugins
     if( @{ $self->error } = @$notify ) {
