@@ -46,7 +46,7 @@ my $defaults =
         },
 
 
-     'Controller::CGIAdaptor' => {
+     'Controller::CGI' => {
          cgi_root_path    => '/',
          cgi_dir          => '__path_to(cgi-bin)__',
          cgi_file_pattern => '*.pl',
