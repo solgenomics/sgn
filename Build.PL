@@ -70,7 +70,7 @@ my $build = $class->new(
         'Test::MockObject'     => 0,
     },
     requires => {
-        'perl'                => '5.6.1',
+        'perl'                => '5.10',
         'autodie'             => 0,
         'IPC::System::Simple' => 0,         #< required for autodie :all
         'Apache::DBI'         => 0,
