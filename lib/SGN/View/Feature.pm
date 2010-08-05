@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use SGN::Context;
 
-our @EXPORT_OK = qw/related_stats feature_table/;
+our @EXPORT_OK = qw/related_stats feature_table gbrowse_link/;
 our $c = SGN::Context->new;
 
 sub related_stats {
@@ -36,7 +36,7 @@ sub feature_table {
                     feature => $f,
                 ),
                 $f->type->name,
-                join(",", $fmin, $fmax),
+                gbrowse_link($f,$fmin,$fmax),
                 $fmax-$fmin . " bp",
                 $loc->strand == 1 ? '+' : '-',
                 $loc->phase,
@@ -47,4 +47,9 @@ sub feature_table {
     return $data;
 }
 
+sub gbrowse_link {
+    my ($feature, $fmin, $fmax) = @_;
+    sprintf '<a href="/gbrowse/bin/gbrowse/ITAG1_genomic/?ref=%s;start=%s;end=%s">%s</a>',
+        $feature->name, $fmin, $fmax, join(",", $fmin, $fmax),
+}
 1;

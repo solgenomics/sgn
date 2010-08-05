@@ -67,6 +67,7 @@ my $build = $class->new(
         'Test::Most'           => 0,
         'Test::WWW::Mechanize' => 0,
         'Test::WWW::Selenium'  => 0,
+        'Test::MockObject'     => 0,
     },
     requires => {
         'perl'                => '5.6.1',
