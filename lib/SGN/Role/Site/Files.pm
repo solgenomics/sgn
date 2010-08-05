@@ -136,6 +136,16 @@ sub tempfiles_subdir {
   return $dir;
 }
 
+# make a path like /tmp/www-data/SGN-site
+sub _default_temp_base {
+    my ($self) = @_;
+    return File::Spec->catdir(
+        File::Spec->tmpdir,
+        (getpwuid($>))[0], # the user name
+        ($self->config->{name} || die '"name" conf value is not set').'-site',
+       );
+}
+
 sub make_generated_dir {
     my ( $self, $tempdir ) = @_;
 
