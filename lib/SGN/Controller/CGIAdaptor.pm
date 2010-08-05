@@ -52,7 +52,7 @@ sub wrap_perl_cgi {
                 , qq{local \$0 = "\Q$cgi\E";}
                 , q/my $rv = eval {/
                 , "#line 1 $cgi"
-                , '$SIG{__DIE__} = \&Carp::confess;'
+                , 'local $SIG{__DIE__} = \&Carp::confess;'
                 , $code
                 , q/};/
                 , q{
