@@ -18,6 +18,7 @@ use Carp;
 use File::Basename;
 use File::Slurp 'slurp';
 use HTTP::Request::Common;
+use URI::Escape;
 
 open my $REAL_STDIN, "<&=".fileno(*STDIN);
 open my $REAL_STDOUT, ">>&=".fileno(*STDOUT);
