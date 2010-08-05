@@ -1,6 +1,5 @@
 use strict;
 
-use File::Slurp qw/slurp/;
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw/  page_title_html
                                        blue_section_html  /;
@@ -20,12 +19,10 @@ my ($intro_content, $input_content);
 my $HTML_ROOT = $c->get_conf('basepath');
 my $DOC_PATH =  $c->get_conf('tempfiles_subdir').'/align_viewer';
 my $PATH = $HTML_ROOT . $DOC_PATH;
-unless($temp_file =~ /\//){
-	$temp_file = $PATH . "/" . $temp_file;
-}
-
+our $c;
+$temp_file = $c->path_to( $c->generated_file_uri('align_viewer',$temp_file) );
 if(-f $temp_file){
-    $seq_data = slurp($temp_file);
+    $seq_data = $temp_file->slurp;
 }
 
 
@@ -102,10 +99,10 @@ Make sure all the spaces in the id and species are replaced by '_'.<br />
 HTML
 
 if($show_prot_example){
-	$seq_data = slurp($page->path_to("cgi-bin/tools/align_viewer/data/prot_example.txt"));
+	$seq_data = $page->path_to("cgi-bin/tools/align_viewer/data/prot_example.txt")->slurp;
 }
 elsif($show_cds_example){
-	$seq_data = slurp($page->path_to("cgi-bin/tools/align_viewer/data/cds_example.txt"));
+	$seq_data = $page->path_to("cgi-bin/tools/align_viewer/data/cds_example.txt")->slurp;
 }
 elsif($show_id_example){
 	$id_data = <<HEREDOC;
