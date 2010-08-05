@@ -6,11 +6,20 @@ use Test::More;
 use CXGN::BlastDB;
 use Test::WWW::Mechanize;
 use HTML::Entities;
+use IPC::Cmd qw/ can_run /;
+
+unless ( can_run('qsub') ) {
+    plan skip_all => 'qsub not found in path';
+}
 
 my ( $test_blast_db ) =
     sort { $a->sequences_count <=> $b->sequences_count }
     grep $_->file_modtime,
     CXGN::BlastDB->retrieve_all;
+
+unless ( $test_blast_db ) {
+    plan skip_all => 'no test BLAST db';
+}
 
 my $urlbase = "$ENV{SGN_TEST_SERVER}/tools/blast/";
 my $simple_input = "$urlbase/index.pl";

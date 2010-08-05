@@ -3,54 +3,31 @@
     $parents
     $title => 'Related Features'
 </%args>
-<%perl>
-
-sub related_stats {
-    my ($features) = @_;
-    my $stats = { };
-    my $total = 0;
-    for my $f (@$features) {
-            $stats->{$f->type->name}++;
-            $total++;
-    }
-    my $data = [ ];
-    for my $k (sort keys %$stats) {
-        my $percent = $stats->{$k} / $total;
-        push @$data, [ $k => $stats->{$k} , sprintf("%.02f%%",100 * $percent) ];
-    }
-    push @$data, [ "Total" => $total, "100%" ];
-    return $data;
-}
-</%perl>
+<%init>
+    use SGN::View::Feature qw/related_stats/;
+</%init>
 <&| /page/info_section.mas,
     title => $title,
     collapsible => 1,
 &>
-% my $c = 0;
-% for my $child (@$children) {
-Child Feature:
-    <& /feature/link.mas, feature => $child, &>
-is a <% $child->type->name %><br>
-% last if ++$c > 10;
-% }
-% $c = 0;
-% for my $parent (@$parents) {
-Parent Feature:
-    <& /feature/link.mas, feature => $parent, &>
-    is a <% $parent->type->name %><br>
-
-% last if ++$c > 10;
-% }
-%if (@$children) {
-<& /page/columnar_table.mas,
-    headings => [ "Child Feature Type", "Number", "%" ],
-    data     => related_stats($children),
-&>
-% }
 %if (@$parents) {
 <& /page/columnar_table.mas,
-    headings => [ "Parent Feature Type", "Number", "%" ],
+    headings => [ "Parent Feature Type", "Number"  ],
     data     => related_stats($parents),
 &>
 %}
+<& /feature/feature_list.mas,
+    features => $parents,
+&>
+<br/>
+%if (@$children) {
+<& /page/columnar_table.mas,
+    headings => [ "Child Feature Type", "Number" ],
+    data     => related_stats($children),
+&>
+% }
+<& /feature/feature_list.mas,
+    features => $children,
+&>
+
 </&>

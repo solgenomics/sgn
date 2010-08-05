@@ -25,7 +25,7 @@ my @subsections = split /\n/,<<SUBSECTIONS;
 Locus details
 Notes and figures
 Accessions and images
-Known alleles
+Alleles
 Associated loci
 Associated loci - graphical view
 SolCyc links

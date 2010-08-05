@@ -8,7 +8,7 @@
         collapsible => 1,
         collapsed   => 0,
 &>
-  Length : <% $seq->length %><br/>
+  Length : <% $seq->length %>bp<br/>
   <% $feature->md5checksum ?  'MD5 :' . $feature->md5checksum : '' %>
   <p/>
 % if( $seq->length > 30_000) {

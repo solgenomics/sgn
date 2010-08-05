@@ -1,0 +1,12 @@
+<%args>
+    $features
+    $limit => 100
+</%args>
+<%init>
+    use SGN::View::Feature qw/feature_table/;
+</%init>
+
+<& /page/columnar_table.mas,
+    headings => [ "Feature", "Type", "Coords", "Length", "Strand", "Phase", "Rank" ],
+    data     => feature_table($features),
+&>
