@@ -33,7 +33,7 @@ use File::Path ();
 use JSAN::ServerSide;
 use SGN::Context;
 
-use CatalystX::GlobalContext '$c'; our $c;
+use CatalystX::GlobalContext '$c';
 
 # =head1 OBJECT METHODS
 
@@ -50,8 +50,18 @@ sub new {
   my $class=shift;
   my $self = bless {},$class;
   $self->{content_type} = 'text/html';
+  $self->{request} = $c->request;
+
   return $self;
 }
+
+sub get_request {
+    shift->{request}
+}
+sub get_apache_request {
+    shift->{request}
+}
+
 
 # =head2 get_encoded_arguments
 
