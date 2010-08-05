@@ -11,6 +11,7 @@ use URI;
 
 requires qw(
             get_conf
+            path_to
             config
            );
 
