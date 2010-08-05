@@ -15,19 +15,19 @@
     headings => [ "Parent Feature Type", "Number"  ],
     data     => related_stats($parents),
 &>
-%}
 <& /feature/feature_list.mas,
     features => $parents,
 &>
+%}
 <br/>
 %if (@$children) {
 <& /page/columnar_table.mas,
     headings => [ "Child Feature Type", "Number" ],
     data     => related_stats($children),
 &>
-% }
 <& /feature/feature_list.mas,
     features => $children,
 &>
+% }
 
 </&>
