@@ -57,6 +57,13 @@ sub _do_redirects {
     my ($self, $c) = @_;
     my $path = $c->req->path;
 
+    # if the path has multiple // in it, collapse them and redirect to
+    # the result
+    if( $path =~ s!/{2,}!/!g ) {
+        $c->res->redirect( "/$path", 301 );
+        return 1;
+    }
+
     # try an internal redirect for index.pl files if the url has not
     # already been found and does not have an extension
     if( $path !~ m|\.\w{2,4}$| ) {
