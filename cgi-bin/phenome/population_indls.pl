@@ -17,11 +17,12 @@ Isaak Y Tecle (iyt2@cornell.edu)
 use strict;
 use warnings;
 
-our $c;
 my $population_indls_detail_page =
   CXGN::Phenome::PopulationIndlsDetailPage->new();
 
 package CXGN::Phenome::PopulationIndlsDetailPage;
+
+use CatalystX::GlobalContext qw( $c );
 
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw /info_section_html

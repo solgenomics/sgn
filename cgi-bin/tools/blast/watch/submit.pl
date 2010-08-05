@@ -11,7 +11,7 @@ use CXGN::Page::FormattingHelpers qw/page_title_html modesel info_table_html hie
 my $page = CXGN::Page->new( "BLAST watch submission", "Adri");
 
 # get arguments from index.pl
-our $c;
+use CatalystX::GlobalContext qw( $c );
 post_only() unless $c->req->method eq 'POST';
 
 my $params = $c->req->params;

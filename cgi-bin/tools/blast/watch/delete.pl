@@ -8,7 +8,7 @@ use CXGN::DB::Connection;
 use CXGN::Page::FormattingHelpers qw/page_title_html modesel info_table_html hierarchical_selectboxes_html simple_selectbox_html/;
 
 my $page = CXGN::Page->new("", "Adri");
-our $c;
+use CatalystX::GlobalContext qw( $c );
 
 # get query_id and person_id from toplevel.pl
 

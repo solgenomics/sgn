@@ -34,7 +34,7 @@ use List::MoreUtils qw /uniq/;
 use Math::Round::Var;
 use SGN::Exception;
 
-our $c;
+use CatalystX::GlobalContext qw( $c );
 my $page = CXGN::Page->new( "qtl", "isaak" );
 our ( $pop_id, $trait_id, $lg, $l_m, $p_m, $r_m, $lod, $qtl_image ) =
   $page->get_encoded_arguments(

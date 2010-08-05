@@ -8,7 +8,7 @@ use CXGN::DB::PhenoPopulation;
 use CGI;
 
 #get parameters from form on previous page
-our $c;
+use CatalystX::GlobalContext qw( $c );
 my %params = %{$c->req->params};
 my $pop_id = $params{pop_id};
 my $pop_name = $params{pop_name};

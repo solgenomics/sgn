@@ -13,7 +13,7 @@ use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw/ page_title_html blue_section_html /;
 use CXGN::Tools::Run;
 
-our $c;
+use CatalystX::GlobalContext qw( $c );
 
 my $page = CXGN::Page->new("Generic SGN Cluster Job Waiting Page", "Lukas");
 

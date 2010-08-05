@@ -365,7 +365,7 @@ if ($preset) {
 # get an upload object to upload a file, copy the
 # file to a temp location
 #
-our $c;
+use CatalystX::GlobalContext qw( $c );
 my $upload = $c->req->upload($file);
 
 my ( $temp_fh, $temp_file ) =

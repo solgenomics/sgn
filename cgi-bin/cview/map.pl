@@ -5,7 +5,7 @@ use warnings;
 use CXGN::Page;
 use CXGN::DB::Connection;
 
-our $c;
+use CatalystX::GlobalContext qw( $c );
 
 my $page = CXGN::Page->new();
 my ( $map_id, $map_version_id, $size, $hilite, $physical, $force ) =

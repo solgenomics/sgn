@@ -9,7 +9,7 @@ use CGI;
 use HTML::Entities;
 
 #get parameters from form on previous page
-our $c;
+use CatalystX::GlobalContext qw( $c );
 my %params = %{$c->req->params};
 my $prev_page = $params{prev_page};
 my $filepath = $params{filepath};

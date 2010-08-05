@@ -5,7 +5,7 @@
 use strict;
 use CXGN::Page;
 use CXGN::DB::PhenoPopulation;
-our $c;
+use CatalystX::GlobalContext qw( $c );
 
 #get parameters from form on previous page
 my %params = %{$c->req->params};

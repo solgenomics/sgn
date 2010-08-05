@@ -10,7 +10,7 @@ use CXGN::BlastWatch;
 
 use CGI ();
 
-our $c;
+use CatalystX::GlobalContext qw( $c );
 
 my $page = CXGN::Page->new( "BLAST watch results", "Adri");
 

@@ -1,4 +1,3 @@
-our $c;
 package CXGN::Chado::CvtermDetailPage;
 
 use base qw/CXGN::Page::Form::SimpleFormPage/;
@@ -24,6 +23,8 @@ use CXGN::Page::FormattingHelpers qw/info_section_html
 use CXGN::Chado::Cvterm;
 use CXGN::Phenome::UserTrait;
 use CXGN::People::PageComment;
+
+use CatalystX::GlobalContext qw( $c );
 
 sub new {
     my $class  = shift;
