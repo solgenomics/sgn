@@ -76,7 +76,6 @@ sub new {
     $self->set_page(CXGN::Page->new("SGN", "Lukas"));
     my $dbh=$self->get_page()->get_dbh(); # reuse the dbh from the Page object
     $self->set_dbh($dbh);
-    $dbh->add_search_path("$schema");
     
     $self->set_login(CXGN::Login->new($self->get_dbh()));
     my %args = $self->get_page()->cgi_params(); #multi-valued parameters have values in a string, delimited by \0
