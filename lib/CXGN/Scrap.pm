@@ -94,9 +94,12 @@ sub get_encoded_arguments {
 
 sub get_all_encoded_arguments {
   my ($self) = @_;
-  my %vars = %{$c->req->params};
-  $_ = HTML::Entities::encode_entities($_,"<>&'\";") for values %vars;
-  return %vars;
+
+  my @paramnames = $c->req->param;
+  return map {
+      my $p = $self->get_arguments($_);
+      $_ => HTML::Entities::encode_entities($p,"<>&'\";");
+  } @paramnames;
 }
 
 
