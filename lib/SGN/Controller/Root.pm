@@ -59,9 +59,12 @@ sub _do_redirects {
     my $query = $c->req->uri->query || '';
     $query = "?$query" if $query;
 
+    $c->log->debug("searching for redirects ($path) ($query)");
+
     # if the path has multiple // in it, collapse them and redirect to
     # the result
-    if( $path =~ s!/{2,}!/!g ) {
+    if(  $path =~ s!/{2,}!/!g ) {
+        $c->log->debug("redirecting multi-/ request to /$path$query");
         $c->res->redirect( "/$path$query", 301 );
         return 1;
     }
@@ -70,12 +73,14 @@ sub _do_redirects {
     # already been found and does not have an extension
     if( $path !~ m|\.\w{2,4}$| ) {
         if( my $index_action = $self->_find_cgi_action( $c, "$path/index.pl" ) ) {
+            $c->log->debug("dispatching to action $index_action");
             $c->go( $index_action );
         }
     }
 
     # redirect away from cgi-bin URLs
     elsif( $path =~ s!cgi-bin/!! ) {
+        $c->log->debug("redirecting cgi-bin url to /$path$query");
         $c->res->redirect( "/$path$query", 301 );
         return 1;
     }
