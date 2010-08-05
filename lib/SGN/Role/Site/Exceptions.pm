@@ -100,7 +100,6 @@ around 'finalize_error' => sub {
     $_ ||= [] for $no_notify, $notify;
 
     $self->clear_errors;
-    $self->error( $no_notify ) if $self->debug;
     $self->error( $notify );
 
     # if we have any errors that need notification, call the rest of the error plugins
