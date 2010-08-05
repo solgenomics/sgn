@@ -1,3 +1,4 @@
+use CatalystX::GlobalContext qw( $c );
 use strict;
 
 use CXGN::Page;
@@ -19,7 +20,6 @@ my ($intro_content, $input_content);
 my $HTML_ROOT = $c->get_conf('basepath');
 my $DOC_PATH =  $c->get_conf('tempfiles_subdir').'/align_viewer';
 my $PATH = $HTML_ROOT . $DOC_PATH;
-our $c;
 $temp_file = $c->path_to( $c->generated_file_uri('align_viewer',$temp_file) );
 if(-f $temp_file){
     $seq_data = $temp_file->slurp;

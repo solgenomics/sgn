@@ -1,3 +1,4 @@
+use CatalystX::GlobalContext qw( $c );
 
 use strict;
 

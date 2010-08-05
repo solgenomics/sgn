@@ -4,6 +4,7 @@ my $individual_detail_page = CXGN::Phenome::IndividualDetailPage->new();
 
 package CXGN::Phenome::IndividualDetailPage;
 
+use CatalystX::GlobalContext qw( $c );
 
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw /info_section_html 

@@ -1,4 +1,5 @@
 package CXGN::Phenome::QtlLoadDetailPage;
+use CatalystX::GlobalContext qw( $c );
 
 =head1 DESCRIPTION
 processes and loads qtl data obtained from the the web forms 

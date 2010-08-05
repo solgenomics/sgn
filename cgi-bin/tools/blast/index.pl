@@ -1,3 +1,4 @@
+use CatalystX::GlobalContext qw( $c );
 =head1 NAME
 
 /tools/blast/ - the entry page to the SGN blast tool
@@ -80,7 +81,6 @@ my $page  = CXGN::Page->new("BLAST Search Interface","Evan");
 my $dbh   = CXGN::DB::Connection->new;
 my $prefs = CXGN::Page::UserPrefs->new( $dbh );
 
-our $c = $c;
 my %params;
 @params{qw/preload_id preload_type seq interface_type db_id flush_cache/} = $page->get_encoded_arguments("preload_id","preload_type","seq","interface_type", "db_id", 'flush_cache');
 
