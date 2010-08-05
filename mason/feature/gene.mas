@@ -29,9 +29,8 @@
     $species    =~ s!(\S+) !<i>$1</i> !;
 </%perl>
 
-<& /feature/feature_data.mas,
+<& /feature/gene_data.mas,
     feature => $feature,
-    title   => "Gene Data",
     species => $species,
 &>
 
