@@ -26,6 +26,10 @@ after 'setup_finalize' => sub {
     # setup up our @INC and PATH for shipwright if necessary
     $class->setup_shipwright( @_ );
 
+    # run setup() on each of our site features
+    $class->setup_features( @_ );
+
+
     ###  for production servers
     if( $self->config->{production_server} ) {
 
