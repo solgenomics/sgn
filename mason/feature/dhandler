@@ -32,16 +32,6 @@
     parents => $parents
 &>
 
-<&| /page/info_section.mas,
-    title       => 'Organism',
-    collapsible => 1,
-    collapsed   => 1,
-&>
-   <% $species%> (<%ucfirst($organism->common_name) %>)<p/>
-   Comment: <% $organism->comment %>
-</&>
-
-
 % if ($seq->length > 0) {
 <& /feature/sequence.mas,
         feature   => $feature,
