@@ -11,7 +11,7 @@ my $defaults =
      disable_component_resolution_regex_fallback => 1,
 
      # Static::Simple configuration
-     root   => File::Spec->curdir,
+     root   => '__HOME__',
      static => {
          ignore_dirs => ['cgi-bin','mason','features','db','t','lib','conf','programs','selenium'],
      },
