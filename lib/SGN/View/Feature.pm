@@ -27,8 +27,10 @@ sub feature_table {
     my $data = [];
     for my $f (@$features) {
         my @locations = $f->featureloc_features->all;
+
         # Add a row for every featureloc
         for my $loc (@locations) {
+            my ($srcfeature) = $loc->srcfeature;
             my ($fmin,$fmax) = ($loc->fmin, $loc->fmax);
             push @$data, [
                 $c->render_mason(
@@ -36,7 +38,7 @@ sub feature_table {
                     feature => $f,
                 ),
                 $f->type->name,
-                gbrowse_link($f,$fmin,$fmax),
+                gbrowse_link($srcfeature,$fmin,$fmax),
                 $fmax-$fmin . " bp",
                 $loc->strand == 1 ? '+' : '-',
                 $loc->phase,
