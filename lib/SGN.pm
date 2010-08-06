@@ -20,6 +20,9 @@ with 'SGN::Role::Site::Config';
 after 'setup_finalize' => sub {
     my $self = shift;
 
+    # all files written by web server will be group-writable
+    umask 000002;
+
     # setup up our @INC and PATH for shipwright if necessary
     $class->setup_shipwright( @_ );
 
