@@ -32,6 +32,10 @@
     parents => $parents
 &>
 
+<& /feature/properties.mas,
+    feature => $feature,
+&>
+
 % if ($seq->length > 0) {
 <& /feature/sequence.mas,
         feature   => $feature,
