@@ -56,9 +56,6 @@ sub new {
 
     my $self = $class->SUPER::new();
 
-    eval { $self->set_dbh(CXGN::DB::Connection->new());  };
-    if ($@) { print STDERR "Oops, database does not seem to be available. ($@). Trying to continue without it...\n"; }
-
     $self->{mk_log_messages} = [];
     my ( $name, $author, $other ) = @_;
     if ( $other and my $js = $other->{jslib} ) {
