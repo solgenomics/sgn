@@ -61,6 +61,7 @@ after 'setup_finalize' => sub {
 __PACKAGE__->setup;
 
 with qw(
+        SGN::Role::Site::ApacheConfigure
         SGN::Role::Site::Files
         SGN::Role::Site::DBConnector
         SGN::Role::Site::DBIC
