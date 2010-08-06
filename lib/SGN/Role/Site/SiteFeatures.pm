@@ -51,6 +51,11 @@ has '_features' => (
        return \%feature_objects;
    }
 
+sub setup_features {
+    my $class = shift;
+    $_->setup( $class ) for $class->enabled_features;
+}
+
 sub enabled_features {
     grep $_->enabled,
       shift->features
