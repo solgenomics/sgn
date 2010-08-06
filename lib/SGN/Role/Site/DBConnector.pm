@@ -65,7 +65,13 @@ sub BUILD {
     }
 }
 
-has '_connections' => ( is => 'ro', isa => 'HashRef', default => sub { {} } );
+my %connections;
+sub _connections {
+    my ($class) = @_;
+    $class = ref $class if ref $class;
+    return $connections{$class} ||= {};
+}
+
 sub dbc {
     my ( $self, $profile_name ) = @_;
     $profile_name ||= 'default';
