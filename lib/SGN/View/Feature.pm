@@ -38,7 +38,7 @@ sub feature_table {
                     feature => $f,
                 ),
                 $f->type->name,
-                gbrowse_link($srcfeature,$fmin,$fmax),
+                gbrowse_link($f,$fmin,$fmax),
                 $fmax-$fmin . " bp",
                 $loc->strand == 1 ? '+' : '-',
                 $loc->phase,
@@ -51,7 +51,10 @@ sub feature_table {
 
 sub gbrowse_link {
     my ($feature, $fmin, $fmax) = @_;
-    sprintf '<a href="/gbrowse/bin/gbrowse/ITAG1_genomic/?ref=%s;start=%s;end=%s">%s</a>',
-        $feature->name, $fmin, $fmax, join(",", $fmin, $fmax),
+    my $gb = $c->enabled_feature('gbrowse2');
+    return '' unless $gb;
+    # TODO: render multiple URLs
+    my ($url) = map { $_->url } $gb->xrefs($feature->name);
+    sprintf('<a href="%s">%s</a>', $url, join(",", $fmin, $fmax)),
 }
 1;
