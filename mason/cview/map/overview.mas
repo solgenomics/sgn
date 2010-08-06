@@ -172,7 +172,7 @@ if ($message) {  $message_html = qq | <div class="boxbgcolor2">$message<br /></d
 </td></tr></table>
 
 
-<table alt="" border="0"><tr><td align="left">
+<table summary="input forms" border="0"><tr><td align="left">
     <div class="indentedcontent">
     
   <form action="/cview/map.pl" >
