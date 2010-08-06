@@ -4,6 +4,7 @@ use Moose::Role;
 use namespace::autoclean;
 
 use Carp;
+use Scalar::Util ();
 
 requires
     'dbc_profile',
@@ -31,6 +32,7 @@ sub dbic_schema {
 
     my $profile = $self->dbc_profile( $profile_name );
 
+    Scalar::Util::weaken $self;
     return $schema_name->connect(
         @{$profile}{qw| dsn user password attributes |},
         { on_connect_call => sub { $self->ensure_dbh_search_path_is_set( shift->dbh ) } },
