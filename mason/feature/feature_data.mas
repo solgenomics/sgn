@@ -3,6 +3,9 @@
     $title => 'Feature Data'
     $species => undef
 </%args>
+<%init>
+    use SGN::View::Feature qw/gbrowse_link/;
+</%init>
 <%perl>
     my @locations = $feature->featureloc_features->all;
     my $locations = scalar @locations;
@@ -27,7 +30,5 @@
                                 text => $species
                            &><br/>
     <b>Length</b>: <% $length %> bp in <% $locations %> location<% $locations > 1 ? 's' : '' %> <br/>
-    <& /feature/dbxref.mas,
-        dbxref => $feature->dbxref,
-    &><br/>
+    <a href="<% gbrowse_link($feature) %>">GBrowse</a><br/>
 </&>
