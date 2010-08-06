@@ -86,6 +86,7 @@ my $defaults =
      tempfiles_base           => undef,
 
      #should we send emails, if we are a production server? this can be used to turn off emails if we are being bombarded.
+     admin_email           => 'sgn-feedback@solgenomics.net',
      feedback_email           => 'sgn-feedback@solgenomics.net',
      bugs_email               => 'sgn-bugs@solgenomics.net',
      disable_emails           => 0,
