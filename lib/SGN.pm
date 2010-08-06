@@ -20,6 +20,9 @@ with 'SGN::Role::Site::Config';
 after 'setup_finalize' => sub {
     my $self = shift;
 
+    # setup up our @INC and PATH for shipwright if necessary
+    $class->setup_shipwright( @_ );
+
     ###  for production servers
     if( $self->config->{production_server} ) {
 
@@ -59,6 +62,7 @@ __PACKAGE__->setup;
 
 with qw(
         SGN::Role::Site::ApacheConfigure
+        SGN::Role::Site::Deploy::Shipwright
         SGN::Role::Site::Files
         SGN::Role::Site::DBConnector
         SGN::Role::Site::DBIC
