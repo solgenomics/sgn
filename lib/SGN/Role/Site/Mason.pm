@@ -12,7 +12,10 @@ requires
        path_to
        get_conf
        tempfiles_subdir
+       setup_finalize
       );
+
+
 
 
 =head2 forward_to_mason_view
@@ -142,7 +145,11 @@ sub _trap_mason_error {
   Side Effects: dies on error
   Example :
 
+  This is run at app startup as a setup_finalize hook.
+
 =cut
+
+after 'setup_finalize' => \&clear_mason_tempfiles;
 
 sub clear_mason_tempfiles {
   my ( $self ) = @_;
