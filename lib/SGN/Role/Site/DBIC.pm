@@ -6,9 +6,9 @@ use namespace::autoclean;
 use Carp;
 
 requires
-    qw(
-       dbc_profile
-      );
+    'dbc_profile',
+    'ensure_dbh_search_path_is_set',
+    ;
 
 
 =head2 dbic_schema
@@ -31,9 +31,10 @@ sub dbic_schema {
 
     my $profile = $self->dbc_profile( $profile_name );
 
-    return $schema_name->connect( @{$profile}{qw| dsn user password attributes |},
-                                  { on_connect_call => sub { $self->_ensure_dbh_search_path_is_set( shift->dbh ) } },
-                                 );
+    return $schema_name->connect(
+        @{$profile}{qw| dsn user password attributes |},
+        { on_connect_call => sub { $self->ensure_dbh_search_path_is_set( shift->dbh ) } },
+       );
 }
 
 1;

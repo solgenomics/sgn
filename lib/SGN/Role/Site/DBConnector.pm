@@ -92,9 +92,10 @@ sub dbc_profile {
 
     return $profile;
 }
+
 # called on database handles to make sure they are setting the right
 # search path
-sub _ensure_dbh_search_path_is_set {
+sub ensure_dbh_search_path_is_set {
     my ($self,$dbh) = @_;
     return $dbh if $dbh->{private_search_path_is_set};
 
@@ -115,7 +116,7 @@ sub _ensure_dbh_search_path_is_set {
 
   sub dbh {
       my $dbh = shift->SUPER::dbh(@_);
-      SGN::Role::Site::DBConnector->_ensure_dbh_search_path_is_set( $dbh );
+      SGN::Role::Site::DBConnector->ensure_dbh_search_path_is_set( $dbh );
       return $dbh;
   }
 }
