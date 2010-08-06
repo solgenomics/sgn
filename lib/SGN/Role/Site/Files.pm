@@ -13,8 +13,33 @@ requires qw(
             get_conf
             path_to
             config
+            setup_finalize
            );
 
+
+=head2 after setup_finalize
+
+attempt to chown tempfiles_subdir and children to the web user
+
+=cut
+
+after 'setup_finalize' => sub {
+    my $c = shift;
+
+    # the tempfiles_subdir() function makes and chmods the given
+    # directory.  with no arguments, will make and chmod the main
+    # tempfiles directory
+    my $temp_subdir = $c->path_to( $c->tempfiles_subdir() );
+    $c->chown_generated_dir( $temp_subdir ); #< force-set the
+                                             # permissions on the
+                                             # main tempfiles dir
+
+    # also chown any subdirs that are in the temp dir.
+    # this line should be removed eventually, the application itself should take
+    # care of creating temp dirs if it wants.
+    $c->chown_generated_dir( $_ ) for $temp_subdir->children;
+
+};
 
 =head2 generated_file_uri
 
