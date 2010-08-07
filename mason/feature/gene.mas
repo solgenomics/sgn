@@ -53,6 +53,18 @@
 </&>
 
 <&| /page/info_section.mas,
+    title => 'Genomic sequence',
+    collapsible => 1,
+&>
+</&>
+
+<&| /page/info_section.mas,
+    title => 'mRNA sequence',
+    collapsible => 1,
+&>
+</&>
+
+<&| /page/info_section.mas,
     title => 'Protein sequence',
     collapsible => 1,
 &>
