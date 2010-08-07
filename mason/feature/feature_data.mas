@@ -15,14 +15,13 @@
     }
     my ($description) = map { $_->value } grep { $_->type->name eq 'Note' } $feature->featureprops->all;
 </%perl>
-
 <&| /page/info_section.mas,
     title       => $title,
     subtitle    => $feature->is_obsolete ? 'WARNING: This feature is obsolete' : '',
     collapsible => 1,
 &>
     <b>Name</b>: <% $feature->name %><br/>
-    <b>Feature Type</b>: <% $feature->type->name %><br/>
+    <b>Feature Type</b>: <a href="/chado/cvterm.pl?cvterm_id=<% $feature->type->id %>"><% $feature->type->name %></a><br/>
     <b>Description</b>: <% $description %><br/>
     <b>Analysis</b>: <% $feature->is_analysis ? 'Yes' : 'No' %><br/>
     <b>Organism Name</b>: <& /feature/organism_link.mas,
