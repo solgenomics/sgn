@@ -2,10 +2,9 @@ package SGN::View::Feature;
 use base 'Exporter';
 use strict;
 use warnings;
-use SGN::Context;
 
 our @EXPORT_OK = qw/related_stats feature_table/;
-our $c = SGN::Context->new;
+use CatalystX::GlobalContext '$c';
 
 sub related_stats {
     my ($features) = @_;
