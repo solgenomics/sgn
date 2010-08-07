@@ -55,6 +55,13 @@ sub gbrowse_link {
     return '' unless $gb;
     # TODO: render multiple URLs
     my ($url) = map { $_->url } $gb->xrefs($feature->name);
+    unless ( $url ) {
+        my @locs = $feature->featureloc_features->all;
+        my $fl = $locs[0];
+        #die Dumper [ $url ];
+        my $plaintext = $fl->srcfeature->name . ':'.$fl->fmin . '..' . $fl->fmax;
+        ($url) = map { $_->url } $gb->xrefs($plaintext);
+    }
     if (defined $fmin && defined $fmax) {
         return sprintf('<a href="%s">%s</a>', $url, join(",", $fmin, $fmax)),
     } else {
