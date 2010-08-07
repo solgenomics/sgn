@@ -27,7 +27,7 @@
     <b>Analysis</b>: <% $feature->is_analysis ? 'Yes' : 'No' %><br/>
     <b>Organism Name</b>: <& /feature/organism_link.mas,
                                 organism => $feature->organism,
-                                text => $species
+                                text => $species,
                            &><br/>
     <b>Length</b>: <% $length %> bp in <% $locations %> location<% $locations > 1 ? 's' : '' %> <br/>
     <a href="<% gbrowse_link($feature) %>">GBrowse</a><br/>

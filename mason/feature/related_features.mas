@@ -11,23 +11,33 @@
     collapsible => 1,
 &>
 %if (@$parents) {
-<& /page/columnar_table.mas,
-    headings => [ "Parent Feature Type", "Number"  ],
-    data     => related_stats($parents),
+<&| /page/info_section.mas,
+    title => "Parent Features",
+    collapsible => 1,
 &>
-<& /feature/feature_list.mas,
-    features => $parents,
-&>
+    <& /page/columnar_table.mas,
+        headings => [ "Feature Type", "Number"  ],
+        data     => related_stats($parents),
+    &>
+    <& /feature/feature_list.mas,
+        features => $parents,
+    &>
+</&>
 %}
 <br/>
 %if (@$children) {
-<& /page/columnar_table.mas,
-    headings => [ "Child Feature Type", "Number" ],
-    data     => related_stats($children),
+<&| /page/info_section.mas,
+    title => "Child Features",
+    collapsible => 1,
 &>
-<& /feature/feature_list.mas,
-    features => $children,
-&>
+    <& /page/columnar_table.mas,
+        headings => [ "Child Feature Type", "Number" ],
+        data     => related_stats($children),
+    &>
+    <& /feature/feature_list.mas,
+        features => $children,
+    &>
+</&>
 % }
 
 </&>
