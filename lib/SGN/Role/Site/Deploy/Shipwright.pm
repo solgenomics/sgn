@@ -1,4 +1,4 @@
-package SGN::Role::Site::Deployment::Shipwright;
+package SGN::Role::Site::Deploy::Shipwright;
 use Moose::Role;
 use namespace::autoclean;
 
