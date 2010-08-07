@@ -24,7 +24,7 @@ after 'setup_finalize' => sub {
     umask 000002;
 
     # setup up our @INC and PATH for shipwright if necessary
-    $class->setup_shipwright( @_ );
+    $self->setup_shipwright( @_ );
 
     # run setup() on each of our site features
     $class->setup_features( @_ );
