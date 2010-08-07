@@ -27,7 +27,7 @@ after 'setup_finalize' => sub {
     $self->setup_shipwright( @_ );
 
     # run setup() on each of our site features
-    $selfs->setup_features( @_ );
+    $self->setup_features( @_ );
 
 
     ###  for production servers
