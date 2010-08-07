@@ -13,7 +13,7 @@ eval { $gb2->setup }; #< may fail if web server has done it already
 
 my @sources = $gb2->data_sources;
 
-can_ok( $_, 'view_url', 'img_url', 'name', 'description') for @sources;
+can_ok( $_, 'view_url', 'name', 'description') for @sources;
 
 for ( @sources ) {
     my @dbs      = do {
