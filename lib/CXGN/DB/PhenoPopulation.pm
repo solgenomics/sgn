@@ -63,45 +63,34 @@ package CXGN::DB::PhenoPopulation;
 use strict;
 use CXGN::DB::Connection;
 use CXGN::Tools::File;
-use CXGN::VHost;my $vhost_conf=CXGN::VHost->new();
 use CXGN::DB::Connection;
 
-#------------------------------------------------------
-#Class variables and other global properties.
-#------------------------------------------------------
-#my $image_top_path = '/phenotype_db/phenotype_image_dir/';
-#my $gen_image_dir = $image_top_path . 'generated_images/';
-#my $prop_image_dir = $image_top_path . 'prop_images';
-#my $system_prop_image_dir = $vhost_conf->get_conf('basepath').$vhost_conf->get_conf('documents_subdir'). $prop_image_dir;
-#my $original_image_dir = $image_top_path . 'plant_images/';
-
-my $image_top_path = $vhost_conf->get_conf('static_datasets_url').'/phenotype_images/';
-my $gen_image_dir = $image_top_path . '/generated_images/';
-my $prop_image_dir = $image_top_path . '/prop_images/';
-my $system_prop_image_dir = $vhost_conf->get_conf('static_datasets_path').'/phenotype_images/prop_images/';
-my $original_image_dir = $image_top_path . '/plant_images/';
 
 #------------------------------------------------------
 #used for all scripts with images----------------------
 #------------------------------------------------------
+use CatalystX::GlobalContext '$c';
+
 sub get_generated_image_dir {
-    # This is for use by Apache.
-    return $gen_image_dir;
+    $c->get_conf('static_datasets_url').'/phenotype_images/generated_images/';
 }
 
 sub get_original_image_dir {
     # This is for use by Apache.
-    return $original_image_dir;
+    $c->get_conf('static_datasets_url').'/phenotype_images/plant_images/';
 }
 
 sub get_prop_image_dir {
     # This is for use within Apache.
-    return $prop_image_dir;
+    $c->get_conf('static_datasets_url').'/phenotype_images/prop_images/';
 }
 
 sub get_system_prop_image_dir {
     # This is for use by the system.
-    return $system_prop_image_dir;
+    File::Spec->catdir( $c->get_conf('static_datasets_path'),
+                        'phenotype_images',
+                        'prop_images',
+                       );
 }
 
  
