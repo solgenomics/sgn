@@ -14,11 +14,26 @@ use Catalyst qw/
 
 extends 'Catalyst';
 
+# setup() needs the Config stuff before running
 with 'SGN::Role::Site::Config';
 
+__PACKAGE__->setup;
+
+with qw(
+        SGN::Role::Site::DBConnector
+        SGN::Role::Site::DBIC
+        SGN::Role::Site::Deploy::Apache
+        SGN::Role::Site::Exceptions
+        SGN::Role::Site::Files
+        SGN::Role::Site::Mason
+        SGN::Role::Site::SiteFeatures
+       );
+
 # on startup, do some dynamic configuration
-after 'setup_finalize' => sub {
+sub setup_finalize {
     my $self = shift;
+
+    $ENV{PROJECT_NAME} = $class->config->{name};
 
     # all files written by web server will be group-writable
     umask 000002;
@@ -57,19 +72,6 @@ after 'setup_finalize' => sub {
         }
     }
 };
-
-__PACKAGE__->setup;
-
-with qw(
-        SGN::Role::Site::ApacheConfigure
-        SGN::Role::Site::Deploy::Shipwright
-        SGN::Role::Site::Files
-        SGN::Role::Site::DBConnector
-        SGN::Role::Site::DBIC
-        SGN::Role::Site::Mason
-        SGN::Role::Site::SiteFeatures
-        SGN::Role::Site::Exceptions
-       );
 
 
 =head1 NAME
