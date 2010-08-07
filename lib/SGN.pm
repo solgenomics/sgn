@@ -32,8 +32,9 @@ with qw(
 # on startup, do some dynamic configuration
 sub setup_finalize {
     my $self = shift;
+    $self->SUPER::setup_finalize(@_);
 
-    $ENV{PROJECT_NAME} = $class->config->{name};
+    $ENV{PROJECT_NAME} = $self->config->{name};
 
     # all files written by web server will be group-writable
     umask 000002;
