@@ -23,12 +23,8 @@ after 'setup_finalize' => sub {
     # all files written by web server will be group-writable
     umask 000002;
 
-    # setup up our @INC and PATH for shipwright if necessary
-    $self->setup_shipwright( @_ );
-
     # run setup() on each of our site features
     $self->setup_features( @_ );
-
 
     ###  for production servers
     if( $self->config->{production_server} ) {
