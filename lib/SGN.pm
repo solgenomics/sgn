@@ -23,9 +23,6 @@ after 'setup_finalize' => sub {
     # all files written by web server will be group-writable
     umask 000002;
 
-    # run setup() on each of our site features
-    $self->setup_features( @_ );
-
     ###  for production servers
     if( $self->config->{production_server} ) {
 
