@@ -23,8 +23,7 @@ Deprecated.  Do not use in new code.
 
 use strict;
 use warnings;
-use Clone;
-use HTML::Entities;
+use HTML::Entities ();
 use Carp;
 use CGI ();
 
