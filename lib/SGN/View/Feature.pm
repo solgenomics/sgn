@@ -58,7 +58,7 @@ sub gbrowse_link {
     unless ( $url ) {
         my @locs = $feature->featureloc_features->all;
         my $fl = $locs[0];
-        #die Dumper [ $url ];
+
         my $plaintext = $fl->srcfeature->name . ':'.$fl->fmin . '..' . $fl->fmax;
         ($url) = map { $_->url } $gb->xrefs($plaintext);
     }
