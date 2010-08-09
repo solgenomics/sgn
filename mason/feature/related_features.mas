@@ -1,11 +1,14 @@
 <%args>
     $children
     $parents
+    $reference
     $title => 'Related Features'
 </%args>
 <%init>
     use SGN::View::Feature qw/related_stats/;
 </%init>
+<%perl>
+</%perl>
 <&| /page/info_section.mas,
     title => $title,
     collapsible => 1,
@@ -39,5 +42,9 @@
     &>
 </&>
 % }
+<& /feature/feature_data.mas,
+    feature => $reference,
+    title => 'Reference Feature',
+&>
 
 </&>

@@ -23,13 +23,15 @@
     my $organism = $feature->organism;
     my $species  = $organism->species;
     $species    =~ s!(\S+) !<i>$1</i> !;
+    my $reference = $feature->featureloc_features->single->srcfeature;
 </%perl>
 
 <& /feature/feature_data.mas, feature => $feature, species => $species &>
 
 <& /feature/related_features.mas,
-    children => $children,
-    parents => $parents
+    children  => $children,
+    parents   => $parents,
+    reference => $reference,
 &>
 
 <& /feature/properties.mas,
