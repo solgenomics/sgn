@@ -32,10 +32,11 @@ with qw(
 # MooseX::ClassAttribute is currently broken under role composition
 with 'SGN::Role::Site::SiteFeatures';
 
-
 # on startup, do some dynamic configuration
 sub setup_finalize {
     my $self = shift;
+    # not using an 'after' modifier for this so we can keep this sub
+    # at the bottom of the package
     $self->SUPER::setup_finalize(@_);
 
     $ENV{PROJECT_NAME} = $self->config->{name};
