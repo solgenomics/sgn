@@ -20,11 +20,11 @@ use SGN::Config;
 
 =cut
 
-{ my $cfg;
+{ my %config;
   sub config {
       my $class = shift;
       $class = ref $class if ref $class;
-      return $cfg ||= $class->_new_config;
+      return $config{$class} ||= $class->_new_config;
   }
 }
 
