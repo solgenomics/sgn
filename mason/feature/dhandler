@@ -8,6 +8,7 @@
 <%init>
     use Bio::Seq;
     use Data::Dumper;
+    use SGN::View::Feature qw/get_reference/;
 </%init>
 
 <& /page/page_title.mas, title => 'Feature Viewer: '. $feature->id &>
@@ -23,7 +24,7 @@
     my $organism = $feature->organism;
     my $species  = $organism->species;
     $species    =~ s!(\S+) !<i>$1</i> !;
-    my $reference = $feature->featureloc_features->single->srcfeature;
+    my $reference = get_reference($feature);
 </%perl>
 
 <& /feature/feature_data.mas, feature => $feature, species => $species &>
@@ -38,10 +39,8 @@
     feature => $feature,
 &>
 
-% if ($seq->length > 0) {
 <& /feature/sequence.mas,
         feature   => $feature,
         seq       => $seq,
         blast_url => $blast_url,
 &>
-% }

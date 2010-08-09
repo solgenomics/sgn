@@ -4,8 +4,18 @@ use strict;
 use warnings;
 use SGN::Context;
 
-our @EXPORT_OK = qw/related_stats feature_table gbrowse_link/;
+our @EXPORT_OK = qw/
+    related_stats feature_table gbrowse_link
+    get_reference
+/;
 our $c = SGN::Context->new;
+
+sub get_reference {
+    my ($feature) = @_;
+    my $fl = $feature->featureloc_features->single;
+    return unless $fl;
+    return $fl->srcfeature;
+}
 
 sub related_stats {
     my ($features) = @_;
@@ -58,6 +68,7 @@ sub gbrowse_link {
     unless ( $url ) {
         my @locs = $feature->featureloc_features->all;
         my $fl = $locs[0];
+        return '' unless $fl;
 
         my $plaintext = $fl->srcfeature->name . ':'.$fl->fmin . '..' . $fl->fmax;
         ($url) = map { $_->url } $gb->xrefs($plaintext);
