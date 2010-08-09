@@ -6,6 +6,7 @@ SGN::Role::Site::SiteFeatures - role for a context class that lets it find, load
 
 package SGN::Role::Site::SiteFeatures;
 use Moose::Role;
+use MooseX::ClassAttribute;
 
 use Module::Pluggable::Object;
 use namespace::autoclean;
@@ -15,7 +16,7 @@ requires 'config';
 
 # lazy accessor, returns arrayref of instantiated and configured
 # SGN::Feature objects
-has '_features' => (
+class_has '_features' => (
     is         => 'ro',
     isa        => 'HashRef[SGN::Feature]',
     traits     => ['Hash'],

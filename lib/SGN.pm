@@ -6,11 +6,11 @@ use SGN::Exception;
 
 use Catalyst::Runtime 5.80;
 use Catalyst qw/
-    ConfigLoader
-    Static::Simple
-    ErrorCatcher
-    StackTrace
-/;
+     ConfigLoader
+     Static::Simple
+     ErrorCatcher
+     StackTrace
+ /;
 
 extends 'Catalyst';
 
@@ -26,8 +26,12 @@ with qw(
         SGN::Role::Site::Exceptions
         SGN::Role::Site::Files
         SGN::Role::Site::Mason
-        SGN::Role::Site::SiteFeatures
        );
+
+# add SiteFeatures separately for now to work around the fact that
+# MooseX::ClassAttribute is currently broken under role composition
+with 'SGN::Role::Site::SiteFeatures';
+
 
 # on startup, do some dynamic configuration
 sub setup_finalize {
