@@ -32,7 +32,7 @@ sub dbic_schema {
     Class::MOP::load_class( $schema_name );
 
     state %schema_cache;
-    return $schema_cache{$class}{$profile_name}{$schema_name} ||= do {
+    return $schema_cache{$class}{$profile_name || ''}{$schema_name} ||= do {
         my $profile = $class->dbc_profile( $profile_name );
         $schema_name->connect(
             @{$profile}{qw| dsn user password attributes |},
