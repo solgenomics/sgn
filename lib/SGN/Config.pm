@@ -11,10 +11,22 @@ my $defaults =
      disable_component_resolution_regex_fallback => 1,
 
      # Static::Simple configuration
-     root   => '__HOME__',
+     root   => 'static',
      static => {
-         ignore_dirs => ['cgi-bin','mason','features','db','t','lib','conf','programs','selenium'],
+         dirs => [qw[ s documents static_content data js ]],
      },
+
+     ### backcompat variables for the various static content types
+     (
+         # relative URL and absolute path for static datasets
+         static_datasets_url      => '/data',
+         static_datasets_path     => '/data/prod/public',
+
+         # relative URL and absoluate path for static site content
+         static_content_url       => '/static_content',
+         static_content_path      => '/data/prod/public/sgn_static_content',
+         homepage_files_dir       => '/data/prod/public/sgn_static_content/homepage',
+     ),
 
      # enable stack traces all the time
      stacktrace => {
@@ -116,19 +128,6 @@ my $defaults =
      hmmsearch_location       => 'hmmsearch', #< in path
      intron_finder_database   => '/data/prod/public/intron_finder_database',
 
-     # relative URL and absolute path for static datasets
-     static_datasets_url      => '/data',
-     static_datasets_path     => '/data/prod/public',
-
-     # relative URL and absoluate path for static site content
-     static_content_url       => '/static_content',
-     static_content_path      => '/data/prod/public/sgn_static_content',
-     homepage_files_dir       => '/data/prod/public/sgn_static_content/homepage',
-
-     # relative URL and relative path for static site files
-     static_site_files_url    => '/documents',
-     static_site_files_path   => 'documents', #< relative to site root
-
      trace_path               => '/data/prod/public/chromatograms',
      image_dir    	      => '/images/image_files',
      image_path               => '/data/prod/public/images',
@@ -138,8 +137,6 @@ my $defaults =
      documents_subdir         => '/documents',
      conf_subdir              => '/conf',
      support_data_subdir      => '/support_data',
-     document_root_subdir     => '/cgi-bin',
-     executable_subdir        => '/cgi-bin',
 
      #in case of missing pages where we should go
      error_document           => '/tools/http_error_handler.pl',
@@ -153,7 +150,7 @@ my $defaults =
      dt_livesite              => 'http://www.sgn.cornell.edu/',
 
      #path to jslib relative to site basepath
-     global_js_lib            => 'js',
+     global_js_lib            => 'static/js',
 
      # where the genefamily info is stored
      genefamily_dir           => '/data/prod/private/genomes/genefamily/',
@@ -186,4 +183,6 @@ my $defaults =
      },
 
     };
+
+
 sub defaults { shift->SUPER::defaults( $defaults, @_ )}

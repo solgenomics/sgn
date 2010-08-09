@@ -41,44 +41,43 @@ sub setup_finalize {
 
     $ENV{PROJECT_NAME} = $self->config->{name};
 
-    # all files written by web server will be group-writable
+    # all files written by web server should be group-writable
     umask 000002;
+
+    # update the symlinks used to serve static files
+    $self->_update_static_symlinks;
 
     ###  for production servers
     if( $self->config->{production_server} ) {
 
+        # enable error email sending
         $self->config->{'Plugin::ErrorCatcher'}{'emit_module'} = 'Catalyst::Plugin::ErrorCatcher::Email';
 
     }
+}
 
-    ### for dev servers
-    else {
 
-        # if on a dev setup, symlink the static_datasets and
-        # static_content in the root dir so that
-        # Catalyst::Plugin::Static::Simple can serve them.  in production,
-        # these will be served directly by Apache
+sub _update_static_symlinks {
+    my $self = shift;
 
-        my @links = (
+    # symlink the static_datasets and
+    # static_content in the root dir so that
+    # Catalyst::Plugin::Static::Simple can serve them.  in production,
+    # these will be served directly by Apache
 
-            # make symlink for /img
-            [ $self->path_to('documents','img'), $self->path_to('img') ],
+    # make symlinks for static_content and static_datasets
+    my @links =
+        map [ $self->config->{$_.'_path'} =>
+                File::Spec->catfile( $self->config->{root}, $self->config->{$_.'_url'} )
+            ],
+        qw( static_content static_datasets );
 
-            # make symlinks for static_content and static_datasets
-            ( map [ $self->config->{$_.'_path'} =>  File::Spec->catfile( $self->config->{root}, $self->config->{$_.'_url'} ) ],
-                  qw( static_content static_datasets )
-            ),
-
-           );
-
-        for my $link (@links) {
-            unlink $link->[1];
-            symlink( $link->[0], $link->[1] )
-                or die "$! symlinking $link->[0] => $link->[1]";
-        }
+    for my $link (@links) {
+        unlink $link->[1];
+        symlink( $link->[0], $link->[1] )
+            or die "$! symlinking $link->[0] => $link->[1]";
     }
-};
-
+}
 
 =head1 NAME
 
