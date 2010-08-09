@@ -41,7 +41,7 @@ sub _new_config {
     for (values %$cfg) {
         no warnings 'uninitialized';
         s|__HOME__|$basepath|eg;
-        s|__path_to\(([^\)]+\))__|$self->path_to( split /,/, $1) |eg;
+        s|__path_to\(([^\)]+\))__|File::Spec->catdir($basepath, split /,/, $1) |eg;
     }
     return $cfg;
 }
