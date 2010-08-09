@@ -39,6 +39,10 @@
     parents => $parents
 &>
 
+<& /feature/properties.mas,
+    feature => $feature,
+&>
+
 % if ($seq->length > 0) {
 <& /feature/sequence.mas,
 	feature => $feature,
@@ -58,10 +62,7 @@
 &>
 </&>
 
-<&| /page/info_section.mas,
-    title => 'mRNA sequence',
-    collapsible => 1,
-&>
+<&| /page/info_section.mas, title => 'mRNA sequence', collapsible => 1, &>
 </&>
 
 <&| /page/info_section.mas,
