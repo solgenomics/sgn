@@ -1,4 +1,5 @@
 package SGN::Role::Site::DBConnector;
+use 5.10.0;
 
 use Moose::Role;
 use namespace::autoclean;
@@ -41,35 +42,11 @@ requires qw(
 
 =cut
 
-# after the context is first created, populate the 'default' profile
-# with dbconn info from the legacy conf interface if necessary,
-sub BUILD {
-    my ($self) = @_;
-    $self->config->{'DatabaseConnection'}->{'default'} ||= do {
-	require CXGN::DB::Connection;
-	my %conn;
-	@conn{qw| dsn user password attributes |} = CXGN::DB::Connection->new_no_connect({ config => $self->config })
-	                                                                ->get_connection_parameters;
-	$conn{search_path} = $self->config->{'dbsearchpath'} || ['public'];
-	\%conn
-    };
-
-    # make a second profile 'sgn_chado' that removes the sgn search path
-    # from the beginning
-    $self->config->{'DatabaseConnection'}->{'sgn_chado'} ||= do {
-        my $c = Storable::dclone( $self->config->{'DatabaseConnection'}->{'default'} );
-        if( $c->{search_path}->[0] eq 'sgn' ) {
-            push @{$c->{search_path}}, shift @{$c->{search_path}};
-        }
-        $c
-    }
-}
-
-my %connections;
 sub _connections {
     my ($class) = @_;
     $class = ref $class if ref $class;
-    return $connections{$class} ||= {};
+    state %connections;
+    $connections{$class} ||= {};
 }
 
 sub dbc {
@@ -86,6 +63,8 @@ sub dbc {
 sub dbc_profile {
     my ( $self, $profile_name ) = @_;
     $profile_name ||= 'default';
+
+    $self->_build_compatibility_profiles(); #< make sure our compatibility profiles are set
 
     my $profile = $self->config->{'DatabaseConnection'}->{$profile_name}
 	or croak "connection profile '$profile_name' not defined";
@@ -110,6 +89,35 @@ sub ensure_dbh_search_path_is_set {
 
     $dbh->{private_search_path_is_set} = 1;
     return $dbh;
+}
+
+
+# generates 'default' and 'sgn_chado' profiles that are compatibile
+# with the legacy CXGN::DB::Connection
+sub _build_compatibility_profiles {
+    my ($self) = @_;
+
+    # make a default profile
+    $self->config->{'DatabaseConnection'}->{'default'} ||= do {
+	require CXGN::DB::Connection;
+	my %conn;
+	@conn{qw| dsn user password attributes |} =
+            CXGN::DB::Connection->new_no_connect({ config => $self->config })
+                                ->get_connection_parameters;
+
+	$conn{search_path} = $self->config->{'dbsearchpath'} || ['public'];
+	\%conn
+    };
+
+    # make a second profile 'sgn_chado' that removes the sgn search path
+    # from the beginning
+    $self->config->{'DatabaseConnection'}->{'sgn_chado'} ||= do {
+        my $c = Storable::dclone( $self->config->{'DatabaseConnection'}->{'default'} );
+        if( $c->{search_path}->[0] eq 'sgn' ) {
+            push @{$c->{search_path}}, shift @{$c->{search_path}};
+        }
+        $c
+    }
 }
 
 
