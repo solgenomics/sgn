@@ -1,10 +1,10 @@
 package SGN::Role::Site::DBIC;
+use 5.10.0;
 
 use Moose::Role;
 use namespace::autoclean;
 
 use Carp;
-use Scalar::Util ();
 
 requires
     'dbc_profile',
@@ -25,18 +25,20 @@ requires
 =cut
 
 sub dbic_schema {
-    my ( $self, $schema_name, $profile_name ) = @_;
+    my ( $class, $schema_name, $profile_name ) = @_;
+    $class = ref $class if ref $class;
 
     $schema_name or croak "must provide a schema package name to dbic_schema";
     Class::MOP::load_class( $schema_name );
 
-    my $profile = $self->dbc_profile( $profile_name );
-
-    Scalar::Util::weaken $self;
-    return $schema_name->connect(
-        @{$profile}{qw| dsn user password attributes |},
-        { on_connect_call => sub { $self->ensure_dbh_search_path_is_set( shift->dbh ) } },
-       );
+    state %schema_cache;
+    return $schema_cache{$class}{$profile_name}{$schema_name} ||= do {
+        my $profile = $class->dbc_profile( $profile_name );
+        $schema_name->connect(
+            @{$profile}{qw| dsn user password attributes |},
+            { on_connect_call => sub { $class->ensure_dbh_search_path_is_set( shift->dbh ) } },
+           )
+    };
 }
 
 1;
