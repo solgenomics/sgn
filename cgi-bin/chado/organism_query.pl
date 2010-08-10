@@ -11,7 +11,7 @@ my ($species) = $doc->get_encoded_arguments("species");
 
 my $json = JSON->new();
 
-my $schema = Bio::Chado::Schema->connect("dbi:Pg:dbname='cxgn'; host='localhost'",'postgres', 'c0d3r!!', {AutoCommit => 0, RaiseError =>1});
+my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
 my $org_rs = $schema->resultset("Organism::Organism")->search({species=>{'ilike'=>'%'.$species.'%'}});
 
@@ -19,14 +19,7 @@ my %species;
 
 while (my $org = $org_rs->next){
     $species{$org->organism_id()}=$org->species();
-      
 }
 
 my $jobj = $json->encode(\%species);
-#print "Content-Type: text/plain\n\n";
 print "$jobj";
-
-
-
-
-
