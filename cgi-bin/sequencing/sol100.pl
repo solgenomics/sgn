@@ -1,8 +1,9 @@
 use strict;
 use warnings;
-<<<<<<< HEAD
 use CXGN::Page;
 use CXGN::Login;
+use CXGN::Chado::Organism;
+use CXGN::DB::DBICFactory;
 
 
 my $page = CXGN::Page->new("SOL100 sequencing project","Naama");
@@ -12,16 +13,10 @@ my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 my $cvterm = $schema->resultset("Cv::Cvterm")->search( { name => 'sol100' } );
 my $o_props;
 my $organism_res;
-=======
 
-use CXGN::Page;
-use CXGN::Chado::Organism;
-use CXGN::DB::DBICFactory;
-
-my $page   =  CXGN::Page->new("SOL100 sequencing project","Naama");
+my $page = CXGN::Page->new("SOL100 sequencing project","Naama");
 
 my $schema = CXGN::DB::DBICFactory->open_schema( 'Bio::Chado::Schema' );
->>>>>>> master
 
 $o_props= $cvterm->search_related('organismprops') if $cvterm;
 
@@ -37,12 +32,3 @@ while(my $o_prop=$o_props->next){
 }
 
 $c->forward_to_mason_view("/sequencing/sol100.mas" , user_type=>$user_type, schema=>$schema, sol=>$sol );
-
-
-
-
-
-
-
-
-
