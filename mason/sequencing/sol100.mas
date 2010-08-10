@@ -57,7 +57,6 @@ Organism content goes here
 This page presents a summary of all species being sequenced as part of the SOL100 sequencing project
 </p>(click on the organism  name to see more details.)<br/><br/>
 
-<head>
 <script>
 function update_result(){
      if(($("species").value.length)>=3){
@@ -116,8 +115,6 @@ $("species").value=species_name;
 }
 	
 </script>
-</head>
-
 
 <div id = "organism_tree">
 
@@ -154,4 +151,3 @@ $("species").value=species_name;
 
 <div id = "messages"></div>
 %}
-
