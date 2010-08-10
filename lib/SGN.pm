@@ -68,7 +68,7 @@ sub _update_static_symlinks {
     # make symlinks for static_content and static_datasets
     my @links =
         map [ $self->config->{$_.'_path'} =>
-                File::Spec->catfile( $self->config->{root}, $self->config->{$_.'_url'} )
+               $self->path_to( $self->config->{root}, $self->config->{$_.'_url'} )
             ],
         qw( static_content static_datasets );
 
