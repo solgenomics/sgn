@@ -1,4 +1,5 @@
 use warnings;
+use strict;
 use Test::WWW::Selenium;
 use Test::More tests=>4;
 
