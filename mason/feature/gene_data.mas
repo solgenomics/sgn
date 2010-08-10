@@ -29,7 +29,7 @@
                                 organism => $feature->organism,
                                 text => $species
                            &><br/>
-    <b>Length</b>: <% $length %> bp in <% $locations %> location<% $locations > 1 ? 's' : '' %> <br/>
+    <b>Length</b>: <% $length %> aa in <% $locations %> location<% $locations > 1 ? 's' : '' %> <br/>
     <& /feature/dbxref.mas,
         dbxref => $feature->dbxref,
     &><br/>
