@@ -38,7 +38,7 @@
 <& /feature/related_features.mas,
     children => $children,
     parents => $parents,
-	reference => $reference,
+    reference => $reference,
 &>
 
 <& /feature/properties.mas,
@@ -52,11 +52,10 @@
 	blast_url => $blast_url,
 &>
 % }
-<&| /page/info_section.mas,
-    title => 'Exon Structure',
-    collapsible => 1,
+
+<& /feature/exon.mas,
+    feature => $feature,
 &>
-</&>
 
 <&| /page/info_section.mas,
     title => 'Genomic sequence',

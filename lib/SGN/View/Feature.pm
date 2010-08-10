@@ -6,7 +6,7 @@ use SGN::Context;
 
 our @EXPORT_OK = qw/
     related_stats feature_table gbrowse_link
-    get_reference
+    get_reference gbrowse_image_url
 /;
 our $c = SGN::Context->new;
 
@@ -59,20 +59,34 @@ sub feature_table {
     return $data;
 }
 
-sub gbrowse_link {
-    my ($feature, $fmin, $fmax) = @_;
+sub gbrowse_image_url {
+    my ($feature) = @_;
+    return _gbrowse_xref($feature,'preview_image_url');
+}
+
+sub _feature_search_string {
+    my ($feature) = @_;
+    my @locs = $feature->featureloc_features->all;
+    my $fl = $locs[0];
+    return '' unless $fl;
+    return $fl->srcfeature->name . ':'. $fl->fmin . '..' . $fl->fmax;
+}
+
+sub _gbrowse_xref {
+    my ($feature, $xref_name) = @_;
     my $gb = $c->enabled_feature('gbrowse2');
     return '' unless $gb;
-    # TODO: render multiple URLs
-    my ($url) = map { $_->url } $gb->xrefs($feature->name);
-    unless ( $url ) {
-        my @locs = $feature->featureloc_features->all;
-        my $fl = $locs[0];
-        return '' unless $fl;
-
-        my $plaintext = $fl->srcfeature->name . ':'.$fl->fmin . '..' . $fl->fmax;
-        ($url) = map { $_->url } $gb->xrefs($plaintext);
+    # TODO: multiple
+    my ($xref) = map { $_->$xref_name } $gb->xrefs($feature->name);
+    unless ( $xref ) {
+        ($xref) = map { $_->$xref_name } $gb->xrefs(_feature_search_string($feature));
     }
+    return $xref;
+
+}
+sub gbrowse_link {
+    my ($feature, $fmin, $fmax) = @_;
+    my $url = _gbrowse_xref($feature,'url');
     if (defined $fmin && defined $fmax) {
         return sprintf('<a href="%s">%s</a>', $url, join(",", $fmin, $fmax)),
     } else {
