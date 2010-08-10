@@ -5,6 +5,8 @@ use 5.10.0;
 
 use Carp;
 use File::Spec;
+use File::Basename;
+use File::Path qw/ mkpath /;
 
 requires
     'config',
@@ -59,8 +61,6 @@ requires
 sub configure_apache {
     my ( $class, %args ) = @_;
     $args{type} ||= 'fcgi';
-
-    return;
 
     my $setup_method = "configure_apache_$args{type}";
     unless( $class->can($setup_method) ) {
