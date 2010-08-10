@@ -17,7 +17,6 @@ my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 my %status;
 
 try{
- 
     my $org = $schema->resultset('Organism::Organism')->find({species=>$species});
     $org->create_organismprops({'sol100'=>'1'},{autocreate=>1});
     $status{"pass"} = "Success, the object was added to the table.";
