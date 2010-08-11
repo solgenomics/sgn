@@ -127,25 +127,16 @@ Additionally, an error report could not be automatically sent, please help us by
 
          ),
 
-         $class->_conf_serve_static,
-         $class->_conf_features,
-
-         <<''
-         <Directory />
-            Options +FollowSymLinks
-
-            # set the access control on this server based on the values of
-            # $cfg->{production_server} and $cfg->{shared_devel_server}
-         .  $class->_apache_access_control_str
-         ."</Directory>\n",
-
-
          # set our application to handle most requests by default
          "<Location />
              SetHandler modperl
              PerlResponseHandler $class
-          </Location>
-         ",
+         "
+         .  $class->_apache_access_control_str
+         ."</Location>\n",
+
+         $class->_conf_serve_static,
+         $class->_conf_features,
 
         );
 }
@@ -161,12 +152,19 @@ sub _conf_serve_static {
     # following the symlinks therein
     return
         ( map {
-            qq|Alias /$_ "|.$class->path_to( $cfg->{root}, $_ ).'"',
+            my $url = "/$_";
+            my $dir = $class->path_to( $cfg->{root}, $url );
+            qq|Alias $url $dir \n|,
+            "<Location $url>\n"
+            ."    SetHandler default-handler\n"
+            ."</Location>\n",
           }
           @{ $cfg->{static}->{dirs} }
         ),
-        '<Directory "'.$class->path_to($cfg->{root}).qq|">\n|
+        '<Directory '.$class->path_to($cfg->{root}).qq|>\n|
         ."    Options +Indexes -ExecCGI +FollowSymLinks\n"
+        ."    Order allow,deny\n"
+        ."    Allow from all\n"
         ."</Directory>\n"
 
 }
