@@ -1,0 +1,20 @@
+<%args>
+    $accession
+</%args>
+
+<script language="javascript" type="text/javascript"  >
+<!--
+var o = new CXGN.Onto.Browser();
+
+o.setUpBrowser();
+
+o.initializeBrowser();
+// hide some unused elements
+$('ontology_browser_input').style.display='none';
+$('ontology_term_input').style.display='none';
+$('hide_link').style.display='none';
+$('search_results').style.display='none';
+o.showParentage('<% $accession %>');
+
+-->
+</script>

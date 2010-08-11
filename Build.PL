@@ -67,15 +67,16 @@ my $build = $class->new(
         'Test::Most'           => 0,
         'Test::WWW::Mechanize' => 0,
         'Test::WWW::Selenium'  => 0,
+        'Test::MockObject'     => 0,
     },
     requires => {
-        'perl'                => '5.6.1',
+        'perl'                => '5.10.0',
         'autodie'             => 0,
         'IPC::System::Simple' => 0,         #< required for autodie :all
         'Apache::DBI'         => 0,
 
         #        'Apache2::Request' => 0,
-        'Bio::Chado::Schema' => '0.05800',
+        'Bio::Chado::Schema' => '0.05801',
 
 	'Bio::Root::Version'     => '1.006001',
         #         'Bio::AlignIO' => 0,
@@ -251,7 +252,6 @@ my $build = $class->new(
         #         'CXGN::Tools::Gene' => 0,
         #         'CXGN::Tools::Identifiers' => 0,
         #         'CXGN::Tools::List' => 0,
-        #         'CXGN::Tools::Onto' => 0,
         #         'CXGN::Tools::Organism' => 0,
         #         'CXGN::Tools::Param' => 0,
         #         'CXGN::Tools::Pubmed' => 0,

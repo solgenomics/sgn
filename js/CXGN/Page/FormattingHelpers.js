@@ -122,7 +122,7 @@ CXGN.Page.FormattingHelpers.set_up_all_optional_show =  function() {
 //insert stuff here that need to be done to formattinghelpers elements on document load
 MochiKit.DOM.addLoadEvent(function() {
 
-			    //set up all the elements made by html_optional_show
-			    CXGN.Page.FormattingHelpers.set_up_all_optional_show();
+	//set up all the elements made by html_optional_show
+	CXGN.Page.FormattingHelpers.set_up_all_optional_show();
 
-			  });
+});

@@ -1,0 +1,44 @@
+<%doc>
+
+=head1 NAME
+
+/locus/obsolete_locusgroup_member.mas - a component for printing a link for obsoleting a locusgroup member (a javascript function in LocusPage.js object)
+
+=head1 DESCRIPTION
+
+this component has dependency on CXGN.Phenome.Locus.LocusPage
+
+
+Parameters:
+
+=over 1
+
+=item lgm_id
+
+a locusgroup_member database id
+
+
+=back
+
+=head1 AUTHOR
+
+Naama Menda <nm249@cornell.edu>
+
+=cut 
+
+
+</%doc>
+
+<%args>
+
+$lgm_id
+
+</%args>
+
+
+<a href="javascript:locusPage.obsoleteLocusgroupMember('<% $lgm_id %>')">[Remove]</a>
+<div id='obsoleteLocusgroupMemberForm' style="display: none">
+  <div id='lgm_id_hidden'>
+    <input type="hidden"  value=$lgm_id id="<% $lgm_id %>"> </div></div>
+
+

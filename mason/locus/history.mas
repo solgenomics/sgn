@@ -1,0 +1,85 @@
+
+
+<%doc>
+
+=head1 NAME
+
+/locus/edits_info.mas - a component for printing locus edit dates and person
+
+=head1 DESCRIPTION
+
+
+Parameters:
+
+=over 1
+
+=item locus
+
+a locus object
+
+
+=back
+
+=head1 AUTHOR
+
+Naama Menda <nm249@cornell.edu>
+
+=cut 
+
+</%doc>
+
+<%args>
+
+$locus
+
+
+</%args>
+
+<%perl>
+
+use CXGN::People::Person;
+use CXGN::Page::FormattingHelpers qw /columnar_table_html  / ;
+my @history;
+my $history_data;
+
+my @history_objs = $locus->show_history();   #array of locus_history objects
+
+foreach my $h (@history_objs) {
+  my $created_date = $h->get_create_date();
+  $created_date = substr $created_date, 0, 10;
+  my $history_id    = $h->{locus_history_id};
+  my $updated_by_id = $h->{updated_by};
+  my $updated =
+    CXGN::People::Person->new( $locus->get_dbh(), $updated_by_id );
+  my $u_first_name = $updated->get_first_name();
+  my $u_last_name  = $updated->get_last_name();
+  my $up_person_link =
+    qq |<a href="/solpeople/personal-info.pl?sp_person_id=$updated_by_id">$u_first_name $u_last_name</a> ($created_date)|;
+  push @history,
+    [
+     map { $_ } (
+		 $h->get_locus_symbol,  $h->get_locus_name,
+		 $h->get_gene_activity, $h->get_description,
+		 $h->get_linkage_group, $h->get_lg_arm,
+		 $up_person_link,
+		)
+    ];
+}
+
+if (@history) {
+
+  $history_data .= columnar_table_html(
+            headings => [
+                'Symbol',     'Name', 'Activity', 'Description',
+                'Chromosome', 'Arm',  'Updated by',
+            ],
+            data         => \@history,
+            __alt_freq   => 2,
+            __alt_width  => 1,
+            __alt_offset => 3,
+	    );
+}
+
+</%perl>
+
+<% $history_data %>

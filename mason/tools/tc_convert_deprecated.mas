@@ -1,0 +1,31 @@
+<& /page/page_title.mas, title => 'Converting between SGN unigenes and TGI TC sequences' &>
+
+<div style="margin: 1em 0; padding: 0.2em 2em 0.4em 2em">
+  <p>
+  SGN and <a href="http://compbio.dfci.harvard.edu/tgi/">the Gene Index Project (TGI)</a>, now at <a href="http://www.dana-farber.org/">DFCI</a>, maintain
+  independent unigene/TC databases, entries in which tend to have common
+  member ESTs.
+  </p>
+
+  <p>
+  SGN no longer maintains a specific tool for mapping between these two
+  databases.  Instead, for users to establish correspondences between these two
+  sets, we recommend using the BLAST tools available on each of these
+  sites.
+  </p>
+
+</div>
+
+<&| /page/info_section.mas, title => 'Mapping SGN-U to TGI TC' &>
+
+  Use the SGN-U sequences as input to the BLAST tool at
+  <a href="http://compbio.dfci.harvard.edu/tgi/">the TGI site</a>.
+
+</&>
+
+<&| /page/info_section.mas, title => 'Mapping TGI TC to SGN-U' &>
+
+  Use the TGI TC sequences as input to the <a href="/tools/blast">SGN
+  BLAST tool</a>, selecting one of the SGN unigene data sets.
+
+</&>

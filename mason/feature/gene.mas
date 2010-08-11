@@ -12,13 +12,12 @@
 
 <& /util/import_javascript.mas,
     classes => [qw(
-        Prototype jQuery Text.Markup CXGN.Effects CXGN.Phenome.Locus  CXGN.Phenome.Tools
+        Prototype jQuery Text.Markup CXGN.Effects
         MochiKit.DOM thickbox
         MochiKit.Async CXGN.Sunshine.NetworkBrowser
-        CXGN.Phenome.Locus.LocusPage CXGN.Page.Form.JSFormPage
+        CXGN.Page.Form.JSFormPage
     )]
 &>
-<& /locus/initialize.mas, locus_id => 428 &>
 
 <%perl>
     my $seq = Bio::PrimarySeq->new(
@@ -28,37 +27,43 @@
     my $organism = $feature->organism;
     my $species  = $organism->species;
     $species    =~ s!(\S+) !<i>$1</i> !;
+    my $reference = $feature->featureloc_features->single->srcfeature;
 </%perl>
 
-<& /feature/feature_data.mas,
+<& /feature/gene_data.mas,
     feature => $feature,
-    title => "Feature " . $feature->name . " (Gene)",
+    species => $species,
 &>
 
 <& /feature/related_features.mas,
     children => $children,
-    parents => $parents
+    parents => $parents,
+    reference => $reference,
+&>
+
+<& /feature/properties.mas,
+    feature => $feature,
+&>
+
+% if ($seq->length > 0) {
+<& /feature/sequence.mas,
+	feature => $feature,
+	seq     => $seq,
+	blast_url => $blast_url,
+&>
+% }
+
+<& /feature/exon.mas,
+    feature => $feature,
 &>
 
 <&| /page/info_section.mas,
-        title       => 'cDNA Sequence',
-        collapsible => 1,
-        collapsed   => 1,
-&>
-  Length : <% $seq->length %><br/>
-  <% $feature->md5checksum ?  'MD5 :' . $feature->md5checksum : '' %>
-  <p/>
-    <& /feature/sequence.mas,
-            feature => $feature,
-            seq     => $seq,
-            blast_url => $blast_url,
-    &>
-</&>
-
-<&| /page/info_section.mas,
-    title => 'Exon Structure',
+    title => 'Genomic sequence',
     collapsible => 1,
 &>
+</&>
+
+<&| /page/info_section.mas, title => 'mRNA sequence', collapsible => 1, &>
 </&>
 
 <&| /page/info_section.mas,
@@ -77,11 +82,8 @@
     title => 'BLAST Annotation',
     collapsible => 1,
 &>
-</&>
 
-<& /locus/ontology.mas,
-    feature   => $feature,
-&>
+</&>
 
 <&| /page/info_section.mas,
     title => 'Gene Families',
@@ -95,13 +97,8 @@
 &>
 </&>
 
-<& /locus/solcyc.mas, &>
-
 <&| /page/info_section.mas,
     title => 'Alternate Splicing',
     collapsible => 1,
 &>
 </&>
-
-
-

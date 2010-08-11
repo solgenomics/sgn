@@ -11,8 +11,9 @@ JSAN.use('MochiKit.DOM');
 JSAN.use('MochiKit.Visual');
 JSAN.use('MochiKit.Async');
 
-CXGN = function() {};
-CXGN.Sunshine = function() {};
+
+if (!CXGN) CXGN = function() {};
+if (!CXGN.Sunshine) CXGN.Sunshine = function() {};
 
 CXGN.Sunshine.NetworkBrowser = function() { 
     //alert('In constructor');

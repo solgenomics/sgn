@@ -1,14 +1,17 @@
 <%args>
-    $feature
+    $cvterm_id
 </%args>
-% my @cvterms = $feature->feature_cvterms;
-# of CV Terms: <% scalar @cvterms %><br/>
-% for my $term (@cvterms) {
-    <% $term->cvterm->name %>
-% my @xrefs = $term->feature_cvterm_dbxrefs;
-% if (@xrefs) { ### XXX Should render all
-    <& /feature/dbxref.mas, dbxref => $xrefs[0],
-    &>
-% }
-    <br/>
-% }
+<%init>
+	use CXGN::Chado::Cvterm;
+	use CXGN::DB::Connection;
+</%init>
+
+<%perl>
+	my $dbh    = CXGN::DB::Connection->new('public');
+	my $cvterm = CXGN::Chado::Cvterm->new( $dbh, $cvterm_id );
+</%perl>
+
+<& /ontology/embedded_browser.mas,
+	cvterm => $cvterm,
+	title => 'Cvterm Ontology',
+&>

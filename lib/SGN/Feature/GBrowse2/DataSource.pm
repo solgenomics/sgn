@@ -68,22 +68,36 @@ sub xrefs {
 
     return unless $self->xref_discriminator->($q);
 
-    my @features;
     if( my $ref =  ref $q ) {
         return unless $ref eq 'HASH';
 
         # search for features in all our DBs
-        @features =
-            map $_->features( %$q ),
-                $self->databases;
+        return $self->_make_feature_xrefs([
+            map $_->features( %$q ), $self->databases
+         ]);
     } else {
-        @features =
-            map $_->get_feature_by_name( $q ),
-            $self->databases;
+        # search for a region on a reference sequence specified like seq_name:23423..66666
+        if( my ($ref_name,$start,$end) = $q =~ /^ \s* ([^:]+) \s* : (\d+) \s* .. \s* (\d+) $/x) {
+            return
+                # make xrefs for the given range of each of the ref features
+                map $self->_make_region_xref({
+                      features => [$_],
+                      range    => Bio::Range->new( -start => $start, -end => $end )
+                     }),
+                # search for ref features
+                map $_->get_feature_by_name( $ref_name ),
+                # for each database
+                $self->databases;
+
+        } else {
+            # search for features by text in all our DBs
+            return $self->_make_feature_xrefs([
+                map $_->get_feature_by_name( $q ), $self->databases
+            ]);
+        }
     }
 
-    return unless @features;
-    return $self->_make_feature_xrefs( \@features );
+    return;
 }
 
 sub _make_feature_xrefs {

@@ -1,18 +1,33 @@
 <%args>
     $feature
     $title => 'Feature Data'
+    $species => undef
 </%args>
+<%init>
+    use SGN::View::Feature qw/gbrowse_link/;
+</%init>
+<%perl>
+    my @locations = $feature->featureloc_features->all;
+    my $locations = scalar @locations;
+    my $length = 0;
+    for my $l (@locations) {
+        $length += $l->fmax - $l->fmin;
+    }
+    my ($description) = map { $_->value } grep { $_->type->name eq 'Note' } $feature->featureprops->all;
+</%perl>
 <&| /page/info_section.mas,
-    title => $title,
+    title       => $title,
+    subtitle    => $feature->is_obsolete ? 'WARNING: This feature is obsolete' : '',
     collapsible => 1,
 &>
-    Feature Type: <% $feature->type->name %><br/>
-    Analysis: <% $feature->is_analysis ? 'Yes' : 'No' %><br/>
-    Obsolete: <% $feature->is_obsolete ? 'Yes' : 'No' %><br/>
-    Accession: <% $feature->accession %><br/>
-    Accession Time: <% $feature->timeaccessioned %><br/>
-    Description: <% $feature->description %><br/>
-    <& /feature/dbxref.mas,
-        dbxref => $feature->dbxref,
-    &><br/>
+    <b>Name</b>: <% $feature->name %><br/>
+    <b>Feature Type</b>: <a href="/chado/cvterm.pl?cvterm_id=<% $feature->type->id %>"><% $feature->type->name %></a><br/>
+    <b>Description</b>: <% $description %><br/>
+    <b>Analysis</b>: <% $feature->is_analysis ? 'Yes' : 'No' %><br/>
+    <b>Organism Name</b>: <& /feature/organism_link.mas,
+                                organism => $feature->organism,
+                                text => $species,
+                           &><br/>
+    <b>Length</b>: <% $length %> bp in <% $locations %> location<% $locations > 1 ? 's' : '' %> <br/>
+    <a href="<% gbrowse_link($feature) %>">GBrowse</a><br/>
 </&>

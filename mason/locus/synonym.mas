@@ -1,0 +1,52 @@
+
+
+<%doc>
+
+=head1 NAME
+
+/locus/synonym.mas - a component for printing locus synonyms
+
+=head1 DESCRIPTION
+
+
+Parameters:
+
+=over 2
+
+=item locus_id
+
+a locus id
+
+=item $synonyms
+
+arrayref of synonyms 
+
+
+=back
+
+=head1 AUTHOR
+
+Naama Menda <nm249@cornell.edu>
+
+=cut 
+
+</%doc>
+
+<%args>
+
+
+$locus_id
+$synonyms=>undef
+
+
+</%args>
+
+<%perl>
+  my $count = scalar(@$synonyms);
+</%perl>
+
+<br /><br /><b>Locus synonyms</b> <b><% $count %>: </b>
+
+% print join(' ' ,  map( $_->get_locus_alias(), @$synonyms )) ;
+<a href="locus_synonym.pl?locus_id=<% $locus_id %>&amp;action=new"> [Add/Remove]</a><br />
+

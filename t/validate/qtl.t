@@ -23,8 +23,8 @@ my $url      = "/phenome/population_indls.pl?population_id=12&cvterm_id=47515";
 
 my $mech = Test::WWW::Mechanize->new;
 $mech->get("$base_url/$url");
-if ($mech->content =~ m/temp dir .* not found/) {
-    plan skip_all => "Skipping QTL Analysis page due to production temp dir not existing";
+if ($mech->content =~ m/temp dir .* not found|Failed to obtain lock/) {
+    plan skip_all => "Skipping QTL Analysis page due to production temp dir not working";
 } else {
     plan tests => 3;
     validate_urls({ "QTL Analysis Page" => $url });

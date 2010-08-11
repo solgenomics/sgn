@@ -12,3 +12,5 @@ MYMETA.yml
 test.sh
 blib/*
 .#*
+*.bak
+cover_db

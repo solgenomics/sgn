@@ -9,7 +9,7 @@
 </div>
 
 % if( $exception->can('developer_message') && !$c->get_conf('production_server') ) {
-<div style="margin: 1em 0; border: 2px solid orange">
+<div style="margin: 1em 0; border: 2px solid orange; padding: 0 1em 1em 1em">
   <h3>Developer message:</h3>
     <% defined $exception->developer_message ? $exception->developer_message : 'none provided' %>
 </div>

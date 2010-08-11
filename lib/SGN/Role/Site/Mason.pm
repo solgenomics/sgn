@@ -5,6 +5,7 @@ use namespace::autoclean;
 use File::Path;
 use Path::Class;
 use HTML::Mason::Interp;
+use Scalar::Util qw/blessed/;
 
 requires
     qw(
@@ -111,14 +112,15 @@ sub _trap_mason_error {
     my ( $self, $sub ) = @_;
 
     eval { $sub->() };
-    if( $@ ) {
-        if( ref $@ && $@->can('as_brief') ) {
-            my $t = $@->as_text;
+    my $error = $@;
+    if( $error ) {
+        if( blessed($error) && $error->can('as_brief') ) {
+            my $t = $error->as_text;
             # munge mason compilation errors for better backtraces on devel debug screens
             $t =~ s/^Error during compilation of[^\n]+\n// unless $self->get_conf('production_server');
             die $t;
         }
-        die $@ if $@;
+        die $error if $error;
     }
 }
 

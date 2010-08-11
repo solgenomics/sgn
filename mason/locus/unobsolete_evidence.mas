@@ -1,0 +1,56 @@
+<%doc>
+
+=head1 NAME
+
+unobsolete_evidence.mas
+
+=head1 DESCRIPTION
+
+Parameters:
+
+=over 2
+
+=item object_name
+
+the name of the object with the related evidence (e.g. 'locus')
+
+=item evidence_id
+
+a _dbxref_ecidence database id
+
+
+=back
+
+=head1 AUTHOR
+
+Naama Menda <nm249@cornell.edu>
+
+=cut 
+
+
+
+</%doc>
+
+<%args>
+
+$object_name=> 'locus'
+$evidence_id
+
+</%args>
+
+<a href="javascript:locusPage.unobsoleteAnnotEv('<% $object_name %>' ,'<% $evidence_id %>')">[unobsolete]</a>
+<div id='unobsoleteAnnotationForm' style="display: none">
+  <div id='ev_dbxref_id_hidden'>
+    <input type="hidden" 
+	   value=<% $evidence_id %>
+	   id="<% $evidence_id %>" >
+  </div>
+</div>
+<div id="locus_ontology" >[loading...]</div>
+
+<script language="javascript" type="text/javascript">
+
+<!--
+    locusPage.printLocusOntology();
+-->
+</script>

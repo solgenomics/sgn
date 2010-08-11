@@ -1,0 +1,77 @@
+
+
+<%doc>
+
+=head1 NAME
+
+/chado/publications.mas - a component for printing publication info
+
+=head1 DESCRIPTION
+
+Parameters:
+
+=over 2
+
+=item pub
+
+CXGN::Chado::Publication object
+
+=item count
+
+numeric value for the div_id of the optional_html abstract view
+
+=back
+
+=head1 AUTHOR
+
+Naama Menda <nm249@cornell.edu>
+
+=cut 
+
+</%doc>
+
+<%args>
+
+$pub
+$count
+$db => undef
+$accession => undef
+</%args>
+
+<%perl>
+
+
+use CXGN::Chado::Publication;
+use CXGN::Page::FormattingHelpers qw / html_optional_show /;
+use HTML::Entities;
+
+
+my $pub_title = $pub->get_title();
+my $year = $pub->get_pyear();
+my $pub_id = $pub->get_pub_id();
+
+
+my $abstract      = encode_entities( $pub->get_abstract() );
+my $authors       = encode_entities( $pub->get_authors_as_string() );
+my $journal       = $pub->get_series_name();
+my $volume        = $pub->get_volume();
+my $issue         = $pub->get_issue();
+my $pages         = $pub->get_pages();
+my $abstract_view = html_optional_show(
+        "abstracts$count",
+        'Show/hide abstract',
+	qq|$abstract <b> <i>$authors.</i> $journal. $year. $volume($issue). $pages.</b>|,
+        0,                           #< do not show by default
+        'abstract_optional_show',    #< don't use the default button-like style
+	);
+
+my $pub_info =
+  qq|<div><a href="/chado/publication.pl?pub_id=$pub_id" >$db:$accession</a> $pub_title ($year) $abstract_view </div> |;
+
+
+
+
+</%perl>
+
+
+<% $pub_info %>

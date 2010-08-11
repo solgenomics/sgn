@@ -1,12 +1,18 @@
 <div class="boxheading">
-Other Links
+SGN Links
 </div>
 <div class="boxcontent">
+<a class="creativitylinks" href="/outreach/">Outreach</a> |
 <a class="creativitylinks" href=
 "/community/links/related_sites.pl">Solanaceae resources</a> | 
 <a class="creativitylinks" href="/community/links/seed_companies.pl">Seed companies</a> 
 <br /><br />
+</div>
 
+<div class="boxheading">
+External Links
+</div>
+<div class="boxcontent">
 <!-- EUSOL Sites -->
 
 <a class="footer" href="http://www.eu-sol.net/"><img src="/img/eusol_logo_small.jpg" border="0" /></a><br />

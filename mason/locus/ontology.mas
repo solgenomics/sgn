@@ -1,15 +1,27 @@
 <%args>
-    $title => 'Ontology Annotations'
+	$title       => "Ontology annotations"
+	$subtitle    => ''
+	$id          => "locus_ontology" ,
+	$collapsible => 1,
+	$collapsed   => 1
+	$locus_id
 </%args>
+
 <&| /page/info_section.mas,
-    title       => $title,
-    collapsible => 1,
+	title       => $title,
+	subtitle    => $subtitle,
+	id          => "locus_ontology" ,
+	collapsible => 1,
+	collapsed   => 1
 &>
-    <div id="locus_ontology" >[loading...]</div>
-</&>
+  <& /locus/associate_ontology.mas, locus_id => $locus_id &>
+<div id="locus_ontology" >[loading...]</div>
+
 
 <script language="javascript" type="text/javascript">
 <!--
     locusPage.printLocusOntology();
 -->
 </script>
+
+</&>
