@@ -14,6 +14,7 @@ my $defaults =
      root   => 'static',
      static => {
          dirs => [qw[ s img documents static_content data js ]],
+         include_path => ['__path_to(static)__'],
      },
 
      ### backcompat variables for the various static content types
