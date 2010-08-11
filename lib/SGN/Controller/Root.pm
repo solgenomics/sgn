@@ -105,6 +105,13 @@ sub _find_cgi_action {
     return $index_action;
 }
 
+=head2 end
+
+Attempt to render a view, if needed.
+
+=cut
+
+sub end : ActionClass('RenderView') {}
 
 =head2 auto
 
@@ -115,17 +122,10 @@ Run for every request to the site.
 sub auto : Private {
     my ($self, $c) = @_;
     CatalystX::GlobalContext->set_context( $c );
+    $c->stash->{c} = $c;
     1;
 }
 
-
-=head2 end
-
-Attempt to render a view, if needed.
-
-=cut
-
-sub end : ActionClass('RenderView') {}
 
 =head1 AUTHOR
 

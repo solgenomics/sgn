@@ -103,7 +103,7 @@ my $build = $class->new(
                                            => 0,
         'Catalyst::Plugin::StackTrace'     => 0,
         'Catalyst::Plugin::Static::Simple' => 0,
-        'Catalyst::View::Mason'            => 0,
+        'Catalyst::View::HTML::Mason'      => 0,
         'CatalystX::GlobalContext'         => 0,
 
         'CGI'                              => 0,

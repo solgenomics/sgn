@@ -1,13 +1,6 @@
 package SGN::View::Mason;
-
-use strict;
-use warnings;
-
-use parent 'Catalyst::View::Mason';
-
-__PACKAGE__->config(
-    use_match => 0,
-   );
+use Moose;
+extends 'Catalyst::View::HTML::Mason';
 
 =head1 NAME
 

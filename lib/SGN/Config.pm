@@ -73,7 +73,10 @@ my $defaults =
         },
 
      'View::Mason' => {
-         comp_root => '__path_to(mason)__',
+         interp_args => {
+             comp_root => '__path_to(mason)__',
+         },
+         globals => [qw[ $c ]],
      },
 
      dbsearchpath             => [qw[
