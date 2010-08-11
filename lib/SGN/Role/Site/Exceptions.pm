@@ -68,8 +68,13 @@ around 'finalize_error' => sub {
     my ( $orig, $self ) = @_;
 
     # render the message page for all the errors
-    $self->stash->{template}  = '/site/error/exception.mas';
-    $self->stash->{exception} = [ $self->_error_objects ];
+    $self->stash({
+        template         => '/site/error/exception.mas',
+
+        exception        => [ $self->_error_objects ],
+        show_dev_message => !$self->get_conf('production_server'),
+        contact_email    => $self->config->{feedback_email},
+    });
     unless( $self->view('Mason')->process( $self ) ) {
         # there must have been an error in the message page, try a
         # backup

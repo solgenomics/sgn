@@ -1,5 +1,8 @@
 <%args>
  $exception
+ $show_dev_message => 0
+ $project_name => ''
+ $contact_email => ''
 </%args>
 
 % $exception = [ $exception ] unless ref $exception eq 'ARRAY';
@@ -20,13 +23,13 @@
 
     <p>
 % if( $e->notify ) {
-    An error report has been sent to the <% $c->config->{name} || '' %> development team.
+    An error report has been sent to the <% $project_name %> development team.
 % }
 
-% if( $e->is_client_error || $e->is_server_error and my $f = $c->config->{feedback_email} ) {
+% if( $e->is_client_error || $e->is_server_error and $contact_email ) {
 
     Please also feel free to contact us at
-    <a href="mailto:<% $f %>"><% $f %></a> and inform us of the
+    <a href="mailto:<% $contact_email %>"><% $contact_email %></a> and inform us of the
     problem, and
 %   if( $e->is_server_error ) {
       we will keep you informed of our progress in resolving it.
@@ -39,7 +42,7 @@
 
 </div>
 
-%   if( $e->can('developer_message') && defined $e->developer_message && !$c->get_conf('production_server') ) {
+%   if( $show_dev_message && $e->can('developer_message') && defined $e->developer_message ) {
     <style>
        pre {
             white-space: pre-wrap;       /* css-3 */
