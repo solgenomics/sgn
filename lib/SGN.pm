@@ -10,30 +10,23 @@ use Catalyst qw/
      Static::Simple
      ErrorCatcher
      StackTrace
+
+     +SGN::Role::Site::Config
+     +SGN::Role::Site::DBConnector
+     +SGN::Role::Site::DBIC
+     +SGN::Role::Site::Deploy::Apache
+     +SGN::Role::Site::Exceptions
+     +SGN::Role::Site::Files
+     +SGN::Role::Site::Mason
+     +SGN::Role::Site::SiteFeatures
  /;
 
 extends 'Catalyst';
 
-# setup() needs the Config stuff before running
-with 'SGN::Role::Site::Config';
-
 __PACKAGE__->setup;
 
-with qw(
-        SGN::Role::Site::DBConnector
-        SGN::Role::Site::DBIC
-        SGN::Role::Site::Deploy::Apache
-        SGN::Role::Site::Exceptions
-        SGN::Role::Site::Files
-        SGN::Role::Site::Mason
-       );
-
-# add SiteFeatures separately for now to work around the fact that
-# MooseX::ClassAttribute is currently broken under role composition
-with 'SGN::Role::Site::SiteFeatures';
-
 # on startup, do some dynamic configuration
-sub setup_finalize {
+after 'setup_finalize' => sub {
     my $self = shift;
     # not using an 'after' modifier for this so we can keep this sub
     # at the bottom of the package
@@ -54,7 +47,7 @@ sub setup_finalize {
         $self->config->{'Plugin::ErrorCatcher'}{'emit_module'} = 'Catalyst::Plugin::ErrorCatcher::Email';
 
     }
-}
+};
 
 
 sub _update_static_symlinks {
