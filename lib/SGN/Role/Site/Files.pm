@@ -37,7 +37,7 @@ after 'setup_finalize' => sub {
     # also chown any subdirs that are in the temp dir.
     # this line should be removed eventually, the application itself should take
     # care of creating temp dirs if it wants.
-    $c->chown_generated_dir( $_ ) for $temp_subdir->children;
+    $c->chown_generated_dir( $_ ) for grep -d, $temp_subdir->children;
 
 };
 
