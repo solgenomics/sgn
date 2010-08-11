@@ -24,9 +24,6 @@ pages.
 
 </%doc>
 
-
-<& /util/import_javascript.mas, classes=>["hoverScript"] &>
-
 <style type="text/css">
     @import url("/documents/inc/icon_nav.css");
 
@@ -236,3 +233,5 @@ pages.
 </ul>
 
 </div>
+
+<& /util/import_javascript.mas, classes=>[qw[ icon_nav ]] &>

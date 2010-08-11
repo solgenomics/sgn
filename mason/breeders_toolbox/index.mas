@@ -3,8 +3,6 @@
 
 </%doc>
 
-<& /util/import_javascript.mas, classes=>["hoverScript"] &>
-
 <style type="text/css">
     @import url("/documents/inc/icon_nav.css");
 
@@ -180,4 +178,6 @@ with suggestions for improvements!</p>
 </ul>
 </&>
 
+
+<& /util/import_javascript.mas, classes => [qw[ icon_nav ]] &>
 
