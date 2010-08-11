@@ -33,6 +33,7 @@ Naama Menda <nm249@cornell.edu>
 </%args>
 <%init>
     use CXGN::Tools::List qw/distinct/;
+use CXGN::Tools::Identifiers qw/ parse_identifier / ;
 </%init>
 
 <%perl>
