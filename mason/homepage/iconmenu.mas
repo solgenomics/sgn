@@ -8,7 +8,9 @@
 
 =head1 DESCRIPTION
 
-Displays an icon-based menu of top level option. Mousing over the icons pops up menus with further links to guide the users to useful pages.
+Displays an icon-based menu of top level option. Mousing over the
+icons pops up menus with further links to guide the users to useful
+pages.
 
 =head1 AUTHORS
 
