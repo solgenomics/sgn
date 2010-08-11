@@ -13,7 +13,7 @@ my $defaults =
      # Static::Simple configuration
      root   => 'static',
      static => {
-         dirs => [qw[ s documents static_content data js ]],
+         dirs => [qw[ s img documents static_content data js ]],
      },
 
      ### backcompat variables for the various static content types
