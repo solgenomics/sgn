@@ -25,8 +25,4 @@ for ( @sources ) {
     }
 }
 
-#use Data::Dumper;
-#diag Dumper(\@xrefs);
-#diag Dumper [$gb2->data_sources];
-
 done_testing;
