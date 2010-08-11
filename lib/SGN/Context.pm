@@ -35,11 +35,11 @@ package SGN::Context;
 use Moose;
 use warnings FATAL => 'all';
 
-
+use Carp;
 use CatalystX::GlobalContext '$c';
 
-sub new      { $c }
-sub instance { $c }
+sub new      { $c || croak 'CXGN::VHost / SGN::Context backward-compatibility not available, please use the appropriate context object' }
+sub instance { shift->new }
 
 
 with qw(
