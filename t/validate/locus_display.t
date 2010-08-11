@@ -14,7 +14,7 @@ Jonathan "Duke" Leto
 
 use strict;
 use warnings;
-use Test::More tests => 11;
+use Test::More tests => 10;
 use Test::WWW::Mechanize;
 BAIL_OUT "Need to set the SGN_TEST_SERVER environment variable" unless $ENV{SGN_TEST_SERVER};
 
