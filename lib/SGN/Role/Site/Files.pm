@@ -208,16 +208,16 @@ sub chown_generated_dir {
 sub _www_gid {
     my $self = shift;
     my $grname = $self->config->{www_group};
-    $self->{www_gid} ||= (getgrnam $grname )[2]
+    my $gid = (getgrnam $grname )[2]
         or warn "WARNING: www_group '$grname' does not exist, please check configuration\n";
-    return $self->{www_gid};
+    return $gid;
 }
 sub _www_uid {
     my $self = shift;
     my $uname = $self->config->{www_user};
-    $self->{www_uid} ||= (getpwnam( $uname ))[2]
-        or warn "WARNING: www_user '$uname' does not exist, please check configuration\n";
-    return $self->{www_uid};
+    my $uid = (getpwnam( $uname ))[2]
+       or warn "WARNING: www_user '$uname' does not exist, please check configuration\n";
+    return $uid;
 }
 
 =head2 uri_for_file
