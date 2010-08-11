@@ -154,7 +154,7 @@ sub _conf_serve_static {
         ( map {
             my $url = "/$_";
             my $dir = $class->path_to( $cfg->{root}, $url );
-            qq|Alias $url $dir \n|,
+            qq|Alias $url $dir|,
             "<Location $url>\n"
             ."    SetHandler default-handler\n"
             ."</Location>\n",
