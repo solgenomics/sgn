@@ -17,8 +17,7 @@
        use lib '/crypt/rob/cxgn/curr/cxgn-corelibs/lib';
        use local::lib '/crypt/rob/cpan-lib';
 
-       use SGN;
-       SGN->configure_apache( type => 'mod_perl', vhost => 1 );
+       use SGN::Deploy::Apache SGN => ( type => 'mod_perl', vhost => 1 );
 
     </Perl>
 

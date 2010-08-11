@@ -14,7 +14,6 @@ use Catalyst qw/
      +SGN::Role::Site::Config
      +SGN::Role::Site::DBConnector
      +SGN::Role::Site::DBIC
-     +SGN::Role::Site::Deploy::Apache
      +SGN::Role::Site::Exceptions
      +SGN::Role::Site::Files
      +SGN::Role::Site::Mason

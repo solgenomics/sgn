@@ -1,6 +1,6 @@
-package SGN::Role::Site::Deploy::Apache;
-use Moose::Role;
-use namespace::autoclean;
+package SGN::Deploy::Apache;
+use strict;
+use warnings;
 use 5.10.0;
 
 use Carp;
@@ -8,14 +8,26 @@ use File::Spec;
 use File::Basename;
 use File::Path qw/ mkpath /;
 
-requires
-    'config',
-    ;
+use Class::MOP;
+
+sub import {
+    my $class = shift;
+    my $app   = shift;
+
+    Class::MOP::load_class( $app );
+
+    for (qw( path_to config )) {
+        $app->can($_) or confess "$class requires $app to support the '$_' method";
+    }
+
+    $class->configure_apache( $app, @_ );
+}
+
 
 =head2 configure_apache
 
   Status  : public
-  Usage   : MyApp->configure_apache( vhost => 1, type => 'mod_perl' );
+  Usage   : $class->configure_apache( 'MyApp', vhost => 1, type => 'mod_perl' );
   Returns : nothing meaningful
   Args    : hash-style list of arguments as:
              vhost => boolean of whether this
@@ -59,14 +71,14 @@ requires
 =cut
 
 sub configure_apache {
-    my ( $class, %args ) = @_;
+    my ( $class, $app,  %args ) = @_;
     $args{type} ||= 'fcgi';
 
     my $setup_method = "configure_apache_$args{type}";
     unless( $class->can($setup_method) ) {
         croak "'$args{type}' Apache configuration type not supported by $class";
     }
-    $class->$setup_method( \%args );
+    $class->$setup_method( $app, \%args );
 }
 
 sub apache_server {
@@ -95,12 +107,12 @@ Run the application as an Apache mod_perl handler.
 =cut
 
 sub configure_apache_mod_perl {
-    my ( $class, $args ) = @_;
+    my ( $class, $app, $args ) = @_;
 
     my $server = $class->apache_server( $args );
 
-    my $app_name = $class->config->{name};
-    my $cfg = $class->config;
+    my $app_name = $app->config->{name};
+    my $cfg = $app->config;
     -d $cfg->{home} or confess <<EOM;
 FATAL: Could not figure out the home dir for $app_name, it
 guessed '$cfg->{home}', but that directory does not exist.  Aborting start.
@@ -130,13 +142,13 @@ Additionally, an error report could not be automatically sent, please help us by
          # set our application to handle most requests by default
          "<Location />
              SetHandler modperl
-             PerlResponseHandler $class
+             PerlResponseHandler $app
          "
          .  $class->_apache_access_control_str
          ."</Location>\n",
 
-         $class->_conf_serve_static,
-         $class->_conf_features,
+         $class->_conf_serve_static( $app ),
+         $class->_conf_features( $app ),
 
         );
 }
@@ -144,16 +156,16 @@ Additionally, an error report could not be automatically sent, please help us by
 
 # return configuration for serving static files with Apache
 sub _conf_serve_static {
-    my $class = shift;
+    my ( $class, $app ) = @_;
 
-    my $cfg = $class->config;
+    my $cfg = $app->config;
 
     # serve files directly from the static/ subdir of the site,
     # following the symlinks therein
     return
         ( map {
             my $url = "/$_";
-            my $dir = $class->path_to( $cfg->{root}, $url );
+            my $dir = $app->path_to( $cfg->{root}, $url );
             qq|Alias $url $dir|,
             "<Location $url>\n"
             ."    SetHandler default-handler\n"
@@ -161,7 +173,7 @@ sub _conf_serve_static {
           }
           @{ $cfg->{static}->{dirs} }
         ),
-        '<Directory '.$class->path_to($cfg->{root}).qq|>\n|
+        '<Directory '.$app->path_to($cfg->{root}).qq|>\n|
         ."    Options +Indexes -ExecCGI +FollowSymLinks\n"
         ."    Order allow,deny\n"
         ."    Allow from all\n"
