@@ -55,7 +55,6 @@ Organism content goes here
 
 <p>
 This page presents a summary of all species being sequenced as part of the SOL100 sequencing project
-</p>(click on the organism  name to see more details.)<br/><br/>
 
 <script>
 function update_result(){
