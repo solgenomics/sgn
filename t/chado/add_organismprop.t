@@ -113,8 +113,8 @@ SGN::Context->instance
                 'cvterms.name'=> $prop_name
                })
             ->search_related('organismprops', {
-                'organismprops.value'  => $prop_value,
-                'organism.species' => $species,
+                'organismprops.value' => $prop_value,
+                'organism.species'    => $species,
                },
                { join => 'organism' },
               )
