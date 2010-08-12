@@ -91,7 +91,6 @@ $mech->get($url . "?species=$species&prop_name=$prop_name&prop_value=$prop_value
 $mech->content_like( qr/Success, the object was added to the table/i, "Found organism $species. Loading new organismprop!");
 
 #now delete the row 
-print STDOUT "Deleting organismprop $prop_name (value = $prop_value) for species $species...\n";
 my $c = SGN::Context->instance;  
 my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 my $type_id = $schema->resultset("Cv::Cv")->find(
@@ -103,8 +102,6 @@ $schema->resultset("Organism::Organism")->find(
 	value => $prop_value,
 	type_id => $type_id  }
     )->delete();
-
-print STDOUT "Gone!\n";
 
 #######
 sub send_login_form {
