@@ -92,12 +92,11 @@ $mech->content_like(
     "Did not find the organism! Server side script returned a 'no organism' fail flag"
    );
 
-{ my $get = uri( path  => $url,
-                 query => {
-                     species    => $species,
-                     prop_name  => $prop_name,
-                     prop_value => $prop_value,
-                 });
+{ my $get = $url.uri( query => {
+    species    => $species,
+    prop_name  => $prop_name,
+    prop_value => $prop_value,
+   });
   $mech->get( $get );
   $mech->content_like(
       qr/Success, the object was added to the table/i,
