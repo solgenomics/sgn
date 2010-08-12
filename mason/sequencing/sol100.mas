@@ -89,7 +89,7 @@ function add_to_tree(){
 var messages=$("messages");
 var species = $("species").value;
      new Ajax.Request("/chado/add_organismprop.pl", {
-          parameters: {species: species},
+          parameters: {species: species, prop_name: 'sol100' , prop_value: '1'},
           onSuccess: function(response){
                var json = response.responseText;
                var result = eval("("+json+")");
