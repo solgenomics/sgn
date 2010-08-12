@@ -93,19 +93,23 @@ $mech->content_like( qr/Success, the object was added to the table/i, "Found org
 #now delete the row
 my $c = SGN::Context->instance;
 my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-my $type_id = $schema->resultset("Cv::Cv")->find(
-    { name => 'organism_property' })->find_related('cvterms', {
-	name=> $prop_name })->cvterm_id();
+my $type_id =
+    $schema->resultset("Cv::Cv")
+           ->find({ name => 'organism_property' })
+           ->find_related('cvterms', {
+               name=> $prop_name
+              })
+           ->cvterm_id;
 
-$schema->resultset("Organism::Organism")->find(
-    { species => $species } )->find_related('organismprops', {
-	value => $prop_value,
-	type_id => $type_id  }
-    )->delete();
-
+$schema->resultset("Organism::Organism")
+       ->find({ species => $species })
+       ->find_related('organismprops', {
+           value => $prop_value,
+           type_id => $type_id,
+          })
+       ->delete;
 
 #######
-
 
 sub send_login_form {
     my $mech = shift;
