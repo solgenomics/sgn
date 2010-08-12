@@ -17,6 +17,7 @@ Naama Menda  <nm249@cornell.edu>
 use strict;
 use Test::More tests => 14;
 use JSON::Any;
+use URI::FromHash qw/ uri /;
 use Test::WWW::Mechanize;
 use SGN::Context;
 
@@ -85,10 +86,16 @@ $mech->get( $url );
 
 $mech->content_like( qr/The organism does not exist/i, "Did not find the organism! Server side script returned a 'no organism' fail flag");
 
-
-$mech->get($url . "?species=$species&prop_name=$prop_name&prop_value=$prop_value");
-
-$mech->content_like( qr/Success, the object was added to the table/i, "Found organism $species. Loading new organismprop!");
+{ my $get = uri( path  => $url,
+                 query => {
+                     species    => $species,
+                     prop_name  => $prop_name,
+                     prop_value => $prop_value,
+                 });
+  $mech->get( $get );
+  $mech->content_like( qr/Success, the object was added to the table/i, "Found organism $species. Loading new organismprop!")
+      or diag "query was '$get'";
+}
 
 #now delete the row
 my $c = SGN::Context->instance;
