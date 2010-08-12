@@ -15,7 +15,7 @@ Naama Menda  <nm249@cornell.edu>
 =cut
 
 use strict;
-use Test::More 'no_plan';
+use Test::More tests => 14;
 use JSON::Any;
 use Test::WWW::Mechanize;
 use SGN::Context;
@@ -62,7 +62,7 @@ $login->store();
 $dbh->commit();
 
 send_login_form($mech);
-#logged in as user, the server side script should still not allow storing 
+#logged in as user, the server side script should still not allow storing
 
 $mech->get( $url );
 $mech->get_ok( $url );
@@ -70,7 +70,7 @@ $mech->get_ok( $url );
 $mech->content_like( qr/You don't have the right privileges/i, "User has no privileges. Server side script does not attempt to  store the organism! ");
 
 
-#logout before changing user type 
+#logout before changing user type
 $mech->get( "$server/solpeople/login.pl?logout=yes" );
 #user is a submitter
 
@@ -90,26 +90,29 @@ $mech->get($url . "?species=$species&prop_name=$prop_name&prop_value=$prop_value
 
 $mech->content_like( qr/Success, the object was added to the table/i, "Found organism $species. Loading new organismprop!");
 
-#now delete the row 
-my $c = SGN::Context->instance;  
+#now delete the row
+my $c = SGN::Context->instance;
 my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 my $type_id = $schema->resultset("Cv::Cv")->find(
     { name => 'organism_property' })->find_related('cvterms', {
 	name=> $prop_name })->cvterm_id();
 
 $schema->resultset("Organism::Organism")->find(
-    { species => $species } )->find_related('organismprops', { 
+    { species => $species } )->find_related('organismprops', {
 	value => $prop_value,
 	type_id => $type_id  }
     )->delete();
 
+
 #######
+
+
 sub send_login_form {
     my $mech = shift;
-    
+
     $mech->get_ok("$server/solpeople/top-level.pl");
     $mech->content_contains("Login");
-    
+
     my %form = (
 	form_name => 'login',
 	fields    => {
@@ -117,7 +120,7 @@ sub send_login_form {
 	    pd       => 'testpassword',
 	},
 	);
-    
+
     $mech->submit_form_ok( \%form, "Login form submission test" );
-    
+
 }
