@@ -68,7 +68,10 @@ send_login_form($mech);
 $mech->get( $url );
 $mech->get_ok( $url );
 
-$mech->content_like( qr/You don't have the right privileges/i, "User has no privileges. Server side script does not attempt to  store the organism! ");
+$mech->content_like(
+    qr/You don't have the right privileges/i,
+    "User has no privileges. Server side script does not attempt to  store the organism."
+   );
 
 
 #logout before changing user type
@@ -84,7 +87,10 @@ send_login_form($mech);
 
 $mech->get( $url );
 
-$mech->content_like( qr/The organism does not exist/i, "Did not find the organism! Server side script returned a 'no organism' fail flag");
+$mech->content_like(
+    qr/The organism does not exist/i,
+    "Did not find the organism! Server side script returned a 'no organism' fail flag"
+   );
 
 { my $get = uri( path  => $url,
                  query => {
@@ -93,8 +99,10 @@ $mech->content_like( qr/The organism does not exist/i, "Did not find the organis
                      prop_value => $prop_value,
                  });
   $mech->get( $get );
-  $mech->content_like( qr/Success, the object was added to the table/i, "Found organism $species. Loading new organismprop!")
-      or diag "query was '$get'";
+  $mech->content_like(
+      qr/Success, the object was added to the table/i,
+      "Found organism $species. Loading new organismprop!"
+     ) or diag "query was '$get'";
 }
 
 #now delete the row
