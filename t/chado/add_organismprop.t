@@ -105,23 +105,20 @@ $mech->content_like(
 }
 
 #now delete the row
-my $c = SGN::Context->instance;
-my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-my $type_id =
-    $schema->resultset("Cv::Cv")
-           ->find({ name => 'organism_property' })
-           ->find_related('cvterms', {
-               name=> $prop_name
-              })
-           ->cvterm_id;
-
-$schema->resultset("Organism::Organism")
-       ->find({ species => $species })
-       ->find_related('organismprops', {
-           value => $prop_value,
-           type_id => $type_id,
-          })
-       ->delete;
+SGN::Context->instance
+            ->dbic_schema('Bio::Chado::Schema', 'sgn_chado')
+            ->resultset("Cv::Cv")
+            ->search({ 'me.name' => 'organism_property' })
+            ->search_related('cvterms', {
+                'cvterms.name'=> $prop_name
+               })
+            ->search_related('organismprops', {
+                'organismprops.value'  => $prop_value,
+                'organism.species' => $species,
+               },
+               { join => 'organism' },
+              )
+            ->delete;
 
 #######
 
