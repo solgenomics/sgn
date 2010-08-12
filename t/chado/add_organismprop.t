@@ -102,7 +102,7 @@ $mech->content_like(
   $mech->content_like(
       qr/Success, the object was added to the table/i,
       "Found organism $species. Loading new organismprop!"
-     ) or diag "query was '$get'";
+     ) or diag "query was '$get', content is:\n".$mech->content;
 }
 
 #now delete the row
