@@ -17,7 +17,7 @@ my $gb2 = $c->feature('gbrowse2')
 
 eval { $gb2->setup }; #< may fail if web server has done it already
 
-my @xrefs = map $gb2->xrefs($_), 'Serine', 'TG154';
+my @xrefs = $gb2->xrefs('Serine'), $gb2->xrefs('TG154');
 
 my @methods = qw/preview_image_url is_empty text
                  url feature data_source seqfeatures
