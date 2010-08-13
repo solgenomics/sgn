@@ -32,7 +32,6 @@ sub define_object {
     $self->set_primary_key("object_id");
     $self->set_owners( $self->get_object()->get_sp_person_id() );
     $self->set_json_hash(%json_hash);
-    $self->print_json() if exists( $json_hash{error} );
 }
 
 sub generate_form {
