@@ -1,10 +1,14 @@
 use strict;
 use warnings;
 
+use Carp;
 use Test::More;
+
 use SGN::Context;
 
 my $c = SGN::Context->new;
+
+$SIG{__DIE__} = \&Carp::confess;
 
 can_ok( $c, 'feature' );
 
