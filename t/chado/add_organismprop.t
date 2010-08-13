@@ -88,7 +88,7 @@ send_login_form($mech);
 $mech->get( $url );
 
 $mech->content_like(
-    qr/The organism does not exist/i,
+    qr/failed to mark the organism/i,
     "Did not find the organism! Server side script returned a 'no organism' fail flag"
    );
 
