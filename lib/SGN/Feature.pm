@@ -7,7 +7,7 @@ use File::Spec;
 # our context object
 has 'context' => ( documentation => 'our context class',
     is => 'ro',
-    isa => 'ClassName',
+    does => 'SGN::Role::Site::SiteFeatures',
     required => 1,
    );
 has 'enabled' => ( documentation => 'boolean flag, whether this feature is enabled',
