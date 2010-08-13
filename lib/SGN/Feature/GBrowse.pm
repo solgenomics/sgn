@@ -79,7 +79,7 @@ has 'default_db_host' => (
     isa => 'Str',
     lazy_build => 1,
    ); sub _build_default_db_host {
-       my $dsn = shift->context->config->{DatabaseConnection}{default}{dsn};
+       my $dsn = shift->context->dbc_profile->{dsn};
        return unless $dsn =~ /host=([^;]+)/;
        return $1;
    }
@@ -88,14 +88,14 @@ has 'default_db_user' => (
     isa => 'Str',
     lazy_build => 1,
    ); sub _build_default_db_user {
-       shift->context->config->{DatabaseConnection}{default}{user};
+       shift->context->dbc_profile->{user};
    }
 has 'default_db_password' => (
     is  => 'ro',
     isa => 'Str',
     lazy_build => 1,
    ); sub _build_default_db_password {
-       shift->context->config->{DatabaseConnection}{default}{password};
+       shift->context->dbc_profile->{password};
    }
 
 
