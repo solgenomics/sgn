@@ -58,8 +58,6 @@ use Path::Class;
 use Try::Tiny;
 use CXGN::Scrap::AjaxPage;
 use CXGN::Contact;
-use Storable qw / store /;
-
 
 use base qw / CXGN::Page::Form::SimpleFormPage CXGN::Phenome::Main/;
 
