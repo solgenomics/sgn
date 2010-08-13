@@ -27,17 +27,22 @@
     my $organism = $feature->organism;
     my $species  = $organism->species;
     $species    =~ s!(\S+) !<i>$1</i> !;
+    my $reference = $feature->featureloc_features->single->srcfeature;
 </%perl>
 
-<& /feature/feature_data.mas,
+<& /feature/gene_data.mas,
     feature => $feature,
-    title   => "Gene Data",
     species => $species,
 &>
 
 <& /feature/related_features.mas,
     children => $children,
-    parents => $parents
+    parents => $parents,
+    reference => $reference,
+&>
+
+<& /feature/properties.mas,
+    feature => $feature,
 &>
 
 % if ($seq->length > 0) {
@@ -47,10 +52,18 @@
 	blast_url => $blast_url,
 &>
 % }
+
+<& /feature/exon.mas,
+    feature => $feature,
+&>
+
 <&| /page/info_section.mas,
-    title => 'Exon Structure',
+    title => 'Genomic sequence',
     collapsible => 1,
 &>
+</&>
+
+<&| /page/info_section.mas, title => 'mRNA sequence', collapsible => 1, &>
 </&>
 
 <&| /page/info_section.mas,

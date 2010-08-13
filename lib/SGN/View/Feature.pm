@@ -3,8 +3,18 @@ use base 'Exporter';
 use strict;
 use warnings;
 
-our @EXPORT_OK = qw/related_stats feature_table/;
+our @EXPORT_OK = qw/
+    related_stats feature_table gbrowse_link
+    get_reference gbrowse_image_url
+/;
 use CatalystX::GlobalContext '$c';
+
+sub get_reference {
+    my ($feature) = @_;
+    my $fl = $feature->featureloc_features->single;
+    return unless $fl;
+    return $fl->srcfeature;
+}
 
 sub related_stats {
     my ($features) = @_;
@@ -26,8 +36,10 @@ sub feature_table {
     my $data = [];
     for my $f (@$features) {
         my @locations = $f->featureloc_features->all;
+
         # Add a row for every featureloc
         for my $loc (@locations) {
+            my ($srcfeature) = $loc->srcfeature;
             my ($fmin,$fmax) = ($loc->fmin, $loc->fmax);
             push @$data, [
                 $c->render_mason(
@@ -35,9 +47,9 @@ sub feature_table {
                     feature => $f,
                 ),
                 $f->type->name,
-                join(",", $fmin, $fmax),
+                gbrowse_link($f,$fmin,$fmax),
                 $fmax-$fmin . " bp",
-                $loc->strand,
+                $loc->strand == 1 ? '+' : '-',
                 $loc->phase,
                 $loc->rank,
             ];
@@ -46,4 +58,37 @@ sub feature_table {
     return $data;
 }
 
+sub gbrowse_image_url {
+    my ($feature) = @_;
+    return _gbrowse_xref($feature,'preview_image_url');
+}
+
+sub _feature_search_string {
+    my ($feature) = @_;
+    my ($fl) = $feature->featureloc_features;
+    return '' unless $fl;
+    return $fl->srcfeature->name . ':'. $fl->fmin . '..' . $fl->fmax;
+}
+
+sub _gbrowse_xref {
+    my ($feature, $xref_name) = @_;
+    my $gb = $c->enabled_feature('gbrowse2');
+    return '' unless $gb;
+    # TODO: multiple
+    my ($xref) = map { $_->$xref_name } $gb->xrefs($feature->name);
+    unless ( $xref ) {
+        ($xref) = map { $_->$xref_name } $gb->xrefs(_feature_search_string($feature));
+    }
+    return $xref;
+
+}
+sub gbrowse_link {
+    my ($feature, $fmin, $fmax) = @_;
+    my $url = _gbrowse_xref($feature,'url');
+    if (defined $fmin && defined $fmax) {
+        return sprintf('<a href="%s">%s</a>', $url, join(",", $fmin, $fmax)),
+    } else {
+        return $url;
+    }
+}
 1;

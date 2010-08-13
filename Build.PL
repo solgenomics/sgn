@@ -67,9 +67,10 @@ my $build = $class->new(
         'Test::Most'           => 0,
         'Test::WWW::Mechanize' => 0,
         'Test::WWW::Selenium'  => 0,
+        'Test::MockObject'     => 0,
     },
     requires => {
-        'perl'                => '5.6.1',
+        'perl'                => '5.10.0',
         'autodie'             => 0,
         'IPC::System::Simple' => 0,         #< required for autodie :all
         'Apache::DBI'         => 0,
@@ -333,6 +334,7 @@ my $build = $class->new(
         'XML::Twig'               => 0,
         'YAML::Any'               => 0,
         'File::Slurp'             => 0,
+        'Test::JSON'              => 0,
     },
 );
 $build->create_build_script;

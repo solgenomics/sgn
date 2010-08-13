@@ -7,11 +7,21 @@ AjaxFormPage.pm -- an abstract class that implements a simple Ajax form that can
 
 =head1 DESCRIPTION
 
-AjaxFormPage.pm works with the CXGN::Page::Form classes and user-defined database classes that have to follow certain guidelines for this class to work properly (in essence, the database classes need to follow the rules for the CXGN::Page::Form framework. For more information, see the documentation of the L<CXGN::Page::Form> classes).
+AjaxFormPage.pm works with the CXGN::Page::Form classes and user-defined
+database classes that have to follow certain guidelines for this class to work
+properly (in essence, the database classes need to follow the rules for the
+CXGN::Page::Form framework. For more information, see the documentation of the
+L<CXGN::Page::Form> classes).
 
-AjaxFormPage.pm implements a simple authentication for the calls that modify database content. The function check_modify_privileges should return 1 if the current user had edit/delete privileges, otherwise it should return 0. The default implementation returns 1 for the owner and any logged in curators, 0 for all others.
+AjaxFormPage.pm implements a simple authentication for the calls that modify
+database content. The function check_modify_privileges should return 1 if the
+current user had edit/delete privileges, otherwise it should return 0. The
+default implementation returns 1 for the owner and any logged in curators, 0 for
+all others.
 
-AjaxFormPage contains a number of pre-populated accessors for often used CXGN features, such as CXGN::Page (get_page()), CXGN::DB::Connection (get_dbh()), and CXGN::Login (get_user()). 
+AjaxFormPage contains a number of pre-populated accessors for often used CXGN
+features, such as CXGN::Page (get_page()), CXGN::DB::Connection (get_dbh()), and
+CXGN::Login (get_user()). 
 
 When creating a derived class, you need to override the following functions:
 
@@ -83,7 +93,7 @@ sub new {
     my $dbh = CXGN::DB::Connection->new();
     $self->set_ajax_page(CXGN::Scrap::AjaxPage->new() );
    
-
+    $self->{is_owner} = 0;
     $self->set_dbh($dbh);
     
     $self->set_login(CXGN::Login->new($self->get_dbh()));
@@ -167,17 +177,13 @@ sub check_modify_privileges {
     # 
     my ($person_id, $user_type)=$self->get_login()->has_session();
     
-    #my $person_id = $self->get_login()->verify_session();
-    #my $user =  CXGN::People::Person->new($self->get_dbh(), $person_id);
-    #my $user_id = $user->get_sp_person_id();
-    #my $user_type = $user->get_user_type();
-    
     if ($user_type eq 'curator') {
 	return 0;
     }
     if (!$person_id) { $json_hash{login} = 1 ; }
     if ($user_type !~ /submitter|sequencer|curator/) { 
-	$json_hash{error} = "You must have an account of type submitter to be able to submit data. Please contact SGN to change your account type.";
+        $json_hash{error} = "You must have an account of type submitter to be able to submit data. Please contact SGN to change your account type.";
+        return 0;
     }
 
     my @owners = $self->get_owners();
@@ -187,7 +193,7 @@ sub check_modify_privileges {
 	#
 	$json_hash{error} = "You do not have rights to modify this database entry because you do not own it. [$person_id, @owners]";
 	
-    }else {  $self->set_is_owner(1); }
+    } else {  $self->set_is_owner(1); }
     
     # override to check privileges for edit, store, delete.
     # return 0 for allow, 1 for not allow.

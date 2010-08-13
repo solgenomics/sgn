@@ -81,7 +81,8 @@ my %urls = (
         "tomato genome publication page"           => "/genomes/Solanum_lycopersicum/publications.pl",
         "tomato genome index page"                 => "/genomes/Solanum_lycopersicum/",
         "outreach index"                           => "/outreach/",
-        "organism page for tomato",                => "/chado/organism.pl?organism_id=1",
+        "organism page for tomato"                 => "/chado/organism.pl?organism_id=1",
+        "image search"                             => "/search/image_search.pl?wad1_description_filename_composite=&wad1_submitter=&wad1_image_tag=",
 );
 
 my $iteration_count;
