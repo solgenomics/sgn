@@ -283,7 +283,7 @@ sub is_bot_request {
 sub send_content_type_header {
     my ( $self, $type ) = @_;
     $c->res->content_type($type || $self->{content_type} || 'text/html');
-    print "\n\n"; # make sure this ends the headers also
+    print "\n" unless $c->res->body;
 }
 
 
