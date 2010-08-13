@@ -56,6 +56,8 @@ use File::Spec;
 use File::Basename;
 use File::stat;
 use Cache::File;
+use Path::Class;
+use Try::Tiny;
 use CXGN::Scrap::AjaxPage;
 use CXGN::Contact;
 use Storable qw / store /;
@@ -1321,23 +1323,31 @@ sub run_r
           or die "could not copy '$r_cmd_file' to '$r_in_temp'";
     }
 
-    # now run the R job on the cluster
-    my $r_process = CXGN::Tools::Run->run_cluster(
-        'R', 'CMD', 'BATCH',
-        '--slave',
-        "--args $file_in $file_out $stat_file",
-        $r_in_temp,
-        $r_out_temp,
-        {
-           working_dir => $prod_temp_path,
+    try {
+        # now run the R job on the cluster
+        my $r_process = CXGN::Tools::Run->run_cluster(
+            'R', 'CMD', 'BATCH',
+            '--slave',
+            "--args $file_in $file_out $stat_file",
+            $r_in_temp,
+            $r_out_temp,
+            {
+                working_dir => $prod_temp_path,
 
-           # don't block and wait if the cluster looks full
-           max_cluster_jobs => 1_000_000_000,
-        },
-    );
+                # don't block and wait if the cluster looks full
+                max_cluster_jobs => 1_000_000_000,
+            },
+           );
 
-    sleep 1 while $r_process->alive;    #< wait for R to finish
-                                        #unlink( $r_in_temp, $r_out_temp );
+        $r_process->wait;       #< wait for R to finish
+    } catch {
+        my $err = $_;
+        $err =~ s/\n at .+//s; #< remove any additional backtrace
+        # try to append the R output
+        try{ $err .= "\n=== R output ===\n".file($r_out_temp)->slurp."\n=== end R output ===\n" };
+        # die with a backtrace
+        Carp::confess $err;
+    };
 
     copy( $prod_permu_file, $tempimages_path )
       or die "could not copy '$prod_permu_file' to '$tempimages_path'";
