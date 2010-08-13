@@ -1,0 +1,33 @@
+<%args>
+    $feature
+    $blast_url => undef
+</%args>
+<%init>
+    use Bio::Seq;
+</%init>
+<%perl>
+    my @locations = $feature->featureloc_features->all;
+    my $coords = [ map { [ $_->fmin, $_->fmax] } @locations ];
+    my $reference = $feature->featureloc_features->single->srcfeature;
+    my $refseq = Bio::PrimarySeq->new(
+        -seq => $reference->residues,
+        -alphabet => 'dna',
+    );
+    my @seqs = map { $refseq->subseq($_->[0], $_->[1]) } @$coords;
+</%perl>
+<&| /page/info_section.mas,
+    title => 'Genomic sequence',
+    collapsible => 1,
+&>
+BLARG
+% for my $seq (@seqs) {
+  <div style="margin-left: 3em">
+    <& /sequence/with_markup.mas,
+        seq       => Bio::PrimarySeq->new( -seq => $seq, -alphabet => 'dna'),
+        width     => 80,
+        subdiv    => undef,
+        blast_url => $blast_url
+    &>
+  </div>
+% }
+</&>
