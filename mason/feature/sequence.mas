@@ -1,16 +1,25 @@
 <%args>
     $feature
-    $blast_url
+    $blast_url => undef
     $title => 'Nucleotide Sequence'
+    $start => undef
+    $end => undef
 </%args>
 <%init>
     use Bio::Seq;
 </%init>
 <%perl>
+    my $id  = $start && $end ? $feature->name . ':' . "$start..$end" : $feature->name;
     my $seq = Bio::PrimarySeq->new(
+            -id  => $id,
             -seq => $feature->residues,
             -alphabet => 'dna',
         );
+    my $link = '/cgi-bin/feature_sequence_as_fasta.pl?feature_id=' . $feature->feature_id;
+    if ($start and $end) {
+        $seq = $seq->trunc($start,$end);
+        $link .= "&start=$start&end=$end";
+    }
 </%perl>
 
 % if ($seq->length > 0 ) {
@@ -22,10 +31,9 @@
         collapsible => 1,
         collapsed   => 0,
 &>
-  Length : <% $seq->length %>bp<br/>
-  <% $feature->md5checksum ?  'MD5 :' . $feature->md5checksum : '' %>
+  Length : <% $start && $end ? $end - $start : $seq->length %> bases<br/>
   <p/>
-    <a href="/cgi-bin/feature_sequence_as_fasta.pl?feature_id=<% $feature->feature_id %>">Download as FASTA</a>
+    <a href="<% $link %>">Download as FASTA</a>
 % if( $seq->length < 30_000) {
   <div style="margin-left: 3em">
     <& /sequence/with_markup.mas,
