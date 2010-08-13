@@ -5,7 +5,6 @@
     $parents   => undef
 </%args>
 <%init>
-    use Bio::Seq;
     use Data::Dumper;
 </%init>
 <& /page/page_title.mas, title => 'Gene: '. $feature->id &>
@@ -20,10 +19,6 @@
 &>
 
 <%perl>
-    my $seq = Bio::PrimarySeq->new(
-        -seq => $feature->residues,
-        -alphabet => 'dna',
-    );
     my $organism = $feature->organism;
     my $species  = $organism->species;
     $species    =~ s!(\S+) !<i>$1</i> !;
@@ -45,15 +40,12 @@
     feature => $feature,
 &>
 
-% if ($seq->length > 0) {
 <& /feature/sequence.mas,
 	feature => $feature,
-	seq     => $seq,
 	blast_url => $blast_url,
 &>
-% }
 
-<& /feature/exon.mas,
+<& /feature/exon_structure.mas,
     feature => $feature,
 &>
 
