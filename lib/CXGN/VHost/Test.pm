@@ -83,7 +83,7 @@ sub request {
     ## Added an enviromental variable SGN_SERVER_TIMEOUT. In some machines load some pages
     ## needs more than 60 s, so if it is better if it can be changed
 
-    my $timeout = $ENV{SGN_SERVER_TIMEOUT} || 60;
+    my $timeout = $ENV{SGN_SERVER_TIMEOUT} || 180;
 
     require LWP::UserAgent;
 
