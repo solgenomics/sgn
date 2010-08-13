@@ -13,10 +13,10 @@ eval { $gb2->setup }; #< may fail if web server has done it already
 
 my @xrefs = $gb2->xrefs('Serine');
 
-can_ok( $_, 'is_empty', 'text', 'url') for @xrefs;
+my @methods = qw/preview_image_url is_empty text
+                 url feature data_source seqfeatures
+                /;
 
-#use Data::Dumper;
-#diag Dumper(\@xrefs);
-#diag Dumper [$gb2->data_sources];
+can_ok( $_, @methods ) for @xrefs;
 
 done_testing;

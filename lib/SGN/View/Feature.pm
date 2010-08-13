@@ -66,8 +66,7 @@ sub gbrowse_image_url {
 
 sub _feature_search_string {
     my ($feature) = @_;
-    my @locs = $feature->featureloc_features->all;
-    my $fl = $locs[0];
+    my ($fl) = $feature->featureloc_features;
     return '' unless $fl;
     return $fl->srcfeature->name . ':'. $fl->fmin . '..' . $fl->fmax;
 }

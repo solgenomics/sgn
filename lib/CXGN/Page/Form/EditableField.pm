@@ -26,7 +26,6 @@ sub new {
 }
 
 sub render { 
-    print STDERR "Rendering an editable field...\n";
     my $self = shift;
     
     return " <input type=\"text\" id=\"" . $self->get_id() . "\" name=\"".$self->get_field_name()."\" value=\"".$self->get_contents()."\" size=\"".$self->get_length()."\" />\n";
