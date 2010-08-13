@@ -11,7 +11,7 @@ use CXGN::Tools::List qw/str_in/;
 
 use CXGN::ITAG::Pipeline;
 
-my $itag_feature = $c->enabled_feature('itag')
+our $itag_feature = $c->enabled_feature('itag')
     or do { print "\n\nITAG feature not enabled.\n"; exit };
 
 eval {
