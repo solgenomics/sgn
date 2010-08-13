@@ -32,22 +32,49 @@ SGN::Context - deprecated, do not use in new code
 # =cut
 
 package SGN::Context;
-use Moose;
+use MooseX::Singleton;
+use namespace::autoclean;
+
 use warnings FATAL => 'all';
 
 use Carp;
+use File::Spec;
+
 use CatalystX::GlobalContext '$c';
 
-sub new      { $c || croak 'CXGN::VHost / SGN::Context backward-compatibility not available, please use the appropriate context object' }
-sub instance { shift->new }
+# only use this object if $c is not available
+around qw( new instance ) => sub {
+    return $c if $c;
 
+    my $orig  = shift;
+    my $class = shift;
+    return $class->$orig(@_);
+};
+
+sub setup_finalize {} #< stubbed out to satisfy roles
+
+sub path_to {
+    my ( $self, @relpath ) = @_;
+
+    @relpath = map "$_", @relpath; #< stringify whatever was passed
+
+    my $basepath = $self->get_conf('basepath')
+      or die "no base path conf variable defined";
+    -d $basepath or die "base path '$basepath' does not exist!";
+
+    return File::Spec->catfile( $basepath, @relpath );
+}
 
 with qw(
     SGN::Role::Site::Config
+    SGN::Role::Site::DBConnector
+    SGN::Role::Site::DBIC
+    SGN::Role::Site::Files
+    SGN::Role::Site::Mason
+    SGN::Role::Site::SiteFeatures
 );
 
 __PACKAGE__->meta->make_immutable( inline_constructor => 0 );
-
 
 ###
 1;#do not remove
