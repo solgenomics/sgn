@@ -6,7 +6,6 @@
 </%args>
 
 <%init>
-    use Bio::Seq;
     use Data::Dumper;
     use SGN::View::Feature qw/get_reference/;
 </%init>
@@ -17,10 +16,6 @@
     classes => [qw(Text.Markup CXGN.Effects CXGN.Phenome.Locus MochiKit.DOM)]
 &>
 <%perl>
-    my $seq = Bio::PrimarySeq->new(
-        -seq => $feature->residues,
-        -alphabet => 'dna',
-    );
     my $organism = $feature->organism;
     my $species  = $organism->species;
     $species    =~ s!(\S+) !<i>$1</i> !;
@@ -41,6 +36,5 @@
 
 <& /feature/sequence.mas,
         feature   => $feature,
-        seq       => $seq,
         blast_url => $blast_url,
 &>
