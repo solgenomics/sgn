@@ -21,7 +21,7 @@
     subtitle    => $feature->is_obsolete ? 'WARNING: This feature is obsolete' : '',
     collapsible => 1,
 &>
-    <b>Name</b>: <% $feature->name %><br/>
+    <b>Name</b>: <& /feature/link.mas, feature => $feature &> <br/>
     <b>Feature Type</b>: <% $feature->type->name %><br/>
     <b>Description</b>: <% $description %><br/>
     <b>Analysis</b>: <% $feature->is_analysis ? 'Yes' : 'No' %><br/>
@@ -29,7 +29,7 @@
                                 organism => $feature->organism,
                                 text => $species
                            &><br/>
-    <b>Length</b>: <% $length %> aa in <% $locations %> location<% $locations > 1 ? 's' : '' %> <br/>
+    <& /feature/feature_length.mas, feature => $feature &>
     <& /feature/dbxref.mas,
         dbxref => $feature->dbxref,
     &><br/>

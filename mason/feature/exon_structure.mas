@@ -3,7 +3,7 @@
     $title => 'Exon Structure'
 </%args>
 <%init>
-    use SGN::View::Feature qw/gbrowse_image_url/;
+    use SGN::View::Feature qw/gbrowse_image_url gbrowse_link/;
 </%init>
 <%perl>
     my $img_url = gbrowse_image_url($feature);

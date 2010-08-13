@@ -1,8 +1,17 @@
 <%args>
     $feature
-    $seq
     $blast_url
 </%args>
+<%init>
+    use Bio::Seq;
+</%init>
+<%perl>
+    my $seq = Bio::PrimarySeq->new(
+            -seq => $feature->residues,
+            -alphabet => 'dna',
+        );
+</%perl>
+
 % if ($seq->length > 0 ) {
 <& /util/import_javascript.mas,
     classes => [qw(Text.Markup)]
