@@ -16,6 +16,8 @@ use strict;
 use Test::More tests => 6;
 use Test::WWW::Mechanize;
 BAIL_OUT "Need to set the SGN_TEST_SERVER environment variable" unless $ENV{SGN_TEST_SERVER};
+
+use lib 't/lib';
 use SGN::Test qw/validate_urls/;
 
 my $base_url      = "/feature.pl";
