@@ -98,7 +98,7 @@ sol100.mas - SGN page for sol100 project organism data overview in a tree format
    <script language="javascript">
 
         jQuery(function() {
-		$("#sol100_species").autocomplete({
+		jQuery("#sol100_species").autocomplete({
 			source: 'sol100_autocomplete.pl'
 		});
 	});
