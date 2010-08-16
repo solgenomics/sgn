@@ -989,8 +989,8 @@ sub infile_list
       $self->cache_temp_path();
 
     my $prod_permu_file  = $self->permu_file();
-    my $gen_dataset_file = $self->genotype_file();
-    my $phe_dataset_file = $self->phenotype_file();
+    my $gen_dataset_file = $population->genotype_file($c);
+    my $phe_dataset_file = $population->phenotype_file($c);
     my $crosstype_file   = $self->crosstype_file();
   
     my $input_file_list_temp =
@@ -1121,16 +1121,12 @@ sub outfile_list
 =cut
 
 sub cache_temp_path
-{
-    my $vh           = SGN::Context->new();
-    my $basepath     = $vh->get_conf("basepath");
-    my $tempfile_dir = $vh->get_conf("tempfiles_subdir");
-
-    my $tempimages_path =
-      File::Spec->catfile( $basepath, $tempfile_dir, "temp_images" );
-
-    my $prod_temp_path = $vh->get_conf('r_qtl_temp_path');
-    mkdir $prod_temp_path;
+{    
+    my $basepath     = $c->get_conf("basepath");
+    my $tempfile_dir = $c->get_conf("tempfiles_subdir");    
+    my $prod_temp_path = $c->get_conf('r_qtl_temp_path');  
+    
+    mkdir $prod_temp_path;    
     my $prod_cache_path = "$prod_temp_path/cache";
     mkdir $prod_cache_path;
     $prod_temp_path = "$prod_temp_path/tempfiles";
@@ -1140,100 +1136,14 @@ sub cache_temp_path
     -r $prod_temp_path or die "temp dir '$prod_temp_path' not readable!";
     -w $prod_temp_path or die "temp dir '$prod_temp_path' not writable!";
 
+    my $tempimages_path =
+      File::Spec->catfile( $basepath, $tempfile_dir, "temp_images" );
+
     return $prod_cache_path, $prod_temp_path, $tempimages_path;
 
 }
 
-=head2 genotype_file
 
- Usage: my $gen_file = $self->genotype_file();
- Desc: creates the genotype file in the /data/prod/tmp/r_qtl/cache, 
-       if it does not exist yet, and caches it for R.
- Ret: genotype filename (with absolute path)
- Args: none
- Side Effects:
- Example:
-
-=cut
-
-sub genotype_file
-{
-    my $self       = shift;
-    my $pop_id     = $self->get_object_id();
-    my $population = $self->get_object();
-
-    my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
-      $self->cache_temp_path();
-    my $file_cache = Cache::File->new( cache_root => $prod_cache_path );
-    $file_cache->purge();
-
-    my $key_gen          = "popid_" . $pop_id . "_genodata";
-    my $gen_dataset_file = $file_cache->get($key_gen);
-
-    unless ($gen_dataset_file)
-    {
-        my $genodata     = $population->genotype_dataset();
-        my $geno_dataset = ${$genodata};
-
-        my $filename = "genodata_" . $pop_id . ".csv";
-        my $file     = "$prod_cache_path/$filename";
-
-        open OUT, ">$file" or die "can't open $file: !$\n";
-        print OUT $geno_dataset;
-        close OUT;
-
-        $file_cache->set( $key_gen, $file, '30 days' );
-        $gen_dataset_file = $file_cache->get($key_gen);
-    }
-
-    return $gen_dataset_file;
-
-}
-
-=head2 phenotype_file
-
- Usage: my $phe_file = $self->phenotype_file();
- Desc: creates the phenotype file in the /data/prod/tmp/r_qtl/cache, 
-       if it does not exist yet, and caches it for R.
- Ret: phenotype filename (with absolute path)
- Args: none
- Side Effects:
- Example:
-
-=cut
-
-sub phenotype_file
-{
-    my $self       = shift;
-    my $pop_id     = $self->get_object_id();
-    my $population = $self->get_object();
-
-    my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
-      $self->cache_temp_path();
-    my $file_cache = Cache::File->new( cache_root => $prod_cache_path );
-
-    my $key_phe          = "popid_" . $pop_id . "_phenodata";
-    my $phe_dataset_file = $file_cache->get($key_phe);
-
-    unless ($phe_dataset_file)
-    {
-        my $phenodata     = $population->phenotype_dataset();
-        my $pheno_dataset = ${$phenodata};
-        my $filename      = "phenodata_" . $pop_id . ".csv";
-
-        my $file = "$prod_cache_path/$filename";
-
-        open OUT, ">$file" or die "can't open $file: !$\n";
-        print OUT $pheno_dataset;
-        close OUT;
-
-        $file_cache->set( $key_phe, $file, '30 days' );
-        $phe_dataset_file = $file_cache->get($key_phe);
-    }
-
-    return $phe_dataset_file;
-
-}
 
 =head2 crosstype_file
 

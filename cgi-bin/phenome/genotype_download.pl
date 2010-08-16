@@ -29,11 +29,8 @@ my $name = $pop->get_name();
 print
 "Pragma: \"no-cache\"\nContent-Disposition:filename=genotype_data_${population_id}.txt\nContent-type:application/data\n\n";
 
-#print "Content-Type: text/plain\n\n";
 
-
-
-my $g_file = genotype_file();
+my $g_file = $pop->genotype_file($c);
 
 if (-e $g_file) {
     print "Genotype data for $name\n\n\n";
@@ -67,11 +64,4 @@ else {
            or does not exist!\n";
 }
 
-sub genotype_file {         
-    my $prod_temp_path = $c->get_conf('r_qtl_temp_path'); 
-    my $file_cache = Cache::File->new( cache_root => $prod_temp_path . "/cache" ); 
-    my $key_gen          = "popid_" . $population_id . "_genodata";
-    my $gen_dataset_file = $file_cache->get($key_gen);   
-    return $gen_dataset_file;
 
-}
