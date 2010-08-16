@@ -6,7 +6,7 @@ use SGN::Context;
 
 our @EXPORT_OK = qw/
     related_stats feature_table gbrowse_link
-    get_reference gbrowse_image_url
+    get_reference gbrowse_image_url feature_link
 /;
 our $c = SGN::Context->new;
 
@@ -92,4 +92,11 @@ sub gbrowse_link {
         return $url;
     }
 }
+
+sub feature_link {
+    my ($feature) = @_;
+    my ($id, $name) = ($feature->feature_id, $feature->name);
+    return qq{<a href="/cgi-bin/feature.pl?id=$id">$name</a>};
+}
+
 1;

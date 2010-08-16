@@ -28,6 +28,7 @@
     children  => $children,
     parents   => $parents,
     reference => $reference,
+    feature => $feature,
 &>
 
 <& /feature/properties.mas,

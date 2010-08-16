@@ -3,6 +3,7 @@
     $parents
     $reference => undef
     $title => 'Related Features'
+    $feature
 </%args>
 <%init>
     use SGN::View::Feature qw/related_stats/;
@@ -44,6 +45,9 @@
     &>
 </&>
 % }
+
+<& /feature/relations.mas, feature => $feature &>
+
 % if ($reference) {
 <& /feature/feature_data.mas,
     feature => $reference,
