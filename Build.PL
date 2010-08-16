@@ -76,7 +76,7 @@ my $build = $class->new(
         'Apache::DBI'         => 0,
 
         #        'Apache2::Request' => 0,
-        'Bio::Chado::Schema' => '0.05801',
+        'Bio::Chado::Schema' => '0.05900',
 
 	'Bio::Root::Version'     => '1.006001',
         #         'Bio::AlignIO' => 0,
