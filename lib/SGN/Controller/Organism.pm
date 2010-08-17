@@ -12,24 +12,6 @@ with 'Catalyst::Component::ApplicationAttribute';
 
 =head1 ATTRIBUTES
 
-=head2 species_data_summary
-
-
-=cut
-
-has 'species_data_summary' => (
-    is  => 'ro',
-    isa => 'HashRef',
-    lazy_build => 1,
-   ); sub _build_species_data_summary {
-       my ($cache_class, $config) = shift->_species_summary_cache_configuration;
-       require MLDBM;
-       MLDBM->import( $cache_class, 'Storable' );
-       my %cache;
-       tie %cache, MLDBM => $config;
-       return \%cache;
-   }
-
 =head2 species_data_summary_cache
 
 L<Cache> object containing species data summaries, as:
