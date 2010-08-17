@@ -10,7 +10,7 @@
 *JSFormPage.js object is instantiated from CXGN::Page::Form::JSFormPage.pm
 */
 
-JSAN.use('jQuery');
+JSAN.use('jquery');
 JSAN.use('Prototype');
 
 if (!CXGN) CXGN = function() {};

@@ -187,7 +187,7 @@ sub display_page
 {
     my $self = shift;
 
-    $self->get_page->jsan_use("jQuery");
+    $self->get_page->jsan_use("jquery");
     $self->get_page->jsan_use("thickbox");
 
     $self->get_page->add_style( text => <<EOS);

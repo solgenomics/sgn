@@ -1,5 +1,5 @@
 if (typeof(JSAN) != 'undefined' ) {
-    JSAN.use("jQuery", []);
+    JSAN.use("jquery", []);
 }
 
 
