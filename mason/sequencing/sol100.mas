@@ -93,7 +93,7 @@ sol100.mas - SGN page for sol100 project organism data overview in a tree format
 % # // subcomponent with all the page's javascript
 <%def .include_javascript>
 
-   <& /util/import_javascript.mas, classes=>[qw[ CXGN.Page.FormattingHelpers  jquery jquery-ui popup]] &>
+   <& /util/import_javascript.mas, classes=>[qw[ CXGN.Page.FormattingHelpers  jquery jqueryui popup]] &>
 
    <script language="javascript">
 
