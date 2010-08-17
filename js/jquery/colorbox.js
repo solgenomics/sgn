@@ -61,8 +61,8 @@
 	event_closed = prefix + '_closed',
 	
 	// Special Handling for IE
-	isIE = $.browser.msie && !$.support.opacity, // feature detection alone gave a false positive on at least one phone browser and on some development versions of Chrome.
-	isIE6 = isIE && $.browser.version < 7,
+	isIE = jQuery.browser.msie && !jQuery.support.opacity, // feature detection alone gave a false positive on at least one phone browser and on some development versions of Chrome.
+	isIE6 = isIE && jQuery.browser.version < 7,
 	event_ie6 = prefix + '_IE6',
 
 	// Cached jQuery Object Variables
@@ -109,7 +109,7 @@
 	function $div(id, css) { 
 		id = id ? ' id="' + prefix + id + '"' : '';
 		css = css ? ' style="' + css + '"' : '';
-		return $('<div' + id + css + '/>');
+		return jQuery('<div' + id + css + '/>');
 	}
 
 	// Convert % values to pixels
@@ -121,19 +121,19 @@
 	// Checks an href to see if it is a photo.
 	// There is a force photo option (photo: true) for hrefs that cannot be matched by this regex.
 	function isImage(url) {
-		url = $.isFunction(url) ? url.call(element) : url;
+		url = jQuery.isFunction(url) ? url.call(element) : url;
 		return settings.photo || url.match(/\.(gif|png|jpg|jpeg|bmp)(?:\?([^#]*))?(?:#(\.*))?$/i);
 	}
 	
 	// Assigns functions results to their respective settings.  This allows functions to be used to set ColorBox options.
 	function process() {
 		for (var i in settings) {
-			if ($.isFunction(settings[i]) && i.substring(0, 2) !== 'on') { // checks to make sure the function isn't one of the callbacks, they will be handled at the appropriate time.
+			if (jQuery.isFunction(settings[i]) && i.substring(0, 2) !== 'on') { // checks to make sure the function isn't one of the callbacks, they will be handled at the appropriate time.
 			    settings[i] = settings[i].call(element);
 			}
 		}
 		settings.rel = settings.rel || element.rel || 'nofollow';
-		settings.href = settings.href || $(element).attr('href');
+		settings.href = settings.href || jQuery(element).attr('href');
 		settings.title = settings.title || element.title;
 	}
 
@@ -141,13 +141,13 @@
 		
 		element = elem;
 		
-		settings = $.extend({}, $(element).data(colorbox));
+		settings = jQuery.extend({}, jQuery(element).data(colorbox));
 		
 		process(); // Convert functions to their returned values.
 		
 		if (settings.rel !== 'nofollow') {
-			$related = $('.' + boxElement).filter(function () {
-				var relRelated = $(this).data(colorbox).rel || this.rel;
+			$related = jQuery('.' + boxElement).filter(function () {
+				var relRelated = jQuery(this).data(colorbox).rel || this.rel;
 				return (relRelated === settings.rel);
 			});
 			index = $related.index(element);
@@ -158,7 +158,7 @@
 				index = $related.length - 1;
 			}
 		} else {
-			$related = $(element);
+			$related = jQuery(element);
 			index = 0;
 		}
 		
@@ -171,7 +171,7 @@
 				bookmark.blur(); // Remove the focus from the calling element.
 			}catch (e) {}
 			
-			$.event.trigger(event_open);
+			jQuery.event.trigger(event_open);
 			if (settings.onOpen) {
 				settings.onOpen.call(element);
 			}
@@ -202,11 +202,11 @@
 
 	// ****************
 	// PUBLIC FUNCTIONS
-	// Usage format: $.fn.colorbox.close();
-	// Usage from within an iframe: parent.$.fn.colorbox.close();
+	// Usage format: jQuery.fn.colorbox.close();
+	// Usage from within an iframe: parent.jQuery.fn.colorbox.close();
 	// ****************
 	
-	publicMethod = $.fn[colorbox] = $[colorbox] = function (options, callback) {
+	publicMethod = jQuery.fn[colorbox] = $[colorbox] = function (options, callback) {
 		var $this = this;
 		
 		if (!$this[0] && $this.selector) { // if a selector was given and it didn't match any elements, go ahead and exit.
@@ -219,13 +219,13 @@
 			options.onComplete = callback;
 		}
 		
-		if (!$this[0] || $this.selector === undefined) { // detects $.colorbox() and $.fn.colorbox()
-			$this = $('<a/>');
+		if (!$this[0] || $this.selector === undefined) { // detects jQuery.colorbox() and jQuery.fn.colorbox()
+			$this = jQuery('<a/>');
 			options.open = true; // assume an immediate open
 		}
 		
 		$this.each(function () {
-			$(this).data(colorbox, $.extend({}, $(this).data(colorbox) || defaults, options)).addClass(boxElement);
+			jQuery(this).data(colorbox, jQuery.extend({}, jQuery(this).data(colorbox) || defaults, options)).addClass(boxElement);
 		});
 		
 		if (options.open) {
@@ -240,7 +240,7 @@
 	// having to run once, instead of each time colorbox is opened.
 	publicMethod.init = function () {
 		// Create & Append jQuery Objects
-		$window = $(window);
+		$window = jQuery(window);
 		$box = $div().attr({id: colorbox, 'class': isIE ? prefix + 'IE' : ''});
 		$overlay = $div("Overlay", isIE6 ? 'position:absolute' : '').hide();
 		
@@ -275,13 +275,13 @@
 		
 		$loadingBay = $div(false, 'position:absolute; width:9999px; visibility:hidden; display:none');
 		
-		$('body').prepend($overlay, $box.append($wrap, $loadingBay));
+		jQuery('body').prepend($overlay, $box.append($wrap, $loadingBay));
 		
 		$content.children()
 		.hover(function () {
-			$(this).addClass('hover');
+			jQuery(this).addClass('hover');
 		}, function () {
-			$(this).removeClass('hover');
+			jQuery(this).removeClass('hover');
 		}).addClass('hover');
 		
 		// Cache values needed for size calculations
@@ -302,7 +302,7 @@
 		// background graphics.  The class can now can be removed.
 		$content.children().removeClass('hover');
 		
-		$('.' + boxElement).live('click', function (e) {
+		jQuery('.' + boxElement).live('click', function (e) {
 			// checks to see if it was a non-left mouse-click and for clicks modified with ctrl, shift, or alt.
 			if ((e.button !== 0 && typeof e.button !== 'undefined') || e.ctrlKey || e.shiftKey || e.altKey) {
 				return true;
@@ -319,7 +319,7 @@
 		});
 		
 		// Set Navigation Key Bindings
-		$(document).bind("keydown", function (e) {
+		jQuery(document).bind("keydown", function (e) {
 			if (open && settings.escKey && e.keyCode === 27) {
 				e.preventDefault();
 				publicMethod.close();
@@ -338,7 +338,7 @@
 	
 	publicMethod.remove = function () {
 		$box.add($overlay).remove();
-		$('.' + boxElement).die('click').removeData(colorbox).removeClass(boxElement);
+		jQuery('.' + boxElement).die('click').removeData(colorbox).removeClass(boxElement);
 	};
 
 	publicMethod.position = function (speed, loadedCallback) {
@@ -443,11 +443,11 @@
 		
 		$loadingBay.hide();
 		
-		$('#' + prefix + 'Photo').css({cssFloat: 'none'});// floating the IMG removes the bottom line-height and fixed a problem where IE miscalculates the width of the parent element as 100% of the document width.
+		jQuery('#' + prefix + 'Photo').css({cssFloat: 'none'});// floating the IMG removes the bottom line-height and fixed a problem where IE miscalculates the width of the parent element as 100% of the document width.
 		
 		// Hides SELECT elements in IE6 because they would otherwise sit on top of the overlay.
 		if (isIE6) {
-			$('select').not($box.find('select')).filter(function () {
+			jQuery('select').not($box.find('select')).filter(function () {
 				return this.style.visibility !== 'hidden';
 			}).css({'visibility': 'hidden'}).one(event_cleanup, function () {
 				this.style.visibility = 'inherit';
@@ -478,7 +478,7 @@
 				//Waited until the iframe is added to the DOM & it is visible before setting the src.
 				//This increases compatability with pages using DOM dependent JavaScript.
 				if (settings.iframe) {
-					$("<iframe frameborder=0" + (settings.scrolling ? "" : " scrolling='no'") + (isIE ? " allowtransparency='true'" : '') + "/>")
+					jQuery("<iframe frameborder=0" + (settings.scrolling ? "" : " scrolling='no'") + (isIE ? " allowtransparency='true'" : '') + "/>")
 					.attr({src: settings.href, name: new Date().getTime()})
 					.appendTo($loaded);
 				}
@@ -505,15 +505,15 @@
 					
 					// Preloads images within a rel group
 					if (settings.preloading) {
-						nextSrc = $(next).data(colorbox).href || next.href;
-						prevSrc = $(prev).data(colorbox).href || prev.href;
+						nextSrc = jQuery(next).data(colorbox).href || next.href;
+						prevSrc = jQuery(prev).data(colorbox).href || prev.href;
 						
 						if (isImage(nextSrc)) {
-							$('<img/>')[0].src = nextSrc;
+							jQuery('<img/>')[0].src = nextSrc;
 						}
 						
 						if (isImage(prevSrc)) {
-							$('<img/>')[0].src = prevSrc;
+							jQuery('<img/>')[0].src = prevSrc;
 						}
 					}
 				}
@@ -532,7 +532,7 @@
 					publicMethod.position(0);
 				});
 				
-				$.event.trigger(event_complete);
+				jQuery.event.trigger(event_complete);
 				if (settings.onComplete) {
 					settings.onComplete.call(element);
 				}
@@ -555,12 +555,12 @@
 		
 		element = $related[index];
 		
-		settings = $.extend({}, $(element).data(colorbox));
+		settings = jQuery.extend({}, jQuery(element).data(colorbox));
 		
 		//convert functions to static values
 		process();
 		
-		$.event.trigger(event_load);
+		jQuery.event.trigger(event_load);
 		if (settings.onLoad) {
 			settings.onLoad.call(element);
 		}
@@ -595,10 +595,10 @@
 		if (settings.inline) {
 			// Inserts an empty placeholder where inline content is being pulled from.
 			// An event is bound to put inline content back when ColorBox closes or loads new content.
-			$div('InlineTemp').hide().insertBefore($(href)[0]).bind(event_load + ' ' + event_cleanup, function () {
-				$(this).replaceWith($loaded.children());
+			$div('InlineTemp').hide().insertBefore(jQuery(href)[0]).bind(event_load + ' ' + event_cleanup, function () {
+				jQuery(this).replaceWith($loaded.children());
 			});
-			prep($(href));
+			prep(jQuery(href));
 		} else if (settings.iframe) {
 			// IFrame element won't be added to the DOM until it is ready to be displayed,
 			// to avoid problems with DOM-ready JS that might be trying to run in that iframe.
@@ -612,7 +612,7 @@
 				
 				img.onload = null;
 				img.id = prefix + 'Photo';
-				$(img).css({margin: 'auto', border: 'none', display: 'block', cssFloat: 'left'});
+				jQuery(img).css({margin: 'auto', border: 'none', display: 'block', cssFloat: 'left'});
 				
 				if (settings.scalePhotos) {
 					setResize = function () {
@@ -638,7 +638,7 @@
 				}, 1);
 				
 				if ($related[1] && (index < $related.length - 1 || settings.loop)) {
-					$(img).css({cursor: 'pointer'}).click(publicMethod.next);
+					jQuery(img).css({cursor: 'pointer'}).click(publicMethod.next);
 				}
 				
 				if (isIE) {
@@ -712,12 +712,12 @@
 		}
 	};
 
-	// Note: to use this within an iframe use the following format: parent.$.fn.colorbox.close();
+	// Note: to use this within an iframe use the following format: parent.jQuery.fn.colorbox.close();
 	publicMethod.close = function () {
 		if (open) {
 			open = false;
 			
-			$.event.trigger(event_cleanup);
+			jQuery.event.trigger(event_cleanup);
 			
 			if (settings.onCleanup) {
 				settings.onCleanup.call(element);
@@ -741,7 +741,7 @@
 				}
 				
 				setTimeout(function () {
-					$.event.trigger(event_closed);
+					jQuery.event.trigger(event_closed);
 					if (settings.onClosed) {
 						settings.onClosed.call(element);
 					}
@@ -753,12 +753,12 @@
 	// A method for fetching the current element ColorBox is referencing.
 	// returns a jQuery object.
 	publicMethod.element = function () {
-		return $(element);
+		return jQuery(element);
 	};
 
 	publicMethod.settings = defaults;
 
 	// Initializes ColorBox when the DOM has loaded
-	$(publicMethod.init);
+	jQuery(publicMethod.init);
 
 }(jQuery, this));
