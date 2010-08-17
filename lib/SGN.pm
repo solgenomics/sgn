@@ -65,6 +65,10 @@ sub _update_static_symlinks {
         qw( static_content static_datasets );
 
     for my $link (@links) {
+        if( $self->debug ) {
+            my $l1_rel = $link->[1]->relative( $self->path_to );
+            $self->log->debug("symlinking static dir '$link->[0]' -> '$l1_rel'") if $self->debug;
+        }
         unlink $link->[1];
         symlink( $link->[0], $link->[1] )
             or die "$! symlinking $link->[0] => $link->[1]";
