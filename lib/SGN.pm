@@ -22,14 +22,9 @@ use Catalyst qw/
 
 extends 'Catalyst';
 
-__PACKAGE__->setup;
-
 # on startup, do some dynamic configuration
 after 'setup_finalize' => sub {
     my $self = shift;
-    # not using an 'after' modifier for this so we can keep this sub
-    # at the bottom of the package
-    $self->SUPER::setup_finalize(@_);
 
     $ENV{PROJECT_NAME} = $self->config->{name};
 
@@ -47,6 +42,9 @@ after 'setup_finalize' => sub {
 
     }
 };
+
+
+__PACKAGE__->setup;
 
 
 sub _update_static_symlinks {
