@@ -22,8 +22,12 @@ my %skip = map { $_ => 1 } qw(
 # all our .pl cgis are perl
 sub is_perl_cgi {
     my ($self,$path) = @_;
-    return 0 if $ENV{SGN_SKIP_CGI} || $skip{ basename($path) };
+    return 0 if $skip{ basename($path) };
     return $path =~ /\.pl$/;
+}
+
+if( $ENV{SGN_SKIP_CGI} ) {
+    override 'cgi_dir' => sub { '/nonexistent/path' }
 }
 
 # force CGI backtrace only if app is starting, and is in debug mode
