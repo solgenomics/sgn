@@ -10,7 +10,7 @@
 
 
 Requires the following javascript classes:
-<& /util/import_javascript.mas, classes => ["jQuery", "thickbox", "CXGN.Page.FormattingHelpers"] &>
+<& /util/import_javascript.mas, classes => ["jquery", "thickbox", "CXGN.Page.FormattingHelpers"] &>
 
 Parameters:
 
