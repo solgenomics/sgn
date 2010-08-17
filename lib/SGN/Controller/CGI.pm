@@ -22,7 +22,7 @@ my %skip = map { $_ => 1 } qw(
 # all our .pl cgis are perl
 sub is_perl_cgi {
     my ($self,$path) = @_;
-    return 0 if $skip{ basename($path) };
+    return 0 if $ENV{SGN_SKIP_CGI} || $skip{ basename($path) };
     return $path =~ /\.pl$/;
 }
 
@@ -36,5 +36,7 @@ if( eval{ SGN->debug } ) {
         $self->$orig( @_ );
     };
 }
+
+
 
 1;
