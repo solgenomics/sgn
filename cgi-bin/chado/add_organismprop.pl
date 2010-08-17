@@ -6,6 +6,8 @@ use CXGN::Scrap::AjaxPage;
 use Try::Tiny;
 use CXGN::Login;
 
+use CatalystX::GlobalContext '$c';
+
 my $dbh = $c->dbc->dbh;
 
 my %status;

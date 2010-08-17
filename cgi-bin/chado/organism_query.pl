@@ -4,6 +4,8 @@ use warnings;
 use JSON;
 use CXGN::Scrap::AjaxPage;
 
+use CatalystX::GlobalContext '$c';
+
 my $doc = CXGN::Scrap::AjaxPage->new();
 $doc->send_http_header();
 
