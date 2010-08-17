@@ -1,3 +1,10 @@
+=head1 NAME
+
+SGN::Controller::Organism - Catalyst controller for pages dealing with
+organisms
+
+=cut
+
 package SGN::Controller::Organism;
 use Moose;
 use namespace::autoclean;
