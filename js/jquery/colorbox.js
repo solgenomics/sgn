@@ -206,7 +206,7 @@
 	// Usage from within an iframe: parent.jQuery.fn.colorbox.close();
 	// ****************
 	
-	publicMethod = jQuery.fn[colorbox] = $[colorbox] = function (options, callback) {
+	publicMethod = jQuery.fn[colorbox] = jQuery[colorbox] = function (options, callback) {
 		var $this = this;
 		
 		if (!$this[0] && $this.selector) { // if a selector was given and it didn't match any elements, go ahead and exit.
