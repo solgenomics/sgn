@@ -47,16 +47,16 @@ sol100.mas - SGN page for sol100 project organism data overview in a tree format
       padding: 3px 10px;
       position: relative;
       top: 4px;
-      left: -1em;s
+      left: -1em;
   }
  </style>
  <div id="sol100_add_organism">
     <span>Authorized <% $user_type %></span>
 
     <h3>Add a SOL100 organism to this tree</h3>
-    <form name="sol100_add_form">
-      <input name="species" type="text" size="25" id="sol100_species" /><input type="submit" name="add_to_tree" onclick="add_to_tree()" value="Add to Tree" />
-      <div style="font-size: 80%; margin-left: 1em; color: #333">type a binomial species name</div>
+    <form method="POST" name="sol100_add_form">
+      <input name="species" type="text" size="30" id="sol100_species" /><input type="submit" name="add_to_tree" onclick="add_to_tree()" value="Add to Tree" />
+      <div style="font-size: 80%; margin-left: 1em; color: #333">type an organism name</div>
     </form>
 
  </div>
@@ -88,67 +88,20 @@ sol100.mas - SGN page for sol100 project organism data overview in a tree format
 
 </div>
 
-% ########### subcomponents ##############33
-
+% ########### subcomponents ##############
 
 % # // subcomponent with all the page's javascript
 <%def .include_javascript>
 
-   <& /util/import_javascript.mas, classes=>["CXGN.Page.FormattingHelpers", "CXGN.Effects", "Prototype"] &>
-
-   <script language="javascript" type="text/javascript" src="/js/popup.js"></script>
+   <& /util/import_javascript.mas, classes=>[qw[ CXGN.Page.FormattingHelpers  jquery jquery-ui popup]] &>
 
    <script language="javascript">
-   function update_result(){
-        if(($("species").value.length)>=3){
-          var result_space = $("result_space");
-          var species = $("species").value;
-          new Ajax.Request("/chado/organism_query.pl", {
-            parameters: { species: species },
-            onSuccess: function(response){
-                 var json = response.responseText;             
-                 var result = eval("("+json+")");
-                 var html = "";
-                 var counter=0; 
-                 for (var r in result) {
-                   html+="<a href='javascript:add_to_search(&quot;"+result[r]+"&quot;)'>"+(result[r])+"</a>"+"<br/>";
-                 }
-                 if(json=="{}"){
-                   html="Your search did not match any organisms.";
-                 }
-                 result_space.innerHTML=html;
-            }
-          });
-        } else {
-          alert("The species name must be at least three characters long.");
-        }
-   }
 
-   function add_to_tree() {
-     var messages=$("messages");
-     var species = $("species").value;
-     new Ajax.Request("/chado/add_organismprop.pl", {
-       parameters: {  species: species,
-                      prop_name: 'sol100' , prop_value: '1'},
-                      onSuccess: function(response){
-                          var json = response.responseText;
-                          var result = eval("("+json+")");
-                  
-                          for (var x in result){
-                            status=(result[x])
-                              if (x == 'fail'){
-                                alert(status);
-                              }
-                            window.location.reload(true);
-                            
-                          }
-                        }
-       });
-   }
-
-   function add_to_search(species_name){
-     $("species").value=species_name;
-   }
+        jQuery(function() {
+		$("#sol100_species").autocomplete({
+			source: 'sol100_autocomplete.pl'
+		});
+	});
    	
    </script>
 </%def>

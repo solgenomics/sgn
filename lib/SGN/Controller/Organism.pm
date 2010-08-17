@@ -12,6 +12,8 @@ use namespace::autoclean;
 use Storable;
 use Scalar::Util qw/ weaken /;
 
+use JSON::Any; my $json = JSON::Any->new;
+
 use CXGN::Chado::Organism;
 use CXGN::Login;
 
@@ -142,6 +144,36 @@ sub sol100 {
 
     $c->forward_to_mason_view( "/sequencing/sol100.mas", %$stash );
 }
+
+
+=head2 autocomplete
+
+Autocomplete an organism name.
+
+=cut
+
+sub autocomplete {
+  my ( $self, $c ) = @_;
+
+  my $term = $c->req->param('term');
+
+  print $c->req->header('application/json');
+  print $json->encode([
+
+      $c->dbic_schema('Bio::Chado::Schema','sgn_chado')
+        ->resultset('Organism::Organism')
+        ->search({ species => { ilike => '%'.$term.'%' },
+                 },
+                 { rows => 15 },
+                )
+        ->get_column('species')
+        ->all
+
+  ]);
+
+}
+
+
 
 #################################3
 
