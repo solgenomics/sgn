@@ -60,21 +60,15 @@ sol100.mas - SGN page for sol100 project organism data overview in a tree format
 </div>
 
 %if ($user_type eq 'submitter' || $user_type eq 'curator' || $user_type eq 'sequencer'){
-  <div style="width: 40%; margin: 0 0 0 auto">
-    <h3>Add an organism to this tree</h3>
+ <div id="sol100_add_organism" style="margin-left: 2em">
 
-    <input type="text" id="species" />
-    <input type="button" name="update_result" onclick="update_result()" value="Search" />
+    <h3>Add a SOL100 organism to this tree</h3>
+    <form name="sol100_add_form">
+      <input name="species" type="text" size="25" id="sol100_species" /><input type="submit" name="add_to_tree" onclick="add_to_tree()" value="Add to Tree" />
+      <div style="font-size: 80%; margin-left: 1em; color: #333">type a binomial species name</div>
+    </form>
 
-    <p>Suggestions: <span id="txtHint"></span></p> 
-
-    <div id = "result_space"></div>
-
-    <div id = "messages"></div>
-
-    <input type="button" name="add_to_tree" onclick="add_to_tree()" value="Add to Tree" />
-
-  </div>
+ </div>
 %}
 
 
