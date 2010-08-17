@@ -82,7 +82,7 @@ my $tree_string = $newick_file->slurp;
 
   <&| /page/info_section.mas,
     title         => $root,
-    subtitle      => 'click on organism name to see more details ',
+    subtitle      => 'click on an organism name to see more details ',
     empty_message => 'Tree not available',
     collapsible   => 1,
     collapsed     => 0,

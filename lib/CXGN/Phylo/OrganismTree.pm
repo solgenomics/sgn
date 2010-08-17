@@ -27,6 +27,9 @@ This is a subcass of L<CXGN::Phylo::Tree>
 
 use strict;
 use warnings;
+use namespace::autoclean;
+
+use HTML::Entities;
 
 use CXGN::DB::DBICFactory;
 use CXGN::Chado::Organism;
@@ -60,10 +63,14 @@ sub new {
 
 =head2 recursive_children
 
- Usage: $self->recursive_children($nodes_hashref, $organism, $node, $is_root)
+ Usage: $self->recursive_children($nodes_hashref, $organism, $node, $species_info, $is_root)
  Desc:  recursively add child nodes starting from root.
  Ret:   nothing
- Args:  $nodes_hashref (organism_id => CXGN::Chado::Organism), $organism object for your root, $node object for your root, 1 (boolean)
+ Args:  $nodes_hashref (organism_id => CXGN::Chado::Organism),
+        $organism object for your root,
+        $node object for your root,
+        hashref of text species info (for rendering species popups),
+        1 (required)
  Side Effects: sets name, label, link, tooltip for nodes, highlites leaf nodes.
  Example:
 
@@ -76,43 +83,57 @@ sub recursive_children {
     # $n is a CXGN::Phylo::Node object
 
     $n->set_name( $o->get_species() );
-    my $orgkey = "" . $o->get_organism_id() . "";
-    $n->get_label()
-      ->set_link( "/chado/organism.pl?organism_id=" . $o->get_organism_id() );
-    my $content = $species_cache ? $species_cache->get($orgkey) : '';
-    $content ||= '';
+    my $orgkey = $o->get_organism_id();
+    $n->get_label
+      ->set_link( "/chado/organism.pl?organism_id="
+                  . $o->get_organism_id
+                 );
+    $n->get_label
+      ->set_name( $o->get_species );
+    $n->set_tooltip( $n->get_name );
+    $n->set_species( $n->get_name );
+    $n->set_hide_label( 0 );
+    $n->get_label->set_hidden( 0 );
 
-    $content =~ s/\?/<br\/>/g;
-    $n->set_tooltip( $n->get_name() );
-    $n->set_onmouseover(
-        "javascript:showPopUp('popup','$content','<b>" . $o->get_species()
-        . "</b>')");
-    $n->set_onmouseout("javascript:hidePopUp('popup');");
-    $n->get_label()->set_name( " " . $o->get_species() );
-    $n->get_label()
-      ->set_onmouseover( "javascript:showPopUp('popup','$content','<b>"
-          . $o->get_species()
-          . "</b>')" );
-    $n->get_label()->set_onmouseout("javascript:hidePopUp('popup');");
-    $n->set_species( $n->get_name() );
-    $n->set_hide_label(0);
-    $n->get_label()->set_hidden(0);
+    my $content = do {
+        if( my $species_data = $species_cache->thaw($orgkey) ) {
+            join '<br />', map {
+                    "<b>$_:</b> ".( $species_data->{$_} || '<span class="ghosted">not set</span>' )
+                  } sort keys %$species_data
+        } else {
+            '<span class="ghosted">no data available</span>'
+        }
+    };
 
-    my @cl = $n->get_children();
+    $content =~ s/\n/ /g;
+    $content = encode_entities( $content );
+
+    my $species = $o->get_species;
+    for ( $n, $n->get_label ) {
+        $_->set_onmouseover(
+            "javascript:showPopUp('popup','$content','<b>$species</b>')"
+           );
+        $_->set_onmouseout(
+            "javascript:hidePopUp('popup')"
+           );
+    }
+
+    my @cl = $n->get_children;
 
     my @children = $o->get_direct_children;
     foreach my $child (@children) {
 
-        if ( exists( $nodes->{ $child->get_organism_id() } )
-            && defined( $nodes->{ $child->get_organism_id() } ) )
+        if ( exists( $nodes->{ $child->get_organism_id } )
+            && defined( $nodes->{ $child->get_organism_id } ) )
         {
 
-            my $new_node = $n->add_child();
+            my $new_node = $n->add_child;
             $self->recursive_children( $nodes, $child, $new_node,
                 $species_cache );
         }
     }
-    if ( $n->is_leaf() ) { $n->set_hilited(1); }
+
+    $n->set_hilited(1) if $n->is_leaf;
 }
 
 =head2 find_recursive_parent

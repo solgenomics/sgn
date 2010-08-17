@@ -4,7 +4,9 @@ use namespace::autoclean;
 
 use Storable;
 use Scalar::Util qw/ weaken /;
+
 use CXGN::Chado::Organism;
+use CXGN::Login;
 
 with 'Catalyst::Component::ApplicationAttribute';
 
@@ -12,15 +14,6 @@ with 'Catalyst::Component::ApplicationAttribute';
 
 =head2 species_data_summary
 
-Hashref (cached) of species data summaries, as:
-
-  {
-    <organism_id> => {
-         'Common Name' => common_name,
-          ...
-    },
-    ...
-  }
 
 =cut
 
@@ -39,10 +32,18 @@ has 'species_data_summary' => (
 
 =head2 species_data_summary_cache
 
-Same as species_summary above, but gets the species summary data
-instead with a L<Cache::Cache> interface ( $cache->get('foo'), etc ).
-Be sure to use C<$cache->thaw> and C<$cache->freeze> instead of C<get>
-and C<set>.
+L<Cache> object containing species data summaries, as:
+
+  {
+    <organism_id> => {
+         'Common Name' => common_name,
+          ...
+    },
+    ...
+  }
+
+Access with C<$cache->thaw( $organism_id )>, do not use Cache's C<get>
+method.
 
 =cut
 
@@ -83,6 +84,14 @@ sub _species_summary_cache_configuration {
 }
 
 
+=head1 ACTIONS
+
+=head2 sgn_data
+
+Display the sgn data overview page.  Currently at /content/sgn_data.pl
+
+=cut
+
 sub sgn_data {
     my ( $self, $c ) = @_;
 
@@ -95,6 +104,8 @@ sub sgn_data {
                Rubiaceae
                Plantaginaceae
               );
+
+    warn "fetched species, gathering data\n";
 
     my $stash = {
         schema       => $schema,
@@ -109,6 +120,38 @@ sub sgn_data {
     #print '<pre>'.Dumper( $stash ).'</pre>';
 
     $c->forward_to_mason_view( "/content/sgn_data.mas", %$stash );
+}
+
+=head2 sol100
+
+Display the sol100 organisms page.  Currently at /sequencing/sol100.pl
+
+=cut
+
+sub sol100 {
+    my ( $self, $c ) = @_;
+
+    my $dbh = $c->dbc->dbh;
+    my ($person_id, $user_type) = CXGN::Login->new($dbh)->has_session();
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    my $sol100_organisms =
+        $schema->resultset( "Cv::Cvterm" )
+               ->search({ name => 'sol100' })
+               ->search_related( 'organismprops' )
+               ->search_related( 'organism' );
+
+    my $stash = {
+        species_data => $self->species_data_summary_cache,
+        species      => { map { $_->species => $_->organism_id } $sol100_organisms->all },
+        user_type => $user_type,
+        schema    => $schema,
+        uri_dir      => $c->tempfiles_subdir( 'sgn_data_pl' ),
+        tmp_dir      => $c->path_to(),
+       };
+
+    $c->forward_to_mason_view( "/sequencing/sol100.mas", %$stash );
 }
 
 #################################3

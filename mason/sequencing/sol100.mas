@@ -8,145 +8,137 @@ sol100.mas - SGN page for sol100 project organism data overview in a tree format
 
 </%doc>
 
+
 <%args>
-
-$schema
-$sol
-$user_type =>undef
-
+    $species_data
+    $species
+    $user_type => undef
+    $schema
+    $uri_dir
+    $tmp_dir
 </%args>
 
-<%perl>
-use Bio::Chado::Schema;
-use warnings;
-use strict;
-use JSON;
-use CXGN::Page;
-
-my $uri_dir     = $c->get_conf('tempfiles_subdir') . '/tree_browser';
-my $tmp_dir     = $c->get_conf('basepath');
-my $sicache_dir = $c->get_conf('basepath')."/". $c->get_conf('tempfiles_subdir') . '/organism_data';
-
-my $speciesinfo_cache = Cache::File->new(
-                            cache_root=>$sicache_dir,
-                            default_expires =>'16000 sec'
-                        );
-
-for my $org_id (values %$sol) {
-    my $org = CXGN::Chado::Organism->new($schema, $org_id);
-    my $info_text="?"."Name: ".$org->get_species()."?"."Common Name: ".$org->get_group_common_name()."?"."Loci Num: ".$org->get_loci_count()."?"."Phenotype Count: ".$org->get_phenotype_count()."?"."Maps Available: ".$org->has_avail_map()."?"."Genome Information: ".$org->has_avail_genome()."?"."Library Num: ".(scalar $org->get_library_list())."";
-    $speciesinfo_cache->set($org_id, $info_text, '16000 sec');
-}
-
-</%perl>
-
-<& /util/import_javascript.mas, classes=>["CXGN.Page.FormattingHelpers", "CXGN.Effects", "Prototype"] &>
-
 <& /page/page_title.mas, title=>"SOL100 sequencing project" &>
-<script language="javascript" type="text/javascript" src="/js/popup.js"></script>
-<div id="popup" style="visibility:hidden; position:absolute; top:0; left:0;">
-<table id="xtratbl">
-<tr><td id="org_title"><font color="#000000">Title Goes Here</font></td></tr>
-<tr><td id="org_content" bgcolor="#ffffff">
-Organism content goes here
 
-</td></tr></table>
+<div id="popup" style="visibility:hidden; position:absolute; top:0; left:0;">
+  <table id="xtratbl">
+  <tr><td id="org_title"><font color="#000000">Title Goes Here</font></td></tr>
+  <tr><td id="org_content" bgcolor="#ffffff">
+      Organism content goes here
+  </td></tr></table>
 </div>
 
-<p>
-This page presents a summary of all species being sequenced as part of the SOL100 sequencing project
+<& .include_javascript &>
 
-<script>
-function update_result(){
-     if(($("species").value.length)>=3){
-          var result_space = $("result_space");
-          var species = $("species").value;
-               new Ajax.Request("/chado/organism_query.pl", {
-                    parameters: {species: species},
-                    onSuccess: function(response){
-	                 var json = response.responseText;             
-                         var result = eval("("+json+")");
-                         var html = "";
-                         var counter=0; 
-                         for (var r in result){
-                   
-                         html+="<a href='javascript:add_to_search(&quot;"+result[r]+"&quot;)'>"+(result[r])+"</a>"+"<br/>";
-                         }
-                    if(json=="{}"){
-                         html="Your search did not match any organisms.";
-                    }
-                    result_space.innerHTML=html;
-            
-                    }
-               });
+<div class="page_introduction">
+  This page presents a summary of all species being sequenced as part
+  of athe SOL100 sequencing project.  Click on an organism's name to see more details.
 
-     }else{
-          alert("The species name must be at least three characters long.");
-     }
-}
+</div>
 
-function add_to_tree(){
-var messages=$("messages");
-var species = $("species").value;
-     new Ajax.Request("/chado/add_organismprop.pl", {
-          parameters: {species: species, prop_name: 'sol100' , prop_value: '1'},
-          onSuccess: function(response){
-               var json = response.responseText;
-               var result = eval("("+json+")");
-               
-               for (var x in result){
-                    status=(result[x])
-                    if (x == 'fail'){
-                        alert(status);
-                    }
-               window.location.reload(true);
-	       
-               }     
-          }
-     });
+<div id="organism_tree">
 
+% if ( $species && %$species ) {
 
-}
+    <& /util/organism_tree.mas,
+      speciesinfo_cache => $species_data,
+      species_hashref => $species,
+      schema  => $schema,
+      root    => 'Solanaceae',
+      uri_dir => $uri_dir,
+      tmp_dir => $tmp_dir,
+     &>
 
-
-function add_to_search(species_name){
-$("species").value=species_name;
-}
-	
-</script>
-
-<div id = "organism_tree">
-
-%if ($sol) { 
-(click on the organism  name to see more details.) <br /><br />
-  <& /util/organism_tree.mas,
-    schema          => $schema,
-    root            => "Solanaceae",
-    species_hashref => $sol,
-    speciesinfo_cache => $speciesinfo_cache,
-    sicache_dir     => $sicache_dir,
-    uri_dir         => $uri_dir,
-    tmp_dir         => $tmp_dir,
-    image_only      => 1
-  &>
 %    } else {
-    <p>
-      No organisms found !
-      </p>
+  $c->throw( public_message => 'Organism page temporarily unavailable, we apologize for the inconvenience',
+             developer_message => "no organisms provided to sol100 page!  $sol:\n".Dumper($sol),
+             is_error => 1,
+             notify => 1,
+            );
 %    }
 
 </div>
 
 %if ($user_type eq 'submitter' || $user_type eq 'curator' || $user_type eq 'sequencer'){
-<h3>Add an organism to this tree:</h3>
+  <div style="width: 40%; margin: 0 0 0 auto">
+    <h3>Add an organism to this tree</h3>
 
-<input type="text" id="species" />
-<input type="button" name="update_result" onclick="update_result()" value="Search" />
-<input type="button" name="add_to_tree" onclick="add_to_tree()" value="Add to Tree" />
+    <input type="text" id="species" />
+    <input type="button" name="update_result" onclick="update_result()" value="Search" />
 
-<p>Suggestions: <span id="txtHint"></span></p> 
+    <p>Suggestions: <span id="txtHint"></span></p> 
 
-<div id = "result_space"></div>
+    <div id = "result_space"></div>
 
-<div id = "messages"></div>
+    <div id = "messages"></div>
+
+    <input type="button" name="add_to_tree" onclick="add_to_tree()" value="Add to Tree" />
+
+  </div>
 %}
+
+
+% ########### subcomponents ##############33
+
+
+% # // subcomponent with all the page's javascript
+<%def .include_javascript>
+
+   <& /util/import_javascript.mas, classes=>["CXGN.Page.FormattingHelpers", "CXGN.Effects", "Prototype"] &>
+
+   <script language="javascript" type="text/javascript" src="/js/popup.js"></script>
+
+   <script language="javascript">
+   function update_result(){
+        if(($("species").value.length)>=3){
+          var result_space = $("result_space");
+          var species = $("species").value;
+          new Ajax.Request("/chado/organism_query.pl", {
+            parameters: { species: species },
+            onSuccess: function(response){
+                 var json = response.responseText;             
+                 var result = eval("("+json+")");
+                 var html = "";
+                 var counter=0; 
+                 for (var r in result) {
+                   html+="<a href='javascript:add_to_search(&quot;"+result[r]+"&quot;)'>"+(result[r])+"</a>"+"<br/>";
+                 }
+                 if(json=="{}"){
+                   html="Your search did not match any organisms.";
+                 }
+                 result_space.innerHTML=html;
+            }
+          });
+        } else {
+          alert("The species name must be at least three characters long.");
+        }
+   }
+
+   function add_to_tree() {
+     var messages=$("messages");
+     var species = $("species").value;
+     new Ajax.Request("/chado/add_organismprop.pl", {
+       parameters: {  species: species,
+                      prop_name: 'sol100' , prop_value: '1'},
+                      onSuccess: function(response){
+                          var json = response.responseText;
+                          var result = eval("("+json+")");
+                  
+                          for (var x in result){
+                            status=(result[x])
+                              if (x == 'fail'){
+                                alert(status);
+                              }
+                            window.location.reload(true);
+                            
+                          }
+                        }
+       });
+   }
+
+   function add_to_search(species_name){
+     $("species").value=species_name;
+   }
+   	
+   </script>
+</%def>
