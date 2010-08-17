@@ -1,3 +1,4 @@
+use CatalystX::GlobalContext qw( $c );
 #!/usr/bin/perl -wT
 
 
@@ -19,11 +20,12 @@ Isaak Y Tecle iyt2@cornell.edu
 use strict;
 use warnings;
 
+use Path::Class;
+
 use CXGN::Scrap::AjaxPage;
 use CXGN::DB::Connection;
 use CXGN::Login;
 use CXGN::Phenome::Qtl;
-use SGN::Context;
 
 my $doc = CXGN::Scrap::AjaxPage->new();
 $doc->send_http_header();
@@ -87,16 +89,12 @@ sub associate_organism {
     my $type = shift;
     my $common_name_id = shift;
     my $sp_person_id = shift;
-    
+
     my $qtl = CXGN::Phenome::Qtl->new($sp_person_id);
-    my $c = SGN::Context->new();
     my ($temp_qtl_dir, $temp_user_dir) = $qtl->create_user_qtl_dir($c); 
-    print STDERR "created user qtl dir...organism select..\n";
 
-    my $org_file = "$temp_user_dir/organism.txt";
-    open TXTFILE, ">$org_file" or die "Can't create file: $! \n";
-    print TXTFILE 'common_name_id' . "\t" . $common_name_id;
-    close TXTFILE;
-
+    my $f = file( $temp_user_dir, 'organism.txt' )->openw
+        or die "Can't create file: $! \n";
+    $f->print( "common_name_id\t$common_name_id" );
 }
 

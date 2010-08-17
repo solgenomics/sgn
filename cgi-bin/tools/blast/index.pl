@@ -1,3 +1,4 @@
+use CatalystX::GlobalContext qw( $c );
 =head1 NAME
 
 /tools/blast/ - the entry page to the SGN blast tool

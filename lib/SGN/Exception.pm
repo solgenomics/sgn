@@ -1,5 +1,13 @@
 package SGN::Exception;
 use Moose;
+use Scalar::Util ();
+
+# make catalyst use this exception class
+{ no warnings 'once';
+  $Catalyst::Exception::CATALYST_EXCEPTION_CLASS = __PACKAGE__;
+}
+
+with 'Catalyst::Exception::Basic';
 
 use overload
   (
@@ -7,8 +15,7 @@ use overload
    fallback => 1,
   );
 
-
-has 'message' => (
+has 'public_message' => (
     is  => 'ro',
     isa => 'Maybe[Str]',
    );
@@ -18,30 +25,59 @@ has 'developer_message' => (
     isa => 'Maybe[Str]',
    );
 
+has 'explanation' => (
+    is  => 'ro',
+    isa => 'Maybe[Str]',
+   );
+
 has 'title' => (
     is  => 'ro',
     isa => 'Maybe[Str]',
    );
 
-has 'is_error' => (
-    is => 'ro',
+has 'is_server_error' => (
+    is  => 'ro',
     isa => 'Bool',
     default => 1,
 );
 
+has 'is_client_error' => (
+    is  => 'ro',
+    isa => 'Bool',
+    default => 0,
+);
+
+has 'http_status' => (
+    is  => 'ro',
+    isa => 'Int',
+    default => sub {
+        my $self = shift;
+        $self->is_server_error ? 500 :
+        $self->is_client_error ? 400 :
+                                 200
+        },
+);
+
 has 'notify' => (
-    is => 'ro',
+    is  => 'ro',
     isa => 'Bool',
     lazy_build => 1,
    ); sub _build_notify {
-       shift->is_error
+       shift->is_server_error
    }
 
+around 'BUILDARGS' => sub {
+    my ($orig,$class,%args) = @_;
+    $args{developer_message} ||= $args{message};
+    $args{message}           ||= $args{developer_message};
+
+    return $class->$orig( %args );
+};
 
 sub stringify {
     my $self = shift;
     return
-        ($self->message || '') . "\n"
+        ($self->public_message || '') . "\n"
         .'Developer message: '
         .($self->developer_message || 'none');
 }

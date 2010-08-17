@@ -1,27 +1,23 @@
 #!usr/bin/perl
-
 use strict;
+use warnings;
+
 use CXGN::Page;
 use CXGN::BlastWatch;
 use CXGN::DB::Connection;
 use CXGN::Page::FormattingHelpers qw/page_title_html modesel info_table_html hierarchical_selectboxes_html simple_selectbox_html/;
 
-our $page = CXGN::Page->new("", "Adri");
+my $page = CXGN::Page->new("", "Adri");
+use CatalystX::GlobalContext qw( $c );
 
 # get query_id and person_id from toplevel.pl
 
-my $r = Apache2::RequestUtil->request;
-$r->content_type("text/html");
+&post_only unless $c->req->method eq 'POST';
 
-my $req = Apache2::Request->new($r);
+my $params = $c->req->params;
 
-my $params = $r->method eq 'POST' ? $req->body : &post_only;
+my @bw_query_ids = $params->{'bw_query_id'};
 
-my @bw_query_ids;
-
-# TODO: can currently only delete one at a time...
-
-push (@bw_query_ids, $params->{'bw_query_id'});
 my $sp_person_id = $params->{'sp_person_id'};
 
 my $dbh = CXGN::DB::Connection->new("public");
@@ -35,15 +31,8 @@ $dbh->disconnect(42);
 &website;
 
 sub post_only {
-    
-    $page->header();
-    
-    print <<EOF;
-    <h4>SGN BLAST Watch Interface Error</h4>
-    <p>BLAST subsystem can only accept HTTP POST requests</p>
-EOF
-	
-    $page->footer();
+    $c->throw( message => 'BLAST subsystem can only accept HTTP POST requests',
+               is_error => 0 );
 }
 
 sub website {
@@ -72,15 +61,3 @@ EOF
     exit(0);
 }
 
-sub post_only {
-    
-    $page->header();
-    print page_title_html('SGN BLAST Watch Interface Error');
-    
-    print <<EOF;
-    <p>BLAST subsystem can only accept HTTP POST requests</p>
-EOF
-	
-    $page->footer();
-    exit(0);
-}

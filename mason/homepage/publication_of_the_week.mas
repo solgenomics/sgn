@@ -20,16 +20,13 @@ Lukas Mueller <lam87@cornell.edu>
 
 use strict;
 use File::Spec;
-use CXGN::VHost;
 use CXGN::Tools::File;
-
-my $vh = CXGN::VHost->new();
 
 my $publications = "The publication of the week is currently unavailable.<br /><br />";
 
 eval {
 
- $publications = CXGN::Tools::File::get_sections(File::Spec->catfile($vh->get_conf('homepage_files_dir'), "publications.txt"));
+ $publications = CXGN::Tools::File::get_sections(File::Spec->catfile($c->get_conf('homepage_files_dir'), "publications.txt"));
 
 };
 

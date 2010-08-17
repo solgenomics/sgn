@@ -76,10 +76,8 @@ sub new {
     $self->set_page(CXGN::Page->new("SGN", "Lukas"));
     my $dbh=$self->get_page()->get_dbh(); # reuse the dbh from the Page object
     $self->set_dbh($dbh);
-    $dbh->add_search_path("$schema");
     
     $self->set_login(CXGN::Login->new($self->get_dbh()));
-    $self->get_page->{request}->no_cache(1);
     my %args = $self->get_page()->cgi_params(); #multi-valued parameters have values in a string, delimited by \0
 
     # sanitize the inputs, we don't want to end up like bobby tables school.
@@ -720,7 +718,6 @@ sub set_primary_key {
 sub get_script_name {
   my $self=shift;
   if (!exists($self->{script_name})) { 
-      #return CXGN::Apache::Request::page_name();
       return $ENV{SCRIPT_NAME};
   }
   else { 

@@ -1,5 +1,4 @@
 
-
 use strict;
 use CXGN::DB::Connection;
 use CXGN::Page;
@@ -8,30 +7,34 @@ use CXGN::People;
 use CXGN::Contact;
 use CXGN::VHost;
 
-my $dbh = CXGN::DB::Connection->new();
-my $login=CXGN::Login->new($dbh);
+my $dbh   = CXGN::DB::Connection->new();
+my $login = CXGN::Login->new($dbh);
 my $username;
 my $useremail;
-if(my $user_id=$login->has_session())
-{
-    my $user=CXGN::People::Person->new($user_id);
-    $username=$user->get_first_name()." ".$user->get_last_name();
-    $useremail=$user->get_private_email();
+if ( my $user_id = $login->has_session() ) {
+    my $user = CXGN::People::Person->new( $dbh, $user_id );
+    $username  = $user->get_first_name() . " " . $user->get_last_name();
+    $useremail = $user->get_private_email();
 }
-$username||='';
-$useremail||='';
-my $vhost=CXGN::VHost->new();
-my $email_address_to_display=$vhost->get_conf('email');
-my $page=CXGN::Page->new("contact.pl","john");
-my($name,$email,$subject,$body,$referred,$tried_once)=$page->get_arguments('moniker','wheretosendelectroniccorrespondence','thingyouarewritingabout','alotofwords','referred','tried_once');
-$name||=$username;
-$email||=$useremail;
-$subject||='';
-$body||='';
-$referred||='';
-if($name and $email and $subject and $body)
-{
-    my $body=<<END_HEREDOC;
+$username  ||= '';
+$useremail ||= '';
+my $vhost                    = CXGN::VHost->new();
+my $email_address_to_display = $vhost->get_conf('email');
+my $page                     = CXGN::Page->new( "contact.pl", "john" );
+my ( $name, $email, $subject, $body, $referred, $tried_once ) =
+  $page->get_arguments(
+    'moniker',                 'wheretosendelectroniccorrespondence',
+    'thingyouarewritingabout', 'alotofwords',
+    'referred',                'tried_once'
+  );
+$name     ||= $username;
+$email    ||= $useremail;
+$subject  ||= '';
+$body     ||= '';
+$referred ||= '';
+
+if ( $name and $email and $subject and $body ) {
+    my $body = <<END_HEREDOC;
 From:
 $name <$email>
 
@@ -42,24 +45,22 @@ Body:
 $body
 
 END_HEREDOC
-    CXGN::Contact::send_email("[contact.pl] $subject",$body,'email',$email);
+    CXGN::Contact::send_email( "[contact.pl] $subject", $body, 'email',
+        $email );
     $page->message_page("Thank you. Your message has been sent.");
 }
-my $message="All fields are required.";
-if($tried_once)
-{
-    $message="<span class=\"alert\">$message</span>";
+my $message = "All fields are required.";
+if ($tried_once) {
+    $message = "<span class=\"alert\">$message</span>";
 }
 my $subject_section;
-if($referred and $subject)
-{
-    $subject_section=<<END_HEREDOC;
+if ( $referred and $subject ) {
+    $subject_section = <<END_HEREDOC;
 <input type="hidden" name="thingyouarewritingabout" value="$subject" />
 END_HEREDOC
 }
-else
-{
-    $subject_section=<<END_HEREDOC;
+else {
+    $subject_section = <<END_HEREDOC;
 <tr><td align="left" valign="top">
 <strong>Subject</strong>
 </td><td align="left" valign="top">
@@ -67,8 +68,8 @@ else
 </td></tr>
 END_HEREDOC
 }
-$page->header('Contact SGN','Contact SGN');
-print<<END_HEREDOC;
+$page->header( 'Contact SGN', 'Contact SGN' );
+print <<END_HEREDOC;
 
 <div class="center">$message</div>
 
@@ -150,5 +151,4 @@ To stay informed of developments around SGN you can subscribe to our <a href="ht
 
 END_HEREDOC
 $page->footer();
-
 

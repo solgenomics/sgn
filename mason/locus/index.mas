@@ -96,7 +96,7 @@ my $owner_objects= $locus->get_owners(1);
 
 my $locus_name = $locus->get_locus_name();
 my $owner;
-if ( $locus_name && ($user_type eq 'curator' || grep { /^$person_id$/ } @owners  ) ) {  $owner = 1; }
+if ( $locus_name && ($user_type eq 'curator' || $person_id && grep { $_ == $person_id } @owners  ) ) {  $owner = 1; }
 my $registry = $locus->get_associated_registry();
 
 my @synonyms = $locus->get_locus_aliases('f','f');

@@ -1,6 +1,8 @@
 use strict;
 use warnings;
 
+use FindBin;
+use lib 't/lib';
 use SGN::Test qw/validate_urls/;
 use Test::More;
 
@@ -18,7 +20,6 @@ my %urls = (
         "phenotype individual detail"              => "/phenome/individual.pl?individual_id=7530",
         "phenotype population detail"              => "/phenome/population.pl?population_id=12",
         "QTL detail page"                          => "/phenome/qtl.pl?population_id=12&term_id=47515&chr=7&l_marker=SSR286&p_marker=SSR286&r_marker=CD57&lod=3.9&qtl=/documents/tempfiles/temp_images/1a1a5391641c653884fbc9d6d8be5c90.png",
-        "Load QTL page"                            => "/cgi-bin/phenome/qtl_load.pl",
         'tomato bac tpf'                           => '/sequencing/agp.pl',
         'tomato bac tpf'                           => '/sequencing/tpf.pl',
         "QTL individuals list page"                => "/phenome/indls_range_cvterm.pl?cvterm_id=47515&lower=151.762&upper=162.011&population_id=12",

@@ -15,7 +15,7 @@ use CXGN::Tools::Text;
 
 use Bio::Chado::Schema;
 
-our $c;
+use CatalystX::GlobalContext qw( $c );
 
 my $page = CXGN::Page->new( "SGN Organism detail", "Naama" );
 my ( $organism_id, $force ) =

@@ -3,16 +3,12 @@
 
 use strict;
 use File::Spec;
-use CXGN::VHost;
 use CXGN::Tools::File;
-
-my $vh = CXGN::VHost->new();
-
 
 my $loci = qq { The locus of the week is currently unavailable. <br /><br /> };
 
 eval { 
-  $loci = CXGN::Tools::File::get_sections(File::Spec->catfile($vh->get_conf("homepage_files_dir"), "loci.txt"));
+  $loci = CXGN::Tools::File::get_sections(File::Spec->catfile($c->get_conf("homepage_files_dir"), "loci.txt"));
 
 };
 </%perl>

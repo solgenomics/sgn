@@ -107,7 +107,7 @@ $clone_html .= @otherchromats
     ? info_table_html( scalar(@otherchromats).' sequencing reads found' => 
 		       qq|<ul style="list-style: none">\n|
 		       .join("\n", map { '<li>'
-					     .$_->read_link_html($page->{request}->uri)
+					     .$_->read_link_html('')
 					     ."</li>\n"
 				       } @otherchromats
 			    )

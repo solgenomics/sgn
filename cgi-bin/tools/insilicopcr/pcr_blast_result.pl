@@ -37,7 +37,6 @@ our %urlencode;
 
 use CXGN::DB::Connection;
 
-use CXGN::Page::UserPrefs;
 use CXGN::BlastDB;
 
 use CXGN::Tools::Identifiers;
@@ -49,7 +48,6 @@ use CXGN::Page::FormattingHelpers qw/page_title_html modesel info_table_html hie
 use Bio::Seq;
 ################################################################################################################
 my $page = CXGN::Page->new( "Get PCR Products", "Waleed");
-my $prefs = CXGN::Page::UserPrefs->new( CXGN::DB::Connection->new );
 my $vhost_conf = CXGN::VHost->new();
 
 my %params;
@@ -202,7 +200,6 @@ my %arg_handlers =
      my $basename = $bdb->full_file_basename;
             #returns '/data/shared/blast/databases/genbank/nr'
  #remember the file_base the user just blasted with
-     $prefs->set_pref( last_blast_db_file_base => $bdb->file_base );
 
      return -d => $basename;
    },

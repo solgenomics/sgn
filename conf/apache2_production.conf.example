@@ -10,7 +10,7 @@
     <Perl>
        use lib '/usr/share/sgn-site/lib/perl5';
         
-       use SGN::Apache2::Startup vhost => 1;
+       use SGN::Deploy::Apache SGN => ( type => 'mod_perl', vhost => 1 );
 
     </Perl>
 

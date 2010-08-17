@@ -1,4 +1,5 @@
 package CXGN::Phenome::QtlLoadDetailPage;
+use CatalystX::GlobalContext qw( $c );
 
 =head1 DESCRIPTION
 processes and loads qtl data obtained from the the web forms 
@@ -15,18 +16,16 @@ use warnings;
 
 my $qtl_load_detail_page = CXGN::Phenome::QtlLoadDetailPage->new();
 
-
 use File::Spec;
-use SGN::Context;
 use CXGN::Page;
-use CXGN::Page::FormattingHelpers qw /info_section_html 
-                                      page_title_html
-                                      columnar_table_html 
-                                      html_optional_show 
-                                      info_table_html
-                                      tooltipped_text
-                                      html_alternate_show
-                                      /;
+use CXGN::Page::FormattingHelpers qw /info_section_html
+  page_title_html
+  columnar_table_html
+  html_optional_show
+  info_table_html
+  tooltipped_text
+  html_alternate_show
+  /;
 use CXGN::DB::Connection;
 use CXGN::Phenome::Qtl;
 use CXGN::Phenome::Qtl::Tools;
@@ -55,385 +54,389 @@ use CXGN::Page;
 use Bio::Chado::Schema;
 use Storable qw /store retrieve/;
 
-
-sub new { 
+sub new {
     my $class = shift;
     my $self = bless {}, $class;
 
-    my $dbh = CXGN::DB::Connection->new();
-    my $login = CXGN::Login->new($dbh);
+    my $dbh          = CXGN::DB::Connection->new();
+    my $login        = CXGN::Login->new($dbh);
     my $sp_person_id = $login->verify_session();
-    
+
     $self->set_sp_person_id($sp_person_id);
     $self->set_dbh($dbh);
 
     if ($sp_person_id) {
-	$self->process_data();
-    } 
-    
-    return $self; 
+        $self->process_data();
+    }
+
+    return $self;
 }
 
-
-
 sub process_data {
-    my $self=shift;
-    my $page = CXGN::Page->new("SGN", "isaak");
-    my $dbh = $self->get_dbh();
-    
-    my $login = CXGN::Login->new($dbh);
-    my $sp_person_id = $login->verify_session();
-    
-    my $referring_page = "/phenome/qtl_form.pl";
+    my $self = shift;
+    my $page = CXGN::Page->new( "SGN", "isaak" );
+    my $dbh  = $self->get_dbh();
 
+    my $login        = CXGN::Login->new($dbh);
+    my $sp_person_id = $login->verify_session();
+
+    my $referring_page = "/phenome/qtl_form.pl";
 
     my %args = $page->get_all_encoded_arguments();
     $args{pop_common_name_id} = $self->common_name_id();
-   
-    my $type = $args{type};
-    my $pop_id = $args{pop_id};
+
+    my $type     = $args{type};
+    my $pop_id   = $args{pop_id};
     my $args_ref = \%args;
 
-    my $qtl_obj = CXGN::Phenome::Qtl->new($sp_person_id, $args_ref);
-    my $c = SGN::Context->new();
+    my $qtl_obj = CXGN::Phenome::Qtl->new( $sp_person_id, $args_ref );
     $qtl_obj->create_user_qtl_dir($c);
     my $qtl_tools = CXGN::Phenome::Qtl::Tools->new();
-    my $page = CXGN::Page->new("SGN", "Isaak");
-   
+    my $page = CXGN::Page->new( "SGN", "Isaak" );
+
     if ($pop_id) {
-	$self->set_population_id($pop_id);
-	$qtl_obj->set_population_id($pop_id);
+        $self->set_population_id($pop_id);
+        $qtl_obj->set_population_id($pop_id);
     }
 
-    my ($pop_name, $desc, $pop_detail, $message);
-     
-     if ($type eq 'begin') {
-	 $type = 'pop_form';
-	 $message = 'A user is at the QTL data upload Step 0 of 5';
-	 $self->send_email('[QTL upload: Step 0]', $message, 'NA');	 
-	 $page->client_redirect("$referring_page?type=$type");	 	 	 
-     }
+    my ( $pop_name, $desc, $pop_detail, $message );
 
-    elsif ($type eq 'pop_form') {
-	$pop_detail = $qtl_obj->user_pop_details();
-	my @error = $qtl_tools->check_pop_fields($pop_detail);
-	
-	if (@error) {	     
-	    $self->error_page(@error);
-	} else {
-	    ($pop_id, $pop_name, $desc) = $self->load_pop_details($pop_detail);
-	}
-	unless (!$pop_id) {
-	    $message = 'QTL population data uploaded: Step 1 of 5';
-	    $self->send_email('[QTL upload: Step 1]', $message, $pop_id);
-	    $type = 'trait_form';
-	    $page->client_redirect("$referring_page?pop_id=$pop_id&amp;type=$type");    
-	}
-    }
-    
-    elsif ($type eq 'trait_form') {
-
-	my ($trait_file, $trait_to_db);
-	if ($args{'trait_file'}) {
-	    $trait_file = $self->trait_upload($qtl_obj, $args{'trait_file'});
-	    $trait_to_db = $self->store_traits($trait_file);
-	} else {
-	    $self->error_page('Traits file');
-	}
-	unless (!-e $trait_file || !$trait_to_db) {
-	    $message = 'QTL traits uploaded: Step 2 of 5';
-	    $self->send_email('[QTL upload: Step 2]', $message, $pop_id);
-	    $type = 'pheno_form';
-	    $page->client_redirect("$referring_page?pop_id=$pop_id&amp;type=$type");
-    
-	} 
-   # else {
-#	print "There is problem with your traits list. <br/>
-#               Make sure (1) it is a tab delimited file, 
-#               <br/> (2) The headings are in the order of 
-#               trait->definition->unit.";
-#	$page->footer();
-#    }
-
-    } 
-
-    elsif ($type eq 'pheno_form') {
-	
-	my ($pheno_file, $trait_values_to_db);
-	if ($args{'pheno_file'}) {
-	     $pheno_file = $self->pheno_upload ($qtl_obj, $args{'pheno_file'});
-	     $trait_values_to_db = $self->store_trait_values($pheno_file);
-	} else {
-	    $self->error_page('Phenotype dataset file');
-	}
-
-	unless (!-e $pheno_file || !$trait_values_to_db) {
-	    $message = 'QTL phenotype data uploaded : Step 3 of 5';
-	    $self->send_email('[QTL upload: Step 3]', $message, $pop_id);
-	    $type = 'geno_form';
-	    $page->client_redirect("$referring_page?pop_id=$pop_id&amp;type=$type");
-    	}
+    if ( $type eq 'begin' ) {
+        $type    = 'pop_form';
+        $message = 'A user is at the QTL data upload Step 0 of 5';
+        $self->send_email( '[QTL upload: Step 0]', $message, 'NA' );
+        $page->client_redirect("$referring_page?type=$type");
     }
 
-    elsif ($type eq 'geno_form') {	
-	my ($geno_file, $map_id, $map_version_id);	
-	if ($args{'geno_file'}) {   
-	    $geno_file = $self->geno_upload($qtl_obj, $args{'geno_file'});
-	    ($map_id, $map_version_id) = $self->store_map($geno_file);
-	} else {
-	    $self->error_page('Genotype dataset file');
-	}
+    elsif ( $type eq 'pop_form' ) {
+        $pop_detail = $qtl_obj->user_pop_details();
+        my @error = $qtl_tools->check_pop_fields($pop_detail);
 
-	unless (!$geno_file || !$map_id || !$map_version_id) {
-	    if ($map_version_id) {
-		my $result = $self->store_marker_and_position($geno_file, $map_version_id);	     
-		unless (!$result) {
-		    my $genotype_uploaded = $self->store_genotype($geno_file, $map_version_id);
-		    if ($genotype_uploaded) {
-			$message = 'QTL genotype data uploaded : Step 4 of 5';
-			$self->send_email('[QTL upload: Step 4]', $message, $pop_id);
-			$type = 'stat_form';
-			$page->client_redirect("$referring_page?pop_id=$pop_id&amp;type=$type");
-		    } 
-		    else {
-			print STDERR "There is problem with your genotype data uploading\n";
-		    }
-		}
-	    } else {
-		die "Can't store markers. No map version id\n";
-	    }	
-	 
-	} #else { die "Failed storing map data\n";}
+        if (@error) {
+            $self->error_page(@error);
+        }
+        else {
+            ( $pop_id, $pop_name, $desc ) =
+              $self->load_pop_details($pop_detail);
+        }
+        unless ( !$pop_id ) {
+            $message = 'QTL population data uploaded: Step 1 of 5';
+            $self->send_email( '[QTL upload: Step 1]', $message, $pop_id );
+            $type = 'trait_form';
+            $page->client_redirect(
+                "$referring_page?pop_id=$pop_id&amp;type=$type");
+        }
     }
 
-    elsif ($type eq 'stat_form') {
-	my $stat_param = $qtl_obj->user_stat_parameters();
-	my @missing = $qtl_tools->check_stat_fields($stat_param);
-	
-	my $stat_file;
-	if (@missing) {
-	    $self->error_page(@missing);
-	} else {
-	    my $c = SGN::Context->new();
-	    $stat_file = $qtl_obj->get_stat_file($c, $pop_id);
-	}
-	unless (!-e $stat_file) {
-	    $message = 'QTL statistical parameters set : Step 5 of 5' . qq | \nQTL data upload for http://solgenomics.net/phenome/population.pl?pop_id=$pop_id" is completed|;
-	    $self->send_email('[QTL upload: Step 5]', $message, $pop_id);
-	    
-	    $type = 'confirm';
-	    $page->client_redirect("$referring_page?pop_id=$pop_id&amp;type=$type");    
-	}
+    elsif ( $type eq 'trait_form' ) {
+
+        my ( $trait_file, $trait_to_db );
+        if ( $args{'trait_file'} ) {
+            $trait_file = $self->trait_upload( $qtl_obj, $args{'trait_file'} );
+            $trait_to_db = $self->store_traits($trait_file);
+        }
+        else {
+            $self->error_page('Traits file');
+        }
+        unless ( !-e $trait_file || !$trait_to_db ) {
+            $message = 'QTL traits uploaded: Step 2 of 5';
+            $self->send_email( '[QTL upload: Step 2]', $message, $pop_id );
+            $type = 'pheno_form';
+            $page->client_redirect(
+                "$referring_page?pop_id=$pop_id&amp;type=$type");
+
+        }
+
+        # else {
+        #	print "There is problem with your traits list. <br/>
+        #               Make sure (1) it is a tab delimited file,
+        #               <br/> (2) The headings are in the order of
+        #               trait->definition->unit.";
+        #	$page->footer();
+        #    }
+
+    }
+
+    elsif ( $type eq 'pheno_form' ) {
+
+        my ( $pheno_file, $trait_values_to_db );
+        if ( $args{'pheno_file'} ) {
+            $pheno_file = $self->pheno_upload( $qtl_obj, $args{'pheno_file'} );
+            $trait_values_to_db = $self->store_trait_values($pheno_file);
+        }
+        else {
+            $self->error_page('Phenotype dataset file');
+        }
+
+        unless ( !-e $pheno_file || !$trait_values_to_db ) {
+            $message = 'QTL phenotype data uploaded : Step 3 of 5';
+            $self->send_email( '[QTL upload: Step 3]', $message, $pop_id );
+            $type = 'geno_form';
+            $page->client_redirect(
+                "$referring_page?pop_id=$pop_id&amp;type=$type");
+        }
+    }
+
+    elsif ( $type eq 'geno_form' ) {
+        my ( $geno_file, $map_id, $map_version_id );
+        if ( $args{'geno_file'} ) {
+            $geno_file = $self->geno_upload( $qtl_obj, $args{'geno_file'} );
+            ( $map_id, $map_version_id ) = $self->store_map($geno_file);
+        }
+        else {
+            $self->error_page('Genotype dataset file');
+        }
+
+        unless ( !$geno_file || !$map_id || !$map_version_id ) {
+            if ($map_version_id) {
+                my $result =
+                  $self->store_marker_and_position( $geno_file,
+                    $map_version_id );
+                unless ( !$result ) {
+                    my $genotype_uploaded =
+                      $self->store_genotype( $geno_file, $map_version_id );
+                    if ($genotype_uploaded) {
+                        $message = 'QTL genotype data uploaded : Step 4 of 5';
+                        $self->send_email( '[QTL upload: Step 4]',
+                            $message, $pop_id );
+                        $type = 'stat_form';
+                        $page->client_redirect(
+                            "$referring_page?pop_id=$pop_id&amp;type=$type");
+                    }
+                    else {
+                        print STDERR
+"There is problem with your genotype data uploading\n";
+                    }
+                }
+            }
+            else {
+                die "Can't store markers. No map version id\n";
+            }
+
+        }    #else { die "Failed storing map data\n";}
+    }
+
+    elsif ( $type eq 'stat_form' ) {
+        my $stat_param = $qtl_obj->user_stat_parameters();
+        my @missing    = $qtl_tools->check_stat_fields($stat_param);
+
+        my $stat_file;
+        if (@missing) {
+            $self->error_page(@missing);
+        }
+        else {
+            $stat_file = $qtl_obj->get_stat_file( $c, $pop_id );
+        }
+        unless ( !-e $stat_file ) {
+            $message = 'QTL statistical parameters set : Step 5 of 5'
+              . qq | \nQTL data upload for http://solgenomics.net/phenome/population.pl?pop_id=$pop_id" is completed|;
+            $self->send_email( '[QTL upload: Step 5]', $message, $pop_id );
+
+            $type = 'confirm';
+            $page->client_redirect(
+                "$referring_page?pop_id=$pop_id&amp;type=$type");
+        }
     }
 
 }
 
-
 sub pheno_upload {
-    my $self = shift;    
-    my $qtl = shift;
+    my $self   = shift;
+    my $qtl    = shift;
     my $p_file = shift;
-   
+
     my $safe_char = "a-zA-Z0-9_.-";
-    my ($temp_pheno_file, $name);
-   
+    my ( $temp_pheno_file, $name );
+
     $p_file =~ tr/ /_/;
     $p_file =~ s/[^$safe_char]//g;
 
-    if ($p_file =~/^([$safe_char]+)$/) { 
-    
-	$p_file = $1;
-    
-    } else  {
-	die "Phenotype file name contains invalid characters";
+    if ( $p_file =~ /^([$safe_char]+)$/ ) {
+
+        $p_file = $1;
+
     }
-    
-    
-    my $p= CXGN::Page->new();
-    my $c = SGN::Context->new();
-    my $phe_upload = $p->get_upload(); 
-    
-    if (defined $phe_upload) {
-	 $name = $phe_upload->filename;
-	 
-	 my ($qtl_dir, $user_dir) = $qtl->get_user_qtl_dir($c);	
-	 my $qtlfiles = retrieve("$user_dir/qtlfiles");
-	
-	 my $trait_file = $qtlfiles->{trait_file};	 
-	 my $f = $self->compare_file_names($name, $trait_file);		
-	 $qtlfiles->{pheno_file}=$name;
-	 store $qtlfiles, "$user_dir/qtlfiles";
-    
-    } else {
-	die "Apache2::Upload object for phenotype file not defined."
-	    
+    else {
+        die "Phenotype file name contains invalid characters";
     }
-    
-    if ($p_file eq $name ) {
-    $temp_pheno_file = $qtl->apache_upload_file($phe_upload, $c);    
-    return $temp_pheno_file;
-   
-    } 
-    else {return 0};
+
+    my $p          = CXGN::Page->new();
+    my $phe_upload = $p->get_upload();
+
+    if ( defined $phe_upload ) {
+        $name = $phe_upload->filename;
+
+        my ( $qtl_dir, $user_dir ) = $qtl->get_user_qtl_dir($c);
+        my $qtlfiles = retrieve("$user_dir/qtlfiles");
+
+        my $trait_file = $qtlfiles->{trait_file};
+        my $f = $self->compare_file_names( $name, $trait_file );
+        $qtlfiles->{pheno_file} = $name;
+        store $qtlfiles, "$user_dir/qtlfiles";
+
+    }
+    else {
+        die "Apache2::Upload object for phenotype file not defined."
+
+    }
+
+    if ( $p_file eq $name ) {
+        $temp_pheno_file = $qtl->apache_upload_file( $phe_upload, $c );
+        return $temp_pheno_file;
+
+    }
+    else { return 0 }
 
 }
 
-
 sub geno_upload {
-    my $self = shift;
-    my $qtl = shift;
+    my $self   = shift;
+    my $qtl    = shift;
     my $g_file = shift;
- 
-    
-    my ($temp_geno_file, $name);
- 
+
+    my ( $temp_geno_file, $name );
+
     my $safe_char = "a-zA-Z0-9_.-";
-    
+
     $g_file =~ tr/ /_/;
     $g_file =~ s/[^$safe_char]//g;
 
-    if ($g_file =~/^([$safe_char]+)$/) { 
-    
-	$g_file = $1;
-    
-    } else  {
-	die "Genotype file name contains invalid characters";
+    if ( $g_file =~ /^([$safe_char]+)$/ ) {
+
+        $g_file = $1;
+
     }
-    
-    my $p = CXGN::Page->new();
-    my $c = SGN::Context->new();
-    my $gen_upload = $p->get_upload();      
-    
-    if (defined $gen_upload) {
-	 $name = $gen_upload->filename;
-	 
-	 my ($qtl_dir, $user_dir) = $qtl->get_user_qtl_dir($c);
-	 my $qtlfiles = retrieve("$user_dir/qtlfiles");
-	
-	 my $trait_file = $qtlfiles->{trait_file};
-	 my $pheno_file = $qtlfiles->{pheno_file};
-
-	 my $f = $self->compare_file_names($name, $trait_file);
-	 $f    = $self->compare_file_names($name, $pheno_file);
-
-	 $qtlfiles->{geno_file}=$name;
-	 store $qtlfiles, "$user_dir/qtlfiles";		 
-
-    } else {
-	die "Apache2::Upload object for genotype file not defined."
-	    
+    else {
+        die "Genotype file name contains invalid characters";
     }
-    
-    if ($g_file eq $name ) {
-	$temp_geno_file = $qtl->apache_upload_file($gen_upload, $c);    
-	return $temp_geno_file;
-    } 
-    else {return 0};    
+
+    my $p          = CXGN::Page->new();
+    my $gen_upload = $p->get_upload();
+
+    if ( defined $gen_upload ) {
+        $name = $gen_upload->filename;
+
+        my ( $qtl_dir, $user_dir ) = $qtl->get_user_qtl_dir($c);
+        my $qtlfiles = retrieve("$user_dir/qtlfiles");
+
+        my $trait_file = $qtlfiles->{trait_file};
+        my $pheno_file = $qtlfiles->{pheno_file};
+
+        my $f = $self->compare_file_names( $name, $trait_file );
+        $f = $self->compare_file_names( $name, $pheno_file );
+
+        $qtlfiles->{geno_file} = $name;
+        store $qtlfiles, "$user_dir/qtlfiles";
+
+    }
+    else {
+        die "Apache2::Upload object for genotype file not defined."
+
+    }
+
+    if ( $g_file eq $name ) {
+        $temp_geno_file = $qtl->apache_upload_file( $gen_upload, $c );
+        return $temp_geno_file;
+    }
+    else { return 0 }
 }
 
-
 sub trait_upload {
-    my $self = shift;   
-    my $qtl = shift;
+    my $self   = shift;
+    my $qtl    = shift;
     my $c_file = shift;
- 
-    my ($temp_trait_file, $name);
-      
+
+    my ( $temp_trait_file, $name );
+
     print STDERR "Trait file: $c_file\n";
     my $safe_char = "a-zA-Z0-9_.-";
-    
+
     $c_file =~ tr/ /_/;
     $c_file =~ s/[^$safe_char]//g;
 
-    if ($c_file =~/^([$safe_char]+)$/) { 
-    
-	$c_file = $1;
-    
-    } else  {
-	die "Trait file name contains invalid characters";
+    if ( $c_file =~ /^([$safe_char]+)$/ ) {
+
+        $c_file = $1;
+
     }
-   
-    my $p = CXGN::Page->new();
-    my $c = SGN::Context->new();
-    my $trait_upload = $p->get_upload();      
-    
-    if (defined $trait_upload) {
-	 $name = $trait_upload->filename;
-	 
-	 my ($qtl_dir, $user_dir) = $qtl->get_user_qtl_dir($c);
-	 my $qtlfiles={};	 	
-	 $qtlfiles->{trait_file}=$name;	 	 
-	 store ($qtlfiles, "$user_dir/qtlfiles");
-	 
-	 
-    } else {
-	die "Apache2::Upload object for trait file not defined."
-	    
+    else {
+        die "Trait file name contains invalid characters";
     }
-    
-    if ($c_file eq $name ) {
-	$temp_trait_file = $qtl->apache_upload_file($trait_upload, $c);    
-	return $temp_trait_file;
-    } 
-    else {return 0};    
+
+    my $p            = CXGN::Page->new();
+    my $trait_upload = $p->get_upload();
+
+    if ( defined $trait_upload ) {
+        $name = $trait_upload->filename;
+
+        my ( $qtl_dir, $user_dir ) = $qtl->get_user_qtl_dir($c);
+        my $qtlfiles = {};
+        $qtlfiles->{trait_file} = $name;
+        store( $qtlfiles, "$user_dir/qtlfiles" );
+
+    }
+    else {
+        die "Apache2::Upload object for trait file not defined."
+
+    }
+
+    if ( $c_file eq $name ) {
+        $temp_trait_file = $qtl->apache_upload_file( $trait_upload, $c );
+        return $temp_trait_file;
+    }
+    else { return 0 }
 }
 
-
-
 sub load_pop_details {
-    my $self = shift;
-    my $pop_args = shift;    
+    my $self        = shift;
+    my $pop_args    = shift;
     my %pop_details = %{$pop_args};
 
-    my $org      = $pop_details{organism};
-    my $name     = $pop_details{pop_name};
-    my $desc     = $pop_details{pop_desc};
-    my $cross_id = $pop_details{pop_type};
-    my $female   = $pop_details{pop_female_parent};
-    my $male     = $pop_details{pop_male_parent};
-    my $recurrent= $pop_details{pop_recurrent_parent};
-    my $donor    = $pop_details{pop_donor_parent};
-    my $comment  = $pop_details{pop_comment};
-    my $is_public = $pop_details{pop_is_public};
+    my $org            = $pop_details{organism};
+    my $name           = $pop_details{pop_name};
+    my $desc           = $pop_details{pop_desc};
+    my $cross_id       = $pop_details{pop_type};
+    my $female         = $pop_details{pop_female_parent};
+    my $male           = $pop_details{pop_male_parent};
+    my $recurrent      = $pop_details{pop_recurrent_parent};
+    my $donor          = $pop_details{pop_donor_parent};
+    my $comment        = $pop_details{pop_comment};
+    my $is_public      = $pop_details{pop_is_public};
     my $common_name_id = $pop_details{pop_common_name_id};
 
-    
-    my $dbh = $self->get_dbh();
-    my $login = CXGN::Login->new($dbh);
+    my $dbh          = $self->get_dbh();
+    my $login        = CXGN::Login->new($dbh);
     my $sp_person_id = $login->verify_session();
 
-   
-    my ($female_id, $male_id, $recurrent_id, $donor_id);
+    my ( $female_id, $male_id, $recurrent_id, $donor_id );
 
-    my $population = CXGN::Phenome::Population->new_with_name($dbh, $name);
+    my $population = CXGN::Phenome::Population->new_with_name( $dbh, $name );
     my $population_id = $population->get_population_id();
     if ($population_id) {
-	$self->population_exists($population, $name);
-    }
-   	
-    print STDERR "storing parental accessions...\n";
-   
-    if ($female) {
-	$female_id = $self->store_accession($female);
-	print STDERR "female: $female_id\n";
+        $self->population_exists( $population, $name );
     }
 
-   
+    print STDERR "storing parental accessions...\n";
+
+    if ($female) {
+        $female_id = $self->store_accession($female);
+        print STDERR "female: $female_id\n";
+    }
+
     if ($male) {
-	$male_id = $self->store_accession($male);
-	print STDERR "male: $male_id\n";
+        $male_id = $self->store_accession($male);
+        print STDERR "male: $male_id\n";
     }
 
     if ($recurrent) {
-	$recurrent_id = $self->store_accession($recurrent);
+        $recurrent_id = $self->store_accession($recurrent);
 
     }
     if ($donor) {
-	$donor_id = $self->store_accession($donor);
+        $donor_id = $self->store_accession($donor);
     }
-   
-    
-    my $pop = CXGN::Phenome::Population->new($dbh);        
+
+    my $pop = CXGN::Phenome::Population->new($dbh);
     $pop->set_name($name);
     $pop->set_description($desc);
     $pop->set_sp_person_id($sp_person_id);
@@ -447,117 +450,125 @@ sub load_pop_details {
     $pop->set_common_name_id($common_name_id);
     $pop->store();
 
-    my $pop_id = $dbh->last_insert_id("population", "phenome");
-    
-    $pop = CXGN::Phenome::Population->new($dbh, $pop_id);    
+    my $pop_id = $dbh->last_insert_id( "population", "phenome" );
+
+    $pop = CXGN::Phenome::Population->new( $dbh, $pop_id );
     $pop->store_data_privacy($is_public);
 
     return $pop_id, $name, $desc;
 }
 
-
-
 sub store_accession {
-    my $self = shift;
-    my $accession = shift;      
-    my $dbh = $self->get_dbh();
- 
-    print STDERR "organism_id: $accession\n";
-    my ($species, $cultivar) = split (/cv|var|cv\.|var\./, $accession);
-    $species =~ s/^\s+|\s+$//;
-    $cultivar=~ s/\.//;
-    $cultivar =~ s/^\s+|\s+$//;   
-    $species = ucfirst($species);
-   
-    print STDERR "$accession: species:$species, cultivar:$cultivar\n";
-    my $schema= $c->dbic_schema('Bio::Chado::Schema');
+    my $self      = shift;
+    my $accession = shift;
+    my $dbh       = $self->get_dbh();
 
-    my $organism = CXGN::Chado::Organism->new_with_species($schema, $species);    
-    $self->check_organism($organism, $species, $cultivar);
-    
+    print STDERR "organism_id: $accession\n";
+    my ( $species, $cultivar ) = split( /cv|var|cv\.|var\./, $accession );
+    $species  =~ s/^\s+|\s+$//;
+    $cultivar =~ s/\.//;
+    $cultivar =~ s/^\s+|\s+$//;
+    $species = ucfirst($species);
+
+    print STDERR "$accession: species:$species, cultivar:$cultivar\n";
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+
+    my $organism = CXGN::Chado::Organism->new_with_species( $schema, $species );
+    $self->check_organism( $organism, $species, $cultivar );
+
     my $existing_organism_id = $organism->get_organism_id();
-    my $organism_name = $organism->get_species();
-      
+    my $organism_name        = $organism->get_species();
+
     print STDERR "chado organism: $organism_name\n";
     eval {
-	my $sth = $dbh->prepare("SELECT accession_id, chado_organism_id, common_name 
+        my $sth = $dbh->prepare(
+            "SELECT accession_id, chado_organism_id, common_name 
                                     FROM sgn.accession 
                                     WHERE common_name ILIKE ?"
-	                   );
-	$sth->execute($cultivar);
-	my ($accession_id, $chado_organism_id, $common_name) = $sth->fetchrow_array();
-	print STDERR "select existing accession: $accession_id, $chado_organism_id, $common_name\n";
-	
-	if ($accession_id) {
-	    unless ($chado_organism_id) {
-		$sth = $dbh->prepare("UPDATE sgn.accession 
+        );
+        $sth->execute($cultivar);
+        my ( $accession_id, $chado_organism_id, $common_name ) =
+          $sth->fetchrow_array();
+        print STDERR
+"select existing accession: $accession_id, $chado_organism_id, $common_name\n";
+
+        if ($accession_id) {
+            unless ($chado_organism_id) {
+                $sth = $dbh->prepare(
+                    "UPDATE sgn.accession 
                                              SET chado_organism_id = ? 
                                              WHERE accession_id = $accession_id"
-                                     );
-		$sth->execute($existing_organism_id);	 
-	    }
-	}  elsif (!$accession_id) {
-  
-	    $sth = $dbh->prepare("INSERT INTO sgn.accession 
+                );
+                $sth->execute($existing_organism_id);
+            }
+        }
+        elsif ( !$accession_id ) {
+
+            $sth = $dbh->prepare(
+                "INSERT INTO sgn.accession 
                                              (common_name, chado_organism_id) 
                                              VALUES (?,?)"
-                                 );
-	    $sth->execute($cultivar, $existing_organism_id);
-	    $accession_id = $dbh->last_insert_id("accession", "sgn");
-	    #my $accession = CXGN::Accession->new($dbh, $accession_id);
-	    #$common_name = $accession->accession_common_name();
-	    print STDERR "inserted: $accession_id, $chado_organism_id, $common_name\n";
-	}
+            );
+            $sth->execute( $cultivar, $existing_organism_id );
+            $accession_id = $dbh->last_insert_id( "accession", "sgn" );
 
-	
-	my ($accession_names_id, $accession_name); 
+            #my $accession = CXGN::Accession->new($dbh, $accession_id);
+            #$common_name = $accession->accession_common_name();
+            print STDERR
+              "inserted: $accession_id, $chado_organism_id, $common_name\n";
+        }
 
- 	
-	unless (!$common_name) {
-	    $sth = $dbh->prepare("SELECT accession_name_id, accession_name
+        my ( $accession_names_id, $accession_name );
+
+        unless ( !$common_name ) {
+            $sth = $dbh->prepare(
+                "SELECT accession_name_id, accession_name
                                     FROM sgn.accession_names 
                                     WHERE accession_name ILIKE ?"
-	                   );
-	    $sth->execute($common_name);
+            );
+            $sth->execute($common_name);
 
-	    ($accession_names_id, $accession_name)  = $sth->fetchrow_array();
-	    print STDERR "selected existing accession_names: $accession_names_id, $accession_name\n";
-	}
-	unless ($accession_names_id) {
-		$sth = $dbh->prepare("INSERT INTO sgn.accession_names 
+            ( $accession_names_id, $accession_name ) = $sth->fetchrow_array();
+            print STDERR
+"selected existing accession_names: $accession_names_id, $accession_name\n";
+        }
+        unless ($accession_names_id) {
+            $sth = $dbh->prepare(
+                "INSERT INTO sgn.accession_names 
                                               (accession_name, accession_id) 
                                                VALUES (?, ?)"
-                                );
-		$sth->execute($common_name, $accession_id);
-	
-		$accession_names_id = $dbh->last_insert_id("accession_names", "sgn");
-		print STDERR "inserted accession_names : $common_name, $accession_id\n";
+            );
+            $sth->execute( $common_name, $accession_id );
 
-	}
-     
-	unless (!$accession_names_id) {
-	    $sth = $dbh->prepare("UPDATE sgn.accession 
+            $accession_names_id =
+              $dbh->last_insert_id( "accession_names", "sgn" );
+            print STDERR
+              "inserted accession_names : $common_name, $accession_id\n";
+
+        }
+
+        unless ( !$accession_names_id ) {
+            $sth = $dbh->prepare(
+                "UPDATE sgn.accession 
                                              SET accession_name_id = ? 
                                              WHERE accession_id = ?"
-                        );
-		  $sth->execute($accession_names_id, $accession_id);
-		print STDERR "updated accession: with $accession_names_id\n";
-	    }
-	
-    
-	if (@_) {
-	    print STDERR "@_\n";
-	    $dbh->rollback();
-	    return 0;
-	}
-	else {
-	    $dbh->commit();	   
-	    return $accession_id;
-	}
+            );
+            $sth->execute( $accession_names_id, $accession_id );
+            print STDERR "updated accession: with $accession_names_id\n";
+        }
+
+        if (@_) {
+            print STDERR "@_\n";
+            $dbh->rollback();
+            return 0;
+        }
+        else {
+            $dbh->commit();
+            return $accession_id;
+        }
     };
 
 }
-
 
 =head2 store_traits
 
@@ -573,98 +584,104 @@ sub store_accession {
 =cut
 
 sub store_traits {
-    my $self = shift;   
-    my $file = shift;
-    my $pop_id = $self->get_population_id();
+    my $self         = shift;
+    my $file         = shift;
+    my $pop_id       = $self->get_population_id();
     my $sp_person_id = $self->get_sp_person_id();
-    my $dbh = $self->get_dbh();
-    
-    open(F, "<$file") || die "Can't open file $file.";
+    my $dbh          = $self->get_dbh();
+
+    open( F, "<$file" ) || die "Can't open file $file.";
 
     my $header = <F>;
     chomp($header);
     my @fields = split /\t/, $header;
 
-    my ($trait, $trait_id, $trait_name, $unit, $unit_id);
-  
+    my ( $trait, $trait_id, $trait_name, $unit, $unit_id );
 
-    if ($fields[0] ne "traits" || $fields[1] ne "definition" || $fields[2] ne "unit")  {
-	my $error = "Data columns in the traits file need to be in the order of: 
+    if (   $fields[0] ne "traits"
+        || $fields[1] ne "definition"
+        || $fields[2] ne "unit" )
+    {
+        my $error =
+          "Data columns in the traits file need to be in the order of: 
                     <b>traits -> definition -> unit</b>. <br/>
                     Now they are in the order of <b><i>$fields[0] -> $fields[1] 
                     -> $fields[2]</i></b>.\n";
-     
-	$self->trait_columns($error);
-    } else {
 
-	eval { 
-	    while (<F>) { 
-		chomp;
-		my (@values) = split /\t/;
-	
-		$trait = CXGN::Phenome::UserTrait->new_with_name($dbh, $values[0]);	
-	
-	 	if (!$trait) {		 
-		    $trait = CXGN::Phenome::UserTrait->new($dbh);
-		    
-		    $trait->set_cv_id(17);
-		    $trait->set_name($values[0]);
-		    $trait->set_definition($values[1]);		       
-		    $trait->set_sp_person_id($sp_person_id);
-		    $trait_id = $trait->store();
-		    
-		    $trait = CXGN::Phenome::UserTrait->new($dbh, $trait_id);
-		    $trait_id = $trait->get_user_trait_id();
-		    
-		   unless (!$values[2]) {
-		       $unit_id  = $trait->get_unit_id($values[2]);
-			if (!$unit_id) {
-			    $unit_id = $trait->insert_unit($values[2]);			    			    
-			    } 
-			    
-			}
-		    if (($trait_id) && ($pop_id) && ($unit_id)) {
-			$trait->insert_user_trait_unit($trait_id, $unit_id, $pop_id);
-		        
-		   }		
-		  
-		}  else {
-		    
-		    unless (!$values[2]) {
-			$trait_id = $trait->get_user_trait_id();
-			$unit_id  = $trait->get_unit_id($values[2]);
-			if (!$unit_id) {
-			    $unit_id = $trait->insert_unit($values[2]);			   
-			    
-			}
-			if (($trait_id) && ($pop_id) && ($unit_id)) {
-			    $trait->insert_user_trait_unit($trait_id, $unit_id, $pop_id);
-			}
-			
-			
-		    }
-			  
-		}
-	    
-	    }
+        $self->trait_columns($error);
+    }
+    else {
 
-	    
-	
-	};
-	if ($@) { 
-		$dbh->rollback();
-		print STDERR "An error occurred storing traits: $@\n";
-		return 0;	        
-	    }
-	    else { 
-		print STDERR "Committing...traits\n";
-		return 1;
-		#$dbh->commit();
-	    }
-    
+        eval {
+            while (<F>)
+            {
+                chomp;
+                my (@values) = split /\t/;
+
+                $trait =
+                  CXGN::Phenome::UserTrait->new_with_name( $dbh, $values[0] );
+
+                if ( !$trait ) {
+                    $trait = CXGN::Phenome::UserTrait->new($dbh);
+
+                    $trait->set_cv_id(17);
+                    $trait->set_name( $values[0] );
+                    $trait->set_definition( $values[1] );
+                    $trait->set_sp_person_id($sp_person_id);
+                    $trait_id = $trait->store();
+
+                    $trait = CXGN::Phenome::UserTrait->new( $dbh, $trait_id );
+                    $trait_id = $trait->get_user_trait_id();
+
+                    unless ( !$values[2] ) {
+                        $unit_id = $trait->get_unit_id( $values[2] );
+                        if ( !$unit_id ) {
+                            $unit_id = $trait->insert_unit( $values[2] );
+                        }
+
+                    }
+                    if ( ($trait_id) && ($pop_id) && ($unit_id) ) {
+                        $trait->insert_user_trait_unit( $trait_id, $unit_id,
+                            $pop_id );
+
+                    }
+
+                }
+                else {
+
+                    unless ( !$values[2] ) {
+                        $trait_id = $trait->get_user_trait_id();
+                        $unit_id  = $trait->get_unit_id( $values[2] );
+                        if ( !$unit_id ) {
+                            $unit_id = $trait->insert_unit( $values[2] );
+
+                        }
+                        if ( ($trait_id) && ($pop_id) && ($unit_id) ) {
+                            $trait->insert_user_trait_unit( $trait_id, $unit_id,
+                                $pop_id );
+                        }
+
+                    }
+
+                }
+
+            }
+
+        };
+        if ($@) {
+            $dbh->rollback();
+            print STDERR "An error occurred storing traits: $@\n";
+            return 0;
+        }
+        else {
+            print STDERR "Committing...traits\n";
+            return 1;
+
+            #$dbh->commit();
+        }
+
     }
 }
-
 
 =head2 store_individual
 
@@ -679,53 +696,55 @@ sub store_traits {
 =cut
 
 sub store_individual {
-    my $self = shift;
-    my $ind_name = shift;
-    my $pop_id = $self->get_population_id();
-    my $sp_person_id = $self->get_sp_person_id();
-    my $dbh = $self->get_dbh();
+    my $self           = shift;
+    my $ind_name       = shift;
+    my $pop_id         = $self->get_population_id();
+    my $sp_person_id   = $self->get_sp_person_id();
+    my $dbh            = $self->get_dbh();
     my $common_name_id = $self->common_name_id();
-    
-    my ($individual, $individual_id, $individual_name);
-    my @individuals = CXGN::Phenome::Individual->new_with_name($dbh, $ind_name, $pop_id);
- 
-    eval { 
-	if (scalar(@individuals) == 0) { 	   
-	    $individual = CXGN::Phenome::Individual->new($dbh);
-	    $individual->set_name($ind_name);
-	    $individual->set_population_id($pop_id);
-	    $individual->set_sp_person_id($sp_person_id);
-	    $individual->set_common_name_id($common_name_id);
-	    $individual_id = $individual->store();
-	
-	    $individual_name = $individual->get_name();
-	}
 
-	elsif (scalar(@individuals) == 1) {
-	   
-	    print STDERR "There is a genotype with name $ind_name 
-                          in the same population ($pop_id). \n";	    
-	    die "There might be a phenotype data for the same trait 
+    my ( $individual, $individual_id, $individual_name );
+    my @individuals =
+      CXGN::Phenome::Individual->new_with_name( $dbh, $ind_name, $pop_id );
+
+    eval {
+        if ( scalar(@individuals) == 0 )
+        {
+            $individual = CXGN::Phenome::Individual->new($dbh);
+            $individual->set_name($ind_name);
+            $individual->set_population_id($pop_id);
+            $individual->set_sp_person_id($sp_person_id);
+            $individual->set_common_name_id($common_name_id);
+            $individual_id = $individual->store();
+
+            $individual_name = $individual->get_name();
+        }
+
+        elsif ( scalar(@individuals) == 1 ) {
+
+            print STDERR "There is a genotype with name $ind_name 
+                          in the same population ($pop_id). \n";
+            die "There might be a phenotype data for the same trait 
                  for the same genotype $ind_name. I can't store 
                  duplicate phenotype data. So I am quitting..\n";
-	}
-	elsif (scalar(@individuals) > 0) {	   
-	    die "There are two genotypes with the same name ($ind_name)
-              in the population: $pop_id.\n";   
-	}
+        }
+        elsif ( scalar(@individuals) > 0 ) {
+            die "There are two genotypes with the same name ($ind_name)
+              in the population: $pop_id.\n";
+        }
     };
-    if ($@) { 
-	$dbh->rollback();
-	print STDERR "An error occurred storing individuals: $@\n";
-	return 0;
-    
+    if ($@) {
+        $dbh->rollback();
+        print STDERR "An error occurred storing individuals: $@\n";
+        return 0;
+
     }
-    else { 
-	$dbh->commit();
-		print STDERR "STORED individual $individual_name.\n";
-	return $individual;
-    }		
-}	
+    else {
+        $dbh->commit();
+        print STDERR "STORED individual $individual_name.\n";
+        return $individual;
+    }
+}
 
 =head2 store_trait_values
 
@@ -739,73 +758,78 @@ sub store_individual {
 =cut
 
 sub store_trait_values {
-    my $self = shift;
-    my $file = shift;
-    my $pop_id = $self->get_population_id();
+    my $self         = shift;
+    my $file         = shift;
+    my $pop_id       = $self->get_population_id();
     my $sp_person_id = $self->get_sp_person_id();
-    my $dbh = $self->get_dbh();
+    my $dbh          = $self->get_dbh();
 
-    open(F, "<$file") || die "Can't open file $file.";
+    open( F, "<$file" ) || die "Can't open file $file.";
 
     my $header = <F>;
     chomp($header);
     my @fields = split /\t/, $header;
 
     my @trait = ();
-    my ($trait_name, $trait_id);
-   
+    my ( $trait_name, $trait_id );
 
+    for ( my $i = 1 ; $i < @fields ; $i++ ) {
 
-    for (my $i=1; $i<@fields; $i++) { 
+        $trait[$i] =
+          CXGN::Phenome::UserTrait->new_with_name( $dbh, $fields[$i] );
+        $trait_name = $trait[$i]->get_name();
+        $trait_id   = $trait[$i]->get_user_trait_id();
 
-    $trait[$i] = CXGN::Phenome::UserTrait->new_with_name($dbh, $fields[$i]);
-    $trait_name = $trait[$i]->get_name();
-    $trait_id = $trait[$i]->get_user_trait_id();  
+    }
+    eval {
+        while (<F>)
+        {
+            chomp;
+            my (@values) = split /\t/;
 
-}
-eval { 
-    while (<F>) { 
-	chomp;
-	my (@values) = split /\t/;
+            my $individual = $self->store_individual( $values[0] );
 
-	my $individual = $self->store_individual($values[0]);
-	
-	die "The genotype does not exist in the database. 
+            die "The genotype does not exist in the database. 
              Therefore, it can not store the associated 
              phenotype data\n"
-        unless ($individual);
-	
-	my $individual_id = $individual->get_individual_id();
-	my $individual_name = $individual->get_name();
+              unless ($individual);
 
-	for (my $i=1; $i<@values; $i++) { 
-	    my $phenotype = CXGN::Chado::Phenotype->new($dbh);
-	    $phenotype->set_unique_name(qq | $individual_name $pop_id .":". $i | );
-	    $phenotype->set_observable_id($trait[$i]->get_user_trait_id());
-	    $phenotype->set_value($values[$i]);
-	    $phenotype->set_individual_id($individual_id);
-	    $phenotype->set_sp_person_id($sp_person_id);
-	    my $phenotype_id = $phenotype->store();
+            my $individual_id   = $individual->get_individual_id();
+            my $individual_name = $individual->get_name();
 
-	    $trait[$i]->insert_phenotype_user_trait_ids ($trait[$i]->get_user_trait_id(), $phenotype_id);
-	    
-	}
+            for ( my $i = 1 ; $i < @values ; $i++ ) {
+                my $phenotype = CXGN::Chado::Phenotype->new($dbh);
+                $phenotype->set_unique_name(
+                    qq | $individual_name $pop_id .":". $i |);
+                $phenotype->set_observable_id(
+                    $trait[$i]->get_user_trait_id() );
+                $phenotype->set_value( $values[$i] );
+                $phenotype->set_individual_id($individual_id);
+                $phenotype->set_sp_person_id($sp_person_id);
+                my $phenotype_id = $phenotype->store();
+
+                $trait[$i]->insert_phenotype_user_trait_ids(
+                    $trait[$i]->get_user_trait_id(),
+                    $phenotype_id );
+
+            }
+        }
+    };
+
+    if ($@) {
+        $dbh->rollback();
+        print STDERR "An error occurred storing trait values: $@\n";
+        return 0;
+
     }
-};
-
-if ($@) { 
-   $dbh->rollback();
-   print STDERR "An error occurred storing trait values: $@\n";
-   return 0;
-    
-}
-else { 
-    print STDERR "Committing...trait values to tables public.phenotype 
+    else {
+        print STDERR "Committing...trait values to tables public.phenotype 
                   and user_trait_id and phenotype_id to phenotype_user_trait\n";
-    #$dbh->commit();
-    return 1;
 
-}
+        #$dbh->commit();
+        return 1;
+
+    }
 
 }
 
@@ -823,77 +847,80 @@ else {
 sub store_map {
     my $self = shift;
     my $file = shift;
-    
-    my $dbh = $self->get_dbh();
+
+    my $dbh    = $self->get_dbh();
     my $pop_id = $self->get_population_id();
-   
-    my $pop = CXGN::Phenome::Population->new($dbh, $pop_id);
+
+    my $pop      = CXGN::Phenome::Population->new( $dbh, $pop_id );
     my $pop_name = $pop->get_name();
     my $parent_m = $pop->get_male_parent_id();
     my $parent_f = $pop->get_female_parent_id();
     my $desc     = $pop->get_description();
-  
-    
-    my $acc = CXGN::Accession->new($dbh, $parent_f);
-    my $female_name = $acc->accession_common_name();
+
+    my $acc            = CXGN::Accession->new( $dbh, $parent_f );
+    my $female_name    = $acc->accession_common_name();
     my $chado_org_id_f = $acc->chado_organism_id();
-    
-    $acc = CXGN::Accession->new($dbh, $parent_m);
-    my $male_name = $acc->accession_common_name();
+
+    $acc = CXGN::Accession->new( $dbh, $parent_m );
+    my $male_name      = $acc->accession_common_name();
     my $chado_org_id_m = $acc->chado_organism_id();
-        
-    my $existing_map_id = CXGN::Map::Tools::population_map($dbh, $pop_id);
-    
-    my ($map, $map_id, $map_version_id);    
+
+    my $existing_map_id = CXGN::Map::Tools::population_map( $dbh, $pop_id );
+
+    my ( $map, $map_id, $map_version_id );
     if ($existing_map_id) {
-	$map_version_id = CXGN::Map::Version->map_version($dbh, $existing_map_id);
- 	$map = CXGN::Map->new($dbh, {map_id=>$existing_map_id});
-	
-    } else { 
-	 $map = CXGN::Map->new_map($dbh, $pop_name);
-	 $map_version_id = $map->{map_version_id};
-    }
-    $map_id = $map->{map_id};
-   
-  
-    my $species_m = $self->species($chado_org_id_m);
-    my $species_f= $self->species($chado_org_id_f);
-        
+        $map_version_id =
+          CXGN::Map::Version->map_version( $dbh, $existing_map_id );
+        $map = CXGN::Map->new( $dbh, { map_id => $existing_map_id } );
 
-    print STDERR "map_id from the store_map function: $map_id\n";
-    my $long_name = $species_f . ' cv. ' . $female_name . ' x ' . $species_m . ' cv. ' . $male_name;
-    print STDERR "map long name: $long_name\n";
-    $map->{long_name}=$long_name;
-    $map->{map_type}='genetic';
-    $map->{parent_1}=$parent_f;
-    $map->{parent_2}=$parent_m;
-    $map->{abstract}=$desc;
-    $map->{population_id}=$pop_id;
-    $map_id = $map->store();
-    
-    
-    my $lg_result;
-    if ($map_version_id) {
-	$lg_result = $self->store_lg($map_version_id, $file);
-	
-	if ($lg_result) {
-	    print STDERR " STORED LINKAGE GROUPS\n";
-	}
-	else { print STDERR "FAILED STORING LINKAGE GROUPS\n";
-	}
-    }
-
-    if ($map_id && $map_version_id && $lg_result) {
-	return $map_id, $map_version_id;
     }
     else {
-	print STDERR "Either map or map_version or 
-                     linkage_groups storing did not work\n";
-	return 0;
+        $map = CXGN::Map->new_map( $dbh, $pop_name );
+        $map_version_id = $map->{map_version_id};
+    }
+    $map_id = $map->{map_id};
+
+    my $species_m = $self->species($chado_org_id_m);
+    my $species_f = $self->species($chado_org_id_f);
+
+    print STDERR "map_id from the store_map function: $map_id\n";
+    my $long_name =
+        $species_f . ' cv. '
+      . $female_name . ' x '
+      . $species_m . ' cv. '
+      . $male_name;
+    print STDERR "map long name: $long_name\n";
+    $map->{long_name}     = $long_name;
+    $map->{map_type}      = 'genetic';
+    $map->{parent_1}      = $parent_f;
+    $map->{parent_2}      = $parent_m;
+    $map->{abstract}      = $desc;
+    $map->{population_id} = $pop_id;
+    $map_id               = $map->store();
+
+    my $lg_result;
+    if ($map_version_id) {
+        $lg_result = $self->store_lg( $map_version_id, $file );
+
+        if ($lg_result) {
+            print STDERR " STORED LINKAGE GROUPS\n";
+        }
+        else {
+            print STDERR "FAILED STORING LINKAGE GROUPS\n";
+        }
     }
 
-    
+    if ( $map_id && $map_version_id && $lg_result ) {
+        return $map_id, $map_version_id;
+    }
+    else {
+        print STDERR "Either map or map_version or 
+                     linkage_groups storing did not work\n";
+        return 0;
+    }
+
 }
+
 =head2 species
 
  Usage: my $species = $self->species($org_id)
@@ -907,18 +934,17 @@ sub store_map {
 =cut
 
 sub species {
-    my $self = shift;
+    my $self   = shift;
     my $org_id = shift;
-    my $dbh = $self->get_dbh();
+    my $dbh    = $self->get_dbh();
 
-    my $schema= $c->dbic_schema('Bio::Chado::Schema');
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
 
-    my $org = CXGN::Chado::Organism->new($schema, $org_id);
-   
+    my $org = CXGN::Chado::Organism->new( $schema, $org_id );
+
     return my $species = $org->get_abbreviation();
 
 }
-
 
 =head2 store_lg
 
@@ -933,32 +959,32 @@ sub species {
 
 sub store_lg {
     my $self = shift;
-    my ($map_version_id, $file) = @_;
+    my ( $map_version_id, $file ) = @_;
     my $dbh = $self->get_dbh();
-    
+
     open F, "<$file" or die "can't open $file\n";
     my $markers = <F>;
-    my $chr = <F>;
+    my $chr     = <F>;
     chomp($chr);
     close F;
-    
-    my @chrs = split /\t/, $chr;
-    @chrs  = uniq @chrs;
-    
-   
-     die "The first cell of 2nd row must be empty."  unless !$chrs[0]; 
-     shift(@chrs);  
 
-    my $lg = CXGN::LinkageGroup->new($dbh, $map_version_id, \@chrs);
+    my @chrs = split /\t/, $chr;
+    @chrs = uniq @chrs;
+
+    die "The first cell of 2nd row must be empty." unless !$chrs[0];
+    shift(@chrs);
+
+    my $lg = CXGN::LinkageGroup->new( $dbh, $map_version_id, \@chrs );
     my $result = $lg->store();
-    
+
     if ($result) {
-	print STDERR "Succeeded storing linkage groups
+        print STDERR "Succeeded storing linkage groups
                       on map_version_id $map_version_id\n";
-    } else {
-	print STDERR "Failed storing linkage groups
+    }
+    else {
+        print STDERR "Failed storing linkage groups
                       on map_version_id $map_version_id\n";
-    }       
+    }
 
 }
 
@@ -975,14 +1001,14 @@ sub store_lg {
 
 sub store_marker_and_position {
     my $self = shift;
-    my ($file, $map_version_id) = @_;
+    my ( $file, $map_version_id ) = @_;
     my $dbh = $self->get_dbh();
     open F, "<$file" or die "can't open $file\n";
-   
-    my $markers = <F>;
-    my $chrs = <F>;
+
+    my $markers   = <F>;
+    my $chrs      = <F>;
     my $positions = <F>;
-    chomp($markers, $chrs, $positions);
+    chomp( $markers, $chrs, $positions );
     close F;
 
     my @markers = split /\t/, $markers;
@@ -990,77 +1016,80 @@ sub store_marker_and_position {
 
     my @positions = split /\t/, $positions;
     shift(@positions);
-  
+
     my @chromosomes = split /\t/, $chrs;
     shift(@chromosomes);
-    
+
     eval {
-	for (my $i=0; $i<@markers; $i++) {
-	    print STDERR $markers[$i] . "\t" . $positions[$i] . "\n";
-      	  
-	    my ($marker_name, $subs) =  CXGN::Marker::Tools::clean_marker_name($markers[$i]);
-    
-	    my @marker_ids =  CXGN::Marker::Tools::marker_name_to_ids($dbh,$marker_name);
-	    if (@marker_ids>1) { die "Too many IDs found for marker '$marker_name'"; }
-	    my($marker_id) = @marker_ids;
-	
-	    my $marker_obj;
-	    if($marker_id) {
-		$marker_obj = CXGN::Marker::Modifiable->new($dbh,$marker_id);
-	    }
-	    else { 
-		$marker_obj = CXGN::Marker::Modifiable->new($dbh);
-		$marker_obj->set_marker_name($marker_name);
-		my $inserts = $marker_obj->store_new_data();
-		
-		if ($inserts and @{$inserts}) { 		  
-		}
-		else { 
-		    die "Oops, I thought I was inserting some new data";
-		}
-		$marker_id=$marker_obj->marker_id();
-	    }	   
-	    my $loc=$marker_obj->new_location();
-	    my $pos = $positions[$i];	    
-	    my $conf ='uncalculated';
-	    my $protocol = 'unknown';
-	    $loc->marker_id($marker_id); 
-	    
-	    $loc->map_version_id($map_version_id);	    
-            $loc->lg_name($chromosomes[$i]);	   
-	    $loc->position($pos);	   
-	    $loc->confidence($conf);	   
-	    $loc->subscript($subs);
-	    
-            
+        for ( my $i = 0 ; $i < @markers ; $i++ )
+        {
+            print STDERR $markers[$i] . "\t" . $positions[$i] . "\n";
 
-	    $marker_obj->add_experiment({location=>$loc,protocol=>$protocol});           
-	    my $inserts = $marker_obj->store_new_data();
+            my ( $marker_name, $subs ) =
+              CXGN::Marker::Tools::clean_marker_name( $markers[$i] );
 
-        if ($inserts and @{$inserts}) { 
-	 
-	}
+            my @marker_ids =
+              CXGN::Marker::Tools::marker_name_to_ids( $dbh, $marker_name );
+            if ( @marker_ids > 1 ) {
+                die "Too many IDs found for marker '$marker_name'";
+            }
+            my ($marker_id) = @marker_ids;
 
-        else { 
-	    die "Oops, I thought I was inserting some new data"; 
-	}
+            my $marker_obj;
+            if ($marker_id) {
+                $marker_obj = CXGN::Marker::Modifiable->new( $dbh, $marker_id );
+            }
+            else {
+                $marker_obj = CXGN::Marker::Modifiable->new($dbh);
+                $marker_obj->set_marker_name($marker_name);
+                my $inserts = $marker_obj->store_new_data();
+
+                if ( $inserts and @{$inserts} ) {
+                }
+                else {
+                    die "Oops, I thought I was inserting some new data";
+                }
+                $marker_id = $marker_obj->marker_id();
+            }
+            my $loc      = $marker_obj->new_location();
+            my $pos      = $positions[$i];
+            my $conf     = 'uncalculated';
+            my $protocol = 'unknown';
+            $loc->marker_id($marker_id);
+
+            $loc->map_version_id($map_version_id);
+            $loc->lg_name( $chromosomes[$i] );
+            $loc->position($pos);
+            $loc->confidence($conf);
+            $loc->subscript($subs);
+
+            $marker_obj->add_experiment(
+                { location => $loc, protocol => $protocol } );
+            my $inserts = $marker_obj->store_new_data();
+
+            if ( $inserts and @{$inserts} ) {
+
+            }
+
+            else {
+                die "Oops, I thought I was inserting some new data";
+            }
+        }
+
+    };
+    if ($@) {
+        print STDERR $@;
+        print STDERR
+          "Failed loading markers and their positions; rolling back.\n";
+        $dbh->rollback();
+        return 0;
     }
-        
-    
-};
-if ($@) {
-    print STDERR  $@;
-    print STDERR "Failed loading markers and their positions; rolling back.\n";
-    $dbh->rollback();
-    return 0;
-}
-else { 
-    print STDERR "Succeeded. loading markers and their position\n";
-   
-    $dbh->commit();
-    return 1;
-    }
+    else {
+        print STDERR "Succeeded. loading markers and their position\n";
 
+        $dbh->commit();
+        return 1;
+    }
 
 }
 
@@ -1077,17 +1106,16 @@ else {
 
 sub store_genotype {
     my $self = shift;
-    my ($file, $map_version_id) = @_;
-    my $dbh = $self->get_dbh();
+    my ( $file, $map_version_id ) = @_;
+    my $dbh    = $self->get_dbh();
     my $pop_id = $self->get_population_id();
 
     open F, "<$file" or die "can't open $file\n";
-   
-    my $markers = <F>;
-    my $chrs = <F>;
+
+    my $markers   = <F>;
+    my $chrs      = <F>;
     my $positions = <F>;
-    chomp($markers, $chrs, $positions);
-    
+    chomp( $markers, $chrs, $positions );
 
     my @markers = split /\t/, $markers;
     shift(@markers);
@@ -1095,121 +1123,127 @@ sub store_genotype {
     my @chrs = split /\t/, $chrs;
     shift(@chrs);
 
-    my $pop = CXGN::Phenome::Population->new($dbh, $pop_id);
-    my $pop_name = $pop->get_name();
+    my $pop          = CXGN::Phenome::Population->new( $dbh, $pop_id );
+    my $pop_name     = $pop->get_name();
     my $sp_person_id = $pop->get_sp_person_id();
-   
-    my $map = CXGN::Map->new($dbh, {map_version_id=>$map_version_id});
+
+    my $map = CXGN::Map->new( $dbh, { map_version_id => $map_version_id } );
     my $map_id = $map->get_map_id();
 
-    my $linkage = CXGN::LinkageGroup->new($dbh, $map_version_id);  
- 
+    my $linkage = CXGN::LinkageGroup->new( $dbh, $map_version_id );
+
     unless ($map_id) {
-	die "I need a valid reference map before I can 
+        die "I need a valid reference map before I can 
              start loading the genotype data\n";
     }
-     
 
- eval {
+    eval {
 
-     my $experiment = CXGN::Phenome::GenotypeExperiment->new($dbh);     
-     $experiment->set_background_accession_id(100);
-     $experiment->set_experiment_name($pop_name);
-     $experiment->set_reference_map_id($map_id);
-     $experiment->set_sp_person_id($sp_person_id);
-     $experiment->set_preferred(1);
-     my $experiment_id = $experiment->store();
-    
-    
-     while (my $row = <F>) {
-	 chomp($row);
-	 my @plant_genotype = split /\t/, $row;
-	 my $plant_name = shift(@plant_genotype);	 
-	 my @individual = CXGN::Phenome::Individual->new_with_name($dbh, $plant_name, $pop_id);
+        my $experiment = CXGN::Phenome::GenotypeExperiment->new($dbh);
+        $experiment->set_background_accession_id(100);
+        $experiment->set_experiment_name($pop_name);
+        $experiment->set_reference_map_id($map_id);
+        $experiment->set_sp_person_id($sp_person_id);
+        $experiment->set_preferred(1);
+        my $experiment_id = $experiment->store();
 
-	 my $individual_id = $individual[0]->get_individual_id();
+        while ( my $row = <F> ) {
+            chomp($row);
+            my @plant_genotype = split /\t/, $row;
+            my $plant_name = shift(@plant_genotype);
+            my @individual =
+              CXGN::Phenome::Individual->new_with_name( $dbh, $plant_name,
+                $pop_id );
 
-	 die "There are two genotypes with the same name or no genotypes 
-              in the same population. Can't assign genotype values." 
-	 unless (scalar(@individual) == 1);
+            my $individual_id = $individual[0]->get_individual_id();
 
+            die "There are two genotypes with the same name or no genotypes 
+              in the same population. Can't assign genotype values."
+              unless ( scalar(@individual) == 1 );
 
-	 if ($individual[0]) {	
-	   
-	     my $genotype = CXGN::Phenome::Genotype->new($dbh);
-		   
-	     $genotype->set_genotype_experiment_id($experiment_id);
-	     $genotype->set_individual_id($individual_id);	    
-	     #$genotype->set_experiment_name($pop_name);
-	     #$genotype->set_reference_map_id($map_id);
-	     #$genotype->set_sp_person_id($sp_person_id);
-	     my $genotype_id = $genotype->store();
+            if ( $individual[0] ) {
 
-	     
-	     my $mapmaker_genotype;
-	     for (my $i=0; $i<@plant_genotype; $i++) { 
-		 my $genotype_region = CXGN::Phenome::GenotypeRegion->new($dbh);
-		
-		 my $marker_name = CXGN::Marker::Tools::clean_marker_name($markers[$i]);
-		 my $marker = CXGN::Marker->new_with_name($dbh, $marker_name);		
-		 my $c = $chrs[$i];		 
-		 my $lg_id = $linkage->get_lg_id($chrs[$i]);
-		 		    
-		 if (!$plant_genotype[$i] || ($plant_genotype[$i] =~/\-/)) { 		
-		     next();
-		 }	    
-		     
-		     
-		 $genotype_region->set_genotype_id($genotype_id);
-		 $genotype_region->set_marker_id_nn($marker->marker_id());
-		 $genotype_region->set_marker_id_ns($marker->marker_id());
-		 $genotype_region->set_marker_id_sn($marker->marker_id());
-		 $genotype_region->set_marker_id_ss($marker->marker_id());
-		 $genotype_region->set_lg_id($lg_id);
-		 $genotype_region->set_sp_person_id($sp_person_id);   
-	
-		 if ($i == 0) { 
-		     if ($plant_genotype[$i] =~/\d/) {
-			 $mapmaker_genotype = 1;
-		     } 
-		     elsif ($plant_genotype[$i] =~/\D/) {
-			 $mapmaker_genotype = undef;
-		     }
-		 }	 
-		     			 
-		 if ($mapmaker_genotype) {
-		     $genotype_region->set_mapmaker_zygocity_code($plant_genotype[$i]);
-		 } 
-		 else {
-		     $genotype_region->set_zygocity_code($plant_genotype[$i]);
-		 }
-		 $genotype_region->set_type("map");	    
-		 $genotype_region->store();
-	     }
-	
-	 }
-	 else { 
-	     die "There is mismatch between the list of genotypes/lines ($plant_genotype[0] 
+                my $genotype = CXGN::Phenome::Genotype->new($dbh);
+
+                $genotype->set_genotype_experiment_id($experiment_id);
+                $genotype->set_individual_id($individual_id);
+
+                #$genotype->set_experiment_name($pop_name);
+                #$genotype->set_reference_map_id($map_id);
+                #$genotype->set_sp_person_id($sp_person_id);
+                my $genotype_id = $genotype->store();
+
+                my $mapmaker_genotype;
+                for ( my $i = 0 ; $i < @plant_genotype ; $i++ ) {
+                    my $genotype_region =
+                      CXGN::Phenome::GenotypeRegion->new($dbh);
+
+                    my $marker_name =
+                      CXGN::Marker::Tools::clean_marker_name( $markers[$i] );
+                    my $marker =
+                      CXGN::Marker->new_with_name( $dbh, $marker_name );
+                    my $c     = $chrs[$i];
+                    my $lg_id = $linkage->get_lg_id( $chrs[$i] );
+
+                    if ( !$plant_genotype[$i]
+                        || ( $plant_genotype[$i] =~ /\-/ ) )
+                    {
+                        next();
+                    }
+
+                    $genotype_region->set_genotype_id($genotype_id);
+                    $genotype_region->set_marker_id_nn( $marker->marker_id() );
+                    $genotype_region->set_marker_id_ns( $marker->marker_id() );
+                    $genotype_region->set_marker_id_sn( $marker->marker_id() );
+                    $genotype_region->set_marker_id_ss( $marker->marker_id() );
+                    $genotype_region->set_lg_id($lg_id);
+                    $genotype_region->set_sp_person_id($sp_person_id);
+
+                    if ( $i == 0 ) {
+                        if ( $plant_genotype[$i] =~ /\d/ ) {
+                            $mapmaker_genotype = 1;
+                        }
+                        elsif ( $plant_genotype[$i] =~ /\D/ ) {
+                            $mapmaker_genotype = undef;
+                        }
+                    }
+
+                    if ($mapmaker_genotype) {
+                        $genotype_region->set_mapmaker_zygocity_code(
+                            $plant_genotype[$i] );
+                    }
+                    else {
+                        $genotype_region->set_zygocity_code(
+                            $plant_genotype[$i] );
+                    }
+                    $genotype_region->set_type("map");
+                    $genotype_region->store();
+                }
+
+            }
+            else {
+                die
+"There is mismatch between the list of genotypes/lines ($plant_genotype[0] 
                   in your phenotype and genotype datasets\n";
-	 }
-     }
+            }
+        }
 
- };
+    };
 
-     if ($@) { 
-	 $dbh->rollback();
-	 print STDERR "An error occurred loading genotype data: 
+    if ($@) {
+        $dbh->rollback();
+        print STDERR "An error occurred loading genotype data: 
                        $@. ROLLED BACK CHANGES.\n";
-	 return undef;
-     }
-     else { 
-	 print STDERR "All is  fine. Committing...genotype data\n";
-	 $dbh->commit();
-	 return 1;
-     }		 
-     	     
-} 
-	 
+        return undef;
+    }
+    else {
+        print STDERR "All is  fine. Committing...genotype data\n";
+        $dbh->commit();
+        return 1;
+    }
+
+}
+
 =head2 accessors get_sp_person_id, set_sp_person_id
 
  Usage:
@@ -1221,13 +1255,13 @@ sub store_genotype {
 =cut
 
 sub get_sp_person_id {
-  my $self = shift;
-  return $self->{sp_person_id}; 
+    my $self = shift;
+    return $self->{sp_person_id};
 }
 
 sub set_sp_person_id {
-  my $self = shift;
-  $self->{sp_person_id} = shift;
+    my $self = shift;
+    $self->{sp_person_id} = shift;
 }
 
 =head2 accessors get_population_id, set_population_id
@@ -1241,13 +1275,13 @@ sub set_sp_person_id {
 =cut
 
 sub get_population_id {
-  my $self = shift;
-  return $self->{population_id}; 
+    my $self = shift;
+    return $self->{population_id};
 }
 
 sub set_population_id {
-  my $self = shift;
-  $self->{population_id} = shift;
+    my $self = shift;
+    $self->{population_id} = shift;
 }
 
 =head2 accessors get_dbh, set_dbh
@@ -1261,15 +1295,14 @@ sub set_population_id {
 =cut
 
 sub get_dbh {
-  my $self = shift;
-  return $self->{dbh}; 
+    my $self = shift;
+    return $self->{dbh};
 }
 
 sub set_dbh {
-  my $self = shift;
-  $self->{dbh} = shift;
+    my $self = shift;
+    $self->{dbh} = shift;
 }
-
 
 =head2 common_name_id
 
@@ -1283,26 +1316,26 @@ sub set_dbh {
 =cut
 
 sub common_name_id {
-    my $self = shift;
+    my $self         = shift;
     my $sp_person_id = $self->get_sp_person_id();
-    my $qtl = CXGN::Phenome::Qtl->new($sp_person_id);
-    my $c = SGN::Context->new();
-    my ($qtl_dir, $user_qtl_dir) = $qtl->get_user_qtl_dir($c);
-    
+    my $qtl          = CXGN::Phenome::Qtl->new($sp_person_id);
+    my ( $qtl_dir, $user_qtl_dir ) = $qtl->get_user_qtl_dir($c);
+
     my $id;
-    if (-e "$user_qtl_dir/organism.txt") {
-	open C, "<$user_qtl_dir/organism.txt" or die "Can't open file: !$\n";
+    if ( -e "$user_qtl_dir/organism.txt" ) {
+        open C, "<$user_qtl_dir/organism.txt" or die "Can't open file: !$\n";
 
-	my $row = <C>;
-	if ($row =~/(\d)/) {
-	    $id = $1;	    
-	}
+        my $row = <C>;
+        if ( $row =~ /(\d)/ ) {
+            $id = $1;
+        }
 
-	close C;
-   
-	return $id;
-    } else { 
-	return 0;
+        close C;
+
+        return $id;
+    }
+    else {
+        return 0;
     }
 
 }
@@ -1322,36 +1355,36 @@ sub common_name_id {
 =cut
 
 sub error_page {
-    my $self = shift;
-    my @error = @_;   
-    my $page = CXGN::Page->new();
-    my ($messages, $count);
-    
+    my $self  = shift;
+    my @error = @_;
+    my $page  = CXGN::Page->new();
+    my ( $messages, $count );
+
     my $guide = $self->guideline();
     if (@error) {
-	$page->header();
-	    
-	print page_title_html("Missing Data:");
-	$messages .="<p>Data for the following field(s) is missing: </p>";
-	my $count=1;
-	foreach  my $e (@error) {
-		
-	    $messages .= $count . ")" ."\t" .  $e ."." ."<br />";
-	    $count++;
-	}
-    
-	$messages .= qq | <p><a href="javascript:history.go(-1)">
-                          Please go back and fill in the missing information.</a> </p>|; 
-	    
-	print info_section_html(subtitle=>$guide,                 
-    			    contents =>$messages, 
-	                   );   
-	$page->footer();
-	
-    } 
-    
-}
+        $page->header();
 
+        print page_title_html("Missing Data:");
+        $messages .= "<p>Data for the following field(s) is missing: </p>";
+        my $count = 1;
+        foreach my $e (@error) {
+
+            $messages .= $count . ")" . "\t" . $e . "." . "<br />";
+            $count++;
+        }
+
+        $messages .= qq | <p><a href="javascript:history.go(-1)">
+                          Please go back and fill in the missing information.</a> </p>|;
+
+        print info_section_html(
+            subtitle => $guide,
+            contents => $messages,
+        );
+        $page->footer();
+
+    }
+
+}
 
 =head2 check_organism
 
@@ -1369,45 +1402,46 @@ sub error_page {
 =cut
 
 sub check_organism {
-    my $self = shift;
+    my $self     = shift;
     my $organism = shift;
-    my $species = shift;
+    my $species  = shift;
     my $cultivar = shift;
 
     my $guide = $self->guideline();
-    unless (!$cultivar) {
-	$cultivar = " cv. $cultivar";
+    unless ( !$cultivar ) {
+        $cultivar = " cv. $cultivar";
     }
 
-    if (!$organism)  {
-	my $page = CXGN::Page->new("SGN", "Isaak");
-	
-	$page->header();
-	
-	print page_title_html("Problem with parental accessions......");
-	
-	my $messages .= "It appears that SGN currently does not support 
+    if ( !$organism ) {
+        my $page = CXGN::Page->new( "SGN", "Isaak" );
+
+        $page->header();
+
+        print page_title_html("Problem with parental accessions......");
+
+        my $messages .= "It appears that SGN currently does not support 
                          this species (<b><i>$species</i>$cultivar</b>).<br/> 
                          As a first step, please make sure you have spelled 
                          the species correctly.</p><p> Read also the guidline for the
                          nomenclature format you have to use for the parental lines.</p>";
-      
-	$messages .= qq |<p> 
+
+        $messages .= qq |<p> 
                           Please go <a href="javascript:history.go(-1)">back</a> 
                           and check its spelling or if you keep having problem 
                           with it contact us.</p>|;
-	
-	print info_section_html(subtitle=>$guide, contents => $messages,);
-	
-	$page->footer();
-	exit ();
+
+        print info_section_html( subtitle => $guide, contents => $messages, );
+
+        $page->footer();
+        exit();
     }
     else {
-	#do nothing..relax
+
+        #do nothing..relax
     }
-      
-} 
-                            
+
+}
+
 =head2 population_exists
 
  Usage: $self->population_exists($population, $population_name);
@@ -1422,44 +1456,43 @@ sub check_organism {
 =cut
 
 sub population_exists {
-    my $self = shift;
-    my $pop = shift;
-    my $name = shift;
+    my $self  = shift;
+    my $pop   = shift;
+    my $name  = shift;
     my $guide = $self->guideline();
- 
-    if ($pop) {	
-	my $page = CXGN::Page->new("SGN", "Isaak");
-	
-	$page->header();
-	
-	print page_title_html("Population name...");
-	
-	my $messages .= "It appears that a population <b>$name</></b> already 
+
+    if ($pop) {
+        my $page = CXGN::Page->new( "SGN", "Isaak" );
+
+        $page->header();
+
+        print page_title_html("Population name...");
+
+        my $messages .= "It appears that a population <b>$name</></b> already 
                          exists in the database. To continue loading QTL data
                          for a new population, try with a different population 
                          name.</p>
                          <p>If you are trying to load more or change data to an exising population
                             contact us.</p>";
-      
-	$messages .= qq |<p> 
+
+        $messages .= qq |<p> 
                           Please go <a href="javascript:history.go(-1)">back</a> 
                           and try to use a different name or if you keep having problem 
                           with it contact us.</p>|;
-	
-	print info_section_html(subtitle=>$guide, contents => $messages,);
-	
-	$page->footer();
-	exit ();
+
+        print info_section_html( subtitle => $guide, contents => $messages, );
+
+        $page->footer();
+        exit();
     }
 
 }
 
 sub guideline {
     my $self = shift;
-    return my $guideline = qq |<a  href="http://docs.google.com/View?id=dgvczrcd_1c479cgfb">Guidelines</a> |;
+    return my $guideline =
+qq |<a  href="http://docs.google.com/View?id=dgvczrcd_1c479cgfb">Guidelines</a> |;
 }
-
-
 
 =head2 trait_columns
 
@@ -1474,29 +1507,30 @@ sub guideline {
  Example:
 
 =cut
+
 sub trait_columns {
-    my $self = shift;
+    my $self        = shift;
     my $trait_error = shift;
-    my $guide = $self->guideline();
- 
-    if ($trait_error) {	
-	my $page = CXGN::Page->new("SGN", "Isaak");
-	
-	$page->header();
-	
-	print page_title_html("Traits file...");
-	
-	my $messages .= $trait_error;
-      
-	$messages .= qq |<p> 
+    my $guide       = $self->guideline();
+
+    if ($trait_error) {
+        my $page = CXGN::Page->new( "SGN", "Isaak" );
+
+        $page->header();
+
+        print page_title_html("Traits file...");
+
+        my $messages .= $trait_error;
+
+        $messages .= qq |<p> 
                           Please go <a href="javascript:history.go(-1)"><b>back</b></a> 
                           and rearrange the order of the columns and upload the file
                           again or if you keep having problem with it contact us.</p>|;
-	
-	print info_section_html(subtitle=>$guide, contents => $messages,);
-	
-	$page->footer();
-	exit ();
+
+        print info_section_html( subtitle => $guide, contents => $messages, );
+
+        $page->footer();
+        exit();
     }
 }
 
@@ -1516,37 +1550,36 @@ sub trait_columns {
 
 sub compare_file_names {
     my $self = shift;
-    my ($file1, $file2) = @_;    
-   
-    my $guide = $self->guideline();
-     
-    unless ($file1 ne $file2) {
+    my ( $file1, $file2 ) = @_;
 
-	my $page = CXGN::Page->new("SGN", "Isaak");
-	
-	$page->header();
-	
-	print page_title_html("Data files...");
-	
-	my $messages .= qq |You are trying to upload file(s) with the same name <b>($file1 and $file2)</b> 
+    my $guide = $self->guideline();
+
+    unless ( $file1 ne $file2 ) {
+
+        my $page = CXGN::Page->new( "SGN", "Isaak" );
+
+        $page->header();
+
+        print page_title_html("Data files...");
+
+        my $messages .=
+qq |You are trying to upload file(s) with the same name <b>($file1 and $file2)</b> 
                          for this step and one of the steps before it.|;
-      
-	$messages .= qq |<p> 
+
+        $messages .= qq |<p> 
                           Please go <a href="javascript:history.go(-1)"><b>back</b></a> 
                           and check the file you are trying to upload
                           or if you keep having problem with it contact us.</p>|;
-	
-	print info_section_html(subtitle=>$guide, contents => $messages,);
-	
-	$page->footer();
-	exit ();
+
+        print info_section_html( subtitle => $guide, contents => $messages, );
+
+        $page->footer();
+        exit();
     }
 
     return 0;
 
-      
 }
-
 
 =head2 send_email
 
@@ -1562,18 +1595,21 @@ sub compare_file_names {
 
 sub send_email {
     my $self = shift;
-    my ($subj, $message, $pop_id) = @_;
-    my $dbh = $self->get_dbh();
+    my ( $subj, $message, $pop_id ) = @_;
+    my $dbh          = $self->get_dbh();
     my $sp_person_id = $self->get_sp_person_id();
-    my $person = CXGN::People::Person->new($dbh, $sp_person_id);
-	    
-    my $user_profile = qq |http://solgenomics.net/solpeople/personal-info.pl?sp_person_id=$sp_person_id |;
-	        
-    my $username= $person->get_first_name()." ".$person->get_last_name();
-    $message .= qq |\nQTL population id: $pop_id \nQTL data owner: $username ($user_profile) |;
+    my $person       = CXGN::People::Person->new( $dbh, $sp_person_id );
+
+    my $user_profile =
+qq |http://solgenomics.net/solpeople/personal-info.pl?sp_person_id=$sp_person_id |;
+
+    my $username = $person->get_first_name() . " " . $person->get_last_name();
+    $message .=
+qq |\nQTL population id: $pop_id \nQTL data owner: $username ($user_profile) |;
 
     print STDERR "\n$subj\n$message\n";
-    CXGN::Contact::send_email($subj,$message, 'sgn-db-curation@sgn.cornell.edu');
-    
+    CXGN::Contact::send_email( $subj, $message,
+        'sgn-db-curation@sgn.cornell.edu' );
+
 }
 

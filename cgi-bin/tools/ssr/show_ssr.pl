@@ -54,10 +54,9 @@ use CXGN::Page::FormattingHelpers qw/  page_title_html
 use Bio::SeqIO;
 
 our $page = CXGN::Page->new("SSR Search Results", "rfa5");
+use CatalystX::GlobalContext qw( $c );
 
-my $r = Apache2::RequestUtil->request;
-$r->content_type("text/html");
-if ($r->method() ne "POST") {
+if ($c->req->method() ne "POST") {
   post_only($page);
   exit;
 }

@@ -1,21 +1,24 @@
 <VirtualHost *:80>
 
-    ServerName       sgn.localhost.localdomain
+    ServerName sgn.localhost.localdomain
 
-    PerlWarn         On
-    PerlTaintCheck   On
+    PerlWarn On
+    PerlTaintCheck On
 
-    LogLevel         info
+    LogLevel error
 
     <Perl>
-       use lib '/crypt/rob/cxgn/core/sgn/lib';
-       use lib '/crypt/rob/cxgn/core/cxgn-corelibs/lib';
+
+       use lib '/crypt/rob/cxgn/curr/sgn/lib';
+       use lib '/crypt/rob/cxgn/curr/ITAG/lib';
+       use lib '/crypt/rob/cxgn/curr/Phenome/lib';
+       use lib '/crypt/rob/cxgn/curr/tomato_genome/lib';
+       use lib '/crypt/rob/cxgn/curr/Cview/lib';
+       use lib '/crypt/rob/cxgn/curr/cxgn-corelibs/lib';
        use local::lib '/crypt/rob/cpan-lib';
-        
-       use SGN::Apache2::Startup vhost => 1;
+
+       use SGN::Deploy::Apache SGN => ( type => 'mod_perl', vhost => 1 );
 
     </Perl>
 
 </VirtualHost>
-
-

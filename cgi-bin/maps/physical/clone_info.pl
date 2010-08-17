@@ -1,3 +1,4 @@
+use CatalystX::GlobalContext qw( $c );
 use strict;
 
 use POSIX;
@@ -21,7 +22,6 @@ use CXGN::Genomic::Search::Clone;
 use CXGN::Login;
 use CXGN::Map;
 use CXGN::Marker;
-use CXGN::MasonFactory;
 use CXGN::Page;
 
 use CXGN::Page::FormattingHelpers qw/ page_title_html
@@ -218,9 +218,9 @@ print info_section_html(title   => 'Clone &amp; library',
 			collapsible => 1,
 			contents =>
 			'<table style="margin: 0 auto"><tr><td>'
-			. CXGN::MasonFactory->bare_render('/genomic/clone/clone_summary.mas', clone => $clone )
+			. $c->render_mason('/genomic/clone/clone_summary.mas', clone => $clone )
 			. '</td><td>'
-			. CXGN::MasonFactory->bare_render('/genomic/library/library_summary.mas', library => $clone->library_object)
+			. $c->render_mason('/genomic/library/library_summary.mas', library => $clone->library_object)
                         . info_table_html
                            ( __title => 'Ordering Information',
                              'BAC Clones' => 'BAC clones can be ordered from the <a href="http://ted.bti.cornell.edu/cgi-bin/TFGD/order/order.cgi?item=clone">clone ordering page at TFGD</a>',
@@ -339,7 +339,7 @@ if( $self->_is_tomato( $clone ) ) {
                                                       map  $_->data_sources,
                                                       $c->enabled_feature('gbrowse2')
                                                      ),
-                                                     render_old_arizona_fpc( $dbh ),
+                                                     render_old_arizona_fpc( $dbh, $clone ),
                                                    ),
                                                    '</dl>',
                                                  )
@@ -412,7 +412,7 @@ if( $self->_is_tomato( $clone ) ) {
 #output sequencing status
 print info_section_html(title   => 'Sequencing',
 			collapsible => 1,
-			contents => sequencing_content( $self, $c, $clone, $person, $dbh ),
+			contents => sequencing_content( $self, $c, $clone, $person, $dbh, $chado ),
 		       );
 
 
@@ -493,7 +493,7 @@ sub clone_not_found_page {
 
 
 sub sequencing_content {
-  my ( $self, $c, $clone, $person,$dbh) = @_;
+  my ( $self, $c, $clone, $person, $dbh, $chado  ) = @_;
   my $clone_id = $clone->clone_id;
 
   my $bac_status_log = CXGN::People::BACStatusLog->new($dbh);
@@ -577,7 +577,7 @@ EOHTML
       my $fingerprint_id = shift @$_;
       my $enzyme = shift @$_;
       my $iv_frags = $_;
-      my $gel_img = qq|<img border="1" style="margin-right: 1em" src="clone_restriction_gel_image?id=$clone_id&amp;enzyme=$enzyme&amp;fp_id=$fingerprint_id" />|;
+      my $gel_img = qq|<img border="1" style="margin-right: 1em" src="clone_restriction_gel_image.pl?id=$clone_id&amp;enzyme=$enzyme&amp;fp_id=$fingerprint_id" />|;
       if (my $is_frags = $clone->in_silico_restriction_fragment_sizes($enzyme)) {
 	$is_frags = [grep {$_ > 1000} @$is_frags];
 	my $match_score = ( frag_match_score($is_frags,$iv_frags) + frag_match_score($iv_frags,$is_frags) ) / 2;
@@ -877,7 +877,7 @@ sub agp_positions {
 
 
 sub render_old_arizona_fpc {
-    my ( $dbh ) = @_;
+    my ( $dbh, $clone ) = @_;
 
     my $map_id = CXGN::DB::Physical::get_current_map_id();
 

@@ -1,3 +1,4 @@
+use CatalystX::GlobalContext qw( $c );
 ######################################################################
 #
 #  Search the people database and display the results.

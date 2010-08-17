@@ -34,9 +34,9 @@ use List::MoreUtils qw /uniq/;
 use Math::Round::Var;
 use SGN::Exception;
 
-our $c;
+use CatalystX::GlobalContext qw( $c );
 my $page = CXGN::Page->new( "qtl", "isaak" );
-my ( $pop_id, $trait_id, $lg, $l_m, $p_m, $r_m, $lod, $qtl_image ) =
+our ( $pop_id, $trait_id, $lg, $l_m, $p_m, $r_m, $lod, $qtl_image ) =
   $page->get_encoded_arguments(
                                 "population_id", "term_id",
                                 "chr",           "l_marker",
@@ -44,13 +44,11 @@ my ( $pop_id, $trait_id, $lg, $l_m, $p_m, $r_m, $lod, $qtl_image ) =
                                 "lod",            "qtl"
                               );
 if (!$pop_id || !$trait_id || !$lg || !$l_m || !$p_m || !$r_m || !$qtl_image) {
-  die SGN::Exception->new(
-    title => 'QTL detail page error:  A required argument is missing'
-  );
+  die 'QTL detail page error:  A required argument is missing';
 }
 
-my $dbh          = CXGN::DB::Connection->new();
-my $pop          = CXGN::Phenome::Population->new( $dbh, $pop_id );
+our $dbh          = CXGN::DB::Connection->new();
+our $pop          = CXGN::Phenome::Population->new( $dbh, $pop_id );
 my $pop_name     = $pop->get_name();
 my $trait_name   = trait_name( $pop, $trait_id );
 my $genetic_link = genetic_map($pop);
@@ -60,7 +58,18 @@ my $marker_link  = marker_detail($pop, $l_m, $p_m, $r_m);
 my $legend       = legend();
 my $comment      = comment();
 
-$c->forward_to_mason_view('/qtl/qtl.mas', qtl_image=>$qtl_image, pop_name=>$pop_name, trait_name=>$trait_name, cmv_link=>$cmv_link, gbrowse_link=>$gbrowse_link, marker_link=>$marker_link, genetic_map=>$genetic_link, legend=>$legend, comment=>$comment);
+$c->forward_to_mason_view(
+    '/qtl/qtl.mas',
+    qtl_image    => $qtl_image,
+    pop_name     => $pop_name,
+    trait_name   => $trait_name,
+    cmv_link     => $cmv_link,
+    gbrowse_link => $gbrowse_link,
+    marker_link  => $marker_link,
+    genetic_map  => $genetic_link,
+    legend       => $legend,
+    comment      => $comment,
+);
 
 
 sub marker_positions

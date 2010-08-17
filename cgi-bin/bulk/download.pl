@@ -1,3 +1,4 @@
+use CatalystX::GlobalContext qw( $c );
 # refactored bulk download script for SGN database
 # Alexander Naydich and Matthew Crumb (interns)
 # July 3, 2007

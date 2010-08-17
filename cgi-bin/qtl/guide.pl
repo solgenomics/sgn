@@ -1,3 +1,4 @@
+use CatalystX::GlobalContext qw( $c );
 #!/usr/bin/perl -w
 
 =head1 DESCRIPTION

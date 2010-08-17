@@ -1,3 +1,4 @@
+use CatalystX::GlobalContext qw( $c );
 use strict;
 use POSIX;
 
@@ -337,17 +338,23 @@ sub cview_map_links {
                  13  => 'clones anchored with FISH',
                  agp => 'clones anchored in manually-curated final chromosome assemblies',
                 );
-
-    return map {
-        my $mid = $_;
-        my $mvid = CXGN::Cview::Map::Tools::find_current_version($dbh, $mid)
-            or die "no map_version_id found for map_id $mid\n";
-        my $m = $map_factory->create({map_version_id => $mvid})
-            or die "no map found with map_version_id $mvid\n";
-        my $sn = $m->get_short_name;
-        qq|<a href="/cview/map.pl?map_id=$mid">$sn</a> &ndash; $maps{$mid}|;
+    my @links;
+    foreach my $mid (sort keys %maps) {
+        if( my $mvid = CXGN::Cview::Map::Tools::find_current_version($dbh, $mid) ) {
+            if( my $m = $map_factory->create({map_version_id => $mvid}) ) {
+                my $sn = $m->get_short_name;
+                push @links, qq|<a href="/cview/map.pl?map_id=$mid">$sn</a> &ndash; $maps{$mid}|;
+            }
+            else {
+                warn "no map found with map_version_id $mvid, link will not be displayed";
+            }
+        }
+        else {
+            warn "no map_version_id found for map_id $mid, link will not be displayed";
+        }
     }
-    sort keys %maps
+
+    return @links;
 }
 
 sub gbrowse_fpc_links {

@@ -95,8 +95,20 @@ my $build = $class->new(
 
         'Cache::File' => 0,
 
-        'CGI'                 => 0,
-        'CGI::Carp::DebugScreen' => '0.16',
+
+        'Catalyst::Runtime'                => '5.80024',
+        'Catalyst::Controller::CGIBin'     => '0.029',
+        'Catalyst::Action::RenderView'     => 0,
+        'Catalyst::Plugin::ErrorCatcher'   => 0,
+        'Catalyst::Plugin::ErrorCatcher::Email'
+                                           => 0,
+        'Catalyst::Plugin::StackTrace'     => 0,
+        'Catalyst::Plugin::Static::Simple' => 0,
+        'Catalyst::View::HTML::Mason'      => 0,
+        'CatalystX::GlobalContext'         => 0,
+
+        'CGI'                              => 0,
+        'CGI::Carp::DebugScreen'           => '0.16',
 
         #         'CXGN::Accession' => 0,
         #         'CXGN::Accession::Tools' => 0,

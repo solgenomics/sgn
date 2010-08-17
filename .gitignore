@@ -1,6 +1,7 @@
 *~
-documents/tempfiles/*.*
-documents/tempfiles/*/*
+TAGS
+static/documents/tempfiles/*
+static/documents/tempfiles/*
 features/gbrowse2/conf/rendered_conf/*.conf
 logs/
 !exists
@@ -13,4 +14,6 @@ test.sh
 blib/*
 .#*
 *.bak
+static/data
+static/static_content
 cover_db
