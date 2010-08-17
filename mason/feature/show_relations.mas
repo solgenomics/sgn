@@ -1,0 +1,15 @@
+<%args>
+    $relations 
+    $title
+</%args>
+% if (@$relations) {
+<&| /page/info_section.mas,
+    title => $title,
+    collapsible => 1,
+&>
+<& /page/columnar_table.mas,
+    headings => [ qw/Subject Object Type/ ],
+    data     => $relations,
+&>
+</&>
+% }
