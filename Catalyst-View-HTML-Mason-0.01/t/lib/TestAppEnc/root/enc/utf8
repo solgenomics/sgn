@@ -1,0 +1,2 @@
+<%args> $verb </%args>\
+Er <% $verb %>: Ich darf auf den großen Platz fahren.\
