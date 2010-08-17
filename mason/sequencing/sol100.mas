@@ -34,7 +34,36 @@ sol100.mas - SGN page for sol100 project organism data overview in a tree format
   This page presents a summary of all species being sequenced as part
   of the SOL100 sequencing project.
 
+%if ($user_type eq 'submitter' || $user_type eq 'curator' || $user_type eq 'sequencer'){
+ <style>
+  #sol100_add_organism {
+      width: 30em;
+      border: 2px solid gray;
+      margin-top: 1em;
+      padding: 0 0 1em 1em;
+  }
+  #sol100_add_organism > span {
+      background: #ccc;
+      padding: 3px 10px;
+      position: relative;
+      top: 4px;
+      left: -1em;s
+  }
+ </style>
+ <div id="sol100_add_organism">
+    <span>Authorized <% $user_type %></span>
+
+    <h3>Add a SOL100 organism to this tree</h3>
+    <form name="sol100_add_form">
+      <input name="species" type="text" size="25" id="sol100_species" /><input type="submit" name="add_to_tree" onclick="add_to_tree()" value="Add to Tree" />
+      <div style="font-size: 80%; margin-left: 1em; color: #333">type a binomial species name</div>
+    </form>
+
+ </div>
+%}
+
 </div>
+
 
 <div id="organism_tree">
 
@@ -58,19 +87,6 @@ sol100.mas - SGN page for sol100 project organism data overview in a tree format
 %    }
 
 </div>
-
-%if ($user_type eq 'submitter' || $user_type eq 'curator' || $user_type eq 'sequencer'){
- <div id="sol100_add_organism" style="margin-left: 2em">
-
-    <h3>Add a SOL100 organism to this tree</h3>
-    <form name="sol100_add_form">
-      <input name="species" type="text" size="25" id="sol100_species" /><input type="submit" name="add_to_tree" onclick="add_to_tree()" value="Add to Tree" />
-      <div style="font-size: 80%; margin-left: 1em; color: #333">type a binomial species name</div>
-    </form>
-
- </div>
-%}
-
 
 % ########### subcomponents ##############33
 
