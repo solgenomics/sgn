@@ -28,4 +28,10 @@ my $uris = $c->js_import_uris( @$classes );
 % foreach my $uri ( @$uris ) {
  <script src="<% $uri %>"></script>
 % }
+% # also import the SGN jquery theme CSS if jquery-ui is being imported
+% if( grep {$_ eq 'jquery-ui'} @$classes ) {
+   <style type="text/css">
+        @import url("/documents/inc/jquery-sgn-theme/jquery-ui-1.8.4.custom.css");
+   </style>
+% }
 
