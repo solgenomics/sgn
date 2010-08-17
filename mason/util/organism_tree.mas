@@ -90,7 +90,7 @@ my $tree_string = $newick_file->slurp;
 
     <form action="/tools/tree_browser/" method="post">
        <input type="hidden" name="tree_string" value="<% $tree_string |h %>" />
-       <input type="submit" value="show in treebrowser" />
+       <input type="submit" value="show in tree browser" />
     </form>
     <% $image_html %>
  </&>
