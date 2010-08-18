@@ -28,9 +28,8 @@
 
 % if( $e->is_client_error || $e->is_server_error and $contact_email ) {
 
-    Please also feel free to contact us at
-    <a href="mailto:<% $contact_email %>"><% $contact_email %></a> and inform us of the
-    problem, and
+    If the problem persists, feel free to contact us at
+    <a href="mailto:<% $contact_email %>"><% $contact_email %></a>, and
 %   if( $e->is_server_error ) {
       we will keep you informed of our progress in resolving it.
 %   } else {
