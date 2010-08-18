@@ -165,10 +165,11 @@ sub find_recursive_parent {
 
 =head2 build_tree
 
- Usage:  $self->build_tree($root_species_name, $species_hashref,$speciesinfo_cache)
+ Usage:  $self->build_tree($root_species_name, $org_ids, $speciesinfo_cache)
  Desc:   builds an organism tree starting from $root with a list of species
  Ret:    a newick representation of the tree
- Args:   $root_species_name, $species_hashref
+ Args:   $root_species_id (species name of root species)
+         $org_ids (arrayref of organism IDs)
  Side Effects:  sets tree nodes names and lables, and renders the tree  (see L<CXGN::Phylo::Renderer> )
                 calls $tree->generate_newick($root_node, 1)
  Example:
@@ -176,24 +177,25 @@ sub find_recursive_parent {
 =cut
 
 sub build_tree {
-    my ( $self, $root, $species_hash, $species_cache ) = @_;
+    my ( $self, $root, $organisms, $species_cache ) = @_;
     my $schema    = $self->get_schema();
-    my $root_o    = CXGN::Chado::Organism->new_with_species( $schema, $root );
+    my $root_o    = CXGN::Chado::Organism->new_with_species( $schema, $root )
+        or die "species '$root' not found";
     my $root_o_id = $root_o->get_organism_id();
     my $organism_link = "/chado/organism.pl?organism_id=";
     my $nodes         = ();
     my $root_node = $self->get_root();    #CXGN::Phylo::Node->new();
 
-    foreach my $s ( keys %$species_hash ) {
-        my $o = CXGN::Chado::Organism->new_with_species( $schema, $s );
-        if ($o) {
-            my $organism_id = $o->get_organism_id();
-            $nodes->{$organism_id} = $o;
-            $nodes = $self->find_recursive_parent( $o, $nodes );
-        }
-        else {
-            $self->d("NO ORGANISM FOUND FOR SPECIES $s  !!!!!!!!!!!\n\n");
-        }
+    # look up all the organism objects
+    my @organisms =
+        grep $_, #< filter out missing organisms
+        map CXGN::Chado::Organism->new_with_species( $schema, $_ ),
+        @$organisms;
+
+    foreach my $o ( @organisms ) {
+        my $organism_id = $o->get_organism_id();
+        $nodes->{$organism_id} = $o;
+        $nodes = $self->find_recursive_parent( $o, $nodes );
     }
 
     $self->recursive_children( $nodes, $nodes->{$root_o_id}, $root_node,

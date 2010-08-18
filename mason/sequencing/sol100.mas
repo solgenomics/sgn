@@ -10,98 +10,90 @@ sol100.mas - SGN page for sol100 project organism data overview in a tree format
 
 
 <%args>
-    $species_data
-    $species
-    $user_type => undef
-    $schema
-    $uri_dir
-    $tmp_dir
+    $organism_tree
+
+    $show_org_add_form => 0
+
+    $organism_add_uri
+    $organism_autocomplete_uri => ''
 </%args>
 
 <& /page/page_title.mas, title=>"SOL100 sequencing project" &>
 
-<div id="popup" style="visibility:hidden; position:absolute; top:0; left:0;">
-  <table id="xtratbl">
-  <tr><td id="org_title"><font color="#000000">Title Goes Here</font></td></tr>
-  <tr><td id="org_content" bgcolor="#ffffff">
-      Organism content goes here
-  </td></tr></table>
-</div>
+<& /util/import_javascript.mas, classes=>[qw[ CXGN.Page.FormattingHelpers  jquery jqueryui popup]] &>
 
-<& .include_javascript &>
+<script language="javascript">
+
+  jQuery(function() {
+     jQuery("#sol100_species").autocomplete({
+	 source: '<% $organism_autocomplete_uri %>'
+     });
+  });
+   	
+</script>
 
 <div class="page_introduction">
   This page presents a summary of all species being sequenced as part
   of the SOL100 sequencing project.
 
-%if ($user_type eq 'submitter' || $user_type eq 'curator' || $user_type eq 'sequencer'){
+%if ( $show_org_add_form ){
  <style>
   #sol100_add_organism {
       width: 30em;
-      border: 2px solid gray;
-      margin-top: 1em;
+      border: 2px solid #aaa;
+      margin-top: 2em;
       padding: 0 0 1em 1em;
-  }
-  #sol100_add_organism > span {
-      background: #ccc;
-      padding: 3px 10px;
       position: relative;
-      top: 4px;
-      left: -1em;
   }
+
+  #sol100_add_organism div.boxtitle {
+      margin-left: -1em;
+      margin-top: -1.2em;
+      padding-left: 0.2em;
+      font-weight: bold;
+      color: #333;
+  }
+
  </style>
  <div id="sol100_add_organism">
-    <span>Authorized <% $user_type %></span>
-
-    <h3>Add a SOL100 organism to this tree</h3>
-    <form method="POST" name="sol100_add_form">
-      <input name="species" type="text" size="30" id="sol100_species" /><input type="submit" name="add_to_tree" onclick="add_to_tree()" value="Add to Tree" />
-      <div style="font-size: 80%; margin-left: 1em; color: #333">type an organism name</div>
-    </form>
-
+    <div class="boxtitle">Authorized user</div>
+    <h3>Add a SOL100 organism</h3>
+    <div>
+      <form method="POST" name="sol100_add_form" action="<% $organism_add_uri %>">
+        <input name="species" type="text" size="30" id="sol100_species" /><input type="submit" name="add_to_tree" onclick="add_to_tree()" value="Add to Tree" />
+        <div style="font-size: 80%; margin-left: 1em; color: #333">type an organism name</div>
+      </form>
+    </div>
  </div>
 %}
 
 </div>
 
+<&| /page/info_section.mas,
+  title         =>  'SOL100 Organisms',
+  subtitle      => 'click on an organism name to see more details ',
+  empty_message => 'Tree not available',
+  collapsible   => 1,
+  collapsed     => 0,
+  &>
 
-<div id="organism_tree">
+  <div id="popup" style="visibility:hidden; position:absolute; top:0; left:0;">
+    <table id="xtratbl">
+    <tr><td id="org_title"><font color="#000000">Title Goes Here</font></td></tr>
+    <tr><td id="org_content" bgcolor="#ffffff">
+        Organism content goes here
+    </td></tr></table>
+  </div>
 
-% if ( $species && %$species ) {
+  <div class="organism_tree">
+    <form action="/tools/tree_browser/" method="post">
+       <input type="hidden" name="tree_string" value="<% $organism_tree->{newick} |h %>" />
+       <input type="submit" value="show in tree browser" />
+    </form>
+    <img src="<% $organism_tree->{image_uri} |h %>" usemap="#<% $organism_tree->{image_map_name} |h %>" />
+    <% $organism_tree->{image_map} %>
+  </div>
+</&>
 
-    <& /util/organism_tree.mas,
-      speciesinfo_cache => $species_data,
-      species_hashref => $species,
-      schema  => $schema,
-      root    => 'Solanaceae',
-      uri_dir => $uri_dir,
-      tmp_dir => $tmp_dir,
-     &>
 
-%    } else {
-  $c->throw( public_message => 'Organism page temporarily unavailable, we apologize for the inconvenience',
-             developer_message => "no organisms provided to sol100 page!  $sol:\n".Dumper($sol),
-             is_error => 1,
-             notify => 1,
-            );
-%    }
 
-</div>
-
-% ########### subcomponents ##############
-
-% # // subcomponent with all the page's javascript
-<%def .include_javascript>
-
-   <& /util/import_javascript.mas, classes=>[qw[ CXGN.Page.FormattingHelpers  jquery jqueryui popup]] &>
-
-   <script language="javascript">
-
-        jQuery(function() {
-		jQuery("#sol100_species").autocomplete({
-			source: 'sol100_autocomplete.pl'
-		});
-	});
-   	
-   </script>
-</%def>

@@ -1,3 +1,4 @@
-use SGN::Controller::Organism;
+use CGI ();
 use CatalystX::GlobalContext qw( $c );
-SGN::Controller::Organism->new( $c, {} )->sgn_data( $c );
+print CGI->new->redirect( -uri => $c->uri_for_action( '/organism/view_all' ), -status => 301 );
+
