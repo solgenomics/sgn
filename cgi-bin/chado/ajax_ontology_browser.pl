@@ -36,8 +36,6 @@ elsif ( $action eq "roots" ) {
 
 }
 elsif ( $action eq "match" ) {
-    print STDERR "Getting nodes matching string $node...\n";
-
     my $synonym_query = $dbh->prepare(
 "SELECT  distinct(cvterm.dbxref_id), cv.name, cvterm.name, dbxref.accession, synonym
                                     FROM public.cvterm 
@@ -100,8 +98,10 @@ elsif ( $action eq "match" ) {
     my $print_string;
 
     foreach my $cv_name ( sort ( keys %terms ) ) {
-        foreach my $key ( sort { $terms{$cv_name}{$a} cmp $terms{$cv_name}{$b} }
-            keys %{ $terms{$cv_name} } )
+        foreach my $key (
+            sort { $terms{$cv_name}{$a} cmp $terms{$cv_name}{$b} }
+            keys %{ $terms{$cv_name} }
+          )
         {
             $print_string .= $key . $terms{$cv_name}{$key};
             $print_string .= "|";
