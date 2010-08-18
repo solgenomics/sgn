@@ -47,6 +47,7 @@ sub throw {
     if( @_ > 1 ) {
         my %args = @_;
         $args{public_message}  ||= $args{message};
+        $args{message}         ||= $args{public_message};
         $args{is_server_error} ||= $args{is_error};
         die Catalyst::Exception->new( %args );
     } else {
