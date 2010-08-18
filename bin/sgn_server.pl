@@ -4,6 +4,8 @@ BEGIN {
     $ENV{CATALYST_SCRIPT_GEN} = 40;
 }
 
+use SGN::Exception;
+
 use Catalyst::ScriptRunner;
 Catalyst::ScriptRunner->run('SGN', 'Server');
 
