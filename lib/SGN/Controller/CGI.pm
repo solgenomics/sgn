@@ -41,6 +41,13 @@ if( eval{ SGN->debug } ) {
     };
 }
 
+sub cgi_action_for {
+    my ( $self, $path ) = @_;
 
+    my $action_name = $self->cgi_action($path)
+        or return;
+
+    return $self->action_for( $action_name )
+}
 
 1;

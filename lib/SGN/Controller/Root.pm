@@ -94,10 +94,7 @@ sub _find_cgi_action {
      my $cgi = $c->controller('CGI')
          or return;
 
-    my $action_name = $cgi->cgi_action($path);
-    $c->log->debug("checking for CGI index action $action_name") if $c->debug;
-
-    my $index_action = $cgi->action_for( $action_name )
+    my $index_action = $cgi->cgi_action_for( $path )
         or return;
 
     $c->log->debug("found CGI index action '$index_action'") if $c->debug;
