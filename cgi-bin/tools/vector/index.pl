@@ -4,7 +4,7 @@ use strict;
 use File::Temp qw/tempfile/;
 use File::Basename;
 use File::Spec;
-use CXGN::Tools::File qw/file_contents/;
+use File::Slurp qw/slurp/;
 
 use Bio::Seq;
 use Bio::Restriction::Analysis;
@@ -38,7 +38,7 @@ if ($native_file){
     my $native_file_url   = File::Spec->catfile($tempfiles_subdir_rel, $native_file);
     
     #open( my $fh , $native_file_dir) or die "$!: cant find $native_file_dir";
-    $native_commands = file_contents ($native_file_dir);
+    $native_commands = slurp ($native_file_dir);
 }
 
 #die "FORMAT: ".join (", ", @$format);

@@ -1,17 +1,17 @@
-
-<%perl>
-use strict;
-
+<%init>
 use SGN::Context;
 use CXGN::Tools::File;
+use File::Slurp qw/slurp/;
+use strict;
+</%init>
+<%perl>
 
 my $vh = SGN::Context->new();
-
 my $url = $vh->get_conf('static_datasets_url')."/images/iotw/desc.txt";
 my $path = $vh->get_conf('static_datasets_path')."/images/iotw/desc.txt";
 my $IOTW = "(no image currently available)";
-eval { 	 
- $IOTW = CXGN::Tools::File::file_contents($path);
+eval {
+ $IOTW = slurp($path);
 };
 
 </%perl>

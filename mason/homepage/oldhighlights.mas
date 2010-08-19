@@ -2,7 +2,6 @@
 <%perl>
 use strict;
 use File::Spec;
-use CXGN::Tools::File;
 
 my $file=File::Spec->catfile($c->get_conf('homepage_files_dir'), 'news.txt');
 
@@ -10,7 +9,6 @@ my $highlights = qq{ <p class="boxbgcolor5"><br />News are not available at the 
 
 eval { 
   $highlights = $m->file($file);
-#$news=CXGN::Tools::File::file_contents("$file")||'';
 };
 
 </%perl>
