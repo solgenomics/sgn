@@ -9,6 +9,7 @@ use CXGN::UserPrefs;
 use CXGN::DB::Connection;
 use CXGN::Page::Widgets;
 use HTML::Entities;
+use File::Slurp qw/slurp/;
 
 use base('CXGN::Page');
 
@@ -273,7 +274,7 @@ sub get_system_message {
 	my $system_message='';
 	if(my $message_file=$self->{vhost_object}->get_conf('system_message_file'))
     {
-        my $message_text=CXGN::Tools::File::file_contents($message_file);
+        my $message_text = slurp($message_file);
         $system_message.="<span class=\"developererrorbox\">$message_text</span><br />";
     }
     unless($self->{vhost_object}->get_conf('production_server'))
