@@ -6,11 +6,14 @@
 <style type="text/css">
     @import url("/documents/inc/icon_nav.css");
 
-    #icon_nav {
+    div.page_introduction {
+        margin-bottom: 0;
+    }
 
+    #icon_nav {
         width: 720px;
-        height: 520px;
-        margin-top: -60px;
+        height: 500px;
+        position: relative;
     }
 
     .SNPTool {
@@ -51,7 +54,7 @@
 
     .Traits {
     	position: relative; 
-    	top: 50px;
+    	top: 0px;
     	left: -30px;
     }
 
@@ -161,7 +164,7 @@ with suggestions for improvements!</p>
   <li>Develop CAPS markers using the <a href="/tools/caps_designer/caps_input.pl">CAPS Designer</a></li>
   <li>Check intron locations in transript data using the <a href="/tools/intron_detection/find_introns.pl">Intron Finder</a></li>
   <li><a href="/phenome/qtl_form.pl">QTL data submssion</a> and on-the-fly QTL analysis <a href="/search/direct_search.pl?search=cvterm_name/">for Solanaceae traits</a></li>
-    <li>SGN gene and phenotype <a href="/phenome/">submission guide</a> </li></ul>
+  <li>SGN gene and phenotype <a href="/phenome/">submission guide</a> </li>
 </ul>
 </&>
 
