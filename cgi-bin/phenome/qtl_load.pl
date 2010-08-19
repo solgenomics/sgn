@@ -92,7 +92,6 @@ sub process_data {
     my $qtl_obj = CXGN::Phenome::Qtl->new( $sp_person_id, $args_ref );
     $qtl_obj->create_user_qtl_dir($c);
     my $qtl_tools = CXGN::Phenome::Qtl::Tools->new();
-    my $page = CXGN::Page->new( "SGN", "Isaak" );
 
     if ($pop_id) {
         $self->set_population_id($pop_id);
