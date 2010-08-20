@@ -134,8 +134,13 @@ td.clonecart {
 /* this is a centered page title, like 'BAC P00343' or 'Marker TM2' or whatever */
 #pagetitle { 
   text-align: center;
-  font-weight: bold;
-  margin-top: -10px;
+  margin: 0;
+  padding: 0;
+}
+#pagetitle > h3 {
+  text-align: center;
+  margin: 0;
+  padding: 0;
 }
 
 /* Developer Toolbar Style */

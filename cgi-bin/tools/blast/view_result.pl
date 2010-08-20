@@ -27,7 +27,7 @@ use CXGN::VHost;
 
 use CXGN::Tools::List qw/str_in/;
 use CXGN::Tools::Identifiers qw/link_identifier/;
-use CXGN::Tools::File qw/file_contents/;
+use File::Slurp qw/slurp/;
 use CXGN::Page::FormattingHelpers qw/info_section_html page_title_html columnar_table_html/;
 
 use constant MAX_FORMATTABLE_REPORT_FILE_SIZE => 2_000_000;
@@ -93,7 +93,7 @@ my $report_download_link = qq|[<a href="$raw_report_url">View / download raw rep
 my $report_text =
   !$got_hits ? 'No hits found.'
   : -s $raw_report_file > MAX_FORMATTABLE_REPORT_FILE_SIZE ? 'report too large to display, please right-click the link above to download it'
-  : file_contents($formatted_report_file);
+  : slurp($formatted_report_file);
 
 
 

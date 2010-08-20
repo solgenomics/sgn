@@ -32,7 +32,6 @@ use CXGN::BlastDB;
 use CXGN::Apache::Error;
 use CXGN::VHost;
 
-use CXGN::Tools::File qw/file_contents/;
 use CXGN::Page::FormattingHelpers qw/info_section_html page_title_html columnar_table_html html_break_string/;
 
 

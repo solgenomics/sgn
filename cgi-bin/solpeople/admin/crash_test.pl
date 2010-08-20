@@ -1,4 +1,3 @@
-use CatalystX::GlobalContext qw( $c );
 #!/usr/bin/perl -w
 
 use strict;
@@ -8,6 +7,7 @@ use CXGN::Login;
 use CXGN::Contact;
 use CXGN::People;
 use CXGN::VHost;
+use CatalystX::GlobalContext qw( $c );
 
 my $page = CXGN::Page->new("crash_test.pl","john binns");
 my $dbh = CXGN::DB::Connection->new();

@@ -26,12 +26,8 @@ use warnings;
 use HTML::Entities ();
 use Carp;
 use CGI ();
-
 use File::Path ();
-
 use JSAN::ServerSide;
-use SGN::Context;
-
 use CatalystX::GlobalContext '$c';
 
 # =head1 OBJECT METHODS
