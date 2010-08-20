@@ -68,8 +68,8 @@ if($action eq "specific") {
 		my @workingPath = @$pathArrayRef;
 
 		my $nextTerm = "done";
-		if( ref( @workingPath[0] ) eq "ARRAY" ) {
-		    $nextTerm = @workingPath[0]->[0];
+		if( ref( $workingPath[0] ) eq "ARRAY" ) {
+		    $nextTerm = $workingPath[0]->[0];
 		}
 
 		# Read only paths that are not done, this saves time
@@ -172,7 +172,7 @@ if($action eq "specific") {
 				if( $newElement ne "false" ) {
 				    if( $next->att( 'indent' ) - $element->att( 'indent' ) == 1 ) {
 					eval{$next->paste( 'last_child', $element )};
-					$termIndentHash{$idText} => [$idIndent];
+					$termIndentHash{$idText} = [$idIndent];
 				    }
 				}
 			    }
@@ -180,7 +180,7 @@ if($action eq "specific") {
 		    }
 		} else {
 		    $next->paste( $xmlRoot );
-		    $termIndentHash{$next->trimmed_text} => ["1"];
+		    $termIndentHash{$next->trimmed_text} = ["1"];
 		}
 	    }
 	}
