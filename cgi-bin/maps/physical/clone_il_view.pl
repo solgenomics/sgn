@@ -89,7 +89,7 @@ print columnar_table_html( headings     => \@headings,
 			   __tableattrs => 'align="center" width="60%" summary="" cellspacing="0"',
 			 );
 
-print editform_html($dbh,$person);
+print editform_html($dbh,$person,$curr_proj);
 
 #now here are the JS functions to do the updating
 print <<EOJS;
@@ -235,7 +235,7 @@ sub edit_controls_html {
 }
 
 sub editform_html {
-  my ($dbh,$person) = @_;
+  my ($dbh,$person,$curr_proj) = @_;
 
   return '' unless $person;
 
