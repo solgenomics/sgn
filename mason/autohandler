@@ -3,3 +3,8 @@
 % $m->call_next;
 
 <& /site/footer.mas &>
+
+<%method .page_title>\
+% my $t = $m->request_args->{'page_title'};
+<% $t ? "$t -" : '' %>Sol Genomics Network\
+</%method>
