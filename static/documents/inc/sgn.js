@@ -1,4 +1,9 @@
+// stub out some problematic things
 var docroot = '/';
+JSAN = {};
+JSAN.use = function() {};
+MochiKit = {__export__: false};
+
 
 
 // Toggles the layer visibility on 

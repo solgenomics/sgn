@@ -11,12 +11,5 @@
 
   <link rel="search" type="application/opensearchdescription+xml" title="SGN Sol Search" href="/documents/sgn_sol_search.xml" />
 
-  <script language="JavaScript" type="text/javascript">
-    var docroot = '/';
-    JSAN = {};
-    JSAN.use = function() {};
-    MochiKit = {__export__: false};
-  </script>
-
   <script language="JavaScript" src="/documents/inc/sgn.js" type="text/javascript"></script>
 
