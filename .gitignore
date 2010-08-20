@@ -17,3 +17,5 @@ blib/*
 static/data
 static/static_content
 cover_db
+lib/MyDevLibs.pm
+
