@@ -6,10 +6,12 @@ CXGN::Page
 
 =head1 DESCRIPTION
 
-This entire module is deprecated. DO NOT USE IN NEW CODE.
+This entire module is deprecated.  Do not use in new code.
 
-Page object which handles headers, footers, simple message pages, and simple error pages. Can also retrieve page arguments and handle redirects.
-This is now a subclass of CXGN::Scrap, which handles all of the argument-retrieval.
+Page object which handles headers, footers, simple message pages, and
+simple error pages. Can also retrieve page arguments and handle
+redirects.  This is now a subclass of CXGN::Scrap, which handles all
+of the argument-retrieval.
 
 =cut
 
