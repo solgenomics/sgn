@@ -24,13 +24,22 @@ attempt to chown tempfiles_subdir and children to the web user
 
 =cut
 
-after 'setup_finalize' => sub {
+before 'setup_finalize' => sub {
     my $c = shift;
 
     # the tempfiles_subdir() function makes and chmods the given
     # directory.  with no arguments, will make and chmod the main
     # tempfiles directory
     my $temp_subdir = $c->path_to( $c->tempfiles_subdir() );
+    my $temp_base   = $c->tempfiles_base;
+
+#     unless( $temp_subdir eq $temp_base ) {
+#         $c->log->warn("WARNING: symlinking tempfiles_subdir() $temp_subdir to $temp_base");
+#         unlink $temp_subdir;
+#         symlink $temp_subdir, $temp_base
+#             or die "$! symlinking $temp_subdir => $temp_base";
+#     }
+
     $c->chown_generated_dir( $temp_subdir ); #< force-set the
                                              # permissions on the
                                              # main tempfiles dir
@@ -162,20 +171,26 @@ sub tempfiles_subdir {
   return $dir;
 }
 
+sub tempfiles_base {
+    my $self = shift;
+    return Path::Class::Dir->new( $self->config->{tempfiles_base} || $self->_default_temp_base );
+}
+
 # make a path like /tmp/www-data/SGN-site
 sub _default_temp_base {
     my ($self) = @_;
     return File::Spec->catdir(
         File::Spec->tmpdir,
         (getpwuid($>))[0], # the user name
-        ($self->config->{name} || die '"name" conf value is not set').'-site',
+        ($self->config->{name} || die '"name" conf value is not set'),
        );
 }
 
 sub make_generated_dir {
     my ( $self, $tempdir ) = @_;
 
-    mkpath $tempdir or return;
+    File::Path::make_path( $tempdir, { verbose => 1 });
+    return unless -d $tempdir;
 
     return $self->chown_generated_dir( $tempdir );
 }
