@@ -4,7 +4,9 @@ use namespace::autoclean;
 
 use File::Spec;
 
+use Carp;
 use Digest::MD5 'md5_hex';
+use JSAN::ServerSide;
 use List::MoreUtils qw/uniq/;
 use Storable qw/ nfreeze /;
 
@@ -26,7 +28,7 @@ has '_package_defs' => (
            cache_root       => $self->_app->path_to( $self->_app->tempfiles_subdir('cache','js_packs') ),
 
            default_expires  => 'never',
-           size_limit       => 50,
+           size_limit       => 1_000_000,
            removal_strategy => 'Cache::RemovalStrategy::LRU',
           );
    }
@@ -49,6 +51,13 @@ sub js_package :Path('pack') :Args(1) {
     # javascript too, but it turns out to not be much faster!
 
     $c->stash->{js} = $self->_package_defs->thaw( $key );
+
+    $c->log->debug(
+         "serving JS pack $key = ("
+        .(join ', ', @{ $c->stash->{js} || [] })
+        .')'
+       ) if $c->debug;
+
 }
 
 =head2 default
@@ -94,32 +103,81 @@ sub end :Private {
 
 =head2 action_for_js_package
 
-  Usage: $controller->action_for_js_package( 'sgn', 'jquery' )
+  Usage: $controller->action_for_js_package([ 'sgn', 'jquery' ])
   Desc : get a list of (action,arguments) for getting a minified,
          concatenated set of javascript containing the given libraries.
-  Args : list of JS libraries to include in the package
+  Args : arrayref of of JS libraries to include in the package
   Ret  : list of ( $action, @arguments )
   Side Effects: saves the list of js libs in a cache for subsequent
                 requests
   Example:
 
-      $c->uri_for( $c->controller('JavaScript')->action_for_js_package( 'sgn', 'jquery' ))
+      $c->uri_for( $c->controller('JavaScript')->action_for_js_package([ 'sgn', 'jquery' ]))
 
 =cut
 
 sub action_for_js_package {
-    my $self = shift;
-    my @files = uniq @_; #< do not sort, load order might be important
+    my ( $self, $files ) = @_;
+    @_ == 2 && ref $files && ref $files eq 'ARRAY' && @$files
+        or croak "action_for_js_package takes a single param, an arrayref of files";
 
-    my $key = md5_hex( join ' ', @files );
+    my @files = uniq @$files; #< do not sort, load order might be important
+    for (@files) {
+        s/\.js$//;
+        s!\.!/!g;
+    }
+
+    # add in JSAN.use dependencies
+    @files = $self->_resolve_jsan_dependencies( \@files );
+
+    my $key = md5_hex( join '!!', @files );
+
+   warn (
+         "defining JS pack $key = ("
+        .(join ', ', @files)
+        .')'
+       ) if $self->_app->debug;
+
 
     # record files for this particular package of JS
-    unless( $self->_package_defs->exists( $key ) ) {
+    if( $self->_package_defs->exists( $key ) ) {
+        warn "key $key already exists in js_packs cache" if $self->_app->debug;
+    } else {
+        warn "key $key is new in js_packs cache" if $self->_app->debug;
         $self->_package_defs->freeze( $key => \@files );
     }
 
     return $self->action_for('js_package'),  $key;
 }
+
+sub _resolve_jsan_dependencies {
+    my ( $self, $files ) = @_;
+
+    # resolve JSAN dependencies of these files
+    my $jsan = $self->new_jsan;
+    for my $f (@$files) {
+        $jsan->add( $f );
+    }
+
+    return map { s!^\/fake_prefix/!!; $_ } $jsan->uris;
+}
+
+has _jsan_params => ( is => 'ro', isa => 'HashRef', lazy_build => 1 );
+sub _build__jsan_params {
+    my ( $self ) = @_;
+    my $inc_path = $self->_app->config->{'js_include_path'};
+    die "multi-dir js_include_path not yet supported" if @$inc_path > 1;
+    my $js_dir = $inc_path->[0];
+    -d $js_dir or die "configured js_include_path '$js_dir' does not exist!\n";
+    return {
+        js_dir     => "$js_dir",
+        uri_prefix => '/fake_prefix',
+    };
+}
+sub new_jsan {
+    JSAN::ServerSide->new( %{ shift->_jsan_params } );
+}
+
 
 __PACKAGE__->meta->make_immutable;
 1;
