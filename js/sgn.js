@@ -35,12 +35,13 @@ function getCookie(name) {
 ////////////////////////////////////////////////////////////
 //   clone cart
 ////////////////////////////////////////////////////////////
-function count_clones() 
+function count_clones()
 {
     var n_clones=0;
     var p;
     var cookies;
     cookies=document.cookie;
+    var count_el = document.getElementById('clone_cart_count');
     if(getCookie('CloneCart')!="") 
     {
         n_clones = 1;//first clone in cookie does not begin with a comma (fencepost problem)
@@ -50,11 +51,12 @@ function count_clones()
             p++;
             n_clones++;
         }
-        document.write(n_clones);
+
+        count_el.innerHTML = n_clones;
     }
     else
     {
-        document.write("No");
+        count_el.innerHTML = 'No';
     }
 }
 

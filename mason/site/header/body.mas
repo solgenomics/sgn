@@ -30,7 +30,7 @@
   </td>
   <td width="50%" class="clonecart">
      <div id="clone_shoppingcart" style="display: none">
-         clone(s) in cart (<a class="toplink" style="text-decoration: underline" href="/search/clone-order.pl">order</a>)
+         <span id="clone_cart_count"></span> clone(s) in cart (<a class="toplink" style="text-decoration: underline" href="/search/clone-order.pl">order</a>)
      </div>
   </td>
   <td class="toplink" width="50%">
