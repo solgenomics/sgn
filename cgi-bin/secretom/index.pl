@@ -39,7 +39,7 @@ The proteome of the plant cell wall is <em>critical</em> to our understanding of
 	">
 
 
-<b>Proteomic analysis of cellular compartments</b> provides essential insight into the subcellular location of a specific protein or protein complex; a valuable step towards understanding protein function and something that cannot be accurately predicted from primary sequence. Localization information also helps in the identification of protein interactions and provides a means to assess targeting, trafficking and residence in multiple compartments.  Moreover, the analysis of a subcellular proteome has the advantage of requiring "biological pre-fractionation," substantially enhancing the detection of lower abundance proteins.
+<b>XXXXX Proteomic analysis of cellular compartments</b> provides essential insight into the subcellular location of a specific protein or protein complex; a valuable step towards understanding protein function and something that cannot be accurately predicted from primary sequence. Localization information also helps in the identification of protein interactions and provides a means to assess targeting, trafficking and residence in multiple compartments.  Moreover, the analysis of a subcellular proteome has the advantage of requiring "biological pre-fractionation," substantially enhancing the detection of lower abundance proteins.
 
 <br /><br />
 <b>The purpose of this NSF-funded project</b> is to catalog and study <a href="proteome.pl">the dynamic properties of the cell wall proteome, or secretome</a>, using tomato (<i>Solanum lycopersicum</i>) as a model system.
