@@ -116,9 +116,9 @@
   </td>
 </tr>
 </table>
-<& /util/import_javascript.mas, classes => 'CXGN.Page.Toolbar' &>
+<& /util/import_javascript.mas, classes => ['CXGN.Page.Toolbar','jquery'] &>
 <script language="JavaScript" type="text/javascript">
-if (window.attachEvent) window.attachEvent("onload", function() {
+jQuery( function() {
   CXGN.Page.Toolbar.addmenu('search');
   CXGN.Page.Toolbar.addmenu('maps');
   CXGN.Page.Toolbar.addmenu('sequencing');
