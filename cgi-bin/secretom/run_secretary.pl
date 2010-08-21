@@ -20,12 +20,9 @@ use stuff;
 use MCMC;
 use SecreTaryAnalyse;
 use SecreTarySelect;
-#use CXGN::Secretome::SecreTaryAnalyse;
-#use SecreTaryAnalyse;
-#use CXGN::Secretome::SecreTarySelect;
-
 use CGI;
-#my $q = CGI->new;
+my $q = CGI->new();
+my $real = 1;
 
 my $d = CXGN::Debug->new();
 
@@ -65,46 +62,48 @@ my @STSparams       = (
     $max_nOxygen22
 );
 
-my $STAarray    = ();
-my $input       = $page->get_arguments("sequence");
+my $STAarray = ();
+my $input    = $page->get_arguments("sequence");
 print '<pre>', "input from form: [$input]", '</pre>';
 my $id_seq_hash = process_input($input);
- print '<pre>', "ids: ", join("  ", keys %$id_seq_hash), "\n", '</pre>';
+print '<pre>', "ids: ", join( "  ", keys %$id_seq_hash ), "\n", '</pre>';
+
 
 my $id_seq_pairs = '';
 my $STAobj;
-
+my @STAarray = ();
 my $tmpred_out = "";
-
-#my $wd = `pwd`;
-my $tmpred_dir = '/home/tomfy/tmpred';   
-#  $tmpred_out = `$tmpred_dir/tmpred -def-in=tmpred_temp.fasta -out=- -par=$tmpred_dir/matrix.tab -max=40 -min=17`;
-if(0){
 foreach my $id ( keys %$id_seq_hash ) {
     my $seq = $id_seq_hash->{$id};
     $id_seq_pairs .= $id . "  " . substr( $seq, 0, 30 ) . "\n";
     print "id: $id; sequence: $seq \n";
+    if($real){
     $STAobj = SecreTaryAnalyse->new( $id, $seq );
-    print( "ref STAobj; ", ref $STAobj, "\n" );
+    }else{
+    #  print '<pre>', `pwd`, "  ", $tmpred_out, '</pre>';
+   $STAobj = SecreTaryAnalyse->new1($id);
+    }
+    push( @STAarray, $STAobj );
 
-   
-  #  print '<pre>', `pwd`, "  ", $tmpred_out, '</pre>';
-    # my $STAobj = SecreTaryAnalyse->new1( $id );
-   # push( @STAarray, $STAobj );
-    my $TMpred_obj = $STAobj->get_TMpred();
-    my $dkdkd = $TMpred_obj->get_solutions();
-    print "tmpred solns: $dkdkd \n";
+    #  my $TMpred_obj = $STAobj->get_TMpred();
+    #  my $dkdkd      = $TMpred_obj->get_solutions();
+    #  print "tmpred solns: $dkdkd \n";
 
 }
-}
-if(0){
-my $STSobj = SecreTarySelect->new(@STSparams);
-my @sta_array = ($STAobj);
-#my ($ng1, $ng2, $nf) = $STSobj->Categorize( \@sta_array );
+my ($ng1, $ng2, $nf);
+if($real){
+my $STSobj    = SecreTarySelect->new(@STSparams);
+#my @sta_array = ($STAobj);
+
+($ng1, $ng2, $nf) = $STSobj->Categorize( \@STAarray );
 #print "counts: $count_g1, $count_g2, $count_fail \n";
-my $prediction = $STSobj->Categorize1($STAobj);
-my $output = $id_seq_pairs . "  " . $prediction . "\n"; # . $ng1 . " " . $ng2 . " " . $nf "\n";
+#$my $prediction = $STSobj->Categorize1($STAobj);
 }
+my $output =
+    $id_seq_pairs . "  "
+#  . $prediction
+#  . "\n";    # 
+. $ng1 . " " . $ng2 . " " . $nf. "\n";
 
 my $out_file = File::Temp->new(
     TEMPLATE => 'secretary-output-XXXXXX',
@@ -117,7 +116,7 @@ print page_title_html("SecreTary secretion prediction results");
 $d->d("Running SecreTary ... \n");
 
 print '<pre>';
-my $output = "SecreTary results will appear here:\n"; # . $output . "\n";
+my $output = "SecreTary results will appear here:\n";    # . $output . "\n";
 print $output;
 print "[[[$tmpred_out]]]\n";
 print join( "\n", @INC ), "\n";
