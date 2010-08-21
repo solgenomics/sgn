@@ -2,14 +2,19 @@ package SGN::Controller::JavaScript;
 use Moose;
 use namespace::autoclean;
 
+use File::Spec;
+
 use Digest::MD5 'md5_hex';
-use Storable qw/ nfreeze /;
 use List::MoreUtils qw/uniq/;
+use Storable qw/ nfreeze /;
 
 BEGIN { extends 'Catalyst::Controller' }
 with 'Catalyst::Component::ApplicationAttribute';
 
-__PACKAGE__->config( path => File::Spec->catdir(qw( static js )));
+__PACKAGE__->config(
+    namespace => 'js',
+   );
+
 
 has '_package_defs' => (
     is => 'ro',
@@ -38,14 +43,54 @@ Args: package identifier (32-character hex)
 
 =cut
 
-sub js_package :Path('/js_pack') :Args(1) {
+sub js_package :Path('pack') :Args(1) {
     my ( $self, $c, $key ) = @_;
 
     # NOTE: you might think that we should cache the minified
     # javascript too, but it turns out to not be much faster!
 
     $c->stash->{js} = $self->_package_defs->thaw( $key );
-    $c->forward( 'View::JavaScript' );
+}
+
+=head2 default
+
+Serve a single (minified) javascript file from our js path.
+
+=cut
+
+sub default :Path {
+    my ( $self, $c, @args ) = @_;
+
+    my $file = File::Spec->catfile( @args );
+
+    $c->stash->{js} = [ $file ];
+}
+
+=head2 end
+
+forwards to View::JavaScript
+
+=cut
+
+sub end :Private {
+    my ( $self, $c ) = @_;
+
+    # all of the actions in this controller will use View::Javascript
+    # for rendering
+    $c->forward('View::JavaScript');
+
+    # handle missing JS with a 404
+    if( @{ $c->error } == 1 && $c->error->[0] =~ /^Can't open '/ ) {
+
+        $c->clear_errors;
+
+        $c->res->status( 404 );
+        $c->res->content_type( 'text/html' );
+
+        $c->stash->{template} = "/site/error/404.mas";
+        $c->stash->{message}  = "Javascript not found";
+        $c->forward('View::Mason');
+    }
 }
 
 =head1 REGULAR METHODS

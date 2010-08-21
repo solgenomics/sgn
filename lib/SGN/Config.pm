@@ -13,7 +13,7 @@ my $defaults =
      # Static::Simple configuration
      root   => 'static',
      static => {
-         dirs => [qw[ s img documents static_content data js ]],
+         dirs => [qw[ s img documents static_content data ]],
          include_path => ['__path_to(static)__'],
      },
 
@@ -154,7 +154,7 @@ my $defaults =
      dt_livesite              => 'http://www.sgn.cornell.edu/',
 
      #path to jslib relative to site basepath
-     global_js_lib            => 'static/js',
+     global_js_lib            => 'js',
 
      # where the genefamily info is stored
      genefamily_dir           => '/data/prod/private/genomes/genefamily/',
