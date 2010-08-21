@@ -2,6 +2,7 @@
   $page_title    => ''
   $extra_headers => ''
 </%args>
+<%method .page_title></%method>
 <!DOCTYPE html>
 <html>
 <head>
