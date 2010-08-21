@@ -189,8 +189,12 @@ sub _default_temp_base {
 sub make_generated_dir {
     my ( $self, $tempdir ) = @_;
 
-    File::Path::make_path( $tempdir, { verbose => 1 });
-    return unless -d $tempdir;
+    warn "attempting to create generated dir '$tempdir'" if $self->debug;
+    mkpath( "$tempdir" );
+    unless( -d $tempdir ) {
+        warn "dir '$tempdir' creation failed ($!)";
+        return;
+    }
 
     return $self->chown_generated_dir( $tempdir );
 }
