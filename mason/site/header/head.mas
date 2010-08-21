@@ -12,3 +12,5 @@
      JSAN.use = function() {};
      MochiKit = {__export__: false};
   </script>
+
+  <!-- AUTOHANDLER_FILTER_INSERT_JS_PACK -->
