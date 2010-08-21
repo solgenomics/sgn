@@ -5,8 +5,10 @@ use English;
 
 use CXGN::VHost::Test;
 
-use Test::More tests => 1;
+use Test::More;
 
 my $homepage = get('/');
-like( $homepage, qr/Toolbar.js/, 'homepage includes Toolbar.js');
+like( $homepage, qr/News/, 'homepage includes News');
+like( $homepage, qr/Events/, 'homepage includes Events');
 
+done_testing;
