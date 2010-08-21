@@ -50,9 +50,9 @@ sub js_package :Path('/js_pack') :Args(1) {
 
 =head1 REGULAR METHODS
 
-=head2 action_for_js
+=head2 action_for_js_package
 
-  Usage: $c->uri_for( $c->controller('JavaScript')->action_for_js( 'sgn', 'jquery' ))
+  Usage: $controller->action_for_js_package( 'sgn', 'jquery' )
   Desc : get a list of (action,arguments) for getting a minified,
          concatenated set of javascript containing the given libraries.
   Args : list of JS libraries to include in the package
@@ -61,17 +61,17 @@ sub js_package :Path('/js_pack') :Args(1) {
                 requests
   Example:
 
-      $c->uri_for( $c->controller('JavaScript')->action_for_js( 'sgn', 'jquery' ))
+      $c->uri_for( $c->controller('JavaScript')->action_for_js_package( 'sgn', 'jquery' ))
 
 =cut
 
-sub action_for_js {
+sub action_for_js_package {
     my $self = shift;
-    my @files = uniq @_;
+    my @files = uniq @_; #< do not sort, load order might be important
 
     my $key = md5_hex( join ' ', @files );
 
-    # record for this particular package of JS
+    # record files for this particular package of JS
     unless( $self->_package_defs->exists( $key ) ) {
         $self->_package_defs->freeze( $key => \@files );
     }

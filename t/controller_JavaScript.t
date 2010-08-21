@@ -10,7 +10,7 @@ my $controller = SGN->controller('JavaScript');
 
 my ($res, $c) = ctx_request('/');
 
-my $test_uri = $c->uri_for( $controller->action_for_js( 'sgn.js', 'jquery.js' ));
+my $test_uri = $c->uri_for( $controller->action_for_js_package( 'sgn.js', 'jquery.js' ));
 like( $test_uri, qr! js_pack/[a-z\d]+$ !x, 'got a kosher-looking pack URI' );
 
 ($res, $c) = ctx_request( $test_uri );
