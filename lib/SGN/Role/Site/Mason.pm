@@ -2,6 +2,7 @@ package SGN::Role::Site::Mason;
 
 use Moose::Role;
 use namespace::autoclean;
+use File::Basename;
 use File::Path;
 use Path::Class;
 use HTML::Mason::Interp;
@@ -154,7 +155,9 @@ after 'setup_finalize' => \&clear_mason_tempfiles;
 sub clear_mason_tempfiles {
   my ( $self ) = @_;
 
-  rmtree( $_ ) for glob $self->path_to( $self->tempfiles_subdir('mason_cache_*') );
+  for my $temp ( $self->path_to( $self->tempfiles_subdir() )->children ) {
+      rmtree( "$temp" ) if -d $temp && basename("$temp") =~ /^mason_cache_/;
+  }
 }
 
 1;
