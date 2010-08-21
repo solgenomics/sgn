@@ -28,7 +28,6 @@ has '_package_defs' => (
            default_expires  => 'never',
            size_limit       => 50,
            removal_strategy => 'Cache::RemovalStrategy::LRU',
-
           );
    }
 
@@ -61,9 +60,7 @@ Serve a single (minified) javascript file from our js path.
 sub default :Path {
     my ( $self, $c, @args ) = @_;
 
-    my $file = File::Spec->catfile( @args );
-
-    $c->stash->{js} = [ $file ];
+    $c->stash->{js} = [  File::Spec->catfile( @args ) ];
 }
 
 =head2 end
