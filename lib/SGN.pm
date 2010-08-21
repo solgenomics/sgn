@@ -47,6 +47,7 @@ after 'setup_finalize' => sub {
 __PACKAGE__->setup;
 
 
+
 sub _update_static_symlinks {
     my $self = shift;
 
@@ -99,58 +100,5 @@ This library is free software. You can redistribute it and/or modify
 it under the same terms as Perl itself.
 
 =cut
-
-
-
-### JSAN
-{ # this should be a role, but JSAN::ServerSide does not seem to work in that context
-
-    use JSAN::ServerSide;
-
-=head2 new_jsan
-
-  Usage: $c->new_jsan
-  Desc : instantiates a new L<JSAN::ServerSide> object with the
-         correct javascript dir and uri prefix for site-global javascript
-  Args : none
-  Ret  : a new L<JSAN::ServerSide> object
-
-=cut
-
-    has _jsan_params => ( is => 'ro', isa => 'HashRef', lazy_build => 1 );
-    sub _build__jsan_params {
-        my ( $self ) = @_;
-        my $js_dir = $self->path_to( $self->get_conf('global_js_lib') );
-        -d $js_dir or die "configured global_js_dir '$js_dir' does not exist!\n";
-
-        return { js_dir     => "$js_dir",
-                 uri_prefix => '/js',
-             };
-    }
-    sub new_jsan {
-        JSAN::ServerSide->new( %{ shift->_jsan_params } );
-    }
-
-=head2 js_import_uris
-
-  Usage: $c->js_import_uris('CXGN.Effects','CXGN.Phenome.Locus');
-  Desc : generate a list of L<URI> objects to import the given
-         JavaScript modules, with dependencies.
-  Args : list of desired modules
-  Ret  : list of L<URI> objects
-
-=cut
-
-    sub js_import_uris {
-        my $self = shift;
-        my $j = $self->new_jsan;
-        my @urls = @_;
-        $j->add(my $m = $_) for @urls;
-        return [ $j->uris ];
-    }
-
-    1;
-}
-
 
 1;

@@ -154,7 +154,7 @@ my $defaults =
      dt_livesite              => 'http://www.sgn.cornell.edu/',
 
      #path to jslib relative to site basepath
-     global_js_lib            => 'js',
+     js_include_path          => ['__path_to(js)__'],
 
      # where the genefamily info is stored
      genefamily_dir           => '/data/prod/private/genomes/genefamily/',

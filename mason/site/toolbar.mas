@@ -1,5 +1,3 @@
-<& /util/import_javascript.mas, classes => 'CXGN.Page.Toolbar' &>
-
 <table class="toolbar" summary="" cellspacing="0" cellpadding="0">
 <tr class="toolbar_content">
   <td class="toolbar_l"><img src="/documents/img/toolbar_l.gif" alt="" /></td>
@@ -118,9 +116,13 @@
   </td>
 </tr>
 </table>
+<& /util/import_javascript.mas, classes => 'CXGN.Page.Toolbar' &>
 <script language="JavaScript" type="text/javascript">
+if (window.attachEvent) window.attachEvent("onload", function() {
   CXGN.Page.Toolbar.addmenu('search');
   CXGN.Page.Toolbar.addmenu('maps');
   CXGN.Page.Toolbar.addmenu('sequencing');
   CXGN.Page.Toolbar.addmenu('tools');
+  CXGN.Page.Toolbar.hideall();
+});
 </script>

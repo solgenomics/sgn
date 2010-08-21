@@ -41,12 +41,14 @@
 </table>
 </div>
 
-<script language="javascript" type="text/javascript" src="/documents/inc/wz_tooltip.js"></script>
+<& /util/import_javascript.mas, classes => ['sgn', 'wz_tooltip'] &>
+
+% #source a package of all the javascript on the page
+<script src="<% $c->uri_for( $c->controller('JavaScript')->action_for_js_package( $c->stash->{pack_js} ) ) %>" type="text/javascript"></script>
 
 % if( eval{ $c->get_conf('production_server') } ) {
    <!-- Google Analytics Code -->
-   <script src="http://www.google-analytics.com/urchin.js" type="text/javascript">
-   </script>
+   <script src="http://www.google-analytics.com/urchin.js" type="text/javascript"></script>
 
    <script type="text/javascript">
    _uacct = "UA-2460904-1";
@@ -56,3 +58,4 @@
     }
    </script>
 % }
+

@@ -30,6 +30,13 @@ use File::Path ();
 use JSAN::ServerSide;
 use CatalystX::GlobalContext '$c';
 
+my @global_js = qw(
+		   CXGN.Effects
+		   CXGN.Page.FormattingHelpers
+		   CXGN.UserPrefs
+		  );
+
+
 # =head1 OBJECT METHODS
 
 # =head2 new
@@ -158,8 +165,8 @@ sub get_arguments {
 # =cut
 
 sub jsan_use {
-  my ($self,@uses) = @_;
-  $self->_jsan->add(my $a = $_) foreach @uses;
+  shift;
+  push @{ $c->stash->{pack_js} }, @_
 }
 
 # =head2 jsan_render_includes
@@ -181,32 +188,24 @@ sub jsan_use {
 
 # =cut
 
-my @global_js = qw(
-		   CXGN.Effects
-		   CXGN.Page.FormattingHelpers
-		   CXGN.UserPrefs
-		  );
+sub jsan_render_includes { '' }
 
-sub jsan_render_includes {
-	my ($self) = @_;
+# sub jsan_render_includes {
+# 	my ($self) = @_;
 
-	# add in our global JS, which is used for every page
-	# JSAN::ServerSide is pretty badly written.  cannot use $_ to
-	# pass the name to add()
-	foreach my $js (@global_js) {
-	    $self->_jsan->add($js);
-	}
 
-	return join "\n",
-	       map qq|<script language="JavaScript" src="$_" type="text/javascript"></script>|,
-	       $self->_jsan->uris;
-}
+# 	# add in our global JS, which is used for every page
+# 	# JSAN::ServerSide is pretty badly written.  cannot use $_ to
+# 	# pass the name to add()
+# 	foreach my $js (@global_js) {
+# 	    $self->_jsan->add($js);
+# 	}
 
-sub _jsan {
-	my ($self) = @_;
+# 	return join "\n",
+# 	       map qq|<script language="JavaScript" src="$_" type="text/javascript"></script>|,
+# 	       $self->_jsan->uris;
+# }
 
-	return $self->{jsan_serverside} ||= JSAN::ServerSide->new( %{ $self->{context}->_jsan_params } );
-}
 
 # =head2 cgi_params
 

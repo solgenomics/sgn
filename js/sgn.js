@@ -1,10 +1,5 @@
 // stub out some problematic things
 var docroot = '/';
-JSAN = {};
-JSAN.use = function() {};
-MochiKit = {__export__: false};
-
-
 
 // Toggles the layer visibility on 
 function showLayer(layerName) { 
@@ -82,3 +77,7 @@ function check_clonecart()
     return;
 }
 
+
+JSAN.use('jquery');
+jQuery( check_clonecart ); // check the clone cart on document load
+jQuery( count_clones );
