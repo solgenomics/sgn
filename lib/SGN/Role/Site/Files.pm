@@ -7,6 +7,7 @@ use Carp;
 use Cwd;
 use File::Spec;
 use File::Temp;
+use File::Path qw/ mkpath /;
 use URI;
 
 requires qw(
@@ -174,7 +175,7 @@ sub _default_temp_base {
 sub make_generated_dir {
     my ( $self, $tempdir ) = @_;
 
-    mkdir $tempdir or return;
+    mkpath $tempdir or return;
 
     return $self->chown_generated_dir( $tempdir );
 }
