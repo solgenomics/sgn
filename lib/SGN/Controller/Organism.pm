@@ -337,7 +337,7 @@ has 'rendered_organism_tree_cache' => (
         my ( $self ) = @_;
 
         Cache::File->new(
-            cache_root      => $self->_app->path_to( $self->_app->tempfiles_subdir('rendered_organism_tree_cache') ),
+            cache_root      => $self->_app->path_to( $self->_app->tempfiles_subdir('cache','rendered_organism_tree_cache') ),
             default_expires => 'never',
 
             load_callback => sub {
