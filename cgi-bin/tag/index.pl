@@ -1,18 +1,19 @@
-package CXGN::Tag_detail_page;
+
+use strict;
 
 my $tag_detail_page = CXGN::Tag_detail_page->new();
-use strict;
-use warnings;
+
+package CXGN::Tag_detail_page;
 
 use CXGN::Page;
-use CXGN::Page::FormattingHelpers qw/ blue_section_html page_title_html /;
+use CXGN::Page::FormattingHelpers qw / blue_section_html page_title_html /;
 use CXGN::Tag;
 use CXGN::Insitu::Experiment;
 use CXGN::Image;
 use CXGN::Login;
 use CXGN::Contact;
 
-use base qw/ CXGN::Page::Form::SimpleFormPage /;
+use base qw / CXGN::Page::Form::SimpleFormPage /;
 
 sub new { 
     my $class = shift;
@@ -162,7 +163,7 @@ sub generate_form {
     my $tag = $self->get_object();
     my $tag_id = $self->get_object_id();
 
-    $self->init_form( form_action => "/tag/index.pl" );
+    $self->init_form();
 
     # generate the form with the appropriate values filled in.
     # if we view, then take the data straight out of the database
@@ -182,6 +183,13 @@ sub generate_form {
 				 setter=>"set_name", 
 				 validate=>"string"
 				 );
+    
+    #$self->get_form()->add_field( display_name=>"Description: ", 
+	#			  field_name=>"description", 
+	#			  length=>50, 
+	#			  object=>$tag, 
+	#			  getter=>"get_description", 
+	#			  setter=>"set_description");
     
     $self->get_form()->add_hidden( field_name=>"action", contents=>"store" );
     $self->get_form()->add_hidden( field_name=>"tag_id", contents=>$tag_id );
