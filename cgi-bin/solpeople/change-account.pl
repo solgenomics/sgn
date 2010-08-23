@@ -203,7 +203,7 @@ sub generate_form {
 	my $login = $self->get_object();
 	my $person = new CXGN::People::Person($self->get_dbh(), $self->get_object_id());
 	
-	$self->init_form();
+	$self->init_form( form_action => "/solpeople/change-account.pl");
 	my $form = $self->get_form();
 	if($form->is_editable()) {
 		$form->set_submit_method('post'); #passwords are sensitive data
