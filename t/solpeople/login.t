@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 19;
+use Test::More tests => 20;
 use Test::WWW::Mechanize;
 use lib 't/lib';
 use SGN::Test;
@@ -60,6 +60,17 @@ $m->content_contains("testfirstname");
 my ($info_link) = $m->find_link( url_regex => qr/personal-info\.pl/);
 ok($info_link, 'found a personal-info.pl link');
 $m->get_ok($info_link->url, $info_link->url . " works");
+$m->submit_form_ok({
+        form_number => 1,
+        fields => {
+            first_name         => "foo",
+            last_name          => "manchu",
+            research_interests => "Ketchup",
+            action             => "store",
+            sp_person_id       => $p_id,
+        },
+    },    "Can change info on personal-info.pl",
+);
 
 # check if logout works
 #
