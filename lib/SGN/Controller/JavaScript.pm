@@ -121,11 +121,11 @@ sub insert_js_pack_html :Private {
   my ( $self, $c ) = @_;
 
   my $js = $c->stash->{pack_js};
-  return unless $js && @$js;
+  return unless $js && @$js && $c->res->content_type eq 'text/html';
 
   my $b = $c->res->body;
 
-  $c->log->debug("inserting js pack with @$js into body of size ".length($b));
+  $c->log->debug("inserting js pack containing (@$js) into body of size ".length($b)) if $c->debug;
 
   my $url_cache;
   if( $b =~ s{<!-- \s* INSERT_JS_PACK \s* -->} {'<script src="'.($url_cache ||= $c->uri_for( $self->action_for_js_package( $js ))).qq|" type="text/javascript">\n</script>|}ex ) {
