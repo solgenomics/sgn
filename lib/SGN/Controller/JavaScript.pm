@@ -121,7 +121,7 @@ sub insert_js_pack_html :Private {
   my ( $self, $c ) = @_;
 
   my $js = $c->stash->{pack_js};
-  return unless $js && @$js && $c->res->content_type eq 'text/html';
+  return unless $js && @$js;
 
   my $b = $c->res->body;
 

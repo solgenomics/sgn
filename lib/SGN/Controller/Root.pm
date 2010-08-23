@@ -111,9 +111,14 @@ Attempt to render a view, if needed.
 sub render : ActionClass('RenderView') { }
 sub end : Private {
     my ( $self, $c ) = @_;
+
     $c->forward('render');
+
     # insert our javascript packages into the rendered view
-    $c->forward('/js/insert_js_pack_html');
+    if( $c->res->content_type eq 'text/html' ) {
+        $c->forward('/js/insert_js_pack_html')
+    }
+
 }
 
 =head2 auto
