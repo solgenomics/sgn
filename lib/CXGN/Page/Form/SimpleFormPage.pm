@@ -1,17 +1,3 @@
-package CXGN::Page::Form::SimpleFormPage;
-use strict;
-use Carp;
-use CXGN::Tools::Text qw | sanitize_string |;
-use CXGN::Page;
-use CXGN::Page::Form::Static;
-use CXGN::Page::Form::Editable;
-use CXGN::Page::Form::ConfirmStore;
-use CXGN::Login;
-use CXGN::DB::Connection;
-use CXGN::People;
-use CXGN::People::Person;
-use CXGN::Page::FormattingHelpers qw / page_title_html blue_section_html /;
-
 
 
 =head1 NAME
@@ -47,7 +33,24 @@ The following is a list of object functions. Some of these functions are used in
 
 =cut
 
+use strict;
+use Carp;
 
+use CXGN::Tools::Text qw | sanitize_string |;
+use CXGN::Page;
+use CXGN::Page::Form::Static;
+use CXGN::Page::Form::Editable;
+use CXGN::Page::Form::ConfirmStore;
+
+use CXGN::Login;
+use CXGN::DB::Connection;
+
+use CXGN::People;
+use CXGN::People::Person;
+
+package CXGN::Page::Form::SimpleFormPage;
+
+use CXGN::Page::FormattingHelpers qw / page_title_html blue_section_html /;
 
 =head2 new
 
@@ -220,7 +223,7 @@ sub define_object {
 # edit is an internally used function to show the editable form.
 #
 
-sub edit {
+sub edit { 
     my $self = shift;
     $self->check_modify_privileges();
     $self->generate_form();
@@ -386,8 +389,9 @@ sub get_user {
 
 =cut
 
-sub generate_form {
-    die "Please subclass 'generate_form' function!";
+sub generate_form { 
+    my $self = shift;
+    warn "Please subclass 'generate_form' function!\n";
 }
 
 =head2 delete_dialog
@@ -791,14 +795,18 @@ sub set_form {
 =cut
 
 sub init_form {
-    my ($self,%args) = @_;
-    if ($self->get_action() =~/edit|^store|new/) {
-        $self->set_form( CXGN::Page::Form::Editable->new( \%args) );
+    my $self = shift;
+    
+    if ($self->get_action() =~/edit|^store|new/) { 
+	$self->set_form( CXGN::Page::Form::Editable -> new() );
+	
     }elsif ($self->get_action() =~/confirm_store/) {
-        $self->set_form( CXGN::Page::Form::ConfirmStore->new( \%args) );
+	$self->set_form( CXGN::Page::Form::ConfirmStore->new() ) ; 
+	
     }else  {
-        $self->set_form( CXGN::Page::Form::Static->new( \%args) );
+	$self->set_form( CXGN::Page::Form::Static -> new() );
     }
+    
 }
 
 =head2 get_request, set_request

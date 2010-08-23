@@ -1,4 +1,3 @@
-package CXGN::Page::Form::Static;
 
 =head1 NAME
 
@@ -20,7 +19,8 @@ Lukas Mueller (lam87@cornell.edu)
 
 
 use strict;
-use warnings;
+
+package CXGN::Page::Form::Static;
 
 use Data::Dumper;
 use CXGN::Page::Form::Field;
@@ -295,7 +295,7 @@ sub add_multiselect
 
 =head2 set_action
 
- Usage:        $form->set_action("view")
+ Usage:        $form->set_action("/cgi-bin/myscript.pl")
  Desc:         sets the action parameter in the form.
  Ret:          nothing
  Args:         a name of a script the form should call.
@@ -304,19 +304,9 @@ sub add_multiselect
 
 =cut
 
-sub set_action {
+sub set_action { 
     my $self = shift;
     $self->{action}=shift;
-}
-
-sub set_form_action {
-    my $self = shift;
-    $self->{form_action}=shift;
-}
-
-sub get_form_action {
-    my ($self) = @_;
-    return $self->{form_action};
 }
 
 =head2 get_action
@@ -330,9 +320,10 @@ sub get_form_action {
 
 =cut
 
-sub get_action {
+sub get_action { 
     my $self = shift;
-    return $self->{action} || '';
+    if (!exists($self->{action})) { $self->{action}=""; }
+    return $self->{action};
 }
 
 =head2 get_fields
@@ -764,6 +755,7 @@ sub set_form_id {
   my $self = shift;
   $self->{form_id} = shift;
 }
+
 
 =head2 accessors get_no_buttons, set_no_buttons
 

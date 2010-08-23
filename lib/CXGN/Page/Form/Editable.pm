@@ -1,4 +1,3 @@
-package CXGN::Page::Form::Editable;
 
 =head1 NAME
 
@@ -26,21 +25,21 @@ use CXGN::Page::Form::EditablePasswordField;
 use CXGN::Page::Form::EditableRadioList;
 use CXGN::Page::Form::EditableMultiSelect;
 
+package CXGN::Page::Form::Editable;
 
-use base qw/ CXGN::Page::Form::Static /;
+use base qw / CXGN::Page::Form::Static /;
 
 sub new {
-    my $class = shift;
-    my $self = $class->SUPER::new(@_);
-    my $args=shift;
-    $self->set_form_id($args->{form_id}); #optional. Set a form id. Required for javasctipt forms
-    $self->set_no_buttons($args->{no_buttons}); #optional. Used in javascript forms, which should generate their own 'store' and 'reset form' buttons.
-    $self->set_reset_button_text("Reset form");
-    $self->set_submit_button_text("Store");
-    $self->set_submit_method(); #use hardcoded default
-    $self->set_form_action($args->{form_action});
+	my $class = shift;
+	my $self = $class->SUPER::new(@_);
+	my $args=shift;
+	$self->set_form_id($args->{form_id}); #optional. Set a form id. Required for javasctipt forms
+	$self->set_no_buttons($args->{no_buttons}); #optional. Used in javascript forms, which should generate their own 'store' and 'reset form' buttons.
+	$self->set_reset_button_text("Reset form");
+	$self->set_submit_button_text("Store");
+	$self->set_submit_method(); #use hardcoded default
 
-    return $self;
+	return $self;
 }
 
 =head2 is_editable
@@ -198,8 +197,11 @@ sub store {
       }
     }
     foreach my $k (keys %distinct_objects) { 
-        my $id = $distinct_objects{$k}->store();
-        $self->set_insert_id($k, $id);
+	#print STDERR " DUMP:" .Data::Dumper::Dumper($distinct_objects{$k});
+	#print STDERR " STORING OBJECT: ".ref($distinct_objects{$k})."\n";
+       
+	my $id = $distinct_objects{$k}->store();
+	$self->set_insert_id($k, $id);
     }
 }
 
@@ -421,9 +423,10 @@ sub add_multiselect
     $self->add_field_obj($radio);
 }
 
-sub get_form_start {
+sub get_form_start { 
     my $self = shift;
-    return sprintf '<form id="%s" method="%s" action="%s"', $self->get_form_id, $self->get_submit_method, $self->get_form_action;
+    
+    return "<form id =\"" . $self->get_form_id() . "\" method=\"" . $self->get_submit_method() . "\" action=\"\">"; #must have action parameter for xhtml 1.0+ -- Evan, 1/7/07
 }
 
 sub get_form_end { 
@@ -561,4 +564,4 @@ sub as_table_string {
     return $string;
 }
 
-1;
+return 1;
