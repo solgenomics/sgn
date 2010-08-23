@@ -27,7 +27,7 @@ ENDINTRO
 
 print <<EOF;
 
-<form method="post" action="T2.pl" name="secretary">
+<form method="post" action="run_secretary.pl" name="secretary">
 
 <textarea name="sequence" rows="10" cols="100"></textarea> <br/><br/>
 
