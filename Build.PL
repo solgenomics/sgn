@@ -106,7 +106,7 @@ my $build = $class->new(
         'Catalyst::Plugin::Static::Simple' => 0,
         'Catalyst::View::HTML::Mason'      => 0,
         'Catalyst::View::JavaScript::Minifier::XS'
-                                           => 0,
+                                           => '2.100000',
         'CatalystX::GlobalContext'         => 0,
 
         'CGI'                              => 0,
