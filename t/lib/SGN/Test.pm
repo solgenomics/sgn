@@ -16,6 +16,7 @@ use Exporter;
 BEGIN {
     BAIL_OUT "You need to define SGN_TEST_SERVER environment variable"
         unless $ENV{SGN_TEST_SERVER};
+    diag "Using server $ENV{SGN_TEST_SERVER}";
 }
 
 sub make_dump_tempdir {
