@@ -5,6 +5,8 @@ use warnings;
 use CXGN::DB::Connection;
 use Test::More tests => 8;
 use Test::WWW::Mechanize;
+use lib 't/lib';
+use SGN::Test;
 
 use CXGN::People::Person;
 
@@ -12,7 +14,7 @@ my $dbh = CXGN::DB::Connection->new();
 
 my $m = Test::WWW::Mechanize->new();
 
-my $server = $ENV{SGN_TEST_SERVER} || die "need SGN_TEST_SERVER set";
+my $server = $ENV{SGN_TEST_SERVER};
 
 $m->get_ok($server."/tools/genefamily/search.pl");
 

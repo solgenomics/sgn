@@ -1,18 +1,20 @@
 
 use strict;
+use warnings;
 
-use File::Spec;
 use Test::More tests => 15;
 use Test::WWW::Mechanize;
 
+use lib 't/lib';
 use SGN::Config;
+use SGN::Test;
 
 use CXGN::DB::Connection;
 use CXGN::People::Person;
 
 my $mech = Test::WWW::Mechanize->new();
 
-my $server = $ENV{SGN_TEST_SERVER} or die "SGN_TEST_SERVER must be set";
+my $server = $ENV{SGN_TEST_SERVER};
 
 my $new_account_page = $server."/solpeople/new-account.pl";
 

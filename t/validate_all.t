@@ -76,6 +76,7 @@ my %urls = (
         "gem detail page for target"               => "/gem/target.pl?id=49",
         "biosource detail page for sample"         => "/biosource/sample.pl?id=1",
         "Locus ajax form"                          => "/jsforms/locus_ajax_form.pl",
+        "SNP search markers"                       => "/search/markers/snp.pl",
         "Locus editors"                            => "/phenome/editors_note.pl",
         "SGN data overview"                        => "/organism/all/view",
         "tomato genome publication page"           => "/genomes/Solanum_lycopersicum/publications.pl",

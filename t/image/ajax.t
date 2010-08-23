@@ -1,9 +1,12 @@
 use strict;
+use warnings;
 
 use Test::More tests=>6;
 use Test::WWW::Mechanize;
+use lib 't/lib';
+use SGN::Test;
 
-my $server = $ENV{SGN_TEST_SERVER} || die "need a SGN_TEST_SERVER environment variable";
+my $server = $ENV{SGN_TEST_SERVER};
 
 my $m = Test::WWW::Mechanize->new();
 
