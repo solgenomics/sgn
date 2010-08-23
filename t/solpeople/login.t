@@ -1,7 +1,10 @@
 use strict;
+use warnings;
 
-use Test::More tests => 17;
+use Test::More tests => 19;
 use Test::WWW::Mechanize;
+use lib 't/lib';
+use SGN::Test;
 
 use_ok("CXGN::DB::Connection");
 use_ok("CXGN::People::Person");
@@ -10,8 +13,7 @@ my $dbh = CXGN::DB::Connection->new();
 
 my $m = Test::WWW::Mechanize->new();
 
-my $server = $ENV{SGN_TEST_SERVER}
-  || die "Need SGN_TEST_SERVER environment variable set";
+my $server = $ENV{SGN_TEST_SERVER};
 
 # generate a new user for testing purposes
 # (to be deleted right afterwards)
@@ -53,11 +55,11 @@ my %form = (
    );
 
 $m->submit_form_ok( \%form, "Login form submission test" );
-
-#$m->get_ok("$server/solpeople/top-level.pl");
-
-#print STDERR $m->content();
 $m->content_contains("testfirstname");
+
+my ($info_link) = $m->find_link( url_regex => qr/personal-info\.pl/);
+ok($info_link, 'found a personal-info.pl link');
+$m->get_ok($info_link->url, $info_link->url . " works");
 
 # check if logout works
 #
