@@ -189,7 +189,6 @@ sub _default_temp_base {
 sub make_generated_dir {
     my ( $self, $tempdir ) = @_;
 
-    warn "attempting to create generated dir '$tempdir'" if $self->debug;
     mkpath( "$tempdir" );
     unless( -d $tempdir ) {
         warn "dir '$tempdir' creation failed ($!)";
