@@ -4,11 +4,6 @@
 
 <& /site/footer.mas &>
 
-<%method .page_title>\
-% my $t = $m->request_args->{'page_title'};
-<% $t ? "$t -" : '' %>Sol Genomics Network\
-</%method>
-
 <%filter>
   # insert our aggregated JS package in the header, this has to be done after the fact
   my $js_pack = do {

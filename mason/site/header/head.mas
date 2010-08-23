@@ -1,4 +1,5 @@
-  <title><% $m->request_comp->call_method('.page_title') %></title>
+% my $t = $m->request_args->{'page_title'};
+  <title><% $t ? "$t - " : '' %>Sol Genomics Network</title>
   <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
 
   <link rel="stylesheet" href="/documents/inc/sgn.css" type="text/css" />
