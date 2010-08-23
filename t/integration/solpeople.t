@@ -13,10 +13,12 @@ Jonathan "Duke" Leto
 =cut
 
 use strict;
+use warnings;
 use Test::More tests => 8;
 use Test::JSON;
 use Test::WWW::Mechanize;
-BAIL_OUT "Need to set the SGN_TEST_SERVER environment variable" unless $ENV{SGN_TEST_SERVER};
+use lib 't/lib';
+use SGN::Test;
 
 my $base_url = $ENV{SGN_TEST_SERVER};
 my $mech = Test::WWW::Mechanize->new;

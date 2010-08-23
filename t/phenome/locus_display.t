@@ -14,14 +14,14 @@ Naama Menda  <nm249@cornell.edu>
 =cut
 
 use strict;
-use Test::More qw /no_plan/ ; #tests => 2;
+use warnings;
+use Test::More tests => 3;
 use Test::WWW::Mechanize;
 use CXGN::Phenome::Schema;
 use CXGN::DB::Connection;
-
+use lib 't/lib';
+use SGN::Test;
 use SGN::Context;
-
-BAIL_OUT "Need to set the SGN_TEST_SERVER environment variable" unless $ENV{SGN_TEST_SERVER};
 
 my $base_url = $ENV{SGN_TEST_SERVER};
 

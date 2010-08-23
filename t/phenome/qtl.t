@@ -16,7 +16,8 @@ Jonathan "Duke" Leto
 use strict;
 use Test::More tests => 2;
 use Test::WWW::Mechanize;
-BAIL_OUT "Need to set the SGN_TEST_SERVER environment variable" unless $ENV{SGN_TEST_SERVER};
+use lib 't/lib';
+use SGN::Test;
 
 my $base_url = $ENV{SGN_TEST_SERVER};
 

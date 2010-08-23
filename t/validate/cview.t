@@ -15,7 +15,6 @@ Jonathan "Duke" Leto
 use strict;
 use Test::More;
 use Test::WWW::Mechanize;
-BAIL_OUT "Need to set the SGN_TEST_SERVER environment variable" unless $ENV{SGN_TEST_SERVER};
 
 use lib 't/lib';
 use SGN::Test qw/validate_urls/;
