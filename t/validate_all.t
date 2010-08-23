@@ -82,6 +82,8 @@ my %urls = (
         "outreach index"                           => "/outreach/",
         "organism page for tomato"                 => "/chado/organism.pl?organism_id=1",
         "image search"                             => "/search/image_search.pl?wad1_description_filename_composite=&wad1_submitter=&wad1_image_tag=",
+        "secretom search with query"               => "/secretom/search.pl?query=the",
+        "secretom search"                          => "secretom/search.pl",
 );
 
 my $iteration_count;
