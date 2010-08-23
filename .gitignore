@@ -14,3 +14,4 @@ blib/*
 .#*
 *.bak
 cover_db
+lib/MyDevLibs.pm
