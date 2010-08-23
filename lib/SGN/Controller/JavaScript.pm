@@ -99,6 +99,41 @@ sub end :Private {
     }
 }
 
+=head2 insert_js_pack_html
+
+Scans the current $c->res->body and inserts <script> includes for the
+current set of javascript includes in the $c->stash->{pack_js}
+arrayref.
+
+Replaces comments like:
+
+  <!-- INSERT_JS_PACK -->
+
+with:
+
+  <script src="(uri for js pack)" type="text/javascript">
+  </script>
+
+=cut
+
+
+sub insert_js_pack_html :Private {
+  my ( $self, $c ) = @_;
+
+  my $js = $c->stash->{pack_js};
+  return unless $js && @$js;
+
+  my $b = $c->res->body;
+
+  $c->log->debug("inserting js pack with @$js into body of size ".length($b));
+
+  my $url_cache;
+  if( $b =~ s{<!-- \s* INSERT_JS_PACK \s* -->} {'<script src="'.($url_cache ||= $c->uri_for( $self->action_for_js_package( $js ))).qq|" type="text/javascript">\n</script>|}ex ) {
+      $c->res->body( $b );
+      delete $c->stash->{pack_js};
+  }
+}
+
 =head1 REGULAR METHODS
 
 =head2 action_for_js_package
@@ -149,6 +184,10 @@ sub action_for_js_package {
 
     return $self->action_for('js_package'),  $key;
 }
+
+
+
+########## helpers #########
 
 sub _resolve_jsan_dependencies {
     my ( $self, $files ) = @_;

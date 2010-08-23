@@ -3,14 +3,3 @@
 % $m->call_next;
 
 <& /site/footer.mas &>
-
-<%filter>
-  # insert our aggregated JS package in the header, this has to be done after the fact
-  my $js_pack = do {
-    local $_; # something in there is clobbering $_.  bleh.
-    $c->uri_for( $c->controller('JavaScript')->action_for_js_package( $c->stash->{pack_js} ))
-  };
-
-  s{<!--\s*AUTOHANDLER_FILTER_INSERT_JS_PACK\s*-->} {<script src="$js_pack" type="text/javascript">\n</script>};
-
-</%filter>

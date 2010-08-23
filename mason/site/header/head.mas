@@ -14,4 +14,4 @@
      MochiKit = {__export__: false};
   </script>
 
-  <!-- AUTOHANDLER_FILTER_INSERT_JS_PACK -->
+  <!-- INSERT_JS_PACK -->
