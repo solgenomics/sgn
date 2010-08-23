@@ -13,6 +13,11 @@ our @ISA = qw/Exporter/;
 use Exporter;
 @EXPORT_OK = qw/validate_urls/;
 
+BEGIN {
+    BAIL_OUT "You need to define SGN_TEST_SERVER environment variable"
+        unless $ENV{SGN_TEST_SERVER};
+}
+
 sub make_dump_tempdir {
     my $d = File::Temp->newdir( catdir( File::Spec->tmpdir, 'validate_error_dump-XXXXXX'), CLEANUP => 0 );
     diag "made dump tempdir '$d'";
