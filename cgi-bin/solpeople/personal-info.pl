@@ -68,7 +68,6 @@ sub check_modify_privileges {
 	return 0;
     }
 
-
     # override to check privileges for edit, store, delete.
     # return 0 for allow, 1 for not allow.
     return 0;
@@ -163,9 +162,9 @@ sub generate_form
 	my %args = $self->get_args();
 	my $person = $self->get_object();
 	
-	$self->init_form();
+	$self->init_form( form_action => "/solpeople/personal-info.pl");
 	my $form = $self->get_form();
-	if ($form->is_editable()) { 
+	if ($form->is_editable()) {
 		$form->set_submit_method('post'); #avoid long URLs caused by research interests
 	}
 	
@@ -458,7 +457,6 @@ sub display_page
 	print page_title_html("Personal info for " . $person->get_first_name() . " " . $person->get_last_name());
 	print $self->get_actions_toolbar() . "<hr />\n";
 	print $self->get_form()->as_table_string();
-
 
 	if($self->get_action() =~ /^edit$/) {
 		#show the preview panes
