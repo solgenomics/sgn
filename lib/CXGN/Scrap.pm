@@ -220,7 +220,7 @@ sub jsan_render_includes { '' }
 # handle that yourself using this function which returns a hash (not
 # hash reference)
 sub cgi_params {
-	return %{$c->req->params};
+	return CGI->new->Vars;
 }
 
 # =head2 get_hostname
