@@ -1,44 +1,43 @@
 
 use strict;
 use English;
-
-use lib '/home/tomfy/cxgn/cxgn-corelibs/lib';
-
 use IO::Scalar;
-
 use File::Temp;
 use File::Spec;
-
 use CXGN::Debug;
-
 use CXGN::BlastDB;
-
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw/page_title_html/;
-
-use stuff;
-use MCMC;
 use SecreTaryAnalyse;
 use SecreTarySelect;
 use CGI;
-my $q = CGI->new();
-my $real = 1;
-
-my $d = CXGN::Debug->new();
 
 my $page = CXGN::Page->new( "SecreTary secretion prediction results", "TomFY" );
+my $input = $page->get_arguments("sequence");
 
 my $temp_file_path = $page->path_to( $page->tempfiles_subdir('secretary') );
-print $temp_file_path, "\n";
 
+$page->header();
 $page->add_style( text => <<EOS );
 a[href^="http:"] {
   padding-right: 0;
   background: none;
 }
 EOS
+my $q = CGI->new();
 
-# parameters for SecreTary Selection:
+my @STAarray = ();
+my $trunc_length = 100;
+my $id_seqs = process_input($input);
+
+#Calculate the necessary quantities for each sequence:
+foreach my $id ( keys %$id_seqs ) {
+    my $sequence = $id_seqs->{$id};
+    my $STAobj =
+      SecreTaryAnalyse->new( $id, substr( $sequence, 0, $trunc_length ) );
+    push @STAarray, $STAobj;
+}
+
 my $min_tmpred_score1 = 1500;
 my $min_tmh_length1   = 17;
 my $max_tmh_length1   = 33;
@@ -61,97 +60,36 @@ my @STSparams       = (
     $min_Gravy22,       $max_nDRQPEN22,     $max_nNitrogen22,
     $max_nOxygen22
 );
+my $STSobj   = SecreTarySelect->new(@STSparams);
+my $STApreds = $STSobj->Categorize( \@STAarray );
 
-my $STAarray = ();
-my $input    = $page->get_arguments("sequence");
-print '<pre>', "input from form: [$input]", '</pre>';
-my $id_seq_hash = process_input($input);
-print '<pre>', "ids: ", join( "  ", keys %$id_seq_hash ), "\n", '</pre>';
-
-
-my $id_seq_pairs = '';
-my $STAobj;
-my @STAarray = ();
-my $tmpred_out = "";
-foreach my $id ( keys %$id_seq_hash ) {
-    my $seq = $id_seq_hash->{$id};
-    $id_seq_pairs .= $id . "  " . substr( $seq, 0, 30 ) . "\n";
-    print "id: $id; sequence: $seq \n";
-    if($real){
-    $STAobj = SecreTaryAnalyse->new( $id, $seq );
-    }else{
-    #  print '<pre>', `pwd`, "  ", $tmpred_out, '</pre>';
-   $STAobj = SecreTaryAnalyse->new1($id);
+my $result_string   = "";
+my $count_pass      = 0;
+my $show_max_length = 60;
+foreach (reverse @$STApreds) {
+    my $STA = $_->[0];
+    my $prediction = substr( $_->[1] . "   ", 0, 3 );
+    $count_pass++ if ( $prediction eq "YES" );
+    my $id = substr( $STA->get_sequence_id() . "                    ", 0, 20 );
+    my $sequence = $STA->get_sequence();
+    if ( length $sequence > $show_max_length ) {
+        $sequence = substr( $sequence, 0, $show_max_length ) . "...";
     }
-    push( @STAarray, $STAobj );
-
-    #  my $TMpred_obj = $STAobj->get_TMpred();
-    #  my $dkdkd      = $TMpred_obj->get_solutions();
-    #  print "tmpred solns: $dkdkd \n";
-
+    else {
+        $sequence .= "                                                              ";    #pad
+        $sequence = substr( $sequence, 0, $show_max_length + 3 );
+    }
+    $result_string .= "$prediction   $id   $sequence\n";
 }
-my ($ng1, $ng2, $nf);
-if($real){
-my $STSobj    = SecreTarySelect->new(@STSparams);
-#my @sta_array = ($STAobj);
-
-($ng1, $ng2, $nf) = $STSobj->Categorize( \@STAarray );
-#print "counts: $count_g1, $count_g2, $count_fail \n";
-#$my $prediction = $STSobj->Categorize1($STAobj);
-}
-my $output =
-    $id_seq_pairs . "  "
-#  . $prediction
-#  . "\n";    # 
-. $ng1 . " " . $ng2 . " " . $nf. "\n";
-
-my $out_file = File::Temp->new(
-    TEMPLATE => 'secretary-output-XXXXXX',
-    DIR      => $temp_file_path,
-);
-$out_file->close;    #< can't use this filehandle
-
-$page->header();
-print page_title_html("SecreTary secretion prediction results");
-$d->d("Running SecreTary ... \n");
-
-print '<pre>';
-my $output = "SecreTary results will appear here:\n";    # . $output . "\n";
-print $output;
-print "[[[$tmpred_out]]]\n";
-print join( "\n", @INC ), "\n";
+print '<pre>', "SecreTary predictions:\n\n";
+print $result_string;
+print "\n$count_pass secreted sequences predicted out of ", scalar @$STApreds,
+  ".\n";
 print '</pre>';
 
-print
-qq|<a href="secretary_predictor.pl">Return to SecreTary input page</a><br /><br />|;
+print qq|<a href="T1.pl">Return to SecreTary input page</a><br /><br />|;
 
 $page->footer();
-
-# show there was an error and link back to the entry page
-# possible arguments: e_bad => 0|1, seq_bad => 0|1, seq_notindb => 0|1,
-# unfound_seq_id => seq_id
-#
-sub show_error {
-    my ( $page, %errors ) = @_;
-
-    $page->add_style( text => "p.error {font-weight: bold}" );
-    $page->header();
-    print page_title_html("Bad Input");
-    if ( $errors{e_bad} ) {
-        print
-"<p class=\"error\">E-value for blast should be an integer or in xe-xx format.</p>";
-    }
-    if ( $errors{seq_bad} ) {
-        print "<p class=\"error\">Please enter your query in FASTA format.</p>";
-    }
-    elsif ( $errors{seq_notindb} ) {
-        print
-"<p class=\"error\">EST identifier $errors{unfound_seq_id} could not be found in the database. Please enter a DNA sequence for it.</p>";
-    }
-
-    print "<p><a href=\"find_introns.pl\">Go back</a> and try again.</p>";
-    $page->footer();
-}
 
 sub process_input {
 
@@ -204,4 +142,3 @@ sub process_input {
 
     return \%id_sequence_hash;
 }
-

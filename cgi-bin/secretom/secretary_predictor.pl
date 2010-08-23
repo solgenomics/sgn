@@ -27,7 +27,7 @@ ENDINTRO
 
 print <<EOF;
 
-<form method="post" action="run_secretary.pl" name="secretary">
+<form method="post" action="T2.pl" name="secretary">
 
 <textarea name="sequence" rows="10" cols="100"></textarea> <br/><br/>
 
@@ -36,7 +36,7 @@ print <<EOF;
     <td>
     </td>
    <td align="right">
-    <input type="submit" name="submit" value="Run SecreTary" />
+    <input type="submit" name="submit" value="Go" />
    </td>
 </tr>
 </table>
@@ -45,4 +45,6 @@ print <<EOF;
 
 EOF
 
+#    my $SToutput = `./SecreTary.pl < /home/tomfy/tempfiles/T8_ONE.fasta`;
+# print '<pre>', "SecreTary output: [$SToutput] \n",  '</pre>';
 $page->footer();

@@ -41,41 +41,18 @@ sub new {
     my $limits       = shift || [ 100, 500, 17, 40, 0, 40 ];
     my $trunc_length = shift @$limits;
 
-    #   $trunc_length = 400;
     $self->set_sequence( substr( $sequence, 0, $trunc_length ) );
-
-    #   print "limits: ", join( ";  ", @$limits ), "\n";
     $self->set_limits($limits);    # array ref; specifies which tmhs to keep.
 
     my $tmpred =
       TMpred->new( $self->get_limits(), $self->get_sequence(),
         $self->get_sequence_id() );
 
-    $tmpred->setup();
-
     $self->set_TMpred($tmpred);
     $self->Sequence22_AAcomposition();
 
     return $self;
 }
-
-sub new1 {
-        my $class = shift;
-        my $self = bless {}, $class;
-
-        $self->set_sequence_id( shift || ">A_protein_sequence" );
-        my $sequence     = shift;
-        my $limits       = shift || [ 100, 500, 17, 40, 0, 40 ];
-        my $trunc_length = shift @$limits;
-
-        #   $trunc_length = 400;
-        $self->set_sequence( substr( $sequence, 0, $trunc_length ) );
-
-        #   print "limits: ", join( ";  ", @$limits ), "\n";
-        $self->set_limits($limits);   # array ref; specifies which tmhs to keep.
-
-        return $self;
-    }
 
     sub Sequence22_AAcomposition {
         my $self = shift;

@@ -241,8 +241,6 @@ sub refine_TMpred_solutions
         /\(([^,]+),([^,]+),([^,]+)\)/;
         my ( $score, $beg, $end ) = ( $1, $2, $3 );
         my $tmh_length = $end + 1 - $beg;
-
-        #	print "tmhlength, beg, end: $tmh_length, $beg, $end \n";
         if (    $self->get_min_tmh_length1() <= $tmh_length
             and $self->get_max_tmh_length1() >= $tmh_length
             and $self->get_max_tmh_beg1() >= $beg
@@ -305,21 +303,15 @@ sub Categorize{
     my $self = shift;
     my $ref = shift; # reference to array of STA objects.
     my @STAarray = @$ref;
+    my @STA_prediction = ();
 
     my ($count_grp1, $count_grp2, $count_fail) = (0,0,0);
     foreach my $STA (@STAarray){
 	my $category = $self->Categorize1($STA);
-	if($category eq "fail"){
-	    $count_fail++;
-	}elsif($category eq "group1"){
-	    $count_grp1++;
-	}elsif($category eq "group2"){
-	    $count_grp2++;
-	}else{
-	    die "unknown category returned by Categorize1: $category.\n";
-	}
+	my $prediction = ($category eq 'fail')? "NO": "YES";
+	push @STA_prediction, [$STA, $prediction]; # array of array refs
     }
-    return ($count_grp1, $count_grp2, $count_fail);
+    return \@STA_prediction;
 }
 
 1;
