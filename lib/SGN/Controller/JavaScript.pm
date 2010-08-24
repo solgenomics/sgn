@@ -126,8 +126,6 @@ sub insert_js_pack_html :Private {
 
   my $b = $c->res->body;
 
-  $c->log->debug("inserting js pack containing (@$js) into body of size ".length($b)) if $c->debug;
-
   my $url_cache;
   if( $b =~ s{<!-- \s* INSERT_JS_PACK \s* -->} {'<script src="'.($url_cache ||= $c->uri_for( $self->action_for_js_package( $js ))).qq|" type="text/javascript">\n</script>|}ex ) {
       $c->res->body( $b );
@@ -178,7 +176,7 @@ sub action_for_js_package {
     my $key = md5_hex( join '!!', @files );
 
    warn (
-         "defining JS pack $key = ("
+         "defining/inserting JS pack $key = ("
         .(join ', ', @files)
         .')'
        ) if $self->_app->debug;
