@@ -182,7 +182,7 @@ sub log_in_ok {
     $self->submit_form_ok( \%form, "submitted login form" );
     $self->content_lacks('Incorrect username', 'did not get "Incorrect username"')
         or Test::More::diag $self->content;
-    $self->content_contains('View or update personal','got MySGN')
+    $self->content_lacks('Incorrect password','did not get "Incorrect password"')
         or Test::More::diag $self->content;
 }
 
