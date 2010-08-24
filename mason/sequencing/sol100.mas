@@ -77,21 +77,8 @@ sol100.mas - SGN page for sol100 project organism data overview in a tree format
   collapsed     => 0,
   &>
 
-  <div id="popup" style="visibility:hidden; position:absolute; top:0; left:0;">
-    <table id="xtratbl">
-    <tr><td id="org_title"><font color="#000000">Title Goes Here</font></td></tr>
-    <tr><td id="org_content" bgcolor="#ffffff">
-        Organism content goes here
-    </td></tr></table>
-  </div>
+  <& /organism/tree.mas, organism_tree => $organism_tree &>
 
-  <div class="organism_tree">
-    <form action="/tools/tree_browser/" method="post">
-       <input type="hidden" name="tree_string" value="<% $organism_tree->{newick} |h %>" />
-       <input type="submit" value="show in tree browser" />
-    </form>
-    <img src="<% $organism_tree->{image_uri} |h %>" usemap="#<% $organism_tree->{image_map_name} |h %>" />
-    <% $organism_tree->{image_map} %>
   </div>
 </&>
 

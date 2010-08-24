@@ -345,12 +345,17 @@ has 'rendered_organism_tree_cache' => (
                 my $root_species  = $set->{root_species} or die "no root species defined for org set $set_name";
                 my $species_names = [ $set->{resultset}->get_column('species')->all ];
 
-                my $orgtree = $self->_render_organism_tree(
-                    $self->_app->dbic_schema('Bio::Chado::Schema','sgn_chado'),
-                    $root_species,
-                    $species_names,
-                   );
-                return Storable::nfreeze( $orgtree );
+                if( @$species_names ) {
+                    my $orgtree = $self->_render_organism_tree(
+                        $self->_app->dbic_schema('Bio::Chado::Schema','sgn_chado'),
+                        $root_species,
+                        $species_names,
+                       );
+                    return Storable::nfreeze( $orgtree );
+                }
+                else {
+                    return Storable::nfreeze( {} );
+                }
             },
            );
     },
@@ -361,9 +366,10 @@ has 'rendered_organism_tree_cache' => (
 # map
 # returns hashref of
 # {
-#    newick    => 'newick string',
-#    png       => 'png data',
-#    image_map => 'html image map',
+#    newick         => 'newick string',
+#    png            => 'png data',
+#    image_map      => 'html image map',
+#    image_map_name => 'name of the image map for <img usemap="" ... />',
 # }
 sub _render_organism_tree {
     my ( $self, $schema, $root_species, $species_names ) = @_;
