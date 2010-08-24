@@ -31,7 +31,9 @@ sub db_connections {
     my $sql =<<SQL;
 select count(*) as connections from pg_stat_activity where usename <> 'postgres'
 SQL
-    my (@row) = $context->dbc->dbh->selectrow_array($sql);
+    my $dsn     = $context->dbc_profile->{dsn};
+    my $dbh     = DBI->connect($dsn);
+    my (@row)   = $dbh->selectrow_array($sql);
     return $row[0];
 }
 
@@ -40,6 +42,7 @@ sub validate_urls {
     local $Test::Builder::Level = $Test::Builder::Level + 1;
     $iteration_count ||= 1;
     my $conns = db_connections();
+    diag("Currently $conns db connections\n");
 
     for my $test_name ( (sort keys %$urls) x $iteration_count ) {
         my $url = $urls->{$test_name};
