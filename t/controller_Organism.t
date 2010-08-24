@@ -3,9 +3,11 @@ use warnings;
 use Test::More;
 use Data::Dumper;
 
+use FindBin;
+use lib "$FindBin::RealBin/lib";
+
 BEGIN {
-    $ENV{SGN_SKIP_CGI} = 1; #< don't need to compile all the CGIs
-    use_ok 'Catalyst::Test', 'SGN';
+    use_ok 'SGN::Test::WWW::Mechanize';
     use_ok 'SGN::Controller::Organism';
 }
 
@@ -42,11 +44,31 @@ my $test_organism = $solanaceae
              { rows => 1, }
             )
     ->single;
+diag "using test organism ".$test_organism->species;
 
 SKIP: {
     skip 'could not find an organism to test with', 0 unless $test_organism;
 
-    diag "using test organism ".$test_organism->species;
+    my $mech = SGN::Test::WWW::Mechanize->new;
+    $mech->get_ok( '/organism/sol100/view' );
+    $mech->content_contains('SOL100 Organisms');
+    $mech->content_contains('presents a summary');
+    $mech->content_contains('click on an organism name');
+    $mech->content_lacks('Add to Tree','not logged in, does not have a form for adding an organism');
+    $mech->while_logged_in( user_type => 'curator', sub {
+        $mech->get_ok( '/organism/sol100/view' );
+        $mech->content_contains( 'Authorized user', 'now says authorized user' );
+        $mech->content_contains( 'Add a SOL100 organism', 'now has an adding form' );
+        $mech->submit_form_ok({
+            form_name => 'sol100_add_form',
+            fields    => { species => $test_organism->species },
+           }, 'submitted add organism form');
+    });
+
+    my $props = $test_organism->search_related('organismprops',{ 'type.name' => 'sol100'},{ join => 'type'} );
+    is( $props->count, 1, 'test organism has been added to sol100' );
+    is( $props->single->value, 1, 'has value one' );
+    $props->delete;
 }
 
 done_testing;
