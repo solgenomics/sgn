@@ -48,9 +48,7 @@ sub default :Path {
 
     return 1 if $self->_do_redirects($c);
 
-    $c->response->status(404);
-    $c->stash->{template} = "/site/error/404.mas";
-    $c->stash->{message} = "Page Not Found";
+    $c->throw_404;
 }
 
 sub _do_redirects {

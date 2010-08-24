@@ -52,10 +52,9 @@ my $defaults =
      'Plugin::ErrorCatcher::Email' => {
          use_tags => 1,
 
-         to       => 'rmb32@cornell.edu',
-         #to       => 'sgn-bugs@solgenomics.net',
+         to       => 'sgn-bugs@solgenomics.net',
          from     => 'sgn-bugs@solgenomics.net',
-         subject  => '%n error - %f',
+         subject  => '%n error - %p',
         },
 
 

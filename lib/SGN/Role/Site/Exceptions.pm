@@ -55,6 +55,39 @@ sub throw {
     }
 }
 
+=head2 throw_404
+
+one arg, the context object.
+
+Goes through some logic to figure out some things about the request,
+then throws an exception that will display a 404 error page.
+
+=cut
+
+sub throw_404 {
+    my ( $c ) = @_;
+
+    my %throw = (
+            title => '404 - not found',
+            http_status => 404,
+            public_message => 'Resource not found, we apologize for the inconvenience. ',
+           );
+
+    my $self_uri  = $c->uri_for('/');
+    my $our_fault = $c->req->referer =~ /$self_uri/;
+
+    if( $our_fault ) {
+        $throw{is_server_error} = 1;
+        $throw{notify} = 1;
+    } else {
+        $throw{public_message}  .= 'You may wish to contact the referring site and inform them of the error.';
+        $throw{is_client_error} = 1;
+        $throw{notify} = 0;
+    }
+
+    $c->throw( %throw );
+}
+
 # convert all the errors to objects if they are not already
 sub _error_objects {
     my $self = shift;
