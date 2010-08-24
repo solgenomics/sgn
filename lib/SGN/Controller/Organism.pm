@@ -126,9 +126,9 @@ has 'organism_sets' => (
 
             # set of only web-visible organisms in that family
             $org_sets{"web_visible_$family"} = {
-                description => $family,
+                description  => $family,
                 root_species => $family,
-                resultset   => $pns->search_related_rs(
+                resultset    => $pns->search_related_rs(
                     'organism',
                     { 'cv_2.name'   => 'local',
                       'type_2.name' => 'web visible',
