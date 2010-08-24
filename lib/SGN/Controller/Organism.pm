@@ -112,10 +112,11 @@ has 'organism_sets' => (
                             ->search_related('phylonode_organisms')
                             ->search_related('phylonode',
                                              { 'cv.name' => 'taxonomy' },
-                                             { join => { type => 'cv' } },
-                                            )
-                            ->search_related('descendants')
-                            ->search_related_rs('phylonode_organism');
+                                             { join => { type => 'cv' }},
+                                            );
+
+            $pns = $self->_child_phylonodes( $pns )
+                        ->search_related_rs('phylonode_organism');
 
             # set of all organisms in that family
             $org_sets{$family} = {
@@ -140,6 +141,26 @@ has 'organism_sets' => (
         return \%org_sets;
     },
    );
+
+# take a resultset of phylonodes, construct a resultset of the child
+# phylonodes.  temporary workaround until the extended_rels branch is
+# merged into DBIx::Class and DBIx::Class::Tree::NestedSet is ported
+# to use it
+sub _child_phylonodes {
+    my ( $self, $phylonodes ) = @_;
+
+    my %child_phylonode_conditions;
+    while( my $pn = $phylonodes->next ) {
+        push @{ $child_phylonode_conditions{ '-or' }} => {
+            'left_idx'     => { '>' => $pn->left_idx  },
+            'right_idx'    => { '<' => $pn->right_idx },
+            'phylotree_id' => $pn->phylotree_id,
+        };
+    }
+
+    return $phylonodes->result_source->resultset
+        ->search( \%child_phylonode_conditions );
+}
 
 
 =head1 ACTIONS
