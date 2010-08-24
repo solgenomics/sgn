@@ -5,7 +5,7 @@ SGN::Feature::GBrowse - site feature object to provide GBrowse integration
 =cut
 
 package SGN::Feature::GBrowse;
-use MooseX::Singleton;
+use Moose;
 use namespace::autoclean;
 
 extends 'SGN::Feature';

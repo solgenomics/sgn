@@ -5,7 +5,7 @@ SGN::Feature::GBrowse2 - subclass of L<SGN::Feature::GBrowse> that tweaks the ap
 =cut
 
 package SGN::Feature::GBrowse2;
-use MooseX::Singleton;
+use Moose;
 use namespace::autoclean;
 extends 'SGN::Feature::GBrowse';
 

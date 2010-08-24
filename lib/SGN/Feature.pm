@@ -1,5 +1,5 @@
 package SGN::Feature;
-use MooseX::Singleton;
+use Moose;
 
 use namespace::autoclean;
 use File::Spec;

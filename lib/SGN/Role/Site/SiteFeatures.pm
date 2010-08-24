@@ -15,6 +15,10 @@ use Try::Tiny;
 
 requires 'config';
 
+after 'setup_finalize' => sub {
+    shift->_features; #< build features
+};
+
 # lazy accessor, returns arrayref of instantiated and configured
 # SGN::Feature objects
 sub _features {
