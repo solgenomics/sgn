@@ -30,7 +30,7 @@ sub validate_urls {
     local $Test::Builder::Level = $Test::Builder::Level + 1;
     $iteration_count ||= 1;
 
-    for my $test_name ( shuffle((sort keys %$urls) x $iteration_count) ) {
+    for my $test_name ( (sort keys %$urls) x $iteration_count ) {
         my $url = $urls->{$test_name};
         my $r  = request( $url );
         my $rc = $r->code;
