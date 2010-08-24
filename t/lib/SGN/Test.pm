@@ -10,9 +10,10 @@ our @ISA = qw/Exporter/;
 use Exporter;
 use CXGN::VHost::Test;
 use SGN::Context;
+use autodie qw/:all/;
 
-@EXPORT_OK = qw/validate_urls/;
 my $context = SGN::Context->new;
+@EXPORT_OK = qw/validate_urls/;
 
 BEGIN {
     BAIL_OUT "You need to define SGN_TEST_SERVER environment variable"
@@ -30,7 +31,8 @@ sub db_connections {
     my $sql =<<SQL;
 select count(*) as connections from pg_stat_activity where usename <> 'postgres'
 SQL
-    return $context->dbc->dbh->do($sql);
+    my (@row) = $context->dbc->dbh->selectrow_array($sql);
+    return $row[0];
 }
 
 sub validate_urls {
