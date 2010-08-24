@@ -9,7 +9,6 @@ use Test::More;
 my %urls = (
         "homepage"                                 => "/",
 
-
         "gene search"                              => "/search/locus_search.pl?w8e4_any_name_matchtype=contains&w8e4_any_name=dwarf&w8e4_common_name=&w8e4_phenotype=&w8e4_locus_linkage_group=&w8e4_ontology_term=&w8e4_editor=&w8e4_genbank_accession=",
         "locus detail"                             => "/phenome/locus_display.pl?locus_id=428",
         "phenotype search"                         => "/search/phenotype_search.pl?wee9_phenotype=&wee9_individual_name=&wee9_population_name=",
@@ -33,15 +32,10 @@ my %urls = (
         "bac detail page"                          => "/maps/physical/clone_info.pl?id=3468&w98e_page=0&w98e_seqstatus=complete",
         "bac detail page 2"                        => "/maps/physical/clone_info.pl?id=119416",
 
-        "tomato genome data home"                  => "/genomes/Solanum_lycopersicum/genome_data.pl",
-        "tomato genome publication page"           => "/genomes/Solanum_lycopersicum/publications.pl",
-        "tomato genome index page"                 => "/genomes/Solanum_lycopersicum/",
-
         "est search page"                          => "/search/direct_search.pl?search=est",
         "est search"                               => "/search/est.pl?request_from=0&request_id=SGN-E234234&request_type=7&search=Search",
         "est detail page"                          => "/search/est.pl?request_from=0&request_id=SGN-E234234&request_type=7&search=Search",
         'chado cvterm page'                        => '/chado/cvterm.pl?cvterm_id=47499',
-        'sol100 page'                              => '/organism/sol100/view',
 
         "family search page"                       => "/search/direct_search.pl?search=family",
         "family search"                            => "/search/family_search.pl?wa82_family_id=22081",
@@ -68,9 +62,12 @@ my %urls = (
 
 
         "biosource detail page for sample"         => "/biosource/sample.pl?id=1",
+
         "Locus ajax form"                          => "/jsforms/locus_ajax_form.pl",
-        "SNP search markers"                       => "/search/markers/snp.pl",
         "Locus editors"                            => "/phenome/editors_note.pl",
+        "SNP search markers"                       => "/search/markers/snp.pl",
+
+        'sol100 page'                              => '/organism/sol100/view',
         "SGN data overview"                        => "/organism/all/view",
 
         "outreach index"                           => "/outreach/",
