@@ -98,7 +98,7 @@ sub validate_urls {
             SKIP: { skip 'because of invalid return code '.$rc, 2 };
         }
         skip 'Skipping leak tests', 1 if $ENV{SGN_SKIP_LEAK_TEST};
-        is($conns, db_connections(), "did not leak any datbase connections on $url");
+        cmp_ok(db_connections(),'<=',$conns, "did not leak any datbase connections on $url");
     }
     $dump_tempdir and diag "failing output dumped to $dump_tempdir";
 }
