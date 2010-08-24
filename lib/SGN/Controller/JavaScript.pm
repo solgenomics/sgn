@@ -87,6 +87,7 @@ sub end :Private {
 
     # handle missing JS with a 404
     if( @{ $c->error } == 1 && $c->error->[0] =~ /^Can't open '/ ) {
+        warn $c->error->[0];
 
         $c->clear_errors;
 
