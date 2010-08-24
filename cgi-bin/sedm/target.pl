@@ -26,10 +26,7 @@
 
 use strict;
 use warnings;
-
-use CXGN::VHost;
 use CXGN::Page;
-
 
 ## Use of CXGN::Page to take the arguments from the URL
 
@@ -61,5 +58,3 @@ if (exists $args{'id'} && defined $args{'id'} && $args{'id'} =~ m/^\d+$/) {
               object => 'target',
             );
 }
-
-
