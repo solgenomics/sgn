@@ -61,6 +61,10 @@ dt.sub { /* used for a second sublevel of dictionary terms */
 td.sgnlogo { 
   vertical-align: top;
 }
+img {
+  border: 0;
+}
+
 img#sgnlogo { 
   margin: -7px 6px 0 0;
 }
