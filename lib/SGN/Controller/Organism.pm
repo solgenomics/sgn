@@ -212,7 +212,7 @@ sub view_sol100 :Path('sol100/view') :Args(0) {
             image_uri => $c->uri_for( $self->action_for('organism_tree_image'), ['sol100'] ),
         },
 
-        show_org_add_form         => ( any {$user_type eq $_} qw( curator submitter sequencer ) ),
+        show_org_add_form         => ( $user_type && any {$user_type eq $_} qw( curator submitter sequencer ) ),
         organism_add_uri          => $c->uri_for( $self->action_for('add_sol100_organism')),
         organism_autocomplete_uri => $c->uri_for( $self->action_for('autocomplete'), ['Solanaceae']),
 
