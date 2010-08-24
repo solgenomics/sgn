@@ -23,7 +23,10 @@ $m->content_contains('Please log in as the correct user');
 $m->get_ok($server."/solpeople/login.pl");
 
 if( my $u_id = CXGN::People::Person->get_person_by_username( $dbh, "genefamily_test_editor" ) ) {
-    CXGN::People::Person->new( $dbh, $u_id )->hard_delete;
+    my $u = CXGN::People::Person->new( $dbh, $u_id );
+    $u->hard_delete;
+    $dbh->commit unless $dbh->dbh_param('AutoCommit');
+
 }
 
 my $p = CXGN::People::Person->new($dbh);

@@ -38,6 +38,12 @@ $dbh->commit();
 
 my $u_id = CXGN::People::Person->get_person_by_username( $dbh, "testusername" );
 my $u = CXGN::People::Person->new( $dbh, $u_id );
+END {
+    if( $u ) {
+        $u->hard_delete();
+        $u->get_dbh->commit unless $u->get_dbh->dbh_param('AutoCommit');
+    }
+}
 
 is( $u->get_first_name(), "testfirstname", "Test first name test" );
 
@@ -103,4 +109,3 @@ $m->content_contains("Incorrect username or password");
 
 # delete the test user from the database (even if the test died)
 #
-END { $u->hard_delete() if $u }

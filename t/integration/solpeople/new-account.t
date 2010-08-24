@@ -48,12 +48,13 @@ $mech->content_contains("already in use", "Duplicate username test");
 
 # remove the user just created
 
-my $dbh = CXGN::DB::Connection->new( { config => SGN::Config->load });
-
-my $p_id = CXGN::People::Person->get_person_by_username($dbh, "testtesttest");
-my $p = CXGN::People::Person->new($dbh, $p_id);
-
-$p->hard_delete();
+{
+    my $dbh = CXGN::DB::Connection->new( { config => SGN::Config->load });
+    my $p_id = CXGN::People::Person->get_person_by_username($dbh, "testtesttest");
+    my $p = CXGN::People::Person->new($dbh, $p_id);
+    $p->hard_delete();
+    $dbh->commit unless $dbh->dbh_param('AutoCommit');
+}
 
 
 # generate an account with a password that is too short
