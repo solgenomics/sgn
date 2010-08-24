@@ -66,7 +66,6 @@ sub _species_summary_cache_configuration {
         load_callback   => sub {
             my $cache_entry = shift;
             my $org_id = $cache_entry->key;
-            warn "loading species data for org $org_id";
             my $org = CXGN::Chado::Organism->new( $schema, $org_id )
                 or return;
             no warnings 'uninitialized';
