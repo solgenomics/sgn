@@ -7,7 +7,7 @@ use File::Spec;
 use Carp;
 use Digest::MD5 'md5_hex';
 use JSAN::ServerSide;
-use List::MoreUtils qw/uniq/;
+use List::MoreUtils qw/ uniq first_index /;
 use Storable qw/ nfreeze /;
 
 BEGIN { extends 'Catalyst::Controller' }
@@ -162,6 +162,15 @@ sub action_for_js_package {
         s/\.js$//;
         s!\.!/!g;
     }
+
+    # if prototype is present, move it to the front to prevent it
+    # conflicting with jquery
+    my $prototype_idx = first_index { /Prototype$/i } @files;
+    if( $prototype_idx > -1 ) {
+        my ($p) = splice @files, $prototype_idx, 1;
+        unshift @files, $p;
+    }
+
 
     # add in JSAN.use dependencies
     @files = $self->_resolve_jsan_dependencies( \@files );
