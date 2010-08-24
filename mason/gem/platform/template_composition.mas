@@ -44,7 +44,7 @@ use CXGN::GEM::Schema;
 use CXGN::Metadata::Dbiref;
 use CXGN::Metadata::Dbipath;
 use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
-<%/init>
+</%init>
 
 <%perl>
 
