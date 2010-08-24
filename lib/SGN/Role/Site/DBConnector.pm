@@ -105,6 +105,8 @@ sub _build_compatibility_profiles {
             CXGN::DB::Connection->new_no_connect({ config => $self->config })
                                 ->get_connection_parameters;
 
+        $conn{attributes}{AutoCommit} = 1;
+
 	$conn{search_path} = $self->config->{'dbsearchpath'} || ['public'];
 	\%conn
     };
