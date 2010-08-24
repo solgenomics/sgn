@@ -14,7 +14,7 @@ Jonathan "Duke" Leto
 
 use strict;
 use warnings;
-use Test::More tests => 6;
+use Test::More tests => 8;
 use Test::WWW::Mechanize;
 
 use lib 't/lib';

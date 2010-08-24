@@ -27,6 +27,6 @@ $mech->get("$base_url/$url");
 if ($mech->content =~ m/No database found/) {
     plan skip_all => "Skipping Contig map due to missing database";
 } else {
-    plan tests => 3;
+    plan tests => 4;
     validate_urls({ "Contig map" => $url });
 }

@@ -2,16 +2,17 @@ package SGN::Test;
 use File::Spec::Functions;
 use File::Temp;
 use File::Find;
-use FindBin;
-use File::Basename;
 use File::Temp;
 use HTML::Lint;
 use List::Util qw/min shuffle/;
-use CXGN::VHost::Test;
 use Test::More;
 our @ISA = qw/Exporter/;
 use Exporter;
+use CXGN::VHost::Test;
+use SGN::Context;
+
 @EXPORT_OK = qw/validate_urls/;
+my $context = SGN::Context->new;
 
 BEGIN {
     BAIL_OUT "You need to define SGN_TEST_SERVER environment variable"
@@ -25,10 +26,18 @@ sub make_dump_tempdir {
     return $d;
 }
 
+sub db_connections {
+    my $sql =<<SQL;
+select count(*) as connections from pg_stat_activity where usename <> 'postgres'
+SQL
+    return $context->dbc->dbh->do($sql);
+}
+
 sub validate_urls {
     my ($urls, $iteration_count) = @_;
     local $Test::Builder::Level = $Test::Builder::Level + 1;
     $iteration_count ||= 1;
+    my $conns = db_connections();
 
     for my $test_name ( (sort keys %$urls) x $iteration_count ) {
         my $url = $urls->{$test_name};
@@ -83,7 +92,9 @@ sub validate_urls {
         } else {
             SKIP: { skip 'because of invalid return code '.$rc, 2 };
         }
+        skip 'Skipping leak tests', 1 if $ENV{SGN_SKIP_LEAK_TEST};
+        is($conns, db_connections(), "did not leak any datbase connections on $url");
     }
-    $dump_tempdir and diag "failing output dumped to $dump_tempdir"
+    $dump_tempdir and diag "failing output dumped to $dump_tempdir";
 }
 1;
