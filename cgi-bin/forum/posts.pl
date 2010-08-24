@@ -154,11 +154,11 @@ sub old_posts_list {
 
     my @parent_ids = ();
 
+    unless( @posts ) {
+        return "Currently there are no posts under this topic. Please use the Add Posting link to add a post. Please note that you have to be logged in to post. [<a href=\"login.pl\">Login</a>]<br /><br />";
+    }
 
-
-    if (!@posts) { $s .= "Currently there are no posts under this topic. Please use the Add Posting link to add a post. Please note that you have to be logged in to post. [<a href=\"login.pl\">Login</a>]<BR/><BR/>"; }
-
-    $s = "<table border=\"0\" cellpadding=\"2\" cellspacing=\"2\">";
+    my $s = "<table border=\"0\" cellpadding=\"2\" cellspacing=\"2\">";
 
     foreach my $p (@posts) { 
 	my $subject   = $p->get_subject();
@@ -196,7 +196,7 @@ sub old_posts_list {
 	}
 
 	my $respond_link = "Respond";
-	if ($sp_person_id) { 
+	if ($person_id) {
 	    $respond_link = "<a href=\"add_post.pl?parent_post_id=$forum_post_id&amp;topic_id=$topic_id\">Respond</a>"; 
 	}
         #my $post_level = $p -> get_post_level();
