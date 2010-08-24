@@ -1,4 +1,5 @@
 <%once>
+  no warnings 'redefine';
   #this code will not work when database connectivity is lost, or when these modules are broken.
   #since the page header is highly important and we ALWAYS expect it to work, we must continue even when that other stuff is broken.
   sub get_session_person {
