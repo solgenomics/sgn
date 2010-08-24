@@ -1,6 +1,7 @@
 use strict;
 use warnings;
 use Test::More;
+use Test::Warn;
 use Data::Dumper;
 
 BEGIN {
@@ -32,7 +33,9 @@ my ($res, $c) = ctx_request('/');
          );
 
 
-    $res = request( $c->uri_for( '/js/Nonexistent.js' ));
+    warning_like {
+        $res = request( $c->uri_for( '/js/Nonexistent.js' ));
+    } qr/Can't open .+Nonexistent.js/, 'got a warning about the missing file';
     like( $res->content,
           qr/not found/i,
           'nonexistent js says not found',
