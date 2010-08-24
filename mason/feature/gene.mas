@@ -11,7 +11,7 @@
 
 <& /util/import_javascript.mas,
     classes => [qw(
-        Prototype jQuery Text.Markup CXGN.Effects
+        Prototype jquery Text.Markup CXGN.Effects
         MochiKit.DOM thickbox
         MochiKit.Async CXGN.Sunshine.NetworkBrowser
         CXGN.Page.Form.JSFormPage
