@@ -30,8 +30,24 @@ SKIP: {
 
 }
 
+my $sol100 = $controller->organism_sets->{sol100}{resultset};
+isa_ok( $sol100, 'DBIx::Class::ResultSet', 'got sol100 organism resultset' );
 
-isa_ok( $controller->organism_sets->{sol100}{resultset}, 'DBIx::Class::ResultSet', 'got sol100 organism resultset' );
+# find an organism that is in the solanaceae but not part of sol100
+my $solanaceae = $controller->organism_sets->{Solanaceae}{resultset};
+isa_ok( $sol100, 'DBIx::Class::ResultSet', 'got solanaceae resultset' );
+
+my $test_organism = $solanaceae
+    ->search({ 'organism.organism_id' => { -not_in => $sol100->get_column('organism_id')->as_query }},
+             { rows => 1, }
+            )
+    ->single;
+
+SKIP: {
+    skip 'could not find an organism to test with', 0 unless $test_organism;
+
+    diag "using test organism ".$test_organism->species;
+}
 
 done_testing;
 
