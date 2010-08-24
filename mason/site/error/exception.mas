@@ -54,7 +54,7 @@
 
     <div style="margin: 1em 0; border: 2px solid orange; padding: 0 1em 1em 1em">
       <h3>Developer message:</h3>
-        <pre><% defined $e->developer_message ? $e->developer_message : 'none provided' %></pre>
+        <pre><% defined $e->developer_message ? $e->developer_message : 'none provided' | h %></pre>
     </div>
 %   }
 % }
