@@ -74,7 +74,7 @@ sub throw_404 {
            );
 
     my $self_uri  = $c->uri_for('/');
-    my $our_fault = $c->req->referer =~ /$self_uri/;
+    my $our_fault = ($c->req->referer || '') =~ /$self_uri/;
 
     if( $our_fault ) {
         $throw{is_server_error} = 1;
