@@ -16,7 +16,9 @@ use Try::Tiny;
 requires 'config';
 
 after 'setup_finalize' => sub {
-    shift->_features; #< build features
+	my $class = shift;
+	$class->_features; #< build features
+	$class->setup_features;
 };
 
 # lazy accessor, returns arrayref of instantiated and configured
