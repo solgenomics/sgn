@@ -1,3 +1,40 @@
+=head1 NAME
+
+SGN::Deploy::Apache - deploy the SGN site on an Apache web server
+
+=head1 SYNOPSIS
+
+   # in your apache conf:
+
+   <VirtualHost *:80>
+
+       ServerName sgn.localhost.localdomain
+
+       PerlWarn On
+       PerlTaintCheck On
+
+       LogLevel error
+
+       <Perl>
+
+          use lib '/crypt/rob/cxgn/curr/sgn/lib';
+          use lib '/crypt/rob/cxgn/curr/ITAG/lib';
+          use lib '/crypt/rob/cxgn/curr/Phenome/lib';
+          use lib '/crypt/rob/cxgn/curr/tomato_genome/lib';
+          use lib '/crypt/rob/cxgn/curr/Cview/lib';
+          use lib '/crypt/rob/cxgn/curr/cxgn-corelibs/lib';
+          use local::lib '/crypt/rob/cpan-lib';
+
+          use SGN::Deploy::Apache SGN => ( type => 'mod_perl', vhost => 1 );
+
+       </Perl>
+
+   </VirtualHost>
+
+=head1 METHODS
+
+=cut
+
 package SGN::Deploy::Apache;
 use strict;
 use warnings;
@@ -9,6 +46,14 @@ use File::Basename;
 use File::Path qw/ mkpath /;
 
 use Class::MOP;
+
+=head2 import( $app_class, %options )
+
+Most of the time, this is the only method that will be used.
+
+Takes the same arguments as configure_apache below.
+
+=cut
 
 sub import {
     my $class = shift;
@@ -98,7 +143,7 @@ sub apache_server {
 }
 
 
-=head1 CONFIGURATION TYPES
+=head1 SUPPORTED CONFIGURATION TYPES
 
 =head2 mod_perl
 
