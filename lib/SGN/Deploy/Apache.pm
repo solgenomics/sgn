@@ -244,7 +244,6 @@ sub _conf_features {
     my ($class,$app) = @_;
     my @confs;
     if( $app->can('enabled_features') ) {
-        $_->setup( $app ) for $app->enabled_features;
         for ( $app->enabled_features ) {
             push @confs, $_->apache_conf if $_->can('apache_conf');
         }
