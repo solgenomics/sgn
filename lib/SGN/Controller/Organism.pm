@@ -201,17 +201,41 @@ sub get_organism_set :Chained('/') :PathPart('organism/set') :CaptureArgs(1) {
         or $c->debug && $c->log->debug("no set found called '$set_name'");
 }
 
+# /organism/tree/<set_name>
 sub get_organism_tree :Chained('/') :PathPart('organism/tree') :CaptureArgs(1) {
     my ( $self, $c, $set_name ) = @_;
 
-    $c->stash->{organism_tree} = $self->rendered_organism_tree_cache->thaw( $set_name );
+    $c->stash->{organism_set_name} = $set_name;
+    # the Cache::Entry for the slot in the cache for this organism tree
+    $c->stash->{organism_tree_cache_entry} = $self->rendered_organism_tree_cache->entry( $set_name );
 }
 
+# /organism/tree/<set_name>/image
 sub organism_tree_image :Chained('get_organism_tree') :PathPart('image') {
     my ( $self, $c ) = @_;
+
+    my $image = $c->stash->{organism_tree_cache_entry}->thaw
+        or $c->throw_404;
+
+    $c->res->body( $image->{png} );
     $c->res->content_type( 'image/png' );
-    $c->res->body( $c->stash->{organism_tree}->{png} );
 }
+
+# /organism/tree/<set_name>/flush
+sub clear_organism_tree :Chained('get_organism_tree') :PathPart('flush') {
+    my ( $self, $c ) = @_;
+    unless( $c->req->method eq 'POST' ) {
+        $c->throw( public_message => 'this action is only available by POST',
+                   http_status => HTTP_METHOD_NOT_ALLOWED );
+    }
+
+    $c->stash->{organism_tree_cache_entry}->remove;
+    $c->res->content_type('application/json');
+    $c->res->body(<<'');
+{ status: "success" }
+
+}
+
 
 
 =head2 view_sol100
