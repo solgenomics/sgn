@@ -83,11 +83,8 @@ isa_ok( $sol100, 'DBIx::Class::ResultSet', 'got sol100 organism resultset' );
 
     is( $mech->content_type, 'image/png', 'got a png image from the image URL' );
 
-    $mech->post_ok( '/organism/tree/sol100/flush' );
+    $mech->get_ok( '/organism/tree/sol100/flush' );
     is( $mech->content_type, 'application/json', 'got a JSON response from the flush action' );
-
-    $mech->get( '/organism/tree/sol100/flush' );
-    is( $mech->status, HTTP_METHOD_NOT_ALLOWED, 'flush does not allow GET requests' );
 
 }
 

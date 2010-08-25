@@ -224,10 +224,6 @@ sub organism_tree_image :Chained('get_organism_tree') :PathPart('image') {
 # /organism/tree/<set_name>/flush
 sub clear_organism_tree :Chained('get_organism_tree') :PathPart('flush') {
     my ( $self, $c ) = @_;
-    unless( $c->req->method eq 'POST' ) {
-        $c->throw( public_message => 'this action is only available by POST',
-                   http_status => HTTP_METHOD_NOT_ALLOWED );
-    }
 
     $c->stash->{organism_tree_cache_entry}->remove;
     $c->res->content_type('application/json');
