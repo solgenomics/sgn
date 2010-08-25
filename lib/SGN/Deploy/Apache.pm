@@ -241,15 +241,15 @@ sub _conf_serve_static {
 # given the context obj, return list of apache conf strings for each
 # of the activated features
 sub _conf_features {
-    my $class = shift;
-    if( $class->can('enabled_features') ) {
-        my @confs;
-        for ( $class->enabled_features ) {
+    my ($class,$app) = @_;
+    my @confs;
+    if( $app->can('enabled_features') ) {
+        $_->setup( $app ) for $app->enabled_features;
+        for ( $app->enabled_features ) {
             push @confs, $_->apache_conf if $_->can('apache_conf');
         }
-        return @confs;
     }
-    return;
+    return @confs;
 }
 
 # no arguments looks at the values of $self->{production_server} and
