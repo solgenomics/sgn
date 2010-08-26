@@ -337,6 +337,7 @@ my $build = $class->new(
         'YAML::Any'               => 0,
         'File::Slurp'             => 0,
         'Test::JSON'              => 0,
+        'Test::WWW::Mechanize::Catalyst' => 0,
     },
 );
 $build->create_build_script;
