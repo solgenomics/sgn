@@ -11,6 +11,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 
 use strict;
+use warnings;
 my $qtl_form_detail_page = CXGN::Phenome::QtlFormDetailPage->new();
 
 package CXGN::Phenome::QtlFormDetailPage;
@@ -18,7 +19,6 @@ package CXGN::Phenome::QtlFormDetailPage;
 
 
 use File::Spec;
-use CXGN::VHost;
 use CXGN::Page;
 use CXGN::Scrap;
 use CXGN::Scrap::AjaxPage;
