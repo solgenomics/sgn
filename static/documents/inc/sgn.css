@@ -1250,3 +1250,20 @@ div#_MochiKit_LoggingPane {
 	text-align:left; /* appears centered otherwise, weird */
 }
 
+
+div.publication_embedded { 
+  text-align: justify;
+}
+/* publication styles */
+div.publication_embedded .detail { 
+  padding: 0.5em 2em;
+  border: 1px solid gray;
+  background: #eee;
+}
+
+div.publication_embedded .citation { 
+  font-weight: bold;
+  font-style: italic;
+  background: #ddd;
+  padding: 0.3em 4px;
+}

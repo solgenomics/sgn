@@ -12,7 +12,6 @@ JSAN.use('MochiKit.Async');
 JSAN.use('CXGN.Effects');
 JSAN.use('CXGN.Phenome.Tools');
 
-
 var Publication = {
  
     //update status of pub_crator
@@ -56,6 +55,16 @@ var Publication = {
 	    });
 	}
     },
-    /////
+
 }
 
+
+JSAN.use('jquery');
+
+// add show/hide functionality to toggle-able publications
+jQuery( function() {
+  jQuery('div.publication_embedded a.toggle_abstract').click(function() {
+    jQuery(this).next().toggle();
+    return false;
+  }).next().hide();
+});

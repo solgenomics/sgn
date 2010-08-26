@@ -29,49 +29,33 @@ Naama Menda <nm249@cornell.edu>
 =cut 
 
 </%doc>
-
 <%args>
-
-$pub
-$count
-$db => undef
-$accession => undef
+  $pub
+  $count
+  $db => undef
+  $accession => undef
 </%args>
 
-<%perl>
-
-
-use CXGN::Chado::Publication;
-use CXGN::Page::FormattingHelpers qw / html_optional_show /;
-use HTML::Entities;
-
-
-my $pub_title = $pub->get_title();
-my $year = $pub->get_pyear();
-my $pub_id = $pub->get_pub_id();
-
-
-my $abstract      = encode_entities( $pub->get_abstract() );
-my $authors       = encode_entities( $pub->get_authors_as_string() );
-my $journal       = $pub->get_series_name();
-my $volume        = $pub->get_volume();
-my $issue         = $pub->get_issue();
-my $pages         = $pub->get_pages();
-my $abstract_view = html_optional_show(
-        "abstracts$count",
-        'Show/hide abstract',
-	qq|$abstract <b> <i>$authors.</i> $journal. $year. $volume($issue). $pages.</b>|,
-        0,                           #< do not show by default
-        'abstract_optional_show',    #< don't use the default button-like style
-	);
-
-my $pub_info =
-  qq|<div><a href="/chado/publication.pl?pub_id=$pub_id" >$db:$accession</a> $pub_title ($year) $abstract_view </div> |;
+<& /util/import_javascript.mas, classes => 'CXGN.Phenome.Publication' &>
+<div class="publication_embedded">
+  <a href="/chado/publication.pl?pub_id=<% $pub->get_pub_id |h%>">
+    <% $db |h%>:<% $accession |h%>
+  </a>
+  <span class="title"> <% $pub->get_title |h%> (<% $pub->get_pyear |h%>) </span>
+  <a class="toggle_abstract" href="#">Show / hide abstract</a>
+  <div class="detail">
+    <div class="abstract">
+       <% $pub->get_abstract |h%>
+    </div>
+     <div class="citation">
+       <% $pub->get_authors_as_string |h%>.
+       <% $pub->get_series_name |h%>.
+       <% $pub->get_pyear |h%>.
+        <% $pub->get_volume |h%>(<% $pub->get_issue |h%>).
+       <% $pub->get_pages |h%>.
+      </div>
+  </div>
+</div>
 
 
 
-
-</%perl>
-
-
-<% $pub_info %>
