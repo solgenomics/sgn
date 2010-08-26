@@ -162,15 +162,16 @@ Please contact Joss Rose if interested :
 External Links</span></td>
 </tr>
 <tr>
-<td>
-<ul>
-<li><a href="http://www.ccrc.uga.edu/~mao/cellwall/main.htm">Plant Cell Wall Overview</a>
-<li><a href="http://cell.ccrc.uga.edu/~mao/wallmab/Home/Home.php">Cell Wall Antibodies</a>
-<li><a href="http://xyloglucan.prl.msu.edu">WallBioNet</a>
-<li><a href="http://cellwall.genomics.purdue.edu/">Cell Wall Genomics</a>
-</ul>
-</td>
-
+  <td>
+    <ul>
+      <li><a href="http://www.ccrc.uga.edu/~mao/cellwall/main.htm">Plant Cell Wall Overview</a></li>
+      <li><a href="http://cell.ccrc.uga.edu/~mao/wallmab/Home/Home.php">Cell Wall Antibodies</a></li>
+      <li><a href="http://cellwall.genomics.purdue.edu/">Cell Wall Genomics</a></li>
+      <li><a href="http://csbl1.bmb.uga.edu/pDAWG">Plant cell wall genes (pDAWG)</li>
+      <li><a href="http://bioweb.ucr.edu/Cellwall">Cell Wall Navigator</li>
+      <li><a href="http://www.cazy.org">Carbohydrate Active Enzymes</a></li>
+    </ul>
+  </td>
 </tr>
 </table>
 
