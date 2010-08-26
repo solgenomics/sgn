@@ -9,13 +9,14 @@
 
     <Perl>
 
-       use lib '/crypt/rob/cxgn/curr/sgn/lib';
-       use lib '/crypt/rob/cxgn/curr/ITAG/lib';
-       use lib '/crypt/rob/cxgn/curr/Phenome/lib';
-       use lib '/crypt/rob/cxgn/curr/tomato_genome/lib';
-       use lib '/crypt/rob/cxgn/curr/Cview/lib';
-       use lib '/crypt/rob/cxgn/curr/cxgn-corelibs/lib';
        use local::lib '/crypt/rob/cpan-lib';
+       use lib ( '/crypt/rob/cxgn/curr/sgn/lib',
+                 '/crypt/rob/cxgn/curr/ITAG/lib',
+                 '/crypt/rob/cxgn/curr/Phenome/lib',
+                 '/crypt/rob/cxgn/curr/tomato_genome/lib',
+                 '/crypt/rob/cxgn/curr/Cview/lib',
+                 '/crypt/rob/cxgn/curr/cxgn-corelibs/lib',
+                );
 
        use SGN::Deploy::Apache SGN => ( type => 'mod_perl', vhost => 1 );
 
