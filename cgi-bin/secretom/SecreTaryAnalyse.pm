@@ -17,6 +17,7 @@ use strict;
 
 #use CXGN::Secretome::TMpred;
 use TMpred;
+use Cleavage;
 
 package SecreTaryAnalyse;
 
@@ -38,10 +39,10 @@ sub new {
 
     $self->set_sequence_id( shift || ">A_protein_sequence" );
     my $sequence     = shift;
-    my $limits       = shift || [ 100, 500, 17, 40, 0, 40 ];
+    my $limits       = shift || [ 100, 500, 10, 40, 0, 40 ]; # [ 100, 500, 17, 40, 0, 40 ];
     my $trunc_length = shift @$limits;
-
-    $self->set_sequence( substr( $sequence, 0, $trunc_length ) );
+    $sequence = substr($sequence, 0, $trunc_length);
+    $self->set_sequence( $sequence );
     $self->set_limits($limits);    # array ref; specifies which tmhs to keep.
 
     my $tmpred =
@@ -51,6 +52,14 @@ sub new {
     $self->set_TMpred($tmpred);
     $self->Sequence22_AAcomposition();
 
+    # do the cleavage site calculation
+    my	$sp_length = Cleavage::cleavage($sequence);
+    # $hstart is the 0-based number of first AA of h region, i.e. the length of
+    # the n region. cstart is the 0-based number of first AA of the c region
+    # i.e. post-hydrophobic cleavage region
+    my ($typical, $hstart, $cstart) = Cleavage::subdomain(substr($sequence, 0, $sp_length)); 
+
+    $self->set_cleavage([$sp_length, $hstart, $cstart, $typical]);
     return $self;
 }
 
@@ -102,6 +111,15 @@ sub new {
         my $self = shift;
         return $self->{sequence_id};
     }
+
+sub set_cleavage{
+    my $self = shift;
+    $self->{cleavage} = shift;
+}
+sub get_cleavage{ 
+    my $self = shift;
+    return $self->{cleavage};
+}
 
     sub set_AI22 {
         my $self = shift;

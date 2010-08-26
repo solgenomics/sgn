@@ -54,7 +54,7 @@ foreach my $id ( keys %$id_seqs ) {
 }
 
 my $min_tmpred_score1 = 1500;
-my $min_tmh_length1   = 17;
+my $min_tmh_length1   = 17; #17
 my $max_tmh_length1   = 33;
 my $max_tmh_beg1      = 30;
 
@@ -86,14 +86,23 @@ foreach (reverse @$STApreds) {
     my $prediction = $_->[1];
     $prediction =~ /\((.*)\)\((.*)\)/;
     my ($soln1, $soln2) = ($1, $2);
-    my $prediction = substr($prediction, 0, 3 );
+    my $prediction = substr($prediction, 0, 3 ); # 'YES' or 'NO '
     $count_pass++ if ( $prediction eq "YES" );
 
-    my $id = substr( $STA->get_sequence_id() . "                    ", 0, 15 );
+    my $id = padtrunc( $STA->get_sequence_id(), 15);
     my $sequence = $STA->get_sequence();
+    my $cleavage = $STA->get_cleavage();
+    my ($sp_length, $hstart, $cstart, $typical) = @$cleavage;
+    my $hstartp1 = padtrunc($hstart+1, 4);
+my $cstartp1 = padtrunc($cstart+1, 4);
+ $sp_length = padtrunc($sp_length, 4);
     my $orig_length = length $sequence;
     $sequence = padtrunc($sequence, $show_max_length);
-    my ($hl_sequence, $solution) = highlight_region($sequence, $soln1, $soln2);
+#    my ($hl_sequence, $solution) = highlight_tmpred_region($sequence, $soln1, $soln2);
+my $hl_sequence = '<FONT style="BACKGROUND-COLOR: ' . "#FFDD66" . '">' . substr($sequence, 0, $sp_length) . '</FONT>' . substr($sequence, $sp_length, $show_max_length - $sp_length); 
+    
+    my $solution = $soln1;
+    if($soln1 =~ /^(.*)?,/ and $1 < $min_tmpred_score1){ $solution = $soln2; }
   #  print "solution: $solution \n";
     my ($score, $start, $end) = ('        ','      ','      ');
  my $tmh_l = '    ';
@@ -102,32 +111,44 @@ foreach (reverse @$STApreds) {
  $score = padtrunc($score, 8);
  $start = padtrunc($start, 6);
  $tmh_l = padtrunc($end-$start+1, 4);
+
     }
     $hl_sequence .= ($orig_length > length $sequence)? '...': '   ';
- 
+ my $endp1 = padtrunc($end+1, 4);
+
   #  print "score: $score \n padtrunc score [", padtrunc($score, 5), "]\n";
    
    
    
 # $result_string .= "$id   $prediction   $soln1   $sequence\n";
-    $result_string .= "$id  $prediction    $score $start $tmh_l  $hl_sequence\n";
+    $result_string .= "$id  $prediction    $score $start $endp1  $hstartp1  $cstartp1  $sp_length  $hl_sequence\n";
   #  print '<FONT style="BACKGROUND-COLOR: yellow">next </FONT>week.';
 
 }
 print<<XX;
-<font size="+1">SecreTary SP Predictions</font></br>
+<font size="+1">SecreTary Signal Peptide (SP) Predictions</font></br>
 XX
 
-print '<pre>', "Identifier       SP     Score  Start  Length  Sequence 10        20        30        40        50        60\n";
-print "                                                       |         |         |         |         |         |\n";
+print '<pre>', "Identifier       SP     Score  Start  Length                   Sequence 10        20        30        40        50        60\n";
+print "                                                                         |         |         |         |         |         |\n";
 print $result_string;
 print "\n$count_pass secreted sequences predicted out of ", scalar @$STApreds,
   ".\n";
 print '</pre>';
 
+print<<EXPLAIN;
+The summary of the results includes, 
+for each sequence, the sequence identifier, 
+SecreTary\'s prediction (YES/NO) of whether a signal peptide is present,
+and the initial part of the sequence itself. SecreTary uses tmpred
+EXPLAIN
+
 print qq|<a href="secretary_predictor.pl">Return to SecreTary input page</a><br /><br />|;
 
 $page->footer();
+
+
+
 
 sub process_input {
 
@@ -189,7 +210,7 @@ sub padtrunc{ #return a string of length $length, truncating or
     return substr($str, 0, $length);
 }
 
-sub highlight_region{ # generate html for a string with a region of it highlighted
+sub highlight_tmpred_region{ # generate html for a string with a region of it highlighted
     my $seq = shift;
     my $soln1 = shift;
     my $soln2 = shift;
@@ -213,7 +234,7 @@ sub highlight_region{ # generate html for a string with a region of it highlight
     return $seq if($score eq '-1');
     my $html_str = substr($seq, 0, $hl_first - 1);
     if(length($seq) >= $hl_first){
-    $html_str .= '<FONT style="BACKGROUND-COLOR: ' . "$color" . '">' . substr($seq, $hl_first-1, $hl_last-$hl_first+1) . '</FONT>';
+    $html_str .= '<FONT style="BACKGROUND-COLOR: ' . "#FFDD66" . '">' . substr($seq, $hl_first-1, $hl_last-$hl_first+1) . '</FONT>';
 }
 if($len > $hl_last){
     $html_str .= substr($seq, $hl_last, $len - $hl_last);

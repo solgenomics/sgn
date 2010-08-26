@@ -37,5 +37,20 @@ my @STSparams = ($min_tmpred_score1, $min_tmh_length1, $max_tmh_length1, $max_tm
 
 my $STSobj = SecreTarySelect->new(@STSparams);	
 
-my ($count_g1, $count_g2, $count_fail)= $STSobj->Categorize(\@STAarray);
-print "counts: $count_g1, $count_g2, $count_fail \n";
+my $STApreds = $STSobj->Categorize(\@STAarray);
+
+my $result_string   = "";
+my $count_pass      = 0;
+my $show_max_length = 62;
+foreach (@$STApreds) {
+    my $STA = $_->[0];
+    my $out = $_->[1];
+    $out =~ /\((.*)\)\((.*)\)/;
+    my ($soln1, $soln2) = ($1, $2);
+    my $prediction = substr($out, 0, 3 );
+    $count_pass++ if ( $prediction eq "YES" );
+    my $id = substr( $STA->get_sequence_id() . "                    ", 0, 15 );
+    my $sequence = $STA->get_sequence();
+    print "$id  $prediction  $soln1 $soln2 ", substr($sequence, 0, 50), "\n";
+}
+print "$count_pass predicted signal peptides out of ", scalar @$STApreds, "\n";
