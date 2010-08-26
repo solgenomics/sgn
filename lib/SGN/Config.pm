@@ -79,6 +79,10 @@ my $defaults =
          globals => [qw[ $c ]],
      },
 
+     'View::JavaScript' => {
+         js_dir  => '__path_to(js)__',,
+     },
+
      dbsearchpath             => [qw[
                                      sgn
                                      public
