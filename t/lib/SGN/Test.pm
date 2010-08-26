@@ -45,6 +45,7 @@ sub validate_urls {
     diag("Currently $conns db connections\n");
 
     for my $test_name ( (sort keys %$urls) x $iteration_count ) {
+        $conns = db_connections();
         my $url = $urls->{$test_name};
         my $r  = request( $url );
         my $rc = $r->code;
