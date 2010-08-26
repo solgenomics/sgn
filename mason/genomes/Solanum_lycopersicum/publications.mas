@@ -48,10 +48,11 @@ function authors_off( id_base ) {
 <%args>
   $schema
 </%args>
-
+<%once>
+    use CXGN::Page::FormattingHelpers;
+    use List::MoreUtils qw/uniq/;
+</%once>
 <%init>
-use CXGN::Page::FormattingHelpers;
-use List::MoreUtils qw/uniq/;
 
 my $pubmed = $schema->resultset('General::Db')
                     ->find({ name => 'PMID' });
