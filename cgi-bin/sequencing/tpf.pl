@@ -28,7 +28,6 @@ use CXGN::TomatoGenome::tpf_agp qw(
 				   tabdelim_to_array
 				   modtime_string
 				  );
-use CXGN::VHost;
 
 my $page = CXGN::Page->new("Tiling Path Display","Rob");
 my $dbh = CXGN::DB::Connection->new();
