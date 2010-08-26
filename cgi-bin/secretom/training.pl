@@ -1,9 +1,7 @@
 use strict;
-use CXGN::Tools::File;
+use warnings;
 use CXGN::Page;
-use CXGN::VHost;
 
-my $vhost_conf=CXGN::VHost->new();
 my $page=CXGN::Page->new('Secretom','john');
 $page->header('Proteomics Workshop');
 print<<END_HTML;

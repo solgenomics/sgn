@@ -4,14 +4,14 @@ use warnings;
 use CXGN::DB::Connection;
 use CXGN::Page;
 use CXGN::Login;
-use CXGN::VHost;
+use SGN::Context;
 
 my $page             = CXGN::Page->new( "Login", "john" );
 my $dbh              = CXGN::DB::Connection->new();
-my $vhost_object     = CXGN::VHost->new();
+my $context          = SGN::Context->new;
 my $login_controller = CXGN::Login->new($dbh);
 
-if ( $vhost_object->get_conf('is_mirror') ) {
+if ( $context->get_conf('is_mirror') ) {
     $page->message_page(
         "Sorry, but you cannot log in to this site.",
 "This site is a mirror of <a href=\"http://sgn.cornell.edu\">sgn.cornell.edu</a>. To log in to SGN, go to <a href=\"http://sgn.cornell.edu/solpeople/login.pl\">SGN's login page</a>."

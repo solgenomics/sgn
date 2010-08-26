@@ -1,8 +1,9 @@
 #!/usr/bin/perl
 use strict;
+use warnings;
 use GD::Graph::lines;
-use CXGN::VHost;
 use CXGN::Page;
+use CatalystX::GlobalContext '$c';
 
 my $page = CXGN::Page->new();
 
@@ -15,11 +16,8 @@ my ($days) = $page->get_encoded_arguments('days');
 $days ||= 7;
 my ($imgsize) = $page->get_encoded_arguments('imgsize');
 
-my $vh = CXGN::VHost->new();
-
-
 # Get the digitemp data
-my $data_file = $vh->get_conf("pucebaboon_file");
+my $data_file = $c->config->{"pucebaboon_file"};
 
 open (my $fh, $data_file) or barf("Can't open file $data_file: $!");
 my @lines = <$fh>;

@@ -1,11 +1,10 @@
 use strict;
+use warnings;
 use CXGN::Page;
 use CXGN::Fish;
 use CXGN::DB::Connection;
-use CXGN::VHost;
 use SGN::Image;
 
-my $vhost_conf = CXGN::VHost->new();
 my $page = CXGN::Page->new("view_fish.pl","john,marty");
 my ($image_size) = $page->get_encoded_arguments('size');
 my ($clone_id) = $page->get_encoded_arguments('id');

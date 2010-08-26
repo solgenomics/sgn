@@ -6,7 +6,6 @@ use CXGN::Page;
 use CXGN::Login;
 use CXGN::Contact;
 use CXGN::People;
-use CXGN::VHost;
 use CatalystX::GlobalContext qw( $c );
 
 my $page = CXGN::Page->new("crash_test.pl","john binns");
@@ -17,8 +16,7 @@ my $dbh = CXGN::DB::Connection->new();
 my($test,$message) = $page->get_arguments('test','message');
 $message ||= 'crash_test';
 
-my $vhost = CXGN::VHost->new;
-my $is_production_server = $vhost->get_conf('production_server');
+my $is_production_server = $c->config->{'production_server'};
 my $logged_in_person_id = CXGN::Login->new($dbh)->verify_session();
 my $logged_in_user = CXGN::People::Person->new($dbh, $logged_in_person_id);
 my $logged_in_username = $logged_in_user->get_first_name()." ".$logged_in_user->get_last_name();
