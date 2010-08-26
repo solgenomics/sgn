@@ -1,3 +1,6 @@
+use strict;
+use warnings;
+
 use CXGN::Scrap::AjaxPage;
 use CXGN::DB::Connection;
 use CXGN::UserList::Hotlist;
@@ -25,7 +28,7 @@ print "<content>$content_list</content>\n";
 print "<buttonId>$button_id</buttonId>\n";
 
 
- if($id_check != $session_id) { die "Session ID is not valid" }
+# if($id_check != $session_id) { die "Session ID is not valid" }
 
 my $loginh = CXGN::Login->new($dbh, {NO_REDIRECT=>1});
 my $owner = $loginh->has_session();

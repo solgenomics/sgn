@@ -9,7 +9,7 @@ use CXGN::DB::Connection;
 use CXGN::Login;
 
 
-our $c;
+use CatalystX::GlobalContext qw( $c );
 
 my $q = CGI->new();
 my $dbh = CXGN::DB::Connection->new();

@@ -1,4 +1,5 @@
 <%once>
+  no warnings 'redefine';
   #this code will not work when database connectivity is lost, or when these modules are broken.
   #since the page header is highly important and we ALWAYS expect it to work, we must continue even when that other stuff is broken.
   sub get_session_person {
@@ -29,11 +30,8 @@
 
   </td>
   <td width="50%" class="clonecart">
-     <div id="clone_shoppingcart">
-         <script language="JavaScript" type="text/javascript">
-         count_clones();
-         </script>
-         clone(s) in cart (<a class="toplink" style="text-decoration: underline" href="/search/clone-order.pl">order</a>)
+     <div id="clone_shoppingcart" style="display: none">
+         <span id="clone_cart_count"></span> clone(s) in cart (<a class="toplink" style="text-decoration: underline" href="/search/clone-order.pl">order</a>)
      </div>
   </td>
   <td class="toplink" width="50%">
@@ -75,14 +73,6 @@
   </td>
 </tr>
 </table>
-
-<script language="javascript" type="text/javascript">
-<!--
-  CXGN.Page.Toolbar.hideall();
-  check_clonecart();
--->
-</script>
-
 
   <table id="pagecontent_t" summary="" width="740" cellpadding="0" cellspacing="0" border="0">
   <tr><td id="pagecontent_td">

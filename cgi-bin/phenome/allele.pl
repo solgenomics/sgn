@@ -182,7 +182,7 @@ sub display_page {
     $self->get_page->jsan_use("CXGN.Phenome.Locus");
     $self->get_page->jsan_use("MochiKit.DOM");
     $self->get_page->jsan_use("Prototype");
-    $self->get_page->jsan_use("jQuery");
+    $self->get_page->jsan_use("jquery");
     $self->get_page->jsan_use("thickbox");
     ###
 

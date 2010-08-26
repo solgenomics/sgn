@@ -5,7 +5,7 @@ use CXGN::DB::DBICFactory;
 use Data::Dumper;
 use Bio::SeqIO;
 
-our $c;
+use CatalystX::GlobalContext qw( $c );
 my $q = new CGI;
 my %args = (
     schema => CXGN::DB::DBICFactory->open_schema('Bio::Chado::Schema')

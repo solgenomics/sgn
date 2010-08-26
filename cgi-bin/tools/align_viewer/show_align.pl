@@ -162,7 +162,7 @@ unless( -d $PATH ) {
 }
 our $tmp_fh;
 our $CLUSTER_SHARED_TEMPDIR = $vhost_conf->get_conf('cluster_shared_tempdir');
-our $NOCLUSTER              = $vhost_conf->get_conf('nocluster');
+our $NOCLUSTER              = $vhost_conf->config->{'nocluster'};
 
 #You can send the temp_file as a filename and not a full path, good for security
 unless ( $temp_file =~ /\// ) {

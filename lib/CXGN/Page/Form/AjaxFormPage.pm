@@ -97,7 +97,6 @@ sub new {
     $self->set_dbh($dbh);
     
     $self->set_login(CXGN::Login->new($self->get_dbh()));
-    $self->get_ajax_page->{request}->no_cache(1);
     my %args = $self->get_ajax_page()->get_all_encoded_arguments(); ##
     my %json_hash=();
     # sanitize the inputs, we don't want to end up like bobby tables school.

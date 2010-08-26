@@ -3,6 +3,86 @@ use base 'CXGN::Config';
 my $defaults =
     {
 
+     name => 'SGN',
+
+     default_view => 'Mason',
+
+     # Disable deprecated behavior needed by old Catalyst applications
+     disable_component_resolution_regex_fallback => 1,
+
+     # Static::Simple configuration
+     root   => 'static',
+     static => {
+         dirs => [qw[ s img documents static_content data ]],
+         include_path => ['__path_to(static)__'],
+     },
+
+     ### backcompat variables for the various static content types
+     (
+         # relative URL and absolute path for static datasets
+         static_datasets_url      => '/data',
+         static_datasets_path     => '/data/prod/public',
+
+         # relative URL and absoluate path for static site content
+         static_content_url       => '/static_content',
+         static_content_path      => '/data/prod/public/sgn_static_content',
+         homepage_files_dir       => '/data/prod/public/sgn_static_content/homepage',
+     ),
+
+     # enable stack traces all the time
+     stacktrace => {
+         enable  => 1,
+         verbose => 1,
+        },
+
+     # keep Plugin::ErrorCatcher on all the time too
+     'Plugin::ErrorCatcher' => {
+         enable     => 1,
+
+         # SGN.pm will set the emit_module dynamically according to
+         # whether production_server is set
+         #emit_module => 'Catalyst::Plugin::ErrorCatcher::Email',
+         #emit_module => 'Catalyst::Plugin::ErrorCatcher::File',
+        },
+
+#      'Plugin::ErrorCatcher::File' => {
+#          dir => '/tmp',
+#         },
+
+     'Plugin::ErrorCatcher::Email' => {
+         use_tags => 1,
+
+         to       => 'sgn-bugs@solgenomics.net',
+         from     => 'sgn-bugs@solgenomics.net',
+         subject  => '%n error - %p',
+        },
+
+
+     'Controller::CGI' => {
+         cgi_root_path    => '/',
+         cgi_dir          => '__path_to(cgi-bin)__',
+         cgi_file_pattern => '*.pl',
+         CGI => {
+             #username_field username # used for REMOTE_USER env var
+             pass_env => [qw[ PERL5LIB
+                              PATH
+                            ]
+                         ],
+           },
+
+        },
+
+     'View::Mason' => {
+         interp_args => {
+             comp_root => '__path_to(mason)__',
+         },
+         globals => [qw[ $c ]],
+     },
+
+     'View::JavaScript' => {
+         js_dir  => '__path_to(js)__',,
+     },
+
      dbsearchpath             => [qw[
                                      sgn
                                      public
@@ -21,9 +101,13 @@ my $defaults =
 
      #is there a system message text file somewhere we should be displaying?
      system_message_file      => undef,
+     # defaults to /tmp/<user>/SGN
+     tempfiles_base           => undef,
 
      #should we send emails, if we are a production server? this can be used to turn off emails if we are being bombarded.
-     bugs_email               => 'sgn-bugs@sgn.cornell.edu',
+     admin_email           => 'sgn-feedback@solgenomics.net',
+     feedback_email           => 'sgn-feedback@solgenomics.net',
+     bugs_email               => 'sgn-bugs@solgenomics.net',
      disable_emails           => 0,
 
      #who is the apache user for chowning and emailing
@@ -51,30 +135,15 @@ my $defaults =
      hmmsearch_location       => 'hmmsearch', #< in path
      intron_finder_database   => '/data/prod/public/intron_finder_database',
 
-     # relative URL and absolute path for static datasets
-     static_datasets_url      => '/data',
-     static_datasets_path     => '/data/prod/public',
-
-     # relative URL and absoluate path for static site content
-     static_content_url       => '/static_content',
-     static_content_path      => '/data/prod/public/sgn_static_content',
-     homepage_files_dir       => '/data/prod/public/sgn_static_content/homepage',
-
-     # relative URL and relative path for static site files
-     static_site_files_url    => '/documents',
-     static_site_files_path   => 'documents', #< relative to site root
-
      trace_path               => '/data/prod/public/chromatograms',
      image_dir    	      => '/images/image_files',
      image_path               => '/data/prod/public/images',
-     tempfiles_subdir         => '/documents/tempfiles',
+     tempfiles_subdir         => '/static/documents/tempfiles',
      submit_dir               => '/data/shared/submit-uploads',
      programs_subdir          => '/programs',
      documents_subdir         => '/documents',
      conf_subdir              => '/conf',
      support_data_subdir      => '/support_data',
-     document_root_subdir     => '/cgi-bin',
-     executable_subdir        => '/cgi-bin',
 
      #in case of missing pages where we should go
      error_document           => '/tools/http_error_handler.pl',
@@ -88,7 +157,7 @@ my $defaults =
      dt_livesite              => 'http://www.sgn.cornell.edu/',
 
      #path to jslib relative to site basepath
-     global_js_lib            => 'js',
+     js_include_path          => ['__path_to(js)__'],
 
      # where the genefamily info is stored
      genefamily_dir           => '/data/prod/private/genomes/genefamily/',
@@ -121,4 +190,6 @@ my $defaults =
      },
 
     };
+
+
 sub defaults { shift->SUPER::defaults( $defaults, @_ )}

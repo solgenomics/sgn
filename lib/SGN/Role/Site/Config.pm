@@ -20,11 +20,11 @@ use SGN::Config;
 
 =cut
 
-{ my $cfg;
+{ my %config;
   sub config {
       my $class = shift;
       $class = ref $class if ref $class;
-      return $cfg ||= $class->_new_config;
+      return $config{$class} ||= $class->_new_config;
   }
 }
 
@@ -40,8 +40,8 @@ sub _new_config {
                                );
     for (values %$cfg) {
         no warnings 'uninitialized';
-        s|__HOME__|$self->path_to()|eg;
-        s|__path_to\(([^\)]+\))__|$self->path_to( split /,/, $1) |eg;
+        s|__HOME__|$basepath|eg;
+        s|__path_to\(([^\)]+\))__|File::Spec->catdir($basepath, split /,/, $1) |eg;
     }
     return $cfg;
 }

@@ -2,6 +2,8 @@
 
 # This script will simply have links to other scripts which will do the
 # actual work in managing data.
+use strict;
+use warnings;
 
 use CXGN::Page;
 use CXGN::People;
@@ -11,7 +13,6 @@ our $debug = 2; # higher for more verbosity
 # default operation; print form
 #
 sub print_default {
-	my $user_type = shift;
 	print "Please select which data you want to update:<br /><br />\n\n";
 
 	print "<div class=\"subheading\">Experiments / Images</div>\n";
@@ -60,6 +61,6 @@ $page->header("Insitu Manager", "<a href=\"/insitu\">Insitu</a>: Manage Data");
 
 CXGN::Insitu::Toolbar::display_toolbar("Manage");
 
-print_default($user_type);
+print_default();
 
 $page->footer();

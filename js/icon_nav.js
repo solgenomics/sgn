@@ -1,4 +1,4 @@
-JSAN.use('jQuery');
+JSAN.use('jquery');
 
 jQuery( function() {
 	var sfEls = document.getElementById("icon_nav").getElementsByTagName("LI");

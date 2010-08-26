@@ -52,16 +52,13 @@ if ($psqlv =~ /8\.1/) {
 my $schema = CXGN::DB::DBICFactory->open_schema( 'CXGN::GEM::Schema', search_path => \@schema_list, );
 
 ## Also it will create a dbi-connection object ($dbh) for all the methods that do not use schemas
-## (as CXGN::People::Person) to not interfiere with them
+## (as CXGN::People::Person) to not interfere with them
 
 my $dbh = CXGN::DB::Connection->new();
 
-
 ## Use of CXGN::Page to take the arguments from the URL
 
-my %args = CXGN::Page->new()
-                     ->get_all_encoded_arguments();
-
+my %args = CXGN::Page->new()->get_all_encoded_arguments();
 
 ## Now it will create a platform object (by default it will create an empty platform object)
 

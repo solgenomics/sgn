@@ -4,6 +4,7 @@ my $individual_detail_page = CXGN::Phenome::IndividualDetailPage->new();
 
 package CXGN::Phenome::IndividualDetailPage;
 
+use CatalystX::GlobalContext qw( $c );
 
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw /info_section_html 
@@ -257,7 +258,7 @@ sub display_page {
 
     $self->get_page->jsan_use("MochiKit.DOM");
     $self->get_page->jsan_use("Prototype");
-    $self->get_page->jsan_use("jQuery");
+    $self->get_page->jsan_use("jquery");
     $self->get_page->jsan_use("thickbox");
     
      my $action = $args{action};

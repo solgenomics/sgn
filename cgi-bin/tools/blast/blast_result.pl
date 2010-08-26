@@ -1,3 +1,4 @@
+use CatalystX::GlobalContext qw( $c );
 use strict;
 use warnings; #FATAL => 'all';
 use CXGN::Page;
@@ -64,7 +65,7 @@ my %arg_handlers =
         );
      try {
          while ( my $s = $i->next_seq ) {
-             $seq_count++;
+             $seq_count++ if $s->length;
              validate_seq( $s, $params{program} );
              $s->length or $c->throw(
                  message  => 'Sequence '.encode_entities('"'.$s->id.'"').' is empty, this is not allowed by BLAST.',
@@ -83,6 +84,14 @@ my %arg_handlers =
                     developer_message => $full_error,
                    );
      };
+
+     $seq_count >= 1 or $c->throw( message => 'no sequence submitted, cannot run BLAST',
+                                   is_error => 0,
+                                   developer_message => Data::Dumper::Dumper({
+                                       '$seq_count' => $seq_count,
+                                       '$seq_filename' => $seq_filename,
+                                   }),
+                                  );
 
      return -i => $seq_filename
    },

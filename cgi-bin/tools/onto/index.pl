@@ -3,7 +3,7 @@ use warnings;
 
 use CXGN::Page;
 
-our $c;
+use CatalystX::GlobalContext qw( $c );
 my $p = CXGN::Page->new("Ontology Browser", "Lukas");
 
 

@@ -96,7 +96,7 @@ my $owner_objects= $locus->get_owners(1);
 
 my $locus_name = $locus->get_locus_name();
 my $owner;
-if ( $locus_name && ($user_type eq 'curator' || grep { /^$person_id$/ } @owners  ) ) {  $owner = 1; }
+if ( $locus_name && ($user_type eq 'curator' || $person_id && grep { $_ == $person_id } @owners  ) ) {  $owner = 1; }
 my $registry = $locus->get_associated_registry();
 
 my @synonyms = $locus->get_locus_aliases('f','f');
@@ -189,7 +189,7 @@ my $ontology_subtitle =  !(grep { /^$user_type$/ } ('curator', 'submitter', 'seq
 
 </%perl>
 
-<& /util/import_javascript.mas, classes => ["Prototype", "jQuery", "thickbox", "CXGN.Page.FormattingHelpers", "CXGN.Phenome.Locus", "CXGN.Phenome.Tools", "CXGN.Phenome.Locus.LocusPage", "CXGN.Sunshine.NetworkBrowser"] &>
+<& /util/import_javascript.mas, classes => ["Prototype", "jquery", "thickbox", "CXGN.Page.FormattingHelpers", "CXGN.Phenome.Locus", "CXGN.Phenome.Tools", "CXGN.Phenome.Locus.LocusPage", "CXGN.Sunshine.NetworkBrowser"] &>
 
 
 <& /locus/initialize.mas, locus_id=>$locus_id  &>

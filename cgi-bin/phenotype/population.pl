@@ -8,9 +8,8 @@ use CXGN::DB::PhenoPopulation;
 use CGI;
 
 #get parameters from form on previous page
-my $r = Apache2::RequestUtil->request;
-$r->content_type("text/html");
-my %params = $r->method eq 'post' ? $r->content :$r->args;
+use CatalystX::GlobalContext qw( $c );
+my %params = %{$c->req->params};
 my $pop_id = $params{pop_id};
 
 my $page = CXGN::Page->new('phenotype', 'Adri');

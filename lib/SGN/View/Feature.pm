@@ -2,13 +2,12 @@ package SGN::View::Feature;
 use base 'Exporter';
 use strict;
 use warnings;
-use SGN::Context;
 
 our @EXPORT_OK = qw/
     related_stats feature_table gbrowse_link
     get_reference gbrowse_image_url feature_link
 /;
-our $c = SGN::Context->new;
+use CatalystX::GlobalContext '$c';
 
 sub get_reference {
     my ($feature) = @_;

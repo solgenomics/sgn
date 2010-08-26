@@ -1,5 +1,3 @@
-#!/usr/bin/perl -w
-
 =head1 DESCRIPTION
 
 Creates a trait/cvterm page with a description of 
@@ -17,11 +15,12 @@ Isaak Y Tecle (iyt2@cornell.edu)
 use strict;
 use warnings;
 
-our $c;
 my $population_indls_detail_page =
   CXGN::Phenome::PopulationIndlsDetailPage->new();
 
 package CXGN::Phenome::PopulationIndlsDetailPage;
+
+use CatalystX::GlobalContext qw( $c );
 
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw /info_section_html
@@ -37,7 +36,6 @@ use CXGN::Phenome::Population;
 use CXGN::Phenome::Qtl;
 use CXGN::Phenome::PopulationDbxref;
 use CXGN::Tools::WebImageCache;
-use SGN::Context;
 use CXGN::People::PageComment;
 use CXGN::People::Person;
 use CXGN::Chado::Publication;
@@ -56,12 +54,11 @@ use File::Spec;
 use File::Basename;
 use File::stat;
 use Cache::File;
+use Path::Class;
+use Try::Tiny;
 use CXGN::Scrap::AjaxPage;
 use CXGN::Contact;
-use Storable qw / store /;
 
-
-use CXGN::Page::UserPrefs;
 use base qw / CXGN::Page::Form::SimpleFormPage CXGN::Phenome::Main/;
 
 sub new
@@ -187,7 +184,7 @@ sub display_page
 {
     my $self = shift;
 
-    $self->get_page->jsan_use("jQuery");
+    $self->get_page->jsan_use("jquery");
     $self->get_page->jsan_use("thickbox");
 
     $self->get_page->add_style( text => <<EOS);
@@ -517,9 +514,8 @@ sub population_distribution
         $term_id   = $term_obj->get_cvterm_id();
     }
 
-    my $vh           = SGN::Context->new();
-    my $basepath     = $vh->get_conf("basepath");
-    my $tempfile_dir = $vh->get_conf("tempfiles_subdir");
+    my $basepath     = $c->get_conf("basepath");
+    my $tempfile_dir = $c->get_conf("tempfiles_subdir");
 
     my $cache = CXGN::Tools::WebImageCache->new();
     $cache->set_basedir($basepath);
@@ -682,9 +678,8 @@ sub qtl_plot
 
     my $ac = $population->cvterm_acronym($term_name);
 
-    my $vh           = SGN::Context->new();
-    my $basepath     = $vh->get_conf("basepath");
-    my $tempfile_dir = $vh->get_conf("tempfiles_subdir");
+    my $basepath     = $c->get_conf("basepath");
+    my $tempfile_dir = $c->get_conf("tempfiles_subdir");
 
     my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
       $self->cache_temp_path();
@@ -1121,23 +1116,23 @@ sub outfile_list
 =cut
 
 sub cache_temp_path
-{    
+{
     my $basepath     = $c->get_conf("basepath");
-    my $tempfile_dir = $c->get_conf("tempfiles_subdir");    
-    my $prod_temp_path = $c->get_conf('r_qtl_temp_path');  
-    
-    mkdir $prod_temp_path;    
+    my $tempfile_dir = $c->get_conf("tempfiles_subdir");
+
+    my $tempimages_path =
+      File::Spec->catfile( $basepath, $tempfile_dir, "temp_images" );
+
+    my $prod_temp_path = $c->get_conf('r_qtl_temp_path');
+    mkdir $prod_temp_path;
+
     my $prod_cache_path = "$prod_temp_path/cache";
     mkdir $prod_cache_path;
-    $prod_temp_path = "$prod_temp_path/tempfiles";
-    mkdir $prod_temp_path;
+
     -d $prod_temp_path
       or die "temp dir '$prod_temp_path' not found, and could not create!";
     -r $prod_temp_path or die "temp dir '$prod_temp_path' not readable!";
     -w $prod_temp_path or die "temp dir '$prod_temp_path' not writable!";
-
-    my $tempimages_path =
-      File::Spec->catfile( $basepath, $tempfile_dir, "temp_images" );
 
     return $prod_cache_path, $prod_temp_path, $tempimages_path;
 
@@ -1157,33 +1152,32 @@ sub cache_temp_path
 
 =cut
 
-sub crosstype_file
-{
+sub crosstype_file {
     my $self       = shift;
     my $pop_id     = $self->get_object_id();
     my $population = $self->get_object();
- 
-    my $cross_type = 'bc' if ($population->get_cross_type_id() == 2);
-    $cross_type = 'f2' if ($population->get_cross_type_id() == 1);
-    
+
+    my $type_id = $population->get_cross_type_id
+        or die "population '$pop_id' has no cross_type, does not seem to be the product of a cross!";
+    my ($cross_type) = $self->get_dbh->selectrow_array(<<'', undef, $type_id);
+                          select cross_type
+                          from cross_type
+                          where cross_type_id = ?
+
+    my $rqtl_cross_type = { 'Back cross' => 'bc',  'F2' => 'f2' }->{$cross_type}
+        or die "unknown cross_type '$cross_type' for population '$pop_id'";
+
     my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
 	$self->cache_temp_path();
 
     my $cross_temp = File::Temp->new(
-	                             TEMPLATE => "cross_type_${pop_id}-XXXXXX",
-                                     DIR      => $prod_temp_path,
-                                     UNLINK   => 0,
-	                            );
-   
+        TEMPLATE => "cross_type_${pop_id}-XXXXXX",
+        DIR      => $prod_temp_path,
+        UNLINK   => 0,
+       );
 
-    my $cross_file = $cross_temp->filename;
-    
-    open CF, ">$cross_file" or die "can't open $cross_file: $!\n";
-    print CF $cross_type;
-    close FO; 
-
-    return $cross_file;
-
+    $cross_temp->print( $rqtl_cross_type );
+    return $cross_temp->filename;
 }
 
 
@@ -1235,23 +1229,31 @@ sub run_r
           or die "could not copy '$r_cmd_file' to '$r_in_temp'";
     }
 
-    # now run the R job on the cluster
-    my $r_process = CXGN::Tools::Run->run_cluster(
-        'R', 'CMD', 'BATCH',
-        '--slave',
-        "--args $file_in $file_out $stat_file",
-        $r_in_temp,
-        $r_out_temp,
-        {
-           working_dir => $prod_temp_path,
+    try {
+        # now run the R job on the cluster
+        my $r_process = CXGN::Tools::Run->run_cluster(
+            'R', 'CMD', 'BATCH',
+            '--slave',
+            "--args $file_in $file_out $stat_file",
+            $r_in_temp,
+            $r_out_temp,
+            {
+                working_dir => $prod_temp_path,
 
-           # don't block and wait if the cluster looks full
-           max_cluster_jobs => 1_000_000_000,
-        },
-    );
+                # don't block and wait if the cluster looks full
+                max_cluster_jobs => 1_000_000_000,
+            },
+           );
 
-    sleep 1 while $r_process->alive;    #< wait for R to finish
-                                        #unlink( $r_in_temp, $r_out_temp );
+        $r_process->wait;       #< wait for R to finish
+    } catch {
+        my $err = $_;
+        $err =~ s/\n at .+//s; #< remove any additional backtrace
+        # try to append the R output
+        try{ $err .= "\n=== R output ===\n".file($r_out_temp)->slurp."\n=== end R output ===\n" };
+        # die with a backtrace
+        Carp::confess $err;
+    };
 
     copy( $prod_permu_file, $tempimages_path )
       or die "could not copy '$prod_permu_file' to '$tempimages_path'";
@@ -1478,9 +1480,8 @@ sub qtl_images_exist
 
     my $ac = $population->cvterm_acronym($term_name);
 
-    my $vh           = SGN::Context->new();
-    my $basepath     = $vh->get_conf("basepath");
-    my $tempfile_dir = $vh->get_conf("tempfiles_subdir");
+    my $basepath     = $c->get_conf("basepath");
+    my $tempfile_dir = $c->get_conf("tempfiles_subdir");
 
     my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
       $self->cache_temp_path();
@@ -1595,7 +1596,6 @@ sub stat_files
     my $pop            = $self->get_object();
     my $sp_person_id   = $pop->get_sp_person_id();
     my $qtl            = CXGN::Phenome::Qtl->new($sp_person_id);
-    my $c = SGN::Context->new();
     my $user_stat_file = $qtl->get_stat_file($c, $pop_id);
 
     my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
@@ -1657,7 +1657,6 @@ sub stat_param_hash
     my $pop            = $self->get_object();
     my $sp_person_id   = $pop->get_sp_person_id();
     my $qtl            = CXGN::Phenome::Qtl->new($sp_person_id);
-    my $c = SGN::Context->new();
     my $user_stat_file = $qtl->get_stat_file($c, $pop_id);
 
     open F, "<$user_stat_file" or die "can't open file: !$\n";

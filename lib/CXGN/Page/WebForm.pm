@@ -179,11 +179,7 @@ sub to_html {
         CXGN::Page->get_arguments() )  you can make your own with
         something like:
 
-        my $r = Apache2::RequestUtil->request;
-        $r->content_type("text/html");
-	my %params=$r->method eq "POST" ? $r->content : $r->args;
-
-        $myform->from_request(\%params);
+        $myform->from_request( CGI->new->Vars );
 
   Ret : not specified
   Side Effects: none

@@ -22,9 +22,9 @@ use constant MUSCLE_TESTS => HAS_MUSCLE ? 3 : 0;
 
 use Test::More tests => 9 + MUSCLE_TESTS;
 use Test::WWW::Mechanize;
+use lib 't/lib';
+use SGN::Test;
 
-
-die "Need to set the SGN_TEST_SERVER environment variable" unless defined($ENV{SGN_TEST_SERVER});
 my $base_url = $ENV{SGN_TEST_SERVER};
 
 sub make_fixture : Test(setup) {

@@ -1,3 +1,4 @@
+use CatalystX::GlobalContext qw( $c );
 # this script is called like /bare_mason.pl/path/to/mason.mas, and
 # simply executes the mason component with no parameters and returns
 # the bare text.

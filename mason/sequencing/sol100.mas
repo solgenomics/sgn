@@ -8,65 +8,79 @@ sol100.mas - SGN page for sol100 project organism data overview in a tree format
 
 </%doc>
 
+
 <%args>
-    $schema
-    $sol
+    $organism_tree
+
+    $show_org_add_form => 0
+
+    $organism_add_uri
+    $organism_autocomplete_uri => ''
 </%args>
 
-<%perl>
-
-my $uri_dir     = $c->get_conf('tempfiles_subdir') . '/tree_browser';
-my $tmp_dir     = $c->get_conf('basepath');
-my $sicache_dir = $c->get_conf('basepath')."/". $c->get_conf('tempfiles_subdir') . '/organism_data';
-
-my $speciesinfo_cache = Cache::File->new(
-                            cache_root=>$sicache_dir,
-                            default_expires =>'16000 sec'
-                        );
-
-for my $org_id (values %$sol) {
-    my $org = CXGN::Chado::Organism->new($schema, $org_id);
-    my $info_text="?"."Name: ".$org->get_species()."?"."Common Name: ".$org->get_group_common_name()."?"."Loci Num: ".$org->get_loci_count()."?"."Phenotype Count: ".$org->get_phenotype_count()."?"."Maps Available: ".$org->has_avail_map()."?"."Genome Information: ".$org->has_avail_genome()."?"."Library Num: ".(scalar $org->get_library_list())."";
-    $speciesinfo_cache->set($org_id, $info_text, '16000 sec');
-}
-
-</%perl>
-
-<& /util/import_javascript.mas,
-    classes=>["CXGN.Page.FormattingHelpers", "CXGN.Effects"]
-&>
-
 <& /page/page_title.mas, title=>"SOL100 sequencing project" &>
-<script language="javascript" type="text/javascript" src="/js/popup.js"></script>
-<div id="popup" style="visibility:hidden; position:absolute; top:0; left:0;">
-<table id="xtratbl">
-<tr><td id="org_title"><font color="#000000">Title Goes Here</font></td></tr>
-<tr><td id="org_content" bgcolor="#ffffff">
-Organism content goes here
 
-</td></tr></table>
+<& /util/import_javascript.mas, classes=>[qw[ CXGN.Page.FormattingHelpers  jquery jqueryui popup]] &>
+
+<script language="javascript">
+
+  jQuery(function() {
+     jQuery("#sol100_species").autocomplete({
+	 source: '<% $organism_autocomplete_uri %>'
+     });
+  });
+   	
+</script>
+
+<div class="page_introduction">
+  This page presents a summary of all species being sequenced as part
+  of the SOL100 sequencing project.
+
+%if ( $show_org_add_form ){
+ <style>
+  #sol100_add_organism {
+      width: 30em;
+      border: 2px solid #aaa;
+      margin-top: 2em;
+      padding: 0 0 1em 1em;
+      position: relative;
+  }
+
+  #sol100_add_organism div.boxtitle {
+      margin-left: -1em;
+      margin-top: -1.2em;
+      padding-left: 0.2em;
+      font-weight: bold;
+      color: #333;
+  }
+
+ </style>
+ <div id="sol100_add_organism">
+    <div class="boxtitle">Authorized user</div>
+    <h3>Add a SOL100 organism</h3>
+    <div>
+      <form method="POST" name="sol100_add_form" action="<% $organism_add_uri %>">
+        <input name="species" type="text" size="30" id="sol100_species" /><input type="submit" name="add_to_tree" onclick="add_to_tree()" value="Add to Tree" />
+        <div style="font-size: 80%; margin-left: 1em; color: #333">type an organism name</div>
+      </form>
+    </div>
+ </div>
+%}
+
 </div>
 
-
-<p>
-This page presents a summary of all species being sequenced as part of the SOL100 sequencing project
-</p>
- 
-
-%if ($sol) { 
-(click on the organism  name to see more details.) <br /><br />
-  <& /util/organism_tree.mas,
-    schema          => $schema,
-    root            => "Solanaceae",
-    species_hashref => $sol,
-    speciesinfo_cache => $speciesinfo_cache,
-    sicache_dir     => $sicache_dir,
-    uri_dir         => $uri_dir,
-    tmp_dir         => $tmp_dir,
-    image_only      => 1
+<&| /page/info_section.mas,
+  title         =>  'SOL100 Organisms',
+  subtitle      => 'click on an organism name to see more details ',
+  empty_message => 'Tree not available',
+  collapsible   => 1,
+  collapsed     => 0,
   &>
-%    } else {
-    <p>
-      No organisms found !
-      </p>
-%    }
+
+  <& /organism/tree.mas, organism_tree => $organism_tree &>
+
+  </div>
+</&>
+
+
+

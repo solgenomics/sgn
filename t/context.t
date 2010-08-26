@@ -29,11 +29,6 @@ can_ok( $schema, 'resultset', 'storage' );
 ok( $schema->storage->dbh->ping, 'dbic storage is connected' );
 is( search_path( $schema->storage->dbh), search_path( $c->dbc->dbh ), 'schema and dbc should have same search path' );
 
-# test jsan functions
-can_ok( $c->new_jsan, 'uris' );
-my $uris = $c->js_import_uris('CXGN.Page.Toolbar');
-cmp_ok( scalar(@$uris), '>=', 1, 'got at least 1 URI to include for CXGN.Page.Toolbar' );
-
 done_testing;
 
 

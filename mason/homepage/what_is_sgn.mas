@@ -26,7 +26,6 @@ $what
 
 <%perl>
 
-use CXGN::VHost;
 use CXGN::Page::Widgets qw/collapser/;
 
 my ($what_is_link, $what_is_content) = collapser({

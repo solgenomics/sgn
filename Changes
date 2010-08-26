@@ -1,0 +1,5 @@
+sgn-64.0
+
+  * tightened input validation for BLAST tool
+  * removed obsolete TIGR TC converter tool
+

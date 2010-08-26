@@ -22,9 +22,11 @@ my $mf  = CXGN::Cview::MapFactory->new($dbh);
 for my $k (keys %maps) {
     my $map = $mf->create( {map_id=>$k});
 
-    is(ref($map), $maps{$k}, "map type test");
-
-    is(scalar($map->get_chromosome_names()), 12, "chromosome count test");
+  SKIP: {
+        skip 'map could not be created', 2 unless $map;
+        is(ref($map), $maps{$k}, "map type test");
+        is(scalar($map->get_chromosome_names()), 12, "chromosome count test");
+    }
 }
 
 done_testing;

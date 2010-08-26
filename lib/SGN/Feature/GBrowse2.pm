@@ -5,7 +5,7 @@ SGN::Feature::GBrowse2 - subclass of L<SGN::Feature::GBrowse> that tweaks the ap
 =cut
 
 package SGN::Feature::GBrowse2;
-use MooseX::Singleton;
+use Moose;
 use namespace::autoclean;
 extends 'SGN::Feature::GBrowse';
 
@@ -126,8 +126,13 @@ ScriptAlias $cgi_url  "$cgibin"
 Alias        "$static_url/i/" "$tmp/images/"
 Alias        "$static_url"    "$static_dir"
 
+<Location "$static_url">
+    SetHandler default-handler\n"
+</Location>
 <Directory "$static_dir">
   Options -Indexes -MultiViews +FollowSymLinks
+  Order allow,deny
+  Allow from all
 </Directory>
 
 $runmode_conf

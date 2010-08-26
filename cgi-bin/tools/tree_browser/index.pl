@@ -365,8 +365,8 @@ if ($preset) {
 # get an upload object to upload a file, copy the
 # file to a temp location
 #
-#my $upload = Apache2::Request->new($request)->upload();
-my $upload = $page->get_apache_request()->upload($file);
+use CatalystX::GlobalContext qw( $c );
+my $upload = $c->req->upload($file);
 
 my ( $temp_fh, $temp_file ) =
   File::Temp::tempfile( "tree-XXXXXX", DIR => $temp_dir );

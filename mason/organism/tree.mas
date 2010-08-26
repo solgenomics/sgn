@@ -1,0 +1,48 @@
+<%doc>
+=head1 ARGS
+
+=head2 $organism_tree
+
+hashref of:
+
+  {
+     newick         => 'newick string',
+     png            => 'png data',
+     image_map      => 'html image map',
+     image_map_name => 'name of the image map for <img usemap="" ... />',
+  }
+
+=cut
+
+</%doc>
+<%args>
+  $organism_tree
+</%args>
+
+     <div id="popup" style="visibility:hidden; position:absolute; top:0; left:0;">
+       <table id="xtratbl">
+       <tr><td id="org_title"><font color="#000000">Title Goes Here</font></td></tr>
+       <tr><td id="org_content" bgcolor="#ffffff">
+           Organism content goes here
+       </td></tr></table>
+     </div>
+
+     <div class="organism_tree">
+
+% if( $organism_tree->{image_uri} && $organism_tree->{image_map} ) {
+
+%    if( $organism_tree->{newick} ) {
+       <form action="/tools/tree_browser/" method="post">
+          <input type="hidden" name="tree_string" value="<% $organism_tree->{newick} |h %>" />
+          <input type="submit" value="show in tree browser" />
+       </form>
+%    }
+
+       <img src="<% $organism_tree->{image_uri} %>" usemap="#<% $organism_tree->{image_map_name} |h %>" />
+       <% $organism_tree->{image_map} %>
+
+% } else {
+    <span class="ghosted">temporarily unavailable</span>
+% }
+
+     </div>

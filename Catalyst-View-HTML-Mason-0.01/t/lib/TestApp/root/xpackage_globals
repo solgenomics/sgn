@@ -1,0 +1,5 @@
+<%init>
+  eval{ $m->comp('globals') };
+  $m->print( $@ );
+  return;
+</%init>

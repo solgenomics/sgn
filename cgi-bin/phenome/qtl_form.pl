@@ -61,7 +61,7 @@ sub display {
     $page->jsan_use("MochiKit.DOM");
     $page->jsan_use("MochiKit.Async");
     $page->jsan_use("Prototype");
-    $page->jsan_use("jQuery");
+    $page->jsan_use("jquery");
 
     %args = $page->get_all_encoded_arguments();
     my $type = $args{type};

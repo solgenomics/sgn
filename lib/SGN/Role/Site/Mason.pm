@@ -2,6 +2,7 @@ package SGN::Role::Site::Mason;
 
 use Moose::Role;
 use namespace::autoclean;
+use File::Basename;
 use File::Path;
 use Path::Class;
 use HTML::Mason::Interp;
@@ -12,7 +13,10 @@ requires
        path_to
        get_conf
        tempfiles_subdir
+       setup_finalize
       );
+
+
 
 
 =head2 forward_to_mason_view
@@ -61,9 +65,17 @@ sub _build__mason_interp {
 
 sub forward_to_mason_view {
     my $self = shift;
-    my @args = @_;
-    $self->_trap_mason_error( sub { $self->_mason_interp->exec( @args ) } );
-    exit;
+    my ($comp,@args) = @_;
+
+    if( $ENV{SERVER_SOFTWARE} =~ /HTTP-Request-AsCGI/ ) {
+        my @args = @_;
+        $self->_trap_mason_error( sub { $self->_mason_interp->exec( @args ) } );
+        die ["EXIT\n",0]; #< weird thing for working with Catalyst's CGIBin controller
+    } else {
+        $self->stash->{template} = $comp;
+        %{$self->stash} = ( %{$self->stash}, @args );
+        $self->view('Mason')->process( $self );
+    }
 }
 
 
@@ -134,12 +146,18 @@ sub _trap_mason_error {
   Side Effects: dies on error
   Example :
 
+  This is run at app startup as a setup_finalize hook.
+
 =cut
+
+after 'setup_finalize' => \&clear_mason_tempfiles;
 
 sub clear_mason_tempfiles {
   my ( $self ) = @_;
 
-  rmtree( $_ ) for glob $self->path_to( $self->tempfiles_subdir('mason_cache_*') );
+  for my $temp ( $self->path_to( $self->tempfiles_subdir() )->children ) {
+      rmtree( "$temp" ) if -d $temp && basename("$temp") =~ /^mason_cache_/;
+  }
 }
 
 1;

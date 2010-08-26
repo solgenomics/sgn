@@ -3,7 +3,7 @@ use CGI qw();
 use CXGN::DB::DBICFactory;
 use Data::Dumper;
 
-our $c;
+use CatalystX::GlobalContext qw( $c );
 my $q = new CGI;
 my %args = (
     schema => CXGN::DB::DBICFactory->open_schema('Bio::Chado::Schema')
