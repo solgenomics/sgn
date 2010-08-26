@@ -14,13 +14,13 @@
 =cut
 
 use strict;
+use warnings;
 
 bulk_display->new->display_page;
 
 package bulk_display;
 use CGI ();
 use CXGN::Page;
-use CXGN::VHost;
 use CXGN::Page::FormattingHelpers qw/ html_break_string/;
 
 =head2 new
