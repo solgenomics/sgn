@@ -107,7 +107,7 @@ lower-abundance proteins.
 
 <tr>
 
-<td rowspan="3" style="padding:10px; padding-left:15px; vertical-align:middle; border-right:1px solid #999">
+<td rowspan="3" style="padding-right: 10px; vertical-align:middle; border-right:1px solid #999">
 
 <h3>Upcoming Meetings</h3>
 <ul class="conferences">
@@ -127,8 +127,8 @@ Experience in mass spectrometry and plant molecular biology would
 be an advantage, and good communication skills are critical. 
 Please contact Joss Rose if interested: 
 <a href="mailto:jr286@cornell.edu">jr286@cornell.edu</a><br />
-</td>
 
+</td>
 <td>
 <ul>
   <li>Joss Rose <a href="http://labs.plantbio.cornell.edu/rose/index.htm">[Lab]</a></li>
@@ -160,7 +160,7 @@ Links
 <td style="border-right:1px solid #999">
 <h3>Education, Training, and Outreach</h3>
 A number of <a href="training.pl">education and training opportunities</a> in plant proteomics and cell wall biology have been established.  <a href="outreach.pl">Internships are available.</a>
-<img style="display: block; margin: 1em auto; border: 1px solid black" src="/img/secretom/tomato_bath.png" />
+<img style="display: block; margin: 1em; border: 1px solid black" src="/img/secretom/tomato_bath.png" />
 </td>
 <td>
 foo
