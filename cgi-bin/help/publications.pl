@@ -1,10 +1,10 @@
 use strict;
-use CXGN::Tools::File;
+use warnings;
 use CXGN::Page;
-use CXGN::VHost;
 use File::Slurp qw/slurp/;
-my $vhost_conf=CXGN::VHost->new();
-my $documents_folder=$vhost_conf->get_conf('basepath').$vhost_conf->get_conf('documents_subdir');
+use CatalystX::GlobalContext '$c';
+
+my $documents_folder= $c->config->{'basepath'} . $c->config->{'documents_subdir'};
 my $page=CXGN::Page->new('SOL Publications','john');
 my $PUBLICATIONS=slurp("$documents_folder/SGNpublications.txt")||'';
 $page->header('SGN Publications','SGN Publications');
