@@ -34,6 +34,7 @@ Lukas Mueller (lam87@cornell.edu)
 =cut
     
 use strict;
+use warnings;
 
 use CXGN::DB::Connection;
 use CXGN::Page;
@@ -44,7 +45,6 @@ use CXGN::People::Forum;
 use CXGN::Contact;
 use CXGN::Page::FormattingHelpers qw/  page_title_html
                                      blue_section_html  /;
-use CXGN::VHost;my $vhost_conf=CXGN::VHost->new();
 
 my $SIZELIMIT = 10000; # the maximal number of bytes in a topic description.
 
