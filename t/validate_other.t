@@ -66,6 +66,7 @@ my %urls = (
         "Locus ajax form"                          => "/jsforms/locus_ajax_form.pl",
         "Locus editors"                            => "/phenome/editors_note.pl",
         "Phenome annot stats"                      => "/phenome/annot_stats.pl",
+        "Phenome claim ownership"                  => "/phenome/claim_locus_ownership.pl",
         "SNP search markers"                       => "/search/markers/snp.pl",
 
         'sol100 page'                              => '/organism/sol100/view',

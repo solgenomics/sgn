@@ -1,11 +1,11 @@
 
 use strict;
+use warnings;
 
 use CXGN::Page;
 use CXGN::Login;
 use CXGN::People;
 use CXGN::Contact;
-use CXGN::VHost;
 use CXGN::Phenome::Locus;
 use CXGN::DB::Connection;
 
@@ -36,8 +36,6 @@ HEREDOC
 my $username=$user->get_first_name()." ".$user->get_last_name();
 my $usermail=$user->get_private_email();
 my $replyto= 'sgn-feedback@sgn.cornell.edu';
-
-my $page=CXGN::Page->new("claim_locus_ownership.pl","Naama");
 
 
 my $subject="[Locus ownership] Request editor privileges for locus $locus_id";
