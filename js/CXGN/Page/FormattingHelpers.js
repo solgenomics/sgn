@@ -5,12 +5,7 @@
 *
 */
 
-if (typeof(JSAN) != 'undefined') {
-    JSAN.use("MochiKit.DOM", []);
-    JSAN.use("MochiKit.Iter", []);
-    JSAN.use("MochiKit.Signal", []);
-    //JSAN.use("MochiKit.Logging", []);
-}
+JSAN.use("jquery");
 
 var CXGN;
 if(!CXGN) CXGN = {};
@@ -85,44 +80,3 @@ CXGN.Page.FormattingHelpers.modesel_switch_highlight =  function(frombutton,tobu
   }
 };
 
-CXGN.Page.FormattingHelpers.set_up_all_optional_show =  function() {
-  //spice up all the optional show elements
-  MochiKit.Iter.forEach(  MochiKit.DOM.getElementsByTagAndClassName('a','html_optional_show'),
-			  function(mylink) {
-			    var mydiv = document.getElementById(mylink.id+'_optional_content');
-			    if( mydiv ) {
-			      var on_by_default = MochiKit.DOM.hasElementClass(mylink,'hos_default_show'); //true if this is open by default
-			      var os_active_class = MochiKit.DOM.getNodeAttribute(mylink,'class').split(' ').pop();
-			      //MochiKit.Logging.log('with class '+os_active_class);
-			      var visible_display = mydiv.style.display; //display to use when visible
-			      var toggle_my_content = function() {
-				if(mydiv.style.display == 'none') {
-				  mydiv.style.display = visible_display;
-				  MochiKit.DOM.addElementClass( mydiv, os_active_class);
-				  MochiKit.DOM.addElementClass( mylink,  os_active_class);
-				} else {
-				  mydiv.style.display = 'none';
-				  MochiKit.DOM.removeElementClass( mydiv, os_active_class);
-				  MochiKit.DOM.removeElementClass( mylink,  os_active_class);
-				}
-			      };
-			      MochiKit.Signal.connect(mylink, 'onclick', toggle_my_content);
-			      //the elements always start out shown for people that have no javascript
-			      //so turn them off here now if they're not on by default
-			      if( ! on_by_default) {
-				toggle_my_content();
-			      }
-			    }
-			  }
-			 )
-
-};
-
-
-//insert stuff here that need to be done to formattinghelpers elements on document load
-MochiKit.DOM.addLoadEvent(function() {
-
-	//set up all the elements made by html_optional_show
-	CXGN.Page.FormattingHelpers.set_up_all_optional_show();
-
-});

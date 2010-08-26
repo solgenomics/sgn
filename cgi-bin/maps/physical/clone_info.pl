@@ -49,7 +49,7 @@ use SGN::Controller::Clone::Genomic;
 # have under catalyst
 my $self = SGN::Controller::Clone::Genomic->new;
 
-my %link_pages = ( marker_page        => '/search/markers/markerinfo.pl?marker_id=',
+our %link_pages = ( marker_page        => '/search/markers/markerinfo.pl?marker_id=',
 		   map_page           => '/cview/map.pl?map_id=',
 		   overgo_report_page => '/maps/physical/overgo_stats.pl',
 		   agi_page           => 'http://www.genome.arizona.edu/fpc/tomato/',

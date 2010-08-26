@@ -236,18 +236,34 @@ sub page_title_html {
 
 sub html_optional_show {
     my ( $itemid, $itemtitle, $itemHTML, $default_show_item, $class_name ) = @_;
-    $class_name ||= 'optional_show';
 
-    $default_show_item = $default_show_item ? ' hos_default_show' : '';
+    return CXGN::MasonFactory->bare_render( '/page/optional_show.mas',
+        id => $itemid,
+        title => $itemtitle,
+        content => $itemHTML,
+        default_show => $default_show_item,
+        class => $class_name,
+    );
 
-    # NOTE: most of the action happens in FormattingHelpers.js
+    $class_name &&= qq| class="$class_name"|;
+    my $disabled = $default_show_item ? 'disabled: true,' : '';
 
-    return <<END_HTML;
-<a name="$itemid" id="$itemid" class="html_optional_show $class_name$default_show_item ${class_name}_active">$itemtitle</a>
-<div id="${itemid}_optional_content" class="html_optional_show $class_name ${class_name}_active">
-   $itemHTML
+    return <<"";
+<script type="text/javascript">
+	jQuery(function() {
+		jQuery("#$itemid").accordion({
+                        $disabled
+			collapsible: true
+		});
+	});
+</script>
+<div id="$itemid" $class_name>
+    <h3><a href="#">$itemtitle</a></h3>
+    <div>
+       $itemHTML
+    </div>
 </div>
-END_HTML
+
 }
 
 =head2 html_alternate_show
