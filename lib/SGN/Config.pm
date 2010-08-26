@@ -77,6 +77,7 @@ my $defaults =
              comp_root => '__path_to(mason)__',
          },
          globals => [qw[ $c ]],
+         template_extension => '.mas',
      },
 
      'View::JavaScript' => {
