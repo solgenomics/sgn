@@ -30,13 +30,6 @@ use File::Path ();
 use JSAN::ServerSide;
 use CatalystX::GlobalContext '$c';
 
-my @global_js = qw(
-		   CXGN.Effects
-		   CXGN.Page.FormattingHelpers
-		   CXGN.UserPrefs
-		  );
-
-
 # =head1 OBJECT METHODS
 
 # =head2 new

@@ -41,7 +41,7 @@
 </table>
 </div>
 
-<& /util/import_javascript.mas, classes => ['sgn', 'wz_tooltip'] &>
+<& /util/import_javascript.mas, classes => [qw[ sgn wz_tooltip CXGN.Effects CXGN.Page.FormattingHelpers CXGN.UserPrefs ]] &>
 
 % if( eval{ $c->get_conf('production_server') } ) {
    <!-- Google Analytics Code -->
