@@ -39,7 +39,7 @@ The proteome of the plant cell wall is <em>critical</em> to our understanding of
 	">
 
 
-<b>XXXXX Proteomic analysis of cellular compartments</b> provides essential insight into the subcellular location of a specific protein or protein complex; a valuable step towards understanding protein function and something that cannot be accurately predicted from primary sequence. Localization information also helps in the identification of protein interactions and provides a means to assess targeting, trafficking and residence in multiple compartments.  Moreover, the analysis of a subcellular proteome has the advantage of requiring "biological pre-fractionation," substantially enhancing the detection of lower abundance proteins.
+<b>Proteomic analysis of cellular compartments</b> provides essential insight into the subcellular location of a specific protein or protein complex; a valuable step towards understanding protein function and something that cannot be accurately predicted from primary sequence. Localization information also helps in the identification of protein interactions and provides a means to assess targeting, trafficking and residence in multiple compartments.  Moreover, the analysis of a subcellular proteome has the advantage of requiring "biological pre-fractionation," substantially enhancing the detection of lower abundance proteins.
 
 <br /><br />
 <b>The purpose of this NSF-funded project</b> is to catalog and study <a href="proteome.pl">the dynamic properties of the cell wall proteome, or secretome</a>, using tomato (<i>Solanum lycopersicum</i>) as a model system.
@@ -57,7 +57,7 @@ This project to characterize the plant secretom includes the following goals:-->
 <ol>
 <li><b>Identify extracellular proteins:</b><ul>
 <li><b>Extraction and anlysis of enriched cell wall protein extracts.</b>  Techniques have been developed to isolate extracellular proteins from various plant tissues, whilst minimizing contamination with intracellular proteins.  Post-translational modification (e.g. glycosylation and phosphorylation) of proteins in these extracts will also be studied.
-<li><b>Computational prediction of secreted proteins.</b>  <a href="prediction.pl">Bioinformatics tools are under development to allow a more accurate <em>in silico</em> prediction of the secretome.</a>
+<li><b>Computational prediction of secreted proteins.</b>  We have developed the <a href="secretary_predictor.pl">SecreTary bioinformatics tool</a> for accurate <em>in silico</em> prediction of the secretome.
 <li><b>Functional screens for secreted proteins.</b>  We have adopted a number of high throughput functional approaches to identify secreted proteins from a range of eukaryotes, including an enhanced yeast secretion trap (YST) screen and the NIP assay.
 </ul>
 
