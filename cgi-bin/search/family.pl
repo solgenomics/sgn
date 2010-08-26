@@ -1,5 +1,6 @@
 #!/usr/bin/perl -w
 use strict;
+use warnings;
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw/  page_title_html
 									   info_section_html
@@ -8,6 +9,7 @@ use CXGN::DB::Connection;
 use CXGN::Phylo::Alignment;
 use CXGN::Tools::Identifiers;
 use CXGN::Tools::WebImageCache;
+use CatalystX::GlobalContext '$c';
 use File::Temp;
 
 our $page = CXGN::Page->new( "SGN Gene Family", "Chenwei Lin");
@@ -246,8 +248,7 @@ else {
 	$cache->set_key($i_value . '_' . $family_nr);
 	$cache->set_expiration_time(1);
 	$cache->set_map_name("family_alignment_tree");
-	my $vhost_conf = CXGN::VHost->new();
-	$cache->set_basedir($vhost_conf->get_conf("basepath"));
+	$cache->set_basedir($c->config->{"basepath"});
 	$cache->set_temp_dir("/documents/tempfiles/family");
 	if(!$cache->is_valid()){
 		my $treealign = undef;

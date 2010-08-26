@@ -1,12 +1,12 @@
 #!/usr/bin/perl -w
 use strict;
+use warnings;
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw/blue_section_html page_title_html html_break_string/;
 use CXGN::Chromatogram;
 use URI::Escape;
-use CXGN::VHost;
+use CatalystX::GlobalContext '$c';
 use CXGN::DB::Connection;
-my $vhost_conf=CXGN::VHost->new();
 
 my %current_unigene = ();
 my %previous_unigene = ();
@@ -378,7 +378,7 @@ if ($read_id && $readq->execute($read_id) && $readq->rows>0) {
   my $tmp_tracename;
   if($tmp_tracename=CXGN::Chromatogram::has_abi_chromatogram($read_id))
   {
-      my $path_to_remove=$vhost_conf->get_conf('basepath').$vhost_conf->get_conf('tempfiles_subdir').'/traceimages/';
+      my $path_to_remove=$c->config->{'basepath'}.$c->config->{'tempfiles_subdir'}.'/traceimages/';
       $tmp_tracename=~s/$path_to_remove//;
       my $file=URI::Escape::uri_escape("$tmp_tracename");
       $view_link=" [<a href=\"/tools/trace_view.pl?file=$file&temp=yes\">View</a>]";
