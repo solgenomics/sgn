@@ -6,31 +6,27 @@ use CXGN::Page;
 use CXGN::DB::Connection;
 use CXGN::Login;
 use CXGN::People;
-use CXGN::VHost;
 use CXGN::Tools::WebImageCache;
 use CXGN::Phenome::Locus;
 use GD::Graph::lines; 
 use GD::Graph::linespoints; 
-
 use GD::Graph::area;
 use GD::Graph::bars;
+use CatalystX::GlobalContext '$c';
 
 use CXGN::Page::FormattingHelpers qw/info_section_html
                                      page_title_html
-				     columnar_table_html
+                                     columnar_table_html
                                      info_table_html
                                      html_optional_show
                                      html_alternate_show
                                     /;
-#use base qw /CXGN::Page::WebForm/;
 my $dbh = CXGN::DB::Connection->new();
 my $logged_sp_person_id = CXGN::Login->new($dbh)->verify_session();
 
 my $page = CXGN::Page->new("Phenome annotation stats","Naama");
 
 $page->header();
-#$page->jsan_use("CXGN.Calendar", "CXGN.Phenome.Locus"); 
-
 
 my $form = CXGN::Page::WebForm->new();
 
@@ -43,17 +39,12 @@ print info_section_html(title   => 'Locus stats',
 			    contents => $image,
 			);
 
-
-
 $page->footer();
-
-
 
 sub get_graph {
     my @stats=@_;
-    my $vh = CXGN::VHost->new();
-    my $basepath = $vh->get_conf("basepath");
-    my $tempfile_dir = $vh->get_conf("tempfiles_subdir");
+    my $basepath = $c->config->{"basepath"};
+    my $tempfile_dir = $c->config->{"tempfiles_subdir"};
     my $cache = CXGN::Tools::WebImageCache->new(1);
     $cache->set_basedir($basepath);
     $cache->set_temp_dir($tempfile_dir."/temp_images");
