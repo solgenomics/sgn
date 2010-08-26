@@ -46,8 +46,6 @@ use CXGN::Contact;
 use CXGN::Page::FormattingHelpers qw/  page_title_html
   blue_section_html  /;
 
-my $SIZELIMIT = 10000;    # the maximal number of bytes in a topic description.
-
 my $dbh = CXGN::DB::Connection->new();
 my $page = CXGN::Page->new( "SGN Forum | Configure topic", "Lukas" );
 
@@ -89,19 +87,19 @@ if ( $action eq "edit" ) {
     }
     if ($subject)    { $topic->set_topic_name($subject); }
     if ($sort_order) { $topic->set_topic_sort_order($sort_order); }
-    show_form( $dbh, $topic, "review", $user );
+    show_form( $dbh, $topic, "review", $user, $page );
 }
 elsif ( $action eq "delete" ) {
-    delete_topic($topic);
+    delete_topic($topic, $page);
 }
 elsif ( $action eq "confirm_delete" ) {
-    confirm_delete_topic($topic);
+    confirm_delete_topic($topic, $page);
 }
 elsif ( $action eq "review" ) {
     $topic->set_topic_description($topic_description);
     $topic->set_topic_name($subject);
     $topic->set_topic_sort_order($sort_order);
-    review_topic($topic);
+    review_topic($topic, $page);
 }
 elsif ( $action eq "save" ) {
     if ($topic_description) {
@@ -113,20 +111,18 @@ elsif ( $action eq "save" ) {
     if ($sort_order) {
         $topic->set_topic_sort_order($sort_order);
     }
-    save_topic( $topic, $user );
+    save_topic( $topic, $user, $page );
 }
 else {
 
     #
     # the action is "new" or anything else.
     #
-    show_form( $dbh, $topic, "review", $user );
+    show_form( $dbh, $topic, "review", $user, $page );
 }
 
 sub save_topic {
-
-    my $topic = shift;
-    my $user  = shift;
+    my ($topic,$user,$page) = @_;
 
     # don't clobber the old person id if this is an edit.
     #
@@ -156,7 +152,7 @@ HTML
 }
 
 sub delete_topic {
-    my $topic            = shift;
+    my ($topic,$page) = @_;
     my $topic_id         = $topic->get_forum_topic_id();
     my $topic_name       = $topic->get_topic_name();
     my $topic_post_count = $topic->get_post_count();
@@ -194,7 +190,7 @@ HTML
 }
 
 sub confirm_delete_topic {
-    my $topic = shift;
+    my ($topic,$page) = @_;
 
     my $topic_name   = $topic->get_topic_name();
     my $delete_count = ( $topic->delete() - 1 );
@@ -213,11 +209,12 @@ HTML
 }
 
 sub review_topic {
-    my $topic = shift;
+    my ($topic,$page) = @_;
 
     my $topic_name = $topic->get_topic_name();
     my $topic_desc = $topic->get_topic_description();
     my $topic_id   = $topic->get_forum_topic_id();
+    my $sort_order = $topic->get_sort_order();
 
     my $display_topic_desc = $topic->format_post_text($topic_desc);
 
@@ -272,10 +269,7 @@ HTML
 }
 
 sub show_form {
-    my $dbh    = shift;
-    my $topic  = shift;
-    my $action = shift;
-    my $user   = shift;
+    my ($dbh, $topic, $action, $user, $page) = @_;
 
     my $subject = $topic->get_topic_name();
     if ( !$subject ) { $subject = "new topic"; }
@@ -307,7 +301,6 @@ sub show_form {
 	HTML tags are not supported. You can add links to your post by using square brackets as follows:<br />
 	[url]sgn.cornell.edu[/url].
 	This will appear as <a href="http://sgn.cornell.edu">sgn.cornell.edu</a> in the post.<br /><br />
-	Size limit for a topic description is $SIZELIMIT characters, including spaces and punctuation.<br /><br />
 	<b>Note:</b> this service is provided as a courtesy. SGN reserves the right to delete topics and posts at any time for any reason.
 	<br /><br />
 	<input type="hidden" name="action" value="$action" />
