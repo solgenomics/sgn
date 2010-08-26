@@ -37,24 +37,49 @@ Projects
 
 <tr>
 
-<td style="width: 375px; padding: 16px 10px 15px 5px">
+<td style="width: 375px; padding: 0 10px 15px 5px">
 
+<p>
+The <strong>plant cell wall/apoplast</strong> plays a fundamental role
+in many aspects of growth, development, and responses to environmental
+conditions and assault by pathogens and insects. It is therefore not
+surprising that a substantial portion of the plant proteome is
+localized in the cell wall/apoplast. However, while major initiatives
+are now underway to map the proteomes of many plant organelles, such
+as the chloroplast, the cell wall proteome, or "secretome", is far
+less well characterized than those of other subcellular compartments.
+</p>
 
-<b>Proteomic analysis of cellular compartments</b> provides essential insight into the subcellular location of a specific protein or protein complex; a valuable step towards understanding protein function and something that cannot be accurately predicted from primary sequence. Localization information also helps in the identification of protein interactions and provides a means to assess targeting, trafficking and residence in multiple compartments.  Moreover, the analysis of a subcellular proteome has the advantage of requiring "biological pre-fractionation," substantially enhancing the detection of lower abundance proteins.
+<p>
+<strong>What is the ""secretome"?</strong> The term "secretome" is
+generally used to refer to the population of proteins that are
+secreted outside the plasma membrane of a cell, but can also be used
+to describe the subset of the proteome that enter the "secretory
+pathway".
+</p>
 
-<br /><br />
+<p>
 <b>The purpose of this NSF-funded project</b> is to catalog and study <a href="proteome.pl">the dynamic properties of the cell wall proteome, or secretome</a>, using tomato (<i>Solanum lycopersicum</i>) as a model system.
-This will be achieved by coupling isotopic peptide labeling and shotgun mass spectrometry-based sequencing of highly enriched cell wall protein extracts with a range of newly developed functional screens and bioinformatics tools. These approaches will then be applied to characterize quantitative and qualitative changes in the wall proteome during fruit ripening and induction of defense responses. Additionally, a coordinated study will be performed of the tomato fruit secretome using protein expression profiling and microarray-based transcriptomics in wild type and ripening mutant fruit. This study in tomato will lay the foundation for a long-term exploration of the diversity of cell wall proteomes in a range of plant species.
+</p>
+
+
+<p>
+<strong>Why study the "secretome"?</strong> Proteomic analysis of cellular
+compartments reveals the subcellular locations of a specific protein,
+or protein complex, which in turn can be a valuable step towards
+understanding protein function. Localization information also helps in
+the identification of protein interactions and targeting pathways, and
+peptide motifs and structural signatures that can direct proteins to
+various cellular locations. In addition the analysis of a subcellular
+proteome has the advantage of requiring "biological
+pre-fractionation," which can substantially enhance the detection of
+lower-abundance proteins.
+</p>
 
 <p><strong>All secretom datasets can be downloaded from the <a href="ftp://ftp.sgn.cornell.edu/secretom/">SGN FTP site</a>.</strong></p>
 
 </td>
-
-
-
 <td style="padding-right:15px;border-left:1px solid #999;">
-<!--
-This project to characterize the plant secretom includes the following goals:-->
 <ol>
 <li><b>Identify extracellular proteins:</b><ul>
 <li><b>Extraction and anlysis of enriched cell wall protein extracts.</b>  Techniques have been developed to isolate extracellular proteins from various plant tissues, whilst minimizing contamination with intracellular proteins.  Post-translational modification (e.g. glycosylation and phosphorylation) of proteins in these extracts will also be studied.
@@ -91,37 +116,32 @@ This project to characterize the plant secretom includes the following goals:-->
 		border-right:1px solid #999">
 
 <b>Upcoming Meetings</b><br />
-<a href="http://www.sol2009.org/">Solanaceae 2009</a> Dehli, India, Nov 8-13<br />
+<a href="http://www.sol2010.org/">SOL2010</a> Dundee, Scotland, UK, Sept. 5-9, 2010
 <br />
-<b>Past Meetings</b><br />
-
-<a href="http://www.biotech.kth.se/woodbiotechnology/PPW">2008 Plant Polysaccharide Workshop</a> Aug 3-5, Sigtuna, Sweden<br />
-<a href="http://www.aspb.org/">ASPB 2008</a> June 26-July 1, Merida, Mexico<br />
-<a href="http://www.asms.org/">ASMS meeting</a> June 1-5, Denver, CO<br />
 <br />
 
-<br />
 <b>Jobs</b><br />
 The Rose lab is currently seeking a postdoctoral research associate with 
 an interest in plant proteomics, or fruit development and ripening. 
 Experience in mass spectrometry and plant molecular biology would 
 be an advantage, and good communication skills are critical. 
 Please contact Joss Rose if interested: 
-<a href="mailto:jr286\@cornell.edu">jr286\@cornell.edu</a><br />
+<a href="mailto:jr286@cornell.edu">jr286@cornell.edu</a><br />
 <br />
 <!-- b>Workshop</b><br />
 The annual summer proteomics workshop will be held in July 2008. 
 Please contact Joss Rose if interested : 
-<a href="mailto:jr286\@cornell.edu">jr286\@cornell.edu</a><br / -->
+<a href="mailto:jr286@cornell.edu">jr286@cornell.edu</a><br / -->
 
 </td>
 
 <td>
 <ul>
-<li>Joss Rose <a href="http://labs.plantbio.cornell.edu/rose/index.htm">[Lab]</a>
-<li>Ted Thannhauser <a href="http://www.ars.usda.gov/PandP/docs.htm?docid=9634">[USDA Personal]</a>
-<li>Jim Giovannoni <a href="http://www.bti.cornell.edu/page.php?id=308">[BTI Personal]</a>
-<li>Lukas Mueller <a href="http://www.sgn.cornell.edu/about">[SGN]</a>
+  <li>Joss Rose <a href="http://labs.plantbio.cornell.edu/rose/index.htm">[Lab]</a></li>
+  <li>Ted Thannhauser <a href="http://www.ars.usda.gov/PandP/docs.htm?docid=9634">[USDA Personal]</a></li>
+  <li>Jim Giovannoni <a href="http://www.bti.cornell.edu/JimGiovannoni.php?page=Research#page=ResearchSummary">[BTI Personal]</a></li>
+  <li>Lukas Mueller <a href="http://solgenomics.net/about">[SGN]</a></li>
+  <li>Zhangjun Fei <a href="http://www.bti.cornell.edu/ZhangjunFei.php?page=Research#page=ResearchSummary">[BTI Personal]</a></li>
 </ul>
 </td>
 </tr>
@@ -157,7 +177,7 @@ External Links</span></td>
 </span><br /><br /> This project and database are funded by National Science Foundation Grant 
 <a href="http://nsf.gov/awardsearch/showAward.do?AwardNumber=0606595">0606595</a>.
 <br /><br />
-For questions and comments regarding the SecreTom project, please contact Jocelyn Rose at <a href="mailto:jr286\@cornell.edu">jr286\@cornell.edu</a>
+For questions and comments regarding the SecreTom project, please contact Jocelyn Rose at <a href="mailto:jr286@cornell.edu">jr286@cornell.edu</a>
 </td>
 <td>
 <a style="padding:0px" href="http://www.nsf.gov"><img border="0" src="/documents/img/secretom/NSF_Logo.jpg" width="100" height="100"/></a>
