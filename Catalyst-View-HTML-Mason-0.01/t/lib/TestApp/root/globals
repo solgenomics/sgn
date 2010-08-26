@@ -1,1 +1,0 @@
-Globals:<% join(',', $maus, @horde, %stamm ) %>

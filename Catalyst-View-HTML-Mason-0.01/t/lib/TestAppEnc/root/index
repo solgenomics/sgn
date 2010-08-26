@@ -1,2 +1,0 @@
-<% $affe %>
-<% $ctx->stash->{affe} %>
