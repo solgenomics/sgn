@@ -24,6 +24,21 @@ a[href^="http:"] {
   background: none;
 }
 EOS
+
+print<<END_STLOGO;
+<div style="width:100%; color:#303030; font-size: 1.1em; text-align:left;">
+<center>
+<img style="margin-bottom:10px" src="/documents/img/secretom/secretom_logo_smaller.jpg" alt="secretom logo" />
+</center>
+END_STLOGO
+
+print<<SECRETARY_TITLE;
+<center>
+<font size="+3"><b>SecreTary</b></font> 
+</center>
+SECRETARY_TITLE
+
+
 my $q = CGI->new();
 
 my @STAarray = ();
@@ -65,29 +80,52 @@ my $STApreds = $STSobj->Categorize( \@STAarray );
 
 my $result_string   = "";
 my $count_pass      = 0;
-my $show_max_length = 60;
+my $show_max_length = 62;
 foreach (reverse @$STApreds) {
     my $STA = $_->[0];
-    my $prediction = substr( $_->[1] . "   ", 0, 3 );
+    my $prediction = $_->[1];
+    $prediction =~ /\((.*)\)\((.*)\)/;
+    my ($soln1, $soln2) = ($1, $2);
+    my $prediction = substr($prediction, 0, 3 );
     $count_pass++ if ( $prediction eq "YES" );
-    my $id = substr( $STA->get_sequence_id() . "                    ", 0, 20 );
+
+    my $id = substr( $STA->get_sequence_id() . "                    ", 0, 15 );
     my $sequence = $STA->get_sequence();
-    if ( length $sequence > $show_max_length ) {
-        $sequence = substr( $sequence, 0, $show_max_length ) . "...";
+    my $orig_length = length $sequence;
+    $sequence = padtrunc($sequence, $show_max_length);
+    my ($hl_sequence, $solution) = highlight_region($sequence, $soln1, $soln2);
+  #  print "solution: $solution \n";
+    my ($score, $start, $end) = ('        ','      ','      ');
+ my $tmh_l = '    ';
+    if($solution =~ /^(.*),(.*),(.*)/){
+	($score, $start, $end) = ($1, $2, $3);
+ $score = padtrunc($score, 8);
+ $start = padtrunc($start, 6);
+ $tmh_l = padtrunc($end-$start+1, 4);
     }
-    else {
-        $sequence .= "                                                              ";    #pad
-        $sequence = substr( $sequence, 0, $show_max_length + 3 );
-    }
-    $result_string .= "$prediction   $id   $sequence\n";
+    $hl_sequence .= ($orig_length > length $sequence)? '...': '   ';
+ 
+  #  print "score: $score \n padtrunc score [", padtrunc($score, 5), "]\n";
+   
+   
+   
+# $result_string .= "$id   $prediction   $soln1   $sequence\n";
+    $result_string .= "$id  $prediction    $score $start $tmh_l  $hl_sequence\n";
+  #  print '<FONT style="BACKGROUND-COLOR: yellow">next </FONT>week.';
+
 }
-print '<pre>', "SecreTary predictions:\n\n";
+print<<XX;
+<font size="+1">SecreTary SP Predictions</font></br>
+XX
+
+print '<pre>', "Identifier       SP     Score  Start  Length  Sequence 10        20        30        40        50        60\n";
+print "                                                       |         |         |         |         |         |\n";
 print $result_string;
 print "\n$count_pass secreted sequences predicted out of ", scalar @$STApreds,
   ".\n";
 print '</pre>';
 
-print qq|<a href="T1.pl">Return to SecreTary input page</a><br /><br />|;
+print qq|<a href="secretary_predictor.pl">Return to SecreTary input page</a><br /><br />|;
 
 $page->footer();
 
@@ -141,4 +179,44 @@ sub process_input {
     }
 
     return \%id_sequence_hash;
+}
+
+sub padtrunc{ #return a string of length $length, truncating or
+# padding with spaces as necessary
+    my $str = shift;
+    my $length = shift;
+    while(length $str < $length){ $str .= "                    "; }
+    return substr($str, 0, $length);
+}
+
+sub highlight_region{ # generate html for a string with a region of it highlighted
+    my $seq = shift;
+    my $soln1 = shift;
+    my $soln2 = shift;
+    my $soln = $soln1;
+    my $color = "yellow";
+    my @x = split(",", $soln1);
+    if($x[0] < $min_tmpred_score1){
+	$color = "yellow";
+	$soln = $soln2;
+    }    $soln =~ /(.*),(.*),(.*)/;
+ #   print "soln:[$soln]\n";
+    my $score = $1;
+    my $hl_first = $2; # 1 based
+    my $hl_last = $3;
+    my $len = length $seq;
+ #   print "soln: $score,$hl_first,$hl_last \n";
+# pre tmh 1 to $hl_first-1, or, 0 to $hl_first-2;  length = $hl_first-1
+# tmh   $hl_first to $hl_last, or $hl_first-1 to $hl_last-1; L = $hl_last-$hl_first+1
+# post tmh $hl_last+1 to $len, or $hl_last to $len-1; L = $len - $hl_last
+    return $seq if($score < $min_tmpred_score2);
+    return $seq if($score eq '-1');
+    my $html_str = substr($seq, 0, $hl_first - 1);
+    if(length($seq) >= $hl_first){
+    $html_str .= '<FONT style="BACKGROUND-COLOR: ' . "$color" . '">' . substr($seq, $hl_first-1, $hl_last-$hl_first+1) . '</FONT>';
+}
+if($len > $hl_last){
+    $html_str .= substr($seq, $hl_last, $len - $hl_last);
+}
+    return ($html_str, $soln);
 }
