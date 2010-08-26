@@ -42,6 +42,6 @@ test_subsections();
 
 sub test_subsections {
     for my $subsection (@subsections) {
-        $mech->content_contains($subsection);
+        $mech->content_contains($subsection, "$url contains $subsection");
     }
 }
