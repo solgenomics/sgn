@@ -126,8 +126,13 @@ ScriptAlias $cgi_url  "$cgibin"
 Alias        "$static_url/i/" "$tmp/images/"
 Alias        "$static_url"    "$static_dir"
 
+<Location "$static_url">
+    SetHandler default-handler\n"
+</Location>
 <Directory "$static_dir">
   Options -Indexes -MultiViews +FollowSymLinks
+  Order allow,deny
+  Allow from all
 </Directory>
 
 $runmode_conf
