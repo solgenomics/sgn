@@ -1,12 +1,3 @@
-use strict;
-use CXGN::Tools::File;
-use CXGN::Page;
-use CXGN::VHost;
-
-my $vhost_conf=CXGN::VHost->new();
-my $page=CXGN::Page->new('Secretom','john');
-$page->header('Secretom');
-print<<END_HTML;
 <div style="width:100%; color:#303030; font-size: 1.1em; text-align:left;">
 
 <center>
@@ -20,25 +11,33 @@ The proteome of the plant cell wall is <em>critical</em> to our understanding of
 </span>
 -->
 
+<style>
+
+td.header {
+  text-align: center;
+  border-right: 1px solid black;
+  color: white;
+  font-size: 50px;
+  text-align: center;
+  vertical-align: middle;
+  height: 90px;
+}
+
+</style>
 
 <table width="750" style="border-collapse:collapse;">
 <tr style="background-color:black">
-<td style="text-align:center;border-right:1px solid black">
-<img src="/documents/img/secretom/summary_header_thin.jpg" />
+<td class="header" style="background: black url(/documents/img/secretom/summary_header_thin.jpg) no-repeat left top">
+Summary
 </td>
-<td style="text-align:center">
-<img src="/documents/img/secretom/objectives_header_thin.jpg" /> 
+<td class="header" ""style="background: url(/documents/img/secretom/objectives_header_thin.jpg) no-repeat left top">
+Projects
 </td>
 </tr>
 
 <tr>
 
-<td width="375" style="
-	padding:5px;
-	padding-right:10px;
-	padding-top:16px;
-	padding-bottom:15px;
-	">
+<td style="width: 375px; padding: 16px 10px 15px 5px">
 
 
 <b>Proteomic analysis of cellular compartments</b> provides essential insight into the subcellular location of a specific protein or protein complex; a valuable step towards understanding protein function and something that cannot be accurately predicted from primary sequence. Localization information also helps in the identification of protein interactions and provides a means to assess targeting, trafficking and residence in multiple compartments.  Moreover, the analysis of a subcellular proteome has the advantage of requiring "biological pre-fractionation," substantially enhancing the detection of lower abundance proteins.
@@ -164,7 +163,3 @@ For questions and comments regarding the SecreTom project, please contact Jocely
 <a style="padding:0px" href="http://www.nsf.gov"><img border="0" src="/documents/img/secretom/NSF_Logo.jpg" width="100" height="100"/></a>
 </td></tr></table>
 </div>
-
-END_HTML
-
-$page->footer();
