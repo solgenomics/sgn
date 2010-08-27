@@ -1,5 +1,7 @@
 
 use strict;
+use warnings; 
+
 
 my $allele_synonym_detail_page = CXGN::Phenome::AlleleSynonymDetailPage->new();
 
@@ -51,7 +53,7 @@ sub store {
     
     
     my $not_new_allele_synonym = "";
-  #  print STDERR "*** STORING ALLELE SYNONYM ***\n";
+    #  print STDERR "*** STORING ALLELE SYNONYM ***\n";
     my $existing_id = CXGN::Phenome::AlleleSynonym::exists_allele_synonym_named($self->get_dbh(), $args{allele_alias}, $args{allele_id});
     if ($existing_id) { 
 	print STDERR "**Allele Synonym already exists...\n";
@@ -68,13 +70,13 @@ sub store {
     
     my $allele;
     my $image;
-    my $allele_id= $args{allele_id};
-    if (exists($args{allele_id}) && defined($args{allele_id})) { 
+    my $allele_id= $self->get_object()->get_allele_id();
+    if ( $allele_id ) { 
 	$allele = CXGN::Phenome::Allele->new($self->get_dbh(), $args{allele_id});
 	$allele->add_allele_aliases($allele_synonym);
+	
+	$self->get_page()->client_redirect("/phenome/allele_synonym.pl?allele_id=$allele_id&action=new");
     }
-    $self->get_page()->client_redirect("/phenome/allele_synonym.pl?allele_id=$allele_id&action=new");
-    
 }
 
 sub delete_dialog { 
