@@ -1,5 +1,6 @@
 package CXGN::Page::Secretary;
 use strict;
+use warnings;
 
 use CXGN::Login;
 use CXGN::People;

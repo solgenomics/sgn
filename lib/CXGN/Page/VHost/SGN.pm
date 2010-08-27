@@ -1,5 +1,6 @@
 package CXGN::Page::VHost::SGN;
 use strict;
+use warnings;
 
 use CGI qw/ -compile :standard /;
 
@@ -54,7 +55,7 @@ sub bar_top {
     my $welcome  = '';
     my $login_logout = '';
 
-    our $vhost ||= CXGN::VHost->new;
+    our $vhost ||= SGN::Context->new;
     if ($vhost->get_conf('is_mirror')) { 
 	$login_logout = qq | <a class="ghosted" style="text-decoration: none" title="Mirror site does not support login">log in</a> \| <a class="ghosted" style="text-decoration: none" title="Mirror site does not support new user">new user</span> |; 
     }
