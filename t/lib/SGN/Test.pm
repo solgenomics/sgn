@@ -100,7 +100,7 @@ sub validate_urls {
         skip 'Skipping leak tests', 1 if $ENV{SGN_SKIP_LEAK_TEST};
         # give some time for db connections to close
         sleep 1;
-        cmp_ok(db_connections(),'<=',$conns, "did not leak any datbase connections on $url");
+        cmp_ok(db_connections(),'<=',$conns, "did not leak any database connections on $url");
     }
     $dump_tempdir and diag "failing output dumped to $dump_tempdir";
 }
