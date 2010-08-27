@@ -42,7 +42,7 @@ Plus the following:
 package SGN::Test::WWW::Mechanize;
 use Moose;
 
-use SGN;
+BEGIN { $ENV{CATALYST_SERVER} ||= $ENV{SGN_TEST_SERVER} }
 
 use CXGN::People::Person;
 use CXGN::People::Login;
