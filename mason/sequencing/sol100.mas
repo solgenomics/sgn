@@ -79,7 +79,6 @@ sol100.mas - SGN page for sol100 project organism data overview in a tree format
 
   <& /organism/tree.mas, organism_tree => $organism_tree &>
 
-  </div>
 </&>
 
 
