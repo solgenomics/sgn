@@ -308,14 +308,6 @@ sub tempfiles_subdir {
 }
 
 
-# =head2 get_conf
-
-#   convenience method, forwards to to CXGN::VHost::get_conf();
-
-#   equivalent to doing CXGN::VHost->new->get_conf(@_);
-
-# =cut
-
 sub get_conf {
   my $self = shift;
   return $c->get_conf(@_);
