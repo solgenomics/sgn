@@ -19,6 +19,9 @@
 ul.conferences {
   padding: 0;
 }
+ul.conferences li {
+  padding-bottom: 1em;
+}
 ul.conferences li, ul.people li {
   list-style: none;
 }
@@ -48,7 +51,9 @@ a.project:hover {
 
 </style>
 
-<div style="width: 350px; padding-right: 3px; float: left; border-right: 2px solid #666"><!-- left column -->
+<table>
+<tr>
+<td style="width: 350px; padding-right: 3px; border-right: 2px solid #666"><!-- left column -->
 
   <div class="header" style="background: black url(/documents/img/secretom/summary_header_thin.jpg) no-repeat left top">
   Summary
@@ -126,13 +131,8 @@ a.project:hover {
   <a href="mailto:jr286@cornell.edu">jr286@cornell.edu</a>
   </p>
 
-  <h3>Education, Training, and Outreach</h3>
-  A number of <a href="training.pl">education and training opportunities</a> in plant proteomics and cell wall biology have been established.  <a href="outreach.pl">Internships are available.</a>
-  <img style="display: block; margin: 1em 3em; border: 1px solid black" src="/img/secretom/tomato_bath.png" />
-
-</div>
-
-<div style="width: 370px; float: right"><!-- right column -->
+</td>
+<td>
 
   <div class="header" ""style="background: black url(/documents/img/secretom/objectives_header_thin.jpg) no-repeat left top">
   Projects
@@ -159,6 +159,9 @@ a.project:hover {
     <li>Zhangjun Fei <a href="http://www.bti.cornell.edu/ZhangjunFei.php?page=Research#page=ResearchSummary">[BTI Personal]</a></li>
   </ul>
 
+  <h3>Education, Training, and Outreach</h3>
+  A number of <a href="training.pl">education and training opportunities</a> in plant proteomics and cell wall biology have been established.  <a href="outreach.pl">Internships are available.</a>
+  <img style="display: block; margin: 1em 3em; border: 1px solid black" src="/img/secretom/tomato_bath.png" />
 
   <div style="background: black url(/img/secretom/tomato_pan.jpg) no-repeat top center" class="header">
   Links
@@ -173,7 +176,9 @@ a.project:hover {
       <li><a href="http://www.cazy.org">Carbohydrate Active Enzymes</a></li>
     </ul>
 
-</div>
+</td>
+</tr>
+</table>
 
 
 <div style="height:3px; font-size:1px; background-color:#c0c0c0; clear: both">&nbsp;</div>
