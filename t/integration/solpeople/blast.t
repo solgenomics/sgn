@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 33;
+use Test::More tests => 44;
 use Test::WWW::Mechanize;
 use lib 't/lib';
 use SGN::Test;

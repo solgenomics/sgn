@@ -32,7 +32,7 @@ SGN::Context - deprecated, do not use in new code
 # =cut
 
 package SGN::Context;
-use MooseX::Singleton;
+use Moose;;
 use namespace::autoclean;
 
 use warnings FATAL => 'all';
@@ -42,8 +42,10 @@ use File::Spec;
 
 use CatalystX::GlobalContext '$c';
 
+sub instance { shift->new(@_) }
+
 # only use this object if $c is not available
-around qw( new instance ) => sub {
+around qw( new ) => sub {
     return $c if $c;
 
     my $orig  = shift;
