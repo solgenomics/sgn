@@ -40,7 +40,7 @@ use CXGN::Tools::List qw/evens distinct/;
 
 my $page = CXGN::Page->new("In Silico PCR form","Waleed");
 my $dbh = CXGN::DB::Connection->new;
-my $prefs = CXGN::Page::UserPrefs->new( $dbh );
+our $prefs = CXGN::Page::UserPrefs->new( $dbh );
 
 $page->header('In Silico PCR');
 
