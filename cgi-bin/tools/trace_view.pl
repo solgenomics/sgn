@@ -1,9 +1,11 @@
 use strict;
+use warnings;
+
 use CXGN::Page;
 use CXGN::Chromatogram;
-use CXGN::VHost;
-my $vhost_conf = CXGN::VHost->new();
 use URI::Escape;
+use CatalystX::GlobalContext '$c';
+
 my $page = CXGN::Page->new( "Chromatogram viewer", "john" );
 my ( $file, $temp ) = $page->get_encoded_arguments( 'file', 'temp' );
 if ($file) {
@@ -22,17 +24,17 @@ if ($file) {
             '', '', "Invalid file location: $file" )
           ; #i made up the extension 'mct' for 'mystery chromatogram type' since we have various kinds of chromatograms and nothing recorded about their file types. --john
         $file =
-            $vhost_conf->get_conf('basepath')
-          . $vhost_conf->get_conf('tempfiles_subdir')
+            $c->config->{'basepath'}
+          . $c->config->{'tempfiles_subdir'}
           . '/traceimages/'
           . $file;
     }
 
     #otherwise it will be in data shared
     else {
-        my $data_shared_url = $vhost_conf->get_conf('static_datasets_url');
+        my $data_shared_url = $c->config->{'static_datasets_url'};
         my $data_shared_website_path =
-          $vhost_conf->get_conf('static_datasets_path');
+          $c->config->{'static_datasets_path'};
 
         #find cosii chromatogram
         if ( $file =~ /^$data_shared_url\/cosii2?\/[\w\-\/]+\.ab1$/ ) {
@@ -71,8 +73,8 @@ s/trace_files/data\/prod\/public\/pgn_data_processing\/processed_traces\//;
         }
         else {
             my $uncompressed_file =
-                $vhost_conf->get_conf('basepath')
-              . $vhost_conf->get_conf('tempfiles_subdir')
+                $c->config->{'basepath'}
+              . $c->config->{'tempfiles_subdir'}
               . "/traceimages/$temp_image_filename"
               . "_uncompressed";
             CXGN::Chromatogram::uncompress_if_necessary( $file,

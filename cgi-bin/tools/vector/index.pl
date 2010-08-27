@@ -1,5 +1,6 @@
 
 use strict;
+use warnings;
 
 use File::Temp qw/tempfile/;
 use File::Basename;
@@ -11,16 +12,15 @@ use Bio::Restriction::Analysis;
 
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw | info_section_html  html_break_string |;
-use CXGN::VHost;
 use CXGN::Cview::MapImage;
 use CXGN::Cview::Chromosome::Vector;
 use CXGN::Cview::Marker::VectorFeature;
 use CXGN::Tools::WebImageCache;
 use CXGN::Cview::VectorViewer;
+use CatalystX::GlobalContext '$c';
 ###############################################################################
 
 my $p = CXGN::Page->new("Vector drawing application", "VeDraw");
-my $vhost_conf = CXGN::VHost->new();
 my ($action, $format, $name, $insert_sequence, $insert_coord, $show_re, $del_start ,$del_end, $native_file, $edit_commands) = $p->get_arguments("action", "format", "name" , "insert_sequence", "insert_coord", "show_re", "del_start", "del_end", "native_file", "edit_commands");
 
 ###############################################################################
@@ -29,19 +29,17 @@ my ($action, $format, $name, $insert_sequence, $insert_coord, $show_re, $del_sta
 my $native_commands;
 
 #getting the file and url
-our $tempfiles_subdir_rel = File::Spec->catdir($vhost_conf->get_conf('tempfiles_subdir'),'cview'); #path relative to website root dir
-our $tempfiles_subdir_abs = File::Spec->catdir($vhost_conf->get_conf('basepath'),$tempfiles_subdir_rel); #absolute path
+our $tempfiles_subdir_rel = File::Spec->catdir($c->config->{'tempfiles_subdir'},'cview'); #path relative to website root dir
+our $tempfiles_subdir_abs = File::Spec->catdir($c->config->{'basepath'},$tempfiles_subdir_rel); #absolute path
 
 if ($native_file){
 
     my $native_file_dir  = File::Spec->catfile($tempfiles_subdir_abs, $native_file);
     my $native_file_url   = File::Spec->catfile($tempfiles_subdir_rel, $native_file);
     
-    #open( my $fh , $native_file_dir) or die "$!: cant find $native_file_dir";
     $native_commands = slurp ($native_file_dir);
 }
 
-#die "FORMAT: ".join (", ", @$format);
 if (!$action) { 
     display_form($p);
     exit();
@@ -139,22 +137,22 @@ if ($action ne "draw_native") {
 
 my $image_html = $vv->generate_image();
 my $commands_ref = $vv->get_commands_ref();
-my $seq = $vv->get_sequence();
+$seq = $vv->get_sequence();
 
 ################################################################################
 #making temp file for the native format
-my $native_format_tempdir = File::Spec->catdir($vhost_conf->get_conf('basepath'),
-            		  $vhost_conf->get_conf('tempfiles_subdir'),
+my $native_format_tempdir = File::Spec->catdir($c->config->{'basepath'},
+            		  $c->config->{'tempfiles_subdir'},
             		  "cview",
             		 );
-my ($fh ,$native_file) = tempfile( DIR => $native_format_tempdir, TEMPLATE=>"vector_XXXXXX");
+my ($fh ,$native_tmp) = tempfile( DIR => $native_format_tempdir, TEMPLATE=>"vector_XXXXXX");
 
 foreach my $c (@$commands_ref) { 
 print $fh join ", ", @$c;
 print $fh "\n";
 }
   
-my $base_temp = basename ($native_file);
+my $base_temp = basename ($native_tmp);
 
 
 

@@ -134,7 +134,6 @@ foreach (sort {$organism_gene_count{$b} <=> $organism_gene_count{$a}} keys %orga
 #Other builds of the same group
 my %other_build = ();
 my %other_build_id = ();
-my $other_build_content;
 
 $other_build_q->execute($group_id, $build_nr);
 while (my ($other_build_id, $other_build_nr, $other_i_value) = $other_build_q->fetchrow_array())

@@ -93,7 +93,7 @@ my ($sum_content, $member_content, $link_content, $align_content);
 #Get information for the summary section
 
 my ($annotation_content, $family_nr_content, $date_content, $i_value_content, $bn_content, $group_content, $total_gene_content);
-my ($family_build_id, $family_build_status, $total_gene, $date, $build_nr, $i_value, $annotation, $group_id, $group_comment, $family_nr);
+my ($family_build_id, $family_build_status, $total_gene, $date, $build_nr, $annotation, $group_id, $group_comment);
 $sum_q->execute($family_id);
 if (($family_build_id, $family_build_status, $total_gene, $date, $build_nr, $i_value, $annotation, $group_id, $group_comment, $family_nr) = $sum_q->fetchrow_array()){
   my $date_display = substr ($date, 0,10);

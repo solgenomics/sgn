@@ -1,14 +1,13 @@
 
 use strict;
+use warnings;
 
 use File::Temp;
 use File::Spec;
 use CXGN::Page;
 use CXGN::Sunshine::Browser;
 use CXGN::Sunshine::Node;
-use CXGN::VHost;
 use CXGN::Tools::WebImageCache;
-
 
 my $page = CXGN::Page->new("Sunshine", "Lukas");
 
@@ -19,14 +18,11 @@ $type = $type || "0";
 $level = $level || "0";
 
 $page->jsan_use("MochiKit.DOM");
-#$page->jsan_use("MochiKit.Visual");
 $page->jsan_use("MochiKit.Async");
 $page->jsan_use("Prototype");
 $page->jsan_use("CXGN.Sunshine.NetworkBrowser");
 
 $page->header("SGN Sunshine Browser", "SGN Network Browser");
-
-#CXGN::Sunshine::Browser::display($name, $type, $level);
 
 print <<JAVASCRIPT;
 
@@ -47,18 +43,8 @@ nb.fetchRelationships();
 //nb.setHiddenRelationshipTypes('$hide_relationships');
 nb.initialize();
 
-
-
-//document.write("....ANOTHER HELLO FROM JS");
-
-
-
 </script>
 
 JAVASCRIPT
 
 $page->footer();
-
-
-
-

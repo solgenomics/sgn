@@ -252,11 +252,11 @@ my $ov_score_ref = $family_align -> get_all_overlap_score();
 my $medium_ref = $family_align -> get_all_medium();
 my ($head_ref, $tail_ref) = $family_align -> get_all_range();
 my $ng_ref = $family_align -> get_all_nogap_length();
-my $sp_ref = $family_align->get_member_species();
+$sp_ref = $family_align->get_member_species();
 my $url_ref = $family_align->get_member_urls();
 
 my @family_member_ids = @$family_member_ids_ref;
-my %species = %$sp_ref;
+%species = %$sp_ref;
 my %ov_score = %$ov_score_ref;
 my %medium = %$medium_ref;
 my %head = %$head_ref;
