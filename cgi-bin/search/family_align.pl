@@ -13,7 +13,7 @@ use CatalystX::GlobalContext '$c';
 
 our $page = CXGN::Page->new( "SGN Gene Family Alignment", "Chenwei Lin");
 
-my $family_size_limit = 100;
+our $family_size_limit = 100;
 
 my ($family_id) = $page->get_arguments("family_id");
 if ($family_id eq ""){
