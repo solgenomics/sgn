@@ -119,7 +119,7 @@ my @alleles = $locus->get_alleles();    #array of allele objects
 my $allele_subtitle =
   !(grep { /^$user_type$/ } ('curator', 'submitter', 'sequencer') ) ?
   '<span class="ghosted">[Add new Allele]</span>'
-  : '<a href="/phenome/allele.pl?locus_id=$locus_id&amp;action=new">[Add new allele]</a>';
+  : "<a href=\"/phenome/allele.pl?locus_id=$locus_id&amp;action=new\">[Add new allele]</a>";
 
 
 my $al_subtitle =
