@@ -21,6 +21,7 @@ my %urls = (
 
         'tomato bac tpf'                           => '/sequencing/agp.pl',
         'tomato bac tpf'                           => '/sequencing/tpf.pl',
+        'tomato bac tpf chr 12'                    => '/sequencing/tpf.pl?chr=12',
 
         "unigene search"                           => "/search/ug-ad2.pl?w9e3_page=0&w9e3_sequence_name=SGN-U231977&w9e3_clone_name=&w9e3_membersrange=gt&w9e3_members1=&w9e3_members2=&w9e3_annotation=&w9e3_annot_type=blast&w9e3_lenrange=gt&w9e3_len1=&w9e3_len2=&w9e3_unigene_build_id=any",
         "unigene detail"                           => "/search/unigene.pl?unigene_id=SGN-U231977&w9e3_page=0&w9e3_annot_type=blast&w9e3_unigene_build_id=any",
