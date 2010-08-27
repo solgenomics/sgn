@@ -54,7 +54,7 @@ sub display {
     my $sp_person_id = $login->verify_session();
 
   
-    my %args = {};
+    my %args = ();
     my $page = CXGN::Page->new("SGN", "isaak");
     $page->jsan_use("CXGN.Phenome.Tools");
     $page->jsan_use("CXGN.Phenome.Qtl");
@@ -66,7 +66,7 @@ sub display {
     %args = $page->get_all_encoded_arguments();
     my $type = $args{type};
    
-    my $pop_id = $args{pop_id};
+    my $pop_id = $args{pop_id} || '';
     if ($sp_person_id) {
 	my $intro = $self->intro();
 	my ($org_submit, $pop_submit) = $self->org_pop_form();
