@@ -6,7 +6,7 @@
 
 <style>
 
-td.header {
+.header {
   text-align: center;
   border-right: 1px solid black;
   color: white;
@@ -18,9 +18,31 @@ td.header {
 ul.conferences {
   padding: 0;
 }
-ul.conferences li {
+ul.conferences li, ul.people li {
   list-style: none;
-  margin-left: 0;
+}
+ul.people li {
+  padding: 0.5em;
+  font-size: 120%;
+}
+ul.people {
+  margin: 2em 0;
+}
+
+a.project {
+  padding: 1em;
+  cursor: pointer;
+  display: block;
+  color: #222;
+  font-size: 105%;
+  font-weight: bold;
+  margin: 1em;
+  border: 1px solid transparent;
+}
+a.project:hover {
+  border: 1px solid black;
+  text-decoration: none;
+  color: black;
 }
 
 </style>
@@ -34,7 +56,6 @@ Summary
 Projects
 </td>
 </tr>
-
 <tr>
 
 <td style="width: 375px; padding: 0 10px 15px 5px">
@@ -80,18 +101,14 @@ lower-abundance proteins.
 
 </td>
 <td style="padding-right:15px;border-left:1px solid #999;">
-<ol>
-<li><b>Identify extracellular proteins:</b><ul>
-<li><b>Extraction and anlysis of enriched cell wall protein extracts.</b>  Techniques have been developed to isolate extracellular proteins from various plant tissues, whilst minimizing contamination with intracellular proteins.  Post-translational modification (e.g. glycosylation and phosphorylation) of proteins in these extracts will also be studied.
-<li><b>Computational prediction of secreted proteins.</b>  <a href="prediction.pl">Bioinformatics tools are under development to allow a more accurate <em>in silico</em> prediction of the secretome.</a>
-<li><b>Functional screens for secreted proteins.</b>  We have adopted a number of high throughput functional approaches to identify secreted proteins from a range of eukaryotes, including an enhanced yeast secretion trap (YST) screen and the NIP assay.
-</ul>
-
-<li><b>Comparative analysis of the cell wall proteome in ripening tomato fruit and in tomato leaves following defense response elicitation.</b>
-
-<li><b>Integrated cell wall proteome and transcriptome expression profiling.</b> Dynamic changes in the wall proteome will be compared with changes in the cognate transcriptome using micro-array analysis.
-
-</ol>
+  <a class="project">Computational Prediction of the Plant Secretome</a>
+  <a class="project">Functional Screens for Secreted Proteins</a>
+  <a class="project">The Tomato Fruit Glycoproteome</a>
+  <a class="project">Tomato Comparative and Quantitative Proteomics</a>
+  <a class="project">Integrated Proteome/Transcriptome Profiling of Tomato Fruit</a>
+  <a class="project">The Tomato Fruit Cuticular Cell Wall Proteome</a>
+  <a class="project">The Secretome of Phytophthora/Tomato Interactions</a>
+  <a class="project">Spin-off Projects and Collaborations</a>
 </td>
 </tr>
 
@@ -107,7 +124,7 @@ lower-abundance proteins.
 
 <tr>
 
-<td rowspan="3" style="padding-right: 10px; vertical-align:middle; border-right:1px solid #999">
+<td rowspan="4" style="padding-right: 10px; vertical-align: top; border-right:1px solid #999">
 
 <h3>Upcoming Meetings</h3>
 <ul class="conferences">
@@ -121,16 +138,22 @@ lower-abundance proteins.
 
 
 <h3>Jobs</h3>
+<p>
 The Rose lab is currently seeking a postdoctoral research associate with 
 an interest in plant proteomics, or fruit development and ripening. 
 Experience in mass spectrometry and plant molecular biology would 
 be an advantage, and good communication skills are critical. 
 Please contact Joss Rose if interested: 
-<a href="mailto:jr286@cornell.edu">jr286@cornell.edu</a><br />
+<a href="mailto:jr286@cornell.edu">jr286@cornell.edu</a>
+</p>
+
+<h3>Education, Training, and Outreach</h3>
+A number of <a href="training.pl">education and training opportunities</a> in plant proteomics and cell wall biology have been established.  <a href="outreach.pl">Internships are available.</a>
+<img style="display: block; margin: 1em 3em; border: 1px solid black" src="/img/secretom/tomato_bath.png" />
 
 </td>
 <td>
-<ul>
+<ul class="people">
   <li>Joss Rose <a href="http://labs.plantbio.cornell.edu/rose/index.htm">[Lab]</a></li>
   <li>Ted Thannhauser <a href="http://www.ars.usda.gov/PandP/docs.htm?docid=9634">[USDA Personal]</a></li>
   <li>Jim Giovannoni <a href="http://www.bti.cornell.edu/JimGiovannoni.php?page=Research#page=ResearchSummary">[BTI Personal]</a></li>
@@ -155,16 +178,6 @@ Links
       <li><a href="http://www.cazy.org">Carbohydrate Active Enzymes</a></li>
     </ul>
   </td>
-</tr>
-<tr>
-<td style="border-right:1px solid #999">
-<h3>Education, Training, and Outreach</h3>
-A number of <a href="training.pl">education and training opportunities</a> in plant proteomics and cell wall biology have been established.  <a href="outreach.pl">Internships are available.</a>
-<img style="display: block; margin: 1em; border: 1px solid black" src="/img/secretom/tomato_bath.png" />
-</td>
-<td>
-foo
-</td>
 </tr>
 </table>
 
