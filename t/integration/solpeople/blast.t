@@ -7,7 +7,6 @@ use lib 't/lib';
 use SGN::Test;
 use SGN::Test::WWW::Mechanize;
 my $mech = SGN::Test::WWW::Mechanize->new;
-my @users = qw/user curator submitter/;
 
 $mech->while_logged_in_all(sub {
     $mech->get_ok('/tools/blast/watch/index.pl');
@@ -26,5 +25,4 @@ $mech->while_logged_in_all(sub {
     );
     $mech->content_contains('Your query has been added to SGN BLAST Watch.');
     $mech->content_contains('You will receive an email when there are new results.');
-
 });
