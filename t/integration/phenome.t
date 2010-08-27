@@ -14,7 +14,7 @@ Jonathan "Duke" Leto
 
 use strict;
 use warnings;
-use Test::More tests => 32;
+use Test::More tests => 44;
 use Test::JSON;
 use lib 't/lib';
 use SGN::Test;
@@ -32,4 +32,7 @@ $mech->while_logged_in_all( sub {
         },
     },
     );
+    $mech->content_contains('Submit Population Details');
+    $mech->content_contains('Select Organism');
+    $mech->content_contains('Population Details');
 });
