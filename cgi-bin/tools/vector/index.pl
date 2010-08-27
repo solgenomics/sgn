@@ -26,7 +26,7 @@ my ($action, $format, $name, $insert_sequence, $insert_coord, $show_re, $del_sta
 ###############################################################################
 
 
-my $native_commands;
+our $native_commands;
 
 #getting the file and url
 our $tempfiles_subdir_rel = File::Spec->catdir($c->config->{'tempfiles_subdir'},'cview'); #path relative to website root dir
