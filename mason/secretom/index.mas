@@ -13,7 +13,8 @@
   font-size: 50px;
   text-align: center;
   vertical-align: middle;
-  height: 90px;
+  height: 100px;
+  background-color: black;
 }
 ul.conferences {
   padding: 0;
@@ -47,60 +48,96 @@ a.project:hover {
 
 </style>
 
-<table width="750" style="border-collapse:collapse;">
-<tr style="background-color:black">
-<td class="header" style="background: black url(/documents/img/secretom/summary_header_thin.jpg) no-repeat left top">
-Summary
-</td>
-<td class="header" ""style="background: url(/documents/img/secretom/objectives_header_thin.jpg) no-repeat left top">
-Projects
-</td>
-</tr>
-<tr>
+<div style="width: 350px; padding-right: 3px; float: left; border-right: 2px solid #666"><!-- left column -->
 
-<td style="width: 375px; padding: 0 10px 15px 5px">
+  <div class="header" style="background: black url(/documents/img/secretom/summary_header_thin.jpg) no-repeat left top">
+  Summary
+  </div>
 
-<p>
-The <strong>plant cell wall/apoplast</strong> plays a fundamental role
-in many aspects of growth, development, and responses to environmental
-conditions and assault by pathogens and insects. It is therefore not
-surprising that a substantial portion of the plant proteome is
-localized in the cell wall/apoplast. However, while major initiatives
-are now underway to map the proteomes of many plant organelles, such
-as the chloroplast, the cell wall proteome, or "secretome", is far
-less well characterized than those of other subcellular compartments.
-</p>
+  <p>
+  The <strong>plant cell wall/apoplast</strong> plays a fundamental role
+  in many aspects of growth, development, and responses to environmental
+  conditions and assault by pathogens and insects. It is therefore not
+  surprising that a substantial portion of the plant proteome is
+  localized in the cell wall/apoplast. However, while major initiatives
+  are now underway to map the proteomes of many plant organelles, such
+  as the chloroplast, the cell wall proteome, or "secretome", is far
+  less well characterized than those of other subcellular compartments.
+  </p>
 
-<p>
-<strong>What is the ""secretome"?</strong> The term "secretome" is
-generally used to refer to the population of proteins that are
-secreted outside the plasma membrane of a cell, but can also be used
-to describe the subset of the proteome that enter the "secretory
-pathway".
-</p>
+  <p>
+  <strong>What is the ""secretome"?</strong> The term "secretome" is
+  generally used to refer to the population of proteins that are
+  secreted outside the plasma membrane of a cell, but can also be used
+  to describe the subset of the proteome that enter the "secretory
+  pathway".
+  </p>
 
-<p>
-<strong>The purpose of this NSF-funded project</strong> is to catalog and study <a href="proteome.pl">the dynamic properties of the cell wall proteome, or secretome</a>, using tomato (<i>Solanum lycopersicum</i>) as a model system.
-</p>
+  <p>
+  <strong>The purpose of this NSF-funded project</strong> is to
+  catalog and study <a href="proteome.pl">the dynamic properties of
+  the cell wall proteome, or secretome</a>, using tomato (<i>Solanum
+  lycopersicum</i>) as a model system.
+  </p>
 
 
-<p>
-<strong>Why study the "secretome"?</strong> Proteomic analysis of cellular
-compartments reveals the subcellular locations of a specific protein,
-or protein complex, which in turn can be a valuable step towards
-understanding protein function. Localization information also helps in
-the identification of protein interactions and targeting pathways, and
-peptide motifs and structural signatures that can direct proteins to
-various cellular locations. In addition the analysis of a subcellular
-proteome has the advantage of requiring "biological
-pre-fractionation," which can substantially enhance the detection of
-lower-abundance proteins.
-</p>
+  <p>
+  <strong>Why study the "secretome"?</strong> Proteomic analysis of cellular
+  compartments reveals the subcellular locations of a specific protein,
+  or protein complex, which in turn can be a valuable step towards
+  understanding protein function. Localization information also helps in
+  the identification of protein interactions and targeting pathways, and
+  peptide motifs and structural signatures that can direct proteins to
+  various cellular locations. In addition the analysis of a subcellular
+  proteome has the advantage of requiring "biological
+  pre-fractionation," which can substantially enhance the detection of
+  lower-abundance proteins.
+  </p>
 
-<p><strong>All secretom datasets can be downloaded from the <a href="ftp://ftp.sgn.cornell.edu/secretom/">SGN FTP site</a>.</strong></p>
+  <p>
+  <strong>All secretom datasets can be downloaded from the
+  <a href="ftp://ftp.sgn.cornell.edu/secretom/">SGN FTP site</a>.
+  </strong>
+  </p>
 
-</td>
-<td style="padding-right:15px;border-left:1px solid #999;">
+
+  <div class="header">
+  <img src="/documents/img/secretom/news_header_thin.jpg" />
+  </div>
+
+  <h3>Upcoming Meetings</h3>
+  <ul class="conferences">
+  <li> <a href="http://www.sol2010.org/">SOL2010</a> &ndash; Dundee, Scotland, UK, Sept. 5-9, 2010 </li>
+  <li> <a href="http://proteomlux.lippmann.lu">International Conference on Proteomics in Plants, Microorganisms and Environment</a> Luxembourg, October 18-20, 2010 </li>
+  <li> <a href="http://www.genomeconference.org">Fifth International Conference on Genomics (ICG-V)</a> &ndash; Shenzhen, China, November 15-18, 2010 </li>
+  <li> <a href="http://www.intl-pag.org">Plant and Animal Genome XIX</a> &ndash;  San Diego, California, USA, January 15-19, 2011
+  <li> <a href="http://www.keystonesymposia.org/meetings/viewMeetings.cfm?MeetingID=1124"> Keystone Symposia: Plant Abiotic Stress Tolerance Mechanisms, Water and Global Agriculture</a> &ndash; Keystone Resort, Keystone, Colorado, USA, January 17-22, 2011</li>
+  <li> <a href="http://www.aspb.org">American Society of Plant Biologists (ASPB)</a> &ndash; Minneapolis, Minnesota, USA, August 6-10, 2011</li>
+  </ul>
+
+
+  <h3>Jobs</h3>
+  <p>
+  The Rose lab is currently seeking a postdoctoral research associate with 
+  an interest in plant proteomics, or fruit development and ripening. 
+  Experience in mass spectrometry and plant molecular biology would 
+  be an advantage, and good communication skills are critical. 
+  Please contact Joss Rose if interested: 
+  <a href="mailto:jr286@cornell.edu">jr286@cornell.edu</a>
+  </p>
+
+  <h3>Education, Training, and Outreach</h3>
+  A number of <a href="training.pl">education and training opportunities</a> in plant proteomics and cell wall biology have been established.  <a href="outreach.pl">Internships are available.</a>
+  <img style="display: block; margin: 1em 3em; border: 1px solid black" src="/img/secretom/tomato_bath.png" />
+
+</div>
+
+<div style="width: 370px; float: right"><!-- right column -->
+
+  <div class="header" ""style="background: black url(/documents/img/secretom/objectives_header_thin.jpg) no-repeat left top">
+  Projects
+  </div>
+
   <a class="project">Computational Prediction of the Plant Secretome</a>
   <a class="project">Functional Screens for Secreted Proteins</a>
   <a class="project">The Tomato Fruit Glycoproteome</a>
@@ -109,66 +146,24 @@ lower-abundance proteins.
   <a class="project">The Tomato Fruit Cuticular Cell Wall Proteome</a>
   <a class="project">The Secretome of Phytophthora/Tomato Interactions</a>
   <a class="project">Spin-off Projects and Collaborations</a>
-</td>
-</tr>
+
+  <div class="header">
+    <img src="/documents/img/secretom/people_header_thin.jpg" />
+  </div>
+
+  <ul class="people">
+    <li>Joss Rose <a href="http://labs.plantbio.cornell.edu/rose/index.htm">[Lab]</a></li>
+    <li>Ted Thannhauser <a href="http://www.ars.usda.gov/PandP/docs.htm?docid=9634">[USDA Personal]</a></li>
+    <li>Jim Giovannoni <a href="http://www.bti.cornell.edu/JimGiovannoni.php?page=Research#page=ResearchSummary">[BTI Personal]</a></li>
+    <li>Lukas Mueller <a href="http://solgenomics.net/about">[SGN]</a></li>
+    <li>Zhangjun Fei <a href="http://www.bti.cornell.edu/ZhangjunFei.php?page=Research#page=ResearchSummary">[BTI Personal]</a></li>
+  </ul>
 
 
-<tr style="background-color:black">
-<td width="375" style="text-align:center">
-<img src="/documents/img/secretom/news_header_thin.jpg" />
-</td>
-<td style="text-align:center">
-<img src="/documents/img/secretom/people_header_thin.jpg" />
-</td>
-</tr>
+  <div style="background: black url(/img/secretom/tomato_pan.jpg) no-repeat top center" class="header">
+  Links
+  </div>
 
-<tr>
-
-<td rowspan="4" style="padding-right: 10px; vertical-align: top; border-right:1px solid #999">
-
-<h3>Upcoming Meetings</h3>
-<ul class="conferences">
-<li> <a href="http://www.sol2010.org/">SOL2010</a> &ndash; Dundee, Scotland, UK, Sept. 5-9, 2010 </li>
-<li> <a href="http://proteomlux.lippmann.lu">International Conference on Proteomics in Plants, Microorganisms and Environment</a> Luxembourg, October 18-20, 2010 </li>
-<li> <a href="http://www.genomeconference.org">Fifth International Conference on Genomics (ICG-V)</a> &ndash; Shenzhen, China, November 15-18, 2010 </li>
-<li> <a href="http://www.intl-pag.org">Plant and Animal Genome XIX</a> &ndash;  San Diego, California, USA, January 15-19, 2011
-<li> <a href="http://www.keystonesymposia.org/meetings/viewMeetings.cfm?MeetingID=1124"> Keystone Symposia: Plant Abiotic Stress Tolerance Mechanisms, Water and Global Agriculture</a> &ndash; Keystone Resort, Keystone, Colorado, USA, January 17-22, 2011</li>
-<li> <a href="http://www.aspb.org">American Society of Plant Biologists (ASPB)</a> &ndash; Minneapolis, Minnesota, USA, August 6-10, 2011</li>
-</ul>
-
-
-<h3>Jobs</h3>
-<p>
-The Rose lab is currently seeking a postdoctoral research associate with 
-an interest in plant proteomics, or fruit development and ripening. 
-Experience in mass spectrometry and plant molecular biology would 
-be an advantage, and good communication skills are critical. 
-Please contact Joss Rose if interested: 
-<a href="mailto:jr286@cornell.edu">jr286@cornell.edu</a>
-</p>
-
-<h3>Education, Training, and Outreach</h3>
-A number of <a href="training.pl">education and training opportunities</a> in plant proteomics and cell wall biology have been established.  <a href="outreach.pl">Internships are available.</a>
-<img style="display: block; margin: 1em 3em; border: 1px solid black" src="/img/secretom/tomato_bath.png" />
-
-</td>
-<td>
-<ul class="people">
-  <li>Joss Rose <a href="http://labs.plantbio.cornell.edu/rose/index.htm">[Lab]</a></li>
-  <li>Ted Thannhauser <a href="http://www.ars.usda.gov/PandP/docs.htm?docid=9634">[USDA Personal]</a></li>
-  <li>Jim Giovannoni <a href="http://www.bti.cornell.edu/JimGiovannoni.php?page=Research#page=ResearchSummary">[BTI Personal]</a></li>
-  <li>Lukas Mueller <a href="http://solgenomics.net/about">[SGN]</a></li>
-  <li>Zhangjun Fei <a href="http://www.bti.cornell.edu/ZhangjunFei.php?page=Research#page=ResearchSummary">[BTI Personal]</a></li>
-</ul>
-</td>
-</tr>
-<tr>
-<td style="background: black url(/img/secretom/tomato_pan.jpg) no-repeat top center" class="header">
-Links
-</td>
-</tr>
-<tr>
-  <td>
     <ul>
       <li><a href="http://www.ccrc.uga.edu/~mao/cellwall/main.htm">Plant Cell Wall Overview</a></li>
       <li><a href="http://cell.ccrc.uga.edu/~mao/wallmab/Home/Home.php">Cell Wall Antibodies</a></li>
@@ -177,26 +172,31 @@ Links
       <li><a href="http://bioweb.ucr.edu/Cellwall">Cell Wall Navigator</a></li>
       <li><a href="http://www.cazy.org">Carbohydrate Active Enzymes</a></li>
     </ul>
-  </td>
-</tr>
-</table>
 
-<div style='height:3px; font-size:1px; background-color:#c0c0c0'>&nbsp;</div>
+</div>
+
+
+<div style="height:3px; font-size:1px; background-color:#c0c0c0; clear: both">&nbsp;</div>
 <br />
 
 <table>
-<tr>
-<td width="650" style="padding-left:10px; padding-right:15px">
-<span style="font-size:1.2em">
-<b>Funding Summary</b>
-</span><br /><br /> This project and database are funded by National Science Foundation Grant 
-<a href="http://nsf.gov/awardsearch/showAward.do?AwardNumber=0606595">0606595</a>.
-<br /><br />
-For questions and comments regarding the SecreTom project, please contact Jocelyn Rose at <a href="mailto:jr286@cornell.edu">jr286@cornell.edu</a>
-</td>
-<td>
-<a style="padding:0px" href="http://www.nsf.gov"><img border="0" src="/documents/img/secretom/NSF_Logo.jpg" width="100" height="100"/></a>
-</td></tr></table>
+  <tr>
+   <td width="650" style="padding-left:10px; padding-right:15px">
+    <h3> Funding Summary</h3>
+    <p>This project and database are funded by National Science Foundation Grant 
+    <a href="http://nsf.gov/awardsearch/showAward.do?AwardNumber=0606595">0606595</a>.
+    </p>
+
+    <p>
+    For questions and comments regarding the SecreTom project, please
+    contact Jocelyn Rose at <a href="mailto:jr286@cornell.edu">jr286@cornell.edu</a>.
+    </p>
+   </td>
+   <td>
+     <a style="padding:0px" href="http://www.nsf.gov"><img border="0" src="/documents/img/secretom/NSF_Logo.jpg" width="100" height="100"/></a>
+   </td>
+ </tr>
+</table>
 
 </div>
 
