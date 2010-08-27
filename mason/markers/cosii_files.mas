@@ -149,8 +149,7 @@ sub cosii_files_html_2 {
 sub get_information {
     my ($dbh, $marker,$ending) = @_;
 
-    my $vhost_conf = CXGN::VHost->new();
-    my $cosii_file = $vhost_conf->get_conf('cosii_files');
+    my $cosii_file = $c->config->{'cosii_files'};
 
     my $table = "forward_amplicon_sequence_information";
     my $html;
