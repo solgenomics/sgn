@@ -165,6 +165,17 @@ sub while_logged_in {
     $self->log_out;
 }
 
+sub while_logged_in_all {
+    my ($self,$sub) = @_;
+    my @users = qw/user curator submitter sequencer/;
+    for my $user_type (@users) {
+        $self->create_test_user( user_type => $user_type );
+        $self->log_in_ok;
+        $sub->($user_type);
+        $self->log_out;
+    }
+}
+
 sub log_in_ok {
     my ($self) = @_;
 

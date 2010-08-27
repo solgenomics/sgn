@@ -14,7 +14,7 @@ Jonathan "Duke" Leto
 
 use strict;
 use warnings;
-use Test::More tests => 21;
+use Test::More tests => 60;
 use Test::JSON;
 use lib 't/lib';
 use SGN::Test;
@@ -23,14 +23,15 @@ use SGN::Test::WWW::Mechanize;
 my $base_url = $ENV{SGN_TEST_SERVER};
 my $mech = SGN::Test::WWW::Mechanize->new;
 
-$mech->while_logged_in( user_type => 'user', sub {
+$mech->while_logged_in_all( sub {
+    my ($user_type) = @_;
     $mech->get_ok('/solpeople/top-level.pl');
     $mech->content_contains('My SGN' );
     $mech->content_contains('[log out]');
     $mech->content_contains('BLAST Watch');
     $mech->content_contains('User Status');
     $mech->content_contains('General Tools');
-    $mech->content_like(qr{Your current user status is\s+<b>user</b>});
+    $mech->content_like(qr{Your current user status is\s+<b>$user_type</b>});
 });
 
 {
