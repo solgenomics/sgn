@@ -31,8 +31,7 @@ sub db_connections {
     my $sql =<<SQL;
 select count(*) as connections from pg_stat_activity where usename <> 'postgres'
 SQL
-    my $dsn     = $context->dbc_profile->{dsn};
-    my $dbh     = DBI->connect($dsn);
+    my $dbh     = DBI->connect( @{ $context->dbc_profile}{qw{ dsn user password attributes }});
     my (@row)   = $dbh->selectrow_array($sql);
     return $row[0];
 }
