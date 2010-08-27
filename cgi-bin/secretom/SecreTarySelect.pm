@@ -206,24 +206,14 @@ sub get_best_solution2 {
     return $self->{best_solution2};
 }
 
-sub set_best_score1 {
+sub set_best_score{
     my $self = shift;
     $self->{best_score1} = shift;
 }
 
-sub get_best_score1 {
+sub get_best_score{
     my $self = shift;
     return $self->{best_score1};
-}
-
-sub set_best_score2 {
-    my $self = shift;
-    $self->{best_score2} = shift;
-}
-
-sub get_best_score2 {
-    my $self = shift;
-    return $self->{best_score2};
 }
 
 sub refine_TMpred_solutions
@@ -273,6 +263,7 @@ sub Categorize1 { # categorize a single SecreTaryAnalyse object as
     my $tmh_length = $end + 1 - $beg;
 
     if ( $score >= $self->get_min_tmpred_score1() ) {
+	$self->set_best_score($score);
         return "group1$soln1$soln2";
     }
     else {
@@ -291,9 +282,11 @@ sub Categorize1 { # categorize a single SecreTaryAnalyse object as
             $STA->get_nOxygen22() <= $self->get_max_nOxygen22()
           )                                                         # 32)
         {                                                           # group 2
-            return "group2$soln1$soln2";
+            $self->set_best_score($score2);
+	    return "group2$soln1$soln2";
         }
-        else {                                                      # fail
+        else {                
+	    $self->set_best_score(0); # fail
             return "fail$soln1$soln2";
         }
     }
@@ -307,13 +300,12 @@ sub Categorize{
 
     my ($count_grp1, $count_grp2, $count_fail) = (0,0,0);
     foreach my $STA (@STAarray){
-	my $category = $self->Categorize1($STA);
-#	print '<pre>', $category, '</pre>',"\n";
-	my $prediction = $category; #($category =~ /^fail/)? "NO": "YES";
+	my $prediction = $self->Categorize1($STA);
 	$prediction =~ s/^fail/NO /;
 	$prediction =~ s/^group1/YES/;
 	$prediction =~ s/^group2/YES/;
-	push @STA_prediction, [$STA, $prediction]; # array of array refs
+my $score = 
+	push @STA_prediction, [$STA, $prediction, $self->get_best_score()]; # array of array refs
     }
     return \@STA_prediction;
 }
