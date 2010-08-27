@@ -4,10 +4,10 @@
 #Refactored by Johnathon Schultz 4/08/07
 
 use strict;
+use warnings;
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers;
 use CXGN::DB::Connection;
-use CXGN::VHost;
 my $dbh=CXGN::DB::Connection->new();
 my $page=CXGN::Page->new("Sol Genomics Network","john");
 my ($dna_seq, $enz_name, $action)=$page->get_encoded_arguments("dna_seq", "enz_name", "action");
@@ -309,10 +309,3 @@ sub wrap_text{
     }
     return $result;
 }
-
-# substr(string, start, end);
-#  my $seq = shift;
-#  my $width = shift || 50;
-#  my $break = shift || "<br />\n";
-#  return '' unless $seq;
-#  return join ($break,($seq =~ /.{1,$width}/g))

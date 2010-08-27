@@ -1,5 +1,6 @@
 #!/usr/bin/perl -w
 use strict;
+use warnings;
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw/  page_title_html
                                        blue_section_html  /;
@@ -8,6 +9,7 @@ use CXGN::Alignment;
 use File::Temp;
 use Bio::Seq;
 use Bio::SeqIO;
+use CatalystX::GlobalContext '$c';
 
 our $page = CXGN::Page->new( "SGN Gene Family Alignment", "Chenwei Lin");
 
@@ -193,9 +195,8 @@ $sum_content .= "<tr><td colspan=\"2\" align=\"center\"><a target=\"blank\" href
 #Draw family_alignment image
 
 #Generate temp file handles
-my $vhost_conf = CXGN::VHost->new();
-my $html_root_path = $vhost_conf->get_conf('basepath');
-my $doc_path = $vhost_conf->get_conf('tempfiles_subdir').'/align_viewer';
+my $html_root_path = $c->config->{'basepath'};
+my $doc_path = $c->config->{'tempfiles_subdir'}.'/align_viewer';
 my $path = $html_root_path . $doc_path;
 
 my $tmp_image = new File::Temp(

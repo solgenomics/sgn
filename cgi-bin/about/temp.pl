@@ -144,7 +144,6 @@ else  {
 $data = [\@times, \@temp_F];
 }
 my $gd = $graph->plot($data) or barf($graph->error());
-#print "Content-type: text/html\n\nASDFASDFADSF";
 print "Content-type: image/png\n\n".$gd->png();
 
 sub barf {
@@ -152,16 +151,6 @@ sub barf {
     my $message = shift;
 
     print "Content-type: text/plain\n\n$message\n";
-
-    if( @times ){
-	use Data::Dumper;
-	print Dumper \@times;
-    }
-
-    if( @temp_F ){
-	use Data::Dumper;
-	print Dumper \@temp_F;
-    }
 
     exit;
 

@@ -1,9 +1,9 @@
 #!/usr/bin/perl
 
 use strict;
+use warnings;
 
 use CXGN::Page;
-use CXGN::VHost;
 use File::Spec;
 use CXGN::DB::Connection;
 use CXGN::BlastWatch;

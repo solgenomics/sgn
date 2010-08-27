@@ -77,6 +77,8 @@ my %urls = (
         "image search"                             => "/search/image_search.pl?wad1_description_filename_composite=&wad1_submitter=&wad1_image_tag=",
         "bac registry"                             => "/sequencing/bac_registry_discrepancies.pl",
         "SGN pubs"                                 => "/help/publications.pl",
+        "glossary search"                          => "/search/glossarysearch.pl",
+        "contact"                                  => "/tools/contact.pl",
 );
 
 my $iteration_count;

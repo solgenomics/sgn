@@ -1,11 +1,9 @@
 #!/usr/bin/perl -w
 use strict;
 use CXGN::Page;
-use CXGN::VHost;
+use CatalystX::GlobalContext '$c';
 
-my $vhost_conf = CXGN::VHost->new();
-#	my $documents_folder = $vhost_conf->get_conf('basepath') . $vhost_conf->get_conf('documents_subdir');
-my $tmpdir = $vhost_conf->get_conf('basepath') . $vhost_conf->get_conf('tempfiles_subdir') . "/blastgraph/";
+my $tmpdir = $c->config->{'basepath'} . $c->config->{'tempfiles_subdir'} . "/blastgraph/";
 
 our $page = CXGN::Page->new("BLAST running", "Koni");
 

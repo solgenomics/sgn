@@ -1,13 +1,14 @@
 #!/usr/bin/perl -w
 use strict;
+use warnings;
 use CXGN::Page;
 use CXGN::Genomic::Chromat;
-use CXGN::VHost;
 use CXGN::DB::Connection;
+use CatalystX::GlobalContext '$c';
+
 # KONI 2003 August 4
 #
 # New download script for chromatogram access.
-my $vhost_conf=CXGN::VHost->new();
 our $trace_basepath;
 our $page = CXGN::Page->new( "Trace Download", "Koni");
 
@@ -16,12 +17,6 @@ my $dbh = CXGN::DB::Connection->new();
 #read_id is for a chromat from sgn.seqread
 #chromat_id is for a chromat from genomic.chromat
 my ($read_id,$chromat_id) = $page->get_arguments(qw/read_id chrid/);
-# if (defined($read_id)) {
-#   warn 'got read';
-# }
-# if(defined($chromat_id)) {
-#   warn 'got chromat';
-# }
 
 unless ((defined($read_id) && $read_id =~ m/^[0-9]+$/)
 	|| (defined($chromat_id) && $chromat_id =~ m/^[0-9]+$/)) {
@@ -36,7 +31,6 @@ if($read_id) {
   $tablename = "$schema.seqread";
   $idcol = 'read_id';
   ($path, $name) = $dbh->selectrow_array("SELECT trace_location,trace_name FROM $tablename WHERE $idcol=?",undef,$read_id||$chromat_id);
-  print STDERR "$path $name\n";
 } elsif($chromat_id) {
     my $chromat = CXGN::Genomic::Chromat->retrieve($chromat_id);
     $path = $chromat->subpath;
@@ -45,11 +39,9 @@ if($read_id) {
   $page->error_page('Invalid GET parameters');
 }
 
-#$traceq->execute($tablename,$idcol,$read_id || $chromat_id);
-
 ($path && $name) || not_found($page, $read_id);
 
-my $basename = $vhost_conf->get_conf('trace_path')."/$path/$name";
+my $basename = $c->config->{'trace_path'}."/$path/$name";
 my $full_pathname = '';
 
 # The actual extension used should have been stored in the database, but it

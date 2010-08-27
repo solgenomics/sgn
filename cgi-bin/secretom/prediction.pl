@@ -2,7 +2,6 @@ use strict;
 use warnings;
 use CXGN::Page;
 
-my $vhost_conf=CXGN::VHost->new();
 my $page=CXGN::Page->new('Secretom','john');
 $page->header('Secretom');
 print<<END_HTML;

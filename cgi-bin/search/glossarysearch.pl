@@ -1,8 +1,8 @@
 use strict;
+use warnings;
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw(tooltipped_text);
 use CXGN::DB::Connection;
-use CXGN::VHost;
 use CXGN::Glossary qw(get_definitions create_tooltips_from_text);
 my $dbh=CXGN::DB::Connection->new({dbschema=>"public"});
 my $page=CXGN::Page->new("Glossary Search","johnathon");
