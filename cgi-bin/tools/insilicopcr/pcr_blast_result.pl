@@ -43,7 +43,6 @@ use CatalystX::GlobalContext '$c';
 
 ################################################################################################################
 my $page = CXGN::Page->new( "Get PCR Products", "Waleed");
-my $vhost_conf = CXGN::VHost->new();
 
 my %params;
 my $seq_count = 0;
