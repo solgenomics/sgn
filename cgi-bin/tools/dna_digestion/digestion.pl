@@ -152,7 +152,7 @@ sub find_matches{
     for(my $i=0; $i<length($dna_seq); $i++){
 	foreach my $enz_seq(@$seqs_ref){
 	    $enz_seq =~ s/\^//g;
-	    $enz_seq =~ s/(.*)\(\d*\/\d*\)/\1/;
+	    $enz_seq =~ s/(.*)\(\d*\/\d*\)/$1/;
 	    my $enz_length = length($enz_seq);
 	    my $sub_seq = substr($dna_seq, $i, $enz_length);
 	    if($enz_seq eq $sub_seq){
@@ -280,7 +280,7 @@ sub insert_cut{
 	return $dna_seq;
     }
     else{
-	$dna_seq =~ s/^(.{$char_count})(.*)$/\1^\2/;
+	$dna_seq =~ s/^(.{$char_count})(.*)$/$1^$2/;
 	return $dna_seq;
     }
 }
