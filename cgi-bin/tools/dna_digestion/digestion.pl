@@ -8,9 +8,9 @@ use warnings;
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers;
 use CXGN::DB::Connection;
-my $dbh=CXGN::DB::Connection->new();
-my $page=CXGN::Page->new("Sol Genomics Network","john");
-my ($dna_seq, $enz_name, $action)=$page->get_encoded_arguments("dna_seq", "enz_name", "action");
+our $dbh=CXGN::DB::Connection->new();
+our $page=CXGN::Page->new("Sol Genomics Network","john");
+our ($dna_seq, $enz_name, $action)=$page->get_encoded_arguments("dna_seq", "enz_name", "action");
 
 if($action eq "digest"){
     if (!is_valid_dna($dna_seq)){
