@@ -1,16 +1,3 @@
-use strict;
-use warnings;
-use CXGN::Page;
-
-my $page=CXGN::Page->new('Secretom','john');
-$page->header('Secretom');
-print<<END_HTML;
-<div style="width:100%; color:#303030; font-size: 1.1em; text-align:left;">
-
-<center>
-<img style="margin-bottom:10px" src="/documents/img/secretom/secretom_logo_smaller.jpg" alt="secretom logo" />
-</center>
-
 <span style="white-space:nowrap; display:block; padding:3px; background-color: #fff; text-align:center; color: #444; font-size:1.3em">
 </span>
 <br />
@@ -19,8 +6,3 @@ print<<END_HTML;
 <center>
 <img src="/documents/img/secretom/proteome.png" />
 </center>
-</div>
-
-END_HTML
-
-$page->footer();
