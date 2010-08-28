@@ -1,6 +1,6 @@
   <style type="text/css">
     a.project {
-      background: rgba(255,255,255,0.8);
+      background: rgba(255,255,255,0.9);
       text-align: left;
       padding: 1em;
       cursor: pointer;
@@ -94,13 +94,13 @@
       </p>
 
       <strong>All secretom datasets can be downloaded from the
-      <a href="ftp://ftp.sgn.cornell.edu/secretom/">SGN FTP site</a>.
+      <a href="ftp://ftp.solgenomics.net/secretom/">SGN FTP site</a>.
       </strong>
 
     </&>
   </div>
   <div class="projects">
-    <&| /page/info_section.mas, title => 'Projects' &>
+    <&| /page/info_section.mas, title => 'Projects', subtitle => 'download datasets: <a href="ftp://ftp.solgenomics.net/secretom/">[SGN FTP site]</a>' &>
 
       <a class="project">Computational Prediction of the Plant Secretome</a>
       <a class="project">Functional Screens for Secreted Proteins</a>
