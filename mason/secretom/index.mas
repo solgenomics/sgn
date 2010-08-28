@@ -1,169 +1,188 @@
-<img style="margin-bottom:10px; display: block; margin: 1em auto" src="/documents/img/secretom/secretom_logo_smaller.jpg" alt="secretom logo" />
+  <div style="width: 34em; text-align: justify; margin: 1em auto; color: #333; font-size: 15px">
+    A project to catalog and study the dynamic properties of the cell
+    wall proteome (the secretome), using tomato as a model system.
+  </div>
 
-<&| /page/info_section.mas, title => 'Summary' &>
+  <div style="float: left; width: 50%">
+    <&| /page/info_section.mas, title => 'Summary' &>
 
-  <p>
-  The <strong>plant cell wall/apoplast</strong> plays a fundamental role
-  in many aspects of growth, development, and responses to environmental
-  conditions and assault by pathogens and insects. It is therefore not
-  surprising that a substantial portion of the plant proteome is
-  localized in the cell wall/apoplast. However, while major initiatives
-  are now underway to map the proteomes of many plant organelles, such
-  as the chloroplast, the cell wall proteome, or "secretome", is far
-  less well characterized than those of other subcellular compartments.
-  </p>
+      <p>
+      The <strong>plant cell wall/apoplast</strong> plays a fundamental role
+      in many aspects of growth, development, and responses to environmental
+      conditions and assault by pathogens and insects. It is therefore not
+      surprising that a substantial portion of the plant proteome is
+      localized in the cell wall/apoplast. However, while major initiatives
+      are now underway to map the proteomes of many plant organelles, such
+      as the chloroplast, the cell wall proteome, or "secretome", is far
+      less well characterized than those of other subcellular compartments.
+      </p>
 
-  <p>
-  <strong>What is the ""secretome"?</strong> The term "secretome" is
-  generally used to refer to the population of proteins that are
-  secreted outside the plasma membrane of a cell, but can also be used
-  to describe the subset of the proteome that enter the "secretory
-  pathway".
-  </p>
+      <p>
+      <strong>What is the ""secretome"?</strong> The term "secretome" is
+      generally used to refer to the population of proteins that are
+      secreted outside the plasma membrane of a cell, but can also be used
+      to describe the subset of the proteome that enter the "secretory
+      pathway".
+      </p>
 
-  <p>
-  <strong>The purpose of this NSF-funded project</strong> is to
-  catalog and study <a href="proteome.pl">the dynamic properties of
-  the cell wall proteome, or secretome</a>, using tomato (<i>Solanum
-  lycopersicum</i>) as a model system.
-  </p>
-
-
-  <p>
-  <strong>Why study the "secretome"?</strong> Proteomic analysis of cellular
-  compartments reveals the subcellular locations of a specific protein,
-  or protein complex, which in turn can be a valuable step towards
-  understanding protein function. Localization information also helps in
-  the identification of protein interactions and targeting pathways, and
-  peptide motifs and structural signatures that can direct proteins to
-  various cellular locations. In addition the analysis of a subcellular
-  proteome has the advantage of requiring "biological
-  pre-fractionation," which can substantially enhance the detection of
-  lower-abundance proteins.
-  </p>
+      <p>
+      <strong>The purpose of this NSF-funded project</strong> is to
+      catalog and study <a href="proteome.pl">the dynamic properties of
+      the cell wall proteome, or secretome</a>, using tomato (<i>Solanum
+      lycopersicum</i>) as a model system.
+      </p>
 
 
-</&>
-<&| /page/info_section.mas, title => 'News' &>
+      <p>
+      <strong>Why study the "secretome"?</strong> Proteomic analysis of cellular
+      compartments reveals the subcellular locations of a specific protein,
+      or protein complex, which in turn can be a valuable step towards
+      understanding protein function. Localization information also helps in
+      the identification of protein interactions and targeting pathways, and
+      peptide motifs and structural signatures that can direct proteins to
+      various cellular locations. In addition the analysis of a subcellular
+      proteome has the advantage of requiring "biological
+      pre-fractionation," which can substantially enhance the detection of
+      lower-abundance proteins.
+      </p>
 
-  <&| /page/info_section.mas, title => 'Upcoming Meetings', is_subsection => 1 &>
-    <ul class="conferences">
-    <li> <a href="http://www.sol2010.org/">SOL2010</a> &ndash; Dundee, Scotland, UK, Sept. 5-9, 2010 </li>
-    <li> <a href="http://proteomlux.lippmann.lu">International Conference on Proteomics in Plants, Microorganisms and Environment</a> Luxembourg, October 18-20, 2010 </li>
-    <li> <a href="http://www.genomeconference.org">Fifth International Conference on Genomics (ICG-V)</a> &ndash; Shenzhen, China, November 15-18, 2010 </li>
-    <li> <a href="http://www.intl-pag.org">Plant and Animal Genome XIX</a> &ndash;  San Diego, California, USA, January 15-19, 2011
-    <li> <a href="http://www.keystonesymposia.org/meetings/viewMeetings.cfm?MeetingID=1124"> Keystone Symposia: Plant Abiotic Stress Tolerance Mechanisms, Water and Global Agriculture</a> &ndash; Keystone Resort, Keystone, Colorado, USA, January 17-22, 2011</li>
-    <li> <a href="http://www.aspb.org">American Society of Plant Biologists (ASPB)</a> &ndash; Minneapolis, Minnesota, USA, August 6-10, 2011</li>
+      <strong>All secretom datasets can be downloaded from the
+      <a href="ftp://ftp.sgn.cornell.edu/secretom/">SGN FTP site</a>.
+      </strong>
+
+    </&>
+  </div>
+  <div style="float: right; width: 50%">
+    <&| /page/info_section.mas, title => 'Projects' &>
+
+      <a class="project">Computational Prediction of the Plant Secretome</a>
+      <a class="project">Functional Screens for Secreted Proteins</a>
+      <a class="project">The Tomato Fruit Glycoproteome</a>
+      <a class="project">Tomato Comparative and Quantitative Proteomics</a>
+      <a class="project">Integrated Proteome/Transcriptome Profiling of Tomato Fruit</a>
+      <a class="project">The Tomato Fruit Cuticular Cell Wall Proteome</a>
+      <a class="project">The Secretome of Phytophthora/Tomato Interactions</a>
+      <a class="project">Spin-off Projects and Collaborations</a>
+
+    </&>
+  </div>
+
+  <&| /page/info_section.mas, title => 'News' &>
+
+    <&| /page/info_section.mas, title => 'Upcoming Meetings', is_subsection => 1 &>
+      <ul class="conferences">
+      <li> <a href="http://www.sol2010.org/">SOL2010</a> &ndash; Dundee, Scotland, UK, Sept. 5-9, 2010 </li>
+      <li> <a href="http://proteomlux.lippmann.lu">International Conference on Proteomics in Plants, Microorganisms and Environment</a> Luxembourg, October 18-20, 2010 </li>
+      <li> <a href="http://www.genomeconference.org">Fifth International Conference on Genomics (ICG-V)</a> &ndash; Shenzhen, China, November 15-18, 2010 </li>
+      <li> <a href="http://www.intl-pag.org">Plant and Animal Genome XIX</a> &ndash;  San Diego, California, USA, January 15-19, 2011
+      <li> <a href="http://www.keystonesymposia.org/meetings/viewMeetings.cfm?MeetingID=1124"> Keystone Symposia: Plant Abiotic Stress Tolerance Mechanisms, Water and Global Agriculture</a> &ndash; Keystone Resort, Keystone, Colorado, USA, January 17-22, 2011</li>
+      <li> <a href="http://www.aspb.org">American Society of Plant Biologists (ASPB)</a> &ndash; Minneapolis, Minnesota, USA, August 6-10, 2011</li>
+      </ul>
+    </&>
+
+    <&| /page/info_section.mas, title => 'Job Openings', is_subsection => 1 &>
+      <p>
+      The Rose lab is currently seeking a postdoctoral research associate with 
+      an interest in plant proteomics, or fruit development and ripening. 
+      Experience in mass spectrometry and plant molecular biology would 
+      be an advantage, and good communication skills are critical. 
+      Please contact Joss Rose if interested: 
+      <a href="mailto:jr286@cornell.edu">jr286@cornell.edu</a>
+      </p>
+    </&>
+
+  </&>
+  <&| /page/info_section.mas, title => 'Education, Training, and Outreach' &>
+
+   <div style="text-align: right; float: right; margin: 1em 3em">
+    <img style="border: 1px solid black" src="/img/secretom/tomato_bath.png" />
+   </div>
+
+    A number of <a href="training.pl">education and training opportunities</a> in plant proteomics and cell wall biology have been established.  <a href="outreach.pl">Internships are available.</a>
+
+
+
+  </&>
+  <&| /page/info_section.mas, title => 'People' &>
+    <ul class="people">
+      <li>Joss Rose <a href="http://labs.plantbio.cornell.edu/rose/index.htm">[Lab]</a></li>
+      <li>Ted Thannhauser <a href="http://www.ars.usda.gov/PandP/docs.htm?docid=9634">[USDA Personal]</a></li>
+      <li>Jim Giovannoni <a href="http://www.bti.cornell.edu/JimGiovannoni.php?page=Research#page=ResearchSummary">[BTI Personal]</a></li>
+      <li>Lukas Mueller <a href="http://solgenomics.net/about">[SGN]</a></li>
+      <li>Zhangjun Fei <a href="http://www.bti.cornell.edu/ZhangjunFei.php?page=Research#page=ResearchSummary">[BTI Personal]</a></li>
     </ul>
+
+  </&>
+  <&| /page/info_section.mas, title => 'Funding' &>
+
+       <table><tr>
+       <td><a style="background: none" href="http://www.nsf.gov"><img border="0" src="/documents/img/secretom/NSF_Logo.jpg" width="100" height="100"/></a></td>
+       <td style="vertical-align: middle; padding-left: 1em">
+        <p>This project and database are funded by National Science Foundation Grant 
+        <a href="http://nsf.gov/awardsearch/showAward.do?AwardNumber=0606595">0606595</a>.
+        </p>
+
+        <p>
+        For questions and comments regarding the SecreTom project, please
+        contact Jocelyn Rose at <a href="mailto:jr286@cornell.edu">jr286@cornell.edu</a>.
+        </p>
+      </td></tr>
+      </table>
+
   </&>
 
-  <&| /page/info_section.mas, title => 'Job Openings', is_subsection => 1 &>
-    <p>
-    The Rose lab is currently seeking a postdoctoral research associate with 
-    an interest in plant proteomics, or fruit development and ripening. 
-    Experience in mass spectrometry and plant molecular biology would 
-    be an advantage, and good communication skills are critical. 
-    Please contact Joss Rose if interested: 
-    <a href="mailto:jr286@cornell.edu">jr286@cornell.edu</a>
-    </p>
+  <&| /page/info_section.mas, title => 'Related Sites' &>
+
+      <ul>
+        <li><a href="http://www.ccrc.uga.edu/~mao/cellwall/main.htm">Plant Cell Wall Overview</a></li>
+        <li><a href="http://cell.ccrc.uga.edu/~mao/wallmab/Home/Home.php">Cell Wall Antibodies</a></li>
+        <li><a href="http://cellwall.genomics.purdue.edu/">Cell Wall Genomics</a></li>
+        <li><a href="http://csbl1.bmb.uga.edu/pDAWG">Plant cell wall genes (pDAWG)</a></li>
+        <li><a href="http://bioweb.ucr.edu/Cellwall">Cell Wall Navigator</a></li>
+        <li><a href="http://www.cazy.org">Carbohydrate Active Enzymes</a></li>
+      </ul>
+
   </&>
 
-</&>
-<&| /page/info_section.mas, title => 'Projects' &>
+  <a name="publications"></a>
 
-  <a class="project">Computational Prediction of the Plant Secretome</a>
-  <a class="project">Functional Screens for Secreted Proteins</a>
-  <a class="project">The Tomato Fruit Glycoproteome</a>
-  <a class="project">Tomato Comparative and Quantitative Proteomics</a>
-  <a class="project">Integrated Proteome/Transcriptome Profiling of Tomato Fruit</a>
-  <a class="project">The Tomato Fruit Cuticular Cell Wall Proteome</a>
-  <a class="project">The Secretome of Phytophthora/Tomato Interactions</a>
-  <a class="project">Spin-off Projects and Collaborations</a>
-
-</&>
-<&| /page/info_section.mas, title => 'People' &>
-  <ul class="people">
-    <li>Joss Rose <a href="http://labs.plantbio.cornell.edu/rose/index.htm">[Lab]</a></li>
-    <li>Ted Thannhauser <a href="http://www.ars.usda.gov/PandP/docs.htm?docid=9634">[USDA Personal]</a></li>
-    <li>Jim Giovannoni <a href="http://www.bti.cornell.edu/JimGiovannoni.php?page=Research#page=ResearchSummary">[BTI Personal]</a></li>
-    <li>Lukas Mueller <a href="http://solgenomics.net/about">[SGN]</a></li>
-    <li>Zhangjun Fei <a href="http://www.bti.cornell.edu/ZhangjunFei.php?page=Research#page=ResearchSummary">[BTI Personal]</a></li>
-  </ul>
-
-</&>
-<&| /page/info_section.mas, title => 'Education, Training, and Outreach' &>
-
-  A number of <a href="training.pl">education and training opportunities</a> in plant proteomics and cell wall biology have been established.  <a href="outreach.pl">Internships are available.</a>
-  <img style="display: block; margin: 1em 3em; border: 1px solid black" src="/img/secretom/tomato_bath.png" />
-
-
-</&>
-<&| /page/info_section.mas, title => 'Related Sites' &>
-
-    <ul>
-      <li><a href="http://www.ccrc.uga.edu/~mao/cellwall/main.htm">Plant Cell Wall Overview</a></li>
-      <li><a href="http://cell.ccrc.uga.edu/~mao/wallmab/Home/Home.php">Cell Wall Antibodies</a></li>
-      <li><a href="http://cellwall.genomics.purdue.edu/">Cell Wall Genomics</a></li>
-      <li><a href="http://csbl1.bmb.uga.edu/pDAWG">Plant cell wall genes (pDAWG)</a></li>
-      <li><a href="http://bioweb.ucr.edu/Cellwall">Cell Wall Navigator</a></li>
-      <li><a href="http://www.cazy.org">Carbohydrate Active Enzymes</a></li>
-    </ul>
-
-</&>
-<&| /page/info_section.mas, title => 'Funding' &>
-
-     <div style="float: right"><a style="padding:0px" href="http://www.nsf.gov"><img border="0" src="/documents/img/secretom/NSF_Logo.jpg" width="100" height="100"/></a></div>
-
-    <p>This project and database are funded by National Science Foundation Grant 
-    <a href="http://nsf.gov/awardsearch/showAward.do?AwardNumber=0606595">0606595</a>.
-    </p>
-
-    <p>
-    For questions and comments regarding the SecreTom project, please
-    contact Jocelyn Rose at <a href="mailto:jr286@cornell.edu">jr286@cornell.edu</a>.
-    </p>
-
-</&>
-
-<a name="publications"></a>
-
-<&| /page/info_section.mas, title => 'Publications' &>
-<&| .publications &>
-- Isaacson, T., Saravanan, R.S., He, Y., Damasceno, C.M.B., Catal·, C., SaladiÈ, M. and Rose, J.K.C. (2006) Sample extraction techniques for enhanced proteomic analysis of plant tissues. Nature Protocols 1: 769-774.
-- Lee, S.-J. Kelley, B., Damasceno, C.M.B., St. John, B., Kim, B.-S. Kim, B.-D. and Rose, J.K.C. (2006) A functional screen to characterize the secretomes of eukaryotic phytopathogens and their hosts in planta. Molecular Plant Microbe Interactions 12: 1368-1377.
-- Lee, S.J., Kim, B.-D. and Rose, J.K.C. (2006) Identification of eukaryotic secreted and cell surface proteins using the yeast secretion trap screen.  Nature Protocols 1: 2439-2447.
-- Tyler, B.M.; Tripathy, S.; Zhang, X.; Dehal, Jiang. R. H.Y.; Aerts, A.; Arredondo, F.D.; Baxter, L.; Bensasson, D.; Beynon, J.L.; Chapman, J.; Damasceno, C.M.B.; Dorrance, A.E.; Dou, D.; Dickerman, A.W.; Dubchak, I.L.; Garbelotto, M.; Gijzen, M.; Gordon, S.G.; Govers, F.; Grunwald, N.J.; Huang, W.; Ivors, K.L.; Jones, R.W.; Kamoun, S.; Krampis, S.; Lamour, K.H.; Lee, M.-K.; Maclean, D.J.; McDonald, W.H., Medina, M., Meijer, H.J.G., Morris, P.F., Nordberg, E.K., Ospina-Giraldo, M.D.; Phuntumart, V.; Putnam, N.H.; Rash, S.; Rose, J.K.C.; Sakihama, Y.; Salamov, A.A.; Savidor, A.; Scheuring, C.F.; Smith, B.M.; Sobral, B.W.S.; Terry, A.; Torto-Alalibo, T.A.; Win, J.; Xu, Z.; Zhang, H.; Grigoriev, I.V.; Rokhsar, D.S.;  Boore, J.L. (2006) Phytophthora genome sequences uncover evolutionary origins and mechanisms of pathogenesis. Science 313: 1261-1266.
-- Urbanowicz, B.R., Catal·, C., Irwin, D., Wilson, D.B., Ripoll, D.R. and Rose, J.K.C. (2007) A tomato endo-%GÔÅ¢%@-1,4-glucanase, SlCel9C1, represents a distinct subclass with a new family of carbohydrate binding modules (CBM49). Journal of Biological Chemistry 282: 12066-12074.
-Urbanowicz, B.R., Bennett, A.B., Catal·, C., del Campillo, E., Hayashi, T., Henrissat, B., Hˆfte, H., McQueen-Mason, S., Patterson, S., Shoseyov, O., Teeri, T. and Rose, J.K.C. (2007) Structural organization and a standardized nomenclature for plant endo-1,4-%GÔÅ¢%@-glucanases of glycosyl hydrolase family 9. Plant Physiology 144: 1693-1696.
-- Vicente, A.R., SaladiÈ, M., Rose, J.K.C. and Labavitch, J.M (2007) The linkage between cell wall metabolism and the ripening-associated softening of fruits: looking to the future. Journal of the Science of Food and Agriculture 87: 1435-1448.
-- Damasceno, C.M.B. and Rose, J.K.C. (2007) Tandem-affinity purification (TAP) tags. Encyclopedia of Life Sciences. Pub. John Wiley & Sons) http://www.els.net [DOI: 10.1002/9780470015902.a0020212).
-- Giovannoni, J.  (2007) Fruit ripening mutants yield insights into ripening control. Current Opinion in Plant Biology. 10:283-289.
-- Damasceno, C.M.B., Bishop, J.G., Ripoll, D.R., Win, J., Kamoun, S. and Rose, J.K.C. (2008) The structure of the glucanase inhibitor protein (GIP) family from Phytophthora species and co-evolution with plant endo-$B&B(B-1,3-glucanases. Molecular Plant-Microbe Interactions 21: 820-830.
-- Yeats, T.H. and Rose, J.K.C. (2008) The biochemistry and biology of extracellular plant lipid-transfer proteins (LTPs) Protein Science 17: 191-198.
-- Cara, B. and Giovannoni, J. (2008) The molecular biology of ethylene during tomato fruit development and maturation.  Plant Science. 175:106-113.
-- Lopez-Casado, G., Urbanowicz, B.R., Damasceno C.M.B. and Rose J.K.C. (2008) Plant glycosyl hydrolases and biofuels: a natural marriage. Current Opinion in Plant Biology 11: 329-337.
-- Urbanowicz, B.R. and Rose J.K.C. (2008) Sustainable biofuels: a daunting challenge for plant scientists. Chemistry Today 26: 23-25.
-- AlÛs, E., Roca, M., Iglesias, D.J., MÌnguez-Mosquera, M.I., Damasceno, C.M.B., Thannhauser, T.W., Rose, J.K.C., TalÛn, M. and CercÛs, M. (2008) An evaluation of the basis and consequences of a stay-green mutation in the navel negra (nan) citrus mutant using transcriptomic and proteomic profiling and metabolite analysis. Plant Physiology 147: 1300-1315.
-- Matas, A.J., Gapper, N., Chung, M.-Y., Giovannoni, J.J. and Rose, J.K.C. (2009) Biology and genetic engineering of fruit maturation for enhanced quality and shelf-life. Current Opinion in Biotechnology 20: 197-203.
-- Buda, G.J., Isaacson, T., Matas, A.J., Paolillo, D.J. and Rose, J.K.C. (2009) Three dimensional imaging of plant cuticle architecture using confocal scanning laser microscopy. The Plant Journal 60: 378-385 (front cover).
-- Isaacson, T., Kosma, D.K., Matas, A.J., Buda, G.J., He, Y., Yu, B., Pravitasari, A., Batteas, J.D., Stark, R.E., Jenks, M.A. and Rose, J.K.C. (2009) Cutin deficiency in the tomato fruit cuticle consistently affects resistance to microbial infection and biomechanical properties, but not transpirational water loss. The Plant Journal 60: 363-377.
-- Vrebalov, J., Pan, I.L., Matas, A.J., McQuinn, R., Chung., M.Y., Poole, M., Rose, J.K.C., Seymour, G., Giovannoni, J.J. and Irish, V.F. (2009) Fleshy fruit expansion and ripening are regulated by the tomato SHATTERPROOF gene, TAGL1. The Plant Cell 21: 3041%G‚Äì%@3062 (front cover).
-- Zhou, S., Sauve, R. and Thannhauser, T.W. (2009) Proteome changes induced by aluminium stress in tomato roots. Journal of Experimental Botany 60:1849-1857
-- Zhou, S., Sauve, R., Fish, T. and Thannhauser, T.W. (2009) Salt induced and salt suppressed proteins in tomato leaves. Journal of the American Society for Horticultural Science 134: 289-292.  
-- Xiang, B., Yang, X. & Thannhauser, T. W. (2009) Protein N- and C-termini identification using mass spectrometry and isotopic labeling. Rapid Communications in Mass Spectrometry 23: 2102%G‚Äì%@2106
-- The International Brachypodium Initiative (2010) Genome sequence analysis of the model grass Brachypodium distachyon: insights into grass genome evolution. Nature 462: 763-768.
-- Kelley, B.S., Lee, S.-J., Damasceno, C.M.B., Chakravarthy, S., Kim, B.-D., Martin, G.B. and Rose, J.K.C. (2010) A secreted effector protein (SNE1) from Phytophthora infestans is a broadly acting suppressor of programmed cell death. The Plant Journal 62: 357%G‚Äì%@366.
-- Rose, J.K.C. and Lee, S.-J. (2010) Straying off the highway: trafficking of secreted plant proteins and complexity in the plant cell wall proteome. Plant Physiology 153: 433-436.
--McCann, M. and Rose, J.K.C. (2010) Blueprints for building plant cell walls. Plant Physiology 153: 365.
-- Lee, S.-J. and Rose, J.K.C. (2010) Mediation of the transition from biotrophy to necrotrophy in hemibiotrophic plant pathogens by secreted effector proteins. Plant Signaling and Behavior 5/6: 1559-2316.
--Lee, S.-J. and Rose, J.K.C. (2010) Characterization of the plant cell wall proteome using high throughput screens (In press Methods in Molecular Biology).
-- Rugkong A., Rose, J.K.C., Lee, S.-J., Giovannoni, J.J., O$B!G(BNeill, M. and Watkins, C.B. (2010) Cell wall metabolism in cold-stored tomato fruit. Postharvest Biology and Technology 57: 106-113.S
-- Matas, A.J., AgustÌ, J., Tadeo, F.R., TalÛn, M. and Rose, J.K.C. (2010) Tissue specific transcriptome profiling of the citrus fruit epidermis and subepidermis using laser capture microdissection. Journal of Experimental Botany 61: 3321%G‚Äì%@3330.
-- Yeats, T.H., Howe, K.J., Matas, A.J., Buda, G.J., Thannhauser, T.W. and Rose, J.K.C. (2010) Mining the tomato fruit cuticular and epidermal cell wall proteome for proteins associated with cuticle biogenesis. Journal of Experimental Botany 61: 3759-3771.
-- Matas, A.J., Fei, Z., Giovannoni, J.J. and Rose, J.K.C. (2010) Developments in tomato transcriptomics. In: Genetics, Genomics and Breeding in Fruits and Vegetable Crops (Eds. B. Leidl, A. Slade, S. Hurst, J.A. Labate, J.R. Stommel). Pub. Science Publishers, New Hampshire, USA. (in press)
-- S¯rensen, I. and Rose, J.K.C. (2010) Plant cell walls. In: McGraw-Hill 2010 Yearbook of Science & Technology$B!I(B. Pub. McGraw-Hill Professional (in press).
-</&>
-</&>
+  <&| /page/info_section.mas, title => 'Publications' &>
+  <&| .publications &>
+  - Isaacson, T., Saravanan, R.S., He, Y., Damasceno, C.M.B., Catal·, C., SaladiÈ, M. and Rose, J.K.C. (2006) Sample extraction techniques for enhanced proteomic analysis of plant tissues. Nature Protocols 1: 769-774.
+  - Lee, S.-J. Kelley, B., Damasceno, C.M.B., St. John, B., Kim, B.-S. Kim, B.-D. and Rose, J.K.C. (2006) A functional screen to characterize the secretomes of eukaryotic phytopathogens and their hosts in planta. Molecular Plant Microbe Interactions 12: 1368-1377.
+  - Lee, S.J., Kim, B.-D. and Rose, J.K.C. (2006) Identification of eukaryotic secreted and cell surface proteins using the yeast secretion trap screen.  Nature Protocols 1: 2439-2447.
+  - Tyler, B.M.; Tripathy, S.; Zhang, X.; Dehal, Jiang. R. H.Y.; Aerts, A.; Arredondo, F.D.; Baxter, L.; Bensasson, D.; Beynon, J.L.; Chapman, J.; Damasceno, C.M.B.; Dorrance, A.E.; Dou, D.; Dickerman, A.W.; Dubchak, I.L.; Garbelotto, M.; Gijzen, M.; Gordon, S.G.; Govers, F.; Grunwald, N.J.; Huang, W.; Ivors, K.L.; Jones, R.W.; Kamoun, S.; Krampis, S.; Lamour, K.H.; Lee, M.-K.; Maclean, D.J.; McDonald, W.H., Medina, M., Meijer, H.J.G., Morris, P.F., Nordberg, E.K., Ospina-Giraldo, M.D.; Phuntumart, V.; Putnam, N.H.; Rash, S.; Rose, J.K.C.; Sakihama, Y.; Salamov, A.A.; Savidor, A.; Scheuring, C.F.; Smith, B.M.; Sobral, B.W.S.; Terry, A.; Torto-Alalibo, T.A.; Win, J.; Xu, Z.; Zhang, H.; Grigoriev, I.V.; Rokhsar, D.S.;  Boore, J.L. (2006) Phytophthora genome sequences uncover evolutionary origins and mechanisms of pathogenesis. Science 313: 1261-1266.
+  - Urbanowicz, B.R., Catal·, C., Irwin, D., Wilson, D.B., Ripoll, D.R. and Rose, J.K.C. (2007) A tomato endo-%GÔÅ¢%@-1,4-glucanase, SlCel9C1, represents a distinct subclass with a new family of carbohydrate binding modules (CBM49). Journal of Biological Chemistry 282: 12066-12074.
+  Urbanowicz, B.R., Bennett, A.B., Catal·, C., del Campillo, E., Hayashi, T., Henrissat, B., Hˆfte, H., McQueen-Mason, S., Patterson, S., Shoseyov, O., Teeri, T. and Rose, J.K.C. (2007) Structural organization and a standardized nomenclature for plant endo-1,4-%GÔÅ¢%@-glucanases of glycosyl hydrolase family 9. Plant Physiology 144: 1693-1696.
+  - Vicente, A.R., SaladiÈ, M., Rose, J.K.C. and Labavitch, J.M (2007) The linkage between cell wall metabolism and the ripening-associated softening of fruits: looking to the future. Journal of the Science of Food and Agriculture 87: 1435-1448.
+  - Damasceno, C.M.B. and Rose, J.K.C. (2007) Tandem-affinity purification (TAP) tags. Encyclopedia of Life Sciences. Pub. John Wiley & Sons) http://www.els.net [DOI: 10.1002/9780470015902.a0020212).
+  - Giovannoni, J.  (2007) Fruit ripening mutants yield insights into ripening control. Current Opinion in Plant Biology. 10:283-289.
+  - Damasceno, C.M.B., Bishop, J.G., Ripoll, D.R., Win, J., Kamoun, S. and Rose, J.K.C. (2008) The structure of the glucanase inhibitor protein (GIP) family from Phytophthora species and co-evolution with plant endo-$B&B(B-1,3-glucanases. Molecular Plant-Microbe Interactions 21: 820-830.
+  - Yeats, T.H. and Rose, J.K.C. (2008) The biochemistry and biology of extracellular plant lipid-transfer proteins (LTPs) Protein Science 17: 191-198.
+  - Cara, B. and Giovannoni, J. (2008) The molecular biology of ethylene during tomato fruit development and maturation.  Plant Science. 175:106-113.
+  - Lopez-Casado, G., Urbanowicz, B.R., Damasceno C.M.B. and Rose J.K.C. (2008) Plant glycosyl hydrolases and biofuels: a natural marriage. Current Opinion in Plant Biology 11: 329-337.
+  - Urbanowicz, B.R. and Rose J.K.C. (2008) Sustainable biofuels: a daunting challenge for plant scientists. Chemistry Today 26: 23-25.
+  - AlÛs, E., Roca, M., Iglesias, D.J., MÌnguez-Mosquera, M.I., Damasceno, C.M.B., Thannhauser, T.W., Rose, J.K.C., TalÛn, M. and CercÛs, M. (2008) An evaluation of the basis and consequences of a stay-green mutation in the navel negra (nan) citrus mutant using transcriptomic and proteomic profiling and metabolite analysis. Plant Physiology 147: 1300-1315.
+  - Matas, A.J., Gapper, N., Chung, M.-Y., Giovannoni, J.J. and Rose, J.K.C. (2009) Biology and genetic engineering of fruit maturation for enhanced quality and shelf-life. Current Opinion in Biotechnology 20: 197-203.
+  - Buda, G.J., Isaacson, T., Matas, A.J., Paolillo, D.J. and Rose, J.K.C. (2009) Three dimensional imaging of plant cuticle architecture using confocal scanning laser microscopy. The Plant Journal 60: 378-385 (front cover).
+  - Isaacson, T., Kosma, D.K., Matas, A.J., Buda, G.J., He, Y., Yu, B., Pravitasari, A., Batteas, J.D., Stark, R.E., Jenks, M.A. and Rose, J.K.C. (2009) Cutin deficiency in the tomato fruit cuticle consistently affects resistance to microbial infection and biomechanical properties, but not transpirational water loss. The Plant Journal 60: 363-377.
+  - Vrebalov, J., Pan, I.L., Matas, A.J., McQuinn, R., Chung., M.Y., Poole, M., Rose, J.K.C., Seymour, G., Giovannoni, J.J. and Irish, V.F. (2009) Fleshy fruit expansion and ripening are regulated by the tomato SHATTERPROOF gene, TAGL1. The Plant Cell 21: 3041%G‚Äì%@3062 (front cover).
+  - Zhou, S., Sauve, R. and Thannhauser, T.W. (2009) Proteome changes induced by aluminium stress in tomato roots. Journal of Experimental Botany 60:1849-1857
+  - Zhou, S., Sauve, R., Fish, T. and Thannhauser, T.W. (2009) Salt induced and salt suppressed proteins in tomato leaves. Journal of the American Society for Horticultural Science 134: 289-292.  
+  - Xiang, B., Yang, X. & Thannhauser, T. W. (2009) Protein N- and C-termini identification using mass spectrometry and isotopic labeling. Rapid Communications in Mass Spectrometry 23: 2102%G‚Äì%@2106
+  - The International Brachypodium Initiative (2010) Genome sequence analysis of the model grass Brachypodium distachyon: insights into grass genome evolution. Nature 462: 763-768.
+  - Kelley, B.S., Lee, S.-J., Damasceno, C.M.B., Chakravarthy, S., Kim, B.-D., Martin, G.B. and Rose, J.K.C. (2010) A secreted effector protein (SNE1) from Phytophthora infestans is a broadly acting suppressor of programmed cell death. The Plant Journal 62: 357%G‚Äì%@366.
+  - Rose, J.K.C. and Lee, S.-J. (2010) Straying off the highway: trafficking of secreted plant proteins and complexity in the plant cell wall proteome. Plant Physiology 153: 433-436.
+  -McCann, M. and Rose, J.K.C. (2010) Blueprints for building plant cell walls. Plant Physiology 153: 365.
+  - Lee, S.-J. and Rose, J.K.C. (2010) Mediation of the transition from biotrophy to necrotrophy in hemibiotrophic plant pathogens by secreted effector proteins. Plant Signaling and Behavior 5/6: 1559-2316.
+  -Lee, S.-J. and Rose, J.K.C. (2010) Characterization of the plant cell wall proteome using high throughput screens (In press Methods in Molecular Biology).
+  - Rugkong A., Rose, J.K.C., Lee, S.-J., Giovannoni, J.J., O$B!G(BNeill, M. and Watkins, C.B. (2010) Cell wall metabolism in cold-stored tomato fruit. Postharvest Biology and Technology 57: 106-113.S
+  - Matas, A.J., AgustÌ, J., Tadeo, F.R., TalÛn, M. and Rose, J.K.C. (2010) Tissue specific transcriptome profiling of the citrus fruit epidermis and subepidermis using laser capture microdissection. Journal of Experimental Botany 61: 3321%G‚Äì%@3330.
+  - Yeats, T.H., Howe, K.J., Matas, A.J., Buda, G.J., Thannhauser, T.W. and Rose, J.K.C. (2010) Mining the tomato fruit cuticular and epidermal cell wall proteome for proteins associated with cuticle biogenesis. Journal of Experimental Botany 61: 3759-3771.
+  - Matas, A.J., Fei, Z., Giovannoni, J.J. and Rose, J.K.C. (2010) Developments in tomato transcriptomics. In: Genetics, Genomics and Breeding in Fruits and Vegetable Crops (Eds. B. Leidl, A. Slade, S. Hurst, J.A. Labate, J.R. Stommel). Pub. Science Publishers, New Hampshire, USA. (in press)
+  - S¯rensen, I. and Rose, J.K.C. (2010) Plant cell walls. In: McGraw-Hill 2010 Yearbook of Science & Technology$B!I(B. Pub. McGraw-Hill Professional (in press).
+  </&>
+  </&>
 
 <%def .publications>
 
