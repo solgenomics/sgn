@@ -241,7 +241,7 @@ S&oslash;rensen, I. and Rose, J.K.C. (2010) Plant cell walls. In: McGraw-Hill 20
 
 <%def .publications>
 
-% my @p = reverse split /\r?\n/, $m->content;
+% my @p = grep /\S/, reverse split /\r?\n/, $m->content;
 % s/^\s*\-\s*// for @p;
   <&| /page/info_section.mas, title => 'Publications', subtitle => @p.' publications' &>
 

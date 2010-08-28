@@ -9,7 +9,7 @@
    border: 1px solid #333;
 }
 #secretom_container .publication {
-  padding: 0.3em 0;
+  padding: 0.6em 0;
   text-align: justify;
 }
 
