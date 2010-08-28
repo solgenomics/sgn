@@ -32,7 +32,8 @@ sub index :Path :Args(0) {
 }
 
 sub default :Path {
-
+    my ( $self, $c, @args ) = @_;
+    $c->stash->{template} = (join '/', $self->action_namespace, @args).'.mas';
 }
 
 

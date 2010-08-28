@@ -74,7 +74,7 @@
 
       <p>
       <strong>The purpose of this NSF-funded project</strong> is to
-      catalog and study <a href="proteome.pl">the dynamic properties of
+      catalog and study <a href="/secretom/proteome">the dynamic properties of
       the cell wall proteome, or secretome</a>, using tomato (<i>Solanum
       lycopersicum</i>) as a model system.
       </p>
@@ -143,9 +143,9 @@
     <div id="education">
       <img style="border: 1px solid black" src="/img/secretom/tomato_bath.png" />
 
-      <div><a href="training.pl">Education and training opportunities</a> in plant proteomics and cell wall biology have been established as part of this project.</div>
+      <div><a href="/secretom/training">Education and training opportunities</a> in plant proteomics and cell wall biology have been established as part of this project.</div>
 
-      <div class="internships"><a href="outreach.pl">Internships</a> are available.</div>
+      <div class="internships"><a href="/secretom/outreach">Internships</a> are available.</div>
     </div>
   </&>
   <&| /page/info_section.mas, title => 'People' &>
