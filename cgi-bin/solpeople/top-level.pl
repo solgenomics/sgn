@@ -290,24 +290,21 @@ qq| <a href="../phenome/recent_annotated_loci.pl">[View annotated loci by date]<
 
 }
 
-my $user_status_info =
-qq { Your current user status is <b>user</b>. Please contact <a href="mailto:sgn-feedback\@sgn.cornell.edu">SGN</a> to upgrade to a <b>submitter</b> account with more privileges. Submitters can upload user maps, EST data, and become locus editors. };
+my $user_type = $sp->get_user_type();
+my $user_info = {
+    user => qq{ Your current user status is <b>$user_type</b>. Please contact <a href="mailto:sgn-feedback\@sgn.cornell.edu">SGN</a> to upgrade to a <b>submitter</b> account with more privileges. Submitters can upload user maps, EST data, and become locus editors. },
 
-if ( $sp->get_user_type() eq "submitter" ) {
-    $user_status_info =
-qq { Your current user status is <b>submitter</b>. You have the maximum user privileges on SGN. Please contact <a href="mailto:sgn-feedback\@sgn.cornell.edu">SGN</a> if you would like to change your user status.};
+    submitter => qq{ Your current user status is <b>$user_type</b>. You have the maximum user privileges on SGN. Please contact <a href="mailto:sgn-feedback\@sgn.cornell.edu">SGN</a> if you would like to change your user status.},
 
-}
-if ( $sp->get_user_type() eq "curator" ) {
-    $user_status_info = qq { Your current user status is <b>curator</b>. };
-}
+    curator => qq{ Your current user status is <b>$user_type</b>. },
 
-if ( $sp->get_user_type() eq "sequencer" ) {
-    $user_status_info =
-qq { Your current user status is <b>sequencer</b>. You have maximum user privileges on SGN. };
-}
+    sequencer => qq{ Your current user status is <b>$user_type</b>. You have maximum user privileges on SGN. },
+
+    genefamily_editor => qq{ Your current user status is <b>$user_type</b>. },
+};
+
 print info_section_html( title => 'User Status',
-    contents => $user_status_info );
+    contents => $user_info->{$user_type} );
 
 $page->footer();
 

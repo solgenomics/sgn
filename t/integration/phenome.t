@@ -14,7 +14,7 @@ Jonathan "Duke" Leto
 
 use strict;
 use warnings;
-use Test::More tests => 44;
+use Test::More tests => 55;
 use Test::JSON;
 use lib 't/lib';
 use SGN::Test;

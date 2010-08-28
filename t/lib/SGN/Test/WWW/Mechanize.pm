@@ -168,7 +168,7 @@ sub while_logged_in {
 
 sub while_logged_in_all {
     my ($self,$sub) = @_;
-    my @users = qw/user curator submitter sequencer/;
+    my @users = qw/user curator submitter sequencer genefamily_editor/;
     for my $user_type (@users) {
         $self->create_test_user( user_type => $user_type );
         $self->log_in_ok;
