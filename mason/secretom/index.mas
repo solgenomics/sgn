@@ -1,3 +1,29 @@
+  <style type="text/css">
+    a.project {
+      background: rgba(255,255,255,0.8);
+      text-align: left;
+      padding: 1em;
+      cursor: pointer;
+      display: block;
+      color: #111;
+      font-size: 105%;
+      font-weight: bold;
+      margin: 1em;
+      border: 1px solid rgba(0,0,0,0.2);
+    }
+    a.project:hover {
+      border: 1px solid black;
+      text-decoration: none;
+      color: black;
+    }
+    div.projects  {
+        float: right;
+        width: 50%;
+        background: url(/img/secretom/tomato_gray.png) 30% 100% no-repeat;
+    }
+
+  </style>
+
   <div style="width: 34em; text-align: justify; margin: 1em auto; color: #333; font-size: 15px">
     A project to catalog and study the dynamic properties of the cell
     wall proteome (the secretome), using tomato as a model system.
@@ -52,7 +78,7 @@
 
     </&>
   </div>
-  <div style="float: right; width: 50%">
+  <div class="projects">
     <&| /page/info_section.mas, title => 'Projects' &>
 
       <a class="project">Computational Prediction of the Plant Secretome</a>
@@ -122,7 +148,7 @@
         <a href="http://nsf.gov/awardsearch/showAward.do?AwardNumber=0606595">0606595</a>.
         </p>
 
-        <p>
+        <p>g
         For questions and comments regarding the SecreTom project, please
         contact Jocelyn Rose at <a href="mailto:jr286@cornell.edu">jr286@cornell.edu</a>.
         </p>
