@@ -22,6 +22,27 @@
         background: url(/img/secretom/tomato_gray.png) 30% 100% no-repeat;
     }
 
+    #education > img {
+       display: block;
+       float: left;
+       border: 1px solid black;
+       margin: 0 1em 1em 1em;
+    }
+
+    #education {
+       font-size: 150%;
+       text-align: left;
+    }
+
+    #education div {
+       text-align: left;
+       width: 50%;
+       margin-bottom: 1em;
+       float: right;
+    }
+
+
+
   </style>
 
   <div style="width: 34em; text-align: justify; margin: 1em auto; color: #333; font-size: 15px">
@@ -119,15 +140,13 @@
 
   </&>
   <&| /page/info_section.mas, title => 'Education, Training, and Outreach' &>
+    <div id="education">
+      <img style="border: 1px solid black" src="/img/secretom/tomato_bath.png" />
 
-   <div style="text-align: right; float: right; margin: 1em 3em">
-    <img style="border: 1px solid black" src="/img/secretom/tomato_bath.png" />
-   </div>
+      <div>Several <a href="training.pl">education and training opportunities</a> in plant proteomics and cell wall biology have been established.</div>
 
-    A number of <a href="training.pl">education and training opportunities</a> in plant proteomics and cell wall biology have been established.  <a href="outreach.pl">Internships are available.</a>
-
-
-
+      <div class="internships"><a href="outreach.pl">Internships</a> are available.</div>
+    </div>
   </&>
   <&| /page/info_section.mas, title => 'People' &>
     <ul class="people">
