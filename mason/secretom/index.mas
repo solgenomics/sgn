@@ -1,62 +1,6 @@
-<style>
-.header {
-  text-align: center;
-  border-right: 1px solid black;
-  color: white;
-  font-size: 50px;
-  text-align: center;
-  vertical-align: middle;
-  height: 90px;
-  background-color: black;
-}
-ul.conferences {
-  padding: 0;
-}
-ul.conferences li {
-  padding-bottom: 1em;
-}
-ul.conferences li, ul.people li {
-  list-style: none;
-}
-ul.people li {
-  padding: 0.5em;
-  font-size: 120%;
-}
-ul.people {
-  margin: 2em 0;
-}
-
-.publication {
-  margin: 0.5em 0;
-}
-a.project {
-  padding: 1em;
-  cursor: pointer;
-  display: block;
-  color: #222;
-  font-size: 105%;
-  font-weight: bold;
-  margin: 1em;
-  border: 1px solid transparent;
-}
-a.project:hover {
-  border: 1px solid black;
-  text-decoration: none;
-  color: black;
-}
-
-</style>
-
 <img style="margin-bottom:10px; display: block; margin: 1em auto" src="/documents/img/secretom/secretom_logo_smaller.jpg" alt="secretom logo" />
 
-
-<table>
-<tr>
-<td style="width: 350px; padding-right: 3px; border-right: 2px solid #666"><!-- left column -->
-
-  <div class="header" style="background: black url(/documents/img/secretom/summary_header_thin.jpg) no-repeat left top">
-  Summary
-  </div>
+<&| /page/info_section.mas, title => 'Summary' &>
 
   <p>
   The <strong>plant cell wall/apoplast</strong> plays a fundamental role
@@ -98,44 +42,34 @@ a.project:hover {
   lower-abundance proteins.
   </p>
 
-  <p>
-  <strong>All secretom datasets can be downloaded from the
-  <a href="ftp://ftp.sgn.cornell.edu/secretom/">SGN FTP site</a>.
-  </strong>
-  </p>
 
+</&>
+<&| /page/info_section.mas, title => 'News' &>
 
-  <div class="header">
-  <img src="/documents/img/secretom/news_header_thin.jpg" />
-  </div>
+  <&| /page/info_section.mas, title => 'Upcoming Meetings', is_subsection => 1 &>
+    <ul class="conferences">
+    <li> <a href="http://www.sol2010.org/">SOL2010</a> &ndash; Dundee, Scotland, UK, Sept. 5-9, 2010 </li>
+    <li> <a href="http://proteomlux.lippmann.lu">International Conference on Proteomics in Plants, Microorganisms and Environment</a> Luxembourg, October 18-20, 2010 </li>
+    <li> <a href="http://www.genomeconference.org">Fifth International Conference on Genomics (ICG-V)</a> &ndash; Shenzhen, China, November 15-18, 2010 </li>
+    <li> <a href="http://www.intl-pag.org">Plant and Animal Genome XIX</a> &ndash;  San Diego, California, USA, January 15-19, 2011
+    <li> <a href="http://www.keystonesymposia.org/meetings/viewMeetings.cfm?MeetingID=1124"> Keystone Symposia: Plant Abiotic Stress Tolerance Mechanisms, Water and Global Agriculture</a> &ndash; Keystone Resort, Keystone, Colorado, USA, January 17-22, 2011</li>
+    <li> <a href="http://www.aspb.org">American Society of Plant Biologists (ASPB)</a> &ndash; Minneapolis, Minnesota, USA, August 6-10, 2011</li>
+    </ul>
+  </&>
 
-  <h3>Upcoming Meetings</h3>
-  <ul class="conferences">
-  <li> <a href="http://www.sol2010.org/">SOL2010</a> &ndash; Dundee, Scotland, UK, Sept. 5-9, 2010 </li>
-  <li> <a href="http://proteomlux.lippmann.lu">International Conference on Proteomics in Plants, Microorganisms and Environment</a> Luxembourg, October 18-20, 2010 </li>
-  <li> <a href="http://www.genomeconference.org">Fifth International Conference on Genomics (ICG-V)</a> &ndash; Shenzhen, China, November 15-18, 2010 </li>
-  <li> <a href="http://www.intl-pag.org">Plant and Animal Genome XIX</a> &ndash;  San Diego, California, USA, January 15-19, 2011
-  <li> <a href="http://www.keystonesymposia.org/meetings/viewMeetings.cfm?MeetingID=1124"> Keystone Symposia: Plant Abiotic Stress Tolerance Mechanisms, Water and Global Agriculture</a> &ndash; Keystone Resort, Keystone, Colorado, USA, January 17-22, 2011</li>
-  <li> <a href="http://www.aspb.org">American Society of Plant Biologists (ASPB)</a> &ndash; Minneapolis, Minnesota, USA, August 6-10, 2011</li>
-  </ul>
+  <&| /page/info_section.mas, title => 'Job Openings', is_subsection => 1 &>
+    <p>
+    The Rose lab is currently seeking a postdoctoral research associate with 
+    an interest in plant proteomics, or fruit development and ripening. 
+    Experience in mass spectrometry and plant molecular biology would 
+    be an advantage, and good communication skills are critical. 
+    Please contact Joss Rose if interested: 
+    <a href="mailto:jr286@cornell.edu">jr286@cornell.edu</a>
+    </p>
+  </&>
 
-
-  <h3>Jobs</h3>
-  <p>
-  The Rose lab is currently seeking a postdoctoral research associate with 
-  an interest in plant proteomics, or fruit development and ripening. 
-  Experience in mass spectrometry and plant molecular biology would 
-  be an advantage, and good communication skills are critical. 
-  Please contact Joss Rose if interested: 
-  <a href="mailto:jr286@cornell.edu">jr286@cornell.edu</a>
-  </p>
-
-</td>
-<td>
-
-  <div class="header" ""style="background: black url(/documents/img/secretom/objectives_header_thin.jpg) no-repeat left top">
-  Projects
-  </div>
+</&>
+<&| /page/info_section.mas, title => 'Projects' &>
 
   <a class="project">Computational Prediction of the Plant Secretome</a>
   <a class="project">Functional Screens for Secreted Proteins</a>
@@ -146,10 +80,8 @@ a.project:hover {
   <a class="project">The Secretome of Phytophthora/Tomato Interactions</a>
   <a class="project">Spin-off Projects and Collaborations</a>
 
-  <div class="header">
-    <img src="/documents/img/secretom/people_header_thin.jpg" />
-  </div>
-
+</&>
+<&| /page/info_section.mas, title => 'People' &>
   <ul class="people">
     <li>Joss Rose <a href="http://labs.plantbio.cornell.edu/rose/index.htm">[Lab]</a></li>
     <li>Ted Thannhauser <a href="http://www.ars.usda.gov/PandP/docs.htm?docid=9634">[USDA Personal]</a></li>
@@ -158,13 +90,15 @@ a.project:hover {
     <li>Zhangjun Fei <a href="http://www.bti.cornell.edu/ZhangjunFei.php?page=Research#page=ResearchSummary">[BTI Personal]</a></li>
   </ul>
 
-  <h3>Education, Training, and Outreach</h3>
+</&>
+<&| /page/info_section.mas, title => 'Education, Training, and Outreach' &>
+
   A number of <a href="training.pl">education and training opportunities</a> in plant proteomics and cell wall biology have been established.  <a href="outreach.pl">Internships are available.</a>
   <img style="display: block; margin: 1em 3em; border: 1px solid black" src="/img/secretom/tomato_bath.png" />
 
-  <div style="background: black url(/img/secretom/tomato_pan.jpg) no-repeat top center" class="header">
-  Links
-  </div>
+
+</&>
+<&| /page/info_section.mas, title => 'Related Sites' &>
 
     <ul>
       <li><a href="http://www.ccrc.uga.edu/~mao/cellwall/main.htm">Plant Cell Wall Overview</a></li>
@@ -175,17 +109,11 @@ a.project:hover {
       <li><a href="http://www.cazy.org">Carbohydrate Active Enzymes</a></li>
     </ul>
 
-</td>
-</tr>
-</table>
+</&>
+<&| /page/info_section.mas, title => 'Funding' &>
 
-
-<div style="height:3px; font-size:1px; background-color:#c0c0c0; clear: both">&nbsp;</div>
-<br />
-<div id="funding">
      <div style="float: right"><a style="padding:0px" href="http://www.nsf.gov"><img border="0" src="/documents/img/secretom/NSF_Logo.jpg" width="100" height="100"/></a></div>
 
-    <h3> Funding Summary</h3>
     <p>This project and database are funded by National Science Foundation Grant 
     <a href="http://nsf.gov/awardsearch/showAward.do?AwardNumber=0606595">0606595</a>.
     </p>
@@ -194,12 +122,12 @@ a.project:hover {
     For questions and comments regarding the SecreTom project, please
     contact Jocelyn Rose at <a href="mailto:jr286@cornell.edu">jr286@cornell.edu</a>.
     </p>
-</div>
 
+</&>
 
-$B&B(B
 <a name="publications"></a>
-<div class="header">Publications</div>
+
+<&| /page/info_section.mas, title => 'Publications' &>
 <&| .publications &>
 - Isaacson, T., Saravanan, R.S., He, Y., Damasceno, C.M.B., Catalá, C., Saladié, M. and Rose, J.K.C. (2006) Sample extraction techniques for enhanced proteomic analysis of plant tissues. Nature Protocols 1: 769-774.
 - Lee, S.-J. Kelley, B., Damasceno, C.M.B., St. John, B., Kim, B.-S. Kim, B.-D. and Rose, J.K.C. (2006) A functional screen to characterize the secretomes of eukaryotic phytopathogens and their hosts in planta. Molecular Plant Microbe Interactions 12: 1368-1377.
@@ -235,8 +163,7 @@ Urbanowicz, B.R., Bennett, A.B., Catalá, C., del Campillo, E., Hayashi, T., Henr
 - Matas, A.J., Fei, Z., Giovannoni, J.J. and Rose, J.K.C. (2010) Developments in tomato transcriptomics. In: Genetics, Genomics and Breeding in Fruits and Vegetable Crops (Eds. B. Leidl, A. Slade, S. Hurst, J.A. Labate, J.R. Stommel). Pub. Science Publishers, New Hampshire, USA. (in press)
 - Sørensen, I. and Rose, J.K.C. (2010) Plant cell walls. In: McGraw-Hill 2010 Yearbook of Science & Technology$B!I(B. Pub. McGraw-Hill Professional (in press).
 </&>
-
-
+</&>
 
 <%def .publications>
 
