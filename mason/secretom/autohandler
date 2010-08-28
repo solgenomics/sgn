@@ -1,0 +1,19 @@
+<style type="text/css">
+#secretom_container {
+  text-align: justify;
+  color: #111;
+}
+
+#secretom_container img.interest {
+   float: right;
+   border: 1px solid #333;
+}
+</style>
+
+<div id="secretom_container">
+
+  <img style="display: block; margin: 1em auto" src="/documents/img/secretom/secretom_logo_smaller.jpg" alt="secretom logo" />
+
+% $m->call_next;
+
+</div>
