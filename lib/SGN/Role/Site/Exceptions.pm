@@ -94,7 +94,7 @@ sub _error_objects {
 
     return
         map {
-            blessed($_) && $_->isa('Catalyst::Exception') ? $_ : Catalyst::Exception->new( message => "$_" )
+            blessed($_) && $_->isa('SGN::Exception') ? $_ : SGN::Exception->new( message => "$_" )
         } @{ $self->error };
 }
 

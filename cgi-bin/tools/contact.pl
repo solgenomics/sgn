@@ -1,11 +1,12 @@
 
 use strict;
+use warnings;
 use CXGN::DB::Connection;
 use CXGN::Page;
 use CXGN::Login;
 use CXGN::People;
 use CXGN::Contact;
-use CXGN::VHost;
+use CatalystX::GlobalContext '$c';
 
 my $dbh   = CXGN::DB::Connection->new();
 my $login = CXGN::Login->new($dbh);
@@ -18,8 +19,7 @@ if ( my $user_id = $login->has_session() ) {
 }
 $username  ||= '';
 $useremail ||= '';
-my $vhost                    = CXGN::VHost->new();
-my $email_address_to_display = $vhost->get_conf('email');
+my $email_address_to_display = $c->config->{'email'};
 my $page                     = CXGN::Page->new( "contact.pl", "john" );
 my ( $name, $email, $subject, $body, $referred, $tried_once ) =
   $page->get_arguments(

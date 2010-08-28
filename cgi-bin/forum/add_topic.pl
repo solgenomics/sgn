@@ -32,8 +32,9 @@ A string with a short description of what the topic is supposed to be about and 
 Lukas Mueller (lam87@cornell.edu)
 
 =cut
-    
+
 use strict;
+use warnings;
 
 use CXGN::DB::Connection;
 use CXGN::Page;
@@ -43,19 +44,18 @@ use CXGN::Contact;
 use CXGN::People::Forum;
 use CXGN::Contact;
 use CXGN::Page::FormattingHelpers qw/  page_title_html
-                                     blue_section_html  /;
-use CXGN::VHost;my $vhost_conf=CXGN::VHost->new();
-
-my $SIZELIMIT = 10000; # the maximal number of bytes in a topic description.
+  blue_section_html  /;
 
 my $dbh = CXGN::DB::Connection->new();
-my $page = CXGN::Page->new( "SGN Forum | Configure topic", "Lukas");
+my $page = CXGN::Page->new( "SGN Forum | Configure topic", "Lukas" );
 
 my $sp_person_id = CXGN::Login->new($dbh)->verify_session();
 
-my ($subject, $topic_description, $action, $topic_id, $sort_order) = $page -> get_encoded_arguments("subject", "topic_description", "action", "topic_id", "sort_order");
+my ( $subject, $topic_description, $action, $topic_id, $sort_order ) =
+  $page->get_encoded_arguments( "subject", "topic_description", "action",
+    "topic_id", "sort_order" );
 
-# we define 3 actions: 
+# we define 3 actions:
 # 1) input
 # 2) review
 # 3) save
@@ -64,75 +64,79 @@ my ($subject, $topic_description, $action, $topic_id, $sort_order) = $page -> ge
 #
 # get information about the user
 #
-my $user = CXGN::People::Person -> new($dbh, $sp_person_id);
-my $name = $user ->get_first_name()." ".$user->get_last_name();
-my $user_id = $user -> get_sp_person_id();
+my $user    = CXGN::People::Person->new( $dbh, $sp_person_id );
+my $name    = $user->get_first_name() . " " . $user->get_last_name();
+my $user_id = $user->get_sp_person_id();
 
-my $topic = CXGN::People::Forum::Topic->new($dbh, $topic_id);
+my $topic = CXGN::People::Forum::Topic->new( $dbh, $topic_id );
 
-# check if the user has the necessary privileges to work with this 
+# check if the user has the necessary privileges to work with this
 # topic. if there it is a topic to be entered, forgo the check.
 #
-if (($topic->get_person_id() && ($topic->get_person_id() ne $user_id)) && ($user->get_user_type() ne "curator")) { 
-    $page->message_page("Error:\nYou don't have the privileges to edit this topic, because you did not create it.\n\n\n");
+if (   ( $topic->get_person_id() && ( $topic->get_person_id() ne $user_id ) )
+    && ( $user->get_user_type() ne "curator" ) )
+{
+    $page->message_page(
+"Error:\nYou don't have the privileges to edit this topic, because you did not create it.\n\n\n"
+    );
 }
 
-
-if ($action eq "edit") { 
-    if ($topic_description) { $topic->set_topic_description($topic_description);}
-    if ($subject) { $topic->set_topic_name($subject); }
+if ( $action eq "edit" ) {
+    if ($topic_description) {
+        $topic->set_topic_description($topic_description);
+    }
+    if ($subject)    { $topic->set_topic_name($subject); }
     if ($sort_order) { $topic->set_topic_sort_order($sort_order); }
-    show_form($dbh, $topic, "review", $user);
+    show_form( $dbh, $topic, "review", $user, $page );
 }
-elsif ($action eq "delete") { 
-    delete_topic($topic);
+elsif ( $action eq "delete" ) {
+    delete_topic($topic, $page);
 }
-elsif ($action eq "confirm_delete") { 
-    confirm_delete_topic($topic);
+elsif ( $action eq "confirm_delete" ) {
+    confirm_delete_topic($topic, $page);
 }
-elsif ($action eq "review") { 
+elsif ( $action eq "review" ) {
     $topic->set_topic_description($topic_description);
     $topic->set_topic_name($subject);
     $topic->set_topic_sort_order($sort_order);
-    review_topic($topic);
+    review_topic($topic, $page);
 }
-elsif ($action eq "save") { 
-    if ($topic_description) { 
-	$topic->set_topic_description($topic_description); 
+elsif ( $action eq "save" ) {
+    if ($topic_description) {
+        $topic->set_topic_description($topic_description);
     }
-    if ($subject) { 
-	$topic->set_topic_name($subject); 
+    if ($subject) {
+        $topic->set_topic_name($subject);
     }
-    if ($sort_order) { 
-	$topic->set_topic_sort_order($sort_order);
+    if ($sort_order) {
+        $topic->set_topic_sort_order($sort_order);
     }
-    save_topic($topic, $user);
+    save_topic( $topic, $user, $page );
 }
-else { 
+else {
+
     #
-    # the action is "new" or anything else. 
+    # the action is "new" or anything else.
     #
-    show_form($dbh, $topic, "review", $user);
+    show_form( $dbh, $topic, "review", $user, $page );
 }
 
 sub save_topic {
-    
-    my $topic = shift;
-    my $user = shift;
+    my ($topic,$user,$page) = @_;
 
     # don't clobber the old person id if this is an edit.
     #
-    if (!$topic->get_person_id()) { 
-	$topic->set_person_id($user->get_sp_person_id());
+    if ( !$topic->get_person_id() ) {
+        $topic->set_person_id( $user->get_sp_person_id() );
     }
 
-    # store the topic -- performs an update if topic_id 
+    # store the topic -- performs an update if topic_id
     # already exists, other new insert...
     #
-    $topic->store();    
+    $topic->store();
 
     $page->header();
-    
+
     print <<HTML;
 
     Steps: Configure topic</b> -\> Review topic -\> <b>Store topic</b><br /><br /> 
@@ -144,15 +148,15 @@ sub save_topic {
     
 HTML
 
-$page->footer();
+    $page->footer();
 }
 
-sub delete_topic { 
-    my $topic = shift;
-    my $topic_id = $topic->get_forum_topic_id();
-    my $topic_name = $topic->get_topic_name();
+sub delete_topic {
+    my ($topic,$page) = @_;
+    my $topic_id         = $topic->get_forum_topic_id();
+    my $topic_name       = $topic->get_topic_name();
     my $topic_post_count = $topic->get_post_count();
-    my $topic_desc = $topic->get_topic_description();
+    my $topic_desc       = $topic->get_topic_description();
 
     $page->header();
 
@@ -185,11 +189,11 @@ HTML
     $page->footer();
 }
 
-sub confirm_delete_topic { 
-    my $topic = shift;
-    
-    my $topic_name = $topic->get_topic_name();
-    my $delete_count = ($topic->delete() -1);
+sub confirm_delete_topic {
+    my ($topic,$page) = @_;
+
+    my $topic_name   = $topic->get_topic_name();
+    my $delete_count = ( $topic->delete() - 1 );
 
     $page->header();
     print <<HTML;
@@ -205,20 +209,21 @@ HTML
 }
 
 sub review_topic {
-    my $topic = shift;
+    my ($topic,$page) = @_;
 
     my $topic_name = $topic->get_topic_name();
     my $topic_desc = $topic->get_topic_description();
-    my $topic_id = $topic->get_forum_topic_id();
+    my $topic_id   = $topic->get_forum_topic_id();
+    my $sort_order = $topic->get_sort_order();
 
     my $display_topic_desc = $topic->format_post_text($topic_desc);
 
     my $sort_order_message = "";
-    if ($sort_order =~ /asc/i) { 
-	$sort_order_message = "Latest post shown at the bottom.";
+    if ( $sort_order =~ /asc/i ) {
+        $sort_order_message = "Latest post shown at the bottom.";
     }
-    elsif ($sort_order =~ /desc/i) { 
-	$sort_order_message = "Latest post shown at the top."; 
+    elsif ( $sort_order =~ /desc/i ) {
+        $sort_order_message = "Latest post shown at the top.";
     }
 
     print $page->header();
@@ -260,34 +265,31 @@ sub review_topic {
 HTML
 
     print $page->footer();
-    
-    
-    
-    
-
 
 }
 
-sub show_form { 
-    my $dbh = shift;
-    my $topic = shift;
-    my $action = shift;
-    my $user = shift;
+sub show_form {
+    my ($dbh, $topic, $action, $user, $page) = @_;
 
     my $subject = $topic->get_topic_name();
-    if (!$subject) { $subject = "new topic"; }
+    if ( !$subject ) { $subject = "new topic"; }
     my $topic_description = $topic->get_topic_description();
-    my $topic_id = $topic->get_forum_topic_id();
-    my $topic_creator = CXGN::People::Person->new($dbh, $topic->get_person_id());
-    my $topic_creator_name = $topic_creator->get_first_name()." ".$topic_creator->get_last_name();
-    if (!$topic_creator->get_sp_person_id()) { 
-	$topic_creator_name = $user->get_first_name()." ".$user->get_last_name();
-    }
-    $page -> header("SGN | New topic", "SGN Forum: Configure topic \"".$subject."\"");
-    
-    if (!$action) { $action="review"; }
+    my $topic_id          = $topic->get_forum_topic_id();
+    my $topic_creator =
+      CXGN::People::Person->new( $dbh, $topic->get_person_id() );
+    my $topic_creator_name =
+      $topic_creator->get_first_name() . " " . $topic_creator->get_last_name();
 
-#    print page_title_html("SGN Forum: Enter new topic");
+    if ( !$topic_creator->get_sp_person_id() ) {
+        $topic_creator_name =
+          $user->get_first_name() . " " . $user->get_last_name();
+    }
+    $page->header( "SGN | New topic",
+        "SGN Forum: Configure topic \"" . $subject . "\"" );
+
+    if ( !$action ) { $action = "review"; }
+
+    #    print page_title_html("SGN Forum: Enter new topic");
 
     print <<HTML;
 
@@ -299,7 +301,6 @@ sub show_form {
 	HTML tags are not supported. You can add links to your post by using square brackets as follows:<br />
 	[url]sgn.cornell.edu[/url].
 	This will appear as <a href="http://sgn.cornell.edu">sgn.cornell.edu</a> in the post.<br /><br />
-	Size limit for a topic description is $SIZELIMIT characters, including spaces and punctuation.<br /><br />
 	<b>Note:</b> this service is provided as a courtesy. SGN reserves the right to delete topics and posts at any time for any reason.
 	<br /><br />
 	<input type="hidden" name="action" value="$action" />
@@ -327,6 +328,6 @@ sub show_form {
 
 HTML
 
-      $page->footer();
+    $page->footer();
 }
 

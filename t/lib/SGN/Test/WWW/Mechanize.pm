@@ -42,6 +42,7 @@ Plus the following:
 package SGN::Test::WWW::Mechanize;
 use Moose;
 
+BEGIN { $ENV{CATALYST_SERVER} ||= $ENV{SGN_TEST_SERVER} }
 use SGN;
 
 use CXGN::People::Person;
@@ -163,6 +164,17 @@ sub while_logged_in {
     $self->log_in_ok;
     $sub->();
     $self->log_out;
+}
+
+sub while_logged_in_all {
+    my ($self,$sub) = @_;
+    my @users = qw/user curator submitter sequencer genefamily_editor/;
+    for my $user_type (@users) {
+        $self->create_test_user( user_type => $user_type );
+        $self->log_in_ok;
+        $sub->($user_type);
+        $self->log_out;
+    }
 }
 
 sub log_in_ok {

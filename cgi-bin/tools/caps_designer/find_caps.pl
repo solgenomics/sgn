@@ -2,13 +2,13 @@
 #Hannah De Jong, Summer Intern
 
 use strict;
+use warnings;
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw/  page_title_html
                                        blue_section_html  /;
-use CXGN::VHost;
 use CXGN::BioTools::CapsDesigner2;
-#use CXGN::BioTools::InputFormatChecker;
 use File::Temp;
+use CatalystX::GlobalContext '$c';
 
 my $page = CXGN::Page->new( "CAPS Designer Result", "Chenwei");
 
@@ -31,9 +31,8 @@ if ($cutno < 1){
 
 
 ##########Write the sequence into a temp file for processing
-my $vhost_conf = CXGN::VHost->new();
-my $html_root_path = $vhost_conf->get_conf('basepath');
-my $doc_path =  $vhost_conf->get_conf('tempfiles_subdir').'/caps_designer';
+my $html_root_path = $c->config->{'basepath'};
+my $doc_path =  $c->config->{'tempfiles_subdir'}.'/caps_designer';
 my $path = $html_root_path . $doc_path;
 my ($tmp_fh, $tmp_name);
 
@@ -50,7 +49,7 @@ close $tmp_fh;
 
 ########Read enzyme information.  allENZYME is a file containing all enzyme information and it is located in the same directory as this script.
 ##allENZYME last updated August 17, 2009 to 09-10 prices
-my $support_dir = $vhost_conf->get_conf('support_data_subdir');
+my $support_dir = $c->config->{'support_data_subdir'};
 my $enzyme_file = $html_root_path . $support_dir . '/caps_designer/allENZYME';
 my ($cost_ref, $cut_ref) = CXGN::BioTools::CapsDesigner2::read_enzyme_file($enzyme_file);
 

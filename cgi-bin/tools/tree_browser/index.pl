@@ -20,6 +20,7 @@ Lukas Mueller <lam87@cornell.edu>
 =cut
 
 use strict;
+use warnings;
 
 use CGI qw/ -compile :standard /;
 
@@ -41,23 +42,19 @@ use CXGN::Phylo::File;
 use CXGN::Phylo::Alignment;
 use CXGN::Phylo::Alignment::Member;
 
-use CXGN::VHost;
 use Bio::SeqIO;
+use CatalystX::GlobalContext '$c';
 
 use HTML::Entities;
-
-#use Storable;
-
-#print STDERR "Done loading modules...\n";
 
 our %urlencode;
 
 my $request = shift;
 
-# generate a page object and get parameters
-
-#
 my $page = CXGN::Page->new( "SGN Tree Browser", "Lukas" );
+
+our ($align_temp_show, $newick_temp_show, $example_show, $native_commands) =
+    $page->get_encoded_arguments(qw/align_temp_show newick_temp_show example_show native_commands/);
 
 my (
     $action,                $tree_string,
@@ -68,8 +65,7 @@ my (
     $preset,                $height,
     $reroot,                $show_orthologs,
     $show_species,          $collapse_single_species_subtrees,
-    $show_standard_species, $align_temp_show,
-    $newick_temp_show,      $example_show,
+    $show_standard_species,
     $use_html_path,         $show_skip_form,
     $align_format,          $align_seq_data,
     $align_temp_file,       $align_type,
@@ -87,8 +83,7 @@ my (
     "preset",                "height",
     "reroot",                "show_orthologs",
     "show_species",          "collapse_single_species_subtrees",
-    "show_standard_species", "align_temp_show",
-    "newick_temp_show",      "example_show",
+    "show_standard_species",
     "use_html_path",         "show_skip_form",
     "align_format",          "align_seq_data",
     "align_temp_file",       "align_type",
@@ -100,20 +95,6 @@ my (
 my $tree_string_param = $tree_string;    #keep track of provided param
 
 $height = 50 if ( $height =~ /^\d+$/ && $height < 50 );
-
-#Stuff to fill into query form, with optional bypass if it's coming from somewhere else on SGN# :
-# our	()=
-# 	$page->get_encoded_arguments
-# 	();
-
-#print STDERR "Done getting parameters...\n";
-
-##Alignment File Handling Stuff ########################################
-# my ()
-# 	= $page->get_arguments(
-
-# 		);
-my $vhost_conf = CXGN::VHost->new();
 
 $show_domains = 1 unless ( $show_domains =~ /^(1|0)$/ && $show_domains == 0 );
 
@@ -144,8 +125,8 @@ our %PARAM = (
     "collapse_single_species_subtrees" => $collapse_single_species_subtrees,
 );
 
-our $HTML_ROOT_PATH = $vhost_conf->get_conf('basepath');
-our $DOC_PATH = $vhost_conf->get_conf('tempfiles_subdir') . '/align_viewer';
+our $HTML_ROOT_PATH = $c->config->{'basepath'};
+our $DOC_PATH = $c->config->{'tempfiles_subdir'} . '/align_viewer';
 our $PATH     = $HTML_ROOT_PATH . $DOC_PATH;
 
 our $CMD_QUICKTREE = "/data/prod/bin/quicktree";
@@ -397,9 +378,8 @@ if ($shared_file) {
         $page->error_page( 'Invalid file location.',
             "Invalid file location: $shared_file" );
     }
-    my $conf             = $vhost_conf;
-    my $shared_data_path = $conf->get_conf('static_datasets_path');
-    my $shared_data_url  = $conf->get_conf('static_datasets_url');
+    my $shared_data_path = $c->config->{'static_datasets_path'};
+    my $shared_data_url  = $c->config->{'static_datasets_url'};
     $shared_file =~ /^$shared_data_url\/cosii\/[\w\-\/]+\.\d\.ml\.tre$/
       or $page->error_page( "Invalid file location",
         "Invalid file location: $shared_file" );
@@ -1320,13 +1300,6 @@ HTML
         $browser->get_tree()->set_show_standard_species($show_species);
         my $ostring = "";
 
-  #	foreach (@leaves) {
-  #			next unless((scalar @search_nodes == 0) or $_->get_label()->get_hilite());
-  #			$ostring .= "orthologs of ".$_->get_name() . ":    &nbsp;&nbsp;   ";
-  #			my @orthologs = $_->collect_orthologs_of_leaf();
-  #			$ostring .= join("; ", @orthologs) . "<br>";
-  #		}
-
         my $ortho_hilite_only = 0;
         if (1) {
             $ostring .= "<table>";
@@ -1538,25 +1511,6 @@ EOJS
                        end_form(),
                      ),
                   ),
-#                 Tr(
-#                    td( {colspan => 2},
-#                        span({ style=> 'font-weight: bold'},
-#                             'Upload nexus file',
-#                            ),
-#                        '*currently supports trees only',
-#                        start_form( -enctype => 'multiport/form-data' ),
-#                        filefield( -name => 'upload_file', -value => 'Upload Nexus file' ),
-#                        hidden('action','upload'),
-#                        submit('Upload Nexus file'),
-#                        end_form(),
-
-#                        start_form(),
-#                        span({style=> 'font-weight: bold'},'View simplified phylogenetic tree of plants'),
-#                        submit(),
-#                        hidden('preset','plants'),
-#                        end_form(),
-#                      ),
-#                   ),
                );
 
     $page->footer();
@@ -1652,55 +1606,6 @@ sub input_err_page {
     exit;
 }
 
-## this one will have col headings ortholog group, leaf names, leaf species, agrees with species tree (distance)
-#sub oglist_string{
-#	my @oglist = @_;
-#	my $spacer = "  ";
-#	my $oglstring .= "Ortholog group" . $spacer . "Names" . $spacer . "Species" . $spacer . "Matches species tree?" . $spacer . "Distance" . "\n";
-#	my $ognumber = 1;
-#my @ogletters = qw(a b c d e f g h i j k l m n o p q r s t u v w x y z);
-
-#	if (scalar @oglist == 0) {
-#		$oglstring .= "No ortholog groups found.\n";
-#	} else {
-#		foreach my $o (@oglist) {
-#			if ($o->get_tree()->get_leaf_count()>1) {
-#				$oglstring .= $ognumber . $spacer;
-#				my $name_string =  join(", ",(map ($_->get_name(), $o->get_tree()->get_leaf_list()))) . $spacer;
-#			#	print("name_string: ", $name_string, "\n");
-#				$oglstring .= join(", ",(map ($_->get_name(), $o->get_tree()->get_leaf_list()))) . $spacer;
-
-#				$oglstring .= join(", ",(map ($_->get_species(), $o->get_tree()->get_leaf_list()))) . $spacer;
-#				if (defined $o->get_conforms_to_species_tree()) {
-#					if ($o->get_conforms_to_species_tree()) {
-#						$oglstring .= "Yes" . $spacer . "0" . "\n";
-#					} else {
-#						$oglstring .= "No" . $spacer .  $o->get_distance_to_species_tree() . "\n";
-#					}
-#				} else {
-#					$oglstring .= "[no species tree]" . $spacer .  "[no species tree]" . "\n";
-#				}
-#			} else {									# Isolated leaf
-#				$oglstring .= "Isolated leaf" . $spacer . "Isolated leaf" . "\n";
-#			}
-
-#			if (!$o->get_conforms_to_species_tree()) {
-#				my @cnins = $o->get_conforming_node_implicit_names();
-#				my $cognumber = 0;
-#				foreach my $s (@cnins) {
-#					$oglstring .= $ognumber.$ogletters[$cognumber].$spacer;
-#					my $qRFd = $o->get_conforming_node($s)->get_attribute("qRF_distance");
-#					$s =~ s/\t/, /g;				# tab ->, as glue between names
-#					$oglstring .= $s.$spacer;
-#					$oglstring .= ".".$spacer.".".$spacer. $qRFd.$spacer."\n";
-#					$cognumber++;
-#				}
-#			}
-#			$ognumber++;
-#		}
-#	}
-#	return $oglstring;
-#}
 
 # this one will have col headings ortholog group, leaf names, leaf species, agrees with species tree (distance)
 sub oglist_html_table {

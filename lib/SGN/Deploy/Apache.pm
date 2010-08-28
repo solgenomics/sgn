@@ -49,40 +49,19 @@ use Class::MOP;
 
 =head2 import( $app_class, %options )
 
-Most of the time, this is the only method that will be used.
-
-Takes the same arguments as configure_apache below.
-
-=cut
-
-sub import {
-    my $class = shift;
-    my $app   = shift;
-
-    Class::MOP::load_class( $app );
-
-    for (qw( path_to config )) {
-        $app->can($_) or confess "$class requires $app to support the '$_' method";
-    }
-
-    $class->configure_apache( $app, @_ );
-}
-
-
-=head2 configure_apache
-
   Status  : public
-  Usage   : $class->configure_apache( 'MyApp', vhost => 1, type => 'mod_perl' );
+  Usage   : use SGN::Deploy::Apache MyApp => ( vhost => 1, type => 'mod_perl' );
   Returns : nothing meaningful
-  Args    : hash-style list of arguments as:
+  Args    : app name,
+            hash-style list of arguments as:
              vhost => boolean of whether this
                       configuration should be applied
                       to the current virtual host (if true),
                       or the root Apache server (if false),
              type  => one of the deployment types listed below
-  Side Eff: adds a lot of configuration to the currently running
-            apache server
 
+  Side Eff: loads the app, and configures the Apache environment to
+            properly run it
 
   Configures the currently running Apache mod_perl server
   to run this application.
@@ -114,6 +93,22 @@ sub import {
        </VirtualHost>
 
 =cut
+
+sub import {
+    my $class = shift;
+    my $app   = shift;
+
+    $class->configure_apache( $app, @_ );
+}
+sub _load_app {
+    my ( $class, $app ) = @_;
+    Class::MOP::load_class( $app );
+
+    for (qw( path_to config )) {
+        $app->can($_) or confess "$class requires $app to support the '$_' method";
+    }
+}
+
 
 sub configure_apache {
     my ( $class, $app,  %args ) = @_;
@@ -153,6 +148,14 @@ Run the application as an Apache mod_perl handler.
 
 sub configure_apache_mod_perl {
     my ( $class, $app, $args ) = @_;
+
+    # force CGI.pm into non-mod-perl mode so that the Catalyst CGI
+    # wrapping will work.
+    # notice that we do this BEFORE loading the app
+    require CGI;
+    $CGI::MOD_PERL = 0;
+
+    $class->_load_app( $app );
 
     my $server = $class->apache_server( $args );
 

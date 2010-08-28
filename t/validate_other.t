@@ -21,6 +21,7 @@ my %urls = (
 
         'tomato bac tpf'                           => '/sequencing/agp.pl',
         'tomato bac tpf'                           => '/sequencing/tpf.pl',
+        'tomato bac tpf chr 12'                    => '/sequencing/tpf.pl?chr=12',
 
         "unigene search"                           => "/search/ug-ad2.pl?w9e3_page=0&w9e3_sequence_name=SGN-U231977&w9e3_clone_name=&w9e3_membersrange=gt&w9e3_members1=&w9e3_members2=&w9e3_annotation=&w9e3_annot_type=blast&w9e3_lenrange=gt&w9e3_len1=&w9e3_len2=&w9e3_unigene_build_id=any",
         "unigene detail"                           => "/search/unigene.pl?unigene_id=SGN-U231977&w9e3_page=0&w9e3_annot_type=blast&w9e3_unigene_build_id=any",
@@ -65,6 +66,8 @@ my %urls = (
 
         "Locus ajax form"                          => "/jsforms/locus_ajax_form.pl",
         "Locus editors"                            => "/phenome/editors_note.pl",
+        "Phenome annot stats"                      => "/phenome/annot_stats.pl",
+        "Phenome claim ownership"                  => "/phenome/claim_locus_ownership.pl",
         "SNP search markers"                       => "/search/markers/snp.pl",
 
         'sol100 page'                              => '/organism/sol100/view',
@@ -73,6 +76,10 @@ my %urls = (
         "outreach index"                           => "/outreach/",
         "organism page for tomato"                 => "/chado/organism.pl?organism_id=1",
         "image search"                             => "/search/image_search.pl?wad1_description_filename_composite=&wad1_submitter=&wad1_image_tag=",
+        "bac registry"                             => "/sequencing/bac_registry_discrepancies.pl",
+        "SGN pubs"                                 => "/help/publications.pl",
+        "glossary search"                          => "/search/glossarysearch.pl",
+        "contact"                                  => "/tools/contact.pl",
 );
 
 my $iteration_count;

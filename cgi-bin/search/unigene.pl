@@ -27,8 +27,6 @@
 use strict;
 use warnings;
 
-use CXGN::VHost; ## used to get tempdir... but should be replace in the new branch
-
 use CXGN::MasonFactory;
 use CXGN::Page;
 
@@ -37,6 +35,7 @@ use CXGN::DB::DBICFactory;
 
 use CXGN::GEM::Schema;
 use CXGN::Transcript::Unigene;
+use CatalystX::GlobalContext '$c';
 
 ## Create mason object
 
@@ -72,9 +71,8 @@ my $dbh = CXGN::DB::Connection->new();
 ## Also it will get the dir for temp files (for images)
 ## This will be replace in the new branch for the apache variable $c !!!!
 
-my $vhost_conf = CXGN::VHost->new();
-my $basepath = $vhost_conf->get_conf('basepath');
-my $tmpdir = File::Spec->catdir($vhost_conf->get_conf('tempfiles_subdir'), 'unigene_images' );
+my $basepath = $c->config->{'basepath'};
+my $tmpdir = File::Spec->catdir($c->config->{'tempfiles_subdir'}, 'unigene_images' );
 
 ## To do more flexible how the unigene can be called
 

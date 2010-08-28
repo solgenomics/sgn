@@ -31,8 +31,7 @@ sub db_connections {
     my $sql =<<SQL;
 select count(*) as connections from pg_stat_activity where usename <> 'postgres'
 SQL
-    my $dsn     = $context->dbc_profile->{dsn};
-    my $dbh     = DBI->connect($dsn);
+    my $dbh     = DBI->connect( @{ $context->dbc_profile}{qw{ dsn user password attributes }});
     my (@row)   = $dbh->selectrow_array($sql);
     return $row[0];
 }
@@ -101,7 +100,7 @@ sub validate_urls {
         skip 'Skipping leak tests', 1 if $ENV{SGN_SKIP_LEAK_TEST};
         # give some time for db connections to close
         sleep 1;
-        cmp_ok(db_connections(),'<=',$conns, "did not leak any datbase connections on $url");
+        cmp_ok(db_connections(),'<=',$conns, "did not leak any database connections on $url");
     }
     $dump_tempdir and diag "failing output dumped to $dump_tempdir";
 }

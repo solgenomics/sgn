@@ -1,11 +1,9 @@
 #!/usr/bin/perl/
 
-
 use strict;
+use warnings;
 
 use CXGN::Page;
-#use CXGN::Page::Simple;
-#use CXGN::Page::VHost::SGN;
 use CXGN::Login;
 use CXGN::Apache::Error;
 use CXGN::DB::Connection;

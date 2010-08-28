@@ -3,6 +3,7 @@ use CXGN::Scrap::AjaxPage;
 use CXGN::Phylo::Alignment;
 use CXGN::Phylo::Alignment::Member;
 use Bio::SeqIO;
+use CatalystX::GlobalContext '$c';
 
 my $page = CXGN::Scrap::AjaxPage->new();
 
@@ -16,10 +17,8 @@ $page->throw("No type specified") unless ($type);
 
 
 
-my $vhost_conf = CXGN::VHost->new();
-
-our $html_root_path = $vhost_conf->get_conf('basepath');
-our $doc_path =  $vhost_conf->get_conf('tempfiles_subdir').'/align_viewer';
+our $html_root_path = $c->config->{'basepath'};
+our $doc_path =  $c->config->{'tempfiles_subdir'}.'/align_viewer';
 our $path = $html_root_path . $doc_path;
 our $tmp_fh;
 

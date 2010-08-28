@@ -69,14 +69,12 @@ our %urlencode;
 use File::Flock;
 
 use CXGN::Page;
-use CXGN::VHost;
 use CXGN::BlastDB;
 use CXGN::Page::FormattingHelpers qw/page_title_html modesel info_table_html hierarchical_selectboxes_html simple_selectbox_html/;
 use CXGN::Page::UserPrefs;
 use CXGN::Tools::List qw/evens distinct/;
+use CatalystX::GlobalContext '$c';
 
-my $vhost_conf = CXGN::VHost->new();
-my $page  = CXGN::Page->new("BLAST Search Interface","Evan");
 my $page  = CXGN::Page->new("BLAST Search Interface","Evan");
 my $dbh   = CXGN::DB::Connection->new;
 my $prefs = CXGN::Page::UserPrefs->new( $dbh );
@@ -87,7 +85,7 @@ my %params;
 $params{interface_type} ||= 0;
 
 
-my $blast_path = $vhost_conf->get_conf('blast_path');
+my $blast_path = $c->config->{'blast_path'};
 my $blast_version = do {
   unless( -x "$blast_path/blastall") {
     ''
@@ -102,7 +100,6 @@ my $blast_version = do {
 	}
       }
       close BP;
-      $v
     }; if( $EVAL_ERROR ) {
       ''
     }

@@ -1,5 +1,6 @@
 #!/usr/bin/perl -w
 use strict;
+use warnings;
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw/  page_title_html
                                        blue_section_html  /;
@@ -8,10 +9,11 @@ use CXGN::Alignment;
 use File::Temp;
 use Bio::Seq;
 use Bio::SeqIO;
+use CatalystX::GlobalContext '$c';
 
 our $page = CXGN::Page->new( "SGN Gene Family Alignment", "Chenwei Lin");
 
-my $family_size_limit = 100;
+our $family_size_limit = 100;
 
 my ($family_id) = $page->get_arguments("family_id");
 if ($family_id eq ""){
@@ -193,9 +195,8 @@ $sum_content .= "<tr><td colspan=\"2\" align=\"center\"><a target=\"blank\" href
 #Draw family_alignment image
 
 #Generate temp file handles
-my $vhost_conf = CXGN::VHost->new();
-my $html_root_path = $vhost_conf->get_conf('basepath');
-my $doc_path = $vhost_conf->get_conf('tempfiles_subdir').'/align_viewer';
+my $html_root_path = $c->config->{'basepath'};
+my $doc_path = $c->config->{'tempfiles_subdir'}.'/align_viewer';
 my $path = $html_root_path . $doc_path;
 
 my $tmp_image = new File::Temp(
@@ -251,11 +252,11 @@ my $ov_score_ref = $family_align -> get_all_overlap_score();
 my $medium_ref = $family_align -> get_all_medium();
 my ($head_ref, $tail_ref) = $family_align -> get_all_range();
 my $ng_ref = $family_align -> get_all_nogap_length();
-my $sp_ref = $family_align->get_member_species();
+$sp_ref = $family_align->get_member_species();
 my $url_ref = $family_align->get_member_urls();
 
 my @family_member_ids = @$family_member_ids_ref;
-my %species = %$sp_ref;
+%species = %$sp_ref;
 my %ov_score = %$ov_score_ref;
 my %medium = %$medium_ref;
 my %head = %$head_ref;

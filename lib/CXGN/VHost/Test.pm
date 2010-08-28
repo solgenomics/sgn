@@ -1,7 +1,6 @@
 package CXGN::VHost::Test;
 use strict;
 use warnings;
-use English;
 use Carp;
 
 use URI;

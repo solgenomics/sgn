@@ -131,8 +131,8 @@ has 'organism_sets' => (
                 root_species => $family,
                 resultset    => $pns->search_related_rs(
                     'organism',
-                    { 'cv_2.name'   => 'local',
-                      'type_2.name' => 'web visible',
+                    { 'cv.name'   => 'local',
+                      'type.name' => 'web visible',
                     },
                     { join => { organismprops => { type => 'cv' }}},
                    )

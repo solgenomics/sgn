@@ -1,8 +1,8 @@
 #!/usr/bin/perl
 use strict;
+use warnings;
 use CXGN::Tools::File;
 use CXGN::Page::Secretary;
-use CXGN::VHost;
 
 my $page=CXGN::Page::Secretary->new("Secretary","Chris");
 

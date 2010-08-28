@@ -18,6 +18,7 @@ package CXGN::Page::VHost;
 use base qw | CXGN::DB::Object |;
 
 use strict;
+use warnings;
 
 sub new {
     my $class=shift;

@@ -1,9 +1,9 @@
 #!/usr/bin/perl
 
 use strict;
+use warnings;
 
 use CXGN::Page;
-use CXGN::VHost;
 use File::Spec;
 use CXGN::DB::Connection;
 use CXGN::BlastWatch;
@@ -33,13 +33,12 @@ my $results = CXGN::BlastWatch::get_results($dbh,$bw_query_id);
 
 if (!$results) { &user_error("Invalid query.") }
 
-&website($results,@v);
+website($page, $results,@v);
 
 #---------------#
 
 sub website {
-
-    my ($results,$sequence,$program,$database,$matrix,$evalue,$num_results) = @_;
+    my ($page, $results,$sequence,$program,$database,$matrix,$evalue,$num_results) = @_;
 
     # force sequence to wrap                                                                                                                         
     
@@ -93,8 +92,7 @@ TEXT
 }
 
 sub user_error {
-
-    my $reason = shift;
+    my ($page,$reason) = @_;
     
     $page->header();
     

@@ -1,8 +1,8 @@
-<%init>
-
+<%once>
 use File::Spec;
-use CXGN::VHost;
+</%once>
 
+<%init>
 my @countries =
         qw(
             Argentina
@@ -22,7 +22,6 @@ my @countries =
             the_United_States
           );
 
-my $vhost = CXGN::VHost->new();
 my $path = File::Spec->catfile('documents', 'img', 'flags');
 
 
