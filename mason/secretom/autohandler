@@ -13,6 +13,29 @@
   text-align: justify;
 }
 
+#secretom_container hr {
+  border: 0;
+  border-top: 2px solid gray;
+}
+
+
+#secretom_container div.captioned_image {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin: 0.4em auto;
+}
+
+#secretom_container div.captioned_image > img {
+  display: block;
+  margin: 1em auto;
+}
+
+#secretom_container div.captioned_image > p {
+  font-weight: bold;
+  font-size: 90%;
+  margin: 1em 3em;
+}
+
 </style>
 
 <div id="secretom_container">

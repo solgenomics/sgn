@@ -54,7 +54,7 @@
     <&| /page/info_section.mas, title => 'Summary' &>
 
       <p>
-      The <strong>plant cell wall/apoplast</strong> plays a fundamental role
+      The <a class="info_link" href="/secretom/detail/cell_wall">plant cell wall/apoplast</a> plays a fundamental role
       in many aspects of growth, development, and responses to environmental
       conditions and assault by pathogens and insects. It is therefore not
       surprising that a substantial portion of the plant proteome is
