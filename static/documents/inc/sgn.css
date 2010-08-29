@@ -1267,3 +1267,7 @@ div.publication_embedded .citation {
   background: #ddd;
   padding: 0.3em 4px;
 }
+
+.species_binomial {
+  font-style: italic;
+}
