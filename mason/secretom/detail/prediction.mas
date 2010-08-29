@@ -27,8 +27,9 @@ span.filesize:after {
   content: ')';
 }
 div.page_introduction p {
-  margin-bottom: 0;
-  padding-bottom: 0;
+  margin: 0 2em;
+  padding: 0 1em;
+
 }
 
 </style>
