@@ -96,7 +96,7 @@
 
 </&>
 
-<&| /page/info_section.mas, title => 'Objectives', is_subsection => 1 &>
+<&| /page/info_section.mas, title => 'Objectives', is_subsection => 0 &>
   <ul>
     <li>
     Screen a range of tomato tissues for genes encoding secreted
