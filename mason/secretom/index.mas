@@ -191,7 +191,7 @@
 
   <a name="publications"></a>
 
-  <&| .publications &>
+  <&| /secretom/publications_section.mas &>
 Isaacson, T., Saravanan, R.S., He, Y., Damasceno, C.M.B., Catal&aacute;, C., Saladi&eacute;, M. and Rose, J.K.C. (2006) Sample extraction techniques for enhanced proteomic analysis of plant tissues. Nature Protocols 1: 769-774.
 Lee, S.-J. Kelley, B., Damasceno, C.M.B., St. John, B., Kim, B.-S. Kim, B.-D. and Rose, J.K.C. (2006) A functional screen to characterize the secretomes of eukaryotic phytopathogens and their hosts in planta. Molecular Plant Microbe Interactions 12: 1368-1377.
 
@@ -257,19 +257,3 @@ Matas, A.J., Fei, Z., Giovannoni, J.J. and Rose, J.K.C. (2010) Developments in t
 
 S&oslash;rensen, I. and Rose, J.K.C. (2010) Plant cell walls. In: McGraw-Hill 2010 Yearbook of Science &amp; Technology (Pub. McGraw-Hill Professional (in press)).
   </&>
-
-<%def .publications>
-
-% my @p = grep /\S/, reverse split /\r?\n/, $m->content;
-% s/^\s*\-\s*// for @p;
-  <&| /page/info_section.mas, title => 'Publications', subtitle => @p.' publications' &>
-  <img style="display: block; float: right; margin-left: 3em" src="/img/secretom/books.png" />
-  <ul class="publication">
-% for my $pub (@p) {
-<li class="publication">
-  <% $pub %>
-</li>
-% }
-  </ul>
-  </&>
-</%def>
