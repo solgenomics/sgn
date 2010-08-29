@@ -36,6 +36,13 @@
   margin: 1em 3em;
 }
 
+#pagetitle > h3{
+  color: #444;
+  font-size: 130%;
+  letter-spacing: 1px;
+  font-weight: normal;
+}
+
 </style>
 
 <div id="secretom_container">

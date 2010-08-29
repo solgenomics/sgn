@@ -33,6 +33,8 @@ div.page_introduction p {
 
 </style>
 
+<& /page/page_title.mas, title => 'Computational prediction of secreted proteins' &>
+
 <div class="page_introduction">
   <p>
   A number of <a class="tools_popup" href="#">computational tools</a> have been
