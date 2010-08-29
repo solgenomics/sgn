@@ -102,14 +102,14 @@
   <div class="projects">
     <&| /page/info_section.mas, title => 'Projects', subtitle => 'download datasets: <a href="ftp://ftp.solgenomics.net/secretom/">[SGN FTP site]</a>' &>
 
-      <a class="project">Computational Prediction of the Plant Secretome</a>
-      <a class="project">Functional Screens for Secreted Proteins</a>
-      <a class="project">The Tomato Fruit Glycoproteome</a>
-      <a class="project">Tomato Comparative and Quantitative Proteomics</a>
-      <a class="project">Integrated Proteome/Transcriptome Profiling of Tomato Fruit</a>
-      <a class="project">The Tomato Fruit Cuticular Cell Wall Proteome</a>
-      <a class="project">The Secretome of Phytophthora/Tomato Interactions</a>
-      <a class="project">Spin-off Projects and Collaborations</a>
+      <a class="project" href="/secretom/detail/prediction">Computational Prediction of the Plant Secretome</a>
+      <a class="project" href="/secretom/detail/functional_screens">Functional Screens for Secreted Proteins</a>
+      <a class="project" href="/secretom/detail/glycoproteome">The Tomato Fruit Glycoproteome</a>
+      <a class="project" href="/secretom/detail/proteomics">Tomato Comparative and Quantitative Proteomics</a>
+      <a class="project" href="/secretom/detail/profiling">Integrated Proteome/Transcriptome Profiling of Tomato Fruit</a>
+      <a class="project" href="/secretom/detail/cell_wall">The Tomato Fruit Cuticular Cell Wall Proteome</a>
+      <a class="project" href="/secretom/detail/phytophthera_interaction">The Secretome of Phytophthora/Tomato Interactions</a>
+      <a class="project" href="/secretom/detail/spinoffs">Spin-off Projects and Collaborations</a>
 
     </&>
   </div>
