@@ -39,10 +39,7 @@ sub new {
       [];    #arrayref of records like {seq => input sequence, id => descriptor}
     $obj->{error}  = 0;     #set to 1 in check_input() if necessary
     $obj->{output} = "";    #raw HMMER output
-    $obj->{tmpdir} =
-        $c->config->{'basepath'}
-      . $c->config->{'tempfiles_subdir'}
-      . "/sigpep_finder";
+    $obj->{tmpdir} =$c->path_to( $c->tempfiles_subdir( 'sigpep_finder' ) );
     $obj->{hmmsearch_path} = $c->config->{'hmmsearch_location'};
     $obj->{page} = CXGN::Page->new( "Signal Peptide Finder", "Evan" );
     $obj->{content} = "";    #the output HTML
