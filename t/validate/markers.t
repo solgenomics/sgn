@@ -15,9 +15,6 @@ my %urls = (
         "marker detail caps"                       => "/search/markers/markerinfo.pl?marker_id=6469",
 );
 
-my $iteration_count;
+validate_urls(\%urls, $ENV{ITERATIONS} || 1 );
 
-plan( tests => scalar(keys %urls)*4*($iteration_count = $ENV{ITERATIONS} || 1));
-
-validate_urls(\%urls, $iteration_count);
-
+done_testing;

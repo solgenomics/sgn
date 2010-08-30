@@ -3,7 +3,7 @@ use strict;
 use warnings;
 
 use Test::More;
-use CXGN::DB::Connection;
+use SGN::Context;
 
 my %maps = (
     agp  => "CXGN::Cview::Map::SGN::AGP",
@@ -14,7 +14,7 @@ my %maps = (
 plan( tests => 1 + 2*(keys %maps));
 use_ok('CXGN::Cview::MapFactory');
 
-my $dbh = CXGN::DB::Connection->new();
+my $dbh = SGN::Context->new->dbc->dbh;
 my $mf  = CXGN::Cview::MapFactory->new($dbh);
 
 

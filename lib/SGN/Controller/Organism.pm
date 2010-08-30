@@ -373,7 +373,8 @@ sub view_organism :Chained('find_organism') :PathPart('view') {
 
 has 'rendered_organism_tree_cache' => (
     is => 'ro',
-    default => sub {
+    lazy_build => 1,
+   ); sub _build_rendered_organism_tree_cache {
         my ( $self ) = @_;
 
         Cache::File->new(
@@ -399,8 +400,7 @@ has 'rendered_organism_tree_cache' => (
                 }
             },
            );
-    },
-   );
+    }
 
 # takes dbic schema, root species name, arrayref of species names to
 # render returns hashref of newick stirng, png data, and an HTML image

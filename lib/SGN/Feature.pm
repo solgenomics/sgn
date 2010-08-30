@@ -38,6 +38,11 @@ sub path_to {
     return File::Spec->catfile( $self->feature_dir, @_ );
 }
 
+sub tmpdir {
+    my $self = shift;
+    return $self->context->tempfiles_base->subdir( 'features', $self->feature_name );
+}
+
 # called on apache restart
 sub setup {
     #my ( $self ) = @_;

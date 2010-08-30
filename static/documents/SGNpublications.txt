@@ -49,7 +49,7 @@ Bioinformatics. 2008 Feb 1;24(3):422-3.
 <div class="subheading">
 <a href="http://www.genetics.org/cgi/content/full/174/3/1407">Combining bioinformatics and phylogenetics to identify large sets of single-copy orthologous genes (COSII) for comparative, evolutionary and systematic studies: a test case in the euasterid plant clade.</a></div>
 <div class="boxsubcontent">
-Wu F, Mueller LA, Crouzillat D, Pétiard V, Tanksley SD.
+Wu F, Mueller LA, Crouzillat D, P&eacute;tiard V, Tanksley SD.
 Genetics. 2006 Nov;174(3):1407-20.
 </div>
 
@@ -57,7 +57,7 @@ Genetics. 2006 Nov;174(3):1407-20.
 <div class="subheading">
 <a href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?cmd=Retrieve&amp;db=pubmed&amp;dopt=Abstract&amp;list_uids=16273343&amp;query_hl=1">Coffee and tomato share common gene repertoires as revealed by deep sequencing of seed and cherry transcripts.</a></div>
 <div class="boxsubcontent">
-Lin C, Mueller LA, McCarthy J, Crouzillat D, Petiard V, Tanksley SD.
+Lin C, Mueller LA, McCarthy J, Crouzillat D, P&eacute;tiard V, Tanksley SD.
 Theor Appl Genet. 2005 Nov 5;:1-17.
 </div>
 

@@ -1,9 +1,6 @@
 *~
 TAGS
-static/documents/tempfiles/*
-static/documents/tempfiles/*
-features/gbrowse2/conf/rendered_conf/*.conf
-logs/
+static/documents/tempfiles
 !exists
 !.exists
 _build
