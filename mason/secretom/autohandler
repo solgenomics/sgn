@@ -47,11 +47,12 @@
 #secretom_container div.goback {
   text-align: right;
   text-decoration: underline;
-  margin-right: 15px;
+  margin-right: 14px;
   margin-bottom: -1em;
 }
 #secretom_container a.goback {
   color: #d22;
+  font-size: 90%;
 }
 
 </style>
