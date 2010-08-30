@@ -24,7 +24,7 @@ has 'conf_dir' => ( documentation => 'directory where GBrowse will look for its 
     isa => 'Path::Class::Dir',
     coerce => 1,
     lazy_build => 1,
-   ); sub _build_conf_dir { shift->path_to('conf','rendered_conf') }
+   ); sub _build_conf_dir { my $self = shift; $self->tmpdir->subdir( 'rendered_conf' ) }
 
 has 'conf_template_dir' => ( documentation => <<'EOD',
 directory for configuration templates, which will be rendered on a one-to-one basis into $self->conf_dir during setup()
