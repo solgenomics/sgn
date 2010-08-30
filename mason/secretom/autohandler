@@ -44,11 +44,25 @@
   margin-bottom: 2em;
 }
 
+#secretom_container div.goback {
+  text-align: right;
+  text-decoration: underline;
+  margin-right: 15px;
+  margin-bottom: -1em;
+}
+#secretom_container a.goback {
+  color: #d22;
+}
+
 </style>
 
 <div id="secretom_container">
+  <div class="goback"><a class="goback" href="/secretom">secretom main page</a></div>
 
-  <img style="display: block; margin: 1em auto" src="/documents/img/secretom/secretom_logo_smaller.jpg" alt="secretom logo" />
+  <a href="/secretom">
+    <img style="display: block; margin: 1em auto" src="/documents/img/secretom/secretom_logo_smaller.jpg" alt="secretom logo" />
+  </a>
+
 
 % $m->call_next;
 
