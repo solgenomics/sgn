@@ -122,17 +122,17 @@ level.
   </p>
 
 
-<div style="width: 700px" class="captioned_image">
+  <div style="width: 700px" class="captioned_image">
 
-        <table><tr><td><img src="/documents/img/secretom/tomato_wild_type_200.jpg" /></td>
-                   <td><img src="/documents/img/secretom/tomato_nor_200.jpg" /></td>
-                   <td><img src="/documents/img/secretom/tomato_rin_200.jpg" /></td>
-        </tr></table>
+          <table><tr><td><img src="/documents/img/secretom/tomato_wild_type_200.jpg" /></td>
+                     <td><img src="/documents/img/secretom/tomato_nor_200.jpg" /></td>
+                     <td><img src="/documents/img/secretom/tomato_rin_200.jpg" /></td>
+          </tr></table>
 
-        <p>
-        Wild type ripe tomato fruit (left), and equivalent stage fruit
-        from the nor (middle) and rin (right) mutants.
-        </p>
+          <p>
+          Wild type ripe tomato fruit (left), and equivalent stage fruit
+          from the nor (middle) and rin (right) mutants.
+          </p>
 
   </div>  
 
