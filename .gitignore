@@ -1,8 +1,6 @@
 *~
 TAGS
-static/documents/tempfiles/*
-static/documents/tempfiles/*
-logs/
+static/documents/tempfiles
 !exists
 !.exists
 _build

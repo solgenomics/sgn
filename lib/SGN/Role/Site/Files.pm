@@ -30,8 +30,10 @@ before 'setup_finalize' => sub {
     # the tempfiles_subdir() function makes and chmods the given
     # directory.  with no arguments, will make and chmod the main
     # tempfiles directory
-    my $temp_subdir = $c->path_to( $c->tempfiles_subdir() );
+    my $temp_subdir = Path::Class::Dir->new( $c->path_to( $c->get_conf('tempfiles_subdir') ) );
     my $temp_base   = $c->tempfiles_base;
+    unlink $temp_subdir;
+    symlink $temp_base, $temp_subdir or die "$! linking $temp_base => $temp_subdir";
 
 #     unless( $temp_subdir eq $temp_base ) {
 #         $c->log->warn("WARNING: symlinking tempfiles_subdir() $temp_subdir to $temp_base");
