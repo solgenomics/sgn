@@ -10,9 +10,6 @@ my %urls = (
         "alignment viewer input page"              => "/tools/align_viewer/",
 );
 
-my $iteration_count;
+validate_urls(\%urls, $ENV{ITERATIONS} || 1);
 
-plan( tests => scalar(keys %urls)*4*($iteration_count = $ENV{ITERATIONS} || 1));
-
-validate_urls(\%urls, $iteration_count);
-
+done_testing;

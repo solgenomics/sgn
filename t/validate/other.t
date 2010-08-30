@@ -82,9 +82,8 @@ my %urls = (
         "contact"                                  => "/tools/contact.pl",
 );
 
-my $iteration_count;
+validate_urls(\%urls, $ENV{ITERATIONS} || 1 );
 
-plan( tests => scalar(keys %urls)*(4-defined($ENV{SGN_SKIP_LEAK_TEST}))*($iteration_count = $ENV{ITERATIONS} || 1));
+done_testing;
 
-validate_urls(\%urls, $iteration_count);
 

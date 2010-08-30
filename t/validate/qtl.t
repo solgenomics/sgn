@@ -27,6 +27,6 @@ $mech->get("$base_url/$url");
 if ($mech->content =~ m/temp dir .* not (found|writable)|Failed to obtain lock/) {
     plan skip_all => "Skipping QTL Analysis page due to production temp dir not working";
 } else {
-    plan tests => 4;
+    plan tests => 7;
     validate_urls({ "QTL Analysis Page" => $url });
 }

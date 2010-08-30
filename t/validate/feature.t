@@ -14,7 +14,7 @@ Jonathan "Duke" Leto
 
 use strict;
 use warnings;
-use Test::More tests => 8;
+use Test::More;
 use Test::WWW::Mechanize;
 
 use lib 't/lib';
@@ -28,3 +28,6 @@ SKIP: {
         "feature request with id" => "$base_url?id=12721702",
     });
 }
+
+done_testing;
+

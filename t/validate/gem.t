@@ -20,9 +20,6 @@ my %urls = (
         "gem detail page for target"               => "/gem/target.pl?id=49",
 );
 
-my $iteration_count;
+validate_urls(\%urls, $ENV{ITERATIONS} || 1 );
 
-plan( tests => scalar(keys %urls)*4*($iteration_count = $ENV{ITERATIONS} || 1));
-
-validate_urls(\%urls, $iteration_count);
-
+done_testing;
