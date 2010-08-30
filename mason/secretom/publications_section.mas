@@ -1,3 +1,6 @@
+<%args>
+  $entitize => 0
+</%args>
 % my @p = grep /\S/, reverse split /\r?\n/, $m->content;
 % s/^\s*\-\s*// for @p;
 <&| /page/info_section.mas, title => 'Publications', subtitle => @p.' publications' &>
@@ -5,7 +8,11 @@
   <ul class="publication">
 % for my $pub (@p) {
 <li class="publication">
+%   if( $entitize ) {
+  <% $pub |h%>
+%   } else {
   <% $pub %>
+%   }
 </li>
 % }
   </ul>
