@@ -18,7 +18,7 @@ requires qw(
            );
 
 
-=head2 after setup_finalize
+=head2 before setup_finalize
 
 attempt to chown tempfiles_subdir and children to the web user
 
