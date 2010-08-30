@@ -182,7 +182,7 @@ sub _default_temp_base {
     return File::Spec->catdir(
         File::Spec->tmpdir,
         (getpwuid($>))[0], # the user name
-        ($self->config->{name} || die '"name" conf value is not set'),
+        ($self->config->{name}.'-site' || die '"name" conf value is not set'),
        );
 }
 
