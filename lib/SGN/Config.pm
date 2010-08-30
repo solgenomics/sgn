@@ -66,6 +66,7 @@ my $defaults =
              #username_field username # used for REMOTE_USER env var
              pass_env => [qw[ PERL5LIB
                               PATH
+                              PROJECT_NAME
                             ]
                          ],
            },
