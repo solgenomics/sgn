@@ -39,7 +39,7 @@ SQL
 
 sub validate_urls {
     my ($urls, $iteration_count) = @_;
-    local $Test::Builder::Level = $Test::Builder::Level + 1;
+    local $Test::Builder::Level = $Test::Builder::Level + 2;
     $iteration_count ||= 1;
 
     for my $test_name ( (sort keys %$urls) x $iteration_count ) {
