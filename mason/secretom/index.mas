@@ -60,7 +60,8 @@
       surprising that a substantial portion of the plant proteome is
       localized in the cell wall/apoplast. However, while major initiatives
       are now underway to map the proteomes of many plant organelles, such
-      as the chloroplast, the cell wall proteome, or "secretome", is far
+      as the <a  href="http://ppdb.tc.cornell.edu/dbsearch/subproteome.aspx">
+      chloroplast</a>, the cell wall proteome, or "secretome", is far
       less well characterized than those of other subcellular compartments.
       </p>
 
@@ -68,8 +69,8 @@
       <strong>What is the "secretome"?</strong> The term "secretome" is
       generally used to refer to the population of proteins that are
       secreted outside the plasma membrane of a cell, but can also be used
-      to describe the subset of the proteome that enter the "secretory
-      pathway".
+      to describe the subset of the proteome that enter the <a href="/secretom/detail/secretion_path">secretory
+      pathway</a>.
       </p>
 
       <p>
