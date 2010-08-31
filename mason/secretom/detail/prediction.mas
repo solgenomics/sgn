@@ -26,11 +26,6 @@ span.filesize:before {
 span.filesize:after {
   content: ')';
 }
-div.page_introduction p {
-  margin: 0 2em;
-  padding: 0 1em;
-
-}
 
 </style>
 
@@ -38,6 +33,7 @@ div.page_introduction p {
 
 <div class="page_introduction">
   <p>
+
   A number of <a class="tools_popup" href="#">computational tools</a> have been
   developed to predict the presence of SPs. These programs have been
   greatly refined in recent years and their accuracy has improved with
