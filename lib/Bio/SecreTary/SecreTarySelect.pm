@@ -1,10 +1,10 @@
 
 =head1 NAME
 
-SecreTarySelect 
-    - an object to implement the SecreTary secretion prediction algorithm
-	 parameters defining the algorithm are stored, then
-    can take array of SecreTaryAnalyse objects and categorize each as grp1, grp2, fail.
+Bio::SecreTary::SecreTarySelect - an object to implement the SecreTary
+secretion prediction algorithm parameters defining the algorithm are
+stored, then can take array of SecreTaryAnalyse objects and categorize
+each as grp1, grp2, fail.
 
 =head1 DESCRIPTION
 
@@ -14,11 +14,10 @@ Tom York (tly2@cornell.edu)
 
 =cut
 
+package Bio::SecreTary::SecreTarySelect;
 use strict;
-#use CXGN::Secretome::SecreTaryAnalyse;
-use SecreTaryAnalyse;
-
-package SecreTarySelect;
+use warnings;
+use Bio::SecreTary::SecreTaryAnalyse;
 
 =head2 function new()
 

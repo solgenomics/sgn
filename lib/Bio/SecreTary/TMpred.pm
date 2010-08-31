@@ -1,7 +1,7 @@
 
 =head1 NAME
 
-TMpred 
+Bio::SecreTary::TMpred
 
 =head1 DESCRIPTION
 
@@ -14,15 +14,10 @@ Tom York (tly2@cornell.edu)
 
 =cut
 
+package Bio::SecreTary::TMpred;
 use strict;
-use IO::File;
+use warnings;
 use File::Temp;
-use CGI ();
-
-#	use lib '/data/local/cxgn/core/sgn-tools/secretom';
-
-
-package TMpred;
 
 =head2 function new()
 

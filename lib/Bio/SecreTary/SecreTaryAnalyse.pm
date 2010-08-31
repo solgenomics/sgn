@@ -1,9 +1,9 @@
 
 =head1 NAME
 
-SecreTaryAnalyse 
-    - an object to analyse a protein sequence. Calculate and
-store various quantities used by the SecreTary algorithm.
+Bio::SecreTary::SecreTaryAnalyse - an object to analyse a protein
+sequence. Calculate and store various quantities used by the SecreTary
+algorithm.
 
 =head1 DESCRIPTION
 
@@ -13,13 +13,11 @@ Tom York (tly2@cornell.edu)
 
 =cut
 
+package Bio::SecreTary::SecreTaryAnalyse;
 use strict;
-
-#use CXGN::Secretome::TMpred;
-use TMpred;
-use Cleavage;
-
-package SecreTaryAnalyse;
+use warnings;
+use Bio::SecreTary::TMpred;
+use Bio::SecreTary::Cleavage;
 
 =head2 function new()
 

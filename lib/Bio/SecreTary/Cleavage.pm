@@ -56,9 +56,9 @@
 #########################################################################################################################
 #one argument: input fasta file
 
+package Bio::SecreTary::Cleavage;
 use strict;
-
-package Cleavage;
+use warnings;
 
 my@weightmatrix =	#columns are positions -13 to +2, rows are residues,
 (							#values are total numbers of such residues in such positions
