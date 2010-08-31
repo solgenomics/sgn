@@ -1,6 +1,6 @@
 <& /page/page_title.mas, title => 'The Tomato Fruit Glycoproteome' &>
 
-<&| /page/info_section.mas, title => 'Summary', is_subsection => 0 &>
+<div class="indented_content">
   <p>
   As with all eukaryotes, N-glycosylation in plant cells is a common
   post-translational modification for proteins traveling through the
@@ -20,9 +20,9 @@
   proteins, focusing on those expressed in ripe tomato fruit.
   </p>
 
-    <div style="width: 500px" class="captioned_image">
+    <div style="width: 400px" class="captioned_image">
 
-      <img src="/documents/img/secretom/SDS_PAGE_full.png" />
+      <img src="/documents/img/secretom/SDS_PAGE_x400.png" />
 
       <p>
       SDS PAGE gel image showing tomato fruit proteins isolated by
@@ -44,28 +44,25 @@
   since the wall proteome was not the major target. Consequently, the
   protein extraction step was not optimized for secreted proteins.
   </p>
-</&>
 
-<&| /page/info_section.mas, title => 'Objectives', is_subsection => 0 &>
-  <ul>
-    <li>
+</div>
+
+<&| /secretom/section_templates/objectives.mas &>
      Develop lectin affinity chromatography protocols to optimize
      extraction of plant glycoproteins.
-    </li>
-    <li>
+
      Evaluate various MS strategies for effective identification of
      glycoproteins, including MALDI and ESI associated strategies.
-    </li>
-    <li>
+
      Generate a catalog of annotated tomato glycoproteins, focusing on
      fruit development, including identification of glycosylation sites.
-    </li>
-    <li>
+
      Confirm localization using transient expression as fluorescent
      fusion proteins in onion epidermal cells.
-    </li>
-  </ul>
 
+</&>
+
+<div class="indented_content">
   <p>
   This enrichment strategy has been highly effective, with a high
   proportion the identified proteins showing predicted localization
@@ -87,20 +84,12 @@
 
   </div>
 
-</&>
+</div>
 
-<&| /page/info_section.mas, title => 'Data Files' &>
-  <ul>
-    <li>
-        Tomato (cv. Ailsa Craig) ripe fruit: annotated glycoproteins, MALDI
-    </li>
-    <li>
-        Tomato (cv. Ailsa Craig) ripe fruit: glycoproteins MALDI, peptides
-    </li>
-    <li>
-        Tomato (cv. Ailsa Craig) mature green fruit: glycoproteins, ESI
-    </li>
-  </ul>
+<&| /secretom/section_templates/data_items.mas &>
+- text: "Tomato (cv. Ailsa Craig) ripe fruit: annotated glycoproteins, MALDI"
+- text: "Tomato (cv. Ailsa Craig) ripe fruit: glycoproteins MALDI, peptides"
+- text: "Tomato (cv. Ailsa Craig) mature green fruit: glycoproteins, ESI"
 </&>
 
 <&| /secretom/section_templates/publications.mas &>
