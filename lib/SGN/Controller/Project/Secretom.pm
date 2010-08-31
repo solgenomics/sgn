@@ -6,8 +6,6 @@ use MooseX::Types::Path::Class;
 
 use JSON::Any; my $json = JSON::Any->new;
 
-use CXGN::Tools::Identifiers qw/ link_identifier /;
-
 BEGIN {extends 'Catalyst::Controller'; }
 with 'Catalyst::Component::ApplicationAttribute';
 
@@ -139,7 +137,6 @@ sub _search_signalp_file {
     while( my $line = <$fh> ) {
         next unless $line =~ $query;
         my @fields = (split /\t/, $line)[0,1,4,5,6,7,8,9,10,11,12];
-        $fields[0] = link_identifier( $fields[0] ) || $fields[0];
         push @results, \@fields;
     }
 
