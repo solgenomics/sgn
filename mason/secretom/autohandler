@@ -22,7 +22,7 @@
 #secretom_container div.captioned_image {
   border: 1px solid #ccc;
   border-radius: 4px;
-  margin: 0.4em auto;
+  margin: 0.4em auto 2em auto;
 }
 
 #secretom_container div.captioned_image > img {
@@ -34,6 +34,7 @@
   font-weight: bold;
   font-size: 90%;
   margin: 1em 3em;
+  letter-spacing: 0.4px;
 }
 
 #pagetitle > h3{
