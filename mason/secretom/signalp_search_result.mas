@@ -1,0 +1,43 @@
+<%args>
+  $data
+  $query
+  $headings
+  $csv_download
+</%args>
+
+<& /page/page_title.mas, title => 'SignalP Result Search' &>
+
+<h3 style="text-align: center">Searched for "<% $query |h%>".</h3>
+
+<&| /page/info_section.mas, title => 'Results', subtitle => @$data." results &mdash; ".qq|<a href="$csv_download">[Download spreadsheet]</a>| &>
+
+%  if( @$data ) {
+%    foreach my $row ( @$data ) {
+%       $row->[1] =~ s/^\s*\|\s*//;
+   <&| /page/info_section.mas, title => 'Hit: '.$row->[0], is_subsection => 1 &>
+     <% $table->( $row, [ 0,2,3 ] ) %> 
+     <% $table->( $row, [ 1 ] ) %> 
+     <% $table->( $row, [ 4,5,6,7,8,9,10 ] ) %> 
+   </&>
+%    } 
+%  } else {
+   <h3 style="text-align: center">No results found matching "<% $query |h %>".</h3>
+%  }
+
+</&>
+
+<%init>
+use List::MoreUtils qw/ mesh /;
+use CXGN::Page::FormattingHelpers qw/ info_table_html /;
+
+my $table = sub {
+    my ( $row, $order, %other ) = @_;
+
+    my @row = @{$row}[ @$order ];
+    my @h = @{$headings}[ @$order ];
+
+    return info_table_html( mesh( @h, @row ),  __multicol => 5, __border => 0, %other );
+
+};
+
+</%init>

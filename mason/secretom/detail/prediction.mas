@@ -1,5 +1,6 @@
 <%args>
   $static_dir
+  $signalp_search_action
 </%args>
 
 <style>
@@ -64,37 +65,45 @@ span.filesize:after {
     <td>
           <h3>Arabidopsis thaliana</h3>
           <img src="/img/secretom/arabidopsisthaliana.png" />
-          <& .result_file, file => 'secretom/Tair8.pep.1.sptp.fasta', dir => $static_dir &>
+          <& .result_file, file => 'data/secretom/.new/SignalP_predictions/Tair8.pep.1.sptp.fasta', dir => $static_dir &>
     </td>
      <td>
           <h3>Rice (Oryza sativa)</h3>
           <img src="/img/secretom/oryzasativa.png" />
-          <& .result_file, file => 'secretom/Rice.pep.1.sptp.fasta', dir => $static_dir &>
+          <& .result_file, file => 'data/secretom/.new/SignalP_predictions/Rice.pep.1.sptp.fasta', dir => $static_dir &>
     </td>
     <td>
           <h3>Brachypodium distachyon</h3>
           <img src="/img/secretom/brachypodiumdistachyon.png" />
-          <& .result_file, file => 'secretom/Brachy.pep.1.sptp.fasta', dir => $static_dir &>
+          <& .result_file, file => 'data/secretom/.new/SignalP_predictions/Brachy.pep.1.sptp.fasta', dir => $static_dir &>
     </td>
     <td>
           <h3>Solanum lycopersicum</h3>
           <img src="/img/secretom/solanumlycopersicum.png">
-          <& .result_file, file => 'secretom/ITAG1.pep.sptp.fasta', dir => $static_dir &>
+          <& .result_file, file => 'data/secretom/.new/SignalP_predictions/ITAG1.pep.sptp.fasta', dir => $static_dir &>
     </td>
   </tr>
   </table>
 
   <&| /page/info_section.mas, title => 'Search SignalP results for secreted proteins', is_subsection => 1 &>
 
+
+    <form method="GET" style="text-align: center; margin: 2em auto" action="<% $signalp_search_action %>">
+      <label for="query_input">Search</label>
+      <input type="text" size="30" name="q" id="query_input" value="" />
+      <input type="hidden" name="file" value="" />
+      <input type="submit" value="Search" size="20" />
+    </form>
+
+    <p>
     Use text terms (e.g. "polygalacturonase", "glycosyl hydrolase
     family", "gh9"), or locus names (e.g. "At1G65610.1"). This will
     provide you with a list of predicted proteins, grouped by species,
     with the annotation protein length, molecular weight, confidence
     scores for the presence of a secretory signal peptide and predicted
     localization.
-
-    <a id="secretom_search" href="/secretom/search">Search</a>
-
+    </p>
+    
   </&>
 </&>
 
@@ -122,14 +131,14 @@ span.filesize:after {
 $file
 $dir
 </%args>
-
-% my $abs = file( $dir, $file);
-% my $size = -s $abs;
+% $file .= '.gz';
+% my $abs = file( $dir, $file );
+% my $size = -s $abs or die $abs;
 % if( $size ) {
     <span class="filename"><% $abs->basename %></span>
 
     <div>
-      <a href="/download/data/<% file($file)->as_foreign('Unix') %>">[Download]</a>
+      <a href="/download/<% file($file)->as_foreign('Unix') %>">[Download]</a>
       <span class="filesize"><%  Number::Bytes::Human::format_bytes( $size ) %></span>
     </div>
 % } else {

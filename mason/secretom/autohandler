@@ -18,6 +18,9 @@
   border-top: 2px solid gray;
 }
 
+#secretom_container label {
+  font-weight: bold;
+}
 
 #secretom_container div.captioned_image {
   border: 1px solid #ccc;
