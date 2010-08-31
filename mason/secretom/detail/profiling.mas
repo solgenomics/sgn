@@ -107,15 +107,13 @@
 
 </div>
 
-<&| /page/info_section.mas, title => 'Data Files' &>
-<ul>
-  <li>File 1: 454 GS FLX reads from library AC1001</li>
-  <li>File 2: 454 GS FLX reads from library AC1002</li>
-  <li>File 3: 454 GS FLX reads from library AC1003</li>
-  <li>File 4: 454 GS FLX reads from library AC1004</li>
-  <li>File 5: 454 GS FLX reads from library AC1005</li>
-  <li>File 6: Assembled sequences of the tomato transcripts (fasta)</li>
-</ul>
+<&| /secretom/section_templates/data_items.mas &>
+- text: "File 1: 454 GS FLX reads from library AC1001"
+- text: "File 2: 454 GS FLX reads from library AC1002"
+- text: "File 3: 454 GS FLX reads from library AC1003"
+- text: "File 4: 454 GS FLX reads from library AC1004"
+- text: "File 5: 454 GS FLX reads from library AC1005"
+- text: "File 6: Assembled sequences of the tomato transcripts (fasta)"
 </&>
 
 <&| /secretom/section_templates/publications.mas, entitize => 1 &>
