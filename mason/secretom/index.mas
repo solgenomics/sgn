@@ -45,7 +45,7 @@
 
   </style>
 
-  <div style="width: 34em; text-align: justify; margin: 1em auto; color: #333; font-size: 15px">
+  <div style="width: 34em; text-align: justify; margin: 1em auto 3em auto; color: #333; font-size: 15px">
     A project to catalog and study the dynamic properties of the cell
     wall proteome (the secretome), using tomato as a model system.
   </div>
