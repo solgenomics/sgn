@@ -1,0 +1,90 @@
+<& /page/page_title.mas, title => 'Instructions for using the SecreTary signal peptide predictor' &>
+
+<div class="indented_content">
+
+  <p>
+   SecreTary is for prediction of signal peptides from the amino acid
+   sequence of a protein. Signal peptides generally possess a common
+   structural design, which is characterized by a short, positively
+   charged n-region followed by a hydrophobic region (h-region) and a
+   somewhat polar and uncharged cleavage site (c-region). It should be
+   more emphasized that the h-region is known to be important for the
+   translocation of the signal peptides to the ER. To improve the
+   performance of the signal peptide prediction, we have developed new
+   parameters such as the overall hydrophobicity and amino acid
+   composition in the n-region as input. SecreTary is mainly trained
+   and tested on the plant secretome that has been identified through
+   functional screens including a yeast secretion trap.
+  </p>
+
+  <p>
+   Questions or suggestions about SecreTary should be addressed to
+   Jocelyn K.C. Rose (<a href="mailto:jr286@cornell.edu">
+   jr286@cornell.edu</a>).
+  </p>
+
+</div>
+
+<&| /page/info_section.mas, title => '1. Input Sequences' &>
+
+  <p>
+  The amino acid sequences can be input by pasting one or more
+  protein sequences, in <b>FASTA format</b> into the SecreTary input
+  page. SecreTary analyses proteins at a rate of approximate
+  20/second. At present there is a limit of 3000 sequences. All the
+  input sequences must be in one-letter amino acid code. The allowed
+  alphabet (not case sensitive) is as follows: <b>A C D E F G H I K L
+  M N P Q R S T V W Y</b> and <b>X</b>.
+  </p>
+
+  <h3>An example:</h3>
+  <& /sequence/with_markup.mas,
+         seq => Bio::PrimarySeq->new(
+                     -id => 'P05117_Tomato',
+                     -seq => 'MVIQRNSILLLIIIFASSISTCRSNVIDDNLFKQVYDNILEQEFAHDFQAYLSYLSKNIESNNNIDKVDKNGIKVINVLSFGAKGDGKTYDNIAFEQAWNEACSSRTPVQFVVPKNKNYLLKQITFSGPCRSSISVKIFGSLEASSKISDYKDRRLWIAFDSVQNLVVGGGGTINGNGQVWWPSSCKINKSLPCRDAPTALTFWNCKNLKVNNLKSKNAQQIHIKFESCTNVVASNLMINASAKSPNTDGVHVSNTQYIQISDTIIGTGDDCISIVSGSQNVQATNITCGPGHGISIGSLGSGNSEAYVSNVTVNEAKIIGAENGVRIKTWQGGSGQASNIKFLNVEMQDVKYPIIIDQNYCDRVEPCIQQFSAVQVKNVVYENIKGTSATKVAIKFDCSTNFPCEGIIMENINLVGESGKPSEATCKNVHFNNAEHVTPHCTSLEISEDEALLYNY',
+                 ),
+          subdiv => 0,
+          width => 100,
+   &>
+
+</&>
+
+<&| /page/info_section.mas, title => '2. Submission' &>
+
+  Paste the sequence(s) into the window. Then, click on the "Submit" 
+  button. Expect to wait about 10 seconds to see the results of
+  analyzing 200 sequences.
+
+</&>
+
+<&| /page/info_section.mas, title => '3. Output' &>
+
+  <p>
+  For each predicted signal peptide SecreTary gives a score, the
+  predicted length, and information on the location of the hydrophobic
+  region within the signal peptide. On the input page you can choose
+  to sort the output by score, with the higher scores (strongest
+  candidates) at the top, and you can suppress output for sequences
+  with no predicted signal peptide.
+  </p>
+
+  <h3>An example:</h3>
+  <pre>
+Identifier       SP    Score   Length     Sequence 10        20        30        40        50   
+                                                   |         |         |         |         |    
+AT1G50920.1      NO       -       -       MVQYNFKRITVVPNGKEFVDIILSRTQRQTPTVVHKGYKINRLRQFYMRKV...
+AT1G36960.1      NO       -       -       MTRLLPYKGGDFLGPDFLTFIDLCVQVRGIPLPYLSELTVSFIAGTLGPIL...
+AT1G44020.1      NO       -       -       MDSESESKLISFISQLVSRNNTDSENISCMIQTISLVSSMDLKSQPKPESK...
+AT1G15970.1      NO       -       -       MSVPPRFRSVNSDEREFRSVLGPTGNKLQRKPPGMKLEKPMMEKTIIDSKD...
+AT1G73440.1      NO       -       -       MARGESEGESSGSERESSSSSSGNESEPTKGTISKYEKQRLSRIAENKARL...
+AT1G75120.1      YES    2512     31       MAVRKEKVQPFRECGIAIAVLVGIFIGCVCTILIPNDFVNFRSSKVASASC...
+AT1G17600.1      NO       -       -       MVSSSAPRVSKYDVFLSFRGEDTRKTIVSHLYAALDSRGIVTFKDDQRLEI...
+
+1 secreted sequences predicted out of 7.
+
+   </pre>
+</&>
+
+<&| /page/info_section.mas, title => '4. Getting help' &>
+  Please contact: <a href="mailto:sgn-feedback@sgn.cornell.edu">sgn-feedback@sgn.cornell.edu</a>.
+</&>
