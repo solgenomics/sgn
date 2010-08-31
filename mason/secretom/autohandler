@@ -43,6 +43,15 @@
   font-weight: normal;
   margin-bottom: 2em;
 }
+#secretom_container h1 {
+  color: #3a3a3a;
+  font-size: 130%;
+  letter-spacing: 1px;
+  font-weight: normal;
+  margin: 3em 4em 2em 0;
+  border-bottom: 2px solid gray;
+  padding-bottom: 10px;
+}
 
 #secretom_container div.goback {
   text-align: right;
