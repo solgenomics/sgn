@@ -1,5 +1,5 @@
 <%args>
-  $refbase => ''
+  $default_ref_base => ''
 </%args>
 % my $items = Load( $m->content );
 
@@ -9,8 +9,8 @@
 % foreach my $item (@$items) {
   <li>
 %    if( my $r = $item->{ref} ) {
-%       $r =~ s!^/!!;
-        <a href="<% "$refbase/$r" %>"><% $item->{text} %></a>
+%       unless( $r =~ m!^/! || $r =~ m!^(ht|f)tp://! ) { $r = "$default_ref_base/$r" }
+        <a href="<% $r %>"><% $item->{text} %></a>
 %    } else {
         <% $item->{text} %>
 %    }
