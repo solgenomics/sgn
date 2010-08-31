@@ -2,7 +2,7 @@
 
 <style>
   div.indented_content > p {
-    background: #eee;
+    background: #f3f3f3;
     border: 2px solid #bbb;
     padding: 2em;
     letter-spacing: 0.8px;
