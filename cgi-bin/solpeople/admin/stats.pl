@@ -1,5 +1,7 @@
 #!/usr/bin/perl -w
 use strict;
+use warnings;
+
 use CXGN::DB::Connection;
 use CXGN::Page;
 use CXGN::Login;
@@ -11,35 +13,11 @@ my $dbh = CXGN::DB::Connection->new("sgn_people");
 
 my $logged_in_person_id=CXGN::Login->new($dbh)->verify_session();
 my $logged_in_user=CXGN::People::Person->new($dbh, $logged_in_person_id);
-my $logged_in_person_id=$logged_in_user->get_sp_person_id();
 my $logged_in_username=$logged_in_user->get_first_name()." ".$logged_in_user->get_last_name();
 my $logged_in_user_type=$logged_in_user->get_user_type();
 
 my $user_table;
 my ($time_to_check) = $page->get_encoded_arguments("hours");
-print STDERR "Time: '$time_to_check'\n";
-#if($logged_in_user_type eq 'curator'){
-#    if($time_to_check <= 0){
-#	$time_to_check = 24;#THIS IS THE DEFAULT TIME
-#    }
-#    my $people_logged_in;
-#    $people_logged_in = $dbh->selectall_arrayref("select sp_person_id, username, extract(epoch from current_timestamp - last_access_time), last_access_time from sp_person where extract(epoch from current_timestamp - last_access_time) <= ? order by last_access_time DESC", undef, $time_to_check*60*60);
-#    $user_table = "<table align='left' style='width: 55%'><tr><th>ID:</th><th>Username:</th><th>Mins since last action:</th><th>Timestamp:</th></tr><tr><td>";
-#    $people_logged_in = epoch_to_minutes($people_logged_in);
-#    for my $row(@$people_logged_in){
-#	$user_table .="<tr><td align='center'>";
-#	for my $cell(@$row){
-#	    $user_table .="$cell</td><td align='center'>";
-#	}
-#	$user_table .= "</tr>";
-#    }
-#    $user_table .="</table>";
-#}
-
-#else
-#{
-#   $page->message_page('Sorry, but you are not authorized to view statistics.');
-#}
 
 sub epoch_to_minutes{
     my $people_logged_in = $_[0];
@@ -96,11 +74,10 @@ print <<html;
 <input type="submit" id="sumbitnum" value="Submit" />
 </form>
 
-#<script type="text/javascript" language="javascript">document.time.hours.focus();</script>
-#$user_table
+<script type="text/javascript" language="javascript">document.time.hours.focus();</script>
+$user_table
 
 <table style="width: 45%" name="idnumbers" id="idnumbers"><tr><th>Username:</th><th>Timestamp:</th></tr></table>
-&nbsp&nbsp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp&nbsp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<h1>HII!</h1>
 html
 
 $page->footer();
