@@ -33,6 +33,8 @@ before 'setup_finalize' => sub {
     # tempfiles directory
     my $temp_subdir = Path::Class::Dir->new( $c->path_to( $c->get_conf('tempfiles_subdir') ) );
     my $temp_base   = $c->tempfiles_base;
+    $c->log->debug("linking $temp_base => $temp_subdir") if $c->debug;
+    mkpath( "$temp_base" );
     unlink $temp_subdir;
     symlink $temp_base, $temp_subdir or die "$! linking $temp_base => $temp_subdir";
 
