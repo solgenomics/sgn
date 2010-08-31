@@ -7,8 +7,8 @@ use CXGN::Debug;
 use CXGN::BlastDB;
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw/page_title_html/;
-use SecreTaryAnalyse;
-use SecreTarySelect;
+use Bio::SecreTary::SecreTaryAnalyse;
+use Bio::SecreTary::SecreTarySelect;
 use CGI;
 
 my $max_sequences_to_analyze = 3000; 
