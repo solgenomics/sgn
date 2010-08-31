@@ -1,3 +1,6 @@
+<%args>
+  $refbase => ''
+</%args>
 % my $items = Load( $m->content );
 
 <&| /page/info_section.mas, title => 'Data Sets' &>
@@ -5,8 +8,9 @@
 
 % foreach my $item (@$items) {
   <li>
-%    if( $item->{ref} ) {
-        <a href="<% $item->{ref} %>"><% $item->{text} %></a>
+%    if( my $r = $item->{ref} ) {
+%       $r =~ s!^/!!;
+        <a href="<% "$refbase/$r" %>"><% $item->{text} %></a>
 %    } else {
         <% $item->{text} %>
 %    }
