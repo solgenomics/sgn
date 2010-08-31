@@ -134,13 +134,11 @@
 </div>
 
 
-<&| /page/info_section.mas, title => 'Data Files' &>
-<ul>
-  <li>Tomato (cv. Ailsa Craig) fruit: DIGE data</li>
-  <li>Tomato (cv. Ailsa Craig) fruit: iTRAQ data</li>
-  <li>Tomato (cv. Rio Grande) leaves infected with Phytophthora infestans (isolate US970001): DIGE data</li>
-  <li>Tomato (cv. Grande) leaves infected with Phytophthora infestans (isolate US970001): iTRAQ data</li>
-</ul>
+<&| /secretom/section_templates/data_items.mas &>
+- text: "Tomato (cv. Ailsa Craig) fruit: DIGE data"
+- text: "Tomato (cv. Ailsa Craig) fruit: iTRAQ data"
+- text: "Tomato (cv. Rio Grande) leaves infected with Phytophthora infestans (isolate US970001): DIGE data"
+- text: "Tomato (cv. Grande) leaves infected with Phytophthora infestans (isolate US970001): iTRAQ data"
 </&>
 
 <&| /secretom/section_templates/publications.mas &>
