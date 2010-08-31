@@ -163,7 +163,7 @@ table.devbar {
 }
 
 /* general div to make something a little more indented */
-div.indentedcontent, div.page_introduction {
+div.indentedcontent, div.indented_content, div.page_introduction {
   margin: 0.3em 1em 2em 2em;
 }
 div.page_introduction {
@@ -171,7 +171,7 @@ div.page_introduction {
 }
 
 /* same effect as above, except for table cells.  Don't make new pages that use this. */
-td.indentedcontent {
+td.indentedcontent, td.indented_content {
   padding: 1em 1em 2em 2em;
 }
 /*generic text-align tags*/
