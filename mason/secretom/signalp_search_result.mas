@@ -13,7 +13,7 @@
 
 %  if( @$data ) {
 %    foreach my $row ( @$data ) {
-%       $row[0] = link_identifier( $row[0] ) || $row[0];
+%       $row->[0] = link_identifier( $row->[0] ) || $row->[0];
 %       $row->[1] =~ s/^\s*\|\s*//;
    <&| /page/info_section.mas, title => 'Hit: '.$row->[0], is_subsection => 1 &>
      <% $table->( $row, [ 0,2,3 ] ) %> 
