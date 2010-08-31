@@ -1,12 +1,12 @@
   <style type="text/css">
     a.project {
-      background: rgba(255,255,255,0.9);
+      background: rgba(255,255,255,0.8);
       text-align: left;
       padding: 1em;
       cursor: pointer;
       display: block;
       color: #111;
-      font-size: 105%;
+              font-size: 105%;
       font-weight: bold;
       margin: 1em;
       border: 1px solid rgba(0,0,0,0.2);
@@ -15,11 +15,11 @@
       border: 1px solid black;
       text-decoration: none;
       color: black;
+      background: rgba(255,255,255,0.9);
     }
     div.projects  {
-        float: right;
-        width: 50%;
         background: url(/img/secretom/tomato_gray.png) 30% 100% no-repeat;
+        padding-bottom: 20px;
     }
 
     #education > img {
@@ -41,7 +41,23 @@
        float: right;
     }
 
+    #secretom_summary > .infosectioncontent {
+       background: rgba(255,255,255,0.8);
+       border: 1px solid rgba( 0, 0, 0, 0.1 );
+       padding: 10px;
+    }
+    #secretom_summary > .infosectioncontent > p:first-child {
+      margin-top: 0;
+    }
 
+    a.FTP {
+       font-size: 130%;
+       color: black;
+       width: 70%;
+       display: block;
+       margin: 30px auto;
+       font-weight: bold;
+    } 
 
   </style>
 
@@ -50,7 +66,7 @@
     wall proteome (the secretome), using tomato as a model system.
   </div>
 
-  <div style="float: left; width: 50%">
+  <div id="secretom_summary" style="float: left; width: 50%">
     <&| /page/info_section.mas, title => 'Summary' &>
 
       <p>
@@ -64,6 +80,8 @@
       chloroplast</a>, the cell wall proteome, or "secretome", is far
       less well characterized than those of other subcellular compartments.
       </p>
+
+      <img width="250" style="display: block; margin: 0 auto" src="/img/secretom/proteome.png" />
 
       <p>
       <strong>What is the "secretome"?</strong> The term "secretome" is
@@ -94,25 +112,30 @@
       lower-abundance proteins.
       </p>
 
-      <strong>All secretom datasets can be downloaded from the
-      <a href="ftp://ftp.solgenomics.net/secretom/">SGN FTP site</a>.
-      </strong>
-
     </&>
   </div>
-  <div class="projects">
-    <&| /page/info_section.mas, title => 'Projects', subtitle => 'download datasets: <a href="ftp://ftp.solgenomics.net/secretom/">[SGN FTP site]</a>' &>
+  <div style="float: right; width: 50%">
 
-      <a class="project" href="/secretom/detail/prediction">Computational Prediction of the Plant Secretome</a>
-      <a class="project" href="/secretom/detail/functional_screens">Functional Screens for Secreted Proteins</a>
-      <a class="project" href="/secretom/detail/glycoproteome">The Tomato Fruit Glycoproteome</a>
-      <a class="project" href="/secretom/detail/proteomics">Tomato Comparative and Quantitative Proteomics</a>
-      <a class="project" href="/secretom/detail/profiling">Integrated Proteome/Transcriptome Profiling of Tomato Fruit</a>
-      <a class="project" href="/secretom/detail/cuticle">The Tomato Fruit Cuticular Cell Wall Proteome</a>
-      <a class="project" href="/secretom/detail/phytophthera_interaction">The Secretome of Phytophthora/Tomato Interactions</a>
-      <a class="project" href="/secretom/detail/spinoffs">Spin-off Projects and Collaborations</a>
+    <div class="projects">
+      <&| /page/info_section.mas, title => 'Projects', subtitle => 'download datasets: <a href="ftp://ftp.solgenomics.net/secretom/">[SGN FTP site]</a>' &>
 
-    </&>
+        <a class="project" href="/secretom/detail/prediction">Computational Prediction of the Plant Secretome</a>
+        <a class="project" href="/secretom/detail/functional_screens">Functional Screens for Secreted Proteins</a>
+        <a class="project" href="/secretom/detail/glycoproteome">The Tomato Fruit Glycoproteome</a>
+        <a class="project" href="/secretom/detail/proteomics">Tomato Comparative and Quantitative Proteomics</a>
+        <a class="project" href="/secretom/detail/profiling">Integrated Proteome/Transcriptome Profiling of Tomato Fruit</a>
+        <a class="project" href="/secretom/detail/cuticle">The Tomato Fruit Cuticular Cell Wall Proteome</a>
+        <a class="project" href="/secretom/detail/phytophthera_interaction">The Secretome of Phytophthora/Tomato Interactions</a>
+        <a class="project" href="/secretom/detail/spinoffs">Spin-off Projects and Collaborations</a>
+
+      </&>
+    </div>
+
+      <a class="FTP" href="ftp://ftp.solgenomics.net/secretom/">
+        All <span style="color: red">secretom</span> datasets can be downloaded from the
+        <span style="text-decoration: underline">SGN FTP site</span>.
+      </a>
+
   </div>
 
   <&| /page/info_section.mas, title => 'News' &>
