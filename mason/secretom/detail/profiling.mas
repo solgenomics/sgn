@@ -28,7 +28,7 @@
   </p>
 </div>
 
-<&| /secretom/section_templates/objectives.mas &>
+<&| /secretom/section_templates/objectives.mas, is_subsection => 1 &>
 
   Compare the protein and transcriptome profile of each gene in the
   groups above using correlation analysis and define three different
@@ -107,13 +107,19 @@
 
 </div>
 
-<&| /secretom/section_templates/data_items.mas &>
+<&| /secretom/section_templates/data_items.mas, default_ref_base => '/download/data/secretom/.new/Integrated_proteome_transcriptome_profiling_tomato_fruit' &>
 - text: "File 1: 454 GS FLX reads from library AC1001"
+  ref: AC1001.sff
 - text: "File 2: 454 GS FLX reads from library AC1002"
+  ref: AC1002.sff
 - text: "File 3: 454 GS FLX reads from library AC1003"
+  ref: AC1003.sff
 - text: "File 4: 454 GS FLX reads from library AC1004"
+  ref: AC1004.sff
 - text: "File 5: 454 GS FLX reads from library AC1005"
+  ref: AC1005.sff
 - text: "File 6: Assembled sequences of the tomato transcripts (fasta)"
+  ref: LCM454assembled.fasta
 </&>
 
 <&| /secretom/section_templates/publications.mas, entitize => 1 &>
