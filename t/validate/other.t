@@ -80,6 +80,7 @@ my %urls = (
         "SGN pubs"                                 => "/help/publications.pl",
         "glossary search"                          => "/search/glossarysearch.pl",
         "contact"                                  => "/tools/contact.pl",
+        "seed BAC guidelines"                      => '/solanaceae-project/seed_bac_selection.pl',
 );
 
 validate_urls(\%urls, $ENV{ITERATIONS} || 1 );
