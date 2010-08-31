@@ -133,7 +133,7 @@ $dir
 </%args>
 % $file .= '.gz';
 % my $abs = file( $dir, $file );
-% my $size = -s $abs or die $abs;
+% my $size = -s $abs;
 % if( $size ) {
     <span class="filename"><% $abs->basename %></span>
 
