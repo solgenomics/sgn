@@ -141,15 +141,10 @@
 
 </&>
 
-<&| /page/info_section.mas, title => 'Data Files' &>
-  <ul>
-    <li>
-        Tomato (cv. Ailsa Craig) fruit (multiple growth and ripening stages): YST clones
-    </li>
-    <li>
-        Tomato (cv. Ailsa Craig) leaves infected with Phytophthora infestans: YST clones
-    </li>
-  </ul>
+<&| /secretom/section_templates/data_items.mas &>
+- text: "Tomato (cv. Ailsa Craig) fruit (multiple growth and ripening stages): YST clones"
+  ref: /download/data/secretom/.new/Functional_screens/Tomato_fruit_YST_clones.xlsx
+- text: "Tomato (cv. Ailsa Craig) leaves infected with Phytophthora infestans: YST clones (Missing)"
 </&>
 
 <&| /secretom/section_templates/publications.mas &>
