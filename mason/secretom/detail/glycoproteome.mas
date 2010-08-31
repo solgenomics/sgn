@@ -86,10 +86,13 @@
 
 </div>
 
-<&| /secretom/section_templates/data_items.mas &>
+<&| /secretom/section_templates/data_items.mas, refbase => '/download/data/secretom/.new/Tomato_fruit_glycoproteome' &>
 - text: "Tomato (cv. Ailsa Craig) ripe fruit: annotated glycoproteins, MALDI"
+  ref: Tomato_fruit_glycoproteins_MALDI.docx
 - text: "Tomato (cv. Ailsa Craig) ripe fruit: glycoproteins MALDI, peptides"
+  ref: Tomato_fruit_glycoproteins_MALDI_peptides.xlsx
 - text: "Tomato (cv. Ailsa Craig) mature green fruit: glycoproteins, ESI"
+  ref: Tomato_fruit_glycoproteins_ESI.xlsx
 </&>
 
 <&| /secretom/section_templates/publications.mas &>
