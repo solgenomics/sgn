@@ -68,6 +68,7 @@ my %urls = (
         "Locus editors"                            => "/phenome/editors_note.pl",
         "Phenome annot stats"                      => "/phenome/annot_stats.pl",
         "Phenome claim ownership"                  => "/phenome/claim_locus_ownership.pl",
+        "Phenotype search"                         => "/search/direct_search.pl?search=phenotypes",
         "SNP search markers"                       => "/search/markers/snp.pl",
 
         'sol100 page'                              => '/organism/sol100/view',
