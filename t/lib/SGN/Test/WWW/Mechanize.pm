@@ -137,7 +137,7 @@ sub _delete_user {
 Execute the given code while logged in.  Takes an optional
 hash-style list of parameters to set on the temp user that is created.
 
-  Args:  hash-style list of props for the temp user to create,
+  Args:  hash ref of props for the temp user to create,
          followed by a subroutine ref to execute while logged in
 
          current supported user properties:
@@ -147,7 +147,7 @@ hash-style list of parameters to set on the temp user that is created.
 
   Example:
 
-    $mech->while_logged_in( user_type => 'curator', sub {
+    $mech->while_logged_in({ user_type => 'curator' }, sub {
 
         $mech->get_ok( '/organism/sol100/view' );
         $mech->content_contains( 'Authorized user', 'now says authorized user' );
@@ -157,14 +157,29 @@ hash-style list of parameters to set on the temp user that is created.
 =cut
 
 sub while_logged_in {
-    my $self = shift;
-    my $sub  = pop;
-    my %props = @_;
-    $self->create_test_user( %props );
+    my ($self,$props,$sub) = @_;
+    $self->create_test_user( %$props );
     $self->log_in_ok;
     $sub->();
     $self->log_out;
 }
+
+=head2 while_logged_in_all
+
+Execute the given code while logged in for each user_type.
+
+  Args:  a subroutine ref to execute while logged in
+
+  Ret: nothing meaningful
+
+  Example:
+
+    $mech->while_logged_in_all(sub {
+        $mech->get_ok( '/organism/sol100/view' );
+        $mech->content_contains( 'Authorized user', 'now says authorized user' );
+    });
+
+=cut
 
 sub while_logged_in_all {
     my ($self,$sub) = @_;
