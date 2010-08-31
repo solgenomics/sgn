@@ -81,6 +81,19 @@ sub auto :Private {
     $c->stash->{signalp_search_action} = $c->uri_for( $self->action_for('signalp_search') );
 }
 
+=head2 signalp_search
+
+Conduct a search of the signalp results.
+
+GET params:
+
+  q - the query text search for
+  file - the file basename to search in, optional
+
+Conducts a search and displayes the results as HTML.
+
+=cut
+
 sub signalp_search :Path('search/signalp') {
     my ( $self, $c ) = @_;
 
@@ -108,6 +121,13 @@ sub signalp_search :Path('search/signalp') {
     $c->stash->{template} = '/secretom/signalp_search_result.mas';
 
 }
+
+=head1 signalp_search_csv
+
+Same as signalp_search, except displays the results as CSV.
+
+=cut
+
 sub signalp_search_csv :Path('search/signalp/csv') {
     my ( $self, $c ) = @_;
     $c->forward( $self->action_for('signalp_search') );
