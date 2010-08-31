@@ -6,7 +6,7 @@ TMpred
 =head1 DESCRIPTION
 
 An object to run the trans-membrane helix prediction program tmpred, 
-and to summarize and store its output.
+and to summarize its output.
 
 =head1 AUTHOR
 
@@ -45,11 +45,12 @@ sub new {
     $self->set_sequence(shift);
     $self->set_sequence_id( shift || ">A_protein_sequence" );
     		$self->set_tmpred_out($self->run_tmpred());
-
+  #  print $self->get_sequence_id(), "  ", $self->get_sequence(), "\n";
  # process tmpred output to get summary, i.e. score, begin and end positions
  # for tmh's satisfying limits.
+
  		$self->set_solutions($self->good_solutions());
- 		$self->set_tmpred_out(""); # discard full tmpred output - keep only summary.
+ 	#	$self->set_tmpred_out(""); # discard full tmpred output - keep only summary.
     return $self;
 }
 
@@ -83,6 +84,7 @@ sub run_tmpred {
     my   $tmpred_dir = "/home/tomfy/tmpred"; 
     my $tmpred_out = `$tmpred_dir/tmpred  -def -in=$temp_file  -out=-  -par=$tmpred_dir/matrix.tab -max=$max_tmh_length  -min=$min_tmh_length`;
 
+  #  print "$tmpred_out", "\n";
     return $tmpred_out;
 }
 
@@ -142,6 +144,7 @@ sub good_solutions {
     my $limits     = $self->get_limits();
     my ( $min_score, $min_tmh_length, $max_tmh_length, $min_beg, $max_beg ) =
       @$limits;
+ #   print "$min_score, $min_tmh_length, $max_tmh_length, $min_beg, $max_beg \n";
     my $solutions = "";
     my $ok        = 0;
     while ( $tmpred_out =~ /(.*?\n)/ ) {
@@ -169,6 +172,7 @@ sub good_solutions {
             }
         }
     }
+#    print "solutions: $solutions \n";
     if ( $solutions eq "" ) { $solutions = "(-10000,0,0)"; }
     else                    { $solutions =~ s/(\s+)$//; }
     return $solutions;
