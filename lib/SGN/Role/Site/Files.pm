@@ -2,7 +2,6 @@ package SGN::Role::Site::Files;
 
 use Moose::Role;
 use namespace::autoclean;
-use autodie qw/:all/;
 
 use Carp;
 use Cwd;
@@ -214,8 +213,7 @@ sub chown_generated_dir {
 
     return unless $www_uid && $www_gid;
 
-    chown -1, $www_gid, $temp
-        or return;
+    chown -1, $www_gid, $temp;
 
     # 02775 = sticky group bit (makes files created in that dir belong to that group),
     #         rwx for user,
@@ -224,8 +222,7 @@ sub chown_generated_dir {
 
     # to avoid version control problems, site maintainers should just
     # be members of the www-data group
-    chmod 02775, $temp
-        or return;
+    chmod 02775, $temp;
 
     return 1;
 }
