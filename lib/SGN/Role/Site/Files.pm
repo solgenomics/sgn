@@ -2,6 +2,7 @@ package SGN::Role::Site::Files;
 
 use Moose::Role;
 use namespace::autoclean;
+use autodie qw/:all/;
 
 use Carp;
 use Cwd;
