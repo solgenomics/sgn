@@ -7,13 +7,11 @@ use CXGN::Debug;
 use CXGN::BlastDB;
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw/page_title_html/;
-use CXGN::VHost;
 use SecreTaryAnalyse;
 use SecreTarySelect;
 use CGI;
 
 my $max_sequences_to_analyze = 3000; 
-my $vhost_conf  = CXGN::VHost->new();
 my $page = CXGN::Page->new( "SecreTary secretion prediction results", "TomFY" );
 my $input = $page->get_arguments("sequence");
 
