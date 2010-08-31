@@ -1,0 +1,194 @@
+<& /page/page_title.mas, title => 'Tomato Comparative and Quantitative Proteomics' &>
+
+<div class="indented_content">
+  <p>
+  Tomato has long served as model system for fleshy fruit development,
+  and is an excellent system to study cell wall proteins as it is
+  associated with dramatic changes in wall biology, including
+  enzyme-mediated cell wall polysaccharide degradation, apoplastic sugar
+  metabolism and extracellular defenses against microbial
+  pathogens. However, there are few published proteomic analyses of
+  ripening tomato fruit and most of those are based on extraction of
+  total proteins followed by 2-DE separation, and the wall proteome was
+  not the major target. Consequently, the protein extraction step was
+  not optimized for secreted proteins.
+  </p>
+
+
+  <div style="width: 300px" class="captioned_image">
+
+    <img src="/documents/img/secretom/tomato_P_infestans_full.jpg" />
+
+    <p>
+    Tomato leaves infected by <span class="species_binomial">P. infestans</span>.
+    </p>
+
+  </div>
+
+  <p>
+  Similarly, defense responses against pathogens are also fundamentally
+  associated with changes in the expression of secreted apoplastic
+  proteins, but there have been few systematic studies at the proteome
+  level.
+  </p>
+
+  <p>
+    We have been developing methods to obtain sample materials highly
+    enriched in apoplast/cell wall proteins, including vacuum
+    dehydration, centrifugal dehydration and several methods that
+    involve the centrifugal isolation of the cell wall followed by
+    sequential extraction with solutions of increasing ionic
+    strength. Taken together, the goal is to create a more comprehensive
+    catalog of the tomato cell wall proteome, focusing on fruit and
+    leaves at various stages of infection by the oomycete Phytophthora
+    infestans. This will include both protein identification and
+    quantitative data, to gain insights into the dynamic properties of
+    the tomato secretome. Additionally we have been profiling "total
+    proteomes"; and screening the resulting protein populations for those
+    known to be localized in the cell wall with a predicted secretory
+    signal peptide, or that are <a href="/secretom/detail/glycoproteome">glycosylated</a>.
+  </p>
+
+  <p>
+    We have been applying several approaches for comparative proteomic
+    analysis, including Difference Gel Electrophoresis (DIGE), isobaric
+    Tag Relative Absolute Protein Quantitation (iTRAQ), exponentially
+    modified protein abundance index (emPAI) and MSE. The latter two
+    approaches were found to provide accurate relative quantitation data
+    on par with that provided by iTRAQ at significantly reduced cost,
+    but without the ability to multiplex. They have been integrated into
+    our work flow and are used where appropriate. We have also developed
+    a high/low pH reverse phase-reverse phase (RP-RP) separation
+    protocol to fractionate peptides prior to MS analysis. This new
+    approach complements the traditional strong cation exchange (SCX) RP
+    strategy and the Offgel peptide IEF fractionation.
+  </p>
+
+</div>
+
+<&| /secretom/section_templates/objectives.mas, is_subsection => 1 &>
+    Qualitative and quantitative characterization of the tomato
+    proteome, focusing principally on tomato fruit development and
+    ripening, and tomato leaves at different stages of infection by
+    P. infestans.  Additional targets include proteins that are
+    regulated by abiotic stresses.
+
+    Compare the data with equivalent transcriptome and metabolome data.
+    Screen for the presence of phosphorylated secreted proteins and
+    small peptides.
+</&>
+
+<h1>Comparative proteomic analysis of the tomato-<span class="species_binomial">P. infestans</span> pathosystem</h1>
+
+<div class="indented_content">
+  <p>
+  We are characterizing the dynamics of host-pathogen secretomes in
+  leaves during infection by the oomycete P. infestans, during distinct
+  phases of hemibiotrophic infection, using both DIGE and iTRAQ
+  supported with 454-generated transcript profiling.
+  </p>
+
+  <div style="width: 400px" class="captioned_image">
+
+        <img src="/documents/img/secretom/infestans_DIGE_300.jpg" />
+
+        <p>
+        DIGE gel of proteins from <span class="species_binomial">P. infestans</span> infected tomato leaves.
+        </p>
+
+  </div>
+
+</div>
+
+<h1>Comparative proteomic analysis of tomato fruit ripening</h1>
+
+<div class="indented_content">
+
+  <p>
+  We are profiling the cell wall proteome of ripening tomato fruit,
+  contrasting those of wild type (cv. Ailsa Craig) and several
+  ripening impaired mutants: ripening inhibitor (rin), non-ripening
+  (Nor) and never ripe (Nr). While the genes responsible for all these
+  mutations have been cloned, and important progress has been made in
+  elucidating their respective signaling pathways, numerous aspects
+  remain poorly understood and the degree of regulatory complexity and
+  the multiplicity of underlying molecular mechanisms have far
+  exceeded expectations.
+  </p>
+
+
+  <div style="width: 700px" class="captioned_image">
+
+          <table><tr><td><img src="/documents/img/secretom/tomato_wild_type_200.jpg" /></td>
+                     <td><img src="/documents/img/secretom/tomato_nor_200.jpg" />Missing image</td>
+                     <td><img src="/documents/img/secretom/tomato_rin_200.jpg" />Missing image</td>
+          </tr></table>
+
+          <p>
+          Wild type ripe tomato fruit (left), and equivalent stage fruit
+          from the nor (middle) and rin (right) mutants.
+          </p>
+
+  </div>  
+
+</div>
+
+
+<&| /secretom/section_templates/data_items.mas &>
+- text: "Tomato (cv. Ailsa Craig) fruit: DIGE data"
+- text: "Tomato (cv. Ailsa Craig) fruit: iTRAQ data"
+- text: "Tomato (cv. Rio Grande) leaves infected with Phytophthora infestans (isolate US970001): DIGE data"
+- text: "Tomato (cv. Grande) leaves infected with Phytophthora infestans (isolate US970001): iTRAQ data"
+- text: "Browse more files via FTP"
+  ref: ftp://ftp.solgenomics.net/secretom/.new/Tomato_comparative_quantitative_proteomics/
+</&>
+
+<&| /secretom/section_templates/publications.mas &>
+
+  Isaacson, T., Saravanan, R.S., He, Y., Damasceno, C.M.B., Catal&aacute;, C., Saladi&eacute;, M. and Rose, J.K.C. (2006) Sample extraction techniques for enhanced proteomic analysis of plant tissues. Nature Protocols 1: 769-774.
+ 
+  Rozanas, C., Rose, J.K.C. and Beckett, P. (2006) Analysis of tomato fruit ripening using DeCyder 2-D and DeCyder EDA. Discovery Matters 3: 19-19.
+ 
+  Vicente, A.R., Saladi&eacute;, M., Rose, J.K.C. and Labavitch, J.M. (2007) The linkage between cell wall metabolism and the ripening-associated softening of fruits: looking to the future. Journal of the Science of Food and Agriculture 87: 1435-1448.
+ 
+  Damasceno, C.M.B. and Rose, J.K.C. (2007) Tandem-affinity purification (TAP) tags. Encyclopedia of Life Sciences. Pub. John Wiley &amp; Sons) http://www.els.net [DOI: 10.1002/9780470015902.a0020212).
+ 
+  Urbanowicz, B.R., Catal&aacute;, C., Irwin, D., Wilson, D.B., Ripoll, D.R. and Rose, J.K.C. (2007) A tomato endo-&Beta;-1,4-glucanase, SlCel9C1, represents a distinct subclass with a new family of carbohydrate binding modules (CBM49). Journal of Biological Chemistry 282: 12066-12074.
+ 
+  Urbanowicz, B.R., Bennett, A.B., Catal&aacute;, C., del Campillo, E., Hayashi, T., Henrissat, B., H&ouml;fte, H., McQueen-Mason, S., Patterson, S., Shoseyov, O., Teeri, T. and Rose, J.K.C. (2007) Structural organization and a standardized nomenclature for plant endo-1,4-&Beta;-glucanases of glycosyl hydrolase family 9. Plant Physiology 144: 1693-1696.
+ 
+  Giovannoni, J.  (2007) Fruit ripening mutants yield insights into ripening control. Current Opinion in Plant Biology. 10:283-289.
+ 
+  Damasceno, C.M.B., Bishop, J.G., Ripoll, D.R., Win, J., Kamoun, S. and Rose, J.K.C. (2008) The structure of the glucanase inhibitor protein (GIP) family from Phytophthora species and co-evolution with plant endo-&Beta;-1,3-glucanases. Molecular Plant-Microbe Interactions 21: 820-830.
+ 
+  Cara, B. and Giovannoni, J. (2008) The molecular biology of ethylene during tomato fruit development and maturation.  Plant Science. 175:106-113.
+ 
+  Lopez-Casado, G., Urbanowicz, B.R., Damasceno C.M.B. and Rose J.K.C. (2008) Plant glycosyl hydrolases and biofuels: a natural marriage. Current Opinion in Plant Biology 11: 329-337.
+ 
+  Urbanowicz, B.R. and Rose J.K.C. (2008) Sustainable biofuels: a daunting challenge for plant scientists. Chemistry Today 26: 23-25.
+ 
+  Al&oacute;s, E., Roca, M., Iglesias, D.J., M&iacute;nguez-Mosquera, M.I., Damasceno, C.M.B., Thannhauser, T.W., Rose, J.K.C., Tal&oacute;n, M. and Cerc&oacute;s, M. (2008) An evaluation of the basis and consequences of a stay-green mutation in the navel negra (nan) citrus mutant using transcriptomic and proteomic profiling and metabolite analysis. Plant Physiology 147: 1300-1315.
+ 
+  Matas, A.J., Gapper, N., Chung, M.-Y., Giovannoni, J.J. and Rose, J.K.C. (2009) Biology and genetic engineering of fruit maturation for enhanced quality and shelf-life. Current Opinion in Biotechnology 20: 197-203.
+ 
+  Vrebalov, J., Pan, I.L., Matas, A.J., McQuinn, R., Chung., M.Y., Poole, M., Rose, J.K.C., Seymour, G., Giovannoni, J.J. and Irish, V.F. (2009) Fleshy fruit expansion and ripening are regulated by the tomato SHATTERPROOF gene, TAGL1. The Plant Cell 21: 3041-3062 (front cover).
+ 
+  Zhou, S., Sauve, R. and Thannhauser, T.W. (2009) Proteome changes induced by aluminium stress in tomato roots. Journal of Experimental Botany 60:1849-1857
+ 
+  Zhou, S., Sauve, R., Fish, T. and Thannhauser, T.W. (2009) Salt induced and salt suppressed proteins in tomato leaves. Journal of the American Society for Horticultural Science 134: 289-292.  
+ 
+  Kelley, B.S., Lee, S.-J., Damasceno, C.M.B., Chakravarthy, S., Kim, B.-D., Martin, G.B. and Rose, J.K.C. (2010) A secreted effector protein (SNE1) from Phytophthora infestans is a broadly acting suppressor of programmed cell death. The Plant Journal 62: 357-366.
+ 
+  Lee, S.-J. and Rose, J.K.C. (2010) Mediation of the transition from biotrophy to necrotrophy in hemibiotrophic plant pathogens by secreted effector proteins. Plant Signaling and Behavior 5/6: 1559-2316.
+ 
+  Rose, J.K.C. and Lee, S.-J. (2010) Straying off the highway: trafficking of secreted plant proteins and complexity in the plant cell wall proteome. Plant Physiology 153: 433-436.
+ 
+  McCann, M. and Rose, J.K.C. (2010) Blueprints for building plant cell walls. Plant Physiology 153: 365.
+ 
+  Lee, S.-J. and Rose, J.K.C. (2010) Characterization of the plant cell wall proteome using high throughput screens (In press Methods in Molecular Biology).
+ 
+  Rugkong A., Rose, J.K.C., Lee, S.-J., Giovannoni, J.J., O'Neill, M. and Watkins, C.B. (2010) Cell wall metabolism in cold-stored tomato fruit. Postharvest Biology and Technology 57: 106-113.S
+ 
+  S&oslash;rensen, I. and Rose, J.K.C. (2010) Plant cell walls. In: McGraw-Hill 2010 Yearbook of Science &amp; Technology (B. Pub. McGraw-Hill Professional (in press).
+
+</&>

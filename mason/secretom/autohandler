@@ -1,0 +1,92 @@
+<style type="text/css">
+#secretom_container {
+  text-align: justify;
+  color: #111;
+}
+
+#secretom_container img.interest {
+   float: right;
+   border: 1px solid #333;
+}
+#secretom_container .publication {
+  padding: 0.6em 0;
+  text-align: justify;
+}
+
+#secretom_container hr {
+  border: 0;
+  border-top: 2px solid gray;
+}
+
+#secretom_container label {
+  font-weight: bold;
+}
+
+#secretom_container div.captioned_image {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  -moz-border-radius: 8px;
+  -webkit-border-radius: 8px;
+  margin: 2em auto;
+}
+
+#secretom_container div.captioned_image > img {
+  display: block;
+  margin: 1em auto;
+}
+
+#secretom_container div.captioned_image > p {
+  font-weight: bold;
+  font-size: 90%;
+  margin: 1em 3em;
+  letter-spacing: 0.4px;
+}
+
+#pagetitle > h3{
+  color: #444;
+  font-size: 130%;
+  letter-spacing: 1px;
+  font-weight: normal;
+  margin-bottom: 2em;
+}
+#secretom_container h1 {
+  color: #3a3a3a;
+  font-size: 130%;
+  letter-spacing: 1px;
+  font-weight: normal;
+  margin: 3em 4em 2em 0;
+  border-bottom: 2px solid gray;
+  padding-bottom: 10px;
+}
+
+#secretom_container div.goback {
+  text-align: right;
+  text-decoration: underline;
+  margin-right: 14px;
+  margin-bottom: -1em;
+}
+#secretom_container a.goback {
+  color: #d22;
+  font-size: 90%;
+}
+
+#secretom_container p.boxed {
+  background: #f3f3f3;
+  border: 2px solid #bbb;
+  padding: 2em;
+  letter-spacing: 0.8px;
+}
+
+</style>
+
+<div id="secretom_container">
+  <div class="goback"><a class="goback" href="/secretom">secretom main page</a></div>
+
+  <a href="/secretom">
+    <img style="display: block; margin: 1em auto" src="/documents/img/secretom/secretom_logo_smaller.jpg" alt="secretom logo" />
+  </a>
+
+
+% $m->call_next;
+
+</div>

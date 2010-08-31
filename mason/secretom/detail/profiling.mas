@@ -1,0 +1,139 @@
+<h1>
+  Integrated Proteome/Transcriptome Profiling of Tomato Fruit
+</h1>
+
+<img style="display: block; margin: 0 auto 3em auto;" src="/img/secretom/tomato_array.jpg" />
+
+<div class="indentedcontent">
+  <p>
+  We are integrating a <a href="http://ted.bti.cornell.edu">tomato fruit
+  transcript expression profiling initiative</a> with the cell wall
+  proteome analysis, in both wild type ripening fruit and those of the
+  ripening impaired mutants ripening inhibitor (rin), non-ripening (Nor)
+  and never ripe (Nr).  The transcriptome data is being generated with
+  the 8,700 unigene TOM1 cDNA array, the long oligonucleotide 12,000
+  unigene (TOM2) microarrays and two RNASeq platforms (454 and
+  Illumina).
+  </p>
+
+  <p>
+  Following the identification of genes and their cognate proteins
+  through comparison of MS-derived protein sequence analysis with the
+  complement of the tomato microarray, microarray and proteomics data of
+  this gene set are directly compared to identify: (a) genes showing
+  significant expression changes by proteomic analysis but not by
+  microarray analysis, or vice versa, through fruit development, or in
+  comparison with mutant fruits; (b) genes showing significant
+  differences between changes in transcript and cognate protein levels.
+  </p>
+</div>
+
+<&| /secretom/section_templates/objectives.mas, is_subsection => 1 &>
+
+  Compare the protein and transcriptome profile of each gene in the
+  groups above using correlation analysis and define three different
+  categories: those showing positive, negative or no significant
+  correlation between microarray and proteomic analysis.
+
+  If data sets of sufficient size result, the number of genes
+  represented in each group will be used to derive estimates of
+  secretome genes under transcriptional and/or post-transcriptional
+  control.
+
+  Classify the genes into different functional categories to determine
+  whether certain classes of secretome genes are primarily under
+  transcriptional and/or post-transcriptional control during ripening.
+
+</&>
+
+<h1>
+ Tissue specific analysis of the tomato pericarp tissues
+ transcriptome: an approach to increase specificity in secretome
+ studies.
+</h1>
+
+<div class="indentedcontent">
+  <p>
+  Most studies of the biochemical and regulatory pathways that are
+  associated with, and control, fruit expansion and ripening are based
+  on homogenized bulk tissues, and do not take into consideration the
+  multiplicity of different cell types from which the analytes
+  (transcripts, proteins or metabolites) are extracted. Consequently,
+  potentially valuable spatial information is lost and the lower
+  abundance cellular components that are expressed only in certain cell
+  types can be diluted below the level of detection.
+  </p>
+
+  <div style="width: 600px" class="captioned_image">
+
+    <img src="/documents/img/secretom/tomato_pericarp_section_500.jpg" />
+
+    <p>
+    Light microscope image of a cross section through a tomato fruit
+    pericarp, which comprises several tissue types: outer epidermis,
+    collenchyma, parenchyma, vascular tissues, and inner epidermis.
+    </p>
+
+  </div>
+
+  <p>
+  We are using laser capture microdissection (LMD), coupled with
+  transcript profiling using RNAseq to identify tissue type specific
+  transcripts and molecular pathways, in to gain new insights into
+  aspects of tissue-specific gene expression, and consequently tissue
+  and organ physiology. In this regard, we are particularly interested
+  in defining tissue-specific secretomes. In addition, this deeper
+  mining of the transcriptome is extremely valuable for tomato gene
+  annotation; for example, revealing substantial alternative splicing,
+  which in turn is critical for enhancing the proteome analyses.
+  </p>
+
+  <p>
+  To date, a total of 1,456,024 high quality sequences have been
+  generated, distributed among the tissue libraries. Following sequence
+  assembly, 20,976 tomato unigenes (assembled from at least five reads)
+  were associated with one or more of the tissues.
+  </p>
+
+  <div style="width: 400px" class="captioned_image">
+
+    <img src="/documents/img/secretom/tomato_pericarp_section_LMD_x400.jpg" />
+
+    <p>
+    Tomato fruit pericarp section after removal of the vascular tissue using LMD.
+    </p>
+
+  </div>
+
+</div>
+
+<&| /secretom/section_templates/data_items.mas, default_ref_base => '/download/data/secretom/.new/Integrated_proteome_transcriptome_profiling_tomato_fruit' &>
+- text: "File 1: 454 GS FLX reads from library AC1001"
+  ref: AC1001.sff
+- text: "File 2: 454 GS FLX reads from library AC1002"
+  ref: AC1002.sff
+- text: "File 3: 454 GS FLX reads from library AC1003"
+  ref: AC1003.sff
+- text: "File 4: 454 GS FLX reads from library AC1004"
+  ref: AC1004.sff
+- text: "File 5: 454 GS FLX reads from library AC1005"
+  ref: AC1005.sff
+- text: "File 6: Assembled sequences of the tomato transcripts (fasta)"
+  ref: LCM454assembled.fasta
+</&>
+
+<&| /secretom/section_templates/publications.mas, entitize => 1 &>
+
+Giovannoni, J. (2007) Fruit ripening mutants yield insights into ripening control. Current Opinion in Plant Biology. 10:283-289.
+
+Cara, B. and Giovannoni, J. (2008) The molecular biology of ethylene during tomato fruit development and maturation.  Plant Science. 175:106-113.
+
+Vrebalov, J., Pan, I.L., Matas, A.J., McQuinn, R., Chung., M.Y., Poole, M., Rose, J.K.C., Seymour, G., Giovannoni, J.J. and Irish, V.F. (2009) Fleshy fruit expansion and ripening are regulated by the tomato SHATTERPROOF gene, TAGL1. The Plant Cell 21: 3041-3062 (front cover).
+
+Matas, A.J., Agustí, J., Tadeo, F.R., Talón, M. and Rose, J.K.C. (2010) Tissue specific transcriptome profiling of the citrus fruit epidermis and subepidermis using laser capture microdissection. Journal of Experimental Botany 61: 3321-3330.
+
+Matas, A.J., Fei, Z., Giovannoni, J.J. and Rose, J.K.C. (2010) Developments in tomato transcriptomics. In: Genetics, Genomics and Breeding in Fruits and Vegetable Crops (Eds. B. Leidl, A. Slade, S. Hurst, J.A. Labate, J.R. Stommel). Pub. Science Publishers, New Hampshire, USA. (in press).
+
+</&>
+
+
