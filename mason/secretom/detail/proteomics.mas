@@ -1,93 +1,86 @@
 <& /page/page_title.mas, title => 'Tomato Comparative and Quantitative Proteomics' &>
 
-<&| /page/info_section.mas, title => 'Summary', is_subsection => 0 &>
+<div class="indented_content">
+  <p>
+  Tomato has long served as model system for fleshy fruit development,
+  and is an excellent system to study cell wall proteins as it is
+  associated with dramatic changes in wall biology, including
+  enzyme-mediated cell wall polysaccharide degradation, apoplastic sugar
+  metabolism and extracellular defenses against microbial
+  pathogens. However, there are few published proteomic analyses of
+  ripening tomato fruit and most of those are based on extraction of
+  total proteins followed by 2-DE separation, and the wall proteome was
+  not the major target. Consequently, the protein extraction step was
+  not optimized for secreted proteins.
+  </p>
 
-<p>
-Tomato has long served as model system for fleshy fruit development,
-and is an excellent system to study cell wall proteins as it is
-associated with dramatic changes in wall biology, including
-enzyme-mediated cell wall polysaccharide degradation, apoplastic sugar
-metabolism and extracellular defenses against microbial
-pathogens. However, there are few published proteomic analyses of
-ripening tomato fruit and most of those are based on extraction of
-total proteins followed by 2-DE separation, and the wall proteome was
-not the major target. Consequently, the protein extraction step was
-not optimized for secreted proteins.
-</p>
 
+  <div style="width: 300px" class="captioned_image">
 
-<div style="width: 300px" class="captioned_image">
+    <img src="/documents/img/secretom/tomato_P_infestans_full.jpg" />
 
-  <img src="/documents/img/secretom/tomato_P_infestans_full.jpg" />
+    <p>
+    Tomato leaves infected by <span class="species_binomial">P. infestans</span>.
+    </p>
+
+  </div>
 
   <p>
-  Tomato leaves infected by <span class="species_binomial">P. infestans</span>.
+  Similarly, defense responses against pathogens are also fundamentally
+  associated with changes in the expression of secreted apoplastic
+  proteins, but there have been few systematic studies at the proteome
+  level.
+  </p>
+
+  <p>
+    We have been developing methods to obtain sample materials highly
+    enriched in apoplast/cell wall proteins, including vacuum
+    dehydration, centrifugal dehydration and several methods that
+    involve the centrifugal isolation of the cell wall followed by
+    sequential extraction with solutions of increasing ionic
+    strength. Taken together, the goal is to create a more comprehensive
+    catalog of the tomato cell wall proteome, focusing on fruit and
+    leaves at various stages of infection by the oomycete Phytophthora
+    infestans. This will include both protein identification and
+    quantitative data, to gain insights into the dynamic properties of
+    the tomato secretome. Additionally we have been profiling "total
+    proteomes"; and screening the resulting protein populations for those
+    known to be localized in the cell wall with a predicted secretory
+    signal peptide, or that are <a href="/secretom/detail/glycoproteome">glycosylated</a>.
+  </p>
+
+  <p>
+    We have been applying several approaches for comparative proteomic
+    analysis, including Difference Gel Electrophoresis (DIGE), isobaric
+    Tag Relative Absolute Protein Quantitation (iTRAQ), exponentially
+    modified protein abundance index (emPAI) and MSE. The latter two
+    approaches were found to provide accurate relative quantitation data
+    on par with that provided by iTRAQ at significantly reduced cost,
+    but without the ability to multiplex. They have been integrated into
+    our work flow and are used where appropriate. We have also developed
+    a high/low pH reverse phase-reverse phase (RP-RP) separation
+    protocol to fractionate peptides prior to MS analysis. This new
+    approach complements the traditional strong cation exchange (SCX) RP
+    strategy and the Offgel peptide IEF fractionation.
   </p>
 
 </div>
 
-<p>
-Similarly, defense responses against pathogens are also fundamentally
-associated with changes in the expression of secreted apoplastic
-proteins, but there have been few systematic studies at the proteome
-level.
-</p>
-
-<p>
-  We have been developing methods to obtain sample materials highly
-  enriched in apoplast/cell wall proteins, including vacuum
-  dehydration, centrifugal dehydration and several methods that
-  involve the centrifugal isolation of the cell wall followed by
-  sequential extraction with solutions of increasing ionic
-  strength. Taken together, the goal is to create a more comprehensive
-  catalog of the tomato cell wall proteome, focusing on fruit and
-  leaves at various stages of infection by the oomycete Phytophthora
-  infestans. This will include both protein identification and
-  quantitative data, to gain insights into the dynamic properties of
-  the tomato secretome. Additionally we have been profiling "total
-  proteomes"; and screening the resulting protein populations for those
-  known to be localized in the cell wall with a predicted secretory
-  signal peptide, or that are <a href="/secretom/detail/glycoproteome">glycosylated</a>.
-</p>
-
-<p>
-  We have been applying several approaches for comparative proteomic
-  analysis, including Difference Gel Electrophoresis (DIGE), isobaric
-  Tag Relative Absolute Protein Quantitation (iTRAQ), exponentially
-  modified protein abundance index (emPAI) and MSE. The latter two
-  approaches were found to provide accurate relative quantitation data
-  on par with that provided by iTRAQ at significantly reduced cost,
-  but without the ability to multiplex. They have been integrated into
-  our work flow and are used where appropriate. We have also developed
-  a high/low pH reverse phase-reverse phase (RP-RP) separation
-  protocol to fractionate peptides prior to MS analysis. This new
-  approach complements the traditional strong cation exchange (SCX) RP
-  strategy and the Offgel peptide IEF fractionation.
-</p>
-
-</&>
-
-<&| /page/info_section.mas, title => 'Summary', is_subsection => 0 &>
-<ul>
-  <li>
+<&| /secretom/section_templates/objectives.mas, is_subsection => 1 &>
     Qualitative and quantitative characterization of the tomato
     proteome, focusing principally on tomato fruit development and
     ripening, and tomato leaves at different stages of infection by
     P. infestans.  Additional targets include proteins that are
     regulated by abiotic stresses.
-  </li>
-  <li>
+
     Compare the data with equivalent transcriptome and metabolome data.
-  </li>
-  <li>
     Screen for the presence of phosphorylated secreted proteins and
     small peptides.
-  </li>
-</ul>
 </&>
 
-<&| /page/info_section.mas, title => 'Comparative proteomic analysis of the tomato-P. infestans pathosystem' &>
+<h1>Comparative proteomic analysis of the tomato-P. infestans pathosystem</h1>
 
+<div class="indented_content">
   <p>
   We are characterizing the dynamics of host-pathogen secretomes in
   leaves during infection by the oomycete P. infestans, during distinct
@@ -105,9 +98,11 @@ level.
 
   </div>
 
-</&>
+</div>
 
-<&| /page/info_section.mas, title => 'Comparative proteomic analysis of the tomato fruit ripening' &>
+<h1>Comparative proteomic analysis of tomato fruit ripening</h1>
+
+<div class="indented_content">
 
   <p>
   We are profiling the cell wall proteome of ripening tomato fruit,
@@ -125,8 +120,8 @@ level.
   <div style="width: 700px" class="captioned_image">
 
           <table><tr><td><img src="/documents/img/secretom/tomato_wild_type_200.jpg" /></td>
-                     <td><img src="/documents/img/secretom/tomato_nor_200.jpg" /></td>
-                     <td><img src="/documents/img/secretom/tomato_rin_200.jpg" /></td>
+                     <td><img src="/documents/img/secretom/tomato_nor_200.jpg" />Missing image</td>
+                     <td><img src="/documents/img/secretom/tomato_rin_200.jpg" />Missing image</td>
           </tr></table>
 
           <p>
@@ -136,7 +131,7 @@ level.
 
   </div>  
 
-</&>
+</div>
 
 
 <&| /page/info_section.mas, title => 'Data Files' &>
