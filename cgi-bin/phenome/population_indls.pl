@@ -51,6 +51,7 @@ use Math::Round::Var;
 use File::Temp qw /tempfile tempdir/;
 use File::Copy;
 use File::Spec;
+use File::Path qw / mkpath /;
 use File::Basename;
 use File::stat;
 use Cache::File;
@@ -1103,10 +1104,8 @@ sub outfile_list
 
 =head2 cache_temp_path
 
- Usage: my ($prod_cache_path, $prod_temp_path, $tempimages_path) = $self->cache_temp_path();
- Desc: creates the 'r_qtl' dir in the '/data/prod/tmp/' dir; 
-      'cache' and 'tempfiles' in the /data/prod/tmp/r_qtl/, 
-       and 'temp_images' in the /data/local/cxgn/sgn/documents/tempfiles'      
+ Usage: my ($rqtl_cache_path, $rqtl_temp_path, $tempimages_path) = $self->cache_temp_path();
+ Desc: creates the 'r_qtl/cache' and 'r_qtl/tempfiles' subdirs in the /data/prod/tmp,              
  Ret: /data/prod/tmp/r_qtl/cache, /data/prod/tmp/r_qtl/tempfiles, 
       /data/local/cxgn/sgn/documents/tempfiles/temp_images
  Args: none
@@ -1123,18 +1122,13 @@ sub cache_temp_path
     my $tempimages_path =
       File::Spec->catfile( $basepath, $tempfile_dir, "temp_images" );
 
-    my $prod_temp_path = $c->get_conf('r_qtl_temp_path');
-    mkdir $prod_temp_path;
-
-    my $prod_cache_path = "$prod_temp_path/cache";
-    mkdir $prod_cache_path;
-
-    -d $prod_temp_path
-      or die "temp dir '$prod_temp_path' not found, and could not create!";
-    -r $prod_temp_path or die "temp dir '$prod_temp_path' not readable!";
-    -w $prod_temp_path or die "temp dir '$prod_temp_path' not writable!";
-
-    return $prod_cache_path, $prod_temp_path, $tempimages_path;
+    my $prod_rqtl_path  = $c->get_conf('r_qtl_temp_path');  
+    my $rqtl_cache_path = qq | $prod_rqtl_path/cache |; 
+    my $rqtl_temp_path  = qq | $prod_rqtl_path/tempfiles |;
+  
+    mkpath ([$rqtl_cache_path, $rqtl_temp_path], 0, 0755);
+  
+    return $rqtl_cache_path, $rqtl_temp_path, $tempimages_path;
 
 }
 
@@ -1143,7 +1137,7 @@ sub cache_temp_path
 =head2 crosstype_file
 
  Usage: my $cross_file = $self->crosstype_file();
- Desc: creates the crosstype file in the /data/prod/tmp/r_qtl/temp, 
+ Desc: creates the crosstype file in the /data/prod/tmp/r_qtl/tempfiles, 
       
  Ret: crosstype filename (with absolute path)
  Args: none
