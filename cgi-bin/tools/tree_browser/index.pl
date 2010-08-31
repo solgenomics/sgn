@@ -128,6 +128,7 @@ our %PARAM = (
 our $HTML_ROOT_PATH = $c->config->{'basepath'};
 our $DOC_PATH = $c->config->{'tempfiles_subdir'} . '/align_viewer';
 our $PATH     = $HTML_ROOT_PATH . $DOC_PATH;
+mkpath $PATH unless -e $PATH;
 
 our $CMD_QUICKTREE = "/data/prod/bin/quicktree";
 our $CMD_SREFORMAT = "/data/prod/bin/sreformat";
@@ -144,8 +145,6 @@ if ($use_html_path) {
     $align_temp_show  = $HTML_ROOT_PATH . $align_temp_show;
     $newick_temp_show = $HTML_ROOT_PATH . $newick_temp_show;
 }
-
-#print STDERR "Done with setting up some variables...\n";
 
 #Family Shortcuts
 #Copy newick/alignment to temp files based on family information:
@@ -219,14 +218,6 @@ unless ( $align_temp_file =~ /\// ) {
     $align_temp_file = $PATH . "/" . $align_temp_file;
 }
 
-# my $align_upload = $page->get_upload("align_upload");
-# my $align_upload_fh;
-# if (defined $align_upload) {
-# 	$align_upload_fh = $align_upload->fh();
-#         while (<$align_upload_fh>) {
-#             $align_seq_data .=$_;
-# 	}
-# }
 if ( $align_seq_data ne '' ) {
     $align_tmp_fh = File::Temp->new(
         DIR    => $PATH,
@@ -749,14 +740,6 @@ else {
         $n->get_label()->set_hilite_color( 255, 200, 85 );
     }
 
-    #exit();
-    # play back the tree operations
-    #
-    #print <<EOH;
-    #before play_back_operations.
-    #$ops
-    #EOH
-
     $browser->play_back_operations();
 
 # hilite the node if the node is still in the tree (may have disappeared due to subtree etc)
@@ -893,26 +876,6 @@ else {
 "<a href=\"?align_temp_show=$align_filename&newick_temp_show=$filename\">Tree browser:</a> "
           . $tree->get_name() );
 
-    #
-
-    #     print blue_section_html('debugging output',<<EOH);
-    # render_png to this file:  $browser->get_temp_file()."$unique.png"
-    # action: $action, <br />
-    # tree string: $tree_string, <br />
-    # file $file,  <br />
-    # shared file: $shared_file, <br />
-    # 	hilite: $hilite, <br />
-    # operations: $ops, <br />
-    # term: $term, <br />
-    # title: $title, <br />
-    # 	tree_style: $tree_style, <br />
-    # show_blen: $show_blen, <br />
-    # preset: $preset, <br />
-    # height: $height <br />
-
-    # EOH
-
-    #
     print $renderer->get_html_image_map( "tree_image_map", $new_align_temp,
         $new_hilite_temp, $align_type );
 
@@ -1086,15 +1049,10 @@ else {
     $original_link = ""
       if ( $upload || $tree_string_param || !$node_operations );
 
-#	my $root_min_var_link = "<a href=\"?$param_root_min_var_toggle\"> $root_min_var_text</a>&nbsp;&nbsp;&nbsp;";
-#	$root_min_var_link = "" if ($node_operations);
     my $w1 = "30%";
     my $w2 = "35%";
     my $w3 = "40%";
 
-#my $htmlstring = "<table width=\"100%\"  border=\"5\" cellpadding=\"5\" cellspacing=\"5\" style=\"font-size:1.0em\" bgcolor=\"\" >  <tr bgcolor=\"\"> <td> XXX</td></tr></table>";
-
-# my $htmlstring = "<table width=\"100%\" style=\"font-size:1.0em\" bgcolor=\"\" >  <tr bgcolor=\"\"> <td></td></tr></table>";
 
     my $treestyle_str = "	 <td width = \"33%\" bgcolor=\"\">
 			<form id=\"tree_style_form\" style=\"margin-bottom:0; margin-top:0;font-size:1.0em\">
@@ -1171,12 +1129,6 @@ else {
 	       </form>
 </td>";
 
-  #my $align_domain_str =    "<tr><td colspan=\"2\" style=\"text-align:center\">
-  #		  		<a href=\"?$param_align_toggle\">$align_text</a>
-  #				&nbsp;&nbsp;&nbsp;
-  #				<a href=\"?$param_domain_toggle\">$domain_text</a>
-  #		   </td>
-  #		   </tr>";
     my $show_species_str =
 "<td  style=\"text-align:center;\"> <a href=\"?$param_show_species_toggle\">$show_species_text</a> </td>";
 
