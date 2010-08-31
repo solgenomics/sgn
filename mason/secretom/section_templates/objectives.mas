@@ -1,5 +1,5 @@
 % my @o = grep /\S/, split /\n\s*\n/, $m->content;
-<&| /page/info_section.mas, title => 'Objectives' &>
+<&| /page/info_section.mas, title => 'Objectives', %ARGS &>
   <ul>
 %  for (@o) {
     <li>
