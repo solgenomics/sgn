@@ -48,7 +48,7 @@ sub new {
     my $tmpred =
       TMpred->new( $self->get_limits(), $self->get_sequence(),
         $self->get_sequence_id() );
-
+    $tmpred->set_tmpred_out("");
     $self->set_TMpred($tmpred);
     $self->Sequence22_AAcomposition();
 
