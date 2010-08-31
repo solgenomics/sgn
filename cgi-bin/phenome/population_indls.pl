@@ -374,7 +374,7 @@ qq|<div><a href="$url_pubmed$accession" target="blank">$pub_info</a> $title $abs
                       "phenotype",
                       'View/hide phenotype raw data',
                       qq |$phenotype_data|,
-                      0,                                #<  show data by default
+                      0,                                #<  don't show data by default
                                        );
 	    $data_download .=
 qq { Download population: <span><a href="pop_download.pl?population_id=$population_id"><b>\[Phenotype raw data\]</b></a><a href="genotype_download.pl?population_id=$population_id"><b>[Genotype raw data]</b></a></span> };
@@ -703,10 +703,10 @@ sub qtl_plot
 
         my ( $qtl_summary, $flanking_markers ) = $self->run_r();
 
-        open QTLSUMMARY, "<$qtl_summary" or die "can't open $qtl_summary: $!\n";
+        open my $qtl_fh, "<", $qtl_summary or die "can't open $qtl_summary: $!\n";
 
-        my $header = <QTLSUMMARY>;
-        while ( my $row = <QTLSUMMARY> )
+        my $header = <$qtl_fh>;
+        while ( my $row = <$qtl_fh> )
         {
             my ( $marker, $chr, $pos, $lod ) = split( /\t/, $row );
             push @marker, $marker;
@@ -721,13 +721,12 @@ sub qtl_plot
         my $max   = $o_lod[-1];
         $max = $max + (0.5);
 
-        close QTLSUMMARY;
 
-        open MARKERS, "<$flanking_markers"
+        open my $markers_fh, "<", $flanking_markers
           or die "can't open $flanking_markers: !$\n";
 
-        $header = <MARKERS>;
-        while ( my $row = <MARKERS> )
+        $header = <$markers_fh>;
+        while ( my $row = <$markers_fh> )
 	   
         {
 	    chomp($row);
@@ -738,7 +737,6 @@ sub qtl_plot
             push @peak, $peakmarker;
         }
 
-        close MARKERS;
 	my (@h_markers, @chromosomes, @lk_groups);
 	my $h_marker;
 
@@ -1004,18 +1002,16 @@ sub infile_list
                                    );
     my $file_cv_in = $file_cvin->filename();
 
-    open CV, ">$file_cv_in" or die "can't open $file_cv_in: $!\n";
-    print CV $ac;
-    close CV;
+    open my $cv_fh, ">", $file_cv_in or die "can't open $file_cv_in: $!\n";
+    $cv_fh->print($ac);
 
     my $file_in_list = join( "\t",
                              $file_cv_in,       "P$pop_id",
                              $gen_dataset_file, $phe_dataset_file,
                              $prod_permu_file, $crosstype_file);
 
-    open FI, ">$file_in" or die "can't open $file_in: $!\n";
-    print FI $file_in_list;
-    close FI;
+    open my $fi_fh, ">", $file_in or die "can't open $file_in: $!\n";
+    $fi_fh->print ($file_in_list);
 
     return $file_in;
 
@@ -1095,9 +1091,8 @@ sub outfile_list
         $qtl_summary,
         $flanking_markers,
                             );
-    open FO, ">$file_out" or die "can't open $file_out: $!\n";
-    print FO $file_out_list;
-    close FO;
+    open my $fo_fh, ">", $file_out or die "can't open $file_out: $!\n";
+    $fo_fh->print ($file_out_list);
 
     return $file_out, $qtl_summary, $flanking_markers;
 }
@@ -1123,11 +1118,11 @@ sub cache_temp_path
       File::Spec->catfile( $basepath, $tempfile_dir, "temp_images" );
 
     my $prod_rqtl_path  = $c->get_conf('r_qtl_temp_path');  
-    my $rqtl_cache_path = qq | $prod_rqtl_path/cache |; 
-    my $rqtl_temp_path  = qq | $prod_rqtl_path/tempfiles |;
+    my $rqtl_cache_path = "$prod_rqtl_path/cache"; 
+    my $rqtl_temp_path  = "$prod_rqtl_path/tempfiles";
   
-    mkpath ([$rqtl_cache_path, $rqtl_temp_path], 0, 0755);
-  
+    mkpath ([$rqtl_cache_path, $rqtl_temp_path, $tempimages_path], 0, 0755);
+   
     return $rqtl_cache_path, $rqtl_temp_path, $tempimages_path;
 
 }
@@ -1243,7 +1238,7 @@ sub run_r
     } catch {
         my $err = $_;
         $err =~ s/\n at .+//s; #< remove any additional backtrace
-        # try to append the R output
+   #     # try to append the R output
         try{ $err .= "\n=== R output ===\n".file($r_out_temp)->slurp."\n=== end R output ===\n" };
         # die with a backtrace
         Carp::confess $err;
@@ -1304,7 +1299,6 @@ sub permu_file
 
     my $key_permu = "$ac" . "_" . $pop_id . "_permu";
     my $filename  = "permu_" . $ac . "_" . $pop_id;
-
     my $permu_file = $file_cache->get($key_permu);
 
     unless ($permu_file)
@@ -1312,11 +1306,11 @@ sub permu_file
 
         my $permu = undef;
 
-        my $permu_file = "$prod_cache_path/$filename";
-
-        open OUT, ">$permu_file" or die "can't open $permu_file: !$\n";
-        print OUT $permu;
-        close OUT;
+        my $permu_file = File::Spec->catfile( $prod_cache_path, $filename );
+        
+	open my $permu_fh, ">", $permu_file or die "can't open $permu_file: !$\n";
+        $permu_fh->print($permu);
+        
 
         $file_cache->set( $key_permu, $permu_file, '30 days' );
         $permu_file = $file_cache->get($key_permu);
@@ -1349,23 +1343,22 @@ sub permu_values
     my $permu_file = fileparse($prod_permu_file);   
     my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
       $self->cache_temp_path();
+    
     $permu_file = File::Spec->catfile( $tempimages_path, $permu_file );
 
     my $round1 = Math::Round::Var->new(0.1);
 
-    open PERMUTATION, "<$permu_file"
+    open my $permu_fh, "<", $permu_file
       or die "can't open $permu_file: !$\n";
 
-    my $header = <PERMUTATION>;
+    my $header = <$permu_fh>;
 
-    while ( my $row = <PERMUTATION> )
+    while ( my $row = <$permu_fh> )
     {
         my ( $significance, $lod_threshold ) = split( /\t/, $row );
         $lod_threshold = $round1->round($lod_threshold);
         $permu_threshold{$significance} = $lod_threshold;
     }
-
-    close PERMUTATION;
 
     return \%permu_threshold;
 
@@ -1407,15 +1400,14 @@ sub permu_values_exist
     if ( -e $permu_file )
     {
 
-        open P, "<$permu_file" or die "can't open $permu_file: !$\n";
-        my $h = <P>;
-        while ( $permu_data = <P> )
+        open my $pf_fh, "<", $permu_file or die "can't open $permu_file: !$\n";
+        my $h = <$pf_fh>;
+        while ( $permu_data = <$pf_fh> )
         {
             last if ($permu_data);
 
             # 	    #just checking if there is data in there
         }
-        close P;
     }
 
     if ($permu_data)
@@ -1595,11 +1587,11 @@ sub stat_files
     my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
       $self->cache_temp_path();
 
-    open F, "<$user_stat_file" or die "can't open file: !$\n";
+    open my $user_stat_fh, "<", $user_stat_file or die "can't open file: !$\n";
 
     my $stat_files;
 
-    while (<F>)
+    while (<$user_stat_fh>)
     {
         my ( $parameter, $value ) = split( /\t/, $_ );
 
@@ -1610,22 +1602,22 @@ sub stat_files
         );
         my $stat_file = $stat_temp->filename;
 
-        open SF, ">$stat_file" or die "can't open file: !$\n";
-        print SF $value;
-        close SF;
+        open my $sf_fh, ">", $stat_file or die "can't open file: !$\n";
+        $sf_fh->print($value);
+        
 
         $stat_files .= $stat_file . "\t";
 
     }
 
-    close F;
+
 
     my $stat_param_files =
       $prod_temp_path . "/" . "stat_temp_files_pop_id_${pop_id}";
 
-    open STAT, ">$stat_param_files" or die "can't open file: !$\n";
-    print STAT $stat_files;
-    close STAT;
+    open my $stat_param_fh, ">", $stat_param_files or die "can't open file: !$\n";
+    $stat_param_fh->print ($stat_files);
+
 
     return $stat_param_files;
 
@@ -1653,11 +1645,11 @@ sub stat_param_hash
     my $qtl            = CXGN::Phenome::Qtl->new($sp_person_id);
     my $user_stat_file = $qtl->get_stat_file($c, $pop_id);
 
-    open F, "<$user_stat_file" or die "can't open file: !$\n";
+    open my $user_stat_fh, "<", $user_stat_file or die "can't open file: !$\n";
 
     my %stat_param;
 
-    while (<F>)
+    while (<$user_stat_fh>)
     {
         my ( $parameter, $value ) = split( /\t/, $_ );
 
