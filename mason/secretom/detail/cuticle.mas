@@ -94,11 +94,17 @@
 
 </&>
 
-<&| /secretom/section_templates/data_items.mas &>
+<&| /secretom/section_templates/data_items.mas,
+      default_ref_base => '/download/data/secretom/.new/Tomato_fruit_cuticular_cell_wall_proteome'
+ &>
 - text: "Tomato fruit (cv. M82) surface proteins identified"
+  ref: Tomato_fruit_surface_proteins.xlsx
 - text: "Tomato fruit (cv. M82) surface proteins: from gel bands"
+  ref: Tomato_fruit_surface_proteins_gel_bands.xlsx
 - text: "Tomato fruit (cv. M82) surface proteins: from gel slabs"
+  ref: Tomato_fruit_surface_proteins_gel_slabs.xlsx
 - text: "Tomato fruit (cv. M82) surface proteins: from gel free"
+  ref: Tomato_fruit_surface_proteins_gel_free.xlsx
 </&>
 
 <&| /secretom/section_templates/publications.mas, entitize => 1 &>
