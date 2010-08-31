@@ -135,7 +135,7 @@ sub _search_signalp_file {
     open my $fh, "gunzip -c '$file' |" or die "$! unzipping $file";
     my @results;
     while( my $line = <$fh> ) {
-        next unless $line =~ $query;
+        next unless lc($line) =~ $query;
         my @fields = (split /\t/, $line)[0,1,4,5,6,7,8,9,10,11,12];
         push @results, \@fields;
     }
