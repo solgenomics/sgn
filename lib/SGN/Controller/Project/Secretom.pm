@@ -60,10 +60,11 @@ Just forwards to the template indicated by the request path.
 sub default :Path {
     my ( $self, $c, @args ) = @_;
     my $path = join '/', $self->action_namespace, @args;
-    if( $path =~ s/\.pl$// ) { #< attempt to su
-        $c->res->redirect( $path, 301 );
-    }
-    $c->stash->{template} = "$path.mas"
+
+    $c->stash->{template} = my $comp_name = "$path.mas";
+
+    $c->throw_404
+        unless $c->view('Mason')->component_exists( $comp_name );
 }
 
 =head2 auto

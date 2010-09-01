@@ -2,6 +2,23 @@ package SGN::View::Mason;
 use Moose;
 extends 'Catalyst::View::HTML::Mason';
 
+use File::Spec;
+
+sub component_exists {
+    my ( $self, $component ) = @_;
+
+    my $cr = $self->interp_args->{comp_root}
+        or return 0;
+    $cr = [['main' => $cr ]] unless ref $cr;
+    for ( @$cr ) {
+        my (undef, $path) = @$_;
+        my $p =  File::Spec->catfile( $path, $component );
+        warn "found $p!" if -f $p;
+        return 1 if -f $p;
+    }
+    return 0;
+}
+
 =head1 NAME
 
 SGN::View::Mason - Mason View Component for SGN
