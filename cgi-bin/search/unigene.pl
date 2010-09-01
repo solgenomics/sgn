@@ -72,7 +72,7 @@ my $dbh = CXGN::DB::Connection->new();
 ## This will be replace in the new branch for the apache variable $c !!!!
 
 my $basepath = $c->config->{'basepath'};
-my $tmpdir = File::Spec->catdir($c->config->{'tempfiles_subdir'}, 'unigene_images' );
+my $tmpdir = $c->path_to( $c->tempfiles_subdir('unigene_images') );
 
 ## To do more flexible how the unigene can be called
 
