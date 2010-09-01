@@ -79,7 +79,7 @@ span.filesize:after {
     </td>
     <td>
           <h3>Solanum lycopersicum</h3>
-          <img src="/img/secretom/solanumlycopersicum.png">
+          <img src="/img/secretom/solanumlycopersicum.png" />
           <& .result_file, file => 'data/secretom/.new/SignalP_predictions/ITAG1.pep.sptp.fasta', dir => $static_dir &>
     </td>
   </tr>
@@ -144,7 +144,6 @@ $dir
 % } else {
     <span class="ghosted">temporarily unavailable</span>
 % }
-    </div>
 </%def>
 
 <%once>
