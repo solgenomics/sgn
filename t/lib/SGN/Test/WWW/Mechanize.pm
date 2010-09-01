@@ -41,9 +41,11 @@ Plus the following:
 
 package SGN::Test::WWW::Mechanize;
 use Moose;
+use namespace::autoclean;
 
 BEGIN { $ENV{CATALYST_SERVER} ||= $ENV{SGN_TEST_SERVER} }
-use SGN;
+
+use Test::More;
 
 use CXGN::People::Person;
 use CXGN::People::Login;
@@ -58,6 +60,78 @@ has 'test_user' => (
     predicate => 'has_test_user',
     clearer   => 'clear_test_user',
    );
+
+
+=head2 test_level
+
+Read-only accessor to give the current testing level, which
+corresponds to how close to the current testing code the app is
+running.  Returns one of:
+
+  process  The app is running in the same process as this test.
+           In-memory state and configuration can be accessed directly
+           from the context object.
+
+  local    The app is running on the same host, and with the same
+           configuration data, as this test code.  Files and databases
+           can be accessed via SGN::Context.
+
+  remote   The app is running on another machine.  The only means of interaction
+           is via remote requests.
+
+=cut
+
+sub test_level {
+    return 'process' if ! $ENV{SGN_TEST_SERVER};
+    return 'host'    if $ENV{SGN_TEST_LOCAL};
+    return 'remote';
+}
+
+=head2 can_test_level
+
+Takes single test level name, returns true if the current testing
+level is at least the given level.
+
+Example:
+
+   if( $mech->can_test_level('local') ) {
+     test_local_stuff();
+   }
+
+=cut
+
+sub can_test_level {
+    my ( $self, $check ) = @_;
+
+    my %val = ( remote => 0, local => 1, process => 2 );
+    confess "invalid test level '$check'" unless exists $val{$check};
+    return $val{ $self->test_level } >= $val{ $check };
+
+}
+
+=head2 with_test_level
+
+Run the subroutine if the test level is at least the given level, or
+output a skip if not.  Takes an optional test count after the sub.
+
+Example:
+
+  $mech->with_test_level( local => sub {
+
+  }, $optional_test_count );
+
+=cut
+
+sub with_test_level {
+    my ( $self, $need_level, $sub, $count ) = @_;
+
+    SKIP: {
+          skip( "tests that require $need_level-level access, current level is ".$self->test_level, ( $count || 1 ) )
+              unless $self->can_test_level( $need_level );
+
+          $sub->( $self );
+      }
+}
 
 sub create_test_user {
     my $self = shift;
@@ -158,10 +232,12 @@ hash-style list of parameters to set on the temp user that is created.
 
 sub while_logged_in {
     my ($self,$props,$sub) = @_;
-    $self->create_test_user( %$props );
-    $self->log_in_ok;
-    $sub->();
-    $self->log_out;
+    $self->with_test_level( local => sub {
+        $self->create_test_user( %$props );
+        $self->log_in_ok;
+        $sub->();
+        $self->log_out;
+    });
 }
 
 =head2 while_logged_in_all
@@ -183,13 +259,15 @@ Execute the given code while logged in for each user_type.
 
 sub while_logged_in_all {
     my ($self,$sub) = @_;
-    my @users = qw/user curator submitter sequencer genefamily_editor/;
-    for my $user_type (@users) {
-        $self->create_test_user( user_type => $user_type );
-        $self->log_in_ok;
-        $sub->($user_type);
-        $self->log_out;
-    }
+    $self->with_test_level( local => sub {
+        my @users = qw/user curator submitter sequencer genefamily_editor/;
+        for my $user_type (@users) {
+            $self->create_test_user( user_type => $user_type );
+            $self->log_in_ok;
+            $sub->($user_type);
+            $self->log_out;
+        }
+    });
 }
 
 sub log_in_ok {
