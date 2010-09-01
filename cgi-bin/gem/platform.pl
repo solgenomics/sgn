@@ -62,12 +62,12 @@ my %args = CXGN::Page->new()->get_all_encoded_arguments();
 
 ## Now it will create a platform object (by default it will create an empty platform object)
 
-my $platform = CXGN::GEM::Platform->new($schema);
+my $platform = CXGN::GEM::Platform->new($dbh);
 
 if (exists $args{'id'} && $args{'id'} =~ m/^\d+$/) {
-   $platform = CXGN::GEM::Platform->new($schema, $args{'id'});
+   $platform = CXGN::GEM::Platform->new($dbh, $args{'id'});
 } elsif (exists $args{'name'}) {
-   $platform = CXGN::GEM::Platform->new_by_name($schema, $args{'name'});
+   $platform = CXGN::GEM::Platform->new_by_name($dbh, $args{'name'});
 }
 
 
@@ -82,9 +82,9 @@ if (defined $platform->get_platform_id() ) {
 	->search({ platform_id => $platform->get_platform_id() });
     
     foreach my $hyb_row (@hyb_rows) {
-	my $target_id = $hyb_row->get_column('target_id');
-	my $target = CXGN::GEM::Target->new($schema, $target_id);
-	push @target_list, $target;
+        my $target_id = $hyb_row->get_column('target_id');
+        my $target = CXGN::GEM::Target->new($dbh, $target_id);
+        push @target_list, $target;
     }
 }
 
@@ -112,12 +112,13 @@ if (defined $platform->get_platform_id() ) {
 
 if (defined $platform->get_platform_id() ) {
     $m->exec('/gem/platform_detail.mas',
-             dbh           => $dbh,
-             schema        => $schema, 
-             platform      => $platform,	     
-             target_list   => \@target_list,
-	     template_list => \@template_row_list, 
-	     pub_list      => \@pub_id_list    );
+            dbh           => $dbh,
+            schema        => $schema, 
+            platform      => $platform,	     
+            target_list   => \@target_list,
+            template_list => \@template_row_list, 
+            pub_list      => \@pub_id_list    
+    );
 } else {
     $m->exec('/gem/gem_page_error.mas', 
              schema => $schema, 
