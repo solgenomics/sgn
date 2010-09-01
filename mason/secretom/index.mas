@@ -31,13 +31,14 @@
       margin-top: 0;
     }
 
-    a.FTP {
+    a.biglink {
        font-size: 130%;
        color: black;
        width: 70%;
        display: block;
        margin: 30px auto;
        font-weight: bold;
+       text-align: left;
     } 
 
     ul.conferences {
@@ -132,9 +133,12 @@
       </&>
     </div>
 
-      <a class="FTP" href="ftp://ftp.solgenomics.net/secretom/">
-        All <span style="color: red">secretom</span> datasets can be downloaded from the
+      <a class="biglink" href="ftp://ftp.solgenomics.net/secretom/">
+        <span class="secretom">secretom</span> datasets are available on the
         <span style="text-decoration: underline">SGN FTP site</span>.
+      </a>
+      <a class="biglink" href="/secretom/publications">
+        View <span class="secretom">secretom</span> publications.
       </a>
 
   </div>
