@@ -12,7 +12,7 @@ Identifier       SP    Score   Length     Sequence 10        20        30       
                                                    |         |         |         |         |         |
 
 <% $result_string %>
-<% $count_pass secreted sequences predicted out of <% scalar @$STApreds %>.
+<% $count_pass %> secreted sequences predicted out of <% scalar @$STApreds %>.
 </pre>
 
   <a href="/secretom/secretary">Return to SecreTary input page</a>
