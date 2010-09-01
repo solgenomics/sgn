@@ -89,12 +89,21 @@ running.  Returns one of:
            In-memory state and configuration can be accessed directly
            from the context object.
 
+           This level is in effect if no SGN_TEST_SERVER environment
+           variable is set.
+
   local    The app is running on the same host, and with the same
            configuration data, as this test code.  Files and databases
            can be accessed via SGN::Context.
 
+           This level is in effect if SGN_TEST_SERVER is set, but
+           SGN_TEST_REMOTE is not set, or false.
+
   remote   The app is running on another machine.  The only means of interaction
            is via remote requests.
+
+           This level is in effect if both SGN_TEST_SERVER and
+           SGN_TEST_REMOTE are set.
 
 =cut
 
