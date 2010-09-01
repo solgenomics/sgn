@@ -1,14 +1,12 @@
 #!/usr/bin/perl -w
 use strict;
+use warnings FATAL => 'all';
 
 # tests for TMpred Module
- 
-use Test::More tests=>11;  # qw / no_plan / ;  
+use Test::More tests=> 11;
 use Bio::SecreTary::TMpred;
 
-use SGN::Context;
-
-$ENV{PATH} .= ':programs';
+$ENV{PATH} .= ':programs'; #< XXX TODO: obviate the need for this
 
 my $limits = [500, 10, 40, 0, 40];
 my $id = "AT1G50920.1";
@@ -16,12 +14,12 @@ my $sequence = "MVQYNFKRITVVPNGKEFVDIILSRTQRQTPTVVHKGYKINRLRQFYMRKVKYTQTNFHAKLSA
 
 my $TMpred_obj = Bio::SecreTary::TMpred->new( $limits, $sequence, $id );
 ok( defined $TMpred_obj, 'new() returned something.');
-ok ($TMpred_obj->isa('Bio::SecreTary::TMpred'), "it belongs to the correct class.");
+isa_ok( $TMpred_obj, 'Bio::SecreTary::TMpred' );
 
-ok( $TMpred_obj->get_sequence() eq $sequence, "sequence is ok");
-ok( $TMpred_obj->get_sequence_id() eq $id, "id is ok");
+is( $TMpred_obj->get_sequence(), $sequence, "sequence is ok");
+is( $TMpred_obj->get_sequence_id(), $id, "id is ok");
 
-ok( $TMpred_obj->get_solutions() eq "(-10000,0,0)", "tmpred solutions ok"); # this is a summary of the most useful bits of the tmpred output
+is( $TMpred_obj->get_solutions(), "(-10000,0,0)", "tmpred solutions ok"); # this is a summary of the most useful bits of the tmpred output
 #print $TMpred_obj->get_solutions(), "\n";
 
 $id = "AT1G75120.1";
@@ -32,10 +30,10 @@ LYRDSDVESMSDGHDNNTAYGFNDVFDDPTMTRSRTVYTNRIWVFNSGFFY";
 
 $TMpred_obj = Bio::SecreTary::TMpred->new( $limits, $sequence, $id );
 ok( defined $TMpred_obj, 'new() returned something.');
-ok ($TMpred_obj->isa('Bio::SecreTary::TMpred'), "it belongs to the correct class.");
+isa_ok ($TMpred_obj, 'Bio::SecreTary::TMpred' );
 
-ok( $TMpred_obj->get_sequence() eq $sequence, "sequence is ok");
-ok( $TMpred_obj->get_sequence_id() eq $id, "id is ok");
+is( $TMpred_obj->get_sequence(), $sequence, "sequence is ok" );
+is( $TMpred_obj->get_sequence_id(), $id, "id is ok" );
 
 # the raw output we should get from tmpred for this input:
 my $tmpred_out1 = 'TMpred prediction output for : /home/tomfy/tempfiles/tmpred_input_WajeGg
@@ -104,8 +102,8 @@ $tmpred_out2 =~ s/\s*$//;
 #$tmpred_out1 .= "x";
 #print "tmpred_out2[", $tmpred_out2, "]\n";
 
-ok($tmpred_out1 eq $tmpred_out2, "tmpred raw output is ok"); 
+is($tmpred_out1, $tmpred_out2, "tmpred raw output is ok");
 
-ok( $TMpred_obj->get_solutions() eq "(2479,17,35)  (2512,15,33)", "tmpred solutions ok"); # summary of tmpred output
+is( $TMpred_obj->get_solutions(), "(2479,17,35)  (2512,15,33)", "tmpred solutions ok"); # summary of tmpred output
 #print $TMpred_obj->get_solutions(), "\n";
 
