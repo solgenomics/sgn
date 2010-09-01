@@ -51,11 +51,11 @@ sub new {
     $self->Sequence22_AAcomposition();
 
     # do the cleavage site calculation
-    my	$sp_length = Cleavage::cleavage($sequence);
+    my	$sp_length = Bio::SecreTary::Cleavage::cleavage($sequence);
     # $hstart is the 0-based number of first AA of h region, i.e. the length of
     # the n region. cstart is the 0-based number of first AA of the c region
     # i.e. post-hydrophobic cleavage region
-    my ($typical, $hstart, $cstart) = Cleavage::subdomain(substr($sequence, 0, $sp_length)); 
+    my ($typical, $hstart, $cstart) = Bio::SecreTary::Cleavage::subdomain(substr($sequence, 0, $sp_length)); 
 
     $self->set_cleavage([$sp_length, $hstart, $cstart, $typical]);
     return $self;
