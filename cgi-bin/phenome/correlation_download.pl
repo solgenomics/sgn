@@ -16,9 +16,7 @@ use strict;
 use CXGN::DB::Connection;
 use CXGN::Phenome::Population;
 use CGI qw /:cgi-lib/ ;
-use Tk;
-use Tk::DialogBox;
-use Tk::MsgBox;
+
 
 my $cgi = CGI->new();
 my %args = $cgi->Vars();
