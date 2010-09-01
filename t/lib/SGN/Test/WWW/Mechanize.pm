@@ -100,8 +100,8 @@ running.  Returns one of:
 
 sub test_level {
     return 'process' if ! $ENV{SGN_TEST_SERVER};
-    return 'local'   if $ENV{SGN_TEST_LOCAL};
-    return 'remote';
+    return 'remote'   if $ENV{SGN_TEST_REMOTE};
+    return 'local';
 }
 
 =head2 can_test_level
