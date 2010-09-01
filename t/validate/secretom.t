@@ -8,11 +8,24 @@ use Test::More;
 
 my %urls = (
         "secretom"            => "/secretom/",
-        "secretom outreach"   => "/secretom/outreach.pl",
-        "secretom prediction" => "/secretom/prediction.pl",
-        "secretom proteome"   => "/secretom/proteome.pl",
-        "secretom search"     => "/secretom/search.pl",
-        "secretom training"   => "/secretom/training.pl",
+        "secretom outreach"   => "/secretom/outreach",
+        "secretom secretary"  => "/secretom/secretary",
+        "secretom training"   => "/secretom/training",
+        ( map { ("secretom $_" => "/secretom/detail/$_") }
+          ( qw(
+             cell_wall
+             cuticle
+             functional_screens
+             glycoproteome
+             phytophthera_interaction
+             prediction
+             profiling
+             proteomics
+             secretion_path
+             spinoffs
+            )
+           )
+         ),
 );
 
 validate_urls(\%urls, $ENV{ITERATIONS} || 1 );
