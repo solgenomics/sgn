@@ -77,7 +77,7 @@ if (defined $experiment->get_experiment_id() ) {
 
 ## There are two ways to access to the page, using id=int or name=something. If use other combinations give an error message 
 
-if (defined $experiment->get_experiment_id() ) {
+if (defined $experiment->get_experiment_id or defined $experiment->get_experiment_name) {
     $m->exec('/gem/experiment_detail.mas',
              dbh         => $dbh,
              schema      => $schema, 
