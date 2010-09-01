@@ -25,12 +25,15 @@ use CXGN::Chado::Pubauthor;
 use CXGN::Contact;
 use CXGN::Map;
 use File::Temp qw / tempfile /;
-use File::Path;
+use File::Path qw / mkpath  /;
 use File::Copy;
 use File::Spec;
 use File::Basename;
 
 use base qw / CXGN::Page::Form::SimpleFormPage CXGN::Phenome::Main/;
+
+use CatalystX::GlobalContext qw( $c );
+
 
 sub new { 
     my $class = shift;
