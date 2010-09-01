@@ -58,8 +58,14 @@ has 'context' => (
     is => 'ro',
     lazy_build => 1,
    ); sub _build_context {
-       require SGN::Context;
-       SGN::Context->new;
+       my $self = shift;
+       if( $self->can_test_level('process') ) {
+           require $self->catalyst_app;
+           return $self->catalyst_app;
+       } else {
+           require SGN::Context;
+           return SGN::Context->new;
+       }
    }
 
 has 'test_user' => (
