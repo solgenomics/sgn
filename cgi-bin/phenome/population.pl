@@ -224,23 +224,18 @@ EOS
 	    {	    
 		if ($definition) 
 		{
-		    push  @phenotype,  [map {$_} ( (tooltipped_text($trait_link, $definition)), 
-                                    $min, $max, $avg, 
-                           qq | <a href="/phenome/population_indls.pl?population_id=$population_id&amp;cvterm_id=$trait_id">
-                                 $count</a> 
-                              |,
-                           qq | <a href="/phenome/population_indls.pl?population_id=$population_id&amp;cvterm_id=$trait_id">
-                                  $graph_icon</a> 
-                              | )];
+		    push  @phenotype,  [
+			                map {$_} ( (tooltipped_text($trait_link, $definition) ), $min, $max, $avg, $count,
+						   qq | <a href="/phenome/population_indls.pl?population_id=$population_id&amp;cvterm_id=$trait_id"> $graph_icon </a> | 
+                                                )
+                                      ];
 		} else  
 		{ 
-		    push  @phenotype,  [map {$_} ($trait_name, $min, $max, $avg, 
-                          qq | <a href="/phenome/population_indls.pl?population_id=$population_id&amp;cvterm_id=$trait_id">
-                             $count</a> 
-                             |,
-                           qq | <a href="/phenome/population_indls.pl?population_id=$population_id&amp;cvterm_id=$trait_id">
-                                  $graph_icon</a> 
-                              |  )];
+		    push  @phenotype,  [
+			                 map {$_} ( $trait_name, $min, $max, $avg, $count,
+                                                   qq | <a href="/phenome/population_indls.pl?population_id=$population_id&amp;cvterm_id=$trait_id">$graph_icon</a> |  
+			                          )
+		                       ];
 		}
 	    } else 
 	    {
