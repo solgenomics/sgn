@@ -19,6 +19,7 @@ my %urls = (
         "gem detail page for platform (name)"      => "/gem/platform.pl?name=Affymetrix%20TobEA",
 
         "gem detail page for experimental design"  => "/gem/experimental_design.pl?id=1",
+        "gem detail page for experimental design (name)"  => "/gem/experimental_design.pl?name=",
         "gem detail page for experiment"           => "/gem/experiment.pl?id=1",
         "gem detail page for experiment (name)"    => "/gem/experiment.pl?name=TobEA%20cauline%20leaf",
         "gem detail page for target"               => "/gem/target.pl?id=49",

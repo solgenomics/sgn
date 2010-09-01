@@ -69,7 +69,7 @@ if (defined $expdesign->get_experimental_design_id()) {
 
 ## There are two ways to access to the page, using id=int or name=something. If use other combinations give an error message 
 
-if (defined $expdesign->get_experimental_design_id() ) {
+if (defined $expdesign->get_experimental_design_id or defined $expdesign->get_experimental_design_name ) {
     $m->exec('/gem/experimental_design_detail.mas', 
 	     schema    => $schema, 
 	     expdesign => $expdesign, 
