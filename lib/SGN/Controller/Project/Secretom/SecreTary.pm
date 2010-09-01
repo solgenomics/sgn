@@ -73,6 +73,9 @@ sub run :Path('run') {
         $input .= $upload->slurp;
     }
 
+    # need to add the programs dir to PATH so secretary code can find tmpred
+    local $ENV{PATH} = $ENV{PATH}.':'.$c->path_to( $c->config->{programs_subdir} );
+
     # stash the results of the run
     @{ $c->stash }{qw{  result_string  STApreds  count_pass  }} =
         $self->_run_secretary( $input, $sort_it, $show_only_sp );
