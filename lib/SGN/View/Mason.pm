@@ -13,7 +13,6 @@ sub component_exists {
     for ( @$cr ) {
         my (undef, $path) = @$_;
         my $p =  File::Spec->catfile( $path, $component );
-        warn "found $p!" if -f $p;
         return 1 if -f $p;
     }
     return 0;
