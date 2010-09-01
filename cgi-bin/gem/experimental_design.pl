@@ -30,8 +30,8 @@ use CXGN::Page;
 use CXGN::MasonFactory;
 use CXGN::DB::Connection;
 use CXGN::DB::DBICFactory;
-use CXGN::GEM::Schema;
 use CXGN::GEM::ExperimentalDesign;
+use CXGN::DB::Connection;
 
 my $m = CXGN::MasonFactory->new();
 
@@ -43,20 +43,15 @@ my %args = CXGN::Page->new()
 
 ## Create the schema used for all the gem searches
 
-my $psqlv = `psql --version`;
-chomp($psqlv);
-
 my @schema_list = ('gem', 'biosource', 'metadata', 'public');
-if ($psqlv =~ /8\.1/) {
-    push @schema_list, 'tsearch2';
-}
 
 my $schema = CXGN::DB::DBICFactory->open_schema( 'CXGN::GEM::Schema', search_path => \@schema_list, );
+my $dbh = CXGN::DB::Connection->new();
 
 
-my $expdesign = CXGN::GEM::ExperimentalDesign->new($schema);
+my $expdesign = CXGN::GEM::ExperimentalDesign->new($dbh);
 if (exists $args{'id'} && $args{'id'} =~ m/^\d+$/) {
-   $expdesign = CXGN::GEM::ExperimentalDesign->new($schema, $args{'id'});
+   $expdesign = CXGN::GEM::ExperimentalDesign->new($dbh, $args{'id'});
 } elsif (exists $args{'name'}) {
    $expdesign = CXGN::GEM::ExperimentalDesign->new_by_name($schema, $args{'name'});
 }
@@ -74,7 +69,7 @@ if (defined $expdesign->get_experimental_design_id()) {
 
 ## There are two ways to access to the page, using id=int or name=something. If use other combinations give an error message 
 
-if (defined $expdesign->get_experimental_design_id() ) {
+if (defined $expdesign->get_experimental_design_id or defined $expdesign->get_experimental_design_name ) {
     $m->exec('/gem/experimental_design_detail.mas', 
 	     schema    => $schema, 
 	     expdesign => $expdesign, 

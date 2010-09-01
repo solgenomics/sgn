@@ -15,9 +15,17 @@ my %urls = (
         "gem results page for platforms"           => "/search/gem_platform_search.pl?w4b9_template_parameters=affy",
         "gem detail page for template"             => "/gem/template.pl?id=65",
         "gem detail page for platform"             => "/gem/platform.pl?id=1",
+
+        "gem detail page for platform (name)"      => "/gem/platform.pl?name=Affymetrix%20TobEA",
+
         "gem detail page for experimental design"  => "/gem/experimental_design.pl?id=1",
+        "gem detail page for experimental design (name)"  => "/gem/experimental_design.pl?name=",
         "gem detail page for experiment"           => "/gem/experiment.pl?id=1",
+        "gem detail page for experiment (name)"    => "/gem/experiment.pl?name=TobEA%20cauline%20leaf",
         "gem detail page for target"               => "/gem/target.pl?id=49",
+        "gem detail page for target (name)"        => "/gem/target.pl?name=Atlas%20143.CEL",
+        "gem template page"                        => "/gem/template.pl?id=1",
+        "gem template page"                        => "/gem/template.pl?name=A10063_at",
 );
 
 validate_urls(\%urls, $ENV{ITERATIONS} || 1 );

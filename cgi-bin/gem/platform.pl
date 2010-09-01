@@ -41,20 +41,14 @@ my $m = CXGN::MasonFactory->new();
 
 ## Create the schema object
 
-my $psqlv = `psql --version`;
-chomp($psqlv);
-
-my @schema_list = ('gem', 'biosource', 'metadata', 'public');
-if ($psqlv =~ /8\.1/) {
-    push @schema_list, 'tsearch2';
-}
-
-my $schema = CXGN::DB::DBICFactory->open_schema( 'CXGN::GEM::Schema', search_path => \@schema_list, );
+my $dbh = CXGN::DB::Connection->new();
+my $schema_list = 'gem,biosource,metadata,public';
+my $schema = CXGN::GEM::Schema->connect( sub { $dbh->get_actual_dbh },
+            { on_connect_do => ["SET search_path TO $schema_list"] }, );
 
 ## Also it will create a dbi-connection object ($dbh) for all the methods that do not use schemas
 ## (as CXGN::People::Person) to not interfere with them
 
-my $dbh = CXGN::DB::Connection->new();
 
 ## Use of CXGN::Page to take the arguments from the URL
 
@@ -62,14 +56,15 @@ my %args = CXGN::Page->new()->get_all_encoded_arguments();
 
 ## Now it will create a platform object (by default it will create an empty platform object)
 
-my $platform = CXGN::GEM::Platform->new($dbh);
+my $platform;
 
 if (exists $args{'id'} && $args{'id'} =~ m/^\d+$/) {
    $platform = CXGN::GEM::Platform->new($dbh, $args{'id'});
 } elsif (exists $args{'name'}) {
-   $platform = CXGN::GEM::Platform->new_by_name($dbh, $args{'name'});
+   $platform = CXGN::GEM::Platform->new_by_name($schema, $args{'name'});
+} else {
+    $platform = CXGN::GEM::Platform->new($dbh);
 }
-
 
 ## Other data that the controller will suply will be: 
 
@@ -110,7 +105,7 @@ if (defined $platform->get_platform_id() ) {
 
 ## There are two ways to access to the page, using id=int or name=something. If use other combinations give an error message 
 
-if (defined $platform->get_platform_id() ) {
+if (defined $platform->get_platform_id or defined $platform->get_platform_name) {
     $m->exec('/gem/platform_detail.mas',
             dbh           => $dbh,
             schema        => $schema, 

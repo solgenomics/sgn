@@ -9,12 +9,14 @@ use List::Util qw/min shuffle/;
 use Test::More;
 our @ISA = qw/Exporter/;
 use Exporter;
-use CXGN::VHost::Test;
 use SGN::Context;
 use autodie qw/:all/;
+use lib 't/lib';
+use SGN::Test::WWW::Mechanize;
+
+our @EXPORT_OK = qw/validate_urls/;
 
 my $context = SGN::Context->new;
-our @EXPORT_OK = qw/validate_urls/;
 
 BEGIN {
     BAIL_OUT "You need to define SGN_TEST_SERVER environment variable"
@@ -38,19 +40,20 @@ SQL
 }
 
 sub validate_urls {
-    my ($urls, $iteration_count) = @_;
+    my ($urls, $iteration_count, $mech) = @_;
     local $Test::Builder::Level = $Test::Builder::Level + 2;
     $iteration_count ||= 1;
+    $mech ||= SGN::Test::WWW::Mechanize->new;
 
     for my $test_name ( (sort keys %$urls) x $iteration_count ) {
         my $url = $urls->{$test_name};
-        _validate_single_url( $test_name, $url );
+        _validate_single_url( $test_name, $url, $mech );
       SKIP: {
             skip 'skipping leak test because SGN_SKIP_LEAK_TEST is set', 4
                 if $ENV{SGN_SKIP_LEAK_TEST};
 
             my $before = db_connection_count();
-            _validate_single_url( $test_name, $url );
+            _validate_single_url( $test_name, $url, $mech );
             my $after = db_connection_count();
             cmp_ok( $after, '<=', $before, "did not leak any database connections on $test_name ($url)");
         }
@@ -58,8 +61,8 @@ sub validate_urls {
 }
 
 sub _validate_single_url {
-    my ( $test_name, $url ) = @_;
-    my $r  = request( $url );
+    my ( $test_name, $url, $mech ) = @_;
+    my $r  = $mech->get( $url );
     my $rc = $r->code;
 
     my $dump_tempdir;

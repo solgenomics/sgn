@@ -66,7 +66,7 @@ my %search_form = (
 
 $m->submit_form(%search_form);
 SKIP : {
-    if ($m->content =~ /can't open family file/) {
+    if ($m->content =~ /can&#39;t open family file/) {
         skip "gene family file not available", 3;
     } else {
         ok($m->success, "Search form submission");

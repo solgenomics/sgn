@@ -30,8 +30,7 @@ $page->header();
 
 my $form = CXGN::Page::WebForm->new();
 
-
-my @lstats=CXGN::Phenome::Locus->get_locus_stats( CXGN::DB::Connection->new('phenome'));
+my @lstats=CXGN::Phenome::Locus->get_locus_stats( $dbh );
 
 
 my $image= get_graph(@lstats);
@@ -45,7 +44,7 @@ sub get_graph {
     my @stats=@_;
     my $basepath = $c->config->{"basepath"};
     my $tempfile_dir = $c->config->{"tempfiles_subdir"};
-    my $cache = CXGN::Tools::WebImageCache->new(1);
+    my $cache = CXGN::Tools::WebImageCache->new;
     $cache->set_basedir($basepath);
     $cache->set_temp_dir($tempfile_dir."/temp_images");
     $cache->set_key("Locus_num");
@@ -69,7 +68,6 @@ sub get_graph {
 	    my $aref = $stats[$i];
 	    my $n = @$aref - 1;
 	    for my $j ( 0 .. $n ) {
-		print STDERR "elt $i $j is $stats[$i][$j]\n";
 	    }
 	}
 	

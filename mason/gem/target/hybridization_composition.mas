@@ -42,12 +42,15 @@ use warnings;
 
 use CXGN::GEM::Schema;
 use CXGN::GEM::Platform;
-
 use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
+use CXGN::DB::Connection;
 </%once>
+
 
 <%perl>
 
+
+my $dbh = CXGN::DB::Connection->new;
 
 my $hyb_comp_content;
 
@@ -59,10 +62,10 @@ my $hyb_composition_html;
 
 my @target_list = @{ $target_list };
 
+my @schema_list = ('gem', 'biosource', 'metadata', 'public');
+my $schema = CXGN::DB::DBICFactory->open_schema( 'CXGN::GEM::Schema', search_path => \@schema_list, );
+
 if (scalar(@target_list) > 0) {
-   
-    ## Get the schema
-    my $schema = $target_list[0]->get_schema();
 
     foreach my $target (@target_list) {
 	my $target_id = $target->get_target_id();
@@ -82,7 +85,7 @@ if (scalar(@target_list) > 0) {
 	foreach my $hyb_row (@hyb_rows) {
 	    my $hyb_id = $hyb_row->get_column('hybridization_id');
 	    my $platform_id = $hyb_row->get_column('platform_id');
-	    my $platform = CXGN::GEM::Platform->new($schema, $platform_id);
+	    my $platform = CXGN::GEM::Platform->new($dbh, $platform_id);
    
 	    my $platform_name = $platform->get_platform_name();
 	    my $platform_link = '/gem/platform.pl?id='.$platform_id;
@@ -120,7 +123,3 @@ my $hyb_n = scalar(@data);
 <% $hyb_comp_content %>
 
 
-<& 
-   /util/import_javascript.mas, 
-   classes => 'CXGN.Effects' 
-&>

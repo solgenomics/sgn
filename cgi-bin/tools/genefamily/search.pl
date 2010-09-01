@@ -1,5 +1,6 @@
 use CatalystX::GlobalContext qw( $c );
 use strict;
+use warnings;
 use CGI ();
 use CXGN::DB::Connection;
 use CXGN::People::Person;
