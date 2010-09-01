@@ -22,10 +22,13 @@ use CXGN::People::PageComment;
 use CXGN::People::Person;
 use CXGN::Chado::Publication;
 use CXGN::Chado::Pubauthor;
-
 use CXGN::Contact;
 use CXGN::Map;
-
+use File::Temp qw / tempfile /;
+use File::Path;
+use File::Copy;
+use File::Spec;
+use File::Basename;
 
 use base qw / CXGN::Page::Form::SimpleFormPage CXGN::Phenome::Main/;
 
@@ -224,18 +227,23 @@ EOS
 	    {	    
 		if ($definition) 
 		{
-		    push  @phenotype,  [
-			                map {$_} ( (tooltipped_text($trait_link, $definition) ), $min, $max, $avg, $count,
-						   qq | <a href="/phenome/population_indls.pl?population_id=$population_id&amp;cvterm_id=$trait_id"> $graph_icon </a> | 
-                                                )
-                                      ];
+		    push  @phenotype,  [map {$_} ( (tooltipped_text($trait_link, $definition)), 
+                                    $min, $max, $avg, 
+                           qq | <a href="/phenome/population_indls.pl?population_id=$population_id&amp;cvterm_id=$trait_id">
+                                 $count</a> 
+                              |,
+                           qq | <a href="/phenome/population_indls.pl?population_id=$population_id&amp;cvterm_id=$trait_id">
+                                  $graph_icon</a> 
+                              | )];
 		} else  
 		{ 
-		    push  @phenotype,  [
-			                 map {$_} ( $trait_name, $min, $max, $avg, $count,
-                                                   qq | <a href="/phenome/population_indls.pl?population_id=$population_id&amp;cvterm_id=$trait_id">$graph_icon</a> |  
-			                          )
-		                       ];
+		    push  @phenotype,  [map {$_} ($trait_name, $min, $max, $avg, 
+                          qq | <a href="/phenome/population_indls.pl?population_id=$population_id&amp;cvterm_id=$trait_id">
+                             $count</a> 
+                             |,
+                           qq | <a href="/phenome/population_indls.pl?population_id=$population_id&amp;cvterm_id=$trait_id">
+                                  $graph_icon</a> 
+                              |  )];
 		}
 	    } else 
 	    {
@@ -424,36 +432,48 @@ EOS
 	    $pubmed .= qq| <div><a href="$url_pubmed$accession" target="blank">$pub_info</a> $title $abstract_view</div> |;
 	}
     }
-
-    my $is_public = $population->get_privacy_status();
-    my ($submitter_obj, $submitter_link) = $self->submitter();
-    my $map_link = $self->genetic_map();
+    
     print info_section_html(title   => 'Population Details',
 			    contents => $population_html,
 			    );
+    
+    my $is_public = $population->get_privacy_status();
+    if ( $is_public 
+	 || $login_user_type eq 'curator' 
+	 || $login_user_id == $population->get_sp_person_id() 
+       )  
+    {   
+	if (-e $population->phenotype_file($c)) 
+	{	    
+	    my $correlation_data = $self->display_correlation();
 
-    if ($is_public || 
-        $login_user_type eq 'curator' || 
-        $login_user_id == 
-        $population->get_sp_person_id() 
-       )  {   
-	if ($phenotype_data) {
 	    print info_section_html(title    => 'Phenotype Data and QTLs',
 			            contents => $phenotype_data ." ".$data_download 
+		                   );	    
+	    
+	    print info_section_html( title    => 'Correlation Analysis',			   
+				     contents => $correlation_data,
 		                   );
-	} else {
+	} 
+	else 
+	{
 	    print info_section_html(title    => 'Phenotype Data',
 			            contents => $accessions_link 
 	                           );
 	}
-    
-	unless (!$map_link) {
+ 	
+	my $map_link = $self->genetic_map();
+	unless (!$map_link) 
+	{
 	    print info_section_html( title    => 'Genetic Map',
 				     contents => $map_link 
 		                   );
 	}	
 
-    } else {
+    } 
+    else 
+    {
+	my ($submitter_obj, $submitter_link) = $self->submitter();   
 	my $message = "The QTL data for this population is not public yet. 
                        If you would like to know more about this data, 
                        please contact the owner of the data: <b>$submitter_link</b> 
@@ -466,11 +486,16 @@ EOS
 	                       );
 
     }
+   
     print info_section_html(title   => 'Literature Annotation',
 			    #subtitle => $pub_subtitle,
 			    contents => $pubmed, 
 			    );
-    
+
+
+
+###################
+
     if ($population_name) { 
 	# change sgn_people.forum_topic.page_type and the CHECK constraint!!
 	my $page_comment_obj = CXGN::People::PageComment->new($self->get_dbh(), "population", $population_id, $self->get_page()->{request}->uri()."?".$self->get_page()->{request}->args());  
@@ -533,5 +558,160 @@ sub genetic_map {
 
 }
 
+=head2 analyze_correlation
+
+ Usage: my ($heatmap_file, $corre_table_file) = $self->analyze_correlation();
+ Desc: runs correlation analysis (R) in the cluster system 
+       for all the traits assayed for a population 
+       and returns a heatmap of the correlation coeffients 
+       (documents/tempfiles/correlation/heatmap_file.png) 
+       and a table containing the correlation coeffients 
+       and their p-values ( /data/prod/tmp/r_qtl/corre_table_file.txt).
+ Ret: heatmap image file  and correlation output text file
+ Args: None
+ Side Effects:
+ Example:
+
+=cut	        
+
+sub analyze_correlation
+{
+    my $self   = shift;
+    my $pop    = $self->get_object();
+    my $pop_id = $self->get_object_id();    
+    
+    my $pheno_file      = $pop->phenotype_file($c);
+    my $base_path       = $c->get_conf("basepath");
+    my $temp_image_dir  = $c->get_conf("tempfiles_subdir");
+    my $pheno_dir       = $c->get_conf("r_qtl_temp_path");
+    my $corre_image_dir = File::Spec->catfile($base_path, $temp_image_dir, "correlation");  
+    my $corre_temp_dir  = File::Spec->catfile($pheno_dir, "tempfiles");
+    my $pheno_file_dir  = File::Spec->catfile($pheno_dir, "cache");
+   
+    foreach my $dir ($corre_image_dir, $corre_temp_dir, $pheno_file_dir) 
+    {
+	unless (-d $dir)
+	{
+	    mkpath ($dir, 0, 0755);
+	}
+    }
+    
+    my (undef, $heatmap_file)     = tempfile( "heatmap_${pop_id}-XXXXXX",
+					      DIR      => $corre_temp_dir,
+					      SUFFIX   =>'.png',
+					      UNLINK   => 1,
+                                   	    );
+
+    my (undef, $corre_table_file) = tempfile( "corre_table_${pop_id}-XXXXXX",
+					      DIR      => $corre_temp_dir,				      
+					      SUFFIX   => '.txt', 
+					      UNLINK   => 1,
+	                                    );
+        
+    my ( $corre_commands_temp, $corre_output_temp ) =
+	map 
+    {
+	my ( undef, $filename ) =
+	    tempfile(
+		File::Spec->catfile( 
+		    CXGN::Tools::Run->temp_base($corre_temp_dir),
+		    "corre_pop_${pop_id}-$_-XXXXXX"
+		),
+		UNLINK =>0,
+	    );
+	$filename
+    } qw / in out /;
+
+    {
+        my $corre_commands_file = $c->path_to('/cgi-bin/phenome/correlation.r');
+        copy( $corre_commands_file, $corre_commands_temp )
+	    or die "could not copy '$corre_commands_file' to '$corre_commands_temp'";
+    }
+ 
+    my $r_process = CXGN::Tools::Run->run_cluster(
+        'R', 'CMD', 'BATCH',
+        '--slave',
+        "--args $heatmap_file $corre_table_file $pheno_file",
+        $corre_commands_temp,
+        $corre_output_temp,
+        {
+           working_dir => $corre_temp_dir,
+           max_cluster_jobs => 1_000_000_000,
+        },
+	);
+
+    sleep 1 while $r_process->alive;    
+    
+    copy( $heatmap_file, $corre_image_dir )
+	or die "could not copy $heatmap_file to $corre_image_dir";         
+           
+    $heatmap_file = fileparse($heatmap_file);
+    $heatmap_file  = $c->generated_file_uri("correlation",  $heatmap_file);
+   
+    return $heatmap_file, $corre_table_file;
+
+}
 	        
 
+
+=head2 display_correlation
+
+ Usage: my $corre_data = $self->display_correlation();
+ Desc: used to display the output of the correlation analysis, 
+       including the heatmap, links for downloading the 
+       correlation coefficients and their p-values and 
+       a key table for the acronyms of the traits used 
+       in the correlation plot
+ Ret: a scalar variable with what needs to be shown in the 
+      correlation section of the page
+ Args: None
+ Side Effects:
+ Example:
+
+=cut
+
+sub display_correlation {
+    my $self = shift;
+    my $pop  = $self->get_object();
+    my $pop_id = $self->get_object_id();
+    
+    my ($heatmap_file, $corre_table_file) = $self->analyze_correlation();
+  
+    my $heatmap_image = qq |<img src="$heatmap_file"/> |;  
+  
+    my @traits = $pop->get_cvterms();
+    my @tr_acronym_table;
+    my $name;
+    foreach my $tr (@traits) 
+    {
+	if ( $pop->get_web_uploaded ) 
+	{
+	    $name = $tr->get_name();
+	} else 
+	{
+	    $name = $tr->get_cvterm_name();
+	}
+	my $tr_acronym= $pop->cvterm_acronym($name);
+	push @tr_acronym_table, [ map { $_ } ( $tr_acronym, $name) ];
+    }
+
+    my $acronym_key  = columnar_table_html(
+	                                   headings     => [ 'Acronym',  'Trait'],
+                                           data         => \@tr_acronym_table,
+                                           __alt_freq   => 2,
+                                           __alt_width  => 1,
+                                           __alt_offset => 3,
+                                           __align      => 'l',
+                                          );
+    
+    my  $acronym_view = html_optional_show("key",
+					   'Show/hide acronym key',
+					   qq | $acronym_key |,
+					   0, 
+	                                  );
+	    
+    my $corre_data = $heatmap_image .  qq | <span><br/><br/>Download:<a href="correlation_download.pl?population_id=$pop_id&amp;corre_file=$corre_table_file">[Correlation Cofficients and p-values table]</a> $acronym_view</span> |; 
+
+    return $corre_data;
+
+}
