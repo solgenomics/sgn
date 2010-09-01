@@ -35,7 +35,6 @@
 
 <%args>
 $target_list
-$dbh
 </%args>
 <%once>
 use strict;
@@ -43,12 +42,15 @@ use warnings;
 
 use CXGN::GEM::Schema;
 use CXGN::GEM::Platform;
-
 use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
+use CXGN::DB::Connection;
 </%once>
+
 
 <%perl>
 
+
+my $dbh = CXGN::DB::Connection->new;
 
 my $hyb_comp_content;
 

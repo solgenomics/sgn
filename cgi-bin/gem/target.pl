@@ -61,20 +61,20 @@ my %args = CXGN::Page->new()
 
 ## Create the target object (by default it will create an empty object)
 
-my $target = CXGN::GEM::Target->new($schema);
+my $dbh = CXGN::DB::Connection->new;
+my $target = CXGN::GEM::Target->new($dbh);
 
 if (exists $args{'id'} && $args{'id'} =~ m/^\d+$/) {
-   $target = CXGN::GEM::Target->new($schema, $args{'id'});
+   $target = CXGN::GEM::Target->new($dbh, $args{'id'});
 } elsif (exists $args{'name'}) {
-   $target = CXGN::GEM::Target->new_by_name($schema, $args{'name'});
+   $target = CXGN::GEM::Target->new_by_name($dbh, $args{'name'});
 }
 
 
 ## There are two ways to access to the page, using id=int or name=something. If use other combinations give an error message 
 
 if (defined $target->get_target_id() ) {
-    $m->exec('/gem/target_detail.mas', 
-             schema => $schema, 
+    $m->exec('/gem/target_detail.mas',
              target => $target );
 } else {
     $m->exec('/gem/gem_page_error.mas', 

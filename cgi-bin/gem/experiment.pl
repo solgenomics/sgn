@@ -79,7 +79,7 @@ if (defined $experiment->get_experiment_id() ) {
 
 if (defined $experiment->get_experiment_id() ) {
     $m->exec('/gem/experiment_detail.mas',
-	     dbh         => $dbh,
+             dbh         => $dbh,
              schema      => $schema, 
              experiment  => $experiment, 
              target_list => \@target_list );
@@ -88,6 +88,3 @@ if (defined $experiment->get_experiment_id() ) {
              schema => $schema, 
              object => $experiment );
 }
-
-
-
