@@ -48,20 +48,20 @@ $unigene
 </%args>
 
 
-<%perl>
 
+<%once>
 use strict;
 use warnings;
-
 use Math::BigFloat;
 use CXGN::GEM::Template;
 use CXGN::GEM::Experiment;
-
 use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
 
+<%once>
 ## Get the object
 my $id = $unigene->get_unigene_id();
 
+<%perl>
 my $expression_html;
 my @template_ids;
 
