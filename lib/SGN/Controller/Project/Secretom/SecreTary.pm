@@ -2,6 +2,8 @@ package SGN::Controller::Project::Secretom::SecreTary;
 use Moose;
 use namespace::autoclean;
 
+use Bio::SecreTary::SecreTarySelect;
+use Bio::SecreTary::SecreTaryAnalyse;
 
 BEGIN {extends 'Catalyst::Controller'; }
 with 'Catalyst::Component::ApplicationAttribute';
