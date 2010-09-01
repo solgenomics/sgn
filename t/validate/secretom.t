@@ -7,7 +7,7 @@ use SGN::Test qw/validate_urls/;
 use Test::More;
 
 my %urls = (
-        "secretom"            => "/secretom/",
+        "secretom main page"  => "/secretom",
         "secretom outreach"   => "/secretom/outreach",
         "secretom secretary"  => "/secretom/secretary",
         "secretom training"   => "/secretom/training",
