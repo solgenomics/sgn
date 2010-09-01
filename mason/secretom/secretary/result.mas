@@ -1,0 +1,20 @@
+<%args>
+  $count_pass
+  $result_string
+  $STApreds
+</%args>
+<& /page/page_title.mas, title => 'SecreTary: Computational prediction of secreted proteins' &>
+
+<&| /page/info_section.mas, title => 'SecreTary Signal Peptide (SP) Predictions' &>
+
+<pre class="secretary_results">
+Identifier       SP    Score   Length     Sequence 10        20        30        40        50        60
+                                                   |         |         |         |         |         |
+
+<% $result_string %>
+<% $count_pass secreted sequences predicted out of <% scalar @$STApreds %>.
+</pre>
+
+  <a href="/secretom/secretary">Return to SecreTary input page</a>
+
+</&>
