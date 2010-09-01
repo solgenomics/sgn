@@ -68,20 +68,20 @@ sub run_tmpred {
       @$limits;
 
 
-    my $in = File::Temp->new( TEMPLATE => 'tmpred_input_XXXXXX' );
+    my $in = File::Temp->new( TEMPLATE => File::Spec->catfile(File::Spec->tmpdir,'tmpred_input_XXXXXX') );
     $in->print( ">$sequence_id\n$sequence\n" );
     $in->close;
 
-    my $matrix = File::Temp->new( TEMPLATE => 'tmpred_matrix_XXXXXX' );
-    { local $/;
-      $matrix->print( <DATA> ); #< see __DATA__ section below
+    my $matrix = File::Temp->new( TEMPLATE => File::Spec->catfile(File::Spec->tmpdir,'tmpred_matrix_XXXXXX') );
+    { seek DATA, 0, 0;
+      local $/;
+      my $data = <DATA>;
+      die "no matrix data!" unless length $data > 100;
+      $matrix->print( $data ); #< see __DATA__ section below
     }
     $matrix->close;
 
-    open my $t, "tmpred  -def -in=$in  -out=-  -par=$matrix -max=$max_tmh_length  -min=$min_tmh_length |"
-        or die "could not run tmpred: $!";
-
-    my $out = <$t>;
+    my $out = `tmpred  -def -in=$in  -out=-  -par=$matrix -max=$max_tmh_length  -min=$min_tmh_length`;
     return $out;
 }
 
