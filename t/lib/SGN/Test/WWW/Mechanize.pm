@@ -45,6 +45,7 @@ use namespace::autoclean;
 
 BEGIN { $ENV{CATALYST_SERVER} ||= $ENV{SGN_TEST_SERVER} }
 
+use Carp;
 use Test::More;
 
 use CXGN::People::Person;
@@ -62,9 +63,11 @@ has 'context' => (
        if( $self->can_test_level('process') ) {
            require $self->catalyst_app;
            return $self->catalyst_app;
-       } else {
+       } elsif($self->can_test_level('local') ) {
            require SGN::Context;
            return SGN::Context->new;
+       } else {
+           confess 'context() should not ever be called at remote test level';
        }
    }
 
