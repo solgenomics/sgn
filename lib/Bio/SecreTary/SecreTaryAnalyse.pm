@@ -44,7 +44,7 @@ sub new {
     $self->set_limits($limits);    # array ref; specifies which tmhs to keep.
 
     my $tmpred =
-      TMpred->new( $self->get_limits(), $self->get_sequence(),
+      Bio::SecreTary::TMpred->new( $self->get_limits(), $self->get_sequence(),
         $self->get_sequence_id() );
     $tmpred->set_tmpred_out("");
     $self->set_TMpred($tmpred);
