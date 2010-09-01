@@ -64,6 +64,8 @@ sub render : ActionClass('RenderView') { }
 sub end : Private {
     my ( $self, $c ) = @_;
 
+    return if @{$c->error};
+
     $c->forward('render');
 
     # insert our javascript packages into the rendered view
