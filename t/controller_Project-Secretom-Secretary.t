@@ -11,7 +11,7 @@ ok( request('/secretom/secretary')->is_success, 'Request should succeed' );
 
 # try a secretary run
 my $response = request POST '/secretom/secretary/run', [
-    input => <<'',
+    sequence => <<'',
 >AT1G73440.1 AI22=4.545 Gravy22=-1.4545 nR=2 nS=10 nT=0 nDRQPEN=7 Nitrogen=28 Oxygen=42 
 MARGESEGESSGSERESSSSSSGNESEPTKGTISKYEKQRLSRIAENKARLDALGISKAAKALLSPSPVSKKRRVKRNSGEEDDDYTPVIADGDGDEDDDEVEEIDEDEEFLCKRKNKSSASKRKVSSRKILNTSVSLGEDDDDLDKAIALSLQGSVAGSDKEAATMKKKRPELMSKTQMTQDELVMYFCQFDEGGKGFITLRDVAKMATVHDFTWTEEELQDMIRCFDMDKDGKLSLDEFRKIVSRCRMLKGS* 
 >AT1G75120.1 AI22=119.545 Gravy22=0.5864 nR=2 nS=0 nT=0 nDRQPEN=6 Nitrogen=31 Oxygen=27 
@@ -32,5 +32,11 @@ like( $response->content, qr/2 secreted sequences predicted out of 6/,
 
 like( $response->content, qr/$_/, "ID $_ appears in output" )
     for qw( AT1G73440.1  AT1G75120.1  AT1G17600.1  AT1G51380.1  AT1G77370.1 AT1G44090.1 );
+
+like( $response->content, qr/$_\s+YES/, "$_ shows as secreted" )
+    for qw( AT1G77370.1  AT1G75120.1 );
+
+like( $response->content, qr/$_\s+NO/, "$_ shows as NOT secreted" )
+    for qw( AT1G73440.1 AT1G17600.1  AT1G51380.1 AT1G44090.1 );
 
 done_testing;
