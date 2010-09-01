@@ -54,6 +54,14 @@ extends 'Test::WWW::Mechanize::Catalyst';
 
 has '+catalyst_app' => ( default => 'SGN' );
 
+has 'context' => (
+    is => 'ro',
+    lazy_build => 1,
+   ); sub _build_context {
+       require SGN::Context;
+       SGN::Context->new;
+   }
+
 has 'test_user' => (
     is => 'rw',
     isa => 'HashRef',
@@ -83,7 +91,7 @@ running.  Returns one of:
 
 sub test_level {
     return 'process' if ! $ENV{SGN_TEST_SERVER};
-    return 'host'    if $ENV{SGN_TEST_LOCAL};
+    return 'local'   if $ENV{SGN_TEST_LOCAL};
     return 'remote';
 }
 
@@ -104,6 +112,7 @@ sub can_test_level {
     my ( $self, $check ) = @_;
 
     my %val = ( remote => 0, local => 1, process => 2 );
+    confess "invalid test level '$check'" unless exists $val{$check};
     confess "invalid test level '$check'" unless exists $val{$check};
     return $val{ $self->test_level } >= $val{ $check };
 
@@ -149,7 +158,7 @@ sub create_test_user {
 
     # generate a new user for testing purposes
     # (to be deleted right afterwards)
-    $self->catalyst_app->dbc->txn( ping => sub {
+    $self->context->dbc->txn( ping => sub {
         my $dbh = $_;
 
         my $p = CXGN::People::Person->new( $dbh );
@@ -179,7 +188,7 @@ sub set_test_user_type {
     my $self = shift;
 
     CXGN::People::Login
-          ->new( $self->catalyst_app->dbc->dbh, $self->test_user->{sp_person_id} )
+          ->new( $self->context->dbc->dbh, $self->test_user->{sp_person_id} )
           ->set_user_type(shift);
 }
 
@@ -198,7 +207,7 @@ sub delete_test_user {
 sub _delete_user {
     my ( $self, $u ) = @_;
 
-    $self->catalyst_app->dbc->txn( ping => sub {
+    $self->context->dbc->txn( ping => sub {
         my $dbh = $_;
         if ( my $u_id = CXGN::People::Person->get_person_by_username( $dbh, $u->{user_name} ) ) {
             CXGN::People::Person->new( $dbh, $u_id )->hard_delete;
