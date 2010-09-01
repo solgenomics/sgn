@@ -715,7 +715,6 @@ my $sequenced_by_html = do {
       $matching_orgs->[0]
     }
     else {
-      CXGN::Apache::Error::notify("found unknown sequencer shortname '$seq_shortname'","for clone $clone_id");
       qq|<span class="ghosted">$seq_shortname</span>|
     }
   }

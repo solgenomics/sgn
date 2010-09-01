@@ -25,8 +25,10 @@ my %urls = (
 
         "unigene search"                           => "/search/ug-ad2.pl?w9e3_page=0&w9e3_sequence_name=SGN-U231977&w9e3_clone_name=&w9e3_membersrange=gt&w9e3_members1=&w9e3_members2=&w9e3_annotation=&w9e3_annot_type=blast&w9e3_lenrange=gt&w9e3_len1=&w9e3_len2=&w9e3_unigene_build_id=any",
         "unigene detail"                           => "/search/unigene.pl?unigene_id=SGN-U231977&w9e3_page=0&w9e3_annot_type=blast&w9e3_unigene_build_id=any",
+        "unigene detail 2"                         => "/search/unigene.pl?unigene_id=345356&force_image=1",
         "unigene build"                            => "/search/unigene_build.pl?id=46",
         'unigene standalone six-frame translation' => '/tools/sixframe_translate.pl?unigene_id=573435',
+
 
         "bac search page"                          => "/search/direct_search.pl?search=bacs",
         "bac search"                               => "/maps/physical/clone_search.pl?w98e_page=0&w98e_id=&w98e_seqstatus=&w98e_estlenrange=gt&w98e_estlen1=&w98e_estlen2=&w98e_genbank_accession=&w98e_chromonum=&w98e_end_annotation=&w98e_map_id=&w98e_offsetrange=gt&w98e_offset1=&w98e_offset2=&w98e_linkage_group_name=&w98e_il_project_id=&w98e_il_bin_name=",
