@@ -61,7 +61,9 @@
 
   </style>
 
-  <div style="width: 80%; margin: 0 auto"> <& /page/page_title.mas, title => 'A project to catalog and study the dynamic properties of the cell wall proteome (the secretome), using tomato as a model system.' &></div>
+  <div style="width: 80%; margin: 0 auto">
+    <& /page/page_title.mas, title => 'A project to catalog and study the dynamic properties of the cell wall proteome (the secretome), using tomato as a model system.' &>
+  </div>
 
   <div id="secretom_summary" style="float: left; width: 50%">
     <&| /page/info_section.mas, title => 'Summary' &>
