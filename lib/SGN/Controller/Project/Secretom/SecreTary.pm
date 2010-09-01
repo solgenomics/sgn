@@ -67,7 +67,7 @@ HTML SecreTary results.
 sub run :Path('run') {
     my ( $self, $c ) = @_;
 
-    my $input        = $c->req->param("sequence");
+    my $input        = $c->req->param("sequence") || '';
     my $sort_it      = $c->req->param("sort");
     my $show_only_sp = $c->req->param("show_only_sp");
 
