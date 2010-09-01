@@ -61,7 +61,7 @@ my $platform;
 if (exists $args{'id'} && $args{'id'} =~ m/^\d+$/) {
    $platform = CXGN::GEM::Platform->new($dbh, $args{'id'});
 } elsif (exists $args{'name'}) {
-   $platform = CXGN::GEM::Platform->new_by_name($dbh, $args{'name'});
+   $platform = CXGN::GEM::Platform->new_by_name($schema, $args{'name'});
 } else {
     $platform = CXGN::GEM::Platform->new($dbh);
 }
@@ -105,7 +105,7 @@ if (defined $platform->get_platform_id() ) {
 
 ## There are two ways to access to the page, using id=int or name=something. If use other combinations give an error message 
 
-if (defined $platform->get_platform_id() ) {
+if (defined $platform->get_platform_id or defined $platform->get_platform_name) {
     $m->exec('/gem/platform_detail.mas',
             dbh           => $dbh,
             schema        => $schema, 
