@@ -73,7 +73,7 @@ if (exists $args{'id'} && $args{'id'} =~ m/^\d+$/) {
 
 ## There are two ways to access to the page, using id=int or name=something. If use other combinations give an error message 
 
-if (defined $target->get_target_id() ) {
+if (defined $target->get_target_id or defined $target->get_target_name ) {
     $m->exec('/gem/target_detail.mas',
              target => $target );
 } else {

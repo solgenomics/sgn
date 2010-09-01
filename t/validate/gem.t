@@ -22,6 +22,7 @@ my %urls = (
         "gem detail page for experiment"           => "/gem/experiment.pl?id=1",
         "gem detail page for experiment (name)"    => "/gem/experiment.pl?name=TobEA%20cauline%20leaf",
         "gem detail page for target"               => "/gem/target.pl?id=49",
+        "gem detail page for target (name)"         => "/gem/target.pl?name=Atlas%20143.CEL",
 );
 
 validate_urls(\%urls, $ENV{ITERATIONS} || 1 );
