@@ -5,10 +5,10 @@
     $parents   => undef
 </%args>
 
-<%init>
+<%once>
     use Data::Dumper;
     use SGN::View::Feature qw/get_reference/;
-</%init>
+</%once>
 
 <& /page/page_title.mas, title => 'Feature Viewer: '. $feature->id &>
 
