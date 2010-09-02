@@ -4,7 +4,14 @@ use warnings;
 use FindBin;
 use lib 't/lib';
 use SGN::Test qw/validate_urls/;
+use SGN::Test::WWW::Mechanize;
 use Test::More;
+
+my $mech = SGN::Test::WWW::Mechanize->new;
+$mech->while_logged_in_all(sub {
+      $mech->get_ok("/phenome/claim_locus_ownership.pl");
+      $mech->get_ok("/phenome/annot_stats.pl");
+});
 
 my %urls = (
         "homepage"                                 => "/",
@@ -68,8 +75,6 @@ my %urls = (
 
         "Locus ajax form"                          => "/jsforms/locus_ajax_form.pl",
         "Locus editors"                            => "/phenome/editors_note.pl",
-        "Phenome annot stats"                      => "/phenome/annot_stats.pl",
-        "Phenome claim ownership"                  => "/phenome/claim_locus_ownership.pl",
         "Phenotype search"                         => "/search/direct_search.pl?search=phenotypes",
         "SNP search markers"                       => "/search/markers/snp.pl",
 
@@ -87,6 +92,7 @@ my %urls = (
 );
 
 validate_urls(\%urls, $ENV{ITERATIONS} || 1 );
+
 
 done_testing;
 

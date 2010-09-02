@@ -20,7 +20,6 @@ use lib 't/lib';
 use SGN::Test;
 use SGN::Test::WWW::Mechanize;
 
-my $base_url = $ENV{SGN_TEST_SERVER};
 my $mech = SGN::Test::WWW::Mechanize->new;
 
 $mech->while_logged_in({ user_type => 'sequencer' }, sub {
