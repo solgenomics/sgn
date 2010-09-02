@@ -30,8 +30,7 @@ $page->header();
 
 my $form = CXGN::Page::WebForm->new();
 
-
-my @lstats=CXGN::Phenome::Locus->get_locus_stats( CXGN::DB::Connection->new('phenome'));
+my @lstats=CXGN::Phenome::Locus->get_locus_stats( $dbh );
 
 
 my $image= get_graph(@lstats);
