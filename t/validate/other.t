@@ -9,8 +9,11 @@ use Test::More;
 
 my $mech = SGN::Test::WWW::Mechanize->new;
 $mech->while_logged_in_all(sub {
-      $mech->get_ok("/phenome/claim_locus_ownership.pl");
-      $mech->get_ok("/phenome/annot_stats.pl");
+      my $urls = {
+        "phenome claim locus" => "/phenome/claim_locus_ownership.pl",
+        "phenome annot stats" => "/phenome/annot_stats.pl",
+      };
+      validate_urls($urls, $ENV{ITERATIONS} || 1, $mech );
 });
 
 my %urls = (
