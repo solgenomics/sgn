@@ -403,7 +403,7 @@ has 'rendered_organism_tree_cache' => (
     }
 
 # takes dbic schema, root species name, arrayref of species names to
-# render returns hashref of newick stirng, png data, and an HTML image
+# render returns hashref of newick string, png data, and an HTML image
 # map
 # returns hashref of
 # {
