@@ -3,8 +3,7 @@ use warnings;
 use Test::More;
 use Data::Dumper;
 
-use FindBin;
-use lib "$FindBin::RealBin/lib";
+use lib 't/lib';
 
 use HTTP::Status ':constants';
 
