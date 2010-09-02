@@ -62,6 +62,8 @@ use CXGN::Contact;
 
 use base qw / CXGN::Page::Form::SimpleFormPage CXGN::Phenome::Main/;
 
+use CatalystX::GlobalContext qw( $c );
+
 sub new
 {
     my $class = shift;

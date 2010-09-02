@@ -18,6 +18,8 @@ use CXGN::Phenome::Population;
 use CXGN::Scrap;
 use Cache::File;
 
+use CatalystX::GlobalContext qw( $c );
+
 my $scrap = CXGN::Scrap->new();
 my $dbh   = CXGN::DB::Connection->new();
 

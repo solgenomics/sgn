@@ -29,6 +29,9 @@ use CXGN::Map;
 
 use base qw / CXGN::Page::Form::SimpleFormPage CXGN::Phenome::Main/;
 
+use CatalystX::GlobalContext qw( $c );
+
+
 sub new { 
     my $class = shift;
     my $self = $class->SUPER::new(@_);
