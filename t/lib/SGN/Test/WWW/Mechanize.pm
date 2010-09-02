@@ -61,7 +61,7 @@ has 'context' => (
    ); sub _build_context {
        my $self = shift;
        if( $self->can_test_level('process') ) {
-           require $self->catalyst_app;
+           Class::MOP::load_class($self->catalyst_app );
            return $self->catalyst_app;
        } elsif($self->can_test_level('local') ) {
            require SGN::Context;
