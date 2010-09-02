@@ -31,8 +31,9 @@ sub make_dump_tempdir {
 
 sub db_connection_count {
     my ($mech) = @_;
-    return $mech->context->dbc->dbh->selectcol_arrayref(<<'')->[0];
-select count(*) as connections from pg_stat_activity where usename <> 'postgres'
+    my $dbh     = DBI->connect( @{ $mech->context->dbc_profile}{qw{ dsn user password attributes }} );
+    return $dbh->selectcol_arrayref(<<'')->[0] - 1;
+select count(*) from pg_stat_activity
 
 }
 
