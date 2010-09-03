@@ -16,6 +16,9 @@ with 'Catalyst::Component::ApplicationAttribute';
 
 sub search :Path('/feature/search') Args(0) {
     my ( $self, $c ) = @_;
+    $c->stash({
+        template => '/feature/search.mas',
+    });
 }
 
 __PACKAGE__->meta->make_immutable;
