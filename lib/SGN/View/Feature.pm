@@ -6,6 +6,7 @@ use warnings;
 our @EXPORT_OK = qw/
     related_stats feature_table gbrowse_link
     get_reference gbrowse_image_url feature_link
+	infer_residue
 /;
 use CatalystX::GlobalContext '$c';
 
@@ -96,6 +97,16 @@ sub feature_link {
     my ($feature) = @_;
     my ($id, $name) = ($feature->feature_id, $feature->name);
     return qq{<a href="/cgi-bin/feature.pl?id=$id">$name</a>};
+}
+
+sub infer_residue {
+	my ($feature) = @_;
+	my $featureloc = $feature->featureloc_features->single;
+	my $length     = $featureloc->fmax - $featureloc->fmin;
+	my $srcresidue = $featureloc->srcfeature->residues;
+	# substr is 0-based, featureloc's are 1-based
+	my $residue    = substr($srcresidue, $featureloc->fmin - 1, $length );
+	return $residue;
 }
 
 1;

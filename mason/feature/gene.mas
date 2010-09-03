@@ -54,14 +54,12 @@
 <& /feature/genomic_sequence.mas, feature => $feature &>
 
 <& /feature/mrna_sequence.mas,
-    mrna_features => \@mrna_features,
+    mrna_features => [ @mrna_features ],
 &>    
 
-<&| /page/info_section.mas,
-    title => 'Protein sequence',
-    collapsible => 1,
+<& /feature/protein_sequence.mas,
+    mrna_features => [ @mrna_features ],
 &>
-</&>
 
 <&| /page/info_section.mas,
     title => 'Protein domains',
