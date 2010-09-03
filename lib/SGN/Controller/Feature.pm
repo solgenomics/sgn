@@ -15,7 +15,7 @@ use URI::FromHash 'uri';
 use YAML::Any;
 
 has 'schema' => (
-is => 'ro',
+is => 'rw',
 isa => 'DBIx::Class::Schema',
 required => 0,
 );
@@ -32,9 +32,10 @@ with 'Catalyst::Component::ApplicationAttribute';
 
 sub search :Path('/feature/search') Args(0) {
     my ( $self, $c ) = @_;
-
     my $req = $c->req;
     my $form = $self->_build_form;
+
+    $self->schema( $c->dbic_schema('Bio::Chado::Schema','sgn_chado') );
     $form->process( $req );
 
     my $results;
