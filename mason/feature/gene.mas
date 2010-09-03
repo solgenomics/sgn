@@ -23,6 +23,7 @@
     my $species  = $organism->species;
     $species    =~ s!(\S+) !<i>$1</i> !;
     my $reference = $feature->featureloc_features->single->srcfeature;
+    my @mrna_features = grep { $_->type->name eq 'mRNA' } @$children;
 </%perl>
 
 <& /feature/gene_data.mas,
@@ -52,8 +53,9 @@
 
 <& /feature/genomic_sequence.mas, feature => $feature &>
 
-<&| /page/info_section.mas, title => 'mRNA sequence', collapsible => 1, &>
-</&>
+<& /feature/mrna_sequence.mas,
+    mrna_features => \@mrna_features,
+&>    
 
 <&| /page/info_section.mas,
     title => 'Protein sequence',

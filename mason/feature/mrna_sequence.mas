@@ -1,0 +1,30 @@
+<%args>
+    $mrna_features
+    $title => 'mRNA Sequence'
+    $collapsible => 1
+</%args>
+<%init>
+    use Bio::Seq;
+</%init>
+<%perl>
+    my $mrna_residue = '';
+    my @exons = grep { $_->type->name eq 'exon' } 
+                map { $_->child_features } @$mrna_features;
+    for my $exon (@exons) {
+        my $featureloc = $exon->featureloc_features->single;
+        my $length     = $featureloc->fmax - $featureloc->fmin;
+        my $srcresidue = $featureloc->srcfeature->residues;
+        # substr is 0-based, featureloc's are 1-based
+        my $residue    = substr($srcresidue, $featureloc->fmin - 1, $length );
+        $mrna_residue .= $residue;
+    }
+    my $seq = Bio::PrimarySeq->new(
+        -seq      => $mrna_residue,
+        -alphabet => 'dna',
+    );
+</%perl>
+<& /feature/sequence.mas,
+    title => 'mRNA Sequence',
+    sequence => $seq,
+    blast_url => undef,
+&>
