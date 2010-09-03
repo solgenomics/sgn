@@ -38,21 +38,18 @@
 $template
 </%args>
 
+<%once>
+use strict;
+use warnings;
+use Math::BigFloat;
+use CXGN::GEM::Hybridization;
+use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
+use CXGN::GEM::Experiment;
+</%once>
 
 <%perl>
 
-use strict;
-use warnings;
-
-use Math::BigFloat;
-use CXGN::GEM::Hybridization;
-
-use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
-
-
 my $experiment_info_content;
-
-my @test;
 
 ## define a hash with keys=experiment_id and values=experiment_name
 

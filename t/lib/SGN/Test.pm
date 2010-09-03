@@ -9,19 +9,18 @@ use List::Util qw/min shuffle/;
 use Test::More;
 our @ISA = qw/Exporter/;
 use Exporter;
-use CXGN::VHost::Test;
-use SGN::Context;
-use autodie qw/:all/;
 
-my $context = SGN::Context->new;
+BEGIN { $ENV{CATALYST_SERVER} ||= $ENV{SGN_TEST_SERVER} }
+
+use Catalyst::Test 'SGN';
+use SGN::Test::WWW::Mechanize;
+use autodie qw/:all/;
+use lib 't/lib';
+use SGN::Test::WWW::Mechanize;
+
 our @EXPORT_OK = qw/validate_urls/;
 
-BEGIN {
-    BAIL_OUT "You need to define SGN_TEST_SERVER environment variable"
-        unless $ENV{SGN_TEST_SERVER};
-    diag "Using server $ENV{SGN_TEST_SERVER}";
-    $ENV{CATALYST_SERVER} ||= $ENV{SGN_TEST_SERVER};
-}
+my $test_server_name = $ENV{SGN_TEST_SERVER} || 'http://(local test server)';
 
 sub make_dump_tempdir {
     my $d = File::Temp->newdir( catdir( File::Spec->tmpdir, 'validate_error_dump-XXXXXX'), CLEANUP => 0 );
@@ -30,37 +29,41 @@ sub make_dump_tempdir {
 }
 
 sub db_connection_count {
-    my $sql =<<SQL;
-select count(*) as connections from pg_stat_activity where usename <> 'postgres'
-SQL
-    my $dbh     = DBI->connect( @{ $context->dbc_profile}{qw{ dsn user password attributes }});
-    my (@row)   = $dbh->selectrow_array($sql);
-    return $row[0];
+    my ($mech) = @_;
+    my $dbh     = DBI->connect( @{ $mech->context->dbc_profile}{qw{ dsn user password attributes }} );
+    return $dbh->selectcol_arrayref(<<'')->[0] - 1;
+select count(*) from pg_stat_activity
+
 }
 
 sub validate_urls {
-    my ($urls, $iteration_count) = @_;
+    my ($urls, $iteration_count, $mech) = @_;
     local $Test::Builder::Level = $Test::Builder::Level + 2;
     $iteration_count ||= 1;
+    $mech ||= SGN::Test::WWW::Mechanize->new;
+
+    my $mech = SGN::Test::WWW::Mechanize->new;
 
     for my $test_name ( (sort keys %$urls) x $iteration_count ) {
         my $url = $urls->{$test_name};
-        _validate_single_url( $test_name, $url );
+        _validate_single_url( $test_name, $url, $mech );
       SKIP: {
             skip 'skipping leak test because SGN_SKIP_LEAK_TEST is set', 4
                 if $ENV{SGN_SKIP_LEAK_TEST};
 
-            my $before = db_connection_count();
-            _validate_single_url( $test_name, $url );
-            my $after = db_connection_count();
-            cmp_ok( $after, '<=', $before, "did not leak any database connections on $test_name ($url)");
+            $mech->with_test_level( local => sub {
+               my $before = db_connection_count($mech);
+               _validate_single_url( $test_name, $url, $mech );
+               my $after = db_connection_count($mech);
+               cmp_ok( $after, '<=', $before, "did not leak any database connections on $test_name ($url)");
+            }, 4 );
         }
     }
 }
 
 sub _validate_single_url {
-    my ( $test_name, $url ) = @_;
-    my $r  = request( $url );
+    my ( $test_name, $url, $mech ) = @_;
+    my $r  = $mech->get( $url );
     my $rc = $r->code;
 
     my $dump_tempdir;

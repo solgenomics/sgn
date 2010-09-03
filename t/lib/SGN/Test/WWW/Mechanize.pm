@@ -41,9 +41,12 @@ Plus the following:
 
 package SGN::Test::WWW::Mechanize;
 use Moose;
+use namespace::autoclean;
 
 BEGIN { $ENV{CATALYST_SERVER} ||= $ENV{SGN_TEST_SERVER} }
-use SGN;
+
+use Carp;
+use Test::More;
 
 use CXGN::People::Person;
 use CXGN::People::Login;
@@ -52,12 +55,110 @@ extends 'Test::WWW::Mechanize::Catalyst';
 
 has '+catalyst_app' => ( default => 'SGN' );
 
+has 'context' => (
+    is => 'ro',
+    lazy_build => 1,
+   ); sub _build_context {
+       my $self = shift;
+       if( $self->can_test_level('process') ) {
+           Class::MOP::load_class($self->catalyst_app );
+           return $self->catalyst_app;
+       } elsif($self->can_test_level('local') ) {
+           require SGN::Context;
+           return SGN::Context->new;
+       } else {
+           confess 'context() should not ever be called at remote test level';
+       }
+   }
+
 has 'test_user' => (
     is => 'rw',
     isa => 'HashRef',
     predicate => 'has_test_user',
     clearer   => 'clear_test_user',
    );
+
+
+=head2 test_level
+
+Read-only accessor to give the current testing level, which
+corresponds to how close to the current testing code the app is
+running.  Returns one of:
+
+  process  The app is running in the same process as this test.
+           In-memory state and configuration can be accessed directly
+           from the context object.
+
+           This level is in effect if no SGN_TEST_SERVER environment
+           variable is set.
+
+  local    The app is running on the same host, and with the same
+           configuration data, as this test code.  Files and databases
+           can be accessed via SGN::Context.
+
+           This level is in effect if SGN_TEST_SERVER is set, but
+           SGN_TEST_REMOTE is not set, or false.
+
+  remote   The app is running on another machine.  The only means of interaction
+           is via remote requests.
+
+           This level is in effect if both SGN_TEST_SERVER and
+           SGN_TEST_REMOTE are set.
+
+=cut
+
+sub test_level {
+    return 'process' if ! $ENV{SGN_TEST_SERVER};
+    return 'remote'   if $ENV{SGN_TEST_REMOTE};
+    return 'local';
+}
+
+=head2 can_test_level
+
+Takes single test level name, returns true if the current testing
+level is at least the given level.
+
+Example:
+
+   if( $mech->can_test_level('local') ) {
+     test_local_stuff();
+   }
+
+=cut
+
+sub can_test_level {
+    my ( $self, $check ) = @_;
+
+    my %val = ( remote => 0, local => 1, process => 2 );
+    confess "invalid test level '$check'" unless exists $val{$check};
+    confess "invalid test level '$check'" unless exists $val{$check};
+    return $val{ $self->test_level } >= $val{ $check };
+
+}
+
+=head2 with_test_level
+
+Run the subroutine if the test level is at least the given level, or
+output a skip if not.  Takes an optional test count after the sub.
+
+Example:
+
+  $mech->with_test_level( local => sub {
+
+  }, $optional_test_count );
+
+=cut
+
+sub with_test_level {
+    my ( $self, $need_level, $sub, $count ) = @_;
+
+    SKIP: {
+          skip( "tests that require $need_level-level access, current level is ".$self->test_level, ( $count || 1 ) )
+              unless $self->can_test_level( $need_level );
+
+          $sub->( $self );
+      }
+}
 
 sub create_test_user {
     my $self = shift;
@@ -75,7 +176,7 @@ sub create_test_user {
 
     # generate a new user for testing purposes
     # (to be deleted right afterwards)
-    $self->catalyst_app->dbc->txn( ping => sub {
+    $self->context->dbc->txn( ping => sub {
         my $dbh = $_;
 
         my $p = CXGN::People::Person->new( $dbh );
@@ -105,7 +206,7 @@ sub set_test_user_type {
     my $self = shift;
 
     CXGN::People::Login
-          ->new( $self->catalyst_app->dbc->dbh, $self->test_user->{sp_person_id} )
+          ->new( $self->context->dbc->dbh, $self->test_user->{sp_person_id} )
           ->set_user_type(shift);
 }
 
@@ -124,7 +225,7 @@ sub delete_test_user {
 sub _delete_user {
     my ( $self, $u ) = @_;
 
-    $self->catalyst_app->dbc->txn( ping => sub {
+    $self->context->dbc->txn( ping => sub {
         my $dbh = $_;
         if ( my $u_id = CXGN::People::Person->get_person_by_username( $dbh, $u->{user_name} ) ) {
             CXGN::People::Person->new( $dbh, $u_id )->hard_delete;
@@ -137,7 +238,7 @@ sub _delete_user {
 Execute the given code while logged in.  Takes an optional
 hash-style list of parameters to set on the temp user that is created.
 
-  Args:  hash-style list of props for the temp user to create,
+  Args:  hash ref of props for the temp user to create,
          followed by a subroutine ref to execute while logged in
 
          current supported user properties:
@@ -147,7 +248,7 @@ hash-style list of parameters to set on the temp user that is created.
 
   Example:
 
-    $mech->while_logged_in( user_type => 'curator', sub {
+    $mech->while_logged_in({ user_type => 'curator' }, sub {
 
         $mech->get_ok( '/organism/sol100/view' );
         $mech->content_contains( 'Authorized user', 'now says authorized user' );
@@ -157,24 +258,43 @@ hash-style list of parameters to set on the temp user that is created.
 =cut
 
 sub while_logged_in {
-    my $self = shift;
-    my $sub  = pop;
-    my %props = @_;
-    $self->create_test_user( %props );
-    $self->log_in_ok;
-    $sub->();
-    $self->log_out;
+    my ($self,$props,$sub) = @_;
+    $self->with_test_level( local => sub {
+        $self->create_test_user( %$props );
+        $self->log_in_ok;
+        $sub->();
+        $self->log_out;
+    });
 }
+
+=head2 while_logged_in_all
+
+Execute the given code while logged in for each user_type.
+
+  Args:  a subroutine ref to execute while logged in
+
+  Ret: nothing meaningful
+
+  Example:
+
+    $mech->while_logged_in_all(sub {
+        $mech->get_ok( '/organism/sol100/view' );
+        $mech->content_contains( 'Authorized user', 'now says authorized user' );
+    });
+
+=cut
 
 sub while_logged_in_all {
     my ($self,$sub) = @_;
-    my @users = qw/user curator submitter sequencer genefamily_editor/;
-    for my $user_type (@users) {
-        $self->create_test_user( user_type => $user_type );
-        $self->log_in_ok;
-        $sub->($user_type);
-        $self->log_out;
-    }
+    $self->with_test_level( local => sub {
+        my @users = qw/user curator submitter sequencer genefamily_editor/;
+        for my $user_type (@users) {
+            $self->create_test_user( user_type => $user_type );
+            $self->log_in_ok;
+            $sub->($user_type);
+            $self->log_out;
+        }
+    });
 }
 
 sub log_in_ok {

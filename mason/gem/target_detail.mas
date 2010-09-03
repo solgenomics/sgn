@@ -32,7 +32,6 @@
 
 
 <%args>
-$schema 
 $target 
 </%args>
 

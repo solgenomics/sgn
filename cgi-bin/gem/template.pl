@@ -92,7 +92,7 @@ if (defined $template->get_template_id) {
 
 ## There are two ways to access to the page, using id=int or name=something. If use other combinations give an error message 
 
-if (defined $template->get_template_id() ) {
+if (defined $template->get_template_id() or defined $template->get_template_name() ) {
     $m->exec( '/gem/template_detail.mas',
               dbh          => $dbh,
               schema       => $schema,
