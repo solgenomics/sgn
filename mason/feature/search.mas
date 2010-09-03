@@ -1,11 +1,40 @@
 <%args>
-    $name => undef
-    $id   => undef
+  $results => undef
+  $form
+  $pagination_link_maker
 </%args>
 <%once>
-
+  use Number::Format;
+  use CXGN::Page::FormattingHelpers qw/ columnar_table_html /;
 </%once>
 <& /page/page_title.mas, title => 'Feature Search' &>
 <& /util/import_javascript.mas,
     classes => [qw(jquery CXGN.Effects)]
 &>
+% if( $results ) {
+%   my $pager = $results->pager;
+
+  <&| /page/info_section.mas, title    => 'Search Results',
+                              subtitle => 'results '
+                                          .$pager->first
+                                          .'-'.$pager->last
+                                          .' of '.Number::Format->new->format_number($pager->total_entries)
+   &>
+%   if( $results->count ) {
+     <% columnar_table_html(
+            headings => ['Feature Name','Feature Type'],
+            data     => [ map [$_->name,$_->type->name], $results->all ],
+        )
+      %>
+%   } else {
+     <h3 style="text-align: center">no matching results found</h3>
+%   }
+  </&>
+
+  <& /page/pagination_control.mas, pager => $pager, link_maker => $pagination_link_maker &>
+% }
+
+<&| /page/info_section.mas, title => 'Search' &>
+  <% $form->render %>
+</&>
+
