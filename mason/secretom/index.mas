@@ -31,6 +31,10 @@
       margin-top: 0;
     }
 
+    #secretom_summary p {
+      margin: 1.8em 0;
+    }
+
     a.biglink {
        font-size: 130%;
        color: black;
