@@ -61,7 +61,11 @@
   margin-top: 3em;
 }
 
-#pagetitle > h3{
+#secretom_container .page_introduction > p:first-child {
+  margin-top: 0;
+}
+
+#secretom_container #pagetitle > h3{
   color: #444;
   font-size: 130%;
   letter-spacing: 1px;
