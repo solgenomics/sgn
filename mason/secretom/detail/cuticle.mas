@@ -20,17 +20,6 @@
   candidates.
   </p>
 
-  <div style="width: 720px; margin: 3em 0" class="captioned_image">
-
-    <img src="/documents/img/secretom/tomato_cuticle_stain_full.jpg" />
-
-    <p>
-    Light microscope image of the surface of an expanding tomato fruit
-    with the cuticle stained red.
-    </p>
-
-  </div>
-
   <p>
   Although Arabidopsis research has greatly accelerated the discovery of
   new cuticle-related genes, its cuticle poses some experimental
@@ -44,6 +33,17 @@
   fruit development represents a remarkably rapid and extensive phase of
   cuticle biosynthesis.
   </p>
+
+  <div style="width: 420px" class="captioned_image img_float_left caption_right">
+
+    <img src="/documents/img/secretom/tomato_cuticle_stain_400.jpg" />
+
+    <p>
+    Light microscope image of the surface of an expanding tomato fruit
+    with the cuticle stained red.
+    </p>
+
+  </div>
 
   <p>
   To identify new candidate proteins with a potential role in cuticle
@@ -68,31 +68,33 @@
   </p>
 </div>
 
-  <div style="width: 500px; margin-bottom: 2em" class="captioned_image">
+  <div style="width: 370px; margin-left: 0" class="captioned_image img_float_right">
 
-    <img src="/documents/img/secretom/tomato_cuticle_3d_470.jpg" />
+    <img src="/documents/img/secretom/tomato_cuticle_3d_350.jpg" />
 
     <p>
-    A 3-D rendition of the tomato fruit (cv. M8) cuticle.
+    A 3-D rendering of the tomato fruit (cv. M8) cuticle.
     </p>
 
   </div>
 
-<&| /secretom/section_templates/objectives.mas &>
+<div style="float: left; width: 345px">
+  <&| /secretom/section_templates/objectives.mas &>
 
-  Isolate and identify proteins from the surface of expanding tomato
-  fruits at the time of maximal cuticle biosynthesis, using solvent
-  dips followed by gel- and liquid chromatography-based separation and
-  several MS approaches
+    Isolate and identify proteins from the surface of expanding tomato
+    fruits at the time of maximal cuticle biosynthesis, using solvent
+    dips followed by gel- and liquid chromatography-based separation and
+    several MS approaches
 
-  Identify potentially secreted proteins and characterize their
-  expression patterns during fruit ontogeny
+    Identify potentially secreted proteins and characterize their
+    expression patterns during fruit ontogeny
 
-  Incorporate this information into related studies of the tomato
-  fruit cuticle t develop a more detailed understanding of cuticle
-  deposition and restructuring
+    Incorporate this information into related studies of the tomato
+    fruit cuticle t develop a more detailed understanding of cuticle
+    deposition and restructuring
 
-</&>
+  </&>
+</div>
 
 <&| /secretom/section_templates/data_items.mas,
       default_ref_base => '/download/data/secretom/.new/Tomato_fruit_cuticular_cell_wall_proteome'

@@ -110,6 +110,11 @@
   letter-spacing: 0.8px;
 }
 
+#secretom_container ul.objectives {
+  padding-left: 2em;
+
+}
+
 </style>
 
 <div id="secretom_container">
