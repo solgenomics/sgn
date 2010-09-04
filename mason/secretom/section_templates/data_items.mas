@@ -13,7 +13,9 @@
 %       unless( $r =~ m!^/! || $r =~ m!^(ht|f)tp://! ) { $r = "$default_ref_base/$r" }
         <a href="<% $r %>"><% $item->{text} %></a>
 %    } else {
-        <% $item->{text} %>
+        <span class="ghosted"><% $item->{text} %></span>
+          <div style="margin-left: 2em; font-size: 90%">(file temporarily unavailable, contact <a href="mailto:jr286@cornell.edu">Joss Rose</a> for details)</div>
+
 %    }
   </li>
 % }
