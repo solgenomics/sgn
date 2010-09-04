@@ -32,10 +32,11 @@ with 'Catalyst::Component::ApplicationAttribute';
 
 sub search :Path('/feature/search') Args(0) {
     my ( $self, $c ) = @_;
+    $self->schema( $c->dbic_schema('Bio::Chado::Schema','sgn_chado') );
+
     my $req = $c->req;
     my $form = $self->_build_form;
 
-    $self->schema( $c->dbic_schema('Bio::Chado::Schema','sgn_chado') );
     $form->process( $req );
 
     my $results;
@@ -68,10 +69,9 @@ sub _build_form {
             label: Feature Name
             size: 30
 
-          - type: Text
+          - type: Select
             name: feature_type
             label: Feature Type
-            size: 30
 
         # hidden form values for page and page size
           - type: Hidden
@@ -87,7 +87,7 @@ sub _build_form {
 EOY
 
     # set the feature type multi-select choices from the db
-    # $form->get_element({ name => 'feature_type'})->options( $self->_feature_types );
+    $form->get_element({ name => 'feature_type'})->options( $self->_feature_types );
 
     return $form;
 }
@@ -103,6 +103,10 @@ sub _make_feature_search_rs {
         $rs = $rs->search({ 'lower(name)' => { like => '%'.lc( $name ).'%' }});
     }
 
+    if( my $type = $form->param_value('feature_type') ) {
+        $rs = $rs->search({ 'type_id' => $type });
+    }
+
     # page number and page size, and order by species name
     $rs = $rs->search( undef,
                        { page => $form->param_value('page') || 1,
@@ -114,6 +118,24 @@ sub _make_feature_search_rs {
     return $rs;
 }
 
+sub _feature_types {
+    my ($self) = @_;
+
+    return [
+        map [$_->cvterm_id,$_->name],
+        $self->schema
+                ->resultset('Sequence::Feature')
+                ->search_related(
+                    'type',
+                    {},
+                    { select => [qw[ cvterm_id type.name ]],
+                    group_by => [qw[ cvterm_id type.name ]],
+                    order_by => 'type.name',
+                    },
+                )
+    ];
+}
 
 __PACKAGE__->meta->make_immutable;
 1;
+
