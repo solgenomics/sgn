@@ -73,6 +73,10 @@ sub _build_form {
             name: feature_type
             label: Feature Type
 
+          - type: Select
+            name: organism
+            label: Organism
+
         # hidden form values for page and page size
           - type: Hidden
             name: page
@@ -88,6 +92,7 @@ EOY
 
     # set the feature type multi-select choices from the db
     $form->get_element({ name => 'feature_type'})->options( $self->_feature_types );
+    $form->get_element({ name => 'organism'})->options( $self->_organisms );
 
     return $form;
 }
@@ -107,6 +112,10 @@ sub _make_feature_search_rs {
         $rs = $rs->search({ 'type_id' => $type });
     }
 
+    if( my $organism = $form->param_value('organism') ) {
+        $rs = $rs->search({ 'organism_id' => $organism });
+    }
+
     # page number and page size, and order by species name
     $rs = $rs->search( undef,
                        { page => $form->param_value('page') || 1,
@@ -116,6 +125,16 @@ sub _make_feature_search_rs {
                      );
 
     return $rs;
+}
+
+sub _organisms {
+    my ($self) = @_;
+    return [
+        map [ $_->organism_id, $_->species ],
+        $self->schema
+             ->resultset('Organism::Organism')
+             ->search(undef, { order_by => 'species' }),
+    ];
 }
 
 sub _feature_types {
