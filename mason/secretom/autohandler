@@ -60,6 +60,14 @@
   margin: 10px 15px;
   margin-top: 3em;
 }
+#secretom_container div.img_float_right {
+  margin: 0 0 10px 20px;
+  float: right;
+}
+#secretom_container div.img_float_left {
+  margin: 0 20px 10px 0;
+  float: left;
+}
 
 #secretom_container .page_introduction > p:first-child {
   margin-top: 0;

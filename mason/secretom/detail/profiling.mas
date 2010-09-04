@@ -2,9 +2,14 @@
   Integrated Proteome/Transcriptome Profiling of Tomato Fruit
 </h1>
 
-<img style="display: block; margin: 0 auto 3em auto;" src="/img/secretom/tomato_array.jpg" />
-
 <div class="indentedcontent">
+
+  <div style="width: 330px; float: right" class="captioned_image img_float_right">
+
+    <img src="/img/secretom/tomato_array_300.jpg" />
+
+  </div>
+
   <p>
   We are integrating a <a href="http://ted.bti.cornell.edu">tomato fruit
   transcript expression profiling initiative</a> with the cell wall
@@ -64,11 +69,11 @@
   types can be diluted below the level of detection.
   </p>
 
-  <div style="width: 600px" class="captioned_image">
+  <div style="width: 700px" class="captioned_image caption_right">
 
     <img src="/documents/img/secretom/tomato_pericarp_section_500.jpg" />
 
-    <p>
+    <p style="margin-top: 2em; height: 100%">
     Light microscope image of a cross section through a tomato fruit
     pericarp, which comprises several tissue types: outer epidermis,
     collenchyma, parenchyma, vascular tissues, and inner epidermis.
@@ -87,6 +92,34 @@
   annotation; for example, revealing substantial alternative splicing,
   which in turn is critical for enhancing the proteome analyses.
   </p>
+</div>
+
+<div class="indentedcontent">
+  <div style="width: 240px; " class="captioned_image img_float_right">
+
+    <img src="/documents/img/secretom/tomato_pericarp_section_LMD_x300.jpg" />
+
+    <p>
+    Tomato fruit pericarp section after removal of the vascular tissue using LMD.
+    </p>
+
+  </div>
+
+  <div style="float; left; width: 430px">
+  <&| /secretom/section_templates/objectives.mas, is_subsection => 1 &>
+
+    Construct and sequence tissue specific transcript libraries for
+    each tissue in tomato fruit pericarp, using 454 and Illumina
+    technologies , at various developmental stages
+
+    Characterize the predicted secretomes of each tissue
+
+    Use the deep coverage of the transcripts to identify enhance gene
+    space definition, and therefore peptide matching for the proteomic
+    studies
+
+  </&>
+  </div>
 
   <p>
   To date, a total of 1,456,024 high quality sequences have been
@@ -94,16 +127,6 @@
   assembly, 20,976 tomato unigenes (assembled from at least five reads)
   were associated with one or more of the tissues.
   </p>
-
-  <div style="width: 400px" class="captioned_image">
-
-    <img src="/documents/img/secretom/tomato_pericarp_section_LMD_x400.jpg" />
-
-    <p>
-    Tomato fruit pericarp section after removal of the vascular tissue using LMD.
-    </p>
-
-  </div>
 
 </div>
 
