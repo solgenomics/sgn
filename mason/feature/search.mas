@@ -6,6 +6,7 @@
 <%once>
   use Number::Format;
   use CXGN::Page::FormattingHelpers qw/ columnar_table_html /;
+  use SGN::View::Feature qw/feature_link/;
 </%once>
 <& /page/page_title.mas, title => 'Feature Search' &>
 <& /util/import_javascript.mas,
@@ -23,7 +24,7 @@
 %   if( $results->count ) {
      <% columnar_table_html(
             headings => ['Feature Name','Feature Type'],
-            data     => [ map [$_->name,$_->type->name], $results->all ],
+            data     => [ map [feature_link($_),$_->type->name], $results->all ],
         )
       %>
 %   } else {
