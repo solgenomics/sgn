@@ -2,6 +2,8 @@ package CXGN::VHost::Test;
 use strict;
 use warnings;
 
+use lib 't/lib';
+use SGN::Test;
 use Catalyst::Test 'SGN';
 use base qw/Exporter/;
 our @EXPORT = qw/ request get /;
