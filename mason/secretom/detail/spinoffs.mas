@@ -1,11 +1,17 @@
 <& /page/page_title.mas, title => 'Spin-off Projects and Collaborations' &>
+<style>
+  div.indented_content > div.indented_content {
+    width: 580px;
+    margin-left: 3em;
+  }
+</style>
 <div class="indented_content">
 
   <h1>
     Interspecific Reproductive Barriers in Tomato (IRBT)
   </h1>
 
-  <div class="indented_content"  style="width: 550px; margin-bottom: 6em">
+  <div class="indented_content"  style="margin-bottom: 6em">
     <div style="width: 140px" class="captioned_image img_float_right">
 
       <img src="/documents/img/secretom/tomato_flower_cropped_120.jpg" />
@@ -32,7 +38,7 @@
     The Evolutionary Origins of the Plant Cell Wall and Associated Secretome
   </h1>
 
-  <div class="indented_content"  style="width: 600px">
+  <div class="indented_content">
 
     <div style="width: 320px" class="captioned_image img_float_right">
 
