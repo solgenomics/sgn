@@ -1,17 +1,19 @@
 <& /page/page_title.mas, title => 'Functional Screens to Identify Secreted Proteins' &>
 
-<&| /page/info_section.mas, title => 'Yeast Secretion Trap (YST) Screen' &>
-
+<div class="page_introduction">
   <p>
   We have been developing and applying functional screens to identify
   genes encoding secreted proteins. The genes are identified based on
   the ultimate localization of the encoded protein, utilizing protein
   markers whose activities confirm targeting to the cell surface.
   </p>
+</div>
 
-  <div style="width: 400px" class="captioned_image">
+<&| /page/info_section.mas, title => 'Yeast Secretion Trap (YST) Screen' &>
 
-    <img src="/documents/img/secretom/YST_control_300.jpg" />
+  <div style="width: 330px; margin: 0; margin-right: 2em; float: left" class="captioned_image caption_right">
+
+    <img src="/documents/img/secretom/YST_control_170.jpg" />
 
     <p>
     Sucrose plate with no yeast colonies growing (negative control).
@@ -31,9 +33,9 @@
   </p>
 
 
-  <div style="width: 400px" class="captioned_image">
+  <div style="width: 330px; margin: 0; margin-right: 2em; float: left" class="captioned_image caption_right">
 
-    <img src="/documents/img/secretom/YST_transformed_300.jpg" />
+    <img src="/documents/img/secretom/YST_transformed_170.jpg" />
 
     <p>
     Sucrose plate showing yeast colonies transformed with the YST vector library.
@@ -60,11 +62,11 @@
 
 <&| /page/info_section.mas, title => 'Necrosis Inducing Protein (NIP) Secretion Trap Screen' &>
 
-  <div style="width: 300px" class="captioned_image">
+  <div style="width: 350px; float: right; margin: 0 0 10px 20px;" class="captioned_image caption_left">
 
-    <img src="/documents/img/secretom/N_benth_NIP_full.jpg" />
+    <img src="/documents/img/secretom/N_benth_NIP_x210.jpg" />
 
-    <p>
+    <p style="text-align: left">
     A <span class="species_binomial">Nicotiana benthamiana</span> leaf
     showing regions of HR indicating the presence of a secreted
     protein fused to NIP.
@@ -97,6 +99,18 @@
 </&>
 
 <&| /page/info_section.mas, title => 'Objectives', is_subsection => 0 &>
+
+  <div style="width: 230px; margin: 0 0 10px 20px; float: right" class="captioned_image">
+
+    <img src="/documents/img/secretom/onion_cyto_secreted_200.jpg" />
+
+    <p style="text-align: left">
+    A cytoplasmic protein (green) and a secreted protein (red) in
+    plasmolyzed onion cells. Scale bar represents 50 microns.
+    </p>
+
+  </div>
+
   <ul>
     <li>
     Screen a range of tomato tissues for genes encoding secreted
@@ -116,16 +130,6 @@
   </ul>
 
 
-  <div style="width: 400px" class="captioned_image">
-
-    <img src="/documents/img/secretom/onion_cyto_secreted.jpg" />
-
-    <p>
-    A cytoplasmic protein (green) and a secreted protein (red) in
-    plasmolyzed onion cells. Scale bar represents 50 microns.
-    </p>
-
-  </div>
 
   <p>
   To date we have identified both known cell wall localized proteins as
@@ -144,7 +148,7 @@
 <&| /secretom/section_templates/data_items.mas &>
 - text: "Tomato (cv. Ailsa Craig) fruit (multiple growth and ripening stages): YST clones"
   ref: /download/data/secretom/.new/Functional_screens/Tomato_fruit_YST_clones.xlsx
-- text: "Tomato (cv. Ailsa Craig) leaves infected with Phytophthora infestans: YST clones (Missing)"
+- text: "Tomato (cv. Ailsa Craig) leaves infected with Phytophthora infestans: YST clones"
 </&>
 
 <&| /secretom/section_templates/publications.mas &>

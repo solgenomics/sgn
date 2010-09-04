@@ -2,6 +2,7 @@
 #secretom_container {
   text-align: justify;
   color: #111;
+  line-height: 1.5;
 }
 
 #secretom_container img.interest {
@@ -40,6 +41,24 @@
   font-size: 90%;
   margin: 1em 3em;
   letter-spacing: 0.4px;
+}
+
+#secretom_container div.caption_right > img {
+  float: left;
+  margin: 10px;
+}
+#secretom_container div.caption_right > p {
+  text-align: left;
+  margin-top: 3em;
+}
+
+#secretom_container div.caption_left > img {
+  float: right;
+  margin: 10px 10px 10px 15px;
+}
+#secretom_container div.caption_left > p {
+  margin: 10px 15px;
+  margin-top: 3em;
 }
 
 #pagetitle > h3{
