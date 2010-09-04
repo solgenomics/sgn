@@ -72,9 +72,9 @@
   </p>
 
 
-  <div style="width: 400px" class="captioned_image">
+  <div style="width: 700px" class="captioned_image">
 
-    <h1>Missing image</h1>
+    <img src="/documents/img/secretom/location_prediction_full.png" />
 
     <p>
     Computational prediction of the subcellular location of the
