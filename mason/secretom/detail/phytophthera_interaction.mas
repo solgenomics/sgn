@@ -71,17 +71,28 @@
 
 </&>
 
-<&| /secretom/section_templates/data_items.mas,
-    default_ref_base => '/download/data/secretom/.new/Secretome_Phytophthora_tomato_interactions'
- &>
-- text: F95S1KP01.sff
-  ref: F95S1KP01.sff
-- text: F95S1KP02.sff
-  ref: F95S1KP02.sff
-- text: GAVIB5H01.sff
-  ref: GAVIB5H01.sff
-- text: GAVIB5H02.sff
-  ref: GAVIB5H02.sff
+<&| /page/info_section.mas, title => 'Data Sets' &>
+
+<p>These samples correspond to a time course experiment of a compatible
+interaction between Phytophthora infestans (clonal lineage US11) and
+its host tomato (M82). Tissue was collected at three different stages
+of the interaction and a mock inoculated plant served as control.
+</p>
+
+  <&| /secretom/section_templates/data_items.mas,
+      default_ref_base => '/download/data/secretom/.new/Secretome_Phytophthora_tomato_interactions',
+      is_subsection => 1,
+      title => 'Files',
+   &>
+  - text: Time 0, F95S1KP01.sff
+    ref: F95S1KP01.sff
+  - text: Time 1, GAVIB5H01.sff
+    ref: GAVIB5H01.sff
+  - text: Time 2, GAVIB5H02.sff
+    ref: GAVIB5H02.sff
+  - text: Time 3, F95S1KP02.sff
+    ref: F95S1KP02.sff
+  </&>
 </&>
 
 <&| /secretom/section_templates/publications.mas, entitize => 0 &>

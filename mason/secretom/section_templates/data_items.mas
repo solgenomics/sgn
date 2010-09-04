@@ -2,8 +2,9 @@
   $default_ref_base => ''
 </%args>
 % my $items = Load( $m->content );
+% delete $ARGS{$_} for qw( default_ref_base c );
 
-<&| /page/info_section.mas, title => 'Data Sets' &>
+<&| /page/info_section.mas, title => 'Data Sets', %ARGS &>
 <ul>
 
 % foreach my $item (@$items) {
