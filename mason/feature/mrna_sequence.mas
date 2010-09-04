@@ -5,6 +5,7 @@
 </%args>
 <%init>
     use Bio::Seq;
+    use SGN::View::Feature qw/infer_residue/;
 </%init>
 <%perl>
     my $mrna_residue = '';
