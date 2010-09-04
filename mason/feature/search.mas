@@ -12,6 +12,30 @@
 <& /util/import_javascript.mas,
     classes => [qw(jquery CXGN.Effects)]
 &>
+
+<!-- This CSS should probably go somewhere better -->
+<style>
+#feature_search_form .select span span {
+  white-space: nowrap;
+  float: left;
+  width: 10em;
+}
+#feature_search_form div label, #feature_search_form legend {
+  font-weight: bold;
+}
+#feature_search_form div.text label {
+  float: left;
+  width: 10em;
+}
+
+div.paginate_nav {
+  margin: 0 auto;
+  width: 80%;
+  white-space: nowrap;
+  text-align: center;
+}
+</style>
+
 % if( $results ) {
 %   my $pager = $results->pager;
 
@@ -33,9 +57,8 @@
   </&>
 
   <& /page/pagination_control.mas, pager => $pager, link_maker => $pagination_link_maker &>
-% }
-
+% } else {
 <&| /page/info_section.mas, title => 'Search' &>
   <% $form->render %>
 </&>
-
+% }
