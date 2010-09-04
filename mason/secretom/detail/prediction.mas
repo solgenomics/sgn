@@ -50,13 +50,17 @@ span.filesize:after {
   to date (see below for SignalP results).
   </p>
 
+</div>
+
+<&| /page/info_section.mas, title => 'New predictor: Secretary' &>
+
   <p>
-  We are developing a new predictor, <a href="/secretom/secretary">Secretary</a>,
+  We are developing a new predictor, <a href="/secretom/secretary">SecreTary</a>,
   for more accurate computational prediction of plant proteins that
-  traffic through the classical secretory pathway.
+  traffic through the classical secretory pathway.  <a href="/secretom/secretary">Try SecreTary</a>,
   </p>
 
-</div>
+</&>
 
 <&| /page/info_section.mas, title => 'SignalP results' &>
 
