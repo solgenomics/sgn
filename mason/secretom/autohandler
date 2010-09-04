@@ -16,7 +16,7 @@
 
 #secretom_container hr {
   border: 0;
-  border-top: 2px solid gray;
+  border-top: 2px solid #bbb;
 }
 
 #secretom_container label {

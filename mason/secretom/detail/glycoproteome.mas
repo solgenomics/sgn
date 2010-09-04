@@ -1,26 +1,7 @@
 <& /page/page_title.mas, title => 'The Tomato Fruit Glycoproteome' &>
 
 <div class="indented_content">
-  <p>
-  As with all eukaryotes, N-glycosylation in plant cells is a common
-  post-translational modification for proteins traveling through the
-  secretory pathway, many of which are destined for the cell wall. The
-  large-scale isolation and analysis of glycoproteins by lectin
-  affinity chromatography, coupled with mass spectrometry (MS), has
-  become a powerful tool to evaluate the glycoproteome of mammalian
-  cells; however, is has rarely been used with plants glycoproteins.
-  </p>
-
-  <p>
-  We are using affinity selection of glycoproteins using the lectin
-  Concanavalin A, coupled with two-dimensional liquid chromatography
-  (2-D LC) and matrix-assisted laser desorption/ionization mass
-  spectrometry (2DLC-MALDI MS/MS) and electrospray ionization MS
-  (ESI-MS) analysis, to identify extracellular and secretory pathway
-  proteins, focusing on those expressed in ripe tomato fruit.
-  </p>
-
-    <div style="width: 400px" class="captioned_image">
+    <div style="width: 400px; float: right; margin: 0 0 10px 20px" class="captioned_image">
 
       <img src="/documents/img/secretom/SDS_PAGE_x400.png" />
 
@@ -31,6 +12,27 @@
       </p>
 
     </div>
+
+
+  <p>
+  As with all eukaryotes, N-glycosylation in plant cells is a common
+  post-translational modification for proteins traveling through the
+  secretory pathway, many of which are destined for the cell wall. The
+  large-scale isolation and analysis of glycoproteins by lectin
+  affinity chromatography, coupled with mass spectrometry (MS), has
+  become a powerful tool to evaluate the glycoproteome of mammalian
+  cells; however, is has rarely been used with plants glycoproteins.
+  </p>
+
+
+  <p>
+  We are using affinity selection of glycoproteins using the lectin
+  Concanavalin A, coupled with two-dimensional liquid chromatography
+  (2-D LC) and matrix-assisted laser desorption/ionization mass
+  spectrometry (2DLC-MALDI MS/MS) and electrospray ionization MS
+  (ESI-MS) analysis, to identify extracellular and secretory pathway
+  proteins, focusing on those expressed in ripe tomato fruit.
+  </p>
 
   <p>
   Tomato has long served as model system for fleshy fruit development
@@ -63,18 +65,8 @@
 </&>
 
 <div class="indented_content">
-  <p>
-  This enrichment strategy has been highly effective, with a high
-  proportion the identified proteins showing predicted localization
-  either in the secretory pathway. We are currently investigating the
-  targeting of proteins form the secretory pathway to other
-  intracellular organelles.
-  </p>
 
-
-  <div style="width: 700px" class="captioned_image">
-
-    <img src="/documents/img/secretom/location_prediction_full.png" />
+  <div style="width: 420px; float: left; margin: 0 20px 10px 0" class="captioned_image">
 
     <p>
     Computational prediction of the subcellular location of the
@@ -82,7 +74,20 @@
     Concanavalin A.
     </p>
 
+    <hr style="margin: 0 10px" />
+
+    <img src="/documents/img/secretom/location_prediction_400.png" />
+
+
   </div>
+
+  <p>
+  This enrichment strategy has been highly effective, with a high
+  proportion the identified proteins showing predicted localization
+  either in the secretory pathway. We are currently investigating the
+  targeting of proteins from the secretory pathway to other
+  intracellular organelles.
+  </p>
 
 </div>
 
