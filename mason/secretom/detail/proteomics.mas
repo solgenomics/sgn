@@ -15,7 +15,7 @@
   </p>
 
 
-  <div style="width: 300px" class="captioned_image">
+  <div style="width: 400px; float: right; margin: 0 0 10px 20px" class="captioned_image caption_left">
 
     <img src="/documents/img/secretom/tomato_P_infestans_full.jpg" />
 
@@ -81,6 +81,16 @@
 <h1>Comparative proteomic analysis of the tomato-<span class="species_binomial">P. infestans</span> pathosystem</h1>
 
 <div class="indented_content">
+  <div style="width: 450px; float: right; margin: 0 0 30px 20px" class="captioned_image caption_left">
+
+        <img src="/documents/img/secretom/infestans_DIGE_300.jpg" />
+
+        <p style="text-align: left">
+        DIGE gel of proteins from <span class="species_binomial">P. infestans</span> infected tomato leaves.
+        </p>
+
+  </div>
+
   <p>
   We are characterizing the dynamics of host-pathogen secretomes in
   leaves during infection by the oomycete P. infestans, during distinct
@@ -88,21 +98,28 @@
   supported with 454-generated transcript profiling.
   </p>
 
-  <div style="width: 400px" class="captioned_image">
-
-        <img src="/documents/img/secretom/infestans_DIGE_300.jpg" />
-
-        <p>
-        DIGE gel of proteins from <span class="species_binomial">P. infestans</span> infected tomato leaves.
-        </p>
-
-  </div>
 
 </div>
 
 <h1>Comparative proteomic analysis of tomato fruit ripening</h1>
 
 <div class="indented_content">
+
+  <div style="width: 370px; float: right; margin: 0 0 10px 20px" class="captioned_image">
+
+          <table style="margin: 10px auto">
+             <tr><td><img src="/documents/img/secretom/tomato_wild_type_110.jpg" /></td>
+                 <td><img src="/documents/img/secretom/tomato_nor_110.jpg" /></td>
+                 <td><img src="/documents/img/secretom/tomato_rin_110.jpg" /></td>
+             </tr>
+          </table>
+
+          <p>
+          Wild type ripe tomato fruit (left), and equivalent stage fruit
+          from the nor (middle) and rin (right) mutants.
+          </p>
+
+  </div>  
 
   <p>
   We are profiling the cell wall proteome of ripening tomato fruit,
@@ -115,21 +132,6 @@
   the multiplicity of underlying molecular mechanisms have far
   exceeded expectations.
   </p>
-
-
-  <div style="width: 700px" class="captioned_image">
-
-          <table><tr><td><img src="/documents/img/secretom/tomato_wild_type_200.jpg" /></td>
-                     <td><img src="/documents/img/secretom/tomato_nor_200.jpg" /></td>
-                     <td><img src="/documents/img/secretom/tomato_rin_200.jpg" /></td>
-          </tr></table>
-
-          <p>
-          Wild type ripe tomato fruit (left), and equivalent stage fruit
-          from the nor (middle) and rin (right) mutants.
-          </p>
-
-  </div>  
 
 </div>
 
