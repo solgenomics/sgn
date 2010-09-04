@@ -2,7 +2,7 @@
 
 <div class="indented_content">
 
-  <div style="width: 400px" class="captioned_image">
+  <div style="width: 300px" class="captioned_image img_float_right">
 
     <img src="/documents/img/secretom/infestans_leaves_stages_full.jpg" />
 
@@ -44,11 +44,15 @@
   </p>
 
   <p>
-    We are using a range of strategies to characterize the secretomes of
-    the hopst and pathogen during the various stages of hemibiotrophy,
-    including Yeast Secretion Trap Screen, comparative proteomic
-    analysis of extracted protein populations, and deep sequencing of
-    the transcriptomes of the infected tissues using RNAseq.
+
+    We are using a range of strategies to characterize the secretomes
+    of the host and pathogen during the various stages of
+    hemibiotrophy, including <a href="/secretom/detail/functional_screens">
+    Yeast Secretion Trap Screen</a>, <a href="/secretom/detail/proteomics">
+    comparative proteomic analysis</a> of extracted protein populations,
+    and deepsequencing of the transcriptomes of the infected tissues using
+    RNAseq.
+
   </p>
 </div>
 
