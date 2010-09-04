@@ -6,7 +6,7 @@
       cursor: pointer;
       display: block;
       color: #111;
-              font-size: 105%;
+      font-size: 105%;
       font-weight: bold;
       margin: 1em;
       border: 1px solid rgba(0,0,0,0.2);
