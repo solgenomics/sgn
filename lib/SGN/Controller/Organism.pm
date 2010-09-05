@@ -217,6 +217,8 @@ sub organism_tree_image :Chained('get_organism_tree') :PathPart('image') {
     my $image = $c->stash->{organism_tree_cache_entry}->thaw
         or $c->throw_404;
 
+    $image->{png} or die "no png data for organism set '".$c->stash->{organism_set_name}."'! cannot serve image.";
+
     $c->res->body( $image->{png} );
     $c->res->content_type( 'image/png' );
 }
