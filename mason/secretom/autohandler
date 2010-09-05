@@ -1,4 +1,8 @@
 <style type="text/css">
+#secretom_container .ghosted, #secretom_container .ghosted:visited {
+  color: #999;
+}
+
 #secretom_container {
   text-align: justify;
   color: #111;
@@ -113,6 +117,54 @@
 #secretom_container ul.objectives {
   padding-left: 2em;
 
+}
+
+span.secretary {
+  font-weight: bold;
+}
+
+#secretary_nav {
+  margin: 3em auto 3em auto;
+  width: 50em;
+}
+#secretary_nav td {
+  text-align: center;
+  vertical-align: middle;
+}
+#secretary_nav a {
+  color: #353535;
+  font-weight: bold;
+  border: 1px solid gray;
+  display: block;
+  padding: 0.5em 4em;
+}
+#secretary_nav a:visited {
+  color: #353535;
+}
+#secretary_nav a.active {
+  color: black;
+  background: #ccf;
+}
+
+
+#secretary_input {
+  margin: 0 0 2em 0;
+  text-align: left;
+}
+#secretary_input table {
+  width: 100%;
+  margin-top: 1em;
+}
+#secretary_input table td {
+        }
+#secretary_input input.submit {
+  padding: 3px 10px;
+  margin-top: 0.5em;
+}
+
+div.examples {
+  text-align: right;
+  margin-bottom: -1em;
 }
 
 </style>

@@ -32,6 +32,8 @@ span.filesize:after {
 
 <& /page/page_title.mas, title => 'Computational prediction of secreted proteins' &>
 
+<& /secretom/secretary/nav.mas, curr_page => 'background' &>
+
 <div class="page_introduction">
   <p>
 

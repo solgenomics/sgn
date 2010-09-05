@@ -1,9 +1,11 @@
-<& /page/page_title.mas, title => 'Instructions for using the SecreTary signal peptide predictor' &>
+<& /page/page_title.mas, title => 'Instructions for using the <span class="secretary">SecreTary</span> signal peptide predictor' &>
+
+<& /secretom/secretary/nav.mas, curr_page => 'instructions' &>
 
 <div class="indented_content">
 
   <p>
-   SecreTary is for prediction of signal peptides from the amino acid
+   <span class="secretary">SecreTary</span> is for prediction of signal peptides from the amino acid
    sequence of a protein. Signal peptides generally possess a common
    structural design, which is characterized by a short, positively
    charged n-region followed by a hydrophobic region (h-region) and a
@@ -12,13 +14,13 @@
    translocation of the signal peptides to the ER. To improve the
    performance of the signal peptide prediction, we have developed new
    parameters such as the overall hydrophobicity and amino acid
-   composition in the n-region as input. SecreTary is mainly trained
+   composition in the h-region as input. <span class="secretary">SecreTary</span> is mainly trained
    and tested on the plant secretome that has been identified through
    functional screens including a yeast secretion trap.
   </p>
 
   <p>
-   Questions or suggestions about SecreTary should be addressed to
+   Questions or suggestions about <span class="secretary">SecreTary</span> should be addressed to
    Jocelyn K.C. Rose (<a href="mailto:jr286@cornell.edu">
    jr286@cornell.edu</a>).
   </p>
@@ -29,8 +31,8 @@
 
   <p>
   The amino acid sequences can be input by pasting one or more
-  protein sequences, in <b>FASTA format</b> into the SecreTary input
-  page. SecreTary analyses proteins at a rate of approximate
+  protein sequences, in <b>FASTA format</b> into the <span class="secretary">SecreTary</span> input
+  page. <span class="secretary">SecreTary</span> analyses proteins at a rate of approximate
   20/second. At present there is a limit of 3000 sequences. All the
   input sequences must be in one-letter amino acid code. The allowed
   alphabet (not case sensitive) is as follows: <b>A C D E F G H I K L
@@ -60,9 +62,9 @@
 <&| /page/info_section.mas, title => '3. Output' &>
 
   <p>
-  For each predicted signal peptide SecreTary gives a score, the
+  For each predicted signal peptide <span class="secretary">SecreTary</span> gives a score, the
   predicted length, and information on the location of the hydrophobic
-  region within the signal peptide. On the input page you can choose
+  region (in gray) within the predicted signal peptide (in yellow). On the input page you can choose
   to sort the output by score, with the higher scores (strongest
   candidates) at the top, and you can suppress output for sequences
   with no predicted signal peptide.
@@ -88,3 +90,5 @@ AT1G17600.1      NO       -       -       MVSSSAPRVSKYDVFLSFRGEDTRKTIVSHLYAALDSR
 <&| /page/info_section.mas, title => '4. Getting help' &>
   Please contact: <a href="mailto:sgn-feedback@sgn.cornell.edu">sgn-feedback@sgn.cornell.edu</a>.
 </&>
+
+<a href="/secretom/secretary">Return to <span class="secretary">SecreTary</span> input</a>
