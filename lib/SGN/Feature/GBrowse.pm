@@ -159,6 +159,14 @@ sub render_all_configs {
         $render_target->dir->mkpath;
         $self->render_config_template( $template_file => $render_target );
     }
+
+    # also symlink other things in the conf dir into there
+    for my $conf_thing ( $self->conf_template_dir->parent->children ) {
+        my $link_target = $self->conf_dir->file( $conf_thing->relative( $conf_thing->parent ) );
+        unlink $link_target;
+        symlink $conf_thing, $link_target
+            or die "$! linking $conf_thing -> $link_target";
+    }
 }
 
 sub render_config_template {
