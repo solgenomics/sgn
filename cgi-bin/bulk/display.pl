@@ -15,8 +15,9 @@
 
 use strict;
 use warnings;
+use CatalystX::GlobalContext '$c';
 
-bulk_display->new->display_page;
+bulk_display->new($c)->display_page;
 
 package bulk_display;
 use CGI ();
