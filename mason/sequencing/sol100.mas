@@ -35,7 +35,7 @@ sol100.mas - SGN page for sol100 project organism data overview in a tree format
 <div class="page_introduction">
 
   The tree below shows organisms that have been proposed for
-  sequencing by the SOL100 sequencing project.
+  sequencing by the SOL100 project.
 
 %if ( $show_org_add_form ){
  <style>
