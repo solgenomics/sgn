@@ -17,7 +17,6 @@ $mech->content_like( qr/toolbar/i, 'seems to have a toolbar' );
 $mech->content_unlike( qr/Cite SGN using/i, 'no footer seen' );
 $mech->content_unlike( qr/<html>/i, 'no html opening' );
 $mech->content_unlike( qr|</html>|i, 'no html closing' );
-diag $mech->content;
 
 $mech->get_ok( '/bare_mason/site/header/head' );
 $mech->content_like( qr/<title>/, 'got a title' );
