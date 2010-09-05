@@ -84,10 +84,12 @@ $mech->with_test_level( process => sub {
 
 { #test fetching an organism tree image
 
-    $mech->get_ok( '/organism/tree/sol100/image' );
+    $mech->get_ok( '/organism/sol100/view' );
+    unless( $mech->content =~ /temporarily unavailable/ ) {
+        $mech->get_ok( '/organism/tree/sol100/image' );
 
-    is( $mech->content_type, 'image/png', 'got a png image from the image URL' );
-
+ 	is( $mech->content_type, 'image/png', 'got a png image from the image URL' );
+    }
     $mech->get_ok( '/organism/tree/sol100/flush' );
     is( $mech->content_type, 'application/json', 'got a JSON response from the flush action' );
 
