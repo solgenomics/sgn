@@ -1,5 +1,9 @@
   <style type="text/css">
     a.project {
+      /* idiotic transparent-background syntax for IE */
+      -ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF, endColorstr=#CCFFFFFF)";
+      filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF, endColorstr=#CCFFFFFF);
+
       background: rgba(255,255,255,0.8);
       text-align: left;
       padding: 1em;
@@ -9,12 +13,15 @@
       font-size: 105%;
       font-weight: bold;
       margin: 1em;
-      border: 1px solid rgba(0,0,0,0.2);
+      border: 1px solid gray;
     }
     a.project:hover {
       border: 1px solid black;
       text-decoration: none;
       color: black;
+      /* idiotic transparent-background syntax for IE */
+      -ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr=#EEFFFFFF, endColorstr=#EEFFFFFF)";
+      filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#EEFFFFFF, endColorstr=#EEFFFFFF);
       background: rgba(255,255,255,0.9);
     }
     div.projects  {
