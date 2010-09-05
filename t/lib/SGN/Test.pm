@@ -1,24 +1,27 @@
 package SGN::Test;
 use strict;
+use warnings FATAL => 'all';
+use autodie qw/:all/;
+
 use File::Spec::Functions;
 use File::Temp;
 use File::Find;
-use File::Temp;
-use HTML::Lint;
+
 use List::Util qw/min shuffle/;
 use Test::More;
-our @ISA = qw/Exporter/;
 use Exporter;
+
+use HTML::Lint;
 
 BEGIN { $ENV{CATALYST_SERVER} ||= $ENV{SGN_TEST_SERVER} }
 
+# we can re-export Catalyst::Test's request, get, and ctx_request functions
 use Catalyst::Test 'SGN';
-use SGN::Test::WWW::Mechanize;
-use autodie qw/:all/;
+our @ISA = qw/Exporter/;
+our @EXPORT_OK = qw/validate_urls request get ctx_request /;
+
 use lib 't/lib';
 use SGN::Test::WWW::Mechanize;
-
-our @EXPORT_OK = qw/validate_urls request get /;
 
 my $test_server_name = $ENV{SGN_TEST_SERVER} || 'http://(local test server)';
 
@@ -41,8 +44,6 @@ sub validate_urls {
     local $Test::Builder::Level = $Test::Builder::Level + 2;
     $iteration_count ||= 1;
     $mech ||= SGN::Test::WWW::Mechanize->new;
-
-    my $mech = SGN::Test::WWW::Mechanize->new;
 
     for my $test_name ( (sort keys %$urls) x $iteration_count ) {
         my $url = $urls->{$test_name};
