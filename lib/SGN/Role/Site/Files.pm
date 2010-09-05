@@ -199,7 +199,8 @@ sub make_generated_dir {
         return;
     }
 
-    return $self->chown_generated_dir( $tempdir );
+    $self->chown_generated_dir( $tempdir );
+    return 1;
 }
 
 # takes one argument, a path in the filesystem, and chowns it appropriately
