@@ -20,6 +20,7 @@
     div.projects  {
         background: url(/img/secretom/tomato_gray.png) 30% 100% no-repeat;
         padding-bottom: 20px;
+        margin-bottom: 20px;
     }
 
     #secretom_summary > .infosectioncontent {
@@ -35,15 +36,39 @@
       margin: 1.8em 0;
     }
 
-    a.biglink {
-       font-size: 130%;
+    .resources a {
+       font-size: 120%;
        color: black;
-       width: 70%;
        display: block;
-       margin: 30px auto;
+       margin: 20px 20px;
        font-weight: bold;
        text-align: left;
     } 
+
+    .resources .secretary  {
+       font-weight: bold;
+       margin: 0 auto;
+       letter-spacing: 0.8px;
+       text-align: center;
+       font-size: 110%;
+    }
+    .resources .secretary a {
+       background: #ddf;
+       border-radius: 10px;
+       padding: 10px 20px;
+       margin: 20px auto 7px auto;
+       border: 1px solid #888;
+       border-bottom: 2px solid #777;
+       font-size: 140%;
+       text-align: center;
+       width: 10em;
+    }
+    .resources .secretary a:hover {
+       text-decoration: none;
+       background: #eee;
+    }
+
+    
 
     ul.conferences {
       padding-left: 0.5em;
@@ -122,7 +147,7 @@
   </div>
   <div style="float: right; width: 50%">
 
-    <div class="projects">
+     <div class="projects">
       <&| /page/info_section.mas, title => 'Projects', subtitle => 'download datasets: <a href="ftp://ftp.solgenomics.net/secretom/">[SGN FTP site]</a>' &>
 
         <a class="project" href="/secretom/detail/prediction">Computational Prediction of the Plant Secretome</a>
@@ -136,15 +161,22 @@
 
       </&>
     </div>
+     <div class="resources">
+      <&| /page/info_section.mas, title => 'Resources' &>
 
-      <a class="biglink" href="ftp://ftp.solgenomics.net/secretom/">
-        <span class="secretom">secretom</span> datasets are available on the
-        <span style="text-decoration: underline">SGN FTP site</span>.
-      </a>
-      <a class="biglink" href="/secretom/publications">
-        View <span class="secretom">secretom</span> publications.
-      </a>
-
+        <a href="ftp://ftp.solgenomics.net/secretom/">
+          <span class="secretom">secretom</span> datasets (<span style="text-decoration: underline">SGN FTP</span>)
+        </a>
+        <a href="/secretom/publications">
+          <span class="secretom">secretom</span> publications
+        </a>
+        <hr />
+        <div class="secretary">
+          <a href="/secretom/secretary">Use SecreTary</a>
+          A tool for predicting secreted proteins.
+        </div>
+      </&>
+     </div>
   </div>
 
   <&| /page/info_section.mas, title => 'News' &>
