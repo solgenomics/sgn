@@ -55,6 +55,8 @@
     .resources .secretary a {
        background: #ddf;
        border-radius: 10px;
+       -moz-border-radius: 10px;
+       -webkit-border-radius: 10px;
        padding: 10px 20px;
        margin: 20px auto 7px auto;
        border: 1px solid #888;
