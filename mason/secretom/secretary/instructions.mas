@@ -59,6 +59,11 @@
 
 </&>
 
+<style type="text/css">
+.yellow { background: yellow }
+.blue { background: #aaf }
+
+</style>
 <&| /page/info_section.mas, title => '3. Output' &>
 
   <p>
@@ -79,7 +84,7 @@ AT1G36960.1      NO       -       -       MTRLLPYKGGDFLGPDFLTFIDLCVQVRGIPLPYLSEL
 AT1G44020.1      NO       -       -       MDSESESKLISFISQLVSRNNTDSENISCMIQTISLVSSMDLKSQPKPESK...
 AT1G15970.1      NO       -       -       MSVPPRFRSVNSDEREFRSVLGPTGNKLQRKPPGMKLEKPMMEKTIIDSKD...
 AT1G73440.1      NO       -       -       MARGESEGESSGSERESSSSSSGNESEPTKGTISKYEKQRLSRIAENKARL...
-AT1G75120.1      YES    2512     31       MAVRKEKVQPFRECGIAIAVLVGIFIGCVCTILIPNDFVNFRSSKVASASC...
+AT1G75120.1      YES    2512     31       <span class="yellow">MAVRKEKVQPFRECG</span><span class="blue">IAIAVLVGIFI</span><span class="yellow">GCVCT</span>ILIPNDFVNFRSSKVASASC...
 AT1G17600.1      NO       -       -       MVSSSAPRVSKYDVFLSFRGEDTRKTIVSHLYAALDSRGIVTFKDDQRLEI...
 
 1 secreted sequences predicted out of 7.
