@@ -85,19 +85,25 @@ sub _do_redirects {
 
 }
 
-sub _find_cgi_action {
-    my ($self,$c,$path) = @_;
+=head2 bare_mason
 
-    $path =~ s!/+!/!g;
-     my $cgi = $c->controller('CGI')
-         or return;
+Render a bare mason component, with no autohandler wrapping.
+Currently used for GBrowse integration (GBrowse makes a subrequest for
+the mason header and footer).
 
-    my $index_action = $cgi->cgi_action_for( $path )
-        or return;
+=cut
 
-    $c->log->debug("found CGI index action '$index_action'") if $c->debug;
+sub bare_mason :Path('bare_mason') {
+    my ( $self, $c, @args ) = @_;
 
-    return $index_action;
+    # figure out our template path
+    my $t = File::Spec->catfile( @args );
+    $t .= '.mas' unless $t =~ m|\.[^/\\\.]+$|;
+    $c->stash->{template} = $t;
+
+    # TODO: check that it exists
+
+    $c->forward('View::BareMason');
 }
 
 =head2 end
@@ -130,6 +136,23 @@ sub auto : Private {
     CatalystX::GlobalContext->set_context( $c );
     $c->stash->{c} = $c;
     1;
+}
+
+############# helper subs ##########
+
+sub _find_cgi_action {
+    my ($self,$c,$path) = @_;
+
+    $path =~ s!/+!/!g;
+     my $cgi = $c->controller('CGI')
+         or return;
+
+    my $index_action = $cgi->cgi_action_for( $path )
+        or return;
+
+    $c->log->debug("found CGI index action '$index_action'") if $c->debug;
+
+    return $index_action;
 }
 
 

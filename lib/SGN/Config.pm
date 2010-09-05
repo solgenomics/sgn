@@ -78,6 +78,16 @@ my $defaults =
              comp_root => '__path_to(mason)__',
          },
          globals => [qw[ $c ]],
+         template_extension => '.mas',
+     },
+
+     'View::BareMason' => {
+         interp_args => {
+             comp_root => '__path_to(mason)__',
+             autohandler_name => '',
+         },
+         globals => [qw[ $c ]],
+         template_extension => '.mas',
      },
 
      'View::JavaScript' => {
