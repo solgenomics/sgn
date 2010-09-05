@@ -51,7 +51,7 @@ use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columna
 
 my $template_comp_content;
 
-my $default_message = '<i><font color="gray">data not available</basefont></i>';
+my $default_message = '<span class="ghosted">data not available</span>';
 
 ## If there aren't any experiment that comes from experimental design it will do nothing. 
 ## The error message will returned by basic information

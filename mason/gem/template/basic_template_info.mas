@@ -49,7 +49,7 @@ my $basic_info_content;
 my $element_info_content;
 my $template_accession;
 
-my $default_message = '<i><font color="gray">data not available</basefont></i>';
+my $default_message = '<span class="ghosted">data not available</span>';
 
 ## If there aren't any template that comes from template_detail.mas, it will return a message.
 
