@@ -78,7 +78,7 @@ my %params = $page->get_all_encoded_arguments;
 
 #### bac status stuff ####
 #if someone is logged in, get their information so they can have the option of updating the status of this bac
-my ( $person, $person_id, $fname, $lname, $username, $user_type ) =
+our ( $person, $person_id, $fname, $lname, $username, $user_type ) =
   ( '', '', '', '', '', '' );
 my @person_projects;
 $person_id = CXGN::Login->new($dbh)->has_session();
@@ -299,19 +299,6 @@ my $physical_map_link = do {
           . $clone->clone_name
           . "&chr_nr=$chr";
         qq|<a href="$url">View on physical map chromosome $chr</a>|;
-    }
-    else {
-        '';
-    }
-};
-my $agp_map_link = do {
-    if ( my @agp_pos = agp_positions($clone) ) {
-        my $url =
-            "/cview/view_chromosome.pl?map_id=agp&hilite="
-          . $clone->clone_name
-          . "&chr_nr="
-          . $agp_pos[0][0];
-        qq|<a href="$url">View on AGP map chromosome $agp_pos[0][0]</a>|;
     }
     else {
         '';
@@ -873,6 +860,20 @@ EOQ
         }
     };
 
+    my $agp_map_link = do {
+        if ( my @agp_pos = agp_positions($clone) ) {
+            my $url =
+                "/cview/view_chromosome.pl?map_id=agp&hilite="
+              . $clone->clone_name
+              . "&chr_nr="
+              . $agp_pos[0][0];
+            qq|<a href="$url">View on AGP map chromosome $agp_pos[0][0]</a>|;
+        }
+        else {
+            '';
+        }
+    };
+
     return $sequencing_project_html . info_table_html(
         'Sequencing Project' => $self->_clone_seq_project_name($clone),
         'Sequencing Status'  => $sequencing_status_html,
@@ -1040,6 +1041,8 @@ sub agp_positions {
 sub render_old_arizona_fpc {
     my ( $dbh, $clone ) = @_;
 
+    my $clone_id = $clone->clone_id;
+
     my $map_id = CXGN::DB::Physical::get_current_map_id();
 
     # Get FPC Contigging data.
@@ -1057,7 +1060,7 @@ sub render_old_arizona_fpc {
       WHERE ba.bac_id=? AND bc.fpc_version=?
 EOQ
 
-    $fpc_sth->execute( $clone->clone_id, $fpc_version );
+    $fpc_sth->execute( $clone_id, $fpc_version );
     my $contig_sth = $dbh->prepare_cached(<<EOQ);
       SELECT ba.bac_id
       FROM physical.bac_associations AS ba
