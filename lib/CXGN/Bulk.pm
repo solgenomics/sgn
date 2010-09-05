@@ -265,9 +265,7 @@ sub getFileLines {
     my $file   = shift;
     open my $f, $file or die "$! opening $file";
     my $cnt = 0;
-    while(<$f>) {
-	$cnt++;
-    }
+    $cnt++ while <$f>;
     return $cnt;
 }
 

@@ -608,11 +608,10 @@ sub newSearchButton {
 sub getFileLines {
     my $self   = shift;
     my $file   = shift;
-    my $output = `wc -l $file`;
-    chomp($output);
-    $output =~ s/^\s+(.*)/$1/;
-    my @list = split /\b/, $output;
-    return $list[0];
+    open my $f, '<', $file or die "$! reading $file";
+    my $cnt = 0;
+    $cnt++ while <$f>;
+    return $cnt;
 }
 
 =head2 render_text_page
