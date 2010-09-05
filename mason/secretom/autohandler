@@ -38,7 +38,6 @@
 
 #secretom_container div.captioned_image > p {
   font-weight: bold;
-  font-style: italic;
   font-size: 90%;
   margin: 1em 3em;
   letter-spacing: 0.4px;
