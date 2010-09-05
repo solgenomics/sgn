@@ -15,8 +15,12 @@ package CXGN::Bulk;
 use strict;
 use warnings;
 use Carp;
-use CXGN::DB::Connection;
+use File::Temp;
+use File::Spec;
+
 use File::Slurp qw/slurp/;
+
+use CXGN::DB::Connection;
 
 
 =head2 new
@@ -72,9 +76,9 @@ sub create_dumpfile {
     {
 
         # generate tmp file names and open files for writing
-        my $date = `date +%y%m%d-%H%M%S`;
-        chomp($date);
-        $self->{dumpfile} = "bulk-$date-$$";
+        $self->{dumpfile} = File::Temp->new( TEMPLATE => File::Spec->catfile( $self->{tempdir}, "bulk-XXXXXX" ), UNLINK => 0 )->filename;
+	$self->{dumpfile} =~ s!$self->{tempdir}/!!;
+
         $self->debug( "FILENAME: " . $self->{dumpfile} );
         my $filepath = $self->{tempdir} . "/" . $self->{dumpfile};
         open( $self->{dump_fh}, '>', $filepath )
