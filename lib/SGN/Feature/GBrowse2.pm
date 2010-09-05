@@ -115,6 +115,8 @@ ScriptAlias $cgi_url  "$cgibin"
 <Directory "$cgibin">
   $cgi_inc
   SetEnv GBROWSE_CONF "$conf"
+  Order allow,deny
+  Allow from all
 </Directory>
 
        );
