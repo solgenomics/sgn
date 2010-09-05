@@ -149,6 +149,8 @@ sub render_html_page {
 sub render_html_table_page {
     my $self = shift;
 
+    $self->{page}->header("Bulk download results");
+
     #
     # open the file
     #
@@ -192,7 +194,6 @@ sub render_html_table_page {
         #
         my $line = 0;
         my @data = ();
-        $self->{page}->header("Bulk download results");
         $self->buttons();
         $self->{content} .= "<table summary=\"\" border=\"1\">\n";
 
