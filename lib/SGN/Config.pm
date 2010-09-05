@@ -13,7 +13,7 @@ my $defaults =
      # Static::Simple configuration
      root   => 'static',
      static => {
-         dirs => [qw[ s img documents static_content data ]],
+         dirs => [qw[ s static img documents static_content data ]],
          include_path => ['__path_to(static)__'],
      },
 
