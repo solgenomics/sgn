@@ -16,7 +16,6 @@ my $mech = SGN::Test::WWW::Mechanize->new;
 
 $mech->get_ok( '/organism/sol100/view' );
 $mech->content_contains('SOL100 Organisms');
-$mech->content_contains('presents a summary');
 $mech->content_contains('click on an organism name');
 $mech->content_lacks('Add to Tree','not logged in, does not have a form for adding an organism');
 $mech->while_logged_in({ user_type => 'curator' }, sub {
