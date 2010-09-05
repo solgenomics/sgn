@@ -13,7 +13,7 @@
       font-size: 105%;
       font-weight: bold;
       margin: 1em;
-      border: 1px solid gray;
+      border: 1px solid transparent;
     }
     a.project:hover {
       border: 1px solid black;
