@@ -67,6 +67,8 @@ then throws an exception that will display a 404 error page.
 sub throw_404 {
     my ( $c ) = @_;
 
+    $c->log->debug('throwing 404 error') if $c->debug;
+
     my %throw = (
             title => '404 - not found',
             http_status => 404,
