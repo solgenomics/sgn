@@ -18,7 +18,7 @@ use autodie qw/:all/;
 use lib 't/lib';
 use SGN::Test::WWW::Mechanize;
 
-our @EXPORT_OK = qw/validate_urls/;
+our @EXPORT_OK = qw/validate_urls request get /;
 
 my $test_server_name = $ENV{SGN_TEST_SERVER} || 'http://(local test server)';
 

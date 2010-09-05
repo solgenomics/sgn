@@ -4,7 +4,8 @@ use Test::More;
 
 use HTTP::Request::Common;
 
-BEGIN { use_ok 'Catalyst::Test', 'SGN' }
+use lib 't/lib';
+use SGN::Test qw/ request /;
 BEGIN { use_ok 'SGN::Controller::Project::Secretom::SecreTary' }
 
 ok( request('/secretom/secretary')->is_success, 'Request should succeed' );
