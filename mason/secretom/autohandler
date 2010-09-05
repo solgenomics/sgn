@@ -75,7 +75,7 @@
 
 #secretom_container #pagetitle > h3{
   color: #444;
-  font-size: 130%;
+  font-size: 120%;
   letter-spacing: 1px;
   font-weight: normal;
   text-align: center;
