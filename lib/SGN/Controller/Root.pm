@@ -20,7 +20,7 @@ SGN::Controller::Root - Root Controller for SGN
 
 Web application to run the SGN web site.
 
-=head1 METHODS
+=head1 PUBLIC ACTIONS
 
 =head2 index
 
@@ -50,6 +50,97 @@ sub default :Path {
 
     $c->throw_404;
 }
+
+=head2 bare_mason
+
+Render a bare mason component, with no autohandler wrapping.
+Currently used for GBrowse integration (GBrowse makes a subrequest for
+the mason header and footer).
+
+=cut
+
+sub bare_mason :Path('bare_mason') {
+    my ( $self, $c, @args ) = @_;
+
+    # figure out our template path
+    my $t = File::Spec->catfile( @args );
+    $t .= '.mas' unless $t =~ m|\.[^/\\\.]+$|;
+    $c->stash->{template} = $t;
+
+    # TODO: check that it exists
+
+    $c->forward('View::BareMason');
+}
+
+
+=head1 PRIVATE ACTIONS
+
+=head2 end
+
+Attempt to render a view, if needed.
+
+=cut
+
+sub render : ActionClass('RenderView') { }
+sub end : Private {
+    my ( $self, $c ) = @_;
+
+    return if @{$c->error};
+
+    $c->forward('render');
+
+    # insert our javascript packages into the rendered view
+    if( $c->res->content_type eq 'text/html' ) {
+        $c->forward('/js/insert_js_pack_html')
+    }
+
+}
+
+=head2 download
+
+Sets the Content-disposition response headers appropriate to trigger a
+file-download behavior in the client browser.  Does NOT set the
+content-type, you should do that before forwarding to this
+(e.g. C<$c->res->content_type('text/plain')>).
+
+=cut
+
+sub download :Private {
+    my ( $self, $c, @path ) = @_;
+
+    $c->res->headers->push_header( 'Content-Disposition' => 'attachment' );
+
+    if( defined $c->stash->{download_filename} ) {
+        $c->res->headers->push_header( 'Content-Disposition' => 'filename='.$c->stash->{download_filename} );
+    }
+}
+
+sub download_static :Path('/download') {
+    my ( $self, $c, @path ) = @_;
+
+    my $file = $c->path_to( $c->config->{root},  @path );
+
+    $c->stash->{download_filename} = $file->basename;
+    $c->forward('download');
+    $c->serve_static_file( $file );
+}
+
+=head2 auto
+
+Run for every request to the site.
+
+=cut
+
+sub auto : Private {
+    my ($self, $c) = @_;
+    CatalystX::GlobalContext->set_context( $c );
+    $c->stash->{c} = $c;
+    1;
+}
+
+
+
+########### helper methods ##########3
 
 sub _do_redirects {
     my ($self, $c) = @_;
@@ -85,58 +176,6 @@ sub _do_redirects {
 
 }
 
-=head2 bare_mason
-
-Render a bare mason component, with no autohandler wrapping.
-Currently used for GBrowse integration (GBrowse makes a subrequest for
-the mason header and footer).
-
-=cut
-
-sub bare_mason :Path('bare_mason') {
-    my ( $self, $c, @args ) = @_;
-
-    # figure out our template path
-    my $t = File::Spec->catfile( @args );
-    $t .= '.mas' unless $t =~ m|\.[^/\\\.]+$|;
-    $c->stash->{template} = $t;
-
-    # TODO: check that it exists
-
-    $c->forward('View::BareMason');
-}
-
-=head2 end
-
-Attempt to render a view, if needed.
-
-=cut
-
-sub render : ActionClass('RenderView') { }
-sub end : Private {
-    my ( $self, $c ) = @_;
-
-    $c->forward('render');
-
-    # insert our javascript packages into the rendered view
-    if( $c->res->content_type eq 'text/html' ) {
-        $c->forward('/js/insert_js_pack_html')
-    }
-
-}
-
-=head2 auto
-
-Run for every request to the site.
-
-=cut
-
-sub auto : Private {
-    my ($self, $c) = @_;
-    CatalystX::GlobalContext->set_context( $c );
-    $c->stash->{c} = $c;
-    1;
-}
 
 ############# helper subs ##########
 
@@ -154,7 +193,6 @@ sub _find_cgi_action {
 
     return $index_action;
 }
-
 
 =head1 AUTHOR
 

@@ -1,0 +1,79 @@
+<& /page/page_title.mas, title => 'Spin-off Projects and Collaborations' &>
+<style>
+  div.indented_content > div.indented_content {
+    width: 580px;
+    margin-left: 3em;
+  }
+</style>
+<div class="indented_content">
+
+  <h1>
+    Interspecific Reproductive Barriers in Tomato (IRBT)
+  </h1>
+
+  <div class="indented_content"  style="margin-bottom: 6em">
+    <div style="width: 140px" class="captioned_image img_float_right">
+
+      <img src="/documents/img/secretom/tomato_flower_cropped_120.jpg" />
+
+      <p>
+         Solanum lycopersicum flower
+      </p>
+
+    </div>
+
+    <p>
+      This is an NSF Plant Genome program funded collaborative scientific
+      endeavor to identify and understand the biological processes
+      underlying species isolation within the Tomato family. We are using
+      proteomic tools to study the molecular barriers between tomato
+      species, with particular focus on secreted proteins as these are
+      believed to be critical in establishing such barriers. We have been
+      characterizing the proteomes of pollen, styles and pollinated styles
+      from both Solanum lycopersicum, S. habrochaites and S. pennellii.
+    </p>
+  </div>
+
+  <h1>
+    The Evolutionary Origins of the Plant Cell Wall and Associated Secretome
+  </h1>
+
+  <div class="indented_content">
+
+    <div style="width: 320px" class="captioned_image img_float_right">
+
+      <img src="/documents/img/secretom/p_margaritaceum_306.png" />
+
+      <p>
+        Cells of Penium margaritaceum, a member of the Charophycean green
+        alga, following treatment with a microtubule inhibitor. Pectin
+        components of the wall are shown in green. Microscopic imaging and
+        cover design by David Domozych.
+      </p>
+
+    </div>
+
+    <p>
+      One of the most important phases of plant evolution occurred
+      approximately 460-480 million years ago when photosynthetic
+      organisms developed the capacity to colonize land. This transition
+      to harsh terrestrial conditions would have required the ability to
+      resist new abiotic stresses, including desiccation and UV radiation,
+      as well as the development of mechanisms to promote progeny
+      dispersal. It is likely that polysaccharide and cuticular cell walls
+      were essential for the transition to a terrestrial environment and
+      yet the evolutionary origins of their biosynthesis are not well
+      understood. In collaboration with Dr. William Willats (University of
+      Copenhagen), Dr. David Domozych (Skidmore College). Dr. Jeffrey
+      Doyle and Dr. Iben S&oslash;rensen (Cornell University), we are addressing
+      the hypothesis that the origins of plant cell walls occurred during
+      divergence within the Charophycean green algae (CGA), which
+      represent the closest living relatives to land plants
+      (embryophytes). Characterization of the secretomes of divergent
+      members of the CGA will likely provide insights into the mechanisms
+      that are currently used by embryophytes for primary, secondary and
+      cuticular cell wall formation and restructuring.
+    </p>
+  </div>
+
+</div>

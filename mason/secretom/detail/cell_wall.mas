@@ -1,0 +1,38 @@
+<& /page/page_title.mas, title => 'About Plant Cell Walls' &>
+
+<div class="indented_content" style="margin: 20px auto 30px auto; width: 480px">
+
+  <p>
+  Plant cell walls are typically considered as complex structural
+  matrices that surround all plant cells. They consist mostly of
+  polysaccharides, but also contain components such as lignin,
+  structural lipids and proteins in specialized cell types.
+  </p>
+
+  <div style="width: 430px" class="captioned_image">
+    <img src="/img/secretom/cell_wall_diagram_400.png" />
+    <p>Plant <a href="http://en.wikipedia.org/wiki/Cell_wall">cell wall</a> model</p>
+  </div> 
+
+  <p>
+  However, the term "plant cell wall" is also used more broadly to refer
+  to the entire compartment outside the plasma membrane that forms a
+  continuum throughout the plant, also termed the "apoplast", or
+  apoplastic compartment.
+  </p>
+
+  <div style="width: 430px" class="captioned_image">
+
+    <img src="/img/secretom/gfp_diffuse_400.png" />
+
+    <p>
+      Green fluorescent protein that has diffused throughout the cell
+      wall and apoplastic compartment surrounding an onion epidermal
+      cell.  Scale bar represents 50 micrometers.
+    </p>
+
+  </div>
+
+
+</div>
+

@@ -163,15 +163,15 @@ table.devbar {
 }
 
 /* general div to make something a little more indented */
-div.indentedcontent, div.page_introduction {
-  margin: 0.4em 1em 2em 2em;
+div.indentedcontent, div.indented_content, div.page_introduction {
+  margin: 0.3em 1em 2em 2em;
 }
 div.page_introduction {
-  padding: 1em;
+  padding: 0.3em;
 }
 
 /* same effect as above, except for table cells.  Don't make new pages that use this. */
-td.indentedcontent {
+td.indentedcontent, td.indented_content {
   padding: 1em 1em 2em 2em;
 }
 /*generic text-align tags*/
@@ -1266,4 +1266,8 @@ div.publication_embedded .citation {
   font-style: italic;
   background: #ddd;
   padding: 0.3em 4px;
+}
+
+.species_binomial {
+  font-style: italic;
 }

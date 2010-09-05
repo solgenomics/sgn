@@ -22,7 +22,6 @@ our @EXPORT_OK = qw/validate_urls/;
 
 my $test_server_name = $ENV{SGN_TEST_SERVER} || 'http://(local test server)';
 
-
 sub make_dump_tempdir {
     my $d = File::Temp->newdir( catdir( File::Spec->tmpdir, 'validate_error_dump-XXXXXX'), CLEANUP => 0 );
     diag "made dump tempdir '$d'";

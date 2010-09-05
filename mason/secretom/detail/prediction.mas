@@ -1,0 +1,156 @@
+<%args>
+  $static_dir
+  $signalp_search_action
+</%args>
+
+<style>
+.species_predictions {
+  margin-bottom: 3em;
+
+}
+.species_predictions h3 {
+  font-size: 100%;
+}
+.species_predictions td {
+  text-align: center;
+}
+
+span.filename {
+  font-family: monospace;
+}
+span.filesize {
+  font-weight: bold;
+}
+span.filesize:before {
+  content: '(';
+}
+span.filesize:after {
+  content: ')';
+}
+
+</style>
+
+<& /page/page_title.mas, title => 'Computational prediction of secreted proteins' &>
+
+<div class="page_introduction">
+  <p>
+
+  A number of <a class="tools_popup" href="#">computational tools</a> have been
+  developed to predict the presence of SPs. These programs have been
+  greatly refined in recent years and their accuracy has improved with
+  the adoption of machine learning algorithms. However, while this is a
+  valuable approach, as with all prediction-based tools, there is a
+  consistent error rate and both false positive and negative predictions
+  should be expected. One of our major goals is to identify the
+  incorrect predictions and generate a database of computationally and
+  functionally confirmed secreted plant proteins. It has been reported
+  that one of the most effective predictors of SPs is <a
+  href="http://www.cbs.dtu.dk/services/SignalP">SignalP 3.0</a>. We have
+  used this to screen the predicted proteomes of several plant species
+  to date (see below for SignalP results).
+  </p>
+
+</div>
+
+<&| /page/info_section.mas, title => 'New predictor: Secretary' &>
+
+  <p>
+  We are developing a new predictor, <a href="/secretom/secretary">SecreTary</a>,
+  for more accurate computational prediction of plant proteins that
+  traffic through the classical secretory pathway.  <a href="/secretom/secretary">Try SecreTary</a>,
+  </p>
+
+</&>
+
+<&| /page/info_section.mas, title => 'SignalP results' &>
+
+  <table class="species_predictions">
+  <tr>
+    <td>
+          <h3>Arabidopsis thaliana</h3>
+          <img src="/img/secretom/arabidopsisthaliana.png" />
+          <& .result_file, file => 'data/secretom/.new/SignalP_predictions/Tair8.pep.1.sptp.fasta', dir => $static_dir &>
+    </td>
+     <td>
+          <h3>Rice (Oryza sativa)</h3>
+          <img src="/img/secretom/oryzasativa.png" />
+          <& .result_file, file => 'data/secretom/.new/SignalP_predictions/Rice.pep.1.sptp.fasta', dir => $static_dir &>
+    </td>
+    <td>
+          <h3>Brachypodium distachyon</h3>
+          <img src="/img/secretom/brachypodiumdistachyon.png" />
+          <& .result_file, file => 'data/secretom/.new/SignalP_predictions/Brachy.pep.1.sptp.fasta', dir => $static_dir &>
+    </td>
+    <td>
+          <h3>Solanum lycopersicum</h3>
+          <img src="/img/secretom/solanumlycopersicum.png" />
+          <& .result_file, file => 'data/secretom/.new/SignalP_predictions/ITAG1.pep.sptp.fasta', dir => $static_dir &>
+    </td>
+  </tr>
+  </table>
+
+  <&| /page/info_section.mas, title => 'Search SignalP results for secreted proteins', is_subsection => 1 &>
+
+
+    <form method="GET" style="text-align: center; margin: 2em auto" action="<% $signalp_search_action %>">
+      <label for="query_input">Search</label>
+      <input type="text" size="30" name="q" id="query_input" value="" />
+      <input type="hidden" name="file" value="" />
+      <input type="submit" value="Search" size="20" />
+    </form>
+
+    <p>
+    Use text terms (e.g. "polygalacturonase", "glycosyl hydrolase
+    family", "gh9"), or locus names (e.g. "At1G65610.1"). This will
+    provide you with a list of predicted proteins, grouped by species,
+    with the annotation protein length, molecular weight, confidence
+    scores for the presence of a secretory signal peptide and predicted
+    localization.
+    </p>
+    
+  </&>
+</&>
+
+<& /util/import_javascript.mas, classes => 'jquery.colorbox' &>
+<script>
+  jQuery(".tools_popup").colorbox({width:"60%", inline:true, href:"#tools_popup"});
+</script>
+<div id="tools_popup">
+<&| /page/info_section.mas, title => 'Other computational tools for prediction of ER-targeting signal peptides' &>
+  <ul>
+  <li><a href="http://www.cbs.dtu.dk/services/SignalP">SignalP</a></li>
+  <li><a href="http://www.predisi.de">PrediSi</a></li>
+  <li><a href="http://rpsp.bioinfo.pl/">Rapid Prediction of Signal Peptides (RPSP)</a></li>
+  <li><a href="http://phobius.sbc.su.se/">Phobius</a></li>
+  <li><a href="http://urgi.versailles.inra.fr/predotar/predotar.html">Predotar</a></li>
+  </ul>
+</&>
+</div>
+
+
+
+<%def .result_file>
+
+<%args>
+$file
+$dir
+</%args>
+% $file .= '.gz';
+% my $abs = file( $dir, $file );
+% my $size = -s $abs;
+% if( $size ) {
+    <span class="filename"><% $abs->basename %></span>
+
+    <div>
+      <a href="/download/<% file($file)->as_foreign('Unix') %>">[Download]</a>
+      <span class="filesize"><%  Number::Bytes::Human::format_bytes( $size ) %></span>
+    </div>
+% } else {
+    <span class="ghosted">temporarily unavailable</span>
+% }
+</%def>
+
+<%once>
+use Path::Class;
+use Number::Bytes::Human;
+</%once>
