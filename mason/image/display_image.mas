@@ -110,34 +110,6 @@ my $object_id = $image->get_image_id();
 
 if ($size!~/thumbnail|small|medium|large|original/ ) { $size="medium"; }
 
-#my @tabs = qw | thumbnail small medium large original |;
-
-# my %tab_html = ();
-# my @tab_defs = ();
-# my $json_tabs = "";
-
-# foreach my $hilite_tab (@tabs) { 
-
-#   my $selected = undef;  
-
-#   foreach my $tab (0..@tabs-1) { 
-#     if ($hilite_tab eq $tab) { 
-      
-#       $selected = $tab;
-#     }
-#     push @tab_defs, [ "javascript:render($object_id, \'$tabs[$tab]\'); ", $tabs[$tab] ];
-    
-#   }
-#   $tab_html{$hilite_tab} = modesel([ @tab_defs ], $selected);
-
-#  $json_tabs = to_json( [ %tab_html ] );
-  
-# }
-
-# #foreach my $t (keys %tab_html) { 
-# #  print $tab_html{$t}."<br />";}
-
-
 </%perl>
 
 <br />
