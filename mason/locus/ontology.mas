@@ -7,6 +7,24 @@
 	$locus_id
 </%args>
 
+<style>
+  #locus_ontology .evidence {
+    margin: 1em 0 0 4em;
+    width: 50%;
+    border: 1px dotted gray;
+    padding: 10px;
+  }
+  #locus_ontology_show_details {
+    text-align: right;
+    margin-bottom: -1em;
+  }
+  #locus_ontology_show_details label {
+    font-weight: bold;
+  }
+  .active#locus_ontology_show_details {
+    background: white;
+  }
+</style>
 <&| /page/info_section.mas,
 	title       => $title,
 	subtitle    => $subtitle,
@@ -14,14 +32,28 @@
 	collapsible => 1,
 	collapsed   => 1
 &>
+
   <& /locus/associate_ontology.mas, locus_id => $locus_id &>
-<div id="locus_ontology" >[loading...]</div>
 
+  <div id="locus_ontology_show_details" style="display: none"> 
+     <form>
+       <input type="checkbox" id="show_details" />
+       <label for="show_details">Show complete details</label>
+     </form>
+  </div>
 
-<script language="javascript" type="text/javascript">
-<!--
-    locusPage.printLocusOntology();
--->
-</script>
+  <div id="locus_ontology" >
+    [loading...]
+  </div>
+
+  <& /util/import_javascript.mas, classes => 'jquery' &>
+  <script language="javascript" type="text/javascript">
+  <!--
+
+      locusPage.printLocusOntology();
+
+      
+  -->
+  </script>
 
 </&>

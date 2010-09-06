@@ -158,10 +158,8 @@ if ( $type eq 'ontology' ) {
         foreach ( @{ $dbs{'PO'} } ) { push @ont_annot, $_; }
         foreach ( @{ $dbs{'SP'} } ) { push @ont_annot, $_; }
 
-        my ( $ontology_links, $ontology_evidence, $ontology_info );
 
         my @obs_annot;
-        my $ont_count = 0;
 
         my %ont_hash = ()
           ; #keys= cvterms, values= hash of arrays (keys= ontology details, values= list of evidences)
@@ -203,7 +201,7 @@ qq |<a href="/chado/cvterm.pl?cvterm_id=$cvterm_id" target="blank">$cvterm_name<
 		    
 		    # add an empty row if there is more than 1 evidence code
 		    my $ev_string;
-                    $ev_string .= "<br /><hr>"
+                    $ev_string .= "<hr />"
 			if $ont_hash{$cv_name}{$ontology_details};
                     no warnings 'uninitialized';
                     $ev_string .=
@@ -223,34 +221,27 @@ qq |<a href="/chado/cvterm.pl?cvterm_id=$cvterm_id" target="blank">$cvterm_name<
                 }
             }
         }
-	
+
+        my $ontology_evidence;
+
 	#now we should have an %ont_hash with all the details we need for printing ...
 	#hash keys are the cv names ..
         for my $cv_name ( sort keys %ont_hash ) {
             my @evidence;
-	    
-#create a string of ontology details from the end level hash keys, which are the values of each cv_name
-            my $cv_ont_details;
 
             #and for each ontology annotation create an array ref of evidences
             for my $ont_detail ( sort keys %{ $ont_hash{$cv_name} } ) {
-                $ont_count++;
-                $cv_ont_details .= $ont_detail;
                 push @evidence,
                   [ $ont_detail, $ont_hash{$cv_name}{$ont_detail} ];
             }
-            $ontology_links .= info_table_html(
-                $cv_name => $cv_ont_details,
-                __border => 0,
-            );
-            my $ev_table = columnar_table_html(
-                data         => \@evidence,
-                __align      => 'lll',
-                __alt_freq   => 2,
-                __alt_offset => 1
-            );
+
+            my $ev = join "\n", map {
+                qq|<div class="term">$_->[0]</div>\n|
+                    .qq|<div class="evidence">$_->[1]</div>\n|;
+            } @evidence;
+
             $ontology_evidence .= info_table_html(
-                $cv_name     => $ev_table,
+                $cv_name     => $ev,
                 __border     => 0,
                 __tableattrs => 'width="100%"',
             );
@@ -259,18 +250,10 @@ qq |<a href="/chado/cvterm.pl?cvterm_id=$cvterm_id" target="blank">$cvterm_name<
         #display ontology annotation form
 
         if ( @obs_annot &&  privileged($login_user_type) ) {
-            $ontology_links .= print_obsoleted(@obs_annot);
+            $ontology_evidence .= print_obsoleted(@obs_annot);
         }
 
-        if ($ontology_evidence) {
-            $ontology_info .= html_alternate_show(
-                'ontology_annotation', 'Annotation info',
-                $ontology_links,       $ontology_evidence,
-            );
-        }
-        else { $ontology_info .= $ontology_links; }
-
-        $error{"response"} = $ontology_info;
+        $error{"response"} = $ontology_evidence;
     };
 
     if ($@) {
