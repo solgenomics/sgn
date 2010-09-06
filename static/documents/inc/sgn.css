@@ -1003,7 +1003,40 @@ table#developer_message_table {
 div.optional_show
 {                                                             
   margin: 0.2em 0 1.3em 0;
+  border: 1px solid gray;
+  border-radius: 6px;
+  -moz-border-radius: 6px;
+  -webkit-border-radius: 6px;
+  background: #eee;
 }                           
+div.optional_show > h3 { 
+  font-weight: normal;
+  padding: 6px 15px;
+  margin: 0;
+  padding: 3px;
+  padding-bottom: 6px;
+  font-size: 100%;
+  cursor: pointer;
+}
+div.optional_show > div { 
+  background: white;
+  margin: 0 10px 10px 10px;
+}
+div.optional_show > h3 > .title { 
+  margin-left: 20px;
+}
+
+div.optional_show > h3 > .icon { 
+  background-image: url(/img/ui-icons.png);
+  width: 16px;
+  height: 16px;
+  position: absolute;
+  background-position: -32px -16px;
+}
+div.optional_show > h3.active > .icon { 
+  background-position: -64px -16px;
+}
+
 
 /*style for displaying a link instead of a button for 'optional_show' contents */ 
 a.abstract_optional_show {

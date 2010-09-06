@@ -7,17 +7,18 @@
 </%args>
 <& /util/import_javascript.mas, classes => 'jqueryui' &>
 <div id="<% $id %>" class="optional_show <% $class %>">
-    <h3><a href="#"><% $title %></a></h3>
+    <h3 class="<% $default_show ? 'active' : '' %>"><span class="icon">&nbsp;</span><span class="title"><% $title %></span></h3>
     <div>
        <% $m->content || $content %>
     </div>
 </div>
 <script type="text/javascript">
-	jQuery(function() {
-		jQuery("#<% $id %>").accordion({
-                        <% $default_show ? '' : 'active: false,' %>
-			collapsible: true
-		});
-	});
+    jQuery(function($) {
+      $("#<% $id %> h3").click(function() {
+        $(this).next().toggle();
+        $(this).toggleClass('active');
+        return false;
+      })<% $default_show ? '' : '.next().hide();' %>
+    });
 </script>
 
