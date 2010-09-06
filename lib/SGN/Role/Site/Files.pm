@@ -230,15 +230,15 @@ sub chown_generated_dir {
 sub _www_gid {
     my $self = shift;
     my $grname = $self->config->{www_group};
-    my $gid = (getgrnam $grname )[2]
-        or warn "WARNING: www_group '$grname' does not exist, please check configuration\n";
+    my $gid = (getgrnam $grname )[2];
+    defined $gid or warn "WARNING: www_group '$grname' does not exist, please check configuration\n";
     return $gid;
 }
 sub _www_uid {
     my $self = shift;
     my $uname = $self->config->{www_user};
-    my $uid = (getpwnam( $uname ))[2]
-       or warn "WARNING: www_user '$uname' does not exist, please check configuration\n";
+    my $uid = (getpwnam( $uname ))[2];
+    defined $uid or warn "WARNING: www_user '$uname' does not exist, please check configuration\n";
     return $uid;
 }
 
