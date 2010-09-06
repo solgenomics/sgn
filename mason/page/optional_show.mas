@@ -3,10 +3,10 @@
   $title
   $content => ''
   $default_show => 0
-  $class => 'optional_show'
+  $class => ''
 </%args>
 <& /util/import_javascript.mas, classes => 'jqueryui' &>
-<div id="<% $id %>" class="<% $class %>">
+<div id="<% $id %>" class="optional_show <% $class %>">
     <h3><a href="#"><% $title %></a></h3>
     <div>
        <% $m->content || $content %>
@@ -15,7 +15,7 @@
 <script type="text/javascript">
 	jQuery(function() {
 		jQuery("#<% $id %>").accordion({
-                        <% $default_show ? 'disabled: true,' : '' %>
+                        <% $default_show ? '' : 'active: false,' %>
 			collapsible: true
 		});
 	});

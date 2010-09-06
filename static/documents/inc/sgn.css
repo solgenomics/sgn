@@ -1000,40 +1000,6 @@ table#developer_message_table {
   display: none;
 }
 
-a.optional_show,
-a.optional_show:visited,
-a.optional_show:hover
-{                                                             
-  color: black;              
-  cursor: s-resize;
-  text-decoration: none;
-  padding: 1px 6px 1px 6px;
-  background: #eeeeee;
-  border-left: 1px solid #e0e0e0;
-  border-right: 1px solid gray;
-  border-top: 1px solid #e0e0e0;
-  border-bottom: 1px solid gray;
-}
-a.optional_show:after {
-  content: url(/documents/img/expand_arrow_blue.gif);
-  vertical-align: middle;
-}
-a.optional_show_active,
-a.optional_show_active:visited,                                 
-a.optional_show_active:hover,
-a.optional_show:active {
-  border-right: 1px solid #e0e0e0;
-  border-left: 1px solid gray;                            
-  border-bottom: 1px solid #e0e0e0;                            
-  border-top: 1px solid gray;
-  background: #dddddd;
-  cursor: n-resize;
-}                                                             
-a.optional_show_active:after,
-a.optional_show:active:after {
-  content: url(/documents/img/expand_arrow_gray.gif);
-  vertical-align: middle;
-}
 div.optional_show
 {                                                             
   margin: 0.2em 0 1.3em 0;
