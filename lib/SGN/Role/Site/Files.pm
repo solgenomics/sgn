@@ -33,7 +33,7 @@ before 'setup_finalize' => sub {
     my $temp_subdir = Path::Class::Dir->new( $c->path_to( $c->get_conf('tempfiles_subdir') ) );
     my $temp_base   = $c->tempfiles_base;
     $c->log->debug("linking $temp_base => $temp_subdir") if $c->debug;
-    mkpath( "$temp_base" );
+    $c->make_generated_dir($temp_base);
     unlink $temp_subdir;
     symlink $temp_base, $temp_subdir or die "$! linking $temp_base => $temp_subdir";
 
@@ -185,7 +185,7 @@ sub _default_temp_base {
     my ($self) = @_;
     return File::Spec->catdir(
         File::Spec->tmpdir,
-        (getpwuid($>))[0], # the user name
+        $self->config->{www_user},
         ($self->config->{name}.'-site' || die '"name" conf value is not set'),
        );
 }
