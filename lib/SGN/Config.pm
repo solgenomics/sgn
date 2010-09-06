@@ -123,7 +123,7 @@ my $defaults =
 
      #who is the apache user for chowning and emailing
      www_user              => '__USERNAME__',
-     www_group             => 'sgn-site-writers',
+     www_group             => '__GROUPNAME__',
 
      #allow people to log in?
      disable_login            => 0,
