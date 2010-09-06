@@ -16,7 +16,7 @@
   }
   #locus_ontology_show_details {
     text-align: right;
-    margin-bottom: -1em;
+    margin-bottom: -2em;
   }
   #locus_ontology_show_details label {
     font-weight: bold;
@@ -37,7 +37,7 @@
 
   <div id="locus_ontology_show_details" style="display: none"> 
      <form>
-       <input type="checkbox" id="show_details" />
+       <input type="checkbox" id="show_details" disabled="true" />
        <label for="show_details">Show complete details</label>
      </form>
   </div>

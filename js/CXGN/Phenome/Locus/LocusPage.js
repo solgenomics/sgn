@@ -139,6 +139,7 @@ CXGN.Phenome.Locus.LocusPage.prototype = {
 		    var e = $("locus_ontology").innerHTML=x.response;
 		    //alert('processing locus ontology...' );
  		    if ( x.error ) { alert(x.error) ; }
+                    jQuery("#locus_ontology_show_details input").first()[0].disabled = false;
                     jQuery("#locus_ontology .evidence").hide();
 		}
 	});
