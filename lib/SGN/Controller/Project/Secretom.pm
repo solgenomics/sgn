@@ -21,7 +21,7 @@ has 'static_dir' => (
         my $self = shift;
         $self->_app->path_to(
             $self->_app->config->{root},
-           );
+           )->stringify
     },
    );
 
