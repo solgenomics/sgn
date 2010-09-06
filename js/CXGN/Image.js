@@ -26,7 +26,8 @@ CXGN.Image.prototype = {
     },
 
     image_html: function(div, size) { 
-	new Ajax.Request('/cgi-bin/image/ajax/fetch_image.pl', {
+    new Ajax.Request('/cgi-bin/image/ajax/fetch_image.pl', {
+                method: 'get',
 		parameters: { image_id: this.get_image_id(), size: size },
 		onSuccess: function(response) {
 		    var json = response.responseText;
