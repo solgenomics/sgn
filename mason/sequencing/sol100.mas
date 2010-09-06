@@ -17,7 +17,7 @@ sol100.mas - SGN page for sol100 project organism data overview in a tree format
     $organism_autocomplete_uri => ''
 </%args>
 
-<& /page/page_title.mas, title=>"The SOL-100 sequencing project" &>
+<div style="margin: 20px auto"><& /page/page_title.mas, title=>"The SOL-100 sequencing project" &></div>
 
 <& /util/import_javascript.mas, classes=>[qw[ CXGN.Page.FormattingHelpers  jquery jqueryui popup]] &>
 
@@ -39,7 +39,7 @@ sol100.mas - SGN page for sol100 project organism data overview in a tree format
   
   .infosectioncontent blockquote {
     border: 1px solid #ccc;
-    background: #eee;
+    background: #feb;
     padding: 2em 3em;
     font-size: 105%;
     letter-spacing: 0.8px;
@@ -79,6 +79,10 @@ How can a deeper understanding of the genetic basis of plant biodiversity be har
   collapsible   => 1,
   collapsed     => 0,
   &>
+
+
+  <img style="margin: 0 0 10px 20px; display: block; float: right" src="/img/solproject_logo_100.png" />
+
 
   <p>
   The SOL community will create a common Solanaceae-based genomic
