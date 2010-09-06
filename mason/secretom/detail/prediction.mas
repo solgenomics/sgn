@@ -71,22 +71,22 @@ span.filesize:after {
     <td>
           <h3>Arabidopsis thaliana</h3>
           <img src="/img/secretom/arabidopsisthaliana.png" />
-          <& .result_file, file => 'data/secretom/.new/SignalP_predictions/Tair8.pep.1.sptp.fasta', dir => $static_dir &>
+          <& .result_file, file => 'data/secretom/SignalP_predictions/Tair8.pep.1.sptp.fasta', dir => $static_dir &>
     </td>
      <td>
           <h3>Rice (Oryza sativa)</h3>
           <img src="/img/secretom/oryzasativa.png" />
-          <& .result_file, file => 'data/secretom/.new/SignalP_predictions/Rice.pep.1.sptp.fasta', dir => $static_dir &>
+          <& .result_file, file => 'data/secretom/SignalP_predictions/Rice.pep.1.sptp.fasta', dir => $static_dir &>
     </td>
     <td>
           <h3>Brachypodium distachyon</h3>
           <img src="/img/secretom/brachypodiumdistachyon.png" />
-          <& .result_file, file => 'data/secretom/.new/SignalP_predictions/Brachy.pep.1.sptp.fasta', dir => $static_dir &>
+          <& .result_file, file => 'data/secretom/SignalP_predictions/Brachy.pep.1.sptp.fasta', dir => $static_dir &>
     </td>
     <td>
           <h3>Solanum lycopersicum</h3>
           <img src="/img/secretom/solanumlycopersicum.png" />
-          <& .result_file, file => 'data/secretom/.new/SignalP_predictions/ITAG1.pep.sptp.fasta', dir => $static_dir &>
+          <& .result_file, file => 'data/secretom/SignalP_predictions/ITAG1.pep.sptp.fasta', dir => $static_dir &>
     </td>
   </tr>
   </table>

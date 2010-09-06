@@ -84,7 +84,7 @@ of the interaction and a mock inoculated plant served as control.
 </p>
 
   <&| /secretom/section_templates/data_items.mas,
-      default_ref_base => '/download/data/secretom/.new/Secretome_Phytophthora_tomato_interactions',
+      default_ref_base => '/download/data/secretom/Secretome_Phytophthora_tomato_interactions',
       is_subsection => 1,
       title => 'Files',
    &>

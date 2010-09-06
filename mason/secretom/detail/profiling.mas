@@ -130,7 +130,7 @@
 
 </div>
 
-<&| /secretom/section_templates/data_items.mas, default_ref_base => '/download/data/secretom/.new/Integrated_proteome_transcriptome_profiling_tomato_fruit' &>
+<&| /secretom/section_templates/data_items.mas, default_ref_base => '/download/data/secretom/Integrated_proteome_transcriptome_profiling_tomato_fruit' &>
 - text: "File 1: 454 GS FLX reads from library AC1001"
   ref: AC1001.sff
 - text: "File 2: 454 GS FLX reads from library AC1002"

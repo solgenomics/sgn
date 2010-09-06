@@ -142,7 +142,7 @@
 - text: "Tomato (cv. Rio Grande) leaves infected with Phytophthora infestans (isolate US970001): DIGE data"
 - text: "Tomato (cv. Grande) leaves infected with Phytophthora infestans (isolate US970001): iTRAQ data"
 - text: "Browse more files via FTP"
-  ref: ftp://ftp.solgenomics.net/secretom/.new/Tomato_comparative_quantitative_proteomics/
+  ref: ftp://ftp.solgenomics.net/secretom/Tomato_comparative_quantitative_proteomics/
 </&>
 
 <&| /secretom/section_templates/publications.mas &>

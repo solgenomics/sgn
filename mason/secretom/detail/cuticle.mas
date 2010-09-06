@@ -97,7 +97,7 @@
 </div>
 
 <&| /secretom/section_templates/data_items.mas,
-      default_ref_base => '/download/data/secretom/.new/Tomato_fruit_cuticular_cell_wall_proteome'
+      default_ref_base => '/download/data/secretom/Tomato_fruit_cuticular_cell_wall_proteome'
  &>
 - text: "Tomato fruit (cv. M82) surface proteins identified"
   ref: Tomato_fruit_surface_proteins.xlsx
