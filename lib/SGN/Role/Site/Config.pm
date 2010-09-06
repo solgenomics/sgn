@@ -43,6 +43,8 @@ sub _new_config {
         s|__HOME__|$basepath|eg;
         s|__UID__|$>|eg;
         s|__USERNAME__|(getpwuid($>))[0]|eg;
+        s|__GID__|$)|eg;
+        s|__GROUPNAME__|(getgrgid($)))[0]|eg;
         s|__path_to\(([^\)]+\))__|File::Spec->catdir($basepath, split /,/, $1) |eg;
     }
     return $cfg;
