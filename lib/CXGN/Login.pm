@@ -429,7 +429,7 @@ sub get_login_cookie {
 
 sub login_page_and_exit {
     my $self = shift;
-    print "Location: $LOGIN_PAGE\n";
+    print CGI->new->redirect( -uri => $LOGIN_PAGE, -status => 302 );
     exit;
 }
 
