@@ -39,4 +39,18 @@ $mech->submit_form_ok({
 $mech->content_contains('Search Results');
 $mech->content_like(qr/results 1-\d+ of \d+(,\d+)?/);
 
+$mech->get("$base_url/feature/search");
+$mech->submit_form_ok({
+    form_name => 'feature_search_form',
+    fields => {
+        feature_name => 'rbuels',
+        feature_type => 'gene',
+        organism     => 'Solanum lycopersicum',
+        submit       => 'Submit',
+    }
+});
+$mech->content_contains('Search Results');
+$mech->content_contains('no matching results found');
+
+
 done_testing;
