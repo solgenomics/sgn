@@ -125,10 +125,9 @@ our %PARAM = (
     "collapse_single_species_subtrees" => $collapse_single_species_subtrees,
 );
 
-our $HTML_ROOT_PATH = $c->config->{'basepath'};
-our $DOC_PATH = $c->config->{'tempfiles_subdir'} . '/align_viewer';
-our $PATH     = $HTML_ROOT_PATH . $DOC_PATH;
-mkpath $PATH unless -e $PATH;
+our $HTML_ROOT_PATH = $c->path_to->stringify;
+our $DOC_PATH = $c->tempfiles_subdir('align_viewer');
+our $PATH     = $c->path_to( $DOC_PATH );
 
 our $CMD_QUICKTREE = "/data/prod/bin/quicktree";
 our $CMD_SREFORMAT = "/data/prod/bin/sreformat";
