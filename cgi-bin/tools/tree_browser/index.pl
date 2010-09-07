@@ -360,7 +360,7 @@ if ( defined $upload ) {
     if ($tree_obj) {
         $tree_string = $tree_obj->get_root()->recursive_generate_newick();
     }
-    print STDERR "TREE STRING= $tree_string\n";
+    #print STDERR "TREE STRING= $tree_string\n";
 }
 
 if ($shared_file) {
@@ -484,7 +484,7 @@ else {
     $tree->set_show_species_in_label($show_species);
     $tree->set_show_standard_species($show_standard_species);
 
-    #	$tree->set_line_color(0, 200, 0);
+    #    $tree->set_line_color(0, 200, 0);
     $tree->set_missing_species_from_names();
     $tree->impose_branch_length_minimum();
     $tree->get_root()->recursive_implicit_names();    # needed?
@@ -525,23 +525,23 @@ else {
     $tree->get_root()->recursive_implicit_species();
     $tree->update_label_names();
 
-#	if (0) {
-#		my $spec_bit_hash = $browser->get_tree()->get_species_bithash($species_tree);
+#    if (0) {
+#        my $spec_bit_hash = $browser->get_tree()->get_species_bithash($species_tree);
 
-#		$species_tree->get_root()->recursive_implicit_species();
-#		#print STDERR "ccccc\n";
-#		$species_tree->get_root()->recursive_set_implicit_species_bits($spec_bit_hash);
+#        $species_tree->get_root()->recursive_implicit_species();
+#        #print STDERR "ccccc\n";
+#        $species_tree->get_root()->recursive_set_implicit_species_bits($spec_bit_hash);
 
-#		$browser->get_tree()->get_root()->rs
-#		$browser->get_tree()->get_root()->recursive_set_implicit_species_bits($spec_bit_hash);
-#		$browser->get_tree()->get_root()->recursive_implicit_names(); # this is needed, but why?
+#        $browser->get_tree()->get_root()->rs
+#        $browser->get_tree()->get_root()->recursive_set_implicit_species_bits($spec_bit_hash);
+#        $browser->get_tree()->get_root()->recursive_implicit_names(); # this is needed, but why?
 
-#		$browser->get_tree()->get_root()->recursive_set_speciation($species_tree);
-#		$browser->get_tree()->get_root()->recursive_hilite_speciation_nodes($species_tree);
-#	}
+#        $browser->get_tree()->get_root()->recursive_set_speciation($species_tree);
+#        $browser->get_tree()->get_root()->recursive_hilite_speciation_nodes($species_tree);
+#    }
 
-    #	$tree->get_root()->recursive_set_leaf_species_count();
-    #	$tree->get_root()->recursive_set_leaf_count();
+    #    $tree->get_root()->recursive_set_leaf_species_count();
+    #    $tree->get_root()->recursive_set_leaf_count();
     if ($collapse_single_species_subtrees) {
         $tree->collapse_unique_species_subtrees()
           ;    # this seems to be causing problems
@@ -555,7 +555,7 @@ else {
           ;    # this is needed, but why?
         $tree->get_root()->recursive_implicit_species();
 
-#	print STDERR "root implicit species: ", join(";", ($tree->get_root()->get_implicit_species())), "\n";
+#    print STDERR "root implicit species: ", join(";", ($tree->get_root()->get_implicit_species())), "\n";
         $tree->get_root()->recursive_set_implicit_species_bits($spec_bit_hash);
 
         $tree->update_label_names();
@@ -582,16 +582,16 @@ else {
         $tree->get_root()->recursive_hilite_speciation_nodes($species_tree);
     }
 
-    #	$tree->set_line_color(100, 100, 0);
+    #    $tree->set_line_color(100, 100, 0);
     $tree->set_hilite_color( 100, 200, 200 );
 
     $tree->show_newick_attribute("species");
 
-    #	$tree->set_hilite_color(150, 0, 200);
+    #    $tree->set_hilite_color(150, 0, 200);
 
     $browser->set_tree($tree);
 
-    #	$page->message_page("tree_style, reroot: [$tree_style], [$reroot]\n");
+    #    $page->message_page("tree_style, reroot: [$tree_style], [$reroot]\n");
 
     # initialize the layout object
     #
@@ -646,7 +646,7 @@ else {
         $align_temp_file = "" if ( $align_temp_file =~ /\/$/ );
         my $align_temp_name = File::Basename::basename($align_temp_file);
 
-#		my $link_tail = "&amp;hilite=$key\&amp;height=$height&amp;file=$file&amp;action=display&amp;term=$term&amp;title=$urlencode{$title}&amp;style=$style&amp;show_blen=$show_blen&amp;align_temp_file=$align_temp_name&align_type=$align_type&hide_alignment=$hide_alignment";
+#        my $link_tail = "&amp;hilite=$key\&amp;height=$height&amp;file=$file&amp;action=display&amp;term=$term&amp;title=$urlencode{$title}&amp;style=$style&amp;show_blen=$show_blen&amp;align_temp_file=$align_temp_name&align_type=$align_type&hide_alignment=$hide_alignment";
         $PARAM{align_temp_file} = $align_temp_name;
         $PARAM{file}            = $file;
 
@@ -664,7 +664,7 @@ else {
         my $tooltip = $n->get_tooltip()
           or "Node " . $n->get_node_key() . ": " . $n->get_label()->get_name();
 
-        #	my $tooltip = "Node " . $n->get_node_key();
+        #    my $tooltip = "Node " . $n->get_node_key();
         my $model = $n->get_attribute("model");
         if ($model) {
             $tooltip .= ", Model: " . ucfirst($model);
@@ -704,7 +704,7 @@ else {
                         #print STDERR "Before Gene->new...\n";
                         $gene = CXGN::Tools::Gene->new($name);
 
-                        #	print STDERR "After Gene->new...\n";
+                        #    print STDERR "After Gene->new...\n";
                         $annot = $gene->getAnnotation();
                         $annot = HTML::Entities::encode($annot);
                     };
@@ -872,7 +872,7 @@ else {
     $page->header();
     my $align_filename = File::Basename::basename($align_temp_file);
     print page_title_html(
-"<a href=\"?align_temp_show=$align_filename&newick_temp_show=$filename\">Tree browser:</a> "
+qq|<a href="?align_temp_show=$align_filename&newick_temp_show=$filename">Tree browser:</a> |
           . $tree->get_name() );
 
     print $renderer->get_html_image_map( "tree_image_map", $new_align_temp,
@@ -897,7 +897,7 @@ else {
       !$collapse_single_species_subtrees;
     my $not_show_species = !$show_species;
 
-    #	my $not_root_min_var = !$root_min_var;
+    #    my $not_root_min_var = !$root_min_var;
     if ( !$hilite ) {
         $active_if_hilite_button = "disabled";
     }
@@ -963,8 +963,8 @@ else {
     my $show_species_text = "Hide species";
     $show_species_text = "Show species" unless $show_species;
 
-    #	my $root_min_var_text = "Reroot (Min Var)";
-    #	$root_min_var_text = "Original Root" if $root_min_var;
+    #    my $root_min_var_text = "Reroot (Min Var)";
+    #    $root_min_var_text = "Original Root" if $root_min_var;
     my $ortho_text = ($show_orthologs) ? "Hide Orthologs" : "Show Orthologs";
     my $collapse_single_species_text =
       ($collapse_single_species_subtrees)
@@ -1028,11 +1028,11 @@ else {
         }
     );
 
-#	$page->message_page("xxxxxx, show ortho, std spec: ", "[$xxxxxx], [$show_orthologs], [$show_standard_species]<br>");
+#    $page->message_page("xxxxxx, show ortho, std spec: ", "[$xxxxxx], [$show_orthologs], [$show_standard_species]<br>");
     my $param_show_species_toggle =
       hash2param( \%PARAM, { show_species => $not_show_species } );
 
-    #	my $param_reroot = hash2param(\%PARAM, { reroot => $reroot });
+    #    my $param_reroot = hash2param(\%PARAM, { reroot => $reroot });
 
     my ( $param_smaller, $param_larger, $param_autosize ) =
       map { hash2param( \%PARAM, { height => $_ } ) }
@@ -1043,8 +1043,7 @@ else {
 
     my $param_input_term = hash2hiddenpost( \%PARAM, {}, ["term"] );
 
-    my $original_link =
-"<a href=\"?$param_reset\">&lt;&lt; See Original Tree</a>&nbsp;&nbsp;&nbsp;";
+    my $original_link = qq|<a href="?$param_reset">&lt;&lt; See Original Tree</a>&nbsp;&nbsp;&nbsp;|;
     $original_link = ""
       if ( $upload || $tree_string_param || !$node_operations );
 
@@ -1053,269 +1052,199 @@ else {
     my $w3 = "40%";
 
 
-    my $treestyle_str = "	 <td width = \"33%\" bgcolor=\"\">
-			<form id=\"tree_style_form\" style=\"margin-bottom:0; margin-top:0;font-size:1.0em\">
-	     	<table width=\"100%\">
+    my $treestyle_str = <<EOH;
+<td width="33%" >
+  <form id="tree_style_form" style="margin-bottom:0; margin-top:0;font-size:1.0em">
+    <table width="100%">
+      <tr>
+        <td style="font-size:1.1em" width="$w1" >Tree Style:&nbsp; </td>
+        <td width="$w2" >
+          <select name="tree_style" onchange="document.getElementById('tree_style_form').submit(); return false">
+            <option value="round" $round_selected>curve</option>
+            <option value="angle" $angle_selected>straight</option>
+            <option value="straight" $straight_selected>corner</option>
+          </select>
+        </td>
+        <td width="$w3">
+          <input type="submit" value="Change" />
+          $param_input_tree_style
+        </td>
+      </tr>
+    </table>
+  </form>
+</td>
+EOH
 
-			<tr bgcolor=\"\">
+    my $reroot_str = <<EOH;
+<td>
+  <form id="reroot_form" style="margin-bottom:0; margin-top:0;font-size:1.0em">
+    <table width="100%">
+    <tr>
+      <td width="$w1">Reroot:&nbsp;</td>
+      <td width="$w2" >
+        <select name="reroot" onchange=" document.getElementById('reroot_form').submit(); return false;    ">
+          <option value ="Original" $original_selected>original</option>
+          <option value="Midpoint" $midpoint_selected>midpoint</option>
+          <option value="MinVariance" $minvar_selected>minvar</option>
+          <option value="MinDuplication" $mindl_selected>mindupl</option>
+          <option value="MaxMin" $maxmin_selected>maxmin</option>
+        </select>
+      </td>
+     <td width="$w3">
+       <input type="submit" value="Change" />
+       $param_input_reroot
+     </td>
+    </tr>
+    </table>
+  </form>
+</td>
 
-			<td style=\"font-size:1.1em\"  bgcolor =\"\" width = $w1 >Tree Style:&nbsp; </td>
+<!-- is this needed? seems to work just when you select new style in menu. maybe some browsers behave differently?-->
+EOH
 
-		   	<td bgcolor = \"\" width = $w2 >
-		   	<select name=\"tree_style\" onchange=\"
-						document.getElementById('tree_style_form').submit();
-						return false;
-		   				\">
-	       	<option value=\"round\" $round_selected>curve</option>
-	       	<option value=\"angle\" $angle_selected>straight</option>
-	       	<option value=\"straight\" $straight_selected>corner</option>
-	       	</select>
-			</td>
+    my $highlight_str = <<EOH;
+<td width = "28%">
+  <form style="margin-bottom:0; margin-top:0">
+    <table>
+    <tr>
+      <td><input name="term" size="10" value="$term" /></td>
+      <td><input type="submit" value="Highlight" />    $param_input_term</td>
+    </tr>
+    </table>
+  </form>
+</td>
+EOH
 
-               <!-- is this needed? seems to work just when you select new style in menu. maybe some browsers behave differently?-->
-			<td bgcolor = \"white\"  width = $w3>
-		       <input type=\"submit\" value=\"Change\" />
-		      	$param_input_tree_style 
-			   </td>
+    my $show_species_str = qq|<td style="text-align:center"> <a href="?$param_show_species_toggle">$show_species_text</a> </td>|;
 
-		   	</tr>
-		   </table>
-	       </form>
-		  </td>";
+    my $show_blen = <<EOH;
+<td style="text-align:center">
+  <a href="?$param_blen_toggle"
+     onMouseover="oldwindowstatus = window.status; window.status=$show_blen; return true"
+     onMouseout="window.status=oldwindowstatus; return true">
+    $blen_text
+  </a>
+</td>
+EOH
 
-    my $reroot_str = "	 <td bgcolor=\"\">
-			<form id=\"reroot_form\" style=\"margin-bottom:0; margin-top:0;font-size:1.0em\">
-	     	<table width=\"100%\">
-
-			<tr bgcolor=\"\">
-
-			<td style=\"font-size:1.1em\"  bgcolor =\"\" width = $w1 >Reroot:&nbsp; </td>
-
-		   	<td bgcolor = \"\" width = $w2 >
-		   	<select name=\"reroot\" onchange=\" document.getElementById('reroot_form').submit(); return false;	\">
-	       	<option value =\"Original\" $original_selected>original</option>
-	       	<option value=\"Midpoint\" $midpoint_selected>midpoint</option>
-	       	<option value=\"MinVariance\" $minvar_selected>minvar</option>
-               <option value=\"MinDuplication\" $mindl_selected>mindupl</option>
-               <option value=\"MaxMin\" $maxmin_selected>maxmin</option>
-	       	</select>
-			</td>
-
-               <!-- is this needed? seems to work just when you select new style in menu. maybe some browsers behave differently?-->
-			<td bgcolor = \"white\"  width = $w3>
-		       <input type=\"submit\" value=\"Change\" />
-		      	$param_input_reroot 
-			   </td>
-
-		   	</tr>
-		   </table>
-	       </form>
-		  </td>";
-
-    my $highlight_str = "<td width = \"28%\">
-			<form style=\"margin-bottom:0; margin-top:0\">
-	       <table>
-		   <tr>
-		   <td>
-	       <input name=\"term\" size=\"10\" value=\"$term\" />
-		   </td>
-		   <td>
-	       <input type=\"submit\" value=\"Highlight\" />	$param_input_term 
-		  </td>
-		   </tr>
-		
-		   </table>
-	       </form>
-</td>";
-
-    my $show_species_str =
-"<td  style=\"text-align:center;\"> <a href=\"?$param_show_species_toggle\">$show_species_text</a> </td>";
-
-    my $show_blen = "<td style=\"text-align:center\">
-	<a href=\"?$param_blen_toggle\"
-             onMouseover=\"oldwindowstatus = window.status; window.status=$show_blen; return true\" 
-             onMouseout=\"window.status=oldwindowstatus; return true\">
-           $blen_text</a><br /></td>";
-    my $show_ortho =
-"<td  style=\"text-align:center;\"> <a href=\"?$param_orthologs_toggle\">$ortho_text</a> </td>";
+    my $show_ortho = qq|<td  style="text-align:center"> <a href="?$param_orthologs_toggle">$ortho_text</a> </td>|;
     my $collapse_single_species =
-"<td  style=\"text-align:center;\"> <a href=\"?$param_collapse_toggle\">$collapse_single_species_text</a> </td>";
+qq|<td style="text-align:center"> <a href="?$param_collapse_toggle">$collapse_single_species_text</a> </td>|;
 
-   #"<td> <input name=\"term\" size=\"10\" value=\"$term\" />  </td>
-   #<td> <input type=\"submit\" value=\"Highlight\" />	$param_input_term </td>";
-    my $imagesize_str =
-"<td style=\"text-align:center;vertical-align:bottom;\">	<span style=\"font-size:1.1em\">Image Size:&nbsp;
-			</span>
-			<a style=\"font-size:0.90em\" href=\"?$param_smaller\">Smaller</a>&nbsp;
-			<a style=\"font-size:1.18em\" href=\"?$param_larger\">Larger</a>&nbsp;
-			<a href=\"?$param_autosize\">AUTO</a>
-			</td>";
-    my $align_domain_str = "<td colspan=\"2\" style=\"text-align:center\">
-		  		<a href=\"?$param_align_toggle\">$align_text</a>
-				&nbsp;&nbsp;&nbsp;
-				<a href=\"?$param_domain_toggle\">$domain_text</a>  </td>";
+    my $imagesize_str = <<EOH;
+<td style="text-align:center; vertical-align:bottom">
+  <span style="font-size:1.1em">Image Size:&nbsp;</span>
+  <a style="font-size:0.90em" href="?$param_smaller">Smaller</a>
+  <a style="font-size:1.18em" href="?$param_larger">Larger</a>
+  <a href="?$param_autosize">AUTO</a>
+</td>
+EOH
+
+    my $align_domain_str = <<EOH;
+<td colspan="2" style="text-align:center">
+  <a href="?$param_align_toggle">$align_text</a>
+  &nbsp;&nbsp;&nbsp;
+  <a href="?$param_domain_toggle">$domain_text</a>
+</td>
+EOH
+
     print <<HTML;
-<table width="100%"  border="2" cellpadding="1" cellspacing="1" style="font-size:1.0em" bgcolor="" >
-<table width="100%"   style="font-size:1.0em" bgcolor="" >
-<tr>
-$treestyle_str
-$highlight_str
-$imagesize_str
-</tr>
-<tr>
-$reroot_str
-$show_ortho
-$collapse_single_species
-</tr>
-<tr>
-$show_blen
-$show_species_str
-$align_domain_str
-</tr>
-</table>
+<table width="100%">
+  <tr>
+    $treestyle_str
+    $highlight_str
+    $imagesize_str
+  </tr>
+  <tr>
+    $reroot_str
+    $show_ortho
+    $collapse_single_species
+  </tr>
+  <tr>
+    $show_blen
+    $show_species_str
+    $align_domain_str
+  </tr>
 HTML
 
     my $node_control = <<HTML;
-<tr>
-	<td style="padding:10px">
-			<div style="text-align: center">
-			<table style="border:1px solid #922; cell-padding:5px; padding:5px;font-size:1.0em;background-color:#eee">
-			<tr>
-			<td>
-			<a href="?$param_unselect">X</a>
-			</td>
-			<td style="">
-			<span style="font-weight:bold; color:#411">Node $hilite</span>&nbsp;&nbsp;&nbsp;
-			</td>
-			<td>
-		 	<a href="?$param_hide">Hide</a>
-			&nbsp;&nbsp;
-			</td>
-			<td>
-		   	<a href="?$param_rotate">Rotate</a>
-			&nbsp;&nbsp;
-			</td>
-			<td>
-	    	<a href="?$param_prune_to_subtree">Subtree</a>
-			&nbsp;&nbsp;
-			</td>
-			<td>
-			<a href="?$param_set_as_root">Set&nbsp;as&nbsp;Root</a>
-			&nbsp;&nbsp;
-			</td>
-
-			</tr>
-			</table>
-			</div>
-  </td>
-</tr>
+  <tr>
+    <td style="padding:10px">
+      <div style="text-align: center">
+        <table style="border:1px solid #922; cell-padding:5px; padding:5px;font-size:1.0em;background-color:#eee">
+          <tr>
+            <td><a href="?$param_unselect">X</a></td>
+            <td><span style="font-weight:bold; color:#411">Node $hilite</span>&nbsp;&nbsp;&nbsp;</td>
+            <td><a href="?$param_hide">Hide</a>&nbsp;&nbsp;</td>
+            <td><a href="?$param_rotate">Rotate</a>&nbsp;&nbsp;</td>
+            <td><a href="?$param_prune_to_subtree">Subtree</a>&nbsp;&nbsp;</td>
+            <td><a href="?$param_set_as_root">Set&nbsp;as&nbsp;Root</a>&nbsp;&nbsp;</td>
+          </tr>
+        </table>
+      </div>
+    </td>
+  </tr>
 HTML
-    if ($hilite) {
-        print $node_control;
-    }
+    print $node_control if $hilite;
 
     print <<HTML;
 </table>
-<br />
-<img src="$temp_url" usemap="#tree_image_map" border="" alt="" />
+<img style="display: block; margin: 2em auto" src="$temp_url" usemap="#tree_image_map" alt="" />
 <a name="bottom">&nbsp;</a>
 HTML
 
     # print STDERR "term: $term.   param_input_term: $param_input_term \n";
 
     if ($show_orthologs) {
-        if (0) {
-            $species_tree->get_root()->recursive_implicit_species();
+#         if (0) {
+#             $species_tree->get_root()->recursive_implicit_species();
 
-            #print STDERR "ccccc\n";
-            $species_tree->get_root()
-              ->recursive_set_implicit_species_bits($spec_bit_hash);
-            $browser->get_tree()->get_root()->recursive_implicit_species();
+#             $species_tree->get_root()
+#               ->recursive_set_implicit_species_bits($spec_bit_hash);
+#             $browser->get_tree()->get_root()->recursive_implicit_species();
 
-            #print STDERR "ddddd\n";
-            $browser->get_tree()->get_root()
-              ->recursive_set_implicit_species_bits($spec_bit_hash);
-            $browser->get_tree()->get_root()->recursive_implicit_names()
-              ;    # this is needed, but why?
-            $browser->get_tree()->get_root()
-              ->recursive_set_speciation($species_tree);
-            $browser->get_tree()->get_root()
-              ->recursive_hilite_speciation_nodes($species_tree);
-        }
+#             $browser->get_tree()->get_root()
+#               ->recursive_set_implicit_species_bits($spec_bit_hash);
+#             $browser->get_tree()->get_root()->recursive_implicit_names();
+#             $browser->get_tree()->get_root()
+#               ->recursive_set_speciation($species_tree);
+#             $browser->get_tree()->get_root()
+#               ->recursive_hilite_speciation_nodes($species_tree);
+#         }
 
         $browser->get_tree()->set_line_color( 0, 200, 0 );
         $browser->get_tree()->set_hilite_color( 100, 200, 200 );
 
-        #	my $species_name_map = CXGN::Phylo::Species_name_map->new();
-        my @leaves = $browser->get_tree->get_leaves();
-        $browser->get_tree()->set_show_standard_species($show_species);
-        my $ostring = "";
-
+        my @leaves = $browser->get_tree->get_leaves;
+        $browser->get_tree->set_show_standard_species($show_species);
         my $ortho_hilite_only = 0;
-        if (1) {
-            $ostring .= "<table>";
-            my $first_cell_text = "Orthologs of&nbsp&nbsp";
-            @leaves = sort { $a->get_name() cmp $b->get_name() } @leaves;
-            foreach (@leaves) {
+        my $first_cell_text = "Orthologs of&nbsp&nbsp";
+        @leaves = sort { $a->get_name cmp $b->get_name } @leaves;
+        my $ostring = "";
+        foreach my $leaf (@leaves) {
 
- # next line to only show orthologs of highlighted nodes, if any are highlighted
-                next
-                  unless ( !$ortho_hilite_only
-                    or ( scalar @search_nodes == 0 )
-                    or $_->get_label()->get_hilite() );
-                my $the_name = $_->get_name();
-                if ( $the_name =~ /([^{|]+)/ ) {
-                    $the_name = $1;
-                }    # i.e. trim off everything from the first pipe or { on
-                $ostring .=
-                    "<tr><td>$first_cell_text</td><td>"
-                  . $the_name
-                  . ":&nbsp&nbsp&nbsp&nbsp</td> ";
-                $first_cell_text = "";
-                my @orthologs = sort( $_->collect_orthologs_of_leaf() );
-                $ostring .= "<td>" . join( ",&nbsp ", @orthologs ) . "</td>";
-                $ostring .= "</tr>";
-            }
-            $ostring .= "</table>";
+            # next line to only show orthologs of highlighted nodes,
+            # if any are highlighted
+            next unless    !$ortho_hilite_only
+                        || !@search_nodes
+                        || $leaf->get_label->get_hilite;
+
+            my $the_name = $leaf->get_name;
+            if ( $the_name =~ /([^{|]+)/ ) {
+                $the_name = $1;
+            }                   # i.e. trim off everything from the first pipe or { on
+            $first_cell_text = "";
+            $ostring .= Tr(
+                td( $first_cell_text ),
+                td( "$the_name:&nbsp&nbsp&nbsp&nbsp"),
+                td( join( ",&nbsp ", sort $leaf->collect_orthologs_of_leaf ) ),
+               );
         }
-        else {       # matrix format
+        $ostring = table($ostring);
 
-            #		for printing ortholog pair information as a matrix
-            $ostring .= "<table>";
-            my $omh           = $browser->get_tree()->ortho_matrix_hash();
-            my @sorted_leaves = sort keys %$omh;
-
-            #$ostring .= "<td width=\"20%\"></td>";
-            #foreach (@sorted_leaves) {
-            #$ostring .=  "<td>$_</td>";
-            #}
-            my $i = 0;
-            foreach (@sorted_leaves) {
-                my $ortho_array_ref = $omh->{$_};
-
-                #	my $str = sprintf("%5i %50s   ", $i, $_);
-                $ostring .= "<tr>";
-
-                #	$ostring .= "<td>$i</td>";
-                #	$ostring .= "<td width=\"3%\">$_</td>";
-                $ostring .= "<td>$_</td>";
-
-                #	$str =~ s/ /\&nbsp/g;
-                #	$ostring .= $str;
-                foreach (@$ortho_array_ref) {
-
-       #	$ostring .= sprintf(" %1i", $_); #join(" ", @$ortho_array_ref), "<br>";
-                    $ostring .= "<td>$_</td>";
-                }
-                $ostring .= "</tr>";
-                $i++;
-            }
-            $ostring .= "</table>";
-        }
-
-        $browser->get_tree()->show_newick_attribute("speciation");    # needed?
-        $browser->get_tree()->show_newick_attribute("species");       # needed?
-        my $newick_string = $browser->get_tree()->generate_newick();
+        $browser->get_tree->show_newick_attribute("speciation");
+        $browser->get_tree->show_newick_attribute("species");
+        my $newick_string = $browser->get_tree->generate_newick();
 
         print info_section_html(
             title         => 'Ortholog pairs',
@@ -1332,14 +1261,10 @@ HTML
     }
 
     $page->footer();
-
-    #print STDERR "Done with the page.\n";
 }
 
 sub show_form {
     my $page = shift;
-
-    #print STDERR "Debug marker 701\n";
 
     $page->header();
 
@@ -1483,7 +1408,7 @@ sub fasta_check {
     $maxlen = length( $entry->seq );
     $entry  = $instream->next_seq;
 
-    #	print STDERR "Checking sequence number $count in $file...\n";
+    #    print STDERR "Checking sequence number $count in $file...\n";
     unless ( $entry && $entry->id && $entry->seq ) {
         input_err_page( $page, "FASTA must have at least two valid sequences" );
     }
@@ -1536,14 +1461,12 @@ sub html_tableize {
     my $instring = shift;
     $instring =~ s/^\s*//;    # remove leading whitespace.
     $instring =~ s/\s*$//;    # remove trailing whitespace
-    my $outstring = "<table width=\"100%\" border=1><tr><td>";
+    my $outstring = qq|<table width="100%" border="1"><tr><td>|;
     $outstring .= $instring;
-    $outstring =~ s/\n/<\/td><\/tr><tr><td>/g;    # /n -> new row
+    $outstring =~ s!\n!</td></tr><tr><td>!g;    # /n -> new row
     $outstring =~
-      s/\s{2,}/<\/td><td>/g;    # >= 2 of any whitespace char -> new cell
-    $outstring .= "<\/td><\/tr><\/table>";
-
-    # print $outstring;
+      s!\s{2,}!</td><td>!g;    # >= 2 of any whitespace char -> new cell
+    $outstring .= "</td></tr></table>";
     return $outstring;
 }
 
@@ -1584,7 +1507,7 @@ sub oglist_html_table {
     else {
         foreach my $o (@oglist) {
 
-#	print STDOUT "ZZZ tree copy root qrfd: [", $o->get_tree()->get_root()->get_attribute("qRF_distance"), "] [", $o->get_tree()->get_root()->get_attribute("subtree_leaves_match"), "]<br>\n";
+#    print STDOUT "ZZZ tree copy root qrfd: [", $o->get_tree()->get_root()->get_attribute("qRF_distance"), "] [", $o->get_tree()->get_root()->get_attribute("subtree_leaves_match"), "]<br>\n";
 
             $o->get_ortholog_tree()->get_root()->recursive_implicit_species();
             my $og_row_string =
