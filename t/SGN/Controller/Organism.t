@@ -15,13 +15,13 @@ BEGIN {
 my $mech = SGN::Test::WWW::Mechanize->new;
 
 $mech->get_ok( '/organism/sol100/view' );
-$mech->content_contains('SOL100 Organisms');
+$mech->content_contains('SOL-100 Organisms');
 $mech->content_contains('click on an organism name');
 $mech->content_lacks('Add to Tree','not logged in, does not have a form for adding an organism');
 $mech->while_logged_in({ user_type => 'curator' }, sub {
                            $mech->get_ok( '/organism/sol100/view' );
                            $mech->content_contains( 'Authorized user', 'now says authorized user' );
-                           $mech->content_contains( 'Add a SOL100 organism', 'now has an adding form' );
+                           $mech->content_contains( 'Add a SOL-100 organism', 'now has an adding form' );
 
                        });
 
@@ -33,10 +33,9 @@ $mech->with_test_level( process => sub {
  SKIP: {
 
     my $organism = $schema->resultset('Organism::Organism')
-        ->search({ species => 'Solanum lycopersicum' },
-                 {
-                     rows => 1 }
-                )
+            ->search({ species => 'Solanum lycopersicum' },
+                     { rows => 1 }
+                    )
             ->single;
 
     skip 'no organism to test on', 3 unless $organism;
@@ -49,7 +48,6 @@ $mech->with_test_level( process => sub {
 
   my $sol100 = $controller->organism_sets->{sol100}{resultset};
   isa_ok( $sol100, 'DBIx::Class::ResultSet', 'got sol100 organism resultset' );
-
 
   # find an organism that is in the solanaceae but not part of sol100
   my $solanaceae = $controller->organism_sets->{Solanaceae}{resultset};
