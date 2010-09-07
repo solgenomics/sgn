@@ -27,5 +27,16 @@ $mech->get_ok("$base_url/feature/search");
 $mech->content_contains('Feature Search');
 $mech->content_contains('Feature Name');
 $mech->content_contains('Feature Type');
+$mech->submit_form_ok({
+    form_name => 'feature_search_form',
+    fields => {
+        feature_name => '',
+        feature_type => 'gene',
+        organism     => 'Solanum lycopersicum',
+        submit       => 'Submit',
+    }
+});
+$mech->content_contains('Search Results');
+$mech->content_like(qr/results 1-\d+ of \d+(,\d+)?/);
 
 done_testing;
