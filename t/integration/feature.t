@@ -15,7 +15,6 @@ Jonathan "Duke" Leto
 use strict;
 use warnings;
 use Test::More;
-use Test::JSON;
 use lib 't/lib';
 use SGN::Test;
 use SGN::Test::WWW::Mechanize;
