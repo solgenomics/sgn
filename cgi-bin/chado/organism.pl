@@ -12,6 +12,7 @@ use CXGN::Page::FormattingHelpers qw/info_section_html
 use CXGN::People::Person;
 use CXGN::Chado::Organism;
 use CXGN::Tools::Text;
+use CXGN::Phenome::Qtl::Tools;
 
 use Bio::Chado::Schema;
 
@@ -36,7 +37,7 @@ if ( !$organism_id || ( !$organism_id =~ /^\d+$/ ) ) {
 my $name        = $organism->get_species();
 my $taxon       = $organism->get_taxon();
 my $common_name = $organism->get_group_common_name();
-
+$common_name    = lc($common_name);
 ##this should be an Ajax editable div
 my $description =
   CXGN::Tools::Text::format_field_text( $organism->get_comment() )
@@ -191,6 +192,31 @@ print info_section_html(
     collapsed   => 0
 );
 
+
+####################### QTL DISPLAY #############
+
+my @qtl_data = qtl_populations($common_name);
+unless (@qtl_data) { @qtl_data = ['N/A', 'N/A'];}
+
+my $qtl = columnar_table_html( headings   => [
+				              'Name',
+				              'Traits',							   
+				             ],
+			       data       => \@qtl_data,
+			     __alt_freq   => 2,
+			     __alt_width  => 1,
+			     __alt_offset => 3,
+			     __align      => 'l',
+                             );
+
+
+print info_section_html (
+    title       => "QTL populations (for all $common_name species)",
+    contents    => $qtl,
+    collapsible => 1,
+    collapsed   => 0
+);
+
 #####################################################################
 
 $page->footer();
@@ -207,4 +233,40 @@ sub get_parentage {
         $taxonomy = get_parentage($parent);
     }
     return $taxonomy;
+}
+
+
+=head2 qtl_populations
+
+ Usage: my @qtl_data = qtl_populations($common_name);
+ Desc:  returns a list of qtl populations (hyperlinked to the pop page) 
+        and counts of traits assayed for QTL for the corresponding population
+ Ret: an array of array of populations and trait counts or undef
+ Args: organism group common name
+ Side Effects:
+ Example:
+
+=cut
+
+
+
+sub qtl_populations { 
+    my $gr_common_name = shift;
+    my $qtl_tool       = CXGN::Phenome::Qtl::Tools->new();
+    my @org_pops       = $qtl_tool->qtl_pops_by_common_name($gr_common_name);
+    my @pop_data;
+    
+    if (@org_pops) {
+	foreach my $org_pop (@org_pops) {
+	    my $pop_id   = $org_pop->get_population_id();
+	    my $pop_name = $org_pop->get_name();
+	    my $pop_link = qq |<a href="/phenome/population.pl?population_id=$pop_id">$pop_name</a>|;
+	    my @traits   = $org_pop->get_cvterms();
+	    my $count    = scalar(@traits);
+	    
+	    push @pop_data, [ map { $_ } ( $pop_link, $count ) ];
+	}
+
+    }
+    return @pop_data;
 }
