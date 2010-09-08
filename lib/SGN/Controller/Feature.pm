@@ -29,6 +29,63 @@ default => 20,
 BEGIN { extends 'Catalyst::Controller' }
 with 'Catalyst::Component::ApplicationAttribute';
 
+sub delegate_component
+{
+    my ($self, $c, $matching_features) = @_;
+    my $feature   = $matching_features->next;
+    my @children  = $feature->child_features;
+    my @parents   = $feature->parent_features;
+    my $type_name = $feature->type->name;
+
+    eval {
+        $c->forward_to_mason_view(
+            "/feature/$type_name.mas",
+            type    => $type_name,
+            feature => $feature,
+            children=> \@children,
+            parents => \@parents,
+        );
+    };
+    if ($@) {
+        $c->forward_to_mason_view(
+            "/feature/dhandler",
+            feature => $feature,
+            children=> \@children,
+            parents => \@parents,
+        );
+    }
+}
+
+sub validate
+{
+    my ($self, $c,$matching_features,$key, $val) = @_;
+    my $count = $matching_features->count;
+#   EVIL HACK: We need a disambiguation process
+#   $c->throw( message => "too many features where $key='$val'") if $count > 1;
+    $c->throw( message => "feature with $key='$val' not found") if $count < 1;
+}
+
+sub view_name :Path('/feature/view/name') Args(1) {
+    my ( $self, $c, $feature_name ) = @_;
+    $self->schema( $c->dbic_schema('Bio::Chado::Schema','sgn_chado') );
+    my $matching_features = $self->schema
+                                 ->resultset('Sequence::Feature')
+                                ->search({ name => $feature_name });
+
+    $self->validate($c, $matching_features, feature_name => $feature_name);
+    $self->delegate_component($c, $matching_features);
+}
+
+sub view_id :Path('/feature/view/id') Args(1) {
+    my ( $self, $c, $feature_id ) = @_;
+    $self->schema( $c->dbic_schema('Bio::Chado::Schema','sgn_chado') );
+    my $matching_features = $self->schema
+                                 ->resultset('Sequence::Feature')
+                                ->search({ feature_id => $feature_id });
+
+    $self->validate($c, $matching_features, feature_id => $feature_id);
+    $self->delegate_component($c, $matching_features);
+}
 
 sub search :Path('/feature/search') Args(0) {
     my ( $self, $c ) = @_;
