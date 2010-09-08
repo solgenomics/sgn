@@ -68,23 +68,32 @@ sub validate
 sub view_name :Path('/feature/view/name') Args(1) {
     my ( $self, $c, $feature_name ) = @_;
     $self->schema( $c->dbic_schema('Bio::Chado::Schema','sgn_chado') );
-    my $matching_features = $self->schema
-                                 ->resultset('Sequence::Feature')
-                                ->search({ name => $feature_name });
+    $self->_view_feature($c, 'name', $feature_name);
+}
 
-    $self->validate($c, $matching_features, feature_name => $feature_name);
-    $self->delegate_component($c, $matching_features);
+sub _view_feature {
+    my ($self, $c, $key, $value) = @_;
+    if ( $value =~ m/\.fasta$/ ) {
+        $value =~ s/\.fasta$//;
+        my $matching_features = $self->schema
+                                    ->resultset('Sequence::Feature')
+                                    ->search({ $key => $value });
+        my $feature = $matching_features->next;
+        print $self->render_fasta($feature);
+    } else {
+        my $matching_features = $self->schema
+                                    ->resultset('Sequence::Feature')
+                                    ->search({ $key => $value });
+
+        $self->validate($c, $matching_features, $key => $value);
+        $self->delegate_component($c, $matching_features);
+    }
 }
 
 sub view_id :Path('/feature/view/id') Args(1) {
     my ( $self, $c, $feature_id ) = @_;
     $self->schema( $c->dbic_schema('Bio::Chado::Schema','sgn_chado') );
-    my $matching_features = $self->schema
-                                 ->resultset('Sequence::Feature')
-                                ->search({ feature_id => $feature_id });
-
-    $self->validate($c, $matching_features, feature_id => $feature_id);
-    $self->delegate_component($c, $matching_features);
+    $self->_view_feature($c, 'feature_id', $feature_id);
 }
 
 sub search :Path('/feature/search') Args(0) {
@@ -210,6 +219,25 @@ sub _feature_types {
                     },
                 )
     ];
+}
+
+sub render_fasta {
+    my ($self, $feature) = @_;
+    my $matching_features = $self->schema
+                                ->resultset('Sequence::Feature')
+                                ->search({ name => $feature->name });
+
+    my $sequence  = Bio::PrimarySeq->new(
+                    -id  => $feature->name,
+                    -seq => $feature->residues,
+                    );
+    my $fh = Bio::SeqIO->new(
+            -format => 'fasta',
+            -fh     => \*STDOUT)
+            ->write_seq( $sequence );
+    my $output = CGI->new->header( -type => 'text/txt' );
+    $output   .= $_ while <$fh>;
+    return $output;
 }
 
 __PACKAGE__->meta->make_immutable;
