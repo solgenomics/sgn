@@ -108,6 +108,7 @@ my $build = $class->new(
         'GD::Graph::points'       => 0,
         'GD::Text'                => 0,
         'HTML::Entities'          => 0,
+        'HTML::FormFu'            => 0,
         'HTML::Mason'             => 0,
         'IO::String'              => 0,
         'Image::Size'             => 0,
