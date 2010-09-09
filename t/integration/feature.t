@@ -51,5 +51,12 @@ $mech->submit_form_ok({
 $mech->content_contains('Search Results');
 $mech->content_contains('no matching results found');
 
+$mech->get_ok("$base_url/feature/view/name/JUNK.fasta");
+$mech->content_contains('no feature found matching name = JUNK');
+
+$mech->get_ok("$base_url/feature/view/id/-1.fasta");
+$mech->content_contains('no feature found matching feature_id = -1');
+
+
 
 done_testing;

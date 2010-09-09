@@ -79,6 +79,7 @@ sub _view_feature {
                                     ->resultset('Sequence::Feature')
                                     ->search({ $key => $value });
         my $feature = $matching_features->next;
+        $c->throw( message => "no feature found matching $key = $value") unless $feature;
         print $self->render_fasta($feature);
     } else {
         my $matching_features = $self->schema
@@ -223,6 +224,7 @@ sub _feature_types {
 
 sub render_fasta {
     my ($self, $feature) = @_;
+
     my $matching_features = $self->schema
                                 ->resultset('Sequence::Feature')
                                 ->search({ name => $feature->name });
