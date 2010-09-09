@@ -20,12 +20,12 @@ use Test::WWW::Mechanize;
 use lib 't/lib';
 use SGN::Test qw/validate_urls/;
 
-my $base_url      = "/feature.pl";
+my $base_url      = "/feature/view";
 
 SKIP: {
     validate_urls({
-        "feature request with nonexistent name" => "$base_url?name=this_does_not_exist",
-        "feature request with id" => "$base_url?id=12721702",
+        "feature request with nonexistent name" => "$base_url/name/this_does_not_exist",
+        "feature request with id" => "$base_url/id/12721702",
     });
 }
 

@@ -43,10 +43,7 @@ sub feature_table {
             my ($srcfeature) = $loc->srcfeature;
             my ($fmin,$fmax) = ($loc->fmin, $loc->fmax);
             push @$data, [
-                $c->render_mason(
-                    "/feature/link.mas",
-                    feature => $f,
-                ),
+                feature_link($f),
                 $f->type->name,
                 gbrowse_link($f,$fmin,$fmax),
                 $fmax-$fmin . " bp",
@@ -95,8 +92,8 @@ sub gbrowse_link {
 
 sub feature_link {
     my ($feature) = @_;
-    my ($id, $name) = ($feature->feature_id, $feature->name);
-    return qq{<a href="/cgi-bin/feature.pl?id=$id">$name</a>};
+    my $name = $feature->name;
+    return qq{<a href="/feature/view/name/$name">$name</a>};
 }
 
 sub infer_residue {
