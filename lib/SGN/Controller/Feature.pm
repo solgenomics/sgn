@@ -62,7 +62,7 @@ sub validate
     my $count = $matching_features->count;
 #   EVIL HACK: We need a disambiguation process
 #   $c->throw( message => "too many features where $key='$val'") if $count > 1;
-    $c->throw( message => "feature with $key='$val' not found") if $count < 1;
+    $c->throw( message => "feature with $key = '$val' not found") if $count < 1;
 }
 
 sub view_name :Path('/feature/view/name') Args(1) {
@@ -71,17 +71,25 @@ sub view_name :Path('/feature/view/name') Args(1) {
     $self->_view_feature($c, 'name', $feature_name);
 }
 
+sub _validate_pair {
+    my ($self,$c,$key,$value) = @_;
+    $c->throw( message => "$value is not a valid value for $key" ) if ($key eq 'feature_id' and $value !~ m/\d+/);
+}
+
 sub _view_feature {
     my ($self, $c, $key, $value) = @_;
+
     if ( $value =~ m/\.fasta$/ ) {
         $value =~ s/\.fasta$//;
+        $self->_validate_pair($c,$key,$value);
         my $matching_features = $self->schema
                                     ->resultset('Sequence::Feature')
                                     ->search({ $key => $value });
         my $feature = $matching_features->next;
-        $c->throw( message => "no feature found matching $key = $value") unless $feature;
+        $c->throw( message => "feature with $key = '$value' not found") unless $feature;
         print $self->render_fasta($feature);
     } else {
+        $self->_validate_pair($c,$key,$value);
         my $matching_features = $self->schema
                                     ->resultset('Sequence::Feature')
                                     ->search({ $key => $value });

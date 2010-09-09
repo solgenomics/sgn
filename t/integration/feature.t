@@ -52,11 +52,21 @@ $mech->content_contains('Search Results');
 $mech->content_contains('no matching results found');
 
 $mech->get_ok("$base_url/feature/view/name/JUNK.fasta");
-$mech->content_contains('no feature found matching name = JUNK');
+$mech->content_contains("feature with name = 'JUNK' not found");
 
 $mech->get_ok("$base_url/feature/view/id/-1.fasta");
-$mech->content_contains('no feature found matching feature_id = -1');
+$mech->content_contains("feature with feature_id = '-1' not found");
 
+$mech->get_ok("$base_url/feature/view/name/JUNK");
+$mech->content_contains("feature with name = 'JUNK' not found");
 
+$mech->get_ok("$base_url/feature/view/id/-1");
+$mech->content_contains("feature with feature_id = '-1' not found");
+
+$mech->get_ok("$base_url/feature/view/id/JUNK.fasta");
+$mech->content_contains("JUNK is not a valid value for feature_id");
+
+$mech->get_ok("$base_url/feature/view/id/JUNK");
+$mech->content_contains("JUNK is not a valid value for feature_id");
 
 done_testing;
