@@ -1,11 +1,9 @@
-
-my $publication_detail_page=CXGN::Chado::PublicationDetailPage->new();
-
 package CXGN::Chado::PublicationDetailPage;
 
 use base qw/CXGN::Page::Form::SimpleFormPage/;
 
 use strict;
+use warnings;
 
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw/info_section_html
@@ -24,7 +22,10 @@ use CXGN::Phenome::Allele;
 use CXGN::Chado::Dbxref;
 use CXGN::Contact;
 use CXGN::People::PageComment;
-use CXGN::Tools::Text qw / sanitize_string /;
+use CXGN::Tools::Text qw/ sanitize_string /;
+
+my $publication_detail_page=CXGN::Chado::PublicationDetailPage->new();
+
 sub new {
     my $class=shift;
     my $self= $class->SUPER::new(@_);
@@ -59,11 +60,14 @@ sub display_page {
     my $pub_title = $publication->get_title();
     my $page="/chado/publication.pl?pub_id=?";
     my $action= $args{action} || "";
-    if (!$pub_title && $action ne 'new' && $action ne  'store') { $self->get_page->message_page("No publication exists for this identifier");}
-    #import javascript libraries    
+
+    #import javascript libraries
+    $self->get_page()->jsan_use("jquery");
     $self->get_page()->jsan_use("CXGN.Phenome.Locus");
-    $self->get_page()->jsan_use("Prototype");
     $self->get_page()->jsan_use("CXGN.Phenome.Publication");
+
+    if (!$pub_title && $action ne 'new' && $action ne  'store') { $self->get_page->message_page("No publication exists for this identifier");}
+
     
     $self->get_page->header("SGN publication $pub_title");
     print page_title_html("Publication:\t$pub_title\n");
