@@ -20,8 +20,9 @@ use CXGN::Chado::Publication;
 # Start a new SGN page.
 
 my $page = CXGN::Page->new( "SGN publcation search results", "Naama" );
+
+$page->jsan_use("jquery");
 $page->jsan_use("CXGN.Phenome.Publication");
-$page->jsan_use("Prototype");
 
 $page->header();
 
