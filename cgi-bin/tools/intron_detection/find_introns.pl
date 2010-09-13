@@ -7,6 +7,7 @@
 #######################################################
 
 use strict;
+use warnings;
 use CXGN::Page;
 
 our $page = CXGN::Page->new( "Intron Finder", "Emil Keyder");
