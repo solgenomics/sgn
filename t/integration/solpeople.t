@@ -14,7 +14,7 @@ Jonathan "Duke" Leto
 
 use strict;
 use warnings;
-use Test::More tests => 73;
+use Test::More;
 use Test::JSON;
 use lib 't/lib';
 use SGN::Test;
@@ -57,3 +57,5 @@ $mech->while_logged_in_all( sub {
     $mech->get_ok("$base_url/$url?logout=yes");
     $mech->content_like(qr/You have successfully logged out\. Thanks for using SGN\./ms);
 }
+
+done_testing;

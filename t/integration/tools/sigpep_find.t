@@ -5,6 +5,9 @@ use English;
 
 use Test::More tests => 11;
 
+use lib 't/lib';
+use SGN::Test::WWW::Mechanize;
+
 my @invalid_seqs =
     ( [ 'SGN-U409494-translated',
         'MGRMNGNPSARKSKGGEYLYDLCFLPFDSADQIGGIILYCCVGLSSFLASSLSASSSSRMSFENAPGFAFIQFCRATKGWTQSEPXKRVD
@@ -22,12 +25,9 @@ my @no_hits_seqs =
     (['SGN-U569791','VIRQFILSVLRTYTFFSFSLSECGQIMSLKNRERPTESIILNKETEGSCINTSENSSEI'],
     );
 
-use Test::WWW::Mechanize;
+my $input_page = "/tools/sigpep_finder/input.pl";
 
-my $urlbase = "$ENV{SGN_TEST_SERVER}/tools/sigpep_finder/";
-my $input_page = "$urlbase/input.pl";
-
-my $mech = Test::WWW::Mechanize->new;
+my $mech = SGN::Test::WWW::Mechanize->new;
 
 # single sequence submission, no ending newline
 {

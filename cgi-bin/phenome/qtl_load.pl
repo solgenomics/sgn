@@ -54,6 +54,9 @@ use CXGN::Page;
 use Bio::Chado::Schema;
 use Storable qw /store retrieve/;
 
+
+use CatalystX::GlobalContext qw( $c );
+
 sub new {
     my $class = shift;
     my $self = bless {}, $class;

@@ -192,7 +192,7 @@ Additionally, an error report could not be automatically sent, please help us by
              SetHandler modperl
              PerlResponseHandler $app
          "
-         .  $class->_apache_access_control_str
+         .  $class->_apache_access_control_str( $cfg )
          ."</Location>\n",
 
          $class->_conf_serve_static( $app ),

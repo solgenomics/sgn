@@ -26,7 +26,7 @@ $m->get_ok($server."/image/ajax/fetch_image.pl?image_id=$image_id");
 
 $m->content_contains('html');
 $m->content_contains('img src');
-$m->content_contains("image_files/$image_id");
+$m->content_contains("/$image_id");
 
 
 

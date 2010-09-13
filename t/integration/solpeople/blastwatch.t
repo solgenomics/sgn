@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 55;
+use Test::More;
 use Test::WWW::Mechanize;
 use lib 't/lib';
 use SGN::Test;
@@ -26,3 +26,5 @@ $mech->while_logged_in_all(sub {
     $mech->content_contains('Your query has been added to SGN BLAST Watch.');
     $mech->content_contains('You will receive an email when there are new results.');
 });
+
+done_testing;

@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use base 'Test::Class';
 
-use Test::More tests => 3;
+use Test::More tests => 2;
 use Test::MockObject;
 use Test::Class;
 
@@ -37,11 +37,11 @@ sub TEST_RELATED_STATS : Tests {
     ], 'related_stats');
 }
 
-sub TEST_GBROWSE_LINK : Tests {
-    my $self = shift;
-    my $link = gbrowse_link($self->{feature}, 10, 20);
-    is($link, '<a href="/gbrowse/bin/gbrowse/ITAG1_genomic/?ref=Jabberwocky;start=10;end=20">10,20</a>', 'gbrowse_link is generated correctly');
+# sub TEST_GBROWSE_LINK : Tests {
+#     my $self = shift;
+#     my $link = gbrowse_link($self->{feature}, 10, 20);
+#     is($link, '<a href="/gbrowse/bin/gbrowse/ITAG1_genomic/?ref=Jabberwocky;start=10;end=20">10,20</a>', 'gbrowse_link is generated correctly');
 
-}
+# }
 
 Test::Class->runtests;

@@ -13,7 +13,7 @@ my $defaults =
      # Static::Simple configuration
      root   => 'static',
      static => {
-         dirs => [qw[ s img documents static_content data ]],
+         dirs => [qw[ s static img documents static_content data ]],
          include_path => ['__path_to(static)__'],
      },
 
@@ -78,6 +78,16 @@ my $defaults =
              comp_root => '__path_to(mason)__',
          },
          globals => [qw[ $c ]],
+         template_extension => '.mas',
+     },
+
+     'View::BareMason' => {
+         interp_args => {
+             comp_root => '__path_to(mason)__',
+             autohandler_name => '',
+         },
+         globals => [qw[ $c ]],
+         template_extension => '.mas',
      },
 
      'View::JavaScript' => {
@@ -112,8 +122,8 @@ my $defaults =
      disable_emails           => 0,
 
      #who is the apache user for chowning and emailing
-     www_user              => 'www-data',
-     www_group             => 'sgn-site-writers',
+     www_user              => '__USERNAME__',
+     www_group             => '__GROUPNAME__',
 
      #allow people to log in?
      disable_login            => 0,

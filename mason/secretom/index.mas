@@ -1,0 +1,302 @@
+  <style type="text/css">
+    a.project {
+      /* idiotic transparent-background syntax for IE */
+      -ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF, endColorstr=#CCFFFFFF)";
+      filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF, endColorstr=#CCFFFFFF);
+
+      background: rgba(255,255,255,0.8);
+      text-align: left;
+      padding: 1em;
+      cursor: pointer;
+      display: block;
+      color: #111;
+      font-size: 105%;
+      font-weight: bold;
+      margin: 1em;
+      border: 1px solid transparent;
+    }
+    a.project:hover {
+      border: 1px solid black;
+      text-decoration: none;
+      color: black;
+      /* idiotic transparent-background syntax for IE */
+      -ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr=#EEFFFFFF, endColorstr=#EEFFFFFF)";
+      filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#EEFFFFFF, endColorstr=#EEFFFFFF);
+      background: rgba(255,255,255,0.9);
+    }
+    div.projects  {
+        background: url(/img/secretom/tomato_gray.png) 30% 100% no-repeat;
+        padding-bottom: 20px;
+        margin-bottom: 20px;
+    }
+
+    #secretom_summary > .infosectioncontent {
+       background: rgba(255,255,255,0.8);
+       border: 1px solid rgba( 0, 0, 0, 0.1 );
+       padding: 10px;
+    }
+    #secretom_summary > .infosectioncontent > p:first-child {
+      margin-top: 0;
+    }
+
+    #secretom_summary p {
+      margin: 1.8em 0;
+    }
+
+    .resources a {
+       font-size: 120%;
+       color: black;
+       display: block;
+       margin: 20px 20px;
+       font-weight: bold;
+       text-align: left;
+    } 
+
+    .resources .secretary  {
+       font-weight: bold;
+       margin: 0 auto;
+       letter-spacing: 0.8px;
+       text-align: center;
+       font-size: 110%;
+    }
+    .resources .secretary a {
+       background: #ddf;
+       border-radius: 10px;
+       -moz-border-radius: 10px;
+       -webkit-border-radius: 10px;
+       padding: 10px 20px;
+       margin: 20px auto 7px auto;
+       border: 1px solid #888;
+       border-bottom: 2px solid #777;
+       font-size: 140%;
+       text-align: center;
+       width: 10em;
+    }
+    .resources .secretary a:hover {
+       text-decoration: none;
+       background: #eee;
+    }
+
+    
+
+    ul.conferences {
+      padding-left: 0.5em;
+    }
+    ul.conferences li {
+      margin-top: 2em;
+      margin-bottom: 2em;
+    }
+
+    .secretom {
+      font-weight: bold;
+      letter-spacing: 0.5px;
+      color: red;
+      font-size: 105%;
+      text-transform: lowercase;
+    }
+    #education a {
+      font-size: 110%;
+      letter-spacing: 0.8px;
+      font-weight: bold;
+    }
+
+  </style>
+
+  <div style="width: 80%; margin: 0 auto">
+    <& /page/page_title.mas, title => 'A project to catalog and study the dynamic properties of the cell wall proteome (the secretome), using tomato as a model system.' &>
+  </div>
+
+  <div id="secretom_summary" style="float: left; width: 50%">
+    <&| /page/info_section.mas, title => 'Summary' &>
+
+      <p>
+      The <a class="info_link" href="/secretom/detail/cell_wall">plant cell wall/apoplast</a> plays a fundamental role
+      in many aspects of growth, development, and responses to environmental
+      conditions and assault by pathogens and insects. It is therefore not
+      surprising that a substantial portion of the plant proteome is
+      localized in the cell wall/apoplast. However, while major initiatives
+      are now underway to map the proteomes of many plant organelles, such
+      as the <a  href="http://ppdb.tc.cornell.edu/dbsearch/subproteome.aspx">
+      chloroplast</a>, the cell wall proteome, or "secretome", is far
+      less well characterized than those of other subcellular compartments.
+      </p>
+
+      <img width="250" style="display: block; margin: 0 auto" src="/img/secretom/proteome.png" />
+
+      <p>
+      <strong>What is the "secretome"?</strong> The term "secretome" is
+      generally used to refer to the population of proteins that are
+      secreted outside the plasma membrane of a cell, but can also be used
+      to describe the subset of the proteome that enter the <a href="/secretom/detail/secretion_path">secretory
+      pathway</a>.
+      </p>
+
+      <p>
+      <strong>The purpose of this NSF-funded project</strong> is to
+      catalog and study the dynamic properties of
+      the cell wall proteome, or secretome, using tomato (<i>Solanum
+      lycopersicum</i>) as a model system.
+      </p>
+
+
+      <p>
+      <strong>Why study the "secretome"?</strong> Proteomic analysis of cellular
+      compartments reveals the subcellular locations of a specific protein,
+      or protein complex, which in turn can be a valuable step towards
+      understanding protein function. Localization information also helps in
+      the identification of protein interactions and targeting pathways, and
+      peptide motifs and structural signatures that can direct proteins to
+      various cellular locations. In addition the analysis of a subcellular
+      proteome has the advantage of requiring "biological
+      pre-fractionation," which can substantially enhance the detection of
+      lower-abundance proteins.
+      </p>
+
+    </&>
+  </div>
+  <div style="float: right; width: 50%">
+
+     <div class="projects">
+      <&| /page/info_section.mas, title => 'Projects', subtitle => 'download datasets: <a href="ftp://ftp.solgenomics.net/secretom/">[SGN FTP site]</a>' &>
+
+        <a class="project" href="/secretom/detail/prediction">Computational Prediction of the Plant Secretome</a>
+        <a class="project" href="/secretom/detail/functional_screens">Functional Screens for Secreted Proteins</a>
+        <a class="project" href="/secretom/detail/glycoproteome">The Tomato Fruit Glycoproteome</a>
+        <a class="project" href="/secretom/detail/proteomics">Tomato Comparative and Quantitative Proteomics</a>
+        <a class="project" href="/secretom/detail/profiling">Integrated Proteome/Transcriptome Profiling of Tomato Fruit</a>
+        <a class="project" href="/secretom/detail/cuticle">The Tomato Fruit Cuticular Cell Wall Proteome</a>
+        <a class="project" href="/secretom/detail/phytophthera_interaction">The Secretome of Phytophthora/Tomato Interactions</a>
+        <a class="project" href="/secretom/detail/spinoffs">Spin-off Projects and Collaborations</a>
+
+      </&>
+    </div>
+     <div class="resources">
+      <&| /page/info_section.mas, title => 'Resources' &>
+
+        <a href="ftp://ftp.solgenomics.net/secretom/">
+          <span class="secretom">secretom</span> datasets (<span style="text-decoration: underline">SGN FTP</span>)
+        </a>
+        <a href="/secretom/publications">
+          <span class="secretom">secretom</span> publications
+        </a>
+        <hr />
+        <div class="secretary">
+          <a href="/secretom/secretary">Use SecreTary</a>
+          A tool for predicting secreted proteins.
+        </div>
+      </&>
+     </div>
+  </div>
+
+  <&| /page/info_section.mas, title => 'News' &>
+
+    <div style="float: left; width: 50%">
+      <&| /page/info_section.mas, title => 'Job Openings', is_subsection => 1 &>
+        <p>
+        The Rose lab is currently seeking a postdoctoral research associate with 
+        an interest in plant proteomics, or fruit development and ripening. 
+        Experience in mass spectrometry and plant molecular biology would 
+        be an advantage, and good communication skills are critical. 
+        Please contact Joss Rose if interested: 
+        <a href="mailto:jr286@cornell.edu">jr286@cornell.edu</a>
+        </p>
+      </&>
+    </div>
+
+    <div style="float: right; width: 50%">
+
+      <&| /page/info_section.mas, title => 'Upcoming Meetings', is_subsection => 1 &>
+        <ul class="conferences">
+        <li>
+            <a href="http://www.sol2010.org/">SOL2010</a> &ndash;
+            Dundee, Scotland, UK, Sept. 5-9, 2010
+        </li>
+        <li>
+             <a href="http://proteomlux.lippmann.lu">International
+             Conference on Proteomics in Plants, Microorganisms and
+             Environment</a> Luxembourg, October 18-20, 2010
+        </li>
+        <li>
+             <a href="http://www.genomeconference.org">Fifth
+             International Conference on Genomics (ICG-V)</a> &ndash;
+             Shenzhen, China, November 15-18, 2010
+        </li>
+        <li>
+             <a href="http://www.intl-pag.org">Plant and Animal Genome
+             XIX</a> &ndash; San Diego, California, USA, January
+             15-19, 2011
+        </li>
+        <li>
+             <a
+             href="http://www.keystonesymposia.org/meetings/viewMeetings.cfm?MeetingID=1124">
+             Keystone Symposia: Plant Abiotic Stress Tolerance
+             Mechanisms, Water and Global Agriculture</a> &ndash;
+             Keystone Resort, Keystone, Colorado, USA, January 17-22,
+             2011
+        </li>
+        <li>
+             <a href="http://www.aspb.org">American Society of Plant
+             Biologists (ASPB)</a> &ndash; Minneapolis, Minnesota,
+             USA, August 6-10, 2011
+        </li>
+        </ul>
+      </&>
+    </div>
+
+    <div style="width: 50%; float: left" id="education">
+
+      <&| /page/info_section.mas, title => 'Education, Training, and Outreach', is_subsection => 1 &>
+          <img style="border: 1px solid black; display: block; margin: 15px auto 0 auto" src="/img/secretom/tomato_bath.png" />
+          <p>
+             <a href="/secretom/training">Education and training
+             opportunities</a> in plant proteomics and cell wall
+             biology are available as part of <span class="secretom">Secretom</span>.
+          </p>
+
+          <p><a href="/secretom/outreach">Internships</a> are also available.</p>
+       </&>
+    </div>
+
+
+  </&>
+  <&| /page/info_section.mas, title => 'People' &>
+    <ul class="people">
+      <li>Joss Rose <a href="http://labs.plantbio.cornell.edu/rose/index.htm">[Lab]</a></li>
+      <li>Ted Thannhauser <a href="http://www.ars.usda.gov/PandP/docs.htm?docid=9634">[USDA Personal]</a></li>
+      <li>Jim Giovannoni <a href="http://www.bti.cornell.edu/JimGiovannoni.php?page=Research#page=ResearchSummary">[BTI Personal]</a></li>
+      <li>Lukas Mueller <a href="http://solgenomics.net/about">[SGN]</a></li>
+      <li>Zhangjun Fei <a href="http://www.bti.cornell.edu/ZhangjunFei.php?page=Research#page=ResearchSummary">[BTI Personal]</a></li>
+    </ul>
+
+  </&>
+  <&| /page/info_section.mas, title => 'Funding' &>
+
+       <table><tr>
+       <td><a style="background: none" href="http://www.nsf.gov"><img border="0" src="/documents/img/secretom/NSF_Logo.jpg" width="100" height="100"/></a></td>
+       <td style="vertical-align: middle; padding-left: 1em">
+        <p>This project and database are funded by National Science Foundation Grant 
+        <a href="http://nsf.gov/awardsearch/showAward.do?AwardNumber=0606595">0606595</a>.
+        </p>
+
+        <p>
+        For questions and comments regarding the SecreTom project, please
+        contact Jocelyn Rose at <a href="mailto:jr286@cornell.edu">jr286@cornell.edu</a>.
+        </p>
+      </td></tr>
+      </table>
+
+  </&>
+
+  <&| /page/info_section.mas, title => 'Related Sites' &>
+
+      <ul>
+        <li><a href="http://www.ccrc.uga.edu/~mao/cellwall/main.htm">Plant Cell Wall Overview</a></li>
+        <li><a href="http://cell.ccrc.uga.edu/~mao/wallmab/Home/Home.php">Cell Wall Antibodies</a></li>
+        <li><a href="http://cellwall.genomics.purdue.edu/">Cell Wall Genomics</a></li>
+        <li><a href="http://csbl1.bmb.uga.edu/pDAWG">Plant cell wall genes (pDAWG)</a></li>
+        <li><a href="http://bioweb.ucr.edu/Cellwall">Cell Wall Navigator</a></li>
+        <li><a href="http://www.cazy.org">Carbohydrate Active Enzymes</a></li>
+      </ul>
+
+  </&>
+

@@ -240,7 +240,7 @@ Sends client to another location.
 
 sub client_redirect {
     my ( $self, $url ) = @_;
-    print "Location: $url\n";
+    print CGI->new->redirect( -uri => $url, -status => 302 );
     exit;
 }
 

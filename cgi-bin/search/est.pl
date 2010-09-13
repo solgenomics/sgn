@@ -378,7 +378,7 @@ if ($read_id && $readq->execute($read_id) && $readq->rows>0) {
   my $tmp_tracename;
   if($tmp_tracename=CXGN::Chromatogram::has_abi_chromatogram($read_id))
   {
-      my $path_to_remove=$c->config->{'basepath'}.$c->config->{'tempfiles_subdir'}.'/traceimages/';
+      my $path_to_remove = $c->path_to( $c->tempfiles_subdir('traceimages') );
       $tmp_tracename=~s/$path_to_remove//;
       my $file=URI::Escape::uri_escape("$tmp_tracename");
       $view_link=" [<a href=\"/tools/trace_view.pl?file=$file&temp=yes\">View</a>]";

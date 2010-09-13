@@ -20,6 +20,8 @@
                    /crypt/rob/cpan-lib/lib/perl5/i486-linux-gnu-thread-multi
                   ));
 
+       $ENV{PERL5LIB} = join ':', @INC;
+
        use SGN::Deploy::Apache SGN => ( type => 'mod_perl', vhost => 1 );
 
     </Perl>

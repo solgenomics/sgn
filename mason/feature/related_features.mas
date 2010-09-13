@@ -11,12 +11,12 @@
 <%perl>
 </%perl>
 
-% if (@$children || @$parents) {
+% if ($children || $parents) {
 <&| /page/info_section.mas,
     title => $title,
     collapsible => 1,
 &>
-%if (@$parents) {
+%if ($parents && @$parents) {
 <&| /page/info_section.mas,
     title => "Parent Features",
     collapsible => 1,
@@ -31,7 +31,7 @@
 </&>
 %}
 <br/>
-%if (@$children) {
+%if ($children && @$children) {
 <&| /page/info_section.mas,
     title => "Child Features",
     collapsible => 1,

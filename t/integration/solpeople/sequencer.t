@@ -14,7 +14,7 @@ Jonathan "Duke" Leto
 
 use strict;
 use warnings;
-use Test::More tests => 12;
+use Test::More;
 use Test::JSON;
 use lib 't/lib';
 use SGN::Test;
@@ -32,3 +32,5 @@ $mech->while_logged_in({ user_type => 'sequencer' }, sub {
     $mech->get_ok('/maps/physical/clone_il_view.pl');
     $mech->content_contains('Clone IL Mapping Assignments');
 });
+
+done_testing;

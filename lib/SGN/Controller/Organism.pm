@@ -15,7 +15,7 @@ use Storable;
 use Scalar::Util qw/ weaken /;
 
 use Cache::File;
-use HTTP::Status ':constants';
+use HTTP::Status;
 use JSON::Any; my $json = JSON::Any->new;
 use List::MoreUtils qw/ any /;
 
@@ -217,6 +217,8 @@ sub organism_tree_image :Chained('get_organism_tree') :PathPart('image') {
     my $image = $c->stash->{organism_tree_cache_entry}->thaw
         or $c->throw_404;
 
+    $image->{png} or die "no png data for organism set '".$c->stash->{organism_set_name}."'! cannot serve image.  Dump of cache entry: \n".Data::Dumper::Dumper( $image );
+
     $c->res->body( $image->{png} );
     $c->res->content_type( 'image/png' );
 }
@@ -275,11 +277,11 @@ sub add_sol100_organism :Path('sol100/add_organism') :Args(0) {
                      ->single;
 
     ## validate our conditions
-    my @validate = ( [ HTTP_METHOD_NOT_ALLOWED,
+    my @validate = ( [ RC_METHOD_NOT_ALLOWED,
                        'Only POST requests are allowed for this page.',
                        sub { $c->req->method eq 'POST' }
                      ],
-                     [ HTTP_BAD_REQUEST,
+                     [ RC_BAD_REQUEST,
                        'Organism not found',
                        sub { $organism },
                      ],

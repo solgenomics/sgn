@@ -15,8 +15,9 @@
 
 use strict;
 use warnings;
+use CatalystX::GlobalContext '$c';
 
-bulk_display->new->display_page;
+bulk_display->new($c)->display_page;
 
 package bulk_display;
 use CGI ();
@@ -148,6 +149,8 @@ sub render_html_page {
 sub render_html_table_page {
     my $self = shift;
 
+    $self->{page}->header("Bulk download results");
+
     #
     # open the file
     #
@@ -191,7 +194,6 @@ sub render_html_table_page {
         #
         my $line = 0;
         my @data = ();
-        $self->{page}->header("Bulk download results");
         $self->buttons();
         $self->{content} .= "<table summary=\"\" border=\"1\">\n";
 
@@ -606,11 +608,10 @@ sub newSearchButton {
 sub getFileLines {
     my $self   = shift;
     my $file   = shift;
-    my $output = `wc -l $file`;
-    chomp($output);
-    $output =~ s/^\s+(.*)/$1/;
-    my @list = split /\b/, $output;
-    return $list[0];
+    open my $f, '<', $file or die "$! reading $file";
+    my $cnt = 0;
+    $cnt++ while <$f>;
+    return $cnt;
 }
 
 =head2 render_text_page

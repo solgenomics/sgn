@@ -33,7 +33,7 @@ before 'setup_finalize' => sub {
     my $temp_subdir = Path::Class::Dir->new( $c->path_to( $c->get_conf('tempfiles_subdir') ) );
     my $temp_base   = $c->tempfiles_base;
     $c->log->debug("linking $temp_base => $temp_subdir") if $c->debug;
-    mkpath( "$temp_base" );
+    $c->make_generated_dir($temp_base);
     unlink $temp_subdir;
     symlink $temp_base, $temp_subdir or die "$! linking $temp_base => $temp_subdir";
 
@@ -185,7 +185,7 @@ sub _default_temp_base {
     my ($self) = @_;
     return File::Spec->catdir(
         File::Spec->tmpdir,
-        (getpwuid($>))[0], # the user name
+        $self->config->{www_user},
         ($self->config->{name}.'-site' || die '"name" conf value is not set'),
        );
 }
@@ -199,7 +199,8 @@ sub make_generated_dir {
         return;
     }
 
-    return $self->chown_generated_dir( $tempdir );
+    $self->chown_generated_dir( $tempdir );
+    return 1;
 }
 
 # takes one argument, a path in the filesystem, and chowns it appropriately
@@ -229,15 +230,15 @@ sub chown_generated_dir {
 sub _www_gid {
     my $self = shift;
     my $grname = $self->config->{www_group};
-    my $gid = (getgrnam $grname )[2]
-        or warn "WARNING: www_group '$grname' does not exist, please check configuration\n";
+    my $gid = (getgrnam $grname )[2];
+    defined $gid or warn "WARNING: www_group '$grname' does not exist, please check configuration\n";
     return $gid;
 }
 sub _www_uid {
     my $self = shift;
     my $uname = $self->config->{www_user};
-    my $uid = (getpwnam( $uname ))[2]
-       or warn "WARNING: www_user '$uname' does not exist, please check configuration\n";
+    my $uid = (getpwnam( $uname ))[2];
+    defined $uid or warn "WARNING: www_user '$uname' does not exist, please check configuration\n";
     return $uid;
 }
 

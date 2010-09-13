@@ -50,6 +50,7 @@ CXGN.Phenome.Locus.LocusPage.prototype = {
 	var type = "network";
 	//locusPage.setLocusId(locus_id);
 	new Ajax.Request("/phenome/locus_page/print_locus_page.pl", {
+                method: 'get',
 		parameters: { type: type, locus_id: locus_id},
 		    onSuccess: this.processLocusNetworkResponse
 		    });
@@ -112,16 +113,34 @@ CXGN.Phenome.Locus.LocusPage.prototype = {
     /////////////////////////////////
 
     printLocusOntology: function(locus_id) {	
+
+        jQuery(function() {
+          jQuery("#locus_ontology_show_details").show()
+          jQuery("#locus_ontology_show_details input").click(function() {
+             if( this.checked ) {
+               jQuery("#locus_ontology .evidence").show();
+               jQuery(this).addClass('active');
+             } else {
+               jQuery("#locus_ontology .evidence").hide();
+               jQuery(this).removeClass('active');
+             }
+          });
+        });
+
+        
 	if (!locus_id) locus_id = this.getLocusId();
 	var type = "ontology";
 	new Ajax.Request("/phenome/locus_page/print_locus_page.pl", {
+                method: 'get',
 		parameters: { type: type, locus_id: locus_id},
 		    onSuccess: function(response) {
 		    var json = response.responseText;
 		    var x =eval ("("+json+")");
 		    var e = $("locus_ontology").innerHTML=x.response;
 		    //alert('processing locus ontology...' );
-		    if ( x.error ) { alert(x.error) ; }
+ 		    if ( x.error ) { alert(x.error) ; }
+                    jQuery("#locus_ontology_show_details input").first()[0].disabled = false;
+                    jQuery("#locus_ontology .evidence").hide();
 		}
 	});
 	
@@ -187,6 +206,7 @@ CXGN.Phenome.Locus.LocusPage.prototype = {
 	if (!locus_id) locus_id = this.getLocusId();
 	var type = "unigenes";
 	new Ajax.Request("/phenome/locus_page/print_locus_page.pl", {
+                method: "get",
 		parameters: { type: type, locus_id: locus_id},
 		    onSuccess: this.processLocusUnigenesResponse
 		    });

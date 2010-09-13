@@ -39,12 +39,6 @@ my %urls = (
         "unigene build"                            => "/search/unigene_build.pl?id=46",
         'unigene standalone six-frame translation' => '/tools/sixframe_translate.pl?unigene_id=573435',
 
-
-        "bac search page"                          => "/search/direct_search.pl?search=bacs",
-        "bac search"                               => "/maps/physical/clone_search.pl?w98e_page=0&w98e_id=&w98e_seqstatus=&w98e_estlenrange=gt&w98e_estlen1=&w98e_estlen2=&w98e_genbank_accession=&w98e_chromonum=&w98e_end_annotation=&w98e_map_id=&w98e_offsetrange=gt&w98e_offset1=&w98e_offset2=&w98e_linkage_group_name=&w98e_il_project_id=&w98e_il_bin_name=",
-        "bac detail page"                          => "/maps/physical/clone_info.pl?id=3468&w98e_page=0&w98e_seqstatus=complete",
-        "bac detail page 2"                        => "/maps/physical/clone_info.pl?id=119416",
-
         "est search page"                          => "/search/direct_search.pl?search=est",
         "est search"                               => "/search/est.pl?request_from=0&request_id=SGN-E234234&request_type=7&search=Search",
         "est detail page"                          => "/search/est.pl?request_from=0&request_id=SGN-E234234&request_type=7&search=Search",
@@ -92,6 +86,7 @@ my %urls = (
         "glossary search"                          => "/search/glossarysearch.pl",
         "contact"                                  => "/tools/contact.pl",
         "seed BAC guidelines"                      => '/solanaceae-project/seed_bac_selection.pl',
+        "caps designer input"                      => '/tools/caps_designer/caps_input.pl',
 );
 
 validate_urls(\%urls, $ENV{ITERATIONS} || 1 );

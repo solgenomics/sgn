@@ -62,6 +62,8 @@ use CXGN::Contact;
 
 use base qw / CXGN::Page::Form::SimpleFormPage CXGN::Phenome::Main/;
 
+use CatalystX::GlobalContext qw( $c );
+
 sub new
 {
     my $class = shift;
@@ -1684,7 +1686,7 @@ sub legend {
     my $qtl            = CXGN::Phenome::Qtl->new($sp_person_id);
     my $stat_file = $qtl->get_stat_file($c, $pop->get_population_id());
     my @stat;
-    my $ci;
+    my $ci= 1;
 
     open my $sf, "<", $stat_file or die "$! reading $stat_file\n";
     while (my $row = <$sf>)
@@ -1700,7 +1702,7 @@ sub legend {
 	if ($parameter =~/prob_level/) {$parameter = 'QTL genotype signifance level';}
 	if ($parameter =~/stat_no_draws/) {$parameter = 'No. of imputations';}
 	
-	if ($value eq 'zero' || $value eq 'Marker Regression') {$ci = 'none';}
+	if ($value eq 'zero' || $value eq 'Marker Regression') {$ci = 0;}
 	
 	unless (($parameter =~/No. of imputations/ && !$value ) ||
 	        ($parameter =~/QTL genotype probability/ && !$value ) ||
@@ -1721,7 +1723,7 @@ sub legend {
 		foreach my $s (@stat) {     		
 		    foreach my $j (@$s) {
 			$j =~ s/Maximum Likelihood/Marker Regression/;
-			$ci = 'none';		
+			$ci = 0;		
 		    }
 		}
 	    }
@@ -1756,22 +1758,23 @@ my $permu_threshold_ref = $self->permu_values();
     ];
     
 
-    unless ($ci) {
+    if ($ci) {
 	push @stat, 
 	[
 	 map {$_} ('Confidence interval', 'Based on 95% Bayesian Credible Interval')
 	];
     }
+
     push @stat, 
     [
      map {$_} ('QTL software', "<a href=http://www.rqtl.org>R/QTL</a>")
     ];
+ 
     my $legend_data = columnar_table_html (
 	                                   headings    => [
 		                                          ' ',
 		                                          ' ',
-
-		                                         ],
+		                                          ],
 		                           data        => \@stat,
 		                          __alt_freq   => 2,
 		                          __alt_width  => 1,

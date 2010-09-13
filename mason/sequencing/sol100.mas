@@ -8,7 +8,6 @@ sol100.mas - SGN page for sol100 project organism data overview in a tree format
 
 </%doc>
 
-
 <%args>
     $organism_tree
 
@@ -18,7 +17,7 @@ sol100.mas - SGN page for sol100 project organism data overview in a tree format
     $organism_autocomplete_uri => ''
 </%args>
 
-<& /page/page_title.mas, title=>"SOL100 sequencing project" &>
+<div style="margin: 20px auto"><& /page/page_title.mas, title=>"The SOL-100 sequencing project" &></div>
 
 <& /util/import_javascript.mas, classes=>[qw[ CXGN.Page.FormattingHelpers  jquery jqueryui popup]] &>
 
@@ -32,9 +31,107 @@ sol100.mas - SGN page for sol100 project organism data overview in a tree format
    	
 </script>
 
-<div class="page_introduction">
-  This page presents a summary of all species being sequenced as part
-  of the SOL100 sequencing project.
+<style>
+  .infosectioncontent {
+    text-align: justify;
+    width: 680px;
+  }
+  
+  .infosectioncontent blockquote {
+    border: 1px solid #ccc;
+    background: #feb;
+    padding: 2em 3em;
+    font-size: 105%;
+    letter-spacing: 0.8px;
+    width: 60%;
+    margin: 1em 10em 1em 7.5em;
+  }
+  
+
+</style>
+
+
+<&| /page/info_section.mas,
+  title         =>  'The questions',
+  collapsible   => 1,
+  collapsed     => 0,
+  &>
+
+<p>
+The Solanaceae include more than 3000 species with wide adaptation, shape, chemistry, and distribution. Species of the family are of great agricultural, nutritional, horticultural and medicinal importance (e.g., potato, tomato, pepper, petunia and tobacco). This enormous diversity is contrasted by high conservation of gene order and content at the macro and micro syntenic levels. Solanaceae genomes can be genetically tied to a common framework linkage map, thus facilitating the identification of genes with homologous phenotypes in the different species. These features make Solanaceae an excellent taxon with which to address a central question in biology:
+</p>
+
+ <blockquote>How can a common set of genes/proteins give rise to such a wide range of morphologically and ecologically distinct species?</blockquote>
+
+
+<p>
+But also, studying the Solanaceae can generate answers to the currently highly relevant and urgent question:  
+</p>
+
+<blockquote>
+How can a deeper understanding of the genetic basis of plant biodiversity be harnessed to better meet the needs of society in an environmentally friendly and sustainable manner?
+</blockquote>
+
+</&>
+
+<&| /page/info_section.mas,
+  title         =>  'The aim',
+  collapsible   => 1,
+  collapsed     => 0,
+  &>
+
+
+  <img style="margin: 0 0 10px 20px; display: block; float: right" src="/img/solproject_logo_100.png" />
+
+
+  <p>
+  The SOL community will create a common Solanaceae-based genomic
+  framework that includes sequences and phenotypes of 100 genomes
+  encompassing the phylogenetic diversity of the group. Specific
+  objectives are to:
+  </p>
+
+  <ol>
+     <li>
+        Tie the available tomato, tobacco, potato and Asterid relatives
+        coffee and Mimulus (monkey-flower) genome sequences to a common
+        SOL physical and genetic map as well as other Asterid taxonomic
+        groups, such as Antirrhinum, sweet potato and mint.
+     </li>
+     <li>
+       Select 100 Solanaceae species and Asterid outgroups (SOL-100)
+       that broadly span the evolutionary tree and reflect important
+       human uses.
+     </li>
+     <li>
+       Apply emerging novel genome sequencing technologies to SOL-100
+       and link the sequences to the common SOL physical and genetic
+       maps.
+     </li>
+     <li>
+       Genetically map simple and complex phenotypes affecting chemical,
+       morphological, yield and fitness-related traits in the SOL-100
+       species.
+     </li>
+     <li>
+       Construct bioinformatic vehicles to effectively access and
+       utilize the information generated within SOL-100.
+     </li>
+     <li>
+       Foster a broadly-based international community of interacting
+       scientists committed to exploring and conserving natural
+       biodiversity.
+     </li>
+  </ol>
+</&>
+
+<&| /page/info_section.mas,
+  title         =>  'SOL-100 Organisms',
+  subtitle      => 'click on an organism name to see more details ',
+  empty_message => 'Tree not available',
+  collapsible   => 1,
+  collapsed     => 0,
+  &>
 
 %if ( $show_org_add_form ){
  <style>
@@ -57,7 +154,7 @@ sol100.mas - SGN page for sol100 project organism data overview in a tree format
  </style>
  <div id="sol100_add_organism">
     <div class="boxtitle">Authorized user</div>
-    <h3>Add a SOL100 organism</h3>
+    <h3>Add a SOL-100 organism</h3>
     <div>
       <form method="POST" name="sol100_add_form" action="<% $organism_add_uri %>">
         <input name="species" type="text" size="30" id="sol100_species" /><input type="submit" name="add_to_tree" onclick="add_to_tree()" value="Add to Tree" />
@@ -67,17 +164,38 @@ sol100.mas - SGN page for sol100 project organism data overview in a tree format
  </div>
 %}
 
-</div>
+  <p>
+  The tree below shows organisms that have been proposed for
+  sequencing by the SOL-100 project.
+  </p>
+
+  <& /organism/tree.mas, organism_tree => $organism_tree &>
+
+</&>
 
 <&| /page/info_section.mas,
-  title         =>  'SOL100 Organisms',
-  subtitle      => 'click on an organism name to see more details ',
-  empty_message => 'Tree not available',
+  title         =>  'Who are we?',
   collapsible   => 1,
   collapsed     => 0,
   &>
 
-  <& /organism/tree.mas, organism_tree => $organism_tree &>
+  <p>
+    The International SOL Genome Project (SOL) is a "virtual umbrella"
+    organization for promoting, coordinating and actively seeking
+    additional scientists, countries and funding agencies to participate
+    in an expedition to understand, utilize and conserve natural
+    biodiversity (see <a href="/solanaceae-project/">http://solgenomics.net/solanaceae-project/</a>). SOL
+    includes scientists from more than 30 countries that are united and
+    excited about the sustainable and equitable use of natural
+    biodiversity in biological research, plant breeding and conservation
+    of these resources for the future. The SOL community has sequenced
+    both the tomato genome and the potato genome through grants from
+    national funding agencies as well as international collaborative
+    projects.
+  </p>
+
+
+  <b>Mathilde Causse, Jeanne Jacobs, Glenn Bryan, Harry Klee, Sanwen Huan, and Ren&eacute; Klein Lankhorst</b>
 
 </&>
 

@@ -36,6 +36,7 @@ use CXGN::Phenome::Qtl::Tools;
 use CXGN::Phenome::Population;
 use CXGN::Login;
 
+use CatalystX::GlobalContext qw( $c );
 
 sub new { 
     my $class = shift;

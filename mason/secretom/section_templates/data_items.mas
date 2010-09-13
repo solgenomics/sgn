@@ -1,0 +1,27 @@
+<%args>
+  $default_ref_base => ''
+</%args>
+% my $items = Load( $m->content );
+% delete $ARGS{$_} for qw( default_ref_base c );
+
+<&| /page/info_section.mas, title => 'Data Sets', %ARGS &>
+<ul>
+
+% foreach my $item (@$items) {
+  <li>
+%    if( my $r = $item->{ref} ) {
+%       unless( $r =~ m!^/! || $r =~ m!^(ht|f)tp://! ) { $r = "$default_ref_base/$r" }
+        <a href="<% $r %>"><% $item->{text} %></a>
+%    } else {
+        <span class="ghosted"><% $item->{text} %></span>
+          <div style="margin-left: 2em; font-size: 90%">(file temporarily unavailable, contact <a href="mailto:jr286@cornell.edu">Joss Rose</a> for details)</div>
+
+%    }
+  </li>
+% }
+</ul>
+</&>
+
+<%once>
+  use YAML::Any;
+</%once>

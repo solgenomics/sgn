@@ -163,15 +163,15 @@ table.devbar {
 }
 
 /* general div to make something a little more indented */
-div.indentedcontent, div.page_introduction {
-  margin: 0.4em 1em 2em 2em;
+div.indentedcontent, div.indented_content, div.page_introduction {
+  margin: 0.3em 1em 2em 2em;
 }
 div.page_introduction {
-  padding: 1em;
+  padding: 0.3em;
 }
 
 /* same effect as above, except for table cells.  Don't make new pages that use this. */
-td.indentedcontent {
+td.indentedcontent, td.indented_content {
   padding: 1em 1em 2em 2em;
 }
 /*generic text-align tags*/
@@ -1000,44 +1000,43 @@ table#developer_message_table {
   display: none;
 }
 
-a.optional_show,
-a.optional_show:visited,
-a.optional_show:hover
-{                                                             
-  color: black;              
-  cursor: s-resize;
-  text-decoration: none;
-  padding: 1px 6px 1px 6px;
-  background: #eeeeee;
-  border-left: 1px solid #e0e0e0;
-  border-right: 1px solid gray;
-  border-top: 1px solid #e0e0e0;
-  border-bottom: 1px solid gray;
-}
-a.optional_show:after {
-  content: url(/documents/img/expand_arrow_blue.gif);
-  vertical-align: middle;
-}
-a.optional_show_active,
-a.optional_show_active:visited,                                 
-a.optional_show_active:hover,
-a.optional_show:active {
-  border-right: 1px solid #e0e0e0;
-  border-left: 1px solid gray;                            
-  border-bottom: 1px solid #e0e0e0;                            
-  border-top: 1px solid gray;
-  background: #dddddd;
-  cursor: n-resize;
-}                                                             
-a.optional_show_active:after,
-a.optional_show:active:after {
-  content: url(/documents/img/expand_arrow_gray.gif);
-  vertical-align: middle;
-}
 div.optional_show
 {                                                             
   margin: 0.2em 0 1.3em 0;
+  border: 1px solid gray;
+  border-radius: 6px;
+  -moz-border-radius: 6px;
+  -webkit-border-radius: 6px;
+  background: #eee;
 }                           
+div.optional_show > h3 { 
+  font-weight: normal;
+  padding: 6px 15px;
+  margin: 0;
+  padding: 3px;
+  padding-bottom: 6px;
+  font-size: 100%;
+  cursor: pointer;
+}
+div.optional_show > div { 
+  background: white;
+  margin: 0 10px 10px 10px;
+}
+div.optional_show > h3 > .title { 
+  margin-left: 20px;
+}
+
+div.optional_show > h3 > .icon { 
+  background-image: url(/img/ui-icons.png);
+  width: 16px;
+  height: 16px;
+  position: absolute;
+  background-position: -32px -16px;
+}
+div.optional_show > h3.active > .icon { 
+  background-position: -64px -16px;
+}
+
 
 /*style for displaying a link instead of a button for 'optional_show' contents */ 
 a.abstract_optional_show {
@@ -1266,4 +1265,8 @@ div.publication_embedded .citation {
   font-style: italic;
   background: #ddd;
   padding: 0.3em 4px;
+}
+
+.species_binomial {
+  font-style: italic;
 }

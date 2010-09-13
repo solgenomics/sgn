@@ -244,26 +244,6 @@ sub html_optional_show {
         default_show => $default_show_item,
         class => $class_name,
     );
-
-    $class_name &&= qq| class="$class_name"|;
-    my $disabled = $default_show_item ? 'disabled: true,' : '';
-
-    return <<"";
-<script type="text/javascript">
-	jQuery(function() {
-		jQuery("#$itemid").accordion({
-                        $disabled
-			collapsible: true
-		});
-	});
-</script>
-<div id="$itemid" $class_name>
-    <h3><a href="#">$itemtitle</a></h3>
-    <div>
-       $itemHTML
-    </div>
-</div>
-
 }
 
 =head2 html_alternate_show

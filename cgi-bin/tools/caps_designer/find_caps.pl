@@ -32,8 +32,8 @@ if ($cutno < 1){
 
 ##########Write the sequence into a temp file for processing
 my $html_root_path = $c->config->{'basepath'};
-my $doc_path =  $c->config->{'tempfiles_subdir'}.'/caps_designer';
-my $path = $html_root_path . $doc_path;
+my $doc_path =  $c->tempfiles_subdir('caps_designer');
+my $path = $c->path_to($doc_path);
 my ($tmp_fh, $tmp_name);
 
 $tmp_fh = new File::Temp(
@@ -63,7 +63,7 @@ if ($format =~ /fasta/i){
 } elsif ($format =~ /clustal/i){
   $format_check = CXGN::BioTools::CapsDesigner2::check_clustal($tmp_name);
 } else {
-  &err_page('Unrecognized format - please enter your input in FASTA or CLUSTAL format.');
+  &err_page($page,'Unrecognized format - please enter your input in FASTA or CLUSTAL format.');
 }
 
 if ($format_check == 0){
@@ -285,9 +285,6 @@ $page -> footer();
 sub err_page {
   my $err_page = shift;
   my $err_message = shift;
-  $err_page->header();
-  print page_title_html("CAPS Designer Error");
-  print "$err_message<br /><br /><a href = 'caps_input.pl'>Start over again</a><br />";
-  $err_page -> footer();
-  exit -1;
+
+  $c->throw( public_message => $err_message, notify => 0, is_client_error => 1 );
 }

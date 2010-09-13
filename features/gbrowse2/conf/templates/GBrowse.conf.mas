@@ -101,13 +101,13 @@ too many landmarks  = 100
 link          = AUTO
 
 # HTML to insert inside the <head></head> section
-head   = sub{ require LWP::Simple; LWP::Simple::get("http://$ENV{HTTP_HOST}/bare_mason.pl/site/header/head.mas") }
+head   = sub{ require LWP::Simple; LWP::Simple::get("http://$ENV{HTTP_HOST}/bare_mason/site/header/head") }
 
 # At the top of the HTML...
-header = sub{ require LWP::Simple; LWP::Simple::get("http://$ENV{HTTP_HOST}/bare_mason.pl/site/header/body.mas") }
+header = sub{ require LWP::Simple; LWP::Simple::get("http://$ENV{HTTP_HOST}/bare_mason/site/header/body") }
 
 # At the footer
-footer = sub{ require LWP::Simple; LWP::Simple::get("http://$ENV{HTTP_HOST}/bare_mason.pl/site/footer/body.mas") }
+footer = sub{ require LWP::Simple; LWP::Simple::get("http://$ENV{HTTP_HOST}/bare_mason/site/footer/body") }
 
 # Various places where you can insert your own HTML -- see configuration docs
 html1 = 

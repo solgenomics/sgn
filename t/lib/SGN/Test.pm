@@ -1,28 +1,29 @@
 package SGN::Test;
 use strict;
+use warnings FATAL => 'all';
+use autodie qw/:all/;
+
 use File::Spec::Functions;
 use File::Temp;
 use File::Find;
-use File::Temp;
-use HTML::Lint;
+
 use List::Util qw/min shuffle/;
 use Test::More;
-our @ISA = qw/Exporter/;
 use Exporter;
-use SGN::Context;
-use autodie qw/:all/;
+
+use HTML::Lint;
+
+BEGIN { $ENV{CATALYST_SERVER} ||= $ENV{SGN_TEST_SERVER} }
+
+# we can re-export Catalyst::Test's request, get, and ctx_request functions
+use Catalyst::Test 'SGN';
+our @ISA = qw/Exporter/;
+our @EXPORT_OK = qw/validate_urls request get ctx_request /;
+
 use lib 't/lib';
 use SGN::Test::WWW::Mechanize;
 
-our @EXPORT_OK = qw/validate_urls/;
-
-my $context = SGN::Context->new;
-
-BEGIN {
-    BAIL_OUT "You need to define SGN_TEST_SERVER environment variable"
-        unless $ENV{SGN_TEST_SERVER};
-    diag "Using server $ENV{SGN_TEST_SERVER}";
-}
+my $test_server_name = $ENV{SGN_TEST_SERVER} || 'http://(local test server)';
 
 sub make_dump_tempdir {
     my $d = File::Temp->newdir( catdir( File::Spec->tmpdir, 'validate_error_dump-XXXXXX'), CLEANUP => 0 );
@@ -31,12 +32,11 @@ sub make_dump_tempdir {
 }
 
 sub db_connection_count {
-    my $sql =<<SQL;
-select count(*) as connections from pg_stat_activity where usename <> 'postgres'
-SQL
-    my $dbh     = DBI->connect( @{ $context->dbc_profile}{qw{ dsn user password attributes }});
-    my (@row)   = $dbh->selectrow_array($sql);
-    return $row[0];
+    my ($mech) = @_;
+    my $dbh     = DBI->connect( @{ $mech->context->dbc_profile}{qw{ dsn user password attributes }} );
+    return $dbh->selectcol_arrayref(<<'')->[0] - 1;
+select count(*) from pg_stat_activity
+
 }
 
 sub validate_urls {
@@ -52,10 +52,12 @@ sub validate_urls {
             skip 'skipping leak test because SGN_SKIP_LEAK_TEST is set', 4
                 if $ENV{SGN_SKIP_LEAK_TEST};
 
-            my $before = db_connection_count();
-            _validate_single_url( $test_name, $url, $mech );
-            my $after = db_connection_count();
-            cmp_ok( $after, '<=', $before, "did not leak any database connections on $test_name ($url)");
+            $mech->with_test_level( local => sub {
+               my $before = db_connection_count($mech);
+               _validate_single_url( $test_name, $url, $mech );
+               my $after = db_connection_count($mech);
+               cmp_ok( $after, '<=', $before, "did not leak any database connections on $test_name ($url)");
+            }, 4 );
         }
     }
 }
