@@ -454,7 +454,7 @@ EOS
 			            contents => $phenotype_data ." ".$data_download 
 		                   );	    
 	    
-	    print info_section_html( title    => 'Correlation Analysis',			   
+	    print info_section_html( title    => 'Pearson Correlation Analysis',			   
 				     contents => $correlation_data,
 		                   );
 	} 
