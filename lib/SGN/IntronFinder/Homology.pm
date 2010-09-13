@@ -26,6 +26,8 @@ sub find_introns_txt {
 
     # validate our input sequences and copy them to a temp file
     my $seq_in = Bio::SeqIO->new( -fh => $in_fh, -format => 'fasta' );
+    die "Invalid input FASTA sequence " unless $seq_in;
+
     my $temp_seq = File::Temp->new(
         DIR      => $tempfile_dir,
         TEMPLATE => $FindBin::Script . '-seq_in-XXXXXX',
@@ -134,25 +136,6 @@ sub find_introns_txt {
                 @cdna_intron_absolute_positions =
                   map { roundToInt($_) } @cdna_intron_absolute_positions;
 
-                #    	    printArray(@cdna_intron_absolute_positions);
-
-                #	    print "\n";
-
-#query_intron_positions is either positions on the sequence from the input file or positions on the unigene sequence
-#             if ( $unigenes{$query}[1] )    #if we have it in the database
-#             {
-#                 @aa_visual_positions = map {
-#                     removeOutofboundsIntrons( $_, 0,
-#                         ( length( $hsp->query_string ) ) + 1 );
-#                 } @aa_visual_positions;
-#                 @cdna_intron_absolute_positions = map {
-#                     removeOutofboundsIntrons(
-#                         $_,
-#                         $unigenes{$query}[5],
-#                         $unigenes{$query}[5] + $unigenes{$query}[3]
-#                     );
-#                 } @cdna_intron_absolute_positions;
-#             }
                 if ( @aa_visual_positions
                   ) #make sure we have at least one intron in the alignment to print
                 {
@@ -180,8 +163,6 @@ sub find_introns_txt {
             "$results_with_introns results returned for query $query.\n\n");
     }
 }
-
-#system("rm -f blast.results");
 
 ########## SUBROUTINES ################
 
@@ -304,97 +285,8 @@ sub displayAlignments {
       ? $hsp->end('query')
       : $hsp->start('query');
 
-    #     if ( $unigenes{$query}[1] )
-    #     {    #we have info about this sequence from our database
-    #         if (
-    #             (
-    #                 ( $hsp->start('query') >= $unigenes{$query}[5] )
-    #                 && ( $hsp->start('query') <=
-    #                     ( $unigenes{$query}[5] + $unigenes{$query}[3] ) )
-    #             )
-    #             || (
-    #                 ( $hsp->end('query') >= $unigenes{$query}[5] )
-    #                 && ( $hsp->end('query') <=
-    #                     ( $unigenes{$query}[5] + $unigenes{$query}[3] ) )
-    #             )
-    #           )
-    #         {    #the HSP has at least one end within our EST
-
-    #             my $estspaces = undef;
-    #             if ( ( $hsp->start('query') ) > ( $unigenes{$query}[5] )
-    #               )    #if hsp starts in unigene after est starts in unigene
-    #             {
-    #                 $eststart = $hsp->start('query') - $unigenes{$query}[5];
-
-#             #open (TEMPDNA, ">tempdnafilex__yz.txt");
-#             #print TEMPDNA ">\n", substr($unigenes{$query}[4], $eststart), "\n";
-#             #close TEMPDNA;
-#             }
-
-#             else {
-#                 $estspaces =
-#                   ceil( ( $unigenes{$query}[5] - $hsp->start('query') ) / 3 );
-#                 $eststart =
-#                   3 - ( ( $unigenes{$query}[5] - $hsp->start('query') ) % 3 );
-
-#             #open (TEMPDNA, ">tempdnafilex__yz.txt");
-#             #print TEMPDNA ">\n", substr($unigenes{$query}[4], $eststart), "\n";
-#             #close TEMPDNA;
-#             }
-
-  #             #first the unigene
-  #             $wslen = 20 -
-  #               ( length( $unigenes{$query}[1] ) + length($query_start_pos) );
-  #             $out_fh->print( $unigenes{$query}[1] . ":" );
-
-    # 	    $out_fh->print(' ' x $wslen);
-
-    # 	    $out_fh->print( $query_start_pos . "|" . $hsp->query_string . "\n" );
-
- #             #Convert the EST sequence to amino acid using the Bioperl module.
- #             my $converter = Bio::SeqIO->new(
- #                 -file     => "tempdnafilex__yz.txt",
- #                 '-format' => 'Fasta'
- #             );
- #             my $dnaseq = $converter->next_seq;
-
-    #             my $pobj = $dnaseq->translate( undef, undef, 0 );
-
-    #             $wslen = 20 - length($query);
-
-    #             $out_fh->print( $query . ":" );
-    # 	    $out_fh->print( ' ' x ($wslen - length $eststart ) );
-    #             $out_fh->print( $eststart . "|" );
-
-    # 	    #$out_fh->print( ' ' x $wslen ) if $estspaces;
-
-#             my $estend = convertRealToVisual( $hsp->query_string, length $pobj->seq() );
-
-   #             #changed to accomodate gaps in unigene alignment
-   # 	    $out_fh->print( substr( $hsp->query_string, 0, $estend + 1 ) . "\n" );
-
-    #             #	     print $out_file_handle $pobj->seq(), "\n";
-
-   #             #then the HSP
-   #             $wslen =
-   #               20 - ( length( $hit->name ) + length( $hsp->start('hit') ) );
-
-    #             $out_fh->print( $hit_name . ":" );
-
-    # 	    $out_fh->print( ' ' x $wslen );
-
-    # 	    $out_fh->print( $hsp->start('hit') . "|" );
-    #             $out_fh->print( $hsp->hit_string . "\n" );
-    #         }
-    #     }
-
 #we have no info in the database, just the sequence from the input file. since we blasted with the
 #EST sequence anyway, no need for arithmetic, just print hsp and query.
-#    else {
-
-    # $out_fh->print ("No unigene entry found for this query.\n");
-
-    #EST sequence
 
     my $wslen = 20 - length($query);
 
@@ -460,37 +352,6 @@ sub displayIntrons {
     $out_fh->print( $intronstring . "\n" . $positionstring . "\n" );
 }
 
-# # number of gaps in the string between 0 and i.
-# sub getNumGapsBeforePosition {
-
-#     my ( $query_string, $i ) = @_;
-#     $i = ceil($i);
-#     my $current_string;
-#     my $gapcount      = 0;
-#     my $totalgapcount = 0;
-#     my $start         = 0;
-
-#     do {
-#         $gapcount = 0;
-
-#         #	print "query_string length is ", length $query_string, "\n";
-#         #	print "start is $start, i is $i\n";
-#         $current_string = substr( $query_string, $start, $i );
-#         while ( $current_string =~ /-/g ) {
-#             $gapcount++;
-#         }
-
-#         $totalgapcount += $gapcount;
-#         $start         += $i;
-
-#         #	print "start is $start after increment\n";
-#         $i = $gapcount;
-
-#     } while ( $gapcount != 0 );
-
-#     return $totalgapcount;
-# }
-
 sub convertRealToVisual {
     my ( $var1, $var2 ) = @_;
     return convertRealVisual( $var1, $var2, 1 );
@@ -547,13 +408,9 @@ sub getFileName($) {
 }
 
 sub roundToInt($) {
-
-    #print ALRES "\n\n ROUNDING \n\n";
-
     my ($num) = @_;
     my $res = int( $num + .5 * ( $num <=> 0 ) );
 
-    #print ALRES "\n\n $num ---> $res \n\n";
     return $res;
 
 }
