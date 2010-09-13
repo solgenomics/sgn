@@ -121,7 +121,7 @@ heatmap.2(coefficients,
           lmat=rbind( c(0, 3), c(2,1), c(0,4) ),
           lhei=c(0.25, 4, 0.75),
           lwid=c(0.25, 4),
-          cexRow = 1.5,
+          cexRow = 1.25,
           cexCol = 1.5,
           margins = c(10, 6)
           )
