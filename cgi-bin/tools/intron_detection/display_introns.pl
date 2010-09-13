@@ -9,6 +9,7 @@ use CXGN::Debug;
 use CXGN::BlastDB;
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw/page_title_html/;
+use SGN::IntronFinder::Homology;
 
 my $d = CXGN::Debug->new();
 
@@ -62,13 +63,12 @@ my $gene_feature_file =
 
 print '<pre>';
 my $output;
-require lib;
-lib->import($page->path_to(qw/ cgi-bin tools intron_detection lib/));
-require SGN::IntronFinder::Homology;
+open my $input_fh, '<', \$input or die $!;
+open my $output_fh, '>', \$output or die $!;
 
 SGN::IntronFinder::Homology::find_introns_txt
-    ( IO::Scalar->new( \$input  ),
-      IO::Scalar->new( \$output ),
+    ( $input_fh,
+      $output_fh,
       $blast_e_val,
       $gene_feature_file,
       $temp_file_path,
