@@ -17,9 +17,7 @@ library(ltm)
                                         #library(reshape)
 
 allargs<-commandArgs()
-warning()
 print(allargs)
-
 
 phenodata<-grep("phenodata",
                allargs,
@@ -118,11 +116,11 @@ heatmap.2(coefficients,
           RowSideColors,
           keysize = 1,
           density.info="none",
-          lmat=rbind( c(0, 3), c(2,1), c(0,4) ),
+          lmat=rbind( c(0,3), c(2,1), c(0,4)),
           lhei=c(0.25, 4, 0.75),
           lwid=c(0.25, 4),
           cexRow = 1.25,
-          cexCol = 1.5,
+          cexCol = 1.25,
           margins = c(10, 6)
           )
 
@@ -137,4 +135,4 @@ write.table(allcordata,
 
 
 
-q(runLast = FALSE)
+q(save = "no", runLast = FALSE)
