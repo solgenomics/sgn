@@ -66,25 +66,17 @@ allcordata<-coefpvalues$cor.mat
 allcordata[lower.tri(allcordata)]<-coefpvalues$p.values[, 3]
 diag(allcordata)<-1.00
 
-#print(coefficients)
 
 pvalues<-as.matrix(allcordata)
 
-## pvalues<-pvalues[-which(apply(pvalues,
-##                                    1,
-##                                    function(x)all(is.na(x)))
-##                              )
 
-##                      ]
 pvalues<-round(pvalues,
                digits=2
                )
 
-print(pvalues)
 pvalues[upper.tri(pvalues)]<-NA
-print(pvalues)
-                                        #rounding correlation coeficients into 2 decimal places
 
+                                        #rounding correlation coeficients into 2 decimal places
 
 coefficients<-round(coefficients,
                     digits=2
@@ -109,26 +101,29 @@ coefficients[upper.tri(coefficients)]<-NA
 #print(coefficients)
 
 png(file=heatmap,
-    height=800,
-    width=800,
+    height=600,
+    width=600,
     bg="transparent"
     )
 
+
 heatmap.2(coefficients,
-          Rowv=NA,
-          Colv=NA,
+          Rowv=FALSE,
+          Colv=FALSE,
+          dendrogram="none",
           na.rm=TRUE,
-          col =  rev(colorRampPalette(brewer.pal(10,"RdBu"))(128)),
-          trace="none",
-          #cellnote=coefficients,
-          #notecol="cyan",
-          margins = c(7, 7),
+          col =  rev(colorRampPalette(brewer.pal(10,"Spectral"))(128)),
+          trace="none",                  
           ColSideColors,
           RowSideColors,
           keysize = 1,
-          density.info=c("none"),
-          lmat=rbind(c(0, 3), c(2,1), c(0,4)),
-          lhei=c(1.5, 8, 2 )         
+          density.info="none",
+          lmat=rbind( c(0, 3), c(2,1), c(0,4) ),
+          lhei=c(0.25, 4, 0.75),
+          lwid=c(0.25, 4),
+          cexRow = 1.5,
+          cexCol = 1.5,
+          margins = c(10, 6)
           )
 
 dev.off()
