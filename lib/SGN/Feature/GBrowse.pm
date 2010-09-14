@@ -5,7 +5,7 @@ SGN::Feature::GBrowse - site feature object to provide GBrowse integration
 =cut
 
 package SGN::Feature::GBrowse;
-use MooseX::Singleton;
+use Moose;
 use namespace::autoclean;
 
 extends 'SGN::Feature';
@@ -24,7 +24,7 @@ has 'conf_dir' => ( documentation => 'directory where GBrowse will look for its 
     isa => 'Path::Class::Dir',
     coerce => 1,
     lazy_build => 1,
-   ); sub _build_conf_dir { shift->path_to('conf','rendered_conf') }
+   ); sub _build_conf_dir { my $self = shift; $self->tmpdir->subdir( 'rendered_conf' ) }
 
 has 'conf_template_dir' => ( documentation => <<'EOD',
 directory for configuration templates, which will be rendered on a one-to-one basis into $self->conf_dir during setup()
@@ -79,7 +79,7 @@ has 'default_db_host' => (
     isa => 'Str',
     lazy_build => 1,
    ); sub _build_default_db_host {
-       my $dsn = shift->context->config->{DatabaseConnection}{default}{dsn};
+       my $dsn = shift->context->dbc_profile->{dsn};
        return unless $dsn =~ /host=([^;]+)/;
        return $1;
    }
@@ -88,14 +88,14 @@ has 'default_db_user' => (
     isa => 'Str',
     lazy_build => 1,
    ); sub _build_default_db_user {
-       shift->context->config->{DatabaseConnection}{default}{user};
+       shift->context->dbc_profile->{user};
    }
 has 'default_db_password' => (
     is  => 'ro',
     isa => 'Str',
     lazy_build => 1,
    ); sub _build_default_db_password {
-       shift->context->config->{DatabaseConnection}{default}{password};
+       shift->context->dbc_profile->{password};
    }
 
 
@@ -140,28 +140,39 @@ sub render_all_configs {
     my $self = shift;
 
     # all .mas files in the conf_template_dir
-    my @template_files =
-        grep /\.mas$/ && -f,
-        $self->conf_template_dir->children;
+    my @template_files;
+    $self->conf_template_dir->recurse(
+        callback => sub {
+            my ($child) = @_;
+            return if $child->is_dir || $child !~ /\.mas$/;
+            push @template_files, $child;
+        });
 
     foreach my $template_file (@template_files) {
 
         # assemble our target filename, which is the same file name
         # (minus the .mas), in the $self->conf_dir directory
-        my $render_target = do {
-            my $bn = $template_file->basename;
-            $bn =~ s/\.mas$//;
-            $self->conf_dir->file( $bn );
-        };
+        my $render_target_relative = $template_file->relative( $self->conf_template_dir );
+        $render_target_relative =~ s/\.mas$//;
+        my $render_target = $self->conf_dir->file( $render_target_relative );
 
+        $render_target->dir->mkpath;
         $self->render_config_template( $template_file => $render_target );
+    }
+
+    # also symlink other things in the conf dir into there
+    for my $conf_thing ( $self->conf_template_dir->parent->children ) {
+        my $link_target = $self->conf_dir->file( $conf_thing->relative( $conf_thing->parent ) );
+        unlink $link_target;
+        symlink $conf_thing, $link_target
+            or die "$! linking $conf_thing -> $link_target";
     }
 }
 
 sub render_config_template {
     my ( $self, $template_file, $render_target ) = @_;
 
-        # render the template into the target file
+    # render the template into the target file
     my $outbuf;
     my $mason = HTML::Mason::Interp
         ->new( allow_globals => [qw[ $c $feature ]],
@@ -172,7 +183,7 @@ sub render_config_template {
     $mason->set_global( '$c'       => $self->context );
     $mason->set_global( '$feature' => $self          );
 
-    $mason->exec( '/'.$template_file->basename ); #< mason's default search path is current working directory
+    $mason->exec( '/'.$template_file->relative( $self->conf_template_dir) ); #< mason's default search path is current working directory
 
     $render_target->openw->print( $outbuf );
 }

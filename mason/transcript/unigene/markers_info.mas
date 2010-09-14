@@ -136,8 +136,3 @@ if (defined $id) {
 </%perl>
 
 <% $markers_content %>
-
-<& 
-   /util/import_javascript.mas, 
-   classes => 'CXGN.Effects' 
-&>

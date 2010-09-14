@@ -18,34 +18,25 @@ Waleed Haso wh292@cornell.edu
 
 =cut
 use strict;
+use warnings;
 use English;
 use File::Basename;
-
 use File::Temp qw/tempfile/;
 use File::Basename;
 use File::Spec;
-
-
 use CXGN::Page;
 use CXGN::BlastDB;
-
 use CXGN::Apache::Error;
-use CXGN::VHost;
-
-use CXGN::Tools::File qw/file_contents/;
-use CXGN::Page::FormattingHelpers qw/info_section_html page_title_html columnar_table_html html_break_string/;
-
-
 use Bio::Seq;
 use Bio::Graphics::Gel;
+use CXGN::Page::FormattingHelpers qw/info_section_html page_title_html columnar_table_html html_break_string/;
+use CatalystX::GlobalContext '$c';
 
 ##############################################################################################################################
 our $page = CXGN::Page->new( "PCR Search Report", "Waleed");
-our $vhost_conf = CXGN::VHost->new();
 our %params;
-##############################################################################################################################
-our $tempfiles_subdir_rel = File::Spec->catdir($vhost_conf->get_conf('tempfiles_subdir'),'blast'); #path relative to website root dir
-our $tempfiles_subdir_abs = File::Spec->catdir($vhost_conf->get_conf('basepath'),$tempfiles_subdir_rel); #absolute path
+our $tempfiles_subdir_rel = File::Spec->catdir($c->config->{'tempfiles_subdir'},'blast'); #path relative to website root dir
+our $tempfiles_subdir_abs = File::Spec->catdir($c->config->{'basepath'},$tempfiles_subdir_rel); #absolute path
 ##############################################################################################################################
 
 
@@ -302,8 +293,8 @@ EOF
     
 
     #saving the gel img in a temp file 
-    my $gel_img_tempdir = File::Spec->catdir($vhost_conf->get_conf('basepath'),
-            		  $vhost_conf->get_conf('tempfiles_subdir'),
+    my $gel_img_tempdir = File::Spec->catdir($c->config->{'basepath'},
+            		  $c->config->{'tempfiles_subdir'},
             		  "temp_images",
             		 );
     
@@ -313,7 +304,7 @@ EOF
     my $base_temp = basename ($temp_file);
 
     #generating the url
-    my $img_url = File::Spec->catdir( $vhost_conf->get_conf('tempfiles_subdir'),
+    my $img_url = File::Spec->catdir( $c->config->{'tempfiles_subdir'},
             	      "temp_images", $base_temp
             	    );
 

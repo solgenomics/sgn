@@ -103,14 +103,11 @@ sub generate_form {
 	$description = $args{description};
     }
 
-    my $form = undef;
     if ($self->get_action()=~/new|edit|store/ ) { 
-	print STDERR "Generating EditableForm..\n";
-	$form = CXGN::Page::Form::Editable->new();
+        $form = CXGN::Page::Form::Editable->new();
     }
     else { 
-	print STDERR "Generating static Form...\n";
-	$form = CXGN::Page::Form::Static->new();
+        $form = CXGN::Page::Form::Static->new();
     }
 
     $form->add_field( display_name=>"Image Name:", field_name=>"name", contents=>$name, length=>15, object=>$image, getter=>"get_name", setter=>"set_name");
@@ -128,9 +125,7 @@ sub generate_form {
 sub display_page { 
     my $self = shift;
     my %args = $self->get_args();
-    
     my $image = $self->get_object();
-    my $image_id = $self->get_object_id();
 
     my $experiment_id = $image->get_experiment_id();
     my $experiment = CXGN::Insitu::Experiment->new($self->get_dbh(), $experiment_id);

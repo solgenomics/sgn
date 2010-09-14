@@ -1,0 +1,21 @@
+<%args>
+    $title => 'Ontology browser'
+    $cvterm
+</%args>
+<&| /page/info_section.mas,
+    title       => $title,
+    collapsible => 1,
+&>
+<& /util/import_javascript.mas,
+    classes => [
+        'MochiKit.DOM',
+        'MochiKit.Visual',
+        'MochiKit.Async',
+        'Prototype',
+        'MochiKit.Logging',
+        'CXGN.Onto.Browser',
+        'CXGN.Page.FormattingHelpers',
+     ]
+&>
+<& /ontology/parentage.mas, accession => $cvterm->get_full_accession &>
+</&>

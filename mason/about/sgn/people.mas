@@ -1,11 +1,8 @@
-
-
-
+<%init>
+    use CXGN::Page::FormattingHelpers qw/info_section_html info_table_html/;
+</%init>
 
 <%perl>
-
-use CXGN::Page::FormattingHelpers qw/info_section_html info_table_html/;
-
 sub person_image {
   my ($filebase,$name,$position) = @_;
   $name ||= '';
@@ -58,7 +55,7 @@ print info_section_html( title => 'Staff',
 					     contents => person_set
 					     ([ 
 						['robert','Robert Buels'],
-						['adri','Adri Mills'],
+						['jonathan','Jonathan Leto'],
 						['joseph','Joseph Gosselin'],
 						],
 					      ),

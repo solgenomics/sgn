@@ -10,14 +10,11 @@ use CXGN::People;
 use CXGN::Login;
 
 use CXGN::Tools::List qw/str_in/;
-use CXGN::Page::FormattingHelpers qw/info_table_html columnar_table_html/;
+use CXGN::Page::FormattingHelpers qw/ info_table_html /;
 
 use CXGN::Genomic::Clone;
 
-
-my $page = CXGN::Scrap::AjaxPage->new('text/html');
-
-$page->send_http_header;
+use CatalystX::GlobalContext '$c';
 
 my %ops = ( assign     => \&assign_to_project,
 	    localize   => \&report_mapping_bin,
@@ -26,7 +23,7 @@ my %ops = ( assign     => \&assign_to_project,
 	    qclonejson => \&query_bac_json
 	  );
 
-my ($opname) = $page->get_encoded_arguments('action');
+my $opname = $c->req->param('action');
 #die "got opname $opname\n";
 $ops{$opname} or die 'unknown operation';
 print $ops{$opname}->();
@@ -39,7 +36,7 @@ sub assign_to_project {
   my $person = get_valid_person();
   my $clone = clone();
 
-  my ($id) = $page->get_encoded_arguments('proj');
+  my $id = $c->req->param('proj');
   if($id eq 'none') {
     $id = undef;
   } else {
@@ -58,7 +55,7 @@ sub report_mapping_bin {
   my $person = get_valid_person();
   my $clone = clone();
 
-  my ($id) = $page->get_encoded_arguments('il_indiv');
+  my $id = $c->req->param('il_indiv');
   if($id eq 'none') {
     $id = undef;
   } else {
@@ -148,7 +145,7 @@ sub query_bac_json {
 ############ UTILITY SUBS #############
 
 sub clone {
-  my ($id) = $page->get_encoded_arguments('id');
+  my $id = $c->req->param('id');
   $id += 0;
   my $c = CXGN::Genomic::Clone->retrieve($id)
     or die 'could not retrieve clone from id';

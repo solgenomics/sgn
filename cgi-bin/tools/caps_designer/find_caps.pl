@@ -2,13 +2,13 @@
 #Hannah De Jong, Summer Intern
 
 use strict;
+use warnings;
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw/  page_title_html
                                        blue_section_html  /;
-use CXGN::VHost;
 use CXGN::BioTools::CapsDesigner2;
-#use CXGN::BioTools::InputFormatChecker;
 use File::Temp;
+use CatalystX::GlobalContext '$c';
 
 my $page = CXGN::Page->new( "CAPS Designer Result", "Chenwei");
 
@@ -31,10 +31,9 @@ if ($cutno < 1){
 
 
 ##########Write the sequence into a temp file for processing
-my $vhost_conf = CXGN::VHost->new();
-my $html_root_path = $vhost_conf->get_conf('basepath');
-my $doc_path =  $vhost_conf->get_conf('tempfiles_subdir').'/caps_designer';
-my $path = $html_root_path . $doc_path;
+my $html_root_path = $c->config->{'basepath'};
+my $doc_path =  $c->tempfiles_subdir('caps_designer');
+my $path = $c->path_to($doc_path);
 my ($tmp_fh, $tmp_name);
 
 $tmp_fh = new File::Temp(
@@ -50,7 +49,7 @@ close $tmp_fh;
 
 ########Read enzyme information.  allENZYME is a file containing all enzyme information and it is located in the same directory as this script.
 ##allENZYME last updated August 17, 2009 to 09-10 prices
-my $support_dir = $vhost_conf->get_conf('support_data_subdir');
+my $support_dir = $c->config->{'support_data_subdir'};
 my $enzyme_file = $html_root_path . $support_dir . '/caps_designer/allENZYME';
 my ($cost_ref, $cut_ref) = CXGN::BioTools::CapsDesigner2::read_enzyme_file($enzyme_file);
 
@@ -64,7 +63,7 @@ if ($format =~ /fasta/i){
 } elsif ($format =~ /clustal/i){
   $format_check = CXGN::BioTools::CapsDesigner2::check_clustal($tmp_name);
 } else {
-  &err_page('Unrecognized format - please enter your input in FASTA or CLUSTAL format.');
+  &err_page($page,'Unrecognized format - please enter your input in FASTA or CLUSTAL format.');
 }
 
 if ($format_check == 0){
@@ -286,9 +285,6 @@ $page -> footer();
 sub err_page {
   my $err_page = shift;
   my $err_message = shift;
-  $err_page->header();
-  print page_title_html("CAPS Designer Error");
-  print "$err_message<br /><br /><a href = 'caps_input.pl'>Start over again</a><br />";
-  $err_page -> footer();
-  exit -1;
+
+  $c->throw( public_message => $err_message, notify => 0, is_client_error => 1 );
 }

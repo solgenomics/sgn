@@ -18,7 +18,7 @@ most beautiful settings in the world, at the <a href="http://www.continentalterm
 Hotel Continental Terme</a>. Special rates are being
 arranged for meeting participants. More information is available at
 <a href="http://www.solanaceae2005.org">the meeting's webpage</a>.</p>
-<p>First meeting annoucement: [<a href=
+<p>First meeting announcement: [<a href=
 "/static_content/solanaceae-project/meeting_2005/SOL2_meeting_announcement1.pdf">pdf</a>]<br /></p>
 <center><img src="/static_content/solanaceae-project/meeting_2005/Ischia-1.gif" alt="" /><br />
 <br />

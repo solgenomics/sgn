@@ -71,23 +71,18 @@ use File::Copy;
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw/ page_title_html blue_section_html  /;
 use CXGN::Page::Widgets qw/ collapser /;
-
-use CXGN::VHost;
-
-#use CXGN::BioTools::CapsDesigner;
 use File::Temp qw/tempfile/;
 use File::Basename qw /basename/;
 use CXGN::Phylo::Alignment;
 use Bio::AlignIO;
-
 use CXGN::DB::Connection;
-
 use CXGN::Tools::Run;
 use CXGN::Tools::Gene;
 use CXGN::Tools::Identifiers qw/ identifier_namespace identifier_url /;
 use CXGN::Tools::Entrez;
 use HTML::Entities;
 use CXGN::Tools::Param qw/ hash2param /;
+use CatalystX::GlobalContext '$c';
 
 our $ALIGN_SEQ_LIMIT = 200;
 my $page = CXGN::Page->new( "SGN Alignment Analyzer", "Chenwei-Carpita" );
@@ -152,17 +147,15 @@ unless ( $seq_data
 #############################################################
 #If a $seq_data is passed to the page, write the content of $seq_data into a temp file
 
-my $vhost_conf = CXGN::VHost->new();
-
-our $HTML_ROOT_PATH = $vhost_conf->get_conf('basepath');
+our $HTML_ROOT_PATH = $c->config->{'basepath'};
 our $PATH     = $page->path_to( $page->tempfiles_subdir('align_viewer') );
 unless( -d $PATH ) {
     mkdir $PATH
         or die "temp dir '$PATH' does not exist, and could not create";
 }
 our $tmp_fh;
-our $CLUSTER_SHARED_TEMPDIR = $vhost_conf->get_conf('cluster_shared_tempdir');
-our $NOCLUSTER              = $vhost_conf->get_conf('nocluster');
+our $CLUSTER_SHARED_TEMPDIR = $c->config->{'cluster_shared_tempdir'};
+our $NOCLUSTER              = $c->config->{'nocluster'};
 
 #You can send the temp_file as a filename and not a full path, good for security
 unless ( $temp_file =~ /\// ) {
@@ -227,7 +220,7 @@ elsif ( $id_data =~ /\S+/ ) {
     }
     $format = "fasta_unaligned";
 
-    open( my $temp_fh, ">$temp_file" );
+    open( my $temp_fh, '>', $temp_file ) or die $!;
 
     my @ids = ();
     push( @ids, split( /\s+/, $id_data ) );
@@ -1215,7 +1208,7 @@ sub run_muscle {
         my ( $enc_title, $enc_type ) =
           map { HTML::Entities::encode($_) } ( $title, $type );
         my $message =
-          "Running Muscle v3.6 ($SEQ_COUNT sequences) on SGN Linux Cluster...";
+          "Running Muscle v3.6 ($SEQ_COUNT sequences), please wait ...";
 
         chdir $old_wd;
 

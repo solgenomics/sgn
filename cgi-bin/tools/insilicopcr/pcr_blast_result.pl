@@ -22,35 +22,27 @@ Original code was aspired from BLAST.
 #handle inserting primer sequences. 
 
 use strict;
+use warnings;
 use CXGN::Page;
-use CXGN::VHost;
 use POSIX;
-
 use File::Temp qw/tempfile/;
 use File::Basename;
-
-use Storable qw / store /;
+use Storable qw/ store /;
 use File::Spec;
 
 use Tie::UrlEncoder;
 our %urlencode;
-
 use CXGN::DB::Connection;
-
-use CXGN::Page::UserPrefs;
 use CXGN::BlastDB;
-
 use CXGN::Tools::Identifiers;
 use CXGN::Tools::List qw/distinct evens/;
-
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw/page_title_html modesel info_table_html hierarchical_selectboxes_html simple_selectbox_html/;
-
 use Bio::Seq;
+use CatalystX::GlobalContext '$c';
+
 ################################################################################################################
 my $page = CXGN::Page->new( "Get PCR Products", "Waleed");
-my $prefs = CXGN::Page::UserPrefs->new( CXGN::DB::Connection->new );
-my $vhost_conf = CXGN::VHost->new();
 
 my %params;
 my $seq_count = 0;
@@ -141,7 +133,7 @@ my %arg_handlers =
      
      #make a tempfile that has our sequence(s) in it
      my ($seq_fh, $seq_filename) = tempfile( "seqXXXXXX",
-					     DIR=> $vhost_conf->get_conf('cluster_shared_tempdir'),
+					     DIR=> $c->config->{'cluster_shared_tempdir'},
 					   );
      print $seq_fh $sequence;
 
@@ -202,7 +194,6 @@ my %arg_handlers =
      my $basename = $bdb->full_file_basename;
             #returns '/data/shared/blast/databases/genbank/nr'
  #remember the file_base the user just blasted with
-     $prefs->set_pref( last_blast_db_file_base => $bdb->file_base );
 
      return -d => $basename;
    },
@@ -232,17 +223,17 @@ my @command =
 ################################################################################################################
 #now run the blast
 my $job = CXGN::Tools::Run->run_cluster(@command,
-					{ temp_base => $vhost_conf->get_conf('cluster_shared_tempdir'),
-					  queue => $vhost_conf->get_conf('web_cluster_queue'),
-					  working_dir => $vhost_conf->get_conf('cluster_shared_tempdir'),
+					{ temp_base => $c->config->{'cluster_shared_tempdir'},
+					  queue => $c->config->{'web_cluster_queue'},
+					  working_dir => $c->config->{'cluster_shared_tempdir'},
 					  # don't block and wait if the cluster looks full
 					  max_cluster_jobs => 1_000_000_000,
 					}
 				   );
 #$job->do_not_cleanup(1);
 
-my $job_file_tempdir = File::Spec->catdir($vhost_conf->get_conf('basepath'),
-					  $vhost_conf->get_conf('tempfiles_subdir'),
+my $job_file_tempdir = File::Spec->catdir($c->config->{'basepath'},
+					  $c->config->{'tempfiles_subdir'},
 					  "blast",
 					 );
 my (undef,$job_file) = tempfile( DIR => $job_file_tempdir, TEMPLATE=>"object_XXXXXX");
@@ -290,11 +281,4 @@ EOF
 sub hash2param {
   my %args = @_;
   return join '&', map "$urlencode{$_}=$urlencode{$args{$_}}", distinct evens @_;
-}
-################################################################################################################
-sub reverse_complement{
-	my $seq = shift;
-	my $seq_obj = Bio::Seq->new( -seq => $seq );
-	
-	return $seq_obj->revcom->seq ;
 }

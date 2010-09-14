@@ -2,23 +2,18 @@
 
 use strict;
 use CXGN::Page;
-use CXGN::VHost;
 use File::Spec;
 use CXGN::DB::Connection;
 use CXGN::BlastWatch;
 use CXGN::Page::FormattingHelpers qw/page_title_html modesel info_table_html hierarchical_selectboxes_html simple_selectbox_html/;
 
-our $page = CXGN::Page->new( "BLAST watch submission", "Adri");
+my $page = CXGN::Page->new( "BLAST watch submission", "Adri");
 
 # get arguments from index.pl
+use CatalystX::GlobalContext qw( $c );
+post_only() unless $c->req->method eq 'POST';
 
-#my $r = Apache->request();
-my $r = Apache2::RequestUtil->request;
-$r->content_type("text/html");
-
-my $req = Apache2::Request->new($r);
-
-my $params = $r->method eq 'POST' ? $req->body : &post_only;
+my $params = $c->req->params;
 
 # dehash, because it's easier later..
 my $database = $params->{database};
@@ -28,16 +23,16 @@ my $matrix = $params->{matrix};
 # check evalue
 my $evalue = $params->{evalue};
 if (!$evalue) {
-    &user_error("Please enter a valid expect value.\n");
+    user_error($page, "Please enter a valid expect value.\n");
 }
 elsif ($evalue !~ m/(e\-[0-9]+|[0-9]+e\-[0-9]+|[0-9]+\.[0-9]+)/ or $evalue <= 0.0) {
-    &user_error("Invalid Expect value \"$evalue\". Please enter a valid expect value.\n");
+    user_error($page, "Invalid Expect value \"$evalue\". Please enter a valid expect value.\n");
 }
 
 # check sequence
 my $sequence = $params->{sequence};
 if (!$sequence or $sequence eq "") {
-    &user_error("You must specify a sequence in FASTA format to perform a BLAST search");
+    user_error($page,"You must specify a sequence in FASTA format to perform a BLAST search");
 }
 
 if ($sequence =~ />.+>/ ) { }
@@ -53,23 +48,23 @@ if ($sequence !~ m/\s*>/) {
 
 my $sp_person_id = $params->{sp_person_id};
 if (!$sp_person_id) {
-    &user_error("Please login first.");
+    user_error($page,"Please login first.");
 }
 
 my $dbh = CXGN::DB::Connection->new();
 
 unless (my $flag = CXGN::BlastWatch::insert_query($dbh, $sp_person_id, $sequence, $program, $database, $matrix, $evalue)) {
-    &user_error("You have already submitted this query!");
+    user_error($page,"You have already submitted this query!");
 }
 
 $dbh->disconnect(42);
 
-&website;
+website($page);
 
 #### ------------------------- ####
 
 sub website {
-
+    my ($page) = @_;
     $page->header();
     print page_title_html('Success!');
 
@@ -82,6 +77,7 @@ EOF
 }
 
 sub post_only {
+    my ($page) = @_;
     
     $page->header();
     print page_title_html('SGN BLAST Watch Interface Error');
@@ -96,8 +92,7 @@ EOF
 
 
 sub user_error {
-
-    my $reason = shift;
+    my ($page,$reason) = @_;
     
     $page->header();
     print page_title_html('SGN BLAST Watch Error');

@@ -1,8 +1,10 @@
+package CXGN::Page::Form;
 
-use Module::Find; 
+use Module::Find;
 useall CXGN::Page::Form;
 
-package CXGN::Page::Form;
+use strict;
+use warnings;
 
 
 =head1 NAME
@@ -114,4 +116,4 @@ Lukas Mueller (lam87@cornell.edu)
 =cut
 
 
-return 1;
+1;

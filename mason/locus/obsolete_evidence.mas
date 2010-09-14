@@ -1,0 +1,49 @@
+<%doc>
+
+=head1 NAME
+
+obsolete_evidence.mas
+
+=head1 DESCRIPTION
+
+component for printing a link for obsoleting locus-ontology annotation evidence 
+	  
+Parameters:
+
+=over 2
+
+=item object_name 
+
+the name of the object with the ontology annotation (e.g. 'locus')
+
+=item evidence_id
+
+_locus_dbxref_evidence database id 
+
+=back
+
+=head1 AUTHOR
+
+Naama Menda <nm249@cornell.edu>
+
+=cut 
+
+
+
+</%doc>
+
+<%args>
+
+$object_name
+$evidence_id
+  
+</%args>
+
+<a href="javascript:locusPage.obsoleteAnnotEv('<% $object_name %>','<% $evidence_id %>')">[delete]</a>
+<div id='obsoleteAnnotationForm' style="display: none">
+  <div id='ev_dbxref_id_hidden'>
+    <input type="hidden" 
+	   value=<% $evidence_id %>
+	   id="<% $evidence_id %>">
+  </div>
+</div>

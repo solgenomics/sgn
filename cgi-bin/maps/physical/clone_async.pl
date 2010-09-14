@@ -201,7 +201,6 @@ sub query_bac_perl {
 }
 
 sub project_stats_img_html {
-  my $vhost = CXGN::VHost->new();
 
   my $map_overview = CXGN::Cview::Map_overviews::ProjectStats->new("force"); # force re-calculation of the image/stats
   $map_overview->render_map();

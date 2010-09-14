@@ -1,3 +1,2 @@
-$c->forward_to_mason_view('/tomato_genome/bac_by_bac_progress.mas');
-
-
+require CGI;
+print CGI->new->redirect( -status => 301, -uri => '/genomes/Solanum_lycopersicum/');

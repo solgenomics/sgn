@@ -1,17 +1,17 @@
-#!/usr/bin/perl -w
 use strict;
+use warnings;
 
 use CXGN::DB::Connection;
 use CXGN::Page;
 use CXGN::Login;
-use CXGN::VHost;
+use SGN::Context;
 
 my $page             = CXGN::Page->new( "Login", "john" );
 my $dbh              = CXGN::DB::Connection->new();
-my $vhost_object     = CXGN::VHost->new();
+my $context          = SGN::Context->new;
 my $login_controller = CXGN::Login->new($dbh);
 
-if ( $vhost_object->get_conf('is_mirror') ) {
+if ( $context->get_conf('is_mirror') ) {
     $page->message_page(
         "Sorry, but you cannot log in to this site.",
 "This site is a mirror of <a href=\"http://sgn.cornell.edu\">sgn.cornell.edu</a>. To log in to SGN, go to <a href=\"http://sgn.cornell.edu/solpeople/login.pl\">SGN's login page</a>."
@@ -25,20 +25,18 @@ if ( !$login_controller->login_allowed() ) {
     );
 }
 
-$page->{request}->no_cache(1)
-  ; #not sure if this is needed--just a bit of old code which probably can't hurt
-
 my ( $username, $password, $goto_url, $logout ) =
   $page->get_arguments( "username", "pd", "goto_url", "logout" );
 
 my $message = "Already have an account? Please log in using the form below.";
 
-if ( $ENV{HTTP_REFERER} =~ m|http://[^/]+/index.pl| ) {
+my $referer = $ENV{HTTP_REFERER} || '';
+if ( $referer =~ m|http://[^/]+/index.pl| ) {
 
     # if they were on the front page, send them to "My SGN"
     $goto_url ||= "/solpeople/top-level.pl";
 }
-elsif ( $ENV{HTTP_REFERER} =~ m|account-confirm.pl| ) {
+elsif ( $referer =~ m|account-confirm.pl| ) {
 
     # if they just confirmed their account, send them to "My SGN"
     $goto_url = "/solpeople/top-level.pl";
@@ -46,26 +44,11 @@ elsif ( $ENV{HTTP_REFERER} =~ m|account-confirm.pl| ) {
 else {
 
     # if they were anywhere else, send them to the referring page
-    $goto_url ||= $ENV{HTTP_REFERER};
-}
-
-unless ( $page->{request}->is_initial_req()
-    && ( $goto_url !~ /account-confirm/ ) ) {
-
-    # if they were redirected here by a page, then save where they came
-    # from so we can send them back
-
-    my $prev_r = $page->{request}->prev();
-    $goto_url = $prev_r->uri();
-    if ( $prev_r->args() ) {
-        $goto_url = $goto_url . "?" . $prev_r->args();
-        $goto_url =~ s/&/&amp;/g;    #allow to use this as a url parameter
-    }
-
+    $goto_url ||= $referer;
 }
 
 
-if ( $logout eq "yes" )              #if we are in the process of logging out
+if ( $logout && $logout eq "yes" )              #if we are in the process of logging out
 {
     $login_controller->logout_user();
     $page->message_page(

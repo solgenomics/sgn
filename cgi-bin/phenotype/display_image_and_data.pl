@@ -5,12 +5,10 @@
 use strict;
 use CXGN::Page;
 use CXGN::DB::PhenoPopulation;
-use CGI;
+use CatalystX::GlobalContext qw( $c );
 
 #get parameters from form on previous page
-my $r = Apache2::RequestUtil->request;
-$r->content_type("text/html");
-my %params = $r->method eq 'POST' ? $r->content :$r->args;
+my %params = %{$c->req->params};
 my $filepath = $params{filepath};
 my $pop_id = $params{pop_id};
 my $pop_name = $params{pop_name};

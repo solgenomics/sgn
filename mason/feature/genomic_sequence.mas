@@ -1,0 +1,25 @@
+<%args>
+    $feature
+    $blast_url => undef
+</%args>
+<%init>
+    use Bio::Seq;
+</%init>
+<%perl>
+    my @locations = $feature->featureloc_features->all;
+    my @coords = map { [ $_->fmin, $_->fmax] } @locations;
+    my $reference = $feature->featureloc_features->single->srcfeature;
+    my $refseq = Bio::PrimarySeq->new(
+        -seq => $reference->residues,
+        -alphabet => 'dna',
+    );
+</%perl>
+% for (@coords) {
+<& /feature/sequence.mas,
+    title => 'Genomic Sequence',
+    feature => $reference,
+    start   => $_->[0],
+    end   => $_->[1],
+    blast_url => undef,
+&>
+%}

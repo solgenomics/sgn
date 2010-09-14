@@ -1,14 +1,20 @@
-
-
+use CatalystX::GlobalContext qw( $c );
 =head1 NAME
 
 /tools/blast/ - the entry page to the SGN blast tool
 
 =head1 DESCRIPTION
 
-This page displays a text box for a query sequence, along with a number of pull down menus to select (1) the dataset to match against, (2) the blast program, (3) an evalue cutoff, (4) a substitution matrix, (5) the number of maximum hits to show, and (6) parameters affecting the output of the results.
+This page displays a text box for a query sequence, along with a
+number of pull down menus to select (1) the dataset to match against,
+(2) the blast program, (3) an evalue cutoff, (4) a substitution
+matrix, (5) the number of maximum hits to show, and (6) parameters
+affecting the output of the results.
 
-Important features: the default dataset selected is tomato_combined. If the user selects another dataset, this is stored in the user prefs and comes up as the default later on. A specific dataset can be pre-selected in a link using the db_id parameter.
+Important features: the default dataset selected is
+tomato_combined. If the user selects another dataset, this is stored
+in the user prefs and comes up as the default later on. A specific
+dataset can be pre-selected in a link using the db_id parameter.
 
 This script is in desparate need of a decent re-factoring...
 
@@ -18,11 +24,13 @@ Parameters:
 
 =item preload_id
 
-an id that can be preloaded from the database. Requires preload_type to be set as well.
+an id that can be preloaded from the database. Requires preload_type
+to be set as well.
 
 =item preload_type
 
-the type of identifier to preload from the database (7 is EST, 15 is unigene). Requires preload_id to be set as well.
+the type of identifier to preload from the database (7 is EST, 15 is
+unigene). Requires preload_id to be set as well.
 
 =item seq
 
@@ -30,17 +38,20 @@ a sequence to blast, automatically filled in
 
 =item interface_type
 
-either 'simple' or 'advanced', affects the features displayed on the page.
+either 'simple' or 'advanced', affects the features displayed on the
+page.
 
 =item db_id
 
-an id of a database, which will appear pre-selected in the pulldown menu. 
+an id of a database, which will appear pre-selected in the pulldown
+menu.
 
 =back
 
 =head1 AUTHORS
 
-This script was initially written by Koni Wright. Many additions and changes by SGN staff. POD by Lukas.
+This script was initially written by Koni Wright. Many additions and
+changes by SGN staff. POD by Lukas.
 
 =cut
 
@@ -58,14 +69,12 @@ our %urlencode;
 use File::Flock;
 
 use CXGN::Page;
-use CXGN::VHost;
 use CXGN::BlastDB;
 use CXGN::Page::FormattingHelpers qw/page_title_html modesel info_table_html hierarchical_selectboxes_html simple_selectbox_html/;
 use CXGN::Page::UserPrefs;
 use CXGN::Tools::List qw/evens distinct/;
+use CatalystX::GlobalContext '$c';
 
-my $vhost_conf = CXGN::VHost->new();
-my $page  = CXGN::Page->new("BLAST Search Interface","Evan");
 my $page  = CXGN::Page->new("BLAST Search Interface","Evan");
 my $dbh   = CXGN::DB::Connection->new;
 my $prefs = CXGN::Page::UserPrefs->new( $dbh );
@@ -76,7 +85,7 @@ my %params;
 $params{interface_type} ||= 0;
 
 
-my $blast_path = $vhost_conf->get_conf('blast_path');
+my $blast_path = $c->config->{'blast_path'};
 my $blast_version = do {
   unless( -x "$blast_path/blastall") {
     ''
@@ -91,7 +100,6 @@ my $blast_version = do {
 	}
       }
       close BP;
-      $v
     }; if( $EVAL_ERROR ) {
       ''
     }
@@ -447,10 +455,10 @@ sub _build_blast_db_choices {
 
 sub bdb_opt {
     my $db = shift;
-    my $timestamp = _cached_file_modtime($db)
-        or return '';
-	$timestamp = strftime(' &nbsp;(%F)',gmtime _cached_file_modtime($db));
-    #my $seq_count = $db->sequences_count;
+#     my $timestamp = _cached_file_modtime($db)
+#         or return;
+#     $timestamp = strftime(' &nbsp;(%F)',gmtime _cached_file_modtime($db));
+    my $seq_count = $db->sequences_count;
 	
-    [$db->blast_db_id, $db->title.$timestamp]
+    [$db->blast_db_id, $db->title ]
 }

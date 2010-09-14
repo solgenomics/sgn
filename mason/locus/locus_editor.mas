@@ -1,0 +1,55 @@
+
+
+<%doc>
+
+=head1 NAME
+
+/locus/locus_editor.mas - a component for printing the locus editors
+
+=head1 DESCRIPTION
+
+
+Parameters:
+
+=over 1
+
+=item owners
+
+a list of sp_person_ids
+
+
+=back
+
+=head1 AUTHOR
+
+Naama Menda <nm249@cornell.edu>
+
+=cut 
+
+</%doc>
+
+<%args>
+
+$owners
+
+</%args>
+
+<%perl>
+my $html;
+foreach my $person (@$owners) {
+  my $first_name = $person->get_first_name();
+  my $last_name  = $person->get_last_name();
+  my $id = $person->get_sp_person_id();
+  if ($person->get_user_type() eq 'curator' && scalar(@$owners) == 1  ) {
+    $html .= '<b>No editor assigned</b>';
+  } else {
+    $html .=
+      qq |<a href="/solpeople/personal-info.pl?sp_person_id=$id">$first_name $last_name</a>;|;
+  }
+}
+chop $html;
+
+</%perl>
+
+<p>Locus editors: 
+<% $html %></p>

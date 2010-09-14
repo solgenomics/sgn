@@ -1,0 +1,19 @@
+<%args>
+  $entitize => 0
+</%args>
+% my @p = grep /\S/, reverse split /\r?\n/, $m->content;
+% s/^\s*\-\s*// for @p;
+<&| /page/info_section.mas, title => 'Publications', subtitle => @p.' publications' &>
+  <img style="display: block; float: right; margin-left: 3em" src="/img/secretom/books.png" />
+  <ul class="publication">
+% for my $pub (@p) {
+<li class="publication">
+%   if( $entitize ) {
+  <% $pub |h%>
+%   } else {
+  <% $pub %>
+%   }
+</li>
+% }
+  </ul>
+</&>

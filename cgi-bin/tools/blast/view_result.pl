@@ -23,21 +23,19 @@ use CXGN::BioTools::SearchIOHTMLWriter;
 
 use CXGN::Graphics::BlastGraph; #Evan's package for conservedness histograms
 use CXGN::Apache::Error;
-use CXGN::VHost;
-
 use CXGN::Tools::List qw/str_in/;
 use CXGN::Tools::Identifiers qw/link_identifier/;
-use CXGN::Tools::File qw/file_contents/;
+use File::Slurp qw/slurp/;
 use CXGN::Page::FormattingHelpers qw/info_section_html page_title_html columnar_table_html/;
+use CatalystX::GlobalContext '$c';
 
 use constant MAX_FORMATTABLE_REPORT_FILE_SIZE => 2_000_000;
 
 our $page = CXGN::Page->new( "BLAST Search Report", "Rob");
-our $vhost_conf = CXGN::VHost->new();
 our %params;
 
-our $tempfiles_subdir_rel = File::Spec->catdir($vhost_conf->get_conf('tempfiles_subdir'),'blast'); #path relative to website root dir
-our $tempfiles_subdir_abs = File::Spec->catdir($vhost_conf->get_conf('basepath'),$tempfiles_subdir_rel); #absolute path
+our $tempfiles_subdir_rel = File::Spec->catdir($c->config->{'tempfiles_subdir'},'blast'); #path relative to website root dir
+our $tempfiles_subdir_abs = File::Spec->catdir($c->config->{'basepath'},$tempfiles_subdir_rel); #absolute path
 
 my @arglist = qw/report_file outformat interface_type output_graphs seq_count program database/;
 @params{@arglist} = $page->get_encoded_arguments(@arglist);
@@ -93,7 +91,7 @@ my $report_download_link = qq|[<a href="$raw_report_url">View / download raw rep
 my $report_text =
   !$got_hits ? 'No hits found.'
   : -s $raw_report_file > MAX_FORMATTABLE_REPORT_FILE_SIZE ? 'report too large to display, please right-click the link above to download it'
-  : file_contents($formatted_report_file);
+  : slurp($formatted_report_file);
 
 
 

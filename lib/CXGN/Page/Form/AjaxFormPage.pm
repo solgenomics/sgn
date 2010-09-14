@@ -1,3 +1,4 @@
+package CXGN::Page::Form::AjaxFormPage;
 
 
 =head1 NAME
@@ -6,11 +7,21 @@ AjaxFormPage.pm -- an abstract class that implements a simple Ajax form that can
 
 =head1 DESCRIPTION
 
-AjaxFormPage.pm works with the CXGN::Page::Form classes and user-defined database classes that have to follow certain guidelines for this class to work properly (in essence, the database classes need to follow the rules for the CXGN::Page::Form framework. For more information, see the documentation of the L<CXGN::Page::Form> classes).
+AjaxFormPage.pm works with the CXGN::Page::Form classes and user-defined
+database classes that have to follow certain guidelines for this class to work
+properly (in essence, the database classes need to follow the rules for the
+CXGN::Page::Form framework. For more information, see the documentation of the
+L<CXGN::Page::Form> classes).
 
-AjaxFormPage.pm implements a simple authentication for the calls that modify database content. The function check_modify_privileges should return 1 if the current user had edit/delete privileges, otherwise it should return 0. The default implementation returns 1 for the owner and any logged in curators, 0 for all others.
+AjaxFormPage.pm implements a simple authentication for the calls that modify
+database content. The function check_modify_privileges should return 1 if the
+current user had edit/delete privileges, otherwise it should return 0. The
+default implementation returns 1 for the owner and any logged in curators, 0 for
+all others.
 
-AjaxFormPage contains a number of pre-populated accessors for often used CXGN features, such as CXGN::Page (get_page()), CXGN::DB::Connection (get_dbh()), and CXGN::Login (get_user()). 
+AjaxFormPage contains a number of pre-populated accessors for often used CXGN
+features, such as CXGN::Page (get_page()), CXGN::DB::Connection (get_dbh()), and
+CXGN::Login (get_user()). 
 
 When creating a derived class, you need to override the following functions:
 
@@ -34,6 +45,7 @@ The following is a list of object functions. Some of these functions are used in
 =cut
 
 use strict;
+use warnings;
 use Carp;
 
 use CXGN::Tools::Text qw | sanitize_string |;
@@ -54,7 +66,6 @@ use CXGN::Contact;
 use CXGN::Feed;
 use JSON;
 
-package CXGN::Page::Form::AjaxFormPage;
 
 use base qw /CXGN::Debug/ ;
 =head2 new
@@ -82,12 +93,10 @@ sub new {
     my $dbh = CXGN::DB::Connection->new();
     $self->set_ajax_page(CXGN::Scrap::AjaxPage->new() );
    
-
-    my $dbh=CXGN::DB::Connection->new();###$self->get_page()->get_dbh(); # reuse the dbh from the Page object
+    $self->{is_owner} = 0;
     $self->set_dbh($dbh);
     
     $self->set_login(CXGN::Login->new($self->get_dbh()));
-    $self->get_ajax_page->{request}->no_cache(1);
     my %args = $self->get_ajax_page()->get_all_encoded_arguments(); ##
     my %json_hash=();
     # sanitize the inputs, we don't want to end up like bobby tables school.
@@ -168,17 +177,13 @@ sub check_modify_privileges {
     # 
     my ($person_id, $user_type)=$self->get_login()->has_session();
     
-    #my $person_id = $self->get_login()->verify_session();
-    #my $user =  CXGN::People::Person->new($self->get_dbh(), $person_id);
-    #my $user_id = $user->get_sp_person_id();
-    #my $user_type = $user->get_user_type();
-    
     if ($user_type eq 'curator') {
 	return 0;
     }
     if (!$person_id) { $json_hash{login} = 1 ; }
     if ($user_type !~ /submitter|sequencer|curator/) { 
-	$json_hash{error} = "You must have an account of type submitter to be able to submit data. Please contact SGN to change your account type.";
+        $json_hash{error} = "You must have an account of type submitter to be able to submit data. Please contact SGN to change your account type.";
+        return 0;
     }
 
     my @owners = $self->get_owners();
@@ -188,7 +193,7 @@ sub check_modify_privileges {
 	#
 	$json_hash{error} = "You do not have rights to modify this database entry because you do not own it. [$person_id, @owners]";
 	
-    }else {  $self->set_is_owner(1); }
+    } else {  $self->set_is_owner(1); }
     
     # override to check privileges for edit, store, delete.
     # return 0 for allow, 1 for not allow.
@@ -212,11 +217,19 @@ sub check_modify_privileges {
 sub define_object { 
     my $self = shift;
     
+    my %json_hash= $self->get_json_hash();
     # in the subclass, instantiate your object here and  call
     $self->set_object();
     $self->set_object_id();
+    $self->set_object_name();
     $self->set_primary_key();
     $self->set_owners();
+    
+    if ( $self->get_object()->get_obsolete() eq 't' ) { 
+	$json_hash{error} = "Object is obsolete!";
+	$self->set_json_hash(%json_hash);
+	$self->print_json();
+    }
 }
 
 
@@ -249,11 +262,16 @@ sub add {
                and all the form fields are validated for correctness. If this fails,
                the input form is shown again with an appropriate error message.
                Else, the store is issued for the object (set using set_object). 
-               If this succeeds, the page is re-directed to the same page, but with
+               If this succeeds, the form div is updated  but with
                the 'view' action parameter.
  Ret:
  Args:
- Side Effects:
+ Side Effects: If the form fails validation, 
+               the 'validate' key in $self->get_json_hash is set to '1',
+               and the form is re-printed with the relevant error message.
+               If validation passes, $form->store is called. 
+               If this was an insert of a new object, 
+               sets $self->set_object_id($last)insert_id)  
  Example:
 
 =cut
@@ -280,10 +298,6 @@ sub store {
 	
 	# the form validated. Now let's check if it passes the uniqueness
 	# constraints.
-	# Assume that the database accessor class inherits from 
-	# CXGN::DB::Modifiable and thus has a exists_in_database
-	# function - but don't make it a requirement. If it doesn't -- never mind.
-	#
  	
 	$self->d("**** about to call the get_form->store() ****");
 	$self->get_form()->store($self->get_args());
@@ -298,17 +312,16 @@ sub store {
 	    my $id = $self->get_form()->get_insert_id();
 	    $self->set_object_id($id);
 	}
-	my %args = $self->get_args();
-	
     }
     else { 
-	# if there was an error, re-display the same page.
+	# if there was an error, re-display the same forms.
 	# the errors will be displayed on the page for each
 	# field that did not validate.
 	#
 	$json_hash{validate} = 1;
 	$json_hash{html} = $self->get_form()->as_table_string();
 	$self->set_json_hash(%json_hash);
+	$self->print_json();
     }
 }
 
@@ -366,7 +379,12 @@ sub get_user {
 
 sub generate_form { 
     my $self = shift;
-    warn "Please subclass 'generate_form' function!\n";
+    my $error=  "Please subclass 'generate_form' function!\n";
+    warn $error;
+    my %json_hash=$self->get_json_hash();
+    $json_hash{error} = $error;
+    $self->set_json_hash(%json_hash);
+    $self->print_json();
 }
 
 
@@ -387,7 +405,7 @@ sub delete {
     my $self = shift;
     warn "Override 'delete' function in derived class\n";
 
-    my $error="Deleting is not implemented for this object";
+    my $error="Deleting is not implemented for this object. Override 'delete' function in derived class.";
     my %json_hash=$self->get_json_hash();
     $json_hash{error} = $error;
     $self->set_json_hash(%json_hash);
@@ -398,21 +416,34 @@ sub delete {
  Usage:        $s->display_form()
  Desc:         can be overridden in the subclass. In the default
                implementation, displays the
-               appropriate edit links and the form in table format,
+               form in table format,
                in the appropriate Editable or Static form.
  Ret:
  Args:
- Side Effects:
+ Side Effects: Sets user_type, is_owner, and editable_form_id keys for 
+               $self->get_json_hash() to be used in the javascript object
+               (See CXGN/Page/Form/JSFormPage.js ) 
  Example:
 
 =cut
 
 sub display_form { 
     my $self=shift;
-    
+    my %json_hash= $self->get_json_hash();
     # edit links are printed from the javascript object! See JSFormPage.js
     #print $self->get_edit_links();
-    $self->get_form()->as_table();
+     
+    if (!($json_hash{html}) ) { $json_hash{html} = $self->get_form()->as_table_string() ; }		
+    $self->check_modify_privileges();
+    
+    $json_hash{"user_type"} = $self->get_user()->get_user_type();
+    $json_hash{"is_owner"} = $self->get_is_owner();
+    
+    $json_hash{"editable_form_id"} = $self->get_form()->get_form_id();
+   
+    
+    $self->set_json_hash(%json_hash);
+    $self->print_json();
 }
 
 
@@ -716,7 +747,24 @@ sub set_form {
 
 =head2 accessors get_json_hash, set_json_hash
 
- Usage:
+ Usage: my %json_hash= $self->get_json_hash() ;
+        
+        # the store function in this class sets the validate key to 1
+        #if the form fields pass permissions and validation
+        my $validate = $json_hahs{validate};
+        
+         $json_hash{error} = "this is an error";
+         $json_hash{html} = $self->get_form()->as_table_string();
+         $json_hash{user_type} = $user_type;
+         
+         $json_hash{is_owner} = 1;
+         $json_hash{editable_form_id} = $self->get_form()->get_form_id();
+         $json_hash{refering_page} = "/my_page.pl?id=$id";
+
+         #Force page reloading (e.g. after deleting an object)  
+         $json_hash{reload} = 1; 
+         
+         $self->set_json_hash(%json_hash)
  Desc:
  Property
  Side Effects:
@@ -842,9 +890,9 @@ sub validate_parameters_before_store {
 sub process_parameters_after_store {
 }
 
-=head2 return_json
+=head2 print_json
 
- Usage: $self->return_json()
+ Usage: $self->print_json()
  Desc:  print a json object. To be used  in the javascript JSFormPage object.
  Ret:   nothing
  Args:  none
@@ -854,16 +902,17 @@ sub process_parameters_after_store {
 =cut
 
 
-sub return_json {
+sub print_json {
     my $self=shift;
     my %results= $self->get_json_hash();
-    
-    if ($results{die_error} ) { 
-	CXGN::Contact::send_email('AjaxFormPage died',$results{"error"} );
+
+    if ($results{die_error} ) {
+        CXGN::Contact::send_email('AjaxFormPage died',$results{"error"} );
     }
     my $json = JSON->new();
-    my $jobj = $json->encode(\%results);
-    print  $jobj;
+    $self->get_ajax_page()->send_http_header();
+
+    print $json->encode(\%results);
 }
 
 =head2 send_form_email
@@ -923,5 +972,5 @@ sub send_form_email {
 }
 
 
-return 1;
+1;
 

@@ -1,45 +1,43 @@
 <%doc>
 
-=head1 NAME 
+=head1 NAME
 
 sgn_data.mas - SGN page for organism data overview in a tree format
 
-=cut 
+=cut
 
 </%doc>
 
 <%args>
-
-$schema
-$sol
-$rub
-$planta
-
+    $organism_trees
 </%args>
 
-<%perl>
+<& /util/import_javascript.mas, classes => ["CXGN.Page.FormattingHelpers", "CXGN.Effects"] &>
 
-my $uri_dir=$c->get_conf('tempfiles_subdir') . '/tree_browser';
+<& /page/page_title.mas, title=> "SGN data overview" &>
 
-my $tmp_dir=$c->get_conf('basepath');
+<script language="javascript" type="text/javascript" src="/js/popup.js"></script>
 
+<div class="page_introduction">
+  This page presents a summary of all currently available data on SGN
+  sorted by species.  Click a species name for details about available
+  its available maps, loci, libraries, ESTs, metabolic annotation and
+  phenotyped accessions.
+</div>
 
-</%perl>
+% for my $category (reverse sort keys %$organism_trees) {
+%    my $organism_tree = $organism_trees->{$category};
 
-<& /util/import_javascript.mas, classes=>["CXGN.Page.FormattingHelpers", "CXGN.Effects"] &>
+   <&| /page/info_section.mas,
+     title         => $category,
+     subtitle      => 'click on an organism name to see more details ',
+     empty_message => 'Tree not available',
+     collapsible   => 1,
+     collapsed     => 0,
+     &>
 
-<& /page/page_title.mas, title=>"SGN data overview" &>
+     <& /organism/tree.mas, organism_tree => $organism_tree &>
 
+   </&>
 
-<p>
-This page presents a summary of all currently available data on SGN sorted by species.
-For a view of our database schema, go <a href="/data/schemas/index.html">here</a>.
-For more details about available maps, loci, libraries, ESTs, metabolic annotation and
-phenotyped accessions, see the species of interest.
-</p>
-<b>List of species currently in the database</b> (click on the organism  name to see more details.) <br /><br />
-
-<& /util/organism_tree.mas, schema=>$schema, root=>"Solanaceae", species_hashref=>$sol, uri_dir=>$uri_dir, tmp_dir=>$tmp_dir &>
-<& /util/organism_tree.mas, schema=>$schema, root=>"Rubiaceae", species_hashref=>$rub,  uri_dir=>$uri_dir, tmp_dir=>$tmp_dir &>
-<& /util/organism_tree.mas, schema=>$schema, root=>"Plantaginaceae", species_hashref=>$planta,  uri_dir=>$uri_dir, tmp_dir=>$tmp_dir &>
-
+% }

@@ -17,16 +17,14 @@ use CXGN::Page::FormattingHelpers qw/ blue_section_html
 				    /;
 use CXGN::Tools::Text;
 use CXGN::DB::Connection;
-
-use CXGN::VHost;
 use CXGN::Unigene::Search;
+use CatalystX::GlobalContext '$c';
 
 
 #################################
 # Start a new SGN page.
 our $page = CXGN::Page->new( 'Unigene Advanced Search', 'Rob Buels');
 $page->header('Unigene Search Results'); #print out header immediately so users get 'in progress' message
-my $vhost = CXGN::VHost->new;
 
 #create the search and query objects
 my $search = CXGN::Unigene::Search->new;
@@ -39,7 +37,7 @@ my %params = $page->get_all_encoded_arguments;
 eval { #initialize the query object from the page parameters
   $query->from_request(\%params);
 }; if( $EVAL_ERROR ) {
-  if($vhost->get_conf('production_server')) {
+  if($c->config->{'production_server'}) {
     print "<b>Invalid search parameters.</b>\n";
   } else {
     die $EVAL_ERROR; #die it on

@@ -1,0 +1,22 @@
+<%args>
+    $feature
+</%args>
+<%init>
+    use SGN::View::Feature qw/feature_link/;
+</%init>
+<%perl>
+    my @child_rels = map { [ feature_link($_->subject), feature_link($_->object), $_->type->name ] }
+        ( $feature->child_relationships);
+    my @parent_rels = map { [ feature_link($_->subject), feature_link($_->object), $_->type->name ] }
+        ( $feature->parent_relationships);
+</%perl>
+
+<& /feature/show_relations.mas, 
+    relations => \@child_rels,
+    title => "Parent Relationships",
+&>
+
+<& /feature/show_relations.mas, 
+    relations => \@parent_rels,
+    title => "Child Relationships",
+&>

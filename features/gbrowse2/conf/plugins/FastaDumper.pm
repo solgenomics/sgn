@@ -189,8 +189,10 @@ sub configure_form {
     }
 
     autoEscape(0);
+    my %selected = map {$_=>1} ($self->selected_tracks);
 
     foreach my $featuretype ( @labels ) {
+        next if ! $selected{$featuretype};
 	my $realtext = $browser->setting($featuretype,'key') || $featuretype;
 	push @choices, TR({-class => 'searchtitle'}, 
 			  th({-align=>'RIGHT',-width=>'25%'}, $realtext,

@@ -56,16 +56,19 @@ $unigene_build
 
 
 
-<& 
+<&
    '/transcript/unigene_build/basic_unigene_build_info.mas',
    bcs           => $bcs,
    schema        => $schema,
-   unigene_build => $unigene_build 
+   unigene_build => $unigene_build
 &>
 
-<& 
+<&
    '/transcript/unigene_build/history_unigene_build_info.mas',
    schema        => $schema,
-   unigene_build => $unigene_build 
+   unigene_build => $unigene_build
 &>
-
+<&
+   /util/import_javascript.mas,
+   classes => 'CXGN.Effects'
+&>

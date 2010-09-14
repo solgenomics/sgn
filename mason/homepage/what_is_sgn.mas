@@ -1,44 +1,54 @@
 
+<%doc>
+
+=head1 NAME
+
+/homepage/what_is_sgn.mas - shows a "More about SGN" collapser that the user can open with a click to reveal more information about SGN.
+
+=head1 DESCRIPTION
+
+takes a what parameter. Either 'textbox' or 'link'. Will result in different rendering.
+
+=head1 AUTHOR
+
+Lukas Mueller
+
+=cut 
+
+</%doc>
+
+
 <%args>
 $what
 </%args>
 
+<& /util/import_javascript.mas, classes=>["CXGN.Effects"] &>
+
 <%perl>
 
-use CXGN::VHost;
 use CXGN::Page::Widgets qw/collapser/;
 
-my $vh = CXGN::VHost->new();
-my $file = $vh->get_conf('basepath')."/documents/what_is.txt";
-my $WHAT_IS=CXGN::Tools::File::read_commented_file("$file");
-
 my ($what_is_link, $what_is_content) = collapser({
-						id => "what_is_sgn",
-						linktext => "",
-						hide_state_linktext => "",
-						collapsed => 1,
-						linkstyle => "font-size:0.86em;white-space:nowrap",
-						alt_target => "",
-						alt_href => "/about/index.pl",
-						content => $WHAT_IS
-						});
-
-if ($what eq "textbox") { 
-
-print qq {
-<div style="border:1px solid #888; background-color:#ffffff; padding:10px;">
-  <div class="boxcontent"><b>What is SGN?</b> Find out about the Solanaceae as model system for diversity and how they can be used to link genotypes to phenotypes... $what_is_link </div>
-  $what_is_content
-</div>
-};
-
-}
-elsif($what eq "link")  { 
-print qq { $what_is_link };
-
-} 
-else { 
-  die "don't know what $what is.";
-}
+    id         => "what_is_sgn",
+    linktext   => '<span class="boxheading" style="border:0">About SGN</span>',
+    collapsed  => 1,
+    linkstyle  => "font-size:0.86em;white-space:nowrap",
+    alt_target => "",
+    alt_href   => "/about/index.pl",
+    content    => CXGN::Tools::File::read_commented_file( $c->path_to('documents','what_is.txt') ),
+});
 
 </%perl>
+
+% if ($what eq "textbox") { 
+
+<div class="boxbgcolor1">
+  <div class="boxheading"><% $what_is_link %></div>
+</div>
+<% $what_is_content %>
+
+% } elsif($what eq "link")  { 
+
+ <% $what_is_link %>
+
+%} else { die "don't know what $what is." }

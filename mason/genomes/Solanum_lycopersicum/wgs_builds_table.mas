@@ -1,0 +1,17 @@
+<% columnar_table_html(
+        __align  => 'cllcc',
+        headings => [qw[ Release Date Description Annotation Download ]],
+        data     =>
+           eval{ LoadFile( $build_description_file ) }
+             || [[('-')x2, '<span class="ghosted">release list temporarily unavailable</span>', ('-')x2]],
+   )
+%>
+
+<%init>
+use YAML::Any 'LoadFile';
+use CXGN::Page::FormattingHelpers qw | columnar_table_html |;
+use File::Spec::Functions;
+
+my $build_description_file =
+    catfile( $c->get_conf('static_content_path'), 'genomes','Solanum_lycopersicum','genome_builds.yaml' );
+</%init>

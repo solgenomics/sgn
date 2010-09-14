@@ -1,3 +1,14 @@
+use strict;
+use warnings;
+
+use CXGN::DB::Connection;
+use CXGN::Page;
+use CXGN::People;
+use CXGN::Login;
+use CXGN::People::Forum;
+use CXGN::Page::FormattingHelpers qw(page_title_html blue_section_html);
+
+use URI::Escape;
 
 =head1 NAME
 
@@ -19,16 +30,6 @@ Lukas Mueller (lam87@cornell.edu)
 =cut
 
 
-use strict;
-
-use CXGN::DB::Connection;
-use CXGN::Page;
-use CXGN::People;
-use CXGN::Login;
-use CXGN::People::Forum;
-use CXGN::Page::FormattingHelpers qw(page_title_html blue_section_html);
-
-use URI::Escape;
 
 my $page = CXGN::Page->new( "SGN Forum Main", "Lukas");
 
@@ -66,7 +67,7 @@ my $topic_start_person = CXGN::People::Person->new($dbh, $topic_start_person_id)
 #
 # generate the post list 
 #
-my $s = posts_list($dbh, $sp_person_id, $topic_id);
+my $s = posts_list($dbh, $sp_person_id, $topic_id, $page);
 # 
 # render the page
 #
@@ -95,9 +96,7 @@ $page->footer();
 
 
 sub posts_list { 
-    my $dbh = shift;
-    my $sp_person_id = shift;
-    my $topic_id = shift;
+    my ($dbh,$sp_person_id,$topic_id,$page) = @_;
     my $topic = CXGN::People::Forum::Topic -> new($dbh, $topic_id);
     my $user = CXGN::People::Person->new($dbh, $sp_person_id);
     
@@ -155,11 +154,11 @@ sub old_posts_list {
 
     my @parent_ids = ();
 
+    unless( @posts ) {
+        return "Currently there are no posts under this topic. Please use the Add Posting link to add a post. Please note that you have to be logged in to post. [<a href=\"login.pl\">Login</a>]<br /><br />";
+    }
 
-
-    if (!@posts) { $s .= "Currently there are no posts under this topic. Please use the Add Posting link to add a post. Please note that you have to be logged in to post. [<a href=\"login.pl\">Login</a>]<BR/><BR/>"; }
-
-    $s = "<table border=\"0\" cellpadding=\"2\" cellspacing=\"2\">";
+    my $s = "<table border=\"0\" cellpadding=\"2\" cellspacing=\"2\">";
 
     foreach my $p (@posts) { 
 	my $subject   = $p->get_subject();
@@ -197,7 +196,7 @@ sub old_posts_list {
 	}
 
 	my $respond_link = "Respond";
-	if ($sp_person_id) { 
+	if ($person_id) {
 	    $respond_link = "<a href=\"add_post.pl?parent_post_id=$forum_post_id&amp;topic_id=$topic_id\">Respond</a>"; 
 	}
         #my $post_level = $p -> get_post_level();
@@ -220,24 +219,3 @@ sub forum_toolbar {
     $s .= "\n";
     return $s;
 }
-	
-# moved to Forum.pm:
-#
-# sub format_post_text { 
-#     my $post_text = shift;
-
-#     # remove html tags
-#     $post_text =~ s/<.*?>//g; 
-#     # support vB script url tag
-#     while ($post_text =~ /\[url\](.*?)\[\/url\]/g ) { 
-# 	my $link = $1;
-# 	my $replace_link = $link;
-# 	if ($link !~ /^http/i) { 
-# 	    $replace_link = "http:\/\/$link"; 
-# 	}
-# 	$post_text =~ s/\[url\]$link\[\/url\]/\<a href=\"$replace_link\"\>$replace_link\<\/a\>/g;
-#     }
-#     # convert newlines to <br /> tags
-#     $post_text =~ s/\n/\<br \/\>/g;
-#     return $post_text;
-# }

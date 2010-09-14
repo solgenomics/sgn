@@ -1,0 +1,53 @@
+
+
+<%doc>
+
+=head1 NAME
+
+/phenome/obsolete_accession_link.mas - a component for printing an 'obsolete associated accession' button
+
+=head1 DESCRIPTION
+
+
+Parameters:
+
+=over 1
+
+=item individual_allele_id
+
+database id 
+
+=back
+
+=head1 AUTHOR
+
+Naama Menda <nm249@cornell.edu>
+
+=cut 
+
+</%doc>
+
+<%args>
+
+$individual_allele_id
+
+
+</%args>
+
+<%perl>
+#my $individual_allele_id = $locus->get_individual_allele_id($individual_id);
+
+</%perl>
+
+
+<a href="javascript:Locus.obsoleteIndividualAllele('$individual_allele_id')">[Remove]</a>
+
+<div id='obsoleteIndividualAlleleForm' style="display: none">
+  <div id='individual_allele_id_hidden'>
+    <input type="hidden" 
+	   value=<% $individual_allele_id %>
+	   id="<% $individual_allele_id" %> >
+  </div>
+</div>
+
+

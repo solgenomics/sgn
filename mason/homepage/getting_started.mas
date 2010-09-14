@@ -16,26 +16,23 @@ Lukas Mueller <lam87@cornell.edu>
 =cut
 
 </%doc>
+<%init>
+use File::Spec;
+</%init>
 <%perl>
 
 use strict;
-
-use File::Spec;
-use CXGN::Tools::File;
 
 my $file = File::Spec->catfile($c->get_conf('homepage_files_dir'), 'getting_started.txt');
 
 my $contents = "Sidebar contents are not available at the moment.<br /><br />";
 
-eval { 
+eval {
   $contents = $m->file($file);
-  #$contents = CXGN::Tools::File::file_contents($file);
 };
 if ( $@ && !$c->get_conf('production_server') ) { 
   $contents .= $@;
 }
-
-
 
 </%perl>
 

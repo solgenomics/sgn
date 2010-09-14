@@ -1,0 +1,17 @@
+<%args>
+    $cvterm_id
+</%args>
+<%init>
+	use CXGN::Chado::Cvterm;
+	use CXGN::DB::Connection;
+</%init>
+
+<%perl>
+	my $dbh    = CXGN::DB::Connection->new('public');
+	my $cvterm = CXGN::Chado::Cvterm->new( $dbh, $cvterm_id );
+</%perl>
+
+<& /ontology/embedded_browser.mas,
+	cvterm => $cvterm,
+	title => 'Cvterm Ontology',
+&>

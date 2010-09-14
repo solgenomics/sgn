@@ -1,8 +1,9 @@
 #!/usr/bin/perl
 use strict;
+use warnings;
 use GD::Graph::lines;
-use CXGN::VHost;
 use CXGN::Page;
+use CatalystX::GlobalContext '$c';
 
 my $page = CXGN::Page->new();
 
@@ -15,11 +16,8 @@ my ($days) = $page->get_encoded_arguments('days');
 $days ||= 7;
 my ($imgsize) = $page->get_encoded_arguments('imgsize');
 
-my $vh = CXGN::VHost->new();
-
-
 # Get the digitemp data
-my $data_file = $vh->get_conf("pucebaboon_file");
+my $data_file = $c->config->{"pucebaboon_file"};
 
 open (my $fh, $data_file) or barf("Can't open file $data_file: $!");
 my @lines = <$fh>;
@@ -146,7 +144,6 @@ else  {
 $data = [\@times, \@temp_F];
 }
 my $gd = $graph->plot($data) or barf($graph->error());
-#print "Content-type: text/html\n\nASDFASDFADSF";
 print "Content-type: image/png\n\n".$gd->png();
 
 sub barf {
@@ -154,16 +151,6 @@ sub barf {
     my $message = shift;
 
     print "Content-type: text/plain\n\n$message\n";
-
-    if( @times ){
-	use Data::Dumper;
-	print Dumper \@times;
-    }
-
-    if( @temp_F ){
-	use Data::Dumper;
-	print Dumper \@temp_F;
-    }
 
     exit;
 

@@ -1,0 +1,220 @@
+<%doc>
+
+=head1 NAME
+
+/genomes/Solanum_lycopersicum/bac_by_bac_progress.mas - a component that displays information about the bac-by-bac progress
+
+=head1 DESCRIPTION
+
+This component does not take any arguments. Sections on this page should be further subdivided into other components.
+
+=head1 AUTHORS
+
+Lukas Mueller <lam87@cornell.edu>. Based on Perl code by many at SGN.
+
+=cut
+
+</%doc>
+
+<%perl>
+
+use POSIX;
+use List::Util qw/sum/;
+use HTML::Entities;
+
+use CXGN::DB::Connection;
+use CXGN::Page::FormattingHelpers qw / info_section_html page_title_html info_table_html commify_number/;
+use CXGN::Genomic::Search::Clone;
+use CXGN::MasonFactory;
+use CXGN::People::BACStatusLog;
+use CXGN::Cview::Map_overviews::ProjectStats;
+
+#my $page=CXGN::Page->new('tomato_sequencing.html','html2pl converter');
+#$page->add_style(text => "img.flag {border: 2px outset #666666;}");
+#$page->header(('International Tomato Sequencing Project Home') x 2);
+
+my $dbh = CXGN::DB::Connection->new();
+
+sub flag_html {
+  my ($country,$flagimg,$url) = @_;
+  if($url) {
+    return <<EOHTML
+  <a href="$url"><img class="flag" src="/documents/img/flags/${flagimg}_small.png" alt="$country" /><br />$country</a>
+EOHTML
+  } else {
+    return <<EOHTML
+  <img class="flag" src="/documents/img/flags/${flagimg}_small.png" alt="$country" /><br />$country
+EOHTML
+  }
+}
+sub flag_td {
+  return qq|<td width="50" align="center" class="tinytype">\n|
+    .flag_html(@_)
+      ."</td>\n";
+}
+
+my $overview = CXGN::Cview::Map_overviews::ProjectStats->new();
+$overview->render_map();
+my $overview_image_html = $overview->get_image_html();
+
+
+print <<EOH;
+
+
+<br />
+<center>
+<table summary="" cellpadding="0" cellspacing="0" border="0">
+<tr>
+<td>&nbsp;</td>
+EOH
+
+print join '', map { flag_td(@$_) }
+  [qw(USA Flag_of_the_United_States /about/us_tomato_sequencing.pl)],
+  [qw(Korea Flag_of_South_Korea http://www.kribb.re.kr/)],
+  [qw(China Flag_of_China http://english.cas.ac.cn/Eng2003/page/home.asp)],
+  [qw(UK Flag_of_the_United_Kingdom http://www.srcuk.org/)],
+  [qw(India Flag_of_India http://www.genomeindia.org/tomato/index.html)],
+  ['Nether- lands', qw(Flag_of_the_Netherlands http://www.biosystemsgenomics.nl/)],
+  [qw(France Flag_of_France http://gbf.ensat.fr/)],
+  [qw(Japan Flag_of_Japan /about/japan.pl )],
+  [qw(Spain Flag_of_Spain /about/spain.pl)],
+  [qw(USA Flag_of_the_United_States /about/us_tomato_sequencing.pl)],
+  [qw(China Flag_of_China)],
+  [qw(Italy Flag_of_Italy /about/italy.pl)];
+print <<EOHTML;
+<td>&nbsp;</td>
+</tr>
+<tr>
+  <td>&nbsp;</td>
+  <td colspan="12" align="center">$overview_image_html</td>
+  <td>&nbsp;</td>
+</tr>
+<tr><td colspan="12"><table><tr><td width="100">&nbsp;</td><td width="15"><span style="background:#cccccc">&nbsp;&nbsp;</span></td><td>in progress</td><td width="10">&nbsp;</td><td width="15"><span style="background:#446644">&nbsp;&nbsp;</span></td><td bgcolor="ffffff">complete</td><td width="10">&nbsp;</td><td width="15"><span style="background:#aaffaa">&nbsp;&nbsp;</span></td><td>available</td><td width="10">&nbsp;</td><td width="15"><span style="background:#00ff00">&nbsp;&nbsp;</span></td><td>available HTGS3</td></tr></table><br /><br /></td></tr>
+<tr><th>BACs</th><td colspan="12"></td><th>Total</th></tr>
+EOHTML
+
+my $log = CXGN::People::BACStatusLog->new($dbh);
+my (undef,@to_be_sequenced) = $log->get_number_bacs_to_complete;
+
+sub summed_row_html(@) {
+  my ($title,@cells) = @_;
+  my $sum = 0;
+  foreach (@cells) {
+    $_ = [$_,$_] unless ref;
+    $sum += $_->[0];
+  }
+  $sum = commify_number($sum);
+  return join '',
+    ( '<tr>',
+      qq|<td align="left" class="tinytype">$title</td>|,
+      (map {qq|<td align="center">$_->[1]</td>| } @cells),
+      qq|<td align="center">$sum</td>|,
+      "</tr>\n"
+    );
+}
+
+print summed_row_html 'Chr Total' => @to_be_sequenced;
+
+my $search = CXGN::Genomic::Search::Clone->new;
+my @in_progress = $log->get_number_bacs_in_progress;
+print summed_row_html 'In&nbsp;progress' =>
+  map {
+    my $q = $search->new_query;
+    $q->seq_project_name(qq/ilike '%Tomato%Chromosome ' || ? || ' %'/,$_);
+    $q->sequencing_status("=?",'in_progress');
+    my $link = "/maps/physical/clone_search.pl?".$q->to_query_string;
+    HTML::Entities::encode_entities($link);
+#    my $total = $search->do_count($q)->total_results;
+    [$in_progress[$_],qq|<a href="$link">$in_progress[$_]</a>|]
+  } (1..12);
+
+my @complete = $log->get_number_bacs_complete;
+print summed_row_html Complete =>
+  map {
+    my $q = $search->new_query;
+    $q->seq_project_name(qq/ilike '%Tomato%Chromosome ' || ? || ' %'/,$_);
+    $q->sequencing_status("=?",'complete');
+    my $link = "/maps/physical/clone_search.pl?".$q->to_query_string;
+    HTML::Entities::encode_entities($link);
+#    my $total = $search->do_count($q)->total_results;
+    [$complete[$_],qq|<a href="$link">$complete[$_]</a>|]
+  } (1..12);
+
+my @num_uploaded = $log->get_number_bacs_uploaded;
+print summed_row_html Available =>
+  map {
+    my $total = $num_uploaded[$_];
+    [$total,qq|<a href="/tomato/genome_data.pl?chr=$_#clones">$total</a>|]
+  } (1..12);
+
+foreach my $phase (1..3) { 
+    my (@num_phase) = $log->get_number_bacs_in_phase($phase);
+    print summed_row_html "&nbsp;&nbsp;HTGS $phase" =>
+	map { 
+	    my $total = $num_phase[$_];
+	    [$total, qq|<a href="/tomato/genome_data.pl?chr=$_#clones">$total</a>|]
+	    } (1..12);
+}
+
+
+my ($overall_percent,@finished) = $log->get_chromosomes_percent_finished;
+print '<tr>', 
+    qq|<td align="left" class="tinytype">% Done</td>|,
+    ( map qq|<td style="text-align: right; padding-right: 0.65em">$_%</td>|, @finished ),
+    '<td>&nbsp;</td>',
+    "</tr>\n";
+
+
+
+
+
+#calculate the proportion of current tomato unigenes that have matches to BAC sequences
+
+my $complete_percent = sprintf('%0.0f',100*$complete[0]/sum(@to_be_sequenced));
+my $available_percent = sprintf('%0.0f',100*$num_uploaded[0]/sum(@to_be_sequenced));
+#warn "complete: $complete[0], todo: $to_be_sequenced[0]";
+print <<EOHTML;
+<tr>
+<td colspan="13" style="padding-top: 1em">
+<center>
+  <b>Overall Stats</b>
+  <table>
+    <tr><td align="right">$overall_percent%</td><td>of sequencing is complete</td></tr>
+    <tr><td align="right">$complete_percent%</td><td>of BACs are reported finished</td></tr>
+    <tr><td align="right">$available_percent%</td><td>of BACs have downloadable sequence</td></tr>
+    </table>
+    </center>
+    </td>
+    </tr>
+  </table>
+</center>
+<br />
+<br />
+EOHTML
+
+print info_table_html( __border => 0, __multicol => 3,
+
+		      'Tomato Mitochondrial Genome' =>
+		       '<center>'.flag_html('Argentina',
+					    'Flag_of_Argentina',
+					    'http://www.mitochondrialgenome.org')
+		       .'</center>',
+
+		      'Tomato Chloroplast Genome' =>
+		       '<center>'.flag_html('EU Plastomics Project',
+					    'Flag_of_European_Union',
+					    'https://genesilico.pl/Plastomics/')
+		       .'</center>',
+
+		      'BAC End Sequences' => <<EOHTML,
+<table summary="">
+  <tr><td align="right">188,130</td><td>Tomato HindIII BAC Library</td></tr>
+  <tr><td align="right">112,507</td><td>Tomato MboI BAC Library</td></tr>
+  <tr><td align="right">101,375</td><td>Tomato EcoRI BAC Library</td></tr>
+  <tr><td align="right">402,012</td><th>Total</th></tr>
+</table>
+EOHTML
+);
+
+</%perl>
+

@@ -64,7 +64,7 @@ sub new {
     $self->set_url("");
     $self->{dbh}= $dbh;
 
-    if ($ENV{MOD_PERL}) { 
+    if ( $ENV{MOD_PERL} || $ENV{GATEWAY_INTERFACE} || $ENV{CATALYST_ENGINE} ) {
 	$self->set_cache_dir($cache_dir);
     }
     else { 
@@ -230,7 +230,7 @@ sub fetch {
     my $assoc = CXGN::Genomic::BACMarkerAssoc->new($self->{dbh});    
     my $cachefile = File::Spec->catfile($self->get_cache_dir(), "itag_chr".$self->get_name());
     if (-e $cachefile) { 
-	open (my $C, "<$cachefile") || die "Can't open file '$cachefile'"; 
+	open (my $C, '<', $cachefile) || die "Can't open file '$cachefile': $!";
 	
 	# the first line is the length of the chromosome
 	#
@@ -262,15 +262,14 @@ sub fetch {
     else { 
 	# generate new cache file if it doesn't exist
 	#
-	open (my $C, ">$cachefile") || die "Can't open file '$cachefile' for writeing...";
-	open (my $ITAG, "<$file") || die "Can't open $file\n";
+	open (my $C, '>', $cachefile) || die "Can't open file '$cachefile' for writing: $!";
+	open (my $ITAG, '<', $file) || die "Can't open $file: $!";
 	
 	# parse gff3 file
 	#
 	my ($coord, $contig_start, $contig_end) = ();
 	my %contigs = (); # hash of listref with bacname, start, end
 	my %contig_coords = (); # has of contig-based bac start and ends 
-	my @contig_order = (); # the order in which the contigs should appear
 	my ($contig_name, $itag_name, $type, $c_start, $c_end, $dot1, $dir, $dot2, $info, $bac_name, $bac_start, $bac_end) = ();
 	while (<$ITAG>) { 
 	    chomp;
@@ -335,7 +334,7 @@ sub fetch {
 	# print to cachefile
 	#
 	#my $assoc = CXGN::Genomic::BACMarkerAssoc->new($self->get_dbh());    
-	open (my $C, ">$cachefile") || die "Can't open file '$cachefile'";
+	open ($C, '>', $cachefile) || die "Can't open file '$cachefile': $!";
 
 
 	# the first line is the length of the chromosome...

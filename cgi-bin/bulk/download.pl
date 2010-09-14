@@ -1,3 +1,4 @@
+use CatalystX::GlobalContext qw( $c );
 # refactored bulk download script for SGN database
 # Alexander Naydich and Matthew Crumb (interns)
 # July 3, 2007
@@ -45,12 +46,8 @@ use CXGN::Bulk::ArraySpotUnigene;
 use CXGN::Bulk::UnigeneMemberInfo;
 
 
-my $page = CXGN::Page->new();
-#my $params = {};
-#$params->{idType} = $page->get_arguments("idType");
-
+my $page   = CXGN::Page->new();
 my $params = get_parameters($page);
-print STDERR "IDTYPE: $params->{idType}\n";
 
 _invalid_params() unless $params->{idType};
 

@@ -1,0 +1,58 @@
+<%args>
+    $children
+    $parents
+    $reference => undef
+    $title => 'Related Features'
+    $feature
+</%args>
+<%init>
+    use SGN::View::Feature qw/related_stats/;
+</%init>
+<%perl>
+</%perl>
+
+% if ($children || $parents) {
+<&| /page/info_section.mas,
+    title => $title,
+    collapsible => 1,
+&>
+%if ($parents && @$parents) {
+<&| /page/info_section.mas,
+    title => "Parent Features",
+    collapsible => 1,
+&>
+    <& /page/columnar_table.mas,
+        headings => [ "Feature Type", "Number"  ],
+        data     => related_stats($parents),
+    &>
+    <& /feature/feature_list.mas,
+        features => $parents,
+    &>
+</&>
+%}
+<br/>
+%if ($children && @$children) {
+<&| /page/info_section.mas,
+    title => "Child Features",
+    collapsible => 1,
+&>
+    <& /page/columnar_table.mas,
+        headings => [ "Child Feature Type", "Number" ],
+        data     => related_stats($children),
+    &>
+    <& /feature/feature_list.mas,
+        features => $children,
+    &>
+</&>
+% }
+
+<& /feature/relations.mas, feature => $feature &>
+
+% if ($reference) {
+<& /feature/feature_data.mas,
+    feature => $reference,
+    title => 'Reference Feature',
+&>
+% }
+</&>
+% }

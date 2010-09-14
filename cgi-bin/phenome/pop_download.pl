@@ -1,3 +1,4 @@
+use CatalystX::GlobalContext qw( $c );
 #!/usr/bin/perl -wT
 
 =head1 DESCRIPTION
@@ -17,6 +18,8 @@ use CXGN::Phenome::Population;
 use CXGN::Scrap;
 use Cache::File;
 
+use CatalystX::GlobalContext qw( $c );
+
 my $scrap = CXGN::Scrap->new();
 my $dbh   = CXGN::DB::Connection->new();
 
@@ -29,11 +32,9 @@ my $name = $pop->get_name();
 print
 "Pragma: \"no-cache\"\nContent-Disposition:filename=phenotype_data_${population_id}.txt\nContent-type:application/data\n\n";
 
-#print "Content-Type: text/plain\n\n";
 
 
-
-my $p_file = &phenotype_file();
+my $p_file = $pop->phenotype_file($c);
 
 if (-e $p_file) {
     print "phenotype data for $name\n\n\n";
@@ -51,12 +52,3 @@ else {
            or does not exist!\n";
 }
 
-sub phenotype_file {
-    my $prod_temp_path = $c->get_conf('r_qtl_temp_path'); 
-    my $file_cache = Cache::File->new( cache_root => $prod_temp_path . "/cache" ); 
-    my $key_phe          = "popid_" . $population_id . "_phenodata";
-    my $phe_dataset_file = $file_cache->get($key_phe); 
-    print STDERR "pheno file: $phe_dataset_file\nkey: $key_phe\npop_id:$population_id\n";
-    return $phe_dataset_file;
-
-}

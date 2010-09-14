@@ -1,18 +1,19 @@
-<%args>
-  $page_title    => ''
-</%args>
+% my $t = $m->request_args->{'page_title'};
+  <title><% $t ? "$t - " : '' %>Sol Genomics Network</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
 
-  <title><% $page_title ? "$page_title - " : '' %>Sol Genomics Network</title>
-  <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
   <link rel="stylesheet" href="/documents/inc/sgn.css" type="text/css" />
+  <link rel="stylesheet" href="/documents/inc/jquery-sgn-theme/jquery-ui-1.8.4.custom.css" type="text/css" />
+  <link rel="stylesheet" href="/documents/inc/colorbox/colorbox.css" type="text/css" />
+
   <link rel="search" type="application/opensearchdescription+xml" title="SGN Sol Search" href="/documents/sgn_sol_search.xml" />
 
-  <script language="JavaScript" type="text/javascript">
-    var docroot = '/';
-    JSAN = {};
-    JSAN.use = function() {};
-    MochiKit = {__export__: false};
+  <script language="javascript" type="text/javascript">
+     JSAN = {};
+     JSAN.use = function() {};
+     MochiKit = {__export__: false};
   </script>
 
-  <script language="JavaScript" src="/documents/inc/sgn.js" type="text/javascript"></script>
+  <& /util/import_javascript.mas, classes => [qw[ sgn wz_tooltip CXGN.Effects CXGN.Page.FormattingHelpers CXGN.UserPrefs CXGN.Page.Toolbar ]] &>
 
+  <!-- INSERT_JS_PACK -->

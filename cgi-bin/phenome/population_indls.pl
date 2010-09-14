@@ -1,5 +1,3 @@
-#!/usr/bin/perl -w
-
 =head1 DESCRIPTION
 
 Creates a trait/cvterm page with a description of 
@@ -15,11 +13,14 @@ Isaak Y Tecle (iyt2@cornell.edu)
 =cut
 
 use strict;
+use warnings;
 
 my $population_indls_detail_page =
   CXGN::Phenome::PopulationIndlsDetailPage->new();
 
 package CXGN::Phenome::PopulationIndlsDetailPage;
+
+use CatalystX::GlobalContext qw( $c );
 
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw /info_section_html
@@ -35,7 +36,6 @@ use CXGN::Phenome::Population;
 use CXGN::Phenome::Qtl;
 use CXGN::Phenome::PopulationDbxref;
 use CXGN::Tools::WebImageCache;
-use SGN::Context;
 use CXGN::People::PageComment;
 use CXGN::People::Person;
 use CXGN::Chado::Publication;
@@ -51,16 +51,18 @@ use Math::Round::Var;
 use File::Temp qw /tempfile tempdir/;
 use File::Copy;
 use File::Spec;
+use File::Path qw / mkpath /;
 use File::Basename;
 use File::stat;
 use Cache::File;
+use Path::Class;
+use Try::Tiny;
 use CXGN::Scrap::AjaxPage;
 use CXGN::Contact;
-use Storable qw / store /;
 
-
-use CXGN::Page::UserPrefs;
 use base qw / CXGN::Page::Form::SimpleFormPage CXGN::Phenome::Main/;
+
+use CatalystX::GlobalContext qw( $c );
 
 sub new
 {
@@ -126,12 +128,10 @@ qq |<a href="/solpeople/personal-info.pl?sp_person_id=$sp_person_id">$submitter_
               || $self->get_user()->get_user_type() eq 'curator' )
        )
     {
-        print STDERR "Generating EditableForm..\n";
         $form = CXGN::Page::Form::Editable->new();
     }
     else
     {
-        print STDERR "Generating static Form...\n";
         $form = CXGN::Page::Form::Static->new();
     }
 
@@ -187,7 +187,7 @@ sub display_page
 {
     my $self = shift;
 
-    $self->get_page->jsan_use("jQuery");
+    $self->get_page->jsan_use("jquery");
     $self->get_page->jsan_use("thickbox");
 
     $self->get_page->add_style( text => <<EOS);
@@ -376,7 +376,7 @@ qq|<div><a href="$url_pubmed$accession" target="blank">$pub_info</a> $title $abs
                       "phenotype",
                       'View/hide phenotype raw data',
                       qq |$phenotype_data|,
-                      0,                                #<  show data by default
+                      0,                                #<  don't show data by default
                                        );
 	    $data_download .=
 qq { Download population: <span><a href="pop_download.pl?population_id=$population_id"><b>\[Phenotype raw data\]</b></a><a href="genotype_download.pl?population_id=$population_id"><b>[Genotype raw data]</b></a></span> };
@@ -385,29 +385,46 @@ qq { Download population: <span><a href="pop_download.pl?population_id=$populati
 
         my (
              $image_pheno, $title_pheno, $image_map_pheno,
-             $plot_html,   $normal_dist
+             $plot_html
            );
         ( $image_pheno, $title_pheno, $image_map_pheno ) =
           population_distribution($population_id);
-        $plot_html .= "<table  cellpadding = 5><tr><td>";
+        $plot_html .= qq | <table  cellpadding = 5><tr><td> |;
         $plot_html .= $image_pheno . $image_map_pheno;
-        $plot_html .= "</td><td>";
-        $plot_html .= $title_pheno . "<br/>";
-        $plot_html .= <<HTML;
-        <b>Data Summay:</b><br />
-	<b>No. of observation units:</b> $all_indls_count<br /> 
-        <b>Minimum:</b> $min<br /> 
-        <b>Maximum:</b> $max <br /> 
-        <b>Mean:</b> $avg <br /> 
-        <b>Standard deviation:</b> $std<br />
-HTML
+        $plot_html .= qq | </td><td> |;
+        $plot_html .= $title_pheno . qq | <br/> |;
+       
 
-        $plot_html .= "</td></tr></table>";
+	my @phe_summ =  ( [ 'No. of obs units', $all_indls_count ], 
+			  [ 'Minimum', $min ], 
+			  [ 'Maximum', $max ],
+			  [ 'Mean', $avg ],
+			  [ 'Standard deviation', $std ]
+	                );
+
+	my @summ;
+	foreach my $phe_summ ( @phe_summ ) 
+	{      
+	    push @summ, [ map { $_ } ( $phe_summ->[0], $phe_summ->[1] ) ];
+	}
+
+	my $summ_data  = columnar_table_html(
+                                              headings   => [ '',  ''],
+                                              data       => \@summ,
+                                              __alt_freq   => 2,
+                                              __alt_width  => 1,
+                                              __alt_offset => 3,
+                                              __align      => 'l',
+                                            );
+
+
+        $plot_html .= $summ_data;
+	$plot_html .= qq | </td></tr></table> |;
 
         my $qtl_image           = $self->qtl_plot();
   
 	my $legend = $self->legend($population);
-	my $qtl_html = "<table><tr><td width=70%>$qtl_image</td><td width=30%>$legend</td></tr></table>";
+	my $qtl_html = qq | <table><tr><td width=70%>$qtl_image</td><td width=30%>$legend</td></tr></table> |;
 
         print info_section_html( 
                                 title    => 'QTL(s)',
@@ -416,7 +433,7 @@ HTML
 
         print info_section_html( 
 	                        title    => 'Phenotype Frequency Distribution',
-                                contents => $plot_html . $normal_dist, 
+                                contents => $plot_html, 
                                );
    
 	print info_section_html( 
@@ -500,11 +517,10 @@ sub population_distribution
         $term_id   = $term_obj->get_cvterm_id();
     }
 
-    my $vh           = SGN::Context->new();
-    my $basepath     = $vh->get_conf("basepath");
-    my $tempfile_dir = $vh->get_conf("tempfiles_subdir");
+    my $basepath     = $c->get_conf("basepath");
+    my $tempfile_dir = $c->get_conf("tempfiles_subdir");
 
-    my $cache = CXGN::Tools::WebImageCache->new(1);
+    my $cache = CXGN::Tools::WebImageCache->new();
     $cache->set_basedir($basepath);
     $cache->set_temp_dir( $tempfile_dir . "/temp_images" );
     $cache->set_expiration_time(259200);
@@ -626,7 +642,7 @@ qq | /phenome/indls_range_cvterm.pl?cvterm_id=$term_id&amp;lower=$lower&amp;uppe
     my $image_map = $cache->get_image_map_data();
     my $image     = $cache->get_image_tag();
     my $title =
-"Frequency distribution of experimental lines from population $pop_name evaluated for $term_name. Bars represent the number of experimental lines with $term_name values greater than the lower limit but less or equal to the upper limit of the range.";
+qq | Frequency distribution of experimental lines evaluated for $term_name. Bars represent the number of experimental lines with $term_name values greater than the lower limit but less or equal to the upper limit of the range. |;
 
     return $image, $title, $image_map;
 }
@@ -665,9 +681,8 @@ sub qtl_plot
 
     my $ac = $population->cvterm_acronym($term_name);
 
-    my $vh           = SGN::Context->new();
-    my $basepath     = $vh->get_conf("basepath");
-    my $tempfile_dir = $vh->get_conf("tempfiles_subdir");
+    my $basepath     = $c->get_conf("basepath");
+    my $tempfile_dir = $c->get_conf("tempfiles_subdir");
 
     my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
       $self->cache_temp_path();
@@ -690,10 +705,10 @@ sub qtl_plot
 
         my ( $qtl_summary, $flanking_markers ) = $self->run_r();
 
-        open QTLSUMMARY, "<$qtl_summary" or die "can't open $qtl_summary: $!\n";
+        open my $qtl_fh, "<", $qtl_summary or die "can't open $qtl_summary: $!\n";
 
-        my $header = <QTLSUMMARY>;
-        while ( my $row = <QTLSUMMARY> )
+        my $header = <$qtl_fh>;
+        while ( my $row = <$qtl_fh> )
         {
             my ( $marker, $chr, $pos, $lod ) = split( /\t/, $row );
             push @marker, $marker;
@@ -708,13 +723,12 @@ sub qtl_plot
         my $max   = $o_lod[-1];
         $max = $max + (0.5);
 
-        close QTLSUMMARY;
 
-        open MARKERS, "<$flanking_markers"
+        open my $markers_fh, "<", $flanking_markers
           or die "can't open $flanking_markers: !$\n";
 
-        $header = <MARKERS>;
-        while ( my $row = <MARKERS> )
+        $header = <$markers_fh>;
+        while ( my $row = <$markers_fh> )
 	   
         {
 	    chomp($row);
@@ -725,7 +739,6 @@ sub qtl_plot
             push @peak, $peakmarker;
         }
 
-        close MARKERS;
 	my (@h_markers, @chromosomes, @lk_groups);
 	my $h_marker;
 
@@ -745,6 +758,8 @@ sub qtl_plot
 		$l_m = $left[$i];
 		$r_m = $right[$i];
 		$p_m = $peak[$i];
+		s/\s//g for $l_m, $r_m, $p_m;
+
 		my $l_pos =
 		    $population->get_marker_position( $mapversion, $l_m );
 		my $r_pos =
@@ -763,13 +778,10 @@ sub qtl_plot
 		    }
 
 		}
-		my $lod1 = $permu_threshold{ $p_keys[0] };
-		# my $log2 = $permu_threshold{ $p_keys[1] };           
-		
+		my $lod1 = $permu_threshold{ $p_keys[0] };	         		
 		$h_marker = 
 		    qq |/phenome/qtl.pl?population_id=$pop_id&amp;term_id=$term_id&amp;chr=$lg&amp;l_marker=$l_m&amp;p_marker=$p_m&amp;r_marker=$r_m&amp;lod=$lod1|;
- #$h_marker =
-#qq |../cview/view_chromosome.pl?map_version_id=$mapversion&chr_nr=$lg&show_ruler=1&show_IL=&show_offsets=1&comp_map_version_id=&comp_chr=&color_model=&show_physical=&size=&show_zoomed=1&confidence=-2&hilite=$l_m+$p_m+$r_m&marker_type=&cM_start=$l_pos&cM_end=$r_pos |;
+ 
 
 		$cache_tempimages->set( $key_h_marker, $h_marker, '30 days' );
 	    }
@@ -804,7 +816,7 @@ sub qtl_plot
                 push @lod_chr, $lod_chr_e;
             }
 
-            my $cache_qtl_plot = CXGN::Tools::WebImageCache->new(1);
+            my $cache_qtl_plot = CXGN::Tools::WebImageCache->new();
             $cache_qtl_plot->set_basedir($basepath);
             $cache_qtl_plot->set_temp_dir( $tempfile_dir . "/temp_images" );
             $cache_qtl_plot->set_expiration_time(259200);
@@ -873,10 +885,10 @@ sub qtl_plot
 
             $image      = $cache_qtl_plot->get_image_tag();
             $image_url  = $cache_qtl_plot->get_image_url();
-           # $image_html = qq |<a href ="$h_marker&qtl=$image_url">$image</a>|;
+          
 
 ###########thickbox
-            my $cache_qtl_plot_t = CXGN::Tools::WebImageCache->new(1);
+            my $cache_qtl_plot_t = CXGN::Tools::WebImageCache->new();
             $cache_qtl_plot_t->set_basedir($basepath);
             $cache_qtl_plot_t->set_temp_dir( $tempfile_dir . "/temp_images" );
             $cache_qtl_plot_t->set_expiration_time(259200);
@@ -973,8 +985,8 @@ sub infile_list
       $self->cache_temp_path();
 
     my $prod_permu_file  = $self->permu_file();
-    my $gen_dataset_file = $self->genotype_file();
-    my $phe_dataset_file = $self->phenotype_file();
+    my $gen_dataset_file = $population->genotype_file($c);
+    my $phe_dataset_file = $population->phenotype_file($c);
     my $crosstype_file   = $self->crosstype_file();
   
     my $input_file_list_temp =
@@ -992,18 +1004,16 @@ sub infile_list
                                    );
     my $file_cv_in = $file_cvin->filename();
 
-    open CV, ">$file_cv_in" or die "can't open $file_cv_in: $!\n";
-    print CV $ac;
-    close CV;
+    open my $cv_fh, ">", $file_cv_in or die "can't open $file_cv_in: $!\n";
+    $cv_fh->print($ac);
 
     my $file_in_list = join( "\t",
                              $file_cv_in,       "P$pop_id",
                              $gen_dataset_file, $phe_dataset_file,
                              $prod_permu_file, $crosstype_file);
 
-    open FI, ">$file_in" or die "can't open $file_in: $!\n";
-    print FI $file_in_list;
-    close FI;
+    open my $fi_fh, ">", $file_in or die "can't open $file_in: $!\n";
+    $fi_fh->print ($file_in_list);
 
     return $file_in;
 
@@ -1082,23 +1092,17 @@ sub outfile_list
         "\t",
         $qtl_summary,
         $flanking_markers,
-
-        #$qtl_summary_file,
-        #$flanking_markers_file
                             );
-    open FO, ">$file_out" or die "can't open $file_out: $!\n";
-    print FO $file_out_list;
-    close FO;
+    open my $fo_fh, ">", $file_out or die "can't open $file_out: $!\n";
+    $fo_fh->print ($file_out_list);
 
     return $file_out, $qtl_summary, $flanking_markers;
 }
 
 =head2 cache_temp_path
 
- Usage: my ($prod_cache_path, $prod_temp_path, $tempimages_path) = $self->cache_temp_path();
- Desc: creates the 'r_qtl' dir in the '/data/prod/tmp/' dir; 
-      'cache' and 'tempfiles' in the /data/prod/tmp/r_qtl/, 
-       and 'temp_images' in the /data/local/cxgn/sgn/documents/tempfiles'      
+ Usage: my ($rqtl_cache_path, $rqtl_temp_path, $tempimages_path) = $self->cache_temp_path();
+ Desc: creates the 'r_qtl/cache' and 'r_qtl/tempfiles' subdirs in the /data/prod/tmp,              
  Ret: /data/prod/tmp/r_qtl/cache, /data/prod/tmp/r_qtl/tempfiles, 
       /data/local/cxgn/sgn/documents/tempfiles/temp_images
  Args: none
@@ -1109,158 +1113,62 @@ sub outfile_list
 
 sub cache_temp_path
 {
-    my $vh           = SGN::Context->new();
-    my $basepath     = $vh->get_conf("basepath");
-    my $tempfile_dir = $vh->get_conf("tempfiles_subdir");
+    my $basepath     = $c->get_conf("basepath");
+    my $tempfile_dir = $c->get_conf("tempfiles_subdir");
 
     my $tempimages_path =
       File::Spec->catfile( $basepath, $tempfile_dir, "temp_images" );
 
-    my $prod_temp_path = $vh->get_conf('r_qtl_temp_path');
-    mkdir $prod_temp_path;
-    my $prod_cache_path = "$prod_temp_path/cache";
-    mkdir $prod_cache_path;
-    $prod_temp_path = "$prod_temp_path/tempfiles";
-    mkdir $prod_temp_path;
-    -d $prod_temp_path
-      or die "temp dir '$prod_temp_path' not found, and could not create!";
-    -r $prod_temp_path or die "temp dir '$prod_temp_path' not readable!";
-    -w $prod_temp_path or die "temp dir '$prod_temp_path' not writable!";
-
-    return $prod_cache_path, $prod_temp_path, $tempimages_path;
+    my $prod_rqtl_path  = $c->get_conf('r_qtl_temp_path');  
+    my $rqtl_cache_path = "$prod_rqtl_path/cache"; 
+    my $rqtl_temp_path  = "$prod_rqtl_path/tempfiles";
+  
+    mkpath ([$rqtl_cache_path, $rqtl_temp_path, $tempimages_path], 0, 0755);
+   
+    return $rqtl_cache_path, $rqtl_temp_path, $tempimages_path;
 
 }
 
-=head2 genotype_file
 
- Usage: my $gen_file = $self->genotype_file();
- Desc: creates the genotype file in the /data/prod/tmp/r_qtl/cache, 
-       if it does not exist yet and caches it for R.
- Ret: genotype filename (with abosolute path)
- Args: none
- Side Effects:
- Example:
-
-=cut
-
-sub genotype_file
-{
-    my $self       = shift;
-    my $pop_id     = $self->get_object_id();
-    my $population = $self->get_object();
-
-    my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
-      $self->cache_temp_path();
-    my $file_cache = Cache::File->new( cache_root => $prod_cache_path );
-    $file_cache->purge();
-
-    my $key_gen          = "popid_" . $pop_id . "_genodata";
-    my $gen_dataset_file = $file_cache->get($key_gen);
-
-    unless ($gen_dataset_file)
-    {
-        my $genodata     = $population->genotype_dataset();
-        my $geno_dataset = ${$genodata};
-
-        my $filename = "genodata_" . $pop_id . ".csv";
-        my $file     = "$prod_cache_path/$filename";
-
-        open OUT, ">$file" or die "can't open $file: !$\n";
-        print OUT $geno_dataset;
-        close OUT;
-
-        $file_cache->set( $key_gen, $file, '30 days' );
-        $gen_dataset_file = $file_cache->get($key_gen);
-    }
-
-    return $gen_dataset_file;
-
-}
-
-=head2 phenotype_file
-
- Usage: my $gen_file = $self->phenotype_file();
- Desc: creates the phenotype file in the /data/prod/tmp/r_qtl/cache, 
-       if it does not exist yet and caches it for R.
- Ret: phenotype filename (with abosolute path)
- Args: none
- Side Effects:
- Example:
-
-=cut
-
-sub phenotype_file
-{
-    my $self       = shift;
-    my $pop_id     = $self->get_object_id();
-    my $population = $self->get_object();
-
-    my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
-      $self->cache_temp_path();
-    my $file_cache = Cache::File->new( cache_root => $prod_cache_path );
-
-    my $key_phe          = "popid_" . $pop_id . "_phenodata";
-    my $phe_dataset_file = $file_cache->get($key_phe);
-
-    unless ($phe_dataset_file)
-    {
-        my $phenodata     = $population->phenotype_dataset();
-        my $pheno_dataset = ${$phenodata};
-        my $filename      = "phenodata_" . $pop_id . ".csv";
-
-        my $file = "$prod_cache_path/$filename";
-
-        open OUT, ">$file" or die "can't open $file: !$\n";
-        print OUT $pheno_dataset;
-        close OUT;
-
-        $file_cache->set( $key_phe, $file, '30 days' );
-        $phe_dataset_file = $file_cache->get($key_phe);
-    }
-
-    return $phe_dataset_file;
-
-}
 
 =head2 crosstype_file
 
- Usage: my $gen_file = $self->crosstype_file();
- Desc: creates the crosstype file in the /data/prod/tmp/r_qtl/temp, 
+ Usage: my $cross_file = $self->crosstype_file();
+ Desc: creates the crosstype file in the /data/prod/tmp/r_qtl/tempfiles, 
       
- Ret: crossotype filename (with abosolute path)
+ Ret: crosstype filename (with absolute path)
  Args: none
  Side Effects:
  Example:
 
 =cut
 
-sub crosstype_file
-{
+sub crosstype_file {
     my $self       = shift;
     my $pop_id     = $self->get_object_id();
     my $population = $self->get_object();
- 
-    my $cross_type = 'bc' if ($population->get_cross_type_id() == 2);
-    $cross_type = 'f2' if ($population->get_cross_type_id() == 1);
-    
+
+    my $type_id = $population->get_cross_type_id
+        or die "population '$pop_id' has no cross_type, does not seem to be the product of a cross!";
+    my ($cross_type) = $self->get_dbh->selectrow_array(<<'', undef, $type_id);
+                          select cross_type
+                          from cross_type
+                          where cross_type_id = ?
+
+    my $rqtl_cross_type = { 'Back cross' => 'bc',  'F2' => 'f2' }->{$cross_type}
+        or die "unknown cross_type '$cross_type' for population '$pop_id'";
+
     my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
 	$self->cache_temp_path();
 
     my $cross_temp = File::Temp->new(
-	                             TEMPLATE => "cross_type_${pop_id}-XXXXXX",
-                                     DIR      => $prod_temp_path,
-                                     UNLINK   => 0,
-	                            );
-   
+        TEMPLATE => "cross_type_${pop_id}-XXXXXX",
+        DIR      => $prod_temp_path,
+        UNLINK   => 0,
+       );
 
-    my $cross_file = $cross_temp->filename;
-    
-    open CF, ">$cross_file" or die "can't open $cross_file: $!\n";
-    print CF $cross_type;
-    close FO; 
-
-    return $cross_file;
-
+    $cross_temp->print( $rqtl_cross_type );
+    return $cross_temp->filename;
 }
 
 
@@ -1289,8 +1197,6 @@ sub run_r
     my ( $file_out, $qtl_summary, $flanking_markers ) = $self->outfile_list();
     my $stat_file = $self->stat_files();
 
-    print STDERR "stat file: $stat_file\n";
-
     CXGN::Tools::Run->temp_base($prod_temp_path);
 
     my ( $r_in_temp, $r_out_temp ) =
@@ -1314,23 +1220,31 @@ sub run_r
           or die "could not copy '$r_cmd_file' to '$r_in_temp'";
     }
 
-    # now run the R job on the cluster
-    my $r_process = CXGN::Tools::Run->run_cluster(
-        'R', 'CMD', 'BATCH',
-        '--slave',
-        "--args $file_in $file_out $stat_file",
-        $r_in_temp,
-        $r_out_temp,
-        {
-           working_dir => $prod_temp_path,
+    try {
+        # now run the R job on the cluster
+        my $r_process = CXGN::Tools::Run->run_cluster(
+            'R', 'CMD', 'BATCH',
+            '--slave',
+            "--args $file_in $file_out $stat_file",
+            $r_in_temp,
+            $r_out_temp,
+            {
+                working_dir => $prod_temp_path,
 
-           # don't block and wait if the cluster looks full
-           max_cluster_jobs => 1_000_000_000,
-        },
-    );
+                # don't block and wait if the cluster looks full
+                max_cluster_jobs => 1_000_000_000,
+            },
+           );
 
-    sleep 1 while $r_process->alive;    #< wait for R to finish
-                                        #unlink( $r_in_temp, $r_out_temp );
+        $r_process->wait;       #< wait for R to finish
+    } catch {
+        my $err = $_;
+        $err =~ s/\n at .+//s; #< remove any additional backtrace
+   #     # try to append the R output
+        try{ $err .= "\n=== R output ===\n".file($r_out_temp)->slurp."\n=== end R output ===\n" };
+        # die with a backtrace
+        Carp::confess $err;
+    };
 
     copy( $prod_permu_file, $tempimages_path )
       or die "could not copy '$prod_permu_file' to '$tempimages_path'";
@@ -1387,7 +1301,6 @@ sub permu_file
 
     my $key_permu = "$ac" . "_" . $pop_id . "_permu";
     my $filename  = "permu_" . $ac . "_" . $pop_id;
-
     my $permu_file = $file_cache->get($key_permu);
 
     unless ($permu_file)
@@ -1395,11 +1308,11 @@ sub permu_file
 
         my $permu = undef;
 
-        my $permu_file = "$prod_cache_path/$filename";
-
-        open OUT, ">$permu_file" or die "can't open $permu_file: !$\n";
-        print OUT $permu;
-        close OUT;
+        my $permu_file = File::Spec->catfile( $prod_cache_path, $filename );
+        
+	open my $permu_fh, ">", $permu_file or die "can't open $permu_file: !$\n";
+        $permu_fh->print($permu);
+        
 
         $file_cache->set( $key_permu, $permu_file, '30 days' );
         $permu_file = $file_cache->get($key_permu);
@@ -1432,23 +1345,22 @@ sub permu_values
     my $permu_file = fileparse($prod_permu_file);   
     my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
       $self->cache_temp_path();
+    
     $permu_file = File::Spec->catfile( $tempimages_path, $permu_file );
 
     my $round1 = Math::Round::Var->new(0.1);
 
-    open PERMUTATION, "<$permu_file"
+    open my $permu_fh, "<", $permu_file
       or die "can't open $permu_file: !$\n";
 
-    my $header = <PERMUTATION>;
+    my $header = <$permu_fh>;
 
-    while ( my $row = <PERMUTATION> )
+    while ( my $row = <$permu_fh> )
     {
         my ( $significance, $lod_threshold ) = split( /\t/, $row );
         $lod_threshold = $round1->round($lod_threshold);
         $permu_threshold{$significance} = $lod_threshold;
     }
-
-    close PERMUTATION;
 
     return \%permu_threshold;
 
@@ -1490,15 +1402,14 @@ sub permu_values_exist
     if ( -e $permu_file )
     {
 
-        open P, "<$permu_file" or die "can't open $permu_file: !$\n";
-        my $h = <P>;
-        while ( $permu_data = <P> )
+        open my $pf_fh, "<", $permu_file or die "can't open $permu_file: !$\n";
+        my $h = <$pf_fh>;
+        while ( $permu_data = <$pf_fh> )
         {
             last if ($permu_data);
 
             # 	    #just checking if there is data in there
         }
-        close P;
     }
 
     if ($permu_data)
@@ -1557,9 +1468,8 @@ sub qtl_images_exist
 
     my $ac = $population->cvterm_acronym($term_name);
 
-    my $vh           = SGN::Context->new();
-    my $basepath     = $vh->get_conf("basepath");
-    my $tempfile_dir = $vh->get_conf("tempfiles_subdir");
+    my $basepath     = $c->get_conf("basepath");
+    my $tempfile_dir = $c->get_conf("tempfiles_subdir");
 
     my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
       $self->cache_temp_path();
@@ -1569,12 +1479,11 @@ sub qtl_images_exist
 
     my ( $qtl_image, $image, $image_t, $image_url, $image_html, $image_t_url,
          $thickbox, $title );
-
-    # my $chrs = scalar(@linkage_groups) + 1;
+  
 
   IMAGES: foreach my $lg (@linkage_groups)
     {
-        my $cache_qtl_plot = CXGN::Tools::WebImageCache->new(1);
+        my $cache_qtl_plot = CXGN::Tools::WebImageCache->new();
         $cache_qtl_plot->set_basedir($basepath);
         $cache_qtl_plot->set_temp_dir( $tempfile_dir . "/temp_images" );
       
@@ -1587,12 +1496,10 @@ sub qtl_images_exist
         if ( $cache_qtl_plot->is_valid )
         {
             $image      = $cache_qtl_plot->get_image_tag();
-            $image_url  = $cache_qtl_plot->get_image_url();
-           # $image_html = qq |<a href ="$h_marker&$image_url">$image</a>|;
-
+            $image_url  = $cache_qtl_plot->get_image_url();           
         }
 
-        my $cache_qtl_plot_t = CXGN::Tools::WebImageCache->new(1);
+        my $cache_qtl_plot_t = CXGN::Tools::WebImageCache->new();
         $cache_qtl_plot_t->set_basedir($basepath);
         $cache_qtl_plot_t->set_temp_dir( $tempfile_dir . "/temp_images" );
 
@@ -1610,6 +1517,7 @@ qq | <a href="$image_t_url" title= "<a href=$h_marker&amp;qtl=$image_t_url><font
 
             $qtl_image .= $thickbox;
             $title = "  ";
+	   
 
         }
         else
@@ -1676,17 +1584,16 @@ sub stat_files
     my $pop            = $self->get_object();
     my $sp_person_id   = $pop->get_sp_person_id();
     my $qtl            = CXGN::Phenome::Qtl->new($sp_person_id);
-    my $c = SGN::Context->new();
     my $user_stat_file = $qtl->get_stat_file($c, $pop_id);
 
     my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
       $self->cache_temp_path();
 
-    open F, "<$user_stat_file" or die "can't open file: !$\n";
+    open my $user_stat_fh, "<", $user_stat_file or die "can't open file: !$\n";
 
     my $stat_files;
 
-    while (<F>)
+    while (<$user_stat_fh>)
     {
         my ( $parameter, $value ) = split( /\t/, $_ );
 
@@ -1697,22 +1604,22 @@ sub stat_files
         );
         my $stat_file = $stat_temp->filename;
 
-        open SF, ">$stat_file" or die "can't open file: !$\n";
-        print SF $value;
-        close SF;
+        open my $sf_fh, ">", $stat_file or die "can't open file: !$\n";
+        $sf_fh->print($value);
+        
 
         $stat_files .= $stat_file . "\t";
 
     }
 
-    close F;
+
 
     my $stat_param_files =
       $prod_temp_path . "/" . "stat_temp_files_pop_id_${pop_id}";
 
-    open STAT, ">$stat_param_files" or die "can't open file: !$\n";
-    print STAT $stat_files;
-    close STAT;
+    open my $stat_param_fh, ">", $stat_param_files or die "can't open file: !$\n";
+    $stat_param_fh->print ($stat_files);
+
 
     return $stat_param_files;
 
@@ -1738,14 +1645,13 @@ sub stat_param_hash
     my $pop            = $self->get_object();
     my $sp_person_id   = $pop->get_sp_person_id();
     my $qtl            = CXGN::Phenome::Qtl->new($sp_person_id);
-    my $c = SGN::Context->new();
     my $user_stat_file = $qtl->get_stat_file($c, $pop_id);
 
-    open F, "<$user_stat_file" or die "can't open file: !$\n";
+    open my $user_stat_fh, "<", $user_stat_file or die "can't open file: !$\n";
 
     my %stat_param;
 
-    while (<F>)
+    while (<$user_stat_fh>)
     {
         my ( $parameter, $value ) = split( /\t/, $_ );
 
@@ -1780,11 +1686,12 @@ sub legend {
     my $qtl            = CXGN::Phenome::Qtl->new($sp_person_id);
     my $stat_file = $qtl->get_stat_file($c, $pop->get_population_id());
     my @stat;
-    my $ci;
+    my $ci= 1;
 
-    open $_, "<", $stat_file or die "$! reading $stat_file\n";
-    while (my $row = <$_>)
+    open my $sf, "<", $stat_file or die "$! reading $stat_file\n";
+    while (my $row = <$sf>)
     {
+	chomp($row);
         my ( $parameter, $value ) = split( /\t/, $row );
 	if ($parameter =~/qtl_method/) {$parameter = 'Mapping method';}
 	if ($parameter =~/qtl_model/) {$parameter = 'Mapping model';}
@@ -1793,16 +1700,20 @@ sub legend {
 	if ($parameter =~/permu_level/) {$parameter = 'Permutation significance level';}
 	if ($parameter =~/permu_test/) {$parameter = 'No. of permutations';}
 	if ($parameter =~/prob_level/) {$parameter = 'QTL genotype signifance level';}
+	if ($parameter =~/stat_no_draws/) {$parameter = 'No. of imputations';}
 	
-	if ($value eq 'zero' || $value eq 'Marker Regression') {$ci = 'none';}
+	if ($value eq 'zero' || $value eq 'Marker Regression') {$ci = 0;}
 	
-	unless (($parameter=~/no_draws/ && $value==' ') ||
-	       ($parameter =~/QTL genotype probability/ && $value==' ')
+	unless (($parameter =~/No. of imputations/ && !$value ) ||
+	        ($parameter =~/QTL genotype probability/ && !$value ) ||
+                ($parameter =~/Permutation significance level/ && !$value)
 	       ) 
+
 	{
 	    push @stat, [map{$_} ($parameter, $value)];
+	    
 	}
-
+	
     }
 
     my $sm;
@@ -1812,7 +1723,7 @@ sub legend {
 		foreach my $s (@stat) {     		
 		    foreach my $j (@$s) {
 			$j =~ s/Maximum Likelihood/Marker Regression/;
-			$ci = 'none';		
+			$ci = 0;		
 		    }
 		}
 	    }
@@ -1834,7 +1745,7 @@ my $permu_threshold_ref = $self->permu_values();
 
     }
     my $lod1 = $permu_threshold{ $keys[0] };
-    my $lod2 = $permu_threshold{ $keys[1] };
+   # my $lod2 = $permu_threshold{ $keys[1] };
 
     if  (!$lod1) 
     {
@@ -1847,22 +1758,23 @@ my $permu_threshold_ref = $self->permu_values();
     ];
     
 
-    unless ($ci) {
+    if ($ci) {
 	push @stat, 
 	[
 	 map {$_} ('Confidence interval', 'Based on 95% Bayesian Credible Interval')
 	];
     }
+
     push @stat, 
     [
      map {$_} ('QTL software', "<a href=http://www.rqtl.org>R/QTL</a>")
     ];
+ 
     my $legend_data = columnar_table_html (
 	                                   headings    => [
 		                                          ' ',
 		                                          ' ',
-
-		                                         ],
+		                                          ],
 		                           data        => \@stat,
 		                          __alt_freq   => 2,
 		                          __alt_width  => 1,

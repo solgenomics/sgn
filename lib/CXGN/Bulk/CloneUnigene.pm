@@ -80,21 +80,20 @@ sub process_parameters
     $self->debug("Type of identifier: ".($self->{idType})."");
 
     # @output_fields is the sub-set of fields that will actually be output.
-    foreach my $o (@output_list)
+    for my $o (@output_list)
     {
-	if (my $value = $self->{$o})
-	{
-	    if ($value eq "on")
-	    {
-		push @output_fields, $o;
-	        #warn ("FIELD TO OUTPUT: $o");
-	    }
-	}
+        if (my $value = $self->{$o})
+        {
+            if ($value eq 'on')
+            {
+                push @output_fields, $o;
+            }
+        }
     }
 
     if ($self->{sequence} eq "on")
     {
-	push @output_fields, $self->{seq_type};
+        push @output_fields, $self->{seq_type};
     }
 
     $self->{output_list} = \@output_list;
@@ -103,20 +102,18 @@ sub process_parameters
     my @ids = $self->check_ids();
     if (@ids == ()) {return 0;}
     $self->debug("IDs to be processed:");
-    foreach my $i (@ids)
+    for my $i (@ids)
     {
-	$i =~ s/^(\w+?)(\d+)(\w+\d+)/$1\-$2\-$3/;
-      	$self->debug($i);
+        $i =~ s/^(\w+?)(\d+)(\w+\d+)/$1\-$2\-$3/;
+        $self->debug($i);
     }
     my $has_valid_id = 0;
-    foreach my $i(@ids){
-	if ($i ne ""){
-	    $has_valid_id = 1;
-	}
+    for my $i(@ids){
+        if ($i ne ""){
+            $has_valid_id = 1;
+        }
     }
-    if(!$has_valid_id){
-	return 0;
-    }
+    return 0 unless $has_valid_id;
     $self->{ids} = \@ids;
 
     return 1; #params were OK if we got here

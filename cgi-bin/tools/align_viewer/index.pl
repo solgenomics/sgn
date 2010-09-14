@@ -1,34 +1,28 @@
+use CatalystX::GlobalContext qw( $c );
 use strict;
+
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw/  page_title_html
                                        blue_section_html  /;
 use HTML::Entities;
 #Get input, if this page is loaded from find_caps.pl
-our $page = CXGN::Page->new( "Align Browser", "Chenwei");
-my ($seq_data, $id_data, $format, $title, $type, 
-	$show_prot_example, $show_cds_example, $show_id_example,
-	$temp_file, $maxiters
-	) = 
-	$page->get_arguments(
-	"seq_data", "id_data", "format", "title", "type", 
-	"show_prot_example", "show_cds_example", "show_id_example",
-	"temp_file", "maxiters"
-	);
+my $page = CXGN::Page->new( "Align Browser", "Chenwei");
+my ($seq_data, $id_data, $format, $title, $type,
+    $show_prot_example, $show_cds_example, $show_id_example,
+    $temp_file, $maxiters) = $page->get_arguments(
+    qw/seq_data id_data format title type
+    show_prot_example show_cds_example show_id_example
+    temp_file maxiters/
+);
 
 my ($intro_content, $input_content);
 
-my $vhost_conf = CXGN::VHost->new();
-our $HTML_ROOT = $vhost_conf->get_conf('basepath');
-our $DOC_PATH =  $vhost_conf->get_conf('tempfiles_subdir').'/align_viewer';
-our $PATH = $HTML_ROOT . $DOC_PATH;
-unless($temp_file =~ /\//){
-	$temp_file = $PATH . "/" . $temp_file;
-}
-
+my $HTML_ROOT = $c->get_conf('basepath');
+my $DOC_PATH =  $c->get_conf('tempfiles_subdir').'/align_viewer';
+my $PATH = $HTML_ROOT . $DOC_PATH;
+$temp_file = $c->path_to( $c->generated_file_uri('align_viewer',$temp_file) );
 if(-f $temp_file){
-	open(FH, $temp_file);
-	$seq_data .= $_ while (<FH>);
-	close(FH);
+    $seq_data = $temp_file->slurp;
 }
 
 
@@ -105,10 +99,10 @@ Make sure all the spaces in the id and species are replaced by '_'.<br />
 HTML
 
 if($show_prot_example){
-	$seq_data = seq_from_file($page->path_to("cgi-bin/tools/align_viewer/data/prot_example.txt"));
+	$seq_data = $page->path_to("cgi-bin/tools/align_viewer/data/prot_example.txt")->slurp;
 }
 elsif($show_cds_example){
-	$seq_data = seq_from_file($page->path_to("cgi-bin/tools/align_viewer/data/cds_example.txt"));
+	$seq_data = $page->path_to("cgi-bin/tools/align_viewer/data/cds_example.txt")->slurp;
 }
 elsif($show_id_example){
 	$id_data = <<HEREDOC;
@@ -165,13 +159,3 @@ print blue_section_html(
 
 
 $page->footer();
-
-
-sub seq_from_file {
-	my $file = shift;
-	my $seq = "";
-	open(FH, $file) or return "File not found";
-	$seq .= $_ while(<FH>);
-	close FH;
-	return $seq;
-}

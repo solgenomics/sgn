@@ -1,0 +1,123 @@
+<& /page/page_title.mas, title => 'The Tomato Fruit Cuticular Cell Wall Proteome' &>
+
+<div class="indentedcontent">
+  <p>
+  The plant cuticle is a highly specialized hydrophobic cell wall that
+  covers the aerial organs of land plants and provides protection
+  against desiccation, pathogens, UV radiation and herbivory. It is
+  continuous with the outer-periclinal polysaccharide cell wall of the
+  epidermis and consists of organic soluble waxes embedded in, and
+  layered on, a non-soluble polyester matrix of &omega;-substituted
+  fatty acids. The waxes include both aliphatic compounds, derived from
+  very long chain fatty acids, and secondary metabolites, such as
+  triterpenoids and flavonoids.
+  </p>
+
+  <p>
+  Little is yet known about many key mechanisms of cuticle biogenesis,
+  and experimental strategies to identify new proteins that associate
+  with cutin and waxes could provide a valuable means to identify new
+  candidates.
+  </p>
+
+  <p>
+  Although Arabidopsis research has greatly accelerated the discovery of
+  new cuticle-related genes, its cuticle poses some experimental
+  limitations since it is relatively thin, fragile and difficult to
+  isolate in substantial quantities. Conversely, tomato fruit cuticles
+  are astomatous and large amounts of intact cuticular material can be
+  isolated for chemical and biomechanical analyses. For example, the
+  fruit accumulate on the order of 1 mg cm<sup>-2</sup> cutin,
+  compared to the stem of Arabidopsis, which has 0.5-10 &mu;g
+  cm<sup>-2</sup>. Thus, the typical 6 week period of early tomato
+  fruit development represents a remarkably rapid and extensive phase of
+  cuticle biosynthesis.
+  </p>
+
+  <div style="width: 420px" class="captioned_image img_float_left caption_right">
+
+    <img src="/documents/img/secretom/tomato_cuticle_stain_400.jpg" />
+
+    <p>
+    Light microscope image of the surface of an expanding tomato fruit
+    with the cuticle stained red.
+    </p>
+
+  </div>
+
+  <p>
+  To identify new candidate proteins with a potential role in cuticle
+  biosynthesis, and particularly those that are secreted to the
+  apoplast, we are generating a more comprehensive inventory of proteins
+  that are associated with the outermost surface tissues of plant
+  organs, we are using a range of complementary protein fractionation
+  strategies (1D gel-based and liquid chromatography) coupled with
+  several sensitive mass spectrometry (MS) platforms.
+  </p>
+
+  <p>
+  We are also characterizing a number of tomato fruit cuticle mutants
+  and have developing a new 3D imaging technique using confocal scanning
+  laser microscopy for visualizing the architecture, deposition patterns
+  and micro-structure of plant cuticles. This has allowed 3-D cuticle
+  modeling based on the reconstruction of serial optical sections and
+  its use in the identification of several previously unreported
+  features of the tomato fruit cuticle. This information, together with
+  the proteome study is providing new insights into the molecular
+  processes underlying cuticle formation and restructuring.
+  </p>
+</div>
+
+  <div style="width: 370px; margin-left: 0" class="captioned_image img_float_right">
+
+    <img src="/documents/img/secretom/tomato_cuticle_3d_350.jpg" />
+
+    <p>
+    A 3-D rendering of the tomato fruit (cv. M8) cuticle.
+    </p>
+
+  </div>
+
+<div style="float: left; width: 345px">
+  <&| /secretom/section_templates/objectives.mas &>
+
+    Isolate and identify proteins from the surface of expanding tomato
+    fruits at the time of maximal cuticle biosynthesis, using solvent
+    dips followed by gel- and liquid chromatography-based separation and
+    several MS approaches
+
+    Identify potentially secreted proteins and characterize their
+    expression patterns during fruit ontogeny
+
+    Incorporate this information into related studies of the tomato
+    fruit cuticle t develop a more detailed understanding of cuticle
+    deposition and restructuring
+
+  </&>
+</div>
+
+<&| /secretom/section_templates/data_items.mas,
+      default_ref_base => '/download/data/secretom/Tomato_fruit_cuticular_cell_wall_proteome'
+ &>
+- text: "Tomato fruit (cv. M82) surface proteins identified"
+  ref: Tomato_fruit_surface_proteins.xlsx
+- text: "Tomato fruit (cv. M82) surface proteins: from gel bands"
+  ref: Tomato_fruit_surface_proteins_gel_bands.xlsx
+- text: "Tomato fruit (cv. M82) surface proteins: from gel slabs"
+  ref: Tomato_fruit_surface_proteins_gel_slabs.xlsx
+- text: "Tomato fruit (cv. M82) surface proteins: from gel free"
+  ref: Tomato_fruit_surface_proteins_gel_free.xlsx
+</&>
+
+<&| /secretom/section_templates/publications.mas, entitize => 1 &>
+
+Yeats, T.H. and Rose, J.K.C. (2008) The biochemistry and biology of extracellular plant lipid-transfer proteins (LTPs) Protein Science 17: 191-198.
+
+Buda, G.J., Isaacson, T., Matas, A.J., Paolillo, D.J. and Rose, J.K.C. (2009) Three dimensional imaging of plant cuticle architecture using confocal scanning laser microscopy. The Plant Journal 60: 378-385 (front cover).
+
+Isaacson, T., Kosma, D.K., Matas, A.J., Buda, G.J., He, Y., Yu, B., Pravitasari, A., Batteas, J.D., Stark, R.E., Jenks, M.A. and Rose, J.K.C. (2009) Cutin deficiency in the tomato fruit cuticle consistently affects resistance to microbial infection and biomechanical properties, but not transpirational water loss. The Plant Journal 60: 363-377.
+
+Yeats, T.H., Howe, K.J., Matas, A.J., Buda, G.J., Thannhauser, T.W. and Rose, J.K.C. (2010) Mining the tomato fruit cuticular and epidermal cell wall proteome for proteins associated with cuticle biogenesis. Journal of Experimental Botany 61: 3759-3771.
+
+</&>
+

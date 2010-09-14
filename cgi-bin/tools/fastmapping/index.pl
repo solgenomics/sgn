@@ -1,6 +1,7 @@
 use strict;
+use warnings;
 use CXGN::Page;
-use CXGN::Page::FormattingHelpers qw / blue_section_html page_title_html /;
+use CXGN::Page::FormattingHelpers qw/ blue_section_html page_title_html /;
 
 use File::Temp;
 use File::Basename;
@@ -9,16 +10,15 @@ use IPC::Cmd 'run';
 
 use Path::Class;
 
-use CXGN::VHost;
+use SGN::Context;
 
-#print STDERR "REQUEST STRING: ".join ("|", @ARGV)."!!!!\n";
-my $vhost = CXGN::VHost->new();
+my $vhost = SGN::Context->new;
 
 my $upload_temp = $vhost->tempfile( TEMPLATE => [ 'fastmapping', 'fastmap-XXXXXX' ] );
 
 # get a new page object and the rest of the parameters
 #
-my $page = CXGN::Page->new('index.html','FastMapping',);
+our $page = CXGN::Page->new('index.html','FastMapping',);
 
 # get an upload object to upload a file
 #
@@ -29,8 +29,6 @@ if( my $upload = $page->get_upload() ) {
     }
 }
 $upload_temp->close;
-
-#print STDERR "Uploadfilename: $upload_filename\n";
 
 my $file = $page->get_arguments("file");
 my $lg_groups = $page->get_arguments("lg_groups");
@@ -47,7 +45,6 @@ my $skipgrouping =$page->get_arguments("skipgrouping");
 # decide what to do - if we have a filename, we can do an analysis,
 # otherwise we display the form.
 #
-#print STDERR "FILE: $file\n";
 if ($file) { 
 
     if (!check_is_number($lg_groups, $corelod, $lowlod, $missingvaluethresh, $screening11, $screening121, $screening13)) { 
@@ -65,7 +62,6 @@ if ($file) {
                                       'fast_mapping_matrix.txt',
                                     );
 	my $call = "$fm_bin $skipgrouping -c $lg_groups -u $corelod -l $lowlod -v $missingvaluethresh -g $screening11 -h $screening121 -d $screening13 $order  -m $matrix_path $upload_temp";
-	#print STDERR "System call: $call\n";
 
         $page->header();
 

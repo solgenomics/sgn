@@ -98,20 +98,18 @@ sub process_parameters
 	if ($value eq "on")
 	{
 	    push @output_fields, 'SGN_U';
-	    #warn ("FIELD TO OUTPUT: SGN_U");
 	}
     }
 
-    foreach my $o (@output_list)
+    for my $o (@output_list)
     {
-	if (my $value = $self->{$o}) 
-	{
-	    if ($value eq "on")
-	    {
-		push @output_fields, $o;
-	        #warn ("FIELD TO OUTPUT: $o");
-	    }
-	}
+        if (my $value = $self->{$o}) 
+        {
+            if ($value eq "on")
+            {
+            push @output_fields, $o;
+            }
+        }
     }
 
     if ($self->{sequence} eq "on") { push @output_fields, $self->{seq_type}; }

@@ -1,0 +1,182 @@
+<style type="text/css">
+#secretom_container .ghosted, #secretom_container .ghosted:visited {
+  color: #999;
+}
+
+#secretom_container {
+  text-align: justify;
+  color: #111;
+  line-height: 1.5;
+}
+
+#secretom_container img.interest {
+   float: right;
+   border: 1px solid #333;
+}
+#secretom_container .publication {
+  padding: 0.6em 0;
+  text-align: justify;
+}
+
+#secretom_container hr {
+  border: 0;
+  border-top: 2px solid #bbb;
+}
+
+#secretom_container label {
+  font-weight: bold;
+}
+
+#secretom_container div.captioned_image {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  -moz-border-radius: 8px;
+  -webkit-border-radius: 8px;
+  margin: 2em auto;
+}
+
+#secretom_container div.captioned_image > img {
+  display: block;
+  margin: 1em auto;
+}
+
+#secretom_container div.captioned_image > p {
+  font-weight: bold;
+  font-size: 90%;
+  margin: 1em 3em;
+  letter-spacing: 0.4px;
+}
+
+#secretom_container div.caption_right > img {
+  float: left;
+  margin: 10px;
+}
+#secretom_container div.caption_right > p {
+  text-align: left;
+  margin-top: 3em;
+}
+
+#secretom_container div.caption_left > img {
+  float: right;
+  margin: 10px 10px 10px 15px;
+}
+#secretom_container div.caption_left > p {
+  margin: 10px 15px;
+  margin-top: 3em;
+}
+#secretom_container div.img_float_right {
+  margin: 0 0 10px 20px;
+  float: right;
+}
+#secretom_container div.img_float_left {
+  margin: 0 20px 10px 0;
+  float: left;
+}
+
+#secretom_container .page_introduction > p:first-child {
+  margin-top: 0;
+}
+
+#secretom_container #pagetitle > h3{
+  color: #444;
+  font-size: 120%;
+  letter-spacing: 1px;
+  font-weight: normal;
+  text-align: center;
+  margin-bottom: 2em;
+}
+#secretom_container h1 {
+  clear: both;
+  color: #3a3a3a;
+  font-size: 130%;
+  letter-spacing: 1px;
+  font-weight: normal;
+  margin: 3em 4em 2em 0;
+  border-bottom: 2px solid gray;
+  padding-bottom: 10px;
+}
+
+#secretom_container div.goback {
+  text-align: right;
+  text-decoration: underline;
+  margin-right: 14px;
+  margin-bottom: -1em;
+}
+#secretom_container a.goback {
+  color: #d22;
+  font-size: 90%;
+}
+
+#secretom_container p.boxed {
+  background: #f3f3f3;
+  border: 2px solid #bbb;
+  padding: 2em;
+  letter-spacing: 0.8px;
+}
+
+#secretom_container ul.objectives {
+  padding-left: 2em;
+
+}
+
+span.secretary {
+  font-weight: bold;
+}
+
+#secretary_nav {
+  margin: 3em auto 3em auto;
+  width: 50em;
+}
+#secretary_nav td {
+  text-align: center;
+  vertical-align: middle;
+}
+#secretary_nav a {
+  color: #353535;
+  font-weight: bold;
+  border: 1px solid gray;
+  display: block;
+  padding: 0.5em 4em;
+}
+#secretary_nav a:visited {
+  color: #353535;
+}
+#secretary_nav a.active {
+  color: black;
+  background: #ccf;
+}
+
+
+#secretary_input {
+  margin: 0 0 2em 0;
+  text-align: left;
+}
+#secretary_input table {
+  width: 100%;
+  margin-top: 1em;
+}
+#secretary_input table td {
+        }
+#secretary_input input.submit {
+  padding: 3px 10px;
+  margin-top: 0.5em;
+}
+
+div.examples {
+  text-align: right;
+  margin-bottom: -1em;
+}
+
+</style>
+
+<div id="secretom_container">
+  <div class="goback"><a class="goback" href="/secretom">secretom main page</a></div>
+
+  <a href="/secretom">
+    <img style="display: block; margin: 1em auto" src="/documents/img/secretom/secretom_logo_smaller.jpg" alt="secretom logo" />
+  </a>
+
+
+% $m->call_next;
+
+</div>

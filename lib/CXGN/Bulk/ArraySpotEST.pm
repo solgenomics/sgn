@@ -64,26 +64,21 @@ sub process_parameters
     my $self = shift;
 
     #do some simple parameter checking
-    if (!exists($self -> {idType})) { print STDERR "NOT EXISTS!"; }
-    if ($self -> {idType} == undef) { print STDERR "UNDEF!!!!"; }
-    if ($self -> {idType} eq "") { print STDERR "EMTPY STRING!"; }
-
-    print STDERR $self->{idType}."\n";
 
     return 0 if ($self->{idType} eq "");
     return 0 if ($self->{ids_string} !~ /\w/);
 
     # @output_list defines the identity on order of all fields that can be output
-    
-    my @output_list = ( 'SGN_S', 'chipname', 'TUS', 'clone_name',
-                                    'SGN_C', 'SGN_T', 'SGN_E', 'SGN_U', 'build_nr',
-                                    'manual_annotation', 'automatic_annotation',
-                                    'evalue');
-    
-    my %links = (clone_name =>
-             "/search/est.pl?request_type=10&search=Search&request_id=",
-		   SGN_U  => "/search/unigene.pl?unigene_id=",
-		   );
+
+    my @output_list = qw/ SGN_S chipname TUS clone_name
+                          SGN_C SGN_T SGN_E SGN_U build_nr
+                          manual_annotation automatic_annotation
+                          evalue /;
+
+    my %links = (
+                    clone_name => "/search/est.pl?request_type=10&search=Search&request_id=",
+                    SGN_U      => "/search/unigene.pl?unigene_id=",
+    );
 
     $self->{links} = \%links;
     my @output_fields = ();
@@ -91,16 +86,15 @@ sub process_parameters
     $self->debug("Type of identifier: ".($self->{idType})."");
 
     # @output_fields is the sub-set of fields that will actually be output.
-    foreach my $o (@output_list)
+    for my $o (@output_list)
     {
-	if (my $value = $self->{$o})
-	{
-	    if ($value eq "on")
-	    {
-		push @output_fields, $o;
-	        #warn ("FIELD TO OUTPUT: $o");
-	    }
-	}
+        if (my $value = $self->{$o})
+        {
+            if ($value eq "on")
+            {
+            push @output_fields, $o;
+            }
+        }
     }
 
     if ($self->{sequence} eq "on") { push @output_fields, $self->{seq_type}; }
@@ -119,23 +113,20 @@ sub process_parameters
     my @ids = split /\s+/, $ids;
     return 0 if @ids > 10_000; #limit to 10_000 ids to process
     $self->debug("IDs to be processed:");
-    foreach my $i (@ids)
+    for my $i (@ids)
     {
-	$i =~ s/^\d\-\d\-(.*)$/$1/;      
-	$self->debug($i);
+        $i =~ s/^\d\-\d\-(.*)$/$1/;
+        $self->debug($i);
     }
     my $has_valid_id = 0;
-    foreach my $i(@ids)
+    for my $i(@ids)
     {
-	if ($i ne "")
-	{
-	    $has_valid_id = 1;
-	}
+        if ($i ne "")
+        {
+            $has_valid_id = 1;
+        }
     }
-    if(!$has_valid_id)
-    {
-	return 0;
-    }
+    return 0 unless $has_valid_id;
     $self->{ids} = \@ids;
 
     return 1; #params were OK if we got here

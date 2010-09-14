@@ -1,12 +1,10 @@
 #!/usr/bin/perl -w
 use strict;
+use warnings;
 
 use CXGN::Page;
 use CXGN::DB::Connection;
-use CXGN::VHost;
 use CXGN::Login;
-
-our $vhost_conf = CXGN::VHost->new();
 
 our @databases;
 

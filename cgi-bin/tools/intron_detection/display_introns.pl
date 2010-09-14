@@ -1,19 +1,15 @@
 
 use strict;
-use English;
+use warnings;
 
 use IO::Scalar;
-
 use File::Temp;
 use File::Spec;
-
-
 use CXGN::Debug;
-
 use CXGN::BlastDB;
-
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw/page_title_html/;
+use SGN::IntronFinder::Homology;
 
 my $d = CXGN::Debug->new();
 
@@ -45,14 +41,6 @@ if ( $blast_e_val !~ m/^\d+(e-\d+)?$/ ) {
     return 1;
 }
 
-#elsif(@lines == 0)
-#{
-#	show_error('e_bad' => 0, 'seq_bad' => 1, 'seq_notindb' => 1, 'unfound_seq_id' => '');
-#	return 1;
-#}
-
-#print STDERR "Creating the temp files...\n";
-
 my $out_file = File::Temp->new(
     TEMPLATE => 'intron-finder-output-XXXXXX',
     DIR      => $temp_file_path,
@@ -66,11 +54,6 @@ $d->d("Runninge the intron finder command...\n");
 
 my ($protein_db) = CXGN::BlastDB->search( file_base => 'ath1/ATH1_pep' ) or die "could not find ath1/ATH1_pep BLAST database";
 
-#my $DEFAULT_PROTEIN_DATABASE_STRING = "/data/shared/intron_finder_database/ATH1.pep.04172003";
-
-#
-
-#print STDERR "Running the intron finder command... at $intron_finder_command\n";
 my $gene_feature_file =
   ( $page->get_conf('intron_finder_database')
       || die 'no conf var intron_finder_database defined!' )
@@ -80,13 +63,12 @@ my $gene_feature_file =
 
 print '<pre>';
 my $output;
-require lib;
-lib->import($page->path_to(qw/ cgi-bin tools intron_detection lib/));
-require IntronFinder::Homology;
+open my $input_fh, '<', \$input or die $!;
+open my $output_fh, '>', \$output or die $!;
 
-IntronFinder::Homology::find_introns_txt
-    ( IO::Scalar->new( \$input  ),
-      IO::Scalar->new( \$output ),
+SGN::IntronFinder::Homology::find_introns_txt
+    ( $input_fh,
+      $output_fh,
       $blast_e_val,
       $gene_feature_file,
       $temp_file_path,

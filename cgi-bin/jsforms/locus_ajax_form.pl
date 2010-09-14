@@ -24,14 +24,11 @@ use JSON;
 sub new {
     my $class  = shift;
     my $self   = $class->SUPER::new(@_);
-###    $self->get_ajax_page()->send_http_header();
-    
     return $self;
 }
 
 sub define_object {
     my $self = shift;
-   
     my %args      = $self->get_args();
     my $locus_id  = $args{locus_id} || $args{object_id};
     my $user_type = $self->get_user()->get_user_type();
@@ -54,25 +51,9 @@ sub define_object {
     $self->set_primary_key("locus_id");
     $self->set_owners( $self->get_object()->get_owners() );
    
-    $self->return_json() if $json_hash{error};
+    $self->print_json() if $json_hash{error};
 }
 
-sub display_form {
-    my $self = shift;
-    my %json_hash = $self->get_json_hash();
-    
-    if (!($json_hash{html}) ) { $json_hash{html} = $self->get_form()->as_table_string() ; }		
-    $self->check_modify_privileges();
-    
-    $json_hash{"user_type"} = $self->get_user()->get_user_type();
-    $json_hash{"is_owner"} = $self->get_is_owner();
-    
-    $json_hash{"editable_form_id"} = $self->get_form()->get_form_id();
-   
-    
-    $self->set_json_hash(%json_hash);
-    $self->return_json();
-}
 
 sub store {
     my $self=shift;
@@ -112,7 +93,7 @@ sub store {
     
     $self->set_json_hash(%json_hash);
     
-    $self->return_json();
+    $self->print_json();
 }
 
 
@@ -121,7 +102,7 @@ sub delete {
     ##Delete the locus (actually set obsolete = 't')
     my $self = shift;
     my $check = $self->check_modify_privileges();
-    $self->return_json() if $check ; #error or no user privileges
+    $self->print_json() if $check ; #error or no user privileges
     
     my $locus      = $self->get_object();
     my $locus_name = $locus->get_locus_name();
@@ -139,7 +120,7 @@ sub delete {
     }
     $self->send_form_email({subject=>"Locus obsoleted ($locus_name)", mailing_list=>'sgn-db-curation@sgn.cornell.edu', refering_page=>"www.solgenomics.net".$refering_page, action=>'delete'}) if (!$json_hash{error});
     $self->set_json_hash(%json_hash);
-    $self->return_json();
+    $self->print_json();
 }
 
 

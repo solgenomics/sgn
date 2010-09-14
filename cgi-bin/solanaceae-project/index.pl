@@ -86,7 +86,8 @@ print blue_section_html('SOL Resources',<<EOHTML);
 <dt><a name="SOL_news" id="SOL_news"></a>SOL Newsletters</dt>
 <dd> 
     <ul>
-<li><a href="/static_content/solanaceae-project/docs/SOL_newsletter_Mar_10.pdf">March 2010</a> <b>(current issue)</b></li>
+<li><a href="/static_content/solanaceae-project/docs/SOL_newsletter_Jun_10.pdf">June 2010</a> <b>(current issue)</b></li>
+<li><a href="/static_content/solanaceae-project/docs/SOL_newsletter_Mar_10.pdf">March 2010</a></li>
 <li><a href="/static_content/solanaceae-project/docs/SOL_newsletter_Dec_09.pdf">December 2009</a></li>
 <li><a href="/static_content/solanaceae-project/docs/SOL_newsletter_Sept_09.pdf">September 2009</a></li>
 <li><a href="/static_content/solanaceae-project/docs/SOL_newsletter_Jun_09.pdf">June 2009</a></li>
@@ -145,11 +146,11 @@ parts:
     <td></td>
   </tr><tr>
     <td><!-- a  href="/static_content/solanaceae-project/docs/tomato-standards.pdf" -->
-    <a href="http://docs.google.com/View?docid=dggs4r6k_1dd5p56">[Writely]</a></td>
+    <a href="http://docs.google.com/View?docid=dggs4r6k_1dd5p56">[Google doc]</a></td>
     <td>Part V &ndash; Bioinformatics Standards and Guidelines
-<table><tr><td class="boxbgcolor4">New! Available as a Writely document. <br />You can request edit privileges by <a href="mailto:sgn-feedback\@sgn.cornell.edu">contacting us</a>.</td></tr></table><br />
+<table><tr><td class="boxbgcolor4">Available as a Google document. <br />You can request edit privileges by <a href="mailto:sgn-feedback\@sgn.cornell.edu">contacting us</a>.</td></tr></table><br />
     </td>
-    <td>[updated September 1, 2006]</td>
+    <td></td>
   </tr><tr>
     <td><a  href="/static_content/solanaceae-project/SOL.final.31_12.sent.ppt">[ppt]</a></td>
     <td>SOL Project presentation slides</td>

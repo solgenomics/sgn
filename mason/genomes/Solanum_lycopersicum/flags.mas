@@ -1,0 +1,34 @@
+<%once>
+use File::Spec;
+</%once>
+
+<%init>
+my @countries =
+        qw(
+            Argentina
+            Belgium
+	    China
+            European_Union
+            France
+            Germany
+            India
+	    Israel
+            Italy
+            Japan
+            the_Netherlands
+	    South_Korea
+            Spain
+            the_United_Kingdom
+            the_United_States
+          );
+
+my $path = File::Spec->catfile('documents', 'img', 'flags');
+
+
+my @images = map qq|<img src="/$path/Flag_of_${_}_small.png" border="1" />|, @countries;
+</%init>
+
+
+<div style="text-align: center">
+  <% join '&nbsp;', @images %>
+</div>

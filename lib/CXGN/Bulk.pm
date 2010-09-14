@@ -15,6 +15,11 @@ package CXGN::Bulk;
 use strict;
 use warnings;
 use Carp;
+use File::Temp;
+use File::Spec;
+
+use File::Slurp qw/slurp/;
+
 use CXGN::DB::Connection;
 
 
@@ -71,15 +76,15 @@ sub create_dumpfile {
     {
 
         # generate tmp file names and open files for writing
-        my $date = `date +%y%m%d-%H%M%S`;
-        chomp($date);
-        $self->{dumpfile} = "bulk-$date-$$";
+        $self->{dumpfile} = File::Temp->new( TEMPLATE => File::Spec->catfile( $self->{tempdir}, "bulk-XXXXXX" ), UNLINK => 0 )->filename;
+	$self->{dumpfile} =~ s!$self->{tempdir}/!!;
+
         $self->debug( "FILENAME: " . $self->{dumpfile} );
         my $filepath = $self->{tempdir} . "/" . $self->{dumpfile};
-        open( $self->{dump_fh}, ">$filepath" )
+        open( $self->{dump_fh}, '>', $filepath )
           || $self->{page}->error_page("Can't open $filepath");
         $self->{notfoundfile} = $self->{dumpfile} . ".notfound";
-        open( $self->{notfound_fh}, ">$self->{tempdir}/$self->{notfoundfile}" )
+        open( $self->{notfound_fh}, '>', "$self->{tempdir}/$self->{notfoundfile}" )
           || $self->{page}->error_page("Can't open $self -> {notfoundfile}");
 
         # write file header
@@ -110,7 +115,7 @@ sub result_summary_page {
 
     # open file for writing the result summary page
     open( my $summary_fh, '>', $summary_file )
-      or die "Can't open .summary file for writing!";
+      or die "Can't open .summary file for writing! : $!";
 
     my $lines_read =
       ( $self->getFileLines( $self->{tempdir} . "/" . $self->{dumpfile} ) ) - 1;
@@ -209,12 +214,9 @@ EOHTML
 
     close($summary_fh);
 
-    open $summary_fh, $summary_file
-      or die "$! opening $summary_file";
-
     $self->{page}->header;
-    print while <$summary_fh>;
-    close($summary_fh);
+
+    print slurp( $summary_file);
 
     $self->{page}->footer;
 }
@@ -261,11 +263,10 @@ EOH
 sub getFileLines {
     my $self   = shift;
     my $file   = shift;
-    my $output = `wc -l $file`;
-    chomp($output);
-    $output =~ s/^\s+(.*)/$1/;
-    my @list = split /\b/, $output;
-    return $list[0];
+    open my $f, $file or die "$! opening $file";
+    my $cnt = 0;
+    $cnt++ while <$f>;
+    return $cnt;
 }
 
 =head2 clean_up
@@ -324,11 +325,6 @@ sub check_ids {
     my @ids  = ();
 
     #do some simple parameter checking
-#     if ( !exists( $self->{idType} ) ) { print STDERR "NOT EXISTS!"; }
-#     if ( ! defined  $self->{idType} eq undef ) { print STDERR "UNDEF!!!!"; }
-#     if ( $self->{idType} eq "" )    { print STDERR "EMTPY STRING!"; }
-
-    #print STDERR $self->{idType}."\n";
 
     return @ids if ( $self->{idType} eq "" );
     return @ids if ( $self->{ids_string} !~ /\w/ );

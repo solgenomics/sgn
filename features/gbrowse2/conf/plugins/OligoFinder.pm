@@ -143,7 +143,7 @@ sub get_chroms {
   my $self = shift;
   my $db   = shift;
   my $dbi  = $db->features_db;
-  my $source = $self->browser_config()->source;
+  my $source = $self->browser_config();
   my $chroms;
   my @chroms = shellwords($self->browser_config->plugin_setting('search_segments'));
   if (@chroms) {

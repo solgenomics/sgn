@@ -1,0 +1,18 @@
+<%doc>
+
+=head1 NAME 
+index.mas - a mason component for qtl/index.pl
+ 
+=AUTHOR
+Isaak Y Tecle (iyt2@cornell.edu)
+=cut
+
+</%doc>
+
+<%args>
+
+$redir
+
+</%args>
+
+<% $redir %>

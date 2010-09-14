@@ -1,0 +1,41 @@
+<%args>
+    $feature
+    $blast_url => undef
+    $children  => undef
+    $parents   => undef
+</%args>
+
+<%once>
+    use Data::Dumper;
+    use SGN::View::Feature qw/get_reference/;
+</%once>
+
+<& /page/page_title.mas, title => 'Feature Viewer: '. $feature->id &>
+
+<& /util/import_javascript.mas,
+    classes => [qw(Text.Markup CXGN.Effects CXGN.Phenome.Locus MochiKit.DOM)]
+&>
+<%perl>
+    my $organism = $feature->organism;
+    my $species  = $organism->species;
+    $species    =~ s!(\S+) !<i>$1</i> !;
+    my $reference = get_reference($feature);
+</%perl>
+
+<& /feature/feature_data.mas, feature => $feature, species => $species &>
+
+<& /feature/related_features.mas,
+    children  => $children,
+    parents   => $parents,
+    reference => $reference,
+    feature => $feature,
+&>
+
+<& /feature/properties.mas,
+    feature => $feature,
+&>
+
+<& /feature/sequence.mas,
+        feature   => $feature,
+        blast_url => $blast_url,
+&>

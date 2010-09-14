@@ -1,0 +1,24 @@
+<%args>
+  $id
+  $title
+  $content => ''
+  $default_show => 0
+  $class => ''
+</%args>
+<& /util/import_javascript.mas, classes => 'jqueryui' &>
+<div id="<% $id %>" class="optional_show <% $class %>">
+    <h3 class="<% $default_show ? 'active' : '' %>"><span class="icon">&nbsp;</span><span class="title"><% $title %></span></h3>
+    <div>
+       <% $m->content || $content %>
+    </div>
+</div>
+<script type="text/javascript">
+    jQuery(function($) {
+      $("#<% $id %> h3").click(function() {
+        $(this).next().toggle(200);
+        $(this).toggleClass('active');
+        return false;
+      })<% $default_show ? '' : '.next().hide();' %>
+    });
+</script>
+

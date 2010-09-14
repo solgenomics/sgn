@@ -373,7 +373,7 @@ And/or upload list file: <br /><input type="file" name="file" />
     <div style="padding-left: 1em">
          <input type="radio" name="seq_mode" value="unigene_seq" checked="checked" /> unigene nucleotide sequence<br />
          <input type="radio" name="seq_mode" value="estscan_seq" /> estscan predicted proteins<br />
-         <input type="radio" name="seq_mode" value="longest6frame_seq" /> longest 6 frame translation<br />
+         <input type="radio" name="seq_mode" value="longest6frame_seq" /> longest ORF from 6-frame translation<br />
          <input type="radio" name="seq_mode" value="preferred_protein_seq" /> preferred sequence<br />
     </div>
 </div>

@@ -12,17 +12,8 @@ use warnings;
 
 use SGN::Context;
 
-sub cxgn_die_handler {
-    SGN::Context->instance->error_notify('died',@_);
-    die @_;
-}
-
-sub cxgn_warn_handler {
-    warn @_;
-}
-
 sub notify {
-    SGN::Context->instance->error_notify( @_ );
+    SGN::Context->instance->throw( developer_message => join '', @_ );
 }
 
 

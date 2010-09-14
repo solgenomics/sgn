@@ -1,3 +1,4 @@
+use CatalystX::GlobalContext qw( $c );
 # instead of linking to this, consider just embedding the translations
 # directly into the relevant detail page
 

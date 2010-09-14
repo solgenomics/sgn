@@ -196,7 +196,7 @@ if (defined $experiment->get_experiment_id()) {
 HTML
 
 } else {
-   $basic_info_content = "<big>There aren't any experiment data for the specified parameters.</big>";
+   $basic_info_content = "<h1>No experiment data for the specified parameters.</h1>";
 }   
 
 my $basic_info_html;

@@ -404,16 +404,11 @@ sub apache_upload_image {
     # # only copy file if it doesn't already exist
     # #
     if ( -e $temp_file ) {
-
-# #die "The file $temp_file already exists. You cannot upload a file more than once\n";
         unlink $temp_file;
     }
 
-    print STDERR "Uploading file to location: $temp_file\n";
+    open UPLOADFILE, '>', $temp_file or die "Could not write to $temp_file: $!\n";
 
-    open UPLOADFILE, ">$temp_file" or die "Could not write to $temp_file: $!\n";
-
-    #warn "could open filename $temp_filename...\n";
     binmode UPLOADFILE;
     while (<$upload_fh>) {
 
@@ -472,7 +467,7 @@ sub process_image {
     my $original_filename = $basename;
 
     my $dest_name = $self->get_upload_dir() . "/" . $basename;
-    print STDERR "Copying $file_name to $dest_name...\n";
+    #print STDERR "Copying $file_name to $dest_name...\n";
 
     #    eval {
     File::Copy::copy( $file_name, $dest_name )
@@ -481,8 +476,8 @@ sub process_image {
 
     #	print STDERR "CHMODing FILE: $chmod\n";
     #system($chmod);
-    print STDERR
-      "copied image $file_name to $dest_name and CHMODed 664 $dest_name.\n";
+    #print STDERR
+    #  "copied image $file_name to $dest_name and CHMODed 664 $dest_name.\n";
 
     #    };
     #    if ($@) {
@@ -533,7 +528,7 @@ sub process_image {
               || die "Can't copy file $mogrified_first_image to $newname";
 
         }
-        print STDERR "Successfully converted $basename to $newname\n";
+        #print STDERR "Successfully converted $basename to $newname\n";
         $basename = $newname;
 
         #	};
@@ -567,7 +562,7 @@ sub process_image {
                 die "Sorry, can't convert image $basename to $newname";
             }
 
-            print STDERR "Successfully converted $basename to $newname\n";
+            #print STDERR "Successfully converted $basename to $newname\n";
             $original_filename = $newname;
             $basename          = $newname;
         }
@@ -639,19 +634,19 @@ sub process_image {
     $image_id = $self->store();
 
     if ( $type eq "experiment" ) {
-        print STDERR "Associating experiment $type_id...\n";
+        #print STDERR "Associating experiment $type_id...\n";
         $self->associate_experiment($type_id);
     }
     elsif ( $type eq "individual" ) {
-        print STDERR "Associating individual $type_id...\n";
+        #print STDERR "Associating individual $type_id...\n";
         $self->associate_individual($type_id);
     }
     elsif ( $type eq "fish" ) {
-        print STDERR "Associating to fish experiment $type_id\n";
+        #print STDERR "Associating to fish experiment $type_id\n";
         $self->associate_fish_result($type_id);
     }
     elsif ( $type eq "locus" ) {
-        print STDERR "Associating to locus $type_id\n";
+        #print STDERR "Associating to locus $type_id\n";
         $self->associate_locus($type_id);
     }
 
@@ -662,7 +657,7 @@ sub process_image {
     # move the image into the image_id subdirectory
     #
     my $image_dir = $self->get_image_dir("full") . "/$image_id";
-    print STDERR "Moved $upload_dir to $image_dir...\n";
+    #print STDERR "Moved $upload_dir to $image_dir...\n";
     File::Copy::move( $upload_dir, $image_dir )
       || die "Couldn't move temp dir to image dir ($upload_dir, $image_dir)";
 
@@ -689,12 +684,6 @@ sub copy_image_resize {
     my $self = shift;
     my ( $original_image, $new_image, $width ) = @_;
 
-#$debug and warn "\tCopying $original_image to $new_image and resizing it to $width px wide\n";
-
-    #debug
-    print STDERR
-"copy_image_resize: $original_image to $new_image and resizing it to $width px wide\n";
-
     # first copy the file
     my $copy = "cp '$original_image' '$new_image'";
 
@@ -704,11 +693,11 @@ sub copy_image_resize {
     my $chmod = "chmod 664 '$new_image'";
 
     #    print STDERR "CHMODing: $chmod\n";
-    system($chmod);
-    my $chown = "chown www-data:www-data '$new_image'";
+    #system($chmod);
+    #my $chown = "chown www-data:www-data '$new_image'";
 
     #   print STDERR "CHOWNing: $chown\n";
-    system($chown);
+    #system($chown);
 
     # now resize the new file, and ensure it is a jpeg
     my $resize = `mogrify -format jpg -geometry $width '$new_image'`;

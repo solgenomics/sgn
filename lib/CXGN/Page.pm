@@ -1,3 +1,4 @@
+package CXGN::Page;
 
 =head1 NAME
 
@@ -5,18 +6,18 @@ CXGN::Page
 
 =head1 DESCRIPTION
 
-This entire module is deprecated. DO NOT USE IN NEW CODE.
+This entire module is deprecated.  Do not use in new code.
 
-Page object which handles headers, footers, simple message pages, and simple error pages. Can also retrieve page arguments and handle redirects.
-This is now a subclass of CXGN::Scrap, which handles all of the argument-retrieval.
+Page object which handles headers, footers, simple message pages, and
+simple error pages. Can also retrieve page arguments and handle
+redirects.  This is now a subclass of CXGN::Scrap, which handles all
+of the argument-retrieval.
 
 =cut
 
-package CXGN::Page;
-use base qw/CXGN::Scrap/;
+use base qw/ CXGN::Scrap /;
 use strict;
-use Apache2::RequestUtil ();
-use Apache2::Cookie;
+use warnings;
 use HTML::Entities qw/encode_entities/;
 use URI::Escape;
 use Carp;
@@ -28,11 +29,11 @@ use CXGN::Login;
 use CXGN::Page::VHost::SGN;
 use CXGN::Tools::File;
 
-use SGN::Context;
-
 
 use Data::Dumper;
 $Data::Dumper::Varname = 'VAR_DUMP';
+
+use CatalystX::GlobalContext '$c';
 
 ## STDERR Capture for the Logger, by Developer Preference ####
 our $STDERR_BUFFER  = '';
@@ -57,16 +58,13 @@ sub new {
 
     my $self = $class->SUPER::new();
 
-    eval { $self->set_dbh(CXGN::DB::Connection->new());  };
-    if ($@) { print STDERR "Oops, database does not seem to be available. ($@). Trying to continue without it...\n"; }
-
     $self->{mk_log_messages} = [];
     my ( $name, $author, $other ) = @_;
     if ( $other and my $js = $other->{jslib} ) {
         my @libs = ref $js ? @$js : ($js);
         $self->jsan_use(@libs);
     }
-    $self->{context} = SGN::Context->new();
+    $self->{context} = $c;
     $self->{project_name} = 'SGN';
 
     $self->{page_object} = CXGN::Page::VHost::SGN->new($self->get_dbh());
@@ -154,7 +152,6 @@ sub header_html {
     unless ( $self->{page_title} ) {
         $self->{page_title} = $self->{name};
     }
-    #$self->{request}->content_type("text/html");
     my $html = $self->get_header();
     if ( $self->{content_title} ) {
         $html .= CXGN::Page::FormattingHelpers::page_title_html(
@@ -243,48 +240,7 @@ Sends client to another location.
 
 sub client_redirect {
     my ( $self, $url ) = @_;
-    unless ($url) {
-        die("Can't redirect to null location.");
-    }
-
-    # Attempt to catch some potential looping -- the uri() method does not
-    # give the query string for GET request, so this may not match even when
-    # it should. I didn't use a reg-exp match here because that may match even
-    # when it should not.
-    my ( undef, $my_uri ) = split /\s/, $self->{request}->the_request();
-    if ( $url eq $my_uri ) {
-        die("Attempt to redirect to url identical to calling url\n");
-    }
-
-    if ( $url =~ m|http://| ) {
-        print "Location: $url\n\n";
-    }
-    else {
-
-        # build the full url
-        my $prev_url = $self->{request}->uri();
-        my $full_url;
-        if ( $url =~ m|^/| ) {
-
-            # rooted
-            $full_url = $prev_url;
-
-            # WARNING: Look-behinds ahead! :)
-            $full_url =~ s|(?<!/)/(?!/).*|$url|
-              ; # replace everything including and after the first non-doubled slash  with the contents of $url.
-
-        }
-        else {
-
-            #relative
-            $full_url = $prev_url;
-            $full_url =~ s|[^/]+$|$url|;
-        }
-
-        $full_url = "http://" . $ENV{HTTP_HOST} . $full_url;
-
-        print "Location: $full_url\n\n";
-    }
+    print CGI->new->redirect( -uri => $url, -status => 302 );
     exit;
 }
 
@@ -297,10 +253,16 @@ deprecated. do not use in new code.
 
 sub message_page {
     my ( $self, $message_header, $message_body ) = @_;
-    SGN::Context->instance->throw( title    => $message_header,
-                                   message  => $message_body,
-                                   is_error => 0,
-                                 );
+
+    unless( defined $message_body ) {
+        $message_body = $message_header;
+        $message_header = undef;
+    }
+
+    $c->throw( title    => $message_header,
+               message  => $message_body,
+               is_error => 0,
+              );
 
 }
 
@@ -314,10 +276,15 @@ sub error_page {
     my $self = shift;
     my ( $message_header, $message_body, $error_verb, $developer_message ) = @_;
 
-    SGN::Context->instance->throw( message => $message_body,
-                                   developer_message => $developer_message,
-                                   title => $message_header,
-                                 );
+    unless( length $message_body ) {
+        $message_body = $message_header;
+        $message_header = undef;
+    }
+
+    $c->throw( message => $message_body,
+               developer_message => $developer_message,
+               title => $message_header,
+              );
 }
 
 =head1 OTHER METHODS
@@ -547,13 +514,11 @@ HTML
 =cut
 
 sub get_dbh {
-  my $self = shift;
-  return $self->{dbh}; 
+    $c->dbc->dbh
 }
 
 sub set_dbh {
-  my $self = shift;
-  $self->{dbh} = shift;
+    confess "don't set me.";
 }
 
 

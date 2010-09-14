@@ -359,7 +359,7 @@ sub display_page {
 	}
 	if ($db_name eq 'SGN_ref') { $accession= $pub_id; }
 	if ($obsolete eq 'f') {
-	    if ($pub_id && $object_dbxref_id) {print "<a href= /chado/publication.pl?pub_id=$pub_id>$db_name:$accession</a>" . $pub->get_title() . " (" . $pub->get_pyear() . ") <b>" . $pub->get_authors_as_string() . "</b>" . qq { \n <a href="add_publication.pl?pub_id=$pub_id&amp;type=$args{type}&amp;type_id=$args{type_id}&amp;object_dbxref_id=$object_dbxref_id&amp;action=confirm_delete&amp;refering_page=$args{refering_page}">[Remove]</a> <br />\n }; } 
+	    if ($pub_id && $object_dbxref_id) {print "<a href= /chado/publication.pl?pub_id=$pub_id>$db_name:$accession</a>" . $pub->get_title() . " (" . $pub->get_pyear() . ") <b>" . $pub->get_authors_as_string() . "</b>" . qq { \n <a href="add_publication.pl?pub_id=$pub_id&amp;type=$args{type}&amp;type_id=$args{type_id}&amp;object_dbxref_id=$object_dbxref_id&amp;action=confirm_delete&amp;refering_page=$args{refering_page}">[Remove]</a> <br /><br />\n }; } 
 	}elsif($pub_id)  {
 	    push @obsoleted, [$pub, $object_dbxref_id] ; #an array of obsoletes pub objects
 	}

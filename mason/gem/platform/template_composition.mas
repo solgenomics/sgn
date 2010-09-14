@@ -36,9 +36,7 @@
 $schema
 $template_list
 </%args>
-
-
-<%perl>
+<%once>
 use strict;
 use warnings;
 
@@ -46,11 +44,14 @@ use CXGN::GEM::Schema;
 use CXGN::Metadata::Dbiref;
 use CXGN::Metadata::Dbipath;
 use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
+</%once>
+
+<%perl>
 
 
 my $template_comp_content;
 
-my $default_message = '<i><font color="gray">data not available</basefont></i>';
+my $default_message = '<span class="ghosted">data not available</span>';
 
 ## If there aren't any experiment that comes from experimental design it will do nothing. 
 ## The error message will returned by basic information

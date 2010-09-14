@@ -1,0 +1,66 @@
+
+
+<%doc>
+
+=head1 NAME
+
+/locus/edits_info.mas - a component for printing locus edit dates and person
+
+=head1 DESCRIPTION
+
+
+Parameters:
+
+=over 2
+
+=item locus
+
+a locus object
+
+=item $synonyms
+
+arrayref of synonyms 
+
+
+=back
+
+=head1 AUTHOR
+
+Naama Menda <nm249@cornell.edu>
+
+=cut 
+
+</%doc>
+
+<%args>
+
+
+$locus
+
+
+</%args>
+
+<%perl>
+
+use CXGN::People::Person;
+
+my $html;
+my $created_date = $locus->get_create_date();
+$created_date = substr $created_date, 0, 10;
+my $modified_date = $locus->get_modification_date() || "";
+$modified_date = substr $modified_date, 0, 10;
+
+my $updated_by = $locus->get_updated_by();
+my $updated =
+  CXGN::People::Person->new( $locus->get_dbh(), $updated_by );
+my $u_first_name = $updated->get_first_name();
+my $u_last_name  = $updated->get_last_name();
+$html .= qq |Created on: $created_date |;
+if ($modified_date) {
+  $html .=
+    qq |  Last updated on: $modified_date  by  <a href="/solpeople/personal-info.pl?sp_person_id=$updated_by">$u_first_name $u_last_name</a><br />|;
+}
+
+</%perl>
+
+<% $html %>

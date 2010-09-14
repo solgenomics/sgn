@@ -6,16 +6,14 @@
 #   use_eval_cutoff(bool), use_bval_cutoff(bool), eval_cutoff(real), bval_cutoff(real)
 
 use strict;
-use English;
+use warnings;
 
 use CXGN::Page;
 use Bio::SearchIO;
 use Bio::SeqIO;
 use IO::String;
-use CXGN::VHost;
 
-my $vhost_conf  = CXGN::VHost->new();
-my $ss_find_obj = SigpepFind->new($vhost_conf);
+my $ss_find_obj = SigpepFind->new();
 $ss_find_obj->process_seqs();
 
 exit;
@@ -23,12 +21,12 @@ exit;
 ################################################################################
 package SigpepFind;
 use strict;
+use CatalystX::GlobalContext '$c';
+use warnings;
 use English;
 
-#parameters: VHost obj
 sub new {
     my $classname  = shift;
-    my $vhost_conf = shift;
     my $obj        = {};      #a reference to an anonymous hash
 
     #all fields are listed here
@@ -41,11 +39,8 @@ sub new {
       [];    #arrayref of records like {seq => input sequence, id => descriptor}
     $obj->{error}  = 0;     #set to 1 in check_input() if necessary
     $obj->{output} = "";    #raw HMMER output
-    $obj->{tmpdir} =
-        $vhost_conf->get_conf('basepath')
-      . $vhost_conf->get_conf('tempfiles_subdir')
-      . "/sigpep_finder";
-    $obj->{hmmsearch_path} = $vhost_conf->get_conf('hmmsearch_location');
+    $obj->{tmpdir} =$c->path_to( $c->tempfiles_subdir( 'sigpep_finder' ) );
+    $obj->{hmmsearch_path} = $c->config->{'hmmsearch_location'};
     $obj->{page} = CXGN::Page->new( "Signal Peptide Finder", "Evan" );
     $obj->{content} = "";    #the output HTML
 

@@ -3,7 +3,7 @@ package Bio::Graphics::Browser2::Plugin::TrackDumper;
 # test plugin
 use strict;
 use Bio::Graphics::Browser2::Plugin;
-use Bio::Graphics::Browser2::GFFPrinter;
+use Bio::Graphics::Browser2::TrackDumper;
 use CGI qw(:standard *sup);
 
 use vars '$VERSION','@ISA';
@@ -138,7 +138,7 @@ sub dump {
 
   # safest thing to do is to use embedded logic
   if ($version == 3 && $config->{print_config}) {
-      my $dumper = Bio::Graphics::Browser2::GFFPrinter->new(
+      my $dumper = Bio::Graphics::Browser2::TrackDumper->new(
 	  -data_source => $conf,
 	  -id          => $page_settings->{userid},
 	  -segment     => $segment->seq_id.':'.$segment->start.'..'.$segment->end,
@@ -150,7 +150,7 @@ sub dump {
   }
 
   elsif ($config->{print_config}) {
-      Bio::Graphics::Browser2::GFFPrinter->print_configuration
+      Bio::Graphics::Browser2::TrackDumper->print_configuration
 	  ($self->browser_config,
 	   $mode eq 'selected' ? [$self->selected_tracks] : ()
 	  );

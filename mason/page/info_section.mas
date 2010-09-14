@@ -91,4 +91,4 @@ Lukas Mueller, based on the Perl code from Rob Buels.
  use CXGN::Page::FormattingHelpers 'info_section_html';
 </%once>
 
-<% info_section_html( %ARGS, contents => $m->content ) %>
+<% info_section_html( %ARGS, contents => ($m->content =~ /\S/ ? $m->content : undef ) ) %>

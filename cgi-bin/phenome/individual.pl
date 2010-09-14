@@ -4,6 +4,7 @@ my $individual_detail_page = CXGN::Phenome::IndividualDetailPage->new();
 
 package CXGN::Phenome::IndividualDetailPage;
 
+use CatalystX::GlobalContext qw( $c );
 
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw /info_section_html 
@@ -26,6 +27,8 @@ use CXGN::Feed;
 use CXGN::Tools::Organism;
 use JSAN::ServerSide;
 use HTML::Entities;
+use Number::Format;
+use Statistics::Descriptive;
 
 use base qw / CXGN::Page::Form::SimpleFormPage /;
 
@@ -52,7 +55,7 @@ sub define_object {
 	if ($individual_by_name) { $individual_id = $individual_by_name->get_individual_id(); }
     }
    
-    unless ( ( $individual_id =~ m /^\d+$/  ) || ($args{action} eq 'new' && !$individual_id) ) 
+    unless ( ( $individual_id =~ m /^\d+$/  ) || ($args{action} eq 'new' && !$individual_id) || ($args{action} eq 'store' && !$individual_id) ) 
     {
 	$c->throw(is_error=>0,
 		  message=>"No accession exists for identifier $individual_id",
@@ -74,10 +77,7 @@ sub define_object {
 	    );
     }
     my $action= $args{action};
-    if ( !$individual->get_individual_id() && $action ne 'new'  ) {
-	$c->throw(is_error=>0, message=>'No accession exists for this identifier',);
-    }
-    
+       
     $self->set_owners($self->get_object()->get_owners());
 }
 
@@ -258,7 +258,7 @@ sub display_page {
 
     $self->get_page->jsan_use("MochiKit.DOM");
     $self->get_page->jsan_use("Prototype");
-    $self->get_page->jsan_use("jQuery");
+    $self->get_page->jsan_use("jquery");
     $self->get_page->jsan_use("thickbox");
     
      my $action = $args{action};
@@ -323,7 +323,7 @@ sub display_page {
     my @images = $individual->get_image_ids();  #array of associated image objects
     my $image_count = 0;
     
-    $image_html .=qq|<table><tr valign="top">|;
+    $image_html .=qq|<table><tr valign="top">| if @images;
     
     foreach my $image_id (@images) {
 	$image_count ++;
@@ -337,15 +337,17 @@ sub display_page {
 	my $image_page= "/image/index.pl?image_id=$image_id";
 	$image_html .=qq|<td><a href="$medium_image" title="<a href=$image_page>Go to image page </a>" class="thickbox" rel="gallery-images"><img src="$small_image" alt="" /></a></td> |;
     }
-    $image_html .= "</tr></table>";
+    $image_html .= "</tr></table>" if @images;
     #link for adding new images
+    my $new_image;
     if ($individual_name) 
-    { $image_html .= 
-	  qq|<br /><a href="../image/add_image.pl?type_id=$individual_id&amp;action=new&amp;type=individual&amp;refering_page=$page">[Add new image]</a>|; 
+    { $new_image = 
+	  qq|<a href="../image/add_image.pl?type_id=$individual_id&amp;action=new&amp;type=individual&amp;refering_page=$page">[Add new image]</a>|; 
     } 
-
+    
     
     print info_section_html(title   => 'Images',
+			    subtitle => $new_image,
 			    contents => $image_html,
 			    );
     
@@ -353,34 +355,43 @@ sub display_page {
 ############################### PHENOTYPE DATA 
 
    
-    my @phenotypes= $individual->get_phenotypes();
+    my %phenotypes= $individual->get_phenotypes();
     my $population_obj = $individual->get_population();          
     my @phenotype;
-    my ($data_view, $term_obj, $term_name, $term_id, $min, $max, $ave, $value);
+    my ($term_obj, $term_name, $term_id, $min, $max, $ave, $mean_value);
     
-    foreach my $p (@phenotypes) 
+    for my $observable_id (keys %phenotypes) 
     {
 
 	if (!$population_obj->get_web_uploaded()) 
 	{
-	    $term_obj  = CXGN::Chado::Cvterm->new( $self->get_dbh(), $p->get_observable_id());
+	    $term_obj  = CXGN::Chado::Cvterm->new( $self->get_dbh(), $observable_id);
 	    $term_name = $term_obj->get_cvterm_name();
 	    $term_id   = $term_obj->get_cvterm_id();
-	    ($min, $max, $ave) = $population_obj->get_pop_data_summary($term_id);
-	    $value = $p->get_value();
-	    if (!defined($value)) {$value= 'N/A';}
-	    elsif ($value == 0) {$value = '0.0';}
-
-
+	    
 	} else 
 	{
-	    $term_obj  = CXGN::Phenome::UserTrait->new($self->get_dbh(), $p->get_observable_id());
+	    $term_obj  = CXGN::Phenome::UserTrait->new($self->get_dbh(), $observable_id);
 	    $term_name = $term_obj->get_name();
 	    $term_id   = $term_obj->get_user_trait_id();
-	    ($min, $max, $ave) = $population_obj->get_pop_data_summary($term_id);
-	    $value = $p->get_value();
 	}    
-
+	
+	($min, $max, $ave) = $population_obj->get_pop_data_summary($term_id);
+	my @values = map ($_->get_value() , @{ $phenotypes{$observable_id} } );
+	my $stat = Statistics::Descriptive::Sparse->new();
+        $stat->add_data(@values);
+	$mean_value = $stat->mean();
+	
+	if (!defined($mean_value)) {$mean_value= 'N/A';}
+	elsif ($mean_value == 0) {$mean_value = '0.0';}
+	
+	# round 3 digit precision
+	my $x = Number::Format->new();
+	$mean_value = $x->round($mean_value,3);
+	$min = $x->round($min,3);
+	$max = $x->round($max,3);
+	$ave = $x->round($ave,3);
+	
 	$term_obj  = CXGN::Chado::Cvterm::get_cvterm_by_name( $self->get_dbh(), $term_name);
 	my $cvterm_id = $term_obj->get_cvterm_id();
 	
@@ -391,11 +402,11 @@ sub display_page {
 	    {
 		push  @phenotype,  [map {$_} 
 				    ((tooltipped_text(qq|<a href="/chado/cvterm.pl?cvterm_id=$term_id">$term_name</a>|, 
-						      $term_obj->get_definition() )), $value, $min, $max, $ave) ]; 	
+						      $term_obj->get_definition() )), $mean_value, $min, $max, $ave) ]; 	
 	    }else 
 	    {
 		push  @phenotype,  [map {$_} qq|<a href="/chado/cvterm.pl?cvterm_id=$term_id">$term_name</a>|, 
-				    $value, $min, $max, $ave ]; 
+				    $mean_value, $min, $max, $ave ]; 
 	    }
 	}
 	else 
@@ -404,16 +415,16 @@ sub display_page {
 	    {
 		push  @phenotype,  [map {$_} 
 				    ((tooltipped_text(qq|<a href="/phenome/trait.pl?trait_id=$term_id">$term_name</a>|, 
-						      $term_obj->get_definition() )), $value, $min, $max, $ave) ]; 	
+						      $term_obj->get_definition() )), $mean_value, $min, $max, $ave) ]; 	
 	    }else {
 		push  @phenotype,  [map {$_} qq|<a href="/phenome/trait.pl?trait_id=$term_id">$term_name</a>|, 
-				    $value, $min, $max, $ave ]; 
+				    $mean_value, $min, $max, $ave ]; 
 	    }
 	}
     }
-  
+    my $phenotype_data;
     if (@phenotype) {
-	my $phenotype_data .= columnar_table_html(
+	$phenotype_data .= columnar_table_html(
 	                                        headings  => 
 	                                            [
 						    'Trait',
@@ -429,15 +440,17 @@ sub display_page {
 						  __align =>'l',
 					          );
 	    
-	$data_view = html_optional_show("phenotype",
-					'View/hide phenotype data summary',
-					qq|$phenotype_data|,
-					1, #<  show data by default
-	    );  
+	#$data_view = html_optional_show("phenotype",
+	#				'View/hide phenotype data summary',
+	#				qq|$phenotype_data|,
+	#				1, #<  show data by default
+	#    );  
     }
     
     print info_section_html(title   => 'Phenotype data',
-			    contents => $data_view,
+			    subtitle => '',
+			    contents => $phenotype_data,
+			    collapsible => 1,
 			    );
     
  ######## map:

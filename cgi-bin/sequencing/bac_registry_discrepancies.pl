@@ -1,7 +1,6 @@
 use strict;
 use warnings;
 
-use English;
 use Carp;
 use FindBin;
 use Getopt::Std;
@@ -10,7 +9,6 @@ use File::Find;
 use File::Basename;
 
 use CXGN::DB::Connection;
-#CXGN::DB::Connection->verbose(0); #STFU
 
 use CXGN::Metadata;
 use CXGN::Genomic::CloneIdentifiers qw/parse_clone_ident/;
@@ -20,13 +18,13 @@ use CXGN::Tools::Identifiers qw/link_identifier/;
 
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw/columnar_table_html/;
-use CXGN::VHost;
+use CatalystX::GlobalContext qw( $c );
 
 my $page = CXGN::Page->new('BAC Registry <-> FTP Discrepancies','Robert Buels');
 
 $page->header('BAC Registry <-> FTP Discrepancies','BAC Registry <-> FTP Discrepancies');
 
-my $ftp_path = CXGN::VHost->new->get_conf('ftpsite_root');
+my $ftp_path = $c->config->{'ftpsite_root'};
 
 if(-d $ftp_path ) {
   my %sequenced_bacs = map {

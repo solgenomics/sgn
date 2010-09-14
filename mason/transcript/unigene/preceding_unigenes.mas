@@ -96,8 +96,3 @@ my $preceding_html = info_section_html( title       => "Preceding Unigenes (" . 
 </%perl>
 
 <% $preceding_html %>
-
-<& 
-   /util/import_javascript.mas, 
-   classes => 'CXGN.Effects' 
-&>

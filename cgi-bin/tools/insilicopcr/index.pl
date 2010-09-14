@@ -28,22 +28,19 @@ Original code was aspired from BLAST.
 
 
 use strict;
+use warnings;
 use POSIX;
-use English;
 
 use CXGN::DB::Connection;
 use CXGN::Page;
-use CXGN::VHost;
 use CXGN::BlastDB;
 use CXGN::Page::FormattingHelpers qw/page_title_html modesel info_table_html hierarchical_selectboxes_html simple_selectbox_html/;
 use CXGN::Page::UserPrefs;
 use CXGN::Tools::List qw/evens distinct/;
 
-my $vhost_conf = CXGN::VHost->new();
-my $page = CXGN::Page->new("In Silico PCR form","Waleed");
 my $page = CXGN::Page->new("In Silico PCR form","Waleed");
 my $dbh = CXGN::DB::Connection->new;
-my $prefs = CXGN::Page::UserPrefs->new( $dbh );
+our $prefs = CXGN::Page::UserPrefs->new( $dbh );
 
 $page->header('In Silico PCR');
 

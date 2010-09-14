@@ -1,0 +1,90 @@
+<%args>
+$contig_name
+$contig
+$seq_source
+</%args>
+
+<& /page/page_title.mas, title => "Viewing Contig $contig_name" &>
+
+<table style="font-family: monospace; font-size: 110%">
+% foreach (mesh( @seq_lines )) {
+<% $_ %>
+% }
+</table>
+
+<%init>
+  use Bio::SeqIO;
+  use Bio::PrimarySeq;
+
+  use Data::Dumper;
+  use List::Util qw/ max /;
+  use CXGN::BioTools::AGP qw/ agp_contig_seq /;
+  use CXGN::Page::FormattingHelpers qw/ html_break_string /;
+
+  for (@$contig) {
+      $_->{display_ident} = $_->{ident}.$_->{orient};
+  }
+  our $ident_width = 1 + max map length($_->{display_ident}),@$contig;
+  our $seq_width = 60;
+
+  my $contig_seq_str = agp_contig_seq( $contig, fetch_bac_sequence => $seq_source );
+  my $contig_seq = Bio::PrimarySeq->new( -id => $contig_name, -seq => $contig_seq_str );
+
+  my $contig_start = $contig->[0]->{ostart};
+  my $contig_end = $contig->[-1]->{oend};
+  my @seq_lines = map padded_member_seq_lines( $_, $seq_source, $contig_start, $contig_end ), @$contig;
+  push @seq_lines, seq_lines( $contig_seq_str, $contig_name );
+  push @seq_lines, [ ('<tr><td colspan="2"><hr /></td></tr>') x scalar @{$seq_lines[-1]} ];
+
+sub padded_member_seq_lines {
+    my ( $comp, $seq_source, $ctg_start, $ctg_end) = @_;
+
+    # add spaces to the beginning and end of the sequence to align it
+    # with the contig
+
+    my $seq   = $seq_source->( $comp->{ident} );
+
+    my $pad_beginning = $comp->{orient} eq '+'
+        ? $comp->{ostart}-$ctg_start-$comp->{cstart}+1
+        : $comp->{ostart}-$ctg_start-(length($seq) - $comp->{cend});
+
+    my $pad_end = $comp->{orient} eq '+'
+        ? $ctg_end-$comp->{oend}-(length($seq)-$comp->{cend})
+        : $ctg_end-$comp->{oend}-$comp->{cstart}+1;
+
+    if( $comp->{orient} eq '-' ) {
+        $seq = Bio::PrimarySeq->new( -id => 'fake', -seq => $seq )->revcom->seq;
+    }
+
+    my $padded_str = join '', (
+        ' ' x $pad_beginning,
+        $seq,
+        ' ' x $pad_end,
+       );
+    return seq_lines( $padded_str, $comp->{display_ident} );
+}
+
+sub seq_lines {
+    my ($str,$ident) = @_;
+    my $lines = [ $str =~ /.{1,$seq_width}/gs ];
+
+    for (@$lines) {
+        s/ /&nbsp;/g;
+        $_ = "<tr><td>$ident</td><td>$_</td></tr>";
+    }
+    return $lines;
+}
+
+sub mesh {
+    my $max_idx = max( map scalar(@$_), @_ ) - 1;
+    my @product;
+    for( my $i = 0; $i <= $max_idx; $i++ ) {
+        foreach (@_) {
+            push @product, $_->[$i];
+        }
+    }
+    return @product;
+}
+
+
+</%init>

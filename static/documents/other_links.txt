@@ -1,0 +1,27 @@
+<div class="boxheading">
+SGN Links
+</div>
+<div class="boxcontent">
+<a class="creativitylinks" href="/outreach/">Outreach</a> |
+<a class="creativitylinks" href=
+"/community/links/related_sites.pl">Solanaceae resources</a> | 
+<a class="creativitylinks" href="/community/links/seed_companies.pl">Seed companies</a> 
+<br /><br />
+</div>
+
+<div class="boxheading">
+External Links
+</div>
+<div class="boxcontent">
+<!-- EUSOL Sites -->
+
+<a class="footer" href="http://www.eu-sol.net/"><img src="/img/eusol_logo_small.jpg" border="0" /></a><br />
+<b>Affiliated sites from the <a href="http://cordis.europa.eu/fetch?CALLER=FP6_PROJ&ACTION=D&DOC=12&CAT=PROJ&QUERY=011d000af831:8cd8:061152b7&RCN=79812">European Union Framework 6 EU-SOL</a> project</b><br />
+<a href="http://www.eu-sol.net/">EU-SOL Home</a> | <a href="https://www.eu-sol.wur.nl/">Tomato Core Collection Phenotype Database</a> | <a href="http://www.agrobios.it/tilling">LycoTILL tomato cv <i>Red Setter</i> EMS mutant database</a><br /><br />
+
+<!-- Sites in Japan -->
+
+<a href="http://tomato.nbrp.jp/indexEn.html" class="footer"><img src="documents/img/nbrp_logo.jpg" border="0" /></a><br />   
+<b>Resources in Japan</b><br />
+<a href="http://www.pgb.kazusa.or.jp/mibase/">MiBase</a> | <a href="http://www.pgb.kazusa.or.jp/kaftom/">KafTom</a> | <a href="http://tomatoma.nbrp.jp/index.jsp">TOMATOMA</a>
+</div>

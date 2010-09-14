@@ -1,0 +1,93 @@
+<%args>
+    $feature
+    $blast_url => undef
+    $children  => undef
+    $parents   => undef
+</%args>
+<%init>
+    use Data::Dumper;
+</%init>
+<& /page/page_title.mas, title => 'Gene: '. $feature->id &>
+
+<& /util/import_javascript.mas,
+    classes => [qw(
+        Prototype jquery Text.Markup CXGN.Effects
+        MochiKit.DOM thickbox
+        MochiKit.Async CXGN.Sunshine.NetworkBrowser
+        CXGN.Page.Form.JSFormPage
+    )]
+&>
+
+<%perl>
+    my $organism = $feature->organism;
+    my $species  = $organism->species;
+    $species    =~ s!(\S+) !<i>$1</i> !;
+    my $reference = $feature->featureloc_features->single->srcfeature;
+    my @mrna_features = grep { $_->type->name eq 'mRNA' } @$children;
+</%perl>
+
+<& /feature/gene_data.mas,
+    feature => $feature,
+    species => $species,
+&>
+
+<& /feature/related_features.mas,
+    children => $children,
+    parents => $parents,
+    reference => $reference,
+    feature => $feature,
+&>
+
+<& /feature/properties.mas,
+    feature => $feature,
+&>
+
+<& /feature/sequence.mas,
+	feature => $feature,
+	blast_url => $blast_url,
+&>
+
+<& /feature/exon_structure.mas,
+    feature => $feature,
+&>
+
+<& /feature/genomic_sequence.mas, feature => $feature &>
+
+<& /feature/mrna_sequence.mas,
+    mrna_features => [ @mrna_features ],
+&>    
+
+<& /feature/protein_sequence.mas,
+    mrna_features => [ @mrna_features ],
+&>
+
+<&| /page/info_section.mas,
+    title => 'Protein domains',
+    collapsible => 1,
+&>
+</&>
+
+<&| /page/info_section.mas,
+    title => 'BLAST Annotation',
+    collapsible => 1,
+&>
+
+</&>
+
+<&| /page/info_section.mas,
+    title => 'Gene Families',
+    collapsible => 1,
+&>
+</&>
+
+<&| /page/info_section.mas,
+    title => 'SNPs',
+    collapsible => 1,
+&>
+</&>
+
+<&| /page/info_section.mas,
+    title => 'Alternate Splicing',
+    collapsible => 1,
+&>
+</&>

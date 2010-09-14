@@ -52,7 +52,7 @@ my $exp_comp_content;
 my @data;
 my $exp_composition_html;
 
-my $default_message = '<i><font color="gray">data not available</basefont></i>';
+my $default_message = '<span class="ghosted">data not available</span>';
 
 my @exp_list = @{ $exp_list };
 

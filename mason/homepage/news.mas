@@ -5,10 +5,8 @@ use strict;
 
 use File::Spec;
 use CXGN::Tools::File;
-use CXGN::VHost;
 
-my $vh = CXGN::VHost->new();
-my $file = File::Spec->catfile($vh->get_conf('homepage_files_dir'), 'news.txt');
+my $file = File::Spec->catfile($c->get_conf('homepage_files_dir'), 'news.txt');
 
 my $contents = "News is not available at the moment.<br /><br />";
 
@@ -20,7 +18,7 @@ eval {
 </%perl>
 
 <div class="boxbgcolor1" style="margin:0px;">
-<div class="boxheading">News...</div>
+<div class="boxheading">News</div>
 <div class="boxcontent"><% $contents %></div>
 <a href="oldhighlights.pl">See all news...</a>
 </div>

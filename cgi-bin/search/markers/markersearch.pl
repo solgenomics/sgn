@@ -119,7 +119,7 @@ if($form->data('submit') && ($form->data('submit') eq 'Search') || ($form->data(
   #print '<!-- '. $msearch->query_text() . ' -->';
   
   my ($subq, $places) = $msearch->return_subquery_and_placeholders();
-  warn $msearch->query_text();
+  #warn $msearch->query_text();
 
   my $resultstart = abs($form->data('resultstart')) || 0;
   my $resultsize = abs($form->data('resultsize')) || 30;

@@ -1,13 +1,13 @@
 package SGN::Feature;
-use MooseX::Singleton;
+use Moose;
 
 use namespace::autoclean;
 use File::Spec;
 
 # our context object
-has 'context' => ( documentation => 'our context object',
+has 'context' => ( documentation => 'our context class',
     is => 'ro',
-    isa => 'SGN::Context',
+    does => 'SGN::Role::Site::SiteFeatures',
     required => 1,
    );
 has 'enabled' => ( documentation => 'boolean flag, whether this feature is enabled',
@@ -36,6 +36,11 @@ has 'feature_dir' => (
 sub path_to {
     my $self = shift;
     return File::Spec->catfile( $self->feature_dir, @_ );
+}
+
+sub tmpdir {
+    my $self = shift;
+    return $self->context->tempfiles_base->subdir( 'features', $self->feature_name );
 }
 
 # called on apache restart

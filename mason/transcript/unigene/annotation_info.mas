@@ -270,8 +270,3 @@ my $annotation_content = info_section_html( title      => $global_title,
 </%perl>
 
 <% $annotation_content %>
-
-<& 
-   /util/import_javascript.mas, 
-   classes => 'CXGN.Effects' 
-&>

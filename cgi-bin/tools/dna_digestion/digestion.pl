@@ -4,13 +4,13 @@
 #Refactored by Johnathon Schultz 4/08/07
 
 use strict;
+use warnings;
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers;
 use CXGN::DB::Connection;
-use CXGN::VHost;
-my $dbh=CXGN::DB::Connection->new();
-my $page=CXGN::Page->new("Sol Genomics Network","john");
-my ($dna_seq, $enz_name, $action)=$page->get_encoded_arguments("dna_seq", "enz_name", "action");
+our $dbh=CXGN::DB::Connection->new();
+our $page=CXGN::Page->new("Sol Genomics Network","john");
+our ($dna_seq, $enz_name, $action)=$page->get_encoded_arguments("dna_seq", "enz_name", "action");
 
 if($action eq "digest"){
     if (!is_valid_dna($dna_seq)){
@@ -152,7 +152,7 @@ sub find_matches{
     for(my $i=0; $i<length($dna_seq); $i++){
 	foreach my $enz_seq(@$seqs_ref){
 	    $enz_seq =~ s/\^//g;
-	    $enz_seq =~ s/(.*)\(\d*\/\d*\)/\1/;
+	    $enz_seq =~ s/(.*)\(\d*\/\d*\)/$1/;
 	    my $enz_length = length($enz_seq);
 	    my $sub_seq = substr($dna_seq, $i, $enz_length);
 	    if($enz_seq eq $sub_seq){
@@ -280,7 +280,7 @@ sub insert_cut{
 	return $dna_seq;
     }
     else{
-	$dna_seq =~ s/^(.{$char_count})(.*)$/\1^\2/;
+	$dna_seq =~ s/^(.{$char_count})(.*)$/$1^$2/;
 	return $dna_seq;
     }
 }
@@ -309,10 +309,3 @@ sub wrap_text{
     }
     return $result;
 }
-
-# substr(string, start, end);
-#  my $seq = shift;
-#  my $width = shift || 50;
-#  my $break = shift || "<br />\n";
-#  return '' unless $seq;
-#  return join ($break,($seq =~ /.{1,$width}/g))

@@ -5,7 +5,7 @@ SGN::Feature::GBrowse2 - subclass of L<SGN::Feature::GBrowse> that tweaks the ap
 =cut
 
 package SGN::Feature::GBrowse2;
-use MooseX::Singleton;
+use Moose;
 use namespace::autoclean;
 extends 'SGN::Feature::GBrowse';
 
@@ -23,7 +23,10 @@ has '_data_sources' => (
    ); sub _build__data_sources {
        my $self = shift;
 
-       return {} unless $self->config_master;
+       unless( $self->config_master ) {
+           warn __PACKAGE__.': no master config found, skipping data sources configuration';
+           return {};
+       }
 
        my $ds_class =  __PACKAGE__.'::DataSource';
        Class::MOP::load_class( $ds_class );
@@ -57,7 +60,10 @@ has 'config_master' => (
    ); sub _build_config_master {
 
        my $master_file = shift->conf_dir->file('GBrowse.conf');
-       return unless -f $master_file;
+       unless( -f $master_file ) {
+           warn __PACKAGE__.": master conf file $master_file not found";
+           return;
+       }
 
        my $ff = Bio::Graphics::FeatureFile->new( -file => "$master_file" );
        $ff->safe( 1 ); #< mark the file as safe, so we can use code refs
@@ -115,6 +121,8 @@ ScriptAlias $cgi_url  "$cgibin"
 <Directory "$cgibin">
   $cgi_inc
   SetEnv GBROWSE_CONF "$conf"
+  Order allow,deny
+  Allow from all
 </Directory>
 
        );
@@ -126,8 +134,13 @@ ScriptAlias $cgi_url  "$cgibin"
 Alias        "$static_url/i/" "$tmp/images/"
 Alias        "$static_url"    "$static_dir"
 
+<Location "$static_url">
+    SetHandler default-handler\n"
+</Location>
 <Directory "$static_dir">
   Options -Indexes -MultiViews +FollowSymLinks
+  Order allow,deny
+  Allow from all
 </Directory>
 
 $runmode_conf

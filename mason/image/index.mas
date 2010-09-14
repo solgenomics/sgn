@@ -1,0 +1,70 @@
+
+<%doc>
+
+=head1 NAME
+
+/image/index.mas - a page for displaying image and image details
+
+=head1 DESCRIPTION
+
+parameters:
+
+=over 5
+
+=item $object_id
+
+The id of the image in the database
+
+=item $dbh
+
+a database handle
+
+=item $person_id
+
+the person logged into the system right now
+
+=item size
+
+the size of the image to display initially
+
+=back
+
+=head1 AUTHOR
+
+Lukas Mueller
+
+=cut
+
+</%doc>
+
+<%args>
+$object_id => undef
+$dbh
+$person_id => undef
+$size => 'large'
+</%args>
+
+<%perl> 
+
+use SGN::Image;
+
+if (!$object_id) { 
+   print "<br /><br />No image is available with these parameters."; 
+   return; 
+ }
+
+my $image = SGN::Image->new($dbh, $object_id);
+
+</%perl>
+
+<& /page/page_title.mas, title=>"SGN Image ".$image->get_name() &>
+
+<&| /page/info_section.mas, title=>"Image data" &>
+
+    <& /page/form.mas, object_type=>'image', object_id=>"$object_id", form_name=> 'image_form', server_side_script => '/image/ajax/image_ajax_form.pl', form_div_name=>'image_info_div', js_object_name=> 'image_form', page_url => '/image/index.pl', alternate_new_button => '' &>
+
+</&>
+
+<&| /page/info_section.mas, title=>"Image" &>
+    <& /image/display_image.mas, image=>$image, size=>$size &>
+</&>

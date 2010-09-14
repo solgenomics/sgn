@@ -3,10 +3,8 @@
 
 use strict;
 use CXGN::Tools::File;
-use CXGN::VHost;
 use File::Spec;
 
-my $vh = CXGN::VHost->new();
 my $file = File::Spec->catfile($vh->get_conf('basepath'), 'documents', 'feature_focus.txt');
 
 

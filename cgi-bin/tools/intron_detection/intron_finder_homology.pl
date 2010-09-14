@@ -1,26 +1,13 @@
-#!/usr/bin/perl
-
-eval 'exec /usr/bin/perl -w -S $0 ${1+"$@"}'
-  if 0;    # not running under some shell
-
 use strict;
 use warnings;
-use English;
 
 use FindBin;
 use File::Spec;
-
 use Getopt::Std;
 use Pod::Usage;
-
-#use CXGN::DB::Connection;
 use CXGN::Tools::Script qw/ in_fh out_fh /;
-#use CXGN::VHost;
 
-
-# use the intron finder module
-use lib $FindBin::RealBin."/lib";
-use IntronFinder::Homology;
+use SGN::IntronFinder::Homology;
 
 
 ###### DEFAULTS ##########
@@ -83,9 +70,7 @@ my $tempfile_dir = defined $opt{t} ? $opt{t} : File::Spec->tmpdir;
 -w $tempfile_dir or die "tempfile dir '$tempfile_dir' is not writable\n";
 
 # fake-assedly factor this out into a module
-IntronFinder::Homology::find_introns_txt( $in_fh, $out_fh, $max_evalue, $gene_feature_file, $tempfile_dir, $protein_db_base );
-
-__END__
+SGN::IntronFinder::Homology::find_introns_txt( $in_fh, $out_fh, $max_evalue, $gene_feature_file, $tempfile_dir, $protein_db_base );
 
 =head1 NAME
 
@@ -146,17 +131,9 @@ if you need to explicitly provide a path for finding blastall.
   1       AT1G05850.1     gene:2198687    exon    1768547 1768662 116     reverse
   1       AT1G05770.1     gene:2198692    GENE    1725546 1726249 704     reverse
 
-=head1 MAINTAINER
-
-your name here
-
-=head1 AUTHOR(S)
-
-Your Name, E<lt>you@cornell.eduE<gt>
-
 =head1 COPYRIGHT & LICENSE
 
-Copyright 2009 The Boyce Thompson Institute for Plant Research
+Copyright 2009-2010 The Boyce Thompson Institute for Plant Research
 
 This program is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.

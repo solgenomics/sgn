@@ -48,24 +48,23 @@ $unigene
 </%args>
 
 
-<%perl>
 
+<%once>
 use strict;
 use warnings;
-
 use Math::BigFloat;
 use CXGN::GEM::Template;
 use CXGN::GEM::Experiment;
-
 use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
-
+</%once>
+<%perl>
 ## Get the object
 my $id = $unigene->get_unigene_id();
 
 my $expression_html;
 my @template_ids;
 
-my $default_message = '<i><font color="gray">data not available</basefont></i>';
+my $default_message = '<span class="ghosted">data not available</span>';
 
 if (defined $id) {
 
@@ -294,8 +293,3 @@ my $expression_content = info_section_html( title      => "Expression Data (" . 
 </%perl>
 
 <% $expression_content %>
-
-<& 
-   /util/import_javascript.mas, 
-   classes => 'CXGN.Effects' 
-&>

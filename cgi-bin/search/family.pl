@@ -1,5 +1,6 @@
 #!/usr/bin/perl -w
 use strict;
+use warnings;
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw/  page_title_html
 									   info_section_html
@@ -8,6 +9,7 @@ use CXGN::DB::Connection;
 use CXGN::Phylo::Alignment;
 use CXGN::Tools::Identifiers;
 use CXGN::Tools::WebImageCache;
+use CatalystX::GlobalContext '$c';
 use File::Temp;
 
 our $page = CXGN::Page->new( "SGN Gene Family", "Chenwei Lin");
@@ -91,7 +93,7 @@ my ($sum_content, $member_content, $link_content, $align_content);
 #Get information for the summary section
 
 my ($annotation_content, $family_nr_content, $date_content, $i_value_content, $bn_content, $group_content, $total_gene_content);
-my ($family_build_id, $family_build_status, $total_gene, $date, $build_nr, $i_value, $annotation, $group_id, $group_comment, $family_nr);
+my ($family_build_id, $family_build_status, $total_gene, $date, $build_nr, $annotation, $group_id, $group_comment);
 $sum_q->execute($family_id);
 if (($family_build_id, $family_build_status, $total_gene, $date, $build_nr, $i_value, $annotation, $group_id, $group_comment, $family_nr) = $sum_q->fetchrow_array()){
   my $date_display = substr ($date, 0,10);
@@ -246,8 +248,7 @@ else {
 	$cache->set_key($i_value . '_' . $family_nr);
 	$cache->set_expiration_time(1);
 	$cache->set_map_name("family_alignment_tree");
-	my $vhost_conf = CXGN::VHost->new();
-	$cache->set_basedir($vhost_conf->get_conf("basepath"));
+	$cache->set_basedir($c->config->{"basepath"});
 	$cache->set_temp_dir("/documents/tempfiles/family");
 	if(!$cache->is_valid()){
 		my $treealign = undef;

@@ -1,3 +1,4 @@
+use CatalystX::GlobalContext qw( $c );
 
 use strict;
 use warnings;
@@ -16,7 +17,6 @@ use CXGN::Page::FormattingHelpers qw /info_table_html
 use CXGN::People::Person;
 use CXGN::Chado::Dbxref;
 use CXGN::Phenome::LocusDbxref;
-use CXGN::Phenome::Locus::LocusPage;
 
 use JSON;
 
@@ -24,7 +24,6 @@ my $doc = CXGN::Scrap::AjaxPage->new();
 $doc->send_http_header();
 
 my $dbh = CXGN::DB::Connection->new();
-$dbh->add_search_path('phenome');
 
 my ( $login_person_id, $login_user_type ) =
   CXGN::Login->new($dbh)->has_session();
@@ -35,6 +34,8 @@ my $locus = CXGN::Phenome::Locus->new( $dbh, $locus_id );
 
 my %error = ();
 my $json  = JSON->new();
+
+my $priv =  privileged($login_user_type);
 
 if ( $type eq 'network' ) {
     eval {
@@ -63,8 +64,8 @@ if ( $type eq 'network' ) {
                 }
                 my (
                     $organism,      $associated_locus_name,
-                    $gene_activity, $lgm_obsolete_link
-                );
+                    $gene_activity
+		    );
                 my $member_locus_id = $member->get_column('locus_id');
 
                 my $member_direction = $member->direction() || '';
@@ -81,13 +82,8 @@ if ( $type eq 'network' ) {
                     $gene_activity = $associated_locus->get_gene_activity();
                     $organism      = $associated_locus->get_common_name;
 
-                    ##obsolete link
-                    $lgm_obsolete_link =
-                      qq | <span class="ghosted">[Remove]</span> |;
-                    if ( privileged($login_user_type) ) {
-                        $lgm_obsolete_link =
-                            CXGN::Phenome::Locus::LocusPage::obsolete_locusgroup_member($lgm_id);
-                    }
+		    my $lgm_obsolete_link =  $priv ?
+			    $c->render_mason("/locus/obsolete_locusgroup_member.mas", lgm_id=>$lgm_id) : qq | <span class="ghosted">[Remove]</span> |;
                     ###########
 
                     $members_info .=
@@ -162,10 +158,8 @@ if ( $type eq 'ontology' ) {
         foreach ( @{ $dbs{'PO'} } ) { push @ont_annot, $_; }
         foreach ( @{ $dbs{'SP'} } ) { push @ont_annot, $_; }
 
-        my ( $ontology_links, $ontology_evidence, $ontology_info );
 
         my @obs_annot;
-        my $ont_count = 0;
 
         my %ont_hash = ()
           ; #keys= cvterms, values= hash of arrays (keys= ontology details, values= list of evidences)
@@ -185,85 +179,69 @@ qq |<a href="/chado/cvterm.pl?cvterm_id=$cvterm_id" target="blank">$cvterm_name<
 
             my @AoH = $locus_dbxref->evidence_details();
 
-            my $c;
             for my $href (@AoH) {
                 my $relationship = $href->{relationship};
 
                 if ( $href->{obsolete} eq 't' ) {
-                    my $unobsolete;
-                    $unobsolete =
-                      CXGN::Phenome::Locus::LocusPage::unobsolete_evidence(
-                        $href->{dbxref_ev_object}
-                          ->get_object_dbxref_evidence_id )
-                      if privileged( $login_user_type );
-
-                    push @obs_annot,
+		    my $unobsolete = $priv ? 
+			$c->render_mason("/locus/unobsolete_evidence.mas", object_name=>'locus', evidence_id=> $href->{dbxref_ev_object}->get_object_dbxref_evidence_id() ) : undef ;
+		    
+		    push @obs_annot,
                         $href->{relationship} . " "
                       . $cvterm_link . " ("
                       . $href->{ev_code} . ")"
                       . $unobsolete;
                 }
                 else {
-                    $c++;
                     my $ontology_details = $href->{relationship}
                       . qq| $cvterm_link ($db_name:<a href="$url$db_accession" target="blank"> $accession</a>)<br />|;
 
-                    # add an empty row if there is more than 1 evidence code
-                    my $obsolete_link =
-                      CXGN::Phenome::Locus::LocusPage::obsolete_evidence(
-                        $href->{dbxref_ev_object}
-                          ->get_object_dbxref_evidence_id )
-                      if privileged( $login_user_type );
-
-                    my $ev_string;
-                    $ev_string .= "<br /><hr>"
-                      if $ont_hash{$cv_name}{$ontology_details};
+                    my $obsolete_link = $priv ? 
+			$c->render_mason("/locus/obsolete_evidence.mas", object_name=>'locus', evidence_id=> $href->{dbxref_ev_object}->get_object_dbxref_evidence_id() ) : undef ;
+		    
+		    # add an empty row if there is more than 1 evidence code
+		    my $ev_string;
+                    $ev_string .= "<hr />"
+			if $ont_hash{$cv_name}{$ontology_details};
                     no warnings 'uninitialized';
                     $ev_string .=
                         $href->{ev_code}
-                      . "<br />"
-                      . $href->{ev_desc}
-                      . "<br /><a href=\""
-                      . $href->{ev_with_url} . "\">"
-                      . $href->{ev_with_acc}
-                      . "</a><br /><a href=\""
-                      . $href->{reference_url} . "\">"
-                      . $href->{reference_acc}
-                      . "</a><br />"
-                      . $href->{submitter}
-                      . $obsolete_link;
+		    . "<br />"
+			. $href->{ev_desc}
+		    . "<br /><a href=\""
+			. $href->{ev_with_url} . "\">"
+			. $href->{ev_with_acc}
+		    . "</a><br /><a href=\""
+			. $href->{reference_url} . "\">"
+			. $href->{reference_acc}
+		    . "</a><br />"
+			. $href->{submitter}
+		    . $obsolete_link;
                     $ont_hash{$cv_name}{$ontology_details} .= $ev_string;
                 }
             }
         }
 
-  #now we should have an %ont_hash with all the details we need for printing ...
-  #hash keys are the cv names ..
+        my $ontology_evidence;
+
+	#now we should have an %ont_hash with all the details we need for printing ...
+	#hash keys are the cv names ..
         for my $cv_name ( sort keys %ont_hash ) {
             my @evidence;
 
-#create a string of ontology details from the end level hash keys, which are the values of each cv_name
-            my $cv_ont_details;
-
             #and for each ontology annotation create an array ref of evidences
             for my $ont_detail ( sort keys %{ $ont_hash{$cv_name} } ) {
-                $ont_count++;
-                $cv_ont_details .= $ont_detail;
                 push @evidence,
                   [ $ont_detail, $ont_hash{$cv_name}{$ont_detail} ];
             }
-            $ontology_links .= info_table_html(
-                $cv_name => $cv_ont_details,
-                __border => 0,
-            );
-            my $ev_table = columnar_table_html(
-                data         => \@evidence,
-                __align      => 'lll',
-                __alt_freq   => 2,
-                __alt_offset => 1
-            );
+
+            my $ev = join "\n", map {
+                qq|<div class="term">$_->[0]</div>\n|
+                    .qq|<div class="evidence">$_->[1]</div>\n|;
+            } @evidence;
+
             $ontology_evidence .= info_table_html(
-                $cv_name     => $ev_table,
+                $cv_name     => $ev,
                 __border     => 0,
                 __tableattrs => 'width="100%"',
             );
@@ -272,18 +250,10 @@ qq |<a href="/chado/cvterm.pl?cvterm_id=$cvterm_id" target="blank">$cvterm_name<
         #display ontology annotation form
 
         if ( @obs_annot &&  privileged($login_user_type) ) {
-            $ontology_links .= print_obsoleted(@obs_annot);
+            $ontology_evidence .= print_obsoleted(@obs_annot);
         }
 
-        if ($ontology_evidence) {
-            $ontology_info .= html_alternate_show(
-                'ontology_annotation', 'Annotation info',
-                $ontology_links,       $ontology_evidence,
-            );
-        }
-        else { $ontology_info .= $ontology_links; }
-
-        $error{"response"} = $ontology_info;
+        $error{"response"} = $ontology_evidence;
     };
 
     if ($@) {
@@ -312,7 +282,6 @@ if ( $type eq 'unigenes' ) {
         if ( !@unigenes ) {
             $unigenes = qq|<span class=\"ghosted\">none</span>|;
         }
-        my $unigene_count = 0;
         my @solcyc;
         my ( $solcyc_links, $sequence_links );
         my $solcyc_count = 0;
@@ -322,27 +291,22 @@ if ( $type eq 'unigenes' ) {
             my $organism_name = $unigene_build->get_organism_group_name();
             my $build_nr      = $unigene->get_build_nr();
             my $nr_members    = $unigene->get_nr_members();
-            my $unigene_obsolete_link =
-              qq | <span class="ghosted">[Remove]</span> |;
+            
             my $locus_unigene_id = $locus->get_locus_unigene_id($unigene_id);
-            if ( privileged( $login_user_type )) {
-                $unigene_obsolete_link =
-                  CXGN::Phenome::Locus::LocusPage::obsolete_locus_unigene(
-                    $locus_unigene_id);
-            }
+            
+	    my $unigene_obsolete_link = privileged( $login_user_type ) ? 
+		$c->render_mason("/locus/obsolete_locus_unigene.mas", id=>$locus_unigene_id ) 
+		: qq | <span class="ghosted">[Remove]</span> |;
+
             my $status = $unigene->get_status();
-
-            if ( $status eq 'C' ) {
-                $unigene_count++;
-                $unigenes .=
-qq|<a href="/search/unigene.pl?unigene_id=$unigene_id">SGN-U$unigene_id</a> $organism_name -- build $build_nr -- $nr_members members $unigene_obsolete_link<br />|;
+	    if ( $status eq 'C' ) {
+		$unigenes .=
+		    qq|<a href="/search/unigene.pl?unigene_id=$unigene_id">SGN-U$unigene_id</a> $organism_name -- build $build_nr -- $nr_members members $unigene_obsolete_link<br />|;
             }
-
-#######
+	    
             # get solcyc links from the unigene page...
             #
-
-            foreach my $dbxref ( $unigene->get_dbxrefs() ) {
+	    foreach my $dbxref ( $unigene->get_dbxrefs() ) {
                 if ( $dbxref->get_db_name() eq "solcyc_images" ) {
                     my $url       = $dbxref->get_url();
                     my $accession = $dbxref->get_accession();
@@ -361,13 +325,12 @@ qq |  <a href="http://solcyc.solgenomics.net/$species/NEW-IMAGE?type=REACTION-IN
         }
         $error{"response"} = $unigenes;
         $error{"solcyc"}   = $solcyc_links;
-
+	
     };
     if ($@) {
         $error{"error"} = $@;
         CXGN::Contact::send_email( 'print_locus_page.pl died',
-            $error{"error"}, 'sgn-bugs@sgn.cornell.edu' );
-
+				   $error{"error"}, 'sgn-bugs@sgn.cornell.edu' );
     }
 }
 
@@ -384,7 +347,7 @@ sub print_obsoleted {
     my $print_obsoleted = html_alternate_show(
         'obsoleted_terms', 'Show obsolete',
         '',                qq|<div class="minorbox">$obsoleted</div> |,
-    );
+	);
     return $print_obsoleted;
 }
 

@@ -54,26 +54,25 @@ All functions are EXPORT_OK.
 
 =cut
 
-
 BEGIN {
     our @ISA = qw/Exporter/;
     use Exporter;
     our $VERSION = sprintf "%d.%03d", q$Revision: 1.1 $ =~ /(\d+)/g;
-    our @EXPORT_OK = qw/  blue_section_html                    html_optional_show
-	                  newlines_to_brs                      html_break_string
-			  html_string_linebreak_and_highlight  page_title_html
-			  tabset  modesel                      info_table_html
-                          toolbar_html                         truncate_string
-                          simple_selectbox_html                columnar_table_html
-                          hierarchical_selectboxes_html        numerical_range_input_html
-			  conditional_like_input_html          info_section_html
-                          tooltipped_text                      html_alternate_show
-			  multilevel_mode_selector_html        commify_number
-		       /;
+    our @EXPORT_OK =
+      qw/  blue_section_html                    html_optional_show
+      newlines_to_brs                      html_break_string
+      html_string_linebreak_and_highlight  page_title_html
+      tabset  modesel                      info_table_html
+      toolbar_html                         truncate_string
+      simple_selectbox_html                columnar_table_html
+      hierarchical_selectboxes_html        numerical_range_input_html
+      conditional_like_input_html          info_section_html
+      tooltipped_text                      html_alternate_show
+      multilevel_mode_selector_html        commify_number
+      /;
 }
 our @ISA;
 our @EXPORT_OK;
-
 
 =head2 blue_section_html
 
@@ -90,17 +89,20 @@ our @EXPORT_OK;
 
 =cut
 
-sub blue_section_html  {
-  if( @_ == 3 ) {
-    info_section_html( title    => shift,
-		       subtitle => shift,
-		       contents  => shift,
-		     )
-  } else {
-    info_section_html( title    => shift,
-		       contents  => shift,
-		     )
-  }
+sub blue_section_html {
+    if ( @_ == 3 ) {
+        info_section_html(
+            title    => shift,
+            subtitle => shift,
+            contents => shift,
+        );
+    }
+    else {
+        info_section_html(
+            title    => shift,
+            contents => shift,
+        );
+    }
 }
 
 =head2 info_section_html
@@ -135,63 +137,69 @@ sub blue_section_html  {
 =cut
 
 sub info_section_html {
-  my %args = @_;
+    my %args = @_;
 
-  #check arguments.  i think this is better for everyone except beth
-  my @valid_keys = qw/ title subtitle contents empty_message is_empty is_subsection collapsible collapsed id align/;
-  foreach my $argname (keys %args) {
-    grep {$_ eq $argname} @valid_keys
-      or croak "Unknown argument name '$argname' to info_section_html";
-  }
+    #check arguments.  i think this is better for everyone except beth
+    my @valid_keys =
+      qw/ title subtitle contents empty_message is_empty is_subsection collapsible collapsed id align/;
+    foreach my $argname ( keys %args ) {
+        grep { $_ eq $argname } @valid_keys
+          or croak "Unknown argument name '$argname' to info_section_html";
+    }
 
-  #$args{collapsible} = 1 unless defined $args{collapsible}; #collapsible defaults to on
+#$args{collapsible} = 1 unless defined $args{collapsible}; #collapsible defaults to on
 
-  #set anything we dont have to the empty string,
-  #avoids 'undefined value in string or concatenation' warnings.
-  $_ ||= '' foreach @args{qw/title subtitle contents/};
+    #set anything we dont have to the empty string,
+    #avoids 'undefined value in string or concatenation' warnings.
+    $_ ||= '' foreach @args{qw/title subtitle contents/};
 
-  #if we have been given content, and we aren't told that this section
-  #is supposed to be empty, print a full section
-  my $sub = $args{is_subsection} ? 'sub_' : '';
-  if ( $args{contents} && ! $args{is_empty} ) {
-  	my $title = $args{title};
-		my $contents = $args{contents} || '';
-		my $collapser_id = $args{id};
-		my $collapsed = $args{collapsed};
-		my $align = $args{align} ? qq| style="text-align: $args{align}"| : '';
-		$collapsed ||= 0;
-		$collapser_id ||= "sgnc" . int(rand(10000));
-		$contents = <<EOC;
+    #if we have been given content, and we aren't told that this section
+    #is supposed to be empty, print a full section
+    my $sub = $args{is_subsection} ? 'sub_' : '';
+    if ( $args{contents} && !$args{is_empty} ) {
+        my $title        = $args{title};
+        my $contents     = $args{contents} || '';
+        my $collapser_id = $args{id};
+        my $collapsed    = $args{collapsed};
+        my $align = $args{align} ? qq| style="text-align: $args{align}"| : '';
+        $collapsed ||= 0;
+        $collapser_id ||= "sgnc" . int( rand(10000) );
+        $contents = <<EOC;
 <div class="${sub}infosectioncontent" $align>
 $contents
 </div>
 EOC
-		if ($args{collapsible}) {
-			($title, $contents) = collapser({
-																			 linktext => $title,
-																			 hide_state_linktext => $title,
-																			 content => $contents,
-																			 collapsed => $collapsed,
-																			 id => $collapser_id});
-		}
-  	my $title_bar = <<EOHTML;
+
+        if ( $args{collapsible} ) {
+            ( $title, $contents ) = collapser(
+                {
+                    linktext            => $title,
+                    hide_state_linktext => $title,
+                    content             => $contents,
+                    collapsed           => $collapsed,
+                    id                  => $collapser_id
+                }
+            );
+        }
+        my $title_bar = <<EOHTML;
 <table cellspacing="0" cellpadding="0" class="${sub}infosectionhead" summary=""><tr><td class="${sub}infosectiontitle">$title</td><td class="${sub}infosectionsubtitle">$args{subtitle}&nbsp;</td></tr></table>
 EOHTML
-    return "$title_bar\n$contents\n";
-  }
-  #otherwise, if it's actually empty, just print a collapsed section
-  #with the empty message
-  else {
-    my $maybe_subtitle = $args{subtitle}
-      ? qq|<td class="${sub}infosectionsubtitle_empty" align="right">$args{subtitle}&nbsp;</td>|
-				: '';
-    $args{empty_message} ||= 'None';
-    return <<EOT;
+        return "$title_bar\n$contents\n";
+    }
+
+    #otherwise, if it's actually empty, just print a collapsed section
+    #with the empty message
+    else {
+        my $maybe_subtitle =
+          $args{subtitle}
+          ? qq|<td class="${sub}infosectionsubtitle_empty" align="right">$args{subtitle}&nbsp;</td>|
+          : '';
+        $args{empty_message} ||= 'None';
+        return <<EOT;
 <table cellspacing="0" cellpadding="0" class="${sub}infosectionhead_empty" summary=""><tr><td class="${sub}infosectiontitle_empty">$args{title}</td><td class="${sub}infosection_emptymessage">$args{empty_message}</td>$maybe_subtitle</tr></table>
 EOT
-  }
+    }
 }
-
 
 =head2 page_title_html
 
@@ -204,7 +212,8 @@ EOT
 
 sub page_title_html {
     my ($title) = @_;
-    return CXGN::MasonFactory->bare_render('/page/page_title.mas', title => $title);
+    return CXGN::MasonFactory->bare_render( '/page/page_title.mas',
+        title => $title );
 }
 
 =head2 html_optional_show
@@ -226,19 +235,15 @@ sub page_title_html {
 =cut
 
 sub html_optional_show {
-    my ($itemid,$itemtitle,$itemHTML,$default_show_item,$class_name) = @_;
-    $class_name  ||= 'optional_show';
+    my ( $itemid, $itemtitle, $itemHTML, $default_show_item, $class_name ) = @_;
 
-    $default_show_item = $default_show_item ? ' hos_default_show' : '';
-
-    # NOTE: most of the action happens in FormattingHelpers.js
-
-    return <<END_HTML;
-<a name="$itemid" id="$itemid" class="html_optional_show $class_name$default_show_item ${class_name}_active">$itemtitle</a>
-<div id="${itemid}_optional_content" class="html_optional_show $class_name ${class_name}_active">
-   $itemHTML
-</div>
-END_HTML
+    return CXGN::MasonFactory->bare_render( '/page/optional_show.mas',
+        id => $itemid,
+        title => $itemtitle,
+        content => $itemHTML,
+        default_show => $default_show_item,
+        class => $class_name,
+    );
 }
 
 =head2 html_alternate_show
@@ -255,14 +260,22 @@ END_HTML
 =cut
 
 sub html_alternate_show {
-    my ($itemid1,$itemtitle1, $itemHTML1,$itemHTML2) = @_;
+    my ( $itemid1, $itemtitle1, $itemHTML1, $itemHTML2 ) = @_;
 
-    my ($click_style,$start_style) = 0 ? (' class="optional_show" style="display:none"',' class="optional_show"') :
-                                         (' class="optional_show"',' class="optional_show" style="display:none"') ;
-    my ($hiddentitle1,$showntitle1) = ref($itemtitle1) ? (@$itemtitle1) : ($itemtitle1,$itemtitle1);
-   
+    my ( $click_style, $start_style ) =
+      0
+      ? (
+        ' class="optional_show" style="display:none"',
+        ' class="optional_show"'
+      )
+      : (
+        ' class="optional_show"',
+        ' class="optional_show" style="display:none"'
+      );
+    my ( $hiddentitle1, $showntitle1 ) =
+      ref($itemtitle1) ? (@$itemtitle1) : ( $itemtitle1, $itemtitle1 );
 
- return <<END_HTMLD;
+    return <<END_HTMLD;
     <a name="$itemid1"></a>
     <div id="click$itemid1" $click_style>
     <a class="optional_show" onclick="document.getElementById('start$itemid1').style.display='block';document.getElementById('click$itemid1').style.display='none';">$hiddentitle1</a>
@@ -276,7 +289,6 @@ END_HTMLD
 
 }
 
-
 =head2 newlines_to_brs
 
     Given a string, replaces newlines with the given breaking string.
@@ -286,9 +298,9 @@ END_HTMLD
 =cut
 
 sub newlines_to_brs {
-    my($string,$breaker)=@_;
+    my ( $string, $breaker ) = @_;
     $breaker ||= "<br />\n";
-    $string=~s/\n/$breaker/g;
+    $string =~ s/\n/$breaker/g;
     return $string;
 }
 
@@ -304,13 +316,12 @@ sub newlines_to_brs {
 =cut
 
 sub html_break_string {
-  my $seq = shift;
-  my $width = shift || 50;
-  my $break = shift || "<br />\n";
-  return '' unless $seq;
-  return join ($break,($seq =~ /.{1,$width}/g))
+    my $seq   = shift;
+    my $width = shift || 50;
+    my $break = shift || "<br />\n";
+    return '' unless $seq;
+    return join( $break, ( $seq =~ /.{1,$width}/g ) );
 }
-
 
 =head2 html_string_linebreak_and_highlight
 
@@ -326,45 +337,48 @@ sub html_break_string {
 =cut
 
 sub html_string_linebreak_and_highlight {
-    my ($seq,$highlights_ar,$highlightclass,$breakwidth) = @_;
+    my ( $seq, $highlights_ar, $highlightclass, $breakwidth ) = @_;
     $highlightclass ||= 'badseq';
-    $breakwidth ||= 50;
+    $breakwidth     ||= 50;
 
     my $hstart_string = qq/<span class="$highlightclass">/;
-    my $hend_string = q|</span>|;
+    my $hend_string   = q|</span>|;
 
     my %hstarts;
     my %hends;
 
     #build highlight starts and ends hashes
-    while (scalar(@$highlights_ar)) {
-	my ($hs,$he) = @{shift @$highlights_ar};
-	croak "Highlight indexes array must have an even number of elements.\n"
-	    unless defined($he);
+    while ( scalar(@$highlights_ar) ) {
+        my ( $hs, $he ) = @{ shift @$highlights_ar };
+        croak "Highlight indexes array must have an even number of elements.\n"
+          unless defined($he);
 
-#     my $hs = shift @$highlights_ar;
-#     my $he = shift @$highlights_ar;
-	croak "Invalid highlight start index $hs.\n"
-	    unless $hs >= 0;
+        #     my $hs = shift @$highlights_ar;
+        #     my $he = shift @$highlights_ar;
+        croak "Invalid highlight start index $hs.\n"
+          unless $hs >= 0;
 
-	($he >= 0 && $he >= $hs) || croak "Invalid highlight end index $he (highlight start was $hs).\n";
-	$hstarts{$hs}++;
-	$hends{$he}++;
+        ( $he >= 0 && $he >= $hs )
+          || croak
+          "Invalid highlight end index $he (highlight start was $hs).\n";
+        $hstarts{$hs}++;
+        $hends{$he}++;
     }
 
-    my @splitseq = split '',$seq;
+    my @splitseq = split '', $seq;
     my $retstr = '';
 
     my $linectr = 0;
+
     #get down wid da for loop
-    for (my $i=0; $i<scalar(@splitseq); $i++) {
-	$retstr .= $hstart_string x ($hstarts{$i} || 0);
-	$retstr .= $splitseq[$i];
-	$retstr .= $hend_string x ($hends{$i} || 0);
-	if(++$linectr == $breakwidth) {
-	    $retstr .= "<br />\n";
-	    $linectr = 0;
-	}
+    for ( my $i = 0 ; $i < scalar(@splitseq) ; $i++ ) {
+        $retstr .= $hstart_string x ( $hstarts{$i} || 0 );
+        $retstr .= $splitseq[$i];
+        $retstr .= $hend_string x   ( $hends{$i}   || 0 );
+        if ( ++$linectr == $breakwidth ) {
+            $retstr .= "<br />\n";
+            $linectr = 0;
+        }
     }
     return $retstr;
 }
@@ -394,61 +408,75 @@ sub html_string_linebreak_and_highlight {
 
 =cut
 
-sub tabset { modesel(@_) } #alias
+sub tabset { modesel(@_) }    #alias
 
 sub modesel {
-  my $ar = shift;
-  my $numcols = @$ar*4+1;
-  my $selected = shift;
+    my $ar       = shift;
+    my $numcols  = @$ar * 4 + 1;
+    my $selected = shift;
 
-  my @buttons =
-    map { { id       => 'mb'.our $_unique_modesel_button_counter++,
-	    contents => $_->[1],
-	    url      => $_->[0],
-	    onclick  => $_->[2] || '',
-	  }
-	} @$ar;
+    my @buttons =
+      map {
+        {
+            id       => 'mb' . our $_unique_modesel_button_counter++,
+            contents => $_->[1],
+            url      => $_->[0],
+            onclick  => $_->[2] || '',
+        }
+      } @$ar;
 
-  my $highlighted_id = defined($selected) && $selected >=0 ? $buttons[$selected]{id} : '';
+    my $highlighted_id =
+      defined($selected) && $selected >= 0 ? $buttons[$selected]{id} : '';
 
-  foreach my $button (@buttons) {
-    my $bid = $button->{id};
-    my $sel = $bid eq $highlighted_id ? '_hi' : '';
+    foreach my $button (@buttons) {
+        my $bid = $button->{id};
+        my $sel = $bid eq $highlighted_id ? '_hi' : '';
 
-    my $tablecell = sub {
-      my ($leaf,$content) = @_;
-      qq|    <td id="${bid}_${leaf}" class="modesel_$leaf$sel">$content</td>\n|;
-    };
+        my $tablecell = sub {
+            my ( $leaf, $content ) = @_;
+qq|    <td id="${bid}_${leaf}" class="modesel_$leaf$sel">$content</td>\n|;
+        };
 
-    $button->{contents} = [
-			    $tablecell->('tl',qq|<img src="/documents/img/modesel_tl$sel.gif" alt="" />|)
-			   .$tablecell->('t', qq||)
-			   .$tablecell->('tr',qq|<img src="/documents/img/modesel_tr$sel.gif" alt="" />|),
-			    $tablecell->('l', qq|<img src="/documents/img/modesel_l$sel.gif" alt="" />|)
-			   .$tablecell->('c', qq|<a class="modesel$sel" onclick="CXGN.Page.FormattingHelpers.modesel_switch_highlight('$highlighted_id','$bid'); $button->{onclick}" href="$button->{url}">$button->{contents}</a>|)
-			   .$tablecell->('r', qq|<img src="/documents/img/modesel_r$sel.gif" alt="" />|),
-			    $tablecell->('bl',qq|<img src="/documents/img/modesel_bl$sel.gif" alt="" />|)
-			   .$tablecell->('b', qq||)
-			   .$tablecell->('br',qq|<img src="/documents/img/modesel_br$sel.gif" alt="" />|),
-			  ];
-  }
+        $button->{contents} = [
+            $tablecell->(
+                'tl', qq|<img src="/documents/img/modesel_tl$sel.gif" alt="" />|
+              )
+              . $tablecell->( 't', qq|| )
+              . $tablecell->(
+                'tr', qq|<img src="/documents/img/modesel_tr$sel.gif" alt="" />|
+              ),
+            $tablecell->(
+                'l', qq|<img src="/documents/img/modesel_l$sel.gif" alt="" />|
+              )
+              . $tablecell->(
+                'c',
+qq|<a class="modesel$sel" onclick="CXGN.Page.FormattingHelpers.modesel_switch_highlight('$highlighted_id','$bid'); $button->{onclick}" href="$button->{url}">$button->{contents}</a>|
+              )
+              . $tablecell->(
+                'r', qq|<img src="/documents/img/modesel_r$sel.gif" alt="" />|
+              ),
+            $tablecell->(
+                'bl', qq|<img src="/documents/img/modesel_bl$sel.gif" alt="" />|
+              )
+              . $tablecell->( 'b', qq|| )
+              . $tablecell->(
+                'br', qq|<img src="/documents/img/modesel_br$sel.gif" alt="" />|
+              ),
+        ];
+    }
 
-  my $spacer = qq{    <td class="modesel_spacer"></td>\n};
-  my $tabs_html = join("\n",
-		       (map {"  <tr>\n$_  </tr>"}
-			(join ($spacer,
-			       (map {$_->{contents}[0]} @buttons)
-			      ),
-			 join ($spacer,
-			       (map {$_->{contents}[1]} @buttons)
-			      ),
-			 join ($spacer,
-			       (map {$_->{contents}[2]} @buttons)
-			      ),
-			)
-		       )
-		      );
-  return <<EOH;
+    my $spacer    = qq{    <td class="modesel_spacer"></td>\n};
+    my $tabs_html = join(
+        "\n",
+        (
+            map { "  <tr>\n$_  </tr>" } (
+                join( $spacer, ( map { $_->{contents}[0] } @buttons ) ),
+                join( $spacer, ( map { $_->{contents}[1] } @buttons ) ),
+                join( $spacer, ( map { $_->{contents}[2] } @buttons ) ),
+            )
+        )
+    );
+    return <<EOH;
 <center>
 <table class="modesel" summary="" cellspacing="0">
 $tabs_html
@@ -493,46 +521,52 @@ EOH
 =cut
 
 sub simple_selectbox_html {
-  my %params = @_;
-  my $retstring;
+    my %params = @_;
+    my $retstring;
 
-  $params{choices} && ref($params{choices}) eq 'ARRAY'
+    $params{choices} && ref( $params{choices} ) eq 'ARRAY'
       or confess "'choices' option must be an arrayref";
 
-  $params{multiple} = $params{multiple} ? 'multiple' : '';
+    $params{multiple} = $params{multiple} ? 'multiple' : '';
 
-  $params{id} ||= "simple_selectbox_" . ++ our $__simple_selectbox_ctr;
-  my $id = qq|id="$params{id}"|;
+    $params{id} ||= "simple_selectbox_" . ++our $__simple_selectbox_ctr;
+    my $id = qq|id="$params{id}"|;
 
-  #print out the select box head
-  if(ref $params{params}) {
-    $params{params} = join ' ',map { qq|$_="$params{params}{$_}"| } keys %{$params{params}};
-  }
-  $params{params} ||= '';
-  $params{name} ||= '';
-  $retstring = qq!<select $id $params{multiple} $params{params} name="$params{name}">\n!;
-  $retstring =~ s/ +/ /; #collapse spaces
-  my $in_group = 0;
-  foreach (@{$params{choices}}) {
-    if(!ref && s/^__// ) {
-      $retstring .= qq{</optgroup>} if $in_group;
-      $in_group = 1;
-      $retstring .= qq{<optgroup label="$_">};
-    } else {
-      my ($name,$text) = ref $_ ? @$_ : ($_,$_);
-      my $selected = (defined $params{selected} && $params{selected} eq $name) ? ' selected="selected"' : '';
-      $retstring .= qq{<option value="$name"$selected>$text</option>\n};
+    #print out the select box head
+    if ( ref $params{params} ) {
+        $params{params} = join ' ',
+          map { qq|$_="$params{params}{$_}"| } keys %{ $params{params} };
     }
-  }
-  $retstring .= qq{</optgroup>} if $in_group;
-  $retstring .= "</select>\n";
+    $params{params} ||= '';
+    $params{name}   ||= '';
+    $retstring =
+      qq!<select $id $params{multiple} $params{params} name="$params{name}">\n!;
+    $retstring =~ s/ +/ /;    #collapse spaces
+    my $in_group = 0;
+    foreach ( @{ $params{choices} } ) {
+        if ( !ref && s/^__// ) {
+            $retstring .= qq{</optgroup>} if $in_group;
+            $in_group = 1;
+            $retstring .= qq{<optgroup label="$_">};
+        }
+        else {
+            my ( $name, $text ) = ref $_ ? @$_ : ( $_, $_ );
+            my $selected =
+              ( defined $params{selected} && $params{selected} eq $name )
+              ? ' selected="selected"'
+              : '';
+            $retstring .= qq{<option value="$name"$selected>$text</option>\n};
+        }
+    }
+    $retstring .= qq{</optgroup>} if $in_group;
+    $retstring .= "</select>\n";
 
-  if($params{label}) {
-    $retstring = qq|<label for="$params{id}">$params{label}</label> $retstring|;
-  }
-  return $retstring;
+    if ( $params{label} ) {
+        $retstring =
+          qq|<label for="$params{id}">$params{label}</label> $retstring|;
+    }
+    return $retstring;
 }
-
 
 =head2 info_table_html
 
@@ -590,63 +624,77 @@ sub simple_selectbox_html {
 =cut
 
 sub info_table_html {
-  croak 'Must pass an even-length argument list' if scalar(@_) % 2;
+    croak 'Must pass an even-length argument list' if scalar(@_) % 2;
 
-  my %tabledata = @_;
-  $tabledata{__multicol} ||= 1;
-  $tabledata{__border} = 1 unless exists($tabledata{__border});
+    my %tabledata = @_;
+    $tabledata{__multicol} ||= 1;
+    $tabledata{__border} = 1 unless exists( $tabledata{__border} );
 
-  #list of reserved field names
-  my @reserved = qw/__title __caption __tableattrs __multicol __border __sub/;
-  my %reserved = map {$_=>1} @reserved; #hash them for quick lookup
+    #list of reserved field names
+    my @reserved = qw/__title __caption __tableattrs __multicol __border __sub/;
+    my %reserved = map { $_ => 1 } @reserved;    #hash them for quick lookup
 
-  #get every other element from args to remember the order of the
-  #table row names
-  my $last = 0;
-  my @field_order = map {$last = !$last; $last ? ($_) : ()} @_;
-  #take out the reserved field names from the field order list
-  @field_order = grep { ! $reserved{$_} } @field_order;
+    #get every other element from args to remember the order of the
+    #table row names
+    my $last = 0;
+    my @field_order = map { $last = !$last; $last ? ($_) : () } @_;
 
-  #figure out the multi-column wrapping
-  my @fields_layout; #2-D array of where in the table each field name
-                     #will be
-  my $numcols = 0;
-  {
-    my $numfields = @field_order;
-    my $max_col_len = POSIX::ceil($numfields/$tabledata{__multicol});
+    #take out the reserved field names from the field order list
+    @field_order = grep { !$reserved{$_} } @field_order;
 
-    #  split the fields array into chunks (these will be columns)
-    push @fields_layout,[] foreach(1..$max_col_len);
-    while (my @chunk = splice(@field_order,0,$max_col_len)) {
-      #     my $chunksize = @chunk;
-      #     push @chunk,undef while($chunksize++ != $max_col_len);
-      # for each chunk, add one of its elements to each of the rows
-      push @$_,(shift @chunk) foreach (@fields_layout);
-      $numcols++;
+    #figure out the multi-column wrapping
+    my @fields_layout;    #2-D array of where in the table each field name
+                          #will be
+    my $numcols = 0;
+    {
+        my $numfields   = @field_order;
+        my $max_col_len = POSIX::ceil( $numfields / $tabledata{__multicol} );
+
+        #  split the fields array into chunks (these will be columns)
+        push @fields_layout, [] foreach ( 1 .. $max_col_len );
+        while ( my @chunk = splice( @field_order, 0, $max_col_len ) ) {
+
+            #     my $chunksize = @chunk;
+            #     push @chunk,undef while($chunksize++ != $max_col_len);
+            # for each chunk, add one of its elements to each of the rows
+            push @$_, ( shift @chunk ) foreach (@fields_layout);
+            $numcols++;
+        }
     }
-  }
 
-  my $tableattrs =
+    my $tableattrs =
       $tabledata{__tableattrs}
-	? ' '.$tabledata{__tableattrs}
-	: '';
+      ? ' ' . $tabledata{__tableattrs}
+      : '';
 
-  my $sub = $tabledata{__sub} ? 'sub_' : '';
+    my $sub = $tabledata{__sub} ? 'sub_' : '';
 
-  my $noborder = $tabledata{__border} ? '' : '_noborder';
-  join("\n",
-       (qq/<table summary="" class="${sub}info_table$noborder" $tableattrs>/,
+    my $noborder = $tabledata{__border} ? '' : '_noborder';
+    join(
+        "\n",
+        (
+qq/<table summary="" class="${sub}info_table$noborder" $tableattrs>/,
 
-	$tabledata{__caption}
-	? (qq!<caption class="${sub}info_table">$tabledata{__caption}</caption>!)
-	: (),
+            $tabledata{__caption}
+            ? (
+qq!<caption class="${sub}info_table">$tabledata{__caption}</caption>!
+              )
+            : (),
 
-	$tabledata{__title}
-	? (qq!<tr><th class="${sub}info_table" colspan="$numcols">$tabledata{__title}</th></tr>!)
-	: (),
+            $tabledata{__title}
+            ? (
+qq!<tr><th class="${sub}info_table" colspan="$numcols">$tabledata{__title}</th></tr>!
+              )
+            : (),
 
-	#turn each of the passed field=>value pairs into an html table row
-	(map {'<tr>'.join('',map {$_ ? <<EOH : '<td>&nbsp;</td><td>&nbsp;</td>'} @$_).'</tr>'} @fields_layout),
+            #turn each of the passed field=>value pairs into an html table row
+            (
+                map {
+                    '<tr>'
+                      . join( '',
+                        map {
+                            $_
+                              ? <<EOH : '<td>&nbsp;</td><td>&nbsp;</td>' } @$_ ) . '</tr>' } @fields_layout ),
   <td class="${sub}info_table_field">
     <span class="${sub}info_table_fieldname">$_</span>
     <div class="${sub}info_table_fieldval">
@@ -655,14 +703,11 @@ sub info_table_html {
   </td>
 EOH
 
-#	'<tr><td colspan="2" class="${sub}info_table_lastrow"></td></tr>',
-	'</table>',
-       )
-      );
+            #	'<tr><td colspan="2" class="${sub}info_table_lastrow"></td></tr>',
+            '</table>',
+        )
+    );
 }
-
-
-
 
 =head2 truncate_string
 
@@ -691,13 +736,12 @@ EOH
 =cut
 
 sub truncate_string {
-  my ($string,$length,$addon) = @_;
-  $length ||= 50;
-  $addon ||= '&hellip;';
+    my ( $string, $length, $addon ) = @_;
+    $length ||= 50;
+    $addon  ||= '&hellip;';
 
-  return CXGN::Tools::Text::truncate_string( $string, $length, $addon );
+    return CXGN::Tools::Text::truncate_string( $string, $length, $addon );
 }
-
 
 =head2 columnar_table_html
 
@@ -801,130 +845,150 @@ every-other-row highlighting.
 =cut
 
 sub columnar_table_html {
-  my %params = @_;
+    my %params = @_;
 
-  croak "must provide 'data' parameter" unless $params{data};
+    croak "must provide 'data' parameter" unless $params{data};
 
-  my $noborder = $params{__border} ? '' : '_noborder';
+    my $noborder = $params{__border} ? '' : '_noborder';
 
-  my $html;
-  #table beginning
-  $params{__tableattrs} ||= qq{summary="" cellspacing="0" width="100%"};
-  $html .= qq|<table class="columnar_table$noborder" $params{__tableattrs}>\n|;
+    my $html;
 
-  unless( defined $params{__alt_freq} ) {
-    $params{__alt_freq} = @{$params{data}} > 6 ? 4 :
-                          @{$params{data}} > 3 ? 2 :
-			                         0;
-  }
-  unless( defined $params{__alt_width} ) {
-    $params{__alt_width}  = @{$params{data}} > 6 ? 2 : 1;
-  }
-  unless( $params{__alt_width} < $params{__alt_freq} ) {
-    $params{__alt_width} = $params{__alt_freq}/2;
-  }
-  unless( defined $params{__alt_offset} ) {
-    $params{__alt_offset} = 0;
-  }
+    #table beginning
+    $params{__tableattrs} ||= qq{summary="" cellspacing="0" width="100%"};
+    $html .=
+      qq|<table class="columnar_table$noborder" $params{__tableattrs}>\n|;
 
-  #set the number of columns in our table.  rows will be padded
-  #up to this with '&nbsp;' if they don't have that many columns
-  my $cols = $params{headings} ?
-        scalar(@{$params{headings}})
-      : max(map {scalar(@$_)} @{$params{data}});
-
-  ###figure out text alignments of each column
-  my @alignments = do {
-    if(ref $params{__align}) {
-      ref($params{__align}) eq 'ARRAY'
-	or croak '__align parameter must be either a string or an arrayref';
-      @{$params{__align}} #< just dereference it
-    } elsif($params{__align}) {
-      split '',$params{__align}; #< explode the string into an array
-    } else {
-      ('c')x$cols;
+    unless ( defined $params{__alt_freq} ) {
+        $params{__alt_freq} =
+            @{ $params{data} } > 6 ? 4
+          : @{ $params{data} } > 3 ? 2
+          :                          0;
     }
-  };
-  my %lcr = ( l => 'align="left"', c => 'align="center"', r => 'align="right"' );
-  foreach (@alignments) {
-    if($_) {
-      $_ = $lcr{$_} or croak "'$_' is not a valid column alignment";
+    unless ( defined $params{__alt_width} ) {
+        $params{__alt_width} = @{ $params{data} } > 6 ? 2 : 1;
     }
-  }
+    unless ( $params{__alt_width} < $params{__alt_freq} ) {
+        $params{__alt_width} = $params{__alt_freq} / 2;
+    }
+    unless ( defined $params{__alt_offset} ) {
+        $params{__alt_offset} = 0;
+    }
 
-  #columns headings
-  if( $params{headings} ) {
-    # Turn headings like this:
-    #  [ 'foo', undef, undef, 'bar' ]
-    # into this:
-    # <tr><th colspan="3">foo</th><th>bar</th></tr>
-    # The first column heading may not be undef.
-    unless (defined ($params{headings}->[0])) {
-      croak ("First column heading is undefined");
-    }
-    $html .= '<thead><tr>';
-    # The outer loop grabs the defined colheading; the
-    # inner loop advances over any undefs.
-    my $i = 0;
-    while ($i<@{$params{headings}}) {
-      my $colspan = 1;
-      my $align = $alignments[$i] || '';
-      my $heading = $params{headings}->[$i++] || '';
-      while (($i<@{$params{headings}}) && (!defined($params{headings}->[$i]))) {
-	$colspan++;
-	$i++;
-      }
-      $html .= "<th $align class=\"columnar_table$noborder\" colspan=\"$colspan\">$heading</th>";
-    }
-    $html .= "</tr></thead>\n";
-  }
+    #set the number of columns in our table.  rows will be padded
+    #up to this with '&nbsp;' if they don't have that many columns
+    my $cols =
+      $params{headings}
+      ? scalar( @{ $params{headings} } )
+      : max( map { scalar(@$_) } @{ $params{data} } );
 
-  $html .= "<tbody>\n";
-  my $hctr = 0;
-  my $rows_remaining_to_hilite = 0;
-  foreach my $row ( @{$params{data}} ) {
-    if( $params{__alt_freq} != 0
-	&& ($hctr++ - $params{__alt_offset})%$params{__alt_freq} == 0
-      ) {
-      $rows_remaining_to_hilite = $params{__alt_width};
-    }
-    my $hilite = do {
-      if( $rows_remaining_to_hilite ) {
-	$rows_remaining_to_hilite--;
-	'class="columnar_table bgcoloralt2"'
-      } else {
-	'class="columnar_table bgcoloralt1"'
-      }
+    ###figure out text alignments of each column
+    my @alignments = do {
+        if ( ref $params{__align} ) {
+            ref( $params{__align} ) eq 'ARRAY'
+              or croak
+              '__align parameter must be either a string or an arrayref';
+            @{ $params{__align} }    #< just dereference it
+        }
+        elsif ( $params{__align} ) {
+            split '', $params{__align};    #< explode the string into an array
+        }
+        else {
+            ('c') x $cols;
+        }
     };
-    #pad the row with &nbsp;s up to the length of the headings
-    if(@$row < $cols) {
-      $_ = '&nbsp;' foreach @{$row}[scalar(@$row)..($cols-1)];
+    my %lcr =
+      ( l => 'align="left"', c => 'align="center"', r => 'align="right"' );
+    foreach (@alignments) {
+        if ($_) {
+            $_ = $lcr{$_} or croak "'$_' is not a valid column alignment";
+        }
     }
-    $html .= "<tr>";
-    for(my $i=0;$i<@$row;$i++) {
-      my $a = $alignments[$i] || '';
-      my $c = $row->[$i] || '';
-      my $tdparams = '';
-      if(ref $c) { #< process HTML attributes if this piece of data is a hashref
-	my $d = $c;
-	$c = delete $d->{content};
-	if(my $moreclasses = delete $d->{class}) { #< add more classes if present
-	  $hilite =~ s/"$/ $moreclasses"/x;
-	}
-	if (exists $d->{'colspan'}) {    ### If exists a colspan it should not add more columns so, we increase 
-	                                 ### the column count as many times as colspan
-	    $i = $i + $d->{'colspan'};
-	}
-	$tdparams = join ' ',map { qq|$_="$d->{$_}"| } grep {$_ ne 'content'} keys %$d;
-      }
-      $html .= "<td $hilite $tdparams $a>$c</td>"
-    }
-    $html .= "</tr>\n";
-#    $html .= join( '',('<tr>',(map {"<td $hilite>$_</td>"} @$row),'</tr>'),"\n" );
-  }
-  $html .= "</tbody></table>\n";
 
-  return $html;
+    #columns headings
+    if ( $params{headings} ) {
+
+        # Turn headings like this:
+        #  [ 'foo', undef, undef, 'bar' ]
+        # into this:
+        # <tr><th colspan="3">foo</th><th>bar</th></tr>
+        # The first column heading may not be undef.
+        unless ( defined( $params{headings}->[0] ) ) {
+            croak("First column heading is undefined");
+        }
+        $html .= '<thead><tr>';
+
+        # The outer loop grabs the defined colheading; the
+        # inner loop advances over any undefs.
+        my $i = 0;
+        while ( $i < @{ $params{headings} } ) {
+            my $colspan = 1;
+            my $align   = $alignments[$i] || '';
+            my $heading = $params{headings}->[ $i++ ] || '';
+            while (( $i < @{ $params{headings} } )
+                && ( !defined( $params{headings}->[$i] ) ) )
+            {
+                $colspan++;
+                $i++;
+            }
+            $html .=
+"<th $align class=\"columnar_table$noborder\" colspan=\"$colspan\">$heading</th>";
+        }
+        $html .= "</tr></thead>\n";
+    }
+
+    $html .= "<tbody>\n";
+    my $hctr                     = 0;
+    my $rows_remaining_to_hilite = 0;
+    foreach my $row ( @{ $params{data} } ) {
+        if ( $params{__alt_freq} != 0
+            && ( $hctr++ - $params{__alt_offset} ) % $params{__alt_freq} == 0 )
+        {
+            $rows_remaining_to_hilite = $params{__alt_width};
+        }
+        my $hilite = do {
+            if ($rows_remaining_to_hilite) {
+                $rows_remaining_to_hilite--;
+                'class="columnar_table bgcoloralt2"';
+            }
+            else {
+                'class="columnar_table bgcoloralt1"';
+            }
+        };
+
+        #pad the row with &nbsp;s up to the length of the headings
+        if ( @$row < $cols ) {
+            $_ = '&nbsp;' foreach @{$row}[ scalar(@$row) .. ( $cols - 1 ) ];
+        }
+        $html .= "<tr>";
+        for ( my $i = 0 ; $i < @$row ; $i++ ) {
+            my $a = $alignments[$i] || '';
+            my $c = $row->[$i]      || '';
+            my $tdparams = '';
+            if ( ref $c )
+            {    #< process HTML attributes if this piece of data is a hashref
+                my $d = $c;
+                $c = delete $d->{content};
+                if ( my $moreclasses = delete $d->{class} )
+                {    #< add more classes if present
+                    $hilite =~ s/"$/ $moreclasses"/x;
+                }
+                if ( exists $d->{'colspan'} )
+                { ### If exists a colspan it should not add more columns so, we increase
+                    ### the column count as many times as colspan
+                    $i = $i + $d->{'colspan'};
+                }
+                $tdparams = join ' ',
+                  map { qq|$_="$d->{$_}"| } grep { $_ ne 'content' } keys %$d;
+            }
+            $html .= "<td $hilite $tdparams $a>$c</td>";
+        }
+        $html .= "</tr>\n";
+
+#    $html .= join( '',('<tr>',(map {"<td $hilite>$_</td>"} @$row),'</tr>'),"\n" );
+    }
+    $html .= "</tbody></table>\n";
+
+    return $html;
 }
 
 =head2 commify_number
@@ -937,8 +1001,6 @@ sub columnar_table_html {
 =cut
 
 # just handled by the importation of CXGN::Tools::Text::commify_number above
-
-
 
 =head2 hierarchical_selectboxes_html
 
@@ -966,80 +1028,101 @@ sub columnar_table_html {
 =cut
 
 sub hierarchical_selectboxes_html {
-  my %params = @_;
+    my %params = @_;
 
-  #assemble javascript datastructure holding the options for the contents of
-  #our dependent select box
-  our $sel_id;
-  $sel_id++;
-  my $seloptions = "seloptions$sel_id";
-  $params{parentsel}{id} ||= "hsparent$sel_id";
-#  $params{childsel}{id} ||= "hschild$sel_id";
+    #assemble javascript datastructure holding the options for the contents of
+    #our dependent select box
+    our $sel_id;
+    $sel_id++;
+    my $seloptions = "seloptions$sel_id";
+    $params{parentsel}{id} ||= "hsparent$sel_id";
 
-  #since this routine knows nothing about the form it's going to be used in,
-  #we can't just use javascript to initialize the dependent select box to
-  #its proper state based on the initial state of the parent select box.  Thus,
-  #we figure out the proper state and initialize it to that statically in HTML
-  #make sure that the child select box has the proper options initially for
-  #whatever is selected in the parent select box
-  my $i = 0;
-  #index in the options array of the initially selected value in the parent box
-  my $parent_selected_index = 0;
-  foreach my $option (@{$params{parentsel}{choices}}) {
-    my $val = ref($option) ? $option->[0] : $option;
-    if( $params{parentsel}{selected}
-	&& $val eq $params{parentsel}{selected}
-      ) {
-      $parent_selected_index = $i;
-      last;
-    } else {
-      $i++;
+    #  $params{childsel}{id} ||= "hschild$sel_id";
+
+   #since this routine knows nothing about the form it's going to be used in,
+   #we can't just use javascript to initialize the dependent select box to
+   #its proper state based on the initial state of the parent select box.  Thus,
+   #we figure out the proper state and initialize it to that statically in HTML
+   #make sure that the child select box has the proper options initially for
+   #whatever is selected in the parent select box
+    my $i = 0;
+
+   #index in the options array of the initially selected value in the parent box
+    my $parent_selected_index = 0;
+    foreach my $option ( @{ $params{parentsel}{choices} } ) {
+        my $val = ref($option) ? $option->[0] : $option;
+        if (   $params{parentsel}{selected}
+            && $val eq $params{parentsel}{selected} )
+        {
+            $parent_selected_index = $i;
+            last;
+        }
+        else {
+            $i++;
+        }
     }
-  }
 
-  $params{childsel}{choices} = $params{childchoices}[$parent_selected_index] || [];
+    $params{childsel}{choices} = $params{childchoices}[$parent_selected_index]
+      || [];
 
-  #add an onChange event handler to the parent select box
-  my $onchange = qq|CXGN.Page.FormattingHelpers.update_hierarchical_selectbox(document.getElementById('$params{parentsel}{id}').selectedIndex,$seloptions,document.getElementById('$params{parentsel}{id}').form.$params{childsel}{name})|;
+    #add an onChange event handler to the parent select box
+    my $onchange =
+qq|CXGN.Page.FormattingHelpers.update_hierarchical_selectbox(document.getElementById('$params{parentsel}{id}').selectedIndex,$seloptions,document.getElementById('$params{parentsel}{id}').form.$params{childsel}{name})|;
 
-  if(ref $params{parentsel}{params}) {
-    $params{parentsel}{params}{onchange} = $onchange.'; '.$params{parentsel}{params}{onchange};
-  } else {
-    $params{parentsel}{params} = qq|onchange="$onchange;" |.( $params{parentsel}{params} || '' );
-  }
+    if ( ref $params{parentsel}{params} ) {
+        $params{parentsel}{params}{onchange} =
+          $onchange . '; ' . $params{parentsel}{params}{onchange};
+    }
+    else {
+        $params{parentsel}{params} =
+          qq|onchange="$onchange;" | . ( $params{parentsel}{params} || '' );
+    }
 
-  #now make the html for the parent select box
-  my $parentselbox = simple_selectbox_html( %{$params{parentsel}} );
-  #and for the child select box
-  my $childselbox = simple_selectbox_html( %{$params{childsel}} );
+    #now make the html for the parent select box
+    my $parentselbox = simple_selectbox_html( %{ $params{parentsel} } );
 
-  #and the javascript enumerating the options and initializing the box
-  my $options_js =
-    #is an array
-    "var $seloptions = [ "
-    #of arrays
-    .join(",",( map {"\n                            [ "
-		       #of options
-		       .join(', ',( map { #consisting of quoted names and values
-                                          ref $_ ? "new Option('$_->[1]','$_->[0]')"
-                                                 : "new Option('$_','$_')"
-                                        } @$_
-				  )
-			    )
-		       ."]"
-                      } @{$params{childchoices}}
-		)
-	 )
-    ."\n                           ];\n$onchange";
-  #NOTE: a lot of the seemingly useless spaces above are for nice indentation
-  #      in the output
+    #and for the child select box
+    my $childselbox = simple_selectbox_html( %{ $params{childsel} } );
 
+    #and the javascript enumerating the options and initializing the box
+    my $options_js =
 
-  if(wantarray) {
-    return ($parentselbox,$childselbox,$options_js);
-  } else {
-  #and put them in context
-    return <<EOH;
+      #is an array
+      "var $seloptions = [ "
+
+      #of arrays
+      . join(
+        ",",
+        (
+            map {
+                "\n                            [ "
+
+                  #of options
+                  . join(
+                    ', ',
+                    (
+                        map {    #consisting of quoted names and values
+                            ref $_
+                              ? "new Option('$_->[1]','$_->[0]')"
+                              : "new Option('$_','$_')"
+                          } @$_
+                    )
+                  )
+                  . "]"
+              } @{ $params{childchoices} }
+        )
+      ) . "\n                           ];\n$onchange";
+
+    #NOTE: a lot of the seemingly useless spaces above are for nice indentation
+    #      in the output
+
+    if (wantarray) {
+        return ( $parentselbox, $childselbox, $options_js );
+    }
+    else {
+
+        #and put them in context
+        return <<EOH;
 $parentselbox
 $childselbox
 <script language="JavaScript" type="text/javascript">
@@ -1048,7 +1131,7 @@ $options_js
 -->
 </script>
 EOH
-  }
+    }
 }
 
 =head2 numerical_range_input_html
@@ -1064,41 +1147,45 @@ EOH
 =cut
 
 my $numerical_range_input_unique_id = 0;
+
 sub numerical_range_input_html {
-  my %params = @_;
+    my %params = @_;
 
-  3 == grep {$params{$_}[0]} qw/compare value1 value2/
-    or croak 'Must provide names for each of the three form fields that make up a numerical range input';
+    3 == grep { $params{$_}[0] } qw/compare value1 value2/
+      or croak
+'Must provide names for each of the three form fields that make up a numerical range input';
 
-  if(defined($params{compare}[1])) {
-    grep {$params{compare}[1] eq $_} qw/gt lt bet eq/
-      or croak "Invalid initial value for comparison box, you passed '$params{compare}[1]'";
-  }
+    if ( defined( $params{compare}[1] ) ) {
+        grep { $params{compare}[1] eq $_ } qw/gt lt bet eq/
+          or croak
+"Invalid initial value for comparison box, you passed '$params{compare}[1]'";
+    }
 
-  my $id = 'rangeinput'.$numerical_range_input_unique_id++;
+    my $id = 'rangeinput' . $numerical_range_input_unique_id++;
 
-  my $compare_select = simple_selectbox_html(name     => $params{compare}[0],
-					     choices  => [
-							  ['gt' , 'greater than'],
-							  ['lt' , 'less than' ],
-							  ['bet', 'between' ],
-							  ['eq' , 'exactly' ],
-							 ],
-					     selected => $params{compare}[1],
-					     id       => $id.'_r',
-					     params   => qq|onchange="CXGN.Page.FormattingHelpers.update_numerical_range_input('$id','$params{units}')"|
-					    );
+    my $compare_select = simple_selectbox_html(
+        name    => $params{compare}[0],
+        choices => [
+            [ 'gt',  'greater than' ],
+            [ 'lt',  'less than' ],
+            [ 'bet', 'between' ],
+            [ 'eq',  'exactly' ],
+        ],
+        selected => $params{compare}[1],
+        id       => $id . '_r',
+        params =>
+qq|onchange="CXGN.Page.FormattingHelpers.update_numerical_range_input('$id','$params{units}')"|
+    );
 
-  $params{value1}[1] = '' unless defined($params{value1}[1]);
-  $params{value2}[1] = '' unless defined($params{value2}[1]);
+    $params{value1}[1] = '' unless defined( $params{value1}[1] );
+    $params{value2}[1] = '' unless defined( $params{value2}[1] );
 
-return <<EOH;
+    return <<EOH;
 $compare_select&nbsp;<input type="text" size="8" name="$params{value1}[0]" value="$params{value1}[1]" />&nbsp;<span id="${id}_m">and</span>&nbsp;<span id="${id}_2" ><input size="8" type="text" name="$params{value2}[0]" value="$params{value2}[1]" />&nbsp;</span><span id="${id}_e">$params{units}</span>
 <script language="JavaScript" type="text/javascript">
   CXGN.Page.FormattingHelpers.update_numerical_range_input('$id','$params{units}');
 </script>
 EOH
-
 
 }
 
@@ -1123,30 +1210,31 @@ EOH
 =cut
 
 sub conditional_like_input_html {
-  my ($name,$type_init,$string_init, $size) = @_;
+    my ( $name, $type_init, $string_init, $size ) = @_;
 
-  #check arguments
-  $name or croak 'must provide a name to conditional_like_input_html()';
-  !$type_init
-    or grep {$type_init eq $_} qw/starts_with ends_with contains exactly/
+    #check arguments
+    $name or croak 'must provide a name to conditional_like_input_html()';
+    !$type_init
+      or grep { $type_init eq $_ } qw/starts_with ends_with contains exactly/
       or croak <<EOC;
 conditional_like_input_html: invalid initial match type $type_init, must be
 starts_with, ends_with, contains, or exactly
 EOC
-  $string_init ||= '';
-  $size ||= '30';
-  #make the select box
-  my $matchtype_select = simple_selectbox_html( name     => $name.'_matchtype',
-						selected => $type_init,
-						choices  => [ 'contains',
-							      ['starts_with','starts with'],
-							      ['ends_with','ends with'],
-							      'exactly',
-							    ],
-					      );
-  chomp $matchtype_select; #remove newline, cause some browsers are idiotic.
-  #return the html
-  return <<EOHTML;
+    $string_init ||= '';
+    $size        ||= '30';
+
+    #make the select box
+    my $matchtype_select = simple_selectbox_html(
+        name     => $name . '_matchtype',
+        selected => $type_init,
+        choices  => [
+            'contains', [ 'starts_with', 'starts with' ],
+            [ 'ends_with', 'ends with' ], 'exactly',
+        ],
+    );
+    chomp $matchtype_select;   #remove newline, cause some browsers are idiotic.
+                               #return the html
+    return <<EOHTML;
 $matchtype_select<input name="$name" value="$string_init" size="$size" type="text" />
 EOHTML
 }
@@ -1174,21 +1262,20 @@ EOHTML
 
 =cut
 
-
 sub tooltipped_text {
 
-  my ($text, $tooltip, $class) = @_;
+    my ( $text, $tooltip, $class ) = @_;
 
-  $class||='help';
+    $class ||= 'information';
 
-  $tooltip =~ s/'/\\'/g;
-  $tooltip =~ s!\n! !g;
-  $tooltip = HTML::Entities::encode_entities($tooltip);
+    $tooltip =~ s/'/\\'/g;
+    $tooltip =~ s!\n! !g;
+    $tooltip = HTML::Entities::encode_entities($tooltip);
 
-  return qq{<span class="$class" onmouseover="return escape('$tooltip')">$text</span>};
+    return
+qq{<span class="$class" onmouseover="return escape('$tooltip')">$text</span>};
 
 }
-
 
 =head2 multilevel_mode_selector_html
 
@@ -1272,204 +1359,238 @@ sub tooltipped_text {
 # IMPLEMENTATION OVERVIEW: first we parse
 
 sub multilevel_mode_selector_html {
-  my ($config,$mode_name) = @_;
+    my ( $config, $mode_name ) = @_;
 
-  # parse our configuration if necessary
-  my %conf = ref($config) ? %{dclone($config)} : Config::General->new(-String => $config)->getall;
+    # parse our configuration if necessary
+    my %conf =
+      ref($config)
+      ? %{ dclone($config) }
+      : Config::General->new( -String => $config )->getall;
 
-  ($mode_name) = %conf unless $mode_name;
-  #warn "mode name is $mode_name\n";
+    ($mode_name) = %conf unless $mode_name;
 
-  my $url_pattern = delete($conf{url_pattern}) || '?mode=%m';
+    #warn "mode name is $mode_name\n";
 
-  # these are the colors for the various mode selection levels
-  my @colors = qw/ e6e6e6 c2c2ff 9797c7 333333 /;
+    my $url_pattern = delete( $conf{url_pattern} ) || '?mode=%m';
 
-  #now use the above recursive function to find and set active => 1 appropriately for each mode level
-  my @selected_modes;
-  _ml_find_active('',\%conf,'',$mode_name,\@selected_modes);
-#   use Data::Dumper;
-#   warn Dumper(\@selected_modes);
+    # these are the colors for the various mode selection levels
+    my @colors = qw/ e6e6e6 c2c2ff 9797c7 333333 /;
 
-#   use Data::Dumper;
-#   print  Dumper(\%conf);
+#now use the above recursive function to find and set active => 1 appropriately for each mode level
+    my @selected_modes;
+    _ml_find_active( '', \%conf, '', $mode_name, \@selected_modes );
 
-  #TODO: transform the conf into a more standard tree structure, which is easier to work with
-  #      and rewrite render code for it
-  sub _xform_tree {
-    my ($def,$stem_name) = @_;
-    my @child_keys = _ml_child_keys($def);
-    my @children;
-    foreach (@child_keys) {
-      my $mn = $def->{$_}->{ml_modename} = $stem_name ? $stem_name.'_'.$_ : $_;
-      push @{$def->{ml_children}}, $def->{$_};
-      _xform_tree(delete $def->{$_}, $mn);
+    #   use Data::Dumper;
+    #   warn Dumper(\@selected_modes);
+
+    #   use Data::Dumper;
+    #   print  Dumper(\%conf);
+
+#TODO: transform the conf into a more standard tree structure, which is easier to work with
+#      and rewrite render code for it
+    sub _xform_tree {
+        my ( $def, $stem_name ) = @_;
+        my @child_keys = _ml_child_keys($def);
+        my @children;
+        foreach (@child_keys) {
+            my $mn = $def->{$_}->{ml_modename} =
+              $stem_name ? $stem_name . '_' . $_ : $_;
+            push @{ $def->{ml_children} }, $def->{$_};
+            _xform_tree( delete $def->{$_}, $mn );
+        }
     }
-  }
-  _xform_tree(\%conf,'');
+    _xform_tree( \%conf, '' );
 
-#   use Data::Dumper;
-#   die Dumper($categories);
+    #   use Data::Dumper;
+    #   die Dumper($categories);
 
-  #now call the rendering function to recursively render each level
-  #use Data::Dumper;
-  #print Dumper(\%conf);
-  return ( _ml_render( $url_pattern, 1, \%conf ),
-	   @selected_modes
-	 );
+    #now call the rendering function to recursively render each level
+    #use Data::Dumper;
+    #print Dumper(\%conf);
+    return ( _ml_render( $url_pattern, 1, \%conf ), @selected_modes );
 }
 
 sub _ml_max_stratum_size {
-  my ($tree) = @_;
-  my @q = ($tree->{ml_children});
-  my $max = 0;
-  while(@q) {
-    my $set = shift @q;
-    $max = @$set if $max < @$set;
-    push @q,$_->{ml_children} foreach @$set;
-  }
-  return $max;
+    my ($tree) = @_;
+    my @q      = ( $tree->{ml_children} );
+    my $max    = 0;
+    while (@q) {
+        my $set = shift @q;
+        $max = @$set if $max < @$set;
+        push @q, $_->{ml_children} foreach @$set;
+    }
+    return $max;
 }
 
 # multilevel helper function:
 # recursion to figure out which category is active in each level
 sub _ml_find_active {
-  my ($curr_name,$curr_entry,$stem,$selected_mode_name,$active_levels) = @_;
-  #warn join(',',($curr_name,$curr_entry,$stem,$selected_mode_name,$active_levels))."\n";
-  my $level_name = $stem ? $stem.'_'.$curr_name : $curr_name;
-  #warn "lev name is $level_name\n";
-  my @child_keys = _ml_child_keys($curr_entry);
-  if ($selected_mode_name eq $level_name ) {
-    $curr_entry->{ml_active} = 1;
-    unshift @$active_levels,$curr_name;
-    return 1;
-  } elsif ( $selected_mode_name =~ /^$level_name/ ) {
-    # might match one of our children
-    #warn "hmm, check children\n";
-    foreach my $child_name (@child_keys) {
-      if ( _ml_find_active( $child_name, $curr_entry->{$child_name}, $level_name, $selected_mode_name, $active_levels ) ) {
-	#this returns true, one of my children must match
-	unshift @$active_levels,$curr_name if $curr_name;
-	$curr_entry->{ml_active} = 1;
-	return 1;
-      }
+    my ( $curr_name, $curr_entry, $stem, $selected_mode_name, $active_levels ) =
+      @_;
+
+#warn join(',',($curr_name,$curr_entry,$stem,$selected_mode_name,$active_levels))."\n";
+    my $level_name = $stem ? $stem . '_' . $curr_name : $curr_name;
+
+    #warn "lev name is $level_name\n";
+    my @child_keys = _ml_child_keys($curr_entry);
+    if ( $selected_mode_name eq $level_name ) {
+        $curr_entry->{ml_active} = 1;
+        unshift @$active_levels, $curr_name;
+        return 1;
     }
-  }
-  #warn "that's all\n";
-  return 0;
+    elsif ( $selected_mode_name =~ /^$level_name/ ) {
+
+        # might match one of our children
+        #warn "hmm, check children\n";
+        foreach my $child_name (@child_keys) {
+            if (
+                _ml_find_active(
+                    $child_name, $curr_entry->{$child_name},
+                    $level_name, $selected_mode_name,
+                    $active_levels
+                )
+              )
+            {
+
+                #this returns true, one of my children must match
+                unshift @$active_levels, $curr_name if $curr_name;
+                $curr_entry->{ml_active} = 1;
+                return 1;
+            }
+        }
+    }
+
+    #warn "that's all\n";
+    return 0;
 }
 
 # check whether a given hash key is reserved
-our %ml_reserved = map { $_=>1 } qw/ ml_active ml_modename ml_children text sort_index ml_parent_id ml_container_id ml_id tooltip/;
+our %ml_reserved = map { $_ => 1 }
+  qw/ ml_active ml_modename ml_children text sort_index ml_parent_id ml_container_id ml_id tooltip/;
+
 sub _ml_is_reserved_key {
-  return  $ml_reserved{+shift};
+    return $ml_reserved{ +shift };
 }
+
 # return a list of unreserved keys in the given hash
 sub _ml_child_keys {
-  return grep !_ml_is_reserved_key($_), keys %{+shift};
+    return grep !_ml_is_reserved_key($_), keys %{ +shift };
 }
 
 # multilevel helper function, recursively renders the HTML for the widget
 
 our $ml_id_ctr = 0;
+
 sub _ml_render {
-  #my ($inactive_color,$active_colors,$level_count, %defs) = @_;
-  my ($url_pattern, $active, $tree) = @_;
-  #use Data::Dumper;
-  #print Dumper($defs);
 
-  #make a global id ctr for this whole multilevel widget
-  $ml_id_ctr = 0;
-  my $thisml = $ml_id_ctr++;
+    #my ($inactive_color,$active_colors,$level_count, %defs) = @_;
+    my ( $url_pattern, $active, $tree ) = @_;
 
-  #sorts a single set of children by sort_index, if present
-  sub _sort_nodes {
-    no warnings 'uninitialized';
-    my ($nodelist) = @_;
-    sort {$a->{sort_index} <=> $b->{sort_index}} @$nodelist
-  }
+    #use Data::Dumper;
+    #print Dumper($defs);
 
-  # go through all the nodes and assign them an id, building an index
-  # of the parent and children for each ID
-  #use Data::Dumper;
-#  print Dumper($tree);
-  my %id_based_index;
-  sub _assign_ids_and_build_idx {
-    my ($self,$parent_id,$idx) = @_;
-    my $id = "ml_".$ml_id_ctr++;
-    $self->{ml_id} = $id;
-    $idx->{$id} = $self;
-    $self->{ml_parent_id} = $parent_id if $parent_id;
-    _assign_ids_and_build_idx($_,$id,$idx) foreach @{$self->{ml_children}};
-  }
-  _assign_ids_and_build_idx($_,'',\%id_based_index) foreach @{$tree->{ml_children}};
-  #warn Dumper($tree);
-  #warn Dumper(\%id_based_index);
+    #make a global id ctr for this whole multilevel widget
+    $ml_id_ctr = 0;
+    my $thisml = $ml_id_ctr++;
 
-  my $button_html = '';
-
-  my @active_button_ids; #< one per depth, indexed by depth
-  my @active_group_ids; #< one per depth, indexed by depth
-  my @traverse_queue = ( [0,_sort_nodes($tree->{ml_children})] ); #< queue used for breadth-first traversal of the tree structure of the mode definitions
-  my $max_stratum_size = _ml_max_stratum_size($tree);
-  while( @traverse_queue ) {
-    my ($depth,@node_set) = @{shift @traverse_queue};
-
-    my $group_html = '';
-    my $group_is_active = 0;
-
-    my $group_id = 'ml_'.$ml_id_ctr++;
-
-    my $width_rel = sprintf('%0.0f%%',92/$max_stratum_size*@node_set);
-    foreach my $node_def (@node_set) {
-      my $name = $node_def->{ml_modename};
-      my @subnodes = _sort_nodes($node_def->{ml_children});
-      my $id = $node_def->{ml_id};
-
-      #record the depth in the node_def
-      $node_def->{ml_depth} = $depth;
-
-      my $title = $node_def->{tooltip} ? qq| title="$node_def->{tooltip}"| : '';
-      my $link_class = "multilevel_modesel";
-      if(@subnodes) {
-	$link_class .= '_parent';
-      }
-      if( $node_def->{ml_active} ) {
-	$link_class .= '_active';
-	$active_button_ids[$depth] = $id;
-	$active_group_ids[$depth] = $group_id;
-	die 'assertion failed' if $group_is_active;
-	$group_is_active = 1;
-      }
-
-      my $width = sprintf('%0.0f%%',92/$max_stratum_size);
-      my $href = qq| href="$url_pattern"|;
-      $href =~ s/\%m/$name/;
-      $group_html .= qq|<td style="width: $width"><a id="$id" class="$link_class" onclick="ml_choose_$thisml(this.id); return false"$href$title>$node_def->{text}</a></td>|;
-
-      #schedule children for this breadth-first traversal
-      push @traverse_queue,[$depth+1,@subnodes] if @subnodes;
+    #sorts a single set of children by sort_index, if present
+    sub _sort_nodes {
+        no warnings 'uninitialized';
+        my ($nodelist) = @_;
+        sort { $a->{sort_index} <=> $b->{sort_index} } @$nodelist;
     }
 
-    my $active = $group_is_active ? '_active' : '';
-    $button_html .= qq|<div id="$group_id" class="multilevel_modesel_level_$depth multilevel_modesel$active"> <table style="width: $width_rel"><tr>$group_html</tr></table></div>\n|;
-  }
+    # go through all the nodes and assign them an id, building an index
+    # of the parent and children for each ID
+    #use Data::Dumper;
+    #  print Dumper($tree);
+    my %id_based_index;
 
-  my $js_idx = $json->to_json(\%id_based_index);
+    sub _assign_ids_and_build_idx {
+        my ( $self, $parent_id, $idx ) = @_;
+        my $id = "ml_" . $ml_id_ctr++;
+        $self->{ml_id}        = $id;
+        $idx->{$id}           = $self;
+        $self->{ml_parent_id} = $parent_id if $parent_id;
+        _assign_ids_and_build_idx( $_, $id, $idx )
+          foreach @{ $self->{ml_children} };
+    }
+    _assign_ids_and_build_idx( $_, '', \%id_based_index )
+      foreach @{ $tree->{ml_children} };
 
-#   my $js_parents = objToJson(\%parent_ids);
-#   my $js_children = objToJson(do {
-#     my @rev_parents = reverse %parent_ids;
-#     my $children = {};
-#     while( my ($c,$p) = splice @rev_parents,0,2 ) {
-#       push @{$children->{$c}},$p;
-#     }
-#     $children
-#   });
-  my $js_active_buttons = $json->to_json( \@active_button_ids );
-  my $js_active_groups  = $json->to_json( \@active_group_ids  );
+    #warn Dumper($tree);
+    #warn Dumper(\%id_based_index);
 
-  return <<EOH;
+    my $button_html = '';
+
+    my @active_button_ids;    #< one per depth, indexed by depth
+    my @active_group_ids;     #< one per depth, indexed by depth
+    my @traverse_queue =
+      ( [ 0, _sort_nodes( $tree->{ml_children} ) ] )
+      ; #< queue used for breadth-first traversal of the tree structure of the mode definitions
+    my $max_stratum_size = _ml_max_stratum_size($tree);
+    while (@traverse_queue) {
+        my ( $depth, @node_set ) = @{ shift @traverse_queue };
+
+        my $group_html      = '';
+        my $group_is_active = 0;
+
+        my $group_id = 'ml_' . $ml_id_ctr++;
+
+        my $width_rel =
+          sprintf( '%0.0f%%', 92 / $max_stratum_size * @node_set );
+        foreach my $node_def (@node_set) {
+            my $name     = $node_def->{ml_modename};
+            my @subnodes = _sort_nodes( $node_def->{ml_children} );
+            my $id       = $node_def->{ml_id};
+
+            #record the depth in the node_def
+            $node_def->{ml_depth} = $depth;
+
+            my $title =
+              $node_def->{tooltip} ? qq| title="$node_def->{tooltip}"| : '';
+            my $link_class = "multilevel_modesel";
+            if (@subnodes) {
+                $link_class .= '_parent';
+            }
+            if ( $node_def->{ml_active} ) {
+                $link_class .= '_active';
+                $active_button_ids[$depth] = $id;
+                $active_group_ids[$depth]  = $group_id;
+                die 'assertion failed' if $group_is_active;
+                $group_is_active = 1;
+            }
+
+            my $width = sprintf( '%0.0f%%', 92 / $max_stratum_size );
+            my $href = qq| href="$url_pattern"|;
+            $href =~ s/\%m/$name/;
+            $group_html .=
+qq|<td style="width: $width"><a id="$id" class="$link_class" onclick="ml_choose_$thisml(this.id); return false"$href$title>$node_def->{text}</a></td>|;
+
+            #schedule children for this breadth-first traversal
+            push @traverse_queue, [ $depth + 1, @subnodes ] if @subnodes;
+        }
+
+        my $active = $group_is_active ? '_active' : '';
+        $button_html .=
+qq|<div id="$group_id" class="multilevel_modesel_level_$depth multilevel_modesel$active"> <table style="width: $width_rel"><tr>$group_html</tr></table></div>\n|;
+    }
+
+    my $js_idx = $json->to_json( \%id_based_index );
+
+    #   my $js_parents = objToJson(\%parent_ids);
+    #   my $js_children = objToJson(do {
+    #     my @rev_parents = reverse %parent_ids;
+    #     my $children = {};
+    #     while( my ($c,$p) = splice @rev_parents,0,2 ) {
+    #       push @{$children->{$c}},$p;
+    #     }
+    #     $children
+    #   });
+    my $js_active_buttons = $json->to_json( \@active_button_ids );
+    my $js_active_groups  = $json->to_json( \@active_group_ids );
+
+    return <<EOH;
 <script>
   var ml_idx_$thisml = $js_idx;
   var ml_active_buttons_$thisml = $js_active_buttons;
@@ -1503,7 +1624,7 @@ sub _ml_render {
       ml_unset_active(d,activelist);
     }
     activelist[depth] = el.id;
-    el.className += '_active';
+m    el.className += '_active';
   }
 
   var ml_choose_$thisml = function( clicked_id ) {
@@ -1531,11 +1652,9 @@ $button_html
 EOH
 }
 
-
 ###
-1;# do not remove
+1;    # do not remove
 ###
-
 
 =head1 AUTHOR
 

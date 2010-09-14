@@ -1,0 +1,18 @@
+<%args>
+    $feature
+    $title => 'Exon Structure'
+</%args>
+<%init>
+    use SGN::View::Feature qw/gbrowse_image_url gbrowse_link/;
+</%init>
+<%perl>
+    my $img_url = gbrowse_image_url($feature);
+    my $link    = gbrowse_link($feature);
+</%perl>
+
+<&| /page/info_section.mas,
+    title => $title,
+    collapsible => 1,
+&>
+<a href="<% $link %>"><img border="0" src="<% $img_url %>"></a>
+</&>

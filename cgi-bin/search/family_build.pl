@@ -1,5 +1,6 @@
 #!/usr/bin/perl -w
 use strict;
+use warnings;
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw/  page_title_html
                                        blue_section_html  /;
@@ -7,8 +8,8 @@ use GD::Graph::bars;
 use GD::Text;
 use GD;
 use File::Temp;
-use CXGN::VHost;
 use CXGN::DB::Connection;
+use CatalystX::GlobalContext '$c';
 
 my $page = CXGN::Page->new( "SGN Gene Family Build", "Chenwei Lin");
 my ($family_build_sum_q, $total_family_q, $total_gene_q, $other_build_q, $organism_member_q, $family_organism_q, $family_size_q);
@@ -133,7 +134,6 @@ foreach (sort {$organism_gene_count{$b} <=> $organism_gene_count{$a}} keys %orga
 #Other builds of the same group
 my %other_build = ();
 my %other_build_id = ();
-my $other_build_content;
 
 $other_build_q->execute($group_id, $build_nr);
 while (my ($other_build_id, $other_build_nr, $other_i_value) = $other_build_q->fetchrow_array())
@@ -190,9 +190,8 @@ while (my ($count) = $family_size_q->fetchrow_array()){
 ###############################################
 #Draw bar chart
 #First generte a random file.
-my $vhost_conf = CXGN::VHost->new();
-my $html_root_path = $vhost_conf->get_conf('basepath');
-my $doc_path = $vhost_conf->get_conf('tempfiles_subdir').'/family_images';
+my $html_root_path = $c->config->{'basepath'};
+my $doc_path = $c->config->{'tempfiles_subdir'}.'/family_images';
 my $path = $html_root_path . $doc_path;
 my $tmp = new File::Temp(
                         DIR => $path,

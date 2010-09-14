@@ -1,7 +1,7 @@
 
 use strict;
+use CGI ();
 
-use Apache2::Request;
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw / blue_section_html page_title_html /;
 use CXGN::Insitu::Image;
@@ -20,12 +20,11 @@ my %args =();
 # the parameters because uploading a file will cause the
 # page object not to receive any of the parameters.
 #
-my $request = shift;
-my $apache = Apache2::Request->instance($request);
-$args{image_id} = $apache->param("image_id");
-$args{experiment_id} = $apache->param("experiment_id");
-$args{action}=$apache->param("action");
-$args{upload_file}=$apache->param("upload_file");
+my $cgi = CGI->new;
+$args{image_id} = $cgi->param("image_id");
+$args{experiment_id} = $cgi->param("experiment_id");
+$args{action}=$cgi->param("action");
+$args{upload_file}=$cgi->param("upload_file");
 
 # now that we got everthing safely, let's initiate the page object
 #
@@ -71,7 +70,7 @@ if ($args{action} eq "new") {
     exit();
 }
 elsif ($args{action} eq "upload") { 
-    upload($dbh, $apache, $image, %args);
+    upload($dbh, $cgi, $image, %args);
 }    
 else { 
     my $page = CXGN::Page->new();
@@ -80,13 +79,14 @@ else {
 
 sub upload { 
     my $dbh = shift;
-    my $apache = shift;
+    my $cgi = shift;
     my $image = shift;
     my %args = @_;
 
     # deal with the upload options
     #
-    my $upload = $apache->upload();
+    # TODO fix this upload
+    my $upload = $cgi->upload();
     my $upload_fh;
 
     my $experiment = CXGN::Insitu::Experiment->new($dbh, $image->get_experiment_id());
