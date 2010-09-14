@@ -4,7 +4,8 @@ use warnings;
 use Test::More;
 
 use CXGN::BlastDB;
-use Test::WWW::Mechanize;
+use lib 't/lib';
+use SGN::Test::WWW::Mechanize;
 use HTML::Entities;
 use IPC::Cmd qw/ can_run /;
 
@@ -21,7 +22,7 @@ unless ( $test_blast_db ) {
     plan skip_all => 'no test BLAST db';
 }
 
-my $urlbase = "$ENV{SGN_TEST_SERVER}/tools/blast/";
+my $urlbase = "/tools/blast/";
 my $simple_input = "$urlbase/index.pl";
 my $advanced_input = "$urlbase/index.pl?interface_type=1";
 
@@ -32,7 +33,7 @@ my @good_seqs = (
 
 for my $seq (@good_seqs) {
     for my $input_page ( $simple_input, $advanced_input ) {
-        my $mech = Test::WWW::Mechanize->new;
+        my $mech = SGN::Test::WWW::Mechanize->new;
         $mech->get_ok( $input_page );
 
         $mech->content_contains('NCBI BLAST');
@@ -66,7 +67,7 @@ my %errors  = (
 
 while( my ($input,$error) = each %errors ) {
 
-  my $mech = Test::WWW::Mechanize->new;
+  my $mech = SGN::Test::WWW::Mechanize->new;
   $mech->get_ok( $advanced_input );
 
   $mech->submit_form_ok({ form_name => 'blastform',
