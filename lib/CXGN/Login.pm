@@ -45,7 +45,6 @@ use Digest::MD5 qw(md5);
 use String::Random;
 
 use CXGN::Cookie;
-use SGN::Context;
 
 use CatalystX::GlobalContext '$c';
 
@@ -83,7 +82,7 @@ sub new {
             last;
         }
     }
-    $self->{conf_object} = SGN::Context->new;
+    $self->{conf_object} = $c || do{ require SGN::Context; SGN::Context->new };
     return $self;
 }
 

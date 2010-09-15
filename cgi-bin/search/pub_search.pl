@@ -27,7 +27,7 @@ $page->jsan_use("CXGN.Phenome.Publication");
 $page->header();
 
 print page_title_html('SGN Publication search');
-my $dbh = CXGN::DB::Connection->new("public");
+my $dbh = CXGN::DB::Connection->new;
 
 #create the search and query objects
 my $search = CXGN::Publication->new;
@@ -80,7 +80,7 @@ if (%params) {
         my @stat_options = ( "curated", "pending", "irrelevant", "no gene" );
         my $stat_options = qq|<option value=""></option>|;
         foreach my $s (@stat_options) {
-            my $selected = qq|selected="selected"| if $s eq $stat || undef;
+            my $selected = qq|selected="selected"| if $s eq $stat || '';
             $stat_options .= qq|<option value="$s" $selected >$s</option>|;
         }
         my $stats = $stat;
@@ -97,8 +97,7 @@ qq|<select id="pub_stat" onchange="Publication.updatePubCuratorStat(this.value, 
         my $curator_options = qq|<option value=""></option>|;
         for my $curator_id ( keys %names ) {
             my $curator  = $names{$curator_id};
-            my $selected = qq|selected="selected"|
-              if $curator_id == $assigned_to_id || undef;
+            my $selected = qq|selected="selected"| if $curator_id == $assigned_to_id || '';
             $curator_options .=
               qq|<option value="$curator_id" $selected>$curator</option>|;
         }

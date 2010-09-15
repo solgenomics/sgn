@@ -144,12 +144,12 @@ if (@$accessions) {
       if ( $no_image_count < 26 ) {
 	$individual_name = $individualHash{$individual_id};
 	$html .=
-	  qq|<a href="individual.pl?individual_id=$individual_id">$individual_name</a>&nbsp|;###$individual_obsolete_link |;
+	  qq|<a href="individual.pl?individual_id=$individual_id">$individual_name</a> |;###$individual_obsolete_link |;
       }
       else {
 	$more++;
 	$more_html .=
-	  qq|<a href="individual.pl?individual_id=$individual_id">$individual_name</a>&nbsp|;###$individual_obsolete_link |;
+	  qq|<a href="individual.pl?individual_id=$individual_id">$individual_name</a> |;###$individual_obsolete_link |;
       }
     }
   }
@@ -160,7 +160,7 @@ if (@$accessions) {
 	#get_individual_obsolete_link($locus, $individual_id, $user_type);
       my $individual_name = $individualHash{$individual_id};
       $more_html .=
-	qq|<a href="/phenome/individual.pl?individual_id=$individual_id">$individual_name</a>&nbsp|;###$individual_obsolete_link |;
+	qq|<a href="/phenome/individual.pl?individual_id=$individual_id">$individual_name</a> |;###$individual_obsolete_link |;
     }
   }
   }
@@ -169,7 +169,7 @@ if ($more) {
   $html .= html_optional_show(
 			      "Accessions",
 			      "<b>See $more more accessions</b>",
-			      qq| $more_html |,
+			      $more_html,
 			      0, #< do not show by default
 			      'abstract_optional_show', #< don't use the default button-like style
 			     );

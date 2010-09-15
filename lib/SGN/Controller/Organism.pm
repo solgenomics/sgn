@@ -12,7 +12,6 @@ use namespace::autoclean;
 BEGIN { extends 'Catalyst::Controller' }
 
 use Storable;
-use Scalar::Util qw/ weaken /;
 
 use Cache::File;
 use HTTP::Status;
@@ -56,8 +55,6 @@ sub _species_summary_cache_configuration {
     my ($self) = @_;
 
     my $schema   = $self->_app->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' );
-
-    weaken $self;
 
     return 'Cache::File', {
         cache_root      => $self->_app->path_to( $self->_app->tempfiles_subdir('species_summary_cache') ),

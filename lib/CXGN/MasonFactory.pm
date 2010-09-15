@@ -48,7 +48,15 @@ use Carp;
 
 use HTML::Mason;
 
-use SGN::Context;
+use CatalystX::GlobalContext '$c';
+
+sub _context {
+    return $c || do {
+        require SGN::Context;
+        SGN::Context->instance
+      };
+
+}
 
 # =head2 new
 
@@ -72,7 +80,7 @@ use SGN::Context;
 sub new {
     my $class = shift;
     @_ and croak "new() takes no arguments\n";
-    SGN::Context->instance->_mason_interp;
+    $class->_context->_mason_interp;
 }
 
 # =head2 bare_render
@@ -113,7 +121,7 @@ sub new {
 
 sub bare_render {
     my $class = shift;
-    return SGN::Context->instance->render_mason( @_ );
+    return $class->_context->render_mason( @_ );
 }
 
 ###

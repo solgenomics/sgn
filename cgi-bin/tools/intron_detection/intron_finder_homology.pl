@@ -1,16 +1,11 @@
 use strict;
 use warnings;
-use English;
 
 use FindBin;
 use File::Spec;
-
 use Getopt::Std;
 use Pod::Usage;
-
-#use CXGN::DB::Connection;
 use CXGN::Tools::Script qw/ in_fh out_fh /;
-#use CXGN::VHost;
 
 use SGN::IntronFinder::Homology;
 
@@ -136,17 +131,9 @@ if you need to explicitly provide a path for finding blastall.
   1       AT1G05850.1     gene:2198687    exon    1768547 1768662 116     reverse
   1       AT1G05770.1     gene:2198692    GENE    1725546 1726249 704     reverse
 
-=head1 MAINTAINER
-
-your name here
-
-=head1 AUTHOR(S)
-
-Your Name, E<lt>you@cornell.eduE<gt>
-
 =head1 COPYRIGHT & LICENSE
 
-Copyright 2009 The Boyce Thompson Institute for Plant Research
+Copyright 2009-2010 The Boyce Thompson Institute for Plant Research
 
 This program is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.
