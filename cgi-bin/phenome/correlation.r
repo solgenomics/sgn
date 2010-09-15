@@ -1,12 +1,12 @@
-                                        #SNOPSIS
+ #SNOPSIS
 
-                                        #commands for running correlation analyis,
-                                        #and generating heatmap and the correlation
-                                        #coefficients and their p-values
+ #commands for running correlation analyis,
+ #and generating heatmap and the correlation
+ #coefficients and their p-values
 
 
-                                        #AUTHOR
-                                        # Isaak Y Tecle (iyt2@cornell.edu)
+ #AUTHOR
+ # Isaak Y Tecle (iyt2@cornell.edu)
 
 
 options(echo = FALSE)
@@ -14,8 +14,7 @@ options(echo = FALSE)
 library(gplots)
 library(RColorBrewer)
 library(ltm)
-                                        #library(reshape)
-
+                                        
 allargs<-commandArgs()
 print(allargs)
 
@@ -25,39 +24,43 @@ phenodata<-grep("phenodata",
                perl=TRUE,
                value=TRUE
                )
+
 cortable<-grep("corre_table",
                allargs,
                ignore.case=TRUE,
                perl=TRUE,
                value=TRUE
                )
+
 heatmap<-grep("heatmap",
                allargs,
                ignore.case=TRUE,
                perl=TRUE,
                value=TRUE
                )
+
 print(phenodata)
 print(cortable)
 print(heatmap)
 
-                                        #reading phenotype data into an R object
 
+#reading phenotype data into an R object
 phenodata<-read.csv(phenodata,
                     header=TRUE,
                     dec=".",
                     sep=",",
                     na.strings=c("NA", "-")
-                    )
+                   )
 
 phenodata$ID=NULL
 
 
-                                     #running Pearson correlation analysis
+
+#running Pearson correlation analysis
 coefpvalues<-rcor.test(phenodata,
                        method="pearson",
                        use="pairwise"
-                       )
+                      )
 
 coefficients<-coefpvalues$cor.mat
 allcordata<-coefpvalues$cor.mat
@@ -74,8 +77,8 @@ pvalues<-round(pvalues,
 
 pvalues[upper.tri(pvalues)]<-NA
 
-                                        #rounding correlation coeficients into 2 decimal places
 
+#rounding correlation coeficients into 2 decimal places
 coefficients<-round(coefficients,
                     digits=2
                    )
@@ -83,7 +86,8 @@ coefficients<-round(coefficients,
 allcordata<-round(allcordata,
                   digits=2
                   )
-                                        #remove rows and columns that are all "NA"
+
+#remove rows and columns that are all "NA"
 coefficients<-coefficients[-which(apply(coefficients,
                                    1,
                                    function(x)all(is.na(x)))
@@ -92,11 +96,11 @@ coefficients<-coefficients[-which(apply(coefficients,
                                    2,
                                    function(x)all(is.na(x)))
                              )
-                     ]
+                          ]
 
 
 coefficients[upper.tri(coefficients)]<-NA
-#print(coefficients)
+
 
 png(file=heatmap,
     height=600,
@@ -132,7 +136,6 @@ write.table(allcordata,
       row.names=TRUE,
       dec="."
       )
-
 
 
 q(save = "no", runLast = FALSE)
