@@ -228,13 +228,13 @@ my $ontology_subtitle =  !(grep { /^$user_type$/ } ('curator', 'submitter', 'seq
 </&>
 
 % }
-
+% if ( $locus_name && ($user_type eq 'curator')) {
 <&| /page/info_section.mas, title=>"Curator tools",  collapsible=>1, collapsed=>1 &>
   <& /locus/merge_locus.mas , locus_id=>"$locus_id" , common_name=>"$common_name" &>
     <& /phenome/assign_owner.mas , object_id=>"$locus_id" , object_type=>"locus" &>
 
 </&>
-
+% }
 
 <&| /page/info_section.mas, title=>"Notes and figures (" .  scalar(@figures)  . ")", subtitle => "$figure_subtitle", collapsible=>1, collapsed=>1 &>
   <& /phenome/print_images.mas , images=>\@figures , dbh=>$dbh &>
