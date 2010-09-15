@@ -304,13 +304,13 @@ var Tools = {
     obsoleteAnnot: function(type, type_dbxref_id)  {
 	var action= 'obsolete';
 	new Ajax.Request('obsolete_object_dbxref.pl', {parameters:
-		{object_dbxref_id: type_dbxref_id, type: type, action: action}, onSuccess:Tools.reloadPage() });
+		{object_dbxref_id: type_dbxref_id, type: type, action: action}, onSuccess:this.reloadPage });
     },
     //Make an ajax response that unobsoletes the selected ontology term-locus association
     unobsoleteAnnot: function(type, type_dbxref_id)  {
 	var action = 'unobsolete';	
 	new Ajax.Request('/phenome/obsolete_object_dbxref.pl', {parameters:
-		{object_dbxref_id: type_dbxref_id, type: type, action: action}, onSuccess:Tools.reloadPage() });
+		{object_dbxref_id: type_dbxref_id, type: type, action: action}, onSuccess:this.reloadPage });
     },
 
    
@@ -321,13 +321,13 @@ var Tools = {
     obsoleteAnnotEv: function(type, object_ev_id)  {
 	var action= 'obsolete';
 	new Ajax.Request('obsolete_object_ev.pl', {parameters:
-		{object_ev_id: object_ev_id, type: type, action: action}, onSuccess:Tools.reloadPage() });
+		{object_ev_id: object_ev_id, type: type, action: action}, onSuccess:this.reloadPage });
     },
     //Make an ajax response that unobsoletes the selected ontology term-locus association
     unobsoleteAnnotEv: function(type, object_ev_id)  {
 	var action = 'unobsolete';	
 	new Ajax.Request('/phenome/obsolete_object_ev.pl', {parameters:
-		{object_ev_id: object_ev_id, type: type, action: action}, onSuccess:Tools.reloadPage() });
+		{object_ev_id: object_ev_id, type: type, action: action}, onSuccess:this.reloadPage });
     },
 
     //toggle function. For toggling a collapsed section + a hidden ajax form.
