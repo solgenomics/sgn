@@ -65,8 +65,9 @@ var Tools = {
     
     assignOwner: function(object_id, object_type) {
 	var sp_person_id = $('user_select').value;
-	var d = new MochiKit.Async.doSimpleXMLHttpRequest("assign_owner.pl", {sp_person_id: sp_person_id, object_id: object_id, object_type: object_type});
-	d.addCallbacks(this.reloadPage);
+	new Ajax.Request("/phenome/assign_owner.pl", {parameters: 
+		{sp_person_id: sp_person_id, object_id: object_id, object_type: object_type}, 
+		    onSuccess: window.location.reload() } );
     },
     
     
@@ -86,22 +87,21 @@ var Tools = {
     getOrganisms: function() {
 	var type = 'organism';
 	new Ajax.Request("locus_browser.pl", {parameters: 
-		{type: type}, onSuccess: this.updateOrganismSelect });
-    },
-    
-    updateOrganismSelect: function(request) {
-	var select = $('organism_select');
-	var responseText = request.responseText;
-        MochiKit.Logging.log("the response text is: " , responseText);
-	var responseArray = responseText.split("|");
-	//the last element of the array is empty. Dont want this in the select box
-	responseArray.pop();
-	select.length = 0;    
-	select.length = responseArray.length;
-	for (i=0; i < responseArray.length; i++) {
-	    select[i].value = responseArray[i];
-	    select[i].text = responseArray[i];
-	}
+		{type: type}, onSuccess: function(response) {
+		    var select = $('organism_select');
+		    var responseText = response.responseText;
+		    MochiKit.Logging.log("the response text is: " , responseText);
+		    var responseArray = responseText.split("|");
+		    //the last element of the array is empty. Dont want this in the select box
+		    responseArray.pop();
+		    select.length = 0;    
+		    select.length = responseArray.length;
+		    for (i=0; i < responseArray.length; i++) {
+			select[i].value = responseArray[i];
+			select[i].text = responseArray[i];
+		    }
+		},
+				  });
     },
     //Make an ajax response that finds all loci  with names/synonyms/symbols like the current value of the locus input
     getLoci: function(locus_name, object_id) {
@@ -113,10 +113,30 @@ var Tools = {
 	}else{
 	    var type = 'browse locus';
 	    var organism = $('organism_select').value;
-	   
+	    
 	    MochiKit.Logging.log("getLoci is updating locus select...", locus_name);
 	    new Ajax.Request("locus_browser.pl", {parameters: 
-    {type: type, locus_name: locus_name,object_id: object_id, organism: organism}, onSuccess: this.updateLocusSelect });		}
+		    {type: type, locus_name: locus_name,object_id: object_id, organism: organism}, 
+			onSuccess: function(response) {
+			var select = $('locus_select');
+			$('associate_locus_button').disabled = true;
+			
+			var responseText = response.responseText;
+			var responseArray = responseText.split("|");
+			
+			//the last element of the array is empty. Dont want this in the select box
+			responseArray.pop();
+			select.length = responseArray.length;
+			for (i=0; i < responseArray.length; i++) {
+			    var locusObject = responseArray[i].split("*");
+			    select[i].value = locusObject[0];
+			    if (typeof(locusObject[1]) != "undefined"){
+				select[i].text = locusObject[1];
+			    }
+			}
+		    },
+			});
+	}
     },
     
     //Parse the ajax response and update the locus select box accordingly
@@ -158,7 +178,7 @@ var Tools = {
         else{
 	    var db_name = $('cv_select').value;
 	    new Ajax.Request("/phenome/ontology_browser.pl", {parameters:
-    {term_name: str, db_name: db_name}, onSuccess: this.updateOntologySelect});
+		    {term_name: str, db_name: db_name}, onSuccess: this.updateOntologySelect() });
 	}
     },
     
@@ -195,7 +215,7 @@ var Tools = {
 	var type = 'relationship'; 
 	var relationship_id = $('relationship_select').value;
 	new Ajax.Request('evidence_browser.pl', {parameters:
-    {type: type}, onSuccess:this.updateRelationshipSelect});
+		{type: type}, onSuccess:this.updateRelationshipSelect() });
     },
     
     updateRelationshipSelect: function(request) {
@@ -284,13 +304,13 @@ var Tools = {
     obsoleteAnnot: function(type, type_dbxref_id)  {
 	var action= 'obsolete';
 	new Ajax.Request('obsolete_object_dbxref.pl', {parameters:
-    {object_dbxref_id: type_dbxref_id, type: type, action: action}, onSuccess:Tools.reloadPage});
+		{object_dbxref_id: type_dbxref_id, type: type, action: action}, onSuccess:Tools.reloadPage() });
     },
     //Make an ajax response that unobsoletes the selected ontology term-locus association
     unobsoleteAnnot: function(type, type_dbxref_id)  {
 	var action = 'unobsolete';	
 	new Ajax.Request('/phenome/obsolete_object_dbxref.pl', {parameters:
-	{object_dbxref_id: type_dbxref_id, type: type, action: action}, onSuccess:Tools.reloadPage});
+		{object_dbxref_id: type_dbxref_id, type: type, action: action}, onSuccess:Tools.reloadPage() });
     },
 
    
@@ -301,13 +321,13 @@ var Tools = {
     obsoleteAnnotEv: function(type, object_ev_id)  {
 	var action= 'obsolete';
 	new Ajax.Request('obsolete_object_ev.pl', {parameters:
-    {object_ev_id: object_ev_id, type: type, action: action}, onSuccess:Tools.reloadPage});
+		{object_ev_id: object_ev_id, type: type, action: action}, onSuccess:Tools.reloadPage() });
     },
     //Make an ajax response that unobsoletes the selected ontology term-locus association
     unobsoleteAnnotEv: function(type, object_ev_id)  {
 	var action = 'unobsolete';	
 	new Ajax.Request('/phenome/obsolete_object_ev.pl', {parameters:
-	{object_ev_id: object_ev_id, type: type, action: action}, onSuccess:Tools.reloadPage});
+		{object_ev_id: object_ev_id, type: type, action: action}, onSuccess:Tools.reloadPage() });
     },
 
     //toggle function. For toggling a collapsed section + a hidden ajax form.
