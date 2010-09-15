@@ -52,4 +52,3 @@ $mech->get_ok("$base_url/gem/platform.pl?id=1");
 $mech->content_like(qr/Expression Platform: Affymetrix TobEA/);
 $mech->content_unlike( qr/ERROR PAGE/ );
 
-
