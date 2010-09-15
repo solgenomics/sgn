@@ -28,7 +28,7 @@ L<Test::WWW::Mechanize::Catalyst> with some SGN-specific convenience
     });
 
     # run tests that require a certain level of access to the
-    # application (see test_level below)
+    # application (see "TEST LEVELS" below)
     $mech->with_test_level( local => sub {
 
        my $c = $mech->context;
@@ -68,7 +68,7 @@ is not set, or false.
 
 =head2 process
 
-The app is running in the same process as this test.  Facilities under
+The app and the tests are running in the same process.  Facilities under
 C<local> are available, plus the app's in-memory state and
 configuration can be accessed directly from the context object.
 
