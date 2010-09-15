@@ -105,6 +105,8 @@ my $defaults =
                                      phenome
                                      physical
                                      tomato_gff
+                                     biosource
+                                     gem
                                   ]],
 
      #is this a production server?
