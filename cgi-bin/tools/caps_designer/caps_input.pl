@@ -1,7 +1,6 @@
-#Modified August 6, 2009 for CapsDesigner2
-#Hannah De Jong, Summer Intern
 
 use strict;
+use warnings;
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw/  page_title_html
                                        blue_section_html  /;
@@ -28,25 +27,6 @@ else {
   $input_content .= '<input type="radio" name="format" value="clustalw" />clustal alignment <a target="blank" href="/about/clustal_file.pl">[What is this?]</a><br />';
   $input_content .= '<input type="radio" name="format" value="fasta" checked="checked" />unaligned fasta sequences<br /><br />';
 }
-
-# #Select sequence pair to analyze
-#######NO LONGER NEEDED for CapsDesigner2
-# $input_content .= '<b>Sequence pair to analyze</b> <br />Please enter <b>at least two sequences</b>.  Please choose two from the first three sequences to analyze.<br />';
-# if ($seq_select == 2) {
-#   $input_content .= '<input type="radio" name="seq_select" value="1" />sequence 1 and 2 (default)<br />';
-#   $input_content .= '<input type="radio" name="seq_select" value="2" checked="checked" />sequence 1 and 3<br />';
-#   $input_content .= '<input type="radio" name="seq_select" value="3" />sequence 2 and 3<br /><br />';
-# }
-# elsif ($seq_select == 3){
-#   $input_content .= '<input type="radio" name="seq_select" value="1" />sequence 1 and 2 (default)<br />';
-#   $input_content .= '<input type="radio" name="seq_select" value="2" />sequence 1 and 3<br />';
-#   $input_content .= '<input type="radio" name="seq_select" value="3" checked="checked" />sequence 2 and 3<br /><br />';
-# }
-# else {
-#   $input_content .= '<input type="radio" name="seq_select" value="1" checked="checked" />sequence 1 and 2 (default)<br />';
-#   $input_content .= '<input type="radio" name="seq_select" value="2" />sequence 1 and 3<br />';
-#   $input_content .= '<input type="radio" name="seq_select" value="3" />sequence 2 and 3<br /><br />';
-# }
 
 #Text area for input sequences
 $input_content .= '<b>Input sequences</b><br />';
