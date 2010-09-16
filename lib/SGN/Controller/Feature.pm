@@ -190,7 +190,7 @@ sub _make_feature_search_rs {
     }
 
     if( my $organism = $form->param_value('organism') ) {
-        $self->_validate_pair($c,'organism_id',$organims);
+        $self->_validate_pair( $c, 'organism_id', $organism );
         $rs = $rs->search({ 'organism_id' => $organism });
     }
 
