@@ -50,7 +50,7 @@ foreach my $a (@a) {
 }
 
 if($html) {
-  $html =  CXGN::Page::FormattingHelpers::blue_section_html("Attributions", $html);
+  $html =  CXGN::Page::FormattingHelpers::blue_section_html("Marker Submitted By", $html);
 }
 else {
   return'';
@@ -59,4 +59,4 @@ else {
 
 </%perl>
 
-$html
+<% $html %>
