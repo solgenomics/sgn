@@ -63,11 +63,7 @@ if ($format =~ /fasta/i){
   &err_page($page,'Unrecognized format - please enter your input in FASTA or CLUSTAL format.');
 }
 
-if ($format_check == 0){
-  err_page($page, $format_check);
-} else { warn "passed format check" }
-
-
+err_page($page,$format_check) unless $format_check;
 
 ########Check if the input has at least two sequences and 12 or fewer sequences
 my $seq_num;
