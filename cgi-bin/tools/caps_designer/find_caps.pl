@@ -1,6 +1,3 @@
-#Modified August 6, 2009 for CapsDesigner2
-#Hannah De Jong, Summer Intern
-
 use strict;
 use warnings;
 use CXGN::Page;
@@ -189,62 +186,6 @@ for my $current_enzyme(sort keys %cap_seq) {
     $caps_content .= '</table><br /><br />';
 }
 $caps_content .= 'Black font denotes sequence with unique cut site(s). <br />' if $caps_content;
-
-
-
-# foreach (sort keys %cap_seq1){
-#   my $current_enzyme = $_;
-  
-#   if (!defined $cost{$current_enzyme}){$cost{$current_enzyme} = 'over $65/1000u';}
-#   $caps_content .= '<table width="100%" cellpadding="5" cellspacing="0" border="6"><tr><th>Enzyme</th><td>' . $current_enzyme . '</td><th>Price</th><td>' . $cost{$current_enzyme} . '</td></tr>';
-
-#   $caps_content .= '<tr><th>Recognition Sequence</th><td colspan="3">' . $cut_site{$current_enzyme} . '</td></tr>';
-
-#   $caps_content .= '<tr><th>' . $parent1_id . ' Cutting Site(s) </th><td>';
-#   if ((keys %{$position1{$current_enzyme}}) == 0) {
-#     $caps_content .= 'None';
-#   }
-#   else {
-#     foreach (sort {$a<=>$b} keys %{$position1{$current_enzyme}}){
-#       $caps_content .= $_ . '  ';
-#     }
-#   }
-#   $caps_content .= '<th>' . $parent1_id . ' Fragments(s),bp </th><td>';
-#   foreach (@{$size1{$current_enzyme}}){
-#       $caps_content .= $_ . '  ';
-#     }    
-#   $caps_content .= '</td></tr>';
-
-#   $caps_content .= '<tr><th>' . $parent2_id . ' Cutting Site(s) </th><td>';
-#   if ((keys %{$position2{$current_enzyme}}) == 0) {
-#     $caps_content .= 'None';
-#   }
-#   else {
-#     foreach (sort {$a<=>$b} keys %{$position2{$current_enzyme}}){
-#       $caps_content .= $_ . '  ';
-#     }
-#   }
-#   $caps_content .= '<th>' . $parent2_id . ' Fragments(s),bp </th><td>';
-#   foreach (@{$size2{$current_enzyme}}){
-#       $caps_content .= $_ . '  ';
-#     }    
-#   $caps_content .= '</td></tr>';
-
-# for (sort {$a<=>$b} keys %{$cap_seq{$current_enzyme}}){
-#     $caps_content .= '<tr><th>CAPS Site</th><td>'. $_ . '</td><td colspan=2>';
-#     $caps_content .= '<table cellspacing="2"><tr><th>';
-    
-#   foreach (sort {$a<=>$b} keys %{$cap_seq1{$current_enzyme}}){
-#     $caps_content .= '<tr><th>CAPS Site</th><td>'. $_ . '</td><td colspan=2>';
-#     $caps_content .= '<table cellspacing="2"><tr><th>';
-#     $caps_content .= $parent1_id . '</th><td>' . $cap_seq1{$current_enzyme}{$_} . '</td></tr><tr><th>';
-#     $caps_content .= $parent2_id . '</th><td>' . $cap_seq2{$current_enzyme}{$_} . '</td></tr>';
-#     $caps_content .= '</table>';
-#   }
-#   $caps_content .= '</td></tr>';
-#   $caps_content .= '</table><br /><br />';
-  
-#}
 
 ###############Prepare plain text result links
 # my $out = CXGN::BioTools::CapsDesigner2::print_text($cost_ref,$cut_ref,$seq_length,$position1_ref, $position2_ref, $cap_seq1_ref, $cap_seq2_ref, $parent1_id, $parent2_id, $cheap_only, $size1_ref, $size2_ref, $cutno, $exclude_seq, $path);
