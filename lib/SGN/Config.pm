@@ -118,7 +118,7 @@ my $defaults =
      tempfiles_base           => undef,
 
      #R qtl tempfiles (must be cluster accessible)
-     r_qtl_temp_path          => '/data/prod/tmp/r_qtl',
+     r_qtl_temp_path          => '/data/prod/tmp/r_qtl___USERNAME__',
 
      #should we send emails, if we are a production server? this can be used to turn off emails if we are being bombarded.
      admin_email           => 'sgn-feedback@solgenomics.net',
