@@ -126,8 +126,8 @@ sub insert_js_pack_html :Private {
 
   my $b = $c->res->body;
 
-  my $url_cache;
-  if( $b =~ s{<!-- \s* INSERT_JS_PACK \s* -->} {'<script src="'.($url_cache ||= $c->uri_for( $self->action_for_js_package( $js ))).qq|" type="text/javascript">\n</script>|}ex ) {
+  my $pack_uri = $c->uri_for( $self->action_for_js_package( $js ) )->path_query;
+  if( $b =~ s{<!-- \s* INSERT_JS_PACK \s* -->} {<script src="$pack_uri" type="text/javascript">\n</script>}x ) {
       $c->res->body( $b );
       delete $c->stash->{pack_js};
   }
