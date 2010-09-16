@@ -63,7 +63,8 @@ sub js_package :Path('pack') :Args(1) {
 
     # support caching with If-Modified-Since requests
     my $ims = $c->req->headers->if_modified_since;
-    if( $ims && $ims >= $c->res->headers->last_modified ) {
+    my $modtime = $c->res->headers->last_modified;
+    if( $ims && $modtime && $ims >= $modtime ) {
         $c->res->status( RC_NOT_MODIFIED );
         $c->res->body(' ');
     }
