@@ -114,7 +114,7 @@ my $defaults =
 
      #is there a system message text file somewhere we should be displaying?
      system_message_file      => undef,
-     # defaults to /tmp/<user>/SGN
+     # defaults to /tmp/<user>/SGN-site
      tempfiles_base           => undef,
 
      #should we send emails, if we are a production server? this can be used to turn off emails if we are being bombarded.
