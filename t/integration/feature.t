@@ -30,26 +30,28 @@ $mech->submit_form_ok({
     form_name => 'feature_search_form',
     fields => {
         feature_name => '',
-        feature_type => 'gene',
+        feature_type => 1,
         organism     => 'Solanum lycopersicum',
         submit       => 'Submit',
     }
 });
 $mech->content_contains('Search Results');
-$mech->content_like(qr/results 1-\d+ of \d+(,\d+)?/);
+$mech->content_like(qr/results \d+-\d+ of \d+(,\d+)?/);
+
 
 $mech->get("$base_url/feature/search");
 $mech->submit_form_ok({
     form_name => 'feature_search_form',
     fields => {
-        feature_name => 'rbuels',
-        feature_type => 'gene',
+        feature_name => 'rbuels_is_3leet',
+        feature_type => '',
         organism     => 'Solanum lycopersicum',
         submit       => 'Submit',
     }
 });
 $mech->content_contains('Search Results');
 $mech->content_contains('no matching results found');
+
 
 $mech->get_ok("$base_url/feature/view/name/JUNK.fasta");
 $mech->content_contains("feature with name = 'JUNK' not found");

@@ -73,7 +73,8 @@ sub view_name :Path('/feature/view/name') Args(1) {
 
 sub _validate_pair {
     my ($self,$c,$key,$value) = @_;
-    $c->throw( message => "$value is not a valid value for $key" ) if ($key eq 'feature_id' and $value !~ m/\d+/);
+    $c->throw( message => "$value is not a valid value for $key" )
+        if ($key =~ m/_id$/ and $value !~ m/\d+/);
 }
 
 sub _view_feature {
@@ -184,10 +185,12 @@ sub _make_feature_search_rs {
     }
 
     if( my $type = $form->param_value('feature_type') ) {
+        $self->_validate_pair($c,'type_id',$type);
         $rs = $rs->search({ 'type_id' => $type });
     }
 
     if( my $organism = $form->param_value('organism') ) {
+        $self->_validate_pair($c,'organism_id',$organims);
         $rs = $rs->search({ 'organism_id' => $organism });
     }
 
