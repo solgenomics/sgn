@@ -6,6 +6,7 @@ use File::Spec;
 
 use Carp;
 use Digest::MD5 'md5_hex';
+use HTTP::Status;
 use JSAN::ServerSide;
 use List::MoreUtils qw/ uniq first_index /;
 use Storable qw/ nfreeze /;
@@ -58,6 +59,14 @@ sub js_package :Path('pack') :Args(1) {
         .')'
        ) if $c->debug;
 
+    $c->forward('View::JavaScript');
+
+    # support caching with If-Modified-Since requests
+    my $ims = $c->req->headers->if_modified_since;
+    if( $ims && $ims >= $c->res->headers->last_modified ) {
+        $c->res->status( RC_NOT_MODIFIED );
+        $c->res->body(' ');
+    }
 }
 
 =head2 default
