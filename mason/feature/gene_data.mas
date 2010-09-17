@@ -4,6 +4,7 @@
     $species => undef
 </%args>
 <%perl>
+    use SGN::View::Feature qw/feature_link/;
     my @locations = $feature->featureloc_features->all;
     my $locations = scalar @locations;
     my $length = 0;

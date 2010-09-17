@@ -13,6 +13,7 @@ use namespace::autoclean;
 use HTML::FormFu;
 use URI::FromHash 'uri';
 use YAML::Any;
+use SGN::View::Feature qw/feature_link/;
 
 has 'schema' => (
 is => 'rw',
@@ -47,6 +48,7 @@ sub delegate_component
         );
     };
     if ($@) {
+        warn $@;
         $c->forward_to_mason_view(
             "/feature/dhandler",
             feature => $feature,
