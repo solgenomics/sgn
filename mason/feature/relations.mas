@@ -5,9 +5,9 @@
     use SGN::View::Feature qw/feature_link/;
 </%once>
 <%perl>
-    my @child_rels = map { [ $_->type->name, feature_link($_->subject)] }
+    my @child_rels = map { [ cvterm_link($_), feature_link($_->subject)] }
         ( $feature->child_relationships );
-    my @parent_rels = map { [ $_->type->name, feature_link($_->subject)] }
+    my @parent_rels = map { [ cvterm_link($_), feature_link($_->subject)] }
         ( $feature->parent_relationships );
 </%perl>
 
