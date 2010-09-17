@@ -250,7 +250,7 @@ sub render_fasta {
             -format => 'fasta',
             -fh     => \*STDOUT)
             ->write_seq( $sequence );
-    my $output = CGI->new->header( -type => 'text/txt' );
+    my $output = CGI->new->header( -type => 'text/plain' );
     $output   .= $_ while <$fh>;
     return $output;
 }
