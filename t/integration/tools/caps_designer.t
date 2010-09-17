@@ -12,6 +12,35 @@ my $fasta = slurp("t/data/caps_designer.fasta");
 my $urlbase = "$ENV{SGN_TEST_SERVER}/tools/caps_designer/caps_input.pl";
 my $mech = SGN::Test::WWW::Mechanize->new;
 
+$mech->get($urlbase);
+diag "submitting capsinput form with invalid clustalw data shouldn't blow up";
+$mech->submit_form(
+    form_name => 'capsinput',
+    fields => {
+        format   => 'clustalw',
+        seq_data => 'FOO!',
+        cheap    => 0,
+        start    => 20,
+        cutno    => 4,
+    },
+);
+$mech->content_contains('Clustal alignment failed');
+
+$mech->get($urlbase);
+diag "submitting capsinput form with only one FASTA shouldn't blow up";
+$mech->submit_form(
+    form_name => 'capsinput',
+    fields => {
+        format   => 'fasta',
+        seq_data => ">FOO\nBAR",
+        cheap    => 0,
+        start    => 20,
+        cutno    => 4,
+    },
+);
+
+$mech->content_contains('Please enter at least two sequences!');
+
 for my $cheapness ( 0 .. 1 ) {
     $mech->get($urlbase);
     $mech->submit_form_ok({
@@ -36,5 +65,6 @@ for my $cheapness ( 0 .. 1 ) {
         $mech->get_ok($link->url);
     }
 }
+
 
 done_testing;

@@ -14,18 +14,16 @@ my ($format, $cheap_only, $exclude_seq, $cutno, $seq_data) = $page->get_argument
 
 #########Check if the input sequence is empty
 if ($seq_data eq ''){
-  &err_page ($page, "Please enter sequence!\n");
+  err_page ($page, "Please enter sequence!\n");
 }
 
 ########Check validity of exclusion number and cut number
 if ($exclude_seq < 0){
-  &err_page ($page, "The number of excluded nucleotides may not be negative!");
+  err_page ($page, "The number of excluded nucleotides may not be negative!");
 }
 if ($cutno < 1){
-  &err_page ($page, "The number of enzyme cut sites allowed must be greater than zero!");
-}   
-
-
+  err_page ($page, "The number of enzyme cut sites allowed must be greater than zero!");
+}
 
 ##########Write the sequence into a temp file for processing
 my $html_root_path = $c->config->{'basepath'};
@@ -78,11 +76,14 @@ if ($format =~ /fasta/i){
 
 
 #########Process input sequence and return aligned sequences
-my ($align_clustal,$align_fasta) = CXGN::BioTools::CapsDesigner2::format_input_file($format, $tmp_name);
+my ($align_clustal,$align_fasta);
+eval {
+    ($align_clustal,$align_fasta) = CXGN::BioTools::CapsDesigner2::format_input_file($format, $tmp_name);
+};
+
 if (!$align_fasta || ($align_fasta eq "")){
-  &err_page($page, "Clustal alignment failed.  Please check input sequences!");
+  err_page($page, "Clustal alignment failed.  Please check input sequences!");
 }
-#my ($parent1_id, $parent1_seq, $parent2_id, $parent2_seq, $seq_length) = CXGN::BioTools::CapsDesigner2::get_seqs($align_fasta, $seq_select);
 my ($seq_length, $parent_info_ref) = CXGN::BioTools::CapsDesigner2::get_seqs($align_fasta);
 
 &err_page($page, "Please enter sequences containing only DNA nucleotides A, C, G, T or N.") unless CXGN::BioTools::CapsDesigner2::check_seqs($parent_info_ref);
