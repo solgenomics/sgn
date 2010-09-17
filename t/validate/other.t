@@ -88,7 +88,6 @@ my %urls = (
         "contact"                                  => "/tools/contact.pl",
         "seed BAC guidelines"                      => '/solanaceae-project/seed_bac_selection.pl',
         "caps designer input"                      => '/tools/caps_designer/caps_input.pl',
-        "caps designer find"                       => '/tools/caps_designer/find_caps.pl',
         "intron finder"                            => '/tools/intron_detection/find_introns.pl',
         "display intron"                           => '/tools/intron_detection/display_introns.pl',
         "about clustal file"                       => '/about/clustal_file.pl',

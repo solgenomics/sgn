@@ -9,8 +9,11 @@ use SGN::Test::WWW::Mechanize;
 
 my $fasta = slurp("t/data/caps_designer.fasta");
 
-my $urlbase = "$ENV{SGN_TEST_SERVER}/tools/caps_designer/caps_input.pl";
+my $urlbase = "/tools/caps_designer/caps_input.pl";
 my $mech = SGN::Test::WWW::Mechanize->new;
+
+$mech->get("/tools/caps_designer/find_caps.pl");
+is($mech->status, 400, "return code was 400 Bad Request");
 
 $mech->get($urlbase);
 diag "submitting capsinput form with invalid clustalw data shouldn't blow up";
@@ -24,6 +27,7 @@ $mech->submit_form(
         cutno    => 4,
     },
 );
+is($mech->status, 400, "return code was 400 Bad Request");
 $mech->content_contains('Clustal alignment failed');
 
 $mech->get($urlbase);
@@ -39,6 +43,7 @@ $mech->submit_form(
     },
 );
 
+is($mech->status, 400, "return code was 400 Bad Request");
 $mech->content_contains('Please enter at least two sequences!');
 
 for my $cheapness ( 0 .. 1 ) {
