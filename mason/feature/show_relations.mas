@@ -1,5 +1,5 @@
 <%args>
-    $relations 
+    $relations
     $title
 </%args>
 % if (@$relations) {
@@ -7,9 +7,13 @@
     title => $title,
     collapsible => 1,
 &>
-<& /page/columnar_table.mas,
-    headings => [ qw/Subject Object Type/ ],
-    data     => $relations,
-&>
+% for my $relation (@$relations) {
+% my $word = $relation->[0] eq 'derives_from' ? '' : ' is ';
+    <% $relation->[1] . $word %>
+    <b><% $relation->[0] %>
+    </b> this feature.
+    <br/>
+% }
+
 </&>
 % }
