@@ -2,7 +2,7 @@
     $feature
 </%args>
 <%once>
-    use SGN::View::Feature qw/feature_link/;
+    use SGN::View::Feature qw/feature_link cvterm_link/;
 </%once>
 <%perl>
     my @child_rels = map { [ cvterm_link($_), feature_link($_->subject)] }
