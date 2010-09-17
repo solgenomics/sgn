@@ -23,8 +23,7 @@ $mech->submit_form_ok({
     },
 });
 
-# TODO
-# $mech->content_unlike(qr/CLUSTAL 2\.0\.10 Multiple Sequence Alignments/);
+$mech->content_unlike(qr/CLUSTAL 2\.0\.10 Multiple Sequence Alignments/);
 
 $mech->content_contains('CAPS Designer Result');
 $mech->content_contains('Query Summary');
