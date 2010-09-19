@@ -1,0 +1,136 @@
+<%doc>
+
+=head1 NAME
+
+/stock/index.mas - a page for displaying stock details (e.g. accession, population, etc.) 
+
+=head1 DESCRIPTION
+
+parameters:
+
+=over 3
+
+=item $stock_id
+
+The id of the stock in the database
+
+=item $schema
+
+L<Bio::Chado::Schema> object
+
+=item $user
+
+the person logged into the system right now
+
+
+
+=back
+
+=head1 AUTHOR
+
+Naama Menda <nm249@cornell.edu>
+
+=cut
+
+</%doc>
+
+
+
+<%args>
+
+$action => 'view'
+$stock_id => 0
+$user => undef
+$schema
+
+</%args>
+
+
+<%perl>
+
+
+use Bio::Chado::Schema;
+use CXGN::Sunshine::Browser;
+use CXGN::Page::FormattingHelpers qw / html_optional_show info_table_html /;
+
+
+# print message if stock_id is not valid 
+unless ( ( $stock_id =~ m /^\d+$/ ) || ($action eq 'new' && !$stock_id) ) {
+  $c->throw(is_error=>0,
+	    message=>"No stock/accession exists for identifier $stock_id",
+	   );
+}
+#my $stock = $schema->resultset("Stock::Stock")->create( {} ) if !$stock_id;
+my ($stock) = $schema->resultset("Stock::Stock")->search( { stock_id => $stock_id} ) ;
+
+my $person_id = $user->get_sp_person_id();
+my $user_type = $user->get_user_type();
+my $stockprop_cv = $schema->resultset("Cv::Cv")->search( {
+ 'me.name' => 'stock_property'} );
+# print message if the stock is obsolete
+my ($obsolete_cvterm) = $stockprop_cv->search_related('cvterms',
+{ 'me.name' => 'obsolete' } );
+
+my $obsolete;
+$obsolete = $stock->search_related('stockprops' , {
+	    type_id => $obsolete_cvterm->cvterm_id() }) if $obsolete_cvterm;
+
+if ( $obsolete  && $user_type ne 'curator' )
+  {
+    $c->throw(is_error=>0, 
+	      title => 'Obsolete stock',
+	      message=>"Stock $stock_id is obsolete!",
+	      developer_message => 'only curators can see obsolete stock',
+	      notify => 0,   #< does not send an error email
+	     );
+  }
+
+# print message if stock_id does not exist
+
+if ( !$stock && $action ne 'new' && $action ne 'store' ) {
+  $c->throw(is_error=>0, message=>'No stock exists for this identifier',);
+}
+
+my $this_page = "/phenome/stock.pl?stock_id=$stock_id";
+
+my ($organism) = $stock->search_related('organism');
+my $species = $organism->species();
+
+#my ($person_id_cvterm) = $stockprop_cv->search_related('cvterms' , { 'me.name'=>'sp_person_id' } );
+
+#my @owners = $stock->search_related('stockprops', { type_id => $person_id_cvterm->cvterm_id() } );
+
+#my $owner_objects= $locus->get_owners(1);
+#<& /stock/initialize.mas, stock_id=>$stock_id  &>
+
+#################
+my $owner;
+#if ( $stock && ($user_type eq 'curator' || $person_id && grep { $_ == $person_id } @owners  ) ) {  $owner = 1; }
+
+</%perl>
+
+<& /util/import_javascript.mas, classes => [ "jquery", "thickbox", "CXGN.Page.FormattingHelpers"] &>
+
+
+
+<& /page/page_title.mas, title=> $stock->uniquename()  . "\n" &>
+  
+  
+
+<&| /page/info_section.mas, title=>"Stock details" , subtitle => ""  &>
+  
+  <& /page/form.mas, object_type=>'stock', object_id=>"$stock_id", form_name=> 'stock_form', server_side_script => '/phenome/stock/stock_ajax_form.pl', form_div_name=>'stock_details', js_object_name=> 'stockForm', page_url => '/phenome/stock.pl'  &>
+    
+</&>
+ 
+
+% if($owner) {
+<&| /page/info_section.mas, title=>"Stock history", collapsible=>1, collapsed=>1 &>
+  <& /stock/history.mas, stock=>$stock  &>
+</&>
+
+% }
+
+
+
+<& /page/comments.mas, object_type=>'stock', object_id=>$stock_id, referer=>$this_page &>
