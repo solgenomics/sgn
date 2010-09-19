@@ -101,7 +101,7 @@ my $species = $organism->species();
 #my @owners = $stock->search_related('stockprops', { type_id => $person_id_cvterm->cvterm_id() } );
 
 #my $owner_objects= $locus->get_owners(1);
-#<& /stock/initialize.mas, stock_id=>$stock_id  &>
+
 
 #################
 my $owner;
@@ -111,7 +111,7 @@ my $owner;
 
 <& /util/import_javascript.mas, classes => [ "jquery", "thickbox", "CXGN.Page.FormattingHelpers"] &>
 
-
+<& /stock/initialize.mas, stock_id=>$stock_id  &>
 
 <& /page/page_title.mas, title=> $stock->uniquename()  . "\n" &>
   
