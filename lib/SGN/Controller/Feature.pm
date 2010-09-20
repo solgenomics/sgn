@@ -90,7 +90,7 @@ sub _view_feature {
                                     ->search({ $key => $value });
         my $feature = $matching_features->next;
         $c->throw( message => "feature with $key = '$value' not found") unless $feature;
-        print $self->render_fasta($feature);
+        $self->render_fasta($feature, $c);
     } else {
         $self->_validate_pair($c,$key,$value);
         my $matching_features = $self->schema
@@ -236,7 +236,7 @@ sub _feature_types {
 }
 
 sub render_fasta {
-    my ($self, $feature) = @_;
+    my ($self, $feature, $c) = @_;
 
     my $matching_features = $self->schema
                                 ->resultset('Sequence::Feature')
@@ -246,13 +246,10 @@ sub render_fasta {
                     -id  => $feature->name,
                     -seq => $feature->residues,
                     );
-    my $fh = Bio::SeqIO->new(
-            -format => 'fasta',
-            -fh     => \*STDOUT)
-            ->write_seq( $sequence );
-    my $output = CGI->new->header( -type => 'text/plain' );
-    $output   .= $_ while <$fh>;
-    return $output;
+    my $fh = Bio::SeqIO->new( -format => 'fasta')->write_seq( $sequence );
+    $c->res->content_type('text/plain');
+    $c->res->status( 200 );
+    $c->res->body( join "", <$fh> );
 }
 
 __PACKAGE__->meta->make_immutable;
