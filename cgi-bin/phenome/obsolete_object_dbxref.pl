@@ -7,7 +7,7 @@ use CXGN::Phenome::LocusDbxref;
 use CXGN::Login;
 use CXGN::Contact;
 use CXGN::People::Person;
-use CGI ();
+
 use JSON;
 
 my $dbh = CXGN::DB::Connection->new();
@@ -15,7 +15,6 @@ my($login_person_id,$login_user_type)=CXGN::Login->new($dbh)->verify_session();
 my $json = JSON->new();
 my %error=();
 
-print CGI->header();
 
 if ($login_user_type eq 'curator' || $login_user_type eq 'submitter' || $login_user_type eq 'sequencer') {
     
