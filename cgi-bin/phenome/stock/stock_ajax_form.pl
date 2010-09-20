@@ -3,6 +3,7 @@ use strict;
 use warnings;
 
 package CXGN::Phenome::Stock::StockForm;
+my $stock_form = CXGN::Phenome::Stock::StockForm->new();
 
 use base qw/CXGN::Page::Form::AjaxFormPage  /; 
 
@@ -13,7 +14,7 @@ use CXGN::Chado::Stock;
 
 use CXGN::People::Person;
 use CXGN::Contact; 
-use CXGN::Feed;
+
 
 use Try::Tiny;
 
@@ -33,22 +34,17 @@ sub define_object {
     my $stock_id  = $args{stock_id} || $args{object_id};
     my $user_type = $self->get_user()->get_user_type();
     my %json_hash= $self->get_json_hash();
-    print STDERR "DEFINING object STOCK!!!!!!!!!\n\n\n\n";
+   
     my $schema   = $c->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' );
     
     $self->set_object_id($stock_id);
     $self->set_object_name('Stock'); #this is useful for email messages
     $self->set_object( CXGN::Chado::Stock->new($schema, $stock_id) );
-	#$schema->resultset("Stock::Stock")->find( {
-	#stock_id => $self->get_object_id() 
-	#					  } ) 
-	#);
     
-    #if ( $self->get_object()->get_obsolete() eq 't' && $user_type ne 'curator' )
-    #{
-	##print STDERR "ERROR:: Locus $locus_id is obsolete!";
-    #$json_hash{error}="Locus $locus_id is obsolete!";
-    #}
+    if ( $self->get_object()->get_obsolete() eq 't' && $user_type ne 'curator' )
+    {
+	$json_hash{error}="Stock $stock_id is obsolete!";
+    }
     unless ( ( $stock_id =~ m /^\d+$/ || !$stock_id  )  ) {
        	$json_hash{error}="No stock exists for identifier $stock_id";
     }
@@ -139,27 +135,36 @@ sub generate_form {
     my $form_id = 'edit_stock'; # a form_id is required for ajax forms
     
     $self->init_form($form_id) ; ## instantiate static/editable/confirmStore form
-    
     my $stock = $self->get_object();
+    my $bcs_stock = $stock->get_object_row();
     my %args  = $self->get_args();
     my $form = $self->get_form();
     my $dbh = $self->get_dbh();
     
-    #if ( $locus->get_obsolete() eq 't' ) {
-#	$form->add_label(
-#	    display_name => "Status",
-#	    field_name   => "obsolete_stat",
-#	    contents     => 'OBSOLETE',
-#	    );
-#}
+    if ( $stock->get_obsolete() eq 't' ) {
+	$form->add_label(
+	    display_name => "Status",
+	    field_name   => "obsolete_stat",
+	    contents     => 'OBSOLETE',
+	    );
+    }
     $form->add_field(
 	display_name => "Stock name ",
 	field_name   => "stock_name",
-	object       => $stock,
-	getter       => "get_object_row",
-	setter       => "set_object_row",
+	object       => $bcs_stock,
+	getter       => "name",
+	setter       => "name",
 	validate     => 'string',
 	);
+    $form->add_field(
+	display_name => "Uniquename ",
+	field_name   => "stock_uniquename",
+	object       => $bcs_stock,
+	getter       => "uniquename",
+	setter       => "uniquename",
+	validate     => 'string',
+	);
+    
     
     if ( $self->get_action() =~ /view|edit/ ) {
 	$form->from_database();
@@ -176,3 +181,4 @@ sub generate_form {
 
 
 
+1;

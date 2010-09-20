@@ -19,7 +19,7 @@ if (!CXGN.Phenome) CXGN.Phenome = function() {};
 if (!CXGN.Phenome.Stock) CXGN.Phenome.Stock = function() {};
 
 CXGN.Phenome.Stock.StockPage = function() { 
-    alert('In constructor');
+    ///alert('In constructor');
    
 };
 

@@ -96,24 +96,17 @@ my $this_page = "/phenome/stock.pl?stock_id=$stock_id";
 my ($organism) = $stock->search_related('organism');
 my $species = $organism->species();
 
-#my ($person_id_cvterm) = $stockprop_cv->search_related('cvterms' , { 'me.name'=>'sp_person_id' } );
-
-#my @owners = $stock->search_related('stockprops', { type_id => $person_id_cvterm->cvterm_id() } );
-
-#my $owner_objects= $locus->get_owners(1);
-
-
 #################
 my $owner;
 #if ( $stock && ($user_type eq 'curator' || $person_id && grep { $_ == $person_id } @owners  ) ) {  $owner = 1; }
-#<& /stock/initialize.mas, stock_id=>$stock_id  &>
+
 </%perl>
 
-<& /util/import_javascript.mas, classes => [ "jquery", "thickbox", "CXGN.Page.FormattingHelpers"] &>
+<& /util/import_javascript.mas, classes => ["jquery", "thickbox", "CXGN.Page.FormattingHelpers", "CXGN.Phenome.Stock.StockPage"] &>
 
+<& /stock/initialize.mas, stock_id=>$stock_id  &>
 
-
-<& /page/page_title.mas, title=> $stock->uniquename()  . "\n" &>
+<& /page/page_title.mas, title=> $stock->type->name() . ": " . $stock->uniquename()  . "\n" &>
   
   
 <&| /page/info_section.mas, title=>"Stock details" , subtitle => ""  &>
