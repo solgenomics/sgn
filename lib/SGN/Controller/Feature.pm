@@ -2,8 +2,7 @@ package SGN::Controller::Feature;
 
 =head1 NAME
 
-SGN::Controller::Organism - Catalyst controller for pages dealing with
-features
+SGN::Controller::Feature - Catalyst controller for pages dealing with features
 
 =cut
 
