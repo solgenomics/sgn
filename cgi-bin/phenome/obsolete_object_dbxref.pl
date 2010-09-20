@@ -7,6 +7,7 @@ use CXGN::Phenome::LocusDbxref;
 use CXGN::Login;
 use CXGN::Contact;
 use CXGN::People::Person;
+use CatalystX::GlobalContext '$c';
 
 use JSON;
 
@@ -60,8 +61,6 @@ if ($login_user_type eq 'curator' || $login_user_type eq 'submitter' || $login_u
     $error{error} =  "User type $login_user_type does not have permissions to obsolete ! ";
 } 
 
-my $jobj = $json->encode(\%error);
-print  $jobj;
-
-
+$c->res->status( exists $error{error} ? 400 : 200 );
+$c->res->body( $json->encode(\%error) );
 
