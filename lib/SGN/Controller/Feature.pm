@@ -245,10 +245,15 @@ sub render_fasta {
                     -id  => $feature->name,
                     -seq => $feature->residues,
                     );
-    my $fh = Bio::SeqIO->new( -format => 'fasta')->write_seq( $sequence );
+    my $fasta;
+    my $fastaio = IO::String->new($fasta);
+    Bio::SeqIO->new( -format => 'fasta',
+                     -fh     => $fastaio,
+    )->write_seq( $sequence );
+
     $c->res->content_type('text/plain');
     $c->res->status( 200 );
-    $c->res->body( join "", <$fh> );
+    $c->res->body( $fasta );
 }
 
 __PACKAGE__->meta->make_immutable;
