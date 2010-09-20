@@ -20,6 +20,7 @@ print CGI->header();
 if ($login_user_type eq 'curator' || $login_user_type eq 'submitter' || $login_user_type eq 'sequencer') {
     
     my $doc = CXGN::Scrap::AjaxPage->new();
+    $doc->send_http_header();
     my ($object_dbxref_id, $type, $action) = $doc->get_encoded_arguments("object_dbxref_id", "type", "action");
     my  $link;
     

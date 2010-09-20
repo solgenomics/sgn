@@ -60,7 +60,8 @@ CXGN.Page.Form.JSFormPage.prototype = {
 	MochiKit.Logging.log("Store function found editableFormId", this.getEditableFormId());
 	
 	new Ajax.Request(this.getAjaxScript(), {
-		parameters: $(editableForm).serialize(true) ,
+		method: "get",
+		    parameters: $(editableForm).serialize(true) ,
 		    onSuccess: function(response) {
 		    var json = response.responseText;
 		    //var x = jQuery.parseJSON( json ); 
@@ -94,7 +95,7 @@ CXGN.Page.Form.JSFormPage.prototype = {
 	}else {
 
 	    new Ajax.Request(this.getAjaxScript(), {
-
+		    method: "get",
 		    parameters: {  object_id: this.getObjectId() , action: action },
 		    onSuccess: function(response) {
 			var json = response.responseText;

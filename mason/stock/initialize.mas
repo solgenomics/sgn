@@ -30,6 +30,6 @@ a stock id
 <script language="javascript" type="text/javascript">
 <!--
     var stockPage = new CXGN.Phenome.Stock.StockPage();
-    stickPage.setStockId( <% $stock_id %> );
+    stockPage.setStockId( <% $stock_id %> );
 -->
 </script>

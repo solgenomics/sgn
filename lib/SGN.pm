@@ -6,6 +6,7 @@ use SGN::Exception;
 
 use Catalyst::Runtime 5.80;
 use Catalyst qw/
+     -Debug
      ConfigLoader
      Static::Simple
      ErrorCatcher

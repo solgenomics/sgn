@@ -140,29 +140,11 @@ sub generate_form {
     
     $self->init_form($form_id) ; ## instantiate static/editable/confirmStore form
     
-    my $stock = $self->get_object()->get_object_row();
+    my $stock = $self->get_object();
     my %args  = $self->get_args();
     my $form = $self->get_form();
     my $dbh = $self->get_dbh();
     
-    my ( $organism_names_ref, $organism_ids_ref ) =
-	CXGN::Tools::Organism::get_all_organisms( $self->get_dbh() );
-    
-    
-    if ( $self->get_action =~ /new|store/ ) {
-	$self->get_form->add_select(
-	    display_name       => "Organism ",
-	    field_name         => "organism_id",
-	    contents           => $stock->organism_id(),
-	    length             => 20,
-	    object             => $stock,
-	    getter             => "orgnaism_id",
-	    setter             => "organism_id",
-	    select_list_ref    => $organism_names_ref,
-	    select_id_list_ref => $organism_ids_ref,
-	    );
-	
-    }
     #if ( $locus->get_obsolete() eq 't' ) {
 #	$form->add_label(
 #	    display_name => "Status",
@@ -174,59 +156,16 @@ sub generate_form {
 	display_name => "Stock name ",
 	field_name   => "stock_name",
 	object       => $stock,
-	getter       => "name",
-	setter       => "name",
+	getter       => "get_object_row",
+	setter       => "set_object_row",
 	validate     => 'string',
-	);
-    
-#    $form->add_field(
-#        display_name => "Symbol ",
-#        field_name   => "locus_symbol",
-#        object       => $locus,
-#        getter       => "get_locus_symbol",
-#        setter       => "set_locus_symbol",
-#        validate     => 'token',
-#	formatting   => '<i>*</i>',
-#	);
- #    $form->add_textarea(
-#	display_name => "Description ",
-#	field_name   => "description",
-#	object       => $locus,
-#	getter       => "get_description",
-#	setter       => "set_description",
-#	columns      => 40,
-#	rows         => => 4,
-#	);
-      
-    $form->add_hidden(
-	field_name => "stock_id",
-	contents   => $stock->stock_id(),
-	);
-    
-    $form->add_hidden(
-	field_name => "action",
-	contents   => "store",
-	);
-    
-    $form->add_hidden(
-	field_name => "sp_person_id",
-	contents   => $self->get_user()->get_sp_person_id(),
-	object     => $stock,
-	setter     => "set_sp_person_id",
-	
-	);
-    $form->add_hidden(
-	field_name => "updated_by",
-	contents   => $self->get_user()->get_sp_person_id(),
-	object     => $stock,
-	setter     => "set_updated_by",
 	);
     
     if ( $self->get_action() =~ /view|edit/ ) {
 	$form->from_database();
 	$form->add_hidden(
 	    field_name => "organims_id",
-	    contents   => $stock->organism_id(),
+	    contents   => $stock->get_object_row(),
 	    );
 	
     }

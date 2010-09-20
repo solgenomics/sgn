@@ -106,17 +106,16 @@ my $species = $organism->species();
 #################
 my $owner;
 #if ( $stock && ($user_type eq 'curator' || $person_id && grep { $_ == $person_id } @owners  ) ) {  $owner = 1; }
-
+#<& /stock/initialize.mas, stock_id=>$stock_id  &>
 </%perl>
 
 <& /util/import_javascript.mas, classes => [ "jquery", "thickbox", "CXGN.Page.FormattingHelpers"] &>
 
-<& /stock/initialize.mas, stock_id=>$stock_id  &>
+
 
 <& /page/page_title.mas, title=> $stock->uniquename()  . "\n" &>
   
   
-
 <&| /page/info_section.mas, title=>"Stock details" , subtitle => ""  &>
   
   <& /page/form.mas, object_type=>'stock', object_id=>"$stock_id", form_name=> 'stock_form', server_side_script => '/phenome/stock/stock_ajax_form.pl', form_div_name=>'stock_details', js_object_name=> 'stockForm', page_url => '/phenome/stock.pl'  &>
