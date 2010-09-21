@@ -50,7 +50,7 @@ $schema
 
 
 use Bio::Chado::Schema;
-use CXGN::Sunshine::Browser;
+use CXGN::Chado::Stock;
 use CXGN::Page::FormattingHelpers qw / html_optional_show info_table_html /;
 
 
@@ -60,8 +60,7 @@ unless ( ( $stock_id =~ m /^\d+$/ ) || ($action eq 'new' && !$stock_id) ) {
 	    message=>"No stock/accession exists for identifier $stock_id",
 	   );
 }
-#my $stock = $schema->resultset("Stock::Stock")->create( {} ) if !$stock_id;
-my ($stock) = $schema->resultset("Stock::Stock")->search( { stock_id => $stock_id} ) ;
+my $stock = CXGN::Chado::Stock->new($schema, $stock_id)->get_object_row();
 
 my $person_id = $user->get_sp_person_id();
 my $user_type = $user->get_user_type();
@@ -93,8 +92,11 @@ if ( !$stock && $action ne 'new' && $action ne 'store' ) {
 
 my $this_page = "/phenome/stock.pl?stock_id=$stock_id";
 
-my ($organism) = $stock->search_related('organism');
-my $species = $organism->species();
+my $type_name;
+my $type = $stock->type();
+$type_name  = $type->name() if $type;
+#my ($organism) = $stock->search_related('organism');
+#my $species = $organism->species();
 
 #################
 my $owner;
@@ -106,7 +108,7 @@ my $owner;
 
 <& /stock/initialize.mas, stock_id=>$stock_id  &>
 
-<& /page/page_title.mas, title=> $stock->type->name() . ": " . $stock->uniquename()  . "\n" &>
+<& /page/page_title.mas, title=> $type_name  .  ": " . $stock->uniquename()  . "\n" &>
   
   
 <&| /page/info_section.mas, title=>"Stock details" , subtitle => ""  &>

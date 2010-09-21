@@ -140,7 +140,41 @@ sub generate_form {
     my %args  = $self->get_args();
     my $form = $self->get_form();
     my $dbh = $self->get_dbh();
+   
+    #########
+    my ( $organism_names_ref, $organism_ids_ref ) =
+	CXGN::Tools::Organism::get_all_organisms( $self->get_dbh() );
+    my ($web_visible) = $stock->get_schema->resultset("Cv::Cvterm")->search(
+	{ name => 'web visible' , }
+	);
+    my @species;
+    my @organism_ids;
+    if ($web_visible) {
+	my $organism_res = $stock->get_schema->resultset("Organism::Organismprop")->
+	    search( { type_id => $web_visible->cvterm_id(), } )->
+	    search_related('organism');
+	while (my $o = $organism_res->next() ) {
+	    push @species, $o->species() ;
+	    push @organism_ids, $o->organism_id();
+	}
+    }
     
+    ##########
+
+    if ( $self->get_action =~ /new|store/ ) {
+	$self->get_form->add_select(
+	    display_name       => "Organism ",
+	    field_name         => "organism_id",
+	    contents           => $bcs_stock->organism_id(),
+	    length             => 20,
+	    object             => $bcs_stock,
+	    getter             => "organism_id",
+	    setter             => "organism_id",
+	    select_list_ref    => \@species,
+	    select_id_list_ref => \@organism_ids,
+	    );
+	
+    }
     if ( $stock->get_obsolete() eq 't' ) {
 	$form->add_label(
 	    display_name => "Status",
@@ -148,6 +182,13 @@ sub generate_form {
 	    contents     => 'OBSOLETE',
 	    );
     }
+    $form->add_label(
+	display_name => "Organism ",
+	field_name   => "stock_organism",
+	contents => $bcs_stock->organism->species,
+	);
+    
+	
     $form->add_field(
 	display_name => "Stock name ",
 	field_name   => "stock_name",
