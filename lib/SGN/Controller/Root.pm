@@ -72,6 +72,10 @@ sub bare_mason :Path('bare_mason') {
     $c->forward('View::BareMason');
 }
 
+sub solanum_lycopersicum :Path('/Solanum_lycopersicum') {
+    my ( $self, $c ) = @_;
+    $c->res->redirect('/genomes/Solanum_lycopersicum');
+}
 
 =head1 PRIVATE ACTIONS
 
@@ -196,7 +200,7 @@ sub _find_cgi_action {
 
 =head1 AUTHOR
 
-Robert Buels,,,
+Robert Buels, Jonathan "Duke" Leto
 
 =head1 LICENSE
 

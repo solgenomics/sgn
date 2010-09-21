@@ -91,6 +91,7 @@ my %urls = (
         "intron finder"                            => '/tools/intron_detection/find_introns.pl',
         "display intron"                           => '/tools/intron_detection/display_introns.pl',
         "about clustal file"                       => '/about/clustal_file.pl',
+        "solanum lycopersicum redirect"            => '/Solanum_lycopersicum',
 );
 
 validate_urls(\%urls, $ENV{ITERATIONS} || 1 );
