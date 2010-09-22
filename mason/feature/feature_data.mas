@@ -4,7 +4,7 @@
     $species => undef
 </%args>
 <%init>
-    use SGN::View::Feature qw/gbrowse_link feature_link cvterm_link/;
+    use SGN::View::Feature qw/gbrowse_link feature_link cvterm_link organism_link/;
 </%init>
 <%perl>
     my ($description) = map { $_->value } grep { $_->type->name eq 'Note' } $feature->featureprops->all;
@@ -19,10 +19,7 @@
     <b>Feature Type</b>: <% cvterm_link($feature) %> <br/>
     <b>Description</b>: <% $description %><br/>
     <b>Analysis</b>: <% $feature->is_analysis ? 'Yes' : 'No' %><br/>
-    <b>Organism Name</b>: <& /feature/organism_link.mas,
-                                organism => $feature->organism,
-                                text => $species,
-                           &><br/>
+    <b>Organism Name</b>: <% organism_link($feature->organism) %> <br/>
     <& /feature/feature_length.mas, feature => $feature &>
     <a href="<% gbrowse_link($feature) %>">GBrowse</a><br/>
 </&>

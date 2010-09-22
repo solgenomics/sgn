@@ -7,6 +7,7 @@ our @EXPORT_OK = qw/
     related_stats feature_table gbrowse_link
     get_reference gbrowse_image_url feature_link
     infer_residue cvterm_link
+    organism_link
 /;
 use CatalystX::GlobalContext '$c';
 
@@ -93,6 +94,16 @@ sub feature_link {
     my ($feature) = @_;
     my $name = $feature->name;
     return qq{<a href="/feature/view/name/$name">$name</a>};
+}
+
+sub organism_link {
+    my ($organism) = @_;
+    my $id      = $organism->organism_id;
+    my $species = $organism->species;
+    return <<LINK;
+<span class="species_binomial">
+<a href="/chado/organism.pl?organism_id=$id">$species</a>
+LINK
 }
 
 sub cvterm_link {
