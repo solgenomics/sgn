@@ -94,10 +94,9 @@ if ($sample->get_sample_id() ) {
     my @sample_el_rows = $gemschema->resultset('GeTargetElement')
 	                           ->search({ sample_id => $sample->get_sample_id() });
 
-    my $dbh = CXGN::DB::Connection->new;
     foreach my $sample_el_row (@sample_el_rows) {
 	my $target_id = $sample_el_row->get_column('target_id');
-	my $target = CXGN::GEM::Target->new($dbh, $target_id);
+	my $target = CXGN::GEM::Target->new($gemschema, $target_id);
 	push @targets, $target;
     }
 }

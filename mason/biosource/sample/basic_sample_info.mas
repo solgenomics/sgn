@@ -76,7 +76,7 @@ if (defined $sample->get_sample_id() ) {
     if (defined $type_id) {
 
 	my ($type_cvterm_row) = $schema->resultset('Cv::Cvterm')
-	                               ->search({ type_id => $type_id });
+	                               ->search({ cvterm_id => $type_id });
 	
 	if (defined $type_cvterm_row) {
 	
@@ -132,25 +132,37 @@ if (defined $sample->get_sample_id() ) {
 
 
     my (@onto_html);
+    my (@external_links_html);
     my %dbxref_related = $sample->get_dbxref_related();
 
     foreach my $dbxref_id (sort keys %dbxref_related) {
 	 
-	 ## Get the sample_element_dbxref (GO and PO terms)
+	## Get the sample_element_dbxref (GO and PO terms) (with cvterm.name)
+	## Get external accessions (without cvterm.name) 
 	 
 	if (defined $dbxref_related{$dbxref_id} ) {
 	 
 	     my %dbxref_rel_data = %{ $dbxref_related{$dbxref_id} };
+
+	     if (defined $dbxref_rel_data{'cvterm.name'}) {
 	
-	     my $onto_accession = $dbxref_rel_data{'db.name'} . ":" . $dbxref_rel_data{'dbxref.accession'};
-	     my $onto_descr = $dbxref_rel_data{'cvterm.name'};
-	     my $onto_link = '/chado/cvterm.pl?action=view&cvterm_id='.$dbxref_rel_data{'cvterm.cvterm_id'};
-	     my $onto_line = "<a href=$onto_link>$onto_accession</a> ($onto_descr)<br>";
-	     push @onto_html, $onto_line;	     
+		 my $onto_accession = $dbxref_rel_data{'db.name'} . ":" . $dbxref_rel_data{'dbxref.accession'};
+		 my $onto_descr = $dbxref_rel_data{'cvterm.name'};
+		 my $onto_link = '/chado/cvterm.pl?action=view&cvterm_id='.$dbxref_rel_data{'cvterm.cvterm_id'};
+		 my $onto_line = "<a href=$onto_link>$onto_accession</a> ($onto_descr)<br>";
+		 push @onto_html, $onto_line;
+	     }
+	     else {
+		 my $external_accession = $dbxref_rel_data{'db.name'} . ": " . $dbxref_rel_data{'dbxref.accession'};
+		 my $external_link = $dbxref_rel_data{'db.urlprefix'} . $dbxref_rel_data{'db.url'} . $dbxref_rel_data{'dbxref.accession'};
+		 my $external_line = "<a href=$external_link>$external_accession</a><br>";
+		 push @external_links_html, $external_line;
+	     }
 	 }
     }
 	 
     my $ontologies_list = join(' ', @onto_html) || $default_message;
+    my $external_links_list = join(' ', @external_links_html) || $default_message;
 
     ## Create the HTML table
 
@@ -165,6 +177,7 @@ if (defined $sample->get_sample_id() ) {
 	   <tr> <td width="25%"> <b>Protocol:</b>               </td> <td> $protocol_html </td></tr>
 	   <tr> <td width="25%"> <b>Contact:</b>                </td> <td> $contact_html </td></tr>
 	   <tr> <td width="25%"> <b>Ontologies:</b>             </td> <td> $ontologies_list </td></tr>
+	   <tr> <td width="25%"> <b>External links:</b>         </td> <td> $external_links_list </td></tr>
     </table>
     <br>
 
