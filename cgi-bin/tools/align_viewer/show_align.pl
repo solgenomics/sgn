@@ -113,7 +113,7 @@ our ( $family_nr, $i_value, $family_id ) =
   $page->get_arguments( "family_nr", "i_value", "family_id" );
 
 if ( $family_id && !( $family_nr || $i_value ) ) {
-    my $dbh = CXGN::DB::Connection->new();
+    my $dbh = $c->dbc->dbh;
     my $sth =
       $dbh->prepare(
 "SELECT family_nr, i_value FROM sgn.family LEFT JOIN sgn.family_build USING (family_build_id) WHERE family_id=?"
@@ -222,8 +222,7 @@ elsif ( $id_data =~ /\S+/ ) {
 
     open( my $temp_fh, '>', $temp_file ) or die $!;
 
-    my @ids = ();
-    push( @ids, split( /\s+/, $id_data ) );
+    my @ids = split /\s+/, $id_data;
     foreach my $id (@ids) {
         if ( $id =~ /^gi:\d+$/i
             || CXGN::Tools::Identifiers::is_genbank_accession($id) )
@@ -239,7 +238,7 @@ elsif ( $id_data =~ /\S+/ ) {
         }
         else {
             eval {
-                my $gene    = CXGN::Tools::Gene->new($id);
+                my $gene    = CXGN::Tools::Gene->new($id, $c->dbc->dbh );
                 my $seqtype = "";
                 $seqtype = "protein" if $type eq "pep";
                 $seqtype = "cds"     if $type eq "cds";
@@ -247,7 +246,13 @@ elsif ( $id_data =~ /\S+/ ) {
                 my $seq = $gene->getSequence($seqtype);
                 print $temp_fh ">$id\n$seq\n" if $seq;
             };
-            push( @good_ids, $id ) unless $@;
+            if( my $err = $@ ) {
+                $err =~ s/\n\s*Catalyst::.+//;
+                warn $err;
+            } else {
+                push @good_ids, $id;
+
+            }
         }
     }
     $id_data = join " ", @good_ids;
@@ -1150,8 +1155,6 @@ sub run_muscle {
 
     if ( $run eq "cluster" ) {
 
-        #$ENV{HOME_4_TCOFFEE}="/data/shared/tmp";
-
         my ( undef, $filename ) = tempfile(
             TEMPLATE => "jobXXXXXX",
             DIR      => $CLUSTER_SHARED_TEMPDIR
@@ -1195,7 +1198,6 @@ sub run_muscle {
           or $page->message_page(
             "An error occurred in the serializaton of the job object");
 
-#if (-e $job_file) { $page->message_page("Yes, it exists! $job_file". `ls $PATH`); }
         my $job_file_base = File::Basename::basename($job_file);
 
         print STDERR "SUBMITTED JOB WITH JOBID: " . $job->job_id() . "\n";
@@ -1205,8 +1207,6 @@ sub run_muscle {
         my $pass_back =
 "./align_viewer/show_align.pl?&amp;title=$title&amp;type=$type&amp;force_gap_cds=1&amp;cds_temp_file=$cds_temp_filename&amp;temp_file=";
         $pass_back =~ s/([^A-Za-z0-9])/sprintf("%%%02X", ord($1))/seg;
-        my ( $enc_title, $enc_type ) =
-          map { HTML::Entities::encode($_) } ( $title, $type );
         my $message =
           "Running Muscle v3.6 ($SEQ_COUNT sequences), please wait ...";
 

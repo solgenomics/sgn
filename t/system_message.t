@@ -1,6 +1,7 @@
 use Test::Most tests => 2;
 use File::Temp;
 
+use SGN::Context;
 use CXGN::MasonFactory;
 
 my $c = SGN::Context->new;

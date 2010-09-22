@@ -10,10 +10,15 @@ package CXGN::Apache::Error;
 use strict;
 use warnings;
 
-use SGN::Context;
+use CatalystX::GlobalContext '$c';
 
+sub _context {
+    return $c if $c;
+    require SGN::Context;
+    return SGN::Context->instance;
+}
 sub notify {
-    SGN::Context->instance->throw( developer_message => join '', @_ );
+    _context()->throw( notify => 1, developer_message => join '', @_ );
 }
 
 

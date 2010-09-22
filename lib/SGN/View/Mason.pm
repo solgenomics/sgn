@@ -4,6 +4,24 @@ extends 'Catalyst::View::HTML::Mason';
 
 use File::Spec;
 
+
+=head1 NAME
+
+SGN::View::Mason - Mason View Component for SGN
+
+=head1 DESCRIPTION
+
+Mason View Component for SGN. This extends Catalyst::View::HTML::Mason.
+
+=head1 FUNCTIONS
+
+=head2 $self->component_exists($component)
+
+Check if a Mason component exists. Returns 1 if the component exists, otherwise 0.
+
+
+=cut
+
 sub component_exists {
     my ( $self, $component ) = @_;
 
@@ -18,21 +36,13 @@ sub component_exists {
     return 0;
 }
 
-=head1 NAME
-
-SGN::View::Mason - Mason View Component for SGN
-
-=head1 DESCRIPTION
-
-Mason View Component for SGN
-
 =head1 SEE ALSO
 
-L<SGN>, L<HTML::Mason>
+L<SGN>, L<HTML::Mason>, L<Catalyst::View::HTML::Mason>
 
-=head1 AUTHOR
+=head1 AUTHORS
 
-Robert Buels,,,
+Robert Buels, Jonathan "Duke" Leto
 
 =head1 LICENSE
 

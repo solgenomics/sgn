@@ -6,7 +6,7 @@ use warnings;
 our @EXPORT_OK = qw/
     related_stats feature_table gbrowse_link
     get_reference gbrowse_image_url feature_link
-	infer_residue
+    infer_residue cvterm_link
 /;
 use CatalystX::GlobalContext '$c';
 
@@ -22,7 +22,7 @@ sub related_stats {
     my $stats = { };
     my $total = scalar @$features;
     for my $f (@$features) {
-            $stats->{$f->type->name}++;
+            $stats->{cvterm_link($f)}++;
     }
     my $data = [ ];
     for my $k (sort keys %$stats) {
@@ -44,7 +44,7 @@ sub feature_table {
             my ($fmin,$fmax) = ($loc->fmin, $loc->fmax);
             push @$data, [
                 feature_link($f),
-                $f->type->name,
+                cvterm_link($f),
                 gbrowse_link($f,$fmin,$fmax),
                 $fmax-$fmin . " bp",
                 $loc->strand == 1 ? '+' : '-',
@@ -94,6 +94,13 @@ sub feature_link {
     my ($feature) = @_;
     my $name = $feature->name;
     return qq{<a href="/feature/view/name/$name">$name</a>};
+}
+
+sub cvterm_link {
+    my ($feature) = @_;
+    my $name = $feature->type->name;
+    my $id   = $feature->type->id;
+    return qq{<a href="/chado/cvterm.pl?cvterm_id=$id">$name</a>};
 }
 
 sub infer_residue {

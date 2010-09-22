@@ -61,13 +61,12 @@ my %args = CXGN::Page->new()
 
 ## Create the target object (by default it will create an empty object)
 
-my $dbh = CXGN::DB::Connection->new;
-my $target = CXGN::GEM::Target->new($dbh);
+my $target = CXGN::GEM::Target->new($schema);
 
 if (exists $args{'id'} && $args{'id'} =~ m/^\d+$/) {
-   $target = CXGN::GEM::Target->new($dbh, $args{'id'});
+   $target = CXGN::GEM::Target->new($schema, $args{'id'});
 } elsif (exists $args{'name'}) {
-   $target = CXGN::GEM::Target->new_by_name($dbh, $args{'name'});
+   $target = CXGN::GEM::Target->new_by_name($schema, $args{'name'});
 }
 
 
@@ -75,6 +74,7 @@ if (exists $args{'id'} && $args{'id'} =~ m/^\d+$/) {
 
 if (defined $target->get_target_id or defined $target->get_target_name ) {
     $m->exec('/gem/target_detail.mas',
+             schema => $schema,
              target => $target );
 } else {
     $m->exec('/gem/gem_page_error.mas', 

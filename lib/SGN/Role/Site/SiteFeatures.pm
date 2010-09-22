@@ -39,6 +39,10 @@ sub feature {
     shift->_features->{+shift};
 }
 
+sub site_name {
+    shift->config->{name};
+}
+
 sub _build__features {
     my $self = shift;
     my @feature_classes =

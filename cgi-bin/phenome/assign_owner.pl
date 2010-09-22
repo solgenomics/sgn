@@ -78,7 +78,6 @@ if ($login_user_type eq 'curator') {
 	    warn "assigning locus owner failed! . $@";
 	    my $message=  "assigning locus owner failed! $@";
 	    return $message;
-            #my $content = "MochiKit.Logging.logDebug(\"$message\");\n";
 	}
     
 	else  { 

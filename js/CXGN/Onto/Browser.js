@@ -15,10 +15,12 @@ JSAN.use('MochiKit.Async');
 JSAN.use('Prototype');
 JSAN.use('CXGN.Effects');
 JSAN.use('CXGN.Onto.Browser');
+JSAN.use('jquery');
 
 
-CXGN = function () {};
-CXGN.Onto = function () {};
+if (!CXGN) CXGN = function() {};
+if (!CXGN.Onto) CXGN.Onto = function() {};
+
 
 CXGN.Onto.Browser = function () { 
 

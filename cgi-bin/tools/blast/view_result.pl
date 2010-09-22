@@ -49,7 +49,7 @@ if ($params{database}=~/\/(\w+?)$/) {
 }
 
 #my ($bdb) = CXGN::BlastDB->search_ilike(title=> "%$params{database}%");
-my ($bdb) = CXGN::BlastDB->from_id($params{database});
+our ($bdb) = CXGN::BlastDB->from_id($params{database});
 
 die "No such database" if (!$bdb);
 
