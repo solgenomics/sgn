@@ -54,7 +54,7 @@ my $min_primer_length = 15;
 
 my $fprimer = $page->get_arguments("fprimer");
 my $rprimer = $page->get_arguments("rprimer");
-my $productLength = $page->get_arguments("ProductLength");
+my $productLength = $page->get_arguments("productLength");
 my $allowedMismatches = $page->get_arguments('allowedMismatches');
 my $frevcom = $page->get_arguments('frevcom'); #forward primer reverse complement
 my $rrevcom = $page->get_arguments('rrevcom'); #reverse primer reverse complement
