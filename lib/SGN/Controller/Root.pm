@@ -72,11 +72,6 @@ sub bare_mason :Path('bare_mason') {
     $c->forward('View::BareMason');
 }
 
-sub solanum_lycopersicum :Path('/Solanum_lycopersicum') {
-    my ( $self, $c ) = @_;
-    $c->res->redirect('/genomes/Solanum_lycopersicum');
-}
-
 =head1 PRIVATE ACTIONS
 
 =head2 end
