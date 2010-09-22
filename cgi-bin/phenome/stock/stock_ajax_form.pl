@@ -142,8 +142,7 @@ sub generate_form {
     my $dbh = $self->get_dbh();
    
     #########
-    my ( $organism_names_ref, $organism_ids_ref ) =
-	CXGN::Tools::Organism::get_all_organisms( $self->get_dbh() );
+   
     my ($web_visible) = $stock->get_schema->resultset("Cv::Cvterm")->search(
 	{ name => 'web visible' , }
 	);
@@ -156,6 +155,20 @@ sub generate_form {
 	while (my $o = $organism_res->next() ) {
 	    push @species, $o->species() ;
 	    push @organism_ids, $o->organism_id();
+	}
+    }
+
+    my ($stock_type) = $stock->get_schema->resultset("Cv::Cv")->search(
+	{ name => 'stock type' , }
+	);
+    my @types;
+    my @type_ids;
+    if ($stock_type) {
+	my $cvterm_res = $stock_type->
+	    search_related('cvterms');
+	while (my $cvterm = $cvterm_res->next() ) {
+	    push @types, $cvterm->name() ;
+	    push @type_ids, $cvterm->cvterm_id();
 	}
     }
     
@@ -175,6 +188,21 @@ sub generate_form {
 	    );
 	
     }
+
+if ( $self->get_action =~ /new|store/ ) {
+	$self->get_form->add_select(
+	    display_name       => "Stock type",
+	    field_name         => "cvterm_id",
+	    contents           => $bcs_stock->type_id(),
+	    length             => 20,
+	    object             => $bcs_stock,
+	    getter             => "type_id",
+	    setter             => "type_id",
+	    select_list_ref    => \@types,
+	    select_id_list_ref => \@type_ids,
+	    );
+	
+    }
     if ( $stock->get_obsolete() eq 't' ) {
 	$form->add_label(
 	    display_name => "Status",
@@ -182,12 +210,14 @@ sub generate_form {
 	    contents     => 'OBSOLETE',
 	    );
     }
-    $form->add_label(
-	display_name => "Organism ",
-	field_name   => "stock_organism",
-	contents => $bcs_stock->organism->species,
-	);
-    
+    if ( $self->get_action =~ /view|edit/ ) {
+	
+	$form->add_label(
+	    display_name => "Organism ",
+	    field_name   => "stock_organism",
+	    contents => $bcs_stock->organism->species,
+	    );
+    }
 	
     $form->add_field(
 	display_name => "Stock name ",
@@ -206,6 +236,15 @@ sub generate_form {
 	validate     => 'string',
 	);
     
+    $form->add_textarea(
+	display_name => "Description",
+	field_name   => "stock_desc",
+	object       => $bcs_stock,
+	getter       => "description",
+	setter       => "description",
+	columns      => 40,
+	rows         => => 4,
+	);
     
     if ( $self->get_action() =~ /view|edit/ ) {
 	$form->from_database();
