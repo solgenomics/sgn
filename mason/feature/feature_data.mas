@@ -13,6 +13,7 @@
     title       => $title,
     subtitle    => $feature->is_obsolete ? 'WARNING: This feature is obsolete' : '',
     collapsible => 1,
+    is_subsection => 1,
 &>
     <b>Name</b>: <% feature_link($feature) %> <br/>
     <b>Feature Type</b>: <% cvterm_link($feature) %> <br/>

@@ -20,6 +20,7 @@
 <&| /page/info_section.mas,
     title => "Parent Features",
     collapsible => 1,
+    is_subsection => 1,
 &>
     <& /page/columnar_table.mas,
         headings => [ "Feature Type", "Number"  ],
@@ -35,6 +36,7 @@
 <&| /page/info_section.mas,
     title => "Child Features",
     collapsible => 1,
+    is_subsection => 1,
 &>
     <& /page/columnar_table.mas,
         headings => [ "Child Feature Type", "Number" ],

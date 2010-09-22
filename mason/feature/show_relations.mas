@@ -9,6 +9,7 @@
 <&| /page/info_section.mas,
     title => $title,
     collapsible => 1,
+    is_subsection => 1,
 &>
 % for my $relation (@$relations) {
 % my $word = $relation->[0] =~ m/derives_from/ ? '' : ' is ';
