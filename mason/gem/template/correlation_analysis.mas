@@ -163,19 +163,10 @@ if (defined $template) {
   		                                        { 
   							    order_by => $order,
   							} 
-  					              );
-
-  	       if (@corr_members_rows > 0) {
-
-  		    my $temp_count = ' (' . scalar(@corr_members_rows) . ' templates correlated)'; 
-  		    $corr_analysis_html .= '<table width="100%">';
-  		    $corr_analysis_html .= '<tr> <td width ="2%"></td><td width="28%"> <b>Correlation Type: </b> </td>';
-  		    $corr_analysis_html .= ' <td align="left">'.$corr_type . $temp_count .'</td></tr>';
-  		    $corr_analysis_html .= '</table><br>';
-  	       }
+  					              );  	       
 
   	       my @corr_data;
-  	       my ($corr_type, $corr_template_type);
+  	       my ($corrtype, $corr_template_type);
 
   	       ## Now it will get the template_id (a or b) and to put in the same order in an array
               
@@ -185,7 +176,7 @@ if (defined $template) {
   	       foreach my $corr_member_row (@corr_members_rows) {
 
   		   my %corr_member_data = $corr_member_row->get_columns();
-  		   $corr_type = $corr_member_data{'correlation_type'};
+  		   $corrtype = $corr_member_data{'correlation_type'};
 
   		   my $templ_a_id = $corr_member_data{'template_a_id'};
   		   my $templ_b_id = $corr_member_data{'template_b_id'};
@@ -208,6 +199,14 @@ if (defined $template) {
 
   	       ## With the list of template_ids it will take them using CXGN::GEM::Template object
 	       
+	       if (@corr_members_rows > 0) {
+
+  		    my $temp_count = ' (' . scalar(@corr_member_ids) . ' templates correlated)'; 
+  		    $corr_analysis_html .= '<table width="100%">';
+  		    $corr_analysis_html .= '<tr> <td width ="2%"></td><td width="28%"> <b>Correlation Type: </b> </td>';
+  		    $corr_analysis_html .= ' <td align="left">'.$corr_type . $temp_count .'</td></tr>';
+  		    $corr_analysis_html .= '</table><br>';
+  	       }
 	       
 	       my @test;
   	       foreach my $corr_template_id (@corr_member_ids) {
@@ -251,12 +250,13 @@ if (defined $template) {
 		   }
   	       }
 
-	       my $test = join('<br>', @test);
-  	       $corr_analysis_html .= columnar_table_html( headings => [ 'Template', $corr_type, 'Internal Mapping' ],
-  							   data     => \@corr_data,
-  							   __align  => ['l', 'c', 'c'],
-  		                                         );
-  	       $corr_analysis_html .= '<br>';
+	       if (scalar(@corr_data) > 0) {
+		   $corr_analysis_html .= columnar_table_html( headings => [ 'Template', $corrtype, 'Internal Mapping' ],
+  						  	       data     => \@corr_data,
+  							       __align  => ['l', 'c', 'c'],
+  		                                             );
+		   $corr_analysis_html .= '<br>';
+	       }
   	   }
        }
    }
