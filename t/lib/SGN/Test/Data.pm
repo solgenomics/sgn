@@ -8,6 +8,7 @@ our $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 our $num_features = 0;
 our $num_cvterms = 0;
 our $num_dbxrefs = 0;
+our $num_organisms = 0;
 our $test_data;
 
 sub create_test_dbxref {
@@ -28,13 +29,31 @@ sub create_test_cvterm {
         $values->{name} = "cvterm $num_cvterms";
         $num_cvterms++;
     }
-    $schema->resultset('Cv::Cv')
+    my $cvterm = $schema->resultset('Cv::Cv')
            ->create( { $values->{name} } )
            ->create_related('cvterms',
             {
                 name => 'tester',
                 dbxref => $values->{dbxref} || create_test_dbxref(),
             });
+    push @$test_data, $cvterm;
+    return $cvterm;
+}
+
+sub create_test_organsim {
+    my ($values) = @_;
+    unless ($values->{genus}) {
+        $values->{genus} = "organism_$num_organisms";
+        $num_organisms++;
+    }
+    unless ($values->{species}) {
+        $values->{species} = 'fooii';
+    }
+    my $organism = $schema->resultset('Organism::Organism')
+                          ->create( $values );
+    push @$test_data, $organism;
+    return $organism;
+
 }
 
 sub create_test_feature {
@@ -52,8 +71,13 @@ sub create_test_feature {
         $num_features++;
     }
 
-    push @$test_data, $schema->resultset('Sequence::Feature')
+    $values->{organism} ||= create_test_organism();
+    $values->{cvterm}   ||= create_test_cvterm();
+
+    my $organism = $schema->resultset('Sequence::Feature')
            ->create( $values );
+    push @$test_data, $organism;
+    return $organism;
 }
 
 sub END {
