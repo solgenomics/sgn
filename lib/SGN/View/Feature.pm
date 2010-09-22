@@ -49,7 +49,6 @@ sub feature_table {
                 $fmax-$fmin . " bp",
                 $loc->strand == 1 ? '+' : '-',
                 $loc->phase,
-                $loc->rank,
             ];
         }
     }
