@@ -94,7 +94,7 @@ if (defined $id) {
        
        my $order_info = qq|[<a href="http://ted.bti.cornell.edu/cgi-bin/TFGD/order/home.cgi">Order&nbsp;Array</a>]|;
        my $ted_link = '[<a href=';
-       $ted_link .= "http://ted.bti.cornell.edu/cgi-bin/TFGD/array/probe_expression.cgi?array_ID=A01&probe_ID=$prespot_id";
+       $ted_link .= "http://ted.bti.cornell.edu/cgi-bin/TFGD/array_data/probe_expression.cgi?array_ID=A01&probe_ID=$prespot_id";
        $ted_link .= '>TMD</a>]';
        
        push @tom, [ $clone_accession, $est_link, $read_dir, $chip_name, $spot_id, $order_info, $ted_link];
