@@ -24,8 +24,6 @@ my $dbh = CXGN::DB::Connection->new;
 
 my $referer = $c->request->referer;
 
-my $tempdir = $c->path_to( $c->tempfiles_subdir('cview') );
-
 $c->forward_to_mason_view(
     '/cview/map/index.mas',
     dbh            => $dbh,
@@ -37,7 +35,7 @@ $c->forward_to_mason_view(
     referer        => $referer,
     force          => $force,
     map_items      => $map_items,
-    tempdir        => $tempdir,
+    tempdir        => $c->tempfiles_subdir('cview'),
     basepath       => $c->path_to(),
 );
 
