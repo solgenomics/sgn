@@ -21,7 +21,7 @@ use CXGN::Phenome::Population;
 use CXGN::Chado::Publication;
 use CXGN::People::PageComment;
 use CXGN::People::Person;
-use CXGN::Cview::Map_overviews;
+use CXGN::Cview::MapOverviews;
 use CXGN::Contact;
 use CXGN::Feed;
 use CXGN::Tools::Organism;
@@ -455,7 +455,7 @@ sub display_page {
     
  ######## map:
 
-    my $overview = CXGN::Cview::Map_overviews::Individual->new($individual_id);
+    my $overview = CXGN::Cview::MapOverviews::Individual->new($individual_id);
     my $map_html;
     if ($overview) {
 	$overview->render_map();
