@@ -114,7 +114,6 @@ $map_overview->set_image_width($image_width);
 # (the ones to be requested to be hilited using the hilite feature)
 #
 my @map_items = split /\n/, $map_items;
-print STDERR  "map items = $map_items\n";
 
 $map_overview->get_map()->set_map_items(@map_items);
 
