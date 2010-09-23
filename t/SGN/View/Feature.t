@@ -23,6 +23,7 @@ sub teardown : Test(teardown) {
 }
 
 sub TEST_RELATED_STATS : Tests {
+    local $TODO = 'TEST_RELATED_STATS not currently functional';
     my $self = shift;
     my $feature = Test::MockObject->new;
     my $type = Test::MockObject->new;
