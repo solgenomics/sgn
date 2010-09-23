@@ -26,6 +26,8 @@ Lukas Mueller, based on SGN Perl code
 
 <%args>
 $dbh
+$basepath
+$cview_tempfiles_subdir
 </%args>
 
 
@@ -78,7 +80,11 @@ note that all data is released under the data release agreement below.
 </&>
 
 <&| /page/info_section.mas, title => 'BAC-by-BAC sequencing statistics', empty_message => '&nbsp;' &>
-  <& /genomes/Solanum_lycopersicum/bac_by_bac_progress.mas &>
+  <& /genomes/Solanum_lycopersicum/bac_by_bac_progress.mas,
+      dbh      => $dbh,
+      basepath => $basepath,
+      cview_tempfiles_subdir => $cview_tempfiles_subdir,
+   &>
 </&>
 
 

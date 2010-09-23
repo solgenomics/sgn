@@ -35,7 +35,7 @@ Lukas Mueller <lam87@cornell.edu>. Based on Perl code by many at SGN.
 <%args>
 $dbh
 $basepath
-$tempfiles_subdir
+$cview_tempfiles_subdir
 </%args>
 
 <%perl>
@@ -73,7 +73,7 @@ sub flag_td {
 
 my $overview = CXGN::Cview::MapOverviews::ProjectStats->new({ dbh      => $dbh,
 							      basepath => $basepath,
-							      tempfiles_subdir => $tempfiles_subdir,
+							      tempfiles_subdir => $cview_tempfiles_subdir,
 							    });
 
 
