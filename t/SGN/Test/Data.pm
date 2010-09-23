@@ -4,8 +4,8 @@ use lib 't/lib';
 use Test::More;
 
 use_ok('SGN::Test::Data',qw/create_test_organism create_test_dbxref create_test_feature create_test_cvterm/);
-my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
+my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
 
 my $dbxref = create_test_dbxref({
                 name => "SGNTESTDATA_$$",

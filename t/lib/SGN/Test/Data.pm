@@ -91,7 +91,8 @@ sub END {
     # delete objects in the reverse order we created them
     # TODO: catch signals?
     map {
-        $_->delete
+        diag("deleting $_");
+        my $deleted = $_->delete;
     } reverse @$test_data;
 }
 
