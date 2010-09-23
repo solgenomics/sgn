@@ -5,24 +5,36 @@ use SGN::Context;
 use base 'Exporter';
 use Test::More;
 
-our $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+our $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
 
 our $num_features = 0;
 our $num_cvterms = 0;
 our $num_dbxrefs = 0;
+our $num_dbs = 0;
 our $num_organisms = 0;
 our $test_data;
 our @EXPORT_OK = qw/
                     create_test_dbxref create_test_cvterm
                     create_test_organism create_test_feature
+                    create_test_db
                     /;
+
+sub create_test_db {
+    my ($values) = @_;
+    my $db = $schema->resultset('General::Db')
+           ->create( { name => $values->{name} || "db_$num_dbs" } );
+    push @$test_data, $db;
+    return $db;
+}
 
 sub create_test_dbxref {
     my ($values) = @_;
-    my $dbxref = $schema->resultset('General::Db')
-           ->create( { name => $values->{name} || "db_$num_dbxrefs" } )
-           ->create_related('dbxrefs',
+    $values->{db} ||= create_test_db();
+
+    my $dbxref = $schema->resultset('General::Dbxref')
+           ->create(
             {
+                db_id     => $values->{db}->db_id,
                 accession => $values->{accession} || "dbxref_$num_dbxrefs",
             });
     push @$test_data, $dbxref;
@@ -87,9 +99,10 @@ sub create_test_feature {
 }
 
 sub END {
-    diag("deleting $#$test_data test data objects") if @$test_data;
+    diag("deleting " . scalar(@$test_data) . " test data objects") if @$test_data;
     # delete objects in the reverse order we created them
     # TODO: catch signals?
+    use Data::Dumper;
     map {
         diag("deleting $_");
         my $deleted = $_->delete;
