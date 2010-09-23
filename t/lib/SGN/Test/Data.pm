@@ -20,10 +20,10 @@ our @EXPORT_OK = qw/
 sub create_test_dbxref {
     my ($values) = @_;
     my $dbxref = $schema->resultset('General::Db')
-           ->create( { name => $values->{name} || 'test_db' } )
+           ->create( { name => $values->{name} || "db_$num_dbxrefs" } )
            ->create_related('dbxrefs',
             {
-                accession => $values->{accession} || 'some_junk',
+                accession => $values->{accession} || "dbxref_$num_dbxrefs",
             });
     push @$test_data, $dbxref;
     return $dbxref;
@@ -36,10 +36,10 @@ sub create_test_cvterm {
         $num_cvterms++;
     }
     my $cvterm = $schema->resultset('Cv::Cv')
-           ->create( { $values->{name} } )
+           ->create( { name => "cv_" . $values->{name} } )
            ->create_related('cvterms',
             {
-                name => 'tester',
+                name => $values->{name},
                 dbxref => $values->{dbxref} || create_test_dbxref(),
             });
     push @$test_data, $cvterm;
