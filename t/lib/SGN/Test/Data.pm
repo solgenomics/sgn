@@ -109,11 +109,11 @@ sub create_test_feature {
     $values->{residues} = 'ATCG' unless $values->{residues};
     $values->{seqlen} = length($values->{residues}) unless $values->{seqlen};
     unless ($values->{name}) {
-        $values->{name} = "Feature #" . $num_features;
+        $values->{name} = "Feature #$num_features";
         $num_features++;
     }
     unless ($values->{uniquename}) {
-        $values->{name} = "Unique Feature #" . $num_features;
+        $values->{uniquename} = "Unique Feature #$num_features";
         $num_features++;
     }
 
