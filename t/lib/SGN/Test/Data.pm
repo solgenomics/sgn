@@ -94,7 +94,7 @@ sub create_test_organism {
         $values->{genus} = "organism_$num_organisms-$$";
     }
     unless ($values->{species}) {
-        $values->{species} = 'fooii';
+        $values->{species} = $values->{genus} . ' fooii';
     }
     my $organism = $schema->resultset('Organism::Organism')
                           ->create( $values );
@@ -140,7 +140,7 @@ sub END {
     # delete objects in the reverse order we created them
     # TODO: catch signals?
     map {
-        diag("deleting $_");
+        diag("deleting $_") if $ENV{DEBUG};
         my $deleted = $_->delete;
     } reverse @$test_data;
 }

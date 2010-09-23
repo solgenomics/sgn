@@ -89,18 +89,28 @@ my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
 {
     my $organism = create_test_organism({
         genus   => 'Tyrannosaurus',
-        species => 'rex',
+        species => 'Tyrannosaurus rex',
     });
     isa_ok($organism, 'Bio::Chado::Schema::Organism::Organism');
 
     my $rs = $schema->resultset('Organism::Organism')
         ->search({
             genus       => 'Tyrannosaurus',
-            species     => 'rex',
+            species     => 'Tyrannosaurus rex',
             organism_id => $organism->organism_id,
         });
     is($rs->count, 1, 'found a T.rex organism');
 }
 
+{
+    my @f = map { create_test_feature() } (1..2);
+    isnt($f[0]->name,$f[1]->name,'two features created have different names');
+    isnt($f[0]->uniquename,$f[1]->uniquename,'two features created have different unique names');
+}
+{
+    my @o = map { create_test_organism() } (1..2);
+    isnt($o[0]->genus,$o[1]->genus,'two organisms created have different genus');
+    isnt($o[0]->species,$o[1]->species,'two organisms created have different species');
+}
 
 done_testing;
