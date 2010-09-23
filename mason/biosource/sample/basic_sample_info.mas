@@ -41,12 +41,14 @@ use CXGN::Biosource::Schema;
 use CXGN::GEM::Schema;
 use Bio::Chado::Schema;
 use CXGN::Chado::Dbxref;
+use CXGN::People::Person;
 use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
 
 my $basic_info_content;
 my $element_info_content;
-my $sample_accession;
+my $sample_name;
 my $default_message = '<span class="ghosted">Data not available</span>';
+
 
 ## If there aren't any sample_row that comes from sample_detail.mas, it will return a message.
 
@@ -56,66 +58,93 @@ if (defined $sample->get_sample_id() ) {
     ## and sample element information (columnar html table) 
 
     ## Get the data from the object.
-    my $sample = $ARGS{'sample'};
-    my $sample_name = $sample->get_sample_name();
-    my $sample_type = $sample->get_sample_type();
-    my $description = $sample->get_description();
-
-    $sample_accession = $sample_name;
-
-    my @sample_el_list;
     
-    ## Get sample_elements, it will put them in a columnar table 
+    $sample_name = $sample->get_sample_name();
+    my $alt_name = $sample->get_alternative_name() || $default_message;
+    my $type_id = $sample->get_type_id();
+    my $description = $sample->get_description() || $default_message;
+    my $contact_id = $sample->get_contact_id();
+    my $organism_id = $sample->get_organism_id();
+    my $stock_id = $sample->get_stock_id();
+    my $protocol_id = $sample->get_protocol_id();
 
-    my %sample_elements = $sample->get_sample_elements(); 
-    my %sample_element_dbxref = $sample->get_dbxref_from_sample_elements();
+    ## Now it will take the data for each id
+
+    ## Type_id
+
+    my $type_name_html = $default_message;
+    if (defined $type_id) {
+
+	my ($type_cvterm_row) = $schema->resultset('Cv::Cvterm')
+	                               ->search({ cvterm_id => $type_id });
+	
+	if (defined $type_cvterm_row) {
+	
+	    $type_name_html = $type_cvterm_row->get_column('name');
+	}
+    }
+
+    ## Organism_id
+
+    my $organism_html = $default_message;
+    my ($organism_row) = $schema->resultset('Organism::Organism')
+	                        ->search( { organism_id => $organism_id } );
+
+    if (defined $organism_row) {
+	my $genus = $organism_row->get_column('genus');
+	my $species = $organism_row->get_column('species');
+	my $organism_link = '/chado/organism.pl?organism_id='.$organism_id;
+	$organism_html = "<a href=$organism_link>$species</a><br>";
+    } 
+   
+	
+    ## Same thing with protocol (it haven't any web yet)
+
+    my $protocol_html = $default_message;
+    my ($protocol_row) = $schema->resultset('BsProtocol')
+	                        ->search( { protocol_id => $protocol_id } );
+
+    if (defined $protocol_row) {
+	my $protocol_name = $protocol_row->get_column('protocol_name');
+	## my $protocol_link = '/biosource/protocol.pl?protocol_id='.$protocol_id;
+	## $protocol_html = "<a href=$protocol_link>$protocol_name</a><br>";
+	$protocol_html = $protocol_name;
+    }
+
+    ## Contact_id
+
+    my $contact_html = $default_message;
+
+    my $contact = CXGN::People::Person->new($schema->storage()->dbh(), $contact_id);
+    
+    if (defined $contact) {
+
+	my $saludation = $contact->get_salutation();
+	my $first_name = $contact->get_first_name();
+	my $last_name = $contact->get_last_name();
+    
+	my $contact_link = '/solpeople/personal-info.pl?sp_person_id=' . $contact_id;
+	$contact_html = "<a href=$contact_link>$saludation $first_name $last_name</a><br>";
+    }
+
+    ## For now, there are not any stock information to show. It should be complete with
+    ## Nat. div. module in some point
+
+
+    my (@onto_html);
+    my (@external_links_html);
     my %dbxref_related = $sample->get_dbxref_related();
 
-
-    foreach my $sample_el_name (sort keys %sample_elements) {
-	 my %sample_el_data = %{$sample_elements{$sample_el_name} };
-	 my $sample_el_name_html = $sample_el_data{'alternative_name'} || $sample_el_data{'sample_element_name'};
-
-	 ## Translate organism_id to organism_names with links
-
-	 my $organism_html;
-	 my $organism_id = $sample_el_data{'organism_id'};
-	 my ($organism_row) = $schema->resultset('Organism::Organism')
-    	                             ->search( { organism_id => $organism_id } );
-
-	 if (defined $organism_row) {
-	     my $genus = $organism_row->get_column('genus');
-	     my $species = $organism_row->get_column('species');
-	     my $organism_link = '/chado/organism.pl?organism_id='.$organism_id;
-	     $organism_html = "<a href=$organism_link>$species</a><br>";
-	 } else {
-	     $organism_html = '<font color="gray"><i>None defined for this sample element</i></font>';
-	 }
-	
-	 ## Same thing with protocol (it haven't any web yet)
-
-	 my $protocol_html;
-	 my $protocol_id = $sample_el_data{'protocol_id'};
-	 my ($protocol_row) = $schema->resultset('BsProtocol')
-   	                             ->search( { protocol_id => $protocol_id } );
-
-	 if (defined $protocol_row) {
-	     my $protocol_name = $protocol_row->get_column('protocol_name');
-	     ## my $protocol_link = '/biosource/protocol.pl?protocol_id='.$protocol_id;
-	     ## $protocol_html = "<a href=$protocol_link>$protocol_name</a><br>";
-	     $protocol_html = $protocol_name;
-	 } else {
-	     $protocol_html = '<font color="gray"><i>None defined for this sample element</i></font>';
-	 }
+    foreach my $dbxref_id (sort keys %dbxref_related) {
 	 
-	 ## Get the sample_element_dbxref (GO and PO terms)
+	## Get the sample_element_dbxref (GO and PO terms) (with cvterm.name)
+	## Get external accessions (without cvterm.name) 
 	 
-	 my (@onto_html);
-	 if (defined $dbxref_related{$sample_el_name} ) {
-	     my @dbxref_related_el = @{ $dbxref_related{$sample_el_name} };
-	     
-	     foreach my $dbxref_rel_el (@dbxref_related_el) {
-		 my %dbxref_rel_data = %{ $dbxref_rel_el };
+	if (defined $dbxref_related{$dbxref_id} ) {
+	 
+	     my %dbxref_rel_data = %{ $dbxref_related{$dbxref_id} };
+
+	     if (defined $dbxref_rel_data{'cvterm.name'}) {
 	
 		 my $onto_accession = $dbxref_rel_data{'db.name'} . ":" . $dbxref_rel_data{'dbxref.accession'};
 		 my $onto_descr = $dbxref_rel_data{'cvterm.name'};
@@ -123,54 +152,49 @@ if (defined $sample->get_sample_id() ) {
 		 my $onto_line = "<a href=$onto_link>$onto_accession</a> ($onto_descr)<br>";
 		 push @onto_html, $onto_line;
 	     }
+	     else {
+		 my $external_accession = $dbxref_rel_data{'db.name'} . ": " . $dbxref_rel_data{'dbxref.accession'};
+		 my $external_link = $dbxref_rel_data{'db.urlprefix'} . $dbxref_rel_data{'db.url'} . $dbxref_rel_data{'dbxref.accession'};
+		 my $external_line = "<a href=$external_link>$external_accession</a><br>";
+		 push @external_links_html, $external_line;
+	     }
 	 }
-	 my $onto_list = join(' ', @onto_html) || $default_message;
-
-	 push @sample_el_list, [ 
-	                         $sample_el_name_html,  
-                                 $organism_html, 
-                                 $protocol_html, 
-                                 $onto_list,
-	                       ];
     }
-	
-    my $sample_el_composition_html = columnar_table_html( headings   => [ 'Sample element name', 
-                                                                          'Organism', 
-                                                                          'Protocol',
-                                                                          'Ontologies',
-							                ],
-                                                           data       => \@sample_el_list,
-                                                           __align    => ['l', 'c', 'c', 'l'],
-							   __alt_freq => 1,
-                                                          );
+	 
+    my $ontologies_list = join(' ', @onto_html) || $default_message;
+    my $external_links_list = join(' ', @external_links_html) || $default_message;
 
-   
     ## Create the HTML table
 
     $basic_info_content = <<HTML;
 
     <table width="100%">
     	   <tr> <td width="25%"> <b>Sample name:</b>            </td> <td> $sample_name </td></tr>
-           <tr> <td width="25%"> <b>Sample type:</b>            </td> <td> $sample_type </td></tr>
+           <tr> <td width="25%"> <b>Alternative name:</b>       </td> <td> $alt_name </td></tr>
+           <tr> <td width="25%"> <b>Sample type:</b>            </td> <td> $type_name_html </td></tr>
  	   <tr> <td width="25%"> <b>Description:</b>            </td> <td> $description </td></tr>
+	   <tr> <td width="25%"> <b>Organism:</b>               </td> <td> $organism_html </td></tr>
+	   <tr> <td width="25%"> <b>Protocol:</b>               </td> <td> $protocol_html </td></tr>
+	   <tr> <td width="25%"> <b>Contact:</b>                </td> <td> $contact_html </td></tr>
+	   <tr> <td width="25%"> <b>Ontologies:</b>             </td> <td> $ontologies_list </td></tr>
+	   <tr> <td width="25%"> <b>External links:</b>         </td> <td> $external_links_list </td></tr>
     </table>
     <br>
 
 HTML
 
-    $element_info_content .= $sample_el_composition_html;
 
-} else {
+} 
+else {
    $basic_info_content = "<big>There aren't any sample data for the specified parameters.</big>";
 }   
 
 my $basic_info_html;
-if (defined $sample_accession) {
-   $basic_info_html = "<center><big><b>Sample: $sample_accession</b></big></center><br>";
+if (defined $sample_name) {
+   $basic_info_html = "<center><big><b>Sample: $sample_name</b></big></center><br>";
 }
 
 $basic_info_html .= info_section_html( title => "Sample Basic Information", contents => $basic_info_content );
-$basic_info_html .= info_section_html( title => "Element Basic Information", contents => $element_info_content );
 
 </%perl>
 

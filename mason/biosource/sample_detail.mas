@@ -31,6 +31,7 @@
 <%args>
 $schema
 $sample
+$sample_relations_href
 $pub_list
 $target_list
 </%args>
@@ -49,6 +50,13 @@ $target_list
     '/biosource/sample/basic_sample_info.mas',
     schema => $schema, 
     sample => $sample,
+&>
+
+<& 
+    '/biosource/sample/sample_relations.mas',
+    schema => $schema, 
+    sample => $sample,
+    sample_relations_href => $sample_relations_href,
 &>
 
 <& 
