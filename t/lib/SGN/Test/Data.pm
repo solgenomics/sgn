@@ -5,7 +5,17 @@ use SGN::Context;
 use base 'Exporter';
 use Test::More;
 
-our $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
+our $schema;
+
+BEGIN {
+    my $db_profile = 'sgn_test';
+    eval {
+        $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', $db_profile)
+    };
+    if ($@) {
+        plan skip_all => "Could not create a db connection. Do  you have the $db_profile db profile?";
+    }
+}
 
 our $num_features = 0;
 our $num_cvterms = 0;
