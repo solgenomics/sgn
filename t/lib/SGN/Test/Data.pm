@@ -21,12 +21,13 @@ our $num_features = 0;
 our $num_cvterms = 0;
 our $num_dbxrefs = 0;
 our $num_dbs = 0;
+our $num_cvs = 0;
 our $num_organisms = 0;
 our $test_data;
 our @EXPORT_OK = qw/
                     create_test_dbxref create_test_cvterm
                     create_test_organism create_test_feature
-                    create_test_db
+                    create_test_db create_test_cv
                     /;
 
 sub create_test_db {
@@ -34,6 +35,7 @@ sub create_test_db {
     my $db = $schema->resultset('General::Db')
            ->create( { name => $values->{name} || "db_$num_dbs" } );
     push @$test_data, $db;
+    $num_dbs++;
     return $db;
 }
 
@@ -48,23 +50,39 @@ sub create_test_dbxref {
                 accession => $values->{accession} || "dbxref_$num_dbxrefs",
             });
     push @$test_data, $dbxref;
+    $num_dbxrefs++;
     return $dbxref;
+}
+
+sub create_test_cv {
+    my ($values) = @_;
+    unless ($values->{name}) {
+        $values->{name} = "cv_$num_cvs";
+    }
+    my $cv = $schema->resultset('Cv::Cv')
+           ->create( { name => $values->{name} } );
+
+    push @$test_data, $cv;
+    $num_cvs++;
+    return $cv;
 }
 
 sub create_test_cvterm {
     my ($values) = @_;
     unless ($values->{name}) {
         $values->{name} = "cvterm $num_cvterms";
-        $num_cvterms++;
     }
-    my $cvterm = $schema->resultset('Cv::Cv')
-           ->create( { name => "cv_" . $values->{name} } )
-           ->create_related('cvterms',
+    $values->{dbxref} ||= create_test_dbxref();
+    $values->{cv} ||= create_test_cv();
+    my $cvterm = $schema->resultset('Cv::Cvterm')
+           ->create(
             {
-                name => $values->{name},
-                dbxref => $values->{dbxref} || create_test_dbxref(),
+                name   => $values->{name},
+                dbxref => $values->{dbxref},
+                cv_id  => $values->{cv}->cv_id,
             });
     push @$test_data, $cvterm;
+    $num_cvterms++;
     return $cvterm;
 }
 
@@ -72,7 +90,6 @@ sub create_test_organsim {
     my ($values) = @_;
     unless ($values->{genus}) {
         $values->{genus} = "organism_$num_organisms";
-        $num_organisms++;
     }
     unless ($values->{species}) {
         $values->{species} = 'fooii';
@@ -80,6 +97,7 @@ sub create_test_organsim {
     my $organism = $schema->resultset('Organism::Organism')
                           ->create( $values );
     push @$test_data, $organism;
+    $num_organisms++;
     return $organism;
 
 }
@@ -112,7 +130,6 @@ sub END {
     diag("deleting " . scalar(@$test_data) . " test data objects") if @$test_data;
     # delete objects in the reverse order we created them
     # TODO: catch signals?
-    use Data::Dumper;
     map {
         diag("deleting $_");
         my $deleted = $_->delete;

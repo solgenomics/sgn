@@ -6,7 +6,8 @@ use Test::More;
 use_ok('SGN::Test::Data',
     qw/
     create_test_organism create_test_dbxref
-    create_test_feature create_test_cvterm create_test_db
+    create_test_feature create_test_cvterm
+    create_test_db create_test_cv
     /);
 
 my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
@@ -31,6 +32,18 @@ my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
     my $rs = $schema->resultset('General::Dbxref')
         ->search({ accession => "SGNTESTDATA_$$" });
     is($rs->count, 1, 'found exactly one dbxref that was created');
+}
+
+{
+    my $cvterm = create_test_cvterm({
+                    name => "SGNTESTDATA_$$",
+                });
+
+    isa_ok($cvterm, 'Bio::Chado::Schema::Cv::Cvterm');
+
+    my $rs = $schema->resultset('Cv::Cvterm')
+        ->search({ name => "SGNTESTDATA_$$" });
+    is($rs->count, 1, 'found exactly one cvterm that was created');
 }
 
 done_testing;
