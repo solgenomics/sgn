@@ -1,5 +1,7 @@
 package SGN::Test::Data;
 
+use strict;
+use warnings;
 use Bio::Chado::Schema::Sequence::Feature;
 use SGN::Context;
 use base 'Exporter';
@@ -86,7 +88,7 @@ sub create_test_cvterm {
     return $cvterm;
 }
 
-sub create_test_organsim {
+sub create_test_organism {
     my ($values) = @_;
     unless ($values->{genus}) {
         $values->{genus} = "organism_$num_organisms";
@@ -118,10 +120,17 @@ sub create_test_feature {
     }
 
     $values->{organism} ||= create_test_organism();
-    $values->{cvterm}   ||= create_test_cvterm();
+    $values->{type}     ||= create_test_cvterm();
 
     my $organism = $schema->resultset('Sequence::Feature')
-           ->create( $values );
+           ->create({
+                residues    => $values->{residues},
+                seqlen      => $values->{seqlen},
+                name        => $values->{name},
+                uniquename  => $values->{uniquename},
+                type_id     => $values->{type}->cvterm_id,
+                organism_id => $values->{organism}->organism_id,
+           });
     push @$test_data, $organism;
     return $organism;
 }
