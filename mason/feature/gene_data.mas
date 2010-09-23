@@ -4,7 +4,7 @@
     $species => undef
 </%args>
 <%once>
-    use SGN::View::Feature qw/feature_link cvterm_link organism_link/;
+    use SGN::View::Feature qw/feature_link cvterm_link organism_link gbrowse_link/;
     use CXGN::Page::FormattingHelpers qw/info_table_html/;
 </%once>
 <%perl>
@@ -26,17 +26,14 @@
         'Description'   => $description,
     );
 </%perl>
-<!-- INFO SECTION -->
 <&| /page/info_section.mas,
     title       => $title,
     subtitle    => $feature->is_obsolete ? 'WARNING: This feature is obsolete' : '',
     collapsible => 1,
 &>
-    <!-- info table -->
     <% print info_table_html( @gene_data ) %>
-    <!-- feature length -->
     <& /feature/feature_length.mas, feature => $feature &>
-    <!-- dbxref -->
     <& /feature/dbxref.mas, dbxref => $feature->dbxref &>
+    <a href="<% gbrowse_link($feature) %>">GBrowse</a><br/>
     <br/>
 </&>
