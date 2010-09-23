@@ -35,7 +35,7 @@ our @EXPORT_OK = qw/
 sub create_test_db {
     my ($values) = @_;
     my $db = $schema->resultset('General::Db')
-           ->create( { name => $values->{name} || "db_$num_dbs" } );
+           ->create( { name => $values->{name} || "db_$num_dbs-$$" } );
     push @$test_data, $db;
     $num_dbs++;
     return $db;
@@ -49,7 +49,7 @@ sub create_test_dbxref {
            ->create(
             {
                 db_id     => $values->{db}->db_id,
-                accession => $values->{accession} || "dbxref_$num_dbxrefs",
+                accession => $values->{accession} || "dbxref_$num_dbxrefs-$$",
             });
     push @$test_data, $dbxref;
     $num_dbxrefs++;
@@ -59,7 +59,7 @@ sub create_test_dbxref {
 sub create_test_cv {
     my ($values) = @_;
     unless ($values->{name}) {
-        $values->{name} = "cv_$num_cvs";
+        $values->{name} = "cv_$num_cvs-$$";
     }
     my $cv = $schema->resultset('Cv::Cv')
            ->create( { name => $values->{name} } );
@@ -72,7 +72,7 @@ sub create_test_cv {
 sub create_test_cvterm {
     my ($values) = @_;
     unless ($values->{name}) {
-        $values->{name} = "cvterm $num_cvterms";
+        $values->{name} = "cvterm_$num_cvterms-$$";
     }
     $values->{dbxref} ||= create_test_dbxref();
     $values->{cv} ||= create_test_cv();
@@ -91,7 +91,7 @@ sub create_test_cvterm {
 sub create_test_organism {
     my ($values) = @_;
     unless ($values->{genus}) {
-        $values->{genus} = "organism_$num_organisms";
+        $values->{genus} = "organism_$num_organisms-$$";
     }
     unless ($values->{species}) {
         $values->{species} = 'fooii';
@@ -111,11 +111,11 @@ sub create_test_feature {
     $values->{residues} = 'ATCG' unless $values->{residues};
     $values->{seqlen} = length($values->{residues}) unless $values->{seqlen};
     unless ($values->{name}) {
-        $values->{name} = "Feature #$num_features";
+        $values->{name} = "feature_$num_features-$$";
         $num_features++;
     }
     unless ($values->{uniquename}) {
-        $values->{uniquename} = "Unique Feature #$num_features";
+        $values->{uniquename} = "unique_feature_$num_features-$$";
         $num_features++;
     }
 

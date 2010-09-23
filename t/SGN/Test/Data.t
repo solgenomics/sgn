@@ -21,7 +21,10 @@ my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
 
     isa_ok($db, 'Bio::Chado::Schema::General::Db');
     my $rs = $schema->resultset('General::Db')
-        ->search({ name => "SGNTESTDATA_$$" });
+        ->search({
+            name  => "SGNTESTDATA_$$",
+            db_id => $db->db_id,
+    });
     is($rs->count, 1, 'found exactly one db that was created');
 }
 {
@@ -32,7 +35,10 @@ my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
     isa_ok($dbxref, 'Bio::Chado::Schema::General::Dbxref');
 
     my $rs = $schema->resultset('General::Dbxref')
-        ->search({ accession => "SGNTESTDATA_$$" });
+        ->search({
+            accession => "SGNTESTDATA_$$",
+            dbxref_id => $dbxref->dbxref_id
+    });
     is($rs->count, 1, 'found exactly one dbxref that was created');
 }
 
@@ -44,7 +50,10 @@ my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
     isa_ok($cvterm, 'Bio::Chado::Schema::Cv::Cvterm');
 
     my $rs = $schema->resultset('Cv::Cvterm')
-        ->search({ name => "SGNTESTDATA_$$" });
+        ->search({
+            name      => "SGNTESTDATA_$$",
+            cvterm_id => $cvterm->cvterm_id,
+    });
     is($rs->count, 1, 'found exactly one cvterm that was created');
 }
 
@@ -71,8 +80,9 @@ my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
 
     my $rs = $schema->resultset('Organism::Organism')
         ->search({
-            genus   => 'Tyrannosaurus',
-            species => 'rex',
+            genus       => 'Tyrannosaurus',
+            species     => 'rex',
+            organism_id => $organism->organism_id,
         });
     is($rs->count, 1, 'found a T.rex organism');
 }
