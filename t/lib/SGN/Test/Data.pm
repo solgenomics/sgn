@@ -3,6 +3,7 @@ package SGN::Test::Data;
 use Bio::Chado::Schema::Sequence::Feature;
 use SGN::Context;
 use base 'Exporter';
+use Test::More;
 
 our $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
@@ -86,6 +87,7 @@ sub create_test_feature {
 }
 
 sub END {
+    diag("deleting $#$test_data test data objects") if @$test_data;
     # delete objects in the reverse order we created them
     # TODO: catch signals?
     map {
