@@ -2,6 +2,7 @@ package SGN::Test::Data;
 
 use Bio::Chado::Schema::Sequence::Feature;
 use SGN::Context;
+use base 'Exporter';
 
 our $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
@@ -10,6 +11,10 @@ our $num_cvterms = 0;
 our $num_dbxrefs = 0;
 our $num_organisms = 0;
 our $test_data;
+our @EXPORT_OK = qw/
+                    create_test_dbxref create_test_cvterm
+                    create_test_organism create_test_feature
+                    /;
 
 sub create_test_dbxref {
     my ($values) = @_;
