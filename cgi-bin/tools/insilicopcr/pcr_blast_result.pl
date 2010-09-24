@@ -232,10 +232,7 @@ my $job = CXGN::Tools::Run->run_cluster(@command,
 				   );
 #$job->do_not_cleanup(1);
 
-my $job_file_tempdir = File::Spec->catdir($c->config->{'basepath'},
-					  $c->config->{'tempfiles_subdir'},
-					  "blast",
-					 );
+my $job_file_tempdir = $c->path_to( $c->tempfiles_subdir('blast') );
 my (undef,$job_file) = tempfile( DIR => $job_file_tempdir, TEMPLATE=>"object_XXXXXX");
 
 store($job, $job_file)
