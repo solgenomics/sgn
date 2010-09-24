@@ -33,175 +33,213 @@ $marker
 <& /util/import_javascript.mas, classes => [ "CXGN.Effects" ] &>
 
 <%perl>
-
-  use CXGN::Cview::MapFactory;
+use CXGN::Cview::MapFactory;
 use CXGN::Cview::ChrMarkerImage;
 
-my $locations_html='';
-my $marker_name = $marker->get_name();
-my @displayed_locs=();
-my @displayed_pcr=();
-#if we have some experiments, and they are an arrayref, and there is at least one location in them
-my $experiments=$marker->current_mapping_experiments();    
-if($experiments and @{$experiments} and grep {$_->{location}} @{$experiments}) {
-  my $count = 1;
-  for my $experiment(@{$experiments}) {
-    
-    #make sure we have a location before we go about showing location data--some experiments do not have locations
-    if(my $loc=$experiment->{location}) {
-      #make sure we haven't displayed a location entry with the same location ID already
-      unless(grep {$_==$loc->location_id()} @displayed_locs) {
-	push(@displayed_locs,$loc->location_id());
-	if ($count > 1) {
-	  $locations_html .= '<br /><br /><br />';
-	}
-	$locations_html.='<table width="100%" cellspacing="0" cellpadding="0" border="0"><tr>';
-	#make a section detailing the location
-	my $protocol='';
-	my $pcr=$experiment->{pcr_experiment};
-	my $rflp=$experiment->{rflp_experiment};
-	$protocol=$experiment->{protocol};
-	unless($protocol) {
-	  if($pcr) {
-	    $protocol='PCR';
-	  }
-	  elsif($rflp) {
-	    $protocol='RFLP';
-	  }
-	  else {
-	    $protocol='<span class="ghosted">Unknown</span>';
-	  }
-	}
-	
-	#make a link to the map this marker can be found on
-	my $map_version_id=$loc->map_version_id();
-	my $lg_name=$loc->lg_name();
-	my $position=$loc->position();
-	my $subscript=$loc->subscript();
-	$subscript||='';
-	my $map_url='';
-	my $map_id='';
-	
-	my $dbh = $marker->{dbh};
-	my $map_factory = CXGN::Cview::MapFactory->new($dbh);
-	my $map = $map_factory->create({map_version_id=>$map_version_id});
-	my $map_name=$map->get_short_name();
-	if($map_version_id) {
-	  $map_id=$map->get_id();
+my $locations_html = '';
+my $marker_name    = $marker->get_name();
+my @displayed_locs;
+my @displayed_pcr;
 
-	  if($map_id and $map_name and defined($lg_name) and defined($position)) {
-	    $map_url="<a href=\"/cview/view_chromosome.pl?map_version_id=$map_version_id&amp;chr_nr=$lg_name&amp;cM=$position&amp;hilite=$marker_name$subscript&amp;zoom=1\">$map_name v$map_version_id</a>";
-	  }
-	}
-	else {
-	  $map_url='<span class="ghosted">Map data not available</span>';
-	}
-	my $multicol=1;
-	my $width="200px";
-	if($subscript and $multicol>1){$multicol++;}
-	my @locations=
-	  (
-	   '__title'   =>"<b>Map:</b> $map_url&nbsp;&nbsp;&nbsp;<span class=\"tinytype\">Loc. ID ".$loc->location_id()."</span>",
-	   '__tableattrs'=>"width=\"$width\"",
-	   '__multicol'=>$multicol,
-	   'Chromosome'=>$loc->lg_name(),
-	   'Position    '=>sprintf('%.2f cM',$loc->position()),
-	   'Confidence'=>$loc->confidence(),
-	   'Protocol'=>$protocol
-	  );
-	if($subscript) {
-	  push(@locations,('Subscript'=>$subscript));
-	}
-	$locations_html.='<td width = "25%">';
-	$locations_html.=CXGN::Page::FormattingHelpers::info_table_html(@locations);
-	$locations_html.='</td>';
-	$locations_html.='<td align="center">';
-	####$map_factory = CXGN::Cview::MapFactory->new($dbh);
+#if we have some experiments, and they are an arrayref, and there is at least one location in them
+my $experiments = $marker->current_mapping_experiments() || [];
+
+if (    $experiments
+    and @{$experiments}
+    and grep { $_->{location} } @{$experiments} )
+{
+    my $count = 1;
+    for my $experiment ( @{$experiments} ) {
+
+#make sure we have a location before we go about showing location data--some experiments do not have locations
+        if ( my $loc = $experiment->{location} ) {
+
+#make sure we haven't displayed a location entry with the same location ID already
+            unless ( grep { $_ == $loc->location_id() } @displayed_locs ) {
+                push( @displayed_locs, $loc->location_id() );
+                if ( $count > 1 ) {
+                    $locations_html .= '<br /><br /><br />';
+                }
+                $locations_html .=
+'<table width="100%" cellspacing="0" cellpadding="0" border="0"><tr>';
+
+                #make a section detailing the location
+                my $protocol = '';
+                my $pcr      = $experiment->{pcr_experiment};
+                my $rflp     = $experiment->{rflp_experiment};
+                $protocol = $experiment->{protocol};
+                unless ($protocol) {
+                    if ($pcr) {
+                        $protocol = 'PCR';
+                    }
+                    elsif ($rflp) {
+                        $protocol = 'RFLP';
+                    }
+                    else {
+                        $protocol = '<span class="ghosted">Unknown</span>';
+                    }
+                }
+
+                #make a link to the map this marker can be found on
+                my $map_version_id = $loc->map_version_id();
+                my $lg_name        = $loc->lg_name();
+                my $position       = $loc->position();
+                my $subscript      = $loc->subscript();
+                $subscript ||= '';
+                my $map_url = '';
+                my $map_id  = '';
+
+                my $dbh         = $marker->{dbh};
+                my $map_factory = CXGN::Cview::MapFactory->new($dbh);
+                my $map =
+                  $map_factory->create( { map_version_id => $map_version_id } );
+                my $map_name = $map->get_short_name();
+                if ($map_version_id) {
+                    $map_id = $map->get_id();
+
+                    if (    $map_id
+                        and $map_name
+                        and defined($lg_name)
+                        and defined($position) )
+                    {
+                        $map_url =
+"<a href=\"/cview/view_chromosome.pl?map_version_id=$map_version_id&amp;chr_nr=$lg_name&amp;cM=$position&amp;hilite=$marker_name$subscript&amp;zoom=1\">$map_name v$map_version_id</a>";
+                    }
+                }
+                else {
+                    $map_url =
+                      '<span class="ghosted">Map data not available</span>';
+                }
+                my $multicol = 1;
+                my $width    = "200px";
+                if ( $subscript and $multicol > 1 ) { $multicol++; }
+                my @locations = (
+                    '__title' =>
+"<b>Map:</b> $map_url&nbsp;&nbsp;&nbsp;<span class=\"tinytype\">Loc. ID "
+                      . $loc->location_id()
+                      . "</span>",
+                    '__tableattrs' => "width=\"$width\"",
+                    '__multicol'   => $multicol,
+                    'Chromosome'   => $loc->lg_name(),
+                    'Position    ' => sprintf( '%.2f cM', $loc->position() ),
+                    'Confidence'   => $loc->confidence(),
+                    'Protocol'     => $protocol
+                );
+                if ($subscript) {
+                    push( @locations, ( 'Subscript' => $subscript ) );
+                }
+                $locations_html .= '<td width = "25%">';
+                $locations_html .=
+                  CXGN::Page::FormattingHelpers::info_table_html(@locations);
+                $locations_html .= '</td>';
+                $locations_html .= '<td align="center">';
+                ####$map_factory = CXGN::Cview::MapFactory->new($dbh);
 #######	my $map=$map_factory->create({map_version_id=>$map_version_id});
 #######	my $map_version_id=$map->get_id();
 
-	my $hilite_name = $marker_name;
-	if ($subscript) {
-	  $hilite_name.=$subscript;
-	}
-	my $chromosome= CXGN::Cview::ChrMarkerImage->new("", 150,150,$dbh, $lg_name, $map, $hilite_name);
-	my ($image_path, $image_url)=$chromosome->get_image_filename();
-	my $chr_link= qq|<img src="$image_url" usemap="#map$count" border="0" alt="" />|;
-	$chr_link .= $chromosome->get_image_map("map$count");
-	$chr_link .= '<br />' . $map_name;
-	$count++;
-	$locations_html .= '<br />';
-	$locations_html .= $chr_link;
-	$locations_html.='</td></tr></table>';
-	
-	#if we have a pcr experiment that was used to map this marker to this location, make a section for this experiment's data
-	if($pcr and !grep {$_==$pcr->pcr_experiment_id()} @displayed_pcr) {
-	  $locations_html .= '<table width="100%" cellspacing="0" cellpadding="0" border="0"><tr>';
-	  my $pcr_bands=$pcr->pcr_bands_hash_of_strings();
-	  my $digest_bands=$pcr->pcr_digest_bands_hash_of_strings();
-	  my $pcr_bands_html = CXGN::Page::FormattingHelpers::info_table_html
-	    ( __border => 0, __sub => 1,
-	      map {
-		my $accession_name = CXGN::Accession->new($dbh,$_)->verbose_name;
-		$accession_name => $pcr_bands->{$_}
-	      } keys %$pcr_bands,
-	    );
-	  my $digest_bands_html = CXGN::Page::FormattingHelpers::info_table_html
-	    ( __border => 0, __sub => 1,
-	      map {
-		my $accession_name=CXGN::Accession->new($dbh,$_)->verbose_name();
-		$accession_name => $digest_bands->{$_};
-	      } keys %$digest_bands,
-	    );
-	  my $mg='';
-	  if($pcr->mg_conc()) {    
-	    $mg=$pcr->mg_conc().'mM';
-	  }
-	  my $temp='';
-	  if($pcr->temp()) {    
-	    $temp=$pcr->temp().'&deg;C';
-	  }                    
-	  $locations_html.='<td>';
-	  my $fwd=$pcr->fwd_primer()||'<span class="ghosted">Unknown</span>';
-	  my $rev=$pcr->rev_primer()||'<span class="ghosted">Unknown</span>';  
-	  my $enz=$pcr->enzyme()||'unknown enzyme';                 
-	  my $dcaps=$pcr->dcaps_primer();
-	  $temp||='<span class="ghosted">Unknown</span>';
-	  $mg||='<span class="ghosted">Unknown</span>';
-	  my $digest_title="Digested band sizes (using $enz)";
-	  unless($digest_bands_html) {
-	    $digest_title='&nbsp;'; 
-	    $digest_bands_html='&nbsp;'; 
-	  }
-	  
-	  ### TODO ###
-	  my ($dcaps_left,$dcaps_right);
-	  
-	  
-	  if ($dcaps) {
-	    $dcaps_left = "dCAPS primer (5'-3')";
-	    $dcaps_right = "<span class=\"sequence\">$dcaps</span>";
-	  }
-	  
-	  $locations_html.=CXGN::Page::FormattingHelpers::info_table_html
-	    (
-	     '__title'=>"PCR data&nbsp;&nbsp;&nbsp;<span class=\"tinytype\">Exp. ID ".$pcr->pcr_experiment_id()."</span>",
-	     "Forward primer (5'-3')"=>"<span class=\"sequence\">$fwd</span>",
-	     "Reverse primer (5'-3')"=>"<span class=\"sequence\">$rev</span>",
-	     $dcaps_left => $dcaps_right,
-	     'Accessions and product sizes'=>$pcr_bands_html,
-	     $digest_title=>$digest_bands_html,
-	     'Approximate temperature'=>$temp,
-	     'Mg<sup>+2</sup> concentration'=>$mg,
-	     '__multicol'=>3,
-	     '__tableattrs'=>"width=\"100%\"",
-	    );
-	  $locations_html.='</td></tr></table>';
-	  push(@displayed_pcr,$pcr->pcr_experiment_id());
-	}
-      }
+                my $hilite_name = $marker_name;
+                if ($subscript) {
+                    $hilite_name .= $subscript;
+                }
+                my $chromosome =
+                  CXGN::Cview::ChrMarkerImage->new( "", 150, 150, $dbh,
+                    $lg_name, $map, $hilite_name );
+                my ( $image_path, $image_url ) =
+                  $chromosome->get_image_filename();
+                my $chr_link =
+qq|<img src="$image_url" usemap="#map$count" border="0" alt="" />|;
+                $chr_link .= $chromosome->get_image_map("map$count");
+                $chr_link .= '<br />' . $map_name;
+                $count++;
+                $locations_html .= '<br />';
+                $locations_html .= $chr_link;
+                $locations_html .= '</td></tr></table>';
+
+#if we have a pcr experiment that was used to map this marker to this location, make a section for this experiment's data
+                if ( $pcr
+                    and !grep { $_ == $pcr->pcr_experiment_id() }
+                    @displayed_pcr )
+                {
+                    $locations_html .=
+'<table width="100%" cellspacing="0" cellpadding="0" border="0"><tr>';
+                    my $pcr_bands    = $pcr->pcr_bands_hash_of_strings();
+                    my $digest_bands = $pcr->pcr_digest_bands_hash_of_strings();
+                    my $pcr_bands_html =
+                      CXGN::Page::FormattingHelpers::info_table_html(
+                        __border => 0,
+                        __sub    => 1,
+                        map {
+                            my $accession_name =
+                              CXGN::Accession->new( $dbh, $_ )->verbose_name;
+                            $accession_name => $pcr_bands->{$_}
+                          } keys %$pcr_bands,
+                      );
+                    my $digest_bands_html =
+                      CXGN::Page::FormattingHelpers::info_table_html(
+                        __border => 0,
+                        __sub    => 1,
+                        map {
+                            my $accession_name =
+                              CXGN::Accession->new( $dbh, $_ )->verbose_name();
+                            $accession_name => $digest_bands->{$_};
+                          } keys %$digest_bands,
+                      );
+                    my $mg = '';
+                    if ( $pcr->mg_conc() ) {
+                        $mg = $pcr->mg_conc() . 'mM';
+                    }
+                    my $temp = '';
+                    if ( $pcr->temp() ) {
+                        $temp = $pcr->temp() . '&deg;C';
+                    }
+                    $locations_html .= '<td>';
+                    my $fwd = $pcr->fwd_primer()
+                      || '<span class="ghosted">Unknown</span>';
+                    my $rev = $pcr->rev_primer()
+                      || '<span class="ghosted">Unknown</span>';
+                    my $enz = $pcr->enzyme() || 'unknown enzyme';
+                    my $dcaps = $pcr->dcaps_primer();
+                    $temp ||= '<span class="ghosted">Unknown</span>';
+                    $mg   ||= '<span class="ghosted">Unknown</span>';
+                    my $digest_title = "Digested band sizes (using $enz)";
+
+                    unless ($digest_bands_html) {
+                        $digest_title      = '&nbsp;';
+                        $digest_bands_html = '&nbsp;';
+                    }
+
+                    ### TODO ###
+                    my ( $dcaps_left, $dcaps_right );
+
+                    if ($dcaps) {
+                        $dcaps_left  = "dCAPS primer (5'-3')";
+                        $dcaps_right = "<span class=\"sequence\">$dcaps</span>";
+                    }
+
+                    $locations_html .=
+                      CXGN::Page::FormattingHelpers::info_table_html(
+                        '__title' =>
+"PCR data&nbsp;&nbsp;&nbsp;<span class=\"tinytype\">Exp. ID "
+                          . $pcr->pcr_experiment_id()
+                          . "</span>",
+                        "Forward primer (5'-3')" =>
+                          "<span class=\"sequence\">$fwd</span>",
+                        "Reverse primer (5'-3')" =>
+                          "<span class=\"sequence\">$rev</span>",
+                        $dcaps_left                     => $dcaps_right,
+                        'Accessions and product sizes'  => $pcr_bands_html,
+                        $digest_title                   => $digest_bands_html,
+                        'Approximate temperature'       => $temp,
+                        'Mg<sup>+2</sup> concentration' => $mg,
+                        '__multicol'                    => 3,
+                        '__tableattrs'                  => "width=\"100%\"",
+                      );
+                    $locations_html .= '</td></tr></table>';
+                    push( @displayed_pcr, $pcr->pcr_experiment_id() );
+                }
+            }
+        }
     }
-  }    	
 }
 
 ###print blue_section_html('Mapped locations',$locations_html);
