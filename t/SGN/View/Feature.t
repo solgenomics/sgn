@@ -3,10 +3,10 @@ use strict;
 use warnings;
 use base 'Test::Class';
 
-use Test::More tests => 7;
 use Test::Class;
 use lib 't/lib';
 use SGN::Test::Data qw/create_test_feature/;
+use Test::More tests => 7;
 
 use_ok('SGN::View::Feature', qw/feature_table gbrowse_link related_stats/ );
 
