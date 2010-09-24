@@ -141,7 +141,8 @@ if ($target->get_target_id() ) {
 	}
 	else {
 	    my $protocol_link = '/biosource/protocol.pl?id=' . $protocol_id;
-	    $protocol_html = "<a href=$protocol_link>$protocol_name</a>";
+	    $protocol_html = $protocol_name;
+            ## protocol.pl page doesn't exists for now (2010-09-23), dissable option" <a href=$protocol_link>$protocol_name</a>";
 	}
 
 	## Get the sample_element_dbxref (GO and PO terms)
@@ -156,18 +157,21 @@ if ($target->get_target_id() ) {
 	    if (defined $dbxref_related{$dbxref_id} ) {
 		
 		my %dbxref_rel_data = %{ $dbxref_related{$dbxref_id} };
+		
+		if (defined $dbxref_rel_data{'cvterm.name'}) {
+    
+		    my $onto_accession = $dbxref_rel_data{'db.name'} . ":" . $dbxref_rel_data{'dbxref.accession'};
+		    my $onto_descr = $dbxref_rel_data{'cvterm.name'};
+		    my $onto_link = '/chado/cvterm.pl?action=view&cvterm_id='.$dbxref_rel_data{'cvterm.cvterm_id'};
+		    my $onto_line = "<a href=$onto_link>$onto_accession</a> ($onto_descr)<br>";
 		    
-		my $onto_accession = $dbxref_rel_data{'db.name'} . ":" . $dbxref_rel_data{'dbxref.accession'};
-		my $onto_descr = $dbxref_rel_data{'cvterm.name'};
-		my $onto_link = '/chado/cvterm.pl?action=view&cvterm_id='.$dbxref_rel_data{'cvterm.cvterm_id'};
-		my $onto_line = "<a href=$onto_link>$onto_accession</a> ($onto_descr)<br>";
-		    
-		unless (defined $onto_html{$onto_line}) {
-		    $onto_html{$onto_line} = 1;
+		    unless (defined $onto_html{$onto_line}) {
+			$onto_html{$onto_line} = 1;
+		    }
 		}
 	    }
 	}
-	my $onto_list = join(' ', keys %onto_html) || $default_message;
+	my $onto_list = join(' ', sort keys %onto_html) || $default_message;
 	
 	push @target_el_html_list, [$target_el_name, $dye, $sample_html, $protocol_html, $onto_list];
     }
