@@ -36,24 +36,17 @@ sub delegate_component
     my @children  = $feature->child_features;
     my @parents   = $feature->parent_features;
     my $type_name = $feature->type->name;
+    my $template  = "/feature/dhandler";
 
+    $c->stash->{feature}  = $feature;
+    $c->stash->{children} = \@children;
+    $c->stash->{parents}  = \@parents;
 
     if ($c->view('Mason')->component_exists("/feature/$type_name.mas")) {
-        $c->forward_to_mason_view(
-            "/feature/$type_name.mas",
-            type    => $type_name,
-            feature => $feature,
-            children=> \@children,
-            parents => \@parents,
-        );
-    } else {
-        $c->forward_to_mason_view(
-            "/feature/dhandler",
-            feature => $feature,
-            children=> \@children,
-            parents => \@parents,
-        );
+        $template         = "/feature/$type_name.mas";
+        $c->stash->{type} = $type_name;
     }
+    $c->stash->{template} = $template;
 }
 
 sub validate
