@@ -58,12 +58,12 @@ my $collapsed = $map_items == undef;
       <script language="javascript">
 	function overlay_show_example() {
 	  var textarea = document.getElementById("map_items");
-	  textarea.innerHTML="1  50 foo\n2  80  bar";
+	  textarea.value="1  50 MyMarker1\n2  80  MyMarker2";
 	}
 
 	function overlay_clear_map_items() {
 	   var textarea = document.getElementById("map_items");
-	   textarea.innerHTML="";
+	   textarea.value="";
         }
 	</script>
 </&>
