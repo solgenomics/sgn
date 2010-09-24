@@ -25,7 +25,7 @@ our $num_dbxrefs = 0;
 our $num_dbs = 0;
 our $num_cvs = 0;
 our $num_organisms = 0;
-our $test_data;
+our $test_data = [];
 our @EXPORT_OK = qw/
                     create_test_dbxref create_test_cvterm
                     create_test_organism create_test_feature
