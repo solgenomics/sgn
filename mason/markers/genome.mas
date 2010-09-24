@@ -1,7 +1,7 @@
 <%doc>
 
 =head1 NAME 
-genome.mas - a displays genome position of a marker.
+genome.mas - displays genome position of a marker.
 
 Assumes one (tomato) genome for now; 
 When more genomes come, depending on how they
