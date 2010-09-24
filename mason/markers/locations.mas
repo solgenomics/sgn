@@ -1,4 +1,3 @@
-
 <%doc>
 
 =head1 NAME
@@ -29,8 +28,6 @@ Lukas Mueller <lam87@cornell.edu>
 <%args>
 $marker
 </%args>
-
-<& /util/import_javascript.mas, classes => [ "CXGN.Effects" ] &>
 
 <%perl>
 use CXGN::Cview::MapFactory;
