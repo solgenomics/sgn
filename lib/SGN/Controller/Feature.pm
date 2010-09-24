@@ -37,7 +37,8 @@ sub delegate_component
     my @parents   = $feature->parent_features;
     my $type_name = $feature->type->name;
 
-    eval {
+
+    if ($c->view('Mason')->component_exists("/feature/$type_name.mas")) {
         $c->forward_to_mason_view(
             "/feature/$type_name.mas",
             type    => $type_name,
@@ -45,9 +46,7 @@ sub delegate_component
             children=> \@children,
             parents => \@parents,
         );
-    };
-    if ($@) {
-        warn $@;
+    } else {
         $c->forward_to_mason_view(
             "/feature/dhandler",
             feature => $feature,
