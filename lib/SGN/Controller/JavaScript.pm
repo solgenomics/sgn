@@ -80,6 +80,7 @@ sub default :Path {
     my ( $self, $c, @args ) = @_;
 
     $c->stash->{js} = [  File::Spec->catfile( @args ) ];
+    $c->forward('View::JavaScript');
 }
 
 =head2 end
@@ -90,10 +91,6 @@ forwards to View::JavaScript
 
 sub end :Private {
     my ( $self, $c ) = @_;
-
-    # all of the actions in this controller will use View::Javascript
-    # for rendering
-    $c->forward('View::JavaScript');
 
     # handle missing JS with a 404
     if( @{ $c->error } == 1 && $c->error->[0] =~ /^Can't open '/ ) {
