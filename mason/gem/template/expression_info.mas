@@ -156,29 +156,26 @@ if (defined $template->get_template_id() ) {
  		foreach my $sample (@sample_list) {
  		    my %po = $sample->get_dbxref_related();
 		    
- 		    foreach my $sample_el (keys %po) {
- 			my @dbxref_po = @{ $po{$sample_el} };
+ 		    foreach my $sample_dbxref_id (keys %po) {
+ 			my %dbxref_po = %{ $po{$sample_dbxref_id} };
 
- 			foreach my $dbxref_po_href (@dbxref_po) {
- 			    my %dbxref_po = %{ $dbxref_po_href };
- 			    my $po_name = $dbxref_po{'cvterm.name'};
- 			    if (length($po_name) < $chooser) {
- 				$chooser = length($po_name);
- 				my $onto_link = '/chado/cvterm.pl?action=view&cvterm_id=' . $dbxref_po{'cvterm.cvterm_id'};
- 				my $onto_html = "<a href=$onto_link>$po_name</a>";
-				
- 				$p_onto = $onto_html;
-				
-				my @opo = split(/ /, $po_name);
-				my $opo_name = join(' ', reverse(@opo));
+			my $po_name = $dbxref_po{'cvterm.name'};
+			if (length($po_name) < $chooser) {
+			    $chooser = length($po_name);
+			    my $onto_link = '/chado/cvterm.pl?action=view&cvterm_id=' . $dbxref_po{'cvterm.cvterm_id'};
+			    my $onto_html = "<a href=$onto_link>$po_name</a>";
+			    
+			    $p_onto = $onto_html;
+			    
+			    my @opo = split(/ /, $po_name);
+			    my $opo_name = join(' ', reverse(@opo));
 
-				unless (exists $order_by_po{$opo_name}) {
-				    $order_by_po{$opo_name} = [$exp_name];
-				}
-				else {
-				    push @{$order_by_po{$opo_name}}, $exp_name;
-				}
- 			    } 
+			    unless (exists $order_by_po{$opo_name}) {
+				$order_by_po{$opo_name} = [$exp_name];
+			    }
+			    else {
+				push @{$order_by_po{$opo_name}}, $exp_name;
+			    }			    
  			}
  		    }
  		}
