@@ -16,7 +16,7 @@ $mech->get("/tools/caps_designer/find_caps.pl");
 is($mech->status, 400, "return code was 400 Bad Request");
 
 $mech->get($urlbase);
-diag "submitting capsinput form with invalid clustalw data shouldn't blow up";
+#diag "submitting capsinput form with invalid clustalw data shouldn't blow up";
 $mech->submit_form(
     form_name => 'capsinput',
     fields => {
@@ -31,7 +31,7 @@ is($mech->status, 400, "return code was 400 Bad Request");
 $mech->content_contains('Clustal alignment failed');
 
 $mech->get($urlbase);
-diag "submitting capsinput form with only one FASTA shouldn't blow up";
+#diag "submitting capsinput form with only one FASTA shouldn't blow up";
 $mech->submit_form(
     form_name => 'capsinput',
     fields => {
