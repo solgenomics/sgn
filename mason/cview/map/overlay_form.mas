@@ -44,8 +44,8 @@ my $collapsed = $map_items == undef;
 <&| /page/info_section.mas, title=>'Overlay information', collapsible=>1, collapsed=>$collapsed &>
       <table><tr><td width="50">&nbsp;</td><td>
       <form action="/cview/map.pl" name="overlay_form" >
-	Enter the chromosome, offset and a name to overlay on the map:<br /><br />
-	<textarea name="map_items" cols="50" rows="5"><% $map_items %></textarea>
+	Enter the chromosome, offset and a name to overlay on the map (<a href="javascript:show_example()">example</a>):<br /><br />
+	<textarea id="map_items" name="map_items" cols="50" rows="5"><% $map_items %></textarea>
 	<input type="hidden" name="map_version_id" value="<% $map_version_id%>" />
 	<input type="hidden" name="size" value="<% $size %>" />
 	<input type="hidden" name="hilite" value="<% $hilite %>" />
@@ -53,5 +53,12 @@ my $collapsed = $map_items == undef;
 	<input type="submit" value="overlay information" />
       </form>
       </td></tr></table>
+
+      <script language="javascript">
+	function show_example() { 
+	  var textarea = document.getElementById("map_items");
+	  textarea.innerHTML="1  50 foo\n2  80  bar";
+	}
+	</script>
 </&>
 
