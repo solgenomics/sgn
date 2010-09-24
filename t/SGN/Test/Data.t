@@ -10,6 +10,7 @@ use_ok('SGN::Test::Data',
     create_test_organism create_test_dbxref
     create_test_feature create_test_cvterm
     create_test_db create_test_cv
+    create_test_featureloc
     /);
 
 my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
@@ -84,6 +85,21 @@ my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
             feature_id => $feature->feature_id,
         });
     is($rs->count, 1, 'found feature with sequence = GATTACA');
+}
+{
+    my $featureloc = create_test_featureloc({
+        fmin => 42,
+        fmax => 69,
+    });
+    isa_ok($featureloc, 'Bio::Chado::Schema::Sequence::Featureloc');
+
+    my $rs = $schema->resultset('Sequence::Featureloc')
+        ->search({
+            fmin => 42,
+            fmax => 69,
+            featureloc_id => $featureloc->featureloc_id,
+        });
+    is($rs->count, 1, 'found featureloc with correct fmin/fmax');
 }
 
 {

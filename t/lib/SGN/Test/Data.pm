@@ -30,6 +30,7 @@ our @EXPORT_OK = qw/
                     create_test_dbxref create_test_cvterm
                     create_test_organism create_test_feature
                     create_test_db create_test_cv
+                    create_test_featureloc
                     /;
 
 sub create_test_db {
@@ -122,7 +123,7 @@ sub create_test_feature {
     $values->{organism} ||= create_test_organism();
     $values->{type}     ||= create_test_cvterm();
 
-    my $organism = $schema->resultset('Sequence::Feature')
+    my $feature = $schema->resultset('Sequence::Feature')
            ->create({
                 residues    => $values->{residues},
                 seqlen      => $values->{seqlen},
@@ -131,8 +132,27 @@ sub create_test_feature {
                 type_id     => $values->{type}->cvterm_id,
                 organism_id => $values->{organism}->organism_id,
            });
-    push @$test_data, $organism;
-    return $organism;
+    push @$test_data, $feature;
+    return $feature;
+}
+
+sub create_test_featureloc {
+    my ($values) = @_;
+
+    $values->{feature}    ||= create_test_feature();
+    $values->{srcfeature} ||= create_test_feature();
+    # the following values need to be consistent with the default
+    # residue, which is 4 bases long
+    $values->{fmin} ||= 1;
+    $values->{fmax} ||= 3;
+
+    my $featureloc = $schema->resultset('Sequence::Featureloc')
+        ->create({
+            feature_id    => $values->{feature}->feature_id,
+            srcfeature_id => $values->{srcfeature}->feature_id,
+            fmin          => $values->{fmin},
+            fmax          => $values->{fmax},
+        });
 }
 
 sub END {
