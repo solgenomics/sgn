@@ -18,24 +18,7 @@ my @xrefs = map {
 
 <&| /page/info_section.mas, title => "Genomic locations" &>
 % if( @xrefs ) {
-% my @locations =
-  <& /page/columnar_table.mas,
-            headings=>["Genome Annotation", "Position(s)"],
-            data=> [ map [ $_->data_source->description,
-                           '<a href="'.$_->url.'">'
-                           .join( ', ', (
-                               map $_->seq_id.':'.$_->start.'..'.$_->end, @{$_->seqfeatures}
-                                  )
-                             )
-                           .'</a>',
-                          ],
-                     @xrefs
-                   ],
-            __alt_freq   =>2,
-            __alt_width  => 1,
-            __alt_offset => 3,
-            __align=> 'l'
-  &>
+  <& /gbrowse/xref_columnar_table.mas, xrefs => \@xrefs &>
 % }
 </&>
 
