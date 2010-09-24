@@ -51,6 +51,7 @@ my $collapsed = $map_items == undef;
 	<input type="hidden" name="hilite" value="<% $hilite %>" />
 	<input type="hidden" name="force" value="1" /><br />
 	<input type="submit" value="overlay information" />
+	<input type="button" value="clear" onclick="javascript:clear_map_items()" />
       </form>
       </td></tr></table>
 
@@ -59,6 +60,11 @@ my $collapsed = $map_items == undef;
 	  var textarea = document.getElementById("map_items");
 	  textarea.innerHTML="1  50 foo\n2  80  bar";
 	}
+
+	function clear_map_items() { 
+	   var textarea = document.getElementById("map_items");
+	   textarea.innerHTML="";
+        }
 	</script>
 </&>
 
