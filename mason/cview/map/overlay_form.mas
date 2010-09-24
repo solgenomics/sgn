@@ -41,29 +41,29 @@ my $collapsed = $map_items == undef;
 
 </%perl>
 
-<&| /page/info_section.mas, title=>'Overlay information', collapsible=>1, collapsed=>$collapsed &>
+<&| /page/info_section.mas, title=>'Overlay custom data', collapsible=>1, collapsed=>$collapsed &>
       <table><tr><td width="50">&nbsp;</td><td>
-      <form action="/cview/map.pl" name="overlay_form" >
-	Enter the chromosome, offset and a name to overlay on the map (<a href="javascript:show_example()">example</a>):<br /><br />
+      <form style="width: 60%" action="/cview/map.pl" name="overlay_form" >
+        <p>To add labels to the diagram above, enter chromosome numbers, offsets (in <% $map->get_units %>), and names in the box below (<a href="javascript:overlay_show_example()">example</a>):</p>
 	<textarea id="map_items" name="map_items" cols="50" rows="5"><% $map_items %></textarea>
 	<input type="hidden" name="map_version_id" value="<% $map_version_id%>" />
 	<input type="hidden" name="size" value="<% $size %>" />
 	<input type="hidden" name="hilite" value="<% $hilite %>" />
 	<input type="hidden" name="force" value="1" /><br />
 	<input type="submit" value="overlay information" />
-	<input type="button" value="clear" onclick="javascript:clear_map_items()" />
+	<input type="button" value="clear" onclick="overlay_clear_map_items(); return false" />
       </form>
       </td></tr></table>
 
       <script language="javascript">
-	function show_example() { 
+	function overlay_show_example() {
 	  var textarea = document.getElementById("map_items");
-	  textarea.innerHTML="1  50 foo\n2  80  bar";
+	  textarea.value = "1  50 foo\n2  80  bar";
 	}
 
-	function clear_map_items() { 
+	function overlay_clear_map_items() {
 	   var textarea = document.getElementById("map_items");
-	   textarea.innerHTML="";
+	   textarea.value = "";
         }
 	</script>
 </&>

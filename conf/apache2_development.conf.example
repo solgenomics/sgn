@@ -12,6 +12,7 @@
        use lib (qw(
                    /crypt/rob/cxgn/curr/sgn/lib
                    /crypt/rob/cxgn/curr/ITAG/lib
+                   /crypt/rob/cxgn/curr/biosource/lib
                    /crypt/rob/cxgn/curr/Phenome/lib
                    /crypt/rob/cxgn/curr/tomato_genome/lib
                    /crypt/rob/cxgn/curr/Cview/lib

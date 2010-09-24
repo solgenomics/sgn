@@ -1,0 +1,118 @@
+<%doc>
+
+=head1 NAME 
+ 
+ sample_relations.mas
+ mason component to take sample relations associated to a sample from the database and return it as html
+
+=cut
+
+=head1 VERSION 
+
+0.1
+
+=cut 
+
+=head1 DESCRIPTION
+
+ A mason component to take sample relations associated to a sample from the database and return it as html. 
+  
+
+=cut
+ 
+=head 1 AUTHOR
+ 
+ Aureliano Bombarely (ab782@cornell.edu)
+
+=cut 
+
+</%doc>
+
+
+<%args>
+$schema
+$sample
+$sample_relations_href
+</%args>
+
+<%perl>
+use strict;
+use warnings;
+
+use CXGN::GEM::Schema;
+use CXGN::Biosource::Sample;
+use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
+
+my $rel_content;
+my @relation_types = ('parents', 'brothers', 'children');
+
+my $default_message = '<i><font color="gray">Data not available</basefont></i>';
+
+## Now it will take each sample relationship and it will take sample_id, 
+## relation_type and sample_name
+
+my %sample_relations = %{$sample_relations_href};
+
+my @sample_rel_list;
+
+foreach my $relation (@relation_types) {
+
+    if (defined $sample_relations{$relation} ) {
+
+	my @samples_rel = @{$sample_relations{$relation}};
+    
+	foreach my $sample_rel (@samples_rel) {
+	
+	    my $sample_id = $sample_rel->get_sample_id();
+	    my $sample_name = $sample_rel->get_sample_name();
+	    my $sample_link = '/biosource/sample.pl?id=' . $sample_id;
+	    my $sample_html = "<a href=$sample_link>$sample_name</a><br>";
+	    
+	    my $type_id = $sample_rel->get_type_id();
+	    my $type_name_html = $default_message;
+	    if (defined $type_id) {
+
+		my ($type_cvterm_row) = $schema->resultset('Cv::Cvterm')
+                                               ->search({ type_id => $type_id });
+        
+		if (defined $type_cvterm_row) {
+		    
+		    $type_name_html = $type_cvterm_row->get_column('name');
+		}
+	    }
+
+	    
+	    push @sample_rel_list, [uc($relation), $sample_html, $type_name_html];
+	}
+    }
+
+
+    ## Use columnar table to give the html format. If don't exists any data, print message.
+    
+    my $rel_composition_html = columnar_table_html( headings => [ 'Relation', 'Sample', 'Type'],
+                                                    data     => \@sample_rel_list,
+       		        	                    __alt_freq => 2,
+                                                    __align  => ['c', 'c', 'c'], );
+
+
+    my $rel_n = scalar(@sample_rel_list);                                              
+    if ($rel_n == 0) {
+	$rel_composition_html = 'None relation was found associated to this sample';
+    }
+
+    $rel_content = info_section_html( title        => "Sample Relations (".$rel_n.")", 
+                                      contents     => $rel_composition_html,
+		    	   	      collapsible  => 1,
+                                      collapsed    => 0, );
+ 
+}
+
+</%perl>
+
+<% $rel_content %>
+
+<& 
+   /util/import_javascript.mas, 
+   classes => 'CXGN.Effects' 
+&>
+   

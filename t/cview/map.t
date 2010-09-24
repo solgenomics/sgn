@@ -1,16 +1,15 @@
-
 use strict;
+use warnings;
 
-use Test::WWW::Mechanize;
+use lib 't/lib';
+use SGN::Test::WWW::Mechanize;
 use Test::More;
 
-if (!$ENV{SGN_TEST_SERVER}) { die "Need SGN_TEST_SERVER"; }
-
-my $m = Test::WWW::Mechanize->new();
+my $m = SGN::Test::WWW::Mechanize->new();
 
 my $tests = 0;
 
-$m->get_ok($ENV{SGN_TEST_SERVER}."/cview/");
+$m->get_ok("/cview/");
 $tests++;
 $m->content_contains("Interactive maps");
 $tests++;
@@ -48,6 +47,5 @@ foreach my $map (@map_links) {
 	
     $m->back();
 }
-    
 
 done_testing($tests);
