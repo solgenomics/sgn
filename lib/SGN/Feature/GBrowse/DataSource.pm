@@ -37,6 +37,7 @@ GBrowse Feature object this data source belongs to
 
     is => 'ro',
     required => 1,
+    weak_ref => 1,
   );
 
 has 'path' => ( documentation => <<'',
