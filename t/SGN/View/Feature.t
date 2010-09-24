@@ -17,6 +17,7 @@ sub make_fixture : Test(setup) {
 
 sub teardown : Test(teardown) {
     my $self = shift;
+    # SGN::Test::Data objects self-destruct, don't clean them up here!
 }
 
 sub TEST_RELATED_STATS : Tests {
