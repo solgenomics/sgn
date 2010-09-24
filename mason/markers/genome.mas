@@ -1,42 +1,41 @@
-<%doc>
-
-=head1 NAME 
-genome.mas - displays genome position of a marker.
-
-Assumes one (tomato) genome for now; 
-When more genomes come, depending on how they
-they will accessed, this needs to be modified.
-
-=AUTHOR
-
-Isaak Y Tecle (iyt2@cornell.edu)
-
-=cut
-
-</%doc>
-
 <%args>
-
-$marker_name
-
+$marker
 </%args>
+<%init>
 
-<%perl>
+# look up gbrowse cross-refs for this marker, if any
+my @xrefs = map {
 
-my $organism   = "Tomato"; # to be modified when more organism genomes are added.
-my $genome_pos = qq |<a href="/gbrowse/bin/gbrowse/ITAG1_genomic/?name=$marker_name">$marker_name</a>|;
-my @genomes    = [ map { $_ } ($organism, $genome_pos) ];
+    $_->xrefs({
+        -types   => ['match'],
+        -name    => 'SGN-M'.$marker->marker_id,
+        -aliases => 1,
+    })
 
-</%perl>
+} $c->enabled_feature('gbrowse2');
 
+</%init>
 
-<&| /page/info_section.mas, title => "Genome position(s)" &>
+<&| /page/info_section.mas, title => "Genomic locations" &>
+% if( @xrefs ) {
+% my @locations =
   <& /page/columnar_table.mas,
-            headings=>["Genome", "Position"],
-            data=>\@genomes,
+            headings=>["Genome Annotation", "Position"],
+            data=> [ map [ $_->data_source->description,
+                           '<a href="'.$_->url.'">'
+                           .join( ', ', (
+                               map $_->seq_id.' ('.$_->start.'..'.$_->end.')', @{$_->seqfeatures}
+                                  )
+                             )
+                           .'</a>',
+                          ],
+                     @xrefs
+                   ],
             __alt_freq   =>2,
             __alt_width  => 1,
             __alt_offset => 3,
             __align=> 'l'
   &>
+% }
 </&>
+

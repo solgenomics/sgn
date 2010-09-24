@@ -92,7 +92,7 @@ if (!$marker) {
 
 <& /markers/attributions.mas, marker=>$marker &>
 
-<& /markers/genome.mas, marker_name=>$marker->get_name() &>
+<& /markers/genome.mas, marker => $marker &>
 
 <& /markers/comments.mas, marker=>$marker &>
 
