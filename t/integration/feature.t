@@ -29,5 +29,7 @@ my $gene_feature = create_test_feature({ type => $gene_cvterm });
 my $gene_featureloc = create_test_featureloc({ feature => $gene_feature });
 
 $mech->get_ok("/feature/view/name/" . $gene_feature->name);
+$mech->content_contains('Gene Data');
+$mech->content_contains('Gene: ' . $gene_feature->name);
 
 done_testing;
