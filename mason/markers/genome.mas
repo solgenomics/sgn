@@ -1,0 +1,42 @@
+<%doc>
+
+=head1 NAME 
+genome.mas - a displays genome position of a marker.
+
+Assumes one (tomato) genome for now; 
+When more genomes come, depending on how they
+they will accessed, this needs to be modified.
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$marker_name
+
+</%args>
+
+<%perl>
+
+my $organism   = "Tomato"; # to be modified when more organism genomes are added.
+my $genome_pos = qq |<a href="/gbrowse/bin/gbrowse/ITAG1_genomic/?name=$marker_name">$marker_name</a>|;
+my @genomes    = [ map { $_ } ($organism, $genome_pos) ];
+
+</%perl>
+
+
+<&| /page/info_section.mas, title => "Genome position(s)" &>
+  <& /page/columnar_table.mas,
+            headings=>["Genome", "Position"],
+            data=>\@genomes,
+            __alt_freq   =>2,
+            __alt_width  => 1,
+            __alt_offset => 3,
+            __align=> 'l'
+  &>
+</&>
