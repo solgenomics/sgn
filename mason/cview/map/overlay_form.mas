@@ -41,10 +41,10 @@ my $collapsed = $map_items == undef;
 
 </%perl>
 
-<&| /page/info_section.mas, title=>'Overlay information', collapsible=>1, collapsed=>$collapsed &>
+<&| /page/info_section.mas, title=>'Overlay custom data', collapsible=>1, collapsed=>$collapsed &>
       <table><tr><td width="50">&nbsp;</td><td>
-      <form action="/cview/map.pl" name="overlay_form" >
-	Enter the chromosome, offset and a name to overlay on the map (<a href="javascript:overlay_show_example()">example</a>):<br /><br />
+      <form style="width: 60%" action="/cview/map.pl" name="overlay_form" >
+        <p>To add labels to the diagram above, enter chromosome numbers, offsets (in <% $map->get_units %>), and names in the box below (<a href="javascript:overlay_show_example()">example</a>):</p>
 	<textarea id="map_items" name="map_items" cols="50" rows="5"><% $map_items %></textarea>
 	<input type="hidden" name="map_version_id" value="<% $map_version_id%>" />
 	<input type="hidden" name="size" value="<% $size %>" />
