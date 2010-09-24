@@ -90,6 +90,11 @@ $temp_dir
 &>
 
 <& 
+   '/transcript/unigene/genomic_locations.mas',
+   unigene => $unigene
+&>
+
+<&
    '/transcript/unigene/library_info.mas',
    dbh     => $dbh,
    schema  => $schema,
