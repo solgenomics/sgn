@@ -43,7 +43,7 @@ my $collapsed = $map_items == undef;
 
 <&| /page/info_section.mas, title=>'Overlay information', collapsible=>1, collapsed=>$collapsed &>
       <table><tr><td width="50">&nbsp;</td><td>
-      <form action="/cview/map.pl">
+      <form action="/cview/map.pl" name="overlay_form" >
 	Enter the chromosome, offset and a name to overlay on the map:<br /><br />
 	<textarea name="map_items" cols="50" rows="5"><% $map_items %></textarea>
 	<input type="hidden" name="map_version_id" value="<% $map_version_id%>" />
