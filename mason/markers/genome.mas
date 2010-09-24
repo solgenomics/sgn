@@ -20,11 +20,11 @@ my @xrefs = map {
 % if( @xrefs ) {
 % my @locations =
   <& /page/columnar_table.mas,
-            headings=>["Genome Annotation", "Position"],
+            headings=>["Genome Annotation", "Position(s)"],
             data=> [ map [ $_->data_source->description,
                            '<a href="'.$_->url.'">'
                            .join( ', ', (
-                               map $_->seq_id.' ('.$_->start.'..'.$_->end.')', @{$_->seqfeatures}
+                               map $_->seq_id.':'.$_->start.'..'.$_->end, @{$_->seqfeatures}
                                   )
                              )
                            .'</a>',
