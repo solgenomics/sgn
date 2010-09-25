@@ -63,7 +63,6 @@ sub clone_annot_download {
 }
 
 # find the chado organism for a clone
-memoize('_clone_organism');
 sub _clone_organism {
     my ( $self, $clone ) = @_;
     $self->bcs->resultset('Organism::Organism')->find( $clone->library_object->organism_id );
