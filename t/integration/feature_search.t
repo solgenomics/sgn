@@ -19,10 +19,9 @@ use lib 't/lib';
 use SGN::Test;
 use SGN::Test::WWW::Mechanize;
 
-my $base_url = $ENV{SGN_TEST_SERVER};
 my $mech = SGN::Test::WWW::Mechanize->new;
 
-$mech->get_ok("$base_url/feature/search");
+$mech->get_ok("/feature/search");
 $mech->content_contains('Feature Search');
 $mech->content_contains('Feature Name');
 $mech->content_contains('Feature Type');
@@ -39,7 +38,7 @@ $mech->content_contains('Search Results');
 $mech->content_like(qr/results \d+-\d+ of \d+(,\d+)?/);
 
 
-$mech->get("$base_url/feature/search");
+$mech->get("/feature/search");
 $mech->submit_form_ok({
     form_name => 'feature_search_form',
     fields => {
