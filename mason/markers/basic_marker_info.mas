@@ -32,16 +32,11 @@ $marker
 use CXGN::Tools::Text;
 use CXGN::Marker::Tools;
 
-
 my @marker_names = $marker->get_name();
 my $dbh = $marker->{dbh};
 my $marker_id = $marker->marker_id();
 
 my ($marker_name, @other_names) = @marker_names;
-
-my $display_name = $marker_name;
-
-$display_name .=  "(also known as ".CXGN::Tools::Text::list_to_string(@other_names).")";
 
 my $collections_string='';
 my $collections_description='';
@@ -54,11 +49,6 @@ if($collections and @{$collections}) {
     }
 }
 
-
-
-
-
 </%perl>
 
-<& /page/page_title.mas, title=> "SGN Marker ".$marker_name &>
 <div class="center">SGN-M<% $marker_id %><br /><% $collections_description %></div><br />

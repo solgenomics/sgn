@@ -67,7 +67,7 @@ sub forward_to_mason_view {
     my $self = shift;
     my ($comp,@args) = @_;
 
-    if( $ENV{SERVER_SOFTWARE} =~ /HTTP-Request-AsCGI/ ) {
+    if( $ENV{SERVER_SOFTWARE} && $ENV{SERVER_SOFTWARE} =~ /HTTP-Request-AsCGI/ ) {
         my @args = @_;
         $self->_trap_mason_error( sub { $self->_mason_interp->exec( @args ) } );
         die ["EXIT\n",0]; #< weird thing for working with Catalyst's CGIBin controller

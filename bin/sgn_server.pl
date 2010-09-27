@@ -4,6 +4,10 @@ BEGIN {
     $ENV{CATALYST_SCRIPT_GEN} = 40;
 }
 
+unless( grep /^(-rr|--restart_regex)$/, @ARGV ) {
+    unshift @ARGV, ( '--restart_regex' => '\.conf|\.p[ml]$' );
+}
+
 use Catalyst::ScriptRunner;
 Catalyst::ScriptRunner->run('SGN', 'Server');
 

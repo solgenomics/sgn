@@ -20,9 +20,11 @@ my ($intro_content, $input_content);
 my $HTML_ROOT = $c->get_conf('basepath');
 my $DOC_PATH =  $c->get_conf('tempfiles_subdir').'/align_viewer';
 my $PATH = $HTML_ROOT . $DOC_PATH;
-$temp_file = $c->path_to( $c->generated_file_uri('align_viewer',$temp_file) );
-if(-f $temp_file){
-    $seq_data = $temp_file->slurp;
+if( $temp_file ) {
+    $temp_file = $c->path_to( $c->generated_file_uri('align_viewer',$temp_file) );
+    if(-f $temp_file){
+        $seq_data = $temp_file->slurp;
+    }
 }
 
 

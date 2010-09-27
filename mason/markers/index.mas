@@ -62,6 +62,8 @@ if (!$marker) {
 
 </%perl>
 
+<& /page/page_title.mas, title=> "SGN Marker ".($marker->get_name)[0] &>
+
 <& /markers/basic_marker_info.mas, marker=>$marker, dbh=>$dbh &>
 
 <& /markers/kfg.mas, marker=>$marker &>
@@ -89,6 +91,8 @@ if (!$marker) {
 <& /markers/cosii_files.mas, marker=>$marker &>
 
 <& /markers/attributions.mas, marker=>$marker &>
+
+<& /markers/genome.mas, marker => $marker &>
 
 <& /markers/comments.mas, marker=>$marker &>
 

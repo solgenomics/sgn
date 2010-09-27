@@ -109,6 +109,7 @@ if (defined $experiment->get_experiment_id()) {
    ## It remove the redundancy using a hash
 	
    my %onto_html;
+   my %external_links_html;
 
    my @target_html_list;
    my @target_list = $experiment->get_target_list();
@@ -130,21 +131,28 @@ if (defined $experiment->get_experiment_id()) {
 
 	   my %dbxref_related = $sample->get_dbxref_related();
 	   
-	   foreach my $sample_el_name (keys %dbxref_related) {
+	   foreach my $dbxref_id (keys %dbxref_related) {
 
-	       if (defined $dbxref_related{$sample_el_name} ) {
-		   my @dbxref_related_el = @{ $dbxref_related{$sample_el_name} };
-	   
-		   foreach my $dbxref_rel_el (@dbxref_related_el) {
-		       my %dbxref_rel_data = %{ $dbxref_rel_el };
-		       
+	       if (defined $dbxref_related{$dbxref_id} ) {
+	 
+		   my %dbxref_rel_data = %{ $dbxref_related{$dbxref_id} };
+
+		   if (defined $dbxref_rel_data{'cvterm.name'}) {
+	
 		       my $onto_accession = $dbxref_rel_data{'db.name'} . ":" . $dbxref_rel_data{'dbxref.accession'};
 		       my $onto_descr = $dbxref_rel_data{'cvterm.name'};
 		       my $onto_link = '/chado/cvterm.pl?action=view&cvterm_id='.$dbxref_rel_data{'cvterm.cvterm_id'};
 		       my $onto_line = "<a href=$onto_link>$onto_accession</a> ($onto_descr)<br>";
-		       
 		       unless (defined $onto_html{$onto_line}) {
 			   $onto_html{$onto_line} = 1;
+		       }
+		   }
+		   else {
+		       my $external_accession = $dbxref_rel_data{'db.name'} . ": " . $dbxref_rel_data{'dbxref.accession'};
+		       my $external_link = $dbxref_rel_data{'db.urlprefix'} . $dbxref_rel_data{'db.url'} . $dbxref_rel_data{'dbxref.accession'};
+		       my $external_line = "<a href=$external_link>$external_accession</a><br>";
+		       unless (defined $external_links_html{$external_line}) {
+			   $external_links_html{$external_line} = 1;
 		       }
 		   }
 	       }
@@ -155,7 +163,10 @@ if (defined $experiment->get_experiment_id()) {
 
    
    
-   my $onto_list = join(' ', keys %onto_html) || $default_message;
+   my $onto_list = join(' ', sort keys %onto_html) || $default_message;
+
+   ## It will not print the dbxref links for a sample
+   ## my $external_links_list = join(' ', keys %external_links_html) || $default_message;
 
    my $target_html_list = join('<br>', @target_html_list) || $default_message;
    

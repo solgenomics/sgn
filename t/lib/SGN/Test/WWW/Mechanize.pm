@@ -1,3 +1,5 @@
+package SGN::Test::WWW::Mechanize;
+
 =head1 NAME
 
 SGN::Test::WWW::Mechanize - subclass of
@@ -14,6 +16,10 @@ L<Test::WWW::Mechanize::Catalyst> with some SGN-specific convenience
     $mech->content_contains('click on an organism name');
     $mech->content_lacks('Add to Tree','not logged in, does not have a form for adding an organism');
 
+    # You can use XPath selectors on $mech to find things
+    # see WWW::Mechanize::TreeBuilder and HTML::TreeBuilder::XPath for more info
+    my $value = $mech->findvalue( '/html/body//span[@class="sequence"]');
+
     # do some tests while logged in as a temporary user
     $mech->while_logged_in( user_type => 'curator', sub {
 
@@ -27,19 +33,66 @@ L<Test::WWW::Mechanize::Catalyst> with some SGN-specific convenience
 
     });
 
+    # run tests that require a certain level of access to the
+    # application (see "TEST LEVELS" below)
+    $mech->with_test_level( local => sub {
+
+       my $c = $mech->context;
+       my $dbh  = $c->dbc->dbh;
+       my $check_data = $dbh->selectall_arrayref('....');
+
+       $mech->get_ok( '/organism/sol100/view' );
+
+
+    });
+
+=head1 TEST LEVELS
+
+This module introduces the concept of B<test levels>, which correspond
+to how much access to the app's underlying files, databases, and
+program state the test code is expected to have.
+
+The following test levels are defined:
+
+=head2 remote
+
+The app and the tests are running on different hosts.  The only
+means of interaction is via remote requests.
+
+This level is in effect if both SGN_TEST_SERVER and SGN_TEST_REMOTE are
+set to true values.
+
+=head2 local
+
+The app and the tests are running on the same host, and with the same
+configuration data, as this test code.  Facilities under C<remote> are
+available, plus files and databases can be accessed via the context
+object, given by $mech->context.
+
+This level is in effect if SGN_TEST_SERVER is set, but SGN_TEST_REMOTE
+is not set, or false.
+
+=head2 process
+
+The app and the tests are running in the same process.  Facilities under
+C<local> are available, plus the app's in-memory state and
+configuration can be accessed directly from the context object.
+
+This level is in effect if no SGN_TEST_SERVER environment variable is
+set.
+
 =head1 SEE ALSO
 
-This class has the methods from all of these:
-  L<Test::WWW::Mechanize::Catalyst>, L<Test::WWW::Mechanize>, L<WWW::Mechanize>
+This class inherits from all of these:
+L<Test::WWW::Mechanize::Catalyst>, L<Test::WWW::Mechanize>,
+L<WWW::Mechanize>
 
+It also does the L<WWW::Mechanize::TreeBuilder> role, with a tree_class of L<HTML::TreeBuilder::XPath>.
 
-=head1 METHODS
-
-Plus the following:
+=head1 ATTRIBUTES
 
 =cut
 
-package SGN::Test::WWW::Mechanize;
 use Moose;
 use namespace::autoclean;
 
@@ -51,9 +104,34 @@ use Test::More;
 use CXGN::People::Person;
 use CXGN::People::Login;
 
+use SGN::Devel::MyDevLibs;
+
 extends 'Test::WWW::Mechanize::Catalyst';
 
+with 'WWW::Mechanize::TreeBuilder' => {
+    tree_class => 'HTML::TreeBuilder::XPath'
+};
+
+
+=head2 catalyst_app
+
+The name of the app under test.  Defaults to 'SGN'.
+
+=cut
+
 has '+catalyst_app' => ( default => 'SGN' );
+
+=head2 context
+
+A context object for the app under test.  Only available under
+C<local> or C<process> testing levels.
+
+Under the C<process> test level, this will be the Catalyst app class
+(same as C<catalyst_app> above).  Under C<local> testing, this will be
+an L<SGN::Context>.  Under C<remote> testing, this will throw an
+exception.
+
+=cut
 
 has 'context' => (
     is => 'ro',
@@ -71,6 +149,7 @@ has 'context' => (
        }
    }
 
+# private, holds the user we're using for testing
 has 'test_user' => (
     is => 'rw',
     isa => 'HashRef',
@@ -78,32 +157,10 @@ has 'test_user' => (
     clearer   => 'clear_test_user',
    );
 
-
 =head2 test_level
 
-Read-only accessor to give the current testing level, which
-corresponds to how close to the current testing code the app is
-running.  Returns one of:
-
-  process  The app is running in the same process as this test.
-           In-memory state and configuration can be accessed directly
-           from the context object.
-
-           This level is in effect if no SGN_TEST_SERVER environment
-           variable is set.
-
-  local    The app is running on the same host, and with the same
-           configuration data, as this test code.  Files and databases
-           can be accessed via SGN::Context.
-
-           This level is in effect if SGN_TEST_SERVER is set, but
-           SGN_TEST_REMOTE is not set, or false.
-
-  remote   The app is running on another machine.  The only means of interaction
-           is via remote requests.
-
-           This level is in effect if both SGN_TEST_SERVER and
-           SGN_TEST_REMOTE are set.
+Read-only attribute to give the current testing level, one of 'remote',
+'local', or 'process'.
 
 =cut
 
@@ -112,6 +169,8 @@ sub test_level {
     return 'remote'   if $ENV{SGN_TEST_REMOTE};
     return 'local';
 }
+
+=head1 METHODS
 
 =head2 can_test_level
 

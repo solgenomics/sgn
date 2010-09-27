@@ -72,7 +72,6 @@ sub bare_mason :Path('bare_mason') {
     $c->forward('View::BareMason');
 }
 
-
 =head1 PRIVATE ACTIONS
 
 =head2 end
@@ -162,8 +161,9 @@ sub _do_redirects {
     # already been found and does not have an extension
     if( $path !~ m|\.\w{2,4}$| ) {
         if( my $index_action = $self->_find_cgi_action( $c, "$path/index.pl" ) ) {
-            $c->log->debug("dispatching to action $index_action") if $c->debug;
-            $c->go( $index_action );
+            $c->log->debug("redirecting to action $index_action") if $c->debug;
+            $c->res->redirect( $c->uri_for_action($index_action,$c->req->query_parameters), 302 );
+            return 1;
         }
     }
 
@@ -196,7 +196,7 @@ sub _find_cgi_action {
 
 =head1 AUTHOR
 
-Robert Buels,,,
+Robert Buels, Jonathan "Duke" Leto
 
 =head1 LICENSE
 

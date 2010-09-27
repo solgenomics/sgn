@@ -8,15 +8,21 @@ use CXGN::DB::Connection;
 use CatalystX::GlobalContext qw( $c );
 
 my $page = CXGN::Page->new();
-my ( $map_id, $map_version_id, $size, $hilite, $physical, $force ) =
-  $page->get_encoded_arguments( "map_id", "map_version_id", "size", "hilite",
-    "physical", "force" );
+my ( $map_id, $map_version_id, $size, $hilite, $physical, $force, $map_items ) =
+  $page->get_encoded_arguments(
+      qw(
+         map_id
+         map_version_id
+         size
+         hilite
+         physical
+         force
+         map_items
+        ));
 
 my $dbh = CXGN::DB::Connection->new;
 
 my $referer = $c->request->referer;
-
-my $tempdir = $c->path_to( $c->tempfiles_subdir('cview') );
 
 $c->forward_to_mason_view(
     '/cview/map/index.mas',
@@ -28,7 +34,9 @@ $c->forward_to_mason_view(
     size           => $size,
     referer        => $referer,
     force          => $force,
-    tempdir        => $tempdir,
+    map_items      => $map_items,
+    tempdir        => $c->tempfiles_subdir('cview'),
+    basepath       => $c->path_to(),
 );
 
 =head1 NAME

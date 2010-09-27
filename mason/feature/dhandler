@@ -18,7 +18,6 @@
 <%perl>
     my $organism = $feature->organism;
     my $species  = $organism->species;
-    $species    =~ s!(\S+) !<i>$1</i> !;
     my $reference = get_reference($feature);
 </%perl>
 

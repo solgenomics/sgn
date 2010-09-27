@@ -125,7 +125,6 @@ foreach my $map (@user_maps) {
 
 $d = <<HTML;
 
-
 <br />
 <a href="/cview/view_chromosome.pl"><b>Interactive comparative map viewer</b></a>: 
 View two chromosomes from two different maps at the same time; it displays the relationships between the chromosomes and additional information such as associated physical map, inbred lines, and rulers.<br /><br />

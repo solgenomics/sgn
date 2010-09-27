@@ -670,6 +670,7 @@ sub info_table_html {
     my $sub = $tabledata{__sub} ? 'sub_' : '';
 
     my $noborder = $tabledata{__border} ? '' : '_noborder';
+    no warnings 'uninitialized';
     join(
         "\n",
         (
@@ -861,7 +862,7 @@ sub columnar_table_html {
     unless ( defined $params{__alt_freq} ) {
         $params{__alt_freq} =
             @{ $params{data} } > 6 ? 4
-          : @{ $params{data} } > 3 ? 2
+          : @{ $params{data} } > 2 ? 2
           :                          0;
     }
     unless ( defined $params{__alt_width} ) {

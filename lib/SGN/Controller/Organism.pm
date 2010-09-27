@@ -1,7 +1,7 @@
 =head1 NAME
 
-SGN::Controller::Organism - Catalyst controller for pages dealing with
-organisms
+SGN::Controller::Organism - Catalyst controller for dealing with
+organism data
 
 =cut
 
@@ -24,66 +24,285 @@ use CXGN::Phylo::OrganismTree;
 
 with 'Catalyst::Component::ApplicationAttribute';
 
-=head1 ATTRIBUTES
+=head1 ACTIONS
 
-=head2 species_data_summary_cache
+=head2 view_all
 
-L<Cache> object containing species data summaries, as:
+Public Path: /organism/all/view
 
-  {
-    <organism_id> => {
-         'Common Name' => common_name,
-          ...
-    },
-    ...
-  }
-
-Access with C<$cache->thaw( $organism_id )>, do not use Cache's C<get>
-method.
+Display the sgn data overview page.
 
 =cut
 
-has 'species_data_summary_cache' => (
-    is  => 'ro',
-    lazy_build => 1,
-   ); sub _build_species_data_summary_cache {
-       my ($cache_class, $config) = shift->_species_summary_cache_configuration;
-       return $cache_class->new( %$config );
-   }
+sub view_all :Path('/organism/all/view') :Args(0) {
+    my ( $self, $c ) = @_;
 
-sub _species_summary_cache_configuration {
-    my ($self) = @_;
+    while( my ( $set_name, $set_callback ) = each %{ $self->organism_sets } ) {
+        next unless $set_name =~ /^web_visible_(.+)/;
+        my $family_name = $1;
 
-    my $schema   = $self->_app->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' );
+        my $tree = $self->rendered_organism_tree_cache->thaw( $set_name );
+        $tree->{set_name} = $set_name;
+        $c->stash->{organism_trees}->{$family_name} = $tree;
 
-    return 'Cache::File', {
-        cache_root      => $self->_app->path_to( $self->_app->tempfiles_subdir('species_summary_cache') ),
-        default_expires => '6 hours',
+    }
 
-        load_callback   => sub {
-            my $cache_entry = shift;
-            my $org_id = $cache_entry->key;
-            my $org = CXGN::Chado::Organism->new( $schema, $org_id )
-                or return;
-            no warnings 'uninitialized';
-            return Storable::nfreeze({
-                'Common Name' => $org->get_group_common_name,
-                'Loci' => $org->get_loci_count,
-                'Phenotypes' => $org->get_phenotype_count,
-                'Maps Available' => $org->has_avail_map,
-                'Genome Information' => $org->has_avail_genome,
-                'Libraries' => scalar( $org->get_library_list ),
-            });
-        },
-    };
+    # add image_uris to each of the organism tree records
+    $_->{image_uri} = $c->uri_for( $self->action_for('organism_tree_image'), [ $_->{set_name} ] )
+        for values  %{ $c->stash->{organism_trees} };
+
+    $c->stash({
+        template => '/content/sgn_data.mas',
+    });
 }
 
-# a hashref of organism sets as
-# { set_name => {
-#      description => 'user-visible description of the set',
-#      resulset => DBIC resultset of organisms in that set,
-#     },
-# }
+# /organism/set/<set_name>
+sub get_organism_set :Chained('/') :PathPart('organism/set') :CaptureArgs(1) {
+    my ( $self, $c, $set_name ) = @_;
+
+    $c->stash->{organism_set_name} = $set_name;
+    $c->stash->{organism_set} = $self->organism_sets->{ $set_name }
+        or $c->debug && $c->log->debug("no set found called '$set_name'");
+}
+
+# /organism/tree/<set_name>
+sub get_organism_tree :Chained('/') :PathPart('organism/tree') :CaptureArgs(1) {
+    my ( $self, $c, $set_name ) = @_;
+
+    $c->stash->{organism_set_name} = $set_name;
+    # the Cache::Entry for the slot in the cache for this organism tree
+    $c->stash->{organism_tree_cache_entry} = $self->rendered_organism_tree_cache->entry( $set_name );
+}
+
+=head2 organism_tree_image
+
+Public Path: /organism/tree/<set_name>/image
+
+Get a PNG organism tree image
+
+=cut
+
+sub organism_tree_image :Chained('get_organism_tree') :PathPart('image') {
+    my ( $self, $c ) = @_;
+
+    my $image = $c->stash->{organism_tree_cache_entry}->thaw
+        or $c->throw_404;
+
+    $image->{png} or die "no png data for organism set '".$c->stash->{organism_set_name}."'! cannot serve image.  Dump of cache entry: \n".Data::Dumper::Dumper( $image );
+
+    $c->res->body( $image->{png} );
+    $c->res->content_type( 'image/png' );
+}
+
+=head2 clear_organism_tree
+
+Public Path: /organism/tree/<set_name>/flush
+
+Flush a cached organism tree image, so that the next call to serve the
+organism tree image or html will regenerate it.
+
+=cut
+
+# /organism/tree/<set_name>/flush
+sub clear_organism_tree :Chained('get_organism_tree') :PathPart('flush') {
+    my ( $self, $c ) = @_;
+
+    $c->stash->{organism_tree_cache_entry}->remove;
+    $c->res->content_type('application/json');
+    $c->res->body(<<'');
+{ status: "success" }
+
+}
+
+
+=head2 view_sol100
+
+Public Path: /organism/sol100/view
+
+Display the sol100 organisms page.
+
+=cut
+
+sub view_sol100 :Path('sol100/view') :Args(0) {
+    my ( $self, $c ) = @_;
+
+    my ($person_id, $user_type) = CXGN::Login->new( $c->dbc->dbh )->has_session();
+
+    $c->stash({
+        template => "/sequencing/sol100.mas",
+
+        organism_tree => {
+            %{ $self->rendered_organism_tree_cache->thaw( 'sol100' ) },
+            image_uri => $c->uri_for( $self->action_for('organism_tree_image'), ['sol100'] ),
+        },
+
+        show_org_add_form         => ( $user_type && any {$user_type eq $_} qw( curator submitter sequencer ) ),
+        organism_add_uri          => $c->uri_for( $self->action_for('add_sol100_organism')),
+        organism_autocomplete_uri => $c->uri_for( $self->action_for('autocomplete'), ['Solanaceae']),
+
+    });
+}
+
+=head2 add_sol100_organism
+
+Public Path: /organism/sol100/add_organism
+
+POST target to add an organism to the set of sol100 organisms.  Takes
+one param, C<species>, which is the exact string species name in the
+DB.
+
+After adding, redirects to C<view_sol100>.
+
+=cut
+
+sub add_sol100_organism :Path('sol100/add_organism') :Args(0) {
+    my ( $self, $c ) = @_;
+
+    my $organism = $c->dbic_schema('Bio::Chado::Schema','sgn_chado')
+                     ->resultset('Organism::Organism')
+                     ->search({ species => { ilike => $c->req->body_parameters->{species} }})
+                     ->single;
+
+    ## validate our conditions
+    my @validate = ( [ RC_METHOD_NOT_ALLOWED,
+                       'Only POST requests are allowed for this page.',
+                       sub { $c->req->method eq 'POST' }
+                     ],
+                     [ RC_BAD_REQUEST,
+                       'Organism not found',
+                       sub { $organism },
+                     ],
+                    );
+    for (@validate) {
+        my ( $status, $message, $test ) = @$_;
+        unless( $test->() ) {
+            $c->throw( http_status => $status, public_message => $message );
+            return;
+        }
+    }
+
+    # if this fails, it will throw an acception and will (probably
+    # rightly) be counted as a server error
+    $organism->create_organismprops(
+        { 'sol100' => 1 },
+        { autocreate => 1 },
+       );
+
+    $self->rendered_organism_tree_cache->remove( 'sol100' ); #< invalidate the sol100 cached image tree
+    $c->res->redirect( $c->uri_for( $self->action_for('view_sol100')));
+}
+
+
+=head2 autocomplete
+
+Public Path: /organism/autocomplete
+
+Autocomplete an organism species name.  Takes a single GET param,
+C<term>, responds with a JSON array of completions for that term.
+
+=cut
+
+sub autocomplete :Chained('get_organism_set') :PathPart('autocomplete') :Args(0) {
+  my ( $self, $c ) = @_;
+
+  my $term = $c->req->param('term');
+  # trim and regularize whitespace
+  $term =~ s/(^\s+|\s+)$//g;
+  $term =~ s/\s+/ /g;
+
+  my $s = $c->dbic_schema('Bio::Chado::Schema','sgn_chado')
+                  ->resultset('Organism::Organism');
+#  my $s = $c->stash->{organism_set};
+
+  my @results = $s->search({ species => { ilike => '%'.$term.'%' }},
+                           { rows => 15 },
+                          )
+                  ->get_column('species')
+                  ->all;
+
+  $c->res->content_type('application/json');
+  $c->res->body( $json->encode( \@results ));
+}
+
+
+#Chaining base to fetch a particular organism, chaining onto this like
+#/organism/<org_id>/<more_stuff>
+sub find_organism :Chained('/') :PathPart('organism') :CaptureArgs(1) {
+    my ( $self, $c, $organism_id ) = @_;
+
+    # TODO: add capability to search by organism name as well
+
+    $c->stash->{organism_id} = $organism_id;
+
+    $c->stash->{organism_rs} =
+        $c->dbic_schema('Bio::Chado::Schema','sgn_chado')
+            ->resultset('Organism::Organism')
+            ->search_rs({ organism_id => $organism_id });
+}
+
+=head2 view_organism
+
+Public Path: /organism/<organism_id>/view
+
+Action for viewing an organism detail page.  Currently just redirects
+to the legacy /chado/organism.pl.
+
+=cut
+
+sub view_organism :Chained('find_organism') :PathPart('view') {
+    my ( $self, $c ) = @_;
+
+    if( my $id = $c->stash->{organism_id} ) {
+        $c->res->redirect("/chado/organism.pl?organism_id=$id", 302 );
+    }
+}
+
+
+=head1 ATTRIBUTES
+
+=head2 organism_sets
+
+a hashref of organism sets (DBIC resultsets) as:
+
+  { set_name => {
+           description => 'user-visible description string for the set',
+           resultset => DBIC resultset of organisms in that set,
+         },
+  }
+
+currently defined sets are:
+
+=head3 sol100
+
+the SOL100 organisms, which are organisms in solanaceae that have a
+'web visible' organismprop set
+
+=head3 Solanaceae
+
+all organisms in the Solanaceae family
+
+=head3 Rubiaceae
+
+all organisms in the Rubiaceae family
+
+=head3 Plantaginaceae
+
+all organisms in the Plantaginaceae family
+
+=head3 web_visible_Solanaceae
+
+organisms in Solanaceae that have their 'web visible' organismprop set
+
+=head3 web_visible_Rubiaceae
+
+organisms in Rubiaceae that have their 'web visible' organismprop set
+
+=head3 web_visible_Plantaginaceae
+
+organisms in Plantaginaceae that have their 'web visible' organismprop set
+
+=cut
+
 has 'organism_sets' => (
     is => 'ro',
     isa => 'HashRef',
@@ -160,215 +379,71 @@ sub _child_phylonodes {
 }
 
 
-=head1 ACTIONS
+=head2 species_data_summary_cache
 
-=head2 view_all
+L<Cache> object containing species data summaries, as:
 
-Display the sgn data overview page.  Currently at /organism/all/view
+  {
+    <organism_id> => {
+         'Common Name' => common_name,
+          ...
+    },
+    ...
+  }
 
-=cut
-
-sub view_all :Path('/organism/all/view') :Args(0) {
-    my ( $self, $c ) = @_;
-
-    while( my ( $set_name, $set_callback ) = each %{ $self->organism_sets } ) {
-        next unless $set_name =~ /^web_visible_(.+)/;
-        my $family_name = $1;
-
-        my $tree = $self->rendered_organism_tree_cache->thaw( $set_name );
-        $tree->{set_name} = $set_name;
-        $c->stash->{organism_trees}->{$family_name} = $tree;
-
-    }
-
-    # add image_uris to each of the organism tree records
-    $_->{image_uri} = $c->uri_for( $self->action_for('organism_tree_image'), [ $_->{set_name} ] )
-        for values  %{ $c->stash->{organism_trees} };
-
-    $c->stash({
-        template => '/content/sgn_data.mas',
-    });
-}
-
-sub get_organism_set :Chained('/') :PathPart('organism/set') :CaptureArgs(1) {
-    my ( $self, $c, $set_name ) = @_;
-
-    $c->stash->{organism_set_name} = $set_name;
-    $c->stash->{organism_set} = $self->organism_sets->{ $set_name }
-        or $c->debug && $c->log->debug("no set found called '$set_name'");
-}
-
-# /organism/tree/<set_name>
-sub get_organism_tree :Chained('/') :PathPart('organism/tree') :CaptureArgs(1) {
-    my ( $self, $c, $set_name ) = @_;
-
-    $c->stash->{organism_set_name} = $set_name;
-    # the Cache::Entry for the slot in the cache for this organism tree
-    $c->stash->{organism_tree_cache_entry} = $self->rendered_organism_tree_cache->entry( $set_name );
-}
-
-# /organism/tree/<set_name>/image
-sub organism_tree_image :Chained('get_organism_tree') :PathPart('image') {
-    my ( $self, $c ) = @_;
-
-    my $image = $c->stash->{organism_tree_cache_entry}->thaw
-        or $c->throw_404;
-
-    $image->{png} or die "no png data for organism set '".$c->stash->{organism_set_name}."'! cannot serve image.  Dump of cache entry: \n".Data::Dumper::Dumper( $image );
-
-    $c->res->body( $image->{png} );
-    $c->res->content_type( 'image/png' );
-}
-
-# /organism/tree/<set_name>/flush
-sub clear_organism_tree :Chained('get_organism_tree') :PathPart('flush') {
-    my ( $self, $c ) = @_;
-
-    $c->stash->{organism_tree_cache_entry}->remove;
-    $c->res->content_type('application/json');
-    $c->res->body(<<'');
-{ status: "success" }
-
-}
-
-
-
-=head2 view_sol100
-
-Display the sol100 organisms page.
+Access with  C<$controller-E<gt>species_data_summary_cache->thaw($organism_id )>,
+do not use Cache's C<get> method.
 
 =cut
 
-sub view_sol100 :Path('sol100/view') :Args(0) {
-    my ( $self, $c ) = @_;
+has 'species_data_summary_cache' => (
+    is  => 'ro',
+    lazy_build => 1,
+   ); sub _build_species_data_summary_cache {
+       my ($cache_class, $config) = shift->_species_summary_cache_configuration;
+       return $cache_class->new( %$config );
+   }
 
-    my ($person_id, $user_type) = CXGN::Login->new( $c->dbc->dbh )->has_session();
+sub _species_summary_cache_configuration {
+    my ($self) = @_;
 
-    $c->stash({
-        template => "/sequencing/sol100.mas",
+    my $schema   = $self->_app->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' );
 
-        organism_tree => {
-            %{ $self->rendered_organism_tree_cache->thaw( 'sol100' ) },
-            image_uri => $c->uri_for( $self->action_for('organism_tree_image'), ['sol100'] ),
+    return 'Cache::File', {
+        cache_root      => $self->_app->path_to( $self->_app->tempfiles_subdir('species_summary_cache') ),
+        default_expires => '6 hours',
+
+        load_callback   => sub {
+            my $cache_entry = shift;
+            my $org_id = $cache_entry->key;
+            my $org = CXGN::Chado::Organism->new( $schema, $org_id )
+                or return;
+            no warnings 'uninitialized';
+            return Storable::nfreeze({
+                'Common Name' => $org->get_group_common_name,
+                'Loci' => $org->get_loci_count,
+                'Phenotypes' => $org->get_phenotype_count,
+                'Maps Available' => $org->has_avail_map,
+                'Genome Information' => $org->has_avail_genome,
+                'Libraries' => scalar( $org->get_library_list ),
+            });
         },
-
-        show_org_add_form         => ( $user_type && any {$user_type eq $_} qw( curator submitter sequencer ) ),
-        organism_add_uri          => $c->uri_for( $self->action_for('add_sol100_organism')),
-        organism_autocomplete_uri => $c->uri_for( $self->action_for('autocomplete'), ['Solanaceae']),
-
-    });
+    };
 }
 
-=head2 add_sol100_organism
+=head2 rendered_organism_tree_cache
 
-Add an organism to the set of sol100 organisms.
+A cache of rendered organism trees, as
+
+   set_name  =>
+    {
+       newick         => 'newick string',
+       png            => 'png data',
+       image_map      => 'html image map',
+       image_map_name => 'name of the image map for <img usemap="" ... />',
+     }
 
 =cut
-
-sub add_sol100_organism :Path('sol100/add_organism') :Args(0) {
-    my ( $self, $c ) = @_;
-
-    my $organism = $c->dbic_schema('Bio::Chado::Schema','sgn_chado')
-                     ->resultset('Organism::Organism')
-                     ->search({ species => { ilike => $c->req->body_parameters->{species} }})
-                     ->single;
-
-    ## validate our conditions
-    my @validate = ( [ RC_METHOD_NOT_ALLOWED,
-                       'Only POST requests are allowed for this page.',
-                       sub { $c->req->method eq 'POST' }
-                     ],
-                     [ RC_BAD_REQUEST,
-                       'Organism not found',
-                       sub { $organism },
-                     ],
-                    );
-    for (@validate) {
-        my ( $status, $message, $test ) = @$_;
-        unless( $test->() ) {
-            $c->throw( http_status => $status, public_message => $message );
-            return;
-        }
-    }
-
-    # if this fails, it will throw an acception and will (probably
-    # rightly) be counted as a server error
-    $organism->create_organismprops(
-        { 'sol100' => 1 },
-        { autocreate => 1 },
-       );
-
-    $self->rendered_organism_tree_cache->remove( 'sol100' ); #< invalidate the sol100 cached image tree
-    $c->res->redirect( $c->uri_for( $self->action_for('view_sol100')));
-}
-
-
-=head2 autocomplete
-
-Autocomplete an organism name.
-
-=cut
-
-sub autocomplete :Chained('get_organism_set') :PathPart('autocomplete') :Args(0) {
-  my ( $self, $c ) = @_;
-
-  my $term = $c->req->param('term');
-  # trim and regularize whitespace
-  $term =~ s/(^\s+|\s+)$//g;
-  $term =~ s/\s+/ /g;
-
-  my $s = $c->dbic_schema('Bio::Chado::Schema','sgn_chado')
-                  ->resultset('Organism::Organism');
-#  my $s = $c->stash->{organism_set};
-
-  my @results = $s->search({ species => { ilike => '%'.$term.'%' }},
-                           { rows => 15 },
-                          )
-                  ->get_column('species')
-                  ->all;
-
-  $c->res->content_type('application/json');
-  $c->res->body( $json->encode( \@results ));
-}
-
-
-=head2 find_organism
-
-Chaining base to fetch a particular organism, chaining onto this like
-/organism/<org_id>/<more_stuff>
-
-=cut
-
-sub find_organism :Chained('/') :PathPart('organism') :CaptureArgs(1) {
-    my ( $self, $c, $organism_id ) = @_;
-
-    # TODO: add capability to search by organism name as well
-
-    $c->stash->{organism_id} = $organism_id;
-
-    $c->stash->{organism_rs} =
-        $c->dbic_schema('Bio::Chado::Schema','sgn_chado')
-            ->resultset('Organism::Organism')
-            ->search_rs({ organism_id => $organism_id });
-}
-
-=head2 view_organism
-
-Action for viewing an organism detail page.  Currently just redirects
-to the legacy /chado/organism.pl.
-
-=cut
-
-sub view_organism :Chained('find_organism') :PathPart('view') {
-    my ( $self, $c ) = @_;
-
-    if( my $id = $c->stash->{organism_id} ) {
-        $c->res->redirect("/chado/organism.pl?organism_id=$id", 302 );
-    }
-}
-
-
-############## organism tree caching
 
 has 'rendered_organism_tree_cache' => (
     is => 'ro',
@@ -441,6 +516,7 @@ sub _render_organism_tree {
         return;
     }
 }
+
 
 __PACKAGE__->meta->make_immutable;
 1;

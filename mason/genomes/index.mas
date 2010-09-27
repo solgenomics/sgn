@@ -20,7 +20,7 @@ Lukas Mueller
   <% map {
        my $url = $_;
        s/_/ /g;
-       qq|<a href="$url" style="font-style: italic; display: block">$_</a>|
+       qq|<a href="/genomes/$url" style="font-style: italic; display: block">$_</a>|
      }
      grep -d,
      glob '*'

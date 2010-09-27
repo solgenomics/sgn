@@ -2,8 +2,7 @@ package SGN::Controller::Feature;
 
 =head1 NAME
 
-SGN::Controller::Organism - Catalyst controller for pages dealing with
-features
+SGN::Controller::Feature - Catalyst controller for pages dealing with features
 
 =cut
 
@@ -13,6 +12,7 @@ use namespace::autoclean;
 use HTML::FormFu;
 use URI::FromHash 'uri';
 use YAML::Any;
+use SGN::View::Feature qw/feature_link/;
 
 has 'schema' => (
 is => 'rw',
@@ -36,24 +36,17 @@ sub delegate_component
     my @children  = $feature->child_features;
     my @parents   = $feature->parent_features;
     my $type_name = $feature->type->name;
+    my $template  = "/feature/dhandler";
 
-    eval {
-        $c->forward_to_mason_view(
-            "/feature/$type_name.mas",
-            type    => $type_name,
-            feature => $feature,
-            children=> \@children,
-            parents => \@parents,
-        );
-    };
-    if ($@) {
-        $c->forward_to_mason_view(
-            "/feature/dhandler",
-            feature => $feature,
-            children=> \@children,
-            parents => \@parents,
-        );
+    $c->stash->{feature}  = $feature;
+    $c->stash->{children} = \@children;
+    $c->stash->{parents}  = \@parents;
+
+    if ($c->view('Mason')->component_exists("/feature/$type_name.mas")) {
+        $template         = "/feature/$type_name.mas";
+        $c->stash->{type} = $type_name;
     }
+    $c->stash->{template} = $template;
 }
 
 sub validate
@@ -73,7 +66,8 @@ sub view_name :Path('/feature/view/name') Args(1) {
 
 sub _validate_pair {
     my ($self,$c,$key,$value) = @_;
-    $c->throw( message => "$value is not a valid value for $key" ) if ($key eq 'feature_id' and $value !~ m/\d+/);
+    $c->throw( message => "$value is not a valid value for $key" )
+        if ($key =~ m/_id$/ and $value !~ m/\d+/);
 }
 
 sub _view_feature {
@@ -87,7 +81,7 @@ sub _view_feature {
                                     ->search({ $key => $value });
         my $feature = $matching_features->next;
         $c->throw( message => "feature with $key = '$value' not found") unless $feature;
-        print $self->render_fasta($feature);
+        $self->render_fasta($feature, $c);
     } else {
         $self->_validate_pair($c,$key,$value);
         my $matching_features = $self->schema
@@ -184,10 +178,12 @@ sub _make_feature_search_rs {
     }
 
     if( my $type = $form->param_value('feature_type') ) {
+        $self->_validate_pair($c,'type_id',$type);
         $rs = $rs->search({ 'type_id' => $type });
     }
 
     if( my $organism = $form->param_value('organism') ) {
+        $self->_validate_pair( $c, 'organism_id', $organism );
         $rs = $rs->search({ 'organism_id' => $organism });
     }
 
@@ -231,7 +227,7 @@ sub _feature_types {
 }
 
 sub render_fasta {
-    my ($self, $feature) = @_;
+    my ($self, $feature, $c) = @_;
 
     my $matching_features = $self->schema
                                 ->resultset('Sequence::Feature')
@@ -241,13 +237,15 @@ sub render_fasta {
                     -id  => $feature->name,
                     -seq => $feature->residues,
                     );
-    my $fh = Bio::SeqIO->new(
-            -format => 'fasta',
-            -fh     => \*STDOUT)
-            ->write_seq( $sequence );
-    my $output = CGI->new->header( -type => 'text/txt' );
-    $output   .= $_ while <$fh>;
-    return $output;
+    my $fasta;
+    my $fastaio = IO::String->new($fasta);
+    Bio::SeqIO->new( -format => 'fasta',
+                     -fh     => $fastaio,
+    )->write_seq( $sequence );
+
+    $c->res->content_type('text/plain');
+    $c->res->status( 200 );
+    $c->res->body( $fasta );
 }
 
 __PACKAGE__->meta->make_immutable;

@@ -101,14 +101,16 @@ if ($sample->get_sample_id() ) {
     }
 }
 
+## Get the sample relationship
 
+my %sample_relations = $sample->get_relationship();
 
 ## Depending if the $sample has or not id, it call a mason page (error when does not exists sample in the database)
 
 ## There are two ways to access to the page, using id=int or name=something. If use other combinations give an error message 
 
 if (defined $sample->get_sample_id() ) {
-    $m->exec('/biosource/sample_detail.mas', schema => $schema, sample => $sample, pub_list => \@pubs, target_list => \@targets );
+    $m->exec('/biosource/sample_detail.mas', schema => $schema, sample => $sample, sample_relations_href => \%sample_relations, pub_list => \@pubs, target_list => \@targets );
 } else {
     $m->exec('/biosource/biosource_page_error.mas', schema => $schema, object => $sample );
 }

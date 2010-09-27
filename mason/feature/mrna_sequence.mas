@@ -9,7 +9,7 @@
 </%init>
 <%perl>
     my $mrna_residue = '';
-    my @exons = grep { $_->type->name eq 'exon' } 
+    my @exons = grep { $_->type->name eq 'exon' }
                 map { $_->child_features } @$mrna_features;
     for my $exon (@exons) {
         $mrna_residue .= infer_residue($exon);

@@ -127,6 +127,11 @@ around 'finalize_error' => sub {
         }
     };
 
+    # insert a JS pack in the error output if necessary
+    $self->res->content_type('text/html');
+    $self->forward('/js/insert_js_pack_html');
+
+
     # set our http status to the most severe error we have
     my ($worst_status ) =
         sort { $b <=> $a }
