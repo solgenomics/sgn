@@ -26,14 +26,26 @@ our $num_dbs = 0;
 our $num_cvs = 0;
 our $num_organisms = 0;
 our $test_data = [];
-our @EXPORT_OK = qw/
-                    create_test_dbxref create_test_cvterm
-                    create_test_organism create_test_feature
-                    create_test_db create_test_cv
-                    create_test_featureloc
-                    /;
+our @EXPORT_OK = qw/ create_test /;
 
-sub create_test_db {
+sub create_test {
+    my ($pkg, $values) = @_;
+    die "Must provide package name to create test object" unless $pkg;
+    my $pkg_subs = {
+        'Cv::Cv'               => sub { _create_test_cv($values) },
+        'Cv::Cvterm'           => sub { _create_test_cvterm($values) },
+        'General::Db'          => sub { _create_test_db($values) },
+        'General::Dbxref'      => sub { _create_test_dbxref($values) },
+        'Sequence::Feature'    => sub { _create_test_feature($values) },
+        'Organism::Organism'   => sub { _create_test_organism($values) },
+        'Sequence::Featureloc' => sub { _create_test_featureloc($values) },
+
+    };
+    die "$pkg creation not supported yet, sorry" unless exists $pkg_subs->{$pkg};
+    return $pkg_subs->{$pkg}->($values);
+}
+
+sub _create_test_db {
     my ($values) = @_;
     my $db = $schema->resultset('General::Db')
            ->create( { name => $values->{name} || "db_$num_dbs-$$" } );
@@ -42,9 +54,9 @@ sub create_test_db {
     return $db;
 }
 
-sub create_test_dbxref {
+sub _create_test_dbxref {
     my ($values) = @_;
-    $values->{db} ||= create_test_db();
+    $values->{db} ||= _create_test_db();
 
     my $dbxref = $schema->resultset('General::Dbxref')
            ->create(
@@ -57,7 +69,7 @@ sub create_test_dbxref {
     return $dbxref;
 }
 
-sub create_test_cv {
+sub _create_test_cv {
     my ($values) = @_;
     unless ($values->{name}) {
         $values->{name} = "cv_$num_cvs-$$";
@@ -70,13 +82,13 @@ sub create_test_cv {
     return $cv;
 }
 
-sub create_test_cvterm {
+sub _create_test_cvterm {
     my ($values) = @_;
     unless ($values->{name}) {
         $values->{name} = "cvterm_$num_cvterms-$$";
     }
-    $values->{dbxref} ||= create_test_dbxref();
-    $values->{cv} ||= create_test_cv();
+    $values->{dbxref} ||= _create_test_dbxref();
+    $values->{cv}     ||= _create_test_cv();
     my $cvterm = $schema->resultset('Cv::Cvterm')
            ->create(
             {
@@ -89,7 +101,7 @@ sub create_test_cvterm {
     return $cvterm;
 }
 
-sub create_test_organism {
+sub _create_test_organism {
     my ($values) = @_;
     unless ($values->{genus}) {
         $values->{genus} = "organism_$num_organisms-$$";
@@ -105,7 +117,7 @@ sub create_test_organism {
 
 }
 
-sub create_test_feature {
+sub _create_test_feature {
     my ($values) = @_;
 
     # provide some defaults for things we don't care about
@@ -120,8 +132,8 @@ sub create_test_feature {
         $num_features++;
     }
 
-    $values->{organism} ||= create_test_organism();
-    $values->{type}     ||= create_test_cvterm();
+    $values->{organism} ||= _create_test_organism();
+    $values->{type}     ||= _create_test_cvterm();
 
     my $feature = $schema->resultset('Sequence::Feature')
            ->create({
@@ -136,11 +148,11 @@ sub create_test_feature {
     return $feature;
 }
 
-sub create_test_featureloc {
+sub _create_test_featureloc {
     my ($values) = @_;
 
-    $values->{feature}    ||= create_test_feature();
-    $values->{srcfeature} ||= create_test_feature();
+    $values->{feature}    ||= _create_test_feature();
+    $values->{srcfeature} ||= _create_test_feature();
     # the following values need to be consistent with the default
     # residue, which is 4 bases long
     $values->{fmin} ||= 1;

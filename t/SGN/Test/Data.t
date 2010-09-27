@@ -5,18 +5,12 @@ use warnings;
 use lib 't/lib';
 use Test::More;
 
-use_ok('SGN::Test::Data',
-    qw/
-    create_test_organism create_test_dbxref
-    create_test_feature create_test_cvterm
-    create_test_db create_test_cv
-    create_test_featureloc
-    /);
+use_ok('SGN::Test::Data', qw/ create_test /);
 
 my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
 
 {
-    my $db = create_test_db({
+    my $db = create_test('General::Db', {
                     name => "SGNTESTDATA_$$",
                 });
 
@@ -29,7 +23,7 @@ my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
     is($rs->count, 1, 'found exactly one db that was created');
 }
 {
-    my $dbxref = create_test_dbxref({
+    my $dbxref = create_test('General::Dbxref',{
                     accession => "SGNTESTDATA_$$",
                 });
 
@@ -44,7 +38,7 @@ my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
 }
 
 {
-    my $cv = create_test_cv({
+    my $cv = create_test('Cv::Cv',{
                     name => "SGNTESTDATA_$$",
                 });
 
@@ -59,7 +53,7 @@ my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
 }
 
 {
-    my $cvterm = create_test_cvterm({
+    my $cvterm = create_test('Cv::Cvterm',{
                     name => "SGNTESTDATA_$$",
                 });
 
@@ -74,7 +68,7 @@ my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
 }
 
 {
-    my $feature = create_test_feature({
+    my $feature = create_test('Sequence::Feature',{
         residues => 'GATTACA',
     });
     isa_ok($feature, 'Bio::Chado::Schema::Sequence::Feature');
@@ -87,7 +81,7 @@ my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
     is($rs->count, 1, 'found feature with sequence = GATTACA');
 }
 {
-    my $featureloc = create_test_featureloc({
+    my $featureloc = create_test('Sequence::Featureloc',{
         fmin => 42,
         fmax => 69,
     });
@@ -103,7 +97,7 @@ my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
 }
 
 {
-    my $organism = create_test_organism({
+    my $organism = create_test('Organism::Organism',{
         genus   => 'Tyrannosaurus',
         species => 'Tyrannosaurus rex',
     });
@@ -119,12 +113,12 @@ my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
 }
 
 {
-    my @f = map { create_test_feature() } (1..2);
+    my @f = map { create_test('Sequence::Feature') } (1..2);
     isnt($f[0]->name,$f[1]->name,'two features created have different names');
     isnt($f[0]->uniquename,$f[1]->uniquename,'two features created have different unique names');
 }
 {
-    my @o = map { create_test_organism() } (1..2);
+    my @o = map { create_test('Organism::Organism') } (1..2);
     isnt($o[0]->genus,$o[1]->genus,'two organisms created have different genus');
     isnt($o[0]->species,$o[1]->species,'two organisms created have different species');
 }
