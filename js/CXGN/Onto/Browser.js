@@ -99,73 +99,69 @@ CXGN.Onto.Browser.prototype = {
 	this.setSearchResponseCount(0);
 	this.render();
     },
-
-    fetchRoots: function() { 
+    
+    fetchRoots: function(nodes) { 
 	
 	new Ajax.Request("/chado/ajax_ontology_browser.pl", {
-	    parameters:   { action: 'roots' }, 
-	    asynchronous: false,
-	    on503: function() { 
-	    	alert('An error occurred! The database may currently be unavailable. Please check back later.');
-	    },
-            onSuccess: function(request) { 
-		
-		//MochiKit.Logging.log('COMPLETE!');
-		
-		var responseText = request.responseText;
-		
-		//MochiKit.Logging.log('RESPONSETEXT = ' + responseText);
-		
-		//MochiKit.Logging.log('This = ' + this);
-		
-		o.rootnode = new Node(o);
-		
-		//MochiKit.Logging.log('Created root node. Yay!');
-		o.rootnode.setName('');
-		o.rootnode.setAccession('root');
-		o.rootnode.openNode();
-		o.rootnode.unHide();
-		o.rootnode.setHasChildren(true);
-		//MochiKit.Logging.log('root: ' + o.rootnode + ' ---- ' + o.rootnode.name);
-		
-		//MochiKit.Logging.log('fetching roots...');
-		
-		var t = responseText.split('#');
-		
-		//MochiKit.Logging.log('Children count ' +  t.length + '<br />');
-		
-		for (var i=0; i<t.length; i++) { 
-		    var j = t[i].split('*');
-		    //  MochiKit.Logging.log(i + '. Child: ID: '+ j[0] + ' Name: ' + j[1] +  ' <br />');
-		    
-		    
-		    //MochiKit.Logging.log('Processing '+j[0]);
-		    
-		    
-		    var childNode = new Node(o);
-		    
-		    o.rootnode.addChild(childNode);
-		    childNode.setAccession(j[0]);
-		    //childNode.setHilite(true);
-		    childNode.closeNode();
-		    childNode.unHide();
-		    childNode.setName(j[1]);
-		    childNode.setCVtermID(j[2]);
-		    childNode.setRelType(j[4]);
-		    //MochiKit.Logging.log('hasChildren = '+j[2]);
-		    if (j[3]==1) { 
-			childNode.setHasChildren(true);
+		parameters:   { action: 'roots' , nodes: nodes }, 
+		asynchronous: false,
+		on503: function() { 
+		    alert('An error occurred! The database may currently be unavailable. Please check back later.');
+		},
+		onSuccess: function(request) { 
+		    var json = request.responseText;
+		    MochiKit.Logging.log('COMPLETE!');
+		    var x = eval("("+json+")");
+		    MochiKit.Logging.log('RESPONSETEXT = ' + x);
+		    if (x.error ) { alert(x.error) ; }
+		    else {
+			o.rootnode = new Node(o);
+			
+			//MochiKit.Logging.log('Created root node. Yay!');
+			o.rootnode.setName('');
+			o.rootnode.setAccession('root');
+			o.rootnode.openNode();
+			o.rootnode.unHide();
+			o.rootnode.setHasChildren(true);
+			//MochiKit.Logging.log('root: ' + o.rootnode + ' ---- ' + o.rootnode.name);
+			
+			//MochiKit.Logging.log('fetching roots...');
+			var t = x.response.split('#');
+			
+			//MochiKit.Logging.log('Children count ' +  t.length + '<br />');
+			
+			for (var i=0; i<t.length; i++) { 
+			    var j = t[i].split('*');
+			    //  MochiKit.Logging.log(i + '. Child: ID: '+ j[0] + ' Name: ' + j[1] +  ' <br />');
+			    
+			    
+			    //MochiKit.Logging.log('Processing '+j[0]);
+			    
+			    
+			    var childNode = new Node(o);
+			    
+			    o.rootnode.addChild(childNode);
+			    childNode.setAccession(j[0]);
+			    //childNode.setHilite(true);
+			    childNode.closeNode();
+			    childNode.unHide();
+			    childNode.setName(j[1]);
+			    childNode.setCVtermID(j[2]);
+			    childNode.setRelType(j[4]);
+			    //MochiKit.Logging.log('hasChildren = '+j[2]);
+			    if (j[3]==1) { 
+				childNode.setHasChildren(true);
+			    }
+			    else { 
+				childNode.setHasChildren(false);
+			    }
+			    
+			    //MochiKit.Logging.log('Root node name: '+o.rootnode.getName()+'<br />');
+			    //MochiKit.Logging.log('Child accession: '+childNode.getAccession()+'<br />');
+			}
 		    }
-		    else { 
-			childNode.setHasChildren(false);
-		    }
-		    
-		    //MochiKit.Logging.log('Root node name: '+o.rootnode.getName()+'<br />');
-		    //MochiKit.Logging.log('Child accession: '+childNode.getAccession()+'<br />');
-		    
 		}
-	    }
-	});
+	    });
     },
     
     workingMessage: function(status) {
@@ -479,37 +475,38 @@ CXGN.Onto.Browser.prototype = {
 	
 
 	new Ajax.Request('/chado/ajax_ontology_browser.pl', {
-	    parameters: { node: accession, action: 'parents' }, 
-	    asynchronous: false,
-			      on503: function() { 
-	    	alert('An error occurred! The database may currently be unavailable. Please check back later.');
-	    },
-
-	    onSuccess: function(request) {
-		
-		var responseText = request.responseText;
-		
-		var t = responseText.split('#');
-		
-		//MochiKit.Logging.log('Children count ' +  t.length);
-		
-		for (var i=0; i<=t.length; i++) { 
-		    var j = t[i].split('*');
-		    //MochiKit.Logging.log(i + '. Parent: ID: '+ j[0] + ' Name: ' + j[1], '' );
+		parameters: { node: accession, action: 'parents' }, 
+		    asynchronous: false,
+		    on503: function() { 
+		    alert('An error occurred! The database may currently be unavailable. Please check back later.');
+		},
 		    
-		    //MochiKit.Logging.log('Processing '+j[0]);
-		    parentsList.push(j[0]);
-		    
-		    //MochiKit.Logging.log('Child accession: '+childNode.getAccession());
-		    
+		    onSuccess: function(request) {
+		    var json = request.responseText;
+		    var x = eval("("+json+")");
+		    if ( x.error() ) { alert(x.error) ; }
+		    else {
+			var t = x.response.split('#');
+			
+			MochiKit.Logging.log('Children count ' +  t.length);
+			
+			for (var i=0; i<=t.length; i++) { 
+			    var j = t[i].split('*');
+			    //MochiKit.Logging.log(i + '. Parent: ID: '+ j[0] + ' Name: ' + j[1], '' );
+			    
+			    //MochiKit.Logging.log('Processing '+j[0]);
+			    parentsList.push(j[0]);
+			    
+			    //MochiKit.Logging.log('Child accession: '+childNode.getAccession());
+			    
+			}
+			
+			//MochiKit.Logging.log('Rendering again...');
+			//parentNode.browser.render();      
+			
+		    }
 		}
-		
-		//MochiKit.Logging.log('Rendering again...');
-		//parentNode.browser.render();      
-		
-	    }
-			      
-			      });
+	});
 	return parentsList;
     },
     
@@ -524,46 +521,48 @@ CXGN.Onto.Browser.prototype = {
 	}
         else{
 	    new Ajax.Request('/chado/ajax_ontology_browser.pl', {
-		parameters: {action: 'match', term_name: search_string, db_name: db_name },
-		asynchronous: false,
-			    on503: function() { 
-	    	alert('An error occurred! The database may currently be unavailable. Please check back later.');
-	    },
-
-		onSuccess: function(request) {
-		    var matchNodes = new Array();
-		    var responseText = request.responseText;
+		    parameters: {action: 'match', term_name: search_string, db_name: db_name },
+		    asynchronous: false,
+		    on503: function() { 
+			alert('An error occurred! The database may currently be unavailable. Please check back later.');
+		    },
 		    
-		    var responseArray = responseText.split('|');
-		    responseArray.pop();
-		    
-		    var s='';
-		    o.setSearchResponseCount(responseArray.length);
-		    MochiKit.Logging.log('Matched '+responseArray.length+' terms');
-		    for (var i=0; i<responseArray.length; i++) { 
-			var ontologyObject = responseArray[i].split('--');
-			var searchResults= responseArray[i].split('*');
-			MochiKit.Logging.log('getOntologies found term ',  ontologyObject[1] );
-			MochiKit.Logging.log('search term ', search_string);
-			matchNodes.push(ontologyObject[0]); ///
-			s +='<a href=javascript:o.searchTermParentage(\''+ontologyObject[1]+'\')>'+searchResults[1]+'</a><br />';
+		    onSuccess: function(request) {
+			var matchNodes = new Array();
+			var json = request.responseText;
+			var x = eval("("+json+")");
+			if ( x.error() ) { alert(x.error) ; }
+			else {
+			    var responseArray = x.response.split('|');
+			    responseArray.pop();
+			    
+			    var s='';
+			    o.setSearchResponseCount(responseArray.length);
+			    MochiKit.Logging.log('Matched '+responseArray.length+' terms');
+			    for (var i=0; i<responseArray.length; i++) { 
+				var ontologyObject = responseArray[i].split('--');
+				var searchResults= responseArray[i].split('*');
+				MochiKit.Logging.log('getOntologies found term ',  ontologyObject[1] );
+				MochiKit.Logging.log('search term ', search_string);
+				matchNodes.push(ontologyObject[0]); ///
+				s +='<a href=javascript:o.searchTermParentage(\''+ontologyObject[1]+'\')>'+searchResults[1]+'</a><br />';
+			    }
+			    //		    MochiKit.Logging.log('the search results:' , s) ;
+			    MochiKit.Logging.log('the search string:' , search_string) ;
+			    
+			    if (s === '') { s = '(no terms found) '; }
+			    o.setSearchResults('<div class="topicbox">Search term: <b>'+search_string+'</b></div><div class="topicdescbox">'+s+'</div>');
+			    o.showSearchResults();
+			    o.setSearchValue(search_string);
+			    
+			    o.render();
+			}
 		    }
-	//		    MochiKit.Logging.log('the search results:' , s) ;
-		    MochiKit.Logging.log('the search string:' , search_string) ;
-		    
-		    if (s === '') { s = '(no terms found) '; }
-		    o.setSearchResults('<div class="topicbox">Search term: <b>'+search_string+'</b></div><div class="topicdescbox">'+s+'</div>');
-		    o.showSearchResults();
-		    o.setSearchValue(search_string);
-		    
-		    o.render();
-		}
-	    });
+		});
 	}
 	this.workingMessage(false);
-	
     },
-
+    
     getSearchResults: function() { 
 	return this.searchResults || '';
     },
@@ -673,36 +672,39 @@ CXGN.Onto.Browser.prototype = {
 	//MochiKit.Logging.log('Fetching children for node '+this.getName());
 	
 	new Ajax.Request('/chado/ajax_ontology_browser.pl', {
-	    parameters: { node: searchText, action: 'match' }, 
-	    asynchronous: false,
-	    	    on503: function() { 
-	    	alert('An error occurred! The database may currently be unavailable. Please check back later.');
-	    },
-
-	    onSuccess: function(request) {
+		parameters: { node: searchText, action: 'match' }, 
+		asynchronous: false,
+		on503: function() { 
+		    alert('An error occurred! The database may currently be unavailable. Please check back later.');
+		},
 		
-		//MochiKit.Logging.log('HELLO WORLD!');
-		var matchNodes = new Array();
-		var responseText = request.responseText;
-		
-		var t = responseText.split('#');
-		
-		//	       t.pop(); //remove last element from the array
-		
-		//MochiKit.Logging.log('Matched '+t.length+' nodes');
-		for (var i=0; i<t.length; i++) { 
-		    var j = t[i].split('*');
+		onSuccess: function(request) {
 		    
-		    //MochiKit.Logging.log('matching node: '+ j[0]);
-		    matchNodes.push(j[0]); ///
+		    //MochiKit.Logging.log('HELLO WORLD!');
+		    var matchNodes = new Array();
+		    var json = request.responseText;
+		    var x = eval("("+json+")");
+		    if ( x.error() ) { alert(x.error) ; }
+		    else {
+			var t = x.response.split('#');
+			
+			//	       t.pop(); //remove last element from the array
+			
+			//MochiKit.Logging.log('Matched '+t.length+' nodes');
+			for (var i=0; i<t.length; i++) { 
+			    var j = t[i].split('*');
+			    
+			    //MochiKit.Logging.log('matching node: '+ j[0]);
+			    matchNodes.push(j[0]); ///
+			}
+			
+			return matchNodes;
+		    }
 		}
-		
-		return matchNodes;
-	    }
-	});
+	    });
 	
     },
-
+    
     setLinkToTextField: function(linkToTextField) { 
 	this.linkToTextField=linkToTextField;
     },
@@ -940,55 +942,58 @@ Node.prototype = {
 	
 	var parentNode = this;
 	new Ajax.Request('/chado/ajax_ontology_browser.pl', {
-	    parameters: { node: parentNode.getAccession(), action: 'children' }, 
-			  asynchronous: false,
-	    on503: function() { 
-	    	alert('An error occurred! The database may currently be unavailable. Please check back later.');
-	    },
-
-	   onSuccess: function(request) {
-			      
-			      
-			      //MochiKit.Logging.log('HELLO WORLD!');
-			      
-			      var responseText = request.responseText;
-			      
-			      var t = responseText.split('#');
-			      
-			      //MochiKit.Logging.log('Children count ' +  t.length + '<br />');
-			      
-			      for (var i=0; i<t.length; i++) { 
-				  var j = t[i].split('*');
-				  //MochiKit.Logging.log(i + '. Child: ID: '+ j[0] + ' Name: ' + j[1] +  ' <br />');
-				  
-				  //MochiKit.Logging.log('Processing '+j[0]);
-				  
-				  var childNode = new Node(o);
-				  
-				  childNode.setAccession(j[0]);
-				  childNode.closeNode();
-				  childNode.unHide();
-				  childNode.setName(j[1]);
-				  childNode.setCVtermID(j[2]);
-				  childNode.setRelType(j[4]);
-				  //MochiKit.Logging.log('hasChildren = '+j[2]);
-				  if (j[3]==1) { 
-				      childNode.setHasChildren(true);
-				  }
-				  else { 
-				      childNode.setHasChildren(false);
-				  }
-				  
-				  parentNode.addChild(childNode);
-				  
-				  //MochiKit.Logging.log('Child accession: '+childNode.getAccession()+'<br />');
-				  
-			      }
-			      //MochiKit.Logging.log('Rendering again...');
-			      parentNode.browser.render();      
-			      
-			  }
-					    });
+		parameters: { node: parentNode.getAccession(), action: 'children' }, 
+		    asynchronous: false,
+		    on503: function() { 
+		    alert('An error occurred! The database may currently be unavailable. Please check back later.');
+		},
+		    
+		    onSuccess: function(request) {
+		    
+		    
+		    //MochiKit.Logging.log('HELLO WORLD!');
+		    
+		    var json = request.responseText;
+		    var x = eval("("+json+")");
+		    if ( x.error() ) { alert(x.error) ; }
+		    else {
+			var t = x.response.split('#');
+			
+			//MochiKit.Logging.log('Children count ' +  t.length + '<br />');
+			
+			for (var i=0; i<t.length; i++) { 
+			    var j = t[i].split('*');
+			    //MochiKit.Logging.log(i + '. Child: ID: '+ j[0] + ' Name: ' + j[1] +  ' <br />');
+			    
+			    //MochiKit.Logging.log('Processing '+j[0]);
+			    
+			    var childNode = new Node(o);
+			    
+			    childNode.setAccession(j[0]);
+			    childNode.closeNode();
+			    childNode.unHide();
+			    childNode.setName(j[1]);
+			    childNode.setCVtermID(j[2]);
+			    childNode.setRelType(j[4]);
+			    //MochiKit.Logging.log('hasChildren = '+j[2]);
+			    if (j[3]==1) { 
+				childNode.setHasChildren(true);
+			    }
+			    else { 
+				childNode.setHasChildren(false);
+			    }
+			    
+			    parentNode.addChild(childNode);
+			    
+			    //MochiKit.Logging.log('Child accession: '+childNode.getAccession()+'<br />');
+			    
+			}
+			//MochiKit.Logging.log('Rendering again...');
+			parentNode.browser.render();      
+			
+		    }
+		}
+	});
     },
     
     
@@ -998,48 +1003,51 @@ Node.prototype = {
 	var childNode = this;
 	
 	new Ajax.Request("/chado/ajax_ontology_browser.pl", {
-	    parameters: { node: childNode.getAccession(), action: 'parents' }, 
-	      asynchronous: false,
-	      onSuccess: function(request) {
-		  
-		  var responseText = request.responseText;
-		  
-		  var t = responseText.split('#');
-		  
-		  //MochiKit.Logging.log('Children count ' +  t.length + '<br />');
-		  
-		  for (var i=0; i<t.length; i++) { 
-		      var j = t[i].split('*');
-		      //MochiKit.Logging.log(i + '. Child: ID: '+ j[0] + ' Name: ' + j[1] +  ' <br />');
-		      
-		      //MochiKit.Logging.log('Processing '+j[0]);
-		      var parent = new Node(o);
-		      
-		      parent.setAccession(j[0]);
-		      parent.closeNode();
-		      parent.unHide();
-		      parent.setName(j[1]);
-		      parent.setCVtermID(j[2]);
-		      parent.setRelType(j[4]);
-		      //MochiKit.Logging.log('hasChildren = '+j[1]);
-		      if (j[3]==1) { 
-			  parent.setHasChildren(true);
-		      }
-		      else { 
-			  parent.setHasChildren(false);
-		      }
-		      
-		      parentList.push(parent);
-		      
-		      //MochiKit.Logging.log('Child accession: '+childNode.getAccession()+'<br />');
-		      
-		  }
-		  //MochiKit.Logging.log('Rendering again...');
-		  //parentNode.browser.render();      
-		  return parentList;
-	      }
-				});
+		parameters: { node: childNode.getAccession(), action: 'parents' }, 
+		    asynchronous: false,
+		    onSuccess: function(request) {
+		   
+		    var json = request.responseText;
+		    var x = eval("("+json+")");
+		    if ( x.error() ) { alert(x.error) ; }
+		    else {
+			var t = x.response.split('#');
+			
+			//MochiKit.Logging.log('Children count ' +  t.length + '<br />');
+			
+			for (var i=0; i<t.length; i++) { 
+			    var j = t[i].split('*');
+			    //MochiKit.Logging.log(i + '. Child: ID: '+ j[0] + ' Name: ' + j[1] +  ' <br />');
+			    
+			    //MochiKit.Logging.log('Processing '+j[0]);
+			    var parent = new Node(o);
+			    
+			    parent.setAccession(j[0]);
+			    parent.closeNode();
+			    parent.unHide();
+			    parent.setName(j[1]);
+			    parent.setCVtermID(j[2]);
+			    parent.setRelType(j[4]);
+			    //MochiKit.Logging.log('hasChildren = '+j[1]);
+			    if (j[3]==1) { 
+				parent.setHasChildren(true);
+			    }
+			    else { 
+				parent.setHasChildren(false);
+			    }
+			    
+			    parentList.push(parent);
+			    
+			    //MochiKit.Logging.log('Child accession: '+childNode.getAccession()+'<br />');
+			    
+			}
+			//MochiKit.Logging.log('Rendering again...');
+			//parentNode.browser.render();      
+			return parentList;
+		    }
+		}
+	});
     }
-
+    
     
 };	
