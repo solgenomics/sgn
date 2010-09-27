@@ -25,6 +25,7 @@ after 'setup_finalize' => sub {
 # SGN::Feature objects
 sub _features {
     my $class = shift;
+    $class = ref $class if ref $class;
     state %feature_objects;
     $feature_objects{$class} ||= do {
         $class->_build__features;

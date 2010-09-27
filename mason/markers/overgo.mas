@@ -128,24 +128,17 @@ if (%overgos) {
     }
     
     #output the sequences for this overgo probe
-    my $seqhtml;
-    $seqhtml .= '<b>A Sequence</b><br />'
-      .html_break_string($thisprobe->{seqs}{seqA})
-	.'<br /><br />';
-    
-    $seqhtml .= '<b>B Sequence</b><br />'
-      .html_break_string($thisprobe->{seqs}{seqB})
-	.'<br /><br />';
-    
-    $seqhtml .= '<b>AB Sequence</b><br />'
-      .html_break_string($thisprobe->{seqs}{seqAB})
-	.'<br /><br />';
-    
-    $seqhtml .= '<b>Marker Sequence</b><br />'
-      .html_break_string($thisprobe->{seqs}{markerseq})
-	.'<br />';
-    
-    $overgo_html .= html_optional_show("seq$probeid",'<i>Overgo Sequences</i>',"<div>$seqhtml</div>");
+    my @seqs = (
+        'A sequence'  => $thisprobe->{seqs}{seqA},
+        'B sequence'  => $thisprobe->{seqs}{seqB},
+        'AB sequence' => $thisprobe->{seqs}{seqAB},
+        'Marker sequence' => $thisprobe->{seqs}{markerseq},
+    );
+
+    $_ = '<span class="sequence">'.html_break_string( $_ ).'</span>' for @seqs[1,3,5,7];
+    my $seqhtml = info_table_html( @seqs, __border => 0 ); 
+   
+    $overgo_html .= html_optional_show( "seq$probeid",'Overgo Sequences', $seqhtml );
     push @overgoinfo, $overgo_html;
   }
   
