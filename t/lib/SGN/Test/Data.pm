@@ -19,6 +19,44 @@ BEGIN {
     }
 }
 
+=head1 NAME
+
+SGN::Test::Data - create Bio::Chado::Schema test objects
+
+=head1 SYNOPSIS
+
+    use lib 't/lib';
+    use SGN::Test::Data qw/create_test/;
+
+    my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
+    # all other necessary objects are auto-created, such as
+    # cvterms, dbxrefs, features, etc...
+    my $organism = create_test('Organism::Organism',{
+        genus   => 'Tyrannosaurus',
+        species => 'Tyrannosaurus rex',
+    });
+
+    my $feature = create_test('Sequence::Feature',{
+        residues => 'GATTACA',
+    });
+
+    # pre-created objects can be passed in, to specify linking objects
+    my $gene_cvterm     = create_test('Cv::Cvterm', { name  => 'gene' });
+    my $gene_feature    = create_test('Sequence::Feature', { type => $gene_cvterm });
+    my $gene_featureloc = create_test('Sequence::Featureloc', { feature => $gene_feature });
+
+=head1 FUNCTIONS
+
+=head2 create_test
+
+This function takes the name of a Bio::Chado::Schema object, such as 'Sequence::Feature', as the first argument, and an optional hash ref of parameters that will be passed to the appropriate C<create> function.
+
+All unspecified parameters that are necessary will get auto-created values, and all necessary linking objects will be autocreated.
+
+YOU DO NOT HAVE TO CLEAN UP THESE OBJECTS. All SGN::Test::Data objects auto-destruct at END time, by having their C<delete> method called.
+
+=cut
+
 our $num_features = 0;
 our $num_cvterms = 0;
 our $num_dbxrefs = 0;
