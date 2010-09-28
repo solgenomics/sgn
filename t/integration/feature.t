@@ -28,5 +28,6 @@ my $gene_featureloc = create_test('Sequence::Featureloc', { feature => $gene_fea
 $mech->get_ok("/feature/view/name/" . $gene_feature->name);
 $mech->content_contains('Gene Data');
 $mech->content_contains('Gene: ' . $gene_feature->name);
+$mech->content_contains('Genomic Sequence');
 
 done_testing;
