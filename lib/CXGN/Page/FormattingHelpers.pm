@@ -670,6 +670,7 @@ sub info_table_html {
     my $sub = $tabledata{__sub} ? 'sub_' : '';
 
     my $noborder = $tabledata{__border} ? '' : '_noborder';
+    no warnings 'uninitialized';
     join(
         "\n",
         (
