@@ -103,6 +103,11 @@ use SGN::Devel::MyDevLibs;
 
 extends 'Test::WWW::Mechanize::Catalyst';
 
+with 'WWW::Mechanize::TreeBuilder' => {
+    tree_class => 'HTML::TreeBuilder::XPath'
+};
+
+
 =head2 catalyst_app
 
 The name of the app under test.  Defaults to 'SGN'.
