@@ -29,5 +29,9 @@ $mech->get_ok("/feature/view/name/" . $gene_feature->name);
 $mech->content_contains('Gene Data');
 $mech->content_contains('Gene: ' . $gene_feature->name);
 $mech->content_contains('Genomic Sequence');
+my ($name, $residues) = ($gene_feature->name, $gene_feature->residues);
+
+like( $mech->findvalue( '/html/body//span[@class="sequence"]'), qr/>$name\s*$residues/, "Found >$name\\n$residues");
+
 
 done_testing;
