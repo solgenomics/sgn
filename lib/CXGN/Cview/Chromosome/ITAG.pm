@@ -2,15 +2,12 @@
 =head1 NAME
 
 CXGN::Cview::Chromosome::ITAG - a chromosome class visualizing the ITAG assembly and BACs
-
+           
 =head1 DESCRIPTION
 
-The ITAG chromosome object is populated by a flat file containing the
-assembly information in gff3 format that is generated as part of the
-ITAG annotation process.
+The ITAG chromosome object is populated by a flat file containing the assembly information in gff3 format that is generated as part of the ITAG annotation process. 
 
-The name of the file is retrieved from the L<CXGN::ITAG::Release>
-object and parsed manually using a 'split' based parser.
+The name of the file is retrieved from the L<CXGN::ITAG::Release> object and parsed manually using a 'split' based parser.
 
 =head1 AUTHOR(S)
 
@@ -47,19 +44,19 @@ our $SCALE = 1000000; #= 1 MB
                 the file with the contig information (gff3 format)
                 a database handle (used to map contigs to the genetic
                   map).
-
+    
   Returns:	an ITAG chromosome object
-  Side effects:
-  Description:
+  Side effects:	
+  Description:	
 
 =cut
 
 sub new {
     my $class = shift;
-
+    
     my ($chr_nr, $height, $x, $y, $file, $dbh, $cache_dir) = @_;
     my $self = $class->SUPER::new($chr_nr, $height, $x, $y);
-
+    
     $self->set_name($chr_nr);
     $self->set_units("MB");
     $self->rasterize(0);
@@ -70,22 +67,22 @@ sub new {
     if ( $ENV{MOD_PERL} || $ENV{GATEWAY_INTERFACE} || $ENV{CATALYST_ENGINE} ) {
 	$self->set_cache_dir($cache_dir);
     }
-    else {
+    else { 
 	$self->set_cache_dir("/tmp");
     }
     # if no file was supplied or if the file does not exist,
     # return an empty chromosome
     #
-
-    if (!$file || ! -e $file) {
+    
+    if (!$file || ! -e $file) { 
 	die "Can't find file $file... ";
-	return $self;
+	return $self; 
     }
 
     $self->fetch($file);
-
+    
     return $self;
-
+    
 }
 
 
@@ -94,7 +91,7 @@ sub new {
 
  Usage:        $c->add_bac($contig_name, $bac_name)
  Desc:         keeps a list of bac members for a contig,
-               which is used to relate the contig to the
+               which is used to relate the contig to the 
                genetic map
  Ret:
  Args:
@@ -123,10 +120,10 @@ sub add_bac {
 #     $bac_marker->set_marker_name($bac_name);
 #     $bac_marker->get_label()->set_name($bac_name);
 #     $bac_marker->get_label()->set_url("/gbrowse/YYYYYY");
-
+    
 #     $self->add_marker($bac_marker);
 #    print STDERR "Added a bac $bac_name at ".($bac_offset/$SCALE).",  end = ".(($coord + $bac_end)/$SCALE)."\n";
-
+       
 }
 
 =head2 get_contig_members
@@ -139,21 +136,21 @@ sub add_bac {
 =cut
 
 
-sub get_contig_members {
+sub get_contig_members { 
     my $self = shift;
     my $contig = shift;
     if (!defined($self->{contig_members})) { $self->{contig_members} = undef; }
-    if (!defined($self->{contig_members}->{$contig})) {
+    if (!defined($self->{contig_members}->{$contig})) { 
 	$self->{contig_members}->{$contig} = [];
     }
     return @{$self->{contig_members}->{$contig}};
 }
-
+ 
 =head2 accessors get_cache_dir, set_cache_dir
 
  Usage:        $c->set_cache_dir($temp_dir)
  Desc:         this will be the directory where information
-               for the ITAG chromosome will be cached. This
+               for the ITAG chromosome will be cached. This 
                is normally set in the constructor.
  Property
  Side Effects:
@@ -163,7 +160,7 @@ sub get_contig_members {
 
 sub get_cache_dir {
   my $self = shift;
-  return $self->{cache_dir};
+  return $self->{cache_dir}; 
 }
 
 sub set_cache_dir {
@@ -173,7 +170,7 @@ sub set_cache_dir {
 
 
 =head2 add_contig
-
+    
   Usage:        $c->add_contig($contig_start, $contig_end, $contig_name, $coord)
   Desc:         Adds a new contig to the ITAG chromosome.
   Ret:          nothing
@@ -185,7 +182,7 @@ sub set_cache_dir {
   Example:
 
 =cut
-
+    
 sub add_contig {
     my $self = shift;
     my $contig_start = shift;
@@ -194,7 +191,7 @@ sub add_contig {
     my $coord = shift;
 
     my $offset = $coord + (($contig_end - $contig_start) /2);
-
+    
     #print STDERR "Adding contig $contig_name...\n";
 
     my $contig_marker = CXGN::Cview::Marker::Physical->new($self);
@@ -208,10 +205,10 @@ sub add_contig {
 #    $contig_marker->set_url("/gbrowse/gbrowse/ITAG_devel_genomic/?name=$contig_name");
     $self->{contigs}->{$contig_name}=$contig_marker; # keep a hash for fast access.
     $self->add_marker($contig_marker);
-    #print STDERR "Added new contig: $contig_name offset=".(($offset)/$SCALE)." \n";
-
+    #print STDERR "Added new contig: $contig_name offset=".(($offset)/$SCALE)." \n";    
+    
 }
-
+    
 
 =head2 fetch
 
@@ -229,22 +226,22 @@ sub fetch {
     my $file = shift;
 
     #print STDERR "CACHEFILE = $file\n\n\n";
-
-    my $assoc = CXGN::Genomic::BACMarkerAssoc->new($self->{dbh});
+    
+    my $assoc = CXGN::Genomic::BACMarkerAssoc->new($self->{dbh});    
     my $cachefile = File::Spec->catfile($self->get_cache_dir(), "itag_chr".$self->get_name());
-    if (-e $cachefile) {
+    if (-e $cachefile) { 
 	open (my $C, '<', $cachefile) || die "Can't open file '$cachefile': $!";
-
+	
 	# the first line is the length of the chromosome
 	#
 	my $length = <$C>;
 	chomp($length);
 	$self->set_length($length);
-
-	while (<$C>) {
+	
+	while (<$C>) { 
 	    chomp;
 	    my ($contig_name, $marker_id, $url, $offset, $north_range, $south_range, $tooltip, @color) = split /\t/;
-
+	    
 	    my $contig_marker = CXGN::Cview::Marker::Physical->new($self);
 	    $contig_marker->set_offset($offset);
 	    $contig_marker->set_hilite_chr_region(1);
@@ -259,44 +256,44 @@ sub fetch {
 	    $self->add_marker($contig_marker);
 	    if ($offset < $length) { $length = $offset; }
 	}
-
+	
 	close($C);
     }
-    else {
+    else { 
 	# generate new cache file if it doesn't exist
 	#
 	open (my $C, '>', $cachefile) || die "Can't open file '$cachefile' for writing: $!";
 	open (my $ITAG, '<', $file) || die "Can't open $file: $!";
-
+	
 	# parse gff3 file
 	#
 	my ($coord, $contig_start, $contig_end) = ();
 	my %contigs = (); # hash of listref with bacname, start, end
-	my %contig_coords = (); # has of contig-based bac start and ends
+	my %contig_coords = (); # has of contig-based bac start and ends 
 	my ($contig_name, $itag_name, $type, $c_start, $c_end, $dot1, $dir, $dot2, $info, $bac_name, $bac_start, $bac_end) = ();
-	while (<$ITAG>) {
+	while (<$ITAG>) { 
 	    chomp;
-
+	    
 	    next if /^\s*\#/;
-
+	    
 	    my $current_chr;
-	    if (/^C(\d+)/) {
+	    if (/^C(\d+)/) { 
 		$current_chr = $1;
 	    }
 	    #print STDERR "Current chr: $current_chr\n";
-	    if ($current_chr != $self->get_name()) {
+	    if ($current_chr != $self->get_name()) { 
 		#print STDERR "Skipping chr $current_chr because not ".$self->get_name()."\n";
 		#print STDERR ".";
-		next;
+		next; 
 	    }
-
+	    	    
 	    ($contig_name, $itag_name, $type, $c_start, $c_end, $dot1, $dir, $dot2, $info) = split /\t/;
-
+	    
 	    ($bac_name, $bac_start, $bac_end) = split /\s+/, $info;
-	    if ($bac_name =~ /^Name=(.*?)\;.*/) {
+	    if ($bac_name =~ /^Name=(.*?)\;.*/) { 
 		$bac_name = $1;
 	    }
-
+	    	    
 	    push @{$contigs{$contig_name}}, [$bac_name, $bac_start, $bac_end];
 	    push @{$contig_coords{$contig_name}}, [$bac_name, $c_start, $c_end];
 	}
@@ -305,60 +302,60 @@ sub fetch {
 	# sort the contigs by their position as represented by their numbering
 	#
 	my @contig_order = sort { my ($x, $y) = (); if ($a=~/contig(\d+)/i) { $x = $1; } if ($b=~/contig(\d+)/) { $y = $1; } return $x <=> $y; } (keys %contigs);
-
-	#foreach my $c (@contig_order) {
+	
+	#foreach my $c (@contig_order) { 
 	#    print STDERR "Contig: $c\n";
 	#}
 	my $old_contig_name = "";
 
-	foreach my $c (@contig_order) {
-
+	foreach my $c (@contig_order) { 
+	    
 		$contig_start = $contig_coords{$c}->[0]->[1];
-
+		
 		$contig_end   = $contig_coords{$c}->[-1]->[2];
-
+		
 		#print STDERR "Contig start $contig_start. Contig end $contig_end.\n";
 
 		$self->add_contig($contig_start, $contig_end, $c, $coord);
-
-		foreach my $b (@{$contigs{$c}}) {
+		
+		foreach my $b (@{$contigs{$c}}) { 
 		    my ($bac_name, $bac_start, $bac_end) = @$b;
 
 		    #print STDERR "    $bac_name $bac_start $bac_end\n";
 		    $self->add_bac($c, $bac_name);
 		    #$coord += $bac_end;
 		}
-
+	   
 	    $coord = $coord + $contig_end + $INTER_CONTIG_DISTANCE;
 	}
-
-	$self->set_length(($coord)/$SCALE);
-
+	
+	$self->set_length(($coord)/$SCALE);	  
+	
 	# print to cachefile
 	#
-	#my $assoc = CXGN::Genomic::BACMarkerAssoc->new($self->get_dbh());
+	#my $assoc = CXGN::Genomic::BACMarkerAssoc->new($self->get_dbh());    
 	open ($C, '>', $cachefile) || die "Can't open file '$cachefile': $!";
 
 
 	# the first line is the length of the chromosome...
 	print $C $self->get_length()."\n";
 
-	foreach my $m ($self->get_markers()) {
-
+	foreach my $m ($self->get_markers()) { 
+	    
 	    my @members = $self->get_contig_members($m->get_marker_name());
 	    my $tooltip = $m->get_name()." (".(scalar(@members))." BACs) [ ".(join ", ", @members)."]";
-	    foreach my $bac (@members) {
+	    foreach my $bac (@members) { 
 		my $clone = CXGN::Genomic::Clone->retrieve_from_clone_name($bac);
 		my @markers = $assoc->get_markers_with_clone_id($clone->clone_id());
-		if (@markers > 0) {
+		if (@markers > 0) { 
 		    $m->set_id($markers[0]->{marker_id});
 		    $tooltip .= " (".$markers[0]->{marker_name}.")";
 		}
-
+		
 	    }
 	    $m->set_tooltip($tooltip);
-
-	    print $C join "\t", (
+	    
+	    print $C join "\t", ( 
 				  $m->get_label()->get_name(), # contig name
 				  $m->get_id(),       # marker id
 				  $m->get_url(),
@@ -369,18 +366,18 @@ sub fetch {
 				  $m->get_color(),
 
 				  );
-
+	    
 	    print $C "\n";
-	}
-
+	}   
+	
 	close($ITAG);
 	close($C);
-
+	
     }
 
 }
 
-
-
+    
+    
 
 return 1;
