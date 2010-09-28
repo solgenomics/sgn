@@ -1,10 +1,16 @@
 =head1 NAME
 
-t/integration/feature.t - integration tests for feature URLs
+t/integration/feature.t - integration tests for generic feature URLs
 
 =head1 DESCRIPTION
 
-Tests for feature URLs
+Tests for generic feature URLs
+
+=head1 SYNOPSIS
+
+These tests assume that a polypeptide does not have a specialized feature mason
+component and gets rendered as a generic feature with mason/feature/dhandler
+from SGN::Controller::Feature.
 
 =head1 AUTHORS
 
@@ -16,57 +22,18 @@ use strict;
 use warnings;
 use Test::More;
 use lib 't/lib';
-use SGN::Test;
+use SGN::Test::Data qw/ create_test /;
 use SGN::Test::WWW::Mechanize;
 
-my $base_url = $ENV{SGN_TEST_SERVER};
 my $mech = SGN::Test::WWW::Mechanize->new;
 
-$mech->get_ok("$base_url/feature/search");
-$mech->content_contains('Feature Search');
-$mech->content_contains('Feature Name');
-$mech->content_contains('Feature Type');
-$mech->submit_form_ok({
-    form_name => 'feature_search_form',
-    fields => {
-        feature_name => '',
-        feature_type => 'gene',
-        organism     => 'Solanum lycopersicum',
-        submit       => 'Submit',
-    }
-});
-$mech->content_contains('Search Results');
-$mech->content_like(qr/results 1-\d+ of \d+(,\d+)?/);
+my $poly_cvterm     = create_test('Cv::Cvterm', { name  => 'polypeptide' });
+my $poly_feature    = create_test('Sequence::Feature', { type => $poly_cvterm });
+my $poly_featureloc = create_test('Sequence::Featureloc', { feature => $poly_feature });
 
-$mech->get("$base_url/feature/search");
-$mech->submit_form_ok({
-    form_name => 'feature_search_form',
-    fields => {
-        feature_name => 'rbuels',
-        feature_type => 'gene',
-        organism     => 'Solanum lycopersicum',
-        submit       => 'Submit',
-    }
-});
-$mech->content_contains('Search Results');
-$mech->content_contains('no matching results found');
-
-$mech->get_ok("$base_url/feature/view/name/JUNK.fasta");
-$mech->content_contains("feature with name = 'JUNK' not found");
-
-$mech->get_ok("$base_url/feature/view/id/-1.fasta");
-$mech->content_contains("feature with feature_id = '-1' not found");
-
-$mech->get_ok("$base_url/feature/view/name/JUNK");
-$mech->content_contains("feature with name = 'JUNK' not found");
-
-$mech->get_ok("$base_url/feature/view/id/-1");
-$mech->content_contains("feature with feature_id = '-1' not found");
-
-$mech->get_ok("$base_url/feature/view/id/JUNK.fasta");
-$mech->content_contains("JUNK is not a valid value for feature_id");
-
-$mech->get_ok("$base_url/feature/view/id/JUNK");
-$mech->content_contains("JUNK is not a valid value for feature_id");
+$mech->get_ok("/feature/view/name/" . $poly_feature->name);
+$mech->content_contains('Feature Data');
+$mech->content_contains($poly_feature->name);
+$mech->content_contains('Nucleotide Sequence');
 
 done_testing;

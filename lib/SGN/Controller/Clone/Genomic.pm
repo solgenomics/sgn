@@ -16,13 +16,10 @@ use CXGN::TomatoGenome::Config;
 
 extends 'SGN::Controller::Clone';
 
-has 'bcs' => (
-    is => 'ro',
-    isa => 'Bio::Chado::Schema',
-    lazy_build => 1,
-);
-sub _build_bcs {
-    CXGN::DB::DBICFactory->open_schema('Bio::Chado::Schema');
+use CatalystX::GlobalContext '$c';
+
+sub bcs {
+    $c->dbic_schema('Bio::Chado::Schema','sgn_chado')
 }
 
 # /maps/physical/clone_annot_download.pl
@@ -63,7 +60,6 @@ sub clone_annot_download {
 }
 
 # find the chado organism for a clone
-memoize('_clone_organism');
 sub _clone_organism {
     my ( $self, $clone ) = @_;
     $self->bcs->resultset('Organism::Organism')->find( $clone->library_object->organism_id );

@@ -1,3 +1,4 @@
+
 #!/usr/bin/perl -w
 use strict;
 use warnings;
@@ -191,7 +192,7 @@ while (my ($count) = $family_size_q->fetchrow_array()){
 #Draw bar chart
 #First generte a random file.
 my $html_root_path = $c->config->{'basepath'};
-my $doc_path = $c->config->{'tempfiles_subdir'}.'/family_images';
+my $doc_path = $c->tempfiles_subdir('family_images');
 my $path = $html_root_path . $doc_path;
 my $tmp = new File::Temp(
                         DIR => $path,

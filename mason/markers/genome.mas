@@ -1,0 +1,24 @@
+<%args>
+$marker
+</%args>
+<%init>
+
+# look up gbrowse cross-refs for this marker, if any
+my @xrefs = map {
+
+    $_->xrefs({
+        -types   => ['match'],
+        -name    => 'SGN-M'.$marker->marker_id,
+        -aliases => 1,
+    })
+
+} $c->enabled_feature('gbrowse2');
+
+</%init>
+
+<&| /page/info_section.mas, title => "Genomic locations" &>
+% if( @xrefs ) {
+  <& /gbrowse/xref_columnar_table.mas, xrefs => \@xrefs &>
+% }
+</&>
+

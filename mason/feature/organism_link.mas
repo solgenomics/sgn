@@ -1,5 +1,0 @@
-<%args>
-	$organism
-	$text
-</%args>
-<a href="/chado/organism.pl?organism_id=<% $organism->organism_id %>"><% $text %></a>

@@ -16,3 +16,6 @@ static/static_content
 cover_db
 lib/MyDevLibs.pm
 static/documents/img/secretom/.directory
+programs/*.o
+programs/draw_contigalign
+programs/fast_mapping

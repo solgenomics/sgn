@@ -36,7 +36,15 @@ if( eval{ SGN->debug } ) {
         my $orig = shift;
         my $self = shift;
         my ($c) = @_;
-        local $SIG{__DIE__} = $c->debug ? \&Carp::confess : $SIG{__DIE__};
+        local $SIG{__DIE__} =
+            $c->debug
+                ? sub {
+                    die map {
+                        s/\sCatalyst::Controller::CGIBin.+//s;
+                        $_
+                    } Carp::longmess(@_);
+                  }
+                : $SIG{__DIE__};
         $self->$orig( @_ );
     };
 }

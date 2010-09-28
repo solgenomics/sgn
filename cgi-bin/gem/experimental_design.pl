@@ -30,8 +30,8 @@ use CXGN::Page;
 use CXGN::MasonFactory;
 use CXGN::DB::Connection;
 use CXGN::DB::DBICFactory;
+use CXGN::GEM::Schema;
 use CXGN::GEM::ExperimentalDesign;
-use CXGN::DB::Connection;
 
 my $m = CXGN::MasonFactory->new();
 
@@ -43,15 +43,20 @@ my %args = CXGN::Page->new()
 
 ## Create the schema used for all the gem searches
 
+my $psqlv = `psql --version`;
+chomp($psqlv);
+
 my @schema_list = ('gem', 'biosource', 'metadata', 'public');
+if ($psqlv =~ /8\.1/) {
+    push @schema_list, 'tsearch2';
+}
 
 my $schema = CXGN::DB::DBICFactory->open_schema( 'CXGN::GEM::Schema', search_path => \@schema_list, );
-my $dbh = CXGN::DB::Connection->new();
 
 
-my $expdesign = CXGN::GEM::ExperimentalDesign->new($dbh);
+my $expdesign = CXGN::GEM::ExperimentalDesign->new($schema);
 if (exists $args{'id'} && $args{'id'} =~ m/^\d+$/) {
-   $expdesign = CXGN::GEM::ExperimentalDesign->new($dbh, $args{'id'});
+   $expdesign = CXGN::GEM::ExperimentalDesign->new($schema, $args{'id'});
 } elsif (exists $args{'name'}) {
    $expdesign = CXGN::GEM::ExperimentalDesign->new_by_name($schema, $args{'name'});
 }

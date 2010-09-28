@@ -54,7 +54,7 @@ my $min_primer_length = 15;
 
 my $fprimer = $page->get_arguments("fprimer");
 my $rprimer = $page->get_arguments("rprimer");
-my $productLength = $page->get_arguments("ProductLength");
+my $productLength = $page->get_arguments("productLength");
 my $allowedMismatches = $page->get_arguments('allowedMismatches');
 my $frevcom = $page->get_arguments('frevcom'); #forward primer reverse complement
 my $rrevcom = $page->get_arguments('rrevcom'); #reverse primer reverse complement
@@ -232,10 +232,7 @@ my $job = CXGN::Tools::Run->run_cluster(@command,
 				   );
 #$job->do_not_cleanup(1);
 
-my $job_file_tempdir = File::Spec->catdir($c->config->{'basepath'},
-					  $c->config->{'tempfiles_subdir'},
-					  "blast",
-					 );
+my $job_file_tempdir = $c->path_to( $c->tempfiles_subdir('blast') );
 my (undef,$job_file) = tempfile( DIR => $job_file_tempdir, TEMPLATE=>"object_XXXXXX");
 
 store($job, $job_file)

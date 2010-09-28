@@ -293,10 +293,7 @@ EOF
     
 
     #saving the gel img in a temp file 
-    my $gel_img_tempdir = File::Spec->catdir($c->config->{'basepath'},
-            		  $c->config->{'tempfiles_subdir'},
-            		  "temp_images",
-            		 );
+    my $gel_img_tempdir = $c->path_to( $c->tempfiles_subdir('temp_images') );
     
     my ($fh ,$temp_file) = tempfile( DIR => $gel_img_tempdir, TEMPLATE=>"gel_XXXXXX", SUFFIX => ".png");
     print $fh $gel_img;

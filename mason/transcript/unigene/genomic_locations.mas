@@ -1,0 +1,18 @@
+<%args>
+$unigene
+</%args>
+<%init>
+my @xrefs = map {
+    $_->xrefs({
+        -types   => ['match'],
+        -name    => 'SGN-U'.$unigene->get_unigene_id,
+        -aliases => 1,
+    })
+} $c->enabled_feature('gbrowse2');
+
+</%init>
+<&| /page/info_section.mas, title => 'Genomic locations ('.@xrefs.')',collapsible => 1, &>
+% if( @xrefs ) {
+  <& /gbrowse/xref_columnar_table.mas, xrefs => \@xrefs &>
+% }
+</&>

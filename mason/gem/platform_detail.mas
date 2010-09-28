@@ -43,15 +43,10 @@ $pub_list
 
 <%perl>
 
- ## No code is used in experimental_design_page.mas.
- ## It composes the web page using mason components and args from the controller
+ ## None code is used in experimental_design_page.mas.
+ ## It compose the web page using mason components and args from the controller
 
 </%perl>
-
-<&
-   /util/import_javascript.mas,
-   classes => [ qw/jquery CXGN.Effects /],
-&>
 
 
 <br>
@@ -70,7 +65,6 @@ $pub_list
 
 <& 
    '/gem/target/hybridization_composition.mas', 
-   dbh         => $dbh,
    target_list => $target_list, 
 &>
 
