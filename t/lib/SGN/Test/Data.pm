@@ -109,9 +109,9 @@ sub _create_test_dbxref {
 
 sub _create_test_cv {
     my ($values) = @_;
-    unless ($values->{name}) {
-        $values->{name} = "cv_$num_cvs-$$";
-    }
+
+    $values->{name} ||= "cv_$num_cvs-$$";
+
     my $cv = $schema->resultset('Cv::Cv')
            ->create( { name => $values->{name} } );
 
@@ -122,9 +122,8 @@ sub _create_test_cv {
 
 sub _create_test_cvterm {
     my ($values) = @_;
-    unless ($values->{name}) {
-        $values->{name} = "cvterm_$num_cvterms-$$";
-    }
+
+    $values->{name}   ||= "cvterm_$num_cvterms-$$";
     $values->{dbxref} ||= _create_test_dbxref();
     $values->{cv}     ||= _create_test_cv();
     my $cvterm = $schema->resultset('Cv::Cvterm')
@@ -141,12 +140,9 @@ sub _create_test_cvterm {
 
 sub _create_test_organism {
     my ($values) = @_;
-    unless ($values->{genus}) {
-        $values->{genus} = "organism_$num_organisms-$$";
-    }
-    unless ($values->{species}) {
-        $values->{species} = $values->{genus} . ' fooii';
-    }
+    $values->{genus}   ||= "organism_$num_organisms-$$";
+    $values->{species} ||= $values->{genus} . ' fooii';
+
     my $organism = $schema->resultset('Organism::Organism')
                           ->create( $values );
     push @$test_data, $organism;
@@ -159,19 +155,12 @@ sub _create_test_feature {
     my ($values) = @_;
 
     # provide some defaults for things we don't care about
-    $values->{residues} = 'ATCG' unless $values->{residues};
-    $values->{seqlen} = length($values->{residues}) unless $values->{seqlen};
-    unless ($values->{name}) {
-        $values->{name} = "feature_$num_features-$$";
-        $num_features++;
-    }
-    unless ($values->{uniquename}) {
-        $values->{uniquename} = "unique_feature_$num_features-$$";
-        $num_features++;
-    }
-
-    $values->{organism} ||= _create_test_organism();
-    $values->{type}     ||= _create_test_cvterm();
+    $values->{residues}   ||= 'ATCG';
+    $values->{seqlen}     ||= length($values->{residues});
+    $values->{name}       ||= "feature_$num_features-$$";
+    $values->{uniquename} ||= "unique_feature_$num_features-$$";
+    $values->{organism}   ||= _create_test_organism();
+    $values->{type}       ||= _create_test_cvterm();
 
     my $feature = $schema->resultset('Sequence::Feature')
            ->create({
@@ -183,6 +172,7 @@ sub _create_test_feature {
                 organism_id => $values->{organism}->organism_id,
            });
     push @$test_data, $feature;
+    $num_features++;
     return $feature;
 }
 
