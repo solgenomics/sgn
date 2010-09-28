@@ -376,7 +376,6 @@ CXGN.Onto.Browser.prototype = {
     },
     
     showParentage: function(accession) {
-	//MochiKit.Logging.log('the accession is :', accession );
 	this.setSearchTerm(accession);
 	if (accession.length < 5) { 
 	    alert('The search text must be longer than 4 characters');
@@ -484,7 +483,7 @@ CXGN.Onto.Browser.prototype = {
 		    onSuccess: function(request) {
 		    var json = request.responseText;
 		    var x = eval("("+json+")");
-		    if ( x.error() ) { alert(x.error) ; }
+		    if ( x.error ) { alert(x.error) ; }
 		    else {
 			var t = x.response.split('#');
 			
@@ -531,11 +530,11 @@ CXGN.Onto.Browser.prototype = {
 			var matchNodes = new Array();
 			var json = request.responseText;
 			var x = eval("("+json+")");
-			if ( x.error() ) { alert(x.error) ; }
+			if ( x.error ) { alert(x.error) ; }
 			else {
-			    var responseArray = x.response.split('|');
+			    var r = x.response;
+			    var responseArray = r.split('|');
 			    responseArray.pop();
-			    
 			    var s='';
 			    o.setSearchResponseCount(responseArray.length);
 			    MochiKit.Logging.log('Matched '+responseArray.length+' terms');
@@ -684,7 +683,7 @@ CXGN.Onto.Browser.prototype = {
 		    var matchNodes = new Array();
 		    var json = request.responseText;
 		    var x = eval("("+json+")");
-		    if ( x.error() ) { alert(x.error) ; }
+		    if ( x.error ) { alert(x.error) ; }
 		    else {
 			var t = x.response.split('#');
 			
@@ -955,7 +954,7 @@ Node.prototype = {
 		    
 		    var json = request.responseText;
 		    var x = eval("("+json+")");
-		    if ( x.error() ) { alert(x.error) ; }
+		    if ( x.error ) { alert(x.error) ; }
 		    else {
 			var t = x.response.split('#');
 			
@@ -1009,7 +1008,7 @@ Node.prototype = {
 		   
 		    var json = request.responseText;
 		    var x = eval("("+json+")");
-		    if ( x.error() ) { alert(x.error) ; }
+		    if ( x.error ) { alert(x.error) ; }
 		    else {
 			var t = x.response.split('#');
 			

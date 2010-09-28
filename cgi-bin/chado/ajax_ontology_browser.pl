@@ -40,21 +40,6 @@ elsif ( $action eq "roots" ) {
     foreach (@roots) { push @response_nodes, [ $_, $empty_cvterm ] }
     
     
-    my @response_list = ();
-    
-    foreach my $n (@response_nodes) {
-	my $has_children = 0;
-	if ( $n->[0]->count_children() > 0 ) { $has_children = 1; }
-	push @response_list,
-	( $n->[0]->get_full_accession() ) . "\*"
-	    . (   $n->[0]->get_cvterm_name() . "\*"
-		  . ( $n->[0]->get_cvterm_id() )
-		  . "\*$has_children" . "\*"
-		  . $n->[1]->get_cvterm_name() );
-    }
-    
-    $res{response} = join "#", @response_list;
-    
 } elsif ( $action eq "match" ) {
     my $synonym_query = $dbh->prepare(
 	"SELECT  distinct(cvterm.dbxref_id), cv.name, cvterm.name, dbxref.accession, synonym
@@ -127,9 +112,28 @@ elsif ( $action eq "roots" ) {
         }
     }
     $res{response} = $print_string;
+
+} else { $res{error} = "ERROR. The action parameter is required."; }
+
+
+my @response_list = ();
+
+if (@response_nodes) {
+    foreach my $n (@response_nodes) {
+	my $has_children = 0;
+	if ( $n->[0]->count_children() > 0 ) { $has_children = 1; }
+	push @response_list,
+	( $n->[0]->get_full_accession() ) . "\*"
+	    . (   $n->[0]->get_cvterm_name() . "\*"
+		  . ( $n->[0]->get_cvterm_id() )
+		  . "\*$has_children" . "\*"
+		  . $n->[1]->get_cvterm_name() );
+    }
+    $res{response} = join "#", @response_list;
 }
-else { $res{error} = "ERROR. The action parameter is required."; }
+
 
 $s->send_http_header();
 print $json->encode(\%res);
+
 
