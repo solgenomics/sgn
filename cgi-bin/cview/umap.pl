@@ -7,7 +7,7 @@ package CXGN::Cview::Map::SGN::UserMapDetailPage;
 
 
 use CXGN::Cview::Map::SGN::User;
-use CXGN::Cview::Map_overviews::Generic;
+use CXGN::Cview::MapOverviews::Generic;
 use CXGN::People::UserMap;
 use CXGN::People::UserMapData;
 use CXGN::Page::Form::SimpleFormPage;
@@ -125,7 +125,7 @@ sub display_page {
     # generate map overview
     #
     my $force = 1;
-    my $map_overview = CXGN::Cview::Map_overviews::Generic->new($map, $force);
+    my $map_overview = CXGN::Cview::MapOverviews::Generic->new($map, $force);
     $map_overview->render_map();
     my $image_html = $map_overview->get_image_html();
     

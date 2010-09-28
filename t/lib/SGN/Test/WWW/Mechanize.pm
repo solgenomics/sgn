@@ -99,6 +99,8 @@ use Test::More;
 use CXGN::People::Person;
 use CXGN::People::Login;
 
+use SGN::Devel::MyDevLibs;
+
 extends 'Test::WWW::Mechanize::Catalyst';
 
 =head2 catalyst_app
