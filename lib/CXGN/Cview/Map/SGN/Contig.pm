@@ -28,6 +28,7 @@ use CXGN::Cview::Map::SGN::Genetic;
 use CXGN::Cview::Chromosome::Physical;
 use CXGN::Cview::Marker::Physical;
 
+use CatalystX::GlobalContext '$c';
 
 use base qw | CXGN::Cview::Map::SGN::Genetic |;
 
@@ -88,9 +89,17 @@ sub get_chromosome {
 
     my $largest_offset = 0;
 
-    my (@gff) = $self->{gbrowse_fpc}->databases();
-    if (@gff > 1) { die "Can't deal with multiple databases right now..."; }
-    if (!@gff) {    die "No database found!"; }
+    my @gff = $self->{gbrowse_fpc}->databases()
+      or $c->throw(
+          public_message    => "Map not found.",
+          developer_message => 'No gbrowse_fpc databases found',
+          notify            => 1,
+          is_server_error   => 0,
+          is_client_error   => 0,
+         );
+
+    if ( @gff > 1 ) { die "Can't deal with multiple databases right now..." }
+
     my ($gff) = @gff;
 
     for my $m ($genetic->get_markers()) {
