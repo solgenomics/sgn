@@ -35,5 +35,7 @@ $mech->get_ok("/feature/view/name/" . $poly_feature->name);
 $mech->content_contains('Feature Data');
 $mech->content_contains($poly_feature->name);
 $mech->content_contains('Nucleotide Sequence');
+$mech->content_contains('Related Features');
+$mech->content_contains('Reference Feature');
 
 done_testing;
