@@ -1,10 +1,16 @@
 =head1 NAME
 
-t/integration/feature.t - integration tests for feature URLs
+t/integration/feature.t - integration tests for generic feature URLs
 
 =head1 DESCRIPTION
 
-Tests for feature URLs
+Tests for generic feature URLs
+
+=head1 SYNOPSIS
+
+These tests assume that a polypeptide does not have a specialized feature mason
+component and gets rendered as a generic feature with mason/feature/dhandler
+from SGN::Controller::Feature.
 
 =head1 AUTHORS
 
@@ -21,13 +27,13 @@ use SGN::Test::WWW::Mechanize;
 
 my $mech = SGN::Test::WWW::Mechanize->new;
 
-my $gene_cvterm     = create_test('Cv::Cvterm', { name  => 'gene' });
-my $gene_feature    = create_test('Sequence::Feature', { type => $gene_cvterm });
-my $gene_featureloc = create_test('Sequence::Featureloc', { feature => $gene_feature });
+my $poly_cvterm     = create_test('Cv::Cvterm', { name  => 'polypeptide' });
+my $poly_feature    = create_test('Sequence::Feature', { type => $poly_cvterm });
+my $poly_featureloc = create_test('Sequence::Featureloc', { feature => $poly_feature });
 
-$mech->get_ok("/feature/view/name/" . $gene_feature->name);
-$mech->content_contains('Gene Data');
-$mech->content_contains('Gene: ' . $gene_feature->name);
-$mech->content_contains('Genomic Sequence');
+$mech->get_ok("/feature/view/name/" . $poly_feature->name);
+$mech->content_contains('Feature Data');
+$mech->content_contains($poly_feature->name);
+$mech->content_contains('Nucleotide Sequence');
 
 done_testing;
