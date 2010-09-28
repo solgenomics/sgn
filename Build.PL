@@ -155,6 +155,9 @@ my $build = $class->new(
         'File::Slurp'             => 0,
         'Test::JSON'              => 0,
         'Test::WWW::Mechanize::Catalyst' => 0,
+        'WWW::Mechanize::TreeBuilder' => 0,
+        'HTML::TreeBuilder::XPath' => 0,
+
     },
 );
 $build->create_build_script;

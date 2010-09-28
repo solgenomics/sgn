@@ -32,8 +32,14 @@ my $poly_feature    = create_test('Sequence::Feature', { type => $poly_cvterm })
 my $poly_featureloc = create_test('Sequence::Featureloc', { feature => $poly_feature });
 
 $mech->get_ok("/feature/view/name/" . $poly_feature->name);
+my ($name, $residues) = ($poly_feature->name, $poly_feature->residues);
+
+like( $mech->findvalue( '/html/body//span[@class="sequence"]'), qr/>$name\s*$residues/, "Found >$name\\n$residues");
+
 $mech->content_contains('Feature Data');
 $mech->content_contains($poly_feature->name);
 $mech->content_contains('Nucleotide Sequence');
+$mech->content_contains('Related Features');
+$mech->content_contains('Reference Feature');
 
 done_testing;
