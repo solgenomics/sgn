@@ -43,8 +43,25 @@ $mech->submit_form(
     },
 );
 
-is($mech->status, 400, "return code was 400 Bad Request");
-$mech->content_contains('Please enter at least two sequences!');
+$mech->get($urlbase);
+$mech->submit_form(
+    form_name => 'capsinput',
+    fields => {
+        format   => 'fasta',
+        seq_data => <<FASTA,
+>s1
+CCCCCCGAATTCAAAAAAAAA
+>s2
+CCCCCCGTATTCAAAAAAAAA
+FASTA
+        cheap    => 0,
+        start    => 0,
+        cutno    => 4,
+    },
+);
+is($mech->status, 200, "return code was 200");
+$mech->content_contains('CAPS Designer Result');
+$mech->content_contains('Query Summary');
 
 for my $cheapness ( 0 .. 1 ) {
     $mech->get($urlbase);
