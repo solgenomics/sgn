@@ -35,6 +35,7 @@ $mech->get_ok("/feature/view/name/" . $poly_feature->name);
 my ($name, $residues) = ($poly_feature->name, $poly_feature->residues);
 
 like( $mech->findvalue( '/html/body//span[@class="sequence"]'), qr/>$name\s*$residues/, "Found >$name\\n$residues");
+like( $mech->findvalue( '/html/body//div[@class="info_table_fieldval"]'), qr/polypeptide/, "Found the polypeptide cvterm");
 
 $mech->content_contains('Feature Data');
 $mech->content_contains($poly_feature->name);
