@@ -191,7 +191,7 @@ sub query_bac_infotable {
 
 sub query_bac_json {
   my $clone = shift() || clone();
-  return objToJson( $clone->reg_info_hashref );
+  return to_json( $clone->reg_info_hashref );
 }
 
 sub query_bac_perl {
