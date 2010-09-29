@@ -9,10 +9,10 @@
 % for my $e (@$exception) {
 
 <h1 style="text-align: center">
-   <% $e->title || ( $e->is_server_error ? 'Server Error' : $e->is_client_error ? 'Error' : '' ) %>
+   <% $e->title || ( $e->is_server_error ? 'Server Error' : $e->is_client_error ? 'Error' : 'Message' ) %>
 </h1>
 
-<div style="margin: auto; width: 80%">
+<div style="margin: auto; width: 60%">
     <p>
 % if( $e->public_message ) {
     <% $e->public_message %>

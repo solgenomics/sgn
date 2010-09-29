@@ -3,7 +3,7 @@ use strict;
 
 use CXGN::DB::Connection;
 use CXGN::Cview::MapFactory;
-use CXGN::Cview::Map_overviews::Generic;
+use CXGN::Cview::MapOverviews::Generic;
 use CXGN::Cview;
 
 my $map_id = 9;
@@ -11,7 +11,7 @@ my $map_id = 9;
 my $dbh = CXGN::DB::Connection->new();
 my $map_factory = CXGN::Cview::MapFactory->new($dbh);
 my $map = $map_factory->create({map_id=>$map_id}); 
-my $overview = CXGN::Cview::Map_overviews::Generic->new($map);
+my $overview = CXGN::Cview::MapOverviews::Generic->new($map);
 
 $overview->set_image_width(2400);
 $overview->set_image_height(1000);

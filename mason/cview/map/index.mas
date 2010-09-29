@@ -37,9 +37,17 @@ a space separated, url-encoded string that gives the markers to be highlighted.
 
 the size of the map to display. 0 denotes the standard size (smallest), 10 denotes the largest size.
 
+=item map_items
+
+items to add to the map, as a multi-line string with chr offset name
+
 =item referer
 
 the page (uri + args) that this component is called from (to be able to construct links back from the page comment feature)
+
+=item basepath
+
+the basepath of the installation
 
 =item force
 
@@ -63,16 +71,15 @@ $map_id
 $map_version_id
 $hilite => undef
 $size => 1
+$map_items
 $force
 $physical
 $referer
 $tempdir
+$basepath
 </%args>
 
 <%perl>
-
-use strict;
-
 use Cache::File;
 use File::Spec;
 use CXGN::Cview::MapFactory;
@@ -86,7 +93,7 @@ my %marker_info;
 
 # set up a cache for the map statistics, using Cache::File
 #
-my $cache_file_dir = File::Spec->catfile($tempdir, "cache_file");
+my $cache_file_dir = File::Spec->catfile($basepath, $tempdir, "cache_file");
 
 tie %marker_info, 'Cache::File', { cache_root => $cache_file_dir };
 
@@ -105,12 +112,10 @@ if ($map_id && !$map_version_id) {
     $map_version_id = CXGN::Cview::Map::Tools::find_current_version($dbh, $map_id);
 }
 
-
 # get the map data using the CXGN::Map API.
 #
 my $map_factory = CXGN::Cview::MapFactory->new($dbh);
 my $map = $map_factory ->create({ map_version_id => $map_version_id });
-
 
 if (!$map) { missing_map_page(); return; }
 
@@ -120,7 +125,6 @@ my $map_fullname = $map->get_long_name();
 my $short_name   = $map->get_short_name();
 
 my @hilite_markers = split /\s+|\,\s*|\;s*/, $hilite;
-
 
 sub missing_map_page { 
 
@@ -161,11 +165,12 @@ sub data_is_private {
     if ($is_public ||             
 	    $user_type eq 'curator' || 
 	    $login_id == 
-	    $pop->get_sp_person_id() 
+	$pop->get_sp_person_id() 
        )  {
-          return undef;
-    } else {
-       
+      return undef;
+    } 
+    else {
+      
 	   my $owner_id = $pop->get_sp_person_id(); 
     
 
@@ -196,11 +201,6 @@ sub data_is_private {
 #     # code.
 #     my ($abstract, $map, $physical) = @_;
 
-
-
-
-
-
 </%perl>
 
 <& /page/page_title.mas, title=> $short_name &>
@@ -212,17 +212,25 @@ sub data_is_private {
 %} 
 %else {
 
-<& /cview/map/overview.mas, map=>$map, size=>$size,  hilite_markers => [ @hilite_markers ] &>
+<& /cview/map/overview.mas, 
+  dbh => $dbh, 
+  map => $map, 
+  size => $size,  
+  hilite_markers => [ @hilite_markers ], 
+  map_items=> $map_items, 
+  basepath => $basepath, 
+  tempdir => $tempdir 
+&>
 
 % if ($message) { 
 %    print "<div class=\"boxbgcolor5\"><b>NOTE:</b><br />$message</div>\n";
 % }
 
-<& /cview/map/abstract.mas, map=>$map &>
+<& /cview/map/abstract.mas, map => $map &>
 
-<& /cview/map/stats.mas, map=>$map &>
+<& /cview/map/stats.mas, map => $map &>
 
-<& /page/comments.mas, object_type=>"map", object_id=>$map_version_id,  referer=>$referer &>
+<& /page/comments.mas, object_type=>"map", object_id => $map_version_id,  referer => $referer &>
 
 %}
 

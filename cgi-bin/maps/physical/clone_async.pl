@@ -17,7 +17,7 @@ use CXGN::Tools::List qw/str_in/;
 use CXGN::Page::FormattingHelpers qw/info_table_html columnar_table_html/;
 
 use CXGN::Genomic::Clone;
-use CXGN::Cview::Map_overviews::ProjectStats;
+use CXGN::Cview::MapOverviews::ProjectStats;
 
 
 our $page = CXGN::Scrap::AjaxPage->new('text/html');
@@ -202,7 +202,7 @@ sub query_bac_perl {
 
 sub project_stats_img_html {
 
-  my $map_overview = CXGN::Cview::Map_overviews::ProjectStats->new("force"); # force re-calculation of the image/stats
+  my $map_overview = CXGN::Cview::MapOverviews::ProjectStats->new("force"); # force re-calculation of the image/stats
   $map_overview->render_map();
   my $map_overview_html = $map_overview->get_image_html();
 
