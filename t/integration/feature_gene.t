@@ -33,5 +33,9 @@ my ($name, $residues) = ($gene_feature->name, $gene_feature->residues);
 
 like( $mech->findvalue( '/html/body//span[@class="sequence"]'), qr/>$name\s*$residues/, "Found >$name\\n$residues");
 
+ok($mech->exists(
+        sprintf '/html/body//div[@class="info_table_fieldval"]/a[@href="/chado/cvterm.pl?cvterm_id=%s"]',
+            $gene_cvterm->cvterm_id
+    ),'the proper cvterm id link exists');
 
 done_testing;
