@@ -177,35 +177,39 @@ var Tools = {
 	
         else{
 	    var db_name = $('cv_select').value;
-	    new Ajax.Request("/phenome/ontology_browser.pl", {parameters:
-		    {term_name: str, db_name: db_name}, onSuccess: this.updateOntologySelect() });
-	}
-    },
-    
-    
-    //Parse the ajax response and update the ontology select box accordingly
-    updateOntologySelect: function(request) {
-        var select = $('ontology_select');
-	if  ($('associate_ontology_button')) $('associate_ontology_button').disabled = true;
-	
-        var responseText = request.responseText;
-	var responseArray = responseText.split("|");
-	
-	//the last element of the array is empty. Dont want this in the select box
-	responseArray.pop();
-
-        select.length = responseArray.length;
-        for (i=0; i < responseArray.length; i++) {
-	    var ontologyObject = responseArray[i].split("*");
-	    
-	    select[i].value = ontologyObject[0];
-	    if (typeof(ontologyObject[1]) != "undefined"){
-		select[i].text = ontologyObject[1];
-	    }
-	    else{
- 		select[i].text = ontologyObject[0];
- 		select[i].value = null;
-	    }
+	    new Ajax.Request("/phenome/ontology_browser.pl", {
+		    parameters:
+		    {term_name: str, db_name: db_name}, 
+			onSuccess: function(response) {
+			var json = response.responseText;
+			var x =eval ("("+json+")");
+			if ( x.error ) { alert(x.error) ; }
+			else {
+			    //Parse the ajax response and update the ontology select box accordingly
+			    var select = $('ontology_select');
+			    if  ($('associate_ontology_button')) $('associate_ontology_button').disabled = true;
+			    var r = x.response;
+			    var responseArray = r.split("|");
+			    
+			    //the last element of the array is empty. Dont want this in the select box
+			    responseArray.pop();
+			    
+			    select.length = responseArray.length;
+			    for (i=0; i < responseArray.length; i++) {
+				var ontologyObject = responseArray[i].split("*");
+				
+				select[i].value = ontologyObject[0];
+				if (typeof(ontologyObject[1]) != "undefined"){
+				    select[i].text = ontologyObject[1];
+				}
+				else{
+				    select[i].text = ontologyObject[0];
+				    select[i].value = null;
+				}
+			    }
+			}
+		    }
+	    });
 	}
     },
     
@@ -215,62 +219,65 @@ var Tools = {
 	var type = 'relationship'; 
 	var relationship_id = $('relationship_select').value;
 	new Ajax.Request('evidence_browser.pl', {parameters:
-		{type: type}, onSuccess:this.updateRelationshipSelect() });
+		{type: type}, 
+		    onSuccess: function(response) {
+		    //var json = response.responseText;
+		    //var x =eval ("("+json+")");
+		    //if ( x.error ) { alert(x.error) ; }
+		    //else {
+		    var select = $('relationship_select');
+		    
+		    var responseText = response.responseText;
+		    var responseArray = responseText.split("|");
+		    responseArray.unshift("*--please select an evidence code--");
+		    //the last element of the array is empty. Dont want this in the select box
+		    responseArray.pop();
+		    select.length = 0;    
+		    select.length = responseArray.length;
+		    for (i=0; i < responseArray.length; i++)
+			{
+			    var relationshipObject = responseArray[i].split("*");
+			    
+			    select[i].value = relationshipObject[0];
+			    if (typeof(relationshipObject[1]) != "undefined"){
+				select[i].text = relationshipObject[1];
+			    }
+			    else{
+				select[i].text = relationshipObject[0];
+				select[i].value = null;
+			    }
+			}
+		}
+	});
     },
     
-    updateRelationshipSelect: function(request) {
-	var select = $('relationship_select');
-	
-        var responseText = request.responseText;
-        var responseArray = responseText.split("|");
-	responseArray.unshift("*--please select an evidence code--");
-
-	//the last element of the array is empty. Dont want this in the select box
-	responseArray.pop();
-        select.length = 0;    
-	select.length = responseArray.length;
-	for (i=0; i < responseArray.length; i++)
-	{
-	    var relationshipObject = responseArray[i].split("*");
-	    
-	    select[i].value = relationshipObject[0];
-	    if (typeof(relationshipObject[1]) != "undefined"){
-		select[i].text = relationshipObject[1];
-	    }
-	    else{
-		select[i].text = relationshipObject[0];
-		select[i].value = null;
-	    }
-	}
-    },
     
     getEvidenceCode: function() {
-    	
 	var type = 'evidence_code';
 	var evidence_code_id = $('evidence_code_select').value;
-	new Ajax.Request('evidence_browser.pl', {parameters: 
-    {type: type}, onSuccess:this.updateEvidenceCodeSelect});
-    },
-    
-    updateEvidenceCodeSelect: function(request) {
-	var select = $('evidence_code_select');
-	
-        var responseText = request.responseText;
-        var responseArray = responseText.split("|");
-	//the last element of the array is empty. Dont want this in the select box
-	responseArray.pop();
-	responseArray.unshift("*--please select an evidence code--");
-        select.length = 0;    
-	select.length = responseArray.length;
-	
-	for (i=0; i < responseArray.length; i++) {
-	    var evidenceCodeObject = responseArray[i].split("*");
-	    
-	    select[i].value = evidenceCodeObject[0];
-	   select[i].text = evidenceCodeObject[1];
-	   
-	   //document.evidence_code_select.options[i] = new Option(evidenceCodeObject[0], evidenceCodeObject[1]);
-	}
+	new Ajax.Request('evidence_browser.pl', {
+		parameters: 
+		{type: type}, 
+		    onSuccess: function (response) {
+		    var select = $('evidence_code_select');
+		    
+		    var responseText = response.responseText;
+		    var responseArray = responseText.split("|");
+		    //the last element of the array is empty. Dont want this in the select box
+		    responseArray.pop();
+		    responseArray.unshift("*--please select an evidence code--");
+		    select.length = 0;    
+		    select.length = responseArray.length;
+		    
+		    for (i=0; i < responseArray.length; i++) {
+			var evidenceCodeObject = responseArray[i].split("*");
+			
+			select[i].value = evidenceCodeObject[0];
+			select[i].text = evidenceCodeObject[1];
+			
+		    }
+		}
+	});
     },
     
     
@@ -279,25 +286,25 @@ var Tools = {
 	var type = 'evidence_description';
 	var evidence_code_id = $('evidence_code_select').value;
 	var evidence_description_id = $('evidence_description_select').value;
-	new Ajax.Request('evidence_browser.pl', {parameters:
-    {type: type, evidence_code_id: evidence_code_id}, onSuccess:this.updateEvidenceDescriptionSelect});
-    },
-    
-    updateEvidenceDescriptionSelect: function(request) {
-	var select = $('evidence_description_select');
-	
-        var responseText = request.responseText;
-        var responseArray = responseText.split("|");
-	//the last element of the array is empty. Dont want this in the select box
-	responseArray.pop();
-	responseArray.unshift("*--Optional: select an evidence description--");
-        select.length = 0;    
-	select.length = responseArray.length;
-	for (i=0; i < responseArray.length; i++) {
-	    var evidenceDescriptionObject = responseArray[i].split("*");
-	    select[i].value = evidenceDescriptionObject[0];
-	    select[i].text = evidenceDescriptionObject[1];
-	}
+	new Ajax.Request('evidence_browser.pl', {
+		parameters:
+		{type: type, evidence_code_id: evidence_code_id}, 
+		    onSuccess: function(response) {
+		    var select = $('evidence_description_select');
+		    
+		    var responseText = response.responseText;
+		    var responseArray = responseText.split("|");
+		    responseArray.pop();
+		    responseArray.unshift("*--Optional: select an evidence description--");
+		    select.length = 0;    
+		    select.length = responseArray.length;
+		    for (i=0; i < responseArray.length; i++) {
+			var evidenceDescriptionObject = responseArray[i].split("*");
+			select[i].value = evidenceDescriptionObject[0];
+			select[i].text = evidenceDescriptionObject[1];
+		    }
+		}
+	});
     },
     
     //Make an ajax response that obsoletes the selected ontology term-locus association
@@ -312,8 +319,8 @@ var Tools = {
 	new Ajax.Request('/phenome/obsolete_object_dbxref.pl', {parameters:
 		{object_dbxref_id: type_dbxref_id, type: type, action: action}, onSuccess:this.reloadPage });
     },
-
-   
+    
+    
     ////////////////////
     //move these to LocusPage and to IndividualPage ... ///////////
     /////////////////////////////////
@@ -329,7 +336,7 @@ var Tools = {
 	new Ajax.Request('/phenome/obsolete_object_ev.pl', {parameters:
 		{object_ev_id: object_ev_id, type: type, action: action}, onSuccess:this.reloadPage });
     },
-
+    
     //toggle function. For toggling a collapsed section + a hidden ajax form.
     //This function will display correctly the form and the span contents. e.g. locus_display.pl->associate_accession 
     toggleContent: function(form,span,style) {
