@@ -1,3 +1,5 @@
+package SGN::Test::WWW::Mechanize;
+
 =head1 NAME
 
 SGN::Test::WWW::Mechanize - subclass of
@@ -91,7 +93,6 @@ It also does the L<WWW::Mechanize::TreeBuilder> role, with a tree_class of L<HTM
 
 =cut
 
-package SGN::Test::WWW::Mechanize;
 use Moose;
 use namespace::autoclean;
 
