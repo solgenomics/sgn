@@ -1,10 +1,8 @@
 <%perl>
 
 use File::Spec;
-use CXGN::Cview::Map_overviews::ProjectStats;
 use SGN::Config;
-use CXGN::Cview::Map_overviews::ProjectStats;
-
+use CXGN::Cview::MapOverviews::ProjectStats;
 
 my $config = SGN::Config->load();
 
@@ -14,42 +12,38 @@ my $tomato_sequencing_progress_image_html = qq { <div class="boxbgcolor5" style=
 my $tomato_sequencing_progress_image_url = File::Spec->catfile($config->{basepath}, $config->{tempfiles_subdir}, 'frontpage/project_stats_overview.png');
 
 if ( ! -e $tomato_sequencing_progress_image_url ) { 
-
- eval {
-   my $map_overview = CXGN::Cview::Map_overviews::ProjectStats->new("force"); # force re-calculation of the image/stats
-   
-   # also generate a smaller version of the image that can be 
-   # used on the homepage.
-   #
-   $map_overview->create_mini_overview();
- };
- if ($@) { 
-   print STDERR "An error occurred while trying to regenerate the sequencing progress image..$@\n";
-   $tomato_sequencing_progress_image_html = qq { <br /><a href="/tomato/">Click to view tomato sequencing progress page</a><br /><br /> };
- }
-
-
-
-$tomato_sequencing_progress_image_html .= 
-  qq { 
-      <center>
-      <a href="/about/tomato_sequencing.pl" >
-      <img src="$tomato_sequencing_progress_image_url" title="Click to view tomato sequencing progress page" border="0" alt="Click to view tomato sequencing progress page" /></a>
-      
-      
-      <hr>
-      <a href="/tomato/">Tomato Whole Genome Shotgun data</a> | <a href="/about/tomato_sequencing.pl">BAC by BAC progress overview</a><br />
-      <a href="/tools/blast/?db_id=93">BLAST WGS scaffolds</a> | <a href="/tools/blast/?db_id=56">BLAST tomato BAC contigs</a>
-      
-      </center>
-      </div>
-     };
-}
-
-
-print $tomato_sequencing_progress_image_html;
-
-
-
-
+  
+  eval {
+    my $map_overview = CXGN::Cview::MapOverviews::ProjectStats->new({ force    => $force, 
+								      dbh      => $dbh,
+								      basepath => $config->{basepath},
+								    }); 
+    
+    
+    # also generate a smaller version of the image that can be 
+    # used on the homepage.
+    #
+    $map_overview->create_mini_overview();
+  };
+  if ($@) { 
+    print STDERR "An error occurred while trying to regenerate the sequencing progress image..$@\n";
+    $tomato_sequencing_progress_image_html = qq { <br /><a href="/tomato/">Click to view tomato sequencing progress page</a><br /><br /> };
+  }
+  
+}  
 </%perl>
+
+  <center>
+  <a href="/about/tomato_sequencing.pl" >
+  <img src="$tomato_sequencing_progress_image_url" title="Click to view tomato sequencing progress page" border="0" alt="Click to view tomato sequencing progress page" /></a>
+  
+  
+  <hr>
+  <a href="/tomato/">Tomato Whole Genome Shotgun data</a> | <a href="/about/tomato_sequencing.pl">BAC by BAC progress overview</a><br />
+  <a href="/tools/blast/?db_id=93">BLAST WGS scaffolds</a> | <a href="/tools/blast/?db_id=56">BLAST tomato BAC contigs</a>
+  
+  </center>
+  </div>
+  
+  
+

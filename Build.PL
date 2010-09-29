@@ -64,8 +64,11 @@ my $build = $class->new(
         'Test::More'           => 0,
         'Test::Most'           => 0,
         'Test::WWW::Mechanize' => 0,
+        'Test::WWW::Mechanize::Catalyst' => '0.50',
         'Test::WWW::Selenium'  => 0,
         'Test::MockObject'     => 0,
+
+
     },
     requires => {
         'perl'                => '5.10.0',
@@ -152,6 +155,9 @@ my $build = $class->new(
         'File::Slurp'             => 0,
         'Test::JSON'              => 0,
         'Test::WWW::Mechanize::Catalyst' => 0,
+        'WWW::Mechanize::TreeBuilder' => 0,
+        'HTML::TreeBuilder::XPath' => 0,
+
     },
 );
 $build->create_build_script;
