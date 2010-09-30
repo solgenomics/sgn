@@ -1,6 +1,7 @@
 package SGN::Devel::MyDevLibs;
 use strict;
 use warnings FATAL => 'all';
+use Class::MOP;
 use Try::Tiny;
 our $VERSION = '0.01';
 BEGIN {
