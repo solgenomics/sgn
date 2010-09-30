@@ -145,7 +145,7 @@ around 'finalize_error' => sub {
         part { ($_->can('notify') && !$_->notify) ? 0 : 1 } $self->_error_objects;
     $_ ||= [] for $no_notify, $notify;
 
-    if( @$notify ) {
+    if( @$notify && $self->config->{production_server} ) {
         $self->stash->{email_errors} = $notify;
         try {
             $self->view('Email::ErrorEmail')->process( $self )
