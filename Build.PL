@@ -96,6 +96,8 @@ my $build = $class->new(
         'CGI'                              => 0,
         'CGI::Carp::DebugScreen'           => '0.16',
 
+        'Data::Visitor::Callback' => 0,
+
         'DBIx::Class'             => 0,
         'DBIx::Connector'         => 0,
         'File::Flock'             => 0,
