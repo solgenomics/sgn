@@ -156,12 +156,13 @@ around 'finalize_error' => sub {
     }
 
     my @server_errors = grep $_->is_server_error, $self->_error_objects;
-    $self->clear_errors;
 
-    if( $self->debug && ! $self->config->{production_server} ) {
+    if( $self->debug && @server_errors && ! $self->config->{production_server} ) {
         @{ $self->error } = @server_errors;
         $self->$orig();
     }
+
+    $self->clear_errors;
 };
 
 
