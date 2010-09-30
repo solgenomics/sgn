@@ -94,7 +94,6 @@ my $build = $class->new(
         'CatalystX::GlobalContext'         => 0,
 
         'CGI'                              => 0,
-        'CGI::Carp::DebugScreen'           => '0.16',
 
         'Data::Visitor::Callback' => 0,
 
