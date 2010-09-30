@@ -22,28 +22,34 @@ before 'process' => sub {
 
     # convert the notify_errors stash key into an email stash key for
     # the generic email view
-    $c->stash->{email} = {
-        to   => $self->default->{to},
-        from => $self->default->{from},
-
-        body => $self->_email_body( $c ),
-       };
+    $c->stash->{email} = $self->_make_email( $c );
 
     $c->log->debug('sending error email to '.$c->stash->{email}->{to}) if $c->debug;
 
 };
 
-sub _email_body {
+sub _make_email {
     my ( $self, $c ) = @_;
     my $error_num = 1;
-    return join '',
 
+    my $type = ( grep $_->is_server_error, @{$c->stash->{email_errors}} ) ? 'error' : 'notification';
+
+    my $body = join '',
         # the errors
         "==== Error(s) ====\n\n",
         ( map { $error_num++.".  $_\n" } @{$c->stash->{email_errors}} ),
 
         # all the necessary debug information
         ( map { ("\n==== $_->[0] ====\n", $_->[1], "\n") } $self->dump_these_strings( $c ) );
+
+    return {
+        to      => $self->default->{to},
+        from    => $self->default->{from},
+        subject => '['.$c->config->{name}.'] /'.$c->req->path." $type",
+        body    => $body,
+
+       };
+
 
 }
 

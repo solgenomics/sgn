@@ -146,11 +146,12 @@ around 'finalize_error' => sub {
     $_ ||= [] for $no_notify, $notify;
 
     if( @$notify ) {
-        $self->stash->{email_errors} = [ map "$_", @$notify ];
+        $self->stash->{email_errors} = $notify;
         try {
             $self->view('Email::ErrorEmail')->process( $self )
         } catch {
             $self->log->error("Failed to send error email! Error was: $_");
+            push @{$self->error}, $_;
         };
     }
 

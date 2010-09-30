@@ -14,11 +14,12 @@ my $mech = SGN::Test::WWW::Mechanize->new;
 $mech->with_test_level( process => sub {
 
     my ($res, $c) = ctx_request('/');
-    $c->stash->{email_errors} = [ 'Fake test error!' ];
-    my $body = $c->view('Email::ErrorEmail')->_email_body( $c );
+    $c->stash->{email_errors} = [ SGN::Exception->new( message => 'Fake test error!') ];
+    my $email = $c->view('Email::ErrorEmail')->_make_email( $c );
 
-    like( $body, qr/object skipped/, 'email body looks right' );
-    like( $body, qr/=== Request ===/, 'email body looks right' );
+    is( $email->{subject}, '[SGN] / error', 'got a good subject line' );
+    like( $email->{body}, qr/object skipped/, 'email body looks right' );
+    like( $email->{body}, qr/=== Request ===/, 'email body looks right' );
 
 });
 
