@@ -88,6 +88,7 @@ my $build = $class->new(
         'Catalyst::Controller::CGIBin'     => '0.029',
         'Catalyst::Action::RenderView'     => 0,
         'Catalyst::Plugin::Static::Simple' => 0,
+        'Catalyst::View::Email'            => 0,
         'Catalyst::View::HTML::Mason'      => 0,
         'Catalyst::View::JavaScript::Minifier::XS'
                                            => '2.100000',
