@@ -59,7 +59,7 @@ my $build = $class->new(
 
         'File::Temp'           => 0,
         'HTML::Lint'           => 0,
-        'JSON'                 => 0,
+        'Test::JSON'              => 0,
         'List::Util'           => 0,
         'Test::More'           => 0,
         'Test::Most'           => 0,
@@ -101,6 +101,7 @@ my $build = $class->new(
         'DBIx::Connector'         => 0,
         'File::Flock'             => 0,
         'File::NFSLock'           => 0,
+        'File::Slurp'             => 0,
         'File::Temp'              => 0,
         'Number::Bytes::Human'    => '0.07',
         'GD'                      => 0,
@@ -110,6 +111,7 @@ my $build = $class->new(
         'HTML::Entities'          => 0,
         'HTML::FormFu'            => 0,
         'HTML::Mason'             => 0,
+        'HTML::TreeBuilder::XPath' => 0,
         'IO::String'              => 0,
         'Image::Size'             => 0,
         'JSAN::ServerSide'        => '==0.06',
@@ -138,6 +140,8 @@ my $build = $class->new(
         'Test::More'              => 0,
         'Test::Class'             => 0,
         'Test::WWW::Mechanize'    => 0,
+        'Test::WWW::Mechanize::Catalyst'
+                                  => 0,
         'Text::ParseWords'        => 0,
         'Tie::Function'           => 0,
         'Tie::UrlEncoder'         => 0,
@@ -149,11 +153,7 @@ my $build = $class->new(
         'XML::Generator'          => 0,
         'XML::Twig'               => 0,
         'YAML::Any'               => 0,
-        'File::Slurp'             => 0,
-        'Test::JSON'              => 0,
-        'Test::WWW::Mechanize::Catalyst' => 0,
         'WWW::Mechanize::TreeBuilder' => 0,
-        'HTML::TreeBuilder::XPath' => 0,
 
     },
 );
