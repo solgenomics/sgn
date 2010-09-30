@@ -140,29 +140,29 @@ around 'finalize_error' => sub {
 
     $self->res->status( $worst_status );
 
-    # now decide which errors to actually notify about
+    # now decide which errors to actually notify about, and notify about them
     my ($no_notify, $notify) =
         part { ($_->can('notify') && !$_->notify) ? 0 : 1 } $self->_error_objects;
     $_ ||= [] for $no_notify, $notify;
 
+    if( @$notify ) {
+        $self->stash->{email_errors} = [ map "$_", @$notify ];
+        try {
+            $self->view('Email::ErrorEmail')->process( $self )
+        } catch {
+            $self->log->error("Failed to send error email! Error was: $_");
+        };
+    }
+
+    my @server_errors = grep $_->is_server_error, $self->_error_objects;
     $self->clear_errors;
-    $self->error( $notify );
 
-    # if we have any errors that need notification, call the rest of the error plugins
-    if( @{ $self->error } ) {
-
-        my $save_status = $self->res->status;
-        my $save_body   = $self->res->body;
+    if( $self->debug && ! $self->config->{production_server} ) {
+        @{ $self->error } = @server_errors;
         $self->$orig();
-
-        unless( $self->debug ) {
-            $self->error( $notify );
-
-            $self->res->status( $save_status );
-            $self->res->body( $save_body );
-        }
     }
 };
+
 
 
 1;

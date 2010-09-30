@@ -35,28 +35,6 @@ my $defaults =
          verbose => 1,
         },
 
-     # keep Plugin::ErrorCatcher on all the time too
-     'Plugin::ErrorCatcher' => {
-         enable     => 1,
-
-         # SGN.pm will set the emit_module dynamically according to
-         # whether production_server is set
-         #emit_module => 'Catalyst::Plugin::ErrorCatcher::Email',
-         #emit_module => 'Catalyst::Plugin::ErrorCatcher::File',
-        },
-
-#      'Plugin::ErrorCatcher::File' => {
-#          dir => '/tmp',
-#         },
-
-     'Plugin::ErrorCatcher::Email' => {
-         use_tags => 1,
-
-         to       => 'sgn-bugs@solgenomics.net',
-         from     => 'sgn-bugs@solgenomics.net',
-         subject  => '%n error - %p',
-        },
-
 
      'Controller::CGI' => {
          cgi_root_path    => '/',
@@ -88,6 +66,19 @@ my $defaults =
          },
          globals => [qw[ $c ]],
          template_extension => '.mas',
+     },
+
+     'View::Email::ErrorEmail' => {
+         default => {
+             to   => 'sgn-bugs@solgenomics.net',
+             #to   => 'rob@sgn.localhost.localdomain',
+             from => 'sgn-bugs@solgenomics.net',
+
+             content_type => 'text/plain',
+             charset      => 'utf-8',
+         },
+
+         dump_skip_class => 'Catalyst Catalyst::Stats DBIx::Class::Schema',
      },
 
      'View::JavaScript' => {

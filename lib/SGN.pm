@@ -8,8 +8,6 @@ use Catalyst::Runtime 5.80;
 use Catalyst qw/
      ConfigLoader
      Static::Simple
-     ErrorCatcher
-     StackTrace
 
      +SGN::Role::Site::Config
      +SGN::Role::Site::DBConnector
@@ -33,14 +31,6 @@ after 'setup_finalize' => sub {
 
     # update the symlinks used to serve static files
     $self->_update_static_symlinks;
-
-    ###  for production servers
-    if( $self->config->{production_server} ) {
-
-        # enable error email sending
-        $self->config->{'Plugin::ErrorCatcher'}{'emit_module'} = 'Catalyst::Plugin::ErrorCatcher::Email';
-
-    }
 };
 
 

@@ -23,8 +23,13 @@ before 'process' => sub {
     # convert the notify_errors stash key into an email stash key for
     # the generic email view
     $c->stash->{email} = {
+        to   => $self->default->{to},
+        from => $self->default->{from},
+
         body => $self->_email_body( $c ),
        };
+
+    $c->log->debug('sending error email to '.$c->stash->{email}->{to}) if $c->debug;
 
 };
 
@@ -34,7 +39,7 @@ sub _email_body {
     return join '',
 
         # the errors
-        "==== Error(s) ====\n",
+        "==== Error(s) ====\n\n",
         ( map { $error_num++.".  $_\n" } @{$c->stash->{email_errors}} ),
 
         # all the necessary debug information
