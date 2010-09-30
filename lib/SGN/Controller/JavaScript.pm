@@ -182,8 +182,8 @@ sub action_for_js_package {
 
     my $key = md5_hex( join '!!', @files );
 
-   warn (
-         "defining/inserting JS pack $key = ("
+    $self->_app->log->debug (
+         "define JS pack $key = ("
         .(join ', ', @files)
         .')'
        ) if $self->_app->debug;
