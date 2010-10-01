@@ -1,5 +1,5 @@
 <%args>
-    $mrna_features
+    $mrna_feature
     $title => 'mRNA Sequence'
     $collapsible => 1
 </%args>
@@ -9,12 +9,12 @@
 </%init>
 <%perl>
     my $mrna_residue = '';
-    my @exons = grep { $_->type->name eq 'exon' }
-                map { $_->child_features } @$mrna_features;
+    my @exons = grep { $_->type->name eq 'exon' } $mrna_feature->child_features;
     for my $exon (@exons) {
         $mrna_residue .= infer_residue($exon);
     }
     my $seq = Bio::PrimarySeq->new(
+        -id       => $mrna_feature->name,
         -seq      => $mrna_residue,
         -alphabet => 'rna',
     );
@@ -23,4 +23,5 @@
     title => $title,
     sequence => $seq,
     blast_url => undef,
+    id  => $mrna_feature->name,
 &>
