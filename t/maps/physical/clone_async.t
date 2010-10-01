@@ -4,9 +4,10 @@ use warnings;
 use English;
 
 use JSON;
+use lib 't/lib';
+use Catalyst::Test 'SGN';
 
 use CXGN::Genomic::Clone;
-use CXGN::VHost::Test;
 
 use Test::More tests => 7;
 

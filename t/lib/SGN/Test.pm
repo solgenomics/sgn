@@ -15,6 +15,8 @@ use HTML::Lint;
 
 BEGIN { $ENV{CATALYST_SERVER} ||= $ENV{SGN_TEST_SERVER} }
 
+use SGN::Devel::MyDevLibs;
+
 # we can re-export Catalyst::Test's request, get, and ctx_request functions
 use Catalyst::Test 'SGN';
 our @ISA = qw/Exporter/;
