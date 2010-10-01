@@ -12,6 +12,7 @@ our @EXPORT_OK = qw/
     get_reference gbrowse_image_url feature_link
     infer_residue cvterm_link
     organism_link feature_length
+    mrna_sequence
 /;
 
 sub get_reference {
@@ -145,6 +146,18 @@ sub infer_residue {
 	# substr is 0-based, featureloc's are 1-based
 	my $residue    = substr($srcresidue, $featureloc->fmin - 1, $length );
 	return $residue;
+}
+
+sub mrna_sequence {
+    my ($mrna_feature) = @_;
+    my @exons        = grep { $_->type->name eq 'exon' } $mrna_feature->child_features;
+    my $mrna_residue = join '', map { infer_residue($_) } @exons;
+    my $seq = Bio::PrimarySeq->new(
+        -id       => $mrna_feature->name,
+        -seq      => $mrna_residue,
+        -alphabet => 'rna',
+    );
+    return $seq;
 }
 
 1;
