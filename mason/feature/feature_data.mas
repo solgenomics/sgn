@@ -6,11 +6,12 @@
 <%once>
     use SGN::View::Feature qw/feature_link cvterm_link organism_link gbrowse_link feature_length/;
     use CXGN::Page::FormattingHelpers qw/info_table_html/;
+    use CXGN::Tools::Text qw/commify_number/;
 </%once>
 <%perl>
     my ($description) = map { $_->value } grep { $_->type->name eq 'Note' } $feature->featureprops->all;
     my ($length,$locations) = feature_length($feature);
-    my $feature_length = "$length bases";
+    my $feature_length = commify_number($length) . " bases";
     if ($locations) {
         $feature_length .= " in $locations location" . ($locations > 1 ? 's' : '');
     };

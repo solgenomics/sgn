@@ -10,6 +10,7 @@
                 feature_length
                 /;
     use CXGN::Page::FormattingHelpers qw/info_table_html/;
+    use CXGN::Tools::Text qw/commify_number/;
 </%once>
 <%perl>
     # In the case of alternative splicing, we can have
@@ -17,7 +18,7 @@
     my $child = ($feature->child_features)[0];
     my ($description) = $child ? map { $_->value } grep { $_->type->name eq 'Note' } $child->featureprops->all : '';
     my ($length,$locations) = feature_length($feature);
-    my $feature_length = "$length bases";
+    my $feature_length = commify_number($length) . " bases";
     if ($locations) {
         $feature_length .= " in $locations location" . ($locations > 1 ? 's' : '');
     };
