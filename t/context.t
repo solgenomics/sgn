@@ -29,6 +29,12 @@ can_ok( $schema, 'resultset', 'storage' );
 ok( $schema->storage->dbh->ping, 'dbic storage is connected' );
 is( search_path( $schema->storage->dbh), search_path( $c->dbc->dbh ), 'schema and dbc should have same search path' );
 
+# test tempfile method
+my ($tempfile, $temp_uri) = $c->tempfile( TEMPLATE => [ 'foobar','noggin-XXXXX' ] );
+can_ok( $tempfile, 'filename', 'print' );
+can_ok( $temp_uri, 'path' );
+unlike( $temp_uri, qr/X+$/, 'temp_uri got its Xs replaced' );
+
 done_testing;
 
 
