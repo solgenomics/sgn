@@ -73,7 +73,7 @@ sub feature_table {
                 gbrowse_link($f,$fmin,$fmax),
                 $fmax-$fmin . " bp",
                 $loc->strand == 1 ? '+' : '-',
-                $loc->phase,
+                $loc->phase || '<span class="ghosted">NA</span>',
             ];
         }
     }
