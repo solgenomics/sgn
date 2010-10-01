@@ -4,17 +4,20 @@
     $species => undef
 </%args>
 <%once>
-    use SGN::View::Feature qw/feature_link cvterm_link organism_link gbrowse_link/;
+    use SGN::View::Feature qw/feature_link cvterm_link organism_link gbrowse_link feature_length/;
     use CXGN::Page::FormattingHelpers qw/info_table_html/;
 </%once>
 <%perl>
     my ($description) = map { $_->value } grep { $_->type->name eq 'Note' } $feature->featureprops->all;
+    my ($length,$locations) = feature_length($feature);
+    my $feature_length = "$length bases in $locations location" . ($locations > 1 ? 's' : '');
     my @feature_data = (
         'Name'          => feature_link($feature),
         'Feature Type'  => cvterm_link($feature),
         'Analysis'      => ($feature->is_analysis ? 'Yes' : 'No'),
         'Organism Name' => organism_link($feature->organism),
         'Description'   => $description,
+        'Length'        => $feature_length,
     );
 </%perl>
 <&| /page/info_section.mas,
@@ -23,7 +26,6 @@
     collapsible => 1,
     is_subsection => 1,
 &>
-    <% print info_table_html( @feature_data ) %>
-    <& /feature/feature_length.mas, feature => $feature &>
+    <% info_table_html( @feature_data ) %>
     <a href="<% gbrowse_link($feature) %>">GBrowse</a><br/>
 </&>

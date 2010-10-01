@@ -1,21 +1,45 @@
 package SGN::View::Feature;
-use base 'Exporter';
 use strict;
 use warnings;
+
+use base 'Exporter';
+use Bio::Seq;
+use CatalystX::GlobalContext '$c';
+
 
 our @EXPORT_OK = qw/
     related_stats feature_table gbrowse_link
     get_reference gbrowse_image_url feature_link
     infer_residue cvterm_link
-    organism_link
+    organism_link feature_length
 /;
-use CatalystX::GlobalContext '$c';
 
 sub get_reference {
     my ($feature) = @_;
     my $fl = $feature->featureloc_features->single;
     return unless $fl;
     return $fl->srcfeature;
+}
+
+sub feature_length {
+    my ($feature) = @_;
+    my @locations = $feature->featureloc_features->all;
+    my $locations = scalar @locations;
+    my $length = 0;
+    for my $l (@locations) {
+        $length += $l->fmax - $l->fmin;
+    }
+    my $seq;
+    # Reference features don't have featureloc's, calculate the length
+    # directly
+    if ($length == 0) {
+        $seq = Bio::PrimarySeq->new(
+            -seq => $feature->residues,
+            -alphabet => 'dna',
+        );
+        $length = $seq->length;
+    }
+    return ($length,$locations);
 }
 
 sub related_stats {
