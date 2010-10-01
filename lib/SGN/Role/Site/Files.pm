@@ -146,6 +146,7 @@ sub tempfile {
   my ($uniq_chars) = "$temp" =~ /$temp_regex/;
   my $new_uri = "$uri";
   $new_uri =~ s/X+$/$uniq_chars/ or die;
+  $new_uri .= $args{SUFFIX} if defined $args{SUFFIX};
 
   return ( $temp, URI->new( $new_uri ) );
 }
