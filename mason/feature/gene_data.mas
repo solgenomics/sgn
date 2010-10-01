@@ -17,8 +17,11 @@
     my $child = ($feature->child_features)[0];
     my ($description) = $child ? map { $_->value } grep { $_->type->name eq 'Note' } $child->featureprops->all : '';
     my ($length,$locations) = feature_length($feature);
-    my $feature_length = "$length bases in $locations location" . ($locations > 1 ? 's' : '');
-   
+    my $feature_length = "$length bases";
+    if ($locations) {
+        $feature_length .= " in $locations location" . ($locations > 1 ? 's' : '');
+    };
+
     my @gene_data = (
         'Name'          => feature_link($feature),
         'Feature Type'  => cvterm_link($feature),
