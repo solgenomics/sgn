@@ -73,7 +73,7 @@ if (defined $template->get_template_id() ) {
     my $cc = $expression->graph_experiment();
     $cc->write_output($tempfile);
 
-    $experiment_html = "<img src=\"$tempuri\" />";
+    $experiment_html = "<br><img src=\"$tempuri\" /><br>";
     
     $experiment_info_content = info_section_html( title       => "Graphs for Expression Data by Experiments", 
                                                   contents    => $experiment_html, 
