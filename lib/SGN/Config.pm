@@ -29,13 +29,6 @@ my $defaults =
          homepage_files_dir       => '/data/prod/public/sgn_static_content/homepage',
      ),
 
-     # enable stack traces all the time
-     stacktrace => {
-         enable  => 1,
-         verbose => 1,
-        },
-
-
      'Controller::CGI' => {
          cgi_root_path    => '/',
          cgi_dir          => '__path_to(cgi-bin)__',
