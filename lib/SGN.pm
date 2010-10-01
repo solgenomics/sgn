@@ -6,7 +6,6 @@ use SGN::Exception;
 
 use Catalyst::Runtime 5.80;
 use Catalyst qw/
-     ConfigLoader
      Static::Simple
 
      +SGN::Role::Site::Config

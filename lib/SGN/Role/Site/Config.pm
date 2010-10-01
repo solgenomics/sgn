@@ -5,6 +5,9 @@ use namespace::autoclean;
 
 use Carp;
 use Cwd;
+
+use Data::Visitor::Callback;
+
 use SGN::Config;
 
 =head2 config
@@ -30,23 +33,33 @@ use SGN::Config;
 
 sub _new_config {
     my $self = shift;
+
     my $basepath = $self->_find_basepath;
-    my $cfg = SGN::Config->load( add_vals =>
-                                 {
-                                  basepath => $basepath, #< basepath is the old-SGN-compatible name
-                                  home     => $basepath, #< home is the catalyst-compatible name
-                                  project_name => 'SGN',
-                                 }
-                               );
-    for (values %$cfg) {
-        no warnings 'uninitialized';
-        s|__HOME__|$basepath|eg;
-        s|__UID__|$>|eg;
-        s|__USERNAME__|(getpwuid($>))[0]|eg;
-        s|__GID__|$)|eg;
-        s|__GROUPNAME__|(getgrgid($)))[0]|eg;
-        s|__path_to\(([^\)]+\))__|File::Spec->catdir($basepath, split /,/, $1) |eg;
-    }
+
+    my $cfg = SGN::Config->load(
+        add_vals => {
+            basepath => $basepath, #< basepath is the old-SGN-compatible name
+            home     => $basepath, #< home is the catalyst-compatible name
+            project_name => 'SGN',
+        },
+       );
+
+    # interpolate config values
+    my $v = Data::Visitor::Callback->new(
+        plain_value => sub {
+            return unless defined $_;
+            s|__HOME__|$basepath|eg;
+            s|__UID__|$>|eg;
+            s|__USERNAME__|(getpwuid($>))[0]|eg;
+            s|__GID__|$)|eg;
+            s|__GROUPNAME__|(getgrgid($)))[0]|eg;
+            s|__path_to\(([^\)]+)\)__|File::Spec->catdir($basepath, split /,/, $1) |eg;
+            return $_;
+        },
+       );
+    $v->visit( $cfg );
+
+
     return $cfg;
 }
 
