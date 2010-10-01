@@ -35,6 +35,7 @@ $dbh
 $schema
 $sgn_schema
 $template
+$expression
 $unigene_list
 </%args>
 
@@ -62,6 +63,13 @@ $unigene_list
    '/gem/template/expression_info.mas', 
    template => $template, 
 &>
+
+<& 
+   '/gem/template/expression_info_graph.mas', 
+   template   => $template, 
+   expression => $expression,
+&>
+
 
 <& 
    '/gem/template/correlation_analysis.mas', 
