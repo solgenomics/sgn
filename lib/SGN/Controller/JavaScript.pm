@@ -220,6 +220,7 @@ has _jsan_params => ( is => 'ro', isa => 'HashRef', lazy_build => 1 );
 sub _build__jsan_params {
     my ( $self ) = @_;
     my $inc_path = $self->_app->config->{'js_include_path'};
+    $inc_path = [ $inc_path ] unless ref $inc_path;
     die "multi-dir js_include_path not yet supported" if @$inc_path > 1;
     my $js_dir = $inc_path->[0];
     -d $js_dir or die "configured js_include_path '$js_dir' does not exist!\n";
