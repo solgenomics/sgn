@@ -5,8 +5,10 @@ use namespace::autoclean;
 
 use Carp;
 use Cwd;
+use List::Util qw/ reduce /;
 
 use Data::Visitor::Callback;
+use Hash::Merge ();
 
 use SGN::Config;
 
@@ -33,19 +35,36 @@ use SGN::Config;
 
 sub _new_config {
     my $self = shift;
+    my $appname = $self->_appname;
 
     my $basepath = $self->_find_basepath;
 
-    my $cfg = SGN::Config->load(
-        add_vals => {
-            basepath => $basepath, #< basepath is the old-SGN-compatible name
-            home     => $basepath, #< home is the catalyst-compatible name
-            project_name => 'SGN',
-        },
+    my @conf_files = (
+           $ENV{ uc($appname).'_CONFIG' }
+        || $ENV{ "CATALYST_CONFIG" }
+        || map File::Spec->catfile( $basepath, "$appname.$_" ),
+            Config::Any->extensions
        );
 
+    my @default_files = (
+            map File::Spec->catfile( $basepath, 'conf', "${appname}_defaults.$_" ),
+            Config::Any->extensions
+       );
+
+    my @file_cfg = $self->_load_conf_files( \@conf_files );
+    my @default_cfg = $self->_load_conf_files( \@default_files );
+
+    my %add = (
+        basepath => $basepath, #< basepath is the old-SGN-compatible name
+        home     => $basepath, #< home is the catalyst-compatible name
+        project_name => 'SGN',
+       );
+
+    my $merge = Hash::Merge->new('RIGHT_PRECEDENT');
+    my $cfg = reduce { $merge->merge( $a, $b ) }  @default_cfg, @file_cfg, \%add;
+
     # interpolate config values
-    my $v = Data::Visitor::Callback->new(
+    Data::Visitor::Callback->new(
         plain_value => sub {
             return unless defined $_;
             s|__HOME__|$basepath|eg;
@@ -56,19 +75,36 @@ sub _new_config {
             s|__path_to\(([^\)]+)\)__|File::Spec->catdir($basepath, split /,/, $1) |eg;
             return $_;
         },
-       );
-    $v->visit( $cfg );
-
+    )->visit( $cfg );
 
     return $cfg;
 }
 
+sub _appname {
+    my $self = shift;
+    my $n = ref $self || $self;
+    $n =~ s/::.+//;
+    return $n;
+}
+
+sub _load_conf_files {
+    my ($self, $files) = @_;
+    my $cfg = Config::Any->load_files({
+        files       => $files,
+        use_ext     => 1,
+    });
+    return map values %$_, @$cfg;
+}
+
 sub _find_basepath {
+    my $self = shift;
+    my $appname = $self->_appname;
+
     # find the path on disk of this file, then find the basename from that
     my @basepath_strategies = (
         # 0. maybe somebody has set an SGN_SITE_ROOT environment variable
         sub {
-            return $ENV{SGN_SITE_ROOT} || '';
+            return $ENV{uc($appname).'_SITE_ROOT'} || '';
         },
         # 1. search down the directory tree until we find a dir that contains ./sgn/cgi-bin
         sub {
