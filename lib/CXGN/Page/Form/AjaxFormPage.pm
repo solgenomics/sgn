@@ -182,7 +182,8 @@ sub check_modify_privileges {
     }
     if (!$person_id) { $json_hash{login} = 1 ;  }
     if ($user_type !~ /submitter|sequencer|curator/) { 
-        $json_hash{error} = "You must have an account of type submitter to be able to submit data. Please contact SGN to change your account type.";
+        if (!$json_hash{error} ) {
+	    $json_hash{error} = "You must have an account of type submitter to be able to submit data. Please contact SGN to change your account type."; }
 	$self->set_json_hash(%json_hash);
 	return 0;
     }
