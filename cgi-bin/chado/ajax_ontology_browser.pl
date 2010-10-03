@@ -29,7 +29,7 @@ if ( $action eq "children" ) {
     @response_nodes = $cvterm->get_children();
 }
 elsif ( $action eq "parents" ) {
-    @response_nodes = $cvterm->get_parents();
+    @response_nodes = $cvterm->get_recursive_parents();
 }
 elsif ( $action eq "roots" ) {
     my @namespaces = ( 'GO', 'PO', 'SP', 'SO', 'PATO' );
