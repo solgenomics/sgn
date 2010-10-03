@@ -139,7 +139,7 @@ sub _make_stock_search_rs {
 
 sub _organisms {
     my ($self) = @_;
-    return [
+    my $ref =  [
         map [ $_->organism_id, $_->species ],
         $self->schema
 	->resultset('Stock::Stock')
@@ -150,24 +150,30 @@ sub _organisms {
 			 },
 	)
 	];
+    # add an empty option 
+    unshift @$ref , ['0', ''];
+    return $ref;
 }
 
 sub _stock_types {
     my ($self) = @_;
 
-    return [
+    my $ref = [
         map [$_->cvterm_id,$_->name],
         $self->schema
-                ->resultset('Stock::Stock')
-                ->search_related(
-                    'type',
-                    {},
-                    { select => [qw[ cvterm_id type.name ]],
-                    group_by => [qw[ cvterm_id type.name ]],
-                    order_by => 'type.name',
-                    },
-                )
-    ];
+	->resultset('Stock::Stock')
+	->search_related(
+	    'type',
+	    {},
+	    { select => [qw[ cvterm_id type.name ]],
+	      group_by => [qw[ cvterm_id type.name ]],
+	      order_by => 'type.name',
+	    },
+	)
+	];
+    # add an empty option 
+    unshift @$ref , ['0', ''];
+    return $ref;
 }
 
 ######

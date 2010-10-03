@@ -47,8 +47,8 @@ div.paginate_nav {
    &>
 %   if( $results->count ) {
      <% columnar_table_html(
-            headings => ['Stock Name','Stock Type'],
-            data     => [ map [stock_link($_),$_->type->name], $results->all ],
+            headings => ['Stock Name','Stock Type', 'Organism'],
+            data     => [ map [stock_link($_),$_->type->name,$_->organism->species], $results->all ],
         )
       %>
 %   } else {
