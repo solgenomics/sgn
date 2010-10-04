@@ -111,7 +111,7 @@ my $owner;
 <& /page/page_title.mas, title=> $type_name  .  ": " . $stock->uniquename()  . "\n" &>
   
   
-<&| /page/info_section.mas, title=>"Stock details" , subtitle => ""  &>
+<&| /page/info_section.mas, title=>"Stock details" , subtitle => "<a href=/stock/search/>Back to stock search</a>"  &>
   
   <& /page/form.mas, object_type=>'stock', object_id=>"$stock_id", form_name=> 'stock_form', server_side_script => '/phenome/stock/stock_ajax_form.pl', form_div_name=>'stock_details', js_object_name=> 'stockForm', page_url => '/phenome/stock.pl'  &>
     
