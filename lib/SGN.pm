@@ -29,6 +29,8 @@ __PACKAGE__->config(
 
     disable_component_resolution_regex_fallback => 1,
 
+    default_view => 'Mason',
+
     'Plugin::ConfigLoader' => {
         substitutions => {
             UID       => sub { $> },
