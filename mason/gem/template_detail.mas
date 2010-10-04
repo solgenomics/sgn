@@ -60,16 +60,15 @@ $unigene_list
 &>
 
 <& 
-   '/gem/template/expression_info.mas', 
-   template => $template, 
-&>
-
-<& 
-   '/gem/template/expression_info_graph.mas', 
+   '/gem/template/expression_graph.mas', 
    template   => $template, 
    expression => $expression,
 &>
 
+<& 
+   '/gem/template/expression_info.mas', 
+   template => $template, 
+&>
 
 <& 
    '/gem/template/correlation_analysis.mas', 
