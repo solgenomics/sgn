@@ -65,22 +65,22 @@ sub store {
     
     my $stock    = $self->get_object();
     my $stock_id = $self->get_object_id();
+    my $bcs_stock = $stock->get_object_row();
     my %args     = $self->get_args();
     my %json_hash = $self->get_json_hash();
     my $initial_stock_id = $stock_id;
    
     my $error;
-    $stock->organism_id($args{organism_id});
-    
+    $bcs_stock->organism_id($args{organism_id});
     my ($message) ;
-	#$locus->exists_in_database( $args{locus_name}, $args{locus_symbol} );
+    #my $message = $bcs_stock->exists_in_database( $args{uniquename}  );
     my $validate;
     if ($message) {
 	$error = " Stock $args{stock_name}  already exists in the database ";
     }else {
 	try{
 	    $self->SUPER::store(); #this sets $json_hash{validate} if the form validation failed.
-	    $stock_id = $stock->get_stock_id() ;
+	    $stock_id = $bcs_stock->stock_id() ;
 	} catch { 
 	    $error = " An error occurred. Cannot store to the database\n An  email message has been sent to the SGN development team";
 	    CXGN::Contact::send_email('stock_ajax_form.pl died', $error . "\n" . $_ , 'sgn-bugs@sgn.cornell.edu');
@@ -252,10 +252,15 @@ if ( $self->get_action =~ /new|store/ ) {
 	contents => $self->get_object_id(),
 	);
     
+    $form->add_hidden(
+	field_name => "action",
+	contents => "store",
+	);
+    
     if ( $self->get_action() =~ /view|edit/ ) {
 	$form->from_database();
 	$form->add_hidden(
-	    field_name => "organims_id",
+	    field_name => "organism_id",
 	    contents   => $stock->get_object_row(),
 	    );
 	
