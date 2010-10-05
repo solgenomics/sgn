@@ -14,7 +14,7 @@ use SGN::Image;
 sub define_object {
     my $self = shift;
 
-    my %json_hash = ();
+    my %json_hash = $self->get_json_hash();
 
     # call set_object_id, set_object and set_primary_key here
     # with the appropriate parameters.

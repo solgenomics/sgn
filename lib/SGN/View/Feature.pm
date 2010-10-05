@@ -1,21 +1,46 @@
 package SGN::View::Feature;
-use base 'Exporter';
 use strict;
 use warnings;
+
+use base 'Exporter';
+use Bio::Seq;
+use CatalystX::GlobalContext '$c';
+
 
 our @EXPORT_OK = qw/
     related_stats feature_table gbrowse_link
     get_reference gbrowse_image_url feature_link
     infer_residue cvterm_link
-    organism_link
+    organism_link feature_length
+    mrna_sequence
 /;
-use CatalystX::GlobalContext '$c';
 
 sub get_reference {
     my ($feature) = @_;
     my $fl = $feature->featureloc_features->single;
     return unless $fl;
     return $fl->srcfeature;
+}
+
+sub feature_length {
+    my ($feature) = @_;
+    my @locations = $feature->featureloc_features->all;
+    my $locations = scalar @locations;
+    my $length = 0;
+    for my $l (@locations) {
+        $length += $l->fmax - $l->fmin;
+    }
+    my $seq;
+    # Reference features don't have featureloc's, calculate the length
+    # directly
+    if ($length == 0) {
+        $seq = Bio::PrimarySeq->new(
+            -seq => $feature->residues,
+            -alphabet => 'dna',
+        );
+        $length = $seq->length;
+    }
+    return ($length,$locations);
 }
 
 sub related_stats {
@@ -49,7 +74,7 @@ sub feature_table {
                 gbrowse_link($f,$fmin,$fmax),
                 $fmax-$fmin . " bp",
                 $loc->strand == 1 ? '+' : '-',
-                $loc->phase,
+                $loc->phase || '<span class="ghosted">NA</span>',
             ];
         }
     }
@@ -121,6 +146,18 @@ sub infer_residue {
 	# substr is 0-based, featureloc's are 1-based
 	my $residue    = substr($srcresidue, $featureloc->fmin - 1, $length );
 	return $residue;
+}
+
+sub mrna_sequence {
+    my ($mrna_feature) = @_;
+    my @exons        = grep { $_->type->name eq 'exon' } $mrna_feature->child_features;
+    my $mrna_residue = join '', map { infer_residue($_) } @exons;
+    my $seq = Bio::PrimarySeq->new(
+        -id       => $mrna_feature->name,
+        -seq      => $mrna_residue,
+        -alphabet => 'rna',
+    );
+    return $seq;
 }
 
 1;

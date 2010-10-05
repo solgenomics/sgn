@@ -7,12 +7,13 @@ use CXGN::Page::FormattingHelpers qw | page_title_html |;
 use CXGN::People::Login;
 use CXGN::People::Person;
 use CXGN::Contact;
-use SGN::Config;
+
+use CatalystX::GlobalContext '$c';
 
 my $page = CXGN::Page->new("solpeople create account", "Koni");
 my $dbh = CXGN::DB::Connection->new();
 
-my $conf = SGN::Config->load();
+my $conf = $c->config;
 
 if ($conf->{is_mirror}) { 
     $page->message_page("This site is a mirror site and does not support adding users. Please go to the main site to create an account.");

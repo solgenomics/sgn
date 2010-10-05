@@ -11,7 +11,7 @@
 <%perl>
 </%perl>
 
-% if ($children || $parents) {
+% if ($reference || $children || $parents) {
 <&| /page/info_section.mas,
     title => $title,
     collapsible => 1,

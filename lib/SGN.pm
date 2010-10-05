@@ -9,8 +9,6 @@ use Catalyst qw/
      -Debug
      ConfigLoader
      Static::Simple
-     ErrorCatcher
-     StackTrace
 
      +SGN::Role::Site::Config
      +SGN::Role::Site::DBConnector
@@ -23,31 +21,49 @@ use Catalyst qw/
 
 extends 'Catalyst';
 
+# configure catalyst-related things.  in general, things should not be
+# added here.  add them to SGN.conf, with comments.
+__PACKAGE__->config(
+
+    name => 'SGN',
+    root => 'static',
+
+    disable_component_resolution_regex_fallback => 1,
+
+    default_view => 'Mason',
+
+    # Static::Simple configuration
+    static => {
+        dirs => [qw[ s static img documents static_content data ]],
+    },
+
+    'Plugin::ConfigLoader' => {
+        substitutions => {
+            UID       => sub { $> },
+            USERNAME  => sub { (getpwuid($>))[0] },
+            GID       => sub { $) },
+            GROUPNAME => sub { (getgrgid($)))[0] },
+           },
+       },
+
+   );
+
+
 # on startup, do some dynamic configuration
 after 'setup_finalize' => sub {
     my $self = shift;
 
     $ENV{PROJECT_NAME} = $self->config->{name};
+    $self->config->{basepath} = $self->config->{home};
 
     # all files written by web server should be group-writable
     umask 000002;
 
     # update the symlinks used to serve static files
     $self->_update_static_symlinks;
-
-    ###  for production servers
-    if( $self->config->{production_server} ) {
-
-        # enable error email sending
-        $self->config->{'Plugin::ErrorCatcher'}{'emit_module'} = 'Catalyst::Plugin::ErrorCatcher::Email';
-
-    }
 };
 
-
 __PACKAGE__->setup;
-
-
 
 sub _update_static_symlinks {
     my $self = shift;
