@@ -4,6 +4,14 @@ extends 'Catalyst::View::HTML::Mason';
 
 use File::Spec;
 
+__PACKAGE__->config(
+    interp_args => {
+        comp_root =>  SGN->path_to('mason'),
+    },
+    globals => ['$c'],
+    template_extension => '.mas',
+);
+
 
 =head1 NAME
 
