@@ -109,7 +109,7 @@ sub delete {
     my $check = $self->check_modify_privileges();
     $self->print_json() if $check ; #error or no user privileges
     
-    my $stock      = $self->get_object();
+    my $stock      = $self->get_object()->get_object_row();
     my $stock_name = $stock->name();
     my $stock_id = $stock->stock_id();
     my %json_hash= $self->get_json_hash();
@@ -120,6 +120,7 @@ sub delete {
 	    $stock->create_stockprops( { obsolete => 1 } , {autocreate=> 1 } );
 	}catch {
 	    $json_hash{error} = " An error occurred. Cannot delete stock\n An  email message has been sent to the SGN development team";
+	    $self->send_form_email({subject=>"Stock delete failed!  ($stock_name) $_", mailing_list=>'sgn-db-curation@sgn.cornell.edu', refering_page=>"www.solgenomics.net".$refering_page, action=>'delete'});
 	};
 	$json_hash{reload} = 1;
     }
@@ -244,6 +245,11 @@ if ( $self->get_action =~ /new|store/ ) {
 	setter       => "description",
 	columns      => 40,
 	rows         => => 4,
+	);
+    
+    $form->add_hidden(
+	field_name => "stock_id",
+	contents => $self->get_object_id(),
 	);
     
     if ( $self->get_action() =~ /view|edit/ ) {
