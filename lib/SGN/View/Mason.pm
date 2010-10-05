@@ -35,7 +35,7 @@ sub component_exists {
 
     my $cr = $self->interp_args->{comp_root}
         or return 0;
-    $cr = [['main' => $cr ]] unless ref $cr;
+    $cr = [['main' => "$cr" ]] unless ref $cr && ref $cr eq 'ARRAY';
     for ( @$cr ) {
         my (undef, $path) = @$_;
         my $p =  File::Spec->catfile( $path, $component );
