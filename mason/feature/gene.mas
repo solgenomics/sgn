@@ -53,10 +53,11 @@
 
 <& /feature/genomic_sequence.mas, feature => $feature &>
 
+% for my $mrna (@mrna_features) {
 <& /feature/mrna_sequence.mas,
-    mrna_features => [ @mrna_features ],
-&>    
-
+    mrna_feature => $mrna,
+&>
+% }
 <& /feature/protein_sequence.mas,
     mrna_features => [ @mrna_features ],
 &>

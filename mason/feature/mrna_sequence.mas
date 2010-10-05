@@ -1,26 +1,16 @@
 <%args>
-    $mrna_features
+    $mrna_feature
     $title => 'mRNA Sequence'
     $collapsible => 1
 </%args>
-<%init>
-    use Bio::Seq;
-    use SGN::View::Feature qw/infer_residue/;
-</%init>
 <%perl>
-    my $mrna_residue = '';
-    my @exons = grep { $_->type->name eq 'exon' }
-                map { $_->child_features } @$mrna_features;
-    for my $exon (@exons) {
-        $mrna_residue .= infer_residue($exon);
-    }
-    my $seq = Bio::PrimarySeq->new(
-        -seq      => $mrna_residue,
-        -alphabet => 'rna',
-    );
+    use SGN::View::Feature qw/mrna_sequence/;
+    my $mrna_sequence = mrna_sequence($mrna_feature);
 </%perl>
+
 <& /feature/sequence.mas,
-    title => $title,
-    sequence => $seq,
+    title     => $title,
+    sequence  => $mrna_sequence,
     blast_url => undef,
+    id        => $mrna_feature->name,
 &>

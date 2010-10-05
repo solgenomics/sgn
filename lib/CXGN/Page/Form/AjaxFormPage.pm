@@ -180,14 +180,14 @@ sub check_modify_privileges {
     if ($user_type eq 'curator') {
 	return 0;
     }
-    if (!$person_id) { $json_hash{login} = 1 ; }
+    if (!$person_id) { $json_hash{login} = 1 ;  }
     if ($user_type !~ /submitter|sequencer|curator/) { 
         $json_hash{error} = "You must have an account of type submitter to be able to submit data. Please contact SGN to change your account type.";
-        return 0;
+	$self->set_json_hash(%json_hash);
+	return 0;
     }
-
     my @owners = $self->get_owners();
-
+    
     if ((@owners) && (!(grep { $_ =~ /^$person_id$/ } @owners) )) {
 	# check the owner only if the action is not new
 	#
@@ -198,8 +198,7 @@ sub check_modify_privileges {
     # override to check privileges for edit, store, delete.
     # return 0 for allow, 1 for not allow.
     $self->set_json_hash(%json_hash);
-    return 0;
-    
+    #return 0;
 }
 
 =head2 define_object
@@ -251,7 +250,7 @@ sub add {
     $self->check_modify_privileges();
     $self->generate_form();
     $self->display_form();
-    
+
 }
 
 =head2 store
