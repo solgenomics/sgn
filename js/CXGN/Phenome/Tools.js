@@ -310,14 +310,45 @@ var Tools = {
     //Make an ajax response that obsoletes the selected ontology term-locus association
     obsoleteAnnot: function(type, type_dbxref_id)  {
 	var action= 'obsolete';
-	new Ajax.Request('obsolete_object_dbxref.pl', {parameters:
-		{object_dbxref_id: type_dbxref_id, type: type, action: action}, onSuccess:this.reloadPage });
+	new Ajax.Request('/phenome/obsolete_object_dbxref.pl', {parameters:
+		{object_dbxref_id: type_dbxref_id, type: type, action: action}, 
+		    onSuccess: function(response) {
+		    var json  = response.responseText;
+		    var x = eval ("("+json+")"); 
+		    if (x.error) { alert(x.error); }
+		    else {  window.location.reload() ; }
+		},
+		    onFailure: function(response) {
+		    alert("Failed obsoleting annotation for " + type) ;
+		    var json = response.responseText;
+		    //var x = jQuery.parseJSON( json );
+		    var x = eval("("+json+")");
+		    //alert (x);
+		},
+		    });
     },
+    
+    
     //Make an ajax response that unobsoletes the selected ontology term-locus association
     unobsoleteAnnot: function(type, type_dbxref_id)  {
 	var action = 'unobsolete';	
 	new Ajax.Request('/phenome/obsolete_object_dbxref.pl', {parameters:
-		{object_dbxref_id: type_dbxref_id, type: type, action: action}, onSuccess:this.reloadPage });
+		{object_dbxref_id: type_dbxref_id, type: type, action: action}, 
+		    onSuccess: function(response) {
+		    var json  = response.responseText;
+		    var x = eval ("("+json+")"); 
+		    if (x.error) { alert(x.error); }
+		    else {  window.location.reload() ; }
+		},
+		    onFailure: function(response) {
+		    alert("Failed unobsoleting annotation for " + type) ;
+		    var json = response.responseText;
+		    //var x = jQuery.parseJSON( json );
+		    var x = eval("("+json+")");
+		    alert (x);
+		},
+		    
+		    });
     },
     
     
