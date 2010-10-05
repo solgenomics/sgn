@@ -16,31 +16,33 @@ Naama Menda  <nm249@cornell.edu>
 use strict;
 use warnings;
 use Test::More tests => 3;
-use Test::WWW::Mechanize;
-use CXGN::Phenome::Schema;
-use CXGN::DB::Connection;
 use lib 't/lib';
 use SGN::Test;
-use SGN::Context;
+use SGN::Test::WWW::Mechanize;
 
-my $base_url = $ENV{SGN_TEST_SERVER};
+use CXGN::Phenome::Schema;
+use CXGN::DB::Connection;
 
 {
-    my $mech = Test::WWW::Mechanize->new;
+    my $mech = SGN::Test::WWW::Mechanize->new;
 
-    $mech->get_ok("$base_url/cgi-bin/phenome/locus_display.pl");
-    my $schema = SGN::Context->new->dbic_schema('CXGN::Phenome::Schema');
+    $mech->get_ok("/cgi-bin/phenome/locus_display.pl");
 
-    #find a test locus that has no dbxrefs linked
-    my $sql = "IS NULL";
-    my $test_locus = $schema->resultset("Locus")->search( 
-	{ 'me.obsolete' => 'f',
-	  dbxref_id => \$sql },
-	{ join => 'locus_dbxrefs' }
-	)->first();
-    my $test_id;
-    $test_id = $test_locus->locus_id() if $test_locus;
-    $mech->get_ok("$base_url/cgi-bin/phenome/locus_display.pl?locus_id=$test_id");
+    $mech->with_test_level( local => sub {
+       my $schema = $mech->context->dbic_schema('CXGN::Phenome::Schema');
 
-    $mech->content_contains("Locus editor");
+       #find a test locus that has no dbxrefs linked
+       my $sql = "IS NULL";
+       my $test_locus = $schema->resultset("Locus")->search( 
+           { 'me.obsolete' => 'f',
+             dbxref_id => \$sql },
+           {
+               join => 'locus_dbxrefs' }
+          )->first();
+       my $test_id;
+       $test_id = $test_locus->locus_id() if $test_locus;
+       $mech->get_ok("/cgi-bin/phenome/locus_display.pl?locus_id=$test_id");
+
+       $mech->content_contains("Locus editor");
+   }, 2 );
 }
