@@ -6,8 +6,8 @@ use Test::More tests => 15;
 use Test::WWW::Mechanize;
 
 use lib 't/lib';
-use SGN::Config;
 use SGN::Test;
+use SGN::Context;
 
 use CXGN::DB::Connection;
 use CXGN::People::Person;
@@ -49,7 +49,7 @@ $mech->content_contains("already in use", "Duplicate username test");
 # remove the user just created
 
 {
-    my $dbh = CXGN::DB::Connection->new( { config => SGN::Config->load });
+    my $dbh = SGN::Context->new->dbc->dbh;
     my $p_id = CXGN::People::Person->get_person_by_username($dbh, "testtesttest");
     my $p = CXGN::People::Person->new($dbh, $p_id);
     $p->hard_delete();
