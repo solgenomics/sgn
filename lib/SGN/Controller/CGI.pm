@@ -14,7 +14,7 @@ BEGIN{ extends 'Catalyst::Controller::CGIBin'; }
 __PACKAGE__->config(
     cgi_root_path => '/',
     CGI => {
-        pass_env => qw[[ PERL5LIB  PATH  PROJECT_NAME ]],
+        pass_env => [qw[ PERL5LIB  PATH  PROJECT_NAME ]],
     },
     cgi_file_pattern => '*.pl',
 );
