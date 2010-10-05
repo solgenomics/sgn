@@ -31,6 +31,11 @@ __PACKAGE__->config(
 
     default_view => 'Mason',
 
+    # Static::Simple configuration
+    static => {
+        dirs => [qw[ s static img documents static_content data ]],
+    },
+
     'Plugin::ConfigLoader' => {
         substitutions => {
             UID       => sub { $> },
