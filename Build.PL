@@ -95,6 +95,7 @@ my $build = $class->new(
                                            => '2.100000',
         'CatalystX::GlobalContext'         => 0,
 
+        'Config::JFDI'                     => 0,
         'CGI'                              => 0,
 
         'Data::Visitor::Callback' => 0,
