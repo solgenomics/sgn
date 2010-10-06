@@ -87,6 +87,7 @@ my $build = $class->new(
         'Catalyst::Runtime'                => '5.80024',
         'Catalyst::Controller::CGIBin'     => '0.029',
         'Catalyst::Action::RenderView'     => 0,
+        'Catalyst::Plugin::ConfigLoader'   => 0,
         'Catalyst::Plugin::Static::Simple' => 0,
         'Catalyst::View::Email'            => 0,
         'Catalyst::View::HTML::Mason'      => 0,
@@ -94,6 +95,7 @@ my $build = $class->new(
                                            => '2.100000',
         'CatalystX::GlobalContext'         => 0,
 
+        'Config::JFDI'                     => 0,
         'CGI'                              => 0,
 
         'Data::Visitor::Callback' => 0,
@@ -109,6 +111,7 @@ my $build = $class->new(
         'GD::Graph::Map'          => 0,
         'GD::Graph::points'       => 0,
         'GD::Text'                => 0,
+        'Hash::Merge'             => 0,
         'HTML::Entities'          => 0,
         'HTML::FormFu'            => 0,
         'HTML::Mason'             => 0,

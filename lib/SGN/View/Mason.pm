@@ -4,6 +4,14 @@ extends 'Catalyst::View::HTML::Mason';
 
 use File::Spec;
 
+__PACKAGE__->config(
+    interp_args => {
+        comp_root =>  SGN->path_to('mason'),
+    },
+    globals => ['$c'],
+    template_extension => '.mas',
+);
+
 
 =head1 NAME
 
@@ -27,7 +35,7 @@ sub component_exists {
 
     my $cr = $self->interp_args->{comp_root}
         or return 0;
-    $cr = [['main' => $cr ]] unless ref $cr;
+    $cr = [['main' => "$cr" ]] unless ref $cr && ref $cr eq 'ARRAY';
     for ( @$cr ) {
         my (undef, $path) = @$_;
         my $p =  File::Spec->catfile( $path, $component );

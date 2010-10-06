@@ -7,6 +7,8 @@
 
     LogLevel         error
 
+    PerlSetEnv  SGN_CONFIG  /etc/cxgn/SGN.conf
+
     <Perl>
        use lib '/usr/share/sgn-site/lib/perl5';
         

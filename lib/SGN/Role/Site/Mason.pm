@@ -45,11 +45,6 @@ sub _build__mason_interp {
 
     $params{comp_root} = [ [ "site", $site_mason_root ] ];
 
-    # add a global mason root if defined
-    if( my $global_mason_root = $self->get_conf('global_mason_lib') ) {
-        push @{$params{comp_root}}, [ "global", $global_mason_root ];
-    }
-
     my $data_dir = $self->path_to( $self->tempfiles_subdir('mason_cache_'.getpwuid($>)) );
 
     $params{data_dir}  = join ":", grep $_, ($data_dir, $params{data_dir});
