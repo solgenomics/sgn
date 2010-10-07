@@ -32,12 +32,16 @@ SGN::Test::Data - create Bio::Chado::Schema test objects
     # all other necessary objects are auto-created, such as
     # cvterms, dbxrefs, features, etc...
     my $organism = create_test('Organism::Organism',{
-        genus   => 'Tyrannosaurus',
-        species => 'Tyrannosaurus rex',
+        genus        => 'Tyrannosaurus',
+        species      => 'Tyrannosaurus rex',
+        common_name  => 'Tyrant King',
+        comment      => 'Small hands',
+        abbreviation => 'TREX',
     });
 
     my $feature = create_test('Sequence::Feature',{
         residues => 'GATTACA',
+        organism => $organism,
     });
 
     # pre-created objects can be passed in, to specify linking objects
@@ -46,7 +50,6 @@ SGN::Test::Data - create Bio::Chado::Schema test objects
     my $gene_featureloc = create_test('Sequence::Featureloc', { feature => $gene_feature });
 
     my $featureprop = create_test('Sequence::Featureprop', { value => 'Amazing!' });
-    my $organism    = create_test('Organsism::Organism', { genus => 'Foo', species => 'bar' });
 
 =head1 FUNCTIONS
 

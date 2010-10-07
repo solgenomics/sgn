@@ -68,15 +68,18 @@ my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
 }
 
 {
+    my $organism = create_test('Organism::Organism');
     my $feature = create_test('Sequence::Feature',{
         residues => 'GATTACA',
+        organism => $organism,
     });
     isa_ok($feature, 'Bio::Chado::Schema::Sequence::Feature');
 
     my $rs = $schema->resultset('Sequence::Feature')
         ->search({
-            residues => "GATTACA",
-            feature_id => $feature->feature_id,
+            residues    => "GATTACA",
+            organism_id => $organism->organism_id,
+            feature_id  => $feature->feature_id,
         });
     is($rs->count, 1, 'found feature with sequence = GATTACA');
 }
@@ -121,16 +124,21 @@ my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
 }
 
 {
+    my %options = (
+        genus       => 'Tyrannosaurus',
+        species     => 'Tyrannosaurus rex',
+        common_name => 'Tyrant King',
+        comment     => 'Small hands',
+        abbreviation=> 'Trex',
+    );
     my $organism = create_test('Organism::Organism',{
-        genus   => 'Tyrannosaurus',
-        species => 'Tyrannosaurus rex',
+        %options,
     });
     isa_ok($organism, 'Bio::Chado::Schema::Organism::Organism');
 
     my $rs = $schema->resultset('Organism::Organism')
         ->search({
-            genus       => 'Tyrannosaurus',
-            species     => 'Tyrannosaurus rex',
+            %options,
             organism_id => $organism->organism_id,
         });
     is($rs->count, 1, 'found a T.rex organism');
