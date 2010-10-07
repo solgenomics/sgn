@@ -84,6 +84,7 @@ my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
     my $featureloc = create_test('Sequence::Featureloc',{
         fmin => 42,
         fmax => 69,
+        rank => 2,
     });
     isa_ok($featureloc, 'Bio::Chado::Schema::Sequence::Featureloc');
 
@@ -91,9 +92,10 @@ my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
         ->search({
             fmin => 42,
             fmax => 69,
+            rank => 2,
             featureloc_id => $featureloc->featureloc_id,
         });
-    is($rs->count, 1, 'found featureloc with correct fmin/fmax');
+    is($rs->count, 1, 'found featureloc with correct fmin/fmax/rank');
 }
 
 {

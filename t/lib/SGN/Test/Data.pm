@@ -45,6 +45,9 @@ SGN::Test::Data - create Bio::Chado::Schema test objects
     my $gene_feature    = create_test('Sequence::Feature', { type => $gene_cvterm });
     my $gene_featureloc = create_test('Sequence::Featureloc', { feature => $gene_feature });
 
+    my $featureprop = create_test('Sequence::Featureprop', { value => 'Amazing!' });
+    my $organism    = create_test('Organsism::Organism', { genus => 'Foo', species => 'bar' });
+
 =head1 FUNCTIONS
 
 =head2 create_test
@@ -187,8 +190,7 @@ sub _create_test_featureprop {
         ->create({
             feature_id    => $values->{feature}->feature_id,
             type_id       => $values->{type}->cvterm_id,
-            value         => $values->{value},
-            rank          => $values->{rank},
+            map { $_ => $values->{$_} } qw/value rank/,
         });
 }
 
@@ -206,8 +208,7 @@ sub _create_test_featureloc {
         ->create({
             feature_id    => $values->{feature}->feature_id,
             srcfeature_id => $values->{srcfeature}->feature_id,
-            fmin          => $values->{fmin},
-            fmax          => $values->{fmax},
+            map { $_ => $values->{$_} } qw/fmin fmax rank/,
         });
 }
 
