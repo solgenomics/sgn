@@ -20,7 +20,7 @@ use SGN::Devel::MyDevLibs;
 # we can re-export Catalyst::Test's request, get, and ctx_request functions
 use Catalyst::Test 'SGN';
 our @ISA = qw/Exporter/;
-our @EXPORT_OK = qw/validate_urls request get ctx_request /;
+our @EXPORT_OK = qw/validate_urls request get ctx_request with_test_level/;
 
 use lib 't/lib';
 use SGN::Test::WWW::Mechanize;
@@ -121,5 +121,10 @@ sub _validate_single_url {
 
     $dump_tempdir and diag "failing output dumped to $dump_tempdir";
 }
+
+sub with_test_level {
+    SGN::Test::WWW::Mechanize->new->with_test_level( @_ );
+}
+
 
 1;
