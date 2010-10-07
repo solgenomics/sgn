@@ -14,19 +14,13 @@ sub ACTION_build {
 # override install to just copy the whole dir into the install_base
 sub ACTION_install {
    my $self = shift;
-   $self->SUPER::ACTION_install(@_);
 
-   my @install_dirs = qw|cgi-bin conf features js mason programs static support_data t |;
-
+   # installation is just copying the entire dist into
+   # install_base/sgn
    require File::Spec;
    my $tgt_dir = File::Spec->catdir($self->install_base,'sgn');
-   mkdir $tgt_dir;
-   system 'cp', '-rl', @install_dirs => $tgt_dir;
+   system 'cp', '-rl', '.', $tgt_dir;
    $? and die "SGN site copy failed\n";
-
-   #put the documents symlink in place also
-   symlink 'static/documents' => "$tgt_dir/documents"
-    or die "$! symlinking static/documents => $tgt_dir/documents";
 }
 
 sub ACTION_clean {

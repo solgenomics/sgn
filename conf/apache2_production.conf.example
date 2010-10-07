@@ -10,7 +10,7 @@
     PerlSetEnv  SGN_CONFIG  /etc/cxgn/SGN.conf
 
     <Perl>
-       use lib '/usr/share/sgn-site/lib/perl5';
+       use lib '/usr/share/sgn-site/sgn/lib', '/usr/share/sgn-site/lib/perl5';
         
        use SGN::Deploy::Apache SGN => ( type => 'mod_perl', vhost => 1 );
 
