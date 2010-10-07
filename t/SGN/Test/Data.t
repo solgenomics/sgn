@@ -97,6 +97,22 @@ my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
 }
 
 {
+    my $featureprop = create_test('Sequence::Featureprop',{
+        value => 42,
+        rank => 69,
+    });
+    isa_ok($featureprop, 'Bio::Chado::Schema::Sequence::Featureprop');
+
+    my $rs = $schema->resultset('Sequence::Featureprop')
+        ->search({
+            featureprop_id => $featureprop->featureprop_id,
+            value          => 42,
+            rank           => 69,
+        });
+    is($rs->count, 1, 'found featureprop with correct value and rank');
+}
+
+{
     my $organism = create_test('Organism::Organism',{
         genus   => 'Tyrannosaurus',
         species => 'Tyrannosaurus rex',

@@ -77,6 +77,7 @@ sub create_test {
         'Sequence::Feature'    => sub { _create_test_feature($values) },
         'Organism::Organism'   => sub { _create_test_organism($values) },
         'Sequence::Featureloc' => sub { _create_test_featureloc($values) },
+        'Sequence::Featureprop' => sub { _create_test_featureprop($values) },
 
     };
     die "$pkg creation not supported yet, sorry" unless exists $pkg_subs->{$pkg};
@@ -174,6 +175,21 @@ sub _create_test_feature {
     push @$test_data, $feature;
     $num_features++;
     return $feature;
+}
+
+sub _create_test_featureprop {
+    my ($values) = @_;
+
+    $values->{feature}    ||= _create_test_feature();
+    $values->{type}       ||= _create_test_cvterm();
+
+    my $featureprop = $schema->resultset('Sequence::Featureprop')
+        ->create({
+            feature_id    => $values->{feature}->feature_id,
+            type_id       => $values->{type}->cvterm_id,
+            value         => $values->{value},
+            rank          => $values->{rank},
+        });
 }
 
 sub _create_test_featureloc {
