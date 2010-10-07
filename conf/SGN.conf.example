@@ -1,9 +1,0 @@
-# configure this server as a production web server
-production_server 1
-
-# database connection info
-dbhost localhost
-dbport 5432
-dbname cxgn
-dbuser web_usr
-dbpass mypassword

@@ -306,7 +306,8 @@ organisms in Plantaginaceae that have their 'web visible' organismprop set
 has 'organism_sets' => (
     is => 'ro',
     isa => 'HashRef',
-    default => sub {
+    lazy_build => 1,
+   ); sub _build_organism_sets {
         my $self = shift;
         my $schema = $self->_app->dbic_schema('Bio::Chado::Schema','sgn_chado');
         my %org_sets;
@@ -355,8 +356,7 @@ has 'organism_sets' => (
                };
         }
         return \%org_sets;
-    },
-   );
+    }
 
 # take a resultset of phylonodes, construct a resultset of the child
 # phylonodes.  temporary workaround until the extended_rels branch is

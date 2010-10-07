@@ -5,12 +5,12 @@
     $title     => 'Nucleotide Sequence'
     $start     => undef
     $end       => undef
+    $id        => undef
 </%args>
 <%once>
     use Bio::Seq;
 </%once>
 <%perl>
-    my $id = '';
     if ($feature) {
         $id = $start && $end ? $feature->name . ':' . "$start..$end" : $feature->name;
     }

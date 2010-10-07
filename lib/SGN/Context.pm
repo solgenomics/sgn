@@ -32,7 +32,8 @@ SGN::Context - deprecated, do not use in new code
 # =cut
 
 package SGN::Context;
-use Moose;;
+use 5.10.0;
+use Moose;
 use namespace::autoclean;
 
 use warnings FATAL => 'all';
@@ -40,6 +41,9 @@ use warnings FATAL => 'all';
 use Carp;
 use File::Spec;
 
+use Config::JFDI;
+
+use Catalyst::Utils ();
 use CatalystX::GlobalContext '$c';
 
 sub instance { shift->new(@_) }
@@ -65,6 +69,36 @@ sub path_to {
     -d $basepath or die "base path '$basepath' does not exist!";
 
     return File::Spec->catfile( $basepath, @relpath );
+}
+
+sub config {
+    my $class = shift;
+    $class = ref $class if ref $class;
+    state %config;
+    return $config{$class} ||= $class->_build_config;
+}
+sub _build_config {
+    my ($self) = @_;
+
+    my $home = Catalyst::Utils::home( __PACKAGE__ );
+
+    return
+        Config::JFDI->open(
+            name => 'sgn',
+            path => $home,
+            substitute => {
+                UID       => sub { $> },
+                USERNAME  => sub { (getpwuid($>))[0] },
+                GID       => sub { $) },
+                GROUPNAME => sub { (getgrgid($)))[0] },
+            },
+            default => {
+                name     => 'SGN',
+                home     => $home,
+                basepath => $home,
+               },
+           )
+        || die "failed to load sgn config files in dir '$home'";
 }
 
 with qw(

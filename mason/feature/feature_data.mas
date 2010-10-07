@@ -22,6 +22,7 @@
         'Organism Name' => organism_link($feature->organism),
         'Description'   => $description,
         'Length'        => $feature_length,
+        'GBrowse'       => sprintf '<a href="%s">%s</a><br/', gbrowse_link($feature), $feature->name,
     );
 </%perl>
 <&| /page/info_section.mas,
@@ -31,5 +32,4 @@
     is_subsection => 1,
 &>
     <% info_table_html( @feature_data ) %>
-    <a href="<% gbrowse_link($feature) %>">GBrowse</a><br/>
 </&>

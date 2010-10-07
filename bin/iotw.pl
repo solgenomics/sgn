@@ -7,8 +7,10 @@
 #
 
 use strict;
-use SGN::Config;
+use SGN::Context;
 use Image::Size;
+
+my $c = SGN::Context->new;
 
 BEGIN {
 	$ENV{'PROJECT_NAME'} = "SGN";
@@ -18,7 +20,7 @@ BEGIN {
 my $debug = 0;
 
 # file setup
-my $cfg = SGN::Config->load;
+my $cfg = $c->config;
 my $webpath = $cfg->{'static_datasets_url'}."/images/iotw/";
 my $fullpath = $cfg->{'static_datasets_path'}."/images/iotw/";
 my $file = $fullpath . "iotw.txt";
