@@ -208,7 +208,11 @@ sub _create_test_featureloc {
         ->create({
             feature_id    => $values->{feature}->feature_id,
             srcfeature_id => $values->{srcfeature}->feature_id,
-            map { $_ => $values->{$_} } qw/fmin fmax rank/,
+            map { $_ => $values->{$_} }
+                qw/
+                    fmin fmax rank phase strand locgroup
+                    is_fmax_partial residue_info
+                  /,
         });
 }
 

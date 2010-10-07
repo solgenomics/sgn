@@ -81,21 +81,27 @@ my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
     is($rs->count, 1, 'found feature with sequence = GATTACA');
 }
 {
+    my %options = (
+        fmin            => 42,
+        fmax            => 69,
+        rank            => 2,
+        strand          => 1,
+        phase           => 2,
+        residue_info    => "stain",
+        is_fmax_partial => 1,
+        locgroup        => 19,
+    );
     my $featureloc = create_test('Sequence::Featureloc',{
-        fmin => 42,
-        fmax => 69,
-        rank => 2,
+        %options,
     });
     isa_ok($featureloc, 'Bio::Chado::Schema::Sequence::Featureloc');
 
     my $rs = $schema->resultset('Sequence::Featureloc')
         ->search({
-            fmin => 42,
-            fmax => 69,
-            rank => 2,
+            %options,
             featureloc_id => $featureloc->featureloc_id,
         });
-    is($rs->count, 1, 'found featureloc with correct fmin/fmax/rank');
+    is($rs->count, 1, 'found featureloc with correct options');
 }
 
 {
