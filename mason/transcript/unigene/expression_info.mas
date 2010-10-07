@@ -55,6 +55,7 @@ use warnings;
 use Math::BigFloat;
 use CXGN::GEM::Template;
 use CXGN::GEM::Experiment;
+use CXGN::GEM::Expression;
 use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
 </%once>
 <%perl>
@@ -135,6 +136,7 @@ if (defined $id) {
  			              );
 
    my $dbiref_id;
+   my $exp_number = 0;
    
    if (defined $dbipath_row) {
        
@@ -150,19 +152,23 @@ if (defined $id) {
         }
    }
 
+   my $exp_resources_html;
+   
    if (defined $dbiref_id) {
-
+       
        my @template_dbiref_rows = $schema->resultset('GeTemplateDbiref')
                                          ->search( { dbiref_id => $dbiref_id } );
  
        foreach my $template_dbiref_row (@template_dbiref_rows) {
 
-	   ## Get template data and create a template object
- 
+	   $exp_resources_html .= '<br>';
+	   
+           ## Get template data and create a template object
+	   
 	   my $template_id = $template_dbiref_row->get_column('template_id');
 	   my $template = CXGN::GEM::Template->new($schema, $template_id);
 	   my $template_name = $template->get_template_name();
-	   my $template_html = '<a href=/gem/template.pl?id=' . $template_id . '>' . $template_name . '</a>'; 
+	   my $template_html = '<b><a href=/gem/template.pl?id=' . $template_id . '>' . $template_name . '</a></b><br>'; 
 
 	   push @template_ids, $template_id; ## To count how many templates are associated to this unigene
 
@@ -173,100 +179,63 @@ if (defined $id) {
 	   my $platform = $template->get_platform();
 	   my $platform_id = $platform->get_platform_id();
 	   my $platform_name = $platform->get_platform_name();
-	   my $platform_html = '<a href=/gem/platform.pl?id=' . $platform_id . '>' . $platform_name . '</a>'; 
+	   my $platform_html = '<a href=/gem/platform.pl?id=' . $platform_id . '>' . $platform_name . '</a><br>'; 
 
 	   $platform_html_h{$template_name} = $platform_html;
 
-	   my @expression_rows = $schema->resultset('GeExpressionByExperiment')
-	                                ->search( { template_id => $template_id } );       
-   
-	   my %expr_by_experiments = ();
-
-	   foreach my $expression_row (@expression_rows) {
+	   my $expression = CXGN::GEM::Expression->new($schema, $template_id);       
+	   my %experiments = $expression->get_experiment();
+	   $exp_number = scalar(keys %experiments);
 	   
-	       my %expression_data = $expression_row->get_columns();
+	   ## Get the experimental design for each emxperiment to link it
 
-	       ## Round with sd, for sd > 1 (for example 1.2 it will round the unit)
-	 
-	       my $round = -2;
-	       my $presd = $expression_data{'standard_desviation'};
-	       if ($presd > 1) {
-		   $round = 0;
-	       }
-	       elsif ($presd > 0.1) {
-		   $round = -1;
-	       }
-
-	       my $mean = Math::BigFloat->new( $expression_data{'mean'})
-                                        ->bfround($round)
-                                        ->bstr();
-
-	       my $sd = Math::BigFloat->new( $expression_data{'standard_desviation'})
-		                      ->bfround($round)
-                                      ->bstr();
-
-	       my $experiment = CXGN::GEM::Experiment->new($schema, $expression_data{'experiment_id'});
-	       my $experiment_name = $experiment->get_experiment_name();
-	       my $experiment_id = $experiment->get_experiment_id();
-
-	       my $experiment_html = '<a href=/gem/experiment.pl?id=' . $experiment_id . '>' . $experiment_name . '</a>'; 	      
-	       $expr_by_experiments{$experiment_name} = [$experiment_html, $mean, $sd];	       
+	   my %expdesigns = ();
+	   my @experiments = $expression->get_experiment_object();
+	   foreach my $exp_obj (@experiments) {
+	       my $expdesign = $exp_obj->get_experimental_design();
+	       my $expdesign_name = $expdesign->get_experimental_design_name();
+	       $expdesigns{$expdesign_name} = $expdesign;
 	   }
-	   $experiment_html_h{$template_name} = \%expr_by_experiments;
+	   
+	   my $expdesign_html;
+	   foreach my $expdes_name (sort keys %expdesigns) {
+	       my $expdesign_id = $expdesigns{$expdes_name}->get_experimental_design_id();
+	       $expdesign_html .= '<a href=/gem/experimental_design.pl?id=' . $expdesign_id . '>' . $expdes_name . '</a>';
+	   }
+
+	   ## Add these data as a table
+
+	   my $basic_info_content = <<HTML;
+
+	   <table width="100%">
+	       <tr> <td width="25%"> <b>Template: </b>                       </td> <td> $template_html </td></tr>
+	       <tr> <td width="25%"> <b>Platform: </b>                       </td> <td> $platform_html </td></tr>
+	       <tr> <td width="25%"> <b>Experimental Design: </b>            </td> <td> $expdesign_html </td></tr>
+	   </table>
+HTML
+
+          $exp_resources_html .= $basic_info_content;
+
+	   ## Show graph only if there is any experiment (expression data)
+
+	   my $experiment_html = "<br>No expression data was found for template: $template_name<br>";
+	   if (scalar(keys %experiments) > 0) {
+
+	       my ($tempfile, $tempuri) = $c->tempfile( TEMPLATE => ['expression', 'templexp-XXXXXX'],
+                                                        SUFFIX   => '.png',
+                                                      );
+
+	       my $cc = $expression->get_experiment_graph({ x_axis_sort => 'PO'});
+	       $cc->write_output($tempfile);
+
+	       $experiment_html = "<br><img src=\"$tempuri\" /><br>";
+	   }
+
+	   $exp_resources_html .= $experiment_html;
        }
    }
    
-   ### Order the data by template_name, platform_name and experiment name (for a template should have the same platform)
-
-   my @exp_data = ();
-   
-   foreach my $templ_name (sort keys %template_html_h) {
-       my $templ_html = $template_html_h{$templ_name};
-       my $platf_html = $platform_html_h{$templ_name};
-
-       if (defined $experiment_html_h{$templ_name}) {
-	   my %expression_by_exp = %{ $experiment_html_h{$templ_name} };
-	   my @exp_list = keys %expression_by_exp;
-
-	   my $e = 0;
-	   if (defined $exp_list[0]) {
-	       foreach my $exp_name (sort keys %expression_by_exp) {
-		   my @experiment_data = @{ $expression_by_exp{$exp_name} };
-	   
-		   if ($e == 0) {
-		       push @exp_data, [$platf_html, $templ_html, @experiment_data];
-		       $e = 1;
-		   }
-		   else {
-		       push @exp_data, ['', '', @experiment_data];
-		   }
-	       }
-	   }
-	   else {
-	       push @exp_data, [$platf_html, $templ_html, $default_message, $default_message, $default_message];
-	   }
-       }
-       else {
-	   push @exp_data, [$platf_html, $templ_html, $default_message, $default_message, $default_message];
-       }
-       
-       ## Insert an empty line between templates
-       push @exp_data, ['<br>', '<br>', '<br>', '<br>', '<br>'];
-
-   }
-   if (scalar(@exp_data) > 0) {
-       my $exp_resources_html = columnar_table_html( 
-                                                      headings => [ 
-							            'Platform', 
-								    'Template', 
-								    'Experiment', 
-								    '<i>expression value mean</i>', 
-								    '<i>expression value sd</i>' 
-	                                                          ],
-	                                              data     => \@exp_data,
-                                                      __align  => ['l', 'l', 'l', 'c', 'c'] 
-                                                   );
-   
+   if ($exp_number > 0 && defined $exp_resources_html) {
 
        my $exp_name = 'Expression data for Unigene: SGN-U' . $id;
        $expression_html .= info_table_html (    $exp_name    => $exp_resources_html,  
