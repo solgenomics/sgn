@@ -138,9 +138,10 @@ if (    $experiments
                 if ($subscript) {
                     $hilite_name .= $subscript;
                 }
-                my $chromosome =
-                  CXGN::Cview::ChrMarkerImage->new( "", 150, 150, $dbh,
-                    $lg_name, $map, $hilite_name );
+                my $chromosome = CXGN::Cview::ChrMarkerImage->new(
+                     "", 150, 150, $dbh, $lg_name, $map, $hilite_name,
+                     $c->get_conf("basepath"),  $c->get_conf('tempfiles_subdir')."/cview",
+                 );
                 my ( $image_path, $image_url ) =
                   $chromosome->get_image_filename();
                 my $chr_link =
