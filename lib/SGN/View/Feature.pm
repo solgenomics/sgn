@@ -13,7 +13,21 @@ our @EXPORT_OK = qw/
     infer_residue cvterm_link
     organism_link feature_length
     mrna_sequence
+    get_description
 /;
+
+sub get_description {
+    my ($feature) = @_;
+    my $description;
+
+    if ($feature->type->name eq 'gene') {
+        my $child = ($feature->child_features)[0];
+        ($description) = $child ? map { $_->value } grep { $_->type->name eq 'Note' } $child->featureprops->all : '';
+    } else {
+        ($description) = map { $_->value } grep { $_->type->name eq 'Note' } $feature->featureprops->all;
+    }
+    return $description;
+}
 
 sub get_reference {
     my ($feature) = @_;

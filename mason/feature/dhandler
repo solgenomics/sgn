@@ -21,7 +21,10 @@
     my $reference = get_reference($feature);
 </%perl>
 
-<& /feature/feature_data.mas, feature => $feature, species => $species &>
+<& /feature/feature_data.mas,
+    feature => $feature,
+    species => $species
+&>
 
 <& /feature/related_features.mas,
     children  => $children,
