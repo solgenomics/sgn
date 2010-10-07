@@ -63,18 +63,26 @@ if (defined $template->get_template_id() ) {
     my $schema = $template->get_schema();
 
     my $template_id = $template->get_template_id();
-
-
+    my $template_name = $template->get_template_name();
     
-    my ($tempfile, $tempuri) = $c->tempfile( TEMPLATE => ['expression', 'templexp-XXXXXX'],
-                                             SUFFIX   => '.png',
-                                           );
+    my %experiments = $expression->get_experiment();
 
-    my $cc = $expression->get_experiment_graph();
-    $cc->write_output($tempfile);
+    ## Show graph only if there is any experiment (expression data)
 
-    $experiment_html = "<br><img src=\"$tempuri\" /><br>";
-    
+    if (scalar(keys %experiments) > 0) {
+
+	my ($tempfile, $tempuri) = $c->tempfile( TEMPLATE => ['expression', 'templexp-XXXXXX'],
+						 SUFFIX   => '.png',
+                                                );
+
+	my $cc = $expression->get_experiment_graph({ x_axis_sort => 'PO'});
+	$cc->write_output($tempfile);
+
+	$experiment_html = "<br><img src=\"$tempuri\" /><br>";
+    }
+    else {
+	$experiment_html = "No expression data was found for template: $template_name";
+    }
     
     $experiment_info_content = info_section_html( title       => "Graphs for Expression Data by Experiments", 
                                                   contents    => $experiment_html, 
