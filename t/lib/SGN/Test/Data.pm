@@ -112,7 +112,8 @@ sub _create_test_dbxref {
            ->create(
             {
                 db_id     => $values->{db}->db_id,
-                map { $_  => $values->{$_} } @values,
+                # some things have null constraints, so default to zero
+                map { $_  => $values->{$_} || 0 } @values,
             });
     push @$test_data, $dbxref;
     $num_dbxrefs++;
@@ -147,7 +148,7 @@ sub _create_test_cvterm {
             {
                 dbxref_id => $values->{dbxref}->dbxref_id,
                 cv_id     => $values->{cv}->cv_id,
-                map { $_  => $values->{$_} } @values,
+                map { $_  => $values->{$_} || 0 } @values,
             });
     push @$test_data, $cvterm;
     $num_cvterms++;
@@ -211,7 +212,7 @@ sub _create_test_featurerelationship {
                 type_id     => $values->{type}->cvterm_id,
                 subject_id  => $values->{subject}->feature_id,
                 object_id   => $values->{object}->feature_id,
-                map { $_    => $values->{$_} } @values,
+                map { $_    => $values->{$_} || 0 } @values,
         });
 }
 
@@ -225,7 +226,7 @@ sub _create_test_featureprop {
         ->create({
             feature_id    => $values->{feature}->feature_id,
             type_id       => $values->{type}->cvterm_id,
-            map { $_ => $values->{$_} } qw/value rank/,
+            map { $_ => $values->{$_} || 0} qw/value rank/,
         });
 }
 
