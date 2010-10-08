@@ -53,16 +53,25 @@ my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
 }
 
 {
+    my $dbxref = create_test('General::Dbxref');
+    my %options = (
+        name                => "SGNTESTDATA_$$",
+        definition          => "stuff",
+        is_obsolete         => 1,
+        is_relationshiptype => 1,
+    );
     my $cvterm = create_test('Cv::Cvterm',{
-                    name => "SGNTESTDATA_$$",
+                    %options,
+                    dbxref => $dbxref,
                 });
 
     isa_ok($cvterm, 'Bio::Chado::Schema::Cv::Cvterm');
 
     my $rs = $schema->resultset('Cv::Cvterm')
         ->search({
-            name      => "SGNTESTDATA_$$",
+            %options,
             cvterm_id => $cvterm->cvterm_id,
+            dbxref_id => $dbxref->dbxref_id,
     });
     is($rs->count, 1, 'found exactly one cvterm that was created');
 }

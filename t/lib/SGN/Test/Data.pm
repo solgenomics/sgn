@@ -131,14 +131,17 @@ sub _create_test_cvterm {
     my ($values) = @_;
 
     $values->{name}   ||= "cvterm_$num_cvterms-$$";
+
+    my @values = keys %$values;
+
     $values->{dbxref} ||= _create_test_dbxref();
     $values->{cv}     ||= _create_test_cv();
     my $cvterm = $schema->resultset('Cv::Cvterm')
            ->create(
             {
-                name   => $values->{name},
-                dbxref => $values->{dbxref},
-                cv_id  => $values->{cv}->cv_id,
+                dbxref_id => $values->{dbxref}->dbxref_id,
+                cv_id     => $values->{cv}->cv_id,
+                map { $_  => $values->{$_} } @values,
             });
     push @$test_data, $cvterm;
     $num_cvterms++;
