@@ -91,6 +91,8 @@ my %urls = (
         "intron finder"                            => '/tools/intron_detection/find_introns.pl',
         "display intron"                           => '/tools/intron_detection/display_introns.pl',
         "about clustal file"                       => '/about/clustal_file.pl',
+
+        'fastmapping tool front page'              => '/tools/fastmapping/index.pl',
 );
 
 validate_urls(\%urls, $ENV{ITERATIONS} || 1 );
