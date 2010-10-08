@@ -5,6 +5,7 @@ use warnings;
 use base 'Exporter';
 use Bio::Seq;
 use CatalystX::GlobalContext '$c';
+use CXGN::Tools::Text qw/commify_number/;
 
 
 our @EXPORT_OK = qw/
@@ -86,7 +87,7 @@ sub feature_table {
                 feature_link($f),
                 cvterm_link($f),
                 gbrowse_link($f,$fmin,$fmax),
-                $fmax-$fmin . " bp",
+                commify_number($fmax-$fmin) . " bp",
                 $loc->strand == 1 ? '+' : '-',
                 $loc->phase || '<span class="ghosted">NA</span>',
             ];
