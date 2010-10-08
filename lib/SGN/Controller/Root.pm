@@ -105,7 +105,8 @@ sub end : Private {
 
     return if @{$c->error};
 
-    $c->forward('render');
+    # don't try to render a default view if this was handled by a CGI
+    $c->forward('render') unless $c->req->path =~ /\.pl$/;
 
     # insert our javascript packages into the rendered view
     if( $c->res->content_type eq 'text/html' ) {
