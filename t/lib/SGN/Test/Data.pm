@@ -84,6 +84,7 @@ sub create_test {
         'Organism::Organism'   => sub { _create_test_organism($values) },
         'Sequence::Featureloc' => sub { _create_test_featureloc($values) },
         'Sequence::Featureprop' => sub { _create_test_featureprop($values) },
+        'Sequence::FeatureRelationship' => sub { _create_test_featurerelationship($values) },
 
     };
     die "$pkg creation not supported yet, sorry" unless exists $pkg_subs->{$pkg};
@@ -182,7 +183,6 @@ sub _create_test_feature {
     $values->{type}       ||= _create_test_cvterm();
     $values->{dbxref}     ||= _create_test_dbxref();
 
-
     my $feature = $schema->resultset('Sequence::Feature')
            ->create({
                 type_id     => $values->{type}->cvterm_id,
@@ -193,6 +193,26 @@ sub _create_test_feature {
     push @$test_data, $feature;
     $num_features++;
     return $feature;
+}
+
+sub _create_test_featurerelationship {
+    my ($values) = @_;
+
+    my @values = grep { $_ ne 'object' and $_ ne 'subject' } keys %$values;
+
+    $values->{type}       ||= _create_test_cvterm();
+
+    # TODO: which gets the type created above?
+    $values->{subject}    ||= _create_test_feature();
+    $values->{object}     ||= _create_test_feature();
+
+    my $featurerelationship = $schema->resultset('Sequence::FeatureRelationship')
+        ->create({
+                type_id     => $values->{type}->cvterm_id,
+                subject_id  => $values->{subject}->feature_id,
+                object_id   => $values->{object}->feature_id,
+                map { $_    => $values->{$_} } @values,
+        });
 }
 
 sub _create_test_featureprop {

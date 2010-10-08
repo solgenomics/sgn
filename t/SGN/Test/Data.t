@@ -4,6 +4,7 @@ use strict;
 use warnings;
 use lib 't/lib';
 use Test::More;
+#use Carp::Always;
 
 use_ok('SGN::Test::Data', qw/ create_test /);
 
@@ -81,6 +82,33 @@ my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
             dbxref_id => $dbxref->dbxref_id,
     });
     is($rs->count, 1, 'found exactly one cvterm that was created');
+}
+
+{
+    my $cvterm = create_test('Cv::Cvterm');
+    my $f1 = create_test('Sequence::Feature');
+    my $f2 = create_test('Sequence::Feature');
+    my %options = (
+        rank => 42,
+        value => 'blarg',
+    );
+    my $f = create_test('Sequence::FeatureRelationship',{
+        subject => $f1,
+        object  => $f2,
+        type    => $cvterm,
+        %options,
+    });
+    isa_ok($f, 'Bio::Chado::Schema::Sequence::FeatureRelationship');
+
+    my $rs = $schema->resultset('Sequence::FeatureRelationship')
+        ->search({
+            feature_relationship_id  => $f->feature_relationship_id,
+            subject_id => $f1->feature_id,
+            object_id  => $f2->feature_id,
+            type_id    => $cvterm->cvterm_id,
+            %options,
+        });
+    is($rs->count, 1, 'found one feature_relationship with correct data');
 }
 
 {
