@@ -32,7 +32,6 @@
     title       => $title,
     subtitle    => $feature->is_obsolete ? 'WARNING: This feature is obsolete' : '',
     collapsible => 1,
-    is_subsection => 1,
 &>
     <% info_table_html( @feature_data ) %>
     <& /feature/dbxref.mas, dbxref => $feature->dbxref &>
