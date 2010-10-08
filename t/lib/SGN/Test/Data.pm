@@ -121,10 +121,11 @@ sub _create_test_dbxref {
 sub _create_test_cv {
     my ($values) = @_;
 
-    $values->{name} ||= "cv_$num_cvs-$$";
+    $values->{name}       ||= "cv_$num_cvs-$$";
+    $values->{definition} ||= "semantics";
 
     my $cv = $schema->resultset('Cv::Cv')
-           ->create( { name => $values->{name} } );
+           ->create( $values );
 
     push @$test_data, $cv;
     $num_cvs++;

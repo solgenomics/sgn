@@ -44,14 +44,16 @@ my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
 
 {
     my $cv = create_test('Cv::Cv',{
-                    name => "SGNTESTDATA_$$",
+                    name       => "SGNTESTDATA_$$",
+                    definition => "blah",
                 });
 
     isa_ok($cv, 'Bio::Chado::Schema::Cv::Cv');
 
     my $rs = $schema->resultset('Cv::Cv')
         ->search({
-            name      => "SGNTESTDATA_$$",
+            name       => "SGNTESTDATA_$$",
+            definition => "blah",
             cv_id => $cv->cv_id,
     });
     is($rs->count, 1, 'found exactly one cv that was created');
