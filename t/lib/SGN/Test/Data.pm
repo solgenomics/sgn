@@ -101,13 +101,17 @@ sub _create_test_db {
 
 sub _create_test_dbxref {
     my ($values) = @_;
+
     $values->{db} ||= _create_test_db();
+
+    $values->{accession} ||= "dbxref_$num_dbxrefs-$$";
+    my @values = keys %$values;
 
     my $dbxref = $schema->resultset('General::Dbxref')
            ->create(
             {
                 db_id     => $values->{db}->db_id,
-                accession => $values->{accession} || "dbxref_$num_dbxrefs-$$",
+                map { $_  => $values->{$_} } @values,
             });
     push @$test_data, $dbxref;
     $num_dbxrefs++;

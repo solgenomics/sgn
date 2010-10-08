@@ -23,15 +23,20 @@ my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
     is($rs->count, 1, 'found exactly one db that was created');
 }
 {
+    my %options = (
+        version     => 42,
+        accession   => "SGNTESTDATA_$$",
+        description => "A bunch of nonsense",
+    );
     my $dbxref = create_test('General::Dbxref',{
-                    accession => "SGNTESTDATA_$$",
+                    %options,
                 });
 
     isa_ok($dbxref, 'Bio::Chado::Schema::General::Dbxref');
 
     my $rs = $schema->resultset('General::Dbxref')
         ->search({
-            accession => "SGNTESTDATA_$$",
+            %options,
             dbxref_id => $dbxref->dbxref_id
     });
     is($rs->count, 1, 'found exactly one dbxref that was created');
