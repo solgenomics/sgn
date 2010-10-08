@@ -72,6 +72,25 @@ sub bare_mason :Path('bare_mason') {
     $c->forward('View::BareMason');
 }
 
+=head2 download_static
+
+Public path: /download/<additional>/<path>
+
+Try to find a file relative to the site root and serve it with the
+proper headers to trigger download dialog in the user's browser.
+
+=cut
+
+sub download_static :Path('/download') {
+    my ( $self, $c, @path ) = @_;
+
+    my $file = $c->path_to( $c->config->{root},  @path );
+
+    $c->stash->{download_filename} = $file->basename;
+    $c->forward('download'); #< set the content headers
+    $c->serve_static_file( $file );
+}
+
 =head1 PRIVATE ACTIONS
 
 =head2 end
@@ -114,25 +133,6 @@ sub download :Private {
     if( defined $c->stash->{download_filename} ) {
         $c->res->headers->push_header( 'Content-Disposition' => 'filename='.$c->stash->{download_filename} );
     }
-}
-
-=head2 download_static
-
-Public path: /download/<additional>/<path>
-
-Try to find a file relative to the site root and serve it with the
-proper headers to trigger download dialog in the user's browser.
-
-=cut
-
-sub download_static :Path('/download') {
-    my ( $self, $c, @path ) = @_;
-
-    my $file = $c->path_to( $c->config->{root},  @path );
-
-    $c->stash->{download_filename} = $file->basename;
-    $c->forward('download'); #< set the content headers
-    $c->serve_static_file( $file );
 }
 
 =head2 auto
