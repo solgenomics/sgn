@@ -52,7 +52,9 @@
     feature => $feature,
 &>
 
-<& /feature/genomic_sequence.mas, feature => $feature &>
+<& /feature/genomic_sequence.mas,
+    feature => $feature,
+&>
 
 % for my $mrna (@mrna_features) {
 <& /feature/mrna_sequence.mas,

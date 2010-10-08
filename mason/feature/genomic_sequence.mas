@@ -2,9 +2,9 @@
     $feature
     $blast_url => undef
 </%args>
-<%init>
+<%once>
     use Bio::Seq;
-</%init>
+</%once>
 <%perl>
     my @locations = $feature->featureloc_features->all;
     my @coords = map { [ $_->fmin, $_->fmax] } @locations;
@@ -15,6 +15,9 @@
     );
 </%perl>
 % for (@coords) {
+<& /feature/extract_promoters.mas,
+    feature => $feature,
+&>
 <& /feature/sequence.mas,
     title     => 'Genomic Sequence',
     feature   => $reference,
