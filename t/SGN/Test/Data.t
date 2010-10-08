@@ -68,20 +68,33 @@ my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
 }
 
 {
+    my %options = (
+        residues          => 'GATTACA',
+        is_obsolete       => 1,
+        is_analysis       => 1,
+        name              => 'Bob',
+        seqlen            => 7,
+        md5checksum       => 'c0decafe',
+        timeaccessioned   => '2010-10-07 17:28:54.756113',
+        timelastmodified  => '2000-10-07 17:28:54.756113',
+    );
     my $organism = create_test('Organism::Organism');
+    my $dbxref   = create_test('General::Dbxref');
     my $feature = create_test('Sequence::Feature',{
-        residues => 'GATTACA',
         organism => $organism,
+        dbxref   => $dbxref,
+        %options,
     });
     isa_ok($feature, 'Bio::Chado::Schema::Sequence::Feature');
 
     my $rs = $schema->resultset('Sequence::Feature')
         ->search({
-            residues    => "GATTACA",
             organism_id => $organism->organism_id,
             feature_id  => $feature->feature_id,
+            dbxref_id   => $dbxref->dbxref_id,
+            %options,
         });
-    is($rs->count, 1, 'found feature with sequence = GATTACA');
+    is($rs->count, 1, 'found one feature with correct data');
 }
 {
     my %options = (

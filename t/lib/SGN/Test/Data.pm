@@ -161,22 +161,26 @@ sub _create_test_organism {
 sub _create_test_feature {
     my ($values) = @_;
 
+
     # provide some defaults for things we don't care about
     $values->{residues}   ||= 'ATCG';
     $values->{seqlen}     ||= length($values->{residues});
     $values->{name}       ||= "feature_$num_features-$$";
     $values->{uniquename} ||= "unique_feature_$num_features-$$";
+
+    my @values = keys %$values;
+
     $values->{organism}   ||= _create_test_organism();
     $values->{type}       ||= _create_test_cvterm();
+    $values->{dbxref}     ||= _create_test_dbxref();
+
 
     my $feature = $schema->resultset('Sequence::Feature')
            ->create({
-                residues    => $values->{residues},
-                seqlen      => $values->{seqlen},
-                name        => $values->{name},
-                uniquename  => $values->{uniquename},
                 type_id     => $values->{type}->cvterm_id,
                 organism_id => $values->{organism}->organism_id,
+                dbxref_id   => $values->{dbxref}->dbxref_id,
+                map { $_ => $values->{$_} } @values,
            });
     push @$test_data, $feature;
     $num_features++;
