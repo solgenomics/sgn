@@ -10,11 +10,11 @@ use IPC::Cmd 'run';
 
 use Path::Class;
 
-use SGN::Context;
+use CatalystX::GlobalContext '$c';
 
-my $vhost = SGN::Context->new;
+my $vhost = $c;
 
-my $upload_temp = $vhost->tempfile( TEMPLATE => [ 'fastmapping', 'fastmap-XXXXXX' ] );
+my ($upload_temp,$upload_temp_uri) = $c->tempfile( TEMPLATE => [ 'fastmapping', 'fastmap-XXXXXX' ] );
 
 # get a new page object and the rest of the parameters
 #
