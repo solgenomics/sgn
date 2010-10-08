@@ -246,6 +246,8 @@ sub _conf_serve_static {
             ."    SetHandler default-handler\n"
             ."</Location>\n",
           }
+          'favicon.ico',
+          'robots.txt',
           @{ $cfg->{static}->{dirs} }
         ),
         '<Directory '.$app->path_to($cfg->{root}).qq|>\n|
