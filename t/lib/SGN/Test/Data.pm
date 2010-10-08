@@ -188,7 +188,7 @@ sub _create_test_feature {
                 type_id     => $values->{type}->cvterm_id,
                 organism_id => $values->{organism}->organism_id,
                 dbxref_id   => $values->{dbxref}->dbxref_id,
-                map { $_ => $values->{$_} } @values,
+                map { $_ => $values->{$_} || 0 } @values,
            });
     push @$test_data, $feature;
     $num_features++;
@@ -243,7 +243,7 @@ sub _create_test_featureloc {
         ->create({
             feature_id    => $values->{feature}->feature_id,
             srcfeature_id => $values->{srcfeature}->feature_id,
-            map { $_ => $values->{$_} }
+            map { $_ => $values->{$_} || 0 }
                 qw/
                     fmin fmax rank phase strand locgroup
                     is_fmax_partial residue_info
