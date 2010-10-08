@@ -97,6 +97,8 @@ sub end : Private {
 
 =head2 download
 
+Private.
+
 Sets the Content-disposition response headers appropriate to trigger a
 file-download behavior in the client browser.  Does NOT set the
 content-type, you should do that before forwarding to this
@@ -114,13 +116,22 @@ sub download :Private {
     }
 }
 
+=head2 download_static
+
+Public path: /download/<additional>/<path>
+
+Try to find a file relative to the site root and serve it with the
+proper headers to trigger download dialog in the user's browser.
+
+=cut
+
 sub download_static :Path('/download') {
     my ( $self, $c, @path ) = @_;
 
     my $file = $c->path_to( $c->config->{root},  @path );
 
     $c->stash->{download_filename} = $file->basename;
-    $c->forward('download');
+    $c->forward('download'); #< set the content headers
     $c->serve_static_file( $file );
 }
 
