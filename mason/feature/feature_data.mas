@@ -18,6 +18,7 @@
     if ($locations) {
         $feature_length .= " in $locations location" . ($locations > 1 ? 's' : '');
     };
+    my @coords = map { $_->fmin, $_->fmax } $feature->featureloc_features->all;
     my @feature_data = (
         'Name'          => feature_link($feature),
         'Feature Type'  => cvterm_link($feature),
@@ -25,7 +26,8 @@
         'Organism Name' => organism_link($feature->organism),
         'Description'   => $description,
         'Length'        => $feature_length,
-        'GBrowse'       => sprintf '<a href="%s">%s</a><br/', gbrowse_link($feature), $feature->name,
+        'GBrowse'       => sprintf('<a href="%s">%s</a><br/', gbrowse_link($feature), $feature->name),
+        'Coordinates'   => join ",", @coords,
     );
 </%perl>
 <&| /page/info_section.mas,
