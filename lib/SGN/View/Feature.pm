@@ -6,6 +6,7 @@ use base 'Exporter';
 use Bio::Seq;
 use CatalystX::GlobalContext '$c';
 use CXGN::Tools::Text qw/commify_number/;
+use CXGN::Tools::Identifiers;
 
 
 our @EXPORT_OK = qw/
@@ -27,6 +28,7 @@ sub get_description {
     } else {
         ($description) = map { $_->value } grep { $_->type->name eq 'Note' } $feature->featureprops->all;
     }
+	$description =~ s/(\S+)/CXGN::Tools::Identifiers::link_identifier($1) || $1/ge;
     return $description;
 }
 
