@@ -7,7 +7,6 @@ use CXGN::Phenome::LocusDbxref;
 use CXGN::Login;
 use CXGN::Contact;
 use CXGN::People::Person;
-
 use JSON;
 
 my $dbh = CXGN::DB::Connection->new();
@@ -55,11 +54,11 @@ if ($login_user_type eq 'curator' || $login_user_type eq 'submitter' || $login_u
    	my $fdbk_body="$user ($user_link) just $action ontology-$type association from phenome. $type - dbxref\n
          id=$object_dbxref_id  \n $link"; 
         CXGN::Contact::send_email($subject,$fdbk_body, 'sgn-db-curation@sgn.cornell.edu');
-	
     }
     
 } else {
     $error{error} =  "User type $login_user_type does not have permissions to obsolete ! ";
 }
 
-print $json->encode(\%error);
+my $jobj = $json->encode(\%error);
+print  $jobj;

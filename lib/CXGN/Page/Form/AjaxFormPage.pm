@@ -279,6 +279,7 @@ sub add {
 
 sub store { 
     my $self = shift;
+    print STDERR "CALLING STORE IN AjaxFormPage.pm!!!\n\n\n";
     my $dont_show_form = shift;
     my %json_hash= $self->get_json_hash();
     $self->check_modify_privileges();
