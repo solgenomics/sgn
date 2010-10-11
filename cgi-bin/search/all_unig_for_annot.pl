@@ -2,11 +2,22 @@ use strict;
 use CXGN::Page;
 use CXGN::DB::Connection;
 
-my ($manual_annot_matches_q, $manual_clone_unig_link_q, $blast_matches_q, $blast_unig_link_q);
+my $dbh = CXGN::DB::Connection->new();
+
+#currently, we only search annotation based on clones
+#combining annotation targets creates problems for determining
+#the proper join path to pull in unigene info
+
+my $manual_annot_matches_q = $dbh->prepare("select t.type_description, ma.annotation_text, a.first_name || ' ' || a.last_name, ma.last_modified from manual_annotations as ma left join sgn_people.sp_person as a on (ma.author_id=a.sp_person_id) left join annotation_target_type as t on (ma.annotation_target_type_id=t.annotation_target_type_id) where ma.manual_annotations_id=? and ma.annotation_target_type_id='1'");
+
+my $manual_clone_unig_link_q = $dbh->prepare("select u.unigene_id, g.comment, ub.build_nr, ub.build_date, ub.unigene_build_id from manual_annotations as ma left join seqread as s on (ma.annotation_target_id=s.clone_id) left join est using (read_id) left join unigene_member using (est_id) left join unigene as u using (unigene_id) left join unigene_build as ub using (unigene_build_id) left join groups as g on (ub.organism_group_id=g.group_id) where ub.status='C' and ma.manual_annotations_id=? and ma.annotation_target_type_id='1'");
+
+
+my $blast_matches_q = $dbh->prepare ("select bt.db_name, bd.defline, bt.blast_program from blast_defline as bd left join blast_targets as bt using (blast_target_id) where bd.defline_id=?");
+
+my $blast_unig_link_q = $dbh->prepare("select u.unigene_id, g.comment, bh.score, bh.evalue, bh.identity_percentage, bh.apply_start, bh.apply_end from blast_defline as bd left join blast_hits as bh on (bd.defline_id=bh.defline_id) left join blast_annotations as ba using (blast_annotation_id) left join unigene as u on (ba.apply_id=u.unigene_id) left join unigene_build as ub using (unigene_build_id) left join groups as g on (ub.organism_group_id=g.group_id) where apply_type='15' and ub.status='C' and bd.defline_id=?");
 
 my $page = CXGN::Page->new( "Annotation Search Results", "Dan");
-
-&local_init;
 
 my $desc_colour='#EEEEEE';
 my $unig_link='/search/unigene.pl?unigene_id=';
@@ -22,8 +33,8 @@ unless ($match_id) {
 
 #execute the necessary SQL commands to get data
 #do only search types requested
-my @match_detail=();
-my @unigene_list=();
+my @match_detail;
+my @unigene_list;
 
 if ($search_type eq 'manual_search'){
 
@@ -212,21 +223,3 @@ EOF
   exit 0;
 }
 
-sub local_init {
-
-  my $dbh = CXGN::DB::Connection->new();
-
-#currently, we only search annotation based on clones
-#combining annotation targets creates problems for determining
-#the proper join path to pull in unigene info
-  
-  $manual_annot_matches_q = $dbh->prepare("select t.type_description, ma.annotation_text, a.first_name || ' ' || a.last_name, ma.last_modified from manual_annotations as ma left join sgn_people.sp_person as a on (ma.author_id=a.sp_person_id) left join annotation_target_type as t on (ma.annotation_target_type_id=t.annotation_target_type_id) where ma.manual_annotations_id=? and ma.annotation_target_type_id='1'");
-
-  $manual_clone_unig_link_q = $dbh->prepare("select u.unigene_id, g.comment, ub.build_nr, ub.build_date, ub.unigene_build_id from manual_annotations as ma left join seqread as s on (ma.annotation_target_id=s.clone_id) left join est using (read_id) left join unigene_member using (est_id) left join unigene as u using (unigene_id) left join unigene_build as ub using (unigene_build_id) left join groups as g on (ub.organism_group_id=g.group_id) where ub.status='C' and ma.manual_annotations_id=? and ma.annotation_target_type_id='1'");
-
-
-  $blast_matches_q = $dbh->prepare ("select bt.db_name, bd.defline, bt.blast_program from blast_defline as bd left join blast_targets as bt using (blast_target_id) where bd.defline_id=?");
-
-  $blast_unig_link_q = $dbh->prepare("select u.unigene_id, g.comment, bh.score, bh.evalue, bh.identity_percentage, bh.apply_start, bh.apply_end from blast_defline as bd left join blast_hits as bh on (bd.defline_id=bh.defline_id) left join blast_annotations as ba using (blast_annotation_id) left join unigene as u on (ba.apply_id=u.unigene_id) left join unigene_build as ub using (unigene_build_id) left join groups as g on (ub.organism_group_id=g.group_id) where apply_type='15' and ub.status='C' and bd.defline_id=?");
-
-}
