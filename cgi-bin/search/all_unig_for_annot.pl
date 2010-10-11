@@ -44,34 +44,34 @@ if ($search_type eq 'manual_search'){
 #t.type_description, ma.annotation_text, a.author_name, ma.last_modified
 
     $manual_annot_matches_q->execute($match_id) or $page->error_page("Couldn't get manual match info\n");
-    
+
    if ($manual_annot_matches_q->rows == 0) {
 	no_matches($match_id);
     }
- 
+
     if ($manual_annot_matches_q->rows > 1) {
 	too_many_matches($match_id);
     }
 
     my ($type_desc, $annot_text, $author_name, $last_updated) = $manual_annot_matches_q->fetchrow_array();
-	
+
     my $annot_target_desc = "$type_desc by $author_name on $last_updated";
     @match_detail = ($annot_target_desc, $annot_text);
-    
+
 
 #get the unigene links
 
 #data returned by $manual_clone_unig_link_q is:
 #u.unigene_id, g.comment, ub.build_nr, ub.build_date, ub.unigene_build_id
-	
+
     $manual_clone_unig_link_q->execute($match_id) or $page->error_page("Couldn't run manual_clone_unig_link_q\n");
 
     while (my ($unig_id, $build_desc, $build_nr, $build_date, $unig_build_id) = $manual_clone_unig_link_q->fetchrow_array()){
-	
+
 	my $unig_desc="<tr><td></td><td align=\"left\" nowrap=\"nowrap\"><a href=\"$unig_link$unig_id\">SGN-U$unig_id</a></td><td align=\"left\" nowrap=\"nowrap\">$build_desc build $build_nr from $build_date</td><td></td></tr>";
 
 	push @unigene_list, [$unig_desc, $unig_build_id];
-	
+
     }
 
 }
@@ -88,7 +88,7 @@ elsif($search_type eq 'blast_search'){
     if ($blast_matches_q->rows == 0){
 	no_matches($match_id);
     }
- 
+
     if ($blast_matches_q->rows > 1) {
 	too_many_matches($match_id);
     }
@@ -96,7 +96,7 @@ elsif($search_type eq 'blast_search'){
     my ($blast_target_db, $defline, $blast_program) = $blast_matches_q->fetchrow_array();
     my $annot_target_desc = "Unigene <b>$blast_program</b> search against <b>$blast_target_db</b>";
     @match_detail = ($annot_target_desc, $defline);
-    
+
 
 #data returned by $blast_unig_link_q is:
 #u.unigene_id, g.comment, bh.score, bh.evalue, bh.identity_percentage, bh.apply_start, bh.apply_end
@@ -105,7 +105,7 @@ elsif($search_type eq 'blast_search'){
 
     while (my ($unig_id, $build_desc,  $blast_score, $evalue, $identity_pct, $span_start, $span_end)=$blast_unig_link_q->fetchrow_array()){
 	my $span_ln=abs($span_end - $span_start);
-	$identity_pct=sprintf "%7.2f", $identity_pct;   
+	$identity_pct=sprintf "%7.2f", $identity_pct;
 	my $unig_desc="<tr><td></td><td align=\"left\" nowrap=\"nowrap\"><a href=\"$unig_link$unig_id\">SGN-U$unig_id</a></td><td align=\"left\" nowrap=\"nowrap\">$build_desc;</td><td align=\"left\" nowrap=\"nowrap\"> matched with $identity_pct% identity over ${span_ln}bp (e-value $evalue)</td></tr>";
 	push @unigene_list, [$unig_desc, $blast_score];
     }
@@ -121,7 +121,7 @@ my @results;
 
 my $match_text=$match_detail[1];
 
-#strip <br /> tags. 
+#strip <br /> tags.
 #this is for the current specific version of manual annotation
 #it is a kludge, there should be a text only searcheable field
 # and a separate html enhanced text display field in the db
@@ -146,17 +146,17 @@ if (@unigene_list){
 #unigene data is:
 #[unigene_line, sorting_value]
 # the unigene line has 4 columns
-    
+
     foreach (sort{$$b[1] <=> $$a[1]} @unigene_list){
 	$web_format .= "$$_[0]";
     }
-    $web_format .="</table></td></tr>";	
+    $web_format .="</table></td></tr>";
 
 
     $web_format .= "<tr><td colspan=\"2\">&nbsp;</td></tr>";
     push @results, $web_format;
 }
-    
+
 
 #start printing the page
 $page->header();
@@ -169,7 +169,7 @@ print<<EOF
 </table>
 EOF
 ;
-   
+
 $page->footer();
 
 
