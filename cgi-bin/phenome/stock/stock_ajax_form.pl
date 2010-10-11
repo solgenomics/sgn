@@ -207,19 +207,24 @@ sub generate_form {
 	    );
 	
     }
-    if ( $stock->get_obsolete()  ) {
+    if ( $stock->get_is_obsolete()  ) {
 	$form->add_label(
 	    display_name => "Status",
 	    field_name   => "obsolete_stat",
 	    contents     => 'OBSOLETE',
 	    );
     }
-    if ( $self->get_action =~ /view/ ) {
+    if ( $self->get_action =~ /view|edit/ ) {
 	
 	$form->add_label(
-	    display_name => "Organism ",
+	    display_name => "Organism",
 	    field_name   => "stock_organism",
-	    contents => $stock->get_organism_id() ,
+	    contents => $stock->get_organism()->species() ,
+	    );
+	$form->add_label(
+	    display_name => "Stock type",
+	    field_name   => "stock_type",
+	    contents => $stock->get_type()->name() ,
 	    );
     }
 	
