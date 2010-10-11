@@ -68,7 +68,7 @@ if ($search_type eq 'manual_search'){
 
     while (my ($unig_id, $build_desc, $build_nr, $build_date, $unig_build_id) = $manual_clone_unig_link_q->fetchrow_array()){
 	
-	my $unig_desc="<tr><td></td><td align=\"left\" nowrap=\"nowrap\"><a href=\"$unig_link$unig_id\">Unigene $unig_id</a></td><td align=\"left\" nowrap=\"nowrap\">$build_desc build $build_nr from $build_date</td><td></td></tr>";
+	my $unig_desc="<tr><td></td><td align=\"left\" nowrap=\"nowrap\"><a href=\"$unig_link$unig_id\">SGN-U$unig_id</a></td><td align=\"left\" nowrap=\"nowrap\">$build_desc build $build_nr from $build_date</td><td></td></tr>";
 
 	push @unigene_list, [$unig_desc, $unig_build_id];
 	
@@ -106,7 +106,7 @@ elsif($search_type eq 'blast_search'){
     while (my ($unig_id, $build_desc,  $blast_score, $evalue, $identity_pct, $span_start, $span_end)=$blast_unig_link_q->fetchrow_array()){
 	my $span_ln=abs($span_end - $span_start);
 	$identity_pct=sprintf "%7.2f", $identity_pct;   
-	my $unig_desc="<tr><td></td><td align=\"left\" nowrap=\"nowrap\"><a href=\"$unig_link$unig_id\">Unigene $unig_id</a></td><td align=\"left\" nowrap=\"nowrap\">$build_desc;</td><td align=\"left\" nowrap=\"nowrap\"> matched with $identity_pct% identity over ${span_ln}bp (e-value $evalue)</td></tr>";
+	my $unig_desc="<tr><td></td><td align=\"left\" nowrap=\"nowrap\"><a href=\"$unig_link$unig_id\">SGN-U$unig_id</a></td><td align=\"left\" nowrap=\"nowrap\">$build_desc;</td><td align=\"left\" nowrap=\"nowrap\"> matched with $identity_pct% identity over ${span_ln}bp (e-value $evalue)</td></tr>";
 	push @unigene_list, [$unig_desc, $blast_score];
     }
 
@@ -114,8 +114,7 @@ elsif($search_type eq 'blast_search'){
 
 
 #get the data ready for display
-
-my @results=();
+my @results;
 
 #match data is:
 #[annotated_data_description, annotation_text];
