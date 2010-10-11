@@ -73,15 +73,18 @@ sub store {
     my $error;
     $stock->set_organism_id($args{organism_id});
     $stock->set_type_id($args{type_id});
+    $stock->set_name($args{name});
+    $stock->set_uniquename($args{uniquename});
+    $stock->set_description($args{description});
+    
 
     my ($message) ;
     my $message = $stock->exists_in_database();
     my $validate;
     if ($message) {
-	$error = " Stock $args{stock_name}  already exists in the database ";
+	$error = " Stock $args{uniquename}  already exists in the database ";
     }else {
 	try{
-	    print STDERR "Calling SUPER - > store\n";
 	    $self->SUPER::store(); #this sets $json_hash{validate} if the form validation failed.
 	    $stock_id = $stock->get_stock_id() ;
 	} catch { 
@@ -93,7 +96,6 @@ sub store {
    
     %json_hash= $self->get_json_hash();
     $validate= $json_hash{validate};
-    print STDERR "validate = $validate , error = $error! \n\n";
     $json_hash{error} = $error if $error;
     
     my $refering_page="/phenome/stock.pl?stock_id=$stock_id";
@@ -159,8 +161,6 @@ sub generate_form {
 	    search_related('organism');
 	while (my $o = $organism_res->next() ) {
 	    push @species, $o->species() ;
-	    print STDERR "Found species " . $o->species() ;
-	    print STDERR " organism_id = " . $o->organism_id() . "\n";
 	    push @organism_ids, $o->organism_id();
 	}
     }
@@ -176,8 +176,6 @@ sub generate_form {
 	while (my $cvterm = $cvterm_res->next() ) {
 	    push @types, $cvterm->name() ;
 	    push @type_ids, $cvterm->cvterm_id();
-	    print STDERR "Found stock type  " . $cvterm->name() ;
-	    print STDERR " cvterm_id = " . $cvterm->cvterm_id() . "\n";
 	}
     }
     
@@ -198,7 +196,7 @@ sub generate_form {
 	
 	$self->get_form->add_select(
 	    display_name       => "Stock type",
-	    field_name         => "cvterm_id",
+	    field_name         => "type_id",
 	    contents           => $stock->get_type_id(),
 	    length             => 20,
 	    object             => $stock,
@@ -221,13 +219,13 @@ sub generate_form {
 	$form->add_label(
 	    display_name => "Organism ",
 	    field_name   => "stock_organism",
-	    #contents => $bcs_stock->organism->species ,
+	    contents => $stock->get_organism_id() ,
 	    );
     }
 	
     $form->add_field(
 	display_name => "Stock name ",
-	field_name   => "stock_name",
+	field_name   => "name",
 	object       => $stock,
 	getter       => "get_name",
 	setter       => "set_name",
@@ -235,7 +233,7 @@ sub generate_form {
 	);
     $form->add_field(
 	display_name => "Uniquename ",
-	field_name   => "stock_uniquename",
+	field_name   => "uniquename",
 	object       => $stock,
 	getter       => "get_uniquename",
 	setter       => "set_uniquename",
@@ -244,7 +242,7 @@ sub generate_form {
     
     $form->add_textarea(
 	display_name => "Description",
-	field_name   => "stock_desc",
+	field_name   => "description",
 	object       => $stock,
 	getter       => "get_description",
 	setter       => "set_description",
@@ -263,17 +261,16 @@ sub generate_form {
 	);
 
     if ( $self->get_action() =~ /view|edit/ ) {
-	$form->from_database();
-	$form->add_hidden(
-	    field_name => "organism_id",
-	    contents   => $stock->get_organism_id,
-	    );
-	$form->add_hidden(
-	    field_name => "type_id",
-	    contents   => $stock->get_type_id,
-	    );
+ 	$form->from_database();
+# 	$form->add_hidden(
+# 	    field_name => "organism_id",
+# 	    contents   => $stock->get_organism_id,
+# 	    );
+ 	$form->add_hidden(
+ 	    field_name => "type_id",
+ 	    contents   => $stock->get_type_id,
+ 	    );
     }
-    
     elsif ( $self->get_action() =~ /store/ ) {
 	my %json_hash = $self->get_json_hash() ;
 	print $json_hash{html} ;
