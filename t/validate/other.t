@@ -19,6 +19,7 @@ my %urls = (
         "unigene detail 2"                         => "/search/unigene.pl?unigene_id=345356&force_image=1",
         "unigene build"                            => "/search/unigene_build.pl?id=46",
         'unigene standalone six-frame translation' => '/tools/sixframe_translate.pl?unigene_id=573435',
+        'unigene list by annot'                    => '/search/all_unig_for_annot.pl?match_id=308546&search_type=blast_search',
 
         "est search page"                          => "/search/direct_search.pl?search=est",
         "est search"                               => "/search/est.pl?request_from=0&request_id=SGN-E234234&request_type=7&search=Search",
