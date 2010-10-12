@@ -19,3 +19,4 @@ static/documents/img/secretom/.directory
 programs/*.o
 programs/draw_contigalign
 programs/fast_mapping
+sgn_local.conf

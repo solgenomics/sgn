@@ -32,18 +32,24 @@ SGN::Test::Data - create Bio::Chado::Schema test objects
     # all other necessary objects are auto-created, such as
     # cvterms, dbxrefs, features, etc...
     my $organism = create_test('Organism::Organism',{
-        genus   => 'Tyrannosaurus',
-        species => 'Tyrannosaurus rex',
+        genus        => 'Tyrannosaurus',
+        species      => 'Tyrannosaurus rex',
+        common_name  => 'Tyrant King',
+        comment      => 'Small hands',
+        abbreviation => 'TREX',
     });
 
     my $feature = create_test('Sequence::Feature',{
         residues => 'GATTACA',
+        organism => $organism,
     });
 
     # pre-created objects can be passed in, to specify linking objects
     my $gene_cvterm     = create_test('Cv::Cvterm', { name  => 'gene' });
     my $gene_feature    = create_test('Sequence::Feature', { type => $gene_cvterm });
     my $gene_featureloc = create_test('Sequence::Featureloc', { feature => $gene_feature });
+
+    my $featureprop = create_test('Sequence::Featureprop', { value => 'Amazing!' });
 
 =head1 FUNCTIONS
 
@@ -77,6 +83,8 @@ sub create_test {
         'Sequence::Feature'    => sub { _create_test_feature($values) },
         'Organism::Organism'   => sub { _create_test_organism($values) },
         'Sequence::Featureloc' => sub { _create_test_featureloc($values) },
+        'Sequence::Featureprop' => sub { _create_test_featureprop($values) },
+        'Sequence::FeatureRelationship' => sub { _create_test_featurerelationship($values) },
 
     };
     die "$pkg creation not supported yet, sorry" unless exists $pkg_subs->{$pkg};
@@ -94,13 +102,18 @@ sub _create_test_db {
 
 sub _create_test_dbxref {
     my ($values) = @_;
+
     $values->{db} ||= _create_test_db();
+
+    $values->{accession} ||= "dbxref_$num_dbxrefs-$$";
+    my @values = keys %$values;
 
     my $dbxref = $schema->resultset('General::Dbxref')
            ->create(
             {
                 db_id     => $values->{db}->db_id,
-                accession => $values->{accession} || "dbxref_$num_dbxrefs-$$",
+                # some things have null constraints, so default to zero
+                map { $_  => $values->{$_} || 0 } @values,
             });
     push @$test_data, $dbxref;
     $num_dbxrefs++;
@@ -110,10 +123,11 @@ sub _create_test_dbxref {
 sub _create_test_cv {
     my ($values) = @_;
 
-    $values->{name} ||= "cv_$num_cvs-$$";
+    $values->{name}       ||= "cv_$num_cvs-$$";
+    $values->{definition} ||= "semantics";
 
     my $cv = $schema->resultset('Cv::Cv')
-           ->create( { name => $values->{name} } );
+           ->create( $values );
 
     push @$test_data, $cv;
     $num_cvs++;
@@ -124,14 +138,17 @@ sub _create_test_cvterm {
     my ($values) = @_;
 
     $values->{name}   ||= "cvterm_$num_cvterms-$$";
+
+    my @values = keys %$values;
+
     $values->{dbxref} ||= _create_test_dbxref();
     $values->{cv}     ||= _create_test_cv();
     my $cvterm = $schema->resultset('Cv::Cvterm')
            ->create(
             {
-                name   => $values->{name},
-                dbxref => $values->{dbxref},
-                cv_id  => $values->{cv}->cv_id,
+                dbxref_id => $values->{dbxref}->dbxref_id,
+                cv_id     => $values->{cv}->cv_id,
+                map { $_  => $values->{$_} || 0 } @values,
             });
     push @$test_data, $cvterm;
     $num_cvterms++;
@@ -154,26 +171,63 @@ sub _create_test_organism {
 sub _create_test_feature {
     my ($values) = @_;
 
+
     # provide some defaults for things we don't care about
     $values->{residues}   ||= 'ATCG';
     $values->{seqlen}     ||= length($values->{residues});
     $values->{name}       ||= "feature_$num_features-$$";
     $values->{uniquename} ||= "unique_feature_$num_features-$$";
+
+    my @values = keys %$values;
+
     $values->{organism}   ||= _create_test_organism();
     $values->{type}       ||= _create_test_cvterm();
+    $values->{dbxref}     ||= _create_test_dbxref();
 
     my $feature = $schema->resultset('Sequence::Feature')
            ->create({
-                residues    => $values->{residues},
-                seqlen      => $values->{seqlen},
-                name        => $values->{name},
-                uniquename  => $values->{uniquename},
                 type_id     => $values->{type}->cvterm_id,
                 organism_id => $values->{organism}->organism_id,
+                dbxref_id   => $values->{dbxref}->dbxref_id,
+                map { $_ => $values->{$_} || 0 } @values,
            });
     push @$test_data, $feature;
     $num_features++;
     return $feature;
+}
+
+sub _create_test_featurerelationship {
+    my ($values) = @_;
+
+    my @values = grep { $_ ne 'object' and $_ ne 'subject' } keys %$values;
+
+    $values->{type}       ||= _create_test_cvterm();
+
+    # TODO: which gets the type created above?
+    $values->{subject}    ||= _create_test_feature();
+    $values->{object}     ||= _create_test_feature();
+
+    my $featurerelationship = $schema->resultset('Sequence::FeatureRelationship')
+        ->create({
+                type_id     => $values->{type}->cvterm_id,
+                subject_id  => $values->{subject}->feature_id,
+                object_id   => $values->{object}->feature_id,
+                map { $_    => $values->{$_} || 0 } @values,
+        });
+}
+
+sub _create_test_featureprop {
+    my ($values) = @_;
+
+    $values->{feature}    ||= _create_test_feature();
+    $values->{type}       ||= _create_test_cvterm();
+
+    my $featureprop = $schema->resultset('Sequence::Featureprop')
+        ->create({
+            feature_id    => $values->{feature}->feature_id,
+            type_id       => $values->{type}->cvterm_id,
+            map { $_ => $values->{$_} || 0} qw/value rank/,
+        });
 }
 
 sub _create_test_featureloc {
@@ -190,8 +244,11 @@ sub _create_test_featureloc {
         ->create({
             feature_id    => $values->{feature}->feature_id,
             srcfeature_id => $values->{srcfeature}->feature_id,
-            fmin          => $values->{fmin},
-            fmax          => $values->{fmax},
+            map { $_ => $values->{$_} || 0 }
+                qw/
+                    fmin fmax rank phase strand locgroup
+                    is_fmax_partial residue_info
+                  /,
         });
 }
 

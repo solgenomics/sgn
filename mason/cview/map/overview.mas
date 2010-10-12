@@ -12,12 +12,16 @@ Arguments:
 =over 10
 
 =item $map
-
+ 
 a CXGN::Cview::Map object (or subclass thereof)
 
 =item @hilite_markers
 
 a list of marker names, which will be highlighted on the map.
+
+=item $map_items
+
+a scalar with a list of chromosomes, positions (numeric), and names, separated by newline. These will be mapped and shown highlighted on the map. Good for drawing positions of gene families etc.
 
 =item size
 
@@ -45,15 +49,19 @@ Lukas Mueller <lam87@cornell.edu>
   $map              # a CXGN::Cview::Map object
   $image_width  => 820
   @hilite_markers => ()
+  $map_items => '';
   $force => 0
   $size => 1
+  $dbh 
+  $basepath
+  $tempdir
 </%args>
 
 <%perl>
 
 use URI::Escape;
 use CXGN::Page::FormattingHelpers qw | tooltipped_text |;
-use CXGN::Cview::Map_overviews::Generic;
+use CXGN::Cview::MapOverviews::Generic;
 
 my $message = "";
 
@@ -71,7 +79,7 @@ if ($size <= 0) {
     $shrink_button_disabled = qq { disabled="1" };
     $smaller_size = $size;
 }
-else { 
+else {
     $smaller_size = $size - 1;
 }
 
@@ -92,7 +100,12 @@ $image_height = $image_height + $image_height * $size /2;
 # create an appropriate overview diagram - physical or generic
 # (the generic will also provide an appropriate overview for the fish map).
 #
-my $map_overview = CXGN::Cview::Map_overviews::Generic -> new($map, $force);
+my $map_overview = CXGN::Cview::MapOverviews::Generic -> new($map, { 
+								    force            => $force,
+								    basepath         => $basepath,
+								    tempfiles_subdir => $tempdir,
+								    dbh              => $dbh,
+								    });
 
 $map_overview->set_image_height($image_height);
 $map_overview->set_image_width($image_width);
@@ -100,7 +113,9 @@ $map_overview->set_image_width($image_width);
 # deal with marker names to be highlighted on the overview diagram
 # (the ones to be requested to be hilited using the hilite feature)
 #
+my @map_items = split /\n/, $map_items;
 
+$map_overview->get_map()->set_map_items(@map_items);
 
 foreach my $hm (@hilite_markers) {
     #print STDERR "Hilite marker $hm...\n";
@@ -117,7 +132,6 @@ $map_overview -> render_map();
 
 my $map_overview_html = $map_overview->get_image_html();
 
-
 # get the markers that could not be hilited
 #
 my @markers_not_found = $map_overview -> get_markers_not_found();
@@ -130,10 +144,9 @@ if (@markers_not_found) {
     $message .= "<br />\n";
 }
 
-
 #
 # add the input box and form for the hilite marker feature
-#    
+#
 my $hilite_tooltip = tooltipped_text("Highlight marker(s)", "You can highlight markers on the overview graphic by entering them here, separated by spaces");
 my $size_tooltip = tooltipped_text("Image size", "You can increase the size of the overview graph by clicking on the (+) button and decrease it by clicking on (-).");
 
@@ -158,11 +171,13 @@ if ($message) {  $message_html = qq | <div class="boxbgcolor2">$message<br /></d
 </td></tr></table>
 
 
-<table><tr><td align="left">
+<table summary="input forms" border="0"><tr><td align="left">
     <div class="indentedcontent">
     
-  <form>
-  <% $hilite_tooltip %>: <input type="text" name="hilite" value="<% $hilite %>" size="40" />
+  <form action="/cview/map.pl" >
+  <% $hilite_tooltip %>: 
+  <input type="hidden" name="map_items" value="<% $map_items %>" />
+  <input type="text" name="hilite" value="<% $hilite %>" size="40" />
   <input type="hidden" name="map_version_id" value="<% $map_version_id %>" />
   <input type="hidden" name="size" value="<% $size %>" />
   <input type="submit" value="Highlight" />
@@ -170,20 +185,29 @@ if ($message) {  $message_html = qq | <div class="boxbgcolor2">$message<br /></d
     </div>
     </td><td width=100 align="right"><% $size_tooltip %>:
 </td><td align="right">
-    <form>
+    <form action="/cview/map.pl">
+    <input type="hidden" name="map_items" value="<% $map_items %>" />
     <input type="hidden" name="map_version_id" value="<% $map_version_id %>" />
     <input type="hidden" name="size" value="<% $smaller_size %>" />
     <input type="hidden" name="hilite" value="<% $hilite %>" />
     <input type="submit" value="-" <% $shrink_button_disabled %> />
     </form>
 </td><td>
-    <form>
+    <form action="/cview/map.pl" >
+    <input type="hidden" name="map_items" value="<% $map_items %>" />
     <input type="hidden" name="map_version_id" value="<% $map_version_id %>" />
     <input type="hidden" name="hilite" value="<% $hilite %>" />
     <input type="hidden" name="size" value="<% $larger_size %>" />
     <input type="submit" value="+" <% $enlarge_button_disabled %> />
     </form>
 </td></tr></table>
+
+<& /cview/map/overlay_form.mas, 
+  map       => $map,
+  map_items => $map_items,
+  size      => $size,
+  hilite    => $hilite
+&>
 
 
 

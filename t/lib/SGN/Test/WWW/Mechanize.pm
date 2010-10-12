@@ -1,3 +1,5 @@
+package SGN::Test::WWW::Mechanize;
+
 =head1 NAME
 
 SGN::Test::WWW::Mechanize - subclass of
@@ -13,6 +15,10 @@ L<Test::WWW::Mechanize::Catalyst> with some SGN-specific convenience
     $mech->content_contains('presents a summary');
     $mech->content_contains('click on an organism name');
     $mech->content_lacks('Add to Tree','not logged in, does not have a form for adding an organism');
+
+    # You can use XPath selectors on $mech to find things
+    # see WWW::Mechanize::TreeBuilder and HTML::TreeBuilder::XPath for more info
+    my $value = $mech->findvalue( '/html/body//span[@class="sequence"]');
 
     # do some tests while logged in as a temporary user
     $mech->while_logged_in( user_type => 'curator', sub {
@@ -81,13 +87,12 @@ This class inherits from all of these:
 L<Test::WWW::Mechanize::Catalyst>, L<Test::WWW::Mechanize>,
 L<WWW::Mechanize>
 
-Plus the following:
+It also does the L<WWW::Mechanize::TreeBuilder> role, with a tree_class of L<HTML::TreeBuilder::XPath>.
 
 =head1 ATTRIBUTES
 
 =cut
 
-package SGN::Test::WWW::Mechanize;
 use Moose;
 use namespace::autoclean;
 
@@ -99,7 +104,14 @@ use Test::More;
 use CXGN::People::Person;
 use CXGN::People::Login;
 
+use SGN::Devel::MyDevLibs;
+
 extends 'Test::WWW::Mechanize::Catalyst';
+
+with 'WWW::Mechanize::TreeBuilder' => {
+    tree_class => 'HTML::TreeBuilder::XPath'
+};
+
 
 =head2 catalyst_app
 

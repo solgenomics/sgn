@@ -2,24 +2,23 @@
 Projects
 </div>
 <div class="boxcontent">
-<a href="/secretom">Secretom Project</a><br /><br />
+&bull <a href="/secretom">Secretom Project</a><br /><br />
 </div>
 <div class="boxheading">
 Mirror Site
 </div>
 <div class="boxcontent">
-<a href="http://solgenomics.wur.nl">http://solgenomics.wur.nl</a><br /><br />
+&bull <a href="http://solgenomics.wur.nl">http://solgenomics.wur.nl</a><br /><br />
 </div>
 <div class="boxheading">
 Affiliated Sites
 </div>
 <div class="boxcontent">
 <a href="http://solcap.msu.edu" class="footer"><img src="/documents/img/solcap_logo_with_text_small.png" border="0" /></a><br />
-<a class="creativitylinks" href="http://solcap.msu.edu">SolCAP Project</a><br />
-<a class="creativitylinks" href="http://pgn.cornell.edu">Plant Genome Network</a><br />
-<a class="creativitylinks" href="http://ted.bti.cornell.edu/">Tomato Expression Database</a><br />
-<a class="creativitylinks" href="http://bti.cornell.edu/CGEP/CGEP.html">Tomato microarrays</a><br />
-<a class="creativitylinks" href="http://zamir.sgn.cornell.edu/mutants/">Genes that make tomatoes</a><br />
-<a class="creativitylinks" href="http://zamir.sgn.cornell.edu/Qtl/Html/home.htm">Realtime quantitative trait loci</a><br />
-<a class="creativitylinks" href="http://tgrc.ucdavis.edu">Tomato Genetics Resource Center</a> 
+&bull <a class="creativitylinks" href="http://solcap.msu.edu">SolCAP Project</a><br />
+&bull <a class="creativitylinks" href="http://pgn.cornell.edu">Plant Genome Network</a><br />
+&bull <a class="creativitylinks" href="http://ted.bti.cornell.edu/">Tomato Functional Genomics Database</a><br />
+&bull <a class="creativitylinks" href="http://zamir.sgn.cornell.edu/mutants/">Genes that make tomatoes</a><br />
+&bull <a class="creativitylinks" href="http://zamir.sgn.cornell.edu/Qtl/Html/home.htm">Realtime quantitative trait loci</a><br />
+&bull <a class="creativitylinks" href="http://tgrc.ucdavis.edu">Tomato Genetics Resource Center</a> 
 </div>

@@ -17,7 +17,7 @@ use CXGN::Tools::List qw/str_in/;
 use CXGN::Page::FormattingHelpers qw/info_table_html columnar_table_html/;
 
 use CXGN::Genomic::Clone;
-use CXGN::Cview::Map_overviews::ProjectStats;
+use CXGN::Cview::MapOverviews::ProjectStats;
 
 
 our $page = CXGN::Scrap::AjaxPage->new('text/html');
@@ -28,7 +28,6 @@ $page->send_http_header;
 my %ops = (
 	    set_ver_int_read   => sub { set_val_flag('int_read') },
 	    set_ver_bac_end    => sub { set_val_flag('bac_end') },
-#	    qprojjson          => \&query_proj_json,
 	    qclonehtml         => \&query_bac_infotable,
 	    qclonejson         => \&query_bac_json,
 	    qcloneperl         => \&query_bac_perl,
@@ -191,7 +190,7 @@ sub query_bac_infotable {
 
 sub query_bac_json {
   my $clone = shift() || clone();
-  return objToJson( $clone->reg_info_hashref );
+  return to_json( $clone->reg_info_hashref );
 }
 
 sub query_bac_perl {
@@ -202,7 +201,7 @@ sub query_bac_perl {
 
 sub project_stats_img_html {
 
-  my $map_overview = CXGN::Cview::Map_overviews::ProjectStats->new("force"); # force re-calculation of the image/stats
+  my $map_overview = CXGN::Cview::MapOverviews::ProjectStats->new("force"); # force re-calculation of the image/stats
   $map_overview->render_map();
   my $map_overview_html = $map_overview->get_image_html();
 
@@ -213,42 +212,6 @@ sub project_stats_img_html {
 
   return $map_overview_html;
 }
-
-# sub query_proj_json {
-#   my ($proj_id) = $page->get_encoded_arguments('p');
-
-#   my $dbh = CXGN::DB::Connection->new;
-#   my $bacs = $dbh->selectall_arrayref(<<EOQ,undef,$proj_id);
-# select cl.clone_id,
-#        ( select name
-#          from sgn_people.sp_clone_il_mapping_segment_log
-#          join phenome.individual using(individual_id)
-#          where clone_id = cl.clone_id
-#                and is_current = true
-#        )
-# from sgn_people.sp_project_il_mapping_clone_log cl
-# where cl.sp_project_id = ?
-#   and cl.is_current = true
-# EOQ
-
-#   my @ret = map {
-#     my ($clone_id,$il_name) = @$_;
-#     [ $clone_id,
-#       'bogus name',
-#       $il_name,
-#     ]
-# #     my $clone = CXGN::Genomic::Clone->retrieve($clone_id);
-# #     [
-# #      '<a href="/maps/physical/clone_info.pl?id=$clone_id">'
-# #      .($clone->clone_name_with_chromosome || $clone->clone_name)
-# #      .'</a>',
-# #      $il_name,
-# #     ]
-#   } @$bacs;
-
-#   return objToJson(\@ret);
-# }
-
 
 
 ############ UTILITY SUBS #############

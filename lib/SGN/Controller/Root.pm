@@ -72,6 +72,25 @@ sub bare_mason :Path('bare_mason') {
     $c->forward('View::BareMason');
 }
 
+=head2 download_static
+
+Public path: /download/<additional>/<path>
+
+Try to find a file relative to the site root and serve it with the
+proper headers to trigger download dialog in the user's browser.
+
+=cut
+
+sub download_static :Path('/download') {
+    my ( $self, $c, @path ) = @_;
+
+    my $file = $c->path_to( $c->config->{root},  @path );
+
+    $c->stash->{download_filename} = $file->basename;
+    $c->forward('download'); #< set the content headers
+    $c->serve_static_file( $file );
+}
+
 =head1 PRIVATE ACTIONS
 
 =head2 end
@@ -86,16 +105,21 @@ sub end : Private {
 
     return if @{$c->error};
 
-    $c->forward('render');
+    # don't try to render a default view if this was handled by a CGI
+    $c->forward('render') unless $c->req->path =~ /\.pl$/;
 
     # insert our javascript packages into the rendered view
-    if( $c->res->content_type eq 'text/html' ) {
+    if( !$c->res->content_type || $c->res->content_type eq 'text/html' ) {
         $c->forward('/js/insert_js_pack_html')
+    } else {
+        warn "skipping page with content type ".$c->res->content_type;
     }
 
 }
 
 =head2 download
+
+Private.
 
 Sets the Content-disposition response headers appropriate to trigger a
 file-download behavior in the client browser.  Does NOT set the
@@ -112,16 +136,6 @@ sub download :Private {
     if( defined $c->stash->{download_filename} ) {
         $c->res->headers->push_header( 'Content-Disposition' => 'filename='.$c->stash->{download_filename} );
     }
-}
-
-sub download_static :Path('/download') {
-    my ( $self, $c, @path ) = @_;
-
-    my $file = $c->path_to( $c->config->{root},  @path );
-
-    $c->stash->{download_filename} = $file->basename;
-    $c->forward('download');
-    $c->serve_static_file( $file );
 }
 
 =head2 auto

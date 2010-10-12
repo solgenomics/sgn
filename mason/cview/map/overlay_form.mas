@@ -1,0 +1,70 @@
+
+<%doc>
+
+=head1 NAME
+
+/cview/map/overlay_form.mas - displays a form for the data overlay function
+
+=head1 DESCRIPTION
+
+Displays a info section with a form to overlay data on to the map.
+
+parameters:
+$map_items: a string with map items to overlay
+$map: a map object
+$size: the size parameter for the image size of the map
+$hilite: a space/comma separated list of markers to hilite
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>
+
+=cut
+
+
+</%doc>
+
+<%args>
+$map_items
+$map
+$size
+$hilite
+</%args>
+
+<%perl>
+
+if (!$map->can_overlay()) { return; }
+
+my $map_version_id = $map->get_id();
+
+my $collapsed = $map_items == undef;
+
+</%perl>
+
+<&| /page/info_section.mas, title=>'Overlay custom data', collapsible=>1, collapsed=>$collapsed &>
+      <table><tr><td width="50">&nbsp;</td><td>
+      <form style="width: 60%" action="/cview/map.pl" name="overlay_form" >
+        <p>To add labels to the diagram above, enter chromosome numbers, offsets (in <% $map->get_units %>), and names in the box below (<a href="javascript:overlay_show_example()">example</a>):</p>
+	<textarea id="map_items" name="map_items" cols="50" rows="5"><% $map_items %></textarea>
+	<input type="hidden" name="map_version_id" value="<% $map_version_id%>" />
+	<input type="hidden" name="size" value="<% $size %>" />
+	<input type="hidden" name="hilite" value="<% $hilite %>" />
+	<input type="hidden" name="force" value="1" /><br />
+	<input type="submit" value="overlay information" />
+	<input type="button" value="clear" onclick="overlay_clear_map_items(); return false" />
+      </form>
+      </td></tr></table>
+
+      <script language="javascript">
+	function overlay_show_example() {
+	  var textarea = document.getElementById("map_items");
+	  textarea.value = "1  50 foo\n2  80  bar";
+	}
+
+	function overlay_clear_map_items() {
+	   var textarea = document.getElementById("map_items");
+	   textarea.value = "";
+        }
+	</script>
+</&>
+

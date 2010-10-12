@@ -4,9 +4,10 @@ use warnings;
 use English;
 
 use JSON;
+use lib 't/lib';
+use SGN::Test qw( get request );
 
 use CXGN::Genomic::Clone;
-use CXGN::VHost::Test;
 
 use Test::More tests => 7;
 

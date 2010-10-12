@@ -46,9 +46,10 @@ use SGN::Exception;
 my $e = undef;
 
 if (!$marker_id) { 
-  $e = SGN::Exception->new(title=>'Maker detail page error: marker_id is a required argument');
-  $m->comp('/site/error/exception.mas',  exception=>$e );
-  return;
+  $c->throw(
+     public_message => 'marker_id must be provided as an argument for this page',
+     is_client_error => 1,
+  );
 }
 
 my $marker = CXGN::Marker->new($dbh, $marker_id);

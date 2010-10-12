@@ -4,26 +4,35 @@
     $species => undef
 </%args>
 <%once>
-    use SGN::View::Feature qw/feature_link cvterm_link organism_link gbrowse_link/;
+    use SGN::View::Feature qw/
+        feature_link cvterm_link organism_link gbrowse_link feature_length
+        get_description
+        /;
     use CXGN::Page::FormattingHelpers qw/info_table_html/;
+    use CXGN::Tools::Text qw/commify_number/;
 </%once>
 <%perl>
-    my ($description) = map { $_->value } grep { $_->type->name eq 'Note' } $feature->featureprops->all;
+    my ($description) = get_description($feature);
+    my ($length,$locations) = feature_length($feature);
+    my $feature_length = commify_number($length) . " bases";
+    if ($locations) {
+        $feature_length .= " in $locations location" . ($locations > 1 ? 's' : '');
+    };
     my @feature_data = (
         'Name'          => feature_link($feature),
         'Feature Type'  => cvterm_link($feature),
         'Analysis'      => ($feature->is_analysis ? 'Yes' : 'No'),
         'Organism Name' => organism_link($feature->organism),
         'Description'   => $description,
+        'Length'        => $feature_length,
+        'GBrowse'       => sprintf '<a href="%s">%s</a><br/', gbrowse_link($feature), $feature->name,
     );
 </%perl>
 <&| /page/info_section.mas,
     title       => $title,
     subtitle    => $feature->is_obsolete ? 'WARNING: This feature is obsolete' : '',
     collapsible => 1,
-    is_subsection => 1,
 &>
-    <% print info_table_html( @feature_data ) %>
-    <& /feature/feature_length.mas, feature => $feature &>
-    <a href="<% gbrowse_link($feature) %>">GBrowse</a><br/>
+    <% info_table_html( @feature_data, __border => 0 ) %>
+    <& /feature/dbxref.mas, dbxref => $feature->dbxref &>
 </&>

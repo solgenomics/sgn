@@ -195,7 +195,7 @@ my $job = CXGN::Tools::Run->run_cluster(
 #$job->do_not_cleanup(1);
 
 # store the job object in a file
-my $job_file = $c->tempfile( TEMPLATE => ['blast','object_XXXXXX'] );
+my ($job_file,$job_file_uri) = $c->tempfile( TEMPLATE => ['blast','object_XXXXXX'] );
 nstore( $job, $job_file )
     or die 'could not serialize job object';
 my $job_file_base = basename($job_file);
