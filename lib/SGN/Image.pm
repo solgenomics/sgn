@@ -651,9 +651,9 @@ sub process_image {
     }
 
     else {
-        die "type $type is like totally illegal!\n";
+        warn "type $type is like totally illegal! Not associating image with any object. Please check if your loading script links the image with an sgn object! \n";
     }
-
+    
     # move the image into the image_id subdirectory
     #
     my $image_dir = $self->get_image_dir("full") . "/$image_id";
