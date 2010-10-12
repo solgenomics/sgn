@@ -109,8 +109,10 @@ sub end : Private {
     $c->forward('render') unless $c->req->path =~ /\.pl$/;
 
     # insert our javascript packages into the rendered view
-    if( $c->res->content_type eq 'text/html' ) {
+    if( !$c->res->content_type || $c->res->content_type eq 'text/html' ) {
         $c->forward('/js/insert_js_pack_html')
+    } else {
+        warn "skipping page with content type ".$c->res->content_type;
     }
 
 }
