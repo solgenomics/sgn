@@ -17,6 +17,7 @@ my %urls = (
         "unigene search 2"                           => "/search/ug-ad2.pl?w9e3_page=0&w9e3_sequence_name=SGN-U231977&w9e3_clone_name=&w9e3_membersrange=gt&w9e3_members1=&w9e3_members2=&w9e3_annotation=&w9e3_annot_type=blast&w9e3_lenrange=gt&w9e3_len1=&w9e3_len2=&w9e3_unigene_build_id=any",
         "unigene detail"                           => "/search/unigene.pl?unigene_id=SGN-U231977&w9e3_page=0&w9e3_annot_type=blast&w9e3_unigene_build_id=any",
         "unigene detail 2"                         => "/search/unigene.pl?unigene_id=345356&force_image=1",
+        "unigene detail 3"                         => "/search/unigene.pl?unigene_id=CGN-U124510",
         "unigene build"                            => "/search/unigene_build.pl?id=46",
         'unigene standalone six-frame translation' => '/tools/sixframe_translate.pl?unigene_id=573435',
         'unigene list by annot'                    => '/search/all_unig_for_annot.pl?match_id=308546&search_type=blast_search',
