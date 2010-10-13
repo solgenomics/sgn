@@ -9,6 +9,10 @@ sub ACTION_build {
    $self->SUPER::ACTION_build(@_);
    system "make -C programs";
    $? and die "make failed\n";
+
+   print "Checking R dependencies\n";
+   system "R CMD check -o _build R_files";
+   $? and die "R dependency check failed.\n";
 }
 
 # override install to just copy the whole dir into the install_base
