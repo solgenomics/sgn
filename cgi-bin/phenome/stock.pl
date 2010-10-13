@@ -28,7 +28,7 @@ my $stock_id = $q->param("stock_id") ;
 my $action =  $q->param("action");
 
 
-$c->forward_to_mason_view('/stock/index.mas',  action=> $action,  stock_id => $stock_id , user=>$user, schema=>$schema);
+$c->forward_to_mason_view('/stock/index.mas',  action=> $action,  stock_id => $stock_id , user=>$user, schema=>$schema, dbh=>$dbh);
 
 
 

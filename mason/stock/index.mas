@@ -42,6 +42,7 @@ $action => 'view'
 $stock_id => 0
 $user => undef
 $schema
+$dbh
 
 </%args>
 
@@ -97,6 +98,17 @@ $type_name  = $type->name() if $type;
 my $owner;
 #if ( $stock && ($user_type eq 'curator' || $person_id && grep { $_ == $person_id } @owners  ) ) {  $owner = 1; }
 
+my $add_image_link;
+my $image_id_type_id = $schema->resultset("Cv::Cvterm")->search( { name => 'sgn image_id' }, )->single->cvterm_id ;
+my $image_stockprops = $stock->get_object_row()->search_related("stockprops" , { type_id => $image_id_type_id }  );
+
+
+my @image_ids ;
+while ( my $ip =  $image_stockprops->next ) {
+  push @image_ids, $ip->value ;
+}
+
+
 </%perl>
 
 <& /util/import_javascript.mas, classes => ["jquery", "thickbox", "CXGN.Page.FormattingHelpers", "CXGN.Phenome.Stock.StockPage"] &>
@@ -120,6 +132,11 @@ my $owner;
 
 % }
 
+ 
+<&| /page/info_section.mas, title=>"images (" .  scalar(@image_ids)  . ")", subtitle => "$add_image_link", collapsible=>1, collapsed=>1 &>
+  <& /image/print_images.mas , images=>\@image_ids , dbh=>$dbh &>
+
+</&>
 
 
 <& /page/comments.mas, object_type=>'stock', object_id=>$stock_id, referer=>$this_page &>
