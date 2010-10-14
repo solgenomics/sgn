@@ -49,4 +49,9 @@ my $poly_featureloc = create_test('Sequence::Featureloc', { feature => $poly_fea
     is('text/plain', $mech->content_type, 'text/plain content type');
     is( $length, length($mech->content), 'got the expected content length');
 }
+{
+    $mech->get_ok("/api/v1/sequence/JUNK.fasta");
+    $mech->content_contains("feature with name = 'JUNK' not found");
+
+}
 done_testing;

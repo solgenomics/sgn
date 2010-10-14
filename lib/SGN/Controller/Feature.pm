@@ -73,24 +73,13 @@ sub _validate_pair {
 sub _view_feature {
     my ($self, $c, $key, $value) = @_;
 
-    if ( $value =~ m/\.fasta$/ ) {
-        $value =~ s/\.fasta$//;
-        $self->_validate_pair($c,$key,$value);
-        my $matching_features = $self->schema
-                                    ->resultset('Sequence::Feature')
-                                    ->search({ $key => $value });
-        my $feature = $matching_features->next;
-        $c->throw( message => "feature with $key = '$value' not found") unless $feature;
-        $self->render_fasta($feature, $c);
-    } else {
-        $self->_validate_pair($c,$key,$value);
-        my $matching_features = $self->schema
-                                    ->resultset('Sequence::Feature')
-                                    ->search({ $key => $value });
+    $self->_validate_pair($c,$key,$value);
+    my $matching_features = $self->schema
+                                ->resultset('Sequence::Feature')
+                                ->search({ $key => $value });
 
-        $self->validate($c, $matching_features, $key => $value);
-        $self->delegate_component($c, $matching_features);
-    }
+    $self->validate($c, $matching_features, $key => $value);
+    $self->delegate_component($c, $matching_features);
 }
 
 sub view_id :Path('/feature/view/id') Args(1) {
@@ -224,28 +213,6 @@ sub _feature_types {
                     },
                 )
     ];
-}
-
-sub render_fasta {
-    my ($self, $feature, $c) = @_;
-
-    my $matching_features = $self->schema
-                                ->resultset('Sequence::Feature')
-                                ->search({ name => $feature->name });
-
-    my $sequence  = Bio::PrimarySeq->new(
-                    -id  => $feature->name,
-                    -seq => $feature->residues,
-                    );
-    my $fasta;
-    my $fastaio = IO::String->new($fasta);
-    Bio::SeqIO->new( -format => 'fasta',
-                     -fh     => $fastaio,
-    )->write_seq( $sequence );
-
-    $c->res->content_type('text/plain');
-    $c->res->status( 200 );
-    $c->res->body( $fasta );
 }
 
 __PACKAGE__->meta->make_immutable;

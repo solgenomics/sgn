@@ -23,9 +23,10 @@
     $link = '/api/v1/sequence/' . $feature->uniquename . '.fasta' if $feature;
 
     # protect us from causing a BioPerl exception if the sequence is not in the database
-    if ($seq->length > 0 && $start && $end) {
+    # ignore invalid ranges
+    if ($seq->length > 0 && $start && $end && $end > $start) {
         $seq = $seq->trunc($start,$end);
-        $link .= "&start=$start&end=$end";
+        $link .= "?$start..$end";
     }
 </%perl>
 
