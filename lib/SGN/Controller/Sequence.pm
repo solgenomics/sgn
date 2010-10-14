@@ -27,9 +27,9 @@ sub _build_schema {
 
 
 sub api_v1_sequence :Path('/api/v1/sequence') Args(1) {
-    my ( $self, $c, $sequence_name ) = @_;
+    my ( $self, $c, $feature_name ) = @_;
     $self->schema( $c->dbic_schema('Bio::Chado::Schema','sgn_chado') );
-    $self->_view_sequence($c, 'name', $sequence_name);
+    $self->_view_sequence($c, 'name', $feature_name);
 }
 
 sub _view_sequence {
@@ -42,13 +42,15 @@ sub _view_sequence {
                                     ->search({ $key => $value });
         my $feature = $matching_features->next;
         $c->throw( message => "feature with $key = '$value' not found") unless $feature;
-        $self->render_fasta($feature, $c);
+        $c->stash->{feature} = $feature;
+        $self->render_fasta($c);
     }
 }
 
 sub render_fasta {
-    my ($self, $feature, $c) = @_;
+    my ($self, $c) = @_;
 
+    my $feature = $c->stash->{feature};
     my $matching_features = $self->schema
                                 ->resultset('Sequence::Feature')
                                 ->search({ name => $feature->name });
