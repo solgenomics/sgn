@@ -111,9 +111,15 @@ while ( my $ip =  $image_stockprops->next ) {
 
 </%perl>
 
+<script language="javascript" type="text/javascript">
+<!--
+    var stockPage = new CXGN.Phenome.Stock.StockPage();
+    stockPage.setStockId( <% $stock_id %> );
+-->
+</script>
+
 <& /util/import_javascript.mas, classes => ["jquery", "thickbox", "CXGN.Page.FormattingHelpers", "CXGN.Phenome.Stock.StockPage"] &>
 
-<& /stock/initialize.mas, stock_id=>$stock_id  &>
 
 <& /page/page_title.mas, title=> $type_name  .  ": " . $stock->get_uniquename()  . "\n" &>
   
