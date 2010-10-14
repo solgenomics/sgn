@@ -31,8 +31,13 @@ my $poly_feature    = create_test('Sequence::Feature', {
 });
 my $poly_featureloc = create_test('Sequence::Featureloc', { feature => $poly_feature });
 
+# 3 = > + 2 newlines
+my $length = length($poly_feature->name . $residue) + 3;
+
 $mech->get_ok('/api/v1/sequence/' . $poly_feature->name . '.fasta');
 $mech->content_contains( '>' . $poly_feature->name );
 $mech->content_contains( $residue );
+is('text/plain', $mech->content_type, 'text/plain content type');
+is( $length, length($mech->content), 'got the expected content length');
 
 done_testing;
