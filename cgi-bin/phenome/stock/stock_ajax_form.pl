@@ -77,7 +77,6 @@ sub store {
     $stock->set_description($args{description});
 
 
-    my ($message) ;
     my $message = $stock->exists_in_database();
     my $validate;
     if ($message) {
