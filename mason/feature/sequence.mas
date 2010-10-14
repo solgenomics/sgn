@@ -20,7 +20,7 @@
             -alphabet => 'dna',
         );
     my $link;
-    $link = '/cgi-bin/feature_sequence_as_fasta.pl?feature_id=' . $feature->feature_id if $feature;
+    $link = '/api/v1/sequence/' . $feature->uniquename . '.fasta' if $feature;
 
     # protect us from causing a BioPerl exception if the sequence is not in the database
     if ($seq->length > 0 && $start && $end) {
