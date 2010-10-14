@@ -50,6 +50,7 @@ sub _view_sequence {
 sub render_fasta {
     my ($self, $c) = @_;
 
+    my ($start,$end) =  split /\.\./, $c->request->query_keywords;
     my $feature = $c->stash->{feature};
     my $matching_features = $self->schema
                                 ->resultset('Sequence::Feature')
@@ -59,6 +60,10 @@ sub render_fasta {
                     -id  => $feature->name,
                     -seq => $feature->residues,
                     );
+    # ignores invalid ranges right now, should do something better
+    if ($seq->length > 0 && $start && $end && $end > $start ) {
+        $seq = $seq->trunc($start,$end);
+    }
     my $fasta;
     my $fastaio = IO::String->new($fasta);
     Bio::SeqIO->new( -format => 'fasta',
