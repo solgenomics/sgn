@@ -15,20 +15,8 @@ BEGIN { extends 'Catalyst::Controller' }
 with 'Catalyst::Component::ApplicationAttribute';
 our $c;
 
-has schema => (
-    is => 'rw',
-    isa => 'Bio::Chado::Schema',
-);
-
-sub _build_schema {
-    my ($self) = @_;
-    return $c->dbic_schema('Bio::Chado::Schema','sgn_chado');
-}
-
-
 sub api_v1_sequence :Path('/api/v1/sequence') Args(1) {
     my ( $self, $c, $feature_name ) = @_;
-    $self->schema( $c->dbic_schema('Bio::Chado::Schema','sgn_chado') );
     $self->_render_sequence($c, 'name', $feature_name);
 }
 
@@ -37,7 +25,7 @@ sub _render_sequence {
 
     if ( $value =~ m/\.fasta$/ ) {
         $value =~ s/\.fasta$//;
-        my $matching_features = $self->schema
+        my $matching_features = $c->dbic_schema('Bio::Chado::Schema','sgn_chado')
                                     ->resultset('Sequence::Feature')
                                     ->search({ $key => $value });
         my $feature = $matching_features->next;
@@ -52,7 +40,7 @@ sub render_fasta {
 
     my ($start,$end) =  split /\.\./, $c->request->query_keywords;
     my $feature = $c->stash->{feature};
-    my $matching_features = $self->schema
+    my $matching_features = $c->dbic_schema('Bio::Chado::Schema','sgn_chado')
                                 ->resultset('Sequence::Feature')
                                 ->search({ name => $feature->name });
 
