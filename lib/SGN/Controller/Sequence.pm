@@ -44,8 +44,12 @@ sub render_fasta {
                                 ->resultset('Sequence::Feature')
                                 ->search({ name => $feature->name });
 
+    my $name = $feature->name;
+    if( $start && $end && $end > $start ){
+        $name .= ":$start..$end";
+    }
     my $seq = Bio::PrimarySeq->new(
-                    -id  => $feature->name,
+                    -id  => $name,
                     -seq => $feature->residues,
                     );
     # ignores invalid ranges right now, should do something better
