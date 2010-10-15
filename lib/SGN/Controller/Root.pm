@@ -129,7 +129,7 @@ content-type, you should do that before forwarding to this
 =cut
 
 sub download :Private {
-    my ( $self, $c, @path ) = @_;
+    my ( $self, $c ) = @_;
 
     $c->res->headers->push_header( 'Content-Disposition' => 'attachment' );
 
