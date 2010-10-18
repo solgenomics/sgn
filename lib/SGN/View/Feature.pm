@@ -5,6 +5,7 @@ use warnings;
 use base 'Exporter';
 use Bio::Seq;
 use CatalystX::GlobalContext '$c';
+use CXGN::Tools::Text qw/commify_number/;
 
 
 our @EXPORT_OK = qw/
@@ -13,7 +14,21 @@ our @EXPORT_OK = qw/
     infer_residue cvterm_link
     organism_link feature_length
     mrna_sequence
+    get_description
 /;
+
+sub get_description {
+    my ($feature) = @_;
+    my $description;
+
+    if ($feature->type->name eq 'gene') {
+        my $child = ($feature->child_features)[0];
+        ($description) = $child ? map { $_->value } grep { $_->type->name eq 'Note' } $child->featureprops->all : '';
+    } else {
+        ($description) = map { $_->value } grep { $_->type->name eq 'Note' } $feature->featureprops->all;
+    }
+    return $description;
+}
 
 sub get_reference {
     my ($feature) = @_;
@@ -72,7 +87,7 @@ sub feature_table {
                 feature_link($f),
                 cvterm_link($f),
                 gbrowse_link($f,$fmin,$fmax),
-                $fmax-$fmin . " bp",
+                commify_number($fmax-$fmin) . " bp",
                 $loc->strand == 1 ? '+' : '-',
                 $loc->phase || '<span class="ghosted">NA</span>',
             ];

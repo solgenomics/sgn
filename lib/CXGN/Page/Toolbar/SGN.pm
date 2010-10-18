@@ -286,12 +286,6 @@ sub default_toolbar_data {
                       'Compare chromosomes from different maps, side by side.',
                 },
                 {
-                    name => 'Fast Mapping',
-                    link => '/tools/fastmapping/',
-                    desc =>
-'A quick mapping program which requires a file in mapmaker format that you can upload.'
-                },
-                {
                     name => 'CAPS Designer',
                     link => '/tools/caps_designer/caps_input.pl',
                     desc =>

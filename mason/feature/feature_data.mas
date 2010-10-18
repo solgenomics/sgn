@@ -4,12 +4,15 @@
     $species => undef
 </%args>
 <%once>
-    use SGN::View::Feature qw/feature_link cvterm_link organism_link gbrowse_link feature_length/;
+    use SGN::View::Feature qw/
+        feature_link cvterm_link organism_link gbrowse_link feature_length
+        get_description
+        /;
     use CXGN::Page::FormattingHelpers qw/info_table_html/;
     use CXGN::Tools::Text qw/commify_number/;
 </%once>
 <%perl>
-    my ($description) = map { $_->value } grep { $_->type->name eq 'Note' } $feature->featureprops->all;
+    my ($description) = get_description($feature);
     my ($length,$locations) = feature_length($feature);
     my $feature_length = commify_number($length) . " bases";
     if ($locations) {
@@ -29,7 +32,7 @@
     title       => $title,
     subtitle    => $feature->is_obsolete ? 'WARNING: This feature is obsolete' : '',
     collapsible => 1,
-    is_subsection => 1,
 &>
-    <% info_table_html( @feature_data ) %>
+    <% info_table_html( @feature_data, __border => 0 ) %>
+    <& /feature/dbxref.mas, dbxref => $feature->dbxref &>
 </&>
