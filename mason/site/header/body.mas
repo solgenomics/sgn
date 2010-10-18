@@ -23,10 +23,10 @@
 <table id="siteheader" cellpadding="0" cellspacing="0">
 <tr>
   <td rowspan="3" width="10" class="sunlogo">
-    <a href="/index.pl"><img src="/documents/img/sgn_logo_icon.png" width="70" height="69" border="0" alt="SGN Home" title="Sol Genomics Network Home" id="sgnlogo" /></a>
+    <a href="/"><img src="/documents/img/sgn_logo_icon.png" width="70" height="69" border="0" alt="SGN Home" title="Sol Genomics Network Home" id="sgnlogo" /></a>
   </td>
   <td style="vertical-align: bottom">
-    <a href="/index.pl"><img id="sgntext" src="/documents/img/sgn_logo_text.png" width="230" height="21" border="0" alt="SGN Home" title="Sol Genomics Network Home" /></a>
+    <a href="/"><img id="sgntext" src="/documents/img/sgn_logo_text.png" width="230" height="21" border="0" alt="SGN Home" title="Sol Genomics Network Home" /></a>
 
   </td>
   <td width="50%" class="clonecart">
@@ -36,7 +36,7 @@
   </td>
   <td class="toplink" width="50%">
 
-          <a class="toplink" href="/index.pl">home</a>
+          <a class="toplink" href="/">home</a>
         | <a class="toplink" href="/forum/topics.pl">forum</a>
         | <a class="toplink" href="/tools/contact.pl">contact</a>
         | <a class="toplink" href="/help/index.pl">help</a>

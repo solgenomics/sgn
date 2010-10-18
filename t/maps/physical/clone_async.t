@@ -46,8 +46,9 @@ is_deeply( $qjson_result, $qperl_result, "JSON and Perl return the same data str
 # test the project stats image
 { my $pi_req = request("$base?action=project_stats_img_html");
   is( $pi_req->code, 200, 'got async project stats image ok' );
-  is( $pi_req->content_type, 'text/html', 'got html content type' );
-#  like( $pi_req->content, qr/\.png"/, 'a .png image url is somewhere in the html' );
+  like( $pi_req->content, qr/\.png"/, 'a .png image url is somewhere in the html' );
+  like( $pi_req->content, qr/<img /, 'contains an image' );
+  like( $pi_req->content, qr/<map /, 'contains an image map' );
 }
 
 
