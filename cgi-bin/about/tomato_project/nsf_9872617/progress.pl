@@ -395,7 +395,7 @@ print<<END_HEREDOC;
   </table><br />
 
   <p>For more information on specific sequences please visit
-  <a href="/index.pl">The Solanaceae Genome
+  <a href="/">The Solanaceae Genome
   Network</a>.</p>
 
     
