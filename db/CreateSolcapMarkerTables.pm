@@ -32,11 +32,12 @@ it under the same terms as Perl itself.
 =cut
 
 
-package TestDbpatchMoose;
+package CreateSolcapMarkerTables;
 
 use Moose;
 extends 'CXGN::Metadata::Dbpatch';
 
+use Bio::Chado::Schema;
 
 sub init_patch {
     my $self=shift;
@@ -59,8 +60,8 @@ sub patch {
     
     print STDOUT "\nChecking if this db_patch was executed before or if previous db_patches have been executed.\n";
     
-    my $schema = Bio::Chado::Schema->connect( sub { $self->dbh } );
-    my @primers = ( 'forward primer', 'reverse primer','dCAPS primer','ASPE primer');
+    my $schema = Bio::Chado::Schema->connect( sub { $self->dbh->clone } ,  { on_connect_do => ['SET search_path TO public;'], autocommit => 1 });
+    my @primers = ( 'forward primer', 'reverse primer','dcaps primer','aspe primer', 'snp nucleotide', 'indel' , 'reference nucleotide');
     foreach my $p (@primers) {
         print "Storing primer type $p\n";
         my $cvterm = $schema->resultset("Cv::Cvterm")->create_with( 
@@ -114,12 +115,13 @@ INSERT INTO sgn.pcr_experiment_sequence (pcr_experiment_id, sequence_id ) SELECT
 
 alter table sgn.marker_experiment drop constraint marker_experiment_protocol_check;
 
-alter table sgn.marker_experiment add constraint marker_experiment_protocol_check CHECK (protocol = 'AFLP'::text OR protocol = 'CAPS'::text OR protocol = 'RAPD'::text OR protocol = 'SNP'::text OR protocol = 'SSR'::text OR protocol = 'RFLP'::text OR protocol = 'PCR'::text OR protocol = 'dCAPS'::text OR protocol = 'DART'::text OR protocol = 'OPA'::text OR protocol = 'unknown'::text)
+    alter table sgn.marker_experiment add constraint marker_experiment_protocol_check CHECK (protocol = 'AFLP'::text OR protocol = 'CAPS'::text OR protocol = 'RAPD'::text OR protocol = 'SNP'::text OR protocol = 'SSR'::text OR protocol = 'RFLP'::text OR protocol = 'PCR'::text OR protocol = 'dCAPS'::text OR protocol = 'DART'::text OR protocol = 'OPA'::text OR protocol = 'unknown'::text  OR protocol = 'ASPE'::text  OR protocol = 'Indel'::text);
+
 
 
 EOSQL
-
-print "You're done!\n";
+    
+    print "You're done!\n";
     
 }
 

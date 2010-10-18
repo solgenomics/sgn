@@ -33,7 +33,7 @@ it under the same terms as Perl itself.
 =cut
 
 
-package TestDbpatchMoose;
+package CopyAccessionToStock;
 
 use Moose;
 extends 'CXGN::Metadata::Dbpatch';
@@ -44,7 +44,7 @@ sub init_patch {
     my $name = __PACKAGE__;
     print "dbpatch name is ':" .  $name . "\n\n";
     my $description = 'populate the chado stock table with sgn accessions';
-    my @previous_requested_patches = ( "CreateSolcapMarkerTables"); #ADD HERE 
+    my @previous_requested_patches ;#= ( "CreateSolcapMarkerTables"); #ADD HERE 
     
     $self->name($name);
     $self->description($description);
@@ -60,22 +60,24 @@ sub patch {
     
     print STDOUT "\nChecking if this db_patch was executed before or if previous db_patches have been executed.\n";
     
-    my $schema = Bio::Chado::Schema->connect( sub { $self->dbh } );
-    my $q = "SELECT common_name, chado_organism_id , accession_name FROM accession JOIN accession_names USING (accession_name_id)";
+    my $schema = Bio::Chado::Schema->connect( sub { $self->dbh->clone } );
+    my $q = "SELECT common_name, chado_organism_id , accession_name FROM sgn.accession JOIN sgn.accession_names USING (accession_name_id)";
     my $sth = $self->dbh->prepare($q);
+    $sth->execute();
     
-    my ($accession_cvterm_id) = $schema->find( { name => 'accession' } ) || 
+    my ($accession_cvterm_id) = $schema->resultset("Cv::Cvterm")->find( { name => 'accession' } )->cvterm_id || 
         die "cvterm for 'accession' has to be stored first in the database ! ";
     
     while ( my ($cname, $organism_id , $acc_name)  = $sth->fetchrow_array) {
         print "Storing new stock $acc_name ($cname)\n";
+        $cname = " ($cname)" if $cname;
         my $stock = $schema->resultset("Stock::Stock")->find_or_create( 
             { name   => $acc_name,
-              uniquename => "$acc_name ($cname)",
+              uniquename => $acc_name.$cname,
               organism_id     => $organism_id,
               type_id  => $accession_cvterm_id,
             });
-        my $stockprop = $stock->create_stockprops( { common_name => $cname } , {autocreate => 1 } );
+        my $stockprop = $stock->create_stockprops( { stock_synonym => $cname } , {autocreate => 1 } );
     }
     
     print "You're done!\n";
