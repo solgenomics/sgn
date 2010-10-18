@@ -190,7 +190,6 @@ sub can_test_level {
 
     my %val = ( remote => 0, local => 1, process => 2 );
     confess "invalid test level '$check'" unless exists $val{$check};
-    confess "invalid test level '$check'" unless exists $val{$check};
     return $val{ $self->test_level } >= $val{ $check };
 
 }
