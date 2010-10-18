@@ -110,6 +110,13 @@ INSERT INTO sgn.pcr_experiment_sequence (pcr_experiment_id, sequence_id ) SELECT
 --need to refactor the code that uses pcr_experiment.primer_id_fwd/rev/pd (dCAPs?). This will be done in the topic/solcap_marker branch
   
 
+--add SNP to the trigger
+
+alter table sgn.marker_experiment drop constraint marker_experiment_protocol_check;
+
+alter table sgn.marker_experiment add constraint marker_experiment_protocol_check CHECK (protocol = 'AFLP'::text OR protocol = 'CAPS'::text OR protocol = 'RAPD'::text OR protocol = 'SNP'::text OR protocol = 'SSR'::text OR protocol = 'RFLP'::text OR protocol = 'PCR'::text OR protocol = 'dCAPS'::text OR protocol = 'DART'::text OR protocol = 'OPA'::text OR protocol = 'unknown'::text)
+
+
 EOSQL
 
 print "You're done!\n";
