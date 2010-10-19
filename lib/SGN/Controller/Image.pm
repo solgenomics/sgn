@@ -53,13 +53,13 @@ sub confirm :Path('/image/confirm') {
 
     my $filename_validation_msg =  $self->validate_image_filename(basename($filename));
     if ( $filename_validation_msg )  { #if non-blank, there is a problem with Filename, print messages
-#print STDERR "Invalid Upload Filename Attempt: $temp_file_base, $filename_validation_msg \n";
-        print qq { There is a problem with the image file you selected: $filename <br />};
-        print qq { Error:  };
-        print $filename_validation_msg;
-        print qq {<br />};
+
         unlink $tempfile;  # remove upload! prevents more errors on item we have rejected
 
+        $c->throw( public_message => <<EOM, is_client_error => 1 );
+There is a problem with the image file you selected: $filename <br />
+Error: $filename_validation_msg <br />
+EOM
 
     }
     my $image_url = $c->tempfiles_subdir('image')."/".basename($tempfile);
