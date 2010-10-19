@@ -21,7 +21,7 @@ L<Test::WWW::Mechanize::Catalyst> with some SGN-specific convenience
     my $value = $mech->findvalue( '/html/body//span[@class="sequence"]');
 
     # do some tests while logged in as a temporary user
-    $mech->while_logged_in( user_type => 'curator', sub {
+    $mech->while_logged_in( { user_type => 'curator' }, sub {
 
         $mech->get_ok( '/organism/sol100/view' );
         $mech->content_contains( 'Authorized user', 'now says authorized user' );
@@ -224,12 +224,13 @@ sub create_test_user {
     my %props = @_;
 
     local $SIG{__DIE__} = \&Carp::confess;
-    my %u = qw(
-               first_name  testfirstname
-               last_name   testlastname
-               user_name   testusername
-               password    testpassword
-              );
+    my %u = (
+        first_name => 'testfirstname',
+        last_name  => 'testlastname',
+        user_name  => 'testusername',
+        password   => 'testpassword',
+        user_type  => $props{user_type} || 'user',
+       );
 
     $self->_delete_user( \%u );
 
@@ -242,13 +243,13 @@ sub create_test_user {
         $p->set_first_name( $u{first_name} );
         $p->set_last_name( $u{last_name} );
         my $p_id = $p->store();
-        $u{ sp_person_id } = $p_id
+        $u{ 'id' } = $p_id
             or die "could not create person $u{first_name} $u{last_name}";
 
         my $login = CXGN::People::Login->new( $dbh, $p_id );
         $login->set_username( $u{user_name} );
         $login->set_password( $u{password} );
-        $login->set_user_type( $props{user_type} || 'user' );
+        $login->set_user_type( $u{user_type} );
 
         $login->store();
     });
@@ -265,7 +266,7 @@ sub set_test_user_type {
     my $self = shift;
 
     CXGN::People::Login
-          ->new( $self->context->dbc->dbh, $self->test_user->{sp_person_id} )
+          ->new( $self->context->dbc->dbh, $self->test_user->{id} )
           ->set_user_type(shift);
 }
 
@@ -302,12 +303,30 @@ hash-style list of parameters to set on the temp user that is created.
 
          current supported user properties:
 
-           user_type  'curator', 'sequencer', etc.  default 'user'
+           user_type  =>  'curator', 'sequencer', etc.  default 'user'
+
   Ret: nothing meaningful
+
+In addition, the called subroutine is passed a hashref of user
+information of the form:
+
+  {
+        first_name => 'testfirstname',
+        last_name  => 'testlastname',
+        user_name  => 'testusername',
+        password   => 'testpassword',
+        user_type  =>  $props{user_type} || 'user',
+        id         => 34,
+  }
 
   Example:
 
     $mech->while_logged_in({ user_type => 'curator' }, sub {
+
+        my $user_info = shift;
+        # the called 
+
+        diag "logged in as user id $user_info->{id}";
 
         $mech->get_ok( '/organism/sol100/view' );
         $mech->content_contains( 'Authorized user', 'now says authorized user' );
@@ -321,7 +340,7 @@ sub while_logged_in {
     $self->with_test_level( local => sub {
         $self->create_test_user( %$props );
         $self->log_in_ok;
-        $sub->();
+        $sub->( $self->test_user );
         $self->log_out;
     });
 }
@@ -350,7 +369,7 @@ sub while_logged_in_all {
         for my $user_type (@users) {
             $self->create_test_user( user_type => $user_type );
             $self->log_in_ok;
-            $sub->($user_type);
+            $sub->( $self->test_user );
             $self->log_out;
         }
     });
