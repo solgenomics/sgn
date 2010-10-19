@@ -26,7 +26,7 @@ sub view :Path('/image/view/') Args(1) {
 sub add :Path('/image/add') Args(0) {
     my ($self, $c) = @_;
     $c->forward_to_mason_view('/image/add_image.mas',
-                              refering_page => $c->req->referer(),
+                              refering_page => $c->req->referer() || undef,
                               type          => $c->req->param('type'),
                               type_id       => $c->req->param('type_id'),
         );
