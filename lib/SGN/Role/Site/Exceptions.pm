@@ -49,7 +49,13 @@ sub throw {
         $args{public_message}  ||= $args{message};
         $args{message}         ||= $args{public_message};
         $args{is_server_error} ||= $args{is_error};
-        die Catalyst::Exception->new( %args );
+        my $exception = SGN::Exception->new( %args );
+        if( $exception->is_server_error ) {
+            die $exception;
+        } else {
+            $self->_set_exception_response( $exception );
+            $self->detach;
+        }
     } else {
         die @_;
     }
@@ -65,14 +71,16 @@ then throws an exception that will display a 404 error page.
 =cut
 
 sub throw_404 {
-    my ( $c ) = @_;
+    my ( $c, $message ) = @_;
 
-    $c->log->debug('throwing 404 error') if $c->debug;
+    $message ||= 'Resource not found.';
+
+    $c->log->debug("throwing 404 error ('$message')") if $c->debug;
 
     my %throw = (
             title => '404 - not found',
             http_status => 404,
-            public_message => 'Resource not found, we apologize for the inconvenience. ',
+            public_message => "$message  We apologize for the inconvenience.",
            );
 
     my $self_uri  = $c->uri_for('/');
@@ -82,7 +90,7 @@ sub throw_404 {
         $throw{is_server_error} = 1;
         $throw{notify} = 1;
     } else {
-        $throw{public_message}  .= 'You may wish to contact the referring site and inform them of the error.';
+        $throw{public_message}  .= ' You may wish to contact the referring site and inform them of the error.';
         $throw{is_client_error} = 1;
         $throw{notify} = 0;
     }
@@ -94,23 +102,32 @@ sub throw_404 {
 sub _error_objects {
     my $self = shift;
 
-    return
-        map {
-            blessed($_) && $_->isa('SGN::Exception') ? $_ : SGN::Exception->new( message => "$_" )
-        } @{ $self->error };
+    return map $self->_coerce_to_exception( $_ ),
+           @{ $self->error };
 }
 
-around 'finalize_error' => sub {
-    my ( $orig, $self ) = @_;
+sub _coerce_to_exception {
+    my ( $self, $thing ) = @_;
+    return $thing if  blessed($thing) && $thing->isa('SGN::Exception');
+    return SGN::Exception->new( message => "$thing" );
+}
+
+
+sub _set_exception_response {
+    my $self = shift;
+    my @exceptions = map $self->_coerce_to_exception($_), @_;
 
     # render the message page for all the errors
     $self->stash({
         template         => '/site/error/exception.mas',
 
-        exception        => [ $self->_error_objects ],
+        exception        => \@exceptions,
         show_dev_message => !$self->get_conf('production_server'),
         contact_email    => $self->config->{feedback_email},
     });
+
+    $self->res->content_type('text/html');
+
     unless( $self->view('Mason')->process( $self ) ) {
         # there must have been an error in the message page, try a
         # backup
@@ -128,17 +145,23 @@ around 'finalize_error' => sub {
     };
 
     # insert a JS pack in the error output if necessary
-    $self->res->content_type('text/html');
     $self->forward('/js/insert_js_pack_html');
 
-
     # set our http status to the most severe error we have
-    my ($worst_status ) =
+    my ( $worst_status ) =
         sort { $b <=> $a }
         map $_->http_status,
-        $self->_error_objects;
+        @exceptions;
 
     $self->res->status( $worst_status );
+
+    return 1;
+}
+
+around 'finalize_error' => sub {
+    my ( $orig, $self ) = @_;
+
+    $self->_set_exception_response( @{ $self->error } );
 
     # now decide which errors to actually notify about, and notify about them
     my ($no_notify, $notify) =
