@@ -1,8 +1,9 @@
-
 use strict;
+use warnings;
 
 use Test::More tests=>9;
 
+use lib 't/lib';
 use SGN::Test::WWW::Mechanize;
 use CXGN::DB::Connection;
 
