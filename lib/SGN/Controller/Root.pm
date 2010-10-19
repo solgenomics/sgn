@@ -108,8 +108,12 @@ sub end : Private {
     # don't try to render a default view if this was handled by a CGI
     $c->forward('render') unless $c->req->path =~ /\.pl$/;
 
+    # enforce a default text/html content type regardless of whether
+    # we tried to render a default view
+    $c->res->content_type('text/html') unless $c->res->content_type;
+
     # insert our javascript packages into the rendered view
-    if( !$c->res->content_type || $c->res->content_type eq 'text/html' ) {
+    if( $c->res->content_type eq 'text/html' ) {
         $c->forward('/js/insert_js_pack_html')
     } else {
         warn "skipping page with content type ".$c->res->content_type;
