@@ -121,9 +121,7 @@ sub store :Path('/image/store') {
 
     # go to the image detail page
     # open for editing.....
-    $c->redirect("/image/view/$image_id");
-
-
+    $c->res->redirect( "/image/view/$image_id" );
 }
 
 
