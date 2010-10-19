@@ -60,11 +60,15 @@ my %form = ( form_name => 'upload_image_form',
 
 $m->submit_form_ok(\%form, "form submit tets");
 
-$m->content_like( qr/image\s+uploaded/, "content test 1");
-#check if referer appears
-$m->content_contains('http://google.com');
+$m->content_like( qr/image\s+uploaded/, "content test 1", "check basic content");
 
-#check submitter id
-$m->content_contains($p_id);
+$m->content_contains('http://google.com', "check referer");
+
+$m->content_contains($p_id, "submitter id check");
 
 
+END { 
+    if( my $u_id = CXGN::People::Person->get_person_by_username( $dbh, "testusername" ) ) {
+	CXGN::People::Person->new( $dbh, $u_id )->hard_delete;
+    }
+}
