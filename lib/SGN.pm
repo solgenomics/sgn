@@ -1,3 +1,18 @@
+
+=head1 NAME
+
+SGN - Catalyst-based application to run the SGN website.
+
+=head1 SYNOPSIS
+
+    script/sgn_server.pl
+
+=head1 DESCRIPTION
+
+This is the main class for the Sol Genomics Network main website.
+
+=cut
+
 package SGN;
 use Moose;
 use namespace::autoclean;
@@ -5,6 +20,16 @@ use namespace::autoclean;
 use SGN::Exception;
 
 use Catalyst::Runtime 5.80;
+
+=head1 ROLES
+
+Does the roles L<SGN::Role::Site::Config>,
+L<SGN::Role::Site::DBConnector>, L<SGN::Role::Site::DBIC>,
+L<SGN::Role::Site::Exceptions>, L<SGN::Role::Site::Files>,
+L<SGN::Role::Site::Mason>, L<SGN::Role::Site::SiteFeatures>
+
+=cut
+
 use Catalyst qw/
      ConfigLoader
      Static::Simple
@@ -19,6 +44,10 @@ use Catalyst qw/
  /;
 
 extends 'Catalyst';
+
+=head1 METHODS
+
+=cut
 
 # configure catalyst-related things.  in general, things should not be
 # added here.  add them to SGN.conf, with comments.
@@ -90,25 +119,13 @@ sub _update_static_symlinks {
     }
 }
 
-=head1 NAME
-
-SGN - Catalyst-based application to run the SGN website.
-
-=head1 SYNOPSIS
-
-    script/sgn_server.pl
-
-=head1 DESCRIPTION
-
-[enter your description here]
-
 =head1 SEE ALSO
 
 L<SGN::Controller::Root>, L<Catalyst>
 
 =head1 AUTHOR
 
-Robert Buels,,,
+The SGN team
 
 =head1 LICENSE
 
