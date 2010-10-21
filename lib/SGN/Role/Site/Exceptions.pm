@@ -48,7 +48,10 @@ sub throw {
         my %args = @_;
         $args{public_message}  ||= $args{message};
         $args{message}         ||= $args{public_message};
-        $args{is_server_error} ||= $args{is_error};
+        if( defined $args{is_error}  && ! $args{is_error} ) {
+            $args{is_server_error} = 0;
+            $args{is_client_error} = 0;
+        }
         my $exception = SGN::Exception->new( %args );
         if( $exception->is_server_error ) {
             die $exception;
@@ -88,10 +91,12 @@ sub throw_404 {
 
     if( $our_fault ) {
         $throw{is_server_error} = 1;
+        $throw{is_client_error} = 0;
         $throw{notify} = 1;
     } else {
         $throw{public_message}  .= ' You may wish to contact the referring site and inform them of the error.';
         $throw{is_client_error} = 1;
+        $throw{is_server_error} = 0;
         $throw{notify} = 0;
     }
 

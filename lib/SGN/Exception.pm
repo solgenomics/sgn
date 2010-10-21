@@ -71,6 +71,13 @@ around 'BUILDARGS' => sub {
     $args{developer_message} ||= $args{message};
     $args{message}           ||= $args{developer_message};
 
+    if( defined $args{is_client_error} && !$args{is_client_error} ) {
+        $args{is_server_error} = 1 unless defined $args{is_server_error};
+    }
+    if( defined $args{is_server_error} && !$args{is_server_error} ) {
+        $args{is_client_error} = 1 unless defined $args{is_client_error};
+    }
+
     return $class->$orig( %args );
 };
 
