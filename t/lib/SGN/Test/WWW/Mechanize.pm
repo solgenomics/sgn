@@ -96,7 +96,10 @@ It also does the L<WWW::Mechanize::TreeBuilder> role, with a tree_class of L<HTM
 use Moose;
 use namespace::autoclean;
 
-BEGIN { $ENV{CATALYST_SERVER} ||= $ENV{SGN_TEST_SERVER} }
+BEGIN {
+    $ENV{SGN_TEST_MODE}   = 1;
+    $ENV{CATALYST_SERVER} = $ENV{SGN_TEST_SERVER};
+}
 
 use Carp;
 use Test::More;
@@ -166,7 +169,7 @@ Read-only attribute to give the current testing level, one of 'remote',
 
 sub test_level {
     return 'process' if ! $ENV{SGN_TEST_SERVER};
-    return 'remote'   if $ENV{SGN_TEST_REMOTE};
+    return 'remote'  if $ENV{SGN_TEST_REMOTE};
     return 'local';
 }
 

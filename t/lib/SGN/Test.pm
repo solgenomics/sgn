@@ -11,19 +11,18 @@ use List::Util qw/min shuffle/;
 use Test::More;
 use Exporter;
 
+use SGN::Devel::MyDevLibs;
+
 use HTML::Lint;
 
-BEGIN { $ENV{CATALYST_SERVER} ||= $ENV{SGN_TEST_SERVER} }
-
-use SGN::Devel::MyDevLibs;
+use lib 't/lib';
+use SGN::Test::WWW::Mechanize;
 
 # we can re-export Catalyst::Test's request, get, and ctx_request functions
 use Catalyst::Test 'SGN';
 our @ISA = qw/Exporter/;
 our @EXPORT_OK = qw/validate_urls request get ctx_request with_test_level/;
 
-use lib 't/lib';
-use SGN::Test::WWW::Mechanize;
 
 my $test_server_name = $ENV{SGN_TEST_SERVER} || 'http://(local test server)';
 
