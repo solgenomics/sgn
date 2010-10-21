@@ -100,8 +100,10 @@ sub throw_404 {
         $throw{is_client_error} = 1;
         $throw{is_server_error} = 0;
         $throw{notify} = 0;
-        $throw{developer_message} = "Probably not our fault.  Referrer is '".($c->req->referer || '')."'";
+        $throw{developer_message} = "404 is probably not our fault.  Referrer is '".($c->req->referer || '')."'";
     }
+
+    $c->log->debug( $throw{developer_message} ) if $c->debug;
 
     $c->throw( %throw );
 }
