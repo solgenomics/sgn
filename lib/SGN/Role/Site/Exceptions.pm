@@ -77,6 +77,7 @@ sub throw_404 {
     my ( $c, $message ) = @_;
 
     $message ||= 'Resource not found.';
+    $message .= '.' unless $message =~ /\.\s*$/; #< add a period at the end if the message does not have one
 
     $c->log->debug("throwing 404 error ('$message')") if $c->debug;
 
