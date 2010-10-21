@@ -93,11 +93,13 @@ sub throw_404 {
         $throw{is_server_error} = 1;
         $throw{is_client_error} = 0;
         $throw{notify} = 1;
+        $throw{developer_message} = "404 error seems to be our fault, referrer is '".$c->req->referer."'";
     } else {
         $throw{public_message}  .= ' You may wish to contact the referring site and inform them of the error.';
         $throw{is_client_error} = 1;
         $throw{is_server_error} = 0;
         $throw{notify} = 0;
+        $throw{developer_message} = "Probably not our fault.  Referrer is '".($c->req->referer || '')."'";
     }
 
     $c->throw( %throw );
