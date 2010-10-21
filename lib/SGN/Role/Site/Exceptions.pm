@@ -191,8 +191,10 @@ around 'finalize_error' => sub {
     my @server_errors = grep $_->is_server_error, $self->_error_objects;
 
     if( $self->debug && @server_errors && ! $self->config->{production_server} ) {
+        my $save_status = $self->res->status;
         @{ $self->error } = @server_errors;
         $self->$orig();
+        $self->res->status( $save_status ) if $save_status;
     }
 
     $self->clear_errors;
