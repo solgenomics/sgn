@@ -35,4 +35,10 @@ $mech->with_test_level( local => sub {
     }
 });
 
+# keep the code from thinking the error is our fault
+$mech->add_header( Referer => undef );
+
+$mech->get( '/genomic/clone/0/annotation/download?set=AUGUSTUS_ab_initio&format=gff3' );
+is( $mech->status, 404, 'got a 404 for a nonexistent set' );
+
 done_testing;
