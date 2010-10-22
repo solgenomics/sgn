@@ -22,3 +22,4 @@ programs/fast_mapping
 sgn_local.conf
 MANIFEST
 MANIFEST.SKIP
+./cgi-bin/secretom
