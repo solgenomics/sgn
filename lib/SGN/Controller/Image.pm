@@ -25,6 +25,12 @@ sub view :Path('/image/view/') Args(1) {
 
 sub add :Path('/image/add') Args(0) {
     my ($self, $c) = @_;
+    my $sp_person_id =CXGN::Login->new($c->dbc->dbh)->has_session();
+    if (!$sp_person_id) { 
+	$c->response->redirect('/solpeople/login.pl');
+	
+    }
+
     $c->forward_to_mason_view('/image/add_image.mas',
                               refering_page => $c->req->referer() || undef,
                               type          => $c->req->param('type'),
@@ -37,8 +43,8 @@ sub confirm :Path('/image/confirm') {
 
     my $sp_person_id = CXGN::Login->new($c->dbc->dbh)->has_session();
     if (!$sp_person_id) {
-        die "Need to be logged in!";
-
+	$c->response->redirect('/solpeople/login.pl');
+	
     }
     my $upload = $c->req->upload('file');
 
@@ -82,6 +88,12 @@ sub store :Path('/image/store') {
     my $self = shift;
     my $c = shift;
 
+    my $sp_person_id = CXGN::Login->new($c->dbc->dbh)->has_session();
+    if (!$sp_person_id) {
+	$c->response->redirect('/solpeople/login.pl');
+	
+    }
+    
     my $image = SGN::Image->new($c->dbc->dbh());
 
     my $tempfile = $c->req()->param('tempfile');
