@@ -77,6 +77,7 @@ print info_section_html( title => 'Emeritus Staff',
 			 info_table_html( __multicol => 3, __border => 0,
 					 'Bioinformatics Analysts' =>
 					  ul(
+                                             'Adri Mills',
                                              'Beth Skwarecki',
 					     'Dean Eckstrom',
 					     'Chris Carpita',
