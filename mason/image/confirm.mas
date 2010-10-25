@@ -28,7 +28,7 @@ if ($type && $type_id) { print "<b>Association</b> $type id $type_id<br /><br />
 print "Submitter: $sp_person_id<br />\n";
 
 print qq { 
-	  <form action="/image/store" method="post" enctype="multipart/form-data" >
+	  <form name="store_image" action="/image/store" method="post" enctype="multipart/form-data" >
 	  <input type="hidden" name="tempfile" value="$tempfile" />
 	  <input type="hidden" name="filename" value="$filename" />
 	  <input type="hidden" name="type" value="$type" />
