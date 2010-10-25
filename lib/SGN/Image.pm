@@ -512,6 +512,70 @@ sub get_associated_objects {
     return @associations;
 }
 
+
+
+### deanx additions - Nov 13, 2007
+
+=head2 associate_locus
+
+ Usage:        $image->associate_locus($locus_id)
+ Desc:         associate a locus with this image
+ Ret:          database_id
+ Args:         locus_id
+ Side Effects:
+ Example:
+
+=cut
+
+sub associate_locus {
+    my $self = shift;
+    my $locus_id = shift;
+    my $sp_person_id= $self->get_sp_person_id();
+    my $query = "INSERT INTO phenome.locus_image
+                   (locus_id,
+		   sp_person_id,
+		   image_id)
+		 VALUES (?, ?, ?)";
+    my $sth = $self->get_dbh()->prepare($query);
+    $sth->execute(
+    		$locus_id,
+    		$sp_person_id,
+    		$self->get_image_id()
+		);
+
+    my $locus_image_id= $self->get_currval("phenome.locus_image_locus_image_id_seq");
+    return $locus_image_id;
+}
+
+
+=head2 get_loci
+
+ Usage:   $self->get_loci
+ Desc:    find the locus objects asociated with this image
+ Ret:     a list of locus objects
+ Args:    none
+ Side Effects: none
+ Example:
+
+=cut
+
+sub get_loci {
+    my $self = shift;
+    my $query = "SELECT locus_id FROM phenome.locus_image WHERE locus_image.obsolete = 'f' and locus_image.image_id=?";
+    my $sth = $self->get_dbh()->prepare($query);
+    $sth->execute($self->get_image_id());
+    my $locus;
+    my @loci = ();
+    while (my ($locus_id) = $sth->fetchrow_array()) {
+       $locus = CXGN::Phenome::Locus->new($self->get_dbh(), $locus_id);
+        push @loci, $locus;
+    }
+    return @loci;
+}
+
+
+
+
 =head2 function get_associated_object_links
 
   Synopsis:
