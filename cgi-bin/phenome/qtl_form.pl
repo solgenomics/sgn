@@ -540,7 +540,7 @@ sub intro {
 			                                          contents => ' ',
                                                                );
 
-   
+    $guide = lc($guide);
     my $intro = qq^
        <form action="qtl_load.pl" method="POST" enctype="MULTIPART/FORM-DATA">  
         $intro_sec
@@ -563,9 +563,13 @@ sub intro {
            <li>Statistical parameters.
         </ul>
 
-        <p>The QTL data  uploading software is at Beta stage. If you have any problems 
-           uploading your data or remarks, please send us your feedback.
+        <p> Please read the submission $guide before starting to upload your data.
+        </p> 
+
+        <p>The QTL data  uploading software is at Beta stage. If you have any 
+           problems uploading your data or remarks, please send us your feedback.
         </p>
+      
      </td>
     </tr>
     <tr> 
