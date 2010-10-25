@@ -167,7 +167,7 @@ sub org_pop_form {
 			                                           id        =>"organism_search",
 			                                          );
    
-    my $pop_sec = $self->subsection_info('Population Details', ' ', "$required <i>must be filled.</i>");
+    my $pop_sec = $self->subsection_info('Population details', ' ', "$required <i>must be filled.</i>");
 
 
    
