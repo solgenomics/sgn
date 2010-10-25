@@ -29,16 +29,5 @@ $mech->content_like( qr/<title>/, 'got a title' );
 $mech->content_unlike( qr/INSERT_JS_PACK/, 'js insertion seems to have happened' );
 $mech->content_unlike( qr/<html>/i, 'no html opening' );
 
-
-
-{ # test download_static
-  my $res = request( '/download/documents/inc/sgn.css' );
-  is( $res->header('Content-disposition'), 'attachment, filename=sgn.css',
-      'got the right disposition header from the static downloader' );
-
-  like( $res->content, qr/text-align\s*:/, 'content looks like css' );
-  is( $res->content_type, 'text/css', 'got a CSS content type' );
-}
-
 done_testing;
 
