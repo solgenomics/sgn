@@ -3,9 +3,11 @@ use warnings;
 
 use Test::More;
 
+use CXGN::DB::Connection;
 use lib 't/lib';
 use SGN::Test::WWW::Mechanize;
 use File::Basename;
+use CXGN::Image;
 
 my $m = SGN::Test::WWW::Mechanize->new;
 
@@ -48,6 +50,21 @@ $m->with_test_level( local => sub {
 
 	$m->content_contains(basename($test_file));
 
+	my $uri = $m->uri();
+
+	my $image_id = "";
+	if ($uri =~ /\/(\d+)$/) { 
+	    $image_id=$1;
+	}
+
+	my $dbh = CXGN::DB::Connection->new();
+	my $i = CXGN::Image->new(dbh=>$dbh, image_id=>$image_id, image_dir=>$m->context->config->{'image_dir'});
+	print STDERR "Deleting image_id $image_id\n";
+	$i->hard_delete();
+
+	$dbh->commit();
+	$dbh->disconnect();
+       
   });
 });
 
