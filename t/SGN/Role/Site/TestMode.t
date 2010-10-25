@@ -14,8 +14,8 @@ my $config_1 = sub { +{
     },
     dog  => '/cat',
 
-    'Plugin::Site::Config' => {
-        munge_conf => [
+    'Plugin::Site::TestMode' => {
+        reroot_conf => [
             '/quux/zoom',
             '/big/long/thing/that/does/not/exist',
             'zaz/zoz',
@@ -26,9 +26,9 @@ my $config_1 = sub { +{
     },
 }};
 
-my $munged_1 = {
-  'Plugin::Site::Config' => {
-    'munge_conf' => [
+my $rerooted_1 = {
+  'Plugin::Site::TestMode' => {
+    'reroot_conf' => [
       '/quux/zoom',
       '/big/long/thing/that/does/not/exist',
       'zaz/zoz',
@@ -61,7 +61,7 @@ my $munged_1 = {
     my $c = mock_app->new( config => $config_1->() );
     $c->finalize_config;
 
-    is_deeply( $c->config, $munged_1, 'test-mode configuration worked' )
+    is_deeply( $c->config, $rerooted_1, 'test-mode configuration worked' )
         or diag 'actual config:', explain $c->config;
 }
 

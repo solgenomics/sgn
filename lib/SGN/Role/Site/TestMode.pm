@@ -45,10 +45,10 @@ sub _reroot_test_mode_files {
 
     return unless $c->test_mode;
 
-    my $filter_conf_keys = $c->config->{'Plugin::Site::Config'}->{munge_conf}
+    my $filter_conf_keys = $c->config->{'Plugin::Site::TestMode'}->{reroot_conf}
         or return;
 
-    my $test_files_path_abs = $c->config->{'Plugin::Site::Config'}->{test_data_dir};
+    my $test_files_path_abs = $c->config->{'Plugin::Site::TestMode'}->{test_data_dir};
     my $test_files_path_rel = File::Spec->abs2rel( $test_files_path_abs, $c->path_to );
 
     my $test_mode_applyer = Data::Visitor::Callback->new(
