@@ -5,9 +5,11 @@ use Test::More;
 
 use lib 't/lib';
 use SGN::Test::WWW::Mechanize;
+use File::Basename;
 
 my $m = SGN::Test::WWW::Mechanize->new;
 
+my $test_file = 't/image/tv_test_1.png';
 # test image upload
 #$m->get_ok('/image/add?type=test&type_id=1');
 
@@ -21,7 +23,7 @@ $m->with_test_level( local => sub {
         my %form = (
             form_name => 'upload_image_form',
             fields => {
-                file => 't/image/tv_test_1.png',
+                file => $test_file,
                 #		 type=>'locus',
                 #		 type_id=>'1',
                 refering_page => 'http://google.com',
@@ -35,6 +37,16 @@ $m->with_test_level( local => sub {
         $m->content_contains('http://google.com', "check referer");
 
         $m->content_contains( $user_info->{id}, "submitter id check");
+	
+	my $store_form = { 
+	    form_name => 'store_image',
+	};
+
+	$m->submit_form_ok($store_form, "Submitting the image for storage");
+	
+	$m->content_contains('SGN Image');
+
+	$m->content_contains(basename($test_file));
 
   });
 });
