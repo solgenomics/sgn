@@ -30,6 +30,19 @@ print info_section_html(title => 'Meeting Records',
 EOHTML
 
 
+			.info_section_html(title => 'SOL 2010 Sequencing Meeting',
+					   subtitle => 'Tuesday, Sep 7, 2010',
+					   is_subsection => 1,
+					   contents => <<EOHTML)
+<dl>
+<dt>Location</dt>
+<dd>Apex Hotel, Dundee, UK</dd>
+<dt>Notes</dt>
+<dd>
+  meeting minutes by Joyce van Eck <a href="/static_content/solanaceae-project/sol-bioinformatics/sol2010_docs/vanEck_notes.txt">[txt]</a><br />
+</dd>
+</dl>
+EOHTML
 			.info_section_html(title => 'PAG 2010 Sequencing Meeting',
 					   subtitle => 'Tuesday, Jan 12, 2010',
 					   is_subsection => 1,
