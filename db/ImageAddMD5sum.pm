@@ -67,6 +67,8 @@ sub patch {
 --do your SQL here
 --
 
+GRANT SELECT, UPDATE, INSERT, DELETE ON metadata.md_image TO web_usr;
+
 ALTER TABLE metadata.md_image ADD COLUMN md5sum text
    
 EOSQL
