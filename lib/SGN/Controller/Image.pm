@@ -101,7 +101,7 @@ sub store :Path('/image/store') {
     my $type = $c->req()->param('type');
     my $type_id = $c->req()->param('type_id');
     my $refering_page = $c->req()->param('refering_page');
-    my $sp_person_id = CXGN::Login->new($c->dbc->dbh())->has_session();
+
 
     my $temp_image_dir = $c->get_conf("basepath")."/".$c->tempfiles_subdir('image');
 
@@ -117,7 +117,6 @@ sub store :Path('/image/store') {
     #print STDERR "Setting the submitter information in the image object...\n";
 
     $image->set_name($filename);
-
 
     $image->store();
 
