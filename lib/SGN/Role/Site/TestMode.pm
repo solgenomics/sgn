@@ -45,7 +45,6 @@ has 'test_mode' => (
     default => sub {
         my $c = shift;
         my $app_name = ref $c || $c;
-        #warn "app is $app_name, test mode is ".$ENV{ uc($app_name).'_TEST_MODE' };
         return $ENV{ uc($app_name).'_TEST_MODE' };
     },
 );
