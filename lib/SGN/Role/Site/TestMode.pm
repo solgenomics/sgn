@@ -18,9 +18,24 @@ requires 'config', 'path_to', 'finalize_config';
 
 after 'finalize_config' => \&_reroot_test_mode_files;
 
+=head1 DESCRIPTION
+
+This role requires that Catalyst::Plugin::ConfigLoader (or other
+plugin providing finalize_config).
+
+It does two things: it adds a C<test_mode> attribute, and it reroots
+paths to files and directories in the global configuration if the app
+is in test mode.
+
+=head1 ADDED ATTRIBUTES
+
 =head2 test_mode
 
-read-only accessor, boolean telling whether the site is now running in test mode
+read-only accessor, boolean telling whether the site is now running in
+test mode.
+
+By default, this attribute is true if the MYAPP_TEST_MODE environment
+variable is set to a true value.
 
 =cut
 
@@ -35,7 +50,62 @@ has 'test_mode' => (
     },
 );
 
+=head1 CONFIGURATION PATH REROOTING
 
+At load time, if the app is running in test mode, this role will
+reroot paths in the global configuration to point into a tree of test
+data instead of wherever they were pointing before.
+
+Example configuration:
+
+    MyApp->config(
+
+      # TestMode configuration
+      'Plugin::Site::TestMode' => {
+          reroot_conf    => [ 'foo', 'bar/baz' ],
+          test_data_dir => '__path_to(t/data)__',
+      },
+
+      # other conf data
+      foo => 'my/relative/path',
+      bar => {
+         quux => '/some/path',
+         baz  => '/absolute/path',
+      }
+    )
+
+This configuration, if MYAPP_TEST_MODE is set, will be rerootd by the
+TestMode plugin into:
+
+    MyApp->config(
+
+      # TestMode configuration
+      'Plugin::Site::TestMode' => {
+          reroot_conf    => [ 'foo', 'bar/baz' ],
+          test_data_dir => '__path_to(t/data)__',
+      },
+
+      # other conf data
+      foo => 't/data/my/relative/path',
+      bar => {
+         quux => '/some/path',
+         baz  => '/path/to/myapp/t/data/absolute/path',
+      }
+    )
+
+
+This is controlled by the C<reroot_conf> and C<test_data_dir>
+configuration variables.  C<reroot_conf> takes an arrayref of conf
+variable names to reroot as if they were path names (using a
+/-separated syntax to denote non-top-level conf variables), and
+C<test_data_dir> takes the absolute path to the directory in which the
+test data file tree resides.
+
+Note that relative paths are kept relative, and assumed to be intended
+as relative to the site's home directory.  You cannot currently reroot
+a relative path unless it is relative to the site home directory.
+
+=cut
 
 ########### helper subs #######
 
