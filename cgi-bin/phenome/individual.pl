@@ -359,7 +359,7 @@ sub display_page {
     my %phenotypes= $individual->get_phenotypes();
     my $population_obj = $individual->get_population();          
     my @phenotype;
-    my ($term_obj, $term_name, $term_id, $min, $max, $ave, $mean_value);
+    my ($term_obj, $term_name, $term_id, $pop_min, $pop_max, $pop_ave, $mean_value);
     
     for my $observable_id (keys %phenotypes) 
     {
@@ -377,7 +377,7 @@ sub display_page {
 	    $term_id   = $term_obj->get_user_trait_id();
 	}    
 	
-	($min, $max, $ave) = $population_obj->get_pop_data_summary($term_id);
+	($pop_min, $pop_max, $pop_ave) = $population_obj->get_pop_data_summary($term_id);
 	my @values = map ($_->get_value() , @{ $phenotypes{$observable_id} } );
 	my $stat = Statistics::Descriptive::Sparse->new();
         $stat->add_data(@values);
@@ -389,9 +389,9 @@ sub display_page {
 	# round 3 digit precision
 	my $x = Number::Format->new();
 	$mean_value = $x->round($mean_value,3);
-	$min = $x->round($min,3);
-	$max = $x->round($max,3);
-	$ave = $x->round($ave,3);
+	$pop_min = $x->round($pop_min,3);
+	$pop_max = $x->round($pop_max,3);
+	$pop_ave = $x->round($pop_ave,3);
 	
 	$term_obj  = CXGN::Chado::Cvterm::get_cvterm_by_name( $self->get_dbh(), $term_name);
 	my $cvterm_id = $term_obj->get_cvterm_id();
@@ -403,11 +403,11 @@ sub display_page {
 	    {
 		push  @phenotype,  [map {$_} 
 				    ((tooltipped_text(qq|<a href="/chado/cvterm.pl?cvterm_id=$term_id">$term_name</a>|, 
-						      $term_obj->get_definition() )), $mean_value, $min, $max, $ave) ]; 	
+						      $term_obj->get_definition() )), $mean_value, $pop_min, $pop_max, $pop_ave) ]; 	
 	    }else 
 	    {
 		push  @phenotype,  [map {$_} qq|<a href="/chado/cvterm.pl?cvterm_id=$term_id">$term_name</a>|, 
-				    $mean_value, $min, $max, $ave ]; 
+				    $mean_value, $pop_min, $pop_max, $pop_ave ]; 
 	    }
 	}
 	else 
@@ -416,10 +416,10 @@ sub display_page {
 	    {
 		push  @phenotype,  [map {$_} 
 				    ((tooltipped_text(qq|<a href="/phenome/trait.pl?trait_id=$term_id">$term_name</a>|, 
-						      $term_obj->get_definition() )), $mean_value, $min, $max, $ave) ]; 	
+						      $term_obj->get_definition() )), $mean_value, $pop_min, $pop_max, $pop_ave) ]; 	
 	    }else {
 		push  @phenotype,  [map {$_} qq|<a href="/phenome/trait.pl?trait_id=$term_id">$term_name</a>|, 
-				    $mean_value, $min, $max, $ave ]; 
+				    $mean_value, $pop_min, $pop_max, $pop_ave ]; 
 	    }
 	}
     }

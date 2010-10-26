@@ -56,7 +56,6 @@ my %urls = (
         "Locus ajax form"                          => "/jsforms/locus_ajax_form.pl",
         "Locus editors"                            => "/phenome/editors_note.pl",
         "Phenotype search"                         => "/search/direct_search.pl?search=phenotypes",
-        "SNP search markers"                       => "/search/markers/snp.pl",
 
         'sol100 page'                              => '/organism/sol100/view',
         "SGN data overview"                        => "/organism/all/view",
