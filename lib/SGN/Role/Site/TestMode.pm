@@ -104,6 +104,10 @@ Note that relative paths are kept relative, and assumed to be intended
 as relative to the site's home directory.  You cannot currently reroot
 a relative path unless it is relative to the site home directory.
 
+Additionally, you can force a rerooted conf var to be treated as either
+absolute or relative by adding a prefix of either C<(abs)> or C<(rel)>
+to the beginning of the conf name.
+
 =cut
 
 ########### helper subs #######
@@ -114,25 +118,43 @@ sub _reroot_test_mode_files {
 
     return unless $c->test_mode;
 
-    my $filter_conf_keys = $c->config->{'Plugin::Site::TestMode'}->{reroot_conf}
+    my $filter_conf_keys = $c->config->{'Plugin::TestMode'}->{reroot_conf}
         or return;
 
-    my $test_files_path_abs = $c->config->{'Plugin::Site::TestMode'}->{test_data_dir};
+
+    # parse any (rel) or (abs) declarations on the conf keys
+    $filter_conf_keys = [
+        map {
+            [ m/^ (\( (?:abs|rel) \))? (.+)/x ]
+        } @$filter_conf_keys
+    ];
+
+    my $test_files_path_abs = $c->config->{'Plugin::TestMode'}->{test_data_dir};
     my $test_files_path_rel = File::Spec->abs2rel( $test_files_path_abs, $c->path_to );
 
-    my $test_mode_applyer = Data::Visitor::Callback->new(
-        plain_value => sub {
-            if( File::Spec->file_name_is_absolute( $_ ) ) {
-                $_ = File::Spec->catfile( $test_files_path_abs, File::Spec->abs2rel( $_, File::Spec->rootdir)  );
-            } else {
-                $_ = File::Spec->catfile( $test_files_path_rel, $_ );
-            }
-        },
-       );
+    for my $key_rec ( @$filter_conf_keys ) {
+        my ( $prefix, $path ) = @$key_rec;
 
-    for my $path ( @$filter_conf_keys ) {
         my ( $conf, $varname ) = $c->_resolve_conf_key_path( $path );
         next unless $conf && $conf->{$varname};
+
+        my $test_mode_applyer = Data::Visitor::Callback->new(
+            plain_value => sub {
+                my $force_abs = $prefix && $prefix eq '(abs)';
+                my $force_rel = $prefix && $prefix eq '(rel)';
+
+                if( $force_rel || !File::Spec->file_name_is_absolute( $_ ) ) {
+                    if( $force_rel and my $leading_slash = m!^/! ) {
+                        $_ = "/$test_files_path_rel$_";
+                    } else {
+                        $_ = File::Spec->catfile( $test_files_path_rel, $_ );
+                    }
+                }
+                else {
+                    $_ = File::Spec->catfile( $test_files_path_abs, File::Spec->abs2rel( $_, File::Spec->rootdir)  );
+                }
+            },
+           );
         $test_mode_applyer->visit( $conf->{$varname} )
     }
 }

@@ -13,30 +13,40 @@ my $config_1 = sub { +{
         snorg => '/tees',
     },
     dog  => '/cat',
+    'REL!!' => '/foo/shouldberel',
+    '!!ABS' => '/bar/shouldbeabs',
 
-    'Plugin::Site::TestMode' => {
+    'Plugin::TestMode' => {
         reroot_conf => [
             '/quux/zoom',
             '/big/long/thing/that/does/not/exist',
             'zaz/zoz',
             'quux/bunk',
             '/quux/snorg',
+            '(rel)REL!!',
+            '(abs)!!ABS',
            ],
         test_data_dir => '/path/to/app/t/data',
     },
 }};
 
 my $rerooted_1 = {
-  'Plugin::Site::TestMode' => {
+  'Plugin::TestMode' => {
     'reroot_conf' => [
       '/quux/zoom',
       '/big/long/thing/that/does/not/exist',
       'zaz/zoz',
       'quux/bunk',
       '/quux/snorg',
+      '(rel)REL!!',
+      '(abs)!!ABS',
     ],
     'test_data_dir' => '/path/to/app/t/data'
   },
+
+  'REL!!' => '/../../app/t/data/foo/shouldberel',
+  '!!ABS' => '/path/to/app/t/data/bar/shouldbeabs',
+
   'bee' => [
     'bal',
     '/bas',
