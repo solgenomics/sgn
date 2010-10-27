@@ -14,19 +14,13 @@ sub ACTION_build {
 # override install to just copy the whole dir into the install_base
 sub ACTION_install {
    my $self = shift;
-   $self->SUPER::ACTION_install(@_);
 
-   my @install_dirs = qw|cgi-bin conf features js mason programs static support_data t |;
-
+   # installation is just copying the entire dist into
+   # install_base/sgn
    require File::Spec;
    my $tgt_dir = File::Spec->catdir($self->install_base,'sgn');
-   mkdir $tgt_dir;
-   system 'cp', '-rl', @install_dirs => $tgt_dir;
+   system 'cp', '-rl', '.', $tgt_dir;
    $? and die "SGN site copy failed\n";
-
-   #put the documents symlink in place also
-   symlink 'static/documents' => "$tgt_dir/documents"
-    or die "$! symlinking static/documents => $tgt_dir/documents";
 }
 
 sub ACTION_clean {
@@ -87,6 +81,7 @@ my $build = $class->new(
         'Catalyst::Runtime'                => '5.80024',
         'Catalyst::Controller::CGIBin'     => '0.029',
         'Catalyst::Action::RenderView'     => 0,
+        'Catalyst::Plugin::ConfigLoader'   => 0,
         'Catalyst::Plugin::Static::Simple' => 0,
         'Catalyst::View::Email'            => 0,
         'Catalyst::View::HTML::Mason'      => 0,
@@ -94,6 +89,7 @@ my $build = $class->new(
                                            => '2.100000',
         'CatalystX::GlobalContext'         => 0,
 
+        'Config::JFDI'                     => 0,
         'CGI'                              => 0,
 
         'Data::Visitor::Callback' => 0,
@@ -109,6 +105,7 @@ my $build = $class->new(
         'GD::Graph::Map'          => 0,
         'GD::Graph::points'       => 0,
         'GD::Text'                => 0,
+        'Hash::Merge'             => 0,
         'HTML::Entities'          => 0,
         'HTML::FormFu'            => 0,
         'HTML::Mason'             => 0,

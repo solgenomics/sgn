@@ -5,7 +5,7 @@ use English;
 
 use JSON;
 use lib 't/lib';
-use Catalyst::Test 'SGN';
+use SGN::Test qw( get request );
 
 use CXGN::Genomic::Clone;
 

@@ -6,8 +6,8 @@ use Test::More tests => 15;
 use Test::WWW::Mechanize;
 
 use lib 't/lib';
-use SGN::Config;
 use SGN::Test;
+use SGN::Context;
 
 use CXGN::DB::Connection;
 use CXGN::People::Person;
@@ -22,9 +22,9 @@ $mech->get_ok($new_account_page);
 
 # generate an account as a first test.
 
-my %form = ( 
+my %form = (
 	     form_name => "submit_userdata",
-	     fields => { 
+	     fields => {
 		 first_name => "Test",
 		 last_name  => "Testman",
 		 username   => "testtesttest",
@@ -48,14 +48,12 @@ $mech->content_contains("already in use", "Duplicate username test");
 
 # remove the user just created
 
-{
-    my $dbh = CXGN::DB::Connection->new( { config => SGN::Config->load });
+SGN::Context->new->dbc->txn( ping => sub {
+    my $dbh = shift;
     my $p_id = CXGN::People::Person->get_person_by_username($dbh, "testtesttest");
     my $p = CXGN::People::Person->new($dbh, $p_id);
     $p->hard_delete();
-    $dbh->commit unless $dbh->dbh_param('AutoCommit');
-}
-
+});
 
 # generate an account with a password that is too short
 

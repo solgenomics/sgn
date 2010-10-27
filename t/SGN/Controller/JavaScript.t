@@ -11,8 +11,6 @@ use Catalyst::Test 'SGN';
 
 BEGIN { $ENV{SGN_SKIP_CGI} = 1 } #< don't need to compile all the CGIs
 
-use_ok 'SGN::Controller::JavaScript';
-
 my $mech = SGN::Test::WWW::Mechanize->new;
 
 $mech->with_test_level( process => sub {
