@@ -41,6 +41,7 @@ use Catalyst qw/
      +SGN::Role::Site::Files
      +SGN::Role::Site::Mason
      +SGN::Role::Site::SiteFeatures
+     +SGN::Role::Site::TestMode
  /;
 
 extends 'Catalyst';
@@ -74,6 +75,23 @@ __PACKAGE__->config(
            },
        },
 
+    'Plugin::TestMode' => {
+        test_data_dir => __PACKAGE__->path_to('t','data'),
+        reroot_conf   =>
+            [qw(
+
+                blast_db_path
+                ftpsite_root
+                image_path
+                homepage_files_dir
+                intron_finder_database
+                r_qtl_temp_path
+                static_content_path
+                static_datasets_path
+                trace_path
+
+               )],
+       },
    );
 
 
