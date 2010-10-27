@@ -287,7 +287,7 @@ if (defined $template->get_template_id() ) {
        $experiments_html = 'No experiment was found associated to this template';
    }
 
-    $experiment_info_content = info_section_html( title       => "Expression Data by Experiments (".$exp_number.")", 
+    $experiment_info_content = info_section_html( title       => "Table: Expression Data by Experiment (".$exp_number.")", 
                                                   contents    => $experiments_html, 
 	 					  collapsible => 1,
                                                   collapsed   => 1 );

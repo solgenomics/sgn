@@ -225,10 +225,17 @@ HTML
                                                         SUFFIX   => '.png',
                                                       );
 
-	       my $cc = $expression->get_experiment_graph({ x_axis_sort => 'PO'});
+	       my $cc = $expression->get_experiment_graph({
+                           x_axis_sort => 'PO',
+                           bar_color => {
+                               red   => 172 / 255,
+                               green =>  40 / 255,
+                               blue  =>   0 / 255,
+                           },
+                       });
 	       $cc->write_output($tempfile);
 
-	       $experiment_html = "<br><img src=\"$tempuri\" /><br>";
+	       $experiment_html = qq|<img style="display: block; margin: 0 auto;" src="$tempuri" />|
 	   }
 
 	   $exp_resources_html .= $experiment_html;

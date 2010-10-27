@@ -75,16 +75,16 @@ if (defined $template->get_template_id() ) {
 						 SUFFIX   => '.png',
                                                 );
 
-	my $cc = $expression->get_experiment_graph({ x_axis_sort => 'PO'});
+	my $cc = $expression->get_experiment_graph({ x_axis_sort => 'PO' });
 	$cc->write_output($tempfile);
 
-	$experiment_html = "<br><img src=\"$tempuri\" /><br>";
+	$experiment_html = qq|<img style="display: block; margin: 0 auto;" src="$tempuri" />|;
     }
     else {
 	$experiment_html = "No expression data was found for template: $template_name";
     }
     
-    $experiment_info_content = info_section_html( title       => "Graphs for Expression Data by Experiments", 
+    $experiment_info_content = info_section_html( title       => "Graph: Expression Data by Experiment", 
                                                   contents    => $experiment_html, 
 	 					  collapsible => 1,
                                                   collapsed   => 0 );
