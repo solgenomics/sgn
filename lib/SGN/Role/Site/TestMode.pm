@@ -39,15 +39,11 @@ variable is set to a true value.
 
 =cut
 
-has 'test_mode' => (
-    is  => 'ro',
-    isa => 'Bool',
-    default => sub {
-        my $c = shift;
-        my $app_name = ref $c || $c;
-        return $ENV{ uc($app_name).'_TEST_MODE' };
-    },
-);
+sub test_mode {
+    my $c = shift;
+    my $app_name = ref($c) || $c;
+    return $ENV{ uc($app_name).'_TEST_MODE' };
+}
 
 =head1 CONFIGURATION PATH REROOTING
 
