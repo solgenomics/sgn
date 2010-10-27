@@ -779,7 +779,8 @@ sub qtl_plot
 		    }
 
 		}
-		my $lod1 = $permu_threshold{ $p_keys[0] };	         		
+		my $lod1 = $permu_threshold{ $p_keys[0] };
+		
 		$h_marker = 
 		    qq |/phenome/qtl.pl?population_id=$pop_id&amp;term_id=$term_id&amp;chr=$lg&amp;l_marker=$l_m&amp;p_marker=$p_m&amp;r_marker=$r_m&amp;lod=$lod1|;
  
@@ -1008,6 +1009,7 @@ sub infile_list
     open my $cv_fh, ">", $file_cv_in or die "can't open $file_cv_in: $!\n";
     $cv_fh->print($ac);
 
+    
     my $file_in_list = join( "\t",
                              $file_cv_in,       "P$pop_id",
                              $gen_dataset_file, $phe_dataset_file,
@@ -1088,12 +1090,16 @@ sub outfile_list
     );
 
     my $flanking_markers = $marker_temp->filename;
+   
+    my $ci_lod = $population->ci_lod_file($c, $ac);
 
-    my $file_out_list = join(
+    my $file_out_list = join (
         "\t",
         $qtl_summary,
         $flanking_markers,
-                            );
+	$ci_lod
+	);
+
     open my $fo_fh, ">", $file_out or die "can't open $file_out: $!\n";
     $fo_fh->print ($file_out_list);
 
