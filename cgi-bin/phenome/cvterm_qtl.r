@@ -121,7 +121,7 @@ if (userpermuvalue == "None")
 userpermuvalue<-as.numeric(userpermuvalue)
 
 #####for test only
-userpermuvalue<-c(0)
+#userpermuvalue<-c(0)
 #####
 
 
