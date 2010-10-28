@@ -15,12 +15,13 @@ sub view :Path('/image/view/') Args(1) {
 
     my $person_id = CXGN::Login->new($dbh)->has_session();
 
-    $c->forward_to_mason_view('/image/index.mas',
-                              object_id=>$image_id,
-                              dbh => $dbh,
-                              person_id => $person_id,
-        );
+    $c->stash(
+        template  => '/image/index.mas',
 
+        object_id => $image_id,
+        dbh       => $dbh,
+        person_id => $person_id,
+       );
 }
 
 sub add :Path('/image/add') Args(0) {
@@ -28,14 +29,15 @@ sub add :Path('/image/add') Args(0) {
     my $sp_person_id =CXGN::Login->new($c->dbc->dbh)->has_session();
     if (!$sp_person_id) { 
 	$c->response->redirect('/solpeople/login.pl');
-	
     }
 
-    $c->forward_to_mason_view('/image/add_image.mas',
-                              refering_page => $c->req->referer() || undef,
-                              type          => $c->req->param('type'),
-                              type_id       => $c->req->param('type_id'),
-        );
+    $c->stash(
+        template => '/image/add_image.mas',
+
+        refering_page => $c->req->referer() || undef,
+        type          => $c->req->param('type'),
+        type_id       => $c->req->param('type_id'),
+       );
 }
 
 sub confirm :Path('/image/confirm') {
