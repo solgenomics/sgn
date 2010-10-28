@@ -1,5 +1,6 @@
 <%args>
     $title => 'Ontology browser'
+    $root_nodes => undef          # comma separated list of root nodes (optional)
 </%args>
 <&| /page/info_section.mas,
     title       => $title,
@@ -17,11 +18,14 @@
         'jquery',
      ]
 &>
+
+% #$root_nodes = 'GO PO SP'; #for testing
+
 <script language="javascript" type="text/javascript"  >
 <!--
     var o = new CXGN.Onto.Browser();
     o.setUpBrowser();
-    o.initializeBrowser();
+    o.initializeBrowser('<% $root_nodes %>');
     o.renderSearchById();
     o.renderSearchByName();
     o.render();
