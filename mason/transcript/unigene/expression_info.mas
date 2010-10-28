@@ -87,16 +87,16 @@ if (defined $id) {
        my $clone_accession = "SGN-C".$tom_match->{clone_id};
        
        my $est_id = $tom_match->{est_id};
-       my $est_link = qq|[<a href="/search/est.pl?request_id=$est_id&request_from=1&request_type=7">SGN-E$est_id</a>]|;
+       my $est_link = qq|<a href="/search/est.pl?request_id=$est_id&request_from=1&request_type=7">SGN-E$est_id</a>|;
        my $read_dir = $tom_match->{read_dir};
        my $chip_name = $tom_match->{chip_name};
        my $prespot_id = $tom_match->{release} . "-" . $tom_match->{version} . "-" . $tom_match->{spot_id};
        my $spot_id = $prespot_id . $tom_match->{content_specific_tag};
        
-       my $order_info = qq|[<a href="http://ted.bti.cornell.edu/cgi-bin/TFGD/order/home.cgi">Order&nbsp;Array</a>]|;
-       my $ted_link = '[<a href=';
+       my $order_info = qq|<a href="http://ted.bti.cornell.edu/cgi-bin/TFGD/order/home.cgi">Order&nbsp;Array</a>|;
+       my $ted_link = '<a href=';
        $ted_link .= "http://ted.bti.cornell.edu/cgi-bin/TFGD/array_data/probe_expression.cgi?array_ID=A01&probe_ID=$prespot_id";
-       $ted_link .= '>TMD</a>]';
+       $ted_link .= '>TMD</a>';
        
        push @tom, [ $clone_accession, $est_link, $read_dir, $chip_name, $spot_id, $order_info, $ted_link];
        push @template_ids, $spot_id;
@@ -105,8 +105,11 @@ if (defined $id) {
    ## Second, put the data into a table 
 
    if (defined $tom[0]) {
-       my $tom_resources_html = columnar_table_html( headings => [qw/ SGN-C  SGN-E  Dir.  Chip  SpotID  Order Info/],
-       	  			       		     data     => \@tom);
+       my $tom_resources_html = columnar_table_html(
+           headings => [qw/ SGN-C  SGN-E  Dir.  Chip  SpotID  Order Info/],
+           data     => \@tom,
+           __border => 0,
+          );
          
        ## For this case will not give any message if there aren't any tom1 data.
 
@@ -227,11 +230,6 @@ HTML
 
 	       my $cc = $expression->get_experiment_graph({
                            x_axis_sort => 'PO',
-                           bar_color => {
-                               red   => 172 / 255,
-                               green =>  40 / 255,
-                               blue  =>   0 / 255,
-                           },
                        });
 	       $cc->write_output($tempfile);
 
