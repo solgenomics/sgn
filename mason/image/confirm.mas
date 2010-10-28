@@ -12,14 +12,6 @@ $image_url
 <%perl>
 if ($refering_page) { print "<a href=\"$refering_page\">[Return]</a><br /><br />\n"; }
 
-### deanx Testing --  this is trashable
-  #         if   ($temp_file_base =~ /(.*)\.(.{1,4})$/ ) { -->
-  #           if ( $2 =~ /[pdf|ps|eps]/i ) {
-  # 	     SGN::Image::iconify_file($tempfile);
-  #             $sample_image = $temp_file_base.'.jpg';
-  #	     }
-  #	 }
-  
   print qq { The image uploaded is shown below. Please click on "Store in SGN database" to permanently store the image in the database. <br /> };
 
 print "<br /><br />\n";
