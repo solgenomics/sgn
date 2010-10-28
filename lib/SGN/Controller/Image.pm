@@ -95,13 +95,13 @@ sub store :Path('/image/store') {
 	$c->response->redirect('/solpeople/login.pl');
 	
     }
-    
+
     my $image = SGN::Image->new($c->dbc->dbh());
 
-    my $tempfile = $c->req()->param('tempfile');
-    my $filename = $c->req()->param('filename');
-    my $type = $c->req()->param('type');
-    my $type_id = $c->req()->param('type_id');
+    my $tempfile      = $c->req()->param('tempfile');
+    my $filename      = $c->req()->param('filename');
+    my $type          = $c->req()->param('type');
+    my $type_id       = $c->req()->param('type_id');
     my $refering_page = $c->req()->param('refering_page');
 
 
