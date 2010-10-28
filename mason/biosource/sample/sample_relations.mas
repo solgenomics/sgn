@@ -97,7 +97,7 @@ foreach my $relation (@relation_types) {
 
     my $rel_n = scalar(@sample_rel_list);                                              
     if ($rel_n == 0) {
-	$rel_composition_html = 'None relation was found associated to this sample';
+	$rel_composition_html = 'No relation was found associated to this sample';
     }
 
     $rel_content = info_section_html( title        => "Sample Relations (".$rel_n.")", 

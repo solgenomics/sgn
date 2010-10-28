@@ -35,6 +35,7 @@ $dbh
 $schema
 $sgn_schema
 $template
+$expression
 $unigene_list
 </%args>
 
@@ -56,6 +57,12 @@ $unigene_list
 <& 
    '/gem/template/probe_composition.mas', 
    template => $template, 
+&>
+
+<& 
+   '/gem/template/expression_graph.mas', 
+   template   => $template, 
+   expression => $expression,
 &>
 
 <& 
