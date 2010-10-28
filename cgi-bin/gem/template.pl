@@ -34,7 +34,7 @@ use CXGN::DB::Connection;
 use CXGN::DB::DBICFactory;
 use CXGN::GEM::Schema;
 use CXGN::GEM::Template;
-
+use CXGN::GEM::Expression;
 
 ## Create the mason object
 
@@ -89,6 +89,15 @@ if (defined $template->get_template_id) {
     @unigene_ids = $template->get_internal_accessions('unigene');
 }
 
+## Add expression object
+
+my $expression = CXGN::GEM::Expression->new($schema);
+
+if (defined $template->get_template_id()) {
+    $expression = CXGN::GEM::Expression->new($schema, $template->get_template_id());
+}
+
+
 
 ## There are two ways to access to the page, using id=int or name=something. If use other combinations give an error message 
 
@@ -98,6 +107,7 @@ if (defined $template->get_template_id() or defined $template->get_template_name
               schema       => $schema,
 	      sgn_schema   => $sgn_schema,
               template     => $template,
+	      expression   => $expression,
 	      unigene_list => \@unigene_ids
             );
 } else {

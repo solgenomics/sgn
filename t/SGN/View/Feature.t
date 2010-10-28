@@ -5,14 +5,14 @@ use base 'Test::Class';
 
 use Test::Class;
 use lib 't/lib';
-use SGN::Test::Data qw/create_test_feature/;
+use SGN::Test::Data qw/create_test/;
 use Test::More tests => 7;
 
 use_ok('SGN::View::Feature', qw/feature_table gbrowse_link related_stats/ );
 
 sub make_fixture : Test(setup) {
     my $self = shift;
-    $self->{feature} = create_test_feature();
+    $self->{feature} = create_test('Sequence::Feature');
 }
 
 sub teardown : Test(teardown) {
@@ -22,7 +22,7 @@ sub teardown : Test(teardown) {
 
 sub TEST_RELATED_STATS : Tests {
     my $self = shift;
-    my $feature = create_test_feature();
+    my $feature = create_test('Sequence::Feature');
 
     my $name1 = $self->{feature}->type->name;
     my $name2 = $feature->type->name;

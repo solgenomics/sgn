@@ -1,4 +1,3 @@
-use CatalystX::GlobalContext qw( $c );
 use strict;
 use warnings;
 
@@ -44,11 +43,10 @@ use CXGN::Tools::Identifiers qw/link_identifier/;
 use CXGN::Tools::List qw/all distinct any min max str_in/;
 use CXGN::Tools::Text;
 
-use SGN::Controller::Clone::Genomic;
+use CatalystX::GlobalContext '$c';
 
-# calling them $c and $self because it's very similar to what we would
-# have under catalyst
-my $self = SGN::Controller::Clone::Genomic->new;
+# some of the newer parts of the page are in a controller object
+my $self = $c->controller('Clone::Genomic');
 
 our %link_pages = (
     marker_page        => '/search/markers/markerinfo.pl?marker_id=',
@@ -956,6 +954,7 @@ sub render_tomato_bac_annot_download {
     my %sequencing_files =
       CXGN::TomatoGenome::BACPublish::sequencing_files( $clone,
         $c->config->{'ftpsite_root'} );
+
     my @formats =
       distinct( grep { $_ }
           map { my ($k) = /_([^_]+)$/; $k } keys %sequencing_files );
@@ -969,18 +968,18 @@ sub render_tomato_bac_annot_download {
     if ( @formats && @available_analyses ) {
         my $set_select = simple_selectbox_html(
             choices => \@available_analyses,
-            name    => 'annot_set',
+            name    => 'set',
             id      => 'annot_set_selector',
         );
         my $type_select = simple_selectbox_html(
             choices => \@formats,
-            name    => 'annot_format',
+            name    => 'format',
             id      => 'annot_format_selector',
         );
         my $id = $clone->clone_id;
 
         return <<EOHTML
-<form method="GET" action="clone_annot_download.pl">
+<form name="clone_annot_download" method="GET" action="/genomic/clone/$id/annotation/download">
 <table><tr><td><label for="annot_set_selector">Analysis:</label></td><td>$set_select</td></tr>
        <tr><td><label for="annot_format_selector">Format:</label></td><td>$type_select <input type="hidden" name="id" value="$id" /><input type="submit" value="Download" /></td></tr>
        <tr><td>&nbsp;</td></tr>

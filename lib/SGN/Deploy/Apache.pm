@@ -25,7 +25,13 @@ SGN::Deploy::Apache - deploy the SGN site on an Apache web server
           use lib '/crypt/rob/cxgn/curr/cxgn-corelibs/lib';
           use local::lib '/crypt/rob/cpan-lib';
 
-          use SGN::Deploy::Apache SGN => ( type => 'mod_perl', vhost => 1 );
+          use SGN::Deploy::Apache SGN => (
+              type  => 'mod_perl',
+              vhost => 1,
+              env   => {
+                 SGN_CONFIG => '/etc/cxgn/SGN.conf',
+              },
+          );
 
        </Perl>
 
@@ -54,11 +60,19 @@ use Class::MOP;
   Returns : nothing meaningful
   Args    : app name,
             hash-style list of arguments as:
+
              vhost => boolean of whether this
                       configuration should be applied
                       to the current virtual host (if true),
                       or the root Apache server (if false),
+
              type  => one of the deployment types listed below
+
+             env   => hashref of environment variables to set.  This
+                      must be used instead of Apache's SetEnv or
+                      PerlSetEnv in order for environment variables to
+                      be available early enough to be used during
+                      Catalyst's setup phases.
 
   Side Eff: loads the app, and configures the Apache environment to
             properly run it
@@ -114,11 +128,24 @@ sub configure_apache {
     my ( $class, $app,  %args ) = @_;
     $args{type} ||= 'fcgi';
 
+    if( my $env = $args{env} ) {
+        $class->setup_env( $env );
+    }
+
     my $setup_method = "configure_apache_$args{type}";
     unless( $class->can($setup_method) ) {
         croak "'$args{type}' Apache configuration type not supported by $class";
     }
     $class->$setup_method( $app, \%args );
+}
+
+# set the environment variables given in the hashref
+sub setup_env {
+    my ( $class, $env_to_add ) = @_;
+
+    while( my ($k,$v) = each %$env_to_add ) {
+        $ENV{$k} = $v;
+    }
 }
 
 sub apache_server {
@@ -219,6 +246,8 @@ sub _conf_serve_static {
             ."    SetHandler default-handler\n"
             ."</Location>\n",
           }
+          'favicon.ico',
+          'robots.txt',
           @{ $cfg->{static}->{dirs} }
         ),
         '<Directory '.$app->path_to($cfg->{root}).qq|>\n|

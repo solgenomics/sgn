@@ -1,6 +1,7 @@
 package SGN::Controller::JavaScript;
 use Moose;
 use namespace::autoclean;
+use Moose::Util::TypeConstraints;
 
 use File::Spec;
 
@@ -15,9 +16,20 @@ BEGIN { extends 'Catalyst::Controller' }
 with 'Catalyst::Component::ApplicationAttribute';
 
 __PACKAGE__->config(
-    namespace => 'js',
+    namespace       => 'js',
+    js_include_path => SGN->path_to('js'),
    );
 
+{
+    my $inc = subtype as 'ArrayRef';
+    coerce $inc, from 'Defined', via { [$_] };
+
+    has 'js_include_path' => (
+        is     => 'ro',
+        isa    => $inc,
+        coerce => 1,
+       );
+}
 
 has '_package_defs' => (
     is => 'ro',
@@ -182,8 +194,8 @@ sub action_for_js_package {
 
     my $key = md5_hex( join '!!', @files );
 
-   warn (
-         "defining/inserting JS pack $key = ("
+    $self->_app->log->debug (
+         "define JS pack $key = ("
         .(join ', ', @files)
         .')'
        ) if $self->_app->debug;
@@ -219,7 +231,7 @@ sub _resolve_jsan_dependencies {
 has _jsan_params => ( is => 'ro', isa => 'HashRef', lazy_build => 1 );
 sub _build__jsan_params {
     my ( $self ) = @_;
-    my $inc_path = $self->_app->config->{'js_include_path'};
+    my $inc_path = $self->js_include_path;
     die "multi-dir js_include_path not yet supported" if @$inc_path > 1;
     my $js_dir = $inc_path->[0];
     -d $js_dir or die "configured js_include_path '$js_dir' does not exist!\n";

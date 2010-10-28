@@ -1,10 +1,9 @@
 <%perl>
 
 use File::Spec;
-use SGN::Config;
 use CXGN::Cview::MapOverviews::ProjectStats;
 
-my $config = SGN::Config->load();
+my $config = $c->config;
 
 my $tomato_sequencing_progress_image_html = qq { <div class="boxbgcolor5" style="margin:0px; margin-bottom:2px;">
 <div class="boxheading">Tomato Genome Sequencing Progress</div> };

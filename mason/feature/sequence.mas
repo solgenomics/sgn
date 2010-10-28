@@ -5,12 +5,12 @@
     $title     => 'Nucleotide Sequence'
     $start     => undef
     $end       => undef
+    $id        => undef
 </%args>
 <%once>
     use Bio::Seq;
 </%once>
 <%perl>
-    my $id = '';
     if ($feature) {
         $id = $start && $end ? $feature->name . ':' . "$start..$end" : $feature->name;
     }
@@ -20,10 +20,13 @@
             -alphabet => 'dna',
         );
     my $link;
-    $link = '/cgi-bin/feature_sequence_as_fasta.pl?feature_id=' . $feature->feature_id if $feature;
-    if ($start and $end) {
+    $link = '/api/v1/sequence/' . $feature->uniquename . '.fasta' if $feature;
+
+    # protect us from causing a BioPerl exception if the sequence is not in the database
+    # ignore invalid ranges
+    if ($seq->length > 0 && $start && $end && $end > $start) {
         $seq = $seq->trunc($start,$end);
-        $link .= "&start=$start&end=$end";
+        $link .= "?$start..$end";
     }
 </%perl>
 

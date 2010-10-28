@@ -58,7 +58,7 @@ print info_section_html( title => 'Project Summary',
           towards establishing the foundations for sequencing by
           establishing 2 additional BAC libraries, obtaining BAC
           end sequence (400,000 reads) and sequencing a sheared
-          library. The Sol Genomics Network (<a href="index.pl">SGN</a>),
+          library. The Sol Genomics Network (<a href="/">SGN</a>),
           an organism database devoted to the genomics of solanaceous species,
           will be expanded to accommodate and incorporate all of
           the sequencing, annotation and mapping information for
@@ -138,7 +138,7 @@ print info_section_html(title => 'Educational Outreach',
 
     <h4>Student Research Opportunities</h4>
     <a name="internships"></a>
-          <p>Undergraduate positions are available at the <a href="index.pl">SOL
+          <p>Undergraduate positions are available at the <a href="/">SOL
           Genomics Network</a>, a database for
           genomic information of the nightshade plant family, which
           includes important crop species such as tomato, potato
@@ -162,7 +162,7 @@ print info_section_html(title => 'Educational Outreach',
 			
 <!--    <h4>Summer 2010 Internships</h4>
 
-<p>Summer internships will be available at the <a href="/index.pl">Sol Genomics Network</a> for college undergraduates.</p>
+<p>Summer internships will be available at the <a href="/">Sol Genomics Network</a> for college undergraduates.</p>
 
 <p>Additional information regarding the internship is available in the flyer. <a href="/documents/help/about/internships_2010/internship_poster_2010.pdf">[pdf]</a></li></p>
 

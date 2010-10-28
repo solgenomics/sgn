@@ -1,3 +1,7 @@
 User-agent: *
-Disallow: /
-
+Disallow: /tools/
+Disallow: /gbrowse/
+Disallow: /documents/tempfiles/
+Disallow: /cview/
+Disallow: /search/
+Crawl-delay: 10

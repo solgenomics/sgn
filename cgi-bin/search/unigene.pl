@@ -51,7 +51,19 @@ my $dbh = CXGN::DB::Connection->new();
 if (defined $args{'unigene_id'}) {
     $args{'id'} = $args{'unigene_id'} ;
     $args{'id'} =~ s/^SGN-U//;
+
+    # convert CGN-U to SGN-U
+    if( $args{unigene_id} =~ s/^CGN-?U//i ) {
+        my ($sgnid) = $dbh->selectrow_array(<<EOS,undef, $args{unigene_id}, 'CGN');
+SELECT unigene_id FROM unigene WHERE sequence_name = ? AND database_name=?
+EOS
+        if( $sgnid ) {
+            $args{'id'} = $sgnid;
+        }
+    }
 }
+
+
 
 ## Random function will get at random unigene from the latest unigene build
 

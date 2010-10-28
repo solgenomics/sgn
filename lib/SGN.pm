@@ -1,3 +1,18 @@
+
+=head1 NAME
+
+SGN - Catalyst-based application to run the SGN website.
+
+=head1 SYNOPSIS
+
+    script/sgn_server.pl
+
+=head1 DESCRIPTION
+
+This is the main class for the Sol Genomics Network main website.
+
+=cut
+
 package SGN;
 use Moose;
 use namespace::autoclean;
@@ -5,11 +20,19 @@ use namespace::autoclean;
 use SGN::Exception;
 
 use Catalyst::Runtime 5.80;
+
+=head1 ROLES
+
+Does the roles L<SGN::Role::Site::Config>,
+L<SGN::Role::Site::DBConnector>, L<SGN::Role::Site::DBIC>,
+L<SGN::Role::Site::Exceptions>, L<SGN::Role::Site::Files>,
+L<SGN::Role::Site::Mason>, L<SGN::Role::Site::SiteFeatures>
+
+=cut
+
 use Catalyst qw/
      ConfigLoader
      Static::Simple
-     ErrorCatcher
-     StackTrace
 
      +SGN::Role::Site::Config
      +SGN::Role::Site::DBConnector
@@ -22,31 +45,53 @@ use Catalyst qw/
 
 extends 'Catalyst';
 
+=head1 METHODS
+
+=cut
+
+# configure catalyst-related things.  in general, things should not be
+# added here.  add them to SGN.conf, with comments.
+__PACKAGE__->config(
+
+    name => 'SGN',
+    root => 'static',
+
+    disable_component_resolution_regex_fallback => 1,
+
+    default_view => 'Mason',
+
+    # Static::Simple configuration
+    static => {
+        dirs => [qw[ s static img documents static_content data ]],
+    },
+
+    'Plugin::ConfigLoader' => {
+        substitutions => {
+            UID       => sub { $> },
+            USERNAME  => sub { (getpwuid($>))[0] },
+            GID       => sub { $) },
+            GROUPNAME => sub { (getgrgid($)))[0] },
+           },
+       },
+
+   );
+
+
 # on startup, do some dynamic configuration
 after 'setup_finalize' => sub {
     my $self = shift;
 
     $ENV{PROJECT_NAME} = $self->config->{name};
+    $self->config->{basepath} = $self->config->{home};
 
     # all files written by web server should be group-writable
     umask 000002;
 
     # update the symlinks used to serve static files
     $self->_update_static_symlinks;
-
-    ###  for production servers
-    if( $self->config->{production_server} ) {
-
-        # enable error email sending
-        $self->config->{'Plugin::ErrorCatcher'}{'emit_module'} = 'Catalyst::Plugin::ErrorCatcher::Email';
-
-    }
 };
 
-
 __PACKAGE__->setup;
-
-
 
 sub _update_static_symlinks {
     my $self = shift;
@@ -74,25 +119,13 @@ sub _update_static_symlinks {
     }
 }
 
-=head1 NAME
-
-SGN - Catalyst-based application to run the SGN website.
-
-=head1 SYNOPSIS
-
-    script/sgn_server.pl
-
-=head1 DESCRIPTION
-
-[enter your description here]
-
 =head1 SEE ALSO
 
 L<SGN::Controller::Root>, L<Catalyst>
 
 =head1 AUTHOR
 
-Robert Buels,,,
+The SGN team
 
 =head1 LICENSE
 

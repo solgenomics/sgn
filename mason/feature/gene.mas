@@ -26,9 +26,10 @@
     my @mrna_features = grep { $_->type->name eq 'mRNA' } @$children;
 </%perl>
 
-<& /feature/gene_data.mas,
+<& /feature/feature_data.mas,
     feature => $feature,
     species => $species,
+    title => 'Gene Data',
 &>
 
 <& /feature/related_features.mas,
@@ -53,10 +54,11 @@
 
 <& /feature/genomic_sequence.mas, feature => $feature &>
 
+% for my $mrna (@mrna_features) {
 <& /feature/mrna_sequence.mas,
-    mrna_features => [ @mrna_features ],
-&>    
-
+    mrna_feature => $mrna,
+&>
+% }
 <& /feature/protein_sequence.mas,
     mrna_features => [ @mrna_features ],
 &>

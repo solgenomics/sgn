@@ -82,7 +82,6 @@
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/tools/intron_detection/find_introns.pl">Intron Finder</a></td></tr>
        <tr><td class="toolbar_item_title">Mapping</td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/cview/view_chromosome.pl?show_offsets=1&amp;show_ruler=1&amp;show_offsets=1">Comparative Viewer</a></td></tr>
-       <tr><td class="toolbar_item"><a class="toolbar_item" href="/tools/fastmapping/">Fast Mapping</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/tools/caps_designer/caps_input.pl">CAPS Designer</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/tools/seedbac/">Seed BAC Finder</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/qtl">QTL Mapping</a></td></tr>

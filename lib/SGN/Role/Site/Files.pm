@@ -134,8 +134,21 @@ sub tempfile {
   my @path_components = ref $args{TEMPLATE} ? @{$args{TEMPLATE}}
                                             : ($args{TEMPLATE});
 
-  $args{TEMPLATE} = '' . $self->path_to( $self->generated_file_uri( @path_components ) );
-  return File::Temp->new( %args );
+  my $uri = $self->generated_file_uri( @path_components );
+
+  my $temp = File::Temp->new( %args,
+                              # override TEMPLATE with abs path
+                              TEMPLATE => '' . $self->path_to( $uri ),
+                             );
+
+  # replace the XXXXs in the URI template
+  ( my $temp_regex = "$uri" ) =~ s/(X+)$/'(\w{'.length($1).'})'/e;
+  my ($uniq_chars) = "$temp" =~ /$temp_regex/;
+  my $new_uri = "$uri";
+  $new_uri =~ s/X+$/$uniq_chars/ or die;
+  $new_uri .= $args{SUFFIX} if defined $args{SUFFIX};
+
+  return ( $temp, URI->new( $new_uri ) );
 }
 
 =head2 tempfiles_subdir

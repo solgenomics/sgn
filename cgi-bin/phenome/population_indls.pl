@@ -20,7 +20,7 @@ my $population_indls_detail_page =
 
 package CXGN::Phenome::PopulationIndlsDetailPage;
 
-use CatalystX::GlobalContext qw( $c );
+
 
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw /info_section_html
@@ -420,10 +420,21 @@ qq { Download population: <span><a href="pop_download.pl?population_id=$populati
 
         $plot_html .= $summ_data;
 	$plot_html .= qq | </td></tr></table> |;
-
-        my $qtl_image           = $self->qtl_plot();
+	
+	my ( $qtl_image, $legend);
+        #using standard deviation of 0.05 as an arbitrary cut off to run
+	#qtl analysis. Probably, need to think of better solution.
+	if ($std >= 0.05) {
+         $qtl_image           = $self->qtl_plot();
+	 $legend = $self->legend($population);
+	} 
+	else { 
+	    $qtl_image = 'There is no statistically significant phenotypic 
+                          variation for this trait to run 
+                          QTL analysis.'; 
+	}
   
-	my $legend = $self->legend($population);
+	
 	my $qtl_html = qq | <table><tr><td width=70%>$qtl_image</td><td width=30%>$legend</td></tr></table> |;
 
         print info_section_html( 
@@ -503,6 +514,7 @@ sub population_distribution
     my ( $term_obj, $term_name, $term_id );
 
     my $pop = CXGN::Phenome::Population->new( $dbh, $pop_id );
+    my $pop_name = $pop->get_name();
 
     if ( $pop->get_web_uploaded() )
     {
@@ -526,38 +538,25 @@ sub population_distribution
     $cache->set_expiration_time(259200);
     $cache->set_key( "popluation_distribution" . $pop_id . $term_id );
     $cache->set_map_name("popmap$pop_id$term_id");
-
-    my $pop_name;
-    my ( $variance, $std,     $mean );
+ 
     my ( @value,    @indl_id, @indl_name );
-
+    
     $cache->set_force(0);
     if ( !$cache->is_valid() )
-    {
-        my $pop_obj = CXGN::Phenome::Population->new( $dbh, $pop_id );
-        $pop_name = $pop_obj->get_name();
-        my ( $indl_id, $indl_name, $value ) = $pop_obj->plot_cvterm($term_id);
-        my @indl_id   = @{$indl_id};
-        my @indl_name = @{$indl_name};
-        @value = @{$value};
-
-        my $round = Math::Round::Var->new(0.001);
+    {        
+ 
+	my ( $indl_id, $indl_name, $value ) = $pop->plot_cvterm($term_id);
+	@value = @{$value};
 
         my $stat = Statistics::Descriptive::Full->new();
-
         $stat->add_data(@value);
-
-        my $stat_para = Statistics::Descriptive::Sparse->new();
-        $stat_para->add_data(@value);
-        $std  = $stat_para->standard_deviation();
-        $mean = $stat_para->mean();
-
         my %f = $stat->frequency_distribution(10);
 
         my ( @keys, @counts );
 
         for ( sort { $a <=> $b } keys %f )
         {
+	    my $round = Math::Round::Var->new(0.001);
             my $key = $round->round($_);
             push @keys,   $key;
             push @counts, $f{$_};
@@ -574,7 +573,8 @@ sub population_distribution
         my $range;
         my $previous_k   = $keys[0];
         my $keys_shifted = shift(@keys);
-        foreach my $k (@keys)
+        
+	foreach my $k (@keys)
         {
             $range = $previous_k . '-' . $k;
             push @keys_range, $range;
@@ -656,16 +656,17 @@ sub qtl_plot
     my ( $pop_id, $cvterm_id ) =
       $doc->get_encoded_arguments( "population_id", "cvterm_id" );
 
+
+
     my $dbh = $self->get_dbh();
 
     my $population     = $self->get_object();
     my $pop_name       = $population->get_name();
     my $mapversion     = $population->mapversion_id();
-    my @linkage_groups = $population->linkage_groups();
+    my @linkage_groups = $population->linkage_groups();    
 
- 
     my ( $term_obj, $term_name, $term_id );
-
+   
     if ( $population->get_web_uploaded() )
     {
         $term_obj  = CXGN::Phenome::UserTrait->new( $dbh, $cvterm_id );
@@ -778,7 +779,8 @@ sub qtl_plot
 		    }
 
 		}
-		my $lod1 = $permu_threshold{ $p_keys[0] };	         		
+		my $lod1 = $permu_threshold{ $p_keys[0] };
+		
 		$h_marker = 
 		    qq |/phenome/qtl.pl?population_id=$pop_id&amp;term_id=$term_id&amp;chr=$lg&amp;l_marker=$l_m&amp;p_marker=$p_m&amp;r_marker=$r_m&amp;lod=$lod1|;
  
@@ -1007,6 +1009,7 @@ sub infile_list
     open my $cv_fh, ">", $file_cv_in or die "can't open $file_cv_in: $!\n";
     $cv_fh->print($ac);
 
+    
     my $file_in_list = join( "\t",
                              $file_cv_in,       "P$pop_id",
                              $gen_dataset_file, $phe_dataset_file,
@@ -1087,12 +1090,16 @@ sub outfile_list
     );
 
     my $flanking_markers = $marker_temp->filename;
+   
+    my $ci_lod = $population->ci_lod_file($c, $ac);
 
-    my $file_out_list = join(
+    my $file_out_list = join (
         "\t",
         $qtl_summary,
         $flanking_markers,
-                            );
+	$ci_lod
+	);
+
     open my $fo_fh, ">", $file_out or die "can't open $file_out: $!\n";
     $fo_fh->print ($file_out_list);
 
@@ -1787,3 +1794,6 @@ my $permu_threshold_ref = $self->permu_values();
     return $legend_data;
 
 }
+
+
+
