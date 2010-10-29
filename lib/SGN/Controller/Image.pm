@@ -4,32 +4,29 @@ use namespace::autoclean;
 use File::Basename;
 use CXGN::Login;
 
+use URI::FromHash 'uri';
+
 BEGIN { extends 'Catalyst::Controller'; }
 
 sub view :Path('/image/view/') Args(1) {
-    my $self = shift;
-    my $c = shift;
-    my $image_id = shift;
+    my ( $self, $c, $image_id ) = @_;
 
-    my $dbh = $c->dbc->dbh();
+    my $dbh = $c->dbc->dbh;
 
-    my $person_id = CXGN::Login->new($dbh)->has_session();
+    $c->forward('get_user');
 
     $c->stash(
         template  => '/image/index.mas',
 
         object_id => $image_id,
         dbh       => $dbh,
-        person_id => $person_id,
        );
 }
 
 sub add :Path('/image/add') Args(0) {
     my ($self, $c) = @_;
-    my $sp_person_id =CXGN::Login->new($c->dbc->dbh)->has_session();
-    if (!$sp_person_id) { 
-	$c->response->redirect('/solpeople/login.pl');
-    }
+
+    $c->forward('require_logged_in');
 
     $c->stash(
         template => '/image/add_image.mas',
@@ -43,14 +40,9 @@ sub add :Path('/image/add') Args(0) {
 sub confirm :Path('/image/confirm') {
     my ($self, $c) = @_;
 
-    my $sp_person_id = CXGN::Login->new($c->dbc->dbh)->has_session();
-    if (!$sp_person_id) {
-	$c->response->redirect('/solpeople/login.pl');
-	
-    }
+    $c->forward('require_logged_in');
+
     my $upload = $c->req->upload('file');
-
-
     my $filename = $upload->filename();
     my $tempfile = $upload->tempname();
     #print STDERR "FILENAME: $filename TEMPNAME: $tempfile\n";
@@ -83,18 +75,14 @@ EOM
     $c->{stash}->{filename}      = $filename;
     $c->{stash}->{tempfile}      = basename($tempfile);
     $c->{stash}->{image_url}     = $image_url;
-    $c->{stash}->{sp_person_id}  = $sp_person_id;
 }
+
 
 sub store :Path('/image/store') {
     my $self = shift;
     my $c = shift;
 
-    my $sp_person_id = CXGN::Login->new($c->dbc->dbh)->has_session();
-    if (!$sp_person_id) {
-	$c->response->redirect('/solpeople/login.pl');
-	
-    }
+    $c->forward('require_logged_in');
 
     my $image = SGN::Image->new($c->dbc->dbh());
 
@@ -107,7 +95,7 @@ sub store :Path('/image/store') {
 
     my $temp_image_dir = $c->get_conf("basepath")."/".$c->tempfiles_subdir('image');
 
-    $image->set_sp_person_id($sp_person_id);
+    $image->set_sp_person_id( $c->stash->{person_id} );
 
     if ((my $err = $image->process_image($temp_image_dir."/".$tempfile, $type, $type_id))<=0) {
         die "An error occurred during the upload. Is the file you are uploading an image file? [$err] ";
@@ -169,7 +157,6 @@ sub validate_image_filename :Private {
     return 0;  # FALSE, if passes all tests
 }
 
-
 sub send_image_email :Private {
     my $self = shift;
     my $c = shift;
@@ -220,6 +207,26 @@ sub send_image_email :Private {
 
 }
 
+sub get_user : Private{
+    my ( $self, $c ) = @_;
+
+    $c->stash->{person_id} =
+        $c->stash->{sp_person_id} =
+          CXGN::Login->new( $c->dbc->dbh )->has_session();
+
+}
+
+sub require_logged_in : Private {
+    my ( $self, $c ) = @_;
+
+    $c->forward('get_user');
+
+    unless( $c->stash->{person_id} ) {
+        $c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+    }
+
+    return 1;
+}
 
 
 1;
