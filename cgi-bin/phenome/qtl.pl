@@ -129,7 +129,11 @@ sub confidence_interval
    
 	
     my @rows =  grep { /\t$lg\t/ } read_file( $ci_lod_file );
-    my (@marker_lods, @all_lods);
+    my (@marker_lods, @all_lods, @marker_html);
+    my ( $peak_marker_lod, $highest_lod, $peak_pos );
+    
+    my $rnd    =  Number::Format->new();
+    my $peak_position;
     
     foreach my $row (@rows) {
 	my ( $m, $m_chr, $m_pos, $m_lod ) = split (/\t/, $row);
@@ -140,33 +144,26 @@ sub confidence_interval
 	unless ( !$marker ) {
 	    push @marker_lods, $m_lod;
 	}
+
+	$peak_marker_lod = $rnd->round(max(@marker_lods), 2);
+	$highest_lod     = $rnd->round(max(@all_lods), 2);
+	$peak_position   = $m_pos if ($rnd->round($m_lod, 2) == $highest_lod);	
     }
-    
-    my $rnd             = Number::Format->new();
-    my $peak_marker_lod = $rnd->round(max(@marker_lods), 2);
-    my $highest_lod     = $rnd->round(max(@all_lods), 2);
-
-    
-    my @marker_html;
-    my $peak_position;	
-
+       
     foreach my $row (@rows) 
     {  
 	    my ( $m, $m_chr, $m_pos, $m_lod ) = split (/\t/, $row);
 	   
 	    $m_pos = $rnd->round($m_pos, 1);
 	    $m_lod = $rnd->round($m_lod, 2);
-	    	       
-	    if ($m_lod == $highest_lod) { $peak_position = $m_pos;}
-	    
+	    		      	   
 	    my $marker = CXGN::Marker->new_with_name( $dbh, $m );
 	   
 	    unless ( !$marker )
 	    {
 		my $m_id      = $marker->marker_id();
-		
-		my $remark1 = "<i>Highest LOD score is $highest_lod at $peak_position cM</i>."  if ( $m_lod == $peak_marker_lod );
-		my $remark2 = "<i>The Closest marker to the peak position ($peak_position cM)</i>."  if ( $m eq $p_m );
+      		my $remark1 = "<i> Highest LOD score is $highest_lod at $peak_position cM</i>."  if ( $m_lod == $peak_marker_lod );
+		my $remark2 = "<i> The closest marker to the peak position ($peak_position cM)</i>."  if ( $m eq $p_m );
 		
 		push @marker_html,
                 [
