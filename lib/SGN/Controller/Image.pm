@@ -209,11 +209,18 @@ sub send_image_email :Private {
 sub get_user : Private{
     my ( $self, $c ) = @_;
 
-    $c->stash->{person_id} =
-        $c->stash->{sp_person_id} =
-          CXGN::Login->new( $c->dbc->dbh )->has_session();
+    my $dbh = $c->dbc->dbh;
 
+    my $person_id               =
+      $c->stash->{person_id}    =
+      $c->stash->{sp_person_id} =
+            CXGN::Login->new( $c->dbc->dbh )->has_session();
+
+    if( $person_id ) {
+        $c->stash->{person} = CXGN::People::Person->new( $dbh, $person_id );
+    }
 }
+
 
 sub require_logged_in : Private {
     my ( $self, $c ) = @_;
