@@ -21,17 +21,17 @@ after 'finalize_config' => \&_reroot_test_mode_files;
 =head1 DESCRIPTION
 
 This role requires that Catalyst::Plugin::ConfigLoader (or other
-plugin providing finalize_config).
+plugin providing finalize_config) be activated.
 
-It does two things: it adds a C<test_mode> attribute, and it reroots
+It does two things: adds a C<test_mode> attribute, and reroots
 paths to files and directories in the global configuration if the app
 is in test mode.
 
-=head1 ADDED ATTRIBUTES
+=head1 METHODS
 
 =head2 test_mode
 
-read-only accessor, boolean telling whether the site is now running in
+read-only sub, boolean telling whether the site is now running in
 test mode.
 
 By default, this attribute is true if the MYAPP_TEST_MODE environment
