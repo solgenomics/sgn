@@ -325,10 +325,9 @@ information of the form:
 
     $mech->while_logged_in({ user_type => 'curator' }, sub {
 
-        my $user_info = shift;
-        # the called 
+        my $user_info_hashref = shift;
 
-        diag "logged in as user id $user_info->{id}";
+        diag "logged in as user id $user_info_hashref->{id}";
 
         $mech->get_ok( '/organism/sol100/view' );
         $mech->content_contains( 'Authorized user', 'now says authorized user' );
