@@ -26,7 +26,8 @@ use Catalyst::Runtime 5.80;
 Does the roles L<SGN::Role::Site::Config>,
 L<SGN::Role::Site::DBConnector>, L<SGN::Role::Site::DBIC>,
 L<SGN::Role::Site::Exceptions>, L<SGN::Role::Site::Files>,
-L<SGN::Role::Site::Mason>, L<SGN::Role::Site::SiteFeatures>
+L<SGN::Role::Site::Mason>, L<SGN::Role::Site::SiteFeatures>,
+L<SGN::Role::Site::TestMode>
 
 =cut
 
