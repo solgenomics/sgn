@@ -9,7 +9,7 @@ use SGN::Test::WWW::Mechanize;
 
 my $ests = slurp("t/data/ests.seq");
 
-my $urlbase = "$ENV{SGN_TEST_SERVER}/tools/intron_detection/find_introns.pl";
+my $urlbase = "/tools/intron_detection/find_introns.pl";
 my $mech = SGN::Test::WWW::Mechanize->new;
 $mech->get($urlbase);
 $mech->submit_form_ok({
