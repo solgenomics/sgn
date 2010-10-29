@@ -311,19 +311,16 @@ if ((is.logical(permuvalue1) == FALSE))
     } else
     if (userpermuvalue != 0)
       {
-      popdataperm<-scanone(popdata,
+        popdataperm<-scanone(popdata,
                            pheno.col=cv,
                            model="normal",
                            n.perm = userpermuvalue,
                            method=qtlmethod
                            )
-      print ("popdataperm")
-      print(popdataperm)
-      permu<-summary(popdataperm,
-                     alpha=permuproblevel
-                     )
-      print ("permu")
-      print(permu)
+      
+        permu<-summary(popdataperm,
+                       alpha=permuproblevel
+                       )     
     }
   }else
   if (qtlmethod != "mr")
@@ -421,10 +418,11 @@ for (i in chrdata)
              chr=chrno,
              pheno.col=cv
              )
- 
+
+  
   position<-max(i,
                 chr=chrno
-                )  
+                )
   p<-position[2]
   p<-p[1, ]
   
