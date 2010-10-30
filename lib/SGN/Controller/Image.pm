@@ -13,6 +13,12 @@ sub view :Path('/image/view/') Args(1) {
 
     my $dbh = $c->dbc->dbh;
 
+    my $image = $c->stash->{image} =
+        SGN::Image->new( $dbh, $image_id+0 );
+
+    $image->get_original_filename
+        or $c->throw_404('Image not found.');
+
     $c->forward('get_user');
 
     $c->stash(
