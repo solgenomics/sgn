@@ -372,15 +372,9 @@ Execute the given code while logged in for each user_type.
 
 sub while_logged_in_all {
     my ($self,$sub) = @_;
-    $self->with_test_level( local => sub {
-        my @users = qw/user curator submitter sequencer genefamily_editor/;
-        for my $user_type (@users) {
-            $self->create_test_user( user_type => $user_type );
-            $self->log_in_ok;
-            $sub->( $self->test_user );
-            $self->log_out;
-        }
-    });
+    for ( qw/ user curator submitter sequencer genefamily_editor / ) {
+        $self->while_logged_in( { user_type => $_ }, $sub );
+    }
 }
 
 sub log_in_ok {
