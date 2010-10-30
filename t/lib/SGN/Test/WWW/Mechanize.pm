@@ -104,6 +104,8 @@ BEGIN {
 use Carp;
 use Test::More;
 
+use Try::Tiny;
+
 use CXGN::People::Person;
 use CXGN::People::Login;
 
@@ -341,8 +343,13 @@ sub while_logged_in {
     $self->with_test_level( local => sub {
         $self->create_test_user( %$props );
         $self->log_in_ok;
-        $sub->( $self->test_user );
-        $self->log_out;
+        try {
+            $sub->( $self->test_user );
+        } catch {
+            die $_;
+        } finally {
+            $self->log_out;
+        };
     });
 }
 
