@@ -10,6 +10,7 @@ use base "CXGN::Page::Form::AjaxFormPage";
 
 use JSON;
 use SGN::Image;
+use Try::Tiny;
 
 sub define_object {
     my $self = shift;
@@ -106,3 +107,23 @@ qq |<a href="/solpeople/personal-info.pl?sp_person_id=$sp_person_id">$submitter_
 
 }
 
+sub delete {
+    my ( $self ) = @_;
+
+    $self->check_modify_privileges
+        or $self->print_json;
+
+
+    my %json = $self->get_json_hash;
+
+    try {
+        $self->get_object->delete;
+        $json{success} = 1;
+    } catch {
+        $json{error} = "Deletion failed ($_)";
+    };
+
+    $self->set_json_hash( %json );
+    $self->print_json;
+
+}
