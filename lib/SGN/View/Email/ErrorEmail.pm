@@ -181,7 +181,7 @@ sub summary_text {
 
     no warnings 'uninitialized';
     return join '', map "$_\n", (
-      'Req URL    : '.$c->req->uri,
+      'Request    : '.$c->req->method.' '.$c->req->uri,
       'Process ID : '.$$,
       'User-Agent : '.$c->req->user_agent,
       'Referrer   : '.$c->req->referer,
