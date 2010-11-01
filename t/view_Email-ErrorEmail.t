@@ -19,7 +19,8 @@ $mech->with_test_level( process => sub {
 
     is( $email->{subject}, '[SGN] / error', 'got a good subject line' );
     like( $email->{body}, qr/object skipped/, 'email body looks right' );
-    like( $email->{body}, qr/=== Request ===/, 'email body looks right' );
+    like( $email->{body}, qr/=== Request ===/, 'email body has a Request' );
+    like( $email->{body}, qr/=== Summary ===/, 'email body has a Summary' );
 
 });
 

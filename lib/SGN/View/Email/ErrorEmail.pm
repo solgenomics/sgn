@@ -50,7 +50,6 @@ sub _make_email {
 
        };
 
-
 }
 
 =head1 ATTRIBUTES
@@ -149,6 +148,7 @@ These are filtered, suitable for debugging output.
 sub dump_these_strings {
     my ($self,$c) = @_;
     return
+        [ 'Summary', $self->summary_text( $c ) ],
         map [ $_->[0], Data::Dump::dump( $self->filter_object_for_dump( $_->[1] ) ) ],
         $c->dump_these;
 }
@@ -162,6 +162,30 @@ Return a filtered copy of the given object.
 sub filter_object_for_dump {
     my ( $self, $object ) = @_;
     $self->debug_filter_visitor->visit( $object );
+}
+
+=head2 summary_text( $c )
+
+Get an un-indented block of text of the most salient features of the
+error.  Example:
+
+  Path_Query: /path/to/request?foo=bar&baz=boo
+  Process ID: <PID of the serving process>
+  User-Agent: <user agent string>
+  Referrer:   <referrer string>
+
+=cut
+
+sub summary_text {
+    my ( $self, $c ) = @_;
+
+    no warnings 'uninitialized';
+    return join '', map "$_\n", (
+      'Req URL    : '.$c->req->uri,
+      'Process ID : '.$$,
+      'User-Agent : '.$c->req->user_agent,
+      'Referrer   : '.$c->req->referer,
+     );
 }
 
 =head1 AUTHOR
