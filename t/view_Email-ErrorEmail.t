@@ -15,7 +15,7 @@ $mech->with_test_level( process => sub {
 
     my ($res, $c) = ctx_request('/');
     $c->stash->{email_errors} = [ SGN::Exception->new( message => 'Fake test error!') ];
-    my $email = $c->view('Email::ErrorEmail')->_make_email( $c );
+    my $email = $c->view('Email::ErrorEmail')->make_email( $c );
 
     is( $email->{subject}, '[SGN](E) /', 'got a good subject line' );
     like( $email->{body}, qr/object skipped/, 'email body looks right' );

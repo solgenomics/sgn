@@ -11,7 +11,8 @@ SGN::View::Email::ErrorEmail - Email View for SGN
 
 =head1 DESCRIPTION
 
-View for sending error emails from SGN.
+View for sending error emails from SGN.  Errors to email should be an
+arrayref of strings in C<$c-E<gt>stash-E<gt>{email_errors}>.
 
 =cut
 
@@ -22,35 +23,10 @@ before 'process' => sub {
 
     # convert the notify_errors stash key into an email stash key for
     # the generic email view
-    $c->stash->{email} = $self->_make_email( $c );
+    $c->stash->{email} = $self->make_email( $c );
 
     $c->log->debug('sending error email to '.$c->stash->{email}->{to}) if $c->debug;
-
 };
-
-sub _make_email {
-    my ( $self, $c ) = @_;
-    my $error_num = 1;
-
-    my $type = ( grep $_->is_server_error, @{$c->stash->{email_errors}} ) ? 'E' : 'NB';
-
-    my $body = join '',
-        # the errors
-        "==== Error(s) ====\n\n",
-        ( map { $error_num++.".  $_\n" } @{$c->stash->{email_errors}} ),
-
-        # all the necessary debug information
-        ( map { ("\n==== $_->[0] ====\n\n", $_->[1], "\n") } $self->dump_these_strings( $c ) );
-
-    return {
-        to      => $self->default->{to},
-        from    => $self->default->{from},
-        subject => '['.$c->config->{name}."]($type) ".$c->req->uri->path_query,
-        body    => $body,
-
-       };
-
-}
 
 =head1 ATTRIBUTES
 
@@ -135,6 +111,37 @@ has 'dump_visitor_args' => (
 
 =head1 METHODS
 
+=head2 make_email( $c )
+
+Returns a hashref of error email information, suitable for rendering
+with L<Catalyst::View::Email>.
+
+=cut
+
+sub make_email {
+    my ( $self, $c ) = @_;
+    my $error_num = 1;
+
+    my $type = ( grep $_->is_server_error, @{$c->stash->{email_errors}} ) ? 'E' : 'NB';
+
+    my $body = join '',
+        # the errors
+        "==== Error(s) ====\n\n",
+        ( map { $error_num++.".  $_\n" } @{$c->stash->{email_errors}} ),
+
+        # all the necessary debug information
+        ( map { ("\n==== $_->[0] ====\n\n", $_->[1], "\n") } $self->dump_these_strings( $c ) );
+
+    return {
+        to      => $self->default->{to},
+        from    => $self->default->{from},
+        subject => '['.$c->config->{name}."]($type) ".$c->req->uri->path_query,
+        body    => $body,
+    };
+
+}
+
+
 =head2 dump_these_strings( $c )
 
 Get a list like
@@ -182,9 +189,10 @@ sub summary_text {
     no warnings 'uninitialized';
     return join '', map "$_\n", (
       'Request    : '.$c->req->method.' '.$c->req->uri,
-      'Process ID : '.$$,
       'User-Agent : '.$c->req->user_agent,
       'Referrer   : '.$c->req->referer,
+      'Process ID : '.$$,
+
      );
 }
 
