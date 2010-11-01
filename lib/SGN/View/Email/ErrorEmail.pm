@@ -32,7 +32,7 @@ sub _make_email {
     my ( $self, $c ) = @_;
     my $error_num = 1;
 
-    my $type = ( grep $_->is_server_error, @{$c->stash->{email_errors}} ) ? 'error' : 'notification';
+    my $type = ( grep $_->is_server_error, @{$c->stash->{email_errors}} ) ? 'E' : 'NB';
 
     my $body = join '',
         # the errors
@@ -45,7 +45,7 @@ sub _make_email {
     return {
         to      => $self->default->{to},
         from    => $self->default->{from},
-        subject => '['.$c->config->{name}.'] /'.$c->req->path." $type",
+        subject => '['.$c->config->{name}."]($type) ".$c->req->uri->path_query,
         body    => $body,
 
        };
