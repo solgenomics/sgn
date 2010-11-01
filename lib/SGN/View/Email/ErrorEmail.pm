@@ -98,6 +98,18 @@ Can be either an arrayref or a whitespace-separated list of class names.
 
 Default: "Catalyst", which will filter out Catalyst context objects.
 
+=cut
+
+{ my $sc = subtype as 'ArrayRef';
+  coerce $sc, from 'Str', via { [ split ] };
+  has 'dump_skip_class' => (
+    is      => 'ro',
+    isa     => $sc,
+    coerce  => 1,
+    default => sub { ['Catalyst'] },
+   );
+}
+
 =head2 dump_visitor_args
 
 Hashref of additional constructor args passed to the
@@ -116,16 +128,6 @@ Example:
 
 =cut
 
-{ my $sc = subtype as 'ArrayRef';
-  coerce $sc, from 'Str', via { [ split ] };
-  has 'dump_skip_class' => (
-    is      => 'ro',
-    isa     => $sc,
-    coerce  => 1,
-    default => sub { ['Catalyst'] },
-   );
-}
-
 has 'dump_visitor_args' => (
     is      => 'ro',
     isa     => 'HashRef',
@@ -139,6 +141,8 @@ has 'dump_visitor_args' => (
 Get a list like
 C<['Request', 'string dump'], ['Stash', 'string dump'], ...>
 for use in debugging output.
+
+These are filtered, suitable for debugging output.
 
 =cut
 
