@@ -40,7 +40,7 @@ sub _make_email {
         ( map { $error_num++.".  $_\n" } @{$c->stash->{email_errors}} ),
 
         # all the necessary debug information
-        ( map { ("\n==== $_->[0] ====\n", $_->[1], "\n") } $self->dump_these_strings( $c ) );
+        ( map { ("\n==== $_->[0] ====\n\n", $_->[1], "\n") } $self->dump_these_strings( $c ) );
 
     return {
         to      => $self->default->{to},
