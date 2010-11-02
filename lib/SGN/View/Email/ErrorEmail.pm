@@ -5,6 +5,8 @@ use Moose::Util::TypeConstraints;
 use Data::Dump ();
 use Data::Visitor::Callback;
 
+use Socket;
+
 =head1 NAME
 
 SGN::View::Email::ErrorEmail - Email View for SGN
@@ -108,6 +110,21 @@ has 'dump_visitor_args' => (
     isa     => 'HashRef',
     default => sub { {} },
 );
+
+=head2 reverse_dns
+
+Boolean, default true.
+
+If set, attempts to do a reverse DNS lookup to
+resolve the hostname of the client.
+
+=cut
+
+has 'reverse_dns' => (
+    is      => 'ro',
+    isa     => 'Bool',
+    default => 1,
+   );
 
 =head1 METHODS
 
@@ -213,13 +230,18 @@ error.  Example:
 sub summary_text {
     my ( $self, $c ) = @_;
 
+    my $client_ip       = $c->req->address;
+    my $client_hostname = $self->reverse_dns
+        ? ' ('.(gethostbyaddr( inet_aton( $client_ip ), AF_INET ) || 'reverse DNS lookup failed').')'
+        : '';
+
     no warnings 'uninitialized';
     return join '', map "$_\n", (
       'Request    : '.$c->req->method.' '.$c->req->uri,
       'User-Agent : '.$c->req->user_agent,
       'Referrer   : '.$c->req->referer,
+      'Client Addr: '.$client_ip.$client_hostname,
       'Process ID : '.$$,
-
      );
 }
 
