@@ -11,7 +11,7 @@ sub ACTION_build {
    $? and die "make failed\n";
 
    print "Checking R dependencies\n";
-   system "R CMD check -o _build R_files";
+   system "R CMD check --no-manual --no-codoc --no-manual --no-vignettes -o _build R_files";
    $? and die "R dependency check failed.\n";
 }
 
