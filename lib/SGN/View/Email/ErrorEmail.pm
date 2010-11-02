@@ -160,6 +160,33 @@ sub dump_these_strings {
         $c->dump_these;
 }
 
+# SGN-specific filtering, removing db passwords and cookie encryption
+# strings from error email output
+around 'dump_these_strings' => sub {
+    my $orig = shift;
+    my $self = shift;
+    my ($c) = @_;
+
+    my @ret = $self->$orig(@_);
+
+    my @remove_strings =
+        map  { Data::Dump::dump( $_ ) }
+        grep { $_ }
+        (
+            @{$c->config}{qw{ cookie_encryption_key dbpass }},
+            ( map $_->{password}, values %{$c->config->{DatabaseConnection} || {}} ),
+        );
+
+    for my $ret ( @ret ) {
+        for my $redact ( @remove_strings ) {
+            $ret->[1] =~ s/$redact/"<redacted>"/g;
+        }
+    }
+
+    return @ret;
+};
+
+
 =head2 filter_object_for_dump( $object )
 
 Return a filtered copy of the given object.

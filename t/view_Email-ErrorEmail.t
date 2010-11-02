@@ -21,6 +21,7 @@ $mech->with_test_level( process => sub {
     like( $email->{body}, qr/object skipped/, 'email body looks right' );
     like( $email->{body}, qr/=== Request ===/, 'email body has a Request' );
     like( $email->{body}, qr/=== Summary ===/, 'email body has a Summary' );
+    like( $email->{body}, qr/"<redacted>"/, 'redacted some stuff' );
 
 });
 
