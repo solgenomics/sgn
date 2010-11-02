@@ -30,8 +30,10 @@ use CXGN::Marker;
 use CXGN::Map;
 use CXGN::DB::Connection;
 use CXGN::Chado::Cvterm;
-use List::MoreUtils qw /uniq/;
-use Math::Round::Var;
+use List::MoreUtils qw / uniq /;
+use List::Util qw / max /;
+use File::Slurp qw / read_file /;
+use Number::Format;
 use SGN::Exception;
 
 use CatalystX::GlobalContext qw( $c );
@@ -55,13 +57,13 @@ if (    !$pop_id
 }
 
 our $dbh         = CXGN::DB::Connection->new();
-our $pop         = CXGN::Phenome::Population->new( $dbh, $pop_id );
-my $pop_name     = $pop->get_name();
-my $trait_name   = trait_name( $pop, $trait_id );
-my $genetic_link = genetic_map($pop);
-my $cmv_link     = marker_positions( $pop, $lg, $l_m, $p_m, $r_m );
-my $gbrowse_link = genome_positions( $l_m, $p_m, $r_m );
-my $marker_link  = marker_detail( $pop, $l_m, $p_m, $r_m );
+our $pop         = CXGN::Phenome::Population->new($dbh, $pop_id);
+our $pop_name    = $pop->get_name();
+our $trait_name  = trait_name();
+my $genetic_link = genetic_map();
+my $cmv_link     = marker_positions();
+my $gbrowse_link = genome_positions();
+my $ci_table     = confidence_interval();
 my $legend       = legend();
 my $comment      = comment();
 
@@ -71,15 +73,15 @@ $c->forward_to_mason_view( '/qtl/qtl.mas',
                            trait_name   => $trait_name,
                            cmv_link     => $cmv_link,
                            gbrowse_link => $gbrowse_link,
-                           marker_link  => $marker_link,
+                           marker_link  => $ci_table,
                            genetic_map  => $genetic_link,
                            legend       => $legend,
                            comment      => $comment,
 );
 
+
 sub marker_positions
 {
-    my ( $pop, $lg, $l_m, $p_m, $r_m ) = @_;
     my $mapv_id = $pop->mapversion_id();
     my $l_m_pos = $pop->get_marker_position( $mapv_id, $l_m );
     my $p_m_pos = $pop->get_marker_position( $mapv_id, $p_m );
@@ -93,7 +95,6 @@ sub marker_positions
 
 sub genome_positions
 {
-    my ( $l_m, $p_m, $r_m ) = uniq @_;
     my $genome_pos
         = qq |<a href="/gbrowse/bin/gbrowse/ITAG1_genomic/?name=$l_m">$l_m</a>|;
     $genome_pos
@@ -109,7 +110,6 @@ sub genome_positions
 #move this to the population object
 sub genetic_map
 {
-    my $pop         = shift;
     my $mapv_id     = $pop->mapversion_id();
     my $map         = CXGN::Map->new( $dbh, { map_version_id => $mapv_id } );
     my $map_name    = $map->get_long_name();
@@ -121,35 +121,62 @@ sub genetic_map
 
 }
 
-sub marker_detail
-{
-    my ( $pop, $l_m, $p_m, $r_m ) = @_;
-    my @markers = uniq( $l_m, $p_m, $r_m );
-    my $mapv_id = $pop->mapversion_id();
+sub confidence_interval
+{    
+    my $ci_lod_file = $pop->ci_lod_file( $c, 
+					$pop->cvterm_acronym( $trait_name )
+	);
+   
+	
+    my @rows =  grep { /\t$lg\t/ } read_file( $ci_lod_file );
+    my (@marker_lods, @all_lods, @marker_html);
+    my ( $peak_marker_lod, $highest_lod, $peak_pos );
+    
+    my $rnd    =  Number::Format->new();
+    my $peak_position;
+    
+    foreach my $row (@rows) {
+	my ( $m, $m_chr, $m_pos, $m_lod ) = split (/\t/, $row);
+	push @all_lods, $m_lod;
+	
+	my $marker = CXGN::Marker->new_with_name( $dbh, $m );
+	
+	unless ( !$marker ) {
+	    push @marker_lods, $m_lod;
+	}
 
-    my @marker_html;
-    my $rnd = Math::Round::Var->new(0.01);
-    for ( my $i = 0; $i < @markers; $i++ )
-    {
-        my $marker = CXGN::Marker->new_with_name( $dbh, $markers[$i] );
-        my ( $m_id, $m_pos );
-
-        unless ( !$marker )
-        {
-            $m_id      = $marker->marker_id();
-            my $m_pos  = $pop->get_marker_position( $mapv_id, $markers[$i] );
-            my $remark = 'Peak marker' if ( $p_m eq $markers[$i] );
-            push @marker_html,
-                [
-                map {$_} (
-                    qq | <a href="/search/markers/markerinfo.pl?marker_id=$m_id">$markers[$i]</a>|,
-                    $rnd->round($m_pos),
-                    $remark,
-                )
-                ];
-        }
-
+	$peak_marker_lod = $rnd->round(max(@marker_lods), 2);
+	$highest_lod     = $rnd->round(max(@all_lods), 2);
+	$peak_position   = $m_pos if ($rnd->round($m_lod, 2) == $highest_lod);	
     }
+       
+    foreach my $row (@rows) 
+    {  
+	    my ( $m, $m_chr, $m_pos, $m_lod ) = split (/\t/, $row);
+	   
+	    $m_pos = $rnd->round($m_pos, 1);
+	    $m_lod = $rnd->round($m_lod, 2);
+	    		      	   
+	    my $marker = CXGN::Marker->new_with_name( $dbh, $m );
+	   
+	    unless ( !$marker )
+	    {
+		my $m_id      = $marker->marker_id();
+      		my $remark1 = "<i> Highest LOD score is $highest_lod at $peak_position cM</i>."  if ( $m_lod == $peak_marker_lod );
+		my $remark2 = "<i> The closest marker to the peak position ($peak_position cM)</i>."  if ( $m eq $p_m );
+		
+		push @marker_html,
+                [
+		 map { $_ } (
+		     qq | <a href="/search/markers/markerinfo.pl?marker_id=$m_id">$m</a>|,
+		     $m_pos,
+		     $m_lod,
+		     $remark1 . $remark2,
+		 )
+                ];
+	    }
+
+     }
 
     return \@marker_html;
 
@@ -157,8 +184,6 @@ sub marker_detail
 
 sub trait_name
 {
-    my ( $pop, $trait_id ) = @_;
-
     my ( $term_obj, $term_name, $term_id );
     if ( $pop->get_web_uploaded() )
     {

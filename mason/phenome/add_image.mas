@@ -44,6 +44,6 @@ $name => 'Add image'
 </%perl>
 
 <span>
-  <a href="/image/add_image.pl?type_id=<% $object_id %>&type=<% $object %>&action=new&refering_page=<% $refering_page %>"> 
+  <a href="/image/add?type_id=<% $object_id %>&type=<% $object %>&action=new&refering_page=<% $refering_page %>"> 
     [<% $name %>]</a>
 </span>

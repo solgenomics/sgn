@@ -166,10 +166,10 @@ sub org_pop_form {
 			                                           contents  => $organism_form,
 			                                           id        =>"organism_search",
 			                                          );
-    my $pop_sec = CXGN::Page::FormattingHelpers::info_section_html(
-                                                                  title    =>'Population Details',
-    			                                          contents =>"$required <i>must be filled.</i> ", 
-	                                                          );   
+   
+    my $pop_sec = $self->subsection_info('Population details', ' ', "$required <i>must be filled.</i>");
+
+
    
     my $qtltools = CXGN::Phenome::Qtl::Tools->new();    
     my %cross_types =  $qtltools->cross_types();
@@ -246,11 +246,7 @@ sub traits_form {
     my $guide = $self->guideline();
     my $trait = tooltipped_text('Traits list', 'in tab delimited format');
     
-    my $traits_sec = CXGN::Page::FormattingHelpers::info_section_html(
-                                                                  title    => 'Traits list',
-	                                                          subtitle => $guide,
-			                                          contents => " ", 
-	                                                          );  
+    my $traits_sec = $self->subsection_info('Traits dataset', $guide);
 
     my $traits_form = qq^
     <form action="qtl_load.pl" method="POST" enctype="MULTIPART/FORM-DATA">        
@@ -274,16 +270,13 @@ return $traits_form;
 sub pheno_form {
     my $self = shift;
     my $pop_id = shift;
-    my $guide= $self->guideline();
-    
+
+    my $guide = $self->guideline();
+   
     my $phenotype = tooltipped_text('Phenotype dataset', 'in tab delimited format');
     
-    my $pheno_sec = CXGN::Page::FormattingHelpers::info_section_html(
-                                                                  title    => 'Phenotype dataset',
-                                                                  subtitle => "$guide",
-			                                          contents => " ", 
-	                                                          );  
-
+    my $pheno_sec = $self->subsection_info('Phenotype dataset', $guide);
+    
     my $pheno_form = qq^
     <form action="qtl_load.pl" method="POST" enctype="MULTIPART/FORM-DATA">        
      $pheno_sec  
@@ -307,14 +300,12 @@ return $pheno_form;
 sub geno_form {
     my $self = shift;
     my $pop_id = shift;
-    my $guide= $self->guideline();
+    my $guide = $self->guideline();
+    
 
     my $genotype = tooltipped_text('Genotype dataset', 'in tab delimited format');
-    my $geno_sec = CXGN::Page::FormattingHelpers::info_section_html(
-                                                                  title    => 'Genotype dataset',
-                                                                  subtitle => $guide,
-			                                          contents => " ", 
-	                                                          );   
+    my $geno_sec = $self->subsection_info('Genotype dataset', $guide);
+    
     my $geno_form = qq^
     <form action="qtl_load.pl" method="POST" enctype="MULTIPART/FORM-DATA">        
      $geno_sec  
@@ -338,7 +329,9 @@ return $geno_form;
 sub stat_form {
     my $self = shift;
     my $pop_id = shift;
+ 
     my $guide = $self->guideline();
+
     my $no_draws = tooltipped_text('No. of imputations', 'required only if the 
                                     Simulate method is selected for the 
                                     calculation of QTL genotype probability method and Multiple Imputation');
@@ -350,11 +343,7 @@ sub stat_form {
     my $qtl_prob = tooltipped_text('QTL genotype probablity method:', 'not required for Marker Regression' 
                                       );
     
-    my $stat_sec =CXGN::Page::FormattingHelpers::info_section_html(
-                                                                  title   => 'Statistical Parameters',
-                                                                  subtitle => $guide,
-			                                          contents => " ",
-	                                                          ); 
+    my $stat_sec = $self->subsection_info('Statistical parameters', $guide);
  
 
     my $stat_form = qq^    
@@ -489,17 +478,12 @@ sub associate_organism {
 sub conf_form {
     my $self = shift;
     my $pop_id = shift;
-    my $guide = $self->guideline();
-    my $dbh = CXGN::DB::Connection->new();
+    my $guide = $self->guideline();    
 
-    my $conf_sec =CXGN::Page::FormattingHelpers::info_section_html(
-                                                                  title   => ' ',
-                                                                  subtitle => "$guide",
-			                                          contents => ' ',
-                                                               );
-
-    my ($pop_link, $pop_name);
+    my $conf_sec = $self->subsection_info('confirmation', $guide);
     
+    my ($pop_link, $pop_name);
+    my $dbh = CXGN::DB::Connection->new();
     if ($pop_id)  {
 	my $pop = CXGN::Phenome::Population->new($dbh, $pop_id);
 	$pop_name = $pop->get_name();
@@ -534,13 +518,11 @@ return $conf_form;
 sub intro {
     my $self = shift;
     my $guide = $self->guideline();
-    my $intro_sec =CXGN::Page::FormattingHelpers::info_section_html(
-                                                                 title => 'Introduction',
-                                                                  subtitle   => $guide,
-			                                          contents => ' ',
-                                                               );
-
-   
+    my $citation = qq | <a href="http://www.biomedcentral.com/1471-2105/11/525/abstract">Citation</a> |;
+    my $links = $guide . '|' . $citation;
+    my $intro_sec = $self->subsection_info('Introduction', $links);                                                        
+    $guide = lc($guide);
+    
     my $intro = qq^
        <form action="qtl_load.pl" method="POST" enctype="MULTIPART/FORM-DATA">  
         $intro_sec
@@ -563,9 +545,13 @@ sub intro {
            <li>Statistical parameters.
         </ul>
 
-        <p>The QTL data  uploading software is at Beta stage. If you have any problems 
-           uploading your data or remarks, please send us your feedback.
+        <p> Please read the submission $guide before starting to upload your data.
+        </p> 
+
+        <p>The QTL data  uploading software is at Beta stage. If you have any 
+           problems uploading your data or remarks, please send us your feedback.
         </p>
+      
      </td>
     </tr>
     <tr> 
@@ -582,6 +568,18 @@ return $intro;
 
 
 sub guideline {
-    my $self = shift;
-    return my $guideline = qq |<a  href="http://docs.google.com/View?id=dgvczrcd_1c479cgfb">Guidelines</a> |;
+    my $self = shift;   
+    my $guideline = qq |<a  href="http://docs.google.com/View?id=dgvczrcd_1c479cgfb">Guidelines</a> |;
+   
+    return $guideline;
+}
+
+sub subsection_info {
+    my ($self, $title, $subtitle, $contents) = @_;
+   
+    return CXGN::Page::FormattingHelpers::info_section_html(
+	                                                     title => $title,
+                                                             subtitle   => $subtitle,
+			                                     contents => $contents,
+                                                            );
 }

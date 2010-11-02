@@ -99,6 +99,11 @@ if (defined $template->get_template_id() ) {
 	                       ->ffround(-2)
 			       ->bstr();
 
+
+	## To create the tags it is better to use % of sd instead a fixed number
+
+	my $sd_perc = 100 * $sd / $mean;
+
 	if ($rep_used eq 'none') {
 	    my $def1 = '<font color=gray>NA</font>';
 	    ($mean, $median, $sd, $cv) = ($def1, $def1, $def1, $def1);
@@ -108,12 +113,12 @@ if (defined $template->get_template_id() ) {
 	    $mean = '<b><font color=darkcyan>'.$mean.'</font></b>';
 	    $median = '<b><font color=darkcyan>'.$median.'</font></b>';
 	} else {
-	    if ($sd < 0.5) {
+	    if ($sd_perc < 5) {
 		$mean = '<b><font color=darkblue>'.$mean.'</font></b>';
 		$median = '<b><font color=darkblue>'.$median.'</font></b>';
 		$sd = '<b><font color=darkblue>'.$sd.'</font></b>';
 		$cv = '<b><font color=darkblue>'.$cv.'</font></b>';
-	    } elsif ($sd < 1) {
+	    } elsif ($sd_perc < 10) {
 		$mean = '<font color=darkblue>'.$mean.'</font>';
 		$median = '<font color=darkblue>'.$median.'</font>';
 		$sd = '<font color=darkorange>'.$sd.'</font>';
@@ -154,7 +159,7 @@ if (defined $template->get_template_id() ) {
  		my @sample_list = $target->get_sample_list();
 		
  		foreach my $sample (@sample_list) {
- 		    my %po = $sample->get_dbxref_related();
+ 		    my %po = $sample->get_dbxref_related('PO');
 		    
  		    foreach my $sample_dbxref_id (keys %po) {
  			my %dbxref_po = %{ $po{$sample_dbxref_id} };
@@ -282,7 +287,7 @@ if (defined $template->get_template_id() ) {
        $experiments_html = 'No experiment was found associated to this template';
    }
 
-    $experiment_info_content = info_section_html( title       => "Expression Data by Experiments (".$exp_number.")", 
+    $experiment_info_content = info_section_html( title       => "Table: Expression Data by Experiment (".$exp_number.")", 
                                                   contents    => $experiments_html, 
 	 					  collapsible => 1,
                                                   collapsed   => 1 );

@@ -96,6 +96,7 @@ my $build = $class->new(
         'Config::JFDI'                     => 0,
         'CGI'                              => 0,
 
+        'Data::Page' => 0,
         'Data::Visitor::Callback' => 0,
 
         'DBIx::Class'             => 0,

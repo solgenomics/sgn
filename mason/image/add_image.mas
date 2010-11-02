@@ -1,0 +1,35 @@
+
+<%doc>
+
+</%doc>
+
+<%args>
+
+$type => undef
+$type_id
+$refering_page => undef
+</%args>
+
+<%perl>
+
+
+    print qq { 
+
+	<p class="boxbgcolor2">Note: By pressing the "Upload" button, you are considered to be the copyright owner of the image being uploaded and that you grant a non-exclusive license to SGN to display and use the image on SGN webpages and materials related to SGN.<br /></p>
+        <p> Supported file formats include .jpg. .jpeg, .gif, .png, .pdf, .ps,
+	.eps <br></p>
+	<form name="upload_image_form" action="/image/confirm" method="post" enctype="multipart/form-data" >
+	    Upload an image, and associated with object <b>$type</b> id $type_id<br /><br />
+	    <input type="file" name="file" value="Choose image file" />
+	    <input type="hidden" name="action" value="confirm" /><br /><br />
+	    <input type="hidden" name="type" value="$type" />
+	    <input type="hidden" name="type_id" value="$type_id" />
+	    <input type="hidden" name="refering_page" value="$refering_page" />
+	    <input type="submit" value="Upload" />
+	 </form>
+     };
+
+    if ($refering_page) { print "<a href=\"$refering_page\">Go back</a>"; }
+
+
+</%perl>

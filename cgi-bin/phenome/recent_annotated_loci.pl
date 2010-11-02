@@ -244,9 +244,9 @@ sub print_results {
     foreach my $list(@{$locus_edits{locus_images} } ) {
 	#[$locus, $image, $person_id, $cdate, $mdate, $obsolete];
 	my $locus=$list->[0];
-	my $image=$list->[1];
-	my $image_id=$image->get_image_id();
-	my $image_name= $image->get_name() || "image: $image_id";
+	my $image_id=$list->[1];
+#	my $image_id=$image->get_image_id();
+#	my $image_name= $image->get_name() || "image: $image_id";
 	my $locus_id=$locus->get_locus_id();
 	my $locus_symbol=$locus->get_common_name() ." " . $locus->get_locus_symbol();
 	my $owner=  $list->[2];
@@ -260,7 +260,7 @@ sub print_results {
 	}
 	my $obsoleted =  $list->[5];
 	if ($obsoleted eq 't' ) { $action= 'Obsoleted'; }
-	push @locus_images, [map {$_} (qq|<a href="locus_display.pl?locus_id=$locus_id">$locus_symbol</a>|, qq|<a href="/image/index.pl?image_id=$image_id">$image_name</a>|, $person, $udate, $action)];
+	push @locus_images, [map {$_} (qq|<a href="locus_display.pl?locus_id=$locus_id">$locus_symbol</a>|, qq|<a href="/image/index.pl?image_id=$image_id">image: $image_id</a>|, $person, $udate, $action)];
     }
     
     my $lis;

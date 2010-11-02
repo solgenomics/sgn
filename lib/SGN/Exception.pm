@@ -69,7 +69,17 @@ has 'notify' => (
 around 'BUILDARGS' => sub {
     my ($orig,$class,%args) = @_;
     $args{developer_message} ||= $args{message};
-    $args{message}           ||= $args{developer_message};
+    $args{message}           ||= $args{developer_message} || $args{public_message};
+
+    if( defined $args{is_client_error} && !$args{is_client_error} ) {
+        $args{is_server_error} = 1 unless defined $args{is_server_error};
+    }
+    if( defined $args{is_server_error} && !$args{is_server_error} ) {
+        $args{is_client_error} = 1 unless defined $args{is_client_error};
+    }
+    if( $args{is_client_error} && ! defined $args{is_server_error} ) {
+        $args{is_server_error} = 0;
+    }
 
     return $class->$orig( %args );
 };

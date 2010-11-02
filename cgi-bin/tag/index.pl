@@ -1,7 +1,9 @@
 
 use strict;
 
+our $c;
 my $tag_detail_page = CXGN::Tag_detail_page->new();
+
 
 package CXGN::Tag_detail_page;
 
@@ -75,7 +77,7 @@ sub store {
 	}else { $self->get_page()->message_page("tag '" . $tag->get_name() ."' already associated with experiment " . $args{experiment_id})  };
     }
     if (exists($args{image_id}) && $args{image_id}) { 
-	my $image = CXGN::Image->new($self->get_dbh(), $args{image_id});
+	my $image = CXGN::Image->new(dbh=>$self->get_dbh(), image_id=>$args{image_id}, image_dir => $c->get_conf('static_datasets_path')."/".$c->get_conf('image_dir'));
 	
 	my ($existing_id, $obsolete) = CXGN::Image::exists_tag_image_named($self->get_dbh(),  $tag_id, $args{image_id});
 	if ($existing_id && $obsolete == 0) { 
@@ -99,7 +101,7 @@ sub store {
 	print qq { view <a href="/insitu/detail/experiment.pl?experiment_id=$args{experiment_id}&amp;action=view">experiment</a> };
     }
     if ($args{image_id}) { 
-	my $image = CXGN::Image->new($self->get_dbh(), $args{image_id});
+	my $image = CXGN::Image->new(dbh=>$self->get_dbh(), image_id=>$args{image_id}, image_dir => $c->get_conf('static_datasets_path')."/". $c->get_conf('image_dir'));
 	print " to image ".$image->get_name()."<br /><br />";
 	print qq { view <a href="/image/?image_id=$args{image_id}&amp;action=view">image</a> };
     }
@@ -133,7 +135,7 @@ sub delete {
 	
     }
     if ($args{image_id}) { 
-	$image = CXGN::Image->new($self->get_dbh(), $args{image_id});
+	$image = CXGN::Image->new(dbh=>$self->get_dbh(), image_id=>$args{image_id}, image_dir=>$c->get_conf('static_datasets_path')."/".$c->get_conf('image_dir'));
 	$image_name = $image->get_name();
 	$image ->remove_tag($self->get_object());
     }
@@ -252,7 +254,7 @@ sub display_page {
 
     }
     if ($args{image_id}) { 
-	$image = CXGN::Image->new($self->get_dbh(), $args{image_id});
+	$image = CXGN::Image->new(dbh=>$self->get_dbh(), image_id=>$args{image_id}, image_dir=>$c->get_conf('static_datasets_path')."/".$c->get_conf('image_dir'));
 	@image_tags = (@tags, $image->get_tags());
 	my $image_id = $image->get_image_id();
 	my $image_name = $image->get_name() || "Untitled";

@@ -37,7 +37,7 @@ sub fmt_rflp_image_link {
     my $marker = shift;
     my $l = SGN::Controller::Marker->rflp_image_link( $c, $marker )
         or return '<span class="ghosted">'.$marker->get_name.' image not available</span>';
-    return '<a href="/search/markers/view_rflp.pl?marker_id='.$marker->marker_id.'">'.$marker->get_name.' image</a>';
+    return '<a href="/marker/SGN-M'.$marker->marker_id.'/rflp_image/view">'.$marker->get_name.' RFLP image</a>';
 }
 sub len_pct {
     my ($len,$seq) = @_;

@@ -45,11 +45,9 @@ print<<END_HEREDOC;
   <p><a href="http://www.tigr.org/tigr-scripts/tgi/T_index.cgi?species=tomato">TIGR TomatoGene
   index</a></p>
 
-  <p><a href="/index.pl">Solanaceae Genome Network</a>
+  <p><a href="/">Solanaceae Genome Network</a>
   (database for comparative genomics between Solanaceaous species
   and Arabidopsis</p>
-
-    
 
 END_HEREDOC
 $page->footer();
