@@ -85,7 +85,7 @@ CXGN.Onto.Browser.prototype = {
     setUpBrowser: function() { 
 
 	document.write('<table cellpadding="0" summary=""><tr><td><div id="ontology_browser_input" >&nbsp;&nbsp;&nbsp;</div></td>'); // the element for the go id parentage search
-	document.write('<td width="*" align="right"><div id="working"  style="background-color:red; color:white; font-weight: bold; margin-top:7px; align:right">&nbsp;Working...&nbsp;</div></td></tr></table>');
+	document.write('<td width="*" align="right"><div id="working" style="margin-top:8px" >&nbsp;<img src="/documents/img/throbber.gif" />&nbsp;</div></td></tr></table>');
 	document.write('<div id="ontology_term_input" ></div>');     // the element for the search
 	document.write('<input id="hide_link" type="button" value="show results" display="none" onClick="MochiKit.Visual.toggle(\'search_results\', \'blind\'); o.toggleSearchResultsVisible(); o.setSearchButtonText();  "><br />');
 	
@@ -151,7 +151,7 @@ CXGN.Onto.Browser.prototype = {
     },
     
     workingMessage: function(status) {
-	MochiKit.Logging.log('the working message = ' , status );
+	//MochiKit.Logging.log('the working message = ' , status );
 	var w = document.getElementById('working');
 
 	if (status) {
@@ -372,10 +372,11 @@ CXGN.Onto.Browser.prototype = {
 	var pL = this.getParentsList(accession);
 	
 	var cache = this.fetchCachedChildren(accession);
-
+	
+	//MochiKit.Logging.log('Cache length now: '+cache.length);
 	this.setCache(cache);
 
-	MochiKit.Logging.log('Retrieved parents '+ pL.join(' '));
+	//MochiKit.Logging.log('Retrieved parents '+ pL.join(' '));
 
 	var c = this.rootnode.getChildren();
 	for (var i=0; i<c.length; i++) { 
@@ -489,24 +490,25 @@ CXGN.Onto.Browser.prototype = {
     },
     
     fetchCachedChildren:function(accession) { 
+	var cache;
 	new Ajax.Request('/ajax/onto/cache', {
 		parameters: { node: accession }, 
-		asynchronous: false,
-		on503: function() { 
+		    asynchronous: false,
+		    on503: function() { 
 		    alert('An error occurred! The database may currently be unavailable. Please check back later.');
 		},
-		
-		onSuccess: function(request) {
+		    
+		    onSuccess: function(request) {
 		    var json = request.responseText;
-		    var cache = eval("("+json+")");
+		    cache = eval("("+json+")");
 		    if ( cache.error ) { alert(cache.error) ; }
 		    else {
-			alert('cache is ' + cache);
-
-			o.setCache(cache);
+			//MochiKit.Logging.log('Cache '+cache.length);
+			
 		    }
 		}
-	    });
+	});
+	return cache;
 	
     },
     
@@ -539,17 +541,17 @@ CXGN.Onto.Browser.prototype = {
 			    responseArray.pop();
 			    var s='';
 			    o.setSearchResponseCount(responseArray.length);
-			    MochiKit.Logging.log('Matched '+responseArray.length+' terms');
+			    //MochiKit.Logging.log('Matched '+responseArray.length+' terms');
 			    for (var i=0; i<responseArray.length; i++) { 
 				var ontologyObject = responseArray[i].split('--');
 				var searchResults= responseArray[i].split('*');
-				MochiKit.Logging.log('getOntologies found term ',  ontologyObject[1] );
-				MochiKit.Logging.log('search term ', search_string);
+				//MochiKit.Logging.log('getOntologies found term ',  ontologyObject[1] );
+				//MochiKit.Logging.log('search term ', search_string);
 				matchNodes.push(ontologyObject[0]); ///
 				s +='<a href=javascript:o.searchTermParentage(\''+ontologyObject[1]+'\')>'+searchResults[1]+'</a><br />';
 			    }
 			    //		    MochiKit.Logging.log('the search results:' , s) ;
-			    MochiKit.Logging.log('the search string:' , search_string) ;
+			    //MochiKit.Logging.log('the search string:' , search_string) ;
 			    
 			    if (s === '') { s = '(no terms found) '; }
 			    o.setSearchResults('<div class="topicbox">Search term: <b>'+search_string+'</b></div><div class="topicdescbox">'+s+'</div>');
@@ -722,55 +724,49 @@ CXGN.Onto.Browser.prototype = {
 
     },
 
-    setCache: function (cache) { 
-	this.childrenCache = cache;
+    setCache: function(cache) { 
+	// convert to hash
+	var hash = new Array();
+	for(var i=0; i<cache.length; i++) { 
+	    if (typeof(hash[cache[i].parent])=='undefined') { 
+		hash[cache[i].parent]=new Array();
+	    }
+	    hash[cache[i].parent].push(cache[i]);
+	}
+	this.childrenCache = hash;
+	
+	//MochiKit.Logging.log('setCache: '+ cache.length + ' entries');
 
+    },
+
+    getCache: function() { 
+	if (typeof(this.childrenCache) == 'undefined') { 
+	    this.childrenCache = new Array();
+	}
+	return this.childrenCache;
     },
 
     getChildrenFromCache: function(accession) { 
-	if (typeof this.childrenCache != 'undefined') { 
-	    if (typeof this.childrenCache[accession] == 'undefined') { 
-		return "ERROR. "+accession+" was not cached.";
-	    }
-	    else { 
-		return this.childrenCache[accession];
-	    }
+	var cache = this.getCache();
+	if (typeof(cache[accession]) != 'undefined') { 
+	    return cache[accession];
 	}
-	else { return "ERROR. cache not yet defined."; }
-	    
-
+	
+	
     },
     
     hasChildrenCache: function(accession) { 
-	if (typeof this.childrenCache != 'undefined') { 
-	    if (typeof this.childrenCache[accession] == 'undefined') { 
-		return 0;
+	var cache = this.getCache();
+
+	if (typeof cache[accession] != 'undefined') { 
+	    //MochiKit.Logging.log(accession + " has childrenCache");
+	    if (cache[accession].length>0) { 
+		return 1;	
 	    }
+	    
 	}
-	else { 
-	    return 1;
-	}
-    }
-
-
-    
-//     submitFormWithEnter: function(myfield,e) {
-// 	var keycode;
-// 	if (window.event) keycode = window.event.keyCode;
-// 	else if (e) keycode = e.which;
-// 	else return true;
-	
-// 	if (keycode == 13)
-// 	{
-// 	    myfield.form.submit();
-// 	    return false;
-// 	}
-// 	else
-// 	return true;
-//     }
-
-
-    
+	return 0;
+    }    
 };
 
 
@@ -981,9 +977,10 @@ Node.prototype = {
 	var parentNode = this;
 	var accession = this.getAccession();
 	if (o.hasChildrenCache(accession)) { 
-	    alert('retrieving accession from cache '+accession);
+	    MochiKit.Logging.log('retrieving accession from cache '+accession);
 	    var children = o.getChildrenFromCache(accession);
 	    for(var i=0; i<children.length; i++) { 
+		//MochiKit.Logging.log('adding child node '+children[i].accession);
 		var childNode = new Node(o);
 		
 		childNode.json2node(children[i]);
@@ -1058,7 +1055,7 @@ Node.prototype = {
 			    //MochiKit.Logging.log('Child accession: '+childNode.getAccession()+'<br />');
 			    
 			}
-			//MochiKit.Logging.log('Rendering again...');
+			//MochiKit.Logging.log('Fetched '+parentList.length + ' parents');
 			//parentNode.browser.render();      
 			return parentList;
 		    }
