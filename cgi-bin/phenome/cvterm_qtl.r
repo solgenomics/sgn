@@ -433,33 +433,27 @@ for (i in chrdata)
  
   lodpeakmarker<-i[peakmarker, ]
   
-  confidenceint<-bayesint(i,
+  lodconfidenceint<-bayesint(i,
                           chr=chrno,
                           prob=0.95,
                           expandtomarkers=TRUE
                           )
-
-  lodconfidenceint<-confidenceint
-  
+ 
   if (is.na(lodconfidenceint[peakmarker, ]))
     {
       lodconfidenceint<-rbind(lodconfidenceint,
                               lodpeakmarker
-                             )
+                              )
     }
   
- 
-  confidenceint<-rownames(confidenceint)
- 
-  confidenceint<-c(chrno,
-                   confidenceint,
+  peakmarker<-c(chrno,
                    peakmarker
                   )
  
   if (chrno==1)
     { 
     datasummary<-i
-    confidenceints<-confidenceint
+    peakmarkers<-peakmarker
     lodconfidenceints<-lodconfidenceint
   }
   
@@ -468,9 +462,9 @@ for (i in chrdata)
       datasummary<-rbind(datasummary,
                          i
                          )
-      confidenceints<-rbind(confidenceints,
-                            confidenceint
-                            )
+      peakmarkers<-rbind(peakmarkers,
+                         peakmarker
+                         )
       lodconfidenceints<-rbind(lodconfidenceints,
                                lodconfidenceint
                                )
@@ -485,7 +479,7 @@ outfiles<-scan(file=outfile,
                )
 
 qtlfile<-outfiles[1]
-confidenceintfile<-outfiles[2]
+peakmarkersfile<-outfiles[2]
 confidencelodfile<-outfiles[3]
 
 write.table(datasummary,
@@ -496,8 +490,8 @@ write.table(datasummary,
             append=FALSE
             )
 
-write.table(confidenceints,
-            file=confidenceintfile,
+write.table(peakmarkers,
+            file=peakmarkersfile,
             sep="\t",
             col.names=NA,
             quote=FALSE,
