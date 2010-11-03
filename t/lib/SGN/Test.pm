@@ -65,8 +65,8 @@ sub validate_urls {
 
 sub _validate_single_url {
     my ( $test_name, $url, $mech ) = @_;
-    my $r  = $mech->get( $url );
-    my $rc = $r->code;
+    $mech->get( $url );
+    my $rc = $mech->status;
 
     my $dump_tempdir;
     ok( $rc == 200, "$test_name returned OK" )
@@ -75,17 +75,17 @@ sub _validate_single_url {
             if( $ENV{DUMP_ERROR_CONTENT} ) {
                 if ( eval { require Digest::Crc32 } ) {
                     $dump_tempdir ||= make_dump_tempdir();
-                    my $script = $r->request->uri->path;
+                    my $script = $mech->base->path;
                     $script =~ s/.//;
                     $script =~ s/\W+/_/g;
-                    my $params = $r->request->uri->query;
+                    my $params = $mech->base->query;
                     $params = $params ? sprintf('%x',Digest::Crc32->new->strcrc32($params)) : '0';
                     my $dump_filename = "${script}_${params}.dump";
                     $dump_filename = catfile( $dump_tempdir, $dump_filename);
                     my $dump_out = IO::File->new( $dump_filename, 'w')
                         or die "$! opening dumpfile $dump_filename for diagnostic dump\n";
                     $dump_out->print("FROM URL: $url\n\n");
-                    $dump_out->print($r->content);
+                    $dump_out->print($mech->content);
                     diag "fetched content dumped to $dump_filename";
                 } else {
                     diag "Cannot include Digest::CRC32 for error content dump.  Skipping.";
@@ -99,7 +99,7 @@ sub _validate_single_url {
     SKIP: {
             skip 'SKIP_HTML_LINT env set', 2 if $ENV{SKIP_HTML_LINT};
             my $lint = HTML::Lint->new;
-            $lint->parse( $r->content );
+            $lint->parse( $mech->content );
             my @e = $lint->errors;
             my $e_cnt = @e;
 
@@ -111,7 +111,7 @@ sub _validate_single_url {
                         "NOTE: above line numbers refer to the HTML output.\nTo see full error list, run: view_lint.pl '$ENV{SGN_TEST_SERVER}$url'\n"
                     );
 
-            unlike( $r->content, qr/timed out/i, "$test_name does not seem to have timed out" )
+            unlike( $mech->content, qr/timed out/i, "$test_name does not seem to have timed out" )
                 or diag "fetch from URL $url seems to have timed out";
         }
     } else {
