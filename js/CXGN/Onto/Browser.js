@@ -523,8 +523,8 @@ CXGN.Onto.Browser.prototype = {
 	    alert('The search text must be longer than 4 characters');
 	}
         else{
-	    new Ajax.Request('/chado/ajax_ontology_browser.pl', {
-		    parameters: {action: 'match', term_name: search_string, db_name: db_name },
+	    new Ajax.Request('/ajax/onto/match', {
+		    parameters: { term_name: search_string, db_name: db_name },
 		    asynchronous: false,
 		    on503: function() { 
 			alert('An error occurred! The database may currently be unavailable. Please check back later.');

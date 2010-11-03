@@ -78,6 +78,19 @@ sub parents  : Local : ActionClass('REST') { }
 sub roots    : Local : ActionClass('REST') { }
 
 
+=head2 match
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub match    : Local : ActionClass('REST') { }
+
 =head2 cache
 
  Usage:        Dispatched by catalyst
@@ -103,15 +116,31 @@ sub children_GET {
  
 sub children_POST {
     my ( $self, $c ) = @_;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
-    my $cvterm = CXGN::Chado::Cvterm->new_with_accession( $c->dbc->dbh(), $c->request->param('node') );
+    my ($db_name, $accession) = split ":", $c->request->param('node');
 
-    my @response_nodes = $cvterm->get_children();
+    my $db = $schema->resultset('General::Db')->search({ name => $db_name })->first();
+    my $dbxref = $db->find_related('dbxrefs', { accession => $accession });
+    
+    my $cvterm = $dbxref->find_related('cvterm');
+
+    my $cvrel_rs = $cvterm->children(); # returns a result set
+
     my @response_list = ();
-    foreach my $e (@response_nodes) { 
-	my $responsehash = $self->nodes2list($e->[0], $e->[1]);
+    while (my $cvrel_row = $cvrel_rs->next()) { 
+	my $relationship_node = $cvrel_row->type();
+	my $child_node = $cvrel_row->subject();
+
+	#only report back children of the same cv namespace
+	if ($child_node->cv_id() != $cvterm->cv_id()) {  
+	    next();
+	}
+
+	my $responsehash = $self->flatten_node($child_node, $relationship_node);
 	push @response_list, $responsehash;
     }
+
     $c->{stash}->{rest} = \@response_list;
 }
 
@@ -123,14 +152,28 @@ sub parents_GET {
     
 sub parents_POST { 
     my ($self, $c) = @_;
-    my $cvterm = CXGN::Chado::Cvterm->new_with_accession( $c->dbc()->dbh(), $c->request->param('node') );
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     
-    my @response_nodes = $cvterm->get_recursive_parents();
+    my ($db_name, $accession) = split ":", $c->request->param('node');
+    
+    my $db = $schema->resultset('General::Db')->search({ name => $db_name })->first();
+    my $dbxref = $db->find_related('dbxrefs', { accession => $accession });
+    
+    my $cvterm = $dbxref->find_related('cvterm');
+    
+    my $parents_rs = $cvterm->recursive_parents(); # returns a result set
+
     my @response_list = ();
-    foreach my $e (@response_nodes) { 
-	print STDERR "processing parent: ".$e->[0]->get_full_accession()."\n";
-	my $response_hash = $self->nodes2list($e->[0], $e->[1]);
-	push @response_list, $response_hash;
+
+    while (my $parent = $parents_rs->next()) { 
+	#only report back children of the same cv namespace
+	if ($parent->cv_id() != $cvterm->cv_id()) {  
+	    next();
+	}
+
+	my $responsehash = $self->flatten_node($parent, undef);
+	push @response_list, $responsehash;
     }
     
     $c->{stash}->{rest} = \@response_list;
@@ -215,35 +258,133 @@ sub roots_GET {
 sub roots_POST { 
     my $self = shift;
     my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     
     my $namespaces = $c->request->param('nodes');
     my @namespaces = ();
 
     my @response_nodes = ();
-    my $empty_cvterm   = CXGN::Chado::Cvterm->new($c->dbc()->dbh());
+    #my $empty_cvterm   = CXGN::Chado::Cvterm->new($c->dbc()->dbh());
     if (!$namespaces) { 
-	@namespaces = ( 'GO', 'PO', 'SP', 'SO', 'PATO' );
+	@namespaces = ( 
+	    'biological_process',
+	    'cellular_component',
+	    'molecular_function',
+	    'plant growth and development stages',
+	    'plant structure',
+	    'Solanaceae phenotype ontology',
+	    'Sequence_Ontology',
+	    'quality',
+	    );
+              
     }
     else { 
-	@namespaces = split /\s+/, $namespaces;
+	@namespaces = split /\%09/, $namespaces; #split on tab?
     }
     my @roots = ();
-    foreach (@namespaces) {
-        push @roots, CXGN::Chado::Cvterm::get_roots( $c->dbc->dbh(), $_ );
+    foreach my $ns (@namespaces) {
+        my $root = $schema->resultset('Cv::Cvterm')->find( { name=> $ns });
+	print STDERR "ROOT $root ".$root->name()."\n";
+	push @roots, $root;
     }
-    foreach (@roots) { push @response_nodes, [ $_, $empty_cvterm ] }
-
+    
     my @response_list = ();
 
-    foreach my $e (@response_nodes) { 
-	my $hashref = $self->nodes2list($e->[0], $e->[1]);
+    foreach my $r (@roots) { 
+	my $hashref = $self->flatten_node($r, undef);
 	push @response_list, $hashref;
     }
     $c->{stash}->{rest}= \@response_list;
 }
+
+
+sub match_GET { 
+}
+
+sub match_POST {
+#     my $self = shift;
+#     my $c    = shift;
+
+#     my $synonym_query = $dbh->prepare(
+# 	"SELECT  distinct(cvterm.dbxref_id), cv.name, cvterm.name, dbxref.accession, synonym
+#                                    FROM public.cvterm 
+#                                    JOIN public.cv USING (cv_id)
+#                                    LEFT JOIN public.cvtermsynonym USING (cvterm_id)
+#                                    JOIN public.dbxref USING (dbxref_id)
+#                                    JOIN public.db USING (db_id)
+#                                    WHERE cvterm.is_obsolete= 0 AND
+#                                    db.name=? AND
+#                                    cvtermsynonym.synonym ilike '%$term_name%'
+#                                   "
+# 	);
+    
+#     my $ontology_query = $dbh->prepare(
+# 	"SELECT  distinct(cvterm.dbxref_id), cv.name, cvterm.name, dbxref.accession,
+#                                    count(synonym)
+#                                    FROM public.cvterm 
+#                                    JOIN public.cv USING (cv_id)
+#                                    LEFT JOIN public.cvtermsynonym USING (cvterm_id)
+#                                    JOIN public.dbxref USING (dbxref_id)
+#                                    JOIN public.db USING (db_id)
+#                                    WHERE cvterm.is_obsolete= 0 AND
+#                                    db.name=? AND
+#                                     (cvterm.name ilike '%$term_name%'
+#                                     OR cvterm.definition ilike '%$term_name%'
+#                                     )
+#                                     GROUP BY cvterm.dbxref_id, cvterm.name, dbxref.accession, cv.name
+#                                     ORDER BY cv.name, cvterm.name
+#                                    "
+# 	);
+#     $ontology_query->execute($db_name);
+#     my %terms;
+#     my ( $dbxref_id, $cv_name, $cvterm_name, $accession, $synonym ) =
+# 	$ontology_query->fetchrow_array();
+    
+#     while ($cvterm_name) {
+#         $terms{$cv_name}{"$dbxref_id*$cv_name--$db_name:$accession--"} =
+# 	    $cvterm_name;
+#         ( $dbxref_id, $cv_name, $cvterm_name, $accession, $synonym ) =
+# 	    $ontology_query->fetchrow_array();
+#     }
+    
+#     $synonym_query->execute($db_name);
+#     my @synonym_terms;
+#     while ( my ( $dbxref_id, $cv_name, $cvterm_name, $accession, $synonym ) =
+# 	    $synonym_query->fetchrow_array() )
+#     {
+#         if ( $terms{$cv_name}{"$dbxref_id*$cv_name--$db_name:$accession--"} ) {
+#             $terms{$cv_name}{"$dbxref_id*$cv_name--$db_name:$accession--"} .=
+# 		" ($synonym)";
+#         }
+#         else {
+#             $terms{$cv_name}{"$dbxref_id*$cv_name--$db_name:$accession--"} =
+# 		$cvterm_name . " ($synonym)";
+#         }
+#     }
+    
+#     #sort the hash of hashes by keys(cv_name)  and then by values (term names)
+#     my $print_string;
+    
+#     foreach my $cv_name ( sort ( keys %terms ) ) {
+#         foreach my $key (
+#             sort { $terms{$cv_name}{$a} cmp $terms{$cv_name}{$b} }
+#             keys %{ $terms{$cv_name} }
+# 	    )
+#         {
+#             $print_string .= $key . $terms{$cv_name}{$key};
+#             $print_string .= "|";
+#         }
+#     }
+#     $res{response} = $print_string;
+
+}
+
+
+
+
  
 =head2 nodes2list
-
+ DEPRECATED. REPLACED by FLATTEN_NODE()
  Usage:
  Desc:         serializes CXGN::Chado::Cvterm objects to a list form convenient
                for processing to json.
@@ -272,6 +413,35 @@ sub nodes2list :Private {
     
     return $hashref;
 }
+
+
+### used for cvterm resultset
+sub flatten_node { 
+    my $self = shift;
+    my $node_row = shift;
+    my $rel_row = shift;
+    
+    my $has_children = 0;
+    if ($node_row->children()->first()) { 
+	$has_children = 1;
+    }
+    
+    my $rel_name = "";
+    if ($rel_row) { 
+	$rel_name = $rel_row->name();
+    }
+
+    my $dbxref = $node_row->dbxref();
+
+    my $hashref = 
+    { accession    => $dbxref->db->name().":".$dbxref->accession,
+      cvterm_name  => $node_row->name(),
+      cvterm_id    => $node_row->cvterm_id(),
+      has_children => $has_children,
+      relationship => $rel_name,
+    };
+}
+
 
 #sub end :ActionClass('Serialize') {}
 
