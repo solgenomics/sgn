@@ -15,15 +15,12 @@ Jonathan "Duke" Leto
 
 use strict;
 use Test::More tests => 2;
-use Test::WWW::Mechanize;
 use lib 't/lib';
-use SGN::Test;
-
-my $base_url = $ENV{SGN_TEST_SERVER};
+use SGN::Test::WWW::Mechanize;
 
 {
-    my $mech = Test::WWW::Mechanize->new;
+    my $mech = SGN::Test::WWW::Mechanize->new;
 
-    $mech->get_ok("$base_url/cgi-bin/phenome/qtl.pl?population_id=12&term_id=47515&chr=7&l_marker=SSR286&p_marker=SSR286&r_marker=CD57&lod=3.9&qtl=/documents/tempfiles/temp_images/1a1a5391641c653884fbc9d6d8be5c90.png");
+    $mech->get_ok("/phenome/qtl.pl?population_id=12&term_id=47515&chr=6&peak_marker=CT206&lod=3.8&qtl=/static/documents/tempfiles/temp_images/32f275542a55732aaee2a79ac081d37c.png");
     $mech->content_contains("genotype significance");
 }
