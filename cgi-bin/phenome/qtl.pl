@@ -122,59 +122,59 @@ sub genetic_map
 }
 
 sub confidence_interval
-{    
-    my $ci_lod_file = $pop->ci_lod_file( $c, 
-					$pop->cvterm_acronym( $trait_name )
-	);
-   
-	
+{
+    my $ci_lod_file = $pop->ci_lod_file( $c,
+                                        $pop->cvterm_acronym( $trait_name )
+        );
+
+
     my @rows =  grep { /\t$lg\t/ } read_file( $ci_lod_file );
     my (@marker_lods, @all_lods, @marker_html);
     my ( $peak_marker_lod, $highest_lod, $peak_pos );
-    
+
     my $rnd    =  Number::Format->new();
     my $peak_position;
-    
-    foreach my $row (@rows) {
-	my ( $m, $m_chr, $m_pos, $m_lod ) = split (/\t/, $row);
-	push @all_lods, $m_lod;
-	
-	my $marker = CXGN::Marker->new_with_name( $dbh, $m );
-	
-	unless ( !$marker ) {
-	    push @marker_lods, $m_lod;
-	}
 
-	$peak_marker_lod = $rnd->round(max(@marker_lods), 2);
-	$highest_lod     = $rnd->round(max(@all_lods), 2);
-	$peak_position   = $m_pos if ($rnd->round($m_lod, 2) == $highest_lod);	
+    foreach my $row (@rows) {
+        my ( $m, $m_chr, $m_pos, $m_lod ) = split (/\t/, $row);
+        push @all_lods, $m_lod;
+
+        my $marker = CXGN::Marker->new_with_name( $dbh, $m );
+
+        unless ( !$marker ) {
+            push @marker_lods, $m_lod;
+        }
+
+        $peak_marker_lod = $rnd->round(max(@marker_lods), 2);
+        $highest_lod     = $rnd->round(max(@all_lods), 2);
+        $peak_position   = $m_pos if ($rnd->round($m_lod, 2) == $highest_lod);
     }
-       
-    foreach my $row (@rows) 
-    {  
-	    my ( $m, $m_chr, $m_pos, $m_lod ) = split (/\t/, $row);
-	   
-	    $m_pos = $rnd->round($m_pos, 1);
-	    $m_lod = $rnd->round($m_lod, 2);
-	    		      	   
-	    my $marker = CXGN::Marker->new_with_name( $dbh, $m );
-	   
-	    unless ( !$marker )
-	    {
-		my $m_id      = $marker->marker_id();
-      		my $remark1 = "<i> Highest LOD score is $highest_lod at $peak_position cM</i>."  if ( $m_lod == $peak_marker_lod );
-		my $remark2 = "<i> The closest marker to the peak position ($peak_position cM)</i>."  if ( $m eq $p_m );
-		
-		push @marker_html,
+
+    foreach my $row (@rows)
+    {
+            my ( $m, $m_chr, $m_pos, $m_lod ) = split (/\t/, $row);
+
+            $m_pos = $rnd->round($m_pos, 1);
+            $m_lod = $rnd->round($m_lod, 2);
+
+            my $marker = CXGN::Marker->new_with_name( $dbh, $m );
+
+            unless ( !$marker )
+            {
+                my $m_id      = $marker->marker_id();
+                my $remark1 = "<i> Highest LOD score is $highest_lod at $peak_position cM</i>."  if ( $m_lod == $peak_marker_lod );
+                my $remark2 = "<i> The closest marker to the peak position ($peak_position cM)</i>."  if ( $m eq $p_m );
+
+                push @marker_html,
                 [
-		 map { $_ } (
-		     qq | <a href="/search/markers/markerinfo.pl?marker_id=$m_id">$m</a>|,
-		     $m_pos,
-		     $m_lod,
-		     $remark1 . $remark2,
-		 )
+                 map { $_ } (
+                     qq | <a href="/search/markers/markerinfo.pl?marker_id=$m_id">$m</a>|,
+                     $m_pos,
+                     $m_lod,
+                     $remark1 . $remark2,
+                 )
                 ];
-	    }
+            }
 
      }
 
@@ -216,14 +216,14 @@ sub legend
         chomp($row);
         my ( $parameter, $value ) = split( /\t/, $row );
 
-        if ( $parameter =~ /qtl_method/ ) 
-	{ 
-	    $parameter = 'Mapping method'; 
-	}
-        if ( $parameter =~ /qtl_model/ )  
-	{ 
-	    $parameter = 'Mapping model'; 
-	}
+        if ( $parameter =~ /qtl_method/ )
+        {
+            $parameter = 'Mapping method';
+        }
+        if ( $parameter =~ /qtl_model/ )
+        {
+            $parameter = 'Mapping model';
+        }
         if ( $parameter =~ /prob_method/ )
         {
             $parameter = 'QTL genotype probability method';
