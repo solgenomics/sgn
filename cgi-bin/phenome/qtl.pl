@@ -69,7 +69,7 @@ foreach my $k (keys %$marker_details) {
 }
 
 my $genetic_link = genetic_map();
-my $cmv_link     = marker_positions($marker_details);
+my $cmv_link     = marker_positions();
 my $gbrowse_link = genome_positions();
 my $legend       = legend();
 my $comment      = comment();
