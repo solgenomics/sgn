@@ -31,41 +31,50 @@ use CXGN::Map;
 use CXGN::DB::Connection;
 use CXGN::Chado::Cvterm;
 use List::MoreUtils qw / uniq /;
-use List::Util qw / max /;
+use List::Util qw / max min/;
 use File::Slurp qw / read_file /;
 use Number::Format;
 use SGN::Exception;
 
+
 use CatalystX::GlobalContext qw( $c );
+
+
 my $page = CXGN::Page->new( "qtl", "isaak" );
-our ( $pop_id, $trait_id, $lg, $l_m, $p_m, $r_m, $lod, $qtl_image )
+our ( $pop_id, $trait_id, $lg, $p_m, $lod, $qtl_image )
     = $page->get_encoded_arguments( "population_id", "term_id",
-                                    "chr",           "l_marker",
-                                    "p_marker",      "r_marker",
-                                    "lod",           "qtl"
+                                    "chr",  "peak_marker", "lod",   "qtl"
     );
 
 if (    !$pop_id
      || !$trait_id
      || !$lg
-     || !$l_m
-     || !$p_m
-     || !$r_m
+     || !$p_m   
      || !$qtl_image )
 {
     die 'QTL detail page error:  A required argument is missing';
 }
 
+
+our ($l_m,  $r_m);
 our $dbh         = CXGN::DB::Connection->new();
 our $pop         = CXGN::Phenome::Population->new($dbh, $pop_id);
 our $pop_name    = $pop->get_name();
 our $trait_name  = trait_name();
+our ($ci_table, $marker_details) = confidence_interval();
+
+foreach my $k (keys %$marker_details) {
+    $l_m = $k if ($marker_details->{$k}{orientation} eq  'left');
+    $r_m = $k if ($marker_details->{$k}{orientation} eq  'right');
+}
+
 my $genetic_link = genetic_map();
-my $cmv_link     = marker_positions();
+my $cmv_link     = marker_positions($marker_details);
 my $gbrowse_link = genome_positions();
-my $ci_table     = confidence_interval();
 my $legend       = legend();
 my $comment      = comment();
+
+
 
 $c->forward_to_mason_view( '/qtl/qtl.mas',
                            qtl_image    => $qtl_image,
@@ -80,12 +89,26 @@ $c->forward_to_mason_view( '/qtl/qtl.mas',
 );
 
 
+
+=head2 marker_positions
+
+ Usage: $map_viewer = marker_positions();
+ Desc: generates a link to the comparative map viewer page
+       using the flanking markers and peak marker.
+ Ret: a link to the map viewer page
+ Args: None
+ Side Effects:
+ Example:
+
+=cut
+
+
 sub marker_positions
 {
-    my $mapv_id = $pop->mapversion_id();
-    my $l_m_pos = $pop->get_marker_position( $mapv_id, $l_m );
-    my $p_m_pos = $pop->get_marker_position( $mapv_id, $p_m );
-    my $r_m_pos = $pop->get_marker_position( $mapv_id, $r_m );
+    my $mapv_id = $pop->mapversion_id();   
+    my $l_m_pos = $marker_details->{$l_m}{position};
+    my $p_m_pos = $marker_details->{$p_m}{position};
+    my $r_m_pos = $marker_details->{$r_m}{position};
 
     my $fl_markers
         = qq |<a href="../cview/view_chromosome.pl?map_version_id=$mapv_id&chr_nr=$lg&show_ruler=1&show_IL=&show_offsets=1&comp_map_version_id=&comp_chr=&color_model=&show_physical=&size=&show_zoomed=1&confidence=-2&hilite=$l_m+$p_m+$r_m&marker_type=&cM_start=$l_m_pos&cM_end=$r_m_pos">Chromosome $lg ($l_m, $r_m)</a> |;
@@ -93,8 +116,22 @@ sub marker_positions
     return $fl_markers;
 }
 
+=head2 genome_positions
+
+ Usage: $genome_position = genome_positions();
+ Desc:  generates links to the respective genome 
+        positions of the flanking and peak markers
+ Ret:  hyperlinked markers
+ Args: None
+ Side Effects:
+ Example:
+
+=cut
+
+
 sub genome_positions
 {
+    my ($l_m, $p_m, $r_m) = uniq ($l_m, $p_m, $r_m);
     my $genome_pos
         = qq |<a href="/gbrowse/bin/gbrowse/ITAG1_genomic/?name=$l_m">$l_m</a>|;
     $genome_pos
@@ -107,7 +144,19 @@ sub genome_positions
     return $genome_pos;
 }
 
-#move this to the population object
+=head2 genetic_map
+
+ Usage: $population_map = genetic_map();
+ Desc: generates a link to the genetic map of the
+       population
+ Ret: a link to the genetic map
+ Args: None
+ Side Effects:
+ Example:
+
+=cut
+
+
 sub genetic_map
 {
     my $mapv_id     = $pop->mapversion_id();
@@ -121,66 +170,121 @@ sub genetic_map
 
 }
 
+=head2 confidence_interval
+
+ Usage: ($marker_table, $marker_details) = confidence_interval();
+ Desc: reads the confidence interval data for the QTL from a 
+       file containing the genome-wide confidence intervals 
+       and their lod profile. It calculates the left and right 
+       markers, their position values; and some interpretation of 
+       the data etc..   
+ Ret: an array ref of marker details table (for the viewer) 
+      and a ref to a hash of hash for the  marker details 
+      (for later access to the data)  
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+
+
 sub confidence_interval
 {    
     my $ci_lod_file = $pop->ci_lod_file( $c, 
 					$pop->cvterm_acronym( $trait_name )
 	);
    
-	
+    my (@marker_lods,  @all_lods, @all_positions, @marker_html);
+    my %marker_details_of = ();
+
+    
     my @rows =  grep { /\t$lg\t/ } read_file( $ci_lod_file );
-    my (@marker_lods, @all_lods, @marker_html);
-    my ( $peak_marker_lod, $highest_lod, $peak_pos );
-    
-    my $rnd    =  Number::Format->new();
-    my $peak_position;
-    
+   
+    my $rnd  = Number::Format->new();
+
     foreach my $row (@rows) {
 	my ( $m, $m_chr, $m_pos, $m_lod ) = split (/\t/, $row);
 	push @all_lods, $m_lod;
+	push @all_positions, $m_pos;	
 	
 	my $marker = CXGN::Marker->new_with_name( $dbh, $m );
-	
-	unless ( !$marker ) {
-	    push @marker_lods, $m_lod;
-	}
-
-	$peak_marker_lod = $rnd->round(max(@marker_lods), 2);
-	$highest_lod     = $rnd->round(max(@all_lods), 2);
-	$peak_position   = $m_pos if ($rnd->round($m_lod, 2) == $highest_lod);	
-    }
-       
-    foreach my $row (@rows) 
-    {  
-	    my ( $m, $m_chr, $m_pos, $m_lod ) = split (/\t/, $row);
-	   
-	    $m_pos = $rnd->round($m_pos, 1);
-	    $m_lod = $rnd->round($m_lod, 2);
-	    		      	   
-	    my $marker = CXGN::Marker->new_with_name( $dbh, $m );
-	   
-	    unless ( !$marker )
-	    {
-		my $m_id      = $marker->marker_id();
-      		my $remark1 = "<i> Highest LOD score is $highest_lod at $peak_position cM</i>."  if ( $m_lod == $peak_marker_lod );
-		my $remark2 = "<i> The closest marker to the peak position ($peak_position cM)</i>."  if ( $m eq $p_m );
 		
-		push @marker_html,
-                [
-		 map { $_ } (
-		     qq | <a href="/search/markers/markerinfo.pl?marker_id=$m_id">$m</a>|,
-		     $m_pos,
-		     $m_lod,
-		     $remark1 . $remark2,
-		 )
-                ];
+	unless  ( !$marker ) 
+	{
+	    push @marker_lods, $m_lod;   
+	}    
+    }
+    
+    my $peak_marker_lod = $rnd->round(max( @marker_lods), 2 );
+    my $highest_lod     = $rnd->round(max( @all_lods), 2 );
+    my $right_position  = $rnd->round(max( @all_positions), 2 );
+    my $left_position   = $rnd->round(min( @all_positions), 2 );
+     
+    my ($peak_marker, $linkage_group, $peak_position) = split (/\t/, $rows[1]);
+    $peak_position = $rnd->round($peak_position, 1);
+    
+    foreach my $row ( @rows ) 
+    {  
+	my ($m, $m_chr, $m_pos, $m_lod)  = split (/\t/, $row);
+	$m_pos = $rnd->round( $m_pos, 1 );
+	$m_lod = $rnd->round( $m_lod, 2 );
+
+	my $marker = CXGN::Marker->new_with_name( $dbh, $m );	   
+	    
+	unless ( !$marker )
+	{
+		
+	    $marker_details_of{$m}{name}          = $m;
+	    $marker_details_of{$m}{linkage_group} = $m_chr;
+	    $marker_details_of{$m}{position}      = $m_pos;
+	
+	    if (!$m_pos) 
+	    {
+		$marker_details_of{$m}{position}  = '0.0'; 
+	    } else 
+	    { 
+		$marker_details_of{$m}{position}  = $m_pos;
 	    }
 
-     }
+	    $marker_details_of{$m}{lod_score}     = $m_lod;
+	    	
+	    if ($m eq $p_m) { $marker_details_of{$m}{orientation} = 'peak'; }
+	    if ($m_pos == $right_position) { $marker_details_of{$m}{orientation} = 'right'; }
+	    if ($m_pos == $left_position) { $marker_details_of{$m}{orientation} = 'left'; }
+		
+	    my $m_id    = $marker->marker_id();
+	    my $remark1 = "<i>Highest LOD score is $highest_lod at $peak_position cM</i>."  if $m_lod == $peak_marker_lod;
+	    my $remark2 = "<i>The closest marker to the peak position ($peak_position cM)</i>."  if $m eq $p_m;
+      				
+	    push @marker_html,
+	    [
+	     map { $_ } (
+		 qq | <a href="/search/markers/markerinfo.pl?marker_id=$m_id">$m</a>|,
+		 $marker_details_of{$m}{position},
+		 $m_lod,
+		 $remark1 . $remark2,
+	     )
+	    ];
+	}
 
-    return \@marker_html;
+    }
+     
+    return \@marker_html, \%marker_details_of;
 
 }
+
+=head2 trait_name
+
+ Usage: $trait_name = trait_name()
+ Desc: returns the name of the QTL trait
+ Ret: trait name
+ Args: None
+ Side Effects:
+ Example:
+
+=cut
+
 
 sub trait_name
 {
@@ -200,6 +304,20 @@ sub trait_name
 
     return $term_name;
 }
+
+=head2 legend
+
+ Usage: $legend = legend();
+ Desc: generates the appropriate legend describing the 
+       statistical methods and parameters used for the
+       QTL analysis
+ Ret: an array ref 
+ Args: None
+ Side Effects:
+ Example:
+
+=cut
+
 
 sub legend
 {
@@ -299,6 +417,18 @@ sub legend
     return \@stat;
 
 }
+
+=head2 comment
+
+ Usage: $comment = comment();
+ Desc: generates the comment section html
+ Ret: the comment html
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 
 sub comment
 {
