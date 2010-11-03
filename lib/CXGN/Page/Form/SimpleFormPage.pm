@@ -931,7 +931,7 @@ sub get_edit_link_html {
    
     my $user_id= $self->get_user()->get_sp_person_id();
     my @owners= $self->get_owners();
-    if (($self->get_user()->get_user_type() eq "curator") || grep{/^$user_id$/} @owners ) {
+    if (($self->get_user()->get_user_type() eq "curator") || $user_id && grep{/^$user_id$/} @owners ) {
 	 $edit_link = qq { <a href="$script_name?action=edit&amp;form=$form_name&amp;$primary_key=$object_id">[Edit]</a> };
 
      }else {
