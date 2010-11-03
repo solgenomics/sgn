@@ -72,7 +72,6 @@ my $build = $class->new(
         'perl'                => '5.10.0',
         'autodie'             => 0,
         'IPC::System::Simple' => 0,         #< required for autodie :all
-        'Apache::DBI'         => 0,
 
         'Bio::Chado::Schema' => '0.05900',
 
