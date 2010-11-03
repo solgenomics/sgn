@@ -64,6 +64,31 @@ sub throw {
     }
 }
 
+=head1 throw_client_error
+
+  Usage: $c->throw_client_error(
+            public_message => 'There was a special error',
+            developer_message => 'the frob was not in place',
+            notify => 0,
+                  );
+  Desc : creates and throws an L<SGN::Exception> with the given attributes.
+  Args : key => val to set in the new L<SGN::Exception>,
+         or if just a single argument is given, just calls die @_
+  Ret  : nothing.
+  Side Effects: throws an exception and renders it for the client
+  Example :
+
+      $c->throw_client_error('foo');
+
+      #equivalent to $c->throw( public_message => 'foo', is_client_error => 1 );
+
+=cut
+
+sub throw_client_error {
+    my ($self,%args) = @_;
+    $self->throw( is_client_error => 1, %args);
+}
+
 =head2 throw_404
 
 one arg, the context object.
