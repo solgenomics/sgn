@@ -2,6 +2,7 @@ package SGN::Build;
 use strict;
 use warnings;
 
+use Module::Build;
 use base 'Module::Build';
 
 my $HAVE_CAPTURE;
@@ -39,10 +40,19 @@ sub ACTION_clean {
    $? and die "SGN site copy failed\n";
 }
 
+sub ACTION_installdeps {
+    my $self = shift;
+
+    $self->_R_installdeps;
+
+    $self->SUPER::ACTION_installdeps( @_ );
+}
+
 sub create_build_script {
     my $self = shift;
 
-    $self->check_R;
+    $self->check_R
+        or warn $self->{R}{check_output};
 
     return $self->SUPER::create_build_script(@_);
 }
@@ -52,19 +62,58 @@ sub check_R {
     if( $HAVE_CAPTURE ) {
         my $ret;
         my $out = Capture::Tiny::capture_merged {
-            $ret = $self->_check_R( @args );
+            $ret = $self->_run_R_check( @args );
         };
 
-        warn $out unless $ret;
+        $self->{R}{check_output} = $out;
+        if( !$ret and my ($missing) = $out =~ /required but not available:\s+(\S(?:[^\n]+\n)+)\n/si ) {
+            $self->{R}{missing_packages} = [ split /\s+/, $missing ];
+        }
 
         return $ret;
     } else {
-        return $self->_check_R( @args );
+        return $self->_run_R_check( @args );
     }
 }
 
+sub _R_installdeps {
+    my ( $self ) = @_;
 
-sub _check_R {
+    if( $self->check_R ) {
+        print "All R prerequisites satisfied\n";
+        return;
+    }
+
+    my @missing_packages = @{ $self->{R}{missing_packages} || [] };
+    unless( @missing_packages ) {
+        print "No missing R packages detected, cannot installdeps for R.\n";
+        return;
+    }
+
+    my $package_vec = 'c('.join( ',', map qq|"$_"|, @missing_packages ).')';
+    my $cran_mirror = $ENV{CRAN_MIRROR} || "http://lib.stat.cmu.edu/R/CRAN";
+
+    my $tf = File::Temp->new;
+    $tf->print( <<EOR );
+userdir <- unlist(strsplit(Sys.getenv("R_LIBS_USER"), .Platform\$path.sep))[1L]
+if (!file.exists(userdir) && !dir.create(userdir, recursive = TRUE, showWarnings = TRUE))
+   stop("unable to create ", sQuote(userdir))
+.libPaths(c(userdir, .libPaths()))
+install.packages( $package_vec, contriburl = contrib.url("$cran_mirror") )
+EOR
+     $tf->close;
+
+    # use system so the user will be able to use the R graphical
+    # mirror chooser, and other things
+    system 'R', '--slave', -f => "$tf", '--no-save', '--no-restore';
+    if( $? ) {
+        warn "Failed to automatically install R dependencies\n";
+    } elsif( $self->check_R ) {
+        print "Successfully installed R dependencies.\n";
+    }
+}
+
+sub _run_R_check {
     print "\nChecking R prerequisites...\n";
 
     system "R CMD check --no-manual --no-codoc --no-manual --no-vignettes -o _build R_files";
