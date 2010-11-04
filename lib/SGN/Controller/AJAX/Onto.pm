@@ -317,7 +317,8 @@ sub match_POST {
     my $query = "SELECT distinct cvterm.cvterm_id as cvterm_id  , cv.name as cv_name , cvterm.name as cvterm_name , db.name || ':' || dbxref.accession as accession
                 FROM db
                JOIN dbxref USING (db_id ) JOIN cvterm USING (dbxref_id)
-               JOIN cv USING (cv_id ) JOIN cvtermsynonym USING (cvterm_id )
+               JOIN cv USING (cv_id )
+               LEFT JOIN cvtermsynonym USING (cvterm_id )
                WHERE db.name = ? AND (cvterm.name ilike ? OR cvtermsynonym.synonym ilike ? OR cvterm.definition ilike ?)
 GROUP BY cvterm.cvterm_id,cv.name, cvterm.name, dbxref.accession, db.name ";
     my $sth= $schema->storage->dbh->prepare($query);
