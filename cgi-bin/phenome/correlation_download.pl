@@ -29,27 +29,30 @@ my $name = $pop->get_name();
 if (-e $corre_file) {
 
     print $cgi->header(
-        -type => 'text/plain',
-        '-Content-Disposition' => "attachment; filename=corre_data_${pop_id}.txt",
+        -type => 'application/x-download',
+        -attachment=>"corre_data_${pop_id}.txt",
        );
 
-    print 'Pearson correlation coefficients and their 
-           corresponding p-values for all traits in 
-           population'	.  $name . "\n\n\n";
-
+   print "Pearson correlation coefficients (upper diagonal) and 
+          their corresponding p-values (lower diagonal) 
+          for all traits in population $name.\n\n\n";
+   
     open my $f, "<$corre_file" or die "can't open file $corre_file: $!\n";
 
     my $cols = <$f>;
-    print "Traits\t" . $cols;
+    $cols =~s/\s/\t/g;
+    
+    print "Traits\t" . $cols . "\n";
 
     while (my $row=<$f>) {
-	print $row;
+	$row =~ s/\s/\t/g;
+	print $row ."\n";
     }
 } else {
 
     print $cgi->header(
-        -status => 404,
         -type   => 'text/plain',
        );
+    print "No correlation analysis data file found for this population."; 
 
 }
