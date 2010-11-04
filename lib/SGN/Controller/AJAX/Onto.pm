@@ -192,31 +192,31 @@ sub cache_POST {
 
     $self->{duplicates} = {};
     $self->{cache_list} = [];
-    my $cvterm = CXGN::Chado::Cvterm->new_with_accession( $c->dbc()->dbh(), $c->request->param('node') );
+    ###my $cvterm = CXGN::Chado::Cvterm->new_with_accession( $c->dbc()->dbh(), $c->request->param('node') );
     
-    my @parent_nodes = $cvterm->get_recursive_parents();
-    foreach my $p (@parent_nodes) { 
-	#$self->{parent_nodes}->{$p->[0]->get_full_accession()}=$p;
-	foreach my $child ($p->[0]->get_children()) { 
-	    $self->add_cache_list($p->[0],  $child->[0], $child->[1] );
-	    
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    
+    my ($db_name, $accession) = split ":", $c->request->param('node');
+    
+    #print STDERR "TERM: $db_name:$accession\n";
+
+    my $db = $schema->resultset('General::Db')->search({ name => $db_name })->first();
+    my $dbxref = $db->find_related('dbxrefs', { accession => $accession });
+    
+    my $cvterm = $dbxref->find_related('cvterm');
+
+    my $parents_rs = $cvterm->recursive_parents(); # returns a result set
+
+    while (my $p = $parents_rs->next()) { 
+	my $children_rs = $p->children();
+	while (my $rel_rs = $children_rs->next()) { # returns a list of cvterm rows
+	    my $child = $rel_rs->subject();
+	    $self->add_cache_list($p, $child, $rel_rs->type());
 	}
-    }
+	    
+   }
     $c->{stash}->{rest} = $self->{cache_list};    
 }
-
-# sub recursive_cache :Private  {
-#     my $self = shift;
-#     my $c = shift;
-#     my @nodes = @_;
-#     foreach my $n (@nodes) { 
-# 	#if (exists($self->{parent_nodes}->{$n->get_full_accession()})) { 
-# 	my @children = $n->get_children();
-# 	map { $self->add_cache_list($c, $n->get_full_accession(), $_->[0], $_->[1] ); } @children;
-# 	if (@children) { $self->recursive_cache($c, map { $_->[0] } @children); }
-#     }
-    
-# }
 
 
 =head2 add_cache_list
@@ -236,15 +236,19 @@ sub add_cache_list :Private {
     my $child  = shift; # object
     my $relationship = shift; #object
 
-    my $unique_hashkey = $parent." ".$child;
-    if (exists($self->{duplicates}->{$unique_hashkey})) { 
-	return;
-    }
+     my $unique_hashkey = $parent->cvterm_id()." ".$child->cvterm_id();
+     if (exists($self->{duplicates}->{$unique_hashkey})) { 
+ 	return;
+     }
     
-    $self->{duplicates}->{$unique_hashkey}++;
+     $self->{duplicates}->{$unique_hashkey}++;
 
-    my $hashref = $self->nodes2list($child, $relationship);
-    $hashref->{parent} = $parent->get_full_accession();
+    my $hashref = $self->flatten_node($child, $relationship);
+    ###$hashref->{parent} = $parent->get_full_accession();
+
+    my $dbxref = $parent->dbxref();
+    my $parent_accession = $dbxref->db()->name().":".$dbxref->accession();
+    $hashref->{parent} = $parent_accession;
     ##print STDERR "Adding to cache list: parent=$parent. child=$child\n";
     push @{$self->{cache_list}}, $hashref;
     
