@@ -910,7 +910,7 @@ sub qtl_plot
             $image_t_url = $cache_qtl_plot_t->get_image_url();
 	  	
             $thickbox =
-qq | <a href="$image_t_url" title="<a href=$h_marker&amp;qtl=$image_t_url><font color=#f87431><b>>>>Go to the QTL page>>>> </b></font></a>" class="thickbox" rel="gallary-qtl"> <img src="$image_url" alt="Chromosome $i $image_t_url $image_url" /> </a> |;
+qq | <a href="$image_t_url" title="<a href=$h_marker&amp;qtl=$image_t_url><font color=#f87431><b>>>>>Go to the QTL page>>>> </b></font></a>" class="thickbox" rel="gallary-qtl"> <img src="$image_url" alt="Chromosome $i $image_t_url $image_url" /> </a> |;
 
             $qtl_image .= $thickbox;
             $title       = "  ";
@@ -1520,35 +1520,6 @@ qq | <a href="$image_t_url" title= "<a href=$h_marker&amp;qtl=$image_t_url><font
 
 }
 
-# =head2 user_stat_file
-
-#  Usage:
-#  Desc:
-#  Ret:
-#  Args:
-#  Side Effects:
-#  Example:
-
-# =cut
-
-# sub user_stat_file {
-#     my $self = shift;
-#     my $pop = $self->get_object();
-#     my $pop_id = $self->get_object_id();
-#     my $sp_person_id = $pop->get_sp_person_id();
-#     my $qtl  = CXGN::Phenome::Qtl->new($sp_person_id);
-#     #$qtl->set_population_id($pop_id);
-
-#     my ($qtl_dir, $user_dir)  = $qtl->get_user_qtl_dir();
-
-#     my $stat_file = "$user_dir/user_stat_pop_$pop_id.txt";
-#     print STDERR "stat_file: $stat_file";
-
-#     if (-e $stat_file) {
-# 	return $stat_file;
-#     } else {return 0;}
-
-# }
 
 =head2 stat_files
 
