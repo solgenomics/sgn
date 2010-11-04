@@ -35,7 +35,7 @@ use SGN::Test::WWW::Mechanize;
     # check that the link took us to what looks like a population page
     $mech->content_contains('Population:');
     $mech->content_contains('Population Details');
-    $mech->content_contains('Literation Annotation', 'seem to have a literature annotation section' );
+    $mech->content_contains('Literature Annotation' );
 
   TODO: {
         local $TODO = 'testing the literature annotation links needs to be implemented!';
@@ -46,7 +46,6 @@ use SGN::Test::WWW::Mechanize;
     my $map_link = $mech->find_link( url_regex => qr!cview/map.pl! );
     ok( $map_link, 'population page has a cview/map.pl link' );
     $mech->links_ok( [$map_link], 'map link appears to be correct' );
-    $mech->back;
 
     # check the trait cvterm links against the population_indl links
     my @cvterm_links = $mech->find_all_links( url_regex => qr!/cvterm.pl! );
@@ -54,9 +53,10 @@ use SGN::Test::WWW::Mechanize;
     is( scalar(@cvterm_links), scalar(@indl_links), 'same number of population_indl links as cvterm links' );
 
     # test that the page includes the correlation analysis and heatmap
-    $mech->content_contains('Pearson Correlation Analysis');
+    $mech->content_contains('Pearson Correlation Analysis')
+        or diag $mech->content;
     my $heatmap = $mech->find_image( alt_regex => qr/heatmap/ );
-    ok( $heatmap, 'population pagae has a heatmap image' );
+    ok( $heatmap, 'population page has a heatmap image' );
     like( $heatmap->url, qr/heatmap_\d+-\w+\.png$/, 'heatmap image url looks plausible' );
     $mech->get_ok( $heatmap->url, 'heatmap URL is fetchable' );
     $mech->back;
@@ -65,12 +65,10 @@ use SGN::Test::WWW::Mechanize;
     my $correlation_download_link = $mech->find_link( text_regex => qr/Correlation coefficients and p-values table/i );
     ok( $correlation_download_link, 'got a correlation download link' );
     $mech->links_ok( [$correlation_download_link], 'correlation download link works' );
-    is( $mech->content_type, 'text/plain', 'got the correct plaintext content type for the correlation table download' );
     cmp_ok( length( $mech->content ), '>=', 1000, 'got at least 1KB of data from the correlation table download' );
-    $mech->back;
 
     # follow the first link to an individual page
-    $mech->links_ok( [ $indl_links[0] ], 'first individual link works' );
+    $mech->get_ok( $indl_links[0]->url, 'first individual link works' );
 
     # verify that we are on what looks like a population_indl page
     $mech->content_contains($_) for (
