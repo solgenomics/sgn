@@ -1347,7 +1347,7 @@ sub permu_values
     my $self            = shift;
     my $prod_permu_file = $self->permu_file();
 
-    my %permu_threshold = {};
+    my %permu_threshold;
 
     my $permu_file = fileparse($prod_permu_file);   
     my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
