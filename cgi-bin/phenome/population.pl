@@ -50,7 +50,7 @@ sub define_object {
     # call set_object_id, set_object and set_primary_key here
     # with the appropriate parameters.
     #
-    $self->set_dbh(CXGN::DB::Connection->new('phenome'));
+    $self->set_dbh( CXGN::DB::Connection->new );
     my %args = $self->get_args();
     my $population_id= $args{population_id};
     unless (!$population_id || $population_id =~m /^\d+$/) { $self->get_page->message_page("No population exists for identifier $population_id"); }  
