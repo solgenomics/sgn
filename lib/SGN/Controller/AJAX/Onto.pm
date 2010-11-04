@@ -224,7 +224,7 @@ sub cache_POST {
  Usage:
  Desc:         adds an entry to the cache list
  Ret:
- Args:         3 CXGN::Chado::Cvterm objects: Parent, child, relationship
+ Args:         3 cvterm row objects: Parent, child, relationship
  Side Effects:
  Example:
 
