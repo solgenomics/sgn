@@ -109,12 +109,8 @@ sub cache    : Local : ActionClass('REST') { }
 
 
 
-sub children_GET { 
-    my ($self, $c) = @_;
-    $self->children_POST($c);
-}
  
-sub children_POST {
+sub children_GET {
     my ( $self, $c ) = @_;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
@@ -145,12 +141,6 @@ sub children_POST {
 }
 
 sub parents_GET { 
-    my $self = shift;
-    $self->parents_POST(@_);
-}
-
-    
-sub parents_POST { 
     my ($self, $c) = @_;
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
@@ -180,13 +170,6 @@ sub parents_POST {
 }
 
 sub cache_GET { 
-    my $self = shift;
-    $self->cache_POST(@_);
-}
-
-
-
-sub cache_POST { 
     my $self =shift;
     my $c = shift;
 
@@ -256,11 +239,6 @@ sub add_cache_list :Private {
 
 sub roots_GET { 
     my $self = shift;
-    $self->roots_POST(@_);
-}
-
-sub roots_POST { 
-    my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     
@@ -301,13 +279,7 @@ sub roots_POST {
     $c->{stash}->{rest}= \@response_list;
 }
 
-
-sub match_GET { 
-    my ($self, $c) = @_;
-    $self->match_POST($c);
-}
-
-sub match_POST {
+sub match_GET {
     my $self = shift;
     my $c    = shift;
     my $db_name = $c->request->param("db_name");
@@ -332,36 +304,36 @@ GROUP BY cvterm.cvterm_id,cv.name, cvterm.name, dbxref.accession, db.name ";
 
 
 
-=head2 nodes2list
- DEPRECATED. REPLACED by FLATTEN_NODE()
- Usage:
- Desc:         serializes CXGN::Chado::Cvterm objects to a list form convenient
-               for processing to json.
- Ret:
- Args:
- Side Effects:
- Example:
+# =head2 nodes2list
+#  DEPRECATED. REPLACED by FLATTEN_NODE()
+#  Usage:
+#  Desc:         serializes CXGN::Chado::Cvterm objects to a list form convenient
+#                for processing to json.
+#  Ret:
+#  Args:
+#  Side Effects:
+#  Example:
 
-=cut
+# =cut
 
-sub nodes2list :Private {
-    my $self = shift;
-    my $node = shift;
-    my $relationship_node = shift;
+# sub nodes2list :Private {
+#     my $self = shift;
+#     my $node = shift;
+#     my $relationship_node = shift;
 
-    #print STDERR "Dealing with ".$n->[0]->get_accession()."\n";
-    my $has_children = 0;
-    if ( $node->count_children() > 0 ) { $has_children = 1; }
-    my $hashref = 
-    { accession    => $node->get_full_accession(), 
-      cvterm_name  => $node->get_cvterm_name(),
-      cvterm_id    => $node->get_cvterm_id(),
-      has_children => $has_children,
-      relationship => $relationship_node->get_cvterm_name()
-    };
+#     #print STDERR "Dealing with ".$n->[0]->get_accession()."\n";
+#     my $has_children = 0;
+#     if ( $node->count_children() > 0 ) { $has_children = 1; }
+#     my $hashref = 
+#     { accession    => $node->get_full_accession(), 
+#       cvterm_name  => $node->get_cvterm_name(),
+#       cvterm_id    => $node->get_cvterm_id(),
+#       has_children => $has_children,
+#       relationship => $relationship_node->get_cvterm_name()
+#     };
     
-    return $hashref;
-}
+#     return $hashref;
+# }
 
 
 ### used for cvterm resultset
