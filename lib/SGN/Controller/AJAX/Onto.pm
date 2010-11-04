@@ -319,7 +319,7 @@ sub match_POST {
                JOIN dbxref USING (db_id ) JOIN cvterm USING (dbxref_id)
                JOIN cv USING (cv_id )
                LEFT JOIN cvtermsynonym USING (cvterm_id )
-               WHERE db.name = ? AND (cvterm.name ilike ? OR cvtermsynonym.synonym ilike ? OR cvterm.definition ilike ?)
+               WHERE db.name = ? AND (cvterm.name ilike ? OR cvtermsynonym.synonym ilike ? OR cvterm.definition ilike ?) AND cvterm.is_obsolete = 0
 GROUP BY cvterm.cvterm_id,cv.name, cvterm.name, dbxref.accession, db.name ";
     my $sth= $schema->storage->dbh->prepare($query);
     $sth->execute($db_name, "\%$term_name\%", "\%$term_name\%", "\%$term_name\%");
