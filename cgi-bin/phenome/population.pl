@@ -680,7 +680,7 @@ sub display_correlation {
     
     my ($heatmap_file, $corre_table_file) = $self->analyze_correlation();
   
-    my $heatmap_image = qq |<img src="$heatmap_file"/> |;  
+    my $heatmap_image = qq |<img alt="correlation heatmap image" src="$heatmap_file"/> |;  
   
     my @traits = $pop->get_cvterms();
     my @tr_acronym_table;
