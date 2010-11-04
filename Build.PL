@@ -159,5 +159,14 @@ my $build = $class->new(
 
     },
 );
+
+print "\nChecking R prerequisites...\n";
+system "R CMD check --no-manual --no-codoc --no-manual --no-vignettes -o _build R_files";
+if( $? ) {
+  warn "R PREREQUISITE CHECK FAILED.  Please install the R packages listed above.\n\n";
+} else {
+  print "R prerequisites OK.\n\n";
+}
+
 $build->create_build_script;
 
