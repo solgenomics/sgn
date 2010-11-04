@@ -516,9 +516,7 @@ CXGN.Onto.Browser.prototype = {
     //Make an ajax response that finds all the ontology terms with names/definitions/synonyms/accessions like the current value of the ontology input
     getOntologies: function(db_name, search_string) {
 	this.workingMessage(true);
-	//	var search_string= document.getElementById('ontology_term_input').value;
-	//	var db_name = document.getElementById('cv_select').value;
-	o.setSelected(db_name);
+        o.setSelected(db_name);
 	if(search_string.length<4){
 	    alert('The search text must be longer than 4 characters');
 	}
@@ -526,38 +524,29 @@ CXGN.Onto.Browser.prototype = {
 	    new Ajax.Request('/ajax/onto/match', {
 		    parameters: { term_name: search_string, db_name: db_name },
 		    asynchronous: false,
-		    on503: function() { 
+		    on503: function() {
 			alert('An error occurred! The database may currently be unavailable. Please check back later.');
 		    },
-		    
 		    onSuccess: function(request) {
 			var matchNodes = new Array();
 			var json = request.responseText;
-			var x = eval("("+json+")");
+                        var x = eval("("+json+")");
 			if ( x.error ) { alert(x.error) ; }
-			else {
-			    var r = x.response;
-			    var responseArray = r.split('|');
-			    responseArray.pop();
-			    var s='';
-			    o.setSearchResponseCount(responseArray.length);
+                        else {
+                            var s='';
+			    o.setSearchResponseCount(x.length);
 			    //MochiKit.Logging.log('Matched '+responseArray.length+' terms');
-			    for (var i=0; i<responseArray.length; i++) { 
-				var ontologyObject = responseArray[i].split('--');
-				var searchResults= responseArray[i].split('*');
-				//MochiKit.Logging.log('getOntologies found term ',  ontologyObject[1] );
-				//MochiKit.Logging.log('search term ', search_string);
-				matchNodes.push(ontologyObject[0]); ///
-				s +='<a href=javascript:o.searchTermParentage(\''+ontologyObject[1]+'\')>'+searchResults[1]+'</a><br />';
+			    for (var i=0; i<x.length; i++) {
+				matchNodes.push(x.accession); ///
+				s +='<a href=javascript:o.searchTermParentage(\''+x[i].accession+'\')>'+x[i].cv_name+' ('+x[i].accession+') '+x[i].cvterm_name+'</a><br />';
 			    }
 			    //		    MochiKit.Logging.log('the search results:' , s) ;
 			    //MochiKit.Logging.log('the search string:' , search_string) ;
-			    
+
 			    if (s === '') { s = '(no terms found) '; }
 			    o.setSearchResults('<div class="topicbox">Search term: <b>'+search_string+'</b></div><div class="topicdescbox">'+s+'</div>');
 			    o.showSearchResults();
 			    o.setSearchValue(search_string);
-			    
 			    o.render();
 			}
 		    }
@@ -664,46 +653,6 @@ CXGN.Onto.Browser.prototype = {
     },
 
 
-    // the following function is deprecated.
-    //
-    fetchMatches: function (searchText) { 
-	
-	//MochiKit.Logging.log('Fetching children for node '+this.getName());
-	
-	new Ajax.Request('/chado/ajax_ontology_browser.pl', {
-		parameters: { node: searchText, action: 'match' }, 
-		asynchronous: false,
-		on503: function() { 
-		    alert('An error occurred! The database may currently be unavailable. Please check back later.');
-		},
-		
-		onSuccess: function(request) {
-		    
-		    //MochiKit.Logging.log('HELLO WORLD!');
-		    var matchNodes = new Array();
-		    var json = request.responseText;
-		    var x = eval("("+json+")");
-		    if ( x.error ) { alert(x.error) ; }
-		    else {
-			var t = x.response.split('#');
-			
-			//	       t.pop(); //remove last element from the array
-			
-			//MochiKit.Logging.log('Matched '+t.length+' nodes');
-			for (var i=0; i<t.length; i++) { 
-			    var j = t[i].split('*');
-			    
-			    //MochiKit.Logging.log('matching node: '+ j[0]);
-			    matchNodes.push(j[0]); ///
-			}
-			
-			return matchNodes;
-		    }
-		}
-	    });
-	
-    },
-    
     setLinkToTextField: function(linkToTextField) { 
 	this.linkToTextField=linkToTextField;
     },
@@ -977,7 +926,7 @@ Node.prototype = {
 	var parentNode = this;
 	var accession = this.getAccession();
 	if (o.hasChildrenCache(accession)) { 
-	    MochiKit.Logging.log('retrieving accession from cache '+accession);
+	    //MochiKit.Logging.log('retrieving accession from cache '+accession);
 	    var children = o.getChildrenFromCache(accession);
 	    for(var i=0; i<children.length; i++) { 
 		//MochiKit.Logging.log('adding child node '+children[i].accession);
@@ -1076,4 +1025,4 @@ Node.prototype = {
 	    this.setHasChildren(false);
 	}
     }
-};	
+};
