@@ -1,42 +1,8 @@
-use Module::Build;
-my $class = Module::Build->subclass(
-    class => 'Module::Build::SGNSite',
-    code  => <<'SUBCLASS',
-
-# build action just runs make on programs
-sub ACTION_build {
-   my $self = shift;
-   $self->SUPER::ACTION_build(@_);
-   system "make -C programs";
-   $? and die "make failed\n";
-
-   print "Checking R dependencies\n";
-   system "R CMD check --no-manual --no-codoc --no-manual --no-vignettes -o _build R_files";
-   $? and die "R dependency check failed.\n";
-}
-
-# override install to just copy the whole dir into the install_base
-sub ACTION_install {
-   my $self = shift;
-
-   # installation is just copying the entire dist into
-   # install_base/sgn
-   require File::Spec;
-   my $tgt_dir = File::Spec->catdir($self->install_base,'sgn');
-   system 'cp', '-rl', '.', $tgt_dir;
-   $? and die "SGN site copy failed\n";
-}
-
-sub ACTION_clean {
-   shift->SUPER::ACTION_clean(@_);
-   system "make -C programs clean";
-   $? and die "SGN site copy failed\n";
-}
-SUBCLASS
-);
+use lib 'lib';
+use SGN::Build;
 
 #my $class = 'Module::Build';
-my $build = $class->new(
+my $build = SGN::Build->new(
 
     dist_name          => 'SGN',
     license            => 'perl',
@@ -159,14 +125,6 @@ my $build = $class->new(
 
     },
 );
-
-print "\nChecking R prerequisites...\n";
-system "R CMD check --no-manual --no-codoc --no-manual --no-vignettes -o _build R_files";
-if( $? ) {
-  warn "R PREREQUISITE CHECK FAILED.  Please install the R packages listed above.\n\n";
-} else {
-  print "R prerequisites OK.\n\n";
-}
 
 $build->create_build_script;
 
