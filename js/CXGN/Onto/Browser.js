@@ -120,6 +120,7 @@ CXGN.Onto.Browser.prototype = {
 	new Ajax.Request("/ajax/onto/roots", {
 		parameters:   { nodes: rootNodes }, 
 		asynchronous: false,
+		method: 'get',
 		on503: function() { 
 		    alert('An error occurred! The database may currently be unavailable. Please check back later.');
 		},
@@ -469,6 +470,7 @@ CXGN.Onto.Browser.prototype = {
 	new Ajax.Request('/ajax/onto/parents', {
 		parameters: { node: accession }, 
 		    asynchronous: false,
+		    method: 'get',
 		    on503: function() { 
 		    alert('An error occurred! The database may currently be unavailable. Please check back later.');
 		},
@@ -494,6 +496,7 @@ CXGN.Onto.Browser.prototype = {
 	new Ajax.Request('/ajax/onto/cache', {
 		parameters: { node: accession }, 
 		    asynchronous: false,
+		    method: 'get',
 		    on503: function() { 
 		    alert('An error occurred! The database may currently be unavailable. Please check back later.');
 		},
@@ -524,6 +527,7 @@ CXGN.Onto.Browser.prototype = {
 	    new Ajax.Request('/ajax/onto/match', {
 		    parameters: { term_name: search_string, db_name: db_name },
 		    asynchronous: false,
+		    method: 'get',
 		    on503: function() {
 			alert('An error occurred! The database may currently be unavailable. Please check back later.');
 		    },
@@ -944,6 +948,7 @@ Node.prototype = {
 	new Ajax.Request('/ajax/onto/children', {
 		parameters: { node: accession },
 		asynchronous: false,
+		method: 'get',
 		    on503: function() { 
 		    alert('An error occurred! The database may currently be unavailable. Please check back later.');
 		},
@@ -984,6 +989,7 @@ Node.prototype = {
 	new Ajax.Request("/ajax/onto/parents", {
 		parameters: { node: childNode.getAccession() }, 
 		    asynchronous: false,
+		    method: 'get',
 		    onSuccess: function(request) {
 		   
 		    var json = request.responseText;
