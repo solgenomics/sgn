@@ -84,7 +84,7 @@
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/cview/view_chromosome.pl?show_offsets=1&amp;show_ruler=1&amp;show_offsets=1">Comparative Viewer</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/tools/caps_designer/caps_input.pl">CAPS Designer</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/tools/seedbac/">Seed BAC Finder</a></td></tr>
-       <tr><td class="toolbar_item"><a class="toolbar_item" href="/qtl">QTL Mapping</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/qtl">solQTL: QTL Mapping</a></td></tr>
        <tr><td class="toolbar_item_title">Molecular Biology</td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/tools/sigpep_finder/input.pl">Signal Peptide Finder</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/tools/insilicopcr">In Silico PCR</a></td></tr>
