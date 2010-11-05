@@ -35,8 +35,8 @@ extends 'CXGN::Metadata::Dbpatch';
 sub init_patch {
     my $self=shift;
     my $name = __PACKAGE__;
-    print "dbpatch name is : '" .  $name . "'\n\n";
-    my $description = 'Loading the chado contact module';
+    say "dbpatch name $name";
+    my $description = 'Add missing indexes';
     my @previous_requested_patches = ();
     $self->name($name);
     $self->description($description);
