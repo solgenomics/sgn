@@ -2,7 +2,6 @@ package SGN::Test::Data;
 
 use strict;
 use warnings;
-use Bio::Chado::Schema::Sequence::Feature;
 use SGN::Context;
 use base 'Exporter';
 use Test::More;
