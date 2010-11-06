@@ -51,7 +51,7 @@ sub patch {
 
     my $sql = <<SQL;
 create index cds_protein_feature_id_idx on sgn.cds (protein_feature_id);
-create index phylonode_feature_id_idx on phylonode (feature_id);
+create index phylonode_feature_id_idx on public.phylonode (feature_id);
 create index clone_feature_feature_id_idx on genomic.clone_feature (feature_id);
 SQL
 
