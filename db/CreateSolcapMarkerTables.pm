@@ -95,7 +95,7 @@ INSERT INTO sgn.pcr_experiment_sequence (pcr_experiment_id, sequence_id ) SELECT
 
     INSERT INTO sgn.pcr_experiment_sequence (pcr_experiment_id, sequence_id) SELECT tmp_pcr_pd.* FROM tmp_pcr_pd;
     
-    UPDATE sgn.pcr_experiment_sequence SET type_id =  (SELECT cvterm_id FROM public.cvterm where name = 'dCAPS primer') WHERE type_id is null;
+    UPDATE sgn.pcr_experiment_sequence SET type_id =  (SELECT cvterm_id FROM public.cvterm where name = 'dcaps primer') WHERE type_id is null;
 
 
 --need to refactor the code that uses pcr_experiment.primer_id_fwd/rev/pd (dCAPs?). This will be done in the topic/solcap_marker branch
