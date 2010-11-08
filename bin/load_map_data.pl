@@ -116,10 +116,13 @@ $map_file = shift;
 if (!$opt_H && !$opt_D) { 
     die "-H and -D parameters are required.\n";
 }
-
-my $dbh=CXGN::DB::InsertDBH::connect
-    ({dbhost=>$opt_H,dbname=>$opt_D,dbschema=>'sgn'});
-
+ my $dbh = CXGN::DB::InsertDBH->new({
+                                             dbname => $opt_D,
+                                             dbhost => $opt_H,
+                                             dbschema => 'sgn',
+                                             dbargs => {AutoCommit => 0,
+                                                        RaiseError => 1}
+                                            });
 
 eval {
     if (!$map_id) { 
@@ -127,21 +130,19 @@ eval {
 	my $key = <STDIN>;
 	if ($key =~ /Y/i) { 
 	    print "Inserting a new map...\n";
-	    
+
 	    my $map = CXGN::Map->new_map($dbh, $opt_n);
-	    
+
 	    $map_id = $map->get_map_id();
-	    
+
 	    print "New map_id: $map_id\n";
-	    
+
 	}
-	else { 
+	else {
 	    exit();
 	}
     }
-    
 
-    
     # we are creating a new map version every time we run this script, 
     # as long as the transaction goes through
     my $new_map_version = CXGN::Map::Version->
@@ -243,7 +244,7 @@ eval {
 	    $protocol =~ tr/[a-z]/[A-Z]/; 
             unless ($protocol eq 'AFLP' or $protocol eq 'CAPS' or $protocol eq 'RAPD' 
 		    or $protocol eq 'SNP' or $protocol eq 'SSR' 
-		    or $protocol eq 'RFLP' or $protocol eq 'PCR' or $protocol eq 'DCAPS' or $protocol =~/DArt/i or $protocol =~ /OPA/i ) 
+		    or $protocol eq 'RFLP' or $protocol eq 'PCR' or $protocol eq 'DCAPS' or $protocol =~/DArt/i or $protocol =~ /OPA/i or $protocol eq 'Indel' or $protocol =~ /ASPE/i )
 	    {
                 $protocol = 'unknown';
             }

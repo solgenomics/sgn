@@ -409,6 +409,7 @@ sub delete {
     my %json_hash=$self->get_json_hash();
     $json_hash{error} = $error;
     $self->set_json_hash(%json_hash);
+    $self->print_json;
 }
 
 =head2 display_form

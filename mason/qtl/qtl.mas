@@ -53,7 +53,7 @@ $qtl_image = qq |<img src="$qtl_image" width=320 height=320 alt="QTL for $trait_
 
 <&| /page/info_section.mas, title => "QTL markers' detail" &>  
   <& /page/columnar_table.mas,
-     headings=>["Marker", " Position (cM)", "Remark"],
+     headings=>["Marker", " Position (cM)", "LOD", "Remark"],
     data=>$marker_link,
     __alt_freq   =>2,
     __alt_width  => 1,

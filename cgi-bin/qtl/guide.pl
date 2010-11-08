@@ -13,6 +13,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 use strict;
 use CGI;
 
-my $redir = CGI->new()->redirect(-uri =>'http://docs.google.com/View?id=dgvczrcd_1c479cgfb', status=>301);
+print  CGI->new()->redirect(-uri =>'http://docs.google.com/View?id=dgvczrcd_1c479cgfb', -status=>301);
 
-$c->forward_to_mason_view('/qtl/guide.mas', redir=>$redir);
+
+#$c->forward_to_mason_view('/qtl/guide.mas', redir=>$redir);

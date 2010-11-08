@@ -1,0 +1,101 @@
+<%doc>
+
+=head1 NAME 
+ 
+ expression_graph.mas
+ Mason component to show expression data associated to a template web_page.
+
+=cut
+
+=head1 VERSION 
+
+0.1
+
+=cut 
+
+=head1 DESCRIPTION
+
+ Mason component to show the expression data associated to a template web_page
+ as a graph.
+
+
+=cut
+ 
+=head 1 AUTHOR
+ 
+ Aureliano Bombarely (ab782@cornell.edu)
+
+=cut 
+
+</%doc>
+
+
+<%args>
+$template
+$expression
+</%args>
+
+<%once>
+use strict;
+use warnings;
+use Math::BigFloat;
+use CXGN::GEM::Hybridization;
+use CXGN::GEM::Experiment;
+use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
+</%once>
+
+<%perl>
+my $experiment_info_content;
+
+my $experiment_html = 'test';
+
+## define a hash with keys=experiment_id and values=experiment_name
+
+my %experiments;
+
+## If there aren't any template_row that comes from template_detail.mas, it will return nothing 
+## (the message is returned by basic_info.mas).
+
+if (defined $template->get_template_id() ) {
+
+    ## Get schema
+
+    my $schema = $template->get_schema();
+
+    my $template_id = $template->get_template_id();
+    my $template_name = $template->get_template_name();
+    
+    my %experiments = $expression->get_experiment();
+
+    ## Show graph only if there is any experiment (expression data)
+
+    if (scalar(keys %experiments) > 0) {
+
+	my ($tempfile, $tempuri) = $c->tempfile( TEMPLATE => ['expression', 'templexp-XXXXXX'],
+						 SUFFIX   => '.png',
+                                                );
+
+	my $cc = $expression->get_experiment_graph({ x_axis_sort => 'PO' });
+	$cc->write_output($tempfile);
+
+	$experiment_html = qq|<img style="display: block; margin: 0 auto;" src="$tempuri" />|;
+    }
+    else {
+	$experiment_html = "No expression data was found for template: $template_name";
+    }
+    
+    $experiment_info_content = info_section_html( title       => "Graph: Expression Data by Experiment", 
+                                                  contents    => $experiment_html, 
+	 					  collapsible => 1,
+                                                  collapsed   => 0 );
+
+}
+
+</%perl>
+
+<% $experiment_info_content %>
+
+<& 
+   /util/import_javascript.mas, 
+   classes => 'CXGN.Effects' 
+&>
