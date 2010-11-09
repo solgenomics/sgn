@@ -64,7 +64,7 @@ sub patch {
     print STDOUT "\nExecuting the SQL commands.\n";
 
      my $schema = Bio::Chado::Schema->connect( sub { $self->dbh->clone } ,  { on_connect_do => ['SET search_path TO public;'], autocommit => 1 });
-    my @primers = ( 'forward primer', 'reverse primer','dcaps primer','aspe primer', 'snp nucleotide', 'indel' , 'reference nucleotide');
+    my @primers = ( 'forward primer', 'reverse primer','dcaps primer','aspe primer', 'snp nucleotide', 'indel' , 'reference nucleotide', 'five prime flanking', 'three prime flanking');
     foreach my $p (@primers) {
         print "Storing primer type $p\n";
         my $cvterm = $schema->resultset("Cv::Cvterm")->create_with( 
