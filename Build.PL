@@ -62,7 +62,6 @@ my $build = $class->new(
         'Test::MockObject'               => 0,
     },
     requires => {
-<<<<<<< HEAD
         'perl'                => '5.10.0',
         'autodie'             => 0,
         'IPC::System::Simple' => 0,         #< required for autodie :all
@@ -151,7 +150,6 @@ my $build = $class->new(
         'XML::Twig'               => 0,
         'YAML::Any'               => 0,
         'WWW::Mechanize::TreeBuilder' => 0,
-=======
         'perl'                                     => '5.10.0',
         'autodie'                                  => 0,
         'IPC::System::Simple'                      => 0,         #< required for autodie :all
