@@ -713,7 +713,7 @@ sub display_correlation {
                                            0,
                                           );
 
-    my $corre_data = $heatmap_image .  qq | <span><br/><br/>Download:<a href="correlation_download.pl?population_id=$pop_id&amp;corre_file=$corre_table_file">[Correlation Coefficients and p-values table]</a> $acronym_view</span> |;
+    my $corre_data = $heatmap_image .  qq | <span><br/><br/>Download:<a href="correlation_download.pl?population_id=$pop_id&amp;corre_file=$corre_table_file">[Correlation coefficients and p-values table]</a> $acronym_view</span> |;
 
     return $corre_data;
 
