@@ -1,4 +1,18 @@
 
+=head1 NAME
+
+SGN::Authentication::User - a Catalyst compatible user class
+
+=head1 DESCRIPTION
+
+Implemented according to Catalyst::Plugin::Authentication::Internals
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>
+
+=cut
+
 use strict;
 use warnings;
 

@@ -1,4 +1,17 @@
 
+=head1 NAME
+
+SGN::Authentication::Credentials - a class providing credentials for the SGN Catalyst system
+
+=head1 DESCRIPTION
+
+Implemented according to Catalyst::Plugin::Authentication::Internals
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>
+
+=cut
 
 use strict;
 use warnings;
