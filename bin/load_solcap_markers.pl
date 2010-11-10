@@ -3,7 +3,7 @@
 # basic script to load pcr marker information
 
 
-# usage: load_marker_data.pl -H hostname D dbname  -i infile 
+# usage: load_marker_data.pl -H hostname D dbname  -i infile -m map_id
 
 # copy and edit this file as necessary
 # common changes include the following:
@@ -23,7 +23,7 @@ usage: load_solcap_markers.pl
 
 Options:
 
-=over 5
+=over 6
 
 =item -H
 
@@ -45,6 +45,9 @@ protocol (e.g. SSR, SNP, Indel, dCAPs, etc)
 
 infile with the marker info
 
+=item -m
+
+sgn map_id
 
 
 =back
@@ -81,20 +84,21 @@ use Data::Dumper;
 use Getopt::Std;
 
 
-our ($opt_H, $opt_D, $opt_i, $opt_t, $opt_p);
+our ($opt_H, $opt_D, $opt_i, $opt_t, $opt_p, $opt_m);
 
-getopts('H:D:i:tp:');
+getopts('H:D:i:tp:m:');
 
 
-my ($map_id, $map_file);
+my $map_id = $opt_m || die "Must pass a -m option with  a valid sgn map_id!\n";
+my $protocol = $opt_p  || die "ERROR: No -p option passed for protocol name (SolCap markers are loaded with one file per protocol: SNP, Indel, SSR, CAPS)  \n";
 
- my $dbh = CXGN::DB::InsertDBH->new({
-                                             dbname => $opt_D,
-                                             dbhost => $opt_H,
-                                             dbschema => 'sgn',
-                                             dbargs => {AutoCommit => 0,
-                                                        RaiseError => 1}
-                                    });
+my $dbh = CXGN::DB::InsertDBH->new({
+    dbname => $opt_D,
+    dbhost => $opt_H,
+    dbschema => 'sgn',
+    dbargs => {AutoCommit => 0,
+               RaiseError => 1}
+                                   });
 eval {
 
     # parameters for this specific instance
@@ -125,7 +129,7 @@ eval {
 	    print "marker added: $marker_id\n";
 	}
 	else {  print "marker_id found: $marker_id\n" }
-
+        
         # clean this up?
 	my $annealing_temp =
 	    ((grep {/temp/} @columns) && ($ss->value_at($marker_name,'temp')))
@@ -147,7 +151,7 @@ eval {
           $primer_id_rev = CXGN::Marker::Tools::insert($dbh,"sequence","sequence_id",['sequence'], ($rev)) if !$primer_id_rev;
 	print "primer_id_rev: $primer_id_rev\n";
 
-	my $protocol = $opt_p;# $ss->value_at($marker_name,'protocol');
+	#my $protocol = $ss->value_at($marker_name,'protocol') ;
 	my ($pd, $primer_id_pd, $indel, $indel_id, $snp, $snp_id, $aspe1, $aspe2, $aspe1_id, $aspe2_id, $seq5, $seq5_id, $seq3, $seq3_id);
 
 	if (($protocol eq 'dCAPS') && ($pd = $ss->value_at($marker_name,'pd'))) {
@@ -220,7 +224,7 @@ eval {
         $pcr_ex->store_sequence('snp nucleotide', $snp) if $snp;
         $pcr_ex->store_sequence('five prime flanking', $seq5) if $seq5;
         $pcr_ex->store_sequence('three prime flanking', $seq3) if $seq3;
-
+        print "Checking if map $map_id , marker $marker_id and protocol $protocol exist in marker_experiment\n";
         # check for existing marker_experiment and update if found
 	my $q = "SELECT marker_experiment_id FROM marker_experiment "
 	    . "JOIN marker_location USING (location_id) JOIN map_version "
@@ -230,33 +234,37 @@ eval {
 	my $sth = $dbh->prepare($q);
 	$sth->execute($map_id,$marker_id,$protocol);
 	my @exp_id;
-	while (my $id = $sth->fetchrow_array()) { push (@exp_id,$id) }
+	while (my ($id) = $sth->fetchrow_array()) { 
+            print "Found id $id\n";
+            push (@exp_id,$id);
+        }
 
 	if (@exp_id) {
 	    if (@exp_id > 1) { print join(', ', @exp_id) and exit() }
             # this really should not be the case
             # update
             my $marker_experiment_id = $exp_id[0];
-
+            print "Updating marker_experiment $marker_experiment_id\n";
 	    my $u = "UPDATE marker_experiment set pcr_experiment_id = ? where marker_experiment_id = ?";
 	    $sth = $dbh->prepare($u);
 	    $sth->execute($pcr_experiment_id,$marker_experiment_id);
-
-	    print "UPDATE $marker_experiment_id\n";
+            print "UPDATED pcr_experiment_id = $pcr_experiment_id for marker_experiment $marker_experiment_id\n";
 	}
 
         # if not loading map and experiments together, may want to match other protocols
 
         # if not, insert new marker_experiment
 	else {
-	    my $names = ["marker_id", "pcr_experiment_id", "protocol"];
+            print "No experiment_id found for marker $marker_name. SKIPPING!!!\n";
+            next();
+            my $names = ["marker_id", "pcr_experiment_id", "protocol"];
 	    my @fields = ($marker_id, $pcr_experiment_id, $protocol);
 	    # 'SSR' or 'unknown'?
 
-	    my $marker_experiment_id = CXGN::Marker::Tools::insert
-		($dbh,"marker_experiment","marker_experiment_id",$names,@fields);
+            #my $marker_experiment_id = CXGN::Marker::Tools::insert
+	#	($dbh,"marker_experiment","marker_experiment_id",$names,@fields);
 #	    print "marker experiment added: $marker_experiment_id\n";
-            print "ADD $marker_experiment_id\n";
+            #print "ADD $marker_experiment_id\n";
 	}
 
     }
