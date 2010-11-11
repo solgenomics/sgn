@@ -83,19 +83,19 @@ create TEMP TABLE tmp_pcr_rev as SELECT pcr_experiment_id, primer_id_rev FROM sg
 INSERT INTO sgn.pcr_experiment_sequence (pcr_experiment_id, sequence_id ) SELECT tmp_pcr_rev.* FROM tmp_pcr_rev ;
 
 --update the type_id 
- UPDATE sgn.pcr_experiment_sequence SET type_id = (SELECT cvterm_id FROM public.cvterm where name = 'reverse primer');
+ UPDATE sgn.pcr_experiment_sequence SET type_id = (SELECT cvterm_id FROM public.cvterm where name = 'reverse_primer');
 
     CREATE TEMP TABLE tmp_pcr_fwd as SELECT pcr_experiment_id, primer_id_fwd FROM sgn.pcr_experiment WHERE primer_id_fwd is not null;
 
     INSERT INTO sgn.pcr_experiment_sequence (pcr_experiment_id, sequence_id) SELECT tmp_pcr_fwd.* FROM tmp_pcr_fwd;
     
-    UPDATE sgn.pcr_experiment_sequence SET type_id =  (SELECT cvterm_id FROM public.cvterm where name = 'forward primer') WHERE type_id is null;
+    UPDATE sgn.pcr_experiment_sequence SET type_id =  (SELECT cvterm_id FROM public.cvterm where name = 'forward_primer') WHERE type_id is null;
 
    CREATE TEMP TABLE tmp_pcr_pd as SELECT pcr_experiment_id, primer_id_fwd FROM sgn.pcr_experiment WHERE primer_id_pd is not null;
 
     INSERT INTO sgn.pcr_experiment_sequence (pcr_experiment_id, sequence_id) SELECT tmp_pcr_pd.* FROM tmp_pcr_pd;
     
-    UPDATE sgn.pcr_experiment_sequence SET type_id =  (SELECT cvterm_id FROM public.cvterm where name = 'dcaps primer') WHERE type_id is null;
+    UPDATE sgn.pcr_experiment_sequence SET type_id =  (SELECT cvterm_id FROM public.cvterm where name ilike 'dcaps_primer') WHERE type_id is null;
 
 
 --need to refactor the code that uses pcr_experiment.primer_id_fwd/rev/pd (dCAPs?). This will be done in the topic/solcap_marker branch
