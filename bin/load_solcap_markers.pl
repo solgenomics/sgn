@@ -228,14 +228,14 @@ eval {
         #new pcr_experiment object
         my $pcr_ex = CXGN::Marker::PCR::Experiment->new($dbh, $pcr_experiment_id);
         # set the sequence types
-        $pcr_ex->store_sequence('forward primer', $fwd);
-        $pcr_ex->store_sequence('reverse primer', $rev);
-        $pcr_ex->store_sequence('aspe primer', $aspe1) if $aspe1;
-        $pcr_ex->store_sequence('aspe primer', $aspe2) if $aspe2;
+        $pcr_ex->store_sequence('forward_primer', $fwd);
+        $pcr_ex->store_sequence('reverse_primer', $rev);
+        $pcr_ex->store_sequence('aspe_primer', $aspe1) if $aspe1;
+        $pcr_ex->store_sequence('aspe_primer', $aspe2) if $aspe2;
         $pcr_ex->store_sequence('indel', $indel) if $indel;
-        $pcr_ex->store_sequence('snp nucleotide', $snp) if $snp;
-        $pcr_ex->store_sequence('five prime flanking', $seq5) if $seq5;
-        $pcr_ex->store_sequence('three prime flanking', $seq3) if $seq3;
+        $pcr_ex->store_sequence('SNP', $snp) if $snp;
+        $pcr_ex->store_sequence('five_prime_flanking_region', $seq5) if $seq5;
+        $pcr_ex->store_sequence('three_prime_flanking_region', $seq3) if $seq3;
         print "Checking if map $map_id , marker $marker_id and protocol $protocol exist in marker_experiment\n";
         # check for existing marker_experiment and update if found
 	my $q = "SELECT marker_experiment_id FROM marker_experiment "
