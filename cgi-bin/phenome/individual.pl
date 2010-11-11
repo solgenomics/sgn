@@ -343,7 +343,7 @@ sub display_page {
     my $new_image;
     if ($individual_name) 
     { $new_image = 
-	  qq|<a href="../image/add_image.pl?type_id=$individual_id&amp;action=new&amp;type=individual&amp;refering_page=$page">[Add new image]</a>|; 
+	  qq|<a href="../image/add?type_id=$individual_id&amp;action=new&amp;type=individual&amp;refering_page=$page">[Add new image]</a>|; 
     } 
     
     

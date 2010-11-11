@@ -236,7 +236,7 @@ HTML
     for ($i; $i< (my @image = $experiment->get_image_ids()); $i++) {
 	my $image_id = $image[$i];
 	my $image = SGN::Image->new($self->get_dbh(), $image_id);	
-	$assoc_imgs_html .= "<td valign=\"top\"><a href=\"/image/?image_id=$image_id&amp;action=view\">".$image->get_img_src_tag("small")."</a>&nbsp;<br />";
+	$assoc_imgs_html .= "<td valign=\"top\"><a href=\"/image/view/$image_id\">".$image->get_img_src_tag("small")."</a>&nbsp;<br />";
 
 	if ($self->get_action() eq "edit") { 
 	    $assoc_imgs_html .= qq {<a href="/image/?image_id=$image_id&amp;type=experiment&amp;type_id=$experiment_id&amp;action=confirm_delete">Delete</a><br />};
@@ -251,7 +251,7 @@ HTML
     print $assoc_imgs_html;
     
     if ($self->get_action() eq "edit") { 
-	print qq {<a href="/image/add_image.pl?type=experiment&amp;type_id=$experiment_id&amp;action=new">Add new image</a> };
+	print qq {<a href="/image/add?type=experiment&amp;type_id=$experiment_id&amp;action=new">Add new image</a> };
     }
     $self->get_page()->footer();
 }

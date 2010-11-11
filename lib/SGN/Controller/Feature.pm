@@ -54,8 +54,8 @@ sub validate
     my ($self, $c,$matching_features,$key, $val) = @_;
     my $count = $matching_features->count;
 #   EVIL HACK: We need a disambiguation process
-#   $c->throw( message => "too many features where $key='$val'") if $count > 1;
-    $c->throw( message => "feature with $key = '$val' not found") if $count < 1;
+#   $c->throw_client_error( public_message => "too many features where $key='$val'") if $count > 1;
+    $c->throw_client_error( public_message => "feature with $key = '$val' not found") if $count < 1;
 }
 
 sub view_name :Path('/feature/view/name') Args(1) {
@@ -66,7 +66,9 @@ sub view_name :Path('/feature/view/name') Args(1) {
 
 sub _validate_pair {
     my ($self,$c,$key,$value) = @_;
-    $c->throw( message => "$value is not a valid value for $key" )
+    $c->throw_client_error(
+        public_message  => "$value is not a valid value for $key",
+    )
         if ($key =~ m/_id$/ and $value !~ m/\d+/);
 }
 

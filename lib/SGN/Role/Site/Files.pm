@@ -7,7 +7,7 @@ use Carp;
 use Cwd;
 use File::Spec;
 use File::Temp;
-use File::Path qw/ mkpath /;
+use File::Path qw/ mkpath rmtree /;
 use URI;
 
 requires qw(
@@ -32,7 +32,20 @@ before 'setup_finalize' => sub {
     # tempfiles directory
     my $temp_subdir = Path::Class::Dir->new( $c->path_to( $c->get_conf('tempfiles_subdir') ) );
     my $temp_base   = $c->tempfiles_base;
-    $c->log->debug("symlinking $temp_base => $temp_subdir") if $c->debug;
+
+    # if clear_tempfiles_on_restart, attempt to delete our temp_base dir
+    if( $c->config->{clear_tempfiles_on_restart} ) {
+        $c->log->debug("clear_tempfiles_on_restart set, cleaning $temp_base") if $c->debug;
+        rmtree( [ $temp_base ] );
+        if( -e $temp_base ) {
+            $c->log->warn(
+                "WARNING: clear_tempfiles_on_restart set, but failed to completely clean out tempfiles_base '$temp_base':\n"
+                .`find '$temp_base' -ls`
+               );
+        }
+    }
+
+    $c->log->debug("symlinking tempfiles_base '$temp_base' -> legacy location '$temp_subdir'") if $c->debug;
     $c->make_generated_dir($temp_base);
     unlink $temp_subdir;
     symlink $temp_base, $temp_subdir or die "$! linking $temp_base => $temp_subdir";

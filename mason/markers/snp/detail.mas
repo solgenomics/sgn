@@ -1,7 +1,0 @@
-<%args>
-  $snp
-</%args>
-<%init>
-
-
-<& /page/page_title.mas, title => "RFLP image for marker $marker_name" &>

@@ -49,11 +49,11 @@ required if -i is not used. Provides the map name.
 
 The tab-delimited map file has the following columns:
 
- Marker 
- Confidence 
- Linkage_group 
- Position 
- Protocol
+ MARKER
+ CONFIDENCE
+ LINKAGE_GROUP
+ POSITION (must be a float! 0.0 )
+ PROTOCOL
 
 
 =head1 AUTHORS
@@ -89,59 +89,40 @@ my $map_file;
 # example: my $linkage_groups = ['1','2','3','4','5'];
 my $linkage_groups = [ qw | 1 2 3 4 5 6 7 8 9 10 11 12 | ];
 
-# unless ($ARGV[0]) {
-#     print "Usage: load_map_data <dbhost> <dbname> "
-# 	."<COMMIT|ROLLBACK> <map_id> <map file>\n" and exit();
-# }
-# unless ($ARGV[0] eq 'db-devel' or $ARGV[0] eq 'db') {
-#     die "First argument must be valid database host";
-# }
-# unless ($ARGV[1] eq 'sandbox' or $ARGV[1] eq 'cxgn') { 
-#     die "Second argument must be valid database name";
-# }
-# unless ($ARGV[2] eq 'COMMIT' or $ARGV[2] eq 'ROLLBACK') { 
-#     die "Third argument must be either COMMIT or ROLLBACK";
-# }
-# unless ($map_id=$ARGV[3]) { 
-#     die "Fourth argument must be the map_id"; 
-# }
-# unless ($map_file=$ARGV[4]) { 
-#     die "Fifth argument must be the map positions file"; 
-# }
-
 $map_id = $opt_i;
 
 $map_file = shift;
 
-if (!$opt_H && !$opt_D) { 
+if (!$opt_H && !$opt_D) {
     die "-H and -D parameters are required.\n";
 }
-
-my $dbh=CXGN::DB::InsertDBH::connect
-    ({dbhost=>$opt_H,dbname=>$opt_D,dbschema=>'sgn'});
-
+ my $dbh = CXGN::DB::InsertDBH->new({
+                                             dbname => $opt_D,
+                                             dbhost => $opt_H,
+                                             dbschema => 'sgn',
+                                             dbargs => {AutoCommit => 0,
+                                                        RaiseError => 1}
+                                            });
 
 eval {
-    if (!$map_id) { 
+    if (!$map_id) {
 	print "No map_id was provided. Insert a new map? ";
 	my $key = <STDIN>;
-	if ($key =~ /Y/i) { 
+	if ($key =~ /Y/i) {
 	    print "Inserting a new map...\n";
-	    
+
 	    my $map = CXGN::Map->new_map($dbh, $opt_n);
-	    
+
 	    $map_id = $map->get_map_id();
-	    
+
 	    print "New map_id: $map_id\n";
-	    
+
 	}
-	else { 
+	else {
 	    exit();
 	}
     }
-    
 
-    
     # we are creating a new map version every time we run this script, 
     # as long as the transaction goes through
     my $new_map_version = CXGN::Map::Version->
@@ -149,7 +130,7 @@ eval {
        new($dbh,{map_id=>$map_id},$linkage_groups);
     # saving the new map version
     my $map_version_id = $new_map_version->insert_into_database();
-    print $new_map_version->as_string();
+    print "map version = " . $new_map_version->as_string() . "\n";
     # make an object to give us the values from the spreadsheet
     my $ss = CXGN::Tools::File::Spreadsheet->new($map_file);
     my @markers = $ss->row_labels(); # row labels are the marker names
@@ -157,7 +138,7 @@ eval {
     # make sure the spreadsheet is how we expect it to be
     @columns = qw | MARKER MARKER_ID LINKAGE_GROUP POSITION CONFIDENCE PROTOCOL | # modify columns as necessary
 	or die"Column headings are not as expected";
-    
+
     # for all the (uncleaned) marker names in the spreadsheet
     for my $dirty_marker_name(@markers) {
 	# clean it, meaning, get the subscript if it's there,
@@ -176,12 +157,14 @@ eval {
         my $marker;
         if($marker_id) { # if we have found an existing marker
 	    # make a modifiable marker object from it
+            print "Found existing marker: $marker_id, $marker_name\n";
             $marker = CXGN::Marker::Modifiable->new($dbh,$marker_id);
         }
         else { # if we are making a new marker
 	    # make a modifiable marker object and start to populate it
             $marker = CXGN::Marker::Modifiable->new($dbh);
             $marker->set_marker_name($marker_name); #give it a name
+            print "Loading new marker id from marker $marker_name\n";
 	    # marker must exist before locations can be added for it. 
 	    # this is a db constraint. if you didn't do this, this script would die later.
             my $inserts = $marker->store_new_data();
@@ -193,7 +176,7 @@ eval {
         }
         print $marker->name_that_marker()."\n";
         my $loc=$marker->new_location(); #create a new location object
-
+        
 	# some files have pos which contains chromsome and position 
 	#my $pos=$ss->value_at($dirty_marker_name,'Position') 
 	    # get position from spreadsheet
@@ -201,7 +184,7 @@ eval {
 	# extract linkage group name and cm position from string like '01.035'
 	#my ($chromosome,$position) = 
 	    #CXGN::Marker::Tools::lg_name_and_position($pos);
-	
+
 	my $chromosome=$ss->value_at($dirty_marker_name,'LINKAGE_GROUP') 
 	    # get chromosome from spreadsheet
 	    or die"No chromosome found for $marker_name"; 
@@ -218,8 +201,7 @@ eval {
 		 print STDERR "No position found for $marker_name\n";
 		 next;
 	 }
-	
-	
+
 	my $conf;
 	# get confidence from spreadsheet
         $conf = $ss->value_at($dirty_marker_name,'CONFIDENCE') or $conf='uncalculated';
@@ -243,13 +225,14 @@ eval {
 	    $protocol =~ tr/[a-z]/[A-Z]/; 
             unless ($protocol eq 'AFLP' or $protocol eq 'CAPS' or $protocol eq 'RAPD' 
 		    or $protocol eq 'SNP' or $protocol eq 'SSR' 
-		    or $protocol eq 'RFLP' or $protocol eq 'PCR' or $protocol eq 'DCAPS' or $protocol =~/DArt/i or $protocol =~ /OPA/i ) 
+		    or $protocol eq 'RFLP' or $protocol eq 'PCR' or $protocol eq 'DCAPS' or $protocol =~/DArt/i or $protocol =~ /OPA/i or $protocol =~ /INDEL/i or $protocol =~ /ASPE/i )
 	    {
+                die "UNKNOWN protocol ($protocol)\n! ";
                 $protocol = 'unknown';
             }
 
             if ($protocol eq 'DCAPS') { $protocol = 'dCAPS' }
-
+            print "Protocol = $protocol\n";
 	    # set the marker_id that will be at this location
             $loc->marker_id($marker_id); 
 	    # set the map_version_id this location is found on
@@ -280,8 +263,8 @@ eval {
 	    # loaded, it was matched up with an old map version. how can we
             # match that existing PCR/RFLP data up with this new map 
 	    # version? well, it will have to be done later by some other script.
-
-	    $marker->add_experiment({location=>$loc,protocol=>$protocol});    
+            print "Adding new experiment , marker_name = $marker_name, location = " . $loc->position . " protocol = '". $protocol . "'\n";
+	    $marker->add_experiment({location=>$loc,protocol=>$protocol});
         }
 
 	# store whatever new data you have (in this case, the new data
@@ -292,7 +275,7 @@ eval {
 	# if any data was inserted for this marker (presumably it was,
 	# since we're adding locations on a brand new map version)
         if ($inserts and @{$inserts}) { 
-	    print "New marker data inserted:\n".Dumper($inserts);
+	    print "New marker data inserted:\n";#.Dumper($inserts);
 	    print $loc->as_string();
 	}
 

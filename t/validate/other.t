@@ -56,7 +56,6 @@ my %urls = (
         "Locus ajax form"                          => "/jsforms/locus_ajax_form.pl",
         "Locus editors"                            => "/phenome/editors_note.pl",
         "Phenotype search"                         => "/search/direct_search.pl?search=phenotypes",
-        "SNP search markers"                       => "/search/markers/snp.pl",
 
         'sol100 page'                              => '/organism/sol100/view',
         "SGN data overview"                        => "/organism/all/view",
@@ -64,7 +63,6 @@ my %urls = (
         "outreach index"                           => "/outreach/",
         "organism page for tomato"                 => "/chado/organism.pl?organism_id=1",
         "image search"                             => "/search/image_search.pl?wad1_description_filename_composite=&wad1_submitter=&wad1_image_tag=",
-        "bac registry"                             => "/sequencing/bac_registry_discrepancies.pl",
         "SGN pubs"                                 => "/help/publications.pl",
         "glossary search"                          => "/search/glossarysearch.pl",
         "contact"                                  => "/tools/contact.pl",
