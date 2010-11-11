@@ -44,8 +44,8 @@ sub init_patch {
     my $name = __PACKAGE__;
     print "dbpatch name is ':" .  $name . "\n\n";
     my $description = 'altering marker schema to accommodate SolCap markers';
-    my @previous_requested_patches = ("LoadSGNSequenceTypes"); #ADD HERE 
-    
+    my @previous_requested_patches = (); #ADD HERE 
+    print "This patch requires version 1.280 of Sequence Ontology";
     $self->name($name);
     $self->description($description);
     $self->prereq(\@previous_requested_patches);
