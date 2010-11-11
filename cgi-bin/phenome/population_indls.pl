@@ -698,11 +698,10 @@ sub qtl_plot
     my $round = Number::Format->new();
   
     $qtl_image  = $self->qtl_images_exist();
-    my $permu_data = $self->permu_values_exist();
+    my $permu_data = $self->permu_file();
     
-    unless ( $qtl_image && $permu_data )
-    {
-
+    unless ( $qtl_image && -s $permu_data)
+    {	   
         my ( $qtl_summary, $peak_markers_file ) = $self->run_r();
 
         open my $qtl_fh, "<", $qtl_summary or die "can't open $qtl_summary: $!\n";
@@ -1233,8 +1232,8 @@ sub run_r
         Carp::confess $err;
     };
 
-    copy( $prod_permu_file, $tempimages_path )
-      or die "could not copy '$prod_permu_file' to '$tempimages_path'";
+#    copy( $prod_permu_file, $tempimages_path )
+#      or die "could not copy '$prod_permu_file' to '$tempimages_path'";
 
     return $qtl_summary, $peak_markers;
 
@@ -1333,7 +1332,7 @@ sub permu_values
     my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
       $self->cache_temp_path();
     
-    $permu_file = File::Spec->catfile( $tempimages_path, $permu_file );
+    $permu_file = File::Spec->catfile( $prod_cache_path, $permu_file );
 
     my $round1 = Math::Round::Var->new(0.1);
 
@@ -1353,63 +1352,7 @@ sub permu_values
 
 }
 
-=head2 permu_values_exist
 
- Usage: my $permu_value = $self->permu_values_exist();
- Desc: checks if there is permutation value in the permutation file.
- Ret: undef or some value
- Args: none
- Side Effects:
- Example:
-
-=cut
-
-sub permu_values_exist
-{
-    my $self            = shift;
-    my $prod_permu_file = $self->permu_file();
-
-    my ( $size, $permu_file, $permu_data, $tempimages_path, $prod_cache_path,
-         $prod_temp_path );
-
-    if ($prod_permu_file)
-    {
-
-        $permu_file = fileparse($prod_permu_file);
-        ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
-          $self->cache_temp_path();
-    }
-
-    if ($permu_file)
-    {
-
-        $permu_file = File::Spec->catfile( $tempimages_path, $permu_file );
-    }
-
-    if ( -e $permu_file )
-    {
-
-        open my $pf_fh, "<", $permu_file or die "can't open $permu_file: !$\n";
-        my $h = <$pf_fh>;
-        while ( $permu_data = <$pf_fh> )
-        {
-            last if ($permu_data);
-
-            # 	    #just checking if there is data in there
-        }
-    }
-
-    if ($permu_data)
-    {
-        return 1;
-    }
-    else
-    {
-        return 0;
-
-    }
-
-}
 
 =head2 qtl_images_exist
 
