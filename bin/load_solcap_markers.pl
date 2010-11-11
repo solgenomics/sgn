@@ -80,6 +80,7 @@ use CXGN::Map::Version;
 use CXGN::DB::Connection;
 use CXGN::DB::InsertDBH;
 use Data::Dumper;
+use CXGN::DB::SQLWrappers;
 
 use Getopt::Std;
 
@@ -95,10 +96,12 @@ my $protocol = $opt_p  || die "ERROR: No -p option passed for protocol name (Sol
 my $dbh = CXGN::DB::InsertDBH->new({
     dbname => $opt_D,
     dbhost => $opt_H,
-    dbschema => 'sgn',
     dbargs => {AutoCommit => 0,
                RaiseError => 1}
                                    });
+
+my $sql=CXGN::DB::SQLWrappers->new($dbh);
+
 eval {
 
     # parameters for this specific instance
@@ -210,8 +213,17 @@ eval {
 		      $primer_id_rev,$experiment_type_id,$map_id,$primer_id_pd,$accession_id);
 
         # does this check if pcr_experiment already exists?
-	my $pcr_experiment_id = CXGN::Marker::Tools::insert($dbh,"pcr_experiment","pcr_experiment_id",$names,@fields);
-	print "pcr experiment added: $pcr_experiment_id\n";
+        #NOW it does!! Should not have 2 rows with the same pcr_experiment data!
+
+        my $pcr_experiment=$sql->insert_unless_exists('pcr_experiment',{marker_id=>$marker_id, ,annealing_temp=>$annealing_temp,primer_id_fwd=>$primer_id_fwd, primer_id_rev=>$primer_id_rev, experiment_type_id=>$experiment_type_id,map_id=>$map_id,primer_id_pd=>$primer_id_pd,accession_id=>$accession_id } );
+
+        if($pcr_experiment->{inserted}) { print "INSERTED NEW pcr_experiment" ; }
+        if($pcr_experiment->{exists}) { print "EXISTING pcr_experiment" ; }
+
+	my $pcr_experiment_id = $pcr_experiment->{id};
+        #THIS DOES NOT CHECK FOR EXISTING ID
+        #CXGN::Marker::Tools::insert($dbh,"pcr_experiment","pcr_experiment_id",$names,@fields);
+        print "pcr experiment added: $pcr_experiment_id\n";
 
         #new pcr_experiment object
         my $pcr_ex = CXGN::Marker::PCR::Experiment->new($dbh, $pcr_experiment_id);
@@ -229,13 +241,13 @@ eval {
 	my $q = "SELECT marker_experiment_id FROM marker_experiment "
 	    . "JOIN marker_location USING (location_id) JOIN map_version "
 	    . "USING (map_version_id) WHERE rflp_experiment_id is null "
-	    . "AND map_id = ? AND marker_id = ? AND protocol = ?";
+	    . "AND map_id = ? AND marker_id = ? AND protocol ilike ?";
 
 	my $sth = $dbh->prepare($q);
 	$sth->execute($map_id,$marker_id,$protocol);
 	my @exp_id;
-	while (my ($id) = $sth->fetchrow_array()) { 
-            print "Found id $id\n";
+	while (my ($id) = $sth->fetchrow_array()) {
+            print "Found experiment id $id\n";
             push (@exp_id,$id);
         }
 

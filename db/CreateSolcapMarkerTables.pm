@@ -105,7 +105,7 @@ INSERT INTO sgn.pcr_experiment_sequence (pcr_experiment_id, sequence_id ) SELECT
 
 alter table sgn.marker_experiment drop constraint marker_experiment_protocol_check;
 
-    alter table sgn.marker_experiment add constraint marker_experiment_protocol_check CHECK (protocol = 'AFLP'::text OR protocol = 'CAPS'::text OR protocol = 'RAPD'::text OR protocol = 'SNP'::text OR protocol = 'SSR'::text OR protocol = 'RFLP'::text OR protocol = 'PCR'::text OR protocol = 'dCAPS'::text OR protocol = 'DART'::text OR protocol = 'OPA'::text OR protocol = 'unknown'::text  OR protocol = 'ASPE'::text  OR protocol = 'Indel'::text);
+    alter table sgn.marker_experiment add constraint marker_experiment_protocol_check CHECK (protocol = 'AFLP'::text OR protocol = 'CAPS'::text OR protocol = 'RAPD'::text OR protocol = 'SNP'::text OR protocol = 'SSR'::text OR protocol = 'RFLP'::text OR protocol = 'PCR'::text OR protocol = 'dCAPS'::text OR protocol = 'DART'::text OR protocol = 'OPA'::text OR protocol = 'unknown'::text  OR protocol = 'ASPE'::text  OR protocol = 'INDEL'::text);
 
 
 
