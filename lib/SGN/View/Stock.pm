@@ -6,7 +6,6 @@ use warnings;
 our @EXPORT_OK = qw/
     stock_link organism_link
     /;
-use CatalystX::GlobalContext '$c';
 
 
 
@@ -16,7 +15,6 @@ sub stock_link {
     my $id = $stock->stock_id;
     #return qq{<a href="/stock/view/name/$name">$name</a>};
     return qq{<a href="/phenome/stock.pl?stock_id=$id">$name</a>};
-    
 }
 
 sub organism_link {

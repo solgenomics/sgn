@@ -74,12 +74,12 @@ sub _build_form {
       elements:
           - type: Text
             name: stock_name
-            label: stock Name
+            label: Stock name
             size: 30
 
           - type: Select
             name: stock_type
-            label: Stock Type
+            label: Stock type
 
           - type: Select
             name: organism
@@ -133,7 +133,7 @@ sub _make_stock_search_rs {
                          order_by => 'uniquename',
                        },
 	);
-    
+
     return $rs;
 }
 
