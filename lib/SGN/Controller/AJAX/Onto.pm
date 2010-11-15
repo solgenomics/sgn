@@ -241,13 +241,12 @@ sub roots_GET {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    
-    my $namespaces = $c->request->param('nodes');
-    my @namespaces = ();
 
+    my $namespace = $c->request->param('nodes');
+    my @namespaces = ();
     my @response_nodes = ();
     #my $empty_cvterm   = CXGN::Chado::Cvterm->new($c->dbc()->dbh());
-    if (!$namespaces) { 
+    if (!$namespace) { # should namespaces be db names ? (SO, GO,PO, SP, PATO)
 	@namespaces = ( 
 	    'biological_process',
 	    'cellular_component',
@@ -255,24 +254,26 @@ sub roots_GET {
 	    'plant growth and development stages',
 	    'plant structure',
 	    'Solanaceae phenotype ontology',
-	    'Sequence_Ontology',
+	    'sequence_attribute',
+            'sequence_collection',
+            'sequence_feature',
+            'sequence_variant',
 	    'quality',
 	    );
-              
     }
-    else { 
-	@namespaces = split /\%09/, $namespaces; #split on tab?
+    else {
+	@namespaces = split /\%09/, $namespace; #split on tab?
     }
     my @roots = ();
     foreach my $ns (@namespaces) {
         my $root = $schema->resultset('Cv::Cvterm')->find( { name=> $ns });
-	print STDERR "ROOT $root ".$root->name()."\n";
-	push @roots, $root;
+	#print STDERR "ROOT $root ".$root->name()."\n";
+	push @roots, $root if $root;
     }
-    
+
     my @response_list = ();
 
-    foreach my $r (@roots) { 
+    foreach my $r (@roots) {
 	my $hashref = $self->flatten_node($r, undef);
 	push @response_list, $hashref;
     }
