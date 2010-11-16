@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use lib 't/lib';
-use Test::More;
+use Test::Most;
 #use Carp::Always;
 
 use_ok('SGN::Test::Data', qw/ create_test /);
@@ -210,6 +210,20 @@ my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
     my @o = map { create_test('Organism::Organism') } (1..2);
     isnt($o[0]->genus,$o[1]->genus,'two organisms created have different genus');
     isnt($o[0]->species,$o[1]->species,'two organisms created have different species');
+}
+
+{
+
+    my $cv  = create_test('Cv::Cv', { name => "The best CV ever" } );
+    my @cvterms;
+    # pre-created objects can be passed in, to specify linking objects
+    lives_ok {
+        @cvterms = map { create_test('Cv::Cvterm', { name  => "cvterm_$_", cv_id => $cv->cv_id, } ) } (1..3)
+    } "can create a bunch of cvterms in one cv";
+
+    is(@cvterms,3, "got 3 cvterms");
+    map { is($cvterms[$_]->cv->cv_id, $cv->cv_id, "got the correct cv_id") } (0 .. 2);
+
 }
 
 done_testing;

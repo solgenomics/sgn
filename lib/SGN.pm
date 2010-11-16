@@ -34,7 +34,9 @@ L<SGN::Role::Site::TestMode>
 use Catalyst qw/
      ConfigLoader
      Static::Simple
-
+     Authentication
+     +SGN::Authentication::Store
+     Authorization::Roles
      +SGN::Role::Site::Config
      +SGN::Role::Site::DBConnector
      +SGN::Role::Site::DBIC
@@ -93,12 +95,30 @@ __PACKAGE__->config(
 
                )],
        },
-   );
+
+    'Plugin::Authentication' => {
+	default_realm => 'default',
+	realms => { 
+	    default => {
+		credential => { 
+		    class => '+SGN::Authentication::Credentials',
+		},
+		
+		store => { 
+		    class => "+SGN::Authentication::Store",
+		    user_class => "+SGN::Authentication::User",
+###		    role_column => 'roles',
+		},
+	    },
+	},
+    }
+    );
 
 
 # on startup, do some dynamic configuration
 after 'setup_finalize' => sub {
     my $self = shift;
+
 
     $ENV{PROJECT_NAME} = $self->config->{name};
     $self->config->{basepath} = $self->config->{home};
