@@ -977,7 +977,7 @@ sub infile_list
     my $file_in = $input_file_list_temp->filename();
 
     my $file_cvin = File::Temp->new(
-                                     TEMPLATE => 'cv_input-XXXXXX',
+                                     TEMPLATE => 'cvterm_input-XXXXXX',
                                      DIR      => $prod_temp_path,
                                      UNLINK   => 0,
                                    );
@@ -986,9 +986,18 @@ sub infile_list
     open my $cv_fh, ">", $file_cv_in or die "can't open $file_cv_in: $!\n";
     $cv_fh->print($ac);
 
-    
+    my $popid_temp = File::Temp->new(
+                                     TEMPLATE => 'popid-XXXXXX',
+                                     DIR      => $prod_temp_path,
+                                     UNLINK   => 0,
+                                   );
+    my $file_popid = $popid_temp->filename();
+
+    open my $popid_fh, ">", $file_popid or die "can't open $file_popid: $!\n";
+    $popid_fh->print($pop_id);
+
     my $file_in_list = join( "\t",
-                             $file_cv_in,       "P$pop_id",
+                             $file_cv_in,       $file_popid,
                              $gen_dataset_file, $phe_dataset_file,
                              $prod_permu_file, $crosstype_file);
 
