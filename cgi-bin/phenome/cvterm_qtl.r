@@ -165,7 +165,7 @@ if (is.logical(grep("stat_no_draws",
                     statfiles))==TRUE
     )
 {
-  drawsnofile<-(grep("stat_no_drwas",
+  drawsnofile<-(grep("stat_no_draws",
                      statfiles,
                      ignore.case=TRUE,
                      fixed = FALSE,
@@ -213,6 +213,7 @@ permuproblevel<-scan(permuproblevelfile,
                      dec = ".",
                      sep="\n"
                      )
+
 permuproblevel<-as.numeric(permuproblevel)
 
 
@@ -221,18 +222,58 @@ infile<-scan(file=infile,
              what="character"
              )#container for the ff
 
-cvtermfile<-infile[1]#file that contains the cvtername
-popid<-infile[2]#population dataset identifier
-genodata<-infile[3] #file name for genotype dataset
-phenodata<-infile[4] #file name for phenotype dataset
-permufile<-infile[5]
-crossfile<-infile[6]
+cvtermfile<-grep("cvterm",
+                 infile,
+                 ignore.case=TRUE,
+                 fixed = FALSE,
+                 value=TRUE
+                 )
 
+popidfile<-grep("popid",
+                 infile,
+                 ignore.case=TRUE,
+                 fixed = FALSE,
+                 value=TRUE
+                 )                 
+
+genodata<-grep("genodata",
+                 infile,
+                 ignore.case=TRUE,
+                 fixed = FALSE,
+                 value=TRUE
+                 )                 
+
+phenodata<-grep("phenodata",
+                 infile,
+                 ignore.case=TRUE,
+                 fixed = FALSE,
+                 value=TRUE
+                 )                 
+
+permufile<-grep("permu",
+                 infile,
+                 ignore.case=TRUE,
+                 fixed = FALSE,
+                 value=TRUE
+                 )                 
+
+crossfile<-grep("cross",
+                 infile,
+                 ignore.case=TRUE,
+                 fixed = FALSE,
+                 value=TRUE
+                 )
+
+popid<-scan(popidfile,
+            what="integer",
+            sep="\n"
+            )
 
 cross<-scan(crossfile,
             what="character",
             sep="\n"
             )
+
 
 popdata<-c()
 if (cross == "f2")
@@ -478,9 +519,26 @@ outfiles<-scan(file=outfile,
                what="character"
                )
 
-qtlfile<-outfiles[1]
-peakmarkersfile<-outfiles[2]
-confidencelodfile<-outfiles[3]
+qtlfile<-grep("qtl_summary",
+                 outfiles,
+                 ignore.case=TRUE,
+                 fixed = FALSE,
+                 value=TRUE
+                 )
+
+peakmarkersfile<-grep("peak_marker",
+                 outfiles,
+                 ignore.case=TRUE,
+                 fixed = FALSE,
+                 value=TRUE
+                 )
+
+confidencelodfile<-grep("confidence",
+                 outfiles,
+                 ignore.case=TRUE,
+                 fixed = FALSE,
+                 value=TRUE
+                 )    
 
 write.table(datasummary,
             file=qtlfile,
