@@ -69,6 +69,7 @@ Naama Menda <nm249@cornell.edu>
 =cut
 
 use strict;
+use warnings;
 
 use CXGN::Tools::File::Spreadsheet;
 use CXGN::Tools::Text;
@@ -125,14 +126,14 @@ eval {
         my @marker_ids =  CXGN::Marker::Tools::marker_name_to_ids($dbh,$marker_name);
         if (@marker_ids>1) { die "Too many IDs found for marker '$marker_name'" }
 	# just get the first ID in the list (if the list is longer than 1, we've already died)
-        my $marker_id = @marker_ids[0];
+        my $marker_id = $marker_ids[0];
 
 	if(!$marker_id) {
 	    $marker_id = CXGN::Marker::Tools::insert_marker($dbh,$marker_name);
 	    print "marker added: $marker_id\n";
 	}
 	else {  print "marker_id found: $marker_id\n" }
-        
+
         # clean this up?
 	my $annealing_temp =
 	    ((grep {/temp/} @columns) && ($ss->value_at($marker_name,'temp')))
