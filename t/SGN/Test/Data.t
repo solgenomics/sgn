@@ -215,11 +215,15 @@ my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
 {
 
     my $cv  = create_test('Cv::Cv', { name => "The best CV ever" } );
-
+    my @cvterms;
     # pre-created objects can be passed in, to specify linking objects
     lives_ok {
-        my @cvterms = map { create_test('Cv::Cvterm', { name  => "cvterm_$_", cv_id => $cv->cv_id, } ) } (1..10)
+        @cvterms = map { create_test('Cv::Cvterm', { name  => "cvterm_$_", cv_id => $cv->cv_id, } ) } (1..3)
     } "can create a bunch of cvterms in one cv";
+
+    is(@cvterms,3, "got 3 cvterms");
+    map { is($cvterms[$_]->cv->cv_id, $cv->cv_id, "got the correct cv_id") } (0 .. 2);
+
 }
 
 done_testing;
