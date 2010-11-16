@@ -153,7 +153,6 @@ sub parents_GET  {
     my $cvterm = $dbxref->cvterm;
     my $parents_rs = $cvterm->recursive_parents(); # returns a result set
 
-    my $cvterm = $dbxref->find_related('cvterm') if $dbxref;
     my @response_list = ();
     if ($cvterm) {
         my $parents_rs = $cvterm->recursive_parents(); # returns a result set
