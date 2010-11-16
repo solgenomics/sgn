@@ -70,7 +70,7 @@ my $build = $class->new(
         'IPC::System::Simple' => 0,         #< required for autodie :all
         'Apache::DBI'         => 0,
 
-        'Bio::Chado::Schema' => '0.05900',
+        'Bio::Chado::Schema' => '0.07000',
 
 	'Bio::Root::Version'     => '1.006001',
         'Bio::Graphics::FeatureFile' => 0,
