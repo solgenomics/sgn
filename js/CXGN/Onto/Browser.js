@@ -71,12 +71,9 @@ CXGN.Onto.Browser.prototype = {
 
     resetBrowser: function() {
 
-	//this.setSearchTerm();
-	//this.setSearchValue();
 	document.getElementById("ontology_browser_input").value='';
 	document.getElementById("ontology_term_input").value='';
-	//this.setSearchResults(); //this works
-
+	
 	this.initializeBrowser(this.rootNodes);
 
 	this.render();
@@ -168,7 +165,6 @@ CXGN.Onto.Browser.prototype = {
     },
 
     renderSearchById: function() {
-	//this.workingMessage(false);
 	//MochiKit.Logging.log('the value of ontology_browser_input is ...', (document.getElementById('ontology_browser_input')).value);
 	
 	var s = '<form name="search_id_form" style="margin-bottom:0" onSubmit="javascript:o.showParentage(this.ontology_browser_input.value); return false;" >';
@@ -187,7 +183,6 @@ CXGN.Onto.Browser.prototype = {
     },
 
     renderSearchByName: function( nameSpace ) {
-	//this.workingMessage(false);
         if ( !nameSpace ) {
             var s = '<form style="margin-bottom:0" name="SearchByNameForm" onsubmit="javascript:o.getOntologies(this.cv_select.value, this.ontology_term_input.value); return false;" >';
         }  else {
@@ -209,7 +204,6 @@ CXGN.Onto.Browser.prototype = {
             s += '</select>';
         } else {
             o.isSelected(nameSpace);
-            //s+= '<option value="'+nameSpace+'" ' + o.isSelected(nameSpace) +'>'+nameSpace+'</option>';
         }
         s += '<input id="term_search" type="submit" value="Search"  />';
 	s += '</td></tr></table>';
@@ -225,18 +219,12 @@ CXGN.Onto.Browser.prototype = {
 	var s = '';
 
 	if (o.searchResults) {
-	    //s +='<input id="hide_link" type="button" value="'+o.getSearchButtonText()+'" onClick="MochiKit.Visual.toggle(\'search_results\', \'blind\'); o.toggleSearchResultsVisible(); o.setSearchButtonText(); "><br />';
 	    document.getElementById("hide_link").style.display="inline";
-	    
 	}
 
 	o.setSearchButtonText();
 
 	document.getElementById("search_results").innerHTML=this.getSearchResults();
-	//	s +='<div id="search_results" >' + this.getSearchResults() + '</div>';
-
-	//s += '<div style="font-size:9pt; line-height:10px; font-face:arial,helvetica" >';
-	
 	s = s + this.renderLevel(s, this.rootnode, 0);
 	var e = document.getElementById('ontology_browser');
 	s += '</div>';
@@ -255,31 +243,23 @@ CXGN.Onto.Browser.prototype = {
 	    //MochiKit.Logging.log('undefined or hidden node!');  
 	}
 	else { 
-	    
 	    //MochiKit.Logging.log('level '+level);
-	    //for (var l=0; l<level; l++) { 
-	    //		    MochiKit.Logging.log('.');
-	    //}
-	    
-	    
-	    for (var i=0; i<level-1; i++) { 
+            for (var i=0; i<level-1; i++) { 
 		t += '<img src="/documents/img/tree_bar.png" border="0" />';
 	    }
-	    
 	    if (node.hasChildren()) { 
 		var key = node.getNodeKey();
 		if (node.getOpenNode()) {
-		    
 		    t +=  '<a href="javascript:o.closeNode('+key+')"><img src="/documents/img/tree_exp.png" border="0" /></a>';
-		    
+
 		}
 		else { 
-		    
+
 		    if (last) { 
 			t += '<a href="javascript:o.openNode('+key+')"><img src="/documents/img/tree_col_end.png" border="0" /></a>';
 		    }
 		    else { 
-			
+
 			t +=  '<b><a href="javascript:o.openNode('+key+')"><img src="/documents/img/tree_col.png" border="0" /></a></b>';
 		    }
 		}
@@ -304,8 +284,7 @@ CXGN.Onto.Browser.prototype = {
 		
 		//MochiKit.Logging.log('now processing node '+node.name + ', with '+c.length+' children nodes');	    
 		
-		//var cs = new Array();
-		for(var i=0; i<c.length; i++) { 		    
+                for(var i=0; i<c.length; i++) { 		    
 		    last = (i==c.length-1);
 		    //MochiKit.Logging.log('<p>', c[i].accession, '</p>');
 		    t = t + this.renderLevel(t, c[i], level, last);
@@ -914,8 +893,7 @@ Node.prototype = {
 	// add a button to select this node and fill it into a textfield
 	// as provided by linkToTextField
 	var link = "";
-	//	if (this.getBrowser().linkToTextField==true) { 
-	if (this.getBrowser().getShowSelectTermButtons()) { 
+        if (this.getBrowser().getShowSelectTermButtons()) { 
 	    link = '<a href="javascript:o.copySelectedToTextField(this)"><img src="/documents/img/select.png" border="0" /></a>';
 	}
 
@@ -998,8 +976,7 @@ Node.prototype = {
 			    //MochiKit.Logging.log('Child accession: '+childNode.getAccession()+'<br />');
 			}
 			//MochiKit.Logging.log('Fetched '+parentList.length + ' parents');
-			//parentNode.browser.render();      
-			return parentList;
+                        return parentList;
 		    }
 		}
 	});
