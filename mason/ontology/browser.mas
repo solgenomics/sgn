@@ -1,6 +1,7 @@
 <%args>
     $title => 'Ontology browser'
     $root_nodes => undef          # comma separated list of root nodes (optional)
+    $db_name => undef
 </%args>
 <&| /page/info_section.mas,
     title       => $title,
@@ -27,7 +28,7 @@
     o.setUpBrowser();
     o.initializeBrowser('<% $root_nodes %>');
     o.renderSearchById();
-    o.renderSearchByName();
+    o.renderSearchByName('<% $db_name %>');
     o.render();
 -->
 </script>

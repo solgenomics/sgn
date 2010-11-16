@@ -140,32 +140,33 @@ sub children_GET {
     $c->{stash}->{rest} = \@response_list;
 }
 
-sub parents_GET { 
+sub parents_GET  {
     my ($self, $c) = @_;
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    
+
     my ($db_name, $accession) = split ":", $c->request->param('node');
-    
+    my $dbxref;
     my $db = $schema->resultset('General::Db')->search({ name => $db_name })->first();
-    my $dbxref = $db->find_related('dbxrefs', { accession => $accession });
-    
+
+    $dbxref = $db->find_related('dbxrefs', { accession => $accession }) if $db;
     my $cvterm = $dbxref->cvterm;
-    
     my $parents_rs = $cvterm->recursive_parents(); # returns a result set
 
+    my $cvterm = $dbxref->find_related('cvterm') if $dbxref;
     my @response_list = ();
+    if ($cvterm) {
+        my $parents_rs = $cvterm->recursive_parents(); # returns a result set
+        while (my $parent = $parents_rs->next()) { 
+            #only report back children of the same cv namespace
+            if ($parent->cv_id() != $cvterm->cv_id()) {  
+                next();
+            }
 
-    while (my $parent = $parents_rs->next()) { 
-	#only report back children of the same cv namespace
-	if ($parent->cv_id() != $cvterm->cv_id()) {  
-	    next();
-	}
-
-	my $responsehash = $self->flatten_node($parent, undef);
-	push @response_list, $responsehash;
+            my $responsehash = $self->flatten_node($parent, undef);
+            push @response_list, $responsehash;
+        }
     }
-    
     $c->{stash}->{rest} = \@response_list;
 }
 
@@ -247,18 +248,12 @@ sub roots_GET {
     my @response_nodes = ();
     #my $empty_cvterm   = CXGN::Chado::Cvterm->new($c->dbc()->dbh());
     if (!$namespace) { # should namespaces be db names ? (SO, GO,PO, SP, PATO)
-	@namespaces = ( 
-	    'biological_process',
-	    'cellular_component',
-	    'molecular_function',
-	    'plant growth and development stages',
-	    'plant structure',
-	    'Solanaceae phenotype ontology',
-	    'sequence_attribute',
-            'sequence_collection',
-            'sequence_feature',
-            'sequence_variant',
-	    'quality',
+	@namespaces = (
+	    'GO',
+            'PO',
+            'SP',
+            'SO',
+            'PATO',
 	    );
     }
     else {
@@ -266,11 +261,17 @@ sub roots_GET {
     }
     my @roots = ();
     foreach my $ns (@namespaces) {
-        my $root = $schema->resultset('Cv::Cvterm')->find( { name=> $ns });
-	#print STDERR "ROOT $root ".$root->name()."\n";
-	push @roots, $root if $root;
+        my $q = "SELECT cvterm.cvterm_id FROM cvterm
+                 JOIN dbxref USING(dbxref_id) JOIN db USING(db_id)
+                 LEFT JOIN cvterm_relationship ON (cvterm.cvterm_id=cvterm_relationship.subject_id)
+                 WHERE cvterm_relationship.subject_id IS NULL AND is_obsolete= ? AND is_relationshiptype = ? AND db.name= ? ";
+        my $sth = $schema->storage->dbh->prepare($q);
+        $sth->execute(0,0,$ns);
+        while (my ($cvterm_id) = $sth->fetchrow_array() ) {
+            my $root = $schema->resultset("Cv::Cvterm")->find( { cvterm_id => $cvterm_id } );
+            push @roots, $root;
+        }
     }
-
     my @response_list = ();
 
     foreach my $r (@roots) {
