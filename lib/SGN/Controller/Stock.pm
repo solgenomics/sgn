@@ -183,19 +183,53 @@ sub view_id :Path('/stock/view/id') :Args(1) {
     my ( $self, $c , $stock_id) = @_;
 
     my $schema   = $c->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' );
+    my $stock = CXGN::Chado::Stock->new($schema, $stock_id);
+
+    my $person_id = $c->user->get_object->get_sp_person_id;
+    my $curator = $c->user->check_roles('curator');
+    my $submitter = $c->user->check_roles('submitter');
+
     my $dbh = $c->dbc->dbh;
-
-    my $login = CXGN::Login->new($dbh);
-
-    my $person_id = $login->has_session();
-
     my $user = CXGN::People::Person->new($dbh, $person_id);
-
-#    my $stock_id = $c->req->param("stock_id") ;
+    
+    ################
     my $action =  $c->request->param("action");
     print STDERR "action parameter from request is $action !!!!!!!\n\n\n";
+    ##################
 
-    $c->forward_to_mason_view('/stock/index.mas',  action=> $action,  stock_id => $stock_id , user=>$user, schema=>$schema, dbh=>$dbh);
+    ###Check if a stock page can be printed###
+
+    # print message if stock_id is not valid
+    unless ( ( $stock_id =~ m /^\d+$/ ) || ($action eq 'new' && !$stock_id) ) {
+        $c->throw(is_error=>0,
+                  message=>"No stock/accession exists for identifier $stock_id",
+            );
+    }
+    if (  !$stock->get_object_row  || ($action ne 'new' && !$stock_id) ) {
+        $c->throw(is_error=>0,
+                  message=>"No stock/accession exists for identifier $stock_id",
+            );
+    }
+
+    # print message if the stock is obsolete
+    my $obsolete = $stock->get_is_obsolete();
+    if ( $obsolete  && !$curator ) {
+        $c->throw(is_error=>0,
+                  title => 'Obsolete stock',
+                  message=>"Stock $stock_id is obsolete!",
+                  developer_message => 'only curators can see obsolete stock',
+                  notify => 0,   #< does not send an error email
+            );
+    }
+    # print message if stock_id does not exist
+    if ( !$stock && $action ne 'new' && $action ne 'store' ) {
+        $c->throw(is_error=>0, message=>'No stock exists for this identifier',);
+    }
+
+    ####################
+    print STDERR " action=> $action,  stock_id => $stock_id , curator=>$curator, submitter=>$submitter, person_id => $person_id, stock => $stock, schema=>$schema, dbh=>$dbh \n\n\n";
+
+    $c->forward_to_mason_view('/stock/index.mas',  stockref=>{ action=> $action,  stock_id => $stock_id , curator=>$curator, submitter=>$submitter, person_id => $person_id, stock => $stock, schema=>$schema, dbh=>$dbh } );
 }
 
 ######

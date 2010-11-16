@@ -8,21 +8,19 @@
 
 parameters:
 
-=over 3
+=over 1
 
-=item $stock_id
+=item $stockref
 
-The id of the stock in the database
+a hashref with all the parameters needed for printing the stock page! 
 
-=item $schema
-
-L<Bio::Chado::Schema> object
-
-=item $user
-
-the person logged into the system right now
-
-
+ $stockref->{stock_id}
+ $stockref->{stock}
+ $stockref->{schema}
+ $stockref->{uniquename}
+ $stockref->{curator}  (boolean)
+ $stockref->{submitter} (boolean)
+ $stockref->{is_owner} (boolean)
 
 =back
 
@@ -38,11 +36,7 @@ Naama Menda <nm249@cornell.edu>
 
 <%args>
 
-$action => 'view'
-$stock_id => 0
-$user => undef
-$schema
-$dbh
+$stockref => undef
 
 </%args>
 
@@ -55,53 +49,30 @@ use CXGN::Chado::Stock;
 use CXGN::Page::FormattingHelpers qw / html_optional_show info_table_html /;
 
 
-# print message if stock_id is not valid 
-unless ( ( $stock_id =~ m /^\d+$/ ) || ($action eq 'new' && !$stock_id) ) {
-  $c->throw(is_error=>0,
-	    message=>"No stock/accession exists for identifier $stock_id",
-	   );
-}
-my $stock = CXGN::Chado::Stock->new($schema, $stock_id);
-if (  !$stock->get_object_row  || ($action ne 'new' && !$stock_id) ) {
-  $c->throw(is_error=>0,
-	    message=>"No stock/accession exists for identifier $stock_id",
-	   );
-}
+my $stock = $stockref->{stock};
+my $stock_id = $stockref->{stock_id};
+my $action = $stockref->{action} || 'view';
+my $person_id = $stockref->{sp_person_id};
+my $curator = $stockref->{curator};
+my $submitter = $stockref->{submitter};
 
-my $person_id = $user->get_sp_person_id();
-my $user_type = $user->get_user_type();
+my $schema = $stockref->{schema};
+my $dbh = $stockref->{dbh};
+
 my $stockprop_cv = $schema->resultset("Cv::Cv")->search( {
  'me.name' => 'stock_property'} );
-# print message if the stock is obsolete
 
-my $obsolete = $stock->get_is_obsolete();
-if ( $obsolete  && $user_type ne 'curator' )
-  {
-    $c->throw(is_error=>0, 
-	      title => 'Obsolete stock',
-	      message=>"Stock $stock_id is obsolete!",
-	      developer_message => 'only curators can see obsolete stock',
-	      notify => 0,   #< does not send an error email
-	     );
-  }
-
-# print message if stock_id does not exist
-
-if ( !$stock && $action ne 'new' && $action ne 'store' ) {
-  $c->throw(is_error=>0, message=>'No stock exists for this identifier',);
-}
-
-my $this_page = "/stock/view/id/$stock_id";
 
 my $type_name;
 my $type = $stock->get_object_row()->type();
 $type_name  = $type->name() if $type;
-#my ($organism) = $stock->search_related('organism');
-#my $species = $organism->species();
 
 #################
-my $owner;
+my $is_owner = $stockref->{is_owner};
+##########
 #if ( $stock && ($user_type eq 'curator' || $person_id && grep { $_ == $person_id } @owners  ) ) {  $owner = 1; }
+###########
+my $this_page = "/stock/view/id/$stock_id";
 
 my $add_image_link;
 my $image_id_type_id = $schema->resultset("Cv::Cvterm")->search( { name => 'sgn image_id' }, )->single->cvterm_id ;
@@ -127,23 +98,23 @@ while ( my $ip =  $image_stockprops->next ) {
 
 
 <& /page/page_title.mas, title=> $type_name  .  ": " . $stock->get_uniquename()  . "\n" &>
-  
-  
-<&| /page/info_section.mas, title=>"Stock details" , subtitle => "<a href=/stock/search/>Back to stock search</a>"  &>
-  
-  <& /page/form.mas, object_type=>'stock', object_id=>"$stock_id", form_name=> 'stock_form', server_side_script => '/phenome/stock/stock_ajax_form.pl', form_div_name=>'stock_details', js_object_name=> 'stockForm', page_url => '/stock/view/id'  &>
-    
-</&>
- 
 
-% if($owner) {
+
+<&| /page/info_section.mas, title=>"Stock details" , subtitle => "<a href=/stock/search/>Back to stock search</a>"  &>
+
+  <& /page/form.mas, object_type=>'stock', object_id=>"$stock_id", form_name=> 'stock_form', server_side_script => '/phenome/stock/stock_ajax_form.pl', form_div_name=>'stock_details', js_object_name=> 'stockForm', page_url => '/stock/view/id'  &>
+
+</&>
+
+
+% if($is_owner) {
 <&| /page/info_section.mas, title=>"Stock history", collapsible=>1, collapsed=>1 &>
   <& /stock/history.mas, stock=>$stock  &>
 </&>
 
 % }
 
- 
+
 <&| /page/info_section.mas, title=>"images (" .  scalar(@image_ids)  . ")", subtitle => "$add_image_link", collapsible=>1, collapsed=>1 &>
   <& /image/print_images.mas , images=>\@image_ids , dbh=>$dbh &>
 

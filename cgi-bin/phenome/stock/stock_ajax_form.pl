@@ -176,7 +176,9 @@ sub generate_form {
             push @type_ids, $cvterm->cvterm_id();
         }
     }
-
+    #not all stocks have an organism!
+    my $species;
+    $species = $stock->get_organism->species if $stock->get_organism; 
     ##########
 
     if ( $self->get_action =~ /new|store/ ) {
@@ -213,11 +215,10 @@ sub generate_form {
             );
     }
     if ( $self->get_action =~ /view|edit/ ) {
-
         $form->add_label(
             display_name => "Organism",
             field_name   => "stock_organism",
-            contents => $stock->get_organism()->species() ,
+            contents => $species,
             );
         $form->add_label(
             display_name => "Stock type",
