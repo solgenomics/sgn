@@ -96,7 +96,7 @@ sub store {
     $validate= $json_hash{validate};
     $json_hash{error} = $error if $error;
 
-    my $refering_page="/phenome/stock.pl?stock_id=$stock_id";
+    my $refering_page="/stock/view/id/$stock_id";
     $self->send_form_email({subject=>"[New stock details stored] stock $stock_id", mailing_list=>'sgn-db-curation@sgn.cornell.edu', refering_page=>"www.solgenomics.net".$refering_page}) if (!$validate && !$json_hash{error});
     $json_hash{refering_page}=$refering_page if !$initial_stock_id && !$validate && !$error;
 
@@ -117,7 +117,7 @@ sub delete {
     my $stock_name = $stock->get_name();
     my $stock_id = $stock->get_stock_id();
     my %json_hash= $self->get_json_hash();
-    my $refering_page="/phenome/stock.pl?stock_id=$stock_id";
+    my $refering_page="/phenome/stock/view/id/$stock_id";
 
     if (!$json_hash{error} ) {
         try {

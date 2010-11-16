@@ -9,6 +9,9 @@ SGN::Controller::Stock - Catalyst controller for pages dealing with stocks (e.g.
 use Moose;
 use namespace::autoclean;
 
+use CXGN::Login;
+use CXGN::People::Person;
+
 use HTML::FormFu;
 use URI::FromHash 'uri';
 use YAML::Any;
@@ -174,6 +177,25 @@ sub _stock_types {
     # add an empty option 
     unshift @$ref , ['0', ''];
     return $ref;
+}
+
+sub view_id :Path('/stock/view/id') :Args(1) {
+    my ( $self, $c , $stock_id) = @_;
+
+    my $schema   = $c->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' );
+    my $dbh = $c->dbc->dbh;
+
+    my $login = CXGN::Login->new($dbh);
+
+    my $person_id = $login->has_session();
+
+    my $user = CXGN::People::Person->new($dbh, $person_id);
+
+#    my $stock_id = $c->req->param("stock_id") ;
+    my $action =  $c->request->param("action");
+    print STDERR "action parameter from request is $action !!!!!!!\n\n\n";
+
+    $c->forward_to_mason_view('/stock/index.mas',  action=> $action,  stock_id => $stock_id , user=>$user, schema=>$schema, dbh=>$dbh);
 }
 
 ######

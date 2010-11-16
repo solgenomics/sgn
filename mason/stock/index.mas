@@ -62,6 +62,11 @@ unless ( ( $stock_id =~ m /^\d+$/ ) || ($action eq 'new' && !$stock_id) ) {
 	   );
 }
 my $stock = CXGN::Chado::Stock->new($schema, $stock_id);
+if (  !$stock->get_object_row  || ($action ne 'new' && !$stock_id) ) {
+  $c->throw(is_error=>0,
+	    message=>"No stock/accession exists for identifier $stock_id",
+	   );
+}
 
 my $person_id = $user->get_sp_person_id();
 my $user_type = $user->get_user_type();
@@ -86,7 +91,7 @@ if ( !$stock && $action ne 'new' && $action ne 'store' ) {
   $c->throw(is_error=>0, message=>'No stock exists for this identifier',);
 }
 
-my $this_page = "/phenome/stock.pl?stock_id=$stock_id";
+my $this_page = "/stock/view/id/$stock_id";
 
 my $type_name;
 my $type = $stock->get_object_row()->type();
@@ -126,7 +131,7 @@ while ( my $ip =  $image_stockprops->next ) {
   
 <&| /page/info_section.mas, title=>"Stock details" , subtitle => "<a href=/stock/search/>Back to stock search</a>"  &>
   
-  <& /page/form.mas, object_type=>'stock', object_id=>"$stock_id", form_name=> 'stock_form', server_side_script => '/phenome/stock/stock_ajax_form.pl', form_div_name=>'stock_details', js_object_name=> 'stockForm', page_url => '/phenome/stock.pl'  &>
+  <& /page/form.mas, object_type=>'stock', object_id=>"$stock_id", form_name=> 'stock_form', server_side_script => '/phenome/stock/stock_ajax_form.pl', form_div_name=>'stock_details', js_object_name=> 'stockForm', page_url => '/stock/view/id'  &>
     
 </&>
  
