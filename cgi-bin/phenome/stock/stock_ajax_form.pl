@@ -266,10 +266,10 @@ sub generate_form {
 
     if ( $self->get_action() =~ /view|edit/ ) {
         $form->from_database();
-#       $form->add_hidden(
-#           field_name => "organism_id",
-#           contents   => $stock->get_organism_id,
-#           );
+        $form->add_hidden(
+            field_name => "organism_id",
+            contents   => $stock->get_organism_id,
+            );
         $form->add_hidden(
             field_name => "type_id",
             contents   => $stock->get_type_id,
