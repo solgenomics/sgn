@@ -237,11 +237,40 @@ sub _view_stock {
     }
 
     ####################
+    my $image_ids = $self->_stock_images($stock);
+    my $is_owner;
+    my $owner_ids = $self->_stock_owners($stock);
+    if ( $stock && ($curator || $person_id && ( grep /^$person_id$/, @$owner_ids ) ) ) {
+        $is_owner = 1;
+    }
+    ################
+    $c->forward_to_mason_view('/stock/index.mas',  stockref=>{ action=> $action,  stock_id => $stock_id , curator=>$curator, submitter=>$submitter, person_id => $person_id, stock => $stock, schema=>$self->schema, dbh=>$dbh, image_ids=> $image_ids, is_owner => $is_owner } );
+}
 
-    $c->forward_to_mason_view('/stock/index.mas',  stockref=>{ action=> $action,  stock_id => $stock_id , curator=>$curator, submitter=>$submitter, person_id => $person_id, stock => $stock, schema=>$self->schema, dbh=>$dbh } );
+sub _stock_images {
+    my ($self,$stock) = @_;
+    my $image_id_type_id = $self->schema->resultset("Cv::Cvterm")->search( { name => 'sgn image_id' }, )->single->cvterm_id ;
+    my $image_stockprops = $stock->get_object_row()->search_related("stockprops" , { type_id => $image_id_type_id }  );
+
+    my @image_ids ;
+    while ( my $ip =  $image_stockprops->next ) {
+        push @image_ids, $ip->value ;
+    }
+    return \@image_ids;
 }
 
 
+sub _stock_owners {
+    my ($self,$stock) = @_;
+    my $person_id_type_id = $self->schema->resultset("Cv::Cvterm")->search( { name => 'sp_person_id' }, )->single->cvterm_id ;
+    my $person_stockprops = $stock->get_object_row()->search_related("stockprops" , { type_id => $person_id_type_id }  );
+
+    my @owner_ids ;
+    while ( my $pp =  $person_stockprops->next ) {
+        push @owner_ids, $pp->value ;
+    }
+    return \@owner_ids;
+}
 ######
 1;
 ######

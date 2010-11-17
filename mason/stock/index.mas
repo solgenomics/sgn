@@ -69,20 +69,11 @@ $type_name  = $type->name() if $type;
 
 #################
 my $is_owner = $stockref->{is_owner};
-##########
-#if ( $stock && ($user_type eq 'curator' || $person_id && grep { $_ == $person_id } @owners  ) ) {  $owner = 1; }
-###########
+
 my $this_page = "/stock/view/id/$stock_id";
 
 my $add_image_link;
-my $image_id_type_id = $schema->resultset("Cv::Cvterm")->search( { name => 'sgn image_id' }, )->single->cvterm_id ;
-my $image_stockprops = $stock->get_object_row()->search_related("stockprops" , { type_id => $image_id_type_id }  );
-
-
-my @image_ids ;
-while ( my $ip =  $image_stockprops->next ) {
-  push @image_ids, $ip->value ;
-}
+my $image_ids =  $stockref->{image_ids};
 
 
 </%perl>
@@ -109,14 +100,14 @@ while ( my $ip =  $image_stockprops->next ) {
 
 % if($is_owner) {
 <&| /page/info_section.mas, title=>"Stock history", collapsible=>1, collapsed=>1 &>
-  <& /stock/history.mas, stock=>$stock  &>
+
 </&>
 
 % }
 
 
-<&| /page/info_section.mas, title=>"images (" .  scalar(@image_ids)  . ")", subtitle => "$add_image_link", collapsible=>1, collapsed=>1 &>
-  <& /image/print_images.mas , images=>\@image_ids , dbh=>$dbh &>
+<&| /page/info_section.mas, title=>"images (" .  scalar(@$image_ids)  . ")", subtitle => "$add_image_link", collapsible=>1, collapsed=>1 &>
+  <& /image/print_images.mas , images=>$image_ids , dbh=>$dbh &>
 
 </&>
 
