@@ -43,7 +43,7 @@ sub authenticate {
     my $realm = shift;
     my $authinfo = shift;
 
-    print STDERR "authenticate: Authenticating user: $authinfo->{username}\n";
+    $c->log->debug("authenticate: Authenticating user: $authinfo->{username}") if $c->debug;
     my $store = SGN::Authentication::Store->new();
     my $user = $store->find_user($authinfo, $c);
 

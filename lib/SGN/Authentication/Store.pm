@@ -46,21 +46,21 @@ sub find_user {
     my $authinfo = shift;
     my $c = shift;
 
-    print STDERR "find_user: $authinfo->{username}\n";
+    $c->log->debug("find_user: $authinfo->{username}") if $c->debug;
     my $sp_person_id = CXGN::People::Person->get_person_by_username($self->{dbh}, $authinfo->{username});
 
     my $user;
     my $sp_person = CXGN::People::Person->new($self->{dbh}, $sp_person_id);
     if (ref($sp_person) eq 'CXGN::People::Person') { 
-	print STDERR "Obtained sp_person ".$sp_person->get_sp_person_id()."\n";
+	$c->log->debug("Obtained sp_person ".$sp_person->get_sp_person_id()) if $c->debug;
 	my $user = SGN::Authentication::User->new();
-    
-	print STDERR "USER ".$sp_person->get_username()." FOUND!\n";
+
+	$c->log->debug("USER ".$sp_person->get_username()." FOUND!") if $c->debug;
 	$user->set_object($sp_person);
 	return $user;
     }
     else { 
-	print STDERR "USER $authinfo->{username} NOT FOUND!\n";
+	$c->log->debug("USER $authinfo->{username} NOT FOUND!") if $c->debug;
     }
 
     return undef;
