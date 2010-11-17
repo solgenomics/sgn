@@ -22,7 +22,6 @@ package SGN::Controller::AJAX::Onto;
 
 use Moose;
 use CXGN::Chado::Cvterm;
-use CXGN::DB::Connection;
 
 use namespace::autoclean;
 
