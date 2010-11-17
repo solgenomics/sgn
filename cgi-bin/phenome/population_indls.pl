@@ -434,11 +434,12 @@ qq { Download population: <span><a href="pop_download.pl?population_id=$populati
 	$plot_html .= qq | </td></tr></table> |;
 	
 	my ( $qtl_image, $legend);
-        #using standard deviation of 0.05 as an arbitrary cut off to run
+        
+        #using standard deviation of 0.01 as an arbitrary cut off to run
 	#qtl analysis. Probably, need to think of better solution.
-	if ($std >= 0.05) {
-         $qtl_image           = $self->qtl_plot();
-	 $legend = $self->legend($population);
+	if ( $std >= 0.01 ) {
+	    $qtl_image           = $self->qtl_plot();
+	    $legend = $self->legend($population);
 	} 
 	else { 
 	    $qtl_image = 'There is no statistically significant phenotypic 
