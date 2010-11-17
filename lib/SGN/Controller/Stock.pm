@@ -182,18 +182,29 @@ sub _stock_types {
 sub view_id :Path('/stock/view/id') :Args(1) {
     my ( $self, $c , $stock_id) = @_;
 
-    my $schema   = $c->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' );
-    my $stock = CXGN::Chado::Stock->new($schema, $stock_id);
+    $self->schema( $c->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' ) );
+    $self->_view_stock($c, 'view', $stock_id);
+}
+
+
+sub new_stock :Path('/stock/view/new') :Args(0) {
+    my ( $self, $c , $stock_id) = @_;
+    $self->schema( $c->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' ) );
+    $self->_view_stock($c, 'new', $stock_id);
+}
+
+
+sub _view_stock {
+    my ( $self, $c, $action, $stock_id) = @_;
+
+    my $stock = CXGN::Chado::Stock->new($self->schema, $stock_id);
     my $logged_user = $c->user;
     my $person_id = $logged_user->get_object->get_sp_person_id if $logged_user;
     my $curator = $logged_user->check_roles('curator') if $logged_user;
     my $submitter = $logged_user->check_roles('submitter') if $logged_user;
 
     my $dbh = $c->dbc->dbh;
-   
-    ################
-    my $action =  $c->request->param("action");
-    print STDERR "action parameter from request is $action !!!!!!!\n\n\n";
+
     ##################
 
     ###Check if a stock page can be printed###
@@ -226,10 +237,10 @@ sub view_id :Path('/stock/view/id') :Args(1) {
     }
 
     ####################
-    print STDERR " action=> $action,  stock_id => $stock_id , curator=>$curator, submitter=>$submitter, person_id => $person_id, stock => $stock, schema=>$schema, dbh=>$dbh \n\n\n";
 
-    $c->forward_to_mason_view('/stock/index.mas',  stockref=>{ action=> $action,  stock_id => $stock_id , curator=>$curator, submitter=>$submitter, person_id => $person_id, stock => $stock, schema=>$schema, dbh=>$dbh } );
+    $c->forward_to_mason_view('/stock/index.mas',  stockref=>{ action=> $action,  stock_id => $stock_id , curator=>$curator, submitter=>$submitter, person_id => $person_id, stock => $stock, schema=>$self->schema, dbh=>$dbh } );
 }
+
 
 ######
 1;
