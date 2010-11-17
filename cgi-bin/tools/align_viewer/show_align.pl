@@ -84,7 +84,9 @@ use HTML::Entities;
 use CXGN::Tools::Param qw/ hash2param /;
 use CatalystX::GlobalContext '$c';
 
-our $ALIGN_SEQ_LIMIT = 200;
+our $ALIGN_SEQ_COUNT_LIMIT        = 200;
+our $ALIGN_SEQ_TOTAL_LENGTH_LIMIT = 100_000;
+
 my $page = CXGN::Page->new( "SGN Alignment Analyzer", "Chenwei-Carpita" );
 $page->jsan_use("CXGN.Effects");
 
@@ -294,7 +296,7 @@ elsif ( $family_nr && $i_value ) {
 }
 
 #Check that the input file is a good FASTA, throw error page otherwise
-our ( $SEQ_COUNT, $MAX_LENGTH ) = fasta_check( $temp_file, $page );
+our ( $SEQ_COUNT, $MAX_LENGTH, $TOTAL_LENGTH ) = fasta_check( $temp_file, $page );
 
 #Also, use seq_count, maxiters, and max_length parameters for Muscle to see if we
 #should run it on the cluster, otherwise allow running on the web server
@@ -358,13 +360,20 @@ foreach (@ids) {
 # (added by Lukas, 9/5/2006)
 if ( $format eq "fasta_unaligned" ) {
 
-    if ( $SEQ_COUNT > $ALIGN_SEQ_LIMIT ) {
+    if ( $SEQ_COUNT > $ALIGN_SEQ_COUNT_LIMIT ) {
         my $message =
-"<center><span style='font-size:1.2em;'>You submitted <b>$SEQ_COUNT</b> sequences. Due to limited computational resources, we only <br>allow <b>$ALIGN_SEQ_LIMIT or fewer</b> sequences to be aligned through our web interface.</span>";
+"<center><span style='font-size:1.2em;'>You submitted <b>$SEQ_COUNT</b> sequences. Due to limited computational resources, we only <br>allow <b>$ALIGN_SEQ_COUNT_LIMIT or fewer</b> sequences to be aligned through our web interface.</span>";
         $message .=
 "<br /><br /><span style='font-size:1.1em'>You can download and run your own copy of the <br />alignment software at <a href='http://www.drive5.com/muscle/'>www.drive5.com/muscle/</a></span></center>";
         input_err_page( $page, $message );
     }
+    elsif( $TOTAL_LENGTH > $ALIGN_SEQ_TOTAL_LENGTH_LIMIT ) {
+        input_err_page( $page, <<"" );
+<center><span style='font-size:1.2em;'>You submitted <b>$TOTAL_LENGTH</b> bases of sequence. Due to limited computational resources, we only <br>allow <b>$ALIGN_SEQ_TOTAL_LENGTH_LIMIT or fewer</b> sequences to be aligned through our web interface.</span>
+<br /><br /><span style='font-size:1.1em'>You can download and run your own copy of the <br />alignment software at <a href='http://www.drive5.com/muscle/'>www.drive5.com/muscle/</a></span></center>
+
+    }
+
     run_muscle( $page, $run );
 }
 
@@ -1098,29 +1107,35 @@ sub input_err_page {
 sub fasta_check {
     my ( $file, $page, $n ) = @_;
     my ($filename) = $file =~ /([^\/]+)$/;
-    my $count      = 0;
-    my $maxlen     = 0;
+    my $count        = 0;
+    my $maxlen       = 0;
+    my $total_length = 0;
     my $instream = Bio::SeqIO->new( -file => $file, -format => 'fasta' );
     my $entry = $instream->next_seq();
     unless ( $entry && $entry->id && $entry->seq ) {
         input_err_page( $page, "FASTA needs IDs and Sequences [$filename]" );
     }
     $count++;
-    $maxlen = length( $entry->seq );
+    $maxlen = $entry->length;
+    $total_length += $entry->length;
+
     $entry  = $instream->next_seq;
     unless ( $entry && $entry->id && $entry->seq ) {
         input_err_page( $page, "FASTA must have at least two valid sequences" );
     }
     $count++;
-    $maxlen = length( $entry->seq ) if length( $entry->seq ) > $maxlen;
+    $maxlen = $entry->length if $entry->length > $maxlen;
+    $total_length += $entry->length;
+
     while ( $entry = $instream->next_seq() ) {
         unless ( $entry->id && $entry->seq ) {
             input_err_page( $page, "Every entry must have ID AND sequence" );
         }
-        $maxlen = length( $entry->seq ) if length( $entry->seq ) > $maxlen;
+        $maxlen = $entry->length if $entry->length > $maxlen;
+        $total_length += $entry->length;
         $count++;
     }
-    return ( $count, $maxlen );
+    return ( $count, $maxlen, $total_length );
 }
 
 sub run_muscle {

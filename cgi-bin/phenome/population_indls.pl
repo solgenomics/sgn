@@ -434,11 +434,12 @@ qq { Download population: <span><a href="pop_download.pl?population_id=$populati
 	$plot_html .= qq | </td></tr></table> |;
 	
 	my ( $qtl_image, $legend);
-        #using standard deviation of 0.05 as an arbitrary cut off to run
+        
+        #using standard deviation of 0.01 as an arbitrary cut off to run
 	#qtl analysis. Probably, need to think of better solution.
-	if ($std >= 0.05) {
-         $qtl_image           = $self->qtl_plot();
-	 $legend = $self->legend($population);
+	if ( $std >= 0.01 ) {
+	    $qtl_image           = $self->qtl_plot();
+	    $legend = $self->legend();
 	} 
 	else { 
 	    $qtl_image = 'There is no statistically significant phenotypic 
@@ -1576,7 +1577,7 @@ qq |<a href="/solpeople/personal-info.pl?sp_person_id=$sp_person_id">$submitter_
 #move to qtl or population object
 sub legend {
     my $self = shift;
-    my $pop = shift;
+    my $pop = $self->get_object();
     my $sp_person_id   = $pop->get_sp_person_id();
     my $qtl            = CXGN::Phenome::Qtl->new($sp_person_id);
     my $stat_file = $qtl->get_stat_file($c, $pop->get_population_id());
