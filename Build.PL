@@ -39,6 +39,7 @@ my $build = Module::Build::SGNSite->new(
         'Cache::File'                              => 0,
         'Catalyst::Runtime'                        => '5.80024',
         'Catalyst::Controller::CGIBin'             => '0.029',
+        'Catalyst::Controller::REST'               => 0,
         'Catalyst::Action::RenderView'             => 0,
         'Catalyst::Plugin::ConfigLoader'           => 0,
         'Catalyst::Plugin::Static::Simple'         => 0,
