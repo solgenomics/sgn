@@ -1,10 +1,9 @@
-
 use strict;
 use warnings;
 
 use lib 't/lib';
 use JSON::Any;
-use Test::More tests=>15;
+use Test::More;
 use SGN::Test::WWW::Mechanize;
 use Data::Dumper;
 
@@ -17,7 +16,6 @@ my $root_term = 'SP:0001000';
 
 $m->get_ok("/ajax/onto/parents/?node=$term");
 my $contents = $m->content();
-
 my $parsed_content = $j->decode($contents);
 
 my @accession_list  = map ( ${$_}{accession} , @$parsed_content);
@@ -52,7 +50,8 @@ $parsed_content = $j->jsonToObj($contents);
 @accession_list  = map ( ${$_}{accession} , @$parsed_content);
 
 ok(  grep(/^$bp_root/, @accession_list) ,  'root accession test');
-is( scalar(@accession_list) , 11 , 'number of roots test');
+cmp_ok( scalar(@accession_list), '>=', 2, 'got at least 2 root terms')
+    or diag explain $parsed_content;
 
 ##
 
@@ -82,4 +81,5 @@ $parsed_content = $j->jsonToObj($contents);
 ok(  grep(/^$term/, @accession_list) ,  'matched accession test');
 is( scalar(@accession_list) , 2 , 'number of matches test');
 
-##
+done_testing;
+
