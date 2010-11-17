@@ -33,8 +33,11 @@ $marker
 <%perl>
   my $polymorphisms_html='';
 my $dbh = $marker->{dbh};
-my @displayed_pcr=();
-my $experiments=$marker->experiments();    
+
+my $displayed_experiments = $marker->current_mapping_experiments;
+my @displayed_pcr  = map ( $_->{pcr_experiment}->pcr_experiment_id , @$displayed_experiments);
+
+my $experiments=$marker->experiments();
 if($experiments and @{$experiments}) {
   for my $experiment(@{$experiments}) {
     my $pcr=$experiment->{pcr_experiment};
