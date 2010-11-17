@@ -38,7 +38,7 @@ my $displayed_experiments = $marker->current_mapping_experiments;
 my @displayed_pcr = map ( $_->{pcr_experiment} , @$displayed_experiments);
 my @displayed_ids;
 foreach my $ex (@displayed_pcr) {
-  push  @displayed_pcr, $ex->pcr_experiment_id  if $ex;
+  push  @displayed_ids, $ex->pcr_experiment_id if $ex;
 }
 
 my $experiments=$marker->experiments();
