@@ -1,17 +1,20 @@
-
 =head1 NAME
 
-SGN::Controller::AJAX::Onto - a REST controller class to provide the backend for the SGN ontology browser
+SGN::Controller::AJAX::Onto - a REST controller class to provide the
+backend for the SGN ontology browser
 
 =head1 DESCRIPTION
 
-Essentially provides four services: roots, children, parents, and cache, that the SGN ontology browser relies on. Output is JSON, as a list of hashes, that has the following keys: accession, has_children, cvterm_name, cvterm_id, and for some functions, parent.
+Essentially provides four services: roots, children, parents, and
+cache, that the SGN ontology browser relies on. Output is JSON, as a
+list of hashes, that has the following keys: accession, has_children,
+cvterm_name, cvterm_id, and for some functions, parent.
 
 =head1 AUTHOR
 
 Lukas Mueller <lam87@cornell.edu>
 
-=head1 FUNCTIONS: 
+=head1 PUBLIC ACTIONS
 
 =cut
 
@@ -25,91 +28,27 @@ use namespace::autoclean;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
-
-__PACKAGE__->config( 
+__PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
     map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
-    );
+   );
 
 
 =head2 children
 
- Usage:
- Desc:         provides a list of children as hashes in json
- Ret:          a list of hashes, in json, with the following keys:
-               accession, cvterm_name, cvterm_id, has_children, relationship
- Args:
- Side Effects:
- Example:
+Public Path: /<ns>/children
+
+L<Catalyst::Action::REST> action.
+
+Provides a list of child terms, each child term being a hashref (or
+equivalent) with keys accession, cvterm_name, cvterm_id, has_children,
+and relationship.
 
 =cut
 
 sub children : Local : ActionClass('REST') { }
 
-=head2 parents
-
- Usage:
- Desc:         returns a list of hashes with parents information in json
- Ret:          a list of hashes, with the keys:
-               accession, relationship, has_children, cvterm_id and cvterm_name.
- Args:
- Side Effects:
- Example:
-
-=cut
-
-sub parents  : Local : ActionClass('REST') { }
-
-
-=head2 roots
-
- Usage: 
- Desc:         provides the default roots for drawing the ontology browser
- Ret:          
- Args:         optional: a string with namespace definitions, separated by white
-               space (for example, "PO SP SO"). This overrides the standard 
-               namespaces provided when called without arguments.
- Side Effects:
- Example:
-
-=cut
-
-sub roots    : Local : ActionClass('REST') { }
-
-
-=head2 match
-
- Usage:
- Desc:
- Ret:
- Args:
- Side Effects:
- Example:
-
-=cut
-
-sub match    : Local : ActionClass('REST') { }
-
-=head2 cache
-
- Usage:        Dispatched by catalyst
- Desc:         provides a list of parents and their direct children in a 
-               denormalized list. The parameter node is used to determine all 
-               the children that need to be cached for the parentage view to 
-               render fast (without having to call the children ajax function). 
- Ret:          JSON data structure
- Args:
- Side Effects:
- Example:
-
-=cut
-
-sub cache    : Local : ActionClass('REST') { }
-
-
-
- 
 sub children_GET {
     my ( $self, $c ) = @_;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
@@ -118,27 +57,42 @@ sub children_GET {
 
     my $db = $schema->resultset('General::Db')->search({ name => $db_name })->first();
     my $dbxref = $db->find_related('dbxrefs', { accession => $accession });
-    
+
     my $cvterm = $dbxref->cvterm;
 
     my $cvrel_rs = $cvterm->children(); # returns a result set
 
     my @response_list = ();
-    while (my $cvrel_row = $cvrel_rs->next()) { 
-	my $relationship_node = $cvrel_row->type();
-	my $child_node = $cvrel_row->subject();
+    while (my $cvrel_row = $cvrel_rs->next()) {
+        my $relationship_node = $cvrel_row->type();
+        my $child_node = $cvrel_row->subject();
 
-	#only report back children of the same cv namespace
-	if ($child_node->cv_id() != $cvterm->cv_id()) {  
-	    next();
-	}
+        #only report back children of the same cv namespace
+        if ($child_node->cv_id() != $cvterm->cv_id()) {
+            next();
+        }
 
-	my $responsehash = $self->flatten_node($child_node, $relationship_node);
-	push @response_list, $responsehash;
+        my $responsehash = $self->flatten_node($child_node, $relationship_node);
+        push @response_list, $responsehash;
     }
 
     $c->{stash}->{rest} = \@response_list;
 }
+
+
+=head2 parents
+
+Public Path: /<ns>/parents
+
+L<Catalyst::Action::REST> action.
+
+Returns a list of hashes with parents information in json, a list of
+hashrefs with the keys: accession, relationship, has_children, cvterm_id
+and cvterm_name.
+
+=cut
+
+sub parents  : Local : ActionClass('REST') { }
 
 sub parents_GET  {
     my ($self, $c) = @_;
@@ -156,9 +110,9 @@ sub parents_GET  {
     my @response_list = ();
     if ($cvterm) {
         my $parents_rs = $cvterm->recursive_parents(); # returns a result set
-        while (my $parent = $parents_rs->next()) { 
+        while (my $parent = $parents_rs->next()) {
             #only report back children of the same cv namespace
-            if ($parent->cv_id() != $cvterm->cv_id()) {  
+            if ($parent->cv_id() != $cvterm->cv_id()) {
                 next();
             }
 
@@ -169,75 +123,26 @@ sub parents_GET  {
     $c->{stash}->{rest} = \@response_list;
 }
 
-sub cache_GET { 
-    my $self =shift;
-    my $c = shift;
 
-    $self->{duplicates} = {};
-    $self->{cache_list} = [];
-    ###my $cvterm = CXGN::Chado::Cvterm->new_with_accession( $c->dbc()->dbh(), $c->request->param('node') );
-    
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    
-    my ($db_name, $accession) = split ":", $c->request->param('node');
-    
-    #print STDERR "TERM: $db_name:$accession\n";
+=head2 roots
 
-    my $db = $schema->resultset('General::Db')->search({ name => $db_name })->first();
-    my $dbxref = $db->find_related('dbxrefs', { accession => $accession });
-    
-    my $cvterm = $dbxref->cvterm;
+Public Path: /<ns>/roots
 
-    my $parents_rs = $cvterm->recursive_parents(); # returns a result set
+L<Catalyst::Action::REST> action.
 
-    while (my $p = $parents_rs->next()) { 
-	my $children_rs = $p->children();
-	while (my $rel_rs = $children_rs->next()) { # returns a list of cvterm rows
-	    my $child = $rel_rs->subject();
-	    $self->add_cache_list($p, $child, $rel_rs->type());
-	}
-	    
-   }
-    $c->{stash}->{rest} = $self->{cache_list};    
-}
+Provides the default roots for drawing the ontology browser
 
+Query/Body Params:
 
-=head2 add_cache_list
-
- Usage:
- Desc:         adds an entry to the cache list
- Ret:
- Args:         3 cvterm row objects: Parent, child, relationship
- Side Effects:
- Example:
+  nodes: optional, a string with namespace definitions, separated by white
+         space (for example, "PO SP SO"). If not provided, will This overrides the standard
+         namespaces provided when called without arguments.
 
 =cut
 
-sub add_cache_list :Private { 
-    my $self = shift;
-    my $parent = shift; # object
-    my $child  = shift; # object
-    my $relationship = shift; #object
+sub roots    : Local : ActionClass('REST') { }
 
-     my $unique_hashkey = $parent->cvterm_id()." ".$child->cvterm_id();
-     if (exists($self->{duplicates}->{$unique_hashkey})) { 
- 	return;
-     }
-    
-     $self->{duplicates}->{$unique_hashkey}++;
-
-    my $hashref = $self->flatten_node($child, $relationship);
-    ###$hashref->{parent} = $parent->get_full_accession();
-
-    my $dbxref = $parent->dbxref();
-    my $parent_accession = $dbxref->db()->name().":".$dbxref->accession();
-    $hashref->{parent} = $parent_accession;
-    ##print STDERR "Adding to cache list: parent=$parent. child=$child\n";
-    push @{$self->{cache_list}}, $hashref;
-    
-}
-
-sub roots_GET { 
+sub roots_GET {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
@@ -247,16 +152,16 @@ sub roots_GET {
     my @response_nodes = ();
     #my $empty_cvterm   = CXGN::Chado::Cvterm->new($c->dbc()->dbh());
     if (!$namespace) { # should namespaces be db names ? (SO, GO,PO, SP, PATO)
-	@namespaces = (
-	    'GO',
+        @namespaces = (
+            'GO',
             'PO',
             'SP',
             'SO',
             'PATO',
-	    );
+            );
     }
     else {
-	@namespaces = split /\%09/, $namespace; #split on tab?
+        @namespaces = split /\%09/, $namespace; #split on tab?
     }
     my @roots = ();
     foreach my $ns (@namespaces) {
@@ -274,11 +179,27 @@ sub roots_GET {
     my @response_list = ();
 
     foreach my $r (@roots) {
-	my $hashref = $self->flatten_node($r, undef);
-	push @response_list, $hashref;
+        my $hashref = $self->flatten_node($r, undef);
+        push @response_list, $hashref;
     }
     $c->{stash}->{rest}= \@response_list;
 }
+
+
+=head2 match
+
+Public Path: /<ns>/match
+
+L<Catalyst::Action::REST> action.
+
+Query/Body Params:
+
+  db_name
+  term_name
+
+=cut
+
+sub match    : Local : ActionClass('REST') { }
 
 sub match_GET {
     my $self = shift;
@@ -303,59 +224,109 @@ GROUP BY cvterm.cvterm_id,cv.name, cvterm.name, dbxref.accession, db.name ";
     $c->{stash}->{rest} = \@response_list;
 }
 
+=head2 cache
+
+Public Path: /<ns>/cache
+
+L<Catalyst::Action::REST> action.
+
+Provides a list of parents and their direct children in a denormalized
+list. The parameter node is used to determine all the children that
+need to be cached for the parentage view to render fast (without
+having to call the children ajax function).
+
+=cut
+
+sub cache    : Local : ActionClass('REST') { }
+
+sub cache_GET {
+    my $self =shift;
+    my $c = shift;
+
+    $self->{duplicates} = {};
+    $self->{cache_list} = [];
+    ###my $cvterm = CXGN::Chado::Cvterm->new_with_accession( $c->dbc()->dbh(), $c->request->param('node') );
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    my ($db_name, $accession) = split ":", $c->request->param('node');
+
+    #print STDERR "TERM: $db_name:$accession\n";
+
+    my $db = $schema->resultset('General::Db')->search({ name => $db_name })->first();
+    my $dbxref = $db->find_related('dbxrefs', { accession => $accession });
+
+    my $cvterm = $dbxref->cvterm;
+
+    my $parents_rs = $cvterm->recursive_parents(); # returns a result set
+
+    while (my $p = $parents_rs->next()) {
+        my $children_rs = $p->children();
+        while (my $rel_rs = $children_rs->next()) { # returns a list of cvterm rows
+            my $child = $rel_rs->subject();
+            $self->add_cache_list($p, $child, $rel_rs->type());
+        }
+
+   }
+    $c->{stash}->{rest} = $self->{cache_list};
+}
 
 
-# =head2 nodes2list
-#  DEPRECATED. REPLACED by FLATTEN_NODE()
-#  Usage:
-#  Desc:         serializes CXGN::Chado::Cvterm objects to a list form convenient
-#                for processing to json.
-#  Ret:
-#  Args:
-#  Side Effects:
-#  Example:
+=head1 PRIVATE ACTIONS
 
-# =cut
+=head2 add_cache_list
 
-# sub nodes2list :Private {
-#     my $self = shift;
-#     my $node = shift;
-#     my $relationship_node = shift;
+Private action.
 
-#     #print STDERR "Dealing with ".$n->[0]->get_accession()."\n";
-#     my $has_children = 0;
-#     if ( $node->count_children() > 0 ) { $has_children = 1; }
-#     my $hashref = 
-#     { accession    => $node->get_full_accession(), 
-#       cvterm_name  => $node->get_cvterm_name(),
-#       cvterm_id    => $node->get_cvterm_id(),
-#       has_children => $has_children,
-#       relationship => $relationship_node->get_cvterm_name()
-#     };
-    
-#     return $hashref;
-# }
+Adds an entry to the cache list.
 
+Argsuments: 3 cvterm row objects: Parent, child, relationship
+
+=cut
+
+sub add_cache_list :Private {
+    my $self = shift;
+    my $parent = shift; # object
+    my $child  = shift; # object
+    my $relationship = shift; #object
+
+     my $unique_hashkey = $parent->cvterm_id()." ".$child->cvterm_id();
+     if (exists($self->{duplicates}->{$unique_hashkey})) {
+        return;
+     }
+
+     $self->{duplicates}->{$unique_hashkey}++;
+
+    my $hashref = $self->flatten_node($child, $relationship);
+    ###$hashref->{parent} = $parent->get_full_accession();
+
+    my $dbxref = $parent->dbxref();
+    my $parent_accession = $dbxref->db()->name().":".$dbxref->accession();
+    $hashref->{parent} = $parent_accession;
+    ##print STDERR "Adding to cache list: parent=$parent. child=$child\n";
+    push @{$self->{cache_list}}, $hashref;
+
+}
 
 ### used for cvterm resultset
-sub flatten_node { 
+sub flatten_node {
     my $self = shift;
     my $node_row = shift;
     my $rel_row = shift;
-    
+
     my $has_children = 0;
-    if ($node_row->children()->first()) { 
-	$has_children = 1;
+    if ($node_row->children()->first()) {
+        $has_children = 1;
     }
-    
+
     my $rel_name = "";
-    if ($rel_row) { 
-	$rel_name = $rel_row->name();
+    if ($rel_row) {
+        $rel_name = $rel_row->name();
     }
 
     my $dbxref = $node_row->dbxref();
 
-    my $hashref = 
+    my $hashref =
     { accession    => $dbxref->db->name().":".$dbxref->accession,
       cvterm_name  => $node_row->name(),
       cvterm_id    => $node_row->cvterm_id(),
@@ -363,9 +334,5 @@ sub flatten_node {
       relationship => $rel_name,
     };
 }
-
-
-#sub end :ActionClass('Serialize') {}
-
 
 1;
