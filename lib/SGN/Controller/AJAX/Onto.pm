@@ -186,7 +186,7 @@ sub cache_GET {
     my $db = $schema->resultset('General::Db')->search({ name => $db_name })->first();
     my $dbxref = $db->find_related('dbxrefs', { accession => $accession });
     
-    my $cvterm = $dbxref->find_related('cvterm');
+    my $cvterm = $dbxref->cvterm;
 
     my $parents_rs = $cvterm->recursive_parents(); # returns a result set
 
