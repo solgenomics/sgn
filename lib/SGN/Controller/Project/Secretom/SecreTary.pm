@@ -147,7 +147,7 @@ sub _run_secretary {
         $count_pass++ if ( $prediction eq "YES" );
 
       my $solution = $soln1;
-        if($soln1 =~ /^(.*)?,/ and $1 < $min_tmpred_score1){ $solution = $soln2; }
+        if($soln1 =~ /^(\S+),(\S+),/ and $1 < $min_tmpred_score1){ $solution = $soln2; }
         my ($score, $start, $end) = ('        ','      ','      ');
         if($solution =~ /^(.*),(.*),(.*)/){
     	($score, $start, $end) = ($1, $2, $3);
