@@ -36,9 +36,9 @@ CREATE TABLE sgn_people.sp_roles (
 
 CREATE TABLE sgn_people.sp_person_roles (
     sp_person_role_id serial primary key,
-    sp_person_id bigint references sgn_people.sp_person,
-    sp_role_id bigint references sgn_people.sp_roles
-    );
+    sp_person_id bigint references sgn_people.sp_person on delete cascade,
+    sp_role_id bigint references sgn_people.sp_roles on delete cascade
+  );
 
     INSERT INTO sgn_people.sp_roles(name) VALUES ('curator');
     INSERT INTO sgn_people.sp_roles(name) VALUES ('sequencer');
