@@ -126,7 +126,7 @@ sub gbrowse_link {
     if (defined $fmin && defined $fmax) {
         return sprintf('<a href="%s">%s</a>', $url, join(",", $fmin, $fmax)),
     } else {
-        return $url;
+        return $url || '<span class="ghosted">Not Available</span>';
     }
 }
 
