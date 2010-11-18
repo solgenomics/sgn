@@ -226,4 +226,22 @@ my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
 
 }
 
+{
+    my %options = (
+        description => "A bunch of nonsense",
+        name        => "Stocky Stockstein",
+    );
+    my $stock = create_test('Stock::Stock',{
+        %options,
+    });
+    isa_ok($stock, 'Bio::Chado::Schema::Stock::Stock');
+    my $rs = $schema->resultset('Stock::Stock')
+        ->search({
+            %options,
+    });
+    is($rs->count, 1, 'found exactly one stock that was created');
+
+
+}
+
 done_testing;
