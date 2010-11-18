@@ -57,7 +57,7 @@ sub new {
 
 sub set_min_tmpred_score1 {
     my $self = shift;
-    $self->{min_tmpred_score1} = shift;
+    return $self->{min_tmpred_score1} = shift;
 }
 
 sub get_min_tmpred_score1 {
@@ -67,7 +67,7 @@ sub get_min_tmpred_score1 {
 
 sub set_min_tmh_length1 {
     my $self = shift;
-    $self->{min_tmh_length1} = shift;
+    return $self->{min_tmh_length1} = shift;
 }
 
 sub get_min_tmh_length1 {
@@ -77,7 +77,7 @@ sub get_min_tmh_length1 {
 
 sub set_max_tmh_length1 {
     my $self = shift;
-    $self->{max_tmh_length1} = shift;
+    return $self->{max_tmh_length1} = shift;
 }
 
 sub get_max_tmh_length1 {
@@ -87,7 +87,7 @@ sub get_max_tmh_length1 {
 
 sub set_max_tmh_beg1 {
     my $self = shift;
-    $self->{max_tmh_beg1} = shift;
+    return $self->{max_tmh_beg1} = shift;
 }
 
 sub get_max_tmh_beg1 {
@@ -97,7 +97,7 @@ sub get_max_tmh_beg1 {
 
 sub set_min_tmpred_score2 {
     my $self = shift;
-    $self->{min_tmpred_score2} = shift;
+    return $self->{min_tmpred_score2} = shift;
 }
 
 sub get_min_tmpred_score2 {
@@ -107,7 +107,7 @@ sub get_min_tmpred_score2 {
 
 sub set_min_tmh_length2 {
     my $self = shift;
-    $self->{min_tmh_length2} = shift;
+    return $self->{min_tmh_length2} = shift;
 }
 
 sub get_min_tmh_length2 {
@@ -117,7 +117,7 @@ sub get_min_tmh_length2 {
 
 sub set_max_tmh_length2 {
     my $self = shift;
-    $self->{max_tmh_length2} = shift;
+    return $self->{max_tmh_length2} = shift;
 }
 
 sub get_max_tmh_length2 {
@@ -127,7 +127,7 @@ sub get_max_tmh_length2 {
 
 sub set_max_tmh_beg2 {
     my $self = shift;
-    $self->{max_tmh_beg2} = shift;
+    return $self->{max_tmh_beg2} = shift;
 }
 
 sub get_max_tmh_beg2 {
@@ -137,7 +137,7 @@ sub get_max_tmh_beg2 {
 
 sub set_min_AI22 {
     my $self = shift;
-    $self->{min_AI22} = shift;
+    return $self->{min_AI22} = shift;
 }
 
 sub get_min_AI22 {
@@ -147,7 +147,7 @@ sub get_min_AI22 {
 
 sub set_min_Gravy22 {
     my $self = shift;
-    $self->{min_Gravy22} = shift;
+    return $self->{min_Gravy22} = shift;
 }
 
 sub get_min_Gravy22 {
@@ -157,7 +157,7 @@ sub get_min_Gravy22 {
 
 sub set_max_nDRQPEN22 {
     my $self = shift;
-    $self->{max_nDRQPEN22} = shift;
+    return $self->{max_nDRQPEN22} = shift;
 }
 
 sub get_max_nDRQPEN22 {
@@ -167,7 +167,7 @@ sub get_max_nDRQPEN22 {
 
 sub set_max_nNitrogen22 {
     my $self = shift;
-    $self->{max_nNitrogen22} = shift;
+    return $self->{max_nNitrogen22} = shift;
 }
 
 sub get_max_nNitrogen22 {
@@ -177,7 +177,7 @@ sub get_max_nNitrogen22 {
 
 sub set_max_nOxygen22 {
     my $self = shift;
-    $self->{max_nOxygen22} = shift;
+    return $self->{max_nOxygen22} = shift;
 }
 
 sub get_max_nOxygen22 {
@@ -187,7 +187,7 @@ sub get_max_nOxygen22 {
 
 sub set_best_solution1 {
     my $self = shift;
-    $self->{best_solution1} = shift;
+    return $self->{best_solution1} = shift;
 }
 
 sub get_best_solution1 {
@@ -197,7 +197,7 @@ sub get_best_solution1 {
 
 sub set_best_solution2 {
     my $self = shift;
-    $self->{best_solution2} = shift;
+    return $self->{best_solution2} = shift;
 }
 
 sub get_best_solution2 {
@@ -207,7 +207,7 @@ sub get_best_solution2 {
 
 sub set_best_score{
     my $self = shift;
-    $self->{best_score1} = shift;
+    return $self->{best_score1} = shift;
 }
 
 sub get_best_score{
@@ -220,14 +220,15 @@ sub refine_TMpred_solutions
         # and beginning early enough
     my $self            = shift;
     my $STA             = shift;
-    my @TMpred_outs     = split( " ", $STA->get_TMpred()->get_solutions() );
+    my @TMpred_outs     = split( " ", $STA->get_tmpred_good_solutions() ); 
     my $grp1_best_score = -1;
     my $grp1_best       = "(-1,0,0)";
     my $grp2_best_score = -1;
     my $grp2_best       = "(-1,0,0)";
     foreach (@TMpred_outs) {
-
+#	print $_, "\n";
         /\(([^,]+),([^,]+),([^,]+)\)/;
+#	print "$1  $2  $3 \n";
         my ( $score, $beg, $end ) = ( $1, $2, $3 );
         my $tmh_length = $end + 1 - $beg;
         if (    $self->get_min_tmh_length1() <= $tmh_length
@@ -304,7 +305,7 @@ sub Categorize{
 	$prediction =~ s/^group1/YES/;
 	$prediction =~ s/^group2/YES/;
 my $score = 
-	push @STA_prediction, [$STA, $prediction, $self->get_best_score()]; # array of array refs
+	push @STA_prediction, [$STA, $prediction, $self->get_best_score()];
     }
     return \@STA_prediction;
 }
