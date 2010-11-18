@@ -23,6 +23,7 @@ my $build = SGN::Build->new(
 
         'File::Temp'           => 0,
         'HTML::Lint'           => 0,
+        'Parse::Deb::Control'  => 0,
         'Test::JSON'              => 0,
         'List::Util'           => 0,
         'Test::More'           => 0,

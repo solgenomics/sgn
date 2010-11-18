@@ -2,6 +2,9 @@ package SGN::Build;
 use strict;
 use warnings;
 
+use version 0.77;
+
+use Parse::Deb::Control;
 use Module::Build;
 use base 'Module::Build';
 
@@ -114,16 +117,67 @@ EOR
 }
 
 sub _run_R_check {
+    my $self = shift;
+
     print "\nChecking R prerequisites...\n";
 
-    system "R CMD check --no-manual --no-codoc --no-manual --no-vignettes -o _build R_files";
-    if ( $? ) {
+    # check the R version ourself, since R CMD check apparently does
+    # not do it.
+    $self->_check_R_version
+        or return 0;
+
+    my $no_manual = $self->_R_version_current >= version->parse('2.10.0') ? '--no-manual' : '';
+
+    my $ret = system "R CMD check $no_manual --no-codoc --no-vignettes -o _build R_files";
+    if ( $ret || $? ) {
         warn "\nR PREREQUISITE CHECK FAILED.\n\n";
         return 0;
     } else {
         print "R prerequisites OK.\n\n";
         return 1;
     }
+}
+
+sub _check_R_version {
+    my $self = shift;
+
+    my ( $cmp, $v ) = $self->_R_version_required;
+
+    if( eval '$self->_R_version_current'." $cmp version->parse('$v')" ) {
+        return 1;
+    } else {
+        warn "R VERSION CHECK FAILED, we have ".$self->_R_version_current.", but we require $cmp $v.\n\n";
+        return 0;
+    }
+}
+
+# parse and return the R DESCRIPTION file
+sub _R_desc {
+    return Parse::Deb::Control->new([qw[ R_files DESCRIPTION ]]);
+}
+
+# parse and return the version of R we require as string list like
+# ('>=','2.10.0')
+sub _R_version_required {
+    my $self = shift;
+    my @k = $self->_R_desc->get_keys('Depends')
+        or return ( '>=', 0 );
+    my ($version) = ${$k[0]->{value}} =~ / \b R \s* \( ([^\)]+) /x
+        or return ( '>=', 0 );
+
+    my @v = split /\s+/, $version;
+    unshift @v, '==' unless @v > 1;
+
+    return @v;
+}
+
+# parse and return the current R version as a version object
+sub _R_version_current {
+    my $r = `R --version`;
+    $r =~ /R version ([\d\.]+)/
+        or return 0;
+
+    return version->parse($1);
 }
 
 
