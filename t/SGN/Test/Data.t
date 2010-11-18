@@ -240,8 +240,23 @@ my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
             %options,
     });
     is($rs->count, 1, 'found exactly one stock that was created');
+}
 
-
+{
+    my $cv = create_test('Cv::Cv');
+    my %options = (
+        pathdistance => 42,
+        cv_id        => $cv->cv_id
+    );
+    my $cvtermpath = create_test('Cv::Cvtermpath',{
+        %options,
+    });
+    isa_ok($cvtermpath, 'Bio::Chado::Schema::Cv::Cvtermpath');
+    my $rs = $schema->resultset('Cv::Cvtermpath')
+        ->search({
+            %options,
+    });
+    is($rs->count, 1, 'found exactly one cvtermpath that was created');
 }
 
 done_testing;
