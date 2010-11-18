@@ -18,39 +18,26 @@ use warnings;
 
 package SGN::Authentication::Store;
 
-use SGN::Authentication::Store;
 use SGN::Authentication::User;
-use CXGN::DB::Connection;
 use CXGN::People::Person;
 
-
 sub new {
-    my $class = shift;
-    my $c = shift;
-    my $app = shift;
-    my $realm = shift;
+    my ( $class, $conf, $c, $realm ) = @_;
 
     my $self = bless {}, $class;
 
-    $self->{c} = $c;
-    $self->{app} = $app;
-    $self->{realm} = $realm;
-    $self->{dbh} = CXGN::DB::Connection->new();
     return $self;
-
 }
 
 
 sub find_user {
-    my $self = shift;
-    my $authinfo = shift;
-    my $c = shift;
+    my ( $self, $authinfo, $c ) = @_;
 
     $c->log->debug("find_user: $authinfo->{username}") if $c->debug;
-    my $sp_person_id = CXGN::People::Person->get_person_by_username($self->{dbh}, $authinfo->{username});
+    my $sp_person_id = CXGN::People::Person->get_person_by_username( $c->dbc->dbh, $authinfo->{username});
 
     my $user;
-    my $sp_person = CXGN::People::Person->new($self->{dbh}, $sp_person_id);
+    my $sp_person = CXGN::People::Person->new( $c->dbc->dbh, $sp_person_id);
     if (ref($sp_person) eq 'CXGN::People::Person') {
         $c->log->debug("Obtained sp_person ".$sp_person->get_sp_person_id()) if $c->debug;
         my $user = SGN::Authentication::User->new();
