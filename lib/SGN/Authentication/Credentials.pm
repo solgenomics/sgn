@@ -21,23 +21,23 @@ package SGN::Authentication::Credentials;
 use SGN::Authentication::Store;
 use SGN::Authentication::User;
 
-sub new { 
+sub new {
     my $class = shift;
     my $config = shift;
     my $app = shift;
     my $realm = shift;
-    
+
     my $self = bless {}, $class;
     $self->{config} = $config;
     $self->{app} = $app;
     $self->{realm} = $realm;
 
-    
+
     return $self;
 }
 
 
-sub authenticate { 
+sub authenticate {
     my $self = shift;
     my $c = shift;
     my $realm = shift;

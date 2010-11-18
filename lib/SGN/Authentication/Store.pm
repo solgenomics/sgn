@@ -24,7 +24,7 @@ use CXGN::DB::Connection;
 use CXGN::People::Person;
 
 
-sub new { 
+sub new {
     my $class = shift;
     my $c = shift;
     my $app = shift;
@@ -41,7 +41,7 @@ sub new {
 }
 
 
-sub find_user { 
+sub find_user {
     my $self = shift;
     my $authinfo = shift;
     my $c = shift;
@@ -51,16 +51,16 @@ sub find_user {
 
     my $user;
     my $sp_person = CXGN::People::Person->new($self->{dbh}, $sp_person_id);
-    if (ref($sp_person) eq 'CXGN::People::Person') { 
-	$c->log->debug("Obtained sp_person ".$sp_person->get_sp_person_id()) if $c->debug;
-	my $user = SGN::Authentication::User->new();
+    if (ref($sp_person) eq 'CXGN::People::Person') {
+        $c->log->debug("Obtained sp_person ".$sp_person->get_sp_person_id()) if $c->debug;
+        my $user = SGN::Authentication::User->new();
 
-	$c->log->debug("USER ".$sp_person->get_username()." FOUND!") if $c->debug;
-	$user->set_object($sp_person);
-	return $user;
+        $c->log->debug("USER ".$sp_person->get_username()." FOUND!") if $c->debug;
+        $user->set_object($sp_person);
+        return $user;
     }
-    else { 
-	$c->log->debug("USER $authinfo->{username} NOT FOUND!") if $c->debug;
+    else {
+        $c->log->debug("USER $authinfo->{username} NOT FOUND!") if $c->debug;
     }
 
     return undef;
