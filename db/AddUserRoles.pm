@@ -9,23 +9,23 @@ sub init_patch {
     my $name = __PACKAGE__;
     print "dbpatch name is ':" .  $name . "\n\n";
     my $description = 'Testing a Moose dbpatch';
-    my @previous_requested_patches = (); #ADD HERE 
-    
+    my @previous_requested_patches = (); #ADD HERE
+
     $self->name($name);
     $self->description($description);
     $self->prereq(\@previous_requested_patches);
-    
+
 }
 
 sub patch {
     my $self=shift;
-    
-   
+
+
     print "Executing the patch:\n " . $self->name . ".\n\nDescription:\n  ".  $self->description . ".\n\nExecuted by:\n " .  $self->username . " .";
-    
+
     print "\nExecuting the SQL commands.\n";
-    
-    $self->dbh->do(<<EOSQL); 
+
+    $self->dbh->do(<<EOSQL);
 --do your SQL here
 --
 
@@ -34,7 +34,7 @@ CREATE TABLE sgn_people.sp_roles (
     name varchar(20)
 );
 
-CREATE TABLE sgn_people.sp_person_roles ( 
+CREATE TABLE sgn_people.sp_person_roles (
     sp_person_role_id serial primary key,
     sp_person_id bigint references sgn_people.sp_person,
     sp_role_id bigint references sgn_people.sp_roles
@@ -51,13 +51,13 @@ CREATE TABLE sgn_people.sp_person_roles (
     GRANT select, update, insert, delete  ON sgn_people.sp_person_roles to postgres, web_usr;
 
     GRANT select, update, usage  ON sgn_people.sp_roles_sp_role_id_seq to postgres, web_usr;
-    
+
     GRANT select, update, usage ON sgn_people.sp_person_roles_sp_person_role_id_seq to postgres, web_usr;
-   
+
 EOSQL
 
 print "You're done!\n";
-    
+
 }
 
 
