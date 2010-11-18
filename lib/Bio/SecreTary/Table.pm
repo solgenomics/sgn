@@ -1,4 +1,6 @@
 package Bio::SecreTary::Table;
+use strict;
+use warnings;
 
 sub new {
     my $class = shift;
@@ -50,6 +52,7 @@ sub scale {
         }
         $irow++;
     }
+    return $m;
 }
 
 sub add_row{
@@ -57,21 +60,22 @@ sub add_row{
     my $new_row = shift; # array ref
     my $rows = $self->get_table(); # ref to array of array refs
     push @$rows, $new_row;
-    $self->set_table($rows);
+    return $self->set_table($rows);
 }
-sub print {
+sub table_as_string {
     my $self = shift;
-    print $self->get_label(), "\n";
-    print $self->get_marked_position, "\n";
+    my $string = $self->get_label() . "\n";
+    $string .= $self->get_marked_position . "\n";
     my $m = $self->get_table();
     foreach (@$m) {
-        print join( ", ", @$_ ), "\n";
+        $string .=  join( ', ', @$_ ) . "\n";
     }
+    return $string;
 }
 
 sub set_table {
     my $self = shift;
-    $self->{table} = shift;
+    return $self->{table} = shift;
 }
 
 sub get_table {
@@ -81,7 +85,7 @@ sub get_table {
 
 sub set_label {
     my $self = shift;
-    $self->{label} = shift;
+    return $self->{label} = shift;
 }
 
 sub get_label {
@@ -91,7 +95,7 @@ sub get_label {
 
 sub set_marked_position {
     my $self = shift;
-    $self->{marked_position} = shift;
+    return $self->{marked_position} = shift;
 }
 
 sub get_marked_position {
@@ -101,7 +105,7 @@ sub get_marked_position {
 
 sub set_column_explanation {
     my $self = shift;
-    $self->{column_explanation} = shift;
+    return $self->{column_explanation} = shift;
 }
 
 sub get_column_explanation {
