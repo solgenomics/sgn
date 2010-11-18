@@ -7,6 +7,8 @@ algorithm.
 
 =head1 DESCRIPTION
 
+
+
 =head1 AUTHOR
 
 Tom York (tly2@cornell.edu)
@@ -34,28 +36,31 @@ Synopsis:
 sub new {
     my $class = shift;
     my $self = bless {}, $class;
-
-    $self->set_sequence_id( shift || ">A_protein_sequence" );
+    my $sequence_id =  shift || ">A_protein_sequence";
     my $sequence     = shift;
-    my $limits       = shift || [ 100, 500, 10, 40, 0, 40 ]; # [ 100, 500, 17, 40, 0, 40 ];
+    my $limits       = shift || [ 100, 500, 17, 33,  0, 35 ];
     my $trunc_length = shift @$limits;
     $sequence = substr($sequence, 0, $trunc_length);
+
+  $self->set_sequence_id($sequence_id);
     $self->set_sequence( $sequence );
     $self->set_limits($limits);    # array ref; specifies which tmhs to keep.
 
     my $tmpred =
-      Bio::SecreTary::TMpred->new( $self->get_limits(), $self->get_sequence(),
-        $self->get_sequence_id() );
-    $tmpred->set_tmpred_out("");
-    $self->set_TMpred($tmpred);
-    $self->Sequence22_AAcomposition();
+      Bio::SecreTary::TMpred->new( $self->get_limits()); #, $self->get_sequence(), $self->get_sequence_id() );
+   my $outstring = $tmpred->run_tmpred($sequence, $sequence_id, 'perl');
+
+  $self->set_tmpred_good_solutions($outstring);
+ 
+   $self->Sequence22_AAcomposition();
 
     # do the cleavage site calculation
-    my	$sp_length = Bio::SecreTary::Cleavage::cleavage($sequence);
+my $cleavage_obj = Bio::SecreTary::Cleavage->new();
+    my	$sp_length = $cleavage_obj->cleavage($sequence);
     # $hstart is the 0-based number of first AA of h region, i.e. the length of
     # the n region. cstart is the 0-based number of first AA of the c region
     # i.e. post-hydrophobic cleavage region
-    my ($typical, $hstart, $cstart) = Bio::SecreTary::Cleavage::subdomain(substr($sequence, 0, $sp_length)); 
+    my ($typical, $hstart, $cstart) = $cleavage_obj->subdomain(substr($sequence, 0, $sp_length)); 
 
     $self->set_cleavage([$sp_length, $hstart, $cstart, $typical]);
     return $self;
@@ -70,14 +75,14 @@ sub new {
         $self->set_nOxygen22( $self->nOxygen(22) );
     }
 
-    sub set_TMpred {    # set the TMpred object
+sub set_tmpred_good_solutions{
         my $self = shift;
-        $self->{TMpred} = shift;
+$self->{tmpred_good_solutions} = shift;
     }
 
-    sub get_TMpred {
+    sub get_tmpred_good_solutions {
         my $self = shift;
-        return $self->{TMpred};
+        return $self->{tmpred_good_solutions};
     }
 
     sub set_limits {
@@ -169,7 +174,7 @@ sub get_cleavage{
         $self->{nOxygen22};
     }
 
-    sub print {
+    sub print22 {
         my $self = shift;
         print $self->get_AI22(),        ", ";
         print $self->get_Gravy22(),     ", ";
