@@ -49,9 +49,8 @@ sub feature_length {
     my $locations = scalar @locations;
     my $length = 0;
     for my $l (@locations) {
-        $length += $l->fmax - $l->fmin;
+        $length += $l->fmax - $l->fmin + 1;
     }
-    my $seq;
     # Reference features don't have featureloc's, calculate the length
     # directly
     if ($length == 0) {
@@ -101,7 +100,7 @@ sub feature_table {
                 cvterm_link($f),
                 feature_link($f),
                 "$fmin..$fmax",
-                commify_number($fmax-$fmin) . " bp",
+                commify_number($fmax-$fmin+1) . " bp",
                 $loc->strand == 1 ? '+' : '-',
                 $loc->phase || '<span class="ghosted">n/a</span>',
             ];
@@ -144,7 +143,7 @@ sub cvterm_link {
 sub infer_residue {
 	my ($feature) = @_;
 	my $featureloc = $feature->featureloc_features->single;
-	my $length     = $featureloc->fmax - $featureloc->fmin;
+	my $length     = $featureloc->fmax - $featureloc->fmin + 1;
 	my $srcresidue = $featureloc->srcfeature->residues;
 	# substr is 0-based, featureloc's are 1-based
 	my $residue    = substr($srcresidue, $featureloc->fmin - 1, $length );
