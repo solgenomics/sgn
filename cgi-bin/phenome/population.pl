@@ -677,28 +677,41 @@ sub display_correlation {
     my $self = shift;
     my $pop  = $self->get_object();
     my $pop_id = $self->get_object_id();
+    my $corre_data;
 
-    my ($heatmap_file, $corre_table_file) = $self->analyze_correlation();
-
-    my $heatmap_image = qq |<img alt="correlation heatmap image" src="$heatmap_file"/> |;
-
-    my @traits = $pop->get_cvterms();
-    my @tr_acronym_table;
-    my $name;
-    foreach my $tr (@traits)
-    {
-        if ( $pop->get_web_uploaded )
-        {
-            $name = $tr->get_name();
-        } else
-        {
-            $name = $tr->get_cvterm_name();
-        }
-        my $tr_acronym= $pop->cvterm_acronym($name);
-        push @tr_acronym_table, [ map { $_ } ( $tr_acronym, $name) ];
+    #there seems to be a problem with the phenotype data of one population (pop id = 18), 
+    #causing problem to the R correlation analysis and thus crashing the pop page.
+    #unitl I identify the problem, displaying the message below  in case the site is updated
+    #before I identify the problem.
+   
+    if ($pop_id == 18) 
+    { 
+	$corre_data = qq | Correlation analysis canno't be run for this population. |;
     }
+    else 
+    {
+	my ($heatmap_file, $corre_table_file) = $self->analyze_correlation();
 
-    my $acronym_key  = columnar_table_html(
+	my $heatmap_image = qq |<img alt="correlation heatmap image" src="$heatmap_file"/> |;
+
+	my @traits = $pop->get_cvterms();
+	my @tr_acronym_table;
+	my $name;
+	foreach my $tr (@traits)
+	{
+	    if ( $pop->get_web_uploaded )
+	    {
+		$name = $tr->get_name();
+	    } 
+	    else
+	    {
+            $name = $tr->get_cvterm_name();
+	    }
+	    my $tr_acronym= $pop->cvterm_acronym($name);
+	    push @tr_acronym_table, [ map { $_ } ( $tr_acronym, $name) ];
+	}
+
+	my $acronym_key  = columnar_table_html(
                                            headings     => [ 'Acronym',  'Trait'],
                                            data         => \@tr_acronym_table,
                                            __alt_freq   => 2,
@@ -707,14 +720,14 @@ sub display_correlation {
                                            __align      => 'l',
                                           );
 
-    my  $acronym_view = html_optional_show("key",
+	my  $acronym_view = html_optional_show("key",
                                            'Show/hide acronym key',
                                            qq | $acronym_key |,
                                            0,
                                           );
 
-    my $corre_data = $heatmap_image .  qq | <span><br/><br/>Download:<a href="correlation_download.pl?population_id=$pop_id&amp;corre_file=$corre_table_file">[Correlation coefficients and p-values table]</a> $acronym_view</span> |;
-
+	$corre_data = $heatmap_image .  qq | <span><br/><br/>Download:<a href="correlation_download.pl?population_id=$pop_id&amp;corre_file=$corre_table_file">[Correlation coefficients and p-values table]</a> $acronym_view</span> |;
+    }
     return $corre_data;
 
 }
