@@ -1,7 +1,7 @@
 <%args>
     $feature
-    $title => 'Feature Data'
-    $species => undef
+    $title   => 'Feature'
+    $species => undef,
 </%args>
 <%once>
     use SGN::View::Feature qw/
@@ -35,6 +35,6 @@
     subtitle    => $feature->is_obsolete ? 'WARNING: This feature is obsolete' : '',
     collapsible => 1,
 &>
-    <% info_table_html( @feature_data, __border => 0 ) %>
+    <% info_table_html( @feature_data, __border => 0, __multicol => 3 ) %>
     <& /feature/dbxref.mas, dbxref => $feature->dbxref &>
 </&>
