@@ -1,47 +1,47 @@
 <%args>
-    $children
-    $parents
     $title => 'Related Features'
     $feature
 </%args>
 <%init>
     use SGN::View::Feature qw/related_stats/;
+
+    # make a hash of relationship_type_html => \@list_of_features
+    my %rels;
+    push @{$rels{$_->[0]}}, $_->[1] for (
+         ( map [ cvterm_link($_).' this feature', $_->subject ], $feature->feature_relationship_objects  ),
+         ( map [ 'this feature '.cvterm_link($_), $_->object  ], $feature->feature_relationship_subjects ),
+        );
+
 </%init>
 
 <&| /page/info_section.mas,
     title => $title,
     collapsible => 1,
 &>
-%   if ($parents && @$parents) {
-      <&| /page/info_section.mas,
-          title => "Parents",
-          collapsible => 1,
-          is_subsection => 1,
-       &>
-          <& /page/columnar_table.mas,
-              headings => [ "Feature Type", "Number"  ],
-              data     => related_stats($parents),
-           &>
-          <& /feature/feature_list.mas,
-              features => $parents,
-           &>
-      </&>
-%   }
-%   if ($children && @$children) {
-      <&| /page/info_section.mas,
-          title => "Children",
-          collapsible => 1,
-          is_subsection => 1,
-       &>
-          <& /page/columnar_table.mas,
-              headings => [ "Child Feature Type", "Number" ],
-              data     => related_stats($children),
-          &>
-          <& /feature/feature_list.mas,
-              features => $children,
-          &>
-      </&>
-%   }
 
-   <& /feature/relations.mas, feature => $feature &>
+%  while( my ( $reltype, $feats ) = each %rels ) {
+     <&| /page/info_section.mas,
+          title => $reltype,
+          is_subsection => 1,
+      &>
+%       if( @$feats > 4 ) {
+         <& /page/columnar_table.mas,
+             headings => [ "Count", 'Type'  ],
+             __tableattrs => 'summary="Feature summary" cellspacing="0" style="margin-bottom: 0.5em"',
+             data     => related_stats($feats),
+             __caption => 'Summary',
+             __border => 1,
+          &>
+         <& /feature/feature_list.mas,
+            features => $feats,
+          &>
+%       }
+%       else {
+            <& /feature/feature_list.mas,
+               features => $feats,
+             &>
+%       }
+     </&>
+%  }
+
 </&>

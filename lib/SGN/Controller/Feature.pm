@@ -33,14 +33,10 @@ sub delegate_component
 {
     my ($self, $c, $matching_features) = @_;
     my $feature   = $matching_features->next;
-    my @children  = $feature->child_features;
-    my @parents   = $feature->parent_features;
     my $type_name = $feature->type->name;
     my $template  = "/feature/dhandler";
 
     $c->stash->{feature}  = $feature;
-    $c->stash->{children} = \@children;
-    $c->stash->{parents}  = \@parents;
 
     if ($c->view('Mason')->component_exists("/feature/$type_name.mas")) {
         $template         = "/feature/$type_name.mas";
