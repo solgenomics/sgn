@@ -5,7 +5,7 @@
 </%args>
 <%once>
     use SGN::View::Feature qw/
-        feature_link cvterm_link organism_link gbrowse_link feature_length
+        feature_link cvterm_link organism_link feature_length
         get_description
         /;
     use CXGN::Page::FormattingHelpers qw/info_table_html/;
@@ -27,7 +27,6 @@
         'Organism Name' => organism_link($feature->organism),
         'Description'   => $description,
         'Length'        => $feature_length,
-        'GBrowse'       => sprintf('<a href="%s">%s</a><br/', gbrowse_link($feature), $feature->name),
         'Coordinates'   => join ",", @coords,
     );
 </%perl>

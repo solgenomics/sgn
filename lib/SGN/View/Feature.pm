@@ -4,7 +4,6 @@ use warnings;
 
 use base 'Exporter';
 use Bio::Seq;
-use CatalystX::GlobalContext '$c';
 use CXGN::Tools::Text qw/commify_number/;
 use CXGN::Tools::Identifiers;
 
@@ -108,28 +107,6 @@ sub _feature_search_string {
     my ($fl) = $feature->featureloc_features;
     return '' unless $fl;
     return $fl->srcfeature->name . ':'. $fl->fmin . '..' . $fl->fmax;
-}
-
-sub _gbrowse_xref {
-    my ($feature, $xref_name) = @_;
-    my $gb = $c->enabled_feature('gbrowse2');
-    return '' unless $gb;
-    # TODO: multiple
-    my ($xref) = map { $_->$xref_name } $gb->xrefs($feature->name);
-    unless ( $xref ) {
-        ($xref) = map { $_->$xref_name } $gb->xrefs(_feature_search_string($feature));
-    }
-    return $xref;
-
-}
-sub gbrowse_link {
-    my ($feature, $fmin, $fmax) = @_;
-    my $url = _gbrowse_xref($feature,'url');
-    if (defined $fmin && defined $fmax) {
-        return sprintf('<a href="%s">%s</a>', $url, join(",", $fmin, $fmax)),
-    } else {
-        return $url || '<span class="ghosted">Not Available</span>';
-    }
 }
 
 sub feature_link {
