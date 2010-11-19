@@ -98,8 +98,8 @@ sub feature_table {
         for my $loc (@locations) {
             my ($fmin,$fmax) = ($loc->fmin, $loc->fmax);
             push @$data, [
-                feature_link($f),
                 cvterm_link($f),
+                feature_link($f),
                 "$fmin..$fmax",
                 commify_number($fmax-$fmin) . " bp",
                 $loc->strand == 1 ? '+' : '-',
