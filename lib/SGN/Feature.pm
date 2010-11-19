@@ -5,13 +5,17 @@ use namespace::autoclean;
 use File::Spec;
 
 # our context object
-has 'context' => ( documentation => 'our context class',
+has 'context' => (
+    documentation => 'our context class',
+
     is => 'ro',
     does => 'SGN::Role::Site::SiteFeatures',
     required => 1,
     weak_ref => 1,
    );
-has 'enabled' => ( documentation => 'boolean flag, whether this feature is enabled',
+has 'enabled' => (
+    documentation => 'boolean flag, whether this feature is enabled',
+
     is => 'ro',
     isa => 'Bool',
     default => 0,
