@@ -80,9 +80,11 @@ sub related_stats {
     }
     my $data = [ ];
     for my $k (sort keys %$stats) {
-        push @$data, [ $k => $stats->{$k} ];
+        push @$data, [ $stats->{$k}, $k ];
     }
-    push @$data, [ "Total" => $total ];
+    if( 1 < scalar keys %$stats ) {
+        push @$data, [ $total, "<b>Total</b>" ];
+    }
     return $data;
 }
 
