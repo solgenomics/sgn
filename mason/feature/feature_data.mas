@@ -33,10 +33,14 @@
         'Length'        => $feature_length,
 
         'Organism' => organism_link($feature->organism),
-        'Description'   => $description || '<span class="ghosted">none</span>',
          __border => 0,
          __multicol => 4
     )%>
+    <% info_table_html(
+         'Description'   => $description || '<span class="ghosted">none</span>',
+         __border => 0,
+    )%>
+
 
 
     <& /feature/dbxref.mas, dbxref => $feature->dbxref &>
