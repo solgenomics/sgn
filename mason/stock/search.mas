@@ -46,9 +46,18 @@ div.paginate_nav {
                                           .' of '.Number::Format->new->format_number($pager->total_entries)
    &>
 %   if( $results->count ) {
+%		my @data =
+%            map {
+%                my $organism = $_->organism;
+%            [
+%                stock_link($_),
+%                $_->type->name,
+%                $organism ? $organism->species : '',
+%            ] } $results->all;
+
      <% columnar_table_html(
             headings => ['Stock Name','Stock Type', 'Organism'],
-            data     => [ map [stock_link($_),$_->type->name,$_->organism->species], $results->all ],
+            data     => [ @data ],
         )
       %>
 %   } else {

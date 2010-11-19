@@ -116,7 +116,10 @@ sub _make_stock_search_rs {
     my $rs = $self->schema->resultset('Stock::Stock');
 
     if( my $name = $form->param_value('stock_name') ) {
-        $rs = $rs->search({ 'lower(uniquename)' => { like => '%'.lc( $name ).'%' }});
+        $rs = $rs->search({ 'lower(name)' => { like => '%'.lc( $name ).'%' }});
+    }
+    if( my $uniquename = $form->param_value('stock_uniquename') ) {
+        $rs = $rs->search({ 'lower(uniquename)' => { like => '%'.lc( $uniquename ).'%' }});
     }
 
     if( my $type = $form->param_value('stock_type') ) {
@@ -130,12 +133,11 @@ sub _make_stock_search_rs {
     }
 
     # page number and page size, and order by species name
-    $rs = $rs->search( undef,
-                       { page => $form->param_value('page') || 1,
-                         rows => $form->param_value('page_size') || $self->default_page_size,
-                         order_by => 'uniquename',
-                       },
-	);
+    $rs = $rs->search( undef, {
+            page => $form->param_value('page')      || 1,
+            rows => $form->param_value('page_size') || $self->default_page_size,
+            order_by => 'name',
+    });
 
     return $rs;
 }
@@ -145,14 +147,14 @@ sub _organisms {
     my $ref =  [
         map [ $_->organism_id, $_->species ],
         $self->schema
-	->resultset('Stock::Stock')
-	->search_related('organism' , {}, 
-			 {select => [qw[ organism.organism_id species ]],
-			  group_by => [qw[ organism.organism_id species ]],
-			  order_by => 'species',
-			 },
-	)
-	];
+    ->resultset('Stock::Stock')
+    ->search_related('organism' , {}, 
+             {select => [qw[ organism.organism_id species ]],
+              group_by => [qw[ organism.organism_id species ]],
+              order_by => 'species',
+             },
+    )
+    ];
     # add an empty option 
     unshift @$ref , ['0', ''];
     return $ref;
@@ -164,16 +166,16 @@ sub _stock_types {
     my $ref = [
         map [$_->cvterm_id,$_->name],
         $self->schema
-	->resultset('Stock::Stock')
-	->search_related(
-	    'type',
-	    {},
-	    { select => [qw[ cvterm_id type.name ]],
-	      group_by => [qw[ cvterm_id type.name ]],
-	      order_by => 'type.name',
-	    },
-	)
-	];
+    ->resultset('Stock::Stock')
+    ->search_related(
+        'type',
+        {},
+        { select => [qw[ cvterm_id type.name ]],
+          group_by => [qw[ cvterm_id type.name ]],
+          order_by => 'type.name',
+        },
+    )
+    ];
     # add an empty option 
     unshift @$ref , ['0', ''];
     return $ref;
