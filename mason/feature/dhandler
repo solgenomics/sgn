@@ -28,7 +28,6 @@
 <& /feature/related_features.mas,
     children  => $children,
     parents   => $parents,
-    reference => $reference,
     feature   => $feature,
 &>
 

@@ -7,6 +7,7 @@
     use SGN::View::Feature qw/
         feature_link cvterm_link organism_link feature_length
         get_description
+        location_list_html
         /;
     use CXGN::Page::FormattingHelpers qw/info_table_html/;
     use CXGN::Tools::Text qw/commify_number/;
@@ -19,22 +20,24 @@
     if ($locations) {
         $feature_length .= " in $locations location" . ($locations > 1 ? 's' : '');
     };
-    my @coords = map { $_->fmin, $_->fmax } $feature->featureloc_features->all;
-    my @feature_data = (
-        'Name'          => feature_link($feature),
-        'Feature Type'  => cvterm_link($feature),
-        'Analysis'      => ($feature->is_analysis ? 'Yes' : 'No'),
-        'Organism Name' => organism_link($feature->organism),
-        'Description'   => $description,
-        'Length'        => $feature_length,
-        'Coordinates'   => join ",", @coords,
-    );
 </%perl>
 <&| /page/info_section.mas,
     title       => $title,
     subtitle    => $feature->is_obsolete ? 'WARNING: This feature is obsolete' : '',
     collapsible => 1,
 &>
-    <% info_table_html( @feature_data, __border => 0, __multicol => 3 ) %>
+    <% info_table_html(
+        'Name'          => feature_link( $feature ),
+        'Type'          => cvterm_link($feature),
+        'Location(s)'   => location_list_html( $feature ),
+        'Length'        => $feature_length,
+
+        'Organism' => organism_link($feature->organism),
+        'Description'   => $description || '<span class="ghosted">none</span>',
+         __border => 0,
+         __multicol => 4
+    )%>
+
+
     <& /feature/dbxref.mas, dbxref => $feature->dbxref &>
 </&>

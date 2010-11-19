@@ -15,6 +15,7 @@ our @EXPORT_OK = qw/
     organism_link feature_length
     mrna_sequence
     get_description
+    location_list_html
 /;
 
 sub get_description {
@@ -27,7 +28,11 @@ sub get_description {
     } else {
         ($description) = map { $_->value } grep { $_->type->name eq 'Note' } $feature->featureprops->all;
     }
-	$description =~ s/(\S+)/CXGN::Tools::Identifiers::link_identifier($1) || $1/ge;
+
+    if( $description ) {
+        $description =~ s/(\S+)/my $id = $1; CXGN::Tools::Identifiers::link_identifier($id) || $id/ge;
+    }
+
     return $description;
 }
 
@@ -50,13 +55,20 @@ sub feature_length {
     # Reference features don't have featureloc's, calculate the length
     # directly
     if ($length == 0) {
-        $seq = Bio::PrimarySeq->new(
-            -seq => $feature->residues,
-            -alphabet => 'dna',
-        );
-        $length = $seq->length;
+        $length = $feature->seqlen,
     }
     return ($length,$locations);
+}
+
+sub location_list_html {
+    my ($feature) = @_;
+    my @coords = map { feature_link($_->srcfeature).':'.$_->fmin.'..'.$_->fmax } $feature->featureloc_features->all
+        or return '<span class="ghosted">none</span>';
+    return @coords;
+}
+sub location_list {
+    my ($feature) = @_;
+    return map { $_->srcfeature->name.':'.$_->fmin.'..'.$_->fmax } $feature->featureloc_features->all;
 }
 
 sub related_stats {
@@ -82,24 +94,18 @@ sub feature_table {
 
         # Add a row for every featureloc
         for my $loc (@locations) {
-            my ($srcfeature) = $loc->srcfeature;
             my ($fmin,$fmax) = ($loc->fmin, $loc->fmax);
             push @$data, [
                 feature_link($f),
                 cvterm_link($f),
-                gbrowse_link($f,$fmin,$fmax),
+                "$fmin..$fmax",
                 commify_number($fmax-$fmin) . " bp",
                 $loc->strand == 1 ? '+' : '-',
-                $loc->phase || '<span class="ghosted">NA</span>',
+                $loc->phase || '<span class="ghosted">n/a</span>',
             ];
         }
     }
     return $data;
-}
-
-sub gbrowse_image_url {
-    my ($feature) = @_;
-    return _gbrowse_xref($feature,'preview_image_url');
 }
 
 sub _feature_search_string {
@@ -121,7 +127,8 @@ sub organism_link {
     my $species = $organism->species;
     return <<LINK;
 <span class="species_binomial">
-<a href="/chado/organism.pl?organism_id=$id">$species</a>
+  <a href="/chado/organism.pl?organism_id=$id">$species</a>
+</span>
 LINK
 }
 
