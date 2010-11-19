@@ -72,17 +72,15 @@ if (@$accessions) {
     my $individual_name = $i->get_name();
     $individualHash{$individual_id} = $individual_name;
     
-    my @images =
-      $i->get_images();    #array of all associated image objects
-    foreach my $image (@images) {
-      my $image_id = $image->get_image_id();
-      
-      $imageHash{$image_id} = $image;
+    my @image_ids =
+      $i->get_image_ids();    #array of all associated image objects
+    foreach my $image_id (@image_ids) {
+      $imageHash{$image_id} = CXGN::Image->new(dbh=>$c->dbc->dbh(), image_id=>$image_id, image_dir=> $c->get_conf('static_datasets_path')."/".$c->get_conf('image_dir'));
       push @{ $imageHoA{$individual_id} }, $image_id;
     }
     
     #if there are no associated images with this individual:
-    if ( !@images ) { push @no_image, $individual_id; }
+    if ( !@image_ids ) { push @no_image, $individual_id; }
   }
   my $ind_count = 0;
   

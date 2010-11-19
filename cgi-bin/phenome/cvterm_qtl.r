@@ -131,11 +131,13 @@ stepsizefile<-grep("stat_step_size",
                    ignore.case=TRUE,
                    fixed = FALSE,
                    value=TRUE)
+
 stepsize<-scan(stepsizefile,
                what="numeric",
                dec = ".",
                sep="\n"
                )
+
 if (stepsize == "zero")
 {
   stepsize<-c(0)
@@ -149,6 +151,7 @@ genoprobmethodfile<-grep("stat_prob_method",
                          fixed = FALSE,
                          value=TRUE
                          )
+
 genoprobmethod<-scan(genoprobmethodfile,
                      what="character",
                      dec = ".",
@@ -187,11 +190,13 @@ genoproblevelfile<-grep("stat_prob_level",
                         fixed = FALSE,
                         value=TRUE
                         )
+
 genoproblevel<-scan(genoproblevelfile,
                     what="numeric",
                     dec = ".",
                     sep="\n"
                     )
+
 genoproblevel<-as.numeric(genoproblevel)
 
 
@@ -202,6 +207,7 @@ permuproblevelfile<-grep("stat_permu_level",
                          fixed = FALSE,
                          value=TRUE
                          )
+
 permuproblevel<-scan(permuproblevelfile,
                      what="numeric",
                      dec = ".",
@@ -279,10 +285,10 @@ if (qtlmethod != "mr")
 cvterm<-scan(file=cvtermfile,
              what="character"
              ) #reads the cvterm
+
 cv<-find.pheno(popdata,
                cvterm
                )#returns the col no. of the cvterm
-
 
 permuvalues<-scan(file=permufile,
                   what="character"
@@ -305,15 +311,16 @@ if ((is.logical(permuvalue1) == FALSE))
     } else
     if (userpermuvalue != 0)
       {
-      popdataperm<-scanone(popdata,
+        popdataperm<-scanone(popdata,
                            pheno.col=cv,
                            model="normal",
                            n.perm = userpermuvalue,
                            method=qtlmethod
                            )
-      permu<-summary(popdataperm,
-                     alpha=permuproblevel
-                     )
+      
+        permu<-summary(popdataperm,
+                       alpha=permuproblevel
+                       )     
     }
   }else
   if (qtlmethod != "mr")
@@ -393,6 +400,7 @@ chrno<-1
 
 datasummary<-c()
 confidenceints<-c()
+lodconfidenceints<-c()
 
 for (i in chrdata)
 {  
@@ -410,41 +418,56 @@ for (i in chrdata)
              chr=chrno,
              pheno.col=cv
              )
+
+  
   position<-max(i,
                 chr=chrno
                 )
-  
   p<-position[2]
   p<-p[1, ]
+  
   peakmarker<-find.marker(popdata,
                           chr=chrno,
                           pos=p
-                          )  
-  confidenceint<-bayesint(i,
+                          )
+ 
+  lodpeakmarker<-i[peakmarker, ]
+  
+  lodconfidenceint<-bayesint(i,
                           chr=chrno,
                           prob=0.95,
                           expandtomarkers=TRUE
                           )
-  confidenceint<-rownames(confidenceint)
-  print (confidenceint)
-  confidenceint<-c(chrno,
-                   confidenceint,
+ 
+  if (is.na(lodconfidenceint[peakmarker, ]))
+    {
+      lodconfidenceint<-rbind(lodconfidenceint,
+                              lodpeakmarker
+                              )
+    }
+  
+  peakmarker<-c(chrno,
                    peakmarker
-                   )
-  print(confidenceint)
+                  )
+ 
   if (chrno==1)
     { 
     datasummary<-i
-    confidenceints<-confidenceint
+    peakmarkers<-peakmarker
+    lodconfidenceints<-lodconfidenceint
   }
+  
   if (chrno > 1 )
     {
-    datasummary<-rbind(datasummary,
-                       i
-                       )
-    confidenceints<-rbind(confidenceints,
-                          confidenceint
-                          )   
+      datasummary<-rbind(datasummary,
+                         i
+                         )
+      peakmarkers<-rbind(peakmarkers,
+                         peakmarker
+                         )
+      lodconfidenceints<-rbind(lodconfidenceints,
+                               lodconfidenceint
+                               )
   }
 
 chrno<-chrno + 1;
@@ -454,8 +477,10 @@ chrno<-chrno + 1;
 outfiles<-scan(file=outfile,
                what="character"
                )
+
 qtlfile<-outfiles[1]
-confidenceintfile<-outfiles[2]
+peakmarkersfile<-outfiles[2]
+confidencelodfile<-outfiles[3]
 
 write.table(datasummary,
             file=qtlfile,
@@ -464,8 +489,17 @@ write.table(datasummary,
             quote=FALSE,
             append=FALSE
             )
-write.table(confidenceints,
-            file=confidenceintfile,
+
+write.table(peakmarkers,
+            file=peakmarkersfile,
+            sep="\t",
+            col.names=NA,
+            quote=FALSE,
+            append=FALSE
+            )
+
+write.table(lodconfidenceints,
+            file=confidencelodfile,
             sep="\t",
             col.names=NA,
             quote=FALSE,

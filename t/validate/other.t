@@ -17,8 +17,10 @@ my %urls = (
         "unigene search 2"                           => "/search/ug-ad2.pl?w9e3_page=0&w9e3_sequence_name=SGN-U231977&w9e3_clone_name=&w9e3_membersrange=gt&w9e3_members1=&w9e3_members2=&w9e3_annotation=&w9e3_annot_type=blast&w9e3_lenrange=gt&w9e3_len1=&w9e3_len2=&w9e3_unigene_build_id=any",
         "unigene detail"                           => "/search/unigene.pl?unigene_id=SGN-U231977&w9e3_page=0&w9e3_annot_type=blast&w9e3_unigene_build_id=any",
         "unigene detail 2"                         => "/search/unigene.pl?unigene_id=345356&force_image=1",
+        "unigene detail 3"                         => "/search/unigene.pl?unigene_id=CGN-U124510",
         "unigene build"                            => "/search/unigene_build.pl?id=46",
         'unigene standalone six-frame translation' => '/tools/sixframe_translate.pl?unigene_id=573435',
+        'unigene list by annot'                    => '/search/all_unig_for_annot.pl?match_id=308546&search_type=blast_search',
 
         "est search page"                          => "/search/direct_search.pl?search=est",
         "est search"                               => "/search/est.pl?request_from=0&request_id=SGN-E234234&request_type=7&search=Search",
@@ -54,7 +56,6 @@ my %urls = (
         "Locus ajax form"                          => "/jsforms/locus_ajax_form.pl",
         "Locus editors"                            => "/phenome/editors_note.pl",
         "Phenotype search"                         => "/search/direct_search.pl?search=phenotypes",
-        "SNP search markers"                       => "/search/markers/snp.pl",
 
         'sol100 page'                              => '/organism/sol100/view',
         "SGN data overview"                        => "/organism/all/view",
@@ -62,7 +63,6 @@ my %urls = (
         "outreach index"                           => "/outreach/",
         "organism page for tomato"                 => "/chado/organism.pl?organism_id=1",
         "image search"                             => "/search/image_search.pl?wad1_description_filename_composite=&wad1_submitter=&wad1_image_tag=",
-        "bac registry"                             => "/sequencing/bac_registry_discrepancies.pl",
         "SGN pubs"                                 => "/help/publications.pl",
         "glossary search"                          => "/search/glossarysearch.pl",
         "contact"                                  => "/tools/contact.pl",

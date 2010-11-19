@@ -9,7 +9,7 @@ use SGN::Test qw( get request );
 
 use CXGN::Genomic::Clone;
 
-use Test::More tests => 7;
+use Test::More;
 
 my $test_clone_id = 8978;
 my $test_clone = CXGN::Genomic::Clone->retrieve($test_clone_id)
@@ -43,3 +43,13 @@ is_deeply( $clone_info, $qperl_result, "Perl return is the same as the reg_info_
 is_deeply( $qjson_result, $qperl_result, "JSON and Perl return the same data structure" );
 
 
+# test the project stats image
+{ my $pi_req = request("$base?action=project_stats_img_html");
+  is( $pi_req->code, 200, 'got async project stats image ok' );
+  like( $pi_req->content, qr/\.png"/, 'a .png image url is somewhere in the html' );
+  like( $pi_req->content, qr/<img /, 'contains an image' );
+  like( $pi_req->content, qr/<map /, 'contains an image map' );
+}
+
+
+done_testing;

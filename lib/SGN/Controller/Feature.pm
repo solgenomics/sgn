@@ -54,8 +54,8 @@ sub validate
     my ($self, $c,$matching_features,$key, $val) = @_;
     my $count = $matching_features->count;
 #   EVIL HACK: We need a disambiguation process
-#   $c->throw( message => "too many features where $key='$val'") if $count > 1;
-    $c->throw( message => "feature with $key = '$val' not found") if $count < 1;
+#   $c->throw_client_error( public_message => "too many features where $key='$val'") if $count > 1;
+    $c->throw_client_error( public_message => "feature with $key = '$val' not found") if $count < 1;
 }
 
 sub view_name :Path('/feature/view/name') Args(1) {
@@ -66,31 +66,22 @@ sub view_name :Path('/feature/view/name') Args(1) {
 
 sub _validate_pair {
     my ($self,$c,$key,$value) = @_;
-    $c->throw( message => "$value is not a valid value for $key" )
+    $c->throw_client_error(
+        public_message  => "$value is not a valid value for $key",
+    )
         if ($key =~ m/_id$/ and $value !~ m/\d+/);
 }
 
 sub _view_feature {
     my ($self, $c, $key, $value) = @_;
 
-    if ( $value =~ m/\.fasta$/ ) {
-        $value =~ s/\.fasta$//;
-        $self->_validate_pair($c,$key,$value);
-        my $matching_features = $self->schema
-                                    ->resultset('Sequence::Feature')
-                                    ->search({ $key => $value });
-        my $feature = $matching_features->next;
-        $c->throw( message => "feature with $key = '$value' not found") unless $feature;
-        $self->render_fasta($feature, $c);
-    } else {
-        $self->_validate_pair($c,$key,$value);
-        my $matching_features = $self->schema
-                                    ->resultset('Sequence::Feature')
-                                    ->search({ $key => $value });
+    $self->_validate_pair($c,$key,$value);
+    my $matching_features = $self->schema
+                                ->resultset('Sequence::Feature')
+                                ->search({ $key => $value });
 
-        $self->validate($c, $matching_features, $key => $value);
-        $self->delegate_component($c, $matching_features);
-    }
+    $self->validate($c, $matching_features, $key => $value);
+    $self->delegate_component($c, $matching_features);
 }
 
 sub view_id :Path('/feature/view/id') Args(1) {
@@ -224,28 +215,6 @@ sub _feature_types {
                     },
                 )
     ];
-}
-
-sub render_fasta {
-    my ($self, $feature, $c) = @_;
-
-    my $matching_features = $self->schema
-                                ->resultset('Sequence::Feature')
-                                ->search({ name => $feature->name });
-
-    my $sequence  = Bio::PrimarySeq->new(
-                    -id  => $feature->name,
-                    -seq => $feature->residues,
-                    );
-    my $fasta;
-    my $fastaio = IO::String->new($fasta);
-    Bio::SeqIO->new( -format => 'fasta',
-                     -fh     => $fastaio,
-    )->write_seq( $sequence );
-
-    $c->res->content_type('text/plain');
-    $c->res->status( 200 );
-    $c->res->body( $fasta );
 }
 
 __PACKAGE__->meta->make_immutable;

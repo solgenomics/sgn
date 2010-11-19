@@ -869,11 +869,6 @@ a.stealth {
 	border-color: #888888;
 	border-width: 1px;
 }
-.creativitylinks
-{ 
-	line-height:24px;
-}
-
 
 /***********   TOOLBARS W/DROPDOWN MENUS ****************/
 
@@ -1269,4 +1264,13 @@ div.publication_embedded .citation {
 
 .species_binomial {
   font-style: italic;
+}
+
+
+#affiliated_sites ul {
+  margin: 0;
+  padding-left: 1em;
+}
+#affiliated_sites li {
+  padding-bottom: 1em;
 }

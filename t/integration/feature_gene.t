@@ -29,6 +29,12 @@ $mech->get_ok("/feature/view/name/" . $gene_feature->name);
 $mech->content_contains('Gene Data');
 $mech->content_contains('Gene: ' . $gene_feature->name);
 $mech->content_contains('Genomic Sequence');
+$mech->content_contains('Related Features');
+
+# This could be more stringent and use a CSS selector
+$mech->content_contains('GBrowse');
+$mech->content_contains('Not Available');
+
 my ($name, $residues) = ($gene_feature->name, $gene_feature->residues);
 
 like( $mech->findvalue( '/html/body//span[@class="sequence"]'), qr/>$name\s*$residues/, "Found >$name\\n$residues");

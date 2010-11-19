@@ -47,6 +47,7 @@ use strict;
 use File::Temp qw / tempfile tempdir /;
 use File::Copy qw / copy move /;
 use File::Basename qw / basename /;
+use File::Spec;
 use CXGN::DB::Connection;
 use SGN::Context;
 use CXGN::Tag;
@@ -55,16 +56,10 @@ package SGN::Image;
 
 use base qw | CXGN::Image |;
 
-# some pseudo constant definitions
-#
-our $LARGE_IMAGE_SIZE     = 800;
-our $MEDIUM_IMAGE_SIZE    = 400;
-our $SMALL_IMAGE_SIZE     = 200;
-our $THUMBNAIL_IMAGE_SIZE = 100;
 
 =head2 new
 
- Usage:        my $image = CXGN::Image->new($dbh)
+ Usage:        my $image = SGN::Image->new($dbh)
  Desc:         constructor
  Ret:
  Args:         a database handle, optional identifier
@@ -77,125 +72,19 @@ our $THUMBNAIL_IMAGE_SIZE = 100;
 sub new {
     my $class = shift;
     my $dbh   = shift;
+    my $image_id = shift;
 
-    my $self = $class->SUPER::new( $dbh, @_ );
+    my $c = SGN::Context->new();
 
-    $self->set_configuration_object( SGN::Context->new() );
+    my $self = $class->SUPER::new(dbh=>$dbh, image_id=>$image_id, image_dir=>$c->get_conf('static_datasets_path')."/".$c->get_conf('image_dir') );
+
+    $self->set_configuration_object( $c );
     $self->set_dbh($dbh);
-    $self->set_upload_dir();
 
     return $self;
 }
 
-=head2 get_image_size_hash
 
- Usage:
- Desc:
- Ret:
- Args:
- Side Effects:
- Example:
-
-=cut
-
-sub get_image_size_hash {
-    my $self = shift;
-    return my %hash = (
-        large     => $LARGE_IMAGE_SIZE,
-        medium    => $MEDIUM_IMAGE_SIZE,
-        small     => $SMALL_IMAGE_SIZE,
-        thumbnail => $THUMBNAIL_IMAGE_SIZE,
-    );
-}
-
-=head2 get_image_size
-
- Usage:
- Desc:
- Ret:
- Args:         "large" | "medium" | "small" | "thumbnail"
-               default is medium
- Side Effects:
- Example:
-
-=cut
-
-sub get_image_size {
-    my $self = shift;
-    my $size = shift;
-    my %hash = $self->get_image_size_hash();
-    if ( exists( $hash{$size} ) ) {
-        return $hash{$size};
-    }
-
-    # default
-    #
-    return $MEDIUM_IMAGE_SIZE;
-}
-
-=head2 get_image_dir
-
- Usage:        returns the image dir
- Desc:         uses the conf object to retrieve the image_dir configuration
-               variable
- Ret:
- Args:         "full" for the full path, "partial" for just the part after the 
-               website data dir (normally "/data/shared/website/");
-               default is full path.
- Side Effects: 
- Example:     
-
-=cut
-
-sub get_image_dir {
-    my $self  = shift;
-    my $which = shift;
-
-    my $dir = $self->get_configuration_object()->get_conf("image_dir");
-    if ( !$dir ) {
-        die
-"Need a configuration variable called image_dir set in SGN.conf  Please contact SGN for help.";
-    }
-    if ( $which eq "full" ) {
-        $dir =
-          $self->get_configuration_object()
-          ->get_conf("static_datasets_path") . "/$dir";
-    }
-    return $dir;
-}
-
-=head2 get_upload_dir
-
- Usage:
- Desc:
- Ret:
- Args:
- Side Effects:
- Example:
-
-=cut
-
-sub get_upload_dir {
-    my $self = shift;
-    return $self->{upload_dir};
-
-}
-
-=head2 set_upload_dir
-
- Usage:
- Desc:
- Ret:
- Args:
- Side Effects:
- Example:
-
-=cut
-
-sub set_upload_dir {
-    my $self = shift;
-    $self->{upload_dir} = shift;
-}
 
 =head2 get_image_url
 
@@ -211,39 +100,50 @@ sub set_upload_dir {
 sub get_image_url {
     my $self = shift;
     my $size = shift;
+    
+    my $url = $self->get_configuration_object()->get_conf('static_datasets_url')."/".$self->get_configuration_object()->get_conf('image_dir')."/".$self->get_filename($size, 'partial')
 
-    my $url =
-        $self->get_configuration_object()->get_conf("static_datasets_url")
-      . "/"
-      . $self->get_image_dir("partial") . "/"
-      . $self->get_image_id();
 
-    if ( $size eq "large" ) {
-        return $url . "/large.jpg";
+}
+
+=head2 process_image
+
+ Usage:        $image->process_image($filename, "individual", 234);
+ Desc:         creates the image and associates it to the type and type_id
+ Ret:
+ Args:
+ Side Effects: 
+ Example:
+
+=cut
+
+sub process_image { 
+    my $self = shift;
+    my ($filename, $type, $type_id) = @_;
+    
+    $self->SUPER::process_image($filename);
+    
+    if ( $type eq "experiment" ) {
+        #print STDERR "Associating experiment $type_id...\n";
+        $self->associate_experiment($type_id);
     }
-    elsif ( $size eq "medium" ) {
-        return $url . "/medium.jpg";
+    elsif ( $type eq "individual" ) {
+        #print STDERR "Associating individual $type_id...\n";
+        $self->associate_individual($type_id);
     }
-    elsif ( $size eq "small" ) {
-        return $url . "/small.jpg";
+    elsif ( $type eq "fish" ) {
+        #print STDERR "Associating to fish experiment $type_id\n";
+        $self->associate_fish_result($type_id);
     }
-    elsif ( $size eq "thumbnail" ) {
-        return $url . "/thumbnail.jpg";
-    }
-    elsif ( $size eq "tiny" ) {
-        return $url . "/thumbnail.jpg";
+    elsif ( $type eq "locus" ) {
+        #print STDERR "Associating to locus $type_id\n";
+        $self->associate_locus($type_id);
     }
 
-    # deanx - 11/21/07
-    elsif ( $size eq "original" ) {
-        return
-            $url . "/"
-          . $self->get_original_filename()
-          . $self->get_file_ext();
-    }
     else {
-        return $url . "/medium.jpg";
+        warn "type $type is like totally illegal! Not associating image with any object. Please check if your loading script links the image with an sgn object! \n";
     }
+    
 }
 
 =head2 get_configuration_object
@@ -359,6 +259,8 @@ sub set_temp_filename {
 
 =head2 apache_upload_image
 
+ DEPRECATED.
+
  Usage:        my $temp_file_name = $image->apache_upload_image($apache_upload_object);
  Desc:
  Ret:          the name of the intermediate tempfile that can be 
@@ -422,364 +324,294 @@ sub apache_upload_image {
 
 }
 
-=head2 process_image
 
- Usage:        $return_code = $image -> process_image($filename, "individual", 234);
- Desc:         processes the image that has been uploaded with the upload command.
- Ret:          the image id of the image in the database as a positive number,
-               error conditions as negative numbers.
- Args:         the filename of the file (complete path), the type of object it is
-               associated to, and the id of that object.
- Side Effects: generates a new subdirectory in the image_dir for the image files,
-               copies the image file around on the file system, and creates 
-               thumnbnails and other views for the image.
+=head2 associate_individual
+
+ Usage:        $image->associate_individual($individual_id)
+ Desc:         associate a CXGN::Phenome::Individual with this image
+ Ret:          a database id (individual_image)
+ Args:         individual_id
+ Side Effects:
  Example:
 
 =cut
 
-sub process_image {
-    my $self      = shift;
-    my $file_name = shift;
-    my $type      = shift;
-    my $type_id   = shift;
-
-    if ( my $id = $self->get_image_id() ) {
-        warn
-"process_image: The image object ($id) should already have an associated image. The old image will be overwritten with the new image provided!\n";
-        die "I'm dying now. Ouch!\n";
-    }
-
-    my ($upload_dir) =
-      File::Temp::tempdir( "upload_XXXXXX",
-        DIR => $self->get_image_dir("full") );
-    system("chmod 775 $upload_dir");
-    $self->set_upload_dir($upload_dir);
-
-    # process image
-    #
-    $upload_dir = $self->get_upload_dir();
-
-    # copy unmodified image to be fullsize image
-    #
-    my $basename = File::Basename::basename($file_name);
-
-    # deanx - preserver original filename
-    my $original_filename = $basename;
-
-    my $dest_name = $self->get_upload_dir() . "/" . $basename;
-    #print STDERR "Copying $file_name to $dest_name...\n";
-
-    #    eval {
-    File::Copy::copy( $file_name, $dest_name )
-      || die "Can't copy file $file_name to $dest_name";
-    my $chmod = "chmod 664 '$dest_name'";
-
-    #	print STDERR "CHMODing FILE: $chmod\n";
-    #system($chmod);
-    #print STDERR
-    #  "copied image $file_name to $dest_name and CHMODed 664 $dest_name.\n";
-
-    #    };
-    #    if ($@) {
-    #	die "An error occurred during copy/chmod: $@\n";
-    #	return -1;
-    #    }
-
-    ### Multi Page Document Support
-    #    deanx - nov. 16 2007
-    #   PDF, PS, EPS documents are now supported by ImageMagick/Ghostscript
-    #   A primary impact is these types can multipage.  'mogrify' produces
-    #   one image per page, labelled filename-0.jpg, filename-1.jpg ...
-    #   This code detects multipage documents and copies the first page for
-    #   thumbnail processing
-
-##    my @image_pages = system("/usr/bin/identify", "$dest_name");  #returns rc, not comtents
-    my @image_pages = `/usr/bin/identify "$dest_name"`;
-
-    if ( $#image_pages > 0 ) {    # multipage, pdf, ps or eps
-
-#	eval  {
-# note mogrify used since 'convert' will not correctly reformat (convert makes blank images)
-# if  (! (`mogrify -format jpg '$dest_name'`)) {die "Sorry, can't convert image $basename";}
-# if ( system("/usr/bin/mogrify -format jpg","$upload_dir/$basename") != 0) {die "Sorry, can't convert image $basename";}
-# my $chmod = "chmod 664 '$upload_dir/$basename'";
-# Convert and mogrify both dislike the format of our filenames intensely if ghostscript
-#   is envoked ... change filename to something beign like temp.<ext>
-
-        my $newname;
-        if ( $basename =~ /(.*)\.(.{1,4})$/ )
-        {                         #note; mogrify will create files name
-                                  # basename-0.jpg, basename-1.jpg
-            my $mogrified_first_image = $upload_dir . "/temp-0.jpg";
-            my $tempname =
-              $upload_dir . "/temp." . $2;    # retrieve file extension
-            $newname = $basename . ".jpg";    #
-            my $new_dest = $upload_dir . "/" . $newname;
-
-            # use temp name for mogrify/ghostscript
-            File::Copy::copy( $dest_name, $tempname )
-              || die "Can't copy file $basename to $tempname";
-
-            if ( (`mogrify -format jpg '$tempname'`) ) {
-                die "Sorry, can't convert image $basename";
-            }
-
-            File::Copy::copy( $mogrified_first_image, $new_dest )
-              || die "Can't copy file $mogrified_first_image to $newname";
-
-        }
-        #print STDERR "Successfully converted $basename to $newname\n";
-        $basename = $newname;
-
-        #	};
-
-        #	  if ($@) {
-        #	      return -2;
-        #	  }
-
-    }         #Multi-page non-image file eg: pdf, ps, eps
-    else {    # appears to be a regular simple image
-
-        #	eval {
-        my $newname = "";
-        if ( !(`mogrify -format jpg '$dest_name'`) ) {
-            if ( $basename !~ /(.*)\.(jpeg|jpg)$/i ) {    # has no jpg extension
-                $newname = $1 . ".JPG";    # convert it to extention .JPG
-            }
-            elsif ( $basename !~ /(.*)\.(.{1,4})$/ ) { # has no extension at all
-                $newname = $basename . ".JPG";         # add an extension .JPG
-            }
-            else {
-                $newname = $basename;    # apparently, it has a JPG extension
-            }
-            if (
-                system(
-                    "/usr/bin/convert", "$upload_dir/$basename",
-                    "$upload_dir/$newname"
-                ) != 0
-              )
-            {
-                die "Sorry, can't convert image $basename to $newname";
-            }
-
-            #print STDERR "Successfully converted $basename to $newname\n";
-            $original_filename = $newname;
-            $basename          = $newname;
-        }
-
-        #	};
-        #	if ($@) {
-        #	    return -2;
-        #	}
-
-    }
-
-    #    eval {
-
-    # create large image
-    $self->copy_image_resize(
-        "$upload_dir/$basename",
-        $self->get_upload_dir() . "/large.jpg",
-        $self->get_image_size("large")
-    );
-
-    # create midsize images
-    $self->copy_image_resize(
-        "$upload_dir/$basename",
-        $self->get_upload_dir() . "/medium.jpg",
-        $self->get_image_size("medium")
-    );
-
-    # create small image
-    $self->copy_image_resize(
-        "$upload_dir/$basename",
-        $self->get_upload_dir() . "/small.jpg",
-        $self->get_image_size("small")
-    );
-
-    # create thumbnail
-    $self->copy_image_resize(
-        "$upload_dir/$basename",
-        $self->get_upload_dir() . "/thumbnail.jpg",
-        $self->get_image_size("thumbnail")
-    );
-
-    #    };
-    #	  if ($@) {
-    #	      return -3;
-    #	  }
-
-    # enter preliminary image data into database
-    #$tag_table->insert_image($experiment_id, $unix_file, ${safe_ext});
-    #
-    my $ext = "";
-
-    # if ($basename =~ /(.*)(\.{1,4})$/) {
-    # deanx - nov 21 2007 - logic changed ... preserve original name from above
-    #     use this to extract file extension. note prior regex was wrong
-    if ( $original_filename =~ /(.*)(\.\S{1,4})$/ ) {
-        $original_filename = $1;
-        $ext               = $2;
-    }
-
-    $self->set_original_filename($original_filename);
-    $self->set_file_ext($ext);
-
-    # start transaction, store the image object, and associate it to
-    # the given type and type_id.
-    #
-    my $image_id = 0;
-
-    #    eval {
-    $image_id = $self->store();
-
-    if ( $type eq "experiment" ) {
-        #print STDERR "Associating experiment $type_id...\n";
-        $self->associate_experiment($type_id);
-    }
-    elsif ( $type eq "individual" ) {
-        #print STDERR "Associating individual $type_id...\n";
-        $self->associate_individual($type_id);
-    }
-    elsif ( $type eq "fish" ) {
-        #print STDERR "Associating to fish experiment $type_id\n";
-        $self->associate_fish_result($type_id);
-    }
-    elsif ( $type eq "locus" ) {
-        #print STDERR "Associating to locus $type_id\n";
-        $self->associate_locus($type_id);
-    }
-
-    else {
-        die "type $type is like totally illegal!\n";
-    }
-
-    # move the image into the image_id subdirectory
-    #
-    my $image_dir = $self->get_image_dir("full") . "/$image_id";
-    #print STDERR "Moved $upload_dir to $image_dir...\n";
-    File::Copy::move( $upload_dir, $image_dir )
-      || die "Couldn't move temp dir to image dir ($upload_dir, $image_dir)";
-
-    #    };
-
-# if we are here, everything should have worked, so we commit.
-#
-#    if ($@) {
-#	print STDERR "An error occurred while storing the image data. Sorry. error: $@";
-#	$self->get_dbh()->rollback();
-
-    # should also delete the newly created image file directory...
-    #
-    ### unlink $upload_dir."/$image_id";
-    #   }
-    #   else {
-    #	$self->get_dbh()->commit();
-    #    }
-    $self->set_image_id($image_id);
-    return $image_id;
-}
-
-sub copy_image_resize {
+sub associate_individual {
     my $self = shift;
-    my ( $original_image, $new_image, $width ) = @_;
+    my $individual_id = shift;
+    my $query = "INSERT INTO phenome.individual_image
+                   (individual_id, image_id) VALUES (?, ?)";
+    my $sth = $self->get_dbh()->prepare($query);
+    $sth->execute($individual_id, $self->get_image_id());
 
-    # first copy the file
-    my $copy = "cp '$original_image' '$new_image'";
-
-    #print STDERR "COPYING: $copy\n";
-    #system($copy);
-    File::Copy::copy( $original_image, $new_image );
-    my $chmod = "chmod 664 '$new_image'";
-
-    #    print STDERR "CHMODing: $chmod\n";
-    #system($chmod);
-    #my $chown = "chown www-data:www-data '$new_image'";
-
-    #   print STDERR "CHOWNing: $chown\n";
-    #system($chown);
-
-    # now resize the new file, and ensure it is a jpeg
-    my $resize = `mogrify -format jpg -geometry $width '$new_image'`;
-
+    my $id= $self->get_currval("phenome.individual_image_individual_image_id_seq");
+    return $id;
 }
 
-=head2 function get_copyright, set_copyright
+=head2 get_individuals
 
-  Synopsis:	$copyright = $image->get_copyright(); 
-                $image->set_copyright("Copyright (c) 2001 by Picasso");
-  Arguments:	getter: the copyright information string
-  Returns:	setter: the copyright information string
-  Side effects:	will be stored in the database in the copyright column.
-  Description:	
+ Usage: $self->get_individuals()
+ Desc:  find associated individuals with the image
+ Ret:   list of 'Individual' objects
+ Args:  none
+ Side Effects: none
+ Example:
 
 =cut
 
-sub get_copyright {
+sub get_individuals {
     my $self = shift;
-    return $self->{copyright};
+    my $query = "SELECT individual_id FROM phenome.individual_image WHERE individual_image.image_id=?";
+    my $sth = $self->get_dbh()->prepare($query);
+    $sth->execute($self->get_image_id());
+    my @individuals;
+    while (my ($individual_id) = $sth->fetchrow_array()) {
+	my $i = CXGN::Phenome::Individual->new($self->get_dbh(), $individual_id);
+	if ( $i->get_individual_id() ) { push @individuals, $i; } #obsolete individuals should be ignored!
+    }
+    return @individuals;
 }
 
-sub set_copyright {
-    my $self = shift;
-    $self->{copyright} = shift;
-}
 
-=head2 iconify_file
+=head2 associate_experiment
 
-Usage:   Iconify_file ($filename)
-Desc:    This is used only for PDF, PS and EPS files during Upload processing to produce a thumbnail image
-         for these filetypes for the CONFIRM screen.  Results end up on disk but are not used other than to t
-	 produce the thumbnail
-Ret:
-Args:    Full Filename of PDF file
-Side Effects:  
-Example:
+ Usage: $image->associate_experiment($experiment_id);
+ Desc:  associate and image with and insitu experiment
+ Ret:   a database id
+ Args:  experiment_id
+ Side Effects:
+ Example:
 
 =cut
 
-sub iconify_file {
-    my $file_name = shift;
+sub associate_experiment {
+    my $self = shift;
+    my $experiment_id = shift;
+    my $query = "INSERT INTO insitu.experiment_image
+                 (image_id, experiment_id)
+                 VALUES (?, ?)";
+    my $sth = $self->get_dbh()->prepare($query);
+    $sth->execute($self->get_image_id(), $experiment_id);
+    my $id= $self->get_currval("insitu.experiment_image_experiment_image_id_seq");
+    return $id;
 
-    my $basename = File::Basename::basename($file_name);
+}
 
-    my $self = SGN::Context->new()
-      ;    # merely used to retrieve correct temp dir on this host
-    my $temp_dir =
-        $self->get_conf("basepath") . "/"
-      . $self->get_conf("tempfiles_subdir")
-      . "/temp_images";
+=head2 get_experiments
 
-    my @image_pages = `/usr/bin/identify $file_name`;
+ Usage:
+ Desc:
+ Ret:          a list of CXGN::Insitu::Experiment objects associated
+               with this image
+ Args:
+ Side Effects:
+ Example:
 
-    my $mogrified_image;
-    my $newname;
-    if ( $basename =~ /(.*)\.(.{1,4})$/ )
-    {      #note; mogrify will create files name
-            # basename-0.jpg, basename-1.jpg
-        if ( $#image_pages > 0 ) {    # multipage, pdf, ps or eps
-            $mogrified_image = $temp_dir . "/temp-0.jpg";
-        }
-        else {
-            $mogrified_image = $temp_dir . "/temp.jpg";
-        }
-        my $tempname = $temp_dir . "/temp." . $2;    # retrieve file extension
-        $newname = $basename . ".jpg";               #
-        my $new_dest = $temp_dir . "/" . $newname;
+=cut
 
-        # use temp name for mogrify/ghostscript
-        File::Copy::copy( $file_name, $tempname )
-          || die "Can't copy file $basename to $tempname";
+sub get_experiments {
+    my $self = shift;
+    my $query = "SELECT experiment_id FROM insitu.experiment_image
+                 WHERE image_id=?";
+    my $sth = $self->get_dbh()->prepare($query);
+    $sth->execute($self->get_image_id());
+    my @experiments = ();
+    while (my ($experiment_id) = $sth->fetchrow_array()) {
+	push @experiments, CXGN::Insitu::Experiment->new($self->get_dbh(), $experiment_id);
+    }
+    return @experiments;
+}
 
-        if ( (`mogrify -format jpg '$tempname'`) ) {
-            die "Sorry, can't convert image $basename";
-        }
+=head2 associate_fish_result
 
-        File::Copy::copy( $mogrified_image, $new_dest )
-          || die "Can't copy file $mogrified_image to $newname";
+ Usage:        $image->associate_fish_result($fish_result_id)
+ Desc:         associate a CXGN::Phenome::Individual with this image
+ Ret:          database_id
+ Args:         fish_result_id
+ Side Effects:
+ Example:
+
+=cut
+
+sub associate_fish_result {
+    my $self = shift;
+    my $fish_result_id = shift;
+    my $query = "INSERT INTO sgn.fish_result_image
+                   (fish_result_id, image_id) VALUES (?, ?)";
+    my $sth = $self->get_dbh()->prepare($query);
+    $sth->execute($fish_result_id, $self->get_image_id());
+    my $id= $self->get_currval("sgn.fish_result_image_fish_result_image_id_seq");
+    return $id;
+}
+
+=head2 get_fish_result_clone_ids
+
+ Usage:        my @clone_ids = $image->get_fish_result_clones();
+ Desc:         because fish results are associated with genomic
+               clones, this function returns the genomic clone ids
+               that are associated through the fish results to
+               this image. The clone ids can be used to construct
+               links to the BAC detail page.
+ Ret:          A list of clone_ids
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_fish_result_clone_ids {
+    my $self = shift;
+    my $query = "SELECT distinct(clone_id) FROM sgn.fish_result_image join sgn.fish_result using(fish_result_id)  WHERE fish_result_image.image_id=?";
+    my $sth = $self->get_dbh()->prepare($query);
+    $sth->execute($self->get_image_id());
+    my @fish_result_clone_ids = ();
+    while (my ($fish_result_clone_id) = $sth->fetchrow_array()) {
+	push @fish_result_clone_ids, $fish_result_clone_id;
+    }
+    return @fish_result_clone_ids;
+}
+
+=head2 function get_associated_objects
+
+  Synopsis:
+  Arguments:
+  Returns:
+  Side effects:
+  Description:
+
+=cut
+
+sub get_associated_objects {
+    my $self = shift;
+    my @associations = ();
+    my @individuals=$self->get_individuals();
+    foreach my $ind (@individuals) {
+	print STDERR  "found individual '$ind' !!\n";
+	my $individual_id = $ind->get_individual_id();
+	my $individual_name = $ind->get_name();
+	push @associations, [ "individual", $individual_id, $individual_name ];
+
+#	print "<a href=\"/phenome/individual.pl?individual_id=$individual_id\">".($ind->get_name())."</a>";
+    }
+
+    foreach my $exp ($self->get_experiments()) {
+	my $experiment_id = $exp->get_experiment_id();
+	my $experiment_name = $exp->get_name();
+
+	push @associations, [ "experiment", $experiment_id, $experiment_name ];
+
+	#print "<a href=\"/insitu/detail/experiment.pl?experiment_id=$experiment_id&amp;action=view\">".($exp->get_name())."</a>";
+    }
+
+    foreach my $fish_result_clone_id ($self->get_fish_result_clone_ids()) {
+	push @associations, [ "fished_clone", $fish_result_clone_id ];
+    }
+    foreach my $locus ($self->get_loci() ) {
+	push @associations, ["locus", $locus->get_locus_id(), $locus->get_locus_name];
+    }
+    return @associations;
+}
+
+
+
+### deanx additions - Nov 13, 2007
+
+=head2 associate_locus
+
+ Usage:        $image->associate_locus($locus_id)
+ Desc:         associate a locus with this image
+ Ret:          database_id
+ Args:         locus_id
+ Side Effects:
+ Example:
+
+=cut
+
+sub associate_locus {
+    my $self = shift;
+    my $locus_id = shift;
+    my $sp_person_id= $self->get_sp_person_id();
+    my $query = "INSERT INTO phenome.locus_image
+                   (locus_id,
+		   sp_person_id,
+		   image_id)
+		 VALUES (?, ?, ?)";
+    my $sth = $self->get_dbh()->prepare($query);
+    $sth->execute(
+    		$locus_id,
+    		$sp_person_id,
+    		$self->get_image_id()
+		);
+
+    my $locus_image_id= $self->get_currval("phenome.locus_image_locus_image_id_seq");
+    return $locus_image_id;
+}
+
+
+=head2 get_loci
+
+ Usage:   $self->get_loci
+ Desc:    find the locus objects asociated with this image
+ Ret:     a list of locus objects
+ Args:    none
+ Side Effects: none
+ Example:
+
+=cut
+
+sub get_loci {
+    my $self = shift;
+    my $query = "SELECT locus_id FROM phenome.locus_image WHERE locus_image.obsolete = 'f' and locus_image.image_id=?";
+    my $sth = $self->get_dbh()->prepare($query);
+    $sth->execute($self->get_image_id());
+    my $locus;
+    my @loci = ();
+    while (my ($locus_id) = $sth->fetchrow_array()) {
+       $locus = CXGN::Phenome::Locus->new($self->get_dbh(), $locus_id);
+        push @loci, $locus;
+    }
+    return @loci;
+}
+
+
+
+
+=head2 function get_associated_object_links
+
+  Synopsis:
+  Arguments:
+  Returns:	a string
+  Side effects:
+  Description:	gets the associated objects as links in tabular format
+
+=cut
+
+sub get_associated_object_links {
+    my $self = shift;
+    my $s = "";
+    foreach my $assoc ($self->get_associated_objects()) {
+
+	if ($assoc->[0] eq "individual") {
+	    $s .= "<a href=\"/phenome/individual.pl?individual_id=$assoc->[1]\">Individual name: $assoc->[2].</a>";
+	}
+
+	if ($assoc->[0] eq "experiment") {
+	    $s .= "<a href=\"/insitu/detail/experiment.pl?experiment_id=$assoc->[1]&amp;action=view\">insitu experiment $assoc->[2]</a>";
+	}
+
+        if ($assoc->[0] eq "fished_clone") {
+	    $s .= qq { <a href="/maps/physical/clone_info.pl?id=$assoc->[1]">FISHed clone id:$assoc->[1]</a> };
+
+	}
+      if ($assoc->[0] eq "locus" ) {
+	  $s .= qq { <a href="/phenome/locus_display.pl?locus_id=$assoc->[1]">Locus name:$assoc->[2]</a> };
+      }
 
     }
-    return;
+    return $s;
 }
+
+
+
 
 1;

@@ -17,7 +17,7 @@ use CXGN::DB::Connection;
 use CXGN::Phenome::Population;
 use CXGN::Scrap;
 use Cache::File;
-
+use CGI ();
 use CatalystX::GlobalContext qw( $c );
 
 my $scrap = CXGN::Scrap->new();
@@ -29,14 +29,18 @@ my $population_id = $args{population_id};
 my $pop = CXGN::Phenome::Population->new( $dbh, $population_id );
 my $name = $pop->get_name();
 
-print
-"Pragma: \"no-cache\"\nContent-Disposition:filename=phenotype_data_${population_id}.txt\nContent-type:application/data\n\n";
-
-
 
 my $p_file = $pop->phenotype_file($c);
 
-if (-e $p_file) {
+my $cgi = CGI->new();
+
+if (-e $p_file) {   
+   
+    print $cgi->header(
+	-type => 'application/x-download',
+	-attachment => "phenotype_data_${population_id}.txt",
+	);
+
     print "phenotype data for $name\n\n\n";
  
     open my $f, "<$p_file" or die "can't open file $p_file: $!\n";
@@ -48,7 +52,7 @@ if (-e $p_file) {
 
 }
 else {
-    print "phenotype file for this population is not cached 
-           or does not exist!\n";
+    print $cgi->header ('text/plain');   
+    print "No Phenotype data file found for this population";
 }
 

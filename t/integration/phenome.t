@@ -24,7 +24,7 @@ my $base_url = $ENV{SGN_TEST_SERVER};
 my $mech = SGN::Test::WWW::Mechanize->new;
 
 $mech->while_logged_in_all( sub {
-    my ($user_type) = @_;
+    my ($user_info) = @_;
     $mech->get_ok('/phenome/qtl_form.pl');
     $mech->submit_form_ok( {
         form_number => 2,

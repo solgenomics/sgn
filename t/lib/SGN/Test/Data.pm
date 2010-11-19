@@ -2,7 +2,6 @@ package SGN::Test::Data;
 
 use strict;
 use warnings;
-use Bio::Chado::Schema::Sequence::Feature;
 use SGN::Context;
 use base 'Exporter';
 use Test::More;
@@ -63,28 +62,30 @@ YOU DO NOT HAVE TO CLEAN UP THESE OBJECTS. All SGN::Test::Data objects auto-dest
 
 =cut
 
-our $num_features = 0;
-our $num_cvterms = 0;
-our $num_dbxrefs = 0;
-our $num_dbs = 0;
-our $num_cvs = 0;
+our $num_features  = 0;
+our $num_cvterms   = 0;
+our $num_dbxrefs   = 0;
+our $num_dbs       = 0;
+our $num_cvs       = 0;
 our $num_organisms = 0;
-our $test_data = [];
+our $num_stocks    = 0;
+our $test_data     = [];
 our @EXPORT_OK = qw/ create_test /;
 
 sub create_test {
     my ($pkg, $values) = @_;
     die "Must provide package name to create test object" unless $pkg;
     my $pkg_subs = {
-        'Cv::Cv'               => sub { _create_test_cv($values) },
-        'Cv::Cvterm'           => sub { _create_test_cvterm($values) },
-        'General::Db'          => sub { _create_test_db($values) },
-        'General::Dbxref'      => sub { _create_test_dbxref($values) },
-        'Sequence::Feature'    => sub { _create_test_feature($values) },
-        'Organism::Organism'   => sub { _create_test_organism($values) },
-        'Sequence::Featureloc' => sub { _create_test_featureloc($values) },
-        'Sequence::Featureprop' => sub { _create_test_featureprop($values) },
-        'Sequence::FeatureRelationship' => sub { _create_test_featurerelationship($values) },
+        'Cv::Cv'                        => sub { _create_test_cv($values)                  } ,
+        'Cv::Cvterm'                    => sub { _create_test_cvterm($values)              } ,
+        'General::Db'                   => sub { _create_test_db($values)                  } ,
+        'Stock::Stock'                  => sub { _create_test_stock($values)               } ,
+        'General::Dbxref'               => sub { _create_test_dbxref($values)              } ,
+        'Sequence::Feature'             => sub { _create_test_feature($values)             } ,
+        'Organism::Organism'            => sub { _create_test_organism($values)            } ,
+        'Sequence::Featureloc'          => sub { _create_test_featureloc($values)          } ,
+        'Sequence::Featureprop'         => sub { _create_test_featureprop($values)         } ,
+        'Sequence::FeatureRelationship' => sub { _create_test_featurerelationship($values) } ,
 
     };
     die "$pkg creation not supported yet, sorry" unless exists $pkg_subs->{$pkg};
@@ -153,6 +154,27 @@ sub _create_test_cvterm {
     push @$test_data, $cvterm;
     $num_cvterms++;
     return $cvterm;
+}
+
+sub _create_test_stock {
+    my ($values) = @_;
+
+    $values->{name}         ||= "stock_name_$num_stocks-$$";
+    $values->{uniquename}   ||= "stock_uniquename_$num_stocks-$$";
+    $values->{description}  ||= "stock_description_$num_stocks-$$";
+
+    my @values = keys %$values;
+
+    $values->{type}   ||= _create_test_cvterm();
+    my $stock = $schema->resultset('Stock::Stock')
+           ->create(
+            {
+                type_id => $values->{type}->cvterm_id,
+                map { $_  => $values->{$_} || 0 } @values,
+            });
+    push @$test_data, $stock;
+    $num_stocks++;
+    return $stock;
 }
 
 sub _create_test_organism {

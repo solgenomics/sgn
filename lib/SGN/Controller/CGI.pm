@@ -14,7 +14,7 @@ BEGIN{ extends 'Catalyst::Controller::CGIBin'; }
 __PACKAGE__->config(
     cgi_root_path => '/',
     CGI => {
-        pass_env => [qw[ PERL5LIB  PATH  PROJECT_NAME ]],
+        pass_env => [qw[ PERL5LIB  PATH  PROJECT_NAME  R_LIBS HOME ]],
     },
     cgi_file_pattern => '*.pl',
 );
@@ -36,7 +36,7 @@ sub is_perl_cgi {
 }
 
 if( $ENV{SGN_SKIP_CGI} ) {
-    override 'cgi_dir' => sub { '/nonexistent/path' }
+    override 'cgi_dir' => sub { File::Spec->devnull },
 }
 
 # force CGI backtrace only if app is starting, and is in debug mode

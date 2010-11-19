@@ -12,9 +12,10 @@
     use CXGN::Tools::Text qw/commify_number/;
 </%once>
 <%perl>
-    my ($description) = get_description($feature);
+    my ($description)       = get_description($feature);
     my ($length,$locations) = feature_length($feature);
-    my $feature_length = commify_number($length) . " bases";
+    my $feature_length      = commify_number($length) . " bases";
+
     if ($locations) {
         $feature_length .= " in $locations location" . ($locations > 1 ? 's' : '');
     };
