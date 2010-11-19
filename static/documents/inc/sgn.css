@@ -781,6 +781,11 @@ th.columnar_table {
   border-bottom: 1px solid #aaa;
   background: #efefef;
 }
+table.columnar_table > caption {
+  font-weight: bold;
+  text-align: left;
+  padding: 2px;
+}
 
 /* styles for paginated search results pages like bacsearch.pl and markersearch.pl*/
 #searchresults { 
