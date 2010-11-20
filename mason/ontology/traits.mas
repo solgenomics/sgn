@@ -1,0 +1,36 @@
+<%doc>
+=head1
+
+
+</%doc>
+
+
+<%args>
+
+$roots => 'Solanaceae phenotype ontology'
+$db_name => 'SP'
+$search => 'cvterm_name' 
+
+</%args>
+
+<%perl>
+
+my $submit_link = qq | <a href="/phenome/qtl_form.pl">[Submit new QTL data]</a> | ;
+
+</%perl>
+
+<& /page/page_title.mas, title=> 'Search SGN' &>
+
+<& /search/forms/searchtabs.mas, search=>$search &>
+
+
+<&| /page/info_section.mas, title=>"Browse traits", subtitle=> $submit_link, collapsible=>1, collapsed=>0 &>
+
+</&>
+
+<& /ontology/browser.mas, root_nodes => $db_name,  db_name  => $db_name , title => "Browse Solanaceae Phenotype Ontology terms" &>
+
+
+<&| /page/info_section.mas, title=>"Browse traits/QTLs by population" , collapsible=>1, collapsed=>0 &>
+
+</&>
