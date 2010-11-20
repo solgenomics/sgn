@@ -107,12 +107,14 @@ alter table sgn.marker_experiment drop constraint marker_experiment_protocol_che
 
     alter table sgn.marker_experiment add constraint marker_experiment_protocol_check CHECK (protocol = 'AFLP'::text OR protocol = 'CAPS'::text OR protocol = 'RAPD'::text OR protocol = 'SNP'::text OR protocol = 'SSR'::text OR protocol = 'RFLP'::text OR protocol = 'PCR'::text OR protocol = 'dCAPS'::text OR protocol = 'DART'::text OR protocol = 'OPA'::text OR protocol = 'unknown'::text  OR protocol = 'ASPE'::text  OR protocol = 'INDEL'::text);
 
-
+--grant permissions to web_usr
+ grant SELECT  on sgn.pcr_experiment_sequence to web_usr ;
+ grant SELECT  on sgn.pcr_experiment_sequence_pcr_experiment_sequence_id_seq TO  web_usr ;
 
 EOSQL
-    
+
     print "You're done!\n";
-    
+
 }
 
 
