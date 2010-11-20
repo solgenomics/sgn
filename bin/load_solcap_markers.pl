@@ -170,7 +170,7 @@ eval {
             $indel_id = CXGN::Marker::Tools::insert($dbh,"sequence","sequence_id",['sequence'], ($indel)) if !$indel_id;
 	    print "indel: $indel_id\n";
         }
-        if (($protocol eq 'snp') && ($snp = $ss->value_at($marker_name,'SNP'))) {
+        if (($protocol eq 'SNP') && ($snp = $ss->value_at($marker_name,'SNP'))) {
 	    print "snp: $snp\n";
 	    $snp_id = CXGN::Marker::Tools::get_sequence_id($dbh,$snp);
             $snp_id = CXGN::Marker::Tools::insert($dbh,"sequence","sequence_id",['sequence'], ($snp)) if !$snp_id;
