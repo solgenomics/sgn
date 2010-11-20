@@ -29,19 +29,24 @@ my $population_id = $args{population_id};
 my $pop = CXGN::Phenome::Population->new( $dbh, $population_id );
 my $name = $pop->get_name();
 
-print
-"Pragma: \"no-cache\"\nContent-Disposition:filename=genotype_data_${population_id}.txt\nContent-type:application/data\n\n";
-
-
 my $g_file = $pop->genotype_file($c);
 
+my $cgi = CGI->new();
+
 if (-e $g_file) {
+
+    print $cgi->header(
+	-type => 'application/x-download',
+	-attachment => "genotype_data_${population_id}.txt",
+	);
+
     print "Genotype data for $name\n\n\n";
  
     open my $f, "<$g_file" or die "can't open file $g_file: $!\n";
     my $markers  = <$f>;
     my $linkages = <$f>;
     my $pos      = <$f>;
+    
     foreach my $row ($markers, $linkages, $pos) {
 	$row =~ s/,/\t/g;
 	print $row;
@@ -63,8 +68,9 @@ if (-e $g_file) {
 
 }
 else {
-    print "Genotype file for this population is not cached 
-           or does not exist!\n";
+     print $cgi->header ('text/plain');   
+     print "No genotype data file found for this population";
+    
 }
 
 

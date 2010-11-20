@@ -58,7 +58,6 @@ use File::stat;
 use Cache::File;
 use Path::Class;
 use Try::Tiny;
-use CXGN::Scrap::AjaxPage;
 use CXGN::Contact;
 
 use base qw / CXGN::Page::Form::SimpleFormPage CXGN::Phenome::Main/;
@@ -81,19 +80,33 @@ sub define_object
     $self->set_dbh( CXGN::DB::Connection->new() );
     my %args          = $self->get_args();
     my $population_id = $args{population_id};
+    
     unless ( !$population_id || $population_id =~ m /^\d+$/ )
     {
         $self->get_page->message_page(
                           "No population exists for identifier $population_id");
     }
+    
     $self->set_object_id($population_id);
     $self->set_object(
                        CXGN::Phenome::Population->new(
                                         $self->get_dbh(), $self->get_object_id()
                        )
                      );
+    
     $self->set_primary_key("population_id");
     $self->set_owners( $self->get_object()->get_owners() );
+    
+    my $cvterm_id = $args{cvterm_id};
+    $cvterm_id =~ s/\D//;
+    
+    if ($cvterm_id) {
+	$self->set_cvterm_id($cvterm_id);
+    } else {
+	$c->throw("A cvterm id is missing");
+    }
+
+
 }
 
 sub generate_form
@@ -204,16 +217,14 @@ div.abstract_optional_show {
   padding: 0.2em 0.5em 0.2em 1em;
 }
 EOS
-
-    my %args      = $self->get_args();
-    my $cvterm_id = $args{cvterm_id};
-
-    my $dbh = $self->get_dbh();
-
+ 
+    my %args            = $self->get_args();    
+    my $dbh             = $self->get_dbh();
     my $population      = $self->get_object();
     my $population_id   = $self->get_object_id();
     my $population_name = $population->get_name();
-
+    my $cvterm_id       = $self->get_cvterm_id();
+    
     my ( $term_obj, $term_name, $term_id );
 
     if ( $population->get_web_uploaded() )
@@ -388,8 +399,8 @@ qq { Download population: <span><a href="pop_download.pl?population_id=$populati
              $image_pheno, $title_pheno, $image_map_pheno,
              $plot_html
            );
-        ( $image_pheno, $title_pheno, $image_map_pheno ) =
-          population_distribution($population_id);
+        ( $image_pheno, $title_pheno, $image_map_pheno ) = $self->
+          population_distribution();
         $plot_html .= qq | <table  cellpadding = 5><tr><td> |;
         $plot_html .= $image_pheno . $image_map_pheno;
         $plot_html .= qq | </td><td> |;
@@ -423,11 +434,12 @@ qq { Download population: <span><a href="pop_download.pl?population_id=$populati
 	$plot_html .= qq | </td></tr></table> |;
 	
 	my ( $qtl_image, $legend);
-        #using standard deviation of 0.05 as an arbitrary cut off to run
+        
+        #using standard deviation of 0.01 as an arbitrary cut off to run
 	#qtl analysis. Probably, need to think of better solution.
-	if ($std >= 0.05) {
-         $qtl_image           = $self->qtl_plot();
-	 $legend = $self->legend($population);
+	if ( $std >= 0.01 ) {
+	    $qtl_image           = $self->qtl_plot();
+	    $legend = $self->legend();
 	} 
 	else { 
 	    $qtl_image = 'There is no statistically significant phenotypic 
@@ -504,19 +516,15 @@ sub store
 
 sub population_distribution
 {
-    my $self = shift;
-    my $doc  = CXGN::Scrap::AjaxPage->new();
-
-    my ( $pop_id, $cvterm_id ) =
-      $doc->get_encoded_arguments( "population_id", "cvterm_id" );
-
-    my $dbh = CXGN::DB::Connection->new();
+    my $self      = shift;
+    my $pop_id    = $self->get_object_id();
+    my $cvterm_id = $self->get_cvterm_id();
+    my $dbh       = $self->get_dbh();
+    my $pop       = $self->get_object();
+    my $pop_name  = $pop->get_name();
 
     my ( $term_obj, $term_name, $term_id );
-
-    my $pop = CXGN::Phenome::Population->new( $dbh, $pop_id );
-    my $pop_name = $pop->get_name();
-
+   
     if ( $pop->get_web_uploaded() )
     {
         $term_obj  = CXGN::Phenome::UserTrait->new( $dbh, $cvterm_id );
@@ -650,16 +658,10 @@ qq | Frequency distribution of experimental lines evaluated for $term_name. Bars
 
 sub qtl_plot
 {
-
-    my $self = shift;
-    my $doc  = CXGN::Scrap::AjaxPage->new();
-
-    my ( $pop_id, $cvterm_id ) =
-      $doc->get_encoded_arguments( "population_id", "cvterm_id" );
-
-
-
-    my $dbh = $self->get_dbh();
+    my $self      = shift;   
+    my $pop_id    = $self->get_object_id();
+    my $cvterm_id = $self->get_cvterm_id();
+    my $dbh       = $self->get_dbh();
 
     my $population     = $self->get_object();
     my $pop_name       = $population->get_name();
@@ -936,17 +938,14 @@ qq | <a href="$image_t_url" title="<a href=$h_marker&amp;qtl=$image_t_url><font 
 
 sub infile_list
 {
-
-    my $self = shift;
-    my $doc  = CXGN::Scrap::AjaxPage->new();
-
-    my ( $pop_id, $cvterm_id ) =
-      $doc->get_encoded_arguments( "population_id", "cvterm_id" );
-
-    my $dbh = $self->get_dbh();
-
-    my ( $term_obj, $term_name, $term_id );
+    my $self       = shift;  
+    my $pop_id     = $self->get_object_id();
     my $population = $self->get_object();
+    my $cvterm_id  = $self->get_cvterm_id();    
+    my $dbh        = $self->get_dbh();
+    
+    my ( $term_obj, $term_name, $term_id );
+   
 
     if ( $population->get_web_uploaded() )
     {
@@ -1018,18 +1017,14 @@ sub infile_list
 
 sub outfile_list
 {
-    my $self = shift;
-
-    my $doc = CXGN::Scrap::AjaxPage->new();
-
-    my ( $pop_id, $cvterm_id ) =
-      $doc->get_encoded_arguments( "population_id", "cvterm_id" );
-
-    my $dbh = $self->get_dbh();
+    my $self       = shift;
+    my $pop_id     = $self->get_object_id();
+    my $population = $self->get_object();
+    my $cvterm_id  = $self->get_cvterm_id();
+    my $dbh        = $self->get_dbh();
 
     my ( $term_obj, $term_name, $term_id );
-    my $population = $self->get_object();
-
+   
     if ( $population->get_web_uploaded() )
     {
         $term_obj  = CXGN::Phenome::UserTrait->new( $dbh, $cvterm_id );
@@ -1199,10 +1194,8 @@ sub run_r
       } qw / in out /;
 
     #copy our R commands into a cluster-accessible tempfile
-    my $doc = CXGN::Scrap::AjaxPage->new();
-
     {
-        my $r_cmd_file = $doc->path_to('/cgi-bin/phenome/cvterm_qtl.r');
+        my $r_cmd_file = $c->path_to('/cgi-bin/phenome/cvterm_qtl.r');
         copy( $r_cmd_file, $r_in_temp )
           or die "could not copy '$r_cmd_file' to '$r_in_temp'";
     }
@@ -1254,15 +1247,12 @@ sub run_r
 
 sub permu_file
 {
-    my $self = shift;
-    my $doc  = CXGN::Scrap::AjaxPage->new();
-    my ( $pop_id, $cvterm_id ) =
-      $doc->get_encoded_arguments( "population_id", "cvterm_id" );
-
-    my $dbh = CXGN::DB::Connection->new();
-
-    my $population = CXGN::Phenome::Population->new( $dbh, $pop_id );
-    my $pop_name = $population->get_name();
+    my $self       = shift;    
+    my $cvterm_id  = $self->get_cvterm_id();
+    my $dbh        = $self->get_dbh();
+    my $pop_id     = $self->get_object_id();
+    my $population = $self->get_object();
+    my $pop_name   = $population->get_name();
 
     my ( $term_obj, $term_name, $term_id );
 
@@ -1327,7 +1317,7 @@ sub permu_values
     my $self            = shift;
     my $prod_permu_file = $self->permu_file();
 
-    my %permu_threshold = {};
+    my %permu_threshold;
 
     my $permu_file = fileparse($prod_permu_file);   
     my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
@@ -1424,14 +1414,10 @@ sub permu_values_exist
 
 sub qtl_images_exist
 {
-    my $self = shift;
-    my $doc  = CXGN::Scrap::AjaxPage->new();
-
-    my ( $pop_id, $cvterm_id ) =
-      $doc->get_encoded_arguments( "population_id", "cvterm_id" );
-
-    my $dbh = $self->get_dbh();
-
+    my $self       = shift;
+    my $pop_id     = $self->get_object_id();
+    my $cvterm_id  = $self->get_cvterm_id();
+    my $dbh        = $self->get_dbh();
     my $population = $self->get_object();
     my $pop_name   = $population->get_name();
 
@@ -1639,7 +1625,7 @@ qq |<a href="/solpeople/personal-info.pl?sp_person_id=$sp_person_id">$submitter_
 #move to qtl or population object
 sub legend {
     my $self = shift;
-    my $pop = shift;
+    my $pop = $self->get_object();
     my $sp_person_id   = $pop->get_sp_person_id();
     my $qtl            = CXGN::Phenome::Qtl->new($sp_person_id);
     my $stat_file = $qtl->get_stat_file($c, $pop->get_population_id());
@@ -1746,5 +1732,25 @@ my $permu_threshold_ref = $self->permu_values();
 
 }
 
+=head2 set_cvterm_id, get_cvterm_id
+
+ Usage:
+ Desc: the 'cvterm id' here is not necessarily a cvterm id, 
+       but may also be user submitted trait id...
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
 
 
+
+sub get_cvterm_id {
+    my $self = shift;
+    return $self->{cvterm_id};
+}
+sub set_cvterm_id {
+    my $self = shift;
+    return $self->{cvterm_id} = shift;
+}
