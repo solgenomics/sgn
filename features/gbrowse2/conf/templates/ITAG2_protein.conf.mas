@@ -1,0 +1,13 @@
+#include ITAG1_protein.conf
+
+[GENERAL]
+
+examples = copper Q9SGA4_ARATH PF00270 SL1.00sc00002_14.1.1
+
+[main:database]
+db_adaptor = Bio::DB::SeqFeature::Store
+db_args     = -adaptor DBI::Pg
+              -dsn 'dbi:Pg:host=<% $feature->default_db_host %>;dbname=sfs_itag2_protein'
+              -user '<% $feature->default_db_user %>'
+              -password '<% $feature->default_db_password %>'
+

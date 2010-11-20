@@ -167,6 +167,16 @@ email_address          = noreply@gmod.org
 
 default source = ITAG1_genomic
 
+[ITAG2_genomic]
+path          = ITAG2_genomic.conf
+description   = ITAG2 Release: genomic annotations
+extended_description = Tomato release 2 annotations on genomic sequences by the International Tomato Annotation Group (ITAG).
+
+[ITAG2_protein]
+path          = ITAG2_protein.conf
+description   = ITAG2 Release: protein annotations
+extended_description = Tomato release 2 annotations on protein sequences by the International Tomato Annotation Group (ITAG).
+
 [ITAG1_genomic]
 path          = ITAG1_genomic.conf
 description   = ITAG1 Release: genomic annotations

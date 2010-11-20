@@ -1,0 +1,17 @@
+#include ITAG1_genomic.conf
+
+[GENERAL]
+
+examples = SL1.00sc00002_16.1.1 "Sulfite oxidase" TG154 C2_At3g02060
+
+[main:database]
+db_adaptor = Bio::DB::SeqFeature::Store
+db_args     = -adaptor DBI::Pg
+              -dsn 'dbi:Pg:host=<% $feature->default_db_host %>;dbname=sfs_itag2_genomic'
+              -user '<% $feature->default_db_user %>'
+              -password '<% $feature->default_db_password %>'
+search options = default +autocomplete +fulltext 
+
+
+[cds]
+link = sub { my $n = shift->display_name; $n =~ s/(\.\d+)\.\d+$/$1/; "/gbrowse/bin/gbrowse/ITAG2_protein/?name=$n" }
