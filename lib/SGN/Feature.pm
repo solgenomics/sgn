@@ -58,7 +58,6 @@ sub setup {
 # handled by this Feature.  note that a CrossReference object should
 # always be returned, it just might be empty
 sub xrefs {
-    return unless shift->enabled;
 }
 
 sub apache_conf {
