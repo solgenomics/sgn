@@ -3,6 +3,7 @@
     $blast_url => undef
     $children  => undef
     $parents   => undef
+    $xrefs     => []
 </%args>
 
 <%once>
@@ -39,3 +40,11 @@
         feature   => $feature,
         blast_url => $blast_url,
 &>
+
+<&| /page/info_section.mas,
+     title => 'Related views',
+ &>
+     <& /sitefeatures/xref_set/links/mixed.mas,
+        xrefs => $xrefs,
+      &>
+</&>

@@ -38,6 +38,13 @@ sub delegate_component
 
     $c->stash->{feature}  = $feature;
 
+    $c->stash->{xrefs} = [
+        $c->feature_xrefs( $feature->name ),
+        ( map { $c->feature_xrefs( $_->srcfeature->name.':'.$_->fmin.'..'.$_->fmax ) }
+          $feature->featureloc_features
+        ),
+      ];
+
     if ($c->view('Mason')->component_exists("/feature/$type_name.mas")) {
         $template         = "/feature/$type_name.mas";
         $c->stash->{type} = $type_name;
