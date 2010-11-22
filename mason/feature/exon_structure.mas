@@ -9,8 +9,11 @@
     empty_message => 'not available',
 &>
 % if( $gbrowse_xref ) {
-   <a style="display: block; border: 1px solid #666; padding: 3px; margin: 3px auto" href="<% $gbrowse_xref->url %>">
-        <img src="<% $gbrowse_xref->preview_image_url %>">
+   <a title="click to view in genome browser"
+      style="display: block; border: 1px solid #666; padding: 3px; margin: 3px auto"
+      href="<% $gbrowse_xref->url %>"
+    >
+      <img src="<% $gbrowse_xref->preview_image_url %>">
    </a>
 % }
 </&>
