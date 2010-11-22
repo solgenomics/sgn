@@ -48,9 +48,7 @@
 	blast_url => $blast_url,
 &>
 
-<& /feature/exon_structure.mas,
-    feature => $feature,
-&>
+<& /feature/exon_structure.mas, %ARGS &>
 
 <& /feature/genomic_sequence.mas,
     feature => $feature,
