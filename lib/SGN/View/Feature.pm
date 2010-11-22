@@ -9,8 +9,8 @@ use CXGN::Tools::Identifiers;
 
 
 our @EXPORT_OK = qw/
-    related_stats feature_table gbrowse_link
-    get_reference gbrowse_image_url feature_link
+    related_stats feature_table
+    get_reference feature_link
     infer_residue cvterm_link
     organism_link feature_length
     mrna_sequence
