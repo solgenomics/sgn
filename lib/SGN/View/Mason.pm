@@ -1,17 +1,23 @@
 package SGN::View::Mason;
 use Moose;
 extends 'Catalyst::View::HTML::Mason';
-
-use File::Spec;
+with 'Catalyst::Component::ApplicationAttribute';
 
 __PACKAGE__->config(
-    interp_args => {
-        comp_root =>  SGN->path_to('mason'),
-    },
     globals => ['$c'],
     template_extension => '.mas',
 );
 
+# must late-compute our interp_args
+sub interp_args {
+    my $self = shift;
+    return {
+        comp_root => [
+            ( map [ $_->feature_name, $_->path_to('mason')], $self->_app->features ),
+            [ main => $self->_app->path_to('mason') ],
+           ],
+    };
+}
 
 =head1 NAME
 

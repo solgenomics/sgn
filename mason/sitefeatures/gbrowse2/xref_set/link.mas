@@ -2,8 +2,12 @@
   $xrefs => []
 </%args>
   <& /page/columnar_table.mas,
-            headings=>["Annotation Dataset", "Location(s)"],
-            data=> [ map [ $_->data_source->description,
+            headings=>["Annotation Set", "Feature(s)", "Location(s)"],
+            data=> [ map [
+                           $_->data_source->description,
+
+                           join( ', ', map $_->display_name, @{$_->seqfeatures} ),                                
+
                            '<a href="'.$_->url.'">'
                            .join( ', ', (
                                map $_->seq_id.':'.$_->start.'..'.$_->end, @{$_->seqfeatures}

@@ -44,7 +44,7 @@
 <&| /page/info_section.mas,
      title => 'Related views',
  &>
-     <& /sitefeatures/xref_set/links/mixed.mas,
+     <& /sitefeatures/mixed/xref_set/link.mas,
         xrefs => $xrefs,
       &>
 </&>
