@@ -35,7 +35,7 @@ has 'feature_dir' => (
     lazy_build => 1,
    ); sub _build_feature_dir {
        my $self = shift;
-       return $self->context->path_to('features', $self->feature_name, @_ );
+       return $self->context->path_to( 'features', $self->feature_name )->stringify;
    }
 
 sub path_to {
