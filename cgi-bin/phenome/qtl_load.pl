@@ -276,7 +276,7 @@ sub pheno_upload {
 
     }
     else {
-         die "Catalyst::Request::Upload object for phenotype file not defined."
+	die "Catalyst::Request::Upload object for phenotype file not defined.";
 
     }
 
@@ -285,7 +285,7 @@ sub pheno_upload {
         return $temp_pheno_file;
 
     }
-    else { return 0 }
+    else { return 0; }
 
 }
 
@@ -329,7 +329,7 @@ sub geno_upload {
 
     }
     else {
-        die "Catalyst::Request::Upload object for genotype file not defined."
+        die "Catalyst::Request::Upload object for genotype file not defined.";
 
     }
 
@@ -337,7 +337,7 @@ sub geno_upload {
         $temp_geno_file = $qtl->apache_upload_file( $gen_upload, $c );
         return $temp_geno_file;
     }
-    else { return 0 }
+    else { return 0; }
 }
 
 sub trait_upload {
@@ -375,7 +375,7 @@ sub trait_upload {
     }
     else 
     {
-        die "Catalyst::Request::Upload object for trait file not defined."
+        die "Catalyst::Request::Upload object for trait file not defined.";
 
     }
   
@@ -471,17 +471,14 @@ sub store_accession {
     $species = ucfirst($species);
 
     print STDERR "$accession: species:$species, cultivar:$cultivar\n";
-    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
-   # my $organism = CXGN::Chado::Organism->new_with_species( $schema, $species );
-   # $self->check_organism( $organism, $species, $cultivar );
+    my $organism = CXGN::Chado::Organism->new_with_species( $schema, $species );
+    $self->check_organism( $organism, $species, $cultivar );
 
-   # my $existing_organism_id = $organism->get_organism_id();
-   # my $organism_name        = $organism->get_species();
+    my $existing_organism_id = $organism->get_organism_id();
+    my $organism_name        = $organism->get_species();
 
-    my $existing_organism_id = 1;
-    my $organism_name = "Solanum lycopersicum";
-    print STDERR "chado organism: $organism_name\n";
     eval {
         my $sth = $dbh->prepare(
             "SELECT accession_id, chado_organism_id, common_name 
@@ -574,12 +571,12 @@ sub store_accession {
 
 =head2 store_traits
 
- Usage: my ($true_or_false) = $self->store_traits($dbh, $file, $pop_id, $sp_person_id);
+ Usage: my ($true_or_false) = $self->store_traits($file);
  Desc: reads traits, their definition, and unit from 
        user submitted tab-delimited traits file and stores traits 
        that does not exist in the db or exist but with different units
  Ret: true or false
- Args: db handle, tab delimited trait file, with full path, population_id, sp_person_id
+ Args: tab delimited trait file, with full path
  Side Effects: accesses database
  Example:
 
@@ -884,12 +881,9 @@ sub store_map {
     }
     $map_id = $map->{map_id};
 
-   # my $species_m = $self->species($chado_org_id_m);
-   # my $species_f = $self->species($chado_org_id_f);
+    my $species_m = $self->species($chado_org_id_m);
+    my $species_f = $self->species($chado_org_id_f);
     
-    my $species_m = "S.lycopersicum";
-    my $species_f = "S.lycopersicum";
-    print STDERR "map_id from the store_map function: $map_id\n";
     my $long_name =
         $species_f . ' cv. '
       . $female_name . ' x '
@@ -944,7 +938,7 @@ sub species {
     my $org_id = shift;
     my $dbh    = $self->get_dbh();
 
-    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
     my $org = CXGN::Chado::Organism->new( $schema, $org_id );
 
