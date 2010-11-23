@@ -55,10 +55,11 @@ sub search :Path('/stock/search') Args(0) {
         $results = $self->_make_stock_search_rs( $c, $form );
     }
 
-    $c->forward_to_mason_view(
-        '/stock/search.mas',
-        form => $form,
-        results => $results,
+    $c->stash(
+        template => '/stock/search.mas',
+
+        form     => $form,
+        results  => $results,
         pagination_link_maker => sub {
             return uri( query => { %{$form->params}, page => shift } );
         },
@@ -247,7 +248,22 @@ sub _view_stock {
         $is_owner = 1;
     }
     ################
-    $c->forward_to_mason_view('/stock/index.mas',  stockref=>{ action=> $action,  stock_id => $stock_id , curator=>$curator, submitter=>$submitter, person_id => $person_id, stock => $stock, schema=>$self->schema, dbh=>$dbh, image_ids=> $image_ids, is_owner => $is_owner } );
+    $c->stash(
+        template => '/stock/index.mas',
+
+        stockref => {
+            action    => $action,
+            stock_id  => $stock_id ,
+            curator   => $curator,
+            submitter => $submitter,
+            person_id => $person_id,
+            stock     => $stock,
+            schema    => $self->schema,
+            dbh       => $dbh,
+            image_ids => $image_ids,
+            is_owner  => $is_owner,
+        },
+       );
 }
 
 sub _stock_images {
