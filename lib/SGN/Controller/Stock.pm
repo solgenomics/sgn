@@ -37,7 +37,7 @@ with 'Catalyst::Component::ApplicationAttribute';
 
 sub _validate_pair {
     my ($self,$c,$key,$value) = @_;
-    $c->throw( message => "$value is not a valid value for $key" )
+    $c->throw( is_client_error => 1, public_message => "$value is not a valid value for $key" )
         if ($key =~ m/_id$/ and $value !~ m/\d+/);
 }
 
@@ -215,20 +215,16 @@ sub _view_stock {
 
     # print message if stock_id is not valid
     unless ( ( $stock_id =~ m /^\d+$/ ) || ($action eq 'new' && !$stock_id) ) {
-        $c->throw(is_error=>0,
-                  message=>"No stock/accession exists for identifier $stock_id",
-            );
+        $c->throw_404( "No stock/accession exists for identifier $stock_id" );
     }
     if (  !$stock->get_object_row  || ($action ne 'new' && !$stock_id) ) {
-        $c->throw(is_error=>0,
-                  message=>"No stock/accession exists for identifier $stock_id",
-            );
+        $c->throw_404( "No stock/accession exists for identifier $stock_id" );
     }
 
     # print message if the stock is obsolete
     my $obsolete = $stock->get_is_obsolete();
     if ( $obsolete  && !$curator ) {
-        $c->throw(is_error=>0,
+        $c->throw(is_client_error => 0,
                   title => 'Obsolete stock',
                   message=>"Stock $stock_id is obsolete!",
                   developer_message => 'only curators can see obsolete stock',
@@ -237,7 +233,7 @@ sub _view_stock {
     }
     # print message if stock_id does not exist
     if ( !$stock && $action ne 'new' && $action ne 'store' ) {
-        $c->throw(is_error=>0, message=>'No stock exists for this identifier',);
+        $c->throw_404('No stock exists for this identifier');
     }
 
     ####################
