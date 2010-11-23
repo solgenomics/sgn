@@ -41,7 +41,7 @@ use Bio::Chado::Schema;
 use CXGN::Accession;
 
 sub init_patch {
-    my $self=shift;
+    my $self = shift;
     my $name = __PACKAGE__;
     print "dbpatch name is ':" .  $name . "\n\n";
     my $description = 'loading solcap map info';
@@ -62,68 +62,76 @@ sub patch {
     print STDOUT "\nExecuting the SQL commands.\n";
     my $schema = Bio::Chado::Schema->connect( sub { $self->dbh->clone } );
 
-    my $coderef = sub {
-        my $q = "Select map_id FROM sgn.map WHERE short_name = ? ";
-        my $sth = $self->dbh->prepare($q) ;
 
-        my %HoH = (
-            integrated => {
-                name => "Integrated map: Yellow Stuffer X LA1589 and Sun1642 X LA1589",
-                abstract => "Linkage maps were developed for the Yellow Stuffer × LA1589 and Sun1642 × LA1589 populations separately then the two maps were combined by chromosome into an integrated map using Joinmap 3.0 (Van Ooijen and Voorrips 2001).",
-                parent1 =>'any',
-                parent2 => 'any',
-                species1 => 'Solanum lycopersicum',
-                species2 => 'Solanum lycopersicum',
-                long_name => "Integrated map: Yellow Stuffer X LA1589 and Sun1642 X LA1589"
-            },
-            yellow => {
-                name => "Yellow Stuffer x LA1589",
-                abstract =>"200 F2 plants from a cross between Yellow Stuffer and LA1589 (van der Knaap and Tanksley 2003).",
-                parent1  =>  "Yellow Stuffer",
-                parent2  => "LA1589",
-                species1 => 'Solanum lycopersicum',
-                species2 => 'Solanum pimpinellifolium',
-                long_name => 'S.lycopersicum Yellow Stuffer X S.pimpinellifolium LA1589'
-            },
-            sun => {
-                name => "Sun1642 x LA1589",
-                abstract => "The mapping population derived from Sun1642 (S.lycopersicum) and LA1589 (S. pimpinellifolium) consists of 100 F2 individuals (van der Knaap and Tanksley 2001).",
-                parent1  => 'LA1589',
-                parent2  => 'Sun1642',
-                species1 => 'Solanum pimpinellifolium',
-                species2 => 'Solanum lycopersicum',
-                long_name => 'S.lycopersicum Sun1642 X S.pimpinellifolium LA1589'
-            },
-            );
-        my $update_q = "update sgn.map SET long_name= ?, abstract = ? , parent_1 =? , parent_2 = ?,
-                     map_type =?
-                    WHERE map_id = ?";
-        my $u_sth= $self->dbh->prepare($update_q);
+    my @maps = (
+        {
+            name => "Integrated map: Yellow Stuffer X LA1589 and Sun1642 X LA1589",
+            abstract => "Linkage maps were developed for the Yellow Stuffer × LA1589 and Sun1642 × LA1589 populations separately then the two maps were combined by chromosome into an integrated map using Joinmap 3.0 (Van Ooijen and Voorrips 2001).",
+            parent1 =>'any',
+            parent2 => 'any',
+            species1 => 'Solanum lycopersicum',
+            species2 => 'Solanum lycopersicum',
+            long_name => "Integrated map: Yellow Stuffer X LA1589 and Sun1642 X LA1589"
+        },
+        {
+            name => "Yellow Stuffer x LA1589",
+            abstract =>"200 F2 plants from a cross between Yellow Stuffer and LA1589 (van der Knaap and Tanksley 2003).",
+            parent1  =>  "Yellow Stuffer",
+            parent2  => "LA1589",
+            species1 => 'Solanum lycopersicum',
+            species2 => 'Solanum pimpinellifolium',
+            long_name => 'S.lycopersicum Yellow Stuffer X S.pimpinellifolium LA1589'
+        },
+        {
+            name => "Sun1642 x LA1589",
+            abstract => "The mapping population derived from Sun1642 (S.lycopersicum) and LA1589 (S. pimpinellifolium) consists of 100 F2 individuals (van der Knaap and Tanksley 2001).",
+            parent1  => 'LA1589',
+            parent2  => 'Sun1642',
+            species1 => 'Solanum pimpinellifolium',
+            species2 => 'Solanum lycopersicum',
+            long_name => 'S.lycopersicum Sun1642 X S.pimpinellifolium LA1589'
+        },
+       );
 
+    my $result = $schema->txn_do( sub {
 
-        foreach my $key ( keys %HoH) {
-            $sth->execute($HoH{$key}{name} );
-            my ($map_id) = $sth->fetchrow_array() ;
-            my $accession_id1 = $self->_find_accession($schema, $HoH{$key}{name}, $HoH{$key}{parent1} , $HoH{$key}{species1} );
-            my $accession_id2 = $self->_find_accession($schema, $HoH{$key}{name}, $HoH{$key}{parent2} , $HoH{$key}{species2} );
-            print "Updating map " . $HoH{$key}{name} . "(id = $map_id ) \n abstract = " .  $HoH{$key}{abstract} . "\n parent1 = " .  $accession_id1 . "\n parent2 = " . $accession_id2 . "\n";
-            $u_sth->execute( $HoH{$key}{long_name},$HoH{$key}{abstract} , $accession_id1, $accession_id2, ,'genetic' , $map_id)
+        for my $map ( @maps ) {
+
+            my ( $map_id ) = $self->dbh->selectrow_array( <<'', undef, $map->{name} );
+                 SELECT map_id
+                   FROM   sgn.map
+                  WHERE  short_name = ?
+
+            $map_id or die "Map '$map->{name}' not found in database.  Aborting.\n";
+
+            my $accession_id1 = $self->_find_accession( $schema, $map->{name}, $map->{parent1}, $map->{species1} );
+            my $accession_id2 = $self->_find_accession( $schema, $map->{name}, $map->{parent2}, $map->{species2} );
+
+            print <<"";
+Updating map '$map->{name}'
+    id       = $map_id
+    abstract = $map->{abstract}
+    parent1  = $accession_id1
+    parent2  = $accession_id2
+
+            $self->dbh->do( <<'', undef, $map->{long_name}, $map->{abstract}, $accession_id1, $accession_id2, ,'genetic' , $map_id );
+                UPDATE sgn.map
+                   SET long_name= ?, abstract = ? , parent_1 = ? , parent_2 = ?, map_type = ?
+                 WHERE map_id = ?
+
         }
 
-        print "You're done!\n";
-        if ($self->trial) {
-	    print "Trail mode! Rolling back transaction\n\n";
+        if ( $self->trial ) {
+	    print "Trial mode! Rolling back transaction.\n\n";
 	    $schema->txn_rollback;
+            return 0;
+        } else {
+            print "Committing.\n";
+            return 1;
         }
-	return 1;
-    };
+    });
 
-    try {
-	$schema->txn_do($coderef);
-	print "Data committed! \n";
-    } catch {
-	die "Load failed! " . $_ . "\n" ;
-    };
+    print $result ? "Patch applied successfully.\n" : "Patch not applied.\n";
 }
 
 sub _find_accession {
