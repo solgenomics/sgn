@@ -268,7 +268,8 @@ sub _view_stock {
 
 sub _stock_images {
     my ($self,$stock) = @_;
-    my $image_id_type_id = $self->schema->resultset("Cv::Cvterm")->search( { name => 'sgn image_id' }, )->single->cvterm_id ;
+    my $image_id_type_id = $self->schema->resultset("Cv::Cvterm")->search( { name => 'sgn image_id' }, )->get_column('cvterm_id')->first
+        or return [];
     my $image_stockprops = $stock->get_object_row()->search_related("stockprops" , { type_id => $image_id_type_id }  );
 
     my @image_ids ;
@@ -281,7 +282,8 @@ sub _stock_images {
 
 sub _stock_owners {
     my ($self,$stock) = @_;
-    my $person_id_type_id = $self->schema->resultset("Cv::Cvterm")->search( { name => 'sp_person_id' }, )->single->cvterm_id ;
+    my $person_id_type_id = $self->schema->resultset("Cv::Cvterm")->search( { name => 'sp_person_id' }, )->get_column('cvterm_id')->first
+        or return [];
     my $person_stockprops = $stock->get_object_row()->search_related("stockprops" , { type_id => $person_id_type_id }  );
 
     my @owner_ids ;
