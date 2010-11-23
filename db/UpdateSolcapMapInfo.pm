@@ -157,8 +157,8 @@ sub _find_accession {
     if ( !$accession) {
         my ($stock) = $schema->resultset("Stock::Stock")->find_or_create( 
             {
-                name => $name,
-                uniquename => $name,
+                name => $parent,
+                uniquename => $parent,
                 type_id => $accession_cvterm->cvterm_id,
             }, );
         print "inserting into accession_names value $parent\n";
