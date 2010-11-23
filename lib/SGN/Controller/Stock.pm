@@ -116,16 +116,12 @@ sub _make_stock_search_rs {
     my $rs = $self->schema->resultset('Stock::Stock');
 
     if( my $name = $form->param_value('stock_name') ) {
-
-  -or  => [c => 3, d => 4],
-
-  $rs = $rs->search(
-            {
+        $rs = $rs->search({
                 -or => [
-                     'lower(name)' => { like => '%'.lc( $name ).'%' } ,
-                     'lower(uniquename)' => { like => '%'.lc( $name ).'%' },
-                    ],
-            } );
+                    'lower(name)' => { like => '%'.lc( $name ).'%' } ,
+                    'lower(uniquename)' => { like => '%'.lc( $name ).'%' },
+                ],
+            });
     }
     if( my $type = $form->param_value('stock_type') ) {
         $self->_validate_pair($c,'type_id',$type);
