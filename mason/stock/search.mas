@@ -23,9 +23,9 @@
 #stock_search_form div label, #stock_search_form legend {
   font-weight: bold;
 }
-#stock_search_form div.text label {
+#stock_search_form label {
   float: left;
-  width: 10em;
+  width: 8em;
 }
 
 div.paginate_nav {
