@@ -39,7 +39,7 @@ div.paginate_nav {
 % if( $results ) {
 %   my $pager = $results->pager;
 
-  <&| /page/info_section.mas, title    => 'Search Results',
+  <&| /page/info_section.mas, title    => 'Search results',
                               subtitle => 'results '
                                           .$pager->first
                                           .'-'.$pager->last
