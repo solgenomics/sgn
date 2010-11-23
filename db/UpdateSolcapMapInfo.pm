@@ -142,6 +142,7 @@ sub _find_accession {
     my $species = shift;
 
     my $organism = $schema->resultset("Organism::Organism")->find( { species=> $species }, );
+    die 'Organism $species not found in the database! Aborting\n' if !$organism;
     my $sgn_q = "SELECT organism_id FROM sgn.organism WHERE chado_organism_id =? ";
     my $o_sth = $self->dbh->prepare($sgn_q);
     $o_sth->execute($organism->organism_id);
@@ -160,6 +161,7 @@ sub _find_accession {
                 name => $parent,
                 uniquename => $parent,
                 type_id => $accession_cvterm->cvterm_id,
+                organism_id => $organism->organism_id,
             }, );
         print "inserting into accession_names value $parent\n";
         $self->dbh->do("insert into sgn.accession_names (accession_name) values ('".$parent."') " );
