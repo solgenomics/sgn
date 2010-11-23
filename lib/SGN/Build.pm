@@ -4,7 +4,11 @@ use warnings;
 
 use version 0.77;
 
-use Parse::Deb::Control;
+my $HAVE_PARSE_DEB_CONTROL;
+BEGIN {
+    eval { require Parse::Deb::Control };
+    $HAVE_PARSE_DEB_CONTROL = !$@;
+}
 use Module::Build;
 use base 'Module::Build';
 
@@ -141,6 +145,11 @@ sub _run_R_check {
 sub _check_R_version {
     my $self = shift;
 
+
+    unless ($HAVE_PARSE_DEB_CONTROL) {
+        warn "Parse::Dep::Control not present, skipping R configuration";
+        return 0;
+    }
     my ( $cmp, $v ) = $self->_R_version_required;
 
     if( eval '$self->_R_version_current'." $cmp version->parse('$v')" ) {
