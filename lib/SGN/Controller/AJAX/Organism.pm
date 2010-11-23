@@ -2,6 +2,7 @@
 use strict;
 
 package SGN::Controller::AJAX::Organism;
+use Moose;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -26,16 +27,22 @@ After adding, redirects to C<view_sol100>.
 
 =cut
 
-sub add_sol100_organism :Local :ActionClass('REST');
+sub add_sol100_organism :Path('/organism/sol100/add_organism') :ActionClass('REST');
 
+sub autocomplete :Path('/organism/autocomplete') :ActionClass('REST');
 
 sub add_sol100_organism_POST { 
     my ( $self, $c ) = @_;
+
+    my $species = $c->req->body_parameters->{species};
+    my $property = $c->req->body_parameters->{property};
+    my $value    = $c->req->body_parameters->{value};
 
     my $organism = $c->dbic_schema('Bio::Chado::Schema','sgn_chado')
                      ->resultset('Organism::Organism')
                      ->search({ species => { ilike => $c->req->body_parameters->{species} }})
                      ->single;
+
 
 
     # if this fails, it will throw an acception and will (probably
@@ -45,7 +52,16 @@ sub add_sol100_organism_POST {
         { autocreate => 1 },
        );
 
-    $self->rendered_organism_tree_cache->remove( 'sol100' ); #< invalidate the sol100 cached image tree
+    if ($property && $value) { 
+	$organism->create_organismprops(
+	    { $property => $value },
+	    { autocreate => 1 },
+	    );
+    }
+
+    print STDERR "NOW WE ARE HERE...\n";
+    $c->forward('invalidate_organism_tree_cache', ['sol100']);
+
     $c->res->redirect( $c->uri_for( $self->action_for('view_sol100')));
 }
 
@@ -59,7 +75,7 @@ C<term>, responds with a JSON array of completions for that term.
 
 =cut
 
-sub autocomplete_GET :Chained('get_organism_set') :PathPart('autocomplete') :Args(0) {
+sub autocomplete_POST :Args(0) {
   my ( $self, $c ) = @_;
 
   my $term = $c->req->param('term');
