@@ -43,7 +43,9 @@ sub search :Path('/trait/search') Args(0) {
 
     my $req = $c->req;
 
-    $c->forward_to_mason_view( '/ontology/traits.mas' );
+    $c->stash(
+        template => '/ontology/traits.mas'
+        );
 }
 
 sub _get_qtl_populations {
