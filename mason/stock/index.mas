@@ -88,7 +88,7 @@ my $image_ids =  $stockref->{image_ids};
 <& /util/import_javascript.mas, classes => ["jquery", "thickbox", "CXGN.Page.FormattingHelpers", "CXGN.Phenome.Stock.StockPage"] &>
 
 
-<& /page/page_title.mas, title=> $type_name  .  ": " . $stock->get_uniquename()  . "\n" &>
+<& /page/page_title.mas, title=> ucfirst($type_name)  .  ": " . $stock->get_uniquename()  . "\n" &>
 
 
 <&| /page/info_section.mas, title=>"Stock details" , subtitle => "<a href=/stock/search/>Back to stock search</a>"  &>
