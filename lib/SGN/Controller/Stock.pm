@@ -146,20 +146,17 @@ sub _make_stock_search_rs {
 
 sub _organisms {
     my ($self) = @_;
-    my $ref =  [
+    return [
+        [ 0, 'any' ],
         map [ $_->organism_id, $_->species ],
         $self->schema
-    ->resultset('Stock::Stock')
-    ->search_related('organism' , {}, 
-             {select => [qw[ organism.organism_id species ]],
-              group_by => [qw[ organism.organism_id species ]],
-              order_by => 'species',
-             },
-    )
+             ->resultset('Stock::Stock')
+             ->search_related('organism' , {}, {
+                 select   => [qw[ organism.organism_id species ]],
+                 distinct => 1,
+                 order_by => 'species',
+               })
     ];
-    # add an empty option 
-    unshift @$ref , ['0', ''];
-    return $ref;
 }
 
 sub _stock_types {
