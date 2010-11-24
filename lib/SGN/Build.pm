@@ -7,8 +7,12 @@ use version 0.77;
 my $HAVE_PARSE_DEB_CONTROL;
 BEGIN {
     eval { require Parse::Deb::Control };
+    if( $@ ) {
+        warn "WARNING: Failed to load Parse::Deb::Control, and it is needed to check R dependencies:\n$@\n"
+    }
     $HAVE_PARSE_DEB_CONTROL = !$@;
 }
+
 use Module::Build;
 use base 'Module::Build';
 
