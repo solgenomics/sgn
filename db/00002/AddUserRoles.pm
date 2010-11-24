@@ -1,4 +1,3 @@
-#!/usr/bin/env perl
 package AddUserRoles;
 
 use Moose;
@@ -61,7 +60,4 @@ print "You're done!\n";
 
 }
 
-
-####
-1; #
-####
+1;
