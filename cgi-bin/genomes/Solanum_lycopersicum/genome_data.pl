@@ -364,11 +364,6 @@ sub gbrowse_fpc_links {
             $gb2->data_sources;
 
     }
-    # otherwise, use the old links to gbrowse1
-    else {
-        return ( '<a href="/gbrowse/gbrowse/fpc_tomato_sgn_2009/">SGN 2009 FPC browser</a> &ndash; browse FPC contigs from SGN 2009 FPC build (Tomato HindIII, EcoRI, MboI, and random sheared libraries)',
-                 '<a href="/gbrowse/gbrowse/sanger_tomato_fpc/">Sanger 2006 FPC browser</a> &ndash; browse FPC contigs from Sanger 2006 FPC build (Tomato HindIII and MboI libraries)',
-                );
-
-    }
+    return;
 }
+
