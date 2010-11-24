@@ -147,7 +147,7 @@ sub _check_R_version {
 
 
     unless ($HAVE_PARSE_DEB_CONTROL) {
-        warn "Parse::Dep::Control not present, skipping R configuration";
+        warn "Parse::Deb::Control not present, skipping R configuration";
         return 0;
     }
     my ( $cmp, $v ) = $self->_R_version_required;
