@@ -22,9 +22,6 @@ my $page = CXGN::Page->new("Tomato genome data","rob");
 my ($chrnum) = $page->get_encoded_arguments('chr');
 $chrnum ||= 1;
 $page->header("Tomato Genome Data","Tomato Genome Data");
-#print <<HTML;
-#<div style="margin: 1em" class="alert">3/27/08 15:00 GMT: The genome browser is being reloaded with new data.  For the next few hours, not all annotations may be available.</div>
-#HTML
 
 my $dbh = CXGN::DB::Connection->new();
 
