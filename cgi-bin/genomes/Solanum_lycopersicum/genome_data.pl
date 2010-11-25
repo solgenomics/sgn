@@ -25,19 +25,22 @@ $page->header("Tomato Genome Data","Tomato Genome Data");
 
 my $dbh = CXGN::DB::Connection->new();
 
-print info_section_html( title => 'Tomato genome sequence builds',
-			 contents => $c->render_mason('/genomes/Solanum_lycopersicum/wgs_builds_table.mas'),
-		       );
-
-
 print qq|<a name="annotation"></a>\n|;
 print info_section_html( title => 'Official annotation',
 			 subtitle => 'browse genome contigs and official annotations',
+                         collapsible => 1,
 			 contents => <<EOH
-			 <table class="indentedcontent"><tr><td>The official annotation for the tomato genome is provided by the <a href="http://www.ab.wur.nl/TomatoWiki">International Tomato Annotation Group (ITAG)</a>, a multinational consortium, funded in part by the <a href="http://www.eu-sol.net">EU-SOL project</a>.</td><td><a class="footer" href="http://www.eu-sol.net"><img src="/img/eusol_logo_small.jpg" border="0" /></a></td></tr></table>
+			 <table class="indentedcontent" style="margin: 0 10px 10px 10px"><tr><td>The official annotation for the tomato genome is provided by the <a href="http://www.ab.wur.nl/TomatoWiki">International Tomato Annotation Group (ITAG)</a>, a multinational consortium, funded in part by the <a href="http://www.eu-sol.net">EU-SOL project</a>.</td><td><a class="footer" href="http://www.eu-sol.net"><img src="/img/eusol_logo_small.jpg" border="0" /></a></td></tr></table>
 EOH
 			 .itag_releases_html( $page )
 		       );
+
+print qq|<a name="sequence_builds"></a>\n|;
+print info_section_html( title => 'Tomato genome sequence builds',
+                         collapsible => 1,
+			 contents => $c->render_mason('/genomes/Solanum_lycopersicum/wgs_builds_table.mas'),
+		       );
+
 
 print info_section_html( title => 'Physical maps',
 			 subtitle => 'locate clones on the genome',
@@ -108,42 +111,44 @@ sub gb_searchbox {
     my ($gb_root) = @_;
     return
         start_form( -style => 'display: inline', -action => $gb_root )
-       .textfield( -name => 'name', -value => 'search (e.g. TG154 or ARP2)', -onfocus => "this.value = ''", -size => 30)
+       .textfield( -name => 'name', -value => 'search (e.g. TG154 or lycopene cyclase)', -onfocus => "this.value = ''", -size => 30)
        .submit('Search','Search')
        .end_form()
 }
 
 sub itag_releases_html {
 
+    my %release_datasources;
+    for my $source ( map $_->data_sources, $c->enabled_feature('gbrowse2') ) {
+        next unless $source->name =~ /(ITAG\d+)/;
+        my $release = $1;
+        push @{$release_datasources{$release}}, $source;
+    }
+
+    my $annot_index = 0;
     return join( "\n",
                  map {
-                     my $r = $_;
-                     my $dev = $r->is_devel_release ? '(development snapshot)' : '';
-                     my $pre = $r->is_pre_release ? '(pre-release)' : '';
-                     my $tag = $r->release_tag;
-                     my $official = $dev || $pre ? '' : '(official release)';
-                     my $modtime = strftime('%b %e, %Y',gmtime($r->dir_modtime));
-                     my $conf_file = $r->get_file_info('gbrowse_genomic_conf');
-                     my $ftp_link = itag_release_ftp_link($r);
-
-                     info_section_html(
-                         title => "$tag  $dev$pre$official",
-                         subtitle => "last modified $modtime",
+                    info_section_html(
+                         title => "$_ annotation release",
                          is_subsection => 1,
-                         contents => info_table_html (
-                             'Bulk download' => $ftp_link,
-                             map {
-                                 $_->description =>
-                                    span({style => "font-weight: bold; font-size: 110%"},a({href =>$_->view_url},'Browse'),'or')
-                                   .gb_searchbox($_->view_url),
-                             }
-                             grep $_->description =~ /$tag/,
-                             map  $_->data_sources,
-                             $c->enabled_feature('gbrowse2')
-                            ),
+                         collapsible => 1,
+                         collapsed => $annot_index++ ? 1 : 0,
+                         contents =>
+                             info_table_html(
+                                 __border => 0,
+                                 map {
+                                     $_->description =>
+                                         '<p>'.$_->extended_description.'</p>'
+                                         .span({style => "font-weight: bold; font-size: 110%"},a({href =>$_->view_url},'Browse'),'or')
+                                         .gb_searchbox($_->view_url)
+                                 }
+                                 sort { $a->description cmp $b->description }
+                                 @{$release_datasources{$_}},
+                                ),
                         )
                  }
-                 CXGN::ITAG::Release->find
+                 sort { $b cmp $a }
+                 keys %release_datasources
              )
            || '<span class="ghosted">annotation data temporarily unavailable</span>'
 }
