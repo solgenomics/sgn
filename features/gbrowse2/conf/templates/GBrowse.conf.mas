@@ -168,15 +168,25 @@ email_address          = noreply@gmod.org
 
 default source = ITAG1_genomic
 
+[ITAG2_genomic]
+path          = ITAG2_genomic.conf
+description   = ITAG2 Release: genomic annotations
+extended_description = ITAG Release 2 (insert release date here) official annotations on SL2.31 genomic sequences by the International Tomato Annotation Group (ITAG).
+
+[ITAG2_protein]
+path          = ITAG2_protein.conf
+description   = ITAG2 Release: protein annotations
+extended_description = ITAG Release 2 (insert release date here) official annotations on SL2.31 protein sequences by the International Tomato Annotation Group (ITAG).
+
 [ITAG1_genomic]
 path          = ITAG1_genomic.conf
 description   = ITAG1 Release: genomic annotations
-extended_description = Tomato release 1 annotations on genomic sequences by the International Tomato Annotation Group (ITAG).
+extended_description = ITAG Release 1 (2010-03-10) official annotations on SL1.00 genomic sequences by the International Tomato Annotation Group (ITAG).
 
 [ITAG1_protein]
 path          = ITAG1_protein.conf
 description   = ITAG1 Release: protein annotations
-extended_description = Tomato release 1 annotations on protein sequences by the International Tomato Annotation Group (ITAG).
+extended_description = ITAG Release 1 (2010-03-10) official annotations on SL1.00 protein sequences by the International Tomato Annotation Group (ITAG).
 
 [ITAG_devel_genomic]
 path          = ITAG_devel_genomic.conf
