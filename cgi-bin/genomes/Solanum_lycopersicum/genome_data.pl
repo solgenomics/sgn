@@ -129,17 +129,18 @@ sub itag_releases_html {
     return join( "\n",
                  map {
                     info_section_html(
-                         title => "$_ annotation release",
+                         title         => "$_ annotation release",
                          is_subsection => 1,
-                         collapsible => 1,
-                         collapsed => $annot_index++ ? 1 : 0,
-                         contents =>
+                         collapsible   => 1,
+                         collapsed     => $annot_index++ ? 1 : 0,
+                         contents      =>
                              info_table_html(
                                  __border => 0,
                                  map {
                                      $_->description =>
                                          '<p>'.$_->extended_description.'</p>'
-                                         .span({style => "font-weight: bold; font-size: 110%"},a({href =>$_->view_url},'Browse'),'or')
+                                         .span({style => "font-weight: bold; font-size: 110%"},
+                                               a({href =>$_->view_url},'Browse'),'or')
                                          .gb_searchbox($_->view_url)
                                  }
                                  sort { $a->description cmp $b->description }
