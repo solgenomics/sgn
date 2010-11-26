@@ -120,7 +120,7 @@ sub itag_releases_html {
 
     my %release_datasources;
     for my $source ( map $_->data_sources, $c->enabled_feature('gbrowse2') ) {
-        next unless $source->name =~ /(ITAG\d+)/;
+        next unless $source->name =~ /(ITAG\d+)/ && $source->databases;
         my $release = $1;
         push @{$release_datasources{$release}}, $source;
     }
