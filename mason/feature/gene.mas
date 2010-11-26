@@ -10,12 +10,7 @@
 <& /page/page_title.mas, title => 'Gene: '. $feature->id &>
 
 <& /util/import_javascript.mas,
-    classes => [qw(
-        Prototype jquery Text.Markup CXGN.Effects
-        MochiKit.DOM thickbox
-        MochiKit.Async CXGN.Sunshine.NetworkBrowser
-        CXGN.Page.Form.JSFormPage
-    )]
+    classes => [ 'jquery', 'jqueryui' ],
 &>
 
 <%perl>
