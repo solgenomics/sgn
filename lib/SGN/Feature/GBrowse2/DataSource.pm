@@ -39,6 +39,7 @@ has 'debug' => (
 
 sub _build__databases {
     my $self = shift;
+    local $_; #< Bio::Graphics::* sloppily clobbers $_
     my $conf = $self->config;
     my @dbs =  grep /:database$/i, $self->config->configured_types;
     return {

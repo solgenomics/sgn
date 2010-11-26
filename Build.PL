@@ -32,9 +32,10 @@ my $build = SGN::Build->new(
     },
     requires => {
         'perl'                                     => '5.10.0',
+        'version'                                  => '0.77',
         'autodie'                                  => 0,
         'IPC::System::Simple'                      => 0,         #< required for autodie :all
-        'Bio::Chado::Schema'                       => '0.05900',
+        'Bio::Chado::Schema'                       => '0.07100',
         'Bio::Root::Version'                       => '1.006001',
         'Bio::Graphics::FeatureFile'               => 0,
         'Cache::File'                              => 0,

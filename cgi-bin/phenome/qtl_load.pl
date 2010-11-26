@@ -54,7 +54,6 @@ use CXGN::Page;
 use Bio::Chado::Schema;
 use Storable qw /store retrieve/;
 
-
 use CatalystX::GlobalContext qw( $c );
 
 sub new {
@@ -262,8 +261,7 @@ sub pheno_upload {
         die "Phenotype file name contains invalid characters";
     }
 
-    my $p          = CXGN::Page->new();
-    my $phe_upload = $p->get_upload();
+    my $phe_upload = $c->req->upload('pheno_file');
 
     if ( defined $phe_upload ) {
         $name = $phe_upload->filename;
@@ -278,7 +276,7 @@ sub pheno_upload {
 
     }
     else {
-        die "Apache2::Upload object for phenotype file not defined."
+	die "Catalyst::Request::Upload object for phenotype file not defined.";
 
     }
 
@@ -287,7 +285,7 @@ sub pheno_upload {
         return $temp_pheno_file;
 
     }
-    else { return 0 }
+    else { return 0; }
 
 }
 
@@ -311,9 +309,8 @@ sub geno_upload {
     else {
         die "Genotype file name contains invalid characters";
     }
-
-    my $p          = CXGN::Page->new();
-    my $gen_upload = $p->get_upload();
+  
+    my $gen_upload = $c->req->upload('geno_file');
 
     if ( defined $gen_upload ) {
         $name = $gen_upload->filename;
@@ -332,7 +329,7 @@ sub geno_upload {
 
     }
     else {
-        die "Apache2::Upload object for genotype file not defined."
+        die "Catalyst::Request::Upload object for genotype file not defined.";
 
     }
 
@@ -340,7 +337,7 @@ sub geno_upload {
         $temp_geno_file = $qtl->apache_upload_file( $gen_upload, $c );
         return $temp_geno_file;
     }
-    else { return 0 }
+    else { return 0; }
 }
 
 sub trait_upload {
@@ -364,29 +361,30 @@ sub trait_upload {
     else {
         die "Trait file name contains invalid characters";
     }
-
-    my $p            = CXGN::Page->new();
-    my $trait_upload = $p->get_upload();
-
-    if ( defined $trait_upload ) {
+  
+    my $trait_upload = $c->req->upload('trait_file');
+ 
+    if ( defined $trait_upload ) 
+    {
         $name = $trait_upload->filename;
-
         my ( $qtl_dir, $user_dir ) = $qtl->get_user_qtl_dir($c);
         my $qtlfiles = {};
         $qtlfiles->{trait_file} = $name;
         store( $qtlfiles, "$user_dir/qtlfiles" );
 
     }
-    else {
-        die "Apache2::Upload object for trait file not defined."
+    else 
+    {
+        die "Catalyst::Request::Upload object for trait file not defined.";
 
     }
-
-    if ( $c_file eq $name ) {
+  
+    if ( $c_file eq $name ) 
+    {
         $temp_trait_file = $qtl->apache_upload_file( $trait_upload, $c );
         return $temp_trait_file;
     }
-    else { return 0 }
+    else { return 0; }
 }
 
 sub load_pop_details {
@@ -473,7 +471,7 @@ sub store_accession {
     $species = ucfirst($species);
 
     print STDERR "$accession: species:$species, cultivar:$cultivar\n";
-    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
     my $organism = CXGN::Chado::Organism->new_with_species( $schema, $species );
     $self->check_organism( $organism, $species, $cultivar );
@@ -481,7 +479,6 @@ sub store_accession {
     my $existing_organism_id = $organism->get_organism_id();
     my $organism_name        = $organism->get_species();
 
-    print STDERR "chado organism: $organism_name\n";
     eval {
         my $sth = $dbh->prepare(
             "SELECT accession_id, chado_organism_id, common_name 
@@ -574,12 +571,12 @@ sub store_accession {
 
 =head2 store_traits
 
- Usage: my ($true_or_false) = $self->store_traits($dbh, $file, $pop_id, $sp_person_id);
+ Usage: my ($true_or_false) = $self->store_traits($file);
  Desc: reads traits, their definition, and unit from 
        user submitted tab-delimited traits file and stores traits 
        that does not exist in the db or exist but with different units
  Ret: true or false
- Args: db handle, tab delimited trait file, with full path, population_id, sp_person_id
+ Args: tab delimited trait file, with full path
  Side Effects: accesses database
  Example:
 
@@ -596,13 +593,15 @@ sub store_traits {
 
     my $header = <F>;
     chomp($header);
-    my @fields = split /\t/, $header;
-
+    my @fields = split /\t/, $header;    
+    @fields = map { lc( $_ ) } @fields;
+   		   
     my ( $trait, $trait_id, $trait_name, $unit, $unit_id );
 
     if (   $fields[0] ne "traits"
-        || $fields[1] ne "definition"
-        || $fields[2] ne "unit" )
+	   || $fields[1] ne "definition"
+	   || $fields[2] ne "unit" 
+	)
     {
         my $error =
           "Data columns in the traits file need to be in the order of: 
@@ -884,8 +883,7 @@ sub store_map {
 
     my $species_m = $self->species($chado_org_id_m);
     my $species_f = $self->species($chado_org_id_f);
-
-    print STDERR "map_id from the store_map function: $map_id\n";
+    
     my $long_name =
         $species_f . ' cv. '
       . $female_name . ' x '
@@ -940,7 +938,7 @@ sub species {
     my $org_id = shift;
     my $dbh    = $self->get_dbh();
 
-    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
     my $org = CXGN::Chado::Organism->new( $schema, $org_id );
 
