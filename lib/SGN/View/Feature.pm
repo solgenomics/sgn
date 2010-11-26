@@ -118,6 +118,7 @@ sub _feature_search_string {
 
 sub feature_link {
     my ($feature) = @_;
+    return '<span class="ghosted">null</span>' unless $feature;
     my $name = $feature->name;
     return qq{<a href="/feature/view/name/$name">$name</a>};
 }
