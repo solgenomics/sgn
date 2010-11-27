@@ -51,41 +51,20 @@
 &>
 
 % for my $mrna (@mrna_features) {
-<& /feature/mrna_sequence.mas,
-    mrna_feature => $mrna,
-&>
+  <& /feature/mrna_sequence.mas,
+      mrna_feature => $mrna,
+  &>
 % }
 <& /feature/protein_sequence.mas,
     mrna_features => [ @mrna_features ],
 &>
 
 <&| /page/info_section.mas,
-    title => 'Protein domains',
-    collapsible => 1,
-&>
-</&>
-
-<&| /page/info_section.mas,
-    title => 'BLAST Annotation',
-    collapsible => 1,
-&>
-
-</&>
-
-<&| /page/info_section.mas,
-    title => 'Gene Families',
-    collapsible => 1,
-&>
-</&>
-
-<&| /page/info_section.mas,
-    title => 'SNPs',
-    collapsible => 1,
-&>
-</&>
-
-<&| /page/info_section.mas,
-    title => 'Alternate Splicing',
-    collapsible => 1,
-&>
+     title => 'Related views',
+     collapsible => 1,
+ &>
+     <& /sitefeatures/mixed/xref_set/link.mas,
+        xrefs   => $xrefs,
+        exclude => 'gbrowse2',
+      &>
 </&>
