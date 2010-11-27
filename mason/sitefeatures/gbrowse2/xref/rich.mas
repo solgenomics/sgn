@@ -6,7 +6,7 @@
 
         <% info_table_html(
             'Annotation Set'  => $xref->data_source->description,
-            'Sequence Region' => $ref_region,
+            'Sequence Region' => '<a href="'.$xref->url.'">'.$ref_region.'</a>',
             __border   => 0,
             __multicol => 2,
          )%>
