@@ -5,6 +5,7 @@
 </%args>
 <%init>
     use SGN::View::Feature qw/ location_string_with_strand /;
+    my @mrnas = grep $_->type->name eq 'mRNA', $feature->child_features;
 </%init>
 <& /page/page_title.mas, title => 'Gene '. $feature->name &>
 
@@ -23,6 +24,7 @@
     feature => $feature,
     species => $species,
     title => 'Gene',
+    description_from => \@mrnas,
 &>
 
 <&| /page/info_section.mas,
@@ -58,7 +60,7 @@
 
 </&>
 
-% for my $mrna ( grep $_->type->name eq 'mRNA', $feature->child_features ) {
+% for my $mrna ( @mrnas ) {
   <&| /page/info_section.mas,
           title       => 'mRNA '.$mrna->name,
           collapsible => 1,

@@ -1,7 +1,8 @@
 <%args>
     $feature
     $title   => 'Feature'
-    $species => undef,
+    $species => undef
+    $description_from => [ $feature ]
 </%args>
 <%once>
     use SGN::View::Feature qw/
@@ -12,15 +13,14 @@
     use CXGN::Page::FormattingHelpers qw/info_table_html/;
     use CXGN::Tools::Text qw/commify_number/;
 </%once>
-<%perl>
-    my ($description)       = get_description($feature);
+<%init>
+    my $description  = join( '<hr />', grep $_, map get_description($_), @$description_from );
     my ($length,$locations) = feature_length($feature);
     my $feature_length      = commify_number($length) . " bases";
-
     if ($locations) {
         $feature_length .= " in $locations location" . ($locations > 1 ? 's' : '');
     };
-</%perl>
+</%init>
 <&| /page/info_section.mas,
     title       => $title,
     subtitle    => $feature->is_obsolete ? 'WARNING: This feature is obsolete' : '',
@@ -36,12 +36,11 @@
          __border => 0,
          __multicol => 4
     )%>
+
     <% info_table_html(
          'Description'   => $description || '<span class="ghosted">none</span>',
          __border => 0,
     )%>
-
-
 
     <& /feature/dbxref.mas, dbxref => $feature->dbxref &>
 </&>
