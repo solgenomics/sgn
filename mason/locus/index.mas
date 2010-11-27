@@ -1,86 +1,21 @@
-<%doc>
-
-=head1 NAME
-
-/locus/index.mas - a page for displaying locus details
-
-=head1 DESCRIPTION
-
-parameters:
-
-=over 3
-
-=item $locus_id
-
-The id of the locus in the database
-
-=item $dbh
-
-a database handle
-
-=item $user
-
-the person logged into the system right now
-
-
-
-=back
-
-=head1 AUTHOR
-
-Naama Menda <nm249@cornell.edu>
-
-=cut
-
-</%doc>
-
-
-
 <%args>
 
-$action => 'view'
-$locus_id => 0
-$user => undef
-$dbh
+  $action => 'view'
+  $locus
+  $locus_id
+  $user => undef
+  $dbh
 
 </%args>
-
+<%once>
+  use CXGN::Sunshine::Browser;
+  use CXGN::Page::FormattingHelpers qw / html_optional_show info_table_html /;
+</%once>
 
 <%perl>
 
-
-use CXGN::Phenome::Locus;
-use CXGN::Sunshine::Browser;
-use CXGN::Page::FormattingHelpers qw / html_optional_show info_table_html /;
-
-
-# print message if locus_id is not valid 
-unless ( ( $locus_id =~ m /^\d+$/ ) || ($action eq 'new' && !$locus_id) ) {
-  $c->throw(is_error=>0,
-	    message=>"No locus exists for identifier $locus_id",
-	   );
-}
-
-my $locus = CXGN::Phenome::Locus->new($dbh, $locus_id);
-my $person_id = $user->get_sp_person_id();
-my $user_type = $user->get_user_type();
-
-# print message if the locus is obsolete 
-if ( $locus->get_obsolete() eq 't' && $user_type ne 'curator' )
-  {
-    $c->throw(is_error=>0, 
-	      title => 'Obsolete locus',
-	      message=>"Locus $locus_id is obsolete!",
-	      developer_message => 'only curators can see obsolete loci',
-	      notify => 0,   #< does not send an error email
-	     );
-  }
-
-# print message if locus_id does not exist
-
-if ( !$locus->get_locus_id() && $action ne 'new' && $action ne 'store' ) {
-  $c->throw(is_error=>0, message=>'No locus exists for this identifier',);
-}
+my $user_type = $user ? $user->get_user_type : '';
+my $person_id = $user ? $user->get_sp_person_id : 0;
 
 my $this_page = "/phenome/locus_display.pl?locus_id=$locus_id";
 my $locus_xml = $locus_id ? qq |<a href = "generic_gene_page.pl?locus_id=$locus_id">Download GMOD XML</a>|
@@ -96,7 +31,7 @@ my $owner_objects= $locus->get_owners(1);
 
 my $locus_name = $locus->get_locus_name();
 my $owner;
-if ( $locus_name && ($user_type eq 'curator' || $person_id && grep { $_ == $person_id } @owners  ) ) {  $owner = 1; }
+if ( $locus_name && ( $user_type eq 'curator' || $person_id && grep { $_ == $person_id } @owners  ) ) {  $owner = 1; }
 my $registry = $locus->get_associated_registry();
 
 my @synonyms = $locus->get_locus_aliases('f','f');
