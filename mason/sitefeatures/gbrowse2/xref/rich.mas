@@ -2,7 +2,7 @@
   $xref
 </%args>
 
-    <div style="border: 1px solid #777; padding-bottom: 10px">
+    <div class="xref xref_rich xref_rich_gbrowse2">
 
         <% info_table_html(
             'Annotation Set'  => $xref->data_source->description,
@@ -18,10 +18,10 @@
             __border   => 0,
          )%>
 
-        <hr style="width: 95%" />
+        <hr />
    
         <a href="<% $xref->url %>">            
-           <img style="border: none" src="<% $xref->preview_image_url %>" />
+           <img src="<% $xref->preview_image_url %>" />
         </a>
 
      </div>
