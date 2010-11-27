@@ -279,28 +279,9 @@ my $ontology_subtitle =  !(grep { /^$user_type$/ } ('curator', 'submitter', 'seq
 </&>
 
 
-   <&| /page/info_section.mas, title=>"Sequence annotations ($seq_count)" , collapsible=>1, collapsed=>1 &>
-     <&| /page/info_section.mas, title => "SGN Unigenes",
-       id => 'unigenes',
-       subtitle => $new_unigene_link,
-       collapsible => 1,
-       collapsed =>  0 ,
-       is_subsection => 1,
-       &>
-       <& /locus/associate_unigene.mas, locus_id=>$locus_id &>
-         <& /locus/locus_unigenes.mas &>
-         </&>
-         <&| /page/info_section.mas, title => "GenBank accessions",
-             subtitle => qq|<a href="/chado/add_feature.pl?type=locus&amp;type_id=$locus_id&amp;refering_page=$this_page&amp;action=new">[Associate new genbank sequence]</a>|,
-             collapsible => 1,
-             collapsed =>  0 ,
-             is_subsection => 1,
-        &>
-        <% $genbank %>
-   </&>
+<&| /page/info_section.mas, title=>"Sequence annotations ($seq_count)" , collapsible=>1, collapsed=>1 &>
 
-   <&| /page/info_section.mas,
-       title         => "Gene model matches",
+   <&| /page/info_section.mas, title => "Gene model matches",
        collapsible   => 1,
        collapsed     => 0,
        is_subsection => 1,
@@ -308,6 +289,29 @@ my $ontology_subtitle =  !(grep { /^$user_type$/ } ('curator', 'submitter', 'seq
 
        <& /locus/locus_gene_model_matches.mas, locus => $locus &>
 
+   </&>
+
+
+   <&| /page/info_section.mas, title => "SGN Unigenes",
+       id => 'unigenes',
+       subtitle => $new_unigene_link,
+       collapsible => 1,
+       collapsed =>  0 ,
+       is_subsection => 1,
+    &>
+        <& /locus/associate_unigene.mas, locus_id=>$locus_id &>
+        <& /locus/locus_unigenes.mas &>
+    </&>
+
+    <&| /page/info_section.mas, title => "GenBank accessions",
+             subtitle => <<"",
+<a href="/chado/add_feature.pl?type=locus;type_id=$locus_id;refering_page=$this_page;action=new">[Associate new genbank sequence]</a>
+
+             collapsible => 1,
+             collapsed =>  0 ,
+             is_subsection => 1,
+        &>
+        <% $genbank %>
    </&>
 
    <&| /page/info_section.mas,
