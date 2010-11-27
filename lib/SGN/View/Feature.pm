@@ -144,9 +144,7 @@ sub organism_link {
     my $id      = $organism->organism_id;
     my $species = $organism->species;
     return <<LINK;
-<span class="species_binomial">
-  <a href="/chado/organism.pl?organism_id=$id">$species</a>
-</span>
+<a class="species_binomial" href="/chado/organism.pl?organism_id=$id">$species</a>
 LINK
 }
 

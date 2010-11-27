@@ -16,7 +16,6 @@
 <%perl>
     my $organism = $feature->organism;
     my $species  = $organism->species;
-    $species    =~ s!(\S+) !<i>$1</i> !;
     my $reference = $feature->featureloc_features->single->srcfeature;
 </%perl>
 
