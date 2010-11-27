@@ -7,13 +7,13 @@
                      grep { $_->type->name ne 'Note' } $feature->featureprops({ value => { '<=', 1000 } });
 </%perl>
 % if (@properties) {
-<&| /page/info_section.mas,
-    title => "Feature Properties",
-    collapsible => 1,
-&>
-<& /page/columnar_table.mas,
-    headings => [ "Feature property", "Value"  ],
-    data     => [ @properties ],
-&>
-</&>
+  <&| /page/info_section.mas,
+      title => "Other Properties",
+      collapsible => 1,
+  &>
+    <& /page/columnar_table.mas,
+        headings => [ "Property", "Value"  ],
+        data     => \@properties,
+    &>
+  </&>
 % }
