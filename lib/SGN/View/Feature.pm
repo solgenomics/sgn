@@ -35,9 +35,9 @@ sub get_description {
         })->get_column('value')
           ->first;
 
-    if( $description ) {
-        $description =~ s/(\S+)/my $id = $1; CXGN::Tools::Identifiers::link_identifier($id) || $id/ge;
-    }
+    return unless $description;
+
+    $description =~ s/(\S+)/my $id = $1; CXGN::Tools::Identifiers::link_identifier($id) || $id/ge;
 
     return $description;
 }
