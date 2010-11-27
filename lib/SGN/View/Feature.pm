@@ -20,14 +20,18 @@ our @EXPORT_OK = qw/
 
 sub get_description {
     my ($feature) = @_;
-    my $description;
 
-    if ($feature->type->name eq 'gene') {
-        my $child = ($feature->child_features)[0];
-        ($description) = $child ? map { $_->value } grep { $_->type->name eq 'Note' } $child->featureprops->all : '';
-    } else {
-        ($description) = map { $_->value } grep { $_->type->name eq 'Note' } $feature->featureprops->all;
-    }
+    my $desc_types =
+        $feature->result_source->schema
+                ->resultset('Cv::Cvterm')
+                ->search({ name => [ 'Note', 'functional_description', 'Description' ] })
+                ->get_column('cvterm_id')
+                ->as_query;
+    my $description =
+        $feature->search_related('featureprops', {
+            type_id => { -in => $desc_types },
+        })->get_column('value')
+          ->first;
 
     if( $description ) {
         $description =~ s/(\S+)/my $id = $1; CXGN::Tools::Identifiers::link_identifier($id) || $id/ge;
