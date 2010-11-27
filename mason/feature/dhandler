@@ -24,9 +24,16 @@
     species => $species
 &>
 
-<& /feature/related_features.mas,
-    feature   => $feature,
+<&| /page/info_section.mas,
+   title => 'Related features',
+   collapsible => 1,
 &>
+
+  <& /feature/related_features.mas,
+      feature   => $feature,
+  &>
+
+</&>
 
 <& /feature/properties.mas,
     feature => $feature,
