@@ -283,4 +283,13 @@ my $ontology_subtitle =  !(grep { /^$user_type$/ } ('curator', 'submitter', 'seq
 	locus_id  => $locus_id,
 &>
 
+<&| /page/info_section.mas,
+     title => 'Related views',
+     collapsible => 1,
+ &>
+     <& /sitefeatures/mixed/xref_set/link.mas,
+        xrefs => [ grep { ! $_->feature->feature_name eq 'gbrowse2' } @$xrefs ],
+      &>
+</&>
+
 <& /page/comments.mas, object_type=>'locus', object_id=>$locus_id, referer=>$this_page &>
