@@ -1,0 +1,43 @@
+<%args>
+  $xref
+</%args>
+
+    <div style="border: 1px solid #777; padding-bottom: 10px">
+
+        <% info_table_html(
+            'Annotation Set'  => $xref->data_source->description,
+            'Sequence Region' => $ref_region,
+            __border   => 0,
+            __multicol => 2,
+         )%>
+
+        <% info_table_html(
+            'Feature(s) matched' => join( ', ',
+                map $_->display_name || $_->primary_id,
+                @{ $xref->seqfeatures } ),
+            __border   => 0,
+         )%>
+
+        <hr style="width: 95%" />
+   
+        <a href="<% $xref->url %>">            
+           <img style="border: none" src="<% $xref->preview_image_url %>" />
+        </a>
+
+     </div>
+<%init>
+     my $ref_region = $xref->has_seqfeatures
+         ? join( '',
+                 $xref->seqfeatures->[0]->seq_id,
+                 ':',
+                 min( map $_->start, @{$xref->seqfeatures} ),
+                 '..',
+                 max( map $_->end,   @{$xref->seqfeatures} )
+                )
+         : '<span class="ghosted">not recorded</span>';
+</%init>
+<%once>
+    use CXGN::Tools::List qw/ min max /;
+</%once>
+
+
