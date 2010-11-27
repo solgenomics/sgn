@@ -10,7 +10,7 @@
     use SGN::View::Feature qw/get_reference/;
 </%once>
 
-<& /page/page_title.mas, title => 'Feature Viewer: '. $feature->id &>
+<& /page/page_title.mas, title => $feature->type->name.' '. $feature->id &>
 
 <& /util/import_javascript.mas,
     classes => [qw(Text.Markup CXGN.Effects CXGN.Phenome.Locus MochiKit.DOM)]
