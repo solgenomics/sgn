@@ -4,37 +4,56 @@
 <%init>
     use SGN::View::Feature qw/related_stats/;
 
-    # make a hash of relationship_type_html => \@list_of_features
+    # make a hash of relationship_type => {
+    #    upstream   => \@list_of_features,
+    #    downstream => \@list_of_features,
+    # }
     my %rels;
-    push @{$rels{$_->[0]}}, $_->[1] for (
-         ( map [ 'these features '.cvterm_link($_).' this feature', $_->subject ], $feature->feature_relationship_objects  ),
-         ( map [ 'this feature '.cvterm_link($_).' these features', $_->object  ], $feature->feature_relationship_subjects ),
+    push @{$rels{$_->[0]}{$_->[1]}}, $_->[2] for (
+         ( map [ cvterm_link($_), 'downstream', $_->subject ], $feature->feature_relationship_objects  ),
+         ( map [ cvterm_link($_), 'upstream',   $_->object  ], $feature->feature_relationship_subjects ),
         );
+
+    my $ftype = $feature->type->name;
 
 </%init>
 
-%  while( my ( $reltype, $feats ) = each %rels ) {
+%  for my $reltype ( sort keys %rels ) {
+%    my $updown = $rels{$reltype};
      <&| /page/info_section.mas,
-          title => $reltype,
-          is_subsection => 1,
+         title => $reltype.' relationships',
+         is_subsection => 1,
       &>
-%       if( @$feats > 4 ) {
-         <& /page/columnar_table.mas,
-             headings => [ "Count", 'Type'  ],
-             __tableattrs => 'summary="Feature summary" cellspacing="0" style="margin-bottom: 0.5em"',
-             data     => related_stats($feats),
-             __caption => 'Summary',
-             __border => 1,
-          &>
-         <& /feature/feature_list.mas,
-            features => $feats,
-          &>
-%       }
-%       else {
-            <& /feature/feature_list.mas,
-               features => $feats,
-             &>
+%       for my $direction ( 'upstream', 'downstream' ) {
+%         if( my $feats = $updown->{$direction} ) {
+            <& .relatedfeats, reltype => $reltype, direction => $direction, feats => $feats, ftype => $ftype &>            
+%         }
 %       }
      </&>
 %  }
 
+<%def .relatedfeats>
+<%args>
+ $reltype
+ $direction
+ $feats
+ $ftype
+</%args>
+<&| /page/info_section.mas,
+   title => $direction eq 'upstream' ? "this $ftype $reltype these features" : "these features $reltype this $ftype",
+   is_subsection => 1,
+&>
+%   if( @$feats > 4 ) {
+     <& /page/columnar_table.mas,
+         __tableattrs => 'summary="Feature summary" cellspacing="0" style="margin-bottom: 0.5em"',
+         data     => related_stats($feats),
+         __caption => 'Summary',
+         __border => 1,
+      &>
+%   }
+    <& /feature/feature_list.mas,
+       features => $feats,
+     &>
+</&>
+
+</%def>
