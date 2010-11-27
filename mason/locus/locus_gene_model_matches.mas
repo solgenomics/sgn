@@ -1,0 +1,24 @@
+<%args>
+  $locus
+</%args>
+
+<& /sitefeatures/gbrowse2/xref_set/rich.mas, xrefs => \@gbrowse_gene_model_xrefs &>
+
+<%init>
+
+   # look up any gbrowse cross-refs for this locus id, if any
+   my @gbrowse_gene_model_xrefs = map {
+       my $gb = $_;
+
+       # 4. look up xrefs for all of them
+       map $gb->xrefs( $_ ),
+       # 3. plus primary locus name
+       $locus->get_locus_name,
+       # 2. list of locus alias strings
+       map $_->get_locus_alias,
+       # 1. list of locus alias objects
+       $locus->get_locus_aliases('f','f')
+
+   } $c->enabled_feature('gbrowse2');
+
+</%init>
