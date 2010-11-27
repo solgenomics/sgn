@@ -1,8 +1,9 @@
 <%args>
     $feature
     $blast_url => undef
-    $children  => undef
-    $parents   => undef
+    $children  => []
+    $parents   => []
+    $xrefs     => []
 </%args>
 <%init>
     use Data::Dumper;
