@@ -53,7 +53,7 @@ sub feature_length {
     my $locations = scalar @locations;
     my $length = 0;
     for my $l (@locations) {
-        $length += $l->fmax - $l->fmin + 1;
+        $length += $l->fmax - $l->fmin;
     }
     # Reference features don't have featureloc's, calculate the length
     # directly
@@ -71,7 +71,7 @@ sub location_list_html {
 }
 sub location_list {
     my ($feature) = @_;
-    return map { $_->srcfeature->name.':'.$_->fmin.'..'.$_->fmax } $feature->featureloc_features->all;
+    return map { $_->srcfeature->name.':'.($_->fmin+1).'..'.$_->fmax } $feature->featureloc_features->all;
 }
 
 sub related_stats {
@@ -99,12 +99,12 @@ sub feature_table {
 
         # Add a row for every featureloc
         for my $loc (@locations) {
-            my ($fmin,$fmax) = ($loc->fmin, $loc->fmax);
+            my ($fmin,$fmax) = ($loc->fmin+1, $loc->fmax);
             push @$data, [
                 cvterm_link($f),
                 feature_link($f),
                 "$fmin..$fmax",
-                commify_number($fmax-$fmin+1) . " bp",
+                commify_number($fmax-$fmin) . " bp",
                 $loc->strand == 1 ? '+' : '-',
                 $loc->phase || '<span class="ghosted">n/a</span>',
             ];

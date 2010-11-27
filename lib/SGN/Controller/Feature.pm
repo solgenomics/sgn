@@ -42,7 +42,7 @@ sub delegate_component
     my @xrefs = $c->feature_xrefs( $feature->name );
     unless( @xrefs ) {
         @xrefs = map {
-            $c->feature_xrefs( $_->srcfeature->name.':'.$_->fmin.'..'.$_->fmax )
+            $c->feature_xrefs( $_->srcfeature->name.':'.($_->fmin+1).'..'.$_->fmax )
         }
         $feature->featureloc_features
     }
