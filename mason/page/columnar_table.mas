@@ -39,7 +39,7 @@ Lukas Mueller, based on Perl code by Rob Buels
 </%doc>
 
 <%args>
-$headings
+$headings     => undef
 $data
 $__align      => undef
 $__tableattrs => undef
