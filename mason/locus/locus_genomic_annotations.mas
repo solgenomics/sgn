@@ -12,10 +12,9 @@ Parameters:
 
 =over 1
 
-=item locus_id
+=item locus
 
-locus database id
-
+locus object
 
 =back
 
@@ -29,7 +28,7 @@ Naama Menda <nm249@cornell.edu>
 </%doc>
 
 <%args>
-    $locus_id
+    $locus
 </%args>
 <%init>
     use CXGN::Tools::List qw/distinct/;
@@ -39,18 +38,17 @@ Naama Menda <nm249@cornell.edu>
 <%perl>
 
 # look up any gbrowse cross-refs for this locus id, if any
-my @xrefs = map {
-    $_->xrefs(
-        {
-            -types      => ['match'],
-            -attributes => { sgn_locus_id => $locus_id },
-        }
-      ),
-} $c->enabled_feature('gbrowse2');
+my @gbrowse = $c->enabled_feature('gbrowse2');
+my @gbrowse_match_xrefs = map {
+    $_->xrefs({
+        -types      => ['match'],
+        -attributes => { sgn_locus_id => $locus->get_locus_id },
+    })
+} @gbrowse;
 
 # and now convert each of the matched regions into HTML strings
 # that display them
-my $annots = join "\n", map _render_genomic_xref($_), @xrefs;
+my $annots = join "\n", map _render_genomic_xref($_), @gbrowse_match_xrefs;
 
 sub _render_genomic_xref {
     my ($xref) = @_;
