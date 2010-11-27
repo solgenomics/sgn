@@ -7,8 +7,8 @@
     # make a hash of relationship_type_html => \@list_of_features
     my %rels;
     push @{$rels{$_->[0]}}, $_->[1] for (
-         ( map [ 'features '.cvterm_link($_).' this feature', $_->subject ], $feature->feature_relationship_objects  ),
-         ( map [ 'this feature '.cvterm_link($_).' features', $_->object  ], $feature->feature_relationship_subjects ),
+         ( map [ 'these features '.cvterm_link($_).' this feature', $_->subject ], $feature->feature_relationship_objects  ),
+         ( map [ 'this feature '.cvterm_link($_).' these features', $_->object  ], $feature->feature_relationship_subjects ),
         );
 
 </%init>
