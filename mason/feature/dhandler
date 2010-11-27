@@ -39,6 +39,7 @@
 
 <&| /page/info_section.mas,
      title => 'Related views',
+     collapsible => 1,
  &>
      <& /sitefeatures/mixed/xref_set/link.mas,
         xrefs => $xrefs,
