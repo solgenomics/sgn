@@ -157,26 +157,58 @@ sub cvterm_link {
     return qq{<a href="/chado/cvterm.pl?cvterm_id=$id">$name</a>};
 }
 
-sub infer_residue {
-	my ($feature) = @_;
-	my $featureloc = $feature->featureloc_features->single;
-	my $length     = $featureloc->fmax - $featureloc->fmin + 1;
-	my $srcresidue = $featureloc->srcfeature->residues;
-	# substr is 0-based, featureloc's are 1-based
-	my $residue    = substr($srcresidue, $featureloc->fmin - 1, $length );
-	return $residue;
-}
-
 sub mrna_sequence {
     my ($mrna_feature) = @_;
-    my @exons        = grep { $_->type->name eq 'exon' } $mrna_feature->child_features;
-    my $mrna_residue = join '', map { infer_residue($_) } @exons;
+    my @exon_locations = $mrna_feature
+        ->feature_relationship_objects({
+            'me.type_id' => {
+                -in => _cvterm_rs( $mrna_feature, 'relationship', 'part_of' )
+                         ->get_column('cvterm_id')
+                         ->as_query,
+            },
+          })
+        ->search_related( 'subject', {
+            'subject.type_id' => {
+                -in => _cvterm_rs( $mrna_feature, 'sequence', 'exon' )
+                         ->get_column('cvterm_id')
+                         ->as_query,
+            },
+           })
+        ->search_related( 'featureloc_features', {
+            srcfeature_id => { -not => undef },
+          },
+          { prefetch => 'srcfeature',
+            order_by => 'fmin',
+          },
+         )
+        ->all;
+
+    die 'no exons' unless @exon_locations;
+    return unless @exon_locations;
+
     my $seq = Bio::PrimarySeq->new(
-        -id       => $mrna_feature->name,
-        -seq      => $mrna_residue,
-        -alphabet => 'rna',
+        -id   => $mrna_feature->name,
+        -desc => 'spliced cDNA sequence',
+        -seq  => join( '', map {
+            $_->srcfeature->subseq( $_->fmin+1, $_->fmax ),
+         } @exon_locations
+        ),
     );
+
+    $seq = $seq->revcom if $exon_locations[0]->strand == -1;
+
     return $seq;
+}
+
+sub _cvterm_rs {
+    my ( $row, $cv, $cvt ) = @_;
+
+    return $row->result_source->schema
+               ->resultset('Cv::Cv')
+               ->search({ 'me.name' => $cv })
+               ->search_related('cvterms', {
+                   'cvterms.name' => $cvt,
+                 });
 }
 
 1;

@@ -32,10 +32,19 @@
     feature => $feature,
 &>
 
-<& /feature/sequence.mas,
-        feature   => $feature,
-        blast_url => $blast_url,
-&>
+<&| /page/info_section.mas,
+     title => 'Genomic sequence',
+     subtitle => 'unprocessed genomic sequence underlying this region',
+     collapsible => 1,
+     collapsed   => 1,
+ &>
+
+  <& /feature/sequence.mas,
+          feature   => $feature,
+          blast_url => $blast_url,
+  &>
+
+</&>
 
 <&| /page/info_section.mas,
      title => 'Related views',

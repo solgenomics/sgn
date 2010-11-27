@@ -6,23 +6,22 @@
     use Bio::Seq;
 </%once>
 <%perl>
-    my @locations = $feature->featureloc_features->all;
-    my @coords = map { [ $_->fmin, $_->fmax] } @locations;
-    my $reference = $feature->featureloc_features->single->srcfeature;
-    my $refseq = Bio::PrimarySeq->new(
-        -seq      => $reference->residues,
-        -alphabet => 'dna',
-    );
+    my @locations = map {
+         [ $_->srcfeature, $_->fmin, $_->fmax, $_->strand ]
+    } $feature->featureloc_features->all;
 </%perl>
-% for (@coords) {
+% for (@locations) {
+%   my ( $srcfeature, $start, $end, $strand ) = @_
+  <& /feature/sequence.mas,
+      title      => 'Genomic Sequence',
+      feature    => $reference,
+      srcfeature => $srcfeature,
+      start      => $start,
+      end        => $end,
+      strand     => $strand,
+      blast_url  => undef,
+  &>
   <& /feature/extract_promoters.mas,
       feature => $feature,
-  &>
-  <& /feature/sequence.mas,
-      title     => 'Genomic Sequence',
-      feature   => $reference,
-      start     => $_->[0],
-      end       => $_->[1],
-      blast_url => undef,
   &>
 %}
