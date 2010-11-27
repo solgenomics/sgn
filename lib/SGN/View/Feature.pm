@@ -16,6 +16,8 @@ our @EXPORT_OK = qw/
     mrna_sequence
     get_description
     location_list_html
+    location_string
+    location_string_with_strand
 /;
 
 sub get_description {
@@ -63,9 +65,19 @@ sub feature_length {
     return ($length,$locations);
 }
 
+sub location_string {
+    my ( $loc ) = @_;
+    return feature_link($loc->srcfeature).':'.($loc->fmin+1).'..'.$loc->fmax;
+}
+
+sub location_string_with_strand {
+    my ( $loc ) = @_;
+    return location_string( $loc ).( $loc->strand == -1 ? '(rev)' : '' )
+}
+
 sub location_list_html {
     my ($feature) = @_;
-    my @coords = map { feature_link($_->srcfeature).':'.$_->fmin.'..'.$_->fmax } $feature->featureloc_features->all
+    my @coords = map { location_string($_) } $feature->featureloc_features->all
         or return '<span class="ghosted">none</span>';
     return @coords;
 }
