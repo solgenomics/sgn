@@ -6,7 +6,7 @@
 <%init>
     use SGN::View::Feature qw/ location_string_with_strand /;
 </%init>
-<& /page/page_title.mas, title => 'Gene: '. $feature->id &>
+<& /page/page_title.mas, title => 'Gene '. $feature->name &>
 
 <& /util/import_javascript.mas,
     classes => [ 'jquery', 'jqueryui' ],
@@ -22,7 +22,7 @@
 <& /feature/feature_data.mas,
     feature => $feature,
     species => $species,
-    title => 'Gene Data',
+    title => 'Gene',
 &>
 
 <&| /page/info_section.mas,
@@ -46,7 +46,7 @@
 <&| /page/info_section.mas,
         title       => 'Genomic sequence',
         subtitle    =>
-          'Unprocessed genomic sequence region underlying this gene',
+          'unprocessed genomic sequence region underlying this gene',
         collapsible => 1,
         collapsed   => 1,
 &>
