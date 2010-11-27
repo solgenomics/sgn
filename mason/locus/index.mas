@@ -5,6 +5,7 @@
   $locus_id
   $user => undef
   $dbh
+  $xrefs
 
 </%args>
 <%once>
@@ -222,7 +223,7 @@ my $ontology_subtitle =  !(grep { /^$user_type$/ } ('curator', 'submitter', 'seq
        is_subsection => 1,
     &>
 
-       <& /locus/locus_gene_model_matches.mas, locus => $locus &>
+       <& /locus/locus_gene_model_matches.mas, locus => $locus, xrefs => $xrefs &>
 
    </&>
 
