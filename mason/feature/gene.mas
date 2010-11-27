@@ -1,12 +1,10 @@
 <%args>
     $feature
     $blast_url => undef
-    $children  => []
-    $parents   => []
     $xrefs     => []
 </%args>
 <%init>
-    use Data::Dumper;
+    use SGN::View::Feature qw/ location_string_with_strand /;
 </%init>
 <& /page/page_title.mas, title => 'Gene: '. $feature->id &>
 
@@ -19,7 +17,6 @@
     my $species  = $organism->species;
     $species    =~ s!(\S+) !<i>$1</i> !;
     my $reference = $feature->featureloc_features->single->srcfeature;
-    my @mrna_features = grep { $_->type->name eq 'mRNA' } @$children;
 </%perl>
 
 <& /feature/feature_data.mas,
@@ -28,36 +25,85 @@
     title => 'Gene Data',
 &>
 
-<& /feature/related_features.mas,
-    children => $children,
-    parents => $parents,
-    reference => $reference,
-    feature => $feature,
+<&| /page/info_section.mas,
+   title => 'Related features',
+   collapsible => 1,
 &>
+
+  <& /feature/related_features.mas,
+      reference => $reference,
+      feature => $feature,
+  &>
+
+</&>
 
 <& /feature/properties.mas,
     feature => $feature,
 &>
 
-<& /feature/sequence.mas,
-	feature => $feature,
-	blast_url => $blast_url,
-&>
-
 <& /feature/exon_structure.mas, %ARGS &>
 
-<& /feature/genomic_sequence.mas,
-    feature => $feature,
+<&| /page/info_section.mas,
+        title       => 'Genomic sequence',
+        subtitle    =>
+          'Unprocessed genomic sequence region underlying this gene',
+        collapsible => 1,
+        collapsed   => 1,
 &>
 
-% for my $mrna (@mrna_features) {
-  <& /feature/mrna_sequence.mas,
-      mrna_feature => $mrna,
+   <& /feature/sequence.mas,
+       feature   => $feature,
+       blast_url => $blast_url,
+   &>
+
+</&>
+
+% for my $mrna ( grep $_->type->name eq 'mRNA', $feature->child_features ) {
+  <&| /page/info_section.mas,
+          title       => 'mRNA '.$mrna->name,
+          collapsible => 1,
   &>
+
+    <&| /page/info_section.mas,
+            title       => 'mRNA sequence',
+            is_subsection => 1,
+            subtitle    =>
+              'spliced mRNA sequence, including UTRs',
+            collapsible => 1,
+            collapsed   => 1,
+    &>
+
+       <& /feature/mrna_sequence.mas,
+           feature   => $mrna,
+           blast_url => $blast_url,
+       &>
+
+    </&>
+
+%#    <& /feature/protein_sequence.mas,
+%#       feature => $mrna,
+%#        mrna_features => [ @mrna_features ],
+%#    &>
+
+    <&| /page/info_section.mas,
+        title => 'Related features',
+        is_subsection => 1,
+        collapsible => 1,
+     &>
+
+       <& /feature/related_features.mas,
+             feature   => $mrna,
+       &>
+
+    </&>
+
+    <& /feature/properties.mas,
+        feature => $mrna,
+    &>
+
+
+  </&>
 % }
-<& /feature/protein_sequence.mas,
-    mrna_features => [ @mrna_features ],
-&>
 
 <&| /page/info_section.mas,
      title => 'Related views',
