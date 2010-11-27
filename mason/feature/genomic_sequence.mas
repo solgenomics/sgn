@@ -15,14 +15,14 @@
     );
 </%perl>
 % for (@coords) {
-<& /feature/extract_promoters.mas,
-    feature => $feature,
-&>
-<& /feature/sequence.mas,
-    title     => 'Genomic Sequence',
-    feature   => $reference,
-    start     => $_->[0],
-    end       => $_->[1],
-    blast_url => undef,
-&>
+  <& /feature/extract_promoters.mas,
+      feature => $feature,
+  &>
+  <& /feature/sequence.mas,
+      title     => 'Genomic Sequence',
+      feature   => $reference,
+      start     => $_->[0],
+      end       => $_->[1],
+      blast_url => undef,
+  &>
 %}
