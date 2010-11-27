@@ -40,8 +40,12 @@ sub delegate_component
 
     # look up site xrefs for this feature
     my @xrefs = $c->feature_xrefs( $feature->name );
-    @xrefs = map { $c->feature_xrefs( $_->srcfeature->name.':'.$_->fmin.'..'.$_->fmax ) } $feature->featureloc_features
-        unless @xrefs;
+    unless( @xrefs ) {
+        @xrefs = map {
+            $c->feature_xrefs( $_->srcfeature->name.':'.$_->fmin.'..'.$_->fmax )
+        }
+        $feature->featureloc_features
+    }
     $c->stash->{xrefs} = \@xrefs;
 
     if ($c->view('Mason')->component_exists("/feature/$type_name.mas")) {
