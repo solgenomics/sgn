@@ -1,8 +1,9 @@
 <%args>
   $xrefs
+  $exclude => []
 </%args>
 
-% if( @$xrefs ) {
+% if( %by_sitefeature ) {
     <dl class="xref">
 %     for my $f ( sort keys %by_sitefeature ) {
         <dt><% ucfirst $f |h %></dt>
@@ -17,10 +18,18 @@
 <%once>
    use SGN::View::Mason::CrossReference 'resolve_xref_component';
 </%once>
+
 <%init>
+
   # group the xrefs by sitefeature name
   my %by_sitefeature;
   for my $x ( @$xrefs ) {
       push @{$by_sitefeature{$x->feature->feature_name}}, $x;
   }
+
+  #filter xrefs if necessary
+  $exclude = [ $exclude ] unless ref $exclude;
+
+  delete $by_sitefeature{$_} for @$exclude;
+
 </%init>
