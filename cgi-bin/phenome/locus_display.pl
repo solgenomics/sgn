@@ -14,7 +14,7 @@ use CatalystX::GlobalContext qw( $c );
 my $q   = CGI->new();
 my $dbh = CXGN::DB::Connection->new();
 
-my $user = $c->user_exists ? $c->user->get_object : undef;
+my $user = $c->user_exists ? $c->user->get_object : CXGN::People::Person->new( $dbh, undef );
 
 my $locus_id = $q->param("locus_id") + 0;
 my $action   = $q->param("action");
