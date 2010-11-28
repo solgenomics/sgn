@@ -17,6 +17,7 @@ Jonathan "Duke" Leto
 use strict;
 use warnings;
 use Test::More;
+BEGIN { $ENV{SGN_SKIP_CGI} = 1 }
 use lib 't/lib';
 use SGN::Test::Data qw/ create_test /;
 use SGN::Test::WWW::Mechanize;
@@ -50,7 +51,8 @@ my $poly_featureloc = create_test('Sequence::Featureloc', { feature => $poly_fea
     is( $length, length($mech->content), 'got the expected content length');
 }
 {
-    $mech->get_ok("/api/v1/sequence/JUNK.fasta");
+    $mech->get("/api/v1/sequence/JUNK.fasta");
+    is( $mech->status, 404, 'feature not found' );
     $mech->content_contains("feature with name = 'JUNK' not found");
 
 }

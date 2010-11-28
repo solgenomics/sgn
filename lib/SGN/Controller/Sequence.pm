@@ -28,8 +28,8 @@ sub _render_sequence {
         my $matching_features = $c->dbic_schema('Bio::Chado::Schema','sgn_chado')
                                     ->resultset('Sequence::Feature')
                                     ->search({ $key => $value });
-        my $feature = $matching_features->next;
-        $c->throw( message => "feature with $key = '$value' not found") unless $feature;
+        my $feature = $matching_features->next
+            or $c->throw_404("feature with $key = '$value' not found");
         $c->stash->{feature} = $feature;
         $self->render_fasta($c);
     }
