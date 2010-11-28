@@ -26,18 +26,14 @@ my $gene_feature    = create_test('Sequence::Feature', { type => $gene_cvterm })
 my $gene_featureloc = create_test('Sequence::Featureloc', { feature => $gene_feature });
 
 $mech->get_ok("/feature/view/name/" . $gene_feature->name);
-$mech->content_contains('Gene Data');
-$mech->content_contains('Gene: ' . $gene_feature->name);
-$mech->content_contains('Genomic Sequence');
-$mech->content_contains('Related Features');
+$mech->content_contains('Description');
+$mech->content_contains('Gene ' . $gene_feature->name);
+$mech->content_contains('Genomic sequence');
+$mech->content_contains('Related features');
 
-# This could be more stringent and use a CSS selector
-$mech->content_contains('GBrowse');
-$mech->content_contains('Not Available');
+my $name = $gene_feature->name;
 
-my ($name, $residues) = ($gene_feature->name, $gene_feature->residues);
-
-like( $mech->findvalue( '/html/body//span[@class="sequence"]'), qr/>$name\s*$residues/, "Found >$name\\n$residues");
+like( $mech->findvalue( '/html/body//span[@class="sequence"]'), qr/>$name\s*/, "Found >$name seq header");
 
 ok($mech->exists(
         sprintf '/html/body//div[@class="info_table_fieldval"]/a[@href="/chado/cvterm.pl?cvterm_id=%s"]',
