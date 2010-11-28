@@ -20,11 +20,9 @@ my $locus_id = $q->param("locus_id") + 0;
 my $action   = $q->param("action");
 
 # print message if locus_id is not valid 
-unless (    $locus_id =~ m /^\d+$/
-         || $action eq 'new' && !$locus_id
-       ) {
+unless ( $locus_id || $action eq 'new' && !$locus_id ) {
 
-  $c->throw_404('No locus exists for this identifier');
+  $c->throw( is_client_error => 1, public_message => 'Invalid arguments' );
 
 }
 
