@@ -35,8 +35,9 @@ my $poly_featureloc = create_test('Sequence::Featureloc', { feature => $poly_fea
 for my $url ( "/feature/view/name/".$poly_feature->name,  "/feature/view/id/".$poly_feature->feature_id ) {
 
     $mech->get_ok( $url );
-
+    $mech->dbh_leak_ok;
     $mech->html_lint_ok('valid HTML');
+
     my ($name, $residues) = ($poly_feature->name, $poly_feature->residues);
 
     like( $mech->findvalue( '/html/body//span[@class="sequence"]'), qr/>$name\s*/, "Found >$name\\n");
