@@ -26,11 +26,16 @@
     description_from => \@mrnas,
 &>
 
+<& /feature/exon_structure.mas, xrefs => $xrefs, feature => $feature &>
+
+<& /feature/properties.mas,
+    feature => $feature,
+&>
+
 <&| /page/info_section.mas,
    title => 'Related features',
    collapsible => 1,
 &>
-
   <& /feature/related_features.mas,
       reference => $reference,
       feature => $feature,
@@ -38,11 +43,6 @@
 
 </&>
 
-<& /feature/properties.mas,
-    feature => $feature,
-&>
-
-<& /feature/exon_structure.mas, %ARGS &>
 
 <&| /page/info_section.mas,
         title       => 'Genomic sequence',

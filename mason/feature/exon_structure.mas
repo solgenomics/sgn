@@ -1,10 +1,9 @@
 <%args>
     $feature
-    $title => 'Genomic Structure and Context'
     $xrefs
 </%args>
 <&| /page/info_section.mas,
-    title => $title,
+    title => 'Structure diagram',
     collapsible => 1,
     empty_message => 'not available',
 &>
