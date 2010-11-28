@@ -39,10 +39,10 @@ sub delegate_component
     $c->stash->{feature}  = $feature;
 
     # look up site xrefs for this feature
-    my @xrefs = $c->feature_xrefs( $feature->name );
+    my @xrefs = $c->feature_xrefs( $feature->name, { exclude => 'featurepages' } );
     unless( @xrefs ) {
         @xrefs = map {
-            $c->feature_xrefs( $_->srcfeature->name.':'.($_->fmin+1).'..'.$_->fmax )
+            $c->feature_xrefs( $_->srcfeature->name.':'.($_->fmin+1).'..'.$_->fmax, { exclude => 'featurepages' } )
         }
         $feature->featureloc_features
     }
