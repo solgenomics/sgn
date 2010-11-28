@@ -111,12 +111,12 @@ sub feature_table {
 
         # Add a row for every featureloc
         for my $loc (@locations) {
-            my ($fmin,$fmax) = ($loc->fmin+1, $loc->fmax);
+            my ($start,$end) = ($loc->fmin+1, $loc->fmax);
             push @$data, [
                 cvterm_link($f),
                 feature_link($f),
-                "$fmin..$fmax",
-                commify_number($fmax-$fmin) . " bp",
+                "$start..$end",
+                commify_number( $end-$start+1 ) . " bp",
                 $loc->strand == 1 ? '+' : '-',
                 $loc->phase || '<span class="ghosted">n/a</span>',
             ];
@@ -129,7 +129,7 @@ sub _feature_search_string {
     my ($feature) = @_;
     my ($fl) = $feature->featureloc_features;
     return '' unless $fl;
-    return $fl->srcfeature->name . ':'. $fl->fmin . '..' . $fl->fmax;
+    return $fl->srcfeature->name . ':'. ($fl->fmin+1) . '..' . $fl->fmax;
 }
 
 sub feature_link {
