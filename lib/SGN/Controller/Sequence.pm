@@ -38,7 +38,7 @@ sub _render_sequence {
 sub render_fasta {
     my ($self, $c) = @_;
 
-    my ($start,$end) =  split /\.\./, $c->request->query_keywords;
+    my ($start,$end) =  split /\.\./, $c->request->query_keywords || '';
     my $feature = $c->stash->{feature};
     my $matching_features = $c->dbic_schema('Bio::Chado::Schema','sgn_chado')
                                 ->resultset('Sequence::Feature')
