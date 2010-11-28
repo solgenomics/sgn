@@ -6,7 +6,7 @@
 % if( %by_sitefeature ) {
     <dl class="xref">
 %     for my $f ( sort keys %by_sitefeature ) {
-        <dt><% ucfirst $f |h %></dt>
+        <dt><% $f |h %></dt>
         <dd>
 %         my $multi_comp = resolve_xref_component( $m, $by_sitefeature{$f}->[0]->feature, '/sitefeatures/%f/xref_set/link.mas' );
           <& $multi_comp, xrefs => $xrefs &>
@@ -24,7 +24,7 @@
   # group the xrefs by sitefeature name
   my %by_sitefeature;
   for my $x ( @$xrefs ) {
-      push @{$by_sitefeature{$x->feature->feature_name}}, $x;
+      push @{$by_sitefeature{$x->feature->description}}, $x;
   }
 
   #filter xrefs if necessary

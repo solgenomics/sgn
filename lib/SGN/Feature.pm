@@ -28,6 +28,15 @@ sub feature_name {
     return lc $name;
 }
 
+has 'description' => (
+    documentation => <<'',
+short plaintext description of the feature, user-visible.  May be used in default views for crossreferences and so forth.
+
+    is => 'ro',
+    isa => 'Str',
+    default => sub { ucfirst shift->feature_name },
+   );
+
 has 'feature_dir' => (
     is => 'ro',
     isa => 'Path::Class::Dir',
@@ -64,4 +73,5 @@ sub apache_conf {
     return ''
 }
 
+__PACKAGE__->meta->make_immutable;
 1;

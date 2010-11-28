@@ -27,6 +27,10 @@ use HTML::Mason::Interp;
    );
 }
 
+has '+description' => (
+    default => 'GMOD GBrowse Genome Browser',
+   );
+
 has 'conf_dir' => ( documentation => 'directory where GBrowse will look for its conf files',
     is => 'ro',
     isa => 'Path::Class::Dir',
@@ -264,5 +268,7 @@ sub render_config_template {
 # $runmode_conf
 # EOC
 # }
+
+__PACKAGE__->meta->make_immutable;
 
 1;
