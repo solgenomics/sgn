@@ -21,6 +21,7 @@ Jonathan "Duke" Leto
 use strict;
 use warnings;
 use Test::More;
+BEGIN { $ENV{SGN_SKIP_CGI} = 1 }
 use lib 't/lib';
 use SGN::Test::Data qw/ create_test /;
 use SGN::Test::WWW::Mechanize;
@@ -34,7 +35,7 @@ my $poly_featureloc = create_test('Sequence::Featureloc', { feature => $poly_fea
 $mech->get_ok("/feature/view/name/" . $poly_feature->name);
 my ($name, $residues) = ($poly_feature->name, $poly_feature->residues);
 
-like( $mech->findvalue( '/html/body//span[@class="sequence"]'), qr/>$name\s*$residues/, "Found >$name\\n$residues");
+like( $mech->findvalue( '/html/body//span[@class="sequence"]'), qr/>$name\s*/, "Found >$name\\n");
 like( $mech->findvalue( '/html/body//div[@class="info_table_fieldval"]'), qr/polypeptide/, "Found the polypeptide cvterm");
 
 ok($mech->exists(
@@ -42,10 +43,9 @@ ok($mech->exists(
             $poly_cvterm->cvterm_id
     ),'the proper cvterm id link exists');
 
-$mech->content_contains('Feature Data');
+$mech->content_contains('Feature');
 $mech->content_contains($poly_feature->name);
-$mech->content_contains('Nucleotide Sequence');
-$mech->content_contains('Related Features');
-$mech->content_contains('Reference Feature');
+$mech->content_contains('Genomic sequence');
+$mech->content_contains('Related features');
 
 done_testing;
