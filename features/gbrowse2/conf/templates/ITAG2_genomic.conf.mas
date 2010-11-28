@@ -25,7 +25,7 @@ bump density    = 100
 [mrna]
 feature       = gene:ITAG_renaming
 balloon hover = click for view options
-balloon click = url:/api/v1/xrefs/rendered.html?q=$name;exclude_features=gbrowse+gbrowse2
+balloon click = url:/api/v1/feature_xrefs?q=$name;exclude=gbrowse,gbrowse2
 
 [cds]
 link = sub { my $n = shift->display_name; $n =~ s/(\.\d+)\.\d+$/$1/; "<% $feature->cgi_url %>/gbrowse/ITAG2_protein/?name=$n" }
