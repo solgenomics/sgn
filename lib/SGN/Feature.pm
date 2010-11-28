@@ -57,9 +57,8 @@ sub tmpdir {
     return $self->context->tempfiles_base->subdir( 'features', $self->feature_name );
 }
 
-# called on apache restart
+# called on application restart
 sub setup {
-    #my ( $self ) = @_;
 }
 
 # return one or more SGN::SiteFeature::CrossReference objects for the
