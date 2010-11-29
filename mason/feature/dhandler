@@ -8,7 +8,7 @@
     use SGN::View::Feature qw/ get_reference type_name /;
 </%once>
 
-<& /page/page_title.mas, title => type_name($feature).' '. $feature->id &>
+<& /page/page_title.mas, title => type_name($feature,'caps').' '. $feature->id &>
 
 <& /util/import_javascript.mas,
     classes => [qw(Text.Markup CXGN.Effects CXGN.Phenome.Locus MochiKit.DOM)]
@@ -20,7 +20,7 @@
 </%perl>
 
 <&| /page/info_section.mas,
-    title       => type_name($feature).' details',
+    title       => type_name($feature,'caps').' details',
     subtitle    => $feature->is_obsolete ? 'WARNING: This gene has been replaced by new data.' : '',
     collapsible => 1,
 &>
