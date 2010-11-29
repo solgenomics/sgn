@@ -128,11 +128,9 @@ my $ontology_subtitle =  !(grep { /^$user_type$/ } ('curator', 'submitter', 'seq
 <& /util/import_javascript.mas, classes => ["Prototype", "jquery", "thickbox", "CXGN.Page.FormattingHelpers", "CXGN.Phenome.Locus", "CXGN.Phenome.Tools", "CXGN.Phenome.Locus.LocusPage", "CXGN.Sunshine.NetworkBrowser"] &>
 
 
-<& /locus/initialize.mas, locus_id=>$locus_id  &>
+<& /locus/initialize.mas, locus_id => $locus_id  &>
 
-<& /page/page_title.mas, title=>$common_name . " \t' " . $locus->get_locus_name() . "'\n" &>
-
-
+<& /page/page_title.mas, title=> "$common_name locus ".$locus->get_locus_name &>
 
 <&| /page/info_section.mas, title=>"Locus details" , subtitle => "$locus_xml | $editor_note | $guide_html" &>
   
