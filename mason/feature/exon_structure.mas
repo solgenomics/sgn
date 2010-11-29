@@ -2,20 +2,12 @@
     $feature
     $xrefs
 </%args>
-<&| /page/info_section.mas,
-    title => 'Structure diagram',
-    collapsible => 1,
-    empty_message => 'not available',
-&>
+
 % if( $gbrowse_xref ) {
-   <a title="click to view in genome browser"
-      style="display: block; border: 1px solid #666; padding: 3px; margin: 3px auto"
-      href="<% $gbrowse_xref->url %>"
-    >
-      <img src="<% $gbrowse_xref->preview_image_url %>">
-   </a>
+
+<& /sitefeatures/gbrowse2/xref/rich.mas, xref => $gbrowse_xref &>
+
 % }
-</&>
 
 <%init>
     # in our xrefs, find the gbrowse2 xref that has only our feature

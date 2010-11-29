@@ -19,10 +19,16 @@
     my $reference = get_reference($feature);
 </%perl>
 
-<& /feature/feature_data.mas,
-    feature => $feature,
-    species => $species
+<&| /page/info_section.mas,
+    title       => type_name($feature).' details',
+    subtitle    => $feature->is_obsolete ? 'WARNING: This gene has been replaced by new data.' : '',
+    collapsible => 1,
 &>
+   <& /feature/feature_data.mas,
+      feature => $feature,
+      species => $species
+    &>
+</&>
 
 <&| /page/info_section.mas,
    title => 'Related features',

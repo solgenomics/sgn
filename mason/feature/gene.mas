@@ -19,14 +19,20 @@
     my $reference = $feature->featureloc_features->single->srcfeature;
 </%perl>
 
-<& /feature/feature_data.mas,
-    feature => $feature,
-    species => $species,
-    title => 'Gene',
-    description_from => \@mrnas,
+<&| /page/info_section.mas,
+    title       => 'Gene',
+    subtitle    => $feature->is_obsolete ? 'WARNING: This gene has been replaced by new data.' : '',
+    collapsible => 1,
 &>
+  <& /feature/feature_data.mas,
+      feature => $feature,
+      species => $species,
+      description_from => \@mrnas,
+  &>
 
-<& /feature/exon_structure.mas, xrefs => $xrefs, feature => $feature &>
+  <& /feature/exon_structure.mas, xrefs => $xrefs, feature => $feature &>
+
+</&>
 
 <& /feature/properties.mas,
     feature => $feature,
