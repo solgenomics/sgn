@@ -133,7 +133,6 @@ after setup => sub {
 };
 
 sub xrefs {
-    return unless @_ == 2;
     my ( $self, $q ) = @_;
     return unless defined $q;
 
