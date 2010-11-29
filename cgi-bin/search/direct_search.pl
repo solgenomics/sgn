@@ -13,8 +13,9 @@ our $page = CXGN::Page->new( "SGN Direct Search page", "Koni");
 my @tabs = (
 	    ['?search=loci','Genes'],
 	    ['?search=phenotypes','Phenotypes'],
-	    ['?search=cvterm_name','QTLs/Traits'],
-	    ['?search=unigene','Unigenes'],
+	    ['?search=qtl','QTLs'],
+    	    ['?search=trait', 'Traits'],
+    	    ['?search=unigene','Unigenes'],
 	    ['?search=family', 'Unigene Families' ],
 	    ['?search=markers','Markers'],
 	    ['?search=bacs','Genomic Clones'],
@@ -26,7 +27,8 @@ my @tabs = (
 my @tabfuncs = (
 		\&gene_tab,
 		\&phenotype_tab,
-		\&cvterm_tab,
+		\&qtl_tab,
+                \&trait_tab,
 		\&unigene_tab,
 		\&family_tab,
 		\&marker_tab,
@@ -35,29 +37,29 @@ my @tabfuncs = (
                 \&images_tab,	
 		\&directory_tab,
                 \&template_experiment_platform_submenu,
-	
-	       );
+    );
 
 #get the search type
 my ($search) = $page -> get_arguments("search");
 $search ||= 'unigene'; #default
 
 my $tabsel =
-  ($search =~ /loci/i)           ? 0
-  : ($search =~ /phenotypes/i)   ? 1  
-  : ($search =~ /cvterm_name/i)  ? 2
-  : ($search =~ /unigene/i)      ? 3
-  : ($search =~ /famil((y)|(ies))/i)       ? 4
-  : ($search =~ /markers/i)      ? 5
-  : ($search =~ /bacs/i)         ? 6
-  : ($search =~ /est/i)          ? 7
-  : ($search =~ /library/i)      ? 7 # yes, there are two terms linking to tab 8
-  : ($search =~ /images/i)       ? 8 # New image search
-  : ($search =~ /directory/i)    ? 9
-  : ($search =~ /template/i)     ? 10 ## There are 3 terms linking to search for expression 
-  : ($search =~ /experiment/i)   ? 10
-  : ($search =~ /platform/i)     ? 10
-  : $page->error_page("Invalid search type '$search'.");
+    ($search =~ /loci/i)           ? 0
+    : ($search =~ /phenotypes/i)   ? 1  
+    : ($search =~ /qtl/i)  ? 2
+    : ($search =~ /trait/i)  ? 3
+    : ($search =~ /unigene/i)      ? 4
+    : ($search =~ /famil((y)|(ies))/i)       ? 5
+    : ($search =~ /markers/i)      ? 6
+    : ($search =~ /bacs/i)         ? 7
+    : ($search =~ /est/i)          ? 8
+    : ($search =~ /library/i)      ? 8 
+    : ($search =~ /images/i)       ? 9 # New image search
+    : ($search =~ /directory/i)    ? 10
+    : ($search =~ /template/i)     ? 11 ## There are 3 terms linking to search for expression 
+    : ($search =~ /experiment/i)   ? 11
+    : ($search =~ /platform/i)     ? 11
+    : $page->error_page("Invalid search type '$search'.");
 
 $page->header('Search SGN','Search SGN');
 
@@ -140,8 +142,11 @@ sub gene_tab {
 sub phenotype_tab {
     print CXGN::Search::CannedForms::phenotype_search_form($page);
 }
-sub cvterm_tab {
+sub qtl_tab {
     print CXGN::Search::CannedForms::cvterm_search_form($page);
+}
+sub trait_tab {
+    $page->client_redirect('/trait/search/');
 }
 
 sub images_tab {

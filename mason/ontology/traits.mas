@@ -9,14 +9,15 @@
 
 $roots => 'Solanaceae phenotype ontology'
 $db_name => 'SP'
-$search => 'cvterm_name' 
+$search => 'traits'
+$browse_link => undef
 
 </%args>
 
 <%perl>
 
 my $submit_link = qq | <a href="/phenome/qtl_form.pl">[Submit new QTL data]</a> | ;
-
+print STDERR "BROWSE LINK = $browse_link\n\n\n\n";
 </%perl>
 
 <& /page/page_title.mas, title=> 'Search SGN' &>
@@ -24,13 +25,11 @@ my $submit_link = qq | <a href="/phenome/qtl_form.pl">[Submit new QTL data]</a> 
 <& /search/forms/searchtabs.mas, search=>$search &>
 
 
-<&| /page/info_section.mas, title=>"Browse traits", subtitle=> $submit_link, collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, title=>"Browse traits alphabetically ", subtitle=> $submit_link, collapsible=>1, collapsed=>0 &>
+<% $browse_link %>
 
 </&>
 
 <& /ontology/browser.mas, root_nodes => $db_name,  db_name  => $db_name , title => "Browse Solanaceae Phenotype Ontology terms" &>
 
 
-<&| /page/info_section.mas, title=>"Browse traits/QTLs by population" , collapsible=>1, collapsed=>0 &>
-
-</&>
