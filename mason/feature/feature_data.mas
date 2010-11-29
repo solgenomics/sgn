@@ -1,39 +1,41 @@
 <%args>
     $feature
-    $title => 'Feature Data'
+    $title   => 'Feature'
     $species => undef
+    $description_from => [ $feature ]
 </%args>
 <%once>
     use SGN::View::Feature qw/
-        feature_link cvterm_link organism_link gbrowse_link feature_length
+        feature_link cvterm_link organism_link feature_length
         get_description
+        location_list_html
         /;
     use CXGN::Page::FormattingHelpers qw/info_table_html/;
     use CXGN::Tools::Text qw/commify_number/;
 </%once>
-<%perl>
-    my ($description)       = get_description($feature);
+<%init>
+    my $description  = join( '<hr />', grep $_, map get_description($_), @$description_from );
     my ($length,$locations) = feature_length($feature);
     my $feature_length      = commify_number($length) . " bases";
-
     if ($locations) {
         $feature_length .= " in $locations location" . ($locations > 1 ? 's' : '');
     };
-    my @feature_data = (
-        'Name'          => feature_link($feature),
-        'Feature Type'  => cvterm_link($feature),
-        'Analysis'      => ($feature->is_analysis ? 'Yes' : 'No'),
-        'Organism Name' => organism_link($feature->organism),
-        'Description'   => $description,
-        'Length'        => $feature_length,
-        'GBrowse'       => sprintf '<a href="%s">%s</a><br/', gbrowse_link($feature), $feature->name,
-    );
-</%perl>
-<&| /page/info_section.mas,
-    title       => $title,
-    subtitle    => $feature->is_obsolete ? 'WARNING: This feature is obsolete' : '',
-    collapsible => 1,
-&>
-    <% info_table_html( @feature_data, __border => 0 ) %>
-    <& /feature/dbxref.mas, dbxref => $feature->dbxref &>
-</&>
+</%init>
+
+<% info_table_html(
+    'Name'          => feature_link( $feature ),
+    'Type'          => cvterm_link($feature,'caps'),
+    'Location(s)'   => location_list_html( $feature ),
+    'Length'        => $feature_length,
+
+    'Organism' => organism_link($feature->organism),
+     __border => 0,
+     __multicol => 4
+)%>
+
+<% info_table_html(
+     'Description'   => $description || '<span class="ghosted">none</span>',
+     __border => 0,
+)%>
+
+<& /feature/dbxref.mas, dbxref => $feature->dbxref &>
