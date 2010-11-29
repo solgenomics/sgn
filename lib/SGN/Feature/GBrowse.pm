@@ -28,7 +28,7 @@ use HTML::Mason::Interp;
 }
 
 has '+description' => (
-    default => 'GMOD GBrowse Genome Browser',
+    default => 'Genome browser',
    );
 
 has 'conf_dir' => ( documentation => 'directory where GBrowse will look for its conf files',
