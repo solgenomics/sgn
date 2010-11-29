@@ -171,12 +171,12 @@ default source = ITAG1_genomic
 [ITAG2_genomic]
 path          = ITAG2_genomic.conf
 description   = ITAG2 Release: genomic annotations
-extended_description = ITAG Release 2 (insert release date here) official annotations on the SL2.31 genome build by the International Tomato Annotation Group (ITAG).
+extended_description = ITAG Release 2 (2010-11-28) official annotations on the SL2.31 genome build by the International Tomato Annotation Group (ITAG).
 
 [ITAG2_protein]
 path          = ITAG2_protein.conf
 description   = ITAG2 Release: protein annotations
-extended_description = ITAG Release 2 (insert release date here) official annotations on the SL2.31 genome build by the International Tomato Annotation Group (ITAG).
+extended_description = ITAG Release 2 (2010-11-28) official annotations on the SL2.31 genome build by the International Tomato Annotation Group (ITAG).
 
 [ITAG1_genomic]
 path          = ITAG1_genomic.conf
