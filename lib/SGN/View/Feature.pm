@@ -158,7 +158,7 @@ LINK
 
 sub cvterm_link {
     my ($feature) = @_;
-    my $name = $feature->type->name;
+    my $name = type_name($feature);
     my $id   = $feature->type->id;
     return qq{<a href="/chado/cvterm.pl?cvterm_id=$id">$name</a>};
 }
