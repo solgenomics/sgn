@@ -13,7 +13,7 @@ our @EXPORT_OK = qw/
     get_reference feature_link
     infer_residue cvterm_link
     organism_link feature_length
-    mrna_sequence
+    mrna_and_protein_sequence
     get_description
     location_list_html
     location_string
@@ -143,6 +143,10 @@ sub _feature_search_string {
     return $fl->srcfeature->name . ':'. ($fl->fmin+1) . '..' . $fl->fmax;
 }
 
+
+### XXX TODO: A lot of these _link and sequence functions need to be
+### moved to controller code.
+
 sub feature_link {
     my ($feature) = @_;
     return '<span class="ghosted">null</span>' unless $feature;
@@ -166,9 +170,72 @@ sub cvterm_link {
     return qq{<a href="/chado/cvterm.pl?cvterm_id=$id">$name</a>};
 }
 
-sub mrna_sequence {
+sub mrna_and_protein_sequence {
     my ($mrna_feature) = @_;
-    my @exon_locations = $mrna_feature
+    my @exon_locations = _exon_rs( $mrna_feature )->all
+        or return;
+
+    my $mrna_seq = Bio::PrimarySeq->new(
+        -id   => $mrna_feature->name,
+        -desc => 'spliced cDNA sequence',
+        -seq  => join( '', map {
+            $_->srcfeature->subseq( $_->fmin+1, $_->fmax ),
+         } @exon_locations
+        ),
+    );
+
+    my $peptide_loc = _peptides_rs( $mrna_feature )->first
+        or return ( $mrna_seq, undef );
+
+    my $trim_fmin = $peptide_loc->fmin         -  $exon_locations[0]->fmin;
+    my $trim_fmax = $exon_locations[-1]->fmax  -  $peptide_loc->fmax;
+    if( $trim_fmin || $trim_fmax ) {
+        $mrna_seq = $mrna_seq->trunc( 1+$trim_fmin, $mrna_seq->length - $trim_fmax );
+    }
+
+    $mrna_seq = $mrna_seq->revcom if $exon_locations[0]->strand == -1;
+
+    my $protein_seq = Bio::PrimarySeq->new(
+        -id   => $mrna_feature->name,
+        -desc => 'protein sequence',
+        -seq  => $mrna_seq->seq,
+       );
+    $protein_seq = $protein_seq->translate;
+
+    return ( $mrna_seq, $protein_seq );
+}
+
+sub _peptides_rs {
+    my ( $mrna_feature ) = @_;
+
+    $mrna_feature
+        ->feature_relationship_objects({
+            'me.type_id' => {
+                -in => _cvterm_rs( $mrna_feature, 'relationship', 'derives_from' )
+                         ->get_column('cvterm_id')
+                         ->as_query,
+            },
+          })
+        ->search_related( 'subject', {
+            'subject.type_id' => {
+                -in => _cvterm_rs( $mrna_feature, 'sequence', 'polypeptide' )
+                         ->get_column('cvterm_id')
+                         ->as_query,
+            },
+           })
+        ->search_related( 'featureloc_features', {
+            srcfeature_id => { -not => undef },
+          },
+          { prefetch => 'srcfeature',
+            order_by => 'fmin',
+          },
+         );
+}
+
+sub _exon_rs {
+    my ( $mrna_feature ) = @_;
+
+    $mrna_feature
         ->feature_relationship_objects({
             'me.type_id' => {
                 -in => _cvterm_rs( $mrna_feature, 'relationship', 'part_of' )
@@ -190,23 +257,6 @@ sub mrna_sequence {
             order_by => 'fmin',
           },
          )
-        ->all;
-
-    die 'no exons' unless @exon_locations;
-    return unless @exon_locations;
-
-    my $seq = Bio::PrimarySeq->new(
-        -id   => $mrna_feature->name,
-        -desc => 'spliced cDNA sequence',
-        -seq  => join( '', map {
-            $_->srcfeature->subseq( $_->fmin+1, $_->fmax ),
-         } @exon_locations
-        ),
-    );
-
-    $seq = $seq->revcom if $exon_locations[0]->strand == -1;
-
-    return $seq;
 }
 
 sub _cvterm_rs {

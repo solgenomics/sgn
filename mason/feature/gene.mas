@@ -4,7 +4,7 @@
     $xrefs     => []
 </%args>
 <%init>
-    use SGN::View::Feature qw/ location_string_with_strand /;
+    use SGN::View::Feature qw/ location_string_with_strand mrna_and_protein_sequence /;
     my @mrnas = grep $_->type->name eq 'mRNA', $feature->child_features;
 </%init>
 <& /page/page_title.mas, title => 'Gene '. $feature->name &>
@@ -71,6 +71,8 @@
           collapsible => 1,
   &>
 
+%   my ( $mrna_sequence, $protein_sequence ) = mrna_and_protein_sequence( $mrna );
+
     <&| /page/info_section.mas,
             title       => 'mRNA sequence',
             is_subsection => 1,
@@ -80,10 +82,42 @@
             collapsed   => 1,
     &>
 
-       <& /feature/mrna_sequence.mas,
-           feature   => $mrna,
-           blast_url => $blast_url,
-       &>
+%  if( $mrna_sequence ) {
+
+     <div style="margin-left: 3em">
+       <& /sequence/with_markup.mas,
+          seq       => $mrna_sequence,
+          width     => 80,
+          subdiv    => 10,
+          blast_url => undef,
+        &>
+     </div>
+
+% }
+
+    </&>
+
+    <&| /page/info_section.mas,
+            title       => 'Protein sequence',
+            is_subsection => 1,
+            subtitle    =>
+              'translated polypeptide sequence',
+            collapsible => 1,
+            collapsed   => 1,
+    &>
+
+%  if( $protein_sequence ) {
+
+     <div style="margin-left: 3em">
+       <& /sequence/with_markup.mas,
+          seq       => $protein_sequence,
+          width     => 80,
+          subdiv    => 10,
+          blast_url => undef,
+        &>
+     </div>
+
+% }
 
     </&>
 
