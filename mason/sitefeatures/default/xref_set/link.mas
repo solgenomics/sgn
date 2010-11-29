@@ -12,3 +12,10 @@
 <%once>
    use SGN::View::Mason::CrossReference 'resolve_xref_component';
 </%once>
+<%init>
+
+  # uniqify the xrefs for display
+  my $first = shift @$xrefs;
+  $xrefs = [ $first->uniq( @$xrefs ) ];
+
+</%init>
