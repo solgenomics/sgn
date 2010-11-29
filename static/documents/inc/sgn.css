@@ -1288,7 +1288,8 @@ div.xref_rich_gbrowse2 {
   -moz-border-radius: 6px;
   -webkit-border-radius: 6px;
   border: 1px outset #666;
-  padding-bottom: 10px
+  padding-bottom: 8px;
+  margin: 10px;
 }
 div.xref_rich_gbrowse2 hr {
   width: 95%;

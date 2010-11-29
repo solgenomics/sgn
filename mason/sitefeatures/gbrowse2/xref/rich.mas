@@ -4,6 +4,12 @@
 
     <div class="xref xref_rich xref_rich_gbrowse2">
 
+        <a href="<% $xref->url %>">
+           <img src="<% $xref->preview_image_url %>" />
+        </a>
+
+        <hr />
+
         <% info_table_html(
             'Annotation Set'  => $xref->data_source->description,
             'Sequence Region' => '<a href="'.$xref->url.'">'.$ref_region.'</a>',
@@ -17,12 +23,6 @@
                 @{ $xref->seqfeatures } ),
             __border   => 0,
          )%>
-
-        <hr />
-   
-        <a href="<% $xref->url %>">            
-           <img src="<% $xref->preview_image_url %>" />
-        </a>
 
      </div>
 <%init>
