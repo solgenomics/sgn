@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-BEGIN { $ENV{SGN_SKIP_CGI} = 0 }
+BEGIN { $ENV{SGN_SKIP_CGI} = 1 }
 
 use Carp;
 use Test::More;
