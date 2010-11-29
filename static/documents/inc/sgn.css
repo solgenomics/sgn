@@ -1296,5 +1296,6 @@ div.xref_rich_gbrowse2 hr {
 }
 
 div.xref_rich_gbrowse2 img {
+  margin-top: 12px;
   border: 0;
 }
