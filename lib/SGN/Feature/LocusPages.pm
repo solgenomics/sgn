@@ -36,9 +36,6 @@ sub _name_xrefs {
     # fetch at most 5 results, hashing by locus name
     my %results = map { $_->[1] => $_ } reverse grep $_, map { $result->next_result } 1..5;
 
-    use Data::Dumper;
-    Carp::cluck( Dumper( \%results ) );
-
     # make xrefs out of them
     my @xrefs;
     for my $locus_name ( sort keys %results ) {
