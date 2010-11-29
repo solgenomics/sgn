@@ -20,16 +20,11 @@
 
 %  for my $reltype ( sort keys %rels ) {
 %    my $updown = $rels{$reltype};
-     <&| /page/info_section.mas,
-         title => $reltype.' relationships',
-         is_subsection => 1,
-      &>
 %       for my $direction ( 'upstream', 'downstream' ) {
 %         if( my $feats = $updown->{$direction} ) {
             <& .relatedfeats, reltype => $reltype, direction => $direction, feats => $feats, ftype => $ftype &>            
 %         }
 %       }
-     </&>
 %  }
 
 <%def .relatedfeats>
@@ -39,8 +34,9 @@
  $feats
  $ftype
 </%args>
+% my ($is,$are) = $reltype =~ /part[ _]of/i ? (' is',' are') : ('','');
 <&| /page/info_section.mas,
-   title => $direction eq 'upstream' ? "this $ftype $reltype these features" : "these features $reltype this $ftype",
+   title => $direction eq 'upstream' ? qq|features this $ftype$is $reltype| : qq|features that$are $reltype this $ftype|,
    is_subsection => 1,
 &>
 %   if( @$feats > 4 ) {

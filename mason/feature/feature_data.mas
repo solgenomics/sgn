@@ -24,7 +24,7 @@
 
 <% info_table_html(
     'Name'          => feature_link( $feature ),
-    'Type'          => cvterm_link($feature),
+    'Type'          => cvterm_link($feature,'caps'),
     'Location(s)'   => location_list_html( $feature ),
     'Length'        => $feature_length,
 

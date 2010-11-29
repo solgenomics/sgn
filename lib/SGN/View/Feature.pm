@@ -23,8 +23,11 @@ our @EXPORT_OK = qw/
 
 sub type_name {
     my $feature = shift;
+    my $caps = shift;
     ( my $n = $feature->type->name ) =~ s/_/ /g;
-    $n =~ s/(\S+)/ucfirst($1)/e;
+    if( $caps ) {
+        $n =~ s/(\S+)/lc($1) eq $1 ? ucfirst($1) : $1/e;
+    }
     return $n;
 }
 
@@ -157,8 +160,8 @@ LINK
 }
 
 sub cvterm_link {
-    my ($feature) = @_;
-    my $name = type_name($feature);
+    my ($feature,$caps) = @_;
+    my $name = type_name($feature,$caps);
     my $id   = $feature->type->id;
     return qq{<a href="/chado/cvterm.pl?cvterm_id=$id">$name</a>};
 }
