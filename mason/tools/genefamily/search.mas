@@ -94,7 +94,7 @@ if ($action eq 'detail') {
     <hr>
     <td>View</td>
     <td>
-      <form name="alignment_viewer_form" method="POST" action="/tools/align_viewer/">
+      <form name="alignment_viewer_form" method="POST" action="/tools/align_viewer/index.pl">
 	<input type="hidden" name="seq_data" value="<% $seq_data %>" />
 	<input type="submit" value="Alignment" <% $align_link_disabled %> />
 	<input type="hidden" name="format" value="fasta" />
