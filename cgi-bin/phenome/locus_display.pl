@@ -45,7 +45,7 @@ if ( !$locus->get_locus_id() && $action ne 'new' && $action ne 'store' ) {
 
 my @locus_xrefs =
     # 4. look up xrefs for all of them
-    map $c->feature_xrefs( $_ ),
+    map $c->feature_xrefs( $_, { exclude => 'locuspages' } ),
     # 3. plus primary locus name
     $locus->get_locus_name,
     # 2. list of locus alias strings
