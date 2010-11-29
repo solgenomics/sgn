@@ -1,0 +1,4 @@
+<%args>
+  $xref
+</%args>
+<a class="xref" href="<% $xref->url %>"><% $xref->text %></a>

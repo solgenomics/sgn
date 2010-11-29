@@ -36,6 +36,14 @@ the site feature object this cross reference points to
     required => 1,
    );
 
+sub TO_JSON {
+    my ( $self ) = @_;
+    return {
+        map { $_ => "$self->{$_}" }
+        qw( url is_empty text )
+    };
+}
+
 __PACKAGE__->meta->make_immutable;
 
 1;

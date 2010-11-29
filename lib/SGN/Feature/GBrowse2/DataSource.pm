@@ -152,6 +152,12 @@ sub _make_region_xref {
     my ( $start, $end ) = ( $region->{range}->start, $region->{range}->end );
     ( $start, $end ) = ( $end, $start ) if $start > $end;
 
+    my @highlight =
+        @{$region->{features}} == 1 # highlight our feature or region if we can
+            ? ( h_feat => $region->{features}->[0]->display_name )
+            : ( h_region =>  $region->{features}->[0]->seq_id.':'.$region->{range}->start.'..'.$region->{range}->end );
+
+
     return $self->_make_cross_ref(
         text => join( '',
             'view ',
@@ -163,21 +169,27 @@ sub _make_region_xref {
             $self->view_url({ ref   => $region->{features}->[0]->seq_id,
                               start => $start,
                               end   => $end,
-                              ( @{$region->{features}} == 1 # highlight our feature or region if we can
-                                    ? ( h_feat => $region->{features}->[0]->display_name )
-                                    : ( h_region =>  $region->{features}->[0]->seq_id.':'.$region->{range}->start.'..'.$region->{range}->end )
-                              )
+                              @highlight,
                           }),
         preview_image_url =>
-            $self->image_url(  { ref      => $region->{features}->[0]->seq_id,
-                               start    => $start,
-                               end      => $end,
-                             },
-                           ),
+            $self->image_url({
+                name   => $region->{features}->[0]->seq_id.":$start..$end",
+                format => 'GD',
+            }),
+
         seqfeatures  => $region->{features},
         feature      => $self->gbrowse,
         data_source  => $self,
        );
+}
+
+sub image_url {
+    my ( $self, $q ) = @_;
+    $q ||= {};
+    $q->{width}    ||= 600;
+    $q->{keystyle} ||= 'between',
+    $q->{grid}     ||= 1;
+    return $self->_url( 'gbrowse_img', $q );
 }
 
 

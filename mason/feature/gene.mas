@@ -1,95 +1,157 @@
 <%args>
     $feature
     $blast_url => undef
-    $children  => undef
-    $parents   => undef
+    $xrefs     => []
 </%args>
 <%init>
-    use Data::Dumper;
+    use SGN::View::Feature qw/ location_string_with_strand mrna_and_protein_sequence /;
+    my @mrnas = grep $_->type->name eq 'mRNA', $feature->child_features;
 </%init>
-<& /page/page_title.mas, title => 'Gene: '. $feature->id &>
+<& /page/page_title.mas, title => 'Gene '. $feature->name &>
 
 <& /util/import_javascript.mas,
-    classes => [qw(
-        Prototype jquery Text.Markup CXGN.Effects
-        MochiKit.DOM thickbox
-        MochiKit.Async CXGN.Sunshine.NetworkBrowser
-        CXGN.Page.Form.JSFormPage
-    )]
+    classes => [ 'jquery', 'jqueryui' ],
 &>
 
 <%perl>
     my $organism = $feature->organism;
     my $species  = $organism->species;
-    $species    =~ s!(\S+) !<i>$1</i> !;
     my $reference = $feature->featureloc_features->single->srcfeature;
-    my @mrna_features = grep { $_->type->name eq 'mRNA' } @$children;
 </%perl>
 
-<& /feature/feature_data.mas,
-    feature => $feature,
-    species => $species,
-    title => 'Gene Data',
+<&| /page/info_section.mas,
+    title       => 'Gene',
+    subtitle    => $feature->is_obsolete ? 'WARNING: This gene has been replaced by new data.' : '',
+    collapsible => 1,
 &>
+  <& /feature/feature_data.mas,
+      feature => $feature,
+      species => $species,
+      description_from => \@mrnas,
+  &>
 
-<& /feature/related_features.mas,
-    children => $children,
-    parents => $parents,
-    reference => $reference,
-    feature => $feature,
-&>
+  <& /feature/exon_structure.mas, xrefs => $xrefs, feature => $feature &>
+
+</&>
 
 <& /feature/properties.mas,
     feature => $feature,
 &>
 
-<& /feature/sequence.mas,
-	feature => $feature,
-	blast_url => $blast_url,
+<&| /page/info_section.mas,
+   title => 'Related features',
+   collapsible => 1,
+&>
+  <& /feature/related_features.mas,
+      reference => $reference,
+      feature => $feature,
+  &>
+
+</&>
+
+
+<&| /page/info_section.mas,
+        title       => 'Genomic sequence',
+        subtitle    =>
+          'unprocessed genomic sequence region underlying this gene',
+        collapsible => 1,
+        collapsed   => 1,
 &>
 
-<& /feature/exon_structure.mas,
-    feature => $feature,
-&>
+   <& /feature/sequence.mas,
+       feature   => $feature,
+       blast_url => $blast_url,
+   &>
 
-<& /feature/genomic_sequence.mas, feature => $feature &>
+</&>
 
-% for my $mrna (@mrna_features) {
-<& /feature/mrna_sequence.mas,
-    mrna_feature => $mrna,
-&>
+% for my $mrna ( @mrnas ) {
+  <&| /page/info_section.mas,
+          title       => 'mRNA '.$mrna->name,
+          collapsible => 1,
+  &>
+
+%   my ( $mrna_sequence, $protein_sequence ) = mrna_and_protein_sequence( $mrna );
+
+    <&| /page/info_section.mas,
+            title       => 'mRNA sequence',
+            is_subsection => 1,
+            subtitle    =>
+              'spliced mRNA sequence, including UTRs',
+            collapsible => 1,
+            collapsed   => 1,
+    &>
+
+%  if( $mrna_sequence ) {
+
+     <div style="margin-left: 3em">
+       <& /sequence/with_markup.mas,
+          seq       => $mrna_sequence,
+          width     => 80,
+          subdiv    => 10,
+          blast_url => undef,
+        &>
+     </div>
+
 % }
-<& /feature/protein_sequence.mas,
-    mrna_features => [ @mrna_features ],
-&>
+
+    </&>
+
+    <&| /page/info_section.mas,
+            title       => 'Protein sequence',
+            is_subsection => 1,
+            subtitle    =>
+              'translated polypeptide sequence',
+            collapsible => 1,
+            collapsed   => 1,
+    &>
+
+%  if( $protein_sequence ) {
+
+     <div style="margin-left: 3em">
+       <& /sequence/with_markup.mas,
+          seq       => $protein_sequence,
+          width     => 80,
+          subdiv    => 10,
+          blast_url => undef,
+        &>
+     </div>
+
+% }
+
+    </&>
+
+%#    <& /feature/protein_sequence.mas,
+%#       feature => $mrna,
+%#        mrna_features => [ @mrna_features ],
+%#    &>
+
+    <&| /page/info_section.mas,
+        title => 'Related features',
+        is_subsection => 1,
+        collapsible => 1,
+     &>
+
+       <& /feature/related_features.mas,
+             feature   => $mrna,
+       &>
+
+    </&>
+
+    <& /feature/properties.mas,
+        feature => $mrna,
+    &>
+
+
+  </&>
+% }
 
 <&| /page/info_section.mas,
-    title => 'Protein domains',
-    collapsible => 1,
-&>
-</&>
-
-<&| /page/info_section.mas,
-    title => 'BLAST Annotation',
-    collapsible => 1,
-&>
-
-</&>
-
-<&| /page/info_section.mas,
-    title => 'Gene Families',
-    collapsible => 1,
-&>
-</&>
-
-<&| /page/info_section.mas,
-    title => 'SNPs',
-    collapsible => 1,
-&>
-</&>
-
-<&| /page/info_section.mas,
-    title => 'Alternate Splicing',
-    collapsible => 1,
-&>
+     title => 'Related views',
+     collapsible => 1,
+ &>
+     <& /sitefeatures/mixed/xref_set/link.mas,
+        xrefs   => $xrefs,
+        exclude => 'gbrowse2',
+      &>
 </&>
