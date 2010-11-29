@@ -18,7 +18,15 @@ our @EXPORT_OK = qw/
     location_list_html
     location_string
     location_string_with_strand
+    type_name
 /;
+
+sub type_name {
+    my $feature = shift;
+    ( my $n = $feature->type->name ) =~ s/_/ /g;
+    $n =~ s/(\S+)/ucfirst($1)/e;
+    return $n;
+}
 
 sub get_description {
     my ($feature) = @_;
