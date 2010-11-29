@@ -187,8 +187,9 @@ sub _R_version_required {
 # parse and return the current R version as a version object
 sub _R_version_current {
     my $r = `R --version`;
-    $r =~ /R version ([\d\.]+)/
-        or return 0;
+    return 0 unless $r;
+
+    $r =~ /R version ([\d\.]+)/;
 
     return version->parse($1);
 }
