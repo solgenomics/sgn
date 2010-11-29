@@ -163,13 +163,15 @@ sub roots_GET {
         @namespaces = split /\%09/, $namespace; #split on tab?
     }
     my @roots = ();
+    my $is_rel = 0;
     foreach my $ns (@namespaces) {
+        $is_rel = 1 if $ns eq 'OBO_REL';
         my $q = "SELECT cvterm.cvterm_id FROM cvterm
                  JOIN dbxref USING(dbxref_id) JOIN db USING(db_id)
                  LEFT JOIN cvterm_relationship ON (cvterm.cvterm_id=cvterm_relationship.subject_id)
                  WHERE cvterm_relationship.subject_id IS NULL AND is_obsolete= ? AND is_relationshiptype = ? AND db.name= ? ";
         my $sth = $schema->storage->dbh->prepare($q);
-        $sth->execute(0,0,$ns);
+        $sth->execute(0,$is_rel,$ns);
         while (my ($cvterm_id) = $sth->fetchrow_array() ) {
             my $root = $schema->resultset("Cv::Cvterm")->find( { cvterm_id => $cvterm_id } );
             push @roots, $root;
