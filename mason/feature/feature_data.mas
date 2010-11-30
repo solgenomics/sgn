@@ -3,6 +3,7 @@
     $title   => 'Feature'
     $species => undef
     $description_from => [ $feature ]
+    $featurelocs
 </%args>
 <%once>
     use SGN::View::Feature qw/

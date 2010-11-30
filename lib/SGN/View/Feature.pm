@@ -61,8 +61,8 @@ sub get_reference {
 }
 
 sub feature_length {
-    my ($feature) = @_;
-    my @locations = $feature->featureloc_features->all;
+    my ($feature, $featurelocs) = @_;
+    my @locations = $featurelocs ? $featurelocs->all : $feature->featureloc_features->all;
     my $locations = scalar @locations;
     my $length = 0;
     for my $l (@locations) {

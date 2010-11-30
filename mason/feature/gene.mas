@@ -14,9 +14,9 @@
 &>
 
 <%perl>
-    my $organism = $feature->organism;
-    my $species  = $organism->species;
-    my $reference = $feature->featureloc_features->single->srcfeature;
+    my $organism    = $feature->organism;
+    my $species     = $organism->species;
+    my $featurelocs = $feature->featureloc_features;
 </%perl>
 
 <&| /page/info_section.mas,
@@ -28,6 +28,7 @@
       feature          => $feature,
       species          => $species,
       description_from => \@mrnas,
+      featurelocs      => $featurelocs,
   &>
 
   <& /feature/exon_structure.mas, xrefs => $xrefs, feature => $feature &>

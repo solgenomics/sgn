@@ -42,9 +42,9 @@
 %   if( @$feats > 4 ) {
      <& /page/columnar_table.mas,
          __tableattrs => 'summary="Feature summary" cellspacing="0" style="margin-bottom: 0.5em"',
-         data     => related_stats($feats),
-         __caption => 'Summary',
-         __border => 1,
+         data         => related_stats($feats),
+         __caption    => 'Summary',
+         __border     => 1,
       &>
 %   }
     <& /feature/feature_list.mas,
