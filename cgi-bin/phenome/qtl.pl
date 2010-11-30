@@ -1,4 +1,3 @@
-#!/usr/bin/perl -w
 
 =head1 DESCRIPTION
 A QTL detail page.
@@ -334,14 +333,14 @@ sub legend
         chomp($row);
         my ( $parameter, $value ) = split( /\t/, $row );
 
-        if ( $parameter =~ /qtl_method/ ) 
-	{ 
-	    $parameter = 'Mapping method'; 
-	}
-        if ( $parameter =~ /qtl_model/ )  
-	{ 
-	    $parameter = 'Mapping model'; 
-	}
+        if ( $parameter =~ /qtl_method/ )
+        {
+            $parameter = 'Mapping method';
+        }
+        if ( $parameter =~ /qtl_model/ )
+        {
+            $parameter = 'Mapping model';
+        }
         if ( $parameter =~ /prob_method/ )
         {
             $parameter = 'QTL genotype probability method';

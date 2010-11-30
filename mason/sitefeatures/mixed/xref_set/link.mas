@@ -1,0 +1,35 @@
+<%args>
+  $xrefs
+  $exclude => []
+</%args>
+
+% if( %by_sitefeature ) {
+    <dl class="xref">
+%     for my $f ( sort keys %by_sitefeature ) {
+        <dt><% $f |h %></dt>
+        <dd>
+%         my $multi_comp = resolve_xref_component( $m, $by_sitefeature{$f}->[0]->feature, '/sitefeatures/%f/xref_set/link.mas' );
+          <& $multi_comp, xrefs => $by_sitefeature{$f} &>
+        </dd>
+%     }
+    </dl>
+% }
+
+<%once>
+   use SGN::View::Mason::CrossReference 'resolve_xref_component';
+</%once>
+
+<%init>
+
+  # group the xrefs by sitefeature name
+  my %by_sitefeature;
+  for my $x ( @$xrefs ) {
+      push @{$by_sitefeature{$x->feature->description}}, $x;
+  }
+
+  #filter xrefs if necessary
+  $exclude = [ $exclude ] unless ref $exclude;
+
+  delete $by_sitefeature{$_} for @$exclude;
+
+</%init>

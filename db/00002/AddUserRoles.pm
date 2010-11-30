@@ -1,14 +1,14 @@
-#!/usr/bin/env perl
 package AddUserRoles;
 
 use Moose;
+use 5.010;
 extends 'CXGN::Metadata::Dbpatch';
 
 sub init_patch {
     my $self=shift;
     my $name = __PACKAGE__;
-    print "dbpatch name is ':" .  $name . "\n\n";
-    my $description = 'Testing a Moose dbpatch';
+    say "dbpatch name is $name";
+    my $description = 'Add User Roles';
     my @previous_requested_patches = (); #ADD HERE
 
     $self->name($name);
@@ -19,7 +19,6 @@ sub init_patch {
 
 sub patch {
     my $self=shift;
-
 
     print "Executing the patch:\n " . $self->name . ".\n\nDescription:\n  ".  $self->description . ".\n\nExecuted by:\n " .  $self->username . " .";
 
@@ -57,11 +56,8 @@ CREATE TABLE sgn_people.sp_person_roles (
 
 EOSQL
 
-print "You're done!\n";
+    say "You're done!";
 
 }
 
-
-####
-1; #
-####
+1;

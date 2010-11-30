@@ -17,6 +17,7 @@
            env   => {
               PERL5LIB   => join( ':', @INC ),
               SGN_CONFIG => '/etc/cxgn/SGN.conf',
+              R_LIBS     => '/usr/share/sgn-site/lib/R',
            },
        );
 

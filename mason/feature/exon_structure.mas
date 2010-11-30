@@ -1,18 +1,21 @@
 <%args>
     $feature
-    $title => 'Exon Structure'
+    $xrefs
 </%args>
-<%init>
-    use SGN::View::Feature qw/gbrowse_image_url gbrowse_link/;
-</%init>
-<%perl>
-    my $img_url = gbrowse_image_url($feature);
-    my $link    = gbrowse_link($feature);
-</%perl>
 
-<&| /page/info_section.mas,
-    title => $title,
-    collapsible => 1,
-&>
-<a href="<% $link %>"><img border="0" src="<% $img_url %>"></a>
-</&>
+% if( $gbrowse_xref ) {
+
+<& /sitefeatures/gbrowse2/xref/rich.mas, xref => $gbrowse_xref &>
+
+% }
+
+<%init>
+    # in our xrefs, find the gbrowse2 xref that has only our feature
+    # in it, and use its gbrowse_img and a link to gbrowse as our exon
+    # structure diagram
+    my ( $gbrowse_xref ) =
+         grep {     $_->feature->feature_name eq 'gbrowse2'
+                 && @{$_->seqfeatures} == 1
+                 && $_->seqfeatures->[0]->display_name eq $feature->name 
+              } @$xrefs;
+</%init>

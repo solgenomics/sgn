@@ -86,6 +86,7 @@ __PACKAGE__->config(
                 blast_db_path
                 ftpsite_root
                 image_path
+                genefamily_dir
                 homepage_files_dir
                 intron_finder_database
                 r_qtl_temp_path

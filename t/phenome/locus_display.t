@@ -15,7 +15,7 @@ Naama Menda  <nm249@cornell.edu>
 
 use strict;
 use warnings;
-use Test::More tests => 3;
+use Test::More;
 use lib 't/lib';
 use SGN::Test;
 use SGN::Test::WWW::Mechanize;
@@ -25,8 +25,6 @@ use CXGN::DB::Connection;
 
 {
     my $mech = SGN::Test::WWW::Mechanize->new;
-
-    $mech->get_ok("/cgi-bin/phenome/locus_display.pl");
 
     $mech->with_test_level( local => sub {
        my $schema = $mech->context->dbic_schema('CXGN::Phenome::Schema');
@@ -46,3 +44,5 @@ use CXGN::DB::Connection;
        $mech->content_contains("Locus editor");
    }, 2 );
 }
+
+done_testing;

@@ -1,107 +1,23 @@
-
-
-<%doc>
-
-=head1 NAME
-
-/locus/locus_genomic_annotations.mas component for printing locus sequence matches found in ITAG gbrowse DBs
-
-=head1 DESCRIPTION
-
-Parameters:
-
-=over 1
-
-=item locus_id
-
-locus database id
-
-
-=back
-
-=head1 AUTHOR
-
-Rob Buels <rmb32@cornell.edu>
-Naama Menda <nm249@cornell.edu>
-
-=cut 
-
-</%doc>
-
 <%args>
-    $locus_id
+    $locus
 </%args>
+
+
+% if( @gbrowse_match_xrefs ) {
+
+  <& /sitefeatures/gbrowse2/xref_set/rich.mas,
+      xrefs => \@gbrowse_match_xrefs
+   &>
+
+% }
+
 <%init>
-    use CXGN::Tools::List qw/distinct/;
-    use CXGN::Tools::Identifiers qw/ parse_identifier / ;
+   # look up any gbrowse cross-refs for this locus id, if any
+   my @gbrowse = $c->enabled_feature('gbrowse2');
+   my @gbrowse_match_xrefs = map {
+       $_->xrefs({
+           -types      => ['match'],
+           -attributes => { sgn_locus_id => $locus->get_locus_id },
+       })
+   } @gbrowse;
 </%init>
-
-<%perl>
-
-# look up any gbrowse cross-refs for this locus id, if any
-my @xrefs = map {
-    $_->xrefs(
-        {
-            -types      => ['match'],
-            -attributes => { sgn_locus_id => $locus_id },
-        }
-      ),
-} $c->enabled_feature('gbrowse2');
-
-# and now convert each of the matched regions into HTML strings
-# that display them
-my $annots = join "\n", map _render_genomic_xref($_), @xrefs;
-
-sub _render_genomic_xref {
-    my ($xref) = @_;
-
-    # look up all the matching locus sequence names
-    my @locus_seqnames = distinct
-      map {
-        my $f = $_;
-        my $p = parse_identifier( $f->target->seq_id, 'sgn_locus_sequence' )
-          or die "cannot parse " . $f->target->seq_id;
-        $p->{ext_id}
-      } @{ $xref->seqfeatures };
-
-    my $linked_img = CGI->a(
-        { href => $xref->url },
-        CGI->img(
-            { #style => "border: 1px solid #ddd; border-top: 0; padding: 1em 0; margin:0",
-                style => 'border: none',
-                src   => $xref->preview_image_url
-            }
-        )
-    );
-
-    my $sequences_matched =
-      @locus_seqnames > 1
-      ? 'Sequences matched'
-      : 'Sequence matched';
-
-    return join(
-        '',
-        '<div style="border: 1px solid #777; padding-bottom: 10px">',
-        info_table_html(
-            'Annotation Set'     => $xref->data_source->description,
-            'Feature(s) matched' => join( ', ',
-                map $_->display_name || $_->primary_id,
-                @{ $xref->seqfeatures } ),
-            'Reference Sequence' => $xref->seqfeatures->[0]->seq_id,
-            $sequences_matched => join( ', ', @locus_seqnames ),
-
-     #__tableattrs         => qq|summary="" style="margin: 1em auto -1px auto"|,
-            __border   => 0,
-            __multicol => 3,
-        ),
-        '<hr style="width: 95%" />',
-        $linked_img,
-        '</div>',
-    );
-}
-
-
-</%perl>
-
-
-<% $annots %>

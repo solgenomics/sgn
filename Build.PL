@@ -1,7 +1,8 @@
-use lib 'inc';
-use Module::Build::SGNSite;
+use lib 'lib';
+use SGN::Build;
 
-my $build = Module::Build::SGNSite->new(
+#my $class = 'Module::Build';
+my $build = SGN::Build->new(
     dist_name          => 'SGN',
     license            => 'perl',
     create_makefile_pl => 'passthrough',
@@ -20,6 +21,7 @@ my $build = Module::Build::SGNSite->new(
         'Class::MethodMaker'             => 0,
         'File::Temp'                     => 0,
         'HTML::Lint'                     => 0,
+        'Parse::Deb::Control'            => 0,
         'Test::JSON'                     => 0,
         'List::Util'                     => 0,
         'Test::Most'                     => 0,
@@ -30,10 +32,10 @@ my $build = Module::Build::SGNSite->new(
     },
     requires => {
         'perl'                                     => '5.10.0',
+        'version'                                  => '0.77',
         'autodie'                                  => 0,
         'IPC::System::Simple'                      => 0,         #< required for autodie :all
-        'Apache::DBI'                              => 0,
-        'Bio::Chado::Schema'                       => '0.05900',
+        'Bio::Chado::Schema'                       => '0.07300',
         'Bio::Root::Version'                       => '1.006001',
         'Bio::Graphics::FeatureFile'               => 0,
         'Cache::File'                              => 0,
@@ -113,4 +115,5 @@ my $build = Module::Build::SGNSite->new(
         'WWW::Mechanize::TreeBuilder'              => 0,
     },
 );
+
 $build->create_build_script;
