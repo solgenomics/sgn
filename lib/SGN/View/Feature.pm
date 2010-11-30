@@ -253,6 +253,9 @@ sub _exon_rs {
                          ->get_column('cvterm_id')
                          ->as_query,
             },
+           },
+           {
+               prefetch => 'featureloc_features',
            })
         ->search_related( 'featureloc_features', {
             srcfeature_id => { -not => undef },
