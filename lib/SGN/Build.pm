@@ -159,7 +159,8 @@ sub _check_R_version {
     if( eval '$self->_R_version_current'." $cmp version->parse('$v')" ) {
         return 1;
     } else {
-        warn "R VERSION CHECK FAILED, we have ".$self->_R_version_current.", but we require $cmp $v.\n\n";
+        warn "R VERSION CHECK FAILED, we have ".$self->_R_version_current.", but we require $cmp $v.\n";
+        warn "To install R : sudo aptitude install r-base-core\n\n";
         return 0;
     }
 }
