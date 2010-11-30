@@ -18,7 +18,7 @@ my @xrefs = map {
 
 <&| /page/info_section.mas, title => "Genomic locations" &>
 % if( @xrefs ) {
-  <& /sitefeatures/gbrowse2/xref_set/link.mas, xrefs => \@xrefs &>
+  <& /sitefeatures/gbrowse2/xref_set/rich.mas, xrefs => \@xrefs &>
 % }
 </&>
 

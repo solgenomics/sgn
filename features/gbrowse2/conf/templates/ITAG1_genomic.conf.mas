@@ -6,7 +6,7 @@ reference class = Sequence
 
 search attributes = Note
 
-default features = mrna sgn_loci sgn_unigenes Markers:overview Genes:region
+default features = mrna sgn_loci sgn_unigenes Markers:overview Genes:region sgn_markers
 
 # "automatic" classes to try when an unqualified identifier is given
 automatic classes = Sequence clone match nucleotide_motif
