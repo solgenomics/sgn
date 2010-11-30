@@ -87,14 +87,18 @@ sub location_string_with_strand {
 }
 
 sub location_list_html {
-    my ($feature) = @_;
-    my @coords = map { location_string($_) } $feature->featureloc_features->all
+    my ($feature, $featurelocs) = @_;
+    my @coords = map { location_string($_) }
+        ( $featurelocs ? $featurelocs->all
+                       : $feature->featureloc_features->all)
         or return '<span class="ghosted">none</span>';
     return @coords;
 }
 sub location_list {
-    my ($feature) = @_;
-    return map { $_->srcfeature->name.':'.($_->fmin+1).'..'.$_->fmax } $feature->featureloc_features->all;
+    my ($feature, $featurelocs) = @_;
+    return map { $_->srcfeature->name . ':' . ($_->fmin+1) . '..' . $_->fmax }
+        ( $featurelocs ? $featurelocs->all
+                       : $feature->featureloc_features->all );
 }
 
 sub related_stats {

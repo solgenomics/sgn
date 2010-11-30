@@ -5,17 +5,17 @@
 </%args>
 <%once>
     use SGN::View::Feature qw/
-    location_string_with_strand mrna_and_protein_sequence
-    get_reference
+    location_string_with_strand
+    mrna_and_protein_sequence
 /;
 </%once>
 <%perl>
     my $organism    = $feature->organism;
     my $species     = $organism->species;
     my $featurelocs = $feature->featureloc_features;
-    my $reference   = get_reference($feature);
+    my $reference   = $featurelocs ? $featurelocs->single->srcfeature : undef ;
     my @mrnas       = grep $_->type->name eq 'mRNA', $feature->child_features;
-<%/perl>
+</%perl>
 
 <& /page/page_title.mas, title => 'Gene '. $feature->name &>
 
@@ -49,7 +49,6 @@
    collapsible => 1,
 &>
   <& /feature/related_features.mas,
-      reference => $reference,
       feature   => $feature,
   &>
 
