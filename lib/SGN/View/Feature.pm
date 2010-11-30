@@ -245,6 +245,9 @@ sub _exon_rs {
                          ->get_column('cvterm_id')
                          ->as_query,
             },
+          },
+          {
+              prefetch => 'type',
           })
         ->search_related( 'subject', {
             'subject.type_id' => {
@@ -259,7 +262,8 @@ sub _exon_rs {
         ->search_related( 'featureloc_features', {
             srcfeature_id => { -not => undef },
           },
-          { prefetch => 'srcfeature',
+          {
+            prefetch => 'srcfeature',
             order_by => 'fmin',
           },
          )
