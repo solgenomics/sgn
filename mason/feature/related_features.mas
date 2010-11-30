@@ -1,9 +1,10 @@
 <%args>
     $feature
 </%args>
-<%init>
+<%once>
     use SGN::View::Feature qw/related_stats/;
-
+</%once>
+<%init>
     # make a hash of relationship_type => {
     #    upstream   => \@list_of_features,
     #    downstream => \@list_of_features,
