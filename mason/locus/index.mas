@@ -251,7 +251,7 @@ my $ontology_subtitle =  !(grep { /^$user_type$/ } ('curator', 'submitter', 'seq
    <&| /page/info_section.mas,
        title         => "Other genome matches",
        collapsible   => 1,
-       collapsed     => 0,
+       collapsed     => 1,
        is_subsection => 1,
     &>
 
