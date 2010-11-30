@@ -121,7 +121,7 @@ if (userpermuvalue == "None")
 userpermuvalue<-as.numeric(userpermuvalue)
 
 #####for test only
-#userpermuvalue<-c(0)
+userpermuvalue<-c(10)
 #####
 
 
@@ -393,6 +393,9 @@ if ((is.logical(permuvalue1) == FALSE))
   }
 }
 
+##########QTL EFFECTS - I ##############
+LodThreshold<-permu[1,1]
+##########QTL EFFECTS ##############
 
 chrlist<-c("chr1")
 
@@ -442,6 +445,8 @@ chrno<-1
 datasummary<-c()
 confidenceints<-c()
 lodconfidenceints<-c()
+QtlChrs<-c()
+QtlPositions<-c()
 
 for (i in chrdata)
 {  
@@ -464,8 +469,16 @@ for (i in chrdata)
   position<-max(i,
                 chr=chrno
                 )
-  p<-position[2]
-  p<-p[1, ]
+  
+  p<-position[["pos"]]
+  LodScore<-position[["lod"]]
+  QtlChr<-levels(position[["chr"]]) 
+
+if (LodScore >=LodThreshold) {
+  QtlChrs<-append(QtlChrs, QtlChr)
+  QtlPositions<-append(QtlPositions, p)
+}
+  
   
   peakmarker<-find.marker(popdata,
                           chr=chrno,
@@ -514,6 +527,17 @@ for (i in chrdata)
 chrno<-chrno + 1;
 
 }
+
+##########QTL EFFECTS ##############
+print("QTL effects")
+print("lod")
+print(LodThreshold)
+print("chrs")
+print(QtlChrs)
+print("pos")
+print(QtlPositions)
+print("QTL effects--End")
+##########QTL EFFECTS ##############
 
 outfiles<-scan(file=outfile,
                what="character"
