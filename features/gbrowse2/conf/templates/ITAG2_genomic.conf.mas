@@ -155,6 +155,7 @@ das category = transcription
 strand_arrow = 1
 height       = 10
 citation     = This track shows the mRNAs for gene models annotated by EuGene, the integrative gene predictor for ITAG. (see <a href="http://www.ab.wur.nl/TomatoWiki/AnEugene000">EuGene on ITAG Wiki</a>, <a href="http://www.inra.fr/internet/Departements/MIA/T//EuGene/index.html">EuGene main page</a>)
+balloon hover = $name: click for more details
 balloon click = url:/api/v1/feature_xrefs?q=$name;exclude=gbrowse,gbrowse2
 
 [cds]
