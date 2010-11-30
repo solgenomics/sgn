@@ -2,6 +2,7 @@
     $feature
     $blast_url => undef
     $xrefs     => []
+    $featurelocs
 </%args>
 <%once>
     use SGN::View::Feature qw/
@@ -12,7 +13,6 @@
 <%perl>
     my $organism    = $feature->organism;
     my $species     = $organism->species;
-    my $featurelocs = $feature->featureloc_features;
     my $reference   = $featurelocs ? $featurelocs->single->srcfeature : undef ;
     my @mrnas       = grep $_->type->name eq 'mRNA', $feature->child_features;
 </%perl>
