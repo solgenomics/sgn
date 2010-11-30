@@ -44,7 +44,7 @@ sub delegate_component
         @xrefs = map {
             $c->feature_xrefs( $_->srcfeature->name.':'.($_->fmin+1).'..'.$_->fmax, { exclude => 'featurepages' } )
         }
-        $c->stash->{featurelocs}
+        $c->stash->{featurelocs}->all
     }
     $c->stash->{xrefs} = \@xrefs;
 
