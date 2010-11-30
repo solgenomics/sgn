@@ -25,8 +25,8 @@
     collapsible => 1,
 &>
   <& /feature/feature_data.mas,
-      feature => $feature,
-      species => $species,
+      feature          => $feature,
+      species          => $species,
       description_from => \@mrnas,
   &>
 
@@ -39,12 +39,12 @@
 &>
 
 <&| /page/info_section.mas,
-   title => 'Related features',
+   title       => 'Related features',
    collapsible => 1,
 &>
   <& /feature/related_features.mas,
       reference => $reference,
-      feature => $feature,
+      feature   => $feature,
   &>
 
 </&>
@@ -52,8 +52,7 @@
 
 <&| /page/info_section.mas,
         title       => 'Genomic sequence',
-        subtitle    =>
-          'unprocessed genomic sequence region underlying this gene',
+        subtitle    => 'unprocessed genomic sequence region underlying this gene',
         collapsible => 1,
         collapsed   => 1,
 &>
@@ -67,19 +66,18 @@
 
 % for my $mrna ( @mrnas ) {
   <&| /page/info_section.mas,
-          title       => 'mRNA '.$mrna->name,
+          title       => 'mRNA '. $mrna->name,
           collapsible => 1,
   &>
 
 %   my ( $mrna_sequence, $protein_sequence ) = mrna_and_protein_sequence( $mrna );
 
     <&| /page/info_section.mas,
-            title       => 'mRNA sequence',
+            title         => 'mRNA sequence',
             is_subsection => 1,
-            subtitle    =>
-              'spliced mRNA sequence, including UTRs',
-            collapsible => 1,
-            collapsed   => 1,
+            subtitle      => 'spliced mRNA sequence, including UTRs',
+            collapsible   => 1,
+            collapsed     => 1,
     &>
 
 %  if( $mrna_sequence ) {
@@ -98,12 +96,11 @@
     </&>
 
     <&| /page/info_section.mas,
-            title       => 'Protein sequence',
+            title         => 'Protein sequence',
             is_subsection => 1,
-            subtitle    =>
-              'translated polypeptide sequence',
-            collapsible => 1,
-            collapsed   => 1,
+            subtitle      => 'translated polypeptide sequence',
+            collapsible   => 1,
+            collapsed     => 1,
     &>
 
 %  if( $protein_sequence ) {
@@ -121,15 +118,10 @@
 
     </&>
 
-%#    <& /feature/protein_sequence.mas,
-%#       feature => $mrna,
-%#        mrna_features => [ @mrna_features ],
-%#    &>
-
     <&| /page/info_section.mas,
-        title => 'Related features',
+        title         => 'Related features',
         is_subsection => 1,
-        collapsible => 1,
+        collapsible   => 1,
      &>
 
        <& /feature/related_features.mas,
@@ -147,7 +139,7 @@
 % }
 
 <&| /page/info_section.mas,
-     title => 'Related views',
+     title       => 'Related views',
      collapsible => 1,
  &>
      <& /sitefeatures/mixed/xref_set/link.mas,
