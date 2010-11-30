@@ -23,7 +23,7 @@ language = en
 
 region segment = 0
 
-examples = copper Q9SGA4_ARATH PF00270 SL1.00sc00002_14.1.1
+examples = copper Q9SGA4_ARATH PF00270 Solyc05g005010.1.1
 
 ### DAS CONFIGURATION ####
 das mapmaster = SELF
