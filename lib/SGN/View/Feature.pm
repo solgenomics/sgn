@@ -22,8 +22,7 @@ our @EXPORT_OK = qw/
 /;
 
 sub type_name {
-    my $feature = shift;
-    my $caps = shift;
+    my ($feature, $caps) = @_;
     ( my $n = $feature->type->name ) =~ s/_/ /g;
     if( $caps ) {
         $n =~ s/(\S+)/lc($1) eq $1 ? ucfirst($1) : $1/e;

@@ -82,9 +82,12 @@ sub _view_feature {
     my ($self, $c, $key, $value) = @_;
 
     $self->_validate_pair($c,$key,$value);
+    $key = "me.$key";
     my $matching_features = $self->schema
                                 ->resultset('Sequence::Feature')
-                                ->search({ $key => $value });
+                                ->search({ $key => $value },{
+                                    prefetch => 'type',
+                                });
 
     $self->validate($c, $matching_features, $key => $value);
     $self->delegate_component($c, $matching_features);
