@@ -313,6 +313,7 @@ category     = Genetic Loci
 stranded     = 1
 fgcolor      = black
 bgcolor      = yellow
+link         = /search/quick_search.pl?term=$name
 citation     = This track shows regions of similarity of the genomic sequence with known sequences associated with SGN genetic markers, as detected by GenomeThreader (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnSgnMarkers000">ITAG Wiki</a>)
 das category = similarity
 
