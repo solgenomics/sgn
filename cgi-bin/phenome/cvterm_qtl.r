@@ -121,7 +121,7 @@ if (userpermuvalue == "None")
 userpermuvalue<-as.numeric(userpermuvalue)
 
 #####for test only
-userpermuvalue<-c(10)
+#userpermuvalue<-c(10)
 #####
 
 
@@ -447,6 +447,7 @@ confidenceints<-c()
 lodconfidenceints<-c()
 QtlChrs<-c()
 QtlPositions<-c()
+QtlLods<-c()
 
 for (i in chrdata)
 {  
@@ -475,8 +476,19 @@ for (i in chrdata)
   QtlChr<-levels(position[["chr"]]) 
 
 if (LodScore >=LodThreshold) {
-  QtlChrs<-append(QtlChrs, QtlChr)
-  QtlPositions<-append(QtlPositions, p)
+  QtlChrs<-append(QtlChrs,
+                  QtlChr
+                  )
+  
+  QtlLods<-append(QtlLods,
+                  LodScore
+                  )
+  
+  QtlPositions<-append(QtlPositions,
+                       round(p,
+                             0
+                             )
+                       )
 }
   
   
@@ -529,14 +541,43 @@ chrno<-chrno + 1;
 }
 
 ##########QTL EFFECTS ##############
-print("QTL effects")
-print("lod")
-print(LodThreshold)
-print("chrs")
-print(QtlChrs)
-print("pos")
-print(QtlPositions)
-print("QTL effects--End")
+if (max(QtlLods)>=LodScore) {
+  QtlObj<-makeqtl(popdata,
+                QtlChrs,
+                QtlPositions,
+                what="prob"
+                )
+  
+  QtlsNo<-length(QtlPositions)
+  Eq<-c("y~")
+
+  for (i in 1:QtlsNo) {
+    q<-paste("Q",
+             i,
+             sep=""
+             )
+  
+    if (i==1) {  
+      Eq<-paste(Eq, q, sep="")
+    }else
+    if (i>1) {
+      Eq<-paste(Eq, q, sep="*")
+    }
+  }
+
+  print(Eq)
+
+  QtlEffects<-fitqtl(popdata,
+                     pheno.col=cv,
+                     QtlObj,
+                     formula=Eq,
+                     method="hk"
+                     )
+  summary(QtlEffects)
+} else
+{
+ print("no Qtls for this trait")
+}
 ##########QTL EFFECTS ##############
 
 outfiles<-scan(file=outfile,
