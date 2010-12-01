@@ -25,6 +25,7 @@ use SGN::Test::WWW::Mechanize;
     my $mech = SGN::Test::WWW::Mechanize->new;
 
     $mech->get_ok("/stock/search/");
+    $mech->dbh_leak_ok;
     $mech->content_contains("Stock name");
     $mech->content_contains("Stock type");
     $mech->content_contains("Organism");
@@ -49,6 +50,7 @@ use SGN::Test::WWW::Mechanize;
 
         #go to the stock detail page
         $mech->follow_link_ok( { url => '/stock/view/id/'.$stock->stock_id }, 'go to the stock detail page' );
+        $mech->dbh_leak_ok;
         $mech->html_lint_ok( 'stock detail page html ok' );
     });
 }
