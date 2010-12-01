@@ -6,7 +6,7 @@ use base 'Test::Class';
 use Test::Class;
 use lib 't/lib';
 use SGN::Test::Data qw/create_test/;
-use Test::More tests => 8;
+use Test::More tests => 9;
 
 use_ok('SGN::View::Feature', qw/
     feature_table related_stats cvterm_link
@@ -21,6 +21,17 @@ sub make_fixture : Test(setup) {
 sub teardown : Test(teardown) {
     my $self = shift;
     # SGN::Test::Data objects self-destruct, don't clean them up here!
+}
+
+sub TEST_CVTERM_LINK : Tests {
+    my $self = shift;
+    my $f = $self->{feature};
+    my ($id,$name) = ($f->type->cvterm_id,$f->type->name);
+    $name =~ s/_/ /g;
+    chomp(my $link = <<LINK);
+<a href="/chado/cvterm.pl?cvterm_id=$id">$name</a>
+LINK
+    is(cvterm_link($f),$link, 'cvterm link');
 }
 
 sub TEST_RELATED_STATS : Tests {
