@@ -224,20 +224,21 @@ CXGN.Onto.Browser.prototype = {
 	o.setSearchButtonText();
 
 	document.getElementById("search_results").innerHTML=this.getSearchResults();
-	s = s + this.renderLevel(s, this.rootnode, 0);
+
+        var children = this.rootnode.getChildren();
+        for (var i=0; i<children.length; i++) {
+            s = s + this.renderLevel(s, children[i], 1);
+        }
 	var e = document.getElementById('ontology_browser');
 	s += '</div>';
 	e.innerHTML = s;
-
-
-	
     },
-    
+
     renderLevel: function (s, node, level, last) { 
 	//MochiKit.Logging.log('renderLevel: ' + node.getName() + ', '+level);
-	
+
 	var t = '';
-	
+
 	if ((node == undefined) || (node.isHidden())) { 
 	    //MochiKit.Logging.log('undefined or hidden node!');  
 	}

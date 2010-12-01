@@ -6,6 +6,7 @@
 
 </%args>
 
+
 <&| /page/info_section.mas,
     title       => 'Search and browse tree of traits',
     collapsible => 0,
@@ -16,9 +17,16 @@
      descriptions.
   </&>
 
-  <& /ontology/browser.mas,
-     root_nodes => $db_name,
-     db_name    => $db_name,
-   &>
+
+<& /ontology/browser.mas,
+   root_nodes => $db_name,
+   db_name    => $db_name,
+   title      => "Search and browse tree of traits",
+   expand => 1,
+ &>
+
+
 
 </&>
+
+
