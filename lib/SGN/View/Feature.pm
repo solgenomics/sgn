@@ -159,9 +159,7 @@ sub organism_link {
     my ($organism) = @_;
     my $id      = $organism->organism_id;
     my $species = $organism->species;
-    return <<LINK;
-<a class="species_binomial" href="/chado/organism.pl?organism_id=$id">$species</a>
-LINK
+    return qq{<a class="species_binomial" href="/chado/organism.pl?organism_id=$id">$species</a>};
 }
 
 sub cvterm_link {
