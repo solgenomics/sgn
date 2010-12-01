@@ -150,8 +150,9 @@ sub _feature_search_string {
 sub feature_link {
     my ($feature) = @_;
     return '<span class="ghosted">null</span>' unless $feature;
+    my $id   = $feature->feature_id;
     my $name = $feature->name;
-    return qq{<a href="/feature/view/name/$name">$name</a>};
+    return qq{<a href="/feature/view/id/$id">$name</a>};
 }
 
 sub organism_link {
