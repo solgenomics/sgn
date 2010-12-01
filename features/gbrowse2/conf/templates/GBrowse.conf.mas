@@ -67,7 +67,7 @@ debug_external         = 0
 debug_plugins          = 0
 
 # Performance settings
-renderfarm             = 1
+renderfarm             = 0
 slave_timeout          = 45
 search_timeout         = 60
 global_timeout         = 60
