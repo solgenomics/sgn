@@ -9,12 +9,11 @@ SGN::Controller::Stock - Catalyst controller for pages dealing with stocks (e.g.
 use Moose;
 use namespace::autoclean;
 
-use CXGN::Login;
-use CXGN::People::Person;
-
 use HTML::FormFu;
 use URI::FromHash 'uri';
 use YAML::Any;
+
+use CXGN::Chado::Stock;
 use SGN::View::Stock qw/stock_link/;
 
 has 'schema' => (
