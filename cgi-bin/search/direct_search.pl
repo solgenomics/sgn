@@ -7,29 +7,26 @@ use CXGN::Page::FormattingHelpers qw/page_title_html modesel/;
 use CXGN::Page;
 use CXGN::People;
 use CXGN::Search::CannedForms;
+use CatalystX::GlobalContext qw( $c );
 
 our $page = CXGN::Page->new( "SGN Direct Search page", "Koni");
 
 my @tabs = (
 	    ['?search=loci','Genes'],
-	    ['?search=phenotypes','Phenotypes'],
-	    ['?search=qtl','QTLs'],
-    	    ['?search=trait', 'Traits'],
-    	    ['?search=unigene','Unigenes'],
+	    ['?search=phenotype_qtl_trail','Phenotypes/QTLs'],
+            ['?search=unigene','Unigenes'],
 	    ['?search=family', 'Unigene Families' ],
 	    ['?search=markers','Markers'],
 	    ['?search=bacs','Genomic Clones'],
 	    ['?search=est_library','ESTs'],
-	    ['?search=images','Images'],	
+	    ['?search=images','Images'],
 	    ['?search=directory','People'],
             ['?search=template_experiment_platform', 'Expression']
 	   );
 my @tabfuncs = (
 		\&gene_tab,
-		\&phenotype_tab,
-		\&qtl_tab,
-                \&trait_tab,
-		\&unigene_tab,
+		\&phenotype_submenu,
+    		\&unigene_tab,
 		\&family_tab,
 		\&marker_tab,
 		\&bac_tab,
@@ -46,19 +43,19 @@ $search ||= 'unigene'; #default
 my $tabsel =
     ($search =~ /loci/i)           ? 0
     : ($search =~ /phenotypes/i)   ? 1  
-    : ($search =~ /qtl/i)  ? 2
-    : ($search =~ /trait/i)  ? 3
-    : ($search =~ /unigene/i)      ? 4
-    : ($search =~ /famil((y)|(ies))/i)       ? 5
-    : ($search =~ /markers/i)      ? 6
-    : ($search =~ /bacs/i)         ? 7
-    : ($search =~ /est/i)          ? 8
-    : ($search =~ /library/i)      ? 8 
-    : ($search =~ /images/i)       ? 9 # New image search
-    : ($search =~ /directory/i)    ? 10
-    : ($search =~ /template/i)     ? 11 ## There are 3 terms linking to search for expression 
-    : ($search =~ /experiment/i)   ? 11
-    : ($search =~ /platform/i)     ? 11
+    : ($search =~ /qtl/i)  ? 1
+    : ($search =~ /trait/i)  ? 1
+    : ($search =~ /unigene/i)      ? 2
+    : ($search =~ /famil((y)|(ies))/i)       ? 3
+    : ($search =~ /markers/i)      ? 4
+    : ($search =~ /bacs/i)         ? 5
+    : ($search =~ /est/i)          ? 6
+    : ($search =~ /library/i)      ? 6 
+    : ($search =~ /images/i)       ? 7 # New image search
+    : ($search =~ /directory/i)    ? 8
+    : ($search =~ /template/i)     ? 9 ## There are 3 terms linking to search for expression 
+    : ($search =~ /experiment/i)   ? 9
+    : ($search =~ /platform/i)     ? 9
     : $page->error_page("Invalid search type '$search'.");
 
 $page->header('Search SGN','Search SGN');
@@ -146,7 +143,7 @@ sub qtl_tab {
     print CXGN::Search::CannedForms::cvterm_search_form($page);
 }
 sub trait_tab {
-    $page->client_redirect('/trait/search/');
+    print $c->render_mason('/ontology/traits.mas' );
 }
 
 sub images_tab {
@@ -187,4 +184,27 @@ sub experiment_tab {
 
 sub platform_tab {
     print CXGN::Search::CannedForms::expr_platform_search_form($page);
+}
+
+sub phenotype_submenu {
+        my @tabs = (
+                    ['?search=phenotypes','Phenotypes'],
+                    ['?search=qtl','QTLs'],
+                    ['?search=trait', 'Traits']);
+        my @tabfuncs = (\&phenotype_tab, \&qtl_tab, \&trait_tab);
+
+        #get the search type
+        my ($search) = $page->get_arguments("search");
+        $search ||= 'phenotypes'; #default
+
+        my $tabsel =
+          ($search=~ /phenotypes/i)          ? 0
+          : ($search =~ /qtl/i)   ? 1
+          : ($search =~ /trait/i)     ? 2
+          : $page->error_page("Invalid submenu search type '$search'.");
+        print modesel(\@tabs, $tabsel); #print out the tabs
+
+        print qq|<div>\n|;
+        $tabfuncs[$tabsel](); #call the right function for filler
+        print qq|</div>\n|;
 }

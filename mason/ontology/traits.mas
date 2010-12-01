@@ -17,12 +17,8 @@ $browse_link => undef
 <%perl>
 
 my $submit_link = qq | <a href="/phenome/qtl_form.pl">[Submit new QTL data]</a> | ;
-print STDERR "BROWSE LINK = $browse_link\n\n\n\n";
+
 </%perl>
-
-<& /page/page_title.mas, title=> 'Search SGN' &>
-
-<& /search/forms/searchtabs.mas, search=>$search &>
 
 
 <&| /page/info_section.mas, title=>"Browse traits alphabetically ", subtitle=> $submit_link, collapsible=>1, collapsed=>0 &>

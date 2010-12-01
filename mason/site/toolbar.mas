@@ -8,7 +8,7 @@
     <table cellspacing="0" cellpadding="0" id="search" class="toolbar_popmenu">
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/direct_search.pl?search=loci">Genes</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/direct_search.pl?search=phenotypes">Phenotypes</a></td></tr>
-       <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/direct_search.pl?search=cvterm_name">QTLs/Traits[beta]</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/direct_search.pl?search=qtl">QTLs</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/direct_search.pl?search=unigene">Unigenes</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/direct_search.pl?search=family">Families</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/direct_search.pl?search=markers">Markers</a></td></tr>
