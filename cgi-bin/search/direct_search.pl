@@ -12,8 +12,8 @@ use CatalystX::GlobalContext qw( $c );
 our $page = CXGN::Page->new( "SGN Direct Search page", "Koni");
 
 my @tabs = (
-	    ['?search=loci','Genes'],
-	    ['?search=phenotype_qtl_trail','Phenotypes/QTLs'],
+            ['?search=loci','Genes'],
+            ['?search=phenotype_qtl_trait','Phenotypes/QTLs'],
             ['?search=unigene','Unigenes'],
 	    ['?search=family', 'Unigene Families' ],
 	    ['?search=markers','Markers'],
