@@ -13,9 +13,11 @@ Naama Menda  <nm249@cornell.edu>
 =cut
 
 use Modern::Perl;
-use Test::More tests => 7;
+use Test::More;
+
 use lib 't/lib';
-use SGN::Test;
+
+BEGIN { $ENV{SGN_SKIP_CGI} = 1 } #< can skip compiling cgis, not using them here
 use SGN::Test::Data qw/create_test/;
 use SGN::Test::WWW::Mechanize;
 
@@ -23,23 +25,33 @@ use SGN::Test::WWW::Mechanize;
     my $mech = SGN::Test::WWW::Mechanize->new;
 
     $mech->get_ok("/stock/search/");
+    $mech->content_contains("Stock name");
+    $mech->content_contains("Stock type");
+    $mech->content_contains("Organism");
+    $mech->html_lint_ok('empty stock search valid html');
 
     $mech->with_test_level( local => sub {
         my $stock = create_test('Stock::Stock', {
             description => "LALALALA3475",
         });
-        $mech->content_contains("Stock name");
-        $mech->content_contains("Stock type");
-        $mech->content_contains("Organism");
 
-        #search a stock
-        $mech->get_ok("/stock/search/?stock_name=" . $stock->name);
-        # This doesn't mean it actually finds the correct stock
-        $mech->content_contains($stock->name);
+        $mech->submit_form_ok({
+            with_fields => {
+                stock_name => $stock->name,
+            },
 
-        # Still need more tests, stocks are not found correctly
+        },'try a test search');
 
-        $mech->get_ok("/stock/search/?stock_uniquename=" . $stock->uniquename);
-        # Need proper tests for above request
-    }, 6);
+        $mech->html_lint_ok('valid html after stock search');
+
+        $mech->content_contains( $stock->name );
+        $mech->content_contains( $stock->stock_id );
+
+        #go to the stock detail page
+        $mech->follow_link_ok( { url => '/stock/view/id/'.$stock->stock_id }, 'go to the stock detail page' );
+        $mech->html_lint_ok( 'stock detail page html ok' );
+    });
 }
+
+
+done_testing;
