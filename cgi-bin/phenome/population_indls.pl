@@ -1075,12 +1075,12 @@ sub outfile_list
     my $peak_markers = $marker_temp->filename;
    
     my $ci_lod = $population->ci_lod_file($c, $ac);
-
-    my $file_out_list = join (
-        "\t",
-        $qtl_summary,
-        $peak_markers,
-	$ci_lod
+    my $qtl_effects = $population->qtl_effects_file($c, $ac);
+    my $file_out_list = join ( "\t"
+        ,$qtl_summary
+        ,$peak_markers
+	,$ci_lod
+        ,$qtl_effects
 	);
 
     open my $fo_fh, ">", $file_out or die "can't open $file_out: $!\n";
@@ -1706,3 +1706,4 @@ sub set_cvterm_id {
     my $self = shift;
     return $self->{cvterm_id} = shift;
 }
+
