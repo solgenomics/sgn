@@ -4,16 +4,16 @@
 <%perl>
     # find all featureprops other that Note, which is already taken care of
     my @properties = map { [ $_->type->name => $_->value ] }
-                     grep { $_->type->name ne 'Note' } $feature->featureprops;
+                     grep { $_->type->name ne 'Note' } $feature->featureprops({ value => { '<=', 1000 } });
 </%perl>
 % if (@properties) {
-<&| /page/info_section.mas,
-    title => "Feature Properties",
-    collapsible => 1,
-&>
-<& /page/columnar_table.mas,
-    headings => [ "Feature property", "Value"  ],
-    data     => [ @properties ],
-&>
-</&>
+  <&| /page/info_section.mas,
+      title => "Other Properties",
+      collapsible => 1,
+  &>
+    <& /page/columnar_table.mas,
+        headings => [ "Property", "Value"  ],
+        data     => \@properties,
+    &>
+  </&>
 % }

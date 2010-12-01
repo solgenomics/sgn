@@ -1,8 +1,9 @@
 <%args>
     $dbxref
 </%args>
-% return unless $dbxref;
-
-GO:<a href="<% $dbxref->db->urlprefix .  $dbxref->db->url .  $dbxref->dbxref_id%>">
-<% $dbxref->dbxref_id %></a>
-<br/>
+% if( $dbxref ) {
+%   no warnings 'uninitialized';
+   <a style="display: block" href="<% $dbxref->db->urlprefix .  $dbxref->db->url .  $dbxref->dbxref_id %>">
+     <% $dbxref->db->name %>:<% $dbxref->dbxref_id %>
+   </a>
+% }

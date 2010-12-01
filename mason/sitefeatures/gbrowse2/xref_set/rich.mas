@@ -1,0 +1,7 @@
+<%args>
+    $xrefs => []
+</%args>
+
+% for my $xref (@$xrefs) {
+  <& /sitefeatures/gbrowse2/xref/rich.mas, xref => $xref &>
+% }

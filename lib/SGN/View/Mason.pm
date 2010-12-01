@@ -1,17 +1,23 @@
 package SGN::View::Mason;
 use Moose;
 extends 'Catalyst::View::HTML::Mason';
-
-use File::Spec;
+with 'Catalyst::Component::ApplicationAttribute';
 
 __PACKAGE__->config(
-    interp_args => {
-        comp_root =>  SGN->path_to('mason'),
-    },
     globals => ['$c'],
     template_extension => '.mas',
 );
 
+# must late-compute our interp_args
+sub interp_args {
+    my $self = shift;
+    return {
+        comp_root => [
+            ( map [ $_->feature_name, $_->path_to('mason')], $self->_app->features ),
+            [ main => $self->_app->path_to('mason') ],
+           ],
+    };
+}
 
 =head1 NAME
 
@@ -33,15 +39,7 @@ Check if a Mason component exists. Returns 1 if the component exists, otherwise 
 sub component_exists {
     my ( $self, $component ) = @_;
 
-    my $cr = $self->interp_args->{comp_root}
-        or return 0;
-    $cr = [['main' => "$cr" ]] unless ref $cr && ref $cr eq 'ARRAY';
-    for ( @$cr ) {
-        my (undef, $path) = @$_;
-        my $p =  File::Spec->catfile( $path, $component );
-        return 1 if -f $p;
-    }
-    return 0;
+    return $self->interp->comp_exists( $component ) ? 1 : 0;
 }
 
 =head1 SEE ALSO
@@ -59,4 +57,5 @@ the same terms as perl itself.
 
 =cut
 
+__PACKAGE__->meta->make_immutable;
 1;

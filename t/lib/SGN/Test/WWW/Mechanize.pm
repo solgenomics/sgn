@@ -223,6 +223,40 @@ sub with_test_level {
       }
 }
 
+=head2 dbh_leak_ok
+
+Call immediately after a get_ok() to re-fetch the same URL, checking
+the database connection count before and after the GET.
+
+If the connection count after the second fetch is greater than before
+the fetch, the test fails.
+
+Skips if the current test level does not support a leak check.
+
+=cut
+
+sub dbh_leak_ok {
+    my $self = shift;
+    my $test_name = shift || '';
+    $test_name .= ' ' if $test_name;
+
+    $self->with_test_level( local => sub {
+        my $before = $self->_db_connection_count;
+        my $url = $self->base;
+        $self->get( $url );
+        my $after  = $self->_db_connection_count;
+        cmp_ok( $after, '<=', $before, "did not leak any database connections: $test_name($url)");
+    }, 1 );
+}
+
+sub _db_connection_count {
+    my ($mech) = @_;
+    my $dbh     = DBI->connect( @{ $mech->context->dbc_profile }{qw{ dsn user password attributes }} );
+    return $dbh->selectcol_arrayref(<<'')->[0] - 1;
+select count(*) from pg_stat_activity
+
+}
+
 sub create_test_user {
     my $self = shift;
     my %props = @_;

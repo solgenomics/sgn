@@ -549,7 +549,8 @@ sub intro {
         </p> 
 
         <p>The QTL data  uploading software is at Beta stage. If you have any 
-           problems uploading your data or remarks, please send us your feedback.
+           problems uploading your data or remarks, please send us your 
+           feedback: <a href=mailto:sgn-feedback\@sgn.cornell.edu>sgn-feedback\@sgn.cornell.edu</a>.
         </p>
       
      </td>

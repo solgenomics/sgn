@@ -1,0 +1,21 @@
+<%args>
+  $xrefs => []
+</%args>
+% if( @$xrefs ) {
+%   my $single_comp = resolve_xref_component( $m, $xrefs->[0]->feature, '/sitefeatures/%f/xref/link.mas' );
+    <ul class="xref xref_link xref_link_<% $xrefs->[0]->feature->feature_name %>">
+%     for my $x (@$xrefs) {
+        <li><& $single_comp, xref => $x &>
+%     }
+    </ul>
+% }
+<%once>
+   use SGN::View::Mason::CrossReference 'resolve_xref_component';
+</%once>
+<%init>
+
+  # uniqify the xrefs for display
+  my $first = shift @$xrefs;
+  $xrefs = [ $first->uniq( @$xrefs ) ];
+
+</%init>

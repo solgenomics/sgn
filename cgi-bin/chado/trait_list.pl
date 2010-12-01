@@ -42,7 +42,6 @@ my @all_traits = @{$all_traits};
 my @index_traits;
 foreach my $trait (@all_traits)
 {
-    print STDERR "traits: $trait\n";
     if ( $trait =~ /^$index/i )
     {
         push @index_traits, $trait;

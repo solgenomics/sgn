@@ -32,13 +32,6 @@ sub make_dump_tempdir {
     return $d;
 }
 
-sub db_connection_count {
-    my ($mech) = @_;
-    my $dbh     = DBI->connect( @{ $mech->context->dbc_profile}{qw{ dsn user password attributes }} );
-    return $dbh->selectcol_arrayref(<<'')->[0] - 1;
-select count(*) from pg_stat_activity
-
-}
 
 sub validate_urls {
     my ($urls, $iteration_count, $mech) = @_;
@@ -53,12 +46,7 @@ sub validate_urls {
             skip 'skipping leak test because SGN_SKIP_LEAK_TEST is set', 4
                 if $ENV{SGN_SKIP_LEAK_TEST};
 
-            $mech->with_test_level( local => sub {
-               my $before = db_connection_count($mech);
-               _validate_single_url( $test_name, $url, $mech );
-               my $after = db_connection_count($mech);
-               cmp_ok( $after, '<=', $before, "did not leak any database connections on $test_name ($url)");
-            }, 4 );
+            $mech->dbh_leak_ok( $test_name );
         }
     }
 }

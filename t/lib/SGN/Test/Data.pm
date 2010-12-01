@@ -62,31 +62,32 @@ YOU DO NOT HAVE TO CLEAN UP THESE OBJECTS. All SGN::Test::Data objects auto-dest
 
 =cut
 
-our $num_features  = 0;
-our $num_cvterms   = 0;
-our $num_dbxrefs   = 0;
-our $num_dbs       = 0;
-our $num_cvs       = 0;
-our $num_organisms = 0;
-our $num_stocks    = 0;
-our $test_data     = [];
+our $num_features    = 0;
+our $num_cvterms     = 0;
+our $num_cvtermpaths = 0;
+our $num_dbxrefs     = 0;
+our $num_dbs         = 0;
+our $num_cvs         = 0;
+our $num_organisms   = 0;
+our $num_stocks      = 0;
+our $test_data       = [];
 our @EXPORT_OK = qw/ create_test /;
 
 sub create_test {
     my ($pkg, $values) = @_;
     die "Must provide package name to create test object" unless $pkg;
     my $pkg_subs = {
-        'Cv::Cv'                        => sub { _create_test_cv($values)                  } ,
-        'Cv::Cvterm'                    => sub { _create_test_cvterm($values)              } ,
-        'General::Db'                   => sub { _create_test_db($values)                  } ,
-        'Stock::Stock'                  => sub { _create_test_stock($values)               } ,
-        'General::Dbxref'               => sub { _create_test_dbxref($values)              } ,
-        'Sequence::Feature'             => sub { _create_test_feature($values)             } ,
-        'Organism::Organism'            => sub { _create_test_organism($values)            } ,
-        'Sequence::Featureloc'          => sub { _create_test_featureloc($values)          } ,
-        'Sequence::Featureprop'         => sub { _create_test_featureprop($values)         } ,
-        'Sequence::FeatureRelationship' => sub { _create_test_featurerelationship($values) } ,
-
+        'Cv::Cv'                        => sub { _create_test_cv($values)                  },
+        'Cv::Cvterm'                    => sub { _create_test_cvterm($values)              },
+        'General::Db'                   => sub { _create_test_db($values)                  },
+        'Stock::Stock'                  => sub { _create_test_stock($values)               },
+        'Cv::Cvtermpath'                => sub { _create_test_cvtermpath($values)          },
+        'General::Dbxref'               => sub { _create_test_dbxref($values)              },
+        'Sequence::Feature'             => sub { _create_test_feature($values)             },
+        'Organism::Organism'            => sub { _create_test_organism($values)            },
+        'Sequence::Featureloc'          => sub { _create_test_featureloc($values)          },
+        'Sequence::Featureprop'         => sub { _create_test_featureprop($values)         },
+        'Sequence::FeatureRelationship' => sub { _create_test_featurerelationship($values) },
     };
     die "$pkg creation not supported yet, sorry" unless exists $pkg_subs->{$pkg};
     return $pkg_subs->{$pkg}->($values);
@@ -154,6 +155,31 @@ sub _create_test_cvterm {
     push @$test_data, $cvterm;
     $num_cvterms++;
     return $cvterm;
+}
+
+sub _create_test_cvtermpath {
+    my ($values) = @_;
+
+    # is this sane?
+    $values->{pathdistance}   ||= 1;
+
+    my @values = keys %$values;
+
+    $values->{cv}      ||= _create_test_cv();
+    $values->{subject} ||= _create_test_cvterm();
+    $values->{object}  ||= _create_test_cvterm();
+
+    my $cvtermpath = $schema->resultset('Cv::Cvtermpath')
+           ->create(
+            {
+                cv_id      => $values->{cv}->cv_id,
+                subject_id => $values->{subject}->cvterm_id,
+                object_id  => $values->{object}->cvterm_id,
+                map { $_   => $values->{$_} || 0 } @values,
+            });
+    push @$test_data, $cvtermpath;
+    $num_cvtermpaths++;
+    return $cvtermpath;
 }
 
 sub _create_test_stock {

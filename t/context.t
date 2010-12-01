@@ -40,8 +40,8 @@ with_test_level( local => sub {
 
     can_ok( $tempfile, 'filename', 'print' );
     can_ok( $temp_uri, 'path' );
-    unlike( $temp_uri, qr/X+/, 'temp_uri got its Xs replaced' );
-    unlike( $temp_uri, qr/X+/, 'temp_uri got its Xs replaced' );
+    unlike( $temp_uri, qr/X{5}/, 'temp_uri got its Xs replaced' );
+    unlike( $temp_uri, qr/X{5}/, 'temp_uri got its Xs replaced' );
     like( "$tempfile", qr/\.foo$/, 'tempfile name has suffix' );
     like( "$temp_uri", qr/\.foo$/, 'tempfile uri has suffix' );
 });
