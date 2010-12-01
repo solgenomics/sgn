@@ -121,7 +121,7 @@ if (userpermuvalue == "None")
 userpermuvalue<-as.numeric(userpermuvalue)
 
 #####for test only
-#userpermuvalue<-c(10)
+userpermuvalue<-c(10)
 #####
 
 
@@ -541,7 +541,7 @@ chrno<-chrno + 1;
 }
 
 ##########QTL EFFECTS ##############
-if (max(QtlLods)>=LodScore) {
+if ( max(QtlLods) >= LodScore ) {
   QtlObj<-makeqtl(popdata,
                 QtlChrs,
                 QtlPositions,
@@ -574,6 +574,22 @@ if (max(QtlLods)>=LodScore) {
                      method="hk"
                      )
   summary(QtlEffects)
+  Effects<-QtlEffects$ests
+  QtlLodAnova<-QtlEffects$lod
+  ResultFull<-QtlEffects$resutl.full
+  ResultDrop<-QtlEffects$result.drop
+  print("Effects")
+  print(Effects)
+  print("lod")
+  print(QtlLodAnova)
+  print("result full")
+  print(ResultFull)
+  print("result drop")
+  print(ResultDrop)
+
+  ResultDrop<-round(ResultDrop,
+                    2)
+  
 } else
 {
  print("no Qtls for this trait")
@@ -603,7 +619,14 @@ confidencelodfile<-grep("confidence",
                  ignore.case=TRUE,
                  fixed = FALSE,
                  value=TRUE
+                 )
+QtlEffectsFile<-grep("qtl_effects",
+                 outfiles,
+                 ignore.case=TRUE,
+                 fixed = FALSE,
+                 value=TRUE
                  )    
+print(QtlEffectsFile)
 
 write.table(datasummary,
             file=qtlfile,
@@ -623,6 +646,13 @@ write.table(peakmarkers,
 
 write.table(lodconfidenceints,
             file=confidencelodfile,
+            sep="\t",
+            col.names=NA,
+            quote=FALSE,
+            append=FALSE
+            )
+write.table(ResultDrop,
+            file=QtlEffectsFile,
             sep="\t",
             col.names=NA,
             quote=FALSE,
