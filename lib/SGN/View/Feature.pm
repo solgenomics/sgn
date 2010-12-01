@@ -150,17 +150,16 @@ sub _feature_search_string {
 sub feature_link {
     my ($feature) = @_;
     return '<span class="ghosted">null</span>' unless $feature;
+    my $id   = $feature->feature_id;
     my $name = $feature->name;
-    return qq{<a href="/feature/view/name/$name">$name</a>};
+    return qq{<a href="/feature/view/id/$id">$name</a>};
 }
 
 sub organism_link {
     my ($organism) = @_;
     my $id      = $organism->organism_id;
     my $species = $organism->species;
-    return <<LINK;
-<a class="species_binomial" href="/chado/organism.pl?organism_id=$id">$species</a>
-LINK
+    return qq{<a class="species_binomial" href="/chado/organism.pl?organism_id=$id">$species</a>};
 }
 
 sub cvterm_link {
