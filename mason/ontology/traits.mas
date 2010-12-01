@@ -10,20 +10,9 @@
 $roots => 'Solanaceae phenotype ontology'
 $db_name => 'SP'
 $search => 'traits'
-$browse_link => undef
 
 </%args>
 
-<&| /page/info_section.mas,
-    title         => "Browse alphabetically",
-    collapsible   => 1,
-    collapsed     => 0,
-    empty_message => 'temporarily unavailable',
- &>
-
-  <% $browse_link %>
-
-</&>
 
 <& /ontology/browser.mas,
    root_nodes => $db_name,
