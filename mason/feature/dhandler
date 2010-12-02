@@ -1,5 +1,6 @@
 <%args>
     $feature
+    $featurelocs
     $blast_url => undef
     $xrefs     => []
 </%args>
@@ -25,8 +26,9 @@
     collapsible => 1,
 &>
    <& /feature/feature_data.mas,
-      feature => $feature,
-      species => $species
+      feature     => $feature,
+      species     => $species,
+      featurelocs => $featurelocs,
     &>
 </&>
 

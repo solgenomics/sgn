@@ -22,8 +22,7 @@ our @EXPORT_OK = qw/
 /;
 
 sub type_name {
-    my $feature = shift;
-    my $caps = shift;
+    my ($feature, $caps) = @_;
     ( my $n = $feature->type->name ) =~ s/_/ /g;
     if( $caps ) {
         $n =~ s/(\S+)/lc($1) eq $1 ? ucfirst($1) : $1/e;
@@ -61,8 +60,8 @@ sub get_reference {
 }
 
 sub feature_length {
-    my ($feature) = @_;
-    my @locations = $feature->featureloc_features->all;
+    my ($feature, $featurelocs) = @_;
+    my @locations = $featurelocs ? $featurelocs->all : $feature->featureloc_features->all;
     my $locations = scalar @locations;
     my $length = 0;
     for my $l (@locations) {
@@ -87,14 +86,18 @@ sub location_string_with_strand {
 }
 
 sub location_list_html {
-    my ($feature) = @_;
-    my @coords = map { location_string($_) } $feature->featureloc_features->all
+    my ($feature, $featurelocs) = @_;
+    my @coords = map { location_string($_) }
+        ( $featurelocs ? $featurelocs->all
+                       : $feature->featureloc_features->all)
         or return '<span class="ghosted">none</span>';
     return @coords;
 }
 sub location_list {
-    my ($feature) = @_;
-    return map { $_->srcfeature->name.':'.($_->fmin+1).'..'.$_->fmax } $feature->featureloc_features->all;
+    my ($feature, $featurelocs) = @_;
+    return map { $_->srcfeature->name . ':' . ($_->fmin+1) . '..' . $_->fmax }
+        ( $featurelocs ? $featurelocs->all
+                       : $feature->featureloc_features->all );
 }
 
 sub related_stats {
@@ -241,6 +244,9 @@ sub _exon_rs {
                          ->get_column('cvterm_id')
                          ->as_query,
             },
+          },
+          {
+              prefetch => 'type',
           })
         ->search_related( 'subject', {
             'subject.type_id' => {
@@ -248,11 +254,15 @@ sub _exon_rs {
                          ->get_column('cvterm_id')
                          ->as_query,
             },
+           },
+           {
+               prefetch => 'featureloc_features',
            })
         ->search_related( 'featureloc_features', {
             srcfeature_id => { -not => undef },
           },
-          { prefetch => 'srcfeature',
+          {
+            prefetch => 'srcfeature',
             order_by => 'fmin',
           },
          )
