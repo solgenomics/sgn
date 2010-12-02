@@ -58,7 +58,6 @@ CXGN.Page.Form.JSFormPage.prototype = {
 	var form = this;
 	var editableForm = $(this.getEditableFormId());
 	MochiKit.Logging.log("Store function found editableFormId", this.getEditableFormId());
-	
 	new Ajax.Request(this.getAjaxScript(), {
 		method: "get",
 		    parameters: $(editableForm).serialize(true) ,
@@ -67,7 +66,7 @@ CXGN.Page.Form.JSFormPage.prototype = {
 		    //var x = jQuery.parseJSON( json ); 
 		    var x = eval("("+json+")");
 		    //alert("ajax request succeeded: " + x);
-				    
+
 		    if (x.error) { 
 			alert(x.error); 
 		    } else if (x.refering_page) {  window.location = x.refering_page ; } 
@@ -87,6 +86,7 @@ CXGN.Page.Form.JSFormPage.prototype = {
     printForm: function( action) {
 	var form = this; //'this' cannot be used inside the inner onSuccess function
 	if (!action) action = 'view';
+        if ( this.getObjectId() == 0 ) action = 'new';
 	MochiKit.Logging.log("printForm: action = " , action);
 	if (!action || !this.getObjectName() || !this.getAjaxScript() )  {
 	    alert("Cannot print from without a objectName, action, and ajaxScript name ! ");
@@ -266,7 +266,7 @@ CXGN.Page.Form.JSFormPage.prototype = {
 
     reloadNewPage: function() {
 	MochiKit.Logging.log("reloadNewPage found page: " , this.getPageName());
-        window.location =  this.getPageName() + '?action=new' ;
+	window.location =  this.getPageName() + "?action=new" ;
     },
 
     //////////////////////////////////////////////////////

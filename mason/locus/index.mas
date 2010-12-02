@@ -1,6 +1,5 @@
 <%args>
 
-  $action => 'view'
   $locus
   $locus_id
   $user => undef
@@ -135,7 +134,8 @@ my $ontology_subtitle =  !(grep { /^$user_type$/ } ('curator', 'submitter', 'seq
 <&| /page/info_section.mas, title=>"Locus details" , subtitle => "$locus_xml | $editor_note | $guide_html" &>
   
   <& /page/form.mas, object_type=>'locus', object_id=>"$locus_id", form_name=> 'locus_form', server_side_script => '/jsforms/locus_ajax_form.pl', form_div_name=>'locus_details', js_object_name=> 'locusForm', page_url => '/phenome/locus_display.pl'  &>
- 
+
+
 <table><tr><td>
       <table>
 	<tr><td>
@@ -145,8 +145,10 @@ my $ontology_subtitle =  !(grep { /^$user_type$/ } ('curator', 'submitter', 'seq
 <% $tgrc %>
 
   <& /locus/locus_editor.mas, owners=>$owner_objects  &>
-  <a href="claim_locus_ownership.pl?locus_id=<% $locus_id %>&amp;action=confirm"> [Request editor privileges]</a><br /><br />
-  <& /locus/edits_info.mas, locus=>$locus  &>
+% if ($locus_id) {
+    <a href="claim_locus_ownership.pl?locus_id=<% $locus_id %>&amp;action=confirm"> [Request editor privileges]</a><br /><br />
+% }
+    <& /locus/edits_info.mas, locus=>$locus  &>
   </td></tr>
       </table>
     </td>
@@ -155,7 +157,10 @@ my $ontology_subtitle =  !(grep { /^$user_type$/ } ('curator', 'submitter', 'seq
   </td></tr></table></td></tr>
 </table>
   </&>
- 
+
+% if($locus_id) {
+
+
 % if($owner) {
     <&| /page/info_section.mas, title=>"Locus history", collapsible=>1, collapsed=>1 &>
       <& /locus/history.mas, locus=>$locus  &>
@@ -293,3 +298,5 @@ my $ontology_subtitle =  !(grep { /^$user_type$/ } ('curator', 'submitter', 'seq
 </&>
 
 <& /page/comments.mas, object_type=>'locus', object_id=>$locus_id, referer=>$this_page &>
+
+% }
