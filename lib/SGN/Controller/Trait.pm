@@ -12,7 +12,6 @@ use namespace::autoclean;
 use HTML::FormFu;
 use URI::FromHash 'uri';
 use YAML::Any;
-#use SGN::View::Trait qw/cvterm_link/;
 
 has 'schema' => (
 is => 'rw',
