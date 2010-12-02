@@ -1,23 +1,19 @@
-<%doc>
-=head1
-
-
-</%doc>
-
-
 <%args>
 
-$roots => 'Solanaceae phenotype ontology'
-$db_name => 'SP'
-$search => 'traits'
+  $roots   => 'Solanaceae phenotype ontology'
+  $db_name => 'SP'
+  $search  => 'traits'
 
 </%args>
 
+<&| /page/info_section.mas,
+    title       => 'Search and browse tree of traits',
+    collapsible => 1,
+&>
 
-<& /ontology/browser.mas,
-   root_nodes => $db_name,
-   db_name    => $db_name,
-   title      => "Search and browse tree of traits",
- &>
+  <& /ontology/browser.mas,
+     root_nodes => $db_name,
+     db_name    => $db_name,
+   &>
 
-
+</&>
