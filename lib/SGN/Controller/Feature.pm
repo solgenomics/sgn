@@ -86,7 +86,7 @@ sub _view_feature {
     my $matching_features = $self->schema
                                 ->resultset('Sequence::Feature')
                                 ->search({ $key => $value },{
-                                    prefetch => 'type',
+                                    prefetch => [ 'type', 'featureloc_features' ],
                                 });
 
     $self->validate($c, $matching_features, $key => $value);
