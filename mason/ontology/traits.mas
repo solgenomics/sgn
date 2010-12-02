@@ -14,18 +14,21 @@ $browse_link => undef
 
 </%args>
 
-<%perl>
+<&| /page/info_section.mas,
+    title         => "Browse alphabetically",
+    collapsible   => 1,
+    collapsed     => 0,
+    empty_message => 'temporarily unavailable',
+ &>
 
-my $submit_link = qq | <a href="/phenome/qtl_form.pl">[Submit new QTL data]</a> | ;
-
-</%perl>
-
-
-<&| /page/info_section.mas, title=>"Browse traits alphabetically ", subtitle=> $submit_link, collapsible=>1, collapsed=>0 &>
-<% $browse_link %>
+  <% $browse_link %>
 
 </&>
 
-<& /ontology/browser.mas, root_nodes => $db_name,  db_name  => $db_name , title => "Browse Solanaceae Phenotype Ontology terms" &>
+<& /ontology/browser.mas,
+   root_nodes => $db_name,
+   db_name    => $db_name,
+   title      => "Search and browse tree of traits",
+ &>
 
 
