@@ -1,0 +1,17 @@
+---
+
+Release date: NEXT
+
+Changes:
+
+ - New easy-to-use trait search, linked from the breeders' toolbox.
+
+---
+
+Release date: Tue Nov 30 00:15:14 2010 -0800
+
+Changes:
+
+ - "Big new feature: gene model pages, integrated with locus pages and GBrowse."
+ - "New correlation heatmap on QTL pages."
+

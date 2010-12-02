@@ -13,6 +13,7 @@ SGN::Build::ChangeLog - data model for machine-readable changelog
 
 package SGN::Build::ChangeLog;
 use Moose;
+use Storable 'dclone';
 use namespace::autoclean;
 
 use YAML::Any 'LoadFile';
@@ -43,7 +44,32 @@ use SGN::Build::ChangeLog::Release;
 
 sub _parse_file {
     my ( $class, $file ) = @_;
-    return [ map { (__PACKAGE__.'::Release')->new($_) } LoadFile( "$file" ) ];
+    use Data::Dump;
+    return [
+        map {
+            my $e = $class->_munge_entry( $_ );
+            SGN::Build::ChangeLog::Release->new( $e );
+        } LoadFile( "$file" )
+       ];
+}
+sub _munge_entry {
+    my ( $class, $entry ) = @_;
+
+    my $new_entry = {
+        map {
+            my ($k,$v) = ( $_, $entry->{$_} );
+            $k = lc $k;
+            $k =~ s/\s/_/g;
+            ( $k => $v )
+        } keys %$entry
+     };
+
+
+    if( $new_entry->{release_date} eq 'NEXT' ) {
+        $new_entry->{release_date} = DateTime->now;
+    }
+
+    return $new_entry;
 }
 
 =head1 ATTRIBUTES
