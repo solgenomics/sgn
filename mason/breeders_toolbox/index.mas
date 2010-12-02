@@ -130,7 +130,7 @@ with suggestions for improvements!</p>
         -->
 	</li>
 	
-	<li class="Traits"><a href="/search/direct_search.pl?search=phenotypes"><img src="/documents/img/breedericonmenu/Traits.png" alt="Traits" title="Traits &amp; Phenotypes" /></a>
+	<li class="Traits"><a href="/search/direct_search.pl?search=trait"><img src="/documents/img/breedericonmenu/Traits.png" alt="Traits" title="Traits &amp; Phenotypes" /></a>
     	<!--
 		<ul>
             <div class="TraitsSubMenu">
@@ -142,7 +142,7 @@ with suggestions for improvements!</p>
         -->
 	</li>
     
-	<li class="QTLTool"><a href="/search/direct_search.pl?search=cvterm_name"><img src="/documents/img/breedericonmenu/QTLTool.png" alt="QTL Tool" title="Access QTL data" /></a>
+	<li class="QTLTool"><a href="/search/direct_search.pl?search=qtl"><img src="/documents/img/breedericonmenu/QTLTool.png" alt="QTL Tool" title="Access QTL data" /></a>
     	<!--
    		<ul>
             <div class="QTLToolSubMenu">
@@ -163,7 +163,7 @@ with suggestions for improvements!</p>
   <li>Browse available controlled vocabularies using the SGN <a href="/tools/onto/">Ontology browser</a></li>
   <li>Develop CAPS markers using the <a href="/tools/caps_designer/caps_input.pl">CAPS Designer</a></li>
   <li>Check intron locations in transript data using the <a href="/tools/intron_detection/find_introns.pl">Intron Finder</a></li>
-  <li><a href="/phenome/qtl_form.pl">QTL data submssion</a> and on-the-fly QTL analysis <a href="/search/direct_search.pl?search=cvterm_name/">for Solanaceae traits</a></li>
+  <li><a href="/phenome/qtl_form.pl">QTL data submssion</a> and on-the-fly QTL analysis <a href="/search/direct_search.pl?search=qtl/">for Solanaceae traits</a></li>
   <li>SGN gene and phenotype <a href="/phenome/">submission guide</a> </li>
 </ul>
 </&>
