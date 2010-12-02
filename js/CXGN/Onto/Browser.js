@@ -168,11 +168,10 @@ CXGN.Onto.Browser.prototype = {
 	//MochiKit.Logging.log('the value of ontology_browser_input is ...', (document.getElementById('ontology_browser_input')).value);
 	
 	var s = '<form name="search_id_form" style="margin-bottom:0" onSubmit="javascript:o.showParentage(this.ontology_browser_input.value); return false;" >';
-	s +=       '<div id="search_by_id" style="width:700" style="margin-bottom:0" >';
-	s += '<table summary="" cellpadding="5" cellspacing="0" ><tr><td align="center">';
+	s +=       '<div id="search_by_id" style="width:100%; margin-bottom:0" >';
+	s += '<table summary="" cellpadding="5" cellspacing="0" width="100%" ><tr><td>';
 	s += 'Find exact ID &nbsp; <input id="ontology_browser_input" name="ontology_browser_input_name" type="text"  size="12" style="margin-bottom:0" /><input id="ontology_browser_submit" value="Find" type="submit" style="margin-bottom:0" />';
-	s += '&nbsp;|&nbsp;<input id="reset_hiliting" type="button" value="clear highlight" onClick="javascript:o.clearHiliting()" style="margin-bottom:0" /> | <input id="reset_tree" type="button" value="reset view" onClick="javascript:o.resetBrowser()" style="margin-bottom:0" />';
-		s += '</td><td align="right" width="*" ></td></tr></table>';
+	s += '</td><td style="text-align: right; padding-left:10px"><input id="reset_hiliting" type="button" value="clear highlight" onClick="javascript:o.clearHiliting()" style="margin-bottom:0" /> | <input id="reset_tree" type="button" value="reset view" onClick="javascript:o.resetBrowser()" style="margin-bottom:0" /></td></tr></table>';
 	s +='</div></form>';
 	
 	var e = document.getElementById('ontology_browser_input');
