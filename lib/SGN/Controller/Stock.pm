@@ -175,7 +175,7 @@ sub _stock_types {
     )
     ];
     # add an empty option 
-    unshift @$ref , ['0', ''];
+    unshift @$ref , ['0', 'any'];
     return $ref;
 }
 
