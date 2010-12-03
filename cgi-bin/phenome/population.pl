@@ -590,68 +590,73 @@ sub analyze_correlation
     my $corre_image_dir = File::Spec->catfile($base_path, $temp_image_dir, "correlation");
     my $corre_temp_dir  = File::Spec->catfile($pheno_dir, "tempfiles");
     my $pheno_file_dir  = File::Spec->catfile($pheno_dir, "cache");
-
-    foreach my $dir ($corre_image_dir, $corre_temp_dir, $pheno_file_dir)
-    {
-        unless (-d $dir)
+   
+    if (-s $pheno_file) {
+        foreach my $dir ($corre_image_dir, $corre_temp_dir, $pheno_file_dir)
         {
-            mkpath ($dir, 0, 0755);
+            unless (-d $dir)
+            {
+                mkpath ($dir, 0, 0755);
+            }
         }
-    }
 
-    my (undef, $heatmap_file)     = tempfile( "heatmap_${pop_id}-XXXXXX",
+        my (undef, $heatmap_file)     = tempfile( "heatmap_${pop_id}-XXXXXX",
                                               DIR      => $corre_temp_dir,
                                               SUFFIX   =>'.png',
                                               UNLINK   => 1,
                                             );
 
-    my (undef, $corre_table_file) = tempfile( "corre_table_${pop_id}-XXXXXX",
+        my (undef, $corre_table_file) = tempfile( "corre_table_${pop_id}-XXXXXX",
                                               DIR      => $corre_temp_dir,
                                               SUFFIX   => '.txt',
                                               UNLINK   => 1,
                                             );
 
-    my ( $corre_commands_temp, $corre_output_temp ) =
-        map
-    {
-        my ( undef, $filename ) =
-            tempfile(
-                File::Spec->catfile(
-                    CXGN::Tools::Run->temp_base($corre_temp_dir),
-                    "corre_pop_${pop_id}-$_-XXXXXX"
-                ),
-                UNLINK =>0,
-            );
-        $filename
-    } qw / in out /;
-
-    {
-        my $corre_commands_file = $c->path_to('/cgi-bin/phenome/correlation.r');
-        copy( $corre_commands_file, $corre_commands_temp )
-            or die "could not copy '$corre_commands_file' to '$corre_commands_temp'";
-    }
-
-    my $r_process = CXGN::Tools::Run->run_cluster(
-        'R', 'CMD', 'BATCH',
-        '--slave',
-        "--args $heatmap_file $corre_table_file $pheno_file",
-        $corre_commands_temp,
-        $corre_output_temp,
+        my ( $corre_commands_temp, $corre_output_temp ) =
+            map
         {
-           working_dir => $corre_temp_dir,
-           max_cluster_jobs => 1_000_000_000,
-        },
-        );
+            my ( undef, $filename ) =
+                tempfile(
+                    File::Spec->catfile(
+                        CXGN::Tools::Run->temp_base($corre_temp_dir),
+                        "corre_pop_${pop_id}-$_-XXXXXX"
+                    ),
+                    UNLINK =>0,
+                );
+            $filename
+        } qw / in out /;
 
-    sleep 1 while $r_process->alive;
+        {
+            my $corre_commands_file = $c->path_to('/cgi-bin/phenome/correlation.r');
+            copy( $corre_commands_file, $corre_commands_temp )
+                or die "could not copy '$corre_commands_file' to '$corre_commands_temp'";
+        }
 
-    copy( $heatmap_file, $corre_image_dir )
-        or die "could not copy $heatmap_file to $corre_image_dir";
+        my $r_process = CXGN::Tools::Run->run_cluster(
+            'R', 'CMD', 'BATCH',
+            '--slave',
+            "--args $heatmap_file $corre_table_file $pheno_file",
+            $corre_commands_temp,
+            $corre_output_temp,
+            {
+                working_dir => $corre_temp_dir,
+                max_cluster_jobs => 1_000_000_000,
+            },
+            );
 
-    $heatmap_file = fileparse($heatmap_file);
-    $heatmap_file  = $c->generated_file_uri("correlation",  $heatmap_file);
+        sleep 1 while $r_process->alive;
 
-    return $heatmap_file, $corre_table_file;
+        copy( $heatmap_file, $corre_image_dir )
+            or die "could not copy $heatmap_file to $corre_image_dir";
+
+        $heatmap_file = fileparse($heatmap_file);
+        $heatmap_file  = $c->generated_file_uri("correlation",  $heatmap_file);
+
+        return $heatmap_file, $corre_table_file;
+    }
+    else {
+        return undef;
+    }
 
 }
 
