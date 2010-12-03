@@ -6,26 +6,26 @@
 <%once>
   use Number::Format;
   use CXGN::Page::FormattingHelpers qw/ columnar_table_html /;
-  use SGN::View::Feature qw/feature_link/;
+  use SGN::View::Stock qw/stock_link/;
 </%once>
-<& /page/page_title.mas, title => 'Feature Search' &>
+<& /page/page_title.mas, title => 'Stock Search' &>
 <& /util/import_javascript.mas,
     classes => [qw(jquery CXGN.Effects)]
 &>
 
 <!-- This CSS should probably go somewhere better -->
 <style>
-#feature_search_form .select span span {
+#stock_search_form .select span span {
   white-space: nowrap;
   float: left;
   width: 10em;
 }
-#feature_search_form div label, #feature_search_form legend {
+#stock_search_form div label, #stock_search_form legend {
   font-weight: bold;
 }
-#feature_search_form div.text label {
+#stock_search_form label {
   float: left;
-  width: 10em;
+  width: 8em;
 }
 
 div.paginate_nav {
@@ -46,9 +46,18 @@ div.paginate_nav {
                                           .' of '.Number::Format->new->format_number($pager->total_entries)
    &>
 %   if( $results->count ) {
+%		my @data =
+%            map {
+%                my $organism = $_->organism;
+%            [
+%                stock_link($_),
+%                $_->type->name,
+%                $organism ? $organism->species : '',
+%            ] } $results->all;
+
      <% columnar_table_html(
-            headings => ['Feature Name','Feature Type'],
-            data     => [ map [feature_link($_),$_->type->name], $results->all ],
+            headings => ['Stock Name','Stock Type', 'Organism'],
+            data     => [ @data ],
         )
       %>
 %   } else {
@@ -57,8 +66,7 @@ div.paginate_nav {
   </&>
 
   <& /page/pagination_control.mas, pager => $pager, link_maker => $pagination_link_maker &>
-% } else {
+% } 
 <&| /page/info_section.mas, title => 'Search' &>
   <% $form->render %>
 </&>
-% }

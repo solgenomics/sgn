@@ -210,10 +210,42 @@ qq|<img src="$image_url" usemap="#map$count" border="0" alt="" />|;
                     my ( $dcaps_left, $dcaps_right );
 
                     if ($dcaps) {
-                        $dcaps_left  = "dCAPS primer (5'-3')";
-                        $dcaps_right = "<span class=\"sequence\">$dcaps</span>";
+                      $dcaps_left  = "dCAPS primer (5'-3')";
+                      $dcaps_right = "<span class=\"sequence\">$dcaps</span>";
                     }
+                    ###########
+                    my $pcr_seq = $pcr->get_sequences;
 
+                    my ($aspe, $aspe_primers);
+                    $aspe_primers = join ('<BR>' ,  @{ $pcr_seq->{ASPE_primer} }  ) if  $pcr_seq->{ASPE_primer}  ;
+                    if ($aspe_primers) {
+                      $aspe = "ASPE primers (5'-3')";
+                      $aspe_primers = "<span class=\"snp\">$aspe_primers</span>"
+                    }
+                    my ($snp, $snp_nuc);
+                    $snp_nuc = join ('<BR>' ,  @{ $pcr_seq->{SNP} }  ) if  $pcr_seq->{SNP}  ;
+                    if ($snp_nuc) {
+                      $snp = "SNP nucleotide";
+                      $snp_nuc = "<span class=\"snp\">$snp_nuc</span>"
+                    }
+                    my ($three_prime, $seq3);
+                    $seq3 = join ('<BR>' ,  @{ $pcr_seq->{three_prime_flanking_region} }  ) if  $pcr_seq->{three_prime_flanking_region}  ;
+                    if ($seq3) {
+                      $three_prime = "3' flanking region";
+                      $seq3 = "<span class=\"assay\">$seq3</span>"
+                    }
+                    my ($five_prime, $seq5);
+                    $seq5 = join ('<BR>' ,  @{ $pcr_seq->{five_prime_flanking_region} }  ) if  $pcr_seq->{five_prime_flanking_region}  ;
+                    if ($seq5) {
+                      $five_prime = "5' flanking region";
+                      $seq5 = "<span class=\"assay\">$seq5</span>"
+                    }
+                    my ($indel, $indel_seq);
+                    $indel_seq = join ('<BR>' ,  @{ $pcr_seq->{indel} }  ) if  $pcr_seq->{indel}  ;
+                    if ($indel_seq) {
+                      $indel = "Indel";
+                      $indel_seq = "<span class=\"indel\">$indel_seq</span>"
+                    }
                     $locations_html .=
                       CXGN::Page::FormattingHelpers::info_table_html(
                         '__title' =>
@@ -225,13 +257,25 @@ qq|<img src="$image_url" usemap="#map$count" border="0" alt="" />|;
                         "Reverse primer (5'-3')" =>
                           "<span class=\"sequence\">$rev</span>",
                         $dcaps_left                     => $dcaps_right,
-                        'Accessions and product sizes'  => $pcr_bands_html,
+                       'Accessions and product sizes'  => $pcr_bands_html,
                         $digest_title                   => $digest_bands_html,
                         'Approximate temperature'       => $temp,
                         'Mg<sup>+2</sup> concentration' => $mg,
                         '__multicol'                    => 3,
                         '__tableattrs'                  => "width=\"100%\"",
                       );
+                    $locations_html .=
+                      CXGN::Page::FormattingHelpers::info_table_html(
+                        '__title' =>
+"Assay data&nbsp;&nbsp;<span class=\"tinytype\"></span>",
+                       $three_prime       => $seq3,
+                       $five_prime       => $seq5,
+                       $aspe  => $aspe_primers,
+                       $snp   => $snp_nuc,
+                       $indel => $indel_seq,
+                       '__multicol'    => 2,
+                      '__tableattrs'   => "width=\"100%\"",
+                      ) if $aspe || $indel;
                     $locations_html .= '</td></tr></table>';
                     push( @displayed_pcr, $pcr->pcr_experiment_id() );
                 }

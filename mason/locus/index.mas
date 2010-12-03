@@ -171,7 +171,7 @@ my $ontology_subtitle =  !(grep { /^$user_type$/ } ('curator', 'submitter', 'seq
 % }
 
 <&| /page/info_section.mas, title=>"Notes and figures (" .  scalar(@figures)  . ")", subtitle => "$figure_subtitle", collapsible=>1, collapsed=>1 &>
-  <& /phenome/print_images.mas , images=>\@figures , dbh=>$dbh &>
+  <& /image/print_images.mas , images=>\@figures , dbh=>$dbh &>
 
 </&>
 

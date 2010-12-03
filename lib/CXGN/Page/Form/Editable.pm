@@ -199,7 +199,6 @@ sub store {
     foreach my $k (keys %distinct_objects) { 
 	#print STDERR " DUMP:" .Data::Dumper::Dumper($distinct_objects{$k});
 	#print STDERR " STORING OBJECT: ".ref($distinct_objects{$k})."\n";
-       
 	my $id = $distinct_objects{$k}->store();
 	$self->set_insert_id($k, $id);
     }

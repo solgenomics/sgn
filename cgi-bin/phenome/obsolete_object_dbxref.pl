@@ -7,18 +7,18 @@ use CXGN::Phenome::LocusDbxref;
 use CXGN::Login;
 use CXGN::Contact;
 use CXGN::People::Person;
-use CXGN::Feed;
 use JSON;
 
 my $dbh = CXGN::DB::Connection->new();
-
 my($login_person_id,$login_user_type)=CXGN::Login->new($dbh)->verify_session();
 my $json = JSON->new();
-my %error;
+my %error=();
+
 
 if ($login_user_type eq 'curator' || $login_user_type eq 'submitter' || $login_user_type eq 'sequencer') {
     
     my $doc = CXGN::Scrap::AjaxPage->new();
+    $doc->send_http_header();
     my ($object_dbxref_id, $type, $action) = $doc->get_encoded_arguments("object_dbxref_id", "type", "action");
     my  $link;
     
@@ -41,10 +41,10 @@ if ($login_user_type eq 'curator' || $login_user_type eq 'submitter' || $login_u
     };
     if ($@) { 
 	warn "$action ontology term association failed!  $@"; 
-	$error{error} =  "$action ontology term association failed!  $@"; 
+	$error{error} =  "$action annotation for $type failed!  $@"; 
     }
     else  { 
-	$error{response} =  "$action ontology term association worked!"; 
+	$error{response} =  "$action annotation for $type worked!"; 
 	
 	my $subject="[Ontology-$type association $action] ";
 	my $person= CXGN::People::Person->new($dbh, $login_person_id);
@@ -54,12 +54,11 @@ if ($login_user_type eq 'curator' || $login_user_type eq 'submitter' || $login_u
    	my $fdbk_body="$user ($user_link) just $action ontology-$type association from phenome. $type - dbxref\n
          id=$object_dbxref_id  \n $link"; 
         CXGN::Contact::send_email($subject,$fdbk_body, 'sgn-db-curation@sgn.cornell.edu');
-	CXGN::Feed::update_feed($subject,$fdbk_body);
     }
     
 } else {
     $error{error} =  "User type $login_user_type does not have permissions to obsolete ! ";
-} 
+}
 
 my $jobj = $json->encode(\%error);
 print  $jobj;
