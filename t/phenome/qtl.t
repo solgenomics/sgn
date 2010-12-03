@@ -25,10 +25,10 @@ use SGN::Test::WWW::Mechanize;
 {
 	my $mech = SGN::Test::WWW::Mechanize->new;
 
-    	# go to the QTL search page
-    	$mech->get_ok('/search/direct_search.pl?search=cvterm_name', 'QTL/Trait search page');
+        # go to the QTL search page
+        $mech->get_ok('/search/direct_search.pl?search=qtl', 'QTL/Trait search page');
     	$mech->content_contains("QTL (trait) search");
-    
+
 	#test trait index links
     	#my @trait_index_links = $mech->find_all_links( url_regex => qr !/chado/trait_list.pl?!);
     	#my $traits_num = scalar(@trait_index_links);

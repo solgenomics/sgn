@@ -1,12 +1,13 @@
+<%doc>
+
+</%doc>
+
 <%args>
-    $title => 'Ontology browser'
-    $root_nodes => undef          # comma separated list of root nodes (optional)
+    # comma separated list of root nodes (optional)
+    $root_nodes => undef
     $db_name => undef
+    $expand => undef
 </%args>
-<&| /page/info_section.mas,
-    title       => $title,
-    collapsible => 1,
-&>
 <& /util/import_javascript.mas,
     classes => [
         'MochiKit.DOM',
@@ -29,7 +30,14 @@
     o.initializeBrowser('<% $root_nodes %>');
     o.renderSearchById();
     o.renderSearchByName('<% $db_name %>');
+    var rn = o.rootnode.getChildren();
+    
+    var expand = "<% $expand %>";
+    if (expand == 1) {
+      for (var i=0; i<rn.length; i++) {
+         rn[i].openNode(1);
+      }
+    }
     o.render();
 -->
 </script>
-</&>

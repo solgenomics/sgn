@@ -8,10 +8,11 @@
   my $seq;
 
   if( my $loc = $feature->featureloc_features(undef,{ prefetch => 'srcfeature' })->first ) {
-    my $seq = $loc->srcfeature->trunc( $loc->fmin+1, $loc->fmax );
-    $seq = $seq->revcom if $loc->strand == -1;
-    $seq->desc( location_string_with_strand( $loc ) );
-    $seq->id( $feature->name );
+    if( my $src = $loc->srcfeature ) {
+      my $seq = $src->trunc( $loc->fmin+1, $loc->fmax );
+      $seq = $seq->revcom if $loc->strand == -1;
+      $seq->desc( location_string_with_strand( $loc ) );
+      $seq->id( $feature->name );
 
 </%perl>
 
@@ -24,6 +25,7 @@
      &>
   </div>
 
+%   }
 % }
 
 <%once>

@@ -1,6 +1,5 @@
 
-use Modern::Perl;
-
+use strict;
 use Storable qw / retrieve /;
 use File::Temp qw / tempfile /;
 use File::Copy;
@@ -32,6 +31,7 @@ if( $out_file_override ) {
 }
 
 my ($message) = $page->get_arguments("message");
+
 
 my $d = CXGN::Debug->new;
 
@@ -103,11 +103,13 @@ sub display_not_finished {
 
 	my $message = shift;
 	$message ||= "Job running ... please be patient";
-    $page->header();
+#    $page->header();
 
     my $title = page_title_html($message);
 
     print <<HTML;
+Content-type: text/html
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 <head>
