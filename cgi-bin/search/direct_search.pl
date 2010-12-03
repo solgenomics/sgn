@@ -13,7 +13,7 @@ our $page = CXGN::Page->new( "SGN Direct Search page", "Koni");
 
 my @tabs = (
             ['?search=loci','Genes'],
-            ['?search=phenotype_qtl_trait','Phenotypes/QTLs'],
+            ['?search=phenotype_qtl_trait','QTLs & Phenotypes'],
             ['?search=unigene','Unigenes'],
             ['?search=family', 'Unigene Families' ],
             ['?search=markers','Markers'],
@@ -140,7 +140,7 @@ sub phenotype_tab {
     print CXGN::Search::CannedForms::phenotype_search_form($page);
 }
 sub qtl_tab {
-    print CXGN::Search::CannedForms::cvterm_search_form($page);
+    print CXGN::Search::CannedForms::qtl_search_form($page);
 }
 sub trait_tab {
     print $c->render_mason('/ontology/traits.mas' );
@@ -188,7 +188,7 @@ sub platform_tab {
 
 sub phenotype_submenu {
         my @tabs = (
-                    ['?search=phenotypes','Phenotypes'],
+                    ['?search=phenotypes','Mutants & Accessions'],
                     ['?search=qtl','QTLs'],
                     ['?search=trait', 'Traits']);
         my @tabfuncs = (\&phenotype_tab, \&qtl_tab, \&trait_tab);
