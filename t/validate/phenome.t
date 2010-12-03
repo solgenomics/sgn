@@ -35,8 +35,6 @@ my %urls = (
         "qtl search"                        => "/search/direct_search.pl?search=qtl",
         "trait search"                        => "/search/direct_search.pl?search=trait",
 
-        "stock detail"                             => "/stock/view/id/1",
-        "stock search"                             => "/stock/search/",
        );
 
 validate_urls(\%urls, $ENV{ITERATIONS} || 1 );
