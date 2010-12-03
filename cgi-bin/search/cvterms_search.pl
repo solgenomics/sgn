@@ -17,12 +17,12 @@ use CXGN::Search::CannedForms;
 use CXGN::DB::Connection;
 use CXGN::Phenome::Qtl::Tools;
 use CXGN::Chado::Cvterm;
-#################################################
 
-my $page = CXGN::Page->new( "SGN QTLs/Traits search results", "Isaak" );
+
+my $page = CXGN::Page->new( "SGN QTLs search results", "Isaak" );
 $page->header();
 
-print page_title_html('QTL/Trait search results');
+print page_title_html('QTL search results');
 my $dbh = CXGN::DB::Connection->new();
 
 
@@ -35,80 +35,77 @@ my $term = $params{$key};
 my $search = CXGN::Cvterms->new;
 my $query  = $search->new_query;
 $query->from_request( \%params );
-$search->page_size(15);
+$search->page_size(60);
 
-my @results;
+my (@results, @cvterm_results)=();
+my $qtl_mark = qq |<font size=4 color="#0033FF"> &#10003;</font> |; 
 
-my $qtl_mark;
 if (%params)
 {
-
-    my $cv       = CXGN::Phenome::Qtl::Tools->new();    
-    my $tickmark = qq| &#10003;|;
-    my $x        = 'X';    
+    my $cv       = CXGN::Phenome::Qtl::Tools->new();       
     $query->order_by( cvterm_name => '' );
     my $result = $search->do_search($query);    #execute the search
+    
     while ( my $r = $result->next_result )
-    {      
-        my $has_qtl = $cv->is_from_qtl( $r->[0] );	       
+    {          
+        my $has_qtl = $cv->is_from_qtl( $r->[0] );        
         if ($has_qtl)
         { 
-	    $qtl_mark = qq |<font size=4 color="#0033FF">$tickmark</font> |; 
-	} else {
-	    $qtl_mark = qq|<font size=4 color="red">$x</font> |; 
-	   
-	}
-	
-        push @results,
-          [
-            map { $_ } (
-                         '<a href="/chado/cvterm.pl?cvterm_id='
-                           . $r->[0] . '">'
-                           . $r->[1] . '</a>',
-                         $r->[2], $r->[3], $qtl_mark
-                       )
-          ];
+            push @cvterm_results, $r->[1];
+            push @results,
+            [
+             map { $_ } 
+             (
+              '<a href="/chado/cvterm.pl?cvterm_id='
+              . $r->[0] 
+              . '">'
+              . $r->[1] 
+              . '</a>'
+              ,$r->[2]
+              ,$r->[3]
+              ,$qtl_mark                       
+             )
+            ];            
+        }
+    }    
+    
+    my ($trait_id, $trait_name, $trait_definition) = $cv->search_usertrait($term);    		
+    if ($trait_id) 
+    {
+        for (my $i=0; $i < @$trait_id; $i++) 
+        {
+            unless ( grep { $_ eq $trait_name->[$i] } @cvterm_results) 
+            {
+                push @results,
+                [
+                 map { $_ } 
+                 (
+                  '<a href="/phenome/trait.pl?trait_id='
+                  . $trait_id->[$i] 
+                  . '">'
+                  . $trait_name->[$i] 
+                  . '</a>'
+                  ,' '
+                  ,$trait_definition->[$i]
+                  ,$qtl_mark
+                 )
+                ]; 
+            }              
+        }
+    } 
 
-    }
- 
-    #build the HTML to output
+#build the HTML to output
     my $pagination_html = $search->pagination_buttons_html( $query, $result );
     my $results_html = <<EOH;
     <div id="searchresults">
 EOH
 
-
-
-    my $cvterm = CXGN::Chado::Cvterm->new_with_term_name($dbh, $term, '17');
-    my $cvterm_id = $cvterm->get_cvterm_id();  
-    unless ($cvterm_id) {
-	my ($trait_id, $trait_name, $trait_definition) = $cv->search_usertrait($term);
-	if ($trait_id) 
-	{
-	    for (my $i=0; $i < @$trait_id; $i++) 
-	    {
-		push @results,
-		[
-		 map { $_ } (
-		     '<a href="/phenome/trait.pl?trait_id='
-		     . $trait_id->[$i] . '">'
-		     . $trait_name->[$i] . '</a>',
-		     ' ', 
-		     $trait_definition->[$i],  
-		     $qtl_mark
-		 )
-		];
-	    }
-	}
- 
-    }
-
-    $results_html .= columnar_table_html(
-                headings    => [ 'Trait name', 'Synonym', 'Definition', 'QTL' ],
-                data        => \@results,
-                __alt_freq  => 2,
-                __alt_width => 1,
-                                        );
+$results_html .= columnar_table_html(
+    headings    => [ 'Trait name', 'Synonym', 'Definition', 'QTL' ],
+    data        => \@results,
+    __alt_freq  => 2,
+    __alt_width => 1,
+);
 
     $results_html .= <<EOH;
     </div>
@@ -116,17 +113,16 @@ EOH
 EOH
 
 
-
+#sprintf(
+#	    '<span class="paginate_summary">%s matches </span>',
+#            $result->total_results, $result->time
+#        ),
 
 
 if (@results)
 {
     print blue_section_html(
-	'QTL/Trait search results',
-	sprintf(
-	    '<span class="paginate_summary">%s matches </span>',
-	    $result->total_results, $result->time
-	),
+	'QTL  search results',       	
 	$results_html
         );
 }
@@ -138,7 +134,7 @@ else
 print info_section_html(
     title => 'Search again',
     contents =>
-    CXGN::Search::CannedForms::cvterm_search_form( $page, $query ),
+    CXGN::Search::CannedForms::qtl_search_form( $page, $query ),
     collapsible => 1,
     collapsed   => 1,
     );
