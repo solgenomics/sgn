@@ -45,7 +45,7 @@ pages.
     	left: 190px;
     	top: -160px;
     	width: 220px;
-            height: 300px;
+            height: 340px;
     }
 
     .MapsMarkersSubMenu a {
@@ -157,6 +157,8 @@ pages.
                     <li><a href="/cview/map.pl?map_id=6">Eggplant LxM 2002 map</a></li>
                     <li><a href="/cview/map.pl?map_id=15">Tobacco SSR 2007 map</a></li>
 		    <li><a href="/cview/map.pl?map_id=7">Arabidopsis COSII map</a></li>
+		    <li><a href="">&nbsp;</a></li>
+		    <li><a href="/search/markers/markersearch.pl">Search markers...</a></li>
 		    <li><a href="">&nbsp;</a></li>
 		    <li><a href="/content/map_submissions.pl">Submit map information to SGN</a></li>
 		  </div>
