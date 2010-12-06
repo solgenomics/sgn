@@ -45,7 +45,7 @@ pages.
     	left: 190px;
     	top: -160px;
     	width: 220px;
-            height: 340px;
+            height: 100px;
     }
 
     .MapsMarkersSubMenu a {
@@ -143,27 +143,13 @@ pages.
 
    		<ul>
         	  <div class="submenu MapsMarkersSubMenu">
-                    <li><a href="/cview/map.pl?map_id=9">Tomato ExPEN 2000</a></li>
-                    <li><a href="/cview/map.pl?map_id=p9">Tomato physical map</a></li>
-                    <li><a href="/cview/map.pl?map_id=c9">Tomato FPC contigs</a></li>
-                    <li><a href="/cview/map.pl?map_id=il6">Tomato/pennellii IL map</a></li>
-                    <li><a href="/cview/map.pl?map_id=13">Tomato FISH map</a></li>
-                    <li><a href="/cview/map.pl?map_id=agp">Tomato AGP map</a></li>
-                    <li><a href="/cview/map.pl?map_id=itag">Tomato ITAG BAC map</a></li>
-                    <li><a href="/cview/map.pl?map_version_id=58">Pepper COSII map</a></li>
-                    <li><a href="/cview/map.pl?map_id=11">Pepper AC99 map</a></li>
-                    <li><a href="/cview/map.pl?map_id=10">Pepper FA03 map</a></li>
-                    <li><a href="/cview/map.pl?map_id=3">Potato TxB 1992 map</a></li>
-                    <li><a href="/cview/map.pl?map_id=6">Eggplant LxM 2002 map</a></li>
-                    <li><a href="/cview/map.pl?map_id=15">Tobacco SSR 2007 map</a></li>
-		    <li><a href="/cview/map.pl?map_id=7">Arabidopsis COSII map</a></li>
-		    <li><a href="">&nbsp;</a></li>
-		    <li><a href="/search/markers/markersearch.pl">Search markers...</a></li>
+		    <li><a href="http://solgenomics.net/cview/index.pl">Available maps</a></li>
+                    <li><a href="http://solgenomics.net/cview/view_chromosome.pl?show_offsets=1&show_ruler=1&show_offsets=1">Comparative viewer</a></li>
+                    <li><a href="/search/markers/markersearch.pl">Search markers</a></li>
 		    <li><a href="">&nbsp;</a></li>
 		    <li><a href="/content/map_submissions.pl">Submit map information to SGN</a></li>
 		  </div>
 		</ul>
-		
 	</li>
 
 	<li class="Genes"><a href="/search/direct_search.pl?search=loci" style="background: none"><img src="/documents/img/soliconmenu/Genes.png" title="Genes" /></a>
