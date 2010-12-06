@@ -2,8 +2,6 @@
 
 # basic script to load maps
 
-# usage: load_map_data <dbhost> <dbname> <COMMIT|ROLLBACK> <map_id> <map file>
-# example: load_map_data.pl db-devel sandbox COMMIT 9 map-file.csv
 
 # copy and edit this file as necessary
 # common changes include the following:
@@ -58,9 +56,9 @@ The tab-delimited map file has the following columns:
 
 =head1 AUTHORS
 
-John Binns, Adri Mills, Lukas Mueller (among others).
+John Binns, Adri Mills, Lukas Mueller, Naama Menda (among others).
 
-Current maintainer: Lukas Mueller.
+Current maintainer: Lukas Mueller/Naama Menda.
 
 =cut
 
@@ -99,7 +97,6 @@ if (!$opt_H && !$opt_D) {
  my $dbh = CXGN::DB::InsertDBH->new({
                                              dbname => $opt_D,
                                              dbhost => $opt_H,
-                                             dbschema => 'sgn',
                                              dbargs => {AutoCommit => 0,
                                                         RaiseError => 1}
                                             });
