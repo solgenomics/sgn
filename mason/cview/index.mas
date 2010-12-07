@@ -84,12 +84,12 @@ foreach my $map (@maps) {
   my $long_name = $map->get_long_name();
   my $short_name = $map->get_short_name();
   my $id = $map->get_id();
-  push @{$map_by_species{$species} } ,  qq{ <a href="map.pl?map_version_id=$id">$short_name</a>: $long_name<br />\n } ;
+  push @{$map_by_species{$species} } ,  qq{ <a href="map.pl?map_version_id=$id">$short_name</a>: $long_name\n } ;
 }
 
 foreach my $s (sort { @{$map_by_species{$a}} <=> @{$map_by_species{$b}} } keys %map_by_species) {
-  $d .= "<br /><b>$s</b><br />\n";
-  $d .= join(/\n/ ,  sort @{ $map_by_species{$s} } );
+  $d .= "<br /><br /><b>$s</b><br />\n";
+  $d .= join('<br />' ,  sort @{ $map_by_species{$s} } );
 }
 
 my $submit = qq | <b>[<a href="/content/map_submissions.pl">Submit New Map</a>]</b> |;
