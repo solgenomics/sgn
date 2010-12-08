@@ -166,7 +166,7 @@ pages.
 
 
 
-	<li class="Phenotypes"><a href="/phenome/" style="background: none"><img src="/documents/img/soliconmenu/Phenotypes.png" alt="Phenotypes and QTLs" title="Phenotypes and QTLs" /></a>
+	<li class="Phenotypes"><a href="/search/direct_search.pl?search=phenotypes" style="background: none"><img src="/documents/img/soliconmenu/Phenotypes.png" alt="Phenotypes and QTLs" title="Phenotypes and QTLs" /></a>
 	  <ul>
 	    <div class="submenu PhenotypesSubMenu">
               <li><a href="/search/direct_search.pl?search=phenotypes">Search phenotypes</a></li>
