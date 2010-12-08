@@ -97,6 +97,7 @@ my $report_text =
 
 print info_section_html( title => 'BLAST Report',
                          subtitle => $report_download_link,
+                         collapsible => 1,
                          contents => <<EOH);
 <div style="border: 1px solid gray; padding: 1em 2em 1em 2em">
 $report_text
@@ -229,7 +230,7 @@ sub format_report_file {
 sub graphics_html {
   my ($raw_report_file,$formatted_report_file,$got_hits) = @_;
 
-  sub section { info_section_html( title => 'Graphics', empty_message => shift, contents => shift) }
+  sub section { info_section_html( title => 'Graphics', collapsible => 1, empty_message => shift, contents => shift) }
 
   return section('not available for multiple query sequences') if $params{seq_count} > 1;
 
@@ -243,6 +244,7 @@ sub graphics_html {
   my $bioperl_graph =
     info_section_html( title => 'Alignment Summary',
                        is_subsection => 1,
+                       collapsible => 1,
                        empty_message => 'disabled by user',
                        contents => $params{output_graphs} =~ /bioperl/
                          ? bioperl_graph_html($raw_report_file)
@@ -253,6 +255,7 @@ sub graphics_html {
   my $evan_graph =
     info_section_html( title => 'Conservedness Histogram',
                        is_subsection => 1,
+                       collapsible => 1,
 
                        $params{output_graphs} !~ /histogram/ ? ( empty_message => 'disabled by user' ) :
                        $params{program} !~ /blastn/ ? (empty_message => 'not available for '.uc($params{program})) :
