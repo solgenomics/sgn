@@ -14,12 +14,11 @@ use HTML::Entities;
 
 use Number::Bytes::Human ();
 
+use CXGN::BioTools::SearchIOHTMLWriter;
 use CXGN::Page;
 use CXGN::BlastDB;
 
 use Bio::SearchIO;
-
-use CXGN::BioTools::SearchIOHTMLWriter;
 
 use CXGN::Graphics::BlastGraph; #Evan's package for conservedness histograms
 use CXGN::Apache::Error;
@@ -61,6 +60,11 @@ my $formatted_report_file = format_report_file($raw_report_file);
 #warn "got raw report file $raw_report_file, formatting $formatted_report_file\n";
 
 $page->header();
+
+# TODO: insert JS here to add site xref popups to onclicks of
+#  a.blast_match_ident elements
+print <<EOJS;
+EOJS
 
 print page_title_html('BLAST Results');
 
@@ -146,7 +150,7 @@ sub format_report_file {
 
         $s =~ s/^lcl\|//;
         my $url = $bdb->identifier_url($s);
-        return qq { <a href="$url">$s</a> };
+        return qq { <a class="blast_match_ident" href="$url">$s</a> };
     }
 
     my %custom_formatters = (
