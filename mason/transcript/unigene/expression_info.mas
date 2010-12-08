@@ -229,7 +229,7 @@ HTML
                                                       );
 
 	       my $cc = $expression->get_experiment_graph({
-                           x_axis_sort => 'PO',
+                          x_axis_sort => 'alphabetical',
                        });
 	       $cc->write_output($tempfile);
 
