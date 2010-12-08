@@ -34,7 +34,7 @@ $mech->submit_form_ok({
         submit       => 'Submit',
     }
 });
-$mech->content_contains('Search Results');
+$mech->content_contains('Search results');
 $mech->content_like(qr/results \d+-\d+ of \d+(,\d+)?/);
 
 
@@ -48,7 +48,7 @@ $mech->submit_form_ok({
         submit       => 'Submit',
     }
 });
-$mech->content_contains('Search Results');
+$mech->content_contains('Search results');
 $mech->content_contains('no matching results found');
 
 done_testing;
