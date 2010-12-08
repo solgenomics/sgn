@@ -587,12 +587,16 @@ if ( max(QtlLods) >= LodScore ) {
   print("result drop")
   print(ResultDrop)
 
-  ResultDrop<-round(ResultDrop,
-                    2)
+  if (is.numeric(ResultDrop)) {
+    ResultDrop<-round(ResultDrop,
+                      2
+                      )
+  }
   
 } else
 {
  print("no Qtls for this trait")
+ ResultDrop<-c(0)
 }
 ##########QTL EFFECTS ##############
 
