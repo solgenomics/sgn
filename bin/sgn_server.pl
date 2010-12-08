@@ -9,6 +9,8 @@ unless( grep /^(-rr|--restart_regex)$/, @ARGV ) {
 }
 
 use Catalyst::ScriptRunner;
+
+print "before Catalyst::ScriptRunner->run...\n";
 Catalyst::ScriptRunner->run('SGN', 'Server');
 
 1;

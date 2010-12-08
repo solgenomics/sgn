@@ -18,6 +18,13 @@ package Bio::SecreTary::TMpred;
 use strict;
 use warnings;
 
+use Inline C => <<'END';
+
+void hollowerld(){
+    printf("Hollow erld\n");
+}
+END
+
 use IO::File;
 use File::Temp;
 use CGI ();
@@ -25,158 +32,151 @@ use Bio::SecreTary::Table;
 use Bio::SecreTary::Helix;
 
 use Readonly;
-Readonly my $FALSE      => 0;
-Readonly my $TRUE       => 1;
-Readonly my $PASCAL_STYLE => $TRUE; # if this is true, does the same as the old pascal code.
-Readonly my $TMHLOFFSET => ($PASCAL_STYLE)? 1: 0; # this gets added to the max_tmh_length,
-
-# and (1 - TMLOFFSET) gets subtracted from min_tmh_length
+Readonly my $FALSE => 0;
+Readonly my $TRUE  => 1;
+Readonly my $PASCAL_STYLE =>
+  $TRUE;    # if this is true, does the same as the old pascal code.
+Readonly my $TMHLOFFSET => ($PASCAL_STYLE)
+  ? 1
+  : 0;      
+# TMHLOFFSET gets added to the max_tmh_length,
+# and (1 - TMHLOFFSET) gets subtracted from min_tmh_length
 # TMHLOFFSET => 1  makes it agree with pascal code.
 # finds helices with length as large as next bigger odd number, e.g. if
 # $max_tmh_length is 33, will find some helices of lengths 34 and 35.
 # with TMHLOFFSET => 0, 33->33, 32->33, 31->31, etc. i.e. goes up to
 # next greater OR EQUAL odd number, rather than to next STRICTLY greater odd.
 # similarly the min length is affected. with TMHLOFFSET => 1, 17->17, 16->17, 15->15
-# i.e. if you specify min lenght of 16 you will never see helices shorter than 17
-# but with TMHLOFFSET => 0, 17->17, 16->15, 15->15, etc. now you find the length 16 ones, (as well as length 15 ones which are discarded).
+# i.e. if you specify min length of 16 you will never see helices shorter than 17
+# but with TMHLOFFSET => 0, 17->17, 16->15, 15->15, etc. now you find the length 16 ones, (as well as length 15 ones which are discarded in good_solutions).
+
+
 
 =head2 function new()
 
 Synopsis:
-   my $limits = [$min_score, $min_tmh_length, $max_tmh_length, $min_beg, $max_beg];      	my $t = TMpred->new($limits, $sequence, $sequence_id)
-	Arguments: $limits is an array ref holding some parameters describing which solutions will be found by tmpred ($min_tmh_length, $max_tmh_length), and which will be kept in the TMpred object. Also an amino acid sequence and (optionally) a sequence id.
+my $tmpred_obj = Bio::SecreTary::TMpred->new(); # using defaults
+    or
+    my $tmpred_obj = Bio::SecreTary::TMpred->new({min_score => 600});
+	Arguments: $arg_hash_ref holds some parameters describing which solutions will be found by tmpred and kept by good_solutions: min_score, min_tm_length, max_tm_length, min_beg, max_beg.
 	Returns:	an instance of a TMpred object
-	Side effects:	Runs tmpred, creates the object.
-	Description:	Runs the tmpred (trans-membrane helix (tmh) prediction) 
-program with parameters $min_tmh_length, $max_tmh_length, and summarizes the output.
-Only keeps solutions with score, begin and end positions consistent with values in limits array.
+	Side effects:	Creates the object.
+  Description: Creates a TMpred object with certain parameters which determine which trans-membrane helices to keep.
 
 =cut
 
 sub new {
-    my $class = shift;
-    my $self = bless {}, $class;
+    my $class        = shift;
+    my $self         = bless {}, $class;
+    my $arg_hash_ref = shift;
+    $self->{version} = (exists $arg_hash_ref->{version})? $arg_hash_ref->{version} : 'perl';
+    $self->{min_score} =
+      ( exists $arg_hash_ref->{min_score} ) ? $arg_hash_ref->{min_score} : 500;
+    $self->{min_tm_length} =
+      ( exists $arg_hash_ref->{min_tm_length} )
+      ? $arg_hash_ref->{min_tm_length}
+      : 17;
+    $self->{max_tm_length} =
+      ( exists $arg_hash_ref->{max_tm_length} )
+      ? $arg_hash_ref->{max_tm_length}
+      : 33;
+    $self->{min_beg} =
+      ( exists $arg_hash_ref->{min_beg} ) ? $arg_hash_ref->{min_beg} : 0;
+    $self->{max_beg} =
+      ( exists $arg_hash_ref->{max_beg} ) ? $arg_hash_ref->{max_beg} : 35;
 
-    $self->set_limits(shift);    # array ref; specifies which tmhs to keep.
+    $self->{min_halfw} =
+      int( ( ( $self->{min_tm_length} ) - ( 1 - $TMHLOFFSET ) ) / 2 );
+    $self->{max_halfw} =
+      int( ( ( $self->{max_tm_length} ) + $TMHLOFFSET ) / 2 );
 
     $self->setup_tables();
-    $self->set_sequence_solutions(undef);
-    my @aa_array = split( "", 'ACDEFGHIKLMNPQRSTVWYX' )
-      ;    # the first 20 are standard aa's then X means unknown aa
-    my %aa_row_hash =
-      (); # keys letters representing aa's; values numbers 0-20 (20 for unknown)
+    my @aa_array = split( '', 'ACDEFGHIKLMNPQRSTVWYX' ); # first 20 are std aa's; X means unknown aa
+    my %aa_row_hash = ()
+      ; # keys: letters representing aa's; values: numbers 0-20 (20 for unknown)
     for ( my $i = 0 ; $i < scalar @aa_array ; $i++ ) {
         $aa_row_hash{ $aa_array[$i] } = $i;
     }
     $self->set_aa_row_hash( \%aa_row_hash );
 
-    my @tmh_length_distribution = ( (0) x 40 );
-    $self->set_length_distribution( \@tmh_length_distribution );
+    hollowerld();
 
     return $self;
 }
 
 sub run_tmpred {
     my $self     = shift;
-    my $sequence = shift;    # sequence is not truncated in TMpred
-    my $sequence_id = shift || 'A_protein_sequence';
-    my $choose_pascal_or_perl = shift || 'perl';
-    my ( $min_score, $min_tmh_length, $max_tmh_length, $min_beg, $max_beg ) =
-      @{ $self->get_limits() };
-    $self->set_sequence_solutions( [ $sequence_id, $sequence, undef, undef ] );
-
+    my ($sequence_id, $sequence, $version, $do_long_output) =
+	('Anon_prot_seq', undef, 'perl', $FALSE);
+    my $arg_hash_ref = undef;
+    my $arg1 = shift; # can be either sequence, or ref to  hash holding arguments
+    if(ref($arg1)){
+	$arg_hash_ref = $arg1;
+    }
+    else{ # arg1 is not a ref; should be sequence
+	$sequence = $arg1; 
+	my $arg2 = shift;
+	if(ref($arg2)){
+	    $arg_hash_ref = $arg2;
+	}else{ # arg2 is not a ref; should be sequence_id
+	    $sequence_id = (defined($arg2))? $arg2: 'A_prot_seq';
+	}
+    }
+    if(defined($arg_hash_ref)){
+if(ref($arg_hash_ref) eq 'HASH'){
+	$sequence = $arg_hash_ref->{sequence} if(exists $arg_hash_ref->{sequence});
+	$sequence_id = $arg_hash_ref->{sequence_id} if(exists $arg_hash_ref->{sequence_id});
+	$version = $arg_hash_ref->{version} if(exists $arg_hash_ref->{version});
+	$do_long_output = $arg_hash_ref->{do_long_output} if(exists $arg_hash_ref->{do_long_output});
+    }
+    else{
+	die "Argument to run_tmpred is ref but not hash ref.\n";
+}
+    }
     # check and fix up the sequence.
     $sequence =~ s/\s+//g;    # remove whitespace
     $sequence =~ s/\*$//;     # remove * at end if present
     $sequence = uc $sequence;
-    
-  #  die  "sequence contains non A-Z characters:[$sequence]\n" 
-	if ( $sequence =~ /[^A-Z]/ ){
-	    warn "substituting 'X' for non A-Z character. \n$sequence_id\n$sequence\n";
-	    $sequence =~ s/[^A-Z]/X/g;
+
+    #  die  "sequence contains non A-Z characters:[$sequence]\n"
+    if ( $sequence =~ /[^A-Z]/ ) {
+        warn
+          "substituting 'X' for non A-Z character. \n$sequence_id  $sequence\n";
+        $sequence =~ s/[^A-Z]/X/g;
     }
-   
- $sequence =~ s/[BJOUZ]/X/g;    # to get just 20 aa's plus X for unknown.
-    if($PASCAL_STYLE){
-	$sequence =~ s/X/A/g;
+
+    $sequence =~ s/[BJOUZ]/X/g;    # to get just 20 aa's plus X for unknown.
+    if ($PASCAL_STYLE) {
+	# the pascal version of tmpred simply substitutes A for X.
+        $sequence =~ s/X/A/g;
     }
     my $good_solns;
-    if ( $choose_pascal_or_perl eq 'pascal' ) {
-        my $tmpred_raw_out =
+    my $tmpred_raw_out = undef;
+    if ( $version eq 'pascal' ) {
+        $tmpred_raw_out =
           $self->run_tmpred_pascal( $sequence_id, $sequence );
 
         # process tmpred output to get summary,
         # i.e. score, begin and end positions for tmh's satisfying limits.
         $good_solns =
-          ( $self->good_solutions($tmpred_raw_out) );    # , $tmpred_raw_out);
+          ( $self->good_solutions_pascal($tmpred_raw_out) );    # , $tmpred_raw_out);
     }
     else {                                               # use perl code
         $good_solns = $self->run_tmpred_perl( $sequence_id, $sequence );
+	if($do_long_output){
+	    $tmpred_raw_out = 'Long output not implemented in perl version.';
+	}
     }
-    return $good_solns;
+  #  return $good_solns;
+    return ($good_solns, $tmpred_raw_out);
 }
 
-sub set_sequence_solutions {
-    my $self = shift;
-    return $self->{seq_solns} = shift;
-}
-
-sub get_sequence_solutions {
-    my $self = shift;
-    return $self->{seq_solns};
-}
-
-sub set_length_distribution {
-    my $self = shift;
-    return $self->{length_distrib} = shift;
-}
-
-sub get_length_distribution {
-    my $self = shift;
-    return $self->{length_distrib};
-}
-
-sub good_solutions_perl {    # get the good solutions starting from the
-                             # output of perl tmpred
-    my $self           = shift;
-    my $tmpred_helices = shift;    # ref to array of predicted helices
-
-    my ( $min_score, $min_tmh_length, $max_tmh_length, $min_beg, $max_beg ) =
-      @{ $self->get_limits() };
-
-    my $good_string = "";
-    foreach (@$tmpred_helices) {
-        my $beg    = $_->get_nterm()->[0] + 1;
-        my $end    = $_->get_cterm()->[0] + 1;
-        my $score  = $_->get_score();
-        my $length = $end + 1 - $beg;
-        $self->get_length_distribution()->[$length]++;
-
-        #	if($length > $max_tmh_length or $length < $min_tmh_length){
-        #	    my $id = shift @{$self->get_sequence_solutions()};
-        #		    warn "$id  length out of allowed range: $length \n";
-        #		}
-        if (    $score >= $min_score
-            and $length >= $min_tmh_length
-            and $length <= $max_tmh_length
-            and $beg >= $min_beg
-            and $beg <= $max_beg )
-        {
-            $good_string .= "($score,$beg,$end)  ";
-        }
-    }
-    if ( $good_string eq "" ) { $good_string = "(-10000,0,0)"; }
-    else { $good_string =~ s/(\s+)$//; }    # eliminate whitespace at end.
-    return $good_string;
-}
 
 sub run_tmpred_pascal {                     # this uses pascal code.
     my $self        = shift;
-    my $sequence_id = shift;                 # $self->get_sequence_id();
-    my $sequence    = shift;                 # $self->get_sequence();
-    my $limits      = $self->get_limits();
-    my ( $min_score, $min_tmh_length, $max_tmh_length, $min_beg, $max_beg ) =
-      @{ $self->get_limits() };              # @$limits;
+    my $sequence_id = shift;
+    my $sequence    = shift;
+
     my $temp_file_dir    = '/home/tomfy/tempfiles';
     my $temp_file_handle = File::Temp->new(
         TEMPLATE => 'tmpred_input_XXXXXX',
@@ -188,21 +188,77 @@ sub run_tmpred_pascal {                     # this uses pascal code.
     print $temp_file_handle ">$sequence_id\n$sequence\n";
     $temp_file_handle->close();
 
-    my $tmpred_dir = "/home/tomfy/tmpred";
+    my $max_tm_length = $self->{max_tm_length};
+    my $min_tm_length = $self->{min_tm_length};
+    my $tmpred_dir    = "/home/tomfy/tmpred";
     my $tmpred_pascal_out =
-`$tmpred_dir/tmpred  -def -in=$temp_file  -out=-  -par=$tmpred_dir/matrix.tab -max=$max_tmh_length  -min=$min_tmh_length`;
+`$tmpred_dir/tmpred  -def -in=$temp_file  -out=-  -par=$tmpred_dir/matrix.tab -max=$max_tm_length  -min=$min_tm_length`;
 
     return $tmpred_pascal_out;
+}
+
+
+=head2 function good_solutions_pascal()
+	Synopsis: my $solution_string = $tmpred->good_solutions_pascal(); 
+Arguments: none.
+Returns: String of "good" solutions' (score,beg,end) info.
+Description: Parses tmpred output; finds the tmhs which
+are consistent with limits, and store them in a string,
+    e.g.: "(2000,17,34)  (1500,12,36)".
+
+=cut
+
+sub good_solutions_pascal {
+    my $self       = shift;
+    my $tmpred_out = shift;
+
+    my $solutions = "";
+    my $ok        = 0;
+    while ( $tmpred_out =~ /(.*?\n)/ ) {
+        my $line = $1;
+        $tmpred_out = substr( $tmpred_out, length $line );    #
+        last  if ( $line =~ /Table of correspondences/ );
+        $ok++ if ( $line =~ /Possible transmembrane helices/ );
+        $ok++ if ( $line =~ /Inside to outside helices/ );
+        if ( $ok == 2 ) {
+
+            if ( $line =~
+                /(\d+)\s*\(\s*(\d+)\)\s*(\d+)\s*\(\s*(\d+)\)\s*(\d+)\s*(\d+)/ )
+            {
+                my ( $begin, $begcore, $end, $endcore, $score, $center ) =
+                  ( $1, $2, $3, $4, $5, $6 );
+
+                my $length = $end + 1 - $begin;
+
+                if (   $length > $self->{max_tm_length}
+                    or $length < $self->{min_tm_length} )
+                {
+                    warn "length out of allowed range: $length \n";
+                }
+                if (    $score >= $self->{min_score}
+                    and $begin <= $self->{max_beg}
+                    and $begin >= $self->{min_beg}
+                    and $length <= $self->{max_tm_length}
+                    and $length >= $self->{min_tm_length} )
+                {
+                    $solutions .= "($score,$begin,$end)  ";
+                }
+		else{
+		    warn "Solution rejected in good_solutions_pascal.\n($score,$begin,$length)";
+		}
+            }
+        }
+    }
+
+    if ( $solutions eq "" ) { $solutions = "(-10000,0,0)"; }
+    else { $solutions =~ s/(\s+)$//; }    # eliminate whitespace at end.
+    return $solutions;
 }
 
 sub run_tmpred_perl {
     my $self        = shift;
     my $sequence_id = shift;
     my $sequence    = shift;
-
-    my $limits = $self->get_limits();
-    my ( $min_score, $min_tmh_length, $max_tmh_length, $min_beg, $max_beg ) =
-      @{ $self->get_limits() };
 
     my $aa_row_hash             = $self->get_aa_row_hash();
     my @seq_array               = split( "", $sequence );
@@ -251,16 +307,12 @@ sub run_tmpred_perl {
     }
 
     # get score array for in-to-out using 3 profiles (center, nterm, cterm)
-    my $io_score = make_curve(
-        $io_center_prof, $io_nterm_prof, $io_cterm_prof,
-        $min_tmh_length, $max_tmh_length
-    );
+    my $io_score =
+      $self->make_curve( $io_center_prof, $io_nterm_prof, $io_cterm_prof );
 
     # same for out-to-in
-    my $oi_score = make_curve(
-        $oi_center_prof, $oi_nterm_prof, $oi_cterm_prof,
-        $min_tmh_length, $max_tmh_length
-    );
+    my $oi_score =
+      $self->make_curve( $oi_center_prof, $oi_nterm_prof, $oi_cterm_prof );
 
     my @io_helices = ();
     {
@@ -269,8 +321,8 @@ sub run_tmpred_perl {
         my $start = 0;
         while ( $start < $length ) {
             ( $fhresult, $start, $helix ) =
-              find_helix( $length, $min_tmh_length, $max_tmh_length, $start,
-                $io_score, $io_center_prof, $io_nterm_prof, $io_cterm_prof );
+              $self->find_helix( $length, $start, $io_score, $io_center_prof,
+                $io_nterm_prof, $io_cterm_prof );
             $helix->set_nt_in('TRUE');    # io is inside-to-outside
             if ($fhresult) {
                 push @io_helices, $helix;
@@ -286,8 +338,8 @@ sub run_tmpred_perl {
         my $helix;
         while ( $start < $length ) {
             ( $fhresult, $start, $helix ) =
-              find_helix( $length, $min_tmh_length, $max_tmh_length, $start,
-                $oi_score, $oi_center_prof, $oi_nterm_prof, $oi_cterm_prof );
+              $self->find_helix( $length, $start, $oi_score, $oi_center_prof,
+                $oi_nterm_prof, $oi_cterm_prof );
             $helix->set_nt_in('FALSE');
             if ($fhresult) {
                 push @oi_helices, $helix;
@@ -295,25 +347,7 @@ sub run_tmpred_perl {
             last if ( $start >= $length );
         }
     }
-    if (0) {
-        print "ID: $sequence_id \n";
-        print "Inside to outside helices: ", scalar @io_helices, " found \n";
-        print " from      to         score  center \n";
-        foreach (@io_helices) {
-            print $_->get_descriptor_string(), "\n";
-        }
 
-        print "Outside to inside helices: ", scalar @oi_helices, " found \n";
-        print " from      to         score  center \n";
-        foreach (@oi_helices) {
-            print $_->get_descriptor_string(), "\n";
-        }
-        print "\n";
-    }
-
-    $self->set_sequence_solutions(
-        [ $sequence_id, $sequence, \@io_helices, \@oi_helices ] )
-      ;    #temporary storage of sequence and corresponding solutions.
     my @helices = ( @io_helices, @oi_helices );
     return $self->good_solutions_perl( \@helices );
 
@@ -322,91 +356,36 @@ sub run_tmpred_perl {
 
 }
 
-sub set_limits {
-    my $self = shift;
-    return $self->{limits} = shift;
-}
+sub good_solutions_perl {    # get the good solutions starting from the
+                             # output of perl tmpred
+    my $self           = shift;
+    my $tmpred_helices = shift;    # ref to array of predicted helices
 
-sub get_limits {
-    my $self = shift;
-    return $self->{limits};
-}
+    my $good_string = "";
+    foreach (@$tmpred_helices) {
+        my $beg    = $_->get_nterm()->[0] + 1;
+        my $end    = $_->get_cterm()->[0] + 1;
+        my $score  = $_->get_score();
+        my $length = $end + 1 - $beg;
 
-=head2 function good_solutions()
-	Synopsis: my $solution_string = $tmpred->good_solutions(); 
-Arguments: none.
-Returns: String of "good" solutions' (score,beg,end) info.
-Description: Parses tmpred output; finds the tmhs which
-are consistent with limits, and store them in a string,
-    e.g.: "(2000,17,34)  (1500,12,36)".
-
-=cut
-
-sub good_solutions {
-    my $self       = shift;
-    my $tmpred_out = shift;
-
-    my ( $min_score, $min_tmh_length, $max_tmh_length, $min_beg, $max_beg ) =
-      @{ $self->get_limits() };
-
-    my $solutions = "";
-    my $ok        = 0;
-    while ( $tmpred_out =~ /(.*?\n)/ ) {
-        my $line = $1;
-        $tmpred_out = substr( $tmpred_out, length $line );    #
-        last  if ( $line =~ /Table of correspondences/ );
-        $ok++ if ( $line =~ /Possible transmembrane helices/ );
-        $ok++ if ( $line =~ /Inside to outside helices/ );
-        if ( $ok == 2 ) {
-
-            if ( $line =~
-                /(\d+)\s*\(\s*(\d+)\)\s*(\d+)\s*\(\s*(\d+)\)\s*(\d+)\s*(\d+)/ )
-            {
-                my ( $begin, $begcore, $end, $endcore, $score, $center ) =
-                  ( $1, $2, $3, $4, $5, $6 );
-
-                my $length = $end + 1 - $begin;
-                $self->get_length_distribution()->[$length]++;
-                if ( $length > $max_tmh_length or $length < $min_tmh_length ) {
-                    warn "length out of allowed range: $length \n";
-                }
-                if (    $score >= $min_score
-                    and $begin <= $max_beg
-                    and $begin >= $min_beg
-                    and $length <= $max_tmh_length
-                    and $length >= $min_tmh_length )
-                {
-                    $solutions .= "($score,$begin,$end)  ";
-                }
-            }
+        if (    $score >= $self->{min_score}
+            and $length >= $self->{min_tm_length}
+            and $length <= $self->{max_tm_length}
+            and $beg >= $self->{min_beg}
+            and $beg <= $self->{max_beg} )
+        {
+            $good_string .= "($score,$beg,$end)  ";
         }
     }
-
-    if ( $solutions eq "" ) { $solutions = "(-10000,0,0)"; }
-    else { $solutions =~ s/(\s+)$//; }    # eliminate whitespace at end.
-    return $solutions;
+    if ( $good_string eq "" ) { $good_string = "(-10000,0,0)"; }
+    else { $good_string =~ s/(\s+)$//; }    # eliminate whitespace at end.
+    return $good_string;
 }
 
-sub length_distribution {
-    my $self = shift;
-
-    my @ldistrib = @{ $self->get_length_distribution() };
-    my $i        = 0;
-    my $total    = 0;
-    my $string   = '';
-    foreach (@ldistrib) {
-        $string .= "$i  $_ \n";
-        $i++;
-        $total += $_;
-    }
-    $string .= "total: $total \n";
-    return $string;
-}
-
-sub make_profile {    # makes a profile, i.e. an array
-                      # containing ...
-                      # my $sequence     = shift;
-    my $seq_aanumber_array = shift;    # ref to array of numbers
+sub make_profile {                        # makes a profile, i.e. an array
+                                          # containing ...
+                                          # my $sequence     = shift;
+    my $seq_aanumber_array = shift;       # ref to array of numbers
     my $table              = shift;
     my $ref_position = $table->get_marked_position();
     my $matrix       = $table->get_table();
@@ -441,11 +420,13 @@ sub make_profile {    # makes a profile, i.e. an array
 }
 
 sub make_curve {
+    my $self      = shift;
     my $m_profile = shift;
     my $n_profile = shift;
     my $c_profile = shift;
-    my $min_halfw = int( ( (shift) - ( 1 - $TMHLOFFSET ) ) / 2 );
-    my $max_halfw = int( ( (shift) + $TMHLOFFSET ) / 2 );
+    my $min_halfw =
+      $self->{min_halfw};    # int( ( (shift) - ( 1 - $TMHLOFFSET ) ) / 2 );
+    my $max_halfw = $self->{max_halfw};  # int( ( (shift) + $TMHLOFFSET ) / 2 );
     my $length    = scalar @$m_profile;
     my @score;
 
@@ -470,15 +451,11 @@ sub make_curve {
 }
 
 sub find_helix {
-
-    #   my $seq       = shift; # dont actually need sequence, just its length
-    my $length    = shift;
-    my $min_halfw = int( ( (shift) - ( 1 - $TMHLOFFSET ) ) / 2 );
-    my $max_halfw = int( ( (shift) + $TMHLOFFSET ) / 2 );
-    my $start     = shift;
-    my $helix     = Bio::SecreTary::Helix->new()
-      ;    #Helix: structure to hold info on helix and its features
-    my ( $s, $m, $n, $c ) = @_;    #array of refs to arrays
+    my $self = shift;
+    my ( $length, $start, $s, $m, $n, $c ) = @_;    # $s, $m, $n, $c array refs
+    my $min_halfw = $self->{min_halfw};
+    my $max_halfw = $self->{max_halfw};
+    my $helix     = Bio::SecreTary::Helix->new();
 
     my $find_helix_result;
 
@@ -488,10 +465,8 @@ sub find_helix {
     $found = $FALSE;
     while ( ( $i < $length - $min_halfw ) and ( !$found ) ) {
 
-        #	print "A: ", $i - $min_halfw, "  ", $i + $max_halfw, "\n";
         my ( $pos, $scr ) = findmax( $s, $i - $min_halfw, $i + $max_halfw );
 
-        #	print "i, pos, scr, s->[i]: $i,  $pos,   $scr ", $s->[$i], "\n";
         if ( ( $s->[$i] == $scr ) and ( $s->[$i] > 0 ) ) {
             $found = $TRUE;
 
@@ -523,7 +498,6 @@ sub find_helix {
                 else                               { $done = $TRUE; }
             }
 
-            #    print "j, n[j],  [$j][", $n->[$j], "]\n";
             $helix->set_sh_nterm( [ $j, $n->[$j] ] );
 
             $j    = $i + $min_halfw;
@@ -577,16 +551,12 @@ sub findmax {    # looking between start and stop,
     my $position = $start;
     $start++;
     for ( my $i = $start ; $i <= $stop ; $i++ ) {
-
-        # foreach my $i ($start .. $stop){ # this is slower
         if ( $profile->[$i] > $profile->[$position] ) {
             $position = $i;
         }
     }
     return ( $position, $profile->[$position] );
 }
-
-
 
 sub setup_tables {
     my $self = shift;
