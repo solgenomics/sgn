@@ -1,0 +1,72 @@
+<%args>
+  $results => undef
+  $form
+  $pagination_link_maker
+</%args>
+<%once>
+  use Number::Format;
+  use CXGN::Page::FormattingHelpers qw/ columnar_table_html /;
+  use SGN::View::Stock qw/stock_link/;
+</%once>
+<& /page/page_title.mas, title => 'Stock Search' &>
+<& /util/import_javascript.mas,
+    classes => [qw(jquery CXGN.Effects)]
+&>
+
+<!-- This CSS should probably go somewhere better -->
+<style>
+#stock_search_form .select span span {
+  white-space: nowrap;
+  float: left;
+  width: 10em;
+}
+#stock_search_form div label, #stock_search_form legend {
+  font-weight: bold;
+}
+#stock_search_form label {
+  float: left;
+  width: 8em;
+}
+
+div.paginate_nav {
+  margin: 0 auto;
+  width: 80%;
+  white-space: nowrap;
+  text-align: center;
+}
+</style>
+
+% if( $results ) {
+%   my $pager = $results->pager;
+
+  <&| /page/info_section.mas, title    => 'Search results',
+                              subtitle => 'results '
+                                          .$pager->first
+                                          .'-'.$pager->last
+                                          .' of '.Number::Format->new->format_number($pager->total_entries)
+   &>
+%   if( $results->count ) {
+%		my @data =
+%            map {
+%                my $organism = $_->organism;
+%            [
+%                stock_link($_),
+%                $_->type->name,
+%                $organism ? $organism->species : '',
+%            ] } $results->all;
+
+     <% columnar_table_html(
+            headings => ['Stock Name','Stock Type', 'Organism'],
+            data     => [ @data ],
+        )
+      %>
+%   } else {
+     <h3 style="text-align: center">no matching results found</h3>
+%   }
+  </&>
+
+  <& /page/pagination_control.mas, pager => $pager, link_maker => $pagination_link_maker &>
+% } 
+<&| /page/info_section.mas, title => 'Search' &>
+  <% $form->render %>
+</&>

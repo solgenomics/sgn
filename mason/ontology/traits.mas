@@ -1,0 +1,32 @@
+<%args>
+
+  $roots   => 'Solanaceae phenotype ontology'
+  $db_name => 'SP'
+  $search  => 'traits'
+
+</%args>
+
+
+<&| /page/info_section.mas,
+    title       => 'Search and browse tree of traits',
+    collapsible => 0,
+&>
+  <&| /page/explanation.mas &>
+     Browse trait terms using the expandable tree below, or use the
+     search boxes to find traits by exact ID or by searching their
+     descriptions.
+  </&>
+
+
+<& /ontology/browser.mas,
+   root_nodes => $db_name,
+   db_name    => $db_name,
+   title      => "Search and browse tree of traits",
+   expand => 1,
+ &>
+
+
+
+</&>
+
+

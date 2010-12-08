@@ -33,13 +33,20 @@ $marker
 <%perl>
   my $polymorphisms_html='';
 my $dbh = $marker->{dbh};
-my @displayed_pcr=();
-my $experiments=$marker->experiments();    
+
+my $displayed_experiments = $marker->current_mapping_experiments;
+my @displayed_pcr = map ( $_->{pcr_experiment} , @$displayed_experiments);
+my @displayed_ids;
+foreach my $ex (@displayed_pcr) {
+  push  @displayed_ids, $ex->pcr_experiment_id if $ex;
+}
+
+my $experiments=$marker->experiments();
 if($experiments and @{$experiments}) {
   for my $experiment(@{$experiments}) {
     my $pcr=$experiment->{pcr_experiment};
     my $rflp=$experiment->{rflp_experiment};
-    if($pcr and !grep {$_==$pcr->pcr_experiment_id()} @displayed_pcr) {
+    if($pcr and !grep {$_==$pcr->pcr_experiment_id()} @displayed_ids) {
       my $pcr_bands=$pcr->pcr_bands_hash_of_strings();
       my $digest_bands=$pcr->pcr_digest_bands_hash_of_strings();
       my $pcr_bands_html='';

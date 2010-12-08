@@ -4,7 +4,7 @@ static/documents/tempfiles
 !exists
 !.exists
 _build
-Build
+/Build
 MYMETA.yml
 *.sw?
 test.sh

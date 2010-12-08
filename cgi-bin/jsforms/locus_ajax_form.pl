@@ -57,7 +57,6 @@ sub define_object {
 
 sub store {
     my $self=shift;
-
     my $locus    = $self->get_object();
     my $locus_id = $self->get_object_id();
     my %args     = $self->get_args();
@@ -128,7 +127,6 @@ sub delete {
 sub generate_form {
     my $self = shift;
     my $form_id = 'edit_locus'; # a form_id is required for ajax forms
-
     $self->init_form($form_id) ; ## instantiate static/editable/confirmStore form
 
     my $locus = $self->get_object();

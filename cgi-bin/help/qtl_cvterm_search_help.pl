@@ -15,7 +15,7 @@ my $email = 'sgn-feedback@solgenomics.net';
 print <<EOHTML;
 
 <p>
-The <a href="/search/direct_search.pl?search=cvterm_name">QTL/Trait search</a> returns phenotypic traits that may have qtl data. QTL analysis is performed on the fly.
+The <a href="/search/direct_search.pl?search=qtl">QTL/Trait search</a> returns phenotypic traits that may have qtl data. QTL analysis is performed on the fly.
 </p>
 
 
