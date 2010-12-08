@@ -97,13 +97,13 @@ sub define_object
     $self->set_primary_key("population_id");
     $self->set_owners( $self->get_object()->get_owners() );
     
-    my $cvterm_id = $args{cvterm_id};
-    $cvterm_id =~ s/\D//;
+    my $trait_id = $args{cvterm_id};
+    $trait_id =~ s/\D//;
     
-    if ($cvterm_id) {
-	$self->set_cvterm_id($cvterm_id);
+    if ($trait_id) {
+	$self->set_trait_id($trait_id);
     } else {
-	$c->throw("A cvterm id is missing");
+	$c->throw("A cvterm id argument is missing");
     }
 
 
@@ -223,23 +223,9 @@ EOS
     my $population      = $self->get_object();
     my $population_id   = $self->get_object_id();
     my $population_name = $population->get_name();
-    my $cvterm_id       = $self->get_cvterm_id();
-    
-    my ( $term_obj, $term_name, $term_id );
-
-    if ( $population->get_web_uploaded() )
-    {
-        $term_obj  = CXGN::Phenome::UserTrait->new( $dbh, $cvterm_id );
-        $term_name = $term_obj->get_name();
-        $term_id   = $term_obj->get_user_trait_id();
-    }
-    else
-    {
-        $term_obj  = CXGN::Chado::Cvterm->new( $dbh, $cvterm_id );
-        $term_name = $term_obj->get_cvterm_name();
-        $term_id   = $term_obj->get_cvterm_id();
-    }
-
+    my $term_id         = $self->get_trait_id();
+    my $term_name       = $self->get_trait_name();
+   
     #used to show certain elements to only the proper users
     my $login_user      = $self->get_user();
     my $login_user_id   = $login_user->get_sp_person_id();
@@ -517,26 +503,13 @@ sub store
 sub population_distribution
 {
     my $self      = shift;
-    my $pop_id    = $self->get_object_id();
-    my $cvterm_id = $self->get_cvterm_id();
-    my $dbh       = $self->get_dbh();
+    my $pop_id    = $self->get_object_id();   
     my $pop       = $self->get_object();
     my $pop_name  = $pop->get_name();
-
-    my ( $term_obj, $term_name, $term_id );
+    my $term_name = $self->get_trait_name();
+    my $term_id   = $self->get_trait_id();
+    my $dbh       = $self->get_dbh();
    
-    if ( $pop->get_web_uploaded() )
-    {
-        $term_obj  = CXGN::Phenome::UserTrait->new( $dbh, $cvterm_id );
-        $term_name = $term_obj->get_name();
-        $term_id   = $term_obj->get_user_trait_id();
-    }
-    else
-    {
-        $term_obj  = CXGN::Chado::Cvterm->new( $dbh, $cvterm_id );
-        $term_name = $term_obj->get_cvterm_name();
-        $term_id   = $term_obj->get_cvterm_id();
-    }
 
     my $basepath     = $c->get_conf("basepath");
     my $tempfile_dir = $c->get_conf("tempfiles_subdir");
@@ -658,30 +631,15 @@ qq | Frequency distribution of experimental lines evaluated for $term_name. Bars
 
 sub qtl_plot
 {
-    my $self      = shift;   
-    my $pop_id    = $self->get_object_id();
-    my $cvterm_id = $self->get_cvterm_id();
-    my $dbh       = $self->get_dbh();
-
+    my $self           = shift;       
+    my $dbh            = $self->get_dbh();
+    my $pop_id         = $self->get_object_id();
     my $population     = $self->get_object();
     my $pop_name       = $population->get_name();
     my $mapversion     = $population->mapversion_id();
     my @linkage_groups = $population->linkage_groups();    
-
-    my ( $term_obj, $term_name, $term_id );
-   
-    if ( $population->get_web_uploaded() )
-    {
-        $term_obj  = CXGN::Phenome::UserTrait->new( $dbh, $cvterm_id );
-        $term_name = $term_obj->get_name();
-        $term_id   = $term_obj->get_user_trait_id();
-    }
-    else
-    {
-        $term_obj  = CXGN::Chado::Cvterm->new( $dbh, $cvterm_id );
-        $term_name = $term_obj->get_cvterm_name();
-        $term_id   = $term_obj->get_cvterm_id();
-    }
+    my $term_name      = $self->get_trait_name();
+    my $term_id        = $self->get_trait_id();
 
     my $ac = $population->cvterm_acronym($term_name);
 
@@ -937,28 +895,13 @@ qq | <a href="$image_t_url" title="<a href=$h_marker&amp;qtl=$image_t_url><font 
 
 sub infile_list
 {
-    my $self       = shift;  
+    my $self       = shift; 
+    my $dbh        = $self->get_dbh(); 
     my $pop_id     = $self->get_object_id();
     my $population = $self->get_object();
-    my $cvterm_id  = $self->get_cvterm_id();    
-    my $dbh        = $self->get_dbh();
-    
-    my ( $term_obj, $term_name, $term_id );
-   
-
-    if ( $population->get_web_uploaded() )
-    {
-        $term_obj  = CXGN::Phenome::UserTrait->new( $dbh, $cvterm_id );
-        $term_name = $term_obj->get_name();
-        $term_id   = $term_obj->get_user_trait_id();
-    }
-    else
-    {
-        $term_obj  = CXGN::Chado::Cvterm->new( $dbh, $cvterm_id );
-        $term_name = $term_obj->get_cvterm_name();
-        $term_id   = $term_obj->get_cvterm_id();
-    }
-
+    my $term_name  = $self->get_trait_name();
+    my $term_id    = $self->get_trait_id();
+  
     my $ac = $population->cvterm_acronym($term_name);
 
     my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
@@ -1028,24 +971,10 @@ sub outfile_list
     my $self       = shift;
     my $pop_id     = $self->get_object_id();
     my $population = $self->get_object();
-    my $cvterm_id  = $self->get_cvterm_id();
+    my $term_id    = $self->get_trait_id();
+    my $term_name  = $self->get_trait_name();
     my $dbh        = $self->get_dbh();
-
-    my ( $term_obj, $term_name, $term_id );
-   
-    if ( $population->get_web_uploaded() )
-    {
-        $term_obj  = CXGN::Phenome::UserTrait->new( $dbh, $cvterm_id );
-        $term_name = $term_obj->get_name();
-        $term_id   = $term_obj->get_user_trait_id();
-    }
-    else
-    {
-        $term_obj  = CXGN::Chado::Cvterm->new( $dbh, $cvterm_id );
-        $term_name = $term_obj->get_cvterm_name();
-        $term_id   = $term_obj->get_cvterm_id();
-    }
-
+    
     my $ac = $population->cvterm_acronym($term_name);
 
     my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
@@ -1256,26 +1185,12 @@ sub run_r
 sub permu_file
 {
     my $self       = shift;    
-    my $cvterm_id  = $self->get_cvterm_id();
     my $dbh        = $self->get_dbh();
     my $pop_id     = $self->get_object_id();
     my $population = $self->get_object();
     my $pop_name   = $population->get_name();
-
-    my ( $term_obj, $term_name, $term_id );
-
-    if ( $population->get_web_uploaded() )
-    {
-        $term_obj  = CXGN::Phenome::UserTrait->new( $dbh, $cvterm_id );
-        $term_name = $term_obj->get_name();
-        $term_id   = $term_obj->get_user_trait_id();
-    }
-    else
-    {
-        $term_obj  = CXGN::Chado::Cvterm->new( $dbh, $cvterm_id );
-        $term_name = $term_obj->get_cvterm_name();
-        $term_id   = $term_obj->get_cvterm_id();
-    }
+    my $term_name  = $self->get_trait_name();
+    my $term_id    = $self->get_trait_id();
 
     my $ac = $population->cvterm_acronym($term_name);
 
@@ -1367,29 +1282,15 @@ sub permu_values
 sub qtl_images_exist
 {
     my $self       = shift;
-    my $pop_id     = $self->get_object_id();
-    my $cvterm_id  = $self->get_cvterm_id();
-    my $dbh        = $self->get_dbh();
+    my $pop_id     = $self->get_object_id();    
     my $population = $self->get_object();
     my $pop_name   = $population->get_name();
+    my $term_name  = $self->get_trait_name();
+    my $term_id    = $self->get_trait_id();
+    my $dbh        = $self->get_dbh();
 
     my @linkage_groups = $population->linkage_groups();
     @linkage_groups = sort ( { $a <=> $b } @linkage_groups );
-
-    my ( $term_obj, $term_name, $term_id );
-
-    if ( $population->get_web_uploaded() )
-    {
-        $term_obj  = CXGN::Phenome::UserTrait->new( $dbh, $cvterm_id );
-        $term_name = $term_obj->get_name();
-        $term_id   = $term_obj->get_user_trait_id();
-    }
-    else
-    {
-        $term_obj  = CXGN::Chado::Cvterm->new( $dbh, $cvterm_id );
-        $term_name = $term_obj->get_cvterm_name();
-        $term_id   = $term_obj->get_cvterm_id();
-    }
 
     my $ac = $population->cvterm_acronym($term_name);
 
@@ -1684,7 +1585,7 @@ my $permu_threshold_ref = $self->permu_values();
 
 }
 
-=head2 set_cvterm_id, get_cvterm_id
+=head2 set_trait_id, get_trait_id
 
  Usage:
  Desc: the 'cvterm id' here is not necessarily a cvterm id, 
@@ -1698,12 +1599,54 @@ my $permu_threshold_ref = $self->permu_values();
 
 
 
-sub get_cvterm_id {
+sub get_trait_id {
     my $self = shift;
     return $self->{cvterm_id};
 }
-sub set_cvterm_id {
+sub set_trait_id {
     my $self = shift;
     return $self->{cvterm_id} = shift;
 }
 
+=head2 get_trait_name
+ Usage: my $term_name = $self->get_trait_name()
+ Desc: retrieves the name of the trait whether 
+       it is stored in the user_trait or cvterm table
+ Return: a trait name
+ Args: None
+ Side Effects:
+ Example:
+
+=cut
+sub get_trait_name {
+    my $self        = shift;
+    my $population  = $self->get_object();
+    my $term_id     = $self->get_trait_id();
+    my $dbh         = $c->dbc()->dbh();
+    
+    my ($term_obj, $term_name);
+    if ( $population->get_web_uploaded() )
+    {
+        $term_obj  = CXGN::Phenome::UserTrait->new( $dbh, $term_id );
+        $term_name = $term_obj->get_name();
+        #$term_id   = $term_obj->get_user_trait_id();
+    }
+    else
+    {
+        $term_obj  = CXGN::Chado::Cvterm->new( $dbh, $term_id );
+        $term_name = $term_obj->get_cvterm_name();
+        #$term_id   = $term_obj->get_cvterm_id();
+    }
+
+    return $term_name;
+
+
+}
+
+sub qtl_effects {
+    my $self = shift;
+    my $pop_id = $self->get_object_id();
+    my $trait_id;
+    my $file;
+    
+}
