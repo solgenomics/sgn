@@ -84,6 +84,7 @@ __PACKAGE__->config(
             [qw(
 
                 blast_db_path
+                cluster_shared_tempdir
                 ftpsite_root
                 image_path
                 genefamily_dir

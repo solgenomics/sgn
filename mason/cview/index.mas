@@ -77,19 +77,19 @@ my @maps = $map_factory->get_system_maps();
 my $previous_species = "";
 
 my $d = "";
-foreach my $map (@maps) { 
+my %map_by_species;
+foreach my $map (@maps) {
 
-    my $species = $map->get_common_name();
-    my $long_name = $map->get_long_name();
-    my $short_name = $map->get_short_name();
-    my $id = $map->get_id();
+  my $species = $map->get_common_name();
+  my $long_name = $map->get_long_name();
+  my $short_name = $map->get_short_name();
+  my $id = $map->get_id();
+  push @{$map_by_species{$species} } ,  qq{ <a href="map.pl?map_version_id=$id">$short_name</a>: $long_name\n } ;
+}
 
-    if ($species ne $previous_species) {
-	$previous_species = $species;
-	$d .= "<br /><b>$species</b><br />\n";
-    }
-    
-    $d .= qq{ <a href="map.pl?map_version_id=$id">$short_name</a>: $long_name<br />\n };
+foreach my $s (sort { @{$map_by_species{$a}} <=> @{$map_by_species{$b}} } keys %map_by_species) {
+  $d .= "<br /><br /><b>$s</b><br />\n";
+  $d .= join('<br />' ,  sort @{ $map_by_species{$s} } );
 }
 
 my $submit = qq | <b>[<a href="/content/map_submissions.pl">Submit New Map</a>]</b> |;
@@ -100,20 +100,20 @@ print blue_section_html("Interactive maps", $submit, $d);
 $d = "";
 my @user_maps = $map_factory->get_user_maps();
 foreach my $map (@user_maps) { 
-    my $short_name = $map->get_short_name();
-    my $long_name = $map->get_long_name();
-    my $species = $map->get_common_name();
-    my $person_id = $map->get_sp_person_id();
-    my $person = CXGN::People::Person->new($dbh, $person_id);
-    my $first_name = $person->get_first_name();
-    my $last_name = $person->get_last_name();
-    my $public = $map->get_is_public();
-    my $is_public = "not public";
-    if ($public) { 
-	$is_public="public";
-    }
-	
-	
+  my $short_name = $map->get_short_name();
+  my $long_name = $map->get_long_name();
+  my $species = $map->get_common_name();
+  my $person_id = $map->get_sp_person_id();
+  my $person = CXGN::People::Person->new($dbh, $person_id);
+  my $first_name = $person->get_first_name();
+  my $last_name = $person->get_last_name();
+  my $public = $map->get_is_public();
+  my $is_public = "not public";
+  if ($public) { 
+    $is_public="public";
+  }
+
+
     my $id = $map->get_id();
     $d = qq { <a href="map.pl?map_version_id=$id">$short_name</a>: $long_name (submitted by <a href="/solpeople/personal-info.pl?sp_person_id=$person_id&action=view">$first_name $last_name</a>, $is_public)<br />\n };
 }
