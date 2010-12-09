@@ -1666,9 +1666,10 @@ sub get_trait_name {
 }
 
 sub qtl_effects {
-    my $self = shift;
+    my $self       = shift;
     my $trait_name = $self->get_trait_name();
-        
+    my $pop        = $self->get_object();    
+    
     my $file = $pop->qtl_effects_file($c, $trait_name);
     
     if ( -s $file ) 
