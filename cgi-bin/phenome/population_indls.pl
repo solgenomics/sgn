@@ -49,12 +49,13 @@ use GD::Graph::Map;
 use Statistics::Descriptive;
 use Math::Round::Var;
 use Number::Format;
-use File::Temp qw /tempfile tempdir/;
+use File::Temp qw / tempfile tempdir /;
 use File::Copy;
 use File::Spec;
 use File::Path qw / mkpath /;
 use File::Basename;
 use File::stat;
+use File::Slurp qw / read_file /;
 use Cache::File;
 use Path::Class;
 use Try::Tiny;
@@ -419,7 +420,9 @@ qq { Download population: <span><a href="pop_download.pl?population_id=$populati
         $plot_html .= $summ_data;
 	$plot_html .= qq | </td></tr></table> |;
 	
-	my ( $qtl_image, $legend);
+        
+
+        my ( $qtl_image, $legend);
         
         #using standard deviation of 0.01 as an arbitrary cut off to run
 	#qtl analysis. Probably, need to think of better solution.
@@ -435,11 +438,29 @@ qq { Download population: <span><a href="pop_download.pl?population_id=$populati
   
 	
 	my $qtl_html = qq | <table><tr><td width=70%>$qtl_image</td><td width=30%>$legend</td></tr></table> |;
+        my $qtl_effects_ref = $self->qtl_effects();
+        my $qtl_effects_data;
+        if ($qtl_effects_ref) 
+        {
+            $qtl_effects_data  = columnar_table_html(                                             
+                                              data       => $qtl_effects_ref,
+                                              __alt_freq   => 2,
+                                              __alt_width  => 1,
+                                              __alt_offset => 3,
+                                              __align      => 'l',
+                                            );
+        } else 
+        {
+            $qtl_effects_data = "No significant qtls were predicted for this trait.";
+        }
 
         print info_section_html( 
                                 title    => 'QTL(s)',
                                 contents => $qtl_html, 
                                 );
+       
+        print info_section_html( title    => 'QTL effects ( Interacting QTLs model )',
+                                 contents => $qtl_effects_data );
 
         print info_section_html( 
 	                        title    => 'Phenotype Frequency Distribution',
@@ -481,6 +502,7 @@ qq { Download population: <span><a href="pop_download.pl?population_id=$populati
         print $page_comment_obj->get_html();
     }
 
+   
     $self->get_page()->footer();
 
     exit();
@@ -1646,7 +1668,19 @@ sub get_trait_name {
 sub qtl_effects {
     my $self = shift;
     my $pop_id = $self->get_object_id();
-    my $trait_id;
-    my $file;
+    my $pop    = $self->get_object();
+    my $trait_id = $self->get_trait_id();
+    my $trait_name = $self->get_trait_name();
+        
+    my $file = $pop->qtl_effects_file($c, $trait_name);
     
+    if ( -s $file ) 
+    {
+        my @anova =  map  { [ split( /\t/, $_) ]}  read_file( $file );
+        return \@anova;
+    } else 
+    {
+        return undef;
+    }
+
 }
