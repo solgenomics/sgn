@@ -121,7 +121,7 @@ if (userpermuvalue == "None")
 userpermuvalue<-as.numeric(userpermuvalue)
 
 #####for test only
-userpermuvalue<-c(10)
+userpermuvalue<-c(1000)
 #####
 
 
@@ -473,8 +473,10 @@ for (i in chrdata)
   
   p<-position[["pos"]]
   LodScore<-position[["lod"]]
-  QtlChr<-levels(position[["chr"]]) 
-
+  QtlChr<-levels(position[["chr"]])
+  print("lod score check")
+  print(LodScore)
+  print(LodThreshold)
 if (LodScore >=LodThreshold) {
   QtlChrs<-append(QtlChrs,
                   QtlChr
@@ -513,8 +515,8 @@ if (LodScore >=LodThreshold) {
     }
   
   peakmarker<-c(chrno,
-                   peakmarker
-                  )
+                peakmarker
+                )
  
   if (chrno==1)
     { 
@@ -571,7 +573,8 @@ if ( max(QtlLods) >= LodScore ) {
                      pheno.col=cv,
                      QtlObj,
                      formula=Eq,
-                     method="hk"
+                     method="hk",
+                     get.ests=TRUE
                      )
   summary(QtlEffects)
   Effects<-QtlEffects$ests
