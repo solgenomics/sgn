@@ -21,6 +21,7 @@ use List::MoreUtils qw/ any /;
 use CXGN::Chado::Organism;
 use CXGN::Login;
 use CXGN::Phylo::OrganismTree;
+use CXGN::Page::FormattingHelpers qw | tooltipped_text |;
 
 with 'Catalyst::Component::ApplicationAttribute';
 
@@ -55,6 +56,9 @@ sub view_all :Path('/organism/all/view') :Args(0) {
         template => '/content/sgn_data.mas',
     });
 }
+
+
+
 
 # /organism/set/<set_name>
 sub get_organism_set :Chained('/') :PathPart('organism/set') :CaptureArgs(1) {
@@ -214,6 +218,7 @@ sub autocomplete :Chained('get_organism_set') :PathPart('autocomplete') :Args(0)
                   ->resultset('Organism::Organism');
 #  my $s = $c->stash->{organism_set};
 
+
   my @results = $s->search({ species => { ilike => '%'.$term.'%' }},
                            { rows => 15 },
                           )
@@ -238,6 +243,10 @@ sub find_organism :Chained('/') :PathPart('organism') :CaptureArgs(1) {
         $c->dbic_schema('Bio::Chado::Schema','sgn_chado')
             ->resultset('Organism::Organism')
             ->search_rs({ organism_id => $organism_id });
+
+
+
+
 }
 
 =head2 view_organism
@@ -249,13 +258,83 @@ to the legacy /chado/organism.pl.
 
 =cut
 
-sub view_organism :Chained('find_organism') :PathPart('view') {
+sub view_organism :Chained('find_organism') :PathPart('view') :Args(0) {
     my ( $self, $c ) = @_;
+    
+    my $self = shift;
+    my $c = shift;
 
-    if( my $id = $c->stash->{organism_id} ) {
-        $c->res->redirect("/chado/organism.pl?organism_id=$id", 302 );
+
+    if (scalar($c->stash->{organism_rs}->all())==0) { 
+	$c->stash()->{template} = '/site/error/exception.mas';
+	$c->stash()->{exception} = SGN::Exception->new( title=>'Organism id '.($c->stash->{organism_id}).' does not exist', public_message=>'The specified organism identifer does not exist. Sorry', notify=>0, is_server_error=>0);
+	return;
     }
-}
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $organism = CXGN::Chado::Organism->new($schema, $c->stash->{organism_id});
+
+    $c->stash->{organism_name} = $c->stash->{organism_rs}->first()->species();
+    $c->stash->{genus} = $c->stash->{organism_rs}->first()->genus();
+    $c->stash->{common_name} = lc($c->stash->{organism_rs}->first()->common_name());
+    $c->stash->{comment} = $c->stash->{organism_rs}->first()->comment();
+    
+    my $organismprop_rs = $schema->resultset('Organism::Organismprop')->search( { organism_id=>$c->stash->{organism_id} });
+    
+    
+    @{$c->stash->{synonyms}} = $organism->get_synonyms();
+
+    $c->stash->{taxonomy} = get_parentage($organism); 
+
+    my $accessions;
+    my @dbxrefs = $organism->get_dbxrefs();
+    my $solcyc_link;
+    
+    foreach my $dbxref (@dbxrefs) {
+	my $accession = $dbxref->accession();
+	my ($db)      = $dbxref->search_related("db");
+	my $db_name   = $db->name();
+	my $full_url  = $db->urlprefix . $db->url();
+	
+	if ( $db_name =~ m/(DB:)(.*)/ ) {
+	    $db_name = $2;
+	    $db_name =~ s/_/ /g;
+	    
+	    $accessions .=
+		qq|<a href= "$full_url$accession">$db_name ID: $accession</a ><br />|;
+	}
+	if ( $db_name eq 'SolCyc_by_species' ) {
+	    my $solcyc = $accession;
+	    $solcyc =~ s/\///g;
+	    $solcyc =~ s/$solcyc/\u\L$solcyc/g;
+	    $solcyc      = $solcyc . "Cyc";
+	    $solcyc_link = "See <a href=\"$full_url$accession\">$solcyc</a>";
+	}
+    }
+    
+    my $na      = qq| <span class="ghosted">N/A</span> |;
+    $c->stash->{ploidy} = $organism->get_ploidy() || $na;
+    $c->stash->{genome_size} = $organism->get_genome_size() || $na;
+    $c->stash->{chromosome_number} = $organism->get_chromosome_number() || $na;
+
+    
+
+}								         
+
+##this should be an Ajax editable div
+#    my $description =
+#	CXGN::Tools::Text::format_field_text( $organism->get_comment() )
+#	;    #the description was copied from sgn_organism to the comment field
+##
+    
+#    my @synonyms = $organism->get_synonyms();
+   
+
+
+
+#    if( my $id = $c->stash->{organism_id} ) {
+#        $c->res->redirect("/chado/organism.pl?organism_id=$id", 302 );
+#    }
 
 
 =head1 ATTRIBUTES
@@ -516,6 +595,60 @@ sub _render_organism_tree {
         return;
     }
 }
+
+
+=head2 qtl_populations
+
+ Usage: my @qtl_data = qtl_populations($common_name);
+ Desc:  returns a list of qtl populations (hyperlinked to the pop page) 
+        and counts of traits assayed for QTL for the corresponding population
+ Ret: an array of array of populations and trait counts or undef
+ Args: organism group common name
+ Side Effects:
+ Example:
+
+=cut
+
+
+
+sub qtl_populations { 
+    my $gr_common_name = shift;
+    my $qtl_tool       = CXGN::Phenome::Qtl::Tools->new();
+    my @org_pops       = $qtl_tool->qtl_pops_by_common_name($gr_common_name);
+    my @pop_data;
+    
+    if (@org_pops) {
+	foreach my $org_pop (@org_pops) {
+	    my $pop_id   = $org_pop->get_population_id();
+	    my $pop_name = $org_pop->get_name();
+	    my $pop_link = qq |<a href="/phenome/population.pl?population_id=$pop_id">$pop_name</a>|;
+	    my @traits   = $org_pop->get_cvterms();
+	    my $count    = scalar(@traits);
+	    
+	    push @pop_data, [ map { $_ } ( $pop_link, $count ) ];
+	}
+
+    }
+    return @pop_data;
+}
+
+sub get_parentage {
+
+    my $organism = shift;
+    my $parent   = $organism->get_parent();
+
+    my $taxonomy;
+    if ($parent) {
+        my $species = $parent->get_species();
+        my $taxon   = $parent->get_taxon();
+        my $comma   = ", " if $parent->get_parent() || '';
+        $taxonomy = $comma . tooltipped_text( $species, $taxon ) . $taxonomy;
+        $taxonomy = get_parentage($parent);
+    }
+    return $taxonomy;
+}
+
+
 
 
 __PACKAGE__->meta->make_immutable;
