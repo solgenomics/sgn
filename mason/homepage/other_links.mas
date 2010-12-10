@@ -3,7 +3,7 @@
 use strict;
 use CXGN::Tools::File;
 
-my $documents_folder = $c->get_conf('basepath')."/documents";
+my $documents_folder = $c->get_conf('homepage_files_dir');
 
 my $OTHER_LINKS=CXGN::Tools::File::read_commented_file("$documents_folder/other_links.txt");
 
