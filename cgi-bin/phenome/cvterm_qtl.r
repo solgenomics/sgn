@@ -121,7 +121,7 @@ if (userpermuvalue == "None")
 userpermuvalue<-as.numeric(userpermuvalue)
 
 #####for test only
-userpermuvalue<-c(1000)
+userpermuvalue<-c(100)
 #####
 
 
@@ -474,9 +474,7 @@ for (i in chrdata)
   p<-position[["pos"]]
   LodScore<-position[["lod"]]
   QtlChr<-levels(position[["chr"]])
-  print("lod score check")
-  print(LodScore)
-  print(LodThreshold)
+
 if (LodScore >=LodThreshold) {
   QtlChrs<-append(QtlChrs,
                   QtlChr
@@ -543,7 +541,8 @@ chrno<-chrno + 1;
 }
 
 ##########QTL EFFECTS ##############
-if ( max(QtlLods) >= LodScore ) {
+if ( max(QtlLods) >= LodScore )
+{
   QtlObj<-makeqtl(popdata,
                 QtlChrs,
                 QtlPositions,
@@ -561,47 +560,61 @@ if ( max(QtlLods) >= LodScore ) {
   
     if (i==1) {  
       Eq<-paste(Eq, q, sep="")
+      
     }else
     if (i>1) {
       Eq<-paste(Eq, q, sep="*")
+     
     }
   }
-
-  print(Eq)
 
   QtlEffects<-fitqtl(popdata,
                      pheno.col=cv,
                      QtlObj,
                      formula=Eq,
-                     method="hk",
+                     method="hk",                   
                      get.ests=TRUE
                      )
-  summary(QtlEffects)
+  ResultModel<-attr(QtlEffects,
+                    "formula"
+                    )
+ 
   Effects<-QtlEffects$ests
   QtlLodAnova<-QtlEffects$lod
-  ResultFull<-QtlEffects$resutl.full
+  ResultFull<-QtlEffects$result.full
+  
   ResultDrop<-QtlEffects$result.drop
-  print("Effects")
-  print(Effects)
+  #print("Effects")
+  #print(Effects)
   print("lod")
   print(QtlLodAnova)
   print("result full")
   print(ResultFull)
   print("result drop")
   print(ResultDrop)
+ # print("Model")
+ # print(ResultModel)
+
+  if (is.numeric(ResultFull)) {
+    ResultFull<-round(ResultFull,
+                      2
+                      )
+   # ResultFull<-rbind(ResultFull,
+   #                   ResultModel
+   #                   )
+  }
 
   if (is.numeric(ResultDrop)) {
     ResultDrop<-round(ResultDrop,
                       2
                       )
+   # ResultDrop<-rbind(ResultDrop,
+   #                   ResultModel
+   #                   )
   }
-  
-} else
-{
- print("no Qtls for this trait")
- ResultDrop<-c(0)
 }
-##########QTL EFFECTS ##############
+
+##########creating vectors for the outfiles##############
 
 outfiles<-scan(file=outfile,
                what="character"
@@ -632,8 +645,9 @@ QtlEffectsFile<-grep("qtl_effects",
                  ignore.case=TRUE,
                  fixed = FALSE,
                  value=TRUE
-                 )    
-print(QtlEffectsFile)
+                 )
+
+##### writing outputs to their respective files
 
 write.table(datasummary,
             file=qtlfile,
@@ -658,13 +672,25 @@ write.table(lodconfidenceints,
             quote=FALSE,
             append=FALSE
             )
-write.table(ResultDrop,
-            file=QtlEffectsFile,
-            sep="\t",
-            col.names=NA,
-            quote=FALSE,
-            append=FALSE
-            )
+
+if (is.null(ResultDrop)==FALSE) {
+  write.table(ResultDrop,
+              file=QtlEffectsFile,
+              sep="\t",
+              col.names=NA,
+              quote=FALSE,
+              append=FALSE
+              )
+} else
+{
+  write.table(ResultFull,
+              file=QtlEffectsFile,
+              sep="\t",
+              col.names=NA,
+              quote=FALSE,
+              append=FALSE
+              )
+}
 
 if (userpermuvalue != 0)
 {
