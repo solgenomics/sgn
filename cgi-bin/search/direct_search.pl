@@ -39,6 +39,7 @@ my @tabfuncs = (
 #get the search type
 my ($search) = $page -> get_arguments("search");
 $search ||= 'unigene'; #default
+if ($search eq 'cvterm_name') { $search = 'qtl';}
 
 my $tabsel =
     ($search =~ /loci/i)           ? 0
@@ -196,7 +197,8 @@ sub phenotype_submenu {
         #get the search type
         my ($search) = $page->get_arguments("search");
         $search ||= 'phenotypes'; #default
-
+        if ($search eq 'cvterm_name') { $search = 'qtl';}
+        
         my $tabsel =
           ($search=~ /phenotypes/i)          ? 0
           : ($search =~ /qtl/i)   ? 1

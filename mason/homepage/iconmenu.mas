@@ -143,8 +143,8 @@ pages.
 
    		<ul>
         	  <div class="submenu MapsMarkersSubMenu">
-		    <li><a href="http://solgenomics.net/cview/index.pl">Available maps</a></li>
-                    <li><a href="http://solgenomics.net/cview/view_chromosome.pl?show_offsets=1&show_ruler=1&show_offsets=1">Comparative viewer</a></li>
+		    <li><a href="/cview/index.pl">Available maps</a></li>
+                    <li><a href="/cview/view_chromosome.pl?show_offsets=1&show_ruler=1&show_offsets=1">Comparative viewer</a></li>
                     <li><a href="/search/markers/markersearch.pl">Search markers</a></li>
 		    <li><a href="">&nbsp;</a></li>
 		    <li><a href="/content/map_submissions.pl">Submit map information to SGN</a></li>
