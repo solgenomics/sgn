@@ -18,13 +18,6 @@ package Bio::SecreTary::TMpred;
 use strict;
 use warnings;
 
-use Inline C => <<'END';
-
-void hollowerld(){
-    printf("Hollow erld\n");
-}
-END
-
 use IO::File;
 use File::Temp;
 use CGI ();
@@ -98,8 +91,6 @@ sub new {
         $aa_row_hash{ $aa_array[$i] } = $i;
     }
     $self->set_aa_row_hash( \%aa_row_hash );
-
-    hollowerld();
 
     return $self;
 }
