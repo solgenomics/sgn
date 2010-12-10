@@ -597,7 +597,7 @@ sub sequencing_content {
 
             if ( $sequencing_files{seq} ) {
                 $dl_links .= <<EOHTML
-    <a href="clone_annot_download.pl?id=$clone_id&amp;annot_set=all&amp;annot_format=seq">[Download fasta]</a><br />
+    <a href="/genomic/clone/$clone_id/annotation/download?set=all;format=seq">[Download fasta]</a><br />
 EOHTML
 
             }
@@ -605,7 +605,7 @@ EOHTML
                 my $tarsize =
                   sprintf( "%0.2f", ( -s $sequencing_files{tar} ) / 1_000_000 );
                 $dl_links .= <<EOHTML
-    <a href="clone_annot_download.pl?id=$clone_id&amp;annot_set=all&amp;annot_format=tar">[Download full submission]</a> ($tarsize MB)
+    <a href="/genomic/clone/$clone_id/annotation/download?set=all;format=tar">[Download full submission]</a> ($tarsize MB)
 EOHTML
 
             }
