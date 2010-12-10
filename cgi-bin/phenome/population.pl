@@ -446,7 +446,7 @@ EOS
          || $login_user_id == $population->get_sp_person_id()
        )
     {
-        if (-e $population->phenotype_file($c))
+        if (-s $population->phenotype_file($c))
         {
             my $correlation_data = $self->display_correlation();
 
