@@ -1,7 +1,7 @@
-<div class="boxbgcolor5">The SOL Genomics Network is a Clade Oriented Database (COD) containing genomic, genetic, phenotypic and taxonomic information for species in the Euasterid clade, including the families <a href="/about/about_solanaceae.pl">Solanaceae</a> (e.g. tomato, potato, eggplant, pepper, petunia) and Rubiaceae (<a href="/content/coffee.pl">coffee</a>). 
+<div class="boxbgcolor5">The SOL Genomics Network (SGN) is a Clade Oriented Database (COD) containing genomic, genetic, phenotypic and taxonomic information for species in the Euasterid clade, including the families <a href="/about/about_solanaceae.pl">Solanaceae</a> (e.g. tomato, potato, eggplant, pepper, petunia) and Rubiaceae (<a href="/content/coffee.pl">coffee</a>). 
 Genomic information is presented in a comparative format and tied to other important plant model species such as Arabidopsis. SGN is also one of the bioinformatics centers involved in tomato genome sequencing.<br />
 <br />
-SGN is a <b>community curated</b> database. This means that you can contribute annotations to genes and phenotypes by becoming a <a href="/phenome/">locus editor</a>. Contributions by the community help keep the information up to date and correct.
+SGN is a <b>community curated</b> database. This means that you can contribute annotations to genes and phenotypes by becoming a <a href="/phenome/">locus editor</a>. You can also upload, analyze and share your <a href="/qtl/">QTL data</a>. Contributions by members of the community like you help keep the information in the database up to date and correct.
 <ul>
 <li><div class="subheading"><a class="creativitylinks" href="/about/index.pl">About SGN </a></div></li>
 <li><div class="subheading"><a class="creativitylinks" href="/content/sgn_data.pl">Species in the SGN database</a></div></li>
