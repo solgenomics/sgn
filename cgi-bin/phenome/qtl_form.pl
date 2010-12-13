@@ -543,6 +543,7 @@ sub intro {
            <li>Phenotype data file (tab delimited): 
            <li>Genotype data file (tab delimited): 
            <li>Statistical parameters.
+           <li><i>Markers with their sequences need to be already in SGN</i>.
         </ul>
 
         <p> Please read the submission $guide before starting to upload your data.
