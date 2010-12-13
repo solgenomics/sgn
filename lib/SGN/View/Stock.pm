@@ -4,7 +4,8 @@ use strict;
 use warnings;
 
 our @EXPORT_OK = qw/
-    stock_link organism_link
+    stock_link organism_link cvterm_link
+    stock_table related_stats
     /;
 
 
@@ -35,6 +36,37 @@ sub cvterm_link {
 }
 
 
+sub stock_table {
+    my ($stocks) = @_;
+    my $data = [];
+    for my $s (@$stocks) {
+        # Add a row for every stock
+        push @$data, [
+            cvterm_link($s),
+            stock_link($s),
+
+        ];
+    }
+    return $data;
+}
+
+
+sub related_stats {
+    my ($stocks) = @_;
+    my $stats = { };
+    my $total = scalar @$stocks;
+    for my $s (@$stocks) {
+            $stats->{cvterm_link($s)}++;
+    }
+    my $data = [ ];
+    for my $k (sort keys %$stats) {
+        push @$data, [ $stats->{$k}, $k ];
+    }
+    if( 1 < scalar keys %$stats ) {
+        push @$data, [ $total, "<b>Total</b>" ];
+    }
+    return $data;
+}
 
 ######
 1;

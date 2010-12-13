@@ -1,0 +1,89 @@
+<%doc>
+=head1 NAME
+
+related_stocks.mas
+
+=head1 DESCRIPTION
+
+This component can print related stocks from the stock_relationship table
+
+
+=head1 ARGUMENTS
+
+=over 1
+
+=item stock
+a Bio::Chado::Schema::Stock::Stock object
+
+
+=back
+
+=head1 AUTHOR
+Naama Menda <nm249@cornell.edu>
+
+
+=cut
+
+</%doc>
+
+<%args>
+  $stock
+
+</%args>
+<%once>
+    use SGN::View::Stock qw/ cvterm_link stock_table related_stats/;
+</%once>
+<%init>
+    # make a hash of relationship_type => {
+    #    upstream   => \@list_of_features,
+    #    downstream => \@list_of_features,
+    # }
+    my %rels;
+    push @{$rels{$_->[0]}{$_->[1]}}, $_->[2] for (
+         ( map [ cvterm_link($_), 'downstream', $_->subject ], $stock->stock_relationship_objects  ),
+         ( map [ cvterm_link($_), 'upstream',   $_->object  ], $stock->stock_relationship_subjects ),
+        );
+
+    my $stype = $stock->type->name;
+
+</%init>
+
+%  for my $reltype ( sort keys %rels ) {
+%    my $updown = $rels{$reltype};
+%       for my $direction ( 'upstream', 'downstream' ) {
+%         if( my $stocks = $updown->{$direction} ) {
+            <& .relatedstocks, reltype => $reltype, direction => $direction, stocks => $stocks, stype => $stype &>
+%         }
+%       }
+%  }
+
+<%def .relatedstocks>
+<%args>
+ $reltype
+ $direction
+ $stocks
+ $stype
+
+</%args>
+
+<&| /page/info_section.mas,
+   title => $direction eq 'upstream' ? qq|This $stype $reltype| : qq|Stocks that belong to this $stype|,
+   is_subsection => 1,
+&>
+%   if( @$stocks > 4 ) {
+     <& /page/columnar_table.mas,
+         __tableattrs => 'summary="Stock summary" cellspacing="0" style="margin-bottom: 0.5em"',
+         data         => related_stats($stocks),
+         __caption    => 'Summary',
+         __border     => 1,
+      &>
+%   }
+
+<& /page/columnar_table.mas,
+  headings => [ "Type", "Name" ],
+  data     => stock_table($stocks),
+  &>
+
+</&>
+
+</%def>
