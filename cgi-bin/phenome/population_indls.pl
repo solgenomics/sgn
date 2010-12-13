@@ -1673,9 +1673,8 @@ sub legend {
 	    }
 	}
     }
-
-    
-my $permu_threshold_ref = $self->permu_values();
+   
+    my $permu_threshold_ref = $self->permu_values();
     my %permu_threshold     = %$permu_threshold_ref;
 
     my @keys;
