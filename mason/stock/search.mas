@@ -1,40 +1,29 @@
 <%args>
   $results => undef
-  $form
-  $pagination_link_maker
+  $form_opts => undef
+  $pagination_link_maker => undef
+  $request => undef
+  $schema => undef
 </%args>
+
 <%once>
   use Number::Format;
   use CXGN::Page::FormattingHelpers qw/ columnar_table_html /;
-  use SGN::View::Stock qw/stock_link/;
+  use SGN::View::Stock qw/stock_link stock_organisms stock_types /;
 </%once>
+
+<%perl>
+
+$form_opts = { stock_types => stock_types($schema), organisms=>stock_organisms($schema)}
+if (!$form_opts) ;
+
+</%perl>
+
 <& /page/page_title.mas, title => 'Stock Search' &>
 <& /util/import_javascript.mas,
     classes => [qw(jquery CXGN.Effects)]
 &>
 
-<!-- This CSS should probably go somewhere better -->
-<style>
-#stock_search_form .select span span {
-  white-space: nowrap;
-  float: left;
-  width: 10em;
-}
-#stock_search_form div label, #stock_search_form legend {
-  font-weight: bold;
-}
-#stock_search_form label {
-  float: left;
-  width: 8em;
-}
-
-div.paginate_nav {
-  margin: 0 auto;
-  width: 80%;
-  white-space: nowrap;
-  text-align: center;
-}
-</style>
 
 % if( $results ) {
 %   my $pager = $results->pager;
@@ -66,7 +55,7 @@ div.paginate_nav {
   </&>
 
   <& /page/pagination_control.mas, pager => $pager, link_maker => $pagination_link_maker &>
-% } 
+% }
 <&| /page/info_section.mas, title => 'Search' &>
-  <% $form->render %>
+  <& /stock/stock_search_form.mas, opts => $form_opts, request => $request &>
 </&>

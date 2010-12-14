@@ -6,6 +6,7 @@ use warnings;
 our @EXPORT_OK = qw/
     stock_link organism_link cvterm_link
     stock_table related_stats
+    stock_organisms stock_types
     /;
 
 
@@ -68,6 +69,42 @@ sub related_stats {
     return $data;
 }
 
+
+sub stock_organisms {
+    my ($schema) = @_;
+    return [
+        [ 0, '' ],
+        map [ $_->organism_id, $_->species ],
+        $schema
+             ->resultset('Stock::Stock')
+             ->search_related('organism' , {}, {
+                 select   => [qw[ organism.organism_id species ]],
+                 distinct => 1,
+                 order_by => 'species',
+               })
+    ];
+}
+
+sub stock_types {
+    my ($schema) = @_;
+
+    my $ref = [
+        map [$_->cvterm_id,$_->name],
+        $schema
+    ->resultset('Stock::Stock')
+    ->search_related(
+        'type',
+        {},
+        { select => [qw[ cvterm_id type.name ]],
+          group_by => [qw[ cvterm_id type.name ]],
+          order_by => 'type.name',
+        },
+    )
+    ];
+    # add an empty option 
+    unshift @$ref , ['0', ''];
+    return $ref;
+}
 ######
 1;
 ######

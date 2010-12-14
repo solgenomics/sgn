@@ -9,12 +9,10 @@ SGN::Controller::Stock - Catalyst controller for pages dealing with stocks (e.g.
 use Moose;
 use namespace::autoclean;
 
-use HTML::FormFu;
 use URI::FromHash 'uri';
-use YAML::Any;
 
 use CXGN::Chado::Stock;
-use SGN::View::Stock qw/stock_link/;
+use SGN::View::Stock qw/stock_link stock_organisms stock_types/;
 
 has 'schema' => (
 is => 'rw',
@@ -45,77 +43,30 @@ sub search :Path('/stock/search') Args(0) {
     $self->schema( $c->dbic_schema('Bio::Chado::Schema','sgn_chado') );
 
     my $req = $c->req;
-    my $form = $self->_build_form;
-
-    $form->process( $req );
 
     my $results;
-    if( $form->submitted_and_valid ) {
-        $results = $self->_make_stock_search_rs( $c, $form );
-    }
+    $results = $self->_make_stock_search_rs( $c, $req ) if $req->param('submit');
 
     $c->stash(
         template => '/stock/search.mas',
-
-        form     => $form,
+        request => $req,
+        form_opts    => { stock_types=>stock_types($self->schema), organisms=>stock_organisms($self->schema)} ,
         results  => $results,
         pagination_link_maker => sub {
-            return uri( query => { %{$form->params}, page => shift } );
+            return uri( query => { %{$req}, page => shift } );
         },
     );
 }
 
 
-sub _build_form {
-    my ($self) = @_;
-
-    my $form = HTML::FormFu->new(Load(<<EOY));
-      method: POST
-      attributes:
-        name: stock_search_form
-        id: stock_search_form
-      elements:
-          - type: Text
-            name: stock_name
-            label: Stock name
-            size: 30
-
-          - type: Select
-            name: stock_type
-            label: Stock type
-
-          - type: Select
-            name: organism
-            label: Organism
-
-        # hidden form values for page and page size
-          - type: Hidden
-            name: page
-            value: 1
-
-          - type: Hidden
-            name: page_size
-            default: 20
-
-          - type: Submit
-            name: submit
-EOY
-
-    # set the stock type multi-select choices from the db
-    $form->get_element({ name => 'stock_type'})->options( $self->_stock_types );
-    $form->get_element({ name => 'organism'})->options( $self->_organisms );
-
-    return $form;
-}
-
 # assembles a DBIC resultset for the search based on the submitted
 # form values
 sub _make_stock_search_rs {
-    my ( $self, $c, $form ) = @_;
+    my ( $self, $c, $req ) = @_;
 
     my $rs = $self->schema->resultset('Stock::Stock');
 
-    if( my $name = $form->param_value('stock_name') ) {
+    if( my $name = $req->param('stock_name') ) {
         $rs = $rs->search({
                 -or => [
                     'lower(name)' => { like => '%'.lc( $name ).'%' } ,
@@ -123,61 +74,26 @@ sub _make_stock_search_rs {
                 ],
             });
     }
-    if( my $type = $form->param_value('stock_type') ) {
+    if( my $type = $req->param('stock_type') ) {
         $self->_validate_pair($c,'type_id',$type);
         $rs = $rs->search({ 'type_id' => $type });
     }
 
-    if( my $organism = $form->param_value('organism') ) {
+    if( my $organism = $req->param('organism') ) {
         $self->_validate_pair( $c, 'organism_id', $organism );
         $rs = $rs->search({ 'organism_id' => $organism });
     }
 
     # page number and page size, and order by species name
     $rs = $rs->search( undef, {
-            page => $form->param_value('page')      || 1,
-            rows => $form->param_value('page_size') || $self->default_page_size,
+            page => $req->param('page')      || 1,
+            rows => $req->param('page_size') || $self->default_page_size,
             order_by => 'name',
     });
 
     return $rs;
 }
 
-sub _organisms {
-    my ($self) = @_;
-    return [
-        [ 0, 'any' ],
-        map [ $_->organism_id, $_->species ],
-        $self->schema
-             ->resultset('Stock::Stock')
-             ->search_related('organism' , {}, {
-                 select   => [qw[ organism.organism_id species ]],
-                 distinct => 1,
-                 order_by => 'species',
-               })
-    ];
-}
-
-sub _stock_types {
-    my ($self) = @_;
-
-    my $ref = [
-        map [$_->cvterm_id,$_->name],
-        $self->schema
-    ->resultset('Stock::Stock')
-    ->search_related(
-        'type',
-        {},
-        { select => [qw[ cvterm_id type.name ]],
-          group_by => [qw[ cvterm_id type.name ]],
-          order_by => 'type.name',
-        },
-    )
-    ];
-    # add an empty option 
-    unshift @$ref , ['0', 'any'];
-    return $ref;
-}
 
 sub view_id :Path('/stock/view/id') :Args(1) {
     my ( $self, $c , $stock_id) = @_;
