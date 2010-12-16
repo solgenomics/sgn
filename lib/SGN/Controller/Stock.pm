@@ -65,14 +65,27 @@ sub _make_stock_search_rs {
     my ( $self, $c, $req ) = @_;
 
     my $rs = $self->schema->resultset('Stock::Stock');
+    my $rs_synonyms;
 
     if( my $name = $req->param('stock_name') ) {
         $rs = $rs->search({
-                -or => [
-                    'lower(name)' => { like => '%'.lc( $name ).'%' } ,
-                    'lower(uniquename)' => { like => '%'.lc( $name ).'%' },
-                ],
-            });
+            -or => [
+                 'lower(me.name)' => { like => '%'.lc( $name ).'%' } ,
+                 'lower(uniquename)' => { like => '%'.lc( $name ).'%' },
+              #   -and => [
+              #       'lower(type.name)' => { like =>'%synonym%' },
+              #       'lower(value)' => { like =>'%'.lc( $name ).'%' },
+              #   ],
+              #  ], },
+              #            {  join => { 'stockprops' => 'type' } },
+                ], } ,
+            );
+        #add the stockprop values here
+        $rs_synonyms =  $self->schema->resultset('Cv::Cvterm')->search( {
+            'lower(me.name)' => { like =>'%synonym%' } , } )->search_related('stockprops', {
+                'lower(value)' => { like =>'%'.lc( $name ).'%' } , } )->
+                    search_related('stock');
+
     }
     if( my $type = $req->param('stock_type') ) {
         $self->_validate_pair($c,'type_id',$type);
@@ -84,13 +97,12 @@ sub _make_stock_search_rs {
         $rs = $rs->search({ 'organism_id' => $organism });
     }
 
-    # page number and page size, and order by species name
+    # page number and page size, and order by name
     $rs = $rs->search( undef, {
-            page => $req->param('page')      || 1,
-            rows => $req->param('page_size') || $self->default_page_size,
-            order_by => 'name',
-    });
-
+        page => $req->param('page')      || 1,
+        rows => $req->param('page_size') || $self->default_page_size,
+        order_by => 'name',
+                       });
     return $rs;
 }
 
@@ -149,12 +161,15 @@ sub _view_stock {
     }
 
     ####################
-    my $image_ids = $self->_stock_images($stock);
+    my $props = $self->_stockprops($stock);
+    my $image_ids = $props->{'sgn image_id'} || [] ;
+
     my $is_owner;
-    my $owner_ids = $self->_stock_owners($stock);
+    my $owner_ids = $props->{sp_perons_id} || [] ;
     if ( $stock && ($curator || $person_id && ( grep /^$person_id$/, @$owner_ids ) ) ) {
         $is_owner = 1;
     }
+
     ################
     $c->stash(
         template => '/stock/index.mas',
@@ -168,37 +183,23 @@ sub _view_stock {
             stock     => $stock,
             schema    => $self->schema,
             dbh       => $dbh,
-            image_ids => $image_ids,
             is_owner  => $is_owner,
+            props     => $props,
         },
        );
 }
 
-sub _stock_images {
+sub _stockprops {
     my ($self,$stock) = @_;
-    my $image_id_type_id = $self->schema->resultset("Cv::Cvterm")->search( { name => 'sgn image_id' }, )->get_column('cvterm_id')->first
-        or return [];
-    my $image_stockprops = $stock->get_object_row()->search_related("stockprops" , { type_id => $image_id_type_id }  );
 
-    my @image_ids ;
-    while ( my $ip =  $image_stockprops->next ) {
-        push @image_ids, $ip->value ;
+
+    my $stockprops = $stock->get_object_row()->search_related("stockprops");
+
+    my $properties ;
+    while ( my $prop =  $stockprops->next ) {
+        push @{ $properties->{$prop->type->name} } ,   $prop->value ;
     }
-    return \@image_ids;
-}
-
-
-sub _stock_owners {
-    my ($self,$stock) = @_;
-    my $person_id_type_id = $self->schema->resultset("Cv::Cvterm")->search( { name => 'sp_person_id' }, )->get_column('cvterm_id')->first
-        or return [];
-    my $person_stockprops = $stock->get_object_row()->search_related("stockprops" , { type_id => $person_id_type_id }  );
-
-    my @owner_ids ;
-    while ( my $pp =  $person_stockprops->next ) {
-        push @owner_ids, $pp->value ;
-    }
-    return \@owner_ids;
+    return $properties;
 }
 ######
 1;
