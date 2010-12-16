@@ -21,7 +21,7 @@ a hashref with all the parameters needed for printing the stock page!
  $stockref->{curator}  (boolean)
  $stockref->{submitter} (boolean)
  $stockref->{is_owner} (boolean)
-
+ $stockref->{props} (hash of arrayrefs of stockprops. Keys = prop name, value = prop value)
 =back
 
 =head1 AUTHOR
@@ -72,9 +72,18 @@ my $is_owner = $stockref->{is_owner};
 
 my $this_page = "/stock/view/id/$stock_id";
 
-my $add_image_link;
-my $image_ids =  $stockref->{image_ids};
+my $add_image_link = qq|<a href="/image/add?type_id=$stock_id&action=new&type=stock&refering_page=/stock/view/id/$stock_id">[Add new image]</a>|;
+my $image_ids =  $stockref->{props}->{'sgn image_id'} || [] ;
 
+my $metadata = ['variety', 'donor', 'donor institute', 'country', 'state' , 'adaptation' , 'notes'];
+my $pedigree = ['pedigree', 'male parent', 'female parent'];
+my $experimet = ['experiment','year', 'location', 'replicate'];
+my $resources = ['solcap number' , 'synonym'];
+
+my $synonyms = $stockref->{props}->{synonym} || [];
+#tgrc (stock_dbxref)
+#sgn_allele_id
+#owner
 
 </%perl>
 
@@ -95,6 +104,13 @@ my $image_ids =  $stockref->{image_ids};
 
   <& /page/form.mas, object_type=>'stock', object_id=>"$stock_id", form_name=> 'stock_form', server_side_script => '/phenome/stock/stock_ajax_form.pl', form_div_name=>'stock_details', js_object_name=> 'stockForm', page_url => '/stock/view/id' , alternate_new_button => '<a href ="/stock/view/new">[New]</a>' &>
 
+    <&| /page/info_section.mas, title => "Synonyms" , is_subsection => 1 &>
+% print join (',' , @$synonyms);
+</&>
+
+    <&| /page/info_section.mas, title => "Additional information" , is_subsection => 1 &>
+      <& /stock/stockprops.mas, props=> $stockref->{props}, print=> $metadata  &>
+</&>
 </&>
 
 
@@ -105,10 +121,14 @@ my $image_ids =  $stockref->{image_ids};
 
 % }
 
+% if ($type) {
 <&| /page/info_section.mas, title=>"Related stocks" , collapsible=>1, collapsed=>0 &>
   <& /stock/related_stocks.mas, stock => $stock->get_object_row &>
 
 </&>
+
+% }
+
 
 <&| /page/info_section.mas, title=>"images (" .  scalar(@$image_ids)  . ")", subtitle => "$add_image_link", collapsible=>1, collapsed=>1 &>
   <& /image/print_images.mas , images=>$image_ids , dbh=>$dbh &>
