@@ -105,6 +105,10 @@ my $image_ids =  $stockref->{image_ids};
 
 % }
 
+<&| /page/info_section.mas, title=>"Related stocks" , collapsible=>1, collapsed=>0 &>
+  <& /stock/related_stocks.mas, stock => $stock->get_object_row &>
+
+</&>
 
 <&| /page/info_section.mas, title=>"images (" .  scalar(@$image_ids)  . ")", subtitle => "$add_image_link", collapsible=>1, collapsed=>1 &>
   <& /image/print_images.mas , images=>$image_ids , dbh=>$dbh &>

@@ -530,8 +530,8 @@ sub intro {
 	<tr><td>
 	   
         <p>The uploading of QTL data needs to be done in one session. 
-           Therefore, have ready your data files before starting the 
-           process.
+           Therefore, prepare your data files in the required format before starting the 
+           process.  Please read the submission $guide.
         </p> 
         
         <p>The data you need are:</p>
@@ -543,10 +543,10 @@ sub intro {
            <li>Phenotype data file (tab delimited): 
            <li>Genotype data file (tab delimited): 
            <li>Statistical parameters.
+           <li><i>Markers with their sequences need to be already in SGN. Read <a href="/content/map_submissions.pl">here</a> on how to submit markers to SGN.</i>
         </ul>
 
-        <p> Please read the submission $guide before starting to upload your data.
-        </p> 
+        
 
         <p>The QTL data  uploading software is at Beta stage. If you have any 
            problems uploading your data or remarks, please send us your 

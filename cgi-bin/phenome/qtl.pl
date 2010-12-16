@@ -237,15 +237,11 @@ sub confidence_interval
 		
 	    $marker_details_of{$m}{name}          = $m;
 	    $marker_details_of{$m}{linkage_group} = $m_chr;
-	    $marker_details_of{$m}{position}      = $m_pos;
-	
-	    if (!$m_pos) 
-	    {
-		$marker_details_of{$m}{position}  = '0.0'; 
-	    } else 
-	    { 
-		$marker_details_of{$m}{position}  = $m_pos;
-	    }
+	   
+            $marker_details_of{$m}{position}  = !$m_pos && $m_pos ne '' ? '0.0' 
+                                              : $m_pos eq '' ? 'NA' 
+                                              : $m_pos
+                                              ; 	
 
 	    $marker_details_of{$m}{lod_score}     = $m_lod;
 	    	
