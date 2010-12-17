@@ -1,0 +1,47 @@
+<%doc>
+=head1 NAME
+
+stockprops.mas
+
+=head1 DESCRIPTION
+
+This component can print stock properties
+
+
+=head1 ARGUMENTS
+
+=over 1
+
+=item props
+hashref of stockprops . keys = prop name (cvterm.name) values = list of prop values
+
+=back
+
+=head1 AUTHOR
+Naama Menda <nm249@cornell.edu>
+
+
+=cut
+
+</%doc>
+
+<%args>
+  $subset
+  $props
+
+</%args>
+
+<%perl>
+
+my $string;
+foreach my $name ( @$subset ) {
+  $string .= "<tr><td>" . $name . ": </td><td><b>" .  join(', ' , @{ $props->{$name} } ) . "</b></td></tr>" if  ref($props->{$name} );
+}
+
+</%perl>
+
+% if ($string) {
+<table> <% $string %> </table>
+
+%}
+
