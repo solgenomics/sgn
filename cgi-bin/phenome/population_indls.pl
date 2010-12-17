@@ -439,28 +439,45 @@ qq { Download population: <span><a href="pop_download.pl?population_id=$populati
 	
 	my $qtl_html = qq | <table><tr><td width=70%>$qtl_image</td><td width=30%>$legend</td></tr></table> |;
         my $qtl_effects_ref = $self->qtl_effects();
-        my $qtl_effects_data;
+        my $explained_variation = $self->explained_variation();
+        my ($qtl_effects_data, $explained_variation_data);
         if ($qtl_effects_ref) 
         {
             $qtl_effects_data  = columnar_table_html(                                             
-                                              data       => $qtl_effects_ref,
+                                              data         => $qtl_effects_ref,
                                               __alt_freq   => 2,
                                               __alt_width  => 1,
                                               __alt_offset => 3,
                                               __align      => 'l',
                                             );
+           
         } else 
         {
             $qtl_effects_data = "No significant qtls were predicted for this trait.";
         }
 
+        if ($explained_variation) {
+         $explained_variation_data  = columnar_table_html(                                             
+                                              data         => $explained_variation,
+                                              __alt_freq   => 2,
+                                              __alt_width  => 1,
+                                              __alt_offset => 3,
+                                              __align      => 'l',
+                                            );
+        } else  {
+            $explained_variation = "No significant qtls were predicted for this trait.";
+        }
         print info_section_html( 
                                 title    => 'QTL(s)',
                                 contents => $qtl_html, 
                                 );
        
-        print info_section_html( title    => 'QTL effects ( Interacting QTLs model )',
-                                 contents => $qtl_effects_data );
+        print info_section_html( title    => 'QTL effects',
+                                 contents => $qtl_effects_data
+                                 );
+         print info_section_html( title    => 'Variation explained by QTL(s) ( Interacting QTLs model )',
+                                 contents => $explained_variation_data
+                                 );
 
         print info_section_html( 
 	                        title    => 'Phenotype Frequency Distribution',
@@ -1027,11 +1044,13 @@ sub outfile_list
    
     my $ci_lod = $population->ci_lod_file($c, $ac);
     my $qtl_effects = $population->qtl_effects_file($c, $ac);
+    my $explained_variation = $population->explained_variation_file($c, $ac);
     my $file_out_list = join ( "\t"
         ,$qtl_summary
         ,$peak_markers
 	,$ci_lod
         ,$qtl_effects
+        ,$explained_variation
 	);
 
     open my $fo_fh, ">", $file_out or die "can't open $file_out: $!\n";
@@ -1671,6 +1690,24 @@ sub qtl_effects {
     my $pop        = $self->get_object();    
     
     my $file = $pop->qtl_effects_file($c, $trait_name);
+    
+    if ( -s $file ) 
+    {
+        my @effects =  map  { [ split( /\t/, $_) ]}  read_file( $file );
+        return \@effects;
+    } else 
+    {
+        return undef;
+    }
+
+}
+
+sub explained_variation {
+    my $self       = shift;
+    my $trait_name = $self->get_trait_name();
+    my $pop        = $self->get_object();    
+    
+    my $file = $pop->explained_variation_file($c, $trait_name);
     
     if ( -s $file ) 
     {
