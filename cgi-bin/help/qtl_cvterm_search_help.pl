@@ -38,14 +38,14 @@ The <a href="/search/direct_search.pl?search=qtl">QTL/Trait search</a> returns p
 <h4>4. Visually determine which linkage group contains a QTL, see the LOD threshold in the legend. For example, chromosome 7 has a QTL. Click the linkage group of interest and on the new window, follow the link "Go to the QTL page...".  </h4>
 <p>
 
-<img src="/documents/help/screenshots/qtl_cvterm_qtl_genome.png" alt="screenshot of qtl plots" style="margin: auto; border: 1px solid black;" />
+<img src="/documents/help/screenshots/qtl_genome.png" alt="screenshot of qtl plots" style="margin: auto; border: 1px solid black;" />
 </p>
 
 <h4>6. Clicking the "Go to the QTL page" generates the QTL detail page where among others the QTL confidence interval, links to the genome positions of the markers, marker detail pages, and SGN's Comparative Map Viewer are displayed.</h4>
 
 <p>
 
-<img src="/documents/help/screenshots/qtl_detail.png" alt="screenshot of qtl detail page" style="margin: auto; border: 1px solid black;" />
+<img src="/documents/help/screenshots/qtl_detail2.png" alt="screenshot of qtl detail page" style="margin: auto; border: 1px solid black;" />
 </p>
 
 <h4>7. The QTL detail page (shown above) presents cross-references from the QTL to other relevant genetic and genomic data and bioinformatic tools. Forexample, to view the genetic location of the QTL of a trait of interest and compare it to other genetic maps using the Comparative Map Viewer, click the linkage group link under the 'QTL markers' genetic positions and Comparative Map Viewer' subection.</h4>
