@@ -580,12 +580,13 @@ if ( max(QtlLods) >= LodScore )
                     )
  
   Effects<-QtlEffects$ests
+  Effects<-attr(Effects, "ests")
   QtlLodAnova<-QtlEffects$lod
   ResultFull<-QtlEffects$result.full
   
   ResultDrop<-QtlEffects$result.drop
-  #print("Effects")
-  #print(Effects)
+  print("Effects")
+  print(Effects)
   print("lod")
   print(QtlLodAnova)
   print("result full")
@@ -646,6 +647,12 @@ QtlEffectsFile<-grep("qtl_effects",
                  fixed = FALSE,
                  value=TRUE
                  )
+VariationFile<-grep("explained_variation",
+                 outfiles,
+                 ignore.case=TRUE,
+                 fixed = FALSE,
+                 value=TRUE
+                 )
 
 ##### writing outputs to their respective files
 
@@ -675,7 +682,7 @@ write.table(lodconfidenceints,
 
 if (is.null(ResultDrop)==FALSE) {
   write.table(ResultDrop,
-              file=QtlEffectsFile,
+              file=VariationFile,
               sep="\t",
               col.names=NA,
               quote=FALSE,
@@ -684,13 +691,22 @@ if (is.null(ResultDrop)==FALSE) {
 } else
 {
   write.table(ResultFull,
-              file=QtlEffectsFile,
+              file=VariationFile,
               sep="\t",
               col.names=NA,
               quote=FALSE,
               append=FALSE
               )
 }
+
+write.table(Effects,
+            file=QtlEffectsFile,
+            sep="\t",
+            col.names=NA,
+            quote=FALSE,
+            append=FALSE
+            )
+
 
 if (userpermuvalue != 0)
 {
