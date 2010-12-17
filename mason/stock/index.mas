@@ -74,16 +74,18 @@ my $this_page = "/stock/view/id/$stock_id";
 
 my $add_image_link = qq|<a href="/image/add?type_id=$stock_id&action=new&type=stock&refering_page=/stock/view/id/$stock_id">[Add new image]</a>|;
 my $image_ids =  $stockref->{props}->{'sgn image_id'} || [] ;
+my $stockprops = $stockref->{props};
 
 my $metadata = ['variety', 'donor', 'donor institute', 'country', 'state' , 'adaptation' , 'notes'];
-my $pedigree = ['pedigree', 'male parent', 'female parent'];
-my $experimet = ['experiment','year', 'location', 'replicate'];
+
+my $pedigree= ['pedigree', 'male parent', 'female parent'];
+my $experiment = ['experiment','year', 'location', 'replicate'];
 my $resources = ['solcap number' , 'synonym'];
 
-my $synonyms = $stockref->{props}->{synonym} || [];
 #tgrc (stock_dbxref)
 #sgn_allele_id
 #owner
+
 
 </%perl>
 
@@ -104,15 +106,25 @@ my $synonyms = $stockref->{props}->{synonym} || [];
 
   <& /page/form.mas, object_type=>'stock', object_id=>"$stock_id", form_name=> 'stock_form', server_side_script => '/phenome/stock/stock_ajax_form.pl', form_div_name=>'stock_details', js_object_name=> 'stockForm', page_url => '/stock/view/id' , alternate_new_button => '<a href ="/stock/view/new">[New]</a>' &>
 
-    <&| /page/info_section.mas, title => "Synonyms" , is_subsection => 1 &>
-% print join (',' , @$synonyms);
+   <&| /page/info_section.mas, title => "Synonyms" , is_subsection => 1 &>
+      <& /stock/stockprops.mas, props=> $stockprops , subset=> $resources  &>
 </&>
 
-    <&| /page/info_section.mas, title => "Additional information" , is_subsection => 1 &>
-      <& /stock/stockprops.mas, props=> $stockref->{props}, print=> $metadata  &>
-</&>
+<&| /page/info_section.mas, title => "Pedigree data" , collapsible=> 1, is_subsection => 1 &>
+      <& /stock/stockprops.mas, props=> $stockprops, subset=> $pedigree  &>
 </&>
 
+
+    <&| /page/info_section.mas, title => "Additional information" , collapsible=> 1, is_subsection => 1 &>
+      <& /stock/stockprops.mas, props=> $stockprops, subset=> $metadata  &>
+</&>
+
+
+</&>
+
+<&| /page/info_section.mas, title => "Experimental data" , collapsible=> 1, is_subsection => 0 &>
+      <& /stock/stockprops.mas, props=> $stockprops, subset=> $experiment  &>
+</&>
 
 % if($is_owner) {
 <&| /page/info_section.mas, title=>"Stock history", collapsible=>1, collapsed=>1 &>
