@@ -18,6 +18,7 @@ package Bio::SecreTary::TMpred;
 use strict;
 use warnings;
 
+use Carp;
 use IO::File;
 use File::Temp;
 use CGI ();
@@ -25,13 +26,25 @@ use Bio::SecreTary::Table;
 use Bio::SecreTary::Helix;
 
 use Readonly;
-Readonly my $FALSE => 0;
-Readonly my $TRUE  => 1;
+Readonly my $FALSE    => 0;
+Readonly my $TRUE     => 1;
+Readonly my %defaults => (
+    'version'       => 'perl',
+    'min_score'     => 500,
+    'min_tm_length' => 17,
+    'max_tm_length' => 33,
+    'min_beg'       => 0,
+    'max_beg'       => 35,
+'lo_orientational_threshold' => 80,
+  'hi_orientational_threshold' => 200,
+  'avg_orientational_threshold' => 80);
+
 Readonly my $PASCAL_STYLE =>
   $TRUE;    # if this is true, does the same as the old pascal code.
 Readonly my $TMHLOFFSET => ($PASCAL_STYLE)
   ? 1
-  : 0;      
+  : 0;
+
 # TMHLOFFSET gets added to the max_tmh_length,
 # and (1 - TMHLOFFSET) gets subtracted from min_tmh_length
 # TMHLOFFSET => 1  makes it agree with pascal code.
@@ -41,20 +54,22 @@ Readonly my $TMHLOFFSET => ($PASCAL_STYLE)
 # next greater OR EQUAL odd number, rather than to next STRICTLY greater odd.
 # similarly the min length is affected. with TMHLOFFSET => 1, 17->17, 16->17, 15->15
 # i.e. if you specify min length of 16 you will never see helices shorter than 17
-# but with TMHLOFFSET => 0, 17->17, 16->15, 15->15, etc. now you find the length 16 ones, (as well as length 15 ones which are discarded in good_solutions).
+# but with TMHLOFFSET => 0, 17->17, 16->15, 15->15, etc. now you find
+# the length 16 ones, (as well as length 15 ones which are discarded in good_solutions).
+# set up defaults for tmpred parameters:
 
+=head2 function new
 
-
-=head2 function new()
-
-Synopsis:
-my $tmpred_obj = Bio::SecreTary::TMpred->new(); # using defaults
-    or
-    my $tmpred_obj = Bio::SecreTary::TMpred->new({min_score => 600});
-	Arguments: $arg_hash_ref holds some parameters describing which solutions will be found by tmpred and kept by good_solutions: min_score, min_tm_length, max_tm_length, min_beg, max_beg.
-	Returns:	an instance of a TMpred object
-	Side effects:	Creates the object.
-  Description: Creates a TMpred object with certain parameters which determine which trans-membrane helices to keep.
+  Synopsis : my $tmpred_obj = Bio::SecreTary::TMpred->new();    # using defaults
+  or my $tmpred_obj =
+  Bio::SecreTary::TMpred->new( { min_score => 600 } );
+  Arguments: $arg_hash_ref holds some parameters describing which 
+      solutions will be found by tmpred :
+      min_score, min_tm_length, max_tm_length, min_beg, max_beg . 
+  Returns: an instance of a TMpred object 
+  Side effects: Creates the object . 
+  Description: Creates a TMpred object with certain parameters which 
+      determine which trans-membrane helices to find.
 
 =cut
 
@@ -62,29 +77,41 @@ sub new {
     my $class        = shift;
     my $self         = bless {}, $class;
     my $arg_hash_ref = shift;
-    $self->{version} = (exists $arg_hash_ref->{version})? $arg_hash_ref->{version} : 'perl';
-    $self->{min_score} =
-      ( exists $arg_hash_ref->{min_score} ) ? $arg_hash_ref->{min_score} : 500;
-    $self->{min_tm_length} =
-      ( exists $arg_hash_ref->{min_tm_length} )
-      ? $arg_hash_ref->{min_tm_length}
-      : 17;
-    $self->{max_tm_length} =
-      ( exists $arg_hash_ref->{max_tm_length} )
-      ? $arg_hash_ref->{max_tm_length}
-      : 33;
-    $self->{min_beg} =
-      ( exists $arg_hash_ref->{min_beg} ) ? $arg_hash_ref->{min_beg} : 0;
-    $self->{max_beg} =
-      ( exists $arg_hash_ref->{max_beg} ) ? $arg_hash_ref->{max_beg} : 35;
 
+    foreach my $param ( keys %defaults ) {    # set params to defaults
+        $self->{$param} = $defaults{$param};
+    }
+
+    if ( defined $arg_hash_ref ) {            # otherwise just use defaults
+        if ( ref($arg_hash_ref) eq 'HASH' ) {    # check it's really a hash ref
+            foreach my $param ( keys %$arg_hash_ref ) {
+                if ( exists $self->{$param} ) {
+                    if ( defined $arg_hash_ref->{$param} ) {
+                        $self->{$param} = $arg_hash_ref->{$param};
+                    }
+                }
+                else {    # a key of the arg hash is an unknown parameter.
+                    carp
+"In TMpred constructor. Attempt to set unknown parameter $param.\n"
+                      . "Known params are:  "
+                      . join( " ", keys %$arg_hash_ref ), "\n";
+                }
+            }
+        }
+        else {
+            carp(
+"Argument to TMpred constructor is not hash ref as it should be.\nUsing defaults.\n"
+            );
+        }
+    }
     $self->{min_halfw} =
       int( ( ( $self->{min_tm_length} ) - ( 1 - $TMHLOFFSET ) ) / 2 );
     $self->{max_halfw} =
       int( ( ( $self->{max_tm_length} ) + $TMHLOFFSET ) / 2 );
 
     $self->setup_tables();
-    my @aa_array = split( '', 'ACDEFGHIKLMNPQRSTVWYX' ); # first 20 are std aa's; X means unknown aa
+    my @aa_array = split( '', 'ACDEFGHIKLMNPQRSTVWYX' )
+      ;    # first 20 are std aa's; X means unknown aa
     my %aa_row_hash = ()
       ; # keys: letters representing aa's; values: numbers 0-20 (20 for unknown)
     for ( my $i = 0 ; $i < scalar @aa_array ; $i++ ) {
@@ -96,34 +123,43 @@ sub new {
 }
 
 sub run_tmpred {
-    my $self     = shift;
-    my ($sequence_id, $sequence, $version, $do_long_output) =
-	('Anon_prot_seq', undef, 'perl', $FALSE);
+    my $self = shift;
+    my ( $sequence_id, $sequence, $version, $do_long_output ) =
+      ( 'Anon_prot_seq', undef, 'perl', $FALSE );
     my $arg_hash_ref = undef;
-    my $arg1 = shift; # can be either sequence, or ref to  hash holding arguments
-    if(ref($arg1)){
-	$arg_hash_ref = $arg1;
+    my $arg1 =
+      shift;    # can be either sequence, or ref to  hash holding arguments
+    if ( ref($arg1) ) {
+        $arg_hash_ref = $arg1;
     }
-    else{ # arg1 is not a ref; should be sequence
-	$sequence = $arg1; 
-	my $arg2 = shift;
-	if(ref($arg2)){
-	    $arg_hash_ref = $arg2;
-	}else{ # arg2 is not a ref; should be sequence_id
-	    $sequence_id = (defined($arg2))? $arg2: 'A_prot_seq';
-	}
+    else {      # arg1 is not a ref; should be sequence
+        $sequence = $arg1;
+        my $arg2 = shift;
+        if ( ref($arg2) ) {
+            $arg_hash_ref = $arg2;
+        }
+        else {    # arg2 is not a ref; should be sequence_id
+            $sequence_id = ( defined($arg2) ) ? $arg2 : 'A_prot_seq';
+        }
+
+        #	print "id, sequence: $sequence_id, $sequence \n";
     }
-    if(defined($arg_hash_ref)){
-if(ref($arg_hash_ref) eq 'HASH'){
-	$sequence = $arg_hash_ref->{sequence} if(exists $arg_hash_ref->{sequence});
-	$sequence_id = $arg_hash_ref->{sequence_id} if(exists $arg_hash_ref->{sequence_id});
-	$version = $arg_hash_ref->{version} if(exists $arg_hash_ref->{version});
-	$do_long_output = $arg_hash_ref->{do_long_output} if(exists $arg_hash_ref->{do_long_output});
+    if ( defined($arg_hash_ref) ) {
+        if ( ref($arg_hash_ref) eq 'HASH' ) {
+            $sequence = $arg_hash_ref->{sequence}
+              if ( exists $arg_hash_ref->{sequence} );
+            $sequence_id = $arg_hash_ref->{sequence_id}
+              if ( exists $arg_hash_ref->{sequence_id} );
+            $version = $arg_hash_ref->{version}
+              if ( exists $arg_hash_ref->{version} );
+            $do_long_output = $arg_hash_ref->{do_long_output}
+              if ( exists $arg_hash_ref->{do_long_output} );
+        }
+        else {
+            die "Argument to run_tmpred is ref but not hash ref.\n";
+        }
     }
-    else{
-	die "Argument to run_tmpred is ref but not hash ref.\n";
-}
-    }
+
     # check and fix up the sequence.
     $sequence =~ s/\s+//g;    # remove whitespace
     $sequence =~ s/\*$//;     # remove * at end if present
@@ -138,32 +174,41 @@ if(ref($arg_hash_ref) eq 'HASH'){
 
     $sequence =~ s/[BJOUZ]/X/g;    # to get just 20 aa's plus X for unknown.
     if ($PASCAL_STYLE) {
-	# the pascal version of tmpred simply substitutes A for X.
+
+        # the pascal version of tmpred simply substitutes A for X.
         $sequence =~ s/X/A/g;
     }
     my $good_solns;
     my $tmpred_raw_out = undef;
     if ( $version eq 'pascal' ) {
-        $tmpred_raw_out =
-          $self->run_tmpred_pascal( $sequence_id, $sequence );
+        $tmpred_raw_out = $self->run_tmpred_pascal( $sequence_id, $sequence );
 
         # process tmpred output to get summary,
         # i.e. score, begin and end positions for tmh's satisfying limits.
-        $good_solns =
-          ( $self->good_solutions_pascal($tmpred_raw_out) );    # , $tmpred_raw_out);
+        $good_solns = ( $self->good_solutions_pascal($tmpred_raw_out) );
     }
-    else {                                               # use perl code
-        $good_solns = $self->run_tmpred_perl( $sequence_id, $sequence );
-	if($do_long_output){
-	    $tmpred_raw_out = 'Long output not implemented in perl version.';
-	}
+    else {    # use perl code
+        my ( $io_helices_ref, $oi_helices_ref ) =
+          $self->run_tmpred_perl( $sequence_id, $sequence );
+        $good_solns = $self->good_solutions_perl($io_helices_ref);
+        $good_solns .= $self->good_solutions_perl($oi_helices_ref);
+        if ( 1 or $do_long_output ) {
+            print "io/oi helices: ", scalar @$io_helices_ref, "  ",
+              scalar @$oi_helices_ref, "\n";
+            print $self->short_output(
+                $sequence_id, $sequence, $io_helices_ref, $oi_helices_ref
+              ),
+              "\n";
+            $tmpred_raw_out = $self->_long_output($sequence_id, $sequence, $io_helices_ref, $oi_helices_ref);
+        }
     }
-  #  return $good_solns;
-    return ($good_solns, $tmpred_raw_out);
+
+    #  print "good_solutions: $good_solns \n";
+    #  return $good_solns;
+    return ( $good_solns, $tmpred_raw_out );
 }
 
-
-sub run_tmpred_pascal {                     # this uses pascal code.
+sub run_tmpred_pascal {    # this uses pascal code.
     my $self        = shift;
     my $sequence_id = shift;
     my $sequence    = shift;
@@ -187,7 +232,6 @@ sub run_tmpred_pascal {                     # this uses pascal code.
 
     return $tmpred_pascal_out;
 }
-
 
 =head2 function good_solutions_pascal()
 	Synopsis: my $solution_string = $tmpred->good_solutions_pascal(); 
@@ -234,9 +278,10 @@ sub good_solutions_pascal {
                 {
                     $solutions .= "($score,$begin,$end)  ";
                 }
-		else{
-		    warn "Solution rejected in good_solutions_pascal.\n($score,$begin,$length)";
-		}
+                else {
+                    warn
+"Solution rejected in good_solutions_pascal.\n($score,$begin,$length)";
+                }
             }
         }
     }
@@ -283,19 +328,8 @@ sub run_tmpred_perl {
       make_profile( \@sequence_aanumber_array, $self->get_oi_cterm_table() );
 
     ( $length == scalar @$io_center_prof )
-      || die "seq length: ", $length, "  io_center_profile size: ",
-      scalar @$io_center_prof, "\n";
-    if (0) {
-        for ( my $i = 0 ; $i < scalar @$io_center_prof ; $i++ ) {
-            print $sequence_aanumber_array[$i], "  ",
-              $io_center_prof->[$i], "  ",
-              $io_nterm_prof->[$i],  "  ",
-              $io_cterm_prof->[$i],  "  ",
-              $oi_center_prof->[$i], "  ",
-              $oi_nterm_prof->[$i],  "  ",
-              $oi_cterm_prof->[$i],  "\n";
-        }
-    }
+      || croak "seq length: ", $length, "  io_center_profile size: ",
+      scalar @$io_center_prof, " Should be the same but aren't.\n";
 
     # get score array for in-to-out using 3 profiles (center, nterm, cterm)
     my $io_score =
@@ -339,21 +373,225 @@ sub run_tmpred_perl {
         }
     }
 
-    my @helices = ( @io_helices, @oi_helices );
-    return $self->good_solutions_perl( \@helices );
+#  print "number of io, oi helices: ", scalar @io_helices, "  ", scalar @oi_helices, "\n";
+# $self->raw_output(\@io_helices, \@oi_helices);
 
-    #	return (\@io_helices, \@oi_helices);
+    #  my @helices = ( @io_helices, @oi_helices );
+    #   return $self->good_solutions_perl( \@helices );
+
+    return ( \@io_helices, \@oi_helices );
+
     #   return ( scalar @io_helices, scalar @oi_helices );
 
 }
 
+sub short_output {
+    my $self           = shift;
+    my $id             = shift;
+    my $sequence       = shift;
+    my $io_helices_ref = shift;
+    my $oi_helices_ref = shift;
+    my $out            = "$id";
+    $out .= substr( $sequence, 0, 3 ) . '...' . substr( $sequence, -3 ) . "\n";
+    $out .=
+        "Inside to outside helices : "
+      . scalar @$oi_helices_ref . "\n"
+      . "    from     to   score  center \n";
+
+    for (@$io_helices_ref) {
+        $out .= $_->get_descriptor_string() . "\n";
+    }
+    $out .=
+        "Outside to inside helices : "
+      . scalar @$oi_helices_ref . "\n"
+      . "    from     to   score  center \n";
+    for (@$oi_helices_ref) {
+        $out .= $_->get_descriptor_string() . "\n";
+    }
+
+    return $out;
+}
+
+sub _long_output {
+    my $self           = shift;
+    my $id             = shift;
+    my $sequence       = shift;
+    my $io_helices_ref = shift;
+    my $oi_helices_ref = shift;
+    my $long_out       = "TMpred prediction output for : $id \n\n";
+    $long_out .= "Sequence: " . substr( $sequence, 0, 3 ),
+      '...' . substr( $sequence, -3 ) . "   length: " . length $sequence . "\n";
+    $long_out .=
+        "Prediction parameters: TM-helix length between "
+      . $self->{min_tm_length} . " and "
+      . $self->{max_tm_length}
+      . "\n\n\n";
+
+    $long_out .=
+        "1.) Possible transmembrane helices\n"
+      . "==================================\n"
+      . "The sequence positions in brackets denominate the core region.\n"
+      . "Only scores above "
+      . $self->{min_score}
+      . " are considered significant.\n\n";
+    $long_out .=
+        "Inside to outside helices : "
+      . scalar @$io_helices_ref . "\n"
+      . "    from     to   score  center \n";
+
+    for (@$io_helices_ref) {
+        $long_out .= $_->get_descriptor_string() . "\n";
+    }
+    $long_out .=
+        "Outside to inside helices : "
+      . scalar @$oi_helices_ref . "\n"
+      . "    from     to   score  center \n";
+    for (@$oi_helices_ref) {
+        $long_out .= $_->get_descriptor_string() . "\n";
+    }
+
+    $long_out .=
+        "2.) Table of correspondences\n"
+      . "============================\n"
+      . "Here is shown, which of the inside->outside helices correspond\n"
+      . "to which of the outside->inside helices.\n";
+    $long_out .=
+        "  Helices shown in brackets are considered insignificant.\n"
+      . 'A "+"  symbol indicates a preference of this orientation.' . "\n"
+      . 'A "++" symbol indicates a strong preference of this orientation.'
+      . "\n\n";
+
+    $long_out .= "           inside->outside | outside->inside \n";
+
+  
+    my ( $n_io, $n_oi ) = ( scalar @$io_helices_ref, scalar @$oi_helices_ref );
+    my ( $io_count, $oi_count ) = 0;
+    my $padding = '         ';
+    while (1) {
+        if ( $io_count >= $n_io ) {
+            $long_out .= "$padding | "
+              . $oi_helices_ref->[$oi_count]->get_descriptor_string() . "\n";
+            $oi_count++;
+        }
+        elsif ( $oi_count >= $n_oi ) {
+            $long_out .= $io_helices_ref->[$io_count]->get_descriptor_string() . " | $padding" . "\n";
+            $io_count++;
+        }
+        elsif ( $io_helices_ref->[$io_count]->get_center()->[0] <=
+            $oi_helices_ref->[$oi_count]->get_center()->[0] )
+        {    # io center is first (or same pos)
+            if ( $oi_helices_ref->[$oi_count]->get_sh_nterm()->[0] <=
+                $io_helices_ref->[$io_count]->get_sh_cterm()->[0] )
+            {    # cores overlap
+ $long_out .= $self->_io_oi_correspondence_string($io_helices_ref->[$io_count], $oi_helices_ref->[$oi_count]);
+                # $long_out .=
+                #     $io_helices_ref->[$io_count]->get_descriptor_string() . '|'
+                #   . $oi_helices_ref->[$oi_count]->get_descriptor_string() . "\n";
+                $io_count++;
+                $oi_count++;
+            }
+            else {
+ $long_out .= $self->_io_oi_correspondence_string($io_helices_ref->[$io_count], undef);
+                # $long_out .= $io_helices_ref->[$io_count]->get_descriptor_string() . " | $padding " . "\n";
+                $io_count++;
+            }
+        }
+        else {    # oi center pos < io center pos
+
+            if ( $io_helices_ref->[$io_count]->get_sh_nterm()->[0] <=
+                $oi_helices_ref->[$oi_count]->get_sh_cterm()->[0] )
+            {     # cores overlap
+                $long_out .= $self->_io_oi_correspondence_string($io_helices_ref->[$io_count], $oi_helices_ref->[$oi_count]);
+      #              $io_helices_ref->[$io_count]->get_descriptor_string() . '|'
+      #            . $oi_helices_ref->[$oi_count]->get_descriptor_string() . "\n";
+                $io_count++;
+                $oi_count++;
+            }
+            else {
+                $long_out .= $self->_io_oi_correspondence_string(undef, $oi_helices_ref->[$oi_count]);
+		#  "$padding | " . $oi_helices_ref->[$oi_count]->get_descriptor_string() . "\n";
+                $oi_count++;
+            }
+
+	  }
+	last if($io_count >= $n_io  and $oi_count >= $n_oi);
+      }
+
+  $long_out .=
+        "3.) Suggested models for transmembrane topology \n"
+      . "============================================== \n"
+      . "These suggestions are purely speculative and should be used with\n"
+      . "EXTREME CAUTION since they are based on the assumption that\n"
+      . "all transmembrane helices have been found.\n";
+    $long_out .=
+        "In most cases, the Correspondence Table shown above or the\n"
+      . "prediction plot that is also created should be used for the\n"
+      . "topology assignment of unknown proteins.\n\n";
+    $long_out .=
+      "2 possible models considered, only significant TM-segments used\n\n";
+
+    return $long_out;
+}
+
+sub _io_oi_correspondence_string{
+  my $self = shift;
+  my $io_helix = shift;
+my $oi_helix = shift;
+
+#print "XXX: ", $self->{lo_orientational_threshold}, "  ", $self->{hi_orientational_threshold}, "\n";
+
+my $io_string = '                       ';
+my ($io_beg, $io_end, $io_score);
+if(defined $io_helix){
+ ($io_beg, $io_end, $io_score) = (
+$io_helix->get_nterm()->[0] + 1, 
+$io_helix->get_cterm()->[0] + 1, 
+$io_helix->get_score()) ;
+
+$io_string = sprintf("%6i-%4i (%2i) %5i ", 
+		     $io_beg, $io_end, $io_end-$io_beg+1, $io_score);
+}
+my $oi_string = '                       ';
+  my ($oi_beg, $oi_end, $oi_score);
+if(defined $oi_helix){
+  ($oi_beg, $oi_end, $oi_score) = (
+$oi_helix->get_nterm()->[0] + 1, 
+$oi_helix->get_cterm()->[0] + 1, 
+$oi_helix->get_score()) ;
+
+$oi_string = sprintf("%6i-%4i (%2i) %5i ", 
+		     $oi_beg, $oi_end, $oi_end-$oi_beg+1, $oi_score);
+}
+my $score_diff;
+my ($io_pref, $oi_pref) = '  ';
+  if(!defined $io_helix){
+    $oi_pref = '++';
+  }elsif(!defined $oi_helix){
+    $io_pref = '++';
+  }else{ # both defined
+    $score_diff = $io_score - $oi_score;
+    if($score_diff > $self->{hi_orientational_threshold}){
+      $io_pref = '++';
+    }elsif($score_diff > $self->{lo_orientational_threshold}){
+      $io_pref = ' +';
+    }elsif($score_diff < -1*$self->{hi_orientational_threshold}){
+      $oi_pref = '++';
+    }elsif($score_diff < -1*$self->{lo_orientational_threshold}){
+      $oi_pref = ' +';
+    }else{
+      # leave them both as '  '
+    }
+  }
+return $io_string . $io_pref . '  |' . $oi_string . $oi_pref . "\n";
+}
+
 sub good_solutions_perl {    # get the good solutions starting from the
                              # output of perl tmpred
-    my $self           = shift;
-    my $tmpred_helices = shift;    # ref to array of predicted helices
+    my $self               = shift;
+    my $tmpred_helices_ref = shift;    # ref to array of predicted helices
 
     my $good_string = "";
-    foreach (@$tmpred_helices) {
+    foreach (@$tmpred_helices_ref) {
         my $beg    = $_->get_nterm()->[0] + 1;
         my $end    = $_->get_cterm()->[0] + 1;
         my $score  = $_->get_score();
@@ -373,10 +611,10 @@ sub good_solutions_perl {    # get the good solutions starting from the
     return $good_string;
 }
 
-sub make_profile {                        # makes a profile, i.e. an array
-                                          # containing ...
-                                          # my $sequence     = shift;
-    my $seq_aanumber_array = shift;       # ref to array of numbers
+sub make_profile {                          # makes a profile, i.e. an array
+                                            # containing ...
+                                            # my $sequence     = shift;
+    my $seq_aanumber_array = shift;         # ref to array of numbers
     my $table              = shift;
     my $ref_position = $table->get_marked_position();
     my $matrix       = $table->get_table();
