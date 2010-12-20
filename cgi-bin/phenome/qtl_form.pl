@@ -531,26 +531,22 @@ sub intro {
 	   
         <p>The uploading of QTL data needs to be done in one session. 
            Therefore, prepare your data files in the required format before starting the 
-           process.  Please read the submission $guide.
+           process.  Please read the submission $guide. If you would like to have the formatting of your dataset checked beforehand, send your data to: <a href=mailto:iyt2\@cornell.edu>iyt2\@cornell.edu</a>.
         </p> 
         
-        <p>The data you need are:</p>
+        <p>What you need are:</p>
        
         <ul>
-           <li>Some basic information about the population
-           <li>Traits file (tab delimited): List of traits, 
-                definition, units of measurement. 
-           <li>Phenotype data file (tab delimited): 
-           <li>Genotype data file (tab delimited): 
+           <li>Some basic information about the population,
+           <li>Traits data file (tab delimited),
+           <li>Phenotype data file (tab delimited), 
+           <li>Genotype data file (tab delimited) and 
            <li>Statistical parameters.
            <li><i>Markers with their sequences need to be already in SGN. Read <a href="/content/map_submissions.pl">here</a> on how to submit markers to SGN.</i>
         </ul>
 
-        
-
-        <p>The QTL data  uploading software is at Beta stage. If you have any 
-           problems uploading your data or remarks, please send us your 
-           feedback: <a href=mailto:sgn-feedback\@sgn.cornell.edu>sgn-feedback\@sgn.cornell.edu</a>.
+        <p>If you have any problems uploading your data or remarks, please send your 
+           feedback to: <a href=mailto:sgn-feedback\@sgn.cornell.edu>sgn-feedback\@sgn.cornell.edu</a>. 
         </p>
       
      </td>
