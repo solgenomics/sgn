@@ -191,7 +191,7 @@ sub phenotype_submenu {
         my @tabs = (
                     ['?search=phenotypes','Mutants & Accessions'],
                     ['?search=qtl','QTLs'],
-                    ['?search=trait', 'Traits']);
+                    ['?search=trait', 'Trait Ontology']);
         my @tabfuncs = (\&phenotype_tab, \&qtl_tab, \&trait_tab);
 
         #get the search type
