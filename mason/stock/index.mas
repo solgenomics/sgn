@@ -55,6 +55,7 @@ my $action = $stockref->{action} || 'view';
 my $person_id = $stockref->{sp_person_id};
 my $curator = $stockref->{curator};
 my $submitter = $stockref->{submitter};
+my $sequencer = $stockref->{sequencer};
 
 my $schema = $stockref->{schema};
 my $dbh = $stockref->{dbh};
@@ -88,7 +89,10 @@ my $new_locus_link = qq|<a href="/stock/link_locus/">[associate new locus]</a> |
 #owner
 my $owners = $stockref->{sp_person_id};
 my $dbxrefs = $stockref->{dbxrefs};
+my $new_pub_link = $curator || $submitter || $sequencer  ?   qq|<a href="/chado/add_publication.pl?type=stock&amp;type_id=$stock_id&amp;refering_page=$this_page&amp;action=new"> [Associate publication] </a>| : qq|<span class=\"ghosted\">[Associate publication]</span>| ;
 
+my $pubmeds = $dbxrefs->{PMID} || [];
+my $pub_count = scalar( @$pubmeds );
 #tgrc (stock_dbxref)
 # sp, po, go , PMID, EUSOL, tgrc
 </%perl>
@@ -156,6 +160,30 @@ my $dbxrefs = $stockref->{dbxrefs};
 
 </&>
 
+
+<&| /page/info_section.mas, title=>"Literature annotation ($pub_count)" , subtitle=>$new_pub_link, id=>"publications" , collapsible=>1, collapsed=>1 &>
+
+% my $pub_count = 0;
+% foreach my $pub_id ( @ { $dbxrefs->{PMID} } ) {
+%  #if the dbxref is not obsolete
+%   my $pub = CXGN::Chado::Publication->new($dbh, $pub_id );
+  <& /chado/publication.mas, pub=>$pub, count=>$pub_count++, db=>'PMID', accession=>$pub->get_accession() &>
+    <br >
+% }
+
+</&>
+
+<&| /page/info_section.mas, title=>"Ontology annotation" &>
+
+</&>
+
+<&| /page/info_section.mas, title=>"Phenotype data " &>
+
+</&>
+
+<&| /page/info_section.mas, title=>"Genotype data " &>
+
+</&>
 
 
 <&| /page/info_section.mas, title=>"dbxrefs" &>
