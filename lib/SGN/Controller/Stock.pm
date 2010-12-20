@@ -124,9 +124,10 @@ sub _view_stock {
 
     my $stock       = CXGN::Chado::Stock->new($self->schema, $stock_id);
     my $logged_user = $c->user;
-    my $person_id   = $logged_user->get_object->get_sp_person_id if $logged_user;
-    my $curator     = $logged_user->check_roles('curator') if $logged_user;
-    my $submitter   = $logged_user->check_roles('submitter') if $logged_user;
+    my $person_id = $logged_user->get_object->get_sp_person_id if $logged_user;
+    my $curator = $logged_user->check_roles('curator') if $logged_user;
+    my $submitter = $logged_user->check_roles('submitter') if $logged_user;
+    my $sequencer = $logged_user->check_roles('sequencer') if $logged_user;
 
     my $dbh = $c->dbc->dbh;
 
@@ -175,6 +176,7 @@ sub _view_stock {
             stock_id  => $stock_id ,
             curator   => $curator,
             submitter => $submitter,
+            sequencer => $sequencer,
             person_id => $person_id,
             stock     => $stock,
             schema    => $self->schema,
