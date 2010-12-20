@@ -105,6 +105,19 @@ sub stock_types {
     unshift @$ref , ['0', ''];
     return $ref;
 }
+
+sub stock_dbxrefprops {
+    my $stock_dbxref = shift;
+    my $props = $stock_dbxref->stock_dbxrefprops;
+    while (my $p = $props->next ) {
+        my $value = $p->value ;
+        my $type = $p->type->name;
+        my $accession = $p->type->dbxref->accession;
+        my $db_name = $p->type->dbxref->db->name;
+
+    }
+}
+
 ######
 1;
 ######
