@@ -82,11 +82,15 @@ my $pedigree= ['pedigree', 'male parent', 'female parent'];
 my $experiment = ['experiment','year', 'location', 'replicate'];
 my $resources = ['solcap number' , 'synonym'];
 
-#tgrc (stock_dbxref)
-#sgn_allele_id
+my $alleles = $stockref->{props}->{'sgn allele_id'} || [] ;
+my $new_locus_link = qq|<a href="/stock/link_locus/">[associate new locus]</a> |;
+
 #owner
+my $owners = $stockref->{sp_person_id};
+my $dbxrefs = $stockref->{dbxrefs};
 
-
+#tgrc (stock_dbxref)
+# sp, po, go , PMID, EUSOL, tgrc
 </%perl>
 
 <script language="javascript" type="text/javascript">
@@ -122,6 +126,11 @@ my $resources = ['solcap number' , 'synonym'];
 
 </&>
 
+
+<&| /page/info_section.mas, title => "Associated loci" , subtitle => $new_locus_link, collapsible=> 1 &>
+      <& /phenome/linked_alleles.mas, alleles=> $alleles , dbh=> $dbh &>
+</&>
+
 <&| /page/info_section.mas, title => "Experimental data" , collapsible=> 1, is_subsection => 0 &>
       <& /stock/stockprops.mas, props=> $stockprops, subset=> $experiment  &>
 </&>
@@ -146,6 +155,18 @@ my $resources = ['solcap number' , 'synonym'];
   <& /image/print_images.mas , images=>$image_ids , dbh=>$dbh &>
 
 </&>
+
+
+
+<&| /page/info_section.mas, title=>"dbxrefs" &>
+% foreach my $d (keys %$dbxrefs) { 
+%  foreach my $item ( @{ $dbxrefs->{$d} } ) {
+%   print "$d: " . $item . "\n" ;
+%  }
+%}
+
+</&>
+
 
 
 <& /page/comments.mas, object_type=>'stock', object_id=>$stock_id, referer=>$this_page &>

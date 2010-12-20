@@ -159,13 +159,12 @@ sub _view_stock {
 
     ####################
     my $props = $self->_stockprops($stock);
-    my $image_ids = $props->{'sgn image_id'} || [] ;
-
     my $is_owner;
     my $owner_ids = $props->{sp_perons_id} || [] ;
     if ( $stock && ($curator || $person_id && ( grep /^$person_id$/, @$owner_ids ) ) ) {
         $is_owner = 1;
     }
+    my $dbxrefs = $self->_stock_dbxrefs($stock);
 
     ################
     $c->stash(
@@ -182,6 +181,7 @@ sub _view_stock {
             dbh       => $dbh,
             is_owner  => $is_owner,
             props     => $props,
+            dbxrefs   => $dbxrefs,
         },
        );
 }
@@ -197,6 +197,23 @@ sub _stockprops {
         push @{ $properties->{$prop->type->name} } ,   $prop->value ;
     }
     return $properties;
+}
+
+
+sub _stock_dbxrefs {
+    my ($self,$stock) = @_;
+
+    my $stock_dbxrefs = $stock->get_object_row()->search_related("stock_dbxrefs");
+
+    my $dbxrefs ;
+    while ( my $sdbxref =  $stock_dbxrefs->next ) {
+        my $url = $sdbxref->dbxref->db->urlprefix . $sdbxref->dbxref->db->url;
+
+        my $accession = $sdbxref->dbxref->accession;
+        $url = $url ? qq |<a href = "$url/$accession">$accession</a>| : $accession ;
+        push @{ $dbxrefs->{$sdbxref->dbxref->db->name} } , $accession ;
+    }
+    return $dbxrefs;
 }
 ######
 1;
