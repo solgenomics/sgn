@@ -30,15 +30,14 @@ Naama Menda <nm249@cornell.edu>
 <%args>
     $alleles=>undef
     $dbh
+    $div=> ''
 </%args>
 
 <%perl>
 
-use CXGN::Page::FormattingHelpers qw / columnar_table_html /;
 use CXGN::Phenome::Allele ;
 
 my @allele_data;
-my $data;
 
 foreach my $allele_id (@$alleles) {
   my $allele = CXGN::Phenome::Allele->new($dbh, $allele_id);
@@ -57,19 +56,18 @@ foreach my $allele_id (@$alleles) {
      )
     ];
 }
-if (@allele_data) {
-  $data = columnar_table_html(
-			      headings => [
-					   'Locus name', 'Allele symbol', 'Phenotype',
-                                          ],
-			      data         => \@allele_data,
-			      __alt_freq   => 2,
-			      __alt_width  => 1,
-			      __alt_offset => 3,
-			     );
-}
 
 </%perl>
 
+<script  language="javascript">
 
-<% $data %>
+</script>
+
+<div id = "$div">
+
+<& /page/columnar_table.mas,
+  headings => [ "Locus name", "Allele symbol", "Phenotype" ],
+  data     => \@allele_data ,
+  &>
+
+</div>
