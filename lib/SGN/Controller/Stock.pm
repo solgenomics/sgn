@@ -185,7 +185,10 @@ sub _view_stock {
             props     => $props,
             dbxrefs   => $dbxrefs,
         },
-       );
+        locus_add_uri  => $c->uri_for(  $self->action_for('associate_locus' ) ),
+        locus_autocomplete_uri => $c->uri_for( '/ajax/locus/autocomplete' ),
+
+        );
 }
 
 sub _stockprops {
@@ -217,6 +220,32 @@ sub _stock_dbxrefs {
     }
     return $dbxrefs;
 }
+
+
+sub associate_locus :Path('stock/associate_locus') :Args(0) {
+    my ( $self, $c ) = @_;
+    my $stock_id = $c->req->param('object_id');
+    my $allele_id = $c->req->param('allele_id');
+
+    my $locus = $c->dbic_schema('CXGN::Phenome::Schema')
+        ->resultset('Allele')
+        ->search({ allele_id => $allele_id, } )
+        ->search_related('locus_id');
+
+     my $stock = $c->dbic_schema('Bio::Chado::Schema' , 'sgn_chado')
+        ->resultset("Stock::Stock")->find({stock_id => $stock_id } ) ;
+    # if this fails, it will throw an acception and will (probably
+    # rightly) be counted as a server error
+    $stock->create_stockprops(
+        { 'sgn allele_id' => $allele_id },
+        { autocreate => 1 },
+        );
+
+    # need to update the loci div!!
+    ##
+    $c->res->redirect( $c->uri_for( '/stock/view/id/$stock_id' ));
+}
+
 ######
 1;
 ######

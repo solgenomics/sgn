@@ -22,6 +22,9 @@ a hashref with all the parameters needed for printing the stock page!
  $stockref->{submitter} (boolean)
  $stockref->{is_owner} (boolean)
  $stockref->{props} (hash of arrayrefs of stockprops. Keys = prop name, value = prop value)
+ locus_add_uri
+ locus_autocomplete_uri 
+
 =back
 
 =head1 AUTHOR
@@ -32,17 +35,16 @@ Naama Menda <nm249@cornell.edu>
 
 </%doc>
 
-
-
 <%args>
 
 $stockref => undef
+$locus_add_uri
+$locus_autocomplete_uri => ''
 
 </%args>
 
 
 <%perl>
-
 
 use Bio::Chado::Schema;
 use CXGN::Chado::Stock;
@@ -84,7 +86,8 @@ my $experiment = ['experiment','year', 'location', 'replicate'];
 my $resources = ['solcap number' , 'synonym'];
 
 my $alleles = $stockref->{props}->{'sgn allele_id'} || [] ;
-my $new_locus_link = qq|<a href="/stock/link_locus/">[associate new locus]</a> |;
+my $allele_div = "stock_alleles";
+my $new_locus_link ;#= qq|<a href="<">[associate new locus]</a> |;
 
 #owner
 my $owners = $stockref->{sp_person_id};
@@ -132,8 +135,13 @@ my $pub_count = scalar( @$pubmeds );
 
 
 <&| /page/info_section.mas, title => "Associated loci" , subtitle => $new_locus_link, collapsible=> 1 &>
-      <& /phenome/linked_alleles.mas, alleles=> $alleles , dbh=> $dbh &>
+<div id = "$allele_div">
+      <& /phenome/linked_alleles.mas, alleles=> $alleles , dbh=> $dbh, div=> $allele_div  &>
+</div>
+
+<& /phenome/associate_locus.mas, object_id => $stock_id , type => "stock", locus_add_uri=> $locus_add_uri,  locus_autocomplete_uri => $ locus_autocomplete_uri &>
 </&>
+
 
 <&| /page/info_section.mas, title => "Experimental data" , collapsible=> 1, is_subsection => 0 &>
       <& /stock/stockprops.mas, props=> $stockprops, subset=> $experiment  &>
