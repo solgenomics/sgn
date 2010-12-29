@@ -264,16 +264,24 @@ sub view_organism :Chained('find_organism') :PathPart('view') :Args(0) {
     my $self = shift;
     my $c = shift;
 
-
     if (scalar($c->stash->{organism_rs}->all())==0) { 
 	$c->stash()->{template} = '/site/error/exception.mas';
 	$c->stash()->{exception} = SGN::Exception->new( title=>'Organism id '.($c->stash->{organism_id}).' does not exist', public_message=>'The specified organism identifer does not exist. Sorry', notify=>0, is_server_error=>0);
 	return;
     }
 
+
+    
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $organism = CXGN::Chado::Organism->new($schema, $c->stash->{organism_id});
+    $c->stash->{organism} = $organism;
+    $c->stash->{na}= qq| <span class="ghosted">N/A</span> |;
+##    $self->basic_info();
+ 
+##    $self->taxonomy();
 
+##    $self->
+    
     $c->stash->{organism_name} = $c->stash->{organism_rs}->first()->species();
     $c->stash->{genus} = $c->stash->{organism_rs}->first()->genus();
     $c->stash->{common_name} = lc($c->stash->{organism_rs}->first()->common_name());
@@ -281,10 +289,13 @@ sub view_organism :Chained('find_organism') :PathPart('view') :Args(0) {
     
     my $organismprop_rs = $schema->resultset('Organism::Organismprop')->search( { organism_id=>$c->stash->{organism_id} });
     
+    $c->stash->{description} = $organism->get_description();
     
     @{$c->stash->{synonyms}} = $organism->get_synonyms();
 
-    $c->stash->{taxonomy} = get_parentage($organism); 
+    $c->stash->{taxonomy} = join ", ", reverse(get_parentage($organism));
+    
+    print STDERR "TAXONOMY for ".$c->stash->{organism_id}." = ". $c->stash->{taxonomy}."\n";
 
     my $accessions;
     my @dbxrefs = $organism->get_dbxrefs();
@@ -311,15 +322,65 @@ sub view_organism :Chained('find_organism') :PathPart('view') :Args(0) {
 	    $solcyc_link = "See <a href=\"$full_url$accession\">$solcyc</a>";
 	}
     }
-    
+    $c->stash->{solcyc_link} = $solcyc_link;
+    $c->stash->{accessions} = $accessions;
     my $na      = qq| <span class="ghosted">N/A</span> |;
     $c->stash->{ploidy} = $organism->get_ploidy() || $na;
     $c->stash->{genome_size} = $organism->get_genome_size() || $na;
     $c->stash->{chromosome_number} = $organism->get_chromosome_number() || $na;
 
-    
+    $self->map_data($c);
 
 }								         
+
+sub map_data { 
+    my $self = shift;
+    my $c = shift;
+    my $maps;
+    my @map_data = $c->stash->{organism}->get_map_data();
+    foreach my $info (@map_data) {
+	my $map_id     = $info->[1];
+	my $short_name = $info->[0];
+	$maps .= "<a href=\"/cview/map.pl?map_id=$map_id\">$short_name</a><br />";
+    }
+    $c->stash->{maps} = $maps;
+}
+
+sub transcript_data { 
+    my $self = shift;
+    my $c = shift;
+    my @libraries = $c->stash->{organism}->get_library_list();
+    
+    my $lib_count = scalar(@libraries);
+    my $library_info;
+    foreach my $lib (@libraries) {
+	$library_info .=
+	    qq|<a href="/content/library_info.pl?library=$lib\">$lib</a> |;
+    }
+    $library_info = $c->stash->{na} if !$lib_count;
+    
+    my $attribution = $c->stash->{organism}->get_est_attribution();
+ 
+    $c->stash->{library_info} = $library_info;
+    $c->stash->{est_attribution}  = $attribution;
+
+    
+   
+    #my $transcript = info_table_html(
+#	"Libraries ($lib_count)" => $library_info,
+#	"Data attribution"       => $attribution,
+#	"__border"               => 0
+#	);
+    
+ #    print info_section_html(
+# 	title       => 'Transcriptomic details',
+# 	contents    => $transcript,
+# 	collapsible => 1,
+# 	collapsed   => 0
+# 	);
+    
+}
+
 
 ##this should be an Ajax editable div
 #    my $description =
@@ -636,16 +697,16 @@ sub get_parentage {
 
     my $organism = shift;
     my $parent   = $organism->get_parent();
-
-    my $taxonomy;
+    
+    my @taxonomy;
     if ($parent) {
         my $species = $parent->get_species();
         my $taxon   = $parent->get_taxon();
-        my $comma   = ", " if $parent->get_parent() || '';
-        $taxonomy = $comma . tooltipped_text( $species, $taxon ) . $taxonomy;
-        $taxonomy = get_parentage($parent);
+       
+        push @taxonomy,  tooltipped_text( $species, $taxon );
+        @taxonomy = (@taxonomy, get_parentage($parent));
     }
-    return $taxonomy;
+    return @taxonomy;
 }
 
 

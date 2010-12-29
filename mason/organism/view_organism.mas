@@ -1,0 +1,38 @@
+
+<%args>
+$organism_name
+$common_name
+$description => ''
+$comment => ''
+@synonyms => ()
+$taxonomy => ''
+$accessions => ''
+$solcyc => ''
+$solcyc_link => ''
+$ploidy => ''
+$genome_size => ''
+$chromosome_number => ''
+$maps => ''
+</%args>
+
+<& /page/page_title.mas, title=>"Details for SGN organism <i>$organism_name</i>" &>
+
+<&| /page/info_section.mas, title=>'Basic information' &>
+<& /organism/basic_info.mas, name=>$organism_name, common_name=>$common_name, description=>'', comment=>$comment, synonyms=> @synonyms &>
+</&>
+
+<& /organism/taxonomy.mas, taxonomy=>$taxonomy &>
+
+<& /organism/accessions.mas, accessions => $accessions &>
+
+<&| /page/info_section.mas, title=>'SolCyc links' &>
+<% $solcyc_link %>
+</&>
+
+<&| /page/info_section.mas, title=>'Available Maps' &>
+<% $maps %>
+</&>
+
+<&| /page/info_section.mas, title=>'Genome data' &>
+<& /organism/genomic_details.mas, ploidy => $ploidy, genome_size=>$genome_size, chromosome_number => $chromosome_number &>
+</&>

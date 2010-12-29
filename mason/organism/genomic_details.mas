@@ -1,0 +1,12 @@
+
+<%args>
+$ploidy => ''
+$genome_size => ''
+$chromosome_number => ''
+
+</%args>
+
+
+Ploidy: <b><% $ploidy %></b><br />
+Genome size: <b><% $genome_size %></b><br />
+Chromosome Number: <b><% $chromosome_number %></b><br />

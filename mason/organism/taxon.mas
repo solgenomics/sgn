@@ -1,0 +1,9 @@
+
+<%args>
+$taxon
+
+</%args>
+
+<&| /page/info_section.mas, title=>'Taxonomic information' &>
+<% $taxon %>
+</&>
