@@ -332,7 +332,9 @@ var Tools = {
     //Make an ajax response that unobsoletes the selected ontology term-locus association
     unobsoleteAnnot: function(type, type_dbxref_id)  {
 	var action = 'unobsolete';	
-	new Ajax.Request('/phenome/obsolete_object_dbxref.pl', {parameters:
+	new Ajax.Request('/phenome/obsolete_object_dbxref.pl', {
+		method: 'get',
+		    parameters:
 		{object_dbxref_id: type_dbxref_id, type: type, action: action}, 
 		    onSuccess: function(response) {
 		    var json  = response.responseText;

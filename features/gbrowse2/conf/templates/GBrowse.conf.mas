@@ -67,9 +67,10 @@ debug_external         = 0
 debug_plugins          = 0
 
 # Performance settings
-renderfarm             = 1
-slave_timeout          = 45
-global_timeout         = 60
+renderfarm             = 0
+slave_timeout          = 60
+search_timeout         = 120
+global_timeout         = 120
 
 # Clean up settings (used by the gbrowse_clean script)
 expire session  = 1M  # expire unused sessions after a month
@@ -167,15 +168,25 @@ email_address          = noreply@gmod.org
 
 default source = ITAG1_genomic
 
+[ITAG2_genomic]
+path          = ITAG2_genomic.conf
+description   = ITAG2 Release: genomic annotations
+extended_description = ITAG Release 2 (2010-11-28) official annotations on the SL2.31 genome build by the International Tomato Annotation Group (ITAG).
+
+[ITAG2_protein]
+path          = ITAG2_protein.conf
+description   = ITAG2 Release: protein annotations
+extended_description = ITAG Release 2 (2010-11-28) official annotations on the SL2.31 genome build by the International Tomato Annotation Group (ITAG).
+
 [ITAG1_genomic]
 path          = ITAG1_genomic.conf
 description   = ITAG1 Release: genomic annotations
-extended_description = Tomato release 1 annotations on genomic sequences by the International Tomato Annotation Group (ITAG).
+extended_description = ITAG Release 1 (2010-03-10) official annotations on the SL1.00 genome build by the International Tomato Annotation Group (ITAG).
 
 [ITAG1_protein]
 path          = ITAG1_protein.conf
 description   = ITAG1 Release: protein annotations
-extended_description = Tomato release 1 annotations on protein sequences by the International Tomato Annotation Group (ITAG).
+extended_description = ITAG Release 1 (2010-03-10) official annotations on the SL1.00 genome build by the International Tomato Annotation Group (ITAG).
 
 [ITAG_devel_genomic]
 path          = ITAG_devel_genomic.conf

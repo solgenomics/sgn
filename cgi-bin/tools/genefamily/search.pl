@@ -13,7 +13,7 @@ my $login        = CXGN::Login->new($dbh);
 my $sp_person_id = $login->has_session();
 my $person       = CXGN::People::Person->new($dbh, $sp_person_id);
 
-unless( $person->get_user_type eq 'genefamily_editor' ) {
+unless( $person->has_role('genefamily_editor') || $person->has_role('curator')) {
     $c->throw(
         message  => 'Please log in as the correct user to access the gene families',
         is_error => 0,

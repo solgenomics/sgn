@@ -1,0 +1,21 @@
+<%args>
+    $feature
+</%args>
+<%perl>
+</%perl>
+
+Extract Promoters:
+<form>
+<select name="length">
+<option value="1000">1 Kbp</option>
+<option value="2000">2 Kbp</option>
+<option value="3000">3 Kbp</option>
+<option value="4000">4 Kbp</option>
+<option value="5000">5 Kbp</option>
+</select>
+<select name="orientation">
+<option value="upstream" default>Upstream</option>
+<option value="downstream" >Downstream</option>
+</select>
+<input value="Download" type="submit"></input>
+</form>

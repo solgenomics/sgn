@@ -1,0 +1,27 @@
+---
+
+Release date: NEXT
+
+Changes:
+
+ - enter changes here
+
+---
+
+Release date: Thu Dec 09 12:58:00 2010 -0800
+
+Changes:
+
+ - New easy-to-use trait search, linked from the breeders' toolbox.
+ - New features for tracking organism stocks using the Chado natural diversity module.
+ - Fixed bug with BLAST tool: simple BLASTs were not filtering low-complexity sequence by default.
+
+---
+
+Release date: Tue Nov 30 00:15:14 2010 -0800
+
+Changes:
+
+ - "Big new feature: gene model pages, integrated with locus pages and GBrowse."
+ - "New correlation heatmap on QTL pages."
+

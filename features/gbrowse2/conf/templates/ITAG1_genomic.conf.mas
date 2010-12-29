@@ -6,7 +6,7 @@ reference class = Sequence
 
 search attributes = Note
 
-default features = mrna sgn_loci sgn_unigenes Markers:overview Genes:region
+default features = mrna sgn_loci sgn_unigenes Markers:overview Genes:region sgn_markers
 
 # "automatic" classes to try when an unqualified identifier is given
 automatic classes = Sequence clone match nucleotide_motif
@@ -133,7 +133,7 @@ citation     = This track shows the spans of gene models annotated by EuGene, th
 [mrna]
 feature      = mRNA:ITAG_renaming
 key          = Gene models
-glyph        = processed_transcript
+glyph        = gene
 fgcolor      = black
 bgcolor      = goldenrod
 description  = sub { <% $feature->local_inc %>; require CXGN::Page::FormattingHelpers; CXGN::Page::FormattingHelpers::truncate_string((shift->attributes('Note'))[0] || '', 70, '...') }
@@ -180,7 +180,7 @@ citation       = This track displays a Kyte-Doolittle hydropathy plot of the pro
 feature      = match:ITAG_transcripts_tomato
 key          = ESTs and cDNAs - Tomato
 category     = Genome data and reagents
-glyph        = segments
+glyph        = alignment
 bgcolor        = red
 stranded     = 1
 link         = http://www.ebi.ac.uk/ebisearch/search.ebi?db=nucleotideSequences&t=$name
@@ -192,7 +192,7 @@ feature      = match:ITAG_transcripts_sol
 key          = ESTs and cDNAs - Other Solanaceae
 category     = Genome data and reagents
 bgcolor      = orange
-glyph        = segments
+glyph        = alignment
 stranded     = 1
 link         = http://www.ebi.ac.uk/ebisearch/search.ebi?db=nucleotideSequences&t=$name
 citation     = This track shows regions of similarity with EST and other cDNA sequences taken from species in the Solanaceae other than Tomato. Provided by <a href="http://cab.unina.it/index2.php">CAB group</a> at <a href="http://www.unina.it">UNINA</a>. (see <a href="http://www.ab.wur.nl/TomatoWiki/AnEST000">ITAG Wiki</a>)
@@ -233,7 +233,7 @@ das category = transcription
 feature      = mRNA:ITAG_genemark_ath
 key          = GeneMark (de novo, Arabidopsis trained)
 category     = Prediction Features
-glyph        = processed_transcript
+glyph        = gene
 stranded     = 1
 citation     = <i>De novo</i> predictions from <a href="http://exon.gatech.edu/GeneMark/">GeneMark</a>, trained on Arabidopsis.  Provided by the <a href="http://mips.gsf.de/proj/plant/jsf/tomato/index.jsp">MIPS Tomato genome database</a>. (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnGeneMark000">ITAG Wiki</a>)
 das category = transcription
@@ -251,7 +251,7 @@ das category = transcription
 feature      = mRNA:ITAG_glimmerhmm_tomato
 key          = GlimmerHMM (de novo, Tomato trained)
 category     = Prediction Features
-glyph        = processed_transcript
+glyph        = gene
 stranded     = 1
 citation     = <i>De novo</i> predictions from <a href="http://www.genomics.jhu.edu/GlimmerHMM/">GlimmerHMM</a>, trained on Tomato.  Provided by Erwin Datema at <a href="http://appliedbioinformatics.wur.nl/">WUR</a>. (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnGlimmerHMM000">ITAG Wiki</a>)
 das category = transcription
@@ -313,6 +313,7 @@ category     = Genetic Loci
 stranded     = 1
 fgcolor      = black
 bgcolor      = yellow
+link         = /search/quick_search.pl?term=$name
 citation     = This track shows regions of similarity of the genomic sequence with known sequences associated with SGN genetic markers, as detected by GenomeThreader (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnSgnMarkers000">ITAG Wiki</a>)
 das category = similarity
 

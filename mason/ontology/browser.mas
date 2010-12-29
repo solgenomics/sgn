@@ -1,10 +1,13 @@
+<%doc>
+
+</%doc>
+
 <%args>
-    $title => 'Ontology browser'
+    # comma separated list of root nodes (optional)
+    $root_nodes => undef
+    $db_name => undef
+    $expand => undef
 </%args>
-<&| /page/info_section.mas,
-    title       => $title,
-    collapsible => 1,
-&>
 <& /util/import_javascript.mas,
     classes => [
         'MochiKit.DOM',
@@ -17,14 +20,24 @@
         'jquery',
      ]
 &>
+
+% #$root_nodes = 'GO PO SP'; #for testing
+
 <script language="javascript" type="text/javascript"  >
 <!--
-    var o = new CXGN.Onto.Browser();
+    var o = new CXGN.Onto.Browser('<% $root_nodes %>');
     o.setUpBrowser();
-    o.initializeBrowser();
+    o.initializeBrowser('<% $root_nodes %>');
     o.renderSearchById();
-    o.renderSearchByName();
+    o.renderSearchByName('<% $db_name %>');
+    var rn = o.rootnode.getChildren();
+    
+    var expand = "<% $expand %>";
+    if (expand == 1) {
+      for (var i=0; i<rn.length; i++) {
+         rn[i].openNode(1);
+      }
+    }
     o.render();
 -->
 </script>
-</&>

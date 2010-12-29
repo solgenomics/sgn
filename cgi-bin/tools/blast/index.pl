@@ -225,6 +225,7 @@ function clearField() {
     
 
 <form method="post" action="blast_result.pl" name="blastform">
+  <input type="hidden" checked="checked" name="filterq" value="1" />
   <input type="hidden" name="interface_type" value="simple" />
   <input type="hidden" name="outformat" value="0" />
   <table align="center" summary="" cellpadding="0" cellspacing="15">

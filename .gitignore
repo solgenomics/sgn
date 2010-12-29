@@ -4,7 +4,7 @@ static/documents/tempfiles
 !exists
 !.exists
 _build
-Build
+/Build
 MYMETA.yml
 *.sw?
 test.sh
@@ -20,3 +20,4 @@ programs/*.o
 programs/draw_contigalign
 programs/fast_mapping
 sgn_local.conf
+t/data/data/prod/tmp/

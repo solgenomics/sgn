@@ -12,17 +12,16 @@ use namespace::autoclean;
 use HTML::FormFu;
 use URI::FromHash 'uri';
 use YAML::Any;
-use SGN::View::Feature qw/feature_link/;
 
 has 'schema' => (
-is => 'rw',
-isa => 'DBIx::Class::Schema',
-required => 0,
+    is       => 'rw',
+    isa      => 'DBIx::Class::Schema',
+    required => 0,
 );
 
 has 'default_page_size' => (
-is => 'ro',
-default => 20,
+    is      => 'ro',
+    default => 20,
 );
 
 
@@ -33,14 +32,21 @@ sub delegate_component
 {
     my ($self, $c, $matching_features) = @_;
     my $feature   = $matching_features->next;
-    my @children  = $feature->child_features;
-    my @parents   = $feature->parent_features;
     my $type_name = $feature->type->name;
     my $template  = "/feature/dhandler";
 
-    $c->stash->{feature}  = $feature;
-    $c->stash->{children} = \@children;
-    $c->stash->{parents}  = \@parents;
+    $c->stash->{feature}     = $feature;
+    $c->stash->{featurelocs} = $feature->featureloc_features;
+
+    # look up site xrefs for this feature
+    my @xrefs = $c->feature_xrefs( $feature->name, { exclude => 'featurepages' } );
+    unless( @xrefs ) {
+        @xrefs = map {
+            $c->feature_xrefs( $_->srcfeature->name.':'.($_->fmin+1).'..'.$_->fmax, { exclude => 'featurepages' } )
+        }
+        $c->stash->{featurelocs}->all
+    }
+    $c->stash->{xrefs} = \@xrefs;
 
     if ($c->view('Mason')->component_exists("/feature/$type_name.mas")) {
         $template         = "/feature/$type_name.mas";
@@ -78,7 +84,9 @@ sub _view_feature {
     $self->_validate_pair($c,$key,$value);
     my $matching_features = $self->schema
                                 ->resultset('Sequence::Feature')
-                                ->search({ $key => $value });
+                                ->search({ "me.$key" => $value },{
+                                    prefetch => [ 'type', 'featureloc_features' ],
+                                });
 
     $self->validate($c, $matching_features, $key => $value);
     $self->delegate_component($c, $matching_features);

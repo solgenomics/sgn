@@ -1,4 +1,3 @@
-#!/usr/bin/perl -w
 
 =head1 DESCRIPTION
 A QTL detail page.
@@ -73,7 +72,7 @@ my $cmv_link     = marker_positions();
 my $gbrowse_link = genome_positions();
 my $legend       = legend();
 my $comment      = comment();
-
+my $download_qtl = download_qtl_region();
 
 
 $c->forward_to_mason_view( '/qtl/qtl.mas',
@@ -85,6 +84,7 @@ $c->forward_to_mason_view( '/qtl/qtl.mas',
                            marker_link  => $ci_table,
                            genetic_map  => $genetic_link,
                            legend       => $legend,
+                           download     => $download_qtl,
                            comment      => $comment,
 );
 
@@ -237,15 +237,11 @@ sub confidence_interval
 		
 	    $marker_details_of{$m}{name}          = $m;
 	    $marker_details_of{$m}{linkage_group} = $m_chr;
-	    $marker_details_of{$m}{position}      = $m_pos;
-	
-	    if (!$m_pos) 
-	    {
-		$marker_details_of{$m}{position}  = '0.0'; 
-	    } else 
-	    { 
-		$marker_details_of{$m}{position}  = $m_pos;
-	    }
+	   
+            $marker_details_of{$m}{position}  = !$m_pos && $m_pos ne '' ? '0.0' 
+                                              : $m_pos eq '' ? 'NA' 
+                                              : $m_pos
+                                              ; 	
 
 	    $marker_details_of{$m}{lod_score}     = $m_lod;
 	    	
@@ -334,14 +330,14 @@ sub legend
         chomp($row);
         my ( $parameter, $value ) = split( /\t/, $row );
 
-        if ( $parameter =~ /qtl_method/ ) 
-	{ 
-	    $parameter = 'Mapping method'; 
-	}
-        if ( $parameter =~ /qtl_model/ )  
-	{ 
-	    $parameter = 'Mapping model'; 
-	}
+        if ( $parameter =~ /qtl_method/ )
+        {
+            $parameter = 'Mapping method';
+        }
+        if ( $parameter =~ /qtl_model/ )
+        {
+            $parameter = 'Mapping model';
+        }
         if ( $parameter =~ /prob_method/ )
         {
             $parameter = 'QTL genotype probability method';
@@ -417,6 +413,18 @@ sub legend
     return \@stat;
 
 }
+
+
+sub download_qtl_region 
+{
+my $link = qq | <a href="https://www.eu-sol.wur.nl/marker2seq/marker2seq.do?marker1=$l_m&marker2=$r_m">View/download</a> genetic markers in the tomato F2.2000 reference map region (+5cM) matching the QTL region and gene models from the ITAG annotated tomato genome. |;
+
+$link  .=   qq | <p><i>Courtesy of</i> <a href="http://www.eu-sol.wur.nl"><img src ="/img/eusol_logo_small.jpg"/></a></p> |;
+
+    return $link;
+
+}
+
 
 =head2 comment
 

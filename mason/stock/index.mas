@@ -1,0 +1,119 @@
+<%doc>
+
+=head1 NAME
+
+/stock/index.mas - a page for displaying stock details (e.g. accession, population, etc.) 
+
+=head1 DESCRIPTION
+
+parameters:
+
+=over 1
+
+=item $stockref
+
+a hashref with all the parameters needed for printing the stock page! 
+
+ $stockref->{stock_id}
+ $stockref->{stock}
+ $stockref->{schema}
+ $stockref->{uniquename}
+ $stockref->{curator}  (boolean)
+ $stockref->{submitter} (boolean)
+ $stockref->{is_owner} (boolean)
+
+=back
+
+=head1 AUTHOR
+
+Naama Menda <nm249@cornell.edu>
+
+=cut
+
+</%doc>
+
+
+
+<%args>
+
+$stockref => undef
+
+</%args>
+
+
+<%perl>
+
+
+use Bio::Chado::Schema;
+use CXGN::Chado::Stock;
+use CXGN::Page::FormattingHelpers qw / html_optional_show info_table_html /;
+
+
+my $stock = $stockref->{stock};
+my $stock_id = $stockref->{stock_id};
+my $action = $stockref->{action} || 'view';
+my $person_id = $stockref->{sp_person_id};
+my $curator = $stockref->{curator};
+my $submitter = $stockref->{submitter};
+
+my $schema = $stockref->{schema};
+my $dbh = $stockref->{dbh};
+
+my $stockprop_cv = $schema->resultset("Cv::Cv")->search( {
+ 'me.name' => 'stock_property'} );
+
+
+my $type_name;
+my $type = $stock->get_object_row()->type();
+$type_name  = $type->name() if $type;
+
+#################
+my $is_owner = $stockref->{is_owner};
+
+my $this_page = "/stock/view/id/$stock_id";
+
+my $add_image_link;
+my $image_ids =  $stockref->{image_ids};
+
+
+</%perl>
+
+<script language="javascript" type="text/javascript">
+<!--
+    var stockPage = new CXGN.Phenome.Stock.StockPage();
+    stockPage.setStockId( <% $stock_id %> );
+-->
+</script>
+
+<& /util/import_javascript.mas, classes => ["jquery", "thickbox", "CXGN.Page.FormattingHelpers", "CXGN.Phenome.Stock.StockPage"] &>
+
+
+<& /page/page_title.mas, title=> ucfirst($type_name)  .  ": " . $stock->get_uniquename()  . "\n" &>
+
+
+<&| /page/info_section.mas, title=>"Stock details" , subtitle => "<a href=/stock/search/>Back to stock search</a>"  &>
+
+  <& /page/form.mas, object_type=>'stock', object_id=>"$stock_id", form_name=> 'stock_form', server_side_script => '/phenome/stock/stock_ajax_form.pl', form_div_name=>'stock_details', js_object_name=> 'stockForm', page_url => '/stock/view/id' , alternate_new_button => '<a href ="/stock/view/new">[New]</a>' &>
+
+</&>
+
+
+% if($is_owner) {
+<&| /page/info_section.mas, title=>"Stock history", collapsible=>1, collapsed=>1 &>
+
+</&>
+
+% }
+
+<&| /page/info_section.mas, title=>"Related stocks" , collapsible=>1, collapsed=>0 &>
+  <& /stock/related_stocks.mas, stock => $stock->get_object_row &>
+
+</&>
+
+<&| /page/info_section.mas, title=>"images (" .  scalar(@$image_ids)  . ")", subtitle => "$add_image_link", collapsible=>1, collapsed=>1 &>
+  <& /image/print_images.mas , images=>$image_ids , dbh=>$dbh &>
+
+</&>
+
+
+<& /page/comments.mas, object_type=>'stock', object_id=>$stock_id, referer=>$this_page &>

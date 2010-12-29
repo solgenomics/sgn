@@ -1,5 +1,7 @@
 package SGN::SiteFeatures::CrossReference;
 use Moose;
+use namespace::autoclean;
+
 use MooseX::Types::URI 'Uri';
 
 has 'url' => ( documentation => <<'',
@@ -36,7 +38,51 @@ the site feature object this cross reference points to
     required => 1,
    );
 
-__PACKAGE__->meta->make_immutable;
+sub TO_JSON {
+    my ( $self ) = @_;
+    return {
+        map { $_ => "$self->{$_}" }
+        qw( url is_empty text )
+    };
+}
+
+sub cr_cmp {
+    my ( $a, $b ) = @_;
+    no warnings 'uninitialized';
+    return
+        $a->feature->feature_name cmp $b->feature->feature_name
+     || $a->is_empty <=> $b->is_empty
+     || $a->text cmp $b->text
+     || $a->url.'' cmp $b->url.'';
+}
+
+sub cr_eq {
+    my ( $a, $b ) = @_;
+
+    no warnings 'uninitialized';
+    return !($a->is_empty xor $b->is_empty)
+        && $a->text eq $b->text
+        && $a->url.'' eq $b->url.''
+        && $a->feature->feature_name eq $b->feature->feature_name;
+}
+
+sub uniq {
+    my %seen;
+    grep !$seen{ _uniq_str($_) }++, @_;
+}
+sub _uniq_str {
+    my ( $self ) = @_;
+    return join ',', (
+        $self->feature->feature_name,
+        $self->url,
+        $self->text,
+       );
+}
+
+{ no warnings 'once';
+  *distinct = \&uniq;
+}
+
 
 1;
 

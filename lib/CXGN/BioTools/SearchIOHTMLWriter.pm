@@ -43,20 +43,21 @@ sub end_report {
 }
 
 
-sub default_hit_link_desc { 
+sub default_hit_link_desc {
     my $self = shift;
     my $hit = shift;
     my $result = shift;
     my $db_id = shift;
 
-    my $coords_string = 
+    my $coords_string =
         "hilite_coords="
-       .join ',',
-        map $_->start('subject').'-'.$_->end('subject'),
-        $hit->hsps;
+       .join( ',',
+              map $_->start('subject').'-'.$_->end('subject'),
+              $hit->hsps,
+             );
 
-    my $id = $hit->name();
-    return qq{<a href="show_match_seq.pl?blast_db_id=$db_id&amp;id=$id&amp;$coords_string">$id</a>};
+    my $id = $hit->name;
+    return qq{<a class="blast_match_ident" href="show_match_seq.pl?blast_db_id=$db_id;id=$id;$coords_string">$id</a>};
 }
 
 ###

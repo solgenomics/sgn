@@ -3,11 +3,16 @@
 //
 // Lukas Mueller and Naama Menda
 //
-// Sol Genomics Network (http://sgn.cornell.edu/ )
+// Sol Genomics Network (http://solgenomics.net/ )
 //
 // Spring 2008
-//
+// Fall 2010: added better caching for the parent view
+/* 
 
+   This browser consists of two objects, Node and Browser. The browsers manages the rendering of the tree and searching. The Node represents a term embedded in a linked DAG data structure. 
+
+
+ */
 JSAN.use('MochiKit.DOM');
 JSAN.use('MochiKit.Visual');
 JSAN.use('MochiKit.Logging');
@@ -66,225 +71,195 @@ CXGN.Onto.Browser.prototype = {
 
     resetBrowser: function() {
 
-	//this.setSearchTerm();
-	//this.setSearchValue();
 	document.getElementById("ontology_browser_input").value='';
 	document.getElementById("ontology_term_input").value='';
-	//this.setSearchResults(); //this works
 	
-	this.initializeBrowser();
+	this.initializeBrowser(this.rootNodes);
 
 	this.render();
     },
-    
-    setUpBrowser: function() { 
-	document.write('<div id="ontology_browser_input" >&nbsp;&nbsp;&nbsp;</div><div id="working"></div> '); // the element for the go id parentage search
+
+    setUpBrowser: function() {
+
+	document.write('<table cellpadding="0" summary=""><tr><td><div id="ontology_browser_input" >&nbsp;&nbsp;&nbsp;</div></td>'); // the element for the go id parentage search
+	document.write('<td width="*" align="right"><div id="working" style="margin-top:8px" >&nbsp;<img src="/documents/img/throbber.gif" />&nbsp;</div></td></tr></table>');
 	document.write('<div id="ontology_term_input" ></div>');     // the element for the search
 	document.write('<input id="hide_link" type="button" value="show results" display="none" onClick="MochiKit.Visual.toggle(\'search_results\', \'blind\'); o.toggleSearchResultsVisible(); o.setSearchButtonText();  "><br />');
-	
+
 	document.write('<div id="search_results" ></div>');    
 	document.write('<div id="ontology_browser" style="font-size:12px; line-height:10px; font-face:arial,helvetica" >&nbsp;</div>');  // the element for the browser
-	
-
 
     },
 
-    initializeBrowser: function() { 
+    initializeBrowser: function(rootNodes) { 
 	this.setSelected();
 	this.setSearchTerm('');
 	this.setSearchValue('');
 	this.setSearchResults('');
-	this.fetchRoots();
+        this.setRootNodes(rootNodes);
+	this.fetchRoots(rootNodes);
 	this.hideSearchButton();
 	this.setSearchResponseCount(0);
 	this.render();
     },
 
-    fetchRoots: function() { 
-	
-	new Ajax.Request("/chado/ajax_ontology_browser.pl", {
-	    parameters:   { action: 'roots' }, 
-	    asynchronous: false,
-	    on503: function() { 
-	    	alert('An error occurred! The database may currently be unavailable. Please check back later.');
-	    },
-            onSuccess: function(request) { 
-		
-		//MochiKit.Logging.log('COMPLETE!');
-		
-		var responseText = request.responseText;
-		
-		//MochiKit.Logging.log('RESPONSETEXT = ' + responseText);
-		
-		//MochiKit.Logging.log('This = ' + this);
-		
-		o.rootnode = new Node(o);
-		
-		//MochiKit.Logging.log('Created root node. Yay!');
-		o.rootnode.setName('');
-		o.rootnode.setAccession('root');
-		o.rootnode.openNode();
-		o.rootnode.unHide();
-		o.rootnode.setHasChildren(true);
-		//MochiKit.Logging.log('root: ' + o.rootnode + ' ---- ' + o.rootnode.name);
-		
-		//MochiKit.Logging.log('fetching roots...');
-		
-		var t = responseText.split('#');
-		
-		//MochiKit.Logging.log('Children count ' +  t.length + '<br />');
-		
-		for (var i=0; i<t.length; i++) { 
-		    var j = t[i].split('*');
-		    //  MochiKit.Logging.log(i + '. Child: ID: '+ j[0] + ' Name: ' + j[1] +  ' <br />');
-		    
-		    
-		    //MochiKit.Logging.log('Processing '+j[0]);
-		    
-		    
-		    var childNode = new Node(o);
-		    
-		    o.rootnode.addChild(childNode);
-		    childNode.setAccession(j[0]);
-		    //childNode.setHilite(true);
-		    childNode.closeNode();
-		    childNode.unHide();
-		    childNode.setName(j[1]);
-		    childNode.setCVtermID(j[2]);
-		    childNode.setRelType(j[4]);
-		    //MochiKit.Logging.log('hasChildren = '+j[2]);
-		    if (j[3]==1) { 
-			childNode.setHasChildren(true);
-		    }
-		    else { 
-			childNode.setHasChildren(false);
-		    }
-		    
-		    //MochiKit.Logging.log('Root node name: '+o.rootnode.getName()+'<br />');
-		    //MochiKit.Logging.log('Child accession: '+childNode.getAccession()+'<br />');
-		    
-		}
-	    }
-	});
+    getParents: function() {
+	return this.parents;
     },
-    
+
+    setRootNodes: function(nodes) {
+	this.rootNodes = nodes;
+    },
+
+    getRootNodes: function() {
+	return this.rootNodes;
+    },
+
+    fetchRoots: function(rootNodes) {
+
+	new Ajax.Request("/ajax/onto/roots", {
+		parameters:   { nodes: rootNodes },
+		asynchronous: false,
+		method: 'get',
+		on503: function() {
+		    alert('An error occurred! The database may currently be unavailable. Please check back later.');
+		},
+		onSuccess: function(request) {
+		    var json = request.responseText;
+		    //MochiKit.Logging.log('COMPLETE!');
+		    var x = eval("("+json+")");
+		    //MochiKit.Logging.log('RESPONSETEXT = ' + x);
+		    if (x.error ) { alert(x.error) ; }
+		    else {
+			o.rootnode = new Node(o);
+
+			o.rootnode.setName('');
+			o.rootnode.setAccession('root');
+			o.rootnode.openNode();
+			o.rootnode.unHide();
+			o.rootnode.setHasChildren(true);
+
+			for (var i=0; i<x.length; i++) {
+
+			    var childNode = new Node(o);
+
+			    o.rootnode.addChild(childNode);
+			    childNode.json2node(x[i]);
+			}
+		    }
+		}
+	    });
+    },
+
     workingMessage: function(status) {
-	MochiKit.Logging.log('the working message = ' , status );
+	//MochiKit.Logging.log('the working message = ' , status );
 	var w = document.getElementById('working');
 
 	if (status) {
 	    //	    MochiKit.Logging.log('status is true! ' , status);
 	    w.style.visibility='visible';
 	}
-	else { 
-	    w.style.visibility='hidden'; 
+	else {
+	    w.style.visibility='hidden';
 	}
     },
-    
+
     renderSearchById: function() {
-	//this.workingMessage(false);
 	//MochiKit.Logging.log('the value of ontology_browser_input is ...', (document.getElementById('ontology_browser_input')).value);
 	
 	var s = '<form name="search_id_form" style="margin-bottom:0" onSubmit="javascript:o.showParentage(this.ontology_browser_input.value); return false;" >';
-	s += '<div id="search_by_id" style="width:700" style="margin-bottom:0" >';
-	s += '<table summary="" cellpadding="5" cellspacing="0" ><tr><td align="center">';
-	s += 'Ontology id&nbsp;&nbsp;&nbsp;&nbsp; <input id="ontology_browser_input" name="ontology_browser_input_name" type="text"  size="12" style="margin-bottom:0" /><input id="ontology_browser_submit" type="submit" style="margin-bottom:0" />';
-	s += '&nbsp;|&nbsp;<input id="reset_hiliting" type="button" value="clear hiliting" onClick="javascript:o.clearHiliting()" style="margin-bottom:0" /> | <input id="reset_tree" type="button" value="reset" onClick="javascript:o.resetBrowser()" style="margin-bottom:0" />';
-		s += '</td><td align="right" width="*" ></td></tr></table>';
+	s +=       '<div id="search_by_id" style="width:100%; margin-bottom:0" >';
+	s += '<table summary="" cellpadding="5" cellspacing="0" width="100%" ><tr><td>';
+	s += 'Find exact ID &nbsp; <input id="ontology_browser_input" name="ontology_browser_input_name" type="text"  size="12" style="margin-bottom:0" /><input id="ontology_browser_submit" value="Find" type="submit" style="margin-bottom:0" />';
+	s += '</td><td style="text-align: right; padding-left:10px"><input id="reset_hiliting" type="button" value="clear highlight" onClick="javascript:o.clearHiliting()" style="margin-bottom:0" /> | <input id="reset_tree" type="button" value="reset view" onClick="javascript:o.resetBrowser()" style="margin-bottom:0" /></td></tr></table>';
 	s +='</div></form>';
 	
 	var e = document.getElementById('ontology_browser_input');
 	//MochiKit.Logging.log('the value of ontology_browser_input is ...',document.getElementById('ontology_browser_input').value);
 	e.innerHTML = s;
 	document.getElementById('ontology_browser_input').value=(o.getSearchTerm());
-		this.workingMessage(false);
+	this.workingMessage(false);
     },
-    
-    renderSearchByName: function() {
-	//this.workingMessage(false);
-	var s = '<form style="margin-bottom:0" name="SearchByNameForm" onsubmit="javascript:o.getOntologies(this.cv_select.value, this.ontology_term_input.value); return false;" >';
-	s += '<div id="search_by_name"  style="margin-bottom:0" >';
-	//s += '<form name="search_name_form" style="margin-bottom:0" >';
-	s += '<table summary="" cellpadding="5" cellspacing="0"><tr><td align="center" >';
-	s += 'Ontology term <input id="ontology_term_input" name="ontology_term_input_name" type="text" size="30"  />';
-	s += '<select id="cv_select" >';
-	s += '<option value="GO" ' + o.isSelected("GO") +'>GO (gene ontology)</option>';
-	s += '<option value="PO" ' + o.isSelected("PO") +'>PO (plant ontology)</option>';
-	s += '<option value="SP" ' + o.isSelected("SP") +'>SP (Solanaceae phenotypes)</option>';
-	s += '<option value="PATO" ' + o.isSelected("PATO") +'>PATO (Phenotype and trait)</option>';
-	s += '<option value="SO" ' + o.isSelected("SO") +'>SO (Sequence ontology)</option>';
-	
-	s += '</select>';
-	s += '<input id="term_search" type="submit" value="Search"  />';
+
+    renderSearchByName: function( nameSpace ) {
+        if ( !nameSpace ) {
+            var s = '<form style="margin-bottom:0" name="SearchByNameForm" onsubmit="javascript:o.getOntologies(this.cv_select.value, this.ontology_term_input.value); return false;" >';
+        }  else {
+            var s = '<form style="margin-bottom:0" name="SearchByNameForm" onsubmit="javascript:o.getOntologies(\'' + nameSpace + '\', this.ontology_term_input.value); return false;" >';
+        }
+        s += '<div id="search_by_name"  style="margin-bottom:0" >';
+        s += '<table summary="" cellpadding="5" cellspacing="0"><tr><td align="center" >';
+	s += 'Search for text <input id="ontology_term_input" name="ontology_term_input_name" type="text" size="30"  />';
+
+        //print the select drop-down only if you not rendering a specific cv
+
+        if (!nameSpace) {
+            s += '<select id="cv_select" >';
+            s += '<option value="GO" ' + o.isSelected("GO") +'>GO (gene ontology)</option>';
+            s += '<option value="PO" ' + o.isSelected("PO") +'>PO (plant ontology)</option>';
+            s += '<option value="SP" ' + o.isSelected("SP") +'>SP (Solanaceae phenotypes)</option>';
+            s += '<option value="PATO" ' + o.isSelected("PATO") +'>PATO (Phenotype and trait)</option>';
+            s += '<option value="SO" ' + o.isSelected("SO") +'>SO (Sequence ontology)</option>';
+            s += '</select>';
+        } else {
+            o.isSelected(nameSpace);
+        }
+        s += '<input id="term_search" type="submit" value="Search"  />';
 	s += '</td></tr></table>';
 	s += '</div></form>';
-	
+
 	var e = document.getElementById('ontology_term_input');
 	e.innerHTML = s;
 	document.getElementById('ontology_term_input').value=(o.getSearchValue());
     },
-    
 
     render: function() {
-	
-	var s = '';	
-	
+
+	var s = '';
+
 	if (o.searchResults) {
-	    //s +='<input id="hide_link" type="button" value="'+o.getSearchButtonText()+'" onClick="MochiKit.Visual.toggle(\'search_results\', \'blind\'); o.toggleSearchResultsVisible(); o.setSearchButtonText(); "><br />';
 	    document.getElementById("hide_link").style.display="inline";
-	    
 	}
 
 	o.setSearchButtonText();
 
 	document.getElementById("search_results").innerHTML=this.getSearchResults();
-	//	s +='<div id="search_results" >' + this.getSearchResults() + '</div>';
 
-	//s += '<div style="font-size:9pt; line-height:10px; font-face:arial,helvetica" >';
-	
-	s = s + this.renderLevel(s, this.rootnode, 0);
+        var children = this.rootnode.getChildren();
+        for (var i=0; i<children.length; i++) {
+            s = s + this.renderLevel(s, children[i], 1);
+        }
 	var e = document.getElementById('ontology_browser');
 	s += '</div>';
 	e.innerHTML = s;
-
-
-	
     },
-    
+
     renderLevel: function (s, node, level, last) { 
 	//MochiKit.Logging.log('renderLevel: ' + node.getName() + ', '+level);
-	
+
 	var t = '';
-	
+
 	if ((node == undefined) || (node.isHidden())) { 
 	    //MochiKit.Logging.log('undefined or hidden node!');  
 	}
 	else { 
-	    
 	    //MochiKit.Logging.log('level '+level);
-	    //for (var l=0; l<level; l++) { 
-	    //		    MochiKit.Logging.log('.');
-	    //}
-	    
-	    
-	    for (var i=0; i<level-1; i++) { 
+            for (var i=0; i<level-1; i++) { 
 		t += '<img src="/documents/img/tree_bar.png" border="0" />';
 	    }
-	    
 	    if (node.hasChildren()) { 
 		var key = node.getNodeKey();
 		if (node.getOpenNode()) {
-		    
 		    t +=  '<a href="javascript:o.closeNode('+key+')"><img src="/documents/img/tree_exp.png" border="0" /></a>';
-		    
+
 		}
 		else { 
-		    
+
 		    if (last) { 
 			t += '<a href="javascript:o.openNode('+key+')"><img src="/documents/img/tree_col_end.png" border="0" /></a>';
 		    }
 		    else { 
-			
+
 			t +=  '<b><a href="javascript:o.openNode('+key+')"><img src="/documents/img/tree_col.png" border="0" /></a></b>';
 		    }
 		}
@@ -309,8 +284,7 @@ CXGN.Onto.Browser.prototype = {
 		
 		//MochiKit.Logging.log('now processing node '+node.name + ', with '+c.length+' children nodes');	    
 		
-		var cs = new Array();
-		for(var i=0; i<c.length; i++) { 		    
+                for(var i=0; i<c.length; i++) { 		    
 		    last = (i==c.length-1);
 		    //MochiKit.Logging.log('<p>', c[i].accession, '</p>');
 		    t = t + this.renderLevel(t, c[i], level, last);
@@ -380,22 +354,28 @@ CXGN.Onto.Browser.prototype = {
     },
     
     showParentage: function(accession) {
-	//MochiKit.Logging.log('the accession is :', accession );
 	this.setSearchTerm(accession);
 	if (accession.length < 5) { 
 	    alert('The search text must be longer than 4 characters');
 	    return;
 	}
 	this.workingMessage(true);
+
 	var pL = this.getParentsList(accession);
 	
-	MochiKit.Logging.log('Retrieved parents '+pL.join(' '));
+	var cache = this.fetchCachedChildren(accession);
 	
+	//MochiKit.Logging.log('Cache length now: '+cache.length);
+	this.setCache(cache);
+
+	//MochiKit.Logging.log('Retrieved parents '+ pL.join(' '));
+
 	var c = this.rootnode.getChildren();
 	for (var i=0; i<c.length; i++) { 
 	    this.recursiveParentage(c[i], pL, accession);
-	    this.render();
+	    //this.render();
 	}
+	this.render();
 	this.workingMessage(false);
     },	
 
@@ -405,6 +385,7 @@ CXGN.Onto.Browser.prototype = {
 	o.hideSearchResults();
 	o.showParentage(accession);
     },
+   
 
     getSearchTerm: function() { 
 	return this.searchTerm;
@@ -413,6 +394,7 @@ CXGN.Onto.Browser.prototype = {
     setSearchTerm: function(searchTerm) { 
 	this.searchTerm = searchTerm;
     },
+
     getSearchValue: function() { 
 	return this.searchValue;
     },
@@ -476,94 +458,99 @@ CXGN.Onto.Browser.prototype = {
 	//MochiKit.Logging.log('Fetching children for node '+this.getName());
 	
 	var parentsList = new Array();
-	
-
-	new Ajax.Request('/chado/ajax_ontology_browser.pl', {
-	    parameters: { node: accession, action: 'parents' }, 
-	    asynchronous: false,
-			      on503: function() { 
-	    	alert('An error occurred! The database may currently be unavailable. Please check back later.');
-	    },
-
-	    onSuccess: function(request) {
-		
-		var responseText = request.responseText;
-		
-		var t = responseText.split('#');
-		
-		//MochiKit.Logging.log('Children count ' +  t.length);
-		
-		for (var i=0; i<=t.length; i++) { 
-		    var j = t[i].split('*');
-		    //MochiKit.Logging.log(i + '. Parent: ID: '+ j[0] + ' Name: ' + j[1], '' );
+	var browser = this;
+	new Ajax.Request('/ajax/onto/parents', {
+		parameters: { node: accession }, 
+		    asynchronous: false,
+		    method: 'get',
+		    on503: function() { 
+		    alert('An error occurred! The database may currently be unavailable. Please check back later.');
+		},
 		    
-		    //MochiKit.Logging.log('Processing '+j[0]);
-		    parentsList.push(j[0]);
-		    
-		    //MochiKit.Logging.log('Child accession: '+childNode.getAccession());
-		    
+		    onSuccess: function(request) {
+		    var json = request.responseText;
+		    var parents = eval("("+json+")");
+		    if ( parents.error ) { alert(parents.error) ; }
+		    else {
+			for (var i=0; i<parents.length; i++) { 
+			    //alert('processing '+parents[i].accession);
+			    parentsList.push(parents[i].accession);
+			}
+			//alert('Now were done!');
+		    }
 		}
-		
-		//MochiKit.Logging.log('Rendering again...');
-		//parentNode.browser.render();      
-		
-	    }
-			      
-			      });
+	});
 	return parentsList;
     },
+    
+    fetchCachedChildren:function(accession) { 
+	var cache;
+	new Ajax.Request('/ajax/onto/cache', {
+		parameters: { node: accession }, 
+		    asynchronous: false,
+		    method: 'get',
+		    on503: function() { 
+		    alert('An error occurred! The database may currently be unavailable. Please check back later.');
+		},
+		    
+		    onSuccess: function(request) {
+		    var json = request.responseText;
+		    cache = eval("("+json+")");
+		    if ( cache.error ) { alert(cache.error) ; }
+		    else {
+			//MochiKit.Logging.log('Cache '+cache.length);
+			
+		    }
+		}
+	});
+	return cache;
+	
+    },
+    
     
     //Make an ajax response that finds all the ontology terms with names/definitions/synonyms/accessions like the current value of the ontology input
     getOntologies: function(db_name, search_string) {
 	this.workingMessage(true);
-	//	var search_string= document.getElementById('ontology_term_input').value;
-	//	var db_name = document.getElementById('cv_select').value;
-	o.setSelected(db_name);
+        o.setSelected(db_name);
 	if(search_string.length<4){
 	    alert('The search text must be longer than 4 characters');
 	}
         else{
-	    new Ajax.Request('/chado/ajax_ontology_browser.pl', {
-		parameters: {action: 'match', term_name: search_string, db_name: db_name },
-		asynchronous: false,
-			    on503: function() { 
-	    	alert('An error occurred! The database may currently be unavailable. Please check back later.');
-	    },
+	    new Ajax.Request('/ajax/onto/match', {
+		    parameters: { term_name: search_string, db_name: db_name },
+		    asynchronous: false,
+		    method: 'get',
+		    on503: function() {
+			alert('An error occurred! The database may currently be unavailable. Please check back later.');
+		    },
+		    onSuccess: function(request) {
+			var matchNodes = new Array();
+			var json = request.responseText;
+                        var x = eval("("+json+")");
+			if ( x.error ) { alert(x.error) ; }
+                        else {
+                            var s='';
+			    o.setSearchResponseCount(x.length);
+			    //MochiKit.Logging.log('Matched '+responseArray.length+' terms');
+			    for (var i=0; i<x.length; i++) {
+				matchNodes.push(x.accession); ///
+				s +='<a href=javascript:o.searchTermParentage(\''+x[i].accession+'\')>'+x[i].cv_name+' ('+x[i].accession+') '+x[i].cvterm_name+'</a><br />';
+			    }
+			    //		    MochiKit.Logging.log('the search results:' , s) ;
+			    //MochiKit.Logging.log('the search string:' , search_string) ;
 
-		onSuccess: function(request) {
-		    var matchNodes = new Array();
-		    var responseText = request.responseText;
-		    
-		    var responseArray = responseText.split('|');
-		    responseArray.pop();
-		    
-		    var s='';
-		    o.setSearchResponseCount(responseArray.length);
-		    MochiKit.Logging.log('Matched '+responseArray.length+' terms');
-		    for (var i=0; i<responseArray.length; i++) { 
-			var ontologyObject = responseArray[i].split('--');
-			var searchResults= responseArray[i].split('*');
-			MochiKit.Logging.log('getOntologies found term ',  ontologyObject[1] );
-			MochiKit.Logging.log('search term ', search_string);
-			matchNodes.push(ontologyObject[0]); ///
-			s +='<a href=javascript:o.searchTermParentage(\''+ontologyObject[1]+'\')>'+searchResults[1]+'</a><br />';
+			    if (s === '') { s = '(no terms found) '; }
+			    o.setSearchResults('<div class="topicbox">Search term: <b>'+search_string+'</b></div><div class="topicdescbox">'+s+'</div>');
+			    o.showSearchResults();
+			    o.setSearchValue(search_string);
+			    o.render();
+			}
 		    }
-	//		    MochiKit.Logging.log('the search results:' , s) ;
-		    MochiKit.Logging.log('the search string:' , search_string) ;
-		    
-		    if (s === '') { s = '(no terms found) '; }
-		    o.setSearchResults('<div class="topicbox">Search term: <b>'+search_string+'</b></div><div class="topicdescbox">'+s+'</div>');
-		    o.showSearchResults();
-		    o.setSearchValue(search_string);
-		    
-		    o.render();
-		}
-	    });
+		});
 	}
 	this.workingMessage(false);
-	
     },
-
+    
     getSearchResults: function() { 
 	return this.searchResults || '';
     },
@@ -622,10 +609,6 @@ CXGN.Onto.Browser.prototype = {
 	document.getElementById("hide_link").style.display="inline";
     },
 
-
-
-
-
     setSearchButtonText: function() { 
 
 	if (this.getSearchResponseCount() === 0) { 
@@ -649,58 +632,20 @@ CXGN.Onto.Browser.prototype = {
 	}
 	return this.searchButtonText;
     },
-    
-    getSelected: function() { 
+
+    getSelected: function() {
 	return this.selected || '';
     },
-    
+
     setSelected: function(selected) {
 	this.selected = selected;
     },
-    
+
     isSelected: function(db_name) {
 	var selected_db_name=o.getSelected();
 	if (selected_db_name == db_name) {
 	    return 'SELECTED' ;
 	}else { return '' ; }
-    },
-
-
-    // the following function is deprecated.
-    //
-    fetchMatches: function (searchText) { 
-	
-	//MochiKit.Logging.log('Fetching children for node '+this.getName());
-	
-	new Ajax.Request('/chado/ajax_ontology_browser.pl', {
-	    parameters: { node: searchText, action: 'match' }, 
-	    asynchronous: false,
-	    	    on503: function() { 
-	    	alert('An error occurred! The database may currently be unavailable. Please check back later.');
-	    },
-
-	    onSuccess: function(request) {
-		
-		//MochiKit.Logging.log('HELLO WORLD!');
-		var matchNodes = new Array();
-		var responseText = request.responseText;
-		
-		var t = responseText.split('#');
-		
-		//	       t.pop(); //remove last element from the array
-		
-		//MochiKit.Logging.log('Matched '+t.length+' nodes');
-		for (var i=0; i<t.length; i++) { 
-		    var j = t[i].split('*');
-		    
-		    //MochiKit.Logging.log('matching node: '+ j[0]);
-		    matchNodes.push(j[0]); ///
-		}
-		
-		return matchNodes;
-	    }
-	});
-	
     },
 
     setLinkToTextField: function(linkToTextField) { 
@@ -721,23 +666,51 @@ CXGN.Onto.Browser.prototype = {
 	    copyToElement.setValue(node.getName());
 	}
 
-    }
-    
-//     submitFormWithEnter: function(myfield,e) {
-// 	var keycode;
-// 	if (window.event) keycode = window.event.keyCode;
-// 	else if (e) keycode = e.which;
-// 	else return true;
-	
-// 	if (keycode == 13)
-// 	{
-// 	    myfield.form.submit();
-// 	    return false;
-// 	}
-// 	else
-// 	return true;
-//     }
+    },
 
+    setCache: function(cache) { 
+	// convert to hash
+	var hash = new Array();
+	for(var i=0; i<cache.length; i++) { 
+	    if (typeof(hash[cache[i].parent])=='undefined') { 
+		hash[cache[i].parent]=new Array();
+	    }
+	    hash[cache[i].parent].push(cache[i]);
+	}
+	this.childrenCache = hash;
+	
+	//MochiKit.Logging.log('setCache: '+ cache.length + ' entries');
+
+    },
+
+    getCache: function() { 
+	if (typeof(this.childrenCache) == 'undefined') { 
+	    this.childrenCache = new Array();
+	}
+	return this.childrenCache;
+    },
+
+    getChildrenFromCache: function(accession) { 
+	var cache = this.getCache();
+	if (typeof(cache[accession]) != 'undefined') { 
+	    return cache[accession];
+	}
+	
+	
+    },
+    
+    hasChildrenCache: function(accession) { 
+	var cache = this.getCache();
+
+	if (typeof cache[accession] != 'undefined') { 
+	    //MochiKit.Logging.log(accession + " has childrenCache");
+	    if (cache[accession].length>0) { 
+		return 1;	
+	    }
+	    
+	}
+	return 0;
+    }    
 };
 
 
@@ -812,6 +785,7 @@ Node.prototype = {
     getRelType: function() { 
 	return this.reltype;
     },
+
     openNode: function() { 
 	this.setOpenNode(true); 
 	if (this.hasChildren() && !this.getChildrenFetched()) { 
@@ -863,35 +837,35 @@ Node.prototype = {
     getChildren: function () { 
 	return this.children;
     },
-    
+
     setParents: function(p) { 
 	this.parents = p;
     },
-    
-    getParents: function() { 
-	return this.parents;
-    },
-    
+
+   
+    /*
+      setHasChildren(), hasChildren(): a boolean property if this node has children
+    */
     setHasChildren: function(childrenFlag) { 
 	this.childrenFlag = childrenFlag;
     },
-    
+
     hasChildren: function() { 
-	//MochiKit.Logging.log('Number of children for node '+this.getName()+' is ' +this.children.length);
-	//if (this.children.length > 0) { 
-	//    return true;
-	//	}
-	//else { 
-	//    return false;
-	//}
 	return this.childrenFlag;
     },
     
+    /*
+      addParent(parentNode): add another Node object has a parent to this Node.
+    */
     addParent: function (parent) { 
 	var p = parent;
 	this.parents.push(p);
     },
     
+    /*
+      getParents() : return all the parents of this Node (remember it's a DAG, 
+      there can be multiple parents!
+    */
     getParents: function () { 
 	if (!this.getParentsFetched()) { 
 	    var p = this.fetchParents;
@@ -899,147 +873,126 @@ Node.prototype = {
 	}
 	return this.parents;
     },
-    
+
+    /*
+      renderNode: renders this node to the browser.
+    */
     renderNode: function (level) { 
 	//MochiKit.Logging.log('Rendering node '+this.getName());
-	
+
 	//      if (this.getOpenNode()) { 
 	//create indent
-	
+
 	//write out link
-	
+
 	var hiliteStyle = 'background-color:white';
 	if (this.isHilited()) { 
 	    hiliteStyle = 'background-color:yellow';
 	}
-	
+
 	// add a button to select this node and fill it into a textfield
 	// as provided by linkToTextField
 	var link = "";
-	//	if (this.getBrowser().linkToTextField==true) { 
-	if (this.getBrowser().getShowSelectTermButtons()) { 
+        if (this.getBrowser().getShowSelectTermButtons()) { 
 	    link = '<a href="javascript:o.copySelectedToTextField(this)"><img src="/documents/img/select.png" border="0" /></a>';
 	}
-	   
+
 	var relType=this.getRelType() || '';
 	return relType + ' <span style="'+hiliteStyle+'"><a href="/chado/cvterm.pl?action=view&amp;cvterm_id='+this.getCVtermID()+'">'+this.getAccession() + '</a> ' + this.getName() + ' ' + link +'</span><br />';
     },
-    
+
     setHilite: function(h) { 
 	this.hilite=h;
     },
-    
-    
+
     isHilited: function() { 
 	return this.hilite;
     },
-    
-    fetchChildren: function () { 
-	
-	//MochiKit.Logging.log('Fetching children for node '+this.getName());
-	
-	var parentNode = this;
-	new Ajax.Request('/chado/ajax_ontology_browser.pl', {
-	    parameters: { node: parentNode.getAccession(), action: 'children' }, 
-			  asynchronous: false,
-	    on503: function() { 
-	    	alert('An error occurred! The database may currently be unavailable. Please check back later.');
-	    },
 
-	   onSuccess: function(request) {
-			      
-			      
-			      //MochiKit.Logging.log('HELLO WORLD!');
-			      
-			      var responseText = request.responseText;
-			      
-			      var t = responseText.split('#');
-			      
-			      //MochiKit.Logging.log('Children count ' +  t.length + '<br />');
-			      
-			      for (var i=0; i<t.length; i++) { 
-				  var j = t[i].split('*');
-				  //MochiKit.Logging.log(i + '. Child: ID: '+ j[0] + ' Name: ' + j[1] +  ' <br />');
-				  
-				  //MochiKit.Logging.log('Processing '+j[0]);
-				  
-				  var childNode = new Node(o);
-				  
-				  childNode.setAccession(j[0]);
-				  childNode.closeNode();
-				  childNode.unHide();
-				  childNode.setName(j[1]);
-				  childNode.setCVtermID(j[2]);
-				  childNode.setRelType(j[4]);
-				  //MochiKit.Logging.log('hasChildren = '+j[2]);
-				  if (j[3]==1) { 
-				      childNode.setHasChildren(true);
-				  }
-				  else { 
-				      childNode.setHasChildren(false);
-				  }
-				  
-				  parentNode.addChild(childNode);
-				  
-				  //MochiKit.Logging.log('Child accession: '+childNode.getAccession()+'<br />');
-				  
-			      }
-			      //MochiKit.Logging.log('Rendering again...');
-			      parentNode.browser.render();      
-			      
-			  }
-					    });
+    fetchChildren: function () { 
+	//MochiKit.Logging.log('Fetching children for node '+this.getName());
+
+	var parentNode = this;
+	var accession = this.getAccession();
+	if (o.hasChildrenCache(accession)) { 
+	    //MochiKit.Logging.log('retrieving accession from cache '+accession);
+	    var children = o.getChildrenFromCache(accession);
+	    for(var i=0; i<children.length; i++) { 
+		//MochiKit.Logging.log('adding child node '+children[i].accession);
+		var childNode = new Node(o);
+		childNode.json2node(children[i]);
+		childNode.closeNode();
+		childNode.unHide();
+		parentNode.addChild(childNode);
+	    }
+	    return;
+	}
+	new Ajax.Request('/ajax/onto/children', {
+		parameters: { node: accession },
+		asynchronous: false,
+		method: 'get',
+		    on503: function() { 
+		    alert('An error occurred! The database may currently be unavailable. Please check back later.');
+		},
+		    onSuccess: function(request) {
+		    //MochiKit.Logging.log('HELLO WORLD!');
+		    var json = request.responseText;
+		    var x = eval("("+json+")");
+		    if ( x.error ) { alert(x.error) ; }
+		    else {
+			for (var i=0; i<x.length; i++) { 
+			    var childNode = new Node(o);
+			    childNode.json2node(x[i]);
+			    childNode.closeNode();
+			    childNode.unHide();
+			    parentNode.addChild(childNode);
+			}
+			parentNode.browser.render();
+		    }
+		}
+	});
     },
-    
-    
     fetchParents: function() { 
 	//MochiKit.Logging.log('Fetching children for node '+this.getName());
-	
 	var childNode = this;
-	
-	new Ajax.Request("/chado/ajax_ontology_browser.pl", {
-	    parameters: { node: childNode.getAccession(), action: 'parents' }, 
-	      asynchronous: false,
-	      onSuccess: function(request) {
-		  
-		  var responseText = request.responseText;
-		  
-		  var t = responseText.split('#');
-		  
-		  //MochiKit.Logging.log('Children count ' +  t.length + '<br />');
-		  
-		  for (var i=0; i<t.length; i++) { 
-		      var j = t[i].split('*');
-		      //MochiKit.Logging.log(i + '. Child: ID: '+ j[0] + ' Name: ' + j[1] +  ' <br />');
-		      
-		      //MochiKit.Logging.log('Processing '+j[0]);
-		      var parent = new Node(o);
-		      
-		      parent.setAccession(j[0]);
-		      parent.closeNode();
-		      parent.unHide();
-		      parent.setName(j[1]);
-		      parent.setCVtermID(j[2]);
-		      parent.setRelType(j[4]);
-		      //MochiKit.Logging.log('hasChildren = '+j[1]);
-		      if (j[3]==1) { 
-			  parent.setHasChildren(true);
-		      }
-		      else { 
-			  parent.setHasChildren(false);
-		      }
-		      
-		      parentList.push(parent);
-		      
-		      //MochiKit.Logging.log('Child accession: '+childNode.getAccession()+'<br />');
-		      
-		  }
-		  //MochiKit.Logging.log('Rendering again...');
-		  //parentNode.browser.render();      
-		  return parentList;
-	      }
-				});
-    }
+	new Ajax.Request("/ajax/onto/parents", {
+		parameters: { node: childNode.getAccession() }, 
+		    asynchronous: false,
+		    method: 'get',
+		    onSuccess: function(request) {
+		    var json = request.responseText;
+		    var x = eval("("+json+")");
+		    if ( x.error ) { alert(x.error) ; }
+		    else {
+			//MochiKit.Logging.log('Children count ' +  t.length + '<br />');
+			for (var i=0; i<x.length; i++) { 
 
-    
-};	
+			    var parent = new Node(o);
+
+			    parent.json2node(x[i]);
+			    parent.closeNode();
+			    parent.unHide();
+			    parentList.push(parent);
+			    //MochiKit.Logging.log('Child accession: '+childNode.getAccession()+'<br />');
+			}
+			//MochiKit.Logging.log('Fetched '+parentList.length + ' parents');
+                        return parentList;
+		    }
+		}
+	});
+    },
+
+    json2node: function(json) { 
+	this.setAccession(json.accession);
+	this.setName(json.cvterm_name);
+	this.setCVtermID(json.cvterm_id);
+	this.setRelType(json.relationship);
+	//MochiKit.Logging.log('hasChildren = '+j[2]);
+	if (json.has_children == 1) { 
+	    this.setHasChildren(true);
+	}
+	else { 
+	    this.setHasChildren(false);
+	}
+    }
+};

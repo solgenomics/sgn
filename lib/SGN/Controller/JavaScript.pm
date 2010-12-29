@@ -66,7 +66,7 @@ sub js_package :Path('pack') :Args(1) {
     $c->stash->{js} = $self->_package_defs->thaw( $key );
 
     $c->log->debug(
-         "serving JS pack $key = ("
+         "JS: serving pack $key = ("
         .(join ', ', @{ $c->stash->{js} || [] })
         .')'
        ) if $c->debug;
@@ -195,7 +195,7 @@ sub action_for_js_package {
     my $key = md5_hex( join '!!', @files );
 
     $self->_app->log->debug (
-         "define JS pack $key = ("
+         "JS: define pack $key = ("
         .(join ', ', @files)
         .')'
        ) if $self->_app->debug;
@@ -203,9 +203,9 @@ sub action_for_js_package {
 
     # record files for this particular package of JS
     if( $self->_package_defs->exists( $key ) ) {
-        warn "key $key already exists in js_packs cache" if $self->_app->debug;
+        $self->_app->log->debug("JS: key $key already exists in js_packs cache") if $self->_app->debug;
     } else {
-        warn "key $key is new in js_packs cache" if $self->_app->debug;
+        $self->_app->log->debug("JS: new key $key stored in js_packs cache") if $self->_app->debug;
         $self->_package_defs->freeze( $key => \@files );
     }
 

@@ -1,0 +1,15 @@
+<%args>
+  $xrefs
+</%args>
+
+<& /sitefeatures/gbrowse2/xref_set/rich.mas, xrefs => \@gbrowse_gene_model_xrefs &>
+
+<%init>
+
+  # look up any gbrowse cross-refs for this locus id, if any
+  my @gbrowse_gene_model_xrefs =
+     grep {
+           $_->feature->feature_name eq 'gbrowse2'
+        && $_->data_source->description =~ /genomic/i
+     } @$xrefs;
+</%init>

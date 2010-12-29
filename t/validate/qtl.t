@@ -27,6 +27,9 @@ $mech->get("$base_url/$url");
 if ($mech->content =~ m/temp dir .* not (found|writable)|Failed to obtain lock|failed to submit cluster job/) {
     plan skip_all => "Skipping QTL Analysis page due to incomplete configuration";
 } else {
-    plan tests => 7;
-    validate_urls({ "QTL Analysis Page" => $url });
+    validate_urls({
+        "QTL Analysis Page" => $url ,
+        });
 }
+
+done_testing;

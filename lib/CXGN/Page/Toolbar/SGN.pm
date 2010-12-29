@@ -27,8 +27,8 @@ sub default_toolbar_data {
                     desc => 'Phenotype search.'
                 },
                 {
-                    name => 'QTLs/Traits[beta]',
-                    link => '/search/direct_search.pl?search=cvterm_name',
+                    name => 'QTLs',
+                    link => '/search/direct_search.pl?search=qtl',
                     desc => 'A web interface for uploading QTL raw data, on-the-fly QTL mapping and search interface for QTLs.'
                 },
                 {

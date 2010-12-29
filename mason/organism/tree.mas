@@ -32,7 +32,7 @@ hashref of:
 % if( $organism_tree->{image_uri} && $organism_tree->{image_map} ) {
 
 %    if( $organism_tree->{newick} ) {
-       <form action="/tools/tree_browser/" method="post">
+       <form action="/tools/tree_browser/index.pl" method="post">
           <input type="hidden" name="tree_string" value="<% $organism_tree->{newick} |h %>" />
           <input type="submit" value="show in tree browser" />
        </form>

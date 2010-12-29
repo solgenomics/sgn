@@ -1,0 +1,10 @@
+Package: sgn
+Title: The SGN website
+Version: 0.1
+Date: 2010-10-12
+Author: Robert Buels <rmb32@cornell.edu>
+Maintainer: Robert Buels <rmb32@cornell.edu>
+Description: The code behind the Sol Genomics Network (sgn.cornell.edu)
+        website.
+Depends: R (>= 2.11.0), qtl (>= 1.17), gplots (>= 2.8.0), ltm (>= 0.9), RColorBrewer (>= 1.0)
+License: Artistic-3
