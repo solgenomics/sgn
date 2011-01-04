@@ -14,16 +14,16 @@ use HTML::Entities;
 
 use Number::Bytes::Human ();
 
-use CXGN::BioTools::SearchIOHTMLWriter;
 use CXGN::Page;
 use CXGN::BlastDB;
 
 use Bio::SearchIO;
+use Bio::SearchIO::Writer::HTMLResultWriter;
 
 use CXGN::Graphics::BlastGraph; #Evan's package for conservedness histograms
 use CXGN::Apache::Error;
+use CXGN::Tools::Identifiers;
 use CXGN::Tools::List qw/str_in/;
-use CXGN::Tools::Identifiers qw/link_identifier/;
 use File::Slurp qw/slurp/;
 use CXGN::Page::FormattingHelpers qw/info_section_html page_title_html columnar_table_html/;
 use CatalystX::GlobalContext '$c';
@@ -59,11 +59,59 @@ my $formatted_report_file = format_report_file($raw_report_file);
 
 #warn "got raw report file $raw_report_file, formatting $formatted_report_file\n";
 
+$page->jsan_use( 'jqueryui' );
 $page->header();
 
-# TODO: insert JS here to add site xref popups to onclicks of
-#  a.blast_match_ident elements
+# stuff to support AJAXy disambiguation of site xrefs
 print <<EOJS;
+<div id="xref_menu_popup" title="Match information">
+  <h1 class="popup_title"></h1>
+  <dl>
+    <dt>Subject details</dt>
+      <dd class="identifier_link"></dd>
+    <dt>Subject sequence</dt>
+      <dd><a class="match_details" href="">view matched sequence</a></dd>
+    <dt>Related pages</dt>
+      <dd>
+       <div class="xref_content"></div>
+     </dd>
+  </dl>
+</div>
+<script>
+
+  function resolve_blast_ident( id, match_detail_url, identifier_url ) {
+    var popup = jQuery( "#xref_menu_popup" );
+
+    var popup_title = popup.children('.popup_title');
+    var identifier_link_area = popup.find('.identifier_link');
+
+    if( identifier_url == null ) {
+       popup_title.html( 'Subject: ' + id );
+       identifier_link_area.html( '<span class="ghosted">not available</span>' );
+    } else {
+       popup_title.html( 'Subject: <a href="' + identifier_url + '">' + id + '</a>' );
+       identifier_link_area.html( '<a href="' + identifier_url + '">view ' + id + ' details</a>' );
+    }
+
+    popup.find('a.match_details').attr( 'href', match_detail_url );
+    var content = popup.find('div.xref_content');
+    content.html( '<img src="/img/throbber.gif" /> searching for additional related pages ...' );
+    content.load( '/api/v1/feature_xrefs?q='+id );
+    popup.dialog( 'open' );
+    jQuery( "body .ui-widget-overlay").click( function() { popup.dialog( "close" ); } );
+
+    return false;
+  }
+
+  jQuery( "#xref_menu_popup" ).dialog({
+          autoOpen: false,
+          height: 300,
+          width: 680,
+          modal: true
+  });
+
+</script>
+
 EOJS
 
 print page_title_html('BLAST Results');
@@ -132,8 +180,6 @@ sub format_report_file {
                                                      "$params{report_file}.formatted.html"
                                                      );
 
-    #  return $formatted_report_file if -s $formatted_report_file;
-
     #for smaller reports, HTML format them
     my %bioperl_formats = ( 0 => 'blast', #< only do for regular output,
                             #not the tabular and xml, even
@@ -142,8 +188,6 @@ sub format_report_file {
                             #these, they probably don't
                             #want bioperl to munge it.
                             );
-#    sub linkit { my $s = $_[0]; $s =~ s/^lcl\|//; link_identifier($s) || $s }
-
     sub linkit {
         my $bdb = shift;
         my $s = shift;
@@ -152,6 +196,42 @@ sub format_report_file {
         my $url = $bdb->identifier_url($s);
         return qq { <a class="blast_match_ident" href="$url">$s</a> };
     }
+
+    if ( $params{seq_count} == 1 && $bioperl_formats{$params{outformat}}) {
+        my $in = Bio::SearchIO->new(-format => $bioperl_formats{$params{outformat}}, -file   => "< $raw_report_file")
+            or die "$! opening $raw_report_file for reading";
+        my $writer = make_bioperl_result_writer( $params{database} );
+        my $out = Bio::SearchIO->new( -writer => $writer,
+                                      -file   => "> $formatted_report_file",
+                                      );
+        $out->write_result($in->next_result);
+    } else {
+        open my $raw,$raw_report_file
+            or die "$! opening $raw_report_file for reading";
+        open my $fmt,'>',$formatted_report_file
+            or die "$! opening $formatted_report_file for writing";
+
+        if(my $formatter = get_custom_formatter( $params{outformat} ) ) {
+            $formatter->($raw,$fmt);
+        } else {
+            print $fmt qq|<pre>|;
+            while (my $line = <$raw>) {
+                $line = encode_entities($line);
+                $line =~ s/(?<=Query[=:]\s)(\S+)/linkit($bdb,$MATCH)/eg;
+                #      $line =~ s/(?<=^>)(\S+)/linkit($bdb,$MATCH)/eg;
+                print $fmt $line;
+            }
+            print $fmt qq|</pre>\n|;
+        }
+    }
+
+    return $formatted_report_file;
+}
+
+##########################
+
+sub get_custom_formatter {
+    my ( $blast_output_format ) = @_;
 
     my %custom_formatters = (
                              7 => sub {  ### XML
@@ -198,38 +278,9 @@ sub format_report_file {
                              },
                              );
 
-    if ( $params{seq_count} == 1 && $bioperl_formats{$params{outformat}}) {
-        my $in = Bio::SearchIO->new(-format => $bioperl_formats{$params{outformat}}, -file   => "< $raw_report_file")
-            or die "$! opening $raw_report_file for reading";
-        #$writer is a  "blastxml" (NCBI BLAST XML) which will b an argument for constructing new Bio::SearchIO module
-        my $writer = CXGN::BioTools::SearchIOHTMLWriter->new($params{database});
-        my $out = Bio::SearchIO->new( -writer => $writer,
-                                      -file   => "> $formatted_report_file",
-                                      );
-        $out->write_result($in->next_result);
-    } else {
-        open my $raw,$raw_report_file
-            or die "$! opening $raw_report_file for reading";
-        open my $fmt,'>',$formatted_report_file
-            or die "$! opening $formatted_report_file for writing";
 
-        if(my $formatter = $custom_formatters{$params{outformat}} ) {
-            $formatter->($raw,$fmt);
-        } else {
-            print $fmt qq|<pre>|;
-            while (my $line = <$raw>) {
-                $line = encode_entities($line);
-                $line =~ s/(?<=Query[=:]\s)(\S+)/linkit($bdb,$MATCH)/eg;
-                #      $line =~ s/(?<=^>)(\S+)/linkit($bdb,$MATCH)/eg;
-                print $fmt $line;
-            }
-            print $fmt qq|</pre>\n|;
-        }
-    }
-
-    return $formatted_report_file;
+    return $custom_formatters{ $blast_output_format };
 }
-##########################
 
 sub graphics_html {
   my ($raw_report_file,$formatted_report_file,$got_hits) = @_;
@@ -325,4 +376,51 @@ EOP
 
   my $html = `perl -e '$cmd'`;
   return $html;
+}
+
+sub make_bioperl_result_writer {
+  my ( $db_id ) = @_;
+  my $self = Bio::SearchIO::Writer::HTMLResultWriter->new;
+
+  $self->id_parser( sub {
+      my ($idline) = @_;
+      my ($ident,$acc) = Bio::SearchIO::Writer::HTMLResultWriter::default_id_parser($idline);
+
+      # The default implementation checks for NCBI-style identifiers in the given string ('gi|12345|AA54321').
+      # For these IDs, it extracts the GI and accession and
+      # returns a two-element list of strings (GI, acc).
+
+      return ($ident,$acc) if $acc;
+      return CXGN::Tools::Identifiers::clean_identifier($ident) || $ident;
+  });
+
+  my $hit_link = sub {
+    my ($self, $hit, $result) = @_;
+
+    my $id = $hit->name;
+
+    #see if we can link it as a CXGN identifier.  Otherwise,
+    #use the default bioperl link generator
+    my $identifier_url = CXGN::Tools::Identifiers::identifier_url( $id );
+    my $js_identifier_url = $identifier_url ? "'$identifier_url'" : 'null';
+
+    my $coords_string =
+        "hilite_coords="
+       .join( ',',
+              map $_->start('subject').'-'.$_->end('subject'),
+              $hit->hsps,
+             );
+
+    my $match_seq_url = "show_match_seq.pl?blast_db_id=$db_id;id=$id;$coords_string";
+
+    my $no_js_url = $identifier_url || $match_seq_url;
+
+    return qq{ <a class="blast_match_ident" href="$no_js_url" onclick="return resolve_blast_ident( '$id', '$match_seq_url', $js_identifier_url )">$id</a> };
+
+  };
+  $self->hit_link_desc(  $hit_link );
+  $self->hit_link_align( $hit_link );
+  $self->start_report(sub {''});
+  $self->end_report(sub {''});
+  return $self;
 }

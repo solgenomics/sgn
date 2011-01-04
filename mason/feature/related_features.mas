@@ -11,8 +11,8 @@
     # }
     my %rels;
     push @{$rels{$_->[0]}{$_->[1]}}, $_->[2] for (
-         ( map [ cvterm_link($_), 'downstream', $_->subject ], $feature->feature_relationship_objects  ),
-         ( map [ cvterm_link($_), 'upstream',   $_->object  ], $feature->feature_relationship_subjects ),
+         ( map [ cvterm_link( $_->type ), 'downstream', $_->subject ], $feature->feature_relationship_objects  ),
+         ( map [ cvterm_link( $_->type ), 'upstream',   $_->object  ], $feature->feature_relationship_subjects ),
         );
 
     my $ftype = $feature->type->name;

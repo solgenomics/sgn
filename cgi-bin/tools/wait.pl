@@ -102,7 +102,7 @@ else {
 sub display_not_finished { 
 
 	my $message = shift;
-	$message ||= "Job running ... please be patient";
+	$message ||= "Job running, please wait.";
 #    $page->header();
 
     my $title = page_title_html($message);
@@ -113,7 +113,7 @@ Content-type: text/html
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 <head>
-<title>Running the job on the SGN Linux cluster</title>
+<title>Job running</title>
 <meta http-equiv="Refresh" content="3" />
 <link rel="stylesheet" href="/documents/inc/sgn.css" type="text/css" />
 </head>
@@ -123,8 +123,6 @@ Content-type: text/html
     <img src="/documents/img/sgn_logo_animated.gif" alt="SGN logo"/>
     <br /><br /><br />
     $title
-    Please do not hit reload or the back button. Thanks!
-    <br /><br />
     <img src="/documents/img/progressbar1.gif" alt="In Progress..."/>
     <br /><br /><br />
     </center>

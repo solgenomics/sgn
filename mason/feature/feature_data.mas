@@ -25,14 +25,15 @@
 
 <% info_table_html(
     'Name'          => feature_link( $feature ),
-    'Type'          => cvterm_link($feature,'caps'),
-    'Location(s)'   => location_list_html( $feature, $featurelocs ),
+    'Type'          => cvterm_link( $feature->type, 'caps' ),
+    'Location(s)'   => join('', map "<div>$_</div>\n", location_list_html( $feature, $featurelocs )),
     'Length'        => $feature_length,
 
     'Organism' => organism_link($feature->organism),
      __border => 0,
      __multicol => 4
-)%>
+   )
+%>
 
 <% info_table_html(
      'Description'   => $description || '<span class="ghosted">none</span>',

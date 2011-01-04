@@ -44,9 +44,9 @@ use SGN::Test::WWW::Mechanize;
 
 
         #qtl help page
-        my $qtl_help_link = $mech->find_link( url_regex => qr !/help/qtl_cvterm_search_help.pl!);
+        my $qtl_help_link = $mech->find_link( url_regex => qr !/help/qtl_search_help.pl!);
         $mech->links_ok([$qtl_help_link], 'link to qtl/trait search help page');
-        $mech->get_ok('/help/qtl_cvterm_search_help.pl', 'qtl/trait search help page');
+        $mech->get_ok('/help/qtl_search_help.pl', 'qtl/trait search help page');
         $mech->content_contains('Search the database using a trait name');
 
         # population page

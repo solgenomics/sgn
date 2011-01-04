@@ -4,7 +4,8 @@ Release date: NEXT
 
 Changes:
 
- - enter changes here
+ - International Tomato Annotation Group (ITAG) annotation bulk files now available for download, with newly rewritten download routines to record user information for each downloaded file.
+ - Fixed performance problems of International Tomato Sequencing project page.
 
 ---
 
