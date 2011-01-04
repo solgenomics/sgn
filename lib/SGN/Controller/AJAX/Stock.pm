@@ -83,6 +83,44 @@ sub add_stockprop_POST {
 }
 
 
+sub add_stockprop_GET {
+}
+
+sub associate_locus :Path('stock/associate_locus') :Args(0) {
+    my ( $self, $c ) = @_;
+    my $stock_id = $c->req->param('object_id');
+    my $allele_id = $c->req->param('allele_id');
+    #Phytoene synthase 1 (psy1) Allele: 1
+    #phytoene synthase 1 (psy1) 
+    my $locus_input = $c->req->param('loci');
+    my ($locus_data, $allele_symbol) = split (/Allele:/ ,$locus_input);
+    my $is_default = $allele_symbol ? 'f' : 't' ;
+    $locus_data =~ m/(.*)\s\((.*)\)/ ;
+    my $locus_name = $1;
+    my $locus_symbol = $2;
+    my $allele = $c->dbic_schema('CXGN::Phenome::Schema')
+        ->resultset('Locus')
+        ->search({
+            locus_symbol => $locus_symbol,
+                 } )
+        ->search_related('alleles' , {
+            allele_symbol => $allele_symbol, 
+            is_default => $is_default} );
+    if (!$allele) { # return some JSON error .. 
+    }
+    my $stock = $c->dbic_schema('Bio::Chado::Schema' , 'sgn_chado')
+        ->resultset("Stock::Stock")->find({stock_id => $stock_id } ) ;
+    # if this fails, it will throw an acception and will (probably
+    # rightly) be counted as a server error
+    $stock->create_stockprops(
+        { 'sgn allele_id' => $allele->allele_id },
+        { autocreate => 1 },
+        );
+    # need to update the loci div!!
+    ##
+    $c->res->redirect( $c->uri_for( '/stock/view/id/$stock_id' ));
+}
+
 sub display_alleles : Local : ActionClass('REST') {}
 
 sub display_alleles_GET :  {
