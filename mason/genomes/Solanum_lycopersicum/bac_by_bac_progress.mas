@@ -200,7 +200,7 @@ print <<EOHTML;
 <center>
   <b>Overall Stats</b>
   <table>
-    <tr><td align="right">$overall_percent%</td><td>of sequencing is complete</td></tr>
+    <tr><td align="right">$overall_percent%</td><td>of BAC sequencing is complete</td></tr>
     <tr><td align="right">$complete_percent%</td><td>of BACs are reported finished</td></tr>
     <tr><td align="right">$available_percent%</td><td>of BACs have downloadable sequence</td></tr>
     </table>
