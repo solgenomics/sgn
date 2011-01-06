@@ -9,7 +9,6 @@ use CXGN::DB::Connection;
 use Carp qw | verbose |;
 
 my $mech = SGN::Test::WWW::Mechanize->new;
-$mech->get_ok("http://localhost:3000/contact/form", "Check the form page");
 
 #Tests the general form
 &check_basic_parts_are_ok($mech);
@@ -44,7 +43,7 @@ sub {
     &check_basic_parts_are_ok($mech);
     $mech->has_tag("input", 
 		    qr/value="TestTester".*?name="name"/sx, 
-                     "If user logs in, name will go on the form."); 
+                     "Check if user logs in, name will go on form."); 
 });
 $user{email} = 'testemail@test.com';
 $mech->while_logged_in(\%user, 
@@ -52,7 +51,7 @@ sub {
    &check_basic_parts_are_ok($mech);
    $mech->has_tag("input", 
 		    qr/value='testemail\@test.com'.*?name="name"/sx, 
-                     "If user logs in, email will go on the form."); 
+                     "Check if user logs in, email will go on the form."); 
 });
 $user{first_name} = "";
 $user{last_name} = "";
@@ -61,7 +60,7 @@ sub {
    &check_basic_parts_are_ok($mech);
    $mech->has_tag("input", 
 		    qr/value="".*?name=""/sx, 
-                     "If user logs in, name will go on the form."); 
+                     "Check if user logs in and does not have name, name won't go on."); 
 });
 
 my $form_name = "contactForm";
@@ -86,7 +85,7 @@ $mech->back();
 foreach my $field (@fields)
 {
    my $filledEntry = {$field => $entry_for_field{$field}};
-   my $testDesc = "Form with $field filled in sent. ";
+   my $testDesc = "Form with $field filled in sent ";
    &test_currently_filled_and_oppositely_filled_forms($mech, $form_name, 
 			$field, $filledEntry, $testDesc, %entry_for_field);
    $mech->back();
@@ -94,6 +93,7 @@ foreach my $field (@fields)
    if ($field ne 'name')
    {
       $$filledEntry{'name'} = $entry_for_field{$field};
+      my $testDesc = "Form with name and $field filled in sent ";
       &test_currently_filled_and_oppositely_filled_forms($mech, $form_name, 
 			$field, $filledEntry, $testDesc, %entry_for_field);
       delete $$filledEntry{'name'};
@@ -108,7 +108,7 @@ sub check_basic_parts_are_ok
    my $mech = shift;
    $mech->get_ok("/contact/form", "Check the form page");
    $mech->html_lint_ok("Check form page html");
-   $mech->page_links_ok('Check all links');
+   #$mech->page_links_ok('Check all links');
    $mech->text_contains("Contact", "Title is there");
 }
 
