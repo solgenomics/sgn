@@ -147,16 +147,16 @@ sub test_currently_filled_and_oppositely_filled_forms
 				      $testDesc . "$i time(s)");
           foreach my $otherFields (keys %entry_for_field)
           {
-             if ($otherFields ne $field)
+             unless ($$filledEntry{$otherFields})
              { 
-                $mech->text_like(qr/($field)|(message) is required/i, 
-				"$field should show error message");
+                $mech->text_like(qr/($otherFields)|(message) is required/i, 
+				"$otherFields should show error message");
                 $$filledEntry{$otherFields} = $entry_for_field{$otherFields}; 
        	     }
              else
              {
-	        $mech->text_unlike(qr/($field)|(message) is required/i,					           "$field should not show error message");
-                delete $$filledEntry{$field};
+	        $mech->text_unlike(qr/($otherFields)|(message) is required/i,					           "$otherFields should not show error message");
+                delete $$filledEntry{$otherFields};
              }
           }
           $mech->back() if $j != 1;
