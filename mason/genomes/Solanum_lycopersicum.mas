@@ -28,6 +28,7 @@ Lukas Mueller, based on SGN Perl code
 $dbh
 $basepath
 $cview_tempfiles_subdir
+$bac_by_bac_progress
 </%args>
 
 
@@ -84,6 +85,7 @@ note that all data is released under the data release agreement below.
       dbh      => $dbh,
       basepath => $basepath,
       cview_tempfiles_subdir => $cview_tempfiles_subdir,
+      progress_data => $bac_by_bac_progress,
    &>
 </&>
 
