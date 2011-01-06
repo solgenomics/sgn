@@ -11,7 +11,7 @@ use Carp qw | verbose |;
 my $mech = SGN::Test::WWW::Mechanize->new;
 
 #Tests the general form
-&check_basic_parts_are_ok($mech);
+check_basic_parts_are_ok($mech);
 my @categories = ("name", "email", "subject");
 foreach my $category (@categories)
 {
@@ -40,7 +40,7 @@ $user{first_name} = "Test";
 $user{last_name} = "Tester";
 $mech->while_logged_in(\%user, 
 sub {
-    &check_basic_parts_are_ok($mech);
+    check_basic_parts_are_ok($mech);
     $mech->has_tag("input", 
 		    qr/value="TestTester".*?name="name"/sx, 
                      "Check if user logs in, name will go on form."); 
@@ -48,7 +48,7 @@ sub {
 $user{email} = 'testemail@test.com';
 $mech->while_logged_in(\%user, 
 sub {
-   &check_basic_parts_are_ok($mech);
+   check_basic_parts_are_ok($mech);
    $mech->has_tag("input", 
 		    qr/value='testemail\@test.com'.*?name="name"/sx, 
                      "Check if user logs in, email will go on the form."); 
@@ -57,7 +57,7 @@ $user{first_name} = "";
 $user{last_name} = "";
 $mech->while_logged_in(\%user,
 sub {
-   &check_basic_parts_are_ok($mech);
+   check_basic_parts_are_ok($mech);
    $mech->has_tag("input", 
 		    qr/value="".*?name=""/sx, 
                      "Check if user logs in and does not have name, name won't go on."); 
@@ -70,29 +70,29 @@ my %entry_for_field = ('name' => 'Test Tester',
 			      'body' => 'Hello World');
 my @fields = keys %entry_for_field;
 diag("Sending complete form from form page\n");
-&send_complete_form_and_check($mech, $form_name, %entry_for_field);
+send_complete_form_and_check($mech, $form_name, %entry_for_field);
 $mech->back();
 diag("Sending empty form from form page\n");
 for (my $i = 0; $i < 2; $i++)
 {  
    diag("Sending empty form from submit page\n" if $i == 1);
-   &send_blank_form_and_check($mech, $form_name, @fields);
+   send_blank_form_and_check($mech, $form_name, @fields);
 }
 diag("Sending full form from submit page\n");
-&send_complete_form_and_check($mech, $form_name, %entry_for_field);
+send_complete_form_and_check($mech, $form_name, %entry_for_field);
 $mech->get("/contact/form");
 foreach my $field (@fields)
 {
    my $filledEntry = {$field => $entry_for_field{$field}};
    my $testDesc = "Form with $field filled in sent ";
-   &test_currently_filled_and_oppositely_filled_forms($mech, $form_name, 
+   test_currently_filled_and_oppositely_filled_forms($mech, $form_name, 
 			$field, $filledEntry, $testDesc, %entry_for_field);
    $mech->get("contact/form");
    if ($field ne 'name')
    {
       $$filledEntry{'name'} = $entry_for_field{$field};
       my $testDesc = "Form with name and $field filled in sent ";
-      &test_currently_filled_and_oppositely_filled_forms($mech, $form_name, 
+      test_currently_filled_and_oppositely_filled_forms($mech, $form_name, 
 			$field, $filledEntry, $testDesc, %entry_for_field);
       delete $$filledEntry{'name'};
       $mech->get("contact/form");
