@@ -161,8 +161,9 @@ sub test_currently_filled_and_oppositely_filled_forms
 	        $mech->text_unlike(qr/$otherFields is required/i,					           "$otherFields should not show error message");
              }
           }
-          $mech->get("/contact/form") if $j != 1;
-          $testDesc =~ s/filled in/unfilled/;
+          $mech->back();
+          $mech->submit_form_ok({'form_name'=>$form_name}, 
+			"Check submitting; blank form was sent.") if $j == 1;
        }
    }
 }
