@@ -18,7 +18,7 @@ foreach my $category (@categories)
 {
    #$mech->has_tag("input", qr/value="".*?name="$category"/sx, 
    #                  "The form has $category as an input.");
-   $mech->has_content("Your $category", "Check if category was added");
+   $mech->content_contains("Your $category", "Check if category was added");
    $mech->has_tag("input", "", "The form has $category as an input.");
 }
 $mech->has_tag("textarea", qr/name="body"/,
