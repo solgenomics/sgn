@@ -1,0 +1,101 @@
+<%
+# % if ($ARGS{submitted}) {
+#  <script type="text/javascript">
+#  alert("All fields must be filled!");
+#  </script>
+#% } 
+%>
+
+<& "../page/page_title.mas", title => "Contact" &>
+
+<form method="post" action= "/contact/submit" name = "contactForm">
+<input type="hidden" name="tried_once" value="1" />
+<div style="margin-left: 30px">
+<table summary="" border="0" cellpadding="5" cellspacing="5">
+
+<%perl>
+my $infoNeeded = ["name", "email", "subject"];
+my $defaultVal = {"name" => $name, 
+                      "email" => $email,
+                         "subject" => $subject};
+</%perl>
+% foreach my $info_category (@$infoNeeded) {
+<tr><td align="left" valign="top">
+<strong>Your <% $info_category %>*</strong>
+</td>
+% unless ($filled{$info_category}) {
+</td>
+<td style = "color:red; font-size: 10px;" align = "left" valign = "top">     
+<% ucfirst $info_category %> is required 
+<br />
+% } else {
+<td align = "left" valign = "top"> 
+%}
+<input type="text" size="50" value= "<% $$defaultVal{$info_category} %>"
+				name = "<% $info_category %>" />
+</td></tr>
+% }     
+
+<tr><td align="left" valign="top">
+<strong>Body*</strong>
+</td>
+% unless ($filled{body}) {
+<td style = "color:red; font-size: 10px;" align = "left" valign = "top">
+Message is required
+<br />
+% } else {
+<td align = "left" valign = "top">
+% }
+<textarea cols="77" rows="12" name="body"><% $body %></textarea>
+</td></tr>
+
+<tr><td colspan="2" align="center" valign="middle" style = "color:red; font-size: 15px; font-style:italic;">
+* fields are required!
+</td></tr>
+
+<tr><td colspan="2" align="center" valign="middle">
+<input type="submit" value="Submit" />
+</td></tr>
+</table>
+</div>
+</form>
+
+<dl>
+<dt>
+<strong>Email</strong>
+</dt>
+<dd><p>
+<a href= "mailto:<% $email_address_to_display %>"><% $email_address_to_display %></a>
+</p></dd>
+
+<dt>
+<strong>Mailing address</strong>
+</dt>
+<dd><p>
+Sol Genomics Network<br />
+Boyce Thompson Institute for Plant Research<br />
+Room 221<br />
+Tower Road<br />
+Ithaca, NY 14853<br />
+USA<br />
+Phone: (607) 255-6557<br />
+</p></dd>
+
+<dt>
+<strong>Mailing list</strong>
+</dt>
+<dd><p>
+To stay informed of developments around SGN you can subscribe to our <a href="http://rubisco.sgn.cornell.edu/mailman/listinfo/sgn-announce/">email list</a>. This is a relatively low volume list (a couple of messages/month).
+</p></dd>
+
+</dl>
+
+<% #Component's arguments %>
+<%args>
+$name     => '';
+$email    => '';
+$subject  => '';
+$body     => '';
+%filled => (name => 1, email => 1, subject => 1, body => 1);
+$email_address_to_display => '';
+</%args>
