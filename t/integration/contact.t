@@ -73,7 +73,7 @@ diag("Sending complete form from form page\n");
 send_complete_form_and_check($mech, $form_name, %entry_for_field);
 $mech->back();
 diag("Sending empty form from form page\n");
-for (my $i = 0; $i < 2; $i++)
+for my $i (0..1)
 {  
    diag("Sending empty form from submit page\n" if $i == 1);
    send_blank_form_and_check($mech, $form_name, @fields);
@@ -133,10 +133,10 @@ sub send_blank_form_and_check
 sub test_currently_filled_and_oppositely_filled_forms
 {
     my ($mech, $form_name, $field, $filledEntry, $testDesc, %entry_for_field) = @_;
-    for (my $i = 0; $i < 2; $i++)
+    for my $i (0..1)
     {
        $testDesc =~ s/unfilled/filled in/;
-       for (my $j = 0; $j < 2; $j++)
+       for my $j (0..1)
        {
 
           $mech->submit_form_ok({'name'=>$form_name, 
