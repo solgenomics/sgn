@@ -69,27 +69,25 @@ my %entry_for_field = ('name' => 'Test Tester',
 			   'subject' => 'Testing',
 			      'body' => 'Hello World');
 my @fields = keys %entry_for_field;
-print "Sending complete form from form page\n";
+diag("Sending complete form from form page\n");
 &send_complete_form_and_check($mech, $form_name, %entry_for_field);
 $mech->back();
-print "Sending empty form from form page\n";
+diag("Sending empty form from form page\n");
 for (my $i = 0; $i < 2; $i++)
 {  
-   print "Sending empty form from submit page\n" if $i == 1;
+   diag("Sending empty form from submit page\n" if $i == 1);
    &send_blank_form_and_check($mech, $form_name, @fields);
 }
-print "Sending full form from submit page\n";
+diag("Sending full form from submit page\n");
 &send_complete_form_and_check($mech, $form_name, %entry_for_field);
-$mech->back();
-$mech->back();
+$mech->get("/contact/form");
 foreach my $field (@fields)
 {
    my $filledEntry = {$field => $entry_for_field{$field}};
    my $testDesc = "Form with $field filled in sent ";
    &test_currently_filled_and_oppositely_filled_forms($mech, $form_name, 
 			$field, $filledEntry, $testDesc, %entry_for_field);
-   $mech->back();
-   $mech->back();
+   $mech->get("contact/form");
    if ($field ne 'name')
    {
       $$filledEntry{'name'} = $entry_for_field{$field};
@@ -97,8 +95,7 @@ foreach my $field (@fields)
       &test_currently_filled_and_oppositely_filled_forms($mech, $form_name, 
 			$field, $filledEntry, $testDesc, %entry_for_field);
       delete $$filledEntry{'name'};
-      $mech->back();
-      $mech->back();
+      $mech->get("contact/form");
    }
    delete $$filledEntry{$field};
 }
