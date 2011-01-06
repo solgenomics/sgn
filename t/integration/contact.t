@@ -116,6 +116,7 @@ sub send_complete_form_and_check
 			     "Check submitting; filled out form was sent.");
    $mech->text_contains("Thank you. Your message has been sent.", 
 			    "See if form is sent successfully");
+   $mech->html_lint_ok("Check message page html");
 }
 
 sub send_blank_form_and_check
