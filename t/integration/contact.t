@@ -75,7 +75,7 @@ $mech->back();
 diag("Sending empty form from form page\n");
 for my $i (0..1)
 {  
-   diag("Sending empty form from submit page\n" if $i == 1);
+   diag("Sending empty form from submit page\n") if $i == 1;
    send_blank_form_and_check($mech, $form_name, @fields);
 }
 diag("Sending full form from submit page\n");
