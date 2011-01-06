@@ -81,8 +81,10 @@ Referred from:
 $self->reference
 
 END_HEREDOC
+       print STDERR "Before it is sent";
        CXGN::Contact::send_email( "[contact.pl] $subject", $body, 'email',
                                         $email );
+       print STDERR "After it is sent";
        $c->stash->{message} = "Thank you. Your message has been sent.";
        $c->stash->{template} = "/gen_pages/message.mas";
        #my $curLocation = $c->res->location();

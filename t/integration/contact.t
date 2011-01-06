@@ -63,6 +63,7 @@ sub {
                      "Check if user logs in and does not have name, name won't go on."); 
 });
 
+$mech->get_ok("/contact/form");
 my $form_name = "contactForm";
 my %entry_for_field = ('name' => 'Test Tester', 
 			 'email' => 'test@test.com', 
@@ -87,7 +88,7 @@ foreach my $field (@fields)
    my $testDesc = "Form with $field filled in sent ";
    test_currently_filled_and_oppositely_filled_forms($mech, $form_name, 
 			$field, $filledEntry, $testDesc, %entry_for_field);
-   $mech->get("contact/form");
+   $mech->get("/contact/form");
    if ($field ne 'name')
    {
       $$filledEntry{'name'} = $entry_for_field{$field};
@@ -95,7 +96,7 @@ foreach my $field (@fields)
       test_currently_filled_and_oppositely_filled_forms($mech, $form_name, 
 			$field, $filledEntry, $testDesc, %entry_for_field);
       delete $$filledEntry{'name'};
-      $mech->get("contact/form");
+      $mech->get("/contact/form");
    }
    delete $$filledEntry{$field};
 }
@@ -112,17 +113,18 @@ sub check_basic_parts_are_ok
 sub send_complete_form_and_check
 {
    my ($mech, $form_name, %entry_for_field) = @_;
-   $mech->submit_form_ok({'name'=>$form_name, 'fields'=>\%entry_for_field}, 
+#print $mech->content;
+   $mech->submit_form_ok({'form_name'=>$form_name, 'fields'=>\%entry_for_field}, 
 			     "Check submitting; filled out form was sent.");
    $mech->text_contains("Thank you. Your message has been sent.", 
 			    "See if form is sent successfully");
-   $mech->html_lint_ok("Check message page html");
+   $mech->html_lint_ok("Check submit page html");
 }
 
 sub send_blank_form_and_check
 {
    my ($mech, $form_name, @fields) = @_;
-   $mech->submit_form_ok({'name'=>$form_name}, 
+   $mech->submit_form_ok({'form_name'=>$form_name}, 
 			     "Check submitting; Empty form is being sent");
    foreach my $field (@fields)
    {
@@ -140,24 +142,26 @@ sub test_currently_filled_and_oppositely_filled_forms
        for my $j (0..1)
        {
 
-          $mech->submit_form_ok({'name'=>$form_name, 
+          $mech->submit_form_ok({'form_name'=>$form_name, 
 	  			   'fields'=>$filledEntry}, 
 				      $testDesc . "$i time(s)");
           foreach my $otherFields (keys %entry_for_field)
           {
              unless ($$filledEntry{$otherFields})
              { 
-                $mech->text_like(qr/($otherFields)|(message) is required/i, 
-				"$otherFields should show error message");
                 $$filledEntry{$otherFields} = $entry_for_field{$otherFields}; 
+                $otherFields = ucfirst $otherFields;
+                $mech->text_like(qr/($otherFields)|(Message) is required/i, 
+				"$otherFields should show error message");
        	     }
              else
              {
-	        $mech->text_unlike(qr/($otherFields)|(message) is required/i,					           "$otherFields should not show error message");
                 delete $$filledEntry{$otherFields};
+                $otherFields = "Message" if $otherFields eq 'body';
+	        $mech->text_unlike(qr/$otherFields is required/i,					           "$otherFields should not show error message");
              }
           }
-          $mech->back() if $j != 1;
+          $mech->get("/contact/form") if $j != 1;
           $testDesc =~ s/filled in/unfilled/;
        }
    }

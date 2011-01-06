@@ -8,7 +8,7 @@
 
 <& "../page/page_title.mas", title => "Contact" &>
 
-<form method="post" action= "/contact/submit" name = "contactForm">
+<form method="POST" action= "/contact/submit" name = "contactForm">
 <input type="hidden" name="tried_once" value="1" />
 <div style="margin-left: 30px">
 <table summary="" border="0" cellpadding="5" cellspacing="5">
@@ -92,10 +92,10 @@ To stay informed of developments around SGN you can subscribe to our <a href="ht
 
 <% #Component's arguments %>
 <%args>
-$name     => '';
-$email    => '';
-$subject  => '';
-$body     => '';
-%filled => (name => 1, email => 1, subject => 1, body => 1);
-$email_address_to_display => '';
+$name     => ''
+$email    => ''
+$subject  => ''
+$body     => ''
+%filled => (name => 1, email => 1, subject => 1, body => 1)
+$email_address_to_display => ''
 </%args>
