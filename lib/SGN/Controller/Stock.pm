@@ -161,7 +161,7 @@ sub _view_stock {
     ####################
     my $props = $self->_stockprops($stock);
     my $is_owner;
-    my $owner_ids = $props->{sp_perons_id} || [] ;
+    my $owner_ids = $props->{sp_person_id} || [] ;
     if ( $stock && ($curator || $person_id && ( grep /^$person_id$/, @$owner_ids ) ) ) {
         $is_owner = 1;
     }
@@ -184,6 +184,7 @@ sub _view_stock {
             is_owner  => $is_owner,
             props     => $props,
             dbxrefs   => $dbxrefs,
+            owners    => $owner_ids,
         },
         locus_add_uri  => $c->uri_for( '/ajax/stock/associate_locus' ),
         locus_autocomplete_uri => $c->uri_for( '/ajax/locus/autocomplete' ),
