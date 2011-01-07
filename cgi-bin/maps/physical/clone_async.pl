@@ -208,6 +208,7 @@ sub project_stats_img_html {
         dbh => $dbh,
         basepath => $c->get_conf('basepath'),
         tempfiles_subdir => $c->tempfiles_subdir('cview'),
+        progress_data => bac_status_log()->bac_by_bac_progress_statistics,
       },
      );
   $map_overview->render_map();
