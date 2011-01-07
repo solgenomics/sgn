@@ -13,15 +13,16 @@ SGN::View::Email - Email View for SGN
 
 =head1 DESCRIPTION
 
-View for sending email from SGN. 
+View for sending email from SGN.  Nearly-bare subclass of L<Catalyst::View::Email>.
 
 =head1 AUTHOR
 
-Robert Buels,,,
+Robert Buels
 
 =head1 SEE ALSO
 
 L<SGN>
+L<Catalyst::View::Email>
 
 =head1 LICENSE
 
