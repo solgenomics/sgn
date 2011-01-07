@@ -49,7 +49,7 @@ $locus_autocomplete_uri => ''
 use Bio::Chado::Schema;
 use CXGN::Chado::Stock;
 use CXGN::Page::FormattingHelpers qw / html_optional_show info_table_html /;
-
+use CXGN::People::Person;
 
 my $stock = $stockref->{stock};
 my $stock_id = $stockref->{stock_id};
@@ -90,7 +90,15 @@ my $allele_div = "stock_alleles";
 my $new_locus_link ;#= qq|<a href="<">[associate new locus]</a> |;
 
 #owner
-my $owners = $stockref->{sp_person_id};
+my $owners = $stockref->{owners};
+my $editor_link;
+foreach my $o_id (@$owners) {
+  my $person = CXGN::People::Person->new($dbh, $o_id);
+  my $first_name = $person->get_first_name;
+  my $last_name = $person->get_last_name;
+  $editor_link .= qq|<a href="/solpeople/personal-info.pl?sp_person_id=$o_id">$first_name $last_name</a> |;
+}
+
 my $dbxrefs = $stockref->{dbxrefs};
 my $new_pub_link = $curator || $submitter || $sequencer  ?   qq|<a href="/chado/add_publication.pl?type=stock&amp;type_id=$stock_id&amp;refering_page=$this_page&amp;action=new"> [Associate publication] </a>| : qq|<span class=\"ghosted\">[Associate publication]</span>| ;
 
@@ -116,6 +124,9 @@ my $pub_count = scalar( @$pubmeds );
 <&| /page/info_section.mas, title=>"Stock details" , subtitle => "<a href=/stock/search/>Back to stock search</a>"  &>
 
   <& /page/form.mas, object_type=>'stock', object_id=>"$stock_id", form_name=> 'stock_form', server_side_script => '/phenome/stock/stock_ajax_form.pl', form_div_name=>'stock_details', js_object_name=> 'stockForm', page_url => '/stock/view/id' , alternate_new_button => '<a href ="/stock/view/new">[New]</a>' &>
+
+<div><b>Stock editors: </b> <% $editor_link %></div>
+<br />
 
    <&| /page/info_section.mas, title => "Synonyms" , is_subsection => 1 &>
       <& /stock/stockprops.mas, props=> $stockprops , subset=> $resources  &>
