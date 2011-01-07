@@ -174,10 +174,6 @@ sub itag_release_ftp_link {
             or return $empty_link;
     }
 
-    #return ghosted link if files are not world-readable
-    return $empty_link
-        unless (stat( $r->dir ))[2] & 04;
-
     return a({style => $link_style, href=> '/itag/release/'.$r->release_number.'/list_files'},'Download bulk files');
 }
 
