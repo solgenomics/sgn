@@ -157,6 +157,15 @@ with suggestions for improvements!</p>
 </ul>
 </div>
 
+
+<&| /page/info_section.mas, title=>'Tutorials' &>
+<ul>
+  <li>Plant Breeding and Genomics at the <a href="http://www.extension.org/plant_breeding_genomics">eXtension</a> site</li>
+  <li>Tomato Genome Browser <a href="http://www.extension.org/article/32485">Webinar</a> presented at the 2010 Tomato Disease Workshop by <a href="mailto:merk.9@osu.edu">Heather Merk</a></li>
+  <li>Designing a CAPS Marker From a SNP Using The <a href="http://www.extension.org/article/32361">SGN CAPS Designer</a> by <a href="mailto:merk.9@osu.edu">Heather Merk</a></li>
+</ul>
+</&>
+
 <&| /page/info_section.mas, title=>'SGN tools' &>
 <ul>
   <li>Browse the SGN <a href="/search/direct_search.pl?search=markers/">Markers database</a></li>
