@@ -21,7 +21,9 @@ my $synonym_list = join ", ", @synonyms;
    data => { 'Name'         => $name,
              'Common name'  => $common_name,
              'Description'  => $description,
-             'Synonyms'     => $synonym_list }
+             'Synonyms'     => $synonym_list },
+  border => 0,
+	       
 &>
 
 

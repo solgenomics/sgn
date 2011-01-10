@@ -22,6 +22,7 @@ use CXGN::Chado::Organism;
 use CXGN::Login;
 use CXGN::Phylo::OrganismTree;
 use CXGN::Page::FormattingHelpers qw | tooltipped_text |;
+use CXGN::Tools::Text;
 
 with 'Catalyst::Component::ApplicationAttribute';
 
@@ -141,8 +142,8 @@ sub view_sol100 :Path('sol100/view') :Args(0) {
         },
 
         show_org_add_form         => ( $user_type && any {$user_type eq $_} qw( curator submitter sequencer ) ),
-        organism_add_uri          => $c->uri_for( $self->action_for('add_sol100_organism')),
-        organism_autocomplete_uri => $c->uri_for( $self->action_for('autocomplete'), ['Solanaceae']),
+        organism_add_uri          => $c->uri_for( '/organism/sol100/add_organism'), #$self->action_for('add_sol100_organism')),
+        organism_autocomplete_uri => $c->uri_for( 'autocomplete'),#$self->action_for('autocomplete')), #, ['Solanaceae']),
 
     });
 }
@@ -159,75 +160,81 @@ After adding, redirects to C<view_sol100>.
 
 =cut
 
-sub add_sol100_organism :Path('sol100/add_organism') :Args(0) {
-    my ( $self, $c ) = @_;
+# sub add_sol100_organism :Path('sol100/add_organism') :Args(0) {
+#     my ( $self, $c ) = @_;
 
-    my $organism = $c->dbic_schema('Bio::Chado::Schema','sgn_chado')
-                     ->resultset('Organism::Organism')
-                     ->search({ species => { ilike => $c->req->body_parameters->{species} }})
-                     ->single;
+#     my $organism = $c->dbic_schema('Bio::Chado::Schema','sgn_chado')
+#                      ->resultset('Organism::Organism')
+#                      ->search({ species => { ilike => $c->req->body_parameters->{species} }})
+#                      ->single;
 
-    ## validate our conditions
-    my @validate = ( [ RC_METHOD_NOT_ALLOWED,
-                       'Only POST requests are allowed for this page.',
-                       sub { $c->req->method eq 'POST' }
-                     ],
-                     [ RC_BAD_REQUEST,
-                       'Organism not found',
-                       sub { $organism },
-                     ],
-                    );
-    for (@validate) {
-        my ( $status, $message, $test ) = @$_;
-        unless( $test->() ) {
-            $c->throw( http_status => $status, public_message => $message );
-            return;
-        }
-    }
+#     ## validate our conditions
+#     my @validate = ( [ RC_METHOD_NOT_ALLOWED,
+#                        'Only POST requests are allowed for this page.',
+#                        sub { $c->req->method eq 'POST' }
+#                      ],
+#                      [ RC_BAD_REQUEST,
+#                        'Organism not found',
+#                        sub { $organism },
+#                      ],
+#                     );
+#     for (@validate) {
+#         my ( $status, $message, $test ) = @$_;
+#         unless( $test->() ) {
+#             $c->throw( http_status => $status, public_message => $message );
+#             return;
+#         }
+#     }
 
-    # if this fails, it will throw an acception and will (probably
-    # rightly) be counted as a server error
-    $organism->create_organismprops(
-        { 'sol100' => 1 },
-        { autocreate => 1 },
-       );
+#     # if this fails, it will throw an acception and will (probably
+#     # rightly) be counted as a server error
+#     $organism->create_organismprops(
+#         { 'sol100' => 1 },
+#         { autocreate => 1 },
+#        );
 
+#     $self->rendered_organism_tree_cache->remove( 'sol100' ); #< invalidate the sol100 cached image tree
+#     $c->res->redirect( $c->uri_for( $self->action_for('view_sol100')));
+# }
+
+
+sub invalidate_organism_tree_cache :Args(0) { 
+    my ($self, $c) = @_;
     $self->rendered_organism_tree_cache->remove( 'sol100' ); #< invalidate the sol100 cached image tree
-    $c->res->redirect( $c->uri_for( $self->action_for('view_sol100')));
+    return;
 }
+    
+# =head2 autocomplete
+
+# Public Path: /organism/autocomplete
+
+# Autocomplete an organism species name.  Takes a single GET param,
+# C<term>, responds with a JSON array of completions for that term.
+
+# =cut
+
+# sub autocomplete :Chained('get_organism_set') :PathPart('autocomplete') :Args(0) {
+#   my ( $self, $c ) = @_;
+
+#   my $term = $c->req->param('term');
+#   # trim and regularize whitespace
+#   $term =~ s/(^\s+|\s+)$//g;
+#   $term =~ s/\s+/ /g;
+
+#   my $s = $c->dbic_schema('Bio::Chado::Schema','sgn_chado')
+#                   ->resultset('Organism::Organism');
+# #  my $s = $c->stash->{organism_set};
 
 
-=head2 autocomplete
+#   my @results = $s->search({ species => { ilike => '%'.$term.'%' }},
+#                            { rows => 15 },
+#                           )
+#                   ->get_column('species')
+#                   ->all;
 
-Public Path: /organism/autocomplete
-
-Autocomplete an organism species name.  Takes a single GET param,
-C<term>, responds with a JSON array of completions for that term.
-
-=cut
-
-sub autocomplete :Chained('get_organism_set') :PathPart('autocomplete') :Args(0) {
-  my ( $self, $c ) = @_;
-
-  my $term = $c->req->param('term');
-  # trim and regularize whitespace
-  $term =~ s/(^\s+|\s+)$//g;
-  $term =~ s/\s+/ /g;
-
-  my $s = $c->dbic_schema('Bio::Chado::Schema','sgn_chado')
-                  ->resultset('Organism::Organism');
-#  my $s = $c->stash->{organism_set};
-
-
-  my @results = $s->search({ species => { ilike => '%'.$term.'%' }},
-                           { rows => 15 },
-                          )
-                  ->get_column('species')
-                  ->all;
-
-  $c->res->content_type('application/json');
-  $c->res->body( $json->encode( \@results ));
-}
+#   $c->res->content_type('application/json');
+#   $c->res->body( $json->encode( \@results ));
+# }
 
 
 #Chaining base to fetch a particular organism, chaining onto this like
@@ -269,27 +276,21 @@ sub view_organism :Chained('find_organism') :PathPart('view') :Args(0) {
 	$c->stash()->{exception} = SGN::Exception->new( title=>'Organism id '.($c->stash->{organism_id}).' does not exist', public_message=>'The specified organism identifer does not exist. Sorry', notify=>0, is_server_error=>0);
 	return;
     }
-
-
     
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $organism = CXGN::Chado::Organism->new($schema, $c->stash->{organism_id});
     $c->stash->{organism} = $organism;
     $c->stash->{na}= qq| <span class="ghosted">N/A</span> |;
-##    $self->basic_info();
- 
-##    $self->taxonomy();
-
-##    $self->
-    
-    $c->stash->{organism_name} = $c->stash->{organism_rs}->first()->species();
     $c->stash->{genus} = $c->stash->{organism_rs}->first()->genus();
+    $c->stash->{taxon} = $organism->get_taxon();
+    $c->stash->{organism_name} = $c->stash->{organism_rs}->first()->species();
+
     $c->stash->{common_name} = lc($c->stash->{organism_rs}->first()->common_name());
     $c->stash->{comment} = $c->stash->{organism_rs}->first()->comment();
     
     my $organismprop_rs = $schema->resultset('Organism::Organismprop')->search( { organism_id=>$c->stash->{organism_id} });
     
-    $c->stash->{description} = $organism->get_description();
+    $c->stash->{description} = CXGN::Tools::Text::format_field_text($organism->get_comment());
     
     @{$c->stash->{synonyms}} = $organism->get_synonyms();
 
@@ -330,6 +331,9 @@ sub view_organism :Chained('find_organism') :PathPart('view') :Args(0) {
     $c->stash->{chromosome_number} = $organism->get_chromosome_number() || $na;
 
     $self->map_data($c);
+    $self->transcript_data($c);
+    $self->phenotype_data($c);
+    $self->qtl_data($c);
 
 }								         
 
@@ -349,53 +353,40 @@ sub map_data {
 sub transcript_data { 
     my $self = shift;
     my $c = shift;
+    
     my @libraries = $c->stash->{organism}->get_library_list();
-    
-    my $lib_count = scalar(@libraries);
-    my $library_info;
-    foreach my $lib (@libraries) {
-	$library_info .=
-	    qq|<a href="/content/library_info.pl?library=$lib\">$lib</a> |;
-    }
-    $library_info = $c->stash->{na} if !$lib_count;
-    
+
     my $attribution = $c->stash->{organism}->get_est_attribution();
  
-    $c->stash->{library_info} = $library_info;
+    $c->stash->{libraries} = \@libraries; 
     $c->stash->{est_attribution}  = $attribution;
-
-    
-   
-    #my $transcript = info_table_html(
-#	"Libraries ($lib_count)" => $library_info,
-#	"Data attribution"       => $attribution,
-#	"__border"               => 0
-#	);
-    
- #    print info_section_html(
-# 	title       => 'Transcriptomic details',
-# 	contents    => $transcript,
-# 	collapsible => 1,
-# 	collapsed   => 0
-# 	);
-    
+       
 }
 
-
-##this should be an Ajax editable div
-#    my $description =
-#	CXGN::Tools::Text::format_field_text( $organism->get_comment() )
-#	;    #the description was copied from sgn_organism to the comment field
-##
+sub qtl_data { 
+    my $self = shift;
+    my $c = shift;
     
-#    my @synonyms = $organism->get_synonyms();
-   
+    
+    ####################### QTL DISPLAY #############
+    my $common_name = $c->stash->{common_name};
+    my @qtl_data = qtl_populations($common_name);
+    unless (@qtl_data) { @qtl_data = ['N/A', 'N/A'];}
+    
 
+    $c->stash->{qtl_data} = \@qtl_data;
+}
 
+sub phenotype_data { 
+    my $self = shift;
+    my $c = shift;
 
-#    if( my $id = $c->stash->{organism_id} ) {
-#        $c->res->redirect("/chado/organism.pl?organism_id=$id", 302 );
-#    }
+    my $pheno_count = $c->stash->{organism}->get_phenotype_count();
+    my $common_name = $c->stash->{common_name};
+    my $pheno_list =
+	qq|<a href="/search/phenotype_search.pl?wee9_common_name=$common_name">$pheno_count</a>|;
+    $c->stash->{phenotypes} = $pheno_list;
+}
 
 
 =head1 ATTRIBUTES
@@ -675,6 +666,7 @@ sub _render_organism_tree {
 sub qtl_populations { 
     my $gr_common_name = shift;
     my $qtl_tool       = CXGN::Phenome::Qtl::Tools->new();
+ 
     my @org_pops       = $qtl_tool->qtl_pops_by_common_name($gr_common_name);
     my @pop_data;
     

@@ -1,6 +1,7 @@
 
 <%args>
 $organism_name
+$taxon => ''
 $common_name
 $description => ''
 $comment => ''
@@ -13,26 +14,62 @@ $ploidy => ''
 $genome_size => ''
 $chromosome_number => ''
 $maps => ''
+$est_attribution => ''
+@libraries => ()
+$phenotypes => ''
+$qtl_data => undef
 </%args>
 
-<& /page/page_title.mas, title=>"Details for SGN organism <i>$organism_name</i>" &>
+<& /page/page_title.mas, title=>"Details for $taxon <i>$organism_name</i>" &>
 
 <&| /page/info_section.mas, title=>'Basic information' &>
-<& /organism/basic_info.mas, name=>$organism_name, common_name=>$common_name, description=>'', comment=>$comment, synonyms=> @synonyms &>
+<& /organism/basic_info.mas, name=>$organism_name, common_name=>$common_name, description=>$description, comment=>$comment, synonyms=> @synonyms &>
 </&>
 
 <& /organism/taxonomy.mas, taxonomy=>$taxonomy &>
 
 <& /organism/accessions.mas, accessions => $accessions &>
 
-<&| /page/info_section.mas, title=>'SolCyc links' &>
+<&| /page/info_section.mas, title=>'Metabolic details' &>
 <% $solcyc_link %>
+</&>
+
+<&| /page/info_section.mas, title=>'Genome data' &>
+<& /organism/genomic_details.mas, ploidy => $ploidy, genome_size=>$genome_size, chromosome_number => $chromosome_number &>
 </&>
 
 <&| /page/info_section.mas, title=>'Available Maps' &>
 <% $maps %>
 </&>
 
-<&| /page/info_section.mas, title=>'Genome data' &>
-<& /organism/genomic_details.mas, ploidy => $ploidy, genome_size=>$genome_size, chromosome_number => $chromosome_number &>
+<&| /page/info_section.mas, title=>'Transcript Information' &>
+
+% my @links = map { qq|<a href="/content/library_info.pl?library=$_\">$_</a>| } @libraries;
+
+<& /page/info_table.mas, 
+   data => { 
+  'Libraries ('.scalar(@links).')' => (join ", ", (@links)), 
+  Attribution => $est_attribution }, border => 0
+ &>
 </&>
+
+<&| /page/info_section.mas, title=>'Phenomic Details' &>
+Number of phenotyped lines (for all <% $common_name %> species combined): <% $phenotypes %>
+</&>
+
+
+<&| /page/info_section.mas, title=>'QTL data' &>
+
+% if ($qtl_data) { 
+  <& /page/columnar_table.mas,  
+    data => $qtl_data, 
+    headings => [ 'Name', 'Traits' ],
+    __alt_freq   => 2,
+    __alt_width  => 1,
+    __alt_offset => 3,
+    __align      => 'l' &>
+%}
+ 
+</&>
+
+

@@ -6,7 +6,13 @@ $chromosome_number => ''
 
 </%args>
 
+<& /page/info_table.mas, data=> {
+  Ploidy              => $ploidy,
+  'Genome size'       => $genome_size,
+  'Chromosome number' => $chromosome_number,
+  
+},
+  border => 0,
+&>
+    
 
-Ploidy: <b><% $ploidy %></b><br />
-Genome size: <b><% $genome_size %></b><br />
-Chromosome Number: <b><% $chromosome_number %></b><br />
