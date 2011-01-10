@@ -4,6 +4,8 @@ $taxonomy
 
 </%args>
 
+<& /util/import_javascript.mas, classes=> [ 'wz_tooltip.js' ] &>
+
 <&| /page/info_section.mas, title=>'Taxonomic information' &>
 <% $taxonomy %>
 </&>
