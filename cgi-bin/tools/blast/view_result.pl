@@ -14,7 +14,6 @@ use HTML::Entities;
 
 use Number::Bytes::Human ();
 
-use CXGN::BioTools::SearchIOHTMLWriter;
 use CXGN::Page;
 use CXGN::BlastDB;
 
@@ -151,8 +150,7 @@ sub format_report_file {
     if ( $params{seq_count} == 1 && $bioperl_formats{$params{outformat}}) {
         my $in = Bio::SearchIO->new(-format => $bioperl_formats{$params{outformat}}, -file   => "< $raw_report_file")
             or die "$! opening $raw_report_file for reading";
-        #$writer is a  "blastxml" (NCBI BLAST XML) which will b an argument for constructing new Bio::SearchIO module
-        my $writer = CXGN::BioTools::SearchIOHTMLWriter->new($params{database});
+        my $writer = my_custom_resultwriter->new($params{database});
         my $out = Bio::SearchIO->new( -writer => $writer,
                                       -file   => "> $formatted_report_file",
                                       );
@@ -328,4 +326,59 @@ EOP
 
   my $html = `perl -e '$cmd'`;
   return $html;
+}
+
+
+package my_custom_resultwriter;
+
+use CXGN::Tools::Identifiers;
+
+use base qw/Bio::SearchIO::Writer::HTMLResultWriter/;
+
+sub new {
+  my ($class,$db_id, @args) = @_;
+  my $self = $class->SUPER::new(@args);
+
+  $self->id_parser( sub {
+      my ($idline) = @_;
+      my ($ident,$acc) = Bio::SearchIO::Writer::HTMLResultWriter::default_id_parser($idline);
+
+      # The default implementation checks for NCBI-style identifiers in the given string ('gi|12345|AA54321').
+      # For these IDs, it extracts the GI and accession and
+      # returns a two-element list of strings (GI, acc).
+
+      return ($ident,$acc) if $acc;
+      return CXGN::Tools::Identifiers::clean_identifier($ident) || $ident;
+  });
+
+  my $hit_link = sub {
+    my ($self, $hit, $result) = @_;
+    #see if we can link it as a CXGN identifier.  Otherwise,
+    #use the default bioperl link generator
+    my $url = CXGN::Tools::Identifiers::link_identifier($hit->name())
+	|| $self->default_hit_link_desc($hit,$result,$db_id);
+
+    return $url;
+  };
+  $self->hit_link_desc(  $hit_link );
+  $self->hit_link_align( $hit_link );
+  $self->start_report(sub {''});
+  $self->end_report(sub {''});
+  return $self;
+}
+
+sub default_hit_link_desc {
+    my ( $self, $hit, $result, $db_id ) = @_;
+
+    my $coords_string =
+        "hilite_coords="
+       .join( ',',
+              map $_->start('subject').'-'.$_->end('subject'),
+              $hit->hsps,
+             );
+
+    my $id = $hit->name;
+
+    #return qq{ <a class="blast_match_ident" href="" onclick="return resolve_blast_ident('$id')">$id</a> };
+    return qq{<a class="blast_match_ident" href="show_match_seq.pl?blast_db_id=$db_id;id=$id;$coords_string">$id</a>};
 }
