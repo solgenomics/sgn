@@ -23,7 +23,6 @@ use Bio::SearchIO;
 use CXGN::Graphics::BlastGraph; #Evan's package for conservedness histograms
 use CXGN::Apache::Error;
 use CXGN::Tools::List qw/str_in/;
-use CXGN::Tools::Identifiers qw/link_identifier/;
 use File::Slurp qw/slurp/;
 use CXGN::Page::FormattingHelpers qw/info_section_html page_title_html columnar_table_html/;
 use CatalystX::GlobalContext '$c';
@@ -142,8 +141,6 @@ sub format_report_file {
                             #these, they probably don't
                             #want bioperl to munge it.
                             );
-#    sub linkit { my $s = $_[0]; $s =~ s/^lcl\|//; link_identifier($s) || $s }
-
     sub linkit {
         my $bdb = shift;
         my $s = shift;
