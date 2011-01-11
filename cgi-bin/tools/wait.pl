@@ -113,7 +113,7 @@ Content-type: text/html
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 <head>
-<title>Running the job on the SGN Linux cluster</title>
+<title>Job running</title>
 <meta http-equiv="Refresh" content="3" />
 <link rel="stylesheet" href="/documents/inc/sgn.css" type="text/css" />
 </head>
