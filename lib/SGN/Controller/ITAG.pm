@@ -14,6 +14,12 @@ BEGIN { extends 'Catalyst::Controller' }
 
 =head1 PUBLIC ACTIONS
 
+=head2 list_releases
+
+Public path: /itag/list_releases
+
+List ITAG bulk file releases available for download.
+
 =cut
 
 sub list_releases :Path('/itag/list_releases') :Args(0) {
@@ -25,12 +31,31 @@ sub list_releases :Path('/itag/list_releases') :Args(0) {
     $c->forward('View::Mason');
 }
 
+=head2 list_release_files
+
+Public path: /itag/release/<releasenum>/list_files
+
+List the downloadable files in a specific ITAG release.
+
+=cut
+
 sub list_release_files :Chained('get_release') :PathPart('list_files') :Args(0) {
     my ( $self, $c ) = @_;
 
     $c->stash->{template} = '/itag/list_release_files.mas';
 }
 
+
+=head2 download_release_file
+
+Public path: /itag/release/<releasenum>/download/<file_key>
+
+Download a specific file from an ITAG release.  Requires C<name>,
+C<email>, and C<organization> GET or POST vars to be provided in the
+request, and sends an email to the configured C<bugs_email> address
+reporting the download (including the name, email, and organization).
+
+=cut
 
 sub download_release_file :Chained('get_release') :PathPart('download') :Args(1) {
     my ( $self, $c, $file_tag ) = @_;
@@ -57,9 +82,8 @@ sub download_release_file :Chained('get_release') :PathPart('download') :Args(1)
     $c->forward( '/download/reported_download' );
 }
 
-
-
-# /itag/release/2/download/file_shortname
+# chaining root for fetching a specific ITAG release.  will 404 if the release is not found.
+# URL format:  /itag/release/2/<rest of the chain>
 sub get_release :Chained('/') :PathPart('itag/release') :CaptureArgs(1) {
     my ( $self, $c, $releasenum ) = @_;
 
@@ -67,8 +91,5 @@ sub get_release :Chained('/') :PathPart('itag/release') :CaptureArgs(1) {
     ($c->stash->{itag_release}) = CXGN::ITAG::Release->find( releasenum => $releasenum )
         or $c->throw_404("Release not found");
 }
-
-
-
 
 1;
