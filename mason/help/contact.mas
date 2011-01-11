@@ -9,7 +9,6 @@
 <& "../page/page_title.mas", title => "Contact" &>
 
 <form method="POST" action= "/contact/submit" name = "contactForm">
-<input type="hidden" name="tried_once" value="1" />
 <div style="margin-left: 30px">
 <table summary="" border="0" cellpadding="5" cellspacing="5">
 

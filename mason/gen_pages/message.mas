@@ -1,0 +1,5 @@
+<div><% $message %></div>
+
+<%args>
+$message
+</%args>
