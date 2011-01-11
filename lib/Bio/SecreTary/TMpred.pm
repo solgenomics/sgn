@@ -1,7 +1,7 @@
 
 =head1 NAME
 
-Bio::SecreTary::TMpred 
+Bio::SecreTary::TMpred
 
 =head1 DESCRIPTION
 
@@ -29,15 +29,16 @@ use Readonly;
 Readonly my $FALSE    => 0;
 Readonly my $TRUE     => 1;
 Readonly my %defaults => (
-    'version'       => 'perl',
-    'min_score'     => 500,
-    'min_tm_length' => 17,
-    'max_tm_length' => 33,
-    'min_beg'       => 0,
-    'max_beg'       => 35,
-'lo_orientational_threshold' => 80,
-  'hi_orientational_threshold' => 200,
-  'avg_orientational_threshold' => 80);
+    'version'                     => 'perl',
+    'min_score'                   => 500,
+    'min_tm_length'               => 17,
+    'max_tm_length'               => 33,
+    'min_beg'                     => 0,
+    'max_beg'                     => 35,
+    'lo_orientational_threshold'  => 80,
+    'hi_orientational_threshold'  => 200,
+    'avg_orientational_threshold' => 80
+);
 
 Readonly my $PASCAL_STYLE =>
   $TRUE;    # if this is true, does the same as the old pascal code.
@@ -105,9 +106,9 @@ sub new {
         }
     }
     $self->{min_halfw} =
-      int( ( ( $self->{min_tm_length} ) - ( 1 - $TMHLOFFSET ) ) / 2 );
+      int( ( $self->{min_tm_length} - ( 1 - $TMHLOFFSET ) ) / 2 );
     $self->{max_halfw} =
-      int( ( ( $self->{max_tm_length} ) + $TMHLOFFSET ) / 2 );
+      int( ( $self->{max_tm_length} + $TMHLOFFSET ) / 2 );
 
     $self->setup_tables();
     my @aa_array = split( '', 'ACDEFGHIKLMNPQRSTVWYX' )
@@ -141,8 +142,6 @@ sub run_tmpred {
         else {    # arg2 is not a ref; should be sequence_id
             $sequence_id = ( defined($arg2) ) ? $arg2 : 'A_prot_seq';
         }
-
-        #	print "id, sequence: $sequence_id, $sequence \n";
     }
     if ( defined($arg_hash_ref) ) {
         if ( ref($arg_hash_ref) eq 'HASH' ) {
@@ -192,19 +191,13 @@ sub run_tmpred {
           $self->run_tmpred_perl( $sequence_id, $sequence );
         $good_solns = $self->good_solutions_perl($io_helices_ref);
         $good_solns .= $self->good_solutions_perl($oi_helices_ref);
-        if ( 1 or $do_long_output ) {
-            print "io/oi helices: ", scalar @$io_helices_ref, "  ",
-              scalar @$oi_helices_ref, "\n";
-            print $self->short_output(
-                $sequence_id, $sequence, $io_helices_ref, $oi_helices_ref
-              ),
-              "\n";
-            $tmpred_raw_out = $self->_long_output($sequence_id, $sequence, $io_helices_ref, $oi_helices_ref);
+        if ( $do_long_output ) {
+            $tmpred_raw_out =
+              $self->_long_output( $sequence_id, $sequence, $io_helices_ref,
+                $oi_helices_ref );
         }
     }
 
-    #  print "good_solutions: $good_solns \n";
-    #  return $good_solns;
     return ( $good_solns, $tmpred_raw_out );
 }
 
@@ -286,8 +279,12 @@ sub good_solutions_pascal {
         }
     }
 
-    if ( $solutions eq "" ) { $solutions = "(-10000,0,0)"; }
-    else { $solutions =~ s/(\s+)$//; }    # eliminate whitespace at end.
+    if ( $solutions eq "" ) {
+        $solutions = "(-10000,0,0)";
+    }
+    else {
+        $solutions =~ s/(\s+)$//;
+    }    # eliminate whitespace at end.
     return $solutions;
 }
 
@@ -348,7 +345,7 @@ sub run_tmpred_perl {
             ( $fhresult, $start, $helix ) =
               $self->find_helix( $length, $start, $io_score, $io_center_prof,
                 $io_nterm_prof, $io_cterm_prof );
-            $helix->set_nt_in('TRUE');    # io is inside-to-outside
+            $helix->set_nt_in($TRUE);    # io is inside-to-outside
             if ($fhresult) {
                 push @io_helices, $helix;
             }
@@ -373,216 +370,8 @@ sub run_tmpred_perl {
         }
     }
 
-#  print "number of io, oi helices: ", scalar @io_helices, "  ", scalar @oi_helices, "\n";
-# $self->raw_output(\@io_helices, \@oi_helices);
-
-    #  my @helices = ( @io_helices, @oi_helices );
-    #   return $self->good_solutions_perl( \@helices );
-
     return ( \@io_helices, \@oi_helices );
 
-    #   return ( scalar @io_helices, scalar @oi_helices );
-
-}
-
-sub short_output {
-    my $self           = shift;
-    my $id             = shift;
-    my $sequence       = shift;
-    my $io_helices_ref = shift;
-    my $oi_helices_ref = shift;
-    my $out            = "$id";
-    $out .= substr( $sequence, 0, 3 ) . '...' . substr( $sequence, -3 ) . "\n";
-    $out .=
-        "Inside to outside helices : "
-      . scalar @$oi_helices_ref . "\n"
-      . "    from     to   score  center \n";
-
-    for (@$io_helices_ref) {
-        $out .= $_->get_descriptor_string() . "\n";
-    }
-    $out .=
-        "Outside to inside helices : "
-      . scalar @$oi_helices_ref . "\n"
-      . "    from     to   score  center \n";
-    for (@$oi_helices_ref) {
-        $out .= $_->get_descriptor_string() . "\n";
-    }
-
-    return $out;
-}
-
-sub _long_output {
-    my $self           = shift;
-    my $id             = shift;
-    my $sequence       = shift;
-    my $io_helices_ref = shift;
-    my $oi_helices_ref = shift;
-    my $long_out       = "TMpred prediction output for : $id \n\n";
-    $long_out .= "Sequence: " . substr( $sequence, 0, 3 ),
-      '...' . substr( $sequence, -3 ) . "   length: " . length $sequence . "\n";
-    $long_out .=
-        "Prediction parameters: TM-helix length between "
-      . $self->{min_tm_length} . " and "
-      . $self->{max_tm_length}
-      . "\n\n\n";
-
-    $long_out .=
-        "1.) Possible transmembrane helices\n"
-      . "==================================\n"
-      . "The sequence positions in brackets denominate the core region.\n"
-      . "Only scores above "
-      . $self->{min_score}
-      . " are considered significant.\n\n";
-    $long_out .=
-        "Inside to outside helices : "
-      . scalar @$io_helices_ref . "\n"
-      . "    from     to   score  center \n";
-
-    for (@$io_helices_ref) {
-        $long_out .= $_->get_descriptor_string() . "\n";
-    }
-    $long_out .=
-        "Outside to inside helices : "
-      . scalar @$oi_helices_ref . "\n"
-      . "    from     to   score  center \n";
-    for (@$oi_helices_ref) {
-        $long_out .= $_->get_descriptor_string() . "\n";
-    }
-
-    $long_out .=
-        "2.) Table of correspondences\n"
-      . "============================\n"
-      . "Here is shown, which of the inside->outside helices correspond\n"
-      . "to which of the outside->inside helices.\n";
-    $long_out .=
-        "  Helices shown in brackets are considered insignificant.\n"
-      . 'A "+"  symbol indicates a preference of this orientation.' . "\n"
-      . 'A "++" symbol indicates a strong preference of this orientation.'
-      . "\n\n";
-
-    $long_out .= "           inside->outside | outside->inside \n";
-
-  
-    my ( $n_io, $n_oi ) = ( scalar @$io_helices_ref, scalar @$oi_helices_ref );
-    my ( $io_count, $oi_count ) = 0;
-    my $padding = '         ';
-    while (1) {
-        if ( $io_count >= $n_io ) {
-            $long_out .= "$padding | "
-              . $oi_helices_ref->[$oi_count]->get_descriptor_string() . "\n";
-            $oi_count++;
-        }
-        elsif ( $oi_count >= $n_oi ) {
-            $long_out .= $io_helices_ref->[$io_count]->get_descriptor_string() . " | $padding" . "\n";
-            $io_count++;
-        }
-        elsif ( $io_helices_ref->[$io_count]->get_center()->[0] <=
-            $oi_helices_ref->[$oi_count]->get_center()->[0] )
-        {    # io center is first (or same pos)
-            if ( $oi_helices_ref->[$oi_count]->get_sh_nterm()->[0] <=
-                $io_helices_ref->[$io_count]->get_sh_cterm()->[0] )
-            {    # cores overlap
- $long_out .= $self->_io_oi_correspondence_string($io_helices_ref->[$io_count], $oi_helices_ref->[$oi_count]);
-                # $long_out .=
-                #     $io_helices_ref->[$io_count]->get_descriptor_string() . '|'
-                #   . $oi_helices_ref->[$oi_count]->get_descriptor_string() . "\n";
-                $io_count++;
-                $oi_count++;
-            }
-            else {
- $long_out .= $self->_io_oi_correspondence_string($io_helices_ref->[$io_count], undef);
-                # $long_out .= $io_helices_ref->[$io_count]->get_descriptor_string() . " | $padding " . "\n";
-                $io_count++;
-            }
-        }
-        else {    # oi center pos < io center pos
-
-            if ( $io_helices_ref->[$io_count]->get_sh_nterm()->[0] <=
-                $oi_helices_ref->[$oi_count]->get_sh_cterm()->[0] )
-            {     # cores overlap
-                $long_out .= $self->_io_oi_correspondence_string($io_helices_ref->[$io_count], $oi_helices_ref->[$oi_count]);
-      #              $io_helices_ref->[$io_count]->get_descriptor_string() . '|'
-      #            . $oi_helices_ref->[$oi_count]->get_descriptor_string() . "\n";
-                $io_count++;
-                $oi_count++;
-            }
-            else {
-                $long_out .= $self->_io_oi_correspondence_string(undef, $oi_helices_ref->[$oi_count]);
-		#  "$padding | " . $oi_helices_ref->[$oi_count]->get_descriptor_string() . "\n";
-                $oi_count++;
-            }
-
-	  }
-	last if($io_count >= $n_io  and $oi_count >= $n_oi);
-      }
-
-  $long_out .=
-        "3.) Suggested models for transmembrane topology \n"
-      . "============================================== \n"
-      . "These suggestions are purely speculative and should be used with\n"
-      . "EXTREME CAUTION since they are based on the assumption that\n"
-      . "all transmembrane helices have been found.\n";
-    $long_out .=
-        "In most cases, the Correspondence Table shown above or the\n"
-      . "prediction plot that is also created should be used for the\n"
-      . "topology assignment of unknown proteins.\n\n";
-    $long_out .=
-      "2 possible models considered, only significant TM-segments used\n\n";
-
-    return $long_out;
-}
-
-sub _io_oi_correspondence_string{
-  my $self = shift;
-  my $io_helix = shift;
-my $oi_helix = shift;
-
-#print "XXX: ", $self->{lo_orientational_threshold}, "  ", $self->{hi_orientational_threshold}, "\n";
-
-my $io_string = '                       ';
-my ($io_beg, $io_end, $io_score);
-if(defined $io_helix){
- ($io_beg, $io_end, $io_score) = (
-$io_helix->get_nterm()->[0] + 1, 
-$io_helix->get_cterm()->[0] + 1, 
-$io_helix->get_score()) ;
-
-$io_string = sprintf("%6i-%4i (%2i) %5i ", 
-		     $io_beg, $io_end, $io_end-$io_beg+1, $io_score);
-}
-my $oi_string = '                       ';
-  my ($oi_beg, $oi_end, $oi_score);
-if(defined $oi_helix){
-  ($oi_beg, $oi_end, $oi_score) = (
-$oi_helix->get_nterm()->[0] + 1, 
-$oi_helix->get_cterm()->[0] + 1, 
-$oi_helix->get_score()) ;
-
-$oi_string = sprintf("%6i-%4i (%2i) %5i ", 
-		     $oi_beg, $oi_end, $oi_end-$oi_beg+1, $oi_score);
-}
-my $score_diff;
-my ($io_pref, $oi_pref) = '  ';
-  if(!defined $io_helix){
-    $oi_pref = '++';
-  }elsif(!defined $oi_helix){
-    $io_pref = '++';
-  }else{ # both defined
-    $score_diff = $io_score - $oi_score;
-    if($score_diff > $self->{hi_orientational_threshold}){
-      $io_pref = '++';
-    }elsif($score_diff > $self->{lo_orientational_threshold}){
-      $io_pref = ' +';
-    }elsif($score_diff < -1*$self->{hi_orientational_threshold}){
-      $oi_pref = '++';
-    }elsif($score_diff < -1*$self->{lo_orientational_threshold}){
-      $oi_pref = ' +';
-    }else{
-      # leave them both as '  '
-    }
-  }
-return $io_string . $io_pref . '  |' . $oi_string . $oi_pref . "\n";
 }
 
 sub good_solutions_perl {    # get the good solutions starting from the
@@ -606,15 +395,19 @@ sub good_solutions_perl {    # get the good solutions starting from the
             $good_string .= "($score,$beg,$end)  ";
         }
     }
-    if ( $good_string eq "" ) { $good_string = "(-10000,0,0)"; }
-    else { $good_string =~ s/(\s+)$//; }    # eliminate whitespace at end.
+    if ( $good_string eq "" ) {
+        $good_string = "(-10000,0,0)";
+    }
+    else {
+        $good_string =~ s/(\s+)$//;
+    }    # eliminate whitespace at end.
     return $good_string;
 }
 
-sub make_profile {                          # makes a profile, i.e. an array
-                                            # containing ...
-                                            # my $sequence     = shift;
-    my $seq_aanumber_array = shift;         # ref to array of numbers
+sub make_profile {    # makes a profile, i.e. an array
+                      # containing ...
+                      # my $sequence     = shift;
+    my $seq_aanumber_array = shift;    # ref to array of numbers
     my $table              = shift;
     my $ref_position = $table->get_marked_position();
     my $matrix       = $table->get_table();
@@ -681,7 +474,10 @@ sub make_curve {
 
 sub find_helix {
     my $self = shift;
-    my ( $length, $start, $s, $m, $n, $c ) = @_;    # $s, $m, $n, $c array refs
+    my ( $length, $start, $s, $m, $n, $c ) = @_;    
+# $s, $m, $n, $c are refs to arrays
+# $io_score, $io_center_prof, $io_nterm_prof, $io_cterm_prof
+# or $oi_score, $oi_center_prof, ...
     my $min_halfw = $self->{min_halfw};
     my $max_halfw = $self->{max_halfw};
     my $helix     = Bio::SecreTary::Helix->new();
@@ -690,8 +486,14 @@ sub find_helix {
 
     my ( $found, $done );
     my $i = $start;
-    if ( $i < $min_halfw ) { $i = $min_halfw; }
+    if ( $i < $min_halfw ) {
+        $i = $min_halfw;
+    }
     $found = $FALSE;
+# sh_nterm position seems to never be 1, even when pascal 
+# version has it as 1. In other cases pascal and perl agree
+# probably some confusion in here about
+# 0-based and 1-based indexing???
     while ( ( $i < $length - $min_halfw ) and ( !$found ) ) {
 
         my ( $pos, $scr ) = findmax( $s, $i - $min_halfw, $i + $max_halfw );
@@ -719,12 +521,16 @@ sub find_helix {
 
             my $j = $i - $min_halfw;    # determine nearest N-terminus
             $done = $FALSE;
-            while ( $j - 1 >= 1
+            while ( $j - 1 >= 0   #  0 not 1 because 0-based
                 and $j - 1 >= $i - $max_halfw
                 and !$done )
             {
-                if   ( $n->[ $j - 1 ] > $n->[$j] ) { $j--; }
-                else                               { $done = $TRUE; }
+                if ( $n->[ $j - 1 ] > $n->[$j] ) {
+                    $j--;
+                }
+                else {
+                    $done = $TRUE;
+                }
             }
 
             $helix->set_sh_nterm( [ $j, $n->[$j] ] );
@@ -736,8 +542,12 @@ sub find_helix {
                 and !$done )
             {
                 if ( defined $c->[ $j + 1 ] and defined $c->[$j] ) {
-                    if   ( $c->[ $j + 1 ] > $c->[$j] ) { $j++; }
-                    else                               { $done = $TRUE; }
+                    if ( $c->[ $j + 1 ] > $c->[$j] ) {
+                        $j++;
+                    }
+                    else {
+                        $done = $TRUE;
+                    }
                 }
                 else {
                     print "j, c[j], c[j+1]: ", $j, " ", $c->[$j], " ",
@@ -787,6 +597,373 @@ sub findmax {    # looking between start and stop,
     return ( $position, $profile->[$position] );
 }
 
+# output routines
+
+sub _short_output {
+    my $self           = shift;
+    my $id             = shift;
+    my $sequence       = shift;
+    my $io_helices_ref = shift;
+    my $oi_helices_ref = shift;
+    my $out            = "$id";
+    $out .= substr( $sequence, 0, 3 ) . '...' . substr( $sequence, -3 ) . "\n";
+    $out .=
+        "Inside to outside helices : "
+      . scalar @$oi_helices_ref . " found \n"
+      . "    from     to   score  center \n";
+
+    for (@$io_helices_ref) {
+        $out .= $_->get_descriptor_string() . "\n";
+    }
+    $out .= "\n" . 
+        "Outside to inside helices : "
+      . scalar @$oi_helices_ref . " found \n"
+      . "    from     to   score  center \n";
+    for (@$oi_helices_ref) {
+        $out .= $_->get_descriptor_string() . "\n";
+    }
+    
+    return $out . "\n";
+}
+
+sub _long_output {
+    my $self           = shift;
+    my $id             = shift;
+    my $sequence       = shift;
+    my $io_helices_ref = shift;
+    my $oi_helices_ref = shift;
+ my ( $n_io, $n_oi ) = ( scalar @$io_helices_ref, scalar @$oi_helices_ref );
+    my $long_out       = "TMpred prediction output for : $id \n\n";
+    $long_out .= "Sequence: " . substr( $sequence, 0, 3 ) .
+      '...' . substr( $sequence, -3 ) . "   length: " . length($sequence) . "\n";
+    $long_out .=
+        "Prediction parameters: TM-helix length between "
+      . $self->{min_tm_length} . " and "
+      . $self->{max_tm_length}
+      . "\n\n\n";
+
+    $long_out .=
+        "1.) Possible transmembrane helices\n"
+      . "==================================\n"
+      . "The sequence positions in brackets denominate the core region.\n"
+      . "Only scores above "
+      . $self->{min_score}
+      . " are considered significant.\n\n";
+    $long_out .=
+        "Inside to outside helices : "
+      . $n_io . " found \n";
+      $long_out .= ($n_io > 0)? "    from     to   score  center \n": '';
+
+    for (@$io_helices_ref) {
+        $long_out .= $_->get_descriptor_string() . "\n";
+    }
+    $long_out .= "\n" .
+        "Outside to inside helices : "
+      . $n_oi . " found \n";
+    $long_out .= ($n_oi > 0)? "    from     to   score  center \n": '';
+    for (@$oi_helices_ref) {
+        $long_out .= $_->get_descriptor_string() . "\n";
+    }
+    $long_out .= "\n\n\n";
+    $long_out .=
+        "2.) Table of correspondences\n"
+      . "============================\n"
+      . "Here is shown, which of the inside->outside helices correspond\n"
+      . "to which of the outside->inside helices.\n";
+    $long_out .=
+        "  Helices shown in brackets are considered insignificant.\n"
+      . 'A "+"  symbol indicates a preference of this orientation.' . "\n"
+      . 'A "++" symbol indicates a strong preference of this orientation.'
+      . "\n\n";
+
+    $long_out .= "           inside->outside | outside->inside \n";
+
+   
+    my ( $io_count, $oi_count ) = (0, 0);
+    my $padding = '         ';
+    while ($io_count < $n_io  or  $oi_count < $n_oi) {
+        if ($io_count >= $n_io ) {
+    $long_out .=
+                  $self->_io_oi_correspondence_string( undef,
+                    $oi_helices_ref->[$oi_count] );
+            $oi_count++;
+        }
+        elsif ($oi_count >= $n_oi ) {
+
+  $long_out .=
+                  $self->_io_oi_correspondence_string(
+                    $io_helices_ref->[$io_count], undef );
+
+
+# $io_helices_ref->[$io_count]->get_descriptor_string() =~ /(.*?)\s+[0-9]+$/;
+# my $iostr = $1;
+# if($io_helices_ref->[$io_count]->get_score() < $self->{min_score}){ $iostr = "($iostr)"; }
+         #   $long_out .= " $1 | $padding" . "\n";
+            $io_count++;
+        }
+        elsif ( $io_helices_ref->[$io_count]->get_center()->[0] <=
+            $oi_helices_ref->[$oi_count]->get_center()->[0] )
+        {    # io center is first (or same pos)
+            if ( $oi_helices_ref->[$oi_count]->get_sh_nterm()->[0] <=
+                $io_helices_ref->[$io_count]->get_sh_cterm()->[0] )
+            {    # cores overlap
+                $long_out .= $self->_io_oi_correspondence_string(
+                    $io_helices_ref->[$io_count],
+                    $oi_helices_ref->[$oi_count]
+                );
+
+             # $long_out .=
+             #     $io_helices_ref->[$io_count]->get_descriptor_string() . '|'
+             #   . $oi_helices_ref->[$oi_count]->get_descriptor_string() . "\n";
+                $io_count++;
+                $oi_count++;
+            }
+            else {
+                $long_out .=
+                  $self->_io_oi_correspondence_string(
+                    $io_helices_ref->[$io_count], undef );
+
+# $long_out .= $io_helices_ref->[$io_count]->get_descriptor_string() . " | $padding " . "\n";
+                $io_count++;
+            }
+        }
+        else {    # oi center pos < io center pos
+
+            if ( $io_helices_ref->[$io_count]->get_sh_nterm()->[0] <=
+                $oi_helices_ref->[$oi_count]->get_sh_cterm()->[0] )
+            {     # cores overlap
+                $long_out .= $self->_io_oi_correspondence_string(
+                    $io_helices_ref->[$io_count],
+                    $oi_helices_ref->[$oi_count]
+                );
+
+    #              $io_helices_ref->[$io_count]->get_descriptor_string() . '|'
+    #            . $oi_helices_ref->[$oi_count]->get_descriptor_string() . "\n";
+                $io_count++;
+                $oi_count++;
+            }
+            else {
+                $long_out .=
+                  $self->_io_oi_correspondence_string( undef,
+                    $oi_helices_ref->[$oi_count] );
+
+#  "$padding | " . $oi_helices_ref->[$oi_count]->get_descriptor_string() . "\n";
+                $oi_count++;
+            }
+
+        }
+        last if ( $io_count >= $n_io and $oi_count >= $n_oi ); # no longer needed, i think.
+    } # end of while loop
+    $long_out .= "\n\n";
+
+    $long_out .=
+        "3.) Suggested models for transmembrane topology\n"
+      . "===============================================\n"
+      . "These suggestions are purely speculative and should be used with\n"
+      . "EXTREME CAUTION since they are based on the assumption that\n"
+      . "all transmembrane helices have been found.\n";
+    $long_out .=
+        "In most cases, the Correspondence Table shown above or the\n"
+      . "prediction plot that is also created should be used for the\n"
+      . "topology assignment of unknown proteins.\n\n";
+    $long_out .=
+      "2 possible models considered, only significant TM-segments used\n\n";
+
+    my $nt_in_topo_model_ref =
+      $self->_topology_model( $TRUE, $io_helices_ref, $oi_helices_ref );
+    my $nt_in_model_score = 0.0;
+    foreach (@$nt_in_topo_model_ref) {
+        $nt_in_model_score += $_->get_score();
+    }
+
+    my $nt_out_topo_model_ref =
+      $self->_topology_model( $FALSE, $io_helices_ref, $oi_helices_ref );
+    my $nt_out_model_score = 0.0;
+    foreach (@$nt_out_topo_model_ref) {
+        $nt_out_model_score += $_->get_score();
+    }
+
+    if ( scalar @$nt_in_topo_model_ref != scalar @$nt_out_topo_model_ref ){
+        $long_out .=
+          "***the models differ in the number of TM-helices ! *** \n\n";
+      }
+    if ( scalar @$nt_in_topo_model_ref == 0 and scalar @$nt_out_topo_model_ref == 0 ) {
+        $long_out .=
+"!!! probably no transmembrane protein - no possible model found !!! \n";
+    }else{ # at least one model with >= 1 helices.
+    my $score_diff = $nt_in_model_score - $nt_out_model_score; # > 0 means io prefered.
+    if($score_diff > 0){ #io preferred
+      my $preference_strength = ($score_diff/(scalar @$nt_in_topo_model_ref) > $self->{avg_orientational_threshold})? 'STRONGLY': 'slightly';
+      $long_out .= "-----> $preference_strength prefered model: N-terminus inside\n";
+      $long_out .= _topology_model_string($nt_in_topo_model_ref, $nt_in_model_score, 'i-o');
+ $long_out .= "------> alternative model \n";
+      $long_out .= _topology_model_string($nt_out_topo_model_ref, $nt_out_model_score, 'o-i');
+
+    }else{ #$score_diff < 0; nt_out preferred
+          my $preference_strength = ((-1*$score_diff)/(scalar @$nt_out_topo_model_ref) > $self->{avg_orientational_threshold})? 'STRONGLY': 'slightly';
+  $long_out .= "-----> $preference_strength prefered model: N-terminus outside\n";
+      $long_out .= _topology_model_string($nt_out_topo_model_ref, $nt_out_model_score, 'o-i');
+ $long_out .= "------> alternative model \n";
+      $long_out .= _topology_model_string($nt_in_topo_model_ref, $nt_in_model_score, 'i-o');
+
+    }
+  }
+
+    return $long_out;
+}
+
+sub _topology_model_string{
+my $model = shift;
+my $model_score = shift;
+my $orientation = shift; # 'i-o' or 'o-i'. this applies to helix nearest nterm
+my $string = scalar @$model;
+$string .= " strong transmembrane helices, total score : $model_score \n";
+$string .= "# from   to length score orientation \n";
+my $i = 1;
+for my $helix (@$model){
+my ($beg, $end) =  ($helix->get_nterm()->[0]+1, $helix->get_cterm()->[0]+1); # add the 1's to get 1 based numbering
+$string .= "$i   $beg   $end (";
+$string .= $end-$beg+1 . ')   ' .  $helix->get_score() . "   " . $orientation . "\n";
+$i++;
+# switch orientation
+$orientation = ($orientation eq 'i-o')? 'o-i': 'i-o';
+}
+$string .= "\n";
+return $string;
+}
+
+sub _io_oi_correspondence_string {
+  my $self = shift;
+ my $io_helix = shift;
+  my $oi_helix = shift;
+
+  my $io_string = '                       ';
+  my ( $io_beg, $io_end, $io_score );
+  if ( defined $io_helix ) {
+    ( $io_beg, $io_end, $io_score ) = (
+				       $io_helix->get_nterm()->[0] + 1,
+				       $io_helix->get_cterm()->[0] + 1,
+				       $io_helix->get_score()
+				      );
+
+    $io_string = sprintf( "%6i-%4i (%2i) %5i ",
+			  $io_beg, $io_end, $io_end - $io_beg + 1, $io_score );
+ 
+  }
+  my $oi_string = '                       ';
+  my ( $oi_beg, $oi_end, $oi_score );
+  if ( defined $oi_helix ) {
+    ( $oi_beg, $oi_end, $oi_score ) = (
+				       $oi_helix->get_nterm()->[0] + 1,
+				       $oi_helix->get_cterm()->[0] + 1,
+				       $oi_helix->get_score()
+				      );
+
+    $oi_string = sprintf( "%6i-%4i (%2i) %5i ",
+			  $oi_beg, $oi_end, $oi_end - $oi_beg + 1, $oi_score );
+  
+  }
+  my $score_diff;
+  my ( $io_pref, $oi_pref ) = ( '  ', '  ' );
+  if ( !defined $io_helix ) {
+    $oi_pref = '++';
+  } elsif ( !defined $oi_helix ) {
+    $io_pref = '++';
+  } else {			# both defined
+    $score_diff = $io_score - $oi_score;
+    if ( $score_diff > $self->{hi_orientational_threshold} ) {
+      $io_pref = '++';
+    } elsif ( $score_diff > $self->{lo_orientational_threshold} ) {
+      $io_pref = ' +';
+    } elsif ( $score_diff < -1 * $self->{hi_orientational_threshold} ) {
+      $oi_pref = '++';
+    } elsif ( $score_diff < -1 * $self->{lo_orientational_threshold} ) {
+      $oi_pref = ' +';
+    } else {
+
+      # neither is preferred leave them both as '  '
+    }
+  }
+  $io_string .= $io_pref;
+$oi_string .= $oi_pref;
+
+  if(defined $io_helix and $io_helix->get_score() < $self->{min_score}){
+      $io_string = "($io_string)";
+    }
+  if(defined $oi_helix and $oi_helix->get_score() < $self->{min_score}){
+      $oi_string = "($oi_string)";
+    }
+  return $io_string . '  |' . $oi_string . "\n";
+}
+
+sub _topology_model {
+
+    my $self = shift;
+    my $is_nterm_inside = shift;
+    my $io_helices_ref  = shift;
+    my $oi_helices_ref  = shift;
+
+    my ( $io_count, $oi_count ) = ( 0, 0 );
+    my $min_pos     = 1;
+    my $model_count = 0;
+    my @model       = ();
+    while (1) {
+        if ($is_nterm_inside) {
+            $io_count =
+              _find_next_helix( $io_helices_ref, $io_count, $min_pos,
+                $self->{min_score} );
+            if ( defined $io_count ) {
+                $model_count++;
+                my $io_helix = $io_helices_ref->[$io_count];
+                push @model, $io_helix;
+                $min_pos = $io_helix->get_sh_cterm()->[0] + 1 + 1; 
+		#one one to make unit based, 
+            }
+            else {
+                last;
+            }
+        }
+        else {    # nterm is outside
+            $oi_count =
+              _find_next_helix( $oi_helices_ref, $oi_count, $min_pos,
+                $self->{min_score} );
+            if ( defined $oi_count ) {
+                $model_count++;
+                my $oi_helix = $oi_helices_ref->[$oi_count];
+                push @model, $oi_helix;
+                $min_pos = $oi_helix->get_sh_cterm()->[0] + 1 + 1;
+            }
+            else {
+                last;
+            }
+        }
+        $is_nterm_inside = !$is_nterm_inside;
+    }
+    $is_nterm_inside = !$is_nterm_inside;
+    return \@model;
+}
+
+sub _find_next_helix {
+
+   #   my $self = shift;
+    my $helices_ref  = shift;    # ref to array of io or oi helices.
+    my $count_start  = shift;
+    my $min_position = shift;
+    my $threshold    = shift;
+
+    for my $count ( $count_start .. scalar @$helices_ref - 1 ) {
+        if (    ( $helices_ref->[$count]->get_score() >= $threshold )
+            and ( $helices_ref->[$count]->get_sh_nterm()->[0] + 1 >= $min_position )
+          )
+        {
+            return $count;
+        }
+
+    }
+    return; # returns undef in scalar context, empty list in list context.
+}
+
+#
 sub setup_tables {
     my $self = shift;
 
@@ -1478,21 +1655,27 @@ sub setup_tables {
         52, 45, 28, 36, 36, 46, 47, 44, 54, 59, 65, 69,
         54, 49, 49, 47, 48, 37, 39, 44, 53
     );
-    for (@io_center_Xrow) { $_ *= -0.01; }
+    for (@io_center_Xrow) {
+        $_ *= -0.01;
+    }
     @io_center_Xrow = reverse @io_center_Xrow;
 
     my @io_nt_Xrow = (
         38, 37, 47, 57, 77, 63, 70, 46, 45, 50, 53, 46,
         37, 33, 39, 53, 16, 4,  4,  3,  2
     );
-    for (@io_nt_Xrow) { $_ *= -0.01; }
+    for (@io_nt_Xrow) {
+        $_ *= -0.01;
+    }
     @io_nt_Xrow = reverse @io_nt_Xrow;
 
     my @io_ct_Xrow = (
         -2, -1, 3,  0,  6,  41, 44, 25, 42, 34, 30, 37,
         84, 42, 55, 52, 90, 54, 42, 58, 45
     );
-    for (@io_ct_Xrow) { $_ *= -0.01; }
+    for (@io_ct_Xrow) {
+        $_ *= -0.01;
+    }
     @io_ct_Xrow = reverse @io_ct_Xrow;
 
     my @oi_center_Xrow = (
@@ -1500,7 +1683,9 @@ sub setup_tables {
         57, 58, 64, 39, 39, 41, 49, 38, 45
     );
 
-    for (@oi_center_Xrow) { $_ *= -0.01; }
+    for (@oi_center_Xrow) {
+        $_ *= -0.01;
+    }
     @oi_center_Xrow = reverse @oi_center_Xrow;
 
     my @oi_nt_Xrow = (
@@ -1508,14 +1693,18 @@ sub setup_tables {
         34, 31, 43, 43, 7,  -4, 6,  2,  0
     );
 
-    for (@oi_nt_Xrow) { $_ *= -0.01; }
+    for (@oi_nt_Xrow) {
+        $_ *= -0.01;
+    }
     @oi_nt_Xrow = reverse @oi_nt_Xrow;
 
     my @oi_ct_Xrow = (
         3,  3,  0,  1,  11, 40, 40, 30, 51, 48, 42, 65,
         56, 50, 55, 61, 62, 49, 60, 59, 43
     );
-    for (@oi_ct_Xrow) { $_ *= -0.01; }
+    for (@oi_ct_Xrow) {
+        $_ *= -0.01;
+    }
     @oi_ct_Xrow = reverse @oi_ct_Xrow;
 
     $io_center_table->add_row( \@io_center_Xrow );
@@ -1603,5 +1792,6 @@ sub get_aa_row_hash {
     my $self = shift;
     return $self->{aa_row_hash};
 }
+
 
 1;
