@@ -131,8 +131,6 @@ sub format_report_file {
                                                      "$params{report_file}.formatted.html"
                                                      );
 
-    #  return $formatted_report_file if -s $formatted_report_file;
-
     #for smaller reports, HTML format them
     my %bioperl_formats = ( 0 => 'blast', #< only do for regular output,
                             #not the tabular and xml, even
@@ -149,6 +147,43 @@ sub format_report_file {
         my $url = $bdb->identifier_url($s);
         return qq { <a class="blast_match_ident" href="$url">$s</a> };
     }
+
+    if ( $params{seq_count} == 1 && $bioperl_formats{$params{outformat}}) {
+        my $in = Bio::SearchIO->new(-format => $bioperl_formats{$params{outformat}}, -file   => "< $raw_report_file")
+            or die "$! opening $raw_report_file for reading";
+        #$writer is a  "blastxml" (NCBI BLAST XML) which will b an argument for constructing new Bio::SearchIO module
+        my $writer = CXGN::BioTools::SearchIOHTMLWriter->new($params{database});
+        my $out = Bio::SearchIO->new( -writer => $writer,
+                                      -file   => "> $formatted_report_file",
+                                      );
+        $out->write_result($in->next_result);
+    } else {
+        open my $raw,$raw_report_file
+            or die "$! opening $raw_report_file for reading";
+        open my $fmt,'>',$formatted_report_file
+            or die "$! opening $formatted_report_file for writing";
+
+        if(my $formatter = get_custom_formatter( $params{outformat} ) ) {
+            $formatter->($raw,$fmt);
+        } else {
+            print $fmt qq|<pre>|;
+            while (my $line = <$raw>) {
+                $line = encode_entities($line);
+                $line =~ s/(?<=Query[=:]\s)(\S+)/linkit($bdb,$MATCH)/eg;
+                #      $line =~ s/(?<=^>)(\S+)/linkit($bdb,$MATCH)/eg;
+                print $fmt $line;
+            }
+            print $fmt qq|</pre>\n|;
+        }
+    }
+
+    return $formatted_report_file;
+}
+
+##########################
+
+sub get_custom_formatter {
+    my ( $blast_output_format ) = @_;
 
     my %custom_formatters = (
                              7 => sub {  ### XML
@@ -195,38 +230,9 @@ sub format_report_file {
                              },
                              );
 
-    if ( $params{seq_count} == 1 && $bioperl_formats{$params{outformat}}) {
-        my $in = Bio::SearchIO->new(-format => $bioperl_formats{$params{outformat}}, -file   => "< $raw_report_file")
-            or die "$! opening $raw_report_file for reading";
-        #$writer is a  "blastxml" (NCBI BLAST XML) which will b an argument for constructing new Bio::SearchIO module
-        my $writer = CXGN::BioTools::SearchIOHTMLWriter->new($params{database});
-        my $out = Bio::SearchIO->new( -writer => $writer,
-                                      -file   => "> $formatted_report_file",
-                                      );
-        $out->write_result($in->next_result);
-    } else {
-        open my $raw,$raw_report_file
-            or die "$! opening $raw_report_file for reading";
-        open my $fmt,'>',$formatted_report_file
-            or die "$! opening $formatted_report_file for writing";
 
-        if(my $formatter = $custom_formatters{$params{outformat}} ) {
-            $formatter->($raw,$fmt);
-        } else {
-            print $fmt qq|<pre>|;
-            while (my $line = <$raw>) {
-                $line = encode_entities($line);
-                $line =~ s/(?<=Query[=:]\s)(\S+)/linkit($bdb,$MATCH)/eg;
-                #      $line =~ s/(?<=^>)(\S+)/linkit($bdb,$MATCH)/eg;
-                print $fmt $line;
-            }
-            print $fmt qq|</pre>\n|;
-        }
-    }
-
-    return $formatted_report_file;
+    return $custom_formatters{ $blast_output_format };
 }
-##########################
 
 sub graphics_html {
   my ($raw_report_file,$formatted_report_file,$got_hits) = @_;
