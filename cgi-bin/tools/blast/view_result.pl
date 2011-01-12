@@ -18,9 +18,11 @@ use CXGN::Page;
 use CXGN::BlastDB;
 
 use Bio::SearchIO;
+use Bio::SearchIO::Writer::HTMLResultWriter;
 
 use CXGN::Graphics::BlastGraph; #Evan's package for conservedness histograms
 use CXGN::Apache::Error;
+use CXGN::Tools::Identifiers;
 use CXGN::Tools::List qw/str_in/;
 use File::Slurp qw/slurp/;
 use CXGN::Page::FormattingHelpers qw/info_section_html page_title_html columnar_table_html/;
@@ -198,7 +200,7 @@ sub format_report_file {
     if ( $params{seq_count} == 1 && $bioperl_formats{$params{outformat}}) {
         my $in = Bio::SearchIO->new(-format => $bioperl_formats{$params{outformat}}, -file   => "< $raw_report_file")
             or die "$! opening $raw_report_file for reading";
-        my $writer = my_custom_resultwriter->new($params{database});
+        my $writer = make_bioperl_result_writer( $params{database} );
         my $out = Bio::SearchIO->new( -writer => $writer,
                                       -file   => "> $formatted_report_file",
                                       );
@@ -376,16 +378,9 @@ EOP
   return $html;
 }
 
-
-package my_custom_resultwriter;
-
-use CXGN::Tools::Identifiers;
-
-use base qw/Bio::SearchIO::Writer::HTMLResultWriter/;
-
-sub new {
-  my ($class,$db_id, @args) = @_;
-  my $self = $class->SUPER::new(@args);
+sub make_bioperl_result_writer {
+  my ( $db_id ) = @_;
+  my $self = Bio::SearchIO::Writer::HTMLResultWriter->new;
 
   $self->id_parser( sub {
       my ($idline) = @_;
