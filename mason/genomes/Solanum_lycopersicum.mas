@@ -56,7 +56,7 @@ note that all data is released under the data release agreement below.
 
 % if ($dbh->isa('CXGN::DB::Connection')) { print STDERR "marker 2. yes.\n"; }
 
-<&| /page/info_section.mas, title => 'Data Access Agreement' &>
+<&| /page/info_section.mas, title => 'Data access agreement' &>
   <& /genomes/Solanum_lycopersicum/disclaimer.mas &>
 </&>
 
