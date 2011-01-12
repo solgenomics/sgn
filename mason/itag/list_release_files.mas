@@ -16,7 +16,7 @@ $itag_release
 %   my $rec = $files->{$key};
 %   next unless -f $rec->{file};
 
-    <dt><a href="" onclick="show_download_form('<% $key %>'); return false"><% basename( $rec->{file} ) %></a></dt>
+    <dt><a class="itag_file_download" name="<% $key %>" href="#"><% basename( $rec->{file} ) %></a></dt>
     <dd><% $rec->{desc} %></dd>
 
 % }
@@ -49,6 +49,8 @@ $itag_release
 </div>
 
 <script>
+
+jQuery( function() {
 
   var dialog_box    = jQuery( "#itag_reported_download_form" ),
       name          = dialog_box.find( "input#name" ),
@@ -125,6 +127,15 @@ $itag_release
     form[0].action = '<% $url_stem %>/'+file_key;
     dialog_box.dialog( "open" );
   }
+
+
+  jQuery("a.itag_file_download").click( function() {
+    var key = this.name;
+    show_download_form( key );
+    return false;
+  });
+
+});
 
 </script>
 
