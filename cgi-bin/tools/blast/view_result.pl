@@ -57,11 +57,59 @@ my $formatted_report_file = format_report_file($raw_report_file);
 
 #warn "got raw report file $raw_report_file, formatting $formatted_report_file\n";
 
+$page->jsan_use( 'jqueryui' );
 $page->header();
 
-# TODO: insert JS here to add site xref popups to onclicks of
-#  a.blast_match_ident elements
+# stuff to support AJAXy disambiguation of site xrefs
 print <<EOJS;
+<div id="xref_menu_popup" title="Match information">
+  <h1 class="hit_identifier"></h1>
+  <dl>
+    <dt>Match details</dt>
+      <dd><a class="match_details" href="">view match details</a></dd>
+    <dt>Item details</dt>
+      <dd class="identifier_link"></dd>
+    <dt>Related pages</dt>
+      <dd>
+       <div class="xref_content"></div>
+     </dd>
+  </dl>
+</div>
+<script>
+
+  function resolve_blast_ident( id, match_detail_url, identifier_url ) {
+    var popup = jQuery( "#xref_menu_popup" );
+
+    var popup_title = popup.children('h1');
+    var identifier_link_area = popup.find('.identifier_link');
+
+    if( identifier_url == null ) {
+       popup_title.html( id );
+       identifier_link_area.html( '<span class="ghosted">not available</span>' );
+    } else {
+       popup_title.html( '<a href="' + identifier_url + '">' + id + '</a>' );
+       identifier_link_area.html( '<a href="' + identifier_url + '">' + id + ' details</a>' );
+    }
+
+    popup.find('a.match_details').attr( 'href', match_detail_url );
+    var content = popup.find('div.xref_content');
+    content.html( '<img src="/img/throbber.gif" /> searching for additional related pages ...' );
+    content.load( '/api/v1/feature_xrefs?q='+id );
+    popup.dialog( 'open' );
+    jQuery( "body .ui-widget-overlay").click( function() { popup.dialog( "close" ); } );
+
+    return false;
+  }
+
+  jQuery( "#xref_menu_popup" ).dialog({
+          autoOpen: false,
+          height: 300,
+          width: 350,
+          modal: true
+  });
+
+</script>
+
 EOJS
 
 print page_title_html('BLAST Results');
@@ -353,22 +401,13 @@ sub new {
 
   my $hit_link = sub {
     my ($self, $hit, $result) = @_;
+
+    my $id = $hit->name;
+
     #see if we can link it as a CXGN identifier.  Otherwise,
     #use the default bioperl link generator
-    my $url = CXGN::Tools::Identifiers::link_identifier($hit->name())
-	|| $self->default_hit_link_desc($hit,$result,$db_id);
-
-    return $url;
-  };
-  $self->hit_link_desc(  $hit_link );
-  $self->hit_link_align( $hit_link );
-  $self->start_report(sub {''});
-  $self->end_report(sub {''});
-  return $self;
-}
-
-sub default_hit_link_desc {
-    my ( $self, $hit, $result, $db_id ) = @_;
+    my $identifier_url = CXGN::Tools::Identifiers::identifier_url( $id );
+    $identifier_url = $identifier_url ? "'$identifier_url'" : 'null';
 
     my $coords_string =
         "hilite_coords="
@@ -377,8 +416,14 @@ sub default_hit_link_desc {
               $hit->hsps,
              );
 
-    my $id = $hit->name;
+    my $match_seq_url = "show_match_seq.pl?blast_db_id=$db_id;id=$id;$coords_string";
 
-    #return qq{ <a class="blast_match_ident" href="" onclick="return resolve_blast_ident('$id')">$id</a> };
-    return qq{<a class="blast_match_ident" href="show_match_seq.pl?blast_db_id=$db_id;id=$id;$coords_string">$id</a>};
+    return qq{ <a class="blast_match_ident" href="" onclick="return resolve_blast_ident( '$id', '$match_seq_url', $identifier_url )">$id</a> };
+
+  };
+  $self->hit_link_desc(  $hit_link );
+  $self->hit_link_align( $hit_link );
+  $self->start_report(sub {''});
+  $self->end_report(sub {''});
+  return $self;
 }
