@@ -31,9 +31,19 @@ $itag_release
   margin-bottom: 0.5em;
 }
 </style>
-<div id="itag_reported_download_form" title="Contact information required to download pre-publication bulk files">
+<div id="itag_reported_download_form" title="Access agreement and contact information">
 
-  <p class="validateTips">Please fill in all fields.</p>
+  <p>
+    By downloading pre-publication tomato genome sequence or ITAG
+    annotation files, you indicate your acceptance of the following data
+    access agreement.
+  </p>
+
+  <&| /page/info_section.mas, title => 'Data access agreement' &>
+    <& /genomes/Solanum_lycopersicum/disclaimer.mas  &>
+  </&>
+
+  <p class="validateTips">To download ITAG pre-publication annotation data, please provide your contact information.</p>
 
   <form method="POST">
         <fieldset>
@@ -94,8 +104,8 @@ jQuery( function() {
 
   jQuery( "#itag_reported_download_form" ).dialog({
           autoOpen: false,
-          height: 300,
-          width: 350,
+          height: 500,
+          width: 500,
           modal: true,
           buttons: {
                   Download: function() {
