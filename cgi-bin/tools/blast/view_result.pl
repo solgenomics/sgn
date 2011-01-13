@@ -106,7 +106,7 @@ print <<EOJS;
   jQuery( "#xref_menu_popup" ).dialog({
           autoOpen: false,
           height: 300,
-          width: 350,
+          width: 680,
           modal: true
   });
 
