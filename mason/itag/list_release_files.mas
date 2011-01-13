@@ -102,7 +102,7 @@ jQuery( function() {
   }
 
 
-  jQuery( "#itag_reported_download_form" ).dialog({
+  dialog_box.dialog({
           autoOpen: false,
           height: 500,
           width: 500,
@@ -136,6 +136,7 @@ jQuery( function() {
   function show_download_form( file_key ) {
     form[0].action = '<% $url_stem %>/'+file_key;
     dialog_box.dialog( "open" );
+    dialog_box.animate({ scrollTop: 0 }, 300 );
   }
 
 
