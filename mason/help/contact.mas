@@ -17,8 +17,9 @@ my $defaultVal = {"name" => $name,
 <tr><td align="left" valign="top">
 <strong>Your <% $info_category %>*</strong>
 </td>
-% #If user did not fill out a field, then it will show in red letters
-% #this field is needed. Otherwise, the form is filled out normally
+% # If user did not fill out a field and submitted the form, then it will 
+% # show in red letters above the field this field is needed above it. 
+% # Otherwise, the form is filled out normally.
 % unless ($filled{$info_category}) {
 </td>
 <td style = "color:red; font-size: 10px;" align = "left" valign = "top">     
@@ -31,7 +32,9 @@ my $defaultVal = {"name" => $name,
 				name = "<% $info_category %>" />
 </td></tr>
 % }     
-
+% # Body uses a text_area so it is hardcoded.
+% # Like the other inputs, it will display a red message above saying 
+% # "Message needed."
 <tr><td align="left" valign="top">
 <strong>Body*</strong>
 </td>
