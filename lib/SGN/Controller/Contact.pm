@@ -8,6 +8,7 @@ package SGN::Controller::Contact;
 use Moose;
 use namespace::autoclean;
 
+#reference holds the URL of the page user was last on
 has 'reference' => (
     is => "rw",
     isa => 'Str',
@@ -22,12 +23,14 @@ use CXGN::Login;
 use CXGN::People;
 use CXGN::Contact;
 
+#Creates a blank form
 sub form :Path('/contact/form') :Args(0) {
     my ($self, $c) = @_;
     my ($username, $useremail) = _load_user();
     _build_form_page($self, $c, $username, $useremail); 
 }
 
+#Loads the user if he has an account
 sub _load_user {
     my $dbh   = CXGN::DB::Connection->new();
     my $login = CXGN::Login->new($dbh);
@@ -44,6 +47,8 @@ sub _load_user {
     return ($username, $useremail);
 }
 
+#Builds a form with $name, $email, $subject, $body in the right line
+#If any undef, assigns '' 
 sub _build_form_page {
     my ($self, $c, $name, $email, $subject, $body) = @_;
     $c->stash->{name} = $name if $name;
@@ -54,6 +59,9 @@ sub _build_form_page {
     $c->stash->{template} = '/help/contact.mas';
 }
 
+#If user submits a completed form, sends the form as an email 
+#through CXGN::Contact. If not, stays on the form page and keeps what the user
+#entered. 
 sub submit :Path('/contact/submit') :Args(0)
 {
     my ($self, $c) = @_;
