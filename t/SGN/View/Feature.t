@@ -29,15 +29,15 @@ sub TEST_CVTERM_LINK : Tests {
     my ($id,$name) = ($f->type->cvterm_id,$f->type->name);
     $name =~ s/_/ /g;
     my $link = qq{<a href="/chado/cvterm.pl?cvterm_id=$id">$name</a>};
-    is(cvterm_link($f),$link, 'cvterm link');
+    is(cvterm_link($f->type),$link, 'cvterm link');
 }
 
 sub TEST_RELATED_STATS : Tests {
     my $self = shift;
     my $feature = create_test('Sequence::Feature');
 
-    my $name1 = cvterm_link( $self->{feature} );
-    my $name2 = cvterm_link( $feature );
+    my $name1 = cvterm_link( $self->{feature}->type );
+    my $name2 = cvterm_link( $feature->type );
     my $stats = related_stats([ $self->{feature}, $feature, $feature ]);
     is($stats->[0][1], $name1);
     is($stats->[0][0], 1);

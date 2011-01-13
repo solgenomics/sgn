@@ -22,8 +22,12 @@ our @EXPORT_OK = qw/
 /;
 
 sub type_name {
-    my ($feature, $caps) = @_;
-    ( my $n = $feature->type->name ) =~ s/_/ /g;
+    cvterm_name( shift->type, @_ );
+}
+
+sub cvterm_name {
+    my ($cvt, $caps) = @_;
+    ( my $n = $cvt->name ) =~ s/_/ /g;
     if( $caps ) {
         $n =~ s/(\S+)/lc($1) eq $1 ? ucfirst($1) : $1/e;
     }
@@ -105,7 +109,7 @@ sub related_stats {
     my $stats = { };
     my $total = scalar @$features;
     for my $f (@$features) {
-            $stats->{cvterm_link($f)}++;
+            $stats->{cvterm_link($f->type)}++;
     }
     my $data = [ ];
     for my $k (sort keys %$stats) {
@@ -127,7 +131,7 @@ sub feature_table {
         for my $loc (@locations) {
             my ($start,$end) = ($loc->fmin+1, $loc->fmax);
             push @$data, [
-                cvterm_link($f),
+                cvterm_link($f->type),
                 feature_link($f),
                 "$start..$end",
                 commify_number( $end-$start+1 ) . " bp",
@@ -166,9 +170,9 @@ sub organism_link {
 }
 
 sub cvterm_link {
-    my ($feature,$caps) = @_;
-    my $name = type_name($feature,$caps);
-    my $id   = $feature->type->id;
+    my ( $cvt, $caps ) = @_;
+    my $name = cvterm_name( $cvt, $caps );
+    my $id   = $cvt->id;
     return qq{<a href="/chado/cvterm.pl?cvterm_id=$id">$name</a>};
 }
 
