@@ -4,7 +4,6 @@ use strict;
 use warnings;
 use Test::More qw | no_plan |;
 use lib 't/lib';
-#use SGN::Test;
 use SGN::Test::WWW::Mechanize;
 use CXGN::DB::Connection;
 use Carp qw | verbose |;
@@ -24,16 +23,6 @@ foreach my $category (@categories)
 }
 $mech->text_contains("Body", "The form has textarea to put message.");
 
-#Tests the form if someone has an account, but no email
-#my $dbh = CXGN::DB::Connection->new();
-#if( my $u_id = CXGN::People::Person->get_person_by_username( $dbh, "testusername" ) ) {
-#    CXGN::People::Person->new( $dbh, $u_id )->hard_delete;
-#}
-#my $p = CXGN::People::Person->new($dbh);
-#$p->set_first_name("testfirstname");
-#$p->set_last_name("testlastname");
-#$p->store();
-#$dbh->commit();
 
 #Tests for a user
 my %user;
@@ -168,5 +157,3 @@ sub test_currently_filled_and_oppositely_filled_forms
        }
     }
 }
-
-done_testing; 
