@@ -11,7 +11,7 @@ $itag_release
 % my $files = $itag_release->get_all_files;
 % my $url_stem = "/itag/release/".$itag_release->release_number.'/download';
 
-<dl>
+<dl style="width: 70%; margin: 1em auto">
 % for my $key ( sort keys %$files ) {
 %   my $rec = $files->{$key};
 %   next unless -f $rec->{file};
