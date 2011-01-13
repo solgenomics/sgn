@@ -67,10 +67,10 @@ print <<EOJS;
 <div id="xref_menu_popup" title="Match information">
   <h1 class="hit_identifier"></h1>
   <dl>
-    <dt>Match details</dt>
-      <dd><a class="match_details" href="">view match details</a></dd>
     <dt>Item details</dt>
       <dd class="identifier_link"></dd>
+    <dt>Sequence details</dt>
+      <dd><a class="match_details" href="">view matched-sequence details</a></dd>
     <dt>Related pages</dt>
       <dd>
        <div class="xref_content"></div>
@@ -90,7 +90,7 @@ print <<EOJS;
        identifier_link_area.html( '<span class="ghosted">not available</span>' );
     } else {
        popup_title.html( '<a href="' + identifier_url + '">' + id + '</a>' );
-       identifier_link_area.html( '<a href="' + identifier_url + '">' + id + ' details</a>' );
+       identifier_link_area.html( '<a href="' + identifier_url + '">view ' + id + ' details</a>' );
     }
 
     popup.find('a.match_details').attr( 'href', match_detail_url );
@@ -402,7 +402,7 @@ sub make_bioperl_result_writer {
     #see if we can link it as a CXGN identifier.  Otherwise,
     #use the default bioperl link generator
     my $identifier_url = CXGN::Tools::Identifiers::identifier_url( $id );
-    $identifier_url = $identifier_url ? "'$identifier_url'" : 'null';
+    my $js_identifier_url = $identifier_url ? "'$identifier_url'" : 'null';
 
     my $coords_string =
         "hilite_coords="
@@ -413,7 +413,9 @@ sub make_bioperl_result_writer {
 
     my $match_seq_url = "show_match_seq.pl?blast_db_id=$db_id;id=$id;$coords_string";
 
-    return qq{ <a class="blast_match_ident" href="" onclick="return resolve_blast_ident( '$id', '$match_seq_url', $identifier_url )">$id</a> };
+    my $no_js_url = $identifier_url || $match_seq_url;
+
+    return qq{ <a class="blast_match_ident" href="$no_js_url" onclick="return resolve_blast_ident( '$id', '$match_seq_url', $js_identifier_url )">$id</a> };
 
   };
   $self->hit_link_desc(  $hit_link );
