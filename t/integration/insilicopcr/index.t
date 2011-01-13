@@ -13,23 +13,23 @@ use CXGN::DB::Connection;
 use CXGN::Page;
 use CXGN::BlastDB;
 use lib 't/lib';
-use SGN::Test;
-
-my $test_blastdb_id = 34;
-my $bdb = CXGN::BlastDB->retrieve($test_blastdb_id);
+use SGN::Test::WWW::Mechanize;
 
 unless( can_run('qsub') ) {
     plan skip_all => 'qsub not found in path';
 }
+
+my $test_blastdb_id = 34;
+my $bdb = CXGN::BlastDB->retrieve($test_blastdb_id);
+
 unless( all { -f } $bdb->list_files ) {
     plan skip_all => "blast db ".$bdb->file_base." not present on disk";
 }
 
-my $server = $ENV{SGN_TEST_SERVER};
+diag "using blast db ".$bdb->file_base;
 
-my $mech = Test::WWW::Mechanize->new;
-my $new_page = $server."/tools/insilicopcr/index.pl";
-$mech->get_ok($new_page);
+my $mech = SGN::Test::WWW::Mechanize->new;
+$mech->get_ok( "/tools/insilicopcr/index.pl" );
 $mech->content_contains("In Silico PCR");
 $mech->content_contains("PCR Primers");
 $mech->content_contains("Forward Primer");
@@ -61,14 +61,15 @@ my %form = (
 
 $mech->submit_form_ok(\%form, "PCR  job submit form" );
 
-if ( $mech->content =~ /Running/ ) {
+if ( $mech->content =~ /running/i ) {
     while ( $mech->content !~ /PCR Results/ ) {
         sleep 1;
         $mech->get( $mech->base );
     }
 }
 
-$mech->content_contains("PCR Results");
+$mech->content_contains("PCR Results")
+  or diag $mech->content;
 $mech->content_contains("Note:");
 $mech->content_contains("PCR Report");
 $mech->content_contains("BLAST OUTPUT");
