@@ -65,12 +65,12 @@ $page->header();
 # stuff to support AJAXy disambiguation of site xrefs
 print <<EOJS;
 <div id="xref_menu_popup" title="Match information">
-  <h1 class="hit_identifier"></h1>
+  <h1 class="popup_title"></h1>
   <dl>
-    <dt>Item details</dt>
+    <dt>Subject details</dt>
       <dd class="identifier_link"></dd>
-    <dt>Sequence details</dt>
-      <dd><a class="match_details" href="">view matched-sequence details</a></dd>
+    <dt>Subject sequence</dt>
+      <dd><a class="match_details" href="">view matched sequence</a></dd>
     <dt>Related pages</dt>
       <dd>
        <div class="xref_content"></div>
@@ -82,14 +82,14 @@ print <<EOJS;
   function resolve_blast_ident( id, match_detail_url, identifier_url ) {
     var popup = jQuery( "#xref_menu_popup" );
 
-    var popup_title = popup.children('h1');
+    var popup_title = popup.children('.popup_title');
     var identifier_link_area = popup.find('.identifier_link');
 
     if( identifier_url == null ) {
-       popup_title.html( id );
+       popup_title.html( 'Subject: ' + id );
        identifier_link_area.html( '<span class="ghosted">not available</span>' );
     } else {
-       popup_title.html( '<a href="' + identifier_url + '">' + id + '</a>' );
+       popup_title.html( 'Subject: <a href="' + identifier_url + '">' + id + '</a>' );
        identifier_link_area.html( '<a href="' + identifier_url + '">view ' + id + ' details</a>' );
     }
 
