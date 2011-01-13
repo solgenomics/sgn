@@ -25,7 +25,10 @@ List ITAG bulk file releases available for download.
 sub list_releases :Path('/itag/list_releases') :Args(0) {
     my ( $self, $c ) = @_;
 
-    $c->stash->{itag_releases} = [ CXGN::ITAG::Release->find ];
+    my $itag = $c->enabled_feature('ITAG')
+        or $c->throw_404('ITAG site feature not available');
+
+    $c->stash->{itag_releases} = [ CXGN::ITAG::Release->find( dir => $itag->releases_base ) ];
 
     $c->stash->{template} = '/itag/list_releases.mas';
     $c->forward('View::Mason');
@@ -87,8 +90,14 @@ sub download_release_file :Chained('get_release') :PathPart('download') :Args(1)
 sub get_release :Chained('/') :PathPart('itag/release') :CaptureArgs(1) {
     my ( $self, $c, $releasenum ) = @_;
 
+    my $itag = $c->enabled_feature('ITAG')
+        or $c->throw_404('ITAG site feature not available');
+
     # get and stash the itag release object, throwing if not found
-    ($c->stash->{itag_release}) = CXGN::ITAG::Release->find( releasenum => $releasenum )
+    ($c->stash->{itag_release}) = CXGN::ITAG::Release->find(
+        releasenum => $releasenum,
+        dir        => $itag->releases_base,
+       )
         or $c->throw_404("Release not found");
 }
 
