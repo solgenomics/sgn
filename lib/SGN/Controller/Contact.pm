@@ -26,10 +26,6 @@ sub form :Path('/contact/form') :Args(0) {
     my ($self, $c) = @_;
     my ($username, $useremail) = _load_user();
     _build_form_page($self, $c, $username, $useremail); 
-    #$c->stash->{name} = $username unless $c->stash->{name};
-    #$c->stash->{email} = $useremail unless $c->stash->{email};
-    #$c->stash->{email_address_to_display} = 'sgn-feedback@solgenomics.net';
-    #$c->stash->{template} = '/help/contact.mas';
 }
 
 sub _load_user {
@@ -87,9 +83,6 @@ END_HEREDOC
        print STDERR "After it is sent";
        $c->stash->{message} = "Thank you. Your message has been sent.";
        $c->stash->{template} = "/gen_pages/message.mas";
-       #my $curLocation = $c->res->location();
-       #$curLocation =~ s/(submit)|(not sent)/sent/;
-       #$c->res->location($curLocation);
     }
     else
     {
@@ -103,12 +96,6 @@ END_HEREDOC
          $c->stash->{filled}->{$category} = $infoInFields{$category};
        }
        _build_form_page($self, $c, $name, $email, $subject, $body);
-       #my $uri = $c->req->uri;
-       #$uri->path("form/message_not_sent");
-       #my $curLocation = $c->res->location;
-       #$curLocation  =~ s/(submit)|(sent)/form\/message_not_sent/;
-       #$c->res->location($curLocation);
-       #$c->res->redirect('/contact/form');
     }
 }
 
