@@ -33,6 +33,18 @@
 </&>
 
 <&| /page/info_section.mas,
+   title => 'Ontology terms',
+   subtitle => 'ontology terms associated with this feature',
+   collapsible => 1,
+&>
+
+  <& /feature/feature_cvterms.mas,
+      feature   => $feature,
+  &>
+
+</&>
+
+<&| /page/info_section.mas,
    title => 'Related features',
    collapsible => 1,
 &>
