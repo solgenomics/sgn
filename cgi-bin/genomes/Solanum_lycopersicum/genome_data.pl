@@ -166,11 +166,16 @@ sub itag_release_ftp_link {
 
     my $link_style = 'display: block; margin: 0.5em 0; font-size: 110%; font-weight: bold';
     my $empty_link = span({style => $link_style, class => 'ghosted'}, 'not available' );
+    my $itag = $c->enabled_feature('ITAG')
+	or return $empty_link;
 
     unless( ref $r ) {
         my ( $releasenum ) = $r =~ /([\d\.]+)$/
             or return $empty_link;
-        ($r) = CXGN::ITAG::Release->find( releasenum => $releasenum )
+        ($r) = CXGN::ITAG::Release->find(
+	    releasenum => $releasenum,
+	    dir        => $itag->releases_base,
+	  )
             or return $empty_link;
     }
 
