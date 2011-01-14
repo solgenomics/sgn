@@ -103,9 +103,6 @@ sub display_not_finished {
 
 	my $message = shift;
 	$message ||= "Job running, please wait.";
-#    $page->header();
-
-    my $title = page_title_html($message);
 
     print <<HTML;
 Content-type: text/html
@@ -118,18 +115,22 @@ Content-type: text/html
 <link rel="stylesheet" href="/documents/inc/sgn.css" type="text/css" />
 </head>
 <body>
-    <center>
-    <br /><br /><br />
+    <style>
+      body { padding-top: 80px }
+      img, div, h2 {
+        display: block;
+        margin: 1em auto;
+        text-align: center;
+      }
+    </style>
     <img src="/documents/img/sgn_logo_animated.gif" alt="SGN logo"/>
-    <br /><br /><br />
-    $title
+    <h2>$message</h2>
+    <div>Please note: jobs are limited to 1 hour of run time.</div>
     <img src="/documents/img/progressbar1.gif" alt="In Progress..."/>
-    <br /><br /><br />
-    </center>
 </body>
 </html>
-
 HTML
+
 }
 
 sub display_finished { 
