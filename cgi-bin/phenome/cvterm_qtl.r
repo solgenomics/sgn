@@ -596,23 +596,19 @@ if ( max(QtlLods) >= LodScore )
  # print("Model")
  # print(ResultModel)
 
-  if (is.numeric(ResultFull)) {
-    ResultFull<-round(ResultFull,
-                      2
-                      )
-   # ResultFull<-rbind(ResultFull,
-   #                   ResultModel
-   #                   )
-  }
+  if (is.numeric(ResultFull))
+    {
+      ResultFull<-round(ResultFull,
+                        2
+                        )
+    }
 
-  if (is.numeric(ResultDrop)) {
-    ResultDrop<-round(ResultDrop,
-                      2
-                      )
-   # ResultDrop<-rbind(ResultDrop,
-   #                   ResultModel
-   #                   )
-  }
+  if (is.numeric(ResultDrop))
+    {
+      ResultDrop<-round(ResultDrop,
+                        2
+                        )
+    }
 }
 
 ##########creating vectors for the outfiles##############
