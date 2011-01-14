@@ -28,6 +28,7 @@ my $build = SGN::Build->new(
         'Test::WWW::Mechanize'           => 0,
         'Test::WWW::Mechanize::Catalyst' => '0.50',
         'Test::WWW::Selenium'            => 0,
+        'WWW::Mechanize::TreeBuilder'    => 0,
         'Test::MockObject'               => 0,
     },
     requires => {
@@ -101,8 +102,6 @@ my $build = SGN::Build->new(
         'Storable'                                 => 0,
         'Test::More'                               => 0,
         'Test::Class'                              => 0,
-        'Test::WWW::Mechanize'                     => 1.3,
-        'Test::WWW::Mechanize::Catalyst'           => 0,
         'Text::ParseWords'                         => 0,
         'Tie::Function'                            => 0,
         'Tie::UrlEncoder'                          => 0,
@@ -114,7 +113,6 @@ my $build = SGN::Build->new(
         'XML::Generator'                           => 0,
         'XML::Twig'                                => 0,
         'YAML::Any'                                => 0,
-        'WWW::Mechanize::TreeBuilder'              => 0,
     },
 );
 

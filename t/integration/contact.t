@@ -21,7 +21,7 @@ foreach my $category (@categories)
    #like($mech->findvalue('/html/body//table[@class="td"]'), qr/$category/, "Input exists");
    #$mech->has_tag("input", "", "The form has $category as an input.");
 }
-$mech->text_contains("Body", "The form has textarea to put message.");
+$mech->content_contains("Body", "The form has textarea to put message.");
 
 
 #Tests for a user
@@ -97,7 +97,7 @@ sub check_basic_parts_are_ok
    $mech->get_ok("/contact/form", "Check the form page");
    $mech->html_lint_ok("Check form page html");
    #$mech->page_links_ok('Check all links');
-   $mech->text_contains("Contact", "Title is there");
+   $mech->content_contains("Contact", "Title is there");
 }
 
 sub send_complete_form_and_check
@@ -106,7 +106,7 @@ sub send_complete_form_and_check
 #print $mech->content;
    $mech->submit_form_ok({'form_name'=>$form_name, 'fields'=>\%entry_for_field}, 
 			     "Check submitting; filled out form was sent.");
-   $mech->text_contains("Thank you. Your message has been sent.", 
+   $mech->content_contains("Thank you. Your message has been sent.",
 			    "See if form is sent successfully");
    $mech->html_lint_ok("Check submit page html");
 }
@@ -118,7 +118,7 @@ sub send_blank_form_and_check
 			     "Check submitting; Empty form is being sent");
    foreach my $field (@fields)
    {
-      $mech->text_like(qr/($field)|(message) is required/i, 
+      $mech->content_like(qr/($field)|(message) is required/i, 
 				"$field should show error message"); 
    }
 }
@@ -141,14 +141,14 @@ sub test_currently_filled_and_oppositely_filled_forms
              { 
                 $$filledEntry{$otherFields} = $entry_for_field{$otherFields}; 
                 $otherFields = ucfirst $otherFields;
-                $mech->text_like(qr/($otherFields)|(Message) is required/i, 
+                $mech->content_like(qr/($otherFields)|(Message) is required/i, 
 				"$otherFields should show error message");
        	     }
              else
              {
                 delete $$filledEntry{$otherFields};
                 $otherFields = "Message" if $otherFields eq 'body';
-	        $mech->text_unlike(qr/$otherFields is required/i,					           "$otherFields should not show error message");
+	        $mech->content_unlike(qr/$otherFields is required/i,					           "$otherFields should not show error message");
              }
           }
           $mech->back();
