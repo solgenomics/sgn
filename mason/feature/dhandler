@@ -6,7 +6,7 @@
 </%args>
 
 <%once>
-    use SGN::View::Feature qw/ get_reference type_name /;
+    use SGN::View::Feature qw/ type_name /;
 </%once>
 
 <& /page/page_title.mas, title => type_name($feature,'caps').' '. $feature->id &>
@@ -17,7 +17,6 @@
 <%perl>
     my $organism = $feature->organism;
     my $species  = $organism->species;
-    my $reference = get_reference($feature);
 </%perl>
 
 <&| /page/info_section.mas,

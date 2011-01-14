@@ -10,7 +10,7 @@ use CXGN::Tools::Identifiers;
 
 our @EXPORT_OK = qw/
     related_stats feature_table
-    get_reference feature_link
+    feature_link
     infer_residue cvterm_link
     organism_link feature_length
     mrna_and_protein_sequence
@@ -54,13 +54,6 @@ sub get_description {
     $description =~ s/(\S+)/my $id = $1; CXGN::Tools::Identifiers::link_identifier($id) || $id/ge;
 
     return $description;
-}
-
-sub get_reference {
-    my ($feature) = @_;
-    my $fl = $feature->featureloc_features->single;
-    return unless $fl;
-    return $fl->srcfeature;
 }
 
 sub feature_length {
