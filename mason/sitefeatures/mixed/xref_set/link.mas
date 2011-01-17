@@ -13,6 +13,10 @@
         </dd>
 %     }
     </dl>
+% } else {
+
+  <div class="ghosted">none found</div>
+
 % }
 
 <%once>

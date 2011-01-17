@@ -14,6 +14,13 @@ has 'pipeline_base' => (
     coerce   => 1,
 );
 
+has 'releases_base' => (
+    is       => 'ro',
+    isa      => 'Path::Class::Dir',
+    required => 1,
+    coerce   => 1,
+);
+
 sub pipeline {
     my $self = shift;
     CXGN::ITAG::Pipeline->open( @_, basedir => $self->pipeline_base );
@@ -25,7 +32,6 @@ sub list_pipelines {
         CXGN::ITAG::Pipeline->list_pipelines( shift->pipeline_base );
 
 }
-
 
 # around apache_conf => sub {
 #     my ($orig,$self) = @_;

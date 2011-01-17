@@ -32,7 +32,39 @@ sub download_static :Path('/download') {
     $c->forward('download');
 }
 
+
 =head1 PRIVATE ACTIONS
+
+=head2 reported_download
+
+Private.
+
+Same as download above, but sends an email to the address in the
+'bugs_email' conf var.
+
+=cut
+
+sub reported_download :Private {
+    my ( $self, $c ) = @_;
+
+    my $info_string = Data::Dump::dump( $c->stash->{download_info} || 'no additional information' );
+
+    # send an email with the information
+    $c->stash->{email} = {
+        to      => $c->config->{bugs_email},
+        from    => 'sgn-reported-downloads@solgenomics.net',
+        subject => "File download: ".($c->stash->{download_filename} || '(no filename set)'),
+        body    => join( '', map "$_\n",
+                         "File       : ".($c->stash->{download_filename} || '(no filename set)'),
+                         "User info  : $info_string",
+                         $c->view('Email::ErrorEmail')->summary_text($c),
+                        ),
+    };
+    $c->forward('View::Email');
+
+    # serve the downloaded file
+    $c->forward('download');
+}
 
 =head2 download
 

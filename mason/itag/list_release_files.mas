@@ -1,0 +1,155 @@
+<%args>
+$itag_release
+</%args>
+
+<& /page/page_title.mas, title => 'Files in '.$itag_release->release_name &>
+
+<& /util/import_javascript.mas, classes => [ 'jqueryui' ] &>
+
+% ######### print download links for all of the files
+
+% my $files = $itag_release->get_all_files;
+% my $url_stem = "/itag/release/".$itag_release->release_number.'/download';
+
+<dl style="width: 70%; margin: 1em auto">
+% for my $key ( sort keys %$files ) {
+%   my $rec = $files->{$key};
+%   next unless -f $rec->{file};
+
+    <dt><a class="itag_file_download" name="<% $key %>" href="#"><% basename( $rec->{file} ) %></a></dt>
+    <dd><% $rec->{desc} %></dd>
+
+% }
+</dl>
+
+% # form for a reported download: name, email, and organization
+<style>
+#itag_reported_download_form label, #itag_reported_download_form input {
+  display: block;
+}
+#itag_reported_download_form input {
+  margin-bottom: 0.5em;
+}
+</style>
+<div id="itag_reported_download_form" title="Access agreement and contact information">
+
+  <p>
+    By downloading pre-publication tomato genome sequence or ITAG
+    annotation files, you indicate your acceptance of the following data
+    access agreement.
+  </p>
+
+  <&| /page/info_section.mas, title => 'Data access agreement' &>
+    <& /genomes/Solanum_lycopersicum/disclaimer.mas  &>
+  </&>
+
+  <p class="validateTips">To download ITAG pre-publication annotation data, please provide your contact information.</p>
+
+  <form method="POST">
+        <fieldset>
+                <label for="name">Name</label>
+                <input type="text" name="name" size="30" id="name" class="text ui-widget-content ui-corner-all" />
+                <label for="email">Email</label>
+                <input type="text" name="email" id="email" value="" class="text ui-widget-content ui-corner-all" />
+                <label for="organization">Organization</label>
+                <input type="text" size="35" name="organization" id="organization" value="" class="text ui-widget-content ui-corner-all" />
+        </fieldset>
+  </form>
+
+</div>
+
+<script>
+
+jQuery( function() {
+
+  var dialog_box    = jQuery( "#itag_reported_download_form" ),
+      name          = dialog_box.find( "input#name" ),
+      email         = dialog_box.find( "#email" ),
+      organization  = dialog_box.find( "#organization" ),
+      allFields     = jQuery( [] ).add( name ).add( email ).add( organization ),
+      tips          = dialog_box.find( ".validateTips" ),
+      form          = dialog_box.find( "form" );
+
+  function updateTips( t ) {
+          tips
+            .text( t )
+            .addClass( "ui-state-highlight" );
+
+          setTimeout(function() {
+                  tips.removeClass( "ui-state-highlight", 1500 );
+          }, 500 );
+  }
+
+  function checkLength( o, n, min, max ) {
+          if ( o.val().length > max || o.val().length < min ) {
+                  o.addClass( "ui-state-error" );
+                  updateTips( "Length of " + n + " must be between " +
+                          min + " and " + max + "." );
+                  return false;
+          } else {
+                  return true;
+          }
+  }
+
+  function checkRegexp( o, regexp, n ) {
+          if ( !( regexp.test( o.val() ) ) ) {
+                  o.addClass( "ui-state-error" );
+                  updateTips( n );
+                  return false;
+          } else {
+                  return true;
+          }
+  }
+
+
+  dialog_box.dialog({
+          autoOpen: false,
+          height: 500,
+          width: 500,
+          modal: true,
+          buttons: {
+                  Download: function() {
+                          var bValid = true;
+                          allFields.removeClass( "ui-state-error" );
+
+                          bValid = bValid && checkLength( name, "username", 3, 50 );
+                          bValid = bValid && checkLength( email, "email", 6, 80 );
+                          bValid = bValid && checkLength( organization, "organization", 5, 50 );
+
+                          // From jquery.validate.js (by joern), contributed by Scott Gonzalez: http://projects.scottsplayground.com/email_address_validation/
+                          bValid = bValid && checkRegexp( email, /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?$/i, "Please enter a valid email address, e.g. ui@jquery.com" );
+
+                          if ( bValid ) {
+                            form[0].submit();
+                          }
+                  },
+                  Cancel: function() {
+                          jQuery( this ).dialog( "close" );
+                  }
+          },
+          close: function() {
+                  allFields.val( "" ).removeClass( "ui-state-error" );
+          }
+  });
+
+
+  function show_download_form( file_key ) {
+    form[0].action = '<% $url_stem %>/'+file_key;
+    dialog_box.dialog( "open" );
+    dialog_box.animate({ scrollTop: 0 }, 300 );
+  }
+
+
+  jQuery("a.itag_file_download").click( function() {
+    var key = this.name;
+    show_download_form( key );
+    return false;
+  });
+
+});
+
+</script>
+
+<%once>
+use File::Basename;
+</%once>
