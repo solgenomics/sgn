@@ -3,11 +3,13 @@ package Bio::SecreTary::Helix;
 use strict;
 use warnings;
 
+# helix classes aa positions are 0-based, 
+
 sub new {
     my $class = shift;
     my $self = bless {}, $class;
 
-    $self->{center}   = [ undef, undef ];    # [position, score]
+    $self->{center}   = [ undef, undef ];    # [position, score] position is 0-based
     $self->{nterm}    = [ undef, undef ];
     $self->{cterm}    = [ undef, undef ];
     $self->{sh_nterm} = [ undef, undef ];
