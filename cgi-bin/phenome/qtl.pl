@@ -69,7 +69,7 @@ foreach my $k (keys %$marker_details) {
 
 my $genetic_link = genetic_map();
 my $cmv_link     = marker_positions();
-my $gbrowse_link = genome_positions();
+my $markers      = markers();
 my $legend       = legend();
 my $comment      = comment();
 my $download_qtl = download_qtl_region();
@@ -80,7 +80,7 @@ $c->forward_to_mason_view( '/qtl/qtl.mas',
                            pop_name     => $pop_name,
                            trait_name   => $trait_name,
                            cmv_link     => $cmv_link,
-                           gbrowse_link => $gbrowse_link,
+                           markers      => $markers,
                            marker_link  => $ci_table,
                            genetic_map  => $genetic_link,
                            legend       => $legend,
@@ -116,12 +116,11 @@ sub marker_positions
     return $fl_markers;
 }
 
-=head2 genome_positions
+=head2 markers
 
- Usage: $genome_position = genome_positions();
- Desc:  generates links to the respective genome 
-        positions of the flanking and peak markers
- Ret:  hyperlinked markers
+ Usage: $markers = markers();
+ Desc: creates  marker objects
+ Ret:  array ref of marker objects
  Args: None
  Side Effects:
  Example:
@@ -129,19 +128,18 @@ sub marker_positions
 =cut
 
 
-sub genome_positions
+sub markers
 {
-    my ($l_m, $p_m, $r_m) = uniq ($l_m, $p_m, $r_m);
-    my $genome_pos
-        = qq |<a href="/gbrowse/bin/gbrowse/ITAG1_genomic/?name=$l_m">$l_m</a>|;
-    $genome_pos
-        .= qq |<br/><a href="/gbrowse/bin/gbrowse/ITAG1_genomic/?name=$p_m">$p_m</a>|;
-    if ($r_m)
+    my @mrs = uniq ($l_m, $p_m, $r_m);
+
+    my @markers;
+    foreach my $mr (@mrs) 
     {
-        $genome_pos
-            .= qq |<br/><a href="/gbrowse/bin/gbrowse/ITAG1_genomic/?name=$r_m">$r_m</a>|;
+        push @markers, CXGN::Marker->new_with_name($dbh, $mr);
     }
-    return $genome_pos;
+
+    return \@markers;
+       
 }
 
 =head2 genetic_map
