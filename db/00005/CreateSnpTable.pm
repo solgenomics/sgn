@@ -72,7 +72,7 @@ CREATE TABLE sgn.snp (
     sequence_left_id integer REFERENCES sgn.sequence(sequence_id),
     sequence_right_id integer REFERENCES sgn.sequence(sequence_id),
     reference_stock_id integer NOT NULL REFERENCES public.stock(stock_id),
-    snp_stock_id integer NOT NULL REFERENCES public.stock(stock_id),
+    stock_id integer NOT NULL REFERENCES public.stock(stock_id),
     metadata_id integer REFERENCES metadata.md_metadata(metadata_id)
 );
 CREATE TABLE sgn.snpprop (
