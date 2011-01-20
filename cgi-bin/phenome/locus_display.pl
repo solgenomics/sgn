@@ -8,13 +8,21 @@ use CGI qw / param /;
 
 use CXGN::DB::Connection;
 use CXGN::Phenome::Locus;
+use CXGN::Login;
 
 use CatalystX::GlobalContext qw( $c );
 
 my $q   = CGI->new();
 my $dbh = CXGN::DB::Connection->new();
 
-my $user = $c->user_exists ? $c->user->get_object : CXGN::People::Person->new( $dbh, undef );
+#my $user = $c->user_exists ? $c->user->get_object : CXGN::People::Person->new( $dbh, undef );
+# NOTE: $c->user_exists only works in actual controllers, not cgi-bin scripts.
+my $sp_person_id = CXGN::Login->new($dbh)->verify_session();
+my $user;
+if ($sp_person_id) { 
+    $user = CXGN::People::Person->new($dbh, $sp_person_id);
+}
+
 
 my $locus_id = $q->param("locus_id") + 0;
 my $action   = $q->param("action");

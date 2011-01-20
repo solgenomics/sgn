@@ -5,6 +5,7 @@ package SGN::Controller::AJAX::Organism;
 
 use Moose;
 use List::MoreUtils qw | any |;
+use YAML::Any;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -25,8 +26,6 @@ sub sol100_image_tag :Path('/organism/sol100/image_tag') :ActionClass('REST') {}
 
 sub sol100_image_tag_GET { 
     my ($self, $c) = @_;
-
-    
 
 }
 
@@ -170,4 +169,59 @@ sub autocomplete_GET :Args(0) {
 }
 
 
+sub project_metadata :Chained('/organism/find_organism') :PathPart('metadata') :Args(0) { 
+    my $self = shift;
+    my $c = shift;
 
+    my %props = $self->get_project_metadata_props($c);
+
+    my $form = HTML::FormFu->new(Load(<<YAML));
+    method: POST
+    attributes:
+       name: organism_project_metadata_form
+       id: organism_project_metadata_form
+       elements:
+           -type: Submit
+           name: Submit
+
+YAML
+
+### get project metadata information for that organism
+my ($login_user_id, $login_user_can_modify, $metadata_html);
+
+    foreach my $k ($self->project_metadata_prop_list()) {
+	$form->element( { type=>'Text', name=>$k});
+    }
+    
+    if($c->user()) { 
+	$login_user_id = $c->get_object()->get_sp_person_id();
+	$login_user_can_modify = any { $_ =~ /curator|sequence/i }, $c->roles();
+
+	$metadata_html = $form;
+    }
+    else { 
+	$metadata_html = join ("<br />",  map { "$_: $props{$_}"} ($self->project_metadata_prop_list()));
+    }
+    $c->stash->{rest} = { login_user_id => $login_user_id, 
+			  login_user_can_modify => $login_user_can_modify, 
+			  metadata_html => $metadata_html
+    };
+}
+
+sub project_metadata_prop_list { 
+    return ("Sequencing Center", "Accessions", "Project start", "Project end");
+}
+
+sub get_project_metadata_props { 
+    my $self = shift;
+    my $c = shift;
+    
+    my $organismprop_rs = $c->dbic_schema('Bio::Chado::Schema','sgn_chado')->resultset('Organism::Organismprop')->search( { organism_id=>$c->stash->{organism_id} });
+    my %props;
+    foreach my $k ($self->project_metadata_prop_list()) { 
+	foreach my $type_id ($organismprop_rs->search( { organism_id=>$c->stash->{organism_id}, name=>$k })->get_column('type_id')) { 
+	    my $cvterm = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado')->resultset('Cv::Cvterm')->search( { type_id=>$type_id })->get_column("name");
+	    $props{$k} = $cvterm;   
+	}
+    }
+}
