@@ -441,6 +441,7 @@ qq { Download population: <span><a href="pop_download.pl?population_id=$populati
         my $qtl_effects_ref = $self->qtl_effects();
         my $explained_variation = $self->explained_variation();
         my ($qtl_effects_data, $explained_variation_data);
+       
         if ($qtl_effects_ref) 
         {
             $qtl_effects_data  = columnar_table_html(                                             
@@ -453,7 +454,7 @@ qq { Download population: <span><a href="pop_download.pl?population_id=$populati
            
         } else 
         {
-            $qtl_effects_data = "No significant qtls were predicted for this trait.";
+            $qtl_effects_data = "No QTL effects estimates were found for QTL(s) of  this trait.";
         }
 
         if ($explained_variation) {
@@ -465,8 +466,9 @@ qq { Download population: <span><a href="pop_download.pl?population_id=$populati
                                               __align      => 'l',
                                             );
         } else  {
-            $explained_variation = "No significant qtls were predicted for this trait.";
+            $explained_variation_data = "No explained variation estimates were found for QTL(s) of this trait.";
         }
+       
         print info_section_html( 
                                 title    => 'QTL(s)',
                                 contents => $qtl_html, 
@@ -475,7 +477,8 @@ qq { Download population: <span><a href="pop_download.pl?population_id=$populati
         print info_section_html( title    => 'QTL effects',
                                  contents => $qtl_effects_data
                                  );
-         print info_section_html( title    => 'Variation explained by QTL(s) ( Interacting QTLs model )',
+        
+        print info_section_html( title    => 'Variation explained by QTL(s) ( Interacting QTLs model )',
                                  contents => $explained_variation_data
                                  );
 
