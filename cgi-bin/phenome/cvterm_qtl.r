@@ -676,7 +676,8 @@ write.table(lodconfidenceints,
             append=FALSE
             )
 
-if (is.null(ResultDrop)==FALSE) {
+if (is.null(ResultDrop)==FALSE)
+{
   write.table(ResultDrop,
               file=VariationFile,
               sep="\t",
@@ -695,14 +696,16 @@ if (is.null(ResultDrop)==FALSE) {
               )
 }
 
-write.table(Effects,
-            file=QtlEffectsFile,
-            sep="\t",
-            col.names=NA,
-            quote=FALSE,
-            append=FALSE
-            )
-
+if (is.null(Effects)==FALSE)
+  {
+    write.table(Effects,
+                file=QtlEffectsFile,
+                sep="\t",
+                col.names=NA,
+                quote=FALSE,
+                append=FALSE
+                )
+  }
 
 if (userpermuvalue != 0)
 {
