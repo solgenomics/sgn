@@ -18,6 +18,10 @@ $est_attribution => ''
 @libraries => ()
 $phenotypes => ''
 $qtl_data => undef
+$user_id => undef
+$user_role => undef
+$form => undef;
+$static_data => undef;
 </%args>
 
 <& /page/page_title.mas, title=>"Details for $taxon <i>$organism_name</i>" &>
@@ -46,9 +50,9 @@ $qtl_data => undef
 
 % my @links = map { qq|<a href="/content/library_info.pl?library=$_\">$_</a>| } @libraries;
 
-<& /page/info_table.mas, 
-   data => { 
-  'Libraries ('.scalar(@links).')' => (join ", ", (@links)), 
+<& /page/info_table.mas,
+   data => {
+  'Libraries ('.scalar(@links).')' => (join ", ", (@links)),
   Attribution => $est_attribution }, border => 0
  &>
 </&>
@@ -57,12 +61,11 @@ $qtl_data => undef
 Number of phenotyped lines (for all <% $common_name %> species combined): <% $phenotypes %>
 </&>
 
-
 <&| /page/info_section.mas, title=>'QTL data' &>
 
-% if ($qtl_data) { 
-  <& /page/columnar_table.mas,  
-    data => $qtl_data, 
+% if ($qtl_data) {
+  <& /page/columnar_table.mas,
+    data => $qtl_data,
     headings => [ 'Name', 'Traits' ],
     __alt_freq   => 2,
     __alt_width  => 1,
@@ -70,6 +73,11 @@ Number of phenotyped lines (for all <% $common_name %> species combined): <% $ph
     __align      => 'l' &>
 %}
  
+
 </&>
+
+<& /organism/project_metadata.mas, user_id=>$user_id form=>$form, static_data=>$static_data &>
+
+
 
 

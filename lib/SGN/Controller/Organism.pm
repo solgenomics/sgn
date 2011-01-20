@@ -17,13 +17,13 @@ use Cache::File;
 use HTTP::Status;
 use JSON::Any; my $json = JSON::Any->new;
 use List::MoreUtils qw/ any /;
+use YAML::Any;
 
 use CXGN::Chado::Organism;
 use CXGN::Login;
 use CXGN::Phylo::OrganismTree;
 use CXGN::Page::FormattingHelpers qw | tooltipped_text |;
 use CXGN::Tools::Text;
-
 with 'Catalyst::Component::ApplicationAttribute';
 
 =head1 ACTIONS
@@ -334,6 +334,7 @@ sub view_organism :Chained('find_organism') :PathPart('view') :Args(0) {
     $self->transcript_data($c);
     $self->phenotype_data($c);
     $self->qtl_data($c);
+    $self->project_metadata($c);
 
 }								         
 
@@ -388,6 +389,36 @@ sub phenotype_data {
     $c->stash->{phenotypes} = $pheno_list;
 }
 
+sub project_metadata { 
+    my $self = shift;
+    my $c = shift;
+    
+    my $form = HTML::FormFu->new(Load(<<YAML));
+    method: POST
+    attributes:
+       name: organism_project_metadata_form
+       id: organism_project_metadata_form
+       elements:
+           -type: Submit
+           name: Submit
+
+YAML
+
+### get project metadata information for that organism
+my @allowed_keys = ();
+    foreach my $k (@allowed_keys) {
+	$form->element( { type=>'text', name=>$k});
+    }
+    
+    $c->stash->{metadata_form} = $form;
+    $c->stash->{metadata_static} = '';
+    if($c->user()) { 
+	$c->stash->{user_id}= $c->get_object()->get_sp_person_id();
+	$c->stash->{user_can_modify} = any { $_ =~ /curator|sequence/i }, $c->roles();
+	
+    }
+    
+}
 
 =head1 ATTRIBUTES
 
