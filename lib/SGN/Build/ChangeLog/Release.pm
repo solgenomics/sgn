@@ -20,7 +20,7 @@ use DateTime::Format::Flexible;
 
 has 'changes' => (
     is => 'ro',
-    isa => 'ArrayRef',
+    isa => 'ArrayRef[Str]',
     required => 1,
    );
 
