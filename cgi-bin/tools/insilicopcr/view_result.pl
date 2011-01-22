@@ -70,7 +70,9 @@ print page_title_html('PCR Results');
 
 print <<EOH;
 <div align="center" style="margin-bottom: 1em">
-  Note: Please <b>do not bookmark</b> this page. BLAST results are automatically deleted after 7 days.
+  Note: Please <b>do not bookmark</b> this page. BLAST results are
+  automatically deleted periodically.  To save these results, use your
+  browser's <b>save</b> feature.
 </div>
 EOH
 
