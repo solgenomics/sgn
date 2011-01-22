@@ -10,10 +10,10 @@ use namespace::autoclean;
 
 #reference holds the URL of the page user was last on
 has 'reference' => (
-    is => "rw",
-    isa => 'Str',
+    is       => "rw",
+    isa      => 'Str',
     required => 0,
-    default => '',
+    default  => '',
 );
 
 BEGIN { extends 'Catalyst::Controller' }
@@ -51,12 +51,12 @@ sub _load_user {
 #If any undef, assigns '' 
 sub _build_form_page {
     my ($self, $c, $name, $email, $subject, $body) = @_;
-    $c->stash->{name} = $name if $name;
-    $c->stash->{email} = $email if $email;
-    $c->stash->{subject} = $subject if $subject;
-    $c->stash->{body} = $body if $body;
+    $c->stash->{name}                     = $name if $name;
+    $c->stash->{email}                    = $email if $email;
+    $c->stash->{subject}                  = $subject if $subject;
+    $c->stash->{body}                     = $body if $body;
     $c->stash->{email_address_to_display} = 'sgn-feedback@solgenomics.net';
-    $c->stash->{template} = '/help/contact.mas';
+    $c->stash->{template}                 = '/help/contact.mas';
 }
 
 #If user submits a completed form, sends the form as an email 
@@ -65,10 +65,11 @@ sub _build_form_page {
 sub submit :Path('/contact/submit') :Args(0)
 {
     my ($self, $c) = @_;
-    my $name = $c->request->param('name');
-    my $email =$c->request->param('email'); 
-    my $subject = $c->request->param('subject');
-    my $body = $c->request->param('body');
+    my $name      = $c->request->param('name');
+    my $email     = $c->request->param('email');
+    my $subject   = $c->request->param('subject');
+    my $body      = $c->request->param('body');
+    my $reference = $self->reference;
     if ($name and $email and $subject and $body) 
     {
        $body = <<END_HEREDOC;
@@ -82,26 +83,26 @@ Body:
 $body
 
 Referred from:
-$self->reference
+$reference
 
 END_HEREDOC
-       print STDERR "Before it is sent";
-       CXGN::Contact::send_email( "[contact.pl] $subject", $body, 'email',
-                                        $email );
-       print STDERR "After it is sent";
+
+       CXGN::Contact::send_email( "[contact.pl] $subject", $body, 'email', $email );
        $c->stash->{message} = "Thank you. Your message has been sent.";
        $c->stash->{template} = "/gen_pages/message.mas";
     }
     else
     {
        my @fields = ("name", "email", "subject", "body");
-       my %infoInFields = ("name" => $name,
-                             "email" => $email,
-                               "subject" => $subject,
-                                      "body" => $body);
-       foreach my $category (@fields)
+       my %info_fields = (
+            name    => $name,
+            email   => $email,
+            subject => $subject,
+            body    => $body
+        );
+       foreach my $category (keys %info_fields)
        {
-         $c->stash->{filled}->{$category} = $infoInFields{$category};
+         $c->stash->{filled}->{$category} = $info_fields{$category};
        }
        _build_form_page($self, $c, $name, $email, $subject, $body);
     }

@@ -179,7 +179,7 @@ Primer type<br />
 <td colspan="2">
 Accession<br />
 $accessions_selector
-<br />To add an accession to this list, <a href="/tools/contact.pl">contact SGN</a>.
+<br />To add an accession to this list, <a href="/contact/form">contact SGN</a>.
 </td>
 </tr>
 
