@@ -1,4 +1,4 @@
-
+use Modern::Perl;
 use CXGN::Page;
 use CXGN::DB::Connection;
 use CXGN::Marker::Tools;
@@ -219,12 +219,3 @@ Band size examples:<br />
 </center>
 END_HTML
 $page->footer();
-
-
-
-
-
-sub verify_data
-{
-
-}
