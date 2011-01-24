@@ -473,13 +473,14 @@ qq { Download population: <span><a href="pop_download.pl?population_id=$populati
                                 title    => 'QTL(s)',
                                 contents => $qtl_html, 
                                 );
-       
-        print info_section_html( title    => 'QTL effects',
-                                 contents => $qtl_effects_data
-                                 );
+             
         
         print info_section_html( title    => 'Variation explained by QTL(s) ( Interacting QTLs model )',
                                  contents => $explained_variation_data
+                                 );
+        
+        print info_section_html( title    => 'QTL effects',
+                                 contents => $qtl_effects_data
                                  );
 
         print info_section_html( 
