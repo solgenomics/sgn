@@ -1696,7 +1696,9 @@ sub qtl_effects {
     
     if ( -s $file ) 
     {
+       
         my @effects =  map  { [ split( /\t/, $_) ]}  read_file( $file );
+        my $trash   = shift(@effects); 
         return \@effects;
     } else 
     {
