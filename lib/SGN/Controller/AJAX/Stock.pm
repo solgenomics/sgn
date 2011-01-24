@@ -48,7 +48,7 @@ sub add_stockprop_POST {
     my ( $self, $c ) = @_;
     my $response;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    if ( 1==1) {#any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles()) {
+    if (  any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
         my $req = $c->req;
 
         my $stock_id = $c->req->param('stock_id');
@@ -78,7 +78,7 @@ sub add_stockprop_POST {
                 $response = { error => "Failed: $_" }
             };
         }
-        $c->{stash}->{rest} = $response;
+    } else {  $c->stash->{rest} = { error => 'user does not have a curator/sequencer/submitter account' };
     }
 }
 
@@ -86,43 +86,61 @@ sub add_stockprop_POST {
 sub add_stockprop_GET {
 }
 
-sub associate_locus :Path('/ajax/stock/associate_locus') :Args(0) {
+sub associate_locus:Path('/ajax/stock/associate_locus') :ActionClass('REST') {}
+
+sub associate_locus_POST :Args(0) {
+}
+sub associate_locus_GET :Args(0) {
     my ( $self, $c ) = @_;
     my $stock_id = $c->req->param('object_id');
-    my $allele_id = $c->req->param('allele_id');
+    ##my $allele_id = $c->req->param('allele_id');
     #Phytoene synthase 1 (psy1) Allele: 1
-    #phytoene synthase 1 (psy1) 
+    #phytoene synthase 1 (psy1)
     my $locus_input = $c->req->param('loci');
     my ($locus_data, $allele_symbol) = split (/ Allele: / ,$locus_input);
     my $is_default = $allele_symbol ? 'f' : 't' ;
     $locus_data =~ m/(.*)\s\((.*)\)/ ;
     my $locus_name = $1;
     my $locus_symbol = $2;
-    print STDERR "***********locus_data = '$locus_data', allele_symbol = '$allele_symbol', locus_name = '$locus_name', locus_symbol = '$locus_symbol'\n\n\n";
+
     my ($allele) = $c->dbic_schema('CXGN::Phenome::Schema')
         ->resultset('Locus')
         ->search({
             locus_symbol => $locus_symbol,
                  } )
         ->search_related('alleles' , {
-            allele_symbol => $allele_symbol, 
+            allele_symbol => $allele_symbol,
             is_default => $is_default} );
-    if (!$allele) { print STDERR "NO ALLELE FOUND !!!|\n\n\n";# return some JSON error .. 
+    if (!$allele) {
+        $c->stash->{rest} = { error => "no allele found for locus '$locus_data' (allele: '$allele_symbol'" };
+        return;
     }
     my $stock = $c->dbic_schema('Bio::Chado::Schema' , 'sgn_chado')
         ->resultset("Stock::Stock")->find({stock_id => $stock_id } ) ;
-    # if this fails, it will throw an acception and will (probably
-    # rightly) be counted as a server error
-    $stock->create_stockprops(
-        { 'sgn allele_id' => $allele->allele_id },
-        { autocreate => 1 },
-        );
-    # need to update the loci div!!
-    ##
-    $c->res->redirect( $c->uri_for( '/stock/view/id/$stock_id' ));
+    my  $allele_id = $allele->allele_id;
+    if ( any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
+
+        print STDERR "Stock_id = $stock_id , stock= $stock , allele_id = $allele_id***************\n\n\n";
+# if this fails, it will throw an acception and will (probably
+        # rightly) be counted as a server error
+        if ($stock && $allele_id) {
+            $stock->create_stockprops(
+                { 'sgn allele_id' => $allele->allele_id },
+                { cv_name => 'local', allow_duplicate_values => 1, autocreate => 1 },
+                );
+            $c->stash->{rest} = ['success'];
+            # need to update the loci div!!
+            $self->display_alleles();
+            return;
+        }
+        $c->stash->{rest} = { error => 'need both valid stock_id and allele_id for adding the stockprop! ' };
+    }
 }
 
-sub display_alleles : Local : ActionClass('REST') {}
+sub display_alleles : Local : ActionClass('REST') {
+    my ($self, $c) = @_;
+
+}
 
 sub display_alleles_GET :  {
 }
