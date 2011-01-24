@@ -21,7 +21,6 @@ BEGIN { extends 'Catalyst::Controller' }
 use CXGN::DB::Connection;
 use CXGN::Login;
 use CXGN::People;
-use CXGN::Contact;
 
 #Creates a blank form
 sub form :Path('/contact/form') :Args(0) {
@@ -59,19 +58,13 @@ sub _build_form_page {
     $c->stash->{template}                 = '/help/contact.mas';
 }
 
-#If user submits a completed form, sends the form as an email 
-#through CXGN::Contact. If not, stays on the form page and keeps what the user
-#entered. 
 sub submit :Path('/contact/submit') :Args(0)
 {
     my ($self, $c) = @_;
-    my $name      = $c->request->param('name');
-    my $email     = $c->request->param('email');
-    my $subject   = $c->request->param('subject');
-    my $body      = $c->request->param('body');
+    my ($name, $email, $subject, $body) =
+        map { $c->request->param($_) } qw/name email subject body/;
     my $reference = $self->reference;
-    if ($name and $email and $subject and $body) 
-    {
+    if ($name and $email and $subject and $body) {
        $body = <<END_HEREDOC;
 From:
 $name <$email>
@@ -87,13 +80,18 @@ $reference
 
 END_HEREDOC
 
-       CXGN::Contact::send_email( "[contact.pl] $subject", $body, 'email', $email );
+       $c->stash->{email} = {
+        to      => $c->config->{bugs_email},
+        from    => 'sgn-feedback@solgenomics.net',
+        subject => "[contact] $subject",
+        body    => $body,
+       };
+
+       $c->forward('View::Email');
+
        $c->stash->{message} = "Thank you. Your message has been sent.";
        $c->stash->{template} = "/gen_pages/message.mas";
-    }
-    else
-    {
-       my @fields = ("name", "email", "subject", "body");
+    } else {
        my %info_fields = (
             name    => $name,
             email   => $email,
