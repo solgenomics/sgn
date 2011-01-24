@@ -54,6 +54,10 @@ $show_form => 0
      });
   });
 
+  function submit_locus_form() {
+  document.associate_locus_form.submit();
+  }
+
 </script>
 
 
@@ -63,9 +67,10 @@ $show_form => 0
     <form method="POST" name="loci_form" action = "<% $locus_add_uri %>" >
       <input type="text" style="width: 50%" id="loci" name="loci" />
 
-      <input type="submit" name = "associate_locus" onclick="associate_locus()" value = "Associate locus" />
+      <input type="submit" name = "associate_locus" onclick="javascript:submit_locus_form" value = "Associate locus" />
       <div style="font-size: 80%; margin-left: 1em; color: #333">type a locus name</div>
     </form>
   </div>
 </div>
+
 
