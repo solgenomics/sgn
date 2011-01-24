@@ -65,9 +65,11 @@ foreach my $allele_id (@$alleles) {
 
 <div id = "$div">
 
+% if(@allele_data) {
 <& /page/columnar_table.mas,
   headings => [ "Locus name", "Allele symbol", "Phenotype" ],
   data     => \@allele_data ,
   &>
 
+% }
 </div>

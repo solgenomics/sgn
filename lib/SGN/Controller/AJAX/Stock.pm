@@ -22,7 +22,7 @@ use Moose;
 
 use List::MoreUtils qw /any /;
 use Try::Tiny;
-
+use CXGN::Phenome::Schema;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -86,19 +86,20 @@ sub add_stockprop_POST {
 sub add_stockprop_GET {
 }
 
-sub associate_locus :Path('stock/associate_locus') :Args(0) {
+sub associate_locus :Path('/ajax/stock/associate_locus') :Args(0) {
     my ( $self, $c ) = @_;
     my $stock_id = $c->req->param('object_id');
     my $allele_id = $c->req->param('allele_id');
     #Phytoene synthase 1 (psy1) Allele: 1
     #phytoene synthase 1 (psy1) 
     my $locus_input = $c->req->param('loci');
-    my ($locus_data, $allele_symbol) = split (/Allele:/ ,$locus_input);
+    my ($locus_data, $allele_symbol) = split (/ Allele: / ,$locus_input);
     my $is_default = $allele_symbol ? 'f' : 't' ;
     $locus_data =~ m/(.*)\s\((.*)\)/ ;
     my $locus_name = $1;
     my $locus_symbol = $2;
-    my $allele = $c->dbic_schema('CXGN::Phenome::Schema')
+    print STDERR "***********locus_data = '$locus_data', allele_symbol = '$allele_symbol', locus_name = '$locus_name', locus_symbol = '$locus_symbol'\n\n\n";
+    my ($allele) = $c->dbic_schema('CXGN::Phenome::Schema')
         ->resultset('Locus')
         ->search({
             locus_symbol => $locus_symbol,
@@ -106,7 +107,7 @@ sub associate_locus :Path('stock/associate_locus') :Args(0) {
         ->search_related('alleles' , {
             allele_symbol => $allele_symbol, 
             is_default => $is_default} );
-    if (!$allele) { # return some JSON error .. 
+    if (!$allele) { print STDERR "NO ALLELE FOUND !!!|\n\n\n";# return some JSON error .. 
     }
     my $stock = $c->dbic_schema('Bio::Chado::Schema' , 'sgn_chado')
         ->resultset("Stock::Stock")->find({stock_id => $stock_id } ) ;
