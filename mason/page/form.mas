@@ -10,6 +10,9 @@
 
 The form component is based on an ajax implementation and requires some backend scripts to be implemented for a given form.
 
+See JSFormPage.js for the javascript code
+
+
 Parameters:
 
 =over 5
