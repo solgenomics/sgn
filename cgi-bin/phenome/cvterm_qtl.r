@@ -579,22 +579,27 @@ if ( max(QtlLods) >= LodScore )
                     "formula"
                     )
  
-  Effects<-QtlEffects$ests
-  Effects<-attr(Effects, "ests")
+  Effects<-QtlEffects$ests$ests
   QtlLodAnova<-QtlEffects$lod
-  ResultFull<-QtlEffects$result.full
-  
+  ResultFull<-QtlEffects$result.full  
   ResultDrop<-QtlEffects$result.drop
-  print("Effects")
-  print(Effects)
-  print("lod")
-  print(QtlLodAnova)
-  print("result full")
-  print(ResultFull)
-  print("result drop")
-  print(ResultDrop)
- # print("Model")
+##   print("Effects")
+##   print(Effects)
+##   print("lod")
+##   print(QtlLodAnova)
+##   print("result full")
+##   print(ResultFull)
+##   print("result drop")
+##   print(ResultDrop)
+##  # print("Model")
  # print(ResultModel)
+  if (is.numeric(Effects))
+    {
+      Effects<-round(Effects,
+                        2
+                        )
+    }
+
 
   if (is.numeric(ResultFull))
     {
