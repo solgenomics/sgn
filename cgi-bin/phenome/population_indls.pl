@@ -1718,6 +1718,7 @@ sub explained_variation {
     if ( -s $file ) 
     {
         my @anova =  map  { [ split( /\t/, $_) ]}  read_file( $file );
+        $anova[0][0] = "Source";
         return \@anova;
     } else 
     {
