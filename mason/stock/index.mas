@@ -85,7 +85,6 @@ my $pedigree= ['pedigree', 'male parent', 'female parent'];
 my $experiment = ['experiment','year', 'location', 'replicate'];
 my $resources = ['solcap number' , 'synonym'];
 
-my $alleles = $stockref->{props}->{'sgn allele_id'} || [] ;
 my $allele_div = "stock_alleles";
 my $new_locus_link ;#= qq|<a href="<">[associate new locus]</a> |;
 
@@ -146,11 +145,8 @@ my $pub_count = scalar( @$pubmeds );
 
 
 <&| /page/info_section.mas, title => "Associated loci" , subtitle => $new_locus_link, collapsible=> 1 &>
-<div id = "$allele_div">
-      <& /phenome/linked_alleles.mas, alleles=> $alleles , dbh=> $dbh, div=> $allele_div  &>
-</div>
 
-<& /phenome/associate_locus.mas, object_id => $stock_id , type => "stock", locus_add_uri=> $locus_add_uri,  locus_autocomplete_uri => $ locus_autocomplete_uri &>
+<& /phenome/associate_locus.mas, object_id => $stock_id , type => "stock", locus_add_uri=> $locus_add_uri,  locus_autocomplete_uri => $locus_autocomplete_uri , allele_div => $allele_div &>
 </&>
 
 

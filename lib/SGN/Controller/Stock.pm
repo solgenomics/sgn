@@ -104,25 +104,23 @@ sub _make_stock_search_rs {
 }
 
 
-sub view_id :Path('/stock/view/id') :Args(1) {
-    my ( $self, $c , $stock_id) = @_;
+# sub view_id :Path('/stock/view/id') :Args(1) {
+#     my ( $self, $c , $stock_id) = @_;
 
-    $self->schema( $c->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' ) );
-    $self->_view_stock($c, 'view', $stock_id);
+#     $self->schema( $c->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' ) );
+#     $self->_view_stock($c, 'view', $stock_id);
+# }
+
+
+sub new_stock :Chained('get_stock') : PathPart('new') :Args(0) {
+    my ( $self, $c ) = @_;
+   # $self->schema( $c->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' ) );
+  ####  $c->forward("view_stock", 'new');
 }
 
 
-sub new_stock :Path('/stock/view/new') :Args(0) {
-    my ( $self, $c , $stock_id) = @_;
-    $self->schema( $c->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' ) );
-    $self->_view_stock($c, 'new', $stock_id);
-}
-
-
-sub _view_stock {
-    my ( $self, $c, $action, $stock_id) = @_;
-
-    my $stock       = CXGN::Chado::Stock->new($self->schema, $stock_id);
+sub view_stock :Chained('get_stock') :PathPart('view') :Args(0) {
+    my ( $self, $c, $action) = @_;
     my $logged_user = $c->user;
     my $person_id = $logged_user->get_object->get_sp_person_id if $logged_user;
     my $curator = $logged_user->check_roles('curator') if $logged_user;
@@ -135,6 +133,9 @@ sub _view_stock {
 
     ###Check if a stock page can be printed###
 
+    my $stock = $c->stash->{stock};
+    my $stock_id = $stock ? $stock->get_stock_id : undef ;
+   
     # print message if stock_id is not valid
     unless ( ( $stock_id =~ m /^\d+$/ ) || ($action eq 'new' && !$stock_id) ) {
         $c->throw_404( "No stock/accession exists for identifier $stock_id" );
@@ -222,6 +223,28 @@ sub _stock_dbxrefs {
     return $dbxrefs;
 }
 
+sub get_stock :Chained('/') :PathPart('stock') :CaptureArgs(1) { 
+    my ($self, $c, $stock_id) = @_;
+
+    $self->schema( $c->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' ) );
+    $c->stash->{stock} = CXGN::Chado::Stock->new($self->schema, $stock_id);
+
+    #add the stockprops to the stash
+    my $stockprops = $c->stash->{stock}->get_object_row()->search_related("stockprops");
+
+    my $properties ;
+    while ( my $prop =  $stockprops->next ) {
+        push @{ $properties->{$prop->type->name} } ,   $prop->value ;
+    }
+    $c->stash->{stockprops} = $properties;
+
+}
+
+sub get_alleles {
+    my ($self, $c) = @_;
+    my $stock;
+    my $alleles = $self->_stockprops->{'sgn allele_id'};
+}
 
 ######
 1;

@@ -23,6 +23,9 @@ use Moose;
 use List::MoreUtils qw /any /;
 use Try::Tiny;
 use CXGN::Phenome::Schema;
+use CXGN::Phenome::Allele;
+use CXGN::Page::FormattingHelpers qw / columnar_table_html /;
+
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -89,7 +92,10 @@ sub add_stockprop_GET {
 sub associate_locus:Path('/ajax/stock/associate_locus') :ActionClass('REST') {}
 
 sub associate_locus_POST :Args(0) {
+    my ($self, $c) = @_;
+    $c->stash->{rest} = { error => "Nothing here, it's a POST.." } ;
 }
+
 sub associate_locus_GET :Args(0) {
     my ( $self, $c ) = @_;
     my $stock_id = $c->req->param('object_id');
@@ -97,6 +103,7 @@ sub associate_locus_GET :Args(0) {
     #Phytoene synthase 1 (psy1) Allele: 1
     #phytoene synthase 1 (psy1)
     my $locus_input = $c->req->param('loci');
+    
     my ($locus_data, $allele_symbol) = split (/ Allele: / ,$locus_input);
     my $is_default = $allele_symbol ? 'f' : 't' ;
     $locus_data =~ m/(.*)\s\((.*)\)/ ;
@@ -119,9 +126,7 @@ sub associate_locus_GET :Args(0) {
         ->resultset("Stock::Stock")->find({stock_id => $stock_id } ) ;
     my  $allele_id = $allele->allele_id;
     if ( any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
-
-        print STDERR "Stock_id = $stock_id , stock= $stock , allele_id = $allele_id***************\n\n\n";
-# if this fails, it will throw an acception and will (probably
+        # if this fails, it will throw an acception and will (probably
         # rightly) be counted as a server error
         if ($stock && $allele_id) {
             $stock->create_stockprops(
@@ -130,19 +135,45 @@ sub associate_locus_GET :Args(0) {
                 );
             $c->stash->{rest} = ['success'];
             # need to update the loci div!!
-            $self->display_alleles();
             return;
         }
         $c->stash->{rest} = { error => 'need both valid stock_id and allele_id for adding the stockprop! ' };
+    } else {
+            $c->stash->{rest} = { error => 'No privileges for adding new loci ' };
     }
 }
 
-sub display_alleles : Local : ActionClass('REST') {
+sub display_alleles : Chained('/stock/get_stock') :PathPart('alleles') : ActionClass('REST') { }
+
+sub display_alleles_GET  {
     my ($self, $c) = @_;
 
-}
-
-sub display_alleles_GET :  {
+    my $stock = $c->stash->{stock};
+    my $allele_ids = $c->stash->{stockprops}->{'sgn allele_id'};
+    my $dbh = $c->dbc->dbh;
+    my @allele_data;
+    my $hashref;
+    foreach my $allele_id (@$allele_ids) {
+        my $allele = CXGN::Phenome::Allele->new($dbh, $allele_id);
+        my $phenotype        = $allele->get_allele_phenotype();
+        my $allele_link  = qq|<a href="/phenome/allele.pl?allele_id=$allele_id">$phenotype </a>|;
+        my $locus_id = $allele->get_locus_id;
+        my $locus_name = $allele->get_locus_name;
+        my $locus_link = qq|<a href="/phenome/locus_display.pl?locus_id=$locus_id">$locus_name </a>|;
+        push @allele_data,
+        [
+         (
+          $locus_link,
+          $allele->get_allele_name,
+          $allele_link
+         )
+        ];
+    }
+    $hashref->{html} = columnar_table_html(
+        headings     =>  [ "Locus name", "Allele symbol", "Phenotype" ],
+        data         => \@allele_data,
+        ) if (@allele_data) ;
+    $c->stash->{rest} = $hashref;
 }
 
 1;
