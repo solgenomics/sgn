@@ -51,9 +51,9 @@ sub check_roles {
     map { $has_roles{$_} = 1; } $self->roles();
 
     foreach my $r (@roles) {
-	if (!exists($has_roles{$r})) {
-	    return 0;
-	}
+        if (!exists($has_roles{$r})) {
+            return 0;
+        }
     }
     return 1;
 }
