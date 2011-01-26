@@ -173,38 +173,69 @@ sub project_metadata :Chained('/organism/find_organism') :PathPart('metadata') :
     my $self = shift;
     my $c = shift;
 
-    my %props = $self->get_project_metadata_props($c);
+    my $action = $c->req->param('action');
+    my $object_id = $c->req->param('object_id');
 
-    my $form = HTML::FormFu->new(Load(<<YAML));
-    method: POST
-    attributes:
-       name: organism_project_metadata_form
-       id: organism_project_metadata_form
-       elements:
-           -type: Submit
-           name: Submit
+    my $login_user_id = 0;
+    my $login_user_can_modify = 0;
+
+    if($c->user()) { 
+	$login_user_id = $c->user()->get_object()->get_sp_person_id();
+	$login_user_can_modify = any { $_ =~ /curator|sequence/i } ($c->user()->roles());
+    }
+    my %props; 
+    if ($action eq 'edit') { 
+	%props = $self->get_project_metadata_props($c);
+    }
+    if ($action eq 'store') { 
+	%props = %{$c->request->parameters()};
+    }
+
+    my $html;
+    my $error;
+
+    if ($login_user_can_modify && ($action eq 'edit' || $action eq 'store')) { 
+	if (!$login_user_id) { 
+	    $error .= 'Must be logged in to edit';
+	}
+	my $form = HTML::FormFu->new(Load(<<YAML));
+method: POST
+attributes:
+    name: organism_project_metadata_form
+    id: organism_project_metadata_form
+elements:
+  - type: Submit
+    name: Submit
 
 YAML
 
-### get project metadata information for that organism
-my ($login_user_id, $login_user_can_modify, $metadata_html);
+;
+	foreach my $k ($self->project_metadata_prop_list()) {
+	    $form->element( { type=>'Text', name=>$k});
+	}
+	
+	$html = $form->render();
 
-    foreach my $k ($self->project_metadata_prop_list()) {
-	$form->element( { type=>'Text', name=>$k});
+	if ($action eq 'store') { 
+	}
     }
+
+
+
+    if ($action eq 'view' || !$login_user_can_modify) { 
+	my $static = '<table>';
+	foreach my $k ($self->project_metadata_prop_list()) { 
+	    $static .= '<tr><td>'.$k.'</td><td>&nbsp;</td><td><b>'.$props{$k}.'</b></td></tr>';
+	}
+	$static .= '</table>';
+	$html = $static;
+    }
+
+    ### get project metadata information for that organism
     
-    if($c->user()) { 
-	$login_user_id = $c->get_object()->get_sp_person_id();
-	$login_user_can_modify = any { $_ =~ /curator|sequence/i }, $c->roles();
-
-	$metadata_html = $form;
-    }
-    else { 
-	$metadata_html = join ("<br />",  map { "$_: $props{$_}"} ($self->project_metadata_prop_list()));
-    }
     $c->stash->{rest} = { login_user_id => $login_user_id, 
 			  login_user_can_modify => $login_user_can_modify, 
-			  metadata_html => $metadata_html
+			  metadata_html => $html
     };
 }
 
@@ -224,4 +255,5 @@ sub get_project_metadata_props {
 	    $props{$k} = $cvterm;   
 	}
     }
+    return %props;
 }
