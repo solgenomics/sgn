@@ -91,10 +91,10 @@ To stay informed of developments around SGN you can subscribe to our <a href="ht
 
 <% #Component's arguments %>
 <%args>
-$name     => ''
-$email    => ''
-$subject  => ''
-$body     => ''
-%filled => (name => 1, email => 1, subject => 1, body => 1)
+$name                     => ''
+$email                    => ''
+$subject                  => ''
+$body                     => ''
+%filled                   => (name => 1, email => 1, subject => 1, body => 1)
 $email_address_to_display => ''
 </%args>

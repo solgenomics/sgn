@@ -1,12 +1,16 @@
+package SGN::Controller::Contact;
+
+use Moose;
+use namespace::autoclean;
+use CXGN::People;
+
+BEGIN { extends 'Catalyst::Controller' }
+
 =head1 NAME
 
 SGN::Controller::Contact - controller for contact page
 
 =cut
-
-package SGN::Controller::Contact;
-use Moose;
-use namespace::autoclean;
 
 #reference holds the URL of the page user was last on
 has 'reference' => (
@@ -16,38 +20,28 @@ has 'reference' => (
     default  => '',
 );
 
-BEGIN { extends 'Catalyst::Controller' }
-
-use CXGN::DB::Connection;
-use CXGN::Login;
-use CXGN::People;
-
 #Creates a blank form
 sub form :Path('/contact/form') :Args(0) {
     my ($self, $c) = @_;
-    my ($username, $useremail) = _load_user();
-    _build_form_page($self, $c, $username, $useremail); 
+    my ($username, $useremail) = _load_user($c);
+    _build_form_page($self, $c, $username, $useremail);
 }
 
 #Loads the user if he has an account
 sub _load_user {
-    my $dbh   = CXGN::DB::Connection->new();
-    my $login = CXGN::Login->new($dbh);
-    my $username;
-    my $useremail;
-    if ( my $user_id = $login->has_session() ) 
-    {
-       my $user = CXGN::People::Person->new( $dbh, $user_id );
-       $username  = $user->get_first_name() . " " . $user->get_last_name();
-       $useremail = $user->get_private_email();
-    }
-    $username  ||= '';
-    $useremail ||= '';
+    my ($c) = @_;
+    my $dbh = $c->dbc->dbh;
+    my $user = $c->user_exists ? $c->user->get_object : CXGN::People::Person->new( $dbh, undef );
+
+    # TODO: we shouldn't have to dig into {user} here
+    my ($username, $useremail) = ($user->id, $user->{user}->get_private_email());
+
+
     return ($username, $useremail);
 }
 
 #Builds a form with $name, $email, $subject, $body in the right line
-#If any undef, assigns '' 
+#If any undef, assigns ''
 sub _build_form_page {
     my ($self, $c, $name, $email, $subject, $body) = @_;
     $c->stash->{name}                     = $name if $name;
