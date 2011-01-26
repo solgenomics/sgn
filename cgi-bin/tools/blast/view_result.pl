@@ -168,7 +168,7 @@ sub format_report_file {
     # check if $raw_report_file exists
     unless (-e $raw_report_file) {
         my $message = "BLAST results are automatically deleted after 7 days. You may need to run your BLAST again. "
-            . "If you feel you received this message in error, please <a href='http://www.sgn.cornell.edu/tools/contact.pl'>contact us</a>.";
+            . "If you feel you received this message in error, please <a href='/contact/form'>contact us</a>.";
         $page->message_page('BLAST results not found.',$message);
     }
 

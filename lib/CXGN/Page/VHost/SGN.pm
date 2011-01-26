@@ -122,7 +122,7 @@ HTML
   <td class="toplink" width="50%">
           <a class="toplink" href="/">home</a>
         | <a class="toplink" href="/forum/topics.pl">forum</a>
-        | <a class="toplink" href="/tools/contact.pl">contact</a>
+        | <a class="toplink" href="/contact/form">contact</a>
         | <a class="toplink" href="/help/index.pl">help</a>
 		<span id="open_developer_toolbar" style="$devbar_style">
 		| <a class="toplink" href="#" onclick="openDeveloperToolbar(); return false">devbar</a>
