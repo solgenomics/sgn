@@ -87,7 +87,7 @@ sub _make_stock_search_rs {
     }
     if( my $type = $req->param('stock_type') ) {
         $self->_validate_pair($c,'type_id',$type);
-        $rs = $rs->search({ 'type_id' => $type });
+        $rs = $rs->search({ 'me.type_id' => $type });
     }
 
     if( my $organism = $req->param('organism') ) {
