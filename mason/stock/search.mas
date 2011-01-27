@@ -4,6 +4,7 @@
   $pagination_link_maker => undef
   $request => undef
   $schema => undef
+  $sp_person_autocomplete_uri => undef
 </%args>
 
 <%once>
@@ -16,7 +17,7 @@
 
 $form_opts = { stock_types => stock_types($schema), organisms=>stock_organisms($schema)}
 if (!$form_opts) ;
-+my $new_stock_link = qq|<a href="/stock/view/new">Submit new stock</a>|;
+my $new_stock_link = qq|<a href="/stock/0/new">Submit new stock</a>|;
 
 </%perl>
 
@@ -58,5 +59,5 @@ if (!$form_opts) ;
   <& /page/pagination_control.mas, pager => $pager, link_maker => $pagination_link_maker &>
 % }
 <&| /page/info_section.mas, title => 'Search' , subtitle => $new_stock_link &>
-  <& /stock/stock_search_form.mas, opts => $form_opts, request => $request &>
+  <& /stock/stock_search_form.mas, opts => $form_opts, request => $request , sp_person_autocomplete_uri => $sp_person_autocomplete_uri &>
 </&>
