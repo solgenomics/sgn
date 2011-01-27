@@ -119,27 +119,36 @@ sub associate_locus_GET :Args(0) {
             allele_symbol => $allele_symbol,
             is_default => $is_default} );
     if (!$allele) {
-        $c->stash->{rest} = { error => "no allele found for locus '$locus_data' (allele: '$allele_symbol'" };
+        $c->stash->{rest} = { error => "no allele found for locus '$locus_data' (allele: '$allele_symbol')" };
         return;
     }
     my $stock = $c->dbic_schema('Bio::Chado::Schema' , 'sgn_chado')
         ->resultset("Stock::Stock")->find({stock_id => $stock_id } ) ;
     my  $allele_id = $allele->allele_id;
+    if (!$c->user) {
+        $c->stash->{rest} = { error => 'Must be logged in for associating loci! ' };
+        return;
+    }
     if ( any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
         # if this fails, it will throw an acception and will (probably
         # rightly) be counted as a server error
         if ($stock && $allele_id) {
-            $stock->create_stockprops(
-                { 'sgn allele_id' => $allele->allele_id },
-                { cv_name => 'local', allow_duplicate_values => 1, autocreate => 1 },
-                );
-            $c->stash->{rest} = ['success'];
-            # need to update the loci div!!
-            return;
+            try {
+                $stock->create_stockprops(
+                    { 'sgn allele_id' => $allele->allele_id },
+                    { cv_name => 'local', allow_duplicate_values => 1, autocreate => 1 },
+                    );
+                $c->stash->{rest} = ['success'];
+                # need to update the loci div!!
+                return;
+            } catch {
+                $c->stash->{rest} = { error => "Failed: $_" };
+                return;
+            };
         }
         $c->stash->{rest} = { error => 'need both valid stock_id and allele_id for adding the stockprop! ' };
     } else {
-            $c->stash->{rest} = { error => 'No privileges for adding new loci ' };
+            $c->stash->{rest} = { error => 'No privileges for adding new loci. You must have an sgn submitter account. Please contact sgn-feedback@solgenomics.net for upgrading your user account. ' };
     }
 }
 
