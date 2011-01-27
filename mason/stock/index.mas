@@ -54,7 +54,7 @@ use CXGN::People::Person;
 my $stock = $stockref->{stock};
 my $stock_id = $stockref->{stock_id};
 my $action = $stockref->{action} || 'view';
-my $person_id = $stockref->{sp_person_id};
+my $person_id = $stockref->{person_id};
 my $curator = $stockref->{curator};
 my $submitter = $stockref->{submitter};
 my $sequencer = $stockref->{sequencer};
@@ -86,7 +86,7 @@ my $experiment = ['experiment','year', 'location', 'replicate'];
 my $resources = ['solcap number' , 'synonym'];
 
 my $allele_div = "stock_alleles";
-my $new_locus_link ;#= qq|<a href="<">[associate new locus]</a> |;
+my $new_locus_link = !$person_id ? qq|<a href="/solpeople/login.pl">[log-in to associate new locus]</a> | : '' ;
 
 #owner
 my $owners = $stockref->{owners};
@@ -156,6 +156,7 @@ my $pub_count = scalar( @$pubmeds );
 <&| /page/info_section.mas, title => "Associated loci" , subtitle => $new_locus_link, collapsible=> 1 &>
 
 <& /phenome/associate_locus.mas, object_id => $stock_id , type => "stock", locus_add_uri=> $locus_add_uri,  locus_autocomplete_uri => $locus_autocomplete_uri , allele_div => $allele_div &>
+
 </&>
 
 

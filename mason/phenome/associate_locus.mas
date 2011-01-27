@@ -61,7 +61,9 @@ $allele_div
     //make an AJAX request with the form params
     var loci = jQuery("#loci").val();
     jQuery.ajax({ url: "<% $locus_add_uri %>" , method:"POST", data: 'object_id='+<% $object_id %>+'&loci='+loci ,
-     success: function() {
+     success: function(response) {
+      var error = response.error;
+      if (error) { alert(error) ; }
       display_alleles( "<% $allele_div %>" );
      }
    } );
