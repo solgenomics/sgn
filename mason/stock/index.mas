@@ -38,7 +38,7 @@ Naama Menda <nm249@cornell.edu>
 <%args>
 
 $stockref => undef
-$locus_add_uri
+$locus_add_uri => ''
 $locus_autocomplete_uri => ''
 
 </%args>
@@ -67,7 +67,7 @@ my $stockprop_cv = $schema->resultset("Cv::Cv")->search( {
 
 
 my $type_name;
-my $type = $stock->get_object_row()->type();
+my $type = $stock->get_object_row ? $stock->get_object_row->type : undef;
 $type_name  = $type->name() if $type;
 
 #################
@@ -122,7 +122,16 @@ my $pub_count = scalar( @$pubmeds );
 
 <&| /page/info_section.mas, title=>"Stock details" , subtitle => "<a href=/stock/search/>Back to stock search</a>"  &>
 
-  <& /page/form.mas, object_type=>'stock', object_id=>"$stock_id", form_name=> 'stock_form', server_side_script => '/phenome/stock/stock_ajax_form.pl', form_div_name=>'stock_details', js_object_name=> 'stockForm', page_url => '/stock/view/id' , alternate_new_button => '<a href ="/stock/view/new">[New]</a>' &>
+  <& /page/form.mas,
+  object_type=>'stock',
+  object_id=>"$stock_id",
+  form_name=> 'stock_form',
+  server_side_script => '/phenome/stock/stock_ajax_form.pl',
+  form_div_name=>'stock_details',
+  js_object_name=> 'stockForm',
+  page_url => "/stock/$stock_id/view/" ,
+  alternate_new_button => '<a href ="/stock/new">[New]</a>'
+  &>
 
 <div><b>Stock editors: </b> <% $editor_link %></div>
 <br />
