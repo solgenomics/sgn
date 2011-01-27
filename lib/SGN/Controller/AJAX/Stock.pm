@@ -169,10 +169,11 @@ sub display_alleles_GET  {
          )
         ];
     }
-    $hashref->{html} = columnar_table_html(
-        headings     =>  [ "Locus name", "Allele symbol", "Phenotype" ],
-        data         => \@allele_data,
-        ) if (@allele_data) ;
+    $hashref->{html} = @allele_data ?
+        columnar_table_html(
+            headings     =>  [ "Locus name", "Allele symbol", "Phenotype" ],
+            data         => \@allele_data,
+        )  : 'None' ;
     $c->stash->{rest} = $hashref;
 }
 
