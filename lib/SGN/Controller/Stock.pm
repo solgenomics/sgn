@@ -52,6 +52,7 @@ sub search :Path('/stock/search') Args(0) {
         request => $req,
         form_opts    => { stock_types=>stock_types($self->schema), organisms=>stock_organisms($self->schema)} ,
         results  => $results,
+        sp_person_autocomplete_uri => $c->uri_for( '/ajax/people/autocomplete' ),
         pagination_link_maker => sub {
             return uri( query => { %{$req}, page => shift } );
         },
@@ -97,6 +98,34 @@ sub _make_stock_search_rs {
         $rs = $rs->search({ 'organism_id' => $organism });
     }
 
+    if ( my $editor = $req->param('person') ) {
+        print STDERR "Searching stock by editor | $editor | ***********\n\n";
+        $self->_validate_pair( $c, 'person') ;
+        my ($first_name, $last_name) = split ',' , $editor ;
+        $first_name  =~ s/\s//g;
+        $last_name  =~ s/\s//g;
+        print STDERR "first_name = |$first_name| , last_name = |$last_name| ***********\n\n";
+        my $q = "SELECT stock_id  FROM stock
+                 JOIN stockprop USING (stock_id)
+                 JOIN sgn_people.sp_person on cast(value AS numeric) = sp_person_id
+                 JOIN cvterm on stockprop.type_id = cvterm_id
+                 WHERE first_name = ? AND last_name = ?
+                 AND cvterm.name = ?";
+        my $sth = $c->dbc->dbh->prepare($q);
+        $sth->execute($first_name, $last_name, 'sp_person_id');
+
+        my $query = "SELECT sp_person_id FROM sgn_people.sp_person
+                     WHERE first_name = ? AND last_name = ?";
+        my $sth = $c->dbc->dbh->prepare($query);
+        $sth->execute($first_name, $last_name);
+        my ($sp_person_id) = $sth->fetchrow_array ;
+        print STDERR "SP_PERSON_ID = $sp_person_id *********\n\n";
+        $rs = $rs->search( {
+            'type.name' => 'sp_person_id',
+            'stockprops.value' => $sp_person_id, } ,
+                           { join => { stockprops =>['type'] } },
+            ) if $sp_person_id;
+    }
     # page number and page size, and order by name
     $rs = $rs->search( undef, {
         page => $req->param('page')      || 1,
@@ -119,14 +148,31 @@ sub new_stock :Chained('get_stock') : PathPart('new') :Args(0) {
     my ( $self, $c ) = @_;
    # $self->schema( $c->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' ) );
   ####  $c->forward("view_stock", 'new');
+    $c->stash(
+        template => '/stock/index.mas',
+
+        stockref => {
+            action    => "new",
+            stock_id  => 0 ,
+            #curator   => $curator,
+            #submitter => $submitter,
+            #sequencer => $sequencer,
+            #person_id => $person_id,
+            stock     => $c->stash->{stock},
+            schema    => $self->schema,
+            #dbh       => $dbh,
+            #is_owner  => $is_owner,
+            #props     => $props,
+            #dbxrefs   => $dbxrefs,
+            #owners    => $owner_ids,
+        },
+        );
 }
 
 
 sub view_stock :Chained('get_stock') :PathPart('view') :Args(0) {
     my ( $self, $c, $action) = @_;
-    
-    
-   
+
     my $logged_user = $c->user;
     my $person_id = $logged_user->get_object->get_sp_person_id if $logged_user;
     my $curator = $logged_user->check_roles('curator') if $logged_user;
@@ -141,7 +187,7 @@ sub view_stock :Chained('get_stock') :PathPart('view') :Args(0) {
 
     my $stock = $c->stash->{stock};
     my $stock_id = $stock ? $stock->get_stock_id : undef ;
-   
+
     # print message if stock_id is not valid
     unless ( ( $stock_id =~ m /^\d+$/ ) || ($action eq 'new' && !$stock_id) ) {
         $c->throw_404( "No stock/accession exists for identifier $stock_id" );
@@ -236,21 +282,19 @@ sub get_stock :Chained('/') :PathPart('stock') :CaptureArgs(1) {
     $c->stash->{stock} = CXGN::Chado::Stock->new($self->schema, $stock_id);
 
     #add the stockprops to the stash
-    my $stockprops = $c->stash->{stock}->get_object_row()->search_related("stockprops");
+    my $stock = $c->stash->{stock}->get_object_row;
+    my $stockprops = $stock ? $stock->search_related("stockprops") : undef ;
 
     my $properties ;
-    while ( my $prop =  $stockprops->next ) {
-        push @{ $properties->{$prop->type->name} } ,   $prop->value ;
+    if ($stockprops) {
+        while ( my $prop =  $stockprops->next ) {
+            push @{ $properties->{$prop->type->name} } ,   $prop->value ;
+        }
     }
     $c->stash->{stockprops} = $properties;
 
 }
 
-sub get_alleles {
-    my ($self, $c) = @_;
-    my $stock;
-    my $alleles = $self->_stockprops->{'sgn allele_id'};
-}
 
 ######
 1;
