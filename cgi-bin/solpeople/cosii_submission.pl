@@ -1,4 +1,4 @@
-
+use Modern::Perl;
 use CXGN::Page;
 use CXGN::DB::Connection;
 use CXGN::Marker::Tools;
@@ -179,7 +179,7 @@ Primer type<br />
 <td colspan="2">
 Accession<br />
 $accessions_selector
-<br />To add an accession to this list, <a href="/tools/contact.pl">contact SGN</a>.
+<br />To add an accession to this list, <a href="/contact/form">contact SGN</a>.
 </td>
 </tr>
 
@@ -219,12 +219,3 @@ Band size examples:<br />
 </center>
 END_HTML
 $page->footer();
-
-
-
-
-
-sub verify_data
-{
-
-}

@@ -18,7 +18,7 @@ my $page = CXGN::Page->new();
 print page_title_html ('Note to Locus Editors');
 my $annotation_link = qq | <a href="http://docs.google.com/View?docid=ddhncntn_0cz2wj6">annotation guidelines</a> |;
 
-print  "<b>Locus editors</b> are experts with a research focus, and generally authors, on the locus. Any one interested in becoming an editor for a locus can request by clicking the 'Request editor privileges' link under the 'Locus details' subsection of the locus of interest.<br />
+print  "<b>Locus editors</b> are experts with a research focus, and generally authors, on the locus. If you are interested in becoming an editor for a locus,  please make a request by clicking the 'Request editor privileges' link under the 'Locus details' subsection of the locus page.<br />
 <br>&nbsp<br />
  <b>Editors:</b><br/>
 

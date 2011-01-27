@@ -42,7 +42,7 @@ my %urls = (
 
         "outreach index"                           => "/outreach/",
         "organism page for tomato"                 => "/chado/organism.pl?organism_id=1",
-        "contact"                                  => "/tools/contact.pl",
+        "contact"                                  => "/contact/form",
         "seed BAC guidelines"                      => '/solanaceae-project/seed_bac_selection.pl',
         "caps designer input"                      => '/tools/caps_designer/caps_input.pl',
         "intron finder"                            => '/tools/intron_detection/find_introns.pl',
