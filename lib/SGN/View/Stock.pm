@@ -15,7 +15,7 @@ sub stock_link {
     my ($stock) = @_;
     my $name = $stock->uniquename;
     my $id = $stock->stock_id;
-    return qq{<a href="/stock/view/id/$id">$name</a>};
+    return qq{<a href="/stock/$id/view">$name</a>};
 }
 
 sub organism_link {
