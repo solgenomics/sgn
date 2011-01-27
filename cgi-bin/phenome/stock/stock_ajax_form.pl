@@ -96,7 +96,7 @@ sub store {
     $validate= $json_hash{validate};
     $json_hash{error} = $error if $error;
 
-    my $refering_page="/stock/view/id/$stock_id";
+    my $refering_page="/stock/$stock_id/view";
     $self->send_form_email({subject=>"[New stock details stored] stock $stock_id", mailing_list=>'sgn-db-curation@sgn.cornell.edu', refering_page=>"www.solgenomics.net".$refering_page}) if (!$validate && !$json_hash{error});
     $json_hash{refering_page}=$refering_page if !$initial_stock_id && !$validate && !$error;
 
