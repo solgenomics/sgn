@@ -31,9 +31,6 @@ has 'default_page_size' => (
 BEGIN { extends 'Catalyst::Controller' }
 with 'Catalyst::Component::ApplicationAttribute';
 
-
-
-
 sub _validate_pair {
     my ($self,$c,$key,$value) = @_;
     $c->throw( is_client_error => 1, public_message => "$value is not a valid value for $key" )
@@ -48,15 +45,10 @@ sub search :Path('/stock/search') Args(0) {
     my $form = $self->_build_form;
 
     $form->process( $req );
-
-    my $results;
-    if( $form->submitted_and_valid ) {
-        $results = $self->_make_stock_search_rs( $c, $form );
-    }
+    my $results = $form->submitted_and_valid ? $self->_make_stock_search_rs($c, $form) : '';
 
     $c->stash(
         template => '/stock/search.mas',
-
         form     => $form,
         results  => $results,
         pagination_link_maker => sub {
@@ -197,11 +189,11 @@ sub new_stock :Path('/stock/view/new') :Args(0) {
 sub _view_stock {
     my ( $self, $c, $action, $stock_id) = @_;
 
-    my $stock = CXGN::Chado::Stock->new($self->schema, $stock_id);
+    my $stock       = CXGN::Chado::Stock->new($self->schema, $stock_id);
     my $logged_user = $c->user;
-    my $person_id = $logged_user->get_object->get_sp_person_id if $logged_user;
-    my $curator = $logged_user->check_roles('curator') if $logged_user;
-    my $submitter = $logged_user->check_roles('submitter') if $logged_user;
+    my $person_id   = $logged_user->get_object->get_sp_person_id if $logged_user;
+    my $curator     = $logged_user->check_roles('curator') if $logged_user;
+    my $submitter   = $logged_user->check_roles('submitter') if $logged_user;
 
     my $dbh = $c->dbc->dbh;
 
@@ -221,10 +213,10 @@ sub _view_stock {
     my $obsolete = $stock->get_is_obsolete();
     if ( $obsolete  && !$curator ) {
         $c->throw(is_client_error => 0,
-                  title => 'Obsolete stock',
-                  message=>"Stock $stock_id is obsolete!",
+                  title             => 'Obsolete stock',
+                  message           => "Stock $stock_id is obsolete!",
                   developer_message => 'only curators can see obsolete stock',
-                  notify => 0,   #< does not send an error email
+                  notify            => 0,   #< does not send an error email
             );
     }
     # print message if stock_id does not exist
