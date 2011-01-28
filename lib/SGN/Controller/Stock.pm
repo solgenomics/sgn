@@ -17,14 +17,14 @@ use CXGN::Chado::Stock;
 use SGN::View::Stock qw/stock_link/;
 
 has 'schema' => (
-is => 'rw',
-isa => 'DBIx::Class::Schema',
-required => 0,
+    is       => 'rw',
+    isa      => 'DBIx::Class::Schema',
+    required => 0,
 );
 
 has 'default_page_size' => (
-is => 'ro',
-default => 20,
+    is      => 'ro',
+    default => 20,
 );
 
 
