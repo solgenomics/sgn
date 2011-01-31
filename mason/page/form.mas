@@ -71,6 +71,9 @@ $form_div_name
 $js_object_name
 $page_url
 $alternate_new_button => undef
+$alternate_ghosted_new_button => undef
+$alternate_delete_button => undef
+$alternate_ghosted_delete_button => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => ["CXGN.Page.Form.JSFormPage", "MochiKit.Logging"] &>
