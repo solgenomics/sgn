@@ -39,13 +39,15 @@ sub new {
     $self->set_limits(shift);    # array ref; specifies which tmhs to keep.
     $self->set_sequence(shift);
     $self->set_sequence_id( shift || ">A_protein_sequence" );
-    		$self->set_tmpred_out($self->run_tmpred());
-  #  print $self->get_sequence_id(), "  ", $self->get_sequence(), "\n";
- # process tmpred output to get summary, i.e. score, begin and end positions
- # for tmh's satisfying limits.
+    $self->set_tmpred_out( $self->run_tmpred() );
 
- 		$self->set_solutions($self->good_solutions());
- 	#	$self->set_tmpred_out(""); # discard full tmpred output - keep only summary.
+    #  print $self->get_sequence_id(), "  ", $self->get_sequence(), "\n";
+    # process tmpred output to get summary, i.e. score, begin and end positions
+    # for tmh's satisfying limits.
+
+    $self->set_solutions( $self->good_solutions() );
+
+  #	$self->set_tmpred_out(""); # discard full tmpred output - keep only summary.
     return $self;
 }
 
@@ -60,37 +62,42 @@ sub get_tmpred_out {
 }
 
 sub run_tmpred {
-    my $self = shift;
+    my $self        = shift;
     my $sequence_id = $self->get_sequence_id();
     my $sequence    = $self->get_sequence();
     my $limits      = $self->get_limits();
     my ( $min_score, $min_tmh_length, $max_tmh_length, $min_beg, $max_beg ) =
       @$limits;
 
-
-    my $in = File::Temp->new( TEMPLATE => File::Spec->catfile(File::Spec->tmpdir,'tmpred_input_XXXXXX') );
-    $in->print( ">$sequence_id\n$sequence\n" );
+    my $in =
+      File::Temp->new( TEMPLATE =>
+          File::Spec->catfile( File::Spec->tmpdir, 'tmpred_input_XXXXXX' ) );
+    $in->print(">$sequence_id\n$sequence\n");
     $in->close;
 
-    my $matrix = File::Temp->new( TEMPLATE => File::Spec->catfile(File::Spec->tmpdir,'tmpred_matrix_XXXXXX') );
-    { seek DATA, 0, 0;
-      local $/;
-      my $data = <DATA>;
-      die "no matrix data!" unless length $data > 100;
-      $matrix->print( $data ); #< see __DATA__ section below
+    my $matrix =
+      File::Temp->new( TEMPLATE =>
+          File::Spec->catfile( File::Spec->tmpdir, 'tmpred_matrix_XXXXXX' ) );
+    {
+        seek DATA, 0, 0;
+        local $/;
+        my $data = <DATA>;
+        die "no matrix data!" unless length $data > 100;
+        $matrix->print($data);    #< see __DATA__ section below
     }
     $matrix->close;
 
-    my $out = `tmpred  -def -in=$in  -out=-  -par=$matrix -max=$max_tmh_length  -min=$min_tmh_length`;
+    my $out =
+`tmpred  -def -in=$in  -out=-  -par=$matrix -max=$max_tmh_length  -min=$min_tmh_length`;
     return $out;
 }
 
 sub set_sequence {
     my $self = shift;
-      $self->{sequence} = shift;
-  }
+    $self->{sequence} = shift;
+}
 
-  sub get_sequence {
+sub get_sequence {
     my $self = shift;
     return $self->{sequence};
 }
@@ -141,7 +148,8 @@ sub good_solutions {
     my $limits     = $self->get_limits();
     my ( $min_score, $min_tmh_length, $max_tmh_length, $min_beg, $max_beg ) =
       @$limits;
- #   print "$min_score, $min_tmh_length, $max_tmh_length, $min_beg, $max_beg \n";
+
+#   print "$min_score, $min_tmh_length, $max_tmh_length, $min_beg, $max_beg \n";
     my $solutions = "";
     my $ok        = 0;
     while ( $tmpred_out =~ /(.*?\n)/ ) {
@@ -169,7 +177,8 @@ sub good_solutions {
             }
         }
     }
-#    print "solutions: $solutions \n";
+
+    #    print "solutions: $solutions \n";
     if ( $solutions eq "" ) { $solutions = "(-10000,0,0)"; }
     else                    { $solutions =~ s/(\s+)$//; }
     return $solutions;
