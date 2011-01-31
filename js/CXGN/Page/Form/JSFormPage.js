@@ -1,13 +1,13 @@
 
 /** 
 * @class JSFormPage
-* A Javascript SimpleFormPage for generating Ajax forms 
+* A Javascript SimpleFormPage for generating editable Ajax forms
 * @author Naama Menda <nm249@cornell.edu>
 *
-*This javascript object deals with dynamic printing  
+*This javascript object deals with dynamic printing
 *of static/editable forms
 *
-*JSFormPage.js object is instantiated from CXGN::Page::Form::JSFormPage.pm
+*JSFormPage.js object is instantiated from CXGN::Page::Form::AjaxFormPage.pm
 */
 
 JSAN.use('jquery');
@@ -17,9 +17,26 @@ if (!CXGN) CXGN = function() {};
 if (!CXGN.Page) CXGN.Page = function() {};
 if (!CXGN.Page.Form) CXGN.Page.Form = function() {};
 
+/**
+   CXGN.Page.Form.JSFormPage
+   The javascript form constructor
+   usually called from mason/page/form.mas
+   'new CXGN.Page.Form.JSFormPage'
+   args are in the following order: (variabe names are not important, just the order)
+   object_id (a database id)
+   object_type (the name of the object, usually the table name. e.g. 'locus')
+   server_side_script (the script where the form is defined. e.g. '/phenome/stock/stock_ajax_form.pl')
+   form_id (the div_id of hte form)
+   js_object_name (a name for this Javascript object. Allows using multiple form objects in one page)
+   page_url (the url for the page. Used for reloading a new page for a new empty object)
+
+   Optional: set an alternate new button (jsObjectName.setNewButton(new_button_url) . e.g. /stock/view/new )
+   After setting the above parameters, need to call the render function: 
+   jsObjectName.render
+*/
 CXGN.Page.Form.JSFormPage = function(id,  name,  script, formId, jsObjectName, pageName) {
     //alert('In constructor.');
-   
+
     this.setObjectName(name);
     this.setObjectId(id);
     this.setAjaxScript(script);
@@ -29,9 +46,17 @@ CXGN.Page.Form.JSFormPage = function(id,  name,  script, formId, jsObjectName, p
     this.defineButtons();
 };
 
-
-CXGN.Page.Form.JSFormPage.prototype = { 
-    
+/**
+   This allows using JSFormPage as a javascript object
+ */
+CXGN.Page.Form.JSFormPage.prototype = {
+    /**
+       render
+       renders the form. By default the form will be static (action ='view')
+       if render is called without an object_id, it will attempt to print a 'new' form, otherwise
+       calls this.printForm with the 'action' arg.
+       Valid 'action' is : view, edit , store, confirm delete, delete (and new)
+     */
     render: function(action) {
        //render the form here
 	if (!action) action  = "view";
@@ -39,14 +64,12 @@ CXGN.Page.Form.JSFormPage.prototype = {
 	//	MochiKit.Logging.log("FormId = " + this.formId);
 	this.printForm( action);
     },
-    
 
-        
     /**
      * store
      * store the information from the form into the database
      * -checks privileges
-     * -form fields are validated 
+     * -form fields are validated
      * (if fails- form shows again with an appropriate error message)
      * args: server_side_script name, and %args
      * -calls the appropriate server side script that calls the store function
@@ -82,7 +105,18 @@ CXGN.Page.Form.JSFormPage.prototype = {
 		},
 		    });
     },
-    
+    /**
+       printForm
+       called from the render function  (and also when clicking the 'edit' or 'delete' buttons)
+       arg: action (default: 'view')
+       if object_id is not set for the form object (this.getObjectId) will attempt to print a 'new' form.
+       If action = 'delete' will print a delete dialog
+       Otherwise will make an Ajax request (this.getAjaxScript):
+       If the user is not logged in - redirects to /solpeople.login.pl
+       If action was 'delete', the page will be reloaded (define in the front end who can see an obsolete page, and who should see a message that this object is obsolete/was deleted, etc.)
+       If action was 'view' or 'edit', the appropriate form will be printed with the defined editable links.
+       If action was 'store' , and the backend did not fail nor returned a JSON error key, the form div will be updated with the current html returned in a JSON object
+     */
     printForm: function( action) {
 	var form = this; //'this' cannot be used inside the inner onSuccess function
 	if (!action) action = 'view';
@@ -114,7 +148,7 @@ CXGN.Page.Form.JSFormPage.prototype = {
 			    form.printEditLinks(action);
 			    form.printFormButtons();
 			    MochiKit.Logging.log("this editable_form_id is ... " , form.getEditableFormId() );
-			    
+
 			    $(form.getFormId() ).innerHTML = x.html + form.getFormButtons();
 			}
 		    },
@@ -125,24 +159,35 @@ CXGN.Page.Form.JSFormPage.prototype = {
 	}
     },
 
+    /**
+       printDeleteDialog
+       action 'delete' prompts printing in the form div a delete confirmation button,
+       clicking 'delete' calls printForm('confirm_delete') which will call the server side (should take care of deleting/obsoleting the object.
+     */
     printDeleteDialog: function() {
 	var deleteDialog =  
 	'<b>Delete this ' + this.getObjectName()  + '?</b> '; 
 	deleteDialog += '<input type =\"button\" onClick=\"javascript:' + this.getJsObjectName() + '.printForm(\'confirm_delete\')\" value=\"Confirm delete\"/><br><br>';
 	this.printEditLinks('delete');
 	$(this.getFormId() ).innerHTML = deleteDialog;
-	
+
     },
-    
+
+    /**
+       defineButtons
+       this function is called from the constructor.
+       Calls the setters for New, Edit, CancelEdit, Delete, CancelDelete buttons, 
+       and ghosted New, Edit, Delete buttons (should be used if the logged in user does not have the related privileges. Should be defined in the backend)
+     */
     defineButtons: function() { 
 	this.setNewButton('<a href= \"javascript:onClick=' +  this.getJsObjectName() + '.reloadNewPage()  \">[New]</a> ');
 
 	this.setGhostedNewButton(' <span class="ghosted">[New]</span> ');
 
 	this.setEditButton(' <a href=\"javascript:onClick=' + this.getJsObjectName() + '.printForm(\'edit\')\">[Edit]</a> ');
-	
+
 	this.setGhostedEditButton(' <span class=\"ghosted\">[Edit]</span> ');
-	
+
 	this.setCancelEditButton(' <a href= \"javascript:onClick='+this.getJsObjectName()+'.render() \">[Cancel]</a> ');
 
 	this.setDeleteButton(' <a href=\"javascript:onClick=' + this.getJsObjectName() + '.printForm(\'delete\')\">[Delete]</a> ');
@@ -152,6 +197,12 @@ CXGN.Page.Form.JSFormPage.prototype = {
 	this.setGhostedDeleteButton(' <span class=\"ghosted\">[Delete]</span> ');
     },
 
+
+    /**
+       printFormButtons
+       called from printForm
+       prints 'store' and 'reset form' buttons for 'editable' and 'new' forms
+     */
     printFormButtons: function() {
 	var action = this.getAction();
 	var buttons='';
@@ -165,6 +216,14 @@ CXGN.Page.Form.JSFormPage.prototype = {
 	this.setFormButtons(buttons);
     },
 
+    /**
+       printEditLinks
+       args: action
+       called from printForm
+       Prints editable buttons correctly depending on the 'action'
+       (e.g. if action was 'edit' will print a ghosted 'new' and 'delete' buttons, and a 'cancel edit' button instead of the 'edit' button).
+       Calls setEditLinks with the buttons html
+     */
     printEditLinks: function(action, newButton, editButton, deleteButton) {
 	this.setAction(action);
 	MochiKit.Logging.log("printEditLinks action = " , action );
@@ -203,6 +262,8 @@ CXGN.Page.Form.JSFormPage.prototype = {
 	this.setEditLinks(buttonHTML);
 
     },
+
+    /////////////////////
 
     printNewButton: function() {
 	//new link
@@ -263,16 +324,23 @@ CXGN.Page.Form.JSFormPage.prototype = {
 	this.setDeleteButton(deleteLink);
 
     },
+    ///////////////////////////////
 
+    /**
+       reloadNewPage
+       called when clicking the 'new' button.
+     */
     reloadNewPage: function() {
 	MochiKit.Logging.log("reloadNewPage found page: " , this.getPageName());
 	window.location =  this.getPageName() + "?action=new" ;
     },
 
     //////////////////////////////////////////////////////
-    //accessors for object_id and object_name
-    //every form object should first set the object_name and object_id. 
-    //These 2 vars will be used in every server side script called 
+
+    /**accessors for object_id and object_name
+    every form object should first set the object_name and object_id. 
+    These 2 vars will be used in every server side script called 
+    */
     setObjectId: function(objectId) { 
 	this.objectId = objectId;
     },
@@ -290,8 +358,10 @@ CXGN.Page.Form.JSFormPage.prototype = {
     },
     //
     ////////////////////////////////////////////////
-    //accessors for the server side script with will handle the form components
-    //and return these as a JSON object
+
+    /**accessors for the server side script with will handle the form components
+    and return these as a JSON object
+    */
     getAjaxScript: function() {
 	return this.ajaxScript;
     },

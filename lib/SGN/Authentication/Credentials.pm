@@ -1,3 +1,9 @@
+package SGN::Authentication::Credentials;
+
+use strict;
+use warnings;
+use SGN::Authentication::Store;
+use SGN::Authentication::User;
 
 =head1 NAME
 
@@ -13,29 +19,17 @@ Lukas Mueller <lam87@cornell.edu>
 
 =cut
 
-use strict;
-use warnings;
-
-package SGN::Authentication::Credentials;
-
-use SGN::Authentication::Store;
-use SGN::Authentication::User;
-
 sub new {
-    my $class = shift;
-    my $config = shift;
-    my $app = shift;
-    my $realm = shift;
+    my ($class, $config, $app, $realm) = @_;
 
     my $self = bless {}, $class;
-    $self->{config} = $config;
-    $self->{app} = $app;
-    $self->{realm} = $realm;
 
+    $self->{config} = $config;
+    $self->{app}    = $app;
+    $self->{realm}  = $realm;
 
     return $self;
 }
-
 
 sub authenticate {
     my $self = shift;
@@ -52,4 +46,3 @@ sub authenticate {
 }
 
 1;
-

@@ -322,7 +322,7 @@ qq|<a href="/chado/publication.pl?pub_id=$pub_id" >PMID:$accession</a> |;
 
             $abstract_view = html_optional_show(
                 "abstracts$abstract_count",
-                'Show/hide abstract',
+                'Abstract',
 qq|$abstract <b> <i>$authors.</i> $journal. $pyear. $volume($issue). $pages.</b>|,
                 0,                         #< do not show by default
                 'abstract_optional_show'
@@ -386,12 +386,12 @@ qq|<div><a href="$url_pubmed$accession" target="blank">$pub_info</a> $title $abs
 
 	    $data_view = html_optional_show(
                       "phenotype",
-                      'View/hide phenotype raw data',
+                      'Trait data',
                       qq |$phenotype_data|,
                       0,                                #<  don't show data by default
                                        );
 	    $data_download .=
-qq { Download population: <span><a href="pop_download.pl?population_id=$population_id"><b>\[Phenotype raw data\]</b></a><a href="genotype_download.pl?population_id=$population_id"><b>[Genotype raw data]</b></a></span> };
+qq { Download population: <span><a href="pop_download.pl?population_id=$population_id"><b>\[Phenotype data\]</b></a><a href="genotype_download.pl?population_id=$population_id"><b>[Genotype data]</b></a></span> };
     }
 
 
@@ -1712,6 +1712,10 @@ my $permu_threshold_ref = $self->permu_values();
     push @stat, 
     [
      map {$_} ('QTL software', "<a href=http://www.rqtl.org>R/QTL</a>")
+    ];
+    push @stat, 
+    [
+     map {$_} ('Citation', "<a href=http://www.biomedcentral.com/1471-2105/11/525>solQTL</a>")
     ];
  
     my $legend_data = columnar_table_html (

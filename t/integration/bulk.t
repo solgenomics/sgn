@@ -13,7 +13,7 @@ Lukas Mueller, Jonathan "Duke" Leto
 
 =cut
 
-use strict;
+use Modern::Perl;
 use Test::More tests => 26;
 use Test::WWW::Mechanize;
 use lib 't/lib';

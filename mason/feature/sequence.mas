@@ -7,7 +7,8 @@
   my $link = '/api/v1/sequence/' . $feature->uniquename . '.fasta';
   my $seq;
 
-  if( my $loc = $feature->featureloc_features(undef,{ prefetch => 'srcfeature' })->first ) {
+  my @locs = $feature->featureloc_features(undef,{ prefetch => 'srcfeature' });
+  for my $loc ( @locs ) {
     if( my $src = $loc->srcfeature ) {
       my $seq = $src->trunc( $loc->fmin+1, $loc->fmax );
       $seq = $seq->revcom if $loc->strand == -1;

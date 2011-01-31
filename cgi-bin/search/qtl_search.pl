@@ -6,7 +6,7 @@
 
 use strict;
 
-use CXGN::Cvterms;
+use CXGN::Qtls;
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw/blue_section_html
   info_section_html
@@ -32,7 +32,7 @@ my ($key) = keys (%params);
 my $term = $params{$key};
 
 #create the search and query objects
-my $search = CXGN::Cvterms->new;
+my $search = CXGN::Qtls->new;
 my $query  = $search->new_query;
 $query->from_request( \%params );
 $search->page_size(60);
