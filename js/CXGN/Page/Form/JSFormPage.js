@@ -247,84 +247,13 @@ CXGN.Page.Form.JSFormPage.prototype = {
 
 	}
 
-	//if (!newButton)   this.printNewButton();
-	//else this.setNewButton(newButton);
-
-	//if (!editButton)    this.printEditButton();
-	//else this.setEditButton(editButton);
-
-	//if (!deleteButton)   this.printDeleteButton();
-	//else this.setDeleteButton(deleteButton);
-
-
-	$(this.formId+ "_buttons").innerHTML = buttonHTML;
+        $(this.formId+ "_buttons").innerHTML = buttonHTML;
 
 	this.setEditLinks(buttonHTML);
 
     },
 
     /////////////////////
-
-    printNewButton: function() {
-	//new link
-	var action = this.getAction();
-
-	var newLink = '<a href= \"javascript:onClick=' +  this.getJsObjectName() + '.reloadNewPage()  \">[New]</a>';
-
-	if (action == "edit" || action == "delete") { 
- 	    newLink = ' <span class="ghosted">[New]</span> ';
- 	}
- 	if (action == "new"   && (( this.getUserType() == "curator") || this.getIsOwner() ==1 )) { 
-	    newLink = '<a href= \"javascript:history.back(1) \">[Cancel]</a> ';
- 	}
-	this.setNewButton(newLink);
-
-    },
-
-    printEditButton: function() {
-	//edit link
-	var action = this.getAction();
- 	var editLink;
-	if ((this.getUserType() == "curator") || this.getIsOwner() ==1 ) {
-	    editLink = ' <a href=\"javascript:onClick=' + this.getJsObjectName() + '.printForm(\'edit\')\">[Edit]</a>' ;
-
-	}else {
-	    editLink = ' <span class=\"ghosted\">[Edit]</span> ';
-	}
-
-	if (action == "edit") { 
-	    editLink = ' <a href=\"javascript:onClick=' + this.getJsObjectName() + '.printForm( \'view\')\">[Cancel edit]</a> ';
-	}
-
-	if (action ==  "new" || action == "delete") { 
-	    editLink = ' <span class=\"ghosted\">[Edit]</span> ';
-	}
-	this.setEditButton(editLink);
-
-    },
-
-    printDeleteButton: function() {
-	//delete link
-	var action = this.getAction();
- 	var deleteLink;
-	// if ((this.getUserType() ==  "curator") || this.getIsOwner() ) {
-	if ((this.getUserType() == "curator") || this.getIsOwner() ==1 ) {
-	    deleteLink = ' <a href=\"javascript:onClick=' + this.getJsObjectName() + '.printForm(\'delete\')\">[Delete]</a>' ;
-
-	}else {
-	    deleteLink = ' <span class=\"ghosted\">[Delete]</span> ';
-	}
-
-	if (action ==  "edit" || action == "new" ) { 
-	    deleteLink = ' <span class=\"ghosted\">[Delete]</span> ';
-	}
-	if (action == "delete" )
-	    deleteLink = ' <a href=\"javascript:onClick=' + this.getJsObjectName() + '.render()\">[Cancel Delete]</a>';
-	// 	////////////////////
-	this.setDeleteButton(deleteLink);
-
-    },
-    ///////////////////////////////
 
     /**
        reloadNewPage
