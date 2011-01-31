@@ -34,15 +34,22 @@ use SGN::Test::WWW::Mechanize;
     $mech->with_test_level( local => sub {
         my $stock = create_test('Stock::Stock', {
             description => "LALALALA3475",
-        });
-
+                                });
+        my $person = $mech->create_test_user(
+            first_name => 'testfirstname',
+            last_name  => 'testlastname',
+            user_name  => 'testusername',
+            password   => 'testpassword',
+            user_type  => 'submitter',
+            );
+        my $sp_person_id = $person->test_user->get_sp_person_id;
+        $stock->create_stockprops( {'sp_person_id' => $sp_person_id} , {cv_name => 'local'} );
         $mech->submit_form_ok({
             with_fields => {
                 stock_name => $stock->name,
+                person => $person->get_first_name . ', ' . $person->get_last_name,
             },
-
-        },'try a test search');
-
+                              },'try a test search');
         $mech->html_lint_ok('valid html after stock search');
 
         $mech->content_contains( $stock->name );
