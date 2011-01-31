@@ -45,9 +45,9 @@ Stores a new stockprop in the database
 
 =cut
 
-sub add_stockprop : Local : ActionClass('REST') { }
+sub stockprop : Local : ActionClass('REST') { }
 
-sub add_stockprop_POST {
+sub stockprop_POST {
     my ( $self, $c ) = @_;
     my $response;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
@@ -86,7 +86,16 @@ sub add_stockprop_POST {
 }
 
 
-sub add_stockprop_GET {
+sub stockprop_GET {
+    my ($self, $c) = @_;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $stock_id = $c->req->param('stock_id');
+    my $stock = $c->stash->{stock};
+    my $type_id; ###
+    my $prop_rs = $stock->stockprops(
+        { type_id => $type_id, } );
+    # print the prop name and value#
+    $c->stash->{rest} =  ['sucess'];
 }
 
 sub associate_locus:Path('/ajax/stock/associate_locus') :ActionClass('REST') {}
