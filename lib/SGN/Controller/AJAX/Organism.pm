@@ -184,7 +184,7 @@ sub project_metadata :Chained('/organism/find_organism') :PathPart('metadata') :
 	$login_user_can_modify = any { $_ =~ /curator|sequence/i } ($c->user()->roles());
     }
     my %props; 
-    if ($action eq 'edit') { 
+    if ($action eq 'edit' || $action eq 'view' || !$action) { 
 	%props = $self->get_project_metadata_props($c);
     }
     if ($action eq 'store') { 
@@ -204,56 +204,111 @@ attributes:
     name: organism_project_metadata_form
     id: organism_project_metadata_form
 elements:
-  - type: Submit
-    name: Submit
+  - type: Hidden
+    name: action
+    value: store
 
 YAML
 
 ;
 	foreach my $k ($self->project_metadata_prop_list()) {
-	    $form->element( { type=>'Text', name=>$k});
+	    $form->element( { type=>'Text', name=>$k, label=>$k, value=>$props{$k}, size=>30 });
 	}
 	
 	$html = $form->render();
-
 	if ($action eq 'store') { 
+
+	    print STDERR "STORING FORM....\n\n";
+
+	    $form->process($c->req);
+	    
+	    print STDERR "FORM PROCESSED.\n";
+
+	    if ($form->submitted_and_valid()) { 
+		print STDERR "FORM VALID!!!!\n\n";
+		foreach my $k ($self->project_metadata_prop_list()) { 
+		    my $value = $c->request->param($k);
+		    if (defined($value)) { 
+			my $cvterm_row = $c->dbic_schema('Bio::Chado::Schema','sgn_chado')->resultset('Cv::Cvterm')->search( { name=>$k  } )->first();
+			if ($cvterm_row) { 
+			    my $op = $c->stash->{organism_rs}->first()->organismprops({ type_id=>$cvterm_row->cvterm_id });
+			    if ($op) { 
+				$op->update( { value=>$value });
+			    }
+			    else { 
+				$c->stash->{organism_rs}->first()->create_organismprops( { $k => $c->request->param($k) }, { autocreate=>1, cv_name => 'local', allow_duplicate_values => 0 });
+			    }
+			}
+		    }
+		}
+	    }
+	    
+
+
 	}
+	
+	
     }
 
 
 
-    if ($action eq 'view' || !$login_user_can_modify) { 
-	my $static = '<table>';
+    if ( $action eq 'view' || !$action || !$login_user_can_modify) { 
+	$html = $self->static_html(%props);
+	$c->stash->{rest} = { login_user_id => $login_user_id,
+			      editable_form_id => 'organism_project_metadata_from',
+			      is_owner => $login_user_can_modify,
+			      html => $self->static_html(%props),
+			      
+	};
+    }
+    elsif ($action eq 'store')  { 
+	$c->stash->{rest} = [ 'success' ];
+
+    }
+    else { 
+	
+    ### get project metadata information for that organism
+    
+	$c->stash->{rest} = { login_user_id => $login_user_id, 
+			      editable_form_id => 'organism_project_metadata_form',
+			      is_owner => $login_user_can_modify, 
+			      html => $html,
+			      
+			      
+	};
+    }
+}
+
+sub static_html { 
+    my $self = shift;
+    my %props = @_;
+    my $static = '<table>';
 	foreach my $k ($self->project_metadata_prop_list()) { 
 	    $static .= '<tr><td>'.$k.'</td><td>&nbsp;</td><td><b>'.$props{$k}.'</b></td></tr>';
 	}
 	$static .= '</table>';
-	$html = $static;
-    }
-
-    ### get project metadata information for that organism
-    
-    $c->stash->{rest} = { login_user_id => $login_user_id, 
-			  login_user_can_modify => $login_user_can_modify, 
-			  metadata_html => $html
-    };
+    return $static;
 }
 
+
 sub project_metadata_prop_list { 
-    return ("Sequencing Center", "Accessions", "Project start", "Project end");
+    return ("Sequencing Center", "Sequenced Accession(s)", "Project start", "Project end");
 }
 
 sub get_project_metadata_props { 
     my $self = shift;
     my $c = shift;
-    
-    my $organismprop_rs = $c->dbic_schema('Bio::Chado::Schema','sgn_chado')->resultset('Organism::Organismprop')->search( { organism_id=>$c->stash->{organism_id} });
+
     my %props;
-    foreach my $k ($self->project_metadata_prop_list()) { 
-	foreach my $type_id ($organismprop_rs->search( { organism_id=>$c->stash->{organism_id}, name=>$k })->get_column('type_id')) { 
-	    my $cvterm = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado')->resultset('Cv::Cvterm')->search( { type_id=>$type_id })->get_column("name");
-	    $props{$k} = $cvterm;   
-	}
+  
+###    my $props_rs = $c->stash->{organism_rs}->search_related( 'organismprops' );
+
+    my $sth = $c->dbc->dbh->prepare('SELECT organismprop.value, cvterm.name FROM organismprop join cvterm on (type_id=cvterm_id) where organism_id=?');
+    $sth->execute($c->stash->{organism_id});
+    while (my ($value, $name) = $sth->fetchrow_array()) { 
+	$props{$name} = $value;
     }
+    
+
     return %props;
 }

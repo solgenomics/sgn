@@ -413,8 +413,8 @@ my @allowed_keys = ();
     $c->stash->{metadata_form} = $form;
     $c->stash->{metadata_static} = '';
     if($c->user()) { 
-	$c->stash->{user_id}= $c->get_object()->get_sp_person_id();
-	$c->stash->{user_can_modify} = any { $_ =~ /curator|sequence/i }, $c->roles();
+	$c->stash->{user_id}= $c->user()->get_object()->get_sp_person_id();
+	$c->stash->{user_can_modify} = any { $_ =~ /curator|sequence/i }, $c->user()->roles();
 	
     }
     

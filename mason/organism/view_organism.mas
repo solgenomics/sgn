@@ -1,6 +1,7 @@
 
 <%args>
 $organism_name
+$organism_id
 $taxon => ''
 $common_name
 $description => ''
@@ -76,7 +77,10 @@ Number of phenotyped lines (for all <% $common_name %> species combined): <% $ph
 
 </&>
 
-<& /organism/project_metadata.mas, user_id=>$user_id form=>$form, static_data=>$static_data &>
+
+<&| /page/info_section.mas, title=>'SOL100 genome sequencing project data' &>
+<& /organism/project_metadata.mas, organism_id=>$organism_id &>
+</&>
 
 
 
