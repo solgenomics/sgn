@@ -42,21 +42,25 @@ use SGN::Test::WWW::Mechanize;
             password   => 'testpassword',
             user_type  => 'submitter',
             );
-        my $sp_person_id = $person->test_user->get_sp_person_id;
+        my $sp_person_id = $person->{id};
+
         $stock->create_stockprops( {'sp_person_id' => $sp_person_id} , {cv_name => 'local'} );
+        #######
         $mech->submit_form_ok({
-            with_fields => {
-                stock_name => $stock->name,
-                person => $person->get_first_name . ', ' . $person->get_last_name,
-            },
-                              },'try a test search');
+            form_name => 'stock_search_form',
+              fields    => {
+                  stock_name => $stock->name,
+                  person =>  $person->{first_name} . ', ' . $person->{last_name},
+              },
+                              }, 'submitted stock search form');
+
         $mech->html_lint_ok('valid html after stock search');
 
         $mech->content_contains( $stock->name );
-        $mech->content_contains( $stock->stock_id );
+        $mech->content_contains("results");
 
         #go to the stock detail page
-        $mech->follow_link_ok( { url => '/stock/view/id/'.$stock->stock_id }, 'go to the stock detail page' );
+        $mech->follow_link_ok( { url => '/stock/'.$stock->stock_id.'/view' }, 'go to the stock detail page' );
         $mech->dbh_leak_ok;
         $mech->html_lint_ok( 'stock detail page html ok' );
     });
