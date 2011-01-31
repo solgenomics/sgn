@@ -1,3 +1,8 @@
+package Bio::SecreTary::TMpred;
+
+use Modern::Perl;
+use autodie qw/:all/;
+use File::Temp;
 
 =head1 NAME
 
@@ -14,10 +19,6 @@ Tom York (tly2@cornell.edu)
 
 =cut
 
-package Bio::SecreTary::TMpred;
-use strict;
-use warnings;
-use File::Temp;
 
 =head2 function new()
 
@@ -87,8 +88,7 @@ sub run_tmpred {
     }
     $matrix->close;
 
-    my $out =
-`tmpred  -def -in=$in  -out=-  -par=$matrix -max=$max_tmh_length  -min=$min_tmh_length`;
+    my $out = `tmpred  -def -in=$in  -out=-  -par=$matrix -max=$max_tmh_length  -min=$min_tmh_length`;
     return $out;
 }
 
