@@ -45,7 +45,7 @@ sub search :Path('/stock/search') Args(0) {
     my $req = $c->req;
 
     my $results;
-    $results = $self->_make_stock_search_rs( $c, $req ) if $req->param('submit');
+    $results = $self->_make_stock_search_rs( $c, $req ) if $req->param('search_submitted');
 
     $c->stash(
         template => '/stock/search.mas',

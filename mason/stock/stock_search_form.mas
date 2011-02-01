@@ -35,7 +35,12 @@ my $form = HTML::FormFu->new(Load(<<EOY));
             name: person
             id:   person
             label: Editor
-        # hidden form values for page and page size
+
+          - type: Hidden
+            name: search_submitted
+            value: 1
+
+          # hidden form values for page and page size
           - type: Hidden
             name: page
             value: 1
