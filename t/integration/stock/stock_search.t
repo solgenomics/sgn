@@ -48,12 +48,12 @@ use SGN::Test::WWW::Mechanize;
         #######
         $mech->submit_form_ok({
             form_name => 'stock_search_form',
-              fields    => {
-                  stock_name => $stock->name,
-                  person =>  $person->{first_name} . ', ' . $person->{last_name},
-              },
+            fields    => {
+                stock_name => $stock->name,
+                person =>  $person->{first_name} . ', ' . $person->{last_name},
+            },
                               }, 'submitted stock search form');
-
+        
         $mech->html_lint_ok('valid html after stock search');
 
         $mech->content_contains( $stock->name );
