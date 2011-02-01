@@ -13,7 +13,7 @@
 <%perl>
 my $form = HTML::FormFu->new(Load(<<EOY));
       method: GET
-      action: "/stock/search/"
+      action: "/stock/search"
       attributes:
         name: stock_search_form
         id: stock_search_form
@@ -46,6 +46,7 @@ my $form = HTML::FormFu->new(Load(<<EOY));
 
           - type: Submit
             name: submit
+            value: Search
 EOY
 
     # set the stock type multi-select choices from the db
