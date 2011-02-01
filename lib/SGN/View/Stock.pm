@@ -6,15 +6,13 @@ use warnings;
 our @EXPORT_OK = qw/
     stock_link organism_link cvterm_link
     stock_table related_stats
-    /;
-
-
+/;
+our @EXPORT = ();
 
 sub stock_link {
     my ($stock) = @_;
     my $name = $stock->uniquename;
     my $id = $stock->stock_id;
-    #return qq{<a href="/stock/view/name/$name">$name</a>};
     return qq{<a href="/stock/view/id/$id">$name</a>};
 }
 
@@ -29,12 +27,11 @@ LINK
 }
 
 sub cvterm_link {
-    my ($feature) = @_;
-    my $name = $feature->type->name;
-    my $id   = $feature->type->id;
+    my ($cvterm) = @_;
+    my $name = $cvterm->name;
+    my $id   = $cvterm->cvterm_id;
     return qq{<a href="/chado/cvterm.pl?cvterm_id=$id">$name</a>};
 }
-
 
 sub stock_table {
     my ($stocks) = @_;
