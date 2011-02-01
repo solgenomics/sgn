@@ -37,7 +37,7 @@ my $new_stock_link = qq|<a href="/stock/0/new">Submit new stock</a>|;
                                           .' of '.Number::Format->new->format_number($pager->total_entries)
    &>
 %   if( $results->count ) {
-%		my @data =
+%               my @data =
 %            map {
 %                my $organism = $_->organism;
 %            [
