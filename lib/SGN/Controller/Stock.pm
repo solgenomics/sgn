@@ -116,7 +116,7 @@ sub _make_stock_search_rs {
 
         my $query = "SELECT sp_person_id FROM sgn_people.sp_person
                      WHERE first_name = ? AND last_name = ?";
-        my $sth = $c->dbc->dbh->prepare($query);
+        $sth = $c->dbc->dbh->prepare($query);
         $sth->execute($first_name, $last_name);
         my ($sp_person_id) = $sth->fetchrow_array ;
         print STDERR "SP_PERSON_ID = $sp_person_id *********\n\n";
