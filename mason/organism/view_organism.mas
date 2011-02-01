@@ -28,7 +28,7 @@ $static_data => undef;
 <& /page/page_title.mas, title=>"Details for $taxon <i>$organism_name</i>" &>
 
 <&| /page/info_section.mas, title=>'Basic information' &>
-<& /organism/basic_info.mas, name=>$organism_name, common_name=>$common_name, description=>$description, comment=>$comment, synonyms=> @synonyms &>
+<& /organism/basic_info.mas, name=>$organism_name, common_name=>$common_name, description=>$description, comment=>$comment, synonyms=> \@synonyms &>
 </&>
 
 <& /organism/taxonomy.mas, taxonomy=>$taxonomy &>
