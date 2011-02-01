@@ -211,43 +211,35 @@ elements:
 YAML
 
 ;
-	foreach my $k ($self->project_metadata_prop_list()) {
-	    $form->element( { type=>'Text', name=>$k, label=>$k, value=>$props{$k}, size=>30 });
+	my %fields = $self->project_metadata_prop_list();
+	foreach my $k (keys %fields) {
+	    $form->element( { type=>'Text', name=>$k, label=>$fields{$k}, value=>$props{$k}, size=>30 });
 	}
 	
 	$html = $form->render();
 	if ($action eq 'store') { 
 
-	    print STDERR "STORING FORM....\n\n";
 
 	    $form->process($c->req);
 	    
-	    print STDERR "FORM PROCESSED.\n";
-
 	    if ($form->submitted_and_valid()) { 
-		print STDERR "FORM VALID!!!!\n\n";
-		foreach my $k ($self->project_metadata_prop_list()) { 
+
+		foreach my $k (keys %fields) { 
 		    my $value = $c->request->param($k);
 		    if (defined($value)) { 
+
+			#add cvterm if it does not exist
+			$c->stash->{organism_rs}->first()->create_organismprops( { $k => $c->request->param($k) }, { autocreate=>1, cv_name => 'local', allow_duplicate_values => 0 });
+
 			my $cvterm_row = $c->dbic_schema('Bio::Chado::Schema','sgn_chado')->resultset('Cv::Cvterm')->search( { name=>$k  } )->first();
-			if ($cvterm_row) { 
-			    my $op = $c->stash->{organism_rs}->first()->organismprops({ type_id=>$cvterm_row->cvterm_id });
-			    if ($op) { 
-				$op->update( { value=>$value });
-			    }
-			    else { 
-				$c->stash->{organism_rs}->first()->create_organismprops( { $k => $c->request->param($k) }, { autocreate=>1, cv_name => 'local', allow_duplicate_values => 0 });
-			    }
-			}
+			my $op = $c->stash->{organism_rs}->first()->organismprops({ type_id=>$cvterm_row->cvterm_id });
+			if ($op >  0) { 
+			    $op->update( { value=>$value });
+			}	
 		    }
 		}
 	    }
-	    
-
-
 	}
-	
-	
     }
 
 
@@ -283,16 +275,29 @@ sub static_html {
     my $self = shift;
     my %props = @_;
     my $static = '<table>';
-	foreach my $k ($self->project_metadata_prop_list()) { 
-	    $static .= '<tr><td>'.$k.'</td><td>&nbsp;</td><td><b>'.$props{$k}.'</b></td></tr>';
-	}
+    
+    my %fields = $self->project_metadata_prop_list();
+
+    foreach my $k (keys %fields) { 
+	$static .= '<tr><td>'.$fields{$k}.'</td><td>&nbsp;</td><td><b>'.$props{$k}.'</b></td></tr>';
+    }
 	$static .= '</table>';
     return $static;
 }
 
 
+=head2 project_metadata_prop_list()
+
+defines the prop list as a hash. the key is the name of the property (stored in cvterm as a 'local' cv and referenced through 'type_id' and the value is the display text for that property.
+
+=cut
+
 sub project_metadata_prop_list { 
-    return ("Sequencing Center", "Sequenced Accession(s)", "Project start", "Project end");
+    return ("genome_project_sequencing_center"    => "Sequencing Center",
+	    "genome_project_sequenced_accessions" => "Sequenced Accession(s)",  
+	    "genome_project_dates"                => "Project start, end",
+	    "genome_project_funding_agencies"     => "Funding Agencies" );
+
 }
 
 sub get_project_metadata_props { 
