@@ -5,6 +5,7 @@ use warnings;
 use version;
 
 my $HAVE_PARSE_DEB_CONTROL;
+
 BEGIN {
     eval { require Parse::Deb::Control };
     if( $@ ) {
@@ -22,12 +23,17 @@ BEGIN {
     $HAVE_CAPTURE = !$@;
 }
 
+# we should probably convert this to autodie at some point
+
 # build action just runs make on programs
 sub ACTION_build {
    my $self = shift;
    $self->SUPER::ACTION_build(@_);
    system "make -C programs";
-   $? and die "make failed\n";
+   if($?) {
+        _handle_errors($?);
+        die "make -C programs failed\!n";
+   }
 
    $self->check_R
        or die "R dependency check failed, aborting.\n";
@@ -42,13 +48,19 @@ sub ACTION_install {
    require File::Spec;
    my $tgt_dir = File::Spec->catdir($self->install_base,'sgn');
    system 'cp', '-rl', '.', $tgt_dir;
-   $? and die "SGN site copy failed\n";
+   if($?) {
+      _handle_errors($?);
+      die "SGN site copy ( cp -rl . $tgt_dir ) failed!\n";
+   }
 }
 
 sub ACTION_clean {
    shift->SUPER::ACTION_clean(@_);
    system "make -C programs clean";
-   $? and die "SGN site copy failed\n";
+   if($?) {
+      _handle_errors($?);
+      die "make -C programs clean failed!\n";
+   }
 }
 
 sub ACTION_installdeps {
@@ -118,9 +130,22 @@ EOR
     # mirror chooser, and other things
     system 'R', '--slave', -f => "$tf", '--no-save', '--no-restore';
     if( $? ) {
+        _handle_errors($?);
         warn "Failed to automatically install R dependencies\n";
     } elsif( $self->check_R ) {
         print "Successfully installed R dependencies.\n";
+    }
+}
+
+sub _handle_errors {
+    my ($exit_code) = @_;
+    if ($exit_code == -1) {
+        print "Error: failed to execute: $!\n";
+    } elsif ($exit_code & 127) {
+        warn "Error: child died with signal %d, %s coredump\n",
+            ($exit_code & 127),  ($exit_code & 128) ? 'with' : 'without';
+    } else {
+        warn "Error: child exited with value %d\n", $exit_code >> 8;
     }
 }
 
@@ -138,6 +163,7 @@ sub _run_R_check {
 
     my $ret = system "R CMD check $no_manual --no-codoc --no-vignettes -o _build R_files";
     if ( $ret || $? ) {
+        _handle_errors($?);
         warn "\nR PREREQUISITE CHECK FAILED.\n\n";
         return 0;
     } else {
