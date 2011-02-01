@@ -77,8 +77,13 @@ use SGN::Test::WWW::Mechanize;
         or diag $mech->content;
         my $heatmap = $mech->find_image( alt_regex => qr/heatmap/ );
         ok( $heatmap, 'population page has a heatmap image' );
-        like( $heatmap->url, qr/heatmap_\d+-\w+\.png$/, 'heatmap image url looks plausible' );
-        $mech->get_ok( $heatmap->url, 'heatmap URL is fetchable' );
+
+        SKIP: {
+            skip 'no heatmap found', 2 unless $heatmap;
+            like( $heatmap->url, qr/heatmap_\d+-\w+\.png$/, 'heatmap image url looks plausible' );
+            $mech->get_ok( $heatmap->url, 'heatmap URL is fetchable' );
+        }
+
         $mech->back;
 
         #test the correlation download link on the population page
@@ -112,8 +117,6 @@ use SGN::Test::WWW::Mechanize;
         my $fd_bar_link = $mech->find_link(url_regex => qr !/phenome/indls_range_cvterm.pl?population_id=12&cvterm_id=39945! );
         $mech->links_ok([$fd_bar_link], 'indls_range_cvterm.pl page');
         $mech->get_ok($fd_bar_link, 'a link on a bar of a frequency distribution on the population_indls.pl ');
-
-
 
 
         # find all the qtl.pl links on the page
