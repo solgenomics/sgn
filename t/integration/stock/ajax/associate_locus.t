@@ -58,7 +58,14 @@ $mech->while_logged_in( { user_type=>'submitter' }, sub {
     $mech->content_contains('success');
                         } );
 
+# now check if the alleles are printed 
+$mech->get_ok("/stock/$stock_id/alleles");
+$mech->content_contains('html');
+$mech->content_contains($locus->locus_name);
+
+done_testing();
+
 # hard delete the temp locus and its allele object
 $locus->delete;
 
-done_testing();
+
