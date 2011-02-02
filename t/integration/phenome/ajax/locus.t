@@ -4,7 +4,7 @@
 use Modern::Perl;
 
 use lib 't/lib';
-use Test::More tests=>6;
+use Test::More;
 
 
 BEGIN { $ENV{SGN_SKIP_CGI} = 1 } #< can skip compiling cgis, not using them here
@@ -17,26 +17,16 @@ my $mech = SGN::Test::WWW::Mechanize->new();
 my $dbh = $mech->context->dbc->dbh;
 my $schema = $mech->context->dbic_schema('CXGN::Phenome::Schema');
 
-my $person = $mech->create_test_user(
-    first_name => 'testfirstname',
-    last_name  => 'testlastname',
-    user_name  => 'testusername',
-    password   => 'testpassword',
-    user_type  => 'submitter',
-    );
-my $sp_person_id = $person->{id};
+
 # instantiate an new locus object and save to database
-my $locus = $schema->resultset('Locus')->create( 
+my $locus = $schema->resultset('Locus')->create(
     {
         locus_name => 'testing_locus_111222',
         locus_symbol => 'testing_111222',
         common_name_id=>1,
-        sp_person_id=>$sp_person_id,
     });
 # now we need a temp allele for this locus
 my $allele = $locus->create_related('alleles' , {allele_symbol => 'test_allele111222' } );
-
-#$locus->insert();
 
 my $locus_id = $locus->locus_id();
 diag("created temporaty test locus  $locus_id");
@@ -48,6 +38,8 @@ $mech->content_contains($term);
 $mech->content_contains($locus->locus_name);
 $mech->content_contains($locus->locus_symbol);
 
+#$allele->delete;
+#$locus->delete;
 # hard delete the temp locus and its allele object
 #
 my @queries = ("DELETE FROM phenome.allele WHERE locus_id = ?", "DELETE FROM phenome.locus WHERE locus_id=?");
@@ -58,5 +50,5 @@ foreach my $q (@queries)  {
 }
 
 
-
+done_testing();
 
