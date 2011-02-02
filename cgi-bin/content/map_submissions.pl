@@ -94,7 +94,7 @@ The polymorphism data file should have the following columns:
 
 <h3>Accession information</h3>
 <p>
-We need the following information for each accession used in the mapping or polymorphism data files. (Some accessions are already in our database; <a href="/tools/contact.pl">Contact us</a> if you're not sure). This information can be sent in an email or text file.
+We need the following information for each accession used in the mapping or polymorphism data files. (Some accessions are already in our database; <a href="/contact/form">Contact us</a> if you're not sure). This information can be sent in an email or text file.
 </p>
 <ul>
 <li>The accession's <b>identifier</b>, for example "TA210"</li>
