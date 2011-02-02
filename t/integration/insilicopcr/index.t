@@ -61,7 +61,7 @@ my %form = (
 
 $mech->submit_form_ok(\%form, "PCR  job submit form" );
 
-if ( $mech->content =~ /Running/ ) {
+if ( $mech->content =~ /Running/i ) {
     while ( $mech->content !~ /PCR Results/ ) {
         sleep 1;
         $mech->get( $mech->base );
