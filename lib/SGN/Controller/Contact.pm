@@ -47,7 +47,7 @@ sub _build_form_page {
     $c->stash->{email}                    = $email if $email;
     $c->stash->{subject}                  = $subject if $subject;
     $c->stash->{body}                     = $body if $body;
-    $c->stash->{email_address_to_display} = 'sgn-feedback@solgenomics.net';
+    $c->stash->{email_address_to_display} = $c->config->{feedback_email},
     $c->stash->{template}                 = '/help/contact.mas';
 }
 
@@ -74,8 +74,8 @@ $reference
 END_HEREDOC
 
        $c->stash->{email} = {
-        to      => $c->config->{bugs_email},
-        from    => 'sgn-feedback@solgenomics.net',
+        to      => $c->config->{feedback_email},
+        from    => $c->config->{feedback_email},
         subject => "[".$c->config->{name}."][contact] $subject",
         body    => $body,
        };
