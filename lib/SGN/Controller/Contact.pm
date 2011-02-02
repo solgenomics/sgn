@@ -83,7 +83,7 @@ END_HEREDOC
        $c->forward('View::Email');
 
        $c->stash->{message} = "Thank you. Your message has been sent.";
-       $c->stash->{template} = "/gen_pages/message.mas";
+       $c->stash->{template} = "/generic_message.mas";
     } else {
        my %info_fields = (
             name    => $name,
