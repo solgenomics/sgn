@@ -75,7 +75,7 @@ RFLP markers:
 </pre>
 
 <p>
-For other types of markers, <a href="/tools/contact.pl">contact SGN</a>. 
+For other types of markers, <a href="/contact/form">contact SGN</a>.
 </p>
 
 <h3>Polymorphism data</h3>
