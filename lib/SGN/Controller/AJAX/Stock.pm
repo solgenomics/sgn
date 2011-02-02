@@ -154,10 +154,11 @@ sub associate_locus_GET :Args(0) {
                 $c->stash->{rest} = { error => "Failed: $_" };
                 return;
             };
+        } else {
+            $c->stash->{rest} = { error => 'need both valid stock_id and allele_id for adding the stockprop! ' };
         }
-        $c->stash->{rest} = { error => 'need both valid stock_id and allele_id for adding the stockprop! ' };
     } else {
-            $c->stash->{rest} = { error => 'No privileges for adding new loci. You must have an sgn submitter account. Please contact sgn-feedback@solgenomics.net for upgrading your user account. ' };
+        $c->stash->{rest} = { error => 'No privileges for adding new loci. You must have an sgn submitter account. Please contact sgn-feedback@solgenomics.net for upgrading your user account. ' };
     }
 }
 
