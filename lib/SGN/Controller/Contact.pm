@@ -76,7 +76,7 @@ END_HEREDOC
        $c->stash->{email} = {
         to      => $c->config->{bugs_email},
         from    => 'sgn-feedback@solgenomics.net',
-        subject => "[contact] $subject",
+        subject => "[".$c->config->{name}."][contact] $subject",
         body    => $body,
        };
 
