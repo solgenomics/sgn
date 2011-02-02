@@ -12,14 +12,6 @@ SGN::Controller::Contact - controller for contact page
 
 =cut
 
-#reference holds the URL of the page user was last on
-has 'reference' => (
-    is       => "rw",
-    isa      => 'Str',
-    required => 0,
-    default  => '',
-);
-
 #Creates a blank form
 sub form :Path('/contact/form') :Args(0) {
     my ($self, $c) = @_;
@@ -56,7 +48,6 @@ sub submit :Path('/contact/submit') :Args(0)
     my ($self, $c) = @_;
     my ($name, $email, $subject, $body) =
         map { $c->request->param($_) } qw/name email subject body/;
-    my $reference = $self->reference;
     if ($name and $email and $subject and $body) {
        $body = <<END_HEREDOC;
 From:
@@ -67,10 +58,6 @@ $subject
 
 Body:
 $body
-
-Referred from:
-$reference
-
 END_HEREDOC
 
        $c->stash->{email} = {
