@@ -26,7 +26,8 @@ sub _load_user {
     my $user = $c->user_exists ? $c->user->get_object : CXGN::People::Person->new( $dbh, undef );
 
     # TODO: we shouldn't have to dig into {user} here
-    my ($username, $useremail) = ($user->get_username, $user->get_private_email());
+    my $username  = $user->get_first_name.' '.$user->get_last_name;
+    my $useremail = $user->get_private_email;
 
     return ($username, $useremail);
 }
