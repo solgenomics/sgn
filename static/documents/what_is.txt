@@ -14,7 +14,7 @@ SGN is a <b>community curated</b> database. This means that <b>you</b> can contr
 
 <div class="boxheading">Citing SGN</div>
 <div class="boxcontent">
-If SGN is useful in your research, please cite SGN in your publications using the following publication:
+If SGN is useful in your research, please cite SGN in your publications using the following reference:
 <br /><br />
 <div class="boxbgcolor2">
 Bombarely A, Menda N, Tecle IY, Buels RM, Strickler S, Fischer-York T, Pujar A, Leto J, Gosselin J, Mueller LA. <b>The Sol Genomics Network (solgenomics.net): growing tomatoes using Perl.</b> (2011) Nucleic Acids Res. Volume 39 (Database issue):D1149-55. <a href="http://www.ncbi.nlm.nih.gov/pubmed/20935049">PubMed</a>.
