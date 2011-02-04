@@ -12,38 +12,39 @@ use CXGN::Chado::Organism;
 
 my $mech = SGN::Test::WWW::Mechanize->new();
 
-my $schema = $mech->context->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+$mech->with_test_level( local => sub {
 
-# instantiate an organism object and save to database
-#
-my $o = CXGN::Chado::Organism->new($schema);
-$o->set_genus('test');
-$o->set_species('test');
+    my $schema = $mech->context->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
-$o->store();
-my $o_id = $o->get_organism_id();
-diag("created temp organism $o_id");
-$mech->get_ok("/organism/$o_id/metadata/?action=view");
-#print $mech->content();
-$mech->content_contains('html');
+    # instantiate an organism object and save to database
+    my $o = CXGN::Chado::Organism->new($schema);
+    $o->set_genus('test');
+    $o->set_species('test');
+    $o->store();
 
-$mech->while_logged_in( { user_type=>'submitter' }, sub { 
-    $mech->get_ok("/organism/$o_id/metadata/?action=store&genome_project_funding_agencies=NSF");
-#    print $mech->content();
-    $mech->content_contains('success');
+    my $o_id = $o->get_organism_id();
+    diag("created temp organism $o_id");
+
     $mech->get_ok("/organism/$o_id/metadata/?action=view");
-    $mech->content_contains('NSF');
-    $mech->get_ok("/organism/$o_id/metadata/?action=store&genome_project_funding_agencies=USDA");
-    $mech->content_contains('success');
-    $mech->get_ok("/organism/$o_id/metadata/?action=view");
-    $mech->content_contains('USDA');
+    #print $mech->content();
+    $mech->content_contains('html');
+
+    $mech->while_logged_in( { user_type=>'submitter' }, sub { 
+                                $mech->get_ok("/organism/$o_id/metadata/?action=store&genome_project_funding_agencies=NSF");
+                                #    print $mech->content();
+                                $mech->content_contains('success');
+                                $mech->get_ok("/organism/$o_id/metadata/?action=view");
+                                $mech->content_contains('NSF');
+                                $mech->get_ok("/organism/$o_id/metadata/?action=store&genome_project_funding_agencies=USDA");
+                                $mech->content_contains('success');
+                                $mech->get_ok("/organism/$o_id/metadata/?action=view");
+                                $mech->content_contains('USDA');
+                            });
+
+    # hard delete the temp organism object
+    #
+    my $success = $schema->storage->dbh->do( "DELETE FROM organism WHERE organism_id=?", undef, $o_id );
+    ok($success, "Hard delete of temp organism $o_id test object");
 });
-
-# hard delete the temp organism object
-#
-my $sth = $schema->storage->dbh->prepare("DELETE FROM organism WHERE organism_id=?");
-my $success = $sth->execute($o_id);
-ok($success, "Hard delete of temp organism $o_id test object");
-
 
 
