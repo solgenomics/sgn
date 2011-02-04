@@ -14,16 +14,24 @@ SGN is a <b>community curated</b> database. This means that <b>you</b> can contr
 
 <div class="boxheading">Citing SGN</div>
 <div class="boxcontent">
-If SGN is useful to your research, please cite SGN in your publications using the following publication:
-<ul><li>
-Bombarely A, Menda N, Tecle IY, Buels RM, Strickler S, Fischer-York T, Pujar A, Leto J, Gosselin J, Mueller LA. <b>The Sol Genomics Network (solgenomics.net): growing tomatoes using Perl.</b> (2011) Nucleic Acids Res. 39(Database issue):D1149-55. (<a href="http://www.ncbi.nlm.nih.gov/pubmed/20935049">PubMed</a>).
-</li></ul>
-
+If SGN is useful in your research, please cite SGN in your publications using the following publication:
+<br /><br />
+<div class="boxbgcolor2">
+Bombarely A, Menda N, Tecle IY, Buels RM, Strickler S, Fischer-York T, Pujar A, Leto J, Gosselin J, Mueller LA. <b>The Sol Genomics Network (solgenomics.net): growing tomatoes using Perl.</b> (2011) Nucleic Acids Res. Volume 39 (Database issue):D1149-55. <a href="http://www.ncbi.nlm.nih.gov/pubmed/20935049">PubMed</a>.
+<br /><br />
+</div>
 
 </div>
+
 <br /><br />
 <div class="boxheading">SGN code and database</div>
 <div class="boxcontent">
- The SGN database is based on database schemas developed by the GMOD project and SGN-specific extensions. All SGN code is freely available in an open source project hosted on <a href="http://github.com/solgenomics/" target="_new" >http://github.com/solgenomics</a>.
+ The SGN code and database are developed as an open source project, and is based on database schemas developed by the GMOD project and SGN-specific extensions. Contributions to the codebase are welcome.  All SGN code is freely available in an open source project hosted on <a href="http://github.com/solgenomics/" target="_new" >http://github.com/solgenomics</a>.
 </div>
+
+<br />
+<br />
+
+
 </div>
+
