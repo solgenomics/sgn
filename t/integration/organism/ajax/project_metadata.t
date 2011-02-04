@@ -5,7 +5,7 @@
 use Modern::Perl;
 
 use lib 't/lib';
-use Test::More tests=>17;
+use Test::More;
 use SGN::Test::WWW::Mechanize;
 
 use CXGN::Chado::Organism;
@@ -48,3 +48,4 @@ $mech->with_test_level( local => sub {
 });
 
 
+done_testing;
