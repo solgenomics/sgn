@@ -21,7 +21,6 @@ sol100.mas - SGN page for sol100 project organism data overview in a tree format
 
 <& /util/import_javascript.mas, classes=>[qw[ CXGN.Page.FormattingHelpers  jquery jqueryui popup]] &>
 
-% print STDERR "URI=$organism_autocomplete_uri\n";
 <script language="javascript">
 
   jQuery(function() {

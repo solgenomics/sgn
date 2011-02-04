@@ -94,8 +94,6 @@ sub add_organism_prop_GET :Args(0) {
   my $prop = $c->req->param("prop");
   my $value    = $c->req->param("value");
 
-  print STDERR "PROP: $prop\n";
-
   if (any { $prop eq $_ } $self->organism_prop_keys()) { 
       
       my $organism = $c->dbic_schema('Bio::Chado::Schema','sgn_chado')

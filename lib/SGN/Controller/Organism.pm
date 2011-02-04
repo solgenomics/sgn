@@ -296,8 +296,6 @@ sub view_organism :Chained('find_organism') :PathPart('view') :Args(0) {
 
     $c->stash->{taxonomy} = join ", ", reverse(get_parentage($organism));
     
-    print STDERR "TAXONOMY for ".$c->stash->{organism_id}." = ". $c->stash->{taxonomy}."\n";
-
     my $accessions;
     my @dbxrefs = $organism->get_dbxrefs();
     my $solcyc_link;
