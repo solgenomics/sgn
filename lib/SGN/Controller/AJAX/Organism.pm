@@ -181,7 +181,7 @@ sub project_metadata :Chained('/organism/find_organism') :PathPart('metadata') :
 
     if($c->user()) { 
 	$login_user_id = $c->user()->get_object()->get_sp_person_id();
-	$login_user_can_modify = any { $_ =~ /curator|sequence/i } ($c->user()->roles());
+	$login_user_can_modify = any { $_ =~ /curator|sequence|submitter/i } ($c->user()->roles());
     }
     my %props; 
     if ($action eq 'edit' || $action eq 'view' || !$action) { 
