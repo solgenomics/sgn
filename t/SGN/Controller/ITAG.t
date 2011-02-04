@@ -17,21 +17,26 @@ my $mech = SGN::Test::WWW::Mechanize->new;
 
 # list ITAG releases
 $mech->get_ok( '/itag/list_releases' );
-my $release_link = $mech->find_link( url_regex => qr!^/itag/release/\d! );
+
 
 SKIP: {
-  skip 'no ITAG bulk file releases found, skipping remaining tests', 2 unless $release_link;
+    my $release_link = $mech->find_link( url_regex => qr!^/itag/release/\d! );
 
-  $mech->get_ok( $release_link->url, 'click on file listing for the first available ITAG release' );
+    skip 'no ITAG release link found', 1 unless $release_link;
 
-  my @all_links  = $mech->find_all_links( url => '' );
-  ok(@all_links, 'found some links on ' . $release_link->text);
+    $mech->get_ok( $release_link->url, 'click on file listing for the first available ITAG release' );
 
-  diag(Dumper(@all_links));
+    my @all_links  = $mech->find_all_links( url => '' );
 
-  my @file_links = grep $_->attrs->{onclick} =~ /show_download_form/, @all_links;
+    skip 'no ITAG bulk file releases found, skipping remaining tests', 2 unless @all_links;
 
-  cmp_ok( @file_links, '>', 5, 'got at least 5 file links for itag release '. $release_link->text );
+    ok(@all_links, 'found some links on ' . $release_link->text);
+
+    diag(Dumper(@all_links));
+
+    my @file_links = grep $_->attrs->{onclick} =~ /show_download_form/, @all_links;
+
+    cmp_ok( @file_links, '>', 5, 'got at least 5 file links for itag release '. $release_link->text );
 
 }
 
