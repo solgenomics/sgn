@@ -218,6 +218,7 @@ if ($login_user_type eq 'curator' || $login_user_type eq 'submitter' || $login_u
 	
 	my $jobj = $json->objToJson(\%error); # replaced by 'encode' but not on the old version of JSON in Rubisco! 
 
+	print STDERR "JSON FORMAT: $jobj\n";
 	
 	print  $jobj;
 	
@@ -251,6 +252,7 @@ if ($login_user_type eq 'curator' || $login_user_type eq 'submitter' || $login_u
 	    CXGN::Feed::update_feed($subject,$fdbk_body);
 	}
 	my $jobj = $json->objToJson(\%error);
+	print STDERR "JSON FORMAT: $jobj\n";
 	
 	print  $jobj;
 	

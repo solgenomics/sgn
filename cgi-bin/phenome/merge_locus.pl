@@ -22,6 +22,7 @@ if ($login_user_type eq 'curator') {
     my $doc = CXGN::Scrap::AjaxPage->new();
     $doc->send_http_header();
     my ($merged_locus_id, $locus_id) = $doc->get_encoded_arguments("merged_locus_id", "locus_id");
+    print STDERR "merge_locus.pl:merged_locus_id=$merged_locus_id, locus_id = $locus_id\n ";
 
     my $locus= CXGN::Phenome::Locus->new($dbh, $locus_id);
     

@@ -140,6 +140,8 @@ sub store {
     
     #db_name, accession, and uniquename will not be changed when updating..
     if (!$publication->get_db_name()) {  $publication->set_db_name($db_name); }
+    print STDERR "adding db_name " . $publication->get_db_name() . "!!\n\n";
+    print STDERR "adding dbxref full_accession " .  "$db_name:" . $publication->get_title() . " (" .$publication->get_pyear() .")\n\n";
     
     #########
     $publication->set_cvterm_name('journal'); #this should be implemented in the form framework- maybe a drop down list with publication types from cvterm table??
@@ -557,6 +559,7 @@ sub rank_loci_now {
     my $title_string= $pub->title_tsvector_string();
     $title_string =~ s/\'//g; 
    
+    print STDERR "title_string = $title_string ! \n";
     my @match_words = split (/\s/, $title_string);
     #print STDERR "match_words= @match_words\n";
     my $abstract_string= $pub->abstract_tsvector_string();
@@ -567,6 +570,7 @@ sub rank_loci_now {
     my %loci_subset=();
     MATCH: foreach (@match_words) {
 	$_= "%$_%";
+	print STDERR "...matching $_ ...\n";
 	my $get_loci_q= ("SELECT distinct locus_id FROM phenome.locus WHERE locus_name SIMILAR TO ?
                       OR  locus_symbol SIMILAR TO ? OR gene_activity SIMILAR TO ? OR description SIMILAR TO ?  
                       ORDER BY  locus_id");

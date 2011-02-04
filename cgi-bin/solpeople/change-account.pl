@@ -81,6 +81,7 @@ sub validate_parameters_before_store
 	# account creation step allowed someone to have an empty password.
 	if(!$person->get_password())
 	{
+		print STDERR "Can't find password for sp_user \"" . $person->get_sp_person_id() . "\" when updating account\n";
 		$self->get_page()->error_page("User account could not be updated because it was not found.\n");
 		exit();
 	}

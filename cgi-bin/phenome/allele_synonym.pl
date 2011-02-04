@@ -56,6 +56,7 @@ sub store {
     #  print STDERR "*** STORING ALLELE SYNONYM ***\n";
     my $existing_id = CXGN::Phenome::AlleleSynonym::exists_allele_synonym_named($self->get_dbh(), $args{allele_alias}, $args{allele_id});
     if ($existing_id) { 
+	print STDERR "**Allele Synonym already exists...\n";
 
 	$self->get_page()->header();
 	print $not_new_allele_synonym = "Allele synonym '".$args{allele_alias}. "' already exists <br />";

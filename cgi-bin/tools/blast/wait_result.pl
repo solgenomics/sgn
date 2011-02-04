@@ -12,6 +12,7 @@ my ($request_file, $not_finished, $invalid, $output_graph_option)
 	= $page->get_arguments("request", "notfinished","invalids", "output_graphs");
 
 if ( ! -f "$tmpdir/${request_file}.req" ) {
+  print STDERR "$request_file ($!)\n";
   request_not_found($page);
 }
 

@@ -66,6 +66,7 @@ foreach $type_ext ( '',qw/.ab1 .abi .scf .esd .SCF/) {
 }
 
 if (!$full_pathname) {
+    print STDERR "Can't find chromatogram file at $basename";
   $page->message_page("This sequence does not seem to have an associated chromatogram.");
 }
 

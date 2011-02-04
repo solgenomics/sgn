@@ -61,6 +61,7 @@ sub browse_organisms {
     my $type = shift;
     my $common_name = shift;
     
+    print STDERR "common_name : $common_name";  
     my $organisms;
     
     if ($type eq 'browse') {

@@ -254,6 +254,7 @@ sub query_from_cookie {
     my $sth = $self->get_sql("user_from_cookie");
     return undef unless $sth;
     if ( !$sth->execute( $LOGIN_TIMEOUT, $cookie_string ) ) {
+        print STDERR "Cookie Query Error: " . $DBH->errstr;
         return undef;
     }
     my @result = $sth->fetchrow_array();

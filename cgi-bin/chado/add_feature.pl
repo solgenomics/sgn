@@ -167,6 +167,7 @@ sub delete_dialog {
 	    $locus = CXGN::Phenome::Locus->new($self->get_dbh(), $type_id);
 	    $locus_name = $locus->get_locus_name();
 	    $object_name=$locus_name;
+	    print STDERR "!!!*$locus_name $object_name\n";
 	}elsif ($type eq 'allele') {
 	    $allele = CXGN::Phenome::Allele->new($self->get_dbh(), $type_id);
 	    $allele_name = $allele->get_allele_name();
@@ -386,8 +387,10 @@ sub confirm_store {
     
     if ($GBaccession =~ m/^[a-z]/i) { #the accession submitted looks like a GenBank accession
 	$feature->set_name($GBaccession);
+	print STDERR "****add_feature.pl is setting feature name $GBaccession...\n\n";
     }elsif ($GBaccession=~ m/^\d/) { #the user submitted an accession that looks like a GenBank GI number!
 	$self->get_page->message_page("Please type a valid genBank accession !!");
+	print STDERR "^^^^add_feature.pl found an accession that looks like a gi number...\n\n";
     } 
     
    
@@ -423,17 +426,20 @@ sub confirm_store {
 	    $associated_feature= $allele->get_allele_dbxref($dbxref)->get_allele_dbxref_id();
 	    $obsolete = $allele->get_allele_dbxref($dbxref)->get_obsolete();  
 	}
+	print STDERR "$type _ dbxref obsolete = '$obsolete' !!!!!\n";
 	if  ($associated_feature && $obsolete eq 'f') {
 	    print  "<h3>Sequence '$GBaccession' is already associated with $args{type}  $args{type_id} </h3>";
 	    print qq { <a href="javascript:history.back(1)">back to features</a> };
 	    $self->get_page()->footer();		   
 	    
 	}else{  ##the feature exists but not associated with the object
+	    print STDERR "*add_feature.pl: confirm_store...calling print_confirm_form (feature exists but not associated)\n";
 
 	    $self->print_confirm_form(); 
 	   
 	}
     } else { # the feature doesn't exist in our database
+	print STDERR "*add_feature.pl: confirm_store...calling print_confirm_form (feature does not exist in db)\n";
 	
 	$self->print_confirm_form();
 			
@@ -507,6 +513,7 @@ sub print_confirm_form {
 
     my @pubmed_ids=undef;
     @pubmed_ids = $feature->get_pubmed_ids();
+    print STDERR "****pubmed_ids in print_confirm_form are: @pubmed_ids \n";
     my $first_pubmed_id = $pubmed_ids[0]; #don't set print_publication to anything if theres no publications to store
     my $pubmed_link="";
 
@@ -629,6 +636,7 @@ sub store_publications {
     ##store the publications associated with the feature
     my @pubmed_ids = $feature->get_pubmed_ids();
     if(@pubmed_ids) {
+	print STDERR "***the pubmeds array exists and has the following values: @pubmed_ids";
 	foreach my $pubmed_id (@pubmed_ids){
 	    my $publication = CXGN::Chado::Publication->new($feature->get_dbh()); 
 	    $publication->set_accession($pubmed_id);
@@ -637,6 +645,7 @@ sub store_publications {
 	    my $existing_publication = $publication->get_pub_by_accession($self->get_dbh(),$pubmed_id);
 	    if(!($existing_publication)) { #publication does not exist in our database
 		
+		print STDERR "storing publication now. pubmed id = $pubmed_id";
 		my $pub_id = $publication->store();
 		my $publication_dbxref_id = $publication->get_dbxref_id_by_db('PMID');
 		my $publication_dbxref= CXGN::Chado::Dbxref->new($self->get_dbh(), $publication_dbxref_id);
@@ -649,6 +658,7 @@ sub store_publications {
 		}
 	    }
 	    else { #publication exists but is not associated with the object
+		print STDERR "***the publication exists but is not associated.";
 		$publication=CXGN::Chado::Publication->new($self->get_dbh(), $existing_publication->get_pub_id());
 		if (!($publication->is_associated_publication($type, $type_id))) {
 		    my $publication_dbxref_id= $publication->get_dbxref_id_by_db('PMID');
@@ -667,6 +677,7 @@ sub store_publications {
 		    if ($publication_dbxref_id ) {
 			if ($type eq 'locus') {$locus->add_locus_dbxref($publication_dbxref, $associated_feature, $sp_person_id);}
 			elsif ($type eq 'allele') { $allele->add_allele_dbxref($publication_dbxref, $associated_feature, $sp_person_id);}
+			print STDERR  "associating publication now.";
 		    }
 		}
 	    }

@@ -36,6 +36,7 @@ foreach my $chr (@$chr_ref) {
 	}
 	if ($m->isa("CXGN::Cview::Marker::SequencedBAC")) { 
 	    $m->show_label();
+	    print STDERR $m->get_marker_name()." is a sequenced BAC\n"; 
 
 	}
     }

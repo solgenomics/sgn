@@ -134,8 +134,10 @@ sub get_link {
 		       "(coffee|coffea|coffea\\s+arabica|coffea\\s+robusta)" => ("/content/coffee.pl", "sol_species"),
 		     );
     
+    print STDERR "Finding the link for $id...\n";
     foreach my $pattern (keys(%id_mapping)) { 
 	if ($id =~ m/$pattern/i) { 
+	    print STDERR "found link for $pattern: $id_mapping{$pattern}\n";
 	    return ($id_mapping{$pattern})[0];
 	}
     }

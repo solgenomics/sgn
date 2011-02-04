@@ -90,6 +90,7 @@ foreach(sort  { $locus_pub_ranks->{$b} <=>  $locus_pub_ranks->{$a} } keys %$locu
 	$pubs .= $pub_link;      
     }elsif ($associated) { 
 	$a_pubs .=$pub_link;
+	print STDERR "$associated ! pub $pub_id associated with locus $locus_id\n"; }
 }
 
 

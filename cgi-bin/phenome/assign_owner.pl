@@ -40,6 +40,7 @@ if ($login_user_type eq 'curator') {
     #setting the new object owner. Only curators can do this.
     #if the user has a 'user' account it will be updated to a 'submitter' first
     if ($object_type && $object_id ) {
+	print STDERR "assigning owner : $object_type, $object_id .. sp_person_id = $sp_person_id ... \n";
 	my $new_user_type= CXGN::People::Person->new($dbh, $sp_person_id)->get_user_type();
 	
 	eval{

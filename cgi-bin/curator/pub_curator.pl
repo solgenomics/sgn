@@ -33,6 +33,7 @@ if ($login_user_type eq 'curator' || $login_user_type eq 'submitter' || $login_u
 	}
 	
 	my $jobj = $json->objToJson(\%error);
+	print STDERR "JSON FORMAT: $jobj\n";
 
         print "Content-Type: text/plain\n\n";
 	print  $jobj;
@@ -59,6 +60,7 @@ if ($login_user_type eq 'curator' || $login_user_type eq 'submitter' || $login_u
 	    #CXGN::Feed::update_feed($subject,$fdbk_body);
 	}
 	my $jobj = $json->objToJson(\%error);
+	print STDERR "JSON FORMAT: $jobj\n";
 	
         print "Content-Type: text/plain\n\n";
 	print  $jobj;

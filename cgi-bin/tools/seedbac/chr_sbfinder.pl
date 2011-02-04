@@ -320,12 +320,14 @@ sub get_associations {
     my $physical = $self->get_dbh()->qualify_schema('physical');
 
     my $MAP_ID = CXGN::Map::Tools::current_tomato_map_id();
+    print STDERR "map_id=$MAP_ID\n";    
 
     my $limit_string = "";
     if ($self->{nr_bacs}) { $limit_string = "limit $self->{nr_bacs}"; }
 
     my $query =  "SELECT distinct marker_id, alias, confidence_id, bmm.position, arizona_clone_name, estimated_length, contig_name, number_of_bacs as mc, lg.lg_order FROM physical.bac_marker_matches AS bmm join linkage_group as lg using(lg_id) WHERE confidence_id >= ? AND lg.lg_name = ? AND association_type=? ORDER BY lg.lg_order, bmm.position, alias, estimated_length desc, number_of_bacs desc, contig_name";
 
+    print STDERR "Now working on QUERY: $query\n";
     my $sth = $self->get_dbh()->prepare($query);
 
     $sth->execute($self->get_confidence(), $self->get_chr(), $association_type);
