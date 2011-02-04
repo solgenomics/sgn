@@ -26,7 +26,9 @@ Bombarely A, Menda N, Tecle IY, Buels RM, Strickler S, Fischer-York T, Pujar A, 
 <br /><br />
 <div class="boxheading">SGN code and database</div>
 <div class="boxcontent">
- The SGN code and database are developed as an open source project, and is based on database schemas developed by the GMOD project and SGN-specific extensions. Contributions to the codebase are welcome.  All SGN code is freely available in an open source project hosted on <a href="http://github.com/solgenomics/" target="_new" >http://github.com/solgenomics</a>.
+ The SGN code and database are developed as an open source project, and is based on database schemas developed by the <a href="http://gmod.org/" target="_new" >GMOD project</a> and SGN-specific extensions. 
+<br /><br />
+Contributions to the codebase are welcome.  All SGN code is available from <a href="http://github.com/solgenomics/" target="_new" >http://github.com/solgenomics</a>.
 </div>
 
 <br />
