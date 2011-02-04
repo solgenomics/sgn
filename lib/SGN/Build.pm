@@ -142,10 +142,10 @@ sub _handle_errors {
     if ($exit_code == -1) {
         print "Error: failed to execute: $!\n";
     } elsif ($exit_code & 127) {
-        warn "Error: child died with signal %d, %s coredump\n",
-            ($exit_code & 127),  ($exit_code & 128) ? 'with' : 'without';
+        warn sprintf("Error: child died with signal %d, %s coredump\n",
+            ($exit_code & 127),  ($exit_code & 128) ? 'with' : 'without');
     } else {
-        warn "Error: child exited with value %d\n", $exit_code >> 8;
+        warn sprintf("Error: child exited with value %d\n",$exit_code >> 8);
     }
 }
 
