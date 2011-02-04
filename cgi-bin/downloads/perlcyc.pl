@@ -299,21 +299,17 @@ VERSION HISTORY
 
         open (F, "<\$file") || die "Can’t open file\\n";
 
-        print STDERR "Connecting to AraCyc...\\n";
         my \$cyc = perlcyc -> new("ARA");
 
-        print STDERR "Getting Gene Information...\\n";
         my \@genes = \$cyc -> get_class_all_instances("|Genes|");
 
         my %genes;
 
-        print STDERR "Getting common names...\\n";
         foreach my \$g (\@genes) {
           my \$cname = \$cyc -> get_slot_value(\$g, "common-name");
           \$genes{\$cname}=\$g;
         }
 
-        print STDERR "Processing file...\\n";
         while (<F>) {
           my (\$locus, \$location, \@rest) = split /\\t/;
           \$recs++;
@@ -329,7 +325,6 @@ VERSION HISTORY
 
         close (F);
 
-        print STDERR "Done. Added \$added descriptions. Total lines in file: \$recs. \\n";
 </pre>
        Add a locus link to the TAIR locus page for each gene in the database
 <pre>

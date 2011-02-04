@@ -198,7 +198,6 @@ sub delete_dialog {
 	    $locus = CXGN::Phenome::Locus->new($self->get_dbh(), $type_id);
 	    $locus_name = $locus->get_locus_name();
 	    $object_name=$locus_name;
-	    print STDERR "!!!*$locus_name $object_name\n";
 	}elsif ($type eq 'allele') {
 	    $allele = CXGN::Phenome::Allele->new($self->get_dbh(), $type_id);
 	    $allele_name = $allele->get_allele_name();

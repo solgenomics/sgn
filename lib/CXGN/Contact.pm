@@ -72,10 +72,8 @@ sub send_email {
     $mailto  ||= 'sgn-bugs@sgn.cornell.edu';
 
     $body .= $request_info;
-    print STDERR "$subject\n\n$body";
     if ( $vhost_conf->get_conf('production_server') ) {
         if ( $vhost_conf->get_conf('disable_emails') ) {
-            print STDERR
 "CXGN::Contact: Configured as production server, but not configured to send emails; no email sent from $mailfrom to $mailto.\n";
         }
         else {
@@ -87,16 +85,13 @@ sub send_email {
             );
             $mail{'Reply-To'} = $replyto;
             if ( sendmail(%mail) ) {
-                print STDERR
 "CXGN::Contact: Email notification sent from $mailfrom to $mailto.\n";
             }
             else {
-                print STDERR "CXGN::Contact: UNABLE TO SEND EMAIL NOTIFICATION\n";
             }
         }
     }
     else {
-        print STDERR
 "CXGN::Contact: Not configured as production server; no email sent from $mailfrom to $mailto.\n";
     }
 }

@@ -51,9 +51,7 @@ sub store {
     my $not_new_locus_synonym = "";
   #  print STDERR "*** STORING LOCUS SYNONYM ***\n";
     my ($existing_id, $obsolete) = CXGN::Phenome::LocusSynonym::exists_locus_synonym_named($self->get_dbh(), $args{locus_alias}, $args{locus_id});
-    print STDERR "******$existing_id, $obsolete\n";
     if ($existing_id && $obsolete == 0) { 
-	print STDERR "**Locus Synonym already exists...\n";
 
 	$self->get_page()->header();
 	print $not_new_locus_synonym = "Locus synonym '".$args{locus_alias}. "' already exists <br />";

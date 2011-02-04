@@ -52,10 +52,8 @@ sub store {
     my $sp_person_id= CXGN::Login->new($self->get_dbh())->has_session(); 
     
     my $not_new_tag = "";
-    print STDERR "*** STORING TAG ***\n";
     my $existing_id = CXGN::Tag::exists_tag_named($self->get_dbh(), $args{tag});
     if ($existing_id) { 
-	print STDERR "Tag already exists...(id = $existing_id)\n";
 	$tag = CXGN::Tag->new($self->get_dbh(), $existing_id);
 	$self->set_object($tag);
 	$self->set_object_id($existing_id);
@@ -69,7 +67,6 @@ sub store {
     $tag = $self->get_object();
 
     if (exists($args{experiment_id}) && $args{experiment_id}) { 
-	print STDERR "/tag/: associating exp $args{experiment_id} to tag ".$tag->get_tag_id()."\n";
 	my $existing_id = CXGN::Insitu::Experiment::exists_tag_experiment($self->get_dbh(),  $tag_id, $args{experiment_id});
 	if (!$existing_id) {
 	    $tag -> associate_experiment($args{experiment_id}, $sp_person_id); 

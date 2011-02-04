@@ -1154,7 +1154,6 @@ sub run_muscle {
 #Within a limit of less than 50 sequences, muscle should run within 3 seconds. Wawa-woo-a!
         $command_line =
           "muscle -in $temp_file -out $result_file -maxiters $maxiters";
-        print STDERR "Running: $command_line\n";
         @local_run_output = `$command_line `;
         $temp_file        = $result_file;
         if ( -f $cds_temp_file ) {
@@ -1180,7 +1179,6 @@ sub run_muscle {
 
         chdir $CLUSTER_SHARED_TEMPDIR;
 
-        print STDERR "Running on cluster: $command_line\n";
 
         CXGN::Tools::Run->temp_base($CLUSTER_SHARED_TEMPDIR);
 
@@ -1215,7 +1213,6 @@ sub run_muscle {
 
         my $job_file_base = File::Basename::basename($job_file);
 
-        print STDERR "SUBMITTED JOB WITH JOBID: " . $job->job_id() . "\n";
         my $cds_temp_filename = File::Basename::basename($cds_temp_file);
 
         # url encode the destination pass_back page.

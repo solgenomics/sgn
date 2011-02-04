@@ -50,7 +50,6 @@ if ($login_user_type eq 'curator' || $login_user_type eq 'submitter' || $login_u
     }
     
     my $jobj = $json->objToJson(\%error);
-    print STDERR "JSON FORMAT: $jobj\n";
     
     #print "Content-Type: text/plain\n\n"; # no need for this ! We already have the http header! 
     print  $jobj;

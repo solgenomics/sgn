@@ -486,7 +486,6 @@ sub get_associated_objects {
     my @associations = ();
     my @individuals=$self->get_individuals();
     foreach my $ind (@individuals) {
-	print STDERR  "found individual '$ind' !!\n";
 	my $individual_id = $ind->get_individual_id();
 	my $individual_name = $ind->get_name();
 	push @associations, [ "individual", $individual_id, $individual_name ];

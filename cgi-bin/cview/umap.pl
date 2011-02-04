@@ -55,7 +55,6 @@ sub generate_form {
 #    my %field = ();
     
     my $selected= undef;
-    print STDERR "*******\nIS PUBLIC IS CURRNETLY SET TO : $args{is_public}\n******\n";
     if ($args{is_public}) { $selected =1; } else { $selected=0; }
 
     $self->get_form()->add_field( display_name => "Short Name", field_name=>"short_name", 
@@ -139,9 +138,7 @@ sub display_page {
 
     my %args = $self->get_args();
 
-    print STDERR "Form Contents\n===========\n";
     foreach my $field ($self->get_form()->get_fields()) { 
-	print STDERR $field->get_field_name()." ". $field->get_contents()."\n";
     }
 
     print $image_html;

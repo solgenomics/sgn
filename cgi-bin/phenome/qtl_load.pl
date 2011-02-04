@@ -205,7 +205,6 @@ sub process_data {
                             "$referring_page?pop_id=$pop_id&amp;type=$type");
                     }
                     else {
-                        print STDERR
 "There is problem with your genotype data uploading\n";
                     }
                 }
@@ -347,7 +346,6 @@ sub trait_upload {
 
     my ( $temp_trait_file, $name );
 
-    print STDERR "Trait file: $c_file\n";
     my $safe_char = "a-zA-Z0-9_.-";
 
     $c_file =~ tr/ /_/;
@@ -416,16 +414,13 @@ sub load_pop_details {
         $self->population_exists( $population, $name );
     }
 
-    print STDERR "storing parental accessions...\n";
 
     if ($female) {
         $female_id = $self->store_accession($female);
-        print STDERR "female: $female_id\n";
     }
 
     if ($male) {
         $male_id = $self->store_accession($male);
-        print STDERR "male: $male_id\n";
     }
 
     if ($recurrent) {
@@ -463,14 +458,12 @@ sub store_accession {
     my $accession = shift;
     my $dbh       = $self->get_dbh();
 
-    print STDERR "organism_id: $accession\n";
     my ( $species, $cultivar ) = split( /cv|var|cv\.|var\./, $accession );
     $species  =~ s/^\s+|\s+$//;
     $cultivar =~ s/\.//;
     $cultivar =~ s/^\s+|\s+$//;
     $species = ucfirst($species);
 
-    print STDERR "$accession: species:$species, cultivar:$cultivar\n";
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
     my $organism = CXGN::Chado::Organism->new_with_species( $schema, $species );
@@ -488,7 +481,6 @@ sub store_accession {
         $sth->execute($cultivar);
         my ( $accession_id, $chado_organism_id, $common_name ) =
           $sth->fetchrow_array();
-        print STDERR
 "select existing accession: $accession_id, $chado_organism_id, $common_name\n";
 
         if ($accession_id) {
@@ -513,7 +505,6 @@ sub store_accession {
 
             #my $accession = CXGN::Accession->new($dbh, $accession_id);
             #$common_name = $accession->accession_common_name();
-            print STDERR
               "inserted: $accession_id, $chado_organism_id, $common_name\n";
         }
 
@@ -528,7 +519,6 @@ sub store_accession {
             $sth->execute($common_name);
 
             ( $accession_names_id, $accession_name ) = $sth->fetchrow_array();
-            print STDERR
 "selected existing accession_names: $accession_names_id, $accession_name\n";
         }
         unless ($accession_names_id) {
@@ -541,7 +531,6 @@ sub store_accession {
 
             $accession_names_id =
               $dbh->last_insert_id( "accession_names", "sgn" );
-            print STDERR
               "inserted accession_names : $common_name, $accession_id\n";
 
         }
@@ -553,11 +542,9 @@ sub store_accession {
                                              WHERE accession_id = ?"
             );
             $sth->execute( $accession_names_id, $accession_id );
-            print STDERR "updated accession: with $accession_names_id\n";
         }
 
         if (@_) {
-            print STDERR "@_\n";
             $dbh->rollback();
             return 0;
         }
@@ -671,11 +658,9 @@ sub store_traits {
         };
         if ($@) {
             $dbh->rollback();
-            print STDERR "An error occurred storing traits: $@\n";
             return 0;
         }
         else {
-            print STDERR "Committing...traits\n";
             return 1;
 
             #$dbh->commit();
@@ -723,7 +708,6 @@ sub store_individual {
 
         elsif ( scalar(@individuals) == 1 ) {
 
-            print STDERR "There is a genotype with name $ind_name 
                           in the same population ($pop_id). \n";
             die "There might be a phenotype data for the same trait 
                  for the same genotype $ind_name. I can't store 
@@ -736,13 +720,11 @@ sub store_individual {
     };
     if ($@) {
         $dbh->rollback();
-        print STDERR "An error occurred storing individuals: $@\n";
         return 0;
 
     }
     else {
         $dbh->commit();
-        print STDERR "STORED individual $individual_name.\n";
         return $individual;
     }
 }
@@ -819,12 +801,10 @@ sub store_trait_values {
 
     if ($@) {
         $dbh->rollback();
-        print STDERR "An error occurred storing trait values: $@\n";
         return 0;
 
     }
     else {
-        print STDERR "Committing...trait values to tables public.phenotype 
                   and user_trait_id and phenotype_id to phenotype_user_trait\n";
 
         #$dbh->commit();
@@ -889,7 +869,6 @@ sub store_map {
       . $female_name . ' x '
       . $species_m . ' cv. '
       . $male_name;
-    print STDERR "map long name: $long_name\n";
     $map->{long_name}     = $long_name;
     $map->{map_type}      = 'genetic';
     $map->{parent_1}      = $parent_f;
@@ -903,10 +882,8 @@ sub store_map {
         $lg_result = $self->store_lg( $map_version_id, $file );
 
         if ($lg_result) {
-            print STDERR " STORED LINKAGE GROUPS\n";
         }
         else {
-            print STDERR "FAILED STORING LINKAGE GROUPS\n";
         }
     }
 
@@ -914,7 +891,6 @@ sub store_map {
         return $map_id, $map_version_id;
     }
     else {
-        print STDERR "Either map or map_version or 
                      linkage_groups storing did not work\n";
         return 0;
     }
@@ -978,11 +954,9 @@ sub store_lg {
     my $result = $lg->store();
 
     if ($result) {
-        print STDERR "Succeeded storing linkage groups
                       on map_version_id $map_version_id\n";
     }
     else {
-        print STDERR "Failed storing linkage groups
                       on map_version_id $map_version_id\n";
     }
 
@@ -1023,7 +997,6 @@ sub store_marker_and_position {
     eval {
         for ( my $i = 0 ; $i < @markers ; $i++ )
         {
-            print STDERR $markers[$i] . "\t" . $positions[$i] . "\n";
 
             my ( $marker_name, $subs ) =
               CXGN::Marker::Tools::clean_marker_name( $markers[$i] );
@@ -1078,14 +1051,11 @@ sub store_marker_and_position {
 
     };
     if ($@) {
-        print STDERR $@;
-        print STDERR
           "Failed loading markers and their positions; rolling back.\n";
         $dbh->rollback();
         return 0;
     }
     else {
-        print STDERR "Succeeded. loading markers and their position\n";
 
         $dbh->commit();
         return 1;
@@ -1232,12 +1202,10 @@ sub store_genotype {
 
     if ($@) {
         $dbh->rollback();
-        print STDERR "An error occurred loading genotype data: 
                        $@. ROLLED BACK CHANGES.\n";
         return undef;
     }
     else {
-        print STDERR "All is  fine. Committing...genotype data\n";
         $dbh->commit();
         return 1;
     }
@@ -1607,7 +1575,6 @@ qq |http://solgenomics.net/solpeople/personal-info.pl?sp_person_id=$sp_person_id
     $message .=
 qq |\nQTL population id: $pop_id \nQTL data owner: $username ($user_profile) |;
 
-    print STDERR "\n$subj\n$message\n";
     CXGN::Contact::send_email( $subj, $message,
         'sgn-db-curation@sgn.cornell.edu' );
 

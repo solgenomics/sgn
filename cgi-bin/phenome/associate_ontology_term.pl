@@ -69,7 +69,6 @@ if ($login_user_type eq 'curator' || $login_user_type eq 'submitter' || $login_u
 	
 	#if the dbxref exists this should just return the database id to be used for storing a  dbxref_evidence
 	$object_dbxref_id=$object_dbxref->store(); 
-	print STDERR "object_dbxref_id = $object_dbxref_id ! \n";
 	if ($type eq 'locus') { $object_dbxref_evidence->set_object_dbxref_id($object_dbxref_id); }
 	elsif ($type eq 'individual') { $object_dbxref_evidence->set_individual_dbxref_id($object_dbxref_id); }
 	

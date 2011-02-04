@@ -61,7 +61,6 @@ s/trace_files/data\/prod\/public\/pgn_data_processing\/processed_traces\//;
     else {
         $page->message_page( 'Invalid file location.',
             '', '', "Invalid file location: $file" );
-        print STDERR
           "/cgi-bin/tools/trace_view.pl: invalid file location: $file\n";
     }
 
@@ -94,7 +93,6 @@ s/trace_files/data\/prod\/public\/pgn_data_processing\/processed_traces\//;
     else {
         $page->message_page( 'Invalid file location.',
             '', '', "Chromatogram file not found at $file" );
-        print STDERR
           "/cgi-bin/tools/trace_view.pl: invalid file location: $file\n";
     }
 
