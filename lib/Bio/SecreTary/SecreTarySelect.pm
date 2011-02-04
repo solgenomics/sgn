@@ -1,3 +1,8 @@
+package Bio::SecreTary::SecreTarySelect;
+use strict;
+use warnings;
+use Bio::SecreTary::SecreTaryAnalyse;
+use autodie qw/:all/;
 
 =head1 NAME
 
@@ -14,10 +19,6 @@ Tom York (tly2@cornell.edu)
 
 =cut
 
-package Bio::SecreTary::SecreTarySelect;
-use strict;
-use warnings;
-use Bio::SecreTary::SecreTaryAnalyse;
 
 =head2 function new()
 
