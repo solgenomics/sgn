@@ -10,7 +10,7 @@ use YAML::Any;
 BEGIN { extends 'Catalyst::Controller::REST' }
 
 
-__PACKAGE__->config( 
+__PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
     map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
@@ -24,7 +24,7 @@ __PACKAGE__->config(
 
 sub sol100_image_tag :Path('/organism/sol100/image_tag') :ActionClass('REST') {}
 
-sub sol100_image_tag_GET { 
+sub sol100_image_tag_GET {
     my ($self, $c) = @_;
 
 }
@@ -43,14 +43,14 @@ After adding, redirects to C<view_sol100>.
 
 sub add_sol100_organism :Path('/organism/sol100/add_organism') :ActionClass('REST') {}
 
-sub add_sol100_organism_POST { 
+sub add_sol100_organism_POST {
     my ( $self, $c ) = @_;
 
     my $species = $c->req->param("species");
  #   my $property = $c->req->param("property");
     my $value    = $c->req->param("value");
 
-    
+
 
     my $organism = $c->dbic_schema('Bio::Chado::Schema','sgn_chado')
                      ->resultset('Organism::Organism')
@@ -66,15 +66,15 @@ sub add_sol100_organism_POST {
         { autocreate => 1 },
        );
 
-#    if ($property && $value) { 
-#	$organism->create_organismprops(
-#	    { $property => $value },
-#	    { autocreate => 1 },
-#	    );
+#    if ($property && $value) {
+#       $organism->create_organismprops(
+#           { $property => $value },
+#           { autocreate => 1 },
+#           );
 
-    
+
     $c->forward("SGN::Controller::Organism", 'invalidate_organism_tree_cache', ['sol100']);
-    
+
     $c->stash->{rest} = [ 'success' ];
 
     #$c->res->redirect($c->uri_for_action('/organism/view_sol100'));
@@ -89,45 +89,43 @@ sub add_organism_prop:Path('/ajax/organism/add_prop') :ActionClass('REST') {}
 
 sub add_organism_prop_GET :Args(0) {
   my ( $self, $c ) = @_;
-  
+
   my $organism_id = $c->req->param("organism_id");
   my $prop = $c->req->param("prop");
   my $value    = $c->req->param("value");
 
-  print STDERR "PROP: $prop\n";
+  if (any { $prop eq $_ } $self->organism_prop_keys()) {
 
-  if (any { $prop eq $_ } $self->organism_prop_keys()) { 
-      
       my $organism = $c->dbic_schema('Bio::Chado::Schema','sgn_chado')
-	  ->resultset('Organism::Organism')
-	  ->search({ organism_id => $organism_id })
-	  ->single;
+          ->resultset('Organism::Organism')
+          ->search({ organism_id => $organism_id })
+          ->single;
 
-      if (!$organism) { 
-	  $c->stash->{rest} = { error => "no organism found for organism_id '$organism_id'" };
-	  return;
+      if (!$organism) {
+          $c->stash->{rest} = { error => "no organism found for organism_id '$organism_id'" };
+          return;
       }
-      
-      if ($prop && $value) { 
-	  $organism->create_organismprops(
-	      { $prop => $value },
-	      { autocreate => 1 },
-	      );
-	  $c->stash->{rest} = ['success'];
-	  
-	  return;
-      
+
+      if ($prop && $value) {
+          $organism->create_organismprops(
+              { $prop => $value },
+              { autocreate => 1 },
+              );
+          $c->stash->{rest} = ['success'];
+
+          return;
+
       }
       $c->stash->{rest} = { error => 'need both property and value parameters' };
-      
-      
+
+
   }
-  else { 
+  else {
       $c->stash->{rest} = { error => 'illegal organism prop' };
   }
 }
 
-sub organism_prop_keys { 
+sub organism_prop_keys {
     my $self = shift;
 
     return ('Sequencing facility', 'Accessions', 'Project Leader', 'sol100');
@@ -169,7 +167,7 @@ sub autocomplete_GET :Args(0) {
 }
 
 
-sub project_metadata :Chained('/organism/find_organism') :PathPart('metadata') :Args(0) { 
+sub project_metadata :Chained('/organism/find_organism') :PathPart('metadata') :Args(0) {
     my $self = shift;
     my $c = shift;
 
@@ -179,26 +177,28 @@ sub project_metadata :Chained('/organism/find_organism') :PathPart('metadata') :
     my $login_user_id = 0;
     my $login_user_can_modify = 0;
 
+
     if($c->user()) { 
 	$login_user_id = $c->user()->get_object()->get_sp_person_id();
 	$login_user_can_modify = any { $_ =~ /curator|sequence|submitter/i } ($c->user()->roles());
+
     }
-    my %props; 
-    if ($action eq 'edit' || $action eq 'view' || !$action) { 
-	%props = $self->get_project_metadata_props($c);
+    my %props;
+    if ($action eq 'edit' || $action eq 'view' || !$action) {
+        %props = $self->get_project_metadata_props($c);
     }
-    if ($action eq 'store') { 
-	%props = %{$c->request->parameters()};
+    if ($action eq 'store') {
+        %props = %{$c->request->parameters()};
     }
 
     my $html;
     my $error;
 
-    if ($login_user_can_modify && ($action eq 'edit' || $action eq 'store')) { 
-	if (!$login_user_id) { 
-	    $error .= 'Must be logged in to edit';
-	}
-	my $form = HTML::FormFu->new(Load(<<YAML));
+    if ($login_user_can_modify && ($action eq 'edit' || $action eq 'store')) {
+        if (!$login_user_id) {
+            $error .= 'Must be logged in to edit';
+        }
+        my $form = HTML::FormFu->new(Load(<<YAML));
 method: POST
 attributes:
     name: organism_project_metadata_form
@@ -211,77 +211,77 @@ elements:
 YAML
 
 ;
-	my %fields = $self->project_metadata_prop_list();
-	foreach my $k (keys %fields) {
-	    $form->element( { type=>'Text', name=>$k, label=>$fields{$k}, value=>$props{$k}, size=>30 });
-	}
-	
-	$html = $form->render();
-	if ($action eq 'store') { 
+        my %fields = $self->project_metadata_prop_list();
+        foreach my $k (keys %fields) {
+            $form->element( { type=>'Text', name=>$k, label=>$fields{$k}, value=>$props{$k}, size=>30 });
+        }
+
+        $html = $form->render();
+        if ($action eq 'store') {
 
 
-	    $form->process($c->req);
-	    
-	    if ($form->submitted_and_valid()) { 
+            $form->process($c->req);
 
-		foreach my $k (keys %fields) { 
-		    my $value = $c->request->param($k);
-		    if (defined($value)) { 
+            if ($form->submitted_and_valid()) {
 
-			#add cvterm if it does not exist
-			$c->stash->{organism_rs}->first()->create_organismprops( { $k => $c->request->param($k) }, { autocreate=>1, cv_name => 'local', allow_duplicate_values => 0 });
+                foreach my $k (keys %fields) {
+                    my $value = $c->request->param($k);
+                    if (defined($value)) {
 
-			my $cvterm_row = $c->dbic_schema('Bio::Chado::Schema','sgn_chado')->resultset('Cv::Cvterm')->search( { name=>$k  } )->first();
-			my $op = $c->stash->{organism_rs}->first()->organismprops({ type_id=>$cvterm_row->cvterm_id });
-			if ($op >  0) { 
-			    $op->update( { value=>$value });
-			}	
-		    }
-		}
-	    }
-	}
+                        #add cvterm if it does not exist
+                        $c->stash->{organism_rs}->first()->create_organismprops( { $k => $c->request->param($k) }, { autocreate=>1, cv_name => 'local', allow_duplicate_values => 0 });
+
+                        my $cvterm_row = $c->dbic_schema('Bio::Chado::Schema','sgn_chado')->resultset('Cv::Cvterm')->search( { name=>$k  } )->first();
+                        my $op = $c->stash->{organism_rs}->first()->organismprops({ type_id=>$cvterm_row->cvterm_id });
+                        if ($op >  0) {
+                            $op->update( { value=>$value });
+                        }
+                    }
+                }
+            }
+        }
     }
 
 
 
-    if ( $action eq 'view' || !$action || !$login_user_can_modify) { 
-	$html = $self->static_html(%props);
-	$c->stash->{rest} = { login_user_id => $login_user_id,
-			      editable_form_id => 'organism_project_metadata_from',
-			      is_owner => $login_user_can_modify,
-			      html => $self->static_html(%props),
-			      
-	};
+    if ( $action eq 'view' || !$action || !$login_user_can_modify) {
+        $html = $self->static_html(%props);
+        $c->stash->{rest} = { login_user_id => $login_user_id,
+                              editable_form_id => 'organism_project_metadata_from',
+                              is_owner => $login_user_can_modify,
+                              html => $self->static_html(%props),
+
+        };
     }
-    elsif ($action eq 'store')  { 
-	$c->stash->{rest} = [ 'success' ];
+    elsif ($action eq 'store')  {
+        $c->stash->{rest} = [ 'success' ];
 
     }
-    else { 
-	
+    else {
+
     ### get project metadata information for that organism
-    
-	$c->stash->{rest} = { login_user_id => $login_user_id, 
-			      editable_form_id => 'organism_project_metadata_form',
-			      is_owner => $login_user_can_modify, 
-			      html => $html,
-			      
-			      
-	};
+
+        $c->stash->{rest} = { login_user_id => $login_user_id,
+                              editable_form_id => 'organism_project_metadata_form',
+                              is_owner => $login_user_can_modify,
+                              html => $html,
+
+
+        };
     }
 }
 
-sub static_html { 
+sub static_html {
     my $self = shift;
     my %props = @_;
     my $static = '<table>';
-    
+
     my %fields = $self->project_metadata_prop_list();
 
-    foreach my $k (keys %fields) { 
-	$static .= '<tr><td>'.$fields{$k}.'</td><td>&nbsp;</td><td><b>'.$props{$k}.'</b></td></tr>';
+    foreach my $k (keys %fields) {
+        $static .= '<tr><td>'.$fields{$k}.'</td><td>&nbsp;</td><td><b>'.$props{$k}.'</b></td></tr>';
     }
-	$static .= '</table>';
+        $static .= '</table>';
     return $static;
 }
 
@@ -292,28 +292,28 @@ defines the prop list as a hash. the key is the name of the property (stored in 
 
 =cut
 
-sub project_metadata_prop_list { 
+sub project_metadata_prop_list {
     return ("genome_project_sequencing_center"    => "Sequencing Center",
-	    "genome_project_sequenced_accessions" => "Sequenced Accession(s)",  
-	    "genome_project_dates"                => "Project start, end",
-	    "genome_project_funding_agencies"     => "Funding Agencies" );
+            "genome_project_sequenced_accessions" => "Sequenced Accession(s)",
+            "genome_project_dates"                => "Project start, end",
+            "genome_project_funding_agencies"     => "Funding Agencies" );
 
 }
 
-sub get_project_metadata_props { 
+sub get_project_metadata_props {
     my $self = shift;
     my $c = shift;
 
     my %props;
-  
+
 ###    my $props_rs = $c->stash->{organism_rs}->search_related( 'organismprops' );
 
     my $sth = $c->dbc->dbh->prepare('SELECT organismprop.value, cvterm.name FROM organismprop join cvterm on (type_id=cvterm_id) where organism_id=?');
     $sth->execute($c->stash->{organism_id});
-    while (my ($value, $name) = $sth->fetchrow_array()) { 
-	$props{$name} = $value;
+    while (my ($value, $name) = $sth->fetchrow_array()) {
+        $props{$name} = $value;
     }
-    
+
 
     return %props;
 }
