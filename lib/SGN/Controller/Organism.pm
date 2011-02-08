@@ -160,42 +160,42 @@ After adding, redirects to C<view_sol100>.
 
 =cut
 
-# sub add_sol100_organism :Path('sol100/add_organism') :Args(0) {
-#     my ( $self, $c ) = @_;
+sub add_sol100_organism :Path('sol100/add_organism') :Args(0) {
+    my ( $self, $c ) = @_;
 
-#     my $organism = $c->dbic_schema('Bio::Chado::Schema','sgn_chado')
-#                      ->resultset('Organism::Organism')
-#                      ->search({ species => { ilike => $c->req->body_parameters->{species} }})
-#                      ->single;
+    my $organism = $c->dbic_schema('Bio::Chado::Schema','sgn_chado')
+                     ->resultset('Organism::Organism')
+                     ->search({ species => { ilike => $c->req->body_parameters->{species} }})
+                     ->single;
 
-#     ## validate our conditions
-#     my @validate = ( [ RC_METHOD_NOT_ALLOWED,
-#                        'Only POST requests are allowed for this page.',
-#                        sub { $c->req->method eq 'POST' }
-#                      ],
-#                      [ RC_BAD_REQUEST,
-#                        'Organism not found',
-#                        sub { $organism },
-#                      ],
-#                     );
-#     for (@validate) {
-#         my ( $status, $message, $test ) = @$_;
-#         unless( $test->() ) {
-#             $c->throw( http_status => $status, public_message => $message );
-#             return;
-#         }
-#     }
+    ## validate our conditions
+    my @validate = ( [ RC_METHOD_NOT_ALLOWED,
+                       'Only POST requests are allowed for this page.',
+                       sub { $c->req->method eq 'POST' }
+                     ],
+                     [ RC_BAD_REQUEST,
+                       'Organism not found',
+                       sub { $organism },
+                     ],
+                    );
+    for (@validate) {
+        my ( $status, $message, $test ) = @$_;
+        unless( $test->() ) {
+            $c->throw( http_status => $status, public_message => $message );
+            return;
+        }
+    }
 
-#     # if this fails, it will throw an acception and will (probably
-#     # rightly) be counted as a server error
-#     $organism->create_organismprops(
-#         { 'sol100' => 1 },
-#         { autocreate => 1 },
-#        );
+    # if this fails, it will throw an acception and will (probably
+    # rightly) be counted as a server error
+    $organism->create_organismprops(
+        { 'sol100' => 1 },
+        { autocreate => 1 },
+       );
 
-#     $self->rendered_organism_tree_cache->remove( 'sol100' ); #< invalidate the sol100 cached image tree
-#     $c->res->redirect( $c->uri_for( $self->action_for('view_sol100')));
-# }
+    $self->rendered_organism_tree_cache->remove( 'sol100' ); #< invalidate the sol100 cached image tree
+    $c->res->redirect( $c->uri_for( $self->action_for('view_sol100')));
+}
 
 
 sub invalidate_organism_tree_cache :Args(0) {
@@ -203,38 +203,6 @@ sub invalidate_organism_tree_cache :Args(0) {
     $self->rendered_organism_tree_cache->remove( 'sol100' ); #< invalidate the sol100 cached image tree
     return;
 }
-
-# =head2 autocomplete
-
-# Public Path: /organism/autocomplete
-
-# Autocomplete an organism species name.  Takes a single GET param,
-# C<term>, responds with a JSON array of completions for that term.
-
-# =cut
-
-# sub autocomplete :Chained('get_organism_set') :PathPart('autocomplete') :Args(0) {
-#   my ( $self, $c ) = @_;
-
-#   my $term = $c->req->param('term');
-#   # trim and regularize whitespace
-#   $term =~ s/(^\s+|\s+)$//g;
-#   $term =~ s/\s+/ /g;
-
-#   my $s = $c->dbic_schema('Bio::Chado::Schema','sgn_chado')
-#                   ->resultset('Organism::Organism');
-# #  my $s = $c->stash->{organism_set};
-
-
-#   my @results = $s->search({ species => { ilike => '%'.$term.'%' }},
-#                            { rows => 15 },
-#                           )
-#                   ->get_column('species')
-#                   ->all;
-
-#   $c->res->content_type('application/json');
-#   $c->res->body( $json->encode( \@results ));
-# }
 
 
 #Chaining base to fetch a particular organism, chaining onto this like
