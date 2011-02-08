@@ -180,7 +180,7 @@ sub project_metadata :Chained('/organism/find_organism') :PathPart('metadata') :
 
     if($c->user()) { 
 	$login_user_id = $c->user()->get_object()->get_sp_person_id();
-	$login_user_can_modify = any { $_ =~ /curator|sequence|submitter/i } ($c->user()->roles());
+	$login_user_can_modify = any { $_ =~ /curator|sequencer|submitter/i } ($c->user()->roles());
 
     }
     my %props;
@@ -219,7 +219,6 @@ YAML
         $html = $form->render();
         if ($action eq 'store') {
 
-
             $form->process($c->req);
 
             if ($form->submitted_and_valid()) {
@@ -229,7 +228,12 @@ YAML
                     if (defined($value)) {
 
                         #add cvterm if it does not exist
-                        $c->stash->{organism_rs}->first()->create_organismprops( { $k => $c->request->param($k) }, { autocreate=>1, cv_name => 'local', allow_duplicate_values => 0 });
+                        $c->stash->{organism_rs}->first()->create_organismprops( 
+			    { $k => $props{$k} }, 
+			    { autocreate=>1, 
+			      cv_name => 'local', 
+			      allow_duplicate_values => 0 
+			    });
 
                         my $cvterm_row = $c->dbic_schema('Bio::Chado::Schema','sgn_chado')->resultset('Cv::Cvterm')->search( { name=>$k  } )->first();
                         my $op = $c->stash->{organism_rs}->first()->organismprops({ type_id=>$cvterm_row->cvterm_id });

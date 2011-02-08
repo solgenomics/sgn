@@ -268,9 +268,6 @@ to the legacy /chado/organism.pl.
 sub view_organism :Chained('find_organism') :PathPart('view') :Args(0) {
     my ( $self, $c ) = @_;
 
-    my $self = shift;
-    my $c = shift;
-
     if (scalar($c->stash->{organism_rs}->all())==0) {
         $c->stash()->{template} = '/site/error/exception.mas';
         $c->stash()->{exception} = SGN::Exception->new( title=>'Organism id '.($c->stash->{organism_id}).' does not exist', public_message=>'The specified organism identifer does not exist. Sorry', notify=>0, is_server_error=>0);
