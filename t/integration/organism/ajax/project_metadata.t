@@ -26,7 +26,7 @@ $mech->with_test_level( local => sub {
     diag("created temp organism $o_id");
 
     $mech->get_ok("/organism/$o_id/metadata/?action=view");
-    #print $mech->content();
+
     $mech->content_contains('html');
 
     $mech->while_logged_in( { user_type=>'submitter' }, sub { 
