@@ -362,7 +362,7 @@ sub generate_form {
     my $allele = $self->get_object();
 
     my %args           = $self->get_args();
-    my $mode_names_ref = [ 'recessive', 'partially dominant', 'dominant' ];
+    my $mode_names_ref = [ '' , 'recessive', 'partially dominant', 'dominant' ];
     my $locus_name     = $allele->get_locus_name();
     my $locus_id       = $allele->get_locus_id();
     if ( $self->get_action =~ /new/ ) {
