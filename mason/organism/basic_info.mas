@@ -18,10 +18,10 @@ my $synonym_list = join ", ", @synonyms;
 
 
 <& /page/info_table.mas,     
-   data => { 'Name'         => $name,
-             'Common name'  => $common_name,
-             'Description'  => $description,
-             'Synonyms'     => $synonym_list },
+   data => [ 'Scientific Name' => $name,
+             'Common name'     => $common_name,
+             'Description'     => $description,
+             'Synonyms'        => $synonym_list ],
   border => 0,
 	       
 &>

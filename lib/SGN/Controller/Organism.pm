@@ -250,7 +250,9 @@ sub view_organism :Chained('find_organism') :PathPart('view') :Args(0) {
     $c->stash->{taxon} = $organism->get_taxon();
     $c->stash->{organism_name} = $c->stash->{organism_rs}->first()->species();
 
-    $c->stash->{common_name} = lc($c->stash->{organism_rs}->first()->common_name());
+    my $common_name = $c->stash->{organism_rs}->first()->common_name();
+    $c->stash->{common_name} = lc($common_name);
+    $common_name = ucfirst($common_name);
     $c->stash->{comment} = $c->stash->{organism_rs}->first()->comment();
 
     my $organismprop_rs = $schema->resultset('Organism::Organismprop')->search( { organism_id=>$c->stash->{organism_id} });
@@ -258,6 +260,8 @@ sub view_organism :Chained('find_organism') :PathPart('view') :Args(0) {
     $c->stash->{description} = CXGN::Tools::Text::format_field_text($organism->get_comment());
 
     @{$c->stash->{synonyms}} = $organism->get_synonyms();
+
+    $c->stash->{loci} = "<a href=\"/search/locus_search.pl?&w8e4_common_name=$common_name\">".$organism->get_loci_count().'</a>';
 
     $c->stash->{taxonomy} = join ", ", reverse(get_parentage($organism));
 

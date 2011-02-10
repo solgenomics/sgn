@@ -46,7 +46,7 @@ Lukas Mueller. Based on code by R. Buels.
 </%doc>
 
 <%args>
-$data => undef
+@data => undef
 $border => 1
 $sub => 0
 $title => ''
@@ -58,7 +58,7 @@ $multicol => 1
 
 use CXGN::Page::FormattingHelpers qw | info_table_html |;
 
-my $table_html = info_table_html(%$data, 
+my $table_html = info_table_html(@data,
 				 __title      => $title,
 				 __border     => $border,
 				 __sub        => $sub,
