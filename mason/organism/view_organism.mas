@@ -55,9 +55,9 @@ $static_data => undef;
 % my @links = map { qq|<a href="/content/library_info.pl?library=$_\">$_</a>| } @libraries;
 
 <& /page/info_table.mas,
-   data => {
+   data => [
   'Libraries ('.scalar(@links).')' => (join ", ", (@links)),
-  Attribution => $est_attribution }, border => 0
+  Attribution => $est_attribution ], border => 0
  &>
 </&>
 
