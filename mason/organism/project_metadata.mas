@@ -1,0 +1,42 @@
+
+<%doc>
+
+</%doc>
+
+<%args>
+$organism_id
+</%args>
+
+<%perl>
+
+
+
+
+
+</%perl>
+<style>
+#organism_project_metadata_form label { 
+ float: left;
+ width: 12em;
+}
+</style>
+
+
+<& /page/form.mas, 
+  object_type          => 'organism', 
+  object_id            => $organism_id, 
+  form_name            => 'organism_form',
+  page_url             => "/organism/$organism_id/view",
+  server_side_script   => "/organism/$organism_id/metadata",
+  form_div_name        => 'organism_metadata_div',
+  js_object_name       => 'organismObjectName',
+  alternate_new_button            => '',
+  alternate_ghosted_new_button    => '',
+  alternate_delete_button         => '',
+  alternate_ghosted_delete_button => '',
+&>
+
+
+  
+
+
