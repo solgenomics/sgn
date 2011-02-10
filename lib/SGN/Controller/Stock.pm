@@ -96,32 +96,23 @@ sub _make_stock_search_rs {
     }
 
     if ( my $editor = $req->param('person') ) {
-        print STDERR "Searching stock by editor | $editor | ***********\n\n";
         $self->_validate_pair( $c, 'person') ;
         my ($first_name, $last_name) = split ',' , $editor ;
         $first_name  =~ s/\s//g;
         $last_name  =~ s/\s//g;
-        print STDERR "first_name = |$first_name| , last_name = |$last_name| ***********\n\n";
-        my $q = "SELECT stock_id  FROM stock
-                 JOIN stockprop USING (stock_id)
-                 JOIN sgn_people.sp_person on cast(value AS numeric) = sp_person_id
-                 JOIN cvterm on stockprop.type_id = cvterm_id
-                 WHERE first_name = ? AND last_name = ?
-                 AND cvterm.name = ?";
-        my $sth = $c->dbc->dbh->prepare($q);
-        $sth->execute($first_name, $last_name, 'sp_person_id');
 
         my $query = "SELECT sp_person_id FROM sgn_people.sp_person
                      WHERE first_name = ? AND last_name = ?";
-        $sth = $c->dbc->dbh->prepare($query);
+        my $sth = $c->dbc->dbh->prepare($query);
         $sth->execute($first_name, $last_name);
         my ($sp_person_id) = $sth->fetchrow_array ;
-        print STDERR "SP_PERSON_ID = $sp_person_id *********\n\n";
-        $rs = $rs->search( {
-            'type.name' => 'sp_person_id',
-            'stockprops.value' => $sp_person_id, } ,
-                           { join => { stockprops =>['type'] } },
-            ) if $sp_person_id;
+        if ($sp_person_id) {
+            $rs = $rs->search( {
+                'type.name' => 'sp_person_id',
+                'stockprops.value' => $sp_person_id, } ,
+                               { join => { stockprops =>['type'] } },
+                ) ; # if no person_id, rs should be empty
+        } else { $rs = $rs->search( { name=> '' } , ); }
     }
     # page number and page size, and order by name
     $rs = $rs->search( undef, {
@@ -143,25 +134,14 @@ sub _make_stock_search_rs {
 
 sub new_stock :Chained('get_stock') : PathPart('new') :Args(0) {
     my ( $self, $c ) = @_;
-   # $self->schema( $c->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' ) );
-  ####  $c->forward("view_stock", 'new');
     $c->stash(
         template => '/stock/index.mas',
 
         stockref => {
             action    => "new",
             stock_id  => 0 ,
-            #curator   => $curator,
-            #submitter => $submitter,
-            #sequencer => $sequencer,
-            #person_id => $person_id,
             stock     => $c->stash->{stock},
             schema    => $self->schema,
-            #dbh       => $dbh,
-            #is_owner  => $is_owner,
-            #props     => $props,
-            #dbxrefs   => $dbxrefs,
-            #owners    => $owner_ids,
         },
         );
 }
@@ -215,7 +195,7 @@ sub view_stock :Chained('get_stock') :PathPart('view') :Args(0) {
         $is_owner = 1;
     }
     my $dbxrefs = $self->_stock_dbxrefs($stock);
-
+    
     ################
     $c->stash(
         template => '/stock/index.mas',
