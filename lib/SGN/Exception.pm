@@ -161,7 +161,7 @@ has 'notify' => (
 around 'BUILDARGS' => sub {
     my ($orig,$class,%args) = @_;
     $args{developer_message} ||= $args{message};
-    $args{message}           ||= $args{developer_message} || $args{public_message};
+    $args{message}           ||= $args{developer_message} || $args{public_message} || '(no message)';
 
     if( defined $args{is_client_error} && !$args{is_client_error} ) {
         $args{is_server_error} = 1 unless defined $args{is_server_error};
