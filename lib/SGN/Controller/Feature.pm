@@ -2,7 +2,8 @@ package SGN::Controller::Feature;
 
 =head1 NAME
 
-SGN::Controller::Feature - Catalyst controller for pages dealing with features
+SGN::Controller::Feature - Catalyst controller for pages dealing with
+Chado (i.e. Bio::Chado::Schema) features
 
 =cut
 
@@ -27,6 +28,10 @@ has 'default_page_size' => (
 
 BEGIN { extends 'Catalyst::Controller' }
 with 'Catalyst::Component::ApplicationAttribute';
+
+=head1 PUBLIC ACTIONS
+
+=cut
 
 sub delegate_component
 {
