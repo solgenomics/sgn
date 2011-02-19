@@ -57,6 +57,16 @@ my $poly_featureloc = create_test('Sequence::Featureloc', { feature => $poly_fea
     is('text/plain', $mech->content_type, 'right content type');
 }
 {
+    # 6 = 10 - 5 + 1 = # of chars in requested sequence
+    my $length = length($poly_feature->name.':5..10' ) + 3 + 6;
+    $mech->get_ok('/api/v1/sequence/' . $poly_feature->feature_id . '.fasta?5..10');
+    $mech->content_contains( '>' . $poly_feature->name . ':5..10' );
+    $mech->content_like( qr/^CCGGAA$/m );
+    is('application/x-fasta', $mech->content_type, 'right content type');
+    is( $length, length($mech->content), 'got the expected content length')
+      or diag $mech->content;
+}
+{
     $mech->get("/api/v1/sequence/JUNK.fasta");
     is( $mech->status, 404, 'feature not found' );
 }
