@@ -38,7 +38,7 @@ my $poly_featureloc = create_test('Sequence::Featureloc', { feature => $poly_fea
     $mech->get_ok('/api/v1/sequence/' . $poly_feature->name . '.fasta');
     $mech->content_contains( '>' . $poly_feature->name );
     $mech->content_contains( $residue );
-    is('text/plain', $mech->content_type, 'text/plain content type');
+    is('application/x-fasta', $mech->content_type, 'right content type');
     is( $length, length($mech->content), 'got the expected content length');
 }
 {
@@ -47,11 +47,19 @@ my $poly_featureloc = create_test('Sequence::Featureloc', { feature => $poly_fea
     $mech->get_ok('/api/v1/sequence/' . $poly_feature->name . '.fasta?5..10');
     $mech->content_contains( '>' . $poly_feature->name . ':5..10' );
     $mech->content_like( qr/^CCGGAA$/m );
-    is('text/plain', $mech->content_type, 'text/plain content type');
+    is('application/x-fasta', $mech->content_type, 'right content type');
     is( $length, length($mech->content), 'got the expected content length');
+}
+{
+    $mech->get_ok('/api/v1/sequence/' . $poly_feature->name . '.ace?10..5', 'fetched in ace format');
+    $mech->content_contains( '"'. $poly_feature->name . ':10..5"' );
+    $mech->content_like( qr/^TTCCGG$/m );
+    is('text/plain', $mech->content_type, 'right content type');
 }
 {
     $mech->get("/api/v1/sequence/JUNK.fasta");
     is( $mech->status, 404, 'feature not found' );
 }
+
+
 done_testing;
