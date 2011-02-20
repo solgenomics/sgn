@@ -175,10 +175,7 @@ sub _feature_to_primaryseq {
 
     my $seq = Bio::PrimarySeq->new(
         -id  => $seq_id,
-        -seq => ( ($start || $end)
-                    ? $feature->subseq( ($start || 1), ($end || $feature->length) )
-                    : $feature->seq
-                ),
+        -seq => $feature->subseq( ($start || 1), ($end || $feature->length) ),
       );
     $seq = $seq->revcom if $strand && $strand eq '-';
 
