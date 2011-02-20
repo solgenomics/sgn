@@ -25,6 +25,8 @@
        blast_url => $blast_url,
      &>
 
+    <hr />
+
     <form name="get_flanking_sequence" action="/api/v1/sequence/download/multi" method="GET">
       <b>Get flanking sequence on <% $src->name || 'feature_'.$src->feature_id %>:</b>
       <input type="hidden" name="format" value="fasta" />
