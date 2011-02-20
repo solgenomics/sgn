@@ -62,7 +62,7 @@
      title => 'Genomic sequence',
      subtitle => 'unprocessed genomic sequence underlying this region',
      collapsible => 1,
-     collapsed   => 1,
+     collapsed   => 0,
  &>
 
   <& /feature/sequence.mas,
