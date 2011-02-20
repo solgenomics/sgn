@@ -65,10 +65,12 @@
      collapsed   => 0,
  &>
 
-  <& /feature/sequence.mas,
-          feature   => $feature,
-          blast_url => $blast_url,
-  &>
+  <div style="margin: 1em 0">
+    <& /feature/genomic_sequence.mas,
+            feature   => $feature,
+            blast_url => $blast_url,
+    &>
+  </div>
 
 </&>
 
