@@ -1,4 +1,4 @@
-use strict;
+use Modern::Perl;
 use warnings;
 
 use CXGN::Scrap::AjaxPage;
@@ -23,8 +23,6 @@ if ($login_user_type eq 'curator') {
                                      ORDER BY last_name
                                     ");
 	$user_query->execute();
-	#my $role_query = "SELECT name FROM sgn_people.sp_roles JOIN sgn_people.sp_person_roles USING (sp_role_id) WHERE sp_person_id = ? ";
-        #my $role_sth= $dbh->prepare($role_query);
 	my ($sp_person_id, $first_name, $last_name, $user_type) = $user_query->fetchrow_array();
 	my $users;
 	my @roles=();
