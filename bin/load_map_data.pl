@@ -43,6 +43,10 @@ the name of the database
 
 required if -i is not used. Provides the map name.
 
+=item -f
+
+force to 'unknown' protocol type if no protocol is provided.
+
 =back
 
 The tab-delimited map file has the following columns:
@@ -77,9 +81,9 @@ use CXGN::DB::InsertDBH;
 use Data::Dumper;
 
 
-our ($opt_H, $opt_D, $opt_i, $opt_r, $opt_n);
+our ($opt_H, $opt_D, $opt_i, $opt_r, $opt_n, $opt_f);
 
-getopts('H:D:i:rn:');
+getopts('H:D:i:rn:f');
 
 my $map_id;
 my $map_file;
@@ -223,8 +227,13 @@ eval {
             print "Protocols found: ".CXGN::Tools::Text::list_to_string(@protocols)."\n";
         }
         else { 
-	    print STDERR "Protocols not found for '$dirty_marker_name'";
-	    @protocols = ('unknown');
+	    if ($opt_f) { 
+		print STDERR "Protocols not found for '$dirty_marker_name'";
+		@protocols = ('unknown');
+	    }
+	    else { 
+		die "no protocol found for $dirty_marker_name. Use -f to force protocol to unknown.";
+	    }
 	}
         for my $protocol(@protocols) {
 	    $protocol =~ tr/[a-z]/[A-Z]/; 
