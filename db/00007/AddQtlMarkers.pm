@@ -25,7 +25,7 @@ sub patch {
 
     print STDOUT "\nExecuting the SQL commands.\n";
 
-    $self->dbh->do( <<'' );
+    $self->dbh->do( <<EOT );
     ALTER TABLE sgn.map DROP CONSTRAINT map_map_type_check;
     ALTER TABLE sgn.map ADD CONSTRAINT map_map_type_check CHECK
         (map_type = 'genetic'::text OR map_type = 'fish'::text OR map_type = 'sequence'::text OR map_type = 'QTL');
@@ -35,6 +35,8 @@ sub patch {
 
     ALTER TABLE sgn.marker_location ADD COLUMN position_north numeric(8,5);
     ALTER TABLE sgn.marker_location ADD COLUMN position_south numeric(8,5);
+
+EOT
 
     print "You're done!\n";
 
