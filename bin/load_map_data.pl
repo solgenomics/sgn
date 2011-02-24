@@ -239,7 +239,7 @@ eval {
 	    $protocol =~ tr/[a-z]/[A-Z]/; 
             unless ($protocol eq 'AFLP' or $protocol eq 'CAPS' or $protocol eq 'RAPD' 
 		    or $protocol eq 'SNP' or $protocol eq 'SSR' 
-		    or $protocol eq 'RFLP' or $protocol eq 'PCR' or $protocol eq 'DCAPS' or $protocol =~/DArt/i or $protocol =~ /OPA/i or $protocol =~ /INDEL/i or $protocol =~ /ASPE/i )
+		    or $protocol eq 'RFLP' or $protocol eq 'PCR' or $protocol eq 'DCAPS' or $protocol =~/DArt/i or $protocol =~ /OPA/i or $protocol =~ /INDEL/i or $protocol =~ /ASPE/i or  $protocol =~ /qtl/i )
 	    {
                 print STDERR "UNKNOWN protocol ($protocol)\n! ";
                 $protocol = 'unknown';
