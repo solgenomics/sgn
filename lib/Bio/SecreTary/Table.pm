@@ -1,9 +1,30 @@
 package Bio::SecreTary::Table;
 use strict;
 use warnings;
+use Carp;
+
+
+=head2 function new
+
+  Synopsis : my $table_obj =  Bio::SecreTary::Table->new(
+        'io_center',
+        10,    # zero-based here
+        [ [ 56.22, 63.83 ],[ 56.55, 56.78 ] ]
+);
+ 
+  Arguments: $arg_hash_ref holds some parameters describing which 
+      solutions will be found by tmpred :
+      min_score, min_tm_length, max_tm_length, min_beg, max_beg . 
+  Returns: an instance of a TMpred object 
+  Side effects: Creates the object . 
+  Description: Creates a TMpred object with certain parameters which 
+      determine which trans-membrane helices to find.
+
+=cut
+
 
 sub new {
-    my $class = shift;
+    my  $class = shift;
     my $self = bless {}, $class;
 
   #  print "in Table->new. class: $class \n";
@@ -24,8 +45,8 @@ sub scale {
     my $v    = shift;
     my $m    = $self->get_table();
     ( scalar @$m == scalar @$v )
-      || die "in Table::scale, sizes of m, v dont match:", scalar @$m, "  ", scalar @$v, "\n";
-   # my $irow   = 0;
+      || croak( "in Table::scale, sizes of m, v dont match:", scalar @$m, "  ", scalar @$v, "\n" );
+
     my $ncols  = scalar @{$m->[0]};
     my @sums   = ( (0) x $ncols );
 

@@ -3,7 +3,7 @@
 
 Bio::SecreTary::SecreTaryAnalyse - an object to analyse a protein
 sequence. Calculate and store various quantities used by the SecreTary
-algorithm.
+algorithms to predict signal peptides.
 
 =head1 DESCRIPTION
 
@@ -20,12 +20,13 @@ use strict;
 use warnings;
 use Bio::SecreTary::TMpred;
 use Bio::SecreTary::Cleavage;
+use Bio::SecreTary::AAComposition;
 
 =head2 function new()
 
-Synopsis:      
-    my $S = Bio::SecreTary::SecreTaryAnalyse->new($sequence_id, $protein_sequence, $tmpred_obj, $trunc_length)
-	Arguments: $tmpred_obj is an instance of TMpred, $trunc_length an optional length to truncate sequence to (default is 100).	 
+Synopsis:
+    my $STA_obj = Bio::SecreTary::SecreTaryAnalyse->new($sequence_id, $protein_sequence, $tmpred_obj, $trunc_length)
+	Arguments: $tmpred_obj is an instance of TMpred, $trunc_length an optional length to truncate sequence to (default is 100).
 	Returns:	an instance of a SecreTaryAnalyse object
 	Side effects:	creates the object.
 	Description:	Does the analysis of the protein (e.g TMpred, AI22, Gravy22), stores them and returns the object.
@@ -65,16 +66,135 @@ sub new {
 
     $self->set_cleavage( [ $sp_length, $hstart, $cstart, $typical ] );
     return $self;
-}
+  }
+
+
+=head2 function Sequence22_AAcomposition
+
+Synopsis: $STA_obj->Sequence22_AAcomposition();
+	Arguments: $STA_obj is an instance of SecreTaryAnalyse.
+	Side effects:	Creates the object.
+	Description:	Calculates 5 quantities (AI, Gravy, nDRQPEN, nNitrogren and nOxygen) for the sequence consisting of the first 22 amino acids. These are stored in the SecreTaryAnalyse object.
+
+=cut
 
 sub Sequence22_AAcomposition {
-    my $self = shift;
+  my $self = shift;
 
     $self->set_AI22( $self->AliphaticIndex(22) );
     $self->set_Gravy22( $self->Gravy(22) );
     $self->set_nDRQPEN22( $self->nDRQPEN(22) );
     $self->set_nNitrogen22( $self->nNitrogen(22) );
     $self->set_nOxygen22( $self->nOxygen(22) );
+}
+
+
+=head2 function AliphaticIndex
+
+Synopsis: $STA_obj->AliphaticIndex($length);
+	Description: Truncates the sequence to length $length, calculates
+and returns the aliphatic index of the truncated sequence.
+
+=cut
+
+
+sub AliphaticIndex {
+    my $self         = shift;
+    my $trunc_length = shift || undef;
+    my $sequence     = $self->get_sequence();
+$sequence = substr($sequence, 0, $trunc_length) if(defined $trunc_length);
+   return Bio::SecreTary::AAComposition::AliphaticIndex($sequence);
+}
+
+=head2 function Gravy
+
+Synopsis: $STA_obj->Gravy($length);
+	Description: Truncates the sequence to length $length, calculates
+and returns the "Gravy" index of the truncated sequence.
+
+=cut
+
+sub Gravy {
+    my $self         = shift;
+    my $trunc_length = shift;
+    my $sequence     = $self->get_sequence();
+    $sequence = substr( $sequence, 0, $trunc_length )
+      if ( defined $trunc_length );
+
+   return  Bio::SecreTary::AAComposition::Gravy($sequence);
+}
+
+=head2 function nDRQPEN
+
+Synopsis: $STA_obj->nDRQPEN($length);
+	Description: Truncates the sequence to length $length, calculates
+and returns the number of amino acids in this truncated sequence which are DRQPE or N.
+
+=cut
+
+sub nDRQPEN {
+    my $self         = shift;
+    my $trunc_length = shift;
+    my $sequence     = $self->get_sequence();
+    $sequence = substr( $sequence, 0, $trunc_length )
+      if ( defined $trunc_length );
+
+   return  Bio::SecreTary::AAComposition::nDRQPEN($sequence);
+}
+
+
+=head2 function nGASDRQPEN
+
+Synopsis: $STA_obj->nGASDRQPEN($length);
+	Description: Truncates the sequence to length $length, calculates
+and returns the number of amino acids in this truncated sequence which are GASDRQPE or N.
+
+=cut
+
+sub nGASDRQPEN {
+    my $self         = shift;
+    my $beg = shift || 0; # zero-based
+    my $length = shift;
+    my $sequence   = $self->get_sequence();
+  $sequence = substr( $sequence, $beg, $length) if(defined $length);
+return Bio::SecreTary::AAComposition::nGASDRQPEN($sequence);
+}
+
+
+=head2 function nNitrogen
+
+Synopsis: $STA_obj->nNitrogen($length);
+	Description: Truncates the sequence to length $length, calculates
+and returns the number of Nitrogen atoms in this truncated sequence.
+
+=cut
+
+sub nNitrogen {
+  my $self         = shift;
+  my $trunc_length = shift;
+  my $sequence     = $self->get_sequence();
+  $sequence = substr( $sequence, 0, $trunc_length )
+    if ( defined $trunc_length );
+
+  return Bio::SecreTary::AAComposition::nNitrogen($sequence);
+}
+
+=head2 function nOxygen
+
+Synopsis: $STA_obj->nOxygen($length);
+	Description: Truncates the sequence to length $length, calculates
+and returns the number of Oxygen atoms in this truncated sequence.
+
+=cut
+
+sub nOxygen {
+    my $self         = shift;
+    my $trunc_length = shift;
+    my $sequence     = $self->get_sequence();
+    $sequence = substr( $sequence, 0, $trunc_length )
+      if ( defined $trunc_length );
+
+ return Bio::SecreTary::AAComposition::nOxygen($sequence);
 }
 
 sub set_tmpred_good_solutions {
@@ -167,160 +287,13 @@ sub get_nOxygen22 {
     $self->{nOxygen22};
 }
 
-sub print22 {
-    my $self = shift;
-    print $self->get_AI22(),        ", ";
-    print $self->get_Gravy22(),     ", ";
-    print $self->get_nDRQPEN22(),   ", ";
-    print $self->get_nNitrogen22(), ", ";
-    print $self->get_nOxygen22(),   "\n";
-}
-
-sub AliphaticIndex {
-    my $self         = shift;
-    my $trunc_length = shift;
-    my $sequence     = $self->get_sequence();
-    $sequence = substr( $sequence, 0, $trunc_length )
-      if ( defined $trunc_length );
-    my $nA = ( $sequence =~ tr/A// );
-    my $nV = ( $sequence =~ tr/V// );
-    my $nL = ( $sequence =~ tr/L// );
-    my $nI = ( $sequence =~ tr/I// );
-    my $nX = ( $sequence =~ tr/X// );
-    my $L  = 22 - $nX;
-    return 100.0 * ( 1.0 * $nA + 2.9 * $nV + 3.9 * ( $nL + $nI ) ) / $L;
-}
-
-sub Gravy {
-    my $self         = shift;
-    my $trunc_length = shift;
-    my $sequence     = $self->get_sequence();
-    $sequence = substr( $sequence, 0, $trunc_length )
-      if ( defined $trunc_length );
-
-    # Kyte and Doolittle hydropathy index: (from Wikipedia "Hydropathy index")
-    my %Hydropaths = (
-        "A" => 1.80,
-        "R" => -4.50,
-        "N" => -3.50,
-        "D" => -3.50,
-        "C" => 2.5,
-        "E" => -3.50,
-        "Q" => -3.50,
-        "G" => -0.40,
-        "H" => -3.20,
-        "I" => 4.50,
-        "L" => 3.80,
-        "K" => -3.90,
-        "M" => 1.90,
-        "F" => 2.80,
-        "P" => -1.60,
-        "S" => -0.80,
-        "T" => -0.70,
-        "W" => -0.90,
-        "Y" => -1.30,
-        "V" => 4.20
-    );
-
-    my $sum_h = 0;
-    my $count = 0;
-
-    while ($sequence) {
-        my $char = chop $sequence;
-        if ( defined $Hydropaths{$char} ) {
-            $sum_h += $Hydropaths{$char};
-            $count++;
-        }
-    }
-
-    if ( $count > 0 ) {
-        return $sum_h / $count;
-    }
-    else {
-        return -10000.0;
-    }
-}
-
-sub nDRQPEN {
-    my $self         = shift;
-    my $trunc_length = shift;
-    my $sequence     = $self->get_sequence();
-    $sequence = substr( $sequence, 0, $trunc_length )
-      if ( defined $trunc_length );
-    my $count = 0;
-    while ($sequence) {
-        my $c = chop $sequence;
-        $count++ if ( $c =~ /[DRQPEN]/ );
-    }
-    return $count;
-}
-
-sub nNitrogen {
-    my $self         = shift;
-    my $trunc_length = shift;
-    my $sequence     = $self->get_sequence();
-    $sequence = substr( $sequence, 0, $trunc_length )
-      if ( defined $trunc_length );
-    my $count = 0;
-    while ($sequence) {
-        my $c = chop $sequence;
-        $count += N_in_aa($c);
-    }
-    return $count;
-}
-
-sub nOxygen {
-    my $self         = shift;
-    my $trunc_length = shift;
-    my $sequence     = $self->get_sequence();
-    $sequence = substr( $sequence, 0, $trunc_length )
-      if ( defined $trunc_length );
-
-    my $count = 0;
-    while ($sequence) {
-        my $c = chop $sequence;
-        $count += O_in_aa($c);
-    }
-    return $count;
-}
-
-sub N_in_aa {
-    my $aa    = shift;
-    my %Nhref = (
-        "H" => 3,
-        "K" => 2,
-        "N" => 2,
-        "O" => 3,
-        "Q" => 2,
-        "R" => 4,
-        "W" => 2
-    );
-    if ( exists $Nhref{$aa} ) {
-        return $Nhref{$aa};
-    }
-    else {
-        return 1;
-    }
-}
-
-sub O_in_aa {
-    my $aa    = shift;
-    my %Ohref = (
-        "D"  => 3,
-        "E", => 3,
-        "N"  => 2,
-        "O"  => 3,
-        "Q"  => 2,
-        "S"  => 2,
-        "T"  => 2,
-        "Y"  => 2
-    );
-    if ( exists $Ohref{$aa} ) {
-        return $Ohref{$aa};
-    }
-    else {
-        return 1;
-    }
-}
+# sub print22 {
+#     my $self = shift;
+#     print $self->get_AI22(),        ", ";
+#     print $self->get_Gravy22(),     ", ";
+#     print $self->get_nDRQPEN22(),   ", ";
+#     print $self->get_nNitrogen22(), ", ";
+#     print $self->get_nOxygen22(),   "\n";
+# }
 
 1;

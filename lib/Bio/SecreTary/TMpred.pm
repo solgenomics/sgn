@@ -29,7 +29,7 @@ use Readonly;
 Readonly my $FALSE    => 0;
 Readonly my $TRUE     => 1;
 Readonly my %defaults => (
-    'version'                     => 'perl',
+  #  'version'                     => 'perl',
     'min_score'                   => 500,
     'min_tm_length'               => 17,
     'max_tm_length'               => 33,
@@ -40,9 +40,9 @@ Readonly my %defaults => (
     'avg_orientational_threshold' => 80
 );
 
-Readonly my $PASCAL_STYLE =>
+Readonly my $IMITATE_PASCAL_CODE =>
   $TRUE;    # if this is true, does the same as the old pascal code.
-Readonly my $TMHLOFFSET => ($PASCAL_STYLE)
+Readonly my $TMHLOFFSET => ($IMITATE_PASCAL_CODE)
   ? 1
   : 0;
 
@@ -62,8 +62,7 @@ Readonly my $TMHLOFFSET => ($PASCAL_STYLE)
 =head2 function new
 
   Synopsis : my $tmpred_obj = Bio::SecreTary::TMpred->new();    # using defaults
-  or my $tmpred_obj =
-  Bio::SecreTary::TMpred->new( { min_score => 600 } );
+  or my $tmpred_obj = Bio::SecreTary::TMpred->new( { min_score => 600 } );
   Arguments: $arg_hash_ref holds some parameters describing which 
       solutions will be found by tmpred :
       min_score, min_tm_length, max_tm_length, min_beg, max_beg . 
@@ -120,13 +119,16 @@ sub new {
     }
     $self->set_aa_row_hash( \%aa_row_hash );
 
+ #   print "In TMpred constructor. min_score: ", $self->{min_score}, "\n";
+
     return $self;
 }
 
-sub run_tmpred {
+
+sub run_tmpred_setup { #processes the arguments, 
     my $self = shift;
-    my ( $sequence_id, $sequence, $version, $do_long_output ) =
-      ( 'Anon_prot_seq', undef, 'perl', $FALSE );
+    my ( $sequence_id, $sequence, $do_long_output ) =
+      ( 'Anon_prot_seq', undef, $FALSE );
     my $arg_hash_ref = undef;
     my $arg1 =
       shift;    # can be either sequence, or ref to  hash holding arguments
@@ -149,13 +151,11 @@ sub run_tmpred {
               if ( exists $arg_hash_ref->{sequence} );
             $sequence_id = $arg_hash_ref->{sequence_id}
               if ( exists $arg_hash_ref->{sequence_id} );
-            $version = $arg_hash_ref->{version}
-              if ( exists $arg_hash_ref->{version} );
             $do_long_output = $arg_hash_ref->{do_long_output}
               if ( exists $arg_hash_ref->{do_long_output} );
         }
         else {
-            die "Argument to run_tmpred is ref but not hash ref.\n";
+            croak( "Argument to run_tmpred is ref but not hash ref.\n" );
         }
     }
 
@@ -164,7 +164,7 @@ sub run_tmpred {
     $sequence =~ s/\*$//;     # remove * at end if present
     $sequence = uc $sequence;
 
-    #  die  "sequence contains non A-Z characters:[$sequence]\n"
+    #  croak( "sequence contains non A-Z characters:[$sequence]\n" );
     if ( $sequence =~ /[^A-Z]/ ) {
         warn
           "substituting 'X' for non A-Z character. \n$sequence_id  $sequence\n";
@@ -172,121 +172,43 @@ sub run_tmpred {
     }
 
     $sequence =~ s/[BJOUZ]/X/g;    # to get just 20 aa's plus X for unknown.
-    if ($PASCAL_STYLE) {
+    if (0 and $IMITATE_PASCAL_CODE) { # don't need to do this 
 
         # the pascal version of tmpred simply substitutes A for X.
         $sequence =~ s/X/A/g;
     }
-    my $good_solns;
-    my $tmpred_raw_out = undef;
-    if ( $version eq 'pascal' ) {
-        $tmpred_raw_out = $self->run_tmpred_pascal( $sequence_id, $sequence );
 
-        # process tmpred output to get summary,
-        # i.e. score, begin and end positions for tmh's satisfying limits.
-        $good_solns = ( $self->good_solutions_pascal($tmpred_raw_out) );
-    }
-    else {    # use perl code
+return ($sequence_id, $sequence, $do_long_output);
+  }
+
+
+sub run_tmpred {
+my $self = shift;
+
+# rest of arguments just get passed through to run_tmpred1
+my ($sequence_id, $sequence, $do_long_output) = $self->run_tmpred_setup(@_);
+# print "do long output: $do_long_output \n";
+
+    my $good_solns;
+    my $tmpred_long_out = undef;
+  
+# use perl code
         my ( $io_helices_ref, $oi_helices_ref ) =
           $self->run_tmpred_perl( $sequence_id, $sequence );
         $good_solns = $self->good_solutions_perl($io_helices_ref);
         $good_solns .= $self->good_solutions_perl($oi_helices_ref);
+if($good_solns eq ''){
+  $good_solns = '(-10000,0,0)';
+}
         if ( $do_long_output ) {
-            $tmpred_raw_out =
+            $tmpred_long_out =
               $self->_long_output( $sequence_id, $sequence, $io_helices_ref,
                 $oi_helices_ref );
         }
-    }
 
-    return ( $good_solns, $tmpred_raw_out );
+    return ( $good_solns, $tmpred_long_out );
 }
 
-sub run_tmpred_pascal {    # this uses pascal code.
-    my $self        = shift;
-    my $sequence_id = shift;
-    my $sequence    = shift;
-
-    my $temp_file_dir    = '/home/tomfy/tempfiles';
-    my $temp_file_handle = File::Temp->new(
-        TEMPLATE => 'tmpred_input_XXXXXX',
-        DIR      => $temp_file_dir,
-        UNLINK   => 0
-    );
-
-    my $temp_file = $temp_file_handle->filename;
-    print $temp_file_handle ">$sequence_id\n$sequence\n";
-    $temp_file_handle->close();
-
-    my $max_tm_length = $self->{max_tm_length};
-    my $min_tm_length = $self->{min_tm_length};
-    my $tmpred_dir    = "/home/tomfy/tmpred";
-    my $tmpred_pascal_out =
-`$tmpred_dir/tmpred  -def -in=$temp_file  -out=-  -par=$tmpred_dir/matrix.tab -max=$max_tm_length  -min=$min_tm_length`;
-
-    return $tmpred_pascal_out;
-}
-
-=head2 function good_solutions_pascal()
-	Synopsis: my $solution_string = $tmpred->good_solutions_pascal(); 
-Arguments: none.
-Returns: String of "good" solutions' (score,beg,end) info.
-Description: Parses tmpred output; finds the tmhs which
-are consistent with limits, and store them in a string,
-    e.g.: "(2000,17,34)  (1500,12,36)".
-
-=cut
-
-sub good_solutions_pascal {
-    my $self       = shift;
-    my $tmpred_out = shift;
-
-    my $solutions = "";
-    my $ok        = 0;
-    while ( $tmpred_out =~ /(.*?\n)/ ) {
-        my $line = $1;
-        $tmpred_out = substr( $tmpred_out, length $line );    #
-        last  if ( $line =~ /Table of correspondences/ );
-        $ok++ if ( $line =~ /Possible transmembrane helices/ );
-        $ok++ if ( $line =~ /Inside to outside helices/ );
-        if ( $ok == 2 ) {
-
-            if ( $line =~
-                /(\d+)\s*\(\s*(\d+)\)\s*(\d+)\s*\(\s*(\d+)\)\s*(\d+)\s*(\d+)/ )
-            {
-                my ( $begin, $begcore, $end, $endcore, $score, $center ) =
-                  ( $1, $2, $3, $4, $5, $6 );
-
-                my $length = $end + 1 - $begin;
-
-                if (   $length > $self->{max_tm_length}
-                    or $length < $self->{min_tm_length} )
-                {
-                    warn "length out of allowed range: $length \n";
-                }
-                if (    $score >= $self->{min_score}
-                    and $begin <= $self->{max_beg}
-                    and $begin >= $self->{min_beg}
-                    and $length <= $self->{max_tm_length}
-                    and $length >= $self->{min_tm_length} )
-                {
-                    $solutions .= "($score,$begin,$end)  ";
-                }
-                else {
-                    warn
-"Solution rejected in good_solutions_pascal.\n($score,$begin,$length)";
-                }
-            }
-        }
-    }
-
-    if ( $solutions eq "" ) {
-        $solutions = "(-10000,0,0)";
-    }
-    else {
-        $solutions =~ s/(\s+)$//;
-    }    # eliminate whitespace at end.
-    return $solutions;
-}
 
 sub run_tmpred_perl {
     my $self        = shift;
@@ -301,7 +223,7 @@ sub run_tmpred_perl {
             push @sequence_aanumber_array, $aa_row_hash->{$_};
         }
         else {
-            die "no row in aa_row_hash for aa: [$_] \n";
+            croak( "no row in aa_row_hash for aa: [$_] \n" );
         }
     }
 
@@ -325,8 +247,8 @@ sub run_tmpred_perl {
       make_profile( \@sequence_aanumber_array, $self->get_oi_cterm_table() );
 
     ( $length == scalar @$io_center_prof )
-      || croak "seq length: ", $length, "  io_center_profile size: ",
-      scalar @$io_center_prof, " Should be the same but aren't.\n";
+      || croak( "seq length: ", $length, "  io_center_profile size: ",
+      scalar @$io_center_prof, " Should be the same but aren't.\n" );
 
     # get score array for in-to-out using 3 profiles (center, nterm, cterm)
     my $io_score =
@@ -395,12 +317,12 @@ sub good_solutions_perl {    # get the good solutions starting from the
             $good_string .= "($score,$beg,$end)  ";
         }
     }
-    if ( $good_string eq "" ) {
-        $good_string = "(-10000,0,0)";
-    }
-    else {
+    # if ( $good_string eq "" ) {
+    #     $good_string = "(-10000,0,0)";
+    # }
+    # else {
         $good_string =~ s/(\s+)$//;
-    }    # eliminate whitespace at end.
+  #  }    # eliminate whitespace at end.
     return $good_string;
 }
 
@@ -422,11 +344,11 @@ sub make_profile {    # makes a profile, i.e. an array
         my $kmrf = $k - $ref_position;
         my $plo  = $kmrf;                        # $k - $ref_position;
         $plo = 0 if ( $plo < 0 );
-        my $pup = $ncols + $kmrf;                # $k - $ref_position;
+        my $pup = $ncols + $kmrf;
         $pup = $length if ( $pup > $length );
 
         for (
-            my ( $p, $i ) = ( $plo, $plo - $kmrf ) ;  # $k - $ref_position ) ) ;
+            my ( $p, $i ) = ( $plo, $plo - $kmrf ) ;
             $p < $pup ; $p++, $i++
           )
         {
@@ -490,10 +412,7 @@ sub find_helix {
         $i = $min_halfw;
     }
     $found = $FALSE;
-# sh_nterm position seems to never be 1, even when pascal 
-# version has it as 1. In other cases pascal and perl agree
-# probably some confusion in here about
-# 0-based and 1-based indexing???
+
     while ( ( $i < $length - $min_halfw ) and ( !$found ) ) {
 
         my ( $pos, $scr ) = findmax( $s, $i - $min_halfw, $i + $max_halfw );
@@ -1649,8 +1568,9 @@ sub setup_tables {
     # handle the case of unknown (X) amino acids so as to make
     # the results agree with results of pascal tmpred. These were
     # found empirically - I don't know why the pascal code uses these.
-    # particular numbers and am not convinced this is a good way to
-    # handle this case.
+    # particular numbers and am not particularly convinced this 
+    # is a good way to handle this case.
+
     my @io_center_Xrow = (
         52, 45, 28, 36, 36, 46, 47, 44, 54, 59, 65, 69,
         54, 49, 49, 47, 48, 37, 39, 44, 53
