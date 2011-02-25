@@ -50,6 +50,9 @@ sub run_tmpred_pascal {    # this uses pascal code.
     my $sequence_id = shift;
     my $sequence    = shift;
 
+# pascal just puts in A for X everywhere ...
+#  $sequence =~ s/X/A/g;
+
     my $temp_file_dir    = '/home/tomfy/tempfiles';
     my $temp_file_handle = File::Temp->new(
         TEMPLATE => 'tmpred_input_XXXXXX',
@@ -116,8 +119,7 @@ sub good_solutions_pascal {
                     $solutions .= "($score,$begin,$end)  ";
                 }
                 else {
-                    warn
-"Solution rejected in good_solutions_pascal.\n($score,$begin,$length)";
+                  #  warn "Solution rejected in good_solutions_pascal.\n($score,$begin,$length)";
                 }
             }
         }
