@@ -21,7 +21,7 @@ L<Test::WWW::Mechanize::Catalyst> with some SGN-specific convenience
     my $value = $mech->findvalue( '/html/body//span[@class="sequence"]');
 
     # do some tests while logged in as a temporary user
-    $mech->while_logged_in( user_type => 'curator', sub {
+    $mech->while_logged_in( { user_type => 'curator' }, sub {
 
         $mech->get_ok( '/organism/sol100/view' );
         $mech->content_contains( 'Authorized user', 'now says authorized user' );
@@ -96,10 +96,15 @@ It also does the L<WWW::Mechanize::TreeBuilder> role, with a tree_class of L<HTM
 use Moose;
 use namespace::autoclean;
 
-BEGIN { $ENV{CATALYST_SERVER} ||= $ENV{SGN_TEST_SERVER} }
+BEGIN {
+    $ENV{SGN_TEST_MODE}   = 1;
+    $ENV{CATALYST_SERVER} = $ENV{SGN_TEST_SERVER};
+}
 
 use Carp;
 use Test::More;
+
+use Try::Tiny;
 
 use CXGN::People::Person;
 use CXGN::People::Login;
@@ -166,7 +171,7 @@ Read-only attribute to give the current testing level, one of 'remote',
 
 sub test_level {
     return 'process' if ! $ENV{SGN_TEST_SERVER};
-    return 'remote'   if $ENV{SGN_TEST_REMOTE};
+    return 'remote'  if $ENV{SGN_TEST_REMOTE};
     return 'local';
 }
 
@@ -189,7 +194,6 @@ sub can_test_level {
     my ( $self, $check ) = @_;
 
     my %val = ( remote => 0, local => 1, process => 2 );
-    confess "invalid test level '$check'" unless exists $val{$check};
     confess "invalid test level '$check'" unless exists $val{$check};
     return $val{ $self->test_level } >= $val{ $check };
 
@@ -219,17 +223,52 @@ sub with_test_level {
       }
 }
 
+=head2 dbh_leak_ok
+
+Call immediately after a get_ok() to re-fetch the same URL, checking
+the database connection count before and after the GET.
+
+If the connection count after the second fetch is greater than before
+the fetch, the test fails.
+
+Skips if the current test level does not support a leak check.
+
+=cut
+
+sub dbh_leak_ok {
+    my $self = shift;
+    my $test_name = shift || '';
+    $test_name .= ' ' if $test_name;
+
+    $self->with_test_level( local => sub {
+        my $before = $self->_db_connection_count;
+        my $url = $self->base;
+        $self->get( $url );
+        my $after  = $self->_db_connection_count;
+        cmp_ok( $after, '<=', $before, "did not leak any database connections: $test_name($url)");
+    }, 1 );
+}
+
+sub _db_connection_count {
+    my ($mech) = @_;
+    my $dbh     = DBI->connect( @{ $mech->context->dbc_profile }{qw{ dsn user password attributes }} );
+    return $dbh->selectcol_arrayref(<<'')->[0] - 1;
+select count(*) from pg_stat_activity
+
+}
+
 sub create_test_user {
     my $self = shift;
     my %props = @_;
 
     local $SIG{__DIE__} = \&Carp::confess;
-    my %u = qw(
-               first_name  testfirstname
-               last_name   testlastname
-               user_name   testusername
-               password    testpassword
-              );
+    my %u = (
+        first_name => 'testfirstname',
+        last_name  => 'testlastname',
+        user_name  => 'testusername',
+        password   => 'testpassword',
+        user_type  => $props{user_type} || 'user',
+       );
 
     $self->_delete_user( \%u );
 
@@ -242,13 +281,13 @@ sub create_test_user {
         $p->set_first_name( $u{first_name} );
         $p->set_last_name( $u{last_name} );
         my $p_id = $p->store();
-        $u{ sp_person_id } = $p_id
+        $u{ 'id' } = $p_id
             or die "could not create person $u{first_name} $u{last_name}";
 
         my $login = CXGN::People::Login->new( $dbh, $p_id );
         $login->set_username( $u{user_name} );
         $login->set_password( $u{password} );
-        $login->set_user_type( $props{user_type} || 'user' );
+        $login->set_user_type( $u{user_type} );
 
         $login->store();
     });
@@ -265,7 +304,7 @@ sub set_test_user_type {
     my $self = shift;
 
     CXGN::People::Login
-          ->new( $self->context->dbc->dbh, $self->test_user->{sp_person_id} )
+          ->new( $self->context->dbc->dbh, $self->test_user->{id} )
           ->set_user_type(shift);
 }
 
@@ -302,12 +341,29 @@ hash-style list of parameters to set on the temp user that is created.
 
          current supported user properties:
 
-           user_type  'curator', 'sequencer', etc.  default 'user'
+           user_type  =>  'curator', 'sequencer', etc.  default 'user'
+
   Ret: nothing meaningful
+
+In addition, the called subroutine is passed a hashref of user
+information of the form:
+
+  {
+        first_name => 'testfirstname',
+        last_name  => 'testlastname',
+        user_name  => 'testusername',
+        password   => 'testpassword',
+        user_type  =>  $props{user_type} || 'user',
+        id         => 34,
+  }
 
   Example:
 
     $mech->while_logged_in({ user_type => 'curator' }, sub {
+
+        my $user_info_hashref = shift;
+
+        diag "logged in as user id $user_info_hashref->{id}";
 
         $mech->get_ok( '/organism/sol100/view' );
         $mech->content_contains( 'Authorized user', 'now says authorized user' );
@@ -321,8 +377,13 @@ sub while_logged_in {
     $self->with_test_level( local => sub {
         $self->create_test_user( %$props );
         $self->log_in_ok;
-        $sub->();
-        $self->log_out;
+        try {
+            $sub->( $self->test_user );
+        } catch {
+            die $_;
+        } finally {
+            $self->log_out;
+        };
     });
 }
 
@@ -345,15 +406,9 @@ Execute the given code while logged in for each user_type.
 
 sub while_logged_in_all {
     my ($self,$sub) = @_;
-    $self->with_test_level( local => sub {
-        my @users = qw/user curator submitter sequencer genefamily_editor/;
-        for my $user_type (@users) {
-            $self->create_test_user( user_type => $user_type );
-            $self->log_in_ok;
-            $sub->($user_type);
-            $self->log_out;
-        }
-    });
+    for ( qw/ user curator submitter sequencer genefamily_editor / ) {
+        $self->while_logged_in( { user_type => $_ }, $sub );
+    }
 }
 
 sub log_in_ok {

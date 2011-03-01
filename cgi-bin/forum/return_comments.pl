@@ -18,11 +18,9 @@ my %things = $page->get_all_encoded_arguments();
 
 use CXGN::People::PageComment;
 my $referer = $things{referer} ||=  $page->{request}->uri()."?".$page->{request}->args();
-warn "referer is $referer\n";
 my $pg = CXGN::People::PageComment->new($dbh, $things{type},$things{id});
 $pg->set_refering_page($referer);
 my $ch = $pg->get_html();
-warn "html is $ch";
 
-print '<!-- brought to you by ajax -->'.$ch;
+print $ch;
 

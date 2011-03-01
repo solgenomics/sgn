@@ -816,6 +816,10 @@ Specify the text alignments for each column.  Takes either
 a string containing the alignments, like 'lccr' or 'llll', or an array
 ref like ['l','c','c','r'].  Default is all columns centered.
 
+=head3 __caption
+
+Specify a <caption> to include in this table.
+
 =head2 __alt_freq
 
 If specified, sets the frequency of color change for alternating the
@@ -858,6 +862,10 @@ sub columnar_table_html {
     $params{__tableattrs} ||= qq{summary="" cellspacing="0" width="100%"};
     $html .=
       qq|<table class="columnar_table$noborder" $params{__tableattrs}>\n|;
+
+    if( defined $params{__caption} ) {
+        $html .= "<caption>$params{__caption}</caption>\n";
+    }
 
     unless ( defined $params{__alt_freq} ) {
         $params{__alt_freq} =

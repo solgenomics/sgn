@@ -1,0 +1,39 @@
+
+<%args>
+$tempfile
+$filename
+$refering_page => undef
+$type
+$type_id
+$sp_person_id
+$image_url
+</%args>
+
+<%perl>
+if ($refering_page) { print "<a href=\"$refering_page\">[Return]</a><br /><br />\n"; }
+
+  print qq { The image uploaded is shown below. Please click on "Store in SGN database" to permanently store the image in the database. <br /> };
+
+print "<br /><br />\n";
+if ($type && $type_id) { print "<b>Association</b> $type id $type_id<br /><br />\n"; }
+
+print "Submitter: $sp_person_id<br />\n";
+
+print qq { 
+	  <form name="store_image" action="/image/store" method="post" enctype="multipart/form-data" >
+	  <input type="hidden" name="tempfile" value="$tempfile" />
+	  <input type="hidden" name="filename" value="$filename" />
+	  <input type="hidden" name="type" value="$type" />
+	  <input type="hidden" name="type_id" value="$type_id" />
+	  <input type="submit" value="Store in SGN database" />
+	  
+	  </form>
+	 };
+
+if ($refering_page) { print "<a href=\"$refering_page\">[Cancel]</a><br /><br />\n"; }
+
+print qq { <img src="$image_url" /> };
+
+
+
+</%perl>

@@ -8,7 +8,7 @@
     <table cellspacing="0" cellpadding="0" id="search" class="toolbar_popmenu">
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/direct_search.pl?search=loci">Genes</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/direct_search.pl?search=phenotypes">Phenotypes</a></td></tr>
-       <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/direct_search.pl?search=cvterm_name">QTLs/Traits[beta]</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/direct_search.pl?search=qtl">QTLs</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/direct_search.pl?search=unigene">Unigenes</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/direct_search.pl?search=family">Families</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/direct_search.pl?search=markers">Markers</a></td></tr>
@@ -62,6 +62,7 @@
 <tr><td class="toolbar_item"><a class="toolbar_item" href="/genomes/Solanum_lycopersicum/genome_data.pl">Tomato genome data</a></td></tr>
        <tr><td class="toolbar_item_title" >Projects</td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/solanaceae-project/index.pl">Solanaceae project (SOL)</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/organism/sol100/view">SOL-100 Project</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/genomes/Solanum_lycopersicum/">International Tomato Sequencing Project</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/genomes/Solanum_pimpinellifolium/"><i>Solanum pimpinellifolium</i> Project (CSHL)</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/about/us_tomato_sequencing.pl">U.S. tomato sequencing project</a></td></tr>
@@ -84,7 +85,7 @@
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/cview/view_chromosome.pl?show_offsets=1&amp;show_ruler=1&amp;show_offsets=1">Comparative Viewer</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/tools/caps_designer/caps_input.pl">CAPS Designer</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/tools/seedbac/">Seed BAC Finder</a></td></tr>
-       <tr><td class="toolbar_item"><a class="toolbar_item" href="/qtl">QTL Mapping</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/qtl">solQTL: QTL Mapping</a></td></tr>
        <tr><td class="toolbar_item_title">Molecular Biology</td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/tools/sigpep_finder/input.pl">Signal Peptide Finder</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/tools/insilicopcr">In Silico PCR</a></td></tr>

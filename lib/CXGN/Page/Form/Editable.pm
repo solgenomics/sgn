@@ -199,7 +199,6 @@ sub store {
     foreach my $k (keys %distinct_objects) { 
 	#print STDERR " DUMP:" .Data::Dumper::Dumper($distinct_objects{$k});
 	#print STDERR " STORING OBJECT: ".ref($distinct_objects{$k})."\n";
-       
 	my $id = $distinct_objects{$k}->store();
 	$self->set_insert_id($k, $id);
     }
@@ -423,16 +422,16 @@ sub add_multiselect
     $self->add_field_obj($radio);
 }
 
-sub get_form_start { 
-    my $self = shift;
-    
+sub get_form_start {
+     my $self = shift;
+
     return "<form id =\"" . $self->get_form_id() . "\" method=\"" . $self->get_submit_method() . "\" action=\"\">"; #must have action parameter for xhtml 1.0+ -- Evan, 1/7/07
 }
 
-sub get_form_end { 
+sub get_form_end {
     my $self = shift;
-    return undef if $self->get_no_buttons();
-    return "<input type=\"submit\" value=\"" . $self->get_submit_button_text() . "\" /> 
+    return "</form>" if $self->get_no_buttons();
+    return "<input type=\"submit\" value=\"" . $self->get_submit_button_text() . "\" />
             <input type=\"reset\" value=\"" . $self->get_reset_button_text() . "\" />
             </form>";
 }
@@ -557,11 +556,12 @@ sub as_table_string {
 	}
     }
     if ($has_required_field) { 
-	$string .= qq { (<font color="red">*</font> denotes required field.)<br /><br /> }; 
+	$string .= qq { (<font color="red">*</font> denotes required field.)<br /><br /> };
     }
     $string .= qq { </td></tr></table> };
     $string .= $self->get_form_end();
     return $string;
+
 }
 
 return 1;

@@ -24,6 +24,8 @@ __align      => 'cccccc...',
 __tableattrs => 'summary="" cellspacing="0" width="100%"',
 __border     => 1,
 
+__caption    => 'Optional table caption',
+
 __alt_freq   => 4,
 __alt_width  => 2,
 __alt_offset => 0,
@@ -37,11 +39,13 @@ Lukas Mueller, based on Perl code by Rob Buels
 </%doc>
 
 <%args>
-$headings
+$headings     => undef
 $data
 $__align      => undef
 $__tableattrs => undef
 $__border     => undef
+
+$__caption    => undef
 
 $__alt_freq   => undef
 $__alt_width  => undef
@@ -49,17 +53,20 @@ $__alt_offset => undef
 
 </%args>
 
-<%perl>
+<%once>
+  use CXGN::Page::FormattingHelpers qw | columnar_table_html |;
+</%once>
 
-use CXGN::Page::FormattingHelpers qw | columnar_table_html |;
-
-my $table = columnar_table_html( headings=> $headings, data => $data, __align => $__align,
-             __tableattrs => $__tableattrs, __border => $__border, __alt_freq => $__alt_freq,
-             __alt_width => $__alt_width, __alt_offset => $__alt_offset );
-
-</%perl>
-
-<% $table %>
-
+<% columnar_table_html(
+    headings     => $headings,
+    data         => $data,
+    __align      => $__align,
+    __caption    => $__caption,
+    __tableattrs => $__tableattrs,
+    __border     => $__border,
+    __alt_freq   => $__alt_freq,
+    __alt_width  => $__alt_width,
+    __alt_offset => $__alt_offset,
+)%>
 
 

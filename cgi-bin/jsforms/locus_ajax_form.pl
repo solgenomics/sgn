@@ -6,14 +6,14 @@ my $locus_form = CXGN::Phenome::LocusForm->new();
 
 package CXGN::Phenome::LocusForm;
 
-use base qw/CXGN::Page::Form::AjaxFormPage  /; 
+use base qw/CXGN::Page::Form::AjaxFormPage  /;
 
 use CXGN::Phenome::Locus;
 use CXGN::Phenome::Locus::LinkageGroup;
 use CXGN::Tools::Organism;
 
 use CXGN::People::Person;
-use CXGN::Contact; 
+use CXGN::Contact;
 use CXGN::Feed;
 
 use Try::Tiny;
@@ -33,7 +33,7 @@ sub define_object {
     my $locus_id  = $args{locus_id} || $args{object_id};
     my $user_type = $self->get_user()->get_user_type();
     my %json_hash= $self->get_json_hash();
-    
+
     $self->set_object_id($locus_id);
     $self->set_object_name('Locus'); #this is useful for email messages
     $self->set_object(
@@ -50,23 +50,22 @@ sub define_object {
     $self->set_json_hash(%json_hash);
     $self->set_primary_key("locus_id");
     $self->set_owners( $self->get_object()->get_owners() );
-   
+
     $self->print_json() if $json_hash{error};
 }
 
 
 sub store {
     my $self=shift;
-    
     my $locus    = $self->get_object();
     my $locus_id = $self->get_object_id();
     my %args     = $self->get_args();
     my %json_hash = $self->get_json_hash();
     my $initial_locus_id = $locus_id;
-   
+
     my $error;
     $locus->set_common_name_id($args{common_name_id});
-    
+
     my ($message) =
 	$locus->exists_in_database( $args{locus_name}, $args{locus_symbol} );
     my $validate;
@@ -76,7 +75,7 @@ sub store {
 	try{
 	    $self->SUPER::store(); #this sets $json_hash{validate} if the form validation failed.
 	    $locus_id = $locus->get_locus_id() ;
-	} catch { 
+	} catch {
 	    $error = " An error occurred. Cannot store to the database\n An  email message has been sent to the SGN development team";
 	    CXGN::Contact::send_email('locus_ajax_form.pl died', $error . "\n" . $_ , 'sgn-bugs@sgn.cornell.edu');
 	};
@@ -86,13 +85,13 @@ sub store {
     %json_hash= $self->get_json_hash();
     $validate= $json_hash{validate};
     $json_hash{error} = $error if $error;
-    
+
     my $refering_page="/phenome/locus_display.pl?locus_id=$locus_id";
     $self->send_form_email({subject=>"[New locus details stored] locus $locus_id", mailing_list=>'sgn-db-curation@sgn.cornell.edu', refering_page=>"www.solgenomics.net".$refering_page}) if (!$validate && !$json_hash{error});
     $json_hash{refering_page}=$refering_page if !$initial_locus_id && !$validate && !$error;
-    
+
     $self->set_json_hash(%json_hash);
-    
+
     $self->print_json();
 }
 
@@ -103,13 +102,13 @@ sub delete {
     my $self = shift;
     my $check = $self->check_modify_privileges();
     $self->print_json() if $check ; #error or no user privileges
-    
+
     my $locus      = $self->get_object();
     my $locus_name = $locus->get_locus_name();
     my $locus_id = $locus->get_locus_id();
     my %json_hash= $self->get_json_hash();
     my $refering_page="/phenome/locus_display.pl?locus_id=$locus_id";
-    
+
     if (!$json_hash{error} ) {
 	try {
 	    $locus->delete();
@@ -128,21 +127,20 @@ sub delete {
 sub generate_form {
     my $self = shift;
     my $form_id = 'edit_locus'; # a form_id is required for ajax forms
-    
     $self->init_form($form_id) ; ## instantiate static/editable/confirmStore form
-    
+
     my $locus = $self->get_object();
     my %args  = $self->get_args();
     my $form = $self->get_form();
     my $dbh = $self->get_dbh();
-    
+
     my ( $organism_names_ref, $organism_ids_ref ) =
 	CXGN::Tools::Organism::get_all_organisms( $self->get_dbh() );
     my ($lg_names_ref) =
 	CXGN::Phenome::Locus::LinkageGroup::get_all_lgs( $self->get_dbh() );
     my ($lg_arms_ref) =
 	CXGN::Phenome::Locus::LinkageGroup::get_lg_arms( $self->get_dbh() );
-    
+
     if ( $self->get_action =~ /new|store/ ) {
 	$self->get_form->add_select(
 	    display_name       => "Organism ",
@@ -155,7 +153,7 @@ sub generate_form {
 	    select_list_ref    => $organism_names_ref,
 	    select_id_list_ref => $organism_ids_ref,
 	    );
-	
+
     }
     if ( $locus->get_obsolete() eq 't' ) {
 	$form->add_label(
@@ -172,7 +170,7 @@ sub generate_form {
 	setter       => "set_locus_name",
 	validate     => 'string',
 	);
-    
+
     $form->add_field(
         display_name => "Symbol ",
         field_name   => "locus_symbol",
@@ -182,7 +180,7 @@ sub generate_form {
         validate     => 'token',
 	formatting   => '<i>*</i>',
 	);
-    
+
     $form->add_field(
 	display_name => "Gene activity ",
 	field_name   => "gene_activity",
@@ -191,7 +189,7 @@ sub generate_form {
 	setter       => "set_gene_activity",
 	length       => '50',
 	);
-    
+
     $form->add_textarea(
 	display_name => "Description ",
 	field_name   => "description",
@@ -201,7 +199,7 @@ sub generate_form {
 	columns      => 40,
 	rows         => => 4,
 	);
-    
+
     $form->add_select(
 	display_name       => "Chromosome ",
 	field_name         => "lg_name",
@@ -213,7 +211,7 @@ sub generate_form {
 	select_list_ref    => $lg_names_ref,
 	select_id_list_ref => $lg_names_ref,
 	);
-    
+
     $form->add_select(
 	display_name       => "Arm",
 	field_name         => "lg_arm",
@@ -225,23 +223,23 @@ sub generate_form {
 	select_list_ref    => $lg_arms_ref,
 	select_id_list_ref => $lg_arms_ref,
 	);
-    
+
     $form->add_hidden(
 	field_name => "locus_id",
 	contents   => $locus->get_locus_id(),
 	);
-    
+
     $form->add_hidden(
 	field_name => "action",
 	contents   => "store",
 	);
-    
+
     $form->add_hidden(
 	field_name => "sp_person_id",
 	contents   => $self->get_user()->get_sp_person_id(),
 	object     => $locus,
 	setter     => "set_sp_person_id",
-	
+
 	);
     $form->add_hidden(
 	field_name => "updated_by",
@@ -249,14 +247,14 @@ sub generate_form {
 	object     => $locus,
 	setter     => "set_updated_by",
 	);
-    
+
     if ( $self->get_action() =~ /view|edit/ ) {
 	$form->from_database();
 	$form->add_hidden(
 	    field_name => "common_name_id",
 	    contents   => $locus->get_common_name_id(),
 	    );
-	
+
     }
     elsif ( $self->get_action() =~ /store/ ) {
 	$form->from_request( %args );

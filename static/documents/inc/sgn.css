@@ -781,6 +781,11 @@ th.columnar_table {
   border-bottom: 1px solid #aaa;
   background: #efefef;
 }
+table.columnar_table > caption {
+  font-weight: bold;
+  text-align: left;
+  padding: 2px;
+}
 
 /* styles for paginated search results pages like bacsearch.pl and markersearch.pl*/
 #searchresults { 
@@ -869,11 +874,6 @@ a.stealth {
 	border-color: #888888;
 	border-width: 1px;
 }
-.creativitylinks
-{ 
-	line-height:24px;
-}
-
 
 /***********   TOOLBARS W/DROPDOWN MENUS ****************/
 
@@ -1269,4 +1269,33 @@ div.publication_embedded .citation {
 
 .species_binomial {
   font-style: italic;
+}
+
+
+#affiliated_sites ul {
+  margin: 0;
+  padding-left: 1em;
+}
+#affiliated_sites li {
+  padding-bottom: 1em;
+}
+
+
+/* styles for numerical range input in FormattingHelpers */
+
+div.xref_rich_gbrowse2 {
+  border-radius: 6px;
+  -moz-border-radius: 6px;
+  -webkit-border-radius: 6px;
+  border: 1px outset #666;
+  padding-bottom: 8px;
+  margin: 10px;
+}
+div.xref_rich_gbrowse2 hr {
+  width: 95%;
+}
+
+div.xref_rich_gbrowse2 img {
+  margin-top: 12px;
+  border: 0;
 }

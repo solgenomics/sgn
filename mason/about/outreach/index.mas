@@ -22,6 +22,7 @@ Lukas Mueller <lam87@cornell.edu>
 <& /page/page_title.mas, title=>"SOL Outreach Activities and Materials" &>
 
 <&| /page/info_section.mas, title=>'Outreach overview' &>
+
 The purpose of outreach is to establish a link between the science community and students at all levels of education in order to foster interest in the sciences and expose students to scientific career paths. A specific mandate from funding agencies such as the National Science Foundation is to increase the participation of underrepresented groups in science.
 <br /><br />
 The US SOL outreach program focuses on Solanaceae biology and bioinformatics. The target audience is K-12 and college undergraduates, with a particular effort to engage underrepresented groups. Activies include presentations at elementary schools and associated after school programs, high schools, undergraduate classes, high school teacher curriculum workshops, and we provide hands-on laboratory activities. Bioinformatics training is taking place in the form of internships at SGN for undergraduate students.
@@ -67,18 +68,34 @@ This page gives more information about the materials developed. Please contact u
 
 <dt><b><a name="interns">Bioinformatics Summer Internships</a></b></dt>
 <dd>
-<ul>
-<li>Available for college undergradutes</li>
-<li>The bioinformatics summer internship accepts college undergraduates into the program. The internship is not available to graduate students. Students work at the Sol Genomics Network (SGN) for 8 - 10 weeks during the summer on their own bioinformatics-related projects. A staff member of SGN acts as project mentor for each student to help them learn the various programming skills necessary to develop their projects. As part of this internship, they also attend weekly seminars held at the Boyce Thompson Institute (BTI) that are given by plant scientists from BTI and Cornell.</li>
-<ul>
-    <li><a href="/about/Summer_Internship_2005.pl">2005 summer interns</a></li>
-    <li><a href="/about/Summer_Internship_2006.pl">2006 summer interns</a></li>
-    <li><a href="/about/Summer_Internship_2007.pl">2007 summer interns</a></li>
-    <li><a href="/about/Summer_Internship_2008.pl">2008 summer interns</a></li>
-</ul>
-<!-- <li>You can find information about the 2010 summer internships <a href="/about/us_tomato_sequencing.pl#internships">here</a>.</li> -->
-</ul>
-
+  <ul>
+    <li>Available for college undergradutes</li>
+    <li>The bioinformatics summer internship accepts college undergraduates into the program. The internship is not available to graduate students. Students work at the Sol Genomics Network (SGN) for 8 - 10 weeks during the summer on their own bioinformatics-related projects. A staff member of SGN acts as project mentor for each student to help them learn the various programming skills necessary to develop their projects. As part of this internship, they also attend weekly seminars held at the Boyce Thompson Institute (BTI) that are given by plant scientists from BTI and Cornell.</li>
+    <ul>
+      <li><a href="/about/Summer_Internship_2005.pl">2005 summer interns</a></li>
+      <li><a href="/about/Summer_Internship_2006.pl">2006 summer interns</a></li>
+      <li><a href="/about/Summer_Internship_2007.pl">2007 summer interns</a></li>
+      <li><a href="/about/Summer_Internship_2008.pl">2008 summer interns</a></li>
+    </ul>
+  </ul>
+  <br />
+  <div class="boxbgcolor2">
+    <h3>Application materials for the 2011 summer internships</h3>
+    
+          
+If you want to apply for the Summer 2011 internships, please use the forms below. The application deadline is March 7, 2010. Please send the filled-in materials or questions to Dr. Joyce van Eck <a href="mailto:jv27@cornell.edu">jv27@cornell.edu</a>.
+    <br /><br />
+    <ul>
+      <li><a href="/static_content/outreach/internship_2011/internship_poster_2011.pdf">Flyer</a> (pdf)</li>
+      <li><a href="/static_content/outreach/internship_2011/recommendation_form_2011.pdf">Recommendation form</a> (pdf)</li>
+      <li><a href="/static_content/outreach/internship_2011/undergrad_app_internship_2011.pdf">Application form</a> (pdf)</li>
+    </ul>
+    <br />
+    Note: you can type your information directly into the pdf file.
+    <br />
+    <br />
+  </div>
+  
 </dd>
 
 

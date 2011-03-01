@@ -1,86 +1,21 @@
-<%doc>
-
-=head1 NAME
-
-/locus/index.mas - a page for displaying locus details
-
-=head1 DESCRIPTION
-
-parameters:
-
-=over 3
-
-=item $locus_id
-
-The id of the locus in the database
-
-=item $dbh
-
-a database handle
-
-=item $user
-
-the person logged into the system right now
-
-
-
-=back
-
-=head1 AUTHOR
-
-Naama Menda <nm249@cornell.edu>
-
-=cut
-
-</%doc>
-
-
-
 <%args>
 
-$action => 'view'
-$locus_id => 0
-$user => undef
-$dbh
+  $locus
+  $locus_id
+  $user => undef
+  $dbh
+  $xrefs
 
 </%args>
-
+<%once>
+  use CXGN::Sunshine::Browser;
+  use CXGN::Page::FormattingHelpers qw / html_optional_show info_table_html /;
+</%once>
 
 <%perl>
 
-
-use CXGN::Phenome::Locus;
-use CXGN::Sunshine::Browser;
-use CXGN::Page::FormattingHelpers qw / html_optional_show info_table_html /;
-
-
-# print message if locus_id is not valid 
-unless ( ( $locus_id =~ m /^\d+$/ ) || ($action eq 'new' && !$locus_id) ) {
-  $c->throw(is_error=>0,
-	    message=>"No locus exists for identifier $locus_id",
-	   );
-}
-
-my $locus = CXGN::Phenome::Locus->new($dbh, $locus_id);
-my $person_id = $user->get_sp_person_id();
-my $user_type = $user->get_user_type();
-
-# print message if the locus is obsolete 
-if ( $locus->get_obsolete() eq 't' && $user_type ne 'curator' )
-  {
-    $c->throw(is_error=>0, 
-	      title => 'Obsolete locus',
-	      message=>"Locus $locus_id is obsolete!",
-	      developer_message => 'only curators can see obsolete loci',
-	      notify => 0,   #< does not send an error email
-	     );
-  }
-
-# print message if locus_id does not exist
-
-if ( !$locus->get_locus_id() && $action ne 'new' && $action ne 'store' ) {
-  $c->throw(is_error=>0, message=>'No locus exists for this identifier',);
-}
+my $user_type = $user ? $user->get_user_type : '';
+my $person_id = $user ? $user->get_sp_person_id : 0;
 
 my $this_page = "/phenome/locus_display.pl?locus_id=$locus_id";
 my $locus_xml = $locus_id ? qq |<a href = "generic_gene_page.pl?locus_id=$locus_id">Download GMOD XML</a>|
@@ -96,7 +31,7 @@ my $owner_objects= $locus->get_owners(1);
 
 my $locus_name = $locus->get_locus_name();
 my $owner;
-if ( $locus_name && ($user_type eq 'curator' || $person_id && grep { $_ == $person_id } @owners  ) ) {  $owner = 1; }
+if ( $locus_name && ( $user_type eq 'curator' || $person_id && grep { $_ == $person_id } @owners  ) ) {  $owner = 1; }
 my $registry = $locus->get_associated_registry();
 
 my @synonyms = $locus->get_locus_aliases('f','f');
@@ -104,8 +39,8 @@ my @figures = $locus->get_figure_ids();
 
 my $figure_subtitle =
   !(grep { /^$user_type$/ } ('curator', 'submitter', 'sequencer') ) ?
-  '<span class= "ghosted">[Add notes, figures or images]</span> '
-  : ' <a href="/image/add_image.pl?type_id=$locus_id&type=locus&action=new&refering_page=$this_page">[ Add notes, figures or images]</a>' ;
+  "<span class= \"ghosted\">[Add notes, figures or images]</span> "
+  : " <a href=\"/image/add?type_id=$locus_id&type=locus&action=new&refering_page=$this_page\">[ Add notes, figures or images]</a>" ;
 
 my $ind_subtitle =
   !(grep { /^$user_type$/ } ('curator', 'submitter', 'sequencer') ) ?
@@ -192,16 +127,15 @@ my $ontology_subtitle =  !(grep { /^$user_type$/ } ('curator', 'submitter', 'seq
 <& /util/import_javascript.mas, classes => ["Prototype", "jquery", "thickbox", "CXGN.Page.FormattingHelpers", "CXGN.Phenome.Locus", "CXGN.Phenome.Tools", "CXGN.Phenome.Locus.LocusPage", "CXGN.Sunshine.NetworkBrowser"] &>
 
 
-<& /locus/initialize.mas, locus_id=>$locus_id  &>
+<& /locus/initialize.mas, locus_id => $locus_id  &>
 
-<& /page/page_title.mas, title=>$common_name . " \t' " . $locus->get_locus_name() . "'\n" &>
-
-
+<& /page/page_title.mas, title=> "$common_name locus ".$locus->get_locus_name &>
 
 <&| /page/info_section.mas, title=>"Locus details" , subtitle => "$locus_xml | $editor_note | $guide_html" &>
   
   <& /page/form.mas, object_type=>'locus', object_id=>"$locus_id", form_name=> 'locus_form', server_side_script => '/jsforms/locus_ajax_form.pl', form_div_name=>'locus_details', js_object_name=> 'locusForm', page_url => '/phenome/locus_display.pl'  &>
- 
+
+
 <table><tr><td>
       <table>
 	<tr><td>
@@ -211,8 +145,10 @@ my $ontology_subtitle =  !(grep { /^$user_type$/ } ('curator', 'submitter', 'seq
 <% $tgrc %>
 
   <& /locus/locus_editor.mas, owners=>$owner_objects  &>
-  <a href="claim_locus_ownership.pl?locus_id=<% $locus_id %>&amp;action=confirm"> [Request editor privileges]</a><br /><br />
-  <& /locus/edits_info.mas, locus=>$locus  &>
+% if ($locus_id) {
+    <a href="claim_locus_ownership.pl?locus_id=<% $locus_id %>&amp;action=confirm"> [Request editor privileges]</a><br /><br />
+% }
+    <& /locus/edits_info.mas, locus=>$locus  &>
   </td></tr>
       </table>
     </td>
@@ -221,7 +157,10 @@ my $ontology_subtitle =  !(grep { /^$user_type$/ } ('curator', 'submitter', 'seq
   </td></tr></table></td></tr>
 </table>
   </&>
- 
+
+% if($locus_id) {
+
+
 % if($owner) {
     <&| /page/info_section.mas, title=>"Locus history", collapsible=>1, collapsed=>1 &>
       <& /locus/history.mas, locus=>$locus  &>
@@ -237,7 +176,7 @@ my $ontology_subtitle =  !(grep { /^$user_type$/ } ('curator', 'submitter', 'seq
 % }
 
 <&| /page/info_section.mas, title=>"Notes and figures (" .  scalar(@figures)  . ")", subtitle => "$figure_subtitle", collapsible=>1, collapsed=>1 &>
-  <& /phenome/print_images.mas , images=>\@figures , dbh=>$dbh &>
+  <& /image/print_images.mas , images=>\@figures , dbh=>$dbh &>
 
 </&>
 
@@ -280,35 +219,50 @@ my $ontology_subtitle =  !(grep { /^$user_type$/ } ('curator', 'submitter', 'seq
 
 
 <&| /page/info_section.mas, title=>"Sequence annotations ($seq_count)" , collapsible=>1, collapsed=>1 &>
-  <&| /page/info_section.mas, title => "SGN Unigenes",
-    id => 'unigenes',
-    subtitle => $new_unigene_link,
-    collapsible => 1,
-    collapsed =>  0 ,
-    is_subsection => 1,
+
+   <&| /page/info_section.mas, title => "Gene model matches",
+       collapsible   => 1,
+       collapsed     => 0,
+       is_subsection => 1,
     &>
-    <& /locus/associate_unigene.mas, locus_id=>$locus_id &>
-      <& /locus/locus_unigenes.mas &>
-      </&>
-      <&| /page/info_section.mas, title => "GenBank accessions",
-	subtitle => qq|<a href="/chado/add_feature.pl?type=locus&amp;type_id=$locus_id&amp;refering_page=$this_page&amp;action=new">[Associate new genbank sequence]</a>|,
-	collapsible => 1,
-	collapsed =>  0 ,
-	is_subsection => 1,
-	&>
-	<% $genbank %>
-</&>
 
-<&| /page/info_section.mas, title => "Genome matches",
-  subtitle => '',
-  collapsible => 1,
-  collapsed =>  0 ,
-  is_subsection => 1,
-  &>
+       <& /locus/locus_gene_model_matches.mas, locus => $locus, xrefs => $xrefs &>
 
-  <& /locus/locus_genomic_annotations.mas, locus_id=>$locus_id &>
+   </&>
 
-</&>
+
+   <&| /page/info_section.mas, title => "SGN Unigenes",
+       id => 'unigenes',
+       subtitle => $new_unigene_link,
+       collapsible => 1,
+       collapsed =>  0 ,
+       is_subsection => 1,
+    &>
+        <& /locus/associate_unigene.mas, locus_id=>$locus_id &>
+        <& /locus/locus_unigenes.mas &>
+    </&>
+
+    <&| /page/info_section.mas, title => "GenBank accessions",
+             subtitle => <<"",
+<a href="/chado/add_feature.pl?type=locus;type_id=$locus_id;refering_page=$this_page;action=new">[Associate new genbank sequence]</a>
+
+             collapsible => 1,
+             collapsed =>  0 ,
+             is_subsection => 1,
+        &>
+        <% $genbank %>
+   </&>
+
+   <&| /page/info_section.mas,
+       title         => "Other genome matches",
+       collapsible   => 1,
+       collapsed     => 1,
+       is_subsection => 1,
+    &>
+
+       <& /locus/locus_genomic_annotations.mas, locus => $locus &>
+
+   </&>
 
 </&>
 
@@ -332,4 +286,17 @@ my $ontology_subtitle =  !(grep { /^$user_type$/ } ('curator', 'submitter', 'seq
 	locus_id  => $locus_id,
 &>
 
+<&| /page/info_section.mas,
+     title       => 'Related views',
+     collapsible => 1,
+ &>
+
+     <& /sitefeatures/mixed/xref_set/link.mas,
+        xrefs => [ grep { $_->feature->feature_name ne 'gbrowse2' } @$xrefs ],
+      &>
+
+</&>
+
 <& /page/comments.mas, object_type=>'locus', object_id=>$locus_id, referer=>$this_page &>
+
+% }

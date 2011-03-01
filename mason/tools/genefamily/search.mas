@@ -23,7 +23,7 @@ if ($genefamily_id eq '') { $genefamily_id=0; }
 
 if ($action eq 'detail') {
     my $gf = SGN::Genefamily->new(
-        name      => "family_$genefamily_id",
+        name      => "ORTHOMCL$genefamily_id",
         dataset   => $dataset,
         files_dir => $DIR,
        );
@@ -94,7 +94,7 @@ if ($action eq 'detail') {
     <hr>
     <td>View</td>
     <td>
-      <form name="alignment_viewer_form" method="post" action="/tools/align_viewer/">
+      <form name="alignment_viewer_form" method="POST" action="/tools/align_viewer/index.pl">
 	<input type="hidden" name="seq_data" value="<% $seq_data %>" />
 	<input type="submit" value="Alignment" <% $align_link_disabled %> />
 	<input type="hidden" name="format" value="fasta" />
@@ -102,7 +102,7 @@ if ($action eq 'detail') {
     </td>
 
     <td>
-      <form name="tree_browser_form" method="post" action="/tools/tree_browser/">
+      <form name="tree_browser_form" method="post" action="/tools/tree_browser/index.pl">
 	<input type="hidden" name="" value="<% $tree_data %>" />
 	<input type="submit" value="Tree" <% $tree_link_disabled %> />
       </form>
@@ -114,7 +114,15 @@ if ($action eq 'detail') {
 </table>
 <hr>
 <table><tr><td>
-Sequences in fasta:<br />
+Sequences in fasta:</td><td>
+<form name="tree_browser_unaligned" method="post" action="/tools/align_viewer/index.pl">
+  <input type="hidden" name="seq_data" value="<% $fasta_data %>" />
+  <input type="hidden" name="format" value="fasta_unaligned" />
+  <input type="submit" value="Align" />
+</form>
+
+<td></tr>
+<td colspan="2">
       <pre><% $fasta_data %></pre>
 </td></tr></table>
 

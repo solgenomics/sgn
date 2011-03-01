@@ -42,7 +42,6 @@ my @all_traits = @{$all_traits};
 my @index_traits;
 foreach my $trait (@all_traits)
 {
-    print STDERR "traits: $trait\n";
     if ( $trait =~ /^$index/i )
     {
         push @index_traits, $trait;
@@ -85,8 +84,7 @@ qq |<a href=/phenome/trait.pl?trait_id=$trait_id>$trait</a> |
 }
 
 my $links = $qtl_tools->browse_traits();
-print
-qq |<table align=center cellpadding=20px><tr><td><b>Browse Traits: $links<b></td></tr></table>|;
+print qq|<div style="margin: 0 auto; font-weight: bold">Browse traits with QTLs: $links</div>\n|;
 
 print info_section_html (
                           title    => "Traits $index-",
@@ -101,12 +99,10 @@ print columnar_table_html (
                             __cellpadding => 20,
                           );
 
-print qq | <table align=center cellpadding=20px><tr><td><b></td></tr></table> |;
-
-my $search = CXGN::Search::CannedForms::cvterm_search_form();
+my $search = CXGN::Search::CannedForms::qtl_search_form();
 
 print info_section_html (
-                          title       => 'Search QTLs/traits',
+                          title       => 'Search QTLs by trait names',
                           contents    => $search,
                           collapsible => 1,
                           collapsed   => 1,

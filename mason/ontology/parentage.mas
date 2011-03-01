@@ -1,14 +1,15 @@
 <%args>
-    $accession
+  $accession
+  $db_name => undef
 </%args>
 
 <script language="javascript" type="text/javascript"  >
 <!--
-var o = new CXGN.Onto.Browser();
+var o = new CXGN.Onto.Browser('<% $db_name %>');
 
 o.setUpBrowser();
 
-o.initializeBrowser();
+o.initializeBrowser('<% $db_name %>');
 // hide some unused elements
 $('ontology_browser_input').style.display='none';
 $('ontology_term_input').style.display='none';

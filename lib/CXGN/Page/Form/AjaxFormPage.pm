@@ -101,30 +101,32 @@ sub new {
     my %json_hash=();
     # sanitize the inputs, we don't want to end up like bobby tables school.
     #
-    foreach my $k (keys (%args)) { 
-	$args{$k} = CXGN::Tools::Text::sanitize_string($args{$k});
+    foreach my $k (keys (%args)) {
+    	$args{$k} = CXGN::Tools::Text::sanitize_string($args{$k});
     }
-    
+
     $self->set_args(%args);
-    
+
     $self->define_object();
 
     $self->set_action($args{action});
-    
-    if (!$self->get_action()) { 
+
+    if (!$self->get_action()) {
 	$self->set_action("view");
     }
-    
-    if (!$self->get_object_id() && $self->get_action()!~/new|store|confirm_store/) { 
-	$json_hash{error}='No identifier provided to display data of this page for action view.'; 
-	
+    if (!$self->get_object_id && !$args{action} ) {
+        $self->set_action("new");
     }
-    else { 
-	if ($self->get_action()!~/new|view|edit|store|delete|confirm_delete|confirm_store/) { 
-	    $json_hash{error}='No identifier provided'; 
-	}	 
+    if (!$self->get_object_id() && $self->get_action()!~/new|store|confirm_store/) {
+	$json_hash{error}='No identifier provided to display data of this page for action view.';
+
     }
-    
+    else {
+	if ($self->get_action()!~/new|view|edit|store|delete|confirm_delete|confirm_store/) {
+	    $json_hash{error}='No identifier provided';
+	}
+    }
+
     if ($self->get_action() eq "view") { 
  	$self->view();
     }
@@ -409,6 +411,7 @@ sub delete {
     my %json_hash=$self->get_json_hash();
     $json_hash{error} = $error;
     $self->set_json_hash(%json_hash);
+    $self->print_json;
 }
 
 =head2 display_form
