@@ -195,7 +195,8 @@ sub view_stock :Chained('get_stock') :PathPart('view') :Args(0) {
         $is_owner = 1;
     }
     my $dbxrefs = $self->_stock_dbxrefs($stock);
-    
+
+    my $nd_experiments = $self->_stock_nd_experiments($stock);
     ################
     $c->stash(
         template => '/stock/index.mas',
@@ -214,6 +215,7 @@ sub view_stock :Chained('get_stock') :PathPart('view') :Args(0) {
             props     => $props,
             dbxrefs   => $dbxrefs,
             owners    => $owner_ids,
+            nd_experiments => $nd_experiments,
         },
         locus_add_uri  => $c->uri_for( '/ajax/stock/associate_locus' ),
         locus_autocomplete_uri => $c->uri_for( '/ajax/locus/autocomplete' ),
@@ -249,6 +251,13 @@ sub _stock_dbxrefs {
         push @{ $dbxrefs->{$sdbxref->dbxref->db->name} } , $accession ;
     }
     return $dbxrefs;
+}
+
+sub _stock_nd_experiments {
+    my ($self, $stock) = @_;
+
+    my $nd_experiments = $stock->get_object_row->nd_experiment_stocks->search_related('nd_experiment');
+    return $nd_experiments;
 }
 
 sub get_stock :Chained('/') :PathPart('stock') :CaptureArgs(1) { 

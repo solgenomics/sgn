@@ -82,7 +82,8 @@ my $stockprops = $stockref->{props};
 my $metadata = ['variety', 'donor', 'donor institute', 'country', 'state' , 'adaptation' , 'notes'];
 
 my $pedigree= ['pedigree', 'male parent', 'female parent'];
-my $experiment = ['experiment','year', 'location', 'replicate'];
+my $experiment = ['year', 'location', 'replicate']; # these values should be in nd_experimentprop ?
+
 my $resources = ['solcap number' , 'synonym'];
 
 my $allele_div = "stock_alleles";
@@ -97,6 +98,34 @@ foreach my $o_id (@$owners) {
   my $last_name = $person->get_last_name;
   $editor_link .= qq|<a href="/solpeople/personal-info.pl?sp_person_id=$o_id">$first_name $last_name</a> |;
 }
+############################
+############################
+my $nd_experiments= $stockref->{nd_experiments};
+
+my $genotypes;
+my $phenotypes; # hash for storing phenotypes by experiment
+
+while (my $exp = $nd_experiments->next) {
+  my $exp_id = $exp->nd_experiment_id ;
+  my $geolocation = $exp->nd_geolocation;
+
+  my @ph = $exp->nd_experiment_phenotypes->search_related('phenotype')->all;
+  $phenotypes->{$exp_id}->{phenotypes} = \@ph;
+
+  my @gen_regions = $exp->nd_experimentprops( { 'type.name' => 'sgn genotype_region_id' } ,
+                                              { join =>  'type'  },
+                                            )->all;
+  #now do the same with genotypes .
+  # genotype regions  are stored as nd_experimentprops type= 'sgn genotype_region_id'
+  my @gen = $exp->nd_experiment_genotypes->search_related('genotype')->all;
+  $genotypes->{$exp_id} = {
+                           geo_description =>  $geolocation->description,
+                           genotypes  => \@gen,
+                           genotype_regions => \@gen_regions,
+                          };
+}
+#########################################
+
 
 my $dbxrefs = $stockref->{dbxrefs};
 my $new_pub_link = $curator || $submitter || $sequencer  ?   qq|<a href="/chado/add_publication.pl?type=stock&amp;type_id=$stock_id&amp;refering_page=$this_page&amp;action=new"> [Associate publication] </a>| : qq|<span class=\"ghosted\">[Associate publication]</span>| ;
@@ -203,7 +232,13 @@ my $pub_count = scalar( @$pubmeds );
 </&>
 
 <&| /page/info_section.mas, title=>"Phenotype data " &>
-
+% foreach my $ex_id (keys %$phenotypes) {
+%  my $p_ref = $phenotypes->{$ex_id}{phenotypes} ;
+%  my $geo_desc = $genotypes->{$ex_id}{geo_description};
+<&| /page/info_section.mas, title=>"Experiment $ex_id. Location: $geo_desc", is_subsection => 1 &>
+    <& /phenotypes/phenotype_data.mas , phenotypes=>$p_ref &>
+  </&>
+% }
 </&>
 
 <&| /page/info_section.mas, title=>"Genotype data " &>
