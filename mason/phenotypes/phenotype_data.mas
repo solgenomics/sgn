@@ -1,0 +1,92 @@
+
+<%doc>
+=head1 NAME
+
+/phenotypes/phenotype_data.mas - a component for printing table with stats of a phenotype object
+
+=head1 DESCRIPTION
+
+
+Parameters:
+
+=over 2
+
+=item phenotypes
+
+arrayref of L<Bio::Chado::Schema::Phenotype> objects
+
+=item div
+
+div id (for using with javascript)
+
+
+=back
+
+=head1 AUTHOR
+
+Naama Menda <nm249@cornell.edu>
+
+=cut
+
+</%doc>
+
+<%args>
+    $phenotypes=>undef
+    $div=> ''
+</%args>
+
+<%once>
+use CXGN::Page::FormattingHelpers qw/ tooltipped_text columnar_table_html /;
+use Number::Format;
+use Statistics::Descriptive;
+
+</%once>
+
+<%perl>
+
+my @data;
+my %info; # hash of term names, since we can have multiple phenotypes of the same term
+
+foreach my $phenotype (@$phenotypes) {
+  #attr_id
+  my ($observable) = $phenotype->observable;
+  push @ { $info{$observable->name."|". $observable->cvterm_id ."|". $observable->definition} } , $phenotype;
+}
+#display traits sorted by name
+foreach my $term(sort keys %info ) {
+  my ($term_name, $term_id, $definition) = split '\|' , $term;
+  my @values = map ($_->value , @{ $info{$term} } );
+  my $stat = Statistics::Descriptive::Sparse->new();
+  $stat->add_data(@values);
+  my $x = Number::Format->new();
+  my $mean_value = $x->round($stat->mean(), 3);
+  my $min = $x->round($stat->min, 3);
+  my $max = $x->round($stat->max, 3);
+
+  push  @data,  [map {$_}
+                 ( (tooltipped_text(qq|<a href="/chado/cvterm.pl?cvterm_id=$term_id">$term_name</a>|, $definition) ), $mean_value, $min, $max, scalar(@values)   ) ];
+}
+
+
+
+</%perl>
+
+<script  language="javascript">
+
+</script>
+
+<div id = "$div">
+
+% if(@data) {
+
+<& /page/columnar_table.mas,
+  headings => [ "Trait" , "Value", "Min", "Max", "Repeats" ],
+    data     => \@data ,
+      __alt_freq   =>2,
+      __alt_width  =>1,
+      __alt_offset =>3,
+      __align =>'l',
+&>
+
+% }
+</div>
