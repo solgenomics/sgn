@@ -41,7 +41,7 @@ sub stock_table {
     for my $s (@$stocks) {
         # Add a row for every stock
         push @$data, [
-            cvterm_link($s),
+            cvterm_link($s->type),
             stock_link($s),
 
         ];
