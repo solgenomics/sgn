@@ -41,9 +41,8 @@ Readonly my %defaults          => (
     'max_nDRQPEN22'   => 8,
     'max_nNitrogen22' => 34,
     'max_nOxygen22'   => 32,
-    'max_tm_nGASDRQPEN' => 9
+    'max_tm_nGASDRQPEN' => 10 
 );
-#Readonly my $max_tm_nGASDRQPEN => 9;
 
 =head2 function new()
 
