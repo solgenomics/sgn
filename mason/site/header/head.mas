@@ -14,6 +14,6 @@
      MochiKit = {__export__: false};
   </script>
 
-  <& /util/import_javascript.mas, classes => [qw[ sgn wz_tooltip CXGN.Effects CXGN.Page.FormattingHelpers CXGN.UserPrefs CXGN.Page.Toolbar ]] &>
+  <& /util/import_javascript.mas, classes => [qw[ sgn jquery.simpletooltip CXGN.Effects CXGN.Page.FormattingHelpers CXGN.UserPrefs CXGN.Page.Toolbar ]] &>
 
   <!-- INSERT_JS_PACK -->

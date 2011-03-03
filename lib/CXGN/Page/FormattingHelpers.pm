@@ -1267,8 +1267,6 @@ EOHTML
    # This produces the following html:
    <span class="help" onmouseover="return escape('Marker confidences come from the MapMaker program and range from I to F(LOD3).')">Select a marker confidence</span>
 
-  These tooltips require the wz_tooltip.js library, which is included in the SGN footer.
-
 =cut
 
 sub tooltipped_text {
@@ -1282,7 +1280,7 @@ sub tooltipped_text {
     $tooltip = HTML::Entities::encode_entities($tooltip);
 
     return
-qq{<span class="$class" onmouseover="return escape('$tooltip')">$text</span>};
+qq{<span class="tooltipped $class" title="$tooltip">$text</span>};
 
 }
 
