@@ -248,7 +248,7 @@ sub _stock_dbxrefs {
 
         my $accession = $sdbxref->dbxref->accession;
         $url = $url ? qq |<a href = "$url/$accession">$accession</a>| : $accession ;
-        push @{ $dbxrefs->{$sdbxref->dbxref->db->name} } , $accession ;
+        push @{ $dbxrefs->{$sdbxref->dbxref->db->name} } , $sdbxref->dbxref;
     }
     return $dbxrefs;
 }

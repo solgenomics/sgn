@@ -216,10 +216,12 @@ my $pub_count = scalar( @$pubmeds );
 <&| /page/info_section.mas, title=>"Literature annotation ($pub_count)" , subtitle=>$new_pub_link, id=>"publications" , collapsible=>1, collapsed=>1 &>
 
 % my $pub_count = 0;
-% foreach my $pub_id ( @ { $dbxrefs->{PMID} } ) {
-%  #if the dbxref is not obsolete
-%   my $pub = CXGN::Chado::Publication->new($dbh, $pub_id );
+% foreach my $dbxref ( @ { $dbxrefs->{PMID} } ) {
+% #if the dbxref is not obsolete
+%   foreach my $pd (  $dbxref->pub_dbxrefs  ) {
+%     my $pub = CXGN::Chado::Publication->new($dbh, $pd->pub_id );
   <& /chado/publication.mas, pub=>$pub, count=>$pub_count++, db=>'PMID', accession=>$pub->get_accession() &>
+%    }
     <br >
 % }
 
@@ -232,6 +234,8 @@ my $pub_count = scalar( @$pubmeds );
 <&| /page/info_section.mas, title=>"Phenotype data " &>
 % foreach my $project (keys %projects) {
 %  my $pheno = $projects{$project}{phenotypes} ;
+% my $gen_region = $projects{$project}{genotype_regions};
+% foreach (@$gen_region) { print STDERR "******$project found genotype region " . $_->value ." \n\n"; }
 <&| /page/info_section.mas, title=>"Experiment: $project", is_subsection => 1 &>
     <& /phenotypes/phenotype_data.mas , phenotypes=>$pheno &>
   </&>
@@ -241,17 +245,5 @@ my $pub_count = scalar( @$pubmeds );
 <&| /page/info_section.mas, title=>"Genotype data " &>
 
 </&>
-
-
-<&| /page/info_section.mas, title=>"dbxrefs" &>
-% foreach my $d (keys %$dbxrefs) { 
-%  foreach my $item ( @{ $dbxrefs->{$d} } ) {
-%   print "$d: " . $item . "\n" ;
-%  }
-%}
-
-</&>
-
-
 
 <& /page/comments.mas, object_type=>'stock', object_id=>$stock_id, referer=>$this_page &>
