@@ -102,28 +102,26 @@ foreach my $o_id (@$owners) {
 ############################
 my $nd_experiments= $stockref->{nd_experiments};
 
-my $genotypes;
-my $phenotypes; # hash for storing phenotypes by experiment
+my %projects;
 
 while (my $exp = $nd_experiments->next) {
-  my $exp_id = $exp->nd_experiment_id ;
   my $geolocation = $exp->nd_geolocation;
-
+  # there should be one project linked to the experiment ?
+  my $project = $exp->nd_experiment_projects->search_related('project')->first;
   my @ph = $exp->nd_experiment_phenotypes->search_related('phenotype')->all;
-  $phenotypes->{$exp_id}->{phenotypes} = \@ph;
+
+  #now do the same with genotypes .
+  # genotype regions  are stored as nd_experimentprops type= 'sgn genotype_region_id'
+  my @gen = $exp->nd_experiment_genotypes->search_related('genotype')->all;
 
   my @gen_regions = $exp->nd_experimentprops( { 'type.name' => 'sgn genotype_region_id' } ,
                                               { join =>  'type'  },
                                             )->all;
-  #now do the same with genotypes .
-  # genotype regions  are stored as nd_experimentprops type= 'sgn genotype_region_id'
-  my @gen = $exp->nd_experiment_genotypes->search_related('genotype')->all;
-  $genotypes->{$exp_id} = {
-                           geo_description =>  $geolocation->description,
-                           genotypes  => \@gen,
-                           genotype_regions => \@gen_regions,
-                          };
+  push(@{$projects{$project->description}{phenotypes}}, @ph);
+  push(@{$projects{$project->description}{genotypes}}, @gen);
+  push(@{$projects{$project->description}{genotype_regions}}, @gen_regions);
 }
+
 #########################################
 
 
@@ -232,11 +230,10 @@ my $pub_count = scalar( @$pubmeds );
 </&>
 
 <&| /page/info_section.mas, title=>"Phenotype data " &>
-% foreach my $ex_id (keys %$phenotypes) {
-%  my $p_ref = $phenotypes->{$ex_id}{phenotypes} ;
-%  my $geo_desc = $genotypes->{$ex_id}{geo_description};
-<&| /page/info_section.mas, title=>"Experiment $ex_id. Location: $geo_desc", is_subsection => 1 &>
-    <& /phenotypes/phenotype_data.mas , phenotypes=>$p_ref &>
+% foreach my $project (keys %projects) {
+%  my $pheno = $projects{$project}{phenotypes} ;
+<&| /page/info_section.mas, title=>"Experiment: $project", is_subsection => 1 &>
+    <& /phenotypes/phenotype_data.mas , phenotypes=>$pheno &>
   </&>
 % }
 </&>
