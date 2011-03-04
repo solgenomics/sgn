@@ -55,7 +55,7 @@ sub related_stats {
     my $stats = { };
     my $total = scalar @$stocks;
     for my $s (@$stocks) {
-            $stats->{cvterm_link($s)}++;
+            $stats->{cvterm_link($s->type)}++;
     }
     my $data = [ ];
     for my $k (sort keys %$stats) {
