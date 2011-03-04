@@ -6,9 +6,11 @@ Arguments: $map - an object implementing the CXGN::Cview::Map interface.
 </%doc>
 
 <%args>
-$map
+$map_stats
 $force => 0
 $hilite_encoded => ""
+@chromosome_stats => ();
+$marker_stats => ''
 </%args>
 
 <& /util/import_javascript.mas, classes => ['MochiKit.Async', 'CXGN.Effects'] &>
