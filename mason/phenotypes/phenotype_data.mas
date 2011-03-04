@@ -50,7 +50,8 @@ my %info; # hash of term names, since we can have multiple phenotypes of the sam
 foreach my $phenotype (@$phenotypes) {
   #attr_id
   my ($observable) = $phenotype->observable;
-  push @ { $info{$observable->name."|". $observable->cvterm_id ."|". $observable->definition} } , $phenotype;
+  my $definition = $observable->definition || '';
+  push @ { $info{$observable->name."|". $observable->cvterm_id ."|". $definition} } , $phenotype;
 }
 #display traits sorted by name
 foreach my $term(sort keys %info ) {
