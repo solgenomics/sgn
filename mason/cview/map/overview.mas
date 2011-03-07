@@ -55,6 +55,7 @@ Lukas Mueller <lam87@cornell.edu>
   $tempdir
   $message => ''
   $overview_image
+  $map_url
 </%args>
 
 <%perl>
@@ -115,7 +116,7 @@ $larger_size = 10 if $larger_size > 10;
 <table summary="input forms" border="0"><tr><td align="left">
     <div class="indentedcontent">
     
-  <form action="/cview/map.pl" >
+  <form action="<% $map_url %>" >
   <% $hilite_tooltip %>: 
   <input type="hidden" name="map_items" value="<% $map_items %>" />
   <input type="text" name="hilite" value="<% $hilite %>" size="40" />
@@ -126,7 +127,7 @@ $larger_size = 10 if $larger_size > 10;
     </div>
     </td><td width=100 align="right"><% $size_tooltip %>:
 </td><td align="right">
-    <form action="/cview/map.pl">
+    <form action="<% $map_url %>">
     <input type="hidden" name="map_items" value="<% $map_items %>" />
     <input type="hidden" name="map_version_id" value="<% $map_version_id %>" />
     <input type="hidden" name="size" value="<% $smaller_size %>" />
@@ -134,7 +135,7 @@ $larger_size = 10 if $larger_size > 10;
     <input type="submit" value="-" <% $shrink_button_disabled %> />
     </form>
 </td><td>
-    <form action="/cview/map.pl" >
+    <form action="<% $map_url %>" >
     <input type="hidden" name="map_items" value="<% $map_items %>" />
     <input type="hidden" name="map_version_id" value="<% $map_version_id %>" />
     <input type="hidden" name="hilite" value="<% $hilite %>" />
@@ -143,12 +144,6 @@ $larger_size = 10 if $larger_size > 10;
     </form>
 </td></tr></table>
 
-<& /cview/map/overlay_form.mas, 
-  map_version_id => $map_version_id,
-  map_items      => $map_items,
-  size           => $size,
-  hilite         => $hilite,
-&>
 
 
 

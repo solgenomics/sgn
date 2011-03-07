@@ -34,7 +34,11 @@ Refactored for Catalyst Feb 2011
 
 <%args>
 $map_by_species
+$map_url
+$chr_url
+$comp_maps_url
 $default_map_id => 9
+
 </%args>
 
 <table summary="" width="100%" border="0">
@@ -68,16 +72,16 @@ my $submit = qq | <b>[<a href="/content/map_submissions.pl">Submit New Map</a>]<
 <&| /page/info_section.mas, title=>"Comparative maps" &>
 
 <br />
-<a href="/cview/view_chromosome.pl"><b>Interactive comparative map viewer</b></a>: 
+<a href="$chr_url"><b>Interactive comparative map viewer</b></a>: 
 View two chromosomes from two different maps at the same time; it displays the relationships between the chromosomes and additional information such as associated physical map, inbred lines, and rulers.<br /><br />
 <b>Examples</b>: 
 <ul>
-<li><a href="/cview/view_chromosome.pl?show_IL=1&amp;map_id=5&amp;chr_nr=1&amp;comp_map_id=3&amp;comp_chr=1">Tomato EXPEN 1992 vs Potato TXB 1992</a><br /></li>
-  <li><a href="/cview/view_chromosome.pl?map_id=$default_map_id&amp;chr_nr=1&amp;comp_map_id=6&amp;comp_chr=1&amp;show_ruler=1&amp;show_physical=1">Tomato EXPEN 2000 vs Eggplant-LXM 2002</a></li>
-<li><a href="/cview/view_chromosome.pl?map_id=3&amp;chr_nr=1&amp;comp_map_id=6&amp;comp_chr=1&amp;show_ruler=1">Potato TXB 1992 vs Eggplant-LXM 2002</a></li>
+<li><a href="$chr_url?show_IL=1&amp;map_id=5&amp;chr_nr=1&amp;comp_map_id=3&amp;comp_chr=1">Tomato EXPEN 1992 vs Potato TXB 1992</a><br /></li>
+  <li><a href="$chr_url?map_id=$default_map_id&amp;chr_nr=1&amp;comp_map_id=6&amp;comp_chr=1&amp;show_ruler=1&amp;show_physical=1">Tomato EXPEN 2000 vs Eggplant-LXM 2002</a></li>
+<li><a href="$chr_url?map_id=3&amp;chr_nr=1&amp;comp_map_id=6&amp;comp_chr=1&amp;show_ruler=1">Potato TXB 1992 vs Eggplant-LXM 2002</a></li>
 </ul>
 
-<a href="/cview/view_maps.pl?center_map=$default_map_id&amp;right_map=3"><b>Compare entire maps</b></a>:
+<a href="$comp_map_url?center_map=$default_map_id&amp;right_map=3"><b>Compare entire maps</b></a>:
 To get a better view how two (or three) maps relate to each other, take a zoomed out view of the entire map. A maximum of 3 maps can be shown together at one time. The maps to be displayed can be selected on the top of the display.  <br /><br />
 <b>Examples</b>:
 <ul>
