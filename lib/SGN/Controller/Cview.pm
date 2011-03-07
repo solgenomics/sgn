@@ -24,9 +24,11 @@ sub auto :Args(0) {
     # push some useful stuff on the stash
     #
     $c->stash->{dbh} = $c->dbc->dbh();
-    $c->stash->{map_link} = '/cview/map.pl';
-    $c->stash->{chr_link} = '/cview/view_chromosome.pl';
-    $c->stash->{comp_map_link} = '/cview/view_maps.pl';
+    
+    $c->stash->{map_url} = '/cview/map';
+    $c->stash->{chr_url} = '/cview/chr';
+    $c->stash->{marker_search_url} = '/search/markers/markersearch.pl';
+    $c->stash->{comp_maps_url} = '/cview/view_maps.pl';
     $c->stash->{default_map_id} = $c->get_conf('cview_default_map_id');
     $c->stash->{referer} = $c->req->referer();
     $c->stash->{tempdir} = $c->get_conf("tempfiles_subdir")."/cview";
@@ -50,7 +52,7 @@ sub index :Path("/cview") :Args(0) {
 	my $long_name = $map->get_long_name();
 	my $short_name = $map->get_short_name();
 	my $id = $map->get_id();
-	push @{$map_by_species{$species} } ,  qq{ <a href="/cview/map.pl?map_version_id=$id">$short_name</a>: $long_name\n } ;
+	push @{$map_by_species{$species} } ,  qq{ <a href="}.$c->stash->{map_url}.qq{?map_version_id=$id">$short_name</a>: $long_name\n } ;
     }
     $c->stash->{map_by_species} = \%map_by_species;    
 }
@@ -90,6 +92,7 @@ sub map :Path("/cview/map") :Args(0) {
 
     if (!$map) {
 	$c->stash->{template} = '/cview/map/missing.mas';
+	$c->stash->{title} = "The map you are trying to view does not exist!";
 	return;
     }
 
@@ -166,23 +169,38 @@ sub map :Path("/cview/map") :Args(0) {
 
     # get chromosome stats and cache them
     #
-    my %marker_info = ();
     my @chr_names = $map->get_chromosome_names();
-    my $total_markers=0;
+    my $hash_key = '';
+
     for (my $i=0; $i<@chr_names; $i++) {
-      my $hash_key = $c->stash->{map_version_id}."-".$i;
-      if (!exists($marker_info{$hash_key}) || $c->stash->{force}) { 
-	$marker_info{$hash_key} = $map->get_marker_count($chr_names[$i]);
-      }
+	$hash_key = $c->stash->{map_version_id}."-".$i;
+	if (!exists($marker_info{$hash_key}) || $c->stash->{force}) { 
+	    $marker_info{$hash_key} = $map->get_marker_count($chr_names[$i]);
+	}
     }
+    
+    if (!exists($marker_info{$c->stash->{map_version_id}}) || $c->stash->{force}) { 
+	$marker_info{$c->stash->{map_version_id}} = $map->get_map_stats();
+    }
+    my $chr_info = '';
 
-    my @chromosome_stats = map { $marker_info{$c->stash->{map_version_id}."-".$_}}  $map->get_chromosome_names();
-
+    my @chr_stats = ();
+    for (my $i=0; $i<@chr_names; $i++) { 
+	my $chr_link .= "<a href=\"".$c->stash->{chr_url}."?map_version_id=".$c->stash->{map_version_id}."&amp;chr_nr=$chr_names[$i]&amp;hilite=".$hilite_encoded."\">
+<b>Chromosome $chr_names[$i]</b></a>";
+	my $marker_link = "<a href=\"/search/markers/markersearch.pl?w822_nametype=starts+with&w822_marker_name=&w822_mapped=on&w822_species=Any&w822_protos=Any&w822_colls=Any&w822_pos_start=&w822_pos_end=&w822_confs=Any&w822_submit=Search&w822_chromos=$chr_names[$i]&w822_maps=\"".$c->stash->{map_id}."\">".$marker_info{$c->stash->{map_version_id}."-".$i}."</a>\n";
+	push @chr_stats, [ $chr_link, $marker_link, $marker_info{$c->stash->{map_version_id}."-".$i} ];
+    }
+    
+##    my @chromosome_stats = map { $marker_info{$c->stash->{map_version_id}."-".$_}}  $map->get_chromosome_names();
+    
     $c->stash->{message} = $message;
     $c->stash->{abstract} = $map->get_abstract();
     $c->stash->{can_overlay} = $map->can_overlay();
-    $c->stash->{marker_stats} = $map->get_marker_type_stats();
-    $c->stash->{chromosome_stats} = \@chromosome_stats;
+    
+    $c->stash->{marker_stats} = $marker_info{$c->stash->{map_version_id}};
+
+    $c->stash->{chromosome_stats} = \@chr_stats;
     $c->stash->{template} = "/cview/map/index.mas";
 }
 
