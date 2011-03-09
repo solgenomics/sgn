@@ -6,21 +6,36 @@
 
 =head1 DESCRIPTION
 
-this component has dependencies on CXGN.Phenome.Locus and CXGN.Phenome.Tools
-you will have to import these javascript classes in your code that uses this component.
-
-<& /util/import_javascript.mas, classes => ["CXGN.Phenome.Locus", "CXGN.Phenome.Tools"] &>
+a component for printing an autocomplete form for searching loci and associating with your object
 
 
 Parameters:
 
-=over 1
+=over 6
 
-=item locus_id
+=item object_id
 
 a database id
 
+=item object_name
 
+ the name of the object you are associating the locus with (e.g. 'stock')
+
+=item locus_autocomplete_uri
+
+the uri for the code which retrieves the  locus info
+
+=item $locus_add_uri
+
+the uri for storing the link in the database
+
+=item show_form
+
+optional. default 0. If the user is logged in, you might want to set this to 1 and display the form. Either way, associating loci permissions should also be enforced in your 'add' function
+
+=item allele_div
+
+a unique name for your div_id for updating content in your page without reloading.
 
 =back
 
@@ -36,8 +51,8 @@ Naama Menda <nm249@cornell.edu>
 <%args>
 
 $object_id
-$type
-$locus_autocomplete_uri => ''
+$object_name
+$locus_autocomplete_uri => '/ajax/locus/autocomplete'
 $locus_add_uri
 $show_form => 0
 $allele_div
@@ -70,7 +85,7 @@ $allele_div
   }
 
   function display_alleles(allele_div) {
-  jQuery.ajax( { url: "/stock/"+<% $object_id %>+"/alleles" , dataType: "json",
+  jQuery.ajax( { url: "/<% $object_name %>/<% $object_id %>/alleles" , dataType: "json",
       success: function(response) {
        var json = response;
        jQuery("#"+allele_div).html(response.html);
@@ -80,10 +95,11 @@ $allele_div
 
 </script>
 
-<div id = "<%$allele_div %> >
+<div id = "<%$allele_div %>" >
 
 </div>
 
+% if ($show_form) {
 <div id="associate_locus_form">
   <b>Associate another Locus</b>
   <div id="locus_search" >
@@ -98,3 +114,4 @@ $allele_div
 </div>
 
 
+% }
