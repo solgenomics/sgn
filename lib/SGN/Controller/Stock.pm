@@ -50,6 +50,7 @@ sub search :Path('/stock/search') Args(0) {
         form_opts    => { stock_types=>stock_types($self->schema), organisms=>stock_organisms($self->schema)} ,
         results  => $results,
         sp_person_autocomplete_uri => $c->uri_for( '/ajax/people/autocomplete' ),
+        trait_autocomplete_uri => $c->uri_for('/ajax/stock/trait_autocomplete'),
         pagination_link_maker => sub {
             return uri( query => { %{$req}, page => shift } );
         },

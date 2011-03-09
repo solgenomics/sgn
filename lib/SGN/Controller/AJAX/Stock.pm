@@ -196,4 +196,34 @@ sub display_alleles_GET  {
     $c->stash->{rest} = $hashref;
 }
 
+=head2 autocomplete
+
+Public Path: /ajax/stock/trait_autocomplete
+
+Autocomplete a trait name.  Takes a single GET param,
+C<term>, responds with a JSON array of completions for that term.
+Finds only traits that exist in nd_experiment_phenotype
+
+=cut
+
+sub trait_autocomplete : Local : ActionClass('REST') { }
+
+sub trait_autocomplete_GET :Args(0) {
+    my ( $self, $c ) = @_;
+
+    my $term = $c->req->param('term');
+    # trim and regularize whitespace
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+    my @response_list;
+    my $q = "select distinct cvterm.name from stock join nd_experiment_stock using (stock_id) join nd_experiment_phenotype using (nd_experiment_id) join phenotype using (phenotype_id) join cvterm on cvterm_id = phenotype.observable_id WHERE cvterm.name ilike ?";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute( '%'.$term.'%');
+    while  (my ($term_name) = $sth->fetchrow_array ) {
+        push @response_list, $term_name;
+    }
+    $c->{stash}->{rest} = \@response_list;
+}
+
+
 1;

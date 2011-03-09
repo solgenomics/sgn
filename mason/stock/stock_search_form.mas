@@ -2,7 +2,30 @@
   $opts => undef
   $request => undef
   $sp_person_autocomplete_uri
+  $trait_autocomplete_uri
+
 </%args>
+
+<& /util/import_javascript.mas,
+ classes=>[qw[CXGN.Effects jquery jqueryui popup] ]
+&>
+
+<script language="javascript">
+  function toggle_advanced() {
+         jQuery('#advanced').toggle();
+       }
+
+  jQuery(function() {
+     jQuery("#person").autocomplete({
+	 source: '<% $sp_person_autocomplete_uri %>'
+     });
+     jQuery("#trait").autocomplete({
+	 source: '<% $trait_autocomplete_uri %>'
+     });
+  });
+
+</script>
+
 
 <%once>
   use HTML::FormFu;
@@ -11,6 +34,7 @@
 </%once>
 
 <%perl>
+
 my $form = HTML::FormFu->new(Load(<<EOY));
       method: GET
       action: "/stock/search"
@@ -31,11 +55,6 @@ my $form = HTML::FormFu->new(Load(<<EOY));
             name: organism
             label: Organism
 
-          - type: Text
-            name: person
-            id:   person
-            label: Editor
-
           - type: Hidden
             name: search_submitted
             value: 1
@@ -49,32 +68,47 @@ my $form = HTML::FormFu->new(Load(<<EOY));
             name: page_size
             default: 20
 
+          - type: Block
+            id: advanced
+
+          - type: Text
+            name: person
+            id: person
+            label: Editor
+
+          - type: Text
+            name: trait
+            id: trait
+            label: Trait
+            size: 40
+
+          - type: Text
+            name: min_limit
+            id: min_limit
+            label: Min. value
+            size: 5
+
+          - type: Text
+            name: max_limit
+            id: max_limit
+            label: Max. value
+            size: 5
+
           - type: Submit
             name: submit
             value: Search
+
 EOY
 
     # set the stock type multi-select choices from the db
     $form->get_element({ name => 'stock_type'})->options( $opts->{stock_types} );
     $form->get_element({ name => 'organism'})->options( $opts->{organisms} );
 
-  $form->process( $request );
+$form->process( $request );
+
 
 </%perl>
 
-<& /util/import_javascript.mas,
- classes=>[qw[CXGN.Effects jquery jqueryui popup] ]
-&>
-
-<script language="javascript">
-
-  jQuery(function() {
-     jQuery("#person").autocomplete({
-	 source: '<% $sp_person_autocomplete_uri %>'
-     });
-  });
-
-</script>
 
 <!-- This CSS should probably go somewhere better -->
 <style>
@@ -101,4 +135,6 @@ div.paginate_nav {
 
 
 <% $form->render %>
+
+<input value="unchecked" type="checkbox" onclick="toggle_advanced()">Advanced
 
