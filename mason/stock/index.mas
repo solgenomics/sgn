@@ -23,7 +23,9 @@ a hashref with all the parameters needed for printing the stock page!
  $stockref->{is_owner} (boolean)
  $stockref->{props} (hash of arrayrefs of stockprops. Keys = prop name, value = prop value)
  locus_add_uri
- locus_autocomplete_uri 
+ locus_autocomplete_uri => '/ajax/locus/autocomplete/'
+ cvterm_add_uri
+ cvterm_autocomplete_uri => '/ajax/cvterm/autocomplete/'
 
 =back
 
@@ -39,8 +41,9 @@ Naama Menda <nm249@cornell.edu>
 
 $stockref => undef
 $locus_add_uri => ''
-$locus_autocomplete_uri => ''
-
+$locus_autocomplete_uri => undef
+$cvterm_add_uri => ''
+$cvterm_autocomplete_uri => undef
 </%args>
 
 
@@ -117,11 +120,15 @@ while (my $exp = $nd_experiments->next) {
   my @gen_regions = $exp->nd_experimentprops( { 'type.name' => 'sgn genotype_region_id' } ,
                                               { join =>  'type'  },
                                             )->all;
+  ##
+  ## genotypes really need to be a genotype_id and not genotype_region ids. 
+  ##
   push(@{$projects{$project->description}{phenotypes}}, @ph);
   push(@{$projects{$project->description}{genotypes}}, @gen);
   push(@{$projects{$project->description}{genotype_regions}}, @gen_regions);
 }
 
+#my $map = CXGN::Cview::Map::Stock->new($stock_id);
 #########################################
 
 
@@ -182,7 +189,7 @@ my $pub_count = scalar( @$pubmeds );
 
 <&| /page/info_section.mas, title => "Associated loci" , subtitle => $new_locus_link, collapsible=> 1 &>
 
-<& /phenome/associate_locus.mas, object_id => $stock_id , type => "stock", locus_add_uri=> $locus_add_uri,  locus_autocomplete_uri => $locus_autocomplete_uri , allele_div => $allele_div &>
+<& /phenome/associate_locus.mas, object_id => $stock_id , object_name => "stock", locus_add_uri=> $locus_add_uri,   allele_div => $allele_div , show_form => $is_owner &>
 
 </&>
 
@@ -228,14 +235,13 @@ my $pub_count = scalar( @$pubmeds );
 </&>
 
 <&| /page/info_section.mas, title=>"Ontology annotation" &>
+<& /ontology/associate_ontology.mas, object_id => $stock_id , object_name => "stock", cvterm_add_uri=> $cvterm_add_uri, div_id =>0 &>
 
 </&>
 
 <&| /page/info_section.mas, title=>"Phenotype data " &>
 % foreach my $project (keys %projects) {
 %  my $pheno = $projects{$project}{phenotypes} ;
-% my $gen_region = $projects{$project}{genotype_regions};
-% foreach (@$gen_region) { print STDERR "******$project found genotype region " . $_->value ." \n\n"; }
 <&| /page/info_section.mas, title=>"Experiment: $project", is_subsection => 1 &>
     <& /phenotypes/phenotype_data.mas , phenotypes=>$pheno &>
   </&>
