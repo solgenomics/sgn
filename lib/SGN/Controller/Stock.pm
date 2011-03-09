@@ -194,7 +194,7 @@ sub view_stock :Chained('get_stock') :PathPart('view') :Args(0) {
     if ( $stock && ($curator || $person_id && ( grep /^$person_id$/, @$owner_ids ) ) ) {
         $is_owner = 1;
     }
-    my $dbxrefs = $self->_stock_dbxrefs($stock);
+    my $dbxrefs = $self->_dbxrefs($stock);
 
     my $nd_experiments = $self->_stock_nd_experiments($stock);
     ################
@@ -218,8 +218,7 @@ sub view_stock :Chained('get_stock') :PathPart('view') :Args(0) {
             nd_experiments => $nd_experiments,
         },
         locus_add_uri  => $c->uri_for( '/ajax/stock/associate_locus' ),
-        locus_autocomplete_uri => $c->uri_for( '/ajax/locus/autocomplete' ),
-
+        cvterm_add_uri => $c->uri_for( '/ajax/stock/associate_ontology')
         );
 }
 
@@ -237,7 +236,7 @@ sub _stockprops {
 }
 
 
-sub _stock_dbxrefs {
+sub _dbxrefs {
     my ($self,$stock) = @_;
 
     my $stock_dbxrefs = $stock->get_object_row()->search_related("stock_dbxrefs");
@@ -260,26 +259,34 @@ sub _stock_nd_experiments {
     return $nd_experiments;
 }
 
-sub get_stock :Chained('/') :PathPart('stock') :CaptureArgs(1) { 
+sub _stock_dbxrefs {
+    my ($self,$stock) = @_;
+
+    my $stock_dbxrefs = $stock->get_object_row()->search_related("stock_dbxrefs");
+    # hash of arrays. Keys are db names , values are lists of StockDbxref objects
+    my $sdbxrefs ;
+    while ( my $sdbxref =  $stock_dbxrefs->next ) {
+        push @{ $sdbxrefs->{$sdbxref->dbxref->db->name} } , $sdbxref;
+    }
+    return $sdbxrefs;
+}
+sub get_stock :Chained('/') :PathPart('stock') :CaptureArgs(1) {
     my ($self, $c, $stock_id) = @_;
 
     $self->schema( $c->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' ) );
     $c->stash->{stock} = CXGN::Chado::Stock->new($self->schema, $stock_id);
 
-    #add the stockprops to the stash
-    my $stock = $c->stash->{stock}->get_object_row;
-    my $stockprops = $stock ? $stock->search_related("stockprops") : undef ;
-
-    my $properties ;
-    if ($stockprops) {
-        while ( my $prop =  $stockprops->next ) {
-            push @{ $properties->{$prop->type->name} } ,   $prop->value ;
-        }
-    }
+    #add the stockprops to the stash. Props are a hashref of lists.
+    # keys are the cvterm name (prop type) and values  are the prop values.
+    my $stock = $c->stash->{stock};
+    my $properties = $stock ?  $self->_stockprops($stock) : undef ;
     $c->stash->{stockprops} = $properties;
 
+    #add the stock_dbxrefs to the stash. Dbxrefs are hashref of lists.
+    # keys are db-names , values are lists of Bio::Chado::Schema::General::Dbxref objects
+    my $dbxrefs  = $stock ?  $self->_stock_dbxrefs($stock) : undef ;
+    $c->stash->{stock_dbxrefs} = $dbxrefs;
 }
-
 
 ######
 1;
