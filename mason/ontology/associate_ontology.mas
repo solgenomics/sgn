@@ -1,0 +1,113 @@
+<%doc>
+
+=head1 NAME
+
+/ontology/associate_ontology.mas - a component for printing a generic 'associate_ontology' javasript form and displaying the ontology annotation
+
+=head1 DESCRIPTION
+
+
+Parameters:
+
+=over 6
+
+=item object_id
+
+a database id
+
+=item object_name
+
+the type of the object you are annotating
+
+=item cvterm_autocomplete_uri
+
+=item cvterm_add_uri
+
+=iterm show_form
+
+whether the associate form should be printed. Usually only if the user is logged-in
+
+=item ontology_url
+
+the url for displaying the ontology annotation
+
+=back
+
+=head1 AUTHOR
+
+Naama Menda <nm249@cornell.edu>
+
+=cut
+
+
+</%doc>
+
+<%args>
+
+$object_id
+$object_name
+$cvterm_autocomplete_uri  => '/ajax/cvterm/autocomplete'
+$cvterm_add_uri
+$show_form => 0
+$div_id => 'ontology_terms'
+$ontology_url
+
+</%args>
+
+<style>
+  #ontology .evidence {
+    margin: 1em 0 0 4em;
+    width: 50%;
+    border: 1px dotted gray;
+    padding: 10px;
+  }
+  #ontology_show_details {
+    text-align: right;
+    margin-bottom: -2em;
+  }
+  #ontology_show_details label {
+    font-weight: bold;
+  }
+  .active#ontology_show_details {
+    background: white;
+  }
+</style>
+
+<& /util/import_javascript.mas, classes=>[qw[ jquery jqueryui popup CXGN.AJAX.Ontology] ]&>
+
+  <div id="ontology_show_details" style="display: none">
+    <form> <input type="checkbox" id="show_details" disabled="true" />
+      <label for="show_details">Show complete details</label> 
+    </form>
+  </div>
+
+<div id="ontology" >[loading...] </div>
+
+<script language="javascript">
+
+  
+  Ontology.displayOntologies("ontology" , "<% $ontology_url %>");
+
+</script>
+
+
+<div id="associate_cvterm_form">
+  <b>Associate ontology term</b>
+  <form name="cvterm_form" >
+    <div id="cvterm_search" >
+      <input type="text" style="width: 50%" id="term_name" name="term_name" onchange="Ontology.updateAutocomplete('<% $cvterm_autocomplete_uri %>')" />
+      <input type="hidden" id="object_id" name="object_id" value="<% $object_id %>" />
+
+      <select id = "db_name" onchange="Ontology.updateAutocomplete('<% $cvterm_autocomplete_uri %>')">
+        <option value="GO">GO (gene ontology)</option>
+        <option value="PO">PO (plant ontology)</option>
+        <option value="SP">SP (Solanaceae phenotypes)</option>
+      </select><br>
+      
+      <div style="font-size: 80%; margin-left: 1em; color: #333">type a cvterm name</div>
+      
+      <input type="button" name = "associate_cvterm" onclick="javascript:Ontology.submitCvtermForm()" value = "Associate term" />
+
+    </div>
+  </form>
+</div>
