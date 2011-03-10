@@ -235,7 +235,7 @@ my $pub_count = scalar( @$pubmeds );
 </&>
 
 <&| /page/info_section.mas, title=>"Ontology annotation" &>
-<& /ontology/associate_ontology.mas, object_id => $stock_id , object_name => "stock", cvterm_add_uri=> $cvterm_add_uri, div_id =>0 &>
+<& /ontology/associate_ontology.mas, object_id => $stock_id , object_name => "stock", cvterm_add_uri=> $cvterm_add_uri, ontology_url=>"/stock/$stock_id/ontologies/" &>
 
 </&>
 
