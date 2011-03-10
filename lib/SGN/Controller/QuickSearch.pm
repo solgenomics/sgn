@@ -81,7 +81,9 @@ my %searches = (
 
 Public path: /search/quick
 
-Handles POST or GET quick searches.  Parameter can be either C<term> or C<q>.
+Handles POST or GET quick searches.  Parameter can be either C<term>
+or C<q>.  If optional param C<showtimes> is true, shows number of
+seconds each of the search steps took.
 
 =cut
 
