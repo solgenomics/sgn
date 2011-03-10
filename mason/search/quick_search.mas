@@ -41,7 +41,7 @@
   <dt>Web pages</dt>
   <dd>
     <% $search{sgn_pages} %>
-    <% $external_link %>
+    <% $search{external_link} %>
     <% $search{web} %>
   </dd>
   <dt>Images</dt>
@@ -60,10 +60,10 @@
   for my $search ( values %search ) {
       my ( $url, $desc ) = @{$search->{result}};
       my $exact = $search->{exact} ? '*' : '';
-      my $html = $url ? qq|<a class="quicksearch_hit" href="$search->{result}[0]">$search->{result}[1]$exact</a>|
-                      : qq|<div class="ghosted">$desc$exact</div>|;
+      my $time  = $show_times ? sprintf(' (%0.1f sec)', $search->{time}) : '';
+      my $html = $url ? qq|<div><a class="quicksearch_hit" href="$search->{result}[0]">$search->{result}[1]$exact$time</a></div>|
+                      : qq|<div class="ghosted">$desc$exact$time</div>|;
       $search = $html;
   }
-  my $external_link = $quick_search->{external_link};
 
 </%init>

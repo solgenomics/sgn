@@ -4,10 +4,12 @@ use namespace::autoclean;
 
 BEGIN { extends 'Catalyst::Controller' }
 
+use Class::MOP;
 use HTML::Entities;
 use Time::HiRes 'time';
 use URI::FromHash 'uri';
 
+use CXGN::Marker::Tools;
 use CXGN::Tools::Identifiers qw/ identifier_url identifier_namespace /;
 use CXGN::Tools::Text qw/to_tsquery_string trim/;
 
@@ -97,7 +99,7 @@ sub quick_search: Path('/search/quick') {
     #first run the term through CXGN::Tools::Identifiers, and if it's
     #recognized as an exact SGN identifier match, just redirect them to
     #that page
-    my $external_link = '<span class="ghosted">0 direct information pages</span>';
+    my $external_link;
     if ( my $direct_url = identifier_url($term) ) {
         #if the URL is just to this page, it's not useful
         unless( $direct_url =~ m!quick_search\.pl|search/quick! ) { #unless the url is to quick_search
@@ -107,7 +109,7 @@ sub quick_search: Path('/search/quick') {
                  && $direct_url !~ /sgn\.cornell\.edu|solgenomics\.net/
                ) {
                 my ($domain) = $direct_url =~ m|://(?:www\.)?([^/]+)|;
-                $c->stash->{quick_search}{external_link} = $direct_url;
+                $c->stash->{quick_search}{results}{external_link}{result} = [ $direct_url, '1 direct information page' ];
             } else {
                 $c->res->redirect( $direct_url );
                 return;
@@ -119,6 +121,7 @@ sub quick_search: Path('/search/quick') {
         $c->stash->{quick_search}{results}{$search_name} = $self->do_search( $c,  $search_name, $searches{$search_name}, $term );
     }
 
+    $c->stash->{show_times} = $c->req->parameters->{showtimes};
     $c->stash->{template} = '/search/quick_search.mas';
 }
 
@@ -138,8 +141,9 @@ sub do_quick_search {
         return $args{function}->( $db,$args{term});
     } else {
         my $classname = $args{class}
-    or die 'Must provide a class name';
+            or die 'Must provide a class name';
 
+        Class::MOP::load_class( $classname );
         $classname->isa( 'CXGN::Search::SearchI' )
             or die "'$classname' is not a CXGN::Search::SearchI-implementing object";
 
@@ -317,7 +321,7 @@ EOSQL
     };
 
     return
-      $count > 0 ? ["/search/annotation_search_result.pl?search_text=$term&Submit=search&request_from=0&search_type=manual_search", "$count manual annotations to $unigene_count unigenes"]
+      $count > 0 ? ["/search/annotation_search_result.pl?search_text=$term&Submit=search&request_from=0&search_type=manual_search", "$count manual annotations on $unigene_count unigenes"]
                  : [undef, "0 manual annotations"];
 }
 
@@ -344,7 +348,7 @@ EOSQL
     }
     my $automatic_annotation_link = [undef, "0 automatic annotations"];
     if ($count !=0) {
-      $automatic_annotation_link = [ "/search/annotation_search_result.pl?search_text=$term&Submit=search&request_from=0&search_type=blast_search", "$count automatic annotations to $unigene_count unigenes" ];
+      $automatic_annotation_link = [ "/search/annotation_search_result.pl?search_text=$term&Submit=search&request_from=0&search_type=blast_search", "$count automatic annotations on $unigene_count unigenes" ];
     }
     return $automatic_annotation_link;
 }
@@ -366,8 +370,12 @@ sub google_search {
                         path     => '/custom',
                         query    => {
                             q    => $term,
-                            btnG => 'Google Search',
+                            ( $site_address
+                              ? ( sitesearch => $site_address )
+                              : ()
+                            ),
                         },
+                        query_separator => '&',
                       );
 
   my $lwp_ua = LWP::UserAgent->new;
@@ -384,9 +392,9 @@ sub google_search {
   };
 
   if( $count ) {
-      return [ $google_url, "$count web pages on $site_title" ];
+      return [ $google_url, "$count pages on $site_title" ];
   } else {
-      return [ undef, "0 web pages on $site_title" ];
+      return [ undef, "0 pages on $site_title" ];
   }
 }
 
