@@ -53,14 +53,41 @@ var Ontology = {
             });
     },
 
-        updateAutocomplete: function(autocomplete_url) {
+        updateAutocomplete: function(autocomplete_url, relationship_uri, rel_div) {
+        // setting some default values
+        if (!relationship_uri)  relationship_uri = '/cvterm/ajax/relationships' ;
+        if (!rel_div) rel_div = 'relationship_select' ;
         jQuery(function() {
                 jQuery("#term_name").autocomplete({
-                        source: autocomplete_url + "?db_name="+jQuery("#db_name").val()
+                        source: autocomplete_url + "?db_name="+jQuery("#db_name").val(),
+                        wait: 2,
+                        change: Ontology.populateEvidence(rel_div, relationship_uri)
                     });
             });
     },
-    
         ////
-}
+        //Make an ajax request for finding the available objects for ontology evidence
+        //(relationships, evidence codes, evidence description
+        populateEvidence: function(div_id, uri, dummy_option) {
+        jQuery.ajax({ url: uri , method:"POST" ,
+                      success: function(response) {
+                    var error = response.error;
+                    if (error) { alert(error) ; }
+                    var select = jQuery('#'+div_id);
+                    ////
+                    var options = '';
+                    if (!dummy_option) dummy_option = '--Please select one--';
+                    options += '<option value="">' + dummy_option + '</option>';
+                    for ( var id in response) {
+                        options += '<option value="' + id + '">' + response[id]+ '</option>';
+                    }
+                    jQuery("#"+div_id).html(options);
+                }
+            });
+    },
+        getEvidenceWith: function() {
+    },
+        getReference: function() {
+    },
 
+}
