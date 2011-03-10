@@ -1,9 +1,10 @@
 <%args>
-  $quick_search
+  $results
+  $term
   $show_times => 0
 </%args>
 
-<& /page/page_title.mas, title => 'Quick search for '.encode_entities( '"'.$quick_search->{term}.'"' ) &>
+<& /page/page_title.mas, title => 'Quick search for '.encode_entities( '"'.$term.'"' ) &>
 
 <p style="margin: 2em 0 1em 0">
   Note: The quick search does not perform exactly the same queries as
@@ -56,7 +57,7 @@
 
   use HTML::Entities;
 
-  my %search = %{ $quick_search->{results} };
+  my %search = %$results;
   for my $search ( values %search ) {
       my ( $url, $desc ) = @{$search->{result}};
       my $exact = $search->{exact} ? '*' : '';

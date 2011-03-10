@@ -37,44 +37,50 @@ that search is also provided.
 =cut
 
 my %searches = (
-		 clone      => { function => \&quick_clone_search, exact => 1 },
-		 est        => { function => \&quick_est_search,   exact => 1 },
-		 microarray => { function => \&quick_array_search, exact => 1 },
-		 marker     => { function => \&quick_marker_search  },
-		 manual_annotations    => { function => \&quick_manual_annotation_search    },
-		 automatic_annotations => { function => \&quick_automatic_annotation_search },
-                 sgn_pages  => { function => \&quick_page_search },
-		 web        => { function => \&quick_web_search  },
-                 people     => { class       => 'CXGN::Searches::People',
-		                 result_desc => 'people',
-				 search_path => '/solpeople/people_search.pl'
-			       },
-		 library    => { class       => 'CXGN::Searches::Library',
-		                 result_desc => 'cDNA libraries',
-				 search_path => '/search/library_search.pl',
-			       },
-		 bac        => { class       => 'CXGN::Genomic::Search::Clone',
-				 result_desc => 'BAC identifiers',
-				 search_path => '/maps/physical/clone_search.pl',
-			       },
-		 unigene    => { class       => 'CXGN::Unigene::Search',
-				 result_desc => 'unigene identifiers',
-				 search_path => '/search/ug-ad2.pl',
-				 exact       => 1,
-			       },
-                 phenotype  => { class       => 'CXGN::Phenotypes',
- 				 result_desc => 'phenotype identifiers',
- 				 search_path => '/search/phenotype_search.pl',
- 			       },
-                 image      => { class       => 'CXGN::Searches::Images',
- 				 result_desc => 'images',
- 				 search_path => '/search/image_search.pl',
- 			       },
-                 locus_allele      => { class       => 'CXGN::Phenome',
- 				        result_desc => 'locus or allele identifiers',
- 				        search_path => '/search/locus_search.pl',
- 			              },
-	       );
+
+    # function-based searches
+    clone      => { function => \&quick_clone_search, exact => 1 },
+    est        => { function => \&quick_est_search,   exact => 1 },
+    microarray => { function => \&quick_array_search, exact => 1 },
+    marker     => { function => \&quick_marker_search  },
+    manual_annotations    => { function => \&quick_manual_annotation_search    },
+    automatic_annotations => { function => \&quick_automatic_annotation_search },
+    sgn_pages  => { function => \&quick_page_search },
+    web        => { function => \&quick_web_search  },
+
+    # search-framework searches
+    people     => { sf_class    => 'CXGN::Searches::People',
+                    result_desc => 'people',
+                    search_path => '/solpeople/people_search.pl'
+                  },
+    library    => { sf_class    => 'CXGN::Searches::Library',
+                    result_desc => 'cDNA libraries',
+                    search_path => '/search/library_search.pl',
+                },
+    bac        => { sf_class       => 'CXGN::Genomic::Search::Clone',
+                    result_desc => 'BAC identifiers',
+                    search_path => '/maps/physical/clone_search.pl',
+                },
+    unigene    => { sf_class       => 'CXGN::Unigene::Search',
+                    result_desc => 'unigene identifiers',
+                    search_path => '/search/ug-ad2.pl',
+                    exact       => 1,
+                },
+    phenotype  => { sf_class    => 'CXGN::Phenotypes',
+                    result_desc => 'phenotype identifiers',
+                    search_path => '/search/phenotype_search.pl',
+                },
+    image      => { sf_class    => 'CXGN::Searches::Images',
+                    result_desc => 'images',
+                    search_path => '/search/image_search.pl',
+                },
+    locus_allele      => { sf_class    => 'CXGN::Phenome',
+                           result_desc => 'locus or allele identifiers',
+                           search_path => '/search/locus_search.pl',
+                       },
+
+    # note that there is also another method of searching using site feature xrefs
+  );
 
 
 =head2 quick_search
@@ -96,7 +102,7 @@ sub quick_search: Path('/search/quick') {
     defined $term && length $term
         or $c->throw_client_error( public_message => 'Must provide a search term' );
 
-    $c->stash->{quick_search}{term} = $term;
+    $c->stash->{term} = $term;
 
     #first run the term through CXGN::Tools::Identifiers, and if it's
     #recognized as an exact SGN identifier match, just redirect them to
@@ -111,7 +117,7 @@ sub quick_search: Path('/search/quick') {
                  && $direct_url !~ /sgn\.cornell\.edu|solgenomics\.net/
                ) {
                 my ($domain) = $direct_url =~ m|://(?:www\.)?([^/]+)|;
-                $c->stash->{quick_search}{results}{external_link}{result} = [ $direct_url, '1 direct information page' ];
+                $c->stash->{results}{external_link}{result} = [ $direct_url, '1 direct information page' ];
             } else {
                 $c->res->redirect( $direct_url );
                 return;
@@ -119,19 +125,31 @@ sub quick_search: Path('/search/quick') {
         }
     }
 
-    for my $search_name ( sort keys %searches ) {
-        $c->stash->{quick_search}{results}{$search_name} = $self->do_search( $c,  $search_name, $searches{$search_name}, $term );
-    }
+    $c->forward('execute_predefined_searches');
 
     $c->stash->{show_times} = $c->req->parameters->{showtimes};
     $c->stash->{template} = '/search/quick_search.mas';
 }
 
-sub do_search {
-    my ( $self, $c, $searchname, $search, $term ) = @_;
-    my $b = time;
-    my $searchresults = $self->do_quick_search( $c->dbc->dbh, %$search, term => $term);
-    return { result => $searchresults, time => time - $b, exact => $search->{exact} }
+sub execute_predefined_searches: Private {
+    my ( $self, $c ) = @_;
+
+    # execute all the searches and stash the results
+    for my $search_name ( sort keys %searches ) {
+         my $search = $searches{$search_name};
+         my $b = time;
+         my $searchresults = $self->do_quick_search(
+             $c->dbc->dbh,
+             %$search,
+             term => $c->stash->{term},
+           );
+         $c->stash->{results}{$search_name} = {
+             result => $searchresults,
+             time   => time - $b,
+             exact  => $search->{exact}
+           };
+
+    }
 }
 
 #do a quick search with either a legacy quick search function or a
@@ -142,7 +160,7 @@ sub do_quick_search {
     if ($args{function}) { #just run legacy functions and return their results
         return $args{function}->( $db,$args{term});
     } else {
-        my $classname = $args{class}
+        my $classname = $args{sf_class}
             or die 'Must provide a class name';
 
         Class::MOP::load_class( $classname );
@@ -154,7 +172,7 @@ sub do_quick_search {
 
         #check that the query has a quick_search function
         $query->can('quick_search')
-    or die "Search '$classname' does not appear to have a query object with a quick_search method";
+            or die "Search '$classname' does not appear to have a query object with a quick_search method";
 
         if ( $query->quick_search($args{term}) ) {
             my $results = $search->do_search($query);
