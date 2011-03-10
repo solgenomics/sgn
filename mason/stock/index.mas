@@ -141,12 +141,6 @@ my $pub_count = scalar( @$pubmeds );
 # sp, po, go , PMID, EUSOL, tgrc
 </%perl>
 
-<script language="javascript" type="text/javascript">
-<!--
-    var stockPage = new CXGN.Phenome.Stock.StockPage();
-    stockPage.setStockId( <% $stock_id %> );
--->
-</script>
 
 <& /util/import_javascript.mas, classes => ["jquery", "thickbox", "CXGN.Page.FormattingHelpers", "CXGN.Phenome.Stock.StockPage"] &>
 
