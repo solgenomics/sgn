@@ -142,7 +142,7 @@ my $pub_count = scalar( @$pubmeds );
 </%perl>
 
 
-<& /util/import_javascript.mas, classes => ["jquery", "thickbox", "CXGN.Page.FormattingHelpers", "CXGN.Phenome.Stock.StockPage"] &>
+<& /util/import_javascript.mas, classes => ["jquery", "thickbox", "CXGN.Page.FormattingHelpers"] &>
 
 
 <& /page/page_title.mas, title=> ucfirst($type_name)  .  ": " . $stock->get_uniquename()  . "\n" &>
