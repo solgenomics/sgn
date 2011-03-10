@@ -15,10 +15,10 @@
 &>
 <style>
 
-td.advanced {
+div[class~="advanced"] {
     display: none;
-    visibitily: hidden;
 }
+
 #stock_search_form .select span span {
   white-space: nowrap;
   float: left;
@@ -43,10 +43,8 @@ div.paginate_nav {
 
 <script language="javascript">
   function toggle_advanced() {
-        $ = jQuery;
-        $('div.tumble').toggleClass('bounce');
-       }
-
+        jQuery('div[class~="advanced"]').toggleClass('advanced');
+  }
   jQuery(function() {
      jQuery("#person").autocomplete({
         source: '<% $sp_person_autocomplete_uri %>'
@@ -97,7 +95,7 @@ my $form = HTML::FormFu->new(Load(<<EOY));
             name: person
             id: person
             label: Editor
-            attributes:
+            container_attributes:
                 class: advanced
 
           - type: Text
@@ -105,7 +103,7 @@ my $form = HTML::FormFu->new(Load(<<EOY));
             id: trait
             label: Trait
             size: 40
-            attributes:
+            container_attributes:
                 class: advanced
 
           - type: Text
@@ -113,7 +111,7 @@ my $form = HTML::FormFu->new(Load(<<EOY));
             id: min_limit
             label: Min. value
             size: 5
-            attributes:
+            container_attributes:
                 class: advanced
 
           - type: Text
@@ -121,7 +119,7 @@ my $form = HTML::FormFu->new(Load(<<EOY));
             id: max_limit
             label: Max. value
             size: 5
-            attributes:
+            container_attributes:
                 class: advanced
 
           - type: Submit
