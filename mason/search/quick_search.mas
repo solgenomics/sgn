@@ -1,0 +1,69 @@
+<%args>
+  $quick_search
+  $show_times => 0
+</%args>
+
+<& /page/page_title.mas, title => 'Quick search for '.encode_entities( '"'.$quick_search->{term}.'"' ) &>
+
+<p style="margin: 2em 0 1em 0">
+  Note: The quick search does not perform exactly the same queries as
+  full searches for the various data types.  If your desired result
+  does not appear, you may want to try again with one of the advanced
+  search tools in the "search" menu.
+</p>
+
+<div style="float: left; width: 50%">
+  <dl>
+  <dt>Identifiers</dt>
+  <dd>
+    <% $search{clone} %>
+    <% $search{est} %>
+    <% $search{unigene} %>
+    <% $search{microarray} %>
+    <% $search{marker} %>
+    <% $search{bac} %>
+    <% $search{phenotype} %>
+    <% $search{locus_allele} %>
+  </dd>
+  <dt>People (searching by name)</dt>
+  <dd><% $search{people} %></dd>
+  </dl>
+</div>
+<div style="float: right; width: 50%">
+  <dl>
+  <dt>cDNA libraries</dt>
+  <dd><% $search{library} %></dd>
+  <dt>Annotations</dt>
+  <dd>
+    <% $search{manual_annotations} %>
+    <% $search{automatic_annotations} %>
+  </dd>
+  <dt>Web pages</dt>
+  <dd>
+    <% $search{sgn_pages} %>
+    <% $external_link %>
+    <% $search{web} %>
+  </dd>
+  <dt>Images</dt>
+  <dd>
+    <% $search{image} %>
+  </dd>
+  </dl>
+</div>
+* &ndash; exact matches only
+
+<%init>
+
+  use HTML::Entities;
+
+  my %search = %{ $quick_search->{results} };
+  for my $search ( values %search ) {
+      my ( $url, $desc ) = @{$search->{result}};
+      my $exact = $search->{exact} ? '*' : '';
+      my $html = $url ? qq|<a class="quicksearch_hit" href="$search->{result}[0]">$search->{result}[1]$exact</a>|
+                      : qq|<div class="ghosted">$desc$exact</div>|;
+      $search = $html;
+  }
+  my $external_link = $quick_search->{external_link};
+
+</%init>
