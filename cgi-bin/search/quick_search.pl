@@ -247,7 +247,7 @@ sub quick_est_search {
     # the est quick search should support identifiers of the form SGN-E999999, SGN_E999999, SGNE999999
     # and also E999999, as well as straight number (999999).
 
-    if ($term =~ /^\d+$/ || identifier_namespace($term) eq 'sgn_e' )
+    if ($term =~ /^\d+$/ || ( identifier_namespace($term) || '' )eq 'sgn_e' )
     {
       my ($id_term) = $term =~ /(\d+)/;
       my $count = sql_query_count($db, "SELECT count(*) FROM est WHERE est.est_id = ?",$id_term);
@@ -282,8 +282,7 @@ sub quick_clone_search {
       $where_clause = "WHERE clone_name ilike ?";
     }
 
-    my $sgn = $db->qualify_schema('sgn');
-    my $query = "SELECT clone_id FROM $sgn.clone $where_clause";
+    my $query = "SELECT clone_id FROM sgn.clone $where_clause";
     my ($clone_id) = $db->selectrow_array($query, undef, $term);
 
     my $clone_link = "0 cDNA clone identifiers";
