@@ -1,37 +1,62 @@
 <%args>
-  $opts => undef
-  $request => undef
+  $opts                       => undef
+  $request                    => undef
   $sp_person_autocomplete_uri
   $trait_autocomplete_uri
-
 </%args>
+
+<%once>
+    use HTML::FormFu;
+    use YAML::Any;
+</%once>
 
 <& /util/import_javascript.mas,
  classes=>[qw[CXGN.Effects jquery jqueryui popup] ]
 &>
+<style>
+
+td.advanced {
+    display: none;
+    visibitily: hidden;
+}
+#stock_search_form .select span span {
+  white-space: nowrap;
+  float: left;
+  width: 10em;
+}
+#stock_search_form div label, #stock_search_form legend {
+  font-weight: bold;
+}
+#stock_search_form label {
+  float: left;
+  width: 8em;
+}
+
+div.paginate_nav {
+  margin: 0 auto;
+  width: 80%;
+  white-space: nowrap;
+  text-align: center;
+}
+</style>
+
 
 <script language="javascript">
   function toggle_advanced() {
-         jQuery('#advanced').toggle();
+        $ = jQuery;
+        $('div.tumble').toggleClass('bounce');
        }
 
   jQuery(function() {
      jQuery("#person").autocomplete({
-	 source: '<% $sp_person_autocomplete_uri %>'
+        source: '<% $sp_person_autocomplete_uri %>'
      });
      jQuery("#trait").autocomplete({
-	 source: '<% $trait_autocomplete_uri %>'
+        source: '<% $trait_autocomplete_uri %>'
      });
   });
 
 </script>
-
-
-<%once>
-  use HTML::FormFu;
-  use YAML::Any;
-
-</%once>
 
 <%perl>
 
@@ -68,31 +93,36 @@ my $form = HTML::FormFu->new(Load(<<EOY));
             name: page_size
             default: 20
 
-          - type: Block
-            id: advanced
-
           - type: Text
             name: person
             id: person
             label: Editor
+            attributes:
+                class: advanced
 
           - type: Text
             name: trait
             id: trait
             label: Trait
             size: 40
+            attributes:
+                class: advanced
 
           - type: Text
             name: min_limit
             id: min_limit
             label: Min. value
             size: 5
+            attributes:
+                class: advanced
 
           - type: Text
             name: max_limit
             id: max_limit
             label: Max. value
             size: 5
+            attributes:
+                class: advanced
 
           - type: Submit
             name: submit
@@ -111,28 +141,6 @@ $form->process( $request );
 
 
 <!-- This CSS should probably go somewhere better -->
-<style>
-#stock_search_form .select span span {
-  white-space: nowrap;
-  float: left;
-  width: 10em;
-}
-#stock_search_form div label, #stock_search_form legend {
-  font-weight: bold;
-}
-#stock_search_form label {
-  float: left;
-  width: 8em;
-}
-
-div.paginate_nav {
-  margin: 0 auto;
-  width: 80%;
-  white-space: nowrap;
-  text-align: center;
-}
-</style>
-
 
 <% $form->render %>
 
