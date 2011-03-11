@@ -1,70 +1,100 @@
 <%args>
+
   $results
+
   $term
+
   $show_times => 0
+
+  $xrefs      => {}
+  $xrefs_time => 0
+
 </%args>
 
 <& /page/page_title.mas, title => 'Quick search for '.encode_entities( '"'.$term.'"' ) &>
 
-<p style="margin: 2em 0 1em 0">
+<div class="page_introduction">
   Note: The quick search does not perform exactly the same queries as
   full searches for the various data types.  If your desired result
   does not appear, you may want to try again with one of the advanced
   search tools in the "search" menu.
-</p>
+</div>
 
-<div style="float: left; width: 50%">
-  <dl>
-  <dt>Identifiers</dt>
-  <dd>
-    <% $search{clone} %>
-    <% $search{est} %>
-    <% $search{unigene} %>
-    <% $search{microarray} %>
-    <% $search{marker} %>
-    <% $search{bac} %>
-    <% $search{phenotype} %>
-    <% $search{locus_allele} %>
-  </dd>
-  <dt>People (searching by name)</dt>
-  <dd><% $search{people} %></dd>
-  </dl>
-</div>
-<div style="float: right; width: 50%">
-  <dl>
-  <dt>cDNA libraries</dt>
-  <dd><% $search{library} %></dd>
-  <dt>Annotations</dt>
-  <dd>
-    <% $search{manual_annotations} %>
-    <% $search{automatic_annotations} %>
-  </dd>
-  <dt>Web pages</dt>
-  <dd>
-    <% $search{sgn_pages} %>
-    <% $search{external_link} %>
-    <% $search{web} %>
-  </dd>
-  <dt>Images</dt>
-  <dd>
-    <% $search{image} %>
-  </dd>
-  </dl>
-</div>
-* &ndash; exact matches only
+<&| /page/info_section.mas, title => 'Exact matches' &>
+
+  <div>
+    <dl>
+    <dt>Identifiers</dt>
+    <dd>
+      <div style="float: left; width: 50%">
+        <% $search{clone} %>
+        <% $search{est} %>
+      </div>
+      <div style="float: right; width: 50%">
+        <% $search{unigene} %>
+        <% $search{microarray} %>
+      </div>
+      <div style="clear: both; margin-bottom: -1em">&nbsp;</div>
+    </dd>
+    </dl>
+  </div>
+
+  <& /sitefeatures/mixed/xref_set/link.mas, xrefs => $xrefs &>
+</&>
+
+<&| /page/info_section.mas,
+    title => 'Fuzzy matches'.($show_times ? sprintf(' (%0.1f sec)', $xrefs_time) : ''),
+    subtitle => 'not necessarily exact',
+ &>
+  <div style="float: left; width: 50%">
+    <dl>
+    <dt>Identifiers</dt>
+    <dd>
+      <% $search{marker} %>
+      <% $search{bac} %>
+      <% $search{phenotype} %>
+      <% $search{locus_allele} %>
+    </dd>
+    <dt>People (searching by name)</dt>
+    <dd><% $search{people} %></dd>
+    <dt>Images</dt>
+    <dd>
+      <% $search{image} %>
+    </dd>
+    </dl>
+  </div>
+  <div style="float: right; width: 50%">
+    <dl>
+    <dt>cDNA libraries</dt>
+    <dd><% $search{library} %></dd>
+    <dt>Annotations</dt>
+    <dd>
+      <% $search{manual_annotations} %>
+      <% $search{automatic_annotations} %>
+    </dd>
+    <dt>Web pages</dt>
+    <dd>
+      <% $search{sgn_pages} %>
+      <% $search{external_link} %>
+      <% $search{web} %>
+    </dd>
+    </dl>
+  </div>
+</&>
 
 <%init>
 
+  use SGN::View::Mason::CrossReference 'resolve_xref_component';
   use HTML::Entities;
 
   my %search = %$results;
   for my $search ( values %search ) {
       my ( $url, $desc ) = @{$search->{result}};
-      my $exact = $search->{exact} ? '*' : '';
       my $time  = $show_times ? sprintf(' (%0.1f sec)', $search->{time}) : '';
-      my $html = $url ? qq|<div><a class="quicksearch_hit" href="$search->{result}[0]">$search->{result}[1]$exact$time</a></div>|
-                      : qq|<div class="ghosted">$desc$exact$time</div>|;
+      my $html = $url ? qq|<div><a class="quicksearch_hit" href="$search->{result}[0]">$search->{result}[1]$time</a></div>|
+                      : qq|<div class="ghosted">$desc$time</div>|;
       $search = $html;
   }
 
 </%init>
+

@@ -1276,8 +1276,12 @@ div.publication_embedded .citation {
   padding-bottom: 1em;
 }
 
-
-/* styles for numerical range input in FormattingHelpers */
+ul.xref_link {
+  padding-left: 0;
+}
+ul.xref_link li {
+  list-style: none outside none;
+}
 
 div.xref_rich_gbrowse2 {
   border-radius: 6px;

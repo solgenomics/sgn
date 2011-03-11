@@ -126,6 +126,7 @@ sub quick_search: Path('/search/quick') {
     }
 
     $c->forward('execute_predefined_searches');
+    $c->forward('search_with_xrefs');
 
     $c->stash->{show_times} = $c->req->parameters->{showtimes};
     $c->stash->{template} = '/search/quick_search.mas';
@@ -150,6 +151,15 @@ sub execute_predefined_searches: Private {
            };
 
     }
+}
+
+sub search_with_xrefs: Private {
+    my ( $self, $c ) = @_;
+
+    my $b = time;
+    my @xrefs = $c->feature_xrefs( $c->stash->{term} );
+    $c->stash->{xrefs} = \@xrefs;
+    $c->stash->{xrefs_time} = time - $b;
 }
 
 #do a quick search with either a legacy quick search function or a
