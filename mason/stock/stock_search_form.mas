@@ -15,7 +15,7 @@
 &>
 <style>
 
-div[class~="advanced"] {
+div[class*="advanced"] {
     display: none;
 }
 
@@ -42,9 +42,6 @@ div.paginate_nav {
 
 
 <script language="javascript">
-  function toggle_advanced() {
-        jQuery('div[class~="advanced"]').toggleClass('advanced');
-  }
   jQuery(function() {
      jQuery("#person").autocomplete({
         source: '<% $sp_person_autocomplete_uri %>'
@@ -53,7 +50,6 @@ div.paginate_nav {
         source: '<% $trait_autocomplete_uri %>'
      });
   });
-
 </script>
 
 <%perl>
@@ -64,7 +60,23 @@ my $form = HTML::FormFu->new(Load(<<EOY));
       attributes:
         name: stock_search_form
         id: stock_search_form
+      javascript:
+            function toggle_advanced() {
+                    jQuery('div[class*="advanced"]').toggle();
+            }
+            jQuery(function(){ jQuery("#advanced_toggle").click(
+                function(){
+                   toggle_advanced();
+                });
+            });
       elements:
+          - type: Checkbox
+            name: advanced
+            label: Advanced
+            value: unchecked
+            id: advanced_toggle
+            default: 0
+
           - type: Text
             name: stock_name
             label: Stock name
@@ -141,6 +153,3 @@ $form->process( $request );
 <!-- This CSS should probably go somewhere better -->
 
 <% $form->render %>
-
-<input value="unchecked" type="checkbox" onclick="toggle_advanced()">Advanced
-
