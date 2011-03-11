@@ -22,6 +22,12 @@
 
 <&| /page/info_section.mas, title => 'Exact matches' &>
 
+% if( @$xrefs ) {
+  <& /sitefeatures/mixed/xref_set/link.mas, xrefs => $xrefs &>
+
+  <hr style="border: 0; border-bottom: 1px solid #aaa; width: 90%; margin: 1.5em auto 1.2em auto"  />
+% }
+
   <div>
     <dl>
     <dt>Identifiers</dt>
@@ -34,12 +40,11 @@
         <% $search{unigene} %>
         <% $search{microarray} %>
       </div>
-      <div style="clear: both; margin-bottom: -1em">&nbsp;</div>
+      <div style="clear: both; margin-bottom: -1.7em">&nbsp;</div>
     </dd>
     </dl>
   </div>
 
-  <& /sitefeatures/mixed/xref_set/link.mas, xrefs => $xrefs &>
 </&>
 
 <&| /page/info_section.mas,
@@ -84,7 +89,6 @@
 
 <%init>
 
-  use SGN::View::Mason::CrossReference 'resolve_xref_component';
   use HTML::Entities;
 
   my %search = %$results;
