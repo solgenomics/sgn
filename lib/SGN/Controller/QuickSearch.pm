@@ -6,6 +6,7 @@ BEGIN { extends 'Catalyst::Controller' }
 
 use Class::MOP;
 use HTML::Entities;
+use List::MoreUtils 'uniq';
 use Time::HiRes 'time';
 use URI::FromHash 'uri';
 
@@ -130,6 +131,22 @@ sub quick_search: Path('/search/quick') {
 
     $c->stash->{show_times} = $c->req->parameters->{showtimes};
     $c->stash->{template} = '/search/quick_search.mas';
+
+    # another optimization: if the quick search found only one
+    # possible URL to go to, go there
+    my @possible_urls = uniq( grep defined,
+         ( map $_->{result}->[0],
+           values %{$c->stash->{results}}
+         ),
+         ( map ''.$_->url,
+           @{ $c->stash->{xrefs} || [] }
+         ),
+       );
+
+    if( @possible_urls == 1 ) {
+        $c->res->redirect( $possible_urls[0] );
+        return;
+    }
 }
 
 sub execute_predefined_searches: Private {

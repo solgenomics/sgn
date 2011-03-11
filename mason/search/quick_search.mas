@@ -22,6 +22,9 @@
 
 <&| /page/info_section.mas, title => 'Exact matches' &>
 
+% if( $show_times ) {
+  <div>Site xref search time: <% sprintf('%0.1f sec', $xrefs_time) %></div>
+% }
 % if( @$xrefs ) {
   <& /sitefeatures/mixed/xref_set/link.mas, xrefs => $xrefs &>
 
@@ -48,8 +51,8 @@
 </&>
 
 <&| /page/info_section.mas,
-    title => 'Fuzzy matches'.($show_times ? sprintf(' (%0.1f sec)', $xrefs_time) : ''),
-    subtitle => 'not necessarily exact',
+    title => 'Fuzzy searches',
+    subtitle => 'click to view search results',
  &>
   <div style="float: left; width: 50%">
     <dl>
