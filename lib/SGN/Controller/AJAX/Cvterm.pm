@@ -68,7 +68,7 @@ GROUP BY cvterm.cvterm_id,cv.name, cvterm.name, dbxref.accession, db.name ";
     #    push @response_list, $hashref;
     #}
     while (my ($cvterm_id, $cv_name, $cvterm_name, $accession) = $sth->fetchrow_array() ) {
-        push @response_list, $cv_name . "--" . $accession . " " . $cvterm_name ;
+        push @response_list, $cv_name . "--" . $accession . "--" . $cvterm_name ;
     }
     $c->{stash}->{rest} = \@response_list;
 }
@@ -77,7 +77,7 @@ sub relationships : Local : ActionClass('REST') { }
 
 sub relationships_GET :Args(0) {
     my ($self, $c) = @_;
-    my $relationship_query = $c->dbc->dbh->prepare("SELECT distinct(cvterm.dbxref_id), cvterm.name
+    my $relationship_query = $c->dbc->dbh->prepare("SELECT distinct(cvterm.cvterm_id), cvterm.name
                                        FROM public.cvterm
                                        JOIN public.cv USING (cv_id)
                                       JOIN public.cvterm_relationship ON (cvterm.cvterm_id= cvterm_relationship.subject_id)
@@ -86,9 +86,9 @@ sub relationships_GET :Args(0) {
                                        ORDER BY cvterm.name;
                                       ");
     $relationship_query->execute();
-    my $hashref;
-    while  ( my ($dbxref_id, $cvterm_name) = $relationship_query->fetchrow_array() ) {
-        $hashref->{$dbxref_id} = $cvterm_name;
+    my $hashref={};
+    while  ( my ($cvterm_id, $cvterm_name) = $relationship_query->fetchrow_array() ) {
+        $hashref->{$cvterm_id} = $cvterm_name;
     }
     $c->{stash}->{rest} = $hashref;
 }
@@ -97,7 +97,7 @@ sub evidence : Local : ActionClass('REST') { }
 
 sub evidence_GET :Args(0) {
     my ($self, $c) = @_;
-    my $query = $c->dbc->dbh->prepare("SELECT distinct(cvterm.dbxref_id), cvterm.name
+    my $query = $c->dbc->dbh->prepare("SELECT distinct(cvterm.cvterm_id), cvterm.name
                                        FROM public.cvterm_relationship
                                       JOIN public.cvterm ON (cvterm.cvterm_id= cvterm_relationship.subject_id)
                                        WHERE
@@ -106,9 +106,9 @@ sub evidence_GET :Args(0) {
                                        ORDER BY cvterm.name;
                                       ");
     $query->execute();
-    my $hashref;
-    while  ( my ($dbxref_id, $cvterm_name) = $query->fetchrow_array() ) {
-        $hashref->{$dbxref_id} = $cvterm_name;
+    my $hashref={};
+    while  ( my ($cvterm_id, $cvterm_name) = $query->fetchrow_array() ) {
+        $hashref->{$cvterm_id} = $cvterm_name;
     }
     $c->{stash}->{rest} = $hashref;
 }
@@ -119,16 +119,15 @@ sub evidence_description : Local : ActionClass('REST') { }
 sub evidence_description_GET :Args(0) {
     my ($self, $c) = @_;
     my $evidence_code_id = $c->request->param("evidence_code_id");
-    my $query = $c->dbc->dbh->prepare("SELECT dbxref_id, cvterm.name FROM cvterm
+    my $query = $c->dbc->dbh->prepare("SELECT cvterm_id, cvterm.name FROM cvterm
                                                 JOIN cvterm_relationship ON cvterm_id=subject_id
-                                                WHERE object_id= (select cvterm_id FROM public.cvterm WHERE dbxref_id= ?)
+                                                WHERE object_id= (select cvterm_id FROM public.cvterm WHERE cvterm_id= ?)
                                                 AND cvterm.is_obsolete = 0"
         );
     $query->execute($evidence_code_id);
-    my $hashref;
-    while  ( my ($dbxref_id, $cvterm_name) = $query->fetchrow_array() ) {
-        $hashref->{$dbxref_id} = $cvterm_name;
-        print STDERR "******Found dbxref_id $dbxref_id , cvterm_name = $cvterm_name\n\n";
+    my $hashref={};
+    while  ( my ($cvterm_id, $cvterm_name) = $query->fetchrow_array() ) {
+        $hashref->{$cvterm_id} = $cvterm_name;
     }
     $c->{stash}->{rest} = $hashref;
 }

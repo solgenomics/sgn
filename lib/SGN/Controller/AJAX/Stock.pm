@@ -254,8 +254,8 @@ sub display_ontologies_GET  {
         my ($evidence_code) =  $props->search_related('type', { cv_id=>$evidence_cv->cv_id} )->single; # should be 1 evidence_code ?
         ############
         my $evidence_desc_name;
-
-
+        my $rel_name = $relationship ? $relationship->name : undef;
+        my $ev_name  = $evidence_code ? $evidence_code->name : undef;
         #if the dbxref has an obsolete property (must have a true value
         # since annotations can be obsolete and un-obsolete, it is possible
         # to have an obsolete property with value = 0, meaning the annotation
@@ -274,12 +274,12 @@ sub display_ontologies_GET  {
             
             # generate the list of obsolete annotations 
             push @obs_annot,
-            $relationship->name . " "
+            $rel_name . " "
                 . $cvterm_link . " ("
-                . $evidence_code->name . ")"
+                . $ev_name . ")"
                 . $unobsolete;
         }else {
-            my $ontology_details = $relationship->name
+            my $ontology_details = $rel_name
                 . qq| $cvterm_link ($db_name:<a href="$url$db_accession" target="blank"> $accession</a>)<br />|;
             # build the obsolete link if the user has  editing privileges
             my $obsolete_link = $privileged ? qq| <a href="/ajax/ontology/obsolete_annotation($_)">[delete]</a> | : undef ;
@@ -303,7 +303,7 @@ sub display_ontologies_GET  {
             my $ev_string;
             $ev_string .= "<hr />" if $ont_hash{$cv_name}{$ontology_details};
             no warnings 'uninitialized';
-            $ev_string .=  $evidence_code->name . "<br />";
+            $ev_string .=  $ev_name . "<br />";
             $ev_string .= $evidence_desc_name . "<br />" if $evidence_desc_name;
             $ev_string .= "<a href=\"$ev_with_url\">$ev_with_acc</a><br />" if $ev_with_acc;
             $ev_string .="<a href=\"$reference_url\">$reference_acc</a><br />" if $reference_acc;
@@ -352,24 +352,30 @@ sub associate_ontology_GET :Args(0) {
     my ( $self, $c ) = @_;
     my $stock_id = $c->req->param('object_id');
     my $ontology_input = $c->req->param('term_name');
-    my $relationship = $c->req->param('relationship');
-    my $evidence_code;
-    my $evidence_description;
-    my $evidence_with;
-    my $reference;
+    my $relationship = $c->req->param('relationship'); # a cvterm_id
+    my $evidence_code = $c->req->param('evidence'); # a cvterm_id
+    my $evidence_description = $c->req->param('evidence_desc'); # a cvterm_id 
+    my $evidence_with = $c->req->param('evidence_with'); # a dbxref_id (type='evidence_with' value = 'dbxref_id'
+    my $reference = $c->req->param('reference'); # a dbxref_id
+    my $params = map { $_ => $c->req->param($_) } qw/
+       stock_id ontology_input relationship evidence_code evidence_description
+       evident_with reference
+    /;
+    #solanaceae_phenotype--SP:000001--fruit size
+    my ($cv_name, $db_accession, $cvterm_name)  = split /--/ , $ontology_input;
+    my ($db_name, $accession) = split ':' , $db_accession;
 
-    my $cvterm_name  = $ontology_input; ##??
     my ($cvterm) = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado')
-        ->resultset('Cv::Cvterm')
-        ->search({
-            'cvterm.name' => $cvterm_name, } );
+        ->resultset('General::Db')
+        ->search({ 'me.name' => $db_name, } )->search_related('dbxrefs' , { accession => $accession } )
+        ->search_related('cvterm')->first; # should be only 1 cvterm per dbxref
     if (!$cvterm) {
-        $c->stash->{rest} = { error => "no ontology term found for term '$cvterm_name' " };
+        $c->stash->{rest} = { error => "no ontology term found for term $db_name : $accession" };
         return;
     }
-    my $stock = $c->stash->{stock};
-    #my $stock = $c->dbic_schema('Bio::Chado::Schema' , 'sgn_chado')
-    #    ->resultset("Stock::Stock")->find({stock_id => $stock_id } ) ;
+    my ($stock) = $c->stash->{stock} || $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado')->resultset("Stock::Stock")->find( { stock_id => $stock_id } );
+
+
     my  $cvterm_id = $cvterm->cvterm_id;
     if (!$c->user) {
         $c->stash->{rest} = { error => 'Must be logged in for associating ontology terms! ' };
@@ -381,22 +387,21 @@ sub associate_ontology_GET :Args(0) {
         #########################################################
         if ($stock && $cvterm_id) {
             try {
+                print STDERR "********trying to load stockdbxrefprops: \n $relationship =1\n $evidence_code = 1 , $evidence_description =1 , reference= $reference, evidence_with = $evidence_with \n\n";
                 my $s_dbxref = $stock->find_or_create_related(
                     'stock_dbxrefs', { dbxref_id => $cvterm->dbxref_id, } );
-                my $rel_name; # the cvterm name of the relationship name
-                my $ev_code;   # the cvterm name of the evidence_code
-                my $ev_desc;   #the cvterm name of the evidence_description
-                my $ref_dbxref_id;      # the dbxref_id  of the reference
-
-                $s_dbxref->create_stockdbxref_props(
-                    { $rel_name => 1 , } , { db_name => 'OBO_REL', cv_name =>'relationship' } );
-                $s_dbxref->create_stockdbxref_props(
-                    { $ev_code => 1 , $ev_desc => 1 } , { db_name => 'ECO', cv_name =>'evidence_code' } );
-                $s_dbxref->create_stockdbxref_props(
-                    { 'reference' => $ref_dbxref_id , } , { cv_name =>'local' } );
+                $s_dbxref->create_stock_dbxrefprops(
+                    { $relationship => 1 , } , { db_name => 'OBO_REL', cv_name =>'relationship' } );
+                $s_dbxref->create_stock_dbxrefprops(
+                    { $evidence_code => 1 } , { db_name => 'ECO', cv_name =>'evidence_code' } );
+                 $s_dbxref->create_stock_dbxrefprops(
+                     { $evidence_description => 1 } , { db_name => 'ECO', cv_name =>'evidence_code' } ) if $evidence_description;
+                $s_dbxref->create_stock_dbxrefprops(
+                    { 'reference' => $reference , } , { cv_name =>'local' } );
+                $s_dbxref->create_stock_dbxrefprops(
+                    { 'evidence_with' => $evidence_with , } , { cv_name =>'local' , autocreate=>1} ) if $evidence_with;
 
                 $c->stash->{rest} = ['success'];
-                # need to update the loci div!!
                 return;
             } catch {
                 $c->stash->{rest} = { error => "Failed: $_" };
@@ -410,4 +415,26 @@ sub associate_ontology_GET :Args(0) {
     }
 }
 
+
+sub references : Chained('/stock/get_stock') :PathPart('references') : ActionClass('REST') { }
+
+
+sub references_GET :Args(0) {
+    my ($self, $c) = @_;
+    my $stock = $c->stash->{stock};
+    # get a list of references
+    my $q =  "SELECT dbxref.dbxref_id, pub.pub_id, accession,title
+              FROM public.stock_pub
+              JOIN public.pub USING (pub_id)
+              JOIN public.pub_dbxref USING (pub_id)
+              JOIN public.dbxref USING (dbxref_id)
+              WHERE stock_id= ?";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute($stock->get_stock_id);
+    my $response_hash={};
+    while (my ($dbxref_id, $pub_id, $accession, $title) = $sth->fetchrow_array) {
+        $response_hash->{$pub_id} = $accession . ": " . $title;
+    }
+    $c->stash->{rest} = $response_hash;
+}
 1;

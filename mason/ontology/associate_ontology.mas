@@ -67,6 +67,7 @@ $cvterm_add_uri
 $relationships_uri => '/ajax/cvterm/relationships'
 $evidence_uri => '/ajax/cvterm/evidence'
 $evidence_description_uri => '/ajax/cvterm/evidence_description'
+$reference_uri => '/stock/'.$object_id.'/references'
 $show_form => 0
 $div_id => 'ontology_terms'
 $ontology_url
@@ -109,12 +110,12 @@ $ontology_url
   
 </script>
 
-
+% if ($show_form) { 
 <div id="associate_cvterm_form">
   <b>Associate ontology term</b>
   <form name="cvterm_form" >
     <div id="cvterm_search" >
-      <input type="text" style="width: 50%" id="term_name" name="term_name" value="Type a term name" onchange="Ontology.updateAutocomplete('<% $cvterm_autocomplete_uri %>', '<% $relationships_uri %>')" />
+      <input type="text" style="width: 50%" id="term_name" name="term_name" value="Type a term name" onchange="Ontology.updateAutocomplete('<% $cvterm_autocomplete_uri %>')" />
       <input type="hidden" id="object_id" name="object_id" value="<% $object_id %>" />
 
       <select id = "db_name" onchange="jQuery('#term_name').val('---Type a term name---')")">
@@ -131,7 +132,7 @@ $ontology_url
     </select>
     <b>Evidence code:</b>
     <select id="evidence_code_select" style="width: 100%"
-	    onchange="Ontology.populateEvidence('evidence_description_select', '<% $evidence_description_uri %>' + '?evidence_code_id=' + jQuery('#evidence_code_select').val() );Ontology.getEvidenceWith();Ontology.getReference()">
+	    onchange="jQuery('#associate_ontology_button').removeAttr('disabled');Ontology.populateEvidence('evidence_description_select', '<% $evidence_description_uri %>' + '?evidence_code_id=' + jQuery('#evidence_code_select').val() );Ontology.getEvidenceWith();Ontology.populateEvidence('reference_select', '<% $reference_uri %>')">
     </select>
     
     <b>Evidence description:</b>
@@ -150,10 +151,12 @@ $ontology_url
              id="associate_ontology_button"
              value="associate term"
              disabled="true"
-             onclick="javascript:Ontology.submitCvtermForm();this.disables=true"
+             onclick="javascript:Ontology.submitCvtermForm('<% $cvterm_add_uri %>', '<% $ontology_url %>');this.disabled=true"
              </div>
       </div>
 
     </div>
   </form>
 </div>
+
+% }
