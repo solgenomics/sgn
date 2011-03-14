@@ -12,14 +12,6 @@ SGN::Controller::Contact - controller for contact page
 
 =cut
 
-#reference holds the URL of the page user was last on
-has 'reference' => (
-    is       => "rw",
-    isa      => 'Str',
-    required => 0,
-    default  => '',
-);
-
 #Creates a blank form
 sub form :Path('/contact/form') :Args(0) {
     my ($self, $c) = @_;
@@ -34,7 +26,8 @@ sub _load_user {
     my $user = $c->user_exists ? $c->user->get_object : CXGN::People::Person->new( $dbh, undef );
 
     # TODO: we shouldn't have to dig into {user} here
-    my ($username, $useremail) = ($user->get_username, $user->get_private_email());
+    my $username  = $user->get_first_name.' '.$user->get_last_name;
+    my $useremail = $user->get_private_email;
 
     return ($username, $useremail);
 }
@@ -47,7 +40,7 @@ sub _build_form_page {
     $c->stash->{email}                    = $email if $email;
     $c->stash->{subject}                  = $subject if $subject;
     $c->stash->{body}                     = $body if $body;
-    $c->stash->{email_address_to_display} = 'sgn-feedback@solgenomics.net';
+    $c->stash->{email_address_to_display} = $c->config->{feedback_email},
     $c->stash->{template}                 = '/help/contact.mas';
 }
 
@@ -56,7 +49,6 @@ sub submit :Path('/contact/submit') :Args(0)
     my ($self, $c) = @_;
     my ($name, $email, $subject, $body) =
         map { $c->request->param($_) } qw/name email subject body/;
-    my $reference = $self->reference;
     if ($name and $email and $subject and $body) {
        $body = <<END_HEREDOC;
 From:
@@ -67,23 +59,19 @@ $subject
 
 Body:
 $body
-
-Referred from:
-$reference
-
 END_HEREDOC
 
        $c->stash->{email} = {
-        to      => $c->config->{bugs_email},
-        from    => 'sgn-feedback@solgenomics.net',
-        subject => "[contact] $subject",
+        to      => $c->config->{feedback_email},
+        from    => $c->config->{feedback_email},
+        subject => "[".$c->config->{name}."][contact] $subject",
         body    => $body,
        };
 
        $c->forward('View::Email');
 
        $c->stash->{message} = "Thank you. Your message has been sent.";
-       $c->stash->{template} = "/gen_pages/message.mas";
+       $c->stash->{template} = "/generic_message.mas";
     } else {
        my %info_fields = (
             name    => $name,

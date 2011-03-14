@@ -45,7 +45,7 @@ sub _make_xref {
     return SGN::SiteFeatures::CrossReference->new({
         feature      => $self,
 
-        text => $feature->name.' details',
+        text => $feature->name.' feature details',
 
         url => URI->new('/feature/view/id/'.$feature->feature_id),
 

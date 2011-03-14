@@ -2,7 +2,8 @@ package SGN::Controller::Feature;
 
 =head1 NAME
 
-SGN::Controller::Feature - Catalyst controller for pages dealing with features
+SGN::Controller::Feature - Catalyst controller for pages dealing with
+Chado (i.e. Bio::Chado::Schema) features
 
 =cut
 
@@ -27,6 +28,72 @@ has 'default_page_size' => (
 
 BEGIN { extends 'Catalyst::Controller' }
 with 'Catalyst::Component::ApplicationAttribute';
+
+=head1 PUBLIC ACTIONS
+
+=cut
+
+=head2 view_by_name
+
+View a feature by name.
+
+Public path: /feature/view/name/<feature name>
+
+=cut
+
+sub view_name :Path('/feature/view/name') Args(1) {
+    my ( $self, $c, $feature_name ) = @_;
+    $self->schema( $c->dbic_schema('Bio::Chado::Schema','sgn_chado') );
+    $self->_view_feature($c, 'name', $feature_name);
+}
+
+=head2 view_id
+
+View a feature by ID number.
+
+Public path: /feature/view/id/<feature id number>
+
+=cut
+
+sub view_id :Path('/feature/view/id') Args(1) {
+    my ( $self, $c, $feature_id ) = @_;
+    $self->schema( $c->dbic_schema('Bio::Chado::Schema','sgn_chado') );
+    $self->_view_feature($c, 'feature_id', $feature_id);
+}
+
+=head2 search
+
+Interactive search interface for features.
+
+Public path: /feature/search
+
+=cut
+
+sub search :Path('/feature/search') Args(0) {
+    my ( $self, $c ) = @_;
+    $self->schema( $c->dbic_schema('Bio::Chado::Schema','sgn_chado') );
+
+    my $req = $c->req;
+    my $form = $self->_build_form;
+
+    $form->process( $req );
+
+    my $results;
+    if( $form->submitted_and_valid ) {
+        $results = $self->_make_feature_search_rs( $c, $form );
+    }
+
+    $c->forward_to_mason_view(
+        '/feature/search.mas',
+        form => $form,
+        results => $results,
+        pagination_link_maker => sub {
+            return uri( query => { %{$form->params}, page => shift } );
+        },
+    );
+}
+
+
 
 sub delegate_component
 {
@@ -61,14 +128,9 @@ sub validate
     my $count = $matching_features->count;
 #   EVIL HACK: We need a disambiguation process
 #   $c->throw_client_error( public_message => "too many features where $key='$val'") if $count > 1;
-    $c->throw_client_error( public_message => "feature with $key = '$val' not found") if $count < 1;
+    $c->throw_client_error( public_message => "Feature not found") if $count < 1;
 }
 
-sub view_name :Path('/feature/view/name') Args(1) {
-    my ( $self, $c, $feature_name ) = @_;
-    $self->schema( $c->dbic_schema('Bio::Chado::Schema','sgn_chado') );
-    $self->_view_feature($c, 'name', $feature_name);
-}
 
 sub _validate_pair {
     my ($self,$c,$key,$value) = @_;
@@ -90,36 +152,6 @@ sub _view_feature {
 
     $self->validate($c, $matching_features, $key => $value);
     $self->delegate_component($c, $matching_features);
-}
-
-sub view_id :Path('/feature/view/id') Args(1) {
-    my ( $self, $c, $feature_id ) = @_;
-    $self->schema( $c->dbic_schema('Bio::Chado::Schema','sgn_chado') );
-    $self->_view_feature($c, 'feature_id', $feature_id);
-}
-
-sub search :Path('/feature/search') Args(0) {
-    my ( $self, $c ) = @_;
-    $self->schema( $c->dbic_schema('Bio::Chado::Schema','sgn_chado') );
-
-    my $req = $c->req;
-    my $form = $self->_build_form;
-
-    $form->process( $req );
-
-    my $results;
-    if( $form->submitted_and_valid ) {
-        $results = $self->_make_feature_search_rs( $c, $form );
-    }
-
-    $c->forward_to_mason_view(
-        '/feature/search.mas',
-        form => $form,
-        results => $results,
-        pagination_link_maker => sub {
-            return uri( query => { %{$form->params}, page => shift } );
-        },
-    );
 }
 
 

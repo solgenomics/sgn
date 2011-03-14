@@ -9,30 +9,25 @@ SGN::Controller::Stock - Catalyst controller for pages dealing with stocks (e.g.
 use Moose;
 use namespace::autoclean;
 
-use HTML::FormFu;
 use URI::FromHash 'uri';
-use YAML::Any;
 
 use CXGN::Chado::Stock;
-use SGN::View::Stock qw/stock_link/;
+use SGN::View::Stock qw/stock_link stock_organisms stock_types/;
 
 has 'schema' => (
-is => 'rw',
-isa => 'DBIx::Class::Schema',
-required => 0,
+    is       => 'rw',
+    isa      => 'DBIx::Class::Schema',
+    required => 0,
 );
 
 has 'default_page_size' => (
-is => 'ro',
-default => 20,
+    is      => 'ro',
+    default => 20,
 );
 
 
 BEGIN { extends 'Catalyst::Controller' }
 with 'Catalyst::Component::ApplicationAttribute';
-
-
-
 
 sub _validate_pair {
     my ($self,$c,$key,$value) = @_;
@@ -45,169 +40,129 @@ sub search :Path('/stock/search') Args(0) {
     $self->schema( $c->dbic_schema('Bio::Chado::Schema','sgn_chado') );
 
     my $req = $c->req;
-    my $form = $self->_build_form;
-
-    $form->process( $req );
 
     my $results;
-    if( $form->submitted_and_valid ) {
-        $results = $self->_make_stock_search_rs( $c, $form );
-    }
+    $results = $self->_make_stock_search_rs( $c, $req ) if $req->param('search_submitted');
 
     $c->stash(
         template => '/stock/search.mas',
-
-        form     => $form,
+        request => $req,
+        form_opts    => { stock_types=>stock_types($self->schema), organisms=>stock_organisms($self->schema)} ,
         results  => $results,
+        sp_person_autocomplete_uri => $c->uri_for( '/ajax/people/autocomplete' ),
         pagination_link_maker => sub {
-            return uri( query => { %{$form->params}, page => shift } );
+            return uri( query => { %{$req}, page => shift } );
         },
     );
 }
 
 
-sub _build_form {
-    my ($self) = @_;
-
-    my $form = HTML::FormFu->new(Load(<<EOY));
-      method: POST
-      attributes:
-        name: stock_search_form
-        id: stock_search_form
-      elements:
-          - type: Text
-            name: stock_name
-            label: Stock name
-            size: 30
-
-          - type: Select
-            name: stock_type
-            label: Stock type
-
-          - type: Select
-            name: organism
-            label: Organism
-
-        # hidden form values for page and page size
-          - type: Hidden
-            name: page
-            value: 1
-
-          - type: Hidden
-            name: page_size
-            default: 20
-
-          - type: Submit
-            name: submit
-EOY
-
-    # set the stock type multi-select choices from the db
-    $form->get_element({ name => 'stock_type'})->options( $self->_stock_types );
-    $form->get_element({ name => 'organism'})->options( $self->_organisms );
-
-    return $form;
-}
-
 # assembles a DBIC resultset for the search based on the submitted
 # form values
 sub _make_stock_search_rs {
-    my ( $self, $c, $form ) = @_;
+    my ( $self, $c, $req ) = @_;
 
     my $rs = $self->schema->resultset('Stock::Stock');
+    my $rs_synonyms;
 
-    if( my $name = $form->param_value('stock_name') ) {
+    if( my $name = $req->param('stock_name') ) {
         $rs = $rs->search({
-                -or => [
-                    'lower(name)' => { like => '%'.lc( $name ).'%' } ,
-                    'lower(uniquename)' => { like => '%'.lc( $name ).'%' },
-                ],
-            });
+            -or => [
+                 'lower(me.name)' => { like => '%'.lc( $name ).'%' } ,
+                 'lower(uniquename)' => { like => '%'.lc( $name ).'%' },
+              #   -and => [
+              #       'lower(type.name)' => { like =>'%synonym%' },
+              #       'lower(value)' => { like =>'%'.lc( $name ).'%' },
+              #   ],
+              #  ], },
+              #            {  join => { 'stockprops' => 'type' } },
+                ], } ,
+            );
+        #add the stockprop values here
+        $rs_synonyms =  $self->schema->resultset('Cv::Cvterm')->search( {
+            'lower(me.name)' => { like =>'%synonym%' } , } )->search_related('stockprops', {
+                'lower(value)' => { like =>'%'.lc( $name ).'%' } , } )->
+                    search_related('stock');
+
     }
-    if( my $type = $form->param_value('stock_type') ) {
+    if( my $type = $req->param('stock_type') ) {
         $self->_validate_pair($c,'type_id',$type);
-        $rs = $rs->search({ 'type_id' => $type });
+        $rs = $rs->search({ 'me.type_id' => $type });
     }
 
-    if( my $organism = $form->param_value('organism') ) {
+    if( my $organism = $req->param('organism') ) {
         $self->_validate_pair( $c, 'organism_id', $organism );
         $rs = $rs->search({ 'organism_id' => $organism });
     }
 
-    # page number and page size, and order by species name
-    $rs = $rs->search( undef, {
-            page => $form->param_value('page')      || 1,
-            rows => $form->param_value('page_size') || $self->default_page_size,
-            order_by => 'name',
-    });
+    if ( my $editor = $req->param('person') ) {
+        $self->_validate_pair( $c, 'person') ;
+        my ($first_name, $last_name) = split ',' , $editor ;
+        $first_name  =~ s/\s//g;
+        $last_name  =~ s/\s//g;
 
+        my $query = "SELECT sp_person_id FROM sgn_people.sp_person
+                     WHERE first_name = ? AND last_name = ?";
+        my $sth = $c->dbc->dbh->prepare($query);
+        $sth->execute($first_name, $last_name);
+        my ($sp_person_id) = $sth->fetchrow_array ;
+        if ($sp_person_id) {
+            $rs = $rs->search( {
+                'type.name' => 'sp_person_id',
+                'stockprops.value' => $sp_person_id, } ,
+                               { join => { stockprops =>['type'] } },
+                ) ; # if no person_id, rs should be empty
+        } else { $rs = $rs->search( { name=> '' } , ); }
+    }
+    # page number and page size, and order by name
+    $rs = $rs->search( undef, {
+        page => $req->param('page')      || 1,
+        rows => $req->param('page_size') || $self->default_page_size,
+        order_by => 'name',
+                       });
     return $rs;
 }
 
-sub _organisms {
-    my ($self) = @_;
-    return [
-        [ 0, 'any' ],
-        map [ $_->organism_id, $_->species ],
-        $self->schema
-             ->resultset('Stock::Stock')
-             ->search_related('organism' , {}, {
-                 select   => [qw[ organism.organism_id species ]],
-                 distinct => 1,
-                 order_by => 'species',
-               })
-    ];
-}
 
-sub _stock_types {
-    my ($self) = @_;
+# sub view_id :Path('/stock/view/id') :Args(1) {
+#     my ( $self, $c , $stock_id) = @_;
 
-    my $ref = [
-        map [$_->cvterm_id,$_->name],
-        $self->schema
-    ->resultset('Stock::Stock')
-    ->search_related(
-        'type',
-        {},
-        { select => [qw[ cvterm_id type.name ]],
-          group_by => [qw[ cvterm_id type.name ]],
-          order_by => 'type.name',
+#     $self->schema( $c->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' ) );
+#     $self->_view_stock($c, 'view', $stock_id);
+# }
+
+
+sub new_stock :Chained('get_stock') : PathPart('new') :Args(0) {
+    my ( $self, $c ) = @_;
+    $c->stash(
+        template => '/stock/index.mas',
+
+        stockref => {
+            action    => "new",
+            stock_id  => 0 ,
+            stock     => $c->stash->{stock},
+            schema    => $self->schema,
         },
-    )
-    ];
-    # add an empty option 
-    unshift @$ref , ['0', 'any'];
-    return $ref;
-}
-
-sub view_id :Path('/stock/view/id') :Args(1) {
-    my ( $self, $c , $stock_id) = @_;
-
-    $self->schema( $c->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' ) );
-    $self->_view_stock($c, 'view', $stock_id);
+        );
 }
 
 
-sub new_stock :Path('/stock/view/new') :Args(0) {
-    my ( $self, $c , $stock_id) = @_;
-    $self->schema( $c->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' ) );
-    $self->_view_stock($c, 'new', $stock_id);
-}
-
-
-sub _view_stock {
-    my ( $self, $c, $action, $stock_id) = @_;
-
-    my $stock = CXGN::Chado::Stock->new($self->schema, $stock_id);
+sub view_stock :Chained('get_stock') :PathPart('view') :Args(0) {
+    my ( $self, $c, $action) = @_;
     my $logged_user = $c->user;
     my $person_id = $logged_user->get_object->get_sp_person_id if $logged_user;
     my $curator = $logged_user->check_roles('curator') if $logged_user;
     my $submitter = $logged_user->check_roles('submitter') if $logged_user;
+    my $sequencer = $logged_user->check_roles('sequencer') if $logged_user;
 
     my $dbh = $c->dbc->dbh;
 
     ##################
 
     ###Check if a stock page can be printed###
+
+    my $stock = $c->stash->{stock};
+    my $stock_id = $stock ? $stock->get_stock_id : undef ;
 
     # print message if stock_id is not valid
     unless ( ( $stock_id =~ m /^\d+$/ ) || ($action eq 'new' && !$stock_id) ) {
@@ -221,10 +176,10 @@ sub _view_stock {
     my $obsolete = $stock->get_is_obsolete();
     if ( $obsolete  && !$curator ) {
         $c->throw(is_client_error => 0,
-                  title => 'Obsolete stock',
-                  message=>"Stock $stock_id is obsolete!",
+                  title             => 'Obsolete stock',
+                  message           => "Stock $stock_id is obsolete!",
                   developer_message => 'only curators can see obsolete stock',
-                  notify => 0,   #< does not send an error email
+                  notify            => 0,   #< does not send an error email
             );
     }
     # print message if stock_id does not exist
@@ -233,12 +188,15 @@ sub _view_stock {
     }
 
     ####################
-    my $image_ids = $self->_stock_images($stock);
+    my $props = $self->_stockprops($stock);
     my $is_owner;
-    my $owner_ids = $self->_stock_owners($stock);
+    my $owner_ids = $props->{sp_person_id} || [] ;
     if ( $stock && ($curator || $person_id && ( grep /^$person_id$/, @$owner_ids ) ) ) {
         $is_owner = 1;
     }
+    my $dbxrefs = $self->_dbxrefs($stock);
+
+    my $nd_experiments = $self->_stock_nd_experiments($stock);
     ################
     $c->stash(
         template => '/stock/index.mas',
@@ -248,42 +206,88 @@ sub _view_stock {
             stock_id  => $stock_id ,
             curator   => $curator,
             submitter => $submitter,
+            sequencer => $sequencer,
             person_id => $person_id,
             stock     => $stock,
             schema    => $self->schema,
             dbh       => $dbh,
-            image_ids => $image_ids,
             is_owner  => $is_owner,
+            props     => $props,
+            dbxrefs   => $dbxrefs,
+            owners    => $owner_ids,
+            nd_experiments => $nd_experiments,
         },
-       );
+        locus_add_uri  => $c->uri_for( '/ajax/stock/associate_locus' ),
+        cvterm_add_uri => $c->uri_for( '/ajax/stock/associate_ontology')
+        );
 }
 
-sub _stock_images {
+sub _stockprops {
     my ($self,$stock) = @_;
-    my $image_id_type_id = $self->schema->resultset("Cv::Cvterm")->search( { name => 'sgn image_id' }, )->get_column('cvterm_id')->first
-        or return [];
-    my $image_stockprops = $stock->get_object_row()->search_related("stockprops" , { type_id => $image_id_type_id }  );
 
-    my @image_ids ;
-    while ( my $ip =  $image_stockprops->next ) {
-        push @image_ids, $ip->value ;
+
+    my $stockprops = $stock->get_object_row()->search_related("stockprops");
+
+    my $properties ;
+    while ( my $prop =  $stockprops->next ) {
+        push @{ $properties->{$prop->type->name} } ,   $prop->value ;
     }
-    return \@image_ids;
+    return $properties;
 }
 
 
-sub _stock_owners {
+sub _dbxrefs {
     my ($self,$stock) = @_;
-    my $person_id_type_id = $self->schema->resultset("Cv::Cvterm")->search( { name => 'sp_person_id' }, )->get_column('cvterm_id')->first
-        or return [];
-    my $person_stockprops = $stock->get_object_row()->search_related("stockprops" , { type_id => $person_id_type_id }  );
 
-    my @owner_ids ;
-    while ( my $pp =  $person_stockprops->next ) {
-        push @owner_ids, $pp->value ;
+    my $stock_dbxrefs = $stock->get_object_row()->search_related("stock_dbxrefs");
+
+    my $dbxrefs ;
+    while ( my $sdbxref =  $stock_dbxrefs->next ) {
+        my $url = $sdbxref->dbxref->db->urlprefix . $sdbxref->dbxref->db->url;
+
+        my $accession = $sdbxref->dbxref->accession;
+        $url = $url ? qq |<a href = "$url/$accession">$accession</a>| : $accession ;
+        push @{ $dbxrefs->{$sdbxref->dbxref->db->name} } , $sdbxref->dbxref;
     }
-    return \@owner_ids;
+    return $dbxrefs;
 }
+
+sub _stock_nd_experiments {
+    my ($self, $stock) = @_;
+
+    my $nd_experiments = $stock->get_object_row->nd_experiment_stocks->search_related('nd_experiment');
+    return $nd_experiments;
+}
+
+sub _stock_dbxrefs {
+    my ($self,$stock) = @_;
+
+    my $stock_dbxrefs = $stock->get_object_row()->search_related("stock_dbxrefs");
+    # hash of arrays. Keys are db names , values are lists of StockDbxref objects
+    my $sdbxrefs ;
+    while ( my $sdbxref =  $stock_dbxrefs->next ) {
+        push @{ $sdbxrefs->{$sdbxref->dbxref->db->name} } , $sdbxref;
+    }
+    return $sdbxrefs;
+}
+sub get_stock :Chained('/') :PathPart('stock') :CaptureArgs(1) {
+    my ($self, $c, $stock_id) = @_;
+
+    $self->schema( $c->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' ) );
+    $c->stash->{stock} = CXGN::Chado::Stock->new($self->schema, $stock_id);
+
+    #add the stockprops to the stash. Props are a hashref of lists.
+    # keys are the cvterm name (prop type) and values  are the prop values.
+    my $stock = $c->stash->{stock};
+    my $properties = $stock ?  $self->_stockprops($stock) : undef ;
+    $c->stash->{stockprops} = $properties;
+
+    #add the stock_dbxrefs to the stash. Dbxrefs are hashref of lists.
+    # keys are db-names , values are lists of Bio::Chado::Schema::General::Dbxref objects
+    my $dbxrefs  = $stock ?  $self->_stock_dbxrefs($stock) : undef ;
+    $c->stash->{stock_dbxrefs} = $dbxrefs;
+}
+
 ######
 1;
 ######

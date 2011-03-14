@@ -2,15 +2,14 @@
 use strict;
 use warnings;
 
-use Test::More tests => 10;
-use Test::WWW::Mechanize;
+use Test::More;
 use lib 't/lib';
-my $base_url = $ENV{SGN_TEST_SERVER};
-my $mech = Test::WWW::Mechanize->new;
-my @sections =  ("News", "Events", "Locus of the week", "Featured publication", "Image of the week", "Featured lab", "SGN Links", "External Links", "Affiliated Sites", "Mirror Site");
 
+use SGN::Test::WWW::Mechanize;
+my $mech = SGN::Test::WWW::Mechanize->new;
 
-$mech->get($base_url);
-for my $section (@sections) {
-    $mech->content_like( qr/$section/ , "homepage includes $section");
-}
+$mech->get( '/' );
+$mech->html_lint_ok;
+$mech->dbh_leak_ok;
+
+done_testing;

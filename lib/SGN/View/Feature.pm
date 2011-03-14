@@ -73,13 +73,20 @@ sub feature_length {
 }
 
 sub location_string {
-    my ( $loc ) = @_;
-    return feature_link($loc->srcfeature).':'.($loc->fmin+1).'..'.$loc->fmax;
+    my ( $id, $start, $end, $strand ) = @_;
+    if( @_ == 1 ) {
+        my $loc = shift;
+        $id     = feature_link($loc->srcfeature);
+        $start  = $loc->fmin+1;
+        $end    = $loc->fmax;
+        $strand = $loc->strand;
+    }
+    ( $start, $end ) = ( $end, $start ) if $strand == -1;
+    return "$id:$start..$end";
 }
 
 sub location_string_with_strand {
-    my ( $loc ) = @_;
-    return location_string( $loc ).( $loc->strand == -1 ? '(rev)' : '' )
+    location_string( @_ )
 }
 
 sub location_list_html {

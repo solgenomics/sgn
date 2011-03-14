@@ -138,7 +138,7 @@ sub gene_tab {
     print CXGN::Search::CannedForms::gene_search_form($page);
 }
 sub phenotype_tab {
-    print CXGN::Search::CannedForms::phenotype_search_form($page);
+    print $c->render_mason('/stock/search.mas' , schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') );
 }
 sub qtl_tab {
     print CXGN::Search::CannedForms::qtl_search_form($page);
@@ -191,7 +191,7 @@ sub phenotype_submenu {
         my @tabs = (
                     ['?search=phenotypes','Mutants & Accessions'],
                     ['?search=qtl','QTLs'],
-                    ['?search=trait', 'Trait Ontology']);
+                    ['?search=trait', 'Traits']);
         my @tabfuncs = (\&phenotype_tab, \&qtl_tab, \&trait_tab);
 
         #get the search type

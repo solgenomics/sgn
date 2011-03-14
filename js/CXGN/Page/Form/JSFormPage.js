@@ -247,17 +247,7 @@ CXGN.Page.Form.JSFormPage.prototype = {
 
 	}
 
-	//if (!newButton)   this.printNewButton();
-	//else this.setNewButton(newButton);
-
-	//if (!editButton)    this.printEditButton();
-	//else this.setEditButton(editButton);
-
-	//if (!deleteButton)   this.printDeleteButton();
-	//else this.setDeleteButton(deleteButton);
-
-
-	$(this.formId+ "_buttons").innerHTML = buttonHTML;
+        $(this.formId+ "_buttons").innerHTML = buttonHTML;
 
 	this.setEditLinks(buttonHTML);
 

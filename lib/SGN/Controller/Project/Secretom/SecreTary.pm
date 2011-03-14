@@ -237,7 +237,7 @@ sub process_input {
             }
         }
         push @id_sequence_array, "$id $sequence";
-	return \@id_sequence_array if(scalar @id_sequence_array == $max_sequences_to_analyze);
+        return \@id_sequence_array if(scalar @id_sequence_array == $max_sequences_to_analyze);
     }
 
     return \@id_sequence_array;
@@ -251,6 +251,4 @@ sub padtrunc{ #return a string of length $length, truncating or
     return substr($str, 0, $length);
 }
 
-
-
-
+1;

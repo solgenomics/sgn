@@ -3,7 +3,7 @@
     <td>
       <img src="/documents/img/info_icon.png" border="0" style="margin-right: 10px; vertical-align: middle" />
     </td>
-    <td style="padding-top: 0.35em">
+    <td style="padding-top: 0.35em; vertical-align: middle">
 <% $m->content %>
      </td>
   </tr>
