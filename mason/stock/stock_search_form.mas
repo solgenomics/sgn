@@ -69,11 +69,15 @@ my $form = HTML::FormFu->new(Load(<<EOY));
                    toggle_advanced();
                 });
             });
+            jQuery(function() {
+                if( jQuery("input#advanced_toggle").attr('checked') ) {
+                    toggle_advanced();
+                }
+            });
       elements:
           - type: Checkbox
             name: advanced
             label: Advanced
-            value: unchecked
             id: advanced_toggle
             default: 0
 
