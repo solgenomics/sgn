@@ -43,6 +43,10 @@ the name of the database
 
 required if -i is not used. Provides the map name.
 
+=item -f
+
+force to 'unknown' protocol type if no protocol is provided.
+
 =back
 
 The tab-delimited map file has the following columns:
@@ -77,9 +81,9 @@ use CXGN::DB::InsertDBH;
 use Data::Dumper;
 
 
-our ($opt_H, $opt_D, $opt_i, $opt_r, $opt_n);
+our ($opt_H, $opt_D, $opt_i, $opt_r, $opt_n, $opt_f);
 
-getopts('H:D:i:rn:');
+getopts('H:D:i:rn:f');
 
 my $map_id;
 my $map_file;
@@ -170,6 +174,7 @@ eval {
             if ($inserts and @{$inserts}) { print"New marker inserted: $marker_name\n" }
             else { die "Oops, I thought I was inserting some new data" }
             $marker_id=$marker->marker_id();
+	 
         }
         print $marker->name_that_marker()."\n";
         my $loc=$marker->new_location(); #create a new location object
@@ -181,6 +186,10 @@ eval {
 	# extract linkage group name and cm position from string like '01.035'
 	#my ($chromosome,$position) = 
 	    #CXGN::Marker::Tools::lg_name_and_position($pos);
+
+#	foreach my $me (@{$marker->current_mapping_experiments}) { 
+#	    print $me->{protocol}."\n";
+#	}
 
 	my $chromosome=$ss->value_at($dirty_marker_name,'LINKAGE_GROUP') 
 	    # get chromosome from spreadsheet
@@ -217,14 +226,22 @@ eval {
         if (@protocols) {
             print "Protocols found: ".CXGN::Tools::Text::list_to_string(@protocols)."\n";
         }
-        else { die "Protocols not found for '$dirty_marker_name'" }
+        else { 
+	    if ($opt_f) { 
+		print STDERR "Protocols not found for '$dirty_marker_name'";
+		@protocols = ('unknown');
+	    }
+	    else { 
+		die "no protocol found for $dirty_marker_name. Use -f to force protocol to unknown.";
+	    }
+	}
         for my $protocol(@protocols) {
 	    $protocol =~ tr/[a-z]/[A-Z]/; 
             unless ($protocol eq 'AFLP' or $protocol eq 'CAPS' or $protocol eq 'RAPD' 
 		    or $protocol eq 'SNP' or $protocol eq 'SSR' 
-		    or $protocol eq 'RFLP' or $protocol eq 'PCR' or $protocol eq 'DCAPS' or $protocol =~/DArt/i or $protocol =~ /OPA/i or $protocol =~ /INDEL/i or $protocol =~ /ASPE/i )
+		    or $protocol eq 'RFLP' or $protocol eq 'PCR' or $protocol eq 'DCAPS' or $protocol =~/DArt/i or $protocol =~ /OPA/i or $protocol =~ /INDEL/i or $protocol =~ /ASPE/i or  $protocol =~ /qtl/i )
 	    {
-                die "UNKNOWN protocol ($protocol)\n! ";
+                print STDERR "UNKNOWN protocol ($protocol)\n! ";
                 $protocol = 'unknown';
             }
 

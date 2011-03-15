@@ -102,10 +102,7 @@ else {
 sub display_not_finished { 
 
 	my $message = shift;
-	$message ||= "Job running ... please be patient";
-#    $page->header();
-
-    my $title = page_title_html($message);
+	$message ||= "Job running, please wait.";
 
     print <<HTML;
 Content-type: text/html
@@ -113,25 +110,27 @@ Content-type: text/html
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 <head>
-<title>Running the job on the SGN Linux cluster</title>
+<title>Job running</title>
 <meta http-equiv="Refresh" content="3" />
 <link rel="stylesheet" href="/documents/inc/sgn.css" type="text/css" />
 </head>
 <body>
-    <center>
-    <br /><br /><br />
+    <style>
+      body { padding-top: 80px }
+      img, div, h2 {
+        display: block;
+        margin: 1em auto;
+        text-align: center;
+      }
+    </style>
     <img src="/documents/img/sgn_logo_animated.gif" alt="SGN logo"/>
-    <br /><br /><br />
-    $title
-    Please do not hit reload or the back button. Thanks!
-    <br /><br />
+    <h2>$message</h2>
+    <div>Please note: jobs are limited to 1 hour of run time.</div>
     <img src="/documents/img/progressbar1.gif" alt="In Progress..."/>
-    <br /><br /><br />
-    </center>
 </body>
 </html>
-
 HTML
+
 }
 
 sub display_finished { 

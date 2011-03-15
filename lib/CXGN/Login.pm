@@ -445,13 +445,15 @@ sub set_sql {
 
           "	SELECT 
 				sp_person_id,
-				user_type,
+				sgn_people.sp_roles.name as user_type,
 				user_prefs,
 				extract (epoch FROM current_timestamp-last_access_time)>? AS expired 
 			FROM 
-				sgn_people.sp_person 
+				sgn_people.sp_person JOIN sgn_people.sp_person_roles using(sp_person_id) join sgn_people.sp_roles using(sp_role_id) 
 			WHERE 
-				cookie_string=?",
+				cookie_string=?
+                        ORDER BY sp_role_id
+                        LIMIT 1",
 
         user_from_uname_pass =>
 

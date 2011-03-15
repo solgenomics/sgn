@@ -1,15 +1,4 @@
-
 <%doc>
-
-######################################################################
-#
-#  Program:  $Id: mapviewerHome.pl 1445 2005-06-08 14:29:30Z john $
-#  Author:   $Author: john $
-#  Date:     $Date: 2005-06-08 10:29:30 -0400 (Wed, 08 Jun 2005) $
-#  Version:  1.0
-#  CHECKOUT TAG: $Name:  $
-#  
-######################################################################
 
 =head1 NAME
 
@@ -45,29 +34,26 @@ February 2010
 $dbh
 </%args>
 
+<%once>
+    use Modern::Perl;
+    use CXGN::Page::FormattingHelpers qw/ blue_section_html page_title_html /;
+    use CXGN::DB::Connection;
+    use CXGN::Cview::MapFactory;
+    use CXGN::Cview::Map::Tools;
+</%once>
+
+<table summary="" width="100%" border="0">
+<tr>
+    <td width="3%"><br /></td>
+    <td width="92%" valign="top">
+    <!-- TYPE="text/javascript" -->
+    <table summary="" width="100%" border="0" align="center">
+    <tr><td>
+
 <%perl>
-
-use strict;
-
-use CXGN::Page::FormattingHelpers qw/ blue_section_html page_title_html /;
-use CXGN::DB::Connection;
-use CXGN::Cview::MapFactory;
-use CXGN::Cview::Map::Tools;
-  
-print <<HTML;
-
-<table summary="" width="100%" border="0">\n<tr>\n
-<td width="3%"><br /></td>\n
-<td width="92%" valign="top">\n<!-- TYPE="text/javascript" -->
-<table summary="" width="100%" border="0" align="center">\n
-<tr><td>
-
-HTML
-
 # Show a blue section html with the system maps
 # organized by species.
 #
-
 
 my $current_F2_2000_map_id = CXGN::Cview::Map::Tools::current_tomato_map_id();
 
@@ -208,7 +194,4 @@ print "</script>";
 print "</td></tr></table>";
 print "</td></tr></table>";
 
-
 </%perl>
-
-

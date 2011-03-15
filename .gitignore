@@ -21,3 +21,6 @@ programs/draw_contigalign
 programs/fast_mapping
 sgn_local.conf
 t/data/data/prod/tmp/
+*.log
+MANIFEST*
+t/data

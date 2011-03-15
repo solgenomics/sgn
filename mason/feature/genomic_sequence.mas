@@ -1,27 +1,103 @@
 <%args>
     $feature
-    $blast_url => undef
+    $blast_url  => undef
 </%args>
-<%once>
-    use Bio::Seq;
-</%once>
 <%perl>
-    my @locations = map {
-         [ $_->srcfeature, $_->fmin, $_->fmax, $_->strand ]
-    } $feature->featureloc_features->all;
+
+  my $link = '/api/v1/sequence/' . $feature->uniquename . '.fasta';
+  my $seq;
+
+  my @locs = $feature->featureloc_features(undef,{ prefetch => 'srcfeature' });
+  for my $loc ( @locs ) {
+    if( my $src = $loc->srcfeature ) {
+      my $seq = $src->trunc( $loc->fmin+1, $loc->fmax );
+      $seq->desc( location_string( $loc ) );
+      if( $loc->strand == -1 ) {
+          $seq = $seq->revcom;
+          $seq->desc( $seq->desc.' (reverse complement)' );
+      }
+
+      $seq->id( $feature->name );
+
 </%perl>
-% for (@locations) {
-%   my ( $srcfeature, $start, $end, $strand ) = @_
-  <& /feature/sequence.mas,
-      title      => 'Genomic Sequence',
-      feature    => $reference,
-      srcfeature => $srcfeature,
-      start      => $start,
-      end        => $end,
-      strand     => $strand,
-      blast_url  => undef,
-  &>
-  <& /feature/extract_promoters.mas,
-      feature => $feature,
-  &>
-%}
+
+  <div style="margin: 1em 3em">
+    <& /sequence/with_markup.mas,
+       seq       => $seq,
+       width     => 80,
+       subdiv    => 10,
+       blast_url => $blast_url,
+     &>
+
+    <hr />
+
+    <form name="get_flanking_sequence" action="/api/v1/sequence/download/multi" method="GET">
+      <b>Get flanking sequence on <% $src->name || 'feature_'.$src->feature_id %>:</b>
+      <input type="hidden" name="format" value="fasta" />
+      <select name="s">
+%     for ( upstream_downstream_options( $loc ) ) {
+%        my ( $locstring, $description ) = @$_;
+          <option value="<% $locstring %>"><% $description %></option>
+%     }
+      </select>
+      <input value="Download" type="submit" />
+    </form>
+
+  </div>
+
+%   }
+% }
+
+<%once>
+   use SGN::View::Feature qw/ location_string /;
+   use List::Util qw/ min max /;
+   use List::MoreUtils qw/ pairwise /;
+
+   sub upstream_downstream_options {
+       my ( $loc ) = @_;
+
+       my $id         = $loc->srcfeature->feature_id;
+       my $start      = $loc->fmin+1;
+       my $end        = $loc->fmax;
+       my $strand     = $loc->strand;
+       my $src_length = $loc->srcfeature->length || 1e20;
+
+       my @increments = ( 1000, 3000, 5000 );
+
+       # calculate location strings for upstream and downstream regions
+       my $upstream = [
+           map location_string(
+               $id,
+               max( 1, $start - $_ ),
+               max( 1, $start - 1  ),
+               $strand
+             ), @increments
+         ];
+
+       my $downstream = [
+           map location_string(
+               $id,
+               min( $end + 1,  $src_length ),
+               min( $end + $_, $src_length ),
+               $strand
+             ), @increments
+         ];
+
+       # upstream/downstream sense is reversed if feature is on the
+       # reverse strand
+       if( $strand == -1 ) {
+           ( $upstream, $downstream ) = ( $downstream, $upstream );
+       }
+
+       # decorate the upstream/downstream loc strings with text
+       # descriptions for the dropdown
+       my @upstream_desc   = map "$_ bp upstream",   @increments;
+       my @downstream_desc = map "$_ bp downstream", @increments;
+       $upstream   = [ pairwise { [$a, $b] } @$upstream,   @upstream_desc   ];
+       $downstream = [ pairwise { [$a, $b] } @$downstream, @downstream_desc ];
+
+       return ( reverse(@$upstream), @$downstream );
+   }
+
+</%once>
+

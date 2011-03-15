@@ -438,10 +438,6 @@ div.deprecated {
 	font-size:1.2em; 
 }
 
-/* for things with tooltips. This styling indicates that a tooltip is available; you must remember to supply the tooltip also. For example:
-  <span class="help" onmouseover="return escape('have no fear, help is here')>Asdf</span>
-  <script language="javascript" type="text/javascript" src="/documents/inc/wz_tooltip.js></script>" */
-
 span.help {
   cursor: help;
   border-bottom: 1px dashed #666;
@@ -1280,8 +1276,12 @@ div.publication_embedded .citation {
   padding-bottom: 1em;
 }
 
-
-/* styles for numerical range input in FormattingHelpers */
+ul.xref_link {
+  padding-left: 0;
+}
+ul.xref_link li {
+  list-style: none outside none;
+}
 
 div.xref_rich_gbrowse2 {
   border-radius: 6px;
@@ -1298,4 +1298,13 @@ div.xref_rich_gbrowse2 hr {
 div.xref_rich_gbrowse2 img {
   margin-top: 12px;
   border: 0;
+}
+
+
+/* styles for jquery.simpletooltip */
+
+#simpleTooltip {
+    padding: 7px;
+    border: 1px solid #A6A7AB;
+    background: #F2F3F5;
 }

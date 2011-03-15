@@ -1,0 +1,11 @@
+<%args>
+  $message
+</%args>
+% #A generic message page.
+
+<div style="width: 63%; margin: 2em auto">
+  <&| /page/explanation.mas &>
+        <% $message %>
+  </&>
+</div>
+

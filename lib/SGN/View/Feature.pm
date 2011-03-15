@@ -10,7 +10,7 @@ use CXGN::Tools::Identifiers;
 
 our @EXPORT_OK = qw/
     related_stats feature_table
-    get_reference feature_link
+    feature_link
     infer_residue cvterm_link
     organism_link feature_length
     mrna_and_protein_sequence
@@ -22,8 +22,12 @@ our @EXPORT_OK = qw/
 /;
 
 sub type_name {
-    my ($feature, $caps) = @_;
-    ( my $n = $feature->type->name ) =~ s/_/ /g;
+    cvterm_name( shift->type, @_ );
+}
+
+sub cvterm_name {
+    my ($cvt, $caps) = @_;
+    ( my $n = $cvt->name ) =~ s/_/ /g;
     if( $caps ) {
         $n =~ s/(\S+)/lc($1) eq $1 ? ucfirst($1) : $1/e;
     }
@@ -52,13 +56,6 @@ sub get_description {
     return $description;
 }
 
-sub get_reference {
-    my ($feature) = @_;
-    my $fl = $feature->featureloc_features->single;
-    return unless $fl;
-    return $fl->srcfeature;
-}
-
 sub feature_length {
     my ($feature, $featurelocs) = @_;
     my @locations = $featurelocs ? $featurelocs->all : $feature->featureloc_features->all;
@@ -76,13 +73,20 @@ sub feature_length {
 }
 
 sub location_string {
-    my ( $loc ) = @_;
-    return feature_link($loc->srcfeature).':'.($loc->fmin+1).'..'.$loc->fmax;
+    my ( $id, $start, $end, $strand ) = @_;
+    if( @_ == 1 ) {
+        my $loc = shift;
+        $id     = feature_link($loc->srcfeature);
+        $start  = $loc->fmin+1;
+        $end    = $loc->fmax;
+        $strand = $loc->strand;
+    }
+    ( $start, $end ) = ( $end, $start ) if $strand == -1;
+    return "$id:$start..$end";
 }
 
 sub location_string_with_strand {
-    my ( $loc ) = @_;
-    return location_string( $loc ).( $loc->strand == -1 ? '(rev)' : '' )
+    location_string( @_ )
 }
 
 sub location_list_html {
@@ -105,7 +109,7 @@ sub related_stats {
     my $stats = { };
     my $total = scalar @$features;
     for my $f (@$features) {
-            $stats->{cvterm_link($f)}++;
+            $stats->{cvterm_link($f->type)}++;
     }
     my $data = [ ];
     for my $k (sort keys %$stats) {
@@ -127,7 +131,7 @@ sub feature_table {
         for my $loc (@locations) {
             my ($start,$end) = ($loc->fmin+1, $loc->fmax);
             push @$data, [
-                cvterm_link($f),
+                cvterm_link($f->type),
                 feature_link($f),
                 "$start..$end",
                 commify_number( $end-$start+1 ) . " bp",
@@ -166,9 +170,9 @@ sub organism_link {
 }
 
 sub cvterm_link {
-    my ($feature,$caps) = @_;
-    my $name = type_name($feature,$caps);
-    my $id   = $feature->type->id;
+    my ( $cvt, $caps ) = @_;
+    my $name = cvterm_name( $cvt, $caps );
+    my $id   = $cvt->id;
     return qq{<a href="/chado/cvterm.pl?cvterm_id=$id">$name</a>};
 }
 

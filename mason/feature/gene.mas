@@ -40,6 +40,18 @@
 
 </&>
 
+<&| /page/info_section.mas,
+   title => 'Ontology terms',
+   subtitle => 'terms associated with this gene',
+   collapsible => 1,
+&>
+
+  <& /feature/feature_cvterms.mas,
+      feature   => $feature,
+  &>
+
+</&>
+
 <& /feature/properties.mas,
     feature => $feature,
 &>
@@ -63,7 +75,7 @@
         collapsed   => 1,
 &>
 
-   <& /feature/sequence.mas,
+   <& /feature/genomic_sequence.mas,
        feature   => $feature,
        blast_url => $blast_url,
    &>
@@ -71,10 +83,24 @@
 </&>
 
 % for my $mrna ( @mrnas ) {
+
   <&| /page/info_section.mas,
           title       => 'mRNA '. $mrna->name,
           collapsible => 1,
   &>
+
+    <&| /page/info_section.mas,
+       title => 'Ontology terms',
+       subtitle => 'terms associated with this mRNA',
+       collapsible => 1,
+       is_subsection => 1,
+    &>
+
+      <& /feature/feature_cvterms.mas,
+          feature   => $mrna,
+      &>
+
+    </&>
 
 %   my ( $mrna_sequence, $protein_sequence ) = mrna_and_protein_sequence( $mrna );
 

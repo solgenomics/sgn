@@ -128,6 +128,7 @@ sub itag_releases_html {
     my $annot_index = 0;
     return join( "\n",
                  map {
+                    my $release_name = $_;
                     info_section_html(
                          title         => "$_ annotation release",
                          is_subsection => 1,
@@ -136,15 +137,21 @@ sub itag_releases_html {
                          contents      =>
                              info_table_html(
                                  __border => 0,
-                                 map {
+
+                                 # gbrowse sets
+                                 ( map {
                                      $_->description =>
                                          '<p>'.$_->extended_description.'</p>'
                                          .span({style => "font-weight: bold; font-size: 110%"},
                                                a({href =>$_->view_url},'Browse'),'or')
                                          .gb_searchbox($_->view_url)
-                                 }
-                                 sort { $a->description cmp $b->description }
-                                 @{$release_datasources{$_}},
+                                     }
+                                   sort { $a->description cmp $b->description }
+                                   @{$release_datasources{$release_name}},
+                                 ),
+
+                                 # bulk download files
+                                 'Bulk files' => itag_release_ftp_link( $release_name ),
                                 ),
                         )
                  }
@@ -155,18 +162,24 @@ sub itag_releases_html {
 }
 
 sub itag_release_ftp_link {
-    my ($r) = @_;
+    my ( $r ) = @_;
 
-    #return ghosted link if files are not world-readable
-    return '<span class="ghosted" title="bulk files not publicly released pending publication">[FTP not available]</span>'
-        unless (stat( $r->dir ))[2] & 04;
+    my $link_style = 'display: block; margin: 0.5em 0; font-size: 110%; font-weight: bold';
+    my $empty_link = span({style => $link_style, class => 'ghosted'}, 'not available' );
+    my $itag = $c->enabled_feature('ITAG')
+	or return $empty_link;
 
-    my $ftp_link = $r->dir;
-    my $ftpsite_root = $c->get_conf('ftpsite_root');
-    $ftp_link =~ s!^$ftpsite_root/*!!;
-    $ftp_link = a({href=> $c->get_conf('ftpsite_url')."/$ftp_link"},'[FTP]');
+    unless( ref $r ) {
+        my ( $releasenum ) = $r =~ /([\d\.]+)$/
+            or return $empty_link;
+        ($r) = CXGN::ITAG::Release->find(
+	    releasenum => $releasenum,
+	    dir        => $itag->releases_base,
+	  )
+            or return $empty_link;
+    }
 
-    return $ftp_link;
+    return a({style => $link_style, href=> '/itag/release/'.$r->release_number.'/list_files'},'Download bulk files');
 }
 
 sub clone_sequences_html {

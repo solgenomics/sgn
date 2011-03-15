@@ -184,7 +184,7 @@ glyph        = alignment
 bgcolor        = red
 stranded     = 1
 link         = http://www.ebi.ac.uk/ebisearch/search.ebi?db=nucleotideSequences&t=$name
-citation     = This track shows regions of similarity with EST and other cDNA sequences from Tomato. Provided by <a href="http://cab.unina.it/index2.php">CAB group</a> at <a href="http://www.unina.it">UNINA</a>. (see <a href="http://www.ab.wur.nl/TomatoWiki/AnEST000">ITAG Wiki</a>)
+citation     = This track shows regions of similarity with EST and other cDNA sequences from Tomato. Provided by <a href="http://cab.unina.it/index2.php">CAB group</a> at <a href="http://www.unina.it">UNINA</a>. (see <a href="http://www.ab.wur.nl/TomatoWiki/AnEST000">ITAG Wiki</a>).  Darker color indicates higher alignment score.
 das category = similarity
 
 [cdna_sol]
@@ -195,7 +195,7 @@ bgcolor      = orange
 glyph        = alignment
 stranded     = 1
 link         = http://www.ebi.ac.uk/ebisearch/search.ebi?db=nucleotideSequences&t=$name
-citation     = This track shows regions of similarity with EST and other cDNA sequences taken from species in the Solanaceae other than Tomato. Provided by <a href="http://cab.unina.it/index2.php">CAB group</a> at <a href="http://www.unina.it">UNINA</a>. (see <a href="http://www.ab.wur.nl/TomatoWiki/AnEST000">ITAG Wiki</a>)
+citation     = This track shows regions of similarity with EST and other cDNA sequences taken from species in the Solanaceae other than Tomato. Provided by <a href="http://cab.unina.it/index2.php">CAB group</a> at <a href="http://www.unina.it">UNINA</a>. (see <a href="http://www.ab.wur.nl/TomatoWiki/AnEST000">ITAG Wiki</a>).  Darker color indicates higher alignment score.
 das category = similarity
 
 [sgn_unigenes]
@@ -207,7 +207,7 @@ bgcolor      = red
 fgcolor      = red
 link         = /search/quick_search.pl?term=$name
 stranded     = 1
-citation     = This track shows regions of similarity with SGN Unigene (SGN-U) sequences.  (see <a href="http://www.ab.wur.nl/TomatoWiki/AnSgnUnigenes000">ITAG Wiki</a>)
+citation     = This track shows regions of similarity with SGN Unigene (SGN-U) sequences.  (see <a href="http://www.ab.wur.nl/TomatoWiki/AnSgnUnigenes000">ITAG Wiki</a>).  Darker color indicates higher alignment score.
 das category = similarity
 
 [augustus]
@@ -314,6 +314,6 @@ stranded     = 1
 fgcolor      = black
 bgcolor      = yellow
 link         = /search/quick_search.pl?term=$name
-citation     = This track shows regions of similarity of the genomic sequence with known sequences associated with SGN genetic markers, as detected by GenomeThreader (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnSgnMarkers000">ITAG Wiki</a>)
+citation     = This track shows regions of similarity of the genomic sequence with known sequences associated with SGN genetic markers, as detected by GenomeThreader (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnSgnMarkers000">ITAG Wiki</a>).  Darker color indicates higher alignment score.
 das category = similarity
 

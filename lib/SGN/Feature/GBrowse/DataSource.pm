@@ -90,7 +90,7 @@ sub image_url {
 
 sub _url {
     my ( $self, $script, $query ) = @_;
-    return uri( path  => join( '', $self->gbrowse->cgi_url, '/', $script, '/', $self->name ),
+    return uri( path  => join( '', $self->gbrowse->cgi_url, '/', $script, '/', $self->name, '/'),
                 ($query ? (query => $query) : ()),
                );
 }

@@ -16,7 +16,7 @@ the name of the object with the related evidence (e.g. 'locus')
 
 =item evidence_id
 
-a _dbxref_ecidence database id
+a _dbxref_evidence database id
 
 
 =back

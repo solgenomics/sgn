@@ -22,6 +22,26 @@ the base path of the apache installation
 
 the location of the tempfiles subdirectory from the basepath onwards
 
+=item progress_data
+
+hashref of numbers giving the progress of each chromosome in the project, arranged as
+
+  {
+    1 => { total_bacs => count,
+           in_progress => count,
+           complete    => count,
+           available   => count,
+           htgs_1      => count,
+           htgs_2      => count,
+           htgs_3      => count,
+           pct_done    => 100-based percentage,
+         },
+    ...
+  }
+
+with the top-level keys being either the chromosome number, or
+'overall' for overall stats.
+
 =back
 
 =head1 AUTHORS
@@ -36,6 +56,7 @@ Lukas Mueller <lam87@cornell.edu>. Based on Perl code by many at SGN.
 $dbh
 $basepath
 $cview_tempfiles_subdir
+$progress_data
 </%args>
 
 <%perl>
@@ -45,7 +66,6 @@ use HTML::Entities;
 use CXGN::Page::FormattingHelpers qw / info_section_html page_title_html info_table_html commify_number/;
 use CXGN::Genomic::Search::Clone;
 use CXGN::MasonFactory;
-use CXGN::People::BACStatusLog;
 use CXGN::Cview::MapOverviews::ProjectStats;
 
 #my $page=CXGN::Page->new('tomato_sequencing.html','html2pl converter');
@@ -74,6 +94,7 @@ sub flag_td {
 my $overview = CXGN::Cview::MapOverviews::ProjectStats->new({ dbh      => $dbh,
 							      basepath => $basepath,
 							      tempfiles_subdir => $cview_tempfiles_subdir,
+                                                              progress_data => $progress_data,
 							    });
 
 
@@ -117,9 +138,8 @@ print <<EOHTML;
 <tr><th>BACs</th><td colspan="12"></td><th>Total</th></tr>
 EOHTML
 
-
-my $log = CXGN::People::BACStatusLog->new($dbh);
-my (undef,@to_be_sequenced) = $log->get_number_bacs_to_complete;
+my @chr_nums = 1..12;
+my @to_be_sequenced = map $progress_data->{$_}{total_bacs}, @chr_nums;
 
 sub summed_row_html(@) {
   my ($title,@cells) = @_;
@@ -141,7 +161,8 @@ sub summed_row_html(@) {
 print summed_row_html 'Chr Total' => @to_be_sequenced;
 
 my $search = CXGN::Genomic::Search::Clone->new;
-my @in_progress = $log->get_number_bacs_in_progress;
+my @in_progress = ( undef, map $progress_data->{$_}{in_progress}, @chr_nums );
+
 print summed_row_html 'In&nbsp;progress' =>
   map {
     my $q = $search->new_query;
@@ -149,11 +170,11 @@ print summed_row_html 'In&nbsp;progress' =>
     $q->sequencing_status("=?",'in_progress');
     my $link = "/maps/physical/clone_search.pl?".$q->to_query_string;
     HTML::Entities::encode_entities($link);
-#    my $total = $search->do_count($q)->total_results;
-    [$in_progress[$_],qq|<a href="$link">$in_progress[$_]</a>|]
-  } (1..12);
+    my $total = $in_progress[$_] || 0;
+    [ $total , sprintf('<a href="%s">%s</a>',$link,$total) ]
+  } @chr_nums;
 
-my @complete = $log->get_number_bacs_complete;
+my @complete = ( undef, map $progress_data->{$_}{complete}, @chr_nums );
 print summed_row_html Complete =>
   map {
     my $q = $search->new_query;
@@ -161,28 +182,30 @@ print summed_row_html Complete =>
     $q->sequencing_status("=?",'complete');
     my $link = "/maps/physical/clone_search.pl?".$q->to_query_string;
     HTML::Entities::encode_entities($link);
-#    my $total = $search->do_count($q)->total_results;
-    [$complete[$_],qq|<a href="$link">$complete[$_]</a>|]
-  } (1..12);
+    my $total = $complete[$_] || 0;
 
-my @num_uploaded = $log->get_number_bacs_uploaded;
+    [ $total, sprintf('<a href="%s">%s</a>', $link, $total ) ]
+  } @chr_nums;
+
+my @num_uploaded = ( undef, map $progress_data->{$_}{available}, @chr_nums );
 print summed_row_html Available =>
   map {
     my $total = $num_uploaded[$_];
-    [$total,qq|<a href="/tomato/genome_data.pl?chr=$_#clones">$total</a>|]
-  } (1..12);
+    [$total,qq|<a href="/genomes/Solanum_lycopersicum/genome_data.pl#clones">$total</a>|]
+  } @chr_nums;
 
 foreach my $phase (1..3) { 
-    my (@num_phase) = $log->get_number_bacs_in_phase($phase);
+    my @num_phase = ( undef, map $progress_data->{$_}{"htgs_$phase"}, @chr_nums );
     print summed_row_html "&nbsp;&nbsp;HTGS $phase" =>
-	map { 
-	    my $total = $num_phase[$_];
-	    [$total, qq|<a href="/tomato/genome_data.pl?chr=$_#clones">$total</a>|]
-	    } (1..12);
+	map {
+	    my $total = $num_phase[$_] || 0;
+	    [$total, qq|<a href="/genomes/Solanum_lycopersicum/genome_data.pl?chr=$_#clones">$total</a>|]
+        } @chr_nums;
 }
 
 
-my ($overall_percent,@finished) = $log->get_chromosomes_percent_finished;
+my $overall_percent = $progress_data->{overall}{pct_done};
+my @finished = map $progress_data->{$_}{pct_done}, @chr_nums;
 print '<tr>', 
     qq|<td align="left" class="tinytype">% Done</td>|,
     ( map qq|<td style="text-align: right; padding-right: 0.65em">$_%</td>|, @finished ),
@@ -191,18 +214,15 @@ print '<tr>',
 
 #calculate the proportion of current tomato unigenes that have matches to BAC sequences
 
-my $complete_percent = sprintf('%0.0f',100*$complete[0]/sum(@to_be_sequenced));
-my $available_percent = sprintf('%0.0f',100*$num_uploaded[0]/sum(@to_be_sequenced));
-#warn "complete: $complete[0], todo: $to_be_sequenced[0]";
 print <<EOHTML;
 <tr>
 <td colspan="13" style="padding-top: 1em">
 <center>
   <b>Overall Stats</b>
   <table>
-    <tr><td align="right">$overall_percent%</td><td>of sequencing is complete</td></tr>
-    <tr><td align="right">$complete_percent%</td><td>of BACs are reported finished</td></tr>
-    <tr><td align="right">$available_percent%</td><td>of BACs have downloadable sequence</td></tr>
+    <tr><td align="right">$progress_data->{overall}{pct_done}%</td><td>of BAC sequencing is complete</td></tr>
+    <tr><td align="right">$progress_data->{overall}{pct_reported_finished}%</td><td>of BACs are reported finished</td></tr>
+    <tr><td align="right">$progress_data->{overall}{pct_available}%</td><td>of BACs have downloadable sequence</td></tr>
     </table>
     </center>
     </td>

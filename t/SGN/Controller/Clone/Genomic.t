@@ -21,6 +21,9 @@ $mech->with_test_level( local => sub {
             unless -e File::Spec->catfile( $c->config->{ftpsite_root}, 'tomato_genome', 'bacs' );
 
 
+        my $form = $mech->form_name('clone_annot_download');
+        skip 'clone_annot_download form is not present', 4 unless $form;
+
         $mech->submit_form_ok({
             form_name => 'clone_annot_download',
             fields => {

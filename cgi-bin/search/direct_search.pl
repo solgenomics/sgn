@@ -138,7 +138,7 @@ sub gene_tab {
     print CXGN::Search::CannedForms::gene_search_form($page);
 }
 sub phenotype_tab {
-    print CXGN::Search::CannedForms::phenotype_search_form($page);
+    print $c->render_mason('/stock/search.mas' , schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') );
 }
 sub qtl_tab {
     print CXGN::Search::CannedForms::qtl_search_form($page);
