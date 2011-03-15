@@ -42,7 +42,7 @@ sub search :Path('/stock/search') Args(0) {
     my $req = $c->req;
 
     my $results;
-    $results = $self->_make_stock_search_rs( $c, $req ) if $req->param('search_submitted');
+    $results = $self->_make_stock_search_rs( $c ) if $req->param('search_submitted');
 
     $c->stash(
         template => '/stock/search.mas',
@@ -61,42 +61,35 @@ sub search :Path('/stock/search') Args(0) {
 # assembles a DBIC resultset for the search based on the submitted
 # form values
 sub _make_stock_search_rs {
-    my ( $self, $c, $req ) = @_;
+    my ( $self, $c ) = @_;
 
     my $rs = $self->schema->resultset('Stock::Stock');
-    my $rs_synonyms;
-
-    if( my $name = $req->param('stock_name') ) {
+    
+    if( my $name = $c->req->param('stock_name') ) {
+        # trim and regularize whitespace
+        $name =~ s/(^\s+|\s+)$//g;
+        $name =~ s/\s+/ /g;
         $rs = $rs->search({
             -or => [
                  'lower(me.name)' => { like => '%'.lc( $name ).'%' } ,
                  'lower(uniquename)' => { like => '%'.lc( $name ).'%' },
-              #   -and => [
-              #       'lower(type.name)' => { like =>'%synonym%' },
-              #       'lower(value)' => { like =>'%'.lc( $name ).'%' },
-              #   ],
-              #  ], },
-              #            {  join => { 'stockprops' => 'type' } },
-                ], } ,
-            );
-        #add the stockprop values here
-        $rs_synonyms =  $self->schema->resultset('Cv::Cvterm')->search( {
-            'lower(me.name)' => { like =>'%synonym%' } , } )->search_related('stockprops', {
-                'lower(value)' => { like =>'%'.lc( $name ).'%' } , } )->
-                    search_related('stock');
-
+                 -and => [
+                     'lower(type.name)' => { like =>'%synonym%' },
+                     'lower(value)' => { like =>'%'.lc( $name ).'%' },
+                 ],
+                ],
+                          } ,
+               {  join =>  { 'stockprops' =>  'type'  }  }, );
     }
-    if( my $type = $req->param('stock_type') ) {
+    if( my $type = $c->req->param('stock_type') ) {
         $self->_validate_pair($c,'type_id',$type);
         $rs = $rs->search({ 'me.type_id' => $type });
     }
-
-    if( my $organism = $req->param('organism') ) {
+    if( my $organism = $c->req->param('organism') ) {
         $self->_validate_pair( $c, 'organism_id', $organism );
         $rs = $rs->search({ 'organism_id' => $organism });
     }
-
-    if ( my $editor = $req->param('person') ) {
+    if ( my $editor = $c->req->param('person') ) {
         $self->_validate_pair( $c, 'person') ;
         my ($first_name, $last_name) = split ',' , $editor ;
         $first_name  =~ s/\s//g;
@@ -117,8 +110,8 @@ sub _make_stock_search_rs {
     }
     # page number and page size, and order by name
     $rs = $rs->search( undef, {
-        page => $req->param('page')      || 1,
-        rows => $req->param('page_size') || $self->default_page_size,
+        page => $c->req->param('page')  || 1,
+        rows => $c->req->param('page_size') || $self->default_page_size,
         order_by => 'name',
                        });
     return $rs;
