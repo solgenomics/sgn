@@ -39,20 +39,17 @@ sub search :Path('/stock/search') Args(0) {
     my ( $self, $c ) = @_;
     $self->schema( $c->dbic_schema('Bio::Chado::Schema','sgn_chado') );
 
-    my $req = $c->req;
-
-    my $results;
-    $results = $self->_make_stock_search_rs( $c ) if $req->param('search_submitted');
+    my $results = $c->req->param('search_submitted') ? $self->_make_stock_search_rs($c) : undef;
 
     $c->stash(
-        template => '/stock/search.mas',
-        request => $req,
-        form_opts    => { stock_types=>stock_types($self->schema), organisms=>stock_organisms($self->schema)} ,
-        results  => $results,
+        template                   => '/stock/search.mas',
+        request                    => $c->req,
+        form_opts                  => { stock_types => stock_types($self->schema), organisms => stock_organisms($self->schema)} ,
+        results                    => $results,
         sp_person_autocomplete_uri => $c->uri_for( '/ajax/people/autocomplete' ),
-        trait_autocomplete_uri => $c->uri_for('/ajax/stock/trait_autocomplete'),
-        pagination_link_maker => sub {
-            return uri( query => { %{$req}, page => shift } );
+        trait_autocomplete_uri     => $c->uri_for('/ajax/stock/trait_autocomplete'),
+        pagination_link_maker      => sub {
+            return uri( query => { %{$c->req}, page => shift } );
         },
     );
 }
@@ -64,11 +61,12 @@ sub _make_stock_search_rs {
     my ( $self, $c ) = @_;
 
     my $rs = $self->schema->resultset('Stock::Stock');
-    
+
     if( my $name = $c->req->param('stock_name') ) {
         # trim and regularize whitespace
         $name =~ s/(^\s+|\s+)$//g;
         $name =~ s/\s+/ /g;
+
         $rs = $rs->search({
             -or => [
                  'lower(me.name)' => { like => '%'.lc( $name ).'%' } ,
