@@ -68,4 +68,6 @@ my $new_stock_link = qq|<a href="/stock/0/new">Submit new stock</a>|;
     sp_person_autocomplete_uri => $sp_person_autocomplete_uri,
     trait_autocomplete_uri     => $trait_autocomplete_uri,
   &>
+  <div id="trait_range">
+  </div>
 </&>
