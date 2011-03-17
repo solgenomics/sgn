@@ -25,7 +25,7 @@ use Try::Tiny;
 use CXGN::Phenome::Schema;
 use CXGN::Phenome::Allele;
 use CXGN::Page::FormattingHelpers qw / columnar_table_html info_table_html /;
-
+use Scalar::Util qw(looks_like_number);
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -205,15 +205,15 @@ sub display_ontologies_GET  {
     my ($self, $c) = @_;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
     my $stock = $c->stash->{stock};
-    my $sp_dbxrefs = $c->stash->{stock_dbxrefs}->{'SP'};
-    my $po_dbxrefs = $c->stash->{stock_dbxrefs}->{'PO'};
+    my $sp_cvterms = $c->stash->{stock_cvterms}->{SP};
+    my $po_cvterms = $c->stash->{stock_cvterms}->{PO} ;
     # should GO be here too?
-    my $go_dbxrefs = $c->stash->{stock_dbxrefs}->{'GO'};
-    my @stock_dbxrefs;
-    push @stock_dbxrefs, @$sp_dbxrefs if $sp_dbxrefs;
-    push @stock_dbxrefs, @$po_dbxrefs if $po_dbxrefs;
+    my $go_cvterms = $c->stash->{stock_cvterms}->{GO};
+    my @stock_cvterms;
+    push @stock_cvterms, @$sp_cvterms if $sp_cvterms;
+    push @stock_cvterms, @$po_cvterms if $po_cvterms;
     ################################
-    ###the following code should be re-formatted in JSON object, 
+    ###the following code should be re-formatted in JSON object,
     #and the html generated in the javascript code
     ### making this more reusable !
     ###############################
@@ -223,40 +223,41 @@ sub display_ontologies_GET  {
     if ($c->user) {
         if ( $c->user->check_roles('curator') || $c->user->check_roles('submitter')  || $c->user->check_roles('sequencer') ) { $privileged = 1; }
     }
-    # the ontology term is a stock_dbxref
-    # the evidence details are in stock_dbxrefprop (relationship, evidence_code,
-    # evidence_description, evidence_with, reference, obsolete )
-    # and the metadata for sp_person_id, create_date, etc. 
+    # the ontology term is a stock_cvterm
+    # the evidence details are in stock_cvtermprop (relationship, evidence_code,
+    # evidence_description, evidence_with, reference, obsolete
+    # and the metadata for sp_person_id, create_date, etc.)
     my @obs_annot;
     #keys= cvterms, values= hash of arrays
     #(keys= ontology details, values= list of evidences)
     my %ont_hash = () ;
-    #some CVs to be used for the evidence codes
-    my $cv_rs =  $schema->resultset("Cv::Cv");
-    my ($rel_cv) = $cv_rs->search(name => 'relationship');
-    my ($evidence_cv) = $cv_rs->search(name => 'evidence_code' );
-    # go over the lists of Bio::Chado::Schema::General::Dbxref objects
+    #some cvterms to be used for the evidence codes
+    my $cvterm_rs =  $schema->resultset("Cv::Cvterm");
+    my ($rel_cvterm) = $cvterm_rs->search( { name => 'relationship'} );
+    my ($evidence_cvterm) = $cvterm_rs->search( { name => 'evidence_code' } );
+    # go over the lists of Bio::Chado::Schema::Cv::Cvterm objects
     # and build the annotation details
-    foreach (@stock_dbxrefs) {
-        my $cv_name      = $_->dbxref->cvterm->cv->name;
-        my $cvterm_id    = $_->dbxref->cvterm->cvterm_id;
-        my $cvterm_name  = $_->dbxref->cvterm->name;
-        my $db_name      = $_->dbxref->db->name;
-        my $accession    = $_->dbxref->accession;
+    foreach (@stock_cvterms) {
+        my $cv_name      = $_->cvterm->cv->name;
+        my $cvterm_id    = $_->cvterm->cvterm_id;
+        my $cvterm_name  = $_->cvterm->name;
+        my $db_name      = $_->cvterm->dbxref->db->name;
+        my $accession    = $_->cvterm->dbxref->accession;
         my $db_accession = $accession;
         $db_accession = $cvterm_id if $db_name eq 'SP';
-        my $url = $_->dbxref->db->urlprefix . $_->dbxref->db->url;
+        my $url = $_->cvterm->dbxref->db->urlprefix . $_->cvterm->dbxref->db->url;
         my $cvterm_link =
             qq |<a href="/chado/cvterm.pl?cvterm_id=$cvterm_id" target="blank">$cvterm_name</a>|;
-        # the stock_dbxrefprop objects have all the evidence and metadata for the annotation
-        my $props = $_->stock_dbxrefprops;
-        my ($relationship) = $props->search_related('type', { cv_id=>$rel_cv->cv_id} )->single; # should be 1 relationship per annotation
-        my ($evidence_code) =  $props->search_related('type', { cv_id=>$evidence_cv->cv_id} )->single; # should be 1 evidence_code ?
+        # the stock_cvtermprop objects have all the evidence and metadata for the annotation
+        my $props = $_->stock_cvtermprops;
+        my ($relationship_id) = $props->search( { type_id =>$rel_cvterm->cvterm_id} )->single ? $props->search( { type_id =>$rel_cvterm->cvterm_id} )->single->value : undef; # should be 1 relationship per annotation
+        my ($evidence_code_id) = $props->search( { type_id => $evidence_cvterm->cvterm_id })->single ?  $props->search( { type_id => $evidence_cvterm->cvterm_id })->single->value : undef;
+        # should be 1 evidence_code
         ############
         my $evidence_desc_name;
-        my $rel_name = $relationship ? $relationship->name : undef;
-        my $ev_name  = $evidence_code ? $evidence_code->name : undef;
-        #if the dbxref has an obsolete property (must have a true value
+        my $rel_name = $relationship_id ? $cvterm_rs->find({ cvterm_id=>$relationship_id})->name : undef;
+        my $ev_name  = $evidence_code_id ? $cvterm_rs->find({ cvterm_id=>$evidence_code_id})->name : undef;
+        #if the cvterm has an obsolete property (must have a true value
         # since annotations can be obsolete and un-obsolete, it is possible
         # to have an obsolete property with value = 0, meaning the annotation
         # is not obsolete.
@@ -268,11 +269,11 @@ sub display_ontologies_GET  {
             },
             { join =>  'type' } , );
         if ($obsolete_prop) {
-            my $unobsolete = $privileged ? qq| <a href="/ajax/ontology/unobsolete_annotation($obsolete_prop)">[unobsolete]</a> | : undef;
-            ### NEED TO MAKE AN AJAX REQUEST 
+            my $unobsolete = $privileged ? qq| <a href="/ajax/stock/unobsolete_annotation($obsolete_prop)">[unobsolete]</a> | : undef;
+            ### NEED TO MAKE AN AJAX REQUEST  #############
             # onclick: $obsolete_prop->update( {value => '0' } );
-            
-            # generate the list of obsolete annotations 
+
+            # generate the list of obsolete annotations
             push @obs_annot,
             $rel_name . " "
                 . $cvterm_link . " ("
@@ -282,22 +283,23 @@ sub display_ontologies_GET  {
             my $ontology_details = $rel_name
                 . qq| $cvterm_link ($db_name:<a href="$url$db_accession" target="blank"> $accession</a>)<br />|;
             # build the obsolete link if the user has  editing privileges
-            my $obsolete_link = $privileged ? qq| <a href="/ajax/ontology/obsolete_annotation($_)">[delete]</a> | : undef ;
-            my ($ev_with) = $props->search( {'type.name' => 'evidence_with'} , { join => 'type'  } );
+            my $obsolete_link = $privileged ? qq| <a href="/ajax/stock/obsolete_annotation($_)">[delete]</a> | : undef ;
+            my ($ev_with) = $props->search( {'type.name' => 'evidence_with'} , { join => 'type'  } )->single;
             my $ev_with_dbxref = $ev_with ? $schema->resultset("General::Dbxref")->find( { dbxref_id=> $ev_with->value } ) : undef;
             my $ev_with_url = $ev_with_dbxref ?  $ev_with_dbxref->urlprefix . $ev_with_dbxref->url . $ev_with_dbxref->accession : undef;
             my $ev_with_acc = $ev_with_dbxref ? $ev_with_dbxref->accession : undef ;
-            # the reference is a dbxref id in the prop table
-            my ($reference) = $props->search( {'type.name' => 'reference'} , { join => 'type'  } );
-            my $reference_dbxref = $reference ? $schema->resultset("General::Dbxref")->find( { dbxref_id=> $reference->value } ) : undef;
-            my $reference_url = $reference_dbxref ? $reference_dbxref->urlprefix . $reference_dbxref->url . $reference_dbxref->accession : undef;
+            # the reference is a stock_cvterm.pub_id
+            my ($reference) = $_->pub;
+            my $reference_dbxref = $reference ? $reference->pub_dbxrefs->first->dbxref : undef;
+            my $reference_url = $reference_dbxref ? $reference_dbxref->db->urlprefix . $reference_dbxref->db->url . $reference_dbxref->accession : undef;
             my $reference_acc = $reference_dbxref ? $reference_dbxref->accession : undef;
             # the submitter is a sp_person_id prop
             my ($submitter) = $props->search( {'type.name' => 'sgn sp_person_id'} , { join => 'type' } );
             my $sp_person_id = $submitter ? $submitter->value : undef;
-            my $submitter_info ;# : <a href'"solpeople/personal_info.pl?sp_person_id=$sp_person_id">$first_name $last_name </a>
+            my $person= CXGN::People::Person->new($c->dbc->dbh, $sp_person_id);
+            my $submitter_info = qq| <a href="solpeople/personal_info.pl?sp_person_id=$sp_person_id">| . $person->get_first_name . " " . $person->get_last_name . "</a>" ;
             my ($date) = $props->search( {'type.name' => 'create_date'} , { join =>  'type'  } )->first || undef ; # $props->search( {'type.name' => 'modified_date'} , { join =>  'type' } ) ;
-            my $evidence_date = $date ? $date->value : undef;
+            my $evidence_date = $date ? substr $date->value , 0, 10 : undef;
 
             # add an empty row if there is more than 1 evidence code
             my $ev_string;
@@ -334,7 +336,7 @@ sub display_ontologies_GET  {
     }
     #display ontology annotation form
     if ( @obs_annot &&  $privileged ) {
-      ##NEED TO RE-WRITE print _obsoleted  $ontology_evidence .= print_obsoleted(@obs_annot);
+        ##NEED TO RE-WRITE print _obsoleted  $ontology_evidence .= print_obsoleted(@obs_annot);
     }
     $hashref->{html} = $ontology_evidence;
     $c->stash->{rest} = $hashref;
@@ -353,19 +355,25 @@ sub associate_ontology_GET :Args(0) {
     my $stock_id = $c->req->param('object_id');
     my $ontology_input = $c->req->param('term_name');
     my $relationship = $c->req->param('relationship'); # a cvterm_id
-    my $evidence_code = $c->req->param('evidence'); # a cvterm_id
-    my $evidence_description = $c->req->param('evidence_desc'); # a cvterm_id 
+    my $evidence_code = $c->req->param('evidence_code'); # a cvterm_id
+    my $evidence_description = $c->req->param('evidence_description'); # a cvterm_id
     my $evidence_with = $c->req->param('evidence_with'); # a dbxref_id (type='evidence_with' value = 'dbxref_id'
-    my $reference = $c->req->param('reference'); # a dbxref_id
+    
+    my $reference = $c->req->param('reference'); # a pub_id
     my $params = map { $_ => $c->req->param($_) } qw/
-       stock_id ontology_input relationship evidence_code evidence_description
-       evident_with reference
+       object_id ontology_input relationship evidence_code evidence_description
+       evidence_with reference
     /;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $cvterm_rs = $schema->resultset('Cv::Cvterm');
+    my ($pub) = $reference ? $reference :
+        $schema->resultset('Pub::Pub')->search( { title=> 'curator' } )->first; # a pub for 'cuurator' should already be in the sgn database. can add here $curator_cvterm->create_with ... and then create the curator pub with type_id of $curator_cvterm
+
     #solanaceae_phenotype--SP:000001--fruit size
     my ($cv_name, $db_accession, $cvterm_name)  = split /--/ , $ontology_input;
     my ($db_name, $accession) = split ':' , $db_accession;
 
-    my ($cvterm) = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado')
+    my ($cvterm) = $schema
         ->resultset('General::Db')
         ->search({ 'me.name' => $db_name, } )->search_related('dbxrefs' , { accession => $accession } )
         ->search_related('cvterm')->first; # should be only 1 cvterm per dbxref
@@ -373,8 +381,7 @@ sub associate_ontology_GET :Args(0) {
         $c->stash->{rest} = { error => "no ontology term found for term $db_name : $accession" };
         return;
     }
-    my ($stock) = $c->stash->{stock} || $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado')->resultset("Stock::Stock")->find( { stock_id => $stock_id } );
-
+    my ($stock) = $c->stash->{stock} || $schema->resultset("Stock::Stock")->find( { stock_id => $stock_id } );
 
     my  $cvterm_id = $cvterm->cvterm_id;
     if (!$c->user) {
@@ -388,19 +395,61 @@ sub associate_ontology_GET :Args(0) {
         if ($stock && $cvterm_id) {
             try {
                 print STDERR "********trying to load stockdbxrefprops: \n $relationship =1\n $evidence_code = 1 , $evidence_description =1 , reference= $reference, evidence_with = $evidence_with \n\n";
-                my $s_dbxref = $stock->find_or_create_related(
-                    'stock_dbxrefs', { dbxref_id => $cvterm->dbxref_id, } );
-                $s_dbxref->create_stock_dbxrefprops(
-                    { $relationship => 1 , } , { db_name => 'OBO_REL', cv_name =>'relationship' } );
-                $s_dbxref->create_stock_dbxrefprops(
-                    { $evidence_code => 1 } , { db_name => 'ECO', cv_name =>'evidence_code' } );
-                 $s_dbxref->create_stock_dbxrefprops(
-                     { $evidence_description => 1 } , { db_name => 'ECO', cv_name =>'evidence_code' } ) if $evidence_description;
-                $s_dbxref->create_stock_dbxrefprops(
-                    { 'reference' => $reference , } , { cv_name =>'local' } );
-                $s_dbxref->create_stock_dbxrefprops(
-                    { 'evidence_with' => $evidence_with , } , { cv_name =>'local' , autocreate=>1} ) if $evidence_with;
 
+               #check if the stock_cvterm exists
+                my $s_cvterm_rs = $stock->search_related(
+                    'stock_cvterms', { cvterm_id => $cvterm_id, pub_id => $pub->pub_id } );
+                # if it exists , we need to increment the rank
+                my $rank = 0;
+                if ($s_cvterm_rs->first) {
+                    $rank = $s_cvterm_rs->get_column('rank')->max;
+                    # now check if the evidence codes already exists
+                    my ($rel_prop, $ev_prop, $desc_prop, $with_prop);
+                    my $eprops = $s_cvterm_rs->search_related('stock_cvtermprops');
+                    $rel_prop = $eprops->search( {
+                        type_id => $cvterm_rs->search( { name => 'relationship'})->single,
+                        value => $relationship  })->first;
+
+                    $ev_prop = $eprops->search( {
+                        type_id =>   $cvterm_rs->search( { name => 'evidence_code'})->single,
+                        value => $evidence_code })->first;
+
+                    $desc_prop = $eprops->search( {
+                        type_id =>  $cvterm_rs->search( { name => 'evidence description'})->single,
+                        value => $evidence_description })->first if $evidence_description;
+
+                    $with_prop = $eprops->search( {
+                        type_id =>  $cvterm_rs->search( { name => 'evidence_with'})->single,
+                        value => $evidence_with })->first if $evidence_with;
+
+                    # return error if annotation + evidence exist
+                    if ($rel_prop && $ev_prop && $desc_prop && $with_prop ) {
+                        $c->stash->{rest} = { error => "Annotation exists with these evidence codes! " };
+                        return;
+                    }
+                }
+                # now store a new stock_cvterm
+                my $s_cvterm = $stock->create_related('stock_cvterms', {
+                    cvterm_id => $cvterm_id,
+                    pub_id    => $pub->pub_id,
+                    rank      => $rank, } );
+#########
+                $s_cvterm->create_stock_cvtermprops(
+                    { 'relationship' => $relationship } , { db_name => 'OBO_REL', cv_name =>'relationship' } ) if looks_like_number($relationship);
+                $s_cvterm->create_stock_cvtermprops(
+                    { 'evidence_code' => $evidence_code } , { db_name => 'ECO', cv_name =>'evidence_code' } ) if looks_like_number($evidence_code);
+                 $s_cvterm->create_stock_cvtermprops(
+                     { 'evidence_description' => $evidence_description } , { cv_name =>'null', autocreate => 1 } ) if looks_like_number($evidence_description);
+                $s_cvterm->create_stock_cvtermprops(
+                    { 'evidence_with' => $evidence_with  } , { cv_name =>'local' , autocreate=>1} ) if looks_like_number($evidence_with);
+                # store the person loading the annotation 
+                #my $login_peronon_id = $c->login->person_id;
+                #$s_cvterm->create_stock_cvtermprops(
+                #{ 'sp_person_id' => $login_person_id  } , { cv_name =>'local' , autocreate=>1} );
+                #store today's date
+                #$s_cvterm->create_stock_cvtermprops(
+                 #   { 'create_date' => "now()"  } , { cv_name =>'local' , autocreate=>1} );
+                
                 $c->stash->{rest} = ['success'];
                 return;
             } catch {
@@ -437,4 +486,41 @@ sub references_GET :Args(0) {
     }
     $c->stash->{rest} = $response_hash;
 }
+
+
+
+sub obsolete_annotation :Path('ajax/stock/obsolete_annotation') : ActionClass('REST') { }
+
+
+sub obsolete_annotation_POST :Args(1) {
+    my ($self, $c, $stock_cvtermprop_id) = @_;
+    my $stock = $c->stash->{stock};
+    my ($prop) = $stock-find_related->('stock_cvtermprops', { stock_cvtermprop_id => $stock_cvtermprop_id } );
+
+    my $response ={} ;
+    if ($prop) {
+        $prop->update( { value => '1' } ) ;
+         $c->stash->{rest} = ['success'];
+        return;
+    } else { $response->{error} = 'stock_cvtermprop $stock_cvtermprop_id does not exists! ';
+    }
+    $c->stash->{rest} = $response;
+}
+
+sub unobsolete_annotation :Path('ajax/stock/unobsolete_annotation') : ActionClass('REST') { }
+
+sub unobsolete_annotation_POST :Args(1) {
+    my ($self, $c, $stock_cvtermprop_id) = @_;
+    my $stock = $c->stash->{stock};
+    my ($prop) = $stock-find_related->('stock_cvtermprops', { stock_cvtermprop_id => $stock_cvtermprop_id } );
+
+    my $response ={} ;
+    if ($prop) {
+        $prop->update( { value => '0' } ) ;
+        $c->stash->{rest} = ['success'];
+        return;
+    } else { $response->{error} = 'stock_cvtermprop $stock_cvtermprop_id does not exists! '; }
+    $c->stash->{rest} = $response;
+}
+
 1;

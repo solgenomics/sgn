@@ -195,7 +195,7 @@ sub view_stock :Chained('get_stock') :PathPart('view') :Args(0) {
         $is_owner = 1;
     }
     my $dbxrefs = $self->_dbxrefs($stock);
-
+   
     my $nd_experiments = $self->_stock_nd_experiments($stock);
     ################
     $c->stash(
@@ -270,6 +270,19 @@ sub _stock_dbxrefs {
     }
     return $sdbxrefs;
 }
+
+sub _stock_cvterms {
+    my ($self,$stock) = @_;
+
+    my $stock_cvterms = $stock->get_object_row()->search_related("stock_cvterms");
+    # hash of arrays. Keys are db names , values are lists of StockCvterm objects
+    my $scvterms ;
+    while ( my $scvterm =  $stock_cvterms->next ) {
+        push @{ $scvterms->{$scvterm->cvterm->dbxref->db->name} } , $scvterm;
+    }
+    return $scvterms;
+}
+
 sub get_stock :Chained('/') :PathPart('stock') :CaptureArgs(1) {
     my ($self, $c, $stock_id) = @_;
 
@@ -286,6 +299,10 @@ sub get_stock :Chained('/') :PathPart('stock') :CaptureArgs(1) {
     # keys are db-names , values are lists of Bio::Chado::Schema::General::Dbxref objects
     my $dbxrefs  = $stock ?  $self->_stock_dbxrefs($stock) : undef ;
     $c->stash->{stock_dbxrefs} = $dbxrefs;
+
+    my $cvterms  = $stock ?  $self->_stock_cvterms($stock) : undef ;
+    $c->stash->{stock_cvterms} = $cvterms;
+
 }
 
 ######
