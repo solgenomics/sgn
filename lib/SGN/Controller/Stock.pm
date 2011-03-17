@@ -51,15 +51,18 @@ javascript:
     function toggle_advanced() {
             jQuery('div[class*="advanced"]').toggle();
     }
-    jQuery(function(){ jQuery("#advanced_toggle").click(
-        function(){
-        toggle_advanced();
-        });
+    jQuery("#advanced_toggle").click(function(){
+            toggle_advanced();
     });
     jQuery(function() {
         if( jQuery("input#advanced_toggle").attr('checked') ) {
             toggle_advanced();
         }
+    });
+    jQuery("#trait").blur(function(){
+        jQuery("#trait_range").replaceWith(
+            'Trait Range'
+        );
     });
 elements:
     - type: Checkbox
