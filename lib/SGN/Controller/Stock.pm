@@ -195,9 +195,11 @@ sub view_stock :Chained('get_stock') :PathPart('view') :Args(0) {
         $is_owner = 1;
     }
     my $dbxrefs = $self->_dbxrefs($stock);
-   
+
     my $nd_experiments = $self->_stock_nd_experiments($stock);
-    ################
+    my $direct_phenotypes  = $self->_stock_project_phenotypes($stock);
+
+################
     $c->stash(
         template => '/stock/index.mas',
 
@@ -215,7 +217,8 @@ sub view_stock :Chained('get_stock') :PathPart('view') :Args(0) {
             props     => $props,
             dbxrefs   => $dbxrefs,
             owners    => $owner_ids,
-            nd_experiments => $nd_experiments,
+            nd_experiments    => $nd_experiments,
+            direct_phenotypes => $direct_phenotypes,
         },
         locus_add_uri  => $c->uri_for( '/ajax/stock/associate_locus' ),
         cvterm_add_uri => $c->uri_for( '/ajax/stock/associate_ontology')
@@ -257,6 +260,34 @@ sub _stock_nd_experiments {
 
     my $nd_experiments = $stock->get_object_row->nd_experiment_stocks->search_related('nd_experiment');
     return $nd_experiments;
+}
+
+# this sub gets all phenotypes measured directly on this stock and stores
+# it in a hashref of keys = project name , values = list of BCS::Phenotype::Phenotype objects
+sub _stock_project_phenotypes {
+    my ($self, $stock) = @_;
+    my $nd_experiments = $self->_stock_nd_experiments($stock);
+    my %phenotypes;
+
+    while (my $exp = $nd_experiments->next) {
+        my $geolocation = $exp->nd_geolocation;
+        # there should be one project linked to the experiment ?
+        my $project = $exp->nd_experiment_projects->search_related('project')->first;
+        my @ph = $exp->nd_experiment_phenotypes->search_related('phenotype')->all;
+
+        push(@{$phenotypes{$project->description}}, @ph);
+    }
+    return \%phenotypes;
+}
+
+# this sub gets all phenotypes measured on all subjects of this stock.
+# Subjects are in stock_relationship
+sub _stock_members_phenotypes {
+    my ($self, $stock) = @_;
+    my %phenotypes;
+    #my $objects = $stock->stock_relationship_objects ;
+    #my $subjects =
+    return \%phenotypes
 }
 
 sub _stock_dbxrefs {

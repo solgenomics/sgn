@@ -101,32 +101,15 @@ foreach my $o_id (@$owners) {
   my $last_name = $person->get_last_name;
   $editor_link .= qq|<a href="/solpeople/personal-info.pl?sp_person_id=$o_id">$first_name $last_name</a> |;
 }
+
+#phenotypes measured directly on this stock
+my $direct_phenotypes = $stockref->{direct_phenotypes};
+
+# get all phenotypes of subjects ..
+my $member_phenotypes = $stockref->{member_phenotypes};
+
 ############################
 ############################
-my $nd_experiments= $stockref->{nd_experiments};
-
-my %projects;
-
-while (my $exp = $nd_experiments->next) {
-  my $geolocation = $exp->nd_geolocation;
-  # there should be one project linked to the experiment ?
-  my $project = $exp->nd_experiment_projects->search_related('project')->first;
-  my @ph = $exp->nd_experiment_phenotypes->search_related('phenotype')->all;
-
-  #now do the same with genotypes .
-  # genotype regions  are stored as nd_experimentprops type= 'sgn genotype_region_id'
-  my @gen = $exp->nd_experiment_genotypes->search_related('genotype')->all;
-
-  my @gen_regions = $exp->nd_experimentprops( { 'type.name' => 'sgn genotype_region_id' } ,
-                                              { join =>  'type'  },
-                                            )->all;
-  ##
-  ## genotypes really need to be a genotype_id and not genotype_region ids. 
-  ##
-  push(@{$projects{$project->description}{phenotypes}}, @ph);
-  push(@{$projects{$project->description}{genotypes}}, @gen);
-  push(@{$projects{$project->description}{genotype_regions}}, @gen_regions);
-}
 
 #my $map = CXGN::Cview::Map::Stock->new($stock_id);
 #########################################
@@ -221,7 +204,7 @@ my $pub_count = scalar( @$pubmeds );
 % #if the dbxref is not obsolete
 %   foreach my $pd (  $dbxref->pub_dbxrefs  ) {
 %     my $pub = CXGN::Chado::Publication->new($dbh, $pd->pub_id );
-  <& /chado/publication.mas, pub=>$pub, count=>$pub_count++, db=>'PMID', accession=>$pub->get_accession() &>
+  <& /chado/publication.mas, pub=>$pub, count=>$pub_count++, db=>'PMID', accession=>$dbxref->accession() &>
 %    }
     <br >
 % }
@@ -230,14 +213,14 @@ my $pub_count = scalar( @$pubmeds );
 
 
 
-<&| /page/info_section.mas, title=>"Ontology annotation" &>
+<&| /page/info_section.mas, title=>"Ontology annotation" , collapsible=>1, collapsed=>1 &>
 <& /ontology/associate_ontology.mas, object_id => $stock_id , object_name => "stock", cvterm_add_uri=> $cvterm_add_uri, ontology_url=>"/stock/$stock_id/ontologies/", show_form => $is_owner  &>
 
 </&>
 
 <&| /page/info_section.mas, title=>"Phenotype data " &>
-% foreach my $project (keys %projects) {
-%  my $pheno = $projects{$project}{phenotypes} ;
+% foreach my $project (keys %$direct_phenotypes) {
+%  my $pheno = $direct_phenotypes->{$project} ;
 <&| /page/info_section.mas, title=>"Experiment: $project", is_subsection => 1 &>
     <& /phenotypes/phenotype_data.mas , phenotypes=>$pheno &>
   </&>
