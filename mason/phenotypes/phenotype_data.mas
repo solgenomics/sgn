@@ -1,5 +1,6 @@
 
 <%doc>
+
 =head1 NAME
 
 /phenotypes/phenotype_data.mas - a component for printing table with stats of a phenotype object
@@ -9,7 +10,7 @@
 
 Parameters:
 
-=over 2
+=over 3
 
 =item phenotypes
 
@@ -18,6 +19,10 @@ arrayref of L<Bio::Chado::Schema::Phenotype> objects
 =item div
 
 div id (for using with javascript)
+
+=item has_qtl
+
+applies to qtl populations. Used for adding a link to the qtl page
 
 
 =back
@@ -33,6 +38,8 @@ Naama Menda <nm249@cornell.edu>
 <%args>
     $phenotypes=>undef
     $div=> ''
+    $has_qtl => undef
+    $object_id => undef
 </%args>
 
 <%once>
@@ -46,6 +53,7 @@ use Statistics::Descriptive;
 
 my @data;
 my %info; # hash of term names, since we can have multiple phenotypes of the same term
+my $graph_icon = qq |<img src="/documents/img/pop_graph.png"/> |;
 
 foreach my $phenotype (@$phenotypes) {
   #attr_id
@@ -53,6 +61,7 @@ foreach my $phenotype (@$phenotypes) {
   my $definition = $observable->definition || '';
   push @ { $info{$observable->name."|". $observable->cvterm_id ."|". $definition} } , $phenotype;
 }
+my $count = 0;
 #display traits sorted by name
 foreach my $term(sort keys %info ) {
   my ($term_name, $term_id, $definition) = split '\|' , $term;
@@ -66,8 +75,13 @@ foreach my $term(sort keys %info ) {
 
   push  @data,  [map {$_}
                  ( (tooltipped_text(qq|<a href="/chado/cvterm.pl?cvterm_id=$term_id">$term_name</a>|, $definition) ), $mean_value, $min, $max, scalar(@values)   ) ];
+
+  push  @{ $data[$count] }, qq | <a href="/phenome/population_indls.pl?population_id=$object_id&amp;cvterm_id=$term_id"> $graph_icon</a> |    if $has_qtl;
+  $count++;
 }
 
+my @headings = ("Trait" , "Value", "Min", "Max", "Repeats");
+push @headings , 'QTL(s)' if $has_qtl;
 
 
 </%perl>
@@ -81,7 +95,7 @@ foreach my $term(sort keys %info ) {
 % if(@data) {
 
 <& /page/columnar_table.mas,
-  headings => [ "Trait" , "Value", "Min", "Max", "Repeats" ],
+  headings => \@headings,
     data     => \@data ,
       __alt_freq   =>2,
       __alt_width  =>1,
