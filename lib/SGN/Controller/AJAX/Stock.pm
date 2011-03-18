@@ -269,7 +269,7 @@ sub display_ontologies_GET  {
             },
             { join =>  'type' } , );
         if ($obsolete_prop) {
-            my $unobsolete = $privileged ? qq| <a href="/ajax/stock/unobsolete_annotation($obsolete_prop)">[unobsolete]</a> | : undef;
+            my $unobsolete = $privileged ? qq| <a href="/ajax/stock/unobsolete_annotation(| . $obsolete_prop->stock_cvtermprop_id . qq|)">[unobsolete]</a> | : undef;
             ### NEED TO MAKE AN AJAX REQUEST  #############
             # onclick: $obsolete_prop->update( {value => '0' } );
 
@@ -283,7 +283,7 @@ sub display_ontologies_GET  {
             my $ontology_details = $rel_name
                 . qq| $cvterm_link ($db_name:<a href="$url$db_accession" target="blank"> $accession</a>)<br />|;
             # build the obsolete link if the user has  editing privileges
-            my $obsolete_link = $privileged ? qq| <a href="/ajax/stock/obsolete_annotation($_)">[delete]</a> | : undef ;
+            my $obsolete_link = $privileged ? qq| <a href="/ajax/stock/obsolete_annotation/| .$_->stock_cvterm_id . qq|/">[delete]</a> | : undef ;
             my ($ev_with) = $props->search( {'type.name' => 'evidence_with'} , { join => 'type'  } )->single;
             my $ev_with_dbxref = $ev_with ? $schema->resultset("General::Dbxref")->find( { dbxref_id=> $ev_with->value } ) : undef;
             my $ev_with_url = $ev_with_dbxref ?  $ev_with_dbxref->urlprefix . $ev_with_dbxref->url . $ev_with_dbxref->accession : undef;
@@ -350,20 +350,26 @@ sub associate_ontology_POST :Args(0) {
     $c->stash->{rest} = { error => "Nothing here, it's a POST.." } ;
 }
 
+
 sub associate_ontology_GET :Args(0) {
     my ( $self, $c ) = @_;
-    my $stock_id = $c->req->param('object_id');
-    my $ontology_input = $c->req->param('term_name');
-    my $relationship = $c->req->param('relationship'); # a cvterm_id
-    my $evidence_code = $c->req->param('evidence_code'); # a cvterm_id
-    my $evidence_description = $c->req->param('evidence_description'); # a cvterm_id
-    my $evidence_with = $c->req->param('evidence_with'); # a dbxref_id (type='evidence_with' value = 'dbxref_id'
-    
-    my $reference = $c->req->param('reference'); # a pub_id
+
     my $params = map { $_ => $c->req->param($_) } qw/
        object_id ontology_input relationship evidence_code evidence_description
        evidence_with reference
     /;
+
+    my $stock_id       = $c->req->param('object_id');
+    my $ontology_input = $c->req->param('term_name');
+    my $relationship   = $c->req->param('relationship'); # a cvterm_id
+    my $evidence_code  = $c->req->param('evidence_code'); # a cvterm_id
+    my $evidence_description = $c->req->param('evidence_description'); # a cvterm_id
+    my $evidence_with  = $c->req->param('evidence_with'); # a dbxref_id (type='evidence_with' value = 'dbxref_id'
+    my $logged_user = $c->user;
+    my $logged_person_id = $logged_user->get_object->get_sp_person_id if $logged_user;
+
+    my $reference = $c->req->param('reference'); # a pub_id
+
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $cvterm_rs = $schema->resultset('Cv::Cvterm');
     my ($pub) = $reference ? $reference :
@@ -394,36 +400,34 @@ sub associate_ontology_GET :Args(0) {
         #########################################################
         if ($stock && $cvterm_id) {
             try {
-                print STDERR "********trying to load stockdbxrefprops: \n $relationship =1\n $evidence_code = 1 , $evidence_description =1 , reference= $reference, evidence_with = $evidence_with \n\n";
-
-               #check if the stock_cvterm exists
+                #check if the stock_cvterm exists
                 my $s_cvterm_rs = $stock->search_related(
                     'stock_cvterms', { cvterm_id => $cvterm_id, pub_id => $pub->pub_id } );
                 # if it exists , we need to increment the rank
                 my $rank = 0;
                 if ($s_cvterm_rs->first) {
-                    $rank = $s_cvterm_rs->get_column('rank')->max;
+                    $rank = $s_cvterm_rs->get_column('rank')->max + 1;
                     # now check if the evidence codes already exists
                     my ($rel_prop, $ev_prop, $desc_prop, $with_prop);
                     my $eprops = $s_cvterm_rs->search_related('stock_cvtermprops');
                     $rel_prop = $eprops->search( {
-                        type_id => $cvterm_rs->search( { name => 'relationship'})->single,
+                        type_id => $cvterm_rs->search( { name => 'relationship'})->single->cvterm_id,
                         value => $relationship  })->first;
 
                     $ev_prop = $eprops->search( {
-                        type_id =>   $cvterm_rs->search( { name => 'evidence_code'})->single,
+                        type_id =>   $cvterm_rs->search( { name => 'evidence_code'})->single->cvterm_id,
                         value => $evidence_code })->first;
 
                     $desc_prop = $eprops->search( {
-                        type_id =>  $cvterm_rs->search( { name => 'evidence description'})->single,
+                        type_id =>  $cvterm_rs->search( { name => 'evidence description'})->single->cvterm_id,
                         value => $evidence_description })->first if $evidence_description;
 
                     $with_prop = $eprops->search( {
-                        type_id =>  $cvterm_rs->search( { name => 'evidence_with'})->single,
+                        type_id =>  $cvterm_rs->search( { name => 'evidence_with'})->single->cvterm_id,
                         value => $evidence_with })->first if $evidence_with;
 
                     # return error if annotation + evidence exist
-                    if ($rel_prop && $ev_prop && $desc_prop && $with_prop ) {
+                    if ($rel_prop && $ev_prop) {
                         $c->stash->{rest} = { error => "Annotation exists with these evidence codes! " };
                         return;
                     }
@@ -443,19 +447,36 @@ sub associate_ontology_GET :Args(0) {
                 $s_cvterm->create_stock_cvtermprops(
                     { 'evidence_with' => $evidence_with  } , { cv_name =>'local' , autocreate=>1} ) if looks_like_number($evidence_with);
                 # store the person loading the annotation 
-                #my $login_peronon_id = $c->login->person_id;
-                #$s_cvterm->create_stock_cvtermprops(
-                #{ 'sp_person_id' => $login_person_id  } , { cv_name =>'local' , autocreate=>1} );
+                $s_cvterm->create_stock_cvtermprops(
+                    { 'sp_person_id' => $logged_person_id  } , { cv_name =>'local' , autocreate=>1} );
                 #store today's date
+                ##NEED TO FIGURE OUT HOW TO CALL THE SQL FUNCTION HERE 
                 #$s_cvterm->create_stock_cvtermprops(
-                 #   { 'create_date' => "now()"  } , { cv_name =>'local' , autocreate=>1} );
-                
+                #    { 'create_date' => "\'now()'"  } , { cv_name =>'local' , autocreate=>1} );
+
                 $c->stash->{rest} = ['success'];
                 return;
             } catch {
                 $c->stash->{rest} = { error => "Failed: $_" };
+                # send an email to sgn bugs
+                $c->stash->{email} = {
+                    to      => 'sgn-bugs@sgn.cornell.edu',
+                    from    => 'sgn-bugs@sgn.cornell.edu',
+                    subject => 'Associate ontology failed! Stock_id = $stock_id',
+                    body    => '$_',
+                };
+                $c->forward( $c->view('Email') );
                 return;
             };
+            # if you reached here this means associate_ontology worked. Now send an email to sgn-db-curation
+            $c->stash->{email} = {
+                to      => 'sgn-db-curation@sgn.cornell.edu',
+                from    => 'sgn-bugs@sgn.cornell.edu',
+                subject => 'New ontology term loaded. Stock $stock_id',
+                body    => "User " . $logged_user->get_object->get_first_name . " " . $logged_user->get_object->get_last_name . "has stored a new ontology term for stock $stock_id http://solgenomics.net/stock/$stock_id/view",
+            };
+            $c->forward( $c->view('Email') );
+
         } else {
             $c->stash->{rest} = { error => 'need both valid stock_id and cvterm_id for adding an ontology term to this stock! ' };
         }
@@ -463,7 +484,6 @@ sub associate_ontology_GET :Args(0) {
         $c->stash->{rest} = { error => 'No privileges for adding new ontology terms. You must have an sgn submitter account. Please contact sgn-feedback@solgenomics.net for upgrading your user account. ' };
     }
 }
-
 
 sub references : Chained('/stock/get_stock') :PathPart('references') : ActionClass('REST') { }
 
@@ -495,10 +515,10 @@ sub obsolete_annotation :Path('ajax/stock/obsolete_annotation') : ActionClass('R
 sub obsolete_annotation_POST :Args(1) {
     my ($self, $c, $stock_cvtermprop_id) = @_;
     my $stock = $c->stash->{stock};
-    my ($prop) = $stock-find_related->('stock_cvtermprops', { stock_cvtermprop_id => $stock_cvtermprop_id } );
+    my ($prop) = $stock->stock_cvterms->find_related->('stock_cvtermprops', { stock_cvtermprop_id => $stock_cvtermprop_id } );
 
     my $response ={} ;
-    if ($prop) {
+    if ($prop && $c->user ) {
         $prop->update( { value => '1' } ) ;
          $c->stash->{rest} = ['success'];
         return;
@@ -512,7 +532,7 @@ sub unobsolete_annotation :Path('ajax/stock/unobsolete_annotation') : ActionClas
 sub unobsolete_annotation_POST :Args(1) {
     my ($self, $c, $stock_cvtermprop_id) = @_;
     my $stock = $c->stash->{stock};
-    my ($prop) = $stock-find_related->('stock_cvtermprops', { stock_cvtermprop_id => $stock_cvtermprop_id } );
+    my ($prop) = $stock->stock_cvterms->find_related->('stock_cvtermprops', { stock_cvtermprop_id => $stock_cvtermprop_id } );
 
     my $response ={} ;
     if ($prop) {
