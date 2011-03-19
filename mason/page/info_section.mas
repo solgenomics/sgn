@@ -83,18 +83,62 @@ Lukas Mueller, based on the Perl code from Rob Buels.
 <%args>
 	$title
 	$subtitle       => ""
-	$empty_message  => ""
+	$empty_message  => "None"
         $collapsible    => 0
         $collapsed      => 0
 	$id             => ""
 	$is_empty       => 0
 	$is_subsection  => 0
-	$align          => 0
+	$align          => ''
+        $contents       => ''
 </%args>
 
+<%perl>
+
+    $contents ||= $m->content;
+
+    #if we have been given content, and we aren't told that this section
+    #is supposed to be empty, print a full section
+    my $sub = $is_subsection ? 'sub_' : '';
+    if ( $contents =~ /\S/ && !$is_empty ) {
+        $align &&= qq| style="text-align: $align|;
+        $id ||= "sgnc" . int( rand(10000) );
+        $contents = <<EOC;
+<div class="${sub}infosectioncontent" $align>
+$contents
+</div>
+EOC
+
+        if ( $collapsible ) {
+            ( $title, $contents ) = collapser(
+                {
+                    linktext            => $title,
+                    hide_state_linktext => $title,
+                    content             => $contents,
+                    collapsed           => $collapsed,
+                    id                  => $id,
+                }
+            );
+        }
+        my $title_bar = <<EOHTML;
+<table cellspacing="0" cellpadding="0" class="${sub}infosectionhead" summary=""><tr><td class="${sub}infosectiontitle">$title</td><td class="${sub}infosectionsubtitle">$subtitle&nbsp;</td></tr></table>
+EOHTML
+        print "$title_bar\n$contents\n";
+    }
+
+    #otherwise, if it's actually empty, just print a collapsed section
+    #with the empty message
+    else {
+        my $maybe_subtitle =
+          $subtitle
+          ? qq|<td class="${sub}infosectionsubtitle_empty" align="right">$subtitle&nbsp;</td>|
+          : '';
+        print <<EOT;
+<table cellspacing="0" cellpadding="0" class="${sub}infosectionhead_empty" summary=""><tr><td class="${sub}infosectiontitle_empty">$title</td><td class="${sub}infosection_emptymessage">$empty_message</td>$maybe_subtitle</tr></table>
+EOT
+    }
+</%perl>
 
 <%once>
- use CXGN::Page::FormattingHelpers 'info_section_html';
+  use CXGN::Page::Widgets qw/collapser/;
 </%once>
-
-<% info_section_html( %ARGS, contents => ($m->content =~ /\S/ ? $m->content : undef ) ) %>
