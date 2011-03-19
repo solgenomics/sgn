@@ -35,6 +35,7 @@
    title => 'Ontology terms',
    subtitle => 'ontology terms associated with this feature',
    collapsible => 1,
+   hide_if_empty => 1,
 &>
 
   <& /feature/feature_cvterms.mas,
@@ -46,6 +47,7 @@
 <&| /page/info_section.mas,
    title => 'Related features',
    collapsible => 1,
+   hide_if_empty => 1,
 &>
 
   <& /feature/related_features.mas,
@@ -60,9 +62,11 @@
 
 <&| /page/info_section.mas,
      title => 'Genomic sequence',
-     subtitle => 'unprocessed genomic sequence underlying this region',
+     subtitle => 'unprocessed genomic sequence underlying this feature',
      collapsible => 1,
      collapsed   => 0,
+     is_empty => !!$feature->seq,
+     hide_if_empty => 1,
  &>
 
   <div style="margin: 1em 0">
