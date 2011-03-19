@@ -46,6 +46,11 @@ The message that should appear when $contents is empty.
 if true, forces this info_section to be drawn in the empty state,
 content will not be shown.
 
+=item $hide_if_empty
+
+if true, hide the info section completely (do not print anything) if
+it is empty
+
 =item $collapsible
 
 boolean - default false, a true value makes the section collapsible
@@ -91,6 +96,8 @@ Lukas Mueller, based on the Perl code from Rob Buels.
 	$is_subsection  => 0
 	$align          => ''
         $contents       => ''
+
+        $hide_if_empty  => 0
 </%args>
 
 <%perl>
@@ -128,6 +135,9 @@ EOHTML
 
     #otherwise, if it's actually empty, just print a collapsed section
     #with the empty message
+    elsif( $hide_if_empty ) {
+        # print nothing
+    }
     else {
         my $maybe_subtitle =
           $subtitle
