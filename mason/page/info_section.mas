@@ -9,7 +9,7 @@ info_section.mas
  <&| info_section.mas, title => 'Search Results',
                       subtitle      => '3 matches',
                       empty_message => 'No matching monkeys found',
-                      is_subsection => 0 
+                      is_subsection => 0,
   &>
 
   HTML and Mason contents of the info section,
@@ -21,31 +21,35 @@ info_section.mas
 
 =head1 DESCRIPTION
 
-Description: Displays a paragraph with a title bar and provides a way to collapse the content. A mason wrapper around CXGN::Page::FormattingHelpers::info_section_html.
+Displays a paragraph with a title bar and provides a way to collapse
+the content. A mason wrapper around
+CXGN::Page::FormattingHelpers::info_section_html.
 
 =head1 ARGUMENTS
 
 =over 14
 
-=item $title 
+=item $title
 
 the title to be displayed in the title bar. Required.
 
-=item $subtitle 
+=item $subtitle
 
 a subtitle that goes next to the title. Optional.
 
-=item $empty_message 
+=item $empty_message
 
 The message that should appear when $contents is empty.
 
 =item $is_empty
 
-if true, forces this info_section to be drawn in the empty state, content will not be shown.
+if true, forces this info_section to be drawn in the empty state,
+content will not be shown.
 
-=item $collapsible 
+=item $collapsible
 
-boolean - default false, a true value makes the section collapsible (with javascript)
+boolean - default false, a true value makes the section collapsible
+(with javascript)
 
 =item $collapsed
 
@@ -53,11 +57,13 @@ boolean - a true value will draw the section in the collapsed state
 
 =item $is_subsection
 
-boolean - a true value will draw the section as a subsection, with slighly altered title bar and text rendering.
+boolean - a true value will draw the section as a subsection, with
+slighly altered title bar and text rendering.
 
-=item $align 
+=item $align
 
-not sure what that does.
+if set, add a text-align: $align CSS property to the div holding the
+main content
 
 =back
 
