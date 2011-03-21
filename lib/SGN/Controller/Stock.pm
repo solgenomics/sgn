@@ -195,10 +195,11 @@ sub view_stock :Chained('get_stock') :PathPart('view') :Args(0) {
         $is_owner = 1;
     }
     my $dbxrefs = $self->_dbxrefs($stock);
-
-    my $nd_experiments = $self->_stock_nd_experiments($stock);
+    my $pubs = $self->_stock_pubs($stock);
+    my $nd_experiments     = $self->_stock_nd_experiments($stock);
     my $direct_phenotypes  = $self->_stock_project_phenotypes($stock);
-
+    my $members_phenotypes  = $self->_stock_members_phenotypes($stock);
+    my $cview_tmp_dir = $c->tempfiles_subdir('cview');
 ################
     $c->stash(
         template => '/stock/index.mas',
@@ -217,8 +218,12 @@ sub view_stock :Chained('get_stock') :PathPart('view') :Args(0) {
             props     => $props,
             dbxrefs   => $dbxrefs,
             owners    => $owner_ids,
+            pubs      => $pubs,
             nd_experiments    => $nd_experiments,
+            members_phenotypes => $members_phenotypes,
             direct_phenotypes => $direct_phenotypes,
+            cview_tmp_dir =>  $cview_tmp_dir,
+            cview_basepath => $c->get_conf('basepath'),
         },
         locus_add_uri  => $c->uri_for( '/ajax/stock/associate_locus' ),
         cvterm_add_uri => $c->uri_for( '/ajax/stock/associate_ontology')
@@ -285,8 +290,19 @@ sub _stock_project_phenotypes {
 sub _stock_members_phenotypes {
     my ($self, $stock) = @_;
     my %phenotypes;
-    #my $objects = $stock->stock_relationship_objects ;
-    #my $subjects =
+    my $objects = $stock->get_object_row->stock_relationship_objects ;
+    # now we have rs of stock_relationship objects. We need to find the phenotypes of their related subjects
+    while (my $object = $objects->next ) {
+
+        my $subject = $object->subject;
+        my $subject_stock = CXGN::Chado::Stock->new($self->schema, $subject->stock_id);
+        my $subject_phenotype_ref = $self->_stock_project_phenotypes($subject_stock);
+        my %subject_phenotypes = %$subject_phenotype_ref;
+        foreach my $key (keys %subject_phenotypes) {
+            push(@{$phenotypes{$key} } , @{$subject_phenotypes{$key} } );
+            ###$phenotypes  = { %$phenotypes, %$subject_phenotypes };
+        }
+    }
     return \%phenotypes
 }
 
@@ -312,6 +328,21 @@ sub _stock_cvterms {
         push @{ $scvterms->{$scvterm->cvterm->dbxref->db->name} } , $scvterm;
     }
     return $scvterms;
+}
+
+# each stock may be linked with publications, each publication may have several dbxrefs
+sub _stock_pubs {
+    my ($self, $stock) = @_;
+    my $stock_pubs = $stock->get_object_row()->search_related("stock_pubs");
+    my $pubs ;
+    while (my $spub = $stock_pubs->next ) {
+        my $pub = $spub->pub;
+        my $pub_dbxrefs = $pub->pub_dbxrefs;
+        while (my $pub_dbxref = $pub_dbxrefs->next ) {
+            $pubs->{$pub_dbxref->dbxref->db->name . ":" .  $pub_dbxref->dbxref->accession } = $pub ;
+        }
+    }
+    return $pubs;
 }
 
 sub get_stock :Chained('/') :PathPart('stock') :CaptureArgs(1) {
