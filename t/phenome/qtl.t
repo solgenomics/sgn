@@ -109,13 +109,13 @@ use SGN::Test::WWW::Mechanize;
         'got at least 1KB of data from the correlation table download' );
 
     my $qtl_analysis_link = $mech->find_link( url_regex =>
-          qr !population_indls.pl?population_id=12&cvterm_id=39945! );
-    $mech->links_ok( [$qtl_analysis_link], 'a link to population_indls.pl' );
+          qr !qtl_analysis.pl?population_id=12&cvterm_id=39945! );
+    $mech->links_ok( [$qtl_analysis_link], 'a link to qtl_analysis.pl' );
 
-    # verify that we are on what looks like a population_indls page
+    # verify that we are on what looks like a qtl_analysis page
     $mech->get_ok(
-        '/phenome/population_indls.pl?population_id=12&cvterm_id=39945',
-        ' a population_indls.pl page' );
+        '/phenome/qtl_analysis.pl?population_id=12&cvterm_id=39945',
+        ' a qtl_analysis.pl page' );
     $mech->content_contains($_)
       for (
         'Population Details',
@@ -131,7 +131,7 @@ use SGN::Test::WWW::Mechanize;
           qr !/phenome/qtl.pl?population_id=12&term_id=39945&chr=3! );
     $mech->links_ok( [$qtl_link], 'qtl.pl page' );
     $mech->get_ok( $qtl_link,
-        'a qtl.pl page link from the population_indls.pl' );
+        'a qtl.pl page link from the qtl_analysis.pl' );
 
     # check a indls_range_cvterm.pl ( Links on frequency distributions)
     my $fd_bar_link =
@@ -140,7 +140,7 @@ use SGN::Test::WWW::Mechanize;
       );
     $mech->links_ok( [$fd_bar_link], 'indls_range_cvterm.pl page' );
     $mech->get_ok( $fd_bar_link,
-'a link on a bar of a frequency distribution on the population_indls.pl '
+'a link on a bar of a frequency distribution on the qtl_analysis.pl '
     );
 
     # find all the qtl.pl links on the page
@@ -158,10 +158,10 @@ use SGN::Test::WWW::Mechanize;
 #ok( $map_link, 'population page has a cview/map.pl link' );
 #$mech->links_ok( [$map_link], 'map link appears to be correct' );
 
-# check the trait cvterm links against the population_indl links
+# check the trait cvterm links against the qtl_analysis links
 #my @cvterm_links = $mech->find_all_links( url_regex => qr!/cvterm.pl! );
-#my @indl_links   = $mech->find_all_links( url_regex => qr!/population_indls.pl! );
-#is( scalar(@cvterm_links), scalar(@indl_links), 'same number of population_indl links as cvterm links' );
+#my @indl_links   = $mech->find_all_links( url_regex => qr!/qtl_analysis.pl! );
+#is( scalar(@cvterm_links), scalar(@indl_links), 'same number of qtl_analysis links as cvterm links' );
 
     # follow the first link to an individual page
     #$mech->get_ok( $indl_links[0]->url, 'first individual link works' );
