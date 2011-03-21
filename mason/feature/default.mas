@@ -51,9 +51,16 @@
 
 </&>
 
-<& /feature/properties.mas,
-    feature => $feature,
-&>
+<&| /page/info_section.mas,
+     title         => 'Other information',
+     collapsible   => 1,
+     collapsed     => 0,
+     hide_if_empty => 1,
+ &>
+  <& /feature/properties.mas,
+      feature => $feature,
+  &>
+</&>
 
 <&| /page/info_section.mas,
      title         => 'Genomic sequence',
