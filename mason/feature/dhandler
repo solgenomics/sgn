@@ -56,21 +56,17 @@
 &>
 
 <&| /page/info_section.mas,
-     title => 'Genomic sequence',
-     subtitle => 'unprocessed genomic sequence underlying this feature',
-     collapsible => 1,
-     collapsed   => 0,
-     is_empty => !!$feature->seq,
+     title         => 'Genomic sequence',
+     subtitle      => 'unprocessed genomic sequence underlying this feature',
+     collapsible   => 1,
+     collapsed     => 0,
+     is_empty      => !!$feature->seq,
      hide_if_empty => 1,
  &>
-
-  <div style="margin: 1em 0">
     <& /feature/genomic_sequence.mas,
             feature   => $feature,
             blast_url => $blast_url,
     &>
-  </div>
-
 </&>
 
 <&| /page/info_section.mas,
