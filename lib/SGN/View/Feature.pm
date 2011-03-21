@@ -14,6 +14,7 @@ our @EXPORT_OK = qw/
     infer_residue cvterm_link
     organism_link feature_length
     mrna_and_protein_sequence
+    description_featureprop_types
     get_description
     location_list_html
     location_string
@@ -34,15 +35,26 @@ sub cvterm_name {
     return $n;
 }
 
+sub description_featureprop_types {
+    shift->result_source->schema
+         ->resultset('Cv::Cvterm')
+         ->search({
+             name => [ 'Note',
+                       'functional_description',
+                       'Description',
+                       'description',
+                     ],
+           })
+}
+
 sub get_description {
     my ($feature) = @_;
 
     my $desc_types =
-        $feature->result_source->schema
-                ->resultset('Cv::Cvterm')
-                ->search({ name => [ 'Note', 'functional_description', 'Description', 'description' ] })
-                ->get_column('cvterm_id')
-                ->as_query;
+        description_featureprop_types( $feature )
+            ->get_column('cvterm_id')
+            ->as_query;
+
     my $description =
         $feature->search_related('featureprops', {
             type_id => { -in => $desc_types },
