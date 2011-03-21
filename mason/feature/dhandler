@@ -80,6 +80,7 @@
 
 <&| /page/info_section.mas,
      title => 'Related views',
+     empty_message => 'None found',
      collapsible => 1,
      is_empty => ! scalar @$xrefs,
  &>
