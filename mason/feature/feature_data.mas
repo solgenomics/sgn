@@ -8,6 +8,7 @@
 
 <% info_table_html(
     'Name'          => feature_link( $feature ),
+    ( $synonyms ? ( 'Synonyms / aliases' => $synonyms ) : () ),
     'Type'          => cvterm_link( $feature->type, 'caps' ),
     ( $length ? ( 'Length'        => $length ) : () ),
     'Organism' => organism_link($feature->organism),
@@ -34,10 +35,14 @@
     use CXGN::Tools::Text qw/commify_number/;
 </%once>
 <%init>
+
     my $description  = join( '<hr />', grep $_, map get_description($_), @$description_from );
+
     my ($length,$locations) = feature_length($feature);
     $length &&= commify_number($length) . " bases";
     if ($locations) {
         $length .= " in $locations location" . ($locations > 1 ? 's' : '');
     };
+
+    my $synonyms = join ', ', map $_->synonym_sgml, grep $_->name ne $feature->name, $feature->synonyms;
 </%init>
