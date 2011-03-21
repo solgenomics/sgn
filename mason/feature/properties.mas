@@ -3,16 +3,13 @@
 </%args>
 <%once>
     use CXGN::Page::FormattingHelpers qw/info_table_html/;
-    use SGN::View::Feature qw/ description_featureprop_types /;
+    use SGN::View::Feature qw/ description_featureprop_types cvterm_link /;
 </%once>
 <%perl>
 # find all featureprops other that Note, which is already taken care of
 my @properties = map {
     my $fp = $_;
-    my $name = $fp->type->name;
-    $name =~ s/_/ /g;
-    $name = ucfirst $name;
-
+    my $name = cvterm_link( $fp->type, 'ucfirst' );
     $name => $fp->value
    }
    $feature->search_related(
