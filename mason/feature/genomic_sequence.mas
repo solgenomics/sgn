@@ -14,7 +14,7 @@
       $seq->desc( location_string( $loc ) );
       if( $loc->strand == -1 ) {
           $seq = $seq->revcom;
-          $seq->desc( $seq->desc.' (reverse complement)' );
+          $seq->desc( $seq->desc.' (sequence from reverse strand)' );
       }
 
       $seq->id( $feature->name );
