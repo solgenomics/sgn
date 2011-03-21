@@ -13,7 +13,7 @@ use CXGN::Cview::Map::Tools;
 use CXGN::Cview::MapOverviews::Generic;
 use CXGN::Phenome::Population;
 use CXGN::People::Person;
-use CXGN::Login;
+#use CXGN::Login;
 use CXGN::Map;
 
 
@@ -25,8 +25,8 @@ sub auto :Args(0) {
     #
     $c->stash->{dbh} = $c->dbc->dbh();
     
-    $c->stash->{map_url} = '/cview/map';
-    $c->stash->{chr_url} = '/cview/chr';
+    $c->stash->{map_url} = '/cview/map.pl';
+    $c->stash->{chr_url} = '/cview/view_chromosome.pl';
     $c->stash->{marker_search_url} = '/search/markers/markersearch.pl';
     $c->stash->{comp_maps_url} = '/cview/view_maps.pl';
     $c->stash->{default_map_id} = $c->get_conf('cview_default_map_id');
@@ -57,7 +57,7 @@ sub index :Path("/cview") :Args(0) {
     $c->stash->{map_by_species} = \%map_by_species;    
 }
 
-sub map :Path("/cview/map") :Args(0) { 
+sub map :Path("/cview/map.pl") :Args(0) { 
     my ($self, $c) = @_;
     
     my @params = qw | map_id map_version_id size hilite physical force map_items |;
@@ -96,7 +96,7 @@ sub map :Path("/cview/map") :Args(0) {
 	return;
     }
 
-    my $private = data_is_private($c->stash->{dbh}, $c->stash->{map_version_id});
+    my $private = $self->data_is_private($c, $c->stash->{dbh}, $c->stash->{map_version_id});
 
     $c->stash->{long_name} = $map->get_long_name();
     $c->stash->{short_name} = $map->get_short_name();
@@ -202,10 +202,13 @@ sub map :Path("/cview/map") :Args(0) {
 
     $c->stash->{chromosome_stats} = \@chr_stats;
     $c->stash->{template} = "/cview/map/index.mas";
+    $c->forward("View::Mason");
 }
 
 
 sub data_is_private {
+    my $self = shift;
+    my $c = shift;
     my $dbh = shift;
     my $map_version_id = shift;
 
@@ -215,16 +218,19 @@ sub data_is_private {
     my $pop = CXGN::Phenome::Population->new($dbh, $pop_id);
     my $is_public = $pop->get_privacy_status();
     
-    my ($login_id, $user_type) = CXGN::Login->new($dbh)->has_session();
-    
-    print STDERR "$is_public\n";
-    
+    my ($login_id, $user_type);
+    if ($c->user()) { 
+	#my ($login_id, $user_type) = CXGN::Login->new($dbh)->has_session();
+	$user_type = $c->user()->get_object->get_user_type();
+	$login_id = $c->user()->get_object->get_sp_person_id();
+    }
+	
     if ($is_public ||             
-	    $user_type eq 'curator' || 
-	    $login_id == 
+	$user_type eq 'curator' || 
+	$login_id == 
 	$pop->get_sp_person_id() 
-       )  {
-      return undef;
+	)  {
+	return undef;
     } 
     else {
       
@@ -249,7 +255,7 @@ sub data_is_private {
 }
 
 
-sub chromosome :Path("/cview/chr") :Args(0) { 
+sub chromosome :Path("/cview/view_chromosome.pl") :Args(0) { 
     my ($self, $c) = @_;
 
     my @params = qw | map_id map_version_id chr_nr cM zoom show_physical show_ruler show_IL comp_map_id comp_map_version_id comp_chr color_model map_chr_select size hilite cM_start cM_end confidence show_zoomed marker_type show_offsets force clicked |;
@@ -260,6 +266,7 @@ sub chromosome :Path("/cview/chr") :Args(0) {
     }
 
     $c->stash->{template} = '/cview/chr/index.mas';
+    $c->forward("View::Mason");
 }
 
 
@@ -273,6 +280,7 @@ sub maps :Path("/cview/view_maps.pl") :Args(0) {
     foreach my $param (@params) { 
 	$c->stash->{$param} = $c->req->param($param);
     }
+    $c->forward("View::Mason");
 }
 
 
