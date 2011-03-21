@@ -1187,7 +1187,7 @@ sub run_r
           tempfile(
                     File::Spec->catfile(
                                          CXGN::Tools::Run->temp_base(),
-                                         "population_indls.pl-$_-XXXXXX",
+                                         "qtl_analysis.pl-$_-XXXXXX",
                                        ),
                   );
         $filename
@@ -1195,7 +1195,7 @@ sub run_r
 
     #copy our R commands into a cluster-accessible tempfile
     {
-        my $r_cmd_file = $c->path_to('/cgi-bin/phenome/cvterm_qtl.r');
+        my $r_cmd_file = $c->path_to('/cgi-bin/phenome/qtl_analysis.r');
         copy( $r_cmd_file, $r_in_temp )
           or die "could not copy '$r_cmd_file' to '$r_in_temp'";
     }
