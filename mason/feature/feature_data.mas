@@ -4,23 +4,7 @@
     $description_from => [ $feature ]
     $featurelocs
 </%args>
-<%once>
-    use SGN::View::Feature qw/
-        feature_link cvterm_link organism_link feature_length
-        get_description
-        location_list_html
-        /;
-    use CXGN::Page::FormattingHelpers qw/info_table_html/;
-    use CXGN::Tools::Text qw/commify_number/;
-</%once>
-<%init>
-    my $description  = join( '<hr />', grep $_, map get_description($_), @$description_from );
-    my ($length,$locations) = feature_length($feature);
-    $length &&= commify_number($length) . " bases";
-    if ($locations) {
-        $length .= " in $locations location" . ($locations > 1 ? 's' : '');
-    };
-</%init>
+
 
 <% info_table_html(
     'Name'          => feature_link( $feature ),
@@ -39,3 +23,21 @@
 )%>
 
 <& /feature/dbxref.mas, dbxref => $feature->dbxref &>
+
+<%once>
+    use SGN::View::Feature qw/
+        feature_link cvterm_link organism_link feature_length
+        get_description
+        location_list_html
+        /;
+    use CXGN::Page::FormattingHelpers qw/info_table_html/;
+    use CXGN::Tools::Text qw/commify_number/;
+</%once>
+<%init>
+    my $description  = join( '<hr />', grep $_, map get_description($_), @$description_from );
+    my ($length,$locations) = feature_length($feature);
+    $length &&= commify_number($length) . " bases";
+    if ($locations) {
+        $length .= " in $locations location" . ($locations > 1 ? 's' : '');
+    };
+</%init>
