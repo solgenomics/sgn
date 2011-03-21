@@ -32,6 +32,7 @@
         location_list_html
         /;
     use CXGN::Page::FormattingHelpers qw/info_table_html/;
+    use CXGN::Tools::Identifiers;
     use CXGN::Tools::Text qw/commify_number/;
 </%once>
 <%init>
@@ -44,5 +45,11 @@
         $length .= " in $locations location" . ($locations > 1 ? 's' : '');
     };
 
-    my $synonyms = join ', ', map $_->synonym_sgml, grep $_->name ne $feature->name, $feature->synonyms;
+    my $synonyms =
+        join ', ',
+        map { s/(\S+)/my $id = $1; CXGN::Tools::Identifiers::link_identifier($id) || $id/ge; $_ }
+        map $_->synonym_sgml,
+        grep $_->name ne $feature->name,
+        $feature->synonyms;
+
 </%init>
