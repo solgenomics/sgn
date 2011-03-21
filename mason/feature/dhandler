@@ -14,10 +14,6 @@
 <& /util/import_javascript.mas,
     classes => [qw(Text.Markup CXGN.Effects CXGN.Phenome.Locus MochiKit.DOM)]
 &>
-<%perl>
-    my $organism = $feature->organism;
-    my $species  = $organism->species;
-</%perl>
 
 <&| /page/info_section.mas,
     title       => type_name($feature,'caps').' details',
@@ -26,7 +22,6 @@
 &>
    <& /feature/feature_data.mas,
       feature     => $feature,
-      species     => $species,
       featurelocs => $featurelocs,
     &>
 </&>

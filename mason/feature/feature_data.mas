@@ -1,7 +1,6 @@
 <%args>
     $feature
     $title   => 'Feature'
-    $species => undef
     $description_from => [ $feature ]
     $featurelocs
 </%args>
