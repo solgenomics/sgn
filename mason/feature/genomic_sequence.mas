@@ -19,6 +19,7 @@
 
       $seq->id( $feature->name );
 
+    if( $seq->length ) {
 </%perl>
 
   <div style="margin: 1em 3em">
@@ -44,7 +45,7 @@
     </form>
 
   </div>
-
+%     }
 %   }
 % }
 
