@@ -93,7 +93,7 @@ sub location_string {
         $end    = $loc->fmax;
         $strand = $loc->strand;
     }
-    ( $start, $end ) = ( $end, $start ) if $strand == -1;
+    ( $start, $end ) = ( $end, $start ) if $strand && $strand == -1;
     return "$id:$start..$end";
 }
 

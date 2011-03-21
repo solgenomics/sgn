@@ -12,7 +12,7 @@
     if( my $src = $loc->srcfeature ) {
       my $seq = $src->trunc( $loc->fmin+1, $loc->fmax );
       $seq->desc( location_string( $loc ) );
-      if( $loc->strand == -1 ) {
+      if( $loc->strand && $loc->strand == -1 ) {
           $seq = $seq->revcom;
           $seq->desc( $seq->desc.' (sequence from reverse strand)' );
       }
