@@ -55,8 +55,8 @@
 </&>
 
 <&| /page/info_section.mas,
-     title         => 'Genomic sequence',
-     subtitle      => 'unprocessed genomic sequence underlying this feature',
+     title         => 'Region sequence(s)',
+     subtitle      => "sequence underlying each location of this feature",
      collapsible   => 1,
      collapsed     => 0,
      is_empty      => !!$feature->seq,
