@@ -40,7 +40,7 @@ sub get_description {
     my $desc_types =
         $feature->result_source->schema
                 ->resultset('Cv::Cvterm')
-                ->search({ name => [ 'Note', 'functional_description', 'Description' ] })
+                ->search({ name => [ 'Note', 'functional_description', 'Description', 'description' ] })
                 ->get_column('cvterm_id')
                 ->as_query;
     my $description =
