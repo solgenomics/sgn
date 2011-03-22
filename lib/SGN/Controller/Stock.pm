@@ -47,22 +47,25 @@ action: "/stock/search"
 attributes:
     name: stock_search_form
     id: stock_search_form
+    params_ignore_underscore: true
+container_attributes:
+    id: stock_search_form
 javascript:
     function toggle_advanced() {
             jQuery('div[class*="advanced"]').toggle();
     }
-    jQuery("#advanced_toggle").click(function(){
+    jQuery(function(){
+        jQuery("#advanced_toggle").click(function(){
             toggle_advanced();
-    });
-    jQuery(function() {
+        });
         if( jQuery("input#advanced_toggle").attr('checked') ) {
             toggle_advanced();
         }
-    });
-    jQuery("#trait").blur(function(){
-        jQuery("#trait_range").replaceWith(
-            'Trait Range'
-        );
+        jQuery("#trait").blur(function(){
+            jQuery("#trait_range").replaceWith(
+                'Trait Range'
+            );
+        });
     });
 elements:
     - type: Checkbox
