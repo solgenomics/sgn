@@ -11,7 +11,7 @@
 
 <%perl>
   print info_table_html( 'Assembly issues' => <<EOF );
-  <p>If, in the course of your work, you find errors or other issues with the tomato genome assemblies, please report them using one of the following links:</p>
+  <p>If in the course of your work you find errors or other issues with the tomato genome assemblies, please report them using one of the following links:</p>
 
   <ul>
     <li>
