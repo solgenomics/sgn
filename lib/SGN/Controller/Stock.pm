@@ -385,7 +385,7 @@ sub get_stock :Chained('/') :PathPart('stock') :CaptureArgs(1) {
     $c->stash->{members_phenotypes} = $members_phenotypes;
 
     my $stock_type = $stock->get_object_row->type->name;
-    if ( ( grep { /^$stock_type/ } ('f2', 'backcross') ) &&  $members_phenotypes && $has_members_genotypes ) { $c->stash->{has_qtl_data} = 1 ; }
+    if ( ( grep { /^$stock_type/ } ('f2 population', 'backcross population') ) &&  $members_phenotypes && $has_members_genotypes ) { $c->stash->{has_qtl_data} = 1 ; }
 
 }
 
