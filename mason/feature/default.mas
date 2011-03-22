@@ -2,6 +2,7 @@
     $feature
     $featurelocs
     $blast_url => undef
+    $seq_download_url => undef
     $xrefs     => []
 </%args>
 
@@ -63,6 +64,7 @@
     <& /feature/residues.mas,
             feature   => $feature,
             blast_url => $blast_url,
+            seq_download_url => $seq_download_url
     &>
 </&>
 

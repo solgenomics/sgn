@@ -401,8 +401,8 @@ span.bgcolorselected a {
 }
 /*not quite so important warning*/
 .warning { 
-	color: #ff0000;
-	background-color: #ffffff
+    color: #d22;
+    background-color: none;
 }
 .news { 
 	color: #ff0000;
