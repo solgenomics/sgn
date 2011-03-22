@@ -1,0 +1,14 @@
+<%args>
+  $feature
+  $blast_url
+</%args>
+% if( $feature->residues ) {
+  <div style="margin: 1em 3em">
+    <& /sequence/with_markup.mas,
+           seq       => $feature,
+           width     => 80,
+           subdiv    => 10,
+           blast_url => $blast_url,
+    &>
+  </div>
+% }
