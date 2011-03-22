@@ -293,8 +293,9 @@ sub display_ontologies_GET  {
             my $reference_dbxref = $reference ? $reference->pub_dbxrefs->first->dbxref : undef;
             my $reference_url = $reference_dbxref ? $reference_dbxref->db->urlprefix . $reference_dbxref->db->url . $reference_dbxref->accession : undef;
             my $reference_acc = $reference_dbxref ? $reference_dbxref->accession : undef;
+            my $display_ref = $reference_acc =~ /^\d/ ? 1 : 0;
             # the submitter is a sp_person_id prop
-            my ($submitter) = $props->search( {'type.name' => 'sgn sp_person_id'} , { join => 'type' } );
+            my ($submitter) = $props->search( {'type.name' => 'sp_person_id'} , { join => 'type' } );
             my $sp_person_id = $submitter ? $submitter->value : undef;
             my $person= CXGN::People::Person->new($c->dbc->dbh, $sp_person_id);
             my $submitter_info = qq| <a href="solpeople/personal_info.pl?sp_person_id=$sp_person_id">| . $person->get_first_name . " " . $person->get_last_name . "</a>" ;
@@ -308,7 +309,7 @@ sub display_ontologies_GET  {
             $ev_string .=  $ev_name . "<br />";
             $ev_string .= $evidence_desc_name . "<br />" if $evidence_desc_name;
             $ev_string .= "<a href=\"$ev_with_url\">$ev_with_acc</a><br />" if $ev_with_acc;
-            $ev_string .="<a href=\"$reference_url\">$reference_acc</a><br />" if $reference_acc;
+            $ev_string .="<a href=\"$reference_url\">$reference_acc</a><br />" if $display_ref;
             $ev_string .= "$submitter_info $evidence_date $obsolete_link";
             $ont_hash{$cv_name}{$ontology_details} .= $ev_string;
         }
@@ -450,9 +451,9 @@ sub associate_ontology_GET :Args(0) {
                 $s_cvterm->create_stock_cvtermprops(
                     { 'sp_person_id' => $logged_person_id  } , { cv_name =>'local' , autocreate=>1} );
                 #store today's date
-                ##NEED TO FIGURE OUT HOW TO CALL THE SQL FUNCTION HERE 
-                #$s_cvterm->create_stock_cvtermprops(
-                #    { 'create_date' => "\'now()'"  } , { cv_name =>'local' , autocreate=>1} );
+                my $val = "now()";
+                $s_cvterm->create_stock_cvtermprops(
+                    { 'create_date' =>  \$val   } , { cv_name =>'local' , autocreate=>1, allow_duplicate_values => 1} );
 
                 $c->stash->{rest} = ['success'];
                 return;

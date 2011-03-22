@@ -182,7 +182,7 @@ my $pub_count = scalar( keys %$pubs );
 </&>
 
 
-<&| /page/info_section.mas, title => "Associated loci" , subtitle => $new_locus_link, collapsible=> 1 &>
+<&| /page/info_section.mas, title => "Associated loci" , subtitle => $new_locus_link, collapsible=> 1 , collapsed => 1 &>
 
 <& /phenome/associate_locus.mas, object_id => $stock_id , object_name => "stock", locus_add_uri=> $locus_add_uri,   allele_div => $allele_div , show_form => $is_owner &>
 
@@ -234,23 +234,23 @@ my $pub_count = scalar( keys %$pubs );
 
 </&>
 
-<&| /page/info_section.mas, title=>"Phenotype data " &>
+<&| /page/info_section.mas, title=>"Phenotype data " ,  collapsible => 1, collapsed => 1 &>
 % foreach my $project (keys %$direct_phenotypes) {
 %  my $pheno = $direct_phenotypes->{$project} ;
-<&| /page/info_section.mas, title=>"Experiment: $project", is_subsection => 1 &>
+<&| /page/info_section.mas, title=>"Experiment: $project", is_subsection => 1, collapsible => 1 &>
     <& /phenotypes/phenotype_data.mas , phenotypes=>$pheno &>
   </&>
 % }
 
 % foreach my $key (keys %$members_phenotypes) {
 %  my $member_pheno = $members_phenotypes->{$key} ;
-<&| /page/info_section.mas, title=>"Member phenotypes. Experiment: $key", is_subsection => 1 &>
+<&| /page/info_section.mas, title=>"Member phenotypes. Experiment: $key", is_subsection => 1, collapsible => 1 &>
     <& /phenotypes/phenotype_data.mas , phenotypes=>$member_pheno , object_id => $stock_id , has_qtl => $has_qtl_data &>
   </&>
 % }
 </&>
 
-<&| /page/info_section.mas, title=>"Genotype data " &>
+<&| /page/info_section.mas, title=>"Genotype data ", collapsible => 1 , collapsed => 1 &>
 % print $map_html;
 </&>
 
