@@ -1276,6 +1276,8 @@ div.publication_embedded .citation {
   padding-bottom: 1em;
 }
 
+/* styles for standard renderings of CrossReference objects */
+
 ul.xref_link {
   padding-left: 0;
 }
