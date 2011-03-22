@@ -172,7 +172,7 @@ sub _make_stock_search_rs {
                 ],
                           } ,
                {  join =>  { 'stockprops' =>  'type'  }  ,
-                  columns => [ qw/stock_id name uniquename type_id organism_id / ],
+                  columns => [ qw/stock_id uniquename type_id organism_id / ],
                   distinct => 1
                }
             );
@@ -204,11 +204,27 @@ sub _make_stock_search_rs {
                 ) ; # if no person_id, rs should be empty
         } else { $rs = $rs->search( { name=> '' } , ); }
     }
+    if ( my $trait = $c->req->param('trait') ) {
+        my $trait_name;
+        #$rs->search( { 'observable.name' => $trait_name },
+        #             { join => { nd_experiment_stock => [ nd_experiment_phenotype ] => phenotype => observable
+    }
+    if ( my $min = $c->req->param('min_limit') ) {
+    }
+    if ( my $max = $c->req->param('max_limit') ) {
+    }
+    # this is for direct annotations in stock_cvterm
+    if ( my $ontology = $c->req->param('ontology') ) {
+    }
+    if ( my $has_image = $c->req->param('has_image') ) {
+    }
+    if ( my $has_locus = $c->req->param('has_locus') ) {
+    }
     # page number and page size, and order by name
     $rs = $rs->search( undef, {
         page => $c->req->param('page')  || 1,
         rows => $c->req->param('page_size') || $self->default_page_size,
-        order_by => 'name',
+        order_by => 'uniquename',
                        });
     return $rs;
 }
