@@ -992,7 +992,7 @@ table#developer_message_table {
   width: 740px;
   margin-bottom: 7px;
 }
-.invisible {
+.invisible, .noshow {
   display: none;
 }
 
@@ -1219,11 +1219,6 @@ span.nri_units {
 	border-top:0px;
 	border-color:#999999;
 	border-width:1px;
-}
-
-/* for ajax fun */
-.noshow {
-	display: none;
 }
 
 /* styles for gbrowse (CGI::Toggle) */
