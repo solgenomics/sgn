@@ -37,7 +37,7 @@
          : '<span class="ghosted">not recorded</span>';
 </%init>
 <%once>
-    use CXGN::Tools::FormattingHelpers 'info_table_html';
+    use CXGN::Page::FormattingHelpers 'info_table_html';
     use CXGN::Tools::List qw/ min max /;
 </%once>
 
