@@ -115,20 +115,22 @@ my $members_phenotypes = $stockref->{members_phenotypes};
 
 
 ############################
-
+my $map_html = $stockref->{map_html};
 my $map = CXGN::Cview::Map::SGN::Genotype->new($dbh, $stock_id);
-my $overview = CXGN::Cview::MapOverviews::Generic->new($map, 
-                                                       { 
-                                                        dbh=> $dbh,
-                                                        basepath => $stockref->{cview_basepath},
-                                                        tempfiles_subdir => $stockref->{cview_tmp_dir } });
+if ($map->get_chromosome_count > 1 ) {
+  my $overview = CXGN::Cview::MapOverviews::Generic->new($map,
+                                                         {
+                                                          dbh=> $dbh,
+                                                          basepath => $stockref->{cview_basepath},
+                                                          tempfiles_subdir => $stockref->{cview_tmp_dir } });
 
-my $map_html;
-if ($overview) {
-  $overview->render_map();
-  $map_html .= $overview->get_image_html(); 
+  if ($overview) {
+    $overview->render_map();
+    $map_html .= $overview->get_image_html(); 
+  }
 }
 #########################################
+my $has_qtl_data = $stockref->{has_qtl_data};
 
 
 my $dbxrefs = $stockref->{dbxrefs};
@@ -242,8 +244,8 @@ my $pub_count = scalar( keys %$pubs );
 
 % foreach my $key (keys %$members_phenotypes) {
 %  my $member_pheno = $members_phenotypes->{$key} ;
-<&| /page/info_section.mas, title=>"Experiment: $key", is_subsection => 1 &>
-    <& /phenotypes/phenotype_data.mas , phenotypes=>$member_pheno &>
+<&| /page/info_section.mas, title=>"Member phenotypes. Experiment: $key", is_subsection => 1 &>
+    <& /phenotypes/phenotype_data.mas , phenotypes=>$member_pheno , object_id => $stock_id , has_qtl => $has_qtl_data &>
   </&>
 % }
 </&>

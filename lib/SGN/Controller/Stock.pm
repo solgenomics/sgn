@@ -196,9 +196,7 @@ sub view_stock :Chained('get_stock') :PathPart('view') :Args(0) {
     }
     my $dbxrefs = $self->_dbxrefs($stock);
     my $pubs = $self->_stock_pubs($stock);
-    my $nd_experiments     = $self->_stock_nd_experiments($stock);
-    my $direct_phenotypes  = $self->_stock_project_phenotypes($stock);
-    my $members_phenotypes  = $self->_stock_members_phenotypes($stock);
+
     my $cview_tmp_dir = $c->tempfiles_subdir('cview');
 ################
     $c->stash(
@@ -219,10 +217,10 @@ sub view_stock :Chained('get_stock') :PathPart('view') :Args(0) {
             dbxrefs   => $dbxrefs,
             owners    => $owner_ids,
             pubs      => $pubs,
-            nd_experiments    => $nd_experiments,
-            members_phenotypes => $members_phenotypes,
-            direct_phenotypes => $direct_phenotypes,
-            cview_tmp_dir =>  $cview_tmp_dir,
+            members_phenotypes => $c->stash->{members_phenotypes},
+            direct_phenotypes  => $c->stash->{direct_phenotypes},
+            has_qtl_data   => $c->stash->{has_qtl_data},
+            cview_tmp_dir  => $cview_tmp_dir,
             cview_basepath => $c->get_conf('basepath'),
         },
         locus_add_uri  => $c->uri_for( '/ajax/stock/associate_locus' ),
@@ -290,6 +288,7 @@ sub _stock_project_phenotypes {
 sub _stock_members_phenotypes {
     my ($self, $stock) = @_;
     my %phenotypes;
+    my $has_members_genotypes;
     my $objects = $stock->get_object_row->stock_relationship_objects ;
     # now we have rs of stock_relationship objects. We need to find the phenotypes of their related subjects
     while (my $object = $objects->next ) {
@@ -297,13 +296,13 @@ sub _stock_members_phenotypes {
         my $subject = $object->subject;
         my $subject_stock = CXGN::Chado::Stock->new($self->schema, $subject->stock_id);
         my $subject_phenotype_ref = $self->_stock_project_phenotypes($subject_stock);
+        $has_members_genotypes = 1 if $self->_stock_genotypes($subject_stock);
         my %subject_phenotypes = %$subject_phenotype_ref;
         foreach my $key (keys %subject_phenotypes) {
             push(@{$phenotypes{$key} } , @{$subject_phenotypes{$key} } );
-            ###$phenotypes  = { %$phenotypes, %$subject_phenotypes };
         }
     }
-    return \%phenotypes
+    return \%phenotypes, $has_members_genotypes;
 }
 
 sub _stock_dbxrefs {
@@ -345,6 +344,20 @@ sub _stock_pubs {
     return $pubs;
 }
 
+sub _stock_genotypes {
+    my ($self, $stock) = @_;
+    my $dbh = $stock->get_schema->storage->dbh;
+    my $q = "SELECT genotype_id FROM phenome.genotype WHERE stock_id = ?";
+    my $sth = $dbh->prepare($q);
+    $sth->execute($stock->get_stock_id);
+    my @genotypes;
+    while (my ($genotype_id) = $sth->fetchrow_array ) {
+        push @genotypes, $genotype_id;
+    }
+    return \@genotypes;
+}
+
+
 sub get_stock :Chained('/') :PathPart('stock') :CaptureArgs(1) {
     my ($self, $c, $stock_id) = @_;
 
@@ -364,6 +377,15 @@ sub get_stock :Chained('/') :PathPart('stock') :CaptureArgs(1) {
 
     my $cvterms  = $stock ?  $self->_stock_cvterms($stock) : undef ;
     $c->stash->{stock_cvterms} = $cvterms;
+
+    my $direct_phenotypes  = $stock ? $self->_stock_project_phenotypes($stock) : undef;
+    $c->stash->{direct_phenotypes} = $direct_phenotypes;
+
+    my ($members_phenotypes, $has_members_genotypes)  = $stock ? $self->_stock_members_phenotypes($stock) : undef;
+    $c->stash->{members_phenotypes} = $members_phenotypes;
+
+    my $stock_type = $stock->get_object_row->type->name;
+    if ( ( grep { /^$stock_type/ } ('f2', 'backcross') ) &&  $members_phenotypes && $has_members_genotypes ) { $c->stash->{has_qtl_data} = 1 ; }
 
 }
 
