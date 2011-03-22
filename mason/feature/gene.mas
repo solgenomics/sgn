@@ -34,7 +34,7 @@
   &>
 
   <& /feature/properties.mas,
-     feature => $mrna,
+     feature => $feature,
    &>
 
   <& /feature/exon_structure.mas, xrefs => $xrefs, feature => $feature &>
