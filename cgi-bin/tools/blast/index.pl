@@ -231,7 +231,7 @@ function clearField() {
   <table align="center" summary="" cellpadding="0" cellspacing="15">
     <tr><td><b>Sequence Set</b> </td><td>$databases <a style="font-size: 80%" title="View details of each database" href="dbinfo.pl">db details</a></td></tr>
     <tr><td><b>Program</b> </td><td>$programs</td></tr>
-    <tr><td colspan="2" align="center"><b>Query sequence</b><div style="font-size: 80%">single sequence only, use Advanced for multiple</div><textarea name="sequence" id="sequence_input" rows="8" cols="80">$preload_seq</textarea></td></tr>
+    <tr><td colspan="2" align="center"><b>Query sequence</b><div style="font-size: 80%">single sequence only, use Advanced for multiple</div><textarea spellcheck="false" name="sequence" id="sequence_input" rows="8" cols="80">$preload_seq</textarea></td></tr>
     <tr><td colspan="2">
       <table width="100%"><tr>
          <td>
@@ -300,7 +300,7 @@ else {
     <tr>
       <td><b>Query sequences (<tt>-i</tt>)</b></td>
       <td >
-        <textarea class="fix" name="sequence" rows="8" cols="65">$preload_seq</textarea><br />
+        <textarea spellcheck="false" class="fix" name="sequence" rows="8" cols="65">$preload_seq</textarea><br />
         <b>AND/OR upload multi-fasta query file</b> <input type="file" name="file" />
       </td>
     </tr>
