@@ -50,6 +50,7 @@ $referer
 
 our %urlencode;
 use Tie::UrlEncoder;
+use CXGN::Page::FormattingHelpers qw / info_section_html / ;
 
 if ($object_id!~/^\d+$/) { return; }
 
