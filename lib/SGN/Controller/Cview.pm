@@ -64,7 +64,7 @@ sub map :Path("/cview/map.pl") :Args(0) {
 
     foreach my $param (@params) { 
 	print STDERR "map: Processing $param\n";
-	$c->stash->{$param} = $c->req->param($param);
+	$c->stash->{$param} = $c->req->param($param) || '';
     }
 
     my %marker_info;
@@ -114,7 +114,7 @@ sub map :Path("/cview/map.pl") :Args(0) {
     if ($size < 0) { $size =0; }
     if ($size > 10) { $size = 10;}
 
-    $c->stash->{size} = $size;
+    $c->stash->{size} = $size || 0;
 
     $image_height = $image_height + $image_height * $size /2;
     my $image_width = 820;
