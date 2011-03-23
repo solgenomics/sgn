@@ -3,7 +3,11 @@ use Modern::Perl;
 
 package SGN::Controller::Cview;
 
-use base "Catalyst::Controller"; 
+use Moose;
+use namespace::autoclean;
+
+BEGIN { extends "Catalyst::Controller" } 
+with 'Catalyst::Component::ApplicationAttribute';
 
 use Cache::File;
 use File::Spec;
@@ -16,11 +20,15 @@ use CXGN::People::Person;
 #use CXGN::Login;
 use CXGN::Map;
 
+has 'cview_default_map_id' => ( 
+    is       => 'rw',
+    isa      => 'Str',
+    required => 1,
+);
 
 sub auto :Args(0) { 
     my ($self, $c) = @_;
-    print STDERR "auto: Setting some defaults...\n";
-
+    
     # push some useful stuff on the stash
     #
     $c->stash->{dbh} = $c->dbc->dbh();
@@ -29,12 +37,20 @@ sub auto :Args(0) {
     $c->stash->{chr_url} = '/cview/view_chromosome.pl';
     $c->stash->{marker_search_url} = '/search/markers/markersearch.pl';
     $c->stash->{comp_maps_url} = '/cview/view_maps.pl';
-    $c->stash->{default_map_id} = $c->get_conf('cview_default_map_id');
+    $c->stash->{default_map_id} = $self->cview_default_map_id;
     $c->stash->{referer} = $c->req->referer();
     $c->stash->{tempdir} = $c->get_conf("tempfiles_subdir")."/cview";
     $c->stash->{basepath} = $c->get_conf("basepath");
-    print STDERR "BASEPATH: ".($c->stash->{basepath})."\n";
+
+    $c->log->debug("BASEPATH: ".($c->stash->{basepath})) if $c->debug;
+
     return 1;
+}
+
+# for backwards compatibility
+sub alt_index :Path("/cview/index.pl") :Args(0) { 
+    my ($self, $c) = @_;
+    $c->forward("index");
 }
 
 sub index :Path("/cview") :Args(0) { 
@@ -55,6 +71,7 @@ sub index :Path("/cview") :Args(0) {
 	push @{$map_by_species{$species} } ,  qq{ <a href="}.$c->stash->{map_url}.qq{?map_version_id=$id">$short_name</a>: $long_name\n } ;
     }
     $c->stash->{map_by_species} = \%map_by_species;    
+    $c->forward("View::Mason");
 }
 
 sub map :Path("/cview/map.pl") :Args(0) { 
@@ -63,7 +80,6 @@ sub map :Path("/cview/map.pl") :Args(0) {
     my @params = qw | map_id map_version_id size hilite physical force map_items |;
 
     foreach my $param (@params) { 
-	print STDERR "map: Processing $param\n";
 	$c->stash->{$param} = $c->req->param($param) || '';
     }
 
@@ -141,7 +157,6 @@ sub map :Path("/cview/map.pl") :Args(0) {
 
     $map_overview->get_map()->set_map_items(@map_items);
     foreach my $hm (@hilite_markers) {
-      #print STDERR "Hilite marker $hm...\n";
       $map_overview -> hilite_marker($hm);
     }
 
@@ -261,7 +276,6 @@ sub chromosome :Path("/cview/view_chromosome.pl") :Args(0) {
     my @params = qw | map_id map_version_id chr_nr cM zoom show_physical show_ruler show_IL comp_map_id comp_map_version_id comp_chr color_model map_chr_select size hilite cM_start cM_end confidence show_zoomed marker_type show_offsets force clicked |;
     
     foreach my $param (@params) { 
-	print STDERR "Preparing param $param...\n";
 	$c->stash->{$param}= $c->req->param($param);
     }
 
