@@ -8314,3 +8314,6 @@ jQuery.each([ "Height", "Width" ], function( i, name ) {
 
 window.jQuery = window.$ = jQuery;
 })(window);
+
+// added for SGN, needed for interoperation with prototype
+jQuery.noConflict();
