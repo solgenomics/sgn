@@ -305,7 +305,7 @@ sub _stock_project_phenotypes {
         my $project = $exp->nd_experiment_projects->search_related('project')->first;
         my @ph = $exp->nd_experiment_phenotypes->search_related('phenotype')->all;
 
-        push(@{$phenotypes{$project->description}}, @ph);
+        push(@{$phenotypes{$project->description}}, @ph) if @ph;
     }
     return \%phenotypes;
 }
