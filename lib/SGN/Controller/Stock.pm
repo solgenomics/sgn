@@ -8,9 +8,10 @@ SGN::Controller::Stock - Catalyst controller for pages dealing with stocks (e.g.
 
 use Moose;
 use namespace::autoclean;
-use YAML::Any;
+use YAML::Any qw/LoadFile/;
 
 use URI::FromHash 'uri';
+use File::Spec::Functions;
 
 use CXGN::Chado::Stock;
 use SGN::View::Stock qw/stock_link stock_organisms stock_types/;
@@ -41,98 +42,7 @@ sub search :Path('/stock/search') Args(0) {
     $self->schema( $c->dbic_schema('Bio::Chado::Schema','sgn_chado') );
 
     my $results = $c->req->param('search_submitted') ? $self->_make_stock_search_rs($c) : undef;
-    my $form = HTML::FormFu->new(Load(<<EOY));
-method: GET
-action: "/stock/search"
-attributes:
-    name: stock_search_form
-    id: stock_search_form
-    params_ignore_underscore: true
-javascript:
-    function toggle_advanced() {
-            jQuery('div[class*="advanced"]').toggle();
-    }
-    jQuery(function(){
-        jQuery("#advanced_toggle").click(function(){
-            toggle_advanced();
-        });
-        if( jQuery("input#advanced_toggle").attr('checked') ) {
-            toggle_advanced();
-        }
-        jQuery("#trait").blur(function(){
-            jQuery("#trait_range").replaceWith(
-                'Trait Range'
-            );
-        });
-    });
-elements:
-    - type: Checkbox
-      name: advanced
-      label: Advanced
-      id: advanced_toggle
-      default: 0
-
-    - type: Text
-      name: stock_name
-      label: Stock name
-      size: 30
-
-    - type: Select
-      name: stock_type
-      label: Stock type
-
-    - type: Select
-      name: organism
-      label: Organism
-
-    - type: Hidden
-      name: search_submitted
-      value: 1
-
-    # hidden form values for page and page size
-    - type: Hidden
-      name: page
-      value: 1
-
-    - type: Hidden
-      name: page_size
-      default: 20
-
-    - type: Text
-      name: person
-      id: person
-      label: Editor
-      container_attributes:
-        class: advanced
-
-    - type: Text
-      name: trait
-      id: trait
-      label: Trait
-      size: 40
-      container_attributes:
-        class: advanced
-
-    - type: Text
-      name: min_limit
-      id: min_limit
-      label: Min. value
-      size: 5
-      container_attributes:
-        class: advanced
-
-    - type: Text
-      name: max_limit
-      id: max_limit
-      label: Max. value
-      size: 5
-      container_attributes:
-        class: advanced
-
-    - type: Submit
-      name: submit
-      value: Search
-EOY
+    my $form = HTML::FormFu->new(LoadFile(catfile(qw{forms stock stock_search.yaml})));
 
     $c->stash(
         template                   => '/stock/search.mas',
