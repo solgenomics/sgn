@@ -114,13 +114,25 @@ sub _make_stock_search_rs {
         } else { $rs = $rs->search( { name=> '' } , ); }
     }
     if ( my $trait = $c->req->param('trait') ) {
-        my $trait_name;
-        #$rs->search( { 'observable.name' => $trait_name },
-        #             { join => { nd_experiment_stock => [ nd_experiment_phenotype ] => phenotype => observable
+        $rs = $rs->search( { 'observable.name' => $trait },
+                     { join => { nd_experiment_stocks => { nd_experiment => {'nd_experiment_phenotypes' => {'phenotype' => 'observable' }}}},
+                       columns => [ qw/stock_id uniquename type_id organism_id / ],
+                       distinct => 1
+                     } );
     }
     if ( my $min = $c->req->param('min_limit') ) {
+        $rs = $rs->search( { 'cast(phenotype.value as numeric) ' => { '>=' => $min }  },
+                           { join => { nd_experiment_stocks => { nd_experiment => {'nd_experiment_phenotypes' => 'phenotype' }}},
+                             columns => [ qw/stock_id uniquename type_id organism_id / ],
+                             distinct => 1
+                           } );
     }
     if ( my $max = $c->req->param('max_limit') ) {
+        $rs = $rs->search( { 'cast(phenotype.value as numeric) ' => { '<=' => $max }  },
+                           { join => { nd_experiment_stocks => { nd_experiment => {'nd_experiment_phenotypes' => 'phenotype' }}},
+                             columns => [ qw/stock_id uniquename type_id organism_id / ],
+                             distinct => 1
+                           } );
     }
     # this is for direct annotations in stock_cvterm
     if ( my $ontology = $c->req->param('ontology') ) {
