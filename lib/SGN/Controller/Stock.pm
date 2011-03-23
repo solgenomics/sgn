@@ -48,8 +48,6 @@ attributes:
     name: stock_search_form
     id: stock_search_form
     params_ignore_underscore: true
-container_attributes:
-    id: stock_search_form
 javascript:
     function toggle_advanced() {
             jQuery('div[class*="advanced"]').toggle();
