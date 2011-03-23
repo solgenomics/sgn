@@ -42,7 +42,7 @@ sub search :Path('/stock/search') Args(0) {
     $self->schema( $c->dbic_schema('Bio::Chado::Schema','sgn_chado') );
 
     my $results = $c->req->param('search_submitted') ? $self->_make_stock_search_rs($c) : undef;
-    my $form = HTML::FormFu->new(LoadFile(catfile(qw{forms stock stock_search.yaml})));
+    my $form = HTML::FormFu->new(LoadFile($c->path_to(catfile(qw{forms stock stock_search.yaml}))));
 
     $c->stash(
         template                   => '/stock/search.mas',
