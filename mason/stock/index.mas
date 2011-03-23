@@ -140,6 +140,8 @@ my $pubmeds = $dbxrefs->{PMID} || [];
 my $pub_count = scalar( keys %$pubs );
 ## EUSOL, tgrc (stock_dbxref)
 
+my $new_ontology_link = !$person_id ? qq|<a href="/solpeople/login.pl">[log-in to associate new ontology term]</a> | : '' ;
+
 </%perl>
 
 
@@ -229,7 +231,7 @@ my $pub_count = scalar( keys %$pubs );
 
 
 
-<&| /page/info_section.mas, title=>"Ontology annotation" , collapsible=>1, collapsed=>1 &>
+<&| /page/info_section.mas, title=>"Ontology annotation" , collapsible=>1, collapsed=>1, subtitle=>$new_ontology_link &>
 <& /ontology/associate_ontology.mas, object_id => $stock_id , object_name => "stock", cvterm_add_uri=> $cvterm_add_uri, ontology_url=>"/stock/$stock_id/ontologies/", show_form => $is_owner  &>
 
 </&>
