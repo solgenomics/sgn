@@ -173,7 +173,11 @@ sub _make_stock_search_rs {
                  ],
                 ],
                           } ,
-               {  join =>  { 'stockprops' =>  'type'  }  }, );
+               {  join =>  { 'stockprops' =>  'type'  }  ,
+                  columns => [ qw/stock_id name uniquename type_id organism_id / ],
+                  distinct => 1
+               }
+            );
     }
     if( my $type = $c->req->param('stock_type') ) {
         $self->_validate_pair($c,'type_id',$type);
