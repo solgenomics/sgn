@@ -10,7 +10,6 @@ use CXGN::Search::CannedForms;
 use CatalystX::GlobalContext qw( $c );
 use HTML::FormFu;
 use YAML::Any qw/LoadFile/;
-use File::Spec::Functions;
 
 our $page = CXGN::Page->new( "SGN Direct Search page", "Koni");
 
@@ -141,7 +140,7 @@ sub gene_tab {
     print CXGN::Search::CannedForms::gene_search_form($page);
 }
 sub phenotype_tab {
-    my $form = HTML::FormFu->new(LoadFile($c->path_to(catfile(qw{forms stock stock_search.yaml}))));
+    my $form = HTML::FormFu->new(LoadFile($c->path_to(qw{forms stock stock_search.yaml})));
     print $c->render_mason('/stock/search.mas' ,
         form   => $form,
         schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado'),
