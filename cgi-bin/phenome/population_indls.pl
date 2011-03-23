@@ -452,6 +452,11 @@ qq { Download population: <span><a href="pop_download.pl?population_id=$populati
                                               __align      => 'l',
                                             );
            
+            $qtl_effects_data .= "<br />QTL effects interpretation: 2\@100 means QTL at linkage group 
+                                 2 and position 100cM. <br />
+                                 2\@100:3\@100 means interaction between QTL at linkage group 2 
+                                 position 100 cM and QTL at linkage group 3 position 100 cM. 
+                                 'a' and 'd' stand for additive and domininace effects, respectively.";
         } else 
         {
             $qtl_effects_data = "No QTL effects estimates were found for QTL(s) of  this trait.";
@@ -465,6 +470,11 @@ qq { Download population: <span><a href="pop_download.pl?population_id=$populati
                                               __alt_offset => 3,
                                               __align      => 'l',
                                             );
+         
+         $explained_variation_data .= "<br />Variance source interpretation: 2\@100 means QTL at linkage group 
+                                      2 and position 100cM. <br />
+                                      2\@100:3\@100 means interaction between QTL at linkage group 2 position 
+                                      100 cM and QTL at linkage group 3 position 100 cM.";
         } else  {
             $explained_variation_data = "No explained variation estimates were found for QTL(s) of this trait.";
         }
