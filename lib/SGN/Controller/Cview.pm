@@ -203,7 +203,8 @@ sub map :Path("/cview/map.pl") :Args(0) {
     for (my $i=0; $i<@chr_names; $i++) { 
 	my $chr_link .= "<a href=\"".$c->stash->{chr_url}."?map_version_id=".$c->stash->{map_version_id}."&amp;chr_nr=$chr_names[$i]&amp;hilite=".$hilite_encoded."\">
 <b>Chromosome $chr_names[$i]</b></a>";
-	my $marker_link = "<a href=\"/search/markers/markersearch.pl?w822_nametype=starts+with&w822_marker_name=&w822_mapped=on&w822_species=Any&w822_protos=Any&w822_colls=Any&w822_pos_start=&w822_pos_end=&w822_confs=Any&w822_submit=Search&w822_chromos=$chr_names[$i]&w822_maps=\"".$c->stash->{map_id}."\">".$marker_info{$c->stash->{map_version_id}."-".$i}."</a>\n";
+	my $marker_link = join '',
+           qq|<a href="/search/markers/markersearch.pl?w822_nametype=starts+with&w822_marker_name=&w822_mapped=on&w822_species=Any&w822_protos=Any&w822_colls=Any&w822_pos_start=&w822_pos_end=&w822_confs=Any&w822_submit=Search&w822_chromos=$chr_names[$i]&w822_maps=$c->stash->{map_id}">|.$marker_info{$c->stash->{map_version_id}."-".$i}."</a>\n";
 	push @chr_stats, [ $chr_link, $marker_link, $marker_info{$c->stash->{map_version_id}."-".$i} ];
     }
     
