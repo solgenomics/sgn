@@ -50,8 +50,6 @@ for my $url ( "/feature/view/name/".$poly_feature->name,  "/feature/view/id/".$p
 
     $mech->content_contains('Polypeptide details');
     $mech->content_contains($poly_feature->name);
-    $mech->content_contains('Genomic sequence');
-    $mech->content_contains('Related features');
 }
 
 done_testing;
