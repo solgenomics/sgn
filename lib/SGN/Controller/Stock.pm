@@ -8,6 +8,7 @@ SGN::Controller::Stock - Catalyst controller for pages dealing with stocks (e.g.
 
 use Moose;
 use namespace::autoclean;
+use YAML::Any qw/LoadFile/;
 
 use URI::FromHash 'uri';
 
@@ -39,19 +40,19 @@ sub search :Path('/stock/search') Args(0) {
     my ( $self, $c ) = @_;
     $self->schema( $c->dbic_schema('Bio::Chado::Schema','sgn_chado') );
 
-    my $req = $c->req;
-
-    my $results;
-    $results = $self->_make_stock_search_rs( $c, $req ) if $req->param('search_submitted');
+    my $results = $c->req->param('search_submitted') ? $self->_make_stock_search_rs($c) : undef;
+    my $form = HTML::FormFu->new(LoadFile($c->path_to(qw{forms stock stock_search.yaml})));
 
     $c->stash(
-        template => '/stock/search.mas',
-        request => $req,
-        form_opts    => { stock_types=>stock_types($self->schema), organisms=>stock_organisms($self->schema)} ,
-        results  => $results,
+        template                   => '/stock/search.mas',
+        request                    => $c->req,
+        form                       => $form,
+        form_opts                  => { stock_types => stock_types($self->schema), organisms => stock_organisms($self->schema)} ,
+        results                    => $results,
         sp_person_autocomplete_uri => $c->uri_for( '/ajax/people/autocomplete' ),
-        pagination_link_maker => sub {
-            return uri( query => { %{$req}, page => shift } );
+        trait_autocomplete_uri     => $c->uri_for('/ajax/stock/trait_autocomplete'),
+        pagination_link_maker      => sub {
+            return uri( query => { %{$c->req->params} , page => shift } );
         },
     );
 }
@@ -60,42 +61,40 @@ sub search :Path('/stock/search') Args(0) {
 # assembles a DBIC resultset for the search based on the submitted
 # form values
 sub _make_stock_search_rs {
-    my ( $self, $c, $req ) = @_;
+    my ( $self, $c ) = @_;
 
     my $rs = $self->schema->resultset('Stock::Stock');
-    my $rs_synonyms;
 
-    if( my $name = $req->param('stock_name') ) {
+    if( my $name = $c->req->param('stock_name') ) {
+        # trim and regularize whitespace
+        $name =~ s/(^\s+|\s+)$//g;
+        $name =~ s/\s+/ /g;
+
         $rs = $rs->search({
             -or => [
                  'lower(me.name)' => { like => '%'.lc( $name ).'%' } ,
                  'lower(uniquename)' => { like => '%'.lc( $name ).'%' },
-              #   -and => [
-              #       'lower(type.name)' => { like =>'%synonym%' },
-              #       'lower(value)' => { like =>'%'.lc( $name ).'%' },
-              #   ],
-              #  ], },
-              #            {  join => { 'stockprops' => 'type' } },
-                ], } ,
+                 -and => [
+                     'lower(type.name)' => { like =>'%synonym%' },
+                     'lower(value)' => { like =>'%'.lc( $name ).'%' },
+                 ],
+                ],
+                          } ,
+               {  join =>  { 'stockprops' =>  'type'  }  ,
+                  columns => [ qw/stock_id uniquename type_id organism_id / ],
+                  distinct => 1
+               }
             );
-        #add the stockprop values here
-        $rs_synonyms =  $self->schema->resultset('Cv::Cvterm')->search( {
-            'lower(me.name)' => { like =>'%synonym%' } , } )->search_related('stockprops', {
-                'lower(value)' => { like =>'%'.lc( $name ).'%' } , } )->
-                    search_related('stock');
-
     }
-    if( my $type = $req->param('stock_type') ) {
+    if( my $type = $c->req->param('stock_type') ) {
         $self->_validate_pair($c,'type_id',$type);
         $rs = $rs->search({ 'me.type_id' => $type });
     }
-
-    if( my $organism = $req->param('organism') ) {
+    if( my $organism = $c->req->param('organism') ) {
         $self->_validate_pair( $c, 'organism_id', $organism );
         $rs = $rs->search({ 'organism_id' => $organism });
     }
-
-    if ( my $editor = $req->param('person') ) {
+    if ( my $editor = $c->req->param('person') ) {
         $self->_validate_pair( $c, 'person') ;
         my ($first_name, $last_name) = split ',' , $editor ;
         $first_name  =~ s/\s//g;
@@ -114,11 +113,39 @@ sub _make_stock_search_rs {
                 ) ; # if no person_id, rs should be empty
         } else { $rs = $rs->search( { name=> '' } , ); }
     }
+    if ( my $trait = $c->req->param('trait') ) {
+        $rs = $rs->search( { 'observable.name' => $trait },
+                     { join => { nd_experiment_stocks => { nd_experiment => {'nd_experiment_phenotypes' => {'phenotype' => 'observable' }}}},
+                       columns => [ qw/stock_id uniquename type_id organism_id / ],
+                       distinct => 1
+                     } );
+    }
+    if ( my $min = $c->req->param('min_limit') ) {
+        $rs = $rs->search( { 'cast(phenotype.value as numeric) ' => { '>=' => $min }  },
+                           { join => { nd_experiment_stocks => { nd_experiment => {'nd_experiment_phenotypes' => 'phenotype' }}},
+                             columns => [ qw/stock_id uniquename type_id organism_id / ],
+                             distinct => 1
+                           } );
+    }
+    if ( my $max = $c->req->param('max_limit') ) {
+        $rs = $rs->search( { 'cast(phenotype.value as numeric) ' => { '<=' => $max }  },
+                           { join => { nd_experiment_stocks => { nd_experiment => {'nd_experiment_phenotypes' => 'phenotype' }}},
+                             columns => [ qw/stock_id uniquename type_id organism_id / ],
+                             distinct => 1
+                           } );
+    }
+    # this is for direct annotations in stock_cvterm
+    if ( my $ontology = $c->req->param('ontology') ) {
+    }
+    if ( my $has_image = $c->req->param('has_image') ) {
+    }
+    if ( my $has_locus = $c->req->param('has_locus') ) {
+    }
     # page number and page size, and order by name
     $rs = $rs->search( undef, {
-        page => $req->param('page')      || 1,
-        rows => $req->param('page_size') || $self->default_page_size,
-        order_by => 'name',
+        page => $c->req->param('page')  || 1,
+        rows => $c->req->param('page_size') || $self->default_page_size,
+        order_by => 'uniquename',
                        });
     return $rs;
 }
