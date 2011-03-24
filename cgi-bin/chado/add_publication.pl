@@ -79,10 +79,9 @@ sub store {
     my $pub_id;
     my $dbxref_id=undef;
     my $existing_publication= CXGN::Chado::Publication->get_pub_by_accession($self->get_dbh(),$accession );
-    if ($existing_publication) {
+    if ($pub_id = $existing_publication->get_pub_id) {
 	#if the publication is already stored in dbxref, we need it's dbxref_id for storing it in the object_dbxref linking table
-	$pub_id = $existing_publication->get_pub_id();
-	$publication=CXGN::Chado::Publication->new($self->get_dbh(), $pub_id);
+        $publication=CXGN::Chado::Publication->new($self->get_dbh(), $pub_id);
 	$dbxref_id= $publication->get_dbxref_id_by_db('PMID');
     }
     $publication->set_accession($accession);
@@ -470,9 +469,8 @@ sub confirm_store {
     #need to check if the publication is already in the database and associated with the object (locus..)
     my $existing_publication= CXGN::Chado::Publication->get_pub_by_accession($self->get_dbh(),$accession) ;
 
-    if ($existing_publication) {
-	my $pub_id =  $existing_publication->get_pub_id();
-	my $publication=CXGN::Chado::Publication->new($self->get_dbh(), $pub_id);
+    if (my $pub_id = $existing_publication->get_pub_id) {
+        my $publication=CXGN::Chado::Publication->new($self->get_dbh(), $pub_id);
 	if($publication->is_associated_publication($type, $type_id)) {
 	    $self->get_page()->header();
 	    print  "<h3>Publication '$accession' is already associated with $args{type}  $args{type_id} </h3>";
