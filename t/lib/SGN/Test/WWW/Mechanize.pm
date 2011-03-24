@@ -394,6 +394,10 @@ information of the form:
 
 sub while_logged_in {
     my ($self,$props,$sub) = @_;
+
+    croak 'must provide hashref of user props to while_logged_in'
+        unless ref $props && ref $props eq 'HASH';
+
     $self->with_test_level( local => sub {
         $self->create_test_user( %$props );
         $self->log_in_ok;
