@@ -15,11 +15,11 @@ my @test_paths = @ARGV;
 if( my $server_pid = fork ) {
 
     # testing process
-    sleep 1 until get 'http://localhost:3000';
-    $ENV{SGN_TEST_SERVER}='http://localhost:3000';
+    sleep 1 until get 'http://localhost:3003';
+    $ENV{SGN_TEST_SERVER}='http://localhost:3003';
     my $app = App::Prove->new;
     $app->process_args(
-        '-lrwv',
+        '-lr',
         ( map { -I => $_ } @INC ),
         @test_paths
         );
@@ -31,6 +31,7 @@ if( my $server_pid = fork ) {
 
     # server process
     $ENV{SGN_TEST_MODE} = 1;
+    @ARGV = ( -p => 3003 );
     Catalyst::ScriptRunner->run('SGN', 'Server');
     exit;
 
