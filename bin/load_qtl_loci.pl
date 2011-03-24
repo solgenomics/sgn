@@ -39,7 +39,7 @@ while (<$F>) {
 	$l->set_common_name_id($opts{c});
 	print STDERR "Setting description...\n";
 	$l->set_description($description);
-	$l->set_sp_person_id(222);
+	$l->set_sp_person_id($opts{p});
 	
 	if (!$opts{t}) { 
 	    print STDERR "Storing...\n";
