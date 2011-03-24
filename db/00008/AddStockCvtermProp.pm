@@ -68,7 +68,7 @@ zero. For properties that are single-valued rather than multi-valued,
 the default 0 value should be used.';
 
     GRANT ALL on public.stock_cvtermprop to web_usr;
-    GRANT usage on stock_cvtermprop_stock_cvtermprop_id_seq to web_usr;
+    GRANT usage on public.stock_cvtermprop_stock_cvtermprop_id_seq to web_usr;
 EOF
 
     print "You're done!\n";
