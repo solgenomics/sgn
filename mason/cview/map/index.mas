@@ -184,7 +184,8 @@ $can_overlay => 0
 <% $html %>
 
 </td>
-<td><td width="40">&nbsp;</td><td><% $marker_stats %></td>
+<td width="40">&nbsp;</td>
+<td><% $marker_stats %></td>
 </tr></table>
 </&>
 
