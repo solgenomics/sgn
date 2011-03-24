@@ -12,9 +12,9 @@ Required parameters:
 
 =over 2
 
-=item $dbh
+$map_by_species - a hashref with map information to display
 
-a database handle (DBI or CXGN::DB::Connection object)
+$default_map_id - the map_id of the map to be displayed by default
 
 =back
 
@@ -26,21 +26,20 @@ Mason version by Lukas Mueller <lam87@cornell.edu>
 
 February 2010
 
+Refactored for Catalyst Feb 2011
+
 =cut
 
 </%doc>
 
 <%args>
-$dbh
-</%args>
+$map_by_species
+$map_url
+$chr_url
+$comp_maps_url
+$default_map_id => 9
 
-<%once>
-    use Modern::Perl;
-    use CXGN::Page::FormattingHelpers qw/ blue_section_html page_title_html /;
-    use CXGN::DB::Connection;
-    use CXGN::Cview::MapFactory;
-    use CXGN::Cview::Map::Tools;
-</%once>
+</%args>
 
 <table summary="" width="100%" border="0">
 <tr>
@@ -54,74 +53,35 @@ $dbh
 # Show a blue section html with the system maps
 # organized by species.
 #
-
-my $current_F2_2000_map_id = CXGN::Cview::Map::Tools::current_tomato_map_id();
-
-my $map_factory = CXGN::Cview::MapFactory->new($dbh);
-my @maps = $map_factory->get_system_maps();
-
-my $previous_species = "";
-
-my $d = "";
-my %map_by_species;
-foreach my $map (@maps) {
-
-  my $species = $map->get_common_name();
-  my $long_name = $map->get_long_name();
-  my $short_name = $map->get_short_name();
-  my $id = $map->get_id();
-  push @{$map_by_species{$species} } ,  qq{ <a href="map.pl?map_version_id=$id">$short_name</a>: $long_name\n } ;
-}
-
-foreach my $s (sort { @{$map_by_species{$a}} <=> @{$map_by_species{$b}} } keys %map_by_species) {
+my $d ='';
+foreach my $s (sort { @{$map_by_species->{$a}} <=> @{$map_by_species->{$b}} } keys %$map_by_species) {
   $d .= "<br /><br /><b>$s</b><br />\n";
-  $d .= join('<br />' ,  sort @{ $map_by_species{$s} } );
+  $d .= join('<br />' ,  sort @{ $map_by_species->{$s} } );
 }
 
 my $submit = qq | <b>[<a href="/content/map_submissions.pl">Submit New Map</a>]</b> |;
-print blue_section_html("Interactive maps", $submit, $d);
 
-# User map section
+</%perl>
 
-$d = "";
-my @user_maps = $map_factory->get_user_maps();
-foreach my $map (@user_maps) { 
-  my $short_name = $map->get_short_name();
-  my $long_name = $map->get_long_name();
-  my $species = $map->get_common_name();
-  my $person_id = $map->get_sp_person_id();
-  my $person = CXGN::People::Person->new($dbh, $person_id);
-  my $first_name = $person->get_first_name();
-  my $last_name = $person->get_last_name();
-  my $public = $map->get_is_public();
-  my $is_public = "not public";
-  if ($public) { 
-    $is_public="public";
-  }
+<&| /page/info_section.mas, title=>"Interactive maps", subtitle=>$submit &>
+<% $d %>
+</&>
 
+<!-- Comparative maps -->
 
-    my $id = $map->get_id();
-    $d = qq { <a href="map.pl?map_version_id=$id">$short_name</a>: $long_name (submitted by <a href="/solpeople/personal-info.pl?sp_person_id=$person_id&action=view">$first_name $last_name</a>, $is_public)<br />\n };
-}
-
-# print blue_section_html("User submitted maps:", $d);
-
-
-# Comparative maps
-
-$d = <<HTML;
+<&| /page/info_section.mas, title=>"Comparative maps" &>
 
 <br />
-<a href="/cview/view_chromosome.pl"><b>Interactive comparative map viewer</b></a>: 
+<a href="$chr_url"><b>Interactive comparative map viewer</b></a>: 
 View two chromosomes from two different maps at the same time; it displays the relationships between the chromosomes and additional information such as associated physical map, inbred lines, and rulers.<br /><br />
 <b>Examples</b>: 
 <ul>
-<li><a href="/cview/view_chromosome.pl?show_IL=1&amp;map_id=5&amp;chr_nr=1&amp;comp_map_id=3&amp;comp_chr=1">Tomato EXPEN 1992 vs Potato TXB 1992</a><br /></li>
-  <li><a href="/cview/view_chromosome.pl?map_id=$current_F2_2000_map_id&amp;chr_nr=1&amp;comp_map_id=6&amp;comp_chr=1&amp;show_ruler=1&amp;show_physical=1">Tomato EXPEN 2000 vs Eggplant-LXM 2002</a></li>
-<li><a href="/cview/view_chromosome.pl?map_id=3&amp;chr_nr=1&amp;comp_map_id=6&amp;comp_chr=1&amp;show_ruler=1">Potato TXB 1992 vs Eggplant-LXM 2002</a></li>
+<li><a href="$chr_url?show_IL=1&amp;map_id=5&amp;chr_nr=1&amp;comp_map_id=3&amp;comp_chr=1">Tomato EXPEN 1992 vs Potato TXB 1992</a><br /></li>
+  <li><a href="$chr_url?map_id=$default_map_id&amp;chr_nr=1&amp;comp_map_id=6&amp;comp_chr=1&amp;show_ruler=1&amp;show_physical=1">Tomato EXPEN 2000 vs Eggplant-LXM 2002</a></li>
+<li><a href="$chr_url?map_id=3&amp;chr_nr=1&amp;comp_map_id=6&amp;comp_chr=1&amp;show_ruler=1">Potato TXB 1992 vs Eggplant-LXM 2002</a></li>
 </ul>
 
-<a href="/cview/view_maps.pl?center_map=$current_F2_2000_map_id&amp;right_map=3"><b>Compare entire maps</b></a>:
+<a href="$comp_map_url?center_map=$default_map_id&amp;right_map=3"><b>Compare entire maps</b></a>:
 To get a better view how two (or three) maps relate to each other, take a zoomed out view of the entire map. A maximum of 3 maps can be shown together at one time. The maps to be displayed can be selected on the top of the display.  <br /><br />
 <b>Examples</b>:
 <ul>
@@ -131,17 +91,11 @@ To get a better view how two (or three) maps relate to each other, take a zoomed
 <br />
 For more on the comparative map viewer, read the <a href="/help/cview.pl">help page</a>.
 
+</&>
 
-HTML
+<!--  Static maps -->
 
-print blue_section_html("Comparative map viewer", $d);
-
-$d = "";
-
-# Static maps.
-
-$d = <<HTML;
-
+<&| /page/info_section.mas, title=>'Static maps' &>
 <p>
 <b>Tomato maps</b><br />
 <i>L. esculentum x L. pennellii</i> maps:<br />
@@ -150,48 +104,15 @@ $d = <<HTML;
 <a href='/maps/pennellii_il/index.pl'>Isogenic Line (IL) map</a><br />
 <a href="/maps/lpimp_ibl/index.pl">Lycopersicon pimpinellifolium Inbred Backcross Lines (IBLs)</a>
 </p>
-HTML
+</&>
 
-    print blue_section_html("Static maps", $d);
+<!-- JavaScript function for help files. -->
+<script language='javascript' type=\"text/javascript\">
+<!--\n
+function commercial(Page)\n{
+   var new_win = open(Page, 'EXTRA', \"scrollbars=yes,resizable=yes,height=500,width=720\")
+}\n// -->
+</script>
+</td></tr></table>
+</td></tr></table>
 
-# Jump to marker.
-
-$d = <<HTML;
-
-<a name='searching'></a>
-
-To view all mapped locations for any given marker, enter its name. A <a href='/search/markers/markersearch.pl'>more advanced marker search</a> is also available.
-
-<form action="/search/markers/markersearch.pl">
-<br />
-<b>Marker</b>&nbsp;&nbsp;&nbsp;<input type="text" name="w822_marker_name" value="" />
-<input type="hidden" name="w822_nametype" value="starts+with" / >
-<input type="hidden" name="w822_chromos" value="Any" />
-<input type="hidden" name="w822_colls" value="Any" />
-<input type="hidden" name="w822_confs" value="-1" />
-<input type="hidden" name="w822_maps" value="Any" />
-<input type="hidden" name="w822_mapped" value="on" />
-<input type="hidden" name="w822_submit" value="Search" />
-
-
-&nbsp;&nbsp;&nbsp;<input type="submit" value="Search" />\n
-
-</form>
-
-
-HTML
-
-print blue_section_html("Search maps by markers", $d);
-
-
-# JavaScript function for help files.
-print "<script language='javascript' type=\"text/javascript\">\n";
-print "<!--\n";
-print "function commercial(Page)\n{\n";
-print "    var new_win = open(Page, 'EXTRA', \"scrollbars=yes,resizable=yes,height=500,width=720\")\n";
-print "}\n// -->\n";
-print "</script>";
-print "</td></tr></table>";
-print "</td></tr></table>";
-
-</%perl>

@@ -18,6 +18,13 @@ my @map_links = $m->find_all_links( url_regex => qr/map.pl/ );
 foreach my $map (@map_links) {
     my $link_text = $map->text();
 
+    # skip maps with non-numeric ids if local data not available
+    #
+    if ($map->url =~ /map.*?id=[a-zA-Z]+/ && $m->test_level() ne 'local') { 
+	diag("Skipping $link_text\n");
+	next();
+    }
+
     $m->follow_link_ok( { text => $map->text() } );
     $tests++;
 

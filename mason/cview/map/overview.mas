@@ -46,118 +46,60 @@ Lukas Mueller <lam87@cornell.edu>
 </%doc>
 
 <%args>
-  $map              # a CXGN::Cview::Map object
-  $image_width  => 820
+  $map_version_id
   @hilite_markers => ()
-  $map_items => '';
+  $map_items => ''
   $force => 0
   $size => 1
-  $dbh 
   $basepath
   $tempdir
+  $message => ''
+  $overview_image
+  $map_url
 </%args>
 
 <%perl>
 
-use URI::Escape;
 use CXGN::Page::FormattingHelpers qw | tooltipped_text |;
-use CXGN::Cview::MapOverviews::Generic;
-
-my $message = "";
-
-# adjust the size parameter, which scales the size of the map overview image.
-#
-my $enlarge_button_disabled = "";
-my $shrink_button_disabled = "";
-my $smaller_size = 0;
-my $larger_size = 0;
-
-# calculate the size of the image based on the size parameter
-#
-if ($size <= 0) { 
-    $size = 0;
-    $shrink_button_disabled = qq { disabled="1" };
-    $smaller_size = $size;
-}
-else {
-    $smaller_size = $size - 1;
-}
-
-if ($size>=10) {
-    $size=10; 
-    $enlarge_button_disabled = qq { disabled="1" };
-    $larger_size = $size;
-}
-else { 
-    $larger_size = $size+ 1;
-}
-$larger_size = 10 if $larger_size > 10;
-
-my $image_height = 160;
-
-$image_height = $image_height + $image_height * $size /2;
-
-# create an appropriate overview diagram - physical or generic
-# (the generic will also provide an appropriate overview for the fish map).
-#
-my $map_overview = CXGN::Cview::MapOverviews::Generic -> new($map, { 
-								    force            => $force,
-								    basepath         => $basepath,
-								    tempfiles_subdir => $tempdir,
-								    dbh              => $dbh,
-								    });
-
-$map_overview->set_image_height($image_height);
-$map_overview->set_image_width($image_width);
-
-# deal with marker names to be highlighted on the overview diagram
-# (the ones to be requested to be hilited using the hilite feature)
-#
-my @map_items = split /\n/, $map_items;
-
-$map_overview->get_map()->set_map_items(@map_items);
-
-foreach my $hm (@hilite_markers) {
-    #print STDERR "Hilite marker $hm...\n";
-    $map_overview -> hilite_marker($hm);
-}
-
-# generate the marker list for use in the URL links
-#
-my $hilite_encoded = URI::Escape::uri_escape(join (" ", @hilite_markers)); 
-
-# render the map and get the imagemap
-#
-$map_overview -> render_map();
-
-my $map_overview_html = $map_overview->get_image_html();
-
-# get the markers that could not be hilited
-#
-my @markers_not_found = $map_overview -> get_markers_not_found();
-
-if (@markers_not_found) { 
-        $message .= "The following markers requested for hiliting were not found on this map (click to search on other maps):<br />";
-    foreach my $m (@markers_not_found) { 
-	$message .= "&nbsp;&nbsp;<a href=\"/search/markers/markersearch.pl?searchtype=exactly&amp;name=$m\">$m</a>";
-    }
-    $message .= "<br />\n";
-}
-
 #
 # add the input box and form for the hilite marker feature
 #
 my $hilite_tooltip = tooltipped_text("Highlight marker(s)", "You can highlight markers on the overview graphic by entering them here, separated by spaces");
 my $size_tooltip = tooltipped_text("Image size", "You can increase the size of the overview graph by clicking on the (+) button and decrease it by clicking on (-).");
 
-
-my $map_version_id = $map->get_id();
-
 my $hilite = join " ", @hilite_markers;
 
 my $message_html = "";
 
 if ($message) {  $message_html = qq | <div class="boxbgcolor2">$message<br /></div> |; }
+
+
+my $shrink_button_disabled = '';
+my $enlarge_button_disabled = '';
+my $smaller_size;
+my $larger_size;
+
+if ($size <= 0) {
+  $size = 0;
+  $shrink_button_disabled = qq { disabled="1" };
+  $smaller_size = $size;
+}
+else {
+  $smaller_size = $size - 1;
+}
+
+if ($size>=10) {
+  $size=10; 
+  $enlarge_button_disabled = qq { disabled="1" };
+  $larger_size = $size;
+}
+else {
+  $larger_size = $size+ 1;
+}
+
+$larger_size = 10 if $larger_size > 10;
+
+
 
 </%perl>
 
@@ -166,7 +108,7 @@ if ($message) {  $message_html = qq | <div class="boxbgcolor2">$message<br /></d
 <td width="10%"><br /></td>
 <td width="80%">
 <center>
-<% $map_overview_html %>
+<% $overview_image %>
 </center>
 </td></tr></table>
 
@@ -174,7 +116,7 @@ if ($message) {  $message_html = qq | <div class="boxbgcolor2">$message<br /></d
 <table summary="input forms" border="0"><tr><td align="left">
     <div class="indentedcontent">
     
-  <form action="/cview/map.pl" >
+  <form action="<% $map_url %>" >
   <% $hilite_tooltip %>: 
   <input type="hidden" name="map_items" value="<% $map_items %>" />
   <input type="text" name="hilite" value="<% $hilite %>" size="40" />
@@ -185,7 +127,7 @@ if ($message) {  $message_html = qq | <div class="boxbgcolor2">$message<br /></d
     </div>
     </td><td width=100 align="right"><% $size_tooltip %>:
 </td><td align="right">
-    <form action="/cview/map.pl">
+    <form action="<% $map_url %>">
     <input type="hidden" name="map_items" value="<% $map_items %>" />
     <input type="hidden" name="map_version_id" value="<% $map_version_id %>" />
     <input type="hidden" name="size" value="<% $smaller_size %>" />
@@ -193,7 +135,7 @@ if ($message) {  $message_html = qq | <div class="boxbgcolor2">$message<br /></d
     <input type="submit" value="-" <% $shrink_button_disabled %> />
     </form>
 </td><td>
-    <form action="/cview/map.pl" >
+    <form action="<% $map_url %>" >
     <input type="hidden" name="map_items" value="<% $map_items %>" />
     <input type="hidden" name="map_version_id" value="<% $map_version_id %>" />
     <input type="hidden" name="hilite" value="<% $hilite %>" />
@@ -202,12 +144,6 @@ if ($message) {  $message_html = qq | <div class="boxbgcolor2">$message<br /></d
     </form>
 </td></tr></table>
 
-<& /cview/map/overlay_form.mas, 
-  map       => $map,
-  map_items => $map_items,
-  size      => $size,
-  hilite    => $hilite
-&>
 
 
 
