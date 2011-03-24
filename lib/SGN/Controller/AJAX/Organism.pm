@@ -57,6 +57,7 @@ sub project_metadata :Chained('/organism/find_organism') :PathPart('metadata') :
 
     my $action = $c->req->param('action');
     my $object_id = $c->req->param('object_id');
+    my $prop_id = $c->req->param('prop_id');
 
     my $login_user_id = 0;
     my $login_user_can_modify = 0;
@@ -82,25 +83,7 @@ sub project_metadata :Chained('/organism/find_organism') :PathPart('metadata') :
         if (!$login_user_id) {
             $error .= 'Must be logged in to edit';
         }
-        my $form = HTML::FormFu->new(Load(<<YAML));
-method: POST
-attributes:
-    name: organism_project_metadata_form
-    id: organism_project_metadata_form
-elements:
-  - type: Hidden
-    name: action
-    value: store
-
-YAML
-
-;
-        my %fields = $self->project_metadata_prop_list();
-        foreach my $k (keys %fields) {
-            $form->element( { type=>'Text', name=>$k, label=>$fields{$k}, value=>$props{$k}, size=>30 });
-        }
-
-        $html = $form->render();
+     
         if ($action eq 'store') {
 
             $form->process($c->req);
@@ -157,6 +140,31 @@ YAML
 
         };
     }
+}
+
+
+sub project_metadata_form { 
+    my ($self, $c) = @_;
+
+    my $form = HTML::FormFu->new(Load(<<YAML));
+  method: POST
+    attributes:
+    name: organism_project_metadata_form
+  id: organism_project_metadata_form
+  elements:
+  - type: Hidden
+  name: action
+  value: store
+ 
+YAML
+ 
+ ;
+    my %fields = $self->project_metadata_prop_list();
+    foreach my $k (keys %fields) {
+	$form->element( { type=>'Text', name=>$k, label=>$fields{$k}, value=>$props{$k}, size=>30 });
+    }
+    
+    return $form->render();
 }
 
 sub static_html {
