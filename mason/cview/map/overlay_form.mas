@@ -37,7 +37,7 @@ $map_url
 
 if (!$can_overlay) { return; }
 
-my $collapsed = $map_items == undef;
+my $collapsed = !!defined $map_items;
 
 </%perl>
 

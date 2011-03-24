@@ -125,10 +125,10 @@ sub map :Path("/cview/map.pl") :Args(0) {
     # calculate the size of the image based on the size parameter
     #
     my $image_height = 160;
-    my $size = $c->stash->{size};
+    my $size = $c->stash->{size} || 0;
 
-    if ($size < 0) { $size =0; }
-    if ($size > 10) { $size = 10;}
+    if ($size < 0 ) { $size = 0;  }
+    if ($size > 10) { $size = 10; }
 
     $c->stash->{size} = $size || 0;
 
@@ -240,10 +240,9 @@ sub data_is_private {
 	$login_id = $c->user()->get_object->get_sp_person_id();
     }
 	
-    if ($is_public ||             
-	$user_type eq 'curator' || 
-	$login_id == 
-	$pop->get_sp_person_id() 
+    if ($is_public ||
+	$user_type && $user_type eq 'curator' ||
+        $login_id  && $login_id == $pop->get_sp_person_id()
 	)  {
 	return undef;
     } 
@@ -253,6 +252,7 @@ sub data_is_private {
     
 
 	   my $submitter = CXGN::People::Person->new($dbh, $owner_id);
+           no warnings 'uninitialized';
     	   my $submitter_name = $submitter->get_first_name()." ".$submitter->get_last_name();
     	   my $submitter_link = qq |<a href="/solpeople/personal-info.pl?sp_person_id=$owner_id">$submitter_name</a> |;
        
