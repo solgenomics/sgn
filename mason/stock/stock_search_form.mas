@@ -57,10 +57,6 @@ div.paginate_nav {
 
 $form->process( $request );
 
-
 </%perl>
-
-
-<!-- This CSS should probably go somewhere better -->
 
 <% $form->render %>
