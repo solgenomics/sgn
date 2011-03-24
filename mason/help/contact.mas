@@ -27,8 +27,8 @@ my $defaultVal = {"name" => $name,
 % } else {
 <td align = "left" valign = "top"> 
 %}
-<input type="text" size="50" value= "<% $$defaultVal{$info_category} %>"
-				name = "<% $info_category %>" />
+<input type="text" size="50" value="<% $$defaultVal{$info_category} %>"
+				name="<% $info_category %>" />
 </td></tr>
 % }     
 % # Body uses a text_area so it is hardcoded.
@@ -39,7 +39,7 @@ my $defaultVal = {"name" => $name,
 </td>
 % unless ($filled{body}) {
 <td style = "color:red; font-size: 10px;" align = "left" valign = "top">
-Message is required
+Message body is required
 <br />
 % } else {
 <td align = "left" valign = "top">
