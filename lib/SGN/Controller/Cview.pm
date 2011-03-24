@@ -11,7 +11,9 @@ with 'Catalyst::Component::ApplicationAttribute';
 
 use Cache::File;
 use File::Spec;
+use HTML::Entities;
 use URI::Escape;
+
 use CXGN::Cview::MapFactory;
 use CXGN::Cview::Map::Tools;
 use CXGN::Cview::MapOverviews::Generic;
@@ -68,7 +70,8 @@ sub index :Path("/cview") :Args(0) {
 	my $long_name = $map->get_long_name();
 	my $short_name = $map->get_short_name();
 	my $id = $map->get_id();
-	push @{$map_by_species{$species} } ,  qq{ <a href="}.$c->stash->{map_url}.qq{?map_version_id=$id">$short_name</a>: $long_name\n } ;
+	push @{$map_by_species{$species} },
+             qq{<a href="}.$c->stash->{map_url}.qq{?map_version_id=$id">}.encode_entities($short_name).'</a>: '.encode_entities($long_name)."\n";
     }
     $c->stash->{map_by_species} = \%map_by_species;    
     $c->forward("View::Mason");
