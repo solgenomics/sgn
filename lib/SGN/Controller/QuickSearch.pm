@@ -134,7 +134,9 @@ sub quick_search: Path('/search/quick') {
 
     # another optimization: if the quick search found only one
     # possible URL to go to, go there
-    my @possible_urls = uniq( grep defined,
+    my @possible_urls = uniq(
+         grep $_ !~ m!^https?://!,
+         grep defined,
          ( map $_->{result}->[0],
            values %{$c->stash->{results}}
          ),
