@@ -48,8 +48,10 @@ while (<$F>) {
 	if ($dbxref_id) { 
 	    print STDERR "Adding dbxref_id $dbxref_id...\n";
 	    my $dbxref = CXGN::Chado::Dbxref->new($dbh, $dbxref_id);
-	    
-	    $l->add_dbxref($dbxref) if $dbxref;
+	    $dbxref->set_sp_person_id($opts{p});
+	    $dbxref->set_accession($pubmed_id);
+	    $dbxref->set_db_name('PMID');
+	    $l->add_locus_dbxref($dbxref) if $dbxref;
 	}
 	
 	
