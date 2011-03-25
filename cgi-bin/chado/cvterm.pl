@@ -35,7 +35,7 @@ sub new {
 
 sub define_object {
     my $self = shift;
-    $self->set_dbh( CXGN::DB::Connection->new('public') );
+    $self->set_dbh( CXGN::DB::Connection->new );
     my %args = $self->get_args();
 
     my $cvterm_id = "";
@@ -302,7 +302,7 @@ sub qtl_populations {
 
         foreach my $qtlpop (@qtlpops) {
             my $qtlpop_id = $qtlpop->get_population_id();
-            if ( $qtlpop_id == $pop_id ) {
+            if ( $pop_id && $qtlpop_id == $pop_id ) {
                 $is_qtl_pop = 1;
             }
         }
