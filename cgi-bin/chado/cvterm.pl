@@ -128,7 +128,7 @@ sub display_page {
             title       => "Phenotype data/QTLs ($pop_count)",
             contents    => $pop_list,
             collapsible => 1,
-            collapsed   => 1,
+            collapsed   => 0,
         );
     }
 
