@@ -23,7 +23,6 @@ my $new_stock_link = qq|<a href="/stock/0/new">Submit new stock</a>|;
 
 </%perl>
 
-<& /page/page_title.mas, title => 'Stock Search' &>
 <& /util/import_javascript.mas,
     classes => [qw(jquery CXGN.Effects)]
 &>
