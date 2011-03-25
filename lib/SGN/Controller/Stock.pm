@@ -195,7 +195,7 @@ sub view_stock :Chained('get_stock') :PathPart('view') :Args(0) {
     unless ( ( $stock_id =~ m /^\d+$/ ) || ($action eq 'new' && !$stock_id) ) {
         $c->throw_404( "No stock/accession exists for identifier $stock_id" );
     }
-    if (  !$stock->get_object_row  || ($action ne 'new' && !$stock_id) ) {
+    unless ( $stock->get_object_row || !$stock_id && $action && $action eq 'new' ) {
         $c->throw_404( "No stock/accession exists for identifier $stock_id" );
     }
 
