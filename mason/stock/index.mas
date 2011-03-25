@@ -243,9 +243,17 @@ my $pub_count = scalar( keys %$pubs );
 % }
 
 % foreach my $key (keys %$members_phenotypes) {
-%  my $member_pheno = $members_phenotypes->{$key} ;
-<&| /page/info_section.mas, title=>"Member phenotypes. Experiment: $key", is_subsection => 1, collapsible => 1 &>
-    <& /phenotypes/phenotype_data.mas , phenotypes=>$member_pheno , object_id => $stock_id , has_qtl => $has_qtl_data &>
+<&| /page/info_section.mas,
+     title         => "Member phenotypes",
+     subtitle      => $key,
+     is_subsection => 1,
+     collapsible   => 1,
+ &>
+    <& /phenotypes/phenotype_data.mas,
+         phenotypes => $members_phenotypes->{$key},
+         object_id  => $stock_id,
+         has_qtl    => $has_qtl_data,
+     &>
   </&>
 % }
 </&>
