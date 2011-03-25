@@ -1,4 +1,3 @@
-
 =head1 NAME
 
 SGN::Controller::AJAX::Locus - a REST controller class to provide the
@@ -56,13 +55,13 @@ sub autocomplete_GET :Args(0) {
 
     my $schema = $c->dbic_schema('CXGN::Phenome::Schema');
     my $rs = $schema->resultset('Allele');
-    my $search_rs = $rs->search(  {
+    my $search_rs = $rs->search( {
         -or =>[
              locus_name => { ilike => '%'.$term.'%' },
              locus_symbol => { ilike => '%'.$term.'%' },
             ],
             -and => [
-             #       common_name_id => $common_name_id 
+             #       common_name_id => $common_name_id
              'me.obsolete' => 'f',
              'locus_id.obsolete' => 'f',
             ],
@@ -84,8 +83,5 @@ sub autocomplete_GET :Args(0) {
     }
     $c->{stash}->{rest} = \@results;
 }
-
-
-
 
 1;
