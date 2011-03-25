@@ -35,37 +35,35 @@ use SGN::Test::WWW::Mechanize;
 #$mech->links_ok(\@trait_index_links, "checking $traits_num trait index links ");
 
     $mech->get_ok( '/chado/trait_list.pl?index=H', 'a trait index page' );
-    $mech->content_contains("Traits H-");
+    $mech->content_contains('Traits beginning with');
+
+    #qtl help page
+    $mech->follow_link_ok({ url_regex => qr!/help/qtl_search_help\.pl! });
+    $mech->content_contains('Search the database using a trait name');
+    $mech->back or die;
 
     # check on one of the 'browse by population' links
-    $mech->follow_link_ok( { text_regex => qr/QTL Tomato/, n => 1 },
-        'a link from the QTL searcg page to a QTL population works' );
+    $mech->follow_link_ok({ url_regex => qr/cvterm.pl/, n => 1 },
+        'a link from the QTL search page to a cvterm works' );
 
     #my $pop_num = scalar(@population_links);
     #$mech->links_ok(\@population_links, "checking $pop_num population links");
 
-    #qtl help page
-    my $qtl_help_link =
-      $mech->find_link( url_regex => qr !/help/qtl_search_help.pl! );
-    $mech->links_ok( [$qtl_help_link], 'link to qtl/trait search help page' );
-    $mech->get_ok( '/help/qtl_search_help.pl', 'qtl/trait search help page' );
-    $mech->content_contains('Search the database using a trait name');
-
     # population page
-    $mech->get_ok( '/phenome/population.pl?population_id=12',
+    $mech->follow_link_ok(
+        { url_regex => qr/population_indls/ },
         'Population page' );
     $mech->content_contains($_)
       for (
         'Population Details',
-        'Phenotype Data and QTLs',
-        'Genetic Map',
-        'Literature Annotation',
+        'QTL(s)',
+        'Phenotype Frequency Distribution',
         'User comments'
       );
 
     # Phenotype data download page
     my $phenotype_download_link =
-      $mech->find_link( text_regex => qr/phenotype raw data/i );
+      $mech->find_link( text_regex => qr/phenotype data/i );
     ok( $phenotype_download_link, 'got a phenotype data  download link' );
     $mech->links_ok( [$phenotype_download_link],
         'phenotype data download link works' );
@@ -75,7 +73,7 @@ use SGN::Test::WWW::Mechanize;
 
     # Genotype data download page
     my $genotype_download_link =
-      $mech->find_link( text_regex => qr/genotype raw data/i );
+      $mech->find_link( text_regex => qr/genotype data/i );
     ok( $genotype_download_link, 'got a genotype data  download link' );
     $mech->links_ok( [$genotype_download_link],
         'genotype data download link works' );
@@ -84,29 +82,28 @@ use SGN::Test::WWW::Mechanize;
         'got at least 1KB of data from the genotype data download' );
 
     # test the correlation analysis output( heatmap ) on the population page
-    $mech->content_contains('Pearson Correlation Analysis')
-      or diag $mech->content;
-    my $heatmap = $mech->find_image( alt_regex => qr/heatmap/ );
-    ok( $heatmap, 'population page has a heatmap image' );
+  #   $mech->content_contains('Pearson Correlation Analysis');
+  #   my $heatmap = $mech->find_image( alt_regex => qr/heatmap/ );
+  #   ok( $heatmap, 'population page has a heatmap image' );
 
-  SKIP: {
-        skip 'no heatmap found', 2 unless $heatmap;
-        like( $heatmap->url, qr/heatmap_\d+-\w+\.png$/,
-            'heatmap image url looks plausible' );
-        $mech->get_ok( $heatmap->url, 'heatmap URL is fetchable' );
-    }
+  # SKIP: {
+  #       skip 'no heatmap found', 2 unless $heatmap;
+  #       like( $heatmap->url, qr/heatmap_\d+-\w+\.png$/,
+  #           'heatmap image url looks plausible' );
+  #       $mech->get_ok( $heatmap->url, 'heatmap URL is fetchable' );
+  #   }
 
     $mech->back;
 
     #test the correlation download link on the population page
-    my $correlation_download_link = $mech->find_link(
-        text_regex => qr/Correlation coefficients and p-values table/i );
-    ok( $correlation_download_link, 'got a correlation download link' );
-    $mech->links_ok( [$correlation_download_link],
-        'correlation download link works' );
-    cmp_ok( length( $mech->content ),
-        '>=', 1000,
-        'got at least 1KB of data from the correlation table download' );
+    # my $correlation_download_link = $mech->find_link(
+    #     text_regex => qr/Correlation coefficients and p-values table/i );
+    # ok( $correlation_download_link, 'got a correlation download link' );
+    # $mech->links_ok( [$correlation_download_link],
+    #     'correlation download link works' );
+    # cmp_ok( length( $mech->content ),
+    #     '>=', 1000,
+    #     'got at least 1KB of data from the correlation table download' );
 
     my $qtl_analysis_link = $mech->find_link( url_regex =>
           qr !qtl_analysis.pl?population_id=12&cvterm_id=39945! );
