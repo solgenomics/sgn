@@ -27,7 +27,7 @@ my $dbh = CXGN::DB::InsertDBH->new({ dbname => $opts{D},
 open(my $F, "<", $file) || die "Can't open file $file\n";
 my $count = 0;
 while (<$F>) { 
-    my ($qtl, $chr, $pos, $protocol, $confidence, $description, $sgn_pub_id) = split /\t/;
+    my ($qtl, $chr, $pos, $protocol, $confidence, $description, $pubmed_id) = split /\t/;
     
     
     if ($protocol =~ /QTL/i) { 
@@ -40,6 +40,18 @@ while (<$F>) {
 	print STDERR "Setting description...\n";
 	$l->set_description($description);
 	$l->set_sp_person_id($opts{p});
+
+	print STDERR "Adding publication $pubmed_id...\n";
+	my $sth = $dbh->prepare("SELECT dbxref_id FROM dbxref WHERE accession=?");
+	$sth->execute($pubmed_id);
+	my ($dbxref_id) = $sth->fetchrow_array();
+	if ($dbxref_id) { 
+	    print STDERR "Adding dbxref_id $dbxref_id...\n";
+	    my $dbxref = CXGN::Chado::Dbxref->new($dbh, $dbxref_id);
+	    
+	    $l->add_dbxref($dbxref) if $dbxref;
+	}
+	
 	
 	if (!$opts{t}) { 
 	    print STDERR "Storing...\n";
@@ -48,8 +60,8 @@ while (<$F>) {
 	    $l->add_owner($opts{p});
 	    
 	    my $sth = $dbh -> prepare("SELECT marker_id FROM sgn.marker_alias WHERE alias =?"); 
-	$sth->execute($qtl);
-	
+	    $sth->execute($qtl);
+	    
 	    my ($marker_id) = $sth->fetchrow_array();
 	
 	    if (!$marker_id) { die "Couldn't find a marker for $qtl!"; }
@@ -58,6 +70,8 @@ while (<$F>) {
 	    my $lm = CXGN::Phenome::LocusMarker->new($dbh);
 	    $lm->set_marker_id($marker_id);
 	    $lm->set_locus_id($locus_id);
+
+
 	    $lm->store();
 	    
 	    $l->add_locus_marker($lm);
