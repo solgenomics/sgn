@@ -19,7 +19,7 @@ my $schema = $mech->context->dbic_schema('CXGN::Phenome::Schema');
 
 
 # instantiate an new locus object and save to database
-my $locus = $schema->resultset('Locus')->create(
+my $locus = $schema->resultset('Locus')->find_or_create(
     {
         locus_name => 'testing_locus_111222',
         locus_symbol => 'testing_111222',
