@@ -193,7 +193,7 @@ $page->jsan_use('jquery');
 my ($databases,$programs,$programs_js) = blast_db_prog_selects($params{db_id});
 my $spellcheck_js = <<'';
 // turn off spell check on sequence inputs without emitting invalid HTML
-jQuery(function($) { alert('turn off spellcheck'); $('#sequence_input').attr('spellcheck',false) });
+jQuery(function($) { $('#sequence_input').attr('spellcheck',false) });
 
 
 sub hash2param {
