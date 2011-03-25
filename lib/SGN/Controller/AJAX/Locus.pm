@@ -59,6 +59,7 @@ sub autocomplete_GET :Args(0) {
     $sth->execute;
     while (my ($locus_symbol, $locus_name, $allele_symbol, $is_default) = $sth->fetchrow_array ) {
         my $allele_data = "Allele: $allele_symbol"  if !$is_default  ;
+        no warnings 'uninitialized';
         push @results , "$locus_name ($locus_symbol) $allele_data";
     }
     $c->{stash}->{rest} = \@results;
