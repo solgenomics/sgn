@@ -54,7 +54,7 @@ sub children_GET {
 
     my ($db_name, $accession) = split ":", $c->request->param('node');
 
-    my $db = $schema->resultset('General::Db')->search({ name => $db_name })->first();
+    my $db = $schema->resultset('General::Db')->search({ name => uc($db_name) })->first();
     my $dbxref = $db->find_related('dbxrefs', { accession => $accession });
 
     my $cvterm = $dbxref->cvterm;
@@ -100,11 +100,21 @@ sub parents_GET  {
 
     my ($db_name, $accession) = split ":", $c->request->param('node');
     my $dbxref;
-    my $db = $schema->resultset('General::Db')->search({ name => $db_name })->first();
-
+    my %response;
+    my $db = $schema->resultset('General::Db')->search({ name => uc($db_name) })->first();
+    if (!$db || !$accession) {
+        #not sure we need here to send an error key, since cache is usually called after parents (? )
+        $response{error} = "Did not pass a legal ontology term ID! ( $db_name : $accession)";
+        $c->{stash}->{rest} = \%response;
+        return;
+    }
     $dbxref = $db->find_related('dbxrefs', { accession => $accession }) if $db;
+    if (!$dbxref) {
+        $response{error} = "Could not find term $db_name : $accession in the database! Check your input and try again";
+        $c->{stash}->{rest} = \%response;
+        return;
+    }
     my $cvterm = $dbxref->cvterm;
-    my $parents_rs = $cvterm->recursive_parents(); # returns a result set
 
     my @response_list = ();
     if ($cvterm) {
@@ -114,10 +124,13 @@ sub parents_GET  {
             if ($parent->cv_id() != $cvterm->cv_id()) {
                 next();
             }
-
             my $responsehash = $self->flatten_node($parent, undef);
             push @response_list, $responsehash;
         }
+    } else {
+        $response{error} = "Could not find term $db_name : $accession in the database! Check your input and try again. THIS MAY BE AN INTERNAL DATABASE PROBLEM! Please contact sgn-feedback\@sgn.cornell.edu for help.";
+        $c->{stash}->{rest} = \%response;
+        return;
     }
     $c->{stash}->{rest} = \@response_list;
 }
@@ -246,29 +259,43 @@ sub cache_GET {
 
     $self->{duplicates} = {};
     $self->{cache_list} = [];
-    ###my $cvterm = CXGN::Chado::Cvterm->new_with_accession( $c->dbc()->dbh(), $c->request->param('node') );
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-
+    my %response;
     my ($db_name, $accession) = split ":", $c->request->param('node');
-
-    #print STDERR "TERM: $db_name:$accession\n";
+    if (!$db_name || !$accession) {
+        $response{error} = "Looks like you passed an illegal ontology term ID ! ($db_name : $accession) Please try again.";
+        $c->{stash}->{rest} = \%response;
+        return;
+    }
 
     my $db = $schema->resultset('General::Db')->search({ name => $db_name })->first();
     my $dbxref = $db->find_related('dbxrefs', { accession => $accession });
+    if (!$dbxref) {
+        $response{error} = "Did not find ontology term $db_name : $accession in the database. Please try again. If you think this term should exist please contact sgn-feedback\@sgn.cornell.edu";
+        $c->{stash}->{rest} = \%response;
+        return;
+    }
 
     my $cvterm = $dbxref->cvterm;
-
+    if (!$cvterm) {
+        $response{error} = "Did not find ontology term $db_name : $accession in the database. This may be an internal database issue. Please contact sgn-feedback\@sgn.cornell.edu and we will fic this error ASAP";
+        $c->{stash}->{rest} = \%response;
+        return;
+    }
     my $parents_rs = $cvterm->recursive_parents(); # returns a result set
-
+    if (!$parents_rs->next) { 
+        $response{error} = "did not find recursive parents for cvterm " . $cvterm->name;
+        $c->{stash}->{rest} = \%response;
+        return;
+    }
     while (my $p = $parents_rs->next()) {
         my $children_rs = $p->children();
         while (my $rel_rs = $children_rs->next()) { # returns a list of cvterm rows
             my $child = $rel_rs->subject();
             $self->add_cache_list($p, $child, $rel_rs->type());
         }
-
-   }
+    }
     $c->{stash}->{rest} = $self->{cache_list};
 }
 
