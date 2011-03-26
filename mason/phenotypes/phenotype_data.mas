@@ -80,7 +80,7 @@ foreach my $term(sort keys %info ) {
   $count++;
 }
 
-my @headings = ("Trait" , "Average", "Min", "Max", "No. of Lines");
+my @headings = ("Trait" , "Average", "Min", "Max", "Lines/repeats");
 push @headings , 'QTL(s)' if $has_qtl;
 
 
