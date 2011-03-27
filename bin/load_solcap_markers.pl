@@ -59,7 +59,13 @@ The tab-delimited map file has the following columns:
  fwd (forward primer)
  rev (reverse primer)
 
-
+(optional columns, depending on the protocol)
+ pd    (an additional primer seq, if protocol is dCAPS)
+ Indel (additional primer seq, if protocol is Indel)
+ ASPE1 (additional primer seq, if protocol is SNP)
+ ASPE2 (additional primer seq, if protocol is SNP)
+ seq3  (3' flanking sequence, if protocol is SNP or Indel)
+ seq5  (5' flanking sequence, if protocol is SNP or Indel)
 
 =head1 AUTHORS
 
