@@ -133,13 +133,20 @@ if ($map->get_chromosome_count > 1 ) {
 my $has_qtl_data = $stockref->{has_qtl_data};
 
 
-my $dbxrefs = $stockref->{dbxrefs};
 my $new_pub_link = $curator || $submitter || $sequencer  ?   qq|<a href="/chado/add_publication.pl?type=stock&amp;type_id=$stock_id&amp;refering_page=$this_page&amp;action=new"> [Associate publication] </a>| : qq|<span class=\"ghosted\">[Associate publication]</span>| ;
 
-my $pubmeds = $dbxrefs->{PMID} || [];
 my $pub_count = scalar( keys %$pubs );
-## EUSOL, tgrc (stock_dbxref)
 
+## EUSOL, tgrc (stock_dbxref)
+my $dbxrefs = $stockref->{dbxrefs};
+my %source_dbs;
+foreach my $db_name ( keys %$dbxrefs ) {
+  foreach my $dbxref ( @{ $dbxrefs->{$db_name} } ) {
+    my $url = $dbxref->db->urlprefix . $dbxref->db->url;
+    $url .= $dbxref->accession if $url =~ m/\?$|\=$/ ;
+    $source_dbs{$url} = $db_name . ": " . $dbxref->accession if $url;
+  }
+}
 my $new_ontology_link = !$person_id ? qq|<a href="/solpeople/login.pl">[log-in to associate new ontology term]</a> | : '' ;
 
 </%perl>
@@ -165,6 +172,10 @@ my $new_ontology_link = !$person_id ? qq|<a href="/solpeople/login.pl">[log-in t
   &>
 
 <div><b>Stock editors: </b> <% $editor_link %></div>
+<br />
+% foreach my $db_url (keys %source_dbs) {
+<div><a href=<% $db_url %>><% $source_dbs{$db_url} %></a> </div>
+%}
 <br />
 
    <&| /page/info_section.mas, title => "Synonyms" , is_subsection => 1 &>
