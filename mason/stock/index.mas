@@ -83,7 +83,7 @@ my $is_owner = $stockref->{is_owner};
 
 my $this_page = "/stock/$stock_id/view";
 
-my $add_image_link = qq|<a href="/image/add?type_id=$stock_id&action=new&type=stock&refering_page=/stock/view/id/$stock_id">[Add new image]</a>|;
+my $add_image_link = qq|<a href="/image/add?type_id=$stock_id&action=new&type=stock&refering_page=$this_page">[Add new image]</a>|;
 my $image_ids =  $stockref->{props}->{'sgn image_id'} || [] ;
 my $stockprops = $stockref->{props};
 
