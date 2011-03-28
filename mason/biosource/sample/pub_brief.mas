@@ -1,112 +1,56 @@
 <%doc>
 
-=head1 NAME 
- 
- pub_brief.mas
- A mason component to show a brief of publications with links to them.
+=head1 NAME
+
+ pub_brief.mas - show a table of publications
+
+=head1 ARGS
+
+=head2 pub_list
+
+arrayref of BCS publication rows to render
 
 =cut
-
-=head1 VERSION 
-
-0.1
-
-=cut 
-
-=head1 DESCRIPTION
-
-  A mason component to show a brief of publications with links to them.
-  The section will appears if $sample->get_sample_id() is defined
-
-=cut
- 
-=head 1 AUTHOR
- 
- Aureliano Bombarely (ab782@cornell.edu)
-
-=cut 
 
 </%doc>
 
-
 <%args>
-$schema
-$pub_list
+  $schema
+  $pub_list
 </%args>
 
+<&| /page/info_section.mas,
+    title       => 'Publications',
+    collapsible => 1,
+ &>
+% if( @pub_objects ) {
+  <% columnar_table_html(
+       headings => [ 'Year', 'Series', 'Title' ],
+       __align    => 'lll',
+       __alt_freq => 2,
+       data => [ map {
+           my $pub = $_;
+           my $id = $pub->pub_id;
+
+           [ ( map encode_entities($_), $pub->pyear, $pub->series_name ),
+             qq|<a href="/chado/publication.pl?pub_id=$id">|.encode_entities($pub->title).'</a>',
+           ]
+         } @pub_objects
+       ],
+   ) %>
+% }
+</&>
+
+<%once>
+   use HTML::Entities;
+   use CXGN::Page::FormattingHelpers  qw/ columnar_table_html /;
+</%once>
 <%init>
-use strict;
-use warnings;
 
-use CXGN::GEM::Schema;
-use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
+   # $pub_list is an arrayref of pub IDs.  inflate them to objects.
+   my @pub_objects =
+      $schema->resultset('Pub::Pub')
+             ->search({ pub_id => $pub_list })
+             ->all;
+
 </%init>
-
-<%perl>
-
-
-my $pub_content;
-
-## If there aren't any pub it will do nothing. 
-## The error message will returned by basic component information
-
-my @pub_data;
-
-my $pub_composition_html;
-
-my @pub_list = @{$pub_list};
-my $pub_n = scalar(@pub_list);
-
-if ($pub_n > 0) {
-
-    foreach my $pub_id (@pub_list) {
-	my ($pub_row) = $schema->resultset("Pub::Pub")
-	                       ->search( { pub_id => $pub_id } );
-
-	my %pub_data = $pub_row->get_columns();
-
-	my ($pub_dbxref_row) = $schema->resultset("Pub::PubDbxref")
-	                              ->search( { pub_id => $pub_id } );
-	if (defined $pub_dbxref_row) {
-	    my $dbxref_id = $pub_dbxref_row->get_column('dbxref_id');
-	    
-	    my ($dbxref_row) = $schema->resultset("General::Dbxref")
- 	                              ->search( { dbxref_id => $dbxref_id } );
-	   
-	    my $accession = $dbxref_row->get_column('accession');       
-	    my $pub_link = '/chado/publication.pl?pub_id=' . $pub_id;
-	    my $sgn_pub_html = "<a href=$pub_link>$accession</a><br>";
-         
-	    push @pub_data, [$sgn_pub_html, $pub_data{'title'}, $pub_data{'pyear'}, $pub_data{'series_name'}];
-	}
-    }       
-
-    ## Use columnar table to give the html format. If don't exists any data, print message.
-
-    $pub_composition_html = columnar_table_html( headings => [ 'Accession', 'Title', 'Year', 'Series' ],
-						 data     => \@pub_data,
-						 __alt_freq => 2,
-						 __align  => ['c', 'l', 'l', 'l'],
-                                                );
-
-
-} else {
-    $pub_composition_html = 'No publication was found associated to this element';
-}
-    
-$pub_content = info_section_html( title        => "Publications (".$pub_n.")", 
-				  contents     => $pub_composition_html,
-				  collapsible  => 1,
-				  collapsed    => 0, );
-
-
-
-</%perl>
-
-<% $pub_content %>
-
-   
-<& 
-   /util/import_javascript.mas, 
-   classes => 'CXGN.Effects' 
-&>
