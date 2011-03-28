@@ -73,7 +73,7 @@ my $markers      = markers();
 my $legend       = legend();
 my $comment      = comment();
 my $download_qtl = download_qtl_region();
-
+$ci_table        = order_by_position();
 
 $c->forward_to_mason_view( '/qtl/qtl.mas',
                            qtl_image    => $qtl_image,
@@ -195,8 +195,7 @@ sub confidence_interval
    
     my (@marker_lods,  @all_lods, @all_positions, @marker_html);
     my %marker_details_of = ();
-
-    
+      
     my @rows =  grep { /\t$lg\t/ } read_file( $ci_lod_file );
    
     my $rnd  = Number::Format->new();
@@ -241,7 +240,7 @@ sub confidence_interval
                                               : $m_pos
                                               ; 	
 
-	    $marker_details_of{$m}{lod_score}     = $m_lod;
+	    $marker_details_of{$m}{lod_score} = $m_lod;
 	    	
 	    if ($m eq $p_m) { $marker_details_of{$m}{orientation} = 'peak'; }
 	    if ($m_pos == $right_position) { $marker_details_of{$m}{orientation} = 'right'; }
@@ -260,10 +259,10 @@ sub confidence_interval
 		 $remark1 . $remark2,
 	     )
 	    ];
-	}
-
+	} 
     }
      
+
     return \@marker_html, \%marker_details_of;
 
 }
@@ -450,3 +449,9 @@ sub comment
 
 }
 
+
+sub order_by_position {
+    my ($marker_html, $markers_details) = confidence_interval();
+    my @marker_html = sort { $a->[1] <=> $b->[1] }  @$marker_html;
+    return \@marker_html;
+}
