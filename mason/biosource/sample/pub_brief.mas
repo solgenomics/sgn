@@ -25,15 +25,16 @@ arrayref of BCS publication rows to render
  &>
 % if( @pub_objects ) {
   <% columnar_table_html(
-       headings => [ 'Year', 'Series', 'Title' ],
+       headings => [ 'Year', 'Title', 'Series' ],
        __align    => 'lll',
        __alt_freq => 2,
        data => [ map {
            my $pub = $_;
            my $id = $pub->pub_id;
 
-           [ ( map encode_entities($_), $pub->pyear, $pub->series_name ),
+           [ encode_entities($pub->pyear),
              qq|<a href="/chado/publication.pl?pub_id=$id">|.encode_entities($pub->title).'</a>',
+             encode_entities( $pub->series_name ),
            ]
          } @pub_objects
        ],
@@ -50,7 +51,10 @@ arrayref of BCS publication rows to render
    # $pub_list is an arrayref of pub IDs.  inflate them to objects.
    my @pub_objects =
       $schema->resultset('Pub::Pub')
-             ->search({ pub_id => $pub_list })
+             ->search(
+                 { pub_id => $pub_list },
+                 { order_by => [ 'pyear DESC', 'title' ] },
+               )
              ->all;
 
 </%init>
