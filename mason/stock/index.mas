@@ -151,7 +151,7 @@ my $new_ontology_link = !$person_id ? qq|<a href="/solpeople/login.pl">[log-in t
 <& /page/page_title.mas, title=> ucfirst($type_name)  .  ": " . $stock->get_uniquename()  . "\n" &>
 
 
-<&| /page/info_section.mas, title=>"Stock details" , subtitle => "<a href=/stock/search/>Back to stock search</a>"  &>
+<&| /page/info_section.mas, title=>"Stock details" , subtitle => "<a href=../../phenome/qtl_form.pl>New QTL population</a> | <a href=/stock/search/>Back to stock search</a>"  &>
 
   <& /page/form.mas,
   object_type=>'stock',
