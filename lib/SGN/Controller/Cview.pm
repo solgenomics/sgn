@@ -67,8 +67,8 @@ sub index :Path("/cview") :Args(0) {
 
     foreach my $map (@maps) {	
 	my $species = $map->get_common_name();
-	my $long_name = $map->get_long_name();
 	my $short_name = $map->get_short_name();
+	my $long_name = $map->get_long_name() || $short_name;       
 	my $id = $map->get_id();
 	push @{$map_by_species{$species} },
              qq{<a href="}.$c->stash->{map_url}.qq{?map_version_id=$id">}.encode_entities($short_name).'</a>: '.encode_entities($long_name)."\n";
