@@ -9,7 +9,7 @@ algorithms to predict signal peptides.
 
 
 
-=head1 AUTHOR
+=head1 AUTHORg
 
 Tom York (tly2@cornell.edu)
 
@@ -22,7 +22,7 @@ use Bio::SecreTary::TMpred;
 use Bio::SecreTary::Cleavage;
 use Bio::SecreTary::AAComposition;
 
-=head2 function new()
+=head2 function new
 
 Synopsis:
     my $STA_obj = Bio::SecreTary::SecreTaryAnalyse->new($sequence_id, $protein_sequence, $tmpred_obj, $trunc_length)
@@ -48,7 +48,6 @@ sub new {
 
     my ($outstring, $long_output) = 
 	$tmpred_obj->run_tmpred( $sequence, $sequence_id);
- #   $tmpred_obj->run_tmpred($sequence, {'sequence_id'=> $sequence_id, 'version' => 'perl'});
 
     $self->set_tmpred_good_solutions($outstring);
 
@@ -65,6 +64,22 @@ sub new {
       $cleavage_obj->subdomain( substr( $sequence, 0, $sp_length ) );
 
     $self->set_cleavage( [ $sp_length, $hstart, $cstart, $typical ] );
+
+
+my @candidate_solutions = ();
+my $tmpred_good_solns = $self->get_tmpred_good_solutions();
+    while ($tmpred_good_solns =~ s/^ ( \( \S+? \) ) //xms ){ # soln in () -> $1
+my $soln = $1;
+$soln =~ s/ \s //gxms; # delete whitespace
+$soln =~ s/ ^[(]//xms;
+$soln =~ s/ [)]$ //xms;
+my ($tmpred_score,$beg,$end) = split(',', $soln);
+my $nGASDRQPENtm = $self->nGASDRQPEN($beg-1, $end+1-$beg); # beg,end are unit based
+push @candidate_solutions, "$tmpred_score,$beg,$end,$nGASDRQPENtm";
+}
+# $analysis_string .= $self->AA22string(',');
+# $analysis_string .= ',' . $sp_length; # predicted length of signal peptide
+$self->{candidate_solutions} = \@candidate_solutions;
     return $self;
   }
 
@@ -72,8 +87,8 @@ sub new {
 =head2 function Sequence22_AAcomposition
 
 Synopsis: $STA_obj->Sequence22_AAcomposition();
-	Arguments: $STA_obj is an instance of SecreTaryAnalyse.
-	Side effects:	Creates the object.
+	Arguments: 
+	Side effects:
 	Description:	Calculates 5 quantities (AI, Gravy, nDRQPEN, nNitrogren and nOxygen) for the sequence consisting of the first 22 amino acids. These are stored in the SecreTaryAnalyse object.
 
 =cut
@@ -86,6 +101,18 @@ sub Sequence22_AAcomposition {
     $self->set_nDRQPEN22( $self->nDRQPEN(22) );
     $self->set_nNitrogen22( $self->nNitrogen(22) );
     $self->set_nOxygen22( $self->nOxygen(22) );
+}
+
+sub AA22string{ # has
+my $self = shift;
+my $separator = shift || ' ';
+my $result = $self->get_AI22();
+$result .= $separator . $self->get_Gravy22();
+$result .= $separator . $self->get_nDRQPEN22();
+$result .= $separator . $self->get_nNitrogen22();
+$result .= $separator . $self->get_nOxygen22();
+
+return $result;
 }
 
 
@@ -143,10 +170,12 @@ sub nDRQPEN {
 }
 
 
+
+
 =head2 function nGASDRQPEN
 
-Synopsis: $STA_obj->nGASDRQPEN($length);
-	Description: Truncates the sequence to length $length, calculates
+Synopsis: $STA_obj->nGASDRQPEN($beg, $length);
+	Description: takes substr($sequence, $beg, $length) and calculates
 and returns the number of amino acids in this truncated sequence which are GASDRQPE or N.
 
 =cut
@@ -284,16 +313,12 @@ sub set_nOxygen22 {
 
 sub get_nOxygen22 {
     my $self = shift;
-    $self->{nOxygen22};
+    return $self->{nOxygen22};
 }
 
-# sub print22 {
-#     my $self = shift;
-#     print $self->get_AI22(),        ", ";
-#     print $self->get_Gravy22(),     ", ";
-#     print $self->get_nDRQPEN22(),   ", ";
-#     print $self->get_nNitrogen22(), ", ";
-#     print $self->get_nOxygen22(),   "\n";
-# }
+sub get_candidate_solutions{
+  my $self = shift;
+return $self->{candidate_solutions};
+}
 
 1;
