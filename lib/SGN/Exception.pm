@@ -159,7 +159,10 @@ has 'notify' => (
    }
 
 around 'BUILDARGS' => sub {
-    my ($orig,$class,%args) = @_;
+    my $orig  = shift;
+    my $class = shift;
+    my %args =  @_ > 1 ? @_ : ( message => @_ );
+
     $args{developer_message} ||= $args{message};
     $args{message}           ||= $args{developer_message} || $args{public_message} || '(no message)';
 
