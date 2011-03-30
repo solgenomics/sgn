@@ -206,10 +206,7 @@ Download [<a href="ftp://ftp.sgn.cornell.edu/programs/perlcyc/">FTP</a>]
 
 HTML
 
-    print info_section_html(title=>"Documentation", contents=>);
-
-print <<HTML;
-
+    print info_section_html(title=>"Documentation", contents=> <<HTML );
 <pre>
        perlcyc is a Perl interface for Pathway Tools software.
 
