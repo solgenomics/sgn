@@ -213,7 +213,7 @@ HTML
 
        "use perlcyc;"
 
-       "my \$cyc = perlcyc -> new("ARA");" "my \@pathways = \$cyc -> all_path‐
+       "my \$cyc = perlcyc -> new("ARA");" "my \@pathways = \$cyc -> all_path-
        ways();"
 
 VERSION
@@ -239,7 +239,7 @@ VERSION HISTORY
             [Thomas Yan] Fixed some minor bugs.
 
        1.2  December 7, 2006 [Lukas Mueller]
-            Added three functions: create-frame, create-class, and cre‐
+            Added three functions: create-frame, create-class, and cre-
             ate-instance.
 
        1.21 May 7, 2008 [Lukas Mueller]
@@ -380,7 +380,7 @@ HTML
        Copyright (c) 2002-2008 by Lukas Mueller, TAIR, BTI
        <br /><br />
        Permission is hereby granted, free of charge, to any person obtaining a
-       copy of this software and associated documentation files (the "Soft‐
+       copy of this software and associated documentation files (the "Soft-
        ware"), to deal in the Software without restriction, including without
        limitation the rights to use, copy, modify, merge, publish, distribute,
        sublicense, and/or sell copies of the Software, and to permit persons
@@ -391,11 +391,11 @@ HTML
        in all copies or substantial portions of the Software.
        <br /><br />
        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-       OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MER‐
+       OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MER-
        CHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
        NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
        CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-       TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFT‐
+       TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFT-
        WARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
        <br /><br />
 
