@@ -141,6 +141,7 @@ sub feature_table {
 
         # Add a row for every featureloc
         for my $loc (@locations) {
+            
             my ($start,$end) = ($loc->fmin+1, $loc->fmax);
             push @$data, [
                 cvterm_link($f->type),
@@ -156,8 +157,7 @@ sub feature_table {
 }
 
 sub _feature_search_string {
-    my ($feature) = @_;
-    my ($fl) = $feature->featureloc_features;
+    my ($fl) = @_;
     return '' unless $fl;
     return $fl->srcfeature->name . ':'. ($fl->fmin+1) . '..' . $fl->fmax;
 }
