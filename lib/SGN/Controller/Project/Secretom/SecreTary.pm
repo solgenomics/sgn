@@ -158,32 +158,41 @@ sub _run_secretary {
     my $count_pass      = 0;
     my $show_max_length = 62;
 
-    my @sort_STApreds = ($sort_it)
-      ? sort {
-        $b->[1] =~ / \( (-?\d+), /xms;
-        my $score_b = $1;
-        $a->[1] =~ / \( (-?\d+), /xms;
-        my $score_a = $1;
-        return $score_b <=> $score_a;
+       my @sort_STApreds = ($sort_it)
+     	? sort {
+     	  $b->[1] =~ /^ \s* (\S+) \s+ (-?[0-9.]+) /xms; # 
+     	  my $score_b = $2;
+     	  $a->[1] =~ /^ \s* (\S+) \s+ (-?[0-9.]+) /xms;
+     	  my $score_a = $2;
+     	  return $score_b <=> $score_a;
+     	} @$STApreds
+     	  : @$STApreds;
 
-      } @$STApreds
-      : @$STApreds;
+        foreach (@sort_STApreds) {
+      my $STA        = $_->[0];
+        my $pred_string = $_->[1];
 
-    foreach (@sort_STApreds) {
-        my $STA        = $_->[0];
-        my $prediction = $_->[1];
-        $prediction =~ / \( (.*) \) \s* \( (.*) \)/xms;
-        my ( $soln1, $soln2 ) = ( $1, $2 );
-        $prediction = substr( $prediction, 0, 3 );    # 'YES' or 'NO '
+	$pred_string =~ / ^ \s* (\S+) \s+ (\S+) \s*(.*) /xms;
+#my $solution = $1;
+my $prediction = substr("$1   ", 0, 3); # 'YES' or 'NO '
+my $STscore = $2;
+my $solution = $3;
+
+# print "XXX: $1, $2, $3. \n";
+# print "prediction: [$prediction]\n";
+      
+#  $prediction =~ / \( (.*) \) \s* \( (.*) \)/xms;
+#        my ( $soln1, $soln2 ) = ( $1, $2 );
+#        $prediction = substr( $prediction, 0, 3 );    # 'YES' or 'NO '
         next if ( $prediction eq 'NO ' and $show_only_sp );
         $count_pass++ if ( $prediction eq "YES" );
 
-        my $solution = $soln1;
-        if ( $soln1 =~ /^ (\S+) , (\S+) , /xms and $1 < $min_tmpred_score1 ) {
-            $solution = $soln2;
-        }
+#        my $solution = $soln1;
+#        if ( $soln1 =~ /^ (\S+) , (\S+) , /xms and $1 < $min_tmpred_score1 ) {
+#            $solution = $soln2;
+#        }
         my ( $score, $start, $end ) = ( '        ', '      ', '      ' );
-        if ( $solution =~ /^(.*),(.*),(.*)/ ) {
+        if ( $solution =~ /^ \s* (\S+) \s+ (\S+) \s+ (\S+)/xms ) {
             ( $score, $start, $end ) = ( $1, $2, $3 );
 
         }
@@ -220,13 +229,13 @@ sub _run_secretary {
         else {
             $hl_sequence = $sequence;
             $sp_length   = " - ";
-            $score       = "  -";
+           # $score       = "  -";
         }
-        $score     = padtrunc( $score,     8 );
+        $STscore     = padtrunc( $STscore,     8 );
         $sp_length = padtrunc( $sp_length, 3 );
         $hl_sequence .= ( $orig_length > length $sequence ) ? '...' : '   ';
         $result_string .=
-          "$id  $prediction    $score $sp_length      $hl_sequence\n";
+          "$id  $prediction    $STscore $sp_length      $hl_sequence\n";
     }
 
     return ( $result_string, $STApreds, $count_pass );
