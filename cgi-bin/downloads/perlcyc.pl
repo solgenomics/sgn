@@ -41,8 +41,8 @@ Installation is standard as for any Perl module. If you downloaded the
         make
         make install
 </pre>
-       The program should now be available in all your Perl programs. ’make
-       install’ may require root access or access through sudo. For the latter
+       The program should now be available in all your Perl programs. "make
+       install" may require root access or access through sudo. For the latter
        case, type
 <pre>
         sudo make install
@@ -152,7 +152,7 @@ Object functions:
         lower-taxa-or-species-p org-frame
         get-class-all-subs
 </pre>
-       added 5/2008 per Suzanne’s request:
+       added 5/2008 per Suzanne's request:
 <pre>
         genes-regulating-gene
         genes-regulated-by-gene
@@ -207,6 +207,7 @@ Download [<a href="ftp://ftp.sgn.cornell.edu/programs/perlcyc/">FTP</a>]
 HTML
 
     print info_section_html(title=>"Documentation", contents=> <<HTML );
+
 <pre>
        perlcyc is a Perl interface for Pathway Tools software.
 
@@ -269,7 +270,7 @@ VERSION HISTORY
 
     print info_section_html (title=>"Examples", contents=><<HTML);
 
-       Change product type for all genes that are in a pathway to ’Enzyme’
+       Change product type for all genes that are in a pathway to 'Enzyme'
 <pre>
         use perlcyc;
 
@@ -294,7 +295,7 @@ VERSION HISTORY
         my \$added=0;
         my \$recs =0;
 
-        open (F, "<\$file") || die "Can’t open file\\n";
+        open (F, "<\$file") || die "Can't open file\\n";
 
         print STDERR "Connecting to AraCyc...\\n";
         my \$cyc = perlcyc -> new("ARA");
@@ -311,7 +312,7 @@ VERSION HISTORY
         }
 
         print STDERR "Processing file...\\n";
-        while (<F>) {
+        while (&lt;F&gt;) {
           my (\$locus, \$location, \@rest) = split /\\t/;
           \$recs++;
           if (exists \$genes{\$locus}) {
@@ -372,7 +373,7 @@ HTML
 
 
     print info_section_html(title=>"License", contents=><<HTML);
-
+<pre>
        According to the MIT License:<br />
        http://www.open-source.org/licenses/mit-license.php
        <br /><br />
