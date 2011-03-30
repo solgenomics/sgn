@@ -8,7 +8,7 @@ my $seq_download_link =
      $seq_download_url
        ? sprintf('<a href="%s">Download (%sb)</a>',
                  $seq_download_url,
-                 Number::Bytes::Human::format_bytes( $feature->seqlen ),
+                 Number::Bytes::Human::format_bytes( $feature->seqlen || $feature->residues && length $feature->residues || 0 ),
                 )
        : '';
 
