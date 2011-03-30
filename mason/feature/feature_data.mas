@@ -39,11 +39,7 @@
 
     my $description  = join( '<hr />', grep $_, map get_description($_), @$description_from );
 
-    my ($length,$locations) = feature_length($feature);
-    $length &&= commify_number($length) . " bases";
-    if ($locations) {
-        $length .= " in $locations location" . ($locations > 1 ? 's' : '');
-    };
+    my $length = commify_number( feature_length( $feature, $feature->search_related('featureloc_features') ) );
 
     my $synonyms =
         join ', ',

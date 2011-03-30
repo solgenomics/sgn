@@ -1,5 +1,6 @@
 <%args>
     $feature
+    $reference_sequence => undef
 </%args>
 <%once>
     use SGN::View::Feature qw/related_stats/;
@@ -10,9 +11,10 @@
     #    downstream => \@list_of_features,
     # }
     my %rels;
-    push @{$rels{$_->[0]}{$_->[1]}}, $_->[2] for (
-         ( map [ cvterm_link( $_->type ), 'downstream', $_->subject ], $feature->feature_relationship_objects  ),
-         ( map [ cvterm_link( $_->type ), 'upstream',   $_->object  ], $feature->feature_relationship_subjects ),
+    push @{$rels{$_->[0]}{$_->[1]}}, $_->[2]
+        for (
+          ( map [ cvterm_link( $_->type ), 'downstream', $_->subject ], $feature->feature_relationship_objects  ),
+          ( map [ cvterm_link( $_->type ), 'upstream',   $_->object  ], $feature->feature_relationship_subjects ),
         );
 
     my $ftype = $feature->type->name;
@@ -23,7 +25,13 @@
 %    my $updown = $rels{$reltype};
 %       for my $direction ( 'upstream', 'downstream' ) {
 %         if( my $feats = $updown->{$direction} ) {
-            <& .relatedfeats, reltype => $reltype, direction => $direction, feats => $feats, ftype => $ftype &>            
+            <& .relatedfeats,
+                  reltype   => $reltype,
+                  direction => $direction,
+                  feats     => $feats,
+                  ftype     => $ftype,
+                  reference_sequence => $reference_sequence,
+             &>
 %         }
 %       }
 %  }
@@ -31,6 +39,7 @@
 <%def .relatedfeats>
 <%args>
  $reltype
+ $reference_sequence
  $direction
  $feats
  $ftype
@@ -50,6 +59,7 @@
 %   }
     <& /feature/feature_list.mas,
        features => $feats,
+       reference_sequence => $reference_sequence,
      &>
 </&>
 
