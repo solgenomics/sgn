@@ -31,7 +31,7 @@ it under the same terms as Perl itself.
 =cut
 
 
-package TestDbpatchMoose;
+package AddMarkerExpAccession;
 
 use Moose;
 extends 'CXGN::Metadata::Dbpatch';
