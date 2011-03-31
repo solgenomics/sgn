@@ -66,6 +66,11 @@ The tab-delimited map file has the following columns:
  ASPE2 (additional primer seq, if protocol is SNP)
  seq3  (3' flanking sequence, if protocol is SNP or Indel)
  seq5  (5' flanking sequence, if protocol is SNP or Indel)
+ 
+ <accession name a> provide band sizes for accession name a 
+    (provided using -a)
+ <accession name b> provide band sizes for accession name b
+    (provided using -b)
 
 =head1 AUTHORS
 
@@ -92,7 +97,7 @@ use CXGN::DB::SQLWrappers;
 use Getopt::Std;
 
 
-our ($opt_H, $opt_D, $opt_i, $opt_t, $opt_p, $opt_m);
+our ($opt_H, $opt_D, $opt_i, $opt_t, $opt_p, $opt_m, $opt_a, $opt_b);
 
 getopts('H:D:i:tp:m:');
 
