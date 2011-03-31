@@ -87,6 +87,10 @@ alter table sgn.map add column population_stock_id bigint references public.stoc
 
 update sgn.map set population_stock_id=phenome.population.stock_id FROM phenome.population WHERE sgn.map.population_id=phenome.population.population_id;
 
+-- remove trigger
+    drop trigger pcr_accession_check_trigger on sgn.pcr_exp_accession;;
+
+
 EOSQL
 
 print "You're done!\n";
