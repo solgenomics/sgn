@@ -155,36 +155,49 @@ qq|<img src="$image_url" usemap="#map$count" border="0" alt="" />|;
 
 #if we have a pcr experiment that was used to map this marker to this location, make a section for this experiment's data
                 if ( $pcr
-                    and !grep { $_ == $pcr->pcr_experiment_id() }
-                    @displayed_pcr )
-                {
+		     and !grep { $_ == $pcr->pcr_experiment_id() }
+		     @displayed_pcr )
+		  {
                     $locations_html .=
-'<table width="100%" cellspacing="0" cellpadding="0" border="0"><tr>';
+		      '<table width="100%" cellspacing="0" cellpadding="0" border="0"><tr>';
                     my $pcr_bands    = $pcr->pcr_bands_hash_of_strings();
+
+		    my %pcr_bands_by_name = ();
+		    my $sth = $dbh->prepare("SELECT organism.species || ' ' ||  stock.name FROM public.stock JOIN public.organism USING(organism_id) WHERE stock_id=?");
+		    foreach my $p (keys %$pcr_bands) { 
+
+		      $sth->execute($p);
+		      $pcr_bands_by_name{($sth->fetchrow_array)} = $pcr_bands->{$p};
+		    }
+
+
                     my $digest_bands = $pcr->pcr_digest_bands_hash_of_strings();
+
+		    my %pcr_digest_bands_by_name = ();
+		    foreach my $p (keys %$digest_bands) { 
+		      $sth->execute($p);
+		      $pcr_digest_bands_by_name{($sth->fetchrow_array)} = $digest_bands->{$p};
+		    }
+
+
                     my $pcr_bands_html =
                       CXGN::Page::FormattingHelpers::info_table_html(
-                        __border => 0,
-                        __sub    => 1,
-                        map {
-                            my $accession_name =
-                              CXGN::Accession->new( $dbh, $_ )->verbose_name;
-                            $accession_name => $pcr_bands->{$_}
-                          } keys %$pcr_bands,
-                      );
+								     __border => 0,
+								     __sub    => 1,
+
+								     %pcr_bands_by_name,
+
+# 					
+								    );
                     my $digest_bands_html =
                       CXGN::Page::FormattingHelpers::info_table_html(
-                        __border => 0,
-                        __sub    => 1,
-                        map {
-                            my $accession_name =
-                              CXGN::Accession->new( $dbh, $_ )->verbose_name();
-                            $accession_name => $digest_bands->{$_};
-                          } keys %$digest_bands,
-                      );
+								     __border => 0,
+								     __sub    => 1,
+								     %pcr_digest_bands_by_name,
+								    );
                     my $mg = '';
                     if ( $pcr->mg_conc() ) {
-                        $mg = $pcr->mg_conc() . 'mM';
+		      $mg = $pcr->mg_conc() . 'mM';
                     }
                     my $temp = '';
                     if ( $pcr->temp() ) {
