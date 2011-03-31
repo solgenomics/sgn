@@ -25,8 +25,8 @@ Readonly my $TRUE  => 1;
 # set up defaults for SecreTary parameters:
 Readonly my $def_min_tm_length => 17;
 Readonly my $def_max_tm_length => 33;
-Readonly my $bad_tm_score => 500; #
-Readonly my $min_STscore => -3; 
+Readonly my $bad_tm_score => 500;
+Readonly my $min_STscore => -3;
 Readonly my $max_STscore => 1;
 Readonly my $ST_pred_threshold_score => (0 - $min_STscore)/($max_STscore - $min_STscore);
 Readonly my %defaults          => (
@@ -103,9 +103,6 @@ sub new {
     }
   }
 
-  # foreach (keys %{$self}){
-  #   print "$_ ", $self->{$_}, "\n";
-  # }
   return $self;
 }
 
@@ -130,16 +127,12 @@ sub refine_TMpred_solutions
     # length in correct range and beginning early enough
     my $self            = shift;
     my $good_solutions = shift;
-    #  my $STA             = shift;
-    #  my $good_solutions = shift; # $STA->get_tmpred_good_solutions();
 
     my @TMpred_good_solns  = ();
     while ($good_solutions =~ s/^ \s* ( \( [^,]+ , [^,]+ , [^)]+ \) ) //xms) {
       push @TMpred_good_solns, $1;
     }
-    # } else {
-    #   @TMpred_good_solns  = split( " ", $STA->get_tmpred_good_solutions() )
-    # }
+
     my $grp1_best_tm_score = -1; # tmpred score? or ST score?
     my $grp1_best       = "(-1,0,0)";
     my $grp2_best_tm_score = -1;
@@ -170,14 +163,12 @@ sub refine_TMpred_solutions
 
 =head2 function refine_solutions()
 
-Synopsis: $STS_obj->refine_TMpred_solutions($STA_obj);
+Synopsis: $STS_obj->refine_solutions($STA_obj);
 	Arguments: An SecreTaryAnalyse object.
 	Returns: A list containing strings describing the best group1 candidate,
-and the best group2 candidate (based on tmpred results only).
-e.g. (2311,23,44)(1100,5,30)
+and the best group2 candidate, based on the SecreTary score.
 	Description: Look at the good tmpred solutions of $STA_obj, finds the one with
-best score which satisfies group1 requirements on tm length, starting position, and 
-similarly for group2.
+best ST score which satisfies group1 requirements on tm length, starting position, and similarly for group2.
 
 =cut
 
@@ -261,44 +252,6 @@ sub Categorize1 {     # categorize a single SecreTaryAnalyse object as
      $return_val = "fail $STscore $best_candidate";
    }
   return $return_val;
-
-  $g1_best_candidate =~ s/,/ /g;
-  $g2_best_candidate =~ s/,/ /g;
- 
-
-# Test if group 1
-  my ( $tm_score, $beg, $end, $nGASDRQPENtm ) = 
-    split(' ', $g1_best_candidate); # $beg, $end unit based
- # my $tmh_length = $end + 1 - $beg;
-  if ( $tm_score >= $self->{g1_min_tmpred_score} and
-       ($STA->nGASDRQPEN($beg-1, $end+1-$beg) <= $self->{max_tm_nGASDRQPEN})
-     ) {			# Group1
-    $self->set_best_tm_score($tm_score);
-    $return_val = "group1 $STscore $g1_best_candidate";
-    warn "??? ", $STA->get_sequence_id(), " Group1 but g1_STscore negative: $g1_STscore.\n" if($g1_STscore < $ST_pred_threshold_score);
-  } else { # test if Group2
-    my ( $tm_score2, $beg2, $end2, $nGASDRQPENtm ) = split(' ', $g2_best_candidate); #( $1, $2, $3 );
- #   my $tmh_length2 = $end2 + 1 - $beg2;
-
-    if (    $tm_score2 >= $self->{g2_min_tmpred_score}
-	    and $STA->get_AI22() >= $self->{min_AI22}
-	    and $STA->get_Gravy22() >= $self->{min_Gravy22}
-	    and $STA->get_nDRQPEN22() <= $self->{max_nDRQPEN22}
-	    and $STA->get_nNitrogen22() <= $self->{max_nNitrogen22}
-            and $STA->get_nOxygen22() <= $self->{max_nOxygen22}
-	    and ($STA->nGASDRQPEN($beg2-1, $end2+1-$beg2) <= $self->{max_tm_nGASDRQPEN})
-
-       ) {			# Group 2
-      $self->set_best_tm_score($tm_score2);
-      $return_val = "group2 $STscore $g2_best_candidate";
-      warn  "??? ",$STA->get_sequence_id(), " Group2 but g2_STscore negative: $g2_STscore.\n" if($g2_STscore < $ST_pred_threshold_score);
-    } else {			# fail
-      $self->set_best_tm_score(0);
-      $return_val = "fail $STscore $best_candidate";
-warn "??? ", $STA->get_sequence_id(), " Fail, but $STscore >= 0: $STscore.\n" if($STscore >= $ST_pred_threshold_score);
-    }
-  }
-  return ($return_val);
 }
 
 =head2 function Categorize()
@@ -343,7 +296,6 @@ sub _group1_STscore{
   my $d_GASDRQPEN = (0.5 + $self->{max_tm_nGASDRQPEN} - $nGASDRQPEN)/$W{W_nGASDRQPEN};
 
   my $g1_STscore = 0;
-  #print "dscore, dGAS...: $d_score, $d_GASDRQPEN \n";
   if ($d_tm_score >= 0.0 and $d_GASDRQPEN >= 0) {
     $g1_STscore += ($d_tm_score > $d_GASDRQPEN)? $d_GASDRQPEN: $d_tm_score; # add the min of these two.
   } else {
@@ -354,7 +306,7 @@ sub _group1_STscore{
       $g1_STscore += $d_GASDRQPEN;
     }
   }
- # print "g1_STscore: $g1_STscore \n";
+
   if($g1_STscore > $max_STscore){ $g1_STscore = $max_STscore; }
   if($g1_STscore < $min_STscore){ $g1_STscore = $min_STscore; }
   $g1_STscore = ($g1_STscore - $min_STscore)/($max_STscore - $min_STscore);
@@ -387,7 +339,6 @@ sub _group2_STscore{
   my $sum_negs = 0.0;
   my $min_pos = 1000000.0;
   foreach (@STscore_pieces) {
-   # print "$_ \n";
     if ($_ < 0.0) { # get the sum of the negative pieces (or add in quadrature?)
       $sum_negs += $_;
     }
@@ -396,7 +347,6 @@ sub _group2_STscore{
     }
   }
   my $g2_STscore = ($sum_negs < 0.0)? $sum_negs : $min_pos; # if any negatives, use $sum_negs
- # print "_g2_STscore:  $result \n";
  if($g2_STscore > $max_STscore){ $g2_STscore = $max_STscore; }
   if($g2_STscore < $min_STscore){ $g2_STscore = $min_STscore; }
   $g2_STscore = ($g2_STscore - $min_STscore)/($max_STscore - $min_STscore);
@@ -414,35 +364,6 @@ sub get_g1_min_tmpred_score {
   return $self->{g1_min_tmpred_score};
 }
 
-# sub set_g1_min_tmh_length1 {
-#     my $self = shift;
-#     return $self->{min_tmh_length1} = shift;
-# }
-
-# sub get_min_tmh_length1 {
-#     my $self = shift;
-#     return $self->{min_tmh_length1};
-# }
-
-# sub set_max_tmh_length1 {
-#     my $self = shift;
-#     return $self->{max_tmh_length1} = shift;
-# }
-
-# sub get_max_tmh_length1 {
-#     my $self = shift;
-#     return $self->{max_tmh_length1};
-# }
-
-# sub set_max_tmh_beg1 {
-#     my $self = shift;
-#     return $self->{max_tmh_beg1} = shift;
-# }
-
-# sub get_max_tmh_beg1 {
-#     my $self = shift;
-#     return $self->{max_tmh_beg1};
-# }
 
 sub set_g2_min_tmpred_score {
   my $self = shift;
@@ -453,36 +374,6 @@ sub get_g2_min_tmpred_score {
   my $self = shift;
   return $self->{g2_min_tmpred_score};
 }
-
-# sub set_min_tmh_length2 {
-#     my $self = shift;
-#     return $self->{min_tmh_length2} = shift;
-# }
-
-# sub get_min_tmh_length2 {
-#     my $self = shift;
-#     return $self->{min_tmh_length2};
-# }
-
-# sub set_max_tmh_length2 {
-#     my $self = shift;
-#     return $self->{max_tmh_length2} = shift;
-# }
-
-# sub get_max_tmh_length2 {
-#     my $self = shift;
-#     return $self->{max_tmh_length2};
-# }
-
-# sub set_max_tmh_beg2 {
-#     my $self = shift;
-#     return $self->{max_tmh_beg2} = shift;
-# }
-
-# sub get_max_tmh_beg2 {
-#     my $self = shift;
-#     return $self->{max_tmh_beg2};
-# }
 
 sub set_min_AI22 {
   my $self = shift;
