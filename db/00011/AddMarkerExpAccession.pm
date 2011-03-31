@@ -75,6 +75,18 @@ alter table sgn.pcr_exp_accession add column stock_id bigint references stock;
 --
 update sgn.pcr_exp_accession set stock_id=sgn.accession.stock_id FROM sgn.accession where sgn.accession.accession_id=pcr_exp_accession.accession_id;
    
+alter table sgn.map add column parent1_stock_id bigint references public.stock;
+
+alter table sgn.map add column parent2_stock_id bigint references public.stock;
+
+alter table sgn.map add column population_stock_id bigint references public.stock;
+
+    update sgn.map set parent1_stock_id=accession.stock_id FROM sgn.accession where sgn.accession.accession_id=map.parent_1;
+
+    update sgn.map set parent2_stock_id=accession.stock_id FROM sgn.accession where sgn.accession.accession_id=map.parent_2;
+
+update sgn.map set population_stock_id=phenome.population.stock_id FROM phenome.population WHERE sgn.map.population_id=phenome.population.population_id;
+
 EOSQL
 
 print "You're done!\n";
