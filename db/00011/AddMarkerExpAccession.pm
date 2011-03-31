@@ -90,6 +90,7 @@ update sgn.map set population_stock_id=phenome.population.stock_id FROM phenome.
 -- remove trigger
     drop trigger pcr_accession_check_trigger on sgn.pcr_exp_accession;;
 
+alter table sgn.pcr_exp_accession drop constraint accession_id_check;
 
 EOSQL
 
