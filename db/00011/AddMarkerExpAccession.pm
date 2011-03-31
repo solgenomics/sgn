@@ -67,9 +67,9 @@ sub patch {
 --
 -- add a stock_id column to pcr_exp_accession
 
-set search_path=sgn;
+set search_path=public,sgn;
 
-alter table sgn.pcr_exp_accession add column stock_id bigint references stock;
+alter table sgn.pcr_exp_accession add column stock_id bigint references public.stock;
 
 -- copy the stock to accession mapping from sgn.accession
 --
