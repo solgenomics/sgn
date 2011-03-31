@@ -55,8 +55,9 @@ $default_map_id => 9
 #
 my $d ='';
 foreach my $s (sort { @{$map_by_species->{$a}} <=> @{$map_by_species->{$b}} } keys %$map_by_species) {
-  $d .= "<br /><br /><b>$s</b><br />\n";
+  $d .= "<b>$s</b><br />\n";
   $d .= join('<br />' ,  sort @{ $map_by_species->{$s} } );
+  $d .= "<br /><br />";
 }
 
 my $submit = qq | <b>[<a href="/content/map_submissions.pl">Submit New Map</a>]</b> |;
