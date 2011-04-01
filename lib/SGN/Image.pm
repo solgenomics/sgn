@@ -108,7 +108,7 @@ sub get_image_url {
 
 =head2 process_image
 
- Usage:        $image->process_image($filename, "individual", 234);
+ Usage:        $image->process_image($filename, "stock", 234);
  Desc:         creates the image and associates it to the type and type_id
  Ret:
  Args:
@@ -127,9 +127,9 @@ sub process_image {
         #print STDERR "Associating experiment $type_id...\n";
         $self->associate_experiment($type_id);
     }
-    elsif ( $type eq "individual" ) {
-        #print STDERR "Associating individual $type_id...\n";
-        $self->associate_individual($type_id);
+    elsif ( $type eq "stock" ) {
+        #print STDERR "Associating stock $type_id...\n";
+        $self->associate_stock($type_id);
     }
     elsif ( $type eq "fish" ) {
         #print STDERR "Associating to fish experiment $type_id\n";
@@ -324,10 +324,33 @@ sub apache_upload_image {
 
 }
 
+=head2 associate_stock
+
+ Usage: $image->associate_stock($stock_id);
+ Desc:  associate a Bio::Chado::Schema::Result::Stock::Stock object with this image 
+ Ret:   a database id (stockprop_id)
+ Args:  stock_id
+ Side Effects: 
+ Example: 
+
+=cut
+
+sub associate_stock  {
+    my $self = shift;
+    my $stock_id = shift;
+    my $stock = $self->get_configuration_object->dbic_schema('Bio::Chado::Schema' , 'sgn_chado')->resultset('Stock::Stock')->find( {
+	stock_id => $stock_id } );
+    if ($stock) {
+	my $prop_ref = $stock->create_stockprops( { 'sgn image_id' => $self->get_image_id } , {autocreate => 1 , cv_name => 'local', allow_duplicate_values => 1 } );
+	my $stockprop = $prop_ref->{'sgn image_id'};
+	return $stockprop->stockprop_id;
+    } else  { return undef ; } 
+}
 
 =head2 associate_individual
 
- Usage:        $image->associate_individual($individual_id)
+ Usage:        DEPRECATED, Individual table is not used any more . Please use stock instead
+               $image->associate_individual($individual_id)
  Desc:         associate a CXGN::Phenome::Individual with this image
  Ret:          a database id (individual_image)
  Args:         individual_id
@@ -339,6 +362,7 @@ sub apache_upload_image {
 sub associate_individual {
     my $self = shift;
     my $individual_id = shift;
+    warn "DEPRECATED. Individual table is not used any more . Please use stock instead";
     my $query = "INSERT INTO phenome.individual_image
                    (individual_id, image_id) VALUES (?, ?)";
     my $sth = $self->get_dbh()->prepare($query);
@@ -347,6 +371,7 @@ sub associate_individual {
     my $id= $self->get_currval("phenome.individual_image_individual_image_id_seq");
     return $id;
 }
+
 
 =head2 get_individuals
 
