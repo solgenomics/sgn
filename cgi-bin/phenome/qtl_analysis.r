@@ -121,7 +121,7 @@ if (userpermuvalue == "None")
 userpermuvalue<-as.numeric(userpermuvalue)
 
 #####for test only
-userpermuvalue<-c(100)
+#userpermuvalue<-c(100)
 #####
 
 
@@ -583,16 +583,7 @@ if ( max(QtlLods) >= LodScore )
   QtlLodAnova<-QtlEffects$lod
   ResultFull<-QtlEffects$result.full  
   ResultDrop<-QtlEffects$result.drop
-##   print("Effects")
-##   print(Effects)
-##   print("lod")
-##   print(QtlLodAnova)
-##   print("result full")
-##   print(ResultFull)
-##   print("result drop")
-##   print(ResultDrop)
-##  # print("Model")
- # print(ResultModel)
+
   if (is.numeric(Effects))
     {
       Effects<-round(Effects,
