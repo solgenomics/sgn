@@ -41,7 +41,7 @@
 
 % if( $feature->residues && length $feature->residues ) {
     <&| /page/info_section.mas,
-            title         => 'Amino acid sequence',
+            title         => 'Protein sequence',
             subtitle      => 'translated polypeptide sequence',
             collapsible   => 1,
             collapsed     => 0,
