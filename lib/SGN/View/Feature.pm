@@ -226,6 +226,25 @@ sub cvterm_link {
 
 sub mrna_and_protein_sequence {
     my ($mrna_feature) = @_;
+
+    # if we were actually passed a polypeptide, get its mrna(s) and
+    # recurse
+    if( $mrna_feature->type->name eq 'polypeptide' ) {
+        return
+            map mrna_and_protein_sequence( $_ ),
+            $mrna_feature->search_related('feature_relationship_subjects',
+                    { 'me.type_id' => {
+                        -in => $mrna_feature->result_source->schema
+                                            ->resultset('Cv::Cvterm')
+                                            ->search({name => 'derives_from'})
+                                            ->get_column('cvterm_id')
+                                            ->as_query,
+                    },
+                  },
+               )
+               ->search_related('object');
+    }
+
     my @exon_locations = _exon_rs( $mrna_feature )->all
         or return;
 
@@ -256,7 +275,7 @@ sub mrna_and_protein_sequence {
        );
     $protein_seq = $protein_seq->translate;
 
-    return ( $mrna_seq, $protein_seq );
+    return [ $mrna_seq, $protein_seq ];
 }
 
 sub _peptides_rs {
