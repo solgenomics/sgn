@@ -14,7 +14,7 @@
 
 <&| /page/info_section.mas,
     title       => type_name($feature,'caps').' details',
-    subtitle    => $feature->is_obsolete ? 'WARNING: This gene has been replaced by new data.' : '',
+    subtitle    => $feature->is_obsolete ? 'WARNING: This feature is obsolete, new data is available.' : '',
     collapsible => 1,
 &>
    <& /feature/feature_data.mas,
