@@ -74,10 +74,10 @@ my $stockprop_cv = $schema->resultset("Cv::Cv")->search( {
  'me.name' => 'stock_property'} );
 
 
-my $type_name;
+my ($type_name, $uniquename);
 my $type = $stock->get_object_row ? $stock->get_object_row->type : undef;
 $type_name  = $type->name() if $type;
-
+$uniquename = $stock->get_uniquename if $type;
 #################
 my $is_owner = $stockref->{is_owner};
 
@@ -116,17 +116,19 @@ my $members_phenotypes = $stockref->{members_phenotypes};
 
 ############################
 my $map_html = $stockref->{map_html};
-my $map = CXGN::Cview::Map::SGN::Genotype->new($dbh, $stock_id);
-if ($map->get_chromosome_count > 1 ) {
-  my $overview = CXGN::Cview::MapOverviews::Generic->new($map,
-                                                         {
-                                                          dbh=> $dbh,
-                                                          basepath => $stockref->{cview_basepath},
-                                                          tempfiles_subdir => $stockref->{cview_tmp_dir } });
-
-  if ($overview) {
-    $overview->render_map();
-    $map_html .= $overview->get_image_html(); 
+my $map;
+if ($stock_id) {
+  $map = CXGN::Cview::Map::SGN::Genotype->new($dbh, $stock_id);
+  if ($map->get_chromosome_count > 1 ) {
+    my $overview = CXGN::Cview::MapOverviews::Generic->new($map,
+                                                           {
+                                                            dbh=> $dbh,
+                                                            basepath => $stockref->{cview_basepath},
+                                                            tempfiles_subdir => $stockref->{cview_tmp_dir } });
+    if ($overview) {
+      $overview->render_map();
+      $map_html .= $overview->get_image_html();
+    }
   }
 }
 #########################################
@@ -155,7 +157,7 @@ my $new_ontology_link = !$person_id ? qq|<a href="/solpeople/login.pl">[log-in t
 <& /util/import_javascript.mas, classes => ["jquery", "thickbox", "CXGN.Page.FormattingHelpers"] &>
 
 
-<& /page/page_title.mas, title=> ucfirst($type_name)  .  ": " . $stock->get_uniquename()  . "\n" &>
+<& /page/page_title.mas, title=> ucfirst($type_name)  .  ": " . $uniquename  . "\n" &>
 
 
 <&| /page/info_section.mas, title=>"Stock details" , subtitle => "<a href=../../phenome/qtl_form.pl>New QTL population</a> | <a href=/stock/search/>Back to stock search</a>"  &>
@@ -168,7 +170,7 @@ my $new_ontology_link = !$person_id ? qq|<a href="/solpeople/login.pl">[log-in t
   form_div_name=>'stock_details',
   js_object_name=> 'stockForm',
   page_url => "/stock/$stock_id/view/" ,
-  alternate_new_button => '<a href ="/stock/new">[New]</a>'
+  alternate_new_button => '<a href ="/stock/0/new">[New]</a>'
   &>
 
 <div><b>Stock editors: </b> <% $editor_link %></div>
