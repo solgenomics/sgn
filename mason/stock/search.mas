@@ -5,8 +5,8 @@
   $pagination_link_maker      => undef
   $request                    => undef
   $schema                     => undef
-  $sp_person_autocomplete_uri => undef
-  $trait_autocomplete_uri     => undef
+  $sp_person_autocomplete_uri => '/ajax/people/autocomplete'
+  $trait_autocomplete_uri     => '/ajax/stock/trait_autocomplete'
 </%args>
 
 <%once>
