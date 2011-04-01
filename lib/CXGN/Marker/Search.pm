@@ -40,13 +40,6 @@ As an alternative to (2) and (3), you may instead want to perform the query your
 =cut
 
 
-
-# minor setup things
-my $physical;
-#my $physical=$dbh->qualify_schema('physical');
-
-
-
 =head2 Constructor
 
 =over 12
@@ -64,8 +57,6 @@ Returns a search object, ready for searching. Required before any of the other m
 sub new {
 
   my ($class, $dbh) = @_;
-
-  $physical = $dbh->qualify_schema('physical');
 
   die "must provide a dbh as first argument: CXGN::Marker->new($dbh)\n" unless $dbh && ref($dbh) eq 'CXGN::DB::Connection';
 
@@ -540,7 +531,7 @@ have any bacs at all.
 
 sub with_bac_associations {
   my ($self, @bacs) = @_; 
-  my $q = "select $self->{m2mfields} from marker_to_map as m2m left join $physical.probe_markers as pm on(m2m.marker_id=pm.marker_id) left join $physical.overgo_associations as oa using(overgo_probe_id) left join $physical.oa_plausibility using(overgo_assoc_id) left join $physical.manual_associations as ma on(ma.marker_id=m2m.marker_id) left join $physical.computational_associations as ca on(ca.marker_id=m2m.marker_id) WHERE oa_plausibility.plausible = 1 OR oa.overgo_assoc_id IS NULL " . join(' OR ', map {' oa.bac_id = ? OR ca.clone_id=? OR ma.clone_id=?'} @bacs);
+  my $q = "select $self->{m2mfields} from marker_to_map as m2m left join physical.probe_markers as pm on(m2m.marker_id=pm.marker_id) left join physical.overgo_associations as oa using(overgo_probe_id) left join physical.oa_plausibility using(overgo_assoc_id) left join physical.manual_associations as ma on(ma.marker_id=m2m.marker_id) left join physical.computational_associations as ca on(ca.marker_id=m2m.marker_id) WHERE oa_plausibility.plausible = 1 OR oa.overgo_assoc_id IS NULL " . join(' OR ', map {' oa.bac_id = ? OR ca.clone_id=? OR ma.clone_id=?'} @bacs);
 
   my @placebacs;
 
@@ -568,7 +559,7 @@ Particular bacs may be specified by their clone_id\'s.
 sub with_overgo_associations {
   my ($self, @bacs) = @_;
 
-  my $q = "SELECT $self->{m2mfields} FROM marker_to_map as m2m INNER JOIN $physical.probe_markers using(marker_id) INNER JOIN $physical.overgo_associations using(overgo_probe_id) INNER JOIN $physical.oa_plausibility using(overgo_assoc_id)";
+  my $q = "SELECT $self->{m2mfields} FROM marker_to_map as m2m INNER JOIN physical.probe_markers using(marker_id) INNER JOIN physical.overgo_associations using(overgo_probe_id) INNER JOIN physical.oa_plausibility using(overgo_assoc_id)";
 
   if(@bacs > 0){
 
@@ -594,7 +585,7 @@ Limits results to markers that have been manually associated with bacs.
 sub with_manual_associations {
   my ($self, @bacs) = @_;
 
-  my $q = "SELECT $self->{m2mfields} FROM marker_to_map as m2m INNER JOIN $physical.manual_associations using(marker_id)";
+  my $q = "SELECT $self->{m2mfields} FROM marker_to_map as m2m INNER JOIN physical.manual_associations using(marker_id)";
 
   if(@bacs > 0){
 
@@ -621,7 +612,7 @@ with bacs (eg, with BLAST).
 sub with_computational_associations {
   my ($self, @bacs) = @_;
 
-  my $q = "SELECT $self->{m2mfields} FROM marker_to_map as m2m INNER JOIN $physical.computational_associations using(marker_id)";
+  my $q = "SELECT $self->{m2mfields} FROM marker_to_map as m2m INNER JOIN physical.computational_associations using(marker_id)";
 
   if(@bacs > 0){
 
