@@ -11,7 +11,7 @@ with_test_level( local => sub {
     require SGN::Context;
     my $dbh = SGN::Context->new->dbc->dbh;
 
-for ( 0..30 ) { # test a few times
+for ( 0..10 ) { # test a few times
 
   my $msearch = CXGN::Marker::Search->new($dbh);
   $msearch->must_be_mapped();
@@ -19,9 +19,9 @@ for ( 0..30 ) { # test a few times
   $msearch->random();
   #$msearch->marker_id(518);
   $msearch->perform_search();
-  diag("search finished, creating locations\n");
+  #diag("search finished, creating locations\n");
   my ($loc) = $msearch->fetch_location_markers();
-  diag("finished creating locations\n");
+  #diag("finished creating locations\n");
 
   isa_ok($loc, 'CXGN::Marker::LocMarker');
 
