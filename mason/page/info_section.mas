@@ -156,7 +156,7 @@ EOT
   use HTML::Entities;
 
   sub anchor_name {
-      local $_ = shift;
+      local $_ = lc shift;
       s/<[^>]+>//g; # strip html tags
       s/\s+/_/g;    # whitespace to underscores
       s/\W//g;      # remove any weird chars
