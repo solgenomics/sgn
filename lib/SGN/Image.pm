@@ -347,6 +347,28 @@ sub associate_stock  {
     } else  { return undef ; } 
 }
 
+=head2 get_stocks
+ 
+ Usage: $image->get_stocks
+
+=cut 
+
+sub get_stocks {
+    my $self = shift;
+    my $schema = $self->get_configuration_object->dbic_schema('Bio::Chado::Schema' , 'sgn_chado');
+    my $image_cvterm = $schema->resultset('Cv::Cvterm')->search( { name => 'sgn image_id' } )->single;
+    my @stocks;
+    my $stockprops = $schema->resultset('Stock::Stockprop')->search( { 
+	type_id => $image_cvterm->cvterm_id,
+	value   => $self->get_image_id,
+								     } );
+    if ($stockprops) {
+	while (my $prop = $stockprops->next) {
+	    push @stocks , $prop->stock;
+	}
+    }
+    return @stocks;
+}
 =head2 associate_individual
 
  Usage:        DEPRECATED, Individual table is not used any more . Please use stock instead
@@ -375,7 +397,8 @@ sub associate_individual {
 
 =head2 get_individuals
 
- Usage: $self->get_individuals()
+ Usage:  DEPRECATED. Use the stock table . 
+        $self->get_individuals()
  Desc:  find associated individuals with the image
  Ret:   list of 'Individual' objects
  Args:  none
@@ -385,7 +408,8 @@ sub associate_individual {
 =cut
 
 sub get_individuals {
-    my $self = shift;
+    my $self = shift;    
+    warn "DEPRECATED. Individual table is not used any more . Please use stock instead";
     my $query = "SELECT individual_id FROM phenome.individual_image WHERE individual_image.image_id=?";
     my $sth = $self->get_dbh()->prepare($query);
     $sth->execute($self->get_image_id());
@@ -509,14 +533,11 @@ sub get_fish_result_clone_ids {
 sub get_associated_objects {
     my $self = shift;
     my @associations = ();
-    my @individuals=$self->get_individuals();
-    foreach my $ind (@individuals) {
-	print STDERR  "found individual '$ind' !!\n";
-	my $individual_id = $ind->get_individual_id();
-	my $individual_name = $ind->get_name();
-	push @associations, [ "individual", $individual_id, $individual_name ];
-
-#	print "<a href=\"/phenome/individual.pl?individual_id=$individual_id\">".($ind->get_name())."</a>";
+    my @stocks=$self->get_stocks();
+    foreach my $stock (@stocks) {
+	my $stock_id = $stock->stock_id();
+	my $stock_name = $stock->name();
+	push @associations, [ "stock", $stock_id, $stock_name ];
     }
 
     foreach my $exp ($self->get_experiments()) {
@@ -616,8 +637,8 @@ sub get_associated_object_links {
     my $s = "";
     foreach my $assoc ($self->get_associated_objects()) {
 
-	if ($assoc->[0] eq "individual") {
-	    $s .= "<a href=\"/phenome/individual.pl?individual_id=$assoc->[1]\">Individual name: $assoc->[2].</a>";
+	if ($assoc->[0] eq "stock") {
+	    $s .= "<a href=\"/stock/$assoc->[1]/view\">Stock name: $assoc->[2].</a>";
 	}
 
 	if ($assoc->[0] eq "experiment") {
