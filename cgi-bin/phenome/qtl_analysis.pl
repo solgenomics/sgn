@@ -457,11 +457,7 @@ qq { Download population: <span><a href="pop_download.pl?population_id=$populati
                                               __align      => 'l',
                                             );
            
-            $qtl_effects_data .= "<br />QTL effects interpretation: 2\@100 means QTL at linkage group 
-                                 2 and position 100cM. <br />
-                                 2\@100:3\@100 means interaction between QTL at linkage group 2 
-                                 position 100 cM and QTL at linkage group 3 position 100 cM. 
-                                 'a' and 'd' stand for additive and domininace effects, respectively.";
+           
         } else 
         {
             $qtl_effects_data = "No QTL effects estimates were found for QTL(s) of  this trait.";
@@ -476,10 +472,6 @@ qq { Download population: <span><a href="pop_download.pl?population_id=$populati
                                               __align      => 'l',
                                             );
          
-         $explained_variation_data .= "<br />Variance source interpretation: 2\@100 means QTL at linkage group 
-                                      2 and position 100cM. <br />
-                                      2\@100:3\@100 means interaction between QTL at linkage group 2 position 
-                                      100 cM and QTL at linkage group 3 position 100 cM.";
         } else  {
             $explained_variation_data = "No explained variation estimates were found for QTL(s) of this trait.";
         }
@@ -1717,6 +1709,14 @@ sub qtl_effects {
        
         my @effects =  map  { [ split( /\t/, $_) ]}  read_file( $file );
         my $trash   = shift(@effects); 
+
+        push @effects, map { [ $_ ] } (" ", "QTL effects interpretation example: 2\@100 means 
+                                        QTL at linkage group 2 and position 100cM.", 
+                                        "2\@100:3\@100 means interaction between QTL at linkage 
+                                        group 2 position 100 cM and QTL at linkage group 3 
+                                        position 100 cM. 'a' and 'd' stand for additive and domininace 
+                                        effects, respectively."
+                                      );
         return \@effects;
     } else 
     {
@@ -1736,6 +1736,24 @@ sub explained_variation {
     {
         my @anova =  map  { [ split( /\t/, $_) ]}  read_file( $file );
         $anova[0][0] = "Source";
+        
+        if ( $anova[1][0] eq 'Model') 
+        {
+            push @anova, map { [ $_ ] } ("  ", "The ANOVA model is based on a single QTL 
+                                         significant source of variation"
+                                        );
+        }
+        else 
+        {
+            push @anova, map { [ $_ ]} ( "  ",  "Variance source interpretation example: 2\@100 means 
+                                          QTL at linkage group 2 and position 100cM.", 
+                                          "2\@100:3\@100 means interaction between QTL at linkage 
+                                          group 2 position 
+                                          100 cM and QTL at linkage group 3 position 100 cM."
+                                       );
+        }
+        
+        
         return \@anova;
     } else 
     {
