@@ -5,7 +5,7 @@ use Data::Dumper;
 
 use lib 't/lib';
 
-use SGN::Test::WWW::Mechanize
+use SGN::Test::WWW::Mechanize;
 
 use_ok 'SGN::Controller::Organism';
 

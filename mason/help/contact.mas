@@ -1,5 +1,4 @@
-
-<& "../page/page_title.mas", title => "Contact" &>
+<& "/page/page_title.mas", title => "Contact SGN" &>
 
 % #The form
 <form method="POST" action= "/contact/submit" name = "contactForm">
@@ -15,7 +14,7 @@ my $defaultVal = {"name" => $name,
 </%perl>
 % foreach my $info_category (@$infoNeeded) {
 <tr><td align="left" valign="top">
-<strong>Your <% $info_category %>*</strong>
+<strong><% ucfirst $info_category %>*</strong>
 </td>
 % # If user did not fill out a field and submitted the form, then it will 
 % # show in red letters above the field this field is needed above it. 
@@ -28,8 +27,8 @@ my $defaultVal = {"name" => $name,
 % } else {
 <td align = "left" valign = "top"> 
 %}
-<input type="text" size="50" value= "<% $$defaultVal{$info_category} %>"
-				name = "<% $info_category %>" />
+<input type="text" size="50" value="<% $$defaultVal{$info_category} %>"
+				name="<% $info_category %>" />
 </td></tr>
 % }     
 % # Body uses a text_area so it is hardcoded.
@@ -40,7 +39,7 @@ my $defaultVal = {"name" => $name,
 </td>
 % unless ($filled{body}) {
 <td style = "color:red; font-size: 10px;" align = "left" valign = "top">
-Message is required
+Message body is required
 <br />
 % } else {
 <td align = "left" valign = "top">
@@ -59,18 +58,13 @@ Message is required
 </div>
 </form>
 
-<dl>
-<dt>
-<strong>Email</strong>
-</dt>
-<dd><p>
-<a href= "mailto:<% $email_address_to_display %>"><% $email_address_to_display %></a>
-</p></dd>
+<hr />
+<%perl>
+print info_table_html(
+    __border => 0,
+    'Email' => qq|<a href="mailto:$email_address_to_display">$email_address_to_display</a>|,
 
-<dt>
-<strong>Mailing address</strong>
-</dt>
-<dd><p>
+    'Mailing address' => <<EOH,
 Sol Genomics Network<br />
 Boyce Thompson Institute for Plant Research<br />
 Room 221<br />
@@ -78,23 +72,25 @@ Tower Road<br />
 Ithaca, NY 14853<br />
 USA<br />
 Phone: (607) 255-6557<br />
-</p></dd>
+EOH
 
-<dt>
-<strong>Mailing list</strong>
-</dt>
-<dd><p>
-To stay informed of developments around SGN you can subscribe to our <a href="http://rubisco.sgn.cornell.edu/mailman/listinfo/sgn-announce/">email list</a>. This is a relatively low volume list (a couple of messages/month).
-</p></dd>
+    'Mailing list' => <<EOH,
+  <p>
+  To stay informed of developments at SGN you can subscribe to our <a href="http://rubisco.sgn.cornell.edu/mailman/listinfo/sgn-announce/">mailing list</a>. This is a low-volume list (usually no more than 2 messages per month).
+  </p>
+EOH
 
-</dl>
+);
+</%perl>
 
-<% #Component's arguments %>
 <%args>
-$name                     => ''
-$email                    => ''
-$subject                  => ''
-$body                     => ''
-%filled                   => (name => 1, email => 1, subject => 1, body => 1)
-$email_address_to_display => ''
+  $name                     => ''
+  $email                    => ''
+  $subject                  => ''
+  $body                     => ''
+  %filled                   => (name => 1, email => 1, subject => 1, body => 1)
+  $email_address_to_display => ''
 </%args>
+<%once>
+  use CXGN::Page::FormattingHelpers 'info_table_html';
+</%once>

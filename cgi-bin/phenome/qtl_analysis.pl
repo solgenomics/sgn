@@ -1,14 +1,7 @@
+#!/usr/bin/perl -w
+
 =head1 DESCRIPTION
-
-Creates a trait/cvterm page with a description of 
-the population on which the trait/cvterm was evaluated, 
-displays the frequency distribution of its phenotypic data
-and most importantly produces the on-the-fly  QTL analysis 
-output for the trait and more.... 
-
-=head1 AUTHOR
-
-Isaak Y Tecle (iyt2@cornell.edu)
+a redirect for phenome/population_indls.pl to phenome/qtl_analysis.pl: for links from the qtl ms and may be more...
 
 =cut
 
@@ -549,8 +542,6 @@ sub store
     my %args          = $self->get_args();
 
     $self->SUPER::store(0);
-
-    exit();
 }
 
 sub population_distribution
@@ -1187,7 +1178,7 @@ sub run_r
 
     #copy our R commands into a cluster-accessible tempfile
     {
-        my $r_cmd_file = $c->path_to('/cgi-bin/phenome/cvterm_qtl.r');
+        my $r_cmd_file = $c->path_to('/cgi-bin/phenome/qtl_analysis.r');
         copy( $r_cmd_file, $r_in_temp )
           or die "could not copy '$r_cmd_file' to '$r_in_temp'";
     }

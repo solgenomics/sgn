@@ -54,10 +54,24 @@ sub find_introns_txt {
         UNLINK   => 1,
     );
     $blast_out->close;                  #< can't use the fh
+
+    glob $protein_db_base.'.*'
+       or die "BLAST db $protein_db_base.* not present on disk";
+
     my $cmd =
-"blastall -d '$protein_db_base' -p 'blastx' -e $max_evalue < $temp_seq > $blast_out";
+"blastall -d '$protein_db_base' -p 'blastx' -e $max_evalue < $temp_seq 2>&1 > $blast_out";
     system $cmd;
-    die "$! (\$?: $?) running $cmd" if $?;
+    if( $? ) {
+        die "$! (\$?: $?) running $cmd: "
+          .do {
+              local $/;
+              if( open my $f, $blast_out ) {
+                  <$f>
+              } else {
+                  ''
+              }
+          };
+    }
 
     # go through the blast report
     my $blast_in = Bio::SearchIO->new(

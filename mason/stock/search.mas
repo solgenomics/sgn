@@ -1,10 +1,12 @@
 <%args>
-  $results => undef
-  $form_opts => undef
-  $pagination_link_maker => undef
-  $request => undef
-  $schema => undef
+  $form
+  $results                    => undef
+  $form_opts                  => undef
+  $pagination_link_maker      => undef
+  $request                    => undef
+  $schema                     => undef
   $sp_person_autocomplete_uri => undef
+  $trait_autocomplete_uri     => undef
 </%args>
 
 <%once>
@@ -17,11 +19,10 @@
 
 $form_opts = { stock_types => stock_types($schema), organisms=>stock_organisms($schema)}
 if (!$form_opts) ;
-my $new_stock_link = qq|<a href="/stock/0/new">Submit new stock</a>|;
+my $new_stock_link = qq| <a href="/stock/0/new">Submit new stock</a> \| <a href=../../phenome/qtl_form.pl>QTL Population</a>|;
 
 </%perl>
 
-<& /page/page_title.mas, title => 'Stock Search' &>
 <& /util/import_javascript.mas,
     classes => [qw(jquery CXGN.Effects)]
 &>
@@ -59,5 +60,11 @@ my $new_stock_link = qq|<a href="/stock/0/new">Submit new stock</a>|;
   <& /page/pagination_control.mas, pager => $pager, link_maker => $pagination_link_maker &>
 % }
 <&| /page/info_section.mas, title => 'Search' , subtitle => $new_stock_link &>
-  <& /stock/stock_search_form.mas, opts => $form_opts, request => $request , sp_person_autocomplete_uri => $sp_person_autocomplete_uri &>
+  <& /stock/stock_search_form.mas,
+    form                       => $form,
+    opts                       => $form_opts,
+    request                    => $request,
+    sp_person_autocomplete_uri => $sp_person_autocomplete_uri,
+    trait_autocomplete_uri     => $trait_autocomplete_uri,
+  &>
 </&>

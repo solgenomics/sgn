@@ -110,8 +110,11 @@ sub quick_search: Path('/search/quick') {
     #that page
     my $external_link;
     if ( my $direct_url = identifier_url($term) ) {
+        my $namespace = identifier_namespace($term);
         #if the URL is just to this page, it's not useful
-        unless( $direct_url =~ m!quick_search\.pl|search/quick! ) { #unless the url is to quick_search
+        unless( $direct_url =~ m!quick_search\.pl|search/quick! #unless the url is to quick_search
+                || $namespace eq 'est'  # don't auto-redirect for est names, some markers are called this
+               ) {
 
             #if it's an external link, don't redirect, but put it in the external_link variable
             if ( $direct_url =~ m@(f|ht)tp://@
@@ -134,7 +137,9 @@ sub quick_search: Path('/search/quick') {
 
     # another optimization: if the quick search found only one
     # possible URL to go to, go there
-    my @possible_urls = uniq( grep defined,
+    my @possible_urls = uniq(
+         grep $_ !~ m!^https?://!,
+         grep defined,
          ( map $_->{result}->[0],
            values %{$c->stash->{results}}
          ),

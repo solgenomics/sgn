@@ -1,11 +1,25 @@
 package SGN::View::Email;
 use Moose;
+use namespace::autoclean;
+use Data::Dump 'dump';
 
 BEGIN { extends 'Catalyst::View::Email' }
 
 __PACKAGE__->config(
     stash_key => 'email'
 );
+
+around 'process' => sub {
+    my $orig = shift;
+    my $self = shift;
+    my ($c) = @_;
+
+    if( $c->can('test_mode') && $c->test_mode ) {
+        $c->log->debug("skipping email send, since running in test mode.  email:\n".dump( $c->stash->{ $self->stash_key } ));
+    } else {
+        $self->$orig( @_ );
+    }
+};
 
 =head1 NAME
 

@@ -188,8 +188,13 @@ EOSQL
 }
 
 $page->header('SGN BLAST');
+$page->jsan_use('jquery');
 
 my ($databases,$programs,$programs_js) = blast_db_prog_selects($params{db_id});
+my $spellcheck_js = <<'';
+// turn off spell check on sequence inputs without emitting invalid HTML
+jQuery(function($) { $('#sequence_input').attr('spellcheck',false) });
+
 
 sub hash2param {
   my %args = @_;
@@ -209,20 +214,19 @@ if($params{interface_type} == 0) {
 
 <script language="JavaScript" type="text/JavaScript" >
 
-function clearField() { 
+function clearField() {
     // OK - there are three ways to clear the fields.
     // The first is let the browser do it. Then it does not clear
-   // with preset sequences. The second way is to clear it with javascript. 
-   // on reload, this will create confusion with preset sequences. 
-   // The third way is simply to redirect to the empty page. Thats good 
-   // because it also resets to the users preferred datatset.
+    // with preset sequences. The second way is to clear it with javascript.
+    // on reload, this will create confusion with preset sequences.
+    // The third way is simply to redirect to the empty page. Thats good
+    // because it also resets to the users preferred datatset.
     // var i = document.getElementById("sequence_input");
     // i.innerHTML='';
     window.location="index.pl";
 }
 
 </script>
-    
 
 <form method="post" action="blast_result.pl" name="blastform">
   <input type="hidden" checked="checked" name="filterq" value="1" />
@@ -267,6 +271,7 @@ EOF
 </form>
 <script language="JavaScript" type="text/javascript">
 $programs_js
+$spellcheck_js
 </script>
 EOF
       ;
@@ -300,7 +305,7 @@ else {
     <tr>
       <td><b>Query sequences (<tt>-i</tt>)</b></td>
       <td >
-        <textarea class="fix" name="sequence" rows="8" cols="65">$preload_seq</textarea><br />
+        <textarea class="fix" id="sequence_input" name="sequence" rows="8" cols="65">$preload_seq</textarea><br />
         <b>AND/OR upload multi-fasta query file</b> <input type="file" name="file" />
       </td>
     </tr>
@@ -346,6 +351,7 @@ else {
 </form>
 <script language="JavaScript" type="text/javascript">
 $programs_js
+$spellcheck_js
 </script>
 EOF
 

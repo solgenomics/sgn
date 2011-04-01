@@ -12,23 +12,25 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 use strict;
 
+use List::MoreUtils qw /uniq/;
+
+use HTML::Entities;
+
 use CXGN::Page;
-use CXGN::Page::FormattingHelpers qw/blue_section_html
+use CXGN::Page::FormattingHelpers qw(
   info_section_html
   page_title_html
   columnar_table_html
   info_table_html
-  /;
+);
 
 use CXGN::DB::Connection;
 use CXGN::Chado::Cvterm;
-use List::MoreUtils qw /uniq/;
 use CXGN::Search::CannedForms;
 
 my $page = CXGN::Page->new( "SGN QTL/Traits", "Isaak" );
 $page->header();
 
-#print page_title_html('SGN QTL Traits');
 my $index = $page->get_arguments("index");
 
 my $dbh       = CXGN::DB::Connection->new();
@@ -83,21 +85,18 @@ qq |<a href=/phenome/trait.pl?trait_id=$trait_id>$trait</a> |
 
 }
 
-my $links = $qtl_tools->browse_traits();
-print qq|<div style="margin: 0 auto; font-weight: bold">Browse traits with QTLs: $links</div>\n|;
+print page_title_html('List Traits with QTLs');
 
 print info_section_html (
-                          title    => "Traits $index-",
-                          contents => " ",
+                          title    => encode_entities( qq|Traits beginning with "$index"| ),
+                          contents => columnar_table_html (
+                              data          => \@traits_list,
+                              __align       => 'l',
+                              __alt_freq    => 2,
+                              __alt_width   => 1,
+                              __cellpadding => 20,
+                              ),
                         );
-
-print columnar_table_html (
-                            data          => \@traits_list,
-                            __align       => 'l',
-                            __alt_freq    => 2,
-                            __alt_width   => 1,
-                            __cellpadding => 20,
-                          );
 
 my $search = CXGN::Search::CannedForms::qtl_search_form();
 
@@ -105,7 +104,7 @@ print info_section_html (
                           title       => 'Search QTLs by trait names',
                           contents    => $search,
                           collapsible => 1,
-                          collapsed   => 1,
+                          collapsed   => 0,
                         );
 $page->footer();
 

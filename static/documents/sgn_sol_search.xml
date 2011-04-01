@@ -4,7 +4,7 @@
    <Description>Search all of SGN using SGN's Sol Search feature.</Description>
    <Tags>sol search</Tags>
    <Contact>sgn-feedback@solgenomics.net</Contact>
-   <Url type="text/html" template="http://solgenomics.net/search/quick_search.pl?term={searchTerms}"/>
+   <Url type="text/html" template="http://solgenomics.net/search/quick?term={searchTerms}"/>
    <LongName>SGN Sol Search</LongName>
    <Image height="16" width="16" type="image/vnd.microsoft.icon">http://solgenomics.net/favicon.ico</Image>
    <Query role="example" searchTerms="dwarf" />

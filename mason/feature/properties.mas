@@ -1,19 +1,34 @@
 <%args>
     $feature
 </%args>
+<%once>
+    use CXGN::Page::FormattingHelpers qw/info_table_html/;
+    use SGN::View::Feature qw/ description_featureprop_types cvterm_link /;
+</%once>
 <%perl>
-    # find all featureprops other that Note, which is already taken care of
-    my @properties = map { [ $_->type->name => $_->value ] }
-                     grep { $_->type->name ne 'Note' } $feature->featureprops({ value => { '<=', 1000 } });
+# find all featureprops other that Note, which is already taken care of
+my @properties = map {
+    my $fp = $_;
+    my $name = cvterm_link( $fp->type, 'ucfirst' );
+    $name => $fp->value
+   }
+   $feature->search_related(
+       'featureprops',
+       {
+           # filter out featureprops that are used as the feature's description
+           'type_id' => {
+               -not_in => description_featureprop_types($feature)
+                            ->get_column('cvterm_id')
+                            ->as_query
+            },
+           'length(value)' => { '<=', 1000 },
+       },
+       { prefetch => 'type' },
+     )->all;
+if( @properties ) {
+    print info_table_html(
+        @properties,
+        __border => 0,
+      );
+}
 </%perl>
-% if (@properties) {
-  <&| /page/info_section.mas,
-      title => "Other Properties",
-      collapsible => 1,
-  &>
-    <& /page/columnar_table.mas,
-        headings => [ "Property", "Value"  ],
-        data     => \@properties,
-    &>
-  </&>
-% }

@@ -177,8 +177,11 @@ sub generate_form {
         }
     }
     #not all stocks have an organism!
-    my $species;
-    $species = $stock->get_organism->species if $stock->get_organism; 
+    my ($species, $organism_id);
+    if ($stock->get_organism) {
+        $species = $stock->get_organism->species ;
+        $organism_id = $stock->get_organism->organism_id;
+    }
     ##########
 
     if ( $self->get_action =~ /new|store/ ) {
@@ -218,7 +221,7 @@ sub generate_form {
         $form->add_label(
             display_name => "Organism",
             field_name   => "stock_organism",
-            contents => $species,
+            contents => $species ? qq|<a href="/organism/$organism_id/view"> | . $species . "<\a>" : '',
             );
         $form->add_label(
             display_name => "Stock type",

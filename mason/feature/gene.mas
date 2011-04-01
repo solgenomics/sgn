@@ -11,8 +11,6 @@
 /;
 </%once>
 <%perl>
-    my $organism    = $feature->organism;
-    my $species     = $organism->species;
     my $reference   = $featurelocs ? $featurelocs->single->srcfeature : undef ;
     my @mrnas       = grep $_->type->name eq 'mRNA', $feature->child_features;
 </%perl>
@@ -31,10 +29,13 @@
 &>
   <& /feature/feature_data.mas,
       feature          => $feature,
-      species          => $species,
       description_from => \@mrnas,
       featurelocs      => $featurelocs,
   &>
+
+  <& /feature/properties.mas,
+     feature => $feature,
+   &>
 
   <& /feature/exon_structure.mas, xrefs => $xrefs, feature => $feature &>
 
@@ -51,10 +52,6 @@
   &>
 
 </&>
-
-<& /feature/properties.mas,
-    feature => $feature,
-&>
 
 <&| /page/info_section.mas,
    title       => 'Related features',
@@ -161,11 +158,6 @@
        &>
 
     </&>
-
-    <& /feature/properties.mas,
-        feature => $mrna,
-    &>
-
 
   </&>
 % }

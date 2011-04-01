@@ -401,8 +401,8 @@ span.bgcolorselected a {
 }
 /*not quite so important warning*/
 .warning { 
-	color: #ff0000;
-	background-color: #ffffff
+    color: #d22;
+    background-color: none;
 }
 .news { 
 	color: #ff0000;
@@ -992,7 +992,7 @@ table#developer_message_table {
   width: 740px;
   margin-bottom: 7px;
 }
-.invisible {
+.invisible, .noshow {
   display: none;
 }
 
@@ -1221,11 +1221,6 @@ span.nri_units {
 	border-width:1px;
 }
 
-/* for ajax fun */
-.noshow {
-	display: none;
-}
-
 /* styles for gbrowse (CGI::Toggle) */
 .el_hidden  {display:none}
 .el_visible {display:inline}
@@ -1275,6 +1270,8 @@ div.publication_embedded .citation {
 #affiliated_sites li {
   padding-bottom: 1em;
 }
+
+/* styles for standard renderings of CrossReference objects */
 
 ul.xref_link {
   padding-left: 0;

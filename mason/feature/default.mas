@@ -2,6 +2,7 @@
     $feature
     $featurelocs
     $blast_url => undef
+    $seq_download_url => undef
     $xrefs     => []
 </%args>
 
@@ -14,10 +15,6 @@
 <& /util/import_javascript.mas,
     classes => [qw(Text.Markup CXGN.Effects CXGN.Phenome.Locus MochiKit.DOM)]
 &>
-<%perl>
-    my $organism = $feature->organism;
-    my $species  = $organism->species;
-</%perl>
 
 <&| /page/info_section.mas,
     title       => type_name($feature,'caps').' details',
@@ -26,8 +23,10 @@
 &>
    <& /feature/feature_data.mas,
       feature     => $feature,
-      species     => $species,
       featurelocs => $featurelocs,
+    &>
+    <& /feature/properties.mas,
+       feature => $feature,
     &>
 </&>
 
@@ -35,6 +34,7 @@
    title => 'Ontology terms',
    subtitle => 'ontology terms associated with this feature',
    collapsible => 1,
+   hide_if_empty => 1,
 &>
 
   <& /feature/feature_cvterms.mas,
@@ -46,6 +46,7 @@
 <&| /page/info_section.mas,
    title => 'Related features',
    collapsible => 1,
+   hide_if_empty => 1,
 &>
 
   <& /feature/related_features.mas,
@@ -54,29 +55,37 @@
 
 </&>
 
-<& /feature/properties.mas,
-    feature => $feature,
-&>
+<&| /page/info_section.mas,
+     title         => 'Sequence',
+     collapsible   => 1,
+     collapsed     => 0,
+     hide_if_empty => 1,
+ &>
+    <& /feature/residues.mas,
+            feature   => $feature,
+            blast_url => $blast_url,
+            seq_download_url => $seq_download_url
+    &>
+</&>
 
 <&| /page/info_section.mas,
-     title => 'Genomic sequence',
-     subtitle => 'unprocessed genomic sequence underlying this region',
-     collapsible => 1,
-     collapsed   => 0,
+     title         => 'Region sequence(s)',
+     subtitle      => "sequence underlying each location of this feature",
+     collapsible   => 1,
+     collapsed     => 0,
+     hide_if_empty => 1,
  &>
-
-  <div style="margin: 1em 0">
     <& /feature/genomic_sequence.mas,
             feature   => $feature,
             blast_url => $blast_url,
     &>
-  </div>
-
 </&>
 
 <&| /page/info_section.mas,
      title => 'Related views',
+     empty_message => 'None found',
      collapsible => 1,
+     is_empty => ! scalar @$xrefs,
  &>
      <& /sitefeatures/mixed/xref_set/link.mas,
         xrefs => $xrefs,

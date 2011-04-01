@@ -3,7 +3,12 @@ use strict;
 use warnings;
 
 use base 'Exporter';
+
+use HTML::Entities;
+use List::MoreUtils qw/ any /;
+
 use Bio::Seq;
+
 use CXGN::Tools::Text qw/commify_number/;
 use CXGN::Tools::Identifiers;
 
@@ -14,6 +19,7 @@ our @EXPORT_OK = qw/
     infer_residue cvterm_link
     organism_link feature_length
     mrna_and_protein_sequence
+    description_featureprop_types
     get_description
     location_list_html
     location_string
@@ -34,15 +40,26 @@ sub cvterm_name {
     return $n;
 }
 
+sub description_featureprop_types {
+    shift->result_source->schema
+         ->resultset('Cv::Cvterm')
+         ->search({
+             name => [ 'Note',
+                       'functional_description',
+                       'Description',
+                       'description',
+                     ],
+           })
+}
+
 sub get_description {
     my ($feature) = @_;
 
     my $desc_types =
-        $feature->result_source->schema
-                ->resultset('Cv::Cvterm')
-                ->search({ name => [ 'Note', 'functional_description', 'Description' ] })
-                ->get_column('cvterm_id')
-                ->as_query;
+        description_featureprop_types( $feature )
+            ->get_column('cvterm_id')
+            ->as_query;
+
     my $description =
         $feature->search_related('featureprops', {
             type_id => { -in => $desc_types },
@@ -56,22 +73,6 @@ sub get_description {
     return $description;
 }
 
-sub feature_length {
-    my ($feature, $featurelocs) = @_;
-    my @locations = $featurelocs ? $featurelocs->all : $feature->featureloc_features->all;
-    my $locations = scalar @locations;
-    my $length = 0;
-    for my $l (@locations) {
-        $length += $l->fmax - $l->fmin;
-    }
-    # Reference features don't have featureloc's, calculate the length
-    # directly
-    if ($length == 0) {
-        $length = $feature->seqlen,
-    }
-    return ($length,$locations);
-}
-
 sub location_string {
     my ( $id, $start, $end, $strand ) = @_;
     if( @_ == 1 ) {
@@ -81,7 +82,7 @@ sub location_string {
         $end    = $loc->fmax;
         $strand = $loc->strand;
     }
-    ( $start, $end ) = ( $end, $start ) if $strand == -1;
+    ( $start, $end ) = ( $end, $start ) if $strand && $strand == -1;
     return "$id:$start..$end";
 }
 
@@ -122,30 +123,77 @@ sub related_stats {
 }
 
 sub feature_table {
-    my ($features) = @_;
-    my $data = [];
-    for my $f (@$features) {
-        my @locations = $f->featureloc_features->all;
+    my ($features,$reference_sequence) = @_;
+    my @data;
+    my $na_html = '<span class="ghosted">n/a</span>';
 
+    for my $f (sort { $a->name cmp $b->name } @$features) {
+        my @ref_condition =
+            $reference_sequence ? ( srcfeature_id => $reference_sequence->feature_id )
+                                : ();
+
+        my @locations = $f->search_related('featureloc_features', {
+            @ref_condition,
+           },
+           { order_by => 'feature_id' }
+          );
+
+        if( @locations ) {
         # Add a row for every featureloc
-        for my $loc (@locations) {
-            my ($start,$end) = ($loc->fmin+1, $loc->fmax);
-            push @$data, [
+            for my $loc (@locations) {
+                my $ref = $loc->srcfeature;
+                my ($start,$end) = ($loc->fmin+1, $loc->fmax);
+                push @data, [
+                    cvterm_link($f->type),
+                    feature_link($f),
+                    $ref->name.":$start..$end",
+                    commify_number( feature_length( $f, $loc ) ) || $na_html,
+                    $loc->strand ? ( $loc->strand == 1 ? '+' : '-' ) : $na_html,
+                    $loc->phase || $na_html,
+                    ];
+            }
+        }
+        else {
+            my $nl = 'not located';
+            if( $reference_sequence ) {
+                $nl .= " on ".encode_entities( $reference_sequence->name )
+            }
+            push @data, [
                 cvterm_link($f->type),
                 feature_link($f),
-                "$start..$end",
-                commify_number( $end-$start+1 ) . " bp",
-                $loc->strand == 1 ? '+' : '-',
-                $loc->phase || '<span class="ghosted">n/a</span>',
+                qq|<span class="ghosted">$nl</span>|,
+                commify_number( feature_length( $f, undef ) ) || $na_html,
+                ($na_html)x2,
             ];
         }
     }
-    return $data;
+    return \@data;
+}
+
+# try to figure out the "length" of a feature, which will vary for different features
+sub feature_length {
+    my ( $feature, $location ) = @_;
+
+    $location = $location->first
+        if $location && $location->isa('DBIx::Class::ResultSet');
+
+    my $type      = $feature->type;
+    my $type_name = $type->name;
+
+    # firstly, for any feature, trust the length of its residues if it has them
+    if( my $seqlen = $feature->seqlen || $feature->residues && length $feature->residues ) {
+        return $seqlen;
+    }
+    # for some features, can say that its length is the length of its location
+    elsif( any { $type_name eq $_ } qw( exon gene ) ) {
+        return unless $location;
+        return $location->fmax - $location->fmin;
+    }
+    return;
 }
 
 sub _feature_search_string {
-    my ($feature) = @_;
-    my ($fl) = $feature->featureloc_features;
+    my ($fl) = @_;
     return '' unless $fl;
     return $fl->srcfeature->name . ':'. ($fl->fmin+1) . '..' . $fl->fmax;
 }

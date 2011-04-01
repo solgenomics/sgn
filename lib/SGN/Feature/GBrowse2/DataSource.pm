@@ -82,12 +82,20 @@ sub xrefs {
     } else {
         # search for a region on a reference sequence specified like seq_name:23423..66666
         if( my ($ref_name,$start,$end) = $q =~ /^ \s* ([^:]+) \s* : (\d+) \s* .. \s* (\d+) $/x) {
+
+            sub _uniq_features(@) {
+                my %seen;
+                grep !($seen{ $_->seq_id.':'.$_->name.':'.$_->start.'..'.$_->end }++), @_;
+            }
+
             return
                 # make xrefs for the given range of each of the ref features
                 map $self->_make_region_xref({
                       features => [$_],
                       range    => Bio::Range->new( -start => $start, -end => $end )
                      }),
+                # remove any duplicate ref features
+                _uniq_features
                 # search for ref features
                 map $_->get_feature_by_name( $ref_name ),
                 # for each database

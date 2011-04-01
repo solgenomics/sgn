@@ -1,15 +1,41 @@
----
-
 Release date: NEXT
+Release tag: NEXT
 
 Changes:
 
+ - improved integration of solQTL with phenotypes and traits
+ - Behind-the-scenes cleanups to map viewer code.
+ - New search functions for tracking stock lines.
+ - Fix bug with ITAG2 annotation download registration, required 8 characters for Name field, and some people actually have first and last names that are shorter than this.  Now requires 5.
+ - New stock page for accessions, individuals, and populations. Using Chado stock and NaturalDiversity modules for representing accession data and its phenotypes and genotypes.
+
+---
+
+Release date: Mon Feb 7 11:30:00 2011 -0800
+Release tag: sgn-88.0
+
+Changes:
+
+ - Editorial improvements to solQTL pages, added link to solQTL publication.
+ - Many code cleanups behind the scenes.
+
+---
+
+Release date: Fri Jan 14 13:43:21 2011 -0800
+Release tag: sgn-87.0
+
+Changes:
+
+ - 'Improvements to Genomic details (i.e. feature) pages: add "Ontology terms" section, plus more.'
+ - Redesigned 'Contact Us' page.
+ - Simplified interstitial 'job running' page.
  - International Tomato Annotation Group (ITAG) annotation bulk files now available for download, with newly rewritten download routines to record user information for each downloaded file.
  - Fixed performance problems of International Tomato Sequencing project page.
 
 ---
 
 Release date: Thu Dec 09 12:58:00 2010 -0800
+Release tag: sgn-84.1
 
 Changes:
 
@@ -20,6 +46,7 @@ Changes:
 ---
 
 Release date: Tue Nov 30 00:15:14 2010 -0800
+Release tag: sgn-83.0
 
 Changes:
 

@@ -38,11 +38,21 @@ the site feature object this cross reference points to
     required => 1,
    );
 
+has 'renderings' => ( documentation => <<'',
+2-level hashref of suggested renderings, keyed first by content type, then rendering hint
+
+   is      => 'ro',
+   isa     => 'HashRef',
+   default => sub { +{} },
+ );
+
 sub TO_JSON {
     my ( $self ) = @_;
+    no strict 'refs';
     return {
-        map { $_ => "$self->{$_}" }
-        qw( url is_empty text )
+        feature => $self->feature->feature_name,
+        map { $_ => $self->$_() }
+        qw( url is_empty text renderings )
     };
 }
 

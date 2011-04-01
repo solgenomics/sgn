@@ -36,7 +36,6 @@
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/cview/map.pl?map_id=13">Tomato FISH map</a></td></tr>
 
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/cview/map.pl?map_id=agp">Tomato AGP map</a></td></tr>
-       <tr><td class="toolbar_item"><a class="toolbar_item" href="/cview/map.pl?map_id=itag">Tomato ITAG map</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/cview/map.pl?map_version_id=58">Pepper COSII map</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/cview/map.pl?map_id=11">Pepper-AC99</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/cview/map.pl?map_id=10">Pepper-FA03</a></td></tr>
@@ -106,7 +105,7 @@
   <td class="toolbar_search toolbar_content">
     <form name="quicksearch" class="quicksearch" action="/search/quick">
       <input type="hidden" name="showtimes" value="" />
-      <input class="quicksearch field" type="text" name="term" value="<% $m->request_args->{'quick_search'}{'term'} || '' |h%>" size="14" />
+      <input class="quicksearch field" type="text" name="term" value="<% $m->request_args->{'term'} || $m->request_args->{'q'} || '' |h%>" size="14" />
       <input class="quicksearch imgbutton" type="image" src="/documents/img/sol_search_button.gif" value="sol search" />
     </form>
 

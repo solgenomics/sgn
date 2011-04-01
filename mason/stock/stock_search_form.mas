@@ -1,83 +1,20 @@
 <%args>
-  $opts => undef
-  $request => undef
+  $opts                       => undef
+  $form
+  $request                    => undef
   $sp_person_autocomplete_uri
+  $trait_autocomplete_uri
 </%args>
-
-<%once>
-  use HTML::FormFu;
-  use YAML::Any;
-
-</%once>
-
-<%perl>
-my $form = HTML::FormFu->new(Load(<<EOY));
-      method: GET
-      action: "/stock/search"
-      attributes:
-        name: stock_search_form
-        id: stock_search_form
-      elements:
-          - type: Text
-            name: stock_name
-            label: Stock name
-            size: 30
-
-          - type: Select
-            name: stock_type
-            label: Stock type
-
-          - type: Select
-            name: organism
-            label: Organism
-
-          - type: Text
-            name: person
-            id:   person
-            label: Editor
-
-          - type: Hidden
-            name: search_submitted
-            value: 1
-
-          # hidden form values for page and page size
-          - type: Hidden
-            name: page
-            value: 1
-
-          - type: Hidden
-            name: page_size
-            default: 20
-
-          - type: Submit
-            name: submit
-            value: Search
-EOY
-
-    # set the stock type multi-select choices from the db
-    $form->get_element({ name => 'stock_type'})->options( $opts->{stock_types} );
-    $form->get_element({ name => 'organism'})->options( $opts->{organisms} );
-
-  $form->process( $request );
-
-</%perl>
 
 <& /util/import_javascript.mas,
  classes=>[qw[CXGN.Effects jquery jqueryui popup] ]
 &>
-
-<script language="javascript">
-
-  jQuery(function() {
-     jQuery("#person").autocomplete({
-	 source: '<% $sp_person_autocomplete_uri %>'
-     });
-  });
-
-</script>
-
-<!-- This CSS should probably go somewhere better -->
 <style>
+
+div[class*="advanced"] {
+    display: none;
+}
+
 #stock_search_form .select span span {
   white-space: nowrap;
   float: left;
@@ -100,5 +37,26 @@ div.paginate_nav {
 </style>
 
 
-<% $form->render %>
+<script language="javascript">
+  jQuery(function() {
+     jQuery("#person").autocomplete({
+        source: '<% $sp_person_autocomplete_uri %>'
+     });
+     jQuery("#trait").autocomplete({
+        source: '<% $trait_autocomplete_uri %>'
+     });
+  });
+</script>
 
+<%perl>
+
+
+    # set the stock type multi-select choices from the db
+    $form->get_element({ name => 'stock_type'})->options( $opts->{stock_types} );
+    $form->get_element({ name => 'organism'})->options( $opts->{organisms} );
+
+$form->process( $request );
+
+</%perl>
+
+<% $form->render %>
