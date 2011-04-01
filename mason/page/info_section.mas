@@ -100,6 +100,8 @@ Lukas Mueller, based on the Perl code from Rob Buels.
         $hide_if_empty  => 0
 </%args>
 
+<a name="<% anchor_name( $title ) %>"></a>
+
 <%perl>
 
     $contents ||= $m->content;
@@ -151,4 +153,13 @@ EOT
 
 <%once>
   use CXGN::Page::Widgets qw/collapser/;
+  use HTML::Entities;
+
+  sub anchor_name {
+      local $_ = shift;
+      s/<[^>]+>//g; # strip html tags
+      s/\s+/_/g;    # whitespace to underscores
+      s/\W//g;      # remove any weird chars
+      return $_;
+  }
 </%once>
