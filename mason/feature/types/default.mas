@@ -66,7 +66,7 @@
 
 <&| /page/info_section.mas,
      title         => 'Region sequence(s)',
-     subtitle      => "sequence underlying each location of this feature",
+     subtitle      => "reference sequence underlying each location of this feature",
      collapsible   => 1,
      collapsed     => 0,
      hide_if_empty => 1,

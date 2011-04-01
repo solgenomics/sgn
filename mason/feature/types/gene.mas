@@ -120,7 +120,7 @@
     </&>
 
     <&| /page/info_section.mas,
-            title         => 'Protein sequence',
+            title         => 'Amino acid sequence',
             is_subsection => 1,
             subtitle      => 'translated polypeptide sequence',
             collapsible   => 1,
