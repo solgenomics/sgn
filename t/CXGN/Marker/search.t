@@ -41,7 +41,7 @@ for ( 0..30 ) { # test a few times
   like($sub, qr/^[ABC]$/i, "subscript = $sub");
 
   my $conf = $loc->confidence();
-  like($conf, qr/I|LOD/, "confidence = $conf");
+  like($conf, qr/I|LOD|uncalculated/, "confidence = $conf");
 
   my $mv = $loc->map_version();
   cmp_ok($mv, '>', 0, "map version = $mv");
