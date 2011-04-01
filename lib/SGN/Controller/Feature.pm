@@ -97,7 +97,7 @@ sub delegate_component
 {
     my ($self, $c, $matching_features) = @_;
     my $feature   = $matching_features->next;
-    my $type_name = $feature->type->name;
+    my $type_name = lc $feature->type->name;
     my $template  = "/feature/types/default.mas";
 
     $c->stash->{feature}     = $feature;
