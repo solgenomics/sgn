@@ -4,7 +4,7 @@
 
 % my @fcvt = $feature->search_related('feature_cvterms', undef, { prefetch => { 'cvterm' => 'dbxref' } } );
 % if( @fcvt ) {
-<ul>
+<ul style="padding-left: 1em">
 
 %   for my $fcvt ( @fcvt ) {
 %     my $cvt    = $fcvt->cvterm;

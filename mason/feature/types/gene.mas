@@ -37,18 +37,6 @@
 </&>
 
 <&| /page/info_section.mas,
-   title => 'Ontology terms',
-   subtitle => 'terms associated with this gene',
-   collapsible => 1,
-&>
-
-  <& /feature/feature_cvterms.mas,
-      feature   => $feature,
-  &>
-
-</&>
-
-<&| /page/info_section.mas,
    title       => 'Related features',
    collapsible => 1,
 &>

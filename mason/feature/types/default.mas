@@ -27,19 +27,6 @@
 </&>
 
 <&| /page/info_section.mas,
-   title => 'Ontology terms',
-   subtitle => 'ontology terms associated with this feature',
-   collapsible => 1,
-   hide_if_empty => 1,
-&>
-
-  <& /feature/feature_cvterms.mas,
-      feature   => $feature,
-  &>
-
-</&>
-
-<&| /page/info_section.mas,
      title         => type_name($feature,'caps').' sequence',
      collapsible   => 1,
      collapsed     => 0,

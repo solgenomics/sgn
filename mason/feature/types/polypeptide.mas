@@ -26,19 +26,6 @@
     &>
 </&>
 
-<&| /page/info_section.mas,
-   title => 'Ontology terms',
-   subtitle => 'ontology terms associated with this feature',
-   collapsible => 1,
-   hide_if_empty => 1,
-&>
-
-  <& /feature/feature_cvterms.mas,
-      feature   => $feature,
-  &>
-
-</&>
-
 % if( $feature->residues && length $feature->residues ) {
     <&| /page/info_section.mas,
             title         => 'Protein sequence',
