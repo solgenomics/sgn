@@ -17,11 +17,6 @@
 
 <& /page/page_title.mas, title => 'Gene '. $feature->name &>
 
-<& /util/import_javascript.mas,
-    classes => [ 'jquery', 'jqueryui' ],
-&>
-
-
 <&| /page/info_section.mas,
     title       => 'Gene',
     subtitle    => $feature->is_obsolete ? 'WARNING: This gene has been replaced by new data.' : '',

@@ -12,10 +12,6 @@
 
 <& /page/page_title.mas, title => type_name($feature,'caps').' '. $feature->id &>
 
-<& /util/import_javascript.mas,
-    classes => [qw(Text.Markup CXGN.Effects CXGN.Phenome.Locus MochiKit.DOM)]
-&>
-
 <&| /page/info_section.mas,
     title       => type_name($feature,'caps').' details',
     subtitle    => $feature->is_obsolete ? 'WARNING: This gene has been replaced by new data.' : '',
