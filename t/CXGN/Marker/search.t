@@ -32,22 +32,22 @@ for ( 0..30 ) { # test a few times
   ok($loc_id, "loc_id is $loc_id");
 
   my $chr = $loc->chr();
-  ok($chr > 0, "chromosome = $chr");
+  cmp_ok($chr, '>', 0, "chromosome = $chr");
 
   my $pos = $loc->position();
-ok($pos >= 0 , "position = $pos");
+  cmp_ok($pos, '>=', 0 , "position = $pos");
 
   my $sub = $loc->subscript();
-  ok($sub =~ /^[ABC]$/i, "subscript = $sub");
+  like($sub, qr/^[ABC]$/i, "subscript = $sub");
 
   my $conf = $loc->confidence();
-  ok($conf =~ /I|LOD/, "confidence = $conf");
+  like($conf, qr/I|LOD/, "confidence = $conf");
 
   my $mv = $loc->map_version();
-  ok($mv > 0, "map version = $mv");
+  cmp_ok($mv, '>', 0, "map version = $mv");
 
   my $map = $loc->map_id();
-  ok($map > 0, "map_id = $map");
+  cmp_ok($map, '>', 0, "map_id = $map");
 
 }
 });
