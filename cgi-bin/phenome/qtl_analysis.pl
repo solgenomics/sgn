@@ -74,13 +74,25 @@ sub define_object
     $self->set_dbh( CXGN::DB::Connection->new() );
     my %args          = $self->get_args();
     my $population_id = $args{population_id};
-    
-    unless ( !$population_id || $population_id =~ m /^\d+$/ )
+     my $stock_id = $args{stock_id};
+    my $object;
+    #########################
+    # this page needs to be re-written with CXGN::Chado::Stock object
+    # and without SimpleFormPage, since edits should be done on the parent page only
+    #########################
+    if ($stock_id) {
+        $object = CXGN::Phenome::Population->new_with_stock_id($self->get_dbh, $stock_id);
+        $population_id = $object->get_population_id;
+    } else  {
+        $object = CXGN::Phenome::Population->new($self->get_dbh, $population_id) ;
+    }
+
+        unless ( !$population_id || $population_id =~ m /^\d+$/ )
     {
         $self->get_page->message_page(
                           "No population exists for identifier $population_id");
     }
-    
+      
     $self->set_object_id($population_id);
     $self->set_object(
                        CXGN::Phenome::Population->new(
