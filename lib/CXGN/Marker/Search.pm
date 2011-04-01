@@ -58,7 +58,8 @@ sub new {
 
   my ($class, $dbh) = @_;
 
-  die "must provide a dbh as first argument: CXGN::Marker->new($dbh)\n" unless $dbh && ref($dbh) eq 'CXGN::DB::Connection';
+  die "must provide a dbh as first argument: CXGN::Marker->new($dbh)\n"
+      unless $dbh && ref($dbh) && $dbh->can('selectall_arrayref');
 
   my $self = bless {dbh => $dbh},$class;
   #my @nullm2mfields = qw(marker.marker_id location_id lg_name lg_order position confidence_id subscript map_version_id map_id);
