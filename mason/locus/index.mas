@@ -42,12 +42,12 @@ my $figure_subtitle =
   "<span class= \"ghosted\">[Add notes, figures or images]</span> "
   : " <a href=\"/image/add?type_id=$locus_id&type=locus&action=new&refering_page=$this_page\">[ Add notes, figures or images]</a>" ;
 
-my $ind_subtitle =
+my $stock_subtitle =
   !(grep { /^$user_type$/ } ('curator', 'submitter', 'sequencer') ) ?
   '<span class= "ghosted">[Associate accession]</span> '
-  : '<a href="javascript:Tools.toggleContent(\'associateIndividualForm\', \'locus_accessions\')">[Associate accession]</a> ';
+  : '<a href="javascript:Tools.toggleContent(\'associateStockForm\', \'locus_accessions\')">[Associate accession]</a> ';
 
-my @accessions = $locus->get_individuals();
+my $accessions = $locus->get_stock_ids;
 
 my @alleles = $locus->get_alleles();    #array of allele objects
 
@@ -180,9 +180,9 @@ my $ontology_subtitle =  !(grep { /^$user_type$/ } ('curator', 'submitter', 'seq
 
 </&>
 
-<&| /page/info_section.mas, title=>"Accessions and images (" .  scalar(@accessions)  . ")", subtitle => "$ind_subtitle", id=>"locus_accessions", collapsible=>1, collapsed=>1 &>
+<&| /page/info_section.mas, title=>"Accessions and images (" .  scalar(@$accessions)  . ")", subtitle => "$stock_subtitle", id=>"locus_accessions", collapsible=>1, collapsed=>1 &>
   <& /phenome/associate_accession_form.mas , locus_id=>$locus_id, person_id=>$person_id &>
-    <& /phenome/associated_accessions.mas , accessions=>\@accessions, dbh=>$dbh &>
+    <& /phenome/associated_accessions.mas , accessions=>$accessions, dbh=>$dbh &>
  
 </&>
 

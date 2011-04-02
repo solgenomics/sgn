@@ -4,10 +4,11 @@ use warnings;
 use CXGN::Scrap::AjaxPage;
 use CXGN::DB::Connection;
 use CXGN::Login;
-use CXGN::Phenome::Individual;
+use CXGN::Phenome::Allele;
 use CXGN::People::Person;
 use CXGN::Feed;
 use JSON;
+use CatalystX::GlobalContext '$c';
 
 my $doc = CXGN::Scrap::AjaxPage->new();
 $doc->send_http_header();
@@ -17,42 +18,33 @@ my($login_person_id,$login_user_type)=CXGN::Login->new($dbh)->verify_session();
 
 if ($login_user_type eq 'curator' || $login_user_type eq 'submitter' || $login_user_type eq 'sequencer') {
 
-
-    
     my $doc = CXGN::Scrap::AjaxPage->new();
-    my ($individual_id, $allele_id, $sp_person_id) = $doc->get_encoded_arguments("individual_id", "allele_id", "sp_person_id");
-    
+    my ($stock_id, $allele_id, $sp_person_id) = $doc->get_encoded_arguments("stock_id", "allele_id", "sp_person_id");
+
     my %error = ();
     my $json = JSON->new();
-   
+
     eval {
-	my $individual=CXGN::Phenome::Individual->new($dbh, $individual_id);
-	$individual->set_updated_by($sp_person_id);
-	$individual->associate_allele($allele_id, $sp_person_id);
-	$error{"response"} = "Associated allele $allele_id with indvidual $individual_id!";
+        my $schema = $c->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' );
+        my $stock = $schema->resultset('Stock::Stock')->find( { stock_id => $stock_id } );
+        $stock->create_stockprops( { 'sgn allele_id' => $allele_id } , {autocreate => 1 , cv_name => 'local', allow_duplicate_values => 1 } );
+        $error{"response"} = "Associated allele $allele_id with stock $stock_id!";
     };
-    if ($@) { 
+    if ($@) {
 	$error{"error"} = "Associate allele failed! " . $@;
 	CXGN::Contact::send_email('associate_allele.pl died',$error{"error"}, 'sgn-bugs@sgn.cornell.edu');
-	
-    } else  { 
-	
-	my $subject="[New individual associated] allele $allele_id";
+    } else  {
+	my $subject="[New stock associated] allele $allele_id";
 	my $person= CXGN::People::Person->new($dbh, $login_person_id);
 	my $user=$person->get_first_name()." ".$person->get_last_name();
 	my $user_link = qq |http://www.sgn.cornell.edu/solpeople/personal-info.pl?sp_person_id=$sp_person_id|;
-	
-   	my $fdbk_body="$user ($user_link has associated individual $individual_id with allele $allele_id  \n
-         http://www.sgn.cornell.edu/phenome/individual.pl?individual_id=$individual_id"; 
- 
+
+   	my $fdbk_body="$user ($user_link has associated stock $stock_id with allele $allele_id  \n
+         http://www.sgn.cornell.edu/stock/$stock_id/view";
         CXGN::Contact::send_email($subject,$fdbk_body, 'sgn-db-curation@sgn.cornell.edu');
 	CXGN::Feed::update_feed($subject,$fdbk_body);
     }
-    
     my $jobj = $json->objToJson(\%error);
-    print STDERR "JSON FORMAT: $jobj\n";
-    
-    #print "Content-Type: text/plain\n\n"; # no need for this ! We already have the http header! 
     print  $jobj;
-    
+
 }
