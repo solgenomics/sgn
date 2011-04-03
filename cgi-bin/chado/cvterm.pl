@@ -141,11 +141,11 @@ sub display_page {
         collapsed   => 1,
     );
 
-    #individual accessions
-    my ( $ind_count, $ind_annot ) = individual_annot($cvterm);
+    #accessions (stocks)
+    my ( $stock_count, $stock_annot ) = stock_annot($cvterm);
     print info_section_html(
-        title       => "Annotated accessions ($ind_count)",
-        contents    => $ind_annot,
+        title       => "Annotated accessions ($stock_count)",
+        contents    => $stock_annot,
         collapsible => 1,
         collapsed   => 1,
     );
@@ -244,30 +244,31 @@ sub loci_annot {
     else { return ( 0, undef ); }
 }
 
-sub individual_annot {
+sub stock_annot {
     my $cvterm = shift;
-    my @acc    = $cvterm->get_recursive_individuals();
-    if (@acc) {
-        my $num = scalar(@acc);
-        my @ind_info;
-        foreach my $a (@acc) {
-            my $id = $a->get_individual_id();
-            push @ind_info,
-              [
-                map { $_ } (
-                    qq|<a href="/phenome/individual.pl?individual_id=$id">|
-                      . $a->get_name() . "</a>",
-                    $a->get_description(),
-                )
-              ];
+    my $ids    = $cvterm->get_recursive_stocks;
+    if ($ids) {
+        my $num = scalar(keys %$ids);
+        my @stock_info;
+
+        foreach my $id (sort { $ids->{$a}->{name} cmp $ids->{$b}->{name} } keys %$ids) {
+            my $name = $ids->{$id}->{name};
+            push @stock_info,
+            [
+             map { $_ } (
+                 qq|<a href="/stock/$id/view">|
+                 . $name . "</a>",
+                 $ids->{$id}->{description},
+             )
+            ];
         }
         return (
-            scalar(@acc),
+            $num,
             columnar_table_html(
                 headings => [ 'Accession name', 'Description' ],
-                data     => \@ind_info
+                data     => \@stock_info
             )
-        );
+            );
     }
     else { return ( 0, undef ); }
 }
