@@ -22,7 +22,7 @@ my @xrefs;
 
 </%init>
 
-<&| /page/info_section.mas, title => "QTL markers' genomic positions" &>
+<&| /page/info_section.mas, collapsible=>1, collapsed=>1, title => "QTL markers' genomic matches" &>
 % if( @xrefs ) {
   <& /sitefeatures/gbrowse2/xref_set/rich.mas, xrefs => \@xrefs &>
 % }
