@@ -1,10 +1,10 @@
 =head1 NAME
 
-t/integration/phenome.t - tests for Phenome URLs
+t/integration/qtl_form.t - tests for qtl data submision web interface URLs
 
 =head1 DESCRIPTION
 
-Tests for Phenome URLs
+Tests for qtl web form URLs
 
 =head1 AUTHORS
 
