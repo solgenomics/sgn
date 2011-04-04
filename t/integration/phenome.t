@@ -23,18 +23,37 @@ use SGN::Test::WWW::Mechanize;
 my $base_url = $ENV{SGN_TEST_SERVER};
 my $mech = SGN::Test::WWW::Mechanize->new;
 
-$mech->while_logged_in_all( sub {
-    my ($user_info) = @_;
+$mech->while_logged_in( { user_type => 'submitter' }, sub {
+ 
     $mech->get_ok('/phenome/qtl_form.pl');
-    $mech->submit_form_ok( {
-        form_number => 2,
-        fields => {
-        },
-    },
-    );
-    $mech->content_contains('Submit Population Details');
+    $mech->content_contains('Introduction');
+    
+   # $mech->submit_form_ok( {
+   #     form_number => 2,
+   #     fields => {
+   #     },
+   # },
+   # );
+
+    $mech->get_ok('/phenome/qtl_form.pl?type=pop_form');    
     $mech->content_contains('Select Organism');
     $mech->content_contains('Population Details');
+ 
+    $mech->get_ok('/phenome/qtl_form.pl?type=trait_form');
+    $mech->content_contains('Traits');
+
+    $mech->get_ok('/phenome/qtl_form.pl?type=pheno_form');
+    $mech->content_contains('Phenotype');
+
+    $mech->get_ok('/phenome/qtl_form.pl?type=geno_form');
+    $mech->content_contains('Genotype');
+
+    $mech->get_ok('/phenome/qtl_form.pl?type=stat_form');
+    $mech->content_contains('Statistical');
+
+    $mech->get_ok('/phenome/qtl_form.pl?type=confirm');
+    $mech->content_contains('Confirmation');
+   
 });
 
 done_testing;
