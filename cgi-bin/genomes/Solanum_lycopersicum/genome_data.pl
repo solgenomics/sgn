@@ -280,11 +280,12 @@ EOQ
        $details_url ? qq(&nbsp;<a href="$details_url">[details]</a>) : '',
       ]
     } else {
+      my $gbrowse = gbrowse_url('tomato_bacs',$fragnames[0]);
       [
        qq|<a style="color: black" href="$details_url">$clone_seqs->{seqname}</a>|,
        $clone_seqs->{accession} ? link_identifier($clone_seqs->{accession}) : '-',
        phase_html($clone_seqs->{phase}),
-       CGI->a({href => gbrowse_url('tomato_bacs',$fragnames[0])}, '[browse]' ),
+       ($gbrowse ? CGI->a({href => $gbrowse}, '[browse]' ) : '<span class="ghosted">none</span>'),
        $details_url ? qq(&nbsp;<a href="$details_url">[details]</a>) : '',
       ]
     }
