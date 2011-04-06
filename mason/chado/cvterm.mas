@@ -1,0 +1,136 @@
+<%doc>
+
+=head1 NAME
+
+/chado/cvterm.mas - a component for printing the cvterm page
+
+=head1 DESCRIPTION
+
+Parameters:
+
+=over 1
+
+=item cvterm
+
+CXGN::Chado::Cvterm object
+
+
+
+=back
+
+=head1 AUTHOR
+
+Naama Menda <nm249@cornell.edu>
+
+=cut
+
+</%doc>
+
+<%args>
+  $cvterm
+</%args>
+
+<%once>
+use CXGN::Page::FormattingHelpers qw/
+ info_section_html
+ page_title_html
+ columnar_table_html
+/;
+use CXGN::Phenome::UserTrait;
+</%once>
+
+<%perl>
+my $cvterm_id   = $cvterm->get_cvterm_id;
+my $db_name     = $cvterm->get_db_name;
+my $accession   = $cvterm->get_accession;
+my $cvterm_name = $cvterm->get_cvterm_name;
+my $definition  = $cvterm->get_definition;
+my $comment     = $cvterm->comment;
+
+my $is_obsolete = $cvterm->get_obsolete();
+my @synonyms    = $cvterm->get_synonyms();
+my @def_dbxrefs = $cvterm->get_def_dbxref();
+my @secondary_dbxrefs = $cvterm->get_secondary_dbxrefs();
+
+my @def_accessions = map( $_->get_db_name . ":" . $_->get_accession , @def_dbxrefs);
+
+</%perl>
+
+
+<& /util/import_javascript.mas, classes => [qw [CXGN.AJAX.Ontology  jquery]] &>
+
+<script language="javascript">
+  function recursiveAnnotations(url, div) {
+  jQuery.ajax( { url: url+"?cvterm_id=<% $cvterm_id %>" , dataType: "json",
+  success: function(response) {
+  jQuery("#"+div).html(response.html);
+  if ( response.error ) { alert(response.error) ; }
+  }
+  });
+  }
+</script>
+
+
+<& /page/page_title.mas, title=> "$db_name:$accession '$cvterm_name' " &>
+
+
+<&| /page/info_section.mas, title=>"Cvterm details" &>
+<table>
+<tr><td>Term id</td><td><b><% $accession %></b></td></tr>
+<tr><td>Term name</td><td><b><% $cvterm_name %></b></td></tr>
+<tr><td>Term definition</td><td><b><% $definition %></b></td></tr>
+<tr><td>Comment</td><td><b><% $comment %></b></td></tr>
+</table>
+
+% if ($is_obsolete) {
+<b>Obsolete:</b> TRUE <br />
+% }
+
+<br /><b>Synoyms</b><br />
+% foreach my $synonym (@synonyms) {
+<% $synonym %> <br />
+% }
+
+<br /><b> Definition dbxrefs</b><br />
+% foreach my $da (@def_accessions) {
+<% $da %><br />
+% }
+
+<br /><b> Definition dbxrefs</b><br />
+% foreach my $ds (@secondary_dbxrefs) {
+<% $ds %><br />
+%  }
+
+</&>
+
+<& /ontology/embedded_browser.mas, cvterm => $cvterm &>
+
+<&| /page/info_section.mas, title=> "Annotated loci" , collapsible => 1&>
+<div id="loci_div">
+   [Loading...]
+<script language="javascript">
+  recursiveAnnotations("/ajax/cvterm/recursive_loci", "loci_div");
+</script>
+</div>
+
+</&>
+
+<&| /page/info_section.mas, title=> "Annotated stocks" , collapsible => 1&>
+<div id="stocks_div">
+   [Loading...]
+<script language="javascript">
+  recursiveAnnotations("/ajax/cvterm/recursive_stocks", "stocks_div");
+</script>
+</div>
+
+</&>
+
+<&| /page/info_section.mas, title=> "Phenotyped accessions" , collapsible => 1&>
+<div id="pheno_div">
+   [Loading...]
+<script language="javascript">
+  recursiveAnnotations("/ajax/cvterm/phenotyped_stocks", "pheno_div");
+</script>
+</div>
+
+</&>
