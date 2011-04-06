@@ -71,7 +71,10 @@ sub _validate_single_url {
     my $dump_tempdir;
     ok( $rc == 200, "$test_name returned OK" )
         or do {
-            diag "fetch actually returned code '$rc': $ENV{SGN_TEST_SERVER}$url";
+
+            diag "fetch actually returned code '$rc': "
+                 .($ENV{SGN_TEST_SERVER}||'').$url;
+
             if( $ENV{DUMP_ERROR_CONTENT} ) {
                 if ( eval { require Digest::Crc32 } ) {
                     $dump_tempdir ||= make_dump_tempdir();
