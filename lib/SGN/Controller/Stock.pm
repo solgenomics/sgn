@@ -96,22 +96,23 @@ sub _make_stock_search_rs {
     }
     if ( my $editor = $c->req->param('person') ) {
         $self->_validate_pair( $c, 'person') ;
-        my ($first_name, $last_name) = split ',' , $editor ;
-        $first_name  =~ s/\s//g;
-        $last_name  =~ s/\s//g;
+        $editor =~ s/,/ /g;
+        $editor =~ s/\s+/ /g;
 
-        my $query = "SELECT sp_person_id FROM sgn_people.sp_person
-                     WHERE first_name = ? AND last_name = ?";
-        my $sth = $c->dbc->dbh->prepare($query);
-        $sth->execute($first_name, $last_name);
-        my ($sp_person_id) = $sth->fetchrow_array ;
-        if ($sp_person_id) {
-            $rs = $rs->search( {
-                'type.name' => 'sp_person_id',
-                'stockprops.value' => $sp_person_id, } ,
-                               { join => { stockprops =>['type'] } },
-                ) ; # if no person_id, rs should be empty
-        } else { $rs = $rs->search( { name=> '' } , ); }
+        my $person_ids = $c->dbc->dbh->selectcol_arrayref(<<'', undef, $editor);
+SELECT sp_person_id FROM sgn_people.sp_person
+WHERE ( first_name || ' ' || last_name ) like '%' || ? || '%'
+
+        if (@$person_ids) {
+            $rs = $rs->search({
+                      'type.name'        => 'sp_person_id',
+                      'stockprops.value' => { -in => $person_ids },
+                    },
+                    { join => { stockprops => ['type'] }},
+                 );
+        } else {
+            $rs = $rs->search({ name => '' });
+        }
     }
     if ( my $trait = $c->req->param('trait') ) {
         $rs = $rs->search( { 'observable.name' => $trait },
