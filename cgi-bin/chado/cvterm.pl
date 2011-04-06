@@ -1,65 +1,38 @@
-package CXGN::Chado::CvtermDetailPage;
-
-use base qw/CXGN::Page::Form::SimpleFormPage/;
-######################################################################
-#
-#  Displays a static cvterm detail page.
-#
-######################################################################
-
-my $cvterm_detail_page = CXGN::Chado::CvtermDetailPage->new();
-
 use strict;
 use warnings;
-
-use CXGN::Page;
-use CXGN::Page::FormattingHelpers qw/info_section_html
-  page_title_html
-  columnar_table_html
-  info_table_html
-  html_optional_show
-  /;
-
+use CGI qw /param/;
 use CXGN::Chado::Cvterm;
-use CXGN::Phenome::UserTrait;
-use CXGN::People::PageComment;
+
+#  Displays a static cvterm detail page.
 
 use CatalystX::GlobalContext qw( $c );
 
-sub new {
-    my $class  = shift;
-    my $schema = 'public';
-    my $self   = $class->SUPER::new(@_);
-    return $self;
+
+my $q   = CGI->new();
+my $dbh = CXGN::DB::Connection->new();
+
+my $cvterm_id = $q->param("cvterm_id") + 0;
+my $cvterm_accession = $q->param("cvterm_name");
+my $cvterm;
+
+if ( $cvterm_accession  ) {
+    $cvterm = CXGN::Chado::Cvterm->new_with_accession( $dbh, $cvterm_accession);
+    $cvterm_id = $cvterm->get_cvterm_id();
+} elsif ( $cvterm_id  ) {
+    $cvterm = CXGN::Chado::Cvterm->new( $dbh, $cvterm_id );
 }
 
-sub define_object {
-    my $self = shift;
-    $self->set_dbh( CXGN::DB::Connection->new );
-    my %args = $self->get_args();
-
-    my $cvterm_id = "";
-    if ( exists( $args{cvterm} ) && defined( $args{cvterm} ) ) {
-        my $cv =
-          CXGN::Chado::Cvterm->new_with_accession( $self->get_dbh(),
-            $args{cvterm} );
-        $cvterm_id = $cv->get_cvterm_id();
-    }
-    else {
-        $cvterm_id = $args{cvterm_id};
-    }
-    unless ( !$cvterm_id || $cvterm_id =~ m /^\d+$/ ) {
-        $self->get_page->message_page(
-            "No term exists for identifier $cvterm_id");
-    }
-    $self->set_object_id($cvterm_id);
-    $self->set_object(
-        CXGN::Chado::Cvterm->new( $self->get_dbh, $self->get_object_id ) );
-
-    $self->set_primary_key("cvterm_id");
-
-#no owners ... $self->set_owners($self->get_object()->get_owners());#instead of get_sp_person_id()
+unless ( $cvterm_id && $cvterm_id =~ m /^\d+$/ ) {
+    $c->throw( is_client_error => 1, public_message => 'Invalid arguments' );
 }
+
+
+
+$c->forward_to_mason_view(
+    '/chado/cvterm.mas',
+    cvterm    => $cvterm,
+    );
+exit();
 
 sub display_page {
     my $self = shift;
