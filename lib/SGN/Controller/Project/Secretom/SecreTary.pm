@@ -152,7 +152,7 @@ sub _run_secretary {
 #     'max_tm_nGASDRQPEN' => 9
 # );
     my $STSobj   = Bio::SecreTary::SecreTarySelect->new();
-    my $STApreds = $STSobj->Categorize( \@STAarray );
+    my $STApreds = $STSobj->categorize( \@STAarray );
 
     my $result_string   = "";
     my $count_pass      = 0;
