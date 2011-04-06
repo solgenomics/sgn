@@ -23,7 +23,7 @@ my $cvterm_id = $cvterm->cvterm_id;
 $mech->get_ok('/ajax/cvterm/recursive_stocks?cvterm_id='.$cvterm_id);
 $mech->content_contains('html');
 
-$mech->content_contains('LycoTILL');
+$mech->content_contains('Stock name');
 
 done_testing();
 
