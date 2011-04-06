@@ -12,13 +12,9 @@
 
 <& /page/page_title.mas, title => type_name($feature,'caps').' '. $feature->id &>
 
-<& /util/import_javascript.mas,
-    classes => [qw(Text.Markup CXGN.Effects CXGN.Phenome.Locus MochiKit.DOM)]
-&>
-
 <&| /page/info_section.mas,
     title       => type_name($feature,'caps').' details',
-    subtitle    => $feature->is_obsolete ? 'WARNING: This gene has been replaced by new data.' : '',
+    subtitle    => $feature->is_obsolete ? 'WARNING: This feature is obsolete, new data is available.' : '',
     collapsible => 1,
 &>
    <& /feature/feature_data.mas,
@@ -31,16 +27,16 @@
 </&>
 
 <&| /page/info_section.mas,
-   title => 'Ontology terms',
-   subtitle => 'ontology terms associated with this feature',
-   collapsible => 1,
-   hide_if_empty => 1,
-&>
-
-  <& /feature/feature_cvterms.mas,
-      feature   => $feature,
-  &>
-
+     title         => type_name($feature,'caps').' sequence',
+     collapsible   => 1,
+     collapsed     => 0,
+     hide_if_empty => 1,
+ &>
+    <& /feature/residues.mas,
+            feature   => $feature,
+            blast_url => $blast_url,
+            seq_download_url => $seq_download_url
+    &>
 </&>
 
 <&| /page/info_section.mas,
@@ -56,21 +52,8 @@
 </&>
 
 <&| /page/info_section.mas,
-     title         => 'Sequence',
-     collapsible   => 1,
-     collapsed     => 0,
-     hide_if_empty => 1,
- &>
-    <& /feature/residues.mas,
-            feature   => $feature,
-            blast_url => $blast_url,
-            seq_download_url => $seq_download_url
-    &>
-</&>
-
-<&| /page/info_section.mas,
      title         => 'Region sequence(s)',
-     subtitle      => "sequence underlying each location of this feature",
+     subtitle      => "reference sequence underlying each location of this feature",
      collapsible   => 1,
      collapsed     => 0,
      hide_if_empty => 1,

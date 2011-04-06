@@ -100,13 +100,16 @@ Lukas Mueller, based on the Perl code from Rob Buels.
         $hide_if_empty  => 0
 </%args>
 
+% my $sub = $is_subsection ? 'sub_' : '';
+
+<a class="info_section_anchor<% $sub ? ' info_subsection_anchor' : '' %>" name="<% anchor_name( $title ) %>"></a>
+
 <%perl>
 
     $contents ||= $m->content;
 
     #if we have been given content, and we aren't told that this section
     #is supposed to be empty, print a full section
-    my $sub = $is_subsection ? 'sub_' : '';
     if ( $contents =~ /\S/ && !$is_empty ) {
         $align &&= qq| style="text-align: $align|;
         $id ||= "sgnc" . int( rand(10000) );
@@ -151,4 +154,13 @@ EOT
 
 <%once>
   use CXGN::Page::Widgets qw/collapser/;
+  use HTML::Entities;
+
+  sub anchor_name {
+      local $_ = lc shift;
+      s/<[^>]+>//g; # strip html tags
+      s/\s+/_/g;    # whitespace to underscores
+      s/\W//g;      # remove any weird chars
+      return $_;
+  }
 </%once>

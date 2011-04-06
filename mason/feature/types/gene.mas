@@ -17,14 +17,9 @@
 
 <& /page/page_title.mas, title => 'Gene '. $feature->name &>
 
-<& /util/import_javascript.mas,
-    classes => [ 'jquery', 'jqueryui' ],
-&>
-
-
 <&| /page/info_section.mas,
     title       => 'Gene',
-    subtitle    => $feature->is_obsolete ? 'WARNING: This gene has been replaced by new data.' : '',
+    subtitle    => $feature->is_obsolete ? 'WARNING: This feature is obsolete, new data is available.' : '',
     collapsible => 1,
 &>
   <& /feature/feature_data.mas,
@@ -38,18 +33,6 @@
    &>
 
   <& /feature/exon_structure.mas, xrefs => $xrefs, feature => $feature &>
-
-</&>
-
-<&| /page/info_section.mas,
-   title => 'Ontology terms',
-   subtitle => 'terms associated with this gene',
-   collapsible => 1,
-&>
-
-  <& /feature/feature_cvterms.mas,
-      feature   => $feature,
-  &>
 
 </&>
 
@@ -99,7 +82,7 @@
 
     </&>
 
-%   my ( $mrna_sequence, $protein_sequence ) = mrna_and_protein_sequence( $mrna );
+%   my ( $mrna_sequence, $protein_sequence ) = @{(mrna_and_protein_sequence( $mrna ))[0] || [] };
 
     <&| /page/info_section.mas,
             title         => 'mRNA sequence',

@@ -9,7 +9,6 @@ use CXGN::Searches::Images;
 use CXGN::Searches::Family;
 use CXGN::Unigene::Search;
 use CXGN::Phenome;
-use CXGN::Phenotypes;
 use CXGN::Qtls;
 use CXGN::Publication;
 use CXGN::Chado::Cvterm;
@@ -497,40 +496,6 @@ EOHTML
 
 }
 
-=head2 phenotype_search_form
-
-  Desc: returns the phenotype search form
-  Args: CXGN::Page object
-  Ret : string of HTML
-
-=cut
-
-sub phenotype_search_form {
-
-    my $page = shift;
-    my $q    = shift;
-
-    $q ||= CXGN::Phenotypes->new->new_query;
-
-    my $form = $q->to_html;
-
-    return <<EOHTML;
-
-<table class="search_form_title" summary=""><tr><td>
-    <h4><span class="search_form_title">Phenotype search</span></h4>
-  </td>
-  </tr></table>
-
-
-<form  action= "/search/phenotype_search.pl" method="get">
-$form<br/>
-
-</form>
-
-
-EOHTML
-
-}
 
 =head2 qtl_search_form
 

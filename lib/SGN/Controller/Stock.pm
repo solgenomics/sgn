@@ -96,22 +96,23 @@ sub _make_stock_search_rs {
     }
     if ( my $editor = $c->req->param('person') ) {
         $self->_validate_pair( $c, 'person') ;
-        my ($first_name, $last_name) = split ',' , $editor ;
-        $first_name  =~ s/\s//g;
-        $last_name  =~ s/\s//g;
+        $editor =~ s/,/ /g;
+        $editor =~ s/\s+/ /g;
 
-        my $query = "SELECT sp_person_id FROM sgn_people.sp_person
-                     WHERE first_name = ? AND last_name = ?";
-        my $sth = $c->dbc->dbh->prepare($query);
-        $sth->execute($first_name, $last_name);
-        my ($sp_person_id) = $sth->fetchrow_array ;
-        if ($sp_person_id) {
-            $rs = $rs->search( {
-                'type.name' => 'sp_person_id',
-                'stockprops.value' => $sp_person_id, } ,
-                               { join => { stockprops =>['type'] } },
-                ) ; # if no person_id, rs should be empty
-        } else { $rs = $rs->search( { name=> '' } , ); }
+        my $person_ids = $c->dbc->dbh->selectcol_arrayref(<<'', undef, $editor);
+SELECT sp_person_id FROM sgn_people.sp_person
+WHERE ( first_name || ' ' || last_name ) like '%' || ? || '%'
+
+        if (@$person_ids) {
+            $rs = $rs->search({
+                      'type.name'        => 'sp_person_id',
+                      'stockprops.value' => { -in => $person_ids },
+                    },
+                    { join => { stockprops => ['type'] }},
+                 );
+        } else {
+            $rs = $rs->search({ name => '' });
+        }
     }
     if ( my $trait = $c->req->param('trait') ) {
         $rs = $rs->search( { 'observable.name' => $trait },
@@ -258,12 +259,13 @@ sub view_stock :Chained('get_stock') :PathPart('view') :Args(0) {
 sub _stockprops {
     my ($self,$stock) = @_;
 
-
-    my $stockprops = $stock->get_object_row()->search_related("stockprops");
-
+    my $bcs_stock = $stock->get_object_row();
     my $properties ;
-    while ( my $prop =  $stockprops->next ) {
-        push @{ $properties->{$prop->type->name} } ,   $prop->value ;
+    if ($bcs_stock) {
+        my $stockprops = $bcs_stock->search_related("stockprops");
+        while ( my $prop =  $stockprops->next ) {
+            push @{ $properties->{$prop->type->name} } ,   $prop->value ;
+        }
     }
     return $properties;
 }
@@ -271,25 +273,28 @@ sub _stockprops {
 
 sub _dbxrefs {
     my ($self,$stock) = @_;
-
-    my $stock_dbxrefs = $stock->get_object_row()->search_related("stock_dbxrefs");
-
+    my $bcs_stock = $stock->get_object_row;
     my $dbxrefs ;
-    while ( my $sdbxref =  $stock_dbxrefs->next ) {
-        my $url = $sdbxref->dbxref->db->urlprefix . $sdbxref->dbxref->db->url;
-
-        my $accession = $sdbxref->dbxref->accession;
-        $url = $url ? qq |<a href = "$url/$accession">$accession</a>| : $accession ;
-        push @{ $dbxrefs->{$sdbxref->dbxref->db->name} } , $sdbxref->dbxref;
+    if ($bcs_stock) {
+        my $stock_dbxrefs = $bcs_stock->search_related("stock_dbxrefs");
+        while ( my $sdbxref =  $stock_dbxrefs->next ) {
+            my $url = $sdbxref->dbxref->db->urlprefix . $sdbxref->dbxref->db->url;
+            my $accession = $sdbxref->dbxref->accession;
+            $url = $url ? qq |<a href = "$url/$accession">$accession</a>| : $accession ;
+            push @{ $dbxrefs->{$sdbxref->dbxref->db->name} } , $sdbxref->dbxref;
+        }
     }
     return $dbxrefs;
 }
 
 sub _stock_nd_experiments {
     my ($self, $stock) = @_;
-
-    my $nd_experiments = $stock->get_object_row->nd_experiment_stocks->search_related('nd_experiment');
-    return $nd_experiments;
+    my $bcs_stock = $stock->get_object_row;
+    if ($bcs_stock) {
+        my $nd_experiments = $bcs_stock->nd_experiment_stocks->search_related('nd_experiment');
+        return $nd_experiments;
+    }
+    return undef;
 }
 
 # this sub gets all phenotypes measured directly on this stock and stores
@@ -298,14 +303,14 @@ sub _stock_project_phenotypes {
     my ($self, $stock) = @_;
     my $nd_experiments = $self->_stock_nd_experiments($stock);
     my %phenotypes;
-
-    while (my $exp = $nd_experiments->next) {
-        my $geolocation = $exp->nd_geolocation;
-        # there should be one project linked to the experiment ?
-        my $project = $exp->nd_experiment_projects->search_related('project')->first;
-        my @ph = $exp->nd_experiment_phenotypes->search_related('phenotype')->all;
-
-        push(@{$phenotypes{$project->description}}, @ph) if @ph;
+    if ($nd_experiments) {
+        while (my $exp = $nd_experiments->next) {
+            my $geolocation = $exp->nd_geolocation;
+            # there should be one project linked to the experiment ?
+            my $project = $exp->nd_experiment_projects->search_related('project')->first;
+            my @ph = $exp->nd_experiment_phenotypes->search_related('phenotype')->all;
+            push(@{$phenotypes{$project->description}}, @ph) if @ph;
+        }
     }
     return \%phenotypes;
 }
@@ -316,17 +321,19 @@ sub _stock_members_phenotypes {
     my ($self, $stock) = @_;
     my %phenotypes;
     my $has_members_genotypes;
-    my $objects = $stock->get_object_row->stock_relationship_objects ;
-    # now we have rs of stock_relationship objects. We need to find the phenotypes of their related subjects
-    while (my $object = $objects->next ) {
-
-        my $subject = $object->subject;
-        my $subject_stock = CXGN::Chado::Stock->new($self->schema, $subject->stock_id);
-        my $subject_phenotype_ref = $self->_stock_project_phenotypes($subject_stock);
-        $has_members_genotypes = 1 if $self->_stock_genotypes($subject_stock);
-        my %subject_phenotypes = %$subject_phenotype_ref;
-        foreach my $key (keys %subject_phenotypes) {
-            push(@{$phenotypes{$key} } , @{$subject_phenotypes{$key} } );
+    my $bcs_stock = $stock->get_object_row;
+    if ($bcs_stock) {
+        my $objects = $bcs_stock->stock_relationship_objects ;
+        # now we have rs of stock_relationship objects. We need to find the phenotypes of their related subjects
+        while (my $object = $objects->next ) {
+            my $subject = $object->subject;
+            my $subject_stock = CXGN::Chado::Stock->new($self->schema, $subject->stock_id);
+            my $subject_phenotype_ref = $self->_stock_project_phenotypes($subject_stock);
+            $has_members_genotypes = 1 if $self->_stock_genotypes($subject_stock);
+            my %subject_phenotypes = %$subject_phenotype_ref;
+            foreach my $key (keys %subject_phenotypes) {
+                push(@{$phenotypes{$key} } , @{$subject_phenotypes{$key} } );
+            }
         }
     }
     return \%phenotypes, $has_members_genotypes;
@@ -334,24 +341,28 @@ sub _stock_members_phenotypes {
 
 sub _stock_dbxrefs {
     my ($self,$stock) = @_;
-
-    my $stock_dbxrefs = $stock->get_object_row()->search_related("stock_dbxrefs");
+    my $bcs_stock = $stock->get_object_row;
     # hash of arrays. Keys are db names , values are lists of StockDbxref objects
     my $sdbxrefs ;
-    while ( my $sdbxref =  $stock_dbxrefs->next ) {
-        push @{ $sdbxrefs->{$sdbxref->dbxref->db->name} } , $sdbxref;
+    if ($bcs_stock) {
+        my $stock_dbxrefs = $bcs_stock->search_related("stock_dbxrefs");
+        while ( my $sdbxref =  $stock_dbxrefs->next ) {
+            push @{ $sdbxrefs->{$sdbxref->dbxref->db->name} } , $sdbxref;
+        }
     }
     return $sdbxrefs;
 }
 
 sub _stock_cvterms {
     my ($self,$stock) = @_;
-
-    my $stock_cvterms = $stock->get_object_row()->search_related("stock_cvterms");
+    my $bcs_stock = $stock->get_object_row;
     # hash of arrays. Keys are db names , values are lists of StockCvterm objects
     my $scvterms ;
-    while ( my $scvterm =  $stock_cvterms->next ) {
-        push @{ $scvterms->{$scvterm->cvterm->dbxref->db->name} } , $scvterm;
+    if ($bcs_stock) {
+        my $stock_cvterms = $bcs_stock->search_related("stock_cvterms");
+        while ( my $scvterm =  $stock_cvterms->next ) {
+            push @{ $scvterms->{$scvterm->cvterm->dbxref->db->name} } , $scvterm;
+        }
     }
     return $scvterms;
 }
@@ -359,13 +370,16 @@ sub _stock_cvterms {
 # each stock may be linked with publications, each publication may have several dbxrefs
 sub _stock_pubs {
     my ($self, $stock) = @_;
-    my $stock_pubs = $stock->get_object_row()->search_related("stock_pubs");
+    my $bcs_stock = $stock->get_object_row;
     my $pubs ;
-    while (my $spub = $stock_pubs->next ) {
-        my $pub = $spub->pub;
-        my $pub_dbxrefs = $pub->pub_dbxrefs;
-        while (my $pub_dbxref = $pub_dbxrefs->next ) {
-            $pubs->{$pub_dbxref->dbxref->db->name . ":" .  $pub_dbxref->dbxref->accession } = $pub ;
+    if ($bcs_stock) {
+        my $stock_pubs = $bcs_stock->search_related("stock_pubs");
+        while (my $spub = $stock_pubs->next ) {
+            my $pub = $spub->pub;
+            my $pub_dbxrefs = $pub->pub_dbxrefs;
+            while (my $pub_dbxref = $pub_dbxrefs->next ) {
+                $pubs->{$pub_dbxref->dbxref->db->name . ":" .  $pub_dbxref->dbxref->accession } = $pub ;
+            }
         }
     }
     return $pubs;
@@ -411,7 +425,8 @@ sub get_stock :Chained('/') :PathPart('stock') :CaptureArgs(1) {
     my ($members_phenotypes, $has_members_genotypes)  = $stock ? $self->_stock_members_phenotypes($stock) : undef;
     $c->stash->{members_phenotypes} = $members_phenotypes;
 
-    my $stock_type = $stock->get_object_row->type->name;
+    my $stock_type;
+    $stock_type = $stock->get_object_row->type->name if $stock->get_object_row;
     if ( ( grep { /^$stock_type/ } ('f2 population', 'backcross population') ) &&  $members_phenotypes && $has_members_genotypes ) { $c->stash->{has_qtl_data} = 1 ; }
 
 }

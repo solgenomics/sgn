@@ -97,8 +97,8 @@ sub delegate_component
 {
     my ($self, $c, $matching_features) = @_;
     my $feature   = $matching_features->next;
-    my $type_name = $feature->type->name;
-    my $template  = "/feature/default.mas";
+    my $type_name = lc $feature->type->name;
+    my $template  = "/feature/types/default.mas";
 
     $c->stash->{feature}     = $feature;
     $c->stash->{featurelocs} = $feature->featureloc_features;
@@ -114,8 +114,8 @@ sub delegate_component
     }
     $c->stash->{xrefs} = \@xrefs;
 
-    if ($c->view('Mason')->component_exists("/feature/$type_name.mas")) {
-        $template         = "/feature/$type_name.mas";
+    if ($c->view('Mason')->component_exists("/feature/types/$type_name.mas")) {
+        $template         = "/feature/types/$type_name.mas";
         $c->stash->{type} = $type_name;
     }
     $c->stash->{template} = $template;
