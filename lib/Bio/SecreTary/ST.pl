@@ -62,7 +62,7 @@ if ( $in_method eq 'BioPerl' ) {
     $sequence = substr( $sequence, 0, $trunc_length );
     my $STA = Bio::SecreTary::SecreTaryAnalyse->new( $seq_id, $sequence,
 						     $tmpred_obj );
-    my $s2 = $STS->Categorize1($STA);
+    my $s2 = $STS->categorize1($STA);
     print $STA->get_sequence_id(), "  ", $s2, "\n";
     push @STAs, $STA;
   }
@@ -81,13 +81,13 @@ if ( $in_method eq 'BioPerl' ) {
 
       my $STA =
 	Bio::SecreTary::SecreTaryAnalyse->new( $id, $sequence, $tmpred_obj );
-      my $s2 = $STS->Categorize1($STA);
+      my $s2 = $STS->categorize1($STA);
       print $STA->get_sequence_id(), "  ", $s2, "\n";
       push @STAs, $STA;
     }
   }
 }
-my $STApreds = $STS->Categorize(\@STAs);
+my $STApreds = $STS->categorize(\@STAs);
 if($sort){
 my @sort_STApreds = (1)
   ? sort {

@@ -180,7 +180,7 @@ sub refine_solutions
     my $self            = shift;
     my $STA             = shift;
     my $solns = $STA->get_candidate_solutions(); # array ref
-    my $AA22string = $STA->AA22string(); # this has AI etc for first 22
+    my $AA22string = $STA->aa22string(); # this has AI etc for first 22
   
     my $grp1_best_STscore = 0;
     my $grp1_best       = "-1,0,0,-1";
@@ -217,9 +217,9 @@ sub refine_solutions
   }
 
 
-=head2 function Categorize1()
+=head2 function categorize1()
 
-Synopsis: my ($g1_cand_soln, $g2_cand_soln) = $STS_obj->Categorize($STA_obj);
+Synopsis: my ($g1_cand_soln, $g2_cand_soln) = $STS_obj->categorize($STA_obj);
 	Arguments: An SecreTaryAnalyse object.
 	Returns: A string with the prediction and tmpred predictions, e.g.: 
 'group1 (2311,23,44)(1100,5,30)'
@@ -227,7 +227,7 @@ Synopsis: my ($g1_cand_soln, $g2_cand_soln) = $STS_obj->Categorize($STA_obj);
 
 =cut
 
-sub Categorize1 {     # categorize a single SecreTaryAnalyse object as
+sub categorize1 {     # categorize a single SecreTaryAnalyse object as
 		      # group1, group2 or fail.
   my $self = shift;
   my $STA  = shift;		# SecreTaryAnalyse object
@@ -254,18 +254,18 @@ sub Categorize1 {     # categorize a single SecreTaryAnalyse object as
   return $return_val;
 }
 
-=head2 function Categorize()
+=head2 function categorize()
 
-Synopsis: my $STA_prediction_array_ref = $STS_obj->Categorize(\@STA_arrayj);
+Synopsis: my $STA_prediction_array_ref = $STS_obj->categorize(\@STA_arrayj);
 	Arguments: Reference to array of SecreTaryAnalyse objects.
 	Returns: A reference to an array of references to arrays, each
 containing a STA obj and the prediction for that STA.
-	Description: Calls Categorize1 on each STA obj. Makes YES/NO prediction
+	Description: Calls categorize1 on each STA obj. Makes YES/NO prediction
 for each, pushes STA obj and prediction onto result array.
 
 =cut
 
-sub Categorize {
+sub categorize {
   my $self           = shift;
   my $ref            = shift;	# reference to array of STA objects.
   my @STAarray       = @$ref;
@@ -273,7 +273,7 @@ sub Categorize {
 
   my ( $count_grp1, $count_grp2, $count_fail ) = ( 0, 0, 0 );
   foreach my $STA (@STAarray) {
-    my $prediction = $self->Categorize1($STA); # e.g.: 'group1 (2311,23,44)(1100,5,30)'
+    my $prediction = $self->categorize1($STA); # e.g.: 'group1 (2311,23,44)(1100,5,30)'
     $prediction =~ s/^fail/NO/;
     $prediction =~ s/^group1/YES/;
     $prediction =~ s/^group2/YES/; 

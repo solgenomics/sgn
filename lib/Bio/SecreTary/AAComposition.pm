@@ -9,7 +9,7 @@ use warnings;
 # Molecular weight.
 
 
-sub AAFrequencies{							# given a aa sequence and a hash of aa/count pairs, add the counts of the aa's in the sequence to the hash.
+sub aa_frequencies{							# given a aa sequence and a hash of aa/count pairs, add the counts of the aa's in the sequence to the hash.
 	my $sequence = shift;
 	my $AAFhash = shift;					# ref. to hash with AA chars for keys, number of occurences for values
 #	my $aas = shift;
@@ -44,16 +44,16 @@ sub AAFrequencies{							# given a aa sequence and a hash of aa/count pairs, add
 
 
 
-=head2 function AliphaticIndex
+=head2 function aliphatic_index
 
-Synopsis: AliphaticIndex($sequence);
+Synopsis: aliphatic_index($sequence);
 	Description: Calculates
 and returns the aliphatic index of the sequence.
 
 =cut
 
 
-sub AliphaticIndex {
+sub aliphatic_index {
     my $sequence     = shift;
     my $nA = ( $sequence =~ tr/A// );
     my $nV = ( $sequence =~ tr/V// );
@@ -62,22 +62,22 @@ sub AliphaticIndex {
     my $nX = ( $sequence =~ tr/X// );
     my $L  = length($sequence) - $nX;
 if($L <= 0) {
-warn "In AliphaticIndex. ", length $sequence, "  $nX $sequence \n";
+warn "In aliphatic_index. ", length $sequence, "  $nX $sequence \n";
 }else{
     return 100.0 * ( 1.0 * $nA + 2.9 * $nV + 3.9 * ( $nL + $nI ) ) / $L;
 }
 return;
 }
 
-=head2 function Gravy
+=head2 function gravy
 
-Synopsis: Gravy($sequence);
+Synopsis: gravy($sequence);
 	Description: Calculates
-and returns the "Gravy" index of the sequence.
+and returns the "gravy" index of the sequence.
 
 =cut
 
-sub Gravy {
+sub gravy {
     my $sequence = shift;
     # Kyte and Doolittle hydropathy index: (from Wikipedia "Hydropathy index")
     my %Hydropaths = (
@@ -237,7 +237,7 @@ sub _O_in_aa { # Number of Oxygen atoms in each kind of amino acid.
 
 
 
-sub MolecularWeight{
+sub molecular_weight{
 	my $AAFhash = shift;
 	my %MolWeights = ("A" => 89, "R" => 174, "N" => 132, "D" => 133,
 										"C" => 121, "E" => 147, "Q" => 146, "G" => 75,
@@ -258,7 +258,7 @@ sub MolecularWeight{
 # if there are X chars, consider them to have MW equal to avg of others.
 		$sum_wf *= $AAFhash->{"LENGTH"}/$sum_f;
 	}
-#	die "in MolecularWeight. Sum of aa counts not equal to seq length:  ", $AAFhash->{"LENGTH"}, 
+#	die "in molecular_weight. Sum of aa counts not equal to seq length:  ", $AAFhash->{"LENGTH"}, 
 #		"  ", $sum_f, "\n" unless($AAFhash->{"LENGTH"} == $sum_f);
 	$sum_wf -= 18 * ($length-1);	# subtract for the H2O molecules removed in forming peptide bonds.
 	return $sum_wf;

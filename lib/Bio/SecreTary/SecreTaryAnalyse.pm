@@ -51,7 +51,7 @@ sub new {
 
     $self->set_tmpred_good_solutions($outstring);
 
-    $self->Sequence22_AAcomposition();
+    $self->sequence22_AAcomposition();
 
     # do the cleavage site calculation
     my $cleavage_obj = Bio::SecreTary::Cleavage->new();
@@ -77,33 +77,33 @@ my ($tmpred_score,$beg,$end) = split(',', $soln);
 my $nGASDRQPENtm = $self->nGASDRQPEN($beg-1, $end+1-$beg); # beg,end are unit based
 push @candidate_solutions, "$tmpred_score,$beg,$end,$nGASDRQPENtm";
 }
-# $analysis_string .= $self->AA22string(',');
+# $analysis_string .= $self->aa22string(',');
 # $analysis_string .= ',' . $sp_length; # predicted length of signal peptide
 $self->{candidate_solutions} = \@candidate_solutions;
     return $self;
   }
 
 
-=head2 function Sequence22_AAcomposition
+=head2 function sequence22_AAcomposition
 
-Synopsis: $STA_obj->Sequence22_AAcomposition();
+Synopsis: $STA_obj->sequence22_AAcomposition();
 	Arguments: 
 	Side effects:
 	Description:	Calculates 5 quantities (AI, Gravy, nDRQPEN, nNitrogren and nOxygen) for the sequence consisting of the first 22 amino acids. These are stored in the SecreTaryAnalyse object.
 
 =cut
 
-sub Sequence22_AAcomposition {
+sub sequence22_AAcomposition {
   my $self = shift;
 
-    $self->set_AI22( $self->AliphaticIndex(22) );
-    $self->set_Gravy22( $self->Gravy(22) );
+    $self->set_AI22( $self->aliphatic_index(22) );
+    $self->set_Gravy22( $self->gravy(22) );
     $self->set_nDRQPEN22( $self->nDRQPEN(22) );
     $self->set_nNitrogen22( $self->nNitrogen(22) );
     $self->set_nOxygen22( $self->nOxygen(22) );
 }
 
-sub AA22string{ # has
+sub aa22string{ # has
 my $self = shift;
 my $separator = shift || ' ';
 my $result = $self->get_AI22();
@@ -116,39 +116,39 @@ return $result;
 }
 
 
-=head2 function AliphaticIndex
+=head2 function aliphatic_index
 
-Synopsis: $STA_obj->AliphaticIndex($length);
+Synopsis: $STA_obj->aliphatic_index($length);
 	Description: Truncates the sequence to length $length, calculates
 and returns the aliphatic index of the truncated sequence.
 
 =cut
 
 
-sub AliphaticIndex {
+sub aliphatic_index {
     my $self         = shift;
     my $trunc_length = shift || undef;
     my $sequence     = $self->get_sequence();
 $sequence = substr($sequence, 0, $trunc_length) if(defined $trunc_length);
-   return Bio::SecreTary::AAComposition::AliphaticIndex($sequence);
+   return Bio::SecreTary::AAComposition::aliphatic_index($sequence);
 }
 
-=head2 function Gravy
+=head2 function gravy
 
-Synopsis: $STA_obj->Gravy($length);
+Synopsis: $STA_obj->gravy($length);
 	Description: Truncates the sequence to length $length, calculates
-and returns the "Gravy" index of the truncated sequence.
+and returns the "gravy" index of the truncated sequence.
 
 =cut
 
-sub Gravy {
+sub gravy {
     my $self         = shift;
     my $trunc_length = shift;
     my $sequence     = $self->get_sequence();
     $sequence = substr( $sequence, 0, $trunc_length )
       if ( defined $trunc_length );
 
-   return  Bio::SecreTary::AAComposition::Gravy($sequence);
+   return  Bio::SecreTary::AAComposition::gravy($sequence);
 }
 
 =head2 function nDRQPEN
