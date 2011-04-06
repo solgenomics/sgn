@@ -1700,8 +1700,9 @@ sub get_trait_name {
 sub qtl_effects {
     my $self       = shift;
     my $trait_name = $self->get_trait_name();
-    my $pop        = $self->get_object();    
-    
+    my $pop        = $self->get_object();  
+    $trait_name   = $pop->cvterm_acronym($trait_name);  
+
     my $file = $pop->qtl_effects_file($c, $trait_name);
     
     if ( -s $file ) 
@@ -1728,8 +1729,9 @@ sub qtl_effects {
 sub explained_variation {
     my $self       = shift;
     my $trait_name = $self->get_trait_name();
-    my $pop        = $self->get_object();    
-    
+    my $pop        = $self->get_object();     
+    $trait_name    = $pop->cvterm_acronym($trait_name);
+
     my $file = $pop->explained_variation_file($c, $trait_name);
     
     if ( -s $file ) 
