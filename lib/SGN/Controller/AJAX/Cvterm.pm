@@ -137,16 +137,14 @@ sub recursive_stocks_GET :Args(0) {
     my $q = "SELECT distinct stock_id, stock.name, stock.description FROM cvtermpath
             JOIN cvterm on (cvtermpath.object_id = cvterm.cvterm_id OR cvtermpath.subject_id = cvterm.cvterm_id )
             JOIN stock_cvterm on (stock_cvterm.cvterm_id = cvterm.cvterm_id)
-            LEFT JOIN stock_cvtermprop USING (stock_cvterm_id)
-            LEFT JOIN cvterm as type_name ON (stock_cvtermprop.type_id = cvterm.cvterm_id)
             JOIN stock USING (stock_id)
-            WHERE  stock_cvterm.cvterm_id = ?
+            WHERE  cvtermpath.object_id = ?
             AND stock.is_obsolete = ?
             AND pathdistance > 0
-            AND ( (type_name.name != ? OR type_name.name IS NULL) AND (value != ? OR value IS NULL) ) ORDER BY stock.name";
+            ORDER BY stock.name";
 
     my $sth = $c->dbc->dbh->prepare($q);
-    $sth->execute($cvterm_id, 'false' , 'obsolete', 1);
+    $sth->execute($cvterm_id, 'false');
     my $hashref = {};
     my @stock_data;
     while ( my ($stock_id , $stock_name, $description) = $sth->fetchrow_array ) {
