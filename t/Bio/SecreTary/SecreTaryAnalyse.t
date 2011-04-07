@@ -3,12 +3,14 @@ use strict;
 use warnings FATAL => 'all';
 
 # tests for TMpred Module
-use Test::More tests=> 8;
+use Test::More tests=> 13;
 use Bio::SecreTary::TMpred;
 use Bio::SecreTary::Helix;
 use Bio::SecreTary::SecreTaryAnalyse;
 
 $ENV{PATH} .= ':programs'; #< XXX TODO: obviate the need for this
+
+my ($AI_tol, $Gravy_tol) = (0.01, 0.001);
 
 my $TMpred_obj = Bio::SecreTary::TMpred->new();
 
@@ -30,8 +32,15 @@ foreach (@$solns){
 }
 
 ok($solns_string eq '2479,17,35,5; 2512,15,33,5; ', 'Check transmembrane solutions (case 1).');
-my $AA22str = $STA_obj->AA22string();
-ok($AA22str eq '119.545454545455 0.586363636363637 6 31 27', 'Check N-terminal amino-acid composition parameters (case 1).');
+my $AA22str = $STA_obj->aa22string();
+ok($AA22str =~ /^ [-0-9.]+ \s+ [-0-9.]+ \s+ [0-9]+ \s+ [0-9]+ \s+ [0-9]+ $/xms, 'Check form of string returned by aa22string.');
+my ($AI, $Gravy, $nDRQPEN, $nN, $nO) = split(" ", $AA22str);
+ok(abs($AI - 119.545454545455) < $AI_tol, 'Check aliphatic index value.');
+ok(abs($Gravy - 0.586363636363637) < $Gravy_tol, 'Check Gravy value.');
+ok($nDRQPEN == 6, 'Check nDRQPEN value');
+ok($nN == 31, 'Check Nitrogen count.');
+ok($nO == 27,'Check Oxygen count.');
+
 
 
 
@@ -49,6 +58,6 @@ foreach (@$solns){
 }
 
 ok($solns_string eq '-10000,0,0,1; ', 'Check transmembrane solutions (case 2).');
-$AA22str = $STA_obj->AA22string();
-ok($AA22str eq '105.909090909091 0.181818181818182 7 30 31', 'Check N-terminal amino-acid composition parameters (case 2).');
+$AA22str = $STA_obj->aa22string();
+ok($AA22str =~ /^105.9090909090[0-9]* 0.1818181818181[0-9]* 7 30 31$/, 'Check N-terminal amino-acid composition parameters (case 2).');
 
