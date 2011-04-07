@@ -10,17 +10,6 @@ use Bio::Range;
 
 extends 'SGN::Feature::GBrowse::DataSource';
 
-# has 'config' => ( documentation => <<'',
-# Bio::Graphics::FeatureFile object for this data source's conf file, from which settings can be 
-
-#     is => 'ro',
-#     isa => 'Bio::Graphics::FeatureFile',
-#     lazy_build => 1,
-#   ); sub _build_config {
-#       my ($self) = @_;
-#       return Bio::Graphics::FeatureFile->new( -file => $self->conf_dir->file( $self->path ) );
-#   }
-
 has 'xref_discriminator' => (
     is => 'ro',
     isa => 'CodeRef',
