@@ -69,7 +69,7 @@ $form_name
 $server_side_script
 $form_div_name
 $js_object_name
-$page_url
+$page_url => ''
 $alternate_new_button => undef
 $alternate_ghosted_new_button => undef
 $alternate_delete_button => undef

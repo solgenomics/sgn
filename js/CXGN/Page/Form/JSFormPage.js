@@ -332,7 +332,12 @@ CXGN.Page.Form.JSFormPage.prototype = {
      */
     reloadNewPage: function() {
 	MochiKit.Logging.log("reloadNewPage found page: " , this.getPageName());
-	window.location =  this.getPageName() + "?action=new" ;
+	if (this.getPageName()) { 
+	    window.location =  this.getPageName() + "?action=new" ;
+	}
+	else { 
+	    this.printForm('new');
+	}
     },
 
     //////////////////////////////////////////////////////
