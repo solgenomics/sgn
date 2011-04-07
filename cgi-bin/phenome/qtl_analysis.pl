@@ -1,24 +1,10 @@
-=head1 DESCRIPTION
-
-Creates a trait/cvterm page with a description of 
-the population on which the trait/cvterm was evaluated, 
-displays the frequency distribution of its phenotypic data
-and most importantly produces the on-the-fly  QTL analysis 
-output for the trait and more.... 
-
-=head1 AUTHOR
-
-Isaak Y Tecle (iyt2@cornell.edu)
-
-=cut
-
 use strict;
 use warnings;
 
-my $qtl_analysis_detail_page =
-  CXGN::Phenome::QtlAnalysisDetailPage->new();
+my $population_indls_detail_page =
+  CXGN::Phenome::PopulationIndlsDetailPage->new();
 
-package CXGN::Phenome::QtlAnalysisDetailPage;
+package CXGN::Phenome::PopulationIndlsDetailPage;
 
 
 
@@ -49,12 +35,13 @@ use GD::Graph::Map;
 use Statistics::Descriptive;
 use Math::Round::Var;
 use Number::Format;
-use File::Temp qw /tempfile tempdir/;
+use File::Temp qw / tempfile tempdir /;
 use File::Copy;
 use File::Spec;
 use File::Path qw / mkpath /;
 use File::Basename;
 use File::stat;
+use File::Slurp qw / read_file /;
 use Cache::File;
 use Path::Class;
 use Try::Tiny;
@@ -68,7 +55,7 @@ sub new
 {
     my $class = shift;
     my $self  = $class->SUPER::new(@_);
-    $self->set_script_name("qtl_analysis.pl");
+    $self->set_script_name("population_indls.pl");
 
     return $self;
 }
@@ -80,7 +67,7 @@ sub define_object
     $self->set_dbh( CXGN::DB::Connection->new() );
     my %args          = $self->get_args();
     my $population_id = $args{population_id};
-    my $stock_id = $args{stock_id};
+     my $stock_id = $args{stock_id};
     my $object;
     #########################
     # this page needs to be re-written with CXGN::Chado::Stock object
@@ -98,19 +85,24 @@ sub define_object
         $self->get_page->message_page(
                           "No population exists for identifier $population_id");
     }
+      
     $self->set_object_id($population_id);
-    $self->set_object( $object);
-
+    $self->set_object(
+                       CXGN::Phenome::Population->new(
+                                        $self->get_dbh(), $self->get_object_id()
+                       )
+                     );
+    
     $self->set_primary_key("population_id");
     $self->set_owners( $self->get_object()->get_owners() );
-
-    my $cvterm_id = $args{cvterm_id};
-    $cvterm_id =~ s/\D//;
-
-    if ($cvterm_id) {
-	$self->set_cvterm_id($cvterm_id);
+    
+    my $trait_id = $args{cvterm_id};
+    $trait_id =~ s/\D//;
+    
+    if ($trait_id) {
+	$self->set_trait_id($trait_id);
     } else {
-	$c->throw("A cvterm id is missing");
+	die "A cvterm id argument is missing";
     }
 
 
@@ -179,6 +171,7 @@ qq |<a href="/solpeople/personal-info.pl?sp_person_id=$sp_person_id">$submitter_
                     );
     $form->add_hidden( field_name => "population_id",
                        contents   => $args{population_id} );
+
     $form->add_hidden(
                        field_name => "sp_person_id",
                        contents   => $self->get_user()->get_sp_person_id(),
@@ -229,23 +222,9 @@ EOS
     my $population      = $self->get_object();
     my $population_id   = $self->get_object_id();
     my $population_name = $population->get_name();
-    my $cvterm_id       = $self->get_cvterm_id();
-    
-    my ( $term_obj, $term_name, $term_id );
-
-    if ( $population->get_web_uploaded() )
-    {
-        $term_obj  = CXGN::Phenome::UserTrait->new( $dbh, $cvterm_id );
-        $term_name = $term_obj->get_name();
-        $term_id   = $term_obj->get_user_trait_id();
-    }
-    else
-    {
-        $term_obj  = CXGN::Chado::Cvterm->new( $dbh, $cvterm_id );
-        $term_name = $term_obj->get_cvterm_name();
-        $term_id   = $term_obj->get_cvterm_id();
-    }
-
+    my $term_id         = $self->get_trait_id();
+    my $term_name       = $self->get_trait_name();
+   
     #used to show certain elements to only the proper users
     my $login_user      = $self->get_user();
     my $login_user_id   = $login_user->get_sp_person_id();
@@ -265,7 +244,7 @@ EOS
 
     
     my $page =
-"../phenome/qtl_analysis.pl?population_id=$population_id&amp;cvterm_id=$term_id";
+"../phenome/population_indls.pl?population_id=$population_id&amp;cvterm_id=$term_id";
     $args{calling_page} = $page;
 
     my $pubmed;
@@ -439,7 +418,9 @@ qq { Download population: <span><a href="pop_download.pl?population_id=$populati
         $plot_html .= $summ_data;
 	$plot_html .= qq | </td></tr></table> |;
 	
-	my ( $qtl_image, $legend);
+        
+
+        my ( $qtl_image, $legend);
         
         #using standard deviation of 0.01 as an arbitrary cut off to run
 	#qtl analysis. Probably, need to think of better solution.
@@ -455,11 +436,52 @@ qq { Download population: <span><a href="pop_download.pl?population_id=$populati
   
 	
 	my $qtl_html = qq | <table><tr><td width=70%>$qtl_image</td><td width=30%>$legend</td></tr></table> |;
+        my $qtl_effects_ref = $self->qtl_effects();
+        my $explained_variation = $self->explained_variation();
+        my ($qtl_effects_data, $explained_variation_data);
+       
+        if ($qtl_effects_ref) 
+        {
+            $qtl_effects_data  = columnar_table_html(                                             
+                                              data         => $qtl_effects_ref,
+                                              __alt_freq   => 2,
+                                              __alt_width  => 1,
+                                              __alt_offset => 3,
+                                              __align      => 'l',
+                                            );
+           
+           
+        } else 
+        {
+            $qtl_effects_data = "No QTL effects estimates were found for QTL(s) of  this trait.";
+        }
 
+        if ($explained_variation) {
+         $explained_variation_data  = columnar_table_html(                                             
+                                              data         => $explained_variation,
+                                              __alt_freq   => 2,
+                                              __alt_width  => 1,
+                                              __alt_offset => 3,
+                                              __align      => 'l',
+                                            );
+         
+        } else  {
+            $explained_variation_data = "No explained variation estimates were found for QTL(s) of this trait.";
+        }
+       
         print info_section_html( 
                                 title    => 'QTL(s)',
                                 contents => $qtl_html, 
                                 );
+             
+        
+        print info_section_html( title    => 'Variation explained by QTL(s) ( Interacting QTLs model )',
+                                 contents => $explained_variation_data
+                                 );
+        
+        print info_section_html( title    => 'QTL effects',
+                                 contents => $qtl_effects_data
+                                 );
 
         print info_section_html( 
 	                        title    => 'Phenotype Frequency Distribution',
@@ -501,6 +523,7 @@ qq { Download population: <span><a href="pop_download.pl?population_id=$populati
         print $page_comment_obj->get_html();
     }
 
+   
     $self->get_page()->footer();
 
     exit();
@@ -516,33 +539,18 @@ sub store
     my %args          = $self->get_args();
 
     $self->SUPER::store(0);
-
-    exit();
 }
 
 sub population_distribution
 {
     my $self      = shift;
-    my $pop_id    = $self->get_object_id();
-    my $cvterm_id = $self->get_cvterm_id();
-    my $dbh       = $self->get_dbh();
+    my $pop_id    = $self->get_object_id();   
     my $pop       = $self->get_object();
     my $pop_name  = $pop->get_name();
-
-    my ( $term_obj, $term_name, $term_id );
+    my $term_name = $self->get_trait_name();
+    my $term_id   = $self->get_trait_id();
+    my $dbh       = $self->get_dbh();
    
-    if ( $pop->get_web_uploaded() )
-    {
-        $term_obj  = CXGN::Phenome::UserTrait->new( $dbh, $cvterm_id );
-        $term_name = $term_obj->get_name();
-        $term_id   = $term_obj->get_user_trait_id();
-    }
-    else
-    {
-        $term_obj  = CXGN::Chado::Cvterm->new( $dbh, $cvterm_id );
-        $term_name = $term_obj->get_cvterm_name();
-        $term_id   = $term_obj->get_cvterm_id();
-    }
 
     my $basepath     = $c->get_conf("basepath");
     my $tempfile_dir = $c->get_conf("tempfiles_subdir");
@@ -664,30 +672,15 @@ qq | Frequency distribution of experimental lines evaluated for $term_name. Bars
 
 sub qtl_plot
 {
-    my $self      = shift;   
-    my $pop_id    = $self->get_object_id();
-    my $cvterm_id = $self->get_cvterm_id();
-    my $dbh       = $self->get_dbh();
-
+    my $self           = shift;       
+    my $dbh            = $self->get_dbh();
+    my $pop_id         = $self->get_object_id();
     my $population     = $self->get_object();
     my $pop_name       = $population->get_name();
     my $mapversion     = $population->mapversion_id();
     my @linkage_groups = $population->linkage_groups();    
-
-    my ( $term_obj, $term_name, $term_id );
-   
-    if ( $population->get_web_uploaded() )
-    {
-        $term_obj  = CXGN::Phenome::UserTrait->new( $dbh, $cvterm_id );
-        $term_name = $term_obj->get_name();
-        $term_id   = $term_obj->get_user_trait_id();
-    }
-    else
-    {
-        $term_obj  = CXGN::Chado::Cvterm->new( $dbh, $cvterm_id );
-        $term_name = $term_obj->get_cvterm_name();
-        $term_id   = $term_obj->get_cvterm_id();
-    }
+    my $term_name      = $self->get_trait_name();
+    my $term_id        = $self->get_trait_id();
 
     my $ac = $population->cvterm_acronym($term_name);
 
@@ -706,11 +699,10 @@ sub qtl_plot
     my $round = Number::Format->new();
   
     $qtl_image  = $self->qtl_images_exist();
-    my $permu_data = $self->permu_values_exist();
+    my $permu_data = $self->permu_file();
     
-    unless ( $qtl_image && $permu_data )
-    {
-
+    unless ( $qtl_image && -s $permu_data)
+    {	   
         my ( $qtl_summary, $peak_markers_file ) = $self->run_r();
 
         open my $qtl_fh, "<", $qtl_summary or die "can't open $qtl_summary: $!\n";
@@ -944,28 +936,13 @@ qq | <a href="$image_t_url" title="<a href=$h_marker&amp;qtl=$image_t_url><font 
 
 sub infile_list
 {
-    my $self       = shift;  
+    my $self       = shift; 
+    my $dbh        = $self->get_dbh(); 
     my $pop_id     = $self->get_object_id();
     my $population = $self->get_object();
-    my $cvterm_id  = $self->get_cvterm_id();    
-    my $dbh        = $self->get_dbh();
-    
-    my ( $term_obj, $term_name, $term_id );
-   
-
-    if ( $population->get_web_uploaded() )
-    {
-        $term_obj  = CXGN::Phenome::UserTrait->new( $dbh, $cvterm_id );
-        $term_name = $term_obj->get_name();
-        $term_id   = $term_obj->get_user_trait_id();
-    }
-    else
-    {
-        $term_obj  = CXGN::Chado::Cvterm->new( $dbh, $cvterm_id );
-        $term_name = $term_obj->get_cvterm_name();
-        $term_id   = $term_obj->get_cvterm_id();
-    }
-
+    my $term_name  = $self->get_trait_name();
+    my $term_id    = $self->get_trait_id();
+  
     my $ac = $population->cvterm_acronym($term_name);
 
     my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
@@ -985,7 +962,7 @@ sub infile_list
     my $file_in = $input_file_list_temp->filename();
 
     my $file_cvin = File::Temp->new(
-                                     TEMPLATE => 'cv_input-XXXXXX',
+                                     TEMPLATE => 'cvterm_input-XXXXXX',
                                      DIR      => $prod_temp_path,
                                      UNLINK   => 0,
                                    );
@@ -994,9 +971,18 @@ sub infile_list
     open my $cv_fh, ">", $file_cv_in or die "can't open $file_cv_in: $!\n";
     $cv_fh->print($ac);
 
-    
+    my $popid_temp = File::Temp->new(
+                                     TEMPLATE => 'popid-XXXXXX',
+                                     DIR      => $prod_temp_path,
+                                     UNLINK   => 0,
+                                   );
+    my $file_popid = $popid_temp->filename();
+
+    open my $popid_fh, ">", $file_popid or die "can't open $file_popid: $!\n";
+    $popid_fh->print($pop_id);
+
     my $file_in_list = join( "\t",
-                             $file_cv_in,       "P$pop_id",
+                             $file_cv_in,       $file_popid,
                              $gen_dataset_file, $phe_dataset_file,
                              $prod_permu_file, $crosstype_file);
 
@@ -1026,24 +1012,10 @@ sub outfile_list
     my $self       = shift;
     my $pop_id     = $self->get_object_id();
     my $population = $self->get_object();
-    my $cvterm_id  = $self->get_cvterm_id();
+    my $term_id    = $self->get_trait_id();
+    my $term_name  = $self->get_trait_name();
     my $dbh        = $self->get_dbh();
-
-    my ( $term_obj, $term_name, $term_id );
-   
-    if ( $population->get_web_uploaded() )
-    {
-        $term_obj  = CXGN::Phenome::UserTrait->new( $dbh, $cvterm_id );
-        $term_name = $term_obj->get_name();
-        $term_id   = $term_obj->get_user_trait_id();
-    }
-    else
-    {
-        $term_obj  = CXGN::Chado::Cvterm->new( $dbh, $cvterm_id );
-        $term_name = $term_obj->get_cvterm_name();
-        $term_id   = $term_obj->get_cvterm_id();
-    }
-
+    
     my $ac = $population->cvterm_acronym($term_name);
 
     my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
@@ -1073,12 +1045,14 @@ sub outfile_list
     my $peak_markers = $marker_temp->filename;
    
     my $ci_lod = $population->ci_lod_file($c, $ac);
-
-    my $file_out_list = join (
-        "\t",
-        $qtl_summary,
-        $peak_markers,
-	$ci_lod
+    my $qtl_effects = $population->qtl_effects_file($c, $ac);
+    my $explained_variation = $population->explained_variation_file($c, $ac);
+    my $file_out_list = join ( "\t"
+        ,$qtl_summary
+        ,$peak_markers
+	,$ci_lod
+        ,$qtl_effects
+        ,$explained_variation
 	);
 
     open my $fo_fh, ">", $file_out or die "can't open $file_out: $!\n";
@@ -1193,7 +1167,7 @@ sub run_r
           tempfile(
                     File::Spec->catfile(
                                          CXGN::Tools::Run->temp_base(),
-                                         "qtl_analysis.pl-$_-XXXXXX",
+                                         "population_indls.pl-$_-XXXXXX",
                                        ),
                   );
         $filename
@@ -1232,8 +1206,8 @@ sub run_r
         Carp::confess $err;
     };
 
-    copy( $prod_permu_file, $tempimages_path )
-      or die "could not copy '$prod_permu_file' to '$tempimages_path'";
+#    copy( $prod_permu_file, $tempimages_path )
+#      or die "could not copy '$prod_permu_file' to '$tempimages_path'";
 
     return $qtl_summary, $peak_markers;
 
@@ -1254,26 +1228,12 @@ sub run_r
 sub permu_file
 {
     my $self       = shift;    
-    my $cvterm_id  = $self->get_cvterm_id();
     my $dbh        = $self->get_dbh();
     my $pop_id     = $self->get_object_id();
     my $population = $self->get_object();
     my $pop_name   = $population->get_name();
-
-    my ( $term_obj, $term_name, $term_id );
-
-    if ( $population->get_web_uploaded() )
-    {
-        $term_obj  = CXGN::Phenome::UserTrait->new( $dbh, $cvterm_id );
-        $term_name = $term_obj->get_name();
-        $term_id   = $term_obj->get_user_trait_id();
-    }
-    else
-    {
-        $term_obj  = CXGN::Chado::Cvterm->new( $dbh, $cvterm_id );
-        $term_name = $term_obj->get_cvterm_name();
-        $term_id   = $term_obj->get_cvterm_id();
-    }
+    my $term_name  = $self->get_trait_name();
+    my $term_id    = $self->get_trait_id();
 
     my $ac = $population->cvterm_acronym($term_name);
 
@@ -1329,7 +1289,7 @@ sub permu_values
     my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
       $self->cache_temp_path();
     
-    $permu_file = File::Spec->catfile( $tempimages_path, $permu_file );
+    $permu_file = File::Spec->catfile( $prod_cache_path, $permu_file );
 
     my $round1 = Math::Round::Var->new(0.1);
 
@@ -1349,63 +1309,7 @@ sub permu_values
 
 }
 
-=head2 permu_values_exist
 
- Usage: my $permu_value = $self->permu_values_exist();
- Desc: checks if there is permutation value in the permutation file.
- Ret: undef or some value
- Args: none
- Side Effects:
- Example:
-
-=cut
-
-sub permu_values_exist
-{
-    my $self            = shift;
-    my $prod_permu_file = $self->permu_file();
-
-    my ( $size, $permu_file, $permu_data, $tempimages_path, $prod_cache_path,
-         $prod_temp_path );
-
-    if ($prod_permu_file)
-    {
-
-        $permu_file = fileparse($prod_permu_file);
-        ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
-          $self->cache_temp_path();
-    }
-
-    if ($permu_file)
-    {
-
-        $permu_file = File::Spec->catfile( $tempimages_path, $permu_file );
-    }
-
-    if ( -e $permu_file )
-    {
-
-        open my $pf_fh, "<", $permu_file or die "can't open $permu_file: !$\n";
-        my $h = <$pf_fh>;
-        while ( $permu_data = <$pf_fh> )
-        {
-            last if ($permu_data);
-
-            # 	    #just checking if there is data in there
-        }
-    }
-
-    if ($permu_data)
-    {
-        return 1;
-    }
-    else
-    {
-        return 0;
-
-    }
-
-}
 
 =head2 qtl_images_exist
 
@@ -1421,29 +1325,15 @@ sub permu_values_exist
 sub qtl_images_exist
 {
     my $self       = shift;
-    my $pop_id     = $self->get_object_id();
-    my $cvterm_id  = $self->get_cvterm_id();
-    my $dbh        = $self->get_dbh();
+    my $pop_id     = $self->get_object_id();    
     my $population = $self->get_object();
     my $pop_name   = $population->get_name();
+    my $term_name  = $self->get_trait_name();
+    my $term_id    = $self->get_trait_id();
+    my $dbh        = $self->get_dbh();
 
     my @linkage_groups = $population->linkage_groups();
     @linkage_groups = sort ( { $a <=> $b } @linkage_groups );
-
-    my ( $term_obj, $term_name, $term_id );
-
-    if ( $population->get_web_uploaded() )
-    {
-        $term_obj  = CXGN::Phenome::UserTrait->new( $dbh, $cvterm_id );
-        $term_name = $term_obj->get_name();
-        $term_id   = $term_obj->get_user_trait_id();
-    }
-    else
-    {
-        $term_obj  = CXGN::Chado::Cvterm->new( $dbh, $cvterm_id );
-        $term_name = $term_obj->get_cvterm_name();
-        $term_id   = $term_obj->get_cvterm_id();
-    }
 
     my $ac = $population->cvterm_acronym($term_name);
 
@@ -1742,7 +1632,7 @@ my $permu_threshold_ref = $self->permu_values();
 
 }
 
-=head2 set_cvterm_id, get_cvterm_id
+=head2 set_trait_id, get_trait_id
 
  Usage:
  Desc: the 'cvterm id' here is not necessarily a cvterm id, 
@@ -1756,11 +1646,113 @@ my $permu_threshold_ref = $self->permu_values();
 
 
 
-sub get_cvterm_id {
+sub get_trait_id {
     my $self = shift;
     return $self->{cvterm_id};
 }
-sub set_cvterm_id {
+sub set_trait_id {
     my $self = shift;
     return $self->{cvterm_id} = shift;
+}
+
+=head2 get_trait_name
+ Usage: my $term_name = $self->get_trait_name()
+ Desc: retrieves the name of the trait whether 
+       it is stored in the user_trait or cvterm table
+ Return: a trait name
+ Args: None
+ Side Effects:
+ Example:
+
+=cut
+sub get_trait_name {
+    my $self        = shift;
+    my $population  = $self->get_object();
+    my $term_id     = $self->get_trait_id();
+    my $dbh         = $c->dbc()->dbh();
+    
+    my ($term_obj, $term_name);
+    if ( $population->get_web_uploaded() )
+    {
+        $term_obj  = CXGN::Phenome::UserTrait->new( $dbh, $term_id );
+        $term_name = $term_obj->get_name();
+        #$term_id   = $term_obj->get_user_trait_id();
+    }
+    else
+    {
+        $term_obj  = CXGN::Chado::Cvterm->new( $dbh, $term_id );
+        $term_name = $term_obj->get_cvterm_name();
+        #$term_id   = $term_obj->get_cvterm_id();
+    }
+
+    return $term_name;
+
+
+}
+
+sub qtl_effects {
+    my $self       = shift;
+    my $trait_name = $self->get_trait_name();
+    my $pop        = $self->get_object();  
+    $trait_name   = $pop->cvterm_acronym($trait_name);  
+
+    my $file = $pop->qtl_effects_file($c, $trait_name);
+    
+    if ( -s $file ) 
+    {
+       
+        my @effects =  map  { [ split( /\t/, $_) ]}  read_file( $file );
+        my $trash   = shift(@effects); 
+
+        push @effects, map { [ $_ ] } (" ", "QTL effects interpretation example: 2\@100 means 
+                                        QTL at linkage group 2 and position 100cM.", 
+                                        "2\@100:3\@100 means interaction between QTL at linkage 
+                                        group 2 position 100 cM and QTL at linkage group 3 
+                                        position 100 cM. 'a' and 'd' stand for additive and domininace 
+                                        effects, respectively."
+                                      );
+        return \@effects;
+    } else 
+    {
+        return undef;
+    }
+
+}
+
+sub explained_variation {
+    my $self       = shift;
+    my $trait_name = $self->get_trait_name();
+    my $pop        = $self->get_object();     
+    $trait_name    = $pop->cvterm_acronym($trait_name);
+
+    my $file = $pop->explained_variation_file($c, $trait_name);
+    
+    if ( -s $file ) 
+    {
+        my @anova =  map  { [ split( /\t/, $_) ]}  read_file( $file );
+        $anova[0][0] = "Source";
+        
+        if ( $anova[1][0] eq 'Model') 
+        {
+            push @anova, map { [ $_ ] } ("  ", "The ANOVA model is based on a single QTL 
+                                         significant source of variation"
+                                        );
+        }
+        else 
+        {
+            push @anova, map { [ $_ ]} ( "  ",  "Variance source interpretation example: 2\@100 means 
+                                          QTL at linkage group 2 and position 100cM.", 
+                                          "2\@100:3\@100 means interaction between QTL at linkage 
+                                          group 2 position 
+                                          100 cM and QTL at linkage group 3 position 100 cM."
+                                       );
+        }
+        
+        
+        return \@anova;
+    } else 
+    {
+        return undef;
+    }
+
 }
