@@ -79,7 +79,7 @@ print <<EOJS;
 </div>
 <script>
 
-  function resolve_blast_ident( id, match_detail_url, identifier_url ) {
+  function resolve_blast_ident( id, id_region, match_detail_url, identifier_url ) {
     var popup = jQuery( "#xref_menu_popup" );
 
     var popup_title = popup.children('.popup_title');
@@ -96,7 +96,7 @@ print <<EOJS;
     popup.find('a.match_details').attr( 'href', match_detail_url );
     var content = popup.find('div.xref_content');
     content.html( '<img src="/img/throbber.gif" /> searching for additional related pages ...' );
-    content.load( '/api/v1/feature_xrefs?q='+id );
+    content.load( '/api/v1/feature_xrefs?q='+id+';q='+id_region );
     popup.dialog( 'open' );
     jQuery( "body .ui-widget-overlay").click( function() { popup.dialog( "close" ); } );
 
@@ -407,6 +407,10 @@ sub make_bioperl_result_writer {
     my $identifier_url = CXGN::Tools::Identifiers::identifier_url( $id );
     my $js_identifier_url = $identifier_url ? "'$identifier_url'" : 'null';
 
+    use List::MoreUtils 'minmax';
+
+    my $region_string = $id.':'.join('..', minmax map { $_->start('subject'), $_->end('subject') } $hit->hsps );
+
     my $coords_string =
         "hilite_coords="
        .join( ',',
@@ -418,7 +422,7 @@ sub make_bioperl_result_writer {
 
     my $no_js_url = $identifier_url || $match_seq_url;
 
-    return qq{ <a class="blast_match_ident" href="$no_js_url" onclick="return resolve_blast_ident( '$id', '$match_seq_url', $js_identifier_url )">$id</a> };
+    return qq{ <a class="blast_match_ident" href="$no_js_url" onclick="return resolve_blast_ident( '$id', '$region_string', '$match_seq_url', $js_identifier_url )">$id</a> };
 
   };
   $self->hit_link_desc(  $hit_link );
