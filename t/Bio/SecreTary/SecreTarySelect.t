@@ -31,12 +31,12 @@ isa_ok( $STS_obj, 'Bio::SecreTary::SecreTarySelect' );
 my ($g1_best, $g2_best) = $STS_obj->refine_solutions($STA_obj);
 
 #  print "$g1_best, $g2_best \n";
-ok($g1_best eq '2479,17,35,5,0.8875', 'Check group1 best solution (case 2).');
-ok($g2_best eq '2479,17,35,5,0.76875', 'Check group2 best solution (case 2).');
+ok($g1_best =~ /^2479,17,35,5,0.887[456][0-9]*$/, 'Check group1 best solution (case 2).');
+ok($g2_best =~ /^2479,17,35,5,0.7687[456][0-9]*$/, 'Check group2 best solution (case 2).');
 
-my $categorize1_output = $STS_obj->Categorize1($STA_obj);
+my $categorize1_output = $STS_obj->categorize1($STA_obj);
 
-ok($categorize1_output eq 'group1 0.8875 2479 17 35 5 0.8875', 'Check categorize1 output (case 2).');
+ok($categorize1_output =~ /^group1 0.887[456][0-9]* 2479 17 35 5 0.887[456][0-9]*$/, 'Check categorize1 output (case 2).');
 # print $categorize1_output, "\n";
 
 
@@ -56,12 +56,12 @@ isa_ok( $STS_obj, 'Bio::SecreTary::SecreTarySelect' );
 
 ($g1_best, $g2_best) = $STS_obj->refine_solutions($STA_obj);
 
-ok($g1_best eq '1453,3,25,8,0.73825', 'Check group1 best solution (case 2).');
-ok($g2_best eq '1453,3,25,8,0.7875', 'Check group2 best solution (case 2).');
+ok($g1_best =~ /^1453,3,25,8,0.7382[456][0-9]*$/, 'Check group1 best solution (case 2).');
+ok($g2_best =~ /^1453,3,25,8,0.787[456][0-9]*$/, 'Check group2 best solution (case 2).');
 
-$categorize1_output = $STS_obj->Categorize1($STA_obj);
+$categorize1_output = $STS_obj->categorize1($STA_obj);
 
-ok($categorize1_output eq 'group2 0.7875 1453 3 25 8 0.7875', 'Check categorize1 output (case 2).');
+ok($categorize1_output =~ /^group2 0.787[456][0-9]* 1453 3 25 8 0.787[456][0-9]*$/, 'Check categorize1 output (case 2).');
 
 
 ### case 3 - a sequence which is predicted to have no signal peptide, but close
@@ -78,12 +78,12 @@ isa_ok( $STS_obj, 'Bio::SecreTary::SecreTarySelect' );
 
 ($g1_best, $g2_best) = $STS_obj->refine_solutions($STA_obj);
 
-ok($g1_best eq '1279,20,41,7,0.69475', 'Check group1 best solution (case 2).');
-ok($g2_best eq '-1,0,0,-1,0', 'Check group2 best solution (case 2).');
+ok($g1_best =~ /^1279,20,41,7,0.6947[456][0-9]*$/, 'Check group1 best solution (case 2).');
+ok($g2_best =~ /^-1,0,0,-1,0$/, 'Check group2 best solution (case 2).');
 
-$categorize1_output = $STS_obj->Categorize1($STA_obj);
+$categorize1_output = $STS_obj->categorize1($STA_obj);
 
-ok($categorize1_output eq 'fail 0.69475 1279 20 41 7 0.69475', 'Check categorize1 output (case 2).');
+ok($categorize1_output =~ /^fail 0.6947[456][0-9]* 1279 20 41 7 0.6947[456][0-9]*$/, 'Check categorize1 output (case 2).');
 
 
 
@@ -103,12 +103,12 @@ isa_ok( $STS_obj, 'Bio::SecreTary::SecreTarySelect' );
 
 ($g1_best, $g2_best) = $STS_obj->refine_solutions($STA_obj);
 
-ok($g1_best eq '-1,0,0,-1,0', 'Check group1 best solution (case 2).');
-ok($g2_best eq '-1,0,0,-1,0', 'Check group2 best solution (case 2).');
+ok($g1_best =~ /^-1,0,0,-1,0$/, 'Check group1 best solution (case 2).');
+ok($g2_best =~ /^-1,0,0,-1,0$/, 'Check group2 best solution (case 2).');
 
-$categorize1_output = $STS_obj->Categorize1($STA_obj);
+$categorize1_output = $STS_obj->categorize1($STA_obj);
 
-ok($categorize1_output eq 'fail 0 -1 0 0 -1 0', 'Check categorize1 output (case 2).');
+ok($categorize1_output =~ /^fail 0 -1 0 0 -1 0$/, 'Check categorize1 output (case 2).');
 
 
 
