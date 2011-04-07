@@ -109,7 +109,7 @@ sub define_object
     if ($trait_id) {
 	$self->set_trait_id($trait_id);
     } else {
-	$c->throw("A cvterm id argument is missing");
+	die "A cvterm id argument is missing";
     }
 
 
