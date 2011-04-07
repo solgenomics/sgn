@@ -1,10 +1,3 @@
-#!/usr/bin/perl -w
-
-=head1 DESCRIPTION
-a redirect for phenome/population_indls.pl to phenome/qtl_analysis.pl: for links from the qtl ms and may be more...
-
-=cut
-
 use strict;
 use warnings;
 
