@@ -9,6 +9,8 @@ sub new {
     my $class = shift;
     my $self = bless {}, $class;
 
+
+
     $self->{center}   = [ undef, undef ];    # [position, score] position is 0-based
     $self->{nterm}    = [ undef, undef ];
     $self->{cterm}    = [ undef, undef ];
@@ -19,15 +21,15 @@ sub new {
     return $self;
 }
 
-sub set_center {
-    my $self = shift;
-    return $self->{center} = shift;
-}
+ sub set_center {
+     my $self = shift;
+     return $self->{center} = shift;
+ }
 
-sub get_center {
-    my $self = shift;
-    return $self->{center};
-}
+ sub get_center {
+     my $self = shift;
+     return $self->{center};
+ }
 
 sub set_nterm {
     my $self = shift;
