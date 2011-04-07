@@ -2,17 +2,18 @@
   $xrefs => []
 </%args>
   <& /page/columnar_table.mas,
-            headings=>["Annotation Set", "Feature(s)", "Location(s)"],
+            headings=>["Annotation Set", "Feature(s)", "Region"],
             data=> [ map [
                            $_->data_source->description,
 
-                           join( ', ', map $_->display_name, @{$_->seqfeatures} ),                                
+                           join( ', ', map $_->display_name, @{$_->seqfeatures} ),
 
                            '<a href="'.$_->url.'">'
-                           .join( ', ', (
-                               map $_->seq_id.':'.$_->start.'..'.$_->end, @{$_->seqfeatures}
-                                  )
-                             )
+                           .join( ', ', ( $_->is_whole_sequence
+                                            ? $_->seqfeatures->[0]->seq_id
+                                            : $_->seq_id.':'.$_->start.'..'.$_->end,
+                                        ),
+                                )
                            .'</a>',
                           ],
                      @$xrefs
