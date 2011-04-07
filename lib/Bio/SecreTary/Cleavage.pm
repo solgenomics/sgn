@@ -1,5 +1,3 @@
-#!/usr/bin/perl
-
 #the Genentech alignment program:
 #reads in a bunch of sequences from the given filename, figures out where their three regions are,
 #aligns N regions at left, Cs at right and Hs at right, and prints to stdout
@@ -59,6 +57,7 @@
 package Bio::SecreTary::Cleavage;
 use strict;
 use warnings;
+use List::Util qw/min/;
 
 sub new {
     my $class = shift;
@@ -172,11 +171,6 @@ sub set_aa_number_hash {
 }
 
 ####################################################################################################################
-
-sub min {
-    my ( $a, $b ) = @_;
-    return ( $a < $b ) ? $a : $b;
-}
 
 #return a positive score for the given cleavagesite in the given sequence
 sub scoreCleavageSite    #expects parameters SEQUENCE, CLEAVAGE_SITE
@@ -366,7 +360,7 @@ sub cleavage1 {
     my $self               = shift;
     my $sequence           = shift;
     my $letter2index       = $self->get_aa_number_hash();
-    my @seq_aanumber_array = map {$letter2index->{$_}} split( '', $sequence );
+    my @seq_aanumber_array = map { $letter2index->{$_} } split( '', $sequence );
     my $weight_matrix_ref  = $self->get_weight_matrix();
     my @cleavageSiteScores;
     my $ibest = 0;
