@@ -101,20 +101,32 @@ use CXGN::Tools::Text qw/ commify_number /;
 use constant LINE_WINDOW_EXPAND => 5;
 
 sub whole_seq_info_table {
-    my ( $seq, $lines, $coords, $highlight_description,  ) = @_;
+    my ( $seq, $lines, $width ) = @_;
 
-    return info_table_html( 'Sequence' =>
-                                join( '',
-                                      '<span class="sequence">',
-                                      ( '&gt;',
-                                        $seq->id,
-                                        "<br />",
-                                        join('<br />',@$lines),
-                                      ),
-                                      '</span>'
-                                     ),
-                            __border      => 0,
-                           );
+    if( $seq->length < 200_000 ) {
+
+        $lines ||= [ $seq->seq =~ /.{1,$width}/gs ];
+
+        return info_table_html( 'Sequence' =>
+                                    join( '',
+                                          '<span class="sequence">',
+                                          ( '&gt;',
+                                            $seq->id,
+                                            "<br />",
+                                            join('<br />',@$lines),
+                                          ),
+                                          '</span>'
+                                         ),
+                                __border      => 0,
+                               );
+    } else {
+
+        return info_table_html( 'Sequence' =>
+                                    '<span class="warning">Sequence too large to display.</span>',
+                                __border      => 0,
+                               );
+
+    }
 }
 
 sub extract_subsequence_for_highlights {
@@ -172,15 +184,13 @@ sub seq_html {
     my $width     = shift;
     my $whole_seq = shift;
 
+    return whole_seq_info_table($seq, undef, $width) unless @$coords;
+
     # get our subsequence, plus 2 subroutine refs that convert
     # coordinates back and forth between being relative to the actual
     # sequence (absolute) and relative to the subsequence we are
     # operating on (relative)
     ( $seq, my ($abs2rel, $rel2abs) ) = extract_subsequence_for_highlights( $seq, $coords, $width );
-    my @lines = $seq->seq =~ /.{1,$width}/gs;
-
-    @$coords
-        or return whole_seq_info_table($seq, \@lines);
 
     # convert the highlight coords to be relative to the subsequence
     # we are operating on
@@ -194,6 +204,8 @@ sub seq_html {
     # clamping them to the sequence length if needed, and merge any
     # overlapping ranges
     my @ranges = Bio::Range->unions( coords_to_ranges( $seq, $coords ) );
+
+    my @lines = $seq->seq =~ /.{1,$width}/gs;
 
     # put the highlighting span tags in the line-broken sequence
     foreach (@ranges) {
