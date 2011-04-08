@@ -14,10 +14,6 @@ Tom York (tly2@cornell.edu)
 =cut
 
 package Bio::SecreTary::TMpred;
-
-use strict;
-use warnings;
-
 use Carp;
 use IO::File;
 use File::Temp;
@@ -58,6 +54,7 @@ Readonly my $TMHLOFFSET => ($IMITATE_PASCAL_CODE)
 # but with TMHLOFFSET => 0, 17->17, 16->15, 15->15, etc. now you find
 # the length 16 ones, (as well as length 15 ones which are discarded in good_solutions).
 # set up defaults for tmpred parameters:
+
 
 =head2 function new
 
@@ -267,7 +264,7 @@ sub run_tmpred_perl {
             ( $fhresult, $start, $helix ) =
               $self->find_helix( $length, $start, $io_score, $io_center_prof,
                 $io_nterm_prof, $io_cterm_prof );
-            $helix->set_nt_in($TRUE);    # io is inside-to-outside
+            $helix->nt_in($TRUE);    # io is inside-to-outside
             if ($fhresult) {
                 push @io_helices, $helix;
             }
@@ -284,7 +281,7 @@ sub run_tmpred_perl {
             ( $fhresult, $start, $helix ) =
               $self->find_helix( $length, $start, $oi_score, $oi_center_prof,
                 $oi_nterm_prof, $oi_cterm_prof );
-            $helix->set_nt_in('FALSE');
+            $helix->nt_in($FALSE);
             if ($fhresult) {
                 push @oi_helices, $helix;
             }
@@ -303,9 +300,9 @@ sub good_solutions_perl {    # get the good solutions starting from the
 
     my $good_string = "";
     foreach (@$tmpred_helices_ref) {
-        my $beg    = $_->get_nterm()->[0] + 1;
-        my $end    = $_->get_cterm()->[0] + 1;
-        my $score  = $_->get_score();
+        my $beg    = $_->nterm()->[0] + 1;
+        my $end    = $_->cterm()->[0] + 1;
+        my $score  = $_->score();
         my $length = $end + 1 - $beg;
 
         if (    $score >= $self->{min_score}
@@ -331,8 +328,8 @@ sub make_profile {    # makes a profile, i.e. an array
                       # my $sequence     = shift;
     my $seq_aanumber_array = shift;    # ref to array of numbers
     my $table              = shift;
-    my $ref_position = $table->get_marked_position();
-    my $matrix       = $table->get_table();
+    my $ref_position = $table->marked_position();
+    my $matrix       = $table->table();
     my $ncols   = scalar @{ $matrix->[0] };   # ncols is # elements in first row
     my @profile = ();
     my $length = scalar @$seq_aanumber_array;    #length $sequence;
@@ -420,15 +417,14 @@ sub find_helix {
         if ( ( $s->[$i] == $scr ) and ( $s->[$i] > 0 ) ) {
             $found = $TRUE;
 
-            $helix->set_center( [ $i, $m->[$i] ] );
-
+	    $helix->center( [ $i, $m->[$i] ] );
             my $beg = $i - $max_halfw;
             $beg = 0 if ( $beg < 0 );
 
             my ( $nt_position, $nt_score ) =
               findmax( $n, $beg, $i - $min_halfw );
 
-            $helix->set_nterm( [ $nt_position, $nt_score ] );
+            $helix->nterm( [ $nt_position, $nt_score ] );
 
             my $end = $i + $max_halfw;
             $end = $length - 1 if ( $end >= $length );
@@ -436,7 +432,7 @@ sub find_helix {
             my ( $ct_position, $ct_score ) =
               findmax( $c, $i + $min_halfw, $end );
 
-            $helix->set_cterm( [ $ct_position, $ct_score ] );
+            $helix->cterm( [ $ct_position, $ct_score ] );
 
             my $j = $i - $min_halfw;    # determine nearest N-terminus
             $done = $FALSE;
@@ -452,7 +448,7 @@ sub find_helix {
                 }
             }
 
-            $helix->set_sh_nterm( [ $j, $n->[$j] ] );
+            $helix->sh_nterm( [ $j, $n->[$j] ] );
 
             $j    = $i + $min_halfw;
             $done = $FALSE;
@@ -475,18 +471,18 @@ sub find_helix {
                 }
             }
 
-            $helix->set_sh_cterm( [ $j, $c->[$j] ] );
+            $helix->sh_cterm( [ $j, $c->[$j] ] );
         }    # end of if helix found block
         $i++;
     }    # end of while loop
     if ($found) {
-        $start = $helix->get_sh_cterm()->[0] + 1;
+        $start = $helix->sh_cterm()->[0] + 1;
 
         my $the_score =
-          $helix->get_center()->[1] +
-          $helix->get_nterm()->[1] +
-          $helix->get_cterm()->[1];
-        $helix->set_score($the_score);
+	    $helix->center()->[1] + 
+          $helix->nterm()->[1] +
+          $helix->cterm()->[1];
+        $helix->score($the_score);
         $find_helix_result = $TRUE;
     }
     else {
@@ -613,18 +609,13 @@ sub _long_output {
                   $self->_io_oi_correspondence_string(
                     $io_helices_ref->[$io_count], undef );
 
-
-# $io_helices_ref->[$io_count]->get_descriptor_string() =~ /(.*?)\s+[0-9]+$/;
-# my $iostr = $1;
-# if($io_helices_ref->[$io_count]->get_score() < $self->{min_score}){ $iostr = "($iostr)"; }
-         #   $long_out .= " $1 | $padding" . "\n";
             $io_count++;
         }
-        elsif ( $io_helices_ref->[$io_count]->get_center()->[0] <=
-            $oi_helices_ref->[$oi_count]->get_center()->[0] )
+        elsif ( $io_helices_ref->[$io_count]->center()->[0] <=
+            $oi_helices_ref->[$oi_count]->center()->[0] )
         {    # io center is first (or same pos)
-            if ( $oi_helices_ref->[$oi_count]->get_sh_nterm()->[0] <=
-                $io_helices_ref->[$io_count]->get_sh_cterm()->[0] )
+            if ( $oi_helices_ref->[$oi_count]->sh_nterm()->[0] <=
+                $io_helices_ref->[$io_count]->sh_cterm()->[0] )
             {    # cores overlap
                 $long_out .= $self->_io_oi_correspondence_string(
                     $io_helices_ref->[$io_count],
@@ -648,8 +639,8 @@ sub _long_output {
         }
         else {    # oi center pos < io center pos
 
-            if ( $io_helices_ref->[$io_count]->get_sh_nterm()->[0] <=
-                $oi_helices_ref->[$oi_count]->get_sh_cterm()->[0] )
+            if ( $io_helices_ref->[$io_count]->sh_nterm()->[0] <=
+                $oi_helices_ref->[$oi_count]->sh_cterm()->[0] )
             {     # cores overlap
                 $long_out .= $self->_io_oi_correspondence_string(
                     $io_helices_ref->[$io_count],
@@ -692,14 +683,14 @@ sub _long_output {
       $self->_topology_model( $TRUE, $io_helices_ref, $oi_helices_ref );
     my $nt_in_model_score = 0.0;
     foreach (@$nt_in_topo_model_ref) {
-        $nt_in_model_score += $_->get_score();
+        $nt_in_model_score += $_->score();
     }
 
     my $nt_out_topo_model_ref =
       $self->_topology_model( $FALSE, $io_helices_ref, $oi_helices_ref );
     my $nt_out_model_score = 0.0;
     foreach (@$nt_out_topo_model_ref) {
-        $nt_out_model_score += $_->get_score();
+        $nt_out_model_score += $_->score();
     }
 
     if ( scalar @$nt_in_topo_model_ref != scalar @$nt_out_topo_model_ref ){
@@ -740,9 +731,9 @@ $string .= " strong transmembrane helices, total score : $model_score \n";
 $string .= "# from   to length score orientation \n";
 my $i = 1;
 for my $helix (@$model){
-my ($beg, $end) =  ($helix->get_nterm()->[0]+1, $helix->get_cterm()->[0]+1); # add the 1's to get 1 based numbering
+my ($beg, $end) =  ($helix->nterm()->[0]+1, $helix->cterm()->[0]+1); # add the 1's to get 1 based numbering
 $string .= "$i   $beg   $end (";
-$string .= $end-$beg+1 . ')   ' .  $helix->get_score() . "   " . $orientation . "\n";
+$string .= $end-$beg+1 . ')   ' .  $helix->score() . "   " . $orientation . "\n";
 $i++;
 # switch orientation
 $orientation = ($orientation eq 'i-o')? 'o-i': 'i-o';
@@ -760,9 +751,9 @@ sub _io_oi_correspondence_string {
   my ( $io_beg, $io_end, $io_score );
   if ( defined $io_helix ) {
     ( $io_beg, $io_end, $io_score ) = (
-				       $io_helix->get_nterm()->[0] + 1,
-				       $io_helix->get_cterm()->[0] + 1,
-				       $io_helix->get_score()
+				       $io_helix->nterm()->[0] + 1,
+				       $io_helix->cterm()->[0] + 1,
+				       $io_helix->score()
 				      );
 
     $io_string = sprintf( "%6i-%4i (%2i) %5i ",
@@ -773,9 +764,9 @@ sub _io_oi_correspondence_string {
   my ( $oi_beg, $oi_end, $oi_score );
   if ( defined $oi_helix ) {
     ( $oi_beg, $oi_end, $oi_score ) = (
-				       $oi_helix->get_nterm()->[0] + 1,
-				       $oi_helix->get_cterm()->[0] + 1,
-				       $oi_helix->get_score()
+				       $oi_helix->nterm()->[0] + 1,
+				       $oi_helix->cterm()->[0] + 1,
+				       $oi_helix->score()
 				      );
 
     $oi_string = sprintf( "%6i-%4i (%2i) %5i ",
@@ -806,10 +797,10 @@ sub _io_oi_correspondence_string {
   $io_string .= $io_pref;
 $oi_string .= $oi_pref;
 
-  if(defined $io_helix and $io_helix->get_score() < $self->{min_score}){
+  if(defined $io_helix and $io_helix->score() < $self->{min_score}){
       $io_string = "($io_string)";
     }
-  if(defined $oi_helix and $oi_helix->get_score() < $self->{min_score}){
+  if(defined $oi_helix and $oi_helix->score() < $self->{min_score}){
       $oi_string = "($oi_string)";
     }
   return $io_string . '  |' . $oi_string . "\n";
@@ -835,7 +826,7 @@ sub _topology_model {
                 $model_count++;
                 my $io_helix = $io_helices_ref->[$io_count];
                 push @model, $io_helix;
-                $min_pos = $io_helix->get_sh_cterm()->[0] + 1 + 1; 
+                $min_pos = $io_helix->sh_cterm()->[0] + 1 + 1; 
 		#one one to make unit based, 
             }
             else {
@@ -850,7 +841,7 @@ sub _topology_model {
                 $model_count++;
                 my $oi_helix = $oi_helices_ref->[$oi_count];
                 push @model, $oi_helix;
-                $min_pos = $oi_helix->get_sh_cterm()->[0] + 1 + 1;
+                $min_pos = $oi_helix->sh_cterm()->[0] + 1 + 1;
             }
             else {
                 last;
@@ -871,8 +862,8 @@ sub _find_next_helix {
     my $threshold    = shift;
 
     for my $count ( $count_start .. scalar @$helices_ref - 1 ) {
-        if (    ( $helices_ref->[$count]->get_score() >= $threshold )
-            and ( $helices_ref->[$count]->get_sh_nterm()->[0] + 1 >= $min_position )
+        if (    ( $helices_ref->[$count]->score() >= $threshold )
+            and ( $helices_ref->[$count]->sh_nterm()->[0] + 1 >= $min_position )
           )
         {
             return $count;
@@ -887,8 +878,9 @@ sub setup_tables {
     my $self = shift;
 
     my $io_center_table = Bio::SecreTary::Table->new(
-        'io_center',
-        10,    # zero-based here
+        label => 'io_center',
+        marked_position => 10,    # zero-based here
+	table =>
         [
             [
                 56.22, 63.83, 56.55, 56.78, 50.81, 62.05, 61.56, 53.03,
@@ -997,9 +989,10 @@ sub setup_tables {
     #print "label:   ", $io_center_table->get_label(), "\n";
 
     my $oi_center_table = Bio::SecreTary::Table->new(
-        'oi_center',
-        10,
-        [
+        label => 'oi_center',
+        marked_position => 10,
+        table =>
+	[
             [
                 64.54, 58.99, 72.81, 79.11, 72.30, 79.80, 87.32, 87.37,
                 87.75, 81.26, 69.69, 95.78, 74.08, 75.32, 61.43, 66.79,
@@ -1105,8 +1098,9 @@ sub setup_tables {
     );
 
     my $io_nterm_table = Bio::SecreTary::Table->new(
-        'io_nterm',
-        5,
+        label => 'io_nterm',
+        marked_position => 5,
+        table => 
         [
             [
                 35.25, 33.27, 33.54, 52.30, 26.50, 76.76, 63.82, 54.85,
@@ -1213,8 +1207,9 @@ sub setup_tables {
     );
 
     my $oi_nterm_table = Bio::SecreTary::Table->new(
-        'oi_nterm',
-        5,
+        label => 'oi_nterm',
+        marked_position => 5,
+        table => 
         [
             [
                 59.90, 51.67, 71.84, 46.91, 30.97, 71.37, 67.31, 72.18,
@@ -1321,9 +1316,9 @@ sub setup_tables {
     );
 
     my $io_cterm_table = Bio::SecreTary::Table->new(
-        'io_cterm',
-        15,
-        [
+        label => 'io_cterm',
+        marked_position => 15,
+        table => [
             [
                 63.28, 52.81, 50.54, 63.44, 92.33, 59.76, 72.64, 53.93,
                 74.66, 59.40, 50.17, 69.36, 61.54, 58.57, 63.37, 43.05,
@@ -1429,9 +1424,9 @@ sub setup_tables {
     );
 
     my $oi_cterm_table = Bio::SecreTary::Table->new(
-        'oi_cterm',
-        15,
-        [
+        label => 'oi_cterm',
+        marked_position => 15,
+        table => [
             [
                 86.65, 84.60, 90.94, 80.15, 83.81, 80.35, 71.75, 76.32,
                 73.97, 48.45, 67.42, 82.26, 76.92, 59.08, 73.61, 79.67,
