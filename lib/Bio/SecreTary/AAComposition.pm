@@ -297,7 +297,6 @@ sub molecular_weight {
 
 sub charge
 {    # get the electric charge at given pH of the set of aa's stored in aa_hash
-
   # for pKa's (3.90, 4.07, etc.) see e.g.  Wikipedia "proteinogenic amino acids"
   # this does not include the charges of the terminal groups
     my $aa_hash = shift
@@ -312,7 +311,7 @@ sub charge
     $Q += $aa_hash->{"H"} / ( 1.0 + 10**( $pH - 6.04 ) );
     $Q += $aa_hash->{"K"} / ( 1.0 + 10**( $pH - 10.54 ) );
     $Q += $aa_hash->{"R"} / ( 1.0 + 10**( $pH - 12.48 ) );
-	return Q;
+	return $Q;
 }
 
 sub isoelectric_point
