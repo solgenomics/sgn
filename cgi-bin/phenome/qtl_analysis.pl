@@ -376,7 +376,7 @@ qq|<div><a href="$url_pubmed$accession" target="blank">$pub_info</a> $title $abs
                       0,                                #<  don't show data by default
                                        );
 	    $data_download .=
-qq { Download population: <span><a href="pop_download.pl?population_id=$population_id"><b>\[Phenotype data\]</b></a><a href="genotype_download.pl?population_id=$population_id"><b>[Genotype data]</b></a></span> };
+qq { Download population: <span><a href="phenotype_download.pl?population_id=$population_id"><b>\[Phenotype data\]</b></a><a href="genotype_download.pl?population_id=$population_id"><b>[Genotype data]</b></a></span> };
     }
 
 
