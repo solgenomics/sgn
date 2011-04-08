@@ -2,7 +2,9 @@
 
 =head1 NAME
 
-/tools/sequence.mas - mason module to display a sequence, either as fasta text or as nicely formatted html, with optional highlighting of sub-regions.
+/tools/sequence.mas - mason module to display a sequence, either as
+fasta text or as nicely formatted html, with optional highlighting of
+sub-regions.
 
 =head1 ARGUMENTS
 
