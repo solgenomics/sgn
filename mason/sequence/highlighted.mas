@@ -127,7 +127,7 @@ sub extract_subsequence_for_highlights {
     # round the coord range to the nearest line boundaries
     @coord_range = (
         $line_width * ( POSIX::floor( ($coord_range[0]-1) / $line_width ) - LINE_WINDOW_EXPAND )+1,
-        $line_width * ( POSIX::ceil ( ($coord_range[1]-1) / $line_width ) + LINE_WINDOW_EXPAND )+1,
+        $line_width * ( POSIX::ceil (  $coord_range[1]    / $line_width ) + LINE_WINDOW_EXPAND )+1,
         );
 
     # clamp it to the boundaries of the sequence
