@@ -2,38 +2,22 @@ package Bio::SecreTary::Table;
 use strict;
 use warnings;
 use Carp;
-
+use Moose;
+use namespace::autoclean;
 
 =head2 function new
 
   Synopsis : my $table_obj =  Bio::SecreTary::Table->new(
-        'io_center',
-        10,    # zero-based here
-        [ [ 56.22, 63.83 ],[ 56.55, 56.78 ] ]
-);
- 
-  Arguments: $arg_hash_ref holds some parameters describing which 
-      solutions will be found by tmpred :
-      min_score, min_tm_length, max_tm_length, min_beg, max_beg . 
-  Returns: an instance of a TMpred object 
-  Side effects: Creates the object . 
-  Description: Creates a TMpred object with certain parameters which 
-      determine which trans-membrane helices to find.
+        label => 'io_center',
+        marked_position => 10,    # zero-based here
+        table => [ [ 56.22, 63.83 ],[ 56.55, 56.78 ] ] );
 
 =cut
 
 
-sub new {
-    my  $class = shift;
-    my $self = bless {}, $class;
-
-  #  print "in Table->new. class: $class \n";
-    $self->set_label(shift);
-    $self->set_marked_position(shift);
-    $self->set_table(shift);
-#    $self->set_aa_freqs(shift);
-    return $self;
-}
+has label => (isa => 'Str', is => 'rw', required => 1 );
+has marked_position => (isa => 'Int', is => 'rw', required => 1 );
+has table => (isa => 'ArrayRef[ArrayRef[Num]]', is => 'rw', required => 1 );
 
 # scale using aa frequency vector
 # the matrix should have 20 rows.
@@ -43,7 +27,7 @@ sub new {
 sub scale {
     my $self = shift;
     my $v    = shift;
-    my $m    = $self->get_table();
+    my $m    = $self->table();
     ( scalar @$m == scalar @$v )
       || croak( "in Table::scale, sizes of m, v dont match:", scalar @$m, "  ", scalar @$v, "\n" );
 
@@ -79,59 +63,21 @@ sub scale {
 sub add_row{
     my $self = shift;
     my $new_row = shift; # array ref
-    my $rows = $self->get_table(); # ref to array of array refs
+    my $rows = $self->table(); # ref to array of array refs
     push @$rows, $new_row;
-    return $self->set_table($rows);
+    return $self->table($rows);
 }
 sub table_as_string {
     my $self = shift;
-    my $string = $self->get_label() . "\n";
-    $string .= $self->get_marked_position . "\n";
-    my $m = $self->get_table();
+    my $string = $self->label() . "\n";
+    $string .= $self->marked_position . "\n";
+    my $m = $self->table();
     foreach (@$m) {
         $string .=  join( ', ', @$_ ) . "\n";
     }
     return $string;
 }
 
-sub set_table {
-    my $self = shift;
-    return $self->{table} = shift;
-}
-
-sub get_table {
-    my $self = shift;
-    return $self->{table};
-}
-
-sub set_label {
-    my $self = shift;
-    return $self->{label} = shift;
-}
-
-sub get_label {
-    my $self = shift;
-    return $self->{label};
-}
-
-sub set_marked_position {
-    my $self = shift;
-    return $self->{marked_position} = shift;
-}
-
-sub get_marked_position {
-    my $self = shift;
-    return $self->{marked_position};
-}
-
-sub set_column_explanation {
-    my $self = shift;
-    return $self->{column_explanation} = shift;
-}
-
-sub get_column_explanation {
-    my $self = shift;
-    return $self->{column_explanation};
-}
+__PACKAGE__->meta->make_immutable;
 
 1;
