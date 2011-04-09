@@ -237,10 +237,10 @@ sub seq_html {
                my $r = $_;
                my $match = Bio::Range->new(
                    -start => max( 0,
-                                  POSIX::floor(($r->start-1)/$width)-LINE_WINDOW_EXPAND,
+                                  ( POSIX::floor(($r->start-1)/$width) - LINE_WINDOW_EXPAND ),
                                 ),
                    -end   => min( POSIX::floor( $seq->length/$width ),
-                                  POSIX::floor( ($r->end-1)/$width )+LINE_WINDOW_EXPAND,
+                                  ( POSIX::floor( ($r->end-1)/$width ) + LINE_WINDOW_EXPAND ),
                                 ),
                   );
            } @ranges
