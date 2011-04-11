@@ -155,7 +155,7 @@ my @def_accessions = map( $_->get_db_name . ":" . $_->get_accession , @def_dbxre
                          url:        "/ajax/cvterm/phenotyped_stocks",
                          content_id: "pheno_div",
                          count_id:   "pheno_count",
-                         inflect:    [ 'phenotype', 'phenotypes' ],
+                         inflect:    [ 'accession', 'accessions' ],
                        });
 </script>
 </div>
