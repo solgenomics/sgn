@@ -155,8 +155,7 @@ WHERE cvtermpath.object_id = ?
 ORDER BY stock.name
 
     my $sth = $c->dbc->dbh->prepare($q);
-    my $rows = $sth->execute($cvterm_id, 'false');
-    $c->stash->{rest}{count} = $rows;
+    my $rows = $c->stash->{rest}{count} = 0 + $sth->execute($cvterm_id, 'false');
     if( $rows > 500 ) {
         $c->stash->{rest}{html} = commify_number($rows)." annotated stocks found, too many to display.";
     } else {
@@ -191,8 +190,7 @@ sub recursive_loci_GET :Args(0) {
              WHERE (cvtermpath.object_id = ?) AND locus_dbxref.obsolete = 'f' AND locus.obsolete = 'f' AND pathdistance > 0";
 
     my $sth = $c->dbc->dbh->prepare($q);
-    $sth->execute($cvterm_id);
-    my $hashref = {};
+    $c->stash->{rest}{count} = 0+$sth->execute($cvterm_id); #< execute can return 0E0, i.e. zero but true.
     my @data;
     while ( my ($locus_id, $locus_name, $locus_symbol, $common_name) = $sth->fetchrow_array ) {
         my $link = qq|<a href="/phenome/locus_display?locus_id=$locus_id">$locus_symbol</a> |;
@@ -205,12 +203,11 @@ sub recursive_loci_GET :Args(0) {
          )
         ];
     }
-    $hashref->{html} = @data ?
+    $c->stash->{rest}{html} = @data ?
         columnar_table_html(
             headings     =>  [ "Organism", "Symbol", "Name" ],
             data         => \@data,
-        )  : undef ;
-    $c->{stash}->{rest} = $hashref;
+        )  : '<span class="ghosted">none</span>' ;
 }
 
 
@@ -231,8 +228,7 @@ sub phenotyped_stocks_GET :Args(0) {
              WHERE observable_id = ? AND type.name ilike ?";
 
     my $sth = $c->dbc->dbh->prepare($q);
-    $sth->execute($cvterm_id , '%population%');
-    my $hashref = {};
+    $c->stash->{rest}{count} = 0 + $sth->execute($cvterm_id , '%population%');
     my @data;
     while ( my ($stock_id, $type, $stock_name, $description) = $sth->fetchrow_array ) {
         my $link = qq|<a href="/stock/$stock_id/view">$stock_name</a> |;
@@ -244,12 +240,11 @@ sub phenotyped_stocks_GET :Args(0) {
          )
         ];
     }
-    $hashref->{html} = @data ?
+    $c->stash->{rest}{html} = @data ?
         columnar_table_html(
             headings     =>  [ "Stock name", "Description" ],
             data         => \@data,
         )  : undef ;
-    $c->{stash}->{rest} = $hashref;
 }
 
 

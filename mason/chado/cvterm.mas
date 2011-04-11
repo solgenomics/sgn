@@ -60,13 +60,17 @@ my @def_accessions = map( $_->get_db_name . ":" . $_->get_accession , @def_dbxre
 <& /util/import_javascript.mas, classes => [qw [CXGN.AJAX.Ontology  jquery]] &>
 
 <script language="javascript">
-  function recursiveAnnotations(url, div) {
-  jQuery.ajax( { url: url+"?cvterm_id=<% $cvterm_id %>" , dataType: "json",
-  success: function(response) {
-  jQuery("#"+div).html(response.html);
-  if ( response.error ) { alert(response.error) ; }
-  }
-  });
+  function recursiveAnnotations( a ) {
+      jQuery.ajax( { url:      a.url+"?cvterm_id=<% $cvterm_id %>" ,
+                     dataType: "json",
+                     success: function(response) {
+                         jQuery("#"+a.content_id).html(response.html);
+                         jQuery("#"+a.count_id).html( response.count + ' ' + a.inflect[ response.count == 1 ? 0 : 1 ]);
+                         if( response.error )
+                             alert(response.error);
+                     }
+                   }
+                 );
   }
 </script>
 
@@ -105,31 +109,54 @@ my @def_accessions = map( $_->get_db_name . ":" . $_->get_accession , @def_dbxre
 
 <& /ontology/embedded_browser.mas, cvterm => $cvterm &>
 
-<&| /page/info_section.mas, title=> "Annotated loci" , collapsible => 1&>
+<&| /page/info_section.mas, title=> "Annotated loci", subtitle => '<span id="loci_count"></span>', collapsible => 1&>
 <div id="loci_div">
    [Loading...]
 <script language="javascript">
-  recursiveAnnotations("/ajax/cvterm/recursive_loci", "loci_div");
+  recursiveAnnotations({
+                         url:        "/ajax/cvterm/recursive_loci",
+                         content_id: "loci_div",
+                         count_id:   "loci_count",
+                         inflect:    [ 'locus', 'loci' ],
+                       });
 </script>
 </div>
 
 </&>
 
-<&| /page/info_section.mas, title=> "Annotated stocks" , collapsible => 1&>
+<&| /page/info_section.mas,
+       title=> "Annotated stocks",
+       collapsible => 1,
+       subtitle => '<span id="stocks_count"></span>',
+ &>
 <div id="stocks_div">
    [Loading...]
 <script language="javascript">
-  recursiveAnnotations("/ajax/cvterm/recursive_stocks", "stocks_div");
+  recursiveAnnotations({
+                         url:        "/ajax/cvterm/recursive_stocks",
+                         content_id: "stocks_div",
+                         count_id:   "stocks_count",
+                         inflect:    [ 'stock', 'stocks' ],
+                       });
 </script>
 </div>
 
 </&>
 
-<&| /page/info_section.mas, title=> "Phenotyped accessions" , collapsible => 1&>
+<&| /page/info_section.mas,
+      title       => "Phenotyped accessions",
+      collapsible => 1,
+      subtitle    => '<span id="pheno_count"></span>',
+&>
 <div id="pheno_div">
    [Loading...]
 <script language="javascript">
-  recursiveAnnotations("/ajax/cvterm/phenotyped_stocks", "pheno_div");
+  recursiveAnnotations({
+                         url:        "/ajax/cvterm/phenotyped_stocks",
+                         content_id: "pheno_div",
+                         count_id:   "pheno_count",
+                         inflect:    [ 'phenotype', 'phenotypes' ],
+                       });
 </script>
 </div>
 
