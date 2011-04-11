@@ -20,7 +20,7 @@ use Moose;
 
 use List::MoreUtils qw /any /;
 use Try::Tiny;
-use CXGN::Page::FormattingHelpers qw /columnar_table_html / ;
+use CXGN::Page::FormattingHelpers qw/ columnar_table_html commify_number /;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -134,35 +134,48 @@ sub recursive_stocks : Local : ActionClass('REST') { }
 sub recursive_stocks_GET :Args(0) {
     my ($self, $c) = @_;
     my $cvterm_id = $c->request->param("cvterm_id");
-    my $q = "SELECT distinct stock_id, stock.name, stock.description FROM cvtermpath
-            JOIN cvterm on (cvtermpath.object_id = cvterm.cvterm_id OR cvtermpath.subject_id = cvterm.cvterm_id )
-            JOIN stock_cvterm on (stock_cvterm.cvterm_id = cvterm.cvterm_id)
-            JOIN stock USING (stock_id)
-            WHERE  cvtermpath.object_id = ?
-            AND stock.is_obsolete = ?
-            AND pathdistance > 0
-            ORDER BY stock.name";
+    my $q = <<'';
+SELECT DISTINCT
+        stock_id
+      , stock.name
+      , stock.description
+FROM cvtermpath
+JOIN cvterm on (cvtermpath.object_id = cvterm.cvterm_id OR cvtermpath.subject_id = cvterm.cvterm_id )
+JOIN stock_cvterm on (stock_cvterm.cvterm_id = cvterm.cvterm_id)
+JOIN stock USING (stock_id)
+WHERE cvtermpath.object_id = ?
+  AND stock.is_obsolete = ?
+  AND pathdistance > 0
+  AND 0 = ( SELECT COUNT(*)
+            FROM stock_cvtermprop p
+            WHERE type_id IN ( SELECT cvterm_id FROM cvterm WHERE name = 'obsolete' )
+              AND p.stock_cvterm_id = stock_cvterm.stock_cvterm_id
+              AND value = '1'
+          )
+ORDER BY stock.name
 
     my $sth = $c->dbc->dbh->prepare($q);
-    $sth->execute($cvterm_id, 'false');
-    my $hashref = {};
-    my @stock_data;
-    while ( my ($stock_id , $stock_name, $description) = $sth->fetchrow_array ) {
-        my $stock_link = qq|<a href="/stock/$stock_id/view">$stock_name</a> |;
-        push @stock_data,
-        [
-         (
-          $stock_link,
-          $description,
-         )
-        ];
+    my $rows = $sth->execute($cvterm_id, 'false');
+    $c->stash->{rest}{count} = $rows;
+    if( $rows > 500 ) {
+        $c->stash->{rest}{html} = commify_number($rows)." annotated stocks found, too many to display.";
+    } else {
+        my @stock_data;
+        while ( my ($stock_id , $stock_name, $description) = $sth->fetchrow_array ) {
+            my $stock_link = qq|<a href="/stock/$stock_id/view">$stock_name</a> |;
+            push @stock_data, [
+                $stock_link,
+                $description,
+                ];
+        }
+        $c->stash->{rest}{html} =
+            @stock_data
+                ? columnar_table_html(
+                    headings  =>  [ "Stock name", "Description" ],
+                    data      => \@stock_data,
+                    )
+                : undef;
     }
-    $hashref->{html} = @stock_data ?
-        columnar_table_html(
-            headings     =>  [ "Stock name", "Description" ],
-            data         => \@stock_data,
-        )  : undef ;
-    $c->{stash}->{rest} = $hashref;
 }
 
 sub recursive_loci : Local : ActionClass('REST') { }
