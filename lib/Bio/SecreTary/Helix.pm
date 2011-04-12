@@ -2,13 +2,33 @@ package Bio::SecreTary::Helix;
 use Moose;
 use namespace::autoclean;
 
-has center => (isa => 'ArrayRef[Maybe[Num]]', is => 'rw', default => sub { [undef, undef] } );
- has nterm => (isa => 'ArrayRef[Maybe[Num]]', is => 'rw', default => sub { [undef, undef] });
- has cterm => (isa => 'ArrayRef[Maybe[Num]]', is => 'rw', default => sub { [undef, undef] });
- has sh_nterm => (isa => 'ArrayRef[Maybe[Num]]', is => 'rw', default => sub { [undef, undef] });
- has sh_cterm => (isa => 'ArrayRef[Maybe[Num]]', is => 'rw', default => sub { [undef, undef] });
- has score => (isa => 'Maybe[Num]', is => 'rw', default => undef);
- has nt_in => (isa => 'Bool', is => 'rw', default => undef);
+has center => (
+    isa     => 'ArrayRef[Maybe[Num]]',
+    is      => 'rw',
+    default => sub { [ undef, undef ] }
+);
+has nterm => (
+    isa     => 'ArrayRef[Maybe[Num]]',
+    is      => 'rw',
+    default => sub { [ undef, undef ] }
+);
+has cterm => (
+    isa     => 'ArrayRef[Maybe[Num]]',
+    is      => 'rw',
+    default => sub { [ undef, undef ] }
+);
+has sh_nterm => (
+    isa     => 'ArrayRef[Maybe[Num]]',
+    is      => 'rw',
+    default => sub { [ undef, undef ] }
+);
+has sh_cterm => (
+    isa     => 'ArrayRef[Maybe[Num]]',
+    is      => 'rw',
+    default => sub { [ undef, undef ] }
+);
+has score => ( isa => 'Maybe[Num]', is => 'rw', default => undef );
+has nt_in => ( isa => 'Bool',       is => 'rw', default => undef );
 
 sub get_descriptor_string {
     my $self   = shift;
@@ -20,10 +40,8 @@ sub get_descriptor_string {
         $string .= 'center: ' . join( ', ', @{ $self->center() } ) . "\n";
         $string .= 'nterm: ' . join( ', ', @{ $self->nterm() } ) . "\n";
         $string .= 'cterm: ' . join( ', ', @{ $self->cterm() } ) . "\n";
-        $string .=
-          'sh_nterm: ' . join( ', ', @{ $self->sh_nterm() } ) . "\n";
-        $string .=
-          'sh_cterm: ' . join( ', ', @{ $self->sh_cterm() } ) . "\n";
+        $string .= 'sh_nterm: ' . join( ', ', @{ $self->sh_nterm() } ) . "\n";
+        $string .= 'sh_cterm: ' . join( ', ', @{ $self->sh_cterm() } ) . "\n";
     }
     else {
         my $npos       = $self->nterm()->[0] + $offset;
@@ -43,13 +61,13 @@ sub get_descriptor_string {
     return $string;
 }
 
-sub short_description{
+sub short_description {
     my $self = shift;
-      my $npos       = $self->nterm()->[0] + 1;
-         my $cpos       = $self->cterm()->[0] + 1;
-         return '[' . $self->score() . ",$npos,$cpos]";
+    my $npos = $self->nterm()->[0] + 1;
+    my $cpos = $self->cterm()->[0] + 1;
+    return '[' . $self->score() . ",$npos,$cpos]";
 }
 
-  __PACKAGE__->meta->make_immutable;
+__PACKAGE__->meta->make_immutable;
 
 1;
