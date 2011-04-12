@@ -145,6 +145,7 @@ sub quick_search: Path('/search/quick') {
        );
 
     if( @possible_urls == 1 ) {
+        $c->log->debug("redirecting to only possible url: $possible_urls[0]") if $c->debug;
         $c->res->redirect( $possible_urls[0] );
         return;
     }
