@@ -1606,7 +1606,7 @@ sub load_stat_parameters {
     my $stat_param   = $qtl_obj->user_stat_parameters();
     my @missing      = $qtl_tools->check_stat_fields($stat_param);
     my $pop_id       = $args_ref->{pop_id};
-    
+   
     my $stat_file;
     if (@missing) {
         $self->error_page(@missing);
@@ -1616,12 +1616,11 @@ sub load_stat_parameters {
     }
     unless ( !-e $stat_file ) {
         my $message = 'QTL statistical parameters set : Step 5 of 5'
-            . qq | \nQTL data upload for http://solgenomics.net/phenome/population.pl?pop_id=$pop_id" is completed|;
+            . qq | \nQTL data upload for <a href="qtl_start.pl?pop_id=$pop_id">of your population</a> is completed|;
         $self->send_email( '[QTL upload: Step 5]', $message, $pop_id );
 
         print CGI->redirect(-uri=>
             "$referring_page?pop_id=$pop_id&amp;type=confirm");
-        return 1;
     }
-    return 0;
+    return 1;
 }

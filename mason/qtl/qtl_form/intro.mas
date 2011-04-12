@@ -1,0 +1,66 @@
+<%doc>
+
+=head1 NAME 
+qtl/qtl_form/intro.mas - a mason component for displaying an introductory
+note for the qtl data submission
+
+=AUTHOR
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$guide
+
+</%args>
+
+<%perl>
+my $citation = qq | <a href="http://www.biomedcentral.com/1471-2105/11/525/abstract">Citation</a> |;
+my $links = $guide . '|' . $citation;
+</%perl>
+
+<& /page/page_title.mas, title => "Step 0: Introduction" &>
+<&| /page/info_section.mas, title => "Introduction", subtitle => $links &>
+ <form action="qtl_load.pl" method="POST" enctype="MULTIPART/FORM-DATA">  
+      <table cellspacing=20>
+	<tr>
+          <td>	   
+            <p>The uploading of QTL data needs to be done in one session. 
+              Therefore, prepare your data files in the required format before 
+              starting the process.  Please read the submission $guide. If you 
+              would like to have the formatting of your dataset checked 
+              beforehand, send your data to: 
+              <a href=mailto:iyt2\@cornell.edu>iyt2\@cornell.edu</a>.
+            </p>         
+            <p>What you need are:</p>
+       
+            <ul>
+              <li>Some basic information about the population,
+              <li>Traits data file (tab delimited),
+              <li>Phenotype data file (tab delimited), 
+              <li>Genotype data file (tab delimited) and 
+              <li>Statistical parameters.
+              <li><i>Markers with their sequences need to be already in SGN. 
+                  Read <a href="/content/map_submissions.pl">here</a> on how 
+                  to submit markers to SGN.</i>
+            </ul>
+
+            <p>If you have any problems uploading your data or remarks, 
+              please send your feedback to: 
+              <a href=mailto:sgn-feedback\@sgn.cornell.edu> 
+                sgn-feedback\@sgn.cornell.edu</a>. 
+            </p>
+      
+          </td>
+        </tr>
+        <tr> 
+          <td> <input type="hidden"  name = "type" value="begin"> </td>
+          <td> <input type="submit" value="Begin Uploading"> </td>
+        </tr>
+      </table>
+ </form>
+
+</&>

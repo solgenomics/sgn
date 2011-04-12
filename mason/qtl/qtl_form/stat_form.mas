@@ -1,0 +1,125 @@
+<%doc>
+
+=head1 NAME 
+qtl/qtl_form/trait_form.mas - a mason component for a traits file submission
+
+=AUTHOR
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$pop_id
+$guide
+
+</%args>
+
+<%perl>
+
+use CXGN::Page::FormattingHelpers qw | tooltipped_text |;
+
+my $no_draws = tooltipped_text('No. of imputations:', 'required only if the 
+                                    Simulate method is selected for the 
+                                    calculation of QTL genotype probability method and Multiple Imputation');
+my $permu_level = tooltipped_text('Significance level of permutation test:', 
+                                      'required only if permutation analysis 
+                                      (LOD threshold) is run');
+my $genome_scan = tooltipped_text('Genome scan size (cM):', 'not required for Marker Regression'
+                                      );
+my $qtl_prob = tooltipped_text('QTL genotype probablity method:', 'not required for Marker Regression' 
+                                      );
+</%perl>
+
+<& /page/page_title.mas, title => "Step 5: Submit Statistical Parameters" &>
+<&| /page/info_section.mas, title => "Statistical Parameters", subtitle => $guide &>
+
+<form action="qtl_load.pl" method="POST" enctype="MULTIPART/FORM-DATA">  
+    <table cellspacing=20>
+	<tr><td>QTL model: </td>
+	    <td> <select name="stat_qtl_model">
+	                 <option>
+                         <option>Single-QTL Scan
+			 <option style="color: #FF0000;text-decoration: line-through">Two-QTL Scan--currently not available
+			 </select>
+	   </td>
+           <td>QTL mapping method:</td>
+	   <td><select name="stat_qtl_method">	         
+	            <option>
+                    <option>Marker Regression
+                    <option>Maximum Likelihood 
+		    <option>Haley-Knott Regression
+                    <option>Multiple Imputation
+		</select>
+	   </td>
+      </tr>
+      <tr><td><% $qtl_prob %></td>
+          <td><select name="stat_prob_method">
+                      <option>
+	              <option>Calculate
+                      <option>Simulate
+	      </select>
+	 </td>
+         <td>QTL genotype probability significance level:</td>
+         <td><select name="stat_prob_level">
+	            <option>
+                    <option>0.001
+                    <option>0.05
+		    <option>0.1		    
+	   </select>	
+         </td>
+         </tr>
+         <tr>
+         <td><% $genome_scan %></td>
+         <td><select name="stat_step_size">
+                     <option>
+	             <option>zero
+		     <option>1
+                     <option>2.5
+		     <option>5
+		     <option>10
+	      </select>
+	 </td>    
+         <td><% $no_draws %></td>
+	 <td><select name="stat_no_draws">
+	            <option>
+	            <option>5
+                    <option>10
+		    <option>15
+		    <option>20
+	    </select>	
+        </td>       
+    </tr>
+    <tr>
+       <td>No. of permutations:</td>
+       <td><select name="stat_permu_test">
+	            <option>
+                    <option>None
+                    <option>100
+		    <option>1000		    
+	   </select>
+       </td>
+       <td><% $permu_level %></td>
+       <td> <select name="stat_permu_level">
+	            <option>
+                    <option>0.05
+                    <option>0.001
+		    <option>0.1		    
+	   </select>
+       </td>
+    </tr>
+    <tr>      
+      <td> <input type="hidden" name="type" value="stat_form"></td>  
+      <td> <input type="hidden" name="pop_id" value = $pop_id ></td>
+    </tr>
+    <tr>      
+      <td></td>
+      <td><input type="submit" value="Submit"> </td>
+      <td></td> 
+      <td> <input type="reset"  value="Reset"></td>      
+    </tr>
+   </table>
+   </form>  
+</&>

@@ -1,0 +1,50 @@
+<%doc>
+
+=head1 NAME 
+qtl/qtl_form/confirm.mas - a mason component for a statistical parameters submission
+
+=AUTHOR
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$pop_id
+$guide
+
+</%args>
+
+<%perl>
+  
+my $dbh = CXGN::DB::Connection->new();
+my ($pop_name, $pop_link);
+
+if ($pop_id)  {
+  my $pop = CXGN::Phenome::Population->new($dbh, $pop_id);
+  my $pop_name = $pop->get_name();
+  my $pop_link = qq | <a href="/phenome/population.pl?population_id=$pop_id"><b>$pop_name</b></a> |;    
+}
+
+</%perl>
+
+<& /page/page_title.mas, title => "Step 6: Confirmation" &>
+<&| /page/info_section.mas, title => "Confirmation", subtitle => $guide &>
+ <form action=" " method="POST" enctype="MULTIPART/FORM-DATA">  
+    <table cellspacing=20>
+    <tr>
+      <td><b><p>You have successfully uploaded your QTL data.</p> 
+           <p>On the next page you will see the population data summary. 
+             The qtl analysis is performed on-the-fly and you need to click the 
+             graph icon  corresponding to the trait of your interest to proceed 
+             with the QTL mapping analysis. The QTL analysis takes a few minutes, 
+             so please be patient. </p>
+          <p>To continue to the QTL analysis page, follow the link below:</p>
+          <% $pop_link %></b>
+      </td>
+     </tr>   
+   </table>
+  </form>
+</&>

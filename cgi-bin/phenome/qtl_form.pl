@@ -12,9 +12,9 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 use strict;
 use warnings;
-my $qtl_form_detail_page = CXGN::Phenome::QtlFormDetailPage->new();
 
 package CXGN::Phenome::QtlFormDetailPage;
+my $qtl_form_detail_page = CXGN::Phenome::QtlFormDetailPage->new();
 
 
 
@@ -69,19 +69,23 @@ sub display {
    
     my $pop_id = $args{pop_id} || '';
     if ($sp_person_id) {
-	my $intro = $self->intro();
+	my $intro                     = $self->intro();
 	my ($org_submit, $pop_submit) = $self->org_pop_form();
-	my $traits_submit = $self->traits_form($pop_id);      
-	my $pheno_submit = $self->pheno_form($pop_id);
-	my $geno_submit = $self->geno_form($pop_id);
-	my $stat_submit = $self->stat_form($pop_id);
-	my $conf_submit = $self->conf_form($pop_id);
-	
+	my $traits_submit             = $self->traits_form($pop_id);      
+	my $pheno_submit              = $self->pheno_form($pop_id);
+	my $geno_submit               = $self->geno_form($pop_id);
+	my $stat_submit               = $self->stat_form($pop_id);
+	my $conf_submit               = $self->conf_form($pop_id);
+	my $guide                     = $self->guideline();
 
 	if(!$type) {
-	    $page->header("QTL Data Submission Page");
-	    print page_title_html("Step 0:  Introduction");
-	    print $intro;
+	    #$page->header("QTL Data Submission Page");
+             #print $intro;
+	   # print page_title_html("Step 0:  Introduction");
+	   $c->forward_to_mason_view('/qtl/qtl_form/intro.mas',
+                                      pop_id => $pop_id,
+                                      guide  => $guide
+                );	   
 	    
 	}
 
@@ -94,43 +98,61 @@ sub display {
 
 
 	elsif ($type eq 'trait_form') {
-	     $page->header("QTL Data Submission Page");
-	     print page_title_html("Step 2: Submit the List of Traits");
-	     print $traits_submit;
-	   
+	  #   $page->header("QTL Data Submission Page");
+	  #   print page_title_html("Step 2: Submit the List of Traits");
+	  #   print $traits_submit;
+            $c->forward_to_mason_view('/qtl/qtl_form/trait_form.mas',
+                                      pop_id => $pop_id,
+                                      guide  => $guide
+                );	   
 	}
 
 
 	elsif ($type eq 'pheno_form') {
-	    $page->header("QTL Data Submission Page");
-	     print page_title_html("Step 3: Submit the Phenotype Data");
-	     print $pheno_submit;
+	   # $page->header("QTL Data Submission Page");
+	   #  print page_title_html("Step 3: Submit the Phenotype Data");
+	   #  print $pheno_submit;
+            $c->forward_to_mason_view('/qtl/qtl_form/pheno_form.mas',
+                                      pop_id => $pop_id,
+                                      guide  => $guide
+                );
 	     
 	}
 
 	elsif ($type eq 'geno_form') {
-	    $page->header("QTL Data Submission Page");
-	     print page_title_html("Step 4: Submit the Genotype Data");
-	     print $geno_submit;
+	   # $page->header("QTL Data Submission Page");
+	   #  print page_title_html("Step 4: Submit the Genotype Data");
+	   #  print $geno_submit;
+             $c->forward_to_mason_view('/qtl/qtl_form/geno_form.mas',
+                                      pop_id => $pop_id,
+                                      guide  => $guide
+                );
 	   
 	}
 
 
 	elsif ($type eq 'stat_form') {
-	    $page->header("QTL Data Submission Page");
+	 #   $page->header("QTL Data Submission Page");
 	     
-	    print page_title_html("Step 5: Set the Statistical Parameters 
-                                    for the QTL Analysis"
-                                  );
-	     print $stat_submit;
+	 #   print page_title_html("Step 5: Set the Statistical Parameters 
+         #                           for the QTL Analysis"
+         #                         );
+	 #    print $stat_submit;
+            $c->forward_to_mason_view('/qtl/qtl_form/stat_form.mas',
+                                      pop_id => $pop_id,
+                                      guide  => $guide
+                );
 	    
 	}	
 	
 	elsif ($type eq 'confirm') {
-	    $page->header("Confirmation page");
-	    print page_title_html("Step 6: Confirmation");	   
-	    print $conf_submit;	    
-	   
+	   # $page->header("Confirmation page");
+	   # print page_title_html("Step 6: Confirmation");	   
+	   #  print $conf_submit;	    
+	    $c->forward_to_mason_view('/qtl/qtl_form/confirm.mas',
+                                      pop_id => $pop_id,
+                                      guide  => $guide
+                ); 
 	}	
 	
 	$page->footer();
@@ -495,7 +517,7 @@ sub conf_form {
     $conf_sec
     <table cellspacing=20>
     <tr>
-      <td><b><p>You have successfully  uploaded your QTL data.</p> 
+      <td><b><p>You have successfully uploaded your QTL data.</p> 
            <p>On the next page you will see the population data summary. 
           The qtl analysis is performed on-the-fly and you need to click the 
           graph icon  corresponding to the trait of your interest to proceed 
