@@ -1,0 +1,102 @@
+<%args>
+    $feature
+    $featurelocs
+    $blast_url => undef
+    $seq_download_url => undef
+    $xrefs     => []
+</%args>
+<%once>
+    use SGN::View::Feature qw/ type_name /;
+</%once>
+
+<& /page/page_title.mas, title => type_name($feature,'caps').' '. $feature->id &>
+
+<&| /page/info_section.mas,
+    title       => type_name($feature,'caps').' details',
+    subtitle    => $feature->is_obsolete ? 'WARNING: This feature is obsolete, new data is available.' : '',
+    collapsible => 1,
+&>
+   <& /feature/feature_data.mas,
+      feature     => $feature,
+      featurelocs => $featurelocs,
+    &>
+    <& /feature/properties.mas,
+       feature => $feature,
+    &>
+</&>
+
+% if( $feature->residues && length $feature->residues ) {
+    <&| /page/info_section.mas,
+            title         => 'mRNA sequence',
+            subtitle      => 'spliced mRNA sequence, including UTRs',
+            collapsible   => 1,
+            collapsed     => 0,
+    &>
+      <& /feature/residues.mas,
+              feature   => $feature,
+              blast_url => $blast_url,
+              seq_download_url => $seq_download_url
+      &>
+    </&>
+% } else {
+%    for my $seqs ( mrna_and_protein_sequence( $feature ) ) {
+%       if( $seqs->[0] ) {
+        <&| /page/info_section.mas,
+                title         => 'mRNA sequence',
+                subtitle      => 'spliced mRNA sequence, including UTRs',
+                collapsible   => 1,
+                collapsed     => 0,
+        &>
+          <div style="margin-left: 3em">
+            <& /sequence/with_markup.mas,
+               seq       => $seqs->[0],
+               width     => 80,
+               subdiv    => 10,
+               blast_url => undef,
+             &>
+          </div>
+        </&>
+%       }
+%    }
+% }
+
+<&| /page/info_section.mas,
+     title         => 'Genomic sequence(s)',
+     subtitle      => "unprocessed genomic sequence underlying each location of this mRNA",
+     collapsible   => 1,
+     collapsed     => 1,
+     hide_if_empty => 1,
+ &>
+    <& /feature/genomic_sequence.mas,
+            feature   => $feature,
+            blast_url => $blast_url,
+    &>
+</&>
+
+<&| /page/info_section.mas,
+   title => 'Related features',
+   collapsible => 1,
+   hide_if_empty => 1,
+&>
+
+  <& /feature/related_features.mas,
+      feature   => $feature,
+  &>
+
+</&>
+
+<&| /page/info_section.mas,
+     title => 'Related views',
+     empty_message => 'None found',
+     collapsible => 1,
+     is_empty => ! scalar @$xrefs,
+ &>
+     <& /sitefeatures/mixed/xref_set/link.mas,
+        xrefs => $xrefs,
+      &>
+</&>
+
+
+<%once>
+   use SGN::View::Feature qw/ mrna_and_protein_sequence /;
+</%once>

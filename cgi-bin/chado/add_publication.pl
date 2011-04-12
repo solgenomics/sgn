@@ -79,10 +79,9 @@ sub store {
     my $pub_id;
     my $dbxref_id=undef;
     my $existing_publication= CXGN::Chado::Publication->get_pub_by_accession($self->get_dbh(),$accession );
-    if ($existing_publication) {
+    if ($pub_id = $existing_publication->get_pub_id) {
 	#if the publication is already stored in dbxref, we need it's dbxref_id for storing it in the object_dbxref linking table
-	$pub_id = $existing_publication->get_pub_id();
-	$publication=CXGN::Chado::Publication->new($self->get_dbh(), $pub_id);
+        $publication=CXGN::Chado::Publication->new($self->get_dbh(), $pub_id);
 	$dbxref_id= $publication->get_dbxref_id_by_db('PMID');
     }
     $publication->set_accession($accession);
@@ -348,14 +347,16 @@ sub display_page {
 	$pubs = $stock->get_object_row->search_related('stock_pubs');
         $pubs = $pubs->search_related('pub') if $pubs;
        	print "for stock '".$stock->get_name ."'<br /><br />\n";
-    }
-    while (my $pub = $pubs->next ) {
-        my $pub_id = $pub->pub_id;
-        my $db_name = $pub->pub_dbxrefs->first->dbxref->db->name;
-        my $accession = $pub->pub_dbxrefs->first->dbxref->accession;
-        my $author_string = $self->author_string($pub);
-        my $object_pub_id = $stock->get_object_row->search_related('stock_pubs', pub_id => $pub_id)->first->stock_pub_id if $stock;
-        print "<a href= /chado/publication.pl?pub_id=$pub_id>$db_name:$accession</a> " . $pub->title() . " (" . $pub->pyear() . ") <b>" . $author_string . "</b>" . qq { \n <a href="add_publication.pl?pub_id=$pub_id&amp;type=$args{type}&amp;type_id=$args{type_id}&amp;object_pub_id=$object_pub_id&amp;action=confirm_delete&amp;refering_page=$args{refering_page}">[Remove]</a> <br /><br />\n };
+        if ($pubs) {
+            while (my $pub = $pubs->next ) {
+                my $pub_id = $pub->pub_id;
+                my $db_name = $pub->pub_dbxrefs->first->dbxref->db->name;
+                my $accession = $pub->pub_dbxrefs->first->dbxref->accession;
+                my $author_string = $self->author_string($pub);
+                my $object_pub_id = $stock->get_object_row->search_related('stock_pubs', pub_id => $pub_id)->first->stock_pub_id if $stock;
+                print "<a href= /chado/publication.pl?pub_id=$pub_id>$db_name:$accession</a> " . $pub->title() . " (" . $pub->pyear() . ") <b>" . $author_string . "</b>" . qq { \n <a href="add_publication.pl?pub_id=$pub_id&amp;type=$args{type}&amp;type_id=$args{type_id}&amp;object_pub_id=$object_pub_id&amp;action=confirm_delete&amp;refering_page=$args{refering_page}">[Remove]</a> <br /><br />\n };
+            }
+        }
     }
     foreach my $dbxref (@dbxref_objs) {
         my $db_name=$dbxref->get_db_name();
@@ -470,9 +471,8 @@ sub confirm_store {
     #need to check if the publication is already in the database and associated with the object (locus..)
     my $existing_publication= CXGN::Chado::Publication->get_pub_by_accession($self->get_dbh(),$accession) ;
 
-    if ($existing_publication) {
-	my $pub_id =  $existing_publication->get_pub_id();
-	my $publication=CXGN::Chado::Publication->new($self->get_dbh(), $pub_id);
+    if (my $pub_id = $existing_publication->get_pub_id) {
+        my $publication=CXGN::Chado::Publication->new($self->get_dbh(), $pub_id);
 	if($publication->is_associated_publication($type, $type_id)) {
 	    $self->get_page()->header();
 	    print  "<h3>Publication '$accession' is already associated with $args{type}  $args{type_id} </h3>";

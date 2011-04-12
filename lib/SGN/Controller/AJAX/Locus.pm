@@ -1,4 +1,3 @@
-
 =head1 NAME
 
 SGN::Controller::AJAX::Locus - a REST controller class to provide the
@@ -54,38 +53,16 @@ sub autocomplete_GET :Args(0) {
     $term =~ s/(^\s+|\s+)$//g;
     $term =~ s/\s+/ /g;
 
-    my $schema = $c->dbic_schema('CXGN::Phenome::Schema');
-    my $rs = $schema->resultset('Allele');
-    my $search_rs = $rs->search(  {
-        -or =>[
-             locus_name => { ilike => '%'.$term.'%' },
-             locus_symbol => { ilike => '%'.$term.'%' },
-            ],
-            -and => [
-             #       common_name_id => $common_name_id 
-             'me.obsolete' => 'f',
-             'locus_id.obsolete' => 'f',
-            ],
-                                },
-                                  {
-                                      join =>  'locus_id',
-                                      '+as' =>[ 'locus' ],
-                                      '+select' => [qw /locus_id.locus_name locus_id.locus_symbol/ ],
-                                      rows => 20 },
-        );
-
     my @results;
     my $q =  "SELECT  locus_symbol, locus_name, allele_symbol, is_default FROM locus join allele using (locus_id) where (locus_name ilike '%$term%' OR  locus_symbol ilike '%$term%') and locus.obsolete = 'f' and allele.obsolete='f' limit 20"; #and common_name_id = ?
     my $sth = $c->dbc->dbh->prepare($q);
     $sth->execute;
     while (my ($locus_symbol, $locus_name, $allele_symbol, $is_default) = $sth->fetchrow_array ) {
         my $allele_data = "Allele: $allele_symbol"  if !$is_default  ;
+        no warnings 'uninitialized';
         push @results , "$locus_name ($locus_symbol) $allele_data";
     }
     $c->{stash}->{rest} = \@results;
 }
-
-
-
 
 1;

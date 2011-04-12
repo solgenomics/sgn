@@ -65,47 +65,54 @@ $page->header();
 # stuff to support AJAXy disambiguation of site xrefs
 print <<EOJS;
 <div id="xref_menu_popup" title="Match information">
-  <h1 class="popup_title"></h1>
   <dl>
-    <dt>Subject details</dt>
-      <dd class="identifier_link"></dd>
-    <dt>Subject sequence</dt>
-      <dd><a class="match_details" href="">view matched sequence</a></dd>
-    <dt>Related pages</dt>
+    <dt>Hit region <span class="region_string"></span></dt>
       <dd>
-       <div class="xref_content"></div>
-     </dd>
+        <div style="margin: 0.5em 0"><a class="match_details" href="">View matched sequence</a></div>
+        <div class="hit_region_xrefs"></div>
+      </dd>
+    <dt>Subject sequence <span class="sequence_name"></span></dt>
+      <dd class="subject_sequence_xrefs">
+      </dd>
   </dl>
 </div>
 <script>
 
-  function resolve_blast_ident( id, match_detail_url, identifier_url ) {
+  function resolve_blast_ident( id, id_region, match_detail_url, identifier_url ) {
     var popup = jQuery( "#xref_menu_popup" );
 
-    var popup_title = popup.children('.popup_title');
-    var identifier_link_area = popup.find('.identifier_link');
-
+    var sequence_name = popup.find('.sequence_name');
     if( identifier_url == null ) {
-       popup_title.html( 'Subject: ' + id );
-       identifier_link_area.html( '<span class="ghosted">not available</span>' );
+       sequence_name.html( id );
     } else {
-       popup_title.html( 'Subject: <a href="' + identifier_url + '">' + id + '</a>' );
-       identifier_link_area.html( '<a href="' + identifier_url + '">view ' + id + ' details</a>' );
+       sequence_name.html( '<a href="' + identifier_url + '">' + id + '</a>' );
     }
 
+    popup.find('.region_string').html( id_region );
+
     popup.find('a.match_details').attr( 'href', match_detail_url );
-    var content = popup.find('div.xref_content');
-    content.html( '<img src="/img/throbber.gif" /> searching for additional related pages ...' );
-    content.load( '/api/v1/feature_xrefs?q='+id );
+
+    // look up xrefs for overall subject sequence
+    var subj = popup.find('.subject_sequence_xrefs');
+    subj.html( '<img src="/img/throbber.gif" /> searching ...' );
+    subj.load( '/api/v1/feature_xrefs?q='+id );
+
+    // look up xrefs for the hit region
+    var region = popup.find('.hit_region_xrefs');
+    region.html( '<img src="/img/throbber.gif" /> searching ...' );
+    region.load( '/api/v1/feature_xrefs?q='+id_region );
+
     popup.dialog( 'open' );
     jQuery( "body .ui-widget-overlay").click( function() { popup.dialog( "close" ); } );
+
+    popup.find('a').blur();
 
     return false;
   }
 
   jQuery( "#xref_menu_popup" ).dialog({
           autoOpen: false,
-          height: 300,
+          height: 400,
           width: 680,
           modal: true
   });
@@ -407,6 +414,10 @@ sub make_bioperl_result_writer {
     my $identifier_url = CXGN::Tools::Identifiers::identifier_url( $id );
     my $js_identifier_url = $identifier_url ? "'$identifier_url'" : 'null';
 
+    use List::MoreUtils 'minmax';
+
+    my $region_string = $id.':'.join('..', minmax map { $_->start('subject'), $_->end('subject') } $hit->hsps );
+
     my $coords_string =
         "hilite_coords="
        .join( ',',
@@ -418,7 +429,7 @@ sub make_bioperl_result_writer {
 
     my $no_js_url = $identifier_url || $match_seq_url;
 
-    return qq{ <a class="blast_match_ident" href="$no_js_url" onclick="return resolve_blast_ident( '$id', '$match_seq_url', $js_identifier_url )">$id</a> };
+    return qq{ <a class="blast_match_ident" href="$no_js_url" onclick="return resolve_blast_ident( '$id', '$region_string', '$match_seq_url', $js_identifier_url )">$id</a> };
 
   };
   $self->hit_link_desc(  $hit_link );

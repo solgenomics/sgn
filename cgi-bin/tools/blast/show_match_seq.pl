@@ -2,11 +2,17 @@ use CatalystX::GlobalContext qw( $c );
 
 =head1 NAME
 
-show_match_seq.pl - a simple script to show the entire sequence of a match in a blast database with optional highlighting of the matched region
+show_match_seq.pl - a simple script to show the entire sequence of a
+match in a blast database with optional highlighting of the matched
+region
 
 =head1 DESCRIPTION
 
-This script shows a webpage with the sequence from a blast database for a specific id, using CXGN::BlastDB. This is the script that should be called if the CXGN::Tools::Identifiers cannot determine an appropriate link, so that the users still can get at the matched sequence, instead of uselessly defaulting to Genbank. 
+This script shows a webpage with the sequence from a blast database
+for a specific id, using CXGN::BlastDB. This is the script that should
+be called if the CXGN::Tools::Identifiers cannot determine an
+appropriate link, so that the users still can get at the matched
+sequence, instead of uselessly defaulting to Genbank.
 
 Page arguments:
 
@@ -14,7 +20,8 @@ Page arguments:
 
 =item id
 
-The id of the sequence [string], as it appears in the database (best retrieved from a blast report).
+The id of the sequence [string], as it appears in the database (best
+retrieved from a blast report).
 
 =item blast_db_id
 
@@ -22,13 +29,14 @@ The id [int] of the blast database file for CXGN::BlastDB.
 
 =item hilite_coords
 
-a list of start and end coordinates, of the form: 
+a list of start and end coordinates, of the form:
 
 start1-end1,start2-end2,start3-end3
 
 =item format
 
-either "text" or "html" to output fasta text or a nicely ;-) formatted html page.
+either "text" or "html" to output fasta text or a nicely ;-) formatted
+html page.
 
 =back
 

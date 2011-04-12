@@ -1,7 +1,0 @@
-use strict;
-use CXGN::Cview::Map_overviews;
-my $project_stats=CXGN::Cview::Map_overviews::project_stats->new();
-$project_stats->render();
-$project_stats->send_image();
-1;
-

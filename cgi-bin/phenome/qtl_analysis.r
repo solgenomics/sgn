@@ -121,7 +121,7 @@ if (userpermuvalue == "None")
 userpermuvalue<-as.numeric(userpermuvalue)
 
 #####for test only
-#userpermuvalue<-c(0)
+#userpermuvalue<-c(100)
 #####
 
 
@@ -165,7 +165,7 @@ if (is.logical(grep("stat_no_draws",
                     statfiles))==TRUE
     )
 {
-  drawsnofile<-(grep("stat_no_drwas",
+  drawsnofile<-(grep("stat_no_draws",
                      statfiles,
                      ignore.case=TRUE,
                      fixed = FALSE,
@@ -213,6 +213,7 @@ permuproblevel<-scan(permuproblevelfile,
                      dec = ".",
                      sep="\n"
                      )
+
 permuproblevel<-as.numeric(permuproblevel)
 
 
@@ -221,18 +222,58 @@ infile<-scan(file=infile,
              what="character"
              )#container for the ff
 
-cvtermfile<-infile[1]#file that contains the cvtername
-popid<-infile[2]#population dataset identifier
-genodata<-infile[3] #file name for genotype dataset
-phenodata<-infile[4] #file name for phenotype dataset
-permufile<-infile[5]
-crossfile<-infile[6]
+cvtermfile<-grep("cvterm",
+                 infile,
+                 ignore.case=TRUE,
+                 fixed = FALSE,
+                 value=TRUE
+                 )
 
+popidfile<-grep("popid",
+                 infile,
+                 ignore.case=TRUE,
+                 fixed = FALSE,
+                 value=TRUE
+                 )                 
+
+genodata<-grep("genodata",
+                 infile,
+                 ignore.case=TRUE,
+                 fixed = FALSE,
+                 value=TRUE
+                 )                 
+
+phenodata<-grep("phenodata",
+                 infile,
+                 ignore.case=TRUE,
+                 fixed = FALSE,
+                 value=TRUE
+                 )                 
+
+permufile<-grep("permu",
+                 infile,
+                 ignore.case=TRUE,
+                 fixed = FALSE,
+                 value=TRUE
+                 )                 
+
+crossfile<-grep("cross",
+                 infile,
+                 ignore.case=TRUE,
+                 fixed = FALSE,
+                 value=TRUE
+                 )
+
+popid<-scan(popidfile,
+            what="integer",
+            sep="\n"
+            )
 
 cross<-scan(crossfile,
             what="character",
             sep="\n"
             )
+
 
 popdata<-c()
 if (cross == "f2")
@@ -352,6 +393,9 @@ if ((is.logical(permuvalue1) == FALSE))
   }
 }
 
+##########QTL EFFECTS - I ##############
+LodThreshold<-permu[1,1]
+##########QTL EFFECTS ##############
 
 chrlist<-c("chr1")
 
@@ -401,6 +445,9 @@ chrno<-1
 datasummary<-c()
 confidenceints<-c()
 lodconfidenceints<-c()
+QtlChrs<-c()
+QtlPositions<-c()
+QtlLods<-c()
 
 for (i in chrdata)
 {  
@@ -423,8 +470,27 @@ for (i in chrdata)
   position<-max(i,
                 chr=chrno
                 )
-  p<-position[2]
-  p<-p[1, ]
+  
+  p<-position[["pos"]]
+  LodScore<-position[["lod"]]
+  QtlChr<-levels(position[["chr"]])
+
+if (LodScore >=LodThreshold) {
+  QtlChrs<-append(QtlChrs,
+                  QtlChr
+                  )
+  
+  QtlLods<-append(QtlLods,
+                  LodScore
+                  )
+  
+  QtlPositions<-append(QtlPositions,
+                       round(p,
+                             0
+                             )
+                       )
+}
+  
   
   peakmarker<-find.marker(popdata,
                           chr=chrno,
@@ -447,8 +513,8 @@ for (i in chrdata)
     }
   
   peakmarker<-c(chrno,
-                   peakmarker
-                  )
+                peakmarker
+                )
  
   if (chrno==1)
     { 
@@ -474,13 +540,113 @@ chrno<-chrno + 1;
 
 }
 
+##########QTL EFFECTS ##############
+if ( max(QtlLods) >= LodScore )
+{
+  QtlObj<-makeqtl(popdata,
+                QtlChrs,
+                QtlPositions,
+                what="prob"
+                )
+  
+  QtlsNo<-length(QtlPositions)
+  Eq<-c("y~")
+
+  for (i in 1:QtlsNo) {
+    q<-paste("Q",
+             i,
+             sep=""
+             )
+  
+    if (i==1) {  
+      Eq<-paste(Eq, q, sep="")
+      
+    }else
+    if (i>1) {
+      Eq<-paste(Eq, q, sep="*")
+     
+    }
+  }
+
+  QtlEffects<-fitqtl(popdata,
+                     pheno.col=cv,
+                     QtlObj,
+                     formula=Eq,
+                     method="hk",                   
+                     get.ests=TRUE
+                     )
+  ResultModel<-attr(QtlEffects,
+                    "formula"
+                    )
+ 
+  Effects<-QtlEffects$ests$ests
+  QtlLodAnova<-QtlEffects$lod
+  ResultFull<-QtlEffects$result.full  
+  ResultDrop<-QtlEffects$result.drop
+
+  if (is.numeric(Effects))
+    {
+      Effects<-round(Effects,
+                        2
+                        )
+    }
+
+
+  if (is.numeric(ResultFull))
+    {
+      ResultFull<-round(ResultFull,
+                        2
+                        )
+    }
+
+  if (is.numeric(ResultDrop))
+    {
+      ResultDrop<-round(ResultDrop,
+                        2
+                        )
+    }
+}
+
+##########creating vectors for the outfiles##############
+
 outfiles<-scan(file=outfile,
                what="character"
                )
 
-qtlfile<-outfiles[1]
-peakmarkersfile<-outfiles[2]
-confidencelodfile<-outfiles[3]
+qtlfile<-grep("qtl_summary",
+                 outfiles,
+                 ignore.case=TRUE,
+                 fixed = FALSE,
+                 value=TRUE
+                 )
+
+peakmarkersfile<-grep("peak_marker",
+                 outfiles,
+                 ignore.case=TRUE,
+                 fixed = FALSE,
+                 value=TRUE
+                 )
+
+confidencelodfile<-grep("confidence",
+                 outfiles,
+                 ignore.case=TRUE,
+                 fixed = FALSE,
+                 value=TRUE
+                 )
+QtlEffectsFile<-grep("qtl_effects",
+                 outfiles,
+                 ignore.case=TRUE,
+                 fixed = FALSE,
+                 value=TRUE
+                 )
+VariationFile<-grep("explained_variation",
+                 outfiles,
+                 ignore.case=TRUE,
+                 fixed = FALSE,
+                 value=TRUE
+                 )
+
+##### writing outputs to their respective files
 
 write.table(datasummary,
             file=qtlfile,
@@ -505,6 +671,37 @@ write.table(lodconfidenceints,
             quote=FALSE,
             append=FALSE
             )
+
+if (is.null(ResultDrop)==FALSE)
+{
+  write.table(ResultDrop,
+              file=VariationFile,
+              sep="\t",
+              col.names=NA,
+              quote=FALSE,
+              append=FALSE
+              )
+} else
+{
+  write.table(ResultFull,
+              file=VariationFile,
+              sep="\t",
+              col.names=NA,
+              quote=FALSE,
+              append=FALSE
+              )
+}
+
+if (is.null(Effects)==FALSE)
+  {
+    write.table(Effects,
+                file=QtlEffectsFile,
+                sep="\t",
+                col.names=NA,
+                quote=FALSE,
+                append=FALSE
+                )
+  }
 
 if (userpermuvalue != 0)
 {

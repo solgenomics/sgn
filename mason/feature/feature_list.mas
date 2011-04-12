@@ -1,5 +1,6 @@
 <%args>
     $features
+    $reference_sequence
     $limit => 100
 </%args>
 <%init>
@@ -8,5 +9,5 @@
 
 <& /page/columnar_table.mas,
     headings => [ "Type", "Name", "Location(s)", "Length", "Strand", "Phase" ],
-    data     => feature_table($features),
+    data     => feature_table( $features, $reference_sequence ),
 &>

@@ -7,6 +7,11 @@ L<Test::WWW::Mechanize::Catalyst> with some SGN-specific convenience
 
 =head1 SYNOPSIS
 
+    use 't/lib';
+    # optional skip_cgi import argument, skips loading CGIs if you
+    # don't need them, speeding up your test.
+    use SGN::Test::WWW::Mechanize skip_cgi => 1;
+
     my $mech = SGN::Test::WWW::Mechanize->new;
 
     # look at some pages
@@ -45,6 +50,16 @@ L<Test::WWW::Mechanize::Catalyst> with some SGN-specific convenience
 
 
     });
+
+=head1 IMPORT ARGUMENTS
+
+=head2 skip_cgi
+
+  use SGN::Test::WWW::Mechanize skip_cgi => 1;
+
+If passed and set to true, skips loading legacy CGI scripts.  Use this
+to speed up your test's running if your test does not use the old
+CGIs.  Note that currently login-based tests still need the CGIs.
 
 =head1 TEST LEVELS
 
@@ -100,6 +115,11 @@ BEGIN {
     $ENV{SGN_TEST_MODE}   = 1;
     $ENV{CATALYST_SERVER} = $ENV{SGN_TEST_SERVER};
 }
+sub import {
+    my ( $class, %args ) = @_;
+    $ENV{SGN_SKIP_CGI} = 1 if $args{skip_cgi};
+}
+
 
 use Carp;
 use Test::More;
@@ -374,6 +394,10 @@ information of the form:
 
 sub while_logged_in {
     my ($self,$props,$sub) = @_;
+
+    croak 'must provide hashref of user props to while_logged_in'
+        unless ref $props && ref $props eq 'HASH';
+
     $self->with_test_level( local => sub {
         $self->create_test_user( %$props );
         $self->log_in_ok;

@@ -50,6 +50,7 @@ $referer
 
 our %urlencode;
 use Tie::UrlEncoder;
+use CXGN::Page::FormattingHelpers qw / info_section_html / ;
 
 if ($object_id!~/^\d+$/) { return; }
 
@@ -64,7 +65,7 @@ if ($object_id!~/^\d+$/) { return; }
 Please wait, checking for comments.  (If comments do not show up, access them <a href="/forum/return_comments.pl?type=$object_type&amp;id=$object_id">here</a>)}
     );
 
-my $encoded_referer = $urlencode{$referer};
+my $encoded_referer = $urlencode{ $referer || '' };
 
 
 

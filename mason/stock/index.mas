@@ -53,6 +53,10 @@ use Bio::Chado::Schema;
 use CXGN::Chado::Stock;
 use CXGN::Page::FormattingHelpers qw / html_optional_show info_table_html /;
 use CXGN::People::Person;
+use CXGN::Chado::Publication;
+use CXGN::Cview::Map::SGN::Genotype;
+use CXGN::Cview::MapOverviews;
+
 
 my $stock = $stockref->{stock};
 my $stock_id = $stockref->{stock_id};
@@ -61,6 +65,7 @@ my $person_id = $stockref->{person_id};
 my $curator = $stockref->{curator};
 my $submitter = $stockref->{submitter};
 my $sequencer = $stockref->{sequencer};
+my $pubs = $stockref->{pubs};
 
 my $schema = $stockref->{schema};
 my $dbh = $stockref->{dbh};
@@ -69,16 +74,16 @@ my $stockprop_cv = $schema->resultset("Cv::Cv")->search( {
  'me.name' => 'stock_property'} );
 
 
-my $type_name;
+my ($type_name, $uniquename);
 my $type = $stock->get_object_row ? $stock->get_object_row->type : undef;
 $type_name  = $type->name() if $type;
-
+$uniquename = $stock->get_uniquename if $type;
 #################
 my $is_owner = $stockref->{is_owner};
 
-my $this_page = "/stock/view/id/$stock_id";
+my $this_page = "/stock/$stock_id/view";
 
-my $add_image_link = qq|<a href="/image/add?type_id=$stock_id&action=new&type=stock&refering_page=/stock/view/id/$stock_id">[Add new image]</a>|;
+my $add_image_link = qq|<a href="/image/add?type_id=$stock_id&action=new&type=stock&refering_page=$this_page">[Add new image]</a>|;
 my $image_ids =  $stockref->{props}->{'sgn image_id'} || [] ;
 my $stockprops = $stockref->{props};
 
@@ -101,54 +106,61 @@ foreach my $o_id (@$owners) {
   my $last_name = $person->get_last_name;
   $editor_link .= qq|<a href="/solpeople/personal-info.pl?sp_person_id=$o_id">$first_name $last_name</a> |;
 }
+
+#phenotypes measured directly on this stock
+my $direct_phenotypes = $stockref->{direct_phenotypes};
+
+# get all phenotypes of subjects
+my $members_phenotypes = $stockref->{members_phenotypes};
+
+
 ############################
-############################
-my $nd_experiments= $stockref->{nd_experiments};
-
-my %projects;
-
-while (my $exp = $nd_experiments->next) {
-  my $geolocation = $exp->nd_geolocation;
-  # there should be one project linked to the experiment ?
-  my $project = $exp->nd_experiment_projects->search_related('project')->first;
-  my @ph = $exp->nd_experiment_phenotypes->search_related('phenotype')->all;
-
-  #now do the same with genotypes .
-  # genotype regions  are stored as nd_experimentprops type= 'sgn genotype_region_id'
-  my @gen = $exp->nd_experiment_genotypes->search_related('genotype')->all;
-
-  my @gen_regions = $exp->nd_experimentprops( { 'type.name' => 'sgn genotype_region_id' } ,
-                                              { join =>  'type'  },
-                                            )->all;
-  ##
-  ## genotypes really need to be a genotype_id and not genotype_region ids. 
-  ##
-  push(@{$projects{$project->description}{phenotypes}}, @ph);
-  push(@{$projects{$project->description}{genotypes}}, @gen);
-  push(@{$projects{$project->description}{genotype_regions}}, @gen_regions);
+my $map_html = $stockref->{map_html};
+my $map;
+if ($stock_id) {
+  $map = CXGN::Cview::Map::SGN::Genotype->new($dbh, $stock_id);
+  if ($map->get_chromosome_count > 1 ) {
+    my $overview = CXGN::Cview::MapOverviews::Generic->new($map,
+                                                           {
+                                                            dbh=> $dbh,
+                                                            basepath => $stockref->{cview_basepath},
+                                                            tempfiles_subdir => $stockref->{cview_tmp_dir } });
+    if ($overview) {
+      $overview->render_map();
+      $map_html .= $overview->get_image_html();
+    }
+  }
 }
-
-#my $map = CXGN::Cview::Map::Stock->new($stock_id);
 #########################################
+my $has_qtl_data = $stockref->{has_qtl_data};
 
 
-my $dbxrefs = $stockref->{dbxrefs};
 my $new_pub_link = $curator || $submitter || $sequencer  ?   qq|<a href="/chado/add_publication.pl?type=stock&amp;type_id=$stock_id&amp;refering_page=$this_page&amp;action=new"> [Associate publication] </a>| : qq|<span class=\"ghosted\">[Associate publication]</span>| ;
 
-my $pubmeds = $dbxrefs->{PMID} || [];
-my $pub_count = scalar( @$pubmeds );
-#tgrc (stock_dbxref)
-# sp, po, go , PMID, EUSOL, tgrc
+my $pub_count = scalar( keys %$pubs );
+
+## EUSOL, tgrc (stock_dbxref)
+my $dbxrefs = $stockref->{dbxrefs};
+my %source_dbs;
+foreach my $db_name ( keys %$dbxrefs ) {
+  foreach my $dbxref ( @{ $dbxrefs->{$db_name} } ) {
+    my $url = $dbxref->db->urlprefix . $dbxref->db->url;
+    $url .= $dbxref->accession if $url =~ m/\?$|\=$/ ;
+    $source_dbs{$url} = $db_name . ": " . $dbxref->accession if $url;
+  }
+}
+my $new_ontology_link = !$person_id ? qq|<a href="/solpeople/login.pl">[log-in to associate new ontology term]</a> | : '' ;
+
 </%perl>
 
 
 <& /util/import_javascript.mas, classes => ["jquery", "thickbox", "CXGN.Page.FormattingHelpers"] &>
 
 
-<& /page/page_title.mas, title=> ucfirst($type_name)  .  ": " . $stock->get_uniquename()  . "\n" &>
+<& /page/page_title.mas, title=> ucfirst($type_name)  .  ": " . $uniquename  . "\n" &>
 
 
-<&| /page/info_section.mas, title=>"Stock details" , subtitle => "<a href=/stock/search/>Back to stock search</a>"  &>
+<&| /page/info_section.mas, title=>"Stock details" , subtitle => "<a href=../../phenome/qtl_form.pl>New QTL population</a> | <a href=/stock/search/>Back to stock search</a>"  &>
 
   <& /page/form.mas,
   object_type=>'stock',
@@ -158,10 +170,14 @@ my $pub_count = scalar( @$pubmeds );
   form_div_name=>'stock_details',
   js_object_name=> 'stockForm',
   page_url => "/stock/$stock_id/view/" ,
-  alternate_new_button => '<a href ="/stock/new">[New]</a>'
+  alternate_new_button => '<a href ="/stock/0/new">[New]</a>'
   &>
 
 <div><b>Stock editors: </b> <% $editor_link %></div>
+<br />
+% foreach my $db_url (keys %source_dbs) {
+<div><a href=<% $db_url %>><% $source_dbs{$db_url} %></a> </div>
+%}
 <br />
 
    <&| /page/info_section.mas, title => "Synonyms" , is_subsection => 1 &>
@@ -181,7 +197,7 @@ my $pub_count = scalar( @$pubmeds );
 </&>
 
 
-<&| /page/info_section.mas, title => "Associated loci" , subtitle => $new_locus_link, collapsible=> 1 &>
+<&| /page/info_section.mas, title => "Associated loci" , subtitle => $new_locus_link, collapsible=> 1 , collapsed => 1 &>
 
 <& /phenome/associate_locus.mas, object_id => $stock_id , object_name => "stock", locus_add_uri=> $locus_add_uri,   allele_div => $allele_div , show_form => $is_owner &>
 
@@ -217,33 +233,48 @@ my $pub_count = scalar( @$pubmeds );
 <&| /page/info_section.mas, title=>"Literature annotation ($pub_count)" , subtitle=>$new_pub_link, id=>"publications" , collapsible=>1, collapsed=>1 &>
 
 % my $pub_count = 0;
-% foreach my $dbxref ( @ { $dbxrefs->{PMID} } ) {
-% #if the dbxref is not obsolete
-%   foreach my $pd (  $dbxref->pub_dbxrefs  ) {
-%     my $pub = CXGN::Chado::Publication->new($dbh, $pd->pub_id );
-  <& /chado/publication.mas, pub=>$pub, count=>$pub_count++, db=>'PMID', accession=>$pub->get_accession() &>
-%    }
-    <br >
+% foreach my $full_accession ( keys %$pubs  ) {
+% my $pub = CXGN::Chado::Publication->new($dbh, $pubs->{$full_accession}->pub_id );
+% my ($pub_db_name, $accession) = split ':' , $full_accession;
+<& /chado/publication.mas, pub=>$pub, count=>$pub_count++, db=>$pub_db_name, accession=>$accession &>
+  <br >
 % }
 
 </&>
 
-<&| /page/info_section.mas, title=>"Ontology annotation" &>
-<& /ontology/associate_ontology.mas, object_id => $stock_id , object_name => "stock", cvterm_add_uri=> $cvterm_add_uri, ontology_url=>"/stock/$stock_id/ontologies/" &>
+
+
+<&| /page/info_section.mas, title=>"Ontology annotation" , collapsible=>1, collapsed=>1, subtitle=>$new_ontology_link &>
+<& /ontology/associate_ontology.mas, object_id => $stock_id , object_name => "stock", cvterm_add_uri=> $cvterm_add_uri, ontology_url=>"/stock/$stock_id/ontologies/", show_form => $is_owner  &>
 
 </&>
 
-<&| /page/info_section.mas, title=>"Phenotype data " &>
-% foreach my $project (keys %projects) {
-%  my $pheno = $projects{$project}{phenotypes} ;
-<&| /page/info_section.mas, title=>"Experiment: $project", is_subsection => 1 &>
+<&| /page/info_section.mas, title=>"Phenotype data " ,  collapsible => 1, collapsed => 1 &>
+% foreach my $project (keys %$direct_phenotypes) {
+%  my $pheno = $direct_phenotypes->{$project} ;
+<&| /page/info_section.mas, title=>"Experiment: $project", is_subsection => 1, collapsible => 1 &>
     <& /phenotypes/phenotype_data.mas , phenotypes=>$pheno &>
+  </&>
+% }
+
+% foreach my $key (keys %$members_phenotypes) {
+<&| /page/info_section.mas,
+     title         => "Member phenotypes",
+     subtitle      => $key,
+     is_subsection => 1,
+     collapsible   => 1,
+ &>
+    <& /phenotypes/phenotype_data.mas,
+         phenotypes => $members_phenotypes->{$key},
+         object_id  => $stock_id,
+         has_qtl    => $has_qtl_data,
+     &>
   </&>
 % }
 </&>
 
-<&| /page/info_section.mas, title=>"Genotype data " &>
-
+<&| /page/info_section.mas, title=>"Genotype data ", collapsible => 1 , collapsed => 1 &>
+% print $map_html;
 </&>
 
 <& /page/comments.mas, object_type=>'stock', object_id=>$stock_id, referer=>$this_page &>

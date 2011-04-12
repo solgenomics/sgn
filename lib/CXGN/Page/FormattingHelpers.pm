@@ -16,7 +16,6 @@ use CXGN::Tools::Text qw/commify_number/;
 
 use CXGN::MasonFactory;
 use CXGN::Scrap;
-use CXGN::Page::Widgets qw/collapser/;
 
 =head1 NAME
 
@@ -137,68 +136,7 @@ sub blue_section_html {
 =cut
 
 sub info_section_html {
-    my %args = @_;
-
-    #check arguments.  i think this is better for everyone except beth
-    my @valid_keys =
-      qw/ title subtitle contents empty_message is_empty is_subsection collapsible collapsed id align/;
-    foreach my $argname ( keys %args ) {
-        grep { $_ eq $argname } @valid_keys
-          or croak "Unknown argument name '$argname' to info_section_html";
-    }
-
-#$args{collapsible} = 1 unless defined $args{collapsible}; #collapsible defaults to on
-
-    #set anything we dont have to the empty string,
-    #avoids 'undefined value in string or concatenation' warnings.
-    $_ ||= '' foreach @args{qw/title subtitle contents/};
-
-    #if we have been given content, and we aren't told that this section
-    #is supposed to be empty, print a full section
-    my $sub = $args{is_subsection} ? 'sub_' : '';
-    if ( $args{contents} && !$args{is_empty} ) {
-        my $title        = $args{title};
-        my $contents     = $args{contents} || '';
-        my $collapser_id = $args{id};
-        my $collapsed    = $args{collapsed};
-        my $align = $args{align} ? qq| style="text-align: $args{align}"| : '';
-        $collapsed ||= 0;
-        $collapser_id ||= "sgnc" . int( rand(10000) );
-        $contents = <<EOC;
-<div class="${sub}infosectioncontent" $align>
-$contents
-</div>
-EOC
-
-        if ( $args{collapsible} ) {
-            ( $title, $contents ) = collapser(
-                {
-                    linktext            => $title,
-                    hide_state_linktext => $title,
-                    content             => $contents,
-                    collapsed           => $collapsed,
-                    id                  => $collapser_id
-                }
-            );
-        }
-        my $title_bar = <<EOHTML;
-<table cellspacing="0" cellpadding="0" class="${sub}infosectionhead" summary=""><tr><td class="${sub}infosectiontitle">$title</td><td class="${sub}infosectionsubtitle">$args{subtitle}&nbsp;</td></tr></table>
-EOHTML
-        return "$title_bar\n$contents\n";
-    }
-
-    #otherwise, if it's actually empty, just print a collapsed section
-    #with the empty message
-    else {
-        my $maybe_subtitle =
-          $args{subtitle}
-          ? qq|<td class="${sub}infosectionsubtitle_empty" align="right">$args{subtitle}&nbsp;</td>|
-          : '';
-        $args{empty_message} ||= 'None';
-        return <<EOT;
-<table cellspacing="0" cellpadding="0" class="${sub}infosectionhead_empty" summary=""><tr><td class="${sub}infosectiontitle_empty">$args{title}</td><td class="${sub}infosection_emptymessage">$args{empty_message}</td>$maybe_subtitle</tr></table>
-EOT
-    }
+    return CXGN::MasonFactory->bare_render( '/page/info_section.mas', @_ );
 }
 
 =head2 page_title_html

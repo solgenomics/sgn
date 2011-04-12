@@ -218,6 +218,7 @@ sub action_for_js_package {
 
 sub _resolve_jsan_dependencies {
     my ( $self, $files ) = @_;
+    local $_; #< stupid JSAN writes to $_
 
     # resolve JSAN dependencies of these files
     my $jsan = $self->new_jsan;

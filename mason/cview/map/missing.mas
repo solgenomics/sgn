@@ -1,0 +1,20 @@
+
+<%args>
+$title => ''
+</%args>
+
+<br />
+<br />
+<& /page/page_title.mas, title=>$title &>
+    
+<div class="boxbgcolor2">
+<p>
+    All available maps on SGN are listed on the <a href="/cview/">map index page</a>.
+    </p>
+    <p>
+    Please contact <a href="mailto:sgn-feedback\@sgn.cornell.edu">SGN</a> if you think there is a problem.
+    </p>
+    <br />
+</div>
+
+

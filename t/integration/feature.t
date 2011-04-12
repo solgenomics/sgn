@@ -9,7 +9,7 @@ Tests for generic feature URLs
 =head1 SYNOPSIS
 
 These tests assume that a polypeptide does not have a specialized feature mason
-component and gets rendered as a generic feature with mason/feature/dhandler
+component and gets rendered as a generic feature with mason/feature/default.mas
 from SGN::Controller::Feature.
 
 =head1 AUTHORS
@@ -50,8 +50,6 @@ for my $url ( "/feature/view/name/".$poly_feature->name,  "/feature/view/id/".$p
 
     $mech->content_contains('Polypeptide details');
     $mech->content_contains($poly_feature->name);
-    $mech->content_contains('Genomic sequence');
-    $mech->content_contains('Related features');
 }
 
 done_testing;

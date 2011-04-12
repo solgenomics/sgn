@@ -93,17 +93,16 @@ sub search :Path('/feature/search') Args(0) {
     );
 }
 
-
-
 sub delegate_component
 {
     my ($self, $c, $matching_features) = @_;
     my $feature   = $matching_features->next;
-    my $type_name = $feature->type->name;
-    my $template  = "/feature/dhandler";
+    my $type_name = lc $feature->type->name;
+    my $template  = "/feature/types/default.mas";
 
     $c->stash->{feature}     = $feature;
     $c->stash->{featurelocs} = $feature->featureloc_features;
+    $c->stash->{seq_download_url} = '/api/v1/sequence/download/single/'.$feature->feature_id;
 
     # look up site xrefs for this feature
     my @xrefs = $c->feature_xrefs( $feature->name, { exclude => 'featurepages' } );
@@ -115,8 +114,8 @@ sub delegate_component
     }
     $c->stash->{xrefs} = \@xrefs;
 
-    if ($c->view('Mason')->component_exists("/feature/$type_name.mas")) {
-        $template         = "/feature/$type_name.mas";
+    if ($c->view('Mason')->component_exists("/feature/types/$type_name.mas")) {
+        $template         = "/feature/types/$type_name.mas";
         $c->stash->{type} = $type_name;
     }
     $c->stash->{template} = $template;

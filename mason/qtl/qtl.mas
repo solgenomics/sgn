@@ -52,7 +52,7 @@ $qtl_image = qq |<img src="$qtl_image" width=320 height=320 alt="QTL for $trait_
   </table>
 </&>
 
-<&| /page/info_section.mas, title => "QTL markers' detail" &>  
+<&| /page/info_section.mas, collapsible=>1, collapsed=>1, title => "QTL 95% Confidence Interval" &>  
   <& /page/columnar_table.mas,
      headings=>["Marker", " Position (cM)", "LOD", "Remark"],
     data=>$marker_link,
@@ -65,8 +65,8 @@ $qtl_image = qq |<img src="$qtl_image" width=320 height=320 alt="QTL for $trait_
 
 
 <& /qtl/genome_positions.mas, markers=>$markers &>
-<&| /page/info_section.mas, title => "Browse QTL region" &><% $download %></&>
-<&| /page/info_section.mas, title => "QTL markers' genetic positions and Comparative Map Viewer" &><% $cmv_link %></&>
-<&| /page/info_section.mas, title => "Population genetic map" &><% $genetic_map %></&>
+<&| /page/info_section.mas, collapsible=>1, collapsed=>1, title => "Browse QTL region" &><% $download %></&>
+<&| /page/info_section.mas, collapsible=>1, collapsed=>1, title => "QTL markers' genetic positions and Comparative Map Viewer" &><% $cmv_link %></&>
+<&| /page/info_section.mas, collapsible=>1, collapsed=>1, title => "Population genetic map" &><% $genetic_map %></&>
 
 <% $comment %>

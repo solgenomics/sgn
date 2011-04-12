@@ -13,19 +13,28 @@ JSAN.use('popup');
 
 
 var Ontology = {
-        submitCvtermForm: function(cvterm_add_uri , object_id) {
+    submitCvtermForm: function(cvterm_add_uri, ontology_url) {
+        var onto_html = this.displayOntologies( "ontology" , ontology_url);
         //make an AJAX request with the form params
-        var cvterm = jQuery("#term_name").val();
-        jQuery.ajax({ url: cvterm_add_uri , method:"POST", data: 'object_id='+ object_id +'&term_name='+$('term_name') ,
+        var object_id = jQuery('#object_id').val();
+        var relationship = jQuery('#relationship_select').val();
+        var evidence_code = jQuery('#evidence_code_select').val();
+        var evidence_description = jQuery('#evidence_description_select').val();
+        var evidence_with = jQuery('#evidence_with_select').val();
+        var reference = jQuery('#reference_select').val();
+        jQuery.ajax({
+                url: cvterm_add_uri ,
+                    type:"GET",
+                    data: 'term_name='+jQuery('#term_name').val()+'&object_id='+object_id+'&relationship='+relationship+'&evidence_code='+evidence_code+'&evidence_description='+evidence_description+'&evidence_with='+evidence_with+'&reference='+reference ,
                     success: function(response) {
                     var error = response.error;
                     if (error) { alert(error) ; }
-                    this.displayOntologies( "ontology" );
                 }
             } );
+        jQuery("#ontology").html( this.displayOntologies( "ontology" , ontology_url) );
     },
 
-        displayOntologies: function(div_id, url) {
+    displayOntologies: function(div_id, url) {
         //alternate show the annotation and the detailed evidence
         jQuery(function() {
                 jQuery("#ontology_show_details").show()
@@ -55,13 +64,14 @@ var Ontology = {
 
         updateAutocomplete: function(autocomplete_url, relationship_uri, rel_div) {
         // setting some default values
-        if (!relationship_uri)  relationship_uri = '/cvterm/ajax/relationships' ;
+        if (!relationship_uri)  relationship_uri = '/ajax/cvterm/relationships' ;
         if (!rel_div) rel_div = 'relationship_select' ;
+        
         jQuery(function() {
                 jQuery("#term_name").autocomplete({
                         source: autocomplete_url + "?db_name="+jQuery("#db_name").val(),
-                        wait: 2,
-                        change: Ontology.populateEvidence(rel_div, relationship_uri)
+                            //wait: 2,
+                            change: Ontology.populateEvidence(rel_div, relationship_uri)
                     });
             });
     },

@@ -48,7 +48,7 @@ my %searches = (
     automatic_annotations => { function => \&quick_automatic_annotation_search },
     sgn_pages  => { function => \&quick_page_search },
     web        => { function => \&quick_web_search  },
-
+    phenotype  => { function => \&quick_phenotype_search },
     # search-framework searches
     people     => { sf_class    => 'CXGN::Searches::People',
                     result_desc => 'people',
@@ -66,10 +66,6 @@ my %searches = (
                     result_desc => 'unigene identifiers',
                     search_path => '/search/ug-ad2.pl',
                     exact       => 1,
-                },
-    phenotype  => { sf_class    => 'CXGN::Phenotypes',
-                    result_desc => 'phenotype identifiers',
-                    search_path => '/search/phenotype_search.pl',
                 },
     image      => { sf_class    => 'CXGN::Searches::Images',
                     result_desc => 'images',
@@ -110,8 +106,11 @@ sub quick_search: Path('/search/quick') {
     #that page
     my $external_link;
     if ( my $direct_url = identifier_url($term) ) {
+        my $namespace = identifier_namespace($term);
         #if the URL is just to this page, it's not useful
-        unless( $direct_url =~ m!quick_search\.pl|search/quick! ) { #unless the url is to quick_search
+        unless( $direct_url =~ m!quick_search\.pl|search/quick! #unless the url is to quick_search
+                || $namespace eq 'est'  # don't auto-redirect for est names, some markers are called this
+               ) {
 
             #if it's an external link, don't redirect, but put it in the external_link variable
             if ( $direct_url =~ m@(f|ht)tp://@
@@ -134,7 +133,9 @@ sub quick_search: Path('/search/quick') {
 
     # another optimization: if the quick search found only one
     # possible URL to go to, go there
-    my @possible_urls = uniq( grep defined,
+    my @possible_urls = uniq(
+         grep $_ !~ m!^https?://!,
+         grep defined,
          ( map $_->{result}->[0],
            values %{$c->stash->{results}}
          ),
@@ -318,6 +319,17 @@ sub quick_array_search {
     }
     return $array_link;
 }
+sub quick_phenotype_search {
+    my ($db, $term) = @_;
+    my $q = "select count (distinct stock_id ) from stock left join stockprop using (stock_id) left join cvterm on stockprop.type_id = cvterm.cvterm_id where stock.name ilike ? or stock.uniquename ilike ? or (stockprop.value ilike ? and cvterm.name ilike ? ) " ;
+    my $count = sql_query_count( $db , $q , "\%$term\%","\%$term\%","\%$term\%", "\%synonym\%" );
+    my $pheno_link = [ undef , "0 phenotype identifiers"];
+    if ($count>0) {
+        $pheno_link = ["/stock/search?stock_name=$term&search_submitted=1" ,
+                       "$count phenotype identifiers" ];
+    }
+    return $pheno_link;
+}
 
 sub quick_marker_search {
     my $db = shift;
@@ -444,6 +456,7 @@ sub google_search {
       return [ undef, "0 pages on $site_title" ];
   }
 }
+
 
 sub quick_web_search {
   my (undef,$term) = @_;
