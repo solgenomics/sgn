@@ -3,11 +3,13 @@ use strict;
 use warnings FATAL => 'all';
 
 # tests for TMpred Module
-use Test::More tests=> 20;
+use Test::More tests=> 21;
+use Bio::SeqIO;
 use Bio::SecreTary::TMpred;
 use Bio::SecreTary::Helix;
 use Bio::SecreTary::SecreTaryAnalyse;
 use Bio::SecreTary::SecreTarySelect;
+use File::Spec::Functions 'catfile';
 
 $ENV{PATH} .= ':programs'; #< XXX TODO: obviate the need for this
 
@@ -110,5 +112,78 @@ $categorize1_output = $STS_obj->categorize1($STA_obj);
 
 ok($categorize1_output =~ /^fail 0 -1 0 0 -1 0$/, 'Check categorize1 output (case 2).');
 
+
+# test of 115 sequences from various species.
+
+my $fasta_infile = catfile( 't', 'data', 'AtBrRiceTomPopYST_115.fasta');
+my $stout_infile = catfile( 't', 'data', 'AtBrRiceTomPopYST_115.stout');
+ 
+my @category_result_standard = ();
+
+if( open my $fh, "<", $stout_infile){
+	while(<$fh>){
+		push @category_result_standard, $_;
+	}
+}else{
+	die "couldn't open file $stout_infile \n";
+}
+
+# get input sequences and construct a SecreTaryAnalyse object for each.
+
+$STS_obj  = Bio::SecreTary::SecreTarySelect->new();
+
+my $trunc_length = 80;
+my $count_sequences_analyzed = 0;
+my @category_result_now = ();
+{
+	my $input_sequences = Bio::SeqIO->new(
+			-file   => "<$fasta_infile",
+			-format => 'fasta'
+			);
+	while ( my $seqobj = $input_sequences->next_seq ) {
+		my $seq_id   = $seqobj->display_id();
+		$seq_id =~ s/\|.*//;	# delete from first pipe to end.
+			my $sequence = $seqobj->seq();
+		$sequence = substr( $sequence, 0, $trunc_length );
+		my $STA = Bio::SecreTary::SecreTaryAnalyse->new( $seq_id, $sequence,
+				$TMpred_obj );
+		my $cat_result = $STS_obj->categorize1($STA);
+
+# print $STA->get_sequence_id(), "  ", $cat_result, "\n";
+		push @category_result_now, $STA->get_sequence_id() . "  " . $cat_result . "\n";
+
+		$count_sequences_analyzed++;
+	}
+}
+
+my ($count_exact, $count_good_enough, $count_bad) = (0, 0, 0);
+my $size_diff = abs( scalar @category_result_now - scalar @category_result_standard);
+	while(@category_result_now and @category_result_standard){
+		my $line_now = shift @category_result_now;
+		my $line_std = shift @category_result_standard;
+		if( $line_now eq $line_std ){
+			$count_exact++;
+		}
+		elsif (compare_categorize1_results($line_now, $line_std) == 0) {
+			$count_good_enough++;
+		}else{
+			$count_bad++;
+		}
+	}
+# print "$count_exact, $count_good_enough, $count_sequences_analyzed \n";
+my $OK = (($count_sequences_analyzed == ($count_exact + $count_good_enough)) and ($count_bad == 0));
+ok($OK, 'Check SecreTarySelect::categorize1 results for 115 sequences.');
+
+#ok($count_bad == 0, 'Check SecreTarySelect::categorize1 results for 115 sequences.');
+
+
+sub compare_categorize1_results{
+	my @r1 = split(" ", shift);
+	my @r2 = split(" ", shift);
+	my $STscore_tolerance = 0.001;
+	if ( join("", @r1[0,1,3,4,5,6]) ne join("", @r2[0,1,3,4,5,6])){ return 1; } # 
+		if( ( abs($r1[2] - $r2[1]) > $STscore_tolerance ) or ( abs($r1[7] - $r2[7]) > $STscore_tolerance) ){ return 2; }
+	return 0; # they are the same (close enough in the case of the STscores.
+			}
 
 
