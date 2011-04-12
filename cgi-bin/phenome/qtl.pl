@@ -11,16 +11,8 @@ Isaak Y Tecle (iyt2@cornell.edu)
 use strict;
 use warnings;
 
-use CXGN::Page;
-use CXGN::Page::FormattingHelpers qw /info_section_html
-    page_title_html
-    columnar_table_html
-    html_optional_show
-    info_table_html
-    tooltipped_text
-    html_alternate_show
-    /;
 
+use CGI;
 use CXGN::People::PageComment;
 use CXGN::Phenome::Population;
 use CXGN::Phenome::UserTrait;
@@ -38,12 +30,15 @@ use SGN::Exception;
 
 use CatalystX::GlobalContext qw( $c );
 
+my $cgi = CGI->new();
+my %params = $cgi->Vars();
 
-my $page = CXGN::Page->new( "qtl", "isaak" );
-our ( $pop_id, $trait_id, $lg, $p_m, $lod, $qtl_image )
-    = $page->get_encoded_arguments( "population_id", "term_id",
-                                    "chr",  "peak_marker", "lod",   "qtl"
-    );
+our $pop_id    = $params{population_id};
+our $trait_id  = $params{term_id};
+our $lg        = $params{chr};
+our $p_m       = $params{peak_marker};
+our $lod       = $params{lod};
+our $qtl_image = $params{qtl};
 
 if (    !$pop_id
      || !$trait_id
