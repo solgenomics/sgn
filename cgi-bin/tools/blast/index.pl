@@ -192,7 +192,7 @@ EOSQL
 $page->header('SGN BLAST');
 $page->jsan_use('jquery');
 
-my ($databases,$programs,$programs_js) = blast_db_prog_selects( $params{db_id}, $params{flush_cache} );
+my ($databases,$programs,$programs_js) = blast_db_prog_selects( $params{db_id}, $params{flush_cache}, $prefs );
 my $spellcheck_js = <<'';
 // turn off spell check on sequence inputs without emitting invalid HTML
 jQuery(function($) { $('#sequence_input').attr('spellcheck',false) });
@@ -369,7 +369,7 @@ sub _cached_file_modtime {
 }
 
 sub blast_db_prog_selects {
-    my ( $db_id, $flush_cache ) = @_;
+    my ( $db_id, $flush_cache, $prefs ) = @_;
 
     my $db_choices = blast_db_choices( $flush_cache );
 
@@ -377,7 +377,7 @@ sub blast_db_prog_selects {
         unless @$db_choices;
 
     # DB select box will either the db_id supplied, or what the user last selected, or the tomato combined blast db
-    my $selected_db_id = $db_id #|| $prefs->get_pref('last_blast_db_id')
+    my $selected_db_id = $db_id || $prefs->get_pref('last_blast_db_id')
 	|| do {
 	    my ($d) = map $_->blast_db_id,
                       grep _cached_file_modtime($_),
