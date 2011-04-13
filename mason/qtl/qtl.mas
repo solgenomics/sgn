@@ -63,10 +63,10 @@ $qtl_image = qq |<img src="$qtl_image" width=320 height=320 alt="QTL for $trait_
     &>
 </&>
 
-
+<&| /page/info_section.mas, collapsible=>1, collapsed=>1, title => "QTL markers' genetic positions and Comparative Map Viewer" &><% $cmv_link %></&>
 <& /qtl/genome_positions.mas, markers=>$markers &>
 <&| /page/info_section.mas, collapsible=>1, collapsed=>1, title => "Browse QTL region" &><% $download %></&>
-<&| /page/info_section.mas, collapsible=>1, collapsed=>1, title => "QTL markers' genetic positions and Comparative Map Viewer" &><% $cmv_link %></&>
+
 <&| /page/info_section.mas, collapsible=>1, collapsed=>1, title => "Population genetic map" &><% $genetic_map %></&>
 
 <% $comment %>
