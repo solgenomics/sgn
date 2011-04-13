@@ -432,3 +432,17 @@ bgcolor      = purple
 stranded     = 1
 citation     = Clone end sequence alignments by Dan Bolser, <a href="http://www.compbio.dundee.ac.uk/">University of Dundee</a>.  Generated from a post-processed <a href="http://www.sanger.ac.uk/resources/software/ssaha/">SSAHA</a> alignment of S. lycopersicum and S. penellii clone end sequences to the SL2.40 assembly.  Clone end sequences from libraries: LE_HBa, LpenBAC, LpenCOS, SL_EcoRI, SL_FOS, SL_MboI, SL_MT, and SL_s
 das category = structural
+
+[itag1_reference]
+feature      = match:ITAG_itag1_ref
+glyph        = alignment
+key          = ITAG1 / SL1.00 scaffolds
+category     = Genomic Reagents
+stranded     = 1
+fgcolor      = green
+bgcolor      = green
+link         = ../ITAG1_genomic/?name=$name
+citation     = This track shows regions of similarity with the reference sequences (scaffolds) from the ITAG1 annotation release, which was based on the SL1.00 sequence assembly.
+das category = similarity
+bump density = 100
+
