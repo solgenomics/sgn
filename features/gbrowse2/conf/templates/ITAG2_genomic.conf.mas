@@ -402,28 +402,3 @@ link         = /search/quick_search.pl?term=$name
 citation     = This track shows regions of similarity of the genomic sequence with known sequences associated with SGN genetic markers, as detected by GenomeThreader (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnSgnMarkers000">ITAG Wiki</a>).  Darker color indicates higher alignment score.
 das category = similarity
 
-[tomato_bacs]
-feature      = match:ITAG_tomato_bacs
-glyph        = alignment
-key          = Tomato BACs
-category     = Genomic Reagents
-stranded     = 1
-fgcolor      = blue
-bgcolor      = blue
-link         = /search/quick_search.pl?term=$name
-citation     = This track shows regions of similarity with tomato BAC sequences.  Darker color indicates higher alignment score.
-das category = similarity
-bump density = 100
-
-[itag1_reference]
-feature      = match:ITAG_itag1_reference
-glyph        = alignment
-key          = Tomato BACs
-category     = Genomic Reagents
-stranded     = 1
-fgcolor      = green
-bgcolor      = green
-link         = /search/quick_search.pl?term=$name
-citation     = This track shows regions of similarity with the reference sequences underlying the ITAG1 annotation, the SL1.00 tomato genome assembly.   Darker color indicates higher alignment score.
-das category = similarity
-bump density = 100
