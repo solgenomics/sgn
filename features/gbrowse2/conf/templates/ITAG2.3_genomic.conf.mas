@@ -318,14 +318,25 @@ citation     = <i>De novo</i> predictions from <a href="http://www.genomics.jhu.
 das category = transcription
 
 [infernal]
-feature      = ncRNA:ITAG_infernal tRNA:ITAG_infernal snoRNA:ITAG_infernal U6atac_snRNA:ITAG_infernal miRNA:ITAG_infernal antisense_RNA:ITAG_infernal snRNA:ITAG_infernal 5_snRNA:ITAG_infernal 13_snRNA:ITAG_infernal 10_snRNA:ITAG_infernal snRNA:ITAG_infernal 11_snRNA:ITAG_infernal 6_snRNA:ITAG_infernal snoRNA:ITAG_infernal 12_snRNA:ITAG_infernal U1_snRNA:ITAG_infernal group_I_intron:ITAG_infernal 7_snRNA:ITAG_infernal UTR_region:ITAG_infernal group_II_intron:ITAG_infernal miRNA:ITAG_infernal SRP_RNA:ITAG_infernal snRNA:ITAG_infernal snoRNA:ITAG_infernal 14_snRNA:ITAG_infernal 4_snRNA:ITAG_infernal miRNA:ITAG_infernal U2_snRNA:ITAG_infernal 9_snRNA:ITAG_infernal rRNA_5.8S:ITAG_infernal 8_snRNA:ITAG_infernal RNAi_reagent:ITAG_infernal
+feature      = transcript:ITAG_infernal
+key          = Infernal
+category     = Prediction Features
+glyph        = segments
+description  = sub { (shift->attributes('Alias'))[0] }
+bgcolor      = blue
+stranded     = 1
+citation     = This track shows RNA regions inferred by <a href="http://infernal.janelia.org/">Infernal</a>.  Provided by James Abbott, Imperial College London.
+das category = transcription
+
+[infernal:overview]
+feature      = transcript:ITAG_infernal
 key          = Infernal
 category     = Prediction Features
 glyph        = segments
 description  = sub { (shift->attributes('Alias'))[0] }
 stranded     = 1
-citation     = This track shows RNA regions inferred by <a href="http://infernal.janelia.org/">Infernal</a>.  Provided by Daniel Buchan, <a href="http://www.srcuk.org/">SRCUK</a>.
-das category = experimental
+citation     = This track shows RNA regions inferred by <a href="http://infernal.janelia.org/">Infernal</a>.  Provided by James Abbott, Imperial College London.
+das category = transcription
 
 [trnascanse]
 feature      = tRNA:ITAG_trnascanse
@@ -334,7 +345,7 @@ category     = Prediction Features
 glyph        = segments
 stranded     = 1
 citation     = This track shows transfer RNAs predicted by the tRNAscan-SE program.  For more on tRNAscan-SE, see <a href="http://selab.janelia.org/software#trnascanse">http://selab.janelia.org/software#trnascanse</a>.  (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnTRNAScanSE000">ITAG Wiki</a>)
-das category = experimental
+das category = transcription
 
 [tRNA:overview]
 feature      = tRNA:ITAG_trnascanse
