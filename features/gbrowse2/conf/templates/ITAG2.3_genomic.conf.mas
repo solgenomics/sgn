@@ -338,6 +338,16 @@ stranded     = 1
 citation     = This track shows RNA regions inferred by <a href="http://infernal.janelia.org/">Infernal</a>.  Provided by James Abbott, Imperial College London.
 das category = transcription
 
+[infernal:region]
+feature      = transcript:ITAG_infernal
+key          = Infernal
+category     = Prediction Features
+glyph        = segments
+description  = sub { (shift->attributes('Alias'))[0] }
+stranded     = 1
+citation     = This track shows RNA regions inferred by <a href="http://infernal.janelia.org/">Infernal</a>.  Provided by James Abbott, Imperial College London.
+das category = transcription
+
 [trnascanse]
 feature      = tRNA:ITAG_trnascanse
 key          = tRNAscanSE
@@ -368,6 +378,16 @@ citation     = This track shows regions of similarity of Eugene-predicted cDNA s
 das category = similarity
 
 [Markers:overview]
+feature      = match:ITAG_sgn_markers
+ignore_sub_part = match_part
+key          = Markers
+fgcolor      = black
+bgcolor      = yellow
+glyph        = generic
+label density = 100
+bump density  = 100
+
+[Markers:region]
 feature      = match:ITAG_sgn_markers
 ignore_sub_part = match_part
 key          = Markers
