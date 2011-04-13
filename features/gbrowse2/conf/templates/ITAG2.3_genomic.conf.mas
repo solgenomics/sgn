@@ -235,18 +235,6 @@ stranded     = 1
 citation     = This track shows regions of similarity with Tomato BAC clones (see <a href="http://www.ab.wur.nl/TomatoWiki/AnTomatoBACs000">ITAG Wiki</a>).  Darker color indicates higher alignment score.
 das category = similarity
 
-[tomato_bac_ends]
-feature      = match:ITAG_tomato_bac_ends
-key          = Tomato BAC Ends
-category     = Genome data and reagents
-glyph        = alignment
-bgcolor      = red
-fgcolor      = red
-link         = /search/quick?term=$name
-stranded     = 1
-citation     = This track shows straightforward regions of similarity with Tomato BAC end sequences (see <a href="http://www.ab.wur.nl/TomatoWiki/AnTomatoBES000">ITAG Wiki</a>).  Darker color indicates higher alignment score.
-das category = similarity
-
 [tobacco_contigs]
 feature      = match:ITAG_tobacco_contigs
 key          = Tobacco Genome Contigs
@@ -269,18 +257,6 @@ fgcolor      = brown
 link         = /search/quick?term=$name
 stranded     = 1
 citation     = This track shows regions of similarity with Potato BAC clones (see <a href="http://www.ab.wur.nl/TomatoWiki/AnPotatoBACs000">ITAG Wiki</a>).  Darker color indicates higher alignment score.
-das category = similarity
-
-[potato_bac_ends]
-feature      = match:ITAG_potato_bac_ends
-key          = Potato BAC Ends
-category     = Other genomes
-glyph        = arrow
-bgcolor      = brown
-fgcolor      = brown
-link         = /search/quick?term=$name
-stranded     = 1
-citation     = This track shows straightforward regions of similarity with Potato BAC end sequences (see <a href="http://www.ab.wur.nl/TomatoWiki/AnTomatoBES000">ITAG Wiki</a>).
 das category = similarity
 
 [augustus]
@@ -412,4 +388,16 @@ glyph        = segments
 bgcolor      = sub { (shift->attributes('scaffold_reliably_oriented'))[0] ? 'gray' : 'white' }
 stranded     = sub { (shift->attributes('scaffold_reliably_oriented'))[0] ? 1 : 0 }
 citation     = This track shows the location and orientation of the scaffolds and contigs in the tomato SL2.40 genome assembly.  Dark gray scaffolds with arrow indicated their directionality indicate reliable orientation, whereas white-filled scaffolds without arrows could not be reliably oriented.
+das category = structural
+
+[dbolser_BES]
+feature      = BAC_clone:DBolser_Dundee_BES_SSAHA
+key          = Clone end sequences
+category     = Genome data and reagents
+#link         = /search/quick?term=$name
+box_subparts = 1
+glyph        = alignment
+bgcolor      = purple
+stranded     = 1
+citation     = Clone end sequence alignments by Dan Bolser, <a href="http://www.compbio.dundee.ac.uk/">University of Dundee</a>.  Generated from a post-processed <a href="http://www.sanger.ac.uk/resources/software/ssaha/">SSAHA</a> alignment of S. lycopersicum and S. penellii clone end sequences to the SL2.40 assembly.  Clone end sequences from libraries: LE_HBa, LpenBAC, LpenCOS, SL_EcoRI, SL_FOS, SL_MboI, SL_MT, and SL_s
 das category = structural
