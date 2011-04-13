@@ -127,7 +127,7 @@ key            = 6-frame translation
 citation       = This track displays a six-frame translation of the reference DNA sequence.
 
 [Genes:region]
-feature      = gene:ITAG_renaming
+feature      = gene:ITAG_eugene
 key          = Genes
 glyph        = segments
 fgcolor      = black
@@ -142,7 +142,7 @@ height       = 7
 citation     = This track shows the spans of gene models annotated by EuGene, the integrative gene predictor for ITAG. (see <a href="http://www.ab.wur.nl/TomatoWiki/AnEugene000">EuGene on ITAG Wiki</a>, <a href="http://www.inra.fr/internet/Departements/MIA/T//EuGene/index.html">EuGene main page</a>)
 
 [mrna]
-feature      = mRNA:ITAG_renaming
+feature      = mRNA:ITAG_eugene
 key          = Gene models
 glyph        = gene
 fgcolor      = black
@@ -159,7 +159,7 @@ balloon hover = $name: click for more details
 balloon click = sub { my $name = shift->name; $name =~ s/\.\d+\.\d+$//; "url:/api/v1/feature_xrefs?q=$name;exclude=gbrowse,gbrowse2" }
 
 [cds]
-feature      = mRNA:ITAG_renaming
+feature      = mRNA:ITAG_eugene
 key          = CDS - click to browse protein
 title        = sub { my $n = shift->display_name; "click to browse annotations on $n protein product"}
 glyph        = CDS
@@ -177,7 +177,7 @@ citation     = This track shows the CDS sequences for gene models annotated by E
 
 #track to show DNA and GC content
 [peptides]
-feature        = CDS:ITAG_renaming
+feature        = CDS:ITAG_eugene
 glyph          = protein
 global feature = 1
 height         = 40
