@@ -109,8 +109,8 @@ citation     = This track shows similarities with peptide sequences from <i>Arab
 [interpro]
 feature      = polypeptide_region:ITAG_interpro
 key          = InterProScan
+description  = 1
 bgcolor      = blue
-description  = sub { shift->get_Annotations('Dbxref') }
 category     = Similarity
 glyph        = segments
 stranded     = 0
