@@ -223,30 +223,6 @@ stranded     = 1
 citation     = This track shows regions of similarity with SGN Unigene (SGN-U) sequences.  (see <a href="http://www.ab.wur.nl/TomatoWiki/AnSgnUnigenes000">ITAG Wiki</a>).  Darker color indicates higher alignment score.
 das category = similarity
 
-[tomato_bacs]
-feature      = match:ITAG_tomato_bacs
-key          = Tomato BACs
-category     = Genome data and reagents
-glyph        = alignment
-bgcolor      = red
-fgcolor      = red
-link         = /search/quick?term=$name
-stranded     = 1
-citation     = This track shows regions of similarity with Tomato BAC clones (see <a href="http://www.ab.wur.nl/TomatoWiki/AnTomatoBACs000">ITAG Wiki</a>).  Darker color indicates higher alignment score.
-das category = similarity
-
-[tomato_bac_ends]
-feature      = match:ITAG_tomato_bac_ends
-key          = Tomato BAC Ends
-category     = Genome data and reagents
-glyph        = alignment
-bgcolor      = red
-fgcolor      = red
-link         = /search/quick?term=$name
-stranded     = 1
-citation     = This track shows straightforward regions of similarity with Tomato BAC end sequences (see <a href="http://www.ab.wur.nl/TomatoWiki/AnTomatoBES000">ITAG Wiki</a>).  Darker color indicates higher alignment score.
-das category = similarity
-
 [tobacco_contigs]
 feature      = match:ITAG_tobacco_contigs
 key          = Tobacco Genome Contigs
@@ -257,30 +233,6 @@ fgcolor      = green
 link         = /search/quick?term=$name
 stranded     = 1
 citation     = This track shows regions of similarity with Tobacco genome contigs (see <a href="http://www.ab.wur.nl/TomatoWiki/AnTobaccoContigs000">ITAG Wiki</a>).  Darker color indicates higher alignment score.
-das category = similarity
-
-[potato_bacs]
-feature      = match:ITAG_potato_bacs
-key          = Potato BACs
-category     = Other genomes
-glyph        = alignment
-bgcolor      = brown
-fgcolor      = brown
-link         = /search/quick?term=$name
-stranded     = 1
-citation     = This track shows regions of similarity with Potato BAC clones (see <a href="http://www.ab.wur.nl/TomatoWiki/AnPotatoBACs000">ITAG Wiki</a>).  Darker color indicates higher alignment score.
-das category = similarity
-
-[potato_bac_ends]
-feature      = match:ITAG_potato_bac_ends
-key          = Potato BAC Ends
-category     = Other genomes
-glyph        = arrow
-bgcolor      = brown
-fgcolor      = brown
-link         = /search/quick?term=$name
-stranded     = 1
-citation     = This track shows straightforward regions of similarity with Potato BAC end sequences (see <a href="http://www.ab.wur.nl/TomatoWiki/AnTomatoBES000">ITAG Wiki</a>).
 das category = similarity
 
 [augustus]
