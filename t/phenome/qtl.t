@@ -30,7 +30,8 @@ use SGN::Test::WWW::Mechanize;
     'Population genetic map',
     'User comments',
 );
-
+ my $qtl_image = $mech->find_image(alt_regex => qr/qtl for/i );  
+ ok($qtl_image, 'There is a qtl image') 
 }
 
 done_testing;
