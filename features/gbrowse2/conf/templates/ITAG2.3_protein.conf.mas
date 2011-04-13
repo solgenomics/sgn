@@ -137,4 +137,4 @@ gc_window      = auto
 axis_color     = blue
 strand         = both
 key            = Peptides
-citation       = Displays polypeptide sequence at higher magnifications.
+citation       = At higher magnifications, displays amino acid sequence.
