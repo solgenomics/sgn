@@ -23,7 +23,7 @@ language = en
 
 region segment = 0
 
-examples = copper Q9SGA4_ARATH PF00270 Solyc05g005010.1.1
+examples = copper CRF1_ARATH PF00270 Solyc05g005010.2.1
 
 ### DAS CONFIGURATION ####
 das mapmaster = SELF
@@ -115,6 +115,16 @@ category     = Similarity
 glyph        = segments
 stranded     = 0
 citation     = Protein domains found by Interproscan (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnInterpro000">ITAG Wiki</a>)
+
+[other]
+feature      = polypeptide_region:ITAG_fprintscan polypeptide_region:ITAG_gene3d polypeptide_region:ITAG_hamap polypeptide_region:ITAG_hmmpanther polypeptide_region:ITAG_hmmpfam polypeptide_region:ITAG_hmmpir polypeptide_region:ITAG_hmmsmart polypeptide_region:ITAG_patternscan polypeptide_region:ITAG_prosite polypeptide_region: polypeptide_region:ITAG_superfamily polypeptide_region:ITAG_blastprodom
+key          = Other matches
+description  = 1
+bgcolor      = green
+category     = Other
+glyph        = segments
+stranded     = 0
+citation     = Other matches found by fprintscan, gene3d, hamap, hmmpanther, hmmpfam, hmmpir, hmmsmart, patternscan, prosite, superfamily, or blastprodom.  Provided by Stephane Rombauts, VIB/Ghent.
 
 [peptides]
 glyph          = dna
