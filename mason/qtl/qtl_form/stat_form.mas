@@ -36,7 +36,7 @@ my $qtl_prob = tooltipped_text('QTL genotype probablity method:', 'not required 
 <& /page/page_title.mas, title => "Step 5: Submit Statistical Parameters" &>
 <&| /page/info_section.mas, title => "Statistical Parameters", subtitle => $guide &>
 
-<form action="qtl_load.pl" method="POST" enctype="MULTIPART/FORM-DATA">  
+<form action="/phenome/qtl_load.pl" method="POST" enctype="MULTIPART/FORM-DATA">  
     <table cellspacing=20>
 	<tr><td>QTL model: </td>
 	    <td> <select name="stat_qtl_model">
@@ -112,7 +112,7 @@ my $qtl_prob = tooltipped_text('QTL genotype probablity method:', 'not required 
     </tr>
     <tr>      
       <td> <input type="hidden" name="type" value="stat_form"></td>  
-      <td> <input type="hidden" name="pop_id" value = $pop_id ></td>
+      <td> <input type="hidden" name="pop_id" value = <% $pop_id %> ></td>
     </tr>
     <tr>      
       <td></td>

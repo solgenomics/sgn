@@ -24,7 +24,7 @@ my $links = $guide . '|' . $citation;
 
 <& /page/page_title.mas, title => "Step 0: Introduction" &>
 <&| /page/info_section.mas, title => "Introduction", subtitle => $links &>
- <form action="qtl_load.pl" method="POST" enctype="MULTIPART/FORM-DATA">  
+ <form action="../../../phenome/qtl_load.pl" method="POST" enctype="MULTIPART/FORM-DATA">  
       <table cellspacing=20>
 	<tr>
           <td>	   
