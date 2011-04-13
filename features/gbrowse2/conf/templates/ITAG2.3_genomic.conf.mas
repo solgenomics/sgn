@@ -18,7 +18,7 @@ default segment = 50000
 # zoom levels
 zoom levels    = 100 200 1000 2000 5000 10000 20000 40000 100000 200000 500000 1000000
 
-examples = Solyc05g005010 SL2.31ch08:2626000..2648999 "Sulfite oxidase" SGN-M100 SGN-M7588
+examples = Solyc05g005010 SL2.40ch08:2626000..2648999 "Sulfite oxidase" SGN-M100 SGN-M7588
 
 # DAS configuration
 
