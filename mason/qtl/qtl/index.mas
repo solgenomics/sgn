@@ -1,0 +1,72 @@
+<%doc>
+
+=head1 NAME 
+qtl.mas - a mason component for a qtl detail page
+=AUTHOR
+Isaak Y Tecle (iyt2@cornell.edu)
+=cut
+
+</%doc>
+
+<%args>
+
+$qtl_image
+$pop_name
+$trait_name
+$cmv_link
+$markers
+$marker_link
+$genetic_map
+$legend
+$download
+$comment
+
+</%args>
+
+<%perl>
+
+$qtl_image = qq |<img src="$qtl_image" width=320 height=320 alt="QTL for $trait_name"> |;
+
+</%perl>
+
+
+
+<& /page/page_title.mas, title=>"QTL for $trait_name in $pop_name" &>
+<&| /page/info_section.mas, title => "QTL map for $trait_name" &>
+  <table cellpadding=20>
+    <tr>
+       <td>
+          <%$qtl_image%>
+       </td>
+       <td>
+	 <& /page/columnar_table.mas, 
+	    headings=>["", ""], 
+	    data=>$legend,  
+	    __alt_freq   =>2, 
+            __alt_width  => 1, 
+	    __alt_offset => 3, 
+            __align=> 'l'
+        &>
+     </td>
+   </tr>
+  </table>
+</&>
+
+<&| /page/info_section.mas, collapsible=>1, collapsed=>1, title => "QTL 95% Confidence Interval" &>  
+  <& /page/columnar_table.mas,
+     headings=>["Marker", " Position (cM)", "LOD", "Remark"],
+    data=>$marker_link,
+    __alt_freq   =>2,
+    __alt_width  => 1,
+    __alt_offset => 3,
+    __align=> 'l'
+    &>
+</&>
+
+<&| /page/info_section.mas, collapsible=>1, collapsed=>1, title => "QTL markers' genetic positions and Comparative Map Viewer" &><% $cmv_link %></&>
+<& genome_positions.mas, markers=>$markers &>
+<&| /page/info_section.mas, collapsible=>1, collapsed=>1, title => "Browse QTL region" &><% $download %></&>
+
+<&| /page/info_section.mas, collapsible=>1, collapsed=>1, title => "Population genetic map" &><% $genetic_map %></&>
+
+<% $comment %>
