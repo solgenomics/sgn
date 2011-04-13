@@ -116,37 +116,6 @@ glyph        = segments
 stranded     = 0
 citation     = Protein domains found by Interproscan (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnInterpro000">ITAG Wiki</a>)
 
-[rpsblast]
-feature      = match:ITAG_rpsblast
-key          = RPS-BLAST
-bgcolor      = lightblue
-category     = Similarity
-description  = sub {
-  my ($f) = @_;
-  join ', ',
-    map {
-        my ($a) = $f->get_Annotations($_);
-         s/^rpsblast_//;
-         "$_: $a"
-    }
-    grep /^rpsblast_/,
-    $f->get_all_tags;
- }
-glyph        = segments
-stranded     = 0
-citation     = Protein domain matches found by RPS-BLAST (see <a href="http://www.ab.wur.nl/TomatoWiki/AnRPSBlast000">ITAG Wiki</a>)
-
-# [Peptides]
-# glyph          = dna
-# global feature = 1
-# height         = 40
-# do_gc          = 0
-# fgcolor        = red
-# category       = General
-# axis_color     = blue
-# key            = Peptides
-# citation       = This track displays the individual peptides of the protein.
-
 [peptides]
 glyph          = dna
 global feature = 1
