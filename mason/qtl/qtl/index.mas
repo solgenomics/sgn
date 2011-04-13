@@ -1,7 +1,7 @@
 <%doc>
 
 =head1 NAME 
-qtl.mas - a mason component for a qtl detail page
+index.mas - a mason component for a qtl detail page
 =AUTHOR
 Isaak Y Tecle (iyt2@cornell.edu)
 =cut
