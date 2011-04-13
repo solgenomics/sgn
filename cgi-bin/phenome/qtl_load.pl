@@ -1358,7 +1358,7 @@ sub error_page {
         $messages .= qq | <p><a href="javascript:history.go(-1)">
                           Please go back and fill in the missing information.</a> </p>|;
 
-        print info_section_html(
+        print info_section_html(title=> ' ',
             subtitle => $guide,
             contents => $messages,
         );
