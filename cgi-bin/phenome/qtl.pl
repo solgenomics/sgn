@@ -70,7 +70,7 @@ my $comment      = comment();
 my $download_qtl = download_qtl_region();
 $ci_table        = order_by_position();
 
-$c->forward_to_mason_view( '/qtl/qtl.mas',
+$c->forward_to_mason_view( '/qtl/qtl/index.mas',
                            qtl_image    => $qtl_image,
                            pop_name     => $pop_name,
                            trait_name   => $trait_name,
