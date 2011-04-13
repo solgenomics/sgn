@@ -402,3 +402,14 @@ link         = /search/quick_search.pl?term=$name
 citation     = This track shows regions of similarity of the genomic sequence with known sequences associated with SGN genetic markers, as detected by GenomeThreader (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnSgnMarkers000">ITAG Wiki</a>).  Darker color indicates higher alignment score.
 das category = similarity
 
+[assembly]
+feature      = supercontig:SL2.40_assembly
+key          = SL2.40 scaffolds and contigs
+category     = Genome data and reagents
+#link         = /search/quick_search.pl?term=$name
+box_subparts = 1
+glyph        = segments
+bgcolor      = sub { (shift->attributes('scaffold_reliably_oriented'))[0] ? 'gray' : 'white' }
+stranded     = sub { (shift->attributes('scaffold_reliably_oriented'))[0] ? 1 : 0 }
+citation     = This track shows the location and orientation of the scaffolds and contigs in the tomato SL2.40 genome assembly.  Dark gray scaffolds with arrow indicated their directionality indicate reliable orientation, whereas white-filled scaffolds without arrows could not be reliably oriented.
+das category = structural
