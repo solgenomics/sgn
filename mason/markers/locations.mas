@@ -90,6 +90,10 @@ if (    $experiments
                 my $map_factory = CXGN::Cview::MapFactory->new($dbh);
                 my $map =
                   $map_factory->create( { map_version_id => $map_version_id } );
+		if (!$map) {
+		  print "map_version_id = $map_version_id could not be instantiated\n"; 
+		  next;
+		}
                 my $map_name = $map->get_short_name();
                 if ($map_version_id) {
                     $map_id = $map->get_id();
@@ -153,6 +157,7 @@ qq|<img src="$image_url" usemap="#map$count" border="0" alt="" />|;
                 $locations_html .= $chr_link;
                 $locations_html .= '</td></tr></table>';
 
+
 #if we have a pcr experiment that was used to map this marker to this location, make a section for this experiment's data
                 if ( $pcr
 		     and !grep { $_ == $pcr->pcr_experiment_id() }
@@ -164,6 +169,7 @@ qq|<img src="$image_url" usemap="#map$count" border="0" alt="" />|;
 
 		    my %pcr_bands_by_name = ();
 		    my $sth = $dbh->prepare("SELECT organism.species || ' ' ||  stock.name FROM public.stock JOIN public.organism USING(organism_id) WHERE stock_id=?");
+		    
 		    foreach my $p (keys %$pcr_bands) { 
 
 		      $sth->execute($p);
@@ -186,8 +192,6 @@ qq|<img src="$image_url" usemap="#map$count" border="0" alt="" />|;
 								     __sub    => 1,
 
 								     %pcr_bands_by_name,
-
-# 					
 								    );
                     my $digest_bands_html =
                       CXGN::Page::FormattingHelpers::info_table_html(
@@ -297,7 +301,6 @@ qq|<img src="$image_url" usemap="#map$count" border="0" alt="" />|;
     }
 }
 
-###print blue_section_html('Mapped locations',$locations_html);
 </%perl>
 
 <&| /page/info_section.mas, title=>'Mapped locations', collapsible=>1, collapsed=>0 &>

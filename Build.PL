@@ -37,6 +37,7 @@ my $build = SGN::Build->new(
         'IPC::System::Simple'                      => 0,         #< required for autodie :all
         'Bio::Chado::Schema'                       => '0.08100',
         'Bio::Root::Version'                       => '1.006001',
+        'Bio::GMOD::Blast::Graph'                  => '0.01',
         'Bio::Graphics::FeatureFile'               => 0,
         'Cache::File'                              => 0,
         'Catalyst::Runtime'                        => '5.80024',
