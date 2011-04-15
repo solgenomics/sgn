@@ -129,42 +129,6 @@ sub whole_seq_info_table {
     }
 }
 
-sub extract_subsequence_for_highlights {
-    my ( $seq, $coords, $line_width ) = @_;
-
-    return ( $seq, $coords ) unless $coords && @$coords;
-
-    my @coord_range = minmax map @$_, @$coords;
-
-    # round the coord range to the nearest line boundaries
-    @coord_range = (
-        $line_width * ( POSIX::floor( ($coord_range[0]-1) / $line_width ) - LINE_WINDOW_EXPAND )+1,
-        $line_width * ( POSIX::ceil (  $coord_range[1]    / $line_width ) + LINE_WINDOW_EXPAND )+1,
-        );
-
-    # clamp it to the boundaries of the sequence
-    $coord_range[0] = max( 1           , $coord_range[0] );
-    $coord_range[1] = min( $seq->length, $coord_range[1] );
-
-    my $offset = $coord_range[0] - 1; #< zero-based offset
-
-    return (
-        # new sequence, the subsequence we are operating on
-        Bio::PrimarySeq->new(
-            -id   => $seq->id,
-            -desc => $seq->desc,
-            -seq  => $seq->subseq( @coord_range ),
-            ),
-
-        # abs to rel
-        sub {  $_[0] - $offset },
-
-        # rel to abs
-        sub {  $_[0] + $offset },
-
-        );
-}
-
 sub coords_to_ranges {
     my ( $seq, $coords ) = @_;
     return
@@ -186,36 +150,103 @@ sub seq_html {
 
     return whole_seq_info_table($seq, undef, $width) unless @$coords;
 
-    # get our subsequence, plus 2 subroutine refs that convert
-    # coordinates back and forth between being relative to the actual
-    # sequence (absolute) and relative to the subsequence we are
-    # operating on (relative)
-    ( $seq, my ($abs2rel, $rel2abs) ) = extract_subsequence_for_highlights( $seq, $coords, $width );
-
-    # convert the highlight coords to be relative to the subsequence
-    # we are operating on
-    for (@$coords) {
-        for (@$_) {
-            $_ = $abs2rel->( $_ );
-        }
-    }
-
     # change the coords into ranges and sort by start coord, also
     # clamping them to the sequence length if needed, and merge any
     # overlapping ranges
     my @ranges = Bio::Range->unions( coords_to_ranges( $seq, $coords ) );
 
-    my @lines = $seq->seq =~ /.{1,$width}/gs;
+    # calculate the windows of context for highlighted regions
+    my @windows =
+       # calculate 1-based non-overlapping ranges of *sequence* we will display
+       sort { $a->start <=> $b->start }
+       Bio::Range->unions(
+           map {
+               my $r = $_;
+               my $match = Bio::Range->new(
+                   -start => max( 0,
+                                  ( POSIX::floor(($r->start-1)/$width) - LINE_WINDOW_EXPAND ),
+                                ) * $width + 1,
+                   -end   => min( $seq->length/$width,
+                                  ( POSIX::floor(($r->end)/$width ) + 1 + LINE_WINDOW_EXPAND ),
+                                ) * $width,
+                  );
+           } @ranges
+       );
+
+    # decorate the windows with the other things that are needed to render them
+    my @windows_and_sequences = map {
+        my $window = $_;
+
+        # find ranges appicable to this window
+        my @window_ranges =
+            grep { $_->start >= $window->start && $_->end <= $window->end }
+            @ranges;
+
+        # make another set of ranges that are relative to the window
+        my @rel_window_ranges = map {
+            my $r = dclone $_;
+            $r->start( $r->start - $window->start + 1 );
+            $r->end(   $r->end   - $window->start + 1 );
+            $r
+        } @window_ranges;
+
+        # and also render the html-highlighted seq
+        my $highlighted_seq_html =
+               highlight_seq(
+                   $seq->subseq( $window->start, $window->end ),
+                   \@rel_window_ranges,
+                   $width,
+                 );
+
+        [ $window, $seq->id, $highlighted_seq_html, \@window_ranges ]
+    } @windows;
+
+    # if we are displaying the whole seq, or if the matches plus the
+    # windows actually cause the whole sequence to be displayed,
+    # display a bit differently
+    if( $whole_seq || @windows == 1 && $windows[0]->start == 1 && $windows[0]->end == $seq->length ) {
+        return whole_seq_info_table( @{ $windows_and_sequences[0] } );
+    } else {
+        return info_table_html(
+            __border  => 0,
+            'Matches' => join '', map {
+                my ( $window, $seq_id, $highlighted_seq_html, $window_ranges ) = @$_;
+
+                my $wstart = $window->start;
+                my $wend   = $window->end;
+                info_section_html(
+                    title => "showing residues ".commify_number( $wstart ).' - '.commify_number( $wend ),
+                    is_subsection => 1,
+                    contents => join ( '',
+                                       '<span class="sequence">',
+                                       ( '&gt;',
+                                         $seq_id,
+                                         ":$wstart..$wend  ",
+                                         "<br />",
+                                         $highlighted_seq_html,
+                                         ),
+                                       '</span>',
+                                       ),
+                    );
+               } @windows_and_sequences
+         );
+    }
+}
+
+sub highlight_seq {
+    my ( $seq, $ranges, $line_width ) = @_;
+
+    my @lines = $seq =~ /.{1,$line_width}/gs;
 
     # put the highlighting span tags in the line-broken sequence
-    foreach (@ranges) {
+    foreach (@$ranges) {
         my ($s,$e) = ($_->start - 1, $_->end - 1); #< convert to 0-based for this
         my @lines_used;
-        my ( $s_line, $s_col ) = line_col( $s, $width );
-        my ( $e_line, $e_col ) = line_col( $e, $width );
+        my ( $s_line, $s_col ) = line_col( $s, $line_width );
+        my ( $e_line, $e_col ) = line_col( $e, $line_width );
 
         #mark up the lines we're using
-        if( $s_line == $e_line ) {
+        if ( $s_line == $e_line ) {
             my $ins_width = $e_col-$s_col+1;
             $lines[$s_line] =~ s|^(.{$s_col})(.{$ins_width})(.*)$|$1<span class="highlighted">$2</span>$3|s;
         } else {
@@ -225,61 +256,9 @@ sub seq_html {
         }
     }
 
-    # return all the lines if we're using the whole seq
-    if( $whole_seq ) {
-        return whole_seq_info_table( $seq, \@lines, $coords );
-    }
-
-    my @windows =
-       # calculate 0-based non-overlapping ranges of lines we need
-       Bio::Range->unions(
-           map {
-               my $r = $_;
-               my $match = Bio::Range->new(
-                   -start => max( 0,
-                                  ( POSIX::floor(($r->start-1)/$width) - LINE_WINDOW_EXPAND ),
-                                ),
-                   -end   => min( POSIX::floor( $seq->length/$width ),
-                                  ( POSIX::floor( ($r->end-1)/$width ) + LINE_WINDOW_EXPAND ),
-                                ),
-                  );
-           } @ranges
-       );
-
-    # special case: if the matches plus the windows actually cause the
-    # whole sequence to be displayed, display a bit differently
-    if( @windows == 1 && $windows[0]->start == 0 && $windows[0]->end == $#lines && $rel2abs->(1) == 1 ) {
-        return whole_seq_info_table( $seq, \@lines, $coords );
-    }
-
-    # return just the lines in our window if not using the whole seq
-    my $match_regions =
-       # and extract those lines
-       join '',
-       map {
-           my $abs_window_start = $rel2abs->( $_->start*$width + 1 );
-           my $abs_window_end   = $rel2abs->( min( $seq->length, ($_->end+1)*$width ) );
-           info_section_html( title => "showing residues ".commify_number($abs_window_start).' - '.commify_number($abs_window_end),
-                              is_subsection => 1,
-                              contents => join ( '',
-						 '<span class="sequence">',
-						 ( '&gt;',
-                                                   $seq->id,
-                                                   ":$abs_window_start..$abs_window_end  ",
-                                                   "<br />",
-                                                   join( "<br />\n", @lines[ $_->start .. $_->end ] ),
-                                                  ),
-						 '</span>',
-					       ),
-                             )
-       } @windows;
-
-
-    return info_table_html( 'Matches' => $match_regions,
-                            __border      => 0,
-                           );
-
+    return join( "<br />\n", @lines );
 }
+
 
 sub highlighted_regions {
     my ( $coords, $highlight_description ) = @_;
