@@ -77,8 +77,8 @@ sub run : Path('run') {
       $ENV{PATH} . ':' . $c->path_to( $c->config->{programs_subdir} );
 
     # stash the results of the run
-    @{ $c->stash }{qw{  result_string  STApreds  count_pass  }} =
-      $self->_run_secretary( $input, $sort_it, $show_only_sp );
+	@{ $c->stash }{qw{ STresults }} =  $self->_run_secretary( $input, $sort_it, $show_only_sp );
+
 
     # and set the template to use for output
     $c->stash->{template} = '/secretom/secretary/result.mas';
@@ -152,7 +152,7 @@ sub _run_secretary {
 #     'max_tm_nGASDRQPEN' => 9
 # );
     my $STSobj   = Bio::SecreTary::SecreTarySelect->new();
-    my $STApreds = $STSobj->categorize( \@STAarray );
+    my $STApreds = $STSobj->Categorize( \@STAarray );
 
     my $result_string   = "";
     my $count_pass      = 0;
@@ -168,6 +168,7 @@ sub _run_secretary {
      	} @$STApreds
      	  : @$STApreds;
 
+my $STresults = [];
         foreach (@sort_STApreds) {
       my $STA        = $_->[0];
         my $pred_string = $_->[1];
@@ -205,8 +206,13 @@ my $solution = $3;
         my $cstartp1 = padtrunc( $cstart + 1, 4 );
         $sp_length = padtrunc( $sp_length, 4 );
         my $orig_length = length $sequence;
-        $sequence = padtrunc( $sequence, $show_max_length );
+       # $sequence = padtrunc( $sequence, $show_max_length );
         my $hl_sequence = "";
+
+
+my $pred_array_ref =
+[ $id, $prediction, $STscore, $sp_length, $sequence, $hstart, $cstart ];
+push @$STresults, $pred_array_ref;
 
         if ( $prediction eq "YES" ) {
             my $bg_color_nc = "#FFDD66";
@@ -236,9 +242,11 @@ my $solution = $3;
         $hl_sequence .= ( $orig_length > length $sequence ) ? '...' : '   ';
         $result_string .=
           "$id  $prediction    $STscore $sp_length      $hl_sequence\n";
-    }
+    
 
-    return ( $result_string, $STApreds, $count_pass );
+}
+
+    return ( $STresults);
 }
 
 sub process_input {
