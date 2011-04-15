@@ -1675,14 +1675,12 @@ sub get_trait_name {
     if ( $population->get_web_uploaded() )
     {
         $term_obj  = CXGN::Phenome::UserTrait->new( $dbh, $term_id );
-        $term_name = $term_obj->get_name();
-        #$term_id   = $term_obj->get_user_trait_id();
+        $term_name = $term_obj->get_name();       
     }
     else
     {
         $term_obj  = CXGN::Chado::Cvterm->new( $dbh, $term_id );
-        $term_name = $term_obj->get_cvterm_name();
-        #$term_id   = $term_obj->get_cvterm_id();
+        $term_name = $term_obj->get_cvterm_name();       
     }
 
     return $term_name;
@@ -1740,7 +1738,7 @@ sub explained_variation {
         }
         else 
         {
-            push @anova, map { [ $_ ]} ( "  ",  "Variance source interpretation example: 2\@100 means 
+            push @anova, map { [ $_ ] } ( "  ",  "Variance source interpretation example: 2\@100 means 
                                           QTL at linkage group 2 and position 100cM.", 
                                           "2\@100:3\@100 means interaction between QTL at linkage 
                                           group 2 position 
