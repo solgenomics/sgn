@@ -41,12 +41,6 @@ and such", or "Tomato unigene build blah blah"
 
 =back
 
-=head1 AUTHOR
-
-Lukas Mueller <lam87@cornell.edu>
-
-=cut
-
 </%doc>
 
 <%args>
