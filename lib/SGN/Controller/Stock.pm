@@ -390,7 +390,7 @@ sub _stock_images {
     my ($self, $stock) = @_;
     my $query = "select distinct image_id FROM phenome.stock_image
                           WHERE stock_id = ?  ";
-    my $ids = $self->get_schema->storage->dbh->selectcol_arrayref
+    my $ids = $stock->get_schema->storage->dbh->selectcol_arrayref
         ( $query,
           undef,
           $stock->get_stock_id,
@@ -400,10 +400,10 @@ sub _stock_images {
 
 sub _stock_allele_ids {
     my ($self, $stock) = @_;
-    my $ids = $self->get_schema->storage->dbh->selectcol_arrayref
+    my $ids = $stock->get_schema->storage->dbh->selectcol_arrayref
 	( "SELECT allele_id FROM phenome.stock_allele WHERE stock_id=? ",
 	  undef,
-	  $self->get_stock_id
+	  $stock->get_stock_id
         );
     return $ids;
 }

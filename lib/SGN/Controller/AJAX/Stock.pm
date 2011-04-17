@@ -119,7 +119,7 @@ sub associate_locus_GET :Args(0) {
     $locus_data =~ m/(.*)\s\((.*)\)/ ;
     my $locus_name = $1;
     my $locus_symbol = $2;
-
+    my $schema =  $c->dbic_schema('Bio::Chado::Schema' , 'sgn_chado');
     my ($allele) = $c->dbic_schema('CXGN::Phenome::Schema')
         ->resultset('Locus')
         ->search({
@@ -132,8 +132,7 @@ sub associate_locus_GET :Args(0) {
         $c->stash->{rest} = { error => "no allele found for locus '$locus_data' (allele: '$allele_symbol')" };
         return;
     }
-    my $stock = $c->dbic_schema('Bio::Chado::Schema' , 'sgn_chado')
-        ->resultset("Stock::Stock")->find({stock_id => $stock_id } ) ;
+    my $stock = $schema->resultset("Stock::Stock")->find({stock_id => $stock_id } ) ;
     my  $allele_id = $allele->allele_id;
     if (!$c->user) {
         $c->stash->{rest} = { error => 'Must be logged in for associating loci! ' };
@@ -144,8 +143,8 @@ sub associate_locus_GET :Args(0) {
         # rightly) be counted as a server error
         if ($stock && $allele_id) {
             try {
-                my $cxgn_stock = CXGN::Chado::Stock->new($c->dbc->dbh, $stock_id);
-                $cxgn_stock->associate_allele($allele_id, $c->user->get-object->get_sp_person_id);
+                my $cxgn_stock = CXGN::Chado::Stock->new($schema, $stock_id);
+                $cxgn_stock->associate_allele($allele_id, $c->user->get_object->get_sp_person_id);
 
                 $c->stash->{rest} = ['success'];
                 # need to update the loci div!!

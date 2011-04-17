@@ -13,6 +13,7 @@ my $doc = CXGN::Scrap::AjaxPage->new();
 $doc->send_http_header();
 
 my $dbh = $c->dbc->dbh;
+my $schema = $c->dbic_schema('Bio::Chado::Schema' , 'sgn_chado');
 my($login_person_id,$login_user_type)=CXGN::Login->new($dbh)->verify_session();
 
 if ($login_user_type eq 'curator' || $login_user_type eq 'submitter' || $login_user_type eq 'sequencer') {
@@ -24,7 +25,7 @@ if ($login_user_type eq 'curator' || $login_user_type eq 'submitter' || $login_u
     my $json = JSON->new();
 
     eval {
-        my $stock = CXGN::Chado::Stock->new($dbh, $stock_id);
+        my $stock = CXGN::Chado::Stock->new($schema, $stock_id);
         $stock->associate_allele($allele_id, $sp_person_id);
         $error{"response"} = "Associated allele $allele_id with stock $stock_id!";
     };
