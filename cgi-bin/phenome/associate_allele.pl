@@ -2,9 +2,8 @@ use strict;
 use warnings;
 
 use CXGN::Scrap::AjaxPage;
-use CXGN::DB::Connection;
 use CXGN::Login;
-use CXGN::Phenome::Allele;
+use CXGN::Chado::Stock;
 use CXGN::People::Person;
 use CXGN::Feed;
 use JSON;
@@ -13,7 +12,7 @@ use CatalystX::GlobalContext '$c';
 my $doc = CXGN::Scrap::AjaxPage->new();
 $doc->send_http_header();
 
-my $dbh = CXGN::DB::Connection->new();
+my $dbh = $c->dbc->dbh;
 my($login_person_id,$login_user_type)=CXGN::Login->new($dbh)->verify_session();
 
 if ($login_user_type eq 'curator' || $login_user_type eq 'submitter' || $login_user_type eq 'sequencer') {
@@ -25,9 +24,8 @@ if ($login_user_type eq 'curator' || $login_user_type eq 'submitter' || $login_u
     my $json = JSON->new();
 
     eval {
-        my $schema = $c->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' );
-        my $stock = $schema->resultset('Stock::Stock')->find( { stock_id => $stock_id } );
-        $stock->create_stockprops( { 'sgn allele_id' => $allele_id } , {autocreate => 1 , cv_name => 'local', allow_duplicate_values => 1 } );
+        my $stock = CXGN::Chado::Stock->new($dbh, $stock_id);
+        $stock->associate_allele($allele_id, $sp_person_id);
         $error{"response"} = "Associated allele $allele_id with stock $stock_id!";
     };
     if ($@) {

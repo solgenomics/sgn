@@ -328,7 +328,7 @@ sub apache_upload_image {
 
  Usage: $image->associate_stock($stock_id);
  Desc:  associate a Bio::Chado::Schema::Result::Stock::Stock object with this image 
- Ret:   a database id (stockprop_id)
+ Ret:   a database id (stock_image_id)
  Args:  stock_id
  Side Effects: 
  Example: 
@@ -338,34 +338,42 @@ sub apache_upload_image {
 sub associate_stock  {
     my $self = shift;
     my $stock_id = shift;
-    my $stock = $self->get_configuration_object->dbic_schema('Bio::Chado::Schema' , 'sgn_chado')->resultset('Stock::Stock')->find( {
-	stock_id => $stock_id } );
-    if ($stock) {
-	my $prop_ref = $stock->create_stockprops( { 'sgn image_id' => $self->get_image_id } , {autocreate => 1 , cv_name => 'local', allow_duplicate_values => 1 } );
-	my $stockprop = $prop_ref->{'sgn image_id'};
-	return $stockprop->stockprop_id;
-    } else  { return undef ; } 
+    if ($stock_id) {
+        my $user = $self->get_configuration_object->user_exists;
+        if ($user) {
+            my $metadata_schema = $self->get_configuration_object->dbic_schema('CXGN::Metadata::Schema', search_path=>'metadata');
+            my $metadata = CXGN::Metadata::Metadbdata->new($metadata_schema, $self->get_configuration_object->user->get_object->get_username);
+            my $metadata_id = $metadata->store()->get_metadata_id();
+
+            my $q = "INSERT INTO phenome.stock_image (stock_id, image_id, metadata_id) VALUES (?,?,?) RETURNING stock_image_id";
+            my $sth = $self->get_dbh->prepare($q);
+            $sth->execute($stock_id, $self->get_image_id, $metadata_id);
+            my ($stock_image_id) = $sth->fetchrow_array;
+            return $stock_image_id;
+        }
+    }
+    return undef;
 }
 
 =head2 get_stocks
- 
- Usage: $image->get_stocks
 
-=cut 
+ Usage: $image->get_stocks
+ Desc:  find all stock objects linked with this image
+ Ret:   a list of Bio::Chado::Schema::Result::Stock::Stock
+ Args:  none
+
+=cut
 
 sub get_stocks {
     my $self = shift;
     my $schema = $self->get_configuration_object->dbic_schema('Bio::Chado::Schema' , 'sgn_chado');
-    my $image_cvterm = $schema->resultset('Cv::Cvterm')->search( { name => 'sgn image_id' } )->single;
     my @stocks;
-    my $stockprops = $schema->resultset('Stock::Stockprop')->search( { 
-	type_id => $image_cvterm->cvterm_id,
-	value   => $self->get_image_id,
-								     } );
-    if ($stockprops) {
-	while (my $prop = $stockprops->next) {
-	    push @stocks , $prop->stock;
-	}
+    my $q = "SELECT stock_id FROM phenome.stock_image WHERE image_id = ? ";
+    my $sth = $self->get_dbh->prepare($q);
+    $sth->execute($self->get_image_id);
+    while (my ($stock_id) = $sth->fetchrow_array) {
+        my $stock = $schema->resultset("Stock::Stock")->find( { stock_id => $stock_id } ) ;
+        push @stocks, $stock;
     }
     return @stocks;
 }

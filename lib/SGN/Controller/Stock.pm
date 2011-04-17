@@ -224,7 +224,7 @@ sub view_stock :Chained('get_stock') :PathPart('view') :Args(0) {
     }
     my $dbxrefs = $self->_dbxrefs($stock);
     my $pubs = $self->_stock_pubs($stock);
-
+    my $image_ids = $self->_stock_images($stock);
     my $cview_tmp_dir = $c->tempfiles_subdir('cview');
 ################
     $c->stash(
@@ -250,6 +250,7 @@ sub view_stock :Chained('get_stock') :PathPart('view') :Args(0) {
             has_qtl_data   => $c->stash->{has_qtl_data},
             cview_tmp_dir  => $cview_tmp_dir,
             cview_basepath => $c->get_conf('basepath'),
+            image_ids      => $image_ids,
         },
         locus_add_uri  => $c->uri_for( '/ajax/stock/associate_locus' ),
         cvterm_add_uri => $c->uri_for( '/ajax/stock/associate_ontology')
@@ -385,6 +386,28 @@ sub _stock_pubs {
     return $pubs;
 }
 
+sub _stock_images {
+    my ($self, $stock) = @_;
+    my $query = "select distinct image_id FROM phenome.stock_image
+                          WHERE stock_id = ?  ";
+    my $ids = $self->get_schema->storage->dbh->selectcol_arrayref
+        ( $query,
+          undef,
+          $stock->get_stock_id,
+        );
+    return $ids;
+}
+
+sub _stock_allele_ids {
+    my ($self, $stock) = @_;
+    my $ids = $self->get_schema->storage->dbh->selectcol_arrayref
+	( "SELECT allele_id FROM phenome.stock_allele WHERE stock_id=? ",
+	  undef,
+	  $self->get_stock_id
+        );
+    return $ids;
+}
+
 sub _stock_genotypes {
     my ($self, $stock) = @_;
     my $dbh = $stock->get_schema->storage->dbh;
@@ -424,6 +447,9 @@ sub get_stock :Chained('/') :PathPart('stock') :CaptureArgs(1) {
 
     my ($members_phenotypes, $has_members_genotypes)  = $stock ? $self->_stock_members_phenotypes($stock) : undef;
     $c->stash->{members_phenotypes} = $members_phenotypes;
+
+    my $allele_ids = $stock ? $self->_stock_allele_ids($stock) : undef;
+    $c->stash->{allele_ids} = $allele_ids;
 
     my $stock_type;
     $stock_type = $stock->get_object_row->type->name if $stock->get_object_row;
