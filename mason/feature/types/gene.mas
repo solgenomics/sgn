@@ -51,6 +51,7 @@
 <&| /page/info_section.mas,
         title       => 'Genomic sequence',
         subtitle    => 'unprocessed genomic sequence region underlying this gene',
+        empty_message => 'Not available',
         collapsible => 1,
         collapsed   => 1,
 &>
@@ -88,6 +89,7 @@
             title         => 'mRNA sequence',
             is_subsection => 1,
             subtitle      => 'spliced mRNA sequence, including UTRs',
+            empty_message => 'Not available',
             collapsible   => 1,
             collapsed     => 1,
     &>
@@ -111,6 +113,7 @@
             title         => 'Protein sequence',
             is_subsection => 1,
             subtitle      => 'translated polypeptide sequence',
+            empty_message => 'Not available',
             collapsible   => 1,
             collapsed     => 1,
     &>
