@@ -84,6 +84,7 @@ sub process_data {
     my $sp_person_id = $login->verify_session();
 
     my $referring_page = "/phenome/qtl_form.pl";
+    my $referring_page = $ENV{HTTP_REFERER};
 
     my %args = $page->get_all_encoded_arguments();
     $args{pop_common_name_id} = $self->common_name_id();
@@ -1339,33 +1340,11 @@ sub common_name_id {
 sub error_page {
     my $self  = shift;
     my @error = @_;
-    my $page  = CXGN::Page->new();
-    my ( $messages, $count );
-
-    my $guide = $self->guideline();
-    if (@error) {
-        $page->header();
-
-        print page_title_html("Missing Data:");
-        $messages .= "<p>Data for the following field(s) is missing: </p>";
-        my $count = 1;
-        foreach my $e (@error) {
-
-            $messages .= $count . ")" . "\t" . $e . "." . "<br />";
-            $count++;
-        }
-
-        $messages .= qq | <p><a href="javascript:history.go(-1)">
-                          Please go back and fill in the missing information.</a> </p>|;
-
-        print info_section_html(title=> ' ',
-            subtitle => $guide,
-            contents => $messages,
-        );
-        $page->footer();
-
-    }
-
+   
+    $c->forward_to_mason_view('/qtl/qtl_load/missing_data.mas',
+                              missing_data => \@error,
+                              guide        => $self->guideline(),
+        )
 }
 
 =head2 check_organism
@@ -1619,6 +1598,7 @@ sub load_stat_parameters {
             . qq | \nQTL data upload for <a href="qtl_start.pl?pop_id=$pop_id">of your population</a> is completed|;
         $self->send_email( '[QTL upload: Step 5]', $message, $pop_id );
 
+        
         print CGI->redirect(-uri=>
             "$referring_page?pop_id=$pop_id&amp;type=confirm");
     }
