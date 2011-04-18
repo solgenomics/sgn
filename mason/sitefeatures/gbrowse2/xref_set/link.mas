@@ -6,7 +6,7 @@
             data=> [ map [
                            $_->data_source->description,
 
-                           join( ', ', map $_->display_name, @{$_->seqfeatures} ),
+                           join( ', ', uniq map $_->display_name, @{$_->seqfeatures} ),
 
                            '<a href="'.$_->url.'">'
                            .join( ', ', ( $_->is_whole_sequence
@@ -20,3 +20,6 @@
                    ],
             __align=> 'l'
   &>
+<%once>
+  use List::MoreUtils 'uniq';
+</%once>
