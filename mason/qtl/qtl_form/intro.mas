@@ -33,7 +33,7 @@ my $links = $guide . '|' . $citation;
               starting the process.  Please read the submission $guide. If you 
               would like to have the formatting of your dataset checked 
               beforehand, send your data to: 
-              <a href=mailto:iyt2\@cornell.edu>iyt2\@cornell.edu</a>.
+              <a href=mailto:iyt2\@cornell.edu>iyt2@cornell.edu</a>.
             </p>         
             <p>What you need are:</p>
        
@@ -51,7 +51,7 @@ my $links = $guide . '|' . $citation;
             <p>If you have any problems uploading your data or remarks, 
               please send your feedback to: 
               <a href=mailto:sgn-feedback\@sgn.cornell.edu> 
-                sgn-feedback\@sgn.cornell.edu</a>. 
+                sgn-feedback@sgn.cornell.edu</a>. 
             </p>
       
           </td>
