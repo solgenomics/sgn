@@ -222,7 +222,7 @@ $page->header( "Clone $az_name", undef, $head_extra );
 print page_title_html("Clone $az_name");
 
 print info_section_html(
-    title       => 'Clone &amp; library',
+    title       => 'Clone and library',
     collapsible => 1,
     contents    => '<table style="margin: 0 auto"><tr><td>'
       . $c->render_mason( '/genomic/clone/clone_summary.mas', clone => $clone )
