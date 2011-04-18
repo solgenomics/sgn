@@ -2,9 +2,8 @@
 
 =head1 NAME
 
-check_organism.mas - a mason component for displaying missing message 
-related to QTL parental accession from qtl data submission forms
-
+check_organism.mas - a mason component for displaying message 
+related to QTL parental accession submissions not supported by SGN...
 =AUTHOR
 
 Isaak Y Tecle (iyt2@cornell.edu)
