@@ -1363,45 +1363,25 @@ sub error_page {
 =cut
 
 sub check_organism {
-    my $self     = shift;
-    my $organism = shift;
-    my $species  = shift;
-    my $cultivar = shift;
-
-    my $guide = $self->guideline();
+    my ($self, $organism, $species, $cultivar) = @_ ;
+    
     unless ( !$cultivar ) {
         $cultivar = " cv. $cultivar";
     }
 
-    if ( !$organism ) {
-        my $page = CXGN::Page->new( "SGN", "Isaak" );
-
-        $page->header();
-
-        print page_title_html("Problem with parental accessions......");
-
-        my $messages .= "It appears that SGN currently does not support 
-                         this species (<b><i>$species</i>$cultivar</b>).<br/> 
-                         As a first step, please make sure you have spelled 
-                         the species correctly.</p><p> Read also the guidline for the
-                         nomenclature format you have to use for the parental lines.</p>";
-
-        $messages .= qq |<p> 
-                          Please go <a href="javascript:history.go(-1)">back</a> 
-                          and check its spelling or if you keep having problem 
-                          with it contact us.</p>|;
-
-        print info_section_html( subtitle => $guide, contents => $messages, );
-
-        $page->footer();
-        exit();
+    if ( !$organism ) 
+    {
+        $c->forward_to_mason_view('/qtl/qtl_load/check_organism.mas',                                
+                                  species  => $species,
+                                  cultivar => $cultivar,
+                                  guide    => $self->guideline(),
+            );
+    } else
+    {
+ #do nothing..relax
     }
-    else {
-
-        #do nothing..relax
-    }
-
 }
+
 
 =head2 population_exists
 
@@ -1451,8 +1431,7 @@ sub population_exists {
 
 sub guideline {
     my $self = shift;
-    return my $guideline =
-qq |<a  href="http://docs.google.com/View?id=dgvczrcd_1c479cgfb">Guidelines</a> |;
+    return qq |<a  href="http://docs.google.com/View?id=dgvczrcd_1c479cgfb">Guidelines</a> |;
 }
 
 =head2 trait_columns
