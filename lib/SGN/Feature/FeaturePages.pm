@@ -29,11 +29,15 @@ sub xrefs {
     my @exact = map { $self->_make_xref( $_ ) }
         $self->context->dbic_schema('Bio::Chado::Schema','sgn_chado')
              ->resultset('Sequence::Feature')
-             ->search({
-                 -or => [ { 'lower(uniquename)' => lc( $query ) },
-                          { 'lower(name)'       => lc( $query ) },
-                        ],
-               })
+             ->search(
+                 {
+                     -or => [ { 'lower(me.uniquename)' => lc( $query ) },
+                              { 'lower(me.name)'       => lc( $query ) },
+                              { 'lower(synonym.name)'  => lc( $query ) },
+                            ],
+                 },
+                 { join => { feature_synonyms => 'synonym' } },
+                 )
              ->all;
 
     return @exact;
