@@ -464,22 +464,24 @@ print info_section_html(
 # compute content for prelim. annot section
 my $latest_seq = $clone->latest_sequence_name;
 
+my @gb_xrefs = map {
+    my $gb = $_;
+    my @names = ( $latest_seq,
+                  $clone->arizona_clone_name,
+                  ($clone->chromosome_num ? ($clone->clone_name_with_chromosome) :  ()),
+                  ( $clone->latest_sequence_name || () ),
+                  );
+    map { warn "looking for $_\n"; $gb->xrefs( $_ ) } @names
+} $c->enabled_feature('gbrowse2');
+
 print info_section_html(
-    title       => 'Sequence Annotations',
+    title       => 'Annotations',
     collapsible => 1,
     contents    => info_table_html(
         __border => 0,
-        Browse   => join(
-            "<br />\n",
-            map '<a href="' . $_->url . '">' . $_->text . '</a>',
-            map {
-                my $gb = $_;
-                $gb->xrefs($latest_seq), $gb->xrefs( $clone->clone_name )
-              } $c->enabled_feature('gbrowse2')
-          )
-          || '<span class="ghosted">'
-          . $clone->clone_name
-          . ' has no browsable sequence annotations</span>',
+        Browse   => @gb_xrefs
+            ? $c->render_mason( '/sitefeatures/gbrowse2/xref_set/link.mas', xrefs => \@gb_xrefs )
+            : '<span class="ghosted">'. $clone->clone_name.' has no browsable sequence annotations</span>',
         Download => (
             $self->_is_tomato($clone)
             ? render_tomato_bac_annot_download( $c, $clone )
