@@ -466,10 +466,12 @@ my $latest_seq = $clone->latest_sequence_name;
 
 my @gb_xrefs = map {
     my $gb = $_;
+    my @end_names = ($clone->arizona_clone_name.'_F', $clone->arizona_clone_name.'_R' );
     my @names = ( $latest_seq,
                   $clone->arizona_clone_name,
                   ($clone->chromosome_num ? ($clone->clone_name_with_chromosome) :  ()),
                   ( $clone->latest_sequence_name || () ),
+                  @end_names,
                   );
     map { warn "looking for $_\n"; $gb->xrefs( $_ ) } @names
 } $c->enabled_feature('gbrowse2');
