@@ -172,10 +172,7 @@ sub itag_release_ftp_link {
     unless( ref $r ) {
         my ( $releasenum ) = $r =~ /([\d\.]+)$/
             or return $empty_link;
-        ($r) = CXGN::ITAG::Release->find(
-	    releasenum => $releasenum,
-	    dir        => $itag->releases_base,
-	  )
+        ($r) = $itag->find_release( $releasenum )
             or return $empty_link;
     }
 
