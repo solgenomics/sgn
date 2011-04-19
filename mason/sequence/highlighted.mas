@@ -39,6 +39,11 @@ width in characters to render the sequence, default 90
 optional source name for the sequence, example "BLAST database such
 and such", or "Tomato unigene build blah blah"
 
+=item blast_url
+
+Optional URL to which a sequence could be POSTed to pre-fill the BLAST
+input form.
+
 =back
 
 </%doc>
@@ -50,6 +55,7 @@ $highlight_coords      => [ ]
 $width     => 100
 $source    => '<span class="ghosted">not recorded</span>'
 $whole_seq => 0
+$blast_url => undef
 </%args>
 
 <&| /page/info_section.mas, title => $seq->id &>
@@ -88,6 +94,7 @@ $whole_seq => 0
                      seq     => $wseq,
                      styles  => { highlight => [ '<span class="highlighted">', '</span>'] },
                      regions => [ map ['highlight', $_->start-1, $_->end], @{ $r->{rel_ranges} } ],
+                     blast_url => $blast_url,
                  &>
 %            }
        </&>
