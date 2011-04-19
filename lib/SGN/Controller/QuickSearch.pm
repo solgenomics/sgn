@@ -25,7 +25,7 @@ functionality of the site
 Performs a search for each entity in the database and reports the
 number of hits for each entity. Links are provided on an overview page
 to allow the user to complete the search. In addition to the database,
-quick_search.pl also searches google for the sgn.cornell.edu domain,
+quick_search.pl also searches google for the solgenomics.net domain,
 parses the page that Google returns to report the number of hits on
 the web site (which includes static and dynamic pages). The link
 provided with that search is going directly to Google.  Similarly, the
@@ -145,6 +145,7 @@ sub quick_search: Path('/search/quick') {
        );
 
     if( @possible_urls == 1 ) {
+        $c->log->debug("redirecting to only possible url: $possible_urls[0]") if $c->debug;
         $c->res->redirect( $possible_urls[0] );
         return;
     }
@@ -466,7 +467,7 @@ sub quick_web_search {
 }
 sub quick_page_search {
   my (undef,$term) = @_;
-  return google_search('SGN',$term,'sgn.cornell.edu');
+  return google_search('SGN',$term,'solgenomics.net');
 }
 
 

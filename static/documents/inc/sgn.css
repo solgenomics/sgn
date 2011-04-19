@@ -769,7 +769,7 @@ table.columnar_table {
 table.columnar_table_noborder { 
 }
 td.columnar_table, th.columnar_table, th.columnar_table_noborder { 
-  padding: 0.2em 0.4em 0.2em 0.4em;
+  padding: 0.2em 0.6em 0.2em 0.6em;
   margin: 0;
   line-height: 1.4;
 }

@@ -86,14 +86,14 @@ sub xrefs {
                 # remove any duplicate ref features
                 _uniq_features
                 # search for ref features
-                map $_->get_feature_by_name( $ref_name ),
+                map $_->get_features_by_alias( $ref_name ),
                 # for each database
                 $self->databases;
 
         } else {
             # search for features by text in all our DBs
             return $self->_make_feature_xrefs([
-                map $_->get_feature_by_name( $q ), $self->databases
+                map $_->get_features_by_alias( $q ), $self->databases
             ]);
         }
     }

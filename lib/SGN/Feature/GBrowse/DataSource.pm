@@ -5,7 +5,7 @@ use Carp;
 use MooseX::Types::Path::Class;
 use URI;
 use URI::Escape;
-use URI::FromHash qw/ uri /;
+use URI::QueryParam;
 
 use Bio::Graphics::FeatureFile;
 
@@ -90,9 +90,10 @@ sub image_url {
 
 sub _url {
     my ( $self, $script, $query ) = @_;
-    return uri( path  => join( '', $self->gbrowse->cgi_url, '/', $script, '/', $self->name, '/'),
-                ($query ? (query => $query) : ()),
-               );
+    my $url = $self->gbrowse->cgi_url->clone;
+    $url->path( join '/', $url->path, $script, $self->name );
+    $url->query_form_hash( $query ) if $query;
+    return $url;
 }
 
 

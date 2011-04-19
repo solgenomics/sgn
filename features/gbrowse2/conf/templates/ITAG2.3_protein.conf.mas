@@ -1,0 +1,140 @@
+[GENERAL]
+database  = main
+plugins   = FastaDumper SequenceDumper TrackDumper
+
+reference class = Sequence
+
+default features = blastp_trembl blastp_refseq_pep blastp_rice_pep blastp_swissprot blastp_ath_pep interpro rpsblast 
+
+# "automatic" classes to try when an unqualified identifier is given
+automatic classes = match
+
+# where to link to when user clicks in detailed view
+link        = AUTO
+
+# max and default segment sizes for detailed view
+max segment     = 5000
+default segment = 200
+
+# zoom levels
+zoom levels    = 100 200 1000 2000
+
+language = en
+
+region segment = 0
+
+examples = copper CRF1_ARATH PF00270 Solyc05g005010.2.1
+
+### DAS CONFIGURATION ####
+das mapmaster = SELF
+
+[main:database]
+db_adaptor = Bio::DB::SeqFeature::Store
+db_args     = -adaptor DBI::Pg
+              -dsn 'dbi:Pg:host=<% $feature->default_db_host %>;dbname=sfs_itag2.3_protein'
+              -user '<% $feature->default_db_user %>'
+              -password '<% $feature->default_db_password %>'
+
+### TRACK CONFIGURATION ####
+# the remainder of the sections configure individual tracks
+[TRACK DEFAULTS]
+# Default glyph settings
+glyph       = generic
+height      = 8
+bgcolor     = cyan
+fgcolor     = black
+label density = 25
+bump density  = 10000
+
+[match:details]
+default  = sub {
+		my ($value,$tag_name,$feature) = @_;
+                return $value if $tag_name eq 'Position';
+                <% $feature->local_inc %>
+		require CXGN::Tools::Identifiers;
+		$value =~ s/(\S+)/CXGN::Tools::Identifiers::link_identifier($1) || $1/ge;
+                $value
+	      }
+
+[blastp_trembl]
+feature      = match:ITAG_blastp_trembl
+key          = TrEMBL
+category     = Similarity
+glyph        = segments
+description  = 1
+stranded     = 0
+citation     = This track shows similarities with sequences in TrEMBL (see <a href="http://www.ebi.ac.uk/trembl/">http://www.ebi.ac.uk/trembl/</a>), as detected by BLAST (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnBlastP000">ITAG Wiki</a>)
+bgcolor      = lightgreen
+
+[blastp_refseq_pep]
+feature      = match:ITAG_blastp_refseq_pep
+key          = RefSeq Polypeptides
+category     = Similarity
+bgcolor      = lightgreen
+description  = 1
+glyph        = segments
+stranded     = 0
+citation     = This track shows similarities with peptide sequences in RefSeq (see <a href="http://www.ncbi.nlm.nih.gov/RefSeq/">http://www.ncbi.nlm.nih.gov/RefSeq/</a>), as detected by BLAST (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnBlastP000">ITAG Wiki</a>)
+
+[blastp_rice_pep]
+feature      = match:ITAG_blastp_rice_pep
+key          = Rice Polypeptides
+category     = Similarity
+bgcolor      = cyan
+description  = 1
+glyph        = segments
+stranded     = 0
+citation     = This track shows similarities with Rice peptide sequences from RAP-DB (see <a href="http://rapdb.dna.affrc.go.jp/rapdownload/">http://rapdb.dna.affrc.go.jp/rapdownload/</a>), as detected by BLAST (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnBlastP000">ITAG Wiki</a>)
+
+[blastp_swissprot]
+feature      = match:ITAG_blastp_swissprot
+key          = SwissProt
+category     = Similarity
+bgcolor      = lightgreen
+description  = 1
+glyph        = segments
+stranded     = 0
+citation     = This track shows similarities with peptide sequences in SwissProt (see <a href="http://www.expasy.ch/sprot/">http://www.expasy.ch/sprot/</a>), as detected by BLAST (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnBlastP000">ITAG Wiki</a>)
+
+[blastp_ath_pep]
+feature      = match:ITAG_blastp_ath_pep
+key          = Arabidopsis Polypeptides
+description  = 1
+category     = Similarity
+glyph        = segments
+bgcolor      = cyan
+stranded     = 0
+citation     = This track shows similarities with peptide sequences from <i>Arabidopsis thaliana</i> (see <a href="ftp://ftp.arabidopsis.org/home/tair/Sequences/blast_datasets/TAIR8_blastsets">ftp://ftp.arabidopsis.org/home/tair/Sequences/blast_datasets/TAIR8_blastsets</a>), as detected by BLAST (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnBlastP000">ITAG Wiki</a>)
+
+[interpro]
+feature      = polypeptide_region:ITAG_interpro
+key          = InterProScan
+description  = 1
+bgcolor      = blue
+category     = Similarity
+glyph        = segments
+stranded     = 0
+citation     = Protein domains found by Interproscan (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnInterpro000">ITAG Wiki</a>)
+
+[other]
+feature      = polypeptide_region:ITAG_fprintscan polypeptide_region:ITAG_gene3d polypeptide_region:ITAG_hamap polypeptide_region:ITAG_hmmpanther polypeptide_region:ITAG_hmmpfam polypeptide_region:ITAG_hmmpir polypeptide_region:ITAG_hmmsmart polypeptide_region:ITAG_patternscan polypeptide_region:ITAG_prosite polypeptide_region: polypeptide_region:ITAG_superfamily polypeptide_region:ITAG_blastprodom
+key          = Other matches
+description  = 1
+bgcolor      = green
+category     = Other
+glyph        = segments
+stranded     = 0
+citation     = Other matches found by fprintscan, gene3d, hamap, hmmpanther, hmmpfam, hmmpir, hmmsmart, patternscan, prosite, superfamily, or blastprodom.  Provided by Stephane Rombauts, VIB/Ghent.
+
+[peptides]
+glyph          = dna
+global feature = 1
+height         = 40
+do_gc          = 0
+fgcolor        = red
+category       = General
+gc_window      = auto
+axis_color     = blue
+strand         = both
+key            = Peptides
+citation       = At higher magnifications, displays amino acid sequence.
