@@ -92,7 +92,7 @@ sub _url {
     my ( $self, $script, $query ) = @_;
     my $url = $self->gbrowse->cgi_url->clone;
     $url->path( join '/', $url->path, $script, $self->name );
-    $url->query_form_hash( $query );
+    $url->query_form_hash( $query ) if $query;
     return $url;
 }
 
