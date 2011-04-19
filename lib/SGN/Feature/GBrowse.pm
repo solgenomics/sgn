@@ -12,6 +12,7 @@ extends 'SGN::Feature';
 
 use Moose::Util::TypeConstraints;
 use MooseX::Types::Path::Class;
+use MooseX::Types::URI 'Uri';
 use HTML::Mason::Interp;
 
 { my $pi = subtype as 'ArrayRef';
@@ -62,8 +63,9 @@ has 'static_dir' => (
 
 has 'cgi_url' => (
     is => 'ro',
-    isa => 'Str',
+    isa => Uri,
     required => 1,
+    coerce => 1,
    );
 has 'cgi_bin' => (
     is => 'ro',

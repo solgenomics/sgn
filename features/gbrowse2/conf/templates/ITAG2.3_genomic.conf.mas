@@ -6,7 +6,7 @@ reference class = Sequence
 
 search attributes = Note
 
-default features = mrna sgn_loci sgn_unigenes Markers:overview Genes:region sgn_markers
+default features = mrna sgn_loci sgn_unigenes Markers:overview Genes:region Markers:region sgn_markers
 
 # "automatic" classes to try when an unqualified identifier is given
 automatic classes = Sequence clone match nucleotide_motif
@@ -18,7 +18,7 @@ default segment = 50000
 # zoom levels
 zoom levels    = 100 200 1000 2000 5000 10000 20000 40000 100000 200000 500000 1000000
 
-examples = SL1.00sc00002_16.1.1 "Sulfite oxidase" TG154 C2_At3g02060
+examples = Solyc05g005010 SL2.40ch08:2626000..2648999 "Sulfite oxidase" SGN-M100 SGN-M7588
 
 # DAS configuration
 
@@ -48,7 +48,7 @@ default = sub {
 [main:database]
 db_adaptor = Bio::DB::SeqFeature::Store
 db_args     = -adaptor DBI::Pg
-              -dsn 'dbi:Pg:host=<% $feature->default_db_host %>;dbname=sfs_itag1_genomic'
+              -dsn 'dbi:Pg:host=<% $feature->default_db_host %>;dbname=sfs_itag2.3_genomic'
               -user '<% $feature->default_db_user %>'
               -password '<% $feature->default_db_password %>'
 search options = default +autocomplete +fulltext 
@@ -75,6 +75,17 @@ bgcolor     = cyan
 fgcolor     = black
 label density = 25
 bump density  = 25
+
+[Markers:region]
+feature         = match:ITAG_sgn_markers
+ignore_sub_part = match_part
+key             = Markers
+fgcolor         = black
+bgcolor         = yellow
+glyph           = generic
+label density   = 100
+bump density    = 100
+link         = /search/quick?term=$name
 
 [GC:region]
 glyph        = dna
@@ -116,7 +127,7 @@ key            = 6-frame translation
 citation       = This track displays a six-frame translation of the reference DNA sequence.
 
 [Genes:region]
-feature      = gene:ITAG_renaming
+feature      = gene:ITAG_eugene
 key          = Genes
 glyph        = segments
 fgcolor      = black
@@ -131,7 +142,7 @@ height       = 7
 citation     = This track shows the spans of gene models annotated by EuGene, the integrative gene predictor for ITAG. (see <a href="http://www.ab.wur.nl/TomatoWiki/AnEugene000">EuGene on ITAG Wiki</a>, <a href="http://www.inra.fr/internet/Departements/MIA/T//EuGene/index.html">EuGene main page</a>)
 
 [mrna]
-feature      = mRNA:ITAG_renaming
+feature      = mRNA:ITAG_eugene
 key          = Gene models
 glyph        = gene
 fgcolor      = black
@@ -144,9 +155,11 @@ das category = transcription
 strand_arrow = 1
 height       = 10
 citation     = This track shows the mRNAs for gene models annotated by EuGene, the integrative gene predictor for ITAG. (see <a href="http://www.ab.wur.nl/TomatoWiki/AnEugene000">EuGene on ITAG Wiki</a>, <a href="http://www.inra.fr/internet/Departements/MIA/T//EuGene/index.html">EuGene main page</a>)
+balloon hover = $name: click for more details
+balloon click = sub { my $name = shift->name; $name =~ s/\.\d+\.\d+$//; "url:/api/v1/feature_xrefs?q=$name;exclude=gbrowse,gbrowse2" }
 
 [cds]
-feature      = mRNA:ITAG_renaming
+feature      = mRNA:ITAG_eugene
 key          = CDS - click to browse protein
 title        = sub { my $n = shift->display_name; "click to browse annotations on $n protein product"}
 glyph        = CDS
@@ -158,13 +171,13 @@ stranded     = 1
 category     = Gene models
 das category = translation
 strand_arrow = 1
-link         = sub { my $n = shift->display_name; $n =~ s/(\.\d+)\.\d+$/$1/; "<% $feature->cgi_url %>/gbrowse/ITAG1_protein/?name=$n" }
+link         = sub { my $n = shift->display_name; $n =~ s/(\.\d+)\.\d+$/$1/; "<% $feature->cgi_url %>/gbrowse/ITAG2.3_protein/?name=$n" }
 height       = 20
 citation     = This track shows the CDS sequences for gene models annotated by EuGene, the integrative gene predictor for ITAG.  Provided by Stephane Rombauts and Jeffrey Fawcett, <a class="http" href="http://bioinformatics.psb.ugent.be/">Bioinformatics and Evolutionary Genomics</a>, <a class="http" href="http://www.psb.ugent.be">Plant Systems Biology, VIB, Ghent University</a>.  (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnEugene000">EuGene on ITAG Wiki</a>, <a href="http://www.inra.fr/internet/Departements/MIA/T//EuGene/index.html">EuGene main page</a>)
 
 #track to show DNA and GC content
 [peptides]
-feature        = CDS:ITAG_renaming
+feature        = CDS:ITAG_eugene
 glyph          = protein
 global feature = 1
 height         = 40
@@ -210,6 +223,42 @@ stranded     = 1
 citation     = This track shows regions of similarity with SGN Unigene (SGN-U) sequences.  (see <a href="http://www.ab.wur.nl/TomatoWiki/AnSgnUnigenes000">ITAG Wiki</a>).  Darker color indicates higher alignment score.
 das category = similarity
 
+[tomato_bacs]
+feature      = match:ITAG_tomato_bacs
+key          = Tomato BACs
+category     = Genome data and reagents
+glyph        = alignment
+bgcolor      = red
+fgcolor      = red
+link         = /search/quick?term=$name
+stranded     = 1
+citation     = This track shows regions of similarity with Tomato BAC clones (see <a href="http://www.ab.wur.nl/TomatoWiki/AnTomatoBACs000">ITAG Wiki</a>).  Darker color indicates higher alignment score.
+das category = similarity
+
+[tobacco_contigs]
+feature      = match:ITAG_tobacco_contigs
+key          = Tobacco Genome Contigs
+category     = Other genomes
+glyph        = alignment
+bgcolor      = green
+fgcolor      = green
+link         = /search/quick?term=$name
+stranded     = 1
+citation     = This track shows regions of similarity with Tobacco genome contigs (see <a href="http://www.ab.wur.nl/TomatoWiki/AnTobaccoContigs000">ITAG Wiki</a>).  Darker color indicates higher alignment score.
+das category = similarity
+
+[potato_bacs]
+feature      = match:ITAG_potato_bacs
+key          = Potato BACs
+category     = Other genomes
+glyph        = alignment
+bgcolor      = brown
+fgcolor      = brown
+link         = /search/quick?term=$name
+stranded     = 1
+citation     = This track shows regions of similarity with Potato BAC clones (see <a href="http://www.ab.wur.nl/TomatoWiki/AnPotatoBACs000">ITAG Wiki</a>).  Darker color indicates higher alignment score.
+das category = similarity
+
 [augustus]
 feature      = transcript:ITAG_augustus
 key          = AUGUSTUS (de novo, Tomato trained)
@@ -219,6 +268,18 @@ glyph        = transcript
 stranded     = 1
 citation      = <i>De novo</i> gene predictions from the AUGUSTUS gene predictor, trained on Tomato.  Provided by SGN.  (see <a href="http://www.ab.wur.nl/TomatoWiki/AnAUGUSTUS000">ITAG Wiki</a>)
 das category = transcription
+
+[microtom_flcdna]
+feature      = match:ITAG_microtom_flcdnas
+key          = MicroTom Full-length cDNAs
+category     = Genome data and reagents
+glyph        = alignment
+bgcolor      = orange
+fgcolor      = orange
+link         = /search/quick?term=$name
+stranded     = 1
+citation     = This track shows regions of similarity with MicroTom Full-length cDNA sequences (provided by the Kazusa Institute, see <a href="http://www.ab.wur.nl/TomatoWiki/AnMicroTomFLCDNA000">ITAG Wiki</a>).    Darker color indicates higher alignment score.
+das category = similarity
 
 [geneid_tomato]
 feature      = gene:ITAG_geneid_tomato
@@ -257,14 +318,35 @@ citation     = <i>De novo</i> predictions from <a href="http://www.genomics.jhu.
 das category = transcription
 
 [infernal]
-feature      = ncRNA:ITAG_infernal tRNA:ITAG_infernal snoRNA:ITAG_infernal U6atac_snRNA:ITAG_infernal miRNA:ITAG_infernal antisense_RNA:ITAG_infernal snRNA:ITAG_infernal 5_snRNA:ITAG_infernal 13_snRNA:ITAG_infernal 10_snRNA:ITAG_infernal snRNA:ITAG_infernal 11_snRNA:ITAG_infernal 6_snRNA:ITAG_infernal snoRNA:ITAG_infernal 12_snRNA:ITAG_infernal U1_snRNA:ITAG_infernal group_I_intron:ITAG_infernal 7_snRNA:ITAG_infernal UTR_region:ITAG_infernal group_II_intron:ITAG_infernal miRNA:ITAG_infernal SRP_RNA:ITAG_infernal snRNA:ITAG_infernal snoRNA:ITAG_infernal 14_snRNA:ITAG_infernal 4_snRNA:ITAG_infernal miRNA:ITAG_infernal U2_snRNA:ITAG_infernal 9_snRNA:ITAG_infernal rRNA_5.8S:ITAG_infernal 8_snRNA:ITAG_infernal RNAi_reagent:ITAG_infernal
+feature      = transcript:ITAG_infernal
+key          = Infernal
+category     = Prediction Features
+glyph        = segments
+description  = sub { (shift->attributes('Alias'))[0] }
+bgcolor      = blue
+stranded     = 1
+citation     = This track shows RNA regions inferred by <a href="http://infernal.janelia.org/">Infernal</a>.  Provided by James Abbott, Imperial College London.
+das category = transcription
+
+[infernal:overview]
+feature      = transcript:ITAG_infernal
 key          = Infernal
 category     = Prediction Features
 glyph        = segments
 description  = sub { (shift->attributes('Alias'))[0] }
 stranded     = 1
-citation     = This track shows RNA regions inferred by <a href="http://infernal.janelia.org/">Infernal</a>.  Provided by Daniel Buchan, <a href="http://www.srcuk.org/">SRCUK</a>.
-das category = experimental
+citation     = This track shows RNA regions inferred by <a href="http://infernal.janelia.org/">Infernal</a>.  Provided by James Abbott, Imperial College London.
+das category = transcription
+
+[infernal:region]
+feature      = transcript:ITAG_infernal
+key          = Infernal
+category     = Prediction Features
+glyph        = segments
+description  = sub { (shift->attributes('Alias'))[0] }
+stranded     = 1
+citation     = This track shows RNA regions inferred by <a href="http://infernal.janelia.org/">Infernal</a>.  Provided by James Abbott, Imperial College London.
+das category = transcription
 
 [trnascanse]
 feature      = tRNA:ITAG_trnascanse
@@ -273,7 +355,7 @@ category     = Prediction Features
 glyph        = segments
 stranded     = 1
 citation     = This track shows transfer RNAs predicted by the tRNAscan-SE program.  For more on tRNAscan-SE, see <a href="http://selab.janelia.org/software#trnascanse">http://selab.janelia.org/software#trnascanse</a>.  (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnTRNAScanSE000">ITAG Wiki</a>)
-das category = experimental
+das category = transcription
 
 [tRNA:overview]
 feature      = tRNA:ITAG_trnascanse
@@ -305,6 +387,16 @@ glyph        = generic
 label density = 100
 bump density  = 100
 
+[Markers:region]
+feature      = match:ITAG_sgn_markers
+ignore_sub_part = match_part
+key          = Markers
+fgcolor      = black
+bgcolor      = yellow
+glyph        = generic
+label density = 100
+bump density  = 100
+
 [sgn_markers]
 feature      = match:ITAG_sgn_markers
 glyph        = alignment
@@ -316,4 +408,41 @@ bgcolor      = yellow
 link         = /search/quick?term=$name
 citation     = This track shows regions of similarity of the genomic sequence with known sequences associated with SGN genetic markers, as detected by GenomeThreader (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnSgnMarkers000">ITAG Wiki</a>).  Darker color indicates higher alignment score.
 das category = similarity
+
+[assembly]
+feature      = supercontig:SL2.40_assembly
+key          = SL2.40 scaffolds and contigs
+category     = Genome data and reagents
+#link         = /search/quick?term=$name
+box_subparts = 1
+glyph        = segments
+bgcolor      = sub { (shift->attributes('scaffold_reliably_oriented'))[0] ? 'gray' : 'white' }
+stranded     = sub { (shift->attributes('scaffold_reliably_oriented'))[0] ? 1 : 0 }
+citation     = This track shows the location and orientation of the scaffolds and contigs in the tomato SL2.40 genome assembly.  Dark gray scaffolds with arrow indicated their directionality indicate reliable orientation, whereas white-filled scaffolds without arrows could not be reliably oriented.
+das category = structural
+
+[dbolser_BES]
+feature      = BAC_clone:DBolser_Dundee_BES_SSAHA
+key          = Clone end sequences
+category     = Genome data and reagents
+#link         = /search/quick?term=$name
+box_subparts = 1
+glyph        = alignment
+bgcolor      = purple
+stranded     = 1
+citation     = Clone end sequence alignments by Dan Bolser, <a href="http://www.compbio.dundee.ac.uk/">University of Dundee</a>.  Generated from a post-processed <a href="http://www.sanger.ac.uk/resources/software/ssaha/">SSAHA</a> alignment of S. lycopersicum and S. penellii clone end sequences to the SL2.40 assembly.  Clone end sequences from libraries: LE_HBa, LpenBAC, LpenCOS, SL_EcoRI, SL_FOS, SL_MboI, SL_MT, and SL_s
+das category = structural
+
+[itag1_reference]
+feature      = match:ITAG_itag1_ref
+glyph        = alignment
+key          = ITAG1 / SL1.00 scaffolds
+category     = Genomic Reagents
+stranded     = 1
+fgcolor      = green
+bgcolor      = green
+link         = ../ITAG1_genomic/?name=$name
+citation     = This track shows regions of similarity with the reference sequences (scaffolds) from the ITAG1 annotation release, which was based on the SL1.00 sequence assembly.
+das category = similarity
+bump density = 100
 

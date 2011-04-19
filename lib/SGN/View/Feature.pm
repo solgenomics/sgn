@@ -257,6 +257,8 @@ sub mrna_and_protein_sequence {
         ),
     );
 
+    return unless $mrna_seq->length > 0;
+
     my $peptide_loc = _peptides_rs( $mrna_feature )->first
         or return ( $mrna_seq, undef );
 

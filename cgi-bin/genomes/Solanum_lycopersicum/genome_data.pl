@@ -120,7 +120,7 @@ sub itag_releases_html {
 
     my %release_datasources;
     for my $source ( map $_->data_sources, $c->enabled_feature('gbrowse2') ) {
-        next unless $source->name =~ /(ITAG\d+)/ && $source->databases;
+        next unless $source->name =~ /(ITAG\d+(\.\d+)?)/ && $source->databases;
         my $release = $1;
         push @{$release_datasources{$release}}, $source;
     }
@@ -172,10 +172,7 @@ sub itag_release_ftp_link {
     unless( ref $r ) {
         my ( $releasenum ) = $r =~ /([\d\.]+)$/
             or return $empty_link;
-        ($r) = CXGN::ITAG::Release->find(
-	    releasenum => $releasenum,
-	    dir        => $itag->releases_base,
-	  )
+        ($r) = $itag->find_release( $releasenum )
             or return $empty_link;
     }
 
