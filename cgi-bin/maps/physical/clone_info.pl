@@ -473,7 +473,7 @@ my @gb_xrefs = map {
                   ( $clone->latest_sequence_name || () ),
                   @end_names,
                   );
-    map { warn "looking for $_\n"; $gb->xrefs( $_ ) } @names
+    map $gb->xrefs( $_ ), @names
 } $c->enabled_feature('gbrowse2');
 
 print info_section_html(
