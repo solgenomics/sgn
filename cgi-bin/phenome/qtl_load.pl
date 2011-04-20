@@ -253,7 +253,7 @@ sub pheno_upload {
         my $qtlfiles = retrieve("$user_dir/qtlfiles");
 
         my $trait_file = $qtlfiles->{trait_file};
-        my $f = $self->compare_file_names( $name, $trait_file );
+        $self->compare_file_names( $name, $trait_file );
         $qtlfiles->{pheno_file} = $name;
         store $qtlfiles, "$user_dir/qtlfiles";
 
@@ -304,8 +304,8 @@ sub geno_upload {
         my $trait_file = $qtlfiles->{trait_file};
         my $pheno_file = $qtlfiles->{pheno_file};
 
-        my $f = $self->compare_file_names( $name, $trait_file );
-        $f = $self->compare_file_names( $name, $pheno_file );
+        $self->compare_file_names( $name, $trait_file );
+        $self->compare_file_names( $name, $pheno_file );
 
         $qtlfiles->{geno_file} = $name;
         store $qtlfiles, "$user_dir/qtlfiles";
@@ -1456,36 +1456,15 @@ sub trait_columns {
 =cut
 
 sub compare_file_names {
-    my $self = shift;
-    my ( $file1, $file2 ) = @_;
-
-    my $guide = $self->guideline();
-
+    my ($self, $file1, $file2) = @_;
+   
     unless ( $file1 ne $file2 ) {
-
-        my $page = CXGN::Page->new( "SGN", "Isaak" );
-
-        $page->header();
-
-        print page_title_html("Data files...");
-
-        my $messages .=
-qq |You are trying to upload file(s) with the same name <b>($file1 and $file2)</b> 
-                         for this step and one of the steps before it.|;
-
-        $messages .= qq |<p> 
-                          Please go <a href="javascript:history.go(-1)"><b>back</b></a> 
-                          and check the file you are trying to upload
-                          or if you keep having problem with it contact us.</p>|;
-
-        print info_section_html( subtitle => $guide, contents => $messages, );
-
-        $page->footer();
-        exit();
+        $c->forward_to_mason_view('/qtl/qtl_load/compare_file_names.mas',
+                                  file1 => $file1,
+                                  file2 => $file2,
+                                  guide => $self->guideline()
+            )
     }
-
-    return 0;
-
 }
 
 =head2 send_email
