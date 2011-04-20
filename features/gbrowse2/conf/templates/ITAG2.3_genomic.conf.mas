@@ -97,7 +97,7 @@ do_gc        = 1
 strand       = both
 fgcolor      = red
 axis_color   = blue
-key          = GC Content
+key          = GC content
 
 #track to show DNA and GC content
 [DNA]
@@ -110,7 +110,7 @@ category       = DNA
 gc_window      = auto
 axis_color     = blue
 strand         = both
-key            = DNA/GC Content
+key            = DNA/GC content
 citation       = This track displays a GC content graph of the reference sequence at low magnifications and the DNA sequence itself at higher magnifications.
 
 #track to show a 6-frame translation of the sequence
@@ -185,7 +185,7 @@ fgcolor        = red
 category       = Gene models
 axis_color     = blue
 strand         = both
-key            = KD Plot/Peptides
+key            = KD plot/peptides
 citation       = This track displays a Kyte-Doolittle hydropathy plot of the protein sequence at low magnifications and the peptide sequence itself at higher magnifications.
 
 [cdna_tom]
@@ -212,7 +212,7 @@ das category = similarity
 
 [sgn_unigenes]
 feature      = match:ITAG_sgn_unigenes
-key          = SGN Unigenes
+key          = SGN unigenes
 category     = Genome data and reagents
 glyph        = alignment
 bgcolor      = red
@@ -236,7 +236,7 @@ das category = similarity
 
 [tobacco_contigs]
 feature      = match:ITAG_tobacco_contigs
-key          = Tobacco Genome Contigs
+key          = Tobacco genome contigs
 category     = Other genomes
 glyph        = alignment
 bgcolor      = green
@@ -270,7 +270,7 @@ das category = transcription
 
 [microtom_flcdna]
 feature      = match:ITAG_microtom_flcdnas
-key          = MicroTom Full-length cDNAs
+key          = MicroTom full-length cDNAs
 category     = Genome data and reagents
 glyph        = alignment
 bgcolor      = orange
@@ -390,7 +390,7 @@ bump density  = 100
 [sgn_markers]
 feature      = match:ITAG_sgn_markers
 glyph        = alignment
-key          = SGN Markers
+key          = SGN markers
 category     = Genetic loci
 stranded     = 1
 fgcolor      = black
