@@ -149,7 +149,7 @@
 - text: "Tomato (cv. Ailsa Craig) fruit (multiple growth and ripening stages): YST clones"
   ref: /download/data/secretom/Functional_screens/Tomato_fruit_YST_clones.xlsx
 - text: "Tomato (cv. Ailsa Craig) leaves infected with Phytophthora infestans: YST clones"
-	ref: /download/data/secretom/Functional_screens/Tomato_and_Pinfestans_clones.xls
+  ref: /download/data/secretom/Functional_screens/Tomato_and_Pinfestans_YST_clones.xls
 </&>
 
 <&| /secretom/section_templates/publications.mas &>
