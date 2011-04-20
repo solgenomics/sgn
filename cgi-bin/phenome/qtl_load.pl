@@ -1397,37 +1397,18 @@ sub check_organism {
 =cut
 
 sub population_exists {
-    my $self  = shift;
-    my $pop   = shift;
-    my $name  = shift;
-    my $guide = $self->guideline();
-
+    my ($self, $pop, $name) = @_;
+    
     if ($pop) {
-        my $page = CXGN::Page->new( "SGN", "Isaak" );
-
-        $page->header();
-
-        print page_title_html("Population name...");
-
-        my $messages .= "It appears that a population <b>$name</></b> already 
-                         exists in the database. To continue loading QTL data
-                         for a new population, try with a different population 
-                         name.</p>
-                         <p>If you are trying to load more or change data to an exising population
-                            contact us.</p>";
-
-        $messages .= qq |<p> 
-                          Please go <a href="javascript:history.go(-1)">back</a> 
-                          and try to use a different name or if you keep having problem 
-                          with it contact us.</p>|;
-
-        print info_section_html( subtitle => $guide, contents => $messages, );
-
-        $page->footer();
-        exit();
+        
+        $c->forward_to_mason_view('/qtl/qtl_load/population_exists.mas',
+                              name  => $name,
+                              guide => $self->guideline()
+            );
     }
-
 }
+
+ 
 
 sub guideline {
     my $self = shift;
@@ -1449,30 +1430,34 @@ sub guideline {
 =cut
 
 sub trait_columns {
-    my $self        = shift;
-    my $trait_error = shift;
-    my $guide       = $self->guideline();
-
+    my ($self, $trait_error) = @_;
+   
     if ($trait_error) {
-        my $page = CXGN::Page->new( "SGN", "Isaak" );
-
-        $page->header();
-
-        print page_title_html("Traits file...");
-
-        my $messages .= $trait_error;
-
-        $messages .= qq |<p> 
-                          Please go <a href="javascript:history.go(-1)"><b>back</b></a> 
-                          and rearrange the order of the columns and upload the file
-                          again or if you keep having problem with it contact us.</p>|;
-
-        print info_section_html( subtitle => $guide, contents => $messages, );
-
-        $page->footer();
-        exit();
+        $c->forward_to_mason_view('/qtl/qtl_load/trait_columns.mas',
+                                  error => $trait_error,
+                                  guide => $self->guideline()
+            )
     }
 }
+#         my $page = CXGN::Page->new( "SGN", "Isaak" );
+
+#         $page->header();
+
+#         print page_title_html("Traits file...");
+
+#         my $messages .= $trait_error;
+
+#         $messages .= qq |<p> 
+#                           Please go <a href="javascript:history.go(-1)"><b>back</b></a> 
+#                           and rearrange the order of the columns and upload the file
+#                           again or if you keep having problem with it contact us.</p>|;
+
+#         print info_section_html( subtitle => $guide, contents => $messages, );
+
+#         $page->footer();
+#         exit();
+#     }
+# }
 
 =head2 accessors compare_file_names
 
