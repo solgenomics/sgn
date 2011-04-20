@@ -4,8 +4,9 @@ $markers
 <%init>
   
 my @xrefs;
-  foreach my $marker (@$markers) {
-    @xrefs = map {
+  foreach my $marker (@$markers) 
+  {
+    my @xrefs_m = map {
 
       $_->xrefs({
                  -types   => ['match'],
@@ -14,11 +15,14 @@ my @xrefs;
                 })
 
     } $c->enabled_feature('gbrowse2');
+  
+    push @xrefs, @xrefs_m;
+
   }
 
 </%init>
 
-<&| /page/info_section.mas, title => "QTL markers' genomic positions" &>
+<&| /page/info_section.mas, collapsible=>1, collapsed=>1, title => "QTL markers' genomic matches" &>
 % if( @xrefs ) {
   <& /sitefeatures/gbrowse2/xref_set/rich.mas, xrefs => \@xrefs &>
 % }

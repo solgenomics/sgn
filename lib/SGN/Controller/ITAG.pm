@@ -65,7 +65,7 @@ sub download_release_file :Chained('get_release') :PathPart('download') :Args(1)
 
     # get and validate the name, email, and organization from the post data
     my $name = $c->req->params->{name};
-    $name && length($name) > 8
+    $name && length($name) > 5
         or $c->throw( public_message => 'Must provide a valid name to download ITAG bulk files.', is_client_error => 1 );
     my $email = $c->req->params->{email};
     $email && $email =~ /^[^@]+@[^@]+$/

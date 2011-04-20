@@ -170,7 +170,14 @@ EOS
     my $action = $args{action};
     if (!$population_id && $action ne 'new' && $action ne 'store')
                      { $self->get_page->message_page("No population exists for this identifier"); }
-
+    ################################
+    #redirecting to the stock page 
+    my $stock_id = $population->get_stock_id;
+    $c->throw(is_error=>1,
+              message=>"No population exists for identifier $population_name (id = $population_id)",
+        ) if !$stock_id;
+    $self->get_page->client_redirect("/stock/$stock_id/view");
+    ###############
     #used to show certain elements to only the proper users
     my $login_user= $self->get_user();
     my $login_user_id= $login_user->get_sp_person_id();
@@ -327,7 +334,7 @@ EOS
                                               __align =>'l',
                                               );
 
-            $data_download .=  qq { <span><br/><br/>Download:<a href="pop_download.pl?population_id=$population_id"><b>\
+            $data_download .=  qq { <span><br/><br/>Download:<a href="phenotype_download.pl?population_id=$population_id"><b>\
                                 [Phenotype raw data]</b></a> <a href="genotype_download.pl?population_id=$population_id"><b>\
                                 [Genotype raw data]</b></a></span>
                               };
@@ -349,7 +356,7 @@ EOS
                                               __align =>'l',
                                               );
 
-            $data_download .=  qq { <span><br/><br/>Download:<a href="pop_download.pl?population_id=$population_id"><b>\
+            $data_download .=  qq { <span><br/><br/>Download:<a href="phenotype_download.pl?population_id=$population_id"><b>\
                                 [Phenotype raw data]</b></a></span>
                               };
 

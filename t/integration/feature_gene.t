@@ -26,7 +26,6 @@ my $gene_feature    = create_test('Sequence::Feature', { type => $gene_cvterm })
 my $gene_featureloc = create_test('Sequence::Featureloc', { feature => $gene_feature });
 
 $mech->get_ok("/feature/view/name/" . $gene_feature->name);
-$mech->content_contains('Description');
 $mech->content_contains('Gene ' . $gene_feature->name);
 $mech->content_contains('Genomic sequence');
 $mech->content_contains('Related features');

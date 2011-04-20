@@ -4,13 +4,16 @@
 
 % my @fcvt = $feature->search_related('feature_cvterms', undef, { prefetch => { 'cvterm' => 'dbxref' } } );
 % if( @fcvt ) {
-<ul>
+<ul style="padding-left: 1em">
 
 %   for my $fcvt ( @fcvt ) {
 %     my $cvt    = $fcvt->cvterm;
 %     my $dbxref = $cvt->dbxref;
+
+%     next unless $dbxref;
+%     my $db     = $dbxref->db;
       <li>
-         <a href="<% $dbxref->db->urlprefix .  $dbxref->db->url .  $dbxref->accession %>"><% $dbxref->db->name %>:<% $dbxref->accession %></a>
+         <a href="<% $db->urlprefix .  $db->url .  $dbxref->accession %>"><% $db->name %>:<% $dbxref->accession %></a>
          &ndash;
          <% cvterm_link( $fcvt->cvterm ) %>
       </li>

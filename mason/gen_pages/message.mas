@@ -1,7 +1,0 @@
-% #A general message page.
-
-<div><% $message %></div>
-
-<%args>
-$message
-</%args>

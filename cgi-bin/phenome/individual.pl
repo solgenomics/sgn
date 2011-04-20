@@ -33,17 +33,15 @@ use Statistics::Descriptive;
 
 use base qw / CXGN::Page::Form::SimpleFormPage /;
 
-sub new { 
+sub new {
     my $class = shift;
     my $self = $class->SUPER::new(@_);
     $self->set_script_name("individual.pl");
-    
-    return $self; 
+    return $self;
 }
 
-sub define_object { 
+sub define_object {
     my $self = shift;
-    
     # call set_object_id, set_object and set_primary_key here
     # with the appropriate parameters.
     #
@@ -247,10 +245,21 @@ sub generate_form {
 sub display_page { 
     my $self = shift;
     my %args = $self->get_args();
-    
+
     my $individual = $self->get_object();
     my $individual_id = $self->get_object_id();
     my $individual_name = $individual->get_name();
+    ###########
+    #THIS PAGE SHOULD BE DEPRECATED FOR NOW IT REDIRECTS TO THE STOCK PAGE
+
+    my $stock_id = $individual->get_stock_id;
+    $c->throw(is_error=>1,
+              message=>"No accession exists for identifier $individual_name (id = $individual_id)",
+        ) if !$stock_id;
+    $self->get_page->client_redirect("/stock/$stock_id/view/");
+
+    #############################################################
+
 
     #insert the necessary javascript for the ajax forms in this page
     #$self->add_javascript();
@@ -458,6 +467,7 @@ sub display_page {
 
     my $map = CXGN::Cview::Map::SGN::Individual->new($self->get_dbh(), $individual_id);
     my $overview = CXGN::Cview::MapOverviews::Individual->new($map, { dbh=>$self->get_dbh });
+   
     my $map_html;
     if ($overview) {
 	$overview->render_map();

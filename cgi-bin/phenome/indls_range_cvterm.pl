@@ -241,7 +241,7 @@ EOS
 					qq|<b>$phenotype_data</b>|,
 					1, #<  show data by default
 					);
-	$data_download .=  qq { <span><a href="pop_download.pl?population_id=$population_id"><b>\[download population raw data\]</b></a></span> }; 
+	$data_download .=  qq { <span><a href="phenotype_download.pl?population_id=$population_id"><b>\[download population raw data\]</b></a></span> }; 
     }
     
     my $page="../phenome/indls_range_cvterm.pl?cvterm_id=$cvterm_id&amp;lower=$lower&amp;upper=$upper&amp;population_id=$population_id ";

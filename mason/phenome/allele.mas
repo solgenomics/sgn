@@ -1,7 +1,7 @@
 <%doc>
 =head1 NAME
 
-/phenome/alleles.mas - a component for printing the alleles section
+/phenome/allele.mas - a component for printing the alleles section
 
 =head1 DESCRIPTION
 
@@ -58,25 +58,23 @@ foreach my $a (@$alleles) {
     ? "<a href=\"allele.pl?action=edit&amp;allele_id=$allele_id\">[Edit]</a>"
 	: '<span class="ghosted">[Edit]</span> ';
 
-my $phenotype        = $a->get_allele_phenotype();
-my @individuals      = $a->get_individuals();
-my $ind_count        = scalar(@individuals);
-my $individual_link  = qq|<a href="/phenome/allele.pl?action=view&amp;allele_id=$allele_id">$ind_count </a>|;
-
-push @allele_data,
-  [
-   (
-    "<i>" . $a->get_allele_symbol . "</i>",
-    $a->get_allele_name,
-    $allele_synonym_link,
-    qq|<div align="left"><a href="/phenome/allele.pl?action=view&amp;allele_id=$allele_id"> |
-    . $phenotype
-    . "</a></div>",
-    $individual_link,
-    $allele_edit_link,
-   )
-  ];
-
+  my $phenotype   = $a->get_allele_phenotype();
+  my $stock_ids   = $a->get_stock_ids();
+  my $stock_count = scalar(@$stock_ids);
+  my $stock_link  = qq|<a href="/phenome/allele.pl?action=view&amp;allele_id=$allele_id">$stock_count </a>|;
+  push @allele_data,
+    [
+     (
+      "<i>" . $a->get_allele_symbol . "</i>",
+      $a->get_allele_name,
+      $allele_synonym_link,
+      qq|<div align="left"><a href="/phenome/allele.pl?action=view&amp;allele_id=$allele_id"> |
+      . $phenotype
+      . "</a></div>",
+      $stock_link,
+      $allele_edit_link,
+     )
+    ];
 }
 if (@allele_data) {
   $data = columnar_table_html(

@@ -18,10 +18,22 @@ use HTML::Lint;
 use lib 't/lib';
 use SGN::Test::WWW::Mechanize;
 
-# we can re-export Catalyst::Test's request, get, and ctx_request functions
-use Catalyst::Test 'SGN';
-our @ISA = qw/Exporter/;
+use base 'Exporter';
 our @EXPORT_OK = qw/validate_urls request get ctx_request with_test_level/;
+
+# do a little dance to only load Catalyst::Test if we've actually been
+# asked for any of its subs
+sub import {
+    my ( $class, @imports ) = @_;
+    for my $import (@imports) {
+        if( grep $_ eq $import, qw( request get ctx_request ) ) {
+            require Catalyst::Test;
+            Catalyst::Test->import( 'SGN' );
+            last;
+        }
+    }
+    $class->export_to_level( 1, undef, @imports );
+}
 
 
 my $test_server_name = $ENV{SGN_TEST_SERVER} || 'http://(local test server)';
@@ -59,7 +71,10 @@ sub _validate_single_url {
     my $dump_tempdir;
     ok( $rc == 200, "$test_name returned OK" )
         or do {
-            diag "fetch actually returned code '$rc': $ENV{SGN_TEST_SERVER}$url";
+
+            diag "fetch actually returned code '$rc': "
+                 .($ENV{SGN_TEST_SERVER}||'').$url;
+
             if( $ENV{DUMP_ERROR_CONTENT} ) {
                 if ( eval { require Digest::Crc32 } ) {
                     $dump_tempdir ||= make_dump_tempdir();
@@ -110,8 +125,7 @@ sub _validate_single_url {
 }
 
 sub with_test_level {
-    SGN::Test::WWW::Mechanize->new->with_test_level( @_ );
+    SGN::Test::WWW::Mechanize->with_test_level( @_ );
 }
-
 
 1;

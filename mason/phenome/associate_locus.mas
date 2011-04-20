@@ -1,0 +1,117 @@
+<%doc>
+
+=head1 NAME
+
+/phenome/associate_locus.mas - a component for printing a generic 'associate_locus' javasript form
+
+=head1 DESCRIPTION
+
+a component for printing an autocomplete form for searching loci and associating with your object
+
+
+Parameters:
+
+=over 6
+
+=item object_id
+
+a database id
+
+=item object_name
+
+ the name of the object you are associating the locus with (e.g. 'stock')
+
+=item locus_autocomplete_uri
+
+the uri for the code which retrieves the  locus info
+
+=item $locus_add_uri
+
+the uri for storing the link in the database
+
+=item show_form
+
+optional. default 0. If the user is logged in, you might want to set this to 1 and display the form. Either way, associating loci permissions should also be enforced in your 'add' function
+
+=item allele_div
+
+a unique name for your div_id for updating content in your page without reloading.
+
+=back
+
+=head1 AUTHOR
+
+Naama Menda <nm249@cornell.edu>
+
+=cut
+
+
+</%doc>
+
+<%args>
+
+$object_id
+$object_name
+$locus_autocomplete_uri => '/ajax/locus/autocomplete'
+$locus_add_uri
+$show_form => 0
+$allele_div
+
+</%args>
+
+<& /util/import_javascript.mas, classes=>[qw[ jquery jqueryui popup]] &>
+
+<div id = "<% $allele_div %>" >&nbsp;Loading..</div>
+
+<script language="javascript">
+  display_alleles("<% $allele_div %>");
+
+  jQuery(function() {
+     jQuery("#loci").autocomplete({
+	 source: '<% $locus_autocomplete_uri %>'
+     });
+  });
+
+  function submit_locus_form() {
+    //make an AJAX request with the form params
+    var loci = jQuery("#loci").val();
+    jQuery.ajax({ url: "<% $locus_add_uri %>" , method:"POST", data: 'object_id='+<% $object_id %>+'&loci='+loci ,
+     success: function(response) {
+      var error = response.error;
+      if (error) { alert(error) ; }
+      display_alleles( "<% $allele_div %>" );
+     }
+   } );
+  }
+
+  function display_alleles(allele_div) {
+  jQuery.ajax( { url: "/<% $object_name %>/<% $object_id %>/alleles" , dataType: "json",
+      success: function(response) {
+       var json = response;
+       jQuery("#"+allele_div).html(response.html);
+      }
+  } );
+}
+
+</script>
+
+<div id = "<%$allele_div %>" >
+
+</div>
+
+% if ($show_form) {
+<div id="associate_locus_form">
+  <b>Associate another Locus</b>
+  <div id="locus_search" >
+    <form name="loci_form" >
+      <input type="text" style="width: 50%" id="loci" name="loci" />
+      <input type="hidden" id="object_id" name="object_id" value="<% $object_id %>" />
+
+      <input type="button" name = "associate_locus" onclick="javascript:submit_locus_form()" value = "Associate locus" />
+      <div style="font-size: 80%; margin-left: 1em; color: #333">type a locus name</div>
+    </form>
+  </div>
+</div>
+
+
+% }

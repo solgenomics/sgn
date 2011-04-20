@@ -6,16 +6,16 @@ use warnings;
 our @EXPORT_OK = qw/
     stock_link organism_link cvterm_link
     stock_table related_stats
-    /;
-
+    stock_organisms stock_types
+/;
+our @EXPORT = ();
 
 
 sub stock_link {
     my ($stock) = @_;
     my $name = $stock->uniquename;
     my $id = $stock->stock_id;
-    #return qq{<a href="/stock/view/name/$name">$name</a>};
-    return qq{<a href="/stock/view/id/$id">$name</a>};
+    return qq{<a href="/stock/$id/view">$name</a>};
 }
 
 sub organism_link {
@@ -29,12 +29,11 @@ LINK
 }
 
 sub cvterm_link {
-    my ($feature) = @_;
-    my $name = $feature->type->name;
-    my $id   = $feature->type->id;
+    my ($cvterm) = @_;
+    my $name = $cvterm->name;
+    my $id   = $cvterm->cvterm_id;
     return qq{<a href="/chado/cvterm.pl?cvterm_id=$id">$name</a>};
 }
-
 
 sub stock_table {
     my ($stocks) = @_;
@@ -42,7 +41,7 @@ sub stock_table {
     for my $s (@$stocks) {
         # Add a row for every stock
         push @$data, [
-            cvterm_link($s),
+            cvterm_link($s->type),
             stock_link($s),
 
         ];
@@ -56,7 +55,7 @@ sub related_stats {
     my $stats = { };
     my $total = scalar @$stocks;
     for my $s (@$stocks) {
-            $stats->{cvterm_link($s)}++;
+            $stats->{cvterm_link($s->type)}++;
     }
     my $data = [ ];
     for my $k (sort keys %$stats) {
@@ -66,6 +65,55 @@ sub related_stats {
         push @$data, [ $total, "<b>Total</b>" ];
     }
     return $data;
+}
+
+
+sub stock_organisms {
+    my ($schema) = @_;
+    return [
+        [ 0, '' ],
+        map [ $_->organism_id, $_->species ],
+        $schema
+             ->resultset('Stock::Stock')
+             ->search_related('organism' , {}, {
+                 select   => [qw[ organism.organism_id species ]],
+                 distinct => 1,
+                 order_by => 'species',
+               })
+    ];
+}
+
+sub stock_types {
+    my ($schema) = @_;
+
+    my $ref = [
+        map [$_->cvterm_id,$_->name],
+        $schema
+    ->resultset('Stock::Stock')
+    ->search_related(
+        'type',
+        {},
+        { select => [qw[ cvterm_id type.name ]],
+          group_by => [qw[ cvterm_id type.name ]],
+          order_by => 'type.name',
+        },
+    )
+    ];
+    # add an empty option 
+    unshift @$ref , ['0', ''];
+    return $ref;
+}
+
+sub stock_dbxrefprops {
+    my $stock_dbxref = shift;
+    my $props = $stock_dbxref->stock_dbxrefprops;
+    while (my $p = $props->next ) {
+        my $value = $p->value ;
+        my $type = $p->type->name;
+        my $accession = $p->type->dbxref->accession;
+        my $db_name = $p->type->dbxref->db->name;
+
+    }
 }
 
 ######

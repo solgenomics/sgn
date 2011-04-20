@@ -17,17 +17,17 @@ Parameters summary:
 
 =over 15
 
-=item dbh
+=item overview_image
 
-a database handle
-
-=item map_id
-
-The map_id of the map to display.
+The img tag and associated html to display the overview graphics [html]
 
 =item map_version_id
 
-the map_version_id of the map to display. Note that map_id and map_version_id are mutually exclusive.
+the map_version_id of the map to display.
+
+=item abstract
+
+the abstract of the map [text]
 
 =item hilite
 
@@ -41,9 +41,19 @@ the size of the map to display. 0 denotes the standard size (smallest), 10 denot
 
 items to add to the map, as a multi-line string with chr offset name
 
+=item map_url
+
+=item chr_url
+
+=item comp_map_url
+
 =item referer
 
 the page (uri + args) that this component is called from (to be able to construct links back from the page comment feature)
+
+=item map_stats
+
+
 
 =item basepath
 
@@ -52,6 +62,14 @@ the basepath of the installation
 =item force
 
 if set to true, force the image and map stats caches to be re-calculated.
+
+=item can_overlay
+
+whether the map knows how to overlay information on the map [boolean]
+
+=item private
+
+whether the map is private [boolean]. Will cause the map to be shown only for logged in users who own the map.
 
 =back
 
@@ -66,130 +84,34 @@ Currently maintained by Lukas Mueller <lam87\@cornell.edu>.
 </%doc>
 
 <%args>
-$dbh
-$map_id
-$map_version_id
+$map_id => undef
+$map_version_id => undef
 $hilite => undef
 $size => 1
 $map_items
-$force
-$physical
+$short_name => "untitled map"
+$long_name => "untitled map"
+$force => 0
+$physical => undef
 $referer
+$abstract => ''
 $tempdir
 $basepath
+$map_url
+$chr_url
+$comp_maps_url => ''
+$default_map_id => 9
+$private => ''
+@hilite_markers => ()
+$marker_stats => ''
+$chromosome_stats => ''
+$message => ''
+$overview_image
+$can_overlay => 0
 </%args>
 
 <%perl>
-use Cache::File;
-use File::Spec;
-use CXGN::Cview::MapFactory;
-use CXGN::Cview::Map::Tools;
-use CXGN::Phenome::Population;
-use CXGN::People::Person;
-use CXGN::Login;
-use CXGN::Map;
 
-my %marker_info;
-
-# set up a cache for the map statistics, using Cache::File
-#
-my $cache_file_dir = File::Spec->catfile($basepath, $tempdir, "cache_file");
-
-tie %marker_info, 'Cache::File', { cache_root => $cache_file_dir };
-
-# report some unusual conditions to the user.
-#
-my $message = ""; 
-
-# maintain some backwards compatibility. The physical parameter is deprecated, but
-# we still support it...
-#
-if ($physical==1) { $map_id= "p".$map_id; }
-
-# if the map_id was supplied, convert immediately to map_version_id
-#
-if ($map_id && !$map_version_id) { 
-    $map_version_id = CXGN::Cview::Map::Tools::find_current_version($dbh, $map_id);
-}
-
-# get the map data using the CXGN::Map API.
-#
-my $map_factory = CXGN::Cview::MapFactory->new($dbh);
-my $map = $map_factory ->create({ map_version_id => $map_version_id });
-
-if (!$map) { missing_map_page(); return; }
-
-my $private = data_is_private($dbh, $map_version_id);
- 
-my $map_fullname = $map->get_long_name();
-my $short_name   = $map->get_short_name();
-
-my @hilite_markers = split /\s+|\,\s*|\;s*/, $hilite;
-
-sub missing_map_page { 
-
-   
-  my $title = "<h1>The requested map could not be found</h1>";
-    
-    print <<HTML;
-
-    $title
-
-    <p>
-    All available maps on SGN are listed on the <a href="/cview/">map index page</a>.
-    </p>
-    <p>
-    Please contact <a href="mailto:sgn-feedback\@sgn.cornell.edu">SGN</a> if you think there is a problem.
-    </p>
-
-
-HTML
-
-
-}
-
-sub data_is_private {     
-    my $dbh = shift;
-    my $map_version_id = shift;
-    
-    if ($map_version_id!~/^\d+$/) { return ''; }
-    my $genetic_map = CXGN::Map->new($dbh, { map_version_id=>$map_version_id}); 
-    my $pop_id = $genetic_map->get_population_id();
-    my $pop = CXGN::Phenome::Population->new($dbh, $pop_id);
-    my $is_public = $pop->get_privacy_status();
-    
-    my ($login_id, $user_type) = CXGN::Login->new($dbh)->has_session();
-    
-    print STDERR "$is_public\n";
-    
-    if ($is_public ||             
-	    $user_type eq 'curator' || 
-	    $login_id == 
-	$pop->get_sp_person_id() 
-       )  {
-      return undef;
-    } 
-    else {
-      
-	   my $owner_id = $pop->get_sp_person_id(); 
-    
-
-	   my $submitter = CXGN::People::Person->new($dbh, $owner_id);
-    	   my $submitter_name = $submitter->get_first_name()." ".$submitter->get_last_name();
-    	   my $submitter_link = qq |<a href="/solpeople/personal-info.pl?sp_person_id=$owner_id">$submitter_name</a> |;
-       
-	   my $private = qq | <p>This genetic map is not public yet. 
-       	              If you would like to know more about this data, 
-                      please contact the owner of the data: <b>$submitter_link</b> 
-                      or email to SGN:
-                      <a href=mailto:sgn-feedback\@sgn.cornell.edu>
-                      sgn-feedback\@sgn.cornell.edu</a>.
-                    </p> |;
-
-         return $private;
-	 } 
-    
-}
 
 # Historic Perl comment by Robert Ahrens, ca. 2003
 #
@@ -205,32 +127,68 @@ sub data_is_private {
 
 <& /page/page_title.mas, title=> $short_name &>
 
-<div id="pagetitle2"><center><h3><%$map_fullname%></h3></center></div>
+<div id="pagetitle2"><center><h3><%$long_name%></h3></center></div>
 
 % if ($private) {
 % print $private;
+% return;
 %} 
-%else {
-
-<& /cview/map/overview.mas, 
-  dbh => $dbh, 
-  map => $map, 
-  size => $size,  
-  hilite_markers => [ @hilite_markers ], 
-  map_items=> $map_items, 
-  basepath => $basepath, 
-  tempdir => $tempdir 
-&>
 
 % if ($message) { 
 %    print "<div class=\"boxbgcolor5\"><b>NOTE:</b><br />$message</div>\n";
 % }
 
-<& /cview/map/abstract.mas, map => $map &>
+<& /cview/map/overview.mas,
+  map_version_id => $map_version_id,
+  overview_image => $overview_image,
+  size => $size,
+  hilite_markers => [ @hilite_markers ],
+  map_items=> $map_items,
+  basepath => $basepath,
+  tempdir => $tempdir,
+  map_url => $map_url,
+  chr_url => $chr_url,
+&>
 
-<& /cview/map/stats.mas, map => $map &>
+<& /cview/map/overlay_form.mas, 
+  map_version_id => $map_version_id,
+  can_overlay    => $can_overlay,
+  map_items      => $map_items,
+  size           => $size,
+  hilite         => $hilite,
+  map_url        => $map_url,
+&>
+
+
+% if ($abstract) { 
+
+<&| /page/info_section.mas, title=>"Abstract", collapsible=>1, collapsed=>0 &>
+<% $abstract %>
+</&>
+
+% }
+
+% my $total = 0; 
+% my $html = '<table><tr><td></td><td width="30">&nbsp;</td><td>markers</td></tr>';
+% foreach (@$chromosome_stats) { $html .= "<tr><td>$_->[0]&nbsp;</td><td></td><td>$_->[1]</td></tr>"; $total += $_->[2];  }
+% $html .= '<tr><td colspan="3"></td></tr>';
+% $html .= '<tr><td><b>Total:</b></td><td></td><td>'.$total.'</td></tr>';
+% $html .= '</table>';
+<&| /page/info_section.mas, 
+  title => 'Map statistics',
+  collapsible => 1,
+  collapsed => 0,
+ &>
+<table><tr>
+<td>
+<% $html %>
+
+</td>
+<td width="40">&nbsp;</td>
+<td><% $marker_stats %></td>
+</tr></table>
+</&>
 
 <& /page/comments.mas, object_type=>"map", object_id => $map_version_id,  referer => $referer &>
 
-%}
 

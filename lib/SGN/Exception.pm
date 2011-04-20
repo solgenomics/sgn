@@ -159,9 +159,12 @@ has 'notify' => (
    }
 
 around 'BUILDARGS' => sub {
-    my ($orig,$class,%args) = @_;
+    my $orig  = shift;
+    my $class = shift;
+    my %args =  @_ > 1 ? @_ : ( message => @_ );
+
     $args{developer_message} ||= $args{message};
-    $args{message}           ||= $args{developer_message} || $args{public_message};
+    $args{message}           ||= $args{developer_message} || $args{public_message} || '(no message)';
 
     if( defined $args{is_client_error} && !$args{is_client_error} ) {
         $args{is_server_error} = 1 unless defined $args{is_server_error};

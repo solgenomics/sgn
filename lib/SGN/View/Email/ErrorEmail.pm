@@ -50,7 +50,8 @@ sub _build_debug_filter_visitor {
     return Data::Visitor::Callback->new(
 
         # descend into objects also
-        object => 'visit_ref',
+        object               => 'visit_ref',
+        ignore_return_values => 1,
 
         # render skip_class option as visitor args
         ( map {

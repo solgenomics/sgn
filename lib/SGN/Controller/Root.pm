@@ -2,6 +2,7 @@ package SGN::Controller::Root;
 use Moose;
 use namespace::autoclean;
 
+use Scalar::Util 'weaken';
 use CatalystX::GlobalContext ();
 
 BEGIN { extends 'Catalyst::Controller' }
@@ -113,6 +114,7 @@ sub auto : Private {
     my ($self, $c) = @_;
     CatalystX::GlobalContext->set_context( $c );
     $c->stash->{c} = $c;
+    weaken $c->stash->{c};
 
     # gluecode for logins
     #

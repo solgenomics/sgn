@@ -70,7 +70,7 @@ User comments are posted at the bottom of each page.
 <dd>SGN hosts a collection of thousands Solanaceae <a href="../search/direct_search.pl?search=phenotypes">phenotyped accessions</a>, of several mapping and mutant populations. Phenotypes are linked to SGN loci whenever applicable. SGN submitters can edit any accession, upload images, and add cross-links to locus information.<br/></dd>
 
 <dt>Submit Phenotype</dt>
-<dd>New phenotypes and plant accessions can be submitted <a href="individual.pl?action=new">here</a>. For large datasets, please <a href="mailto:sgn-feedback.sgn.cornell.edu">contact SGN</a>.<br/>
+<dd>New phenotypes and plant accessions can be submitted <a href="/stock/0/new">here</a>. For large datasets, please <a href="mailto:sgn-feedback.sgn.cornell.edu">contact SGN</a>.<br/>
 Phenotype annotation works in a similar manner to locus annotation. Submitters of phenotypes are the owners of the accessions, and have full on-line editing privileges.<br />
 For batch submission of phenotypes, you can send us a <a href= "/content/phenotype_submissions.pl">file with the information</a>, and images on a CD/DVD,  and we will upload the data for you.
 </dd>

@@ -38,6 +38,25 @@ sub view_rflp_image: Chained('get_marker') PathPart('rflp_image/view') :Args(0) 
 }
 
 
+=head2 marker_details
+
+Public path: /marker/SGN-M23545/details
+
+Show the HTML detail page for this marker.
+
+=cut
+
+
+sub marker_details: Chained('get_marker') PathPart('details') :Args(0) {
+  my ( $self, $c ) = @_;
+
+  $c->stash(
+      template  => '/markers/index.mas',
+      dbh       => $c->dbc->dbh,
+     );
+}
+
+
 =head2 get_marker
 
 Public path: /marker/SGN-M23545
@@ -50,9 +69,12 @@ id.  The marker ID is an SGN-M identifier.
 
 sub get_marker: Chained('/') PathPart('marker') :CaptureArgs(1) {
     my ( $self, $c, $marker_id ) = @_;
+
     ($marker_id) = $marker_id =~ /^SGN-M(\d+)$/i
         and $c->stash->{marker} = CXGN::Marker->new( $c->dbc->dbh, $marker_id)
         or $c->throw_404('No marker found with that ID');
+
+    $c->stash->{marker_id} = $marker_id;
 }
 
 

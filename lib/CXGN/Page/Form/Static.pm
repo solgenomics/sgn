@@ -580,7 +580,7 @@ sub as_table_string {
     my $string = qq { <table> };
     foreach my $f ($self->get_fields()) { 
 	if (ref($f)!~/hidden/i) { 
-	    $string .=  "<tr><td>".($f->get_display_name())."</td><td width=\"20\">&nbsp;</td><td><b>".($f->render())."</b></td></tr>\n";
+	    $string .=  "<tr><td>".($f->get_display_name || '')."</td><td width=\"20\">&nbsp;</td><td><b>".($f->render || '')."</b></td></tr>\n";
 	}
     }
     $string .= qq { </table> };

@@ -1,0 +1,162 @@
+<%doc>
+
+=head1 NAME
+
+/ontology/associate_ontology.mas - a component for printing a generic 'associate_ontology' javasript form and displaying the ontology annotation
+
+=head1 DESCRIPTION
+
+
+Parameters:
+
+=over 9
+
+=item object_id
+
+a database id
+
+=item object_name
+
+the type of the object you are annotating
+
+=item cvterm_autocomplete_uri
+
+defaults to /ajax/cvterm/autocomplete
+
+=item cvterm_add_uri
+
+the uri for associating the cvterm with your object
+
+=iterm relationships_uri
+
+populate the relationships drop down menu. defaults to /ajax/cvterm/relationships
+
+=item evidence_uri
+
+populate the evidence code menu. Defaults to /ajax/cvterm/evidence
+
+=item evidence_description_uri
+
+populate the evidence description menu. Defaults to /ajax/cvterm/evidence_description
+
+=iterm show_form
+
+whether the associate form should be printed. Usually only if the user is logged-in
+
+=item ontology_url
+
+the url for displaying the ontology annotation
+
+=back
+
+=head1 AUTHOR
+
+Naama Menda <nm249@cornell.edu>
+
+=cut
+
+
+</%doc>
+
+<%args>
+
+$object_id
+$object_name
+$cvterm_autocomplete_uri  => '/ajax/cvterm/autocomplete'
+$cvterm_add_uri
+$relationships_uri => '/ajax/cvterm/relationships'
+$evidence_uri => '/ajax/cvterm/evidence'
+$evidence_description_uri => '/ajax/cvterm/evidence_description'
+$reference_uri => '/stock/'.$object_id.'/references'
+$show_form => 0
+$div_id => 'ontology_terms'
+$ontology_url
+
+</%args>
+
+<style>
+  #ontology .evidence {
+    margin: 1em 0 0 4em;
+    width: 50%;
+    border: 1px dotted gray;
+    padding: 10px;
+  }
+  #ontology_show_details {
+    text-align: right;
+    margin-bottom: -2em;
+  }
+  #ontology_show_details label {
+    font-weight: bold;
+  }
+  .active#ontology_show_details {
+    background: white;
+  }
+</style>
+
+<& /util/import_javascript.mas, classes=>[qw[ jquery jqueryui popup CXGN.AJAX.Ontology] ]&>
+
+  <div id="ontology_show_details" style="display: none">
+    <form> <input type="checkbox" id="show_details" disabled="true" />
+      <label for="show_details">Show complete details</label> 
+    </form>
+  </div>
+
+<div id="ontology" >[loading...] </div>
+
+<script language="javascript">
+
+  
+  Ontology.displayOntologies("ontology" , "<% $ontology_url %>");
+  
+</script>
+
+% if ($show_form) { 
+<div id="associate_cvterm_form">
+  <b>Associate ontology term</b>
+  <form name="cvterm_form" >
+    <div id="cvterm_search" >
+      <input type="text" style="width: 50%" id="term_name" name="term_name" value="Type a term name" onchange="Ontology.updateAutocomplete('<% $cvterm_autocomplete_uri %>')" />
+      <input type="hidden" id="object_id" name="object_id" value="<% $object_id %>" />
+
+      <select id = "db_name" onchange="jQuery('#term_name').val('---Type a term name---')")">
+        <option value="GO">GO (gene ontology)</option>
+        <option value="PO">PO (plant ontology)</option>
+        <option value="SP">SP (Solanaceae phenotypes)</option>
+      </select><br>
+
+      <div style="font-size: 80%; margin-left: 1em; color: #333">type a cvterm name</div>
+      <div id ="ontology_evidence">
+        <b>Relationship type:</b>
+    <select id="relationship_select" style="width: 100%"
+	    onchange="Ontology.populateEvidence('evidence_code_select', '<% $evidence_uri %>' )">
+    </select>
+    <b>Evidence code:</b>
+    <select id="evidence_code_select" style="width: 100%"
+	    onchange="jQuery('#associate_ontology_button').removeAttr('disabled');Ontology.populateEvidence('evidence_description_select', '<% $evidence_description_uri %>' + '?evidence_code_id=' + jQuery('#evidence_code_select').val() );Ontology.getEvidenceWith();Ontology.populateEvidence('reference_select', '<% $reference_uri %>')">
+    </select>
+    
+    <b>Evidence description:</b>
+    <select id="evidence_description_select" style="width: 100%">
+    </select>
+    
+    <b>Evidence with:</b>
+    <select id="evidence_with_select" style="width: 100%">
+    </select>
+    
+    <b>Reference:</b>
+    <select id="reference_select" style="width: 100%">
+    </select>
+    <div id="ontology_select_button">
+      <input type="button"
+             id="associate_ontology_button"
+             value="associate term"
+             disabled="true"
+             onclick="javascript:Ontology.submitCvtermForm('<% $cvterm_add_uri %>', '<% $ontology_url %>');this.disabled=true"
+             </div>
+      </div>
+
+    </div>
+  </form>
+</div>
+
+% }

@@ -167,6 +167,9 @@ my @command =
     map $_->(), values %arg_handlers
   );
 
+# save our prefs
+$prefs->save;
+
 #check some specific error conditions
 #   multiple sequences in given to simple BLAST
 if($params{interface_type} eq 'simple' && $seq_count > 1) {
