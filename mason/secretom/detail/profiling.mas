@@ -143,6 +143,17 @@
   ref: AC1005.sff
 - text: "File 6: Assembled sequences of the tomato transcripts (fasta)"
   ref: LCM454assembled.fasta
+- text: "File 7: Solexa/Illumina reads from library AC1001"
+  ref: AC1001.txt.tar.gz
+- text: "File 8: Solexa/Illumina reads from library AC1002"
+  ref: AC1002.txt.tar.gz
+- text: "File 9: Solexa/Illumina reads from library AC1003"
+  ref: AC1003.txt.gz
+- text: "File 10: Solexa/Illumina reads from library AC1004"
+  ref: AC1004.txt.gz
+- text: "File 11: Solexa/Illumina reads from library AC1005"
+  ref: AC1005.txt.gz
+
 </&>
 
 <&| /secretom/section_templates/publications.mas, entitize => 1 &>
