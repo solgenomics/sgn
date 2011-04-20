@@ -99,12 +99,9 @@ sub signalp_search :Path('search/signalp') {
     my ( $self, $c ) = @_;
 
     my $file = $c->req->param('file');  $file =~ s!\\/!!g; # no dir seps, no badness.
-    $file ||= 'Tair9RiceBrachyITAG1.tab.gz';
-    my $abs_file;
-$abs_file = $self->static_dir->file( 'data','secretom', '.new', 'SignalP_predictions', $file  );
-$file = 'Tair10_all.tab.gz';
-$file = 'AtBrRiceTomPop.tab.gz';
-$abs_file = $self->static_dir->file('Scrtm', $file);
+    $file ||= 'AtBrRiceTomPop.tab.gz';  # 'Tair10_all.tab.gz'; 
+    my $abs_file = $self->static_dir->file( 'data','secretom', '.new', 'SecreTarySPTP_predictions', $file  );
+    $abs_file = $self->static_dir->file('Scrtm', $file);
 
     $c->stash->{headings} = [
 	"Locus name",
