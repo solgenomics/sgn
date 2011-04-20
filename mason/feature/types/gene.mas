@@ -101,7 +101,7 @@
           seq       => $mrna_sequence,
           width     => 80,
           subdiv    => 10,
-          blast_url => undef,
+          blast_url => $blast_url,
         &>
      </div>
 
@@ -125,7 +125,7 @@
           seq       => $protein_sequence,
           width     => 80,
           subdiv    => 10,
-          blast_url => undef,
+          blast_url => $blast_url,
         &>
      </div>
 

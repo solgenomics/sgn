@@ -39,7 +39,7 @@
                seq       => $seqs->[1],
                width     => 80,
                subdiv    => 10,
-               blast_url => undef,
+               blast_url => $blast_url,
              &>
           </div>
         </&>
