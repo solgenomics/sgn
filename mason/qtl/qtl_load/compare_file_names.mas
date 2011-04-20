@@ -1,0 +1,41 @@
+<%doc>
+
+=head1 NAME
+
+compare_file_names.mas - a mason component for displaying message 
+when a user tries to submit the same files for two different dataset fields...
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$file1
+$file2
+$guide
+
+</%args>
+
+<%perl>
+my $message = qq | <p>You are trying to upload file(s) with the same name 
+                     <b>($file1 and $file2)</b> for this step and one of the 
+                     steps before it.
+                   </p>
+
+                   <p>Please go <a href="javascript:history.go(-1)"><b>back</b></a> 
+                     and check the file you are trying to upload or if you keep 
+                     having problem with it contact us.
+                   </p>
+                | ;
+
+
+</%perl>
+
+<& /page/page_title.mas, title => 'Data files' &>
+<&| /page/info_section.mas, title => '', subtitle => $guide &>
+  <% $message %>  
+</&>
