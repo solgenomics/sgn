@@ -2,17 +2,14 @@
     $feature
 </%args>
 <%once>
+    use HTML::Entities;
     use CXGN::Page::FormattingHelpers qw/info_table_html/;
     use SGN::View::Feature qw/ description_featureprop_types cvterm_link /;
 </%once>
 <%perl>
-# find all featureprops other that Note, which is already taken care of
-my @properties = map {
-    my $fp = $_;
-    my $name = cvterm_link( $fp->type, 'ucfirst' );
-    $name => $fp->value
-   }
-   $feature->search_related(
+   # find all featureprops other that Note, which is already taken
+   # care of, group them by type
+   my $props = $feature->search_related(
        'featureprops',
        {
            # filter out featureprops that are used as the feature's description
@@ -24,10 +21,24 @@ my @properties = map {
            'length(value)' => { '<=', 1000 },
        },
        { prefetch => 'type' },
-     )->all;
-if( @properties ) {
+     );
+     my %properties;
+     while( my $fp = $props->next ) {
+         push @{$properties{ cvterm_link( $fp->type, 'ucfirst' ) } ||= []}, $fp->value;
+     }
+     for my $propvals ( values %properties ) {
+         if( @$propvals > 1 ) {
+             $propvals = '<ul>'.(join '', map "<li>".encode_entities($_)."</li>", @$propvals).'</ul>';
+         } else {
+             $propvals = encode_entities($propvals->[0]);
+         }
+     }
+
+if( %properties ) {
     print info_table_html(
-        @properties,
+        ( map { $_ => $properties{$_} }
+          sort keys %properties
+        ),
         __border => 0,
       );
 }
