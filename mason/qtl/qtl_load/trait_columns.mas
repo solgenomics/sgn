@@ -29,5 +29,5 @@ $error .= qq |<p>Please go <a href="javascript:history.go(-1)"><b>back</b></a> a
 
 <& /page/page_title.mas, title => 'Traits file' &>
 <&| /page/info_section.mas, title => '', subtitle => $guide &>
-  <% $message %>  
+  <% $error %>  
 </&>
