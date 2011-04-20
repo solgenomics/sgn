@@ -170,7 +170,7 @@ stranded     = 1
 category     = Gene models
 das category = translation
 strand_arrow = 1
-link         = sub { my $n = shift->display_name; $n =~ s/(\.\d+)\.\d+$/$1/; "<% $feature->cgi_url %>/gbrowse/ITAG2.3_protein/?name=$n" }
+link         = sub { my $n = shift->display_name; "<% $feature->cgi_url %>/gbrowse/ITAG2.3_protein/?name=$n" }
 height       = 20
 citation     = This track shows the CDS sequences for gene models annotated by EuGene, the integrative gene predictor for ITAG.  Provided by Stephane Rombauts and Jeffrey Fawcett, <a class="http" href="http://bioinformatics.psb.ugent.be/">Bioinformatics and Evolutionary Genomics</a>, <a class="http" href="http://www.psb.ugent.be">Plant Systems Biology, VIB, Ghent University</a>.  (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnEugene000">EuGene on ITAG Wiki</a>, <a href="http://www.inra.fr/internet/Departements/MIA/T//EuGene/index.html">EuGene main page</a>)
 
