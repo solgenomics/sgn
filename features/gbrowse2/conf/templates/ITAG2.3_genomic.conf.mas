@@ -155,7 +155,6 @@ das category = transcription
 strand_arrow = 1
 height       = 10
 citation     = This track shows the mRNAs for gene models annotated by EuGene, the integrative gene predictor for ITAG. (see <a href="http://www.ab.wur.nl/TomatoWiki/AnEugene000">EuGene on ITAG Wiki</a>, <a href="http://www.inra.fr/internet/Departements/MIA/T//EuGene/index.html">EuGene main page</a>)
-balloon hover = $name: click for more details
 balloon click = sub { my $name = shift->name; $name =~ s/\.\d+\.\d+$//; "url:/api/v1/feature_xrefs?q=$name;exclude=gbrowse,gbrowse2" }
 
 [cds]
@@ -288,15 +287,6 @@ category     = Prediction Features
 glyph        = gene
 stranded     = 1
 citation     = <i>De novo</i> predictions from <a href="http://genome.imim.es/software/geneid/">GeneID</a>, trained on Tomato.  Provided by Francisco Camara, <a href="http://genome.crg.es">Genome Bioinformatics Research Lab - Gene Prediction Group, Center for Genomic Regulation (CRG) - Spain</a>. (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnGeneID000">ITAG Wiki</a>)
-das category = transcription
-
-[genemark_ath]
-feature      = mRNA:ITAG_genemark_ath
-key          = GeneMark (de novo, Arabidopsis trained)
-category     = Prediction Features
-glyph        = gene
-stranded     = 1
-citation     = <i>De novo</i> predictions from <a href="http://exon.gatech.edu/GeneMark/">GeneMark</a>, trained on Arabidopsis.  Provided by the <a href="http://mips.gsf.de/proj/plant/jsf/tomato/index.jsp">MIPS Tomato genome database</a>. (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnGeneMark000">ITAG Wiki</a>)
 das category = transcription
 
 [glimmerhmm_ath]
