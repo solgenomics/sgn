@@ -1,0 +1,43 @@
+<%doc>
+
+=head1 NAME
+
+population_exists.mas - a mason component for displaying message 
+when a user tries to submit a population name the same with an existing one...
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$name
+$guide
+
+</%args>
+
+<%perl>
+ my $message = qq | <p> It appears that a population <b>$name</></b> already 
+                   exists in the database. To continue loading QTL data
+                   for a new population, try with a different population 
+                   name.</p>
+                         
+                  <p>If you are trying to load more or change data to an 
+                  exising population contact us.</p>
+
+                 <p>Please go <a href="javascript:history.go(-1)">back</a> 
+                  and try to use a different name or if you keep having 
+                  problem with it contact us.</p>
+                 |;
+
+
+
+</%perl>
+
+<& /page/page_title.mas, title => 'QTL population' &>
+<&| /page/info_section.mas, title => '', subtitle => $guide &>
+  <% $message %>  
+</&>
