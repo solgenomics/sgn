@@ -1439,25 +1439,7 @@ sub trait_columns {
             )
     }
 }
-#         my $page = CXGN::Page->new( "SGN", "Isaak" );
 
-#         $page->header();
-
-#         print page_title_html("Traits file...");
-
-#         my $messages .= $trait_error;
-
-#         $messages .= qq |<p> 
-#                           Please go <a href="javascript:history.go(-1)"><b>back</b></a> 
-#                           and rearrange the order of the columns and upload the file
-#                           again or if you keep having problem with it contact us.</p>|;
-
-#         print info_section_html( subtitle => $guide, contents => $messages, );
-
-#         $page->footer();
-#         exit();
-#     }
-# }
 
 =head2 accessors compare_file_names
 
