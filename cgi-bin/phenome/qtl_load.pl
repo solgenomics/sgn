@@ -84,7 +84,7 @@ sub process_data {
     my $sp_person_id = $login->verify_session();
 
     my $referring_page = "/phenome/qtl_form.pl";
-    my $referring_page = $ENV{HTTP_REFERER};
+   # my $referring_page = $ENV{HTTP_REFERER};
 
     my %args = $page->get_all_encoded_arguments();
     $args{pop_common_name_id} = $self->common_name_id();
