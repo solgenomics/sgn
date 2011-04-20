@@ -283,7 +283,7 @@ das category = similarity
 [geneid_tomato]
 feature      = gene:ITAG_geneid_tomato
 key          = GeneID (de novo, Tomato trained)
-category     = Prediction Features
+category     = Prediction features
 glyph        = gene
 stranded     = 1
 citation     = <i>De novo</i> predictions from <a href="http://genome.imim.es/software/geneid/">GeneID</a>, trained on Tomato.  Provided by Francisco Camara, <a href="http://genome.crg.es">Genome Bioinformatics Research Lab - Gene Prediction Group, Center for Genomic Regulation (CRG) - Spain</a>. (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnGeneID000">ITAG Wiki</a>)
@@ -292,7 +292,7 @@ das category = transcription
 [glimmerhmm_ath]
 feature      = mRNA:ITAG_glimmerhmm_ath
 key          = GlimmerHMM (de novo, Arabidopsis trained)
-category     = Prediction Features
+category     = Prediction features
 glyph        = gene
 stranded     = 1
 citation     = <i>De novo</i> predictions from <a href="http://www.genomics.jhu.edu/GlimmerHMM/">GlimmerHMM</a>, trained on Arabidopsis.  Provided by Erwin Datema at <a href="http://appliedbioinformatics.wur.nl/">WUR</a>. (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnGlimmerHMM000">ITAG Wiki</a>)
@@ -301,7 +301,7 @@ das category = transcription
 [glimmerhmm_tomato]
 feature      = mRNA:ITAG_glimmerhmm_tomato
 key          = GlimmerHMM (de novo, Tomato trained)
-category     = Prediction Features
+category     = Prediction features
 glyph        = gene
 stranded     = 1
 citation     = <i>De novo</i> predictions from <a href="http://www.genomics.jhu.edu/GlimmerHMM/">GlimmerHMM</a>, trained on Tomato.  Provided by Erwin Datema at <a href="http://appliedbioinformatics.wur.nl/">WUR</a>. (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnGlimmerHMM000">ITAG Wiki</a>)
@@ -310,7 +310,7 @@ das category = transcription
 [infernal]
 feature      = transcript:ITAG_infernal
 key          = Infernal
-category     = Prediction Features
+category     = Prediction features
 glyph        = segments
 description  = sub { (shift->attributes('Alias'))[0] }
 bgcolor      = blue
@@ -321,7 +321,7 @@ das category = transcription
 [infernal:overview]
 feature      = transcript:ITAG_infernal
 key          = Infernal
-category     = Prediction Features
+category     = Prediction features
 glyph        = segments
 description  = sub { (shift->attributes('Alias'))[0] }
 stranded     = 1
@@ -331,7 +331,7 @@ das category = transcription
 [infernal:region]
 feature      = transcript:ITAG_infernal
 key          = Infernal
-category     = Prediction Features
+category     = Prediction features
 glyph        = segments
 description  = sub { (shift->attributes('Alias'))[0] }
 stranded     = 1
@@ -341,7 +341,7 @@ das category = transcription
 [trnascanse]
 feature      = tRNA:ITAG_trnascanse
 key          = tRNAscanSE
-category     = Prediction Features
+category     = Prediction features
 glyph        = segments
 stranded     = 1
 citation     = This track shows transfer RNAs predicted by the tRNAscan-SE program.  For more on tRNAscan-SE, see <a href="http://selab.janelia.org/software#trnascanse">http://selab.janelia.org/software#trnascanse</a>.  (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnTRNAScanSE000">ITAG Wiki</a>)
@@ -350,7 +350,7 @@ das category = transcription
 [tRNA:overview]
 feature      = tRNA:ITAG_trnascanse
 key          = tRNAscanSE
-category     = Prediction Features
+category     = Prediction features
 glyph        = segments
 stranded     = 1
 label        = sub { my ($n) = shift->get_Annotations('aminoacid'); $n }
@@ -391,7 +391,7 @@ bump density  = 100
 feature      = match:ITAG_sgn_markers
 glyph        = alignment
 key          = SGN Markers
-category     = Genetic Loci
+category     = Genetic loci
 stranded     = 1
 fgcolor      = black
 bgcolor      = yellow
