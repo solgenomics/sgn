@@ -73,28 +73,28 @@ span.filesize:after {
     <td>
           <h3>Arabidopsis thaliana</h3>
           <img src="/img/secretom/arabidopsisthaliana.png" />
-          <& .result_file, file => 'data/secretom/SignalP_predictions/Tair8.pep.1.sptp.fasta', dir => $static_dir &>
+          <& .result_file, file => 'data/secretom/SecreTarySPTP_predictions/Tair10.STsptp.fa.gz', dir => $static_dir &>
     </td>
      <td>
           <h3>Rice (Oryza sativa)</h3>
           <img src="/img/secretom/oryzasativa.png" />
-          <& .result_file, file => 'data/secretom/SignalP_predictions/Rice.pep.1.sptp.fasta', dir => $static_dir &>
+          <& .result_file, file => 'data/secretom/SecreTarySPTP_predictions/TIGR6.1.STsptp.fa.gz', dir => $static_dir &>
     </td>
     <td>
           <h3>Brachypodium distachyon</h3>
           <img src="/img/secretom/brachypodiumdistachyon.png" />
-          <& .result_file, file => 'data/secretom/SignalP_predictions/Brachy.pep.1.sptp.fasta', dir => $static_dir &>
+          <& .result_file, file => 'data/secretom/SecreTarySPTP_predictions/Brachy1.2.STsptp.fa.gz', dir => $static_dir &>
     </td>
     <td>
           <h3>Tomato (Solanum lycopersicum)</h3>
           <img src="/img/secretom/solanumlycopersicum.png" />
-          <& .result_file, file => 'data/secretom/SignalP_predictions/ITAG1.pep.sptp.fasta', dir => $static_dir &>
+          <& .result_file, file => 'data/secretom/SecreTarySPTP_predictions/ITAG2.STsptp.fa.gz', dir => $static_dir &>
     </td>
   
  <td>
           <h3>Populus trichocarpa</h3>
           <img src="/img/secretom/Populustrichocarpa.jpg" />
-          <& .result_file, file => 'data/secretom/SignalP_predictions/ITAG1.pep.sptp.fasta', dir => $static_dir &>
+          <& .result_file, file => 'data/secretom/SecreTarySPTP_predictions/Poptri2.STsptp.fa.gz', dir => $static_dir &>
     </td>
 
 
