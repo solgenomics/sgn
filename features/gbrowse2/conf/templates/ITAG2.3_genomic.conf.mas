@@ -24,26 +24,24 @@ examples = Solyc05g005010 SL2.40ch08:2626000..2648999 "Sulfite oxidase" SGN-M100
 
 das mapmaster = SELF
 
-#these two little subroutines add links to some of the text on gbrowse_detail pages for GeneSeqer alignments
-[match:details]
-default  = sub {
+init_code =
+  sub link_detail_page_idents {
 		my ($value,$tag_name,$feature) = @_;
                 return $value if $tag_name eq 'Position';
                 <% $feature->local_inc %>
 		require CXGN::Tools::Identifiers;
 		$value =~ s/(\S+)/CXGN::Tools::Identifiers::link_identifier($1) || $1/ge;
                 $value
-	      }
+  }
 
-[mRNA:details]
-default = sub {
-		my ($value,$tag_name,$feature) = @_;
-                <% $feature->local_inc %>
-		require CXGN::Tools::Identifiers;
-		$value =~ s/(\S+)/CXGN::Tools::Identifiers::link_identifier($1) || $1/ge;
-		$value
-	      }
+# run detail pages for most of the types through identifier regex
+# recognition
+% for (qw( match BAC BAC_clone BAC_end mRNA )) {
 
+[<% $_ %>:details]
+default  = \&link_detail_page_idents
+
+% }
 
 [main:database]
 db_adaptor = Bio::DB::SeqFeature::Store
