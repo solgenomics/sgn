@@ -86,9 +86,9 @@
 %   my ( $mrna_sequence, $protein_sequence ) = @{(mrna_and_protein_sequence( $mrna ))[0] || [] };
 
     <&| /page/info_section.mas,
-            title         => 'mRNA sequence',
+            title         => 'cDNA sequence',
             is_subsection => 1,
-            subtitle      => 'spliced mRNA sequence, including UTRs',
+            subtitle      => 'spliced cDNA sequence, including UTRs',
             empty_message => 'Not available',
             collapsible   => 1,
             collapsed     => 1,
