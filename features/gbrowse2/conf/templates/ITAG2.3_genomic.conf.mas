@@ -437,3 +437,28 @@ citation     = This track shows regions of similarity with the reference sequenc
 das category = similarity
 bump density = 100
 
+[repeats]
+feature      = repeat_region:ITAG_repeats
+glyph        = alignment
+key          = RepeatMasker (normal)
+category     = Repetitive elements
+stranded     = 1
+fgcolor      = black
+bgcolor      = black
+link         = AUTO
+citation     = Repetitive regions found by running Repeatmasker at 'normal' stringency, meaning running it *with* the -nolow option, so that low-complexity and simple repeats are NOT masked.
+das category = similarity
+bump density = 100
+
+[repeats_aggressive]
+feature      = repeat_region:ITAG_repeats_aggressive
+glyph        = alignment
+key          = RepeatMasker (aggressive)
+category     = Repetitive elements
+stranded     = 1
+fgcolor      = black
+bgcolor      = black
+link         = AUTO
+citation     = Repetitive regions found by running Repeatmasker at 'aggressive' stringency, meaning running it *without* the -nolow option, so that low-complexity and simple repeats ARE masked.
+das category = similarity
+bump density = 100
