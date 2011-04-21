@@ -17,15 +17,6 @@ use warnings;
 my $qtl_load_detail_page = CXGN::Phenome::QtlLoadDetailPage->new();
 
 use File::Spec;
-use CXGN::Page;
-use CXGN::Page::FormattingHelpers qw /info_section_html
-  page_title_html
-  columnar_table_html
-  html_optional_show
-  info_table_html
-  tooltipped_text
-  html_alternate_show
-  /;
 use CXGN::DB::Connection;
 use CXGN::Phenome::Qtl;
 use CXGN::Phenome::Qtl::Tools;
