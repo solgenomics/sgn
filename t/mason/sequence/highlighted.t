@@ -6,6 +6,9 @@ use Bio::PrimarySeq;
 
 use Test::More;
 
+# inject a mock stash method into SGN::Context
+{ no warnings 'once'; *SGN::Context::stash = sub { {} }; }
+
 my $c = SGN::Context->instance;
 
 my $test_seq = Bio::PrimarySeq->new( -id => 'foo',

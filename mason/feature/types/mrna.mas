@@ -25,20 +25,6 @@
     &>
 </&>
 
-% if( $feature->residues && length $feature->residues ) {
-    <&| /page/info_section.mas,
-            title         => 'mRNA sequence',
-            subtitle      => 'spliced mRNA sequence, including UTRs',
-            collapsible   => 1,
-            collapsed     => 0,
-    &>
-      <& /feature/residues.mas,
-              feature   => $feature,
-              blast_url => $blast_url,
-              seq_download_url => $seq_download_url
-      &>
-    </&>
-% } else {
 %    for my $seqs ( mrna_and_protein_sequence( $feature ) ) {
 %       if( $seqs->[0] ) {
         <&| /page/info_section.mas,
@@ -52,13 +38,12 @@
                seq       => $seqs->[0],
                width     => 80,
                subdiv    => 10,
-               blast_url => undef,
+               blast_url => $blast_url,
              &>
           </div>
         </&>
 %       }
 %    }
-% }
 
 <&| /page/info_section.mas,
      title         => 'Genomic sequence(s)',

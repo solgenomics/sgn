@@ -110,6 +110,7 @@ if ( $format eq 'html' ) {
             ( $seq->length > 500_000 ? () : [ 'View as FASTA' => $view_link ] ),
             [ 'Download as FASTA' => $download_link ],
            ],
+        blast_url => '/tools/blast/index.pl',
        );
 
 } elsif( $format eq 'fasta_file' || $format eq 'fasta_text' ) {

@@ -245,6 +245,12 @@ sub mrna_and_protein_sequence {
                ->search_related('object');
     }
 
+    my $peptide = _peptides_rs( $mrna_feature )->first;
+
+    # just return the mrna and peptide rows if they both have their
+    # own sequences (because the rows can act as Bio::PrimarySeqI's
+    return [ $mrna_feature, $peptide ] if $peptide->subseq(1,1) && $mrna_feature->subseq(1,1);
+
     my @exon_locations = _exon_rs( $mrna_feature )->all
         or return;
 
@@ -259,22 +265,24 @@ sub mrna_and_protein_sequence {
 
     return unless $mrna_seq->length > 0;
 
-    my $peptide_loc = _peptides_rs( $mrna_feature )->first
+    my $peptide_loc = _peptide_loc($peptide)->first
         or return ( $mrna_seq, undef );
-
-    my $trim_fmin = $peptide_loc->fmin         -  $exon_locations[0]->fmin;
-    my $trim_fmax = $exon_locations[-1]->fmax  -  $peptide_loc->fmax;
-    if( $trim_fmin || $trim_fmax ) {
-        $mrna_seq = $mrna_seq->trunc( 1+$trim_fmin, $mrna_seq->length - $trim_fmax );
-    }
-
-    $mrna_seq = $mrna_seq->revcom if $exon_locations[0]->strand == -1;
 
     my $protein_seq = Bio::PrimarySeq->new(
         -id   => $mrna_feature->name,
         -desc => 'protein sequence',
         -seq  => $mrna_seq->seq,
        );
+    my $trim_fmin = $peptide_loc->fmin         -  $exon_locations[0]->fmin;
+    my $trim_fmax = $exon_locations[-1]->fmax  -  $peptide_loc->fmax;
+    if( $trim_fmin || $trim_fmax ) {
+        $protein_seq = $protein_seq->trunc( 1+$trim_fmin, $mrna_seq->length - $trim_fmax );
+    }
+
+    if( $exon_locations[0]->strand == -1 ) {
+        $_ = $_->revcom for $mrna_seq, $protein_seq;
+    }
+
     $protein_seq = $protein_seq->translate;
 
     return [ $mrna_seq, $protein_seq ];
@@ -298,7 +306,9 @@ sub _peptides_rs {
                          ->as_query,
             },
            })
-        ->search_related( 'featureloc_features', {
+    }
+sub _peptide_loc {
+    shift->search_related( 'featureloc_features', {
             srcfeature_id => { -not => undef },
           },
           { prefetch => 'srcfeature',

@@ -28,9 +28,9 @@ if ($login_user_type eq 'curator' || $login_user_type eq 'submitter' || $login_u
     #obsolete individual-allele association
     elsif ($type eq 'obsolete') {
 	eval {
-	    my $query = "delete from public.stockprop WHERE stock_id = ? AND value = ? AND type_id = (select cvterm_id from public.cvterm where cvterm.name = ?";
+	    my $query = "delete from phenome.stock_allele WHERE stock_id = ? AND allele_id = ? ";
 	    my $sth= $dbh->prepare($query);
-            $sth->execute($stock_id, $allele_id, 'sgn allele_id');
+            $sth->execute($stock_id, $allele_id);
 	};
         if ($@) {
 	    warn "stock-allele obsoletion failed! " . $@ ;

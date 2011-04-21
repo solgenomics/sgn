@@ -142,6 +142,8 @@ sub _validate_pair {
 sub _view_feature {
     my ($self, $c, $key, $value) = @_;
 
+    $c->stash->{blast_url} = '/tools/blast/index.pl';
+
     $self->_validate_pair($c,$key,$value);
     my $matching_features = $self->schema
                                 ->resultset('Sequence::Feature')
