@@ -1,9 +1,7 @@
-use CatalystX::GlobalContext qw( $c );
-#!/usr/bin/perl -wT
 
 =head1 DESCRIPTION
 A script for downloading population 
-genotype raw data in tab delimited format.
+genotype raw data in a tab delimited format.
 
 =head1 AUTHOR(S)
 
@@ -15,23 +13,20 @@ use strict;
 
 use CXGN::DB::Connection;
 use CXGN::Phenome::Population;
-use CXGN::Scrap;
-use Cache::File;
+use CGI;
 
 use CatalystX::GlobalContext qw( $c );
 
-my $scrap = CXGN::Scrap->new();
-my $dbh   = CXGN::DB::Connection->new();
+my $cgi = CGI->new();
+my $population_id = $cgi->param('population_id');
 
-my %args = $scrap->get_all_encoded_arguments();
-my $population_id = $args{population_id};
+my $dbh   = CXGN::DB::Connection->new();
 
 my $pop = CXGN::Phenome::Population->new( $dbh, $population_id );
 my $name = $pop->get_name();
 
 my $g_file = $pop->genotype_file($c);
 
-my $cgi = CGI->new();
 
 if (-e $g_file) {
 
