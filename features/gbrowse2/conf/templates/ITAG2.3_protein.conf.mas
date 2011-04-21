@@ -117,8 +117,9 @@ stranded     = 0
 citation     = Protein domains found by Interproscan (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnInterpro000">ITAG Wiki</a>)
 
 [other]
-feature      = polypeptide_region:ITAG_fprintscan polypeptide_region:ITAG_gene3d polypeptide_region:ITAG_hamap polypeptide_region:ITAG_hmmpanther polypeptide_region:ITAG_hmmpfam polypeptide_region:ITAG_hmmpir polypeptide_region:ITAG_hmmsmart polypeptide_region:ITAG_patternscan polypeptide_region:ITAG_prosite polypeptide_region: polypeptide_region:ITAG_superfamily polypeptide_region:ITAG_blastprodom
-key          = Other matches
+feature      = <% join ' ', map "polypeptide_region:ITAG_$_", qw( fprintscan gene3d hamap hmmpanther hmmpfam hmmpir hmmsmart patternscan prosite blastprodom ) %>
+key          = Other
+label        = sub { (my $l = shift) =~ s/.+ ITAG_ ( [^\(]+ ) \( ([^\)]+) \) /$2 (from $1)/x; $l }
 description  = 1
 bgcolor      = green
 category     = Other
