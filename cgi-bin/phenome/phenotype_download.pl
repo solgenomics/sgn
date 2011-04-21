@@ -13,7 +13,6 @@ use strict;
 
 use CXGN::DB::Connection;
 use CXGN::Phenome::Population;
-use Cache::File;
 use CGI;
 
 use CatalystX::GlobalContext qw( $c );
