@@ -344,13 +344,14 @@ sub _delete_user {
     my ( $self, $u ) = @_;
 
     my $dbc = $self->context->dbc;
-
+   
     # attempt to delete the user's metadata also, but we may not have
     # permission, so be silent if it fails
     $dbc->txn( fixup => sub {
-        local $_->{RaiseError} = 0;
-        local $_->{PrintError} = 0;
-        $_->do( <<'', undef, $u->{id}, $u->{id} );
+        #local $_->{RaiseError} = 0;
+        #local $_->{PrintError} = 0;
+        my $u_id = CXGN::People::Person->get_person_by_username( $_, $u->{user_name} );
+        $_->do( <<'', undef, $u_id, $u_id );
 DELETE FROM metadata.md_metadata WHERE create_person_id = ? OR modified_person_id = ?
 
     });
