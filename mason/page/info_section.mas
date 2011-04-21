@@ -156,7 +156,6 @@ EOT
   use CXGN::Page::Widgets qw/collapser/;
   use HTML::Entities;
 
-  no warnings 'redefined';
   sub anchor_name {
       local $_ = lc shift;
       s/<[^>]+>//g; # strip html tags
