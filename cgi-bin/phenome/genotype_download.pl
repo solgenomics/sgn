@@ -11,21 +11,17 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 use strict;
 
-use CXGN::DB::Connection;
 use CXGN::Phenome::Population;
 use CGI;
 
 use CatalystX::GlobalContext qw( $c );
 
-my $cgi = CGI->new();
+my $cgi           = CGI->new();
 my $population_id = $cgi->param('population_id');
-
-my $dbh   = CXGN::DB::Connection->new();
-
-my $pop = CXGN::Phenome::Population->new( $dbh, $population_id );
-my $name = $pop->get_name();
-
-my $g_file = $pop->genotype_file($c);
+my $dbh           = $c->dbc->dbh;
+my $pop           = CXGN::Phenome::Population->new( $dbh, $population_id );
+my $name          = $pop->get_name();
+my $g_file        = $pop->genotype_file($c);
 
 
 if (-e $g_file) {
