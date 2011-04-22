@@ -193,7 +193,7 @@ sub recursive_loci_GET :Args(0) {
     $c->stash->{rest}{count} = 0+$sth->execute($cvterm_id); #< execute can return 0E0, i.e. zero but true.
     my @data;
     while ( my ($locus_id, $locus_name, $locus_symbol, $common_name) = $sth->fetchrow_array ) {
-        my $link = qq|<a href="/phenome/locus_display?locus_id=$locus_id">$locus_symbol</a> |;
+        my $link = qq|<a href="/phenome/locus_display.pl?locus_id=$locus_id">$locus_symbol</a> |;
         push @data,
         [
          (

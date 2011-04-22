@@ -25,20 +25,23 @@ sub xrefs {
     my ( $self, $query ) = @_;
 
     return if ref $query;
+    $query = lc $query;
 
-    my @exact = map { $self->_make_xref( $_ ) }
-        $self->context->dbic_schema('Bio::Chado::Schema','sgn_chado')
-             ->resultset('Sequence::Feature')
-             ->search(
-                 {
-                     -or => [ { 'lower(me.uniquename)' => lc( $query ) },
-                              { 'lower(me.name)'       => lc( $query ) },
-                              { 'lower(synonym.name)'  => lc( $query ) },
-                            ],
-                 },
-                 { join => { feature_synonyms => 'synonym' } },
-                 )
-             ->all;
+    my $feats = $self->context->dbic_schema('Bio::Chado::Schema','sgn_chado')
+                     ->resultset('Sequence::Feature');
+
+    my @exact =
+        map { $self->_make_xref( $_ ) }
+            ( $feats->search({
+                -or => [ { 'lower(me.uniquename)' => $query },
+                         { 'lower(me.name)'       => $query },
+                       ],
+               }),
+               $feats->search(
+                   { 'lower(synonym.name)' => $query },
+                   { join => { feature_synonyms => 'synonym' } },
+               ),
+             );
 
     return @exact;
 }

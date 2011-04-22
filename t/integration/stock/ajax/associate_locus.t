@@ -56,16 +56,14 @@ $mech->while_logged_in( { user_type=>'user' }, sub {
 $mech->while_logged_in( { user_type=>'submitter' }, sub {
     $mech->get_ok("/ajax/stock/associate_locus?object_id=$stock_id&loci=$locus_details");
     $mech->content_contains('success');
+    
+# now check if the alleles are printed 
+    $mech->get_ok("/stock/$stock_id/alleles");
+    $mech->content_contains('html');
+    $mech->content_contains($locus->locus_name);
+# hard delete the temp locus and its allele object
+    $locus->delete;
                         } );
 
-# now check if the alleles are printed 
-$mech->get_ok("/stock/$stock_id/alleles");
-$mech->content_contains('html');
-$mech->content_contains($locus->locus_name);
-
 done_testing();
-
-# hard delete the temp locus and its allele object
-$locus->delete;
-
 
