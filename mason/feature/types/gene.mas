@@ -32,7 +32,7 @@
      feature => $feature,
    &>
 
-  <& /feature/exon_structure.mas, xrefs => $xrefs, feature => $feature &>
+  <& /feature/gbrowse_exact_match.mas, xrefs => $xrefs, feature => $feature &>
 
 </&>
 
