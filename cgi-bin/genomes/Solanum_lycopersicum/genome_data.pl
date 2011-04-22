@@ -111,7 +111,7 @@ sub gb_searchbox {
     my ($gb_root) = @_;
     return
         start_form( -style => 'display: inline', -action => $gb_root )
-       .textfield( -name => 'name', -value => 'search (e.g. SGN-M7588 or lycopene cyclase)', -onfocus => "this.value = ''", -size => 30)
+       .textfield( -name => 'name', -value => 'search (e.g. SGN-M7588 or lycopene cyclase)', -onfocus => "this.value = ''", -size => 50)
        .submit('Search','Search')
        .end_form()
 }
