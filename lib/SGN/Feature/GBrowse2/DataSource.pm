@@ -102,7 +102,7 @@ sub xrefs {
     return;
 }
 sub _search_db {
-    my ( $db, $name ) = @_;
+    my ( $self, $db, $name ) = @_;
     my $f =
             $db->can('get_features_by_alias')
          || $db->can('get_feature_by_name')
