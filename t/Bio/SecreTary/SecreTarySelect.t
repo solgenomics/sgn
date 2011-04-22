@@ -159,13 +159,17 @@ my @category_result_now = ();
 my ($count_exact, $count_good_enough, $count_bad) = (0, 0, 0);
 my $size_diff = abs( scalar @category_result_now - scalar @category_result_standard);
 	while(@category_result_now and @category_result_standard){
-		my $line_now = shift @category_result_now;
-		my $line_std = shift @category_result_standard;
+		my $line_now = shift @category_result_now ;
+		my $line_std = shift @category_result_standard ;
+		$line_now =~ s/\s+$//; # remove final whitespace
+		$line_std =~ s/\s+$//; # remove final whitespace
 		if( $line_now eq $line_std ){
 			$count_exact++;
 		}
 		elsif (compare_categorize1_results($line_now, $line_std) == 0) {
-			$count_good_enough++;
+#	print "categorize output string agreement is close but not exact.\n";
+#	print "this line: [$line_now]\n", "std_line : [$line_std]\n";	
+		$count_good_enough++;
 		}else{
 			$count_bad++;
 		}
@@ -182,7 +186,7 @@ sub compare_categorize1_results{
 	my @r2 = split(" ", shift);
 	my $STscore_tolerance = 0.001;
 	if ( join("", @r1[0,1,3,4,5,6]) ne join("", @r2[0,1,3,4,5,6])){ return 1; } # 
-		if( ( abs($r1[2] - $r2[1]) > $STscore_tolerance ) or ( abs($r1[7] - $r2[7]) > $STscore_tolerance) ){ return 2; }
+		if( ( abs($r1[2] - $r2[2]) > $STscore_tolerance ) or ( abs($r1[7] - $r2[7]) > $STscore_tolerance) ){ return 2; }
 	return 0; # they are the same (close enough in the case of the STscores.
 			}
 
