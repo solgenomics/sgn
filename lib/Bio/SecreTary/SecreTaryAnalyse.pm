@@ -9,7 +9,7 @@ algorithms to predict signal peptides.
 
 
 
-=head1 AUTHORg
+=head1 AUTHOR
 
 Tom York (tly2@cornell.edu)
 
@@ -46,12 +46,12 @@ sub new {
     $self->set_sequence_id($sequence_id);
     $self->set_sequence($sequence);
 
-    my ($outstring, $long_output) = 
-	$tmpred_obj->run_tmpred( $sequence, $sequence_id);
+    my ( $outstring, $long_output ) =
+      $tmpred_obj->run_tmpred( $sequence, $sequence_id );
 
     $self->set_tmpred_good_solutions($outstring);
 
-    $self->Sequence22_AAcomposition();
+    $self->sequence22_AAcomposition();
 
     # do the cleavage site calculation
     my $cleavage_obj = Bio::SecreTary::Cleavage->new();
@@ -65,90 +65,88 @@ sub new {
 
     $self->set_cleavage( [ $sp_length, $hstart, $cstart, $typical ] );
 
+    my @candidate_solutions = ();
+    my $tmpred_good_solns   = $self->get_tmpred_good_solutions();
+    while ( $tmpred_good_solns =~ s/^ ( \( \S+? \) ) //xms )
+    {    # soln in () -> $1
+        my $soln = $1;
+        $soln =~ s/ \s //gxms;    # delete whitespace
+        $soln =~ s/ ^[(]//xms;
+        $soln =~ s/ [)]$ //xms;
+        my ( $tmpred_score, $beg, $end ) = split( ',', $soln );
+        my $nGASDRQPENtm = $self->nGASDRQPEN( $beg - 1, $end + 1 - $beg )
+          ;                       # beg,end are unit based
+        push @candidate_solutions, "$tmpred_score,$beg,$end,$nGASDRQPENtm";
+    }
 
-my @candidate_solutions = ();
-my $tmpred_good_solns = $self->get_tmpred_good_solutions();
-    while ($tmpred_good_solns =~ s/^ ( \( \S+? \) ) //xms ){ # soln in () -> $1
-my $soln = $1;
-$soln =~ s/ \s //gxms; # delete whitespace
-$soln =~ s/ ^[(]//xms;
-$soln =~ s/ [)]$ //xms;
-my ($tmpred_score,$beg,$end) = split(',', $soln);
-my $nGASDRQPENtm = $self->nGASDRQPEN($beg-1, $end+1-$beg); # beg,end are unit based
-push @candidate_solutions, "$tmpred_score,$beg,$end,$nGASDRQPENtm";
-}
-# $analysis_string .= $self->AA22string(',');
-# $analysis_string .= ',' . $sp_length; # predicted length of signal peptide
-$self->{candidate_solutions} = \@candidate_solutions;
+    $self->{candidate_solutions} = \@candidate_solutions;
     return $self;
-  }
+}
 
+=head2 function sequence22_AAcomposition
 
-=head2 function Sequence22_AAcomposition
-
-Synopsis: $STA_obj->Sequence22_AAcomposition();
+Synopsis: $STA_obj->sequence22_AAcomposition();
 	Arguments: 
 	Side effects:
 	Description:	Calculates 5 quantities (AI, Gravy, nDRQPEN, nNitrogren and nOxygen) for the sequence consisting of the first 22 amino acids. These are stored in the SecreTaryAnalyse object.
 
 =cut
 
-sub Sequence22_AAcomposition {
-  my $self = shift;
+sub sequence22_AAcomposition {
+    my $self = shift;
 
-    $self->set_AI22( $self->AliphaticIndex(22) );
-    $self->set_Gravy22( $self->Gravy(22) );
+    $self->set_AI22( $self->aliphatic_index(22) );
+    $self->set_Gravy22( $self->gravy(22) );
     $self->set_nDRQPEN22( $self->nDRQPEN(22) );
     $self->set_nNitrogen22( $self->nNitrogen(22) );
     $self->set_nOxygen22( $self->nOxygen(22) );
 }
 
-sub AA22string{ # has
-my $self = shift;
-my $separator = shift || ' ';
-my $result = $self->get_AI22();
-$result .= $separator . $self->get_Gravy22();
-$result .= $separator . $self->get_nDRQPEN22();
-$result .= $separator . $self->get_nNitrogen22();
-$result .= $separator . $self->get_nOxygen22();
+sub aa22string {    # has
+    my $self      = shift;
+    my $separator = shift || ' ';
+    my $result    = $self->get_AI22();
+    $result .= $separator . $self->get_Gravy22();
+    $result .= $separator . $self->get_nDRQPEN22();
+    $result .= $separator . $self->get_nNitrogen22();
+    $result .= $separator . $self->get_nOxygen22();
 
-return $result;
+    return $result;
 }
 
+=head2 function aliphatic_index
 
-=head2 function AliphaticIndex
-
-Synopsis: $STA_obj->AliphaticIndex($length);
+Synopsis: $STA_obj->aliphatic_index($length);
 	Description: Truncates the sequence to length $length, calculates
 and returns the aliphatic index of the truncated sequence.
 
 =cut
 
-
-sub AliphaticIndex {
+sub aliphatic_index {
     my $self         = shift;
     my $trunc_length = shift || undef;
     my $sequence     = $self->get_sequence();
-$sequence = substr($sequence, 0, $trunc_length) if(defined $trunc_length);
-   return Bio::SecreTary::AAComposition::AliphaticIndex($sequence);
+    $sequence = substr( $sequence, 0, $trunc_length )
+      if ( defined $trunc_length );
+    return Bio::SecreTary::AAComposition::aliphatic_index($sequence);
 }
 
-=head2 function Gravy
+=head2 function gravy
 
-Synopsis: $STA_obj->Gravy($length);
+Synopsis: $STA_obj->gravy($length);
 	Description: Truncates the sequence to length $length, calculates
-and returns the "Gravy" index of the truncated sequence.
+and returns the "gravy" index of the truncated sequence.
 
 =cut
 
-sub Gravy {
+sub gravy {
     my $self         = shift;
     my $trunc_length = shift;
     my $sequence     = $self->get_sequence();
     $sequence = substr( $sequence, 0, $trunc_length )
       if ( defined $trunc_length );
 
-   return  Bio::SecreTary::AAComposition::Gravy($sequence);
+    return Bio::SecreTary::AAComposition::gravy($sequence);
 }
 
 =head2 function nDRQPEN
@@ -166,11 +164,8 @@ sub nDRQPEN {
     $sequence = substr( $sequence, 0, $trunc_length )
       if ( defined $trunc_length );
 
-   return  Bio::SecreTary::AAComposition::nDRQPEN($sequence);
+    return Bio::SecreTary::AAComposition::nDRQPEN($sequence);
 }
-
-
-
 
 =head2 function nGASDRQPEN
 
@@ -181,14 +176,13 @@ and returns the number of amino acids in this truncated sequence which are GASDR
 =cut
 
 sub nGASDRQPEN {
-    my $self         = shift;
-    my $beg = shift || 0; # zero-based
-    my $length = shift;
-    my $sequence   = $self->get_sequence();
-  $sequence = substr( $sequence, $beg, $length) if(defined $length);
-return Bio::SecreTary::AAComposition::nGASDRQPEN($sequence);
+    my $self     = shift;
+    my $beg      = shift || 0;              # zero-based
+    my $length   = shift;
+    my $sequence = $self->get_sequence();
+    $sequence = substr( $sequence, $beg, $length ) if ( defined $length );
+    return Bio::SecreTary::AAComposition::nGASDRQPEN($sequence);
 }
-
 
 =head2 function nNitrogen
 
@@ -199,13 +193,13 @@ and returns the number of Nitrogen atoms in this truncated sequence.
 =cut
 
 sub nNitrogen {
-  my $self         = shift;
-  my $trunc_length = shift;
-  my $sequence     = $self->get_sequence();
-  $sequence = substr( $sequence, 0, $trunc_length )
-    if ( defined $trunc_length );
+    my $self         = shift;
+    my $trunc_length = shift;
+    my $sequence     = $self->get_sequence();
+    $sequence = substr( $sequence, 0, $trunc_length )
+      if ( defined $trunc_length );
 
-  return Bio::SecreTary::AAComposition::nNitrogen($sequence);
+    return Bio::SecreTary::AAComposition::nNitrogen($sequence);
 }
 
 =head2 function nOxygen
@@ -223,7 +217,7 @@ sub nOxygen {
     $sequence = substr( $sequence, 0, $trunc_length )
       if ( defined $trunc_length );
 
- return Bio::SecreTary::AAComposition::nOxygen($sequence);
+    return Bio::SecreTary::AAComposition::nOxygen($sequence);
 }
 
 sub set_tmpred_good_solutions {
@@ -316,9 +310,9 @@ sub get_nOxygen22 {
     return $self->{nOxygen22};
 }
 
-sub get_candidate_solutions{
-  my $self = shift;
-return $self->{candidate_solutions};
+sub get_candidate_solutions {
+    my $self = shift;
+    return $self->{candidate_solutions};
 }
 
 1;

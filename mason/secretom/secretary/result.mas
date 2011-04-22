@@ -1,20 +1,62 @@
 <%args>
-  $count_pass
-  $result_string
-  $STApreds
+$STresults
 </%args>
 <& /page/page_title.mas, title => 'SecreTary: Computational prediction of secreted proteins' &>
 
 <&| /page/info_section.mas, title => 'SecreTary Signal Peptide (SP) Predictions' &>
+
+<% # put in the highlighting, etc. %> 
+<%perl>
+my $show_max_length = 62;
+my $result_string = '';
+my $count_pass = 0;
+foreach (@$STresults){
+	my ($id, $prediction, $STscore, $sp_length, $sequence, $hstart, $cstart ) = @{$_};
+	my $orig_length = length $sequence;
+	while(length $sequence < $show_max_length){
+		$sequence .= '          ';
+	}$sequence = substr($sequence, 0, $show_max_length);	
+	my $hl_sequence;    
+	if ( $prediction eq "YES" ) {
+		$count_pass++;
+		my $bg_color_nc = "#FFDD66";
+		my $bg_color_h  = "#AAAAFF";
+		$hl_sequence =
+			'<FONT style="BACKGROUND-COLOR: '
+			. "$bg_color_nc" . '">'
+			. substr( $sequence, 0, $hstart )
+			. '</FONT>'
+			. '<FONT style="BACKGROUND-COLOR: '
+			. "$bg_color_h" . '">'
+			. substr( $sequence, $hstart, $cstart - $hstart )
+			. '</FONT>'
+			. '<FONT style="BACKGROUND-COLOR: '
+			. "$bg_color_nc" . '">'
+			. substr( $sequence, $cstart, $sp_length - $cstart )
+			. '</FONT>'
+			. substr( $sequence, $sp_length, $show_max_length - $sp_length );
+	}
+	else { # prediction is no signal peptide
+		$hl_sequence = $sequence;
+		$sp_length   = " - ";
+	}
+	$STscore     = substr($STscore . '        ', 0, 8);
+	$sp_length = substr($sp_length . '   ', 0, 3);
+	$hl_sequence .= ( $orig_length > length $sequence ) ? '...' : '   ';
+	$result_string .=
+		"$id  $prediction    $STscore $sp_length      $hl_sequence\n";
+}
+</%perl> 
+
 
 <pre class="secretary_results">
 Identifier       SP    Score   Length     Sequence 10        20        30        40        50        60
                                                    |         |         |         |         |         |
 
 <% $result_string %>
-<% $count_pass %> secreted sequences predicted out of <% scalar @$STApreds %>.
+<% $count_pass %> secreted sequences predicted out of <% scalar @$STresults %>.
 </pre>
 
-  <a href="/secretom/secretary">Return to SecreTary input page</a>
+<a href="/secretom/secretary">Return to SecreTary input page</a>
 
 </&>

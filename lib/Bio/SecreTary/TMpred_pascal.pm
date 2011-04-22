@@ -15,32 +15,31 @@ Tom York (tly2@cornell.edu)
 
 =cut
 
-
 package Bio::SecreTary::TMpred_pascal;
-
-
+use strict;
 use base qw/ Bio::SecreTary::TMpred /;
 
 sub new {
-	my $class = shift;
-	my $self = $class->SUPER::new(@_);
-	return $self;
+    my $class = shift;
+    my $self  = $class->SUPER::new(@_);
+    return $self;
 }
 
-sub run_tmpred { # 
-my $self = shift;
+sub run_tmpred {    #
+    my $self = shift;
 
-# rest of arguments just get passed through to run_tmpred_setup.
-my ($sequence_id, $sequence, $do_long_output) = $self->run_tmpred_setup(@_);
+    # rest of arguments just get passed through to run_tmpred_setup.
+    my ( $sequence_id, $sequence, $do_long_output ) =
+      $self->run_tmpred_setup(@_);
 
     my $good_solns;
     my $tmpred_raw_out = undef;
 
-        $tmpred_raw_out = $self->run_tmpred_pascal( $sequence_id, $sequence );
+    $tmpred_raw_out = $self->run_tmpred_pascal( $sequence_id, $sequence );
 
-        # process tmpred output to get summary,
-        # i.e. score, begin and end positions for tmh's satisfying limits.
-        $good_solns = ( $self->good_solutions_pascal($tmpred_raw_out) );
+    # process tmpred output to get summary,
+    # i.e. score, begin and end positions for tmh's satisfying limits.
+    $good_solns = ( $self->good_solutions_pascal($tmpred_raw_out) );
 
     return ( $good_solns, $tmpred_raw_out );
 }
@@ -50,8 +49,8 @@ sub run_tmpred_pascal {    # this uses pascal code.
     my $sequence_id = shift;
     my $sequence    = shift;
 
-# pascal just puts in A for X everywhere ...
-#  $sequence =~ s/X/A/g;
+    # pascal just puts in A for X everywhere ...
+    #  $sequence =~ s/X/A/g;
 
     my $temp_file_dir    = '/home/tomfy/tempfiles';
     my $temp_file_handle = File::Temp->new(
@@ -119,7 +118,8 @@ sub good_solutions_pascal {
                     $solutions .= "($score,$begin,$end)  ";
                 }
                 else {
-                  #  warn "Solution rejected in good_solutions_pascal.\n($score,$begin,$length)";
+
+ #  warn "Solution rejected in good_solutions_pascal.\n($score,$begin,$length)";
                 }
             }
         }
@@ -133,7 +133,5 @@ sub good_solutions_pascal {
     }    # eliminate whitespace at end.
     return $solutions;
 }
-
-
 
 1;
