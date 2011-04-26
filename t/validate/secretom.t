@@ -16,7 +16,7 @@ my %urls = (
              cuticle
              functional_screens
              glycoproteome
-             phytophthera_interaction
+             phytophthora_interaction
              prediction
              profiling
              proteomics
