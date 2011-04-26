@@ -28,7 +28,8 @@ sub xrefs {
     $query = lc $query;
 
     my $feats = $self->context->dbic_schema('Bio::Chado::Schema','sgn_chado')
-                     ->resultset('Sequence::Feature');
+                     ->resultset('Sequence::Feature')
+                     ->search({},{ prefetch => 'type' });
 
     my @exact =
         map { $self->_make_xref( $_ ) }
@@ -52,7 +53,7 @@ sub _make_xref {
     return SGN::SiteFeatures::CrossReference->new({
         feature      => $self,
 
-        text => $feature->name.' feature details',
+        text => $feature->name.' '.$feature->type->name.' feature details',
 
         url => URI->new('/feature/view/id/'.$feature->feature_id),
 
