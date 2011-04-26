@@ -25,3 +25,4 @@ t/data/data/prod/tmp/
 MANIFEST*
 t/data
 ./cgi-bin/secretom
+MYMETA.json
