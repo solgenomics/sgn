@@ -116,6 +116,12 @@ sub _validate_single_url {
 
             unlike( $mech->content, qr/timed out/i, "$test_name does not seem to have timed out" )
                 or diag "fetch from URL $url seems to have timed out";
+
+            # test for any broken images or other things that have a
+            # src attr
+            { my @stuff = map $_->attr('src'), $mech->findnodes('//*[@src]');
+              $mech->get_ok( $_ ) for @stuff;
+            }
         }
     } else {
         SKIP: { skip 'because of invalid return code '.$rc, 2 };
