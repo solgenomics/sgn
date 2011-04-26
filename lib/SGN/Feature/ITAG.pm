@@ -3,11 +3,19 @@ use Moose;
 
 use MooseX::Types::Path::Class;
 
+use CXGN::ITAG::Release;
 use CXGN::ITAG::Pipeline;
 
 extends 'SGN::Feature';
 
 has 'pipeline_base' => (
+    is       => 'ro',
+    isa      => 'Path::Class::Dir',
+    required => 1,
+    coerce   => 1,
+);
+
+has 'releases_base' => (
     is       => 'ro',
     isa      => 'Path::Class::Dir',
     required => 1,
@@ -26,6 +34,13 @@ sub list_pipelines {
 
 }
 
+sub find_release {
+    my ( $self, $releasenum ) = @_;
+    return CXGN::ITAG::Release->find(
+        releasenum => $releasenum,
+        dir        => $self->releases_base,
+       );
+}
 
 # around apache_conf => sub {
 #     my ($orig,$self) = @_;

@@ -3,7 +3,7 @@ use strict;
 use warnings;
 
 use CXGN::DB::Connection;
-use Test::More tests => 8;
+use Test::More;
 use Test::WWW::Mechanize;
 use lib 't/lib';
 use SGN::Test;
@@ -56,28 +56,34 @@ $m->submit_form_ok( \%form, "Login with special user..." );
 $m->get_ok($server."/tools/genefamily/search.pl");
 
 
-my %search_form = (
-    form_name  => 'member_search_form',
-    fields     => {
-        dataset       => 'test',
-        member_id     => 'AT5G22680',
-    },
-);
+my $search_form = $m->form_name('member_search_form');
 
-$m->submit_form(%search_form);
-SKIP : {
-    if ($m->content =~ /can&#39;t open family file/) {
-        skip "gene family file not available", 3;
-    } else {
-        ok($m->success, "Search form submission");
+if ($search_form) {
+    my %search_form = (
+        form_name  => 'member_search_form',
+        fields     => {
+            dataset       => 'test',
+            member_id     => 'AT5G22680',
+        },
+    );
+
+    $m->submit_form(%search_form);
+    SKIP : {
+        if ($m->content =~ /can&#39;t open family file/) {
+            skip "gene family file not available", 3;
+        } else {
+            ok($m->success, "Search form submission");
+        }
+
+        $m->content_contains('is in family 0');
+
+        $m->form_name('genefamily_display_form');
+        $m->click('view_family');
+
+        $m->content_contains('detail for family 0');
     }
-
-    $m->content_contains('is in family 0');
-
-    $m->form_name('genefamily_display_form');
-    $m->click('view_family');
-
-    $m->content_contains('detail for family 0');
 }
+
+done_testing();
 
 END { $p->hard_delete() if $p }

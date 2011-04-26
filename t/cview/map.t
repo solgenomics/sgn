@@ -13,38 +13,45 @@ $m->get_ok("/cview/");
 $tests++;
 $m->content_contains("Interactive maps");
 $tests++;
-my @map_links = $m->find_all_links( url_regex => qr/map.pl/);
-foreach my $map (@map_links) { 
+my @map_links = $m->find_all_links( url_regex => qr/map.pl/ );
+
+foreach my $map (@map_links) {
     my $link_text = $map->text();
 
-    $m->follow_link_ok( {text=>$map->text() });
+    # skip maps with non-numeric ids if local data not available
+    #
+    if ($map->url =~ /map.*?id=[a-zA-Z]+/ && $m->test_level() ne 'local') { 
+	diag("Skipping $link_text\n");
+	next();
+    }
+
+    $m->follow_link_ok( { text => $map->text() } );
     $tests++;
 
     $m->content_contains("Map statistics");
     $tests++;
 
-    my @chr_links = $m->find_all_links(url_regex => qr/view_chromosome.pl/);
+    my @chr_links = $m->find_all_links( url_regex => qr/view_chromosome.pl/ );
 
 #    if (@chr_links) { $m->follow_link_ok({ text=>$chr_links[0]->text() }); $tests++;}
 #    $tests++;
 
     $m->back();
 
-    if ($m->content() =~ /Overlay/) { 
-	my %form = ( 
-	    form_name => 'overlay_form',
-	    fields => { 
-		map_id=> 9,
-		hilite => "1 50 foo",
-		force => 1,
-	    }
-	    );
-	
-	$m->submit_form_ok(\%form, "submit overlay form");
-	$tests++;
-	$m->back();
+    if ( $m->content() =~ /Overlay/ ) {
+        my %form = (
+            form_name => 'overlay_form',
+            fields    => {
+                map_id => 9,
+                hilite => "1 50 foo",
+                force  => 1,
+            }
+        );
+        $m->submit_form_ok( \%form, "submit overlay form" );
+        $tests++;
+        $m->back();
     }
-	
+
     $m->back();
 }
 

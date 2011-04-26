@@ -15,7 +15,6 @@ my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
                     name => "SGNTESTDATA_$$",
                 });
 
-    isa_ok($db, 'Bio::Chado::Schema::General::Db');
     my $rs = $schema->resultset('General::Db')
         ->search({
             name  => "SGNTESTDATA_$$",
@@ -33,7 +32,7 @@ my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
                     %options,
                 });
 
-    isa_ok($dbxref, 'Bio::Chado::Schema::General::Dbxref');
+    is( $dbxref->result_source->source_name, 'General::Dbxref');
 
     my $rs = $schema->resultset('General::Dbxref')
         ->search({
@@ -49,7 +48,7 @@ my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
                     definition => "blah",
                 });
 
-    isa_ok($cv, 'Bio::Chado::Schema::Cv::Cv');
+    is( $cv->result_source->source_name, 'Cv::Cv');
 
     my $rs = $schema->resultset('Cv::Cv')
         ->search({
@@ -73,7 +72,7 @@ my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
                     dbxref => $dbxref,
                 });
 
-    isa_ok($cvterm, 'Bio::Chado::Schema::Cv::Cvterm');
+    is( $cvterm->result_source->source_name, 'Cv::Cvterm');
 
     my $rs = $schema->resultset('Cv::Cvterm')
         ->search({
@@ -98,7 +97,7 @@ my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
         type    => $cvterm,
         %options,
     });
-    isa_ok($f, 'Bio::Chado::Schema::Sequence::FeatureRelationship');
+    is( $f->result_source->source_name, 'Sequence::FeatureRelationship');
 
     my $rs = $schema->resultset('Sequence::FeatureRelationship')
         ->search({
@@ -129,7 +128,7 @@ my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
         dbxref   => $dbxref,
         %options,
     });
-    isa_ok($feature, 'Bio::Chado::Schema::Sequence::Feature');
+    is( $feature->result_source->source_name, 'Sequence::Feature');
 
     my $rs = $schema->resultset('Sequence::Feature')
         ->search({
@@ -154,7 +153,7 @@ my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
     my $featureloc = create_test('Sequence::Featureloc',{
         %options,
     });
-    isa_ok($featureloc, 'Bio::Chado::Schema::Sequence::Featureloc');
+    is( $featureloc->result_source->source_name, 'Sequence::Featureloc');
 
     my $rs = $schema->resultset('Sequence::Featureloc')
         ->search({
@@ -169,7 +168,7 @@ my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
         value => 42,
         rank => 69,
     });
-    isa_ok($featureprop, 'Bio::Chado::Schema::Sequence::Featureprop');
+    is( $featureprop->result_source->source_name, 'Sequence::Featureprop');
 
     my $rs = $schema->resultset('Sequence::Featureprop')
         ->search({
@@ -191,7 +190,7 @@ my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
     my $organism = create_test('Organism::Organism',{
         %options,
     });
-    isa_ok($organism, 'Bio::Chado::Schema::Organism::Organism');
+    is( $organism->result_source->source_name, 'Organism::Organism');
 
     my $rs = $schema->resultset('Organism::Organism')
         ->search({
@@ -234,7 +233,7 @@ my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
     my $stock = create_test('Stock::Stock',{
         %options,
     });
-    isa_ok($stock, 'Bio::Chado::Schema::Stock::Stock');
+    is( $stock->result_source->source_name, 'Stock::Stock');
     my $rs = $schema->resultset('Stock::Stock')
         ->search({
             %options,
@@ -251,7 +250,7 @@ my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
     my $cvtermpath = create_test('Cv::Cvtermpath',{
         %options,
     });
-    isa_ok($cvtermpath, 'Bio::Chado::Schema::Cv::Cvtermpath');
+    is( $cvtermpath->result_source->source_name, 'Cv::Cvtermpath');
     my $rs = $schema->resultset('Cv::Cvtermpath')
         ->search({
             %options,

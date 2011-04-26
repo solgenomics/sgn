@@ -35,7 +35,7 @@ Naama Menda <nm249@cornell.edu>
 
 $object_id
 $object_type
-$refereing_page => undef
+$refering_page => undef
 $name => 'Add image'
 
 </%args>

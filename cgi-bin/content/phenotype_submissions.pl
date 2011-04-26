@@ -8,7 +8,7 @@ print<<END_HEREDOC;
 <p>
 SGN hosts a <a href="/search/direct_search.pl?search=phenotypes/">phenotype database</a> for displaying individual plant accessions scored for phenotypic attributes and more (links to genetic maps, QTLs, locus associations).<br>
 Each accession is associated with a population, such as introgression lines, mutants, and mapping populations.<br>
-SGN users may upload <a href="/phenome/individual.pl?action=new">new accessions</a> using our web interface (you will be prompt to login first, and an SGN submitter account is required. Please <a href="mailto:sgn-feedback\@solgenomics.net">contact us</a> for for obtaining submitter privileges). <br/>
+    SGN users may upload <a href="/stock/0/new">new accessions or populations</a> using our web interface (you will be prompt to login first, and an SGN submitter account is required. Please <a href="mailto:sgn-feedback\@solgenomics.net">contact us</a> for for obtaining submitter privileges). <br/>
 For large datasets we accept batch submissions of files with the following details:
 
 <ul>

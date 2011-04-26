@@ -3,17 +3,23 @@ use strict;
 use warnings;
 
 use base 'Exporter';
+
+use HTML::Entities;
+use List::MoreUtils qw/ any /;
+
 use Bio::Seq;
+
 use CXGN::Tools::Text qw/commify_number/;
 use CXGN::Tools::Identifiers;
 
 
 our @EXPORT_OK = qw/
     related_stats feature_table
-    get_reference feature_link
+    feature_link
     infer_residue cvterm_link
     organism_link feature_length
     mrna_and_protein_sequence
+    description_featureprop_types
     get_description
     location_list_html
     location_string
@@ -22,23 +28,38 @@ our @EXPORT_OK = qw/
 /;
 
 sub type_name {
-    my ($feature, $caps) = @_;
-    ( my $n = $feature->type->name ) =~ s/_/ /g;
+    cvterm_name( shift->type, @_ );
+}
+
+sub cvterm_name {
+    my ($cvt, $caps) = @_;
+    ( my $n = $cvt->name ) =~ s/_/ /g;
     if( $caps ) {
         $n =~ s/(\S+)/lc($1) eq $1 ? ucfirst($1) : $1/e;
     }
     return $n;
 }
 
+sub description_featureprop_types {
+    shift->result_source->schema
+         ->resultset('Cv::Cvterm')
+         ->search({
+             name => [ 'Note',
+                       'functional_description',
+                       'Description',
+                       'description',
+                     ],
+           })
+}
+
 sub get_description {
     my ($feature) = @_;
 
     my $desc_types =
-        $feature->result_source->schema
-                ->resultset('Cv::Cvterm')
-                ->search({ name => [ 'Note', 'functional_description', 'Description' ] })
-                ->get_column('cvterm_id')
-                ->as_query;
+        description_featureprop_types( $feature )
+            ->get_column('cvterm_id')
+            ->as_query;
+
     my $description =
         $feature->search_related('featureprops', {
             type_id => { -in => $desc_types },
@@ -52,37 +73,21 @@ sub get_description {
     return $description;
 }
 
-sub get_reference {
-    my ($feature) = @_;
-    my $fl = $feature->featureloc_features->single;
-    return unless $fl;
-    return $fl->srcfeature;
-}
-
-sub feature_length {
-    my ($feature, $featurelocs) = @_;
-    my @locations = $featurelocs ? $featurelocs->all : $feature->featureloc_features->all;
-    my $locations = scalar @locations;
-    my $length = 0;
-    for my $l (@locations) {
-        $length += $l->fmax - $l->fmin;
-    }
-    # Reference features don't have featureloc's, calculate the length
-    # directly
-    if ($length == 0) {
-        $length = $feature->seqlen,
-    }
-    return ($length,$locations);
-}
-
 sub location_string {
-    my ( $loc ) = @_;
-    return feature_link($loc->srcfeature).':'.($loc->fmin+1).'..'.$loc->fmax;
+    my ( $id, $start, $end, $strand ) = @_;
+    if( @_ == 1 ) {
+        my $loc = shift;
+        $id     = feature_link($loc->srcfeature);
+        $start  = $loc->fmin+1;
+        $end    = $loc->fmax;
+        $strand = $loc->strand;
+    }
+    ( $start, $end ) = ( $end, $start ) if $strand && $strand == -1;
+    return "$id:$start..$end";
 }
 
 sub location_string_with_strand {
-    my ( $loc ) = @_;
-    return location_string( $loc ).( $loc->strand == -1 ? '(rev)' : '' )
+    location_string( @_ )
 }
 
 sub location_list_html {
@@ -105,7 +110,7 @@ sub related_stats {
     my $stats = { };
     my $total = scalar @$features;
     for my $f (@$features) {
-            $stats->{cvterm_link($f)}++;
+            $stats->{cvterm_link($f->type)}++;
     }
     my $data = [ ];
     for my $k (sort keys %$stats) {
@@ -118,30 +123,77 @@ sub related_stats {
 }
 
 sub feature_table {
-    my ($features) = @_;
-    my $data = [];
-    for my $f (@$features) {
-        my @locations = $f->featureloc_features->all;
+    my ($features,$reference_sequence) = @_;
+    my @data;
+    my $na_html = '<span class="ghosted">n/a</span>';
 
+    for my $f (sort { $a->name cmp $b->name } @$features) {
+        my @ref_condition =
+            $reference_sequence ? ( srcfeature_id => $reference_sequence->feature_id )
+                                : ();
+
+        my @locations = $f->search_related('featureloc_features', {
+            @ref_condition,
+           },
+           { order_by => 'feature_id' }
+          );
+
+        if( @locations ) {
         # Add a row for every featureloc
-        for my $loc (@locations) {
-            my ($start,$end) = ($loc->fmin+1, $loc->fmax);
-            push @$data, [
-                cvterm_link($f),
+            for my $loc (@locations) {
+                my $ref = $loc->srcfeature;
+                my ($start,$end) = ($loc->fmin+1, $loc->fmax);
+                push @data, [
+                    cvterm_link($f->type),
+                    feature_link($f),
+                    $ref->name.":$start..$end",
+                    commify_number( feature_length( $f, $loc ) ) || $na_html,
+                    $loc->strand ? ( $loc->strand == 1 ? '+' : '-' ) : $na_html,
+                    $loc->phase || $na_html,
+                    ];
+            }
+        }
+        else {
+            my $nl = 'not located';
+            if( $reference_sequence ) {
+                $nl .= " on ".encode_entities( $reference_sequence->name )
+            }
+            push @data, [
+                cvterm_link($f->type),
                 feature_link($f),
-                "$start..$end",
-                commify_number( $end-$start+1 ) . " bp",
-                $loc->strand == 1 ? '+' : '-',
-                $loc->phase || '<span class="ghosted">n/a</span>',
+                qq|<span class="ghosted">$nl</span>|,
+                commify_number( feature_length( $f, undef ) ) || $na_html,
+                ($na_html)x2,
             ];
         }
     }
-    return $data;
+    return \@data;
+}
+
+# try to figure out the "length" of a feature, which will vary for different features
+sub feature_length {
+    my ( $feature, $location ) = @_;
+
+    $location = $location->first
+        if $location && $location->isa('DBIx::Class::ResultSet');
+
+    my $type      = $feature->type;
+    my $type_name = $type->name;
+
+    # firstly, for any feature, trust the length of its residues if it has them
+    if( my $seqlen = $feature->seqlen || $feature->residues && length $feature->residues ) {
+        return $seqlen;
+    }
+    # for some features, can say that its length is the length of its location
+    elsif( any { $type_name eq $_ } qw( exon gene ) ) {
+        return unless $location;
+        return $location->fmax - $location->fmin;
+    }
+    return;
 }
 
 sub _feature_search_string {
-    my ($feature) = @_;
-    my ($fl) = $feature->featureloc_features;
+    my ($fl) = @_;
     return '' unless $fl;
     return $fl->srcfeature->name . ':'. ($fl->fmin+1) . '..' . $fl->fmax;
 }
@@ -166,14 +218,39 @@ sub organism_link {
 }
 
 sub cvterm_link {
-    my ($feature,$caps) = @_;
-    my $name = type_name($feature,$caps);
-    my $id   = $feature->type->id;
+    my ( $cvt, $caps ) = @_;
+    my $name = cvterm_name( $cvt, $caps );
+    my $id   = $cvt->id;
     return qq{<a href="/chado/cvterm.pl?cvterm_id=$id">$name</a>};
 }
 
 sub mrna_and_protein_sequence {
     my ($mrna_feature) = @_;
+
+    # if we were actually passed a polypeptide, get its mrna(s) and
+    # recurse
+    if( $mrna_feature->type->name eq 'polypeptide' ) {
+        return
+            map mrna_and_protein_sequence( $_ ),
+            $mrna_feature->search_related('feature_relationship_subjects',
+                    { 'me.type_id' => {
+                        -in => $mrna_feature->result_source->schema
+                                            ->resultset('Cv::Cvterm')
+                                            ->search({name => 'derives_from'})
+                                            ->get_column('cvterm_id')
+                                            ->as_query,
+                    },
+                  },
+               )
+               ->search_related('object');
+    }
+
+    my $peptide = _peptides_rs( $mrna_feature )->first;
+
+    # just return the mrna and peptide rows if they both have their
+    # own sequences (because the rows can act as Bio::PrimarySeqI's
+    return [ $mrna_feature, $peptide ] if $peptide->subseq(1,1) && $mrna_feature->subseq(1,1);
+
     my @exon_locations = _exon_rs( $mrna_feature )->all
         or return;
 
@@ -186,25 +263,29 @@ sub mrna_and_protein_sequence {
         ),
     );
 
-    my $peptide_loc = _peptides_rs( $mrna_feature )->first
+    return unless $mrna_seq->length > 0;
+
+    my $peptide_loc = _peptide_loc($peptide)->first
         or return ( $mrna_seq, undef );
-
-    my $trim_fmin = $peptide_loc->fmin         -  $exon_locations[0]->fmin;
-    my $trim_fmax = $exon_locations[-1]->fmax  -  $peptide_loc->fmax;
-    if( $trim_fmin || $trim_fmax ) {
-        $mrna_seq = $mrna_seq->trunc( 1+$trim_fmin, $mrna_seq->length - $trim_fmax );
-    }
-
-    $mrna_seq = $mrna_seq->revcom if $exon_locations[0]->strand == -1;
 
     my $protein_seq = Bio::PrimarySeq->new(
         -id   => $mrna_feature->name,
         -desc => 'protein sequence',
         -seq  => $mrna_seq->seq,
        );
+    my $trim_fmin = $peptide_loc->fmin         -  $exon_locations[0]->fmin;
+    my $trim_fmax = $exon_locations[-1]->fmax  -  $peptide_loc->fmax;
+    if( $trim_fmin || $trim_fmax ) {
+        $protein_seq = $protein_seq->trunc( 1+$trim_fmin, $mrna_seq->length - $trim_fmax );
+    }
+
+    if( $exon_locations[0]->strand == -1 ) {
+        $_ = $_->revcom for $mrna_seq, $protein_seq;
+    }
+
     $protein_seq = $protein_seq->translate;
 
-    return ( $mrna_seq, $protein_seq );
+    return [ $mrna_seq, $protein_seq ];
 }
 
 sub _peptides_rs {
@@ -225,7 +306,9 @@ sub _peptides_rs {
                          ->as_query,
             },
            })
-        ->search_related( 'featureloc_features', {
+    }
+sub _peptide_loc {
+    shift->search_related( 'featureloc_features', {
             srcfeature_id => { -not => undef },
           },
           { prefetch => 'srcfeature',

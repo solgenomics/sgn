@@ -25,35 +25,62 @@ use SGN::Test::WWW::Mechanize;
 my $mech = SGN::Test::WWW::Mechanize->new;
 
 my $residue = 'AATTCCGG' x 3;
-my $poly_cvterm     = create_test('Cv::Cvterm', { name  => 'polypeptide' });
+my $poly_cvterm     = create_test('Cv::Cvterm', { name  => 'polyfonebone' });
 my $poly_feature    = create_test('Sequence::Feature', {
         type     => $poly_cvterm,
         residues => $residue,
 });
 my $poly_featureloc = create_test('Sequence::Featureloc', { feature => $poly_feature });
+my $poly_feature_2   = create_test('Sequence::Feature', {
+        type     => $poly_cvterm,
+        residues => reverse( $residue ),
+});
 
-{
+for my $base ( '/api/v1/sequence/download/single/', '/gmodrpc/v1.1/fetch/seq/' ) {
     # 3 = > + 2 newlines
     my $length = length($poly_feature->name . $residue) + 3;
-    $mech->get_ok('/api/v1/sequence/' . $poly_feature->name . '.fasta');
+    $mech->get_ok( $base . $poly_feature->name . '.fasta');
     $mech->content_contains( '>' . $poly_feature->name );
     $mech->content_contains( $residue );
-    is('text/plain', $mech->content_type, 'text/plain content type');
+    is('application/x-fasta', $mech->content_type, 'right content type');
     is( $length, length($mech->content), 'got the expected content length');
 }
 {
     # 6 = 10 - 5 + 1 = # of chars in requested sequence
     my $length = length($poly_feature->name.':5..10' ) + 3 + 6;
-    $mech->get_ok('/api/v1/sequence/' . $poly_feature->name . '.fasta?5..10');
+    $mech->get_ok('/api/v1/sequence/download/single/' . $poly_feature->name . '.fasta?5..10');
     $mech->content_contains( '>' . $poly_feature->name . ':5..10' );
     $mech->content_like( qr/^CCGGAA$/m );
-    is('text/plain', $mech->content_type, 'text/plain content type');
+    is('application/x-fasta', $mech->content_type, 'right content type');
     is( $length, length($mech->content), 'got the expected content length');
 }
 {
-    $mech->get("/api/v1/sequence/JUNK.fasta");
-    is( $mech->status, 404, 'feature not found' );
-    $mech->content_contains("feature with name = 'JUNK' not found");
-
+    $mech->get_ok('/api/v1/sequence/download/single/' . $poly_feature->name . '.ace?10..5', 'fetched in ace format');
+    $mech->content_contains( '"'. $poly_feature->name . ':10..5"' );
+    $mech->content_like( qr/^TTCCGG$/m );
+    is('text/plain', $mech->content_type, 'right content type');
 }
+{
+    # 6 = 10 - 5 + 1 = # of chars in requested sequence
+    my $length = length($poly_feature->name.':5..10' ) + 3 + 6;
+    $mech->get_ok('/api/v1/sequence/download/single/' . $poly_feature->feature_id . '.fasta?5..10');
+    $mech->content_contains( '>' . $poly_feature->name . ':5..10' );
+    $mech->content_like( qr/^CCGGAA$/m );
+    is('application/x-fasta', $mech->content_type, 'right content type');
+    is( $length, length($mech->content), 'got the expected content length')
+      or diag $mech->content;
+}
+{
+    $mech->get_ok('/api/v1/sequence/download/multi?s=' . $poly_feature->feature_id . '&s=' . $poly_feature_2->name .'&format=tab' );
+    is $mech->content, sprintf(<<'EOT',$poly_feature->name,$poly_feature_2->name), 'right content for tab-delimited fetch';
+%s	AATTCCGGAATTCCGGAATTCCGG
+%s	AATTCCGGAATTCCGGAATTCCGG
+EOT
+}
+{
+    $mech->get("/api/v1/sequence/download/single/JUNK.fasta");
+    is( $mech->status, 404, 'feature not found' );
+}
+
+
 done_testing;

@@ -2,7 +2,9 @@
 
 =head1 NAME
 
-/tools/sequence.mas - mason module to display a sequence, either as fasta text or as nicely formatted html, with optional highlighting of sub-regions.
+/tools/sequence.mas - mason module to display a sequence, either as
+fasta text or as nicely formatted html, with optional highlighting of
+sub-regions.
 
 =head1 ARGUMENTS
 
@@ -37,13 +39,12 @@ width in characters to render the sequence, default 90
 optional source name for the sequence, example "BLAST database such
 and such", or "Tomato unigene build blah blah"
 
+=item blast_url
+
+Optional URL to which a sequence could be POSTed to pre-fill the BLAST
+input form.
+
 =back
-
-=head1 AUTHOR
-
-Lukas Mueller <lam87@cornell.edu>
-
-=cut
 
 </%doc>
 
@@ -54,166 +55,146 @@ $highlight_coords      => [ ]
 $width     => 100
 $source    => '<span class="ghosted">not recorded</span>'
 $whole_seq => 0
+$blast_url => undef
 </%args>
 
-<%init>
+<&| /page/info_section.mas, title => $seq->id &>
 
-use List::Util qw/ min max /;
+    <% info_table_html( 'Sequence ID' => link_identifier($seq->id) || $seq->id,
+                        'Length'      => commify_number( $seq->length ),
+                        'Source'      => $source,
+                        __multicol    => 3,
+                        __border      => 0,
+                        )
+    %>
+    <% info_table_html( 'Description' => $seq->desc || '<span class="ghosted">none</span>',
+                        highlighted_regions( $highlight_coords, $highlight_description ),
+                        __border => 0,
+                        )
+    %>
+
+    <div style="margin: 0.4em 0">&nbsp;</div>
+
+%   for my $r ( @regions ) {
+%       my $w = $r->{window};
+%       my $highlight_count = sum map $_->end - $_->start +1, @{$r->{abs_ranges}};
+
+        <&| /page/info_section.mas,
+              title => "Residues ".commify_number( $w->start ).' - '.commify_number( $w->end ),
+              is_subsection => 1,
+              subtitle => commify_number( $w->end - $w->start + 1 ).' residues shown, '.commify_number( $highlight_count || 0 ).' highlighted',
+         &>
+%            my $wseq = $w->start == 1 && $w->end == $seq->length ? $seq : $seq->trunc( $w->start, $w->end );
+%            if( $wseq->length > 200_000 ) {
+                 <span class="ghosted">Region too large to display.</span>
+%            } else {
+                 <& /sequence/with_markup.mas,
+                     width   => $width,
+                     subdiv  => 10,
+                     seq     => $wseq,
+                     styles  => { highlight => [ '<span class="highlighted">', '</span>'] },
+                     regions => [ map ['highlight', $_->start-1, $_->end], @{ $r->{rel_ranges} } ],
+                     blast_url => $blast_url,
+                 &>
+%            }
+       </&>
+%    }
+
+</&>
+
+<%init>
+  # sanitize the coords array (add 0 to all the numbers in it, forcing them to be purely numeric)
+  my @highlight_coords = map [map $_+0, @$_], @$highlight_coords;
+
+  # calculate the pieces of the sequence that we will display, and that we will highlight
+  my @regions = seq_windows_and_ranges( $seq, \@highlight_coords, $width );
+
+</%init>
+
+<%once>
+use List::Util qw/ min max sum /;
+use List::MoreUtils qw/ minmax /;
 use POSIX;
+use Storable 'dclone';
 
 use Bio::Range ();
 
 use CXGN::Page::FormattingHelpers qw(
-   html_string_linebreak_and_highlight
-   info_section_html
    info_table_html
   );
 
 use CXGN::Tools::Identifiers qw/ link_identifier /;
 use CXGN::Tools::Text qw/ commify_number /;
 
-# sanitize the coords array (add 0 to all the numbers in it, forcing them to be purely numeric)
-$highlight_coords = [ map [map $_+0, @$_], @$highlight_coords ];
+use constant LINE_WINDOW_EXPAND => 5;
 
-</%init>
-
-<% info_section_html( title    => $seq->id,
-                      contents => info_table_html( 'Sequence ID' => link_identifier($seq->id) || $seq->id,
-                                                   'Length'      => commify_number( $seq->length ),
-                                                   'Source'      => $source,
-                                                   __multicol    => 3,
-                                                   __border      => 0,
-                                                  )
-                                . info_table_html( 'Description' => $seq->desc || '<span class="ghosted">none</span>',
-                                                   highlighted_regions( $highlight_coords, $highlight_description ),
-                                                   __border => 0,
-                                                  )
-                                . seq_html( $seq, $highlight_coords, $width, $whole_seq ),
-                     ) %>
-
-
-
-<%once>
-
-sub whole_seq_info_table {
-    my ( $seq, $lines, $coords, $highlight_description,  ) = @_;
-
-    return info_table_html( 'Sequence' =>
-                                join( '',
-                                      '<span class="sequence">',
-                                      ( '&gt;',
-                                        $seq->id,
-                                        "<br />",
-                                        join('<br />',@$lines),
-                                      ),
-                                      '</span>'
-                                     ),
-                            __border      => 0,
-                           );
-}
-
-sub seq_html {
-
-    my $seq       = shift;
-    my $coords    = shift;
-    my $width     = shift;
-    my $whole_seq = shift;
-
-    my $seq_string = $seq->seq;
-    my @lines = $seq_string =~ /.{1,$width}/gs;
-
-    @$coords
-        or return whole_seq_info_table($seq, \@lines);
-
-    # change the coords into ranges and sort by start coord,
-    # also clamping them to the sequence length if needed
-    my @ranges =
+sub coords_to_ranges {
+    my ( $seq, $coords ) = @_;
+    return
         map {
             Bio::Range->new( -start => max( 1, $_->[0]),
                              -end   => min( $seq->length, $_->[1] ),
                             )
-          }
-      sort { $a->[0] <=> $b->[0] }
-      @$coords;
-
-    # merge any overlapping ranges
-    @ranges = Bio::Range->unions( @ranges );
-
-    # put the highlighting span tags in the line-broken sequence
-    foreach (@ranges) {
-        my ($s,$e) = ($_->start - 1, $_->end - 1); #< convert to 0-based for this
-        my @lines_used;
-        my ( $s_line, $s_col ) = line_col( $s, $width );
-        my ( $e_line, $e_col ) = line_col( $e, $width );
-
-        #mark up the lines we're using
-        if( $s_line == $e_line ) {
-            my $ins_width = $e_col-$s_col+1;
-            $lines[$s_line] =~ s|^(.{$s_col})(.{$ins_width})(.*)$|$1<span class="highlighted">$2</span>$3|s;
-        } else {
-            $lines[$s_line] =~ s|^(.{$s_col})(.*)$|$1<span class="highlighted">$2|s;
-            my $ecol_n = $e_col+1;
-            $lines[$e_line] =~ s|^(.{1,$ecol_n})(.*)$|$1</span>$2|s;
         }
+        sort { $a->[0] <=> $b->[0] }
+        @$coords;
+}
+
+sub seq_windows_and_ranges {
+    my ( $seq, $coords, $width ) = @_;
+
+    unless ( $coords && @$coords ) {
+        return {
+            window     => Bio::Range->new( -start => 1, -end => $seq->length ),
+            abs_ranges => [],
+            rel_ranges => [],
+        };
     }
 
-    # return all the lines if we're using the whole seq
-    if( $whole_seq ) {
-        return whole_seq_info_table( $seq, \@lines, $coords );
-    }
+    # change the coords into ranges and sort by start coord, also
+    # clamping them to the sequence length if needed, and merge any
+    # overlapping ranges
+    my @ranges = Bio::Range->unions( coords_to_ranges( $seq, $coords ) );
 
-    my $line_window_expand = 5;
-
+    # calculate the windows of context for highlighted regions
     my @windows =
-       # calculate 0-based non-overlapping ranges of lines we need
+       # calculate 1-based non-overlapping ranges of *sequence* we will display
+       sort { $a->start <=> $b->start }
        Bio::Range->unions(
            map {
                my $r = $_;
                my $match = Bio::Range->new(
                    -start => max( 0,
-                                  POSIX::floor(($r->start-1)/$width)-$line_window_expand
-                                ),
-                   -end   => min( POSIX::floor( $seq->length/$width ),
-                                  POSIX::floor( ($r->end-1)/$width )+$line_window_expand
-                                ),
+                                  ( POSIX::floor(($r->start-1)/$width) - LINE_WINDOW_EXPAND ),
+                                ) * $width + 1,
+                   -end   => min( $seq->length/$width,
+                                  ( POSIX::floor(($r->end)/$width ) + 1 + LINE_WINDOW_EXPAND ),
+                                ) * $width,
                   );
            } @ranges
        );
 
-    # special case: if the matches plus the windows actually case the
-    # whole sequence to be displayed, display a bit differently
-    if( @windows == 1 && $windows[0]->start == 0 && $windows[0]->end == $#lines ) {
-        return whole_seq_info_table( $seq, \@lines, $coords );
-    }
+    # decorate the windows with the other things that are needed to render them
+    return map {
+        my $window = $_;
 
-    # return just the lines in our window if not using the whole seq
-    my $match_regions =
-       # and extract those lines
-       join '',
-       map {
-           my $window_start = $_->start*$width + 1;
-           my $window_end   = min( $seq->length, ($_->end+1)*$width );
-           info_section_html( title => "showing residues ".commify_number($window_start).' - '.commify_number($window_end),
-                              is_subsection => 1,
-                              contents => join ( '',
-						 '<span class="sequence">',
-						 ( '&gt;',
-                                                   $seq->id,
-                                                   ":$window_start..$window_end  ",
-                                                   "<br />",
-                                                   join( "<br />\n", @lines[ $_->start .. $_->end ] ),
-                                                  ),
-						 '</span>',
-					       ),
-                             )
-       } @windows;
+        # find ranges appicable to this window
+        my @window_ranges =
+            grep { $_->start >= $window->start && $_->end <= $window->end }
+            @ranges;
 
+        # make another set of ranges that are relative to the window
+        my @rel_window_ranges = map {
+            my $r = dclone $_;
+            $r->start( $r->start - $window->start + 1 );
+            $r->end(   $r->end   - $window->start + 1 );
+            $r
+        } @window_ranges;
 
-    return info_table_html( 'Matches' => $match_regions,
-                            __border      => 0,
-                           );
-
+        { window => $window, abs_ranges => \@window_ranges, rel_ranges => \@rel_window_ranges }
+    } @windows;
 }
+
 
 sub highlighted_regions {
     my ( $coords, $highlight_description ) = @_;
@@ -233,18 +214,6 @@ sub line_col {
     my $line = POSIX::floor( $index/$width  );
     my $col  = POSIX::fmod ( $index, $width );
     return ($line,$col);
-}
-
-sub ranges2coords(@) {
-    [ map [ $_->start-1, $_->end-1 ], @{$_[0]} ]
-}
-
-sub round_to_nearest_line_beginning {
-    my ( $base_number, $line_width, $factor ) = @_;
-    $base_number--;
-    $base_number += $factor*$line_width; #< convert to 0-based for this calculation
-    my $lines_before = POSIX::floor( $base_number / $line_width );
-    return $lines_before * $line_width + 1;
 }
 
 </%once>

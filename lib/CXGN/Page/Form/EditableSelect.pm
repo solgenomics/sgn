@@ -35,15 +35,19 @@ sub render {
     foreach my $s ( $self->get_selections() ) {
         my $yes = "";
 
-        if (   exists( $s->[1] )
-            && ( $s->[1] =~ /\d+/ )
-            && ( $s->[1] == $self->get_contents() ) )
+        if(    exists $s->[1]
+            && $s->[1] =~ /\d+/
+            && $self->get_contents
+            && $s->[1] == $self->get_contents
+          )
         {
             $yes = "selected=\"selected\"";
         }
-        elsif (exists( $s->[1] )
-            && ( $s->[1] =~ /\w+/ )
-            && ( $s->[1] eq $self->get_contents() ) )
+        elsif( exists $s->[1]
+            && $s->[1] =~ /\w+/
+            && $self->get_contents
+            && $s->[1] eq $self->get_contents()
+            )
         {
             $yes = "selected=\"selected\"";
         }

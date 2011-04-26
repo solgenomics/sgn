@@ -48,18 +48,18 @@ $person_id
 </%perl>
 
 
-<div id="associateIndividualForm" style="display: none">
+<div id="associateStockForm" style="display: none">
   Accession name:
   <input type="text"
          style="width: 50%"
          id="locus_name"
-         onkeyup="Locus.getIndividuals(this.value, '<% $locus_id %>');">
+         onkeyup="Locus.getStocks(this.value, '<% $locus_id %>');">
   <input type="button"
-         id="associate_individual_button"
+         id="associate_stock_button"
          value="associate accession"
 	 disabled="true"
          onclick="Locus.associateAllele('<% $person_id %>');this.disabled=true;">
-  <select id="individual_select"
+  <select id="stock_select"
           style="width: 100%"
 	  onchange="Locus.getAlleles('<% $locus_id %>')"
           size=10>

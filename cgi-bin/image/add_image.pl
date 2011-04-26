@@ -28,7 +28,7 @@ I<action>: needs to be set to "new"
 
 =item o
 
-I<type>: either experiment, individual, locus, or to be defined data types in the SGN database that can have associated images (fish etc).
+I<type>: either experiment, stock, locus, or to be defined data types in the SGN database that can have associated images (fish etc).
 
 =item o
 
@@ -210,7 +210,7 @@ else {
  Ret:
  Args:         $page: a page object
                $image: an image object (empty)
-               $args{type}: either "individual" or "experiment"
+               $args{type}: either "stock" or "experiment"
                $args{type_id}: the primary key identifying the object 
                of type $args{type}
                $args{refering_page}: The page that has called the 

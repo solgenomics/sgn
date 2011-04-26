@@ -85,7 +85,7 @@ bgcolor         = yellow
 glyph           = generic
 label density   = 100
 bump density    = 100
-link         = /search/quick_search.pl?term=$name
+link         = /search/quick?term=$name
 
 [GC:region]
 glyph        = dna
@@ -197,7 +197,7 @@ glyph        = alignment
 bgcolor        = red
 stranded     = 1
 link         = http://www.ebi.ac.uk/ebisearch/search.ebi?db=nucleotideSequences&t=$name
-citation     = This track shows regions of similarity with EST and other cDNA sequences from Tomato. Provided by <a href="http://cab.unina.it/index2.php">CAB group</a> at <a href="http://www.unina.it">UNINA</a>. (see <a href="http://www.ab.wur.nl/TomatoWiki/AnEST000">ITAG Wiki</a>)
+citation     = This track shows regions of similarity with EST and other cDNA sequences from Tomato. Provided by <a href="http://cab.unina.it/index2.php">CAB group</a> at <a href="http://www.unina.it">UNINA</a>. (see <a href="http://www.ab.wur.nl/TomatoWiki/AnEST000">ITAG Wiki</a>).  Darker color indicates higher alignment score.
 das category = similarity
 
 [cdna_sol]
@@ -208,7 +208,7 @@ bgcolor      = orange
 glyph        = alignment
 stranded     = 1
 link         = http://www.ebi.ac.uk/ebisearch/search.ebi?db=nucleotideSequences&t=$name
-citation     = This track shows regions of similarity with EST and other cDNA sequences taken from species in the Solanaceae other than Tomato. Provided by <a href="http://cab.unina.it/index2.php">CAB group</a> at <a href="http://www.unina.it">UNINA</a>. (see <a href="http://www.ab.wur.nl/TomatoWiki/AnEST000">ITAG Wiki</a>)
+citation     = This track shows regions of similarity with EST and other cDNA sequences taken from species in the Solanaceae other than Tomato. Provided by <a href="http://cab.unina.it/index2.php">CAB group</a> at <a href="http://www.unina.it">UNINA</a>. (see <a href="http://www.ab.wur.nl/TomatoWiki/AnEST000">ITAG Wiki</a>).  Darker color indicates higher alignment score.
 das category = similarity
 
 [sgn_unigenes]
@@ -218,9 +218,21 @@ category     = Genome data and reagents
 glyph        = alignment
 bgcolor      = red
 fgcolor      = red
-link         = /search/quick_search.pl?term=$name
+link         = /search/quick?term=$name
 stranded     = 1
-citation     = This track shows regions of similarity with SGN Unigene (SGN-U) sequences.  (see <a href="http://www.ab.wur.nl/TomatoWiki/AnSgnUnigenes000">ITAG Wiki</a>)
+citation     = This track shows regions of similarity with SGN Unigene (SGN-U) sequences.  (see <a href="http://www.ab.wur.nl/TomatoWiki/AnSgnUnigenes000">ITAG Wiki</a>).  Darker color indicates higher alignment score.
+das category = similarity
+
+[tobacco_contigs]
+feature      = match:ITAG_tobacco_contigs
+key          = Tobacco Genome Contigs
+category     = Other genomes
+glyph        = alignment
+bgcolor      = green
+fgcolor      = green
+link         = /search/quick?term=$name
+stranded     = 1
+citation     = This track shows regions of similarity with Tobacco genome contigs (see <a href="http://www.ab.wur.nl/TomatoWiki/AnTobaccoContigs000">ITAG Wiki</a>).  Darker color indicates higher alignment score.
 das category = similarity
 
 [augustus]
@@ -232,6 +244,18 @@ glyph        = transcript
 stranded     = 1
 citation      = <i>De novo</i> gene predictions from the AUGUSTUS gene predictor, trained on Tomato.  Provided by SGN.  (see <a href="http://www.ab.wur.nl/TomatoWiki/AnAUGUSTUS000">ITAG Wiki</a>)
 das category = transcription
+
+[microtom_flcdna]
+feature      = match:ITAG_microtom_flcdnas
+key          = MicroTom Full-length cDNAs
+category     = Genome data and reagents
+glyph        = alignment
+bgcolor      = orange
+fgcolor      = orange
+link         = /search/quick?term=$name
+stranded     = 1
+citation     = This track shows regions of similarity with MicroTom Full-length cDNA sequences (provided by the Kazusa Institute, see <a href="http://www.ab.wur.nl/TomatoWiki/AnMicroTomFLCDNA000">ITAG Wiki</a>).    Darker color indicates higher alignment score.
+das category = similarity
 
 [geneid_tomato]
 feature      = gene:ITAG_geneid_tomato
@@ -301,7 +325,7 @@ citation     = This track shows transfer RNAs predicted by the tRNAscan-SE progr
 feature      = match:ITAG_sgn_loci
 key          = SGN Locus Sequences
 category     = Genetic Loci
-link         = /search/quick_search.pl?term=$name
+link         = /search/quick?term=$name
 glyph        = segments
 bgcolor      = #ea00ea
 stranded     = 1
@@ -326,7 +350,7 @@ category     = Genetic Loci
 stranded     = 1
 fgcolor      = black
 bgcolor      = yellow
-link         = /search/quick_search.pl?term=$name
-citation     = This track shows regions of similarity of the genomic sequence with known sequences associated with SGN genetic markers, as detected by GenomeThreader (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnSgnMarkers000">ITAG Wiki</a>)
+link         = /search/quick?term=$name
+citation     = This track shows regions of similarity of the genomic sequence with known sequences associated with SGN genetic markers, as detected by GenomeThreader (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnSgnMarkers000">ITAG Wiki</a>).  Darker color indicates higher alignment score.
 das category = similarity
 

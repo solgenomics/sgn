@@ -401,8 +401,8 @@ span.bgcolorselected a {
 }
 /*not quite so important warning*/
 .warning { 
-	color: #ff0000;
-	background-color: #ffffff
+    color: #d22;
+    background-color: none;
 }
 .news { 
 	color: #ff0000;
@@ -437,10 +437,6 @@ div.deprecated {
 	text-align:center; 
 	font-size:1.2em; 
 }
-
-/* for things with tooltips. This styling indicates that a tooltip is available; you must remember to supply the tooltip also. For example:
-  <span class="help" onmouseover="return escape('have no fear, help is here')>Asdf</span>
-  <script language="javascript" type="text/javascript" src="/documents/inc/wz_tooltip.js></script>" */
 
 span.help {
   cursor: help;
@@ -773,7 +769,7 @@ table.columnar_table {
 table.columnar_table_noborder { 
 }
 td.columnar_table, th.columnar_table, th.columnar_table_noborder { 
-  padding: 0.2em 0.4em 0.2em 0.4em;
+  padding: 0.2em 0.6em 0.2em 0.6em;
   margin: 0;
   line-height: 1.4;
 }
@@ -996,7 +992,7 @@ table#developer_message_table {
   width: 740px;
   margin-bottom: 7px;
 }
-.invisible {
+.invisible, .noshow {
   display: none;
 }
 
@@ -1225,11 +1221,6 @@ span.nri_units {
 	border-width:1px;
 }
 
-/* for ajax fun */
-.noshow {
-	display: none;
-}
-
 /* styles for gbrowse (CGI::Toggle) */
 .el_hidden  {display:none}
 .el_visible {display:inline}
@@ -1280,8 +1271,14 @@ div.publication_embedded .citation {
   padding-bottom: 1em;
 }
 
+/* styles for standard renderings of CrossReference objects */
 
-/* styles for numerical range input in FormattingHelpers */
+ul.xref_link {
+  padding-left: 0;
+}
+ul.xref_link li {
+  list-style: none outside none;
+}
 
 div.xref_rich_gbrowse2 {
   border-radius: 6px;
@@ -1298,4 +1295,13 @@ div.xref_rich_gbrowse2 hr {
 div.xref_rich_gbrowse2 img {
   margin-top: 12px;
   border: 0;
+}
+
+
+/* styles for jquery.simpletooltip */
+
+#simpleTooltip {
+    padding: 7px;
+    border: 1px solid #A6A7AB;
+    background: #F2F3F5;
 }

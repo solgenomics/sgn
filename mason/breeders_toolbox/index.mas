@@ -18,8 +18,8 @@
 
     .SNPTool {
     	position: relative; 
-    	top: 150px;
-    	left: 100px;
+    	top: 100px;
+    	left: 50px;
     }
 
     .SNPToolSubMenu {
@@ -31,14 +31,13 @@
     	top: 0px;
     	left: 0px;
     	z-index: 1;
-    }
-
-
+    }   
+   
 
     .Markers {
     	position: relative; 
-    	top: 160px;
-    	left: 410px;
+    	top: 110px;
+    	left: 400px;
     }
 
     .MarkersSubMenu {
@@ -52,9 +51,9 @@
     }
 
 
-    .Traits {
+    .Phenotypes {
     	position: relative; 
-    	top: 0px;
+    	top: 20px;
     	left: -30px;
     }
 
@@ -69,12 +68,10 @@
     }
 
 
-
-
     .QTLTool {
     	position: relative; 
-    	top: 160px;
-    	left: 190px;
+    	top: 170px;
+    	left: 120px;
     }
 
     .QTLToolSubMenu {
@@ -87,11 +84,19 @@
     	left: 0px;
     	z-index: 1;
     }
+    
+    .Genes { 
+        position: relative;
+        top: 10px;
+        left: 130px;
+    }
+
+
 
 </style>
 
 <& /page/page_title.mas, title=>'SGN Breeders Toolbox' &>
-
+ 
 <div class="page_introduction">
 <p>The purpose of this page is to give breeders direct links to
 breeder-relevant tools and data on SGN. It is a work in progress and
@@ -104,6 +109,7 @@ with suggestions for improvements!</p>
 
 <div id="icon_nav">
 <ul>
+
 	
     
 	<li class="SNPTool"><!-- a href="#" --><img src="/documents/img/breedericonmenu/SNPTool.png" alt="SNP Tool" title="SNP Tool (coming soon)" ><!-- /a -->
@@ -118,7 +124,7 @@ with suggestions for improvements!</p>
         -->
 	</li>
     
-     <li class="Markers"><a href="/search/markers/markersearch.pl"><img src="/documents/img/breedericonmenu/Markers.png" alt="Markers" title="Maps &amp; Markers"  /></a>
+     <li class="Markers"><a href="/search/direct_search.pl?search=markers"><img src="/documents/img/breedericonmenu/Markers.png" alt="Markers" title="Maps &amp; Markers"  /></a>
     	<!--
 		<ul>
             <div class="MarkersSubMenu">
@@ -130,7 +136,8 @@ with suggestions for improvements!</p>
         -->
 	</li>
 	
-	<li class="Traits"><a href="/search/direct_search.pl?search=trait"><img src="/documents/img/breedericonmenu/Traits.png" alt="Traits" title="Traits &amp; Phenotypes" /></a>
+
+	<li class="Phenotypes"><a href="/search/direct_search.pl?search=phenotypes"><img src="/documents/img/soliconmenu/Phenotypes.png" alt="Traits" title="Traits &amp; Phenotypes" /></a>
     	<!--
 		<ul>
             <div class="TraitsSubMenu">
@@ -154,8 +161,30 @@ with suggestions for improvements!</p>
         -->
 	</li>
 
+		<li class="Genes"><a href="/search/direct_search.pl?search=loci"><img src="/documents/img/soliconmenu/Genes.png" alt="Genes" title="Genes" ><!-- /a -->
+    	<!--
+		<ul>
+            <div class="SNPToolSubMenu">
+                <li><a href="#">Test...1</a></li>
+                <li><a href="#">Test...2</a></li>
+                <li><a href="#">Test...3</a></li>
+            </div>
+        </ul>
+        -->
+	</li>
+
+
 </ul>
 </div>
+
+
+<&| /page/info_section.mas, title=>'Tutorials' &>
+<ul>
+  <li>Plant Breeding and Genomics at the <a href="http://www.extension.org/plant_breeding_genomics">eXtension</a> site</li>
+  <li>Tomato Genome Browser <a href="http://www.extension.org/article/32485">Webinar</a> presented at the 2010 Tomato Disease Workshop by <a href="mailto:merk.9@osu.edu">Heather Merk</a></li>
+  <li>Designing a CAPS Marker From a SNP Using The <a href="http://www.extension.org/article/32361">SGN CAPS Designer</a> by <a href="mailto:merk.9@osu.edu">Heather Merk</a></li>
+</ul>
+</&>
 
 <&| /page/info_section.mas, title=>'SGN tools' &>
 <ul>

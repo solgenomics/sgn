@@ -20,6 +20,8 @@ programs/*.o
 programs/draw_contigalign
 programs/fast_mapping
 sgn_local.conf
-MANIFEST
-MANIFEST.SKIP
+t/data/data/prod/tmp/
+*.log
+MANIFEST*
+t/data
 ./cgi-bin/secretom

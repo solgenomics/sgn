@@ -1,0 +1,28 @@
+<%args>
+    $feature
+</%args>
+
+% my @fcvt = $feature->search_related('feature_cvterms', undef, { prefetch => { 'cvterm' => 'dbxref' } } );
+% if( @fcvt ) {
+<ul style="padding-left: 1em">
+
+%   for my $fcvt ( @fcvt ) {
+%     my $cvt    = $fcvt->cvterm;
+%     my $dbxref = $cvt->dbxref;
+
+%     next unless $dbxref;
+%     my $db     = $dbxref->db;
+      <li>
+         <a href="<% $db->urlprefix .  $db->url .  $dbxref->accession %>"><% $db->name %>:<% $dbxref->accession %></a>
+         &ndash;
+         <% cvterm_link( $fcvt->cvterm ) %>
+      </li>
+%   }
+
+</ul>
+% }
+
+
+<%once>
+  use SGN::View::Feature qw/ cvterm_link /;
+</%once>

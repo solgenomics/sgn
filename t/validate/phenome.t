@@ -26,9 +26,7 @@ my %urls = (
         "Locus editors"                            => "/phenome/editors_note.pl",
 
         "phenotype search"                         => "/search/phenotype_search.pl?wee9_phenotype=&wee9_individual_name=&wee9_population_name=",
-        "phenotype individual detail"              => "/phenome/individual.pl?individual_id=7530",
-        "phenotype population detail"              => "/phenome/population.pl?population_id=12",
-
+        "phenotype population detail"              => "/phenome/population.pl?population_id=12", # this redirects to the stock page
         "QTL detail page"                          => "/phenome/qtl.pl?population_id=12&term_id=47515&chr=7&&peak_marker=SSR286&lod=3.9&qtl=/documents/tempfiles/temp_images/1a1a5391641c653884fbc9d6d8be5c90.png",
         "QTL individuals list page"                => "/phenome/indls_range_cvterm.pl?cvterm_id=47515&lower=151.762&upper=162.011&population_id=12",
 

@@ -96,7 +96,7 @@ sub store {
     $validate= $json_hash{validate};
     $json_hash{error} = $error if $error;
 
-    my $refering_page="/stock/view/id/$stock_id";
+    my $refering_page="/stock/$stock_id/view";
     $self->send_form_email({subject=>"[New stock details stored] stock $stock_id", mailing_list=>'sgn-db-curation@sgn.cornell.edu', refering_page=>"www.solgenomics.net".$refering_page}) if (!$validate && !$json_hash{error});
     $json_hash{refering_page}=$refering_page if !$initial_stock_id && !$validate && !$error;
 
@@ -177,8 +177,11 @@ sub generate_form {
         }
     }
     #not all stocks have an organism!
-    my $species;
-    $species = $stock->get_organism->species if $stock->get_organism; 
+    my ($species, $organism_id);
+    if ($stock->get_organism) {
+        $species = $stock->get_organism->species ;
+        $organism_id = $stock->get_organism->organism_id;
+    }
     ##########
 
     if ( $self->get_action =~ /new|store/ ) {
@@ -218,7 +221,7 @@ sub generate_form {
         $form->add_label(
             display_name => "Organism",
             field_name   => "stock_organism",
-            contents => $species,
+            contents => $species ? qq|<a href="/organism/$organism_id/view"> | . $species . "</a>" : '',
             );
         $form->add_label(
             display_name => "Stock type",

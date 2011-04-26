@@ -8,6 +8,8 @@ use CXGN::Page;
 use CXGN::People;
 use CXGN::Search::CannedForms;
 use CatalystX::GlobalContext qw( $c );
+use HTML::FormFu;
+use YAML::Any qw/LoadFile/;
 
 our $page = CXGN::Page->new( "SGN Direct Search page", "Koni");
 
@@ -39,6 +41,7 @@ my @tabfuncs = (
 #get the search type
 my ($search) = $page -> get_arguments("search");
 $search ||= 'unigene'; #default
+if ($search eq 'cvterm_name') { $search = 'qtl';}
 
 my $tabsel =
     ($search =~ /loci/i)           ? 0
@@ -137,7 +140,11 @@ sub gene_tab {
     print CXGN::Search::CannedForms::gene_search_form($page);
 }
 sub phenotype_tab {
-    print CXGN::Search::CannedForms::phenotype_search_form($page);
+    my $form = HTML::FormFu->new(LoadFile($c->path_to(qw{forms stock stock_search.yaml})));
+    print $c->render_mason('/stock/search.mas' ,
+        form   => $form,
+        schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado'),
+    );
 }
 sub qtl_tab {
     print CXGN::Search::CannedForms::qtl_search_form($page);
@@ -196,7 +203,8 @@ sub phenotype_submenu {
         #get the search type
         my ($search) = $page->get_arguments("search");
         $search ||= 'phenotypes'; #default
-
+        if ($search eq 'cvterm_name') { $search = 'qtl';}
+        
         my $tabsel =
           ($search=~ /phenotypes/i)          ? 0
           : ($search =~ /qtl/i)   ? 1

@@ -10,6 +10,9 @@
 
 The form component is based on an ajax implementation and requires some backend scripts to be implemented for a given form.
 
+See JSFormPage.js for the javascript code
+
+
 Parameters:
 
 =over 5
@@ -42,9 +45,11 @@ The javascript variable name to be used in the form.
 
 The semi-absolute url of the page that displays the form.
 
-=item alternate_new_button
+=item alternate_new_button, alternate_ghosted_new_button, alternate_delete_button, alterante_ghosted_delete_button
 
-An alternate link for the 'new' button of the form.
+An alternate link for the 'new' and 'delete' buttons, including their ghosted variants. For example, if the 'new' button is not needed, it and its ghosted variant can be set to the empty string.
+
+
 
 
 =back
@@ -66,6 +71,9 @@ $form_div_name
 $js_object_name
 $page_url
 $alternate_new_button => undef
+$alternate_ghosted_new_button => undef
+$alternate_delete_button => undef
+$alternate_ghosted_delete_button => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => ["CXGN.Page.Form.JSFormPage", "MochiKit.Logging"] &>
@@ -82,6 +90,20 @@ $alternate_new_button => undef
 % if (defined($alternate_new_button)) { 
      <% $js_object_name %>.setNewButton('<% $alternate_new_button %>');
 % }
+
+% if (defined($alternate_ghosted_new_button)) { 
+     <% $js_object_name %>.setGhostedNewButton('<% $alternate_ghosted_new_button %>');
+% }
+
+% if (defined($alternate_delete_button)) { 
+     <% $js_object_name %>.setDeleteButton('<% $alternate_delete_button %>');
+% }
+
+% if (defined($alternate_ghosted_delete_button)) { 
+     <% $js_object_name %>.setGhostedDeleteButton('<% $alternate_ghosted_delete_button %>');
+% }
+
+
   <% $js_object_name %>.render();
   
 </script>  

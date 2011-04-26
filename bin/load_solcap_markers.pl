@@ -59,7 +59,18 @@ The tab-delimited map file has the following columns:
  fwd (forward primer)
  rev (reverse primer)
 
-
+(optional columns, depending on the protocol)
+ pd    (an additional primer seq, if protocol is dCAPS)
+ Indel (additional primer seq, if protocol is Indel)
+ ASPE1 (additional primer seq, if protocol is SNP)
+ ASPE2 (additional primer seq, if protocol is SNP)
+ seq3  (3' flanking sequence, if protocol is SNP or Indel)
+ seq5  (5' flanking sequence, if protocol is SNP or Indel)
+ 
+ <accession name a> provide band sizes for accession name a 
+    (provided using -a)
+ <accession name b> provide band sizes for accession name b
+    (provided using -b)
 
 =head1 AUTHORS
 
@@ -86,9 +97,9 @@ use CXGN::DB::SQLWrappers;
 use Getopt::Std;
 
 
-our ($opt_H, $opt_D, $opt_i, $opt_t, $opt_p, $opt_m);
+our ($opt_H, $opt_D, $opt_i, $opt_t, $opt_p, $opt_m, $opt_a, $opt_b);
 
-getopts('H:D:i:tp:m:');
+getopts('H:D:i:tp:m:a:b:');
 
 
 my $map_id = $opt_m || die "Must pass a -m option with  a valid sgn map_id!\n";
@@ -205,6 +216,16 @@ eval {
 	    print "seq5_id: $seq5_id\n";
         }
 
+	my $band_size_a;
+	my $band_size_b;
+	if ($opt_a) { 
+	    $band_size_a = $ss->value_at($marker_name, $opt_a);
+	}
+	if ($opt_b) { 
+	    $band_size_b = $ss->value_at($marker_name, $opt_b);
+	}
+
+
         # check if data already in pcr_experiment and marker_experiment, and if not, add it
 	# there's a lot of stuff to check here.. I know these aren't in the database so will come back later
 
@@ -225,10 +246,11 @@ eval {
         #THIS DOES NOT CHECK FOR EXISTING ID
         #CXGN::Marker::Tools::insert($dbh,"pcr_experiment","pcr_experiment_id",$names,@fields);
         print "pcr experiment added: $pcr_experiment_id\n";
-
+		print STDERR "HELLO!\n";
         #new pcr_experiment object
         my $pcr_ex = CXGN::Marker::PCR::Experiment->new($dbh, $pcr_experiment_id);
         # set the sequence types
+
         $pcr_ex->store_sequence('forward_primer', $fwd);
         $pcr_ex->store_sequence('reverse_primer', $rev);
         $pcr_ex->store_sequence('aspe_primer', $aspe1) if $aspe1;
@@ -237,6 +259,13 @@ eval {
         $pcr_ex->store_sequence('SNP', $snp) if $snp;
         $pcr_ex->store_sequence('five_prime_flanking_region', $seq5) if $seq5;
         $pcr_ex->store_sequence('three_prime_flanking_region', $seq3) if $seq3;
+
+
+	$pcr_ex->add_pcr_bands_for_stock($band_size_a, $opt_a) if $band_size_a;
+	$pcr_ex->add_pcr_bands_for_stock($band_size_b, $opt_b) if $band_size_b;
+
+	$pcr_ex->store_unless_exists();
+
         print "Checking if map $map_id , marker $marker_id and protocol $protocol exist in marker_experiment\n";
         # check for existing marker_experiment and update if found
 	my $q = "SELECT marker_experiment_id FROM marker_experiment "

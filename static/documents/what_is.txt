@@ -1,6 +1,21 @@
-<div class="boxbgcolor5">The SOL Genomics Network is a Clade Oriented Database (COD) containing genomic, genetic, phenotypic and taxonomic information for species in the Euasterid clade, including the families <a href="/about/about_solanaceae.pl">Solanaceae</a> (e.g. tomato, potato, eggplant, pepper, petunia) and Rubiaceae (<a href="/content/coffee.pl">coffee</a>). 
-Genomic information is presented in a comparative format and tied to other important plant model species such as Arabidopsis. SGN is also one of the bioinformatics centers involved in tomato genome sequencing.
+<div class="boxbgcolor5">
 
+The SOL Genomics Network (SGN) is a Clade Oriented Database (COD) containing
+genomic, genetic, phenotypic and taxonomic information for plant genomes.  SGN
+originally concentrated on the Euasterid clade, including the families
+including the families <a href="/about/about_solanaceae.pl">Solanaceae</a>
+(e.g. tomato, potato, eggplant, pepper and petunia) and Rubiaceae
+(<a href="/content/coffee.pl">coffee</a>), but since our tools are not specific to
+these genomes, we are expanding our scope.  If you are interested in using SGN
+to explore one of the many new plant genomes being sequenced, please contact
+us!  <br/>
+
+Genomic information is presented in a comparative format and tied to other
+important plant model species such as Arabidopsis. SGN is also one of the
+bioinformatics centers involved in tomato genome sequencing.<br />
+
+<br />
+SGN is a <b>community curated</b> database. This means that <b>you</b> can contribute annotations to genes and phenotypes by becoming a <a href="/phenome/">locus editor</a>. You can also upload, analyze and share your <a href="/content/map_submissions.pl">map</a> and <a href="/qtl/">QTL data</a>. Contributions by members of the community like you help keep the information in the database up to date and correct.
 <ul>
 <li><div class="subheading"><a class="creativitylinks" href="/about/index.pl">About SGN </a></div></li>
 <li><div class="subheading"><a class="creativitylinks" href="/content/sgn_data.pl">Species in the SGN database</a></div></li>
@@ -9,4 +24,30 @@ Genomic information is presented in a comparative format and tied to other impor
 <li><div class="subheading"><a class="creativitylinks" href="/genomes/Solanum_lycopersicum/">The tomato genome sequencing project</a></div></li>
 </ul>
 
+<br /><br />
+
+<div class="boxheading">Citing SGN</div>
+<div class="boxcontent">
+If SGN is useful in your research, please cite SGN in your publications using the following reference:
+<br /><br />
+<div class="boxbgcolor2">
+Bombarely A, Menda N, Tecle IY, Buels RM, Strickler S, Fischer-York T, Pujar A, Leto J, Gosselin J, Mueller LA. <b>The Sol Genomics Network (solgenomics.net): growing tomatoes using Perl.</b> (2011) Nucleic Acids Res. Volume 39 (Database issue):D1149-55. <a href="http://www.ncbi.nlm.nih.gov/pubmed/20935049">PubMed</a>.
+<br /><br />
 </div>
+
+</div>
+
+<br /><br />
+<div class="boxheading">SGN code and database</div>
+<div class="boxcontent">
+ The SGN code and database are developed as an open source project, and is based on database schemas developed by the <a href="http://gmod.org/" target="_new" >GMOD project</a> and SGN-specific extensions. 
+<br /><br />
+Contributions to the codebase are welcome.  All SGN code is available from <a href="http://github.com/solgenomics/" target="_new" >http://github.com/solgenomics</a>.
+</div>
+
+<br />
+<br />
+
+
+</div>
+

@@ -1,7 +1,6 @@
 
 use strict;
 
-our $c;
 my $tag_detail_page = CXGN::Tag_detail_page->new();
 
 
@@ -14,6 +13,7 @@ use CXGN::Insitu::Experiment;
 use CXGN::Image;
 use CXGN::Login;
 use CXGN::Contact;
+use CatalystX::GlobalContext qw( $c );
 
 use base qw / CXGN::Page::Form::SimpleFormPage /;
 

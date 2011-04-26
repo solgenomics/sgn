@@ -27,7 +27,7 @@ use CXGN::Chado::Publication;
 use CXGN::People::PageComment;
 use CXGN::Feed;
 use SGN::Image;
-
+use CatalystX::GlobalContext qw( $c );
 
 sub new {
     my $class  = shift;
@@ -174,7 +174,7 @@ sub display_page {
     my $locus_id      = $allele->get_locus_id();
     my $locus_name    = $allele->get_locus_name();
 
-    my @individuals    = $allele->get_individuals();
+    my $stock_ids      = $allele->get_stock_ids();
     my $default_allele = $allele->get_is_default();
 
     ###import js libraries
@@ -238,57 +238,56 @@ sub display_page {
         title    => 'Allele details',
         contents => $allele_html,
     );
-    my $individuals_html = "<TABLE>";
+    my $stocks_html = "<TABLE>";
     my %imageHoA
-      ; # hash of image arrays. Keys are individual_ids, values are arrays of image_ids
-    my %individualHash;
+      ; # hash of image arrays. Keys are stock_ids, values are arrays of image_ids
+    my %stockHash;
     my %imageHash;
     my @no_image = ();
+    
+    my $schema = $c->dbic_schema('Bio::Chado::Schema' , 'sgn_chado');
+    foreach my $stock_id (@$stock_ids) {
+        my $stock = CXGN::Chado::Stock->new( $schema, $stock_id );
+        my $stock_name = $stock->get_name();
+        $stockHash{$stock_id} = $stock_name;
 
-    foreach my $individual (@individuals) {
-        my $individual_id   = $individual->get_individual_id();
-        my $individual_name = $individual->get_name();
-        $individualHash{$individual_id} = $individual_name;
-
-        my @images = map SGN::Image->new( $self->get_dbh, $_ ), $individual->get_image_ids();
+        my @images = map SGN::Image->new( $self->get_dbh, $_ ), $stock->get_image_ids();
         foreach my $image (@images) {
             my $image_id    = $image->get_image_id();
             my $img_src_tag = $image->get_img_src_tag("thumbnail");
             $imageHash{$image_id} = $img_src_tag;
-            push @{ $imageHoA{$individual_id} }, $image_id;
+            push @{ $imageHoA{$stock_id} }, $image_id;
         }
 
-        #if there are no associated images with this individual:
-        if ( !@images ) { push @no_image, $individual_id; }
+        #if there are no associated images with this stock:
+        if ( !@images ) { push @no_image, $stock_id; }
     }
-    for my $individual_id (
+    for my $stock_id (
         sort { @{ $imageHoA{$b} } <=> @{ $imageHoA{$a} } }
         keys %imageHoA
       )
     {
+        my $stock_name = $stockHash{$stock_id};
+        $stocks_html .=
+qq|<TR valign="top"><TD><a href="/stock/$stock_id/view">$stock_name </a></TD>|;
 
-        #print "$individual_id: @{ $imageHoA{$individual_id} }<br>\n";
-        my $individual_name = $individualHash{$individual_id};
-        $individuals_html .=
-qq|<TR valign="top"><TD><a href="individual.pl?individual_id=$individual_id">$individual_name </a></TD>|;
-
-        foreach my $image_id ( @{ $imageHoA{$individual_id} } ) {
+        foreach my $image_id ( @{ $imageHoA{$stock_id} } ) {
             my $image_src_tag = $imageHash{$image_id};
-            $individuals_html .=
+            $stocks_html .=
 qq |<TD><a href="../image/index.pl?image_id=$image_id">$image_src_tag</a></TD>|;
         }
-        $individuals_html .= "</TR>";
+        $stocks_html .= "</TR>";
     }
-    if ( !@individuals ) { $individuals_html = undef; }
-    else                 { $individuals_html .= "</TABLE>"; }
+    if ( !@$stock_ids ) { $stocks_html = undef; }
+    else                 { $stocks_html .= "</TABLE>"; }
 
-    foreach my $individual_id (@no_image) {
-        my $individual_name = $individualHash{$individual_id};
-        $individuals_html .=
-qq|<a href="individual.pl?individual_id=$individual_id">$individual_name </a>|;
+    foreach my $stock_id (@no_image) {
+        my $stock_name = $stockHash{$stock_id};
+        $stocks_html .=
+qq|<a href="/stock/$stock_id/view">$stock_name </a>|;
     }
 
-    my $ind_subtitle = "";
+    my $stock_subtitle = "";
     if (
         $allele_symbol
         && (   $login_user_type eq 'curator'
@@ -297,22 +296,20 @@ qq|<a href="individual.pl?individual_id=$individual_id">$individual_name </a>|;
       )
     {
 
-#$ind_subtitle .= qq| <a href="javascript:Tools.toggleContent('associateIndividualAllele', 'allele_accessions')">[Associate accession]</a> |;
+        $stock_subtitle .=
+qq| <a href="javascript:Tools.toggleContent('associateStockForm', 'allele_accessions')">[Associate accession]</a> |;
 
-        $ind_subtitle .=
-qq| <a href="javascript:Tools.toggleContent('associateIndividualForm', 'allele_accessions')">[Associate accession]</a> |;
-
-        $individuals_html .= $self->associate_individual();
+        $stocks_html .= $self->associate_stock;
     }
     else {
-        $ind_subtitle .=
+        $stock_subtitle .=
           qq|<span class= "ghosted">[Associate accession]</span> |;
     }
 
     print info_section_html(
         title       => 'Associated accessions',
-        subtitle    => $ind_subtitle,
-        contents    => $individuals_html,
+        subtitle    => $stock_subtitle,
+        contents    => $stocks_html,
         id          => "allele_accessions",
         collapsible => 1,
         collapsed   => 1,
@@ -614,8 +611,7 @@ qq |<a href="/solpeople/personal-info.pl?sp_person_id=$updated_by_id">$u_first_n
     return $print_history;
 }    #print_allele_history
 
-sub associate_individual {
-
+sub associate_stock {
     my $self         = shift;
     my $allele_id    = $self->get_object_id();
     my $sp_person_id = $self->get_user->get_sp_person_id();
@@ -623,20 +619,20 @@ sub associate_individual {
 
     my $associate_html = qq^
 
-<div id="associateIndividualForm" style="display: none">
+<div id="associateStockForm" style="display: none">
     Accession name:
     <input type="text"
            style="width: 50%"
            id="a_name"
-           onkeyup="Locus.getAlleleIndividuals(this.value, '$allele_id');">
+           onkeyup="Locus.getStocks(this.value);">
     <input type="button"
-           id="associate_individual_button"
+           id="associate_stock_button"
            value="associate accession"
 	   disabled="true"
            onclick="Locus.associateAllele('$sp_person_id', '$allele_id');this.disabled=true;">
-    <select id="individual_select"
+    <select id="stock_select"
             style="width: 100%"
-	    onchange="Tools.enableButton('associate_individual_button');"
+	    onchange="Tools.enableButton('associate_stock_button');"
             size=10>
        </select>
 </div>

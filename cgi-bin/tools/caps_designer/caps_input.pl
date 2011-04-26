@@ -19,7 +19,7 @@ $input_content = '<form method="post" action="find_caps.pl" name="capsinput">';
 
 #Select input format
 $input_content .= '<b>Input format</b><br />';
-if ($format eq "clustalw"){
+if ( $format && $format eq "clustalw" ){
   $input_content .= '<input type="radio" name="format" value="clustalw" checked="checked" />clustal alignment <a target="blank" href="/about/clustal_file.pl">[What is this?]</a><br />';
   $input_content .= '<input type="radio" name="format" value="fasta" />unaligned fasta sequences<br /><br />';
 }
@@ -28,13 +28,15 @@ else {
   $input_content .= '<input type="radio" name="format" value="fasta" checked="checked" />unaligned fasta sequences<br /><br />';
 }
 
+{ no warnings 'uninitialized';
 #Text area for input sequences
 $input_content .= '<b>Input sequences</b><br />';
 $input_content .= "<textarea name=\"seq_data\" rows=\"20\" cols=\"100\">$seq_data</textarea><br /><br /><br /><br />";
+}
 
 #Options low price enzyme
 $input_content .= '<b>Options</b><br /><br />';
-if ($cheap_only == 1){
+if ( $cheap_only ){
   $input_content .= '<input type="checkbox" name="cheap" value = "1" checked="checked" /> Find enzymes priced less than $65/1000u.<br />';
 }
 else {

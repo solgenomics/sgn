@@ -20,7 +20,7 @@ use lib 't/lib';
 use SGN::Test qw/validate_urls/;
 
 my $base_url = $ENV{SGN_TEST_SERVER};
-my $url      = "/phenome/population_indls.pl?population_id=12&cvterm_id=47515";
+my $url      = "/phenome/qtl_analysis.pl?population_id=12&cvterm_id=47515";
 
 my $mech = Test::WWW::Mechanize->new;
 $mech->get("$base_url/$url");

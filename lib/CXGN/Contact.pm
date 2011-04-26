@@ -48,22 +48,22 @@ sub send_email {
     my $vhost_conf   = SGN::Context->new;
     my $hostname     = `hostname`;
     chomp($hostname);
-    my $dnsdomainname = `dnsdomainname`;
-    chomp($dnsdomainname);
+    #my $dnsdomainname = `dnsdomainname`;
+    #chomp($dnsdomainname);
     my $mailfrom = $vhost_conf->get_conf('www_user') . '@' . $hostname;
 
 #if we are specifying a mailto as a vhost configuration variable (such as 'bugs_email'), then use that variable's value, and append the request info.
 #mailto can also be specified normally (such as 'John Binns <zombieite@gmail.com>').
     if ( $mailto and eval{ $vhost_conf->get_conf($mailto)} ) {
         $mailto = $vhost_conf->get_conf($mailto);
-        $request_info .= CXGN::Apache::Request::as_verbose_string();
+        ##$request_info .= CXGN::Apache::Request::as_verbose_string();
     }
 
 #if we have no one specified to mail to, send it to bugs, and append the request info.
     unless ($mailto) {
         $mailto = $vhost_conf->get_conf('bugs_email')
           ; #for all emails that do not specify email address, send them to our bugs_email
-        $request_info .= CXGN::Apache::Request::as_verbose_string()
+        ##$request_info .= CXGN::Apache::Request::as_verbose_string()
           ; #append request info to all emails that do not specify email address
     }
 

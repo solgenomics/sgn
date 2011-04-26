@@ -1,19 +1,46 @@
 <%args>
     $feature
 </%args>
+<%once>
+    use HTML::Entities;
+    use CXGN::Page::FormattingHelpers qw/info_table_html/;
+    use SGN::View::Feature qw/ description_featureprop_types cvterm_link /;
+</%once>
 <%perl>
-    # find all featureprops other that Note, which is already taken care of
-    my @properties = map { [ $_->type->name => $_->value ] }
-                     grep { $_->type->name ne 'Note' } $feature->featureprops({ value => { '<=', 1000 } });
+   # find all featureprops other that Note, which is already taken
+   # care of, group them by type
+   my $props = $feature->search_related(
+       'featureprops',
+       {
+           # filter out featureprops that are used as the feature's description
+           'type_id' => {
+               -not_in => description_featureprop_types($feature)
+                            ->get_column('cvterm_id')
+                            ->as_query
+            },
+           'length(value)' => { '<=', 1000 },
+       },
+       { prefetch => 'type' },
+     );
+     my %properties;
+     while( my $fp = $props->next ) {
+         push @{$properties{ $fp->type->name } ||= []}, $fp;
+     }
+
+   if( %properties ) {
+       print info_table_html(
+           ( map {
+               my $fps = $properties{$_};
+               my $title = cvterm_link( $fps->[0]->type, 'ucfirst' );
+               if( @$fps > 1 ) {
+                   $title => '<ul>'.(join '', map "<li>".encode_entities($_->value)."</li>", @$fps).'</ul>';
+               } else {
+                   $title => encode_entities($fps->[0]->value);
+               }
+             }
+             sort keys %properties
+           ),
+           __border => 0,
+        );
+   }
 </%perl>
-% if (@properties) {
-  <&| /page/info_section.mas,
-      title => "Other Properties",
-      collapsible => 1,
-  &>
-    <& /page/columnar_table.mas,
-        headings => [ "Property", "Value"  ],
-        data     => \@properties,
-    &>
-  </&>
-% }

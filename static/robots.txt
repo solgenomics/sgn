@@ -3,4 +3,7 @@ Disallow: /tools/
 Disallow: /gbrowse/
 Disallow: /documents/tempfiles/
 Disallow: /cview/
+Disallow: /phenome/population_indls.pl
+Disallow: /phenome/qtl.pl
+Disallow: /phenome/population.pl
 Crawl-delay: 30

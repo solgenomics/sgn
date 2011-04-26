@@ -10,15 +10,15 @@
     <Perl>
 
        use lib (qw(
-                   /crypt/rob/cxgn/curr/sgn/lib
-                   /crypt/rob/cxgn/curr/ITAG/lib
-                   /crypt/rob/cxgn/curr/biosource/lib
-                   /crypt/rob/cxgn/curr/Phenome/lib
-                   /crypt/rob/cxgn/curr/tomato_genome/lib
-                   /crypt/rob/cxgn/curr/Cview/lib
-                   /crypt/rob/cxgn/curr/cxgn-corelibs/lib
-                   /crypt/rob/cpan-lib/lib/perl5
-                   /crypt/rob/cpan-lib/lib/perl5/i486-linux-gnu-thread-multi
+                   /home/rob/cxgn/sgn/lib
+                   /home/rob/cxgn/ITAG/lib
+                   /home/rob/cxgn/biosource/lib
+                   /home/rob/cxgn/Phenome/lib
+                   /home/rob/cxgn/tomato_genome/lib
+                   /home/rob/cxgn/Cview/lib
+                   /home/rob/cxgn/cxgn-corelibs/lib
+                   /home/rob/cpan-lib/lib/perl5
+                   /home/rob/cpan-lib/lib/perl5/i686-linux-gnu-thread-multi
                   ));
 
        $ENV{PERL5LIB} = join ':', @INC;

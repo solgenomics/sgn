@@ -3,6 +3,7 @@
   $highlight_coords
   $source
   $format_links => []
+  $blast_url => undef
 </%args>
 
 <& /page/page_title.mas, title => $seq->id &>
@@ -27,4 +28,5 @@
    source => $source,
    highlight_coords      => $highlight_coords,
    highlight_description => 'BLAST matches',
+   blast_url => $blast_url,
  &>
