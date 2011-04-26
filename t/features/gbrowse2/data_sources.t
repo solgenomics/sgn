@@ -21,6 +21,7 @@ $mech->with_test_level( local => sub {
 
 
     for ( @sources ) {
+        like( $_->_url( 'gbrowse_img', { foo => 'bar' }), qr!/[^/]+$!, '_url path ends with a trailing slash' );
         my @dbs      = do {
             local $SIG{__WARN__} = sub {};
             $_->databases;

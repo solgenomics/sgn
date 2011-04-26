@@ -91,7 +91,7 @@ sub image_url {
 sub _url {
     my ( $self, $script, $query ) = @_;
     my $url = $self->gbrowse->cgi_url->clone;
-    $url->path( join '/', $url->path, $script, $self->name );
+    $url->path( join '', map "$_/", $url->path, $script, $self->name );
     $url->query_form_hash( $query ) if $query;
     return $url;
 }
