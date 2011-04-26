@@ -7,7 +7,10 @@
             __align  => 'l'
   &>
 <%init>
-  my @rows = sort { $b->[0] cmp $a->[0] || $a->[1] cmp $b->[1] ||  $a->[2] cmp $b->[2] }
+  my %seen_row;
+  my @rows =
+             sort { $b->[0] cmp $a->[0] || $a->[1] cmp $b->[1] ||  $a->[2] cmp $b->[2] }
+             grep { !$seen_row{ join '|', @$_ }++ }
              map [ $_->data_source->description,
 
                    join( ', ', uniq map $_->display_name, @{$_->seqfeatures} ),
