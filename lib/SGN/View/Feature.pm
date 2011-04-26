@@ -100,7 +100,7 @@ sub location_list_html {
 }
 sub location_list {
     my ($feature, $featurelocs) = @_;
-    return map { $_->srcfeature->name . ':' . ($_->fmin+1) . '..' . $_->fmax }
+    return map { ($_->srcfeature ? $_->srcfeature->name : '<span class="ghosted">null</span>') . ':' . ($_->fmin+1) . '..' . $_->fmax }
         ( $featurelocs ? $featurelocs->all
                        : $feature->featureloc_features->all );
 }
@@ -146,7 +146,7 @@ sub feature_table {
                 push @data, [
                     cvterm_link($f->type),
                     feature_link($f),
-                    $ref->name.":$start..$end",
+                    ($ref ? $ref->name : '<span class="ghosted">null</span>').":$start..$end",
                     commify_number( feature_length( $f, $loc ) ) || $na_html,
                     $loc->strand ? ( $loc->strand == 1 ? '+' : '-' ) : $na_html,
                     $loc->phase || $na_html,
@@ -195,7 +195,7 @@ sub feature_length {
 sub _feature_search_string {
     my ($fl) = @_;
     return '' unless $fl;
-    return $fl->srcfeature->name . ':'. ($fl->fmin+1) . '..' . $fl->fmax;
+    return ($fl->srcfeature ? $fl->srcfeature->name : '<span class="ghosted">null</span>') . ':'. ($fl->fmin+1) . '..' . $fl->fmax;
 }
 
 
