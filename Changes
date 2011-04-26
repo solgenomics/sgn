@@ -3,6 +3,8 @@ Release tag: NEXT
 
 Changes:
 
+ - Integrated SecreTary results to secretion prediction search (tomfy).
+ - Updated SignalP results at http://solgenomics.net/secretom/detail/prediction for TAIR10 and ITAG2 releases of arabidopsis and tomato, respectively (tomfy).
 
 ---
 
