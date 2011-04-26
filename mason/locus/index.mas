@@ -114,8 +114,6 @@ foreach  my $g  ( @{ $dbxrefs{'DB:GenBank_GI'} } )  {
     $gb_count++;
   }
 }
-my $seq_count = $gb_count + scalar(@unigenes);
-
 my $ont_count = $locus->count_ontology_annotations();
 
 my $ontology_subtitle =  !(grep { /^$user_type$/ } ('curator', 'submitter', 'sequencer') ) ?  qq |<span class = "ghosted"> [Add ontology annotations]</span> |
@@ -218,7 +216,7 @@ my $ontology_subtitle =  !(grep { /^$user_type$/ } ('curator', 'submitter', 'seq
 </&>
 
 
-<&| /page/info_section.mas, title=>"Sequence annotations ($seq_count)" , collapsible=>1, collapsed=>1 &>
+<&| /page/info_section.mas, title=>"Sequence annotations" , collapsible=>1, collapsed=>1 &>
 
    <&| /page/info_section.mas, title => "Gene model matches",
        collapsible   => 1,
