@@ -260,5 +260,3 @@ sub _feature_types {
 }
 
 __PACKAGE__->meta->make_immutable;
-1;
-
