@@ -341,10 +341,8 @@ sub make_profile {    # makes a profile, i.e. an array
     for ( my $k = 0 ; $k < $length ; $k++ ) {
         my $m    = 0;
         my $kmrf = $k - $ref_position;
-        my $plo  = $kmrf;                        # $k - $ref_position;
-        $plo = 0 if ( $plo < 0 );
+        my $plo  = max($kmrf, 0);      # $k - $ref_position;
         my $pup = min( $ncols + $kmrf, $length);
-      #  $pup = $length if ( $pup > $length );
 
         for ( my ( $p, $i ) = ( $plo, $plo - $kmrf ) ; $p < $pup ; $p++, $i++ )
         {
@@ -353,6 +351,7 @@ sub make_profile {    # makes a profile, i.e. an array
 
         my $round_m =
           ( $m < 0 ) ? int( $m * 100 - 0.5 ) : int( $m * 100 + 0.5 );
+
         push @profile, $round_m;
     }
 
@@ -399,19 +398,13 @@ sub find_helix {
     # or $oi_score, $oi_center_prof, ...
     my $min_halfw = $self->{min_halfw};
     my $max_halfw = $self->{max_halfw};
-    my $helix;
+    my ($helix, $find_helix_result);
 
-    my $find_helix_result;
-
-    my ( $found, $done );
-    my $i = $start;
-    if ( $i < $min_halfw ) {
-        $i = $min_halfw;
-    }
-    $found = $FALSE;
+    my ( $found, $done ) = ($FALSE, $FALSE);
+    my $i = max($start, $min_halfw);
 
     while ( ( $i < $length - $min_halfw ) and ( !$found ) ) {
-
+# Could probably be implemented better.
         my ( $pos, $scr ) = findmax( $s, $i - $min_halfw, $i + $max_halfw );
 
         if ( ( $s->[$i] == $scr ) and ( $s->[$i] > 0 ) ) {
@@ -419,16 +412,14 @@ sub find_helix {
 	    $helix = Bio::SecreTary::Helix->new();
 
             $helix->center( [ $i, $m->[$i] ] );
-            my $beg = $i - $max_halfw;
-            $beg = 0 if ( $beg < 0 );
+            my $beg = max($i - $max_halfw, 0);
 
             my ( $nt_position, $nt_score ) =
               findmax( $n, $beg, $i - $min_halfw );
 
             $helix->nterm( [ $nt_position, $nt_score ] );
 
-            my $end = $i + $max_halfw;
-            $end = $length - 1 if ( $end >= $length );
+            my $end = min($i + $max_halfw, $length - 1);
 
             my ( $ct_position, $ct_score ) =
               findmax( $c, $i + $min_halfw, $end );
@@ -436,7 +427,6 @@ sub find_helix {
             $helix->cterm( [ $ct_position, $ct_score ] );
 
             my $j = $i - $min_halfw;    # determine nearest N-terminus
-            $done = $FALSE;
             while (
                 $j - 1 >= 0             #  0 not 1 because 0-based
                 and $j - 1 >= $i - $max_halfw and !$done
@@ -496,12 +486,9 @@ sub find_helix {
 sub findmax {    # looking between start and stop,
                  # return the maximum value in $profile and its position.
     my $profile = shift;    # array ref
-    my $start   = shift;
-    my $stop    = shift;
+    my $start   = max(shift, 0);
+    my $stop    = min(shift, scalar(@$profile) - 1);
 
-    my $profile_size = scalar @$profile;
-    $start = 0 if ( $start < 0 );
-    $stop = $profile_size - 1 if ( $stop >= $profile_size );
     my $position = $start;
     $start++;
     for ( my $i = $start ; $i <= $stop ; $i++ ) {
