@@ -15,11 +15,9 @@ Tom York (tly2@cornell.edu)
 
 package Bio::SecreTary::TMpred;
 use Carp;
-use IO::File;
-use File::Temp;
-use CGI ();
 use Bio::SecreTary::Table;
 use Bio::SecreTary::Helix;
+use List::Util qw / min max /;
 
 use Readonly;
 Readonly my $FALSE    => 0;
@@ -266,8 +264,8 @@ sub run_tmpred_perl {
             ( $fhresult, $start, $helix ) =
               $self->find_helix( $length, $start, $io_score, $io_center_prof,
                 $io_nterm_prof, $io_cterm_prof );
-            $helix->nt_in($TRUE);    # io is inside-to-outside
             if ($fhresult) {
+	      $helix->nt_in($TRUE);    # io is inside-to-outside
                 push @io_helices, $helix;
             }
             last if ( $start >= $length );
@@ -283,8 +281,8 @@ sub run_tmpred_perl {
             ( $fhresult, $start, $helix ) =
               $self->find_helix( $length, $start, $oi_score, $oi_center_prof,
                 $oi_nterm_prof, $oi_cterm_prof );
-            $helix->nt_in($FALSE);
             if ($fhresult) {
+       $helix->nt_in($FALSE);
                 push @oi_helices, $helix;
             }
             last if ( $start >= $length );
@@ -345,8 +343,8 @@ sub make_profile {    # makes a profile, i.e. an array
         my $kmrf = $k - $ref_position;
         my $plo  = $kmrf;                        # $k - $ref_position;
         $plo = 0 if ( $plo < 0 );
-        my $pup = $ncols + $kmrf;
-        $pup = $length if ( $pup > $length );
+        my $pup = min( $ncols + $kmrf, $length);
+      #  $pup = $length if ( $pup > $length );
 
         for ( my ( $p, $i ) = ( $plo, $plo - $kmrf ) ; $p < $pup ; $p++, $i++ )
         {
@@ -401,7 +399,7 @@ sub find_helix {
     # or $oi_score, $oi_center_prof, ...
     my $min_halfw = $self->{min_halfw};
     my $max_halfw = $self->{max_halfw};
-    my $helix     = Bio::SecreTary::Helix->new();
+    my $helix;
 
     my $find_helix_result;
 
@@ -418,6 +416,7 @@ sub find_helix {
 
         if ( ( $s->[$i] == $scr ) and ( $s->[$i] > 0 ) ) {
             $found = $TRUE;
+	    $helix = Bio::SecreTary::Helix->new();
 
             $helix->center( [ $i, $m->[$i] ] );
             my $beg = $i - $max_halfw;
