@@ -94,7 +94,7 @@ sub _run_secretary {
 
 	my $tmpred_obj =
 		Bio::SecreTary::TMpred->new( {} ); # use defaults here for min_score, etc.
-#   Bio::SecreTary::TMpred_pascal->new( {} );
+#              Bio::SecreTary::TMpred_Cinline->new( {} );
 		my $id_seqs = process_input($input);
 
 #Calculate the necessary quantities for each sequence:
@@ -170,6 +170,7 @@ sub process_input {
 	my $max_sequences_to_do = 10000;
 	my $input               = shift;
 	my @id_sequence_array;
+	my $min_sequence_length = 8; # this is the minimal length of sequence string which will be recognized as a sequence if no fasta idline is present.
 	my @fastas  = ();
 	my $wscount = 0;
 
@@ -179,7 +180,9 @@ sub process_input {
 		if ( $input =~ s/\A ([^>]+) //xms )
 		{                            # if >= 1 chars before first > capture them.
 			my $fasta = uc $1;
-			if ( $fasta =~ /\A [A-Z]{10,} [A-Z\s]* [*]? \s* \z/xms )
+			# if letters and spaces optionally with * as last non whitespace char,
+			# and starts with at least $min_sequence_length letters, treat as sequence
+			if ( $fasta =~ /\A [A-Z]{$min_sequence_length,} [A-Z\s]* [*]? \s* \z/xms )
 			{                        # looks like sequence with no identifier
 				$fasta = '>sequence_' . $wscount . "\n" . $fasta . "\n";
 				push @fastas, $fasta;
