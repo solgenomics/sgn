@@ -19,6 +19,7 @@ package Bio::SecreTary::SecreTaryAnalyse;
 use strict;
 use warnings;
 use Bio::SecreTary::TMpred;
+use Bio::SecreTary::TMpred_Cinline;
 use Bio::SecreTary::Cleavage;
 use Bio::SecreTary::AAComposition;
 
