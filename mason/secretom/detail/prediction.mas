@@ -86,14 +86,14 @@ span.filesize:after {
           <& .result_file, file => 'data/secretom/SecreTarySPTP_predictions/Brachy1.2.STsptp.fa', dir => $static_dir &>
     </td>
     <td>
-          <h3>Tomato (Solanum lycopersicum)</h3>
+          <h3>Tomato </h3>
           <img src="/img/secretom/solanumlycopersicum.png" />
           <& .result_file, file => 'data/secretom/SecreTarySPTP_predictions/ITAG2.STsptp.fa', dir => $static_dir &>
     </td>
   
  <td>
           <h3>Populus trichocarpa</h3>
-          <img src="/img/secretom/Populustrichocarpa.jpg" />
+          <img src="/img/secretom/Populus_trichocarpa_126x150.png" />
           <& .result_file, file => 'data/secretom/SecreTarySPTP_predictions/Poptri2.STsptp.fa', dir => $static_dir &>
     </td>
 
