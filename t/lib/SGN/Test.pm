@@ -65,9 +65,9 @@ sub validate_urls {
 
 sub _validate_single_url {
     my ( $test_name, $url, $mech ) = @_;
+    diag "validating url: $url";
     $mech->get( $url );
     my $rc = $mech->status;
-
     my $dump_tempdir;
     ok( $rc == 200, "$test_name returned OK" )
         or do {
