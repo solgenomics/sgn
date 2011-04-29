@@ -14,6 +14,8 @@ Tom York (tly2@cornell.edu)
 =cut
 
 package Bio::SecreTary::TMpred;
+use strict;
+use warnings;
 use Carp;
 use Bio::SecreTary::Table;
 use Bio::SecreTary::Helix;
