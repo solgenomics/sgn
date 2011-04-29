@@ -487,7 +487,7 @@ bump density = 100
 
 [DM_BAC_Link]
 feature =
-  "clone:DBolser_Dundee_BES_SSAHA_dm_bes_l"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_dm_bes_l"
 glyph       = segments
 bgcolor     = red
 fgcolor     = red
@@ -502,12 +502,12 @@ citation    =
 
 [DM_BAC]
 feature =
-  "clone:DBolser_Dundee_BES_SSAHA_dm_bes_sg"
-  "clone:DBolser_Dundee_BES_SSAHA_dm_bes_sb"
-  "clone:DBolser_Dundee_BES_SSAHA_dm_bes_lg"
-  "clone:DBolser_Dundee_BES_SSAHA_dm_bes_lb"
-  "clone:DBolser_Dundee_BES_SSAHA_dm_bes_hg"
-  "clone:DBolser_Dundee_BES_SSAHA_dm_bes_hb"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_dm_bes_sg"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_dm_bes_sb"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_dm_bes_lg"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_dm_bes_lb"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_dm_bes_hg"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_dm_bes_hb"
 glyph       = segments
 bgcolor     = \&bes_color_by_length_flag
 fgcolor     = \&bes_color_by_length_flag
@@ -524,8 +524,8 @@ citation    =
 
 [DM_BAC_f]
 feature =
-  "clone:DBolser_Dundee_BES_SSAHA_dm_bes_fg"
-  "clone:DBolser_Dundee_BES_SSAHA_dm_bes_fb"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_dm_bes_fg"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_dm_bes_fb"
 glyph       = segments
 bgcolor     = \&bes_color_by_length_flag
 fgcolor     = \&bes_color_by_length_flag
@@ -543,7 +543,7 @@ citation    =
 
 [DM_FOS_Link]
 feature =
-  "clone:DBolser_Dundee_BES_SSAHA_dm_fos_l"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_dm_fos_l"
 glyph       = segments
 bgcolor     = red
 fgcolor     = red
@@ -558,12 +558,12 @@ citation    =
 
 [DM_FOS]
 feature =
-  "clone:DBolser_Dundee_BES_SSAHA_dm_fos_sg"
-  "clone:DBolser_Dundee_BES_SSAHA_dm_fos_sb"
-  "clone:DBolser_Dundee_BES_SSAHA_dm_fos_lg"
-  "clone:DBolser_Dundee_BES_SSAHA_dm_fos_lb"
-  "clone:DBolser_Dundee_BES_SSAHA_dm_fos_hg"
-  "clone:DBolser_Dundee_BES_SSAHA_dm_fos_hb"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_dm_fos_sg"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_dm_fos_sb"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_dm_fos_lg"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_dm_fos_lb"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_dm_fos_hg"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_dm_fos_hb"
 glyph       = segments
 fgcolor     = \&bes_color_by_length_flag
 bgcolor     = \&bes_color_by_length_flag
@@ -581,8 +581,8 @@ citation    =
 
 [DM_FOS_f]
 feature =
-  "clone:DBolser_Dundee_BES_SSAHA_dm_fos_fg"
-  "clone:DBolser_Dundee_BES_SSAHA_dm_fos_fb"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_dm_fos_fg"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_dm_fos_fb"
 glyph       = segments
 bgcolor     = \&bes_color_by_length_flag
 fgcolor     = \&bes_color_by_length_flag
@@ -601,7 +601,7 @@ citation    =
 
 [RH_BAC_Link]
 feature =
-  "clone:DBolser_Dundee_BES_SSAHA_rh_bes_l"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_rh_bes_l"
 glyph       = segments
 bgcolor     = red
 fgcolor     = red
@@ -616,12 +616,12 @@ citation    =
 
 [RH_BAC]
 feature =
-  "clone:DBolser_Dundee_BES_SSAHA_rh_bes_sg"
-  "clone:DBolser_Dundee_BES_SSAHA_rh_bes_sb"
-  "clone:DBolser_Dundee_BES_SSAHA_rh_bes_lg"
-  "clone:DBolser_Dundee_BES_SSAHA_rh_bes_lb"
-  "clone:DBolser_Dundee_BES_SSAHA_rh_bes_hg"
-  "clone:DBolser_Dundee_BES_SSAHA_rh_bes_hb"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_rh_bes_sg"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_rh_bes_sb"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_rh_bes_lg"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_rh_bes_lb"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_rh_bes_hg"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_rh_bes_hb"
 glyph       = segments
 bgcolor     = \&bes_color_by_length_flag
 fgcolor     = \&bes_color_by_length_flag
@@ -638,8 +638,8 @@ citation    =
 
 [RH_BAC_f]
 feature =
-  "clone:DBolser_Dundee_BES_SSAHA_rh_bes_fg"
-  "clone:DBolser_Dundee_BES_SSAHA_rh_bes_fb"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_rh_bes_fg"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_rh_bes_fb"
 glyph       = segments
 bgcolor     = \&bes_color_by_length_flag
 fgcolor     = \&bes_color_by_length_flag
@@ -658,7 +658,7 @@ citation    =
 
 [SL_BAC_Link]
 feature =
-  "clone:DBolser_Dundee_BES_SSAHA_sl_clones_l"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_sl_clones_l"
 glyph       = segments
 bgcolor     = red
 fgcolor     = red
@@ -673,12 +673,12 @@ citation    =
 
 [SL_BAC]
 feature =
-  "clone:DBolser_Dundee_BES_SSAHA_sl_clones_sg"
-  "clone:DBolser_Dundee_BES_SSAHA_sl_clones_sb"
-  "clone:DBolser_Dundee_BES_SSAHA_sl_clones_lg"
-  "clone:DBolser_Dundee_BES_SSAHA_sl_clones_lb"
-  "clone:DBolser_Dundee_BES_SSAHA_sl_clones_hg"
-  "clone:DBolser_Dundee_BES_SSAHA_sl_clones_hb"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_sl_clones_sg"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_sl_clones_sb"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_sl_clones_lg"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_sl_clones_lb"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_sl_clones_hg"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_sl_clones_hb"
 glyph       = segments
 bgcolor     = \&bes_color_by_length_flag
 fgcolor     = \&bes_color_by_length_flag
@@ -696,8 +696,8 @@ citation    =
 
 [SL_BAC_f]
 feature =
-  "clone:DBolser_Dundee_BES_SSAHA_sl_clones_fg"
-  "clone:DBolser_Dundee_BES_SSAHA_sl_clones_fb"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_sl_clones_fg"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_sl_clones_fb"
 glyph       = segments
 bgcolor     = \&bes_color_by_length_flag
 fgcolor     = \&bes_color_by_length_flag
@@ -719,30 +719,30 @@ citation    =
 
 [Clone]
 feature =
-  "clone:DBolser_Dundee_BES_SSAHA_dm_bes_sg"
-  "clone:DBolser_Dundee_BES_SSAHA_dm_bes_sb"
-  "clone:DBolser_Dundee_BES_SSAHA_dm_bes_lg"
-  "clone:DBolser_Dundee_BES_SSAHA_dm_bes_lb"
-  "clone:DBolser_Dundee_BES_SSAHA_dm_bes_hg"
-  "clone:DBolser_Dundee_BES_SSAHA_dm_bes_hb"
-  "clone:DBolser_Dundee_BES_SSAHA_dm_fos_sg"
-  "clone:DBolser_Dundee_BES_SSAHA_dm_fos_sb"
-  "clone:DBolser_Dundee_BES_SSAHA_dm_fos_lg"
-  "clone:DBolser_Dundee_BES_SSAHA_dm_fos_lb"
-  "clone:DBolser_Dundee_BES_SSAHA_dm_fos_hg"
-  "clone:DBolser_Dundee_BES_SSAHA_dm_fos_hb"
-  "clone:DBolser_Dundee_BES_SSAHA_rh_bes_sg"
-  "clone:DBolser_Dundee_BES_SSAHA_rh_bes_sb"
-  "clone:DBolser_Dundee_BES_SSAHA_rh_bes_lg"
-  "clone:DBolser_Dundee_BES_SSAHA_rh_bes_lb"
-  "clone:DBolser_Dundee_BES_SSAHA_rh_bes_hg"
-  "clone:DBolser_Dundee_BES_SSAHA_rh_bes_hb"
-  "clone:DBolser_Dundee_BES_SSAHA_sl_clones_sg"
-  "clone:DBolser_Dundee_BES_SSAHA_sl_clones_sb"
-  "clone:DBolser_Dundee_BES_SSAHA_sl_clones_lg"
-  "clone:DBolser_Dundee_BES_SSAHA_sl_clones_lb"
-  "clone:DBolser_Dundee_BES_SSAHA_sl_clones_hg"
-  "clone:DBolser_Dundee_BES_SSAHA_sl_clones_hb"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_dm_bes_sg"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_dm_bes_sb"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_dm_bes_lg"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_dm_bes_lb"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_dm_bes_hg"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_dm_bes_hb"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_dm_fos_sg"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_dm_fos_sb"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_dm_fos_lg"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_dm_fos_lb"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_dm_fos_hg"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_dm_fos_hb"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_rh_bes_sg"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_rh_bes_sb"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_rh_bes_lg"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_rh_bes_lb"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_rh_bes_hg"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_rh_bes_hb"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_sl_clones_sg"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_sl_clones_sb"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_sl_clones_lg"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_sl_clones_lb"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_sl_clones_hg"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_sl_clones_hb"
 glyph       = segments
 bgcolor     = \&bes_color_by_length_flag
 fgcolor     = \&bes_color_by_length_flag
@@ -760,10 +760,10 @@ citation    =
 
 [Clone_Link]
 feature =
-  "clone:DBolser_Dundee_BES_SSAHA_dm_bes_l"
-  "clone:DBolser_Dundee_BES_SSAHA_dm_fos_l"
-  "clone:DBolser_Dundee_BES_SSAHA_rh_bes_l"
-  "clone:DBolser_Dundee_BES_SSAHA_sl_clones_l"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_dm_bes_l"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_dm_fos_l"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_rh_bes_l"
+  "BAC_clone:DBolser_Dundee_BES_SSAHA_sl_clones_l"
 glyph       = segments
 bgcolor     = red
 fgcolor     = red
