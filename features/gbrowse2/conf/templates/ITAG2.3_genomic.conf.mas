@@ -33,6 +33,27 @@ init_code =
 		$value =~ s/(\S+)/CXGN::Tools::Identifiers::link_identifier($1) || $1/ge;
                 $value
   }
+  sub bes_color_by_length_flag {
+    my ($feature, $option_name, $part_no, $total_parts, $glyph) = @_;
+    #
+    $feature = $glyph->parent_feature if $glyph->parent_feature;
+    #
+    return "goldenrod" if ($feature->source =~ /^dund .* s[gb]$/);
+    return "purple"    if ($feature->source =~ /^dund .* l[gb]$/);
+    return "green"     if ($feature->source =~ /^dund .* h[gb]$/);
+    return "lightgrey";
+  }
+  #
+  sub bes_style_by_orientation_flag {
+    my ($feature, $option_name, $part_no, $total_parts, $glyph) = @_;
+    $feature = $glyph->parent_feature if 0;
+    #
+    return "solid"     if ($feature->source =~ /^dund .* [slhf]g$/);
+    return "dashed"    if ($feature->source =~ /^dund .* [slhf]b$/);
+    return "hat";
+  }
+
+
 
 # run detail pages for most of the types through identifier regex
 # recognition
@@ -460,3 +481,277 @@ link         = AUTO
 citation     = Repetitive regions found by running Repeatmasker at 'aggressive' stringency, meaning running it *without* the -nolow option, so that low-complexity and simple repeats ARE masked.
 das category = similarity
 bump density = 100
+
+
+##### begin dan bolser's ultra clone-end-mapping conf
+
+[DM_BAC_Link]
+feature =
+  "clone:dund dm bes l"
+glyph       = segments
+bgcolor     = red
+fgcolor     = red
+key         = DM BAC Links
+category    = PEMP
+description = 1
+citation    = 
+ BAC ends from the 'POTATO-B-01-100-110KB' library aligned using SSAHA2.
+ The coresponding clone ends have unique matches on another sequence segment!
+
+[DM_BAC]
+feature =
+  "clone:dund dm bes sg"
+  "clone:dund dm bes sb"
+  "clone:dund dm bes lg"
+  "clone:dund dm bes lb"
+  "clone:dund dm bes hg"
+  "clone:dund dm bes hb"
+glyph       = segments
+bgcolor     = \&bes_color_by_length_flag
+fgcolor     = \&bes_color_by_length_flag
+fontcolor   = \&bes_color_by_length_flag
+connector   = \&bes_style_by_orientation_flag
+key         = DM BACs
+category    = PEMP
+description = 1
+citation    = 
+ BAC ends from the 'POTATO-B-01-100-110KB' library aligned using SSAHA2.
+ The clone ends pair correctly (solid connector) or not (dahsed connector),
+ and are color coded by insert-size.
+
+[DM_BAC_f]
+feature =
+  "clone:dund dm bes fg"
+  "clone:dund dm bes fb"
+glyph       = segments
+bgcolor     = \&bes_color_by_length_flag
+fgcolor     = \&bes_color_by_length_flag
+fontcolor   = \&bes_color_by_length_flag
+connector   = \&bes_style_by_orientation_flag
+height      = 7
+key         = DM BACs (fail)
+category    = PEMP fail
+description = 1
+citation    = 
+ BAC ends from the 'POTATO-B-01-100-110KB' library aligned using SSAHA2.
+ The clone ends pair correctly (solid connector) or not (dahsed connector),
+ but are too far appart.
+
+[DM_FOS_Link]
+feature =
+  "clone:dund dm fos l"
+glyph       = segments
+bgcolor     = red
+fgcolor     = red
+key         = DM FOS Links
+category    = PEMP
+description = 1
+citation    = 
+ Fosmid ends from the 'POTATO-F-01-40KB' library aligned using SSAHA2.
+ The coresponding clone ends have unique matches on another sequence segment!
+
+[DM_FOS]
+feature =
+  "clone:dund dm fos sg"
+  "clone:dund dm fos sb"
+  "clone:dund dm fos lg"
+  "clone:dund dm fos lb"
+  "clone:dund dm fos hg"
+  "clone:dund dm fos hb"
+glyph       = segments
+fgcolor     = \&bes_color_by_length_flag
+bgcolor     = \&bes_color_by_length_flag
+fontcolor   = \&bes_color_by_length_flag
+connector   = \&bes_style_by_orientation_flag
+key         = DM Fosmids
+category    = PEMP
+description = 1
+citation    = 
+ Fosmid ends from the 'POTATO-F-01-40KB' library aligned using SSAHA2.
+ The clone ends pair correctly (solid connector) or not (dahsed connector),
+ and are color coded by insert-size.
+
+[DM_FOS_f]
+feature =
+  "clone:dund dm fos fg"
+  "clone:dund dm fos fb"
+glyph       = segments
+bgcolor     = \&bes_color_by_length_flag
+fgcolor     = \&bes_color_by_length_flag
+fontcolor   = \&bes_color_by_length_flag
+connector   = \&bes_style_by_orientation_flag
+height      = 7
+key         = DM Fosmids (fail)
+category    = PEMP fail
+description = 1
+citation    = 
+ Fosmid ends from the 'POTATO-F-01-40KB' library aligned using SSAHA2.
+ The clone ends pair correctly (solid connector) or not (dahsed connector),
+ but are too far appart.
+
+
+[RH_BAC_Link]
+feature =
+  "clone:dund rh bes l"
+glyph       = segments
+bgcolor     = red
+fgcolor     = red
+key         = RH BAC Link
+category    = PEMP
+description = 1
+citation    = 
+ BAC ends from the 'RHPOTKEY' library aligned using SSAHA2.
+ The coresponding clone ends have unique matches on another sequence segment!
+
+[RH_BAC]
+feature =
+  "clone:dund rh bes sg"
+  "clone:dund rh bes sb"
+  "clone:dund rh bes lg"
+  "clone:dund rh bes lb"
+  "clone:dund rh bes hg"
+  "clone:dund rh bes hb"
+glyph       = segments
+bgcolor     = \&bes_color_by_length_flag
+fgcolor     = \&bes_color_by_length_flag
+fontcolor   = \&bes_color_by_length_flag
+connector   = \&bes_style_by_orientation_flag
+key         = RH BACs
+category    = PEMP
+description = 1
+citation    = 
+ BAC ends from the 'RHPOTKEY' library aligned using SSAHA2.
+ The clone ends pair correctly (solid connector) or not (dahsed connector),
+ and are color coded by insert-size.
+
+[RH_BAC_f]
+feature =
+  "clone:dund rh bes fg"
+  "clone:dund rh bes fb"
+glyph       = segments
+bgcolor     = \&bes_color_by_length_flag
+fgcolor     = \&bes_color_by_length_flag
+fontcolor   = \&bes_color_by_length_flag
+connector   = \&bes_style_by_orientation_flag
+height      = 7
+key         = RH BACs (fail)
+category    = PEMP fail
+description = 1
+citation    = 
+ BAC ends from the 'RHPOTKEY' library aligned using SSAHA2.
+ The clone ends pair correctly (solid connector) or not (dahsed connector),
+ but are too far appart.
+
+
+[SL_BAC_Link]
+feature =
+  "clone:dund sl clones l"
+glyph       = segments
+bgcolor     = red
+fgcolor     = red
+key         = SL BAC Link
+category    = PEMP
+description = 1
+citation    = 
+ Clone ends from several tomato libraries aligned using SSAHA2.
+ The coresponding clone ends have unique matches on another sequence segment!
+
+[SL_BAC]
+feature =
+  "clone:dund sl clones sg"
+  "clone:dund sl clones sb"
+  "clone:dund sl clones lg"
+  "clone:dund sl clones lb"
+  "clone:dund sl clones hg"
+  "clone:dund sl clones hb"
+glyph       = segments
+bgcolor     = \&bes_color_by_length_flag
+fgcolor     = \&bes_color_by_length_flag
+fontcolor   = \&bes_color_by_length_flag
+connector   = \&bes_style_by_orientation_flag
+key         = SL BACs
+category    = PEMP
+description = 1
+citation    = 
+ Clone ends from several tomato libraries aligned using SSAHA2.
+ The clone ends pair correctly (solid connector) or not (dahsed connector),
+ and are color coded by insert-size.
+
+[SL_BAC_f]
+feature =
+  "clone:dund sl clones fg"
+  "clone:dund sl clones fb"
+glyph       = segments
+bgcolor     = \&bes_color_by_length_flag
+fgcolor     = \&bes_color_by_length_flag
+fontcolor   = \&bes_color_by_length_flag
+connector   = \&bes_style_by_orientation_flag
+height      = 7
+key         = SL BACs (fail)
+category    = PEMP fail
+description = 1
+citation    = 
+ Clone ends from several tomato libraries aligned using SSAHA2.
+ The clone ends pair correctly (solid connector) or not (dahsed connector),
+ but are too far appart.
+
+
+
+## Summary of above
+
+[Clone]
+feature =
+  "clone:dund dm bes sg"
+  "clone:dund dm bes sb"
+  "clone:dund dm bes lg"
+  "clone:dund dm bes lb"
+  "clone:dund dm bes hg"
+  "clone:dund dm bes hb"
+  "clone:dund dm fos sg"
+  "clone:dund dm fos sb"
+  "clone:dund dm fos lg"
+  "clone:dund dm fos lb"
+  "clone:dund dm fos hg"
+  "clone:dund dm fos hb"
+  "clone:dund rh bes sg"
+  "clone:dund rh bes sb"
+  "clone:dund rh bes lg"
+  "clone:dund rh bes lb"
+  "clone:dund rh bes hg"
+  "clone:dund rh bes hb"
+  "clone:dund sl clones sg"
+  "clone:dund sl clones sb"
+  "clone:dund sl clones lg"
+  "clone:dund sl clones lb"
+  "clone:dund sl clones hg"
+  "clone:dund sl clones hb"
+glyph       = segments
+bgcolor     = \&bes_color_by_length_flag
+fgcolor     = \&bes_color_by_length_flag
+fontcolor   = \&bes_color_by_length_flag
+connector   = \&bes_style_by_orientation_flag
+key         = Clone
+category    = Summary
+description = 1
+citation    = 
+ Clone ends from several tomato and potato libraries aligned using SSAHA2.
+ The clone ends pair correctly (solid connector) or not (dahsed connector),
+ and are color coded by insert-size.
+
+[Clone_Link]
+feature =
+  "clone:dund dm bes l"
+  "clone:dund dm fos l"
+  "clone:dund rh bes l"
+  "clone:dund sl clones l"
+glyph       = segments
+bgcolor     = red
+fgcolor     = red
+key         = Clone Link
+category    = Summary
+description = 1
+citation    = 
+ Clone ends from several tomato and potato libraries aligned using SSAHA2.
+  The coresponding clone ends have unique matches on another sequence segment!
+
+##### end dan bolser's ultra clone-end-mapping conf
