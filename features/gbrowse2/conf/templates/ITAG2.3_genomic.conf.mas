@@ -280,7 +280,7 @@ das category = similarity
 [augustus]
 feature      = transcript:ITAG_augustus
 key          = AUGUSTUS (de novo, Tomato trained)
-category     = Prediction features
+category     = Prediction features (<i>de novo</i>)
 ignore_sub_part = intron
 glyph        = transcript
 stranded     = 1
@@ -302,34 +302,34 @@ das category = similarity
 [geneid_tomato]
 feature      = gene:ITAG_geneid_tomato
 key          = GeneID (de novo, Tomato trained)
-category     = Prediction features
+category     = Prediction features (<i>de novo</i>)
 glyph        = gene
 stranded     = 1
-citation     = <i>De novo</i> predictions from <a href="http://genome.imim.es/software/geneid/">GeneID</a>, trained on Tomato.  Provided by Francisco Camara, <a href="http://genome.crg.es">Genome Bioinformatics Research Lab - Gene Prediction Group, Center for Genomic Regulation (CRG) - Spain</a>. (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnGeneID000">ITAG Wiki</a>)
+citation     = Prediction features (<i>de novo</i>)s from <a href="http://genome.imim.es/software/geneid/">GeneID</a>, trained on Tomato.  Provided by Francisco Camara, <a href="http://genome.crg.es">Genome Bioinformatics Research Lab - Gene Prediction Group, Center for Genomic Regulation (CRG) - Spain</a>. (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnGeneID000">ITAG Wiki</a>)
 das category = transcription
 
 [glimmerhmm_ath]
 feature      = mRNA:ITAG_glimmerhmm_ath
 key          = GlimmerHMM (de novo, Arabidopsis trained)
-category     = Prediction features
+category     = Prediction features (<i>de novo</i>)
 glyph        = gene
 stranded     = 1
-citation     = <i>De novo</i> predictions from <a href="http://www.genomics.jhu.edu/GlimmerHMM/">GlimmerHMM</a>, trained on Arabidopsis.  Provided by Erwin Datema at <a href="http://appliedbioinformatics.wur.nl/">WUR</a>. (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnGlimmerHMM000">ITAG Wiki</a>)
+citation     = Prediction features (<i>de novo</i>)s from <a href="http://www.genomics.jhu.edu/GlimmerHMM/">GlimmerHMM</a>, trained on Arabidopsis.  Provided by Erwin Datema at <a href="http://appliedbioinformatics.wur.nl/">WUR</a>. (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnGlimmerHMM000">ITAG Wiki</a>)
 das category = transcription
 
 [glimmerhmm_tomato]
 feature      = mRNA:ITAG_glimmerhmm_tomato
 key          = GlimmerHMM (de novo, Tomato trained)
-category     = Prediction features
+category     = Prediction features (<i>de novo</i>)
 glyph        = gene
 stranded     = 1
-citation     = <i>De novo</i> predictions from <a href="http://www.genomics.jhu.edu/GlimmerHMM/">GlimmerHMM</a>, trained on Tomato.  Provided by Erwin Datema at <a href="http://appliedbioinformatics.wur.nl/">WUR</a>. (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnGlimmerHMM000">ITAG Wiki</a>)
+citation     = Prediction features (<i>de novo</i>)s from <a href="http://www.genomics.jhu.edu/GlimmerHMM/">GlimmerHMM</a>, trained on Tomato.  Provided by Erwin Datema at <a href="http://appliedbioinformatics.wur.nl/">WUR</a>. (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnGlimmerHMM000">ITAG Wiki</a>)
 das category = transcription
 
 [infernal]
 feature      = transcript:ITAG_infernal
 key          = Infernal
-category     = Prediction features
+category     = Prediction features (<i>de novo</i>)
 glyph        = segments
 description  = sub { (shift->attributes('Alias'))[0] }
 bgcolor      = blue
@@ -340,7 +340,7 @@ das category = transcription
 [infernal:overview]
 feature      = transcript:ITAG_infernal
 key          = Infernal
-category     = Prediction features
+category     = Prediction features (<i>de novo</i>)
 glyph        = segments
 description  = sub { (shift->attributes('Alias'))[0] }
 stranded     = 1
@@ -350,7 +350,7 @@ das category = transcription
 [infernal:region]
 feature      = transcript:ITAG_infernal
 key          = Infernal
-category     = Prediction features
+category     = Prediction features (<i>de novo</i>)
 glyph        = segments
 description  = sub { (shift->attributes('Alias'))[0] }
 stranded     = 1
@@ -360,16 +360,16 @@ das category = transcription
 [trnascanse]
 feature      = tRNA:ITAG_trnascanse
 key          = tRNAscanSE
-category     = Prediction features
+category     = Prediction features (<i>de novo</i>)
 glyph        = segments
 stranded     = 1
-citation     = This track shows transfer RNAs predicted by the tRNAscan-SE program.  For more on tRNAscan-SE, see <a href="http://selab.janelia.org/software#trnascanse">http://selab.janelia.org/software#trnascanse</a>.  (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnTRNAScanSE000">ITAG Wiki</a>)
+citation     = This track shows transfer RNAs predicted by the tRNAscan-SE program.  For more on tRNAscan-SE, see <a href="http://selab.janelia.org/software#trnascanse">http://selab.janelia.org/software.html#trnascanse</a>.  (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnTRNAScanSE000">ITAG Wiki</a>)
 das category = transcription
 
 [tRNA:overview]
 feature      = tRNA:ITAG_trnascanse
 key          = tRNAscanSE
-category     = Prediction features
+category     = Prediction features (<i>de novo</i>)
 glyph        = segments
 stranded     = 1
 label        = sub { my ($n) = shift->get_Annotations('aminoacid'); $n }
@@ -478,8 +478,8 @@ feature =
 glyph       = segments
 bgcolor     = red
 fgcolor     = red
-key         = DM BAC Links
-category    = Paired clone-end mapping
+key         = DM BACs (linking)
+category    = Paired clone-end mapping (details)
 description = 1
 citation    = 
  BAC ends from the 'POTATO-B-01-100-110KB' library aligned using
@@ -501,7 +501,7 @@ fgcolor     = \&bes_color_by_length_flag
 fontcolor   = \&bes_color_by_length_flag
 connector   = \&bes_style_by_orientation_flag
 key         = DM BACs
-category    = Paired clone-end mapping
+category    = Paired clone-end mapping (details)
 description = 1
 citation    = 
  BAC ends from the 'POTATO-B-01-100-110KB' library aligned using SSAHA2.
@@ -519,8 +519,8 @@ fgcolor     = \&bes_color_by_length_flag
 fontcolor   = \&bes_color_by_length_flag
 connector   = \&bes_style_by_orientation_flag
 height      = 7
-key         = DM BACs (fail)
-category    = Paired clone-end mapping (failures)
+key         = DM BACs (problematic)
+category    = Paired clone-end mapping (problematic)
 description = 1
 citation    = 
  BAC ends from the 'POTATO-B-01-100-110KB' library aligned using
@@ -534,8 +534,8 @@ feature =
 glyph       = segments
 bgcolor     = red
 fgcolor     = red
-key         = DM FOS Links
-category    = Paired clone-end mapping
+key         = DM fosmids (linking)
+category    = Paired clone-end mapping (details)
 description = 1
 citation    = 
  Fosmid ends from the 'POTATO-F-01-40KB' library aligned using SSAHA2.
@@ -556,8 +556,8 @@ fgcolor     = \&bes_color_by_length_flag
 bgcolor     = \&bes_color_by_length_flag
 fontcolor   = \&bes_color_by_length_flag
 connector   = \&bes_style_by_orientation_flag
-key         = DM Fosmids
-category    = Paired clone-end mapping
+key         = DM fosmids
+category    = Paired clone-end mapping (details)
 description = 1
 citation    = 
  Fosmid ends from the 'POTATO-F-01-40KB' library aligned using SSAHA2.
@@ -576,8 +576,8 @@ fgcolor     = \&bes_color_by_length_flag
 fontcolor   = \&bes_color_by_length_flag
 connector   = \&bes_style_by_orientation_flag
 height      = 7
-key         = DM Fosmids (fail)
-category    = Paired clone-end mapping (failures)
+key         = DM Fosmids (problematic)
+category    = Paired clone-end mapping (problematic)
 description = 1
 citation    = 
  Fosmid ends from the 'POTATO-F-01-40KB' library aligned using SSAHA2.
@@ -592,8 +592,8 @@ feature =
 glyph       = segments
 bgcolor     = red
 fgcolor     = red
-key         = RH BAC Link
-category    = Paired clone-end mapping
+key         = RH BAC (linking)
+category    = Paired clone-end mapping (details)
 description = 1
 citation    = 
  BAC ends from the 'RHPOTKEY' library aligned using SSAHA2.  The
@@ -615,7 +615,7 @@ fgcolor     = \&bes_color_by_length_flag
 fontcolor   = \&bes_color_by_length_flag
 connector   = \&bes_style_by_orientation_flag
 key         = RH BACs
-category    = Paired clone-end mapping
+category    = Paired clone-end mapping (details)
 description = 1
 citation    = 
  BAC ends from the 'RHPOTKEY' library aligned using SSAHA2.  The clone
@@ -633,8 +633,8 @@ fgcolor     = \&bes_color_by_length_flag
 fontcolor   = \&bes_color_by_length_flag
 connector   = \&bes_style_by_orientation_flag
 height      = 7
-key         = RH BACs (fail)
-category    = Paired clone-end mapping (failures)
+key         = RH BACs (problematic)
+category    = Paired clone-end mapping (problematic)
 description = 1
 citation    = 
  BAC ends from the 'RHPOTKEY' library aligned using SSAHA2.
@@ -649,8 +649,8 @@ feature =
 glyph       = segments
 bgcolor     = red
 fgcolor     = red
-key         = SL BAC Link
-category    = Paired clone-end mapping
+key         = SL BACs (linking)
+category    = Paired clone-end mapping (details)
 description = 1
 citation    = 
  Clone ends from several tomato libraries aligned using SSAHA2.  The
@@ -672,7 +672,7 @@ fgcolor     = \&bes_color_by_length_flag
 fontcolor   = \&bes_color_by_length_flag
 connector   = \&bes_style_by_orientation_flag
 key         = SL BACs
-category    = Paired clone-end mapping
+category    = Paired clone-end mapping (details)
 description = 1
 citation    = 
  Clone ends from several tomato libraries aligned using SSAHA2.  The
@@ -691,8 +691,8 @@ fgcolor     = \&bes_color_by_length_flag
 fontcolor   = \&bes_color_by_length_flag
 connector   = \&bes_style_by_orientation_flag
 height      = 7
-key         = SL BACs (fail)
-category    = Paired clone-end mapping (failures)
+key         = SL BACs (problematic)
+category    = Paired clone-end mapping (problematic)
 description = 1
 citation    = 
  Clone ends from several tomato libraries aligned using SSAHA2.  The
@@ -735,8 +735,8 @@ bgcolor     = \&bes_color_by_length_flag
 fgcolor     = \&bes_color_by_length_flag
 fontcolor   = \&bes_color_by_length_flag
 connector   = \&bes_style_by_orientation_flag
-key         = Clone
-category    = Summary
+key         = All clones
+category    = Paired clone-end mapping
 description = 1
 citation    = 
  Clone ends from several tomato and potato libraries aligned using
@@ -754,8 +754,8 @@ feature =
 glyph       = segments
 bgcolor     = red
 fgcolor     = red
-key         = Clone Link
-category    = Summary
+key         = All clones (linking)
+category    = Paired clone-end mapping
 description = 1
 citation    = 
  Clone ends from several tomato and potato libraries aligned using
