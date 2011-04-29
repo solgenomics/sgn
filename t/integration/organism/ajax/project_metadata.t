@@ -30,12 +30,12 @@ $mech->with_test_level( local => sub {
     $mech->content_contains('html');
 
     $mech->while_logged_in( { user_type=>'submitter' }, sub { 
-                                $mech->get_ok("/organism/$o_id/metadata/?action=store&genome_project_funding_agencies=NSF");
+                                $mech->get_ok("/organism/$o_id/metadata/?action=store&genome_project_funding_agencies=NSF&object_id=-$o_id");
                                 #    print $mech->content();
                                 $mech->content_contains('success');
                                 $mech->get_ok("/organism/$o_id/metadata/?action=view");
                                 $mech->content_contains('NSF');
-                                $mech->get_ok("/organism/$o_id/metadata/?action=store&genome_project_funding_agencies=USDA");
+                                $mech->get_ok("/organism/$o_id/metadata/?action=store&genome_project_funding_agencies=USDA&object_id=-$o_id");
                                 $mech->content_contains('success');
                                 $mech->get_ok("/organism/$o_id/metadata/?action=view");
                                 $mech->content_contains('USDA');
