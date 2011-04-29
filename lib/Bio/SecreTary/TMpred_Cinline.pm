@@ -14,6 +14,8 @@ Tom York (tly2@cornell.edu)
 =cut
 
 package Bio::SecreTary::TMpred_Cinline;
+use strict;
+use warnings;
 use base qw / Bio::SecreTary::TMpred /;
 use List::Util qw / min max /;
 
