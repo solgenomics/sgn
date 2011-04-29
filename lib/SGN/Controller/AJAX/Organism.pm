@@ -53,11 +53,24 @@ sub autocomplete_GET :Args(0) {
 }
 
 
+=head2 project_metadata
+
+ Usage:        Action to update metadata information about sequencing 
+               projects
+ Desc:         Stores the sequencing metadata for each accession in an 
+               organismprop, using a JSON data structure for storing the
+               different fields.
+ Side Effects: stores/updates/deletes metadata information
+
+=cut
+
 sub project_metadata :Chained('/organism/find_organism') :PathPart('metadata') :Args(0) {
     my $self = shift;
     my $c = shift;
 
     my $action = $c->req->param('action');
+
+    #object id is a combination of prop_id and organism_id, separated by a "-"
     my ($prop_id, $organism_id) = split "-", $c->req->param('object_id');
     my $login_user_id = 0;
     my $login_user_can_modify = 0;
@@ -75,7 +88,6 @@ sub project_metadata :Chained('/organism/find_organism') :PathPart('metadata') :
     # 4. if it is a store, store the selected prop_id, display everything as static
     # 5. if it is a delete, delete the selected prop_id, display everthing as static
     
-    # get all the props!
     my $form;
     my $html = "";
     my $error;
@@ -144,10 +156,7 @@ sub project_metadata :Chained('/organism/find_organism') :PathPart('metadata') :
     }
     my @proplist = $self->get_organism_metadata_props($c); # contains JSON strings
 
-    print STDERR "LOGIN_USER_CAN_MODIFY $login_user_can_modify\n";
-
     foreach my $p (@proplist) { 
-
 	
 	if (exists($p->{organismprop_id}) && ($prop_id == $p->{organismprop_id}) && $action eq "edit") { 
 	    if ($login_user_can_modify) { 
