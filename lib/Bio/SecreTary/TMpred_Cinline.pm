@@ -65,8 +65,29 @@ double max_in_range( SV * terms, int start, int stop ) {
        return max;
 }
 
+double make_profile_inner_loop(SV* m, SV* seq_nums, I32 kmrf){
+   if ((!SvROK(m))
+                        || (SvTYPE(SvRV(m)) != SVt_PVAV)
+                        || ((av_len((AV *)SvRV(m)) + 1) < 0)) {
+                return -10000;
+        }
+     double result = 0;
+I32 length = av_len((AV *)SvRV(seq_nums)) + 1;
+I32 ncols = av_len((AV *)SvRV(* av_fetch((AV*) SvRV(m), 0, 0 ))) + 1;
 
+I32 plo  = (kmrf > 0)? kmrf: 0; //max($kmrf, 0);	# $kmrf = $k - $ref_position;
+ I32  pup = (ncols + kmrf < length)? ncols + kmrf: length;  //min($ncols + $kmrf, $length);
 
+I32 p = plo;
+I32 i = plo - kmrf;
+for(; p < pup; p++, i++){
+I32 aanum = SvIV(* av_fetch((AV*) SvRV(seq_nums), p, 0 ));
+SV* a = (* av_fetch((AV*) SvRV(m), aanum, 0 ));
+result += SvNV(* av_fetch((AV*) SvRV(a), i, 0 ));
+}
+result = (result < 0)? (int) (result * 100 - 0.5): (int) (result * 100 + 0.5);
+return result;
+}
 
 END_C
 
@@ -125,34 +146,22 @@ sub new {
   return $self;
 }
 
-sub make_profile {		    # makes a profile, i.e. an array
-				    # containing ...
-				    # my $sequence     = shift;
-  my $seq_aanumber_array = shift;   # ref to array of numbers
+sub make_profile {    # makes a profile, i.e. a certain array
+  my $self = shift;
+  my $seq_aanumber_array = shift; # ref to array of numbers
   my $table              = shift;
   my $ref_position       = $table->marked_position();
   my $matrix             = $table->table();
   my $ncols   = scalar @{ $matrix->[0] }; # ncols is # elements in first row
-  my @profile = ();
   my $length = scalar @$seq_aanumber_array; #length $sequence;
+  my @profile = ();
 
   # need to be careful here to make it consistent with pascal code,
   # which has 1-based arrays. ref_position is 1 less than in pascal code for this reason.
-  for ( my $k = 0 ; $k < $length ; $k++ ) {
+  for ( my $kmrf = 0 - $ref_position ; $kmrf < $length - $ref_position ; $kmrf++ ) {
     my $m    = 0;
-    my $kmrf = $k - $ref_position;
-    my $plo  = max($kmrf, 0);		# $kmrf = $k - $ref_position;
-   # $plo = 0 if ( $plo < 0 );
-    my $pup = min($ncols + $kmrf, $length);
-  #  $pup = $length if ( $pup > $length );
-
-    for ( my ( $p, $i ) = ( $plo, $plo - $kmrf ) ; $p < $pup ; $p++, $i++ ) {
-      $m += $matrix->[ $seq_aanumber_array->[$p] ]->[$i];
-    }
-
-    my $round_m =
-      ( $m < 0 ) ? int( $m * 100 - 0.5 ) : int( $m * 100 + 0.5 );
-    push @profile, $round_m;
+      $m = make_profile_inner_loop( $matrix, $seq_aanumber_array, $kmrf);
+    push @profile, $m;
   }
 
   return \@profile;
@@ -183,7 +192,7 @@ sub make_curve {
       my $s2 = max_in_range($c_profile, $i + $min_halfw, $c_end); 
 
 
- $score[$i] = $m_profile->[$i] + $s1 + $s2;
+      $score[$i] = $m_profile->[$i] + $s1 + $s2;
     }
   }
   return \@score;
@@ -198,7 +207,7 @@ sub find_helix {
   # or $oi_score, $oi_center_prof, ...
   my $min_halfw = $self->{min_halfw};
   my $max_halfw = $self->{max_halfw};
-  my $helix; #     = Bio::SecreTary::Helix->new();
+  my $helix;			#     = Bio::SecreTary::Helix->new();
 
   my $find_helix_result;
 
@@ -209,9 +218,9 @@ sub find_helix {
 
   while ( ( $i < $length - $min_halfw ) and ( !$found ) ) {
 
-     # my $pos = max_index_in_range( $s, $i - $min_halfw, $i + $max_halfw );
-     # my $scr = $s->[$pos];
-      my $scr = max_in_range( $s, $i - $min_halfw, $i + $max_halfw );
+    # my $pos = max_index_in_range( $s, $i - $min_halfw, $i + $max_halfw );
+    # my $scr = $s->[$pos];
+    my $scr = max_in_range( $s, $i - $min_halfw, $i + $max_halfw );
 
     if ( ( $s->[$i] == $scr ) and ( $s->[$i] > 0 ) ) {
       $found = $TRUE;
@@ -267,9 +276,9 @@ sub find_helix {
       }
 
       $helix->sh_cterm( [ $j, $c->[$j] ] );
-    }	   # end of if helix found block
+    }				# end of if helix found block
     $i++;
-  }	   # end of while loop
+  }				# end of while loop
   if ($found) {
     $start = $helix->sh_cterm()->[0] + 1;
 
