@@ -120,7 +120,10 @@ sub _validate_single_url {
             # test for any broken images or other things that have a
             # src attr
             { my @stuff = map $_->attr('src'), $mech->findnodes('//*[@src]');
-              $mech->get_ok( $_ ) for @stuff;
+              for( @stuff ) {
+                  $mech->get_ok( $_ );
+                  $mech->back;
+              }
             }
         }
     } else {
