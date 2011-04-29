@@ -430,19 +430,6 @@ citation     = This track shows the location and orientation of the scaffolds an
 das category = structural
 balloon click = sub { my $name = shift->name; "url:/api/v1/feature_xrefs?q=$name;exclude=gbrowse,gbrowse2" }
 
-
-[dbolser_BES]
-feature      = BAC_clone:DBolser_Dundee_BES_SSAHA
-key          = Clone end sequences
-category     = Genome data and reagents
-#link         = /search/quick?term=$name
-box_subparts = 1
-glyph        = alignment
-bgcolor      = purple
-stranded     = 1
-citation     = Clone end sequence alignments Provided by Dan Bolser, <a href="http://www.compbio.dundee.ac.uk/">University of Dundee</a>.  Generated from a post-processed <a href="http://www.sanger.ac.uk/resources/software/ssaha/">SSAHA</a> alignment of S. lycopersicum and S. penellii clone end sequences to the SL2.40 assembly.  Clone end sequences from libraries: LE_HBa, LpenBAC, LpenCOS, SL_EcoRI, SL_FOS, SL_MboI, SL_MT, and SL_s
-das category = structural
-
 [itag1_reference]
 feature      = match:ITAG_itag1_ref
 glyph        = alignment
