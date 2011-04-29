@@ -166,7 +166,7 @@ CXGN.Page.Form.JSFormPage.prototype = {
      */
     printDeleteDialog: function() {
 	var deleteDialog =  
-	'<b>Delete this ' + this.getObjectName()  + '?</b> '; 
+	'<b>Delete this ' + this.getObjectName() + ' ' +this.getObjectId()  + '?</b> '; 
 	deleteDialog += '<input type =\"button\" onClick=\"javascript:' + this.getJsObjectName() + '.printForm(\'confirm_delete\')\" value=\"Confirm delete\"/><br><br>';
 	this.printEditLinks('delete');
 	$(this.getFormId() ).innerHTML = deleteDialog;

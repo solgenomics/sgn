@@ -58,19 +58,15 @@ sub project_metadata :Chained('/organism/find_organism') :PathPart('metadata') :
     my $c = shift;
 
     my $action = $c->req->param('action');
-    my $object_id = $c->req->param('object_id');
-    my $prop_id = $c->req->param('prop_id');
-
+    my ($prop_id, $organism_id) = split "-", $c->req->param('object_id');
     my $login_user_id = 0;
     my $login_user_can_modify = 0;
-
 
     $c->stash->{json} = JSON::Any->new();
 
     if($c->user()) { 
 	$login_user_id = $c->user()->get_object()->get_sp_person_id();
 	$login_user_can_modify = any { $_ =~ /curator|sequencer|submitter/i } ($c->user()->roles());
-
     }
 
     # 1. get all the props associated with the organism
@@ -80,95 +76,109 @@ sub project_metadata :Chained('/organism/find_organism') :PathPart('metadata') :
     # 5. if it is a delete, delete the selected prop_id, display everthing as static
     
     # get all the props!
-
-    my %props = $self->get_organism_metadata_props($c); # contains JSON strings
-
-    my $html = "TEST";
-
-    print STDERR "GENERATING FORM...\n";
-
     my $form;
-    foreach my $k (keys %props) { 
-	if ($prop_id == $props{organismprop_id} && $action eq "edit") { 
-	    $form = $self->metadata_form($c, $prop_id);
-	    $html .= $form->render_html();
-	}
-	else { 
-	    $html .= $self->metadata_static();
-	}
-
-
-
-    }
-
-    
-#    if ($action eq 'store') {
-#        %props = %{$c->request->parameters()};
-#	
-#    }
-
-    my $html;
+    my $html = "";
     my $error;
 
-    if ($login_user_can_modify && ($action eq 'edit' || $action eq 'store')) {
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    if (!$action) { $action = 'view'; }
+    if ($login_user_can_modify && ($action ne 'view')) {
         if (!$login_user_id) {
-            $error .= 'Must be logged in to edit';
+            $c->stash->{rest}->{$error} .= 'Must be logged in to edit';
+	    return;
         }
+	if ($action eq 'confirm_delete') {
+	    my $delete_rs = $schema->resultset('Organism::Organismprop')->search({ organismprop_id=>$prop_id });
+	    $delete_rs->delete();
+	}
      
         if ($action eq 'store') {
+	    my $props = $c->req->parameters();
+	    my %props = $self->project_metadata_prop_list();
+	    my $store_props = {};
+	    foreach my $p (keys(%props )) { 
+		$store_props->{$p}=$props->{$p};
+	    }	    
+	    my $json = $c->stash->{json}->objToJson($store_props);
 
-	    $form = $self->metadata_form($c, $prop_id);
-	    print STDERR "STORING...\n";
-	    
-	    print STDERR join (", ", (keys(%{$c->request()->parameters}), ":", values(%{$c->req->parameters})))."\n";
-
+	    $form = $self->metadata_form($c, $json, $prop_id, $organism_id);
 
             $form->process($c->req());
-	    print STDERR "FORM PROCESSED.\n";
+
             if ($form->submitted_and_valid()) {
-		print STDERR "FORM IS VALID...\n";
-		my $store_props = {};
+		my $cv = $schema->resultset('Cv::Cv') ->find( { name=> 'local' } );
+		my $cv_id = $cv->cv_id();
+		
+		my $cvterm = $schema->resultset('Cv::Cvterm')->find( { name => 'organism_sequencing_metadata' } );
 
-		my $props = $c->req->parameters();
-		print STDERR "blabla\n";
-		my %props = $self->project_metadata_prop_list();
-		foreach my $p (keys(%props )) { 
-		    print STDERR "Dealing with $p...\n";
-		    $store_props->{$p}=$props{$p};
+		my $type_id = $cvterm->cvterm_id();
+
+		if (!$type_id) { 
+		    my $cvterm_rs = $schema->('Cv::Cvterm')->new({ name=> 'organism_sequencing_metadata', cv_id=>$cv_id });
+		    $type_id = $cvterm_rs->insert();
+		    
+		}		
+		
+		if ($prop_id) { 
+		    my $prop_row = $schema->resultset('Organism::Organismprop')
+			->find({ organismprop_id => $prop_id });
+		
+		    
+		    $prop_row->value($json);
+		    $prop_row->update();
+		}
+		else { 
+		    
+		    my $max_rank_prop_rs = $schema->resultset('Organism::Organismprop')->search( { organism_id=>$organism_id, type_id=>$type_id } );
+		    my $max_rank_prop_col = $max_rank_prop_rs->get_column('rank');
+		    my $max_rank = $max_rank_prop_col->max();
+		    my $prop_row = $schema->resultset('Organism::Organismprop')->new( { value=>$json, organism_id=>$organism_id, type_id=>$type_id, rank => $max_rank +1 } );
+		    $prop_row->insert();
 		}
 		
-		print STDERR "CALCULATED PROPS...\n";
-		my $json = $c->stash->{json}->objToJson($store_props);
-
-		#add cvterm if it does not exist
-		$c->stash->{organism_rs}->first()->create_organismprops( 
-		    { 'organism_metadata' => $json }, 
-		    { autocreate=>1, 
-		      cv_name => 'local', 
-		      allow_duplicate_values => 0 
-		    });
-		
-		my $cvterm_row = $c->dbic_schema('Bio::Chado::Schema','sgn_chado')->resultset('Cv::Cvterm')->search( { organismprop_id=>$prop_id  } )->first();
-		my $op = $c->stash->{organism_rs}->first()->organismprops({ type_id=>$cvterm_row->cvterm_id });
-		if ($op >  0) {
-		    $op->update( { value=>$json });
-		}
 	    }
 	    else { 
-		print "FORM IS NOT VALID...\n";
+		print STDERR "FORM IS NOT VALID...\n";
 	    }
 	}
     }
+    my @proplist = $self->get_organism_metadata_props($c); # contains JSON strings
 
-    if ( $action eq 'new') {
-	print STDERR "ACTION = new\n";
-	$form = $self->metadata_form($c, $prop_id);
-	print STDERR "Rendering Form...\n";
+    print STDERR "LOGIN_USER_CAN_MODIFY $login_user_can_modify\n";
+
+    foreach my $p (@proplist) { 
+
+	
+	if (exists($p->{organismprop_id}) && ($prop_id == $p->{organismprop_id}) && $action eq "edit") { 
+	    if ($login_user_can_modify) { 
+		#make the form editable
+		$form = $self->metadata_form($c, $p->{json}, $prop_id, $organism_id);
+		$html .= $form->render();
+		$html .= "<hr />\n";
+	    }
+	}
+	else { 
+	    $html .= $self->metadata_static($c, $p->{json});
+	    $html .= "<hr />\n";
+	}
+	
+	if ($login_user_can_modify) {
+	    # add appropriate edit and delete links 
+	    $html .= "<a href=\"javascript:organismObjectName.setObjectId('$p->{organismprop_id}-$organism_id'); organismObjectName.printForm('edit'); \">Edit</a> <a href=\"javascript:organismObjectName.setObjectId('$p->{organismprop_id}-$organism_id'); organismObjectName.printDeleteDialog();\">Delete</a><hr />";
+	    
+	}
+    }
+    
+    if ($login_user_can_modify && $action eq 'new') {
+	$form = $self->metadata_form($c, undef, undef, $organism_id);
 	$html .= $form->render();
+	$html .= qq | <br /><a href="javascript:organismObjectName.render();">Cancel</a><br /><br /> | ; 
+    }
+    elsif ($login_user_can_modify) { 
+	$html .=  "<br /><a href=\"javascript:organismObjectName.setObjectId('-$organism_id' ); organismObjectName.printForm('new');\">New</a>"; 
     }
 
     if ( $action eq 'new' || $action eq 'view' || !$action || !$login_user_can_modify) {
-	print STDERR "CONSTRUCTING JSON RESPONSE...\n";
         $c->stash->{rest} = { login_user_id => $login_user_id,
                               editable_form_id => 'organism_project_metadata_form',
                               is_owner => $login_user_can_modify,
@@ -195,10 +205,9 @@ sub project_metadata :Chained('/organism/find_organism') :PathPart('metadata') :
 
 
 sub metadata_form { 
-    my ($self, $c, $json, $prop_id) = @_;
+    my ($self, $c, $json, $prop_id, $organism_id) = @_;
     print STDERR "METADATA_FORM\n";
     my $data = {};
-    print STDERR "JSON = '$json'\n";
     if ($json) { 
 	print STDERR "CONVERTING JSON...\n";
 	$data = $c->stash->{json}->jsonToObj($json); }
@@ -207,14 +216,9 @@ sub metadata_form {
 
     }
 
-##    print "JSON data for form: ". (Data::Dumper->Dump($data))."\n";
-    print STDERR "Yeah!\n";
-
-    my $prop_id;
-    if (exists($data->{prop_id})) { 
-	$prop_id = $data->{prop_id};
-    }
     print STDERR "CREATING FORM FU...\n";
+
+    my $object_id = $prop_id."-".$organism_id;
     my $form = HTML::FormFu->new(Load(<<YAML));
   method: POST
   attributes:
@@ -224,40 +228,41 @@ sub metadata_form {
      - type: Hidden
        name: action
        value: store
-       
      - type: Hidden
-       name: prop_id
-       value: $prop_id
+       name: object_id
+       value: $object_id
 YAML
  
  ;
-    print STDERR "DONE.\n";
+
     my %fields = $self->project_metadata_prop_list();
+
     foreach my $k (keys %fields) {
 	print STDERR "processing $k\n";
 
 	$form->element( { type=>'Text', name=>$k, label=>$fields{$k}, value=>$data->{$k}, size=>30 });
     }
-    
+
+    print STDERR "FORM: = ".$form->render()."\n";
     return $form;
 }
 
-sub static_html {
+sub metadata_static { 
     my $self = shift;
     my $c = shift;
     my $json = shift;
     
     if (!$json) { return; }
-    print STDERR "formatting static html for metadata: $json\n";
-    my $props = %{$c->{stash}->{json}->jsonToObj($json)};
+    print STDERR "Formatting static html for metadata: $json\n";
+    my %props = %{$c->{stash}->{json}->jsonToObj($json)};
 
     my %fields = $self->project_metadata_prop_list();
 
     my $static = '<table>';
 
     foreach my $k (keys %fields) {
-	print STDERR "Rendering $k ($fields{$k})\n";
-        $static .= '<tr><td>'.$fields{$k}.'</td><td>&nbsp;</td><td><b>'.$props->{$k}.'</b></td></tr>';
+	print STDERR "Rendering $k ($fields{$k}, $props{$k})\n";
+        $static .= '<tr><td>'.$fields{$k}.'</td><td>&nbsp;</td><td><b>'.$props{$k}.'</b></td></tr>';
     }
     
     $static .= '</table>';
@@ -273,7 +278,7 @@ defines the prop list as a hash. the key is the name of the property (stored in 
 
 sub project_metadata_prop_list {
     return ("genome_project_sequencing_center"    => "Sequencing Center",
-            "genome_project_sequenced_accessions" => "Sequenced Accession(s)",
+            "genome_project_sequenced_accessions" => "Accession",
             "genome_project_dates"                => "Project start, end",
             "genome_project_funding_agencies"     => "Funding Agencies" );
 
@@ -283,16 +288,16 @@ sub get_organism_metadata_props {
     my $self = shift;
     my $c = shift;
 
-    my %props;
+    my @proplist = ();
 
 ###    my $props_rs = $c->stash->{organism_rs}->search_related( 'organismprops' );
-
-    my $sth = $c->dbc->dbh->prepare("SELECT organismprop.organismprop_id, organismprop.value, cvterm.name FROM organismprop join cvterm on (type_id=cvterm_id) where organism_id=? and cvterm.name='organism_metadata'");
+    print STDERR "GETTING THE ORGANISM METADATA FROM DB...\n";
+    my $sth = $c->dbc()->dbh()->prepare("SELECT organismprop.organismprop_id, organismprop.value, cvterm.name FROM organismprop join cvterm on (type_id=cvterm_id) where organism_id=? and cvterm.name='organism_sequencing_metadata'");
     $sth->execute($c->stash->{organism_id});
-    while (my ($organism_prop_id, $value, $name) = $sth->fetchrow_array()) {
-        $props{$organism_prop_id} = $value;
+    while (my ($organismprop_id, $value, $name) = $sth->fetchrow_array()) {
+	print STDERR "NAME: $name, VALUE: $value. ID=$organismprop_id\n";
+        push @proplist, { organismprop_id => $organismprop_id, json =>$value, name => $name };
     }
 
-
-    return %props;
+    return @proplist;
 }
