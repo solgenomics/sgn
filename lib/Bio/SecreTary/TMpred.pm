@@ -225,19 +225,19 @@ sub run_tmpred_perl {
     # get the 6 profiles:
     # in-to-out
     my $io_center_prof =
-      make_profile( \@sequence_aanumber_array, $self->get_io_center_table() );
+      $self->make_profile( \@sequence_aanumber_array, $self->get_io_center_table() );
     my $io_nterm_prof =
-      make_profile( \@sequence_aanumber_array, $self->get_io_nterm_table() );
+      $self->make_profile( \@sequence_aanumber_array, $self->get_io_nterm_table() );
     my $io_cterm_prof =
-      make_profile( \@sequence_aanumber_array, $self->get_io_cterm_table() );
+      $self->make_profile( \@sequence_aanumber_array, $self->get_io_cterm_table() );
 
     # out-to-in
     my $oi_center_prof =
-      make_profile( \@sequence_aanumber_array, $self->get_oi_center_table() );
+      $self->make_profile( \@sequence_aanumber_array, $self->get_oi_center_table() );
     my $oi_nterm_prof =
-      make_profile( \@sequence_aanumber_array, $self->get_oi_nterm_table() );
+      $self->make_profile( \@sequence_aanumber_array, $self->get_oi_nterm_table() );
     my $oi_cterm_prof =
-      make_profile( \@sequence_aanumber_array, $self->get_oi_cterm_table() );
+      $self->make_profile( \@sequence_aanumber_array, $self->get_oi_cterm_table() );
 
     ( $length == scalar @$io_center_prof )
       || croak(
@@ -328,7 +328,8 @@ sub good_solutions_perl {    # get the good solutions starting from the
 sub make_profile {    # makes a profile, i.e. an array
                       # containing ...
                       # my $sequence     = shift;
-    my $seq_aanumber_array = shift;                    # ref to array of numbers
+  my $self = shift;
+my $seq_aanumber_array = shift;                    # ref to array of numbers
     my $table              = shift;
     my $ref_position       = $table->marked_position();
     my $matrix             = $table->table();
