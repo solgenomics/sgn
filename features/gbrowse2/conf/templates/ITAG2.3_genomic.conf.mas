@@ -38,9 +38,9 @@ init_code =
     #
     $feature = $glyph->parent_feature if $glyph->parent_feature;
     #
-    return "goldenrod" if ($feature->source =~ /^dund .* s[gb]$/);
-    return "purple"    if ($feature->source =~ /^dund .* l[gb]$/);
-    return "green"     if ($feature->source =~ /^dund .* h[gb]$/);
+    return "goldenrod" if ($feature->source =~ /^DBolser_Dundee_BES_SSAHA .* s[gb]$/x);
+    return "purple"    if ($feature->source =~ /^DBolser_Dundee_BES_SSAHA .* l[gb]$/x);
+    return "green"     if ($feature->source =~ /^DBolser_Dundee_BES_SSAHA .* h[gb]$/x);
     return "lightgrey";
   }
   #
@@ -48,8 +48,8 @@ init_code =
     my ($feature, $option_name, $part_no, $total_parts, $glyph) = @_;
     $feature = $glyph->parent_feature if 0;
     #
-    return "solid"     if ($feature->source =~ /^dund .* [slhf]g$/);
-    return "dashed"    if ($feature->source =~ /^dund .* [slhf]b$/);
+    return "solid"     if ($feature->source =~ /^DBolser_Dundee_BES_SSAHA .* [slhf]g$/x);
+    return "dashed"    if ($feature->source =~ /^DBolser_Dundee_BES_SSAHA .* [slhf]b$/x);
     return "hat";
   }
 
@@ -250,7 +250,7 @@ bgcolor      = red
 fgcolor      = red
 link         = /search/quick?term=$name
 stranded     = 1
-citation     = This track shows regions of similarity with Tomato BAC clones (see <a href="http://www.ab.wur.nl/TomatoWiki/AnTomatoBACs000">ITAG Wiki</a>).  Darker color indicates higher alignment score.
+citation     = This track shows regions of similarity with Tomato BAC clones (see <a href="http://www.ab.wur.nl/TomatoWiki/AnTomatoBACs000">ITAG Wiki</a>), calculated using <a href="http://mummer.sourceforge.net/">mummer</a>.  Darker color indicates higher alignment score.
 das category = similarity
 
 [tobacco_contigs]
@@ -440,7 +440,7 @@ box_subparts = 1
 glyph        = alignment
 bgcolor      = purple
 stranded     = 1
-citation     = Clone end sequence alignments by Dan Bolser, <a href="http://www.compbio.dundee.ac.uk/">University of Dundee</a>.  Generated from a post-processed <a href="http://www.sanger.ac.uk/resources/software/ssaha/">SSAHA</a> alignment of S. lycopersicum and S. penellii clone end sequences to the SL2.40 assembly.  Clone end sequences from libraries: LE_HBa, LpenBAC, LpenCOS, SL_EcoRI, SL_FOS, SL_MboI, SL_MT, and SL_s
+citation     = Clone end sequence alignments Provided by Dan Bolser, <a href="http://www.compbio.dundee.ac.uk/">University of Dundee</a>.  Generated from a post-processed <a href="http://www.sanger.ac.uk/resources/software/ssaha/">SSAHA</a> alignment of S. lycopersicum and S. penellii clone end sequences to the SL2.40 assembly.  Clone end sequences from libraries: LE_HBa, LpenBAC, LpenCOS, SL_EcoRI, SL_FOS, SL_MboI, SL_MT, and SL_s
 das category = structural
 
 [itag1_reference]
@@ -487,42 +487,45 @@ bump density = 100
 
 [DM_BAC_Link]
 feature =
-  "clone:dund dm bes l"
+  "clone:DBolser_Dundee_BES_SSAHA_dm_bes_l"
 glyph       = segments
 bgcolor     = red
 fgcolor     = red
 key         = DM BAC Links
-category    = PEMP
+category    = Paired clone-end mapping
 description = 1
 citation    = 
- BAC ends from the 'POTATO-B-01-100-110KB' library aligned using SSAHA2.
- The coresponding clone ends have unique matches on another sequence segment!
+ BAC ends from the 'POTATO-B-01-100-110KB' library aligned using
+ SSAHA2.  The coresponding clone ends have unique matches on another
+ sequence segment!  Provided by Dan Bolser, <a
+ href="http://www.compbio.dundee.ac.uk/">University of Dundee</a>.
 
 [DM_BAC]
 feature =
-  "clone:dund dm bes sg"
-  "clone:dund dm bes sb"
-  "clone:dund dm bes lg"
-  "clone:dund dm bes lb"
-  "clone:dund dm bes hg"
-  "clone:dund dm bes hb"
+  "clone:DBolser_Dundee_BES_SSAHA_dm_bes_sg"
+  "clone:DBolser_Dundee_BES_SSAHA_dm_bes_sb"
+  "clone:DBolser_Dundee_BES_SSAHA_dm_bes_lg"
+  "clone:DBolser_Dundee_BES_SSAHA_dm_bes_lb"
+  "clone:DBolser_Dundee_BES_SSAHA_dm_bes_hg"
+  "clone:DBolser_Dundee_BES_SSAHA_dm_bes_hb"
 glyph       = segments
 bgcolor     = \&bes_color_by_length_flag
 fgcolor     = \&bes_color_by_length_flag
 fontcolor   = \&bes_color_by_length_flag
 connector   = \&bes_style_by_orientation_flag
 key         = DM BACs
-category    = PEMP
+category    = Paired clone-end mapping
 description = 1
 citation    = 
  BAC ends from the 'POTATO-B-01-100-110KB' library aligned using SSAHA2.
- The clone ends pair correctly (solid connector) or not (dahsed connector),
- and are color coded by insert-size.
+ The clone ends pair correctly (solid connector) or not (dashed connector),
+ and are color coded by insert-size.  Provided by Dan Bolser, <a
+ href="http://www.compbio.dundee.ac.uk/">University of Dundee</a>.
 
 [DM_BAC_f]
 feature =
-  "clone:dund dm bes fg"
-  "clone:dund dm bes fb"
+  "clone:DBolser_Dundee_BES_SSAHA_dm_bes_fg"
+  "clone:DBolser_Dundee_BES_SSAHA_dm_bes_fb"
 glyph       = segments
 bgcolor     = \&bes_color_by_length_flag
 fgcolor     = \&bes_color_by_length_flag
@@ -530,51 +533,56 @@ fontcolor   = \&bes_color_by_length_flag
 connector   = \&bes_style_by_orientation_flag
 height      = 7
 key         = DM BACs (fail)
-category    = PEMP fail
+category    = Paired clone-end mapping (failures)
 description = 1
 citation    = 
- BAC ends from the 'POTATO-B-01-100-110KB' library aligned using SSAHA2.
- The clone ends pair correctly (solid connector) or not (dahsed connector),
- but are too far appart.
+ BAC ends from the 'POTATO-B-01-100-110KB' library aligned using
+ SSAHA2.  The clone ends pair correctly (solid connector) or not
+ (dashed connector), but are too far appart.  Provided by Dan Bolser,
+ <a href="http://www.compbio.dundee.ac.uk/">University of Dundee</a>.
 
 [DM_FOS_Link]
 feature =
-  "clone:dund dm fos l"
+  "clone:DBolser_Dundee_BES_SSAHA_dm_fos_l"
 glyph       = segments
 bgcolor     = red
 fgcolor     = red
 key         = DM FOS Links
-category    = PEMP
+category    = Paired clone-end mapping
 description = 1
 citation    = 
  Fosmid ends from the 'POTATO-F-01-40KB' library aligned using SSAHA2.
- The coresponding clone ends have unique matches on another sequence segment!
+ The corresponding clone ends have unique matches on another sequence
+ segment!  Provided by Dan Bolser, <a
+ href="http://www.compbio.dundee.ac.uk/">University of Dundee</a>.
 
 [DM_FOS]
 feature =
-  "clone:dund dm fos sg"
-  "clone:dund dm fos sb"
-  "clone:dund dm fos lg"
-  "clone:dund dm fos lb"
-  "clone:dund dm fos hg"
-  "clone:dund dm fos hb"
+  "clone:DBolser_Dundee_BES_SSAHA_dm_fos_sg"
+  "clone:DBolser_Dundee_BES_SSAHA_dm_fos_sb"
+  "clone:DBolser_Dundee_BES_SSAHA_dm_fos_lg"
+  "clone:DBolser_Dundee_BES_SSAHA_dm_fos_lb"
+  "clone:DBolser_Dundee_BES_SSAHA_dm_fos_hg"
+  "clone:DBolser_Dundee_BES_SSAHA_dm_fos_hb"
 glyph       = segments
 fgcolor     = \&bes_color_by_length_flag
 bgcolor     = \&bes_color_by_length_flag
 fontcolor   = \&bes_color_by_length_flag
 connector   = \&bes_style_by_orientation_flag
 key         = DM Fosmids
-category    = PEMP
+category    = Paired clone-end mapping
 description = 1
 citation    = 
  Fosmid ends from the 'POTATO-F-01-40KB' library aligned using SSAHA2.
- The clone ends pair correctly (solid connector) or not (dahsed connector),
- and are color coded by insert-size.
+ The clone ends pair correctly (solid connector) or not (dashed
+ connector), and are color-coded by insert size.  Provided by Dan
+ Bolser, <a href="http://www.compbio.dundee.ac.uk/">University of
+ Dundee</a>.
 
 [DM_FOS_f]
 feature =
-  "clone:dund dm fos fg"
-  "clone:dund dm fos fb"
+  "clone:DBolser_Dundee_BES_SSAHA_dm_fos_fg"
+  "clone:DBolser_Dundee_BES_SSAHA_dm_fos_fb"
 glyph       = segments
 bgcolor     = \&bes_color_by_length_flag
 fgcolor     = \&bes_color_by_length_flag
@@ -582,52 +590,56 @@ fontcolor   = \&bes_color_by_length_flag
 connector   = \&bes_style_by_orientation_flag
 height      = 7
 key         = DM Fosmids (fail)
-category    = PEMP fail
+category    = Paired clone-end mapping (failures)
 description = 1
 citation    = 
  Fosmid ends from the 'POTATO-F-01-40KB' library aligned using SSAHA2.
- The clone ends pair correctly (solid connector) or not (dahsed connector),
- but are too far appart.
+ The clone ends pair correctly (solid connector) or not (dashed
+ connector), but are too far apart. Provided by Dan Bolser, <a
+ href="http://www.compbio.dundee.ac.uk/">University of Dundee</a>.
 
 
 [RH_BAC_Link]
 feature =
-  "clone:dund rh bes l"
+  "clone:DBolser_Dundee_BES_SSAHA_rh_bes_l"
 glyph       = segments
 bgcolor     = red
 fgcolor     = red
 key         = RH BAC Link
-category    = PEMP
+category    = Paired clone-end mapping
 description = 1
 citation    = 
- BAC ends from the 'RHPOTKEY' library aligned using SSAHA2.
- The coresponding clone ends have unique matches on another sequence segment!
+ BAC ends from the 'RHPOTKEY' library aligned using SSAHA2.  The
+ coresponding clone ends have unique matches on another sequence
+ segment!  Provided by Dan Bolser, <a
+ href="http://www.compbio.dundee.ac.uk/">University of Dundee</a>.
 
 [RH_BAC]
 feature =
-  "clone:dund rh bes sg"
-  "clone:dund rh bes sb"
-  "clone:dund rh bes lg"
-  "clone:dund rh bes lb"
-  "clone:dund rh bes hg"
-  "clone:dund rh bes hb"
+  "clone:DBolser_Dundee_BES_SSAHA_rh_bes_sg"
+  "clone:DBolser_Dundee_BES_SSAHA_rh_bes_sb"
+  "clone:DBolser_Dundee_BES_SSAHA_rh_bes_lg"
+  "clone:DBolser_Dundee_BES_SSAHA_rh_bes_lb"
+  "clone:DBolser_Dundee_BES_SSAHA_rh_bes_hg"
+  "clone:DBolser_Dundee_BES_SSAHA_rh_bes_hb"
 glyph       = segments
 bgcolor     = \&bes_color_by_length_flag
 fgcolor     = \&bes_color_by_length_flag
 fontcolor   = \&bes_color_by_length_flag
 connector   = \&bes_style_by_orientation_flag
 key         = RH BACs
-category    = PEMP
+category    = Paired clone-end mapping
 description = 1
 citation    = 
- BAC ends from the 'RHPOTKEY' library aligned using SSAHA2.
- The clone ends pair correctly (solid connector) or not (dahsed connector),
- and are color coded by insert-size.
+ BAC ends from the 'RHPOTKEY' library aligned using SSAHA2.  The clone
+ ends pair correctly (solid connector) or not (dashed connector), and
+ are color-coded by insert size. Provided by Dan Bolser, <a
+ href="http://www.compbio.dundee.ac.uk/">University of Dundee</a>.
 
 [RH_BAC_f]
 feature =
-  "clone:dund rh bes fg"
-  "clone:dund rh bes fb"
+  "clone:DBolser_Dundee_BES_SSAHA_rh_bes_fg"
+  "clone:DBolser_Dundee_BES_SSAHA_rh_bes_fb"
 glyph       = segments
 bgcolor     = \&bes_color_by_length_flag
 fgcolor     = \&bes_color_by_length_flag
@@ -635,52 +647,57 @@ fontcolor   = \&bes_color_by_length_flag
 connector   = \&bes_style_by_orientation_flag
 height      = 7
 key         = RH BACs (fail)
-category    = PEMP fail
+category    = Paired clone-end mapping (failures)
 description = 1
 citation    = 
  BAC ends from the 'RHPOTKEY' library aligned using SSAHA2.
- The clone ends pair correctly (solid connector) or not (dahsed connector),
- but are too far appart.
+ The clone ends pair correctly (solid connector) or not (dashed connector),
+ but are too far appart. Provided by Dan Bolser, <a
+ href="http://www.compbio.dundee.ac.uk/">University of Dundee</a>.
 
 
 [SL_BAC_Link]
 feature =
-  "clone:dund sl clones l"
+  "clone:DBolser_Dundee_BES_SSAHA_sl_clones_l"
 glyph       = segments
 bgcolor     = red
 fgcolor     = red
 key         = SL BAC Link
-category    = PEMP
+category    = Paired clone-end mapping
 description = 1
 citation    = 
- Clone ends from several tomato libraries aligned using SSAHA2.
- The coresponding clone ends have unique matches on another sequence segment!
+ Clone ends from several tomato libraries aligned using SSAHA2.  The
+ coresponding clone ends have unique matches on another sequence
+ segment! Provided by Dan Bolser, <a
+ href="http://www.compbio.dundee.ac.uk/">University of Dundee</a>.
 
 [SL_BAC]
 feature =
-  "clone:dund sl clones sg"
-  "clone:dund sl clones sb"
-  "clone:dund sl clones lg"
-  "clone:dund sl clones lb"
-  "clone:dund sl clones hg"
-  "clone:dund sl clones hb"
+  "clone:DBolser_Dundee_BES_SSAHA_sl_clones_sg"
+  "clone:DBolser_Dundee_BES_SSAHA_sl_clones_sb"
+  "clone:DBolser_Dundee_BES_SSAHA_sl_clones_lg"
+  "clone:DBolser_Dundee_BES_SSAHA_sl_clones_lb"
+  "clone:DBolser_Dundee_BES_SSAHA_sl_clones_hg"
+  "clone:DBolser_Dundee_BES_SSAHA_sl_clones_hb"
 glyph       = segments
 bgcolor     = \&bes_color_by_length_flag
 fgcolor     = \&bes_color_by_length_flag
 fontcolor   = \&bes_color_by_length_flag
 connector   = \&bes_style_by_orientation_flag
 key         = SL BACs
-category    = PEMP
+category    = Paired clone-end mapping
 description = 1
 citation    = 
- Clone ends from several tomato libraries aligned using SSAHA2.
- The clone ends pair correctly (solid connector) or not (dahsed connector),
- and are color coded by insert-size.
+ Clone ends from several tomato libraries aligned using SSAHA2.  The
+ clone ends pair correctly (solid connector) or not (dashed
+ connector), and are color coded by insert-size. Provided by Dan
+ Bolser, <a href="http://www.compbio.dundee.ac.uk/">University of
+ Dundee</a>.
 
 [SL_BAC_f]
 feature =
-  "clone:dund sl clones fg"
-  "clone:dund sl clones fb"
+  "clone:DBolser_Dundee_BES_SSAHA_sl_clones_fg"
+  "clone:DBolser_Dundee_BES_SSAHA_sl_clones_fb"
 glyph       = segments
 bgcolor     = \&bes_color_by_length_flag
 fgcolor     = \&bes_color_by_length_flag
@@ -688,12 +705,13 @@ fontcolor   = \&bes_color_by_length_flag
 connector   = \&bes_style_by_orientation_flag
 height      = 7
 key         = SL BACs (fail)
-category    = PEMP fail
+category    = Paired clone-end mapping (failures)
 description = 1
 citation    = 
- Clone ends from several tomato libraries aligned using SSAHA2.
- The clone ends pair correctly (solid connector) or not (dahsed connector),
- but are too far appart.
+ Clone ends from several tomato libraries aligned using SSAHA2.  The
+ clone ends pair correctly (solid connector) or not (dashed
+ connector), but are too far apart. Provided by Dan Bolser, <a
+ href="http://www.compbio.dundee.ac.uk/">University of Dundee</a>.
 
 
 
@@ -701,30 +719,30 @@ citation    =
 
 [Clone]
 feature =
-  "clone:dund dm bes sg"
-  "clone:dund dm bes sb"
-  "clone:dund dm bes lg"
-  "clone:dund dm bes lb"
-  "clone:dund dm bes hg"
-  "clone:dund dm bes hb"
-  "clone:dund dm fos sg"
-  "clone:dund dm fos sb"
-  "clone:dund dm fos lg"
-  "clone:dund dm fos lb"
-  "clone:dund dm fos hg"
-  "clone:dund dm fos hb"
-  "clone:dund rh bes sg"
-  "clone:dund rh bes sb"
-  "clone:dund rh bes lg"
-  "clone:dund rh bes lb"
-  "clone:dund rh bes hg"
-  "clone:dund rh bes hb"
-  "clone:dund sl clones sg"
-  "clone:dund sl clones sb"
-  "clone:dund sl clones lg"
-  "clone:dund sl clones lb"
-  "clone:dund sl clones hg"
-  "clone:dund sl clones hb"
+  "clone:DBolser_Dundee_BES_SSAHA_dm_bes_sg"
+  "clone:DBolser_Dundee_BES_SSAHA_dm_bes_sb"
+  "clone:DBolser_Dundee_BES_SSAHA_dm_bes_lg"
+  "clone:DBolser_Dundee_BES_SSAHA_dm_bes_lb"
+  "clone:DBolser_Dundee_BES_SSAHA_dm_bes_hg"
+  "clone:DBolser_Dundee_BES_SSAHA_dm_bes_hb"
+  "clone:DBolser_Dundee_BES_SSAHA_dm_fos_sg"
+  "clone:DBolser_Dundee_BES_SSAHA_dm_fos_sb"
+  "clone:DBolser_Dundee_BES_SSAHA_dm_fos_lg"
+  "clone:DBolser_Dundee_BES_SSAHA_dm_fos_lb"
+  "clone:DBolser_Dundee_BES_SSAHA_dm_fos_hg"
+  "clone:DBolser_Dundee_BES_SSAHA_dm_fos_hb"
+  "clone:DBolser_Dundee_BES_SSAHA_rh_bes_sg"
+  "clone:DBolser_Dundee_BES_SSAHA_rh_bes_sb"
+  "clone:DBolser_Dundee_BES_SSAHA_rh_bes_lg"
+  "clone:DBolser_Dundee_BES_SSAHA_rh_bes_lb"
+  "clone:DBolser_Dundee_BES_SSAHA_rh_bes_hg"
+  "clone:DBolser_Dundee_BES_SSAHA_rh_bes_hb"
+  "clone:DBolser_Dundee_BES_SSAHA_sl_clones_sg"
+  "clone:DBolser_Dundee_BES_SSAHA_sl_clones_sb"
+  "clone:DBolser_Dundee_BES_SSAHA_sl_clones_lg"
+  "clone:DBolser_Dundee_BES_SSAHA_sl_clones_lb"
+  "clone:DBolser_Dundee_BES_SSAHA_sl_clones_hg"
+  "clone:DBolser_Dundee_BES_SSAHA_sl_clones_hb"
 glyph       = segments
 bgcolor     = \&bes_color_by_length_flag
 fgcolor     = \&bes_color_by_length_flag
@@ -734,16 +752,18 @@ key         = Clone
 category    = Summary
 description = 1
 citation    = 
- Clone ends from several tomato and potato libraries aligned using SSAHA2.
- The clone ends pair correctly (solid connector) or not (dahsed connector),
- and are color coded by insert-size.
+ Clone ends from several tomato and potato libraries aligned using
+ SSAHA2.  The clone ends pair correctly (solid connector) or not
+ (dashed connector), and are color coded by insert-size. Provided by
+ Dan Bolser, <a href="http://www.compbio.dundee.ac.uk/">University of
+ Dundee</a>.
 
 [Clone_Link]
 feature =
-  "clone:dund dm bes l"
-  "clone:dund dm fos l"
-  "clone:dund rh bes l"
-  "clone:dund sl clones l"
+  "clone:DBolser_Dundee_BES_SSAHA_dm_bes_l"
+  "clone:DBolser_Dundee_BES_SSAHA_dm_fos_l"
+  "clone:DBolser_Dundee_BES_SSAHA_rh_bes_l"
+  "clone:DBolser_Dundee_BES_SSAHA_sl_clones_l"
 glyph       = segments
 bgcolor     = red
 fgcolor     = red
@@ -751,7 +771,9 @@ key         = Clone Link
 category    = Summary
 description = 1
 citation    = 
- Clone ends from several tomato and potato libraries aligned using SSAHA2.
-  The coresponding clone ends have unique matches on another sequence segment!
+ Clone ends from several tomato and potato libraries aligned using
+ SSAHA2.  The corresponding clone ends have unique matches on another
+ sequence segment!  Provided by Dan Bolser, <a
+ href="http://www.compbio.dundee.ac.uk/">University of Dundee</a>.
 
 ##### end dan bolser's ultra clone-end-mapping conf
