@@ -74,6 +74,8 @@ $alternate_new_button => undef
 $alternate_ghosted_new_button => undef
 $alternate_delete_button => undef
 $alternate_ghosted_delete_button => undef
+$alternate_ghosted_edit_button => undef
+$alternate_edit_button => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => ["CXGN.Page.Form.JSFormPage", "MochiKit.Logging"] &>
@@ -101,6 +103,14 @@ $alternate_ghosted_delete_button => undef
 
 % if (defined($alternate_ghosted_delete_button)) { 
      <% $js_object_name %>.setGhostedDeleteButton('<% $alternate_ghosted_delete_button %>');
+% }
+
+% if (defined($alternate_edit_button)) { 
+     <% $js_object_name %>.setEditButton('<% $alternate_edit_button %>');
+% }
+
+% if (defined($alternate_ghosted_edit_button)) { 
+     <% $js_object_name %>.setGhostedEditButton('<% $alternate_ghosted_edit_button %>');
 % }
 
 
