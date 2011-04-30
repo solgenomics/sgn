@@ -93,8 +93,8 @@ sub _run_secretary {
 	my $trunc_length = 100;
 
 	my $tmpred_obj =
-		Bio::SecreTary::TMpred->new( {} ); # use defaults here for min_score, etc.
-#              Bio::SecreTary::TMpred_Cinline->new( {} );
+#		Bio::SecreTary::TMpred->new( {} ); # use defaults here for min_score, etc.
+              Bio::SecreTary::TMpred_Cinline->new( {} );
 		my $id_seqs = process_input($input);
 
 #Calculate the necessary quantities for each sequence:
@@ -189,16 +189,25 @@ sub process_input {
 				$wscount++;
 			}
 
-# otherwise stuff ahead of first > is considered junk, discarded
+# otherwise stuff ahead of first > is considered junk, discarded ($1 not used)
 		}
-	while ( $input =~ s/ ( > [^>]+ )//xms
-	      )    # capture and delete initial > and everything up to next >.
-	{
-		push @fastas, $1;
-		last if ( scalar @fastas >= $max_sequences_to_do );
-	}
+# if(0){
+# 	while ( $input =~ s/ ( > [^>]+ )//xms
+# 	      )    # capture and delete initial > and everything up to next >.
+# 	{
+# 		push @fastas, $1;
+# 		last if ( scalar @fastas >= $max_sequences_to_do );
+# 	}
+# }
+# else{
+$input =~ s/\A > //xms; # eliminate initial >
+@fastas = split(">", $input);
+
+        @fastas = @fastas[0..$max_sequences_to_do-1] if(scalar @fastas > $max_sequences_to_do); # keep just the first $max_sequence_to_do
+#}
 
 	foreach my $fasta (@fastas) {
+		$fasta = '>' . $fasta;
 		next if ( $fasta =~ /\A\z/xms );
 
 		my $id;
