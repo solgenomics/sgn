@@ -154,18 +154,12 @@ sub make_profile {    # makes a profile, i.e. a certain array
   my $table              = shift;
   my $ref_position       = $table->marked_position();
   my $matrix             = $table->table();
-  my $ncols   = scalar @{ $matrix->[0] }; # ncols is # elements in first row
+ # my $ncols   = scalar @{ $matrix->[0] }; # ncols is # elements in first row
   my $length = scalar @$seq_aanumber_array; #length $sequence;
   my @profile = ();
-
-  # need to be careful here to make it consistent with pascal code,
-  # which has 1-based arrays. ref_position is 1 less than in pascal code for this reason.
   for ( my $kmrf = 0 - $ref_position ; $kmrf < $length - $ref_position ; $kmrf++ ) {
-    my $m    = 0;
-      $m = make_profile_inner_loop( $matrix, $seq_aanumber_array, $kmrf);
-    push @profile, $m;
+    push @profile, make_profile_inner_loop( $matrix, $seq_aanumber_array, $kmrf);
   }
-
   return \@profile;
 }
 
@@ -209,66 +203,49 @@ sub find_helix {
   # or $oi_score, $oi_center_prof, ...
   my $min_halfw = $self->{min_halfw};
   my $max_halfw = $self->{max_halfw};
-  my $helix;			#     = Bio::SecreTary::Helix->new();
 
-  my $find_helix_result;
+  for(my $i = max($start, $min_halfw); $i < $length - $min_halfw; $i++){
 
-  my ( $found, $done );
-  my $i = max($start, $min_halfw);
+#    my $pos = max_index_in_range( $s, $i - $min_halfw, $i + $max_halfw );
+#    my $test = (($i==$pos) and ($s->[$i] > 0));
 
-  $found = $FALSE;
-
-  while ( ( $i < $length - $min_halfw ) and ( !$found ) ) {
-
-    # my $pos = max_index_in_range( $s, $i - $min_halfw, $i + $max_halfw );
-    # my $scr = $s->[$pos];
     my $scr = max_in_range( $s, $i - $min_halfw, $i + $max_halfw );
+    my $test = (( $s->[$i] == $scr ) and ( $s->[$i] > 0 ));
 
-    if ( ( $s->[$i] == $scr ) and ( $s->[$i] > 0 ) ) {
-      $found = $TRUE;
-      $helix = Bio::SecreTary::Helix->new();
+if($test) { # helix found
+ #   if( ($i == $pos) and ($s->[$i] > 0) ) { #helix found
 
-      $helix->center( [ $i, $m->[$i] ] );
       my $beg = max($i - $max_halfw, 0);
 
       my $nt_position = max_index_in_range( $n, $beg, $i - $min_halfw );
       my $nt_score = $n->[$nt_position];
 
-      $helix->nterm( [ $nt_position, $nt_score ] );
-
-      my $end = $i + $max_halfw;
-      $end = $length - 1 if ( $end >= $length );
+      my $end = min($i + $max_halfw, $length - 1);
 
       my $ct_position = max_index_in_range( $c, $i + $min_halfw, $end );
       my $ct_score = $c->[$ct_position];
 
-      $helix->cterm( [ $ct_position, $ct_score ] );
-
       my $j = $i - $min_halfw;	# determine nearest N-terminus
-      $done = $FALSE;
       while (
 	     $j - 1 >= 0	#  0 not 1 because 0-based
-	     and $j - 1 >= $i - $max_halfw and !$done
+	     and $j - 1 >= $i - $max_halfw 
 	    ) {
 	if ( $n->[ $j - 1 ] > $n->[$j] ) {
 	  $j--;
-	} else {
-	  $done = $TRUE;
+	} else { 
+	  last;
 	}
       }
 
-      $helix->sh_nterm( [ $j, $n->[$j] ] );
-
       $j    = $i + $min_halfw;
-      $done = $FALSE;
       while ( $j + 1 < $length
 	      and $j + 1 <= $i + $max_halfw
-	      and !$done ) {
+) {
 	if ( defined $c->[ $j + 1 ] and defined $c->[$j] ) {
 	  if ( $c->[ $j + 1 ] > $c->[$j] ) {
 	    $j++;
 	  } else {
-	    $done = $TRUE;
+	    last;
 	  }
 	} else {
 	  print "j, c[j], c[j+1]: ", $j, " ", $c->[$j], " ",
@@ -277,23 +254,24 @@ sub find_helix {
 	}
       }
 
-      $helix->sh_cterm( [ $j, $c->[$j] ] );
+      my $helix = Bio::SecreTary::Helix->new(center => [ $i, $m->[$i] ],
+					   nterm => [ $nt_position, $nt_score ],
+					   cterm => [ $ct_position, $ct_score ],
+					   sh_nterm => [ $j, $n->[$j] ],
+					   sh_cterm => [ $j, $c->[$j] ]
+					  );
+      $helix->score(
+		    $helix->center()->[1]
+		    + $helix->nterm()->[1]
+		    + $helix->cterm()->[1]
+		   );
+
+      return ($TRUE, $helix->sh_cterm()->[0] + 1, $helix);
     }				# end of if helix found block
-    $i++;
-  }				# end of while loop
-  if ($found) {
-    $start = $helix->sh_cterm()->[0] + 1;
 
-    my $the_score =
-      $helix->center()->[1] + $helix->nterm()->[1] + $helix->cterm()->[1];
-    $helix->score($the_score);
-    $find_helix_result = $TRUE;
-  } else {
-    $start             = $length;
-    $find_helix_result = $FALSE;
-  }
+  }				# end of for loop
 
-  return ( $find_helix_result, $start, $helix );
+  return ($FALSE, $length, undef); # no helix found
 }				# end of sub find_helix
 
 1;
