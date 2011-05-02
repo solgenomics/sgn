@@ -210,7 +210,7 @@ sub process_data {
     }
 
     elsif ( $type eq 'stat_form' ) {
-        $self->load_stat_parameters($args_ref, $referring_page);
+        $self->load_stat_parameters($args_ref);
 #add checks
     }
 }
@@ -1492,14 +1492,13 @@ qq |\nQTL population id: $pop_id \nQTL data owner: $username ($user_profile) |;
 
 
 sub load_stat_parameters {
-    my ($self, $args_ref, $referring_page) = @_;
+    my ($self, $args_ref) = @_;
     
     my $sp_person_id = $self->get_sp_person_id();
     my $qtl_obj      = CXGN::Phenome::Qtl->new($sp_person_id, $args_ref );
-    my $qtl_tools    = CXGN::Phenome::Qtl::Tools->new();
- 
+    my $qtl_tools    = CXGN::Phenome::Qtl::Tools->new(); 
     my $stat_param   = $qtl_obj->user_stat_parameters();
-    my @missing      = $qtl_tools->check_stat_fields($stat_param);
+    my @missing      = $qtl_tools->check_stat_fields($stat_param);  
     my $pop_id       = $args_ref->{pop_id};
    
     my $stat_file;
@@ -1509,14 +1508,20 @@ sub load_stat_parameters {
     else {
         $stat_file = $qtl_obj->user_stat_file( $c, $pop_id );
     }
-    unless ( !-e $stat_file ) {
-        my $message = 'QTL statistical parameters set : Step 5 of 5'
-            . qq | \nQTL data upload for <a href="qtl_start.pl?pop_id=$pop_id">of your population</a> is completed|;
-        $self->send_email( '[QTL upload: Step 5]', $message, $pop_id );
+       
+    if ($c->req->referer =~ /qtl_form/ ) {
+        unless ( !-e $stat_file ) {
+            my $qtlpage = $c->req->base . "qtl/id/$pop_id";
+            my $message =<<MSG;
+            QTL statistical parameters set : Step 5 of 5;
+            
+            QTL data upload for <a href="$qtlpage"> of your population </a> is completed.
+MSG
 
-        
-        print CGI->redirect(-uri=>
-            "$referring_page?pop_id=$pop_id&amp;type=confirm");
-    }
-    return 1;
+            $self->send_email( '[QTL upload: Step 5]', $message, $pop_id );
+            $c->res->redirect("qtl_form.pl?pop_id=$pop_id&type=confirm");
+            $c->detach();
+        }
+    } 
+
 }
