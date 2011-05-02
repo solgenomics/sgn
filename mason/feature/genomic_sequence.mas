@@ -1,6 +1,8 @@
 <%args>
     $feature
-    $blast_url  => undef
+    $blast_url        => undef
+    $max_display_size => 200_000
+
 </%args>
 <%perl>
 
@@ -10,26 +12,40 @@
   my @locs = $feature->featureloc_features(undef,{ prefetch => 'srcfeature' });
   for my $loc ( @locs ) {
     if( my $src = $loc->srcfeature ) {
-      my $seq = $src->trunc( $loc->fmin+1, $loc->fmax );
-      $seq->desc( location_string( $loc ) );
-      if( $loc->strand && $loc->strand == -1 ) {
-          $seq = $seq->revcom;
-          $seq->desc( $seq->desc.' (sequence from reverse strand)' );
-      }
 
-      $seq->id( $feature->name );
+        my $has_seq = $src->subseq(1,1);
 
-    if( $seq->length ) {
+        if( $has_seq ) {
 </%perl>
 
-  <div style="margin: 1em 3em">
-    <& /sequence/with_markup.mas,
-       seq       => $seq,
-       width     => 80,
-       subdiv    => 10,
-       blast_url => $blast_url,
-     &>
+            <div style="margin: 1em 3em">
 
+<%perl>
+            # if the sequence is small enough to display
+            if( $loc->fmax - $loc->fmin <= $max_display_size ) {
+
+                my $seq = $src->trunc( $loc->fmin+1, $loc->fmax );
+                $seq->desc( location_string( $loc ) );
+                if( $loc->strand && $loc->strand == -1 ) {
+                    $seq = $seq->revcom;
+                    $seq->desc( $seq->desc.' (sequence from reverse strand)' );
+                }
+
+                $seq->id( $feature->name );
+
+</%perl>
+
+                <& /sequence/with_markup.mas,
+                   seq       => $seq,
+                   width     => 80,
+                   subdiv    => 10,
+                   blast_url => $blast_url,
+                 &>
+
+%            } else { # otherwise, if the sequence is big
+                <span class="warning">Sequence too large to display.</span>
+%            }
+             </div>
     <hr />
 
     <form name="get_flanking_sequence" action="/api/v1/sequence/download/multi" method="GET">
