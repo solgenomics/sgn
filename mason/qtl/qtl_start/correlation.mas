@@ -1,0 +1,31 @@
+<%doc>
+
+=head1 NAME 
+qtl/qtl_form/stat_form.mas - a mason component for a QTL stat parameters 
+submission
+
+=AUTHOR
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$heatmap
+$corr_table
+
+</%args>
+
+<%perl>
+
+
+</%perl>
+
+<&| /page/info_section.mas, title => "Pearson Correlation Analysis" &> % $heatmap % </&>
+
+
+
+
+
