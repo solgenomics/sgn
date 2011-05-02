@@ -41,6 +41,12 @@
                blast_url => $blast_url,
              &>
           </div>
+          <div style="margin-top: 1em">
+            <& /feature/sequence_download.mas,
+                 feature => $feature,
+                 download_url => $seq_download_url
+             &>
+          </div>
         </&>
 %       }
 %    }

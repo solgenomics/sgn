@@ -1,0 +1,19 @@
+<%args>
+  $feature
+  $region        => undef
+  $length        => undef
+  $download_url
+</%args>
+
+<a href="<% $download_url %>">Download sequence (<% Number::Bytes::Human::format_bytes( $length ) %>b)</a>
+
+<%init>
+  $length ||=  $region            ? $region->[1] - $region->[0] :
+               $feature->seqlen   ? $feature->seqlen            :
+               $feature->residues ? length $feature->residues   :
+                                    0;
+</%init>
+
+<%once>
+  use Number::Bytes::Human;
+</%once>
