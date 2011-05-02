@@ -172,24 +172,12 @@ sub make_curve {
     $self->{min_halfw};	# int( ( (shift) - ( 1 - $TMHLOFFSET ) ) / 2 );
   my $max_halfw = $self->{max_halfw}; # int( ( (shift) + $TMHLOFFSET ) / 2 );
   my $length    = scalar @$m_profile;
-  my @score;
+  my @score = ((0) x $length);
 
-  # have to be careful here going to 0-based index $i
-  for ( my $i = 0 ; $i < $length ; $i++ ) {
-    if (   ( $i + 1 <= $min_halfw )
-	   or ( $i + 1 > ( $length - $min_halfw ) ) ) {
-      $score[$i] = 0;
-    } else {
-      my $n_start = ( $i - $max_halfw > 0 ) ? $i - $max_halfw : 0;
-      my $c_end =
-	( $i + $max_halfw < $length ) ? $i + $max_halfw : $length - 1;
-
-      my $s1 = max_in_range($n_profile, $n_start, $i - $min_halfw);
-      my $s2 = max_in_range($c_profile, $i + $min_halfw, $c_end); 
-
-
-      $score[$i] = $m_profile->[$i] + $s1 + $s2;
-    }
+  for(my $i = $min_halfw; $i < $length - $min_halfw; $i++){
+	$score[$i] = $m_profile->[$i] +
+	  max_in_range($n_profile, $i - $max_halfw, $i - $min_halfw) +
+	  max_in_range($c_profile, $i + $min_halfw, $i + $max_halfw);
   }
   return \@score;
 }
