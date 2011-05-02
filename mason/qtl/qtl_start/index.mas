@@ -1,0 +1,26 @@
+<%args>
+
+$pop
+$r_qtl
+$guide
+$referer
+$heatmap
+$corr_table
+
+</%args>
+
+<%perl>
+
+my $pop_id = $pop->get_population_id();
+my $name   = $pop->get_name();
+my $corr_image = qq | <img alt="correlation out put for $name " src="${$heatmap}"/> |;
+</%perl>
+
+<& /page/page_title.mas, title=>"QTL for $pop_id" &>
+<&| /page/info_section.mas, collapsible=>1, collapsed=>1, title => "QTL markers' genetic positions and Comparative Map Viewer" &> </&>
+<&| /page/info_section.mas, collapsible=>1, collapsed=>1, title => "Set Statistical Parameters" &> 
+  <& /qtl/qtl_form/stat_form.mas, pop_id =>$pop_id, guide => $guide, referer=>$referer &>
+</&>
+
+<&| /page/info_section.mas, collapsible=>1, collapsed=>1, title => "correlation" &> <% $corr_image %> </&>
+
