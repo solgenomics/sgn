@@ -1,7 +1,8 @@
 <%doc>
 
 =head1 NAME 
-qtl/qtl_form/trait_form.mas - a mason component for a traits file submission
+qtl/qtl_form/stat_form.mas - a mason component for a QTL stat parameters 
+submission
 
 =AUTHOR
 Isaak Y Tecle (iyt2@cornell.edu)
@@ -14,6 +15,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 $pop_id
 $guide
+$referer
 
 </%args>
 
@@ -22,19 +24,27 @@ $guide
 use CXGN::Page::FormattingHelpers qw | tooltipped_text |;
 
 my $no_draws = tooltipped_text('No. of imputations:', 'required only if the 
-                                    Simulate method is selected for the 
-                                    calculation of QTL genotype probability method and Multiple Imputation');
+                                Simulate method is selected for the 
+                                calculation of QTL genotype probability 
+                                method and Multiple Imputation');
 my $permu_level = tooltipped_text('Significance level of permutation test:', 
-                                      'required only if permutation analysis 
-                                      (LOD threshold) is run');
-my $genome_scan = tooltipped_text('Genome scan size (cM):', 'not required for Marker Regression'
-                                      );
-my $qtl_prob = tooltipped_text('QTL genotype probablity method:', 'not required for Marker Regression' 
-                                      );
+                                  'required only if permutation analysis 
+                                  (LOD threshold) is run');
+my $genome_scan = tooltipped_text('Genome scan size (cM):', 'not required for 
+                                   Marker Regression');
+my $qtl_prob = tooltipped_text('QTL genotype probablity method:', 
+                               'not required for Marker Regression');
+
+
+my $page_end;
+
 </%perl>
 
-<& /page/page_title.mas, title => "Step 5: Submit Statistical Parameters" &>
-<&| /page/info_section.mas, title => "Statistical Parameters", subtitle => $guide &>
+
+% unless ( $referer =~ /^qtl\/id/ ) {
+                <& /page/page_title.mas, title => "Step 5: Submit Statistical Parameters" &> 
+                <&| /page/info_section.mas, title => "Statistical Parameters", subtitle => $guide &></&>
+% }
 
 <form action="/phenome/qtl_load.pl" method="POST" enctype="MULTIPART/FORM-DATA">  
     <table cellspacing=20>
@@ -122,4 +132,6 @@ my $qtl_prob = tooltipped_text('QTL genotype probablity method:', 'not required 
     </tr>
    </table>
    </form>  
-</&>
+
+
+
