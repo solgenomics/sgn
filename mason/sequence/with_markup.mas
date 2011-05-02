@@ -72,6 +72,18 @@ to the given URL as `seq`
 
 <%args>
   $seq
+</%args>
+
+% if( $seq->length > 200_000 ) {
+    <p class="warning">Sequence too large to display.</p>
+% } else {
+    <& .really_display, %ARGS &>
+% }
+
+<%def .really_display>
+
+<%args>
+  $seq
   $styles    => undef
   $regions   => undef
   $width     => 80
@@ -80,30 +92,30 @@ to the given URL as `seq`
 </%args>
 
 <%perl>
-  use POSIX;
+    use POSIX;
 
-  #insert default space and break styles
-  $styles ||= {};
-  $styles->{space} ||= '<span style="margin: 0 0.5em"></span>';
-  $styles->{break} ||= '<br />';
+    #insert default space and break styles
+    $styles ||= {};
+    $styles->{space} ||= '<span style="margin: 0 0.5em"></span>';
+    $styles->{break} ||= '<br />';
 
-  #insert space and break regions
-  $regions ||= [];
-  if( $subdiv || $width ) {
-      # break every $width bases, and also hash them to use for filtering the spaces
-      my %breaks =
-          !$width ? ()
-                  : map { $_ *= $width; $_ => ['break',$_] }
-                    1..POSIX::floor($seq->length/$width);
-      push @$regions, values %breaks;
+    #insert space and break regions
+    $regions ||= [];
+    if( $subdiv || $width ) {
+        # break every $width bases, and also hash them to use for filtering the spaces
+        my %breaks =
+            !$width ? ()
+                    : map { $_ *= $width; $_ => ['break',$_] }
+                      1..POSIX::floor($seq->length/$width);
+        push @$regions, values %breaks;
 
-      # spaces every $subdiv bases, except where there is a break already
-      push @$regions,
-           !$subdiv ? ()
-                    : map { $_ *= $subdiv; $breaks{$_} ? () : ['space',$_] }
-                      1..POSIX::floor($seq->length/$subdiv);
+        # spaces every $subdiv bases, except where there is a break already
+        push @$regions,
+             !$subdiv ? ()
+                      : map { $_ *= $subdiv; $breaks{$_} ? () : ['space',$_] }
+                        1..POSIX::floor($seq->length/$subdiv);
 
-  }
+    }
 </%perl>
 
 <span class="sequence">
@@ -123,3 +135,4 @@ to the given URL as `seq`
   &>
 </span>
 
+</%def>
