@@ -27,7 +27,7 @@ else {
   if( $feature->residues || $feature->search_featureprops('large_residues')->count ) {
 </%perl>
     <p class="warning">Sequence too large to display.</p>
-    <& sequence_download.mas, feature => $feature, download_url => $seq_download_url &>
+    <& /feature/sequence_download.mas, feature => $feature, download_url => $seq_download_url &>
 <%perl>
   }
 }
