@@ -104,7 +104,6 @@ sub quick_search: Path('/search/quick') {
     #first run the term through CXGN::Tools::Identifiers, and if it's
     #recognized as an exact SGN identifier match, just redirect them to
     #that page
-    my $external_link;
     if ( my $direct_url = identifier_url($term) ) {
         my $namespace = identifier_namespace($term);
         #if the URL is just to this page, it's not useful
