@@ -99,11 +99,27 @@ sub quick_search: Path('/search/quick') {
     defined $term && length $term
         or $c->throw_client_error( public_message => 'Must provide a search term' );
 
-    $c->stash->{term} = $term;
+    $c->stash(
+        term       => $term,
+        show_times => $c->req->parameters->{showtimes},
+        template   => '/search/quick_search.mas',
+        );
 
-    #first run the term through CXGN::Tools::Identifiers, and if it's
-    #recognized as an exact SGN identifier match, just redirect them to
-    #that page
+    return if $c->forward('redirect_by_ident');
+
+    $c->forward('execute_predefined_searches');
+    $c->forward('search_with_xrefs');
+    $c->forward('redirect_if_only_one_possible');
+}
+
+#run the term through CXGN::Tools::Identifiers, and if it's
+#recognized as an exact SGN identifier match, just redirect them to
+#that page
+sub redirect_by_ident : Private {
+    my ( $self, $c ) = @_;
+
+    my $term = $c->stash->{term};
+
     if ( my $direct_url = identifier_url($term) ) {
         my $namespace = identifier_namespace($term);
         #if the URL is just to this page, it's not useful
@@ -119,19 +135,19 @@ sub quick_search: Path('/search/quick') {
                 $c->stash->{results}{external_link}{result} = [ $direct_url, '1 direct information page' ];
             } else {
                 $c->res->redirect( $direct_url );
-                return;
+                return 1;
             }
         }
     }
 
-    $c->forward('execute_predefined_searches');
-    $c->forward('search_with_xrefs');
+    return;
+}
 
-    $c->stash->{show_times} = $c->req->parameters->{showtimes};
-    $c->stash->{template} = '/search/quick_search.mas';
+# another optimization: if the quick search found only one
+# possible URL to go to, go there
+sub redirect_if_only_one_possible : Private {
+    my ( $self, $c ) = @_;
 
-    # another optimization: if the quick search found only one
-    # possible URL to go to, go there
     my @possible_urls = uniq(
          grep $_ !~ m!^https?://!,
          grep defined,
