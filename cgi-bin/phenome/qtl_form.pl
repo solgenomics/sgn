@@ -72,7 +72,8 @@ if ($sp_person_id)
     {
         $c->forward_to_mason_view( '/qtl/qtl_form/stat_form.mas',
                                    pop_id => $pop_id,
-                                   guide  => $guide
+                                   guide  => $guide,
+                                   referer=> $c->req->path
         );
 
     }
