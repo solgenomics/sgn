@@ -1522,6 +1522,10 @@ MSG
             $c->res->redirect("qtl_form.pl?pop_id=$pop_id&type=confirm");
             $c->detach();
         }
-    } 
+    } else {
+        $c->res->redirect($c->req->referer);
+        $c->detach();
+    }
+ 
 
 }
