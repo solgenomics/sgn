@@ -24,7 +24,7 @@ sub clone_sequencing : Chained('/organism/find_organism') PathPart('clone_sequen
     $c->stash(
         template => '/genomes/Solanum_lycopersicum/clone_sequencing.mas',
         dbh      => $c->dbc->dbh,
-        chrnum   => $c->req->params->{chr},
+        chrnum   => $c->req->params->{chr} || 1,
         basepath => $c->get_conf('basepath'),
         cview_tempfiles_subdir => $c->tempfiles_subdir('cview'),
         bac_by_bac_progress => $log->bac_by_bac_progress_statistics,
