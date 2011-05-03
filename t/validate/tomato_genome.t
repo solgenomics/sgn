@@ -8,6 +8,7 @@ use Test::More;
 
 my %urls = (
         "tomato genome data home"                  => "/organism/Solanum_lycopersicum/genome",
+        "tomato genome clone sequencing"            => "/organism/Solanum_lycopersicum/clone_sequencing",
         "tomato genome publication page"           => "/genomes/Solanum_lycopersicum/publications.pl",
 
         "bac search page"                          => "/search/direct_search.pl?search=bacs",
