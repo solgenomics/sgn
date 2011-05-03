@@ -187,7 +187,7 @@ my @num_uploaded = ( undef, map $progress_data->{$_}{available}, @chr_nums );
 print summed_row_html Available =>
   map {
     my $total = $num_uploaded[$_];
-    [$total,qq|<a href="/genomes/Solanum_lycopersicum/genome_data.pl#clones">$total</a>|]
+    [$total,qq|<a href="/organism/Solanum_lycopersicum/clone_sequencing#clones">$total</a>|]
   } @chr_nums;
 
 foreach my $phase (1..3) { 
@@ -195,7 +195,7 @@ foreach my $phase (1..3) {
     print summed_row_html "&nbsp;&nbsp;HTGS $phase" =>
 	map {
 	    my $total = $num_phase[$_] || 0;
-	    [$total, qq|<a href="/genomes/Solanum_lycopersicum/genome_data.pl?chr=$_#clones">$total</a>|]
+	    [$total, qq|<a href="/organism/Solanum_lycopersicum/clone_sequencing?chr=$_#clones">$total</a>|]
         } @chr_nums;
 }
 

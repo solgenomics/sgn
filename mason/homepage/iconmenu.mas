@@ -158,7 +158,7 @@ pages.
               <li><a href="/search/direct_search.pl?search=loci">Search loci</a></li>
               <li><a href="/search/direct_search.pl?search=unigene">Search unigenes</a></li>
               <li><a href="/search/direct_search.pl?search=template">Expression</a></li>
-              <li><a href="/genomes/Solanum_lycopersicum/genome_data.pl">Search/browse tomato genome</a></li>
+              <li><a href="/organism/Solanum_lycopersicum/genome">Search/browse tomato genome</a></li>
 	      <li><a href="/phenome/">Become an SGN locus editor</a></li>              
 	      </div>
 	      
@@ -196,7 +196,7 @@ pages.
       <ul>
             <div class="submenu GenomesSequencesSubMenu">
             	<li><a href="/genomes/Solanum_lycopersicum">Tomato Genome Project</a></li>
-                <li><a href="/genomes/Solanum_lycopersicum/genome_data.pl">Search/browse tomato genome</a></li>
+                <li><a href="/organism/Solanum_lycopersicum/genome">Search/browse tomato genome</a></li>
                 <li><a href="/genomes/Solanum_pimpinellifolium/">Solanum pimpinellifolium genome</a></li>
 		<li><a href=""></a>&nbsp;<li>
 		<li><a href="/sequencing/sol100.pl">SOL100 genomes</a></li>
