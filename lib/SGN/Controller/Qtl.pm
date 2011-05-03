@@ -12,40 +12,59 @@ use namespace::autoclean;
 
 BEGIN { extends 'Catalyst::Controller' }
 
+
 use File::Spec::Functions;
 use File::Temp qw / tempfile /;
 use File::Path qw / mkpath  /;
 use File::Copy;
 use File::Basename;
 
-sub auto :Args(0) {
-    my ($self, $c) = @_;
+# sub auto :Args(0) {
+#     my ($self, $c) = @_;
     
-    $c->stash(tempdir  => $c->get_conf("tempfiles_subdir")."/correlation",
-                basepath => $c->get_conf("basepath"),
-                r_qtl    => $c->get_conf("r_qtl_temp_path"), 
-                guide    => $self->guideline(),             
-                population => CXGN::Phenome::Population->new($c->dbc->dbh , $c->req->args->[0]),                            
-        );
+#     ($c->req->args->[0] !~ /^\d+$/ or !$c->req->args->[0]) ? $c->throw_404("$c->req->args->[0] is not a valid population.") 
+#          :   $c->stash(population => CXGN::Phenome::Population->new($c->dbc->dbh , $c->req->args->[0]));
+#     $c->stash(tempdir  => $c->get_conf("tempfiles_subdir")."/correlation",
+#                 basepath => $c->get_conf("basepath"),
+#                 r_qtl    => $c->get_conf("r_qtl_temp_path"), 
+#                 guide    => $self->guideline(),                                                
+#         );     
    
-    return 1;
-}
+#     return 1;
+# }
 
 
 sub view : PathPart('qtl/view') Chained Args(1) {
     my ( $self, $c, $id) = @_;
     
-    ($id !~ /^\d+$/ && !$id) ? $c->throw_404("$id is not a valid population.")  
-                     : $c->stash(template      => '/qtl/qtl_start/index.mas',                              
-                                 pop    => $c->stash->{population},                                
-                                 referer => $c->req->path,                                
-                     );
- 
-    my ($heatmap, $corr_table) = $self->_analyze_correlation($c, $c->stash->{population});        
-    
-    $c->stash(heatmap    => $heatmap,
-              corr_table => $corr_table
-        );
+    if ( $id !~ /^\d+$/ ) 
+    { $c->throw_404("$id is not a valid population id.");
+    }  
+    elsif ($id ){
+        my $schema = $c->dbic_schema('CXGN::Phenome::Schema');
+        my $rs = $schema->resultset('Population')->find($id);                             
+        if ($rs)  {                                                               
+            $c->stash(template => '/qtl/qtl_start/index.mas',                              
+                      pop      => CXGN::Phenome::Population->new($c->dbc->dbh, $id),                                
+                      referer  => $c->req->path,
+                      guide    => $self->guideline
+                );
+            
+            my ($heatmap, $corr_table) = $self->_analyze_correlation($c, $c->stash->{pop});           
+            $c->stash(heatmap    => $heatmap,
+                      corr_table => $corr_table
+                );
+
+        }
+        else 
+        {
+            $c->throw_404("There is no QTL population for this $id");
+        }
+
+    }
+    elsif (!$id) {
+        $c->throw_404("You must provide a valid population id argument");
+    }
 }
 
 
@@ -145,7 +164,26 @@ sub _analyze_correlation : {
 
 }
 
+# sub _correlation_output {
+#     my ($self, $c, $pop) = @_;
 
+#     my $cache = $c->cache;
+#     my $key_h   = "heat_$pop->get_population_id()";
+#     my $key_t   = "table_$pop->get_population_id()";
+#     my $heatmap = $cache->get($key_h);
+#     my $corr_table = $cache->get($key_t);
+   
+#     unless ($heatmap && $corr_table) {
+#      ( $heatmap, $corr_table ) = $self->_analyze_correlation ($c, $pop);
+#      $cache->set($key_h, $heatmap, '24h');
+#      $cache->set($key_t, $corr_table, '24h');
+#     }
+
+#    return \$heatmap, \$corr_table;  
+     
+
+
+#}
 ####
 1;
 ####
