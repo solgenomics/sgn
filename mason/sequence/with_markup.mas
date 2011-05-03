@@ -74,7 +74,7 @@ to the given URL as `seq`
   $seq
 </%args>
 
-% if( $seq->length > 200_000 ) {
+% if( $seq->length > 50_000 ) {
     <span class="sequence">
       ><% $seq->id %> <% $seq->desc %>
       <br /><span class="warning">Sequence too large to display.</span>

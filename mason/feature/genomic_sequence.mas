@@ -1,7 +1,7 @@
 <%args>
     $feature
     $blast_url        => undef
-    $max_display_size => 200_000
+    $max_display_size => 50_000
 </%args>
 <%perl>
 
