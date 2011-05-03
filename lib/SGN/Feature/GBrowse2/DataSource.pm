@@ -85,7 +85,9 @@ sub xrefs {
                      }),
                 # remove any duplicate ref features
                 _uniq_features
-                # search for ref features
+                # make sure they are all actually reference features
+                grep { $_->seq_id eq $_->display_name }
+                # search for features with the ref seq name
                 map $self->_search_db( $_, $ref_name ),
                 # for each database
                 $self->databases;
