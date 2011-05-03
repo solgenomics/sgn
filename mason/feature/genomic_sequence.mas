@@ -2,11 +2,9 @@
     $feature
     $blast_url        => undef
     $max_display_size => 200_000
-
 </%args>
 <%perl>
 
-  my $link = '/api/v1/sequence/' . $feature->uniquename . '.fasta';
   my $seq;
 
   my @locs = $feature->featureloc_features(undef,{ prefetch => 'srcfeature' });
@@ -43,12 +41,20 @@
                  &>
 
 %            } else { # otherwise, if the sequence is big
-                <span class="warning">Sequence too large to display.</span>
+                <p class="warning">Sequence too large to display.</p>
 %            }
              </div>
     <hr />
 
+%   my ( $start, $end ) = $loc->strand == -1 ? ( $loc->fmax, $loc->fmin+1 ) : ( $loc->fmin+1, $loc->fmax );
     <form name="get_flanking_sequence" action="/api/v1/sequence/download/multi" method="GET">
+      <b>Download full sequence:</b>
+      <& /feature/sequence_download.mas,
+          feature      => $feature,
+          length       => $loc->fmax - $loc->fmin,
+          download_url => '/api/v1/sequence/download/single/'.$src->feature_id.".fasta?$start..$end",
+       &>
+      <br />
       <b>Get flanking sequence on <% $src->name || 'feature_'.$src->feature_id %>:</b>
       <input type="hidden" name="format" value="fasta" />
       <select name="s">
