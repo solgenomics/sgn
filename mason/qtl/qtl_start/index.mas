@@ -1,7 +1,6 @@
 <%args>
 
 $pop
-$r_qtl
 $guide
 $referer
 $heatmap
