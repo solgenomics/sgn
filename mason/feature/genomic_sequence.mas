@@ -15,9 +15,7 @@
 
         if( $has_seq ) {
 </%perl>
-
             <div style="margin: 1em 3em">
-
 <%perl>
             # if the sequence is small enough to display
             if( $loc->fmax - $loc->fmin <= $max_display_size ) {
@@ -41,33 +39,24 @@
                  &>
 
 %            } else { # otherwise, if the sequence is big
-                <p class="warning">Sequence too large to display.</p>
+                <p class="warning">Sequence region (<% location_string($loc) %>) too large to display.</p>
 %            }
-             </div>
-    <hr />
-
-%   my ( $start, $end ) = $loc->strand == -1 ? ( $loc->fmax, $loc->fmin+1 ) : ( $loc->fmin+1, $loc->fmax );
-    <form name="get_flanking_sequence" action="/api/v1/sequence/download/multi" method="GET">
-      <b>Download full sequence:</b>
-      <& /feature/sequence_download.mas,
-          feature      => $feature,
-          length       => $loc->fmax - $loc->fmin,
-          download_url => '/api/v1/sequence/download/single/'.$src->feature_id.".fasta?$start..$end",
-       &>
-      <br />
-      <b>Get flanking sequence on <% $src->name || 'feature_'.$src->feature_id %>:</b>
-      <input type="hidden" name="format" value="fasta" />
-      <select name="s">
-%     for ( upstream_downstream_options( $loc ) ) {
-%        my ( $locstring, $description ) = @$_;
-          <option value="<% $locstring %>"><% $description %></option>
-%     }
-      </select>
-      <input value="Download" type="submit" />
-    </form>
-
-  </div>
-%     }
+%            my ( $start, $end ) = $loc->strand == -1 ? ( $loc->fmax, $loc->fmin+1 ) : ( $loc->fmin+1, $loc->fmax );
+             <% info_table_html(
+                 __tableattrs => 'width="100%"',
+                 __multicol   => 2,
+                 'Download sequence region' => $m->scomp(
+                     '/feature/sequence_download.mas',
+                     feature      => $feature,
+                     length       => $loc->fmax - $loc->fmin,
+                     download_url => '/api/v1/sequence/download/single/'.$src->feature_id.".fasta?$start..$end",
+                     ),
+                 'Get flanking sequences on '.($src->name || 'feature_'.$src->feature_id) =>
+                    $m->scomp('.flanking_download', loc => $loc ),
+                )
+              %>
+              </div>
+%      }
 %   }
 % }
 
@@ -75,6 +64,7 @@
    use SGN::View::Feature qw/ location_string /;
    use List::Util qw/ min max /;
    use List::MoreUtils qw/ pairwise /;
+   use CXGN::Page::FormattingHelpers 'info_table_html';
 
    sub upstream_downstream_options {
        my ( $loc ) = @_;
@@ -124,3 +114,19 @@
 
 </%once>
 
+<%def .flanking_download>
+<%args>
+  $loc
+</%args>
+    <form name="get_flanking_sequence" action="/api/v1/sequence/download/multi" method="GET">
+      <input type="hidden" name="format" value="fasta" />
+      <select name="s">
+%     for ( upstream_downstream_options( $loc ) ) {
+%        my ( $locstring, $description ) = @$_;
+          <option value="<% $locstring %>"><% $description %></option>
+%     }
+      </select>
+      <input value="Download" type="submit" />
+    </form>
+
+</%def>
