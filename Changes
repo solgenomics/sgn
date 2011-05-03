@@ -3,6 +3,15 @@ Release tag: NEXT
 
 Changes:
 
+ - put changes here
+
+---
+Release date: Mon May 2 11:35:00 2011 -0800
+Release tag: sgn-96.0
+
+Changes:
+
+ - Fix marker detail page crashing bug (mueller).
  - Integrated SecreTary results to secretion prediction search (tomfy).
  - Updated SignalP results at http://solgenomics.net/secretom/detail/prediction for TAIR10 and ITAG2 releases of arabidopsis and tomato, respectively (tomfy).
 
