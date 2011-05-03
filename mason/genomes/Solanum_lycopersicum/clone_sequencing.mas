@@ -9,6 +9,8 @@
 
 <& /page/page_title.mas, title => 'Tomato Genomic Clone Sequencing' &>
 
+<div class="page_introduction"> <& /genomes/Solanum_lycopersicum/project_background.mas &> </div>
+
 <&| /page/info_section.mas, title => 'BAC-by-BAC sequencing statistics', empty_message => '&nbsp;' &>
   <& /genomes/Solanum_lycopersicum/bac_by_bac_progress.mas,
       dbh      => $dbh,

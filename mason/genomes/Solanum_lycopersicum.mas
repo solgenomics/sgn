@@ -3,7 +3,7 @@
 
 <div style="padding-left: 7px; margin-bottom: 2em">
 
-  <& /genomes/Solanum_lycopersicum/project_background.mas &>
+  <p> <& /genomes/Solanum_lycopersicum/project_background.mas &> </p>
 
   <p> Please note that all data is released under the data access agreement below. </p>
 
