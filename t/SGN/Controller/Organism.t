@@ -87,5 +87,14 @@ $mech->with_test_level( process => sub {
     is( $mech->content_type, 'application/json', 'got a JSON response from the flush action' );
 }
 
+
+{ # test organism detail
+    $mech->get_ok( '/organism/solanum_lycopersicum/view' );
+    $mech->content_contains($_) for 'Solanum lycopersicum', 'tomato';
+
+    $mech->get('/organism/nonexistent_organism/view');
+    is( $mech->status, 404, 'got a 404 for nonexistent organism' );
+}
+
 done_testing;
 
