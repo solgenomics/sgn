@@ -68,10 +68,6 @@ use CXGN::Genomic::Search::Clone;
 use CXGN::MasonFactory;
 use CXGN::Cview::MapOverviews::ProjectStats;
 
-#my $page=CXGN::Page->new('tomato_sequencing.html','html2pl converter');
-#$page->add_style(text => "img.flag {border: 2px outset #666666;}");
-#$page->header(('International Tomato Sequencing Project Home') x 2);
-
 sub flag_html {
   my ($country,$flagimg,$url) = @_;
   if($url) {
