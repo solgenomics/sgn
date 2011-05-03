@@ -41,7 +41,7 @@ my $page_end;
 </%perl>
 
 
-% unless ( $referer =~ /^qtl\/id/ ) {
+% unless ( $referer =~ /^qtl\/view/ ) {
                 <& /page/page_title.mas, title => "Step 5: Submit Statistical Parameters" &> 
                 <&| /page/info_section.mas, title => "Statistical Parameters", subtitle => $guide &></&>
 % }
