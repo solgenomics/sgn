@@ -67,6 +67,7 @@ sub patch {
 --
 
 drop trigger pcr_accession_check_trigger on sgn.pcr_exp_accession;
+    alter table sgn.pcr_exp_accession drop constraint accession_id_check;
    
 EOSQL
 
