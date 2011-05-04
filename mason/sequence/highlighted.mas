@@ -207,13 +207,4 @@ sub highlighted_regions {
         @$coords;
 }
 
-# 0-based line number and column number of the given $index in a
-# string broken into lines of width $width
-sub line_col {
-    my ($index,$width) = @_;
-    my $line = POSIX::floor( $index/$width  );
-    my $col  = POSIX::fmod ( $index, $width );
-    return ($line,$col);
-}
-
 </%once>
