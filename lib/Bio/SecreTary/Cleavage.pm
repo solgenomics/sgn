@@ -346,17 +346,22 @@ sub cleavage {
     my $sequence           = shift;
     my $weight_matrix_ref  = $self->get_weight_matrix();
     my $aa_number_hash_ref = $self->get_aa_number_hash();
-    my @cleavageSiteScores;
-    my $ibest = 0;
-    my $up = min( 45, length($sequence) - 15 );
-    for ( my $i = 0 ; $i < $up ; $i++ ) {
-        my $j = $i + 13;    # this will be the cleavage site
-        $cleavageSiteScores[$i] =
-          scoreCleavageSite( $sequence, $j, $aa_number_hash_ref,
-            $weight_matrix_ref ) *
-          exp( -0.5 * ( ( 20 - $j ) * ( 20 - $j ) ) / 4000 );
 
-# Not sure what this was originally. x^2/200 seems to me to cut off to quickly at large lengths. How about 1/2*x^2/400, i.e. a width of ~ 20
+    my $up = min( 45, length($sequence) - 15 );
+    my @cleavageSiteScores = ((0) x $up);
+    $cleavageSiteScores[0] =
+      scoreCleavageSite( $sequence, 13, $aa_number_hash_ref,
+			 $weight_matrix_ref ) *
+			   exp( -0.5 * ( ( 20 - 13 ) * ( 20 - 13 ) ) / 4000 );
+    my $ibest = 0;
+    for ( my $i = 1 ; $i < $up ; $i++ ) {
+      my $j = $i + 13;		# this will be the cleavage site
+      $cleavageSiteScores[$i] =
+	scoreCleavageSite( $sequence, $j, $aa_number_hash_ref,
+			   $weight_matrix_ref ) *
+			     exp( -0.5 * ( ( 20 - $j ) * ( 20 - $j ) ) / 4000 );
+
+      # Not sure what this was originally. x^2/200 seems to me to cut off too quickly at large lengths. How about 1/2*x^2/400, i.e. a width of ~ 20
 
         if ( $cleavageSiteScores[$i] > $cleavageSiteScores[$ibest] ) {
             $ibest = $i;
@@ -373,10 +378,12 @@ sub cleavage_fast {		# uses Inline::C. faster
   my $letter2index       = $self->get_aa_number_hash();
   my @seq_aanumber_array = map { $letter2index->{$_} } split( '', $sequence );
   my $weight_matrix_ref  = $self->get_weight_matrix();
-  my @cleavageSiteScores;
-  my $ibest = 0;
+
   my $up = min( 45, length($sequence) - 15 );
-  for ( my $i = 0 ; $i < $up; $i++ ) {
+  my @cleavageSiteScores = ((0) x $up);
+  $cleavageSiteScores[0] = scoreCleavageSiteFast($weight_matrix_ref, \@seq_aanumber_array, 0);
+  my $ibest = 0;
+  for ( my $i = 1; $i < $up; $i++ ) {
     if (
 	($cleavageSiteScores[$i] = scoreCleavageSiteFast($weight_matrix_ref, \@seq_aanumber_array, $i) )
 	> $cleavageSiteScores[$ibest] ) {
