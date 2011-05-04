@@ -1,13 +1,13 @@
 
 =head1 NAME
 
-Bio::SecreTary::SecreTaryAnalyse - an object to analyse a protein
-sequence. Calculate and store various quantities used by the SecreTary
-algorithms to predict signal peptides.
+Bio::SecreTary::SecreTaryAnalyse
 
 =head1 DESCRIPTION
 
-
+Bio::SecreTary::SecreTaryAnalyse - an object to analyse a protein
+sequence. Calculate and store various quantities used by the SecreTary
+algorithms to predict signal peptides.
 
 =head1 AUTHOR
 
@@ -56,7 +56,7 @@ sub new {
 
     # do the cleavage site calculation
     my $cleavage_obj = Bio::SecreTary::Cleavage->new();
-    my $sp_length    = $cleavage_obj->cleavage($sequence);
+    my $sp_length    = $cleavage_obj->cleavage_fast($sequence);
 
     # $hstart is the 0-based number of first AA of h region, i.e. the length of
     # the n region. cstart is the 0-based number of first AA of the c region
