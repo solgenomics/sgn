@@ -187,6 +187,7 @@ sub check_modify_privileges {
     # implement quite strict access controls by default
     #
     my ($person_id, $user_type)=$self->get_login()->has_session();
+    $user_type ||= '';
 
     if ($user_type eq 'curator') {
 	return 0;
