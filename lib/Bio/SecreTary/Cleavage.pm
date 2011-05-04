@@ -59,6 +59,30 @@ use strict;
 use warnings;
 use List::Util qw/min/;
 
+use Inline C => <<'END_C';
+
+double scoreCleavageSiteFast(SV* m, SV* seq_aa_nums, I32 opos){
+  if ((!SvROK(m))
+                        || (SvTYPE(SvRV(m)) != SVt_PVAV)
+                        || ((av_len((AV *)SvRV(m)) + 1) < 0)) {
+                return -10000;
+        }
+    double result = 0;
+    I32 length = av_len((AV *)SvRV(seq_aa_nums)) + 1; // length of the sequence
+    I32 i;
+    I32 pos = opos + 13; // opos: offset position, pos: position
+    for(i = 0; i < 15; i++){
+        I32 aanum = SvIV(* av_fetch((AV*) SvRV(seq_aa_nums), i + opos, 0 ));
+        SV* a = (* av_fetch((AV*) SvRV(m), aanum, 0 ));
+        result += SvNV(* av_fetch((AV*) SvRV(a), i, 0 ));
+    }
+    result *= exp(-0.5*((20.0-pos)*(20.0-pos)/4000));
+    return result;
+}
+
+END_C
+
+
 sub new {
     my $class = shift;
     my $self = bless {}, $class;
@@ -180,24 +204,11 @@ sub scoreCleavageSite    #expects parameters SEQUENCE, CLEAVAGE_SITE
     my $letter2index  = shift;    # hash ref
     my $weight_matrix = shift;    # shift; # ref to array of array refs
     my $score         = 0;
+    my $length = length $sequence;
     for ( my $i = $position - 13 ; $i < $position + 2 ; $i++ ) {
+#      print "XXX: $length $i, char: ", substr($sequence, $i, 1), "\n" if($i < 0 or $i >= $length);
         $score +=
           $weight_matrix->[ $letter2index->{ substr( $sequence, $i, 1 ) } ]
-          ->[ $i - $position + 13 ];
-    }
-    return $score;
-}
-
-#return a positive score for the given cleavage site in the given sequence
-sub scoreCleavageSite1            #expects parameters SEQUENCE, CLEAVAGE_SITE
-{
-    my $seq_aanumber_array_ref = shift;
-    my $position               = shift;
-    my $weight_matrix          = shift;
-    my $score                  = 0;
-    for ( my $i = $position - 13 ; $i < $position + 2 ; $i++ ) {
-        $score +=
-          $weight_matrix->[ $seq_aanumber_array_ref->[$i] ]
           ->[ $i - $position + 13 ];
     }
     return $score;
@@ -356,30 +367,24 @@ sub cleavage {
     return $ibest + 13;
 }
 
-sub cleavage1 {
-    my $self               = shift;
-    my $sequence           = shift;
-    my $letter2index       = $self->get_aa_number_hash();
-    my @seq_aanumber_array = map { $letter2index->{$_} } split( '', $sequence );
-    my $weight_matrix_ref  = $self->get_weight_matrix();
-    my @cleavageSiteScores;
-    my $ibest = 0;
-    my $up = min( 45, length($sequence) - 15 );
-    for ( my $i = 0 ; $i < $up ; $i++ ) {
-        my $j = $i + 13;    # this will be the cleavage site
-
-        $cleavageSiteScores[$i] =
-          scoreCleavageSite1( \@seq_aanumber_array, $j, $weight_matrix_ref ) *
-          exp( -0.5 * ( ( 20 - $j ) * ( 20 - $j ) ) / 4000 );
-
-        if ( $cleavageSiteScores[$i] > $cleavageSiteScores[$ibest] ) {
-            $ibest = $i;
-        }
-
+sub cleavage_fast {		# uses Inline::C. faster
+  my $self               = shift;
+  my $sequence           = shift;
+  my $letter2index       = $self->get_aa_number_hash();
+  my @seq_aanumber_array = map { $letter2index->{$_} } split( '', $sequence );
+  my $weight_matrix_ref  = $self->get_weight_matrix();
+  my @cleavageSiteScores;
+  my $ibest = 0;
+  my $up = min( 45, length($sequence) - 15 );
+  for ( my $i = 0 ; $i < $up; $i++ ) {
+    if (
+	($cleavageSiteScores[$i] = scoreCleavageSiteFast($weight_matrix_ref, \@seq_aanumber_array, $i) )
+	> $cleavageSiteScores[$ibest] ) {
+      $ibest = $i;
     }
-
-    # return the cleavage site, which is also the length of the signal peptide.
-    return $ibest + 13;
+  }
+  # return the cleavage site, which is also the length of the signal peptide.
+  return $ibest + 13;
 }
 
 1;
