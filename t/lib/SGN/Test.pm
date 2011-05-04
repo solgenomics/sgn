@@ -7,7 +7,8 @@ use File::Spec::Functions;
 use File::Temp;
 use File::Find;
 
-use List::Util qw/min shuffle/;
+use List::Util qw/ min shuffle /;
+use List::MoreUtils qw/ uniq /;
 use Test::More;
 use Exporter;
 
@@ -119,7 +120,7 @@ sub _validate_single_url {
 
             # test for any broken images or other things that have a
             # src attr
-            { my @stuff = map $_->attr('src'), $mech->findnodes('//*[@src]');
+            { my @stuff = uniq map $_->attr('src'), $mech->findnodes('//*[@src]');
               for( @stuff ) {
                   $mech->get_ok( $_ );
                   $mech->back;
