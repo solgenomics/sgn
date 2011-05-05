@@ -20,12 +20,15 @@ DLTEKVRLAEQKEVIKAGPFGTVTGLQTNPTVAPDESANPRLAKLLEKVAVNKEIIVVLANNNVKPMLEVQIASVKRVG
 IQNYLVVPLDDSLESFCKSNEVAYYKRDPDNAIDVVGKSRRSSDVSGLKFRVLREFLQLGYGVLLSDVDIVFLQNPFGH
 LYRDSDVESMSDGHDNNT";
 
-my $STA_obj = Bio::SecreTary::SecreTaryAnalyse->new($id, $sequence, $TMpred_obj);
+my $STA_obj = Bio::SecreTary::SecreTaryAnalyse->new({
+sequence_id => $id, 
+sequence => $sequence, 
+tmpred_obj => $TMpred_obj});
 ok( defined $STA_obj, 'new() returned something.');
 
 isa_ok( $STA_obj, 'Bio::SecreTary::SecreTaryAnalyse' );
 
-my $solns = $STA_obj->get_candidate_solutions();
+my $solns = $STA_obj->candidate_solutions();
 my $solns_string = '';
 foreach (@$solns){
 	 $solns_string .= "$_; ";
@@ -47,11 +50,11 @@ ok($nO == 27,'Check Oxygen count.');
 $id = "AT1G50920.1";
 $sequence = "MVQYNFKRITVVPNGKEFVDIILSRTQRQTPTVVHKGYKINRLRQFYMRKVKYTQTNFHAKLSAIIDEFPRLEQIHPFYGDLLHVLYNKDHYKLALGQVNTARNLISKISKDYVKLLKYGDSLYRCKCLKVAALGRMCTVLKRITPSLAYLEQIRQHMARLPSIDPNTRTVLICGYPNVGKSSFMNKVTRADVDVQPYAFTTKSLFVGHTDYKYLRYQVIDTPGILDRPFEDRNIIEMCSITALAHLRAAVLFFLDISGSCGYTIAQQAALFHS*";
 
-$STA_obj = Bio::SecreTary::SecreTaryAnalyse->new($id, $sequence, $TMpred_obj);
+$STA_obj = Bio::SecreTary::SecreTaryAnalyse->new({sequence_id => $id, sequence => $sequence, tmpred_obj => $TMpred_obj});
 ok( defined $STA_obj, 'new() returned something.');
 isa_ok( $STA_obj, 'Bio::SecreTary::SecreTaryAnalyse' );
 
-$solns = $STA_obj->get_candidate_solutions();
+$solns = $STA_obj->candidate_solutions();
 $solns_string = '';
 foreach (@$solns){
          $solns_string .= "$_; ";
