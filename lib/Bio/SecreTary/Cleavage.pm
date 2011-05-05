@@ -55,8 +55,19 @@
 #one argument: input fasta file
 
 package Bio::SecreTary::Cleavage;
-use strict;
-use warnings;
+use Moose;
+use namespace::autoclean;
+
+has weight_matrix => (
+    isa     => 'Maybe[ArrayRef[ArrayRef[Int]]]',
+    is      => 'rw',
+    default => undef );
+
+has aa_number_hash => (
+    isa     => 'Maybe[HashRef[Int]]',
+    is      => 'rw',
+    default => undef );
+
 use List::Util qw/min/;
 
 use Inline C => <<'END_C';
@@ -83,13 +94,14 @@ double scoreCleavageSiteFast(SV* m, SV* seq_aa_nums, I32 opos){
 END_C
 
 
-sub new {
-    my $class = shift;
-    my $self = bless {}, $class;
+sub BUILD {
+    # my $class = shift;
+    # my $self = bless {}, $class;
+  my $self = shift;
 
     # weight_matrix: columns are positions -13 to +2, rows are residues,
     # values are total numbers of such residues in such positions
-    my $weight_matrix_ref = [
+    $self->weight_matrix([
         [
             101, 112, 106, 100, 158, 128, 107, 149,
             146, 107, 258, 80,  458, 141, 55
@@ -115,15 +127,16 @@ sub new {
         [ 112, 124, 127, 100, 99, 86, 79, 129, 60, 72, 191, 45, 8, 50, 56 ],
         [ 16,  13,  20,  11,  9,  13, 24, 21,  13, 13, 2,   33, 2, 9,  6 ],
         [ 17,  3,   6,   9,   6,  7,  10, 6,   8,  19, 2,   26, 2, 21, 23 ]
-    ];
-    my $nrows = scalar @{$weight_matrix_ref};
-    my $ncols = scalar @{ $weight_matrix_ref->[0] };
+    ]);
+    my $nrows = scalar @{$self->weight_matrix()};
+    my $ncols = scalar @{ $self->weight_matrix()->[0] };
     my $Zval  = 50
       ; # the value to use for X in all positions, i.e. value of all elements in an additional row of weight matrix.
+    my $weight_matrix_ref = $self->weight_matrix();
     push @{$weight_matrix_ref}, [ ($Zval) x $ncols ];
+    $self->weight_matrix($weight_matrix_ref);
 
-    my %letter2index =
-      ( # keys: letter representing amino acids; values: corresponding row index of weight matrix.
+    $self->aa_number_hash( { # keys: letter representing amino acids; values: corresponding row index of weight matrix.
         "a" => 0,
         "A" => 0,
         "c" => 1,
@@ -166,32 +179,7 @@ sub new {
         "Y" => 19,
         "x" => 20,
         "X" => 20
-      );
-
-    $self->set_weight_matrix($weight_matrix_ref);
-    $self->set_aa_number_hash( \%letter2index );
-
-    return $self;
-}
-
-sub get_weight_matrix {
-    my $self = shift;
-    return $self->{weight_matrix};
-}
-
-sub set_weight_matrix {
-    my $self = shift;
-    return $self->{weight_matrix} = shift;
-}
-
-sub get_aa_number_hash {
-    my $self = shift;
-    return $self->{aa_number_hash};
-}
-
-sub set_aa_number_hash {
-    my $self = shift;
-    return $self->{aa_number_hash} = shift;
+      } );
 }
 
 ####################################################################################################################
@@ -216,7 +204,7 @@ sub scoreCleavageSite    #expects parameters SEQUENCE, CLEAVAGE_SITE
 
 sub weight_matrix_average {
     my $self           = shift;
-    my $rows_array_ref = $self->get_weight_matrix();
+    my $rows_array_ref = $self->weight_matrix();
     my $sum_elems      = 0;
     my $count_elems    = 0;
 
@@ -344,8 +332,8 @@ sub nh {
 sub cleavage {
     my $self               = shift;
     my $sequence           = shift;
-    my $weight_matrix_ref  = $self->get_weight_matrix();
-    my $aa_number_hash_ref = $self->get_aa_number_hash();
+    my $weight_matrix_ref  = $self->weight_matrix();
+    my $aa_number_hash_ref = $self->aa_number_hash();
 
     my $up = min( 45, length($sequence) - 15 );
     my @cleavageSiteScores = ((0) x $up);
@@ -375,9 +363,9 @@ sub cleavage {
 sub cleavage_fast {		# uses Inline::C. faster
   my $self               = shift;
   my $sequence           = shift;
-  my $letter2index       = $self->get_aa_number_hash();
+  my $letter2index       = $self->aa_number_hash();
   my @seq_aanumber_array = map { $letter2index->{$_} } split( '', $sequence );
-  my $weight_matrix_ref  = $self->get_weight_matrix();
+  my $weight_matrix_ref  = $self->weight_matrix();
 
   my $up = min( 45, length($sequence) - 15 );
   my @cleavageSiteScores = ((0) x $up);
@@ -393,5 +381,7 @@ sub cleavage_fast {		# uses Inline::C. faster
   # return the cleavage site, which is also the length of the signal peptide.
   return $ibest + 13;
 }
+
+__PACKAGE__->meta->make_immutable;
 
 1;
