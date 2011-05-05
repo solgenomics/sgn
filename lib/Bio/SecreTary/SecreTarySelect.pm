@@ -182,7 +182,7 @@ sub refine_solutions {    # take the STA object and give each solution a score
                           # choose the one with best score.
     my $self  = shift;
     my $STA   = shift;
-    my $solns = $STA->get_candidate_solutions();    # array ref
+    my $solns = $STA->candidate_solutions();    # array ref
     my $AA22string = $STA->aa22string();    # this has AI etc for first 22
 
     my $grp1_best_STscore = 0;
@@ -335,11 +335,11 @@ sub _group2_STscore {
     my $tm_score    = shift;
     my $nGASDRQPEN  = shift;
     my $STA         = shift;
-    my $AI22        = $STA->get_AI22();
-    my $Gravy22     = $STA->get_Gravy22();
-    my $nDRQPEN22   = $STA->get_nDRQPEN22();
-    my $nNitrogen22 = $STA->get_nNitrogen22();
-    my $nOxygen22   = $STA->get_nOxygen22();
+    my $AI22        = $STA->AI22();
+    my $Gravy22     = $STA->Gravy22();
+    my $nDRQPEN22   = $STA->nDRQPEN22();
+    my $nNitrogen22 = $STA->nNitrogen22();
+    my $nOxygen22   = $STA->nOxygen22();
     if ( $tm_score < $bad_tm_score ) {
         $tm_score = $bad_tm_score;
     }
