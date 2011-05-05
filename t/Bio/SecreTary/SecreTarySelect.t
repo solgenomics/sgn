@@ -23,7 +23,7 @@ DLTEKVRLAEQKEVIKAGPFGTVTGLQTNPTVAPDESANPRLAKLLEKVAVNKEIIVVLANNNVKPMLEVQIASVKRVG
 IQNYLVVPLDDSLESFCKSNEVAYYKRDPDNAIDVVGKSRRSSDVSGLKFRVLREFLQLGYGVLLSDVDIVFLQNPFGH
 LYRDSDVESMSDGHDNNT";
 
-my $STA_obj = Bio::SecreTary::SecreTaryAnalyse->new($id, $sequence, $TMpred_obj);
+my $STA_obj = Bio::SecreTary::SecreTaryAnalyse->new({sequence_id => $id, sequence => $sequence, tmpred_obj => $TMpred_obj});
 
 my $STS_obj = Bio::SecreTary::SecreTarySelect->new(); # using defaults
 ok( defined $STS_obj, 'new() returned something.');
@@ -49,7 +49,7 @@ ok($categorize1_output =~ /^group1 0.887[456][0-9]* 2479 17 35 5 0.887[456][0-9]
 $id = 'SlTFR12';
 $sequence = 'MEMSSKIACFIVLCMIVVAPHGEALSCGQVESGLAPCLPYPQGKGPLGGCCRGVKGLLGAAK';
 
-$STA_obj = Bio::SecreTary::SecreTaryAnalyse->new($id, $sequence, $TMpred_obj);
+$STA_obj = Bio::SecreTary::SecreTaryAnalyse->new({sequence_id => $id, sequence => $sequence, tmpred_obj => $TMpred_obj});
 
 $STS_obj = Bio::SecreTary::SecreTarySelect->new(); # using defaults
 ok( defined $STS_obj, 'new() returned something.');
@@ -71,7 +71,7 @@ ok($categorize1_output =~ /^group2 0.787[456][0-9]* 1453 3 25 8 0.787[456][0-9]*
 $id = 'SlTFR80';
 $sequence = 'MLDRFLSARRAWQVRRIMRNGKLTFLCLFLTVIVLRGNLGAGRFGTPGQDLKEIRETFSYYR';
 
-$STA_obj = Bio::SecreTary::SecreTaryAnalyse->new($id, $sequence, $TMpred_obj);
+$STA_obj = Bio::SecreTary::SecreTaryAnalyse->new({ sequence_id => $id, sequence => $sequence, tmpred_obj => $TMpred_obj});
 
 $STS_obj = Bio::SecreTary::SecreTarySelect->new(); # using defaults
 ok( defined $STS_obj, 'new() returned something.');
@@ -96,7 +96,7 @@ ok($categorize1_output =~ /^fail 0.6947[456][0-9]* 1279 20 41 7 0.6947[456][0-9]
 $id = "AT1G50920.1";
 $sequence = "MVQYNFKRITVVPNGKEFVDIILSRTQRQTPTVVHKGYKINRLRQFYMRKVKYTQTNFHAKLSAIIDEFPRLEQIHPFYGDLLHVLYNKDHYKLALGQVNTARNLISKISKDYVKLLKYGDSLYRCKCLKVAALGRMCTVLKRITPSLAYLEQIRQHMARLPSIDPNTRTVLICGYPNVGKSSFMNKVTRADVDVQPYAFTTKSLFVGHTDYKYLRYQVIDTPGILDRPFEDRNIIEMCSITALAHLRAAVLFFLDISGSCGYTIAQQAALFHS*";
 
-$STA_obj = Bio::SecreTary::SecreTaryAnalyse->new($id, $sequence, $TMpred_obj);
+$STA_obj = Bio::SecreTary::SecreTaryAnalyse->new({ sequence_id => $id, sequence => $sequence, tmpred_obj => $TMpred_obj});
 
 $STS_obj = Bio::SecreTary::SecreTarySelect->new(); # using defaults
 ok( defined $STS_obj, 'new() returned something.');
@@ -145,12 +145,12 @@ my @category_result_now = ();
 		$seq_id =~ s/\|.*//;	# delete from first pipe to end.
 			my $sequence = $seqobj->seq();
 		$sequence = substr( $sequence, 0, $trunc_length );
-		my $STA = Bio::SecreTary::SecreTaryAnalyse->new( $seq_id, $sequence,
-				$TMpred_obj );
+		my $STA = Bio::SecreTary::SecreTaryAnalyse->new( {sequence_id => $seq_id, sequence => $sequence,
+				tmpred_obj => $TMpred_obj} );
 		my $cat_result = $STS_obj->categorize1($STA);
 
-# print $STA->get_sequence_id(), "  ", $cat_result, "\n";
-		push @category_result_now, $STA->get_sequence_id() . "  " . $cat_result . "\n";
+# print $STA->sequence_id(), "  ", $cat_result, "\n";
+		push @category_result_now, $STA->sequence_id() . "  " . $cat_result . "\n";
 
 		$count_sequences_analyzed++;
 	}
