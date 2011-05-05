@@ -1,4 +1,6 @@
-
+<%args>
+$organism
+</%args>
 <& /page/page_title.mas, title => 'International Tomato Genome Sequencing Project' &>
 
 <div style="padding-left: 7px; margin-bottom: 2em">

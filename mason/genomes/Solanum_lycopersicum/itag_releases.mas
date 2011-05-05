@@ -9,14 +9,11 @@
           collapsed     => $annot_index++ ? 1 : 0,
        &>
 
+%         for my $source ( sort { $a->description cmp $b->description } @{$release_datasources{$release_name}}) {
+            <& /genomes/util/gbrowse_set.mas, source => $source &>
+%         }
           <% info_table_html(
               __border => 0,
-
-              ( map  { $_->description => $m->scomp( '.release_html', release => $_ ) }
-                sort { $a->description cmp $b->description }
-                @{$release_datasources{$release_name}},
-              ),
-
               # bulk download files
               'Bulk files' => itag_release_ftp_link( $release_name ),
             )
@@ -31,6 +28,7 @@
 % }
 
 <%init>
+
     my %release_datasources;
     for my $source ( map $_->data_sources, $c->enabled_feature('gbrowse2') ) {
         next unless $source->name =~ /(ITAG\d+(\.\d+)?)/ && $source->databases;
@@ -38,9 +36,9 @@
         push @{$release_datasources{$release}}, $source;
     }
 
-
 </%init>
 <%once>
+
 use CXGN::Page::FormattingHelpers 'info_table_html';
 
 sub itag_release_ftp_link {
@@ -62,13 +60,3 @@ sub itag_release_ftp_link {
 }
 </%once>
 
-<%def .release_html>
-<%args>
-  $release
-</%args>
-  <p><% $release->extended_description %></p>
-  <span style="font-weight: bold; font-size: 110%">
-     <a href="<% $release->view_url %>">Browse</a>
-     or <& /genomes/util/gbrowse_searchbox.mas, gb_root => $release->view_url &>
-  </span>
-</%def>
