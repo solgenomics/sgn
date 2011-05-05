@@ -16,12 +16,60 @@ Tom York (tly2@cornell.edu)
 =cut
 
 package Bio::SecreTary::SecreTaryAnalyse;
-use strict;
-use warnings;
+use Moose;
 use Bio::SecreTary::TMpred;
 use Bio::SecreTary::TMpred_Cinline;
 use Bio::SecreTary::Cleavage;
 use Bio::SecreTary::AAComposition;
+
+has sequence_id => (
+		    isa     => 'Maybe[Str]',
+		    is      => 'rw',
+		    default => undef );
+
+has sequence => (
+		 isa     => 'Maybe[Str]',
+		 is      => 'rw',
+		 default => undef );
+has tmpred_obj => (
+		   isa => 'Object',
+		   is => 'rw' );
+has tmpred_good_solutions => (
+			      isa => 'Maybe[Str]',
+			      is => 'rw',
+			      default => undef );
+has trunc_length => (
+		     isa => 'Int',
+		     is => 'rw',
+		     default => 100 );
+has cleavage_prediction => (
+			    isa => 'ArrayRef[Maybe[Str]]',
+			    is => 'rw',
+			    default => sub { [undef, undef, undef, undef] } );
+has AI22 => (
+	     isa => 'Maybe[Num]',
+	     is => 'rw',
+	     default => undef );
+has Gravy22 => (
+	     isa => 'Maybe[Num]',
+	     is => 'rw',
+	     default => undef );
+has nDRQPEN22 => (
+	     isa => 'Maybe[Int]',
+	     is => 'rw',
+	     default => undef );
+has nNitrogen22 => (
+	     isa => 'Maybe[Int]',
+	     is => 'rw',
+	     default => undef );
+has nOxygen22 => (
+	     isa => 'Maybe[Int]',
+	     is => 'rw',
+	     default => undef );
+has candidate_solutions => (
+isa => 'Maybe[ArrayRef]', 
+is => 'rw',
+default => undef );
 
 =head2 function new
 
@@ -34,40 +82,40 @@ Synopsis:
 
 =cut
 
-sub new {
-    my $class        = shift;
-    my $self         = bless {}, $class;
-    my $sequence_id  = shift;
-    my $sequence     = shift;
-    my $tmpred_obj   = shift;
-    my $trunc_length = shift || 100;
+sub BUILD {
+  #  my $class        = shift;
+    my $self     = shift; #    = bless {}, $class;
+  #  my $sequence_id  = shift;
+  #  my $sequence     = shift;
+  #  my $tmpred_obj   = shift;
+  #  my $trunc_length = shift || 100;
 
-    $sequence = substr( $sequence, 0, $trunc_length );
+    $self->sequence(substr( $self->sequence(), 0, $self->trunc_length() ));
 
-    $self->set_sequence_id($sequence_id);
-    $self->set_sequence($sequence);
+    $self->sequence_id($self->sequence_id());
+#    $self->sequence($sequence);
 
     my ( $outstring, $long_output ) =
-      $tmpred_obj->run_tmpred( $sequence, $sequence_id );
+      $self->tmpred_obj()->run_tmpred( $self->sequence(), $self->sequence_id() );
 
-    $self->set_tmpred_good_solutions($outstring);
+    $self->tmpred_good_solutions($outstring);
 
     $self->sequence22_AAcomposition();
 
     # do the cleavage site calculation
-    my $cleavage_obj = Bio::SecreTary::Cleavage->new();
-    my $sp_length    = $cleavage_obj->cleavage_fast($sequence);
+    my $cleavage_predictor_obj = Bio::SecreTary::Cleavage->new(); # Should avoid doing this for each sequence
+    my $sp_length    = $cleavage_predictor_obj->cleavage_fast($self->sequence());
 
     # $hstart is the 0-based number of first AA of h region, i.e. the length of
     # the n region. cstart is the 0-based number of first AA of the c region
     # i.e. post-hydrophobic cleavage region
     my ( $typical, $hstart, $cstart ) =
-      $cleavage_obj->subdomain( substr( $sequence, 0, $sp_length ) );
+      $cleavage_predictor_obj->subdomain( substr( $self->sequence(), 0, $sp_length ) );
 
-    $self->set_cleavage( [ $sp_length, $hstart, $cstart, $typical ] );
+    $self->cleavage_prediction( [ $sp_length, $hstart, $cstart, $typical ] );
 
     my @candidate_solutions = ();
-    my $tmpred_good_solns   = $self->get_tmpred_good_solutions();
+    my $tmpred_good_solns   = $self->tmpred_good_solutions();
     while ( $tmpred_good_solns =~ s/^ ( \( \S+? \) ) //xms )
     {    # soln in () -> $1
         my $soln = $1;
@@ -80,7 +128,7 @@ sub new {
         push @candidate_solutions, "$tmpred_score,$beg,$end,$nGASDRQPENtm";
     }
 
-    $self->{candidate_solutions} = \@candidate_solutions;
+    $self->candidate_solutions(\@candidate_solutions);
     return $self;
 }
 
@@ -96,21 +144,21 @@ Synopsis: $STA_obj->sequence22_AAcomposition();
 sub sequence22_AAcomposition {
     my $self = shift;
 
-    $self->set_AI22( $self->aliphatic_index(22) );
-    $self->set_Gravy22( $self->gravy(22) );
-    $self->set_nDRQPEN22( $self->nDRQPEN(22) );
-    $self->set_nNitrogen22( $self->nNitrogen(22) );
-    $self->set_nOxygen22( $self->nOxygen(22) );
+    $self->AI22( $self->aliphatic_index(22) );
+    $self->Gravy22( $self->gravy(22) );
+    $self->nDRQPEN22( $self->nDRQPEN(22) );
+    $self->nNitrogen22( $self->nNitrogen(22) );
+    $self->nOxygen22( $self->nOxygen(22) );
 }
 
 sub aa22string {    # has
     my $self      = shift;
     my $separator = shift || ' ';
-    my $result    = $self->get_AI22();
-    $result .= $separator . $self->get_Gravy22();
-    $result .= $separator . $self->get_nDRQPEN22();
-    $result .= $separator . $self->get_nNitrogen22();
-    $result .= $separator . $self->get_nOxygen22();
+    my $result    = $self->AI22();
+    $result .= $separator . $self->Gravy22();
+    $result .= $separator . $self->nDRQPEN22();
+    $result .= $separator . $self->nNitrogen22();
+    $result .= $separator . $self->nOxygen22();
 
     return $result;
 }
@@ -126,7 +174,7 @@ and returns the aliphatic index of the truncated sequence.
 sub aliphatic_index {
     my $self         = shift;
     my $trunc_length = shift || undef;
-    my $sequence     = $self->get_sequence();
+    my $sequence     = $self->sequence();
     $sequence = substr( $sequence, 0, $trunc_length )
       if ( defined $trunc_length );
     return Bio::SecreTary::AAComposition::aliphatic_index($sequence);
@@ -143,7 +191,7 @@ and returns the "gravy" index of the truncated sequence.
 sub gravy {
     my $self         = shift;
     my $trunc_length = shift;
-    my $sequence     = $self->get_sequence();
+    my $sequence     = $self->sequence();
     $sequence = substr( $sequence, 0, $trunc_length )
       if ( defined $trunc_length );
 
@@ -161,7 +209,7 @@ and returns the number of amino acids in this truncated sequence which are DRQPE
 sub nDRQPEN {
     my $self         = shift;
     my $trunc_length = shift;
-    my $sequence     = $self->get_sequence();
+    my $sequence     = $self->sequence();
     $sequence = substr( $sequence, 0, $trunc_length )
       if ( defined $trunc_length );
 
@@ -180,7 +228,7 @@ sub nGASDRQPEN {
     my $self     = shift;
     my $beg      = shift || 0;              # zero-based
     my $length   = shift;
-    my $sequence = $self->get_sequence();
+    my $sequence = $self->sequence();
     $sequence = substr( $sequence, $beg, $length ) if ( defined $length );
     return Bio::SecreTary::AAComposition::nGASDRQPEN($sequence);
 }
@@ -196,7 +244,7 @@ and returns the number of Nitrogen atoms in this truncated sequence.
 sub nNitrogen {
     my $self         = shift;
     my $trunc_length = shift;
-    my $sequence     = $self->get_sequence();
+    my $sequence     = $self->sequence();
     $sequence = substr( $sequence, 0, $trunc_length )
       if ( defined $trunc_length );
 
@@ -214,106 +262,11 @@ and returns the number of Oxygen atoms in this truncated sequence.
 sub nOxygen {
     my $self         = shift;
     my $trunc_length = shift;
-    my $sequence     = $self->get_sequence();
+    my $sequence     = $self->sequence();
     $sequence = substr( $sequence, 0, $trunc_length )
       if ( defined $trunc_length );
 
     return Bio::SecreTary::AAComposition::nOxygen($sequence);
-}
-
-sub set_tmpred_good_solutions {
-    my $self = shift;
-    $self->{tmpred_good_solutions} = shift;
-}
-
-sub get_tmpred_good_solutions {
-    my $self = shift;
-    return $self->{tmpred_good_solutions};
-}
-
-sub set_sequence {
-    my $self = shift;
-    $self->{sequence} = shift;
-}
-
-sub get_sequence {
-    my $self = shift;
-    return $self->{sequence};
-}
-
-sub set_sequence_id {
-    my $self = shift;
-    $self->{sequence_id} = shift;
-}
-
-sub get_sequence_id {
-    my $self = shift;
-    return $self->{sequence_id};
-}
-
-sub set_cleavage {
-    my $self = shift;
-    $self->{cleavage} = shift;
-}
-
-sub get_cleavage {
-    my $self = shift;
-    return $self->{cleavage};
-}
-
-sub set_AI22 {
-    my $self = shift;
-    $self->{AI22} = shift;
-}
-
-sub get_AI22 {
-    my $self = shift;
-    return $self->{AI22};
-}
-
-sub set_Gravy22 {
-    my $self = shift;
-    $self->{Gravy22} = shift;
-}
-
-sub get_Gravy22 {
-    my $self = shift;
-    return $self->{Gravy22};
-}
-
-sub set_nDRQPEN22 {
-    my $self = shift;
-    $self->{nDRQPEN22} = shift;
-}
-
-sub get_nDRQPEN22 {
-    my $self = shift;
-    return $self->{nDRQPEN22};
-}
-
-sub set_nNitrogen22 {
-    my $self = shift;
-    $self->{nNitrogen22} = shift;
-}
-
-sub get_nNitrogen22 {
-    my $self = shift;
-    return $self->{nNitrogen22};
-}
-
-sub set_nOxygen22 {
-    my $self = shift;
-    $self->{nOxygen22} = shift;
-}
-
-sub get_nOxygen22 {
-    my $self = shift;
-    return $self->{nOxygen22};
-}
-
-sub get_candidate_solutions {
-    my $self = shift;
-    return $self->{candidate_solutions};
 }
 
 1;
