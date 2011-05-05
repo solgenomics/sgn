@@ -32,7 +32,7 @@
            __border   => 0,
            Browse => "$ftp_link $gb_link",
            'Search Annotations' =>
-                $m->scomp( '/genomes/util/gbrowse_searchbox.mas',
+                $m->scomp( '/gbrowse/search_box.mas',
                            gb_root => gbrowse_url('tomato_bacs')
                          ),
        )
