@@ -112,7 +112,7 @@ sub associate_locus_GET :Args(0) {
     ##my $allele_id = $c->req->param('allele_id');
     #Phytoene synthase 1 (psy1) Allele: 1
     #phytoene synthase 1 (psy1)
-    my $locus_input = $c->req->param('loci');
+    my $locus_input = $c->req->param('loci') || '';
 
     my ($locus_data, $allele_symbol) = split (/ Allele: / ,$locus_input);
     my $is_default = $allele_symbol ? 'f' : 't' ;
