@@ -103,8 +103,8 @@ sub _run_secretary {
 		my ( $id, $sequence ) = ( $1, $2 );
 
 		my $STAobj =
-			Bio::SecreTary::SecreTaryAnalyse->new( $id,
-					substr( $sequence, 0, $trunc_length ), $tmpred_obj );
+			Bio::SecreTary::SecreTaryAnalyse->new( {sequence_id => $id,
+				sequence => substr( $sequence, 0, $trunc_length ), tmpred_obj => $tmpred_obj });
 		push @STAarray, $STAobj;
 	}
 
@@ -144,9 +144,9 @@ sub _run_secretary {
 
 		}
 
-		my $id       = padtrunc( $STA->get_sequence_id(), 15 );
-		my $sequence = $STA->get_sequence();
-		my $cleavage = $STA->get_cleavage();
+		my $id       = padtrunc( $STA->sequence_id(), 15 );
+		my $sequence = $STA->sequence();
+		my $cleavage = $STA->cleavage_prediction();
 		my ( $sp_length, $hstart, $cstart, $typical ) = @$cleavage;
 		my $hstartp1 = padtrunc( $hstart + 1, 4 );
 		my $cstartp1 = padtrunc( $cstart + 1, 4 );
