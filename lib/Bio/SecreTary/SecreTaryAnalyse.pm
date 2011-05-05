@@ -17,59 +17,75 @@ Tom York (tly2@cornell.edu)
 
 package Bio::SecreTary::SecreTaryAnalyse;
 use Moose;
+use namespace::autoclean;
 use Bio::SecreTary::TMpred;
 use Bio::SecreTary::TMpred_Cinline;
 use Bio::SecreTary::Cleavage;
 use Bio::SecreTary::AAComposition;
 
 has sequence_id => (
-		    isa     => 'Maybe[Str]',
-		    is      => 'rw',
-		    default => undef );
-
+		    isa     => 'Str',
+		    is      => 'ro',
+		    required => 1 );
 has sequence => (
-		 isa     => 'Maybe[Str]',
-		 is      => 'rw',
-		 default => undef );
+		 isa     => 'Str',
+		 is      => 'ro',
+		 required => 1,
+		 writer => '_set_sequence' );
 has tmpred_obj => (
 		   isa => 'Object',
-		   is => 'rw' );
+		   is => 'ro' ,
+		   required => 1);
+has cleavage_predictor => (
+isa => 'Object',
+			   is => 'ro',
+			   required => 1);
+
 has tmpred_good_solutions => (
-			      isa => 'Maybe[Str]',
-			      is => 'rw',
-			      default => undef );
+			      isa => 'Str',
+			      is => 'ro',
+			      default => undef,
+			      writer => '_set_tmpred_good_solutions' );
 has trunc_length => (
 		     isa => 'Int',
-		     is => 'rw',
+		     is => 'ro',
 		     default => 100 );
 has cleavage_prediction => (
-			    isa => 'ArrayRef[Maybe[Str]]',
+			    isa => 'ArrayRef',
 			    is => 'rw',
-			    default => sub { [undef, undef, undef, undef] } );
+			    default => sub { [undef, undef, undef, undef] }, 
+			    writer => '_set_cleavage_prediction' );
 has AI22 => (
-	     isa => 'Maybe[Num]',
-	     is => 'rw',
-	     default => undef );
+	     isa => 'Num',
+	     is => 'ro',
+	     default => undef,
+	     writer => '_set_AI22' );
 has Gravy22 => (
-	     isa => 'Maybe[Num]',
-	     is => 'rw',
-	     default => undef );
+		isa => 'Num',
+		is => 'ro',
+		default => undef,
+		writer => '_set_Gravy22' );
 has nDRQPEN22 => (
-	     isa => 'Maybe[Int]',
-	     is => 'rw',
-	     default => undef );
+		  isa => 'Int',
+		  is => 'ro',
+		  default => undef,
+		  writer => '_set_nDRQPEN22' );
 has nNitrogen22 => (
-	     isa => 'Maybe[Int]',
-	     is => 'rw',
-	     default => undef );
+		    isa => 'Int',
+		    is => 'ro',
+		    default => undef,
+		    writer => '_set_nNitrogen22' );
 has nOxygen22 => (
-	     isa => 'Maybe[Int]',
-	     is => 'rw',
-	     default => undef );
+		  isa => 'Int',
+		  is => 'ro',
+		  default => undef,
+		  writer => '_set_nOxygen22' );
 has candidate_solutions => (
-isa => 'Maybe[ArrayRef]', 
-is => 'rw',
-default => undef );
+			    isa => 'ArrayRef',
+			    is => 'ro',
+			    default => undef,
+			    writer => '_set_candidate_solutions' );
+
 
 =head2 function new
 
@@ -79,40 +95,34 @@ Synopsis:
 	Returns:	an instance of a SecreTaryAnalyse object
 	Side effects:	creates the object.
 	Description:	Does the analysis of the protein (e.g TMpred, AI22, Gravy22), stores them and returns the object.
+# AI22, Gravy22, nDRQPEN22, etc.
 
 =cut
 
 sub BUILD {
-  #  my $class        = shift;
-    my $self     = shift; #    = bless {}, $class;
-  #  my $sequence_id  = shift;
-  #  my $sequence     = shift;
-  #  my $tmpred_obj   = shift;
-  #  my $trunc_length = shift || 100;
+    my $self     = shift;
 
-    $self->sequence(substr( $self->sequence(), 0, $self->trunc_length() ));
+    $self->_set_sequence(substr( $self->sequence(), 0, $self->trunc_length() ));
 
-    $self->sequence_id($self->sequence_id());
-#    $self->sequence($sequence);
-
+# TMpred
     my ( $outstring, $long_output ) =
       $self->tmpred_obj()->run_tmpred( $self->sequence(), $self->sequence_id() );
+    $self->_set_tmpred_good_solutions($outstring);
 
-    $self->tmpred_good_solutions($outstring);
-
+# AI22, Gravy22, nDRQPEN22, etc.
     $self->sequence22_AAcomposition();
 
-    # do the cleavage site calculation
-    my $cleavage_predictor_obj = Bio::SecreTary::Cleavage->new(); # Should avoid doing this for each sequence
-    my $sp_length    = $cleavage_predictor_obj->cleavage_fast($self->sequence());
+# do the cleavage site calculation
+    my $cleavage_predictor_obj = $self->cleavage_predictor();  #Bio::SecreTary::Cleavage->new(); # Should avoid doing this for each sequence
+    my $sp_length = $cleavage_predictor_obj->cleavage_fast($self->sequence());
 
+# subdomains (n, h, c)
     # $hstart is the 0-based number of first AA of h region, i.e. the length of
     # the n region. cstart is the 0-based number of first AA of the c region
     # i.e. post-hydrophobic cleavage region
     my ( $typical, $hstart, $cstart ) =
       $cleavage_predictor_obj->subdomain( substr( $self->sequence(), 0, $sp_length ) );
-
-    $self->cleavage_prediction( [ $sp_length, $hstart, $cstart, $typical ] );
+    $self->_set_cleavage_prediction( [ $sp_length, $hstart, $cstart, $typical ] );
 
     my @candidate_solutions = ();
     my $tmpred_good_solns   = $self->tmpred_good_solutions();
@@ -128,7 +138,7 @@ sub BUILD {
         push @candidate_solutions, "$tmpred_score,$beg,$end,$nGASDRQPENtm";
     }
 
-    $self->candidate_solutions(\@candidate_solutions);
+    $self->_set_candidate_solutions(\@candidate_solutions);
     return $self;
 }
 
@@ -144,11 +154,11 @@ Synopsis: $STA_obj->sequence22_AAcomposition();
 sub sequence22_AAcomposition {
     my $self = shift;
 
-    $self->AI22( $self->aliphatic_index(22) );
-    $self->Gravy22( $self->gravy(22) );
-    $self->nDRQPEN22( $self->nDRQPEN(22) );
-    $self->nNitrogen22( $self->nNitrogen(22) );
-    $self->nOxygen22( $self->nOxygen(22) );
+    $self->_set_AI22( $self->aliphatic_index(22) );
+    $self->_set_Gravy22( $self->gravy(22) );
+    $self->_set_nDRQPEN22( $self->nDRQPEN(22) );
+    $self->_set_nNitrogen22( $self->nNitrogen(22) );
+    $self->_set_nOxygen22( $self->nOxygen(22) );
 }
 
 sub aa22string {    # has
@@ -268,5 +278,7 @@ sub nOxygen {
 
     return Bio::SecreTary::AAComposition::nOxygen($sequence);
 }
+
+__PACKAGE__->meta->make_immutable;
 
 1;
