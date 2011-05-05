@@ -10,7 +10,7 @@
        &>
 
 %         for my $source ( sort { $a->description cmp $b->description } @{$release_datasources{$release_name}}) {
-            <& /genomes/util/gbrowse_set.mas, source => $source &>
+            <& /gbrowse/source.mas, source => $source &>
 %         }
           <% info_table_html(
               __border => 0,

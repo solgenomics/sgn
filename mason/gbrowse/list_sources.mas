@@ -4,7 +4,7 @@
 </%args>
 
 % for my $src (@sources) {
-    <& /genomes/util/gbrowse_set.mas, source => $src &>
+      <& /gbrowse/source.mas, source => $src &>
 % }
 
 <%init>
@@ -13,6 +13,7 @@
 
   # find the data sources, filtering if necessary
   my @sources =
+     sort { $a->description cmp $b->description }
      grep $_->databases,
      grep !$description || index( lc $_->description, lc $description ) != -1,
      grep !$organism    || index( lc $_->organism,    lc $species     ) != -1,
