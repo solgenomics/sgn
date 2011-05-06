@@ -231,7 +231,7 @@ sub find_organism :Chained('/') :PathPart('organism') :CaptureArgs(1) {
     my ( $self, $c, $organism_id ) = @_;
 
     my $rs =
-        $c->dbic_schema('Bio::Chado::Schema','sgn_chado')
+        $c->dbic_schema('CXGN::Biosource::Schema','sgn_chado')
           ->resultset('Organism::Organism');
 
     if( $organism_id =~ /\D/ ) {
