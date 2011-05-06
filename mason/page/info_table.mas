@@ -1,0 +1,20 @@
+<%args>
+  $title      => ''
+  $caption    => ''
+  $tableattrs => ''
+  $multicol   => 1
+  $border     => 0
+  $sub        => 0
+</%args>
+<% info_table_html( %mapped_args, %$content ) %>
+<%init>
+  my %mapped_args;
+  for my $k (keys %ARGS) {
+    $mapped_args{"__$k"} = $ARGS{$k};
+  }
+  my $content = YAML::Any::Load( $m->content );
+</%init>
+<%once>
+  use YAML::Any ();
+  use CXGN::Page::FormattingHelpers 'info_table_html';
+</%once>
