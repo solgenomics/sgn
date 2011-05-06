@@ -25,6 +25,7 @@ if( my $server_pid = fork ) {
         ( map { -I => $_ } @INC ),
         @test_paths
         );
+    $SIG{CHLD} = 'IGNORE';
     exit( $app->run ? 0 : 1 );
 
     END { kill 15, $server_pid if $server_pid }
