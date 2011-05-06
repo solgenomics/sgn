@@ -45,7 +45,7 @@ my $page_end;
                 <& /page/page_title.mas, title => "Step 5: Submit Statistical Parameters" &> 
                 <&| /page/info_section.mas, title => "Statistical Parameters", subtitle => $guide &></&>
 % }
-
+<div id="qtlParameters" style="display: none">
 <form action="/phenome/qtl_load.pl" method="POST" enctype="MULTIPART/FORM-DATA">  
     <table cellspacing=20>
 	<tr><td>QTL model: </td>
@@ -132,6 +132,6 @@ my $page_end;
     </tr>
    </table>
    </form>  
-
+</div>
 
 
