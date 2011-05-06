@@ -15,7 +15,7 @@ my @test_paths = @ARGV;
 if( my $server_pid = fork ) {
 
     # testing process
-    sleep 1 until !kill(0, $server_pid) || get 'http://localhost:3003';
+    sleep 1 until get 'http://localhost:3003';
     $ENV{SGN_TEST_SERVER}='http://localhost:3003';
     my $app = App::Prove->new;
     warn "Starting testing process with SGN_TEST_SERVER=" . $ENV{SGN_TEST_SERVER};
