@@ -13,7 +13,6 @@ use CXGN::Biosource::Schema;
 
 my %urls;
 
-my $base_url = $ENV{SGN_TEST_SERVER};
 my $mech = SGN::Test::WWW::Mechanize->new;
 
 ## This test are local test, so it will use the with_test_level function
@@ -49,8 +48,8 @@ $mech->with_test_level( local => sub {
 			    my $first_sample_id = $first_sample_row->get_column('sample_id');
     			    my $first_sample_name = $first_sample_row->get_column('sample_name');
 
-	                    $urls{'biosource sample page'} = "$base_url/biosource/sample.pl?id=$first_sample_id";
-	    		    $urls{'biosource sample page'} = "$base_url/biosource/sample.pl?name=$first_sample_name";
+	                    $urls{'biosource sample page'} = "/biosource/sample.pl?id=$first_sample_id";
+	    		    $urls{'biosource sample page'} = "/biosource/sample.pl?name=$first_sample_name";
 
 		        }
 
