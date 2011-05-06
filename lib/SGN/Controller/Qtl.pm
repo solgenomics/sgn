@@ -50,7 +50,7 @@ sub view : PathPart('qtl/view') Chained Args(1) {
                       guide    => $self->guideline
                 );
             
-            my ($heatmap, $corr_table) = $self->_analyze_correlation($c, $c->stash->{pop});           
+           my ($heatmap, $corr_table) =(); #$self->_analyze_correlation($c, $c->stash->{pop});           
             $c->stash(heatmap    => $heatmap,
                       corr_table => $corr_table
                 );
