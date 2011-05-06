@@ -12,14 +12,33 @@ $corr_table
 
 my $pop_id = $pop->get_population_id();
 my $name   = $pop->get_name();
-my $corr_image = qq | <img alt="correlation out put for $name " src="${$heatmap}"/> |;
+
+#my $qtlstat = qq| <a href="javascript:Qtl.toggleStatParameters()">[Qtl Parameters]</a> |;
+
 </%perl>
 
+<& /util/import_javascript.mas, classes => [ "CXGN.Phenome.Qtl" ] &>
+
 <& /page/page_title.mas, title=>"QTL for $pop_id" &>
-<&| /page/info_section.mas, collapsible=>1, collapsed=>1, title => "QTL markers' genetic positions and Comparative Map Viewer" &> </&>
-<&| /page/info_section.mas, collapsible=>1, collapsed=>1, title => "Set Statistical Parameters" &> 
-  <& /qtl/qtl_form/stat_form.mas, pop_id =>$pop_id, guide => $guide, referer=>$referer &>
+%#<&| /page/info_section.mas, title => $qtlstat, subtitle => $guide &> 
+%#<& /qtl/qtl_form/stat_form.mas, pop_id=>$pop_id, guide=>$guide, referer=>$referer &>
+%#</&>
+<&| /page/info_section.mas, 
+  collapsible=>1, 
+  collapsed=>1, 
+  title => "Population details" &> 
 </&>
 
-<&| /page/info_section.mas, collapsible=>1, collapsed=>1, title => "correlation" &> <% $corr_image %> </&>
-
+<&| /page/info_section.mas, 
+  collapsible =>1, 
+  collapsed   =>0, 
+  title       => "Set Statistical Parameters"
+  &>   
+</&>
+<& stat_tools.mas &>
+<& /qtl/qtl_form/stat_form.mas, pop_id=>$pop_id, guide=>$guide, referer=>$referer &>
+%#<& correlation.mas, 
+%#   pop        =>$pop, 
+%#   heatmap    =>$heatmap, 
+%#   corr_table =>$corr_table 
+%#&>
