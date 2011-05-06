@@ -8,7 +8,6 @@
 JSAN.use('MochiKit.DOM');
 JSAN.use('MochiKit.Visual');
 JSAN.use('MochiKit.Async');
-
 JSAN.use('CXGN.Effects');
 JSAN.use('CXGN.Phenome.Tools');
 
@@ -17,8 +16,20 @@ var Qtl = {
 
     toggleAssociateTaxon: function()
     {	
-	MochiKit.Visual.toggle('associateTaxonForm', 'blind');
+	MochiKit.Visual.toggle('associateTaxonForm', 'appear');
     },
+ 
+    toggleQtlParameters: function()
+    {	
+        MochiKit.Visual.toggle('qtlParameters', 'appear');
+    },
+    
+    toggleDiagnosticParameters: function()
+    {	
+        MochiKit.Visual.toggle('diagnosticParameters', 'appear');                  
+    },
+    
+  
   
 //Make an ajax response that finds all the TAXON with organism ids
     getTaxons: function(str) {
@@ -30,7 +41,7 @@ var Qtl = {
 	}
         else{
 	    var type = 'browse';
-	    var d = new MochiKit.Async.doSimpleXMLHttpRequest("organism_browser.pl", {organism: str, type: type});
+	    var d = new MochiKit.Async.doSimpleXMLHttpRequest("organism_browse.pl", {organism: str, type: type});
 	    d.addCallbacks(this.updateTaxonSelect);
 	}
     },
