@@ -8,11 +8,13 @@
 </%args>
 <% info_table_html( %mapped_args, %$content ) %>
 <%init>
-  my %mapped_args;
-  for my $k (keys %ARGS) {
-    $mapped_args{"__$k"} = $ARGS{$k};
-  }
+
+  my %mapped_args =
+      map {( "__$_" => $ARGS{$_} )}
+      qw( title caption tableattrs multicol border sub );
+
   my $content = YAML::Any::Load( $m->content );
+
 </%init>
 <%once>
   use YAML::Any ();
