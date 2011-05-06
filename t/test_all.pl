@@ -14,6 +14,8 @@ my @test_paths = @ARGV;
 
 if( my $server_pid = fork ) {
 
+    $SIG{CHLD} = sub { waitpid $server_pid, 0 };
+
     # testing process
     sleep 1 until !kill(0, $server_pid) || get 'http://localhost:3003';
     $ENV{SGN_TEST_SERVER}='http://localhost:3003';
