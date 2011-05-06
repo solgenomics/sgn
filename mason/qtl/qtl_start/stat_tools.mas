@@ -1,0 +1,28 @@
+<%doc>
+
+=head1 NAME 
+qtl/qtl_form/trait_form.mas - a mason component for a traits file submission
+
+=AUTHOR
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<& /util/import_javascript.mas, classes => [ "CXGN.Phenome.Qtl" ] &>
+
+<div id="statTools">
+ <form >
+     <table>
+     <tr>
+       <td>Select the statistical analysis you would like to set the parameters for:</td>
+     </tr>
+     <tr>
+       <td><input type="radio" id="qtl" onclick="Qtl.toggleQtlParameters()" name="stat_options" value="qtl analysis"/>QTL Analysis</td>
+       <td><input type="radio" id="diagnostic" onclick="Qtl.toggleDiagnosticParameters()" name="stat_options"  value="diagnostic tests"/> Diagnostic tests (coming soon)</td>       
+     </tr>            
+    </table>
+</form>
+</div>
+
