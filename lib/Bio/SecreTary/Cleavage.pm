@@ -59,12 +59,12 @@ use Moose;
 use namespace::autoclean;
 
 has weight_matrix => (
-    isa     => 'Maybe[ArrayRef[ArrayRef[Int]]]',
+    isa     => 'ArrayRef', # 'Maybe[ArrayRef[ArrayRef[Int]]]',
     is      => 'rw',
     default => undef );
 
 has aa_number_hash => (
-    isa     => 'Maybe[HashRef[Int]]',
+    isa     => 'HashRef', # Maybe[HashRef[Int]]',
     is      => 'rw',
     default => undef );
 
