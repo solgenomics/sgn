@@ -19,6 +19,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
        <td>Select the statistical analysis you would like to set the parameters for:</td>
      </tr>
      <tr>
+<td><input type="radio" id="default" name="stat_options" value="Default qtl analysis"/>Use default parameters</td>
        <td><input type="radio" id="qtl" onclick="Qtl.toggleQtlParameters()" name="stat_options" value="qtl analysis"/>QTL Analysis</td>
        <td><input type="radio" id="diagnostic" onclick="Qtl.toggleDiagnosticParameters()" name="stat_options"  value="diagnostic tests"/> Diagnostic tests (coming soon)</td>       
      </tr>            
