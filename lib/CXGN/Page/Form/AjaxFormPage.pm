@@ -337,7 +337,7 @@ sub store {
 	$json_hash{validate} = 1;
 	$json_hash{html} = $self->get_form()->as_table_string();
 	$self->set_json_hash(%json_hash);
-	$self->print_json();
+	#$self->print_json(); #json is printed from the sub-class regardless of the content
     }
 }
 
@@ -450,7 +450,7 @@ sub display_form {
     # edit links are printed from the javascript object! See JSFormPage.js
     #print $self->get_edit_links();
 
-    if (!($json_hash{html}) ) { $json_hash{html} = $self->get_form()->as_table_string() ; }		
+    if (!($json_hash{html}) ) { $json_hash{html} = $self->get_form()->as_table_string() ; }
     $self->check_modify_privileges();
 
     $json_hash{"user_type"} = $self->get_user()->get_user_type();
