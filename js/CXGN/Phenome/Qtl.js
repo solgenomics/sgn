@@ -19,17 +19,31 @@ var Qtl = {
 	MochiKit.Visual.toggle('associateTaxonForm', 'appear');
     },
  
-    toggleQtlParameters: function()
-    {	
-        MochiKit.Visual.toggle('qtlParameters', 'appear');
-    },
+    //toggleQtlParameters: function()
+    // {	
+    //    MochiKit.Visual.toggle('qtlParameters', 'appear');
+    //},
     
-    toggleDiagnosticParameters: function()
-    {	
-        MochiKit.Visual.toggle('diagnosticParameters', 'appear');                  
-    },
+    // toggleDiagnosticParameters: function()
+    // {	
+    //    MochiKit.Visual.toggle('diagnosticParameters', 'appear');                  
+    //},
     
-  
+    
+    toggleStatOptions: function(id)
+    {
+        var e = document.getElementById('statTools');
+        var all = e.getElementsByTagName('div');
+        
+        for(var i=0;i<all.length;i++)
+            {
+                all[i].style.display="none";
+                if(all[i].id==id){all[i].style.display="block";}
+            }
+    },
+   
+        
+     
   
 //Make an ajax response that finds all the TAXON with organism ids
     getTaxons: function(str) {
