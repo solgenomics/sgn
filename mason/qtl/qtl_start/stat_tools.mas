@@ -10,20 +10,37 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 </%doc>
 
+<%args>
+
+$pop_id
+$referer
+$guide
+
+</%args>
 <& /util/import_javascript.mas, classes => [ "CXGN.Phenome.Qtl" ] &>
 
 <div id="statTools">
- <form >
+<form>
      <table>
      <tr>
        <td>Select the statistical analysis you would like to set the parameters for:</td>
      </tr>
      <tr>
-<td><input type="radio" id="default" name="stat_options" value="Default qtl analysis"/>Use default parameters</td>
-       <td><input type="radio" id="qtl" onclick="Qtl.toggleQtlParameters()" name="stat_options" value="qtl analysis"/>QTL Analysis</td>
-       <td><input type="radio" id="diagnostic" onclick="Qtl.toggleDiagnosticParameters()" name="stat_options"  value="diagnostic tests"/> Diagnostic tests (coming soon)</td>       
+       <td><input type="radio" onclick="Qtl.toggleStatOptions('default')" name="stat_options" value="Default qtl analysis"/>Use default parameters</td>
+       <td><input type="radio" onclick="Qtl.toggleStatOptions('qtlParameters')" name="stat_options" value="qtl analysis"/>QTL Analysis</td>
+       <td><input type="radio" onclick="Qtl.toggleStatOptions('diagnosticTests')" name="stat_options"  value="diagnostic tests"/> Diagnostic tests</td>       
      </tr>            
     </table>
-</form>
+</form> 
+
+<div id="default" style="display:none">
+       Currently default parameters for QTL analysis are displayed on the legend of the analysis output.
+</div>
+
+<& /qtl/qtl_form/stat_form.mas,  pop_id=>$pop_id, referer=>$referer, guide=>$guide &>
+
+<div id="diagnosticTests" style="display:none">
+       Under development
+</div>      
 </div>
 
