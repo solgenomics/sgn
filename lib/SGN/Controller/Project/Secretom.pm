@@ -99,21 +99,24 @@ sub signalp_search :Path('search/signalp') {
     my ( $self, $c ) = @_;
 
     my $file = $c->req->param('file');  $file =~ s!\\/!!g; # no dir seps, no badness.
-    $file ||= 'Tair9RiceBrachyITAG1.tab.gz';
-    my $abs_file = $self->static_dir->file( 'data','secretom', '.new', 'SignalP_predictions', $file  );
+    $file ||= 'AtBrRiceTomPop.tab.gz';  # 'Tair10_all.tab.gz'; 
+    my $abs_file = $self->static_dir->file( 'data','secretom', '.new', 'SecreTarySPTP_predictions', $file  );
+    $abs_file = $self->static_dir->file('Scrtm', $file);
 
     $c->stash->{headings} = [
 	"Locus name",
 	"Annotation",
 	"Protein length",
 	"Molecular weight",
-	"SignalP-nn (Dscore)",
+	"SignalP-nn Dscore",
 	"SignalP-nn (YES if Dscore >= 0.43, NO otherwise)",
 	"SignalP-nn pred sp len",
 	"SignalP-hmm sp score",
 	"SignalP-hmm sa score",
 	"SignalP-hmm prediction (SP,SA or NS)",
 	"TargetP result (C,M,S,_)",
+	"SecreTary score",
+	"SecreTary prediction (ST+ if score >= 0.75)"
        ];
 
     $c->stash->{query}    = my $q = $c->req->param('q');
@@ -149,20 +152,42 @@ sub _search_signalp_file {
 
     # normalize and compile query
     $query = lc $query;
-    $query =~ s/ ^\s+ | \s+$ | [^\w\s] //gx;;
+    $query =~ s/ ^\s+ | \s+$ //gx; # remove initial and final whitespace
+#  $query =~ s/ [^\w\s] //gx; # removes characters which are neither
+# word ([a-zA-Z0-9_]) or whitespace characters. But then somthing like
+# AT1G37010.1 becomes AT1G370101 and we get no matches. 
     $query =~ s/\s+/'\s+'/ge;
     $query = qr|$query|;
 
     open my $fh, "gunzip -c '$file' |" or die "$! unzipping $file";
     my @results;
-    while( my $line = <$fh> ) {
-        next unless lc($line) =~ $query;
-        my @fields = (split /\t/, $line)[0,1,4,5,6,7,8,9,10,11,12];
-        push @results, \@fields;
+    while ( my $line = <$fh> ) {
+      next unless lc($line) =~ $query;
+      # choose the fields in the tab file to keep
+      my @fields = (split /\t/, $line)[
+				       0, # id
+				       1, # protein length
+				       4, # Molecular weight
+				       5, # Annotation
+				       6, # SPnn Dscore
+				       7, # SPnn prediction 
+				       8, # SPnn signal peptide predicted length
+				       9, # SPhmm sp score
+				       10, # SPhmm sa (signal anchor) score
+				       11, # SPhmm prediction
+				       12, # TargetP prediction (C,M,S,_)
+				       13, # SecreTary score (>= 0.75 -> pass)
+				       14 # SecreTary prediction (pass/fail)
+				      ];
+my $STpred = pop @fields;
+$STpred = ($STpred eq 'pass')? 'ST+': 'ST-';
+push @fields, $STpred;
+
+      push @results, \@fields;
     }
 
     return @results;
-}
+  }
 
 
 =head1 AUTHOR

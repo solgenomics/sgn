@@ -25,7 +25,7 @@ functionality of the site
 Performs a search for each entity in the database and reports the
 number of hits for each entity. Links are provided on an overview page
 to allow the user to complete the search. In addition to the database,
-quick_search.pl also searches google for the sgn.cornell.edu domain,
+quick_search.pl also searches google for the solgenomics.net domain,
 parses the page that Google returns to report the number of hits on
 the web site (which includes static and dynamic pages). The link
 provided with that search is going directly to Google.  Similarly, the
@@ -99,12 +99,27 @@ sub quick_search: Path('/search/quick') {
     defined $term && length $term
         or $c->throw_client_error( public_message => 'Must provide a search term' );
 
-    $c->stash->{term} = $term;
+    $c->stash(
+        term       => $term,
+        show_times => $c->req->parameters->{showtimes},
+        template   => '/search/quick_search.mas',
+        );
 
-    #first run the term through CXGN::Tools::Identifiers, and if it's
-    #recognized as an exact SGN identifier match, just redirect them to
-    #that page
-    my $external_link;
+    return if $c->forward('redirect_by_ident');
+
+    $c->forward('execute_predefined_searches');
+    $c->forward('search_with_xrefs');
+    $c->forward('redirect_if_only_one_possible');
+}
+
+#run the term through CXGN::Tools::Identifiers, and if it's
+#recognized as an exact SGN identifier match, just redirect them to
+#that page
+sub redirect_by_ident : Private {
+    my ( $self, $c ) = @_;
+
+    my $term = $c->stash->{term};
+
     if ( my $direct_url = identifier_url($term) ) {
         my $namespace = identifier_namespace($term);
         #if the URL is just to this page, it's not useful
@@ -120,19 +135,19 @@ sub quick_search: Path('/search/quick') {
                 $c->stash->{results}{external_link}{result} = [ $direct_url, '1 direct information page' ];
             } else {
                 $c->res->redirect( $direct_url );
-                return;
+                return 1;
             }
         }
     }
 
-    $c->forward('execute_predefined_searches');
-    $c->forward('search_with_xrefs');
+    return;
+}
 
-    $c->stash->{show_times} = $c->req->parameters->{showtimes};
-    $c->stash->{template} = '/search/quick_search.mas';
+# another optimization: if the quick search found only one
+# possible URL to go to, go there
+sub redirect_if_only_one_possible : Private {
+    my ( $self, $c ) = @_;
 
-    # another optimization: if the quick search found only one
-    # possible URL to go to, go there
     my @possible_urls = uniq(
          grep $_ !~ m!^https?://!,
          grep defined,
@@ -145,6 +160,7 @@ sub quick_search: Path('/search/quick') {
        );
 
     if( @possible_urls == 1 ) {
+        $c->log->debug("redirecting to only possible url: $possible_urls[0]") if $c->debug;
         $c->res->redirect( $possible_urls[0] );
         return;
     }
@@ -466,7 +482,7 @@ sub quick_web_search {
 }
 sub quick_page_search {
   my (undef,$term) = @_;
-  return google_search('SGN',$term,'sgn.cornell.edu');
+  return google_search('SGN',$term,'solgenomics.net');
 }
 
 

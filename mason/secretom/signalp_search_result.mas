@@ -5,7 +5,7 @@
   $csv_download
 </%args>
 
-<& /page/page_title.mas, title => 'SignalP Result Search' &>
+<& /page/page_title.mas, title => 'SecreTary SignalP TargetP Result Search' &>
 
 <h3 style="text-align: center">Searched for "<% $query |h%>".</h3>
 
@@ -18,7 +18,10 @@
    <&| /page/info_section.mas, title => 'Hit: '.$row->[0], is_subsection => 1 &>
      <% $table->( $row, [ 0,2,3 ] ) %> 
      <% $table->( $row, [ 1 ] ) %> 
-     <% $table->( $row, [ 4,5,6,7,8,9,10 ] ) %> 
+     <% $table->( $row, [ 4,5,6 ] ) %>
+	<% $table->( $row, [ 7,8,9 ] ) %>
+	<% $table->( $row, [ 10 ] ) %> 
+	  <% $table->( $row, [ 11,12 ] ) %>
    </&>
 %    } 
 %  } else {

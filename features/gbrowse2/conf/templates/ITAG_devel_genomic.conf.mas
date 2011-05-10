@@ -58,7 +58,7 @@ search options = default +autocomplete +fulltext
 [TRACK DEFAULTS]
 glyph       = generic
 height      = 8
-link         = /search/quick_search.pl?term=$name
+link         = /search/quick?term=$name
 bgcolor     = cyan
 fgcolor     = black
 label density = 25

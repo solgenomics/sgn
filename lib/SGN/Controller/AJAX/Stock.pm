@@ -24,6 +24,7 @@ use List::MoreUtils qw /any /;
 use Try::Tiny;
 use CXGN::Phenome::Schema;
 use CXGN::Phenome::Allele;
+use CXGN::Chado::Stock;
 use CXGN::Page::FormattingHelpers qw/ columnar_table_html info_table_html /;
 use Scalar::Util qw(looks_like_number);
 
@@ -111,14 +112,14 @@ sub associate_locus_GET :Args(0) {
     ##my $allele_id = $c->req->param('allele_id');
     #Phytoene synthase 1 (psy1) Allele: 1
     #phytoene synthase 1 (psy1)
-    my $locus_input = $c->req->param('loci');
-    
+    my $locus_input = $c->req->param('loci') || '';
+
     my ($locus_data, $allele_symbol) = split (/ Allele: / ,$locus_input);
     my $is_default = $allele_symbol ? 'f' : 't' ;
     $locus_data =~ m/(.*)\s\((.*)\)/ ;
     my $locus_name = $1;
     my $locus_symbol = $2;
-
+    my $schema =  $c->dbic_schema('Bio::Chado::Schema' , 'sgn_chado');
     my ($allele) = $c->dbic_schema('CXGN::Phenome::Schema')
         ->resultset('Locus')
         ->search({
@@ -131,8 +132,7 @@ sub associate_locus_GET :Args(0) {
         $c->stash->{rest} = { error => "no allele found for locus '$locus_data' (allele: '$allele_symbol')" };
         return;
     }
-    my $stock = $c->dbic_schema('Bio::Chado::Schema' , 'sgn_chado')
-        ->resultset("Stock::Stock")->find({stock_id => $stock_id } ) ;
+    my $stock = $schema->resultset("Stock::Stock")->find({stock_id => $stock_id } ) ;
     my  $allele_id = $allele->allele_id;
     if (!$c->user) {
         $c->stash->{rest} = { error => 'Must be logged in for associating loci! ' };
@@ -143,10 +143,9 @@ sub associate_locus_GET :Args(0) {
         # rightly) be counted as a server error
         if ($stock && $allele_id) {
             try {
-                $stock->create_stockprops(
-                    { 'sgn allele_id' => $allele->allele_id },
-                    { cv_name => 'local', allow_duplicate_values => 1, autocreate => 1 },
-                    );
+                my $cxgn_stock = CXGN::Chado::Stock->new($schema, $stock_id);
+                $cxgn_stock->associate_allele($allele_id, $c->user->get_object->get_sp_person_id);
+
                 $c->stash->{rest} = ['success'];
                 # need to update the loci div!!
                 return;
@@ -168,7 +167,7 @@ sub display_alleles_GET  {
     my ($self, $c) = @_;
 
     my $stock = $c->stash->{stock};
-    my $allele_ids = $c->stash->{stockprops}->{'sgn allele_id'};
+    my $allele_ids = $c->stash->{allele_ids};
     my $dbh = $c->dbc->dbh;
     my @allele_data;
     my $hashref;

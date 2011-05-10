@@ -78,6 +78,9 @@ __PACKAGE__->config(
            },
        },
 
+    # configure SGN::Role::Site::TestMode.  These are the
+    # configuration keys that it will change so that they point into
+    # t/data
     'Plugin::TestMode' => {
         test_data_dir => __PACKAGE__->path_to('t','data'),
         reroot_conf   =>

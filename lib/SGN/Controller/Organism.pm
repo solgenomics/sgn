@@ -230,14 +230,26 @@ sub autocomplete :Chained('get_organism_set') :PathPart('autocomplete') :Args(0)
 sub find_organism :Chained('/') :PathPart('organism') :CaptureArgs(1) {
     my ( $self, $c, $organism_id ) = @_;
 
-    # TODO: add capability to search by organism name as well
-
-    $c->stash->{organism_id} = $organism_id;
-
-    $c->stash->{organism_rs} =
+    my $rs =
         $c->dbic_schema('Bio::Chado::Schema','sgn_chado')
-            ->resultset('Organism::Organism')
-            ->search_rs({ organism_id => $organism_id });
+          ->resultset('Organism::Organism');
+
+    if( $organism_id =~ /\D/ ) {
+        (my $species = $organism_id) =~ s/_/ /g;
+        $rs = $rs->search_rs({ 'lower(me.species)' => lc $species });
+    } else {
+        $rs = $rs->search_rs({ organism_id => $organism_id });
+    }
+
+    my ( $organism ) = my @organisms = $rs->all;
+    $c->throw_client_error('Multiple matching organisms') if @organisms > 1;
+    $c->throw_404('Organism not found') unless $organism;
+
+    $c->stash(
+        organism_rs => $rs,
+        organism_id => $organism->organism_id,
+        organism    => $organism,
+        );
 }
 
 =head2 view_organism

@@ -105,7 +105,8 @@ sub delegate_component
     $c->stash->{seq_download_url} = '/api/v1/sequence/download/single/'.$feature->feature_id;
 
     # look up site xrefs for this feature
-    my @xrefs = $c->feature_xrefs( $feature->name, { exclude => 'featurepages' } );
+    my @xrefs = map $c->feature_xrefs( $_, { exclude => 'featurepages' } ),
+                ( $feature->name, $feature->synonyms->get_column('name')->all );
     unless( @xrefs ) {
         @xrefs = map {
             $c->feature_xrefs( $_->srcfeature->name.':'.($_->fmin+1).'..'.$_->fmax, { exclude => 'featurepages' } )
@@ -141,6 +142,8 @@ sub _validate_pair {
 
 sub _view_feature {
     my ($self, $c, $key, $value) = @_;
+
+    $c->stash->{blast_url} = '/tools/blast/index.pl';
 
     $self->_validate_pair($c,$key,$value);
     my $matching_features = $self->schema
@@ -257,5 +260,3 @@ sub _feature_types {
 }
 
 __PACKAGE__->meta->make_immutable;
-1;
-

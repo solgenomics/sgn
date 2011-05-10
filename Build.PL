@@ -1,7 +1,6 @@
 use lib 'lib';
 use SGN::Build;
 
-#my $class = 'Module::Build';
 my $build = SGN::Build->new(
     dist_name          => 'SGN',
     license            => 'perl',
@@ -10,10 +9,9 @@ my $build = SGN::Build->new(
     module_name        => 'SGN::Context',
 
     # current version of our core libraries distribution
-    dist_version => '0.1',
-    dist_author  => 'Lukas Mueller',
-    dist_abstract =>
-'The code and content behind the Sol Genomics Network main website, http://solgenomics.net',
+    dist_version  => '0.1',
+    dist_author   => 'Lukas Mueller',
+    dist_abstract => 'The code and content behind the Sol Genomics Network main website, http://solgenomics.net',
 
     recursive_test_files => 1,
 
@@ -37,6 +35,7 @@ my $build = SGN::Build->new(
         'IPC::System::Simple'                      => 0,         #< required for autodie :all
         'Bio::Chado::Schema'                       => '0.08100',
         'Bio::Root::Version'                       => '1.006001',
+        'Bio::GMOD::Blast::Graph'                  => '0.01',
         'Bio::Graphics::FeatureFile'               => 0,
         'Cache::File'                              => 0,
         'Catalyst::Runtime'                        => '5.80024',

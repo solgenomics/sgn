@@ -127,15 +127,15 @@ var Locus = {
 	    $("add_registry_button").disabled=true;
 	}
     },
-    
-    //Make an ajax request that finds all the alleles related to the currently selected individual
+
+    //Make an ajax request that finds all the alleles related to the currently selected stock
     getAlleles: function(locus_id) {
-	$("associate_individual_button").disabled=false;
-	var individual_id = $('individual_select').value;
-	var d = new MochiKit.Async.doSimpleXMLHttpRequest("allele_browser.pl", {locus_id: locus_id, individual_id: individual_id});
+	$("associate_stock_button").disabled=false;
+	var stock_id = $('stock_select').value;
+        var d = new MochiKit.Async.doSimpleXMLHttpRequest("allele_browser.pl", {locus_id: locus_id, stock_id: stock_id});
 	d.addCallbacks(this.updateAlleleSelect);
     },
-    
+
     //Parse the ajax response to update the allele select box
     updateAlleleSelect: function(request) {
 	var select = $('allele_select');
@@ -143,7 +143,7 @@ var Locus = {
 	var responseArray = responseText.split("|");
 	//the last element of the array is empty. Dont want this in the select box
 	responseArray.pop();
-	select.length = 0;    
+	select.length = 0;
 	select.length = responseArray.length;
 	for (i=0; i < responseArray.length; i++) {
 	    var registryObject = responseArray[i].split("*");
@@ -155,24 +155,23 @@ var Locus = {
 		select[i].text = registryObject[0];
 		select[i].value = null;
 	    }
-	}	
+	}
 	if(responseArray.length > 1){
-	    Effects.showElement('alleleSelect');	
+	    Effects.showElement('alleleSelect');
 	}
 	else{
 	    Effects.hideElement('alleleSelect');
 	}
-    	
     },
-    
+
     associateAllele: function(sp_person_id, allele_id) {
 	// locus page does not call this function with an allele_id
 	// allele page calls the function with the page object_id 
 	if (!allele_id) {  allele_id = $('allele_select').value; } 
-	var individual_id = $('individual_select').value;
-	
+	var stock_id = $('stock_select').value;
+
 	new Ajax.Request("associate_allele.pl", {
-		parameters: {allele_id: allele_id, individual_id: individual_id, sp_person_id: sp_person_id}, 
+		parameters: {allele_id: allele_id, stock_id: stock_id, sp_person_id: sp_person_id}, 
 		    onSuccess: function(response) {
 				var json = response.responseText;
 				MochiKit.Logging.log("associateAllele response:  " , json);
@@ -183,40 +182,27 @@ var Locus = {
 		},
 		    });
     },
-    
-    
-    //Make an ajax request to find all the individuals with a name like the current value of of the accession name input box
-    getIndividuals: function(str, locus_id) {
+
+    //Make an ajax request to find all the stocks with a name like the current value of of the accession name input box
+    getStocks: function(str, locus_id) {
 	var type = 'browse';
 	if(str.length==0){
-	    var select = $('individual_select');
+	    var select = $('stock_select');
 	    select.length=0;
-	    $('associate_individual_button').disabled = true;
+	    $('associate_stock_button').disabled = true;
 	}
         else{
-	    var d = new MochiKit.Async.doSimpleXMLHttpRequest("individual_browser.pl", {individual_name: str, locus_id: locus_id, type: type});
-	    d.addCallbacks(this.updateIndividualsSelect);
+            new Ajax.Request("individual_browser.pl", {parameters: {stock_name: str,  type: type}, onSuccess: this.updateStockSelect});
 	}
     },
-    
- //Make an ajax request to find all the individuals with a name like the current value of of the accession name input box
-    getAlleleIndividuals: function(str, allele_id) {
-	var type = 'browse_allele';
-	if(str.length==0){
-	    var select = $('individual_select');
-	    select.length=0;
-	    $('associate_individual_button').disabled = true;
-	}
-        else{
-	    new Ajax.Request("individual_browser.pl", {parameters: {individual_name: str, allele_id: allele_id, type: type}, onSuccess: this.updateIndividualsSelect});
-	}
-    },
+
+    //Make an ajax request to find all the stock with a name like the current value of of the accession name input box
+
     
     //Parse the ajax response to update the individuals select box
-    updateIndividualsSelect: function(request) {
-        var select = $('individual_select');
-	$('associate_individual_button').disabled = true;
-	
+    updateStockSelect: function(request) {
+        var select = $('stock_select');
+	$('associate_stock_button').disabled = true;
         var responseText = request.responseText;
         var responseArray = responseText.split("|");
 	//last element of array is empty. dont want this in select box
@@ -235,8 +221,7 @@ var Locus = {
 	    }
 	}
     },
-    
-    
+
 
     getEvidenceWith: function(locus_id)  {
 	var type = 'evidence_with';
@@ -467,12 +452,12 @@ var Locus = {
      },
 
    
-	//Make an ajax response that obsoletes the selected individual-allele association
-    	obsoleteIndividualAllele: function(individual_allele_id)  {
+    //Make an ajax response that obsoletes the selected stock-allele association
+    obsoleteStockAllele: function(stockprop_id)  {
 		var type= 'obsolete';
-		new Ajax.Request('individual_browser.pl', {parameters: 
-		{type: type, individual_allele_id: individual_allele_id}, onSuccess: Tools.reloadPage });		
-	},
+		new Ajax.Request('individual_browser.pl', {parameters:
+                        {type: type, stockprop_id: stockprop_id }, onSuccess: Tools.reloadPage });
+    },
     //Make an ajax response that finds all loci  with names/synonyms/symbols like the current value of the locus input
     getMergeLocus: function(str, object_id) {
 	if(str.length == 0){

@@ -85,7 +85,7 @@ bgcolor         = yellow
 glyph           = generic
 label density   = 100
 bump density    = 100
-link         = /search/quick_search.pl?term=$name
+link         = /search/quick?term=$name
 
 [GC:region]
 glyph        = dna
@@ -218,33 +218,9 @@ category     = Genome data and reagents
 glyph        = alignment
 bgcolor      = red
 fgcolor      = red
-link         = /search/quick_search.pl?term=$name
+link         = /search/quick?term=$name
 stranded     = 1
 citation     = This track shows regions of similarity with SGN Unigene (SGN-U) sequences.  (see <a href="http://www.ab.wur.nl/TomatoWiki/AnSgnUnigenes000">ITAG Wiki</a>).  Darker color indicates higher alignment score.
-das category = similarity
-
-[tomato_bacs]
-feature      = match:ITAG_tomato_bacs
-key          = Tomato BACs
-category     = Genome data and reagents
-glyph        = alignment
-bgcolor      = red
-fgcolor      = red
-link         = /search/quick_search.pl?term=$name
-stranded     = 1
-citation     = This track shows regions of similarity with Tomato BAC clones (see <a href="http://www.ab.wur.nl/TomatoWiki/AnTomatoBACs000">ITAG Wiki</a>).  Darker color indicates higher alignment score.
-das category = similarity
-
-[tomato_bac_ends]
-feature      = match:ITAG_tomato_bac_ends
-key          = Tomato BAC Ends
-category     = Genome data and reagents
-glyph        = alignment
-bgcolor      = red
-fgcolor      = red
-link         = /search/quick_search.pl?term=$name
-stranded     = 1
-citation     = This track shows straightforward regions of similarity with Tomato BAC end sequences (see <a href="http://www.ab.wur.nl/TomatoWiki/AnTomatoBES000">ITAG Wiki</a>).  Darker color indicates higher alignment score.
 das category = similarity
 
 [tobacco_contigs]
@@ -254,33 +230,9 @@ category     = Other genomes
 glyph        = alignment
 bgcolor      = green
 fgcolor      = green
-link         = /search/quick_search.pl?term=$name
+link         = /search/quick?term=$name
 stranded     = 1
 citation     = This track shows regions of similarity with Tobacco genome contigs (see <a href="http://www.ab.wur.nl/TomatoWiki/AnTobaccoContigs000">ITAG Wiki</a>).  Darker color indicates higher alignment score.
-das category = similarity
-
-[potato_bacs]
-feature      = match:ITAG_potato_bacs
-key          = Potato BACs
-category     = Other genomes
-glyph        = alignment
-bgcolor      = brown
-fgcolor      = brown
-link         = /search/quick_search.pl?term=$name
-stranded     = 1
-citation     = This track shows regions of similarity with Potato BAC clones (see <a href="http://www.ab.wur.nl/TomatoWiki/AnPotatoBACs000">ITAG Wiki</a>).  Darker color indicates higher alignment score.
-das category = similarity
-
-[potato_bac_ends]
-feature      = match:ITAG_potato_bac_ends
-key          = Potato BAC Ends
-category     = Other genomes
-glyph        = arrow
-bgcolor      = brown
-fgcolor      = brown
-link         = /search/quick_search.pl?term=$name
-stranded     = 1
-citation     = This track shows straightforward regions of similarity with Potato BAC end sequences (see <a href="http://www.ab.wur.nl/TomatoWiki/AnTomatoBES000">ITAG Wiki</a>).
 das category = similarity
 
 [augustus]
@@ -300,7 +252,7 @@ category     = Genome data and reagents
 glyph        = alignment
 bgcolor      = orange
 fgcolor      = orange
-link         = /search/quick_search.pl?term=$name
+link         = /search/quick?term=$name
 stranded     = 1
 citation     = This track shows regions of similarity with MicroTom Full-length cDNA sequences (provided by the Kazusa Institute, see <a href="http://www.ab.wur.nl/TomatoWiki/AnMicroTomFLCDNA000">ITAG Wiki</a>).    Darker color indicates higher alignment score.
 das category = similarity
@@ -373,7 +325,7 @@ citation     = This track shows transfer RNAs predicted by the tRNAscan-SE progr
 feature      = match:ITAG_sgn_loci
 key          = SGN Locus Sequences
 category     = Genetic Loci
-link         = /search/quick_search.pl?term=$name
+link         = /search/quick?term=$name
 glyph        = segments
 bgcolor      = #ea00ea
 stranded     = 1
@@ -398,32 +350,7 @@ category     = Genetic Loci
 stranded     = 1
 fgcolor      = black
 bgcolor      = yellow
-link         = /search/quick_search.pl?term=$name
+link         = /search/quick?term=$name
 citation     = This track shows regions of similarity of the genomic sequence with known sequences associated with SGN genetic markers, as detected by GenomeThreader (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnSgnMarkers000">ITAG Wiki</a>).  Darker color indicates higher alignment score.
 das category = similarity
 
-[tomato_bacs]
-feature      = match:ITAG_tomato_bacs
-glyph        = alignment
-key          = Tomato BACs
-category     = Genomic Reagents
-stranded     = 1
-fgcolor      = blue
-bgcolor      = blue
-link         = /search/quick_search.pl?term=$name
-citation     = This track shows regions of similarity with tomato BAC sequences.  Darker color indicates higher alignment score.
-das category = similarity
-bump density = 100
-
-[itag1_reference]
-feature      = match:ITAG_itag1_reference
-glyph        = alignment
-key          = Tomato BACs
-category     = Genomic Reagents
-stranded     = 1
-fgcolor      = green
-bgcolor      = green
-link         = /search/quick_search.pl?term=$name
-citation     = This track shows regions of similarity with the reference sequences underlying the ITAG1 annotation, the SL1.00 tomato genome assembly.   Darker color indicates higher alignment score.
-das category = similarity
-bump density = 100

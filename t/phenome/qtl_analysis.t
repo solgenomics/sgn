@@ -1,7 +1,7 @@
 
 =head1 NAME
 
-qtl_analysis.t - tests for cgi-bin/phenome/qtl_analysis.pl
+qtl_analysis.t - tests for cgi-bin/phenome/qtl_analysis.pl. This page takes 2 - 4 min to run R computations.
 
 =head1 DESCRIPTION
 
@@ -21,7 +21,7 @@ use SGN::Test::WWW::Mechanize;
 
     $mech->get_ok(
         '/phenome/qtl_analysis.pl?population_id=12&cvterm_id=39945',
-        ' got a qtl_analysis.pl page' );
+        ' got a qtl_analysis.pl page. (In case of failure, try to run it again. Takes 2 - 4 min to run R computations)' );
 
     $mech->content_contains($_)
       for (

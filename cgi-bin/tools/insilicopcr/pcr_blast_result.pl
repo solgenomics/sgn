@@ -254,7 +254,7 @@ my $pass_back = "./insilicopcr/view_result.pl?".
 
 my $redir_url = "../wait.pl?tmp_app_dir=/blast&job_file=$job_file_base&redirect=$urlencode{$pass_back}";
 
-warn "redirecting to '$redir_url'";
+#warn "redirecting to '$redir_url'";
 
 $page->client_redirect($redir_url);
 

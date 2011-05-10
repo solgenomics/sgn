@@ -1,4 +1,5 @@
 use CatalystX::GlobalContext qw( $c );
+
 =head1 NAME
 
 /tools/blast/ - the entry page to the SGN blast tool
@@ -56,7 +57,7 @@ changes by SGN staff. POD by Lukas.
 =cut
 
 
-use strict;
+use Modern::Perl;
 use POSIX;
 use English;
 
@@ -80,10 +81,11 @@ my $dbh   = CXGN::DB::Connection->new;
 my $prefs = CXGN::Page::UserPrefs->new( $dbh );
 
 my %params;
-@params{qw/preload_id preload_type seq interface_type db_id flush_cache/} = $page->get_encoded_arguments("preload_id","preload_type","seq","interface_type", "db_id", 'flush_cache');
+{ my @p = qw/preload_id preload_type seq interface_type db_id flush_cache/;
+  @params{@p} = $page->get_encoded_arguments(@p);
+}
 
 $params{interface_type} ||= 0;
-
 
 my $blast_path = $c->config->{'blast_path'};
 my $blast_version = do {
@@ -190,7 +192,7 @@ EOSQL
 $page->header('SGN BLAST');
 $page->jsan_use('jquery');
 
-my ($databases,$programs,$programs_js) = blast_db_prog_selects($params{db_id});
+my ($databases,$programs,$programs_js) = blast_db_prog_selects( $params{db_id}, $params{flush_cache}, $prefs );
 my $spellcheck_js = <<'';
 // turn off spell check on sequence inputs without emitting invalid HTML
 jQuery(function($) { $('#sequence_input').attr('spellcheck',false) });
@@ -367,15 +369,15 @@ sub _cached_file_modtime {
 }
 
 sub blast_db_prog_selects {
-    my $db_id = shift;
+    my ( $db_id, $flush_cache, $prefs ) = @_;
 
-    my $db_choices = blast_db_choices();
+    my $db_choices = blast_db_choices( $flush_cache );
 
     return '<span class="ghosted">The BLAST service is temporarily unavailable, we apologize for the inconvenience</span>'
         unless @$db_choices;
 
     # DB select box will either the db_id supplied, or what the user last selected, or the tomato combined blast db
-    my $selected_db_id = $db_id #|| $prefs->get_pref('last_blast_db_id')
+    my $selected_db_id = $db_id || $prefs->get_pref('last_blast_db_id')
 	|| do {
 	    my ($d) = map $_->blast_db_id,
                       grep _cached_file_modtime($_),
@@ -412,11 +414,12 @@ sub blast_db_prog_selects {
 }
 
 sub blast_db_choices {
+    my ( $flush_cache ) = @_;
 
     my $choices_cache_filename = $c->path_to( $c->generated_file_uri('blast','choices_cache.dat') );
     my $lockfile = "$choices_cache_filename.lock";
 
-    unless( $params{flush_cache} ) {
+    unless( $flush_cache ) {
         my $l = File::Flock->new($lockfile,'shared');
         my $cache_modtime = (stat($choices_cache_filename))[9];
 

@@ -86,18 +86,17 @@ Lukas Mueller, based on the Perl code from Rob Buels.
 </%doc>
 
 <%args>
-	$title
-	$subtitle       => ""
-	$empty_message  => "None"
-        $collapsible    => 0
-        $collapsed      => 0
-	$id             => ""
-	$is_empty       => 0
-	$is_subsection  => 0
-	$align          => ''
-        $contents       => ''
-
-        $hide_if_empty  => 0
+    $title
+    $subtitle      => ""
+    $empty_message => "None"
+    $collapsible   => 0
+    $collapsed     => 0
+    $id            => ""
+    $is_empty      => 0
+    $is_subsection => 0
+    $align         => ''
+    $contents      => ''
+    $hide_if_empty => 0
 </%args>
 
 % my $sub = $is_subsection ? 'sub_' : '';
@@ -106,7 +105,7 @@ Lukas Mueller, based on the Perl code from Rob Buels.
 
 <%perl>
 
-    $contents ||= $m->content;
+    $contents ||= $m->content || '';
 
     #if we have been given content, and we aren't told that this section
     #is supposed to be empty, print a full section
@@ -130,6 +129,7 @@ EOC
                 }
             );
         }
+        $subtitle ||= '';
         my $title_bar = <<EOHTML;
 <table cellspacing="0" cellpadding="0" class="${sub}infosectionhead" summary=""><tr><td class="${sub}infosectiontitle">$title</td><td class="${sub}infosectionsubtitle">$subtitle&nbsp;</td></tr></table>
 EOHTML
@@ -156,6 +156,7 @@ EOT
   use CXGN::Page::Widgets qw/collapser/;
   use HTML::Entities;
 
+  no warnings 'redefine';
   sub anchor_name {
       local $_ = lc shift;
       s/<[^>]+>//g; # strip html tags

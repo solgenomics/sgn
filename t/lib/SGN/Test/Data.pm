@@ -301,7 +301,7 @@ sub _create_test_featureloc {
 }
 
 sub END {
-    diag("deleting " . scalar(@$test_data) . " test data objects") if @$test_data;
+    diag("deleting " . scalar(@$test_data) . " test data objects") if $ENV{DEBUG} && @$test_data;
     # delete objects in the reverse order we created them
     # TODO: catch signals?
     map {

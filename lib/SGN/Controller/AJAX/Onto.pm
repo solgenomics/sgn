@@ -101,7 +101,7 @@ sub parents_GET  {
     my ($db_name, $accession) = split ":", $c->request->param('node');
     my $dbxref;
     my %response;
-    my $db = $schema->resultset('General::Db')->search({ name => uc($db_name) })->first();
+    my $db = $schema->resultset('General::Db')->search({ 'upper(name)' => uc($db_name) })->first();
     if (!$db || !$accession) {
         #not sure we need here to send an error key, since cache is usually called after parents (? )
         $response{error} = "Did not pass a legal ontology term ID! ( $db_name : $accession)";

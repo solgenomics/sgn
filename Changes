@@ -3,6 +3,55 @@ Release tag: NEXT
 
 Changes:
 
+ - put changes here
+
+---
+Release date: Mon May 2 11:35:00 2011 -0800
+Release tag: sgn-96.0
+
+Changes:
+
+ - Fix marker detail page crashing bug (mueller).
+ - Integrated SecreTary results to secretion prediction search (tomfy).
+ - Updated SignalP results at http://solgenomics.net/secretom/detail/prediction for TAIR10 and ITAG2 releases of arabidopsis and tomato, respectively (tomfy).
+
+---
+
+Release date: Mon Apr 25 17:14:00 2011 -0800
+Release tag: sgn-95.0
+
+Changes:
+
+ - Major improvements to SecreTary calculation code (tomfy).
+ - ITAG2.3 tomato genome browser released (rob).
+ - Improvements to cross-linking between loci, gene models, and the quick search (rob).
+ - Improved quick search, now includes results from the genome browser and the feature detail pages (rob).
+ - Add BLAST buttons to many displayed sequences on feature pages and in the BLAST highlighted-sequence viewer, which allow users to BLAST these sequences with one click (rob).
+
+---
+
+Release date: Wed Apr 13 10:12:00 2011 -0800
+Release tag: sgn-93.0
+
+Changes:
+
+ - New QTL effects section on population details pages (isaak).
+ - Bug fixes to Ontology tree AJAX browser on ontology term detail pages (naama).
+ - 'Polishing and bug fixes to feature detail pages: calculate the concept of "length" differently for some features. (rbuels)'
+ - Fixed bug in adding images on Stock detail pages (naama).
+ - Improved detail pages for polypeptide and mRNA features (rob).
+ - Layout improvements to "compare entire maps" tool (rob).
+ - TODO naama please add a note about 41178691fb9092daaf715f864b5f2cf053fa2b8e
+ - Improvements to BLAST report linking dialog box, better layout, now has a link to see the hit region in the genome browser if possible (rob).
+ - Performance improvements in BLAST highlighted-sequence viewer tool.
+
+---
+
+Release date: Mon Mar 28 11:52:00 2011 -0800
+Release tag: sgn-92.0
+
+Changes:
+
  - improved integration of solQTL with phenotypes and traits
  - Behind-the-scenes cleanups to map viewer code.
  - New search functions for tracking stock lines.

@@ -96,6 +96,10 @@ of the interaction and a mock inoculated plant served as control.
     ref: GAVIB5H02.sff
   - text: Time 3, F95S1KP02.sff
     ref: F95S1KP02.sff
+  - text: Assembled sequences for Phytophtora infestans
+    ref: P.infestans_unigenes.fasta
+  - text: Assembled sequences for tomato
+    ref: Tomato_unigenes.fasta
   </&>
 </&>
 

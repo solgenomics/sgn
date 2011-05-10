@@ -166,7 +166,17 @@ email_address          = noreply@gmod.org
 #
 ###############################################################################################
 
-default source = ITAG1_genomic
+default source = ITAG2.3_genomic
+
+[ITAG2.3_genomic]
+path          = ITAG2.3_genomic.conf
+description   = ITAG2.3 Release: genomic annotations
+extended_description = ITAG Release 2.3 (2011-04-26) official annotations on the SL2.40 genome build by the International Tomato Annotation Group (ITAG).
+
+[ITAG2.3_protein]
+path          = ITAG2.3_protein.conf
+description   = ITAG2.3 Release: protein annotations
+extended_description = ITAG Release 2.3 (2011-04-26) official annotations on the SL2.40 genome build by the International Tomato Annotation Group (ITAG).
 
 [ITAG2_genomic]
 path          = ITAG2_genomic.conf

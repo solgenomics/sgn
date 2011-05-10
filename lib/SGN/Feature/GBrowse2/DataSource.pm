@@ -10,17 +10,6 @@ use Bio::Range;
 
 extends 'SGN::Feature::GBrowse::DataSource';
 
-# has 'config' => ( documentation => <<'',
-# Bio::Graphics::FeatureFile object for this data source's conf file, from which settings can be 
-
-#     is => 'ro',
-#     isa => 'Bio::Graphics::FeatureFile',
-#     lazy_build => 1,
-#   ); sub _build_config {
-#       my ($self) = @_;
-#       return Bio::Graphics::FeatureFile->new( -file => $self->conf_dir->file( $self->path ) );
-#   }
-
 has 'xref_discriminator' => (
     is => 'ro',
     isa => 'CodeRef',
@@ -96,20 +85,31 @@ sub xrefs {
                      }),
                 # remove any duplicate ref features
                 _uniq_features
-                # search for ref features
-                map $_->get_feature_by_name( $ref_name ),
+                # make sure they are all actually reference features
+                grep { $_->seq_id eq $_->display_name }
+                # search for features with the ref seq name
+                map $self->_search_db( $_, $ref_name ),
                 # for each database
                 $self->databases;
 
         } else {
             # search for features by text in all our DBs
             return $self->_make_feature_xrefs([
-                map $_->get_feature_by_name( $q ), $self->databases
+                map $self->_search_db($_,$q),
+                $self->databases
             ]);
         }
     }
 
     return;
+}
+sub _search_db {
+    my ( $self, $db, $name ) = @_;
+    my $f =
+            $db->can('get_features_by_alias')
+         || $db->can('get_feature_by_name')
+      or return;
+    return $db->$f( $name );
 }
 
 sub _make_feature_xrefs {
@@ -157,35 +157,59 @@ sub _make_cross_ref {
 sub _make_region_xref {
     my ( $self, $region ) = @_;
 
-    my ( $start, $end ) = ( $region->{range}->start, $region->{range}->end );
+    my $features      = $region->{features};
+    my $first_feature = $features->[0];
+    my $range         = $region->{range};
+
+    my ( $start, $end ) = ( $range->start, $range->end );
     ( $start, $end ) = ( $end, $start ) if $start > $end;
 
     my @highlight =
-        @{$region->{features}} == 1 # highlight our feature or region if we can
-            ? ( h_feat => $region->{features}->[0]->display_name )
-            : ( h_region =>  $region->{features}->[0]->seq_id.':'.$region->{range}->start.'..'.$region->{range}->end );
+        @$features == 1 # highlight our feature or region if we can
+            ? ( h_feat => $first_feature->display_name )
+            : ( h_region =>  $first_feature->seq_id.":$start..$end" );
 
+    my $is_whole_sequence = # is the region the whole reference sequence?
+       (    scalar @$features == 1
+         && $first_feature->seq_id eq $first_feature->display_name
+         && $start == 1
+         && $first_feature->can('length') && $end == $first_feature->length
+       );
+
+    my $region_string =
+       $is_whole_sequence
+       # if so, just use the seq name as the region string
+       ? $first_feature->seq_id
+       # otherwise, print coords on the region string
+       : $first_feature->seq_id.":$start..$end";
+
+    my @features_to_print = grep $_->display_name ne $_->seq_id, @{$region->{features}};
 
     return $self->_make_cross_ref(
-        text => join( '',
-            'view ',
-            (  join ', ', map $_->display_name || $_->primary_id, @{$region->{features}}),
-            ' in GBrowse - ',
-            $self->description,
-           ),
+        text => join( ' ',
+            $self->description.' - ',
+            "view $region_string",
+            ( @features_to_print
+                 ? ' ('.join(', ', map $_->display_name || $_->primary_id, @features_to_print).')'
+                 : ()
+            ),
+            ),
         url =>
-            $self->view_url({ ref   => $region->{features}->[0]->seq_id,
-                              start => $start,
-                              end   => $end,
-                              @highlight,
-                          }),
+            $self->view_url({
+                name => $region_string,
+                @highlight,
+            }),
         preview_image_url =>
             $self->image_url({
-                name   => $region->{features}->[0]->seq_id.":$start..$end",
+                name   => $region_string,
                 format => 'GD',
             }),
 
-        seqfeatures  => $region->{features},
+        seqfeatures  => $features,
+        seq_id       => $first_feature->seq_id,
+        is_whole_sequence => $is_whole_sequence,
+        start        => $start,
+        end          => $end,
         feature      => $self->gbrowse,
         data_source  => $self,
        );
@@ -210,6 +234,20 @@ with 'SGN::SiteFeatures::CrossReference::WithPreviewImage',
      'SGN::SiteFeatures::CrossReference::WithSeqFeatures';
 
 has 'data_source' => ( is => 'ro', required => 1 );
+
+has 'is_whole_sequence' => (
+    is => 'ro',
+    isa => 'Bool',
+    documentation => 'true if this cross-reference points to the entire reference sequence',
+    );
+
+has 'seq_id' => (
+    is  => 'ro',
+    isa => 'Str',
+    );
+
+has $_ => ( is => 'ro', isa => 'Int' )
+  for 'start', 'end';
 
 __PACKAGE__->meta->make_immutable;
 1;
