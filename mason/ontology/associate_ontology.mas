@@ -105,12 +105,12 @@ $ontology_url
 
 <script language="javascript">
 
-  
+
   Ontology.displayOntologies("ontology" , "<% $ontology_url %>");
-  
+
 </script>
 
-% if ($show_form) { 
+% if ($show_form) {
 <div id="associate_cvterm_form">
   <b>Associate ontology term</b>
   <form name="cvterm_form" >
@@ -134,15 +134,15 @@ $ontology_url
     <select id="evidence_code_select" style="width: 100%"
 	    onchange="jQuery('#associate_ontology_button').removeAttr('disabled');Ontology.populateEvidence('evidence_description_select', '<% $evidence_description_uri %>' + '?evidence_code_id=' + jQuery('#evidence_code_select').val() );Ontology.getEvidenceWith();Ontology.populateEvidence('reference_select', '<% $reference_uri %>')">
     </select>
-    
+
     <b>Evidence description:</b>
     <select id="evidence_description_select" style="width: 100%">
     </select>
-    
+
     <b>Evidence with:</b>
     <select id="evidence_with_select" style="width: 100%">
     </select>
-    
+
     <b>Reference:</b>
     <select id="reference_select" style="width: 100%">
     </select>
@@ -151,12 +151,12 @@ $ontology_url
              id="associate_ontology_button"
              value="associate term"
              disabled="true"
-             onclick="javascript:Ontology.submitCvtermForm('<% $cvterm_add_uri %>', '<% $ontology_url %>');this.disabled=true"
-             </div>
+             onclick="javascript:Ontology.submitCvtermForm('<% $cvterm_add_uri %>', '<% $ontology_url %>');this.disabled=true" />
+    </div>
       </div>
 
-    </div>
-  </form>
+</div>
+</form>
 </div>
 
 % }
