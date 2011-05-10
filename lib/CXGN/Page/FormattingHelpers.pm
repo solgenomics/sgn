@@ -926,6 +926,8 @@ sub columnar_table_html {
                 }
                 $tdparams = join ' ',
                   map { qq|$_="$d->{$_}"| } grep { $_ ne 'content' } keys %$d;
+            } elsif( ref $c eq 'ARRAY' ) {
+                $c = "@$c";
             }
             $html .= "<td $hilite $tdparams $a>$c</td>";
         }
