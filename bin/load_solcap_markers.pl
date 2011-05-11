@@ -119,7 +119,7 @@ eval {
     # parameters for this specific instance
     my $experiment_type_id = 1; # 'mapping'
 
-    my $accession_id ;#= '88x87'; # parent1 x parent2
+    my $stock_id ;#= '88x87'; # parent1 x parent2
 
     # make an object to give us the values from the spreadsheet
     my $ss = CXGN::Tools::File::Spreadsheet->new($opt_i);
@@ -230,24 +230,46 @@ eval {
 	# there's a lot of stuff to check here.. I know these aren't in the database so will come back later
 
 	my $names = ["marker_id", "annealing_temp", "primer_id_fwd",
-		     "primer_id_rev", "experiment_type_id", "map_id","primer_id_pd","accession_id"];
+		     "primer_id_rev", "experiment_type_id", "map_id","primer_id_pd","stock_id"];
 	my @fields = ($marker_id,$annealing_temp,$primer_id_fwd,
-		      $primer_id_rev,$experiment_type_id,$map_id,$primer_id_pd,$accession_id);
+		      $primer_id_rev,$experiment_type_id,$map_id,$primer_id_pd,$stock_id);
 
         # does this check if pcr_experiment already exists?
         #NOW it does!! Should not have 2 rows with the same pcr_experiment data!
 
-        my $pcr_experiment=$sql->insert_unless_exists('pcr_experiment',{marker_id=>$marker_id, ,annealing_temp=>$annealing_temp,primer_id_fwd=>$primer_id_fwd, primer_id_rev=>$primer_id_rev, experiment_type_id=>$experiment_type_id,map_id=>$map_id,primer_id_pd=>$primer_id_pd,accession_id=>$accession_id } );
+	my $q = "SELECT marker_experiment.marker_experiment_id, pcr_experiment_id FROM sgn.marker_experiment JOIN sgn.marker_location using(location_id) join sgn.map_version using(map_version_id) WHERE map_id=? and marker_id=?";
+	my $s = $dbh->prepare($q);
+	$s->execute($opt_m, $marker_id);
+	my ($marker_experiment_id, $pcr_experiment_id) = $s->fetchrow_array();
 
-        if($pcr_experiment->{inserted}) { print "INSERTED NEW pcr_experiment" ; }
-        if($pcr_experiment->{exists}) { print "EXISTING pcr_experiment" ; }
+	print STDERR "This marker ($marker_id) has marker_experiment_id $marker_experiment_id,pcr_experiment_id $pcr_experiment_id on $map_id\n";
 
-	my $pcr_experiment_id = $pcr_experiment->{id};
+	print STDERR "marker_id: $marker_id, map_id=$map_id, stock_id=$stock_id\n";
+        my $pcr_exp_info=$sql->insert_unless_exists('pcr_experiment',{marker_id=>$marker_id,annealing_temp=>$annealing_temp,primer_id_fwd=>$primer_id_fwd, primer_id_rev=>$primer_id_rev, experiment_type_id=>$experiment_type_id,map_id=>$map_id,primer_id_pd=>$primer_id_pd }); #,stock_id => $stock_id } );
+
+
+
+	if($pcr_exp_info->{inserted}) { print "INSERTED NEW pcr_experiment\n" ; }
+        if($pcr_exp_info->{exists}) { print "EXISTING pcr_experiment\n" ; }
+	
+
+
+	my $pcr_experiment_id = $pcr_exp_info->{id};
+
+	if ($marker_experiment_id) { 
+	    my $q = "UPDATE sgn.marker_experiment set pcr_experiment_id=? WHERE marker_experiment_id=?";
+	    my $s = $dbh->prepare($q);
+	    $s->execute($pcr_experiment_id,$marker_experiment_id);
+	}
+	
+
+
         #THIS DOES NOT CHECK FOR EXISTING ID
         #CXGN::Marker::Tools::insert($dbh,"pcr_experiment","pcr_experiment_id",$names,@fields);
-        print "pcr experiment added: $pcr_experiment_id\n";
-		print STDERR "HELLO!\n";
-        #new pcr_experiment object
+        print STDERR "pcr experiment added: $pcr_experiment_id\n";
+
+	print STDERR "Instantiating the PCR::Experiment object...\n";
+	
         my $pcr_ex = CXGN::Marker::PCR::Experiment->new($dbh, $pcr_experiment_id);
         # set the sequence types
 
@@ -264,9 +286,10 @@ eval {
 	$pcr_ex->add_pcr_bands_for_stock($band_size_a, $opt_a) if $band_size_a;
 	$pcr_ex->add_pcr_bands_for_stock($band_size_b, $opt_b) if $band_size_b;
 
+	print STDERR "Storing pcr_experiment_id $pcr_experiment_id for marker $marker_id ($pcr_ex->{marker_id})\n";
 	$pcr_ex->store_unless_exists();
 
-        print "Checking if map $map_id , marker $marker_id and protocol $protocol exist in marker_experiment\n";
+        print STDERR "Checking if map $map_id , marker $marker_id and protocol $protocol exist in marker_experiment\n";
         # check for existing marker_experiment and update if found
 	my $q = "SELECT marker_experiment_id FROM marker_experiment "
 	    . "JOIN marker_location USING (location_id) JOIN map_version "
@@ -286,11 +309,11 @@ eval {
             # this really should not be the case
             # update
             my $marker_experiment_id = $exp_id[0];
-            print "Updating marker_experiment $marker_experiment_id\n";
+            print STDERR "Updating marker_experiment $marker_experiment_id\n";
 	    my $u = "UPDATE marker_experiment set pcr_experiment_id = ? where marker_experiment_id = ?";
 	    $sth = $dbh->prepare($u);
 	    $sth->execute($pcr_experiment_id,$marker_experiment_id);
-            print "UPDATED pcr_experiment_id = $pcr_experiment_id for marker_experiment $marker_experiment_id\n";
+            print STDERR "UPDATED pcr_experiment_id = $pcr_experiment_id for marker_experiment $marker_experiment_id\n";
 	}
 
         # if not loading map and experiments together, may want to match other protocols
