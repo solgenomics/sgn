@@ -99,8 +99,19 @@ sub create_test {
         'Sequence::Featureprop'         => sub { _create_test_featureprop($values)         },
         'Sequence::FeatureRelationship' => sub { _create_test_featurerelationship($values) },
     };
-    die "$pkg creation not supported yet, sorry" unless exists $pkg_subs->{$pkg};
-    return $pkg_subs->{$pkg}->($values);
+    if( my $custom_handler = $pkg_subs->{$pkg} ) {
+        return $custom_handler->( $values );
+    } else {
+        return _create_test_default( $pkg, $values );
+    }
+}
+
+sub _create_test_default {
+    my ( $moniker, $values ) = @_;
+
+    my $row = $schema->resultset($moniker)->create( $values );
+    push @$test_data, $row;
+    return $row;
 }
 
 sub _create_test_db {
