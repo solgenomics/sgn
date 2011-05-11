@@ -68,7 +68,7 @@ sub project_metadata :Chained('/organism/find_organism') :PathPart('metadata') :
 
     #object id is a combination of prop_id and organism_id, separated by a "-"
     my $organism = $c->stash->{organism};
-    my ($prop_id, $organism_id) = split "-", $c->req->param('object_id');
+    my ($prop_id, $organism_id) = split "-", $c->req->param('object_id') || '';
     my $login_user_id = 0;
     my $login_user_can_modify = 0;
 
@@ -253,6 +253,7 @@ sub metadata_static {
     my $static = '<table>';
 
     foreach my $k (keys %fields) {
+        no warnings 'uninitialized';
         $static .= '<tr><td>'.$fields{$k}.'</td><td>&nbsp;</td><td><b>'.$props{$k}.'</b></td></tr>';
     }
 
