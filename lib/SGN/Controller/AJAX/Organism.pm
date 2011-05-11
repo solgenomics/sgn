@@ -67,6 +67,7 @@ sub project_metadata :Chained('/organism/find_organism') :PathPart('metadata') :
     my $action = $c->req->param('action');
 
     #object id is a combination of prop_id and organism_id, separated by a "-"
+    my $organism = $c->stash->{organism};
     my ($prop_id, $organism_id) = split "-", $c->req->param('object_id');
     my $login_user_id = 0;
     my $login_user_can_modify = 0;
@@ -114,34 +115,27 @@ sub project_metadata :Chained('/organism/find_organism') :PathPart('metadata') :
             $form->process($c->req());
 
             if ($form->submitted_and_valid()) {
-                my $cv = $schema->resultset('Cv::Cv') ->find( { name=> 'local' } );
-                my $cv_id = $cv->cv_id();
-
-                my $cvterm = $schema->resultset('Cv::Cvterm')->find( { name => 'organism_sequencing_metadata' } );
-
-                my $type_id = $cvterm->cvterm_id();
-
-                if (!$type_id) {
-                    my $cvterm_rs = $schema->('Cv::Cvterm')->new({ name=> 'organism_sequencing_metadata', cv_id=>$cv_id });
-                    $type_id = $cvterm_rs->insert();
-
-                }
-
                 if ($prop_id) {
-                    my $prop_row = $schema->resultset('Organism::Organismprop')
-                        ->find({ organismprop_id => $prop_id });
-
-
-                    $prop_row->value($json);
-                    $prop_row->update();
+                    my $prop = $organism->find_related( 'organismprops', {
+                                   organismprop_id => $prop_id,
+                               });
+                    unless( $prop ) {
+                        $self->status_bad_request(
+                            $c, message =>
+                            'no such organismprop',
+                         );
+                        return;
+                    }
+                    $prop->update({ value => $json });
                 }
                 else {
-
-                    my $max_rank_prop_rs = $schema->resultset('Organism::Organismprop')->search( { organism_id=>$organism_id, type_id=>$type_id } );
-                    my $max_rank_prop_col = $max_rank_prop_rs->get_column('rank');
-                    my $max_rank = $max_rank_prop_col->max();
-                    my $prop_row = $schema->resultset('Organism::Organismprop')->new( { value=>$json, organism_id=>$organism_id, type_id=>$type_id, rank => $max_rank +1 } );
-                    $prop_row->insert();
+                    $organism->create_organismprops(
+                        { 'organism_sequencing_metadata' => $json },
+                        { autocreate => 1,
+                          cv_name    => 'local',
+                          definitions => { organism_sequencing_metadata => "metadata about this organism's sequencing status" },
+                        },
+                     );
                 }
 
             }
