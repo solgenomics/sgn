@@ -244,11 +244,7 @@ to the legacy /chado/organism.pl.
 sub view_organism :Chained('find_organism') :PathPart('view') :Args(0) {
     my ( $self, $c ) = @_;
 
-    if (scalar($c->stash->{organism_rs}->all())==0) {
-        $c->stash()->{template} = '/site/error/exception.mas';
-        $c->stash()->{exception} = SGN::Exception->new( title=>'Organism id '.($c->stash->{organism_id}).' does not exist', public_message=>'The specified organism identifer does not exist. Sorry', notify=>0, is_server_error=>0);
-        return;
-    }
+    return unless $c->stash->{organism_id};
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $organism = CXGN::Chado::Organism->new($schema, $c->stash->{organism_id});
