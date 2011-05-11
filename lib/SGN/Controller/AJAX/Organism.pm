@@ -34,13 +34,13 @@ sub autocomplete_GET :Args(0) {
   my ( $self, $c ) = @_;
 
   my $term = $c->req->param('term');
+
   # trim and regularize whitespace
   $term =~ s/(^\s+|\s+)$//g;
   $term =~ s/\s+/ /g;
 
   my $s = $c->dbic_schema('Bio::Chado::Schema','sgn_chado')
                   ->resultset('Organism::Organism');
-#  my $s = $c->stash->{organism_set};
 
   my @results = $s->search({ species => { ilike => '%'.$term.'%' }},
                            { rows => 15 },
@@ -96,7 +96,7 @@ sub project_metadata :Chained('/organism/find_organism') :PathPart('metadata') :
     if (!$action) { $action = 'view'; }
     if ($login_user_can_modify && ($action ne 'view')) {
         if (!$login_user_id) {
-            $c->stash->{rest}->{$error} .= 'Must be logged in to edit';
+            $c->stash->{rest}->{error} .= 'Must be logged in to edit\n';
 	    return;
         }
 	if ($action eq 'confirm_delete') {
@@ -150,7 +150,7 @@ sub project_metadata :Chained('/organism/find_organism') :PathPart('metadata') :
 		
 	    }
 	    else { 
-		print STDERR "FORM IS NOT VALID...\n";
+		$c->stash->{rest}->{error} .= 'Form is not valid\n';
 	    }
 	}
     }
@@ -215,7 +215,7 @@ sub project_metadata :Chained('/organism/find_organism') :PathPart('metadata') :
 
 sub metadata_form { 
     my ($self, $c, $json, $prop_id, $organism_id) = @_;
-    print STDERR "METADATA_FORM\n";
+    
     my $data = {};
     if ($json) { 
 	print STDERR "CONVERTING JSON...\n";
@@ -224,8 +224,6 @@ sub metadata_form {
 	print STDERR "No JSON data provided...\n";
 
     }
-
-    print STDERR "CREATING FORM FU...\n";
 
     my $object_id = $prop_id."-".$organism_id;
     my $form = HTML::FormFu->new(Load(<<YAML));
@@ -247,12 +245,11 @@ YAML
     my %fields = $self->project_metadata_prop_list();
 
     foreach my $k (keys %fields) {
-	print STDERR "processing $k\n";
 
 	$form->element( { type=>'Text', name=>$k, label=>$fields{$k}, value=>$data->{$k}, size=>30 });
     }
 
-    print STDERR "FORM: = ".$form->render()."\n";
+
     return $form;
 }
 
@@ -262,7 +259,7 @@ sub metadata_static {
     my $json = shift;
     
     if (!$json) { return; }
-    print STDERR "Formatting static html for metadata: $json\n";
+
     my %props = %{$c->{stash}->{json}->jsonToObj($json)};
 
     my %fields = $self->project_metadata_prop_list();
@@ -270,7 +267,6 @@ sub metadata_static {
     my $static = '<table>';
 
     foreach my $k (keys %fields) {
-	print STDERR "Rendering $k ($fields{$k}, $props{$k})\n";
         $static .= '<tr><td>'.$fields{$k}.'</td><td>&nbsp;</td><td><b>'.$props{$k}.'</b></td></tr>';
     }
     
@@ -299,12 +295,9 @@ sub get_organism_metadata_props {
 
     my @proplist = ();
 
-###    my $props_rs = $c->stash->{organism_rs}->search_related( 'organismprops' );
-    print STDERR "GETTING THE ORGANISM METADATA FROM DB...\n";
     my $sth = $c->dbc()->dbh()->prepare("SELECT organismprop.organismprop_id, organismprop.value, cvterm.name FROM organismprop join cvterm on (type_id=cvterm_id) where organism_id=? and cvterm.name='organism_sequencing_metadata'");
     $sth->execute($c->stash->{organism_id});
     while (my ($organismprop_id, $value, $name) = $sth->fetchrow_array()) {
-	print STDERR "NAME: $name, VALUE: $value. ID=$organismprop_id\n";
         push @proplist, { organismprop_id => $organismprop_id, json =>$value, name => $name };
     }
 
