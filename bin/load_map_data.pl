@@ -203,7 +203,7 @@ eval {
 	# some have separate fields for chromsome and position
 	my $position = $ss->value_at($dirty_marker_name,'POSITION');
 	    # get position from spreadsheet
-	     if (!$position) { 
+	     if (!defined($position)) { 
 		 print STDERR "No position found for $marker_name\n";
 		 next;
 	 }
