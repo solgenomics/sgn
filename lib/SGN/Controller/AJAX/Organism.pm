@@ -279,18 +279,18 @@ sub project_metadata_prop_list {
 }
 
 sub get_organism_metadata_props {
-    my $self = shift;
-    my $c = shift;
+    my ( $self, $c ) = @_;
 
-    my @proplist = ();
+    my $props = $c->stash->{organism}
+                  ->search_related('organismprops',
+                       { 'type.name' => 'organism_sequencing_metadata' },
+                       { join => 'type', prefetch => 'type' },
+                     );
 
-    my $sth = $c->dbc()->dbh()->prepare("SELECT organismprop.organismprop_id, organismprop.value, cvterm.name FROM organismprop join cvterm on (type_id=cvterm_id) where organism_id=? and cvterm.name='organism_sequencing_metadata'");
-    $sth->execute($c->stash->{organism_id});
-    while (my ($organismprop_id, $value, $name) = $sth->fetchrow_array()) {
-        push @proplist, { organismprop_id => $organismprop_id, json =>$value, name => $name };
-    }
+    return map
+       { +{ organismprop_id => $_->organismprop_id, json => $_->value, name => $_->type->name } }
+       $props->all;
 
-    return @proplist;
 }
 
 
