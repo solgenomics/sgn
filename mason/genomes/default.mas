@@ -14,6 +14,9 @@
 
 </&>
 
-<&| /page/info_section.mas, title => 'Genome releases', collapsible => 1 &>
+<&| /page/info_section.mas,
+      title       => 'Genome releases',
+      collapsible => 1,
+ &>
   <& /genomes/default/genome_builds.mas, %ARGS &>
 </&>

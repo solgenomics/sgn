@@ -6,10 +6,16 @@ use List::MoreUtils 'uniq';
 
 BEGIN{ extends 'Catalyst::Controller' }
 
+with 'Catalyst::Component::ApplicationAttribute';
+
 sub view_genome_data : Chained('/organism/find_organism') PathPart('genome') {
     my ( $self, $c ) = @_;
 
     my $organism = $c->stash->{organism};
+    $c->throw_404 unless $organism->search_related('organismprops',
+                             { 'type.name' => 'genome_page', 'me.value' => 1 },
+                             { join => 'type' },
+                         )->count;
 
     (my $template_name = '/genomes/'.$organism->species.'.mas') =~ s/ /_/g;
 
@@ -18,11 +24,16 @@ sub view_genome_data : Chained('/organism/find_organism') PathPart('genome') {
         map {
             my $bs_sample = $_;
             [
-                $bs_sample->name,
-                $bs_sample->metadata->create_date,
-                $bs_sample->description || '-',
-                '-',
-                '-',
+                $bs_sample->sample_name,
+                $bs_sample->metadata ? $bs_sample->metadata->create_date : undef,
+                $bs_sample->description,
+                [ $self->assembly_annotations( $bs_sample ) ],
+                [ map +{ text    => $_->basename,
+                         url     => '/metadata/file/'.$_->file_id.'/download',
+                         tooltip => $_->comment,
+                       },
+                  $self->assembly_files( $bs_sample )
+                ],
             ],
         } $self->assemblies_for_organism( $organism )->all
       ];
@@ -33,6 +44,40 @@ sub view_genome_data : Chained('/organism/find_organism') PathPart('genome') {
 }
 
 ####### helper methods ##########
+
+sub _annotates_cvterms_rs {
+    my ( $self, $row ) = @_;
+    my $schema = $row ? $row->result_source->schema : $self->_app->dbic_schema('CXGN::Biosource::Schema');
+
+    return $schema->resultset('Cv::Cvterm')
+                  ->search_rs({ name => 'annotates' });
+}
+
+sub assembly_annotations {
+    my ( $self, $sample_row ) = @_;
+    return
+        $sample_row->search_related('bs_sample_relationship_objects',
+                       { 'me.type_id' =>
+                             { -in => $self->_annotates_cvterms_rs( $sample_row )
+                                           ->get_column('cvterm_id')
+                                           ->as_query,
+                             },
+                       },
+                     )
+                   ->search_related('subject')
+                   ->all
+    ;
+}
+
+sub assembly_files {
+    my ( $self, $sample_row ) = @_;
+
+    return
+        $sample_row->search_related('bs_sample_files')
+                   ->search_related('file')
+                   ->all
+    ;
+}
 
 sub assemblies_for_organism {
     my ( $self, $organism ) = @_;
