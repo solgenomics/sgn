@@ -17,10 +17,9 @@ Jonathan "Duke" Leto
 use strict;
 use warnings;
 use Test::More;
-BEGIN { $ENV{SGN_SKIP_CGI} = 1 }
 use lib 't/lib';
 use SGN::Test::Data qw/ create_test /;
-use SGN::Test::WWW::Mechanize;
+use SGN::Test::WWW::Mechanize skip_cgi => 1;
 
 my $mech = SGN::Test::WWW::Mechanize->new;
 
@@ -42,7 +41,7 @@ for my $base ( '/api/v1/sequence/download/single/', '/gmodrpc/v1.1/fetch/seq/' )
     $mech->get_ok( $base . $poly_feature->name . '.fasta');
     $mech->content_contains( '>' . $poly_feature->name );
     $mech->content_contains( $residue );
-    is('application/x-fasta', $mech->content_type, 'right content type');
+    is( $mech->content_type, 'application/x-fasta', 'right content type');
     is( $length, length($mech->content), 'got the expected content length');
 }
 {
@@ -51,14 +50,8 @@ for my $base ( '/api/v1/sequence/download/single/', '/gmodrpc/v1.1/fetch/seq/' )
     $mech->get_ok('/api/v1/sequence/download/single/' . $poly_feature->name . '.fasta?5..10');
     $mech->content_contains( '>' . $poly_feature->name . ':5..10' );
     $mech->content_like( qr/^CCGGAA$/m );
-    is('application/x-fasta', $mech->content_type, 'right content type');
+    is( $mech->content_type, 'application/x-fasta', 'right content type');
     is( $length, length($mech->content), 'got the expected content length');
-}
-{
-    $mech->get_ok('/api/v1/sequence/download/single/' . $poly_feature->name . '.ace?10..5', 'fetched in ace format');
-    $mech->content_contains( '"'. $poly_feature->name . ':10..5"' );
-    $mech->content_like( qr/^TTCCGG$/m );
-    is('text/plain', $mech->content_type, 'right content type');
 }
 {
     # 6 = 10 - 5 + 1 = # of chars in requested sequence
@@ -66,7 +59,22 @@ for my $base ( '/api/v1/sequence/download/single/', '/gmodrpc/v1.1/fetch/seq/' )
     $mech->get_ok('/api/v1/sequence/download/single/' . $poly_feature->feature_id . '.fasta?5..10');
     $mech->content_contains( '>' . $poly_feature->name . ':5..10' );
     $mech->content_like( qr/^CCGGAA$/m );
-    is('application/x-fasta', $mech->content_type, 'right content type');
+    is( $mech->content_type, 'application/x-fasta', 'right content type');
+    is( $length, length($mech->content), 'got the expected content length');
+}
+{
+    $mech->get_ok('/api/v1/sequence/download/single/' . $poly_feature->name . '.ace?10..5', 'fetched in ace format');
+    $mech->content_contains( '"'. $poly_feature->name . ':10..5"' );
+    $mech->content_like( qr/^TTCCGG$/m );
+    is( $mech->content_type, 'text/plain', 'right content type');
+}
+{
+    # 6 = 10 - 5 + 1 = # of chars in requested sequence
+    my $length = length($poly_feature->name.':5..10' ) + 3 + 6;
+    $mech->get_ok('/api/v1/sequence/download/single/' . $poly_feature->feature_id . '.fasta?5..10');
+    $mech->content_contains( '>' . $poly_feature->name . ':5..10' );
+    $mech->content_like( qr/^CCGGAA$/m );
+    is( $mech->content_type, 'application/x-fasta', 'right content type');
     is( $length, length($mech->content), 'got the expected content length')
       or diag $mech->content;
 }

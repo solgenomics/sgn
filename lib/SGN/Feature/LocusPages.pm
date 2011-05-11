@@ -30,7 +30,7 @@ sub _name_xrefs {
     my $search = CXGN::Phenome->new;
     my $query = $search->new_query;
     $query->locus_obsolete(" = 'f' ");
-    $query->any_name(" = ? ", $q );
+    $query->any_name("lower(&t) = ? ", lc $q );
     my $result = $search->do_search($query);
 
     # fetch at most 5 results, hashing by locus name

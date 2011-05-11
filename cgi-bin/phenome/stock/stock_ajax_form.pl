@@ -221,7 +221,7 @@ sub generate_form {
         $form->add_label(
             display_name => "Organism",
             field_name   => "stock_organism",
-            contents => $species ? qq|<a href="/organism/$organism_id/view"> | . $species . "<\a>" : '',
+            contents => $species ? qq|<a href="/organism/$organism_id/view"> | . $species . "</a>" : '',
             );
         $form->add_label(
             display_name => "Stock type",

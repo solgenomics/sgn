@@ -150,11 +150,11 @@ td.clonecart {
 /* Developer Toolbar Style */
 div.devbar {
 	width: 100%;
+        padding: 5px;
+        margin: -8px 0 13px -5px;
+
+	text-align: center;
 	background-color: #eef;
-	font-size: 1.0em; /**Need to set baseline size **/
-	line-height: 1.05em;
-	text-align: center; 
-        margin: -7px 0 7px 0;
 	border-bottom: 2px solid #905;
 }
 /**Everything visible is in a table, use this to style fonts**/
@@ -769,7 +769,7 @@ table.columnar_table {
 table.columnar_table_noborder { 
 }
 td.columnar_table, th.columnar_table, th.columnar_table_noborder { 
-  padding: 0.2em 0.4em 0.2em 0.4em;
+  padding: 0.2em 0.6em 0.2em 0.6em;
   margin: 0;
   line-height: 1.4;
 }

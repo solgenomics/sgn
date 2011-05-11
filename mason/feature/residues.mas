@@ -4,48 +4,31 @@
   $seq_download_url => ''
 </%args>
 <%perl>
-my $seq_download_link =
-     $seq_download_url
-       ? sprintf('<a href="%s">Download (%sb)</a>',
-                 $seq_download_url,
-                 Number::Bytes::Human::format_bytes( $feature->seqlen || $feature->residues && length $feature->residues || 0 ),
-                )
-       : '';
 
-if( $feature->residues ) {
+if( $feature->residues && length $feature->residues < 200_000 ) {
 </%perl>
-  <div style="margin: 1em 3em">
+  <div style="margin-left: 1em">
     <& /sequence/with_markup.mas,
            seq       => $feature,
            width     => 80,
            subdiv    => 10,
            blast_url => $blast_url,
     &>
+    <div style="margin-top: 1em">
+      <& /feature/sequence_download.mas,
+           feature => $feature,
+           download_url => $seq_download_url
+       &>
+    </div>
   </div>
-  <% $seq_download_link %>
 <%perl>
 }
 else {
-  my $large_residues = $feature->search_featureprops('large_residues');
-  if( $large_residues->count ) {
+  if( $feature->residues || $feature->search_featureprops('large_residues')->count ) {
 </%perl>
     <p class="warning">Sequence too large to display.</p>
-    <% $seq_download_link %>
+    <& /feature/sequence_download.mas, feature => $feature, download_url => $seq_download_url &>
 <%perl>
   }
 }
 </%perl>
-
-<%def .download_link>
-<%args>
-  $feature
-  $seq_download_url
-</%args>
-% if( $seq_download_url ) {
-  <a href="<% $seq_download_url %>">Download (<% Number::Bytes::Human::format_bytes( $feature->seqlen ) %>)</a>
-% }
-</%def>
-
-<%once>
-  use Number::Bytes::Human;
-</%once>

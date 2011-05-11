@@ -4,6 +4,52 @@ This package is deprecated, do not use in new code.
 
 =cut
 
+package CXGN::MasonFactory;
+use strict;
+use warnings;
+
+use Carp;
+
+use CatalystX::GlobalContext '$c';
+
+sub _context {
+    return $c || do {
+        require SGN::Context;
+        SGN::Context->instance
+      };
+}
+
+sub new {
+    my $class = shift;
+    @_ and croak "new() takes no arguments\n";
+    return CXGN::MasonFactory::InterpWrapper->new(
+        context => $class->_context,
+      );
+}
+
+sub bare_render {
+    my $class = shift;
+    my $comp = shift;
+    my $context = $class->_context;
+    return $context->view('BareMason')->render( $context, $comp, { c => $context, @_ });
+}
+
+package CXGN::MasonFactory::InterpWrapper;
+use Moose;
+
+has 'context' => ( is => 'ro', required => 1 );
+
+sub exec {
+    my ( $self, $comp, @args ) = @_;
+    my $context = $self->context;
+    print $context->view('Mason')->render( $context, $comp, { c => $context, @args } );
+}
+
+__PACKAGE__->meta->make_immutable;
+1;
+
+__END__
+
 # =head1 NAME
 
 # CXGN::MasonFactory - a factory that returns HTML::Mason::Interp object configured for the CXGN layout.
@@ -38,26 +84,6 @@ This package is deprecated, do not use in new code.
 # =head1 METHODS
 
 # =cut
-
-package CXGN::MasonFactory;
-
-use strict;
-use warnings;
-use English;
-use Carp;
-
-use HTML::Mason;
-
-use CatalystX::GlobalContext '$c';
-
-sub _context {
-    return $c || do {
-        require SGN::Context;
-        SGN::Context->instance
-      };
-
-}
-
 # =head2 new
 
 #  Usage:        $mason = CXGN::MasonFactory->new()
@@ -77,11 +103,6 @@ sub _context {
 
 # =cut
 
-sub new {
-    my $class = shift;
-    @_ and croak "new() takes no arguments\n";
-    $class->_context->_mason_interp;
-}
 
 # =head2 bare_render
 
@@ -118,12 +139,3 @@ sub new {
 # 		       );
 
 # =cut
-
-sub bare_render {
-    my $class = shift;
-    return $class->_context->render_mason( @_ );
-}
-
-###
-1;#do not remove
-###

@@ -14,7 +14,7 @@ examples = ctg11477  LE_HBa0173O22 84L02
 automatic classes = BAC marker contig
 
 # where to link to when user clicks in detail view
-link      = /search/quick_search.pl?term=$name
+link      = /search/quick?term=$name
 
 #################################
 # database definitions

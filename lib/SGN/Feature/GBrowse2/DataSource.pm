@@ -85,20 +85,31 @@ sub xrefs {
                      }),
                 # remove any duplicate ref features
                 _uniq_features
-                # search for ref features
-                map $_->get_feature_by_name( $ref_name ),
+                # make sure they are all actually reference features
+                grep { $_->seq_id eq $_->display_name }
+                # search for features with the ref seq name
+                map $self->_search_db( $_, $ref_name ),
                 # for each database
                 $self->databases;
 
         } else {
             # search for features by text in all our DBs
             return $self->_make_feature_xrefs([
-                map $_->get_feature_by_name( $q ), $self->databases
+                map $self->_search_db($_,$q),
+                $self->databases
             ]);
         }
     }
 
     return;
+}
+sub _search_db {
+    my ( $self, $db, $name ) = @_;
+    my $f =
+            $db->can('get_features_by_alias')
+         || $db->can('get_feature_by_name')
+      or return;
+    return $db->$f( $name );
 }
 
 sub _make_feature_xrefs {

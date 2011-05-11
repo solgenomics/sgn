@@ -7,7 +7,8 @@ use File::Spec::Functions;
 use File::Temp;
 use File::Find;
 
-use List::Util qw/min shuffle/;
+use List::Util qw/ min shuffle /;
+use List::MoreUtils qw/ uniq /;
 use Test::More;
 use Exporter;
 
@@ -65,9 +66,9 @@ sub validate_urls {
 
 sub _validate_single_url {
     my ( $test_name, $url, $mech ) = @_;
+    diag "validating url: $url";
     $mech->get( $url );
     my $rc = $mech->status;
-
     my $dump_tempdir;
     ok( $rc == 200, "$test_name returned OK" )
         or do {
@@ -116,6 +117,15 @@ sub _validate_single_url {
 
             unlike( $mech->content, qr/timed out/i, "$test_name does not seem to have timed out" )
                 or diag "fetch from URL $url seems to have timed out";
+
+            # test for any broken images or other things that have a
+            # src attr
+            { my @stuff = uniq map $_->attr('src'), $mech->findnodes('//*[@src]');
+              for( @stuff ) {
+                  $mech->get_ok( $_ );
+                  $mech->back;
+              }
+            }
         }
     } else {
         SKIP: { skip 'because of invalid return code '.$rc, 2 };

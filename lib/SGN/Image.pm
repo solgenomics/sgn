@@ -63,7 +63,7 @@ use base qw | CXGN::Image |;
  Desc:         constructor
  Ret:
  Args:         a database handle, optional identifier
- Side Effects: an empty object is returned. 
+ Side Effects: an empty object is returned.
                a database connection is established.
  Example:
 
@@ -89,9 +89,9 @@ sub new {
 =head2 get_image_url
 
  Usage: $self->get_image_url($size)
- Desc:  get the url for the image with a given size 
+ Desc:  get the url for the image with a given size
  Ret:   a url for the image
- Args:  size (large, medium, small, thumbnail,  original) 
+ Args:  size (large, medium, small, thumbnail,  original)
  Side Effects: none
  Example:
 
@@ -100,7 +100,7 @@ sub new {
 sub get_image_url {
     my $self = shift;
     my $size = shift;
-    
+
     my $url = $self->get_configuration_object()->get_conf('static_datasets_url')."/".$self->get_configuration_object()->get_conf('image_dir')."/".$self->get_filename($size, 'partial')
 
 
@@ -112,17 +112,17 @@ sub get_image_url {
  Desc:         creates the image and associates it to the type and type_id
  Ret:
  Args:
- Side Effects: 
+ Side Effects:
  Example:
 
 =cut
 
-sub process_image { 
+sub process_image {
     my $self = shift;
     my ($filename, $type, $type_id) = @_;
-    
+
     $self->SUPER::process_image($filename);
-    
+
     if ( $type eq "experiment" ) {
         #print STDERR "Associating experiment $type_id...\n";
         $self->associate_experiment($type_id);
@@ -143,7 +143,7 @@ sub process_image {
     else {
         warn "type $type is like totally illegal! Not associating image with any object. Please check if your loading script links the image with an sgn object! \n";
     }
-    
+
 }
 
 =head2 get_configuration_object
@@ -197,7 +197,7 @@ sub get_img_src_tag {
     my $name = $self->get_name();
     if ( $size eq "original" ) {
 
-	my $static = $self->get_configuration_object()->get_conf("static_datasets_url");
+        my $static = $self->get_configuration_object()->get_conf("static_datasets_url");
 
         return
             "<a href=\""
@@ -263,12 +263,12 @@ sub set_temp_filename {
 
  Usage:        my $temp_file_name = $image->apache_upload_image($apache_upload_object);
  Desc:
- Ret:          the name of the intermediate tempfile that can be 
+ Ret:          the name of the intermediate tempfile that can be
                used to access down the road.
  Args:         an apache upload object
  Side Effects: generates an intermediate temp file from an apache request
-               that can be handled more easily. Adds the remote IP addr to the 
-               filename so that different uploaders don\'t clobber but 
+               that can be handled more easily. Adds the remote IP addr to the
+               filename so that different uploaders don\'t clobber but
                allows only one upload per remote addr at a time.
  Errors:       change 11/30/07 - removes temp file if already exists
                # returns -1 if the intermediate temp file already exists.
@@ -327,45 +327,53 @@ sub apache_upload_image {
 =head2 associate_stock
 
  Usage: $image->associate_stock($stock_id);
- Desc:  associate a Bio::Chado::Schema::Result::Stock::Stock object with this image 
- Ret:   a database id (stockprop_id)
+ Desc:  associate a Bio::Chado::Schema::Result::Stock::Stock object with this image
+ Ret:   a database id (stock_image_id)
  Args:  stock_id
- Side Effects: 
- Example: 
+ Side Effects:
+ Example:
 
 =cut
 
 sub associate_stock  {
     my $self = shift;
     my $stock_id = shift;
-    my $stock = $self->get_configuration_object->dbic_schema('Bio::Chado::Schema' , 'sgn_chado')->resultset('Stock::Stock')->find( {
-	stock_id => $stock_id } );
-    if ($stock) {
-	my $prop_ref = $stock->create_stockprops( { 'sgn image_id' => $self->get_image_id } , {autocreate => 1 , cv_name => 'local', allow_duplicate_values => 1 } );
-	my $stockprop = $prop_ref->{'sgn image_id'};
-	return $stockprop->stockprop_id;
-    } else  { return undef ; } 
+    if ($stock_id) {
+        my $user = $self->get_configuration_object->user_exists;
+        if ($user) {
+            my $metadata_schema = $self->get_configuration_object->dbic_schema('CXGN::Metadata::Schema', search_path=>'metadata');
+            my $metadata = CXGN::Metadata::Metadbdata->new($metadata_schema, $self->get_configuration_object->user->get_object->get_username);
+            my $metadata_id = $metadata->store()->get_metadata_id();
+
+            my $q = "INSERT INTO phenome.stock_image (stock_id, image_id, metadata_id) VALUES (?,?,?) RETURNING stock_image_id";
+            my $sth = $self->get_dbh->prepare($q);
+            $sth->execute($stock_id, $self->get_image_id, $metadata_id);
+            my ($stock_image_id) = $sth->fetchrow_array;
+            return $stock_image_id;
+        }
+    }
+    return undef;
 }
 
 =head2 get_stocks
- 
- Usage: $image->get_stocks
 
-=cut 
+ Usage: $image->get_stocks
+ Desc:  find all stock objects linked with this image
+ Ret:   a list of Bio::Chado::Schema::Result::Stock::Stock
+ Args:  none
+
+=cut
 
 sub get_stocks {
     my $self = shift;
     my $schema = $self->get_configuration_object->dbic_schema('Bio::Chado::Schema' , 'sgn_chado');
-    my $image_cvterm = $schema->resultset('Cv::Cvterm')->search( { name => 'sgn image_id' } )->single;
     my @stocks;
-    my $stockprops = $schema->resultset('Stock::Stockprop')->search( { 
-	type_id => $image_cvterm->cvterm_id,
-	value   => $self->get_image_id,
-								     } );
-    if ($stockprops) {
-	while (my $prop = $stockprops->next) {
-	    push @stocks , $prop->stock;
-	}
+    my $q = "SELECT stock_id FROM phenome.stock_image WHERE image_id = ? ";
+    my $sth = $self->get_dbh->prepare($q);
+    $sth->execute($self->get_image_id);
+    while (my ($stock_id) = $sth->fetchrow_array) {
+        my $stock = $schema->resultset("Stock::Stock")->find( { stock_id => $stock_id } ) ;
+        push @stocks, $stock;
     }
     return @stocks;
 }
@@ -397,7 +405,7 @@ sub associate_individual {
 
 =head2 get_individuals
 
- Usage:  DEPRECATED. Use the stock table . 
+ Usage:  DEPRECATED. Use the stock table .
         $self->get_individuals()
  Desc:  find associated individuals with the image
  Ret:   list of 'Individual' objects
@@ -408,15 +416,15 @@ sub associate_individual {
 =cut
 
 sub get_individuals {
-    my $self = shift;    
+    my $self = shift;
     warn "DEPRECATED. Individual table is not used any more . Please use stock instead";
     my $query = "SELECT individual_id FROM phenome.individual_image WHERE individual_image.image_id=?";
     my $sth = $self->get_dbh()->prepare($query);
     $sth->execute($self->get_image_id());
     my @individuals;
     while (my ($individual_id) = $sth->fetchrow_array()) {
-	my $i = CXGN::Phenome::Individual->new($self->get_dbh(), $individual_id);
-	if ( $i->get_individual_id() ) { push @individuals, $i; } #obsolete individuals should be ignored!
+        my $i = CXGN::Phenome::Individual->new($self->get_dbh(), $individual_id);
+        if ( $i->get_individual_id() ) { push @individuals, $i; } #obsolete individuals should be ignored!
     }
     return @individuals;
 }
@@ -466,7 +474,7 @@ sub get_experiments {
     $sth->execute($self->get_image_id());
     my @experiments = ();
     while (my ($experiment_id) = $sth->fetchrow_array()) {
-	push @experiments, CXGN::Insitu::Experiment->new($self->get_dbh(), $experiment_id);
+        push @experiments, CXGN::Insitu::Experiment->new($self->get_dbh(), $experiment_id);
     }
     return @experiments;
 }
@@ -515,7 +523,7 @@ sub get_fish_result_clone_ids {
     $sth->execute($self->get_image_id());
     my @fish_result_clone_ids = ();
     while (my ($fish_result_clone_id) = $sth->fetchrow_array()) {
-	push @fish_result_clone_ids, $fish_result_clone_id;
+        push @fish_result_clone_ids, $fish_result_clone_id;
     }
     return @fish_result_clone_ids;
 }
@@ -535,25 +543,25 @@ sub get_associated_objects {
     my @associations = ();
     my @stocks=$self->get_stocks();
     foreach my $stock (@stocks) {
-	my $stock_id = $stock->stock_id();
-	my $stock_name = $stock->name();
-	push @associations, [ "stock", $stock_id, $stock_name ];
+        my $stock_id = $stock->stock_id();
+        my $stock_name = $stock->name();
+        push @associations, [ "stock", $stock_id, $stock_name ];
     }
 
     foreach my $exp ($self->get_experiments()) {
-	my $experiment_id = $exp->get_experiment_id();
-	my $experiment_name = $exp->get_name();
+        my $experiment_id = $exp->get_experiment_id();
+        my $experiment_name = $exp->get_name();
 
-	push @associations, [ "experiment", $experiment_id, $experiment_name ];
+        push @associations, [ "experiment", $experiment_id, $experiment_name ];
 
-	#print "<a href=\"/insitu/detail/experiment.pl?experiment_id=$experiment_id&amp;action=view\">".($exp->get_name())."</a>";
+        #print "<a href=\"/insitu/detail/experiment.pl?experiment_id=$experiment_id&amp;action=view\">".($exp->get_name())."</a>";
     }
 
     foreach my $fish_result_clone_id ($self->get_fish_result_clone_ids()) {
-	push @associations, [ "fished_clone", $fish_result_clone_id ];
+        push @associations, [ "fished_clone", $fish_result_clone_id ];
     }
     foreach my $locus ($self->get_loci() ) {
-	push @associations, ["locus", $locus->get_locus_id(), $locus->get_locus_name];
+        push @associations, ["locus", $locus->get_locus_id(), $locus->get_locus_name];
     }
     return @associations;
 }
@@ -579,15 +587,15 @@ sub associate_locus {
     my $sp_person_id= $self->get_sp_person_id();
     my $query = "INSERT INTO phenome.locus_image
                    (locus_id,
-		   sp_person_id,
-		   image_id)
-		 VALUES (?, ?, ?)";
+                   sp_person_id,
+                   image_id)
+                 VALUES (?, ?, ?)";
     my $sth = $self->get_dbh()->prepare($query);
     $sth->execute(
-    		$locus_id,
-    		$sp_person_id,
-    		$self->get_image_id()
-		);
+                $locus_id,
+                $sp_person_id,
+                $self->get_image_id()
+                );
 
     my $locus_image_id= $self->get_currval("phenome.locus_image_locus_image_id_seq");
     return $locus_image_id;
@@ -626,9 +634,9 @@ sub get_loci {
 
   Synopsis:
   Arguments:
-  Returns:	a string
+  Returns:      a string
   Side effects:
-  Description:	gets the associated objects as links in tabular format
+  Description:  gets the associated objects as links in tabular format
 
 =cut
 
@@ -637,20 +645,20 @@ sub get_associated_object_links {
     my $s = "";
     foreach my $assoc ($self->get_associated_objects()) {
 
-	if ($assoc->[0] eq "stock") {
-	    $s .= "<a href=\"/stock/$assoc->[1]/view\">Stock name: $assoc->[2].</a>";
-	}
+        if ($assoc->[0] eq "stock") {
+            $s .= "<a href=\"/stock/$assoc->[1]/view\">Stock name: $assoc->[2].</a>";
+        }
 
-	if ($assoc->[0] eq "experiment") {
-	    $s .= "<a href=\"/insitu/detail/experiment.pl?experiment_id=$assoc->[1]&amp;action=view\">insitu experiment $assoc->[2]</a>";
-	}
+        if ($assoc->[0] eq "experiment") {
+            $s .= "<a href=\"/insitu/detail/experiment.pl?experiment_id=$assoc->[1]&amp;action=view\">insitu experiment $assoc->[2]</a>";
+        }
 
         if ($assoc->[0] eq "fished_clone") {
-	    $s .= qq { <a href="/maps/physical/clone_info.pl?id=$assoc->[1]">FISHed clone id:$assoc->[1]</a> };
+            $s .= qq { <a href="/maps/physical/clone_info.pl?id=$assoc->[1]">FISHed clone id:$assoc->[1]</a> };
 
-	}
+        }
       if ($assoc->[0] eq "locus" ) {
-	  $s .= qq { <a href="/phenome/locus_display.pl?locus_id=$assoc->[1]">Locus name:$assoc->[2]</a> };
+          $s .= qq { <a href="/phenome/locus_display.pl?locus_id=$assoc->[1]">Locus name:$assoc->[2]</a> };
       }
 
     }

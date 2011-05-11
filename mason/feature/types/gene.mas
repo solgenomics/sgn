@@ -32,7 +32,7 @@
      feature => $feature,
    &>
 
-  <& /feature/exon_structure.mas, xrefs => $xrefs, feature => $feature &>
+  <& /feature/gbrowse_exact_match.mas, xrefs => $xrefs, feature => $feature &>
 
 </&>
 
@@ -51,11 +51,12 @@
 <&| /page/info_section.mas,
         title       => 'Genomic sequence',
         subtitle    => 'unprocessed genomic sequence region underlying this gene',
+        empty_message => 'Not available',
         collapsible => 1,
         collapsed   => 1,
 &>
 
-   <& /feature/genomic_sequence.mas,
+   <& /feature/region_sequence.mas,
        feature   => $feature,
        blast_url => $blast_url,
    &>
@@ -85,9 +86,10 @@
 %   my ( $mrna_sequence, $protein_sequence ) = @{(mrna_and_protein_sequence( $mrna ))[0] || [] };
 
     <&| /page/info_section.mas,
-            title         => 'mRNA sequence',
+            title         => 'cDNA sequence',
             is_subsection => 1,
-            subtitle      => 'spliced mRNA sequence, including UTRs',
+            subtitle      => 'spliced cDNA sequence, including UTRs',
+            empty_message => 'Not available',
             collapsible   => 1,
             collapsed     => 1,
     &>
@@ -99,7 +101,7 @@
           seq       => $mrna_sequence,
           width     => 80,
           subdiv    => 10,
-          blast_url => undef,
+          blast_url => $blast_url,
         &>
      </div>
 
@@ -111,6 +113,7 @@
             title         => 'Protein sequence',
             is_subsection => 1,
             subtitle      => 'translated polypeptide sequence',
+            empty_message => 'Not available',
             collapsible   => 1,
             collapsed     => 1,
     &>
@@ -122,7 +125,7 @@
           seq       => $protein_sequence,
           width     => 80,
           subdiv    => 10,
-          blast_url => undef,
+          blast_url => $blast_url,
         &>
      </div>
 

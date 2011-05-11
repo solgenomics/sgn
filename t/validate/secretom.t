@@ -2,6 +2,7 @@ use strict;
 use warnings;
 
 use lib 't/lib';
+BEGIN { $ENV{SGN_SKIP_CGI}=1 }
 use SGN::Test qw/validate_urls/;
 use Test::More;
 
@@ -16,7 +17,7 @@ my %urls = (
              cuticle
              functional_screens
              glycoproteome
-             phytophthera_interaction
+             phytophthora_interaction
              prediction
              profiling
              proteomics

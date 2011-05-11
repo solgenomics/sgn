@@ -2,21 +2,29 @@
   $xrefs => []
 </%args>
   <& /page/columnar_table.mas,
-            headings=>["Annotation Set", "Feature(s)", "Region"],
-            data=> [ map [
-                           $_->data_source->description,
-
-                           join( ', ', map $_->display_name, @{$_->seqfeatures} ),
-
-                           '<a href="'.$_->url.'">'
-                           .join( ', ', ( $_->is_whole_sequence
-                                            ? $_->seqfeatures->[0]->seq_id
-                                            : $_->seq_id.':'.$_->start.'..'.$_->end,
-                                        ),
-                                )
-                           .'</a>',
-                          ],
-                     @$xrefs
-                   ],
-            __align=> 'l'
+            headings => ["Annotation Set", "Feature(s)", "Region"],
+            data     => \@rows,
+            __align  => 'l'
   &>
+<%init>
+  my %seen_row;
+  my @rows =
+             sort { $b->[0] cmp $a->[0] || $a->[1] cmp $b->[1] ||  $a->[2] cmp $b->[2] }
+             grep { !$seen_row{ join '|', @$_ }++ }
+             map [ $_->data_source->description,
+
+                   join( ', ', uniq map $_->display_name, @{$_->seqfeatures} ),
+
+                   '<a href="'.$_->url.'">'
+                   .join( ', ', ( $_->is_whole_sequence
+                                    ? $_->seqfeatures->[0]->seq_id
+                                    : $_->seq_id.':'.$_->start.'..'.$_->end,
+                                ),
+                        )
+                   .'</a>',
+                 ],
+                 @$xrefs;
+</%init>
+<%once>
+  use List::MoreUtils 'uniq';
+</%once>
