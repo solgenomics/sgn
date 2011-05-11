@@ -1,34 +1,21 @@
 use strict;
 use warnings;
-use Carp;
 
-use File::Spec;
 use IPC::Cmd qw/ can_run /;
 
 use List::MoreUtils qw/ all /;
 use Test::More;
-use Test::WWW::Mechanize;
 
 use CXGN::DB::Connection;
 use CXGN::Page;
 use CXGN::BlastDB;
+
 use lib 't/lib';
-use SGN::Test;
+use aliased 'SGN::Test::WWW::Mechanize';
 
-my $test_blastdb_id = 34;
-my $bdb = CXGN::BlastDB->retrieve($test_blastdb_id);
+my $mech = Mechanize->new;
 
-unless( can_run('qsub') ) {
-    plan skip_all => 'qsub not found in path';
-}
-unless( all { -f } $bdb->list_files ) {
-    plan skip_all => "blast db ".$bdb->file_base." not present on disk";
-}
-
-my $server = $ENV{SGN_TEST_SERVER};
-
-my $mech = Test::WWW::Mechanize->new;
-my $new_page = $server."/tools/insilicopcr/index.pl";
+my $new_page = "/tools/insilicopcr/index.pl";
 $mech->get_ok($new_page);
 $mech->content_contains("In Silico PCR");
 $mech->content_contains("PCR Primers");
@@ -51,7 +38,7 @@ my %form = (
 		productLength => '5000',
 		allowedMismatches => '0',
 		output_format => '8',
-		database => $test_blastdb_id,
+		#database => $test_blastdb_id,
 		program => 'blastn',
 		expect => '1e-10',
 		matrix => 'BLOSUM62',
@@ -61,11 +48,9 @@ my %form = (
 
 $mech->submit_form_ok(\%form, "PCR  job submit form" );
 
-if ( $mech->content =~ /Running/ ) {
-    while ( $mech->content !~ /PCR Results/ ) {
-        sleep 1;
-        $mech->get( $mech->base );
-    }
+while ( $mech->content =~ /please wait/i && $mech->content !~ /PCR Results/i ) {
+    sleep 1;
+    $mech->get( $mech->base );
 }
 
 $mech->content_contains("PCR Results");

@@ -4,9 +4,14 @@ use warnings;
 use base 'Test::Class';
 
 use Test::Class;
+use Test::More tests => 14;
+
+use Data::Dump;
+use List::MoreUtils qw/ any /;
+
 use lib 't/lib';
 use SGN::Test::Data qw/create_test/;
-use Test::More tests => 11;
+
 
 use_ok('SGN::View::Feature', qw/
     feature_table related_stats cvterm_link
@@ -23,21 +28,37 @@ sub teardown : Test(teardown) {
     # SGN::Test::Data objects self-destruct, don't clean them up here!
 }
 
+sub TEST_FEATURE_TABLE : Tests {
+    my $self = shift;
+    my $f = $self->{feature};
+    my $table_data = feature_table( [$f] );
+    is( scalar(@$table_data), 1, 'got one row for the one, unlocated feature' );
+    table_row_contains( $table_data->[0], 'not located', 'says feature is not located' );
+    table_row_contains( $table_data->[0], $f->name, 'has feature name' );
+}
+sub table_row_contains {
+    my $row = shift;
+    my $substr  = shift;
+    my $name = shift;
+    ok( ( any { index($_,$substr) != -1 } @$row ), $name )
+       or diag "$substr not found in ".Data::Dump::dump( $row );
+}
+
 sub TEST_CVTERM_LINK : Tests {
     my $self = shift;
     my $f = $self->{feature};
     my ($id,$name) = ($f->type->cvterm_id,$f->type->name);
     $name =~ s/_/ /g;
     my $link = qq{<a href="/chado/cvterm.pl?cvterm_id=$id">$name</a>};
-    is(cvterm_link($f),$link, 'cvterm link');
+    is(cvterm_link($f->type),$link, 'cvterm link');
 }
 
 sub TEST_RELATED_STATS : Tests {
     my $self = shift;
     my $feature = create_test('Sequence::Feature');
 
-    my $name1 = cvterm_link( $self->{feature} );
-    my $name2 = cvterm_link( $feature );
+    my $name1 = cvterm_link( $self->{feature}->type );
+    my $name2 = cvterm_link( $feature->type );
     my $stats = related_stats([ $self->{feature}, $feature, $feature ]);
     is($stats->[0][1], $name1);
     is($stats->[0][0], 1);

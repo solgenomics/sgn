@@ -1,5 +1,8 @@
 /** 
 * @class Tools
+* DEPRECATED - this is used only on the locus page. 
+* The individual page is deprecated, and future pages should use
+* CXGN.AJAX.Ontology which is more generic 
 * Function used in phenome pages
 * @author Naama Menda <nm249@cornell.edu>
 *

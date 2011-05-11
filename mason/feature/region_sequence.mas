@@ -1,0 +1,132 @@
+<%args>
+    $feature
+    $blast_url        => undef
+    $max_display_size => 50_000
+</%args>
+<%perl>
+
+  my $seq;
+
+  my @locs = $feature->featureloc_features(undef,{ prefetch => 'srcfeature' });
+  for my $loc ( @locs ) {
+    if( my $src = $loc->srcfeature ) {
+
+        my $has_seq = $src->subseq(1,1);
+
+        if( $has_seq ) {
+</%perl>
+            <div style="margin: 1em 3em">
+<%perl>
+            # if the sequence is small enough to display
+            if( $loc->fmax - $loc->fmin <= $max_display_size ) {
+
+                my $seq = $src->trunc( $loc->fmin+1, $loc->fmax );
+                $seq->desc( location_string( $loc ) );
+                if( $loc->strand && $loc->strand == -1 ) {
+                    $seq = $seq->revcom;
+                    $seq->desc( $seq->desc.' (sequence from reverse strand)' );
+                }
+
+                $seq->id( $feature->name );
+
+</%perl>
+
+                <& /sequence/with_markup.mas,
+                   seq       => $seq,
+                   width     => 80,
+                   subdiv    => 10,
+                   blast_url => $blast_url,
+                 &>
+
+%            } else { # otherwise, if the sequence is big
+                <p class="warning">Sequence region (<% location_string($loc) %>) too large to display.</p>
+%            }
+%            my ( $start, $end ) = $loc->strand == -1 ? ( $loc->fmax, $loc->fmin+1 ) : ( $loc->fmin+1, $loc->fmax );
+             <% info_table_html(
+                 __tableattrs => 'width="100%"',
+                 __multicol   => 2,
+                 'Download sequence region' => $m->scomp(
+                     '/feature/sequence_download.mas',
+                     feature      => $feature,
+                     length       => $loc->fmax - $loc->fmin,
+                     download_url => '/api/v1/sequence/download/single/'.$src->feature_id.".fasta?$start..$end",
+                     ),
+                 'Get flanking sequences on '.($src->name || 'feature_'.$src->feature_id) =>
+                    $m->scomp('.flanking_download', loc => $loc ),
+                )
+              %>
+              </div>
+%      }
+%   }
+% }
+
+<%once>
+   use SGN::View::Feature qw/ location_string /;
+   use List::Util qw/ min max /;
+   use List::MoreUtils qw/ pairwise /;
+   use CXGN::Page::FormattingHelpers 'info_table_html';
+
+   sub upstream_downstream_options {
+       my ( $loc ) = @_;
+
+       my $id         = $loc->srcfeature->feature_id;
+       my $start      = $loc->fmin+1;
+       my $end        = $loc->fmax;
+       my $strand     = $loc->strand;
+       my $src_length = $loc->srcfeature->length || 1e20;
+
+       my @increments = ( 1000, 3000, 5000 );
+
+       # calculate location strings for upstream and downstream regions
+       my $upstream = [
+           map location_string(
+               $id,
+               max( 1, $start - $_ ),
+               max( 1, $start - 1  ),
+               $strand
+             ), @increments
+         ];
+
+       my $downstream = [
+           map location_string(
+               $id,
+               min( $end + 1,  $src_length ),
+               min( $end + $_, $src_length ),
+               $strand
+             ), @increments
+         ];
+
+       # upstream/downstream sense is reversed if feature is on the
+       # reverse strand
+       if( $strand == -1 ) {
+           ( $upstream, $downstream ) = ( $downstream, $upstream );
+       }
+
+       # decorate the upstream/downstream loc strings with text
+       # descriptions for the dropdown
+       my @upstream_desc   = map "$_ bp upstream",   @increments;
+       my @downstream_desc = map "$_ bp downstream", @increments;
+       $upstream   = [ pairwise { [$a, $b] } @$upstream,   @upstream_desc   ];
+       $downstream = [ pairwise { [$a, $b] } @$downstream, @downstream_desc ];
+
+       return ( reverse(@$upstream), @$downstream );
+   }
+
+</%once>
+
+<%def .flanking_download>
+<%args>
+  $loc
+</%args>
+    <form name="get_flanking_sequence" action="/api/v1/sequence/download/multi" method="GET">
+      <input type="hidden" name="format" value="fasta" />
+      <select name="s">
+%     for ( upstream_downstream_options( $loc ) ) {
+%        my ( $locstring, $description ) = @$_;
+          <option value="<% $locstring %>"><% $description %></option>
+%     }
+      </select>
+      <input value="Download" type="submit" />
+    </form>
+
+</%def>

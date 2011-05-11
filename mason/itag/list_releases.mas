@@ -1,0 +1,21 @@
+<%args>
+$itag_releases
+</%args>
+
+<& /page/page_title.mas, title => 'ITAG Releases Available for Bulk Download' &>
+
+% if ( @$itag_releases ) {
+
+<ul>
+%   for my $rel ( @$itag_releases ) {
+
+  <li><a href="/itag/release/<% $rel->release_number %>/list_files"><% $rel->release_name %></a></li>
+
+%   }
+</ul>
+
+% } else {
+
+<span class="ghosted">temporarily unavailable</span>
+
+% }

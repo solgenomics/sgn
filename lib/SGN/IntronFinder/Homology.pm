@@ -45,7 +45,7 @@ sub find_introns_txt {
     }
     $seq_in = $seq_out_temp = undef;    #< undef the seqIOs to close and
                                         #  flush their files
-    $seq_count or die "must provide at least one input sequence\n";
+    $seq_count or confess "must provide at least one input sequence\n";
 
     # run blastall, feeding sequences on its STDIN and STDOUT
     my $blast_out = File::Temp->new(
@@ -54,10 +54,24 @@ sub find_introns_txt {
         UNLINK   => 1,
     );
     $blast_out->close;                  #< can't use the fh
+
+    glob $protein_db_base.'.*'
+       or confess "BLAST db $protein_db_base.* not present on disk";
+
     my $cmd =
-"blastall -d '$protein_db_base' -p 'blastx' -e $max_evalue < $temp_seq > $blast_out";
+"blastall -d '$protein_db_base' -p 'blastx' -e $max_evalue < $temp_seq 2>&1 > $blast_out";
     system $cmd;
-    die "$! (\$?: $?) running $cmd" if $?;
+    if( $? ) {
+        die "$! (\$?: $?) running $cmd: "
+          .do {
+              local $/;
+              if( open my $f, $blast_out ) {
+                  <$f>
+              } else {
+                  ''
+              }
+          };
+    }
 
     # go through the blast report
     my $blast_in = Bio::SearchIO->new(

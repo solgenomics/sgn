@@ -4,7 +4,7 @@ my $page=CXGN::Page->new('my page','marty');
 $page->header("SGN FISH submission guidelines", "SGN FISH Submission Guidelines");
 print qq|<div>
 <p>This document describes what we at SGN are prepared to accept for FISH
-experiment data. Please <a href="http://sgn.cornell.edu/tools/contact.pl">contact us</a> if you have any questions about these guidelines.</p>
+experiment data. Please <a href="/contact/form">contact us</a> if you have any questions about these guidelines.</p>
 
 
 <p>When submitting spreads, the preferred folder layout looks like this:</p>

@@ -51,16 +51,22 @@ if($experiments and @{$experiments}) {
       my $digest_bands=$pcr->pcr_digest_bands_hash_of_strings();
       my $pcr_bands_html='';
       my $digest_bands_html='';
-      for my $accession_id(keys(%{$pcr_bands})) {
-	my $accession_name=CXGN::Accession->new($dbh,$accession_id)->verbose_name();
-	$pcr_bands_html.="<b>$accession_name:</b> $pcr_bands->{$accession_id}<br />";
+      for my $stock_id(keys(%{$pcr_bands})) {
+	#my $accession_name=CXGN::Accession->new($dbh,$accession_id)->verbose_name();
+	my $sth = $dbh->prepare("SELECT organism.species || ' ' ||  stock.name FROM public.stock JOIN public.organism USING(organism_id) WHERE stock_id=?");
+	$sth->execute($stock_id);
+	my ($stock_name) = $sth->fetchrow_array();
+	$pcr_bands_html.="<b>$stock_name:</b> $pcr_bands->{$stock_id}<br />";
       }
-      for my $accession_id(keys(%{$digest_bands})) {
-	my $accession_name=CXGN::Accession->new($dbh,$accession_id)->verbose_name();
-	$digest_bands_html.="<b>$accession_name:</b> $digest_bands->{$accession_id}<br />";
+      for my $stock_id(keys(%{$digest_bands})) {
+	my $sth = $dbh->prepare("SELECT organism.species || ' ' ||  stock.name FROM public.stock JOIN public.organism USING(organism_id) WHERE stock_id=?");
+	$sth->execute($stock_id);
+	my ($stock_name) = $sth->fetchrow_array();
+#	my $accession_name=CXGN::Accession->new($dbh,$accession_id)->verbose_name();
+	$digest_bands_html.="<b>$stock_name:</b> $digest_bands->{$stock_id}<br />";
       }
       my $mg='';
-      if($pcr->mg_conc()) {    
+      if($pcr->mg_conc()) {   
 	$mg=$pcr->mg_conc().'mM';
       }
       my $temp='';

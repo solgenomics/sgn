@@ -7,7 +7,8 @@ use File::Spec::Functions;
 use File::Temp;
 use File::Find;
 
-use List::Util qw/min shuffle/;
+use List::Util qw/ min shuffle /;
+use List::MoreUtils qw/ uniq /;
 use Test::More;
 use Exporter;
 
@@ -18,10 +19,22 @@ use HTML::Lint;
 use lib 't/lib';
 use SGN::Test::WWW::Mechanize;
 
-# we can re-export Catalyst::Test's request, get, and ctx_request functions
-use Catalyst::Test 'SGN';
-our @ISA = qw/Exporter/;
+use base 'Exporter';
 our @EXPORT_OK = qw/validate_urls request get ctx_request with_test_level/;
+
+# do a little dance to only load Catalyst::Test if we've actually been
+# asked for any of its subs
+sub import {
+    my ( $class, @imports ) = @_;
+    for my $import (@imports) {
+        if( grep $_ eq $import, qw( request get ctx_request ) ) {
+            require Catalyst::Test;
+            Catalyst::Test->import( 'SGN' );
+            last;
+        }
+    }
+    $class->export_to_level( 1, undef, @imports );
+}
 
 
 my $test_server_name = $ENV{SGN_TEST_SERVER} || 'http://(local test server)';
@@ -53,13 +66,16 @@ sub validate_urls {
 
 sub _validate_single_url {
     my ( $test_name, $url, $mech ) = @_;
+    diag "validating url: $url";
     $mech->get( $url );
     my $rc = $mech->status;
-
     my $dump_tempdir;
     ok( $rc == 200, "$test_name returned OK" )
         or do {
-            diag "fetch actually returned code '$rc': $ENV{SGN_TEST_SERVER}$url";
+
+            diag "fetch actually returned code '$rc': "
+                 .($ENV{SGN_TEST_SERVER}||'').$url;
+
             if( $ENV{DUMP_ERROR_CONTENT} ) {
                 if ( eval { require Digest::Crc32 } ) {
                     $dump_tempdir ||= make_dump_tempdir();
@@ -101,6 +117,15 @@ sub _validate_single_url {
 
             unlike( $mech->content, qr/timed out/i, "$test_name does not seem to have timed out" )
                 or diag "fetch from URL $url seems to have timed out";
+
+            # test for any broken images or other things that have a
+            # src attr
+            { my @stuff = uniq map $_->attr('src'), $mech->findnodes('//*[@src]');
+              for( @stuff ) {
+                  $mech->get_ok( $_ );
+                  $mech->back;
+              }
+            }
         }
     } else {
         SKIP: { skip 'because of invalid return code '.$rc, 2 };
@@ -110,8 +135,7 @@ sub _validate_single_url {
 }
 
 sub with_test_level {
-    SGN::Test::WWW::Mechanize->new->with_test_level( @_ );
+    SGN::Test::WWW::Mechanize->with_test_level( @_ );
 }
-
 
 1;

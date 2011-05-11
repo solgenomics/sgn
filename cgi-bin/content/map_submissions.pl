@@ -28,7 +28,7 @@ This file gives the location of the markers on the map. When submitting a map, b
 <li><b>linkage group</b>: The name or number of the chromosome or linkage group.</li>
 <li><b>position</b>: The position in cM on the linkage group.</li>
 <li><b>confidence</b>: Mapmaker's confidence for this marker - one of I, I(LOD2), F(LOD3), CF(LOD3). If your mapping software doesn't calculate a confidence, just omit this column.</li>
-<li><b>protocol</b>: The type of experiment used to map the marker. Currently we support CAPS, SSR, RFLP, SNP, and AFLP. We can accept most PCR-based markers; <a href="/tools/contact.pl">contact SGN</a> if you would like to submit marker types that are not listed here.</li>
+<li><b>protocol</b>: The type of experiment used to map the marker. Currently we support CAPS, SSR, RFLP, SNP, and AFLP. We can accept most PCR-based markers; <a href="/contact/">contact SGN</a> if you would like to submit marker types that are not listed here.</li>
 </ul>
 
 <h3>The marker data file</h3>
@@ -75,7 +75,7 @@ RFLP markers:
 </pre>
 
 <p>
-For other types of markers, <a href="/tools/contact.pl">contact SGN</a>. 
+For other types of markers, <a href="/contact/form">contact SGN</a>.
 </p>
 
 <h3>Polymorphism data</h3>
@@ -94,7 +94,7 @@ The polymorphism data file should have the following columns:
 
 <h3>Accession information</h3>
 <p>
-We need the following information for each accession used in the mapping or polymorphism data files. (Some accessions are already in our database; <a href="/tools/contact.pl">Contact us</a> if you're not sure). This information can be sent in an email or text file.
+We need the following information for each accession used in the mapping or polymorphism data files. (Some accessions are already in our database; <a href="/contact/form">Contact us</a> if you're not sure). This information can be sent in an email or text file.
 </p>
 <ul>
 <li>The accession's <b>identifier</b>, for example "TA210"</li>

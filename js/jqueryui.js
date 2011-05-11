@@ -1,3 +1,5 @@
+JSAN.use('jquery');
+
 /*!
  * jQuery UI 1.8.4
  *

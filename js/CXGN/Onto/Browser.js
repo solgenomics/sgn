@@ -362,22 +362,20 @@ CXGN.Onto.Browser.prototype = {
 	this.workingMessage(true);
 
 	var pL = this.getParentsList(accession);
-	
-	var cache = this.fetchCachedChildren(accession);
-	
-	//MochiKit.Logging.log('Cache length now: '+cache.length);
-	this.setCache(cache);
-
-	//MochiKit.Logging.log('Retrieved parents '+ pL.join(' '));
-
-	var c = this.rootnode.getChildren();
-	for (var i=0; i<c.length; i++) { 
-	    this.recursiveParentage(c[i], pL, accession);
-	    //this.render();
-	}
-	this.render();
-	this.workingMessage(false);
-    },	
+        if (pL.length > 1) {
+            var cache = this.fetchCachedChildren(accession);
+            //MochiKit.Logging.log('Cache length now: '+cache.length);
+            this.setCache(cache);
+            //MochiKit.Logging.log('Retrieved parents '+ pL.join(' '));
+            var c = this.rootnode.getChildren();
+            for (var i=0; i<c.length; i++) { 
+                this.recursiveParentage(c[i], pL, accession);
+                //this.render();
+            }
+            this.render();
+        }
+        this.workingMessage(false);
+    },
 
     //this is called when a search term is clicked from the search results list.
     //we explicitly hide the search results.
@@ -484,30 +482,37 @@ CXGN.Onto.Browser.prototype = {
     },
     
     fetchCachedChildren:function(accession) { 
-	var cache;
-	new Ajax.Request('/ajax/onto/cache', {
-		parameters: { node: accession }, 
-		    asynchronous: false,
-		    method: 'get',
-		    on503: function() { 
-		    alert('An error occurred! The database may currently be unavailable. Please check back later.');
-		},
-		    
-		    onSuccess: function(request) {
-		    var json = request.responseText;
-		    cache = eval("("+json+")");
-		    if ( cache.error ) { alert(cache.error) ; }
-		    else {
-			//MochiKit.Logging.log('Cache '+cache.length);
-			
-		    }
-		}
-	});
-	return cache;
-	
+	var fetch_response;
+	jQuery.ajax( {
+                url: '/ajax/onto/cache',
+                    async: false,
+                    dataType:"json",
+                    data: 'node='+accession,
+                    success: function(response) {
+                    fetch_response = response;
+                    if (response.error) { alert(response.error) ; }
+                }
+
+                //new Ajax.Request('/ajax/onto/cache', {
+                //parameters: { node: accession }, 
+                //  asynchronous: false,
+                //  method: 'get',
+                //  on503: function() { 
+                //  alert('An error occurred! The database may currently be unavailable. Please check back later.');
+                //},
+                //  onSuccess: function(request) {
+                //  var json = request.responseText;
+                //  cache = eval("("+json+")");
+                //  if ( cache.error ) { alert(cache.error) ; }
+                //  else {
+                //      MochiKit.Logging.log('Cache '+cache.length);
+                //  }
+                //}
+        });
+        return fetch_response;
     },
-    
-    
+
+
     //Make an ajax response that finds all the ontology terms with names/definitions/synonyms/accessions like the current value of the ontology input
     getOntologies: function(db_name, search_string) {
 	this.workingMessage(true);

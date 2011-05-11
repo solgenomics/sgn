@@ -2,7 +2,8 @@ package SGN::Controller::Feature;
 
 =head1 NAME
 
-SGN::Controller::Feature - Catalyst controller for pages dealing with features
+SGN::Controller::Feature - Catalyst controller for pages dealing with
+Chado (i.e. Bio::Chado::Schema) features
 
 =cut
 
@@ -28,41 +29,17 @@ has 'default_page_size' => (
 BEGIN { extends 'Catalyst::Controller' }
 with 'Catalyst::Component::ApplicationAttribute';
 
-sub delegate_component
-{
-    my ($self, $c, $matching_features) = @_;
-    my $feature   = $matching_features->next;
-    my $type_name = $feature->type->name;
-    my $template  = "/feature/dhandler";
+=head1 PUBLIC ACTIONS
 
-    $c->stash->{feature}     = $feature;
-    $c->stash->{featurelocs} = $feature->featureloc_features;
+=cut
 
-    # look up site xrefs for this feature
-    my @xrefs = $c->feature_xrefs( $feature->name, { exclude => 'featurepages' } );
-    unless( @xrefs ) {
-        @xrefs = map {
-            $c->feature_xrefs( $_->srcfeature->name.':'.($_->fmin+1).'..'.$_->fmax, { exclude => 'featurepages' } )
-        }
-        $c->stash->{featurelocs}->all
-    }
-    $c->stash->{xrefs} = \@xrefs;
+=head2 view_by_name
 
-    if ($c->view('Mason')->component_exists("/feature/$type_name.mas")) {
-        $template         = "/feature/$type_name.mas";
-        $c->stash->{type} = $type_name;
-    }
-    $c->stash->{template} = $template;
-}
+View a feature by name.
 
-sub validate
-{
-    my ($self, $c,$matching_features,$key, $val) = @_;
-    my $count = $matching_features->count;
-#   EVIL HACK: We need a disambiguation process
-#   $c->throw_client_error( public_message => "too many features where $key='$val'") if $count > 1;
-    $c->throw_client_error( public_message => "feature with $key = '$val' not found") if $count < 1;
-}
+Public path: /feature/view/name/<feature name>
+
+=cut
 
 sub view_name :Path('/feature/view/name') Args(1) {
     my ( $self, $c, $feature_name ) = @_;
@@ -70,33 +47,27 @@ sub view_name :Path('/feature/view/name') Args(1) {
     $self->_view_feature($c, 'name', $feature_name);
 }
 
-sub _validate_pair {
-    my ($self,$c,$key,$value) = @_;
-    $c->throw_client_error(
-        public_message  => "$value is not a valid value for $key",
-    )
-        if ($key =~ m/_id$/ and $value !~ m/\d+/);
-}
+=head2 view_id
 
-sub _view_feature {
-    my ($self, $c, $key, $value) = @_;
+View a feature by ID number.
 
-    $self->_validate_pair($c,$key,$value);
-    my $matching_features = $self->schema
-                                ->resultset('Sequence::Feature')
-                                ->search({ "me.$key" => $value },{
-                                    prefetch => [ 'type', 'featureloc_features' ],
-                                });
+Public path: /feature/view/id/<feature id number>
 
-    $self->validate($c, $matching_features, $key => $value);
-    $self->delegate_component($c, $matching_features);
-}
+=cut
 
 sub view_id :Path('/feature/view/id') Args(1) {
     my ( $self, $c, $feature_id ) = @_;
     $self->schema( $c->dbic_schema('Bio::Chado::Schema','sgn_chado') );
     $self->_view_feature($c, 'feature_id', $feature_id);
 }
+
+=head2 search
+
+Interactive search interface for features.
+
+Public path: /feature/search
+
+=cut
 
 sub search :Path('/feature/search') Args(0) {
     my ( $self, $c ) = @_;
@@ -120,6 +91,69 @@ sub search :Path('/feature/search') Args(0) {
             return uri( query => { %{$form->params}, page => shift } );
         },
     );
+}
+
+sub delegate_component
+{
+    my ($self, $c, $matching_features) = @_;
+    my $feature   = $matching_features->next;
+    my $type_name = lc $feature->type->name;
+    my $template  = "/feature/types/default.mas";
+
+    $c->stash->{feature}     = $feature;
+    $c->stash->{featurelocs} = $feature->featureloc_features;
+    $c->stash->{seq_download_url} = '/api/v1/sequence/download/single/'.$feature->feature_id;
+
+    # look up site xrefs for this feature
+    my @xrefs = map $c->feature_xrefs( $_, { exclude => 'featurepages' } ),
+                ( $feature->name, $feature->synonyms->get_column('name')->all );
+    unless( @xrefs ) {
+        @xrefs = map {
+            $c->feature_xrefs( $_->srcfeature->name.':'.($_->fmin+1).'..'.$_->fmax, { exclude => 'featurepages' } )
+        }
+        $c->stash->{featurelocs}->all
+    }
+    $c->stash->{xrefs} = \@xrefs;
+
+    if ($c->view('Mason')->component_exists("/feature/types/$type_name.mas")) {
+        $template         = "/feature/types/$type_name.mas";
+        $c->stash->{type} = $type_name;
+    }
+    $c->stash->{template} = $template;
+}
+
+sub validate
+{
+    my ($self, $c,$matching_features,$key, $val) = @_;
+    my $count = $matching_features->count;
+#   EVIL HACK: We need a disambiguation process
+#   $c->throw_client_error( public_message => "too many features where $key='$val'") if $count > 1;
+    $c->throw_client_error( public_message => "Feature not found") if $count < 1;
+}
+
+
+sub _validate_pair {
+    my ($self,$c,$key,$value) = @_;
+    $c->throw_client_error(
+        public_message  => "$value is not a valid value for $key",
+    )
+        if ($key =~ m/_id$/ and $value !~ m/\d+/);
+}
+
+sub _view_feature {
+    my ($self, $c, $key, $value) = @_;
+
+    $c->stash->{blast_url} = '/tools/blast/index.pl';
+
+    $self->_validate_pair($c,$key,$value);
+    my $matching_features = $self->schema
+                                ->resultset('Sequence::Feature')
+                                ->search({ "me.$key" => $value },{
+                                    prefetch => [ 'type', 'featureloc_features' ],
+                                });
+
+    $self->validate($c, $matching_features, $key => $value);
+    $self->delegate_component($c, $matching_features);
 }
 
 
@@ -226,5 +260,3 @@ sub _feature_types {
 }
 
 __PACKAGE__->meta->make_immutable;
-1;
-

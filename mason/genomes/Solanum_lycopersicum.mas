@@ -28,6 +28,7 @@ Lukas Mueller, based on SGN Perl code
 $dbh
 $basepath
 $cview_tempfiles_subdir
+$bac_by_bac_progress
 </%args>
 
 
@@ -49,13 +50,13 @@ note that all data is released under the data release agreement below.
 
   </p>
 
-  <img style="display: block" src="/documents/img/tomato_varieties.png" border="0" width="720" />
+  <img style="display: block" src="/documents/img/tomato_varieties_720x.jpg" border="0" width="720" />
 
 </div>
 
 % if ($dbh->isa('CXGN::DB::Connection')) { print STDERR "marker 2. yes.\n"; }
 
-<&| /page/info_section.mas, title => 'Data Access Agreement' &>
+<&| /page/info_section.mas, title => 'Data access agreement' &>
   <& /genomes/Solanum_lycopersicum/disclaimer.mas &>
 </&>
 
@@ -84,6 +85,7 @@ note that all data is released under the data release agreement below.
       dbh      => $dbh,
       basepath => $basepath,
       cview_tempfiles_subdir => $cview_tempfiles_subdir,
+      progress_data => $bac_by_bac_progress,
    &>
 </&>
 

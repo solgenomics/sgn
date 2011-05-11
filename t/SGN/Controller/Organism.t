@@ -5,12 +5,9 @@ use Data::Dumper;
 
 use lib 't/lib';
 
-use HTTP::Status ':constants';
+use SGN::Test::WWW::Mechanize;
 
-BEGIN {
-    use_ok 'SGN::Test::WWW::Mechanize';
-    use_ok 'SGN::Controller::Organism';
-}
+use_ok 'SGN::Controller::Organism';
 
 my $mech = SGN::Test::WWW::Mechanize->new;
 
@@ -84,12 +81,19 @@ $mech->with_test_level( process => sub {
     $mech->get_ok( '/organism/sol100/view' );
     unless( $mech->content =~ /temporarily unavailable/ ) {
         $mech->get_ok( '/organism/tree/sol100/image' );
-
- 	is( $mech->content_type, 'image/png', 'got a png image from the image URL' );
+        is( $mech->content_type, 'image/png', 'got a png image from the image URL' );
     }
     $mech->get_ok( '/organism/tree/sol100/flush' );
     is( $mech->content_type, 'application/json', 'got a JSON response from the flush action' );
+}
 
+
+{ # test organism detail
+    $mech->get_ok( '/organism/solanum_lycopersicum/view' );
+    $mech->content_contains($_) for 'Solanum lycopersicum', 'tomato';
+
+    $mech->get('/organism/nonexistent_organism/view');
+    is( $mech->status, 404, 'got a 404 for nonexistent organism' );
 }
 
 done_testing;

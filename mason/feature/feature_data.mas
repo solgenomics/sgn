@@ -1,10 +1,31 @@
 <%args>
     $feature
     $title   => 'Feature'
-    $species => undef
     $description_from => [ $feature ]
     $featurelocs
 </%args>
+
+
+<% info_table_html(
+    'Name'          => feature_link( $feature ),
+    ( $synonyms ? ( 'Synonyms / aliases' => $synonyms ) : () ),
+    'Type'          => cvterm_link( $feature->type, 'caps' ),
+    ( $length ? ( 'Length'        => $length ) : () ),
+    'Organism' => organism_link($feature->organism),
+     __border => 0,
+     __multicol => 4
+   )
+%>
+
+<% info_table_html(
+    ( $description ? ( 'Description'   => $description || '<span class="ghosted">none</span>' ) : () ),
+    ( $featurelocs->count ? ( 'Location(s)'   => join('', map "<div>$_</div>\n", location_list_html( $feature, $featurelocs )) ) : () ),
+    ( $cvterms_html =~ /\S/ ? ( 'Ontology term(s)' => $cvterms_html ) : () ),
+     __border => 0,
+)%>
+
+<& /feature/dbxref.mas, dbxref => $feature->dbxref &>
+
 <%once>
     use SGN::View::Feature qw/
         feature_link cvterm_link organism_link feature_length
@@ -12,31 +33,22 @@
         location_list_html
         /;
     use CXGN::Page::FormattingHelpers qw/info_table_html/;
+    use CXGN::Tools::Identifiers;
     use CXGN::Tools::Text qw/commify_number/;
 </%once>
 <%init>
+
     my $description  = join( '<hr />', grep $_, map get_description($_), @$description_from );
-    my ($length,$locations) = feature_length($feature);
-    my $feature_length      = commify_number($length) . " bases";
-    if ($locations) {
-        $feature_length .= " in $locations location" . ($locations > 1 ? 's' : '');
-    };
+
+    my $length = commify_number( feature_length( $feature, $feature->search_related('featureloc_features') ) );
+
+    my $cvterms_html = $m->scomp( '/feature/feature_cvterms.mas', feature => $feature );
+
+    my $synonyms =
+        join ', ',
+        map { s/(\S+)/my $id = $1; CXGN::Tools::Identifiers::link_identifier($id) || $id/ge; $_ }
+        map $_->synonym_sgml,
+        grep $_->name ne $feature->name,
+        $feature->synonyms;
+
 </%init>
-
-<% info_table_html(
-    'Name'          => feature_link( $feature ),
-    'Type'          => cvterm_link($feature,'caps'),
-    'Location(s)'   => location_list_html( $feature, $featurelocs ),
-    'Length'        => $feature_length,
-
-    'Organism' => organism_link($feature->organism),
-     __border => 0,
-     __multicol => 4
-)%>
-
-<% info_table_html(
-     'Description'   => $description || '<span class="ghosted">none</span>',
-     __border => 0,
-)%>
-
-<& /feature/dbxref.mas, dbxref => $feature->dbxref &>

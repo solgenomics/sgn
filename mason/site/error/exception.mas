@@ -15,7 +15,7 @@
 <div style="margin: auto; width: 60%">
     <p>
 % if( $e->public_message ) {
-    <% $e->public_message %>
+    <% $e->public_message . ( $e->public_message =~ /\.\s*$/ ? '' : '.' ) %>
 % } else {
     Our apologies, there was an error processing your request.  
 % }

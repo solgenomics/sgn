@@ -69,18 +69,18 @@ foreach my $k (keys %$marker_details) {
 
 my $genetic_link = genetic_map();
 my $cmv_link     = marker_positions();
-my $gbrowse_link = genome_positions();
+my $markers      = markers();
 my $legend       = legend();
 my $comment      = comment();
 my $download_qtl = download_qtl_region();
-
+$ci_table        = order_by_position();
 
 $c->forward_to_mason_view( '/qtl/qtl.mas',
                            qtl_image    => $qtl_image,
                            pop_name     => $pop_name,
                            trait_name   => $trait_name,
                            cmv_link     => $cmv_link,
-                           gbrowse_link => $gbrowse_link,
+                           markers      => $markers,
                            marker_link  => $ci_table,
                            genetic_map  => $genetic_link,
                            legend       => $legend,
@@ -116,12 +116,11 @@ sub marker_positions
     return $fl_markers;
 }
 
-=head2 genome_positions
+=head2 markers
 
- Usage: $genome_position = genome_positions();
- Desc:  generates links to the respective genome 
-        positions of the flanking and peak markers
- Ret:  hyperlinked markers
+ Usage: $markers = markers();
+ Desc: creates  marker objects
+ Ret:  array ref of marker objects
  Args: None
  Side Effects:
  Example:
@@ -129,19 +128,18 @@ sub marker_positions
 =cut
 
 
-sub genome_positions
+sub markers
 {
-    my ($l_m, $p_m, $r_m) = uniq ($l_m, $p_m, $r_m);
-    my $genome_pos
-        = qq |<a href="/gbrowse/bin/gbrowse/ITAG1_genomic/?name=$l_m">$l_m</a>|;
-    $genome_pos
-        .= qq |<br/><a href="/gbrowse/bin/gbrowse/ITAG1_genomic/?name=$p_m">$p_m</a>|;
-    if ($r_m)
+    my @mrs = uniq ($l_m, $p_m, $r_m);
+
+    my @markers;
+    foreach my $mr (@mrs) 
     {
-        $genome_pos
-            .= qq |<br/><a href="/gbrowse/bin/gbrowse/ITAG1_genomic/?name=$r_m">$r_m</a>|;
+        push @markers, CXGN::Marker->new_with_name($dbh, $mr);
     }
-    return $genome_pos;
+
+    return \@markers;
+       
 }
 
 =head2 genetic_map
@@ -197,8 +195,7 @@ sub confidence_interval
    
     my (@marker_lods,  @all_lods, @all_positions, @marker_html);
     my %marker_details_of = ();
-
-    
+      
     my @rows =  grep { /\t$lg\t/ } read_file( $ci_lod_file );
    
     my $rnd  = Number::Format->new();
@@ -237,17 +234,13 @@ sub confidence_interval
 		
 	    $marker_details_of{$m}{name}          = $m;
 	    $marker_details_of{$m}{linkage_group} = $m_chr;
-	    $marker_details_of{$m}{position}      = $m_pos;
-	
-	    if (!$m_pos) 
-	    {
-		$marker_details_of{$m}{position}  = '0.0'; 
-	    } else 
-	    { 
-		$marker_details_of{$m}{position}  = $m_pos;
-	    }
+	   
+            $marker_details_of{$m}{position}  = !$m_pos && $m_pos ne '' ? '0.0' 
+                                              : $m_pos eq '' ? 'NA' 
+                                              : $m_pos
+                                              ; 	
 
-	    $marker_details_of{$m}{lod_score}     = $m_lod;
+	    $marker_details_of{$m}{lod_score} = $m_lod;
 	    	
 	    if ($m eq $p_m) { $marker_details_of{$m}{orientation} = 'peak'; }
 	    if ($m_pos == $right_position) { $marker_details_of{$m}{orientation} = 'right'; }
@@ -266,10 +259,10 @@ sub confidence_interval
 		 $remark1 . $remark2,
 	     )
 	    ];
-	}
-
+	} 
     }
      
+
     return \@marker_html, \%marker_details_of;
 
 }
@@ -456,3 +449,9 @@ sub comment
 
 }
 
+
+sub order_by_position {
+    my ($marker_html, $markers_details) = confidence_interval();
+    my @marker_html = sort { $a->[1] <=> $b->[1] }  @$marker_html;
+    return \@marker_html;
+}

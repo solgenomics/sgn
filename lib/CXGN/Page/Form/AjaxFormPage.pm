@@ -74,28 +74,33 @@ use base qw /CXGN::Debug/ ;
  Desc:         This class needs to be subclassed and certain functions 
                overridden (the functions are listed above). The constructor
                should not be overridden or called from the overridden 
-               constructor. 
- Ret:
+               constructor.
+ Ret:          $self
  Args:
- Side Effects:
+ Side Effects: sets the following:
+    ajax_page = CXGN::Scrap::AjaxPage->new
+    {is_owner} = 0
+    login = CXGN::Login->new
+    args (all encoded agruments)
+    if action = new, sets object_id and primary key to 0
+    sets jason_hash (here can have only an 'error' key if 'action' is not a valid one.
  Example:
 
 =cut
 
-sub new { 
+sub new {
     my $class = shift;
     my $self = bless {}, $class;
-    
     my $primary_key = shift;
-    
+
     __PACKAGE__->SUPER::new();
-    
+
     my $dbh = CXGN::DB::Connection->new();
     $self->set_ajax_page(CXGN::Scrap::AjaxPage->new() );
-   
+
     $self->{is_owner} = 0;
     $self->set_dbh($dbh);
-    
+
     $self->set_login(CXGN::Login->new($self->get_dbh()));
     my %args = $self->get_ajax_page()->get_all_encoded_arguments(); ##
     my %json_hash=();
@@ -134,7 +139,7 @@ sub new {
  	$self->edit();
     }
     elsif ($self->get_action() eq "new") { 
-	$self->set_object_id(0);	
+	$self->set_object_id(0);
 	my %args = $self->get_args();
 	$args{$self->get_primary_key()}=0;
 	$self->set_args(%args);
@@ -147,10 +152,10 @@ sub new {
 	$self->delete();
     }
     ##action delete is being handled by the JSFormPage javascript object
-    
+
     $self->set_json_hash(%json_hash);
     $self->get_ajax_page()->send_http_header();
-    
+
     return $self;
 }
 
@@ -164,10 +169,14 @@ sub new {
                logged-in owners can do everything
                logged-in users can only view
                non-logged-in users can only view
-               
- Ret:          true if the user has sufficient privileges for the action.
+
+ Ret:          0 if user is a curator
  Args:
- Side Effects:
+ Side Effects: sets json_hash with the folowing keys:
+    {login} = 1 if user is not logged in
+    {error} if logged in user is not submitter|sequencer|curator
+           or if logged-in user tries to modify an object, while not being an owner or a curator
+    %json_hash is  evaluated by the javascript code which prints the form (JSFormPage.js)
  Example:
 
 =cut
@@ -176,9 +185,10 @@ sub check_modify_privileges {
     my $self = shift;
     my %json_hash= $self->get_json_hash();
     # implement quite strict access controls by default
-    # 
+    #
     my ($person_id, $user_type)=$self->get_login()->has_session();
-    
+    $user_type ||= '';
+
     if ($user_type eq 'curator') {
 	return 0;
     }
@@ -190,35 +200,40 @@ sub check_modify_privileges {
 	return 0;
     }
     my @owners = $self->get_owners();
-    
+
     if ((@owners) && (!(grep { $_ =~ /^$person_id$/ } @owners) )) {
 	# check the owner only if the action is not new
 	#
 	$json_hash{error} = "You do not have rights to modify this database entry because you do not own it. [$person_id, @owners]";
-	
+
     } else {  $self->set_is_owner(1); }
-    
+
     # override to check privileges for edit, store, delete.
     # return 0 for allow, 1 for not allow.
     $self->set_json_hash(%json_hash);
-    #return 0;
 }
 
 =head2 define_object
 
- Usage:        
+ Usage:
  Desc:         define the object that this simple form page operates on.
                The object needs to implement L<CXGN::DB::ModifiableI>
- Ret:
+                Need to set in the subclass:
+    set_object (e.g. CXGN::Chado::Stock)
+    set_object_id (e.g. 1)
+    set_object_name (e.g. 'stock')
+    set_primary_key (e.g. 'stock_id')
+    set_owners  (e.g. list of sp_person_ids)
+ Ret: nothing
  Args:
- Side Effects:
+ Side Effects: sets json_hash{error} if the objecy is obsolete
  Example:
 
 =cut
 
 sub define_object { 
     my $self = shift;
-    
+
     my %json_hash= $self->get_json_hash();
     # in the subclass, instantiate your object here and  call
     $self->set_object();
@@ -226,7 +241,7 @@ sub define_object {
     $self->set_object_name();
     $self->set_primary_key();
     $self->set_owners();
-    
+
     if ( $self->get_object()->get_obsolete() eq 't' ) { 
 	$json_hash{error} = "Object is obsolete!";
 	$self->set_json_hash(%json_hash);
@@ -238,7 +253,7 @@ sub define_object {
 # edit is an internally used function to show the editable form.
 #
 
-sub edit { 
+sub edit {
     my $self = shift;
     $self->check_modify_privileges();
     $self->generate_form();
@@ -248,7 +263,7 @@ sub edit {
 # add is an internally used function to generate an 'emtpy' form.
 #
 
-sub add { 
+sub add {
     my $self = shift;
     $self->check_modify_privileges();
     $self->generate_form();
@@ -293,21 +308,20 @@ sub store {
     # validate the form
     my %errors = $self->get_form()->validate($self->get_args());
     if (!%errors) {
-	
+
 	#give the user the opportunity to modify, add or remove form parameters before committing them
 	#(this needs to be done after validate() because that assumes it'll have the parameters given on the form as displayed)
 	$self->validate_parameters_before_store();
-	
+
 	# the form validated. Now let's check if it passes the uniqueness
 	# constraints.
- 	
+
 	$self->d("**** about to call the get_form->store() ****");
 	$self->get_form()->store($self->get_args());
-	
+
 	#give the user the opportunity to do anything related to the form after storing
 	$self->process_parameters_after_store();
-	
-	
+
         # was it an insert? get the insert id
 	#
 	if (!$self->get_object_id()) { 
@@ -315,7 +329,7 @@ sub store {
 	    $self->set_object_id($id);
 	}
     }
-    else { 
+    else {
 	# if there was an error, re-display the same forms.
 	# the errors will be displayed on the page for each
 	# field that did not validate.
@@ -323,7 +337,7 @@ sub store {
 	$json_hash{validate} = 1;
 	$json_hash{html} = $self->get_form()->as_table_string();
 	$self->set_json_hash(%json_hash);
-	$self->print_json();
+	#$self->print_json(); #json is printed from the sub-class regardless of the content
     }
 }
 
@@ -336,11 +350,11 @@ sub store {
 
 sub view { 
     my $self = shift;
-    
+
     # make sure we get a static form.
     #
     $self->set_action("view");
-    
+
     $self->generate_form();
     $self->display_form();
 }
@@ -435,16 +449,15 @@ sub display_form {
     my %json_hash= $self->get_json_hash();
     # edit links are printed from the javascript object! See JSFormPage.js
     #print $self->get_edit_links();
-     
-    if (!($json_hash{html}) ) { $json_hash{html} = $self->get_form()->as_table_string() ; }		
+
+    if (!($json_hash{html}) ) { $json_hash{html} = $self->get_form()->as_table_string() ; }
     $self->check_modify_privileges();
-    
+
     $json_hash{"user_type"} = $self->get_user()->get_user_type();
     $json_hash{"is_owner"} = $self->get_is_owner();
-    
+
     $json_hash{"editable_form_id"} = $self->get_form()->get_form_id();
-   
-    
+
     $self->set_json_hash(%json_hash);
     $self->print_json();
 }

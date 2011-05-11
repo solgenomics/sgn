@@ -81,6 +81,18 @@ $right_map_version_id=>undef
 $color_model=>undef
 </%args>
 
+<& /page/page_title.mas, title => 'Compare Entire Maps' &>
+
+<div style="text-align: center">
+   <div style="width: 40em; margin: 0 auto">
+      <&| /page/explanation.mas &>
+
+      Select maps to compare using the control below, then
+      press the 'set' button to update the display.
+
+      </&>
+  </div>
+
 <%perl>
 
 use strict;
@@ -139,7 +151,7 @@ $vm -> generate_image();
 #my $width = int($self->{map_width}/3);
 my $select = $vm->get_select_toolbar();
     
-print "$select";
+print qq|<div style="width: 60%; margin: 0 auto">$select</div>|;
 
 if (!$vm->get_maps()) { 
   print "<br /><br /><center>Note: No maps are selected. Please select maps from the pull down menus above.</center>\n";
@@ -151,5 +163,5 @@ print $vm->get_cache()->get_image_html();
 $vm -> clean_up();
 
 </%perl>
-
+</div>
 

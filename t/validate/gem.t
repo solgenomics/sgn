@@ -24,16 +24,10 @@ $mech->with_test_level( local => sub {
 
     my @schema_list = ('gem', 'biosource', 'metadata', 'public');
     my $schema_list = join(',', @schema_list);
-    my $set_path = "SET search_path TO $schema_list";
 
     my $dbh = $mech->context()->dbc()->dbh();
-    
-    my $schema = CXGN::GEM::Schema->connect( sub { $dbh }, 
-					     {on_connect_do => $set_path} );
 
-
-
-
+    my $schema = $mech->context->dbic_schema('CXGN::GEM::Schema');
 
     ## WWW. GEM SEARCH TEST ###
 

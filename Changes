@@ -1,14 +1,101 @@
+Release date: NEXT
+Release tag: NEXT
+
+Changes:
+
+ - put changes here
+
+---
+Release date: Mon May 2 11:35:00 2011 -0800
+Release tag: sgn-96.0
+
+Changes:
+
+ - Fix marker detail page crashing bug (mueller).
+ - Integrated SecreTary results to secretion prediction search (tomfy).
+ - Updated SignalP results at http://solgenomics.net/secretom/detail/prediction for TAIR10 and ITAG2 releases of arabidopsis and tomato, respectively (tomfy).
+
 ---
 
-Release date: NEXT
+Release date: Mon Apr 25 17:14:00 2011 -0800
+Release tag: sgn-95.0
+
+Changes:
+
+ - Major improvements to SecreTary calculation code (tomfy).
+ - ITAG2.3 tomato genome browser released (rob).
+ - Improvements to cross-linking between loci, gene models, and the quick search (rob).
+ - Improved quick search, now includes results from the genome browser and the feature detail pages (rob).
+ - Add BLAST buttons to many displayed sequences on feature pages and in the BLAST highlighted-sequence viewer, which allow users to BLAST these sequences with one click (rob).
+
+---
+
+Release date: Wed Apr 13 10:12:00 2011 -0800
+Release tag: sgn-93.0
+
+Changes:
+
+ - New QTL effects section on population details pages (isaak).
+ - Bug fixes to Ontology tree AJAX browser on ontology term detail pages (naama).
+ - 'Polishing and bug fixes to feature detail pages: calculate the concept of "length" differently for some features. (rbuels)'
+ - Fixed bug in adding images on Stock detail pages (naama).
+ - Improved detail pages for polypeptide and mRNA features (rob).
+ - Layout improvements to "compare entire maps" tool (rob).
+ - TODO naama please add a note about 41178691fb9092daaf715f864b5f2cf053fa2b8e
+ - Improvements to BLAST report linking dialog box, better layout, now has a link to see the hit region in the genome browser if possible (rob).
+ - Performance improvements in BLAST highlighted-sequence viewer tool.
+
+---
+
+Release date: Mon Mar 28 11:52:00 2011 -0800
+Release tag: sgn-92.0
+
+Changes:
+
+ - improved integration of solQTL with phenotypes and traits
+ - Behind-the-scenes cleanups to map viewer code.
+ - New search functions for tracking stock lines.
+ - Fix bug with ITAG2 annotation download registration, required 8 characters for Name field, and some people actually have first and last names that are shorter than this.  Now requires 5.
+ - New stock page for accessions, individuals, and populations. Using Chado stock and NaturalDiversity modules for representing accession data and its phenotypes and genotypes.
+
+---
+
+Release date: Mon Feb 7 11:30:00 2011 -0800
+Release tag: sgn-88.0
+
+Changes:
+
+ - Editorial improvements to solQTL pages, added link to solQTL publication.
+ - Many code cleanups behind the scenes.
+
+---
+
+Release date: Fri Jan 14 13:43:21 2011 -0800
+Release tag: sgn-87.0
+
+Changes:
+
+ - 'Improvements to Genomic details (i.e. feature) pages: add "Ontology terms" section, plus more.'
+ - Redesigned 'Contact Us' page.
+ - Simplified interstitial 'job running' page.
+ - International Tomato Annotation Group (ITAG) annotation bulk files now available for download, with newly rewritten download routines to record user information for each downloaded file.
+ - Fixed performance problems of International Tomato Sequencing project page.
+
+---
+
+Release date: Thu Dec 09 12:58:00 2010 -0800
+Release tag: sgn-84.1
 
 Changes:
 
  - New easy-to-use trait search, linked from the breeders' toolbox.
+ - New features for tracking organism stocks using the Chado natural diversity module.
+ - "Fixed bug with BLAST tool: simple BLASTs were not filtering low-complexity sequence by default."
 
 ---
 
 Release date: Tue Nov 30 00:15:14 2010 -0800
+Release tag: sgn-83.0
 
 Changes:
 

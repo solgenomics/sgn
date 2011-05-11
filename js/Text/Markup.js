@@ -18,7 +18,7 @@ Text.Markup.prototype.inflate_regions = function( regions ) {
   return jQuery.map( regions, function(a,i) {
     var style = mu.markup_styles[a[0]];
     ordering++;
-      
+
     if(! style ) {
       console.error('markup style "' + a + '" not defined');
       return;

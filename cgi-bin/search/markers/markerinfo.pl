@@ -1,13 +1,11 @@
-use CatalystX::GlobalContext qw( $c );
-
 use strict;
+use CGI ();
 
-use CXGN::Page;
-use CXGN::DB::Connection;
+my $q = CGI->new;
+my $marker_id = $q->param('marker_id');
+$marker_id =~ s/\D//g;
 
-my $page = CXGN::Page->new();
-my $dbh = CXGN::DB::Connection->new();
-
-my $marker_id = $page->get_arguments("marker_id");
-
-$c->forward_to_mason_view('/markers/index.mas', marker_id=>$marker_id, dbh=>$dbh);
+print $q->redirect(
+    -status => 301,
+    -uri => "/marker/SGN-M$marker_id/details",
+);

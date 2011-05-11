@@ -72,6 +72,21 @@ to the given URL as `seq`
 
 <%args>
   $seq
+</%args>
+
+% if( $seq->length > 50_000 ) {
+    <span class="sequence">
+      ><% $seq->id %> <% $seq->desc %>
+      <br /><span class="warning">Sequence too large to display.</span>
+    </span>
+% } else {
+    <& .really_display, %ARGS &>
+% }
+
+<%def .really_display>
+
+<%args>
+  $seq
   $styles    => undef
   $regions   => undef
   $width     => 80
@@ -80,26 +95,39 @@ to the given URL as `seq`
 </%args>
 
 <%perl>
-  use POSIX;
+    use POSIX;
 
-  #insert default space and break styles
-  $styles ||= {};
-  $styles->{space} ||= ' ';
-  $styles->{break} ||= '<br />';
+    #insert default space and break styles
+    $styles ||= {};
+    $styles->{space} ||= '<span style="margin: 0 0.5em"></span>';
+    $styles->{break} ||= '<br />';
 
-  #insert space and break regions
-  $regions ||= [];
-  push @$regions, (
-      $subdiv ? ( map ['space',$_*$subdiv], 1..POSIX::floor($seq->length/$subdiv)  ) : (), #< spaces every $subdiv bases
-      $width  ? ( map ['break',$_*$width], 1..POSIX::floor($seq->length/$width)    ) : (), #< break every $width bases
-     );
+    #insert space and break regions
+    $regions ||= [];
+    if( $subdiv || $width ) {
+        # break every $width bases, and also hash them to use for filtering the spaces
+        my %breaks =
+            !$width ? ()
+                    : map { $_ *= $width; $_ => ['break',$_] }
+                      1..POSIX::floor($seq->length/$width);
+        push @$regions, values %breaks;
 
+        # spaces every $subdiv bases, except where there is a break already
+        push @$regions,
+             !$subdiv ? ()
+                      : map { $_ *= $subdiv; $breaks{$_} ? () : ['space',$_] }
+                        1..POSIX::floor($seq->length/$subdiv);
+
+    }
 </%perl>
 
 <span class="sequence">
   ><% $seq->id %> <% $seq->desc %>
 % if( $blast_url ) {
-    <form style="display: inline" method="POST" action="<% $blast_url %>"><input type="hidden" name="seq" value="<% '>'.$seq->id."\n".$seq->seq | h %>" /><input style="padding: 0; line-height: 0.8" type="submit" value="BLAST" /></form>
+    <form style="display: inline" method="post" action="<% $blast_url %>">
+        <input type="hidden" name="seq" value="<% '>'.$seq->id.( $seq->desc ? ' '.$seq->desc : '' )."\n".$seq->seq | h %>" />
+        <input style="padding: 1px; line-height: 0.8" type="submit" value="BLAST" />
+    </form>
 % }
 
   <br />
@@ -110,3 +138,4 @@ to the given URL as `seq`
   &>
 </span>
 
+</%def>

@@ -102,7 +102,13 @@ if (defined $template->get_template_id() ) {
 
 	## To create the tags it is better to use % of sd instead a fixed number
 
-	my $sd_perc = 100 * $sd / $mean;
+	my $sd_perc = '';
+	if ($mean != 0) {
+	    $sd_perc = 100 * $sd / $mean;
+	}
+	else {
+	    $rep_used = 'none';
+	}
 
 	if ($rep_used eq 'none') {
 	    my $def1 = '<font color=gray>NA</font>';

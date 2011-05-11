@@ -1,0 +1,62 @@
+<%args>
+  $opts                       => undef
+  $form
+  $request                    => undef
+  $sp_person_autocomplete_uri
+  $trait_autocomplete_uri
+</%args>
+
+<& /util/import_javascript.mas,
+ classes=>[qw[CXGN.Effects jquery jqueryui popup] ]
+&>
+<style>
+
+div[class*="advanced"] {
+    display: none;
+}
+
+#stock_search_form .select span span {
+  white-space: nowrap;
+  float: left;
+  width: 10em;
+}
+#stock_search_form div label, #stock_search_form legend {
+  font-weight: bold;
+}
+#stock_search_form label {
+  float: left;
+  width: 8em;
+}
+
+div.paginate_nav {
+  margin: 0 auto;
+  width: 80%;
+  white-space: nowrap;
+  text-align: center;
+}
+</style>
+
+
+<script language="javascript">
+  jQuery(function() {
+     jQuery("#person").autocomplete({
+        source: '<% $sp_person_autocomplete_uri %>'
+     });
+     jQuery("#trait").autocomplete({
+        source: '<% $trait_autocomplete_uri %>'
+     });
+  });
+</script>
+
+<%perl>
+
+
+    # set the stock type multi-select choices from the db
+    $form->get_element({ name => 'stock_type'})->options( $opts->{stock_types} );
+    $form->get_element({ name => 'organism'})->options( $opts->{organisms} );
+
+$form->process( $request );
+
+</%perl>
+
+<% $form->render %>

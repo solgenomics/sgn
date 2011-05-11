@@ -1,15 +1,13 @@
 package SGN::View::BareMason;
 use Moose;
-extends 'Catalyst::View::HTML::Mason';
+extends 'SGN::View::Mason';
 
-__PACKAGE__->config(
-    interp_args => {
-        comp_root =>  SGN->path_to('mason'),
-        autohandler_name => '',
-    },
-    globals => ['$c'],
-    template_extension => '.mas',
-);
+around 'interp_args' => sub {
+    my $orig = shift;
+    my $args = shift->$orig( @_ );
+    $args->{autohandler_name} = '';
+    return $args;
+};
 
 =head1 NAME
 
