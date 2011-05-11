@@ -11,7 +11,10 @@ my $mech = SGN::Test::WWW::Mechanize->new();
 
 $mech->with_test_level( local => sub {
 
-    my $organism = create_test('Organism::Organism', { });
+    my $organism = create_test('Organism::Organism', {
+        genus   => 'test',
+        species => 'test',
+        });
     my $o_id = $organism->organism_id;
 
     # diag("created temp organism $o_id");
