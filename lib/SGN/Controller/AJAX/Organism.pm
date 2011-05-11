@@ -87,18 +87,15 @@ sub project_metadata :Chained('/organism/find_organism') :PathPart('metadata') :
 
     my $form;
     my $html = "";
-    my $error;
 
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     if (!$action) { $action = 'view'; }
     if ($login_user_can_modify && ($action ne 'view')) {
         if (!$login_user_id) {
-            $c->stash->{rest}->{error} .= 'Must be logged in to edit\n';
+            $self->status_bad_request( $c, message => 'Must be logged in to edit' );
             return;
         }
         if ($action eq 'confirm_delete') {
-            my $delete_rs = $schema->resultset('Organism::Organismprop')->search({ organismprop_id=>$prop_id });
-            $delete_rs->delete();
+            $organism->search_related('organismprops',{ organismprop_id=>$prop_id })->delete;
         }
 
         if ($action eq 'store') {
@@ -137,10 +134,10 @@ sub project_metadata :Chained('/organism/find_organism') :PathPart('metadata') :
                         },
                      );
                 }
-
             }
             else {
-                $c->stash->{rest}->{error} .= 'Form is not valid\n';
+                $self->status_bad_request( $c, message => 'Form is not valid' );
+                return;
             }
         }
     }
@@ -178,30 +175,29 @@ sub project_metadata :Chained('/organism/find_organism') :PathPart('metadata') :
     }
 
     if ( $action eq 'new' || $action eq 'view' || !$action || !$login_user_can_modify) {
-        $c->stash->{rest} = { login_user_id => $login_user_id,
-                              editable_form_id => 'organism_project_metadata_form',
-                              is_owner => $login_user_can_modify,
-                              html => $html,
-        };
+        $self->status_ok(
+            $c,
+            entity => { login_user_id => $login_user_id,
+                        editable_form_id => 'organism_project_metadata_form',
+                        is_owner => $login_user_can_modify,
+                        html => $html,
+                      }
+            );
     }
     elsif ($action eq 'store')  {
-        $c->stash->{rest} = [ 'success' ];
-
+        $self->status_ok( $c, entity => [ 'success' ] );
     }
     else {
 
-    ### get project metadata information for that organism
-
-        $c->stash->{rest} = { login_user_id => $login_user_id,
-                              editable_form_id => 'organism_project_metadata_form',
-                              is_owner => $login_user_can_modify,
-                              html => $html,
-
-
-        };
+        ### get project metadata information for that organism
+        $self->status_ok( $c, entity => {
+            login_user_id => $login_user_id,
+            editable_form_id => 'organism_project_metadata_form',
+            is_owner => $login_user_can_modify,
+            html => $html,
+        });
     }
 }
-
 
 sub metadata_form {
     my ($self, $c, $json, $prop_id, $organism_id) = @_;
@@ -293,3 +289,6 @@ sub get_organism_metadata_props {
 
     return @proplist;
 }
+
+
+1;
