@@ -213,31 +213,31 @@ if($test) { # helix found
       my $ct_position = max_index_in_range( $c, $i + $min_halfw, $end );
       my $ct_score = $c->[$ct_position];
 
-      my $j = $i - $min_halfw;	# determine nearest N-terminus
+      my $j_n = $i - $min_halfw;	# determine nearest N-terminus
       while (
-	     $j - 1 >= 0	#  0 not 1 because 0-based
-	     and $j - 1 >= $i - $max_halfw 
+	     $j_n - 1 >= 0	#  0 not 1 because 0-based
+	     and $j_n - 1 >= $i - $max_halfw 
 	    ) {
-	if ( $n->[ $j - 1 ] > $n->[$j] ) {
-	  $j--;
-	} else { 
+	if ( $n->[ $j_n - 1 ] > $n->[$j_n] ) {
+	  $j_n--;
+	} else {
 	  last;
 	}
       }
 
-      $j    = $i + $min_halfw;
-      while ( $j + 1 < $length
-	      and $j + 1 <= $i + $max_halfw
+      my $j_c    = $i + $min_halfw;
+      while ( $j_c + 1 < $length
+	      and $j_c + 1 <= $i + $max_halfw
 ) {
-	if ( defined $c->[ $j + 1 ] and defined $c->[$j] ) {
-	  if ( $c->[ $j + 1 ] > $c->[$j] ) {
-	    $j++;
+	if ( defined $c->[ $j_c + 1 ] and defined $c->[$j_c] ) {
+	  if ( $c->[ $j_c + 1 ] > $c->[$j_c] ) {
+	    $j_c++;
 	  } else {
 	    last;
 	  }
 	} else {
-	  print "j, c[j], c[j+1]: ", $j, " ", $c->[$j], " ",
-	    $c->[ $j + 1 ], " ", $length, "\n";
+	  print "j, c[j_c], c[j_c+1]: ", $j_c, " ", $c->[$j_c], " ",
+	    $c->[ $j_c + 1 ], " ", $length, "\n";
 	  exit;
 	}
       }
@@ -245,8 +245,8 @@ if($test) { # helix found
       my $helix = Bio::SecreTary::Helix->new(center => [ $i, $m->[$i] ],
 					   nterm => [ $nt_position, $nt_score ],
 					   cterm => [ $ct_position, $ct_score ],
-					   sh_nterm => [ $j, $n->[$j] ],
-					   sh_cterm => [ $j, $c->[$j] ]
+					   sh_nterm => [ $j_n, $n->[$j_n] ],
+					   sh_cterm => [ $j_c, $c->[$j_c] ]
 					  );
       $helix->score(
 		    $helix->center()->[1]
