@@ -1,8 +1,4 @@
-
-use strict;
-
 package SGN::Controller::AJAX::Organism;
-
 use Moose;
 use List::MoreUtils qw | any |;
 use YAML::Any;
@@ -55,9 +51,9 @@ sub autocomplete_GET :Args(0) {
 
 =head2 project_metadata
 
- Usage:        Action to update metadata information about sequencing 
+ Usage:        Action to update metadata information about sequencing
                projects
- Desc:         Stores the sequencing metadata for each accession in an 
+ Desc:         Stores the sequencing metadata for each accession in an
                organismprop, using a JSON data structure for storing the
                different fields.
  Side Effects: stores/updates/deletes metadata information
@@ -77,9 +73,9 @@ sub project_metadata :Chained('/organism/find_organism') :PathPart('metadata') :
 
     $c->stash->{json} = JSON::Any->new();
 
-    if($c->user()) { 
-	$login_user_id = $c->user()->get_object()->get_sp_person_id();
-	$login_user_can_modify = any { $_ =~ /curator|sequencer|submitter/i } ($c->user()->roles());
+    if($c->user()) {
+        $login_user_id = $c->user()->get_object()->get_sp_person_id();
+        $login_user_can_modify = any { $_ =~ /curator|sequencer|submitter/i } ($c->user()->roles());
     }
 
     # 1. get all the props associated with the organism
@@ -87,7 +83,7 @@ sub project_metadata :Chained('/organism/find_organism') :PathPart('metadata') :
     # 3. if it is an edit, render them, but render the selected prop_id as an editable
     # 4. if it is a store, store the selected prop_id, display everything as static
     # 5. if it is a delete, delete the selected prop_id, display everthing as static
-    
+
     my $form;
     my $html = "";
     my $error;
@@ -97,94 +93,94 @@ sub project_metadata :Chained('/organism/find_organism') :PathPart('metadata') :
     if ($login_user_can_modify && ($action ne 'view')) {
         if (!$login_user_id) {
             $c->stash->{rest}->{error} .= 'Must be logged in to edit\n';
-	    return;
+            return;
         }
-	if ($action eq 'confirm_delete') {
-	    my $delete_rs = $schema->resultset('Organism::Organismprop')->search({ organismprop_id=>$prop_id });
-	    $delete_rs->delete();
-	}
-     
-        if ($action eq 'store') {
-	    my $props = $c->req->parameters();
-	    my %props = $self->project_metadata_prop_list();
-	    my $store_props = {};
-	    foreach my $p (keys(%props )) { 
-		$store_props->{$p}=$props->{$p};
-	    }	    
-	    my $json = $c->stash->{json}->objToJson($store_props);
+        if ($action eq 'confirm_delete') {
+            my $delete_rs = $schema->resultset('Organism::Organismprop')->search({ organismprop_id=>$prop_id });
+            $delete_rs->delete();
+        }
 
-	    $form = $self->metadata_form($c, $json, $prop_id, $organism_id);
+        if ($action eq 'store') {
+            my $props = $c->req->parameters();
+            my %props = $self->project_metadata_prop_list();
+            my $store_props = {};
+            foreach my $p (keys(%props )) {
+                $store_props->{$p}=$props->{$p};
+            }
+            my $json = $c->stash->{json}->objToJson($store_props);
+
+            $form = $self->metadata_form($c, $json, $prop_id, $organism_id);
 
             $form->process($c->req());
 
             if ($form->submitted_and_valid()) {
-		my $cv = $schema->resultset('Cv::Cv') ->find( { name=> 'local' } );
-		my $cv_id = $cv->cv_id();
-		
-		my $cvterm = $schema->resultset('Cv::Cvterm')->find( { name => 'organism_sequencing_metadata' } );
+                my $cv = $schema->resultset('Cv::Cv') ->find( { name=> 'local' } );
+                my $cv_id = $cv->cv_id();
 
-		my $type_id = $cvterm->cvterm_id();
+                my $cvterm = $schema->resultset('Cv::Cvterm')->find( { name => 'organism_sequencing_metadata' } );
 
-		if (!$type_id) { 
-		    my $cvterm_rs = $schema->('Cv::Cvterm')->new({ name=> 'organism_sequencing_metadata', cv_id=>$cv_id });
-		    $type_id = $cvterm_rs->insert();
-		    
-		}		
-		
-		if ($prop_id) { 
-		    my $prop_row = $schema->resultset('Organism::Organismprop')
-			->find({ organismprop_id => $prop_id });
-		
-		    
-		    $prop_row->value($json);
-		    $prop_row->update();
-		}
-		else { 
-		    
-		    my $max_rank_prop_rs = $schema->resultset('Organism::Organismprop')->search( { organism_id=>$organism_id, type_id=>$type_id } );
-		    my $max_rank_prop_col = $max_rank_prop_rs->get_column('rank');
-		    my $max_rank = $max_rank_prop_col->max();
-		    my $prop_row = $schema->resultset('Organism::Organismprop')->new( { value=>$json, organism_id=>$organism_id, type_id=>$type_id, rank => $max_rank +1 } );
-		    $prop_row->insert();
-		}
-		
-	    }
-	    else { 
-		$c->stash->{rest}->{error} .= 'Form is not valid\n';
-	    }
-	}
+                my $type_id = $cvterm->cvterm_id();
+
+                if (!$type_id) {
+                    my $cvterm_rs = $schema->('Cv::Cvterm')->new({ name=> 'organism_sequencing_metadata', cv_id=>$cv_id });
+                    $type_id = $cvterm_rs->insert();
+
+                }
+
+                if ($prop_id) {
+                    my $prop_row = $schema->resultset('Organism::Organismprop')
+                        ->find({ organismprop_id => $prop_id });
+
+
+                    $prop_row->value($json);
+                    $prop_row->update();
+                }
+                else {
+
+                    my $max_rank_prop_rs = $schema->resultset('Organism::Organismprop')->search( { organism_id=>$organism_id, type_id=>$type_id } );
+                    my $max_rank_prop_col = $max_rank_prop_rs->get_column('rank');
+                    my $max_rank = $max_rank_prop_col->max();
+                    my $prop_row = $schema->resultset('Organism::Organismprop')->new( { value=>$json, organism_id=>$organism_id, type_id=>$type_id, rank => $max_rank +1 } );
+                    $prop_row->insert();
+                }
+
+            }
+            else {
+                $c->stash->{rest}->{error} .= 'Form is not valid\n';
+            }
+        }
     }
     my @proplist = $self->get_organism_metadata_props($c); # contains JSON strings
 
-    foreach my $p (@proplist) { 
-	
-	if (exists($p->{organismprop_id}) && ($prop_id == $p->{organismprop_id}) && $action eq "edit") { 
-	    if ($login_user_can_modify) { 
-		#make the form editable
-		$form = $self->metadata_form($c, $p->{json}, $prop_id, $organism_id);
-		$html .= $form->render();
-		$html .= "<hr />\n";
-	    }
-	}
-	else { 
-	    $html .= $self->metadata_static($c, $p->{json});
-	    $html .= "<hr />\n";
-	}
-	
-	if ($login_user_can_modify) {
-	    # add appropriate edit and delete links 
-	    $html .= "<a href=\"javascript:organismObjectName.setObjectId('$p->{organismprop_id}-$organism_id'); organismObjectName.printForm('edit'); \">Edit</a> <a href=\"javascript:organismObjectName.setObjectId('$p->{organismprop_id}-$organism_id'); organismObjectName.printDeleteDialog();\">Delete</a><hr />";
-	    
-	}
+    foreach my $p (@proplist) {
+
+        if (exists($p->{organismprop_id}) && ($prop_id == $p->{organismprop_id}) && $action eq "edit") {
+            if ($login_user_can_modify) {
+                #make the form editable
+                $form = $self->metadata_form($c, $p->{json}, $prop_id, $organism_id);
+                $html .= $form->render();
+                $html .= "<hr />\n";
+            }
+        }
+        else {
+            $html .= $self->metadata_static($c, $p->{json});
+            $html .= "<hr />\n";
+        }
+
+        if ($login_user_can_modify) {
+            # add appropriate edit and delete links
+            $html .= "<a href=\"javascript:organismObjectName.setObjectId('$p->{organismprop_id}-$organism_id'); organismObjectName.printForm('edit'); \">Edit</a> <a href=\"javascript:organismObjectName.setObjectId('$p->{organismprop_id}-$organism_id'); organismObjectName.printDeleteDialog();\">Delete</a><hr />";
+
+        }
     }
-    
+
     if ($login_user_can_modify && $action eq 'new') {
-	$form = $self->metadata_form($c, undef, undef, $organism_id);
-	$html .= $form->render();
-	$html .= qq | <br /><a href="javascript:organismObjectName.render();">Cancel</a><br /><br /> | ; 
+        $form = $self->metadata_form($c, undef, undef, $organism_id);
+        $html .= $form->render();
+        $html .= qq | <br /><a href="javascript:organismObjectName.render();">Cancel</a><br /><br /> | ;
     }
-    elsif ($login_user_can_modify) { 
-	$html .=  "<br /><a href=\"javascript:organismObjectName.setObjectId('-$organism_id' ); organismObjectName.printForm('new');\">New</a>"; 
+    elsif ($login_user_can_modify) {
+        $html .=  "<br /><a href=\"javascript:organismObjectName.setObjectId('-$organism_id' ); organismObjectName.printForm('new');\">New</a>";
     }
 
     if ( $action eq 'new' || $action eq 'view' || !$action || !$login_user_can_modify) {
@@ -213,15 +209,15 @@ sub project_metadata :Chained('/organism/find_organism') :PathPart('metadata') :
 }
 
 
-sub metadata_form { 
+sub metadata_form {
     my ($self, $c, $json, $prop_id, $organism_id) = @_;
-    
+
     my $data = {};
-    if ($json) { 
-	print STDERR "CONVERTING JSON...\n";
-	$data = $c->stash->{json}->jsonToObj($json); }
-    else { 
-	print STDERR "No JSON data provided...\n";
+    if ($json) {
+        print STDERR "CONVERTING JSON...\n";
+        $data = $c->stash->{json}->jsonToObj($json); }
+    else {
+        print STDERR "No JSON data provided...\n";
 
     }
 
@@ -239,25 +235,25 @@ sub metadata_form {
        name: object_id
        value: $object_id
 YAML
- 
+
  ;
 
     my %fields = $self->project_metadata_prop_list();
 
     foreach my $k (keys %fields) {
 
-	$form->element( { type=>'Text', name=>$k, label=>$fields{$k}, value=>$data->{$k}, size=>30 });
+        $form->element( { type=>'Text', name=>$k, label=>$fields{$k}, value=>$data->{$k}, size=>30 });
     }
 
 
     return $form;
 }
 
-sub metadata_static { 
+sub metadata_static {
     my $self = shift;
     my $c = shift;
     my $json = shift;
-    
+
     if (!$json) { return; }
 
     my %props = %{$c->{stash}->{json}->jsonToObj($json)};
@@ -269,7 +265,7 @@ sub metadata_static {
     foreach my $k (keys %fields) {
         $static .= '<tr><td>'.$fields{$k}.'</td><td>&nbsp;</td><td><b>'.$props{$k}.'</b></td></tr>';
     }
-    
+
     $static .= '</table>';
     return $static;
 }
