@@ -68,7 +68,8 @@ sub project_metadata :Chained('/organism/find_organism') :PathPart('metadata') :
 
     #object id is a combination of prop_id and organism_id, separated by a "-"
     my $organism = $c->stash->{organism};
-    my ($prop_id, $organism_id) = split "-", $c->req->param('object_id') || '';
+    my ($prop_id, undef) = split "-", $c->req->param('object_id') || '';
+    my $organism_id = $organism->organism_id;
     my $login_user_id = 0;
     my $login_user_can_modify = 0;
 
@@ -141,11 +142,12 @@ sub project_metadata :Chained('/organism/find_organism') :PathPart('metadata') :
             }
         }
     }
-    my @proplist = $self->get_organism_metadata_props($c); # contains JSON strings
+
+    my @proplist = $self->get_organism_metadata_props( $c );
 
     foreach my $p (@proplist) {
 
-        if (exists($p->{organismprop_id}) && ($prop_id == $p->{organismprop_id}) && $action eq "edit") {
+        if (exists($p->{organismprop_id}) && defined $prop_id && $prop_id eq $p->{organismprop_id} && $action eq "edit") {
             if ($login_user_can_modify) {
                 #make the form editable
                 $form = $self->metadata_form($c, $p->{json}, $prop_id, $organism_id);
