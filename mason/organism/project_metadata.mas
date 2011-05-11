@@ -5,7 +5,7 @@
 
 <%args>
 $organism_id
-$prop_id=> undef
+$prop_id=> ''
 </%args>
 
 <%perl>
