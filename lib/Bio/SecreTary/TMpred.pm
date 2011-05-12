@@ -243,11 +243,11 @@ sub run_tmpred_perl {
 
     ( $length == scalar @$io_center_prof )
       || croak(
-        "seq length: ", $length,
-        "  io_center_profile size: ",
-        scalar @$io_center_prof,
-        " Should be the same but aren't.\n"
-      );
+	       "seq length: ", $length,
+	       "  io_center_profile size: ",
+	       scalar @$io_center_prof,
+	       " Should be the same but aren't.\n"
+	      );
 
     # get score array for in-to-out using 3 profiles (center, nterm, cterm)
     my $io_score =
@@ -257,39 +257,31 @@ sub run_tmpred_perl {
     my $oi_score =
       $self->make_curve( $oi_center_prof, $oi_nterm_prof, $oi_cterm_prof );
 
+    my ($helix, $start);
     my @io_helices = ();
-    {
-        my $fhresult;
-        my $helix;
-        my $start = 0;
-        while ( $start < $length ) {
-            ( $fhresult, $start, $helix ) =
-              $self->find_helix( $length, $start, $io_score, $io_center_prof,
-                $io_nterm_prof, $io_cterm_prof );
-            if ($fhresult) {
-	      $helix->nt_in($TRUE);    # io is inside-to-outside
-                push @io_helices, $helix;
-            }
-            last if ( $start >= $length );
-        }
+    $start = 0;
+    while ( $start < $length ) {
+      ($start, $helix ) =
+	$self->find_helix( $length, $start, $io_score, $io_center_prof,
+			   $io_nterm_prof, $io_cterm_prof );
+      if (defined $helix) {
+	$helix->nt_in($TRUE);	# io is inside-to-outside
+	push @io_helices, $helix;
+      }
     }
 
     my @oi_helices = ();
-    {
-        my $fhresult;
-        my $start = 0;
-        my $helix;
-        while ( $start < $length ) {
-            ( $fhresult, $start, $helix ) =
-              $self->find_helix( $length, $start, $oi_score, $oi_center_prof,
-                $oi_nterm_prof, $oi_cterm_prof );
-            if ($fhresult) {
-       $helix->nt_in($FALSE);
-                push @oi_helices, $helix;
-            }
-            last if ( $start >= $length );
-        }
+    $start = 0;
+    while ( $start < $length ) {
+      ( $start, $helix ) =
+	$self->find_helix( $length, $start, $oi_score, $oi_center_prof,
+			   $oi_nterm_prof, $oi_cterm_prof );
+      if (defined $helix) {
+	$helix->nt_in($FALSE);
+	push @oi_helices, $helix;
+      }
     }
+    # }
 
     return ( \@io_helices, \@oi_helices );
 
@@ -401,7 +393,7 @@ sub find_helix {
     # or $oi_score, $oi_center_prof, ...
     my $min_halfw = $self->{min_halfw};
     my $max_halfw = $self->{max_halfw};
-    my ($helix, $find_helix_result);
+    my ($helix, $find_helix_result) = (undef, undef);
 
     my ( $found, $done ) = ($FALSE, $FALSE);
     my $i = max($start, $min_halfw);
@@ -483,7 +475,8 @@ sub find_helix {
         $find_helix_result = $FALSE;
     }
 
-    return ( $find_helix_result, $start, $helix );
+  #  return ( $find_helix_result, $start, $helix );
+ return ( $start, $helix );
 }    # end of sub find_helix
 
 sub findmax {    # looking between start and stop,
