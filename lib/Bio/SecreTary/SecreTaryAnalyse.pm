@@ -87,15 +87,21 @@ has candidate_solutions => (
 			    writer => '_set_candidate_solutions' );
 
 
-=head2 function new
+=head2 function BUILD
 
 Synopsis:
-    my $STA_obj = Bio::SecreTary::SecreTaryAnalyse->new($sequence_id, $protein_sequence, $tmpred_obj, $trunc_length)
-	Arguments: $tmpred_obj is an instance of TMpred, $trunc_length an optional length to truncate sequence to (default is 100).
+    my $STA_obj = Bio::SecreTary::SecreTaryAnalyse->new({
+                sequence_id => $id,
+                sequence => $sequence,
+                tmpred_obj => $TMpred_obj,
+                cleavage_predictor => $cleavage_predictor_obj,
+                trunc_length => 100
+                });
+
+	Arguments: $TMpred_obj is an instance of TMpred, $trunc_length an optional length to truncate sequence to (default is 100).
 	Returns:	an instance of a SecreTaryAnalyse object
 	Side effects:	creates the object.
-	Description:	Does the analysis of the protein (e.g TMpred, AI22, Gravy22), stores them and returns the object.
-# AI22, Gravy22, nDRQPEN22, etc.
+	Description:	This is the Moose Builder which is automatically called after new creates object and sets attributes according to its arguments and defaults. BUILD then does the analysis of the protein (TMpred, AI22, Gravy22, etc.), stores the results in the object and returns it.       .
 
 =cut
 
