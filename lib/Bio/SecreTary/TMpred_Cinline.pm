@@ -1,4 +1,3 @@
-
 =head1 NAME
 
 Bio::SecreTary::TMpred_Cinline
@@ -65,6 +64,30 @@ double max_in_range( SV * terms, int start, int stop ) {
                 }
         }
        return max;
+}
+
+int has_max_at_i( SV * terms, int i, int start, int stop ) {
+// returns 1 if terms[i] is the max in the range from start to stop
+// 0 otherwise.    
+    I32 numterms = 0;
+        /* Make sure we have an array ref with values */
+        if ((!SvROK(terms))
+                        || (SvTYPE(SvRV(terms)) != SVt_PVAV)
+                        || ((numterms = av_len((AV *)SvRV(terms))) < 0)) {
+                return -10000;
+        }
+        /* Set result to first value in array */
+        if(start < 0) { start = 0; }
+        if(stop > numterms){ stop = numterms; }
+        double val_i = SvNV(* av_fetch((AV *)SvRV(terms), i, 0));
+        long j;
+        for (j = start; j <= stop; j++) {
+                double thisval = SvNV(* av_fetch((AV *)SvRV(terms), j, 0));
+                if(thisval > val_i){
+                        return 0;
+                }
+        }
+       return 1;
 }
 
 double make_profile_inner_loop(SV* m, SV* seq_nums, I32 kmrf){
@@ -192,16 +215,16 @@ sub find_helix {
   my $min_halfw = $self->{min_halfw};
   my $max_halfw = $self->{max_halfw};
 
-  for(my $i = max($start, $min_halfw); $i < $length - $min_halfw; $i++){
+  for (my $i = max($start, $min_halfw); $i < $length - $min_halfw; $i++) {
 
-#    my $pos = max_index_in_range( $s, $i - $min_halfw, $i + $max_halfw );
-#    my $test = (($i==$pos) and ($s->[$i] > 0));
+    # my $scr = max_in_range( $s, $i - $min_halfw, $i + $max_halfw );
+    # if (( $s->[$i] == $scr ) and ( $s->[$i] > 0 )) { # helix found
 
-    my $scr = max_in_range( $s, $i - $min_halfw, $i + $max_halfw );
-    my $test = (( $s->[$i] == $scr ) and ( $s->[$i] > 0 ));
+    #   my $pos = max_index_in_range( $s, $i - $min_halfw, $i + $max_halfw );
+    #   if( ($i == $pos) and ($s->[$i] > 0) ) { #helix found
 
-if($test) { # helix found
- #   if( ($i == $pos) and ($s->[$i] > 0) ) { #helix found
+    my $max_at_i = has_max_at_i( $s, $i, $i - $min_halfw, $i + $max_halfw );
+    if ( $max_at_i and ( $s->[$i] > 0 ) ) {
 
       my $beg = max($i - $max_halfw, 0);
 
@@ -213,33 +236,16 @@ if($test) { # helix found
       my $ct_position = max_index_in_range( $c, $i + $min_halfw, $end );
       my $ct_score = $c->[$ct_position];
 
-      my $j_n = $i - $min_halfw;	# determine nearest N-terminus
-      while (
-	     $j_n - 1 >= 0	#  0 not 1 because 0-based
-	     and $j_n - 1 >= $i - $max_halfw 
-	    ) {
-	if ( $n->[ $j_n - 1 ] > $n->[$j_n] ) {
-	  $j_n--;
-	} else {
-	  last;
-	}
-      }
+      my $j_n;
+       my $j_n_limit = max(0, $i - $max_halfw);
+       for( $j_n = $i - $min_halfw; $j_n > $j_n_limit; $j_n--){
+       	last if($n->[ $j_n - 1 ] <= $n->[$j_n]);
+       }
 
-      my $j_c    = $i + $min_halfw;
-      while ( $j_c + 1 < $length
-	      and $j_c + 1 <= $i + $max_halfw
-) {
-	if ( defined $c->[ $j_c + 1 ] and defined $c->[$j_c] ) {
-	  if ( $c->[ $j_c + 1 ] > $c->[$j_c] ) {
-	    $j_c++;
-	  } else {
-	    last;
-	  }
-	} else {
-	  print "j, c[j_c], c[j_c+1]: ", $j_c, " ", $c->[$j_c], " ",
-	    $c->[ $j_c + 1 ], " ", $length, "\n";
-	  exit;
-	}
+      my $j_c;
+      my $j_c_limit = min($length - 1, $i + $max_halfw);
+      for ( $j_c = $i + $min_halfw; $j_c < $j_c_limit; $j_c++) {
+	last if ($c->[ $j_c + 1 ] <= $c->[$j_c]);
       }
 
       my $helix = Bio::SecreTary::Helix->new(center => [ $i, $m->[$i] ],
@@ -254,12 +260,12 @@ if($test) { # helix found
 		    + $helix->cterm()->[1]
 		   );
 
-      return ($TRUE, $helix->sh_cterm()->[0] + 1, $helix);
+ return ($j_c + 1, $helix);
     }				# end of if helix found block
 
   }				# end of for loop
 
-  return ($FALSE, $length, undef); # no helix found
+  return ($length, undef); # no helix found
 }				# end of sub find_helix
 
 1;
