@@ -213,7 +213,7 @@ sub metadata_form {
 
     }
 
-    my $object_id = $prop_id."-".$organism_id;
+    my $object_id = ($prop_id || '')."-".$organism_id;
     my $form = HTML::FormFu->new(Load(<<YAML));
   method: POST
   attributes:
