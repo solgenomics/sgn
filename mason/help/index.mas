@@ -55,7 +55,7 @@ Please refer to your browser\'s manual or help pages to enable the following set
 <h5>Getting more information</h5>
 <ul>
 <li>subscribe to our <a href="http://rubisco.sgn.cornell.edu/mailman/listinfo/sgn-announce">announcement list</a> to keep up to date with the latest developments.</li>
-<li>email to <a href="mailto:sgn-feedback\@sgn.cornell.edu">sgn-feedback\@sgn.cornell.edu</a> for questions, comments and suggestions </li>
+<li>email to <a href="mailto:sgn-feedback@sgn.cornell.edu">sgn-feedback@sgn.cornell.edu</a> for questions, comments and suggestions </li>
 </ul>
 
 
@@ -67,7 +67,7 @@ SGN has community annotation tools are available for locus, allele, insitu exper
 The related information can be added, updated and deleted by registered SGN users that have specially designated submitter accounts. 
 In addition, for certain database records, only a designated editor may change the information. <br />
 Submitters are always accredited on each information page related to theur work (image, experiment, locus, phenotype, etc.) and are the sole owners of the data.<br />
-<a href="mailto:sgn-feedback\@sgn.cornell.edu">Contact us</a> if you would like to use the community annotation tools and become a submitter or editor.
+<a href="mailto:sgn-feedback@sgn.cornell.edu">Contact us</a> if you would like to use the community annotation tools and become a submitter or editor.
 <ul>
 <li>How do I contribute information on my <a href="/phenome/">favorite gene?</a></li>
 <li><a href="/content/phenotype_submissions.pl">Submit your phenotyped population</a> and we will add it to our <a href="/search/direct_search.pl?search=phenotypes">phenotype database</a></li>
@@ -76,7 +76,7 @@ Submitters are always accredited on each information page related to theur work 
 <li>To submit genetic map data, please see the <a href="/content/map_submissions.pl">map and marker submission guidelines</a>.</li>
 <li>To submit genotypic and phenotypic data from a QTL study, please see the <a href="/qtl/guide.pl">QTL data submission guidelines</a>.</li>
 
-<li>If you would like to add sequence, marker or other information to this database, or have any comments or suggestions, please send email to <a href="mailto:sgn-feedback\@sgn.cornell.edu">sgn-feedback\@sgn.cornell.edu</a>.</li>
+<li>If you would like to add sequence, marker or other information to this database, or have any comments or suggestions, please send email to <a href="mailto:sgn-feedback@sgn.cornell.edu">sgn-feedback@sgn.cornell.edu</a>.</li>
 </ul>
 <br />
 </P>
