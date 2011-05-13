@@ -66,8 +66,10 @@ sub patch {
 --do your SQL here
 --
 
-grant delete on public.organismprop to web_usr;
-   
+grant insert on cvterm to web_usr;
+grant usage, update on cvterm_cvterm_id_seq to web_usr;
+grant insert,delete on public.organismprop to web_usr;
+grant usage, update on organismprop_organismprop_id_seq to web_usr;
 EOSQL
 
 print "You're done!\n";
