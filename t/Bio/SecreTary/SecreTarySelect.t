@@ -14,7 +14,7 @@ use File::Spec::Functions 'catfile';
 $ENV{PATH} .= ':programs'; #< XXX TODO: obviate the need for this
 
 my $TMpred_obj = Bio::SecreTary::TMpred->new();
-
+my $cleavage_predictor_obj = Bio::SecreTary::Cleavage->new();
 ### case 1 a sequence which is predicted to have a signal peptide (group 1).
 
 my $id = "AT1G75120.1";
@@ -23,7 +23,12 @@ DLTEKVRLAEQKEVIKAGPFGTVTGLQTNPTVAPDESANPRLAKLLEKVAVNKEIIVVLANNNVKPMLEVQIASVKRVG
 IQNYLVVPLDDSLESFCKSNEVAYYKRDPDNAIDVVGKSRRSSDVSGLKFRVLREFLQLGYGVLLSDVDIVFLQNPFGH
 LYRDSDVESMSDGHDNNT";
 
-my $STA_obj = Bio::SecreTary::SecreTaryAnalyse->new($id, $sequence, $TMpred_obj);
+my $STA_obj = Bio::SecreTary::SecreTaryAnalyse->new({
+		sequence_id => $id, 
+		sequence => $sequence, 
+		tmpred_obj => $TMpred_obj,
+		cleavage_predictor => $cleavage_predictor_obj
+		});
 
 my $STS_obj = Bio::SecreTary::SecreTarySelect->new(); # using defaults
 ok( defined $STS_obj, 'new() returned something.');
@@ -49,7 +54,14 @@ ok($categorize1_output =~ /^group1 0.887[456][0-9]* 2479 17 35 5 0.887[456][0-9]
 $id = 'SlTFR12';
 $sequence = 'MEMSSKIACFIVLCMIVVAPHGEALSCGQVESGLAPCLPYPQGKGPLGGCCRGVKGLLGAAK';
 
-$STA_obj = Bio::SecreTary::SecreTaryAnalyse->new($id, $sequence, $TMpred_obj);
+$STA_obj = Bio::SecreTary::SecreTaryAnalyse->new({
+		sequence_id => $id,
+		sequence => $sequence,
+		tmpred_obj => $TMpred_obj,
+		cleavage_predictor => $cleavage_predictor_obj
+		});
+
+#$STA_obj = Bio::SecreTary::SecreTaryAnalyse->new({sequence_id => $id, sequence => $sequence, tmpred_obj => $TMpred_obj});
 
 $STS_obj = Bio::SecreTary::SecreTarySelect->new(); # using defaults
 ok( defined $STS_obj, 'new() returned something.');
@@ -71,7 +83,14 @@ ok($categorize1_output =~ /^group2 0.787[456][0-9]* 1453 3 25 8 0.787[456][0-9]*
 $id = 'SlTFR80';
 $sequence = 'MLDRFLSARRAWQVRRIMRNGKLTFLCLFLTVIVLRGNLGAGRFGTPGQDLKEIRETFSYYR';
 
-$STA_obj = Bio::SecreTary::SecreTaryAnalyse->new($id, $sequence, $TMpred_obj);
+$STA_obj = Bio::SecreTary::SecreTaryAnalyse->new({
+		sequence_id => $id,
+		sequence => $sequence,
+		tmpred_obj => $TMpred_obj,
+		cleavage_predictor => $cleavage_predictor_obj
+		});
+
+#$STA_obj = Bio::SecreTary::SecreTaryAnalyse->new({ sequence_id => $id, sequence => $sequence, tmpred_obj => $TMpred_obj});
 
 $STS_obj = Bio::SecreTary::SecreTarySelect->new(); # using defaults
 ok( defined $STS_obj, 'new() returned something.');
@@ -96,7 +115,14 @@ ok($categorize1_output =~ /^fail 0.6947[456][0-9]* 1279 20 41 7 0.6947[456][0-9]
 $id = "AT1G50920.1";
 $sequence = "MVQYNFKRITVVPNGKEFVDIILSRTQRQTPTVVHKGYKINRLRQFYMRKVKYTQTNFHAKLSAIIDEFPRLEQIHPFYGDLLHVLYNKDHYKLALGQVNTARNLISKISKDYVKLLKYGDSLYRCKCLKVAALGRMCTVLKRITPSLAYLEQIRQHMARLPSIDPNTRTVLICGYPNVGKSSFMNKVTRADVDVQPYAFTTKSLFVGHTDYKYLRYQVIDTPGILDRPFEDRNIIEMCSITALAHLRAAVLFFLDISGSCGYTIAQQAALFHS*";
 
-$STA_obj = Bio::SecreTary::SecreTaryAnalyse->new($id, $sequence, $TMpred_obj);
+$STA_obj = Bio::SecreTary::SecreTaryAnalyse->new({
+		sequence_id => $id,
+		sequence => $sequence,
+		tmpred_obj => $TMpred_obj,
+		cleavage_predictor => $cleavage_predictor_obj
+		});
+
+#$STA_obj = Bio::SecreTary::SecreTaryAnalyse->new({ sequence_id => $id, sequence => $sequence, tmpred_obj => $TMpred_obj});
 
 $STS_obj = Bio::SecreTary::SecreTarySelect->new(); # using defaults
 ok( defined $STS_obj, 'new() returned something.');
@@ -117,7 +143,7 @@ ok($categorize1_output =~ /^fail 0 -1 0 0 -1 0$/, 'Check categorize1 output (cas
 
 my $fasta_infile = catfile( 't', 'data', 'AtBrRiceTomPopYST_115.fasta');
 my $stout_infile = catfile( 't', 'data', 'AtBrRiceTomPopYST_115.stout');
- 
+
 my @category_result_standard = ();
 
 if( open my $fh, "<", $stout_infile){
@@ -145,12 +171,19 @@ my @category_result_now = ();
 		$seq_id =~ s/\|.*//;	# delete from first pipe to end.
 			my $sequence = $seqobj->seq();
 		$sequence = substr( $sequence, 0, $trunc_length );
-		my $STA = Bio::SecreTary::SecreTaryAnalyse->new( $seq_id, $sequence,
-				$TMpred_obj );
+
+		my $STA = Bio::SecreTary::SecreTaryAnalyse->new({
+				sequence_id => $seq_id,
+				sequence => $sequence,
+				tmpred_obj => $TMpred_obj,
+				cleavage_predictor => $cleavage_predictor_obj
+				});
+
+#	my $STA = Bio::SecreTary::SecreTaryAnalyse->new( {sequence_id => $seq_id, sequence => $sequence, tmpred_obj => $TMpred_obj} );
 		my $cat_result = $STS_obj->categorize1($STA);
 
-# print $STA->get_sequence_id(), "  ", $cat_result, "\n";
-		push @category_result_now, $STA->get_sequence_id() . "  " . $cat_result . "\n";
+# print $STA->sequence_id(), "  ", $cat_result, "\n";
+		push @category_result_now, $STA->sequence_id() . "  " . $cat_result . "\n";
 
 		$count_sequences_analyzed++;
 	}
@@ -158,18 +191,22 @@ my @category_result_now = ();
 
 my ($count_exact, $count_good_enough, $count_bad) = (0, 0, 0);
 my $size_diff = abs( scalar @category_result_now - scalar @category_result_standard);
-	while(@category_result_now and @category_result_standard){
-		my $line_now = shift @category_result_now;
-		my $line_std = shift @category_result_standard;
+while(@category_result_now and @category_result_standard){
+	my $line_now = shift @category_result_now ;
+	my $line_std = shift @category_result_standard ;
+	$line_now =~ s/\s+$//; # remove final whitespace
+		$line_std =~ s/\s+$//; # remove final whitespace
 		if( $line_now eq $line_std ){
 			$count_exact++;
 		}
-		elsif (compare_categorize1_results($line_now, $line_std) == 0) {
-			$count_good_enough++;
-		}else{
-			$count_bad++;
-		}
+	elsif (compare_categorize1_results($line_now, $line_std) == 0) {
+#	print "categorize output string agreement is close but not exact.\n";
+#	print "this line: [$line_now]\n", "std_line : [$line_std]\n";	
+		$count_good_enough++;
+	}else{
+		$count_bad++;
 	}
+}
 # print "$count_exact, $count_good_enough, $count_sequences_analyzed \n";
 my $OK = (($count_sequences_analyzed == ($count_exact + $count_good_enough)) and ($count_bad == 0));
 ok($OK, 'Check SecreTarySelect::categorize1 results for 115 sequences.');

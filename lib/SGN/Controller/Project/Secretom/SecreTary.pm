@@ -4,6 +4,9 @@ use namespace::autoclean;
 
 use Bio::SecreTary::SecreTarySelect;
 use Bio::SecreTary::SecreTaryAnalyse;
+use Bio::SecreTary::TMpred;
+use Bio::SecreTary::TMpred_Cinline;
+use Bio::SecreTary::Cleavage;
 
 BEGIN { extends 'Catalyst::Controller'; }
 with 'Catalyst::Component::ApplicationAttribute';
@@ -93,8 +96,9 @@ sub _run_secretary {
 	my $trunc_length = 100;
 
 	my $tmpred_obj =
-		Bio::SecreTary::TMpred->new( {} ); # use defaults here for min_score, etc.
-#   Bio::SecreTary::TMpred_pascal->new( {} );
+#		Bio::SecreTary::TMpred->new( {} ); # use defaults here for min_score, etc.
+              Bio::SecreTary::TMpred_Cinline->new( {} );
+	my $cleavage_predictor_obj = Bio::SecreTary::Cleavage->new();
 		my $id_seqs = process_input($input);
 
 #Calculate the necessary quantities for each sequence:
@@ -103,8 +107,8 @@ sub _run_secretary {
 		my ( $id, $sequence ) = ( $1, $2 );
 
 		my $STAobj =
-			Bio::SecreTary::SecreTaryAnalyse->new( $id,
-					substr( $sequence, 0, $trunc_length ), $tmpred_obj );
+			Bio::SecreTary::SecreTaryAnalyse->new( {sequence_id => $id,
+				sequence => substr( $sequence, 0, $trunc_length ), tmpred_obj => $tmpred_obj, cleavage_predictor => $cleavage_predictor_obj });
 		push @STAarray, $STAobj;
 	}
 
@@ -144,9 +148,9 @@ sub _run_secretary {
 
 		}
 
-		my $id       = padtrunc( $STA->get_sequence_id(), 15 );
-		my $sequence = $STA->get_sequence();
-		my $cleavage = $STA->get_cleavage();
+		my $id       = padtrunc( $STA->sequence_id(), 15 );
+		my $sequence = $STA->sequence();
+		my $cleavage = $STA->cleavage_prediction();
 		my ( $sp_length, $hstart, $cstart, $typical ) = @$cleavage;
 		my $hstartp1 = padtrunc( $hstart + 1, 4 );
 		my $cstartp1 = padtrunc( $cstart + 1, 4 );
@@ -170,6 +174,7 @@ sub process_input {
 	my $max_sequences_to_do = 10000;
 	my $input               = shift;
 	my @id_sequence_array;
+	my $min_sequence_length = 8; # this is the minimal length of sequence string which will be recognized as a sequence if no fasta idline is present.
 	my @fastas  = ();
 	my $wscount = 0;
 
@@ -179,23 +184,34 @@ sub process_input {
 		if ( $input =~ s/\A ([^>]+) //xms )
 		{                            # if >= 1 chars before first > capture them.
 			my $fasta = uc $1;
-			if ( $fasta =~ /\A [A-Z]{10,} [A-Z\s]* [*]? \s* \z/xms )
+			# if letters and spaces optionally with * as last non whitespace char,
+			# and starts with at least $min_sequence_length letters, treat as sequence
+			if ( $fasta =~ /\A [A-Z]{$min_sequence_length,} [A-Z\s]* [*]? \s* \z/xms )
 			{                        # looks like sequence with no identifier
 				$fasta = '>sequence_' . $wscount . "\n" . $fasta . "\n";
 				push @fastas, $fasta;
 				$wscount++;
 			}
 
-# otherwise stuff ahead of first > is considered junk, discarded
+# otherwise stuff ahead of first > is considered junk, discarded ($1 not used)
 		}
-	while ( $input =~ s/ ( > [^>]+ )//xms
-	      )    # capture and delete initial > and everything up to next >.
-	{
-		push @fastas, $1;
-		last if ( scalar @fastas >= $max_sequences_to_do );
-	}
+# if(0){
+# 	while ( $input =~ s/ ( > [^>]+ )//xms
+# 	      )    # capture and delete initial > and everything up to next >.
+# 	{
+# 		push @fastas, $1;
+# 		last if ( scalar @fastas >= $max_sequences_to_do );
+# 	}
+# }
+# else{
+$input =~ s/\A > //xms; # eliminate initial >
+@fastas = split(">", $input);
+
+        @fastas = @fastas[0..$max_sequences_to_do-1] if(scalar @fastas > $max_sequences_to_do); # keep just the first $max_sequence_to_do
+#}
 
 	foreach my $fasta (@fastas) {
+		$fasta = '>' . $fasta;
 		next if ( $fasta =~ /\A\z/xms );
 
 		my $id;

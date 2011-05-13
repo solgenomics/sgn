@@ -14,12 +14,12 @@ Tom York (tly2@cornell.edu)
 =cut
 
 package Bio::SecreTary::TMpred;
+use strict;
+use warnings;
 use Carp;
-use IO::File;
-use File::Temp;
-use CGI ();
 use Bio::SecreTary::Table;
 use Bio::SecreTary::Helix;
+use List::Util qw / min max /;
 
 use Readonly;
 Readonly my $FALSE    => 0;
@@ -227,27 +227,27 @@ sub run_tmpred_perl {
     # get the 6 profiles:
     # in-to-out
     my $io_center_prof =
-      make_profile( \@sequence_aanumber_array, $self->get_io_center_table() );
+      $self->make_profile( \@sequence_aanumber_array, $self->get_io_center_table() );
     my $io_nterm_prof =
-      make_profile( \@sequence_aanumber_array, $self->get_io_nterm_table() );
+      $self->make_profile( \@sequence_aanumber_array, $self->get_io_nterm_table() );
     my $io_cterm_prof =
-      make_profile( \@sequence_aanumber_array, $self->get_io_cterm_table() );
+      $self->make_profile( \@sequence_aanumber_array, $self->get_io_cterm_table() );
 
     # out-to-in
     my $oi_center_prof =
-      make_profile( \@sequence_aanumber_array, $self->get_oi_center_table() );
+      $self->make_profile( \@sequence_aanumber_array, $self->get_oi_center_table() );
     my $oi_nterm_prof =
-      make_profile( \@sequence_aanumber_array, $self->get_oi_nterm_table() );
+      $self->make_profile( \@sequence_aanumber_array, $self->get_oi_nterm_table() );
     my $oi_cterm_prof =
-      make_profile( \@sequence_aanumber_array, $self->get_oi_cterm_table() );
+      $self->make_profile( \@sequence_aanumber_array, $self->get_oi_cterm_table() );
 
     ( $length == scalar @$io_center_prof )
       || croak(
-        "seq length: ", $length,
-        "  io_center_profile size: ",
-        scalar @$io_center_prof,
-        " Should be the same but aren't.\n"
-      );
+	       "seq length: ", $length,
+	       "  io_center_profile size: ",
+	       scalar @$io_center_prof,
+	       " Should be the same but aren't.\n"
+	      );
 
     # get score array for in-to-out using 3 profiles (center, nterm, cterm)
     my $io_score =
@@ -257,39 +257,31 @@ sub run_tmpred_perl {
     my $oi_score =
       $self->make_curve( $oi_center_prof, $oi_nterm_prof, $oi_cterm_prof );
 
+    my ($helix, $start);
     my @io_helices = ();
-    {
-        my $fhresult;
-        my $helix;
-        my $start = 0;
-        while ( $start < $length ) {
-            ( $fhresult, $start, $helix ) =
-              $self->find_helix( $length, $start, $io_score, $io_center_prof,
-                $io_nterm_prof, $io_cterm_prof );
-            $helix->nt_in($TRUE);    # io is inside-to-outside
-            if ($fhresult) {
-                push @io_helices, $helix;
-            }
-            last if ( $start >= $length );
-        }
+    $start = 0;
+    while ( $start < $length ) {
+      ($start, $helix ) =
+	$self->find_helix( $length, $start, $io_score, $io_center_prof,
+			   $io_nterm_prof, $io_cterm_prof );
+      if (defined $helix) {
+	$helix->nt_in($TRUE);	# io is inside-to-outside
+	push @io_helices, $helix;
+      }
     }
 
     my @oi_helices = ();
-    {
-        my $fhresult;
-        my $start = 0;
-        my $helix;
-        while ( $start < $length ) {
-            ( $fhresult, $start, $helix ) =
-              $self->find_helix( $length, $start, $oi_score, $oi_center_prof,
-                $oi_nterm_prof, $oi_cterm_prof );
-            $helix->nt_in($FALSE);
-            if ($fhresult) {
-                push @oi_helices, $helix;
-            }
-            last if ( $start >= $length );
-        }
+    $start = 0;
+    while ( $start < $length ) {
+      ( $start, $helix ) =
+	$self->find_helix( $length, $start, $oi_score, $oi_center_prof,
+			   $oi_nterm_prof, $oi_cterm_prof );
+      if (defined $helix) {
+	$helix->nt_in($FALSE);
+	push @oi_helices, $helix;
+      }
     }
+    # }
 
     return ( \@io_helices, \@oi_helices );
 
@@ -330,7 +322,8 @@ sub good_solutions_perl {    # get the good solutions starting from the
 sub make_profile {    # makes a profile, i.e. an array
                       # containing ...
                       # my $sequence     = shift;
-    my $seq_aanumber_array = shift;                    # ref to array of numbers
+  my $self = shift;
+my $seq_aanumber_array = shift;                    # ref to array of numbers
     my $table              = shift;
     my $ref_position       = $table->marked_position();
     my $matrix             = $table->table();
@@ -343,10 +336,8 @@ sub make_profile {    # makes a profile, i.e. an array
     for ( my $k = 0 ; $k < $length ; $k++ ) {
         my $m    = 0;
         my $kmrf = $k - $ref_position;
-        my $plo  = $kmrf;                        # $k - $ref_position;
-        $plo = 0 if ( $plo < 0 );
-        my $pup = $ncols + $kmrf;
-        $pup = $length if ( $pup > $length );
+        my $plo  = max($kmrf, 0);      # $k - $ref_position;
+        my $pup = min( $ncols + $kmrf, $length);
 
         for ( my ( $p, $i ) = ( $plo, $plo - $kmrf ) ; $p < $pup ; $p++, $i++ )
         {
@@ -355,6 +346,7 @@ sub make_profile {    # makes a profile, i.e. an array
 
         my $round_m =
           ( $m < 0 ) ? int( $m * 100 - 0.5 ) : int( $m * 100 + 0.5 );
+
         push @profile, $round_m;
     }
 
@@ -401,35 +393,28 @@ sub find_helix {
     # or $oi_score, $oi_center_prof, ...
     my $min_halfw = $self->{min_halfw};
     my $max_halfw = $self->{max_halfw};
-    my $helix     = Bio::SecreTary::Helix->new();
+    my ($helix, $find_helix_result) = (undef, undef);
 
-    my $find_helix_result;
-
-    my ( $found, $done );
-    my $i = $start;
-    if ( $i < $min_halfw ) {
-        $i = $min_halfw;
-    }
-    $found = $FALSE;
+    my ( $found, $done ) = ($FALSE, $FALSE);
+    my $i = max($start, $min_halfw);
 
     while ( ( $i < $length - $min_halfw ) and ( !$found ) ) {
-
+# Could probably be implemented better.
         my ( $pos, $scr ) = findmax( $s, $i - $min_halfw, $i + $max_halfw );
 
         if ( ( $s->[$i] == $scr ) and ( $s->[$i] > 0 ) ) {
             $found = $TRUE;
+	    $helix = Bio::SecreTary::Helix->new();
 
             $helix->center( [ $i, $m->[$i] ] );
-            my $beg = $i - $max_halfw;
-            $beg = 0 if ( $beg < 0 );
+            my $beg = max($i - $max_halfw, 0);
 
             my ( $nt_position, $nt_score ) =
               findmax( $n, $beg, $i - $min_halfw );
 
             $helix->nterm( [ $nt_position, $nt_score ] );
 
-            my $end = $i + $max_halfw;
-            $end = $length - 1 if ( $end >= $length );
+            my $end = min($i + $max_halfw, $length - 1);
 
             my ( $ct_position, $ct_score ) =
               findmax( $c, $i + $min_halfw, $end );
@@ -437,7 +422,6 @@ sub find_helix {
             $helix->cterm( [ $ct_position, $ct_score ] );
 
             my $j = $i - $min_halfw;    # determine nearest N-terminus
-            $done = $FALSE;
             while (
                 $j - 1 >= 0             #  0 not 1 because 0-based
                 and $j - 1 >= $i - $max_halfw and !$done
@@ -491,18 +475,16 @@ sub find_helix {
         $find_helix_result = $FALSE;
     }
 
-    return ( $find_helix_result, $start, $helix );
+  #  return ( $find_helix_result, $start, $helix );
+ return ( $start, $helix );
 }    # end of sub find_helix
 
 sub findmax {    # looking between start and stop,
                  # return the maximum value in $profile and its position.
     my $profile = shift;    # array ref
-    my $start   = shift;
-    my $stop    = shift;
+    my $start   = max(shift, 0);
+    my $stop    = min(shift, scalar(@$profile) - 1);
 
-    my $profile_size = scalar @$profile;
-    $start = 0 if ( $start < 0 );
-    $stop = $profile_size - 1 if ( $stop >= $profile_size );
     my $position = $start;
     $start++;
     for ( my $i = $start ; $i <= $stop ; $i++ ) {
