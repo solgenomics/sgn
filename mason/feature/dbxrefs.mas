@@ -1,0 +1,60 @@
+<%args>
+    $dbxrefs => []
+</%args>
+% if( %others ) {
+  <% info_table_html( __border => 0, __multicol => 4, %others ) %>
+% }
+
+<%init>
+
+    sub uniq_dbx(@) { my %seen; grep !($seen{ $_->db->name.':'.$_->accession }++), @_ }
+
+    my @others = uniq_dbx grep defined, @$dbxrefs;
+    my %others;
+    for ( @others ) {
+        push @{$others{ $m->scomp('.db', d => $_->db ) }}, $m->scomp('.dxlink', d => $_);
+    }
+    for ( values %others ) {
+        if( @$_ > 1 ) {
+            $_ = $m->scomp('.dxlist', l => $_ );
+        } else {
+            $_ = $_->[0];
+        }
+    }
+</%init>
+<%once>
+    use HTML::Entities;
+    use CXGN::Page::FormattingHelpers qw/ info_table_html /;
+</%once>
+
+<%def .db>
+<%args>
+  $d
+</%args>
+%  $d = $d->name;
+%  $d =~ s/_/ /g;
+%  $d =~ s/^DB://;
+<% $d |h%>
+</%def>
+
+<%def .dxlist>
+<%args>
+  $l
+</%args>
+  <ul>
+%   for (@$l) {
+      <li><% $_ %></li>
+%   }
+  </ul>
+</%def>
+<%def .dxlink>
+<%args>
+  $d
+</%args>
+% if( $d->db->urlprefix && $d->db->url ) {
+   <a href="<% $d->db->urlprefix .  $d->db->url .  $d->accession |h%>"><% $d->accession |h%></a>
+% } else {
+   <% $d->accession |h %>
+% }
+</%def>
+

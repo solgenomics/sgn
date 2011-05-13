@@ -3,7 +3,7 @@
 
 =head1 NAME
 
- SampleDbpatchMoose.pm
+ AddMapVersionMetadata.pm
 
 =head1 SYNOPSIS
 
@@ -14,7 +14,7 @@ see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
 
-This is a test dummy patch.
+This patch adds metadata_id column to sgn.map_version, in order to keep track of submitter, date, etc.
 This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
 
 =head1 AUTHOR
@@ -23,7 +23,7 @@ This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
 
 =head1 COPYRIGHT & LICENSE
 
-Copyright 2010 Boyce Thompson Institute for Plant Research
+Copyright 2011 Boyce Thompson Institute for Plant Research
 
 This program is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.
@@ -31,20 +31,15 @@ it under the same terms as Perl itself.
 =cut
 
 
-package TestDbpatchMoose;
+package AddMapVersionMetadata;
 
 use Moose;
 extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-Description of this patch goes here
+Adding metadata_id FK to sgn.map_version
 
-has '+prereq' => (
-    default => sub {
-        ['MyPrevPatch'],
-    },
-  );
 
 sub patch {
     my $self=shift;
@@ -58,7 +53,7 @@ sub patch {
     $self->dbh->do(<<EOSQL);
 --do your SQL here
 --
-SELECT * from public.stock;
+ALTER TABLE sgn.map_version ADD COLUMN metadata_id integer REFERENCES metadata.md_metadata ON DELETE CASCADE ;
 
 EOSQL
 
