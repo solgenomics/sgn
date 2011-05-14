@@ -911,7 +911,7 @@ sub columnar_table_html {
             my $a = $alignments[$i] || '';
             my $c = $row->[$i]      || '';
             my $tdparams = '';
-            if ( ref $c )
+            if ( ref $c eq 'HASH' )
             {    #< process HTML attributes if this piece of data is a hashref
                 my $d = $c;
                 $c = delete $d->{content};
@@ -926,6 +926,8 @@ sub columnar_table_html {
                 }
                 $tdparams = join ' ',
                   map { qq|$_="$d->{$_}"| } grep { $_ ne 'content' } keys %$d;
+            } elsif( ref $c eq 'ARRAY' ) {
+                $c = "@$c";
             }
             $html .= "<td $hilite $tdparams $a>$c</td>";
         }

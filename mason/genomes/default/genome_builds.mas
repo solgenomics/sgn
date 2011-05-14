@@ -1,0 +1,58 @@
+<%args>
+  $organism
+  $assembly_list
+  $bug_tracker_url  => ''
+  $bug_tracker_desc => 'assembly bug tracker'
+</%args>
+
+% if( @$assembly_list ) {
+    <div style="margin: 1em 0">
+          <% columnar_table_html(
+                  __align  => 'cllcc',
+                  headings => [qw[ Release Date Description Annotation Download ]],
+                  data     => $assembly_display,
+             )
+          %>
+    </div>
+    <&| /page/info_table.mas, border => 0 &>
+
+    Assembly issues:
+
+      <p>If in the course of your work you find errors or other issues with
+        these genome assemblies, please report them using one of the
+        following links:</p>
+
+      <ul>
+        <li>
+          <a href="mailto:<% $c->get_conf('feedback_email') %>?subject=<% $organism->species %> genome assembly issue">email us</a>
+        </li>
+%       if( $bug_tracker_url ) {
+        <li>
+          <a href="<% $bug_tracker_url %>"><% $bug_tracker_desc %></a>
+        </li>
+%       }
+      </ul>
+
+    </&>
+% }
+<%init>
+  use CXGN::Page::FormattingHelpers qw | columnar_table_html |;
+
+  # transform our assembly list a little for formatting
+  my $assembly_display = [ map [@$_], @$assembly_list ];
+  for my $a ( @$assembly_display ) {
+    $a->[0] &&= "<b>$a->[0]</b>";
+    $a->[1] &&= $_->[1]->ymd('-');
+    $a->[3] &&= join ' ', map $_->sample_name, @{$a->[3]};
+    $a->[4] &&= join ' ', map $m->scomp('.dl_link', link => $_ ), @{$a->[4]};
+    $_ ||= '-' for @$a;
+  }
+
+</%init>
+
+<%def .dl_link>
+<%args>
+$link
+</%args>
+<a title="<% $link->{tooltip}|h%>" href="<% $link->{url} |h%>"><% $link->{text} |h%></a>
+</%def>

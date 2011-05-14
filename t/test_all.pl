@@ -14,8 +14,10 @@ my @test_paths = @ARGV;
 
 if( my $server_pid = fork ) {
 
+    $SIG{CHLD} = sub { waitpid $server_pid, 0 };
+
     # testing process
-    sleep 1 until get 'http://localhost:3003';
+    sleep 1 until !kill(0, $server_pid) || get 'http://localhost:3003';
     $ENV{SGN_TEST_SERVER}='http://localhost:3003';
     my $app = App::Prove->new;
     warn "Starting testing process with SGN_TEST_SERVER=" . $ENV{SGN_TEST_SERVER};
@@ -24,6 +26,7 @@ if( my $server_pid = fork ) {
         ( map { -I => $_ } @INC ),
         @test_paths
         );
+    $SIG{CHLD} = 'IGNORE';
     exit( $app->run ? 0 : 1 );
 
     END { kill 15, $server_pid if $server_pid }

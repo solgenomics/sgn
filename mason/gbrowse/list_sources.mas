@@ -1,0 +1,23 @@
+<%args>
+  $organism    => undef
+  $description => undef
+</%args>
+
+% for my $src (@sources) {
+      <& /gbrowse/source.mas, source => $src &>
+% }
+
+<%init>
+
+  my $species = $organism ? lc $organism->species : undef;
+
+  # find the data sources, filtering if necessary
+  my @sources =
+     sort { $a->description cmp $b->description }
+     grep $_->databases,
+     grep !$description || index( lc $_->description, lc $description ) != -1,
+     grep !$organism    || index( lc $_->organism,    lc $species     ) != -1,
+     map  $_->data_sources,
+     $c->enabled_feature('gbrowse2');
+
+</%init>

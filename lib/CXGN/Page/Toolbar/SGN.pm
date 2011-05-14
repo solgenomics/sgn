@@ -238,7 +238,7 @@ sub default_toolbar_data {
                 },
                 {
                     name => 'Browse Tomato Genome Data',
-                    link => '/tomato/genome_data.pl',
+                    link => '/organism/Solanum_lycopersicum/genome',
                     desc => 'Browse tomato genomic sequences and annotations.',
                 },
             ]

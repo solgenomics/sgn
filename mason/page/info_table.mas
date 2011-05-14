@@ -1,4 +1,3 @@
-
 <%doc>
 
 =head1 NAME
@@ -11,10 +10,6 @@ parameters:
 
 =over 3
 
-=item data
-
-a hashref with the data to be displayed in the info table.
-
 =item title
 
 Title to use for the table.
@@ -25,11 +20,15 @@ set to true if this table is contained in another table, styles will be subtly c
 
 =item tableattrs
 
-the attributes to use for each table cell. 
+the attributes to use for each table cell.
 
 =item border
 
 if true, draws a border. Default is on.
+
+=item data
+
+a hashref with the data to be displayed in the info table.
 
 =back
 
@@ -46,25 +45,26 @@ Lukas Mueller. Based on code by R. Buels.
 </%doc>
 
 <%args>
-@data => undef
-$border => 1
-$sub => 0
-$title => ''
-$tableattrs => ''
-$multicol => 1
+  $sub        => 0
+  $title      => ''
+  $tableattrs => ''
+  $multicol   => 1
+  $caption    => ''
+  $border     => 0
+
+  $data       => undef
 </%args>
+<% info_table_html( %mapped_args, @$data ) %>
+<%init>
 
-<%perl>
+  my %mapped_args =
+      map {( "__$_" => $ARGS{$_} )}
+      qw( title caption tableattrs multicol border sub );
 
-use CXGN::Page::FormattingHelpers qw | info_table_html |;
+  $data ||= [ map %{ YAML::Any::Load($_) }, split /^\s*-+\s*$/, $m->content ];
 
-my $table_html = info_table_html(@data,
-				 __title      => $title,
-				 __border     => $border,
-				 __sub        => $sub,
-				 __tableattrs => $tableattrs
-				);
-
-</%perl>
-
-<% $table_html %>
+</%init>
+<%once>
+  use YAML::Any ();
+  use CXGN::Page::FormattingHelpers 'info_table_html';
+</%once>
