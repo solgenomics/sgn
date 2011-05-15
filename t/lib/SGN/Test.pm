@@ -122,7 +122,7 @@ sub _validate_single_url {
 
             # test for any broken images or other things that have a
             # src attr
-            { my @stuff = uniq map $_->attr('src'), $mech->findnodes('//*[@src]');
+            { my @stuff = grep !m|^https?://|, uniq map $_->attr('src'), $mech->findnodes('//*[@src]');
               for( @stuff ) {
                   $mech->get_ok( $_ );
                   $mech->back;
