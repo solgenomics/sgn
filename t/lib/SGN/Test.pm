@@ -15,6 +15,7 @@ use Exporter;
 use SGN::Devel::MyDevLibs;
 
 use HTML::Lint;
+use HTML::Lint::Error;
 
 use lib 't/lib';
 use SGN::Test::WWW::Mechanize;
@@ -103,6 +104,7 @@ sub _validate_single_url {
     SKIP: {
             skip 'SKIP_HTML_LINT env set', 2 if $ENV{SKIP_HTML_LINT};
             my $lint = HTML::Lint->new;
+            $lint->only_types( HTML::Lint::Error::STRUCTURE );
             $lint->parse( $mech->content );
             my @e = $lint->errors;
             my $e_cnt = @e;
