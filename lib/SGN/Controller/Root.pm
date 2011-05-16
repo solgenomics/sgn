@@ -5,6 +5,9 @@ use namespace::autoclean;
 use Scalar::Util 'weaken';
 use CatalystX::GlobalContext ();
 
+use CXGN::Login;
+use CXGN::People::Person;
+
 BEGIN { extends 'Catalyst::Controller' }
 
 #
@@ -118,17 +121,18 @@ sub auto : Private {
 
     # gluecode for logins
     #
-    require CXGN::Login;
-    require CXGN::People::Person;
-    if (my $sp_person_id = CXGN::Login->new($c->dbc->dbh())->has_session()) { 
-	my $sp_person = CXGN::People::Person->new($c->dbc->dbh, $sp_person_id);
-	
-	$c->authenticate({ username=>$sp_person->get_username(), password=>$sp_person->get_password()});
+    my $dbh = $c->dbc->dbh;
+    if ( my $sp_person_id = CXGN::Login->new( $dbh )->has_session ) {
+
+	my $sp_person = CXGN::People::Person->new( $dbh, $sp_person_id);
+
+	$c->authenticate({
+            username => $sp_person->get_username(),
+            password => $sp_person->get_password(),
+        });
     }
 
-
-
-    1;
+    return 1;
 }
 
 
