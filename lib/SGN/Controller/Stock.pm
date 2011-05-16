@@ -393,13 +393,11 @@ sub _stock_members_phenotypes {
     return unless $bcs_stock;
     my %phenotypes;
     my $has_members_genotypes;
-    my $objects = $bcs_stock->stock_relationship_objects ;
-    # now we have rs of stock_relationship objects. We need to find the phenotypes of their related subjects
-    while (my $object = $objects->next ) {
-        my $subject = $object->subject;
-        my $subject_stock = CXGN::Chado::Stock->new($self->schema, $subject->stock_id);
+    # now we have rs of stock_relationship objects. We need to find
+    # the phenotypes of their related subjects
+    for my $subject ( map $_->subject, $bcs_stock->stock_relationship_objects ) {
         my $subject_phenotype_ref = $self->_stock_project_phenotypes( $bcs_stock );
-        $has_members_genotypes = 1 if $self->_stock_genotypes($subject_stock);
+        $has_members_genotypes = 1 if $self->_stock_genotypes( $subject->stock_id );
         my %subject_phenotypes = %$subject_phenotype_ref;
         foreach my $key (keys %subject_phenotypes) {
             push(@{$phenotypes{$key} } , @{$subject_phenotypes{$key} } );
@@ -477,16 +475,12 @@ sub _stock_allele_ids {
 }
 
 sub _stock_genotypes {
-    my ($self, $stock) = @_;
-    my $dbh = $stock->get_schema->storage->dbh;
-    my $q = "SELECT genotype_id FROM phenome.genotype WHERE stock_id = ?";
-    my $sth = $dbh->prepare($q);
-    $sth->execute($stock->get_stock_id);
-    my @genotypes;
-    while (my ($genotype_id) = $sth->fetchrow_array ) {
-        push @genotypes, $genotype_id;
-    }
-    return \@genotypes;
+    my ($self, $stock_id) = @_;
+    die "pass a stock id!" unless $stock_id + 0 == $stock_id;
+    my $dbh = $self->schema->storage->dbh;
+    return $dbh->selectcol_arrayref( <<'', undef, $stock_id );
+SELECT genotype_id FROM phenome.genotype WHERE stock_id = ?
+
 }
 
 sub _validate_pair {
