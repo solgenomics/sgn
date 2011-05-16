@@ -197,6 +197,10 @@ sub get_stock : Chained('/')  PathPart('stock')  CaptureArgs(1) {
     my ($self, $c, $stock_id) = @_;
 
     $c->stash->{stock} = CXGN::Chado::Stock->new($self->schema, $stock_id);
+    $c->stash->{stock_row} = $self->schema->resultset('Stock::Stock')
+                                  ->find({ stock_id => $stock_id },
+                                         { prefetch => { 'stock_relationship_objects' => 'subject' } },
+                                        );
 }
 
 #add the stockprops to the stash. Props are a hashref of lists.
@@ -224,7 +228,7 @@ sub get_stock_extended_info : Private {
     my $direct_phenotypes  = $stock ? $self->_stock_project_phenotypes($stock) : undef;
     $c->stash->{direct_phenotypes} = $direct_phenotypes;
 
-    my ($members_phenotypes, $has_members_genotypes)  = $stock ? $self->_stock_members_phenotypes($stock) : undef;
+    my ($members_phenotypes, $has_members_genotypes)  = $stock ? $self->_stock_members_phenotypes( $c->stash->{stock_row} ) : undef;
     $c->stash->{members_phenotypes} = $members_phenotypes;
 
     my $allele_ids = $stock ? $self->_stock_allele_ids($stock) : undef;
@@ -394,22 +398,20 @@ sub _stock_project_phenotypes {
 # this sub gets all phenotypes measured on all subjects of this stock.
 # Subjects are in stock_relationship
 sub _stock_members_phenotypes {
-    my ($self, $stock) = @_;
+    my ($self, $bcs_stock) = @_;
+    return unless $bcs_stock;
     my %phenotypes;
     my $has_members_genotypes;
-    my $bcs_stock = $stock->get_object_row;
-    if ($bcs_stock) {
-        my $objects = $bcs_stock->stock_relationship_objects ;
-        # now we have rs of stock_relationship objects. We need to find the phenotypes of their related subjects
-        while (my $object = $objects->next ) {
-            my $subject = $object->subject;
-            my $subject_stock = CXGN::Chado::Stock->new($self->schema, $subject->stock_id);
-            my $subject_phenotype_ref = $self->_stock_project_phenotypes($subject_stock);
-            $has_members_genotypes = 1 if $self->_stock_genotypes($subject_stock);
-            my %subject_phenotypes = %$subject_phenotype_ref;
-            foreach my $key (keys %subject_phenotypes) {
-                push(@{$phenotypes{$key} } , @{$subject_phenotypes{$key} } );
-            }
+    my $objects = $bcs_stock->stock_relationship_objects ;
+    # now we have rs of stock_relationship objects. We need to find the phenotypes of their related subjects
+    while (my $object = $objects->next ) {
+        my $subject = $object->subject;
+        my $subject_stock = CXGN::Chado::Stock->new($self->schema, $subject->stock_id);
+        my $subject_phenotype_ref = $self->_stock_project_phenotypes($subject_stock);
+        $has_members_genotypes = 1 if $self->_stock_genotypes($subject_stock);
+        my %subject_phenotypes = %$subject_phenotype_ref;
+        foreach my $key (keys %subject_phenotypes) {
+            push(@{$phenotypes{$key} } , @{$subject_phenotypes{$key} } );
         }
     }
     return \%phenotypes, $has_members_genotypes;
