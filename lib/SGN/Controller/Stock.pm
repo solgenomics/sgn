@@ -377,7 +377,6 @@ sub _stock_project_phenotypes {
     my $nd_experiments = $bcs_stock->nd_experiment_stocks->search_related('nd_experiment');
     my %phenotypes;
     while (my $exp = $nd_experiments->next) {
-        my $geolocation = $exp->nd_geolocation;
         # there should be one project linked to the experiment ?
         my $project = $exp->nd_experiment_projects->search_related('project')->first;
         my @ph = $exp->nd_experiment_phenotypes->search_related('phenotype')->all;
