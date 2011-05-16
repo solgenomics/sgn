@@ -3,7 +3,7 @@ package SGN::Controller::Stock;
 =head1 NAME
 
 SGN::Controller::Stock - Catalyst controller for pages dealing with
-stocks (e.g. accession, poopulation, etc.)
+stocks (e.g. accession, population, etc.)
 
 =cut
 
