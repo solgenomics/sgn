@@ -374,7 +374,7 @@ sub _stock_project_phenotypes {
 
     return {} unless $bcs_stock;
 
-    my $nd_experiments = $bcs_stock->nd_experiment_stocks->search_related('nd_experiment');
+    my $nd_experiments = $bcs_stock->search_related('nd_experiment_stocks')->search_related('nd_experiment');
     my %phenotypes;
     while (my $exp = $nd_experiments->next) {
         # there should be one project linked to the experiment ?
