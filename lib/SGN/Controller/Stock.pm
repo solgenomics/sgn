@@ -193,7 +193,6 @@ Path part: /stock/<stock_id>
 sub get_stock : Chained('/')  PathPart('stock')  CaptureArgs(1) {
     my ($self, $c, $stock_id) = @_;
 
-    $self->schema( $c->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' ) );
     $c->stash->{stock} = CXGN::Chado::Stock->new($self->schema, $stock_id);
 
     #add the stockprops to the stash. Props are a hashref of lists.
