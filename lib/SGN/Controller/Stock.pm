@@ -225,7 +225,7 @@ sub get_stock_extended_info : Private {
     my $cvterms  = $stock ?  $self->_stock_cvterms($stock) : undef ;
     $c->stash->{stock_cvterms} = $cvterms;
 
-    my $direct_phenotypes  = $stock ? $self->_stock_project_phenotypes($stock) : undef;
+    my $direct_phenotypes  = $stock ? $self->_stock_project_phenotypes( $c->stash->{stock_row} ) : undef;
     $c->stash->{direct_phenotypes} = $direct_phenotypes;
 
     my ($members_phenotypes, $has_members_genotypes)  = $stock ? $self->_stock_members_phenotypes( $c->stash->{stock_row} ) : undef;
@@ -367,30 +367,21 @@ sub _dbxrefs {
     return $dbxrefs;
 }
 
-sub _stock_nd_experiments {
-    my ($self, $stock) = @_;
-    my $bcs_stock = $stock->get_object_row;
-    if ($bcs_stock) {
-        my $nd_experiments = $bcs_stock->nd_experiment_stocks->search_related('nd_experiment');
-        return $nd_experiments;
-    }
-    return undef;
-}
-
 # this sub gets all phenotypes measured directly on this stock and stores
 # it in a hashref of keys = project name , values = list of BCS::Phenotype::Phenotype objects
 sub _stock_project_phenotypes {
-    my ($self, $stock) = @_;
-    my $nd_experiments = $self->_stock_nd_experiments($stock);
+    my ($self, $bcs_stock) = @_;
+
+    return {} unless $bcs_stock;
+
+    my $nd_experiments = $bcs_stock->nd_experiment_stocks->search_related('nd_experiment');
     my %phenotypes;
-    if ($nd_experiments) {
-        while (my $exp = $nd_experiments->next) {
-            my $geolocation = $exp->nd_geolocation;
-            # there should be one project linked to the experiment ?
-            my $project = $exp->nd_experiment_projects->search_related('project')->first;
-            my @ph = $exp->nd_experiment_phenotypes->search_related('phenotype')->all;
-            push(@{$phenotypes{$project->description}}, @ph) if @ph;
-        }
+    while (my $exp = $nd_experiments->next) {
+        my $geolocation = $exp->nd_geolocation;
+        # there should be one project linked to the experiment ?
+        my $project = $exp->nd_experiment_projects->search_related('project')->first;
+        my @ph = $exp->nd_experiment_phenotypes->search_related('phenotype')->all;
+        push(@{$phenotypes{$project->description}}, @ph) if @ph;
     }
     return \%phenotypes;
 }
@@ -407,7 +398,7 @@ sub _stock_members_phenotypes {
     while (my $object = $objects->next ) {
         my $subject = $object->subject;
         my $subject_stock = CXGN::Chado::Stock->new($self->schema, $subject->stock_id);
-        my $subject_phenotype_ref = $self->_stock_project_phenotypes($subject_stock);
+        my $subject_phenotype_ref = $self->_stock_project_phenotypes( $bcs_stock );
         $has_members_genotypes = 1 if $self->_stock_genotypes($subject_stock);
         my %subject_phenotypes = %$subject_phenotype_ref;
         foreach my $key (keys %subject_phenotypes) {
