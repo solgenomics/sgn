@@ -202,6 +202,7 @@ sub display_ontologies : Chained('/stock/get_stock') :PathPart('ontologies') : A
 
 sub display_ontologies_GET  {
     my ($self, $c) = @_;
+    $c->forward('/stock/get_stock_cvterms');
     my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
     my $stock = $c->stash->{stock};
     my $sp_cvterms = $c->stash->{stock_cvterms}->{SP};

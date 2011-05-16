@@ -100,6 +100,9 @@ Chained off of L</get_stock> below.
 
 sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
     my ( $self, $c, $action) = @_;
+
+    $c->forward('get_stock_extended_info');
+
     my $logged_user = $c->user;
     my $person_id = $logged_user->get_object->get_sp_person_id if $logged_user;
     my $curator = $logged_user->check_roles('curator') if $logged_user;
@@ -194,12 +197,21 @@ sub get_stock : Chained('/')  PathPart('stock')  CaptureArgs(1) {
     my ($self, $c, $stock_id) = @_;
 
     $c->stash->{stock} = CXGN::Chado::Stock->new($self->schema, $stock_id);
+}
 
-    #add the stockprops to the stash. Props are a hashref of lists.
-    # keys are the cvterm name (prop type) and values  are the prop values.
+#add the stockprops to the stash. Props are a hashref of lists.
+# keys are the cvterm name (prop type) and values  are the prop values.
+sub get_stock_cvterms : Private {
+    my ( $self, $c ) = @_;
     my $stock = $c->stash->{stock};
     my $properties = $stock ?  $self->_stockprops($stock) : undef ;
     $c->stash->{stockprops} = $properties;
+}
+
+sub get_stock_extended_info : Private {
+    my ( $self, $c ) = @_;
+    $c->forward('get_stock_cvterms');
+    my $stock = $c->stash->{stock};
 
     #add the stock_dbxrefs to the stash. Dbxrefs are hashref of lists.
     # keys are db-names , values are lists of Bio::Chado::Schema::General::Dbxref objects
