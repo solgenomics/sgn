@@ -2,7 +2,8 @@ package SGN::Controller::Stock;
 
 =head1 NAME
 
-SGN::Controller::Stock - Catalyst controller for pages dealing with stocks (e.g. accession, poopulation, etc.)
+SGN::Controller::Stock - Catalyst controller for pages dealing with
+stocks (e.g. accession, poopulation, etc.)
 
 =cut
 
@@ -30,11 +31,15 @@ has 'default_page_size' => (
 BEGIN { extends 'Catalyst::Controller' }
 with 'Catalyst::Component::ApplicationAttribute';
 
-sub _validate_pair {
-    my ($self,$c,$key,$value) = @_;
-    $c->throw( is_client_error => 1, public_message => "$value is not a valid value for $key" )
-        if ($key =~ m/_id$/ and $value !~ m/\d+/);
-}
+=head1 PUBLIC ACTIONS
+
+=head2 search
+
+Public path: /stock/search
+
+Display a stock search form, or handle stock searching.
+
+=cut
 
 sub search :Path('/stock/search') Args(0) {
     my ( $self, $c ) = @_;
@@ -57,6 +62,169 @@ sub search :Path('/stock/search') Args(0) {
     );
 }
 
+=head2 new_stock
+
+Public path: /stock/0/new
+
+Create a new stock.
+
+Chained off of L</get_stock> below.
+
+=cut
+
+sub new_stock : Chained('get_stock') PathPart('new') Args(0) {
+    my ( $self, $c ) = @_;
+    $c->stash(
+        template => '/stock/index.mas',
+
+        stockref => {
+            action    => "new",
+            stock_id  => 0 ,
+            stock     => $c->stash->{stock},
+            schema    => $self->schema,
+        },
+        );
+}
+
+
+=head2 view_stock
+
+Public path: /stock/<stock_id>/view
+
+View a stock's detail page.
+
+Chained off of L</get_stock> below.
+
+=cut
+
+sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
+    my ( $self, $c, $action) = @_;
+    my $logged_user = $c->user;
+    my $person_id = $logged_user->get_object->get_sp_person_id if $logged_user;
+    my $curator = $logged_user->check_roles('curator') if $logged_user;
+    my $submitter = $logged_user->check_roles('submitter') if $logged_user;
+    my $sequencer = $logged_user->check_roles('sequencer') if $logged_user;
+
+    my $dbh = $c->dbc->dbh;
+
+    ##################
+
+    ###Check if a stock page can be printed###
+
+    my $stock = $c->stash->{stock};
+    my $stock_id = $stock ? $stock->get_stock_id : undef ;
+
+    # print message if stock_id is not valid
+    unless ( ( $stock_id =~ m /^\d+$/ ) || ($action eq 'new' && !$stock_id) ) {
+        $c->throw_404( "No stock/accession exists for identifier $stock_id" );
+    }
+    unless ( $stock->get_object_row || !$stock_id && $action && $action eq 'new' ) {
+        $c->throw_404( "No stock/accession exists for identifier $stock_id" );
+    }
+
+    # print message if the stock is obsolete
+    my $obsolete = $stock->get_is_obsolete();
+    if ( $obsolete  && !$curator ) {
+        $c->throw(is_client_error => 0,
+                  title             => 'Obsolete stock',
+                  message           => "Stock $stock_id is obsolete!",
+                  developer_message => 'only curators can see obsolete stock',
+                  notify            => 0,   #< does not send an error email
+            );
+    }
+    # print message if stock_id does not exist
+    if ( !$stock && $action ne 'new' && $action ne 'store' ) {
+        $c->throw_404('No stock exists for this identifier');
+    }
+
+    ####################
+    my $props = $self->_stockprops($stock);
+    my $is_owner;
+    my $owner_ids = $props->{sp_person_id} || [] ;
+    if ( $stock && ($curator || $person_id && ( grep /^$person_id$/, @$owner_ids ) ) ) {
+        $is_owner = 1;
+    }
+    my $dbxrefs = $self->_dbxrefs($stock);
+    my $pubs = $self->_stock_pubs($stock);
+    my $image_ids = $self->_stock_images($stock);
+    my $cview_tmp_dir = $c->tempfiles_subdir('cview');
+################
+    $c->stash(
+        template => '/stock/index.mas',
+
+        stockref => {
+            action    => $action,
+            stock_id  => $stock_id ,
+            curator   => $curator,
+            submitter => $submitter,
+            sequencer => $sequencer,
+            person_id => $person_id,
+            stock     => $stock,
+            schema    => $self->schema,
+            dbh       => $dbh,
+            is_owner  => $is_owner,
+            props     => $props,
+            dbxrefs   => $dbxrefs,
+            owners    => $owner_ids,
+            pubs      => $pubs,
+            members_phenotypes => $c->stash->{members_phenotypes},
+            direct_phenotypes  => $c->stash->{direct_phenotypes},
+            has_qtl_data   => $c->stash->{has_qtl_data},
+            cview_tmp_dir  => $cview_tmp_dir,
+            cview_basepath => $c->get_conf('basepath'),
+            image_ids      => $image_ids,
+        },
+        locus_add_uri  => $c->uri_for( '/ajax/stock/associate_locus' ),
+        cvterm_add_uri => $c->uri_for( '/ajax/stock/associate_ontology')
+        );
+}
+
+=head1 PRIVATE ACTIONS
+
+=head2 get_stock
+
+Chain root for fetching a stock object to operate on.
+
+Path part: /stock/<stock_id>
+
+=cut
+
+sub get_stock : Chained('/')  PathPart('stock')  CaptureArgs(1) {
+    my ($self, $c, $stock_id) = @_;
+
+    $self->schema( $c->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' ) );
+    $c->stash->{stock} = CXGN::Chado::Stock->new($self->schema, $stock_id);
+
+    #add the stockprops to the stash. Props are a hashref of lists.
+    # keys are the cvterm name (prop type) and values  are the prop values.
+    my $stock = $c->stash->{stock};
+    my $properties = $stock ?  $self->_stockprops($stock) : undef ;
+    $c->stash->{stockprops} = $properties;
+
+    #add the stock_dbxrefs to the stash. Dbxrefs are hashref of lists.
+    # keys are db-names , values are lists of Bio::Chado::Schema::General::Dbxref objects
+    my $dbxrefs  = $stock ?  $self->_stock_dbxrefs($stock) : undef ;
+    $c->stash->{stock_dbxrefs} = $dbxrefs;
+
+    my $cvterms  = $stock ?  $self->_stock_cvterms($stock) : undef ;
+    $c->stash->{stock_cvterms} = $cvterms;
+
+    my $direct_phenotypes  = $stock ? $self->_stock_project_phenotypes($stock) : undef;
+    $c->stash->{direct_phenotypes} = $direct_phenotypes;
+
+    my ($members_phenotypes, $has_members_genotypes)  = $stock ? $self->_stock_members_phenotypes($stock) : undef;
+    $c->stash->{members_phenotypes} = $members_phenotypes;
+
+    my $allele_ids = $stock ? $self->_stock_allele_ids($stock) : undef;
+    $c->stash->{allele_ids} = $allele_ids;
+
+    my $stock_type;
+    $stock_type = $stock->get_object_row->type->name if $stock->get_object_row;
+    if ( ( grep { /^$stock_type/ } ('f2 population', 'backcross population') ) &&  $members_phenotypes && $has_members_genotypes ) { $c->stash->{has_qtl_data} = 1 ; }
+
+}
+
+############## HELPER METHODS ######################3
 
 # assembles a DBIC resultset for the search based on the submitted
 # form values
@@ -151,111 +319,6 @@ WHERE ( first_name || ' ' || last_name ) like '%' || ? || '%'
     return $rs;
 }
 
-
-# sub view_id :Path('/stock/view/id') :Args(1) {
-#     my ( $self, $c , $stock_id) = @_;
-
-#     $self->schema( $c->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' ) );
-#     $self->_view_stock($c, 'view', $stock_id);
-# }
-
-
-sub new_stock :Chained('get_stock') : PathPart('new') :Args(0) {
-    my ( $self, $c ) = @_;
-    $c->stash(
-        template => '/stock/index.mas',
-
-        stockref => {
-            action    => "new",
-            stock_id  => 0 ,
-            stock     => $c->stash->{stock},
-            schema    => $self->schema,
-        },
-        );
-}
-
-
-sub view_stock :Chained('get_stock') :PathPart('view') :Args(0) {
-    my ( $self, $c, $action) = @_;
-    my $logged_user = $c->user;
-    my $person_id = $logged_user->get_object->get_sp_person_id if $logged_user;
-    my $curator = $logged_user->check_roles('curator') if $logged_user;
-    my $submitter = $logged_user->check_roles('submitter') if $logged_user;
-    my $sequencer = $logged_user->check_roles('sequencer') if $logged_user;
-
-    my $dbh = $c->dbc->dbh;
-
-    ##################
-
-    ###Check if a stock page can be printed###
-
-    my $stock = $c->stash->{stock};
-    my $stock_id = $stock ? $stock->get_stock_id : undef ;
-
-    # print message if stock_id is not valid
-    unless ( ( $stock_id =~ m /^\d+$/ ) || ($action eq 'new' && !$stock_id) ) {
-        $c->throw_404( "No stock/accession exists for identifier $stock_id" );
-    }
-    unless ( $stock->get_object_row || !$stock_id && $action && $action eq 'new' ) {
-        $c->throw_404( "No stock/accession exists for identifier $stock_id" );
-    }
-
-    # print message if the stock is obsolete
-    my $obsolete = $stock->get_is_obsolete();
-    if ( $obsolete  && !$curator ) {
-        $c->throw(is_client_error => 0,
-                  title             => 'Obsolete stock',
-                  message           => "Stock $stock_id is obsolete!",
-                  developer_message => 'only curators can see obsolete stock',
-                  notify            => 0,   #< does not send an error email
-            );
-    }
-    # print message if stock_id does not exist
-    if ( !$stock && $action ne 'new' && $action ne 'store' ) {
-        $c->throw_404('No stock exists for this identifier');
-    }
-
-    ####################
-    my $props = $self->_stockprops($stock);
-    my $is_owner;
-    my $owner_ids = $props->{sp_person_id} || [] ;
-    if ( $stock && ($curator || $person_id && ( grep /^$person_id$/, @$owner_ids ) ) ) {
-        $is_owner = 1;
-    }
-    my $dbxrefs = $self->_dbxrefs($stock);
-    my $pubs = $self->_stock_pubs($stock);
-    my $image_ids = $self->_stock_images($stock);
-    my $cview_tmp_dir = $c->tempfiles_subdir('cview');
-################
-    $c->stash(
-        template => '/stock/index.mas',
-
-        stockref => {
-            action    => $action,
-            stock_id  => $stock_id ,
-            curator   => $curator,
-            submitter => $submitter,
-            sequencer => $sequencer,
-            person_id => $person_id,
-            stock     => $stock,
-            schema    => $self->schema,
-            dbh       => $dbh,
-            is_owner  => $is_owner,
-            props     => $props,
-            dbxrefs   => $dbxrefs,
-            owners    => $owner_ids,
-            pubs      => $pubs,
-            members_phenotypes => $c->stash->{members_phenotypes},
-            direct_phenotypes  => $c->stash->{direct_phenotypes},
-            has_qtl_data   => $c->stash->{has_qtl_data},
-            cview_tmp_dir  => $cview_tmp_dir,
-            cview_basepath => $c->get_conf('basepath'),
-            image_ids      => $image_ids,
-        },
-        locus_add_uri  => $c->uri_for( '/ajax/stock/associate_locus' ),
-        cvterm_add_uri => $c->uri_for( '/ajax/stock/associate_ontology')
-        );
-}
 
 sub _stockprops {
     my ($self,$stock) = @_;
@@ -421,41 +484,13 @@ sub _stock_genotypes {
     return \@genotypes;
 }
 
-
-sub get_stock :Chained('/') :PathPart('stock') :CaptureArgs(1) {
-    my ($self, $c, $stock_id) = @_;
-
-    $self->schema( $c->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' ) );
-    $c->stash->{stock} = CXGN::Chado::Stock->new($self->schema, $stock_id);
-
-    #add the stockprops to the stash. Props are a hashref of lists.
-    # keys are the cvterm name (prop type) and values  are the prop values.
-    my $stock = $c->stash->{stock};
-    my $properties = $stock ?  $self->_stockprops($stock) : undef ;
-    $c->stash->{stockprops} = $properties;
-
-    #add the stock_dbxrefs to the stash. Dbxrefs are hashref of lists.
-    # keys are db-names , values are lists of Bio::Chado::Schema::General::Dbxref objects
-    my $dbxrefs  = $stock ?  $self->_stock_dbxrefs($stock) : undef ;
-    $c->stash->{stock_dbxrefs} = $dbxrefs;
-
-    my $cvterms  = $stock ?  $self->_stock_cvterms($stock) : undef ;
-    $c->stash->{stock_cvterms} = $cvterms;
-
-    my $direct_phenotypes  = $stock ? $self->_stock_project_phenotypes($stock) : undef;
-    $c->stash->{direct_phenotypes} = $direct_phenotypes;
-
-    my ($members_phenotypes, $has_members_genotypes)  = $stock ? $self->_stock_members_phenotypes($stock) : undef;
-    $c->stash->{members_phenotypes} = $members_phenotypes;
-
-    my $allele_ids = $stock ? $self->_stock_allele_ids($stock) : undef;
-    $c->stash->{allele_ids} = $allele_ids;
-
-    my $stock_type;
-    $stock_type = $stock->get_object_row->type->name if $stock->get_object_row;
-    if ( ( grep { /^$stock_type/ } ('f2 population', 'backcross population') ) &&  $members_phenotypes && $has_members_genotypes ) { $c->stash->{has_qtl_data} = 1 ; }
-
+sub _validate_pair {
+    my ($self,$c,$key,$value) = @_;
+    $c->throw( is_client_error => 1, public_message => "$value is not a valid value for $key" )
+        if ($key =~ m/_id$/ and $value !~ m/\d+/);
 }
+
+
 
 ######
 1;
