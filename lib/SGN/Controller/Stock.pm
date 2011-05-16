@@ -395,8 +395,9 @@ sub _stock_members_phenotypes {
     # now we have rs of stock_relationship objects. We need to find
     # the phenotypes of their related subjects
     for my $subject ( map $_->subject, $bcs_stock->stock_relationship_objects ) {
-        my $subject_phenotype_ref = $self->_stock_project_phenotypes( $bcs_stock );
-        $has_members_genotypes = 1 if $self->_stock_genotypes( $subject->stock_id );
+        my $genotypes = $self->_stock_genotypes( $subject->stock_id );
+        $has_members_genotypes = 1 if @$genotypes;
+        my $subject_phenotype_ref = $self->_stock_project_phenotypes( $subject );
         my %subject_phenotypes = %$subject_phenotype_ref;
         foreach my $key (keys %subject_phenotypes) {
             push(@{$phenotypes{$key} } , @{$subject_phenotypes{$key} } );
