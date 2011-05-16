@@ -16,20 +16,22 @@ use URI::FromHash 'uri';
 use CXGN::Chado::Stock;
 use SGN::View::Stock qw/stock_link stock_organisms stock_types/;
 
+
+BEGIN { extends 'Catalyst::Controller' }
+with 'Catalyst::Component::ApplicationAttribute';
+
 has 'schema' => (
     is       => 'rw',
     isa      => 'DBIx::Class::Schema',
-    required => 0,
+    default  => sub {
+        shift->_app->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' )
+    },
 );
 
 has 'default_page_size' => (
     is      => 'ro',
     default => 20,
 );
-
-
-BEGIN { extends 'Catalyst::Controller' }
-with 'Catalyst::Component::ApplicationAttribute';
 
 =head1 PUBLIC ACTIONS
 
@@ -43,7 +45,6 @@ Display a stock search form, or handle stock searching.
 
 sub search :Path('/stock/search') Args(0) {
     my ( $self, $c ) = @_;
-    $self->schema( $c->dbic_schema('Bio::Chado::Schema','sgn_chado') );
 
     my $results = $c->req->param('search_submitted') ? $self->_make_stock_search_rs($c) : undef;
     my $form = HTML::FormFu->new(LoadFile($c->path_to(qw{forms stock stock_search.yaml})));
