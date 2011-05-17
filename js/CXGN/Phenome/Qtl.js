@@ -32,13 +32,16 @@ var Qtl = {
     
     toggleStatOptions: function(id)
     {
-        var e = document.getElementById('statTools');
+        var e = document.getElementById('statTools'); 
         var all = e.getElementsByTagName('div');
         
         for(var i=0;i<all.length;i++)
             {
                 all[i].style.display="none";
-                if(all[i].id==id){all[i].style.display="block";}
+                if(all[i].id==id)
+                    {
+                        all[i].style.display="block";
+                    }
             }
     },
    
