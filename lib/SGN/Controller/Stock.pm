@@ -199,7 +199,10 @@ sub get_stock : Chained('/')  PathPart('stock')  CaptureArgs(1) {
     $c->stash->{stock} = CXGN::Chado::Stock->new($self->schema, $stock_id);
     $c->stash->{stock_row} = $self->schema->resultset('Stock::Stock')
                                   ->find({ stock_id => $stock_id },
-                                         { prefetch => { 'stock_relationship_objects' => 'subject' } },
+                                         { prefetch => {
+                                             'stock_relationship_objects' => [ { 'subject' => 'type' }, 'type'],
+                                           },
+                                         },
                                         );
 }
 

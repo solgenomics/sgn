@@ -38,7 +38,7 @@ Naama Menda <nm249@cornell.edu>
 </%doc>
 
 <%args>
-
+$stock_row
 $stockref => undef
 $locus_add_uri => ''
 $locus_autocomplete_uri => undef
@@ -75,7 +75,7 @@ my $stockprop_cv = $schema->resultset("Cv::Cv")->search( {
 
 
 my ($type_name, $uniquename);
-my $type = $stock->get_object_row ? $stock->get_object_row->type : undef;
+my $type = $stock_row ? $stock_row->type : undef;
 $type_name  = $type->name() if $type;
 $uniquename = $stock->get_uniquename if $type;
 #################
@@ -217,7 +217,7 @@ my $new_ontology_link = !$person_id ? qq|<a href="/solpeople/login.pl">[log-in t
 
 % if ($type) {
 <&| /page/info_section.mas, title=>"Related stocks" , collapsible=>1, collapsed=>0 &>
-  <& /stock/related_stocks.mas, stock => $stock->get_object_row &>
+  <& /stock/related_stocks.mas, stock => $stock_row &>
 
 </&>
 
