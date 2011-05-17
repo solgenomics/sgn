@@ -224,7 +224,7 @@ my $new_ontology_link = !$person_id ? qq|<a href="/solpeople/login.pl">[log-in t
 % }
 
 
-<&| /page/info_section.mas, title=>"images (" .  scalar(@$image_ids)  . ")", subtitle => "$add_image_link", collapsible=>1, collapsed=>1 &>
+<&| /page/info_section.mas, title=>"Images (" .  scalar(@$image_ids)  . ")", subtitle => "$add_image_link", collapsible=>1, collapsed=>1 &>
   <& /image/print_images.mas , images=>$image_ids , dbh=>$dbh &>
 
 </&>
