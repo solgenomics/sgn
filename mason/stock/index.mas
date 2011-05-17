@@ -157,7 +157,7 @@ my $new_ontology_link = !$person_id ? qq|<a href="/solpeople/login.pl">[log-in t
 <& /util/import_javascript.mas, classes => ["jquery", "thickbox", "CXGN.Page.FormattingHelpers"] &>
 
 
-<& /page/page_title.mas, title=> ucfirst($type_name)  .  ": " . $uniquename  . "\n" &>
+<& /page/page_title.mas, title=> join( ': ', grep $_, ucfirst($type_name), $uniquename ) || 'Create a new stock' &>
 
 
 <&| /page/info_section.mas, title=>"Stock details" , subtitle => "<a href=../../phenome/qtl_form.pl>New QTL population</a> | <a href=/stock/search/>Back to stock search</a>"  &>
