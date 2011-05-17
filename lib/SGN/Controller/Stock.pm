@@ -391,12 +391,14 @@ sub _stock_members_phenotypes {
     my ($self, $bcs_stock) = @_;
     return unless $bcs_stock;
     my %phenotypes;
-    my $has_members_genotypes;
+    my $has_members_genotypes = 0;
     # now we have rs of stock_relationship objects. We need to find
     # the phenotypes of their related subjects
     for my $subject ( map $_->subject, $bcs_stock->stock_relationship_objects ) {
-        my $genotypes = $self->_stock_genotypes( $subject->stock_id );
-        $has_members_genotypes = 1 if @$genotypes;
+        $has_members_genotypes ||= do {
+            my $genotypes = $self->_stock_genotypes( $subject->stock_id );
+            scalar(@$genotypes) ? 1 : 0
+        };
         my $subject_phenotype_ref = $self->_stock_project_phenotypes( $subject );
         my %subject_phenotypes = %$subject_phenotype_ref;
         foreach my $key (keys %subject_phenotypes) {
