@@ -196,14 +196,9 @@ Path part: /stock/<stock_id>
 sub get_stock : Chained('/')  PathPart('stock')  CaptureArgs(1) {
     my ($self, $c, $stock_id) = @_;
 
-    $c->stash->{stock} = CXGN::Chado::Stock->new($self->schema, $stock_id);
+    $c->stash->{stock}     = CXGN::Chado::Stock->new($self->schema, $stock_id);
     $c->stash->{stock_row} = $self->schema->resultset('Stock::Stock')
-                                  ->find({ stock_id => $stock_id },
-                                         { prefetch => {
-                                             'stock_relationship_objects' => [ { 'subject' => 'type' }, 'type'],
-                                           },
-                                         },
-                                        );
+                                  ->find({ stock_id => $stock_id });
 }
 
 #add the stockprops to the stash. Props are a hashref of lists.
@@ -218,6 +213,16 @@ sub get_stock_cvterms : Private {
 sub get_stock_extended_info : Private {
     my ( $self, $c ) = @_;
     $c->forward('get_stock_cvterms');
+
+    # look up the stock again, this time prefetching a lot of data about its related stocks
+    $c->stash->{stock_row} = $self->schema->resultset('Stock::Stock')
+                                  ->find({ stock_id => $c->stash->{stock_row}->stock_id },
+                                         { prefetch => {
+                                             'stock_relationship_objects' => [ { 'subject' => 'type' }, 'type'],
+                                           },
+                                         },
+                                        );
+
     my $stock = $c->stash->{stock};
 
     #add the stock_dbxrefs to the stash. Dbxrefs are hashref of lists.
