@@ -367,20 +367,34 @@ sub _dbxrefs {
     return $dbxrefs;
 }
 
-# this sub gets all phenotypes measured directly on this stock and stores
-# it in a hashref of keys = project name , values = list of BCS::Phenotype::Phenotype objects
+# this sub gets all phenotypes measured directly on this stock and
+# stores it in a hashref as { project_name => [ BCS::Phenotype::Phenotype, ... ]
+
 sub _stock_project_phenotypes {
     my ($self, $bcs_stock) = @_;
 
     return {} unless $bcs_stock;
 
-    my $nd_experiments = $bcs_stock->search_related('nd_experiment_stocks')->search_related('nd_experiment');
+    # hash of experiment_id => project(s) desc
+    my %project_descriptions =
+        map { $_->nd_experiment_id => join( ', ', map $_->project->description, $_->nd_experiment_projects ) }
+        $bcs_stock->search_related('nd_experiment_stocks')
+                  ->search_related('nd_experiment',
+                                   {},
+                                   { prefetch => { 'nd_experiment_projects' => 'project' } },
+                                   );
+    my $experiments = $bcs_stock->search_related('nd_experiment_stocks')
+                                ->search_related('nd_experiment',
+                                                 {},
+                                                 { prefetch => { nd_experiment_phenotypes => 'phenotype' } },
+                                                );
     my %phenotypes;
-    while (my $exp = $nd_experiments->next) {
+    while (my $exp = $experiments->next) {
         # there should be one project linked to the experiment ?
-        my $project = $exp->nd_experiment_projects->search_related('project')->first;
-        my @ph = $exp->nd_experiment_phenotypes->search_related('phenotype')->all;
-        push(@{$phenotypes{$project->description}}, @ph) if @ph;
+        my @ph = map $_->phenotype, $exp->nd_experiment_phenotypes;
+        my $project_desc = $project_descriptions{ $exp->nd_experiment_id }
+            or die "no project found for exp ".$exp->nd_experiment_id;
+        push @{ $phenotypes{ $project_desc }}, @ph;
     }
     return \%phenotypes;
 }
@@ -391,21 +405,19 @@ sub _stock_members_phenotypes {
     my ($self, $bcs_stock) = @_;
     return unless $bcs_stock;
     my %phenotypes;
-    my $has_members_genotypes = 0;
+    my ($has_members_genotypes) = $bcs_stock->result_source->schema->storage->dbh->selectrow_array( <<'', undef, $bcs_stock->stock_id );
+SELECT COUNT( DISTINCT genotype_id )
+  FROM phenome.genotype
+  JOIN stock subj using(stock_id)
+  JOIN stock_relationship sr ON( sr.subject_id = subj.stock_id )
+ WHERE sr.object_id = ?
+
     # now we have rs of stock_relationship objects. We need to find
     # the phenotypes of their related subjects
-    for my $subject ( map $_->subject, $bcs_stock->stock_relationship_objects ) {
-        $has_members_genotypes ||= do {
-            my $genotypes = $self->_stock_genotypes( $subject->stock_id );
-            scalar(@$genotypes) ? 1 : 0
-        };
-        my $subject_phenotype_ref = $self->_stock_project_phenotypes( $subject );
-        my %subject_phenotypes = %$subject_phenotype_ref;
-        foreach my $key (keys %subject_phenotypes) {
-            push(@{$phenotypes{$key} } , @{$subject_phenotypes{$key} } );
-        }
-    }
-    return \%phenotypes, $has_members_genotypes;
+    my $subjects = $bcs_stock->search_related('stock_relationship_objects')
+                             ->search_related('subject');
+    my $subject_phenotypes = $self->_stock_project_phenotypes( $subjects );
+    return ( $subject_phenotypes, $has_members_genotypes );
 }
 
 sub _stock_dbxrefs {
@@ -474,15 +486,6 @@ sub _stock_allele_ids {
 	  $stock->get_stock_id
         );
     return $ids;
-}
-
-sub _stock_genotypes {
-    my ($self, $stock_id) = @_;
-    die "pass a stock id!" unless $stock_id + 0 == $stock_id;
-    my $dbh = $self->schema->storage->dbh;
-    return $dbh->selectcol_arrayref( <<'', undef, $stock_id );
-SELECT genotype_id FROM phenome.genotype WHERE stock_id = ?
-
 }
 
 sub _validate_pair {
