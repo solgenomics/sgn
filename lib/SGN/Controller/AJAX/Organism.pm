@@ -274,7 +274,9 @@ sub project_metadata_prop_list {
     return ("genome_project_sequencing_center"    => "Sequencing Center",
             "genome_project_sequenced_accessions" => "Accession",
             "genome_project_dates"                => "Project start, end",
-            "genome_project_funding_agencies"     => "Funding Agencies" );
+            "genome_project_funding_agencies"     => "Funding Agencies",
+	    "genome_project_url"                  => "Project URL", 
+	);
 
 }
 
