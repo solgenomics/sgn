@@ -101,6 +101,9 @@ Chained off of L</get_stock> below.
 
 sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
     my ( $self, $c, $action) = @_;
+
+    $c->forward('get_stock_extended_info');
+
     my $logged_user = $c->user;
     my $person_id = $logged_user->get_object->get_sp_person_id if $logged_user;
     my $curator = $logged_user->check_roles('curator') if $logged_user;
@@ -194,14 +197,34 @@ Path part: /stock/<stock_id>
 sub get_stock : Chained('/')  PathPart('stock')  CaptureArgs(1) {
     my ($self, $c, $stock_id) = @_;
 
-    $self->schema( $c->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' ) );
-    $c->stash->{stock} = CXGN::Chado::Stock->new($self->schema, $stock_id);
+    $c->stash->{stock}     = CXGN::Chado::Stock->new($self->schema, $stock_id);
+    $c->stash->{stock_row} = $self->schema->resultset('Stock::Stock')
+                                  ->find({ stock_id => $stock_id });
+}
 
-    #add the stockprops to the stash. Props are a hashref of lists.
-    # keys are the cvterm name (prop type) and values  are the prop values.
+#add the stockprops to the stash. Props are a hashref of lists.
+# keys are the cvterm name (prop type) and values  are the prop values.
+sub get_stock_cvterms : Private {
+    my ( $self, $c ) = @_;
     my $stock = $c->stash->{stock};
     my $properties = $stock ?  $self->_stockprops($stock) : undef ;
     $c->stash->{stockprops} = $properties;
+}
+
+sub get_stock_extended_info : Private {
+    my ( $self, $c ) = @_;
+    $c->forward('get_stock_cvterms');
+
+    # look up the stock again, this time prefetching a lot of data about its related stocks
+    $c->stash->{stock_row} = $self->schema->resultset('Stock::Stock')
+                                  ->find({ stock_id => $c->stash->{stock_row}->stock_id },
+                                         { prefetch => {
+                                             'stock_relationship_objects' => [ { 'subject' => 'type' }, 'type'],
+                                           },
+                                         },
+                                        );
+
+    my $stock = $c->stash->{stock};
 
     #add the stock_dbxrefs to the stash. Dbxrefs are hashref of lists.
     # keys are db-names , values are lists of Bio::Chado::Schema::General::Dbxref objects
@@ -211,10 +234,10 @@ sub get_stock : Chained('/')  PathPart('stock')  CaptureArgs(1) {
     my $cvterms  = $stock ?  $self->_stock_cvterms($stock) : undef ;
     $c->stash->{stock_cvterms} = $cvterms;
 
-    my $direct_phenotypes  = $stock ? $self->_stock_project_phenotypes($stock) : undef;
+    my $direct_phenotypes  = $stock ? $self->_stock_project_phenotypes( $c->stash->{stock_row} ) : undef;
     $c->stash->{direct_phenotypes} = $direct_phenotypes;
 
-    my ($members_phenotypes, $has_members_genotypes)  = $stock ? $self->_stock_members_phenotypes($stock) : undef;
+    my ($members_phenotypes, $has_members_genotypes)  = $stock ? $self->_stock_members_phenotypes( $c->stash->{stock_row} ) : undef;
     $c->stash->{members_phenotypes} = $members_phenotypes;
 
     my $allele_ids = $stock ? $self->_stock_allele_ids($stock) : undef;
@@ -353,30 +376,34 @@ sub _dbxrefs {
     return $dbxrefs;
 }
 
-sub _stock_nd_experiments {
-    my ($self, $stock) = @_;
-    my $bcs_stock = $stock->get_object_row;
-    if ($bcs_stock) {
-        my $nd_experiments = $bcs_stock->nd_experiment_stocks->search_related('nd_experiment');
-        return $nd_experiments;
-    }
-    return undef;
-}
+# this sub gets all phenotypes measured directly on this stock and
+# stores it in a hashref as { project_name => [ BCS::Phenotype::Phenotype, ... ]
 
-# this sub gets all phenotypes measured directly on this stock and stores
-# it in a hashref of keys = project name , values = list of BCS::Phenotype::Phenotype objects
 sub _stock_project_phenotypes {
-    my ($self, $stock) = @_;
-    my $nd_experiments = $self->_stock_nd_experiments($stock);
+    my ($self, $bcs_stock) = @_;
+
+    return {} unless $bcs_stock;
+
+    # hash of experiment_id => project(s) desc
+    my %project_descriptions =
+        map { $_->nd_experiment_id => join( ', ', map $_->project->description, $_->nd_experiment_projects ) }
+        $bcs_stock->search_related('nd_experiment_stocks')
+                  ->search_related('nd_experiment',
+                                   {},
+                                   { prefetch => { 'nd_experiment_projects' => 'project' } },
+                                   );
+    my $experiments = $bcs_stock->search_related('nd_experiment_stocks')
+                                ->search_related('nd_experiment',
+                                                 {},
+                                                 { prefetch => { nd_experiment_phenotypes => 'phenotype' } },
+                                                );
     my %phenotypes;
-    if ($nd_experiments) {
-        while (my $exp = $nd_experiments->next) {
-            my $geolocation = $exp->nd_geolocation;
-            # there should be one project linked to the experiment ?
-            my $project = $exp->nd_experiment_projects->search_related('project')->first;
-            my @ph = $exp->nd_experiment_phenotypes->search_related('phenotype')->all;
-            push(@{$phenotypes{$project->description}}, @ph) if @ph;
-        }
+    while (my $exp = $experiments->next) {
+        # there should be one project linked to the experiment ?
+        my @ph = map $_->phenotype, $exp->nd_experiment_phenotypes;
+        my $project_desc = $project_descriptions{ $exp->nd_experiment_id }
+            or die "no project found for exp ".$exp->nd_experiment_id;
+        push @{ $phenotypes{ $project_desc }}, @ph;
     }
     return \%phenotypes;
 }
@@ -384,25 +411,22 @@ sub _stock_project_phenotypes {
 # this sub gets all phenotypes measured on all subjects of this stock.
 # Subjects are in stock_relationship
 sub _stock_members_phenotypes {
-    my ($self, $stock) = @_;
+    my ($self, $bcs_stock) = @_;
+    return unless $bcs_stock;
     my %phenotypes;
-    my $has_members_genotypes;
-    my $bcs_stock = $stock->get_object_row;
-    if ($bcs_stock) {
-        my $objects = $bcs_stock->stock_relationship_objects ;
-        # now we have rs of stock_relationship objects. We need to find the phenotypes of their related subjects
-        while (my $object = $objects->next ) {
-            my $subject = $object->subject;
-            my $subject_stock = CXGN::Chado::Stock->new($self->schema, $subject->stock_id);
-            my $subject_phenotype_ref = $self->_stock_project_phenotypes($subject_stock);
-            $has_members_genotypes = 1 if $self->_stock_genotypes($subject_stock);
-            my %subject_phenotypes = %$subject_phenotype_ref;
-            foreach my $key (keys %subject_phenotypes) {
-                push(@{$phenotypes{$key} } , @{$subject_phenotypes{$key} } );
-            }
-        }
-    }
-    return \%phenotypes, $has_members_genotypes;
+    my ($has_members_genotypes) = $bcs_stock->result_source->schema->storage->dbh->selectrow_array( <<'', undef, $bcs_stock->stock_id );
+SELECT COUNT( DISTINCT genotype_id )
+  FROM phenome.genotype
+  JOIN stock subj using(stock_id)
+  JOIN stock_relationship sr ON( sr.subject_id = subj.stock_id )
+ WHERE sr.object_id = ?
+
+    # now we have rs of stock_relationship objects. We need to find
+    # the phenotypes of their related subjects
+    my $subjects = $bcs_stock->search_related('stock_relationship_objects')
+                             ->search_related('subject');
+    my $subject_phenotypes = $self->_stock_project_phenotypes( $subjects );
+    return ( $subject_phenotypes, $has_members_genotypes );
 }
 
 sub _stock_dbxrefs {
@@ -471,19 +495,6 @@ sub _stock_allele_ids {
 	  $stock->get_stock_id
         );
     return $ids;
-}
-
-sub _stock_genotypes {
-    my ($self, $stock) = @_;
-    my $dbh = $stock->get_schema->storage->dbh;
-    my $q = "SELECT genotype_id FROM phenome.genotype WHERE stock_id = ?";
-    my $sth = $dbh->prepare($q);
-    $sth->execute($stock->get_stock_id);
-    my @genotypes;
-    while (my ($genotype_id) = $sth->fetchrow_array ) {
-        push @genotypes, $genotype_id;
-    }
-    return \@genotypes;
 }
 
 sub _validate_pair {
