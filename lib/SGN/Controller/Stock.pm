@@ -23,10 +23,11 @@ with 'Catalyst::Component::ApplicationAttribute';
 has 'schema' => (
     is       => 'rw',
     isa      => 'DBIx::Class::Schema',
-    default  => sub {
-        shift->_app->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' )
-    },
+    lazy_build => 1,
 );
+sub _build_schema {
+    shift->_app->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' )
+}
 
 has 'default_page_size' => (
     is      => 'ro',
