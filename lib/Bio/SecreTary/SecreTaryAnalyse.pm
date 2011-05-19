@@ -21,6 +21,7 @@ use namespace::autoclean;
 use Bio::SecreTary::TMpred;
 use Bio::SecreTary::TMpred_Cinline;
 use Bio::SecreTary::Cleavage;
+use Bio::SecreTary::Cleavage_Cinline;
 use Bio::SecreTary::AAComposition;
 
 has sequence_id => (
@@ -120,7 +121,7 @@ sub BUILD {
 
 # do the cleavage site calculation
     my $cleavage_predictor_obj = $self->cleavage_predictor();  #Bio::SecreTary::Cleavage->new(); # Should avoid doing this for each sequence
-    my $sp_length = $cleavage_predictor_obj->cleavage_fast($self->sequence());
+    my $sp_length = $cleavage_predictor_obj->cleavage($self->sequence());
 
 # subdomains (n, h, c)
     # $hstart is the 0-based number of first AA of h region, i.e. the length of
