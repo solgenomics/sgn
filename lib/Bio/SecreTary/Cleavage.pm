@@ -57,6 +57,7 @@
 package Bio::SecreTary::Cleavage;
 use Moose;
 use namespace::autoclean;
+use List::Util qw/min/;
 
 has weight_matrix => (
     isa     => 'ArrayRef', # 'Maybe[ArrayRef[ArrayRef[Int]]]',
@@ -67,31 +68,6 @@ has aa_number_hash => (
     isa     => 'HashRef', # Maybe[HashRef[Int]]',
     is      => 'rw',
     default => undef );
-
-use List::Util qw/min/;
-
-use Inline C => <<'END_C';
-
-double scoreCleavageSiteFast(SV* m, SV* seq_aa_nums, I32 opos){
-  if ((!SvROK(m))
-                        || (SvTYPE(SvRV(m)) != SVt_PVAV)
-                        || ((av_len((AV *)SvRV(m)) + 1) < 0)) {
-                return -10000;
-        }
-    double result = 0;
-    I32 length = av_len((AV *)SvRV(seq_aa_nums)) + 1; // length of the sequence
-    I32 i;
-    I32 pos = opos + 13; // opos: offset position, pos: position
-    for(i = 0; i < 15; i++){
-        I32 aanum = SvIV(* av_fetch((AV*) SvRV(seq_aa_nums), i + opos, 0 ));
-        SV* a = (* av_fetch((AV*) SvRV(m), aanum, 0 ));
-        result += SvNV(* av_fetch((AV*) SvRV(a), i, 0 ));
-    }
-    result *= exp(-0.5*((20.0-pos)*(20.0-pos)/4000));
-    return result;
-}
-
-END_C
 
 
 sub BUILD {
@@ -358,28 +334,6 @@ sub cleavage {
 
     # returns the cleavage site, which is also the length of the signal peptide.
     return $ibest + 13;
-}
-
-sub cleavage_fast {		# uses Inline::C. faster
-  my $self               = shift;
-  my $sequence           = shift;
-  my $letter2index       = $self->aa_number_hash();
-  my @seq_aanumber_array = map { $letter2index->{$_} } split( '', $sequence );
-  my $weight_matrix_ref  = $self->weight_matrix();
-
-  my $up = min( 45, length($sequence) - 15 );
-  my @cleavageSiteScores = ((0) x $up);
-  $cleavageSiteScores[0] = scoreCleavageSiteFast($weight_matrix_ref, \@seq_aanumber_array, 0);
-  my $ibest = 0;
-  for ( my $i = 1; $i < $up; $i++ ) {
-    if (
-	($cleavageSiteScores[$i] = scoreCleavageSiteFast($weight_matrix_ref, \@seq_aanumber_array, $i) )
-	> $cleavageSiteScores[$ibest] ) {
-      $ibest = $i;
-    }
-  }
-  # return the cleavage site, which is also the length of the signal peptide.
-  return $ibest + 13;
 }
 
 __PACKAGE__->meta->make_immutable;
