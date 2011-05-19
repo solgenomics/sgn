@@ -18,10 +18,6 @@ Tom York (tly2@cornell.edu)
 package Bio::SecreTary::SecreTaryAnalyse;
 use Moose;
 use namespace::autoclean;
-use Bio::SecreTary::TMpred;
-use Bio::SecreTary::TMpred_Cinline;
-use Bio::SecreTary::Cleavage;
-use Bio::SecreTary::Cleavage_Cinline;
 use Bio::SecreTary::AAComposition;
 
 has sequence_id => (
@@ -111,7 +107,7 @@ sub BUILD {
 
     $self->_set_sequence(substr( $self->sequence(), 0, $self->trunc_length() ));
 
-# TMpred
+# do the prediction of trans-membrane region using TMpred object
     my ( $outstring, $long_output ) =
       $self->tmpred_obj()->run_tmpred( $self->sequence(), $self->sequence_id() );
     $self->_set_tmpred_good_solutions($outstring);
@@ -120,7 +116,7 @@ sub BUILD {
     $self->sequence22_AAcomposition();
 
 # do the cleavage site calculation
-    my $cleavage_predictor_obj = $self->cleavage_predictor();  #Bio::SecreTary::Cleavage->new(); # Should avoid doing this for each sequence
+    my $cleavage_predictor_obj = $self->cleavage_predictor();
     my $sp_length = $cleavage_predictor_obj->cleavage($self->sequence());
 
 # subdomains (n, h, c)
