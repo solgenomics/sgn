@@ -5,7 +5,7 @@ use namespace::autoclean;
 use Bio::SecreTary::SecreTarySelect;
 use Bio::SecreTary::SecreTaryAnalyse;
 use Bio::SecreTary::TMpred;
-use Bio::SecreTary::TMpred_Cinline;
+#use Bio::SecreTary::TMpred_Cinline;
 use Bio::SecreTary::Cleavage;
 
 BEGIN { extends 'Catalyst::Controller'; }
@@ -96,8 +96,8 @@ sub _run_secretary {
 	my $trunc_length = 100;
 
 	my $tmpred_obj =
-#		Bio::SecreTary::TMpred->new( {} ); # use defaults here for min_score, etc.
-              Bio::SecreTary::TMpred_Cinline->new( {} );
+		Bio::SecreTary::TMpred->new( {} ); # use defaults here for min_score, etc.
+ #             Bio::SecreTary::TMpred_Cinline->new( {} );
 	my $cleavage_predictor_obj = Bio::SecreTary::Cleavage->new();
 		my $id_seqs = process_input($input);
 
