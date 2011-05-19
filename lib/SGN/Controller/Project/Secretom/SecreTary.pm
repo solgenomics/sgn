@@ -4,9 +4,8 @@ use namespace::autoclean;
 
 use Bio::SecreTary::SecreTarySelect;
 use Bio::SecreTary::SecreTaryAnalyse;
-use Bio::SecreTary::TMpred;
-#use Bio::SecreTary::TMpred_Cinline;
-use Bio::SecreTary::Cleavage;
+use Bio::SecreTary::TMpred_Cinline;
+use Bio::SecreTary::Cleavage_Cinline;
 
 BEGIN { extends 'Catalyst::Controller'; }
 with 'Catalyst::Component::ApplicationAttribute';
@@ -96,9 +95,9 @@ sub _run_secretary {
 	my $trunc_length = 100;
 
 	my $tmpred_obj =
-		Bio::SecreTary::TMpred->new( {} ); # use defaults here for min_score, etc.
- #             Bio::SecreTary::TMpred_Cinline->new( {} );
-	my $cleavage_predictor_obj = Bio::SecreTary::Cleavage->new();
+#		Bio::SecreTary::TMpred->new( {} ); # use defaults here for min_score, etc.
+             Bio::SecreTary::TMpred_Cinline->new( {} );
+	my $cleavage_predictor_obj = Bio::SecreTary::Cleavage_Cinline->new();
 		my $id_seqs = process_input($input);
 
 #Calculate the necessary quantities for each sequence:
