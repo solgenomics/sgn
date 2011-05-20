@@ -58,13 +58,12 @@ Lukas Mueller. Based on code by R. Buels.
 <%init>
 
   my %mapped_args =
-      map {( "__$_" => $ARGS{$_} )}
+      map { exists $ARGS{$_} ? ( "__$_" => $ARGS{$_} ) : () }
       qw( title caption tableattrs multicol border sub );
 
-  $data ||= [ map %{ YAML::Any::Load($_) }, split /^\s*-+\s*$/, $m->content ];
+  $data ||= [ split /^\s*\-{2,}\s*$/m, $m->content ];
 
 </%init>
 <%once>
-  use YAML::Any ();
   use CXGN::Page::FormattingHelpers 'info_table_html';
 </%once>

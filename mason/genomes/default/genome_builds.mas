@@ -16,7 +16,9 @@
     </div>
     <&| /page/info_table.mas, border => 0 &>
 
-    Assembly issues:
+    Assembly issues
+
+    ----
 
       <p>If in the course of your work you find errors or other issues with
         these genome assemblies, please report them using one of the
