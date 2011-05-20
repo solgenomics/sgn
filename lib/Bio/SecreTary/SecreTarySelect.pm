@@ -230,6 +230,40 @@ sub categorize1 {     # categorize a single SecreTaryAnalyse object as
   return $return_val;
 }
 
+=head2 function categorize()
+
+Synopsis: my $STA_prediction_array_ref = $STS_obj->categorize(\@STA_arrayj);
+	Arguments: Reference to array of SecreTaryAnalyse objects.
+	Returns: A reference to an array of references to arrays, each
+containing a STA obj and the prediction for that STA.
+	Description: Calls categorize1 on each STA obj. Makes YES/NO prediction
+for each, pushes STA obj and prediction onto result array.
+
+=cut
+
+sub categorize {
+    my $self           = shift;
+    my $ref            = shift;    # reference to array of STA objects.
+    my @STAarray       = @$ref;
+    my @STA_prediction = ();
+
+    my ( $count_grp1, $count_grp2, $count_fail ) = ( 0, 0, 0 );
+    foreach my $STA (@STAarray) {
+        my $prediction =
+          $self->categorize1($STA);    # e.g.: 'group1 (2311,23,44)(1100,5,30)'
+        $prediction =~ s/^fail/NO/;
+        $prediction =~ s/^group1/YES/;
+        $prediction =~ s/^group2/YES/;
+        push @STA_prediction, [ $STA, $prediction ];
+
+        # [ $STA, $prediction, $self->get_best_score() ];
+
+    }
+    return
+      \@STA_prediction; # return ref to array of [$STA, $prediction] array refs.
+}
+
+
 sub _group1_STscore {
   my $self       = shift;
   my $tm_score   = shift;
