@@ -2,19 +2,16 @@
   $source
 </%args>
 
-<% info_table_html(
-     __border => 0,
-     $source->description => $m->scomp( '.release_html', source => $source ),
-   )
-%>
+<&| /page/info_table.mas &>
 
-<%def .release_html>
-<%args>
-  $source
-</%args>
-  <p><% $source->extended_description %></p>
-  <span style="font-weight: bold; font-size: 110%">
-     <a href="<% $source->view_url %>">Browse</a>
-     or <& /gbrowse/search_box.mas, gb_root => $source->view_url &>
-  </span>
-</%def>
+   <% $source->description %>
+
+  ----
+
+   <p><% $source->extended_description %></p>
+   <span style="font-weight: bold; font-size: 110%">
+      <a href="<% $source->view_url %>">Browse</a>
+      or <& /gbrowse/search_box.mas, gb_root => $source->view_url &>
+   </span>
+
+</&>
