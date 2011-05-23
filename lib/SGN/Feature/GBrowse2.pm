@@ -116,6 +116,7 @@ around apache_conf => sub {
   DefaultInitEnv GBROWSE_CONF "$conf"
   BusyTimeout 360
   IPCCommTimeout 300
+  MaxRequestLen 20971520
   $fcgi_inc
 
 	cgi => <<"",
