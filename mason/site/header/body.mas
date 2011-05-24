@@ -45,7 +45,7 @@
 % if( $c->config->{'is_mirror'} ) {
     <a class="toplink" style="line-height: 1.2; text-decoration: underline; background: none" href="<% $c->config->{main_production_site_url} %>" title="log in on main site">main site</a>
 % } elsif ( $c->config->{disable_login} ) {
-    <!-- site logins disabled by disable_login configuration variable -->
+    <span style="visibility: hidden">site login disabled</span>
 % } elsif ( $c->user_exists ) {
   <b><% $c->user->get_object->get_first_name || '' %> <% $c->user->get_object->get_last_name  || '' %></b>
   (<a class="toplink" style="text-decoration: underline" href="/solpeople/login.pl?logout=yes">log out</a>)
