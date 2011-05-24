@@ -121,15 +121,17 @@ sub auto : Private {
 
     # gluecode for logins
     #
-    my $dbh = $c->dbc->dbh;
-    if ( my $sp_person_id = CXGN::Login->new( $dbh )->has_session ) {
+    unless( $c->config->{'disable_login'} ) {
+        my $dbh = $c->dbc->dbh;
+        if ( my $sp_person_id = CXGN::Login->new( $dbh )->has_session ) {
 
-	my $sp_person = CXGN::People::Person->new( $dbh, $sp_person_id);
+            my $sp_person = CXGN::People::Person->new( $dbh, $sp_person_id);
 
-	$c->authenticate({
-            username => $sp_person->get_username(),
-            password => $sp_person->get_password(),
-        });
+            $c->authenticate({
+                username => $sp_person->get_username(),
+                password => $sp_person->get_password(),
+            });
+        }
     }
 
     return 1;
