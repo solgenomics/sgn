@@ -89,6 +89,7 @@ sub download :Private {
     $c->throw_404 unless defined( $file ) && -e $file;
 
     $c->forward('set_download_headers');
+    $c->log->debug("static file download: $file") if $c->debug;
     $c->serve_static_file( $file );
 }
 

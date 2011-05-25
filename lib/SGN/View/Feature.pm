@@ -249,7 +249,7 @@ sub mrna_and_protein_sequence {
 
     # just return the mrna and peptide rows if they both have their
     # own sequences (because the rows can act as Bio::PrimarySeqI's
-    return [ $mrna_feature, $peptide ] if $peptide->subseq(1,1) && $mrna_feature->subseq(1,1);
+    return [ $mrna_feature, $peptide ] if $peptide && $peptide->subseq(1,1) && $mrna_feature && $mrna_feature->subseq(1,1);
 
     my @exon_locations = _exon_rs( $mrna_feature )->all
         or return;

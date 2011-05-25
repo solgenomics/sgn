@@ -9,20 +9,28 @@ use Catalyst::ScriptRunner;
 use lib 'lib';
 use SGN::Devel::MyDevLibs;
 
-my @test_paths = @ARGV;
-@test_paths = ('t') unless @test_paths;
+my @test_args = @ARGV;
+@test_args = ('t') unless @test_args;
 
 if( my $server_pid = fork ) {
 
-    # testing process
-    sleep 1 until get 'http://localhost:3003';
-    $ENV{SGN_TEST_SERVER}='http://localhost:3003';
+    # wait for the test server to start
+    {
+      local $SIG{CHLD} = sub {
+          waitpid $server_pid, 0;
+          die "\nTest server failed to start.  Aborting.\n";
+      };
+      sleep 1 until !kill(0, $server_pid) || get 'http://localhost:3003';
+    }
+
+    # now run the tests against it
+    $ENV{SGN_TEST_SERVER} = 'http://localhost:3003';
+
     my $app = App::Prove->new;
-    warn "Starting testing process with SGN_TEST_SERVER=" . $ENV{SGN_TEST_SERVER};
     $app->process_args(
         '-lr',
         ( map { -I => $_ } @INC ),
-        @test_paths
+        @test_args
         );
     exit( $app->run ? 0 : 1 );
 
@@ -33,7 +41,6 @@ if( my $server_pid = fork ) {
     # server process
     $ENV{SGN_TEST_MODE} = 1;
     @ARGV = ( -p => 3003 );
-    warn "Starting SGN::Server on port 3003";
     Catalyst::ScriptRunner->run('SGN', 'Server');
     exit;
 

@@ -1,0 +1,11 @@
+<%args>
+  $gb_root
+</%args>
+<%  CGI::start_form( -style => 'display: inline', -action => $gb_root )
+     .CGI::textfield( -name => 'name', -value => 'search (e.g. SGN-M7588 or lycopene cyclase)', -onfocus => "this.value = ''", -size => 50)
+     .CGI::submit('Search','Search')
+    .CGI::end_form()
+%>
+<%once>
+  use CGI ();
+</%once>

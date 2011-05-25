@@ -202,6 +202,7 @@ sub display_ontologies : Chained('/stock/get_stock') :PathPart('ontologies') : A
 
 sub display_ontologies_GET  {
     my ($self, $c) = @_;
+    $c->forward('/stock/get_stock_cvterms');
     my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
     my $stock = $c->stash->{stock};
     my $sp_cvterms = $c->stash->{stock_cvterms}->{SP};
@@ -372,8 +373,8 @@ sub associate_ontology_GET :Args(0) {
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $cvterm_rs = $schema->resultset('Cv::Cvterm');
-    my ($pub) = $reference ? $reference :
-        $schema->resultset('Pub::Pub')->search( { title=> 'curator' } )->first; # a pub for 'cuurator' should already be in the sgn database. can add here $curator_cvterm->create_with ... and then create the curator pub with type_id of $curator_cvterm
+    my ($pub_id) = $reference ? $reference :
+        $schema->resultset('Pub::Pub')->search( { title=> 'curator' } )->first->pub_id; # a pub for 'cuurator' should already be in the sgn database. can add here $curator_cvterm->create_with ... and then create the curator pub with type_id of $curator_cvterm
 
     #solanaceae_phenotype--SP:000001--fruit size
     my ($cv_name, $db_accession, $cvterm_name)  = split /--/ , $ontology_input;
@@ -402,7 +403,7 @@ sub associate_ontology_GET :Args(0) {
             try {
                 #check if the stock_cvterm exists
                 my $s_cvterm_rs = $stock->search_related(
-                    'stock_cvterms', { cvterm_id => $cvterm_id, pub_id => $pub->pub_id } );
+                    'stock_cvterms', { cvterm_id => $cvterm_id, pub_id => $pub_id } );
                 # if it exists , we need to increment the rank
                 my $rank = 0;
                 if ($s_cvterm_rs->first) {
@@ -435,7 +436,7 @@ sub associate_ontology_GET :Args(0) {
                 # now store a new stock_cvterm
                 my $s_cvterm = $stock->create_related('stock_cvterms', {
                     cvterm_id => $cvterm_id,
-                    pub_id    => $pub->pub_id,
+                    pub_id    => $pub_id,
                     rank      => $rank, } );
 #########
                 $s_cvterm->create_stock_cvtermprops(

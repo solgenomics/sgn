@@ -27,17 +27,9 @@ No help available.
 
 <&| /page/info_section.mas, title => 'Available GBrowse Datasets' &>
 
-% my @sources = sort {$a->description cmp $b->description} $gb->data_sources;
-% if( @sources ) {
-%    foreach my $ds (@sources) {
-   <dt><a style="display: block" href="<% $ds->view_url %>"><% $ds->description %></a></dt>
-%      if( $ds->extended_description ) {
-   <dd><% $ds->extended_description %></dd>
-%      }
-%   }
-% } else {
-  <strong>no sources available</strong>
-% }
+%   my $s = $m->scomp('/gbrowse/list_sources.mas');
+    <% $s =~ /\S/ ? $s : '<strong>no sources available</strong>' %>
+
 </&>
 
 </%def>

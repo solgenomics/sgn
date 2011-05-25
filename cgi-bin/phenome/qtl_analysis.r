@@ -541,55 +541,61 @@ chrno<-chrno + 1;
 }
 
 ##########QTL EFFECTS ##############
-if ( max(QtlLods) >= LodScore )
+ResultDrop<-c()
+ResultFull<-c()
+Effects<-c()
+
+if ( is.null(QtlLods)==FALSE)
 {
-  QtlObj<-makeqtl(popdata,
+  if (max(QtlLods) >= LodScore ) 
+    {
+      QtlObj<-makeqtl(popdata,
                 QtlChrs,
                 QtlPositions,
                 what="prob"
                 )
   
-  QtlsNo<-length(QtlPositions)
-  Eq<-c("y~")
+      QtlsNo<-length(QtlPositions)
+      Eq<-c("y~")
 
-  for (i in 1:QtlsNo) {
-    q<-paste("Q",
-             i,
-             sep=""
-             )
+      for (i in 1:QtlsNo) {
+        q<-paste("Q",
+                 i,
+                 sep=""
+                 )
   
-    if (i==1) {  
-      Eq<-paste(Eq, q, sep="")
+        if (i==1) {  
+          Eq<-paste(Eq, q, sep="")
       
-    }else
-    if (i>1) {
-      Eq<-paste(Eq, q, sep="*")
+        }else
+        if (i>1) {
+          Eq<-paste(Eq, q, sep="*")
      
-    }
-  }
+        }
+      }
 
-  QtlEffects<-fitqtl(popdata,
-                     pheno.col=cv,
-                     QtlObj,
-                     formula=Eq,
-                     method="hk",                   
-                     get.ests=TRUE
-                     )
-  ResultModel<-attr(QtlEffects,
-                    "formula"
-                    )
- 
-  Effects<-QtlEffects$ests$ests
-  QtlLodAnova<-QtlEffects$lod
-  ResultFull<-QtlEffects$result.full  
-  ResultDrop<-QtlEffects$result.drop
-
-  if (is.numeric(Effects))
-    {
-      Effects<-round(Effects,
-                        2
+      QtlEffects<-fitqtl(popdata,
+                         pheno.col=cv,
+                         QtlObj,
+                         formula=Eq,
+                         method="hk",                   
+                         get.ests=TRUE
+                         )
+      ResultModel<-attr(QtlEffects,
+                        "formula"
                         )
-    }
+ 
+      Effects<-QtlEffects$ests$ests
+      QtlLodAnova<-QtlEffects$lod
+      ResultFull<-QtlEffects$result.full  
+      ResultDrop<-QtlEffects$result.drop
+
+      if (is.numeric(Effects))
+        {
+          Effects<-round(Effects,
+                         2
+                         )
+        }
 
 
   if (is.numeric(ResultFull))
@@ -599,14 +605,14 @@ if ( max(QtlLods) >= LodScore )
                         )
     }
 
-  if (is.numeric(ResultDrop))
-    {
-      ResultDrop<-round(ResultDrop,
-                        2
-                        )
+      if (is.numeric(ResultDrop))
+        {
+          ResultDrop<-round(ResultDrop,
+                            2
+                            )
+        }
     }
 }
-
 ##########creating vectors for the outfiles##############
 
 outfiles<-scan(file=outfile,
@@ -683,13 +689,16 @@ if (is.null(ResultDrop)==FALSE)
               )
 } else
 {
-  write.table(ResultFull,
+  if(is.null(ResultFull)==FALSE)
+    {
+      write.table(ResultFull,
               file=VariationFile,
               sep="\t",
               col.names=NA,
               quote=FALSE,
               append=FALSE
               )
+    }
 }
 
 if (is.null(Effects)==FALSE)

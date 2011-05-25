@@ -15,6 +15,7 @@ use Exporter;
 use SGN::Devel::MyDevLibs;
 
 use HTML::Lint;
+use HTML::Lint::Error;
 
 use lib 't/lib';
 use SGN::Test::WWW::Mechanize;
@@ -103,6 +104,7 @@ sub _validate_single_url {
     SKIP: {
             skip 'SKIP_HTML_LINT env set', 2 if $ENV{SKIP_HTML_LINT};
             my $lint = HTML::Lint->new;
+            $lint->only_types( HTML::Lint::Error::STRUCTURE );
             $lint->parse( $mech->content );
             my @e = $lint->errors;
             my $e_cnt = @e;
@@ -120,7 +122,7 @@ sub _validate_single_url {
 
             # test for any broken images or other things that have a
             # src attr
-            { my @stuff = uniq map $_->attr('src'), $mech->findnodes('//*[@src]');
+            { my @stuff = grep !m|^https?://|, uniq map $_->attr('src'), $mech->findnodes('//*[@src]');
               for( @stuff ) {
                   $mech->get_ok( $_ );
                   $mech->back;

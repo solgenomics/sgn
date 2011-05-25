@@ -24,7 +24,7 @@
      __border => 0,
 )%>
 
-<& /feature/dbxref.mas, dbxref => $feature->dbxref &>
+<& /feature/dbxrefs.mas, dbxrefs => [ $feature->dbxref, $feature->secondary_dbxrefs ]  &>
 
 <%once>
     use SGN::View::Feature qw/

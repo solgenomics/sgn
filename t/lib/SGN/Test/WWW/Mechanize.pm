@@ -124,6 +124,7 @@ sub import {
 use Carp;
 use Test::More;
 
+use HTML::Lint;
 use Try::Tiny;
 
 use CXGN::People::Person;
@@ -473,6 +474,34 @@ sub log_in_ok {
 sub log_out {
     my ($self) = @_;
     $self->get_ok( "/solpeople/login.pl?logout=yes", 'logged out' );
+}
+
+sub _lint_content_ok {
+    my $self = shift;
+    my $desc = shift;
+
+    local $Test::Builder::Level = $Test::Builder::Level + 1;
+
+    my $lint = HTML::Lint->new;
+    $lint->only_types( HTML::Lint::Error::STRUCTURE );
+    $lint->parse( $self->content );
+
+    my @errors = $lint->errors;
+    my $nerrors = @errors;
+    my $ok;
+    my $Test = Test::Builder->new;
+    if ( $nerrors ) {
+        $ok = $Test->ok( 0, $desc );
+        $Test->diag( 'HTML::Lint errors for ' . $self->uri );
+        $Test->diag( $_->as_string ) for @errors;
+        my $s = $nerrors == 1 ? '' : 's';
+        $Test->diag( "$nerrors error$s on the page" );
+    }
+    else {
+        $ok = $Test->ok( 1, $desc );
+    }
+
+    return $ok;
 }
 
 

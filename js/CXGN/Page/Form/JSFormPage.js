@@ -166,7 +166,7 @@ CXGN.Page.Form.JSFormPage.prototype = {
      */
     printDeleteDialog: function() {
 	var deleteDialog =  
-	'<b>Delete this ' + this.getObjectName()  + '?</b> '; 
+	'<b>Delete this ' + this.getObjectName() + ' ' +this.getObjectId()  + '?</b> '; 
 	deleteDialog += '<input type =\"button\" onClick=\"javascript:' + this.getJsObjectName() + '.printForm(\'confirm_delete\')\" value=\"Confirm delete\"/><br><br>';
 	this.printEditLinks('delete');
 	$(this.getFormId() ).innerHTML = deleteDialog;
@@ -322,7 +322,12 @@ CXGN.Page.Form.JSFormPage.prototype = {
      */
     reloadNewPage: function() {
 	MochiKit.Logging.log("reloadNewPage found page: " , this.getPageName());
-	window.location =  this.getPageName() + "?action=new" ;
+	if (this.getPageName()) { 
+	    window.location =  this.getPageName() + "?action=new" ;
+	}
+	else { 
+	    this.printForm('new');
+	}
     },
 
     //////////////////////////////////////////////////////

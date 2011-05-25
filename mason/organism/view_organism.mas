@@ -1,0 +1,92 @@
+
+<%args>
+$organism_name
+$organism_id
+$taxon => ''
+$common_name
+$description => ''
+$comment => ''
+@synonyms => ()
+$taxonomy => ''
+$accessions => ''
+$solcyc => ''
+$solcyc_link => ''
+$ploidy => ''
+$genome_size => ''
+$chromosome_number => ''
+$maps => ''
+$est_attribution => ''
+@libraries => ()
+$phenotypes => ''
+$loci => ''
+$qtl_data => undef
+$user_id => undef
+$user_role => undef
+$form => undef;
+$static_data => undef;
+</%args>
+
+<& /page/page_title.mas, title=>"Details for $taxon <i>$organism_name</i>" &>
+
+<&| /page/info_section.mas, title=>'Basic information' &>
+<& /organism/basic_info.mas, name=>$organism_name, common_name=>$common_name, description=>$description, comment=>$comment, synonyms=> \@synonyms &>
+</&>
+
+<& /organism/taxonomy.mas, taxonomy=>$taxonomy &>
+
+
+
+<& /organism/accessions.mas, accessions => $accessions &>
+
+% if ($taxon ne 'species') { return; }
+
+<&| /page/info_section.mas, title=>'Metabolic details' &>
+<% $solcyc_link %>
+</&>
+
+<&| /page/info_section.mas, title=>'Genome data', collapsible=>1 &>
+<& /organism/genomic_details.mas, ploidy => $ploidy, genome_size=>$genome_size, chromosome_number => $chromosome_number, loci=>$loci, maps=>$maps &>
+
+
+</&>
+
+<&| /page/info_section.mas, title=>'Transcript Information', collapsible => 1 &>
+
+% my @links = map { qq|<a href="/content/library_info.pl?library=$_\">$_</a>| } @libraries;
+
+<& /page/info_table.mas,
+   data => [
+  'Libraries ('.scalar(@links).')' => (join ", ", (@links)),
+  Attribution => $est_attribution ], border => 0
+ &>
+</&>
+
+
+<&| /page/info_section.mas, title=>'Phenomic Details', collapsible=>1 &>
+
+Number of phenotyped lines (for all <% $common_name %> species combined): <% $phenotypes %>
+<br /><br />
+
+
+<&| /page/info_section.mas, title=>'QTL data', is_subsection=>1 &>
+
+% if ($qtl_data) {
+  <& /page/columnar_table.mas,
+    data => $qtl_data,
+    headings => [ 'Name', 'Traits' ],
+    __alt_freq   => 2,
+    __alt_width  => 1,
+    __alt_offset => 3,
+    __align      => 'l' &>
+%}
+ </&>
+</&>
+
+
+<&| /page/info_section.mas, title=>'SOL100 genome sequencing project data', collapsible=>1 &>
+<& /organism/project_metadata.mas, organism_id=>$organism_id &>
+</&>
+
+
+
+

@@ -1,5 +1,23 @@
 <!-- COUNT  1 -->
 <div class="subheading">
+<a href="http://www.ncbi.nlm.nih.gov/pubmed/20964836">
+solQTL: a tool for QTL analysis, visualization and linking to genomes at SGN database.</a></div>
+<div class="boxsubcontent">
+Tecle IY, Menda N, Buels RM, van der Knaap E, Mueller LA.
+BMC Bioinformatics. 2010 Oct 21;11:525.
+</div>
+
+
+<div class="subheading">
+<a href="http://www.ncbi.nlm.nih.gov/pubmed/20935049">
+The Sol Genomics Network (solgenomics.net): growing tomatoes using Perl.</a></div>
+<div class="boxsubcontent">
+Bombarely A, Menda N, Tecle IY, Buels RM, Strickler S, Fischer-York T, Pujar A, Leto J, Gosselin J, Mueller LA.
+Nucleic Acids Res. 2011 Jan;39(Database issue):D1149-55. Epub 2010 Oct 8.
+</div>
+
+
+<div class="subheading">
 <a href="http://www.ncbi.nlm.nih.gov/pubmed/19553373">
 A dynamic interface for capsaicinoid systems biology.</a></div>
 <div class="boxsubcontent">
