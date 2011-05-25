@@ -56,7 +56,7 @@
 
 package Bio::SecreTary::Cleavage;
 use Moose;
-# use namespace::autoclean;
+use namespace::autoclean;
 use List::Util qw/min/;
 
 has weight_matrix => (
