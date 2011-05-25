@@ -15,7 +15,7 @@ Tom York (tly2@cornell.edu)
 
 package Bio::SecreTary::SecreTarySelect;
 use Moose;
-#use namespace::autoclean;
+use namespace::autoclean;
 use Carp;
 use Bio::SecreTary::SecreTaryAnalyse;
 use List::Util qw / min max /;
