@@ -56,19 +56,19 @@
 
 package Bio::SecreTary::Cleavage;
 use Moose;
-use namespace::autoclean;
+# use namespace::autoclean;
 use List::Util qw/min/;
 
 has weight_matrix => (
     isa     => 'ArrayRef',    # 'Maybe[ArrayRef[ArrayRef[Int]]]',
     is      => 'rw',
-    default => undef
+    default => sub{ [] }
 );
 
 has aa_number_hash => (
     isa     => 'HashRef',     # Maybe[HashRef[Int]]',
     is      => 'rw',
-    default => undef
+    default => sub{ {} }
 );
 
 sub BUILD {
