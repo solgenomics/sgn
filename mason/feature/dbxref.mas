@@ -1,7 +1,0 @@
-<%args>
-    $dbxref
-</%args>
-% if( $dbxref ) {
-%   no warnings 'uninitialized';
-   <a href="<% $dbxref->db->urlprefix .  $dbxref->db->url .  $dbxref->accession %>"><% $dbxref->db->name %>:<% $dbxref->accession %></a>
-% }

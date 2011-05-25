@@ -8,24 +8,34 @@ use Test::More;
 
 our $schema;
 
-BEGIN {
+sub import {
+    my ( $class, @args ) = @_;
+
+    my ( $schema_class ) = grep /::/, @args;
+    @args = grep !/::/, @args;
+
+    $schema_class ||= 'Bio::Chado::Schema';
     my $db_profile = 'sgn_test';
     eval {
-        $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', $db_profile)
+        $schema = SGN::Context->new->dbic_schema( $schema_class, $db_profile)
     };
     if ($@) {
-        plan skip_all => "Could not create a db connection. Do  you have the $db_profile db profile?";
+        plan skip_all => "Could not create a db connection. Do  you have the $db_profile db profile? ($@)";
     }
+
+    $class->export_to_level( 1, undef, @args );
 }
 
 =head1 NAME
 
-SGN::Test::Data - create Bio::Chado::Schema test objects
+SGN::Test::Data - create Bio::Chado::Schema (and other) test objects
 
 =head1 SYNOPSIS
 
     use lib 't/lib';
     use SGN::Test::Data qw/create_test/;
+    # or to use CXGN::Biosoure::Schema instead:
+    use SGN::Test::Data qw/ CXGN::Biosource::Schema  create_test /;
 
     my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
     # all other necessary objects are auto-created, such as
@@ -89,8 +99,19 @@ sub create_test {
         'Sequence::Featureprop'         => sub { _create_test_featureprop($values)         },
         'Sequence::FeatureRelationship' => sub { _create_test_featurerelationship($values) },
     };
-    die "$pkg creation not supported yet, sorry" unless exists $pkg_subs->{$pkg};
-    return $pkg_subs->{$pkg}->($values);
+    if( my $custom_handler = $pkg_subs->{$pkg} ) {
+        return $custom_handler->( $values );
+    } else {
+        return _create_test_default( $pkg, $values );
+    }
+}
+
+sub _create_test_default {
+    my ( $moniker, $values ) = @_;
+
+    my $row = $schema->resultset($moniker)->create( $values );
+    push @$test_data, $row;
+    return $row;
 }
 
 sub _create_test_db {
