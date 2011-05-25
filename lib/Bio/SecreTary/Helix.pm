@@ -1,6 +1,6 @@
 package Bio::SecreTary::Helix;
 use Moose;
-#use namespace::autoclean;
+use namespace::autoclean;
 
 has center => (
     isa     => 'ArrayRef[Maybe[Num]]',
