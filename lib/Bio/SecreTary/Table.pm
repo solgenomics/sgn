@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use Carp;
 use Moose;
-use namespace::autoclean;
+#use namespace::autoclean;
 
 =head2 function new
 
