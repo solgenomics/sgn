@@ -17,7 +17,7 @@ Tom York (tly2@cornell.edu)
 
 package Bio::SecreTary::SecreTaryAnalyse;
 use Moose;
-#use namespace::autoclean;
+use namespace::autoclean;
 use Bio::SecreTary::AAComposition;
 
 has sequence_id => (
