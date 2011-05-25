@@ -99,10 +99,9 @@ sub signalp_search :Path('search/signalp') {
     my ( $self, $c ) = @_;
 
     my $file = $c->req->param('file');  $file =~ s!\\/!!g; # no dir seps, no badness.
-    $file ||= 'AtBrRiceTomPop.tab.gz';  # 'Tair10_all.tab.gz'; 
-    my $abs_file = $self->static_dir->file( 'data','secretom', '.new', 'SecreTarySPTP_predictions', $file  );
-    $abs_file = $self->static_dir->file('Scrtm', $file);
-
+    $file ||= 'AtBrRiceTomPop.tab';  # use uncompressed file for speed # 'Tair10_all.tab.gz'; 
+    my $abs_file = $self->static_dir->file( 'data','secretom', 'SecreTarySPTP_predictions', $file  );
+	
     $c->stash->{headings} = [
 	"Locus name",
 	"Annotation",
@@ -159,8 +158,10 @@ sub _search_signalp_file {
     $query =~ s/\s+/'\s+'/ge;
     $query = qr|$query|;
 
-    open my $fh, "gunzip -c '$file' |" or die "$! unzipping $file";
-    my @results;
+#   open my $fh, "gunzip -c '$file' |" or die "$! unzipping $file";
+    open my $fh, "<", $file;
+    
+my @results;
     while ( my $line = <$fh> ) {
       next unless lc($line) =~ $query;
       # choose the fields in the tab file to keep
