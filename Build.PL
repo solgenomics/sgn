@@ -73,7 +73,6 @@ my $build = SGN::Build->new(
         'HTML::FormFu'                             => 0,
         'HTML::Mason'                              => 0,
         'HTML::TreeBuilder::XPath'                 => 0,
-        'Inline::C'                                => 0,
         'IO::String'                               => 0,
         'Image::Size'                              => 0,
         'JSAN::ServerSide'                         => '==0.06',
