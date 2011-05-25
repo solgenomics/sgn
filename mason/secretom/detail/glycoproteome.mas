@@ -98,12 +98,12 @@
   ref: Tomato_fruit_glycoproteins_MALDI_peptides.xlsx
 - text: "Tomato (cv. Ailsa Craig) mature green fruit: glycoproteins, ESI"
   ref: Tomato_fruit_glycoproteins_ESI.xlsx
-- text: "Glycoprotein fractions from mature green fruit indentified using Concavalin A"
-  ref: "Con_A.xls"
-- text: "Glycoprotein fractions from mature green fruit indentified using Snowdrop lectin"
-  ref: "GNA.xls"
-- text: "Glycoprotein fractions from mature green fruit indentified using Lentil lectin"
-  ref: "LCH.xls"
+- text: "Glycoprotein fractions from mature green tomato fruit identified using Concanavalin A"
+  ref: Con_A.xls
+- text: "Glycoprotein fractions from mature green tomato fruit identified using Snowdrop lectin"
+  ref: GNA.xls
+- text: "Glycoprotein fractions from mature green tomato fruit identified using Lentil lectin"
+  ref: LCH.xls
 - text: "More files in FTP"
   ref: ftp://ftp.solgenomics.net/secretom/Tomato_fruit_glycoproteome
 </&>

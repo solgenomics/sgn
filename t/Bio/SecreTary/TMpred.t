@@ -5,7 +5,6 @@ use warnings FATAL => 'all';
 # tests for TMpred Module
 use Test::More tests=> 8;
 use Bio::SecreTary::TMpred;
-use Bio::SecreTary::Helix;
 
 $ENV{PATH} .= ':programs'; #< XXX TODO: obviate the need for this
 
