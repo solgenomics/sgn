@@ -211,9 +211,17 @@ sub get_stock_cvterms : Private {
     $c->stash->{stockprops} = $properties;
 }
 
+sub get_stock_allele_ids : Private {
+    my ( $self, $c ) = @_;
+    my $stock = $c->stash->{stock};
+    my $allele_ids = $stock ? $self->_stock_allele_ids($stock) : undef;
+    $c->stash->{allele_ids} = $allele_ids;
+}
+
 sub get_stock_extended_info : Private {
     my ( $self, $c ) = @_;
     $c->forward('get_stock_cvterms');
+    $c->forward('get_stock_allele_ids');
 
     # look up the stock again, this time prefetching a lot of data about its related stocks
     $c->stash->{stock_row} = $self->schema->resultset('Stock::Stock')
@@ -239,9 +247,6 @@ sub get_stock_extended_info : Private {
 
     my ($members_phenotypes, $has_members_genotypes)  = $stock ? $self->_stock_members_phenotypes( $c->stash->{stock_row} ) : undef;
     $c->stash->{members_phenotypes} = $members_phenotypes;
-
-    my $allele_ids = $stock ? $self->_stock_allele_ids($stock) : undef;
-    $c->stash->{allele_ids} = $allele_ids;
 
     my $stock_type;
     $stock_type = $stock->get_object_row->type->name if $stock->get_object_row;
