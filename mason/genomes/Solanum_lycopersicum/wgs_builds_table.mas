@@ -10,12 +10,13 @@
 </div>
 
 <%perl>
+  my $feedback_email = $c->get_conf('feedback_email');
   print info_table_html( 'Assembly issues' => <<EOF );
   <p>If in the course of your work you find errors or other issues with the tomato genome assemblies, please report them using one of the following links:</p>
 
   <ul>
     <li>
-      <a href="mailto:sgn-feedback\@solgenomics.net?subject=Tomato genome build issue">email SGN</a>
+      <a href="mailto:$feedback_email?subject=Tomato genome build issue">email SGN</a>
     </li>
     <li>
       <a href="https://ncbijira.ncbi.nlm.nih.gov/browse/TG">issue tracker at NCBI (registered curators only)</a>

@@ -1,21 +1,21 @@
-<div class="boxbgcolor5">
+<div class="boxbgcolor5" style="text-align: justify">
 
   <p>
+
   PLEASE READ BEFORE ACCESSING THE PRE-PUBLICATION TOMATO GENOME
-  SEQUENCE: The International Tomato Genome Sequencing Consortium is
-  pleased to make available a pre-publication draft assembly of the
-  tomato genome for use by public and private research communities as
-  a resource to enable plant biology discovery and improve the human
-  condition through improved agriculture. This assembly was produced
-  by the Dutch/French assembly team and includes both 454
-  data and Sanger sequence data (BAC-ends, fosmid-ends and Selected
-  BAC Mixture sequences).
-  </p>
+  SEQUENCE OR ANNOTATIONS: The International Tomato Genome Sequencing
+  Consortium is pleased to make available a pre-publication draft
+  assembly of the tomato genome for use by public and private research
+  communities as a resource to enable plant biology discovery and
+  improve the human condition through improved agriculture. This
+  assembly was produced by the Dutch/French assembly team and includes
+  both 454 data and Sanger sequence data (BAC-ends, fosmid-ends and
+  Selected BAC Mixture sequences).  </p>
 
   <p>
   We caution you that the current assembly is a "work-in-progress" and
   as such is subject to modification prior to publication release
-  (anticipated for mid-2010), some of which is likely to be
+  (anticipated for mid-2011), some of which is likely to be
   substantial. Therefore we encourage you to carefully and
   independently validate any conclusions you may draw from this
   sequence. We will update this resource as improvements in the
@@ -25,7 +25,7 @@
   </p>
 
   <p>
-  The pre-publication tomato genome sequence is made available with
+  This pre-publication tomato genome data is made available with
   the understanding that users will respect the rights of those who
   contributed to this effort to describe the tomato genome in a
   peer-reviewed publication. This description includes whole genome
@@ -34,7 +34,7 @@
   use of pre-publication genome sequence at
   <a href="http://www.genome.gov/page.cfm?pageID=10506537">http://www.genome.gov/page.cfm?pageID=10506537</a>.
 
-  Any use of the tomato genome sequence prior to its publication should
+  Any use of the tomato genome data prior to its publication should
   credit "The International Tomato Genome Sequencing Consortium". If
   you are uncertain about how to credit the use of the sequence or its
   appropriate use please do not hesitate to contact

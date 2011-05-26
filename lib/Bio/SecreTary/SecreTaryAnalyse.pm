@@ -18,9 +18,6 @@ Tom York (tly2@cornell.edu)
 package Bio::SecreTary::SecreTaryAnalyse;
 use Moose;
 use namespace::autoclean;
-use Bio::SecreTary::TMpred;
-use Bio::SecreTary::TMpred_Cinline;
-use Bio::SecreTary::Cleavage;
 use Bio::SecreTary::AAComposition;
 
 has sequence_id => (
@@ -44,7 +41,7 @@ isa => 'Object',
 has tmpred_good_solutions => (
 			      isa => 'Str',
 			      is => 'ro',
-			      default => undef,
+			      default => '',
 			      writer => '_set_tmpred_good_solutions' );
 has trunc_length => (
 		     isa => 'Int',
@@ -56,34 +53,34 @@ has cleavage_prediction => (
 			    default => sub { [undef, undef, undef, undef] }, 
 			    writer => '_set_cleavage_prediction' );
 has AI22 => (
-	     isa => 'Num',
+	     isa => 'Maybe[Num]',
 	     is => 'ro',
 	     default => undef,
 	     writer => '_set_AI22' );
 has Gravy22 => (
-		isa => 'Num',
+		isa => 'Maybe[Num]',
 		is => 'ro',
 		default => undef,
 		writer => '_set_Gravy22' );
 has nDRQPEN22 => (
-		  isa => 'Int',
+		  isa => 'Maybe[Int]',
 		  is => 'ro',
 		  default => undef,
 		  writer => '_set_nDRQPEN22' );
 has nNitrogen22 => (
-		    isa => 'Int',
+		    isa => 'Maybe[Int]',
 		    is => 'ro',
 		    default => undef,
 		    writer => '_set_nNitrogen22' );
 has nOxygen22 => (
-		  isa => 'Int',
+		  isa => 'Maybe[Int]',
 		  is => 'ro',
 		  default => undef,
 		  writer => '_set_nOxygen22' );
 has candidate_solutions => (
 			    isa => 'ArrayRef',
 			    is => 'ro',
-			    default => undef,
+			    default => sub{ [] },
 			    writer => '_set_candidate_solutions' );
 
 
@@ -110,7 +107,7 @@ sub BUILD {
 
     $self->_set_sequence(substr( $self->sequence(), 0, $self->trunc_length() ));
 
-# TMpred
+# do the prediction of trans-membrane region using TMpred object
     my ( $outstring, $long_output ) =
       $self->tmpred_obj()->run_tmpred( $self->sequence(), $self->sequence_id() );
     $self->_set_tmpred_good_solutions($outstring);
@@ -119,8 +116,8 @@ sub BUILD {
     $self->sequence22_AAcomposition();
 
 # do the cleavage site calculation
-    my $cleavage_predictor_obj = $self->cleavage_predictor();  #Bio::SecreTary::Cleavage->new(); # Should avoid doing this for each sequence
-    my $sp_length = $cleavage_predictor_obj->cleavage_fast($self->sequence());
+    my $cleavage_predictor_obj = $self->cleavage_predictor();
+    my $sp_length = $cleavage_predictor_obj->cleavage($self->sequence());
 
 # subdomains (n, h, c)
     # $hstart is the 0-based number of first AA of h region, i.e. the length of

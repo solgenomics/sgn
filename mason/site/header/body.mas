@@ -7,7 +7,7 @@
 <table id="siteheader" cellpadding="0" cellspacing="0">
 <tr>
   <td rowspan="3" width="10" class="sunlogo">
-    <a href="/"><img src="/documents/img/sgn_logo_icon.png" width="70" height="69" border="0" alt="SGN Home" title="Sol Genomics Network Home" id="sgnlogo" /></a>
+    <a href="/"><img src="/documents/img/sgn_logo_icon.png" width="70" height="70" border="0" alt="SGN Home" title="Sol Genomics Network Home" id="sgnlogo" /></a>
   </td>
   <td style="vertical-align: bottom">
     <a href="/"><img id="sgntext" src="/documents/img/sgn_logo_text.png" width="230" height="21" border="0" alt="SGN Home" title="Sol Genomics Network Home" /></a>
@@ -44,6 +44,8 @@
 % # if the site is a mirror, gray out the login/logout links
 % if( $c->config->{'is_mirror'} ) {
     <a class="toplink" style="line-height: 1.2; text-decoration: underline; background: none" href="<% $c->config->{main_production_site_url} %>" title="log in on main site">main site</a>
+% } elsif ( $c->config->{disable_login} ) {
+    <span style="visibility: hidden">site login disabled</span>
 % } elsif ( $c->user_exists ) {
   <b><% $c->user->get_object->get_first_name || '' %> <% $c->user->get_object->get_last_name  || '' %></b>
   (<a class="toplink" style="text-decoration: underline" href="/solpeople/login.pl?logout=yes">log out</a>)

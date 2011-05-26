@@ -6,7 +6,8 @@ use warnings FATAL => 'all';
 use Test::More tests=> 21;
 use Bio::SeqIO;
 use Bio::SecreTary::TMpred;
-use Bio::SecreTary::Helix;
+# use Bio::SecreTary::Helix;
+use Bio::SecreTary::Cleavage;
 use Bio::SecreTary::SecreTaryAnalyse;
 use Bio::SecreTary::SecreTarySelect;
 use File::Spec::Functions 'catfile';
@@ -14,7 +15,7 @@ use File::Spec::Functions 'catfile';
 $ENV{PATH} .= ':programs'; #< XXX TODO: obviate the need for this
 
 my $TMpred_obj = Bio::SecreTary::TMpred->new();
-my $cleavage_predictor_obj = Bio::SecreTary::Cleavage->new();
+my $cleavage_predictor_obj = Bio::SecreTary::Cleavage->new(); # _Cinline->new();
 ### case 1 a sequence which is predicted to have a signal peptide (group 1).
 
 my $id = "AT1G75120.1";
