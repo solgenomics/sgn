@@ -2,14 +2,13 @@
 
 The SOL Genomics Network (SGN) is a Clade Oriented Database (COD) containing
 genomic, genetic, phenotypic and taxonomic information for plant genomes.  SGN
-originally concentrated on the Euasterid clade, including the families
-including the families <a href="/about/about_solanaceae.pl">Solanaceae</a>
+originally concentrated on the Euasterid clade, including the families <a href="/about/about_solanaceae.pl">Solanaceae</a>
 (e.g. tomato, potato, eggplant, pepper and petunia) and Rubiaceae
 (<a href="/content/coffee.pl">coffee</a>), but since our tools are not specific to
 these genomes, we are expanding our scope.  If you are interested in using SGN
 to explore one of the many new plant genomes being sequenced, please contact
 us!  <br/>
-
+<br />
 Genomic information is presented in a comparative format and tied to other
 important plant model species such as Arabidopsis. SGN is also one of the
 bioinformatics centers involved in tomato genome sequencing.<br />
