@@ -1,7 +1,7 @@
 package SGN::Controller::Project::Secretom;
 use Moose;
 use namespace::autoclean;
-
+use Carp;
 use MooseX::Types::Path::Class;
 
 use JSON::Any; my $json = JSON::Any->new;
@@ -101,7 +101,7 @@ sub signalp_search :Path('search/signalp') {
     my $file = $c->req->param('file');  $file =~ s!\\/!!g; # no dir seps, no badness.
     $file ||= 'AtBrRiceTomPop.tab';  # use uncompressed file for speed # 'Tair10_all.tab.gz'; 
     my $abs_file = $self->static_dir->file( 'data','secretom', 'SecreTarySPTP_predictions', $file  );
-	
+print "abs_file: $abs_file \n";	
     $c->stash->{headings} = [
 	"Locus name",
 	"Annotation",
@@ -158,8 +158,10 @@ sub _search_signalp_file {
     $query =~ s/\s+/'\s+'/ge;
     $query = qr|$query|;
 
-#   open my $fh, "gunzip -c '$file' |" or die "$! unzipping $file";
-    open my $fh, "<", $file;
+my $fh;
+#   open $fh, "gunzip -c '$file' |" or die "$! unzipping $file";
+   
+open ($fh, "<", $file) or carp "Failed to open file: $file for reading.\n";
     
 my @results;
     while ( my $line = <$fh> ) {
