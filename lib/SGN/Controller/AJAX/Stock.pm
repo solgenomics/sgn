@@ -166,6 +166,8 @@ sub display_alleles : Chained('/stock/get_stock') :PathPart('alleles') : ActionC
 sub display_alleles_GET  {
     my ($self, $c) = @_;
 
+    $c->forward('/stock/get_stock_allele_ids');
+
     my $stock = $c->stash->{stock};
     my $allele_ids = $c->stash->{allele_ids};
     my $dbh = $c->dbc->dbh;
