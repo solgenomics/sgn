@@ -101,7 +101,7 @@ sub signalp_search :Path('search/signalp') {
     my $file = $c->req->param('file');  $file =~ s!\\/!!g; # no dir seps, no badness.
     $file ||= 'AtBrRiceTomPop.tab';  # use uncompressed file for speed # 'Tair10_all.tab.gz'; 
     my $abs_file = $self->static_dir->file( 'data','secretom', 'SecreTarySPTP_predictions', $file  );
-print "abs_file: $abs_file \n";	
+# print "abs_file: $abs_file \n";	
     $c->stash->{headings} = [
 	"Locus name",
 	"Annotation",
@@ -167,6 +167,7 @@ my @results;
     while ( my $line = <$fh> ) {
       next unless lc($line) =~ $query;
       # choose the fields in the tab file to keep
+	$line =~ s/\s+$//; # delete whitespace at end of line.
       my @fields = (split /\t/, $line)[
 				       0, # id
 				       1, # protein length
