@@ -1,5 +1,5 @@
 package CXGN::Search::CannedForms;
-use strict;
+use Modern::Perl;
 
 use CXGN::DB::Connection;
 use CXGN::Genomic::Search::Clone;

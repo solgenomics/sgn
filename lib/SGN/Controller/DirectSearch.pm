@@ -5,7 +5,6 @@ use namespace::autoclean;
 use CXGN::Genomic::Search::Clone;
 use CXGN::Page::FormattingHelpers qw/page_title_html modesel/;
 use CXGN::Search::CannedForms;
-use CatalystX::GlobalContext qw( $c );
 use HTML::FormFu;
 use YAML::Any qw/LoadFile/;
 
