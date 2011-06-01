@@ -29,6 +29,7 @@ my %urls = (
         "image search"          => "/search/image_search.pl?wad1_description_filename_composite=&wad1_submitter=&wad1_image_tag=",
         "SGN pubs"              => "/help/publications.pl",
         "glossary search"       => "/search/glossarysearch.pl",
+        "glossary definition"   => "/search/glossarysearch.pl?getTerm=bac",
         "people search page"    => "/search/direct_search.pl?search=directory",
         "people search"         => "/solpeople/people_search.pl?wf7d_first_name=&wf7d_last_name=&wf7d_organization=&wf7d_country=USA&wf7d_research_interests=&wf7d_research_keywords=&wf7d_sortby=last_name",
 );
