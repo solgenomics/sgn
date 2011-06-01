@@ -1,5 +1,9 @@
-use strict;
-use warnings;
+require CGI;
+print CGI->new->redirect(
+    -status => 301,
+    -uri => '/search/direct/');
+
+exit;
 
 use CXGN::DB::Connection;
 use CXGN::Genomic::Search::Clone;

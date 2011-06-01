@@ -1,4 +1,5 @@
 package SGN::Controller::DirectSearch;
+
 use Moose;
 use namespace::autoclean;
 use CXGN::Genomic::Search::Clone;
@@ -27,7 +28,7 @@ Direct search catalyst Controller.
 
 =cut
 
-sub direct_search :Path('/cgi-bin/search/direct_search.pl') :Args(0) {
+sub direct_search :Path('/search/direct/') :Args(0) {
     my ( $self, $c ) = @_;
 
     $c->response->body('Matched SGN::Controller::DirectSearch in DirectSearch.');
