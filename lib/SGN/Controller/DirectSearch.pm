@@ -3,8 +3,6 @@ package SGN::Controller::DirectSearch;
 use Moose;
 use namespace::autoclean;
 use CXGN::Genomic::Search::Clone;
-use CXGN::Page::FormattingHelpers qw/page_title_html modesel/;
-use CXGN::Search::CannedForms;
 use HTML::FormFu;
 use YAML::Any qw/LoadFile/;
 
