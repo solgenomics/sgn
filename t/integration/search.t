@@ -28,10 +28,11 @@ my $mech = SGN::Test::WWW::Mechanize->new;
 my @search_types = qw/locus unigene feature family marker bac est insitu directory images glossary/;
 
 $mech->get_ok("/search");
+$mech->content_like(qr/Search/);
 
 for my $type (@search_types) {
     $mech->get_ok("/search/$type");
+    $mech->content_like(qr/Search SGN/);
 }
-
 
 done_testing;
