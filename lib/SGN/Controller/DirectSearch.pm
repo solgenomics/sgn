@@ -1,6 +1,12 @@
 package SGN::Controller::DirectSearch;
 use Moose;
 use namespace::autoclean;
+use CXGN::Genomic::Search::Clone;
+use CXGN::Page::FormattingHelpers qw/page_title_html modesel/;
+use CXGN::Search::CannedForms;
+use CatalystX::GlobalContext qw( $c );
+use HTML::FormFu;
+use YAML::Any qw/LoadFile/;
 
 BEGIN {extends 'Catalyst::Controller'; }
 
@@ -10,7 +16,7 @@ SGN::Controller::DirectSearch - Catalyst Controller
 
 =head1 DESCRIPTION
 
-Catalyst Controller.
+Direct search catalyst Controller.
 
 =head1 METHODS
 
@@ -21,7 +27,7 @@ Catalyst Controller.
 
 =cut
 
-sub index :Path :Args(0) {
+sub direct_search :Path('/cgi-bin/search/direct_search.pl') :Args(0) {
     my ( $self, $c ) = @_;
 
     $c->response->body('Matched SGN::Controller::DirectSearch in DirectSearch.');
