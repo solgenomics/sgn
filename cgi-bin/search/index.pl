@@ -1,8 +1,7 @@
 use Modern::Perl;
-use CatalystX::GlobalContext qw( $c );
 use CGI qw();
 
-# just in case
+# In case people bookmarked or linked to the old index
 
 print CGI->new->redirect(
     -status => 301,
