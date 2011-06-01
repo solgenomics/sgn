@@ -98,10 +98,10 @@ Conducts a search and displayes the results as HTML.
 sub signalp_search :Path('search/signalp') {
     my ( $self, $c ) = @_;
 
-    my $file = $c->req->param('file');  $file =~ s!\\/!!g; # no dir seps, no badness.
-    $file ||= 'AtBrRiceTomPop.tab';  # use uncompressed file for speed # 'Tair10_all.tab.gz'; 
+    my $file = $c->req->param('file');
+    $file =~ s![\\/]!!g; # no dir seps, no badness.
+    $file ||= 'AtBrRiceTomPop.tab';  # use uncompressed file for speed # 'Tair10_all.tab.gz';
     my $abs_file = $self->static_dir->file( 'data','secretom', 'SecreTarySPTP_predictions', $file  );
-# print "abs_file: $abs_file \n";	
     $c->stash->{headings} = [
 	"Locus name",
 	"Annotation",
