@@ -1,8 +1,9 @@
-use strict;
-use CXGN::Page;
-use CXGN::Page::Toolbar::SGN;
-my $page=CXGN::Page->new("Search","john");
-$page->header();
-my $tb=CXGN::Page::Toolbar::SGN->new();
-print $tb->index_page('search');
-$page->footer();
+use Modern::Perl;
+use CatalystX::GlobalContext qw( $c );
+use CGI qw();
+
+# just in case
+
+print CGI->new->redirect(
+    -status => 301,
+    -uri => "/search");
