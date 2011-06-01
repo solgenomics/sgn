@@ -6,6 +6,7 @@ use CXGN::Genomic::Search::Clone;
 use HTML::FormFu;
 use YAML::Any qw/LoadFile/;
 use CXGN::Search::CannedForms;
+use CXGN::Page::Toolbar::SGN;
 
 BEGIN {extends 'Catalyst::Controller'; }
 
@@ -26,10 +27,14 @@ Direct search catalyst Controller.
 
 =cut
 
-sub search :Path('/search/') :Args(0) {
-    my ( $self, $c ) = @_;
-
-    $c->response->body('Matched SGN::Controller::DirectSearch in DirectSearch.');
+sub search :Path('/search') :Args(1) {
+    my ( $self, $c, $term ) = @_;
+    if ($term) {
+        $c->response->body( "stuff" );
+    } else {
+        my $tb = CXGN::Page::Toolbar::SGN->new();
+        $c->response->body( $tb->index_page('search') );
+    }
 }
 
 
