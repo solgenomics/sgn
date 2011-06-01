@@ -6,6 +6,7 @@ use SGN::Test qw/validate_urls/;
 use Test::More;
 
 my %urls = (
+        "main search page"      => "/search",
         "direct qtl search"     => "/search/direct_search.pl?search=qtl",
         "qtl_search"            => "/cgi-bin/search/qtl_search.pl",
         "qtl search foo"        => "/search/qtl_search.pl?wf1a_cvterm_name=foo",
@@ -19,7 +20,6 @@ my %urls = (
         "est search page"       => "/search/direct_search.pl?search=est",
         "est search"            => "/search/est.pl?request_from=0&request_id=SGN-E234234&request_type=7&search=Search",
         "est detail page"       => "/search/est.pl?request_from=0&request_id=SGN-E234234&request_type=7&search=Search",
-        'chado cvterm page'     => '/chado/cvterm.pl?cvterm_id=47499',
         "family search page"    => "/search/direct_search.pl?search=family",
         "family search"         => "/search/family_search.pl?wa82_family_id=22081",
         "family detail page"    => "/search/family.pl?family_id=22081",
@@ -27,7 +27,6 @@ my %urls = (
         "library search"        => "/search/library_search.pl?w5c4_term=leaf",
         "Phenotype search"      => "/search/direct_search.pl?search=phenotypes",
         "image search"          => "/search/image_search.pl?wad1_description_filename_composite=&wad1_submitter=&wad1_image_tag=",
-        "SGN pubs"              => "/help/publications.pl",
         "glossary search"       => "/search/glossarysearch.pl",
         "glossary definition"   => "/search/glossarysearch.pl?getTerm=bac",
         "people search page"    => "/search/direct_search.pl?search=directory",
