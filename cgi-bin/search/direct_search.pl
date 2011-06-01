@@ -1,7 +1,12 @@
-require CGI;
+use Modern::Perl;
+use CatalystX::GlobalContext qw( $c );
+use CGI qw();
+
+my $term = $c->request->param('search') || 'loci';
+
 print CGI->new->redirect(
     -status => 301,
-    -uri => '/search/direct/');
+    -uri => "/search/$term");
 
 exit;
 
@@ -11,7 +16,6 @@ use CXGN::Page::FormattingHelpers qw/page_title_html modesel/;
 use CXGN::Page;
 use CXGN::People;
 use CXGN::Search::CannedForms;
-use CatalystX::GlobalContext qw( $c );
 use HTML::FormFu;
 use YAML::Any qw/LoadFile/;
 

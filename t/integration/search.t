@@ -25,7 +25,7 @@ use SGN::Test::WWW::Mechanize;
 
 my $mech = SGN::Test::WWW::Mechanize->new;
 
-my @search_types = qw/locus unigene feature family marker bac est insitu directory images glossary/;
+my @search_types = qw/loci unigene feature family markers bacs est_library insitu directory images template_experiment_platform glossary phenotype_qtl_trait/;
 
 $mech->get_ok("/search");
 $mech->content_like(qr/Search/);
