@@ -34,9 +34,9 @@ my %urls = (
         "direct_search TEP"         => "/search/direct_search.pl?search=template_experiment_platform",
         "direct_search qtl"         => "/search/direct_search.pl?search=phenotype_qtl_trait",
         "direct_search bacs"        => "/search/direct_search.pl?search=bacs",
-        "direct_search markers"     => "/search/direct_search.pl?search=bacs",
-        "direct_search images"      => "/search/direct_search.pl?search=bacs",
-        "direct_search est_library" => "/search/direct_search.pl?search=bacs",
+        "direct_search markers"     => "/search/direct_search.pl?search=markers",
+        "direct_search images"      => "/search/direct_search.pl?search=images",
+        "direct_search est_library" => "/search/direct_search.pl?search=est_library",
 );
 
 validate_urls(\%urls, $ENV{ITERATIONS} || 1 );
