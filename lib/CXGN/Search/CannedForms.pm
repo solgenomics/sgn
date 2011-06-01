@@ -579,7 +579,7 @@ EOHTML
 package CXGN::Search::CannedForms::MarkerSearch;
 use base qw( CXGN::Page::WebForm );
 
-use strict;
+use Modern::Perl;
 use CXGN::Page::FormattingHelpers qw(blue_section_html);
 use Tie::Function;
 use CXGN::DB::Connection;
