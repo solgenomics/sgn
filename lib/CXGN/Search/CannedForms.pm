@@ -911,12 +911,4 @@ sub species_select {
 
 }
 
-###########################
-# call uniqify_name() to make a name
-
-#required by Perl convention - modules must return something
-
-###
-1;    #do not remove
-###
-
+1;
