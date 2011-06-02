@@ -80,16 +80,23 @@ sub search :Path('/search') :Args(1) {
     my ( $self, $c, $term ) = @_;
 
     $c->stash->{term} = $term;
-
+    my $response;
     if ($term) {
-        my $response = modesel(\@tabs,$tab_num->{$term}); # tabs
+        $response = modesel(\@tabs,$tab_num->{$term}); # tabs
         $response   .= $tabfuncs[$tab_num->{$term}]();
 
-        $c->response->body($response);
+        $c->forward_to_mason_view(
+            '/search/controller.mas',
+            content => $response,
+        );
     } else {
         my $tb = CXGN::Page::Toolbar::SGN->new();
-        $c->response->body( $tb->index_page('search') );
+        $response = $tb->index_page('search');
     }
+    $c->forward_to_mason_view(
+        '/search/controller.mas',
+        content => $response,
+    );
 }
 
 sub annotation_tab {
