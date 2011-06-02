@@ -76,7 +76,7 @@ Direct search catalyst Controller.
 
 =cut
 
-sub search :Path('/search') :Args(1) {
+sub search :Path('/search') :Args {
     my ( $self, $c, $term ) = @_;
 
     $c->stash->{term} = $term;
