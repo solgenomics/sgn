@@ -8,11 +8,11 @@ use YAML::Any qw/LoadFile/;
 use CXGN::Search::CannedForms;
 use CXGN::Page::FormattingHelpers qw/page_title_html modesel/;
 use CXGN::Page::Toolbar::SGN;
+
+# this is suboptimal
 use CatalystX::GlobalContext qw( $c );
 
 BEGIN {extends 'Catalyst::Controller'; }
-
-our $page = CXGN::Page->new('search');
 
 my @tabs = (
             ['?search=loci','Genes'],
@@ -93,7 +93,7 @@ sub search :Path('/search') :Args(1) {
 }
 
 sub annotation_tab {
-    return CXGN::Search::CannedForms::annotation_search_form($page);
+    return CXGN::Search::CannedForms->annotation_search_form();
 }
 
 #display a second level of tabs, allowing the user to choose between EST and library searches
@@ -104,11 +104,10 @@ sub est_library_submenu {
         my @tabfuncs = (\&est_tab, \&library_tab);
 
         my $term = $c->stash->{term};
-
         my $tabsel =
-          ($term =~ /est/i)          ? 0
+            ($term=~ /est/i)        ? 0
           : ($term =~ /library/i)   ? 1
-          : $page->error_page("Invalid submenu term type '$term'.");
+          : -1 ;
 
         my $tabs = modesel(\@tabs, $tabsel); #print out the tabs
         my $response = sprintf "$tabs<div>%s</div>", $tabfuncs[$tab_num->{$term}]();
@@ -116,19 +115,19 @@ sub est_library_submenu {
 }
 
 sub est_tab {
-    return CXGN::Search::CannedForms::est_search_form($page);
+    return CXGN::Search::CannedForms->est_search_form();
 }
 
 sub library_tab {
-    return CXGN::Search::CannedForms::library_search_form($page);
+    return CXGN::Search::CannedForms->library_search_form();
 }
 
 sub unigene_tab {
-    return CXGN::Search::CannedForms::unigene_search_form($page);
+    return CXGN::Search::CannedForms->unigene_search_form();
 }
 
 sub family_tab {
-    return CXGN::Search::CannedForms::family_search_form($page);
+    return CXGN::Search::CannedForms->family_search_form();
 }
 
 sub marker_tab {
@@ -146,15 +145,15 @@ MARKERTAB
 }
 
 sub bac_tab {
-    return CXGN::Search::CannedForms::clone_search_form($page);
+    return CXGN::Search::CannedForms->clone_search_form();
 }
 
 sub directory_tab {
-    return CXGN::Search::CannedForms::people_search_form($page);
+    return CXGN::Search::CannedForms->people_search_form();
 }
 
 sub gene_tab {
-    return CXGN::Search::CannedForms::gene_search_form($page);
+    return CXGN::Search::CannedForms->gene_search_form();
 }
 sub phenotype_tab {
     my $form = HTML::FormFu->new(LoadFile($c->path_to(qw{forms stock stock_search.yaml})));
@@ -164,14 +163,14 @@ sub phenotype_tab {
     );
 }
 sub qtl_tab {
-    return CXGN::Search::CannedForms::qtl_search_form($page);
+    return CXGN::Search::CannedForms->qtl_search_form();
 }
 sub trait_tab {
     return $c->render_mason('/ontology/traits.mas' );
 }
 
 sub images_tab {
-    return CXGN::Search::CannedForms::image_search_form($page);
+    return CXGN::Search::CannedForms->image_search_form();
 }
 
 sub template_experiment_platform_submenu {
@@ -183,27 +182,21 @@ sub template_experiment_platform_submenu {
 
         my $term = $c->stash->{term} || 'template';
 
-        my $tabsel =
-            ($term =~ /template/i)     ? 0
-          : ($term =~ /experiment/i)   ? 1
-          : ($term =~ /platform/i)     ? 2
-          : $page->error_page("Invalid submenu term type '$term'.");
-
         my $tabs = modesel(\@tabs, $tab_num->{$term}); #print out the tabs
         my $response = sprintf "$tabs<div>%s</div>", $tabfuncs[$tab_num->{$term}]();
         return $response;
 }
 
 sub template_tab {
-    return CXGN::Search::CannedForms::expr_template_search_form($page);
+    return CXGN::Search::CannedForms->expr_template_search_form();
 }
 
 sub experiment_tab {
-    return CXGN::Search::CannedForms::expr_experiment_search_form($page);
+    return CXGN::Search::CannedForms->expr_experiment_search_form();
 }
 
 sub platform_tab {
-    return CXGN::Search::CannedForms::expr_platform_search_form($page);
+    return CXGN::Search::CannedForms->expr_platform_search_form();
 }
 
 sub phenotype_submenu {
@@ -221,8 +214,7 @@ sub phenotype_submenu {
           ($term=~ /phenotypes/i)          ? 0
           : ($term =~ /qtl/i)   ? 1
           : ($term =~ /trait/i)     ? 2
-          : $page->error_page("Invalid submenu term type '$term'.");
-
+          : -1 ;
         my $tabs = modesel(\@tabs, $tabsel); #print out the tabs
         my $response = sprintf "$tabs<div>%s</div>", $tabfuncs[$tab_num->{$term}]();
         return $response;
