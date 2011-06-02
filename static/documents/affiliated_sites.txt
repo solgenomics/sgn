@@ -5,6 +5,7 @@
   <div class="boxcontent">
   <ul>
   <li><a href="/secretom">Secretom Project</a></li>
+  <li><a href="/organism/sol100/view">SOL-100 Project</a></li>
   </ul>
   </div>
   <div class="boxheading">
@@ -20,14 +21,14 @@
   </div>
   <div class="boxcontent">
     <ul>
-      <li><a class="creativitylinks" href="http://solcap.msu.edu">SolCAP Project</a>
-          <a href="http://solcap.msu.edu" class="footer"><img src="/documents/img/solcap_logo_with_text_small.png" border="0" /></a>
+      <li><a class="creativitylinks" href="http://solcap.msu.edu">SolCAP Project</a><br />
+          <a href="http://solcap.msu.edu" class="footer" target="_new"><img src="/documents/img/solcap_logo_with_text_small.png" border="0" /></a>
       </li>
-      <li><a class="creativitylinks" href="http://pgn.cornell.edu">Plant Genome Network</a></li>
-      <li><a class="creativitylinks" href="http://ted.bti.cornell.edu/">Tomato Functional Genomics Database</a></li>
-      <li><a class="creativitylinks" href="http://zamir.sgn.cornell.edu/mutants/">Genes that make tomatoes</a></li>
-      <li><a class="creativitylinks" href="http://zamir.sgn.cornell.edu/Qtl/Html/home.htm">Realtime quantitative trait loci</a></li>
-      <li><a class="creativitylinks" href="http://tgrc.ucdavis.edu">Tomato Genetics Resource Center</a></li>
+      <li><a class="creativitylinks" href="http://pgn.cornell.edu" target="_new">Plant Genome Network</a></li>
+      <li><a class="creativitylinks" href="http://ted.bti.cornell.edu/" target="_new">Tomato Functional Genomics Database</a></li>
+      <li><a class="creativitylinks" href="http://zamir.sgn.cornell.edu/mutants/" target="_new">Genes that make tomatoes</a></li>
+      <li><a class="creativitylinks" href="http://zamir.sgn.cornell.edu/Qtl/Html/home.htm" target="_new">Realtime quantitative trait loci</a></li>
+      <li><a class="creativitylinks" href="http://tgrc.ucdavis.edu" target="_new">Tomato Genetics Resource Center</a></li>
     </ul>
   </div>
 </div>
