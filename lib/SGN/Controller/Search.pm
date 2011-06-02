@@ -34,7 +34,8 @@ my @tabfuncs = (
                 \&family_tab,
                 \&marker_tab,
                 \&bac_tab,
-                \&est_library_submenu,
+               # \&est_library_submenu,
+                \&est_tab,
                 \&images_tab,
                 \&directory_tab,
                 \&template_experiment_platform_submenu,
@@ -76,10 +77,11 @@ Direct search catalyst Controller.
 
 =cut
 
-sub search :Path('/search') :Args {
-    my ( $self, $c, $term ) = @_;
+sub search :Path('/search/') :Args(1) {
+    my ( $self, $c, $term, @args ) = @_;
 
     $c->stash->{term} = $term;
+
     my $response;
     if ($term) {
         $response = modesel(\@tabs,$tab_num->{$term}); # tabs
@@ -110,11 +112,11 @@ sub est_library_submenu {
                     ['?search=library','Libraries']);
         my @tabfuncs = (\&est_tab, \&library_tab);
 
-        my $term = $c->stash->{term};
+        my $term = $c->stash->{term} || 'est';
         my $tabsel =
             ($term=~ /est/i)        ? 0
           : ($term =~ /library/i)   ? 1
-          : -1 ;
+          : 0 ;
 
         my $tabs = modesel(\@tabs, $tabsel); #print out the tabs
         my $response = sprintf "$tabs<div>%s</div>", $tabfuncs[$tab_num->{$term}]();
@@ -230,7 +232,7 @@ sub phenotype_submenu {
 
 =head1 AUTHOR
 
-Jonathan "Duke" Leto
+Converted to Catalyst by Jonathan "Duke" Leto
 
 =head1 LICENSE
 
