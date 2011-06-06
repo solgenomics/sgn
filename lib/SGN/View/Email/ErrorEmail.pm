@@ -230,7 +230,7 @@ error.  Example:
 sub summary_text {
     my ( $self, $c ) = @_;
 
-    my $client_ip       = $c->req->address;
+    my $client_ip       = ($c->req->header('X-Forwarded-For'))[0] || $c->req->address;
     my $client_hostname = $self->reverse_dns
         ? ' ('.(gethostbyaddr( inet_aton( $client_ip ), AF_INET ) || 'reverse DNS lookup failed').')'
         : '';
