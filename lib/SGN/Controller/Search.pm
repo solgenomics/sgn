@@ -58,6 +58,7 @@ my $tab_num = {
     template    => 9,
     experiment  => 9,
     platform    => 9,
+    template_experiment_platform => 9,
 };
 
 =head1 NAME

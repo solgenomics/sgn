@@ -19,9 +19,12 @@ my @urls = qw{
             /search/images
             /search/directory
             /search/template_experiment_platform
+            /search/platform
 };
 
 for my $url (@urls) {
-    ok( request($url)->is_success, "GET $url succeeded");
+    my ($r) = request($url);
+    diag $r->content unless $r->is_success;
+    cmp_ok( $r->code,'eq',200, "GET $url succeeded with 200");
 }
 done_testing();
