@@ -1,5 +1,4 @@
 <%args>
-  $term
   $content
 </%args>
 <div>

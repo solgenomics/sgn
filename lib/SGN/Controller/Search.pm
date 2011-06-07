@@ -8,6 +8,7 @@ use YAML::Any qw/LoadFile/;
 use CXGN::Search::CannedForms;
 use CXGN::Page::FormattingHelpers qw/page_title_html modesel/;
 use CXGN::Page::Toolbar::SGN;
+use CXGN::Glossary qw(get_definitions create_tooltips_from_text);
 
 # this is suboptimal
 use CatalystX::GlobalContext qw( $c );
@@ -80,6 +81,43 @@ Search.
 =head2 index
 
 =cut
+
+sub glossary :Path('/search/glossary') :Args() {
+    my ( $self, $c, $term ) = @_;
+    my $response;
+    if($term){
+        my @defs = get_definitions($term);
+        unless (@defs){
+            $response = "<p>Your term was not found. <br> The term you searched for was $term.</p>";
+        } else {
+            $response = "<hr /><dl><dt>$term</dt>";
+            for my $d (@defs){
+                $response .= "<dd>$d</dd><br />";
+            }
+            $response .= "</dl>";
+        }
+    } else {
+        $response =<<DEFAULT;
+<hr />
+<h2>Glossary search</h2>
+<form action="#" method='get' name='glossary'>
+<b>Search the glossary by term:</b>
+<input type = 'text' name = 'getTerm' size = '50' tabindex='0' />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<input type = 'submit' value = 'Lookup' /></form>
+<script type="text/javascript" language="javascript">
+document.glossary.getTerm.focus();
+</script>
+
+DEFAULT
+    }
+
+    $c->forward_to_mason_view(
+        '/search/controller.mas',
+        content => $response,
+    );
+
+}
 
 sub search :Path('/search/') :Args() {
     my ( $self, $c, $term, @args ) = @_;
