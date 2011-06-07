@@ -45,11 +45,13 @@ my $tab_num = {
     loci        => 0,
     phenotype   => 1,
     phenotypes  => 1,
+    phenotype_qtl_trait => 1,
     qtl         => 1,
     trait       => 1,
     unigene     => 2,
     family      => 3,
     families    => 3,
+    marker      => 4,
     markers     => 4,
     bacs        => 5,
     est         => 6,
@@ -142,12 +144,7 @@ sub family_tab {
 }
 
 sub marker_tab {
-
-  return <<MARKERTAB;
-<h3><b>Marker search</b></h3>
-MARKERTAB
-
-  my $dbh = CXGN::DB::Connection->new();
+  my $dbh   = CXGN::DB::Connection->new();
   my $mform = CXGN::Search::CannedForms::MarkerSearch->new($dbh);
   return   '<form action="/search/markers/markersearch.pl">'
     . $mform->to_html() .
