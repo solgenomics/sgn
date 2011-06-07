@@ -1,0 +1,7 @@
+<%args>
+  $term
+  $content
+</%args>
+<div>
+<% $content %>
+</div>

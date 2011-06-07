@@ -185,15 +185,20 @@ sub images_tab {
 
 sub template_experiment_platform_submenu {
         my @tabs = (
-                    ['?search=template','Templates'],
-                    ['?search=experiment','Experiments'],
-                    ['?search=platform', 'Platforms']);
-        my @tabfuncs = (\&template_tab, \&experiment_tab, \&platform_tab);
+                    ['/search/template','Templates'],
+                    ['/search/experiment','Experiments'],
+                    ['/search/platform', 'Platforms']);
+        my $tabfuncs = {
+            template                     => \&template_tab,
+            experiment                   => \&experiment_tab,
+            platform                     => \&platform_tab,
+            template_experiment_platform => \&template_tab,
+        };
 
         my $term = $c->stash->{term} || 'template';
 
-        my $tabs = modesel(\@tabs, $tab_num->{$term}); #print out the tabs
-        my $response = sprintf "$tabs<div>%s</div>", $tabfuncs[$tab_num->{$term}]();
+        my $tabs     = modesel(\@tabs, $tab_num->{template}); #print out the tabs
+        my $response = sprintf "$tabs<div>%s</div>", $tabfuncs->{$term}();
         return $response;
 }
 
