@@ -25,7 +25,9 @@ my @tabs = (
             ['/search/est_library','ESTs'],
             ['/search/images','Images'],
             ['/search/directory','People'],
-            ['/search/template_experiment_platform', 'Expression']
+            ['/search/template_experiment_platform', 'Expression'],
+            ['/organism/search/', 'Organism'],
+            ['/feature/search/', 'Feature'],
            );
 
 my @tabfuncs = (
