@@ -16,7 +16,7 @@ BEGIN {extends 'Catalyst::Controller'; }
 
 my @tabs = (
             ['/search/loci','Genes'],
-            ['/search/phenotype_qtl_trait','QTLs & Phenotypes'],
+            ['/search/qtl','QTLs & Phenotypes'],
             ['/search/unigene','Unigenes'],
             ['/search/family', 'Unigene Families' ],
             ['/search/markers','Markers'],
@@ -77,7 +77,7 @@ Search.
 
 =cut
 
-sub search :Path('/search/') :Args(1) {
+sub search :Path('/search/') :Args() {
     my ( $self, $c, $term, @args ) = @_;
 
     $c->stash->{term} = $term;
