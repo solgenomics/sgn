@@ -62,11 +62,11 @@ my $tab_num = {
 
 =head1 NAME
 
-SGN::Controller::DirectSearch - Catalyst Controller
+SGN::Controller::Search - SGN Search Controller
 
 =head1 DESCRIPTION
 
-Direct search catalyst Controller.
+Search.
 
 =head1 METHODS
 
