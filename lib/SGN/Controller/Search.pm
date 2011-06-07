@@ -26,6 +26,7 @@ my @tabs = (
             ['/search/images','Images'],
             ['/search/directory','People'],
             ['/search/template_experiment_platform', 'Expression'],
+            ['/insitu/search.pl', 'Insitu' ],
             ['/organism/search/', 'Organism'],
             ['/feature/search/', 'Feature'],
            );
