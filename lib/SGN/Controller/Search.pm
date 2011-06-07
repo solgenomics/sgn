@@ -15,16 +15,16 @@ use CatalystX::GlobalContext qw( $c );
 BEGIN {extends 'Catalyst::Controller'; }
 
 my @tabs = (
-            ['?search=loci','Genes'],
-            ['?search=phenotype_qtl_trait','QTLs & Phenotypes'],
-            ['?search=unigene','Unigenes'],
-            ['?search=family', 'Unigene Families' ],
-            ['?search=markers','Markers'],
-            ['?search=bacs','Genomic Clones'],
-            ['?search=est_library','ESTs'],
-            ['?search=images','Images'],
-            ['?search=directory','People'],
-            ['?search=template_experiment_platform', 'Expression']
+            ['/search/loci','Genes'],
+            ['/search/phenotype_qtl_trait','QTLs & Phenotypes'],
+            ['/search/unigene','Unigenes'],
+            ['/search/family', 'Unigene Families' ],
+            ['/search/markers','Markers'],
+            ['/search/bacs','Genomic Clones'],
+            ['/search/est_library','ESTs'],
+            ['/search/images','Images'],
+            ['/search/directory','People'],
+            ['/search/template_experiment_platform', 'Expression']
            );
 
 my @tabfuncs = (
