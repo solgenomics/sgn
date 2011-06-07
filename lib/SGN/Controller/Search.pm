@@ -44,6 +44,7 @@ my @tabfuncs = (
 my $tab_num = {
     loci        => 0,
     phenotype   => 1,
+    phenotypes  => 1,
     qtl         => 1,
     trait       => 1,
     unigene     => 2,
@@ -216,9 +217,9 @@ sub platform_tab {
 
 sub phenotype_submenu {
         my @tabs = (
-                    ['?search=phenotypes','Mutants & Accessions'],
-                    ['?search=qtl','QTLs'],
-                    ['?search=trait', 'Traits']);
+                    ['/search/phenotypes','Mutants & Accessions'],
+                    ['/search/qtl','QTLs'],
+                    ['/search/trait', 'Traits']);
         my @tabfuncs = (\&phenotype_tab, \&qtl_tab, \&trait_tab);
 
         my $term = $c->stash->{term} || 'phenotype';
@@ -226,12 +227,12 @@ sub phenotype_submenu {
         $term = 'qt' if $term eq 'cvterm_name';
 
         my $tabsel =
-          ($term=~ /phenotypes/i)          ? 0
-          : ($term =~ /qtl/i)   ? 1
-          : ($term =~ /trait/i)     ? 2
+            ($term =~ /phenotypes/i) ? 0
+          : ($term =~ /qtl/i)        ? 1
+          : ($term =~ /trait/i)      ? 2
           : -1 ;
         my $tabs = modesel(\@tabs, $tabsel); #print out the tabs
-        my $response = sprintf "$tabs<div>%s</div>", $tabfuncs[$tab_num->{$term}]();
+        my $response = sprintf "$tabs<div>%s</div>", $tabfuncs[$tabsel]();
         return $response;
 }
 

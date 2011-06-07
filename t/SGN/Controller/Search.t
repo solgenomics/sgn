@@ -11,6 +11,9 @@ my @urls = qw{
             /search/
             /search/loci
             /search/qtl
+            /search/trait
+            /search/phenotypes
+            /search/phenotype
             /search/unigene
             /search/family
             /search/markers
