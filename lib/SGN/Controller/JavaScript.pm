@@ -148,6 +148,12 @@ sub insert_js_pack_html :Private {
   my $pack_uri = $c->uri_for( $self->action_for_js_package( $js ) )->path_query;
   if( $b && $b =~ s{<!-- \s* INSERT_JS_PACK \s* -->} {<script src="$pack_uri" type="text/javascript">\n</script>}x ) {
       $c->res->body( $b );
+
+      # we have changed the size of the body.  remove the
+      # content-length and let catalyst recalculate the content-length
+      # if it can
+      $c->res->headers->remove_header('content-length');
+
       delete $c->stash->{pack_js};
   }
 }
