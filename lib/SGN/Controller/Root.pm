@@ -99,7 +99,8 @@ sub end : Private {
 
     # insert our javascript packages into the rendered view
     if( $c->res->content_type eq 'text/html' ) {
-        $c->forward('/js/insert_js_pack_html')
+        $c->forward('/js/insert_js_pack_html');
+        $c->res->headers->push_header('Vary', 'Cookie');
     } else {
         $c->log->debug("skipping JS pack insertion for page with content type ".$c->res->content_type)
             if $c->debug;
