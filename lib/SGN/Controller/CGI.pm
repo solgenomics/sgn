@@ -59,6 +59,14 @@ if( eval{ SGN->debug } ) {
     };
 }
 
+# remove the content-length for CGI responses after running them, let
+# catalyst recalculate it later in the response cycle.  this works
+# around a bug somewhere in HTTP::Request::AsCGI
+after 'cgi_to_response' => sub {
+    my ( $self, $c ) = @_;
+    $c->res->headers->remove_header('content-length');
+};
+
 sub cgi_action_for {
     my ( $self, $path ) = @_;
 
