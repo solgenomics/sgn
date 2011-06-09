@@ -179,7 +179,6 @@ path          = ITAG2.3_protein.conf
 description   = ITAG2.3 Release: protein annotations
 organism      = Solanum lycopersicum
 extended_description = ITAG Release 2.3 (2011-04-26) official annotations on the SL2.40 genome build by the International Tomato Annotation Group (ITAG).
-snogger = true
 
 [ITAG2_genomic]
 path          = ITAG2_genomic.conf
