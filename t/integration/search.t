@@ -18,10 +18,9 @@ Jonathan "Duke" Leto
 use Modern::Perl;
 use Test::Most;
 
-BEGIN { $ENV{SGN_SKIP_CGI} = 1 }
 use lib 't/lib';
 use SGN::Test::Data qw/ create_test /;
-use SGN::Test::WWW::Mechanize;
+use SGN::Test::WWW::Mechanize skip_cgi => 1;
 
 my $mech = SGN::Test::WWW::Mechanize->new;
 
