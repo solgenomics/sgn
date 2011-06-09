@@ -28,7 +28,8 @@ my @tabs = (
             ['/search/template_experiment_platform', 'Expression'],
             ['/insitu/search.pl', 'Insitu' ],
             ['/organism/search/', 'Organism'],
-            ['/feature/search/', 'Feature'],
+#           Not ready for prime-time yet
+#            ['/feature/search/', 'Feature'],
            );
 
 my @tabfuncs = (
