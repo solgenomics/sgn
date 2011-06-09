@@ -46,25 +46,25 @@ my @tabfuncs = (
     );
 
 my $tab_num = {
-    loci        => 0,
-    phenotype   => 1,
-    phenotypes  => 1,
-    phenotype_qtl_trait => 1,
-    qtl         => 1,
-    trait       => 1,
-    unigene     => 2,
-    family      => 3,
-    families    => 3,
-    marker      => 4,
-    markers     => 4,
-    bacs        => 5,
-    est         => 6,
-    est_library => 6,
-    images      => 7,
-    directory   => 8,
-    template    => 9,
-    experiment  => 9,
-    platform    => 9,
+    loci                         => 0,
+    phenotype                    => 1,
+    phenotypes                   => 1,
+    phenotype_qtl_trait          => 1,
+    qtl                          => 1,
+    trait                        => 1,
+    unigene                      => 2,
+    family                       => 3,
+    families                     => 3,
+    marker                       => 4,
+    markers                      => 4,
+    bacs                         => 5,
+    est                          => 6,
+    est_library                  => 6,
+    images                       => 7,
+    directory                    => 8,
+    template                     => 9,
+    experiment                   => 9,
+    platform                     => 9,
     template_experiment_platform => 9,
 };
 
@@ -74,12 +74,11 @@ SGN::Controller::Search - SGN Search Controller
 
 =head1 DESCRIPTION
 
-Search.
-
-=head1 METHODS
+SGN Search Controller. Most, but not all, search code interacts with this
+controller. This controller defines the general search interface that used to
+live at direct_search.pl, and links to all other kinds of search.
 
 =cut
-
 
 =head2 index
 
