@@ -1,0 +1,6 @@
+<%args>
+  $content
+</%args>
+<div>
+<% $content %>
+</div>

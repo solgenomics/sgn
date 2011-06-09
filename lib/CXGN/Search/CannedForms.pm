@@ -1,5 +1,5 @@
 package CXGN::Search::CannedForms;
-use strict;
+use Modern::Perl;
 
 use CXGN::DB::Connection;
 use CXGN::Genomic::Search::Clone;
@@ -579,7 +579,7 @@ EOHTML
 package CXGN::Search::CannedForms::MarkerSearch;
 use base qw( CXGN::Page::WebForm );
 
-use strict;
+use Modern::Perl;
 use CXGN::Page::FormattingHelpers qw(blue_section_html);
 use Tie::Function;
 use CXGN::DB::Connection;
@@ -911,12 +911,4 @@ sub species_select {
 
 }
 
-###########################
-# call uniqify_name() to make a name
-
-#required by Perl convention - modules must return something
-
-###
-1;    #do not remove
-###
-
+1;
