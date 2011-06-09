@@ -116,7 +116,7 @@ DEFAULT
     }
 
     $c->forward_to_mason_view(
-        '/search/controller.mas',
+        '/search/search.mas',
         content => $response,
     );
 
@@ -138,7 +138,7 @@ sub search :Path('/search/') :Args() {
         $response   .= $tabfuncs[$tab_num->{$term}]();
 
         $c->forward_to_mason_view(
-            '/search/controller.mas',
+            '/search/search.mas',
             content => $response,
         );
     } else {
@@ -146,7 +146,7 @@ sub search :Path('/search/') :Args() {
         $response = $tb->index_page('search');
     }
     $c->forward_to_mason_view(
-        '/search/controller.mas',
+        '/search/search.mas',
         content => $response,
     );
 }
