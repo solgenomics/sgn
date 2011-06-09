@@ -28,12 +28,15 @@ my $mech = SGN::Test::WWW::Mechanize->new;
 my @search_types = qw{
     loci unigene feature family markers marker bacs est_library insitu directory
     images template_experiment_platform glossary phenotype_qtl_trait trait
-    glossary qtl experiment platform
+    qtl experiment platform
 };
 
 
 $mech->get_ok("/search");
 $mech->content_like(qr/Search/);
+
+$mech->get_ok("/search/index.pl");
+$mech->content_like(qr/A database of in-situ/);
 
 my $type_regex = {
     bacs                         => qr/Genomic clone search/,
@@ -61,7 +64,9 @@ my $type_regex = {
 
 for my $type (@search_types) {
     $mech->get_ok("/search/$type");
-    $mech->get_ok("/search/direct_search.pl?search=$type");
+
+    # the glossary search was never accessible via direct_search
+    $mech->get_ok("/search/direct_search.pl?search=$type") if ($type ne 'glossary');
     my $regex = $type_regex->{$type};
     $mech->content_like($regex); # or diag $mech->content;
 }

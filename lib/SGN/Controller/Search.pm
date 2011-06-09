@@ -124,6 +124,11 @@ DEFAULT
 sub search :Path('/search/') :Args() {
     my ( $self, $c, $term, @args ) = @_;
 
+    # make /search/index.pl show the list of all kinds of searches
+    $term = '' if $term eq 'index.pl';
+
+    $term = $c->req->param('search') if $term eq 'direct_search.pl';
+
     $c->stash->{term} = $term;
 
     my $response;
