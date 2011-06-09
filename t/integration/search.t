@@ -61,6 +61,7 @@ my $type_regex = {
 
 for my $type (@search_types) {
     $mech->get_ok("/search/$type");
+    $mech->get_ok("/search/direct_search.pl?search=$type");
     my $regex = $type_regex->{$type};
     $mech->content_like($regex); # or diag $mech->content;
 }

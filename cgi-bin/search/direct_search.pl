@@ -1,8 +1,8 @@
 use Modern::Perl;
-use CatalystX::GlobalContext qw( $c );
 use CGI qw();
+my $q = CGI->new;
 
-my $term = $c->request->param('search') || 'loci';
+my $term = $q->param('search') || 'loci';
 
 print CGI->new->redirect(
     -status => 301,
