@@ -1,3 +1,10 @@
+=head1 NAME
+
+SGN::Controller::JavaScript - controller for packing up and serving
+minified javascript
+
+=cut
+
 package SGN::Controller::JavaScript;
 use Moose;
 use namespace::autoclean;
