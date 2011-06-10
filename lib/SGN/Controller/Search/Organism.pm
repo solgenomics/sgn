@@ -1,4 +1,4 @@
-package SGN::Controller::Organism::Search;
+package SGN::Controller::Search::Organism;
 use Moose;
 use namespace::autoclean;
 
@@ -149,6 +149,4 @@ sub get_taxa_choices : Private {
       ];
 }
 
-
 __PACKAGE__->meta->make_immutable;
-1;
