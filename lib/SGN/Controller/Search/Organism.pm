@@ -18,7 +18,7 @@ has 'default_page_size' => (
 sub search : Path('/search/organism') {
     my ($self, $c) = @_;
 
-    $c->forward('stash_tab_data');
+    $c->forward('/search/stash_tab_data');
     $c->forward( 'get_taxa_choices' );
     $c->forward( 'build_form' );
 
