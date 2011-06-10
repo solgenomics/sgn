@@ -45,8 +45,8 @@ sub stash_tab_data :Private {
             ['/search/images','Images'],
             ['/search/directory','People'],
             ['/search/template_experiment_platform', 'Expression'],
-            ['/insitu/search.pl', 'Insitu' ],
-            ['/organism/search/', 'Organism'],
+            ['/search/organism', 'Organism'],
+#            ['/insitu/search.pl', 'Insitu' ],
 #           Not ready for prime-time yet
 #            ['/feature/search/', 'Feature'],
            ];
