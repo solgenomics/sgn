@@ -255,10 +255,16 @@ sub template_experiment_platform_submenu {
             platform                     => \&platform_tab,
             template_experiment_platform => \&template_tab,
         };
+        my $tab_nums = {
+            template                     => 1,
+            experiment                   => 2,
+            platform                     => 3,
+            template_experiment_platform => 4,
+        };
 
         my $term = $c->stash->{term} || 'template';
 
-        my $tabs     = modesel(\@tabs, $c->stash->{tab_nums}{template});
+        my $tabs     = modesel(\@tabs, $tab_nums->{$term});
         my $response = sprintf "$tabs<div>%s</div>", $tabfuncs->{$term}();
         return $response;
 }
