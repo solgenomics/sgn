@@ -46,11 +46,10 @@ sub autocomplete_GET :Args(0) {
     my ( $self, $c ) = @_;
 
     #my $term = $c->req->param('term_name');
-    my $db_name = $c->req->param('db_name');
+    my $db_name = $c->request->param('db_name');
     # trim and regularize whitespace
     #$term =~ s/(^\s+|\s+)$//g;
     #$term =~ s/\s+/ /g;
-    #my $db_name = 'PO';
     my $term_name = $c->request->param("term");
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
@@ -60,7 +59,8 @@ sub autocomplete_GET :Args(0) {
                JOIN cv USING (cv_id )
                LEFT JOIN cvtermsynonym USING (cvterm_id )
                WHERE db.name = ? AND (cvterm.name ilike ? OR cvtermsynonym.synonym ilike ? OR cvterm.definition ilike ?) AND cvterm.is_obsolete = 0
-GROUP BY cvterm.cvterm_id,cv.name, cvterm.name, dbxref.accession, db.name ";
+GROUP BY cvterm.cvterm_id,cv.name, cvterm.name, dbxref.accession, db.name
+ORDER BY cv.name, cvterm.name";
     my $sth= $schema->storage->dbh->prepare($query);
     $sth->execute($db_name, "\%$term_name\%", "\%$term_name\%", "\%$term_name\%");
     my @response_list;

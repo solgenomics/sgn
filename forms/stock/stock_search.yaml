@@ -55,6 +55,13 @@ elements:
       default: 20
 
     - type: Text
+      name: description
+      id: description
+      label: Description
+      container_attributes:
+        class: advanced
+
+    - type: Text
       name: person
       id: person
       label: Editor
@@ -62,10 +69,18 @@ elements:
         class: advanced
 
     - type: Text
+      name: onto
+      id: onto
+      label: Ontology term
+      size: 50
+      container_attributes:
+        class: advanced
+
+    - type: Text
       name: trait
       id: trait
       label: Trait
-      size: 40
+      size: 50
       container_attributes:
         class: advanced
 

@@ -58,10 +58,11 @@ sub search :Path('/stock/search') Args(0) {
         results                    => $results,
         sp_person_autocomplete_uri => $c->uri_for( '/ajax/people/autocomplete' ),
         trait_autocomplete_uri     => $c->uri_for('/ajax/stock/trait_autocomplete'),
+        onto_autocomplete_uri      => $c->uri_for('/ajax/cvterm/autocomplete'),
         pagination_link_maker      => sub {
             return uri( query => { %{$c->req->params} , page => shift } );
         },
-    );
+        );
 }
 
 =head2 new_stock
@@ -271,10 +272,10 @@ sub _make_stock_search_rs {
         $rs = $rs->search({
             -or => [
                  'lower(me.name)' => { like => '%'.lc( $name ).'%' } ,
-                 'lower(uniquename)' => { like => '%'.lc( $name ).'%' },
+                 'lower(me.uniquename)' => { like => '%'.lc( $name ).'%' },
                  -and => [
                      'lower(type.name)' => { like =>'%synonym%' },
-                     'lower(value)' => { like =>'%'.lc( $name ).'%' },
+                     'lower(stockprops.value)' => { like =>'%'.lc( $name ).'%' },
                  ],
                 ],
                           } ,
@@ -292,6 +293,20 @@ sub _make_stock_search_rs {
         $self->_validate_pair( $c, 'organism_id', $organism );
         $rs = $rs->search({ 'organism_id' => $organism });
     }
+    if ( my $description = $c->req->param('description') ) {
+        $self->_validate_pair($c, 'description');
+        $rs = $rs->search( {
+            -or => [
+                 'lower(me.description)' => { like => '%'.lc( $description ).'%' } ,
+                 'lower(stockprops.value)' => { like =>'%'.lc( $description ).'%' },
+                ],
+                           } ,
+                {  join =>  { 'stockprops' =>  'type'  }  ,
+                   columns => [ qw/stock_id uniquename type_id organism_id / ],
+                   distinct => 1
+                }
+            );
+    }
     if ( my $editor = $c->req->param('person') ) {
         $self->_validate_pair( $c, 'person') ;
         $editor =~ s/,/ /g;
@@ -299,15 +314,15 @@ sub _make_stock_search_rs {
 
         my $person_ids = $c->dbc->dbh->selectcol_arrayref(<<'', undef, $editor);
 SELECT sp_person_id FROM sgn_people.sp_person
-WHERE ( first_name || ' ' || last_name ) like '%' || ? || '%'
+    WHERE ( first_name || ' ' || last_name ) like '%' || ? || '%'
 
         if (@$person_ids) {
-            $rs = $rs->search({
-                      'type.name'        => 'sp_person_id',
-                      'stockprops.value' => { -in => $person_ids },
-                    },
-                    { join => { stockprops => ['type'] }},
-                 );
+            my $id_list = join ',' , @$person_ids ;
+            my $stock_ids =  $c->dbc->dbh->selectcol_arrayref(<<'', undef, $id_list);
+SELECT stock_id FROM phenome.stock_owner
+    WHERE sp_person_id IN (?)
+
+            $rs = $rs->search({ 'me.stock_id' => { -in => $stock_ids } } );
         } else {
             $rs = $rs->search({ name => '' });
         }
@@ -320,18 +335,22 @@ WHERE ( first_name || ' ' || last_name ) like '%' || ? || '%'
                      } );
     }
     if ( my $min = $c->req->param('min_limit') ) {
-        $rs = $rs->search( { 'cast(phenotype.value as numeric) ' => { '>=' => $min }  },
-                           { join => { nd_experiment_stocks => { nd_experiment => {'nd_experiment_phenotypes' => 'phenotype' }}},
-                             columns => [ qw/stock_id uniquename type_id organism_id / ],
-                             distinct => 1
-                           } );
+        if ( $min =~ /^\d+$/ ) {
+            $rs = $rs->search( { 'cast(phenotype.value as numeric) ' => { '>=' => $min }  },
+                               { join => { nd_experiment_stocks => { nd_experiment => {'nd_experiment_phenotypes' => 'phenotype' }}},
+                                 columns => [ qw/stock_id uniquename type_id organism_id / ],
+                                 distinct => 1
+                               } );
+        }
     }
     if ( my $max = $c->req->param('max_limit') ) {
-        $rs = $rs->search( { 'cast(phenotype.value as numeric) ' => { '<=' => $max }  },
-                           { join => { nd_experiment_stocks => { nd_experiment => {'nd_experiment_phenotypes' => 'phenotype' }}},
-                             columns => [ qw/stock_id uniquename type_id organism_id / ],
-                             distinct => 1
-                           } );
+        if ( $max =~ /^\d+$/ ) {
+            $rs = $rs->search( { 'cast(phenotype.value as numeric) ' => { '<=' => $max }  },
+                               { join => { nd_experiment_stocks => { nd_experiment => {'nd_experiment_phenotypes' => 'phenotype' }}},
+                                 columns => [ qw/stock_id uniquename type_id organism_id / ],
+                                 distinct => 1
+                               } );
+        }
     }
     # this is for direct annotations in stock_cvterm
     if ( my $ontology = $c->req->param('ontology') ) {
