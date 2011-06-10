@@ -146,10 +146,11 @@ sub search :Path('/search/') :Args() {
     $term = $c->req->param('search') if $term eq 'direct_search.pl';
 
     $c->stash->{term} = $term;
+    my $tab_html      = $c->stash->{tab_html_function}($term);
 
     my $response;
     if ($term) {
-        $response  = $c->stash->{tab_html_function}($term);
+        $response  = $tab_html;
         $response .= $c->stash->{tab_functions}[$c->stash->{name_to_num}->($term)]();
 
         $c->forward_to_mason_view(
@@ -158,7 +159,7 @@ sub search :Path('/search/') :Args() {
         );
     } else {
         my $tb = CXGN::Page::Toolbar::SGN->new();
-        $response = $tb->index_page('search');
+        $response = $tab_html . $tb->index_page('search');
     }
     $c->forward_to_mason_view(
         '/search/search.mas',
