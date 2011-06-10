@@ -7,18 +7,19 @@ my @xrefs;
   foreach my $marker (@$markers) 
   {
     my @xrefs_m = map {
-
       $_->xrefs({
                  -types   => ['match'],
                  -name    => 'SGN-M'.$marker->marker_id,
                  -aliases => 1,
                 })
-
     } $c->enabled_feature('gbrowse2');
+ 
+    @xrefs_m = grep {
+        $_->data_source->description =~/'itag2.3 release: genomic'/i
+    } @xrefs_m;
   
     push @xrefs, @xrefs_m;
-
-  }
+}
 
 </%init>
 
