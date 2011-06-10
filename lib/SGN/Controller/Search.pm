@@ -35,6 +35,7 @@ sub stash_tab_data :Private {
     my ($self,$c) = @_;
 
     $c->stash->{tabs} = [
+            ['/search/organism', 'Organisms'],
             ['/search/loci','Genes'],
             ['/search/qtl','QTLs & Phenotypes'],
             ['/search/unigene','Unigenes'],
@@ -45,12 +46,12 @@ sub stash_tab_data :Private {
             ['/search/images','Images'],
             ['/search/directory','People'],
             ['/search/template_experiment_platform', 'Expression'],
-            ['/search/organism', 'Organisms'],
 #            ['/insitu/search.pl', 'Insitu' ],
 #           Not ready for prime-time yet
 #            ['/feature/search/', 'Feature'],
            ];
     $c->stash->{tab_functions} = [
+                undef,
                 \&gene_tab,
                 \&phenotype_submenu,
                 \&unigene_tab,
@@ -64,27 +65,27 @@ sub stash_tab_data :Private {
                 \&template_experiment_platform_submenu,
     ];
     $c->stash->{tab_nums} = {
-        loci                         => 0,
-        phenotype                    => 1,
-        phenotypes                   => 1,
-        phenotype_qtl_trait          => 1,
-        qtl                          => 1,
-        trait                        => 1,
-        unigene                      => 2,
-        family                       => 3,
-        families                     => 3,
-        marker                       => 4,
-        markers                      => 4,
-        bacs                         => 5,
-        est                          => 6,
-        est_library                  => 6,
-        images                       => 7,
-        directory                    => 8,
-        template                     => 9,
-        experiment                   => 9,
-        platform                     => 9,
-        template_experiment_platform => 9,
-        organism                     => 10,
+        organism                     => 0,
+        loci                         => 1,
+        phenotype                    => 2,
+        phenotypes                   => 2,
+        phenotype_qtl_trait          => 2,
+        qtl                          => 2,
+        trait                        => 2,
+        unigene                      => 3,
+        family                       => 4,
+        families                     => 4,
+        marker                       => 5,
+        markers                      => 5,
+        bacs                         => 6,
+        est                          => 7,
+        est_library                  => 7,
+        images                       => 8,
+        directory                    => 9,
+        template                     => 10,
+        experiment                   => 10,
+        platform                     => 10,
+        template_experiment_platform => 10,
     };
 
     $c->stash->{name_to_num} = sub {
