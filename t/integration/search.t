@@ -30,7 +30,7 @@ my @search_types = qw{
     qtl experiment platform
 };
 
-$mech->get_ok("/search/organism");
+$mech->get_ok("/search/organisms");
 $mech->content_like(qr!Organism/Taxon search!);
 
 $mech->get_ok("/search");

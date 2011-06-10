@@ -35,7 +35,7 @@ sub stash_tab_data :Private {
     my ($self,$c) = @_;
 
     $c->stash->{tabs} = [
-            ['/search/organism', 'Organisms'],
+            ['/search/organisms', 'Organisms'],
             ['/search/loci','Genes'],
             ['/search/qtl','QTLs & Phenotypes'],
             ['/search/unigene','Unigenes'],
@@ -65,7 +65,7 @@ sub stash_tab_data :Private {
                 \&template_experiment_platform_submenu,
     ];
     $c->stash->{tab_nums} = {
-        organism                     => 0,
+        organisms                    => 0,
         loci                         => 1,
         phenotype                    => 2,
         phenotypes                   => 2,
