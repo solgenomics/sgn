@@ -260,10 +260,10 @@ sub template_experiment_platform_submenu {
             template_experiment_platform => \&template_tab,
         };
         my $tab_nums = {
-            template                     => 1,
-            experiment                   => 2,
-            platform                     => 3,
-            template_experiment_platform => 4,
+            template                     => 0,
+            experiment                   => 1,
+            platform                     => 2,
+            template_experiment_platform => 0,
         };
 
         my $term = $c->stash->{term} || 'template';
