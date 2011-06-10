@@ -29,8 +29,10 @@ results and returns the appropriate URL for going to that page of results
   $results => undef
   $form
   $pagination_link_maker
+  $tabs => ''
 </%args>
 
+<% $tabs %>
 <& /page/page_title.mas, title => 'Organism/Taxon search' &>
 
 <style>

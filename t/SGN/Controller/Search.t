@@ -9,6 +9,7 @@ BEGIN { use_ok 'SGN::Controller::Search' }
 my @urls = qw{
             /search
             /search/
+            /search/organism
             /search/loci
             /search/qtl
             /search/trait

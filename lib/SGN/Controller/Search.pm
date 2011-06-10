@@ -15,60 +15,6 @@ use CatalystX::GlobalContext qw( $c );
 
 BEGIN {extends 'Catalyst::Controller'; }
 
-my @tabs = (
-            ['/search/loci','Genes'],
-            ['/search/qtl','QTLs & Phenotypes'],
-            ['/search/unigene','Unigenes'],
-            ['/search/family', 'Unigene Families' ],
-            ['/search/markers','Markers'],
-            ['/search/bacs','Genomic Clones'],
-            ['/search/est_library','ESTs'],
-            ['/search/images','Images'],
-            ['/search/directory','People'],
-            ['/search/template_experiment_platform', 'Expression'],
-            ['/insitu/search.pl', 'Insitu' ],
-            ['/organism/search/', 'Organism'],
-#           Not ready for prime-time yet
-#            ['/feature/search/', 'Feature'],
-           );
-
-my @tabfuncs = (
-                \&gene_tab,
-                \&phenotype_submenu,
-                \&unigene_tab,
-                \&family_tab,
-                \&marker_tab,
-                \&bac_tab,
-               # \&est_library_submenu,
-                \&est_tab,
-                \&images_tab,
-                \&directory_tab,
-                \&template_experiment_platform_submenu,
-    );
-
-my $tab_num = {
-    loci                         => 0,
-    phenotype                    => 1,
-    phenotypes                   => 1,
-    phenotype_qtl_trait          => 1,
-    qtl                          => 1,
-    trait                        => 1,
-    unigene                      => 2,
-    family                       => 3,
-    families                     => 3,
-    marker                       => 4,
-    markers                      => 4,
-    bacs                         => 5,
-    est                          => 6,
-    est_library                  => 6,
-    images                       => 7,
-    directory                    => 8,
-    template                     => 9,
-    experiment                   => 9,
-    platform                     => 9,
-    template_experiment_platform => 9,
-};
-
 =head1 NAME
 
 SGN::Controller::Search - SGN Search Controller
@@ -84,6 +30,73 @@ live at direct_search.pl, and links to all other kinds of search.
 =head2 index
 
 =cut
+
+sub stash_tab_data :Private {
+    my ($self,$c) = @_;
+
+    $c->stash->{tabs} = [
+            ['/search/loci','Genes'],
+            ['/search/qtl','QTLs & Phenotypes'],
+            ['/search/unigene','Unigenes'],
+            ['/search/family', 'Unigene Families' ],
+            ['/search/markers','Markers'],
+            ['/search/bacs','Genomic Clones'],
+            ['/search/est_library','ESTs'],
+            ['/search/images','Images'],
+            ['/search/directory','People'],
+            ['/search/template_experiment_platform', 'Expression'],
+            ['/insitu/search.pl', 'Insitu' ],
+            ['/organism/search/', 'Organism'],
+#           Not ready for prime-time yet
+#            ['/feature/search/', 'Feature'],
+           ];
+    $c->stash->{tab_functions} = [
+                \&gene_tab,
+                \&phenotype_submenu,
+                \&unigene_tab,
+                \&family_tab,
+                \&marker_tab,
+                \&bac_tab,
+               # \&est_library_submenu,
+                \&est_tab,
+                \&images_tab,
+                \&directory_tab,
+                \&template_experiment_platform_submenu,
+    ];
+    $c->stash->{tab_nums} = {
+        loci                         => 0,
+        phenotype                    => 1,
+        phenotypes                   => 1,
+        phenotype_qtl_trait          => 1,
+        qtl                          => 1,
+        trait                        => 1,
+        unigene                      => 2,
+        family                       => 3,
+        families                     => 3,
+        marker                       => 4,
+        markers                      => 4,
+        bacs                         => 5,
+        est                          => 6,
+        est_library                  => 6,
+        images                       => 7,
+        directory                    => 8,
+        template                     => 9,
+        experiment                   => 9,
+        platform                     => 9,
+        template_experiment_platform => 9,
+        organism                     => 10,
+    };
+
+    $c->stash->{name_to_num} = sub {
+        my ($name) = @_;
+        return $c->stash->{tab_nums}{$name};
+    };
+
+    $c->stash->{tab_html_function} = sub {
+        my ($name) = @_;
+        return modesel($c->stash->{tabs}, $c->stash->{name_to_num}->($name));
+    };
+}
 
 sub glossary :Path('/search/glossary') :Args() {
     my ( $self, $c, $term ) = @_;
@@ -125,6 +138,8 @@ DEFAULT
 sub search :Path('/search/') :Args() {
     my ( $self, $c, $term, @args ) = @_;
 
+    $c->forward('stash_tab_data');
+
     # make /search/index.pl show the list of all kinds of searches
     $term = '' if $term eq 'index.pl';
 
@@ -134,8 +149,8 @@ sub search :Path('/search/') :Args() {
 
     my $response;
     if ($term) {
-        $response = modesel(\@tabs,$tab_num->{$term}); # tabs
-        $response   .= $tabfuncs[$tab_num->{$term}]();
+        $response  = $c->stash->{tab_html_function}($term);
+        $response .= $c->stash->{tab_functions}[$c->stash->{name_to_num}->($term)]();
 
         $c->forward_to_mason_view(
             '/search/search.mas',
@@ -169,7 +184,8 @@ sub est_library_submenu {
           : 0 ;
 
         my $tabs = modesel(\@tabs, $tabsel); #print out the tabs
-        my $response = sprintf "$tabs<div>%s</div>", $tabfuncs[$tab_num->{$term}]();
+        my $response = sprintf "$tabs<div>%s</div>",
+            $c->stash->{tab_functions}[$c->stash->{name_to_num}->($term)];
         return $response;
 }
 
@@ -241,7 +257,7 @@ sub template_experiment_platform_submenu {
 
         my $term = $c->stash->{term} || 'template';
 
-        my $tabs     = modesel(\@tabs, $tab_num->{template}); #print out the tabs
+        my $tabs     = modesel(\@tabs, $c->stash->{tab_nums}{template});
         my $response = sprintf "$tabs<div>%s</div>", $tabfuncs->{$term}();
         return $response;
 }
