@@ -3,23 +3,23 @@
   <td class="toolbar_l"><img src="/documents/img/toolbar_l.gif" alt="" /></td>
   <td class="toolbar_content" onmouseover="CXGN.Page.Toolbar.showmenu('search')" onmouseout="CXGN.Page.Toolbar.hidemenu()" style="text-align: left">
 
-    <a class="toolbar_menuname" href="/search/direct_search.pl?search=loci">search</a>
+    <a class="toolbar_menuname" href="/search">search</a>
     <div style="position: relative; text-align: left">
     <table cellspacing="0" cellpadding="0" id="search" class="toolbar_popmenu">
-       <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/direct_search.pl?search=loci">Genes</a></td></tr>
-       <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/direct_search.pl?search=phenotypes">Phenotypes</a></td></tr>
-       <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/direct_search.pl?search=qtl">QTLs</a></td></tr>
-       <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/direct_search.pl?search=unigene">Unigenes</a></td></tr>
-       <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/direct_search.pl?search=family">Families</a></td></tr>
-       <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/direct_search.pl?search=markers">Markers</a></td></tr>
-       <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/direct_search.pl?search=bacs">BACs</a></td></tr>
-       <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/direct_search.pl?search=est">ESTs and libraries</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/loci">Genes</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/phenotypes">Phenotypes</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/qtl">QTLs</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/unigene">Unigenes</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/family">Families</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/markers">Markers</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/bacs">BACs</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/est">ESTs and libraries</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/insitu/">Insitu database</a></td></tr>
-       <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/direct_search.pl?search=directory">People</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/directory">People</a></td></tr>
 
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/glossarysearch.pl">Glossary</a></td></tr>
-       <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/direct_search.pl?search=images">Images</a></td></tr>
-       <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/direct_search.pl?search=template">Expression</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/images">Images</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/template">Expression</a></td></tr>
     </table>
 
     </div>
