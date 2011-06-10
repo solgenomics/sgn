@@ -100,9 +100,9 @@ sub quick_search: Path('/search/quick') {
         or $c->throw_client_error( public_message => 'Must provide a search term' );
 
     $c->stash(
-        term       => $term,
-        show_times => $c->req->parameters->{showtimes},
-        template   => '/search/quick_search.mas',
+        quick_search_term => $term,
+        show_times        => $c->req->parameters->{showtimes},
+        template          => '/search/quick_search.mas',
         );
 
     return if $c->forward('redirect_by_ident');
