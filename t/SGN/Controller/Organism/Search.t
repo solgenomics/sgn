@@ -6,7 +6,7 @@ use SGN::Test::WWW::Mechanize skip_cgi => 1;
 
 my $mech = SGN::Test::WWW::Mechanize->new;
 
-$mech->get_ok('/organism/search');
+$mech->get_ok('/search/organism');
 $mech->content_contains('Organism/Taxon search');
 $mech->submit_form_ok({
     form_name => 'organism_search_form',
