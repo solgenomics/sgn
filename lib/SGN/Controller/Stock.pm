@@ -353,7 +353,31 @@ SELECT stock_id FROM phenome.stock_owner
         }
     }
     # this is for direct annotations in stock_cvterm
-    if ( my $ontology = $c->req->param('ontology') ) {
+    if ( my $ontology = $c->req->param('onto') ) {
+        my ($cv_name, $full_accession, $cvterm_name) = split(/--/ , $ontology);
+        my ($db_name, $accession) = split(/:/, $full_accession);
+        my ($cvterm) = $self->schema->resultset("General::Db")->
+            search( { 'me.name' => $db_name })->
+            search_related('dbxrefs', { accession => $accession } )->
+            search_related('cvterm');
+        my $cvterm_id = $cvterm->cvterm_id;
+        my @children_ids = $cvterm->recursive_children->get_column('cvterm_id')->all;
+        push ( @children_ids, $cvterm_id ) ;
+        $rs = $rs->search( {
+            'stock_cvterms.cvterm_id' => { -in =>  \@children_ids },
+            -or => [
+                'stock_cvtermprops.value' => { '!=' => '1' },
+                'stock_cvtermprops.value' => undef,
+                ],
+                -or => [
+                lc('type.name')       => { 'NOT LIKE' => lc('obsolete') },
+                'type.name'           =>  undef,
+                ],
+                           },
+                           { join => { stock_cvterms => { 'stock_cvtermprops' => 'type' } },
+                             columns => [ qw/stock_id uniquename type_id organism_id / ],
+                             distinct => 1
+                           } );
     }
     if ( my $has_image = $c->req->param('has_image') ) {
     }
