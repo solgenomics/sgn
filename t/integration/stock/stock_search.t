@@ -43,17 +43,16 @@ use SGN::Test::WWW::Mechanize;
             user_type  => 'submitter',
             );
         my $sp_person_id = $person->{id};
-
-        $stock->create_stockprops( {'sp_person_id' => $sp_person_id} , {cv_name => 'local'} );
+        # stock owner is now stored in phenome.stock_owner, and not in stockprop
+        ### $stock->create_stockprops( {'sp_person_id' => $sp_person_id} , {cv_name => 'local'} );
         #######
         $mech->submit_form_ok({
             form_name => 'stock_search_form',
             fields    => {
                 stock_name => $stock->name,
-                person =>  $person->{first_name} . ', ' . $person->{last_name},
+                #person =>  $person->{first_name} . ', ' . $person->{last_name},
             },
                               }, 'submitted stock search form');
-        
         $mech->html_lint_ok('valid html after stock search');
 
         $mech->content_contains( $stock->name );
