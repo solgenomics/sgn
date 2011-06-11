@@ -146,7 +146,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
     ####################
     my $props = $self->_stockprops($stock);
     my $is_owner;
-    my $owner_ids = $props->{sp_person_id} || [] ;
+    my $owner_ids = $c->stash->{owner_ids} || [] ;
     if ( $stock && ($curator || $person_id && ( grep /^$person_id$/, @$owner_ids ) ) ) {
         $is_owner = 1;
     }
@@ -169,9 +169,9 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
             schema    => $self->schema,
             dbh       => $dbh,
             is_owner  => $is_owner,
+            owners    => $owner_ids,
             props     => $props,
             dbxrefs   => $dbxrefs,
-            owners    => $owner_ids,
             pubs      => $pubs,
             members_phenotypes => $c->stash->{members_phenotypes},
             direct_phenotypes  => $c->stash->{direct_phenotypes},
@@ -218,10 +218,18 @@ sub get_stock_allele_ids : Private {
     $c->stash->{allele_ids} = $allele_ids;
 }
 
+sub get_stock_owner_ids : Private {
+    my ( $self, $c ) = @_;
+    my $stock = $c->stash->{stock};
+    my $owner_ids = $stock ? $self->_stock_owner_ids($stock) : undef;
+    $c->stash->{owner_ids} = $owner_ids;
+}
+
 sub get_stock_extended_info : Private {
     my ( $self, $c ) = @_;
     $c->forward('get_stock_cvterms');
     $c->forward('get_stock_allele_ids');
+    $c->forward('get_stock_owner_ids');
 
     # look up the stock again, this time prefetching a lot of data about its related stocks
     $c->stash->{stock_row} = $self->schema->resultset('Stock::Stock')
@@ -540,6 +548,16 @@ sub _stock_allele_ids {
 	( "SELECT allele_id FROM phenome.stock_allele WHERE stock_id=? ",
 	  undef,
 	  $stock->get_stock_id
+        );
+    return $ids;
+}
+
+sub _stock_owner_ids {
+    my ($self,$stock) = @_;
+    my $ids = $stock->get_schema->storage->dbh->selectcol_arrayref
+        ("SELECT sp_person_id FROM phenome.stock_owner WHERE stock_id = ? ",
+         undef,
+         $stock->get_stock_id
         );
     return $ids;
 }
