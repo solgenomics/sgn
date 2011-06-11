@@ -203,13 +203,12 @@ sub get_stock : Chained('/')  PathPart('stock')  CaptureArgs(1) {
                                   ->find({ stock_id => $stock_id });
 }
 
-#add the stockprops to the stash. Props are a hashref of lists.
-# keys are the cvterm name (prop type) and values  are the prop values.
+#add the stockcvterms to the stash. Props are a hashref of lists.
 sub get_stock_cvterms : Private {
     my ( $self, $c ) = @_;
     my $stock = $c->stash->{stock};
-    my $properties = $stock ?  $self->_stockprops($stock) : undef ;
-    $c->stash->{stockprops} = $properties;
+    my $stock_cvterms = $stock ? $self->_stock_cvterms($stock) : undef;
+    $c->stash->{stock_cvterms} = $stock_cvterms;
 }
 
 sub get_stock_allele_ids : Private {
