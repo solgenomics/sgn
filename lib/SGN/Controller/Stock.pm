@@ -324,15 +324,17 @@ SELECT sp_person_id FROM sgn_people.sp_person
     WHERE ( first_name || ' ' || last_name ) like '%' || ? || '%'
 
         if (@$person_ids) {
-            my $id_list = join ',' , @$person_ids ;
-            my $stock_ids =  $c->dbc->dbh->selectcol_arrayref(<<'', undef, $id_list);
-SELECT stock_id FROM phenome.stock_owner
-    WHERE sp_person_id IN (?)
-
+            my $bindstr = join ',', map '?', @$person_ids;
+            my $stock_ids =  $c->dbc->dbh->selectcol_arrayref(
+                "SELECT stock_id FROM phenome.stock_owner
+    WHERE sp_person_id IN ($bindstr)",
+                undef,
+                @$person_ids,
+                );
             $rs = $rs->search({ 'me.stock_id' => { -in => $stock_ids } } );
-        } else {
-            $rs = $rs->search({ name => '' });
-        }
+         } else {
+             $rs = $rs->search({ name => '' });
+         }
     }
     if ( my $trait = $c->req->param('trait') ) {
         $rs = $rs->search( { 'observable.name' => $trait },
