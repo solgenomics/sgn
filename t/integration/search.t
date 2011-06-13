@@ -25,7 +25,7 @@ use SGN::Test::WWW::Mechanize skip_cgi => 1;
 my $mech = SGN::Test::WWW::Mechanize->new;
 
 my @search_types = qw{
-    loci unigene feature family markers marker bacs est_library directory
+    loci unigene family markers marker bacs est_library directory
     images template_experiment_platform glossary phenotype_qtl_trait trait
     qtl experiment platform
 };
@@ -45,7 +45,6 @@ my $type_regex = {
     est_library                  => qr/EST search/,
     experiment                   => qr/Expression search/,
     family                       => qr/Family search/,
-    feature                      => qr/foo/,
     images                       => qr/Image search/,
     library                      => qr/Library search/,
     loci                         => qr/Gene search/,
