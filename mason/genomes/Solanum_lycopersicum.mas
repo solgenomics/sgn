@@ -41,7 +41,7 @@ $organism
 
 </&>
 
-<&| /page/info_section.mas, title => 'Tomato genome builds', collapsible => 1 &>
+<&| /page/info_section.mas, title => 'Tomato genome sequence builds', collapsible => 1 &>
   <& /genomes/Solanum_lycopersicum/wgs_builds_table.mas &>
 </&>
 
