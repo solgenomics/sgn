@@ -142,7 +142,7 @@ sub search :Path('/search/') :Args() {
     $c->forward('stash_tab_data');
 
     # make /search/index.pl show the list of all kinds of searches
-    $term = '' if $term eq 'index.pl';
+    $term = '' if $term && $term eq 'index.pl';
 
     if( $term eq 'direct_search.pl' ) {
         $term = $c->req->param('search');
