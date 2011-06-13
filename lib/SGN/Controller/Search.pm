@@ -79,6 +79,7 @@ sub stash_tab_data :Private {
         markers                      => 5,
         bacs                         => 6,
         est                          => 7,
+        library                      => 7,
         est_library                  => 7,
         images                       => 8,
         directory                    => 9,
