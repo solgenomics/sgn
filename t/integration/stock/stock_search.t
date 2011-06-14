@@ -60,9 +60,10 @@ use SGN::Test::WWW::Mechanize;
         $mech->content_contains("results");
 
         #go to the stock detail page
-        $mech->get_ok( '/stock/'.$stock->stock_id.'/view',
+        $mech->follow_link_ok(
+            { url => '/stock/'.$stock->stock_id.'/view' },
             "go to the stock detail page at /stock/" . $stock->stock_id . "/view"
-        ) or diag $mech->content;
+        );
         $mech->dbh_leak_ok;
         $mech->html_lint_ok( 'stock detail page html ok' );
     });
