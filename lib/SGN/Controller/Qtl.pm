@@ -32,7 +32,11 @@ use File::Basename;
    
 #     return 1;
 # }
-
+# sub no_argument :PathPart('qtl/view') {
+#     my ($self, $c) = @_;
+#     $c->throw_404("You must provide a valid population id argument");
+# }
+    
 
 sub view : PathPart('qtl/view') Chained Args(1) {
     my ( $self, $c, $id) = @_;
@@ -43,13 +47,15 @@ sub view : PathPart('qtl/view') Chained Args(1) {
     elsif ($id ){
         my $schema = $c->dbic_schema('CXGN::Phenome::Schema');
         my $rs = $schema->resultset('Population')->find($id);                             
-        if ($rs)  {                                                               
-            $c->stash(template => '/qtl/qtl_start/index.mas',                              
-                      pop      => CXGN::Phenome::Population->new($c->dbc->dbh, $id),                                
-                      referer  => $c->req->path,
-                      guide    => $self->guideline
+        if ($rs)  { 
+           
+            $c->stash(template     => '/qtl/qtl_start/index.mas',                              
+                      pop          => CXGN::Phenome::Population->new($c->dbc->dbh, $id),                                
+                      referer      => $c->req->path,
+                      guide        => $self->guideline,                     
                 );
             
+            $self->_list_traits($c);
            my ($heatmap, $corr_table) =(); #$self->_analyze_correlation($c, $c->stash->{pop});           
             $c->stash(heatmap    => $heatmap,
                       corr_table => $corr_table
@@ -184,6 +190,95 @@ sub _analyze_correlation : {
 
 
 #}
+
+
+sub _list_traits {
+    my ($self, $c) = @_;
+    my @phenotype;
+    my $graph_icon = qq |<img src="/../../../documents/img/pop_graph.png"/> |;
+    my $population_id = $c->stash->{pop}->get_population_id();
+        
+    if ($c->stash->{pop}->get_web_uploaded()) 
+    {
+        my @traits = $c->stash->{pop}->get_cvterms();
+        
+        foreach my $trait (@traits)  
+        {
+            my $trait_id = $trait->get_user_trait_id();
+            my $trait_name = $trait->get_name();
+            my $definition = $trait->get_definition();
+            my ($min, $max, $avg, $std, $count)= $c->stash->{pop}->get_pop_data_summary($trait_id);
+
+            my $cvterm = CXGN::Chado::Cvterm::get_cvterm_by_name( $c->dbc->dbh, $trait_name);
+            my $trait_link;
+                    
+            if ($cvterm)
+            {
+                my $cvterm_id = $cvterm->get_cvterm_id();
+                $trait_link = qq |<a href="/chado/cvterm.pl?cvterm_id=$cvterm_id">$trait_name</a>|;
+
+            } else
+            {
+                $trait_link = qq |<a href="/phenome/trait.pl?trait_id=$trait_id">$trait_name</a>|;
+            }
+
+           
+            push  @phenotype,  [map {$_} ($trait_link,
+                                    $min, $max, $avg,
+                           qq | <a href="/phenome/qtl_analysis.pl?population_id=$population_id&amp;cvterm_id=$trait_id">
+                                 $count</a>
+                              |,
+                           qq | <a href="/phenome/qtl_analysis.pl?population_id=$population_id&amp;cvterm_id=$trait_id">
+                                  $graph_icon</a>
+                              | )];
+               
+        }
+    }
+     else 
+     {
+         my @cvterms = $c->stash->{pop}->get_cvterms();
+         foreach my $cvterm(@cvterms)
+         {
+             my $cvterm_id = $cvterm->get_cvterm_id();
+             my $cvterm_name = $cvterm->get_cvterm_name();
+             my ($min, $max, $avg, $std, $count)= $c->stash->{pop}->get_pop_data_summary($cvterm_id);                        
+             push  @phenotype,  [ map {$_} (  qq|<a href="/chado/cvterm.pl?cvterm_id=$cvterm_id">
+                                                                      $cvterm_name</a>
+                                                                     |, $min, $max, $avg, $count, qq | <a href="/phenome/qtl_analysis.pl?population_id=$population_id&amp;cvterm_id=$cvterm_id">$graph_icon</a> | ) 
+             ];
+         }
+
+     }
+    $c->stash->{traits_list} = \@phenotype;
+}
+
+
+sub _is_qtl_pop {
+    my ($self, $c) = @_;
+    my $qtltool = CXGN::Phenome::Qtl::Tools->new();
+    my @qtl_pops = $qtltool->has_qtl_data();
+
+    foreach my $qtl_pop (@qtl_pops)
+    {
+        my $pop_id = $qtl_pop->get_population_id();
+        if ($pop_id == $c->stash->{pop}->get_population_id())
+        {
+            $c->stash->{is_qtl_pop} = 1;
+            last;
+        }
+       
+    }
+}
+
+
+# sub _links {
+#     my ($self, $c, $term_id) = @_;
+#     $c->stash(qtl_analysis => qq |<a href="/phenome/population_indls.pl?" .qq | population_id = $c->stash->{pop}->get_population_id=$population_id | &amp;cvterm_id=$cvterm_id>
+#                                $graph_icon</a>
+#                              | )
+
+# }
+
 ####
 1;
 ####
