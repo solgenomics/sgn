@@ -550,8 +550,4 @@ sub _validate_pair {
         if ($key =~ m/_id$/ and $value !~ m/\d+/);
 }
 
-
-
-######
-1;
-######
+__PACKAGE__->meta->make_immutable;

@@ -85,8 +85,8 @@ sub search :Path('/feature/search') Args(0) {
 
     $c->forward_to_mason_view(
         '/feature/search.mas',
-        form => $form,
-        results => $results,
+        form                  => $form,
+        results               => $results,
         pagination_link_maker => sub {
             return uri( query => { %{$form->params}, page => shift } );
         },
