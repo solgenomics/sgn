@@ -33,6 +33,8 @@ L<SGN::Role::Site::TestMode>
 
 use Catalyst qw/
      ConfigLoader
+     Cache
+     Cache::Store::FastMmap
      Static::Simple
      Authentication
      +SGN::Authentication::Store
@@ -80,7 +82,7 @@ __PACKAGE__->config(
 
     # configure SGN::Role::Site::TestMode.  These are the
     # configuration keys that it will change so that they point into
-    # t/data
+    # t/data   
     'Plugin::TestMode' => {
         test_data_dir => __PACKAGE__->path_to('t','data'),
         reroot_conf   =>
@@ -101,6 +103,15 @@ __PACKAGE__->config(
                )],
        },
 
+    'Plugin::Cache'=>{
+        backend => {
+                  store =>"FastMmap",
+                  share_file => __PACKAGE__->{config}->{'r_qtl_temp_path'}
+        },
+},
+   
+
+
     'Plugin::Authentication' => {
 	default_realm => 'default',
 	realms => { 
@@ -117,7 +128,7 @@ __PACKAGE__->config(
 	    },
 	},
     }
-    );
+);
 
 
 # on startup, do some dynamic configuration
