@@ -309,9 +309,14 @@ sub trait_name
 
 sub legend
 {
+    my $user_id;
+    if ($c->user) {
+        $user_id = $c->user->get_object->get_sp_person_id;
+    } else {
+        $user_id = $pop->get_sp_person_id();
+    }
 
-    my $sp_person_id   = $pop->get_sp_person_id();
-    my $qtl            = CXGN::Phenome::Qtl->new( $sp_person_id );
+    my $qtl            = CXGN::Phenome::Qtl->new( $user_id );
     my $user_stat_file = $qtl->get_stat_file( $c, $pop_id );
     my @stat;
     my $ci;
