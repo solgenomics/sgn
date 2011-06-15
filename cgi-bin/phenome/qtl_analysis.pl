@@ -1419,11 +1419,17 @@ qq | <a href="$image_t_url" title= "<a href=$h_marker&amp;qtl=$image_t_url><font
 
 sub stat_files
 {
-    my $self           = shift;
-    my $pop_id         = $self->get_object_id();
-    my $pop            = $self->get_object();
-    my $sp_person_id   = $pop->get_sp_person_id();
-    my $qtl            = CXGN::Phenome::Qtl->new($sp_person_id);
+    my $self   = shift;
+    my $pop_id = $self->get_object_id();
+    my $pop    = $self->get_object();
+    my $user_id;
+    if ($c->user) {
+        $user_id = $c->user->get_object->get_sp_person_id;
+    } else {
+        $user_id = $pop->get_sp_person_id();
+    }
+
+    my $qtl            = CXGN::Phenome::Qtl->new($user_id);
     my $user_stat_file = $qtl->get_stat_file($c, $pop_id);
 
     my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
@@ -1480,11 +1486,16 @@ sub stat_files
 
 sub stat_param_hash
 {
-    my $self           = shift;
-    my $pop_id         = $self->get_object_id();
-    my $pop            = $self->get_object();
-    my $sp_person_id   = $pop->get_sp_person_id();
-    my $qtl            = CXGN::Phenome::Qtl->new($sp_person_id);
+    my $self   = shift;
+    my $pop_id = $self->get_object_id();
+    my $pop    = $self->get_object();    
+    my $user_id;
+    if ($c->user) {
+        $user_id = $c->user->get_object->get_sp_person_id;
+    } else {
+        $user_id = $pop->get_sp_person_id();
+    }
+    my $qtl            = CXGN::Phenome::Qtl->new($user_id);
     my $user_stat_file = $qtl->get_stat_file($c, $pop_id);
 
     open my $user_stat_fh, "<", $user_stat_file or die "can't open file: !$\n";
@@ -1521,9 +1532,15 @@ qq |<a href="/solpeople/personal-info.pl?sp_person_id=$sp_person_id">$submitter_
 #move to qtl or population object
 sub legend {
     my $self = shift;
-    my $pop = $self->get_object();
-    my $sp_person_id   = $pop->get_sp_person_id();
-    my $qtl            = CXGN::Phenome::Qtl->new($sp_person_id);
+    my $pop  = $self->get_object(); 
+    my $user_id;
+    if ($c->user) {
+        $user_id = $c->user->get_object->get_sp_person_id;
+    } else {
+        $user_id = $pop->get_sp_person_id();
+    }
+    
+    my $qtl       = CXGN::Phenome::Qtl->new($user_id);
     my $stat_file = $qtl->get_stat_file($c, $pop->get_population_id());
     my @stat;
     my $ci= 1;
