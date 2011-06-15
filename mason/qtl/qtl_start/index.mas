@@ -4,7 +4,7 @@ $pop
 $guide
 $referer
 $heatmap
-$corr_table
+$corre_table
 $traits_list
 
 </%args>
@@ -34,18 +34,26 @@ my $name   = $pop->get_name();
   collapsible =>1, 
   collapsed   =>0, 
   title       => "Set Statistical Parameters"
-&>  
- 
+&>   
 <& stat_tools.mas, pop_id=>$pop_id, 
                    guide=>$guide, 
                    referer=>$referer 
 &>
 
 </&>
-%#<& /qtl/qtl_form/stat_form.mas, pop_id=>$pop_id, guide=>$guide, referer=>$referer&>
-%#<& correlation.mas, 
-%#   pop        =>$pop, 
-%#   heatmap    =>$heatmap, 
-%#   corr_table =>$corr_table 
-%#&>
+
 <& traits_list.mas, traits_list =>$traits_list &>
+
+%#<& /qtl/qtl_form/stat_form.mas, pop_id=>$pop_id, guide=>$guide, referer=>$referer&>
+
+<&| /page/info_section.mas, 
+  collapsible =>1, 
+  collapsed   =>0, 
+  title       => "Pearson Correlation Analysis"
+&>   
+<& correlation.mas, 
+   pop        =>$pop, 
+   heatmap    =>$heatmap, 
+   corr_table =>$corre_table 
+&>
+</&>
