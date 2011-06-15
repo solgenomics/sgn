@@ -4,13 +4,18 @@ SGN::Controller::Qtl- controller for the qtl anlysis start page
 
 =cut
 
+
+
+
 package SGN::Controller::Qtl;
 
 use Moose;
 
 use namespace::autoclean;
 
-BEGIN { extends 'Catalyst::Controller' }
+
+BEGIN { extends 'Catalyst::Controller'}  
+
 
 
 use File::Spec::Functions;
@@ -19,6 +24,10 @@ use File::Path qw / mkpath  /;
 use File::Copy;
 use File::Basename;
 
+
+
+
+#use Catalyst qw / cache /;
 # sub auto :Args(0) {
 #     my ($self, $c) = @_;
     
@@ -56,10 +65,11 @@ sub view : PathPart('qtl/view') Chained Args(1) {
                 );
             
             $self->_list_traits($c);
-           my ($heatmap, $corr_table) =(); #$self->_analyze_correlation($c, $c->stash->{pop});           
-            $c->stash(heatmap    => $heatmap,
-                      corr_table => $corr_table
-                );
+          # my ($heatmap, $corr_table) = 
+               $self->_correlation_output($c, $c->stash->{pop});           
+           # $c->stash(heatmap    => $heatmap,
+           #           corr_table => $corr_table
+           #     );
 
         }
         else 
@@ -91,11 +101,10 @@ sub guideline {
 
 
 sub _analyze_correlation : {
-    my ($self, $c, $pop)   = @_;
+    my ($self, $c)   = @_;
     
-    my $pop_id = $pop->get_population_id();
-
-    my $pheno_file      = $pop->phenotype_file($c);
+    my $pop_id          = $c->stash->{pop}->get_population_id();
+    my $pheno_file      = $c->stash->{pop}->phenotype_file($c);
     my $base_path       = $c->get_conf('basepath');
     my $temp_image_dir  = $c->get_conf('tempfiles_subdir');
     my $r_qtl_dir       = $c->get_conf('r_qtl_temp_path');
@@ -165,39 +174,44 @@ sub _analyze_correlation : {
         $heatmap_file = fileparse($heatmap_file);
         $heatmap_file  = $c->generated_file_uri("correlation",  $heatmap_file);
     
-    return \$heatmap_file, \$corre_table_file; 
+        $c->stash( heatmap_file     => \$heatmap_file, 
+                   corre_table_file =>\$corre_table_file
+            ); 
     } 
-
 }
 
-# sub _correlation_output {
-#     my ($self, $c, $pop) = @_;
+sub _correlation_output {
+    my ($self, $c, $pop) = @_;
 
-#     my $cache = $c->cache;
-#     my $key_h   = "heat_$pop->get_population_id()";
-#     my $key_t   = "table_$pop->get_population_id()";
-#     my $heatmap = $cache->get($key_h);
-#     my $corr_table = $cache->get($key_t);
+ 
+    my $cache = $c->cache;
+    my $key_h   = "heat_$pop->get_population_id()";
+    my $key_t   = "table_$pop->get_population_id()";
+    my $heatmap = $cache->get($key_h);
+    my $corre_table = $cache->get($key_t);
    
-#     unless ($heatmap && $corr_table) {
-#      ( $heatmap, $corr_table ) = $self->_analyze_correlation ($c, $pop);
-#      $cache->set($key_h, $heatmap, '24h');
-#      $cache->set($key_t, $corr_table, '24h');
-#     }
-
-#    return \$heatmap, \$corr_table;  
-     
-
-
-#}
+    if  (!$heatmap || !$corre_table) {
+        $self->_analyze_correlation($c);
+        $heatmap = $c->stash->{heatmap_file};
+        $corre_table  = $c->stash->{corre_table_file};
+        $cache->set($key_h, $heatmap, '24h');
+        $cache->set($key_t, $corre_table, '24h');
+    } else 
+    {
+        $heatmap = $c->stash->( heatmap_file     => $heatmap,
+                                corre_table_file => $corre_table
+        );
+    }
+}
 
 
 sub _list_traits {
     my ($self, $c) = @_;
-    my @phenotype;
-    my $graph_icon = qq |<img src="/../../../documents/img/pop_graph.png"/> |;
+   
+    my $graph_icon    = qq |<img src="/../../../documents/img/pop_graph.png"/> |;  
     my $population_id = $c->stash->{pop}->get_population_id();
-        
+    my @phenotype;    
+    
     if ($c->stash->{pop}->get_web_uploaded()) 
     {
         my @traits = $c->stash->{pop}->get_cvterms();
@@ -224,13 +238,9 @@ sub _list_traits {
 
            
             push  @phenotype,  [map {$_} ($trait_link,
-                                    $min, $max, $avg,
-                           qq | <a href="/phenome/qtl_analysis.pl?population_id=$population_id&amp;cvterm_id=$trait_id">
-                                 $count</a>
-                              |,
-                           qq | <a href="/phenome/qtl_analysis.pl?population_id=$population_id&amp;cvterm_id=$trait_id">
-                                  $graph_icon</a>
-                              | )];
+                                    $min, $max, $avg, $count,
+                                          qq | <a href="/phenome/qtl_analysis.pl?population_id=$population_id&amp;cvterm_id=$trait_id">$graph_icon</a>| 
+                                )];
                
         }
     }
@@ -242,9 +252,7 @@ sub _list_traits {
              my $cvterm_id = $cvterm->get_cvterm_id();
              my $cvterm_name = $cvterm->get_cvterm_name();
              my ($min, $max, $avg, $std, $count)= $c->stash->{pop}->get_pop_data_summary($cvterm_id);                        
-             push  @phenotype,  [ map {$_} (  qq|<a href="/chado/cvterm.pl?cvterm_id=$cvterm_id">
-                                                                      $cvterm_name</a>
-                                                                     |, $min, $max, $avg, $count, qq | <a href="/phenome/qtl_analysis.pl?population_id=$population_id&amp;cvterm_id=$cvterm_id">$graph_icon</a> | ) 
+             push  @phenotype,  [ map {$_} (  qq|<a href="/chado/cvterm.pl?cvterm_id=$cvterm_id">$cvterm_name</a>|, $min, $max, $avg, $count, qq | <a href="/phenome/qtl_analysis.pl?population_id=$population_id&amp;cvterm_id=$cvterm_id">$graph_icon</a> | ) 
              ];
          }
 
@@ -271,13 +279,14 @@ sub _is_qtl_pop {
 }
 
 
-# sub _links {
-#     my ($self, $c, $term_id) = @_;
-#     $c->stash(qtl_analysis => qq |<a href="/phenome/population_indls.pl?" .qq | population_id = $c->stash->{pop}->get_population_id=$population_id | &amp;cvterm_id=$cvterm_id>
-#                                $graph_icon</a>
-#                              | )
-
-# }
+sub _links {
+    my ($self, $c, $cvterm_id) = @_;
+    my $pop_id = $c->stash->{pop}->get_population_id();
+    
+    $c->stash(qtl_analysis => qq |<a href="/phenome/qtl_analysis.pl?population_id =$pop_id&amp;cvterm_id=$cvterm_id"></a>|,             qtl_graph    => qq |<img src="/../../../documents/img/pop_graph.png"/> |
+        )
+    
+}
 
 ####
 1;
