@@ -13,15 +13,15 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 <%args>
 $pop
-$heatmap
-$corr_table
+$heatmap_file
+$corre_table_file
 
 </%args>
 
 <%perl>
 
 my $name   = $pop->get_name();
-my $corr_image = qq | <img alt="correlation output for $name " src="${$heatmap}"/> |;
+my $corre_image = qq | <img src="$heatmap_file"  alt="correlation output for $name"/> |;
 
 </%perl>
 
@@ -29,7 +29,7 @@ my $corr_image = qq | <img alt="correlation output for $name " src="${$heatmap}"
   collapsible =>1, 
   collapsed   =>1, 
   title       => "Pearson Correlation Analysis" &> 
-  <% $corr_image %> 
+  <% $corre_image %> 
 </&>
 
 
