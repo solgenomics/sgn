@@ -101,6 +101,7 @@ sub quick_search: Path('/search/quick') {
 
     $c->stash(
         quick_search_term => $term,
+        term              => $term,
         show_times        => $c->req->parameters->{showtimes},
         template          => '/search/quick_search.mas',
         );
