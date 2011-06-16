@@ -65,8 +65,9 @@ sub view : PathPart('qtl/view') Chained Args(1) {
                 );
             
             $self->_list_traits($c);
+           # $self->_analyze_correlation($c);
           # my ($heatmap, $corr_table) = 
-               $self->_correlation_output($c, $c->stash->{pop});           
+               $self->_correlation_output($c);           
            # $c->stash(heatmap    => $heatmap,
            #           corr_table => $corr_table
            #     );
@@ -105,9 +106,9 @@ sub _analyze_correlation : {
     
     my $pop_id          = $c->stash->{pop}->get_population_id();
     my $pheno_file      = $c->stash->{pop}->phenotype_file($c);
-    my $base_path       = $c->get_conf('basepath');
-    my $temp_image_dir  = $c->get_conf('tempfiles_subdir');
-    my $r_qtl_dir       = $c->get_conf('r_qtl_temp_path');
+    my $base_path       = $c->config->{basepath};
+    my $temp_image_dir  = $c->config->{tempfiles_subdir};
+    my $r_qtl_dir       = $c->config->{r_qtl_temp_path};
     my $corre_image_dir = catfile($base_path, $temp_image_dir, "correlation");
     my $corre_temp_dir  = catfile($r_qtl_dir, "tempfiles");
     my $corre_file_dir  = catfile($r_qtl_dir, "cache");
@@ -174,33 +175,38 @@ sub _analyze_correlation : {
         $heatmap_file = fileparse($heatmap_file);
         $heatmap_file  = $c->generated_file_uri("correlation",  $heatmap_file);
     
-        $c->stash( heatmap_file     => \$heatmap_file, 
-                   corre_table_file =>\$corre_table_file
-            ); 
-    } 
+    $c->stash( heatmap_file     => "../../.." . $heatmap_file, 
+               corre_table_file => $corre_table_file
+            );  
+    }
+ 
 }
 
 sub _correlation_output {
-    my ($self, $c, $pop) = @_;
+    my ($self, $c) = @_;
 
- 
+    my $pop = $c->{stash}->{pop};
     my $cache = $c->cache;
-    my $key_h   = "heat_$pop->get_population_id()";
-    my $key_t   = "table_$pop->get_population_id()";
+    my $key_h   = "heat_" . $pop->get_population_id();
+    my $key_t   = "table_" . $pop->get_population_id();
     my $heatmap = $cache->get($key_h);
     my $corre_table = $cache->get($key_t);
-   
-    if  (!$heatmap || !$corre_table) {
+  
+   # $cache->remove($key_t);
+   # $cache->remove($key_h);
+    if  (!$corre_table  || !$heatmap) {
         $self->_analyze_correlation($c);
         $heatmap = $c->stash->{heatmap_file};
         $corre_table  = $c->stash->{corre_table_file};
         $cache->set($key_h, $heatmap, '24h');
         $cache->set($key_t, $corre_table, '24h');
+      
     } else 
     {
-        $heatmap = $c->stash->( heatmap_file     => $heatmap,
-                                corre_table_file => $corre_table
+        $c->stash( heatmap_file      => $heatmap,
+                   corre_table_file => $corre_table,
         );
+        
     }
 }
 
