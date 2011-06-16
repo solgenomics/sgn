@@ -34,7 +34,7 @@ L<SGN::Role::Site::TestMode>
 use Catalyst qw/
      ConfigLoader
      Cache
-     Cache::Store::FastMmap
+     Cache::Store::FastMmap   
      Static::Simple
      Authentication
      +SGN::Authentication::Store
@@ -105,10 +105,9 @@ __PACKAGE__->config(
 
     'Plugin::Cache'=>{
         backend => {
-                  store =>"FastMmap",
-                  share_file => __PACKAGE__->{config}->{'r_qtl_temp_path'}
+            store =>"FastMmap",               
         },
-},
+    },
    
 
 
