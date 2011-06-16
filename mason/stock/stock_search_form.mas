@@ -26,7 +26,8 @@ div[class*="advanced"] {
 }
 #stock_search_form label {
   float: left;
-  width: 8em;
+  width: 9em;
+  white-space: nowrap;
 }
 
 div.paginate_nav {
