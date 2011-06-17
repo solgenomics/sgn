@@ -143,19 +143,6 @@ Readonly my $TMHLOFFSET => ($IMITATE_PASCAL_CODE)
 # the length 16 ones, (as well as length 15 ones which are discarded in good_solutions).
 # set up defaults for tmpred parameters:
 
-=head2 function BUILD
-
-  Synopsis : my $tmpred_obj = Bio::SecreTary::TMpred->new();    # using defaults
-  or my $tmpred_obj = Bio::SecreTary::TMpred->new( { min_score => 600 } );
-  Arguments: $arg_hash_ref holds some parameters describing which 
-      solutions will be found by tmpred :
-      min_score, min_tm_length, max_tm_length, min_beg, max_beg . 
-  Returns: an instance of a TMpred object 
-  Side effects: Creates the object . 
-  Description: Creates a TMpred object with certain parameters which 
-      determine which trans-membrane helices to find.
-
-=cut
 
 sub BUILD {
 my $self = shift;
