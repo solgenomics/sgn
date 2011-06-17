@@ -147,7 +147,11 @@ while (<$res_fh>) {
   if (m/Sbjct:/) {
     $got_hits = 1;
     last;
+  } elsif ($_ !~ m/Number of sequences better than .*:\s*0$/) {
+    $got_hits = 1;
+    last;
   }
+
 }
 close $res_fh;
 #force got_hits to 1 if the report file is other than -m 0
