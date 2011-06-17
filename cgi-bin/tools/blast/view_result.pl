@@ -1,11 +1,18 @@
 #!/usr/bin/perl -w
 
-# Take the output file produced by BLAST from blast_result.pl and create one or more graphs from it.
-# The types of graphs that can be created are those made by Bio::GMOD::Blast::Graph and by my BlastGraph
-# package in CXGN::Graphics. The latter produces a histogram of how conserved each individual base is
-# with respect to the domains found by BLAST in database entries.
-#
-# - Evan, 9 / 30 / 05
+=head1 NAME
+
+cgi-bin/tools/blast/view_result.pl - Render BLAST web reports
+
+This script takes the output file produced by BLAST from blast_result.pl, create
+one or more graphs from it, and renders the report.
+
+The types of graphs that can be created are those made by
+Bio::GMOD::Blast::Graph and by my BlastGraph package in CXGN::Graphics. The
+latter produces a histogram of how conserved each individual base is with
+respect to the domains found by BLAST in database entries.
+
+=cut
 
 use strict;
 use English;
