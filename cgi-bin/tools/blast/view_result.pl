@@ -12,6 +12,18 @@ Bio::GMOD::Blast::Graph and by my BlastGraph package in CXGN::Graphics. The
 latter produces a histogram of how conserved each individual base is with
 respect to the domains found by BLAST in database entries.
 
+=head1 SEE ALSO
+
+=head1 AUTHOR
+
+The SGN team
+
+=head1 LICENSE
+
+This library is free software. You can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+
 =cut
 
 use Modern::Perl;
