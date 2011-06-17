@@ -196,7 +196,7 @@ sub process_input {
 	my @id_sequence_array;
 	my $min_sequence_length = 8; # this is the minimal length of sequence string which will be recognized as a sequence if no fasta idline is present.
 		my @fastas  = ();
-	my $wscount = 0;
+	my $anon_seq_count = 0;
 
 	$input =~ s/\r//g;           #remove weird line endings.
 		$input =~ s/\A \s*//xms;     # remove initial whitespace
@@ -208,27 +208,19 @@ sub process_input {
 # and starts with at least $min_sequence_length letters, treat as sequence
 			if ( $fasta =~ /\A [A-Z]{$min_sequence_length,} [A-Z\s]* [*]? \s* \z/xms )
 			{                        # looks like sequence with no identifier
-				$fasta = '>sequence_' . $wscount . "\n" . $fasta . "\n";
+	$fasta =~ s/\s* \z//xms;
+				$fasta = 'sequence_' . $anon_seq_count . "\n" . $fasta . "\n";
 				push @fastas, $fasta;
-				$wscount++;
+				$anon_seq_count++;
 			}
 
 # otherwise stuff ahead of first > is considered junk, discarded ($1 not used)
 		}
-# if(0){
-# 	while ( $input =~ s/ ( > [^>]+ )//xms
-# 	      )    # capture and delete initial > and everything up to next >.
-# 	{
-# 		push @fastas, $1;
-# 		last if ( scalar @fastas >= $max_sequences_to_do );
-# 	}
-# }
-# else{
 	$input =~ s/\A > //xms; # eliminate initial >
-		@fastas = split(">", $input);
+		@fastas = (@fastas, split(">", $input));
 
 	@fastas = @fastas[0..$max_sequences_to_do-1] if(scalar @fastas > $max_sequences_to_do); # keep just the first $max_sequence_to_do
-#}
+
 
 		foreach my $fasta (@fastas) {
 			$fasta = '>' . $fasta;
@@ -241,8 +233,8 @@ sub process_input {
 		}
 				else {
 					$fasta =~ s/\A > \s*//xms;   # handles case of > not followed by id.
-						$id = 'sequence_' . $wscount;
-					$wscount++;
+						$id = 'sequence_' . $anon_seq_count;
+					$anon_seq_count++;
 				}
 			$fasta =~ s/\s//xmsg;            # remove whitespace from sequence;
 			$fasta =~ s/\* \z//xms;          # remove final * if present.
