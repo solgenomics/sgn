@@ -3,7 +3,7 @@ use strict;
 use warnings FATAL => 'all';
 
 # tests for TMpred Module
-use Test::More tests=> 8;
+use Test::More tests=> 6;
 use Bio::SecreTary::TMpred;
 
 $ENV{PATH} .= ':programs'; #< XXX TODO: obviate the need for this
@@ -28,9 +28,12 @@ DLTEKVRLAEQKEVIKAGPFGTVTGLQTNPTVAPDESANPRLAKLLEKVAVNKEIIVVLANNNVKPMLEVQIASVKRVG
 IQNYLVVPLDDSLESFCKSNEVAYYKRDPDNAIDVVGKSRRSSDVSGLKFRVLREFLQLGYGVLLSDVDIVFLQNPFGH
 LYRDSDVESMSDGHDNNT";
 
-$TMpred_obj = Bio::SecreTary::TMpred->new();
-ok( defined $TMpred_obj, 'new() returned something.');
-isa_ok ($TMpred_obj, 'Bio::SecreTary::TMpred' );
+#$TMpred_obj = Bio::SecreTary::TMpred->new();
+
+$TMpred_obj = Bio::SecreTary::TMpred->new({do_long_output => 1});  # now we want the long output
+
+#ok( defined $TMpred_obj, 'new() returned something.');
+#isa_ok ($TMpred_obj, 'Bio::SecreTary::TMpred' );
 
 # the long output we should get from tmpred for this input:
 my $tmpred_long_out1 = 
@@ -93,8 +96,6 @@ topology assignment of unknown proteins.
 
 ';
 
-
-#$tmpred_long_out1 =~ s/\s*$//;
 $tmpred_long_out1 =~ s/[ \t]//g; 
 
 my ($good_solns, $tmpred_long_out2) = $TMpred_obj->run_tmpred($sequence, {sequence_id => $id, do_long_output => 1} );
