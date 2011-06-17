@@ -14,7 +14,8 @@ respect to the domains found by BLAST in database entries.
 
 =cut
 
-use strict;
+use Modern::Perl;
+
 use English;
 use File::Basename;
 use HTML::Entities;
