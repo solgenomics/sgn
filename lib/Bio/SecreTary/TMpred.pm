@@ -14,29 +14,116 @@ Tom York (tly2@cornell.edu)
 =cut
 
 package Bio::SecreTary::TMpred;
-use strict;
-use warnings;
+use Moose;
+use namespace::autoclean;
+#use strict;
+#use warnings;
 use Carp;
 use Bio::SecreTary::Table;
 use Bio::SecreTary::Helix;
 use List::Util qw / min max sum /;
 
+
+has io_center_table => (
+	isa => 'Maybe[Object]',
+	is => 'rw',
+	default => undef
+);
+
+has oi_center_table => (
+        isa => 'Maybe[Object]',
+        is => 'rw',
+        default => undef
+);
+
+has io_nterm_table => (
+        isa => 'Maybe[Object]',
+        is => 'rw',
+        default => undef
+);
+
+has oi_nterm_table => (
+        isa => 'Maybe[Object]',
+        is => 'rw',
+        default => undef
+);
+
+has io_cterm_table => (
+        isa => 'Maybe[Object]',
+        is => 'rw',
+        default => undef
+);
+
+has oi_cterm_table => (
+        isa => 'Maybe[Object]',
+        is => 'rw',
+        default => undef
+);
+
+has aa_row_hash => (
+	isa => 'HashRef',
+	is => 'rw',
+	default => sub{ {} }
+);
+
+has min_score => (
+	isa => 'Int',
+	is => 'ro',
+	default => 500
+);
+
+has min_tm_length => (
+        isa => 'Int',
+        is => 'ro',
+        default => 17
+);
+
+has max_tm_length => (
+        isa => 'Int',
+        is => 'ro',
+        default => 33
+);
+
+has min_beg => (
+        isa => 'Int',
+        is => 'ro',
+        default => 0
+);
+
+has max_beg => (
+        isa => 'Int',
+        is => 'ro',
+        default => 35
+);
+
+has lo_orientational_threshold => (
+        isa => 'Int',
+        is => 'ro',
+        default => 80
+);
+
+has hi_orientational_threshold => (
+        isa => 'Int',
+        is => 'ro',
+        default => 200
+);
+
+has avg_orientational_threshold => (
+        isa => 'Int',
+        is => 'ro',
+        default => 80
+);
+
+has do_long_output => (
+	isa => 'Bool',
+	is => 'rw',
+	default => 0
+);
+
+
 use Readonly;
 Readonly my $FALSE    => 0;
 Readonly my $TRUE     => 1;
-Readonly my %defaults => (
-
-    #  'version'                     => 'perl',
-    'min_score'                   => 500,
-    'min_tm_length'               => 17,
-    'max_tm_length'               => 33,
-    'min_beg'                     => 0,
-    'max_beg'                     => 35,
-    'lo_orientational_threshold'  => 80,
-    'hi_orientational_threshold'  => 200,
-    'avg_orientational_threshold' => 80
-);
-
 Readonly my $IMITATE_PASCAL_CODE =>
   $TRUE;    # if this is true, does the same as the old pascal code.
 Readonly my $TMHLOFFSET => ($IMITATE_PASCAL_CODE)
@@ -56,7 +143,7 @@ Readonly my $TMHLOFFSET => ($IMITATE_PASCAL_CODE)
 # the length 16 ones, (as well as length 15 ones which are discarded in good_solutions).
 # set up defaults for tmpred parameters:
 
-=head2 function new
+=head2 function BUILD
 
   Synopsis : my $tmpred_obj = Bio::SecreTary::TMpred->new();    # using defaults
   or my $tmpred_obj = Bio::SecreTary::TMpred->new( { min_score => 600 } );
@@ -70,40 +157,12 @@ Readonly my $TMHLOFFSET => ($IMITATE_PASCAL_CODE)
 
 =cut
 
-sub new {
-    my $class        = shift;
-    my $self         = bless {}, $class;
-    my $arg_hash_ref = shift;
+sub BUILD {
+my $self = shift;
 
-    foreach my $param ( keys %defaults ) {    # set params to defaults
-        $self->{$param} = $defaults{$param};
-    }
-
-    if ( defined $arg_hash_ref ) {            # otherwise just use defaults
-        if ( ref($arg_hash_ref) eq 'HASH' ) {    # check it's really a hash ref
-            foreach my $param ( keys %$arg_hash_ref ) {
-                if ( exists $self->{$param} ) {
-                    if ( defined $arg_hash_ref->{$param} ) {
-                        $self->{$param} = $arg_hash_ref->{$param};
-                    }
-                }
-                else {    # a key of the arg hash is an unknown parameter.
-                    carp
-"In TMpred constructor. Attempt to set unknown parameter $param.\n"
-                      . "Known params are:  "
-                      . join( " ", keys %$arg_hash_ref ), "\n";
-                }
-            }
-        }
-        else {
-            carp(
-"Argument to TMpred constructor is not hash ref as it should be.\nUsing defaults.\n"
-            );
-        }
-    }
     $self->{min_halfw} =
-      int( ( $self->{min_tm_length} - ( 1 - $TMHLOFFSET ) ) / 2 );
-    $self->{max_halfw} = int( ( $self->{max_tm_length} + $TMHLOFFSET ) / 2 );
+      int( ( $self->min_tm_length() - ( 1 - $TMHLOFFSET ) ) / 2 );
+    $self->{max_halfw} = int( ( $self->max_tm_length() + $TMHLOFFSET ) / 2 );
 
     $self->setup_tables();
     my @aa_array = split( '', 'ACDEFGHIKLMNPQRSTVWYX' )
@@ -113,17 +172,14 @@ sub new {
     for ( my $i = 0 ; $i < scalar @aa_array ; $i++ ) {
         $aa_row_hash{ $aa_array[$i] } = $i;
     }
-    $self->set_aa_row_hash( \%aa_row_hash );
+    $self->aa_row_hash( \%aa_row_hash );
 
-    #   print "In TMpred constructor. min_score: ", $self->{min_score}, "\n";
-
-    return $self;
 }
 
-sub run_tmpred_setup {    #processes the arguments,
+sub _run_tmpred_process_args {    #processes the arguments,
     my $self = shift;
-    my ( $sequence_id, $sequence, $do_long_output ) =
-      ( 'Anon_prot_seq', undef, $FALSE );
+    my ( $sequence_id, $sequence) =
+      ( 'A_prot_seq', undef );
     my $arg_hash_ref = undef;
     my $arg1 =
       shift;    # can be either sequence, or ref to  hash holding arguments
@@ -146,8 +202,6 @@ sub run_tmpred_setup {    #processes the arguments,
               if ( exists $arg_hash_ref->{sequence} );
             $sequence_id = $arg_hash_ref->{sequence_id}
               if ( exists $arg_hash_ref->{sequence_id} );
-            $do_long_output = $arg_hash_ref->{do_long_output}
-              if ( exists $arg_hash_ref->{do_long_output} );
         }
         else {
             croak("Argument to run_tmpred is ref but not hash ref.\n");
@@ -173,30 +227,26 @@ sub run_tmpred_setup {    #processes the arguments,
         $sequence =~ s/X/A/g;
     }
 
-    return ( $sequence_id, $sequence, $do_long_output );
+    return ( $sequence_id, $sequence );
 }
 
 sub run_tmpred {
     my $self = shift;
 
     # rest of arguments just get passed through to run_tmpred1
-    my ( $sequence_id, $sequence, $do_long_output ) =
-      $self->run_tmpred_setup(@_);
+    my ( $sequence_id, $sequence ) =
+      $self->_run_tmpred_process_args(@_);
 
-    # print "do long output: $do_long_output \n";
-
-    my $good_solns;
-    my $tmpred_long_out = undef;
-
-    # use perl code
     my ( $io_helices_ref, $oi_helices_ref ) =
-      $self->run_tmpred_perl( $sequence_id, $sequence );
-    $good_solns = $self->good_solutions_perl($io_helices_ref);
-    $good_solns .= $self->good_solutions_perl($oi_helices_ref);
+      $self->tmpred_helices( $sequence_id, $sequence );
+    my $good_solns = $self->good_solutions($io_helices_ref);
+    $good_solns .= $self->good_solutions($oi_helices_ref);
     if ( $good_solns eq '' ) {
         $good_solns = '(-10000,0,0)';
     }
-    if ($do_long_output) {
+
+	my $tmpred_long_out = undef;
+    if ($self->do_long_output()) {
         $tmpred_long_out =
           $self->_long_output( $sequence_id, $sequence, $io_helices_ref,
             $oi_helices_ref );
@@ -205,12 +255,12 @@ sub run_tmpred {
     return ( $good_solns, $tmpred_long_out );
 }
 
-sub run_tmpred_perl {
+sub tmpred_helices {
     my $self        = shift;
     my $sequence_id = shift;
     my $sequence    = shift;
 
-    my $aa_row_hash             = $self->get_aa_row_hash();
+    my $aa_row_hash             = $self->aa_row_hash();
     my @seq_array               = split( "", $sequence );
     my @sequence_aanumber_array = ();
     foreach (@seq_array) {
@@ -228,24 +278,24 @@ sub run_tmpred_perl {
     # in-to-out
     my $io_center_prof =
       $self->make_profile( \@sequence_aanumber_array,
-        $self->get_io_center_table() );
+        $self->io_center_table() );
     my $io_nterm_prof =
       $self->make_profile( \@sequence_aanumber_array,
-        $self->get_io_nterm_table() );
+        $self->io_nterm_table() );
     my $io_cterm_prof =
       $self->make_profile( \@sequence_aanumber_array,
-        $self->get_io_cterm_table() );
+        $self->io_cterm_table() );
 
     # out-to-in
     my $oi_center_prof =
       $self->make_profile( \@sequence_aanumber_array,
-        $self->get_oi_center_table() );
+        $self->oi_center_table() );
     my $oi_nterm_prof =
       $self->make_profile( \@sequence_aanumber_array,
-        $self->get_oi_nterm_table() );
+        $self->oi_nterm_table() );
     my $oi_cterm_prof =
       $self->make_profile( \@sequence_aanumber_array,
-        $self->get_oi_cterm_table() );
+        $self->oi_cterm_table() );
 
     ( $length == scalar @$io_center_prof )
       || croak(
@@ -294,8 +344,8 @@ sub run_tmpred_perl {
 
 }
 
-sub good_solutions_perl {    # get the good solutions starting from the
-                             # output of perl tmpred
+sub good_solutions {    # get the good solutions starting from the
+                             # output of tmpred
     my $self               = shift;
     my $tmpred_helices_ref = shift;    # ref to array of predicted helices
 
@@ -306,11 +356,11 @@ sub good_solutions_perl {    # get the good solutions starting from the
         my $score  = $_->score();
         my $length = $end + 1 - $beg;
 
-        if (    $score >= $self->{min_score}
-            and $length >= $self->{min_tm_length}
-            and $length <= $self->{max_tm_length}
-            and $beg >= $self->{min_beg}
-            and $beg <= $self->{max_beg} )
+        if (    $score >= $self->min_score()
+            and $length >= $self->min_tm_length()
+            and $length <= $self->max_tm_length()
+            and $beg >= $self->min_beg()
+            and $beg <= $self->max_beg() )
         {
             $good_string .= "($score,$beg,$end)  ";
         }
@@ -499,8 +549,8 @@ sub _long_output {
       . length($sequence) . "\n";
     $long_out .=
         "Prediction parameters: TM-helix length between "
-      . $self->{min_tm_length} . " and "
-      . $self->{max_tm_length}
+      . $self->min_tm_length() . " and "
+      . $self->max_tm_length()
       . "\n\n\n";
 
     $long_out .=
@@ -508,7 +558,7 @@ sub _long_output {
       . "==================================\n"
       . "The sequence positions in brackets denominate the core region.\n"
       . "Only scores above "
-      . $self->{min_score}
+      . $self->min_score()
       . " are considered significant.\n\n";
     $long_out .= "Inside to outside helices : " . $n_io . " found \n";
     $long_out .= ( $n_io > 0 ) ? "    from     to   score  center \n" : '';
@@ -754,16 +804,16 @@ sub _io_oi_correspondence_string {
     }
     else {    # both defined
         $score_diff = $io_score - $oi_score;
-        if ( $score_diff > $self->{hi_orientational_threshold} ) {
+        if ( $score_diff > $self->hi_orientational_threshold() ) {
             $io_pref = '++';
         }
-        elsif ( $score_diff > $self->{lo_orientational_threshold} ) {
+        elsif ( $score_diff > $self->lo_orientational_threshold() ) {
             $io_pref = ' +';
         }
-        elsif ( $score_diff < -1 * $self->{hi_orientational_threshold} ) {
+        elsif ( $score_diff < -1 * $self->hi_orientational_threshold() ) {
             $oi_pref = '++';
         }
-        elsif ( $score_diff < -1 * $self->{lo_orientational_threshold} ) {
+        elsif ( $score_diff < -1 * $self->lo_orientational_threshold() ) {
             $oi_pref = ' +';
         }
         else {
@@ -774,10 +824,10 @@ sub _io_oi_correspondence_string {
     $io_string .= $io_pref;
     $oi_string .= $oi_pref;
 
-    if ( defined $io_helix and $io_helix->score() < $self->{min_score} ) {
+    if ( defined $io_helix and $io_helix->score() < $self->min_score() ) {
         $io_string = "($io_string)";
     }
-    if ( defined $oi_helix and $oi_helix->score() < $self->{min_score} ) {
+    if ( defined $oi_helix and $oi_helix->score() < $self->min_score() ) {
         $oi_string = "($oi_string)";
     }
     return $io_string . '  |' . $oi_string . "\n";
@@ -798,7 +848,7 @@ sub _topology_model {
         if ($is_nterm_inside) {
             $io_count =
               _find_next_helix( $io_helices_ref, $io_count, $min_pos,
-                $self->{min_score} );
+                $self->min_score() );
             if ( defined $io_count ) {
                 $model_count++;
                 my $io_helix = $io_helices_ref->[$io_count];
@@ -814,7 +864,7 @@ sub _topology_model {
         else {    # nterm is outside
             $oi_count =
               _find_next_helix( $oi_helices_ref, $oi_count, $min_pos,
-                $self->{min_score} );
+                $self->min_score() );
             if ( defined $oi_count ) {
                 $model_count++;
                 my $oi_helix = $oi_helices_ref->[$oi_count];
@@ -1605,84 +1655,24 @@ sub setup_tables {
     $io_cterm_table->add_row( \@io_ct_Xrow );
     $oi_cterm_table->add_row( \@oi_ct_Xrow );
 
-    $self->set_io_center_table($io_center_table);
-    $self->set_oi_center_table($oi_center_table);
-    $self->set_io_nterm_table($io_nterm_table);
-    $self->set_oi_nterm_table($oi_nterm_table);
-    $self->set_io_cterm_table($io_cterm_table);
-    $self->set_oi_cterm_table($oi_cterm_table);
+    $self->io_center_table($io_center_table);
+    $self->oi_center_table($oi_center_table);
+    $self->io_nterm_table($io_nterm_table);
+    $self->oi_nterm_table($oi_nterm_table);
+    $self->io_cterm_table($io_cterm_table);
+    $self->oi_cterm_table($oi_cterm_table);
 
 }    # end of setup_tables
 
-sub set_io_center_table {
-    my $self = shift;
-    return $self->{io_center_table} = shift;
-}
+#sub set_io_center_table {
+#    my $self = shift;
+#    return $self->{io_center_table} = shift;
+#}
 
-sub get_io_center_table {
-    my $self = shift;
-    return $self->{io_center_table};
-}
-
-sub set_oi_center_table {
-    my $self = shift;
-    return $self->{oi_center_table} = shift;
-}
-
-sub get_oi_center_table {
-    my $self = shift;
-    return $self->{oi_center_table};
-}
-
-sub set_io_nterm_table {
-    my $self = shift;
-    return $self->{io_nterm_table} = shift;
-}
-
-sub get_io_nterm_table {
-    my $self = shift;
-    return $self->{io_nterm_table};
-}
-
-sub set_oi_nterm_table {
-    my $self = shift;
-    return $self->{oi_nterm_table} = shift;
-}
-
-sub get_oi_nterm_table {
-    my $self = shift;
-    return $self->{oi_nterm_table};
-}
-
-sub set_io_cterm_table {
-    my $self = shift;
-    return $self->{io_cterm_table} = shift;
-}
-
-sub get_io_cterm_table {
-    my $self = shift;
-    return $self->{io_cterm_table};
-}
-
-sub set_oi_cterm_table {
-    my $self = shift;
-    return $self->{oi_cterm_table} = shift;
-}
-
-sub get_oi_cterm_table {
-    my $self = shift;
-    return $self->{oi_cterm_table};
-}
-
-sub set_aa_row_hash {
-    my $self = shift;
-    return $self->{aa_row_hash} = shift;
-}
-
-sub get_aa_row_hash {
-    my $self = shift;
-    return $self->{aa_row_hash};
-}
+#sub get_io_center_table {
+#    my $self = shift;
+#    return $self->{io_center_table};
+#}
 
 sub _max_index_in_range {
     my $a          = shift;
@@ -1722,5 +1712,7 @@ sub _max_in_range {
     my $last  = min( (shift), scalar @$a - 1 );
     return max( @$a[ $first .. $last ] );
 }
+
+__PACKAGE__->meta->make_immutable;
 
 1;
