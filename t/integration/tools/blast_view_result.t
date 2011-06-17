@@ -6,7 +6,7 @@ use CXGN::BlastDB;
 use File::Spec::Functions;
 
 use lib 't/lib';
-use SGN::Test::WWW::Mechanize skip_cgi => 1;
+use SGN::Test::WWW::Mechanize;
 
 my $urlbase = "/tools/blast/view_result.pl";
 my $mech    = SGN::Test::WWW::Mechanize->new;
