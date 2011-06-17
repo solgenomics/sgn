@@ -1,4 +1,4 @@
-use Test::Most tests => 4;
+use Test::Most tests => 7;
 
 use Modern::Perl;
 use File::Copy;
@@ -39,6 +39,12 @@ $mech->with_test_level( local => sub {
 
     # the file is not there
     $mech->content_unlike(qr/BLAST results not found/);
+
+    $mech->content_like(qr/SL_MboI0050O02_SP6_153886/);
+
+    $mech->content_like(qr/SL_MboI0019D11_T7_215962/);
+
+    $mech->content_like(qr/Tomato BAC end seqs/);
 
     for my $f (glob("$blast_dir/*")) {
         diag "Removing $f";
