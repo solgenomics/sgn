@@ -15,7 +15,7 @@ my @xrefs;
     } $c->enabled_feature('gbrowse2');
  
     @xrefs_m = grep {
-        $_->data_source->description =~/'itag2.3 release: genomic'/i
+        $_->data_source->description =~/'itag2\.3 release: genomic'/i
     } @xrefs_m;
   
     push @xrefs, @xrefs_m;
