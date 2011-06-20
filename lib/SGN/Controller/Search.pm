@@ -160,7 +160,7 @@ sub search :Path('/search/') :Args() {
 
         # if it is an unknown search type, default to gene search
         unless ($c->stash->{name_to_num}->($term)) {
-            $term = "loci";
+            $c->throw_404('Invalid search type');
         }
 
         $response .= $c->stash->{tab_functions}[$c->stash->{name_to_num}->($term)]();

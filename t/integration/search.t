@@ -53,11 +53,15 @@ my $type_regex = {
     trait                        => qr/Browse trait terms/,
     unigene                      => qr/Unigene search/,
     glossary                     => qr/Glossary search/,
-
-    # show that unknown search terms default to Gene search
-
-    unknown_search_type          => qr/Gene search/,
 };
+
+$mech->get("/search/wombats");
+is($mech->status,404,'/search/wombats is a 404');
+$mech->content_like(qr/Invalid search type/);
+
+$mech->get("/search/direct_search.pl?search=wombats");
+is($mech->status,404,'/search/direct_search.pl?search=wombats is a 404');
+$mech->content_like(qr/Invalid search type/);
 
 for my $type (keys %$type_regex) {
     $mech->get_ok("/search/$type");
