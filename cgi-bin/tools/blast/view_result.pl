@@ -1,13 +1,33 @@
 #!/usr/bin/perl -w
 
-# Take the output file produced by BLAST from blast_result.pl and create one or more graphs from it.
-# The types of graphs that can be created are those made by Bio::GMOD::Blast::Graph and by my BlastGraph
-# package in CXGN::Graphics. The latter produces a histogram of how conserved each individual base is
-# with respect to the domains found by BLAST in database entries.
-#
-# - Evan, 9 / 30 / 05
+=head1 NAME
 
-use strict;
+cgi-bin/tools/blast/view_result.pl - Render BLAST web reports
+
+This script takes the output file produced by BLAST from blast_result.pl, create
+one or more graphs from it, and renders the report.
+
+The types of graphs that can be created are those made by
+Bio::GMOD::Blast::Graph and by my BlastGraph package in CXGN::Graphics. The
+latter produces a histogram of how conserved each individual base is with
+respect to the domains found by BLAST in database entries.
+
+=head1 SEE ALSO
+
+=head1 AUTHOR
+
+The SGN team
+
+=head1 LICENSE
+
+This library is free software. You can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+
+=cut
+
+use Modern::Perl;
+
 use English;
 use File::Basename;
 use HTML::Entities;
@@ -139,7 +159,11 @@ while (<$res_fh>) {
   if (m/Sbjct:/) {
     $got_hits = 1;
     last;
+  } elsif ($_ !~ m/Number of sequences better than .*:\s*0$/) {
+    $got_hits = 1;
+    last;
   }
+
 }
 close $res_fh;
 #force got_hits to 1 if the report file is other than -m 0

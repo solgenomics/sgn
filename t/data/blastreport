@@ -1,0 +1,124 @@
+BLASTN 2.2.18 [Mar-02-2008]
+
+
+Reference: Altschul, Stephen F., Thomas L. Madden, Alejandro A. Schaffer, 
+Jinghui Zhang, Zheng Zhang, Webb Miller, and David J. Lipman (1997), 
+"Gapped BLAST and PSI-BLAST: a new generation of protein database search
+programs",  Nucleic Acids Res. 25:3389-3402.
+
+Query= WEB-USER-SEQUENCE (Unknown)
+         (483 letters)
+
+Database: Tomato BAC end seqs - MboI 
+           88,728 sequences; 44,789,136 total letters
+
+Searching..................................................done
+
+
+
+                                                                 Score    E
+Sequences producing significant alignments:                      (bits) Value
+
+SL_MboI0050O02_SP6_153886 Unknown                                     910   0.0  
+SL_MboI0019D11_T7_215962 Unknown                                      611   e-174
+
+
+ Score =  910 bits (459), Expect = 0.0
+ Identities = 0/483 (0%)
+ Strand = Plus / Plus
+
+                                                                       
+Query: 1   tttaaaataataatataattccaacttgtatcttcttttatgttaatcgattttaaagtt 60
+
+                                                                       
+Query: 61  ttacaattattgctgacattaaattattaaatcatgagttgtgtagtgaaatggaattgg 120
+
+                                                                       
+Query: 121 ctagccactttaaacgttatccaagttatacaaattttacttttagcctcttttatgaga 180
+
+                                                                       
+Query: 181 tattgagcagtaaagtacatnnnnnnnntagcacaagataatcacttttaagttttttcc 240
+
+                                                                       
+Query: 241 agtggtacaatttactgtgaaatagaacgagctgaccacttcaagttcttgaattgatat 300
+
+                                                                       
+Query: 301 aatttacgactttagcttatttttatgaaatcttaaccatgtagtaatacagttttggat 360
+
+                                                                       
+Query: 361 acgcattttaaaactctttcaagtaataccttttacgatttaacctatttatatgaaatc 420
+
+                                                                       
+Query: 421 ctaatcaattaactaggtagtaaaataaatacgatttgactaatcgctcttttagcttgt 480
+
+              
+Query: 481 taa 483
+
+
+
+ Score =  611 bits (308), Expect = e-174
+ Identities = 0/484 (0%), Gaps = 1/484 (0%)
+ Strand = Plus / Plus
+
+                                                                       
+Query: 1   tttaaaataataatataattccaacttgtatcttcttttatgttaatcg-attttaaagt 59
+
+                                                                       
+Query: 60  tttacaattattgctgacattaaattattaaatcatgagttgtgtagtgaaatggaattg 119
+
+                                                                       
+Query: 120 gctagccactttaaacgttatccaagttatacaaattttacttttagcctcttttatgag 179
+
+                                                                       
+Query: 180 atattgagcagtaaagtacatnnnnnnnntagcacaagataatcacttttaagttttttc 239
+
+                                                                       
+Query: 240 cagtggtacaatttactgtgaaatagaacgagctgaccacttcaagttcttgaattgata 299
+
+                                                                       
+Query: 300 taatttacgactttagcttatttttatgaaatcttaaccatgtagtaatacagttttgga 359
+
+                                                                       
+Query: 360 tacgcattttaaaactctttcaagtaataccttttacgatttaacctatttatatgaaat 419
+
+                                                                       
+Query: 420 cctaatcaattaactaggtagtaaaataaatacgatttgactaatcgctcttttagcttg 479
+
+               
+Query: 480 ttaa 483
+
+
+  Database: Tomato BAC end seqs - MboI
+    Posted date:  Jun 15, 2011 12:57 AM
+  Number of letters in database: 44,789,136
+  Number of sequences in database:  88,728
+  
+Lambda     K      H
+    1.37    0.711     1.31 
+
+Gapped
+Lambda     K      H
+    1.37    0.711     1.31 
+
+
+Matrix: blastn matrix:1 -3
+Gap Penalties: Existence: 5, Extension: 2
+Number of Sequences: 88728
+Number of Hits to DB: 371,404
+Number of extensions: 25210
+Number of successful extensions: 25109
+Number of sequences better than 1.0e-10: 2
+Number of HSP's gapped: 25108
+Number of HSP's successfully gapped: 5
+Length of query: 483
+Length of database: 44,789,136
+Length adjustment: 17
+Effective length of query: 466
+Effective length of database: 43,280,760
+Effective search space: 20168834160
+Effective search space used: 20168834160
+X1: 11 (21.8 bits)
+X2: 15 (29.7 bits)
+X3: 50 (99.1 bits)
+S1: 11 (22.3 bits)
+S2: 34 (67.9 bits)
