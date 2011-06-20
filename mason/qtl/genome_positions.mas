@@ -13,19 +13,17 @@ my @xrefs;
                  -aliases => 1,
                 })
     } $c->enabled_feature('gbrowse2');
- 
-   my @xrefs_latest = grep {
-        $_->data_source->description =~/'itag2\.3 release: genomic'/i
-    } @xrefs_m;
-  
-    push @xrefs, @xrefs_latest;
+     push @xrefs, @xrefs_m;
 }
+my @xrefs_latest = grep {
+  $_->data_source->description =~ /itag2\.3/i
+} @xrefs;
 
 </%init>
 
 <&| /page/info_section.mas, collapsible=>1, collapsed=>1, title => "QTL markers' genomic matches" &>
-% if( @xrefs ) {
-  <& /sitefeatures/gbrowse2/xref_set/rich.mas, xrefs => \@xrefs &>
+% if( @xrefs_latest ) {
+  <& /sitefeatures/gbrowse2/xref_set/rich.mas, xrefs => \@xrefs_latest &>
 % }
 </&>
 
