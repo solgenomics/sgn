@@ -157,8 +157,13 @@ sub search :Path('/search/') :Args() {
     my $response;
     if ($term) {
         $response  = $tab_html;
-        $response .= $c->stash->{tab_functions}[$c->stash->{name_to_num}->($term)]();
 
+        # if it is an unknown search type, default to gene search
+        unless ($c->stash->{name_to_num}->($term)) {
+            $term = "loci";
+        }
+
+        $response .= $c->stash->{tab_functions}[$c->stash->{name_to_num}->($term)]();
         $c->forward_to_mason_view(
             '/search/search.mas',
             content => $response,
@@ -299,7 +304,7 @@ sub phenotype_submenu {
         $term = 'qt' if $term eq 'cvterm_name';
 
         my $tabsel =
-            ($term =~ /phenotypes/i) ? 0
+            ($term =~ /phenotype/i)  ? 0
           : ($term =~ /qtl/i)        ? 1
           : ($term =~ /trait/i)      ? 2
           : -1 ;

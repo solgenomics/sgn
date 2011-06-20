@@ -24,12 +24,6 @@ use SGN::Test::WWW::Mechanize skip_cgi => 1;
 
 my $mech = SGN::Test::WWW::Mechanize->new;
 
-my @search_types = qw{
-    loci unigene family markers marker bacs est_library directory
-    images template_experiment_platform glossary phenotype_qtl_trait trait
-    qtl experiment platform
-};
-
 $mech->get_ok("/search/organisms");
 $mech->content_like(qr!Organism/Taxon search!);
 
@@ -46,12 +40,12 @@ my $type_regex = {
     experiment                   => qr/Expression search/,
     family                       => qr/Family search/,
     images                       => qr/Image search/,
-    library                      => qr/Library search/,
+    library                      => qr/EST search/,
     loci                         => qr/Gene search/,
     marker                       => qr/Map locations/,
     markers                      => qr/Marker options/,
     phenotype                    => qr/Submit new stock/,
-    phenotype_qtl_trait          => qr/Search QTLs by trait name/,
+    phenotype_qtl_trait          => qr/Submit new stock/,
     phenotypes                   => qr/QTL Population/,
     platform                     => qr/Expression search/,
     qtl                          => qr/QTL search/,
@@ -59,9 +53,13 @@ my $type_regex = {
     trait                        => qr/Browse trait terms/,
     unigene                      => qr/Unigene search/,
     glossary                     => qr/Glossary search/,
+
+    # show that unknown search terms default to Gene search
+
+    unknown_search_type          => qr/Gene search/,
 };
 
-for my $type (@search_types) {
+for my $type (keys %$type_regex) {
     $mech->get_ok("/search/$type");
 
     # the glossary search was never accessible via direct_search
