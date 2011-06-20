@@ -1473,11 +1473,11 @@ sub stat_files
 
 =head2 stat_param_hash
 
- Usage: my %stat_param = $self->stat_param_hash();
- Desc: creates a hash (with the statistical parameters (as key) and 
+ Usage: my $stat_param = $self->stat_param_hash();
+ Desc: creates a hash table (with the statistical parameters (as key) and 
        their corresponding values) out of a tab delimited 
        statistical parameters file.       
- Ret: a hash statistics file
+ Ret: a hashref for statistical parameter key and value pairs table
  Args: None
  Side Effects:
  Example:
