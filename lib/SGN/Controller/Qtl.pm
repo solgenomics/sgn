@@ -51,12 +51,15 @@ sub view : PathPart('qtl/view') Chained Args(1) {
     my ( $self, $c, $id) = @_;
     
     if ( $id !~ /^\d+$/ ) 
-    { $c->throw_404("$id is not a valid population id.");
+    { 
+        $c->throw_404("$id is not a valid population id.");
     }  
-    elsif ($id ){
+    elsif ( $id )
+    {
         my $schema = $c->dbic_schema('CXGN::Phenome::Schema');
         my $rs = $schema->resultset('Population')->find($id);                             
-        if ($rs)  { 
+        if ($rs)  
+        { 
            
             $c->stash(template     => '/qtl/qtl_start/index.mas',                              
                       pop          => CXGN::Phenome::Population->new($c->dbc->dbh, $id),                                
@@ -64,14 +67,8 @@ sub view : PathPart('qtl/view') Chained Args(1) {
                       guide        => $self->guideline,                     
                 );
             
-            $self->_list_traits($c);
-           # $self->_analyze_correlation($c);
-          # my ($heatmap, $corr_table) = 
-               $self->_correlation_output($c);           
-           # $c->stash(heatmap    => $heatmap,
-           #           corr_table => $corr_table
-           #     );
-
+            $self->_list_traits($c);   
+            $self->_correlation_output($c);                     
         }
         else 
         {
@@ -175,11 +172,10 @@ sub _analyze_correlation : {
         $heatmap_file = fileparse($heatmap_file);
         $heatmap_file  = $c->generated_file_uri("correlation",  $heatmap_file);
     
-    $c->stash( heatmap_file     => "../../.." . $heatmap_file, 
-               corre_table_file => $corre_table_file
+        $c->stash( heatmap_file     => "../../.." . $heatmap_file, 
+                   corre_table_file => $corre_table_file
             );  
-    }
- 
+    } 
 }
 
 sub _correlation_output {
@@ -203,7 +199,7 @@ sub _correlation_output {
       
     } else 
     {
-        $c->stash( heatmap_file      => $heatmap,
+        $c->stash( heatmap_file     => $heatmap,
                    corre_table_file => $corre_table,
         );
         
