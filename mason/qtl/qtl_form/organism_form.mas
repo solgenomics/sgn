@@ -10,6 +10,9 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 </%doc>
 
+ 
+<& /util/import_javascript.mas, classes => ["CXGN.Phenome.Qtl"] &>
+
 <div id= 'associateTaxonForm' style="display: none">
   <div id= "organism_search">
     Common name:
