@@ -98,7 +98,11 @@ var Qtl = {
 
 },
 
-    
+ setStatOptions: function() {
+	var pop_id = MochiKit.DOM.getElement('default_params').value;	
+        new MochiKit.Async.doSimpleXMLHttpRequest('../../../phenome/qtl_stat_options.pl', {pop_id: pop_id});
+
+},   
 }//
 
 	
