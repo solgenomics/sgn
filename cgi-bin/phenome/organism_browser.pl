@@ -37,8 +37,7 @@ my ($common_name, $common_name_id, $type, $sp_person_id) = $doc->get_encoded_arg
  
 my $dbh = CXGN::DB::Connection->new();
 my ($login_person_id, $login_user_type)=CXGN::Login->new($dbh)->verify_session();
-
-
+  
 if ($login_user_type eq 'curator' || $login_user_type eq 'submitter' || $login_user_type eq 'sequencer') {
 
     if ($type eq 'browse') {
@@ -53,7 +52,7 @@ if ($login_user_type eq 'curator' || $login_user_type eq 'submitter' || $login_u
 sub browse_organisms {
     my ($dbh, $type, $common_name) = @_;   
     my $organisms;
-    
+  
     if ($type eq 'browse') 
     {
 	if ($common_name) 
@@ -73,11 +72,8 @@ sub browse_organisms {
 }
 
 sub associate_organism {
-    my $dbh = shift;
-    my $type = shift;
-    my $common_name_id = shift;
-    my $sp_person_id = shift;
-
+    my ($dbh, $type, $common_name_id, $sp_person_id) = @_;
+    
     my $qtl = CXGN::Phenome::Qtl->new($sp_person_id);
     my ($temp_qtl_dir, $temp_user_dir) = $qtl->create_user_qtl_dir($c); 
 
