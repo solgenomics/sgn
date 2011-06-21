@@ -58,7 +58,7 @@ var Qtl = {
 	}
         else{
 	    var type = 'browse';
-	    var d = new MochiKit.Async.doSimpleXMLHttpRequest("organism_browse.pl", {organism: str, type: type});
+	    var d = new MochiKit.Async.doSimpleXMLHttpRequest("organism_browser.pl", {organism: str, type: type});
 	    d.addCallbacks(this.updateTaxonSelect);
 	}
     },
