@@ -69,7 +69,11 @@ div.paginate_nav {
 %   if( $results->count ) {
      <% columnar_table_html(
             headings => ['Taxon name','Common name'],
-            data     => [ map [$_->species,$_->common_name], $results->all ],
+            data     => [
+                map [ '<a href="/organism/' . $_->organism_id . '/view/">'
+                    . $_->species . "</a>",
+                    $_->common_name
+                ], $results->all ],
         )
       %>
 %   } else {
