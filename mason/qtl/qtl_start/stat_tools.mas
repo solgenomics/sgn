@@ -26,15 +26,22 @@ $guide
        <td>Select the statistical analysis you would like to set the parameters for:</td>
      </tr>
      <tr>
-       <td><input type="radio" onclick="Qtl.toggleStatOptions('default')" name="stat_options" value="Default qtl analysis"/>Use default parameters</td>
-       <td><input type="radio" onclick="Qtl.toggleStatOptions('qtlParameters')" name="stat_options" value="qtl analysis"/>QTL Analysis</td>
+       <td><input type="radio" onclick="Qtl.toggleStatOptions('default');Qtl.setStatOptions(<% $pop_id %>)" name="stat_options" value="Default qtl analysis"/>Use default parameters</td>
+       <td><input type="radio" onclick="Qtl.toggleStatOptions('qtlParameters');Qtl.setStatOptions(<% $pop_id %>)" name="stat_options" value="qtl analysis"/>QTL Analysis</td>
        <td><input type="radio" onclick="Qtl.toggleStatOptions('diagnosticTests')" name="stat_options"  value="diagnostic tests"/> Diagnostic tests</td>       
      </tr>            
     </table>
 </form> 
 
 <div id="default" style="display:none">
-       Currently default parameters for QTL analysis are displayed on the legend of the analysis output.
+       Currently default parameters for QTL analysis are <br/>
+       displayed on the legend of the analysis output.<br />
+
+    <input id = "default_params"
+           type="hidden"
+           value= "<% $pop_id %>"
+           onclick="Qtl.setStatOptions()"
+           >    
 </div>
 
 <& /qtl/qtl_form/stat_form.mas,  pop_id=>$pop_id, referer=>$referer, guide=>$guide &>
