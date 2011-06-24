@@ -14,7 +14,7 @@ if ($login_id) {
     my $qtl = CXGN::Phenome::Qtl->new($login_id);
     my ($temp_qtl_dir, $temp_user_dir) = $qtl->create_user_qtl_dir($c); 
                      
-    my $f = file( $temp_user_dir, "stat_options_${pop_id}.txt" )->openw
+    my $f = file( $temp_user_dir, "stat_options_pop_${pop_id}.txt" )->openw
         or die "Can't create file: $! \n";
 
     if ( $stat_params eq 'default' ) 
