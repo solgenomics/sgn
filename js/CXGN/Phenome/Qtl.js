@@ -67,7 +67,7 @@ var Qtl = {
 		{type: type, organism_id: organism_id}, onSuccess: Tools.reloadPage} );
 
 
-},
+    },
 
 
     toggleStatOptions: function(id)
@@ -85,7 +85,8 @@ var Qtl = {
             }
     },
    
-    setDefaultStat: function( id ) {
+    setDefaultStat: function( id ) 
+    {
 	var pop_id = id;
         var stat_params = 'default';
         new MochiKit.Async.doSimpleXMLHttpRequest ( '../../../phenome/qtl_stat_options.pl', 
@@ -95,15 +96,28 @@ var Qtl = {
                                                   );
     }, 
     
-    setUserStat: function( id ) {
+    setUserStat: function( id ) 
+    {
 	var pop_id = id;
         var stat_params = 'user_params';
         new MochiKit.Async.doSimpleXMLHttpRequest ( '../../../phenome/qtl_stat_options.pl', 
                                                     { 
                                                      pop_id: pop_id, stat_params: stat_params
                                                     }
-                                                   );
-    },     
+                                                  );
+    },
+ 
+    logUser: function( userid ) 
+    {
+	if (userid == null) 
+            {
+                window.location="../../../solpeople/login.pl";
+            } 
+        else 
+            {
+                Qtl.toggleStatOptions('qtlParameters');
+            }
+    },       
 }//
 
 	
