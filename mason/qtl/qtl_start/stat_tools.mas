@@ -15,6 +15,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 $pop_id
 $referer
 $guide
+$userid
 
 </%args>
 <& /util/import_javascript.mas, classes => [ "CXGN.Phenome.Qtl" ] &>
@@ -34,7 +35,7 @@ $guide
         </td>
         <td>
           <input type="radio" 
-                 onclick="Qtl.toggleStatOptions('qtlParameters');Qtl.setUserStat(<% $pop_id %>)"
+                 onclick="Qtl.setUserStat(<% $pop_id %>);Qtl.logUser(<% $userid %>)"
                  name="stat_options"
                  value="user qtl parameters"> Set your own QTL analysis parameters
         </td>
@@ -53,13 +54,13 @@ $guide
        The default parameters for QTL analysis are <br />
        displayed on the legend of the analysis output.<br />
   </div>
-
+  <div id="qtlParameters" style="display:none">
   <& /qtl/qtl_form/stat_form.mas,  
-     pop_id => $pop_id, 
-    referer => $referer, 
-    guide   => $guide 
+     pop_id  => $pop_id, 
+     referer => $referer, 
+     guide   => $guide 
   &>
- 
+ </div>
   <div id="diagnosticTests" align="right" style="display:none; color:blue">
     Under development.
   </div>      
