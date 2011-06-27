@@ -60,11 +60,12 @@ sub view : PathPart('qtl/view') Chained Args(1) {
         my $rs = $schema->resultset('Population')->find($id);                             
         if ($rs)  
         { 
-           
+            my $userid = $c->user->get_object->get_sp_person_id if $c->user;
             $c->stash(template     => '/qtl/qtl_start/index.mas',                              
                       pop          => CXGN::Phenome::Population->new($c->dbc->dbh, $id),                                
                       referer      => $c->req->path,
-                      guide        => $self->guideline,                     
+                      guide        => $self->guideline,
+                      userid       => $userid,
                 );
             
             $self->_list_traits($c);   
