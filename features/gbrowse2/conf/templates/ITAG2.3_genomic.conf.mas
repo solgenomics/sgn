@@ -377,7 +377,7 @@ citation     = This track shows transfer RNAs predicted by the tRNAscan-SE progr
 
 [sgn_loci]
 feature      = match:ITAG_sgn_loci
-key          = SGN Locus Sequences
+key          = SGN locus sequences
 category     = Genetic loci
 link         = /search/quick?term=$name
 glyph        = segments
