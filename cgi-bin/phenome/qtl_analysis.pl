@@ -681,11 +681,9 @@ sub qtl_plot
     my @linkage_groups = $population->linkage_groups();    
     my $term_name      = $self->get_trait_name();
     my $term_id        = $self->get_trait_id();
-
-    my $ac = $population->cvterm_acronym($term_name);
-
-    my $basepath     = $c->get_conf("basepath");
-    my $tempfile_dir = $c->get_conf("tempfiles_subdir");
+    my $ac             = $population->cvterm_acronym($term_name);
+    my $basepath       = $c->get_conf("basepath");
+    my $tempfile_dir   = $c->get_conf("tempfiles_subdir");
 
     my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
       $self->cache_temp_path();
@@ -696,12 +694,12 @@ sub qtl_plot
     my ( $qtl_image, $image, $image_t, $image_url, $image_html, $image_t_url,
          $thickbox, $title, $l_m, $p_m, $r_m );
 
-    my $round = Number::Format->new();
-  
-    $qtl_image  = $self->qtl_images_exist();
-    my $permu_data = $self->permu_file();
-    
-    unless ( $qtl_image && -s $permu_data)
+    my $round       = Number::Format->new();
+    $qtl_image      = $self->qtl_images_exist();
+    my $permu_data  = $self->permu_file();   
+    my $stat_option = $self->qtl_stat_option();
+
+    unless ( $qtl_image && -s $permu_data && $stat_option=~/default/)
     {	   
         my ( $qtl_summary, $peak_markers_file ) = $self->run_r();
 
@@ -1770,4 +1768,21 @@ sub explained_variation {
         return undef;
     }
 
+}
+
+sub qtl_stat_option {
+    my $self    = shift;
+    my $pop_id  = $self->get_object_id();
+    my $user_id = $c->user->get_object->get_sp_person_id if $c->user;
+    my $qtl_obj = CXGN::Phenome::Qtl->new($user_id);
+    
+    my ($user_qtl_dir, $user_dir) = $qtl_obj->get_user_qtl_dir($c);
+    my $stat_options_file         = "$user_dir/stat_options_pop_${pop_id}.txt";
+    
+    my $stat_option = -e $stat_options_file && read_file($stat_options_file) =~ /Yes/ ? 'default'
+                    : !-e $stat_options_file                                          ? 'default'
+                    :                                                                   'user params'
+                    ; 
+   
+    return $stat_option;
 }
