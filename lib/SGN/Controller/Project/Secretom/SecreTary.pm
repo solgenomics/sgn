@@ -135,7 +135,6 @@ sub _run_secretary {
 	my $STApreds = $STSobj->categorize( \@STAarray );
 
 	my $result_string   = "";
-#   my $count_pass      = 0;
 	my $show_max_length = 62;
 
 	my @sort_STApreds = ($sort_it)
