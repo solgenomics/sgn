@@ -61,7 +61,7 @@ sequence: text sequence to run
 sequence_file: uploaded sequence file to run against
 sort: boolean whether to sort the output by score
 show_only_sp: boolean whether to show only predicted signal peptides
-
+st_output_action: st_out_download
 Output:
 
 HTML SecreTary results.
@@ -74,6 +74,7 @@ sub run : Path('run') {
 	my $input        = $c->req->param("sequence") || '';
 	my $sort_it      = $c->req->param("sort");
 	my $show_only_sp = $c->req->param("show_only_sp");
+my $st_output_action = $c->req->param("st_output_action");
 
 	for my $upload ( $c->req->upload('sequence_file') ) {
 		$input .= $upload->slurp;
@@ -83,12 +84,23 @@ sub run : Path('run') {
 	local $ENV{PATH} =
 		$ENV{PATH} . ':' . $c->path_to( $c->config->{programs_subdir} );
 
-# stash the results of the run
-	@{ $c->stash }{qw{ STresults secretary_output_temp_path }} =  $self->_run_secretary( $input, $sort_it, $show_only_sp, $c );
+my ($STresults, $temp_file_handle) =  $self->_run_secretary( $input, $sort_it, $show_only_sp, $c );
 
+# stash the results of the run
+	@{ $c->stash }{qw{ STresults }} = ( $STresults );
+
+if($st_output_action eq 'st_out_download'){ # download the output
+
+$c->stash->{download_filename} = $temp_file_handle->filename;  
+$c->forward('/download/download');
+
+}
+else{ # display in browser
 
 # and set the template to use for output
 	$c->stash->{template} = '/secretom/secretary/result.mas';
+}
+
 }
 
 ############# helper subs ##########
@@ -170,19 +182,17 @@ sub _run_secretary {
 		push @$STresults, $pred_array_ref;
 	}
 
-		my $temp_file_dir = $c->get_conf('tempfiles_subdir');
 		my $temp_file_handle = File::Temp->new(
 				TEMPLATE => 'secretary_output_XXXXXX',
-				DIR      => $c->get_conf('basepath') . $temp_file_dir,
+				DIR      => $c->get_conf('basepath') . $c->get_conf('tempfiles_subdir'),
 				UNLINK   => 0
 				);
 
-	my $secretary_output_temp_file = File::Spec->catfile($temp_file_dir, basename($temp_file_handle->filename) );
 for(@$STresults){
 			print $temp_file_handle join('  ', @$_[0,1,2,3,4]), "\n";
 		}
 
-	return ( $STresults,  $secretary_output_temp_file);
+	return ( $STresults,  $temp_file_handle );
 }
 
 sub process_input {
