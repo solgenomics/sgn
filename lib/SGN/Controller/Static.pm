@@ -21,7 +21,7 @@ package SGN::Controller::Static;
 
 use Moose;
 
-use base 'Catalyst::Controller';
+BEGIN { extends 'Catalyst::Controller'; }
 
 
 sub solanaceae_project_afri :Path('/solanaceae-project/afri-sol/') { 
