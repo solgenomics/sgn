@@ -199,9 +199,8 @@ qq |<a href="/solpeople/personal-info.pl?sp_person_id=$sp_person_id">$submitter_
 sub display_page
 {
     my $self = shift;
-
-    $self->get_page->jsan_use("jquery");
     $self->get_page->jsan_use("thickbox");
+
 
     $self->get_page->add_style( text => <<EOS);
 a.abstract_optional_show {
@@ -232,7 +231,6 @@ EOS
 
     $self->get_page()
       ->header(" SGN: $term_name values in population $population_name");
-
     print page_title_html(
                     "SGN: $term_name values in population $population_name \n");
 
