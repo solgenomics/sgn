@@ -10,6 +10,8 @@ JSAN.use('MochiKit.Visual');
 JSAN.use('MochiKit.Async');
 JSAN.use('CXGN.Effects');
 JSAN.use('CXGN.Phenome.Tools');
+JSAN.use('jquery.blockUI');
+
 
 
 var Qtl = {
@@ -72,7 +74,7 @@ var Qtl = {
 
     toggleStatOptions: function(id)
     {
-        var e = document.getElementById('statTools'); 
+        var e = document.getElementById('statTools');       
         var all = e.getElementsByTagName('div');
         
         for ( var i=0;i<all.length;i++ )
@@ -117,7 +119,23 @@ var Qtl = {
             {
                 Qtl.toggleStatOptions('qtlParameters');
             }
-    },       
+    }, 
+
+    waitPage: function() 
+    {
+        jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
+        jQuery.blockUI({message: jQuery('#waitmsg')});
+                       
+        if(location.reload()) 
+            {
+                jQuery.unblockUI();
+            }          
+    },
+            
+
+
+
+      
 }//
 
 	
