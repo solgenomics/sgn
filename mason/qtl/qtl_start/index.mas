@@ -15,16 +15,12 @@ $traits_list
 my $pop_id = $pop->get_population_id();
 my $name   = $pop->get_name();
 
-#my $qtlstat = qq| <a href="javascript:Qtl.toggleStatParameters()">[Qtl Parameters]</a> |;
-
 </%perl>
 
 <& /util/import_javascript.mas, classes => [ "CXGN.Phenome.Qtl" ] &>
 
 <& /page/page_title.mas, title=>"QTL for $pop_id" &>
-%#<&| /page/info_section.mas, title => $qtlstat, subtitle => $guide &> 
-%#<& /qtl/qtl_form/stat_form.mas, pop_id=>$pop_id, guide=>$guide, referer=>$referer &>
-%#</&>
+
 <&| /page/info_section.mas, 
   collapsible=>1, 
   collapsed=>1, 
@@ -44,9 +40,6 @@ my $name   = $pop->get_name();
 </&>
 
 <& traits_list.mas, traits_list =>$traits_list &>
-
-%#<& /qtl/qtl_form/stat_form.mas, pop_id=>$pop_id, guide=>$guide, referer=>$referer&>
-
 
 <& correlation.mas, 
    pop        =>$pop, 
