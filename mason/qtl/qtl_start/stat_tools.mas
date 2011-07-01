@@ -61,8 +61,22 @@ $userid
      guide   => $guide 
   &>
  </div>
-  <div id="diagnosticTests" align="right" style="display:none; color:blue">
+  <div id="diagnosticTests" 
+       style="display:none; 
+              color:blue; 
+              text-align:right
+              ">
     Under development.
+  </div>
+
+  <div id    ="waitmsg" 
+       style ="display:none; 
+              color:#f87431; 
+              font-weight: bold; 
+              font-style:italic; 
+              background-color:#fff; 
+              ">   
+    <p>solQTL is running ..... Please wait ..... This may take a few minutes.</p>
   </div>      
 </div>
  
