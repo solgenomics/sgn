@@ -211,10 +211,10 @@ sub _correlation_output {
 sub _list_traits {
     my ($self, $c) = @_;
    
-    my $graph_icon    = qq |<img src="/../../../documents/img/pop_graph.png"/> |;  
+    my $graph_icon    = qq | <img src="/../../../documents/img/pop_graph.png"> |;  
     my $population_id = $c->stash->{pop}->get_population_id();
     my @phenotype;    
-    
+   
     if ($c->stash->{pop}->get_web_uploaded()) 
     {
         my @traits = $c->stash->{pop}->get_cvterms();
@@ -242,7 +242,7 @@ sub _list_traits {
            
             push  @phenotype,  [map {$_} ($trait_link,
                                     $min, $max, $avg, $count,
-                                          qq | <a href="/phenome/qtl_analysis.pl?population_id=$population_id&amp;cvterm_id=$trait_id">$graph_icon</a>| 
+                                          qq | <a href="/phenome/qtl_analysis.pl?population_id=$population_id&amp;cvterm_id=$trait_id" onclick=Qtl.waitPage()>$graph_icon</a>| 
                                 )];
                
         }
@@ -255,7 +255,7 @@ sub _list_traits {
              my $cvterm_id = $cvterm->get_cvterm_id();
              my $cvterm_name = $cvterm->get_cvterm_name();
              my ($min, $max, $avg, $std, $count)= $c->stash->{pop}->get_pop_data_summary($cvterm_id);                        
-             push  @phenotype,  [ map {$_} (  qq|<a href="/chado/cvterm.pl?cvterm_id=$cvterm_id">$cvterm_name</a>|, $min, $max, $avg, $count, qq | <a href="/phenome/qtl_analysis.pl?population_id=$population_id&amp;cvterm_id=$cvterm_id">$graph_icon</a> | ) 
+             push  @phenotype,  [ map {$_} (  qq|<a href="/chado/cvterm.pl?cvterm_id=$cvterm_id">$cvterm_name</a>|, $min, $max, $avg, $count, qq | <a href="/phenome/qtl_analysis.pl?population_id=$population_id&amp;cvterm_id=$cvterm_id" onclick="Qtl.waitPage();">$graph_icon</a>|  ) 
              ];
          }
 
@@ -286,7 +286,7 @@ sub _links {
     my ($self, $c, $cvterm_id) = @_;
     my $pop_id = $c->stash->{pop}->get_population_id();
     
-    $c->stash(qtl_analysis => qq |<a href="/phenome/qtl_analysis.pl?population_id =$pop_id&amp;cvterm_id=$cvterm_id"></a>|,             qtl_graph    => qq |<img src="/../../../documents/img/pop_graph.png"/> |
+    $c->stash(qtl_analysis => qq |"<a href="/phenome/qtl_analysis.pl?population_id =$pop_id&amp;cvterm_id=$cvterm_id"></a>|,             qtl_graph    => qq |<img src="/../../../documents/img/pop_graph.png"/> |
         )
     
 }
