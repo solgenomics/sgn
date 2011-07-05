@@ -261,7 +261,7 @@
   </&>
   <&| /page/info_section.mas, title => 'People' &>
     <ul class="people">
-      <li>Joss Rose <a href="http://labs.plantbio.cornell.edu/rose/index.htm">[Lab]</a></li>
+      <li>Joss Rose <a href="http://labs.plantbio.cornell.edu/rose/">[Lab]</a></li>
       <li>Ted Thannhauser <a href="http://www.ars.usda.gov/PandP/docs.htm?docid=9634">[USDA Personal]</a></li>
       <li>Jim Giovannoni <a href="http://www.bti.cornell.edu/JimGiovannoni.php?page=Research#page=ResearchSummary">[BTI Personal]</a></li>
       <li>Lukas Mueller <a href="http://solgenomics.net/about">[SGN]</a></li>

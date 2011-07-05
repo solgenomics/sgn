@@ -12,9 +12,8 @@ sub aa_frequencies
 { # given a aa sequence and a hash of aa/count pairs, add the counts of the aa's in the sequence to the hash.
     my $sequence = shift;
     my $AAFhash  = shift
-      ;   # ref. to hash with AA chars for keys, number of occurences for values
+      ;  # ref. to hash with AA chars for keys, number of occurences for values
 
-    #	my $aas = shift;
     my %AAFs = ();
 
 #ref to array of 20 amino acids (1 char abbreviations), plus "X" for any other stuff.
@@ -40,7 +39,7 @@ sub aa_frequencies
         $seq_length_b++;
     }
     die
-      "in getAAFreqs, seqlength discrepancy: $seq_length_a,  $seq_length_b  \n"
+      "in aa_frequencies, seqlength discrepancy: $seq_length_a,  $seq_length_b  \n"
       unless ( $seq_length_a == $seq_length_b );
     $AAFhash->{"LENGTH"} = $seq_length_b;
     return $AAFhash;
@@ -165,6 +164,27 @@ sub nGASDRQPEN {
     return $count;
 }
 
+
+=head2 function nVIL
+
+Synopsis: nVIL($sequence);
+	Description: Calculates
+and returns the number of amino acids in the sequence which are VI or L.
+
+=cut
+
+sub nVIL {
+    my $sequence = shift;
+    my $count    = 0;
+    while ($sequence) {
+        my $c = chop $sequence;
+        $count++ if ( $c =~ /[VIL]/ );
+    }
+    return $count;
+}
+
+
+
 =head2 function nNitrogen
 
 Synopsis: nNitrogen($sequence);
@@ -252,29 +272,53 @@ sub _O_in_aa {       # Number of Oxygen atoms in each kind of amino acid
 sub molecular_weight {
     my $AAFhash    = shift;
     my %MolWeights = (
-
         # (see e.g. Wikipedia "proteinogenic amino acids")
-        "A" => 89,
-        "R" => 174,
-        "N" => 132,
-        "D" => 133,
-        "C" => 121,
-        "E" => 147,
-        "Q" => 146,
-        "G" => 75,
-        "H" => 155,
-        "I" => 131,
-        "L" => 131,
-        "K" => 146,
-        "M" => 149,
-        "F" => 165,
-        "P" => 115,
-        "S" => 105,
-        "T" => 119,
-        "W" => 204,
-        "Y" => 181,
-        "V" => 117
-    );
+	"A" => 89.09,
+	"C" => 121.16,
+	"D" => 133.10,
+	"E" => 147.13,
+	"F" => 165.19,
+	"G" => 75.07,
+	"H" => 155.16,
+	"I" => 131.18,
+	"K" => 146.19,
+	"L" => 131.18,
+	"M" => 149.21,
+	"N" => 132.12,
+	"P" => 115.13,
+	"Q" => 146.15,
+	"R" => 174.20,
+	"S" => 105.09,
+	"T" => 119.12,
+	"V" => 117.15,
+	"W" => 204.23,
+	"Y" => 181.19,
+);
+
+
+
+    #     "A" => 89,
+    #     "R" => 174,
+    #     "N" => 132,
+    #     "D" => 133,
+    #     "C" => 121,
+    #     "E" => 147,
+    #     "Q" => 146,
+    #     "G" => 75,
+    #     "H" => 155,
+    #     "I" => 131,
+    #     "L" => 131,
+    #     "K" => 146,
+    #     "M" => 149,
+    #     "F" => 165,
+    #     "P" => 115,
+    #     "S" => 105,
+    #     "T" => 119,
+    #     "W" => 204,
+    #     "Y" => 181,
+    #     "V" => 117
+    # );
+
     my $sum_wf = 0;
     my $sum_f  = 0;
     my $length = $AAFhash->{"LENGTH"};
@@ -362,6 +406,19 @@ sub isoelectric_point
         }
     }
     return;
+}
+
+sub extinction_coefficient{
+
+	my $sequence = uc (shift);
+	my $result = 0;
+	while($sequence){
+		my $char = chop $sequence;
+		if($char eq 'W'){ $result += 5690; }
+		elsif($char eq 'Y'){ $result += 1280; }
+		elsif($char eq 'C'){ $result += 120; }
+	}
+	return $result;
 }
 
 1;
