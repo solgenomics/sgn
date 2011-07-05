@@ -8,6 +8,9 @@ use Bio::SecreTary::TMpred;
 use Bio::SecreTary::Cleavage;
 #use Bio::SecreTary::TMpred_Cinline;
 #use Bio::SecreTary::Cleavage_Cinline;
+use File::Temp; 
+use File::Basename;
+use File::Spec;
 
 BEGIN { extends 'Catalyst::Controller'; }
 with 'Catalyst::Component::ApplicationAttribute';
@@ -58,7 +61,7 @@ sequence: text sequence to run
 sequence_file: uploaded sequence file to run against
 sort: boolean whether to sort the output by score
 show_only_sp: boolean whether to show only predicted signal peptides
-
+st_output_action: st_out_download
 Output:
 
 HTML SecreTary results.
@@ -71,6 +74,7 @@ sub run : Path('run') {
 	my $input        = $c->req->param("sequence") || '';
 	my $sort_it      = $c->req->param("sort");
 	my $show_only_sp = $c->req->param("show_only_sp");
+my $st_output_action = $c->req->param("st_output_action");
 
 	for my $upload ( $c->req->upload('sequence_file') ) {
 		$input .= $upload->slurp;
@@ -80,18 +84,29 @@ sub run : Path('run') {
 	local $ENV{PATH} =
 		$ENV{PATH} . ':' . $c->path_to( $c->config->{programs_subdir} );
 
-# stash the results of the run
-	@{ $c->stash }{qw{ STresults }} =  $self->_run_secretary( $input, $sort_it, $show_only_sp );
+my ($STresults, $temp_file_handle) =  $self->_run_secretary( $input, $sort_it, $show_only_sp, $c );
 
+# stash the results of the run
+	@{ $c->stash }{qw{ STresults }} = ( $STresults );
+
+if($st_output_action eq 'st_out_download'){ # download the output
+
+$c->stash->{download_filename} = $temp_file_handle->filename;  
+$c->forward('/download/download');
+
+}
+else{ # display in browser
 
 # and set the template to use for output
 	$c->stash->{template} = '/secretom/secretary/result.mas';
 }
 
+}
+
 ############# helper subs ##########
 
 sub _run_secretary {
-	my ( $self, $input, $sort_it, $show_only_sp ) = @_;
+	my ( $self, $input, $sort_it, $show_only_sp, $c ) = @_;
 
 	my @STAarray;
 	my $trunc_length = 100;
@@ -99,9 +114,9 @@ sub _run_secretary {
 	my $tmpred_obj = Bio::SecreTary::TMpred->new( {} ); # use defaults here for min_score, etc.
 #             Bio::SecreTary::TMpred_Cinline->new( {} );
 
-	my $cleavage_predictor_obj = Bio::SecreTary::Cleavage->new();
+		my $cleavage_predictor_obj = Bio::SecreTary::Cleavage->new();
 #             Bio::SecreTary::Cleavage_Cinline->new();
-	
+
 	my $id_seqs = process_input($input);
 
 #Calculate the necessary quantities for each sequence:
@@ -111,7 +126,7 @@ sub _run_secretary {
 
 		my $STAobj =
 			Bio::SecreTary::SecreTaryAnalyse->new( {sequence_id => $id,
-				sequence => substr( $sequence, 0, $trunc_length ), tmpred_obj => $tmpred_obj, cleavage_predictor => $cleavage_predictor_obj });
+					sequence => substr( $sequence, 0, $trunc_length ), tmpred_obj => $tmpred_obj, cleavage_predictor => $cleavage_predictor_obj });
 		push @STAarray, $STAobj;
 	}
 
@@ -120,7 +135,6 @@ sub _run_secretary {
 	my $STApreds = $STSobj->categorize( \@STAarray );
 
 	my $result_string   = "";
-#   my $count_pass      = 0;
 	my $show_max_length = 62;
 
 	my @sort_STApreds = ($sort_it)
@@ -133,6 +147,8 @@ sub _run_secretary {
 		} @$STApreds
 	: @$STApreds;
 
+
+
 	my $STresults = [];
 	foreach (@sort_STApreds) {
 		my $STA        = $_->[0];
@@ -140,7 +156,7 @@ sub _run_secretary {
 
 		$pred_string =~ / ^ \s* (\S+) \s+ (\S+) \s*(.*) /xms;
 		my $prediction = substr("$1   ", 0, 3); # 'YES' or 'NO '
-			my $STscore = $2;
+			my $STscore = padtrunc($2, 8);
 		my $solution = $3;
 
 		next if ( $prediction eq 'NO ' and $show_only_sp );
@@ -165,7 +181,17 @@ sub _run_secretary {
 		push @$STresults, $pred_array_ref;
 	}
 
-	return ( $STresults);
+		my $temp_file_handle = File::Temp->new(
+				TEMPLATE => 'secretary_output_XXXXXX',
+				DIR      => $c->get_conf('basepath') . $c->get_conf('tempfiles_subdir'),
+				UNLINK   => 0
+				);
+
+for(@$STresults){
+			print $temp_file_handle join('  ', @$_[0,1,2,3,4]), "\n";
+		}
+
+	return ( $STresults,  $temp_file_handle );
 }
 
 sub process_input {
@@ -178,8 +204,8 @@ sub process_input {
 	my $input               = shift;
 	my @id_sequence_array;
 	my $min_sequence_length = 8; # this is the minimal length of sequence string which will be recognized as a sequence if no fasta idline is present.
-	my @fastas  = ();
-	my $wscount = 0;
+		my @fastas  = ();
+	my $anon_seq_count = 0;
 
 	$input =~ s/\r//g;           #remove weird line endings.
 		$input =~ s/\A \s*//xms;     # remove initial whitespace
@@ -187,51 +213,43 @@ sub process_input {
 		if ( $input =~ s/\A ([^>]+) //xms )
 		{                            # if >= 1 chars before first > capture them.
 			my $fasta = uc $1;
-			# if letters and spaces optionally with * as last non whitespace char,
-			# and starts with at least $min_sequence_length letters, treat as sequence
+# if letters and spaces optionally with * as last non whitespace char,
+# and starts with at least $min_sequence_length letters, treat as sequence
 			if ( $fasta =~ /\A [A-Z]{$min_sequence_length,} [A-Z\s]* [*]? \s* \z/xms )
 			{                        # looks like sequence with no identifier
-				$fasta = '>sequence_' . $wscount . "\n" . $fasta . "\n";
+	$fasta =~ s/\s* \z//xms;
+				$fasta = 'sequence_' . $anon_seq_count . "\n" . $fasta . "\n";
 				push @fastas, $fasta;
-				$wscount++;
+				$anon_seq_count++;
 			}
 
 # otherwise stuff ahead of first > is considered junk, discarded ($1 not used)
 		}
-# if(0){
-# 	while ( $input =~ s/ ( > [^>]+ )//xms
-# 	      )    # capture and delete initial > and everything up to next >.
-# 	{
-# 		push @fastas, $1;
-# 		last if ( scalar @fastas >= $max_sequences_to_do );
-# 	}
-# }
-# else{
-$input =~ s/\A > //xms; # eliminate initial >
-@fastas = split(">", $input);
+	$input =~ s/\A > //xms; # eliminate initial >
+		@fastas = (@fastas, split(">", $input));
 
-        @fastas = @fastas[0..$max_sequences_to_do-1] if(scalar @fastas > $max_sequences_to_do); # keep just the first $max_sequence_to_do
-#}
+	@fastas = @fastas[0..$max_sequences_to_do-1] if(scalar @fastas > $max_sequences_to_do); # keep just the first $max_sequence_to_do
 
-	foreach my $fasta (@fastas) {
-		$fasta = '>' . $fasta;
-		next if ( $fasta =~ /\A\z/xms );
 
-		my $id;
-		$fasta =~ s/\A \s+ //xms;    # delete initial whitespace
-			if ( $fasta =~ s/\A > (\S+) [^\n]* \n //xms ) {    # line starts with >
-				$id = $1;
-	}
-			else {
-				$fasta =~ s/\A > \s*//xms;   # handles case of > not followed by id.
-					$id = 'sequence_' . $wscount;
-				$wscount++;
-			}
-		$fasta =~ s/\s//xmsg;            # remove whitespace from sequence;
-		$fasta =~ s/\* \z//xms;          # remove final * if present.
-			$fasta = uc $fasta;
-		push @id_sequence_array, "$id $fasta";
-	}
+		foreach my $fasta (@fastas) {
+			$fasta = '>' . $fasta;
+			next if ( $fasta =~ /\A\z/xms );
+
+			my $id;
+			$fasta =~ s/\A \s+ //xms;    # delete initial whitespace
+				if ( $fasta =~ s/\A > (\S+) [^\n]* \n //xms ) {    # line starts with >
+					$id = $1;
+		}
+				else {
+					$fasta =~ s/\A > \s*//xms;   # handles case of > not followed by id.
+						$id = 'sequence_' . $anon_seq_count;
+					$anon_seq_count++;
+				}
+			$fasta =~ s/\s//xmsg;            # remove whitespace from sequence;
+			$fasta =~ s/\* \z//xms;          # remove final * if present.
+				$fasta = uc $fasta;
+			push @id_sequence_array, "$id $fasta";
+		}
 	return \@id_sequence_array;
 }
 

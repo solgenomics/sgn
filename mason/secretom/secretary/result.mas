@@ -40,14 +40,13 @@ foreach (@$STresults){
 		$hl_sequence = $sequence;
 		$sp_length   = " - ";
 	}
-	$STscore     = substr($STscore . '        ', 0, 8);
+	# $STscore     = substr($STscore . '        ', 0, 8);
 	$sp_length = substr($sp_length . '   ', 0, 3);
 	$hl_sequence .= ( $orig_length > length $sequence ) ? '...' : '   ';
 	$result_string .=
 		"$id  $prediction    $STscore $sp_length      $hl_sequence\n";
 }
 </%perl> 
-
 
 <pre class="secretary_results">
 Identifier       SP    Score   Length     Sequence 10        20        30        40        50        60
