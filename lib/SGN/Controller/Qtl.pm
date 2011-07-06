@@ -173,7 +173,7 @@ sub _analyze_correlation : {
         $heatmap_file = fileparse($heatmap_file);
         $heatmap_file  = $c->generated_file_uri("correlation",  $heatmap_file);
     
-        $c->stash( heatmap_file     => "../../.." . $heatmap_file, 
+        $c->stash( heatmap_file     => "../../../$heatmap_file", 
                    corre_table_file => $corre_table_file
             );  
     } 
@@ -189,8 +189,8 @@ sub _correlation_output {
     my $heatmap = $cache->get($key_h);
     my $corre_table = $cache->get($key_t);
   
-   # $cache->remove($key_t);
-   # $cache->remove($key_h);
+   #$cache->remove($key_t);
+   #$cache->remove($key_h);
     if  (!$corre_table  || !$heatmap) {
         $self->_analyze_correlation($c);
         $heatmap = $c->stash->{heatmap_file};
@@ -202,8 +202,8 @@ sub _correlation_output {
     {
         $c->stash( heatmap_file     => $heatmap,
                    corre_table_file => $corre_table,
-        );
-        
+            );       
+        $self->_get_trait_acronyms($c); 
     }
 }
 
@@ -307,6 +307,10 @@ sub _link {
     
 }
 
+sub _get_trait_acronyms {
+    my ($self, $c) = @_;
+    $c->stash(trait_acronym_pairs => $c->stash->{pop}->get_cvterm_acronyms());
+}
 
 ####
 1;
