@@ -15,7 +15,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 $pop
 $heatmap_file
 $corre_table_file
-
+$trait_acronym_pairs
 </%args>
 
 <%perl>
@@ -30,8 +30,18 @@ my $corre_image = qq | <img src="$heatmap_file"  alt="correlation output for $na
   collapsed   =>1, 
   title       => "Pearson Correlation Analysis" &> 
   <% $corre_image %> 
-</&>
 
+<&| /page/optional_show.mas, title => "Acronyms key" &>
+<& /page/columnar_table.mas,
+   headings => ["Trait name", "Acronym"],
+   data=>$trait_acronym_pairs,
+   __alt_freq   =>2,
+   __alt_width  =>1,
+   __alt_offset =>3,
+   __align      =>'l'
+&>
+</&>
+</&>
 
 
 
