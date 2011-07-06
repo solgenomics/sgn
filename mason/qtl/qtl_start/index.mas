@@ -7,10 +7,12 @@ $userid
 $heatmap_file
 $corre_table_file
 $traits_list
+$trait_acronym_pairs
 
 </%args>
 
 <%perl>
+
 
 my $pop_id = $pop->get_population_id();
 my $name   = $pop->get_name();
@@ -44,6 +46,7 @@ my $name   = $pop->get_name();
 <& correlation.mas, 
    pop        =>$pop, 
    heatmap_file    =>$heatmap_file, 
-   corre_table_file =>$corre_table_file 
+   corre_table_file =>$corre_table_file, 
+   trait_acronym_pairs => $trait_acronym_pairs
 &>
 
