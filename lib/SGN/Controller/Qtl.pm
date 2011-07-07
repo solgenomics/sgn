@@ -27,24 +27,6 @@ use File::Basename;
 
 
 
-#use Catalyst qw / cache /;
-# sub auto :Args(0) {
-#     my ($self, $c) = @_;
-    
-#     ($c->req->args->[0] !~ /^\d+$/ or !$c->req->args->[0]) ? $c->throw_404("$c->req->args->[0] is not a valid population.") 
-#          :   $c->stash(population => CXGN::Phenome::Population->new($c->dbc->dbh , $c->req->args->[0]));
-#     $c->stash(tempdir  => $c->get_conf("tempfiles_subdir")."/correlation",
-#                 basepath => $c->get_conf("basepath"),
-#                 r_qtl    => $c->get_conf("r_qtl_temp_path"), 
-#                 guide    => $self->guideline(),                                                
-#         );     
-   
-#     return 1;
-# }
-# sub no_argument :PathPart('qtl/view') {
-#     my ($self, $c) = @_;
-#     $c->throw_404("You must provide a valid population id argument");
-# }
     
 
 sub view : PathPart('qtl/view') Chained Args(1) {
@@ -61,10 +43,12 @@ sub view : PathPart('qtl/view') Chained Args(1) {
         if ($rs)  
         { 
             my $userid = $c->user->get_object->get_sp_person_id if $c->user;
+            $self->guideline($c);
+
             $c->stash(template     => '/qtl/qtl_start/index.mas',                              
                       pop          => CXGN::Phenome::Population->new($c->dbc->dbh, $id),                                
                       referer      => $c->req->path,
-                      guide        => $self->guideline,
+                      guideline    => $c->stash->{guideline},
                       userid       => $userid,
                 );
             
@@ -83,19 +67,9 @@ sub view : PathPart('qtl/view') Chained Args(1) {
 }
 
 
-
-# sub set_qtl_parameters : PathPart('qtl/stat') Chained('/') Args(0) {
-#     my ($self, $c) = @_;  
-#     $c->stash(template =>'/qtl/qtl_form/stat_form.mas', 
-#               pop_id => 12, 
-#               guide => $c->stash->{guide}
-#         );
-
-# }
-
 sub guideline {
-    my ($self) = shift;
-    return qq |<a  href="http://docs.google.com/View?id=dgvczrcd_1c479cgfb">Guidelines</a> |;
+    my ($self, $c) = @_;
+    $c->stash(guideline => qq |<a  href="http://docs.google.com/View?id=dgvczrcd_1c479cgfb">Guidelines</a> |);
 }
 
 
