@@ -14,7 +14,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 $pop_id
 $referer
-$guide
+$guideline
 $userid
 
 </%args>
@@ -54,11 +54,19 @@ $userid
        The default parameters for QTL analysis are <br />
        displayed on the legend of the analysis output.<br />
   </div>
-  <div id="qtlParameters" style="display:none">
-  <& /qtl/qtl_form/stat_form.mas,  
+  <div id="qtlParameters" style="display:none"> 
+    <table align="center">
+      <tr>
+        <td>
+          <% $guideline %>
+        </td>
+      </tr>
+    </table>
+      
+    <& /qtl/qtl_form/stat_form.mas,  
      pop_id  => $pop_id, 
      referer => $referer, 
-     guide   => $guide 
+     guide   => $guideline 
   &>
  </div>
   <div id="diagnosticTests" 
