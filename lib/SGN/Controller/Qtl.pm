@@ -26,9 +26,6 @@ use File::Basename;
 
 
 
-
-    
-
 sub view : PathPart('qtl/view') Chained Args(1) {
     my ( $self, $c, $id) = @_;
     
@@ -51,7 +48,8 @@ sub view : PathPart('qtl/view') Chained Args(1) {
                       guideline    => $c->stash->{guideline},
                       userid       => $userid,
                 );
-            
+            $self->_show_data($c);
+            $self->_get_owner_page($c);
             $self->_list_traits($c);   
             $self->_correlation_output($c);                     
         }
@@ -74,8 +72,7 @@ sub guideline {
 
 
 sub _analyze_correlation : {
-    my ($self, $c)   = @_;
-    
+    my ($self, $c)      = @_;    
     my $pop_id          = $c->stash->{pop}->get_population_id();
     my $pheno_file      = $c->stash->{pop}->phenotype_file($c);
     my $base_path       = $c->config->{basepath};
@@ -154,24 +151,23 @@ sub _analyze_correlation : {
 }
 
 sub _correlation_output {
-    my ($self, $c) = @_;
-
-    my $pop = $c->{stash}->{pop};
-    my $cache = $c->cache;
-    my $key_h   = "heat_" . $pop->get_population_id();
-    my $key_t   = "table_" . $pop->get_population_id();
-    my $heatmap = $cache->get($key_h);
+    my ($self, $c)  = @_;
+    my $pop         = $c->{stash}->{pop};
+    my $cache       = $c->cache;
+    my $key_h       = "heat_" . $pop->get_population_id();
+    my $key_t       = "table_" . $pop->get_population_id();   
+    my $heatmap     = $cache->get($key_h);
     my $corre_table = $cache->get($key_t);
   
    #$cache->remove($key_t);
    #$cache->remove($key_h);
-    if  (!$corre_table  || !$heatmap) {
+    if  (!$corre_table  || !$heatmap) 
+    {
         $self->_analyze_correlation($c);
         $heatmap = $c->stash->{heatmap_file};
         $corre_table  = $c->stash->{corre_table_file};
         $cache->set($key_h, $heatmap, '24h');
-        $cache->set($key_t, $corre_table, '24h');
-      
+        $cache->set($key_t, $corre_table, '24h');    
     } else 
     {
         $c->stash( heatmap_file     => $heatmap,
@@ -284,6 +280,34 @@ sub _link {
 sub _get_trait_acronyms {
     my ($self, $c) = @_;
     $c->stash(trait_acronym_pairs => $c->stash->{pop}->get_cvterm_acronyms());
+}
+
+sub _get_owner_page {
+    my ($self, $c) = @_;
+    my $owner_id   = $c->stash->{pop}->get_sp_person_id();
+    my $owner      = CXGN::People::Person->new($c->dbc->dbh, $owner_id);
+    my $owner_name = $owner->get_first_name()." ".$owner->get_last_name();
+    my $owner_page = qq |<a href="/solpeople/personal-info.pl?sp_person_id=$owner_id">$owner_name</a> |;
+    
+    $c->stash(owner_page => $owner_page);
+}
+
+sub _show_data {
+    my ($self, $c) = @_;
+    my $user_id    = $c->stash->{userid};
+    my $user_type  = $c->user->get_object->get_user_type() if $c->user;
+    my $is_public  = $c->stash->{pop}->get_privacy_status();
+    my $owner_id   = $c->stash->{pop}->get_sp_person_id();
+    
+    if ($user_id) 
+    {        
+        ($user_id == $owner_id || $user_type eq 'curator') ? $c->stash(show_data => 1) : $c->stash(show_data => undef);
+    } else
+    { 
+        $is_public ?  $c->stash(show_data => 1) : $c->stash(show_data => undef);
+    }
+            
+            
 }
 
 ####
