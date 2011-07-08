@@ -28,9 +28,12 @@ $owner_page
   title       => "Acccessibility" 
 &>   
   <p>
-    The QTL data for this population is not public yet. If you are the owner or SGN curator, login to access the data. Others who would like to know more about this data,
+    The QTL data for this population is not public yet. If you are the 
+    owner or SGN curator, login to access the data. 
+    Others who would like to know more about this data,
     can contact the owner of the data: <b><% $owner_page %></b> or 
-    email to SGN: <a href=mailto:sgn-feedback@sgn.cornell.edu>sgn-feedback@sgn.cornell.edu</a>.
+    email to SGN: <a href=mailto:sgn-feedback@sgn.cornell.edu>
+    sgn-feedback@sgn.cornell.edu</a>.
   </p>
 </&>
 
