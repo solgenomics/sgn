@@ -8,45 +8,60 @@ $heatmap_file
 $corre_table_file
 $traits_list
 $trait_acronym_pairs
+$owner_page
+$show_data
 
 </%args>
 
 <%perl>
 
-
-my $pop_id = $pop->get_population_id();
-my $name   = $pop->get_name();
+my $pop_id    = $pop->get_population_id();
+my $name      = $pop->get_name();
+my $desc      = $pop->get_description();
 
 </%perl>
 
 <& /util/import_javascript.mas, classes => [ "CXGN.Phenome.Qtl" ] &>
 
-<& /page/page_title.mas, title=>"QTL for $pop_id" &>
+<& /page/page_title.mas, title=>"QTL for $name" &>
 
 <&| /page/info_section.mas, 
-  collapsible=>1, 
-  collapsed=>1, 
-  title => "Population details" &> 
+  collapsible => 1, 
+  collapsed   => 1, 
+  title       => "Population details" 
+  &> 
 </&>
 
+% if ($show_data) 
+%{
 <&| /page/info_section.mas, 
-  collapsible =>1, 
-  collapsed   =>0, 
+  collapsible => 1, 
+  collapsed   => 0, 
   title       => "Set Statistical Parameters"
 &>   
-<& stat_tools.mas, pop_id=>$pop_id, 
-                   guideline=>$guideline, 
-                   referer=>$referer, 
-                   userid=>$userid
+<& stat_tools.mas, 
+  pop_id     => $pop_id, 
+  guideline  => $guideline, 
+  referer    => $referer, 
+  userid     => $userid
 &>
 </&>
 
-<& traits_list.mas, traits_list =>$traits_list &>
-
-<& correlation.mas, 
-   pop        =>$pop, 
-   heatmap_file    =>$heatmap_file, 
-   corre_table_file =>$corre_table_file, 
-   trait_acronym_pairs => $trait_acronym_pairs
+<& traits_list.mas, 
+   traits_list => $traits_list 
 &>
 
+<& correlation.mas, 
+   pop                 => $pop, 
+   heatmap_file        => $heatmap_file, 
+   corre_table_file    => $corre_table_file, 
+   trait_acronym_pairs => $trait_acronym_pairs
+&>
+%}
+% else
+%{
+  <& data_access.mas, 
+     pop        => $pop, 
+     owner_page => $owner_page
+    &>
+%}
