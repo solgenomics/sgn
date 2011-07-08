@@ -1,0 +1,41 @@
+<%doc>
+
+=head1 NAME 
+qtl/qtl_form/stat_form.mas - a mason component for a QTL stat parameters 
+submission
+
+=AUTHOR
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$pop
+$owner_page
+
+</%args>
+
+<%perl>
+
+</%perl>
+
+<&| /page/info_section.mas, 
+  collapsible => 1, 
+  collapsed   => 0, 
+  title       => "Acccessibility" 
+&>   
+  <p>
+    The QTL data for this population is not public yet. 
+    If you would like to know more about this data,
+    please contact the owner of the data: <b><% $owner_page %></b> or 
+    email to SGN: <a href=mailto:sgn-feedback@sgn.cornell.edu>sgn-feedback@sgn.cornell.edu</a>.
+  </p>
+</&>
+
+
+ 
+
+
