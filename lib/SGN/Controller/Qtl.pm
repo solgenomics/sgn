@@ -40,16 +40,15 @@ sub view : PathPart('qtl/view') Chained Args(1) {
         if ($rs)  
         { 
             my $userid = $c->user->get_object->get_sp_person_id if $c->user;
-            $self->guideline($c);
-
+           
             $c->stash(template     => '/qtl/qtl_start/index.mas',                              
                       pop          => CXGN::Phenome::Population->new($c->dbc->dbh, $id),                                
                       referer      => $c->req->path,
                       guideline    => $c->stash->{guideline},
                       userid       => $userid,
                 );
-            $self->_show_data($c);
-            $self->_get_owner_page($c);
+            $self->_link($c);
+            $self->_show_data($c);           
             $self->_list_traits($c);   
             $self->_correlation_output($c);                     
         }
@@ -159,22 +158,20 @@ sub _correlation_output {
     my $heatmap     = $cache->get($key_h);
     my $corre_table = $cache->get($key_t);
   
-   #$cache->remove($key_t);
-   #$cache->remove($key_h);
     if  (!$corre_table  || !$heatmap) 
     {
         $self->_analyze_correlation($c);
         $heatmap = $c->stash->{heatmap_file};
         $corre_table  = $c->stash->{corre_table_file};
-        $cache->set($key_h, $heatmap, '24h');
-        $cache->set($key_t, $corre_table, '24h');    
+        $cache->set($key_h, $heatmap, (expires =>'24h'));
+        $cache->set($key_t, $corre_table, (expires =>'24h'));    
     } else 
     {
         $c->stash( heatmap_file     => $heatmap,
                    corre_table_file => $corre_table,
-            );       
-        $self->_get_trait_acronyms($c); 
+            );               
     }
+     $self->_get_trait_acronyms($c);
 }
 
 
@@ -232,7 +229,7 @@ sub _list_traits {
                        cvterm_id  => $cvterm_id
                 );
 
-             $self->_link($c);
+            $self->_link($c);
             my $graph_icon = $c->stash->{graph_icon};
             my $qtl_analysis_page = $c->stash->{qtl_analysis_page};
             my $cvterm_page = $c->stash->{cvterm_page};
@@ -268,11 +265,16 @@ sub _link {
     my $cvterm_id  = $c->stash->{cvterm_id};
     my $trait_name = $c->stash->{trait_name};
     my $term_id    = $cvterm_id ? $cvterm_id : $trait_id;
-    my $graph_icon = qq | <img src="/../../../documents/img/pop_graph.png"/> |; 
- 
-    $c->stash( qtl_analysis_page => qq | <a href="/phenome/qtl_analysis.pl?population_id=$pop_id&amp;cvterm_id=$term_id" onclick="Qtl.waitPage();">$graph_icon</a>|,
+    my $graph_icon = qq | <img src="/../../../documents/img/pop_graph.png"/> |;
+    
+    $self->_get_owner_details($c);
+    my $owner_name = $c->stash->{owner_name};
+    my $owner_id   = $c->stash->{owner_id};
+    
+    $c->stash( qtl_analysis_page => qq | <a href="/phenome/qtl_analysis.pl?population_id=$pop_id&amp;cvterm_id=$term_id" onclick="Qtl.waitPage();">$graph_icon</a> |,
                cvterm_page  => qq |<a href="/chado/cvterm.pl?cvterm_id=$cvterm_id">$trait_name</a> |,
-               trait_page   => qq |<a href="/phenome/trait.pl?trait_id=$trait_id">$trait_name</a>|,
+               trait_page   => qq |<a href="/phenome/trait.pl?trait_id=$trait_id">$trait_name</a> |,
+               owner_page   => qq |<a href="/solpeople/personal-info.pl?sp_person_id=$owner_id">$owner_name</a> |,
         );
     
 }
@@ -282,14 +284,16 @@ sub _get_trait_acronyms {
     $c->stash(trait_acronym_pairs => $c->stash->{pop}->get_cvterm_acronyms());
 }
 
-sub _get_owner_page {
+sub _get_owner_details {
     my ($self, $c) = @_;
     my $owner_id   = $c->stash->{pop}->get_sp_person_id();
     my $owner      = CXGN::People::Person->new($c->dbc->dbh, $owner_id);
-    my $owner_name = $owner->get_first_name()." ".$owner->get_last_name();
-    my $owner_page = qq |<a href="/solpeople/personal-info.pl?sp_person_id=$owner_id">$owner_name</a> |;
+    my $owner_name = $owner->get_first_name()." ".$owner->get_last_name();    
     
-    $c->stash(owner_page => $owner_page);
+    $c->stash( owner_name => $owner_name,
+               owner_id   => $owner_id
+        );
+    
 }
 
 sub _show_data {
