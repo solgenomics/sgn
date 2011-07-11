@@ -18,7 +18,7 @@ $show_data
 my $pop_id    = $pop->get_population_id();
 my $name      = $pop->get_name();
 my $desc      = $pop->get_description();
-$show_data=undef;
+
 </%perl>
 
 <& /util/import_javascript.mas, classes => [ "CXGN.Phenome.Qtl" ] &>
