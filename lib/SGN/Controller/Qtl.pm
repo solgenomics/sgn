@@ -39,12 +39,10 @@ sub view : PathPart('qtl/view') Chained Args(1) {
         my $rs = $schema->resultset('Population')->find($id);                             
         if ($rs)  
         { 
-            my $userid = $c->user->get_object->get_sp_person_id if $c->user;
-           
+            my $userid = $c->user->get_object->get_sp_person_id if $c->user;          
             $c->stash(template     => '/qtl/qtl_start/index.mas',                              
-                      pop          => CXGN::Phenome::Population->new($c->dbc->dbh, $id),                                
-                      referer      => $c->req->path,
-                      guideline    => $c->stash->{guideline},
+                      pop          => CXGN::Phenome::Population->new($c->dbc->dbh, $id), 
+                      referer      => $c->req->path,             
                       userid       => $userid,
                 );
             $self->_link($c);
@@ -61,12 +59,6 @@ sub view : PathPart('qtl/view') Chained Args(1) {
     elsif (!$id) {
         $c->throw_404("You must provide a valid population id argument");
     }
-}
-
-
-sub guideline {
-    my ($self, $c) = @_;
-    $c->stash(guideline => qq |<a  href="http://docs.google.com/View?id=dgvczrcd_1c479cgfb">Guidelines</a> |);
 }
 
 
@@ -271,10 +263,11 @@ sub _link {
     my $owner_name = $c->stash->{owner_name};
     my $owner_id   = $c->stash->{owner_id};
     
-    $c->stash( qtl_analysis_page => qq | <a href="/phenome/qtl_analysis.pl?population_id=$pop_id&amp;cvterm_id=$term_id" onclick="Qtl.waitPage();">$graph_icon</a> |,
-               cvterm_page  => qq |<a href="/chado/cvterm.pl?cvterm_id=$cvterm_id">$trait_name</a> |,
-               trait_page   => qq |<a href="/phenome/trait.pl?trait_id=$trait_id">$trait_name</a> |,
-               owner_page   => qq |<a href="/solpeople/personal-info.pl?sp_person_id=$owner_id">$owner_name</a> |,
+    $c->stash( cvterm_page       => qq |<a href="/chado/cvterm.pl?cvterm_id=$cvterm_id">$trait_name</a> |,
+               trait_page        => qq |<a href="/phenome/trait.pl?trait_id=$trait_id">$trait_name</a> |,
+               owner_page        => qq |<a href="/solpeople/personal-info.pl?sp_person_id=$owner_id">$owner_name</a> |,
+               guideline         => qq |<a  href="http://docs.google.com/View?id=dgvczrcd_1c479cgfb">Guidelines</a> |,
+               qtl_analysis_page => qq | <a href="/phenome/qtl_analysis.pl?population_id=$pop_id&amp;cvterm_id=$term_id" onclick="Qtl.waitPage();">$graph_icon</a> |,
         );
     
 }
