@@ -17,7 +17,7 @@ $show_data
 <& /util/import_javascript.mas, classes => [ "CXGN.Phenome.Qtl" ] &>
 
 <& /page/page_title.mas, 
-   title=>$pop->get_description 
+   title=>$pop->get_name 
 &>
 
 <&| /page/info_section.mas, 
