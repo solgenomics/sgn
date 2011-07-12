@@ -13,23 +13,24 @@ $show_data
 
 </%args>
 
-<%perl>
-
-my $pop_id    = $pop->get_population_id();
-my $name      = $pop->get_name();
-my $desc      = $pop->get_description();
-
-</%perl>
 
 <& /util/import_javascript.mas, classes => [ "CXGN.Phenome.Qtl" ] &>
 
-<& /page/page_title.mas, title=>"QTL for $name" &>
+<& /page/page_title.mas, 
+   title=>$pop->get_description 
+&>
 
 <&| /page/info_section.mas, 
   collapsible => 1, 
-  collapsed   => 1, 
-  title       => "Population details" 
-  &> 
+  collapsed   => 0, 
+  title       => "Population summary" 
+  &>
+ 
+  <& summary.mas,
+     pop        => $pop,
+     owner_page => $owner_page,
+  &>
+
 </&>
 
 % if ($show_data) 
@@ -40,7 +41,7 @@ my $desc      = $pop->get_description();
     title       => "Set Statistical Parameters"
   &>   
   <& stat_tools.mas, 
-    pop_id     => $pop_id, 
+    pop_id     => $pop->get_population_id, 
     guideline  => $guideline, 
     referer    => $referer, 
     userid     => $userid
