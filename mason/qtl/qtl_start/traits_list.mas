@@ -17,9 +17,9 @@ $traits_list
 </%args>
 
 <&| /page/info_section.mas, 
-  collapsible=>1, 
-  collapsed=>0, 
-  title => "Analyze QTLs" 
+  collapsible => 1, 
+  collapsed   => 1, 
+  title       => "Analyze QTLs" 
 &> 
 
 <& /page/columnar_table.mas,
