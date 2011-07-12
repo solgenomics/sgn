@@ -10,7 +10,6 @@ SGN::Controller::Qtl- controller for the qtl anlysis start page
 package SGN::Controller::Qtl;
 
 use Moose;
-
 use namespace::autoclean;
 
 
