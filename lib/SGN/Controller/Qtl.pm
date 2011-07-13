@@ -11,18 +11,14 @@ package SGN::Controller::Qtl;
 
 use Moose;
 use namespace::autoclean;
-
-
-BEGIN { extends 'Catalyst::Controller'}  
-
-
-
 use File::Spec::Functions;
 use File::Temp qw / tempfile /;
 use File::Path qw / mkpath  /;
 use File::Copy;
 use File::Basename;
+use File::Slurp;
 
+BEGIN { extends 'Catalyst::Controller'}  
 
 
 sub view : PathPart('qtl/view') Chained Args(1) {
@@ -47,7 +43,7 @@ sub view : PathPart('qtl/view') Chained Args(1) {
             $self->_link($c);
             $self->_show_data($c);           
             $self->_list_traits($c);   
-            $self->_correlation_output($c);                     
+            $self->_correlation_output($c);
         }
         else 
         {
@@ -58,6 +54,30 @@ sub view : PathPart('qtl/view') Chained Args(1) {
     elsif (!$id) {
         $c->throw_404("You must provide a valid population id argument");
     }
+}
+
+sub download_phenotype : PathPart('qtl/download/phenotype') Chained Args(1) {
+    my ($self, $c, $id) = @_;
+    my $pop = CXGN::Phenome::Population->new($c->dbc->dbh, $id);
+    my @pheno_data;
+    foreach ( read_file($pop->phenotype_file($c))) 
+    {
+       push @pheno_data, [ split(/,/) ];
+    }
+    $c->stash->{'csv'}={ data => \@pheno_data};
+    $c->forward("SGN::View::Download::CSV");
+}
+
+sub download_genotype : PathPart('qtl/download/genotype') Chained Args(1) {
+    my ($self, $c, $id) = @_;
+    my $pop = CXGN::Phenome::Population->new($c->dbc->dbh, $id);
+    my @geno_data;
+    foreach ( read_file($pop->genotype_file($c))) 
+    {
+       push @geno_data, [ split(/,/) ];
+    }
+    $c->stash->{'csv'}={ data    => \@geno_data};
+    $c->forward("SGN::View::Download::CSV");
 }
 
 
@@ -262,11 +282,13 @@ sub _link {
     my $owner_name = $c->stash->{owner_name};
     my $owner_id   = $c->stash->{owner_id};
     
-    $c->stash( cvterm_page       => qq |<a href="/chado/cvterm.pl?cvterm_id=$cvterm_id">$trait_name</a> |,
-               trait_page        => qq |<a href="/phenome/trait.pl?trait_id=$trait_id">$trait_name</a> |,
-               owner_page        => qq |<a href="/solpeople/personal-info.pl?sp_person_id=$owner_id">$owner_name</a> |,
-               guideline         => qq |<a  href="http://docs.google.com/View?id=dgvczrcd_1c479cgfb">Guidelines</a> |,
-               qtl_analysis_page => qq | <a href="/phenome/qtl_analysis.pl?population_id=$pop_id&amp;cvterm_id=$term_id" onclick="Qtl.waitPage();">$graph_icon</a> |,
+    $c->stash( cvterm_page        => qq |<a href="/chado/cvterm.pl?cvterm_id=$cvterm_id">$trait_name</a> |,
+               trait_page         => qq |<a href="/phenome/trait.pl?trait_id=$trait_id">$trait_name</a> |,
+               owner_page         => qq |<a href="/solpeople/personal-info.pl?sp_person_id=$owner_id">$owner_name</a> |,
+               guideline          => qq |<a href="http://docs.google.com/View?id=dgvczrcd_1c479cgfb">Guidelines</a> |,
+               phenotype_download => qq |<a href="/qtl/download/phenotype/$pop_id">Phenotype data</a> |,
+               genotype_download  => qq |<a href="/qtl/download/genotype/$pop_id">Genotype data</a> |,
+               qtl_analysis_page  => qq | <a href="/phenome/qtl_analysis.pl?population_id=$pop_id&amp;cvterm_id=$term_id" onclick="Qtl.waitPage();">$graph_icon</a> |,
         );
     
 }
