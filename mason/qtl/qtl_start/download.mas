@@ -1,0 +1,33 @@
+<%doc>
+
+=head1 NAME 
+qtl/qtl_form/stat_form.mas - a mason component for a QTL stat parameters 
+submission
+
+=AUTHOR
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$phenotype_download
+$genotype_download
+
+</%args>
+
+
+<&| /page/info_section.mas,
+    collapsible => 1, 
+    collapsed   => 1, 
+    title => 'Download',
+&>
+<% $phenotype_download %> | <% $genotype_download %>
+</&>
+    
+
+ 
+
+
