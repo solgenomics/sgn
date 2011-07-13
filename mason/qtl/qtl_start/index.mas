@@ -10,6 +10,8 @@ $traits_list
 $trait_acronym_pairs
 $owner_page
 $show_data
+$phenotype_download
+$genotype_download
 
 </%args>
 
@@ -58,6 +60,10 @@ $show_data
    corre_table_file    => $corre_table_file, 
    trait_acronym_pairs => $trait_acronym_pairs
  &>
+<& download.mas, 
+   phenotype_download => $phenotype_download,
+   genotype_download  => $genotype_download,
+&>
 %}
 % else
 %{
