@@ -15,6 +15,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 $phenotype_download
 $genotype_download
+$corre_download
 
 </%args>
 
@@ -24,7 +25,7 @@ $genotype_download
     collapsed   => 1, 
     title => 'Download',
 &>
-<% $phenotype_download %> | <% $genotype_download %>
+<% $phenotype_download %> | <% $genotype_download %> | <% $corre_download %>
 </&>
     
 
