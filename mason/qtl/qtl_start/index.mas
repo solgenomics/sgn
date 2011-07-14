@@ -12,6 +12,7 @@ $owner_page
 $show_data
 $phenotype_download
 $genotype_download
+$corre_download
 
 </%args>
 
@@ -63,6 +64,7 @@ $genotype_download
 <& download.mas, 
    phenotype_download => $phenotype_download,
    genotype_download  => $genotype_download,
+   corre_download     => $corre_download,
 &>
 %}
 % else
