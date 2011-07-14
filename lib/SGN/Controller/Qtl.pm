@@ -16,7 +16,7 @@ use File::Temp qw / tempfile /;
 use File::Path qw / mkpath  /;
 use File::Copy;
 use File::Basename;
-use File::Slurp;
+use File::Slurp qw / edit_file_lines read_file/;
 
 BEGIN { extends 'Catalyst::Controller'}  
 
@@ -70,13 +70,35 @@ sub download_phenotype : PathPart('qtl/download/phenotype') Chained Args(1) {
 
 sub download_genotype : PathPart('qtl/download/genotype') Chained Args(1) {
     my ($self, $c, $id) = @_;
-    my $pop = CXGN::Phenome::Population->new($c->dbc->dbh, $id);
+    my $pop = CXGN::Phenome::Population->new($c->dbc->dbh, $id);    
     my @geno_data;
+    
     foreach ( read_file($pop->genotype_file($c))) 
     {
        push @geno_data, [ split(/,/) ];
     }
     $c->stash->{'csv'}={ data    => \@geno_data};
+    $c->forward("SGN::View::Download::CSV");
+}
+
+sub download_correlation : PathPart('qtl/download/correlation') Chained Args(1) {
+    my ($self, $c, $id) = @_;
+
+    $c->stash(pop => CXGN::Phenome::Population->new($c->dbc->dbh, $id));
+  
+    $self->_correlation_output($c);
+   
+    my @corr_data;
+    my $count=1;
+    foreach ( read_file($c->stash->{corre_table_file}) )
+    {
+        if ($count == 1) { $_ = "Traits " . $_;}
+        s/\"//g; s/\s/,/g;
+        push @corr_data, [ split (/,/) ];
+        $count++;
+    }
+
+    $c->stash->{'csv'}={ data => \@corr_data };
     $c->forward("SGN::View::Download::CSV");
 }
 
@@ -150,12 +172,14 @@ sub _analyze_correlation : {
 
         copy( $heatmap_file, $corre_image_dir )
             or die "could not copy $heatmap_file to $corre_image_dir";
+         copy( $corre_table_file, $corre_file_dir )
+            or die "could not copy $corre_table_file to $corre_file_dir";
 
         $heatmap_file = fileparse($heatmap_file);
         $heatmap_file  = $c->generated_file_uri("correlation",  $heatmap_file);
-    
+        $corre_table_file = fileparse($corre_table_file);
         $c->stash( heatmap_file     => "../../../$heatmap_file", 
-                   corre_table_file => $corre_table_file
+                   corre_table_file => "$corre_file_dir/$corre_table_file"
             );  
     } 
 }
@@ -168,7 +192,9 @@ sub _correlation_output {
     my $key_t       = "table_" . $pop->get_population_id();   
     my $heatmap     = $cache->get($key_h);
     my $corre_table = $cache->get($key_t);
-  
+   # $cache->remove($key_h);
+   # $cache->remove($key_t);
+
     if  (!$corre_table  || !$heatmap) 
     {
         $self->_analyze_correlation($c);
@@ -288,6 +314,7 @@ sub _link {
                guideline          => qq |<a href="http://docs.google.com/View?id=dgvczrcd_1c479cgfb">Guidelines</a> |,
                phenotype_download => qq |<a href="/qtl/download/phenotype/$pop_id">Phenotype data</a> |,
                genotype_download  => qq |<a href="/qtl/download/genotype/$pop_id">Genotype data</a> |,
+               corre_download     => qq |<a href="/qtl/download/correlation/$pop_id">Correlation data</a> |,
                qtl_analysis_page  => qq | <a href="/phenome/qtl_analysis.pl?population_id=$pop_id&amp;cvterm_id=$term_id" onclick="Qtl.waitPage();">$graph_icon</a> |,
         );
     
