@@ -13,6 +13,7 @@ $show_data
 $phenotype_download
 $genotype_download
 $corre_download
+$acronym_download
 
 </%args>
 
@@ -65,6 +66,7 @@ $corre_download
    phenotype_download => $phenotype_download,
    genotype_download  => $genotype_download,
    corre_download     => $corre_download,
+   acronym_download   => $acronym_download,
 &>
 %}
 % else
