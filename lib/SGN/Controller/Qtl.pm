@@ -84,8 +84,7 @@ sub download_genotype : PathPart('qtl/download/genotype') Chained Args(1) {
 sub download_correlation : PathPart('qtl/download/correlation') Chained Args(1) {
     my ($self, $c, $id) = @_;
 
-    $c->stash(pop => CXGN::Phenome::Population->new($c->dbc->dbh, $id));
-  
+    $c->stash(pop => CXGN::Phenome::Population->new($c->dbc->dbh, $id)); 
     $self->_correlation_output($c);
    
     my @corr_data;
@@ -97,8 +96,14 @@ sub download_correlation : PathPart('qtl/download/correlation') Chained Args(1) 
         push @corr_data, [ split (/,/) ];
         $count++;
     }
-
     $c->stash->{'csv'}={ data => \@corr_data };
+    $c->forward("SGN::View::Download::CSV");
+}
+
+sub download_acronym : PathPart('qtl/download/acronym') Chained Args(1) {
+    my ($self, $c, $id) = @_;
+    my $pop = CXGN::Phenome::Population->new($c->dbc->dbh, $id);    
+    $c->stash->{'csv'}={ data => $pop->get_cvterm_acronyms};
     $c->forward("SGN::View::Download::CSV");
 }
 
@@ -315,6 +320,7 @@ sub _link {
                phenotype_download => qq |<a href="/qtl/download/phenotype/$pop_id">Phenotype data</a> |,
                genotype_download  => qq |<a href="/qtl/download/genotype/$pop_id">Genotype data</a> |,
                corre_download     => qq |<a href="/qtl/download/correlation/$pop_id">Correlation data</a> |,
+               acronym_download   => qq |<a href="/qtl/download/acronym/$pop_id">Trait-acronym key</a> |,
                qtl_analysis_page  => qq | <a href="/phenome/qtl_analysis.pl?population_id=$pop_id&amp;cvterm_id=$term_id" onclick="Qtl.waitPage();">$graph_icon</a> |,
         );
     
