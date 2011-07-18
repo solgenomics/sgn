@@ -28,7 +28,12 @@ $acronym_download
 &>
 <% $phenotype_download %> | 
 <% $genotype_download %> | 
-<% $corre_download %> | 
+
+% if ($corre_download) 
+%{
+ <% $corre_download %> |
+%}
+ 
 <% $acronym_download %>
 </&>
     
