@@ -16,7 +16,7 @@ use File::Temp qw / tempfile /;
 use File::Path qw / mkpath  /;
 use File::Copy;
 use File::Basename;
-use File::Slurp qw / edit_file_lines read_file/;
+use File::Slurp;
 
 BEGIN { extends 'Catalyst::Controller'}  
 
@@ -34,16 +34,23 @@ sub view : PathPart('qtl/view') Chained Args(1) {
         my $rs = $schema->resultset('Population')->find($id);                             
         if ($rs)  
         { 
-            my $userid = $c->user->get_object->get_sp_person_id if $c->user;          
-            $c->stash(template     => '/qtl/qtl_start/index.mas',                              
-                      pop          => CXGN::Phenome::Population->new($c->dbc->dbh, $id), 
-                      referer      => $c->req->path,             
-                      userid       => $userid,
-                );
-            $self->_link($c);
-            $self->_show_data($c);           
-            $self->_list_traits($c);   
-            $self->_correlation_output($c);
+            $self->_is_qtl_pop($c, $id);
+            if ( $c->stash->{is_qtl_pop} ) 
+            {
+                my $userid = $c->user->get_object->get_sp_person_id if $c->user;          
+                $c->stash(template     => '/qtl/qtl_start/index.mas',                              
+                          pop          => CXGN::Phenome::Population->new($c->dbc->dbh, $id), 
+                          referer      => $c->req->path,             
+                          userid       => $userid,
+                    );
+                $self->_link($c);
+                $self->_show_data($c);           
+                $self->_list_traits($c);   
+                $self->_correlation_output($c);
+            } else 
+            {
+                $c->throw_404("This not a QTL population");
+            }
         }
         else 
         {
@@ -283,19 +290,18 @@ sub _list_traits {
 
 
 sub _is_qtl_pop {
-    my ($self, $c) = @_;
+    my ($self, $c, $id) = @_;
     my $qtltool = CXGN::Phenome::Qtl::Tools->new();
     my @qtl_pops = $qtltool->has_qtl_data();
 
-    foreach my $qtl_pop (@qtl_pops)
+    foreach my $qtl_pop ( @qtl_pops )
     {
         my $pop_id = $qtl_pop->get_population_id();
-        if ($pop_id == $c->stash->{pop}->get_population_id())
+        if ($pop_id == $id)
         {
             $c->stash->{is_qtl_pop} = 1;
             last;
-        }
-       
+        }       
     }
 }
 
@@ -352,10 +358,14 @@ sub _show_data {
     
     if ($user_id) 
     {        
-        ($user_id == $owner_id || $user_type eq 'curator') ? $c->stash(show_data => 1) : $c->stash(show_data => undef);
+        ($user_id == $owner_id || $user_type eq 'curator') ? $c->stash(show_data => 1) 
+                  :                                          $c->stash(show_data => undef)
+                  ;
     } else
     { 
-        $is_public ?  $c->stash(show_data => 1) : $c->stash(show_data => undef);
+        $is_public ? $c->stash(show_data => 1) 
+            :        $c->stash(show_data => undef)
+            ;
     }
             
             
