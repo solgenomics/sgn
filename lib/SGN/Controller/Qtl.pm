@@ -17,6 +17,7 @@ use File::Path qw / mkpath  /;
 use File::Copy;
 use File::Basename;
 use File::Slurp;
+use List::Util qw / first /;
 
 BEGIN { extends 'Catalyst::Controller'}  
 
@@ -46,8 +47,21 @@ sub view : PathPart('qtl/view') Chained Args(1) {
                 $self->_link($c);
                 $self->_show_data($c);           
                 $self->_list_traits($c);   
-                $self->_correlation_output($c);
-            } else 
+                
+                if ( $id == 18 ) 
+                { 
+                    $c->stash(heatmap_file => undef,
+                              corre_table_file => undef,
+                        );
+                    $self->_get_trait_acronyms($c);
+                   
+                } 
+                else 
+                {
+                    $self->_correlation_output($c);
+                }
+            } 
+            else 
             {
                 $c->throw_404("This not a QTL population");
             }
@@ -58,7 +72,8 @@ sub view : PathPart('qtl/view') Chained Args(1) {
         }
 
     }
-    elsif (!$id) {
+    elsif (!$id) 
+    {
         $c->throw_404("You must provide a valid population id argument");
     }
 }
@@ -96,13 +111,15 @@ sub download_correlation : PathPart('qtl/download/correlation') Chained Args(1) 
    
     my @corr_data;
     my $count=1;
+    
     foreach ( read_file($c->stash->{corre_table_file}) )
     {
-        if ($count == 1) { $_ = "Traits " . $_;}
+        if ($count==1) { $_ = "Traits " . $_;}
         s/\"//g; s/\s/,/g;
         push @corr_data, [ split (/,/) ];
         $count++;
     }
+    
     $c->stash->{'csv'}={ data => \@corr_data };
     $c->forward("SGN::View::Download::CSV");
 }
