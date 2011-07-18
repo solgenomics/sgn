@@ -25,24 +25,37 @@ my $corre_image = qq | <img src="$heatmap_file"  alt="correlation output for $na
 
 </%perl>
 
-<&| /page/info_section.mas, 
-  collapsible =>1, 
-  collapsed   =>1, 
-  title       => "Pearson Correlation Analysis" &> 
+% if (!$heatmap_file) 
+%{
+  <&| /page/info_section.mas, 
+      collapsible =>1, 
+      collapsed   =>1, 
+      title       => "Pearson Correlation Analysis" &> 
+         <p>There is no correlation output for this population.</p>
+  </&>
+%}
+% else
+%{
+  <&| /page/info_section.mas, 
+      collapsible =>1, 
+      collapsed   =>1, 
+      title       => "Pearson Correlation Analysis" &> 
   <% $corre_image %> 
 
-<&| /page/optional_show.mas, title => "Acronyms key" &>
-<& /page/columnar_table.mas,
-   headings => ["Trait name", "Acronym"],
-   data=>$trait_acronym_pairs,
-   __alt_freq   =>2,
-   __alt_width  =>1,
-   __alt_offset =>3,
-   __align      =>'l'
-&>
-</&>
-</&>
-
+  <&| /page/optional_show.mas, 
+      title => "Acronyms key"
+  &>
+  <& /page/columnar_table.mas,
+     headings     => ["Trait name", "Acronym"],
+     data         => $trait_acronym_pairs,
+     __alt_freq   => 2,
+     __alt_width  => 1,
+     __alt_offset => 3,
+     __align      => 'l'
+  &>
+  </&>
+  </&>
+%}
 
 
 
