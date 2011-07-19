@@ -10,13 +10,23 @@
   <& /genomes/default/genome_builds.mas, %ARGS &>
 </&>
 
+
 <&| /page/info_section.mas,
-      title       => 'Annotation sets',
-      subtitle    => 'browsable sequences and annotations',
+      title       => 'Browsable annotations',
       collapsible => 1,
+      hide_if_empty => 1,
+ &>
+
+  <& /gbrowse/list_sources.mas, organism => $organism &>
+
+</&>
+
+<&| /page/info_section.mas,
+      title       => 'Annotation datasets',
+      collapsible => 1,
+      hide_if_empty => 1,
  &>
 
   <& /genomes/default/annotation_sets.mas, %ARGS &>
-  <& /gbrowse/list_sources.mas, organism => $organism &>
 
 </&>
