@@ -1,4 +1,11 @@
 package SGN::Controller::Genomes;
+
+=head1 NAME
+
+SGN::Controller::Genomes - controller for genome portal pages
+
+=cut
+
 use Moose;
 use namespace::autoclean;
 
@@ -7,6 +14,18 @@ use List::MoreUtils 'uniq';
 BEGIN{ extends 'Catalyst::Controller' }
 
 with 'Catalyst::Component::ApplicationAttribute';
+
+=head1 PUBLIC ACTIONS
+
+=head2 view_genome_data
+
+Public path: /organism/<organism id or name>/genome
+
+Queries for Biosource bs_sample records of type 'sequence_collection'
+or 'genome_annotation_set', and displays them with file download
+links.
+
+=cut
 
 sub view_genome_data : Chained('/organism/find_organism') PathPart('genome') {
     my ( $self, $c ) = @_;
