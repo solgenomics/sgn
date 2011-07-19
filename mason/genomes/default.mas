@@ -4,7 +4,7 @@
 <& /page/page_title.mas, title => '<i>'.$organism->species.'</i> Genome Data' &>
 
 <&| /page/info_section.mas,
-      title       => 'Genome releases',
+      title       => 'Genomic datasets',
       collapsible => 1,
  &>
   <& /genomes/default/genome_builds.mas, %ARGS &>

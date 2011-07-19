@@ -7,14 +7,36 @@
 
 % if( @$assembly_list ) {
     <div style="margin: 1em 0">
-          <% columnar_table_html(
-                  __align  => 'cllcc',
-                  headings => [qw[ Release Date Description Annotation Download ]],
-                  data     => $assembly_display,
-             )
-          %>
+%       for my $a (@$assembly_list) {
+            <&| /page/info_section.mas,
+                is_subsection => 1,
+                title         => $a->[0],
+                subtitle      => $a->[1] && $a->[1]->ymd('-'),
+             &>
+                <&| /page/info_table.mas, border => 0,
+                 &>
+                   Description
+                   -----
+                   <% $a->[2] |h %>
+                   -----
+%                  if( $a->[3] && @{$a->[3]} ) {
+                     Annotated by
+                     -----
+                     <% join ' ', map $_->sample_name, @{$a->[3]} | h %>
+                     -----
+%                  }
+%                  if( $a->[4] && @{$a->[4]} ) {
+                     Files
+                     -----
+                     <% join '<br />', map $m->scomp('.dl_link', link => $_ ), @{$a->[4]} %>
+                     ----
+%                  }
+                </&>
+
+            </&>
+%       }
     </div>
-    <&| /page/info_table.mas, border => 0 &>
+    <&| /page/info_table.mas, border => 1 &>
 
     Assembly issues
 
@@ -26,7 +48,7 @@
 
       <ul>
         <li>
-          <a href="mailto:<% $c->get_conf('feedback_email') %>?subject=<% $organism->species %> genome assembly issue">email us</a>
+          <a href="mailto:<% $c->get_conf('feedback_email') %>?subject=<% $organism->species    %> genome assembly issue">email us</a>
         </li>
 %       if( $bug_tracker_url ) {
         <li>
@@ -37,20 +59,6 @@
 
     </&>
 % }
-<%init>
-  use CXGN::Page::FormattingHelpers qw | columnar_table_html |;
-
-  # transform our assembly list a little for formatting
-  my $assembly_display = [ map [@$_], @$assembly_list ];
-  for my $a ( @$assembly_display ) {
-    $a->[0] &&= "<b>$a->[0]</b>";
-    $a->[1] &&= $_->[1]->ymd('-');
-    $a->[3] &&= join ' ', map $_->sample_name, @{$a->[3]};
-    $a->[4] &&= join ' ', map $m->scomp('.dl_link', link => $_ ), @{$a->[4]};
-    $_ ||= '-' for @$a;
-  }
-
-</%init>
 
 <%def .dl_link>
 <%args>
