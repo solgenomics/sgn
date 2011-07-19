@@ -10,25 +10,25 @@
 %       for my $a (@$assembly_list) {
             <&| /page/info_section.mas,
                 is_subsection => 1,
-                title         => $a->[0],
-                subtitle      => $a->[1] && $a->[1]->ymd('-'),
+                title         => $a->{name},
+                subtitle      => $a->{date} && $a->{date}->ymd('-'),
              &>
                 <&| /page/info_table.mas, border => 0,
                  &>
                    Description
                    -----
-                   <% $a->[2] |h %>
+                   <% $a->{description} |h %>
                    -----
-%                  if( $a->[3] && @{$a->[3]} ) {
+%                  if( $a->{annotation_sets} && @{$a->{annotation_sets}} ) {
                      Annotated by
                      -----
-                     <% join ' ', map $_->sample_name, @{$a->[3]} | h %>
+                     <% join ' ', map $_->sample_name, @{$a->{annotation_sets}} | h %>
                      -----
 %                  }
-%                  if( $a->[4] && @{$a->[4]} ) {
+%                  if( $a->{files} && @{$a->{files}} ) {
                      Files
                      -----
-                     <% join '<br />', map $m->scomp('.dl_link', link => $_ ), @{$a->[4]} %>
+                     <% join '<br />', map $m->scomp('.dl_link', link => $_ ), @{$a->{files}} %>
                      ----
 %                  }
                 </&>

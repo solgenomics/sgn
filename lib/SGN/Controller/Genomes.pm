@@ -23,18 +23,18 @@ sub view_genome_data : Chained('/organism/find_organism') PathPart('genome') {
     $c->stash->{assembly_list} = [
         map {
             my $bs_sample = $_;
-            [
-                $bs_sample->sample_name,
-                $bs_sample->metadata ? $bs_sample->metadata->create_date : undef,
-                $bs_sample->description,
-                [ $self->assembly_annotations( $bs_sample ) ],
+            { name =>  $bs_sample->sample_name,
+              date => $bs_sample->metadata ? $bs_sample->metadata->create_date : undef,
+              description => $bs_sample->description,
+              annotation_sets => [ $self->assembly_annotations( $bs_sample ) ],
+              files =>
                 [ map +{ text    => $_->basename,
                          url     => '/metadata/file/'.$_->file_id.'/download',
                          tooltip => $_->comment,
                        },
                   $self->assembly_files( $bs_sample )
                 ],
-            ],
+            },
         } $self->assemblies_for_organism( $organism )->all
       ];
 
