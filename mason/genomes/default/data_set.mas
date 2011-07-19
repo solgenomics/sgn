@@ -1,0 +1,37 @@
+<%args>
+  $a
+</%args>
+
+            <&| /page/info_section.mas,
+                is_subsection => 1,
+                title         => $a->{name},
+                subtitle      => $a->{date} && $a->{date}->ymd('-'),
+             &>
+                <&| /page/info_table.mas, border => 0,
+                 &>
+                   Description
+                   -----
+                   <% $a->{description} |h %>
+                   -----
+%                  if( $a->{annotation_sets} && @{$a->{annotation_sets}} ) {
+                     Annotated by
+                     -----
+                     <% join ' ', map $_->sample_name, @{$a->{annotation_sets}} | h %>
+                     -----
+%                  }
+%                  if( $a->{files} && @{$a->{files}} ) {
+                     Files
+                     -----
+                     <% join '<br />', map $m->scomp('.dl_link', link => $_ ), @{$a->{files}} %>
+                     ----
+%                  }
+                </&>
+
+            </&>
+
+<%def .dl_link>
+<%args>
+$link
+</%args>
+<a title="<% $link->{tooltip}|h%>" href="<% $link->{url} |h%>"><% $link->{text} |h%></a>
+</%def>

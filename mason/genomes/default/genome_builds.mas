@@ -8,32 +8,7 @@
 % if( @$assembly_list ) {
     <div style="margin: 1em 0">
 %       for my $a (@$assembly_list) {
-            <&| /page/info_section.mas,
-                is_subsection => 1,
-                title         => $a->{name},
-                subtitle      => $a->{date} && $a->{date}->ymd('-'),
-             &>
-                <&| /page/info_table.mas, border => 0,
-                 &>
-                   Description
-                   -----
-                   <% $a->{description} |h %>
-                   -----
-%                  if( $a->{annotation_sets} && @{$a->{annotation_sets}} ) {
-                     Annotated by
-                     -----
-                     <% join ' ', map $_->sample_name, @{$a->{annotation_sets}} | h %>
-                     -----
-%                  }
-%                  if( $a->{files} && @{$a->{files}} ) {
-                     Files
-                     -----
-                     <% join '<br />', map $m->scomp('.dl_link', link => $_ ), @{$a->{files}} %>
-                     ----
-%                  }
-                </&>
-
-            </&>
+        <& /genomes/default/data_set.mas, a => $a &>
 %       }
     </div>
     <&| /page/info_table.mas, border => 1 &>
@@ -60,9 +35,3 @@
     </&>
 % }
 
-<%def .dl_link>
-<%args>
-$link
-</%args>
-<a title="<% $link->{tooltip}|h%>" href="<% $link->{url} |h%>"><% $link->{text} |h%></a>
-</%def>

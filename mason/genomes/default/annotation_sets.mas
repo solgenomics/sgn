@@ -1,0 +1,13 @@
+<%args>
+  $organism
+  $annotation_list
+</%args>
+
+% if( @$annotation_list ) {
+    <div style="margin: 1em 0">
+%       for my $a (@$annotation_list) {
+        <& /genomes/default/data_set.mas, a => $a &>
+%       }
+    </div>
+% }
+

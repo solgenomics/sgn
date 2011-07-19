@@ -16,6 +16,7 @@
       collapsible => 1,
  &>
 
+  <& /genomes/default/annotation_sets.mas, %ARGS &>
   <& /gbrowse/list_sources.mas, organism => $organism &>
 
 </&>
