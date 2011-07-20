@@ -17,7 +17,6 @@ use File::Path qw / mkpath  /;
 use File::Copy;
 use File::Basename;
 use File::Slurp;
-use List::Util qw / first /;
 
 BEGIN { extends 'Catalyst::Controller'}  
 
@@ -344,7 +343,7 @@ sub _link {
                genotype_download  => qq |<a href="/qtl/download/genotype/$pop_id">Genotype data</a> |,
                corre_download     => qq |<a href="/qtl/download/correlation/$pop_id">Correlation data</a> |,
                acronym_download   => qq |<a href="/qtl/download/acronym/$pop_id">Trait-acronym key</a> |,
-               qtl_analysis_page  => qq | <a href="/phenome/qtl_analysis.pl?population_id=$pop_id&amp;cvterm_id=$term_id" onclick="Qtl.waitPage();">$graph_icon</a> |,
+               qtl_analysis_page  => qq |<a href="/phenome/qtl_analysis.pl?population_id=$pop_id&amp;cvterm_id=$term_id" onclick="Qtl.waitPage();">$graph_icon</a> |,
         );
     
 }
