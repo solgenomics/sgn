@@ -22,16 +22,15 @@
 %                  if( $a->{files} && @{$a->{files}} ) {
                      Files
                      -----
-                     <% join '<br />', map $m->scomp('.dl_link', link => $_ ), @{$a->{files}} %>
+                     <dl>
+%                    for my $link (@{$a->{files}}) {
+                         <dt><a href="<% $link->{url} |h%>"><% $link->{text} |h%></a></dt>
+                         <dd><% $link->{description} |h%> </dd>
+%                    }
+                     </dl>
+
                      ----
 %                  }
                 </&>
 
             </&>
-
-<%def .dl_link>
-<%args>
-$link
-</%args>
-<a title="<% $link->{tooltip}|h%>" href="<% $link->{url} |h%>"><% $link->{text} |h%></a>
-</%def>

@@ -88,9 +88,9 @@ sub _bs_sample_to_display_hashref {
         date => $bs_sample->metadata ? $bs_sample->metadata->create_date : undef,
         description => $bs_sample->description,
         files => [
-            map +{ text    => $_->basename,
-                   url     => '/metadata/file/'.$_->file_id.'/download',
-                   tooltip => $_->comment,
+            map +{ text        => $_->basename,
+                   url         => '/metadata/file/'.$_->file_id.'/download',
+                   description => $_->comment,
                  },
             $self->assembly_files( $bs_sample )
          ],
