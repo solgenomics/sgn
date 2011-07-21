@@ -16,11 +16,12 @@ $corre_download
 $acronym_download
 
 </%args>
-<%perl>
-if (!$heatmap_file) { $corre_download=undef;}
-</%perl>
 
-<& /util/import_javascript.mas, classes => [ "CXGN.Phenome.Qtl" ] &>
+<%perl>
+
+if (!$heatmap_file) { $corre_download=undef;}
+
+</%perl>
 
 <& /page/page_title.mas, 
    title=>$pop->get_name 
