@@ -113,12 +113,6 @@ $results_html .= columnar_table_html(
 EOH
 
 
-#sprintf(
-#	    '<span class="paginate_summary">%s matches </span>',
-#            $result->total_results, $result->time
-#        ),
-
-
 if (@results)
 {
     print blue_section_html(
