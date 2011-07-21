@@ -20,6 +20,7 @@ use File::Slurp;
 
 BEGIN { extends 'Catalyst::Controller'}  
 
+no warnings 'uninitialized';
 
 sub view : PathPart('qtl/view') Chained Args(1) {
     my ( $self, $c, $id) = @_;
@@ -335,6 +336,7 @@ sub _link {
     my $owner_name = $c->stash->{owner_name};
     my $owner_id   = $c->stash->{owner_id};
     
+   
     $c->stash( cvterm_page        => qq |<a href="/chado/cvterm.pl?cvterm_id=$cvterm_id">$trait_name</a> |,
                trait_page         => qq |<a href="/phenome/trait.pl?trait_id=$trait_id">$trait_name</a> |,
                owner_page         => qq |<a href="/solpeople/personal-info.pl?sp_person_id=$owner_id">$owner_name</a> |,
