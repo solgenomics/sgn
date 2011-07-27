@@ -1,7 +1,7 @@
 <%doc>
 
 =head1 NAME 
-qtl/qtl_form/trait_form.mas - a mason component for a traits file submission
+qtl/qtl_form/stat_tools.mas - a mason component for the stat parameters interface
 
 =AUTHOR
 Isaak Y Tecle (iyt2@cornell.edu)
