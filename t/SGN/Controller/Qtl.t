@@ -21,10 +21,10 @@ $mech->content_contains("Set Statistical Parameters", "there is statistical para
 $mech->content_contains("Analyze QTLs", "there is list of traits section");
 $mech->content_contains("Pearson Correlation", "there is correlation section");
 $mech->content_contains("Download", "there is data download section");
+$mech->content_contains("Set your own QTL analysis parameters", "interactive statistics interface loaded");
 
-
-
-
+ok($mech->find_image(alt_regex => qr/correlation/i ), "Got correlation heatmap");    
+$mech->content_contains("Acronyms key", "Got trait acronyms key");
 
 $mech->with_test_level( process => sub {
       my ($res, $c) = ctx_request("qtl/view/12");     
