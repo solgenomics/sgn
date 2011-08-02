@@ -1,0 +1,11 @@
+#include sanger_tomato_fpc.conf
+
+[GENERAL]
+examples = ctg11 SL_MboI0006E20 T0513
+
+[main:database]
+db_adaptor     = Bio::DB::GFF
+db_args        = -adaptor berkeleydb
+                 -dsn '/data/prod/public/physical_mapping/fpc/SGN_2011/gbrowse/curr'
+search options = default
+

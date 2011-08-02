@@ -222,12 +222,19 @@ description  = Tomato Preliminary BAC Annotations (SGN)
 organism     = Solanum lycopersicum
 extended_description = Preliminary automatic annotations on tomato BACs, no manual validation.
 
+[fpc_tomato_sgn_2011]
+path         = fpc_tomato_sgn_2011.conf
+description  = Tomato FPC (SGN 2011)
+organism     = Solanum lycopersicum
+restrict_xrefs = sub { my ($q) = @_; my $r = ref $q; return $r && $r eq 'HASH' || $q =~ /^(SGN-M|LE|SL|C\d\d)/  }
+extended_description = <p>This map shows the contig positions of the SGN2011 physical map constructed at the Arizona Genome Institute in early 2011. The marker positions shown are from the latest <a href="/cview/map.pl?map_id=9">EXPEN2000 map</a>.</p>  <p>This physical map contains clones from the HindIII, EcoRI, MboI and sheared BAC libraries.</p>
+
 [fpc_tomato_sgn_2009]
 path         = fpc_tomato_sgn_2009.conf
 description  = Tomato FPC (SGN 2009)
 organism     = Solanum lycopersicum
 restrict_xrefs = sub { my ($q) = @_; my $r = ref $q; return $r && $r eq 'HASH' || $q =~ /^(SGN-M|LE|SL|C\d\d)/  }
-extended_description = <p>This map shows the contig positions of the SGN2009 physical map constructed at the Arizona Genome Institute in late 2009. The marker positions shown are from the latest <a href="/cview/map.pl?map_id=9">EXPEN2000 map</a>.</p>  <p>This physical map contains clones from the HindIII, EcoRI, MboI and sheared BAC library.</p>
+extended_description = <p>This map shows the contig positions of the SGN2009 physical map constructed at the Arizona Genome Institute in late 2009. The marker positions shown are from the latest <a href="/cview/map.pl?map_id=9">EXPEN2000 map</a>.</p>  <p>This physical map contains clones from the HindIII, EcoRI, MboI and sheared BAC libraries.</p>
 
 [sanger_tomato_fpc]
 path         = sanger_tomato_fpc.conf
