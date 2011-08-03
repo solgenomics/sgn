@@ -697,7 +697,7 @@ sub qtl_plot
     my $permu_data  = $self->permu_file();   
     my $stat_option = $self->qtl_stat_option();
 
-    unless ( $qtl_image && -s $permu_data && $stat_option=~/default/)
+    unless ( $qtl_image && -s $permu_data > 1 && $stat_option=~/default/)
     {	   
         my ( $qtl_summary, $peak_markers_file ) = $self->run_r();
 
@@ -1202,9 +1202,6 @@ sub run_r
         Carp::confess $err;
     };
 
-#    copy( $prod_permu_file, $tempimages_path )
-#      or die "could not copy '$prod_permu_file' to '$tempimages_path'";
-
     return $qtl_summary, $peak_markers;
 
 }
@@ -1419,9 +1416,11 @@ sub stat_files
     my $pop_id = $self->get_object_id();
     my $pop    = $self->get_object();
     my $user_id;
-    if ($c->user) {
+    if ($c->user) 
+    {
         $user_id = $c->user->get_object->get_sp_person_id;
-    } else {
+    } else 
+    {
         $user_id = $pop->get_sp_person_id();
     }
 
@@ -1453,8 +1452,6 @@ sub stat_files
         $stat_files .= $stat_file . "\t";
 
     }
-
-
 
     my $stat_param_files =
       $prod_temp_path . "/" . "stat_temp_files_pop_id_${pop_id}";
@@ -1584,7 +1581,7 @@ sub legend {
     }
 
     
-my $permu_threshold_ref = $self->permu_values();
+    my $permu_threshold_ref = $self->permu_values();
     my %permu_threshold     = %$permu_threshold_ref;
 
     my @keys;
@@ -1709,7 +1706,7 @@ sub qtl_effects {
 
     my $file = $pop->qtl_effects_file($c, $trait_name);
     
-    if ( -s $file ) 
+    if ( -s $file > 1 ) 
     {
        
         my @effects =  map  { [ split( /\t/, $_) ]}  read_file( $file );
@@ -1738,7 +1735,7 @@ sub explained_variation {
 
     my $file = $pop->explained_variation_file($c, $trait_name);
     
-    if ( -s $file ) 
+    if ( -s $file > 1 ) 
     {
         my @anova =  map  { [ split( /\t/, $_) ]}  read_file( $file );
         $anova[0][0] = "Source";
