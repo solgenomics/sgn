@@ -213,8 +213,10 @@ permuproblevel<-scan(permuproblevelfile,
                      dec = ".",
                      sep="\n"
                      )
-
-permuproblevel<-as.numeric(permuproblevel)
+#if (is.null(permuproblevel) == FALSE)
+#{
+  permuproblevel<-as.numeric(permuproblevel)
+#}
 
 
 #########
@@ -337,7 +339,9 @@ permuvalues<-scan(file=permufile,
 
 permuvalue1<-permuvalues[1]
 permuvalue2<-permuvalues[2]
-if ((is.logical(permuvalue1) == FALSE))
+permu<-c()
+
+if (is.logical(permuvalue1) == FALSE)
 {
   if (qtlmodel == "scanone")
     {
@@ -361,7 +365,7 @@ if ((is.logical(permuvalue1) == FALSE))
       
         permu<-summary(popdataperm,
                        alpha=permuproblevel
-                       )     
+                       )
     }
   }else
   if (qtlmethod != "mr")
@@ -394,7 +398,12 @@ if ((is.logical(permuvalue1) == FALSE))
 }
 
 ##########QTL EFFECTS - I ##############
-LodThreshold<-permu[1,1]
+LodThreshold<-c()
+
+if(is.null(permu) == FALSE)
+{
+  LodThreshold<-permu[1,1]
+}
 ##########QTL EFFECTS ##############
 
 chrlist<-c("chr1")
@@ -474,23 +483,24 @@ for (i in chrdata)
   p<-position[["pos"]]
   LodScore<-position[["lod"]]
   QtlChr<-levels(position[["chr"]])
-
-if (LodScore >=LodThreshold) {
-  QtlChrs<-append(QtlChrs,
-                  QtlChr
-                  )
   
-  QtlLods<-append(QtlLods,
-                  LodScore
-                  )
-  
-  QtlPositions<-append(QtlPositions,
-                       round(p,
-                             0
-                             )
-                       )
-}
-  
+  if ( is.null(LodThreshold)==FALSE )
+    {
+      if (LodScore >=LodThreshold )
+        {
+          QtlChrs<-append(QtlChrs,
+                          QtlChr
+                          ) 
+          QtlLods<-append(QtlLods,
+                          LodScore
+                          )  
+          QtlPositions<-append(QtlPositions,
+                               round(p,
+                                     0
+                                     )
+                               )
+        }
+    }
   
   peakmarker<-find.marker(popdata,
                           chr=chrno,
@@ -541,72 +551,80 @@ chrno<-chrno + 1;
 }
 
 ##########QTL EFFECTS ##############
-if ( max(QtlLods) >= LodScore )
-{
-  QtlObj<-makeqtl(popdata,
-                QtlChrs,
-                QtlPositions,
-                what="prob"
-                )
-  
-  QtlsNo<-length(QtlPositions)
-  Eq<-c("y~")
+ResultFull<-c()
+ResultDrop<-c()
+Effects<-c()
 
-  for (i in 1:QtlsNo) {
-    q<-paste("Q",
-             i,
-             sep=""
-             )
+if (is.null(LodThreshold) == FALSE)
+    {
+      if ( max(QtlLods) >= LodScore )
+        {
+          QtlObj<-makeqtl(popdata,
+                          QtlChrs,
+                          QtlPositions,
+                          what="prob"
+                          )
   
-    if (i==1) {  
-      Eq<-paste(Eq, q, sep="")
-      
-    }else
-    if (i>1) {
-      Eq<-paste(Eq, q, sep="*")
-     
-    }
-  }
+          QtlsNo<-length(QtlPositions)
+          Eq<-c("y~")
 
-  QtlEffects<-fitqtl(popdata,
-                     pheno.col=cv,
-                     QtlObj,
-                     formula=Eq,
-                     method="hk",                   
-                     get.ests=TRUE
+          for (i in 1:QtlsNo)
+            {
+            q<-paste("Q",
+                     i,
+                     sep=""
                      )
-  ResultModel<-attr(QtlEffects,
-                    "formula"
-                    )
+  
+            if (i==1)
+              {  
+                Eq<-paste(Eq, q, sep="")      
+              }
+            else
+              if (i>1)
+                {
+                  Eq<-paste(Eq, q, sep="*")    
+                }
+          }
+
+          QtlEffects<-fitqtl(popdata,
+                             pheno.col=cv,
+                             QtlObj,
+                             formula=Eq,
+                             method="hk",                   
+                             get.ests=TRUE
+                             )
+          ResultModel<-attr(QtlEffects,
+                            "formula"
+                            )
  
-  Effects<-QtlEffects$ests$ests
-  QtlLodAnova<-QtlEffects$lod
-  ResultFull<-QtlEffects$result.full  
-  ResultDrop<-QtlEffects$result.drop
+          Effects<-QtlEffects$ests$ests
+          QtlLodAnova<-QtlEffects$lod
+          ResultFull<-QtlEffects$result.full  
+          ResultDrop<-QtlEffects$result.drop
 
-  if (is.numeric(Effects))
-    {
-      Effects<-round(Effects,
-                        2
-                        )
+          if (is.numeric(Effects))
+            {
+              Effects<-round(Effects,
+                             2
+                             )
+            }
+
+
+          if (is.numeric(ResultFull))
+            {
+              ResultFull<-round(ResultFull,
+                                2
+                                )
+            }
+
+          if (is.numeric(ResultDrop))
+            {
+              ResultDrop<-round(ResultDrop,
+                                2
+                                )
+            }
+        }
     }
-
-
-  if (is.numeric(ResultFull))
-    {
-      ResultFull<-round(ResultFull,
-                        2
-                        )
-    }
-
-  if (is.numeric(ResultDrop))
-    {
-      ResultDrop<-round(ResultDrop,
-                        2
-                        )
-    }
-}
-
 ##########creating vectors for the outfiles##############
 
 outfiles<-scan(file=outfile,
@@ -692,8 +710,6 @@ if (is.null(ResultDrop)==FALSE)
               )
 }
 
-if (is.null(Effects)==FALSE)
-  {
     write.table(Effects,
                 file=QtlEffectsFile,
                 sep="\t",
@@ -701,12 +717,7 @@ if (is.null(Effects)==FALSE)
                 quote=FALSE,
                 append=FALSE
                 )
-  }
 
-if (userpermuvalue != 0)
-{
-  if ((is.logical(permuvalue1) == FALSE))
-    {
     write.table(permu,
                 file=permufile,
                 sep="\t",
@@ -714,8 +725,5 @@ if (userpermuvalue != 0)
                 quote=FALSE,
                 append=FALSE
                 )
-  }
-}
-
 
 q(runLast = FALSE)
