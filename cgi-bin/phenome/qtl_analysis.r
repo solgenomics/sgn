@@ -59,7 +59,7 @@ qtlmethod<-scan(qtlmethodfile,
                 what="character",
                 sep="\n"
                 )
-#print(qtlmethod)
+
 if (qtlmethod == "Maximum Likelihood")
 {
   qtlmethod<-c("em")
@@ -138,10 +138,16 @@ stepsize<-scan(stepsizefile,
                sep="\n"
                )
 
+if (is.logical(stepsize) == FALSE)
+{
+  stepsize<-c('zero')
+}
+
 if (stepsize == "zero")
 {
   stepsize<-c(0)
 }
+
 stepsize<-as.numeric(stepsize)
 
 ######genotype calculation method############
@@ -197,8 +203,19 @@ genoproblevel<-scan(genoproblevelfile,
                     sep="\n"
                     )
 
-genoproblevel<-as.numeric(genoproblevel)
 
+if (qtlmethod == 'mr')
+  {
+    if (is.logical(genoproblevel) == FALSE)
+      {
+        genoproblevel<-c(0)
+      }
+    
+    if (is.logical(genoprobmethod) ==FALSE)
+      {
+        genoprobmethod<-c('Calculate')
+      }
+  }
 
 ########significance level for permutation test
 permuproblevelfile<-grep("stat_permu_level",
@@ -213,11 +230,7 @@ permuproblevel<-scan(permuproblevelfile,
                      dec = ".",
                      sep="\n"
                      )
-#if (is.null(permuproblevel) == FALSE)
-#{
-  permuproblevel<-as.numeric(permuproblevel)
-#}
-
+permuproblevel<-as.numeric(permuproblevel)
 
 #########
 infile<-scan(file=infile,
@@ -302,8 +315,8 @@ if (cross == "bc")
 }  
 
 
-if (qtlmethod != "mr")
-{
+#if (qtlmethod != "mr")
+#{
   if (genoprobmethod == "Calculate")
     {
     popdata<-calc.genoprob(popdata,
@@ -322,7 +335,7 @@ if (qtlmethod != "mr")
                           stepwidth="fixed"
                           ) 
   }
-}
+#}
 
 
 cvterm<-scan(file=cvtermfile,
@@ -483,24 +496,25 @@ for (i in chrdata)
   p<-position[["pos"]]
   LodScore<-position[["lod"]]
   QtlChr<-levels(position[["chr"]])
-  
-  if ( is.null(LodThreshold)==FALSE )
-    {
-      if (LodScore >=LodThreshold )
+
+      if ( is.null(LodThreshold)==FALSE )
         {
-          QtlChrs<-append(QtlChrs,
-                          QtlChr
-                          ) 
-          QtlLods<-append(QtlLods,
-                          LodScore
-                          )  
-          QtlPositions<-append(QtlPositions,
-                               round(p,
-                                     0
-                                     )
-                               )
+          if (LodScore >=LodThreshold )
+            {
+              QtlChrs<-append(QtlChrs,
+                              QtlChr
+                              ) 
+              QtlLods<-append(QtlLods,
+                              LodScore
+                              )  
+              QtlPositions<-append(QtlPositions,
+                                   round(p,
+                                         0
+                                         )
+                                   )
+            }
         }
-    }
+    
   
   peakmarker<-find.marker(popdata,
                           chr=chrno,
@@ -555,76 +569,76 @@ ResultFull<-c()
 ResultDrop<-c()
 Effects<-c()
 
-if (is.null(LodThreshold) == FALSE)
-    {
-      if ( max(QtlLods) >= LodScore )
-        {
-          QtlObj<-makeqtl(popdata,
-                          QtlChrs,
-                          QtlPositions,
-                          what="prob"
-                          )
-  
-          QtlsNo<-length(QtlPositions)
-          Eq<-c("y~")
-
-          for (i in 1:QtlsNo)
-            {
-            q<-paste("Q",
-                     i,
-                     sep=""
-                     )
-  
-            if (i==1)
-              {  
-                Eq<-paste(Eq, q, sep="")      
-              }
-            else
-              if (i>1)
-                {
-                  Eq<-paste(Eq, q, sep="*")    
-                }
-          }
-
-          QtlEffects<-fitqtl(popdata,
-                             pheno.col=cv,
-                             QtlObj,
-                             formula=Eq,
-                             method="hk",                   
-                             get.ests=TRUE
-                             )
-          ResultModel<-attr(QtlEffects,
-                            "formula"
+    if (is.null(LodThreshold) == FALSE)
+      {
+        if ( max(QtlLods) >= LodScore )
+          {
+            QtlObj<-makeqtl(popdata,
+                            QtlChrs,
+                            QtlPositions,
+                            what="prob"
                             )
+  
+            QtlsNo<-length(QtlPositions)
+            Eq<-c("y~")
+
+            for (i in 1:QtlsNo)
+              {
+                q<-paste("Q",
+                         i,
+                         sep=""
+                         )
+  
+                if (i==1)
+                  {  
+                    Eq<-paste(Eq, q, sep="")      
+                  }
+                else
+                  if (i>1)
+                    {
+                      Eq<-paste(Eq, q, sep="*")    
+                    }
+              }
+
+            QtlEffects<-fitqtl(popdata,
+                               pheno.col=cv,
+                               QtlObj,
+                               formula=Eq,
+                               method="hk",                   
+                               get.ests=TRUE
+                               )
+            ResultModel<-attr(QtlEffects,
+                              "formula"
+                              )
  
-          Effects<-QtlEffects$ests$ests
-          QtlLodAnova<-QtlEffects$lod
-          ResultFull<-QtlEffects$result.full  
-          ResultDrop<-QtlEffects$result.drop
+            Effects<-QtlEffects$ests$ests
+            QtlLodAnova<-QtlEffects$lod
+            ResultFull<-QtlEffects$result.full  
+            ResultDrop<-QtlEffects$result.drop
 
-          if (is.numeric(Effects))
-            {
-              Effects<-round(Effects,
-                             2
-                             )
-            }
+            if (is.numeric(Effects))
+              {
+                Effects<-round(Effects,
+                               2
+                               )
+              }
 
+            if (is.numeric(ResultFull))
+              {
+                ResultFull<-round(ResultFull,
+                                  2
+                                  )
+              }
 
-          if (is.numeric(ResultFull))
-            {
-              ResultFull<-round(ResultFull,
-                                2
-                                )
-            }
+            if (is.numeric(ResultDrop))
+              {
+                ResultDrop<-round(ResultDrop,
+                                  2
+                                  )
+              }
+          }
+      }
 
-          if (is.numeric(ResultDrop))
-            {
-              ResultDrop<-round(ResultDrop,
-                                2
-                                )
-            }
-        }
-    }
 ##########creating vectors for the outfiles##############
 
 outfiles<-scan(file=outfile,
