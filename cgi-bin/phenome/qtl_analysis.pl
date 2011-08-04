@@ -751,17 +751,18 @@ sub qtl_plot
 
 		my $permu_threshold_ref = $self->permu_values();
 		my %permu_threshold     = %$permu_threshold_ref;
-		my @p_keys;
-		foreach my $key ( keys %permu_threshold )
+		my @p_keys;		
+                foreach my $key ( keys %permu_threshold )
 		{
 		    if ( $key =~ m/^\d./ )
 		    {
 			push @p_keys, $key;
+                         print STDERR "\n\npermu key: $key\n\n";
 		    }
 
 		}
-		my $lod1 = $permu_threshold{ $p_keys[0] };
-		
+		my $lod1 = $permu_threshold{$p_keys[0]};
+                print STDERR "\n\npermu: $lod1\n\n";
 		$h_marker = 
 		    qq |/phenome/qtl.pl?population_id=$pop_id&amp;term_id=$term_id&amp;chr=$lg&amp;peak_marker=$p_m&amp;lod=$lod1|;
 
@@ -1536,7 +1537,7 @@ sub legend {
     my $qtl       = CXGN::Phenome::Qtl->new($user_id);
     my $stat_file = $qtl->get_stat_file($c, $pop->get_population_id());
     my @stat;
-    my $ci= 1;
+    my $ci=1;
 
     open my $sf, "<", $stat_file or die "$! reading $stat_file\n";
     while (my $row = <$sf>)
@@ -1551,16 +1552,24 @@ sub legend {
 	if ($parameter =~/permu_test/) {$parameter = 'No. of permutations';}
 	if ($parameter =~/prob_level/) {$parameter = 'QTL genotype signifance level';}
 	if ($parameter =~/stat_no_draws/) {$parameter = 'No. of imputations';}
+        
+        if ( $value eq 'zero' || $value eq 'Marker Regression' )
+        {
+            $ci = 0;
+        }
 	
-	if ($value eq 'zero' || $value eq 'Marker Regression') {$ci = 0;}
-	
-	unless (($parameter =~/No. of imputations/ && !$value ) ||
+        unless (($parameter =~/No. of imputations/ && !$value ) ||
 	        ($parameter =~/QTL genotype probability/ && !$value ) ||
                 ($parameter =~/Permutation significance level/ && !$value)
 	       ) 
 
 	{
-	    push @stat, [map{$_} ($parameter, $value)];
+            if ($parameter =~/Genome scan/ && $value eq 'zero' || !$value) 
+            {
+                $value = '0.0'
+            }
+	    
+            push @stat, [map{$_} ($parameter, $value)];
 	    
 	}
 	
@@ -1595,8 +1604,7 @@ sub legend {
 
     }
     my $lod1 = $permu_threshold{ $keys[0] };
-   # my $lod2 = $permu_threshold{ $keys[1] };
-
+  
     if  (!$lod1) 
     {
 	$lod1 = qq |<i>Not calculated</i>|;
