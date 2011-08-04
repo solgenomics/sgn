@@ -203,6 +203,16 @@ with suggestions for improvements!</p>
 
 <&| /page/info_section.mas, title=>'Links' &>
 <ul>
+<li><b>Potato</b>
+ <ul>
+  <li><a href="/organism/Solanum_tuberosum/genome">Potato genome</a></li>
+  <li><a href="https://spreadsheets.google.com/spreadsheet/ccc?key=0AglmOi1fE8ZYdEtWaUV3S1FzUjNFVmt4X29fNU9HLXc&hl=en_US">Potato marker list</a> (work in progres by David Douches)<li>
+ </ul>
+<li><b>Tomato</b>
+ <ul>
+  <li><a href="/organism/Solanum_lycopersicum/genome">Tomato genome</a></li>
+  <li><a href="https://spreadsheets.google.com/spreadsheet/ccc?key=0AglmOi1fE8ZYdE9RU0dlS2h4S29RMk1ZQXk4aUJBOGc&hl=en_US">Tomato resistance genes </a> (by Douglas Maxwell).</li>
+ </ul>
 <li><a href="http://www.tomatomap.net/">TomatoMap.Net</a> - a site for Tomato Genetics at Ohio State University.</li>
 <li><a href="http://solcap.msu.edu/">SolCAP</a> - the official SolCAP website at Michigan State University.</li>
 <li><a href="http://www.oardc.ohio-state.edu/vanderknaap/tomato_analyzer.htm">Tomato Analyzer</a> - software for scoring fruit shape and other shapes.</li>
