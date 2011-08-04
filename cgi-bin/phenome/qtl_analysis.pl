@@ -757,12 +757,11 @@ sub qtl_plot
 		    if ( $key =~ m/^\d./ )
 		    {
 			push @p_keys, $key;
-                         print STDERR "\n\npermu key: $key\n\n";
 		    }
 
 		}
 		my $lod1 = $permu_threshold{$p_keys[0]};
-                print STDERR "\n\npermu: $lod1\n\n";
+                
 		$h_marker = 
 		    qq |/phenome/qtl.pl?population_id=$pop_id&amp;term_id=$term_id&amp;chr=$lg&amp;peak_marker=$p_m&amp;lod=$lod1|;
 
