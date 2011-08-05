@@ -487,12 +487,12 @@ for (i in chrdata)
              chr=chrno,
              pheno.col=cv
              )
-
+print(i)
   
   position<-max(i,
                 chr=chrno
                 )
-  
+ print(position) 
   p<-position[["pos"]]
   LodScore<-position[["lod"]]
   QtlChr<-levels(position[["chr"]])
@@ -515,31 +515,39 @@ for (i in chrdata)
             }
         }
     
-  
+ 
   peakmarker<-find.marker(popdata,
                           chr=chrno,
                           pos=p
                           )
- 
+  print("peakmarker")
+ print(peakmarker)
   lodpeakmarker<-i[peakmarker, ]
-  
+   print("lodpeakmarker")
+  print(lodpeakmarker)
+  print("baye i")
+  print(i)
   lodconfidenceint<-bayesint(i,
                           chr=chrno,
                           prob=0.95,
                           expandtomarkers=TRUE
                           )
- 
+   print("lodconfidenceint")
+ print(lodconfidenceint)
   if (is.na(lodconfidenceint[peakmarker, ]))
     {
       lodconfidenceint<-rbind(lodconfidenceint,
                               lodpeakmarker
                               )
     }
-  
+   print("lodconfidenceint lodpeakmarker")
+ print(lodconfidenceint)
   peakmarker<-c(chrno,
                 peakmarker
                 )
- 
+   print("chr peakmarker")
+ print(peakmarker)
+  
   if (chrno==1)
     { 
     datasummary<-i
