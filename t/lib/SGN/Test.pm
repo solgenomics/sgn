@@ -75,7 +75,7 @@ sub _validate_single_url {
         or do {
 
             diag "fetch actually returned code '$rc': "
-                 .($ENV{SGN_TEST_SERVER}||'').$url;
+                 .$test_server_name.$url;
 
             if( $ENV{DUMP_ERROR_CONTENT} ) {
                 if ( eval { require Digest::Crc32 } ) {
@@ -114,7 +114,7 @@ sub _validate_single_url {
             is( scalar @e, 0, "$test_name HTML validates" )
                 or diag( "first " . min($e_cnt,$max_errors_to_show) ." of $e_cnt errors:\n",
                         (map {$_->as_string."\n"} @e[0..min($max_errors_to_show,$#e)]),
-                        "NOTE: above line numbers refer to the HTML output.\nTo see full error list, run: view_lint.pl '$ENV{SGN_TEST_SERVER}$url'\n"
+                        "NOTE: above line numbers refer to the HTML output.\nTo see full error list, run: view_lint.pl '$test_server_name$url'\n"
                     );
 
             unlike( $mech->content, qr/timed out/i, "$test_name does not seem to have timed out" )
