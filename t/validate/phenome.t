@@ -31,9 +31,9 @@ my %urls = (
         "QTL individuals list page"                => "/phenome/indls_range_cvterm.pl?cvterm_id=47515&lower=151.762&upper=162.011&population_id=12",
 
         "qtl search"                        => "/search/direct_search.pl?search=qtl",
-        "trait search"                        => "/search/direct_search.pl?search=trait",
-
-       );
+        "trait search"                      => "/search/direct_search.pl?search=trait",
+        "breeders toolbox"                 => "/breeders/",
+    );
 
 validate_urls(\%urls, $ENV{ITERATIONS} || 1 );
 
