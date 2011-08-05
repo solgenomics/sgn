@@ -65,7 +65,7 @@ if (qtlmethod == "Maximum Likelihood")
   qtlmethod<-c("em")
 } else
 
-if (qtlmethod == "Haley-knott Regression")
+if (qtlmethod == "Haley-Knott Regression")
 {
   qtlmethod<-c("hk")
 
