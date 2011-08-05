@@ -58,8 +58,9 @@
     <div style="position: relative; text-align: left">
 
     <table cellspacing="0" cellpadding="0" id="sequencing" class="toolbar_popmenu">
-       <tr><td class="toolbar_item_title" >Browse</td></tr>
-<tr><td class="toolbar_item"><a class="toolbar_item" href="/organism/Solanum_lycopersicum/genome">Tomato genome data</a></td></tr>
+       <tr><td class="toolbar_item_title" >Organisms</td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/organism/Solanum_lycopersicum/genome">Tomato genome</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/organism/Solanum_tuberosum/genome">Potato genome</a></td></tr>
        <tr><td class="toolbar_item_title" >Projects</td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/solanaceae-project/index.pl">Solanaceae project (SOL)</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/organism/sol100/view">SOL-100 Project</a></td></tr>
