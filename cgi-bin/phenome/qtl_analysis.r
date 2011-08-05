@@ -138,9 +138,9 @@ stepsize<-scan(stepsizefile,
                sep="\n"
                )
 
-if (is.logical(stepsize) == FALSE)
+if (is.null(stepsize) == TRUE)
 {
-  stepsize<-c('zero')
+  stepsize<-c(0)
 }
 
 if (stepsize == "zero")
@@ -216,6 +216,8 @@ if (qtlmethod == 'mr')
         genoprobmethod<-c('Calculate')
       }
   }
+
+genoproblevel<-as.numeric(genoproblevel)
 
 ########significance level for permutation test
 permuproblevelfile<-grep("stat_permu_level",
@@ -485,14 +487,14 @@ for (i in chrdata)
   
   i<-scanone(popdata,
              chr=chrno,
-             pheno.col=cv
+             pheno.col=cv,
+             model = "normal",
+             method= qtlmethod
              )
-print(i)
-  
   position<-max(i,
                 chr=chrno
                 )
- print(position) 
+  
   p<-position[["pos"]]
   LodScore<-position[["lod"]]
   QtlChr<-levels(position[["chr"]])
@@ -520,33 +522,25 @@ print(i)
                           chr=chrno,
                           pos=p
                           )
-  print("peakmarker")
- print(peakmarker)
+ 
   lodpeakmarker<-i[peakmarker, ]
-   print("lodpeakmarker")
-  print(lodpeakmarker)
-  print("baye i")
-  print(i)
+  
   lodconfidenceint<-bayesint(i,
                           chr=chrno,
                           prob=0.95,
                           expandtomarkers=TRUE
                           )
-   print("lodconfidenceint")
- print(lodconfidenceint)
+
   if (is.na(lodconfidenceint[peakmarker, ]))
     {
       lodconfidenceint<-rbind(lodconfidenceint,
                               lodpeakmarker
                               )
     }
-   print("lodconfidenceint lodpeakmarker")
- print(lodconfidenceint)
+  
   peakmarker<-c(chrno,
                 peakmarker
                 )
-   print("chr peakmarker")
- print(peakmarker)
   
   if (chrno==1)
     { 
