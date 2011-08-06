@@ -232,12 +232,13 @@ permuproblevel<-scan(permuproblevelfile,
                      dec = ".",
                      sep="\n"
                      )
+
 permuproblevel<-as.numeric(permuproblevel)
 
 #########
 infile<-scan(file=infile,
              what="character"
-             )#container for the ff
+             )
 
 cvtermfile<-grep("cvterm",
                  infile,
@@ -316,17 +317,14 @@ if (cross == "bc")
   popdata<-jittermap(popdata)
 }  
 
-
-#if (qtlmethod != "mr")
-#{
-  if (genoprobmethod == "Calculate")
-    {
+#calculates the qtl genotype probablity at
+#the specififed step size and probability level
+if (genoprobmethod == "Calculate")
+  {
     popdata<-calc.genoprob(popdata,
                            step=stepsize,
                            error.prob=genoproblevel
                            )
-  #calculates the qtl genotype probablity at
-  #the specififed step size and probability level
   } else
   if (genoprobmethod == "Simulate")
     {
@@ -337,7 +335,7 @@ if (cross == "bc")
                           stepwidth="fixed"
                           ) 
   }
-#}
+
 
 
 cvterm<-scan(file=cvtermfile,
