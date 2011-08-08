@@ -138,17 +138,19 @@ stepsize<-scan(stepsizefile,
                sep="\n"
                )
 
-if (is.null(stepsize) == TRUE)
-{
-  stepsize<-c(0)
-}
-
-if (stepsize == "zero")
-{
-  stepsize<-c(0)
-}
+if (qtlmethod == 'mr')
+  {
+    stepsize<-c(0)
+  }else
+if 
+  (qtlmethod != 'mr' & stepsize == "zero")
+    {
+      stepsize<-c(0)
+    }
 
 stepsize<-as.numeric(stepsize)
+
+
 
 ######genotype calculation method############
 genoprobmethodfile<-grep("stat_prob_method",
