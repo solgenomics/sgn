@@ -47,6 +47,7 @@ use CXGN::Tools::List qw/str_in/;
 use File::Slurp qw/slurp/;
 use CXGN::Page::FormattingHelpers qw/info_section_html page_title_html columnar_table_html/;
 use CatalystX::GlobalContext '$c';
+use List::MoreUtils 'minmax';
 
 use constant MAX_FORMATTABLE_REPORT_FILE_SIZE => 2_000_000;
 
@@ -67,7 +68,6 @@ if ($params{database}=~/\/(\w+?)$/) {
     $params{database} = $1;
 }
 
-#my ($bdb) = CXGN::BlastDB->search_ilike(title=> "%$params{database}%");
 our ($bdb) = CXGN::BlastDB->from_id($params{database});
 
 die "No such database" if (!$bdb);
@@ -438,7 +438,6 @@ sub make_bioperl_result_writer {
     my $identifier_url = CXGN::Tools::Identifiers::identifier_url( $id );
     my $js_identifier_url = $identifier_url ? "'$identifier_url'" : 'null';
 
-    use List::MoreUtils 'minmax';
 
     my $region_string = $id.':'.join('..', minmax map { $_->start('subject'), $_->end('subject') } $hit->hsps );
 
