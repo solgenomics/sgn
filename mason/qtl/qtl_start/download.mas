@@ -1,8 +1,9 @@
 <%doc>
 
 =head1 NAME 
-qtl/qtl_form/stat_form.mas - a mason component for a QTL stat parameters 
-submission
+qtl/qtl_form/download.mas - a mason component for 
+diplaying links to download pages of phenotype, genotype,
+correlation and trait acronmyms files.
 
 =AUTHOR
 Isaak Y Tecle (iyt2@cornell.edu)
