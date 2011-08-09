@@ -141,11 +141,10 @@ sub _analyze_correlation : {
     my $r_qtl_dir       = $c->config->{r_qtl_temp_path};
     my $corre_image_dir = catfile($base_path, $temp_image_dir, "correlation");
     my $corre_temp_dir  = catfile($r_qtl_dir, "tempfiles");
-    my $corre_file_dir  = catfile($r_qtl_dir, "cache");
-   
+    
     if (-s $pheno_file) 
     {
-        foreach my $dir ($corre_image_dir, $corre_temp_dir, $corre_file_dir)
+        foreach my $dir ($corre_temp_dir, $corre_image_dir)
         {
             unless (-d $dir)
             {
@@ -154,13 +153,13 @@ sub _analyze_correlation : {
         }
 
         my (undef, $heatmap_file)     = tempfile( "heatmap_${pop_id}-XXXXXX",
-                                              DIR      => $corre_temp_dir,
+                                              DIR      => $corre_image_dir,
                                               SUFFIX   =>'.png',
                                               UNLINK   => 1,
                                             );
 
         my (undef, $corre_table_file) = tempfile( "corre_table_${pop_id}-XXXXXX",
-                                              DIR      => $corre_temp_dir,
+                                              DIR      => $corre_image_dir,
                                               SUFFIX   => '.txt',
                                               UNLINK   => 1,
                                             );
@@ -199,16 +198,13 @@ sub _analyze_correlation : {
 
         sleep 1 while $r_process->alive;
 
-        copy( $heatmap_file, $corre_image_dir )
-            or die "could not copy $heatmap_file to $corre_image_dir";
-         copy( $corre_table_file, $corre_file_dir )
-            or die "could not copy $corre_table_file to $corre_file_dir";
-
+      
         $heatmap_file = fileparse($heatmap_file);
         $heatmap_file  = $c->generated_file_uri("correlation",  $heatmap_file);
         $corre_table_file = fileparse($corre_table_file);
-        $c->stash( heatmap_file     => "../../../$heatmap_file", 
-                   corre_table_file => "$corre_file_dir/$corre_table_file"
+        $corre_table_file  = $c->generated_file_uri("correlation",  $corre_table_file);
+        $c->stash( heatmap_file     => "$heatmap_file", 
+                   corre_table_file => "$corre_table_file"
             );  
     } 
 }
@@ -221,16 +217,16 @@ sub _correlation_output {
     my $key_t       = "table_" . $pop->get_population_id();   
     my $heatmap     = $cache->get($key_h);
     my $corre_table = $cache->get($key_t);
-   # $cache->remove($key_h);
-   # $cache->remove($key_t);
-
+    #$cache->remove($key_h);
+    #$cache->remove($key_t);
+  
     if  (!$corre_table  || !$heatmap) 
     {
         $self->_analyze_correlation($c);
         $heatmap = $c->stash->{heatmap_file};
         $corre_table  = $c->stash->{corre_table_file};
-        $cache->set($key_h, $heatmap, (expires =>'24h'));
-        $cache->set($key_t, $corre_table, (expires =>'24h'));    
+        $cache->set($key_h, "../../..$heatmap", (expires =>'24h'));
+        $cache->set($key_t, "../../..$corre_table", (expires =>'24h'));  
     } else 
     {
         $c->stash( heatmap_file     => $heatmap,
@@ -238,6 +234,7 @@ sub _correlation_output {
             );               
     }
      $self->_get_trait_acronyms($c);
+
 }
 
 
