@@ -19,7 +19,10 @@ $acronym_download
 
 <%perl>
 
-if (!$heatmap_file) { $corre_download=undef;}
+if (!$corre_table_file) { $corre_download=undef; }
+if (!-e $pop->phenotype_file($c)) { $phenotype_download=undef; }
+if (!-e $pop->genotype_file($c)) { $genotype_download=undef; }
+if (!$pop->get_cvterm_acronyms($c)) { $acronym_download=undef;}
 
 </%perl>
 
