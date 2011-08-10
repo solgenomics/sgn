@@ -21,21 +21,28 @@ $acronym_download
 
 </%args>
 
-
 <&| /page/info_section.mas,
     collapsible => 1, 
     collapsed   => 1, 
     title => 'Download',
 &>
-<% $phenotype_download %> | 
-<% $genotype_download %> | 
+%if ($phenotype_download)
+%{
+<% $phenotype_download %> |
+%} 
+%if ($genotype_download) 
+%{
+<% $genotype_download %> |
+%} 
 
-% if ($corre_download) 
+%if ($corre_download) 
 %{
  <% $corre_download %> |
 %}
- 
+%if ($acronym_download)
+%{ 
 <% $acronym_download %>
+%}
 </&>
     
 
