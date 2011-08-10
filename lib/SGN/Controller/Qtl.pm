@@ -17,6 +17,7 @@ use File::Path qw / mkpath  /;
 use File::Copy;
 use File::Basename;
 use File::Slurp;
+use Cache::File;
 
 BEGIN { extends 'Catalyst::Controller'}  
 
@@ -81,26 +82,38 @@ sub view : PathPart('qtl/view') Chained Args(1) {
 sub download_phenotype : PathPart('qtl/download/phenotype') Chained Args(1) {
     my ($self, $c, $id) = @_;
     my $pop = CXGN::Phenome::Population->new($c->dbc->dbh, $id);
-    my @pheno_data;
-    foreach ( read_file($pop->phenotype_file($c))) 
+   
+
+    my $phenotype_file = $pop->phenotype_file($c);
+    
+    unless (!-e $phenotype_file || -s $phenotype_file < 1)
     {
-       push @pheno_data, [ split(/,/) ];
+        my @pheno_data;
+        foreach ( read_file($phenotype_file) ) 
+        {
+            push @pheno_data, [ split(/,/) ];
+        }
+        $c->stash->{'csv'}={ data => \@pheno_data};
+        $c->forward("SGN::View::Download::CSV");
     }
-    $c->stash->{'csv'}={ data => \@pheno_data};
-    $c->forward("SGN::View::Download::CSV");
 }
 
 sub download_genotype : PathPart('qtl/download/genotype') Chained Args(1) {
     my ($self, $c, $id) = @_;
     my $pop = CXGN::Phenome::Population->new($c->dbc->dbh, $id);    
-    my @geno_data;
     
-    foreach ( read_file($pop->genotype_file($c))) 
+    my $genotype_file = $pop->genotype_file($c);
+    
+    unless (!-e $genotype_file || -s $genotype_file < 1)
     {
-       push @geno_data, [ split(/,/) ];
+        my @geno_data;
+        foreach ( read_file($genotype_file)) 
+        {
+            push @geno_data, [ split(/,/) ];
+        }
+        $c->stash->{'csv'}={ data => \@geno_data};
+        $c->forward("SGN::View::Download::CSV");
     }
-    $c->stash->{'csv'}={ data    => \@geno_data};
-    $c->forward("SGN::View::Download::CSV");
 }
 
 sub download_correlation : PathPart('qtl/download/correlation') Chained Args(1) {
@@ -108,20 +121,26 @@ sub download_correlation : PathPart('qtl/download/correlation') Chained Args(1) 
 
     $c->stash(pop => CXGN::Phenome::Population->new($c->dbc->dbh, $id)); 
     $self->_correlation_output($c);
-   
-    my @corr_data;
-    my $count=1;
+      
+    my $corr_file = $c->stash->{corre_table_file};
     
-    foreach ( read_file($c->stash->{corre_table_file}) )
+    unless (!-e $corr_file || -s $corr_file < 1) 
     {
-        if ($count==1) { $_ = "Traits " . $_;}
-        s/\"//g; s/\s/,/g;
-        push @corr_data, [ split (/,/) ];
-        $count++;
+        my @corr_data;
+        my $count=1;
+        
+        foreach ( read_file($corr_file) )
+        {
+            if ($count==1) { $_ = "Traits " . $_;}
+            s/\"//g; s/\s/,/g;
+            push @corr_data, [ split (/,/) ];
+            $count++;
+        }
+    
+        $c->stash->{'csv'}={ data => \@corr_data };
+        $c->forward("SGN::View::Download::CSV");
     }
     
-    $c->stash->{'csv'}={ data => \@corr_data };
-    $c->forward("SGN::View::Download::CSV");
 }
 
 sub download_acronym : PathPart('qtl/download/acronym') Chained Args(1) {
@@ -155,13 +174,13 @@ sub _analyze_correlation : {
         my (undef, $heatmap_file)     = tempfile( "heatmap_${pop_id}-XXXXXX",
                                               DIR      => $corre_image_dir,
                                               SUFFIX   =>'.png',
-                                              UNLINK   => 1,
+                                              UNLINK   => 0,
                                             );
 
         my (undef, $corre_table_file) = tempfile( "corre_table_${pop_id}-XXXXXX",
                                               DIR      => $corre_image_dir,
                                               SUFFIX   => '.txt',
-                                              UNLINK   => 1,
+                                              UNLINK   => 0,
                                             );
 
         my ( $corre_commands_temp, $corre_output_temp ) =
@@ -198,43 +217,42 @@ sub _analyze_correlation : {
 
         sleep 1 while $r_process->alive;
 
-      
         $heatmap_file = fileparse($heatmap_file);
         $heatmap_file  = $c->generated_file_uri("correlation",  $heatmap_file);
         $corre_table_file = fileparse($corre_table_file);
         $corre_table_file  = $c->generated_file_uri("correlation",  $corre_table_file);
-        $c->stash( heatmap_file     => "$heatmap_file", 
-                   corre_table_file => "$corre_table_file"
+        $c->stash( heatmap_file     => $heatmap_file, 
+                   corre_table_file => $corre_table_file
             );  
     } 
 }
 
 sub _correlation_output {
-    my ($self, $c)  = @_;
-    my $pop         = $c->{stash}->{pop};
-    my $cache       = $c->cache;
-    my $key_h       = "heat_" . $pop->get_population_id();
-    my $key_t       = "table_" . $pop->get_population_id();   
-    my $heatmap     = $cache->get($key_h);
-    my $corre_table = $cache->get($key_t);
-    #$cache->remove($key_h);
-    #$cache->remove($key_t);
-  
-    if  (!$corre_table  || !$heatmap) 
+    my ($self, $c)      = @_;
+    my $pop             = $c->{stash}->{pop};
+    my $base_path       = $c->config->{basepath};
+    my $temp_image_dir  = $c->config->{tempfiles_subdir};   
+    my $corre_image_dir = catfile($base_path, $temp_image_dir, "correlation");
+    my $cache           = Cache::File->new( cache_root => $corre_image_dir);
+    my $key_h           = "heat_" . $pop->get_population_id();
+    my $key_t           = "table_" . $pop->get_population_id();   
+    my $heatmap         = $cache->get($key_h);
+    my $corre_table     = $cache->get($key_t);
+    
+    unless  ($heatmap) 
     {
         $self->_analyze_correlation($c);
         $heatmap = $c->stash->{heatmap_file};
         $corre_table  = $c->stash->{corre_table_file};
-        $cache->set($key_h, "../../..$heatmap", (expires =>'24h'));
-        $cache->set($key_t, "../../..$corre_table", (expires =>'24h'));  
-    } else 
-    {
-        $c->stash( heatmap_file     => $heatmap,
-                   corre_table_file => $corre_table,
-            );               
+        $cache->set($key_h, "$heatmap", "24h");
+        $cache->set($key_t, "$corre_table", "24h");
+        
     }
-     $self->_get_trait_acronyms($c);
-
+    $c->stash( heatmap_file     => $heatmap,
+                   corre_table_file => $corre_table,
+        );  
+    
+    $self->_get_trait_acronyms($c);
 }
 
 
