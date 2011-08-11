@@ -46,6 +46,7 @@ use Cache::File;
 use Path::Class;
 use Try::Tiny;
 use CXGN::Contact;
+use String::Random;
 
 use base qw / CXGN::Page::Form::SimpleFormPage CXGN::Phenome::Main/;
 
@@ -736,15 +737,19 @@ sub qtl_plot
 
 	@lk_groups = @linkage_groups;
 	@lk_groups = sort ( { $a <=> $b } @lk_groups );
-	for ( my $i = 0 ; $i < @linkage_groups ; $i++ )
+	
+        for ( my $i = 0 ; $i < @linkage_groups ; $i++ )
 	{
 	    my $lg           = shift(@lk_groups);
 	    my $key_h_marker = "$ac" . "_pop_" . "$pop_id" . "_chr_" . $lg;
-	    $h_marker = $cache_tempimages->get($key_h_marker);
+
+            $h_marker = $cache_tempimages->get($key_h_marker) 
+                      ? $self->qtl_stat_option eq 'default'
+                      : undef
+                      ;
 
 	    unless ($h_marker)
 	    {
-
 		push @chromosomes, $lg;	
 		$p_m = $peak_markers[$i];
 		$p_m =~ s/\s//;
@@ -800,10 +805,19 @@ sub qtl_plot
             $cache_qtl_plot->set_basedir($basepath);
             $cache_qtl_plot->set_temp_dir( $tempfile_dir . "/temp_images" );
             $cache_qtl_plot->set_expiration_time(259200);
-            $cache_qtl_plot->set_key(
-                                "qtlplot" . $i . "small" . $pop_id . $term_id );
-            $cache_qtl_plot->set_force(0);
-
+            
+            my $random = String::Random->new();
+            if ($self->qtl_stat_option() ne 'default')
+            {   
+                $cache_qtl_plot->set_key($random->randpattern("CCccCCnnn"));
+                $cache_qtl_plot->set_force(1);
+            }
+            elsif ( $self->qtl_stat_option() eq 'default')
+            {
+                $cache_qtl_plot->set_key("qtlplot" . $i . "small" . $pop_id . $term_id);
+                $cache_qtl_plot->set_force(0);
+            }
+                        
             if ( !$cache_qtl_plot->is_valid() )
             {
 
@@ -870,9 +884,20 @@ sub qtl_plot
             $cache_qtl_plot_t->set_basedir($basepath);
             $cache_qtl_plot_t->set_temp_dir( $tempfile_dir . "/temp_images" );
             $cache_qtl_plot_t->set_expiration_time(259200);
-            $cache_qtl_plot_t->set_key(
-                          "qtlplot_" . $i . "_thickbox_" . $pop_id . $term_id );
-            $cache_qtl_plot_t->set_force(0);
+           
+            if ($self->qtl_stat_option() ne 'default')
+            {
+                $cache_qtl_plot_t->set_key($random->randpattern("CCccccnnn"));
+                $cache_qtl_plot_t->set_force(1);
+            }
+            
+            elsif ( $self->qtl_stat_option() eq 'default') 
+
+            {  
+                $cache_qtl_plot_t->set_key("qtlplot_" . $i . "_thickbox_" . $pop_id . $term_id);
+                $cache_qtl_plot_t->set_force(0);
+            }
+            
 
             if ( !$cache_qtl_plot_t->is_valid() )
             {
@@ -1134,8 +1159,7 @@ sub crosstype_file {
 =head2 run_r
 
  Usage: my ($qtl_summary, $peak_markers) = $self->run_r();
- Desc: run R in the cluster; copies permutation file from the /data/prod.. 
-       to the tempimages dir; returns the R output files (with abosulate filepath) with qtl mapping data 
+ Desc: run R in the cluster; returns the R output files (with abosulate filepath) with qtl mapping data 
        and peak markers 
  Ret: 
  Args:  none
@@ -1237,8 +1261,9 @@ sub permu_file
 
     my $key_permu = "$ac" . "_" . $pop_id . "_permu";
     my $filename  = "permu_" . $ac . "_" . $pop_id;
-    my $permu_file = $file_cache->get($key_permu);
-
+   
+    my  $permu_file = $file_cache->get($key_permu);
+  
     unless ($permu_file)
     {
 
@@ -1324,71 +1349,75 @@ sub qtl_images_exist
     my $term_name  = $self->get_trait_name();
     my $term_id    = $self->get_trait_id();
     my $dbh        = $self->get_dbh();
+    my $qtl_image  = undef;
 
-    my @linkage_groups = $population->linkage_groups();
-    @linkage_groups = sort ( { $a <=> $b } @linkage_groups );
+    if ($self->qtl_stat_option eq 'default') 
+    {    
+        my @linkage_groups = $population->linkage_groups();
+        @linkage_groups = sort ( { $a <=> $b } @linkage_groups );
 
-    my $ac = $population->cvterm_acronym($term_name);
+        my $ac = $population->cvterm_acronym($term_name);
 
-    my $basepath     = $c->get_conf("basepath");
-    my $tempfile_dir = $c->get_conf("tempfiles_subdir");
+        my $basepath     = $c->get_conf("basepath");
+        my $tempfile_dir = $c->get_conf("tempfiles_subdir");
 
-    my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
-      $self->cache_temp_path();
+        my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
+            $self->cache_temp_path();
 
-    my $cache_tempimages = Cache::File->new( cache_root => $tempimages_path );
-    $cache_tempimages->purge();
+        my $cache_tempimages = Cache::File->new( cache_root => $tempimages_path );
+        $cache_tempimages->purge();
 
-    my ( $qtl_image, $image, $image_t, $image_url, $image_html, $image_t_url,
-         $thickbox, $title );
+        my ( $image, $image_t, $image_url, $image_html, $image_t_url,
+             $thickbox, $title );
   
 
-  IMAGES: foreach my $lg (@linkage_groups)
-    {
-        my $cache_qtl_plot = CXGN::Tools::WebImageCache->new();
-        $cache_qtl_plot->set_basedir($basepath);
-        $cache_qtl_plot->set_temp_dir( $tempfile_dir . "/temp_images" );
+      IMAGES: foreach my $lg (@linkage_groups)
+      {
+          my $cache_qtl_plot = CXGN::Tools::WebImageCache->new();
+          $cache_qtl_plot->set_basedir($basepath);
+          $cache_qtl_plot->set_temp_dir( $tempfile_dir . "/temp_images" );
       
-        my $key = "qtlplot" . $lg . "small" . $pop_id . $term_id;
-        $cache_qtl_plot->set_key($key);
+          my $key = "qtlplot" . $lg . "small" . $pop_id . $term_id;
+          $cache_qtl_plot->set_key($key);
 
-        my $key_h_marker = "$ac" . "_pop_" . "$pop_id" . "_chr_" . $lg;
-        my $h_marker     = $cache_tempimages->get($key_h_marker);
+          my $key_h_marker = "$ac" . "_pop_" . "$pop_id" . "_chr_" . $lg;
+          my $h_marker     = $cache_tempimages->get($key_h_marker);
 
-        if ( $cache_qtl_plot->is_valid )
-        {
-            $image      = $cache_qtl_plot->get_image_tag();
-            $image_url  = $cache_qtl_plot->get_image_url();           
-        }
+          if ( $cache_qtl_plot->is_valid )
+          {
+              $image      = $cache_qtl_plot->get_image_tag();
+              $image_url  = $cache_qtl_plot->get_image_url();           
+          }
 
-        my $cache_qtl_plot_t = CXGN::Tools::WebImageCache->new();
-        $cache_qtl_plot_t->set_basedir($basepath);
-        $cache_qtl_plot_t->set_temp_dir( $tempfile_dir . "/temp_images" );
+          my $cache_qtl_plot_t = CXGN::Tools::WebImageCache->new();
+          $cache_qtl_plot_t->set_basedir($basepath);
+          $cache_qtl_plot_t->set_temp_dir( $tempfile_dir . "/temp_images" );
 
-        my $key_t = "qtlplot_" . $lg . "_thickbox_" . $pop_id . $term_id;
-        $cache_qtl_plot_t->set_key($key_t);
+          my $key_t = "qtlplot_" . $lg . "_thickbox_" . $pop_id . $term_id;
+          $cache_qtl_plot_t->set_key($key_t);
 
-        if ( $cache_qtl_plot_t->is_valid )
-        {
+          if ( $cache_qtl_plot_t->is_valid )
+          {
+              $image_t     = $cache_qtl_plot_t->get_image_tag();
+              $image_t_url = $cache_qtl_plot_t->get_image_url();
 
-            $image_t     = $cache_qtl_plot_t->get_image_tag();
-            $image_t_url = $cache_qtl_plot_t->get_image_url();
-
-            $thickbox =
+              $thickbox =
 qq | <a href="$image_t_url" title= "<a href=$h_marker&amp;qtl=$image_t_url><font color=#f87431><b>>>>Go to the QTL page>>>> </b></font></a>"  class="thickbox" rel="gallary-qtl"> <img src="$image_url" alt="Chromosome $lg $image_t_url $image_url" /> </a> |;
 
-            $qtl_image .= $thickbox;
-            $title = "  ";
-	   
+              $qtl_image .= $thickbox;
+              $title = "  ";
+          }
+          else
+          {
+              $qtl_image = undef;
+              last IMAGES;
 
-        }
-        else
-        {
-            $qtl_image = undef;
-            last IMAGES;
-
-        }
-
+          }
+      }
+    }
+    else 
+    { 
+        $qtl_image = undef;
     }
 
     return $qtl_image;
