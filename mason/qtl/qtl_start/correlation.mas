@@ -1,8 +1,8 @@
 <%doc>
 
 =head1 NAME 
-qtl/qtl_form/stat_form.mas - a mason component for a QTL stat parameters 
-submission
+qtl/qtl_start/correlation.mas - displays correlation heatmap 
+and trait acronyms legend
 
 =AUTHOR
 Isaak Y Tecle (iyt2@cornell.edu)
@@ -12,15 +12,17 @@ Isaak Y Tecle (iyt2@cornell.edu)
 </%doc>
 
 <%args>
+
 $pop
 $heatmap_file
 $corre_table_file
 $trait_acronym_pairs
+
 </%args>
 
 <%perl>
 
-my $name   = $pop->get_name();
+my $name        = $pop->get_name();
 my $corre_image = qq | <img src="$heatmap_file"  alt="correlation output for $name"/> |;
 
 </%perl>
