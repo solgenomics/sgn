@@ -22,16 +22,13 @@ $userid
 
 <div id="statTools">
   <form>
-    <table>
-      <tr>
-        <td>Select the statistical analysis you would like to set the parameters for:</td>
-      </tr>
+    <table>      
       <tr>
         <td>
           <input type="radio" 
                  onclick="Qtl.toggleStatOptions('default');Qtl.setDefaultStat(<% $pop_id %>)"
                  name="stat_options"
-                 value="default qtl parameters"> Use default parameters
+                 value="default qtl parameters"> Use default QTL parameters
         </td>
         <td>
           <input type="radio" 
