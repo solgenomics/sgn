@@ -15,6 +15,7 @@ BEGIN {
 }
 
 my $mech = SGN::Test::WWW::Mechanize->new;
+
 $mech->get_ok("qtl/view/12", "Got qtl start page");
 $mech->content_contains("Population summary", "there is population summary section");
 $mech->content_contains("Set Statistical Parameters", "there is statistical parameters section");
@@ -23,13 +24,14 @@ $mech->content_contains("Pearson Correlation", "there is correlation section");
 $mech->content_contains("Download", "there is data download section");
 $mech->content_contains("Set your own QTL analysis parameters", "interactive statistics interface loaded");
 
+ok($mech->find_image(alt_regex => qr/run solQTL/i ), "Got atleast one trait for solQTL");
 ok($mech->find_image(alt_regex => qr/correlation/i ), "Got correlation heatmap");    
 $mech->content_contains("Acronyms key", "Got trait acronyms key");
 
-$mech->with_test_level( process => sub {
-      my ($res, $c) = ctx_request("qtl/view/12");     
-      my $controller = SGN->Controller("Qtl");
-      
-});
+#$mech->with_test_level( process => sub {
+#      my ($res, $c) = ctx_request("qtl/view/12");     
+#      my $controller = SGN->Controller("Qtl");
+#      
+#});
 
 done_testing;
