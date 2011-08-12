@@ -169,19 +169,15 @@ genoprobmethod<-scan(genoprobmethodfile,
 
 ########No. of draws for sim.geno method###########
 drawsnofile<-c()
-if (is.logical(grep("stat_no_draws",
-                    statfiles))==TRUE
-    )
-{
-  drawsnofile<-(grep("stat_no_draws",
-                     statfiles,
-                     ignore.case=TRUE,
-                     fixed = FALSE,
-                     value=TRUE)
-                )
-}
-    
-if (is.logical(drawsnofile) ==TRUE)
+drawsnofile<-grep("stat_no_draws",
+                  statfiles,
+                  ignore.case=TRUE,
+                  fixed = FALSE,
+                  value=TRUE
+                  )
+drawsno<-c();
+
+if (is.null(drawsnofile)==FALSE)
 {
   drawsno<-scan(drawsnofile,
                 what="numeric",
@@ -190,6 +186,7 @@ if (is.logical(drawsnofile) ==TRUE)
                 )
   drawsno<-as.numeric(drawsno)
 }
+
 ########significance level for genotype
 #######probablity calculation
 genoproblevelfile<-grep("stat_prob_level",
@@ -321,21 +318,24 @@ if (cross == "bc")
 
 #calculates the qtl genotype probablity at
 #the specififed step size and probability level
+genotypetype<-c()
 if (genoprobmethod == "Calculate")
   {
     popdata<-calc.genoprob(popdata,
                            step=stepsize,
                            error.prob=genoproblevel
                            )
+    genotypetype<-c('prob')
   } else
   if (genoprobmethod == "Simulate")
     {
-    popdata<-sim.genoprob(popdata,
-                          n.draws= drawsno,
-                          step=stepsize,
-                          error.prob=genoproblevel,
-                          stepwidth="fixed"
-                          ) 
+    popdata<-sim.geno(popdata,
+                      n.draws=drawsno,
+                      step=stepsize,
+                      error.prob=genoproblevel,
+                      stepwidth="fixed"
+                      )
+    genotypetype<-c('draws')
   }
 
 
@@ -578,7 +578,7 @@ Effects<-c()
             QtlObj<-makeqtl(popdata,
                             QtlChrs,
                             QtlPositions,
-                            what="prob"
+                            what=genotypetype
                             )
   
             QtlsNo<-length(QtlPositions)
