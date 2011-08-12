@@ -345,7 +345,7 @@ sub _link {
     my $cvterm_id  = $c->stash->{cvterm_id};
     my $trait_name = $c->stash->{trait_name};
     my $term_id    = $cvterm_id ? $cvterm_id : $trait_id;
-    my $graph_icon = qq | <img src="/../../../documents/img/pop_graph.png"/> |;
+    my $graph_icon = qq | <img src="/../../../documents/img/pop_graph.png" alt="run solqtl"/> |;
     
     $self->_get_owner_details($c);
     my $owner_name = $c->stash->{owner_name};
