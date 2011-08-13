@@ -25,6 +25,10 @@ $mech->content_contains("Download", "there is data download section");
 $mech->content_contains("Set your own QTL analysis parameters", "interactive statistics interface loaded");
 
 ok($mech->find_image(alt_regex => qr/run solQTL/i ), "Got atleast one trait for solQTL");
+my @links_to_solqtl = $mech->find_all_links( text_regex => qr/run solQTL/i );
+my $traits = scalar(@links_to_solqtl);
+cmp_ok($traits, '>=', 1, "this population has $traits traits for QTL analysis");
+
 ok($mech->find_image(alt_regex => qr/correlation/i ), "Got correlation heatmap");    
 $mech->content_contains("Acronyms key", "Got trait acronyms key");
 
