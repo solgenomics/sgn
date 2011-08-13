@@ -169,12 +169,16 @@ genoprobmethod<-scan(genoprobmethodfile,
 
 ########No. of draws for sim.geno method###########
 drawsnofile<-c()
-drawsnofile<-grep("stat_no_draws",
-                  statfiles,
-                  ignore.case=TRUE,
-                  fixed = FALSE,
-                  value=TRUE
-                  )
+
+if (is.logical(grep("stat_no_draws", statfiles))==TRUE)
+    {
+      drawsnofile<-grep("stat_no_draws",
+                        statfiles,
+                        ignore.case=TRUE,
+                        fixed = FALSE,
+                        value=TRUE
+                        )
+    }
 drawsno<-c();
 
 if (is.null(drawsnofile)==FALSE)
