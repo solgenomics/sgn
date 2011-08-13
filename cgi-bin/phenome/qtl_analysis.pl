@@ -524,6 +524,7 @@ qq { Download population: <span><a href="phenotype_download.pl?population_id=$po
 
    
     $self->get_page()->footer();
+    $self->remove_permu_file();
 
     exit();
 }
@@ -747,7 +748,7 @@ sub qtl_plot
                       ? $self->qtl_stat_option eq 'default'
                       : undef
                       ;
-
+          
 	    unless ($h_marker)
 	    {
 		push @chromosomes, $lg;	
@@ -771,9 +772,8 @@ sub qtl_plot
 		    qq |/phenome/qtl.pl?population_id=$pop_id&amp;term_id=$term_id&amp;chr=$lg&amp;peak_marker=$p_m&amp;lod=$lod1|;
 
 		$cache_tempimages->set( $key_h_marker, $h_marker, '30 days' );
-	    }
-
-	    push @h_markers, $h_marker;
+                push @h_markers, $h_marker;
+	    }	   
 	}
        
         my $count       = 0;
@@ -807,16 +807,16 @@ sub qtl_plot
             $cache_qtl_plot->set_expiration_time(259200);
             
             my $random = String::Random->new();
-            if ($self->qtl_stat_option() ne 'default')
+           if ($self->qtl_stat_option() eq 'user params')
             {   
                 $cache_qtl_plot->set_key($random->randpattern("CCccCCnnn"));
                 $cache_qtl_plot->set_force(1);
-            }
-            elsif ( $self->qtl_stat_option() eq 'default')
-            {
+           }
+           elsif ( $self->qtl_stat_option() eq 'default')
+           {
                 $cache_qtl_plot->set_key("qtlplot" . $i . "small" . $pop_id . $term_id);
                 $cache_qtl_plot->set_force(0);
-            }
+           }
                         
             if ( !$cache_qtl_plot->is_valid() )
             {
@@ -885,18 +885,18 @@ sub qtl_plot
             $cache_qtl_plot_t->set_temp_dir( $tempfile_dir . "/temp_images" );
             $cache_qtl_plot_t->set_expiration_time(259200);
            
-            if ($self->qtl_stat_option() ne 'default')
-            {
+           if ($self->qtl_stat_option() eq 'user params')
+           {
                 $cache_qtl_plot_t->set_key($random->randpattern("CCccccnnn"));
                 $cache_qtl_plot_t->set_force(1);
-            }
+           }
             
             elsif ( $self->qtl_stat_option() eq 'default') 
 
-            {  
+           {  
                 $cache_qtl_plot_t->set_key("qtlplot_" . $i . "_thickbox_" . $pop_id . $term_id);
                 $cache_qtl_plot_t->set_force(0);
-            }
+           }
             
 
             if ( !$cache_qtl_plot_t->is_valid() )
@@ -1381,8 +1381,9 @@ sub qtl_images_exist
           $cache_qtl_plot->set_key($key);
 
           my $key_h_marker = "$ac" . "_pop_" . "$pop_id" . "_chr_" . $lg;
-          my $h_marker     = $cache_tempimages->get($key_h_marker);
 
+         my $h_marker     = $cache_tempimages->get($key_h_marker);
+         
           if ( $cache_qtl_plot->is_valid )
           {
               $image      = $cache_qtl_plot->get_image_tag();
@@ -1816,4 +1817,21 @@ sub qtl_stat_option {
                     ; 
    
     return $stat_option;
+}
+
+sub remove_permu_file {
+    my $self = shift;
+    my $population = $self->get_object();
+    
+    if ($self->qtl_stat_option eq 'user params')        
+    {
+        my $ac = $population->cvterm_acronym($self->get_trait_name());
+        my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
+            $self->cache_temp_path();
+
+        my $file_cache = Cache::File->new( cache_root => $prod_cache_path );
+        my $key_permu = "$ac" . "_" . $population->get_population_id() . "_permu";        
+        unlink($self->permu_file());
+        $file_cache->remove($key_permu);
+    }
 }
