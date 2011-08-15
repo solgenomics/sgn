@@ -47,6 +47,7 @@ use Path::Class;
 use Try::Tiny;
 use CXGN::Contact;
 use String::Random;
+#use Storable qw / store retrieve /;
 
 use base qw / CXGN::Page::Form::SimpleFormPage CXGN::Phenome::Main/;
 
@@ -531,15 +532,15 @@ qq { Download population: <span><a href="phenotype_download.pl?population_id=$po
 
 # override store to check if a locus with the submitted symbol/name already exists in the database
 
-sub store
-{
-    my $self          = shift;
-    my $population    = $self->get_object();
-    my $population_id = $self->get_object_id();
-    my %args          = $self->get_args();
+ sub store
+ {
+     my $self          = shift;
+     my $population    = $self->get_object();
+     my $population_id = $self->get_object_id();
+     my %args          = $self->get_args();
 
-    $self->SUPER::store(0);
-}
+     $self->SUPER::store(0);
+ }
 
 sub population_distribution
 {
@@ -736,19 +737,37 @@ sub qtl_plot
 	my (@h_markers, @chromosomes, @lk_groups);
 	my $h_marker;
 
-	@lk_groups = @linkage_groups;
-	@lk_groups = sort ( { $a <=> $b } @lk_groups );
-	
+	@lk_groups  = @linkage_groups;
+	@lk_groups  = sort ( { $a <=> $b } @lk_groups );         
+        my $random  = String::Random->new();
+       # my $user_id = $c->user->get_object->get_sp_person_id() if $c->user;
+       # my $qtl_obj = CXGN::Phenome::Qtl->new($user_id);
+       # my ($user_qtl_dir, $user_dir) = $qtl_obj->get_user_qtl_dir($c);
+        
         for ( my $i = 0 ; $i < @linkage_groups ; $i++ )
 	{
-	    my $lg           = shift(@lk_groups);
-	    my $key_h_marker = "$ac" . "_pop_" . "$pop_id" . "_chr_" . $lg;
+	    my $lg = shift(@lk_groups);
+            my $key_h_marker;
+            #my %keys_to_urls=();
 
+            if ($self->qtl_stat_option() eq 'user params')
+            {   
+                $key_h_marker = $random->randpattern("CCccCCnnn") . '_'. $lg;
+               # %keys_to_urls = ("user_params_${lg}" => $key_h_marker);
+               # store(\%keys_to_urls, "$user_dir/image_urls");
+              
+            }
+            elsif ( $self->qtl_stat_option() eq 'default')
+               
+            {
+                $key_h_marker = "$ac" . "_pop_" . "$pop_id" . "_chr_" . $lg;
+            }
+	  
             $h_marker = $cache_tempimages->get($key_h_marker) 
                       ? $self->qtl_stat_option eq 'default'
                       : undef
                       ;
-          
+                     
 	    unless ($h_marker)
 	    {
 		push @chromosomes, $lg;	
@@ -806,7 +825,7 @@ sub qtl_plot
             $cache_qtl_plot->set_temp_dir( $tempfile_dir . "/temp_images" );
             $cache_qtl_plot->set_expiration_time(259200);
             
-            my $random = String::Random->new();
+           
            if ($self->qtl_stat_option() eq 'user params')
             {   
                 $cache_qtl_plot->set_key($random->randpattern("CCccCCnnn"));
@@ -929,7 +948,7 @@ sub qtl_plot
 
             $image_t     = $cache_qtl_plot_t->get_image_tag();
             $image_t_url = $cache_qtl_plot_t->get_image_url();
-	  	
+            	
             $thickbox =
 qq | <a href="$image_t_url" title="<a href=$h_marker&amp;qtl=$image_t_url><font color=#f87431><b>>>>>Go to the QTL page>>>> </b></font></a>" class="thickbox" rel="gallary-qtl"> <img src="$image_url" alt="Chromosome $i $image_t_url $image_url" /> </a> |;
 
@@ -1351,56 +1370,51 @@ sub qtl_images_exist
     my $dbh        = $self->get_dbh();
     my $qtl_image  = undef;
 
-    if ($self->qtl_stat_option eq 'default') 
-    {    
-        my @linkage_groups = $population->linkage_groups();
-        @linkage_groups = sort ( { $a <=> $b } @linkage_groups );
+    my @linkage_groups = $population->linkage_groups();
+    @linkage_groups = sort ( { $a <=> $b } @linkage_groups );
 
-        my $ac = $population->cvterm_acronym($term_name);
+    my $ac = $population->cvterm_acronym($term_name);
 
-        my $basepath     = $c->get_conf("basepath");
-        my $tempfile_dir = $c->get_conf("tempfiles_subdir");
+    my $basepath     = $c->get_conf("basepath");
+    my $tempfile_dir = $c->get_conf("tempfiles_subdir");
 
-        my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
+    my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
             $self->cache_temp_path();
 
-        my $cache_tempimages = Cache::File->new( cache_root => $tempimages_path );
-        $cache_tempimages->purge();
+    my $cache_tempimages = Cache::File->new( cache_root => $tempimages_path );
+    $cache_tempimages->purge();
 
+    my $cache_qtl_plot = CXGN::Tools::WebImageCache->new();
+    $cache_qtl_plot->set_basedir($basepath);
+    $cache_qtl_plot->set_temp_dir( $tempfile_dir . "/temp_images" );
+    
+    if ($self->qtl_stat_option eq 'default') 
+    {    
         my ( $image, $image_t, $image_url, $image_html, $image_t_url,
              $thickbox, $title );
   
 
       IMAGES: foreach my $lg (@linkage_groups)
-      {
-          my $cache_qtl_plot = CXGN::Tools::WebImageCache->new();
-          $cache_qtl_plot->set_basedir($basepath);
-          $cache_qtl_plot->set_temp_dir( $tempfile_dir . "/temp_images" );
-      
-          my $key = "qtlplot" . $lg . "small" . $pop_id . $term_id;
-          $cache_qtl_plot->set_key($key);
-
+      {      
           my $key_h_marker = "$ac" . "_pop_" . "$pop_id" . "_chr_" . $lg;
-
-         my $h_marker     = $cache_tempimages->get($key_h_marker);
-         
+          my $h_marker     = $cache_tempimages->get($key_h_marker);
+       
+          my $key = "qtlplot" . $lg . "small" . $pop_id . $term_id;         
+          $cache_qtl_plot->set_key($key);
+          
           if ( $cache_qtl_plot->is_valid )
           {
               $image      = $cache_qtl_plot->get_image_tag();
               $image_url  = $cache_qtl_plot->get_image_url();           
           }
 
-          my $cache_qtl_plot_t = CXGN::Tools::WebImageCache->new();
-          $cache_qtl_plot_t->set_basedir($basepath);
-          $cache_qtl_plot_t->set_temp_dir( $tempfile_dir . "/temp_images" );
-
           my $key_t = "qtlplot_" . $lg . "_thickbox_" . $pop_id . $term_id;
-          $cache_qtl_plot_t->set_key($key_t);
+          $cache_qtl_plot->set_key($key_t);
 
-          if ( $cache_qtl_plot_t->is_valid )
+          if ( $cache_qtl_plot->is_valid )
           {
-              $image_t     = $cache_qtl_plot_t->get_image_tag();
-              $image_t_url = $cache_qtl_plot_t->get_image_url();
+              $image_t     = $cache_qtl_plot->get_image_tag();
+              $image_t_url = $cache_qtl_plot->get_image_url();
 
               $thickbox =
 qq | <a href="$image_t_url" title= "<a href=$h_marker&amp;qtl=$image_t_url><font color=#f87431><b>>>>Go to the QTL page>>>> </b></font></a>"  class="thickbox" rel="gallary-qtl"> <img src="$image_url" alt="Chromosome $lg $image_t_url $image_url" /> </a> |;
@@ -1418,7 +1432,28 @@ qq | <a href="$image_t_url" title= "<a href=$h_marker&amp;qtl=$image_t_url><font
     }
     else 
     { 
-        $qtl_image = undef;
+               
+        foreach my $lg (@linkage_groups)
+        {
+            my $key_h_marker = $ac . "_pop_" . $pop_id . "_chr_" . $lg;
+            $cache_tempimages->remove($key_h_marker);
+            
+            my $key = "qtlplot" . $lg . "small" . $pop_id . $term_id;
+            $cache_qtl_plot->set_key($key);
+            
+            if ($cache_qtl_plot->is_valid) 
+            {
+            $cache_qtl_plot->destroy();
+            }                       
+            my $key_t = "qtlplot_" . $lg . "_thickbox_" . $pop_id . $term_id;
+            $cache_qtl_plot->set_key($key_t);
+            
+            if ($cache_qtl_plot->is_valid)
+            {            
+            $cache_qtl_plot->destroy();
+            }       
+            $qtl_image = undef;
+        }
     }
 
     return $qtl_image;
@@ -1830,8 +1865,10 @@ sub remove_permu_file {
             $self->cache_temp_path();
 
         my $file_cache = Cache::File->new( cache_root => $prod_cache_path );
-        my $key_permu = "$ac" . "_" . $population->get_population_id() . "_permu";        
+        my $key_permu = $ac . "_" . $population->get_population_id() . "_permu";
+        
         unlink($self->permu_file());
         $file_cache->remove($key_permu);
+        
     }
 }
