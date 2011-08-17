@@ -124,7 +124,7 @@ sub generate_form
     my $type          = $args{type};
     my $pop_name      = $population->get_name();
     my $pop_link =
-qq |<a href="/phenome/population.pl?population_id=$population_id">$pop_name</a> |;
+qq |<a href="/qtl/view/$population_id">$pop_name</a> |;
 
     my $sp_person_id = $population->get_sp_person_id();
     my $submitter    = CXGN::People::Person->new( $self->get_dbh(),
