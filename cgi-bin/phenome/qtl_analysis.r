@@ -169,30 +169,30 @@ genoprobmethod<-scan(genoprobmethodfile,
 
 ########No. of draws for sim.geno method###########
 drawsnofile<-c()
-
-if (is.null(grep("stat_no_draws", statfiles))==FALSE)
-    {
-      drawsnofile<-grep("stat_no_draws",
-                        statfiles,
-                        ignore.case=TRUE,
-                        fixed = FALSE,
-                        value=TRUE
-                        )
-    }
-
 drawsno<-c()
+if (qtlmethod == 'imp')
+  {
+    if (is.null(grep("stat_no_draws", statfiles))==FALSE)
+      {
+        drawsnofile<-grep("stat_no_draws",
+                          statfiles,
+                          ignore.case=TRUE,
+                          fixed = FALSE,
+                          value=TRUE
+                          )
+      }
 
-if (is.null(drawsnofile)==FALSE)
-{
-  drawsno<-scan(drawsnofile,
-                what="numeric",
-                dec = ".",
-                sep="\n"
-                )
-  drawsno<-as.numeric(drawsno)
+    if (is.null(drawsnofile)==FALSE)
+      {
+        drawsno<-scan(drawsnofile,
+                      what="numeric",
+                      dec = ".",
+                      sep="\n"
+                      )
+        drawsno<-as.numeric(drawsno)
 
-}
-
+      }
+  }
 ########significance level for genotype
 #######probablity calculation
 genoproblevelfile<-grep("stat_prob_level",
