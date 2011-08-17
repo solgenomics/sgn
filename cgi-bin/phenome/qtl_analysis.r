@@ -170,7 +170,7 @@ genoprobmethod<-scan(genoprobmethodfile,
 ########No. of draws for sim.geno method###########
 drawsnofile<-c()
 
-if (is.logical(grep("stat_no_draws", statfiles))==TRUE)
+if (is.null(grep("stat_no_draws", statfiles))==FALSE)
     {
       drawsnofile<-grep("stat_no_draws",
                         statfiles,
@@ -179,7 +179,8 @@ if (is.logical(grep("stat_no_draws", statfiles))==TRUE)
                         value=TRUE
                         )
     }
-drawsno<-c();
+
+drawsno<-c()
 
 if (is.null(drawsnofile)==FALSE)
 {
@@ -189,6 +190,7 @@ if (is.null(drawsnofile)==FALSE)
                 sep="\n"
                 )
   drawsno<-as.numeric(drawsno)
+
 }
 
 ########significance level for genotype
