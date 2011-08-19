@@ -56,6 +56,13 @@ for my $seq (@good_seqs) {
         $mech->content_contains('Graphics');
         $mech->content_contains('BLAST Report');
         $mech->content_contains('View / download raw report');
+
+        # try to extract some show_match_seq.pl URLs from the document
+        # (might be in the JS)
+        for my $show_match_seq_url ( $mech->content =~ /['"](show_match_seq\.pl\?[^'"]+)/g ) {
+            $mech->get_ok( $show_match_seq_url );
+            $mech->content_contains( $test_blast_db->title, 'show_match_seq has the blast db title' );
+        }
     }
 }
 

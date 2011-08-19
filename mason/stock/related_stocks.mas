@@ -34,6 +34,7 @@ Naama Menda <nm249@cornell.edu>
     use SGN::View::Stock qw/ cvterm_link stock_table related_stats/;
 </%once>
 <%init>
+
     # make a hash of relationship_type => {
     #    upstream   => \@list_of_features,
     #    downstream => \@list_of_features,

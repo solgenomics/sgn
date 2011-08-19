@@ -1,0 +1,242 @@
+<%args>
+  $dbh
+  $basepath
+  $cview_tempfiles_subdir
+  $bac_by_bac_progress
+  $chrnum => 1
+  $bac_publish_subdir
+</%args>
+
+<& /page/page_title.mas, title => 'Tomato Genomic Clone Sequencing' &>
+
+<div class="page_introduction"> <& /genomes/Solanum_lycopersicum/project_background.mas &> </div>
+
+<&| /page/info_section.mas, title => 'BAC-by-BAC sequencing statistics', empty_message => '&nbsp;' &>
+  <& /genomes/Solanum_lycopersicum/bac_by_bac_progress.mas,
+      dbh      => $dbh,
+      basepath => $basepath,
+      cview_tempfiles_subdir => $cview_tempfiles_subdir,
+      progress_data => $bac_by_bac_progress,
+   &>
+</&>
+
+<&| /page/info_section.mas,
+     title => 'Clone preliminary annotations',
+ &>
+
+%   my $ftp_link  = qq|<a href="|.$c->get_conf('ftpsite_url'). '/'. $bac_publish_subdir.'">[FTP]</a>';
+%   my $gb_link   = qq|<a href="|.gbrowse_url('tomato_bacs').'">[GBrowse]</a>';
+
+    <% info_table_html(
+           __multicol => 2,
+           __border   => 0,
+           Browse => "$ftp_link $gb_link",
+           'Search Annotations' =>
+                $m->scomp( '/gbrowse/search_box.mas',
+                           gb_root => gbrowse_url('tomato_bacs')
+                         ),
+       )
+    %>
+
+</&>
+
+<a name ="clones"></a>
+<&| /page/info_section.mas,
+     title    => 'Clone sequences',
+     subtitle => 'browse and download individual genomic clone sequences',
+ &>
+
+     <% clone_sequences_html( $dbh, $chrnum ) %>
+
+</&>
+
+<%once>
+use List::Util qw/ max /;
+use CXGN::Page::FormattingHelpers qw/ info_table_html modesel tooltipped_text columnar_table_html /;
+use CXGN::Genomic::CloneIdentifiers qw/ assemble_clone_ident parse_clone_ident /;
+use CXGN::Tools::Identifiers qw/identifier_url identifier_namespace link_identifier/;
+
+
+sub gbrowse_url {
+    my ($ds_name,@args) = @_;
+    my $gb2 = $c->enabled_feature('gbrowse2');
+    if( $gb2 ) {
+        my $ds = $gb2->data_source($ds_name)
+            or return;
+        if( @args ) {
+            return map $_->url, $ds->xrefs( @args );
+        } else {
+            return $ds->view_url;
+        }
+    } else {
+        return "/gbrowse/gbrowse/$ds_name/".( @args ? "?name=$args[0]" : '' );
+    }
+}
+
+#finds the highest phase number present in a clone entry
+sub maxphase {
+    my ($clone_entry) = @_;
+    my $maxphase =  max map $_->{phase}, values %$clone_entry;
+    return $maxphase || 0;
+}
+
+sub clone_sequences_html {
+  my ($dbh,$chrnum) = @_;
+
+  my $names = $dbh->selectall_arrayref(<<EOQ,undef,$chrnum);
+select f.name,(select dbx.accession
+               from feature_dbxref fd
+               join dbxref dbx using(dbxref_id)
+               join db using(db_id)
+               where db.name = 'DB:GenBank_Accession'
+                 and fd.feature_id=f.feature_id),
+       f.seqlen,
+       c.clone_id
+from metadata.attribution a
+join metadata.attribution_to at
+  using(attribution_id)
+join sgn_people.sp_project p
+  on( at.project_id = p.sp_project_id )
+join genomic.clone c
+  on(a.row_id=c.clone_id)
+join clone_feature cf
+  using(clone_id)
+join feature f
+  using(feature_id)
+where p.name ilike '%Tomato% ' || ? || ' %'
+order by f.name
+EOQ
+
+  #group the sequence names by clone name and version, storing in the %clones hash
+  my %clones;
+  foreach my $namepair (@$names) {
+    my ($seqname,$acc,$seqlen,$clone_id) = @$namepair;
+    my $p = parse_clone_ident($seqname,'versioned_bac_seq')
+      or die "Could not parse sequence ident '$seqname'";
+    delete $p->{fragment};
+    my $clone_name = assemble_clone_ident(agi_bac_with_chrom => $p);
+    my $clone = CXGN::Genomic::Clone->retrieve($clone_id);
+    $clones{$clone_name}{$p->{version}}{seqname} = assemble_clone_ident(versioned_bac_seq => $p);
+    $clones{$clone_name}{$p->{version}}{fragments} ||= [];
+    $clones{$clone_name}{$p->{version}}{accession} = $acc;
+    $clones{$clone_name}{$p->{version}}{seqlen}    = $seqlen;
+    $clones{$clone_name}{$p->{version}}{clone}     = $clone;
+    $clones{$clone_name}{$p->{version}}{phase}     = $clone->seqprops($p->{version})->{htgs_phase};
+    push @{$clones{$clone_name}{$p->{version}}{fragments}}, $seqname;
+  }
+
+  #now assemble the html table rows from the grouped clone names
+  my %stats; #< and keep some stats
+  my @tablerows = map {
+    my $clone_name = $_;
+    my @versions = sort {$b <=> $a} keys %{$clones{$clone_name}};
+    my $clone_seqs = $clones{$clone_name}{$versions[0]};
+    my @fragnames = @{$clone_seqs->{fragments}};
+
+    my $clone = $clone_seqs->{clone};
+
+    #  warn 'got ns '.identifier_namespace($clone_name);
+    my $details_url = identifier_url($clone_name,'bac');
+
+    #here's the actual table row
+
+    sub phase_html {
+      my $phase = shift;
+      my $pstyle = 'htg'.($phase || 'unk');
+      $phase ||= '-';
+      qq|<div class="$pstyle">$phase</div>|
+    }
+
+    $stats{Clones}++;
+
+
+    $stats{'Phase '.($clone_seqs->{phase}||'unknown')}++;
+    $stats{'Total sequenced bases'} += $clone_seqs->{seqlen};
+
+    if (@fragnames > 1) {
+      [
+       qq|<a style="color: black" href="$details_url">$clone_seqs->{seqname}</a>|,
+       $clone_seqs->{accession} ? link_identifier($clone_seqs->{accession},'genbank_accession') : '-',
+       phase_html($clone_seqs->{phase}),
+       ( qq|<form method="get" action="|.gbrowse_url('tomato_bacs').qq|">\n|
+	 .simple_selectbox_html( choices  => [ [ '', '-' ],
+					       sort {$a->[1] <=> $b->[1]}
+					       map  {[$_,parse_clone_ident($_,'versioned_bac_seq')->{fragment}]}
+					       @fragnames
+					     ],
+				 name     => 'ref',
+				 params   => { onchange => 'submit();',
+					       style => 'width: 4em',
+					     },
+				 label    => 'fragment',
+				 selected => '',
+			       )
+	 .qq|<input type="hidden" name="start" value="1" />|
+	 .qq|<input type="hidden" name="end" value="$clone_seqs->{seqlen}" />|
+	 .qq|</form>\n|
+       ),
+       $details_url ? qq(&nbsp;<a href="$details_url">[details]</a>) : '',
+      ]
+    } else {
+      my $gbrowse = gbrowse_url('tomato_bacs',$fragnames[0]);
+      [
+       qq|<a style="color: black" href="$details_url">$clone_seqs->{seqname}</a>|,
+       $clone_seqs->{accession} ? link_identifier($clone_seqs->{accession}) : '-',
+       phase_html($clone_seqs->{phase}),
+       ($gbrowse ? CGI->a({href => $gbrowse}, '[browse]' ) : '<span class="ghosted">none</span>'),
+       $details_url ? qq(&nbsp;<a href="$details_url">[details]</a>) : '',
+      ]
+    }
+  } sort {(maxphase($clones{$b}) <=> maxphase($clones{$a})) || ($a cmp $b) } keys %clones;
+
+
+  my $seqs_and_annots_html = <<HTML
+<style type="text/css">
+div.htg1 {
+  background: #bfbfbf;
+}
+div.htg2 {
+  background: #b0b0e4;
+}
+div.htg3 {
+  background: #7575ed;
+}
+div.htgunk {
+}
+</style>
+
+<div align="center">
+
+<h3>Chromosome</h3>
+HTML
+    .modesel( [ map { ["?chr=$_#clones",$_]} ('unmapped',1..12) ],
+	      $chrnum eq 'unmapped' ? 0 : $chrnum,
+	    )
+    .do {
+      $stats{'Total sequenced bases'}  = commify_number($stats{'Total sequenced bases'}) || 0;
+
+      info_table_html( __title => ($chrnum eq 'unmapped' ? "Unmapped" : "Chromosome $chrnum")." Sequence Summary",
+		       __multicol => scalar(keys %stats),
+		       __tableattrs => 'style="margin-bottom: 0.6em"',
+		       map {$_ => $stats{$_}} sort keys %stats,
+		     )
+    }
+    .do {
+      if (@tablerows) {
+	columnar_table_html( headings     => ['SOL ID','GenBank Acc.',tooltipped_text('HTGS Phase','1: unordered fragments, 2: ordered fragments, 3: finished sequence'),'Prelim. Annot.','Clone Details'],
+			     data         => \@tablerows,
+			     __tableattrs => 'width="100%" cellspacing="0"',
+			     __border     => 1,
+			     __align      => 'lccc',
+			   );
+      } else {
+	"<b>No sequences found.</b>\n";
+      }
+    }
+    ."</div>";
+
+
+  return $seqs_and_annots_html;
+
+}
+</%once>

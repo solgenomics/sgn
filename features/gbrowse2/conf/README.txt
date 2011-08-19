@@ -1,4 +1,8 @@
+Important directories in here are:
 
-templates/     - configuration templates
+templates/
+  configuration Mason templates
 
-rendered_conf/ - configuration files rendered from templates/, generated at server startup
+rendered_conf/
+  configuration files rendered from templates/, generated at server startup
+

@@ -13,7 +13,7 @@ my $mech = SGN::Test::WWW::Mechanize->new;
 
 { # test download_static
   my $res = request( '/download/documents/inc/sgn.css' );
-  is( $res->header('Content-disposition'), 'attachment, filename=sgn.css',
+  is( $res->header('Content-disposition'), 'attachment; filename=sgn.css',
       'got the right disposition header from the static downloader' );
 
   like( $res->content, qr/text-align\s*:/, 'content looks like css' );

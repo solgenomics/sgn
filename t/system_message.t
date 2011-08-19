@@ -1,24 +1,31 @@
-use Test::Most tests => 2;
-use File::Temp;
+use Test::Most tests => 5;
+use Path::Class;
 
-use SGN::Context;
-use CXGN::MasonFactory;
+use lib 't/lib';
+use aliased 'SGN::Test::WWW::Mechanize';
+my $mech = Mechanize->new;
 
-my $c = SGN::Context->new;
+$mech->with_test_level( local => sub {
+    my $c = $mech->context;
 
-my $tempfile = File::Temp->new;
-$tempfile->print("fogbat!");
-$tempfile->close;
+    my $message_file = $c->config->{system_message_file}
+        or die "must have a system_message_file conf var defined";
 
-$c->config->{system_message_file} = undef;
-is( CXGN::MasonFactory->bare_render('/system_message.mas' ),
-    '',
-    'system message is empty for no message file'
-   );
+  SKIP: {
+        skip "system message file $message_file already exists, not overwriting for test", 5
+            if -f $message_file;
 
-# correctly set system_message_file var
-$c->config->{system_message_file} = "$tempfile";
-like( CXGN::MasonFactory->bare_render('/system_message.mas'),
-      qr/fogbat/,
-      'system message looks correct'
-     );
+        $mech->get_ok('/');
+        $mech->content_lacks('system message active', 'no system message if no message file');
+
+        file($message_file)->openw->write('Testing site-wide message system');
+
+        $mech->get_ok('/');
+        $mech->content_contains('system message active', 'system message file, now have system message');
+        $mech->content_contains('Testing site-wide message system', 'got actual message');
+
+        unlink $message_file;
+    }
+
+}, 5);
+

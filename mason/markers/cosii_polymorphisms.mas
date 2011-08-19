@@ -131,16 +131,22 @@ if($experiments and @{$experiments}) {
       unless($marker_experiment->{location}) {
 	my $exp=$marker_experiment->{pcr_experiment};
 	my $bands_hash=$exp->pcr_bands_hash_of_strings();
-	my($accession_id)=keys(%{$bands_hash});
-	my $accession=CXGN::Accession->new($dbh,$accession_id);
-	my $key_string="<b>".$accession->organism_common_name()."</b> ".$accession->verbose_name();
+	my($stock_id)=keys(%{$bands_hash});
+	#my $accession=CXGN::Accession->new($dbh,$accession_id);
+	
+	#my $key_string="<b>".$accession->organism_common_name()."</b> ".$accession->verbose_name();
+
+	my $sth = $dbh->prepare("SELECT species FROM stock join public.organism using(organism_id) WHERE stock_id=?");
+        $sth->execute($stock_id);
+	my ($key_string) = $sth->fetchrow_array();
+	
 	if($exp->primer_type() eq 'iUPA') {
-	  $display_hash{$key_string}->{iUPA}->{bands}=$bands_hash->{$accession_id};
+	  $display_hash{$key_string}->{iUPA}->{bands}=$bands_hash->{$stock_id};
 	  $display_hash{$key_string}->{iUPA}->{temp}=$exp->temp();
 	  $display_hash{$key_string}->{iUPA}->{mg_conc}=$exp->mg_conc();
 	}
 	elsif($exp->primer_type() eq 'eUPA') {
-	  $display_hash{$key_string}->{eUPA}->{bands}=$bands_hash->{$accession_id};
+	  $display_hash{$key_string}->{eUPA}->{bands}=$bands_hash->{$stock_id};
 	  $display_hash{$key_string}->{eUPA}->{temp}=$exp->temp();
 	  $display_hash{$key_string}->{eUPA}->{mg_conc}=$exp->mg_conc();
 	}

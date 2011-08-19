@@ -1,0 +1,46 @@
+<%args>
+  $organism
+</%args>
+<& /page/page_title.mas, title => '<i>'.$organism->species.'</i> Genome Data' &>
+
+<div class="page_introduction">
+
+   The potato genome has been sequenced by the <a
+   href="http://potatogenome.net">Potato Genome Sequence
+   Consortium</a> (PGSC), an international group of scientists from 14
+   countries. The sequence was published in <a
+   href="http://www.ncbi.nlm.nih.gov/pubmed/21743474">Nature</a> in
+   July 2011. Many potato lines are tetraploid; however, the sequenced
+   accession was a homozygous diploid line (double haploid) <i>Solanum
+   tuberosum phureja</i>. Below is a mirror of the files provided on
+   <a href="http://potatogenome.net">http://potatogenome.net</a>.
+
+</div>
+
+<&| /page/info_section.mas,
+      title       => 'Sequence datasets',
+      collapsible => 1,
+ &>
+  <& /genomes/default/genome_builds.mas, %ARGS &>
+</&>
+
+
+<&| /page/info_section.mas,
+      title       => 'Browsable annotations',
+      collapsible => 1,
+      hide_if_empty => 1,
+ &>
+
+  <& /gbrowse/list_sources.mas, organism => $organism &>
+
+</&>
+
+<&| /page/info_section.mas,
+      title       => 'Annotation datasets',
+      collapsible => 1,
+      hide_if_empty => 1,
+ &>
+
+  <& /genomes/default/annotation_sets.mas, %ARGS &>
+
+</&>

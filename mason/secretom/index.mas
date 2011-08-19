@@ -165,7 +165,7 @@
         <a class="project" href="/secretom/detail/proteomics">Tomato Comparative and Quantitative Proteomics</a>
         <a class="project" href="/secretom/detail/profiling">Integrated Proteome/Transcriptome Profiling of Tomato Fruit</a>
         <a class="project" href="/secretom/detail/cuticle">The Tomato Fruit Cuticular Cell Wall Proteome</a>
-        <a class="project" href="/secretom/detail/phytophthera_interaction">The Secretome of Phytophthora/Tomato Interactions</a>
+        <a class="project" href="/secretom/detail/phytophthora_interaction">The Secretome of Phytophthora/Tomato Interactions</a>
         <a class="project" href="/secretom/detail/spinoffs">Spin-off Projects and Collaborations</a>
 
       </&>
@@ -261,7 +261,7 @@
   </&>
   <&| /page/info_section.mas, title => 'People' &>
     <ul class="people">
-      <li>Joss Rose <a href="http://labs.plantbio.cornell.edu/rose/index.htm">[Lab]</a></li>
+      <li>Joss Rose <a href="http://labs.plantbio.cornell.edu/rose/">[Lab]</a></li>
       <li>Ted Thannhauser <a href="http://www.ars.usda.gov/PandP/docs.htm?docid=9634">[USDA Personal]</a></li>
       <li>Jim Giovannoni <a href="http://www.bti.cornell.edu/JimGiovannoni.php?page=Research#page=ResearchSummary">[BTI Personal]</a></li>
       <li>Lukas Mueller <a href="http://solgenomics.net/about">[SGN]</a></li>

@@ -9,7 +9,6 @@ use SGN::Test::WWW::Mechanize;
 
 use CXGN::Biosource::Schema;
 
-my $base_url = $ENV{SGN_TEST_SERVER};
 my $mech = SGN::Test::WWW::Mechanize->new;
 
 ## First take variables for the test from the database ##
@@ -42,11 +41,11 @@ if (defined $first_sample_row) {
     my $first_sample_id = $first_sample_row->get_column('sample_id');
     my $first_sample_name = $first_sample_row->get_column('sample_name');
 
-    $mech->get_ok("$base_url/biosource/sample.pl?id=$first_sample_id");
+    $mech->get_ok("/biosource/sample.pl?id=$first_sample_id");
     $mech->content_like(qr/Sample: $first_sample_name/);
     $mech->content_unlike(qr/ERROR PAGE/);
 
-    $mech->get_ok("$base_url/biosource/sample.pl?name=$first_sample_name");
+    $mech->get_ok("/biosource/sample.pl?name=$first_sample_name");
     $mech->content_like(qr/Sample: $first_sample_name/);
     $mech->content_unlike(qr/ERROR PAGE/);
 

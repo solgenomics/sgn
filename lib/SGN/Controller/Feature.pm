@@ -85,8 +85,8 @@ sub search :Path('/feature/search') Args(0) {
 
     $c->forward_to_mason_view(
         '/feature/search.mas',
-        form => $form,
-        results => $results,
+        form                  => $form,
+        results               => $results,
         pagination_link_maker => sub {
             return uri( query => { %{$form->params}, page => shift } );
         },
@@ -105,7 +105,8 @@ sub delegate_component
     $c->stash->{seq_download_url} = '/api/v1/sequence/download/single/'.$feature->feature_id;
 
     # look up site xrefs for this feature
-    my @xrefs = $c->feature_xrefs( $feature->name, { exclude => 'featurepages' } );
+    my @xrefs = map $c->feature_xrefs( $_, { exclude => 'featurepages' } ),
+                ( $feature->name, $feature->synonyms->get_column('name')->all );
     unless( @xrefs ) {
         @xrefs = map {
             $c->feature_xrefs( $_->srcfeature->name.':'.($_->fmin+1).'..'.$_->fmax, { exclude => 'featurepages' } )
@@ -259,5 +260,3 @@ sub _feature_types {
 }
 
 __PACKAGE__->meta->make_immutable;
-1;
-

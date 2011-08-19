@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 use strict;
 use warnings;
-use Test::More;
+use Test::Most;
 
 use lib 't/lib';
 use SGN::Test;

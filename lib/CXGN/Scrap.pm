@@ -45,7 +45,7 @@ sub new {
   my $class=shift;
   my $self = bless {},$class;
   $self->{content_type} = 'text/html';
-  $self->{request} = $c->request;
+  $self->{request} = $c ? $c->request : '';
 
   return $self;
 }

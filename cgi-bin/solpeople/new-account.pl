@@ -92,7 +92,7 @@ if ($username) {
 Please do *NOT* reply to this message. The return address is not valid. 
 Use sgn-feedback\@solgenomics.net instead.
 
-This message is sent to confirm the email addresss for community user
+This message is sent to confirm the email address for community user
 \"$username\"
 
 Please click (or cut and paste into your browser) the following link to

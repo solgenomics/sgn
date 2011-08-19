@@ -58,7 +58,7 @@
      collapsed     => 0,
      hide_if_empty => 1,
  &>
-    <& /feature/genomic_sequence.mas,
+    <& /feature/region_sequence.mas,
             feature   => $feature,
             blast_url => $blast_url,
     &>

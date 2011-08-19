@@ -28,7 +28,8 @@ my %skip = map { $_ => 1 } qw(
   page_with_syntax_error.pl
 );
 
-# all our .pl cgis are perl
+# all our .pl cgis are perl, just match the filenames, which speeds up
+# startup considerably.
 sub is_perl_cgi {
     my ($self,$path) = @_;
     return 0 if $skip{ basename($path) };
@@ -57,6 +58,14 @@ if( eval{ SGN->debug } ) {
         $self->$orig( @_ );
     };
 }
+
+# remove the content-length for CGI responses after running them, let
+# catalyst recalculate it later in the response cycle.  this works
+# around a bug somewhere in HTTP::Request::AsCGI
+after 'cgi_to_response' => sub {
+    my ( $self, $c ) = @_;
+    $c->res->headers->remove_header('content-length');
+};
 
 sub cgi_action_for {
     my ( $self, $path ) = @_;

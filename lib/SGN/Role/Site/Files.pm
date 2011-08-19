@@ -47,8 +47,11 @@ before 'setup_finalize' => sub {
 
     $c->log->debug("symlinking tempfiles_base '$temp_base' -> legacy location '$temp_subdir'") if $c->debug;
     $c->make_generated_dir($temp_base);
-    unlink $temp_subdir;
-    symlink $temp_base, $temp_subdir or die "$! linking $temp_base => $temp_subdir";
+
+    # Only symlink if it doesn't exist already
+    unless( -l $temp_subdir ) {
+        symlink $temp_base, $temp_subdir or die "$! linking $temp_base => $temp_subdir";
+    }
 
 #     unless( $temp_subdir eq $temp_base ) {
 #         $c->log->warn("WARNING: symlinking tempfiles_subdir() $temp_subdir to $temp_base");

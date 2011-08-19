@@ -4,6 +4,7 @@
   $request                    => undef
   $sp_person_autocomplete_uri
   $trait_autocomplete_uri
+  $onto_autocomplete_uri
 </%args>
 
 <& /util/import_javascript.mas,
@@ -25,7 +26,8 @@ div[class*="advanced"] {
 }
 #stock_search_form label {
   float: left;
-  width: 8em;
+  width: 9em;
+  white-space: nowrap;
 }
 
 div.paginate_nav {
@@ -44,6 +46,9 @@ div.paginate_nav {
      });
      jQuery("#trait").autocomplete({
         source: '<% $trait_autocomplete_uri %>'
+     });
+     jQuery("#onto").autocomplete({
+        source: '<% $onto_autocomplete_uri %>' + "?db_name=SP"
      });
   });
 </script>

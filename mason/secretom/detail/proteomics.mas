@@ -137,10 +137,12 @@
 
 
 <&| /secretom/section_templates/data_items.mas &>
+% if(0){
 - text: "Tomato (cv. Ailsa Craig) fruit: DIGE data"
 - text: "Tomato (cv. Ailsa Craig) fruit: iTRAQ data"
 - text: "Tomato (cv. Rio Grande) leaves infected with Phytophthora infestans (isolate US970001): DIGE data"
 - text: "Tomato (cv. Grande) leaves infected with Phytophthora infestans (isolate US970001): iTRAQ data"
+% }
 - text: "Browse more files via FTP"
   ref: ftp://ftp.solgenomics.net/secretom/Tomato_comparative_quantitative_proteomics/
 </&>

@@ -7,13 +7,15 @@ use File::Spec::Functions;
 use File::Temp;
 use File::Find;
 
-use List::Util qw/min shuffle/;
+use List::Util qw/ min shuffle /;
+use List::MoreUtils qw/ uniq /;
 use Test::More;
 use Exporter;
 
 use SGN::Devel::MyDevLibs;
 
 use HTML::Lint;
+use HTML::Lint::Error;
 
 use lib 't/lib';
 use SGN::Test::WWW::Mechanize;
@@ -65,15 +67,15 @@ sub validate_urls {
 
 sub _validate_single_url {
     my ( $test_name, $url, $mech ) = @_;
+    diag "validating url: $url";
     $mech->get( $url );
     my $rc = $mech->status;
-
     my $dump_tempdir;
     ok( $rc == 200, "$test_name returned OK" )
         or do {
 
             diag "fetch actually returned code '$rc': "
-                 .($ENV{SGN_TEST_SERVER}||'').$url;
+                 .$test_server_name.$url;
 
             if( $ENV{DUMP_ERROR_CONTENT} ) {
                 if ( eval { require Digest::Crc32 } ) {
@@ -102,6 +104,7 @@ sub _validate_single_url {
     SKIP: {
             skip 'SKIP_HTML_LINT env set', 2 if $ENV{SKIP_HTML_LINT};
             my $lint = HTML::Lint->new;
+            $lint->only_types( HTML::Lint::Error::STRUCTURE );
             $lint->parse( $mech->content );
             my @e = $lint->errors;
             my $e_cnt = @e;
@@ -111,11 +114,20 @@ sub _validate_single_url {
             is( scalar @e, 0, "$test_name HTML validates" )
                 or diag( "first " . min($e_cnt,$max_errors_to_show) ." of $e_cnt errors:\n",
                         (map {$_->as_string."\n"} @e[0..min($max_errors_to_show,$#e)]),
-                        "NOTE: above line numbers refer to the HTML output.\nTo see full error list, run: view_lint.pl '$ENV{SGN_TEST_SERVER}$url'\n"
+                        "NOTE: above line numbers refer to the HTML output.\nTo see full error list, run: view_lint.pl '$test_server_name$url'\n"
                     );
 
             unlike( $mech->content, qr/timed out/i, "$test_name does not seem to have timed out" )
                 or diag "fetch from URL $url seems to have timed out";
+
+            # test for any broken images or other things that have a
+            # src attr
+            { my @stuff = grep !m|^https?://|, uniq map $_->attr('src'), $mech->findnodes('//*[@src]');
+              for( @stuff ) {
+                  $mech->get_ok( $_ );
+                  $mech->back;
+              }
+            }
         }
     } else {
         SKIP: { skip 'because of invalid return code '.$rc, 2 };

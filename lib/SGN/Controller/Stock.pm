@@ -2,7 +2,8 @@ package SGN::Controller::Stock;
 
 =head1 NAME
 
-SGN::Controller::Stock - Catalyst controller for pages dealing with stocks (e.g. accession, poopulation, etc.)
+SGN::Controller::Stock - Catalyst controller for pages dealing with
+stocks (e.g. accession, population, etc.)
 
 =cut
 
@@ -15,30 +16,36 @@ use URI::FromHash 'uri';
 use CXGN::Chado::Stock;
 use SGN::View::Stock qw/stock_link stock_organisms stock_types/;
 
+
+BEGIN { extends 'Catalyst::Controller' }
+with 'Catalyst::Component::ApplicationAttribute';
+
 has 'schema' => (
     is       => 'rw',
     isa      => 'DBIx::Class::Schema',
-    required => 0,
+    lazy_build => 1,
 );
+sub _build_schema {
+    shift->_app->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' )
+}
 
 has 'default_page_size' => (
     is      => 'ro',
     default => 20,
 );
 
+=head1 PUBLIC ACTIONS
 
-BEGIN { extends 'Catalyst::Controller' }
-with 'Catalyst::Component::ApplicationAttribute';
+=head2 search
 
-sub _validate_pair {
-    my ($self,$c,$key,$value) = @_;
-    $c->throw( is_client_error => 1, public_message => "$value is not a valid value for $key" )
-        if ($key =~ m/_id$/ and $value !~ m/\d+/);
-}
+Public path: /stock/search
+
+Display a stock search form, or handle stock searching.
+
+=cut
 
 sub search :Path('/stock/search') Args(0) {
     my ( $self, $c ) = @_;
-    $self->schema( $c->dbic_schema('Bio::Chado::Schema','sgn_chado') );
 
     my $results = $c->req->param('search_submitted') ? $self->_make_stock_search_rs($c) : undef;
     my $form = HTML::FormFu->new(LoadFile($c->path_to(qw{forms stock stock_search.yaml})));
@@ -51,116 +58,24 @@ sub search :Path('/stock/search') Args(0) {
         results                    => $results,
         sp_person_autocomplete_uri => $c->uri_for( '/ajax/people/autocomplete' ),
         trait_autocomplete_uri     => $c->uri_for('/ajax/stock/trait_autocomplete'),
+        onto_autocomplete_uri      => $c->uri_for('/ajax/cvterm/autocomplete'),
         pagination_link_maker      => sub {
             return uri( query => { %{$c->req->params} , page => shift } );
         },
-    );
+        );
 }
 
+=head2 new_stock
 
-# assembles a DBIC resultset for the search based on the submitted
-# form values
-sub _make_stock_search_rs {
-    my ( $self, $c ) = @_;
+Public path: /stock/0/new
 
-    my $rs = $self->schema->resultset('Stock::Stock');
+Create a new stock.
 
-    if( my $name = $c->req->param('stock_name') ) {
-        # trim and regularize whitespace
-        $name =~ s/(^\s+|\s+)$//g;
-        $name =~ s/\s+/ /g;
+Chained off of L</get_stock> below.
 
-        $rs = $rs->search({
-            -or => [
-                 'lower(me.name)' => { like => '%'.lc( $name ).'%' } ,
-                 'lower(uniquename)' => { like => '%'.lc( $name ).'%' },
-                 -and => [
-                     'lower(type.name)' => { like =>'%synonym%' },
-                     'lower(value)' => { like =>'%'.lc( $name ).'%' },
-                 ],
-                ],
-                          } ,
-               {  join =>  { 'stockprops' =>  'type'  }  ,
-                  columns => [ qw/stock_id uniquename type_id organism_id / ],
-                  distinct => 1
-               }
-            );
-    }
-    if( my $type = $c->req->param('stock_type') ) {
-        $self->_validate_pair($c,'type_id',$type);
-        $rs = $rs->search({ 'me.type_id' => $type });
-    }
-    if( my $organism = $c->req->param('organism') ) {
-        $self->_validate_pair( $c, 'organism_id', $organism );
-        $rs = $rs->search({ 'organism_id' => $organism });
-    }
-    if ( my $editor = $c->req->param('person') ) {
-        $self->_validate_pair( $c, 'person') ;
-        $editor =~ s/,/ /g;
-        $editor =~ s/\s+/ /g;
+=cut
 
-        my $person_ids = $c->dbc->dbh->selectcol_arrayref(<<'', undef, $editor);
-SELECT sp_person_id FROM sgn_people.sp_person
-WHERE ( first_name || ' ' || last_name ) like '%' || ? || '%'
-
-        if (@$person_ids) {
-            $rs = $rs->search({
-                      'type.name'        => 'sp_person_id',
-                      'stockprops.value' => { -in => $person_ids },
-                    },
-                    { join => { stockprops => ['type'] }},
-                 );
-        } else {
-            $rs = $rs->search({ name => '' });
-        }
-    }
-    if ( my $trait = $c->req->param('trait') ) {
-        $rs = $rs->search( { 'observable.name' => $trait },
-                     { join => { nd_experiment_stocks => { nd_experiment => {'nd_experiment_phenotypes' => {'phenotype' => 'observable' }}}},
-                       columns => [ qw/stock_id uniquename type_id organism_id / ],
-                       distinct => 1
-                     } );
-    }
-    if ( my $min = $c->req->param('min_limit') ) {
-        $rs = $rs->search( { 'cast(phenotype.value as numeric) ' => { '>=' => $min }  },
-                           { join => { nd_experiment_stocks => { nd_experiment => {'nd_experiment_phenotypes' => 'phenotype' }}},
-                             columns => [ qw/stock_id uniquename type_id organism_id / ],
-                             distinct => 1
-                           } );
-    }
-    if ( my $max = $c->req->param('max_limit') ) {
-        $rs = $rs->search( { 'cast(phenotype.value as numeric) ' => { '<=' => $max }  },
-                           { join => { nd_experiment_stocks => { nd_experiment => {'nd_experiment_phenotypes' => 'phenotype' }}},
-                             columns => [ qw/stock_id uniquename type_id organism_id / ],
-                             distinct => 1
-                           } );
-    }
-    # this is for direct annotations in stock_cvterm
-    if ( my $ontology = $c->req->param('ontology') ) {
-    }
-    if ( my $has_image = $c->req->param('has_image') ) {
-    }
-    if ( my $has_locus = $c->req->param('has_locus') ) {
-    }
-    # page number and page size, and order by name
-    $rs = $rs->search( undef, {
-        page => $c->req->param('page')  || 1,
-        rows => $c->req->param('page_size') || $self->default_page_size,
-        order_by => 'uniquename',
-                       });
-    return $rs;
-}
-
-
-# sub view_id :Path('/stock/view/id') :Args(1) {
-#     my ( $self, $c , $stock_id) = @_;
-
-#     $self->schema( $c->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' ) );
-#     $self->_view_stock($c, 'view', $stock_id);
-# }
-
-
-sub new_stock :Chained('get_stock') : PathPart('new') :Args(0) {
+sub new_stock : Chained('get_stock') PathPart('new') Args(0) {
     my ( $self, $c ) = @_;
     $c->stash(
         template => '/stock/index.mas',
@@ -175,8 +90,21 @@ sub new_stock :Chained('get_stock') : PathPart('new') :Args(0) {
 }
 
 
-sub view_stock :Chained('get_stock') :PathPart('view') :Args(0) {
+=head2 view_stock
+
+Public path: /stock/<stock_id>/view
+
+View a stock's detail page.
+
+Chained off of L</get_stock> below.
+
+=cut
+
+sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
     my ( $self, $c, $action) = @_;
+
+    $c->forward('get_stock_extended_info');
+
     my $logged_user = $c->user;
     my $person_id = $logged_user->get_object->get_sp_person_id if $logged_user;
     my $curator = $logged_user->check_roles('curator') if $logged_user;
@@ -218,7 +146,7 @@ sub view_stock :Chained('get_stock') :PathPart('view') :Args(0) {
     ####################
     my $props = $self->_stockprops($stock);
     my $is_owner;
-    my $owner_ids = $props->{sp_person_id} || [] ;
+    my $owner_ids = $c->stash->{owner_ids} || [] ;
     if ( $stock && ($curator || $person_id && ( grep /^$person_id$/, @$owner_ids ) ) ) {
         $is_owner = 1;
     }
@@ -241,9 +169,9 @@ sub view_stock :Chained('get_stock') :PathPart('view') :Args(0) {
             schema    => $self->schema,
             dbh       => $dbh,
             is_owner  => $is_owner,
+            owners    => $owner_ids,
             props     => $props,
             dbxrefs   => $dbxrefs,
-            owners    => $owner_ids,
             pubs      => $pubs,
             members_phenotypes => $c->stash->{members_phenotypes},
             direct_phenotypes  => $c->stash->{direct_phenotypes},
@@ -256,6 +184,223 @@ sub view_stock :Chained('get_stock') :PathPart('view') :Args(0) {
         cvterm_add_uri => $c->uri_for( '/ajax/stock/associate_ontology')
         );
 }
+
+=head1 PRIVATE ACTIONS
+
+=head2 get_stock
+
+Chain root for fetching a stock object to operate on.
+
+Path part: /stock/<stock_id>
+
+=cut
+
+sub get_stock : Chained('/')  PathPart('stock')  CaptureArgs(1) {
+    my ($self, $c, $stock_id) = @_;
+
+    $c->stash->{stock}     = CXGN::Chado::Stock->new($self->schema, $stock_id);
+    $c->stash->{stock_row} = $self->schema->resultset('Stock::Stock')
+                                  ->find({ stock_id => $stock_id });
+}
+
+#add the stockcvterms to the stash. Props are a hashref of lists.
+sub get_stock_cvterms : Private {
+    my ( $self, $c ) = @_;
+    my $stock = $c->stash->{stock};
+    my $stock_cvterms = $stock ? $self->_stock_cvterms($stock) : undef;
+    $c->stash->{stock_cvterms} = $stock_cvterms;
+}
+
+sub get_stock_allele_ids : Private {
+    my ( $self, $c ) = @_;
+    my $stock = $c->stash->{stock};
+    my $allele_ids = $stock ? $self->_stock_allele_ids($stock) : undef;
+    $c->stash->{allele_ids} = $allele_ids;
+}
+
+sub get_stock_owner_ids : Private {
+    my ( $self, $c ) = @_;
+    my $stock = $c->stash->{stock};
+    my $owner_ids = $stock ? $self->_stock_owner_ids($stock) : undef;
+    $c->stash->{owner_ids} = $owner_ids;
+}
+
+sub get_stock_extended_info : Private {
+    my ( $self, $c ) = @_;
+    $c->forward('get_stock_cvterms');
+    $c->forward('get_stock_allele_ids');
+    $c->forward('get_stock_owner_ids');
+
+    # look up the stock again, this time prefetching a lot of data about its related stocks
+    $c->stash->{stock_row} = $self->schema->resultset('Stock::Stock')
+                                  ->find({ stock_id => $c->stash->{stock_row}->stock_id },
+                                         { prefetch => {
+                                             'stock_relationship_objects' => [ { 'subject' => 'type' }, 'type'],
+                                           },
+                                         },
+                                        );
+
+    my $stock = $c->stash->{stock};
+
+    #add the stock_dbxrefs to the stash. Dbxrefs are hashref of lists.
+    # keys are db-names , values are lists of Bio::Chado::Schema::General::Dbxref objects
+    my $dbxrefs  = $stock ?  $self->_stock_dbxrefs($stock) : undef ;
+    $c->stash->{stock_dbxrefs} = $dbxrefs;
+
+    my $cvterms  = $stock ?  $self->_stock_cvterms($stock) : undef ;
+    $c->stash->{stock_cvterms} = $cvterms;
+
+    my $direct_phenotypes  = $stock ? $self->_stock_project_phenotypes( $c->stash->{stock_row} ) : undef;
+    $c->stash->{direct_phenotypes} = $direct_phenotypes;
+
+    my ($members_phenotypes, $has_members_genotypes)  = $stock ? $self->_stock_members_phenotypes( $c->stash->{stock_row} ) : undef;
+    $c->stash->{members_phenotypes} = $members_phenotypes;
+
+    my $stock_type;
+    $stock_type = $stock->get_object_row->type->name if $stock->get_object_row;
+    if ( ( grep { /^$stock_type/ } ('f2 population', 'backcross population') ) &&  $members_phenotypes && $has_members_genotypes ) { $c->stash->{has_qtl_data} = 1 ; }
+
+}
+
+############## HELPER METHODS ######################3
+
+# assembles a DBIC resultset for the search based on the submitted
+# form values
+sub _make_stock_search_rs {
+    my ( $self, $c ) = @_;
+
+    my $rs = $self->schema->resultset('Stock::Stock');
+
+    if( my $name = $c->req->param('stock_name') ) {
+        # trim and regularize whitespace
+        $name =~ s/(^\s+|\s+)$//g;
+        $name =~ s/\s+/ /g;
+
+        $rs = $rs->search({
+            -or => [
+                 'lower(me.name)' => { like => '%'.lc( $name ).'%' } ,
+                 'lower(me.uniquename)' => { like => '%'.lc( $name ).'%' },
+                 -and => [
+                     'lower(type.name)' => { like =>'%synonym%' },
+                     'lower(stockprops.value)' => { like =>'%'.lc( $name ).'%' },
+                 ],
+                ],
+                          } ,
+               {  join =>  { 'stockprops' =>  'type'  }  ,
+                  columns => [ qw/stock_id uniquename type_id organism_id / ],
+                  distinct => 1
+               }
+            );
+    }
+    if( my $type = $c->req->param('stock_type') ) {
+        $self->_validate_pair($c,'type_id',$type);
+        $rs = $rs->search({ 'me.type_id' => $type });
+    }
+    if( my $organism = $c->req->param('organism') ) {
+        $self->_validate_pair( $c, 'organism_id', $organism );
+        $rs = $rs->search({ 'organism_id' => $organism });
+    }
+    if ( my $description = $c->req->param('description') ) {
+        $self->_validate_pair($c, 'description');
+        $rs = $rs->search( {
+            -or => [
+                 'lower(me.description)' => { like => '%'.lc( $description ).'%' } ,
+                 'lower(stockprops.value)' => { like =>'%'.lc( $description ).'%' },
+                ],
+                           } ,
+                {  join =>  { 'stockprops' =>  'type'  }  ,
+                   columns => [ qw/stock_id uniquename type_id organism_id / ],
+                   distinct => 1
+                }
+            );
+    }
+    if ( my $editor = $c->req->param('person') ) {
+        $self->_validate_pair( $c, 'person') ;
+        $editor =~ s/,/ /g;
+        $editor =~ s/\s+/ /g;
+
+        my $person_ids = $c->dbc->dbh->selectcol_arrayref(<<'', undef, $editor);
+SELECT sp_person_id FROM sgn_people.sp_person
+    WHERE ( first_name || ' ' || last_name ) like '%' || ? || '%'
+
+        if (@$person_ids) {
+            my $bindstr = join ',', map '?', @$person_ids;
+            my $stock_ids =  $c->dbc->dbh->selectcol_arrayref(
+                "SELECT stock_id FROM phenome.stock_owner
+    WHERE sp_person_id IN ($bindstr)",
+                undef,
+                @$person_ids,
+                );
+            $rs = $rs->search({ 'me.stock_id' => { -in => $stock_ids } } );
+         } else {
+             $rs = $rs->search({ name => '' });
+         }
+    }
+    if ( my $trait = $c->req->param('trait') ) {
+        $rs = $rs->search( { 'observable.name' => $trait },
+                     { join => { nd_experiment_stocks => { nd_experiment => {'nd_experiment_phenotypes' => {'phenotype' => 'observable' }}}},
+                       columns => [ qw/stock_id uniquename type_id organism_id / ],
+                       distinct => 1
+                     } );
+    }
+    if ( my $min = $c->req->param('min_limit') ) {
+        if ( $min =~ /^\d+$/ ) {
+            $rs = $rs->search( { 'cast(phenotype.value as numeric) ' => { '>=' => $min }  },
+                               { join => { nd_experiment_stocks => { nd_experiment => {'nd_experiment_phenotypes' => 'phenotype' }}},
+                                 columns => [ qw/stock_id uniquename type_id organism_id / ],
+                                 distinct => 1
+                               } );
+        }
+    }
+    if ( my $max = $c->req->param('max_limit') ) {
+        if ( $max =~ /^\d+$/ ) {
+            $rs = $rs->search( { 'cast(phenotype.value as numeric) ' => { '<=' => $max }  },
+                               { join => { nd_experiment_stocks => { nd_experiment => {'nd_experiment_phenotypes' => 'phenotype' }}},
+                                 columns => [ qw/stock_id uniquename type_id organism_id / ],
+                                 distinct => 1
+                               } );
+        }
+    }
+    # this is for direct annotations in stock_cvterm
+    if ( my $ontology = $c->req->param('onto') ) {
+        my ($cv_name, $full_accession, $cvterm_name) = split(/--/ , $ontology);
+        my ($db_name, $accession) = split(/:/, $full_accession);
+        my ($cvterm) = $self->schema->resultset("General::Db")->
+            search( { 'me.name' => $db_name })->
+            search_related('dbxrefs', { accession => $accession } )->
+            search_related('cvterm');
+        my $cvterm_id = $cvterm->cvterm_id;
+        my @children_ids = $cvterm->recursive_children->get_column('cvterm_id')->all;
+        push ( @children_ids, $cvterm_id ) ;
+        $rs = $rs->search( {
+            'stock_cvterms.cvterm_id' => { -in =>  \@children_ids },
+            -or => [
+                'stock_cvtermprops.value' => { '!=' => '1' },
+                'stock_cvtermprops.value' => undef,
+                ],
+                -or => [
+                lc('type.name')       => { 'NOT LIKE' => lc('obsolete') },
+                'type.name'           =>  undef,
+                ],
+                           },
+                           { join => { stock_cvterms => { 'stock_cvtermprops' => 'type' } },
+                             columns => [ qw/stock_id uniquename type_id organism_id / ],
+                             distinct => 1
+                           } );
+    }
+    if ( my $has_image = $c->req->param('has_image') ) {
+    }
+    if ( my $has_locus = $c->req->param('has_locus') ) {
+    }
+    # page number and page size, and order by name
+    $rs = $rs->search( undef, {
+        page => $c->req->param('page')  || 1,
+        rows => $c->req->param('page_size') || $self->default_page_size,
+        order_by => 'uniquename',
+                       });
+    return $rs;
+}
+
 
 sub _stockprops {
     my ($self,$stock) = @_;
@@ -288,30 +433,34 @@ sub _dbxrefs {
     return $dbxrefs;
 }
 
-sub _stock_nd_experiments {
-    my ($self, $stock) = @_;
-    my $bcs_stock = $stock->get_object_row;
-    if ($bcs_stock) {
-        my $nd_experiments = $bcs_stock->nd_experiment_stocks->search_related('nd_experiment');
-        return $nd_experiments;
-    }
-    return undef;
-}
+# this sub gets all phenotypes measured directly on this stock and
+# stores it in a hashref as { project_name => [ BCS::Phenotype::Phenotype, ... ]
 
-# this sub gets all phenotypes measured directly on this stock and stores
-# it in a hashref of keys = project name , values = list of BCS::Phenotype::Phenotype objects
 sub _stock_project_phenotypes {
-    my ($self, $stock) = @_;
-    my $nd_experiments = $self->_stock_nd_experiments($stock);
+    my ($self, $bcs_stock) = @_;
+
+    return {} unless $bcs_stock;
+
+    # hash of experiment_id => project(s) desc
+    my %project_descriptions =
+        map { $_->nd_experiment_id => join( ', ', map $_->project->description, $_->nd_experiment_projects ) }
+        $bcs_stock->search_related('nd_experiment_stocks')
+                  ->search_related('nd_experiment',
+                                   {},
+                                   { prefetch => { 'nd_experiment_projects' => 'project' } },
+                                   );
+    my $experiments = $bcs_stock->search_related('nd_experiment_stocks')
+                                ->search_related('nd_experiment',
+                                                 {},
+                                                 { prefetch => { nd_experiment_phenotypes => 'phenotype' } },
+                                                );
     my %phenotypes;
-    if ($nd_experiments) {
-        while (my $exp = $nd_experiments->next) {
-            my $geolocation = $exp->nd_geolocation;
-            # there should be one project linked to the experiment ?
-            my $project = $exp->nd_experiment_projects->search_related('project')->first;
-            my @ph = $exp->nd_experiment_phenotypes->search_related('phenotype')->all;
-            push(@{$phenotypes{$project->description}}, @ph) if @ph;
-        }
+    while (my $exp = $experiments->next) {
+        # there should be one project linked to the experiment ?
+        my @ph = map $_->phenotype, $exp->nd_experiment_phenotypes;
+        my $project_desc = $project_descriptions{ $exp->nd_experiment_id }
+            or die "no project found for exp ".$exp->nd_experiment_id;
+        push @{ $phenotypes{ $project_desc }}, @ph;
     }
     return \%phenotypes;
 }
@@ -319,25 +468,22 @@ sub _stock_project_phenotypes {
 # this sub gets all phenotypes measured on all subjects of this stock.
 # Subjects are in stock_relationship
 sub _stock_members_phenotypes {
-    my ($self, $stock) = @_;
+    my ($self, $bcs_stock) = @_;
+    return unless $bcs_stock;
     my %phenotypes;
-    my $has_members_genotypes;
-    my $bcs_stock = $stock->get_object_row;
-    if ($bcs_stock) {
-        my $objects = $bcs_stock->stock_relationship_objects ;
-        # now we have rs of stock_relationship objects. We need to find the phenotypes of their related subjects
-        while (my $object = $objects->next ) {
-            my $subject = $object->subject;
-            my $subject_stock = CXGN::Chado::Stock->new($self->schema, $subject->stock_id);
-            my $subject_phenotype_ref = $self->_stock_project_phenotypes($subject_stock);
-            $has_members_genotypes = 1 if $self->_stock_genotypes($subject_stock);
-            my %subject_phenotypes = %$subject_phenotype_ref;
-            foreach my $key (keys %subject_phenotypes) {
-                push(@{$phenotypes{$key} } , @{$subject_phenotypes{$key} } );
-            }
-        }
-    }
-    return \%phenotypes, $has_members_genotypes;
+    my ($has_members_genotypes) = $bcs_stock->result_source->schema->storage->dbh->selectrow_array( <<'', undef, $bcs_stock->stock_id );
+SELECT COUNT( DISTINCT genotype_id )
+  FROM phenome.genotype
+  JOIN stock subj using(stock_id)
+  JOIN stock_relationship sr ON( sr.subject_id = subj.stock_id )
+ WHERE sr.object_id = ?
+
+    # now we have rs of stock_relationship objects. We need to find
+    # the phenotypes of their related subjects
+    my $subjects = $bcs_stock->search_related('stock_relationship_objects')
+                             ->search_related('subject');
+    my $subject_phenotypes = $self->_stock_project_phenotypes( $subjects );
+    return ( $subject_phenotypes, $has_members_genotypes );
 }
 
 sub _stock_dbxrefs {
@@ -408,55 +554,20 @@ sub _stock_allele_ids {
     return $ids;
 }
 
-sub _stock_genotypes {
-    my ($self, $stock) = @_;
-    my $dbh = $stock->get_schema->storage->dbh;
-    my $q = "SELECT genotype_id FROM phenome.genotype WHERE stock_id = ?";
-    my $sth = $dbh->prepare($q);
-    $sth->execute($stock->get_stock_id);
-    my @genotypes;
-    while (my ($genotype_id) = $sth->fetchrow_array ) {
-        push @genotypes, $genotype_id;
-    }
-    return \@genotypes;
+sub _stock_owner_ids {
+    my ($self,$stock) = @_;
+    my $ids = $stock->get_schema->storage->dbh->selectcol_arrayref
+        ("SELECT sp_person_id FROM phenome.stock_owner WHERE stock_id = ? ",
+         undef,
+         $stock->get_stock_id
+        );
+    return $ids;
 }
 
-
-sub get_stock :Chained('/') :PathPart('stock') :CaptureArgs(1) {
-    my ($self, $c, $stock_id) = @_;
-
-    $self->schema( $c->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' ) );
-    $c->stash->{stock} = CXGN::Chado::Stock->new($self->schema, $stock_id);
-
-    #add the stockprops to the stash. Props are a hashref of lists.
-    # keys are the cvterm name (prop type) and values  are the prop values.
-    my $stock = $c->stash->{stock};
-    my $properties = $stock ?  $self->_stockprops($stock) : undef ;
-    $c->stash->{stockprops} = $properties;
-
-    #add the stock_dbxrefs to the stash. Dbxrefs are hashref of lists.
-    # keys are db-names , values are lists of Bio::Chado::Schema::General::Dbxref objects
-    my $dbxrefs  = $stock ?  $self->_stock_dbxrefs($stock) : undef ;
-    $c->stash->{stock_dbxrefs} = $dbxrefs;
-
-    my $cvterms  = $stock ?  $self->_stock_cvterms($stock) : undef ;
-    $c->stash->{stock_cvterms} = $cvterms;
-
-    my $direct_phenotypes  = $stock ? $self->_stock_project_phenotypes($stock) : undef;
-    $c->stash->{direct_phenotypes} = $direct_phenotypes;
-
-    my ($members_phenotypes, $has_members_genotypes)  = $stock ? $self->_stock_members_phenotypes($stock) : undef;
-    $c->stash->{members_phenotypes} = $members_phenotypes;
-
-    my $allele_ids = $stock ? $self->_stock_allele_ids($stock) : undef;
-    $c->stash->{allele_ids} = $allele_ids;
-
-    my $stock_type;
-    $stock_type = $stock->get_object_row->type->name if $stock->get_object_row;
-    if ( ( grep { /^$stock_type/ } ('f2 population', 'backcross population') ) &&  $members_phenotypes && $has_members_genotypes ) { $c->stash->{has_qtl_data} = 1 ; }
-
+sub _validate_pair {
+    my ($self,$c,$key,$value) = @_;
+    $c->throw( is_client_error => 1, public_message => "$value is not a valid value for $key" )
+        if ($key =~ m/_id$/ and $value !~ m/\d+/);
 }
 
-######
-1;
-######
+__PACKAGE__->meta->make_immutable;

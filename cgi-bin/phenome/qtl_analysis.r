@@ -573,10 +573,41 @@ chrno<-chrno + 1;
 }
 
 ##########QTL EFFECTS ##############
-ResultFull<-c()
-ResultDrop<-c()
-Effects<-c()
+## <<<<<<< HEAD
+## ResultFull<-c()
+## ResultDrop<-c()
+## Effects<-c()
+## |||||||
+## if ( max(QtlLods) >= LodScore )
+## {
+##   QtlObj<-makeqtl(popdata,
+##                 QtlChrs,
+##                 QtlPositions,
+##                 what="prob"
+##                 )
+  
+##   QtlsNo<-length(QtlPositions)
+##   Eq<-c("y~")
+## =======
+ ResultDrop<-c()
+ ResultFull<-c()
+ Effects<-c()
 
+## if ( is.null(QtlLods)==FALSE)
+## {
+##   if (max(QtlLods) >= LodScore ) 
+##     {
+##       QtlObj<-makeqtl(popdata,
+##                 QtlChrs,
+##                 QtlPositions,
+##                 what="prob"
+##                 )
+  
+##       QtlsNo<-length(QtlPositions)
+##       Eq<-c("y~")
+## #>>>>>>> master
+
+#<<<<<<< HEAD
     if (is.null(LodThreshold) == FALSE)
       {
         if ( max(QtlLods) >= LodScore )
@@ -586,7 +617,21 @@ Effects<-c()
                             QtlPositions,
                             what=genotypetype
                             )
+## |||||||
+##   for (i in 1:QtlsNo) {
+##     q<-paste("Q",
+##              i,
+##              sep=""
+##              )
+## =======
+##       for (i in 1:QtlsNo) {
+##         q<-paste("Q",
+##                  i,
+##                  sep=""
+##                  )
+## >>>>>>> master
   
+#<<<<<<< HEAD
             QtlsNo<-length(QtlPositions)
             Eq<-c("y~")
 
@@ -599,12 +644,18 @@ Effects<-c()
   
                 if (i==1)
                   {  
-                    Eq<-paste(Eq, q, sep="")      
+                    Eq<-paste(Eq,
+                              q,
+                              sep=""
+                              )      
                   }
                 else
                   if (i>1)
                     {
-                      Eq<-paste(Eq, q, sep="*")    
+                      Eq<-paste(Eq,
+                                q,
+                                sep="*"
+                                )    
                     }
               }
 
@@ -618,7 +669,51 @@ Effects<-c()
             ResultModel<-attr(QtlEffects,
                               "formula"
                               )
+## |||||||
+##     if (i==1) {  
+##       Eq<-paste(Eq, q, sep="")
+      
+##     }else
+##     if (i>1) {
+##       Eq<-paste(Eq, q, sep="*")
+     
+##     }
+##   }
+
+##   QtlEffects<-fitqtl(popdata,
+##                      pheno.col=cv,
+##                      QtlObj,
+##                      formula=Eq,
+##                      method="hk",                   
+##                      get.ests=TRUE
+##                      )
+##   ResultModel<-attr(QtlEffects,
+##                     "formula"
+##                     )
+## =======
+##         if (i==1) {  
+##           Eq<-paste(Eq, q, sep="")
+      
+##         }else
+##         if (i>1) {
+##           Eq<-paste(Eq, q, sep="*")
+     
+##         }
+##       }
+
+##       QtlEffects<-fitqtl(popdata,
+##                          pheno.col=cv,
+##                          QtlObj,
+##                          formula=Eq,
+##                          method="hk",                   
+##                          get.ests=TRUE
+##                          )
+##       ResultModel<-attr(QtlEffects,
+##                         "formula"
+##                         )
+## >>>>>>> master
  
+#<<<<<<< HEAD
             Effects<-QtlEffects$ests$ests
             QtlLodAnova<-QtlEffects$lod
             ResultFull<-QtlEffects$result.full  
@@ -647,6 +742,65 @@ Effects<-c()
           }
       }
 
+## |||||||
+##   Effects<-QtlEffects$ests$ests
+##   QtlLodAnova<-QtlEffects$lod
+##   ResultFull<-QtlEffects$result.full  
+##   ResultDrop<-QtlEffects$result.drop
+
+##   if (is.numeric(Effects))
+##     {
+##       Effects<-round(Effects,
+##                         2
+##                         )
+##     }
+
+
+##   if (is.numeric(ResultFull))
+##     {
+##       ResultFull<-round(ResultFull,
+##                         2
+##                         )
+##     }
+
+##   if (is.numeric(ResultDrop))
+##     {
+##       ResultDrop<-round(ResultDrop,
+##                         2
+##                         )
+##     }
+## }
+
+## =======
+##       Effects<-QtlEffects$ests$ests
+##       QtlLodAnova<-QtlEffects$lod
+##       ResultFull<-QtlEffects$result.full  
+##       ResultDrop<-QtlEffects$result.drop
+
+##       if (is.numeric(Effects))
+##         {
+##           Effects<-round(Effects,
+##                          2
+##                          )
+##         }
+
+
+##   if (is.numeric(ResultFull))
+##     {
+##       ResultFull<-round(ResultFull,
+##                         2
+##                         )
+##     }
+
+##       if (is.numeric(ResultDrop))
+##         {
+##           ResultDrop<-round(ResultDrop,
+##                             2
+##                             )
+##         }
+##     }
+## }
+## >>>>>>> master
 ##########creating vectors for the outfiles##############
 
 outfiles<-scan(file=outfile,
@@ -723,13 +877,16 @@ if (is.null(ResultDrop)==FALSE)
               )
 } else
 {
-  write.table(ResultFull,
+  if(is.null(ResultFull)==FALSE)
+    {
+      write.table(ResultFull,
               file=VariationFile,
               sep="\t",
               col.names=NA,
               quote=FALSE,
               append=FALSE
               )
+    }
 }
 
     write.table(Effects,

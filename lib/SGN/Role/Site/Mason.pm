@@ -17,8 +17,6 @@ requires
       );
 
 
-
-
 =head2 forward_to_mason_view
 
   Usage: $c->forward_to_mason_view( '/some/thing', foo => 'bar' );
@@ -32,39 +30,12 @@ requires
 
 =cut
 
-has '_mason_interp' => (
-    is         => 'ro',
-    lazy_build => 1,
-   ); 
-
-sub _build__mason_interp {
-    my $self = shift;
-    my %params = @_;
-
-    my $site_mason_root  = $self->path_to( 'mason' );
-
-    $params{comp_root} = [ [ "site", $site_mason_root ] ];
-
-    my $data_dir = $self->path_to( $self->tempfiles_subdir('mason_cache_'.getpwuid($>)) );
-
-    $params{data_dir}  = join ":", grep $_, ($data_dir, $params{data_dir});
-
-    # have a global $self for the SGN::Context (later to be Catalyst object)
-    my $interp = HTML::Mason::Interp->new( allow_globals => [qw[ $c ]],
-                                            %params,
-                                            );
-    $interp->set_global( '$c' => $self );
-
-    return $interp;
-}
-
 sub forward_to_mason_view {
     my $self = shift;
     my ($comp,@args) = @_;
 
     if( $ENV{SERVER_SOFTWARE} && $ENV{SERVER_SOFTWARE} =~ /HTTP-Request-AsCGI/ ) {
-        my @args = @_;
-        $self->_trap_mason_error( sub { $self->_mason_interp->exec( @args ) } );
+        print $self->view('Mason')->render( $self, $comp, { %{$self->stash}, @args} );
         die ["EXIT\n",0]; #< weird thing for working with Catalyst's CGIBin controller
     } else {
         $self->stash->{template} = $comp;
@@ -91,44 +62,11 @@ sub forward_to_mason_view {
 
 =cut
 
-my $render_mason_outbuf;
-has '_bare_mason_interp' => (
-    is         => 'ro',
-    lazy_build => 1,
-);
-
-sub _build__bare_mason_interp {
-    return shift->_build__mason_interp(
-        autohandler_name => '', #< turn off autohandlers
-        out_method       => \$render_mason_outbuf,
-        );
-}
-
 sub render_mason {
     my $self = shift;
     my $view = shift;
-    my @args = @_;
 
-    $render_mason_outbuf = '';
-    $self->_trap_mason_error( sub { $self->_bare_mason_interp->exec( $view, @args ) });
-
-    return $render_mason_outbuf;
-}
-
-sub _trap_mason_error {
-    my ( $self, $sub ) = @_;
-
-    eval { $sub->() };
-    my $error = $@;
-    if( $error ) {
-        if( blessed($error) && $error->can('as_brief') ) {
-            my $t = $error->as_text;
-            # munge mason compilation errors for better backtraces on devel debug screens
-            $t =~ s/^Error during compilation of[^\n]+\n// unless $self->get_conf('production_server');
-            die $t;
-        }
-        die $error if $error;
-    }
+    return $self->view('BareMason')->render( $self, $view, { %{$self->stash}, @_ } );
 }
 
 =head2 clear_mason_tempfiles

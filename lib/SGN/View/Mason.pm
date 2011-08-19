@@ -12,6 +12,7 @@ __PACKAGE__->config(
 sub interp_args {
     my $self = shift;
     return {
+        data_dir => SGN->tempfiles_base->subdir('mason'),
         comp_root => [
             ( map [ $_->feature_name, $_->path_to('mason')], $self->_app->features ),
             [ main => $self->_app->path_to('mason') ],

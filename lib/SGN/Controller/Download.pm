@@ -89,6 +89,7 @@ sub download :Private {
     $c->throw_404 unless defined( $file ) && -e $file;
 
     $c->forward('set_download_headers');
+    $c->log->debug("static file download: $file") if $c->debug;
     $c->serve_static_file( $file );
 }
 
@@ -111,9 +112,10 @@ content-type, you should do that before forwarding to this
 sub set_download_headers :Private {
     my ( $self, $c ) = @_;
 
-    $c->res->headers->push_header( 'Content-Disposition' => 'attachment' );
     if( my $bn = basename( $c->stash->{download_filename} ) ) {
-        $c->res->headers->push_header( 'Content-Disposition' => "filename=$bn" );
+        $c->res->headers->header( 'Content-Disposition' => "attachment; filename=$bn" );
+    } else {
+        $c->res->headers->header( 'Content-Disposition' => 'attachment' );
     }
 }
 

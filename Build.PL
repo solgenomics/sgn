@@ -1,7 +1,6 @@
 use lib 'lib';
 use SGN::Build;
 
-#my $class = 'Module::Build';
 my $build = SGN::Build->new(
     dist_name          => 'SGN',
     license            => 'perl',
@@ -10,10 +9,9 @@ my $build = SGN::Build->new(
     module_name        => 'SGN::Context',
 
     # current version of our core libraries distribution
-    dist_version => '0.1',
-    dist_author  => 'Lukas Mueller',
-    dist_abstract =>
-'The code and content behind the Sol Genomics Network main website, http://solgenomics.net',
+    dist_version  => '0.1',
+    dist_author   => 'Lukas Mueller',
+    dist_abstract => 'The code and content behind the Sol Genomics Network main website, http://solgenomics.net',
 
     recursive_test_files => 1,
 

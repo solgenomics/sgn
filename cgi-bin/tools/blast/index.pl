@@ -57,7 +57,7 @@ changes by SGN staff. POD by Lukas.
 =cut
 
 
-use strict;
+use Modern::Perl;
 use POSIX;
 use English;
 

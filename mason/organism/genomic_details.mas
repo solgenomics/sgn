@@ -1,0 +1,21 @@
+
+<%args>
+$ploidy => ''
+$genome_size => ''
+$chromosome_number => ''
+$loci => ''
+$maps => ''
+</%args>
+
+<& /page/info_table.mas, data=> [
+  Ploidy              => $ploidy,
+  'Genome size'       => $genome_size,
+  'Chromosome number' => $chromosome_number,
+  'Available loci'    => $loci,
+  'Available maps'    => $maps,
+  
+],
+  border => 0,
+&>
+    
+

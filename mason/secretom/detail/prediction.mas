@@ -47,9 +47,11 @@ span.filesize:after {
   incorrect predictions and generate a database of computationally and
   functionally confirmed secreted plant proteins. It has been reported
   that one of the most effective predictors of SPs is <a
-  href="http://www.cbs.dtu.dk/services/SignalP">SignalP 3.0</a>. We have
-  used this to screen the predicted proteomes of several plant species
-  to date (see below for SignalP results).
+  href="http://www.cbs.dtu.dk/services/SignalP">SignalP 3.0</a>. 
+  We have used both SignalP and our recently developed predictor, 
+  <a href="/secretom/secretary">SecreTary</a>, 
+  to screen the predicted proteomes of several plant species
+  to date. See below for these prediction results.
   </p>
 
 </div>
@@ -57,41 +59,49 @@ span.filesize:after {
 <&| /page/info_section.mas, title => 'New predictor: Secretary' &>
 
   <p>
-  We are developing a new predictor, <a href="/secretom/secretary">SecreTary</a>,
+  We have developed a new predictor, <a href="/secretom/secretary">SecreTary</a>,
   for more accurate computational prediction of plant proteins that
   traffic through the classical secretory pathway.  <a href="/secretom/secretary">Try SecreTary</a>,
   </p>
 
 </&>
 
-<&| /page/info_section.mas, title => 'SignalP results' &>
+<&| /page/info_section.mas, title => 'SecreTary, SignalP, TargetP results' &>
 
   <table class="species_predictions">
   <tr>
     <td>
           <h3>Arabidopsis thaliana</h3>
           <img src="/img/secretom/arabidopsisthaliana.png" />
-          <& .result_file, file => 'data/secretom/SignalP_predictions/Tair8.pep.1.sptp.fasta', dir => $static_dir &>
+          <& .result_file, file => 'data/secretom/SecreTarySPTP_predictions/Tair10.STsptp.fa', dir => $static_dir &>
     </td>
      <td>
           <h3>Rice (Oryza sativa)</h3>
           <img src="/img/secretom/oryzasativa.png" />
-          <& .result_file, file => 'data/secretom/SignalP_predictions/Rice.pep.1.sptp.fasta', dir => $static_dir &>
+          <& .result_file, file => 'data/secretom/SecreTarySPTP_predictions/TIGR6.1.STsptp.fa', dir => $static_dir &>
     </td>
     <td>
           <h3>Brachypodium distachyon</h3>
           <img src="/img/secretom/brachypodiumdistachyon.png" />
-          <& .result_file, file => 'data/secretom/SignalP_predictions/Brachy.pep.1.sptp.fasta', dir => $static_dir &>
+          <& .result_file, file => 'data/secretom/SecreTarySPTP_predictions/Brachy1.2.STsptp.fa', dir => $static_dir &>
     </td>
     <td>
-          <h3>Solanum lycopersicum</h3>
+          <h3>Tomato </h3>
           <img src="/img/secretom/solanumlycopersicum.png" />
-          <& .result_file, file => 'data/secretom/SignalP_predictions/ITAG1.pep.sptp.fasta', dir => $static_dir &>
+          <& .result_file, file => 'data/secretom/SecreTarySPTP_predictions/ITAG2.STsptp.fa', dir => $static_dir &>
     </td>
-  </tr>
+  
+ <td>
+          <h3>Populus trichocarpa</h3>
+          <img src="/img/secretom/Populus_trichocarpa_126x150.png" />
+          <& .result_file, file => 'data/secretom/SecreTarySPTP_predictions/Poptri2.STsptp.fa', dir => $static_dir &>
+    </td>
+
+
+</tr>
   </table>
 
-  <&| /page/info_section.mas, title => 'Search SignalP results for secreted proteins', is_subsection => 1 &>
+  <&| /page/info_section.mas, title => 'Search SecreTary, SignalP, TargetP results for secreted proteins', is_subsection => 1 &>
 
 
     <form method="GET" style="text-align: center; margin: 2em auto" action="<% $signalp_search_action %>">

@@ -2,7 +2,7 @@
 
   $results
 
-  $term
+  $quick_search_term
 
   $show_times => 0
 
@@ -11,7 +11,7 @@
 
 </%args>
 
-<& /page/page_title.mas, title => 'Quick search for '.encode_entities( '"'.$term.'"' ) &>
+<& /page/page_title.mas, title => 'Quick search for '.encode_entities( '"'.$quick_search_term.'"' ) &>
 
 <div class="page_introduction">
   Note: The quick search does not perform exactly the same queries as

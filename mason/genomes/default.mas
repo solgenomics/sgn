@@ -1,0 +1,32 @@
+<%args>
+  $organism
+</%args>
+<& /page/page_title.mas, title => '<i>'.$organism->species.'</i> Genome Data' &>
+
+<&| /page/info_section.mas,
+      title       => 'Sequence datasets',
+      collapsible => 1,
+ &>
+  <& /genomes/default/genome_builds.mas, %ARGS &>
+</&>
+
+
+<&| /page/info_section.mas,
+      title       => 'Browsable annotations',
+      collapsible => 1,
+      hide_if_empty => 1,
+ &>
+
+  <& /gbrowse/list_sources.mas, organism => $organism &>
+
+</&>
+
+<&| /page/info_section.mas,
+      title       => 'Annotation datasets',
+      collapsible => 1,
+      hide_if_empty => 1,
+ &>
+
+  <& /genomes/default/annotation_sets.mas, %ARGS &>
+
+</&>

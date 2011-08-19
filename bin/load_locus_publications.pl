@@ -1,4 +1,19 @@
 
+=head1 NAME
+ load_locus_publications.pl - a script to associate publications (pubmed IDs) with locus
+
+=head1 SYNOPSYS
+
+load_locus_publications.pl -p [person_id] -H [hostname] -D [database name] file
+
+where file contains a column with locus names and a column with associated pubmed_ids.
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>
+
+=cut
+
 use strict;
 use warnings;
 
@@ -29,9 +44,8 @@ foreach my $l (@lines) {
     my ($locus_id) = $sth->fetchrow_array();
     my $locus = CXGN::Phenome::Locus->new($dbh, $locus_id);
     
-    my $pub = CXGN::Chado::Publication->new($dbh);
-    $pub->get_pub_by_accession($dbh, $pubmed_id);
-
+    my $pub = CXGN::Chado::Publication->get_pub_by_accession($dbh, $pubmed_id);
+    
     my ($dbxref, @more_dbxrefs) = $pub->get_dbxrefs();
     print STDERR "Adding dbxref ".($dbxref->get_dbxref_id())."...\n";
     my $dbxref = CXGN::Chado::Dbxref->new($dbh, $dbxref->get_dbxref_id);

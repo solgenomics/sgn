@@ -44,15 +44,12 @@ sub generate_form {
     $self->init_form($form_id);
     my $form = $self->get_form();
 
-    my $image     = $self->get_object();
-    my $object_id = $self->get_object_id();
-    my $submitter =
-      CXGN::People::Person->new( $self->get_dbh(), $image->get_sp_person_id() );
-    my $sp_person_id = $submitter->get_sp_person_id();
-    my $submitter_name =
-      $submitter->get_first_name() . " " . $submitter->get_last_name();
-    my $submitter_link =
-qq |<a href="/solpeople/personal-info.pl?sp_person_id=$sp_person_id">$submitter_name </a> |;
+    my $image          = $self->get_object();
+    my $object_id      = $self->get_object_id();
+    my $submitter      = CXGN::People::Person->new( $self->get_dbh(), $image->get_sp_person_id() );
+    my $sp_person_id   = $submitter->get_sp_person_id();
+    my $submitter_name = ($submitter->get_first_name() || '') . " " . ($submitter->get_last_name() || '');
+    my $submitter_link = qq |<a href="/solpeople/personal-info.pl?sp_person_id=$sp_person_id">$submitter_name </a> |;
 
     my $name        = "";
     my $description = "";

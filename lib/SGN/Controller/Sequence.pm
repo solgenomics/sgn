@@ -36,7 +36,7 @@ sub gmodrpc_fetch_seq :Path('/gmodrpc/v1.1/fetch/seq') :Args(1) {
 
 Public path: /api/v1/sequence/<name or id>.fasta?start..end
 
-?start..end is optional.  If start &gt; end, does reverse complement.
+?start..end is optional.  If start E<gt> end, does reverse complement.
 
 =cut
 

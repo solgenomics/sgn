@@ -32,6 +32,14 @@ fuller description of this data source, 1-2 sentences
     isa => 'Maybe[Str]',
   );
 
+has 'organism' => ( documentation => <<'',
+string name of the organism(s) the *reference sequences* for this set
+are from.  Usually species name.
+
+    is => 'ro',
+    isa => 'Maybe[Str]',
+  );
+
 has 'gbrowse' => ( documentation => <<'',
 GBrowse Feature object this data source belongs to
 
@@ -91,7 +99,7 @@ sub image_url {
 sub _url {
     my ( $self, $script, $query ) = @_;
     my $url = $self->gbrowse->cgi_url->clone;
-    $url->path( join '/', $url->path, $script, $self->name );
+    $url->path( join '', map "$_/", $url->path, $script, $self->name );
     $url->query_form_hash( $query ) if $query;
     return $url;
 }

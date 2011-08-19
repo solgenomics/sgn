@@ -1,0 +1,29 @@
+
+<%doc>
+
+</%doc>
+
+<%args>
+$name
+$common_name
+$taxon => ''
+$description => ''
+@synonyms => ()
+</%args>
+
+<%perl>
+$name = $name.($taxon ? " ($taxon)" : '');
+my $synonym_list = join ", ", @synonyms;
+</%perl>
+
+
+<& /page/info_table.mas,     
+   data => [ 'Scientific Name' => $name,
+             'Common name'     => $common_name,
+             'Description'     => $description,
+             'Synonyms'        => $synonym_list ],
+  border => 0,
+	       
+&>
+
+

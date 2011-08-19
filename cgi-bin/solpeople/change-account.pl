@@ -182,7 +182,7 @@ sub send_confirmation_email {
 Please do *NOT* reply to this message. The return address is not valid. 
 Use sgn-feedback\@sgn.cornell.edu instead.
 
-This message is sent to confirm the private e-mail addresss for community user
+This message is sent to confirm the private e-mail address for community user
 \"$username\".
 
 Please click (or cut and paste into your browser) the following link to

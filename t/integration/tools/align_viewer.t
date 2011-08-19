@@ -14,22 +14,19 @@ Jonathan "Duke" Leto
 
 =cut
 
-use strict;
-use warnings;
+use Modern::Perl;
+
+use lib 't/lib';
 use base 'Test::Class';
 use constant HAS_MUSCLE => sub { no warnings; system "muscle -version &>/dev/null"; $? == 0 ? 1 : 0 }->();
 use constant MUSCLE_TESTS => HAS_MUSCLE ? 3 : 0;
 
-use Test::More tests => 9 + MUSCLE_TESTS;
-use Test::WWW::Mechanize;
-use lib 't/lib';
-use SGN::Test;
-
-my $base_url = $ENV{SGN_TEST_SERVER};
+use Test::Most tests => 9 + MUSCLE_TESTS;
+use SGN::Test::WWW::Mechanize;
 
 sub make_fixture : Test(setup) {
     my $self = shift;
-    $self->{mech} = Test::WWW::Mechanize->new;
+    $self->{mech} = SGN::Test::WWW::Mechanize->new;
 }
 
 sub teardown : Test(teardown) {
@@ -39,11 +36,11 @@ sub teardown : Test(teardown) {
 
 sub get_ok {
     my ($self,$url,$msg) = @_;
-    return $self->{mech}->get_ok("$base_url$url",$msg);
+    return $self->{mech}->get_ok($url,$msg);
 }
 sub get {
     my ($self,$url,$msg) = @_;
-    return $self->{mech}->get("$base_url$url",$msg);
+    return $self->{mech}->get($url,$msg);
 }
 sub content_contains {
     my ($self,@args) = @_;

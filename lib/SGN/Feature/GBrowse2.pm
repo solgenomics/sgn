@@ -43,11 +43,13 @@ has '_data_sources' => (
            }
 
            $sources{$type} = $ds_class->new(
+               ( map {
+                   $_ => $self->config_master->setting( $type => $_ )
+                 } $self->config_master->setting( $type )
+               ),
                name    => $type,
                path    => $path,
                gbrowse => $self,
-               description => $self->config_master->setting( $type => 'description' ),
-               extended_description => $self->config_master->setting( $type => 'extended_description' ),
               );
        }
 
@@ -114,6 +116,7 @@ around apache_conf => sub {
   DefaultInitEnv GBROWSE_CONF "$conf"
   BusyTimeout 360
   IPCCommTimeout 300
+  MaxRequestLen 20971520
   $fcgi_inc
 
 	cgi => <<"",

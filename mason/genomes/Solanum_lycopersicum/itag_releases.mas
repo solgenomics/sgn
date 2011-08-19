@@ -1,0 +1,62 @@
+% if( %release_datasources ) {
+%   my $annot_index;
+%   for my $release_name( sort { $b cmp $a } keys %release_datasources ) {
+
+      <&| /page/info_section.mas,
+          title => "$release_name annotation release",
+          is_subsection => 1,
+          collapsible   => 1,
+          collapsed     => $annot_index++ ? 1 : 0,
+       &>
+
+%         for my $source ( sort { $a->description cmp $b->description } @{$release_datasources{$release_name}}) {
+            <& /gbrowse/source.mas, source => $source &>
+%         }
+          <% info_table_html(
+              __border => 0,
+              # bulk download files
+              'Bulk files' => itag_release_ftp_link( $release_name ),
+            )
+          %>
+
+      </&>
+%   }
+% } else {
+
+  <span class="ghosted">annotation data temporarily unavailable</span>
+
+% }
+
+<%init>
+
+    my %release_datasources;
+    for my $source ( map $_->data_sources, $c->enabled_feature('gbrowse2') ) {
+        next unless $source->name =~ /(ITAG\d+(\.\d+)?)/ && $source->databases;
+        my $release = $1;
+        push @{$release_datasources{$release}}, $source;
+    }
+
+</%init>
+<%once>
+
+use CXGN::Page::FormattingHelpers 'info_table_html';
+
+sub itag_release_ftp_link {
+    my ( $r ) = @_;
+
+    my $link_style = 'display: block; margin: 0.5em 0; font-size: 110%; font-weight: bold';
+    my $empty_link = qq|<span style="$link_style" class="ghosted">not available</span>|;
+    my $itag = $c->enabled_feature('ITAG')
+	or return $empty_link;
+
+    unless( ref $r ) {
+        my ( $releasenum ) = $r =~ /([\d\.]+)$/
+            or return $empty_link;
+        ($r) = $itag->find_release( $releasenum )
+            or return $empty_link;
+    }
+
+    return qq|<a style="$link_style" href="/itag/release/|.$r->release_number.'/list_files">Download bulk files</a>';
+}
+</%once>
+

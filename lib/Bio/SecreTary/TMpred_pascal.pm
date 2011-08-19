@@ -18,6 +18,7 @@ Tom York (tly2@cornell.edu)
 package Bio::SecreTary::TMpred_pascal;
 use strict;
 use base qw/ Bio::SecreTary::TMpred /;
+use File::Temp;
 
 sub new {
     my $class = shift;

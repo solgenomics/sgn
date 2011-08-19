@@ -1,0 +1,36 @@
+<%args>
+  $a
+</%args>
+
+            <&| /page/info_section.mas,
+                is_subsection => 1,
+                title         => $a->{name},
+                subtitle      => $a->{date} && $a->{date}->ymd('-'),
+             &>
+                <&| /page/info_table.mas, border => 0,
+                 &>
+                   Description
+                   -----
+                   <% $a->{description} |h %>
+                   -----
+%                  if( $a->{annotation_sets} && @{$a->{annotation_sets}} ) {
+                     Annotated by
+                     -----
+                     <% join ' ', map $_->sample_name, @{$a->{annotation_sets}} | h %>
+                     -----
+%                  }
+%                  if( $a->{files} && @{$a->{files}} ) {
+                     Files
+                     -----
+                     <dl>
+%                    for my $link (@{$a->{files}}) {
+                         <dt><a href="<% $link->{url} |h%>"><% $link->{text} |h%></a></dt>
+                         <dd><% $link->{description} |h%> </dd>
+%                    }
+                     </dl>
+
+                     ----
+%                  }
+                </&>
+
+            </&>

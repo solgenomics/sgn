@@ -68,10 +68,6 @@ use CXGN::Genomic::Search::Clone;
 use CXGN::MasonFactory;
 use CXGN::Cview::MapOverviews::ProjectStats;
 
-#my $page=CXGN::Page->new('tomato_sequencing.html','html2pl converter');
-#$page->add_style(text => "img.flag {border: 2px outset #666666;}");
-#$page->header(('International Tomato Sequencing Project Home') x 2);
-
 sub flag_html {
   my ($country,$flagimg,$url) = @_;
   if($url) {
@@ -191,7 +187,7 @@ my @num_uploaded = ( undef, map $progress_data->{$_}{available}, @chr_nums );
 print summed_row_html Available =>
   map {
     my $total = $num_uploaded[$_];
-    [$total,qq|<a href="/genomes/Solanum_lycopersicum/genome_data.pl#clones">$total</a>|]
+    [$total,qq|<a href="/organism/Solanum_lycopersicum/clone_sequencing?chr=$_#clones">$total</a>|]
   } @chr_nums;
 
 foreach my $phase (1..3) { 
@@ -199,7 +195,7 @@ foreach my $phase (1..3) {
     print summed_row_html "&nbsp;&nbsp;HTGS $phase" =>
 	map {
 	    my $total = $num_phase[$_] || 0;
-	    [$total, qq|<a href="/genomes/Solanum_lycopersicum/genome_data.pl?chr=$_#clones">$total</a>|]
+	    [$total, qq|<a href="/organism/Solanum_lycopersicum/clone_sequencing?chr=$_#clones">$total</a>|]
         } @chr_nums;
 }
 

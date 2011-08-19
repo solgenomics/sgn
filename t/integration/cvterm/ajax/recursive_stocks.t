@@ -5,7 +5,7 @@
 
 use Modern::Perl;
 use lib 't/lib';
-use Test::More;
+use Test::Most;
 use SGN::Test::WWW::Mechanize;
 
 my $mech = SGN::Test::WWW::Mechanize->new();
@@ -18,13 +18,15 @@ $mech->with_test_level( local => sub {
     my $cvterm = $schema->resultset("General::Db")->search( { 'me.name' => $db_name } )->
         search_related('dbxrefs', { accession => $accession} )->
         search_related('cvterm')->first;
-    my $cvterm_id = $cvterm->cvterm_id;
-    $mech->get_ok('/ajax/cvterm/recursive_stocks?cvterm_id='.$cvterm_id);
-    $mech->content_contains('html');
-    $mech->content_contains('Stock name');
+
+    if ($cvterm) {
+        my $cvterm_id = $cvterm->cvterm_id;
+        $mech->get_ok('/ajax/cvterm/recursive_stocks?cvterm_id='.$cvterm_id);
+        $mech->content_contains('html');
+        $mech->content_contains('Stock name');
+    } else {
+        plan skip_all => "could not create cvterms";
+    }
 });
+
 done_testing();
-
-
-
-
