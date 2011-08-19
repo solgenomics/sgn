@@ -573,41 +573,10 @@ chrno<-chrno + 1;
 }
 
 ##########QTL EFFECTS ##############
-## <<<<<<< HEAD
-## ResultFull<-c()
-## ResultDrop<-c()
-## Effects<-c()
-## |||||||
-## if ( max(QtlLods) >= LodScore )
-## {
-##   QtlObj<-makeqtl(popdata,
-##                 QtlChrs,
-##                 QtlPositions,
-##                 what="prob"
-##                 )
-  
-##   QtlsNo<-length(QtlPositions)
-##   Eq<-c("y~")
-## =======
  ResultDrop<-c()
  ResultFull<-c()
  Effects<-c()
 
-## if ( is.null(QtlLods)==FALSE)
-## {
-##   if (max(QtlLods) >= LodScore ) 
-##     {
-##       QtlObj<-makeqtl(popdata,
-##                 QtlChrs,
-##                 QtlPositions,
-##                 what="prob"
-##                 )
-  
-##       QtlsNo<-length(QtlPositions)
-##       Eq<-c("y~")
-## #>>>>>>> master
-
-#<<<<<<< HEAD
     if (is.null(LodThreshold) == FALSE)
       {
         if ( max(QtlLods) >= LodScore )
@@ -617,21 +586,7 @@ chrno<-chrno + 1;
                             QtlPositions,
                             what=genotypetype
                             )
-## |||||||
-##   for (i in 1:QtlsNo) {
-##     q<-paste("Q",
-##              i,
-##              sep=""
-##              )
-## =======
-##       for (i in 1:QtlsNo) {
-##         q<-paste("Q",
-##                  i,
-##                  sep=""
-##                  )
-## >>>>>>> master
-  
-#<<<<<<< HEAD
+
             QtlsNo<-length(QtlPositions)
             Eq<-c("y~")
 
@@ -669,51 +624,7 @@ chrno<-chrno + 1;
             ResultModel<-attr(QtlEffects,
                               "formula"
                               )
-## |||||||
-##     if (i==1) {  
-##       Eq<-paste(Eq, q, sep="")
-      
-##     }else
-##     if (i>1) {
-##       Eq<-paste(Eq, q, sep="*")
-     
-##     }
-##   }
 
-##   QtlEffects<-fitqtl(popdata,
-##                      pheno.col=cv,
-##                      QtlObj,
-##                      formula=Eq,
-##                      method="hk",                   
-##                      get.ests=TRUE
-##                      )
-##   ResultModel<-attr(QtlEffects,
-##                     "formula"
-##                     )
-## =======
-##         if (i==1) {  
-##           Eq<-paste(Eq, q, sep="")
-      
-##         }else
-##         if (i>1) {
-##           Eq<-paste(Eq, q, sep="*")
-     
-##         }
-##       }
-
-##       QtlEffects<-fitqtl(popdata,
-##                          pheno.col=cv,
-##                          QtlObj,
-##                          formula=Eq,
-##                          method="hk",                   
-##                          get.ests=TRUE
-##                          )
-##       ResultModel<-attr(QtlEffects,
-##                         "formula"
-##                         )
-## >>>>>>> master
- 
-#<<<<<<< HEAD
             Effects<-QtlEffects$ests$ests
             QtlLodAnova<-QtlEffects$lod
             ResultFull<-QtlEffects$result.full  
@@ -742,65 +653,6 @@ chrno<-chrno + 1;
           }
       }
 
-## |||||||
-##   Effects<-QtlEffects$ests$ests
-##   QtlLodAnova<-QtlEffects$lod
-##   ResultFull<-QtlEffects$result.full  
-##   ResultDrop<-QtlEffects$result.drop
-
-##   if (is.numeric(Effects))
-##     {
-##       Effects<-round(Effects,
-##                         2
-##                         )
-##     }
-
-
-##   if (is.numeric(ResultFull))
-##     {
-##       ResultFull<-round(ResultFull,
-##                         2
-##                         )
-##     }
-
-##   if (is.numeric(ResultDrop))
-##     {
-##       ResultDrop<-round(ResultDrop,
-##                         2
-##                         )
-##     }
-## }
-
-## =======
-##       Effects<-QtlEffects$ests$ests
-##       QtlLodAnova<-QtlEffects$lod
-##       ResultFull<-QtlEffects$result.full  
-##       ResultDrop<-QtlEffects$result.drop
-
-##       if (is.numeric(Effects))
-##         {
-##           Effects<-round(Effects,
-##                          2
-##                          )
-##         }
-
-
-##   if (is.numeric(ResultFull))
-##     {
-##       ResultFull<-round(ResultFull,
-##                         2
-##                         )
-##     }
-
-##       if (is.numeric(ResultDrop))
-##         {
-##           ResultDrop<-round(ResultDrop,
-##                             2
-##                             )
-##         }
-##     }
-## }
-## >>>>>>> master
 ##########creating vectors for the outfiles##############
 
 outfiles<-scan(file=outfile,
