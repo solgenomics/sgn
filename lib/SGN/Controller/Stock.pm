@@ -365,13 +365,24 @@ SELECT sp_person_id FROM sgn_people.sp_person
     if ( my $ontology = $c->req->param('onto') ) {
         my ($cv_name, $full_accession, $cvterm_name) = split(/--/ , $ontology);
         my ($db_name, $accession) = split(/:/, $full_accession);
-        my ($cvterm) = $self->schema->resultset("General::Db")->
-            search( { 'me.name' => $db_name })->
-            search_related('dbxrefs', { accession => $accession } )->
-            search_related('cvterm');
-        my $cvterm_id = $cvterm->cvterm_id;
-        my @children_ids = $cvterm->recursive_children->get_column('cvterm_id')->all;
-        push ( @children_ids, $cvterm_id ) ;
+        my $cvterm;
+        my (@cvterm_ids, @children_ids);
+        if ($db_name && $accession) {
+            ($cvterm) = $self->schema->resultset("General::Db")->
+                search( { 'me.name' => $db_name })->
+                search_related('dbxrefs', { accession => $accession } )->
+                search_related('cvterm');
+            @cvterm_ids = ( $cvterm->cvterm_id );
+            @children_ids = $cvterm->recursive_children->get_column('cvterm_id')->all;
+        } else {
+            my $cvterms = $self->schema->resultset("Cv::Cvterm")->
+                search( { lc('name') => { 'LIKE' => lc($ontology) } });
+            while ( my $term =  $cvterms->next ) {
+                push @cvterm_ids ,   $term->cvterm_id ;
+                push @children_ids , $term->recursive_children->get_column('cvterm_id')->all;
+            }
+        }
+        push ( @children_ids, @cvterm_ids ) ;
         $rs = $rs->search( {
             'stock_cvterms.cvterm_id' => { -in =>  \@children_ids },
             -or => [
