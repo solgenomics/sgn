@@ -36,12 +36,15 @@ $userid
                  name="stat_options"
                  value="user qtl parameters"> Set your own QTL analysis parameters
         </td>
-        <td>
+% if (0) 
+%{
+       <td>
           <input type="radio" 
                  onclick="Qtl.toggleStatOptions('diagnosticTests')"
                  name="stat_options"
                  value="diagnostic tests"> Diagnostic tests
-        </td>       
+     </td>
+%}       
       </tr>            
     </table>
   </form> 
@@ -66,6 +69,9 @@ $userid
      guide   => $guideline 
   &>
  </div>
+
+% if (0)
+%{
   <div id="diagnosticTests" 
        style="display:none; 
               color:blue; 
@@ -73,7 +79,7 @@ $userid
               ">
     Under development.
   </div>
-
+%}
   <div id    ="waitmsg" 
        style ="display:none; 
               color:#f87431; 
