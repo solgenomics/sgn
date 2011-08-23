@@ -70,6 +70,7 @@ sub stash_tab_data :Private {
         phenotype                    => 2,
         phenotypes                   => 2,
         phenotype_qtl_trait          => 2,
+        cvterm_name                  => 2,
         qtl                          => 2,
         trait                        => 2,
         unigene                      => 3,
@@ -147,10 +148,11 @@ sub search :Path('/search/') :Args() {
 
     if( $term eq 'direct_search.pl' ) {
         $term = $c->req->param('search');
+        if ($term eq 'cvterm_name') {$term = 'qtl';}
         $c->res->redirect('/search/'.$term, 301 );
         return;
     }
-
+    
     $c->stash->{term} = $term;
     my $tab_html      = $c->stash->{tab_html_function}($term);
 
@@ -301,7 +303,7 @@ sub phenotype_submenu {
 
         my $term = $c->stash->{term} || 'phenotype';
 
-        $term = 'qt' if $term eq 'cvterm_name';
+        $term = 'qtl' if $term eq 'cvterm_name';
 
         my $tabsel =
             ($term =~ /phenotype/i)  ? 0
