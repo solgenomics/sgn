@@ -12,7 +12,7 @@ use strict;
 use warnings;
 
 
-use CGI;
+use CGI qw //;
 use CXGN::People::PageComment;
 use CXGN::Phenome::Population;
 use CXGN::Phenome::UserTrait;
