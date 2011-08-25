@@ -21,7 +21,6 @@ use Cache::File;
 
 BEGIN { extends 'Catalyst::Controller'}  
 
-no warnings 'uninitialized';
 
 sub view : PathPart('qtl/view') Chained Args(1) {
     my ( $self, $c, $id) = @_;
@@ -341,27 +340,31 @@ sub _is_qtl_pop {
 sub _link {
     my ($self, $c) = @_;
     my $pop_id     = $c->stash->{pop}->get_population_id();
-    my $trait_id   = $c->stash->{trait_id};
-    my $cvterm_id  = $c->stash->{cvterm_id};
-    my $trait_name = $c->stash->{trait_name};
-    my $term_id    = $cvterm_id ? $cvterm_id : $trait_id;
-    my $graph_icon = qq | <img src="/../../../documents/img/pop_graph.png" alt="run solqtl"/> |;
     
-    $self->_get_owner_details($c);
-    my $owner_name = $c->stash->{owner_name};
-    my $owner_id   = $c->stash->{owner_id};
+    {
+        no warnings 'uninitialized';
+        my $trait_id   = $c->stash->{trait_id};
+        my $cvterm_id  = $c->stash->{cvterm_id};
+        my $trait_name = $c->stash->{trait_name};
+        my $term_id    = $cvterm_id ? $cvterm_id : $trait_id;
+        my $graph_icon = qq | <img src="/../../../documents/img/pop_graph.png" alt="run solqtl"/> |;
+    
+        $self->_get_owner_details($c);
+        my $owner_name = $c->stash->{owner_name};
+        my $owner_id   = $c->stash->{owner_id};
     
    
-    $c->stash( cvterm_page        => qq |<a href="/chado/cvterm.pl?cvterm_id=$cvterm_id">$trait_name</a> |,
-               trait_page         => qq |<a href="/phenome/trait.pl?trait_id=$trait_id">$trait_name</a> |,
-               owner_page         => qq |<a href="/solpeople/personal-info.pl?sp_person_id=$owner_id">$owner_name</a> |,
-               guideline          => qq |<a href="http://docs.google.com/View?id=dgvczrcd_1c479cgfb">Guidelines</a> |,
-               phenotype_download => qq |<a href="/qtl/download/phenotype/$pop_id">Phenotype data</a> |,
-               genotype_download  => qq |<a href="/qtl/download/genotype/$pop_id">Genotype data</a> |,
-               corre_download     => qq |<a href="/qtl/download/correlation/$pop_id">Correlation data</a> |,
-               acronym_download   => qq |<a href="/qtl/download/acronym/$pop_id">Trait-acronym key</a> |,
-               qtl_analysis_page  => qq |<a href="/phenome/qtl_analysis.pl?population_id=$pop_id&amp;cvterm_id=$term_id" onclick="Qtl.waitPage();">$graph_icon</a> |,
-        );
+        $c->stash( cvterm_page        => qq |<a href="/chado/cvterm.pl?cvterm_id=$cvterm_id">$trait_name</a> |,
+                   trait_page         => qq |<a href="/phenome/trait.pl?trait_id=$trait_id">$trait_name</a> |,
+                   owner_page         => qq |<a href="/solpeople/personal-info.pl?sp_person_id=$owner_id">$owner_name</a> |,
+                   guideline          => qq |<a href="http://docs.google.com/View?id=dgvczrcd_1c479cgfb">Guidelines</a> |,
+                   phenotype_download => qq |<a href="/qtl/download/phenotype/$pop_id">Phenotype data</a> |,
+                   genotype_download  => qq |<a href="/qtl/download/genotype/$pop_id">Genotype data</a> |,
+                   corre_download     => qq |<a href="/qtl/download/correlation/$pop_id">Correlation data</a> |,
+                   acronym_download   => qq |<a href="/qtl/download/acronym/$pop_id">Trait-acronym key</a> |,
+                   qtl_analysis_page  => qq |<a href="/phenome/qtl_analysis.pl?population_id=$pop_id&amp;cvterm_id=$term_id" onclick="Qtl.waitPage();">$graph_icon</a> |,
+            );
+    }
     
 }
 
