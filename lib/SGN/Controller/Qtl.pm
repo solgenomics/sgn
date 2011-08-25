@@ -18,6 +18,7 @@ use File::Copy;
 use File::Basename;
 use File::Slurp;
 use Cache::File;
+use Bio::Chado::Schema;
 
 BEGIN { extends 'Catalyst::Controller'}  
 
@@ -256,11 +257,10 @@ sub _correlation_output {
 
 
 sub _list_traits {
-    my ($self, $c) = @_;
-   
+    my ($self, $c) = @_;      
     my $population_id = $c->stash->{pop}->get_population_id();
-    my @phenotype;    
-   
+    my @phenotype;  
+    
     if ($c->stash->{pop}->get_web_uploaded()) 
     {
         my @traits = $c->stash->{pop}->get_cvterms();
@@ -277,13 +277,13 @@ sub _list_traits {
                        trati_name => $trait_name
                 );
             
-            my $cvterm = CXGN::Chado::Cvterm::get_cvterm_by_name( $c->dbc->dbh, $trait_name);
+            my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+            my $cvterm = $schema->resultset('Cv::Cvterm')->find(name => $trait_name);
             my $trait_link;
                     
             if ($cvterm)
-            {
-                my $cvterm_id = $cvterm->get_cvterm_id();
-                $c->stash(cvterm_id =>$cvterm_id);
+            {                
+                $c->stash(cvterm_id =>$cvterm->id);
                 $self->_link($c);
                 $trait_link = $c->stash->{cvterm_page};
             } else
