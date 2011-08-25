@@ -1,0 +1,4 @@
+--Implements a dedicated QTL population page with an interface for setting QTL analysis parameters and running analysis with any set of ones own parameters. 
+--Runs and displays correlation analysis. 
+--Features tools to download QTL population phenotype, genotype and correlation data. 
+--Implements 'wait page' feature while qtl analysis is running.

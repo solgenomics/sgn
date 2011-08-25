@@ -1,0 +1,33 @@
+<%doc>
+
+=head1 NAME
+
+trait_columns.mas - a mason component for displaying message 
+when a user tries to submit traits file with wrong order of column data...
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$error
+$guide
+
+</%args>
+
+<%perl>
+$error .= qq |<p>Please go <a href="javascript:history.go(-1)"><b>back</b></a> and 
+                 rearrange the order of the columns and upload the file again or if 
+                 you keep having problem with it contact us.
+              </p>
+             |;
+</%perl>
+
+<& /page/page_title.mas, title => 'Traits file' &>
+<&| /page/info_section.mas, title => '', subtitle => $guide &>
+  <% $error %>  
+</&>

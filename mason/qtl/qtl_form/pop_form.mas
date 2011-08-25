@@ -1,0 +1,92 @@
+<%doc>
+
+=head1 NAME 
+qtl/qtl_form/pop_form.mas - a mason component for the qtl pop detail webform
+
+=AUTHOR
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$guide
+
+</%args>
+
+<%perl>
+
+use CXGN::Phenome::Qtl::Tools;
+use CXGN::Page::FormattingHelpers qw | tooltipped_text |;
+
+my $organism = qq| <a href="javascript:Qtl.toggleAssociateTaxon()">[Select Organism]</a> |;
+my $required = qq | <font color="red"><sup>*</sup></font>|;
+my $qtltools = CXGN::Phenome::Qtl::Tools->new();
+   
+my %cross_types =  $qtltools->cross_types();
+my $cross_options;
+foreach my $key (keys %cross_types) {    
+	$cross_options .= qq |<option value="$key">$cross_types{$key} |;	     
+    }
+
+my $parent_m = tooltipped_text('Male parent', 'format eg. Solanum lycopersicum cv moneymaker');
+my $parent_f = tooltipped_text('Female parent', 'format eg. Solanum lycopersicum cv micro tom');
+
+</%perl>
+
+<& /util/import_javascript.mas, classes => [ "CXGN.Phenome.Qtl" ] &>
+
+<& /page/page_title.mas, title => "Step 1: Submit QTL Population Details" &>
+<&| /page/info_section.mas, title => $organism, subtitle => $guide &> 
+<& organism_form.mas &>
+</&>
+
+<&| /page/info_section.mas,
+  title => "Population Details",
+&>
+<% $required %> <span><i>must be filled.</i><br/><br/></span>
+<form action="/phenome/qtl_load.pl" method="POST" enctype="MULTIPART/FORM-DATA">        
+     <table>
+     <tr>
+	 <td>Cross type<% $required %></td>
+	 <td> <select name="pop_type">
+	          <% $cross_options %>
+             </select>
+         </td>
+     </tr>
+     <tr>
+	<td>Population name<% $required %></td>
+	<td><input type="text" name="pop_name" size=42></td>    
+     </tr>
+     <tr>
+         <td>Population description<% $required %></td>
+         <td><textarea name="pop_desc" rows = 5 cols=44></textarea></td>
+     </tr>  
+     <tr>
+	<td><% $parent_f%><%$required %> </td>
+	<td><input type="text" name="pop_female_parent" size=24></td>
+	<td><% $parent_m %><% $required %> </td> 
+	<td><input type="text" name="pop_male_parent" size=24></td> 
+     </tr>
+     <tr>
+	<td>Recurrent parent</td>
+	<td><input type="text" name="pop_recurrent_parent" size=24></td>
+	<td>Donor parent</td>
+	<td><input type="text" name="pop_donor_parent" size=24></td> 	 	 
+     </tr> 
+     <tr>
+      <td>Do you want to make the data public?</td>
+      <td><input type="radio" name="pop_is_public" value="true" checked />Yes</td>      
+      <td><input type="radio" name="pop_is_public" value="false" />No</td> 
+     </tr> 
+     <tr>
+       <td>&nbsp;</td><td>&nbsp;</td>
+       <td><input type="hidden" name="type" value="pop_form"></td>
+       <td><input type="submit" value="Submit"></td>      
+     </tr>
+     </table>
+     </form>
+
+</&>

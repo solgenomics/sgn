@@ -130,7 +130,7 @@ heatmap.2(coefficients,
 
 dev.off()
 
-write.table(allcordata,
+write.table(coefficients,
       file=cortable,
       col.names=TRUE,
       row.names=TRUE,

@@ -1,0 +1,35 @@
+<%doc>
+
+=head1 NAME 
+qtl/qtl_form/organism_form.mas - a mason component for the associate organism ajax webform
+
+=AUTHOR
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+ 
+<& /util/import_javascript.mas, classes => ["CXGN.Phenome.Qtl"] &>
+
+<div id= 'associateTaxonForm' style="display: none">
+  <div id= "organism_search">
+    Common name:
+    <input type="text"
+           style="width: 50%"
+           id="organism_name"
+           onkeyup="Qtl.getTaxons(this.value)">
+    <input type="button"
+           id="associate_taxon_button"
+           value="associate organism"
+           disabled="true"	  
+           onclick="Qtl.associateTaxon();this.disabled=false;">
+    <select id="taxon_select"
+            style="width: 100%"
+            onchange="Tools.enableButton('associate_taxon_button');"	                           
+            size=10>
+    </select>
+  </div> 
+</div>
+
