@@ -270,11 +270,13 @@ sub _list_traits {
             my $trait_id   = $trait->get_user_trait_id();
             my $trait_name = $trait->get_name();
             my $definition = $trait->get_definition();
+
+            print STDERR "trait: \t $trait_id \t $trait_name\n";
             
             my ($min, $max, $avg, $std, $count)= $c->stash->{pop}->get_pop_data_summary($trait_id);
             
             $c->stash( trait_id   => $trait_id,
-                       trati_name => $trait_name
+                       trait_name => $trait_name
                 );
             
             my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
@@ -285,13 +287,13 @@ sub _list_traits {
             {                
                 $c->stash(cvterm_id =>$cvterm->id);
                 $self->_link($c);
-                $trait_link = $c->stash->{cvterm_page};
+                $trait_link = $c->stash->{cvterm_page};                
             } else
             {
                 $self->_link($c);
                 $trait_link = $c->stash->{trait_page};
             }
-            $self->_link($c);
+            
             my $qtl_analysis_page = $c->stash->{qtl_analysis_page}; 
             push  @phenotype,  [ map { $_ } ( $trait_link, $min, $max, $avg, $count, $qtl_analysis_page ) ];               
         }
