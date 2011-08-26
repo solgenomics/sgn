@@ -19,16 +19,16 @@ $guide
 
 <& /page/page_title.mas, title => "Step 2: Submit Genotype Data" &>
 <&| /page/info_section.mas, title => "Genotype Dataset", subtitle => $guide &>
-<div>
+
 <form action="qtl_load.pl" method="POST" enctype="MULTIPART/FORM-DATA">         
      <table cellspacing=20>
-     <tr>
+      <tr>
         <td> Genotype Dataset: </td>
 	<td> <input type="file" name="geno_file" size=40>
 	<td> <input type="hidden" name="type" value="geno_form"> </td>
-	<td> <input type="hidden" name="pop_id" value=$pop_id> </td>  
+	<td> <input type="hidden" name="pop_id" value=<% $pop_id %> > </td>  
 	<td> <input type="submit" value="Submit"> </td>
      </tr>  
-     </table>
-     </form>
+    </table>
+</form>
 </&>
