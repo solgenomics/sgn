@@ -23,9 +23,9 @@ my $dbh = CXGN::DB::Connection->new();
 my ($pop_name, $pop_link);
 
 if ($pop_id)  {
-  my $pop = CXGN::Phenome::Population->new($dbh, $pop_id);
-  my $pop_name = $pop->get_name();
-  my $pop_link = qq | <a href="/phenome/population.pl?population_id=$pop_id"><b>$pop_name</b></a> |;    
+  my $pop   = CXGN::Phenome::Population->new($dbh, $pop_id);
+  $pop_name = $pop->get_name();
+  $pop_link = qq | <a href="/qtl/view/$pop_id"><b>$pop_name</b></a> |;    
 }
 
 </%perl>
