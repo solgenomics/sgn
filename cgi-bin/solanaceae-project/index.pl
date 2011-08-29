@@ -50,6 +50,7 @@ END_HEREDOC
 print blue_section_html('SOL sites around the world', <<HTML);
 
 <ul>
+<li><a href="/solanaceae-project/afri-sol">AFRI-SOL</a> The African SOL initiative, focusing on African Solanaceae plants and information exchange.</li>
 <li><a href="http://cnia.inta.gov.ar/lat-sol/">Lat-SOL</a> - South American SOL laboratories<br /></li>
 <li><a href="http://www.srcuk.org/index.htm">SRCUK</a> - Solanaceae Research Community in the United Kingdom<br /></li>
 </ul>
