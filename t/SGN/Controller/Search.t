@@ -19,7 +19,9 @@ my @urls = qw{
             /search/family
             /search/markers
             /search/bacs
+            /search/est
             /search/est_library
+            /search/library
             /search/images
             /search/directory
             /search/template_experiment_platform
