@@ -59,7 +59,7 @@ my $m_image_html   = "";
 my $count;
 my @more_is;
 
-if (@$images && !@$image_objects) {
+if ($images && !$image_objects) {
   my @image_object_list = map { SGN::Image->new( $dbh , $_ ) }  @$images ;
   $image_objects = \@image_object_list;
 }
