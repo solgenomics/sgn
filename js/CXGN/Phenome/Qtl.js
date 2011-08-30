@@ -8,16 +8,17 @@
 JSAN.use('MochiKit.DOM');
 JSAN.use('MochiKit.Visual');
 JSAN.use('MochiKit.Async');
-
 JSAN.use('CXGN.Effects');
 JSAN.use('CXGN.Phenome.Tools');
+JSAN.use('jquery.blockUI');
+
 
 
 var Qtl = {
 
     toggleAssociateTaxon: function()
     {	
-	MochiKit.Visual.toggle('associateTaxonForm', 'blind');
+	MochiKit.Visual.toggle('associateTaxonForm', 'appear');
     },
   
 //Make an ajax response that finds all the TAXON with organism ids
@@ -68,9 +69,73 @@ var Qtl = {
 		{type: type, organism_id: organism_id}, onSuccess: Tools.reloadPage} );
 
 
-},
+    },
 
+
+    toggleStatOptions: function(id)
+    {
+        var e = document.getElementById('statTools');       
+        var all = e.getElementsByTagName('div');
+        
+        for ( var i=0;i<all.length;i++ )
+            {
+                all[i].style.display="none";
+                if ( all[i].id == id )
+                    {
+                        all[i].style.display="block";
+                    }
+            }
+    },
+   
+    setDefaultStat: function( id ) 
+    {
+	var pop_id = id;
+        var stat_params = 'default';
+        new MochiKit.Async.doSimpleXMLHttpRequest ( '../../../phenome/qtl_stat_options.pl', 
+                                                    {
+                                                     pop_id: pop_id, stat_params: stat_params
+                                                    }
+                                                  );
+    }, 
     
+    setUserStat: function( id ) 
+    {
+	var pop_id = id;
+        var stat_params = 'user_params';
+        new MochiKit.Async.doSimpleXMLHttpRequest ( '../../../phenome/qtl_stat_options.pl', 
+                                                    { 
+                                                     pop_id: pop_id, stat_params: stat_params
+                                                    }
+                                                  );
+    },
+ 
+    logUser: function( userid ) 
+    {
+	if (userid == null) 
+            {
+                window.location="../../../solpeople/login.pl";
+            } 
+        else 
+            {
+                Qtl.toggleStatOptions('qtlParameters');
+            }
+    }, 
+
+    waitPage: function() 
+    {
+        jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
+        jQuery.blockUI({message: jQuery('#waitmsg')});
+                       
+        if(location.reload()) 
+            {
+                jQuery.unblockUI();
+            }          
+    },
+            
+
+
+
+      
 }//
 
 	

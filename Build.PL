@@ -48,6 +48,7 @@ my $build = SGN::Build->new(
         'Catalyst::Plugin::Static::Simple'         => 0,
         'Catalyst::View::Bio::SeqIO'               => 0,
         'Catalyst::View::Email'                    => 0,
+        'Catalyst::View::Download::CSV'            => 0,
         'Catalyst::View::HTML::Mason'              => 0,
         'Catalyst::View::JavaScript::Minifier::XS' => '2.100000',
         'CatalystX::GlobalContext'                 => 0,

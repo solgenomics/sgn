@@ -1,0 +1,46 @@
+<%doc>
+
+=head1 NAME
+
+check_organism.mas - a mason component for displaying message 
+related to QTL parental accession submissions not supported by SGN...
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$species
+$cultivar
+$guide
+
+</%args>
+
+<%perl>
+
+my $message = qq |<p> It appears that SGN currently does not support 
+                  this species (<b><i>$species</i>$cultivar</b>).<br/> 
+                  As a first step, please make sure you have spelled 
+                  the species correctly.</p>
+                        
+                  <p> Read also the guidline for the nomenclature format 
+                  you have to use to submit the parental lines.</p>
+
+                  <p> Please go <a href="javascript:history.go(-1)">back</a> 
+                  and check.</p>
+                        
+                  <p> if you keep having the same problem with it
+                  <a href=mailto:sgn-feedback\@sgn.cornell.edu> contact us.</a></p> 
+                 |;
+
+
+</%perl>
+
+<& /page/page_title.mas, title => 'Check parental accession(s)' &>
+<&| /page/info_section.mas, title => '', subtitle => $guide &>
+  <% $message %>  
+</&>

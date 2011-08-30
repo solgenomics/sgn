@@ -80,7 +80,7 @@ __PACKAGE__->config(
 
     # configure SGN::Role::Site::TestMode.  These are the
     # configuration keys that it will change so that they point into
-    # t/data
+    # t/data   
     'Plugin::TestMode' => {
         test_data_dir => __PACKAGE__->path_to('t','data'),
         reroot_conf   =>
@@ -101,6 +101,14 @@ __PACKAGE__->config(
                )],
        },
 
+    'Plugin::Cache'=>{
+        backend => {
+            store =>"FastMmap",               
+        },
+    },
+   
+
+
     'Plugin::Authentication' => {
 	default_realm => 'default',
 	realms => { 
@@ -117,7 +125,7 @@ __PACKAGE__->config(
 	    },
 	},
     }
-    );
+);
 
 
 # on startup, do some dynamic configuration

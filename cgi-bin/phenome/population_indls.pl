@@ -6,6 +6,9 @@ redirects to qtl_analysis.pl
 =cut
 
 use strict;
+use warnings;
+
+
 use CGI;
 
 my $cgi = CGI->new();

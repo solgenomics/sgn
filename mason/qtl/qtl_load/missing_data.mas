@@ -1,0 +1,48 @@
+<%doc>
+
+=head1 NAME
+
+missing_data.mas - a mason component for displaying missing data from 
+qtl data submission forms
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$missing_data
+$guide
+
+</%args>
+
+<%perl>
+
+my ( $messages, $count );
+
+if ( @{$missing_data} ) 
+{
+       
+$messages .= "Data for the following field(s) is missing: <br /><br />";
+my $count = 1;
+foreach my $e (@{$missing_data}) {
+
+$messages .= $count . ")" . "\t" . $e . "." . "<br />";
+$count++;
+}
+
+$messages .= qq | <p><a href="javascript:history.go(-1)">
+   Please go back and fill in the missing information.</a> </p>|;
+}
+
+</%perl>
+
+<& /page/page_title.mas, title => "Missing Data:" &>
+<&| /page/info_section.mas, title => ' ', 
+  subtitle => $guide &>
+ <% $messages %>  
+</&>

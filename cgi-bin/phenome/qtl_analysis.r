@@ -59,7 +59,7 @@ qtlmethod<-scan(qtlmethodfile,
                 what="character",
                 sep="\n"
                 )
-#print(qtlmethod)
+
 if (qtlmethod == "Maximum Likelihood")
 {
   qtlmethod<-c("em")
@@ -138,11 +138,19 @@ stepsize<-scan(stepsizefile,
                sep="\n"
                )
 
-if (stepsize == "zero")
-{
-  stepsize<-c(0)
-}
+if (qtlmethod == 'mr')
+  {
+    stepsize<-c(0)
+  }else
+if 
+  (qtlmethod != 'mr' & stepsize == "zero")
+    {
+      stepsize<-c(0)
+    }
+
 stepsize<-as.numeric(stepsize)
+
+
 
 ######genotype calculation method############
 genoprobmethodfile<-grep("stat_prob_method",
@@ -161,27 +169,30 @@ genoprobmethod<-scan(genoprobmethodfile,
 
 ########No. of draws for sim.geno method###########
 drawsnofile<-c()
-if (is.logical(grep("stat_no_draws",
-                    statfiles))==TRUE
-    )
-{
-  drawsnofile<-(grep("stat_no_draws",
-                     statfiles,
-                     ignore.case=TRUE,
-                     fixed = FALSE,
-                     value=TRUE)
-                )
-}
-    
-if (is.logical(drawsnofile) ==TRUE)
-{
-  drawsno<-scan(drawsnofile,
-                what="numeric",
-                dec = ".",
-                sep="\n"
-                )
-  drawsno<-as.numeric(drawsno)
-}
+drawsno<-c()
+if (qtlmethod == 'imp')
+  {
+    if (is.null(grep("stat_no_draws", statfiles))==FALSE)
+      {
+        drawsnofile<-grep("stat_no_draws",
+                          statfiles,
+                          ignore.case=TRUE,
+                          fixed = FALSE,
+                          value=TRUE
+                          )
+      }
+
+    if (is.null(drawsnofile)==FALSE)
+      {
+        drawsno<-scan(drawsnofile,
+                      what="numeric",
+                      dec = ".",
+                      sep="\n"
+                      )
+        drawsno<-as.numeric(drawsno)
+
+      }
+  }
 ########significance level for genotype
 #######probablity calculation
 genoproblevelfile<-grep("stat_prob_level",
@@ -197,8 +208,21 @@ genoproblevel<-scan(genoproblevelfile,
                     sep="\n"
                     )
 
-genoproblevel<-as.numeric(genoproblevel)
 
+if (qtlmethod == 'mr')
+  {
+    if (is.logical(genoproblevel) == FALSE)
+      {
+        genoproblevel<-c(0)
+      }
+    
+    if (is.logical(genoprobmethod) ==FALSE)
+      {
+        genoprobmethod<-c('Calculate')
+      }
+  }
+
+genoproblevel<-as.numeric(genoproblevel)
 
 ########significance level for permutation test
 permuproblevelfile<-grep("stat_permu_level",
@@ -216,11 +240,10 @@ permuproblevel<-scan(permuproblevelfile,
 
 permuproblevel<-as.numeric(permuproblevel)
 
-
 #########
 infile<-scan(file=infile,
              what="character"
-             )#container for the ff
+             )
 
 cvtermfile<-grep("cvterm",
                  infile,
@@ -299,28 +322,28 @@ if (cross == "bc")
   popdata<-jittermap(popdata)
 }  
 
-
-if (qtlmethod != "mr")
-{
-  if (genoprobmethod == "Calculate")
-    {
+#calculates the qtl genotype probablity at
+#the specififed step size and probability level
+genotypetype<-c()
+if (genoprobmethod == "Calculate")
+  {
     popdata<-calc.genoprob(popdata,
                            step=stepsize,
                            error.prob=genoproblevel
                            )
-  #calculates the qtl genotype probablity at
-  #the specififed step size and probability level
+    genotypetype<-c('prob')
   } else
   if (genoprobmethod == "Simulate")
     {
-    popdata<-sim.genoprob(popdata,
-                          n.draws= drawsno,
-                          step=stepsize,
-                          error.prob=genoproblevel,
-                          stepwidth="fixed"
-                          ) 
+    popdata<-sim.geno(popdata,
+                      n.draws=drawsno,
+                      step=stepsize,
+                      error.prob=genoproblevel,
+                      stepwidth="fixed"
+                      )
+    genotypetype<-c('draws')
   }
-}
+
 
 
 cvterm<-scan(file=cvtermfile,
@@ -337,7 +360,9 @@ permuvalues<-scan(file=permufile,
 
 permuvalue1<-permuvalues[1]
 permuvalue2<-permuvalues[2]
-if ((is.logical(permuvalue1) == FALSE))
+permu<-c()
+
+if (is.logical(permuvalue1) == FALSE)
 {
   if (qtlmodel == "scanone")
     {
@@ -361,7 +386,7 @@ if ((is.logical(permuvalue1) == FALSE))
       
         permu<-summary(popdataperm,
                        alpha=permuproblevel
-                       )     
+                       )
     }
   }else
   if (qtlmethod != "mr")
@@ -394,7 +419,12 @@ if ((is.logical(permuvalue1) == FALSE))
 }
 
 ##########QTL EFFECTS - I ##############
-LodThreshold<-permu[1,1]
+LodThreshold<-c()
+
+if(is.null(permu) == FALSE)
+{
+  LodThreshold<-permu[1,1]
+}
 ##########QTL EFFECTS ##############
 
 chrlist<-c("chr1")
@@ -463,10 +493,10 @@ for (i in chrdata)
   
   i<-scanone(popdata,
              chr=chrno,
-             pheno.col=cv
+             pheno.col=cv,
+             model = "normal",
+             method= qtlmethod
              )
-
-  
   position<-max(i,
                 chr=chrno
                 )
@@ -475,23 +505,25 @@ for (i in chrdata)
   LodScore<-position[["lod"]]
   QtlChr<-levels(position[["chr"]])
 
-if (LodScore >=LodThreshold) {
-  QtlChrs<-append(QtlChrs,
-                  QtlChr
-                  )
-  
-  QtlLods<-append(QtlLods,
-                  LodScore
-                  )
-  
-  QtlPositions<-append(QtlPositions,
-                       round(p,
-                             0
-                             )
-                       )
-}
-  
-  
+      if ( is.null(LodThreshold)==FALSE )
+        {
+          if (LodScore >=LodThreshold )
+            {
+              QtlChrs<-append(QtlChrs,
+                              QtlChr
+                              ) 
+              QtlLods<-append(QtlLods,
+                              LodScore
+                              )  
+              QtlPositions<-append(QtlPositions,
+                                   round(p,
+                                         0
+                                         )
+                                   )
+            }
+        }
+    
+ 
   peakmarker<-find.marker(popdata,
                           chr=chrno,
                           pos=p
@@ -504,7 +536,7 @@ if (LodScore >=LodThreshold) {
                           prob=0.95,
                           expandtomarkers=TRUE
                           )
- 
+
   if (is.na(lodconfidenceint[peakmarker, ]))
     {
       lodconfidenceint<-rbind(lodconfidenceint,
@@ -515,7 +547,7 @@ if (LodScore >=LodThreshold) {
   peakmarker<-c(chrno,
                 peakmarker
                 )
- 
+  
   if (chrno==1)
     { 
     datasummary<-i
@@ -541,78 +573,86 @@ chrno<-chrno + 1;
 }
 
 ##########QTL EFFECTS ##############
-ResultDrop<-c()
-ResultFull<-c()
-Effects<-c()
+ ResultDrop<-c()
+ ResultFull<-c()
+ Effects<-c()
 
-if ( is.null(QtlLods)==FALSE)
-{
-  if (max(QtlLods) >= LodScore ) 
-    {
-      QtlObj<-makeqtl(popdata,
-                QtlChrs,
-                QtlPositions,
-                what="prob"
-                )
-  
-      QtlsNo<-length(QtlPositions)
-      Eq<-c("y~")
+    if (is.null(LodThreshold) == FALSE)
+      {
+        if ( max(QtlLods) >= LodScore )
+          {
+            QtlObj<-makeqtl(popdata,
+                            QtlChrs,
+                            QtlPositions,
+                            what=genotypetype
+                            )
 
-      for (i in 1:QtlsNo) {
-        q<-paste("Q",
-                 i,
-                 sep=""
-                 )
+            QtlsNo<-length(QtlPositions)
+            Eq<-c("y~")
+
+            for (i in 1:QtlsNo)
+              {
+                q<-paste("Q",
+                         i,
+                         sep=""
+                         )
   
-        if (i==1) {  
-          Eq<-paste(Eq, q, sep="")
-      
-        }else
-        if (i>1) {
-          Eq<-paste(Eq, q, sep="*")
-     
-        }
+                if (i==1)
+                  {  
+                    Eq<-paste(Eq,
+                              q,
+                              sep=""
+                              )      
+                  }
+                else
+                  if (i>1)
+                    {
+                      Eq<-paste(Eq,
+                                q,
+                                sep="*"
+                                )    
+                    }
+              }
+
+            QtlEffects<-fitqtl(popdata,
+                               pheno.col=cv,
+                               QtlObj,
+                               formula=Eq,
+                               method="hk",                   
+                               get.ests=TRUE
+                               )
+            ResultModel<-attr(QtlEffects,
+                              "formula"
+                              )
+
+            Effects<-QtlEffects$ests$ests
+            QtlLodAnova<-QtlEffects$lod
+            ResultFull<-QtlEffects$result.full  
+            ResultDrop<-QtlEffects$result.drop
+
+            if (is.numeric(Effects))
+              {
+                Effects<-round(Effects,
+                               2
+                               )
+              }
+
+            if (is.numeric(ResultFull))
+              {
+                ResultFull<-round(ResultFull,
+                                  2
+                                  )
+              }
+
+            if (is.numeric(ResultDrop))
+              {
+                ResultDrop<-round(ResultDrop,
+                                  2
+                                  )
+              }
+          }
       }
 
-      QtlEffects<-fitqtl(popdata,
-                         pheno.col=cv,
-                         QtlObj,
-                         formula=Eq,
-                         method="hk",                   
-                         get.ests=TRUE
-                         )
-      ResultModel<-attr(QtlEffects,
-                        "formula"
-                        )
- 
-      Effects<-QtlEffects$ests$ests
-      QtlLodAnova<-QtlEffects$lod
-      ResultFull<-QtlEffects$result.full  
-      ResultDrop<-QtlEffects$result.drop
-
-      if (is.numeric(Effects))
-        {
-          Effects<-round(Effects,
-                         2
-                         )
-        }
-
-
-  if (is.numeric(ResultFull))
-    {
-      ResultFull<-round(ResultFull,
-                        2
-                        )
-    }
-
-      if (is.numeric(ResultDrop))
-        {
-          ResultDrop<-round(ResultDrop,
-                            2
-                            )
-        }
-    }
-}
 ##########creating vectors for the outfiles##############
 
 outfiles<-scan(file=outfile,
@@ -701,8 +741,6 @@ if (is.null(ResultDrop)==FALSE)
     }
 }
 
-if (is.null(Effects)==FALSE)
-  {
     write.table(Effects,
                 file=QtlEffectsFile,
                 sep="\t",
@@ -710,12 +748,7 @@ if (is.null(Effects)==FALSE)
                 quote=FALSE,
                 append=FALSE
                 )
-  }
 
-if (userpermuvalue != 0)
-{
-  if ((is.logical(permuvalue1) == FALSE))
-    {
     write.table(permu,
                 file=permufile,
                 sep="\t",
@@ -723,8 +756,5 @@ if (userpermuvalue != 0)
                 quote=FALSE,
                 append=FALSE
                 )
-  }
-}
-
 
 q(runLast = FALSE)

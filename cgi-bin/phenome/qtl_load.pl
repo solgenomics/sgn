@@ -17,15 +17,6 @@ use warnings;
 my $qtl_load_detail_page = CXGN::Phenome::QtlLoadDetailPage->new();
 
 use File::Spec;
-use CXGN::Page;
-use CXGN::Page::FormattingHelpers qw /info_section_html
-  page_title_html
-  columnar_table_html
-  html_optional_show
-  info_table_html
-  tooltipped_text
-  html_alternate_show
-  /;
 use CXGN::DB::Connection;
 use CXGN::Phenome::Qtl;
 use CXGN::Phenome::Qtl::Tools;
@@ -53,6 +44,7 @@ use CXGN::People::Person;
 use CXGN::Page;
 use Bio::Chado::Schema;
 use Storable qw /store retrieve/;
+use CGI;
 
 use CatalystX::GlobalContext qw( $c );
 
@@ -83,6 +75,7 @@ sub process_data {
     my $sp_person_id = $login->verify_session();
 
     my $referring_page = "/phenome/qtl_form.pl";
+   # my $referring_page = $ENV{HTTP_REFERER};
 
     my %args = $page->get_all_encoded_arguments();
     $args{pop_common_name_id} = $self->common_name_id();
@@ -205,8 +198,7 @@ sub process_data {
                             "$referring_page?pop_id=$pop_id&amp;type=$type");
                     }
                     else {
-                        print STDERR
-"There is problem with your genotype data uploading\n";
+                        die "There is a problem with your genotype data uploading\n";
                     }
                 }
             }
@@ -218,27 +210,9 @@ sub process_data {
     }
 
     elsif ( $type eq 'stat_form' ) {
-        my $stat_param = $qtl_obj->user_stat_parameters();
-        my @missing    = $qtl_tools->check_stat_fields($stat_param);
-
-        my $stat_file;
-        if (@missing) {
-            $self->error_page(@missing);
-        }
-        else {
-            $stat_file = $qtl_obj->get_stat_file( $c, $pop_id );
-        }
-        unless ( !-e $stat_file ) {
-            $message = 'QTL statistical parameters set : Step 5 of 5'
-              . qq | \nQTL data upload for http://solgenomics.net/phenome/population.pl?pop_id=$pop_id" is completed|;
-            $self->send_email( '[QTL upload: Step 5]', $message, $pop_id );
-
-            $type = 'confirm';
-            $page->client_redirect(
-                "$referring_page?pop_id=$pop_id&amp;type=$type");
-        }
+        $self->load_stat_parameters($args_ref);
+#add checks
     }
-
 }
 
 sub pheno_upload {
@@ -270,7 +244,7 @@ sub pheno_upload {
         my $qtlfiles = retrieve("$user_dir/qtlfiles");
 
         my $trait_file = $qtlfiles->{trait_file};
-        my $f = $self->compare_file_names( $name, $trait_file );
+        $self->compare_file_names( $name, $trait_file );
         $qtlfiles->{pheno_file} = $name;
         store $qtlfiles, "$user_dir/qtlfiles";
 
@@ -321,8 +295,8 @@ sub geno_upload {
         my $trait_file = $qtlfiles->{trait_file};
         my $pheno_file = $qtlfiles->{pheno_file};
 
-        my $f = $self->compare_file_names( $name, $trait_file );
-        $f = $self->compare_file_names( $name, $pheno_file );
+        $self->compare_file_names( $name, $trait_file );
+        $self->compare_file_names( $name, $pheno_file );
 
         $qtlfiles->{geno_file} = $name;
         store $qtlfiles, "$user_dir/qtlfiles";
@@ -1357,33 +1331,11 @@ sub common_name_id {
 sub error_page {
     my $self  = shift;
     my @error = @_;
-    my $page  = CXGN::Page->new();
-    my ( $messages, $count );
-
-    my $guide = $self->guideline();
-    if (@error) {
-        $page->header();
-
-        print page_title_html("Missing Data:");
-        $messages .= "<p>Data for the following field(s) is missing: </p>";
-        my $count = 1;
-        foreach my $e (@error) {
-
-            $messages .= $count . ")" . "\t" . $e . "." . "<br />";
-            $count++;
-        }
-
-        $messages .= qq | <p><a href="javascript:history.go(-1)">
-                          Please go back and fill in the missing information.</a> </p>|;
-
-        print info_section_html(
-            subtitle => $guide,
-            contents => $messages,
-        );
-        $page->footer();
-
-    }
-
+   
+    $c->forward_to_mason_view('/qtl/qtl_load/missing_data.mas',
+                              missing_data => \@error,
+                              guide        => $self->guideline(),
+        )
 }
 
 =head2 check_organism
@@ -1402,45 +1354,25 @@ sub error_page {
 =cut
 
 sub check_organism {
-    my $self     = shift;
-    my $organism = shift;
-    my $species  = shift;
-    my $cultivar = shift;
-
-    my $guide = $self->guideline();
+    my ($self, $organism, $species, $cultivar) = @_ ;
+    
     unless ( !$cultivar ) {
         $cultivar = " cv. $cultivar";
     }
 
-    if ( !$organism ) {
-        my $page = CXGN::Page->new( "SGN", "Isaak" );
-
-        $page->header();
-
-        print page_title_html("Problem with parental accessions......");
-
-        my $messages .= "It appears that SGN currently does not support 
-                         this species (<b><i>$species</i>$cultivar</b>).<br/> 
-                         As a first step, please make sure you have spelled 
-                         the species correctly.</p><p> Read also the guidline for the
-                         nomenclature format you have to use for the parental lines.</p>";
-
-        $messages .= qq |<p> 
-                          Please go <a href="javascript:history.go(-1)">back</a> 
-                          and check its spelling or if you keep having problem 
-                          with it contact us.</p>|;
-
-        print info_section_html( subtitle => $guide, contents => $messages, );
-
-        $page->footer();
-        exit();
+    if ( !$organism ) 
+    {
+        $c->forward_to_mason_view('/qtl/qtl_load/check_organism.mas',                                
+                                  species  => $species,
+                                  cultivar => $cultivar,
+                                  guide    => $self->guideline(),
+            );
+    } else
+    {
+ #do nothing..relax
     }
-    else {
-
-        #do nothing..relax
-    }
-
 }
+
 
 =head2 population_exists
 
@@ -1456,42 +1388,22 @@ sub check_organism {
 =cut
 
 sub population_exists {
-    my $self  = shift;
-    my $pop   = shift;
-    my $name  = shift;
-    my $guide = $self->guideline();
-
+    my ($self, $pop, $name) = @_;
+    
     if ($pop) {
-        my $page = CXGN::Page->new( "SGN", "Isaak" );
-
-        $page->header();
-
-        print page_title_html("Population name...");
-
-        my $messages .= "It appears that a population <b>$name</></b> already 
-                         exists in the database. To continue loading QTL data
-                         for a new population, try with a different population 
-                         name.</p>
-                         <p>If you are trying to load more or change data to an exising population
-                            contact us.</p>";
-
-        $messages .= qq |<p> 
-                          Please go <a href="javascript:history.go(-1)">back</a> 
-                          and try to use a different name or if you keep having problem 
-                          with it contact us.</p>|;
-
-        print info_section_html( subtitle => $guide, contents => $messages, );
-
-        $page->footer();
-        exit();
+        
+        $c->forward_to_mason_view('/qtl/qtl_load/population_exists.mas',
+                              name  => $name,
+                              guide => $self->guideline()
+            );
     }
-
 }
+
+ 
 
 sub guideline {
     my $self = shift;
-    return my $guideline =
-qq |<a  href="http://docs.google.com/View?id=dgvczrcd_1c479cgfb">Guidelines</a> |;
+    return qq |<a  href="http://docs.google.com/View?id=dgvczrcd_1c479cgfb">Guidelines</a> |;
 }
 
 =head2 trait_columns
@@ -1509,30 +1421,16 @@ qq |<a  href="http://docs.google.com/View?id=dgvczrcd_1c479cgfb">Guidelines</a> 
 =cut
 
 sub trait_columns {
-    my $self        = shift;
-    my $trait_error = shift;
-    my $guide       = $self->guideline();
-
+    my ($self, $trait_error) = @_;
+   
     if ($trait_error) {
-        my $page = CXGN::Page->new( "SGN", "Isaak" );
-
-        $page->header();
-
-        print page_title_html("Traits file...");
-
-        my $messages .= $trait_error;
-
-        $messages .= qq |<p> 
-                          Please go <a href="javascript:history.go(-1)"><b>back</b></a> 
-                          and rearrange the order of the columns and upload the file
-                          again or if you keep having problem with it contact us.</p>|;
-
-        print info_section_html( subtitle => $guide, contents => $messages, );
-
-        $page->footer();
-        exit();
+        $c->forward_to_mason_view('/qtl/qtl_load/trait_columns.mas',
+                                  error => $trait_error,
+                                  guide => $self->guideline()
+            )
     }
 }
+
 
 =head2 accessors compare_file_names
 
@@ -1549,36 +1447,15 @@ sub trait_columns {
 =cut
 
 sub compare_file_names {
-    my $self = shift;
-    my ( $file1, $file2 ) = @_;
-
-    my $guide = $self->guideline();
-
+    my ($self, $file1, $file2) = @_;
+   
     unless ( $file1 ne $file2 ) {
-
-        my $page = CXGN::Page->new( "SGN", "Isaak" );
-
-        $page->header();
-
-        print page_title_html("Data files...");
-
-        my $messages .=
-qq |You are trying to upload file(s) with the same name <b>($file1 and $file2)</b> 
-                         for this step and one of the steps before it.|;
-
-        $messages .= qq |<p> 
-                          Please go <a href="javascript:history.go(-1)"><b>back</b></a> 
-                          and check the file you are trying to upload
-                          or if you keep having problem with it contact us.</p>|;
-
-        print info_section_html( subtitle => $guide, contents => $messages, );
-
-        $page->footer();
-        exit();
+        $c->forward_to_mason_view('/qtl/qtl_load/compare_file_names.mas',
+                                  file1 => $file1,
+                                  file2 => $file2,
+                                  guide => $self->guideline()
+            )
     }
-
-    return 0;
-
 }
 
 =head2 send_email
@@ -1613,3 +1490,42 @@ qq |\nQTL population id: $pop_id \nQTL data owner: $username ($user_profile) |;
 
 }
 
+
+sub load_stat_parameters {
+    my ($self, $args_ref) = @_;
+    
+    my $sp_person_id = $self->get_sp_person_id();
+    my $qtl_obj      = CXGN::Phenome::Qtl->new($sp_person_id, $args_ref );
+    my $qtl_tools    = CXGN::Phenome::Qtl::Tools->new(); 
+    my $stat_param   = $qtl_obj->user_stat_parameters();
+    my @missing      = $qtl_tools->check_stat_fields($stat_param);  
+    my $pop_id       = $args_ref->{pop_id};
+   
+    my $stat_file;
+    if (@missing) {
+        $self->error_page(@missing);
+    }
+    else {
+        $stat_file = $qtl_obj->user_stat_file( $c, $pop_id );
+    }
+       
+    if ($c->req->referer =~ /qtl_form/ ) {
+        unless ( !-e $stat_file ) {
+            my $qtlpage = $c->req->base . "qtl/id/$pop_id";
+            my $message =<<MSG;
+            QTL statistical parameters set : Step 5 of 5;
+            
+            QTL data upload for <a href="$qtlpage"> of your population </a> is completed.
+MSG
+
+            $self->send_email( '[QTL upload: Step 5]', $message, $pop_id );
+            $c->res->redirect("qtl_form.pl?pop_id=$pop_id&type=confirm");
+            $c->detach();
+        }
+    } else {
+        $c->res->redirect($c->req->referer);
+        $c->detach();
+    }
+ 
+
+}
