@@ -1,7 +1,7 @@
 <%doc>
 
 =head1 NAME 
-qtl/qtl_form/stat_tools.mas - a mason component for the stat parameters interface
+qtl/qtl_start/stat_tools.mas - a mason component for the stat parameters interface
 
 =AUTHOR
 Isaak Y Tecle (iyt2@cornell.edu)
@@ -18,6 +18,7 @@ $guideline
 $userid
 
 </%args>
+
 <& /util/import_javascript.mas, classes => [ "CXGN.Phenome.Qtl" ] &>
 
 <div id="statTools">
@@ -54,15 +55,15 @@ $userid
        The default parameters for QTL analysis are <br />
        displayed on the legend of the analysis output.<br />
   </div>
-  <div id="qtlParameters" style="display:none"> 
+  <div id="qtlParameters" style="display:none">
     <table align="center">
-      <tr>
-        <td>
+     <tr>
+       <td>
           <% $guideline %>
         </td>
       </tr>
     </table>
-      
+
     <& /qtl/qtl_form/stat_form.mas,  
      pop_id  => $pop_id, 
      referer => $referer, 
