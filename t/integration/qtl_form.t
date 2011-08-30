@@ -40,7 +40,7 @@ $mech->while_logged_in( { user_type => 'submitter' }, sub {
     $mech->content_contains('Population Details');
  
     $mech->get_ok('/phenome/qtl_form.pl?type=trait_form');
-    $mech->content_contains('Traits');
+    $mech->content_contains('Submit Trait Data');
 
     $mech->get_ok('/phenome/qtl_form.pl?type=pheno_form');
     $mech->content_contains('Phenotype');
