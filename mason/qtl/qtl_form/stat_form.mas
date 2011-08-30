@@ -35,17 +35,20 @@ my $genome_scan = tooltipped_text('Genome scan size (cM):', 'not required for
 my $qtl_prob = tooltipped_text('QTL genotype probablity method:', 
                                'not required for Marker Regression');
 
-
-my $page_end;
-
 </%perl>
 
 
-% unless ( $referer =~ /^qtl\/view/ ) {
-                <& /page/page_title.mas, title => "Step 5: Submit Statistical Parameters" &> 
-                <&| /page/info_section.mas, title => "Statistical Parameters", subtitle => $guide &></&>
-% }
-<div id="qtlParameters" style="display: none">
+% if ( $referer =~ /^phenome\/qtl_form/ ) 
+%{
+<& /page/page_title.mas, 
+   title => "Step 5: Submit Statistical Parameters" 
+&>
+<& /page/info_section.mas, 
+   title => "Statistical Parameters", 
+   subtitle => $guide 
+&> 
+%}
+
   <form action="/phenome/qtl_load.pl" method="POST" enctype="MULTIPART/FORM-DATA">  
     <table cellspacing=20>
       <tr>
@@ -54,8 +57,7 @@ my $page_end;
 	<td>
           <select name="stat_qtl_model">
 	    <option>
-            <option>Single-QTL Scan
-	    <option style="color: #FF0000;text-decoration: line-through">Two-QTL Scan--currently not available
+            <option>Single-QTL Scan	    
           </select>
 	</td>
         <td>QTL mapping method:</td>
@@ -158,7 +160,5 @@ my $page_end;
         </td>      
       </tr>
     </table>
-  </form>  
-</div>
-
+  </form>
 
