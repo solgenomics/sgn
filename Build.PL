@@ -45,7 +45,6 @@ my $build = SGN::Build->new(
         'Catalyst::Plugin::Authentication'         => 0,
         'Catalyst::Plugin::Authorization::Roles'   => 0,
         'Catalyst::Plugin::ConfigLoader'           => 0,
-        'Catalyst::Plugin::Cache       '           => 0,
         'Catalyst::Plugin::Static::Simple'         => 0,
         'Catalyst::View::Bio::SeqIO'               => 0,
         'Catalyst::View::Email'                    => 0,

@@ -33,8 +33,6 @@ L<SGN::Role::Site::TestMode>
 
 use Catalyst qw/
      ConfigLoader
-     Cache
-     Cache::Store::FastMmap   
      Static::Simple
      Authentication
      +SGN::Authentication::Store
