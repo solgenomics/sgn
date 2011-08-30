@@ -296,6 +296,13 @@ sub view_organism :Chained('find_organism') :PathPart('view') :Args(0) {
             $solcyc_link = "See <a href=\"$full_url$accession\">$solcyc</a>";
         }
     }
+
+    my $logged_user = $c->user;
+    my $person_id = $logged_user->get_object->get_sp_person_id if $logged_user;
+    my $privileged_user =  ($logged_user && ( $logged_user->check_roles('curator') || $logged_user->check_roles('sequencer') || $logged_user->check_roles('submitter') ) )  ;
+
+    $c->stash->{privileged_user} = $privileged_user;
+
     $c->stash->{solcyc_link} = $solcyc_link;
     $c->stash->{accessions} = $accessions;
     my $na      = qq| <span class="ghosted">N/A</span> |;
@@ -309,7 +316,6 @@ sub view_organism :Chained('find_organism') :PathPart('view') :Args(0) {
     $self->transcript_data($c);
     $self->phenotype_data($c);
     $self->qtl_data($c);
-    
 
 }
 

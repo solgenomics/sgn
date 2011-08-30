@@ -21,11 +21,22 @@ $phenotypes => ''
 $loci => ''
 $qtl_data => undef
 $user_id => undef
-$user_role => undef
+$privileged_user => undef
 $form => undef;
 $static_data => undef;
 @image_objects => ()
 </%args>
+
+<%perl>
+my $this_page = "/organism/$organism_id/view/";
+my $image_subtitle =
+!$privileged_user ?
+"<span class= \"ghosted\">[Add new image]</span> "
+: " <a href=\"/image/add?type_id=$organism_id&type=organism&action=new&refering_page=$this_page\">[ Add new image]</a>" ;
+</%perl>
+
+<& /util/import_javascript.mas, classes => ["jquery", "thickbox", "CXGN.Page.FormattingHelpers"] &>
+
 
 <& /page/page_title.mas, title=>"Details for $taxon <i>$organism_name</i>" &>
 
@@ -35,7 +46,7 @@ $static_data => undef;
 
 <& /organism/taxonomy.mas, taxonomy=>$taxonomy &>
 
-<&| /page/info_section.mas, title=>"Images" &>
+<&| /page/info_section.mas, title=>"Images" , subtitle=>$image_subtitle &>
 <& /image/print_images.mas, image_objects => \@image_objects &>
 </&>
 
