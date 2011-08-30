@@ -1,8 +1,7 @@
 <%doc>
 
 =head1 NAME 
-qtl/qtl_form/stat_form.mas - a mason component for a QTL stat parameters 
-submission
+qtl/qtl_start/data_access.mas - displays if qtl data is private. 
 
 =AUTHOR
 Isaak Y Tecle (iyt2@cornell.edu)
@@ -18,14 +17,11 @@ $owner_page
 
 </%args>
 
-<%perl>
-
-</%perl>
 
 <&| /page/info_section.mas, 
   collapsible => 1, 
   collapsed   => 0, 
-  title       => "Acccessibility" 
+  title       => "Data access" 
 &>   
   <p>
     The QTL data for this population is not public yet. If you are the 
