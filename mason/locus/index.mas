@@ -88,6 +88,15 @@ foreach ( @{ $dbxrefs{'tgrc'} } ) {
       qq|<br>$locus_name is a <a href="$url$accession" target="blank">TGRC gene</a><br />|;
   }
 }
+my $tair;
+foreach ( @{ $dbxrefs{'TAIR locus'} } ) {
+  if ( $_->[1] eq '0' ) {
+    my $url       = $_->[0]->get_urlprefix() . $_->[0]->get_url();
+    my $accession = $_->[0]->get_accession();
+    $tair .=
+      qq|<br>$locus_name is a <a href="$url$accession" target="blank">TAIR locus</a><br />|;
+  }
+}
 
 my @sorted_pubs =  defined @{ $dbxrefs{PMID} } ? sort { $a->[0]->get_accession() <=> $b->[0]->get_accession() } @{ $dbxrefs{PMID} } : () ;
 
@@ -141,6 +150,7 @@ my $ontology_subtitle =  !(grep { /^$user_type$/ } ('curator', 'submitter', 'seq
 	      <& /locus/synonym.mas ,  locus_id=>"$locus_id" , synonyms=>\@synonyms &>
 
 <% $tgrc %>
+<% $tair %>
 
   <& /locus/locus_editor.mas, owners=>$owner_objects  &>
 % if ($locus_id) {
