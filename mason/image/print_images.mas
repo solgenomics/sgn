@@ -72,7 +72,7 @@ if ($image_objects)  { # don't display anything for empty list of images
     my $image_description = $image_ob->get_description();
     my $image_img  = $image_ob->get_image_url("medium");
     my $small_image = $image_ob->get_image_url("thumbnail");
-    my $image_page  = "/image/index.pl?image_id=$image_id";
+    my $image_page  = "/image/view/$image_id";
 
     my $thickbox =
       qq|<a href="$image_img"  title="<a href=$image_page>Go to image page ($image_name)</a>" class="thickbox" rel="gallery-figures"><img src="$small_image" alt="$image_description" /></a> |;

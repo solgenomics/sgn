@@ -110,8 +110,8 @@ sub get_image_url {
  Usage:        $image->process_image($filename, "stock", 234);
  Desc:         creates the image and associates it to the type and type_id
  Ret:
- Args:
- Side Effects:
+ Args:         filename, type (experiment, stock, fish, locus, organism) , type_id
+ Side Effects: Calls the relevant $image->associate_$type function
  Example:
 
 =cut
@@ -642,22 +642,21 @@ sub get_loci {
 
 sub associate_organism {
     my $self = shift;
-    my $locus_id = shift;
+    my $organism_id = shift;
     my $sp_person_id= $self->get_sp_person_id();
     my $query = "INSERT INTO metadata.md_image_organism
-                   (md_image_id,
+                   (image_id,
                    sp_person_id,
                    organism_id)
-                 VALUES (?, ?, ?)";
+                 VALUES (?, ?, ?) RETURNING md_image_organism_id";
     my $sth = $self->get_dbh()->prepare($query);
     $sth->execute(
-                $locus_id,
-                $sp_person_id,
-                $self->get_image_id()
-                );
-
-    my $organism_image_id= $self->get_currval("metadata.md_image_organism_md_image_organism_id_seq");
-    return $organism_image_id;
+        $self->get_image_id,
+        $sp_person_id,
+        $organism_id,
+        );
+    my ($image_organism_id) = $sth->fetchrow_array;
+    return $image_organism_id;
 }
 
 =head2 function get_associated_object_links
