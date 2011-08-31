@@ -666,7 +666,7 @@ sub associate_organism {
 
  Usage:   $self->get_orgnaisms
  Desc:    find the organism objects asociated with this image
- Ret:     a list of CXGN::Chado::Organism objects
+ Ret:     a list of BCS Organism objects
  Args:    none
  Side Effects: none
  Example:
@@ -675,12 +675,14 @@ sub associate_organism {
 
 sub get_organisms {
     my $self = shift;
+    my $schema = $self->get_configuration_object->dbic_schema('Bio::Chado::Schema' , 'sgn_chado');
     my $query = "SELECT organism_id FROM metadata.md_image_organism WHERE md_image_organism.obsolete != 't' and md_image_organism.image_id=?";
     my $sth = $self->get_dbh()->prepare($query);
     $sth->execute($self->get_image_id());
     my @organisms = ();
     while (my ($o_id) = $sth->fetchrow_array ) {
-        push @organisms, CXGN::Chado::Organism->new($self->get_dbh(), $o_id);
+        push @organisms, $schema->resultset("Organism::Organism")->find(
+            { organism_id => $o_id } );
     }
     return @organisms;
 }
