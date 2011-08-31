@@ -564,6 +564,9 @@ sub get_associated_objects {
     foreach my $locus ($self->get_loci() ) {
         push @associations, ["locus", $locus->get_locus_id(), $locus->get_locus_name];
     }
+    foreach my $o ($self->get_organisms ) {
+        push @associations, ["organism", $o->get_organism_id, $o->get_species];
+    }
     return @associations;
 }
 
@@ -659,6 +662,30 @@ sub associate_organism {
     return $image_organism_id;
 }
 
+=head2 get_organism
+
+ Usage:   $self->get_orgnaisms
+ Desc:    find the organism objects asociated with this image
+ Ret:     a list of CXGN::Chado::Organism objects
+ Args:    none
+ Side Effects: none
+ Example:
+
+=cut
+
+sub get_organisms {
+    my $self = shift;
+    my $query = "SELECT organism_id FROM metadata.md_image_organism WHERE md_image_organism.obsolete != 't' and md_image_organism.image_id=?";
+    my $sth = $self->get_dbh()->prepare($query);
+    $sth->execute($self->get_image_id());
+    my @organisms = ();
+    while (my ($o_id) = $sth->fetchrow_array ) {
+        push @organisms, CXGN::Chado::Organism->new($self->get_dbh(), $o_id);
+    }
+    return @organisms;
+}
+
+
 =head2 function get_associated_object_links
 
   Synopsis:
@@ -684,12 +711,13 @@ sub get_associated_object_links {
 
         if ($assoc->[0] eq "fished_clone") {
             $s .= qq { <a href="/maps/physical/clone_info.pl?id=$assoc->[1]">FISHed clone id:$assoc->[1]</a> };
-
         }
-      if ($assoc->[0] eq "locus" ) {
-          $s .= qq { <a href="/phenome/locus_display.pl?locus_id=$assoc->[1]">Locus name:$assoc->[2]</a> };
-      }
-
+        if ($assoc->[0] eq "locus" ) {
+            $s .= qq { <a href="/phenome/locus_display.pl?locus_id=$assoc->[1]">Locus name:$assoc->[2]</a> };
+        }
+        if ($assoc->[0] eq "organism" ) {
+            $s .= qq { <a href="/organism/$assoc->[1]/view/">Organism name:$assoc->[2]</a> };
+        }
     }
     return $s;
 }
