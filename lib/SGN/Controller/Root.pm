@@ -163,7 +163,9 @@ sub _do_redirects {
     if( $path !~ m|\.\w{2,4}$| ) {
         if( my $index_action = $self->_find_cgi_action( $c, "$path/index.pl" ) ) {
             $c->log->debug("redirecting to action $index_action") if $c->debug;
-            $c->res->redirect( $c->uri_for_action($index_action,$c->req->query_parameters), 302 );
+            my $uri = $c->uri_for_action($index_action, $c->req->query_parameters)
+                        ->rel( $c->uri_for('/') );
+            $c->res->redirect( "/$uri", 302 );
             return 1;
         }
     }
