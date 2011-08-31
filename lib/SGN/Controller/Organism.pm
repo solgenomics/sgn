@@ -504,7 +504,7 @@ L<Cache> object containing species data summaries, as:
     ...
   }
 
-Accesso with  C<$controller-E<gt>species_data_summary_cache->thaw($organism_id )>,
+Access with  C<$controller-E<gt>species_data_summary_cache->thaw($organism_id )>,
 do not use Cache's C<get> method.
 
 =cut
