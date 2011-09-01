@@ -24,7 +24,7 @@ $user_id => undef
 $user_role => undef
 $form => undef;
 $static_data => undef;
-@images => ()
+@image_objects => ()
 </%args>
 
 <& /page/page_title.mas, title=>"Details for $taxon <i>$organism_name</i>" &>
@@ -36,6 +36,7 @@ $static_data => undef;
 <& /organism/taxonomy.mas, taxonomy=>$taxonomy &>
 
 <& /image/print_images.mas, image_objects => \@images &>
+
 
 <& /organism/accessions.mas, accessions => $accessions &>
 
