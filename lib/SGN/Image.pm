@@ -26,7 +26,6 @@ image sizes: large, medium, small and thumbnail with the names:
 large.jpg, medium.jpg, small.jpg and thumbnail.jpg . All other
 metadata about the image is stored in the database.
 
-
 =head1 AUTHOR(S)
 
 Lukas Mueller (lam87@cornell.edu)
@@ -139,7 +138,9 @@ sub process_image {
         #print STDERR "Associating to locus $type_id\n";
         $self->associate_locus($type_id);
     }
-
+    elsif ( $type eq "organism" ) { 
+	$self->associate_organism($type_id);
+    }
     else {
         warn "type $type is like totally illegal! Not associating image with any object. Please check if your loading script links the image with an sgn object! \n";
     }
@@ -628,7 +629,36 @@ sub get_loci {
 }
 
 
+=head2 associate_organism
 
+ Usage:        $image -> associate_orgasim($organism_id)
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub associate_organism {
+    my $self = shift;
+    my $locus_id = shift;
+    my $sp_person_id= $self->get_sp_person_id();
+    my $query = "INSERT INTO metadata.md_image_organism
+                   (md_image_id,
+                   sp_person_id,
+                   organism_id)
+                 VALUES (?, ?, ?)";
+    my $sth = $self->get_dbh()->prepare($query);
+    $sth->execute(
+                $locus_id,
+                $sp_person_id,
+                $self->get_image_id()
+                );
+
+    my $organism_image_id= $self->get_currval("metadata.md_image_organism_md_image_organism_id_seq");
+    return $organism_image_id;
+}
 
 =head2 function get_associated_object_links
 
