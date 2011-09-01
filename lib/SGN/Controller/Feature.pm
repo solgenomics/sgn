@@ -128,7 +128,7 @@ sub validate
     my $count = $matching_features->count;
 #   EVIL HACK: We need a disambiguation process
 #   $c->throw_client_error( public_message => "too many features where $key='$val'") if $count > 1;
-    $c->throw_client_error( public_message => "Feature not found") if $count < 1;
+    $c->throw_404( "Feature not found") if $count < 1;
 }
 
 
