@@ -156,4 +156,10 @@
         xrefs   => $xrefs,
         exclude => 'gbrowse2',
       &>
+
+     <& /feature/gbrowse_syn_search_link.mas,
+        feature => $feature,
+        featurelocs => $featurelocs,
+      &>
+
 </&>

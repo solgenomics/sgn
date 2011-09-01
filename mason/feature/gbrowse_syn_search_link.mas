@@ -1,0 +1,18 @@
+<%args>
+  $feature
+  $featurelocs
+</%args>
+% my $search_src = { 'Solanum lycopersicum' => 'tom', 'Solanum tuberosum' => 'pot', 'Arabidopsis thaliana' => 'ara' }->{$feature->organism->species};
+
+% if( $search_src ) {
+<dl class="xref">
+  <dt>Synteny browser</dt>
+  <dd>
+%     for my $loc ( grep $_->srcfeature, $featurelocs->all ) {
+%         my $region_string = $loc->srcfeature->name . ':' . ($loc->fmin+1) . '..' . $loc->fmax;
+
+          <a style="display: block; margin-top: 0.5em" href="/gbrowse2/bin/gbrowse_syn/sol2/?search_src=<% $search_src %>;name=<% $region_string |u %>">Search synteny browser for <% $region_string |h %> </a>
+%     }
+  </dd>
+</dl>
+% }
