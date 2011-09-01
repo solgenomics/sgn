@@ -35,7 +35,7 @@ $static_data => undef;
 
 <& /organism/taxonomy.mas, taxonomy=>$taxonomy &>
 
-<& /image/print_images.mas, image_objects => \@images &>
+<& /image/print_images.mas, image_objects => \@image_objects &>
 
 
 <& /organism/accessions.mas, accessions => $accessions &>
