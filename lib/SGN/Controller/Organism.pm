@@ -300,11 +300,12 @@ sub view_organism :Chained('find_organism') :PathPart('view') :Args(0) {
     $c->stash->{ploidy} = $organism->get_ploidy() || $na;
     $c->stash->{genome_size} = $organism->get_genome_size() || $na;
     $c->stash->{chromosome_number} = $organism->get_chromosome_number() || $na;
-
+    $c->stash->{image_objects} = $organism->get_image_ids();
     $self->map_data($c);
     $self->transcript_data($c);
     $self->phenotype_data($c);
     $self->qtl_data($c);
+    
 
 }
 
