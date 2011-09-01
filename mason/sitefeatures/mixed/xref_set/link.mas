@@ -1,6 +1,7 @@
 <%args>
   $xrefs
   $exclude => []
+  $empty_message => 'none found'
 </%args>
 
 % if( %by_sitefeature ) {
@@ -15,7 +16,7 @@
     </dl>
 % } else {
 
-  <div class="ghosted">none found</div>
+  <div class="ghosted"><% $empty_message |h %></div>
 
 % }
 
