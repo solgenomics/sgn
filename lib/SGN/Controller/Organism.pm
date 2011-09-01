@@ -24,6 +24,8 @@ use CXGN::Login;
 use CXGN::Phylo::OrganismTree;
 use CXGN::Page::FormattingHelpers qw | tooltipped_text |;
 use CXGN::Tools::Text;
+use SGN::Image;
+
 with 'Catalyst::Component::ApplicationAttribute';
 
 =head1 ACTIONS
@@ -300,7 +302,9 @@ sub view_organism :Chained('find_organism') :PathPart('view') :Args(0) {
     $c->stash->{ploidy} = $organism->get_ploidy() || $na;
     $c->stash->{genome_size} = $organism->get_genome_size() || $na;
     $c->stash->{chromosome_number} = $organism->get_chromosome_number() || $na;
-    $c->stash->{image_objects} = $organism->get_image_ids();
+    my @image_ids = = $organism->get_image_ids();
+    my @image_objects = map { SGN::Image->new($c->dbc->dbh, $_) } @image_ids;
+    $c->stash->{image_objects} 
     $self->map_data($c);
     $self->transcript_data($c);
     $self->phenotype_data($c);
@@ -494,7 +498,7 @@ L<Cache> object containing species data summaries, as:
     ...
   }
 
-Access with  C<$controller-E<gt>species_data_summary_cache->thaw($organism_id )>,
+Accesso with  C<$controller-E<gt>species_data_summary_cache->thaw($organism_id )>,
 do not use Cache's C<get> method.
 
 =cut
