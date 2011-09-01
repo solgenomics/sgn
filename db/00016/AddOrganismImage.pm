@@ -60,7 +60,7 @@ sub patch {
 --
 
 CREATE TABLE metadata.md_image_organism (
-    md_image_organism_id bigint primary key,
+    md_image_organism_id serial primary key,
     md_image_id bigint references metadata.md_image,
     organism_id bigint references public.organism,
     sp_person_id bigint references sgn_people.sp_person,
