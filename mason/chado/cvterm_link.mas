@@ -1,0 +1,15 @@
+<%args>
+  $cvterm
+  $caps => 0
+</%args>
+\
+<a href="/chado/cvterm.pl?cvterm_id=$id"><% $name |h %></a>\
+\
+<%init>
+        ( my $name = $cvterm->name ) =~ s/_/ /g;
+        if( $caps ) {
+            $name =~ s/(\S+)/lc($1) eq $1 ? ucfirst($1) : $1/e;
+        }
+
+        my $id   = $cvterm->id;
+</%init>
