@@ -36,15 +36,7 @@ $pub_list
 $target_list
 </%args>
 
-<%perl>
-
-## None perl code, sample_detail.mas pass the arguments from the controller to the 
-## different mason components
-
-</%perl>
-
-
-<br>
+<& /page/page_title.mas, title => $sample->get_sample_name &>
 
 <& 
     '/biosource/sample/basic_sample_info.mas',

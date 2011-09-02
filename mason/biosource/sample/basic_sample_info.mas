@@ -1,65 +1,30 @@
 <%doc>
 
-=head1 NAME 
- 
+=head1 NAME
+
  basic_sample_info.mas
  mason component to take basic sample data from the database and return it as html
-
-=cut
-
-=head1 VERSION 
-
-0.1
-
-=cut 
 
 =head1 DESCRIPTION
 
  A mason component to take basic sample data from the database and return it as html
 
-=cut
- 
-=head 1 AUTHOR
- 
- Aureliano Bombarely (ab782@cornell.edu)
-
-=cut 
-
 </%doc>
 
-
 <%args>
-$schema
-$sample
+  $schema
+  $sample
 </%args>
 
 <%perl>
 use strict;
 use warnings;
 
-use CXGN::Biosource::Schema;
-use CXGN::GEM::Schema;
-use Bio::Chado::Schema;
-use CXGN::Chado::Dbxref;
 use CXGN::People::Person;
-use CXGN::Page::FormattingHelpers  qw/ info_section_html info_table_html columnar_table_html page_title_html html_break_string /;
 
-my $basic_info_content;
-my $element_info_content;
-my $sample_name;
-my $default_message = '<span class="ghosted">Data not available</span>';
+my $default_message = '<span class="ghosted">not recorded</span>';
 
-
-## If there aren't any sample_row that comes from sample_detail.mas, it will return a message.
-
-if (defined $sample->get_sample_id() ) {
-
-    ## The basic info will be divided into two section, sample information (simple table) 
-    ## and sample element information (columnar html table) 
-
-    ## Get the data from the object.
-    
-    $sample_name = $sample->get_sample_name();
+my $sample_name = $sample->get_sample_name();
     my $alt_name = $sample->get_alternative_name() || $default_message;
     my $type_id = $sample->get_type_id();
     my $description = $sample->get_description() || $default_message;
@@ -77,9 +42,9 @@ if (defined $sample->get_sample_id() ) {
 
 	my ($type_cvterm_row) = $schema->resultset('Cv::Cvterm')
 	                               ->search({ cvterm_id => $type_id });
-	
+
 	if (defined $type_cvterm_row) {
-	
+
 	    $type_name_html = $type_cvterm_row->get_column('name');
 	}
     }
@@ -95,9 +60,9 @@ if (defined $sample->get_sample_id() ) {
 	my $species = $organism_row->get_column('species');
 	my $organism_link = '/chado/organism.pl?organism_id='.$organism_id;
 	$organism_html = "<a href=$organism_link>$species</a><br>";
-    } 
-   
-	
+    }
+
+
     ## Same thing with protocol (it haven't any web yet)
 
     my $protocol_html = $default_message;
@@ -116,13 +81,13 @@ if (defined $sample->get_sample_id() ) {
     my $contact_html = $default_message;
 
     my $contact = CXGN::People::Person->new($schema->storage()->dbh(), $contact_id);
-    
+
     if (defined $contact) {
 
 	my $saludation = $contact->get_salutation();
 	my $first_name = $contact->get_first_name();
 	my $last_name = $contact->get_last_name();
-    
+
 	my $contact_link = '/solpeople/personal-info.pl?sp_person_id=' . $contact_id;
 	$contact_html = "<a href=$contact_link>$saludation $first_name $last_name</a><br>";
     }
@@ -136,16 +101,16 @@ if (defined $sample->get_sample_id() ) {
     my %dbxref_related = $sample->get_dbxref_related();
 
     foreach my $dbxref_id (sort keys %dbxref_related) {
-	 
+
 	## Get the sample_element_dbxref (GO and PO terms) (with cvterm.name)
-	## Get external accessions (without cvterm.name) 
-	 
+	## Get external accessions (without cvterm.name)
+
 	if (defined $dbxref_related{$dbxref_id} ) {
-	 
+
 	     my %dbxref_rel_data = %{ $dbxref_related{$dbxref_id} };
 
 	     if (defined $dbxref_rel_data{'cvterm.name'}) {
-	
+
 		 my $onto_accession = $dbxref_rel_data{'db.name'} . ":" . $dbxref_rel_data{'dbxref.accession'};
 		 my $onto_descr = $dbxref_rel_data{'cvterm.name'};
 		 my $onto_link = '/chado/cvterm.pl?action=view&cvterm_id='.$dbxref_rel_data{'cvterm.cvterm_id'};
@@ -160,47 +125,29 @@ if (defined $sample->get_sample_id() ) {
 	     }
 	 }
     }
-	 
+
     my $ontologies_list = join(' ', @onto_html) || $default_message;
     my $external_links_list = join(' ', @external_links_html) || $default_message;
 
-    ## Create the HTML table
-
-    $basic_info_content = <<HTML;
-
-    <table width="100%">
-    	   <tr> <td width="25%"> <b>Sample name:</b>            </td> <td> $sample_name </td></tr>
-           <tr> <td width="25%"> <b>Alternative name:</b>       </td> <td> $alt_name </td></tr>
-           <tr> <td width="25%"> <b>Sample type:</b>            </td> <td> $type_name_html </td></tr>
- 	   <tr> <td width="25%"> <b>Description:</b>            </td> <td> $description </td></tr>
-	   <tr> <td width="25%"> <b>Organism:</b>               </td> <td> $organism_html </td></tr>
-	   <tr> <td width="25%"> <b>Protocol:</b>               </td> <td> $protocol_html </td></tr>
-	   <tr> <td width="25%"> <b>Contact:</b>                </td> <td> $contact_html </td></tr>
-	   <tr> <td width="25%"> <b>Ontologies:</b>             </td> <td> $ontologies_list </td></tr>
-	   <tr> <td width="25%"> <b>External links:</b>         </td> <td> $external_links_list </td></tr>
-    </table>
-    <br>
-
-HTML
-
-
-} 
-else {
-   $basic_info_content = "<big>There aren't any sample data for the specified parameters.</big>";
-}   
-
-my $basic_info_html;
-if (defined $sample_name) {
-   $basic_info_html = "<center><big><b>Sample: $sample_name</b></big></center><br>";
-}
-
-$basic_info_html .= info_section_html( title => "Sample Basic Information", contents => $basic_info_content );
-
 </%perl>
 
-<% $basic_info_html %>
+<&| /page/info_section.mas, title => 'Basic information' &>
 
-<& 
-   /util/import_javascript.mas, 
-   classes => 'CXGN.Effects' 
-&>
+    <& /page/info_table.mas, multicol => 4, data => [
+            'Name' => $sample_name,
+            'Alternative name' => $alt_name,
+            'Type' => $type_name_html,
+            'Protocol' => $protocol_html,
+            'Organism' => $organism_html,
+            'Contact' => $contact_html,
+    ]&>
+
+    <& /page/info_table.mas, data => [
+            'Description' => $description,
+    ]&>
+    <& /page/info_table.mas, data => [
+            'Ontology terms' => $ontologies_list,
+            'External links' => $external_links_list,
+    ]&>
+
+</&>
