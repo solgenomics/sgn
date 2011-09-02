@@ -73,7 +73,7 @@ foreach my $relation (@relation_types) {
 	    if (defined $type_id) {
 
 		my ($type_cvterm_row) = $schema->resultset('Cv::Cvterm')
-                                               ->search({ type_id => $type_id });
+                                               ->search({ cvterm_id => $type_id });
         
 		if (defined $type_cvterm_row) {
 		    
