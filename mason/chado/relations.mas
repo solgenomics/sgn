@@ -1,0 +1,74 @@
+<%args>
+  $principle
+  $relationship_name
+  $object_type_text
+  $list_component
+</%args>
+
+<%init>
+
+    sub cvterm_link {
+        $m->scomp( '/chado/cvterm_link.mas', cvterm => shift );
+    }
+
+    sub related_stats {
+        my ($features) = @_;
+        my $stats = { };
+        my $total = scalar @$features;
+        for my $f (@$features) {
+                $stats->{cvterm_link($f->type)}++;
+        }
+        my $data = [ ];
+        for my $k (sort keys %$stats) {
+            push @$data, [ $stats->{$k}, $k ];
+        }
+        if( 1 < scalar keys %$stats ) {
+            push @$data, [ $total, "<b>Total</b>" ];
+        }
+        return $data;
+    }
+
+
+    # make a hash of relationship_type => {
+    #    upstream   => \@list_of_objects
+    #    downstream => \@list_of_objects
+    # }
+    my %rels;
+    push @{$rels{$_->[0]}{$_->[1]}}, $_->[2]
+        for (
+          ( map [ cvterm_link( $_->type ), 'downstream', $_->subject ], $principle->${\"${relationship_name}_objects"}()  ),
+          ( map [ cvterm_link( $_->type ), 'upstream',   $_->object  ], $principle->${\"${relationship_name}_subjects"}() ),
+        );
+
+    my $type = $principle->type ? $principle->type->name : 'dataset';
+
+</%init>
+
+%  for my $reltype ( sort keys %rels ) {
+%    my $updown = $rels{$reltype};
+%       for my $direction ( 'upstream', 'downstream' ) {
+%         if( my $objects = $updown->{$direction} ) {
+
+
+% my ($is,$are) = $reltype =~ /part[ _]of/i ? (' is',' are') : ('','');
+<&| /page/info_section.mas,
+   title => $direction eq 'upstream' ? qq|$object_type_text this $type$is $reltype| : qq|$object_type_text that$are $reltype this $type|,
+   is_subsection => 1,
+&>
+%   if( @$objects > 4 ) {
+     <& /page/columnar_table.mas,
+         __tableattrs => qq|summary="$object_type_text summary" cellspacing="0" style="margin-bottom: 0.5em"|,
+         data         => related_stats($objects),
+         __caption    => 'Summary',
+         __border     => 1,
+      &>
+%   }
+    <& $list_component,
+       objects => $objects,
+     &>
+</&>
+
+
+%         }
+%       }
+%  }
