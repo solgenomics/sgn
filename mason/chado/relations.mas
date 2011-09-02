@@ -8,7 +8,7 @@
 <%init>
 
     sub cvterm_link {
-        $m->scomp( '/chado/cvterm_link.mas', cvterm => shift );
+        $m->scomp( '/chado/cvterm_link.mas', cvterm => shift, @_ );
     }
 
     sub related_stats {
@@ -36,7 +36,7 @@
     my %rels;
     push @{$rels{$_->[0]}{$_->[1]}}, $_->[2]
         for (
-          ( map [ cvterm_link( $_->type ), 'downstream', $_->subject ], $principle->${\"${relationship_name}_objects"}()  ),
+          ( map [ cvterm_link( $_->type, inflect => 'PL_V' ), 'downstream', $_->subject ], $principle->${\"${relationship_name}_objects"}()  ),
           ( map [ cvterm_link( $_->type ), 'upstream',   $_->object  ], $principle->${\"${relationship_name}_subjects"}() ),
         );
 
