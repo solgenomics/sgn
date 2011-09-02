@@ -30,7 +30,7 @@ my $links = $guide . '|' . $citation;
           <td>	   
             <p>The uploading of QTL data needs to be done in one session. 
               Therefore, prepare your data files in the required format before 
-              starting the process.  Please read the submission $guide. If you 
+              starting the process. Please read the submission <% $guide %> first. If you 
               would like to have the formatting of your dataset checked 
               beforehand, send your data to: 
               <a href=mailto:iyt2\@cornell.edu>iyt2@cornell.edu</a>.
