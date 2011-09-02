@@ -1,15 +1,24 @@
 <%args>
   $cvterm
   $caps => 0
+  $inflect => 0
+  $inflect_count => undef
 </%args>
 \
 <a href="/chado/cvterm.pl?cvterm_id=$id"><% $name |h %></a>\
 \
 <%init>
+        use Lingua::EN::Inflect ();
+
         ( my $name = $cvterm->name ) =~ s/_/ /g;
         if( $caps ) {
             $name =~ s/(\S+)/lc($1) eq $1 ? ucfirst($1) : $1/e;
         }
-
+        if( $inflect ) {
+            no strict 'refs';
+            $name =
+               defined $inflect_count ? ("Lingua::EN::Inflect::".$inflect)->($name, $inflect_count)
+                                      : ("Lingua::EN::Inflect::".$inflect)->($name)
+        }
         my $id   = $cvterm->id;
 </%init>
