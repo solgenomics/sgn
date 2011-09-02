@@ -62,8 +62,10 @@ END_HTML
             my $new_user_person=CXGN::People::Person->new($dbh, $new_user_person_id);
             $new_user_person->set_first_name(encode_entities($first_name));
             $new_user_person->set_last_name(encode_entities($last_name));
-            $new_user_person->set_censor(1);#censor by default, since we are creating this account, not the person whose info might be displayed, and they might not want it to be displayed
-            $new_user_person->store();            
+            ##removed. This was causing problems with creating new accounts for people,
+            ##and then not finding it in the people search.
+            #$new_user_person->set_censor(1);#censor by default, since we are creating this account, not the person whose info might be displayed, and they might not want it to be displayed
+            $new_user_person->store();
             $page->header();
  print <<END_HTML;
 
