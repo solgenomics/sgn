@@ -1,0 +1,17 @@
+<%args>
+    $objects
+</%args>
+
+<& /page/columnar_table.mas,
+    headings => [ "Type", "Name" ],
+    data     => [
+       map {
+         my $o = $_;
+         $o = $o->get_bssample_row unless $o->can('type');
+         [
+          $m->scomp('/chado/cvterm_link.mas', cvterm => $o->type),
+          $m->scomp('/biosource/sample/sample_link.mas', sample_row => $o ),
+         ]
+       }@$objects
+    ],
+&>

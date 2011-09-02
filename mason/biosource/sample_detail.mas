@@ -38,27 +38,30 @@ $target_list
 
 <& /page/page_title.mas, title => $sample->get_sample_name &>
 
-<& 
+<&
     '/biosource/sample/basic_sample_info.mas',
-    schema => $schema, 
+    schema => $schema,
     sample => $sample,
 &>
 
-<& 
-    '/biosource/sample/sample_relations.mas',
-    schema => $schema, 
-    sample => $sample,
-    sample_relations_href => $sample_relations_href,
-&>
+<&| /page/info_section.mas, title => 'Related datasets', collapsible => 1, &>
+  <&
+      '/chado/relations.mas',
+      principle         => $sample->get_bssample_row,
+      relationship_name => 'bs_sample_relationship',
+      object_type_text  => 'Datasets',
+      list_component => '/biosource/sample/sample_list.mas',
+  &>
+</&>
 
-<& 
-   '/biosource/sample/pub_brief.mas', 
+<&
+   '/biosource/sample/pub_brief.mas',
     schema => $schema,
     pub_list => $pub_list,
 &>
 
-<& 
-    '/biosource/sample/exp_associated.mas', 
+<&
+    '/biosource/sample/exp_associated.mas',
     schema => $schema,
     target_list => $target_list,
 &>
