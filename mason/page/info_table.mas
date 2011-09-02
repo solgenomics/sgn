@@ -57,9 +57,14 @@ Lukas Mueller. Based on code by R. Buels.
 <% info_table_html( %mapped_args, @$data ) %>
 <%init>
 
-  my %mapped_args =
-      map { exists $ARGS{$_} ? ( "__$_" => $ARGS{$_} ) : () }
-      qw( title caption tableattrs multicol border sub );
+  my %mapped_args = (
+      __border   => $border,
+      __caption  => $caption,
+      __multicol => $multicol,
+      __tableattrs => $tableattrs,
+      __title    => $title,
+      __sub      => $sub
+   );
 
   $data ||= [ split /^\s*\-{2,}\s*$/m, $m->content ];
 
