@@ -7,16 +7,12 @@
 
 <%init>
 
-    sub cvterm_link {
-        $m->scomp( '/chado/cvterm_link.mas', cvterm => shift, @_ );
-    }
-
-    sub related_stats {
+    sub _chado_relations_related_stats {
         my ($features) = @_;
         my $stats = { };
         my $total = scalar @$features;
         for my $f (@$features) {
-                $stats->{cvterm_link($f->type)}++;
+                $stats->{ $m->scomp('/chado/cvterm_link.mas', cvterm => $f->type) }++;
         }
         my $data = [ ];
         for my $k (sort keys %$stats) {
@@ -28,7 +24,6 @@
         return $data;
     }
 
-
     # make a hash of relationship_type => {
     #    upstream   => \@list_of_objects
     #    downstream => \@list_of_objects
@@ -36,8 +31,8 @@
     my %rels;
     push @{$rels{$_->[0]}{$_->[1]}}, $_->[2]
         for (
-          ( map [ cvterm_link( $_->type, inflect => 'PL_V' ), 'downstream', $_->subject ], $principle->${\"${relationship_name}_objects"}()  ),
-          ( map [ cvterm_link( $_->type ), 'upstream',   $_->object  ], $principle->${\"${relationship_name}_subjects"}() ),
+          ( map [ $m->scomp('/chado/cvterm_link.mas', cvterm =>  $_->type, inflect => 'PL_V' ), 'downstream', $_->subject ], $principle->${\"${relationship_name}_objects"}()  ),
+          ( map [ $m->scomp('/chado/cvterm_link.mas', cvterm => $_->type ), 'upstream',   $_->object  ], $principle->${\"${relationship_name}_subjects"}() ),
         );
 
     my $type = $principle->type ? $principle->type->name : 'dataset';
@@ -58,12 +53,13 @@
 %   if( @$objects > 4 ) {
      <& /page/columnar_table.mas,
          __tableattrs => qq|summary="$object_type_text summary" cellspacing="0" style="margin-bottom: 0.5em"|,
-         data         => related_stats($objects),
+         data         => _chado_relations_related_stats($objects),
          __caption    => 'Summary',
          __border     => 1,
       &>
 %   }
     <& $list_component,
+       %ARGS,
        objects => $objects,
      &>
 </&>
