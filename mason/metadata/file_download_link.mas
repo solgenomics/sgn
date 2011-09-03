@@ -1,4 +1,8 @@
 <%args>
   $file
 </%args>
-<a href="/metadata/file/<% $file->file_id |u %>/download"><% $file->basename |h %></a>
+% if( -f $file->path ) {
+<a href="/metadata/file/<% $file->file_id |u %>/download"><% $file->basename |h %></a>\
+% } else {
+<span class="ghosted" style="cursor: pointer" title="file temporarily unavailable"><% $file->basename |h %></span>\
+%}
