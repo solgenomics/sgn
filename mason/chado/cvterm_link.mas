@@ -16,9 +16,10 @@
         }
         if( $inflect ) {
             no strict 'refs';
-            $name =
-               defined $inflect_count ? ("Lingua::EN::Inflect::".$inflect)->($name, $inflect_count)
-                                      : ("Lingua::EN::Inflect::".$inflect)->($name)
+            $name =~ s| (\S+)
+                      | defined $inflect_count ? ("Lingua::EN::Inflect::".$inflect)->($1, $inflect_count)
+                                               : ("Lingua::EN::Inflect::".$inflect)->($1)
+                      |xe;
         }
         my $id   = $cvterm->id;
 </%init>
