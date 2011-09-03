@@ -103,7 +103,9 @@ Chained off of L</get_stock> below.
 sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
     my ( $self, $c, $action) = @_;
 
-    $c->forward('get_stock_extended_info');
+    if( $c->stash->{stock_row} ) {
+        $c->forward('get_stock_extended_info');
+    }
 
     my $logged_user = $c->user;
     my $person_id = $logged_user->get_object->get_sp_person_id if $logged_user;
@@ -122,10 +124,10 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
 
     # print message if stock_id is not valid
     unless ( ( $stock_id =~ m /^\d+$/ ) || ($action eq 'new' && !$stock_id) ) {
-        $c->throw_404( "No stock/accession exists for identifier $stock_id" );
+        $c->throw_404( "No stock/accession exists for that identifier." );
     }
     unless ( $stock->get_object_row || !$stock_id && $action && $action eq 'new' ) {
-        $c->throw_404( "No stock/accession exists for identifier $stock_id" );
+        $c->throw_404( "No stock/accession exists for that identifier." );
     }
 
     # print message if the stock is obsolete
