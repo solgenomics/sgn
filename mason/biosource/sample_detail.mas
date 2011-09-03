@@ -1,29 +1,19 @@
 <%doc>
 
-=head1 NAME 
- 
+=head1 NAME
+
  sample_detail.mas
  Mason code to get different sections of the sample.pl web_page.
-
-=cut
-
-=head1 VERSION 
-
-0.1
-
-=cut 
 
 =head1 DESCRIPTION
 
  This mason script coordinate different mason component to create the sample.pl page
 
-=cut
- 
-=head 1 AUTHOR
- 
+=head1 AUTHOR
+
  Aureliano Bombarely (ab782@cornell.edu)
 
-=cut 
+=cut
 
 </%doc>
 
