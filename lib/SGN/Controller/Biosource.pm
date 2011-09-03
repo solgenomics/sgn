@@ -16,7 +16,7 @@ use CXGN::GEM::Target;
 
 =head2 view_sample
 
-Public path: /dataset/<ident>/view
+Public path: /data_source/<ident>/view
 
 View a biosource sample detail page.
 
@@ -40,9 +40,9 @@ sub view_sample : Chained('get_sample') PathPart('view') Args(0) {
 ### helper actions ###
 
 # chain root for retrieving a biosource sample, URL beginning with
-# /dataset/<ident>.  supports either an ID number or a sample name as
+# /data_source/<ident>.  supports either an ID number or a sample name as
 # the identifier
-sub get_sample : Chained('/') CaptureArgs(1) PathPart('dataset') {
+sub get_sample : Chained('/') CaptureArgs(1) PathPart('data_source') {
     my ( $self, $c, $ident ) = @_;
 
     $ident or $c->throw_client_error('invalid arguments');
