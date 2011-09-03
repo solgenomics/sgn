@@ -9,16 +9,26 @@
 
     sub _chado_relations_related_stats {
         my ($features) = @_;
-        my $stats = { };
+        my %stats;
         my $total = scalar @$features;
+        my %types;
         for my $f (@$features) {
-                $stats->{ $m->scomp('/chado/cvterm_link.mas', cvterm => $f->type) }++;
+            my $t = $f->type;
+            $types{ $t->cvterm_id } = $t;
+            $stats{ $t->cvterm_id }++;
         }
         my $data = [ ];
-        for my $k (sort keys %$stats) {
-            push @$data, [ $stats->{$k}, $k ];
+        for my $k (sort keys %stats) {
+            push @$data, [
+                $stats{$k},
+                $m->scomp(  '/chado/cvterm_link.mas',
+                            cvterm => $types{$k},
+                            inflect => 'PL_N',
+                            inflect_count => $stats{$k}
+                          )
+            ];
         }
-        if( 1 < scalar keys %$stats ) {
+        if( 1 < scalar keys %stats ) {
             push @$data, [ $total, "<b>Total</b>" ];
         }
         return $data;
