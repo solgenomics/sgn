@@ -1,0 +1,13 @@
+<%args>
+  $objects
+</%args>
+
+<& /page/columnar_table.mas,
+  headings => [ "Type", "Name" ],
+  data     => SGN::View::Stock::stock_table( $objects ),
+&>
+
+<%once>
+    use SGN::View::Stock ();
+</%once>
+
