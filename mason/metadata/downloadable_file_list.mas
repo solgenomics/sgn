@@ -1,0 +1,11 @@
+<%args>
+ $files => []
+</%args>
+% if( @$files ) {
+  <dl class="metadata md_files">
+%     for my $md_file (@$files) {
+        <dt><& /metadata/file_download_link.mas, file => $md_file &></dt>
+        <dd><% $md_file->comment  |h %></dd>
+%     }
+  </dl>
+% }

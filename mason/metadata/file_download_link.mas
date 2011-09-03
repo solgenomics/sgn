@@ -1,0 +1,4 @@
+<%args>
+  $file
+</%args>
+<a href="/metadata/file/<% $file->file_id |u %>/download"><% $file->basename |h %></a>
