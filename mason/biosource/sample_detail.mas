@@ -34,6 +34,17 @@ $target_list
     sample => $sample,
 &>
 
+<&| /page/info_section.mas,
+    title => 'Files',
+    subtitle => 'files available for download',
+    collapsible => 1,
+    hide_if_empty => 1,
+ &>
+
+  <& /metadata/downloadable_file_list.mas, %ARGS &>
+
+</&>
+
 <&| /page/info_section.mas, title => 'Related datasets', collapsible => 1, &>
   <&
       '/chado/relations.mas',

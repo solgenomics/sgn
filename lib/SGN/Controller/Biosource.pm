@@ -26,6 +26,7 @@ sub view_sample : Chained('get_sample') PathPart('view') Args(0) {
     my ( $self, $c ) = @_;
 
     $c->forward('get_sample_targets');
+    $c->forward('get_sample_files');
 
     $c->stash(
         sample_relations_href => { $c->stash->{sample}->get_relationship },
@@ -52,6 +53,17 @@ sub get_sample : Chained('/') CaptureArgs(1) PathPart('dataset') {
     my $method_name = $ident =~ /\D/ ? 'new_by_name' : 'new';
     $c->stash->{sample} = CXGN::Biosource::Sample->$method_name( $schema, $ident )
         or $c->throw_404;
+}
+
+sub get_sample_files : Private {
+    my ( $self, $c ) = @_;
+
+    $c->stash->{files} = [
+            $c->stash->{sample}->get_bssample_row
+                               ->search_related('bs_sample_files')
+                               ->search_related('file')
+                               ->all
+     ];
 }
 
 # The sample can be associated expression data (search sample_id in
