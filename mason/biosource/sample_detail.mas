@@ -55,14 +55,17 @@ $target_list
   &>
 </&>
 
-<&
-   '/biosource/sample/pub_brief.mas',
-    schema => $schema,
-    pub_list => $pub_list,
-&>
+% if( @$pub_list ) {
+  <&
+     '/biosource/sample/pub_brief.mas',
+      schema => $schema,
+      pub_list => $pub_list,
+  &>
+% }
 
 <&
     '/biosource/sample/exp_associated.mas',
     schema => $schema,
     target_list => $target_list,
 &>
+
