@@ -42,7 +42,7 @@ sub view_genome_data : Chained('/organism/find_organism') PathPart('genome') {
     $c->stash->{assembly_list} = my $assembly_list = [
         map {
             my $s = $_;
-            my $h = $self->_bs_sample_to_display_hashref( $s );
+            my $h = $self->_bs_sample_to_display_hashref( $c, $s );
             # also add the associated annotation_sets to it
             $h->{annotation_sets} =  [ $self->assembly_annotations( $s ) ];
             $h
@@ -52,7 +52,7 @@ sub view_genome_data : Chained('/organism/find_organism') PathPart('genome') {
     # find annotation sets for this organism
     $c->stash->{annotation_list} = [
         map {
-            $self->_bs_sample_to_display_hashref( $_ );
+            $self->_bs_sample_to_display_hashref( $c, $_ );
         }
         # annotation sets are the ones that were found related to the
         # assemblies, plus ones queried from the db by organism, made
@@ -81,10 +81,10 @@ sub uniq_bs_samples {
 }
 
 sub _bs_sample_to_display_hashref {
-    my ( $self, $bs_sample ) = @_;
+    my ( $self, $c, $bs_sample ) = @_;
 
     return {
-        name =>  $bs_sample->sample_name,
+        name => $c->view('BareMason')->render( $c, '/biosource/sample_link.mas', { sample => $bs_sample } ),
         date => $bs_sample->metadata ? $bs_sample->metadata->create_date : undef,
         description => $bs_sample->description,
         files => [

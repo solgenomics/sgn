@@ -1,5 +1,0 @@
-<%args>
-  $sample_row
-</%args>
-\
-<a class="biosource biosource_sample" href="/dataset/<% $sample_row->sample_id |u%>/view"><% $sample_row->sample_name |h %></a>
