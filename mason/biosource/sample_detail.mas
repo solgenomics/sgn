@@ -26,7 +26,7 @@ $pub_list
 $target_list
 </%args>
 
-<& /page/page_title.mas, title => $sample->get_sample_name &>
+<& /page/page_title.mas, title => 'Dataset '.$sample->get_sample_name &>
 
 <&
     '/biosource/sample/basic_sample_info.mas',
