@@ -54,12 +54,14 @@ print<<END_HEREDOC;
                 submit. We will then work with you to integrate
                 your data into the database and/or add it to the
                 FTP server.<br />
+                </p>
+                 <p><strong>Question:</strong> Tomato genome has 12 chromosomes. However, some sequences are mapped to 'ch00'. What is 'ch00'? <br />
+                <strong>Answer:</strong> ch00 is a place holder for tomato sequences that could not be mapped to any of the 12 tomato chromosomes.
                 <br />
-                <br /></p>
+                </p>
               </td>
             </tr>
-          </table>
-          
+          </table>         
         </center>
       </td>
     </tr>
