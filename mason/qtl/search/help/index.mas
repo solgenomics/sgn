@@ -1,0 +1,57 @@
+<%doc>
+QTL search help.
+</%doc>
+
+<%perl>
+
+my $qtl_search_page = qq | <a href="/search/qtl">QTL/Trait search</a> |;
+my $search_form     = qq | <img src="/documents/help/screenshots/qtl_cvterm_searchform.png" /> |;
+my $search_result   = qq | <img src="/documents/help/screenshots/qtl_cvterm_results.png"/>|;
+my $pop_list        = qq | <img src="/documents/help/screenshots/qtl_cvterm_poplist.png"/> |;
+my $qtl_genome      = qq | <img src="/documents/help/screenshots/qtl_genome.png" /> |;
+my $qtl_detail      = qq | <img src="/documents/help/screenshots/qtl_detail2.png" /> |;
+my $chr_location    = qq | <img src="/documents/help/screenshots/qtl_cvterm_qtl_chrloc.png" /> |;
+my $cview_help      = qq | <a href="/help/cview.pl"> |;
+my $contact         = qq | <a href="mailto:sgn-feedback\@solgenomics.net">sgn-feedback\@solgenomics.net</a> |; 
+
+</%perl>
+
+<& /page/page_title.mas, 
+   title=>'QTL Search Page'
+&>
+
+<br>The <% $qtl_search_page %> returns phenotypic traits that may have qtl data. 
+QTL analysis is performed on the fly.<br /> 
+
+
+<br><b>1. Search the database using a trait name. For example, 'fruit shape'.</b><br/>
+
+<% $search_form %>
+
+<br/><b>2. Follow the link for the trait of your interest.</b><br/>
+
+<% $search_result %>
+
+<br><b>3. After selecting the trait of your interest, for example the trait 'fruit shape circular', you will be taken to the trait (cvterm) page, scroll down to the 'Phenotype data/QTL' subsection. Select the population of interest for which the trait was evaluated. For example, the population 'Howard German x LA1589'. </b><br/>
+
+<% $pop_list %>
+
+
+<br><b>4. Visually determine which linkage group contains a QTL, see the LOD threshold in the legend. For example, chromosome 7 has a QTL. Click the linkage group of interest and on the new window, follow the link "Go to the QTL page...".</b><br/>
+
+<% $qtl_genome %>
+
+<br><b>6. Clicking the "Go to the QTL page" generates the QTL detail page where among others the QTL confidence interval, links to the genome positions of the markers, marker detail pages, and SGN's Comparative Map Viewer are displayed.</b><br/>
+
+<% $qtl_detail %>
+
+<br><b>7. The QTL detail page (shown above) presents cross-references from the QTL to other relevant genetic and genomic data and bioinformatic tools. Forexample, to view the genetic location of the QTL of a trait of interest and compare it to other genetic maps using the Comparative Map Viewer, click the linkage group link under the 'QTL markers' genetic positions and Comparative Map Viewer' subection.</b><br/>
+
+<br>QTL genetic location:<br/>
+
+<% $chr_location %>
+
+<br><b>To learn on how to perform comparative analysis with genetic maps and physical maps of the same or different Solanaceae species, please read this <% $cview_help %> help document.</a></b><br />  
+
+
+<br><b>If you have questions, please contact us at: <% $contact %> </b><br/>
