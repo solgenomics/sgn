@@ -270,8 +270,6 @@ sub _list_traits {
             my $trait_id   = $trait->get_user_trait_id();
             my $trait_name = $trait->get_name();
             my $definition = $trait->get_definition();
-
-            print STDERR "trait: \t $trait_id \t $trait_name\n";
             
             my ($min, $max, $avg, $std, $count)= $c->stash->{pop}->get_pop_data_summary($trait_id);
             
@@ -404,11 +402,13 @@ sub _show_data {
         $is_public ? $c->stash(show_data => 1) 
             :        $c->stash(show_data => undef)
             ;
-    }
-            
-            
+    }            
 }
 
+sub search_help : PathPart('search/qtl/help') Chained Args(0) {
+    my ($self, $c) = @_;
+    $c->stash(template => '/qtl/search/help/index.mas',)
+}
 ####
 1;
 ####
