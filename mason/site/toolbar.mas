@@ -16,11 +16,12 @@
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/bacs">BACs</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/est">ESTs and libraries</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/insitu/">Insitu database</a></td></tr>
-       <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/directory">People</a></td></tr>
-
-       <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/glossarysearch.pl">Glossary</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/images">Images</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/template">Expression</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/directory">People</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/help/faq.pl">FAQ</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/glossarysearch.pl">Glossary</a></td></tr>
+      
     </table>
 
     </div>
