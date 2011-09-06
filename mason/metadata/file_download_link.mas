@@ -4,5 +4,5 @@
 % if( -f $file->path ) {
 <a href="/metadata/file/<% $file->file_id |u %>/download"><% $file->basename |h %></a>\
 % } else {
-<span class="ghosted" style="cursor: pointer" title="file temporarily unavailable"><% $file->basename |h %></span>\
+<span class="ghosted" style="cursor: pointer" title="file temporarily unavailable"><% $file->basename |h %> (temporarily unavailable)</span>\
 %}
