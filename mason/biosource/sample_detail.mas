@@ -45,7 +45,7 @@ $target_list
 
 </&>
 
-<&| /page/info_section.mas, title => 'Related datasets', collapsible => 1, &>
+<&| /page/info_section.mas, title => 'Related data sources', collapsible => 1, &>
   <&
       '/chado/relations.mas',
       principle         => $sample->get_bssample_row,
