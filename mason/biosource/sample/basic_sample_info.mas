@@ -131,7 +131,7 @@ my $sample_name = $sample->get_sample_name();
 
 </%perl>
 
-<&| /page/info_section.mas, title => 'Basic information' &>
+<&| /page/info_section.mas, title => 'Data source' &>
 
     <& /page/info_table.mas, multicol => 4, data => [
             'Name' => $sample_name,
