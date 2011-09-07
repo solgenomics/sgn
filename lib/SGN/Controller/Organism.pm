@@ -645,7 +645,7 @@ sub qtl_populations {
         foreach my $org_pop (@org_pops) {
             my $pop_id   = $org_pop->get_population_id();
             my $pop_name = $org_pop->get_name();
-            my $pop_link = qq |<a href="/phenome/population.pl?population_id=$pop_id">$pop_name</a>|;
+            my $pop_link = qq |<a href="/qtl/view/$pop_id">$pop_name</a>|;
             my @traits   = $org_pop->get_cvterms();
             my $count    = scalar(@traits);
 
