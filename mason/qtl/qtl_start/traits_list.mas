@@ -23,7 +23,7 @@ $traits_list
 &> 
 
 <& /page/columnar_table.mas,
-  headings     => ["Trait", "Min", "Max", "Ave", "No. of<br />Lines", "Analyse<br />QTL"], 
+  headings     => ["Trait", "Min", "Max", "Ave", "No. of<br />Lines", "Analyze<br />QTL"], 
   data         => $traits_list,
   __alt_freq   =>2,
   __alt_width  =>1,
