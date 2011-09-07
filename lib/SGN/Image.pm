@@ -63,15 +63,16 @@ use base qw| CXGN::Image |;
 =cut
 
 sub new {
-    my $class = shift;
-    my $dbh   = shift;
+    my $class    = shift;
+    my $dbh      = shift;
     my $image_id = shift;
 
-    my $c = SGN::Context->new();
+    my $c  = SGN::Context->new();
+    $dbh ||= $c->dbc->dbh;
 
     my $self = $class->SUPER::new(dbh=>$dbh, image_id=>$image_id, image_dir=>$c->get_conf('static_datasets_path')."/".$c->get_conf('image_dir') );
 
-    $self->set_configuration_object( $c );
+    $self->config( $c );
     $self->set_dbh($dbh);
 
     return $self;
@@ -94,7 +95,7 @@ sub get_image_url {
     my $self = shift;
     my $size = shift;
 
-    my $url = $self->get_configuration_object()->get_conf('static_datasets_url')."/".$self->get_configuration_object()->get_conf('image_dir')."/".$self->get_filename($size, 'partial')
+    my $url = $self->config()->get_conf('static_datasets_url')."/".$self->config()->get_conf('image_dir')."/".$self->get_filename($size, 'partial')
 
 
 }
@@ -141,7 +142,7 @@ sub process_image {
 
 }
 
-=head2 get_configuration_object
+=head2 config
 
  Usage:
  Desc:
@@ -152,25 +153,12 @@ sub process_image {
 
 =cut
 
-sub get_configuration_object {
-    my $self = shift;
+sub config {
+    my ($self,$obj) = @_;
+
+    $self->{configuration_object} = $obj if $obj;
+
     return $self->{configuration_object};
-}
-
-=head2 set_configuration_object
-
- Usage:
- Desc:
- Ret:
- Args:
- Side Effects:
- Example:
-
-=cut
-
-sub set_configuration_object {
-    my $self = shift;
-    $self->{configuration_object} = shift;
 }
 
 =head2 get_img_src_tag
@@ -192,7 +180,7 @@ sub get_img_src_tag {
     my $name = $self->get_name();
     if ( $size eq "original" ) {
 
-        my $static = $self->get_configuration_object()->get_conf("static_datasets_url");
+        my $static = $self->config()->get_conf("static_datasets_url");
 
         return
             "<a href=\""
@@ -288,8 +276,8 @@ sub apache_upload_image {
     }
 
     my $temp_file =
-        $self->get_configuration_object()->get_conf("basepath") . "/"
-      . $self->get_configuration_object()->get_conf("tempfiles_subdir")
+        $self->config()->get_conf("basepath") . "/"
+      . $self->config()->get_conf("tempfiles_subdir")
       . "/temp_images/"
       . $ENV{REMOTE_ADDR} . "-"
       . $upload_filename;
@@ -334,10 +322,10 @@ sub associate_stock  {
     my $self = shift;
     my $stock_id = shift;
     if ($stock_id) {
-        my $user = $self->get_configuration_object->user_exists;
+        my $user = $self->config->user_exists;
         if ($user) {
-            my $metadata_schema = $self->get_configuration_object->dbic_schema('CXGN::Metadata::Schema', search_path=>'metadata');
-            my $metadata = CXGN::Metadata::Metadbdata->new($metadata_schema, $self->get_configuration_object->user->get_object->get_username);
+            my $metadata_schema = $self->config->dbic_schema('CXGN::Metadata::Schema', search_path=>'metadata');
+            my $metadata = CXGN::Metadata::Metadbdata->new($metadata_schema, $self->config->user->get_object->get_username);
             my $metadata_id = $metadata->store()->get_metadata_id();
 
             my $q = "INSERT INTO phenome.stock_image (stock_id, image_id, metadata_id) VALUES (?,?,?) RETURNING stock_image_id";
@@ -361,7 +349,7 @@ sub associate_stock  {
 
 sub get_stocks {
     my $self = shift;
-    my $schema = $self->get_configuration_object->dbic_schema('Bio::Chado::Schema' , 'sgn_chado');
+    my $schema = $self->config->dbic_schema('Bio::Chado::Schema' , 'sgn_chado');
     my @stocks;
     my $q = "SELECT stock_id FROM phenome.stock_image WHERE image_id = ? ";
     my $sth = $self->get_dbh->prepare($q);
@@ -652,9 +640,9 @@ sub associate_organism {
     return $image_organism_id;
 }
 
-=head2 get_organism
+=head2 get_organisms
 
- Usage:   $self->get_orgnaisms
+ Usage:   $self->get_organisms
  Desc:    find the organism objects asociated with this image
  Ret:     a list of BCS Organism objects
  Args:    none
@@ -665,7 +653,7 @@ sub associate_organism {
 
 sub get_organisms {
     my $self = shift;
-    my $schema = $self->get_configuration_object->dbic_schema('Bio::Chado::Schema' , 'sgn_chado');
+    my $schema = $self->config->dbic_schema('Bio::Chado::Schema' , 'sgn_chado');
     my $query = "SELECT organism_id FROM metadata.md_image_organism WHERE md_image_organism.obsolete != 't' and md_image_organism.image_id=?";
     my $sth = $self->get_dbh()->prepare($query);
     $sth->execute($self->get_image_id());
