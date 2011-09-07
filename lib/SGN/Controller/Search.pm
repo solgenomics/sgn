@@ -27,9 +27,107 @@ live at direct_search.pl, and links to all other kinds of search.
 
 =cut
 
-=head2 index
+=head1 PUBLIC ACTIONS
 
 =cut
+
+=head2 glossary
+
+Public path: /search/glossary
+
+Runs the glossary search.
+
+=cut
+
+sub glossary :Path('/search/glossary') :Args() {
+    my ( $self, $c, $term ) = @_;
+    my $response;
+    if($term){
+        my @defs = get_definitions($term);
+        unless (@defs){
+            $response = "<p>Your term was not found. <br> The term you searched for was $term.</p>";
+        } else {
+            $response = "<hr /><dl><dt>$term</dt>";
+            for my $d (@defs){
+                $response .= "<dd>$d</dd><br />";
+            }
+            $response .= "</dl>";
+        }
+    } else {
+        $response =<<DEFAULT;
+<hr />
+<h2>Glossary search</h2>
+<form action="#" method='get' name='glossary'>
+<b>Search the glossary by term:</b>
+<input type = 'text' name = 'getTerm' size = '50' tabindex='0' />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<input type = 'submit' value = 'Lookup' /></form>
+<script type="text/javascript" language="javascript">
+document.glossary.getTerm.focus();
+</script>
+
+DEFAULT
+    }
+
+    $c->forward_to_mason_view(
+        '/search/search.mas',
+        content => $response,
+    );
+
+}
+
+=head2 search
+
+Public path: /search/*
+
+Runs the main search code, which sets up the mode-selection button
+html, and calls some sub-functions for displaying search forms.
+
+=cut
+
+sub search :Path('/search/') :Args() {
+    my ( $self, $c, $term, @args ) = @_;
+
+    $c->forward('stash_tab_data');
+
+    # make /search/index.pl show the list of all kinds of searches
+    $term = '' if $term && $term eq 'index.pl';
+
+    if( $term eq 'direct_search.pl' ) {
+        $term = $c->req->param('search');
+        if ($term eq 'cvterm_name') {$term = 'qtl';}
+        $c->res->redirect('/search/'.$term, 301 );
+        return;
+    }
+    
+    $c->stash->{term} = $term;
+    my $tab_html      = $c->stash->{tab_html_function}($term);
+
+    my $response;
+    if ($term) {
+        $response  = $tab_html;
+
+        # if it is an unknown search type, default to gene search
+        unless ($c->stash->{name_to_num}->($term)) {
+            $c->throw_404('Invalid search type');
+        }
+
+        $response .= $c->stash->{tab_functions}[$c->stash->{name_to_num}->($term)]();
+        $c->forward_to_mason_view(
+            '/search/search.mas',
+            content => $response,
+        );
+    } else {
+        my $tb = CXGN::Page::Toolbar::SGN->new();
+        $response = $tab_html . $tb->index_page('search');
+    }
+    $c->forward_to_mason_view(
+        '/search/search.mas',
+        content => $response,
+    );
+}
+
+######### private actions and helper methods #########
 
 sub stash_tab_data :Private {
     my ($self,$c) = @_;
@@ -98,85 +196,6 @@ sub stash_tab_data :Private {
         my ($name) = @_;
         return modesel($c->stash->{tabs}, $c->stash->{name_to_num}->($name));
     };
-}
-
-sub glossary :Path('/search/glossary') :Args() {
-    my ( $self, $c, $term ) = @_;
-    my $response;
-    if($term){
-        my @defs = get_definitions($term);
-        unless (@defs){
-            $response = "<p>Your term was not found. <br> The term you searched for was $term.</p>";
-        } else {
-            $response = "<hr /><dl><dt>$term</dt>";
-            for my $d (@defs){
-                $response .= "<dd>$d</dd><br />";
-            }
-            $response .= "</dl>";
-        }
-    } else {
-        $response =<<DEFAULT;
-<hr />
-<h2>Glossary search</h2>
-<form action="#" method='get' name='glossary'>
-<b>Search the glossary by term:</b>
-<input type = 'text' name = 'getTerm' size = '50' tabindex='0' />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-<input type = 'submit' value = 'Lookup' /></form>
-<script type="text/javascript" language="javascript">
-document.glossary.getTerm.focus();
-</script>
-
-DEFAULT
-    }
-
-    $c->forward_to_mason_view(
-        '/search/search.mas',
-        content => $response,
-    );
-
-}
-
-sub search :Path('/search/') :Args() {
-    my ( $self, $c, $term, @args ) = @_;
-
-    $c->forward('stash_tab_data');
-
-    # make /search/index.pl show the list of all kinds of searches
-    $term = '' if $term && $term eq 'index.pl';
-
-    if( $term eq 'direct_search.pl' ) {
-        $term = $c->req->param('search');
-        if ($term eq 'cvterm_name') {$term = 'qtl';}
-        $c->res->redirect('/search/'.$term, 301 );
-        return;
-    }
-    
-    $c->stash->{term} = $term;
-    my $tab_html      = $c->stash->{tab_html_function}($term);
-
-    my $response;
-    if ($term) {
-        $response  = $tab_html;
-
-        # if it is an unknown search type, default to gene search
-        unless ($c->stash->{name_to_num}->($term)) {
-            $c->throw_404('Invalid search type');
-        }
-
-        $response .= $c->stash->{tab_functions}[$c->stash->{name_to_num}->($term)]();
-        $c->forward_to_mason_view(
-            '/search/search.mas',
-            content => $response,
-        );
-    } else {
-        my $tb = CXGN::Page::Toolbar::SGN->new();
-        $response = $tab_html . $tb->index_page('search');
-    }
-    $c->forward_to_mason_view(
-        '/search/search.mas',
-        content => $response,
-    );
 }
 
 sub annotation_tab {
