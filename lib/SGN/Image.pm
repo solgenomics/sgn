@@ -1,8 +1,8 @@
+package SGN::Image;
 
 =head1 NAME
 
-SGN::Image.pm - a class to deal the SGN Context  configuration for
-uploading images on SGN.
+SGN::Image - SGN Images
 
 =head1 DESCRIPTION
 
@@ -31,9 +31,6 @@ metadata about the image is stored in the database.
 Lukas Mueller (lam87@cornell.edu)
 Naama Menda (nm249@cornell.edu)
 
-=head1 VERSION
-
-0.01, Dec 15, 2009.
 
 =head1 MEMBER FUNCTIONS
 
@@ -41,20 +38,17 @@ The following functions are provided in this class:
 
 =cut
 
-use strict;
+use Modern::Perl;
 
-use File::Temp qw / tempfile tempdir /;
-use File::Copy qw / copy move /;
-use File::Basename qw / basename /;
+use File::Temp qw/ tempfile tempdir /;
+use File::Copy qw/ copy move /;
+use File::Basename qw/ basename /;
 use File::Spec;
 use CXGN::DB::Connection;
 use SGN::Context;
 use CXGN::Tag;
 
-package SGN::Image;
-
-use base qw | CXGN::Image |;
-
+use base qw| CXGN::Image |;
 
 =head2 new
 
@@ -570,10 +564,6 @@ sub get_associated_objects {
     return @associations;
 }
 
-
-
-### deanx additions - Nov 13, 2007
-
 =head2 associate_locus
 
  Usage:        $image->associate_locus($locus_id)
@@ -723,8 +713,5 @@ sub get_associated_object_links {
     }
     return $s;
 }
-
-
-
 
 1;
