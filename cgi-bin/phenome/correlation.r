@@ -134,6 +134,7 @@ write.table(coefficients,
       file=cortable,
       col.names=TRUE,
       row.names=TRUE,
+      quote=FALSE,
       dec="."
       )
 
