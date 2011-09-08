@@ -81,12 +81,10 @@ sub view : PathPart('qtl/view') Chained Args(1) {
 
 sub download_phenotype : PathPart('qtl/download/phenotype') Chained Args(1) {
     my ($self, $c, $id) = @_;
-    my $pop = CXGN::Phenome::Population->new($c->dbc->dbh, $id);
-   
-
-    my $phenotype_file = $pop->phenotype_file($c);
+    my $pop             = CXGN::Phenome::Population->new($c->dbc->dbh, $id);
+    my $phenotype_file  = $pop->phenotype_file($c);
     
-    unless (!-e $phenotype_file || -s $phenotype_file < 1)
+    unless (!-e $phenotype_file || -s $phenotype_file <= 1)
     {
         my @pheno_data;
         foreach ( read_file($phenotype_file) ) 
@@ -100,11 +98,10 @@ sub download_phenotype : PathPart('qtl/download/phenotype') Chained Args(1) {
 
 sub download_genotype : PathPart('qtl/download/genotype') Chained Args(1) {
     my ($self, $c, $id) = @_;
-    my $pop = CXGN::Phenome::Population->new($c->dbc->dbh, $id);    
-    
-    my $genotype_file = $pop->genotype_file($c);
-    
-    unless (!-e $genotype_file || -s $genotype_file < 1)
+    my $pop             = CXGN::Phenome::Population->new($c->dbc->dbh, $id);        
+    my $genotype_file   = $pop->genotype_file($c);
+   
+    unless (!-e $genotype_file || -s $genotype_file <= 1)
     {
         my @geno_data;
         foreach ( read_file($genotype_file)) 
@@ -118,29 +115,29 @@ sub download_genotype : PathPart('qtl/download/genotype') Chained Args(1) {
 
 sub download_correlation : PathPart('qtl/download/correlation') Chained Args(1) {
     my ($self, $c, $id) = @_;
-
-    $c->stash(pop => CXGN::Phenome::Population->new($c->dbc->dbh, $id)); 
-    $self->_correlation_output($c);
-      
-    my $corr_file = $c->stash->{corre_table_file};
     
-    unless (!-e $corr_file || -s $corr_file < 1) 
+    $c->stash(pop => CXGN::Phenome::Population->new($c->dbc->dbh, $id)); 
+    $self->_correlation_output($c);     
+    my $corr_file = $c->stash->{corre_table_file};   
+    my $base_path = $c->config->{basepath};
+    $corr_file    = $base_path . $corr_file;
+  
+    unless (!-e $corr_file || -s $corr_file <= 1) 
     {
         my @corr_data;
         my $count=1;
-        
+
         foreach ( read_file($corr_file) )
         {
             if ($count==1) { $_ = "Traits " . $_;}
-            s/\"//g; s/\s/,/g;
+            s/\s/,/g;
             push @corr_data, [ split (/,/) ];
             $count++;
         }
     
         $c->stash->{'csv'}={ data => \@corr_data };
         $c->forward("SGN::View::Download::CSV");
-    }
-    
+    }    
 }
 
 sub download_acronym : PathPart('qtl/download/acronym') Chained Args(1) {
@@ -172,13 +169,13 @@ sub _analyze_correlation : {
         }
 
         my (undef, $heatmap_file)     = tempfile( "heatmap_${pop_id}-XXXXXX",
-                                              DIR      => $corre_image_dir,
+                                              DIR      => $corre_temp_dir,
                                               SUFFIX   =>'.png',
                                               UNLINK   => 0,
                                             );
 
         my (undef, $corre_table_file) = tempfile( "corre_table_${pop_id}-XXXXXX",
-                                              DIR      => $corre_image_dir,
+                                              DIR      => $corre_temp_dir,
                                               SUFFIX   => '.txt',
                                               UNLINK   => 0,
                                             );
@@ -217,6 +214,11 @@ sub _analyze_correlation : {
 
         sleep 1 while $r_process->alive;
 
+        copy( $heatmap_file, $corre_image_dir )
+            or die "could not copy $heatmap_file to $corre_image_dir";
+         copy( $corre_table_file, $corre_image_dir )
+            or die "could not copy $corre_table_file to $corre_image_dir";
+
         $heatmap_file = fileparse($heatmap_file);
         $heatmap_file  = $c->generated_file_uri("correlation",  $heatmap_file);
         $corre_table_file = fileparse($corre_table_file);
@@ -235,11 +237,11 @@ sub _correlation_output {
     my $corre_image_dir = catfile($base_path, $temp_image_dir, "correlation");
     my $cache           = Cache::File->new( cache_root => $corre_image_dir);
     my $key_h           = "heat_" . $pop->get_population_id();
-    my $key_t           = "table_" . $pop->get_population_id();   
+    my $key_t           = "corr_table_" . $pop->get_population_id();   
     my $heatmap         = $cache->get($key_h);
     my $corre_table     = $cache->get($key_t); 
     $cache->purge();
-    
+  
     unless  ($heatmap) 
     {
         $self->_analyze_correlation($c);
@@ -250,7 +252,7 @@ sub _correlation_output {
         
     }
     $c->stash( heatmap_file     => $heatmap,
-                   corre_table_file => $corre_table,
+               corre_table_file => $corre_table,
         );  
     
     $self->_get_trait_acronyms($c);
@@ -401,8 +403,8 @@ sub _show_data {
     } else
     { 
         $is_public ? $c->stash(show_data => 1) 
-            :        $c->stash(show_data => undef)
-            ;
+                   : $c->stash(show_data => undef)
+                   ;
     }            
 }
 
@@ -410,6 +412,10 @@ sub search_help : PathPart('search/qtl/help') Chained Args(0) {
     my ($self, $c) = @_;
     $c->stash(template => '/qtl/search/help/index.mas',)
 }
+
+
+
+
 ####
 1;
 ####
