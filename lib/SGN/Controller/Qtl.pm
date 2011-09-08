@@ -64,7 +64,7 @@ sub view : PathPart('qtl/view') Chained Args(1) {
             } 
             else 
             {
-                $c->throw_404("This not a QTL population");
+                $c->throw_404("$id is not a QTL population.");
             }
         }
         else 
@@ -237,7 +237,8 @@ sub _correlation_output {
     my $key_h           = "heat_" . $pop->get_population_id();
     my $key_t           = "table_" . $pop->get_population_id();   
     my $heatmap         = $cache->get($key_h);
-    my $corre_table     = $cache->get($key_t);
+    my $corre_table     = $cache->get($key_t); 
+    $cache->purge();
     
     unless  ($heatmap) 
     {
