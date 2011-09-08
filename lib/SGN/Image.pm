@@ -133,10 +133,9 @@ sub process_image {
         #print STDERR "Associating to locus $type_id\n";
         $self->associate_locus($type_id);
     }
-    elsif ( $type eq "organism" ) { 
-	$self->associate_organism($type_id);
-    }
-    else {
+    elsif ( $type eq "organism" ) {
+        $self->associate_organism($type_id);
+    } else {
         warn "type $type is like totally illegal! Not associating image with any object. Please check if your loading script links the image with an sgn object! \n";
     }
 
@@ -511,7 +510,7 @@ sub get_fish_result_clone_ids {
     return @fish_result_clone_ids;
 }
 
-=head2 function get_associated_objects
+=head2 get_associated_objects
 
   Synopsis:
   Arguments:
@@ -612,7 +611,7 @@ sub get_loci {
 
 =head2 associate_organism
 
- Usage:        $image -> associate_orgasim($organism_id)
+ Usage:        $image->associate_organism($organism_id)
  Desc:
  Ret:
  Args:
@@ -666,7 +665,7 @@ sub get_organisms {
 }
 
 
-=head2 function get_associated_object_links
+=head2 get_associated_object_links
 
   Synopsis:
   Arguments:
