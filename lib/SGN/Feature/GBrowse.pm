@@ -158,7 +158,7 @@ sub render_all_configs {
     $self->conf_template_dir->recurse(
         callback => sub {
             my ($child) = @_;
-            return if $child->is_dir || $child !~ /\.mas$/;
+            return if $child->is_dir || $child !~ /\.mas$/ || $child =~ /^#/ || $child =~ /~$/;
             push @template_files, $child;
         });
 
