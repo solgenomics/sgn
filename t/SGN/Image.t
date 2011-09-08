@@ -3,7 +3,7 @@ use lib 't/lib';
 use SGN::Test;
 use SGN::Context;
 use SGN::Test::Data qw/create_test/;
-use Test::Most tests => 5;
+use Test::Most tests => 9;
 use SGN::Test::WWW::Mechanize;
 use Data::Dumper;
 
@@ -24,6 +24,16 @@ my $url = $image->get_image_url('medium');
 like($url, qr{medium}, 'getting a medium image');
 
 can_ok( $image, qw/get_organisms get_stocks get_experiments get_loci process_image config associate_experiment/);
+
+my @o = $image->get_organisms;
+is(@o, 1, 'got one organism');
+isa_ok($o[0], 'Bio::Chado::Schema::Result::Organism::Organism');
+
+my @l = $image->get_loci;
+is(@l, 0, 'no loci associated with image');
+
+my @e = $image->get_experiments;
+is(@e, 0, 'no experiments associated with image');
 
 # we can't use $image->hard_delete because that connects as web_usr which doesn't
 # have permissions to delete images
