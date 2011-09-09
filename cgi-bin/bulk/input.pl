@@ -22,7 +22,7 @@
 # Modified June 27th, 2007 by Alexander Naydich and Matthew Crumb (interns)
 
 
-use strict;
+use Modern::Perl;
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw/page_title_html modesel simple_selectbox_html/;
 use CXGN::DB::Connection;
@@ -770,12 +770,9 @@ HTML
 
   None known.
 
-=head1 AUTHOR
+=head1 AUTHORS
 
-  Lukas Mueller, August 12, 2003
-  Modified and documented by Caroline Nyenke, August 11, 2005
-  Modified June 27th, 2007 by Alexander Naydich and Matthew Crumb
- 
+  Lukas Mueller, Caroline Nyenke, Alexander Naydich and Matthew Crumb
 
 =head1 SEE ALSO
 
