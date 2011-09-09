@@ -9,8 +9,6 @@ use lib 't/lib';
 BEGIN { $ENV{SGN_SKIP_CGI} = 1 } #< don't need to compile all the CGIs
 use SGN::Test qw/ request /;
 
-my $mech = SGN::Test::WWW::Mechanize->new;
-
 { # test download_static
   my $res = request( '/download/documents/inc/sgn.css' );
   is( $res->header('Content-disposition'), 'attachment; filename=sgn.css',

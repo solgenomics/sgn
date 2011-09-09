@@ -21,7 +21,7 @@ Catalyst Controller.
 
 =cut
 
-sub index :Path :Args(0) {
+sub bulk_feature :Path('/bulk/feature') :Args(0) {
     my ( $self, $c ) = @_;
 
     $c->response->body('Matched SGN::Controller::Bulk in Bulk.');
@@ -30,7 +30,7 @@ sub index :Path :Args(0) {
 
 =head1 AUTHOR
 
-Duke Leto,,,
+Jonathan "Duke" Leto
 
 =head1 LICENSE
 
