@@ -60,13 +60,15 @@ sub patch {
 --
 
 CREATE TABLE metadata.md_image_organism (
-    md_image_organism_id bigint primary key,
-    md_image_id bigint references metadata.md_image,
-    organism_id bigint references public.organism,
+    md_image_organism_id serial primary key,
+    image_id bigint references metadata.md_image not null,
+    organism_id bigint references public.organism not null,
     sp_person_id bigint references sgn_people.sp_person,
-    obsolete boolean
+    obsolete boolean default false
 );
     
+    GRANT UPDATE, INSERT, SELECT ON metadata.md_image_organism TO web_usr;
+    GRANT USAGE ON metadata.md_image_organism_md_image_organism_id_seq to web_usr;
 
 EOSQL
 

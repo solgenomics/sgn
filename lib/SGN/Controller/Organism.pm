@@ -24,6 +24,8 @@ use CXGN::Login;
 use CXGN::Phylo::OrganismTree;
 use CXGN::Page::FormattingHelpers qw | tooltipped_text |;
 use CXGN::Tools::Text;
+use SGN::Image;
+
 with 'Catalyst::Component::ApplicationAttribute';
 
 =head1 ACTIONS
@@ -294,13 +296,22 @@ sub view_organism :Chained('find_organism') :PathPart('view') :Args(0) {
             $solcyc_link = "See <a href=\"$full_url$accession\">$solcyc</a>";
         }
     }
+
+    my $logged_user = $c->user;
+    my $person_id = $logged_user->get_object->get_sp_person_id if $logged_user;
+    my $privileged_user =  ($logged_user && ( $logged_user->check_roles('curator') || $logged_user->check_roles('sequencer') || $logged_user->check_roles('submitter') ) )  ;
+
+    $c->stash->{privileged_user} = $privileged_user;
+
     $c->stash->{solcyc_link} = $solcyc_link;
     $c->stash->{accessions} = $accessions;
     my $na      = qq| <span class="ghosted">N/A</span> |;
     $c->stash->{ploidy} = $organism->get_ploidy() || $na;
     $c->stash->{genome_size} = $organism->get_genome_size() || $na;
     $c->stash->{chromosome_number} = $organism->get_chromosome_number() || $na;
-
+    my @image_ids = $organism->get_image_ids();
+    my @image_objects = map { SGN::Image->new($c->dbc->dbh, $_) } @image_ids;
+    $c->stash->{image_objects} = \@image_objects;
     $self->map_data($c);
     $self->transcript_data($c);
     $self->phenotype_data($c);
