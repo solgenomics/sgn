@@ -2,7 +2,21 @@
 
 This is the SGN test suite, which helps us verify that code is working as it should.
 
-Explanation of directories:
+## t/test_all.pl
+
+Helps spawn a local instance of the SGN website and run the test suite against it.
+
+## t/Bio
+
+Tests in the Bio::SecreTary::* namespace.
+
+## t/CXGN
+
+Tests in the CXGN::* namespace
+
+## t/SGN
+
+Tests in the SGN::* namespace
 
 ## t/data/
 
@@ -16,6 +30,14 @@ as opposed to unit tests, which usually test a small piece of code in isolation.
 ## t/lib/
 
 Libraries written for and to be used by the test suite, such as SGN::Test::Data.
+
+## t/live
+
+Tests which run tests against live websites.
+
+## t/pod
+
+Tests related to POD documentation.
 
 ## t/validate/
 
