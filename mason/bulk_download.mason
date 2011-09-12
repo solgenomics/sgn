@@ -1,4 +1,5 @@
 <%args>
     $content => ''
+	$sequences
 </%args>
 <% $content %>

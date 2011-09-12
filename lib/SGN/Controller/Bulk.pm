@@ -2,7 +2,7 @@ package SGN::Controller::Bulk;
 use Moose;
 use namespace::autoclean;
 
-BEGIN {extends 'Catalyst::Controller'; }
+BEGIN {extends 'SGN::Controller::Feature'; }
 
 =head1 NAME
 
@@ -30,7 +30,12 @@ sub bulk_feature :Path('/bulk/feature') :Args(0) {
 sub bulk_feature_download :Path('/bulk/feature/download') :Args(0) {
     my ( $self, $c ) = @_;
 
-    $c->stash( template => 'bulk_download.mason');
+    my $req = $c->req;
+    $c->stash( sequence_identifiers => $req->param('ids') );
+
+    $c->forward('fetch_sequences');
+
+    $c->stash( template => 'bulk_download.mason' );
 }
 
 
