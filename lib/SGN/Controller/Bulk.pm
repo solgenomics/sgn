@@ -24,7 +24,7 @@ Catalyst Controller.
 sub bulk_feature :Path('/bulk/feature') :Args(0) {
     my ( $self, $c ) = @_;
 
-    $c->response->body('Matched SGN::Controller::Bulk in Bulk.');
+    $c->stash( template => 'bulk.mason');
 }
 
 

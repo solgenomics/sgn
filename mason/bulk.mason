@@ -1,0 +1,30 @@
+<%args>
+</%args>
+<form name="bulkform" action="download.pl" method="post" enctype="multipart/form-data">
+<table summary="" cellpadding="10" width="100%"><tr><td valign="top" bgcolor="#EEEEEE" width="320">
+Enter a list of feature identifier or upload a file containing one identifer separated by whitespace (returns, spaces or tabs):<br />
+<table summary="" width="100%" cellpadding="0"><tr><td>
+<textarea name="ids" rows="5" cols="20"></textarea>
+</td>
+<td>
+<i>Example:</i>
+<pre style="border: 1px solid gray; width: 10em; height: 5em">
+TODO
+</pre>
+</td></tr></table>
+<br />
+<br />
+
+And/or upload list file: <br /><input type="file" name="file" />
+<br />
+<br />
+
+</td><td valign="top" bgcolor="#EEEEEE" width="320">
+
+<input type="radio" name="unigene_mode" value="unigene_info" checked="checked" /> <b>Download feature information</b>:<br />
+<div style="padding-left: 1em">
+    <input type="checkbox" name="cdna" checked="checked" />cDNA<br />
+    <input type="checkbox" name="cds" checked="checked" />CDS <br />
+    <input type="checkbox" name="protein" checked="checked" />Protein<br />
+</div>
+</td></tr></table>

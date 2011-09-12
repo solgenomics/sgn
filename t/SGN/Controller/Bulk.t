@@ -7,11 +7,13 @@ use lib 't/lib';
 use Catalyst::Test 'SGN';
 
 use_ok 'SGN::Controller::Bulk';
+use aliased 'SGN::Test::WWW::Mechanize' => 'Mech';
 
-use SGN::Test qw/ request /;
+my $mech = Mech->new;
 
-my $r = request('/bulk/feature');
-
-is( $r->code, 200, 'Request should succeed' ) or diag $r->content;
+$mech->with_test_level( local => sub {
+    my $r = request('/bulk/feature');
+    is( $r->code, 200, $r->content );
+});
 
 done_testing();
