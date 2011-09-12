@@ -6,11 +6,11 @@ BEGIN {extends 'Catalyst::Controller'; }
 
 =head1 NAME
 
-SGN::Controller::Bulk - Catalyst Controller
+SGN::Controller::Bulk - Bulk Feature Controller
 
 =head1 DESCRIPTION
 
-Catalyst Controller.
+Catalyst Controller which allows bulk download of features.
 
 =head1 METHODS
 
@@ -25,6 +25,12 @@ sub bulk_feature :Path('/bulk/feature') :Args(0) {
     my ( $self, $c ) = @_;
 
     $c->stash( template => 'bulk.mason');
+}
+
+sub bulk_feature_download :Path('/bulk/feature/download') :Args(0) {
+    my ( $self, $c ) = @_;
+
+    $c->stash( template => 'bulk_download.mason');
 }
 
 

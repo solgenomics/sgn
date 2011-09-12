@@ -12,8 +12,9 @@ use aliased 'SGN::Test::WWW::Mechanize' => 'Mech';
 my $mech = Mech->new;
 
 $mech->with_test_level( local => sub {
-    my $r = request('/bulk/feature');
-    is( $r->code, 200, $r->content );
+    $mech->get_ok('/bulk/feature');
+
+    $mech->post_ok('/bulk/feature/download');
 });
 
 done_testing();
