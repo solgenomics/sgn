@@ -16,7 +16,7 @@ use CXGN::Tools::Identifiers;
 our @EXPORT_OK = qw/
     related_stats feature_table
     feature_link
-    infer_residue cvterm_link
+    cvterm_link
     organism_link feature_length
     mrna_and_protein_sequence
     description_featureprop_types
