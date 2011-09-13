@@ -67,7 +67,7 @@ sub bulk_feature_download :Path('/bulk/feature/download') :Args(0) {
     } else {
         $c->stash( sequence_identifiers => $ids );
 
-        $c->forward('fetch_sequences');
+        $c->forward('Controller::Sequence', 'fetch_sequences');
 
         $self->cache->set( $sha1 => $c->stash->{sequences} );
     }
