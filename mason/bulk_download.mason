@@ -1,5 +1,6 @@
 <%args>
     $content => ''
-	$sequences
+    $sha1
 </%args>
-<% $content %>
+
+Download as <a href="/bulk/feature/download/$sha1.fasta">FASTA</a>

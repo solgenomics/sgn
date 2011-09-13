@@ -10,10 +10,18 @@ has cache => (
     is         => 'ro',
 );
 
+use File::Path qw/mkpath/;
+
 sub _build_cache {
     my $self = shift;
+
+    my $app = $self->_app;
+    my $cache_dir = $app->tempfiles_subdir(qw/cache bulk feature/);
+
+    mkpath($app->path_to( $cache_dir)) unless -d $app->path_to($cache_dir);
+
     return Cache::File->new(
-           cache_root       => $self->_app->path_to( $self->_app->tempfiles_subdir(qw/cache bulk feature/) ),
+           cache_root       => $app->path_to( $app->tempfiles_subdir(qw/cache bulk feature/) ),
 
            default_expires  => '2 days',
            # TODO: how big can the output of 10K identifiers be?
