@@ -27,13 +27,13 @@ $userid
       <tr>
         <td>
           <input type="radio" 
-                 onclick="Qtl.toggleStatOptions('default');Qtl.setDefaultStat(<% $pop_id %>)"
+                 onclick="Qtl.toggleStatOptions('default');Qtl.setUserStatOption(<% $pop_id %>, 'default')"
                  name="stat_options"
                  value="default qtl parameters"> Use default QTL parameters
         </td>
         <td>
           <input type="radio" 
-                 onclick="Qtl.setUserStat(<% $pop_id %>);Qtl.logUser(<% $userid %>)"
+                 onclick="Qtl.setUserStatOption(<% $pop_id %>, 'user_params');Qtl.logUser(<% $userid %>)"
                  name="stat_options"
                  value="user qtl parameters"> Set your own QTL analysis parameters
         </td>
