@@ -18,7 +18,9 @@ use File::Copy;
 use File::Basename;
 use File::Slurp;
 use Cache::File;
+use Path::Class;
 use Bio::Chado::Schema;
+use CXGN::Phenome::Qtl;
 
 BEGIN { extends 'Catalyst::Controller'}  
 
@@ -413,8 +415,34 @@ sub search_help : PathPart('search/qtl/help') Chained Args(0) {
     $c->stash(template => '/qtl/search/help/index.mas',)
 }
 
+sub set_stat_option : PathPart('qtl/stat/option') Chained Args(0) {
+    my ($self, $c) =@_;
 
+    my $login_id = $c->user()->get_object->get_sp_person_id() if $c->user;
+    my $pop_id = $c->request->param('pop_id');
+    my $stat_params = $c->request->param('stat_params');
 
+    if ($login_id) 
+    {
+        my $qtl = CXGN::Phenome::Qtl->new($login_id);
+        my ($temp_qtl_dir, $temp_user_dir) = $qtl->create_user_qtl_dir($c); 
+                     
+        my $f = file( $temp_user_dir, "stat_options_pop_${pop_id}.txt" )->openw
+            or die "Can't create file: $! \n";
+
+        if ( $stat_params eq 'default' ) 
+        {
+            $f->print( "default parameters\tYes" );
+        } 
+        else 
+        {
+            $f->print( "default parameters\tNo" );
+        }  
+    }
+    $c->res->content_type('application/json');
+    $c->res->body({undef});                
+
+}
 
 ####
 1;
