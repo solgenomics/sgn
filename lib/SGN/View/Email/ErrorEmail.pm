@@ -230,18 +230,26 @@ error.  Example:
 sub summary_text {
     my ( $self, $c ) = @_;
 
-    my $client_ip       = ($c->req->header('X-Forwarded-For'))[0] || $c->req->address;
-    my $client_hostname = $self->reverse_dns
-        ? ' ('.(gethostbyaddr( inet_aton( $client_ip ), AF_INET ) || 'reverse DNS lookup failed').')'
-        : '';
+    my @client_ips = $c->req->header('X-Forwarded-For')
+                   ? ( map { split /\s*,\s*/, $_ } $c->req->header('X-Forwarded-For') )
+                   : ( $c->req->address );
+    my $client_addr_string = join ', ', (
+        $self->reverse_dns
+            ? ( map {
+                  my $client_ip = $_;
+                  "$client_ip (".(gethostbyaddr( inet_aton( $client_ip ), AF_INET ) || 'reverse DNS lookup failed').')'
+                } @client_ips
+              )
+            : @client_ips
+      );
 
     no warnings 'uninitialized';
     return join '', map "$_\n", (
       'Request    : '.$c->req->method.' '.$c->req->uri,
       'User-Agent : '.$c->req->user_agent,
       'Referrer   : '.$c->req->referer,
-      'Client Addr: '.$client_ip.$client_hostname,
-      'Process ID : '.$$,
+      'Client Addr: '.$client_addr_string,
+      'Worker PID : '.$$,
      );
 }
 
