@@ -11,7 +11,7 @@ JSAN.use('MochiKit.Async');
 JSAN.use('CXGN.Effects');
 JSAN.use('CXGN.Phenome.Tools');
 JSAN.use('jquery.blockUI');
-
+JSAN.use('jquery');
 
 
 var Qtl = {
@@ -87,28 +87,16 @@ var Qtl = {
             }
     },
    
-    setDefaultStat: function( id ) 
+    setUserStatOption: function( id, useroption ) 
     {
-	var pop_id = id;
-        var stat_params = 'default';
-        new MochiKit.Async.doSimpleXMLHttpRequest ( '../../../phenome/qtl_stat_options.pl', 
-                                                    {
-                                                     pop_id: pop_id, stat_params: stat_params
-                                                    }
-                                                  );
-    }, 
-    
-    setUserStat: function( id ) 
-    {
-	var pop_id = id;
-        var stat_params = 'user_params';
-        new MochiKit.Async.doSimpleXMLHttpRequest ( '../../../phenome/qtl_stat_options.pl', 
-                                                    { 
-                                                     pop_id: pop_id, stat_params: stat_params
-                                                    }
+        new MochiKit.Async.doSimpleXMLHttpRequest ('/qtl/stat/option', 
+                                                   { pop_id: id, 
+                                                     stat_params: useroption
+                                                   }
                                                   );
     },
- 
+
+
     logUser: function( userid ) 
     {
 	if (userid == null) 
