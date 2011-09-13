@@ -1,6 +1,26 @@
 package SGN::Controller::Bulk;
 use Moose;
 use namespace::autoclean;
+use Cache::File;
+use Digest::SHA1 qw/sha1_hex/;
+
+has cache => (
+    isa        => 'Cache::File',
+    lazy_build => 1,
+    is         => 'ro',
+);
+
+sub _build_cache {
+    my $self = shift;
+    return Cache::File->new(
+           cache_root       => $self->_app->path_to( $self->_app->tempfiles_subdir(qw/cache bulk feature/) ),
+
+           default_expires  => '2 days',
+           # TODO: how big can the output of 10K identifiers be?
+           size_limit       => 10_000_000,
+           removal_strategy => 'Cache::RemovalStrategy::LRU',
+          );
+};
 
 BEGIN {extends 'SGN::Controller::Feature'; }
 
@@ -30,12 +50,21 @@ sub bulk_feature :Path('/bulk/feature') :Args(0) {
 sub bulk_feature_download :Path('/bulk/feature/download') :Args(0) {
     my ( $self, $c ) = @_;
 
-    my $req = $c->req;
-    $c->stash( sequence_identifiers => $req->param('ids') );
+    my $req  = $c->req;
+    my $ids  = $req->params('ids');
+    my $sha1 = sha1_hex($ids);
 
-    $c->forward('fetch_sequences');
+    if( $self->cache->get( $sha1 ) ) {
+        # bulk download is cached already
+    } else {
+        $c->stash( sequence_identifiers => $ids );
 
-    $c->stash( template => 'bulk_download.mason' );
+        $c->forward('fetch_sequences');
+
+        $self->cache->set( $sha1 => $c->stash->{sequences} );
+    }
+
+    $c->stash( template => 'bulk_download.mason', sha1 => $sha1 );
 }
 
 
