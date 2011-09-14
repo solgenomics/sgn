@@ -15,10 +15,10 @@ use File::Path qw/mkpath/;
 sub _build_cache {
     my $self = shift;
 
-    my $app = $self->_app;
-    my $cache_dir = $app->tempfiles_subdir(qw/cache bulk feature/);
+    my $app       = $self->_app;
+    my $cache_dir = $app->path_to($app->tempfiles_subdir(qw/cache bulk feature/));
 
-    mkpath($app->path_to( $cache_dir)) unless -d $app->path_to($cache_dir);
+    mkpath($cache_dir) unless -d $cache_dir;
 
     return Cache::File->new(
            cache_root       => $app->path_to( $app->tempfiles_subdir(qw/cache bulk feature/) ),
@@ -65,6 +65,7 @@ sub bulk_feature_download :Path('/bulk/feature/download') :Args(0) {
     if( $self->cache->get( $sha1 ) ) {
         # bulk download is cached already
     } else {
+        warn "setting ids to $ids";
         $c->stash( sequence_identifiers => $ids );
 
         $c->forward('Controller::Sequence', 'fetch_sequences');

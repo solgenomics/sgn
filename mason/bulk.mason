@@ -1,6 +1,6 @@
 <%args>
 </%args>
-<form name="bulkform" action="/bulk/feature/download" method="post" enctype="multipart/form-data">
+<form name="bulk_feature" action="/bulk/feature/download" method="post" enctype="multipart/form-data">
 <table summary="" cellpadding="10" width="100%"><tr><td valign="top" bgcolor="#EEEEEE" width="320">
 Enter a list of feature identifier or upload a file containing one identifer separated by whitespace (returns, spaces or tabs):<br />
 <table summary="" width="100%" cellpadding="0"><tr><td>
@@ -21,7 +21,7 @@ And/or upload list file: <br /><input type="file" name="file" />
 
 </td><td valign="top" bgcolor="#EEEEEE" width="320">
 
-<input type="radio" name="unigene_mode" value="unigene_info" checked="checked" /> <b>Download feature information</b>:<br />
+<input type="radio" name="feature_type" value="feature_type" checked="checked" /> <b>Download feature information</b>:<br />
 <div style="padding-left: 1em">
     <input type="checkbox" name="cdna" checked="checked" />cDNA<br />
     <input type="checkbox" name="cds" checked="checked" />CDS <br />
