@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 6;
+use Test::More tests => 7;
 
 use lib 't/lib';
 use SGN::Test::Data qw/ create_test /;
@@ -16,8 +16,10 @@ my $mech = Mech->new;
 my $poly_cvterm     = create_test('Cv::Cvterm',        { name => 'polypeptide' });
 my $poly_feature    = create_test('Sequence::Feature', { type => $poly_cvterm  });
 
-# TODO: these tests depend on live data.
-my $ids =<<IDS;
+$mech->with_test_level( local => sub {
+
+    # TODO: these tests depend on live data.
+    my $ids =<<IDS;
 SGN-E398616
 SGN-E540202
 SGN-E541638
@@ -32,7 +34,6 @@ SGN-E443637
 SGN-E403108
 IDS
 
-$mech->with_test_level( local => sub {
     $mech->get_ok('/bulk/feature');
     $mech->submit_form_ok({
         form_name => "bulk_feature",
@@ -40,6 +41,8 @@ $mech->with_test_level( local => sub {
             ids => $ids,
         },
     }, "submit bulk_feature form");
+    $mech->content_like(qr/Download as/);
+
     my $sha1  = sha1_hex($ids);
     my @links = $mech->find_all_links( url_regex => qr{/bulk/feature/download/$sha1\.fasta} );
 
@@ -51,6 +54,8 @@ $mech->with_test_level( local => sub {
 
     #diag $mech->content;
 });
+
+exit;
 
 $mech->with_test_level( local => sub {
     # attempt to post an empty list

@@ -10,7 +10,7 @@ has cache => (
     is         => 'ro',
 );
 
-use File::Path qw/mkpath/;
+use File::Path qw/make_path/;
 
 sub _build_cache {
     my $self = shift;
@@ -19,8 +19,16 @@ sub _build_cache {
     my $cache_dir      = $app->path_to($app->tempfiles_subdir(qw/cache bulk feature/));
     my $lock_cache_dir = $app->path_to($app->tempfiles_subdir(qw/cache bulk feature lock/));
 
+    my $error_string;
+
+    #die "making $lock_cache_dir";
     # since the lock directory is deeper, this will autocreate the $cache_dir as well
-    mkpath($lock_cache_dir) unless -d $lock_cache_dir;
+    make_path($lock_cache_dir, {
+        verbose => 1,
+        error   => \$error_string,
+    }) unless -d $lock_cache_dir;
+
+    die $error_string if $error_string;
 
     return Cache::File->new(
            cache_root       => $cache_dir,
@@ -28,6 +36,8 @@ sub _build_cache {
            # TODO: how big can the output of 10K identifiers be?
            size_limit       => 10_000_000,
            removal_strategy => 'Cache::RemovalStrategy::LRU',
+           # temporary, until we figure out locking issue
+           lock_level       => Cache::File::LOCK_NONE,
           );
 };
 
@@ -60,14 +70,13 @@ sub bulk_feature_download :Path('/bulk/feature/download') :Args(0) {
     my ( $self, $c ) = @_;
 
     my $req  = $c->req;
-    my $ids  = $req->params('ids');
+    my $ids  = $req->param('ids');
     my $sha1 = sha1_hex($ids);
 
     if( $self->cache->get( $sha1 ) ) {
         # bulk download is cached already
     } else {
-        warn "setting ids to $ids";
-        $c->stash( sequence_identifiers => $ids );
+        $c->stash( sequence_identifiers => [ split /\w+/, $ids ] );
 
         $c->forward('Controller::Sequence', 'fetch_sequences');
 
