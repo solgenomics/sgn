@@ -15,14 +15,15 @@ use File::Path qw/mkpath/;
 sub _build_cache {
     my $self = shift;
 
-    my $app       = $self->_app;
-    my $cache_dir = $app->path_to($app->tempfiles_subdir(qw/cache bulk feature/));
+    my $app            = $self->_app;
+    my $cache_dir      = $app->path_to($app->tempfiles_subdir(qw/cache bulk feature/));
+    my $lock_cache_dir = $app->path_to($app->tempfiles_subdir(qw/cache bulk feature lock/));
 
-    mkpath($cache_dir) unless -d $cache_dir;
+    # since the lock directory is deeper, this will autocreate the $cache_dir as well
+    mkpath($lock_cache_dir) unless -d $lock_cache_dir;
 
     return Cache::File->new(
-           cache_root       => $app->path_to( $app->tempfiles_subdir(qw/cache bulk feature/) ),
-
+           cache_root       => $cache_dir,
            default_expires  => '2 days',
            # TODO: how big can the output of 10K identifiers be?
            size_limit       => 10_000_000,
