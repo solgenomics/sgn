@@ -323,7 +323,7 @@ sub associate_stock  {
     if ($stock_id) {
         my $user = $self->config->user_exists;
         if ($user) {
-            my $metadata_schema = $self->config->dbic_schema('CXGN::Metadata::Schema', search_path=>'metadata');
+            my $metadata_schema = $self->config->dbic_schema('CXGN::Metadata::Schema');
             my $metadata = CXGN::Metadata::Metadbdata->new($metadata_schema, $self->config->user->get_object->get_username);
             my $metadata_id = $metadata->store()->get_metadata_id();
 
