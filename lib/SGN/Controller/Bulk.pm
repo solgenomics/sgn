@@ -21,7 +21,7 @@ sub _build_cache {
 
     my $error_string;
 
-    #die "making $lock_cache_dir";
+    warn "making $lock_cache_dir";
     # since the lock directory is deeper, this will autocreate the $cache_dir as well
     make_path($lock_cache_dir, {
         verbose => 1,
@@ -29,6 +29,7 @@ sub _build_cache {
     }) unless -d $lock_cache_dir;
 
     die $error_string if $error_string;
+    die "Something is horribly wrong! $cache_dir does not exit" unless -d $cache_dir;
 
     return Cache::File->new(
            cache_root       => $cache_dir,
@@ -64,10 +65,24 @@ sub bulk_feature :Path('/bulk/feature') :Args(0) {
     my ( $self, $c ) = @_;
 
     $c->stash( template => 'bulk.mason');
+
+    # trigger cache creation
+    $self->cache->get("");
 }
 
-sub bulk_feature_download :Path('/bulk/feature/download') :Args(0) {
-    my ( $self, $c ) = @_;
+sub bulk_feature_download :Path('/bulk/feature/download') :Args(1) {
+    my ( $self, $c, $sha1 ) = @_;
+
+    my $app            = $self->_app;
+    my $cache_dir      = $app->path_to($app->tempfiles_subdir(qw/cache bulk feature/));
+
+    $sha1 =~ s/\.fasta$//g;
+
+    $c->response->body( $self->cache->get($sha1) );
+}
+
+sub bulk_feature_submit :Path('/bulk/feature/submit') :Args(0) {
+    my ( $self, $c, $file ) = @_;
 
     my $req  = $c->req;
     my $ids  = $req->param('ids');
