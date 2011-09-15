@@ -546,7 +546,7 @@ sub get_associated_objects {
         push @associations, ["locus", $locus->get_locus_id(), $locus->get_locus_name];
     }
     foreach my $o ($self->get_organisms ) {
-        push @associations, ["organism", $o->get_organism_id, $o->get_species];
+        push @associations, ["organism", $o->organism_id, $o->species];
     }
     return @associations;
 }
