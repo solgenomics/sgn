@@ -1,8 +1,14 @@
 <%args>
   $file
 </%args>
-% if( -f $file->path ) {
-<a href="/metadata/file/<% $file->file_id |u %>/download"><% $file->basename |h %></a>\
+% my $stat = $file->stat;
+% if( $stat ) {
+<a href="/metadata/file/<% $file->file_id |u %>/download">
+   <% $file->basename |h %> (<% Number::Bytes::Human::format_bytes( $stat->size ) %>b)
+</a>
 % } else {
 <span class="ghosted" style="cursor: pointer" title="file temporarily unavailable"><% $file->basename |h %> (temporarily unavailable)</span>\
 %}
+<%once>
+  use Number::Bytes::Human;
+</%once>
