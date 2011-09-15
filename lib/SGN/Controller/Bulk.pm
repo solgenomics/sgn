@@ -78,7 +78,11 @@ sub bulk_feature_download :Path('/bulk/feature/download') :Args(1) {
 
     $sha1 =~ s/\.fasta$//g;
 
-    $c->response->body( $self->cache->get($sha1) );
+    my $seqs = $self->cache->get($sha1);
+
+    $c->stash( sequences => $seqs );
+
+    $c->forward( 'View::SeqIO' );
 }
 
 sub bulk_feature_submit :Path('/bulk/feature/submit') :Args(0) {
@@ -91,7 +95,7 @@ sub bulk_feature_submit :Path('/bulk/feature/submit') :Args(0) {
     if( $self->cache->get( $sha1 ) ) {
         # bulk download is cached already
     } else {
-        $c->stash( sequence_identifiers => [ split /\w+/, $ids ] );
+        $c->stash( sequence_identifiers => [ split /\s+/, $ids ] );
 
         $c->forward('Controller::Sequence', 'fetch_sequences');
 
