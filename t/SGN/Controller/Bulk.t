@@ -48,7 +48,7 @@ IDS
 
     cmp_ok(@links, '==', 1, "found one FASTA download link for $sha1.fasta");
 
-    @links = $mech->find_all_links( url_regex => qr{/bulk/feature/download/.*\.fasta} );
+    @links =  grep { $_ !~ qr{$sha1} } $mech->find_all_links(url_regex => qr{/bulk/feature/download/.*\.fasta} );
 
     cmp_ok(@links, '==', 0, "found no other download links") or diag("Unexpected download links" . Dumper [ map {$_->url} @links ]);
 
