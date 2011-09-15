@@ -68,7 +68,7 @@ sub bulk_feature_download :Path('/bulk/feature/download') :Args(1) {
 
     $sha1 =~ s/\.fasta$//g;
 
-    my $seqs = $self->cache->get($sha1);
+    my $seqs = $self->cache->thaw($sha1);
 
     $c->stash( sequences => $seqs );
 
@@ -82,14 +82,14 @@ sub bulk_feature_submit :Path('/bulk/feature/submit') :Args(0) {
     my $ids  = $req->param('ids');
     my $sha1 = sha1_hex($ids);
 
-    if( $self->cache->get( $sha1 ) ) {
+    if( $self->cache->thaw( $sha1 ) ) {
         # bulk download is cached already
     } else {
         $c->stash( sequence_identifiers => [ split /\s+/, $ids ] );
 
         $c->forward('Controller::Sequence', 'fetch_sequences');
 
-        $self->cache->set( $sha1 , $c->stash->{sequences} );
+        $self->cache->freeze( $sha1 , $c->stash->{sequences} );
     }
 
     $c->stash( template => 'bulk_download.mason', sha1 => $sha1 );
