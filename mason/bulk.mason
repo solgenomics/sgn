@@ -23,11 +23,11 @@ And/or upload list file: <br /><input type="file" name="file" />
 
 </td><td valign="top" bgcolor="#EEEEEE" width="320">
 
-<input type="radio" name="feature_type" value="feature_type" checked="checked" /> <b>Download feature information</b>:<br />
+<b>Download feature information</b>:<br />
 <div style="padding-left: 1em">
-    <input type="checkbox" name="cdna" checked="checked" />cDNA<br />
-    <input type="checkbox" name="cds" checked="checked" />CDS <br />
-    <input type="checkbox" name="protein" checked="checked" />Protein<br />
+    <input type="radio" name="feature_type" value="cdna" checked="checked" />cDNA<br />
+    <input type="radio" name="feature_type" value="cds" checked="unchecked" />CDS <br />
+    <input type="radio" name="feature_type" value="protein" checked="unchecked" />Protein<br />
 </div>
 </td></tr></table>
 
