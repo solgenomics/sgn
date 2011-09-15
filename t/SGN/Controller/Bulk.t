@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 7;
+use Test::More tests => 12;
 
 use lib 't/lib';
 use SGN::Test::Data qw/ create_test /;
@@ -18,6 +18,7 @@ my $poly_feature    = create_test('Sequence::Feature', { type => $poly_cvterm  }
 
 $mech->with_test_level( local => sub {
 
+sub submit_bulk_form {
     # TODO: these tests depend on live data.
     my $ids =<<IDS;
 SGN-E398616
@@ -33,7 +34,6 @@ SGN-E587346
 SGN-E443637
 SGN-E403108
 IDS
-
     $mech->get_ok('/bulk/feature');
     $mech->submit_form_ok({
         form_name => "bulk_feature",
@@ -51,7 +51,10 @@ IDS
     @links =  grep { $_ =~ qr{$sha1} } $mech->find_all_links(url_regex => qr{/bulk/feature/download/.*\.fasta} );
 
     cmp_ok(@links, '==', 0, "found no other download links") or diag("Unexpected download links" . Dumper [ map {$_->url} @links ]);
-
+}
+    # do it twice to test for bugs relating to the cache directory getting removed
+    submit_bulk_form();
+    submit_bulk_form();
     #diag $mech->content;
 });
 
