@@ -51,6 +51,7 @@ my @mode_links = (
     [ '?mode=bac_end',         'BAC&nbsp;ends' ],
     [ '?mode=ftp',             'Full&nbsp;datasets<br />(FTP)' ],
     [ '?mode=unigene_convert', 'Unigene ID Converter<br />(SGN-U)' ],
+    [ '/bulk/feature',         'Features' ],
 );
 
 ### figure out which mode we're in ###
@@ -62,6 +63,7 @@ my $modenum =
   : $mode =~ /bac_end/i         ? 4
   : $mode =~ /bac/i             ? 3
   : $mode =~ /ftp/i             ? 5
+  : $mode =~ /feature/i         ? 7
   :                               0;    #clone search is default
 
 ### print out the mode selection buttons at the top of the page ###

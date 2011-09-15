@@ -1,5 +1,7 @@
 <%args>
+    $menu
 </%args>
+<% $menu %>
 <form name="bulk_feature" action="/bulk/feature/submit/" method="post" enctype="multipart/form-data">
 <table summary="" cellpadding="10" width="100%"><tr><td valign="top" bgcolor="#EEEEEE" width="320">
 Enter a list of feature identifier or upload a file containing one identifer separated by whitespace (returns, spaces or tabs):<br />
