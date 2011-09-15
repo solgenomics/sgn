@@ -67,7 +67,7 @@ IDS
 $mech->with_test_level( local => sub {
     # attempt to post an empty list
     $mech->post('/bulk/feature/submit/', { ids => "" }  );
-    is($mech->status,400);
+    $mech->content_like(qr/At least one identifier must be given/);
 });
 
 done_testing();

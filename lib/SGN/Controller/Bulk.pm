@@ -82,6 +82,11 @@ sub bulk_feature_submit :Path('/bulk/feature/submit') :Args(0) {
     my $ids  = $req->param('ids');
     my $sha1 = sha1_hex($ids);
 
+    unless ($ids) {
+        $c->throw_client_error(public_message => 'At least one identifier must be given');
+
+    }
+
     if( $self->cache->thaw( $sha1 ) ) {
         # bulk download is cached already
     } else {
