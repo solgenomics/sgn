@@ -47,6 +47,11 @@ IDS
     my @links = $mech->find_all_links( url_regex => qr{/bulk/feature/download/$sha1\.fasta} );
 
     cmp_ok(@links, '==', 1, "found one FASTA download link for $sha1.fasta");
+    $mech->links_ok( \@links );
+
+    my $url = $links[0]->url;
+    $mech->get( $url );
+    cmp_ok(length($mech->content), '>', 0,"$url has a content length > 0");
 
     @links =  grep { $_ =~ qr{$sha1} } $mech->find_all_links(url_regex => qr{/bulk/feature/download/.*\.fasta} );
 
