@@ -17,22 +17,9 @@ sub _build_cache {
 
     my $app            = $self->_app;
     my $cache_dir      = $app->path_to($app->tempfiles_subdir(qw/cache bulk feature/));
-=for blah
-    my $lock_cache_dir = $app->path_to($app->tempfiles_subdir(qw/cache bulk feature lock/));
 
-    my $error_string;
-
-    $app->log->debug("Bulk : mkdir $lock_cache_dir");
-    # since the lock directory is deeper, this will autocreate the $cache_dir as well
-    make_path($lock_cache_dir, {
-        verbose => 1,
-        error   => \$error_string,
-    }) unless -d $lock_cache_dir;
-
-    die $error_string if $error_string;
-    die "Something is horribly wrong! $cache_dir does not exit" unless -d $cache_dir;
-=cut
     $app->log->debug("Bulk: creating new cache in $cache_dir");
+
     return Cache::File->new(
            cache_root       => $cache_dir,
            default_expires  => 'never',
