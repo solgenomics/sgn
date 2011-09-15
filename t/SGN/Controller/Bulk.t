@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 12;
+use Test::More tests => 18;
 
 use lib 't/lib';
 use SGN::Test::Data qw/ create_test /;
@@ -52,6 +52,7 @@ IDS
     my $url = $links[0]->url;
     $mech->get( $url );
     cmp_ok(length($mech->content), '>', 0,"$url has a content length > 0");
+    $mech->content_unlike(qr/Caught exception/);
 
     @links =  grep { $_ =~ qr{$sha1} } $mech->find_all_links(url_regex => qr{/bulk/feature/download/.*\.fasta} );
 
