@@ -3,6 +3,9 @@ use Moose;
 use namespace::autoclean;
 use Cache::File;
 use Digest::SHA1 qw/sha1_hex/;
+use File::Path qw/make_path/;
+
+BEGIN { extends 'Catalyst::Controller' }
 
 has cache => (
     isa        => 'Cache::File',
@@ -10,7 +13,6 @@ has cache => (
     is         => 'ro',
 );
 
-use File::Path qw/make_path/;
 
 sub _build_cache {
     my $self = shift;
@@ -31,7 +33,6 @@ sub _build_cache {
           );
 };
 
-BEGIN {extends 'Catalyst::Controller' }
 
 =head1 NAME
 
