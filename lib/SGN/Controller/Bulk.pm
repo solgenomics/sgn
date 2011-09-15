@@ -17,11 +17,12 @@ sub _build_cache {
 
     my $app            = $self->_app;
     my $cache_dir      = $app->path_to($app->tempfiles_subdir(qw/cache bulk feature/));
+=for blah
     my $lock_cache_dir = $app->path_to($app->tempfiles_subdir(qw/cache bulk feature lock/));
 
     my $error_string;
 
-    warn "making $lock_cache_dir";
+    $app->log->debug("Bulk : mkdir $lock_cache_dir");
     # since the lock directory is deeper, this will autocreate the $cache_dir as well
     make_path($lock_cache_dir, {
         verbose => 1,
@@ -30,19 +31,20 @@ sub _build_cache {
 
     die $error_string if $error_string;
     die "Something is horribly wrong! $cache_dir does not exit" unless -d $cache_dir;
-
+=cut
+    $app->log->debug("Bulk: creating new cache in $cache_dir");
     return Cache::File->new(
            cache_root       => $cache_dir,
-           default_expires  => '2 days',
+           default_expires  => 'never',
            # TODO: how big can the output of 10K identifiers be?
            size_limit       => 10_000_000,
            removal_strategy => 'Cache::RemovalStrategy::LRU',
            # temporary, until we figure out locking issue
-           lock_level       => Cache::File::LOCK_NONE,
+           lock_level       => Cache::File::LOCK_NFS,
           );
 };
 
-BEGIN {extends 'SGN::Controller::Feature'; }
+BEGIN {extends 'Catalyst::Controller' }
 
 =head1 NAME
 
@@ -99,7 +101,7 @@ sub bulk_feature_submit :Path('/bulk/feature/submit') :Args(0) {
 
         $c->forward('Controller::Sequence', 'fetch_sequences');
 
-        $self->cache->set( $sha1 => $c->stash->{sequences} );
+        $self->cache->set( $sha1 , $c->stash->{sequences} );
     }
 
     $c->stash( template => 'bulk_download.mason', sha1 => $sha1 );

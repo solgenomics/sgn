@@ -48,18 +48,16 @@ IDS
 
     cmp_ok(@links, '==', 1, "found one FASTA download link for $sha1.fasta");
 
-    @links =  grep { $_ !~ qr{$sha1} } $mech->find_all_links(url_regex => qr{/bulk/feature/download/.*\.fasta} );
+    @links =  grep { $_ =~ qr{$sha1} } $mech->find_all_links(url_regex => qr{/bulk/feature/download/.*\.fasta} );
 
     cmp_ok(@links, '==', 0, "found no other download links") or diag("Unexpected download links" . Dumper [ map {$_->url} @links ]);
 
     #diag $mech->content;
 });
 
-exit;
-
 $mech->with_test_level( local => sub {
     # attempt to post an empty list
-    $mech->post('/bulk/feature/download/', { ids => "" }  );
+    $mech->post('/bulk/feature/submit/', { ids => "" }  );
     is($mech->status,400);
 });
 
