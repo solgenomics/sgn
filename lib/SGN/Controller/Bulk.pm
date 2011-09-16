@@ -45,12 +45,10 @@ Catalyst Controller which allows bulk download of features.
 
 =cut
 
-sub bulk_feature :Path('/bulk/feature') :Args(0) {
+sub bulk_js_menu :Local {
     my ( $self, $c ) = @_;
-    my $mode = $c->req->param('mode') || 'feature';
 
-    $c->stash( template => 'bulk.mason');
-
+    my $mode = $c->stash->{bulk_js_menu_mode};
     # define urls of modes
     my @mode_links = (
         [ '/bulk/input.pl?mode=clone_search',    'Clone&nbsp;name<br />(SGN-C)' ],
@@ -75,9 +73,19 @@ sub bulk_feature :Path('/bulk/feature') :Args(0) {
     : $mode =~ /feature/i         ? 7
     :                               0;    # clone search is default
 
-    my $modesel = modesel( \@mode_links, $modenum );
+    $c->stash( bulk_js_menu => modesel( \@mode_links, $modenum ) );
 
-    $c->stash( menu     => $modesel );
+}
+
+sub bulk_feature :Path('/bulk/feature') :Args(0) {
+    my ( $self, $c ) = @_;
+    my $mode = $c->req->param('mode') || 'feature';
+
+    $c->stash( bulk_js_menu_mode => $mode );
+
+    $c->forward('bulk_js_menu');
+
+    $c->stash( template => 'bulk.mason');
 
     # trigger cache creation
     $self->cache->get("");
@@ -103,7 +111,10 @@ sub bulk_feature_submit :Path('/bulk/feature/submit') :Args(0) {
 
     my $req  = $c->req;
     my $ids  = $req->param('ids') || '';
+    my $mode = $req->param('mode') || 'feature';
     my $sha1 = sha1_hex($ids);
+
+    $c->stash( bulk_js_menu_mode => $mode );
 
     if( $c->req->param('feature_file') ) {
         my ($upload) = $c->req->upload('feature_file');
@@ -125,7 +136,9 @@ sub bulk_feature_submit :Path('/bulk/feature/submit') :Args(0) {
         $self->cache->freeze( $sha1 , $c->stash->{sequences} );
     }
 
-    $c->stash( template => 'bulk_download.mason', sha1 => $sha1 );
+    $c->forward('bulk_js_menu');
+
+    $c->stash( template          => 'bulk_download.mason', sha1 => $sha1 );
 }
 
 
