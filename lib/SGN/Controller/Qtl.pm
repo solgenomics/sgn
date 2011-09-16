@@ -237,16 +237,18 @@ sub _correlation_output {
     my $base_path       = $c->config->{basepath};
     my $temp_image_dir  = $c->config->{tempfiles_subdir};   
     my $corre_image_dir = catfile($base_path, $temp_image_dir, "correlation");
-    my $cache           = Cache::File->new( cache_root => $corre_image_dir, 
-                                            cache_umask=>002
+    my $cache           = Cache::File->new( cache_root  => $corre_image_dir, 
+                                            cache_umask => 002
                                           );
+    $cache->purge();
+
     my $key_h           = "heat_" . $pop->get_population_id();
     my $key_t           = "corr_table_" . $pop->get_population_id();   
     my $heatmap         = $cache->get($key_h);
     my $corre_table     = $cache->get($key_t); 
-    $cache->purge();
+   
     
-    unless  ($heatmap) 
+    unless  ($heatmap && -s $heatmap > 1) 
     {
         $self->_analyze_correlation($c);
         $heatmap = $c->stash->{heatmap_file};
