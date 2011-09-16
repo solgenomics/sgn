@@ -6,7 +6,7 @@
 <table summary="" cellpadding="10" width="100%"><tr><td valign="top" bgcolor="#EEEEEE" width="320">
 Enter a list of feature identifier or upload a file containing one identifer separated by whitespace (returns, spaces or tabs):<br />
 <table summary="" width="100%" cellpadding="0"><tr><td>
-<textarea name="ids" rows="5" cols="20"></textarea>
+<textarea name="ids" rows="10" cols="30"></textarea>
 </td>
 <td>
 <i>Example:</i>
@@ -23,15 +23,8 @@ And/or upload list file: <br /><input type="file" name="file" />
 <br />
 <br />
 
-</td><td valign="top" bgcolor="#EEEEEE" width="320">
-
-<b>Download feature information</b>:<br />
-<div style="padding-left: 1em">
-    <input type="radio" name="feature_type" value="cdna" checked="checked" />cDNA<br />
-    <input type="radio" name="feature_type" value="cds" checked="unchecked" />CDS <br />
-    <input type="radio" name="feature_type" value="protein" checked="unchecked" />Protein<br />
-</div>
-</td></tr></table>
+</td>
+</tr></table>
 
 <input type="submit" value="Submit" /><br />
 </form>
