@@ -29,6 +29,17 @@ $mech->with_test_level( local => sub {
     $mech->submit_form_ok({
         form_name => "bulk_feature",
         fields    => {
+            ids => "\nSGN-E398616",
+        },
+    }, "submit bulk_feature form");
+    $mech->content_unlike(qr/Caught exception/);
+});
+
+$mech->with_test_level( local => sub {
+    $mech->get('/bulk/feature');
+    $mech->submit_form_ok({
+        form_name => "bulk_feature",
+        fields    => {
             # NOTE: no trailing whitespace, to test for colliding identifiers
             ids => "SGN-E398616",
             feature_file => [ [ undef, 'ids.txt', Content => "AP009263\n" ] ],

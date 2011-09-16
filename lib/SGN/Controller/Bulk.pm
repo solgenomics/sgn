@@ -45,6 +45,18 @@ Catalyst Controller which allows bulk download of features.
 
 =cut
 
+sub bulk_download_stats :Local {
+    my ( $self, $c ) = @_;
+
+    my $seqs    = scalar @{$c->stash->{sequences} || ()};
+    my $seq_ids = scalar @{$c->stash->{sequence_identifiers} || ()};
+    my $stats   = <<STATS;
+A total of $seqs out of $seq_ids sequence identifiers were found.
+STATS
+
+    $c->stash( bulk_download_stats => $stats );
+}
+
 sub bulk_js_menu :Local {
     my ( $self, $c ) = @_;
 
@@ -101,7 +113,7 @@ sub bulk_feature_download :Path('/bulk/feature/download') :Args(1) {
 
     my $seqs = $self->cache->thaw($sha1);
 
-    $c->stash( sequences => $seqs );
+    $c->stash( sequences => $seqs->[1] );
 
     $c->forward( 'View::SeqIO' );
 }
@@ -129,17 +141,14 @@ sub bulk_feature_submit :Path('/bulk/feature/submit') :Args(0) {
         $c->throw_client_error(public_message => 'At least one identifier must be given');
     }
 
-    if( $self->cache->thaw( $sha1 ) ) {
-        # bulk download is cached already
-    } else {
-        $c->stash( sequence_identifiers => [ split /\s+/, $ids ] );
+    $c->stash( sequence_identifiers => [ split /\s+/, $ids ] );
 
-        $c->forward('Controller::Sequence', 'fetch_sequences');
+    $c->forward('Controller::Sequence', 'fetch_sequences');
 
-        $self->cache->freeze( $sha1 , $c->stash->{sequences} );
-    }
+    $self->cache->freeze( $sha1 , [ $c->stash->{sequence_identifiers}, $c->stash->{sequences} ] );
 
     $c->forward('bulk_js_menu');
+    $c->forward('bulk_download_stats');
 
     $c->stash( template          => 'bulk_download.mason', sha1 => $sha1 );
 }

@@ -2,11 +2,15 @@
     $content => ''
     $sha1
     $bulk_js_menu
+    $bulk_download_stats
 </%args>
 <% $bulk_js_menu %>
 <h1>Feature Download Summary</h1>
 
-Your query was successful.
+Your query was successful.<br>
+<div id="bulk_download_stats">
+<% $bulk_download_stats %>
+</div>
 
 Download as <a href="/bulk/feature/download/<% $sha1 %>.fasta">Fasta</a>
 <a href="/bulk/feature/download/<% $sha1 %>.txt">Text</a>
