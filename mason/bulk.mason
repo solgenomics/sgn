@@ -19,7 +19,7 @@ AP009262
 <br />
 <br />
 
-And/or upload list file: <br /><input type="file" name="file" />
+And/or upload list file: <br /><input type="file" name="feature_file" />
 <br />
 <br />
 

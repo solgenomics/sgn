@@ -102,12 +102,17 @@ sub bulk_feature_submit :Path('/bulk/feature/submit') :Args(0) {
     my ( $self, $c, $file ) = @_;
 
     my $req  = $c->req;
-    my $ids  = $req->param('ids');
+    my $ids  = $req->param('ids') || '';
     my $sha1 = sha1_hex($ids);
+
+    if( $c->req->param('feature_file') ) {
+        my ($upload) = $c->req->upload('feature_file');
+        # append contents of file to form input
+        $ids        .= $upload->slurp if $upload;
+    }
 
     unless ($ids) {
         $c->throw_client_error(public_message => 'At least one identifier must be given');
-
     }
 
     if( $self->cache->thaw( $sha1 ) ) {
