@@ -117,8 +117,9 @@ sub bulk_feature_submit :Path('/bulk/feature/submit') :Args(0) {
 
     if( $c->req->param('feature_file') ) {
         my ($upload) = $c->req->upload('feature_file');
-        # append contents of file to form input
-        $ids        .= $upload->slurp if $upload;
+        # always append contents of file with newline to form input to
+        # prevent smashing identifiers together
+        $ids        = "$ids\n" . $upload->slurp if $upload;
     }
 
     # Must calculate this after looking at file contents

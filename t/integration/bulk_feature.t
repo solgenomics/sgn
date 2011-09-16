@@ -29,7 +29,8 @@ $mech->with_test_level( local => sub {
     $mech->submit_form_ok({
         form_name => "bulk_feature",
         fields    => {
-            ids => "SGN-E398616\n",
+            # NOTE: no trailing whitespace, to test for colliding identifiers
+            ids => "SGN-E398616",
             feature_file => [ [ undef, 'ids.txt', Content => "AP009263\n" ] ],
         },
     }, "submit bulk_feature form");
