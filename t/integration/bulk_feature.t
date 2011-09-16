@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 18;
+use Test::More tests => 28;
 
 use lib 't/lib';
 use SGN::Test::Data qw/ create_test /;
@@ -44,19 +44,30 @@ IDS
     $mech->content_like(qr/Download as/);
 
     my $sha1  = sha1_hex($ids);
-    my @links = $mech->find_all_links( url_regex => qr{/bulk/feature/download/$sha1\.fasta} );
+    my @flinks = $mech->find_all_links( url_regex => qr{/bulk/feature/download/$sha1\.fasta} );
+    my @tlinks = $mech->find_all_links( url_regex => qr{/bulk/feature/download/$sha1\.txt} );
 
-    cmp_ok(@links, '==', 1, "found one FASTA download link for $sha1.fasta");
-    $mech->links_ok( \@links );
+    cmp_ok(@flinks, '==', 1, "found one FASTA download link for $sha1.fasta");
+    $mech->links_ok( \@flinks );
 
-    my $url = $links[0]->url;
-    $mech->get( $url );
-    cmp_ok(length($mech->content), '>', 0,"$url has a content length > 0");
-    $mech->content_unlike(qr/Caught exception/);
+    cmp_ok(@tlinks, '==', 1, "found one text download link for $sha1.txt");
+    $mech->links_ok( \@tlinks );
 
-    @links =  grep { $_ =~ qr{$sha1} } $mech->find_all_links(url_regex => qr{/bulk/feature/download/.*\.fasta} );
+    for my $url (map { $_->url } (@tlinks,@flinks)) {
+        $mech->get( $url );
+        my $length = length($mech->content);
+        cmp_ok($length, '>', 0,"$url has a content length $length > 0");
+        $mech->content_unlike(qr/Caught exception/);
+    }
 
-    cmp_ok(@links, '==', 0, "found no other download links") or diag("Unexpected download links" . Dumper [ map {$_->url} @links ]);
+    @flinks =  grep { $_ =~ qr{$sha1} } $mech->find_all_links(url_regex => qr{/bulk/feature/download/.*\.fasta} );
+
+    cmp_ok(@flinks, '==', 0, "found no other fasta download links") or diag("Unexpected fasta download links" . Dumper [ map {$_->url} @flinks ]);
+
+    @tlinks =  grep { $_ =~ qr{$sha1} } $mech->find_all_links(url_regex => qr{/bulk/feature/download/.*\.txt} );
+
+    cmp_ok(@tlinks, '==', 0, "found no other txt download links") or diag("Unexpected txt download links" . Dumper [ map {$_->url} @tlinks ]);
+
 }
     # do it twice to test for bugs relating to the cache directory getting removed
     submit_bulk_form();

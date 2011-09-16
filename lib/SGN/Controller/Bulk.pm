@@ -97,7 +97,7 @@ sub bulk_feature_download :Path('/bulk/feature/download') :Args(1) {
     my $app            = $self->_app;
     my $cache_dir      = $app->path_to($app->tempfiles_subdir(qw/cache bulk feature/));
 
-    $sha1 =~ s/\.fasta$//g;
+    $sha1 =~ s/\.(fasta|txt)$//g;
 
     my $seqs = $self->cache->thaw($sha1);
 

@@ -4,5 +4,9 @@
     $bulk_js_menu
 </%args>
 <% $bulk_js_menu %>
+<h1>Feature Download Summary</h1>
 
-Download as <a href="/bulk/feature/download/<% $sha1 %>.fasta">FASTA</a>
+Your query was successful.
+
+Download as <a href="/bulk/feature/download/<% $sha1 %>.fasta">Fasta</a>
+<a href="/bulk/feature/download/<% $sha1 %>.txt">Text</a>
