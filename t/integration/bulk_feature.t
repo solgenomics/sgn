@@ -17,6 +17,19 @@ my $poly_cvterm     = create_test('Cv::Cvterm',        { name => 'polypeptide' }
 my $poly_feature    = create_test('Sequence::Feature', { type => $poly_cvterm  });
 
 $mech->with_test_level( local => sub {
+    # do it twice to test for bugs relating to the cache directory getting removed
+    submit_bulk_form();
+    submit_bulk_form();
+    #diag $mech->content;
+});
+
+$mech->with_test_level( local => sub {
+    # attempt to post an empty list
+    $mech->post('/bulk/feature/submit/', { ids => "" }  );
+    $mech->content_like(qr/At least one identifier must be given/);
+});
+
+done_testing();
 
 sub submit_bulk_form {
     # TODO: these tests depend on live data.
@@ -69,16 +82,3 @@ IDS
     cmp_ok(@tlinks, '==', 0, "found no other txt download links") or diag("Unexpected txt download links" . Dumper [ map {$_->url} @tlinks ]);
 
 }
-    # do it twice to test for bugs relating to the cache directory getting removed
-    submit_bulk_form();
-    submit_bulk_form();
-    #diag $mech->content;
-});
-
-$mech->with_test_level( local => sub {
-    # attempt to post an empty list
-    $mech->post('/bulk/feature/submit/', { ids => "" }  );
-    $mech->content_like(qr/At least one identifier must be given/);
-});
-
-done_testing();
