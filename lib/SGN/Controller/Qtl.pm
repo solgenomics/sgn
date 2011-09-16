@@ -17,6 +17,7 @@ use File::Path qw / mkpath  /;
 use File::Copy;
 use File::Basename;
 use File::Slurp;
+use Try::Tiny;
 use Cache::File;
 use Path::Class;
 use Bio::Chado::Schema;
@@ -201,33 +202,45 @@ sub _analyze_correlation : {
             copy( $corre_commands_file, $corre_commands_temp )
                 or die "could not copy '$corre_commands_file' to '$corre_commands_temp'";
         }
+        try 
+        {
+            my $r_process = CXGN::Tools::Run->run_cluster(
+                'R', 'CMD', 'BATCH',
+                '--slave',
+                "--args $heatmap_file $corre_table_file $pheno_file",
+                $corre_commands_temp,
+                $corre_output_temp,
+                {
+                    working_dir => $corre_temp_dir,
+                    max_cluster_jobs => 1_000_000_000,
+                },
+                );
 
-        my $r_process = CXGN::Tools::Run->run_cluster(
-            'R', 'CMD', 'BATCH',
-            '--slave',
-            "--args $heatmap_file $corre_table_file $pheno_file",
-            $corre_commands_temp,
-            $corre_output_temp,
-            {
-                working_dir => $corre_temp_dir,
-                max_cluster_jobs => 1_000_000_000,
-            },
-            );
-
-        sleep 1 while $r_process->alive;
+            $r_process->wait;
+       }
+        catch 
+        {
+            my $err = $_;
+            $err =~ s/\n at .+//s; #< remove any additional backtrace
+            #     # try to append the R output
+            try{ $err .= "\n=== R output ===\n".file($corre_output_temp)->slurp."\n=== end R output ===\n" };
+            # die with a backtrace
+            Carp::confess $err;
+        };
 
         copy( $heatmap_file, $corre_image_dir )
             or die "could not copy $heatmap_file to $corre_image_dir";
-         copy( $corre_table_file, $corre_image_dir )
+        copy( $corre_table_file, $corre_image_dir )
             or die "could not copy $corre_table_file to $corre_image_dir";
 
         $heatmap_file = fileparse($heatmap_file);
         $heatmap_file  = $c->generated_file_uri("correlation",  $heatmap_file);
         $corre_table_file = fileparse($corre_table_file);
         $corre_table_file  = $c->generated_file_uri("correlation",  $corre_table_file);
+        
         $c->stash( heatmap_file     => $heatmap_file, 
                    corre_table_file => $corre_table_file
-            );  
+                );  
     } 
 }
 
