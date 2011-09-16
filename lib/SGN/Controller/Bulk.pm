@@ -112,7 +112,6 @@ sub bulk_feature_submit :Path('/bulk/feature/submit') :Args(0) {
     my $req  = $c->req;
     my $ids  = $req->param('ids') || '';
     my $mode = $req->param('mode') || 'feature';
-    my $sha1 = sha1_hex($ids);
 
     $c->stash( bulk_js_menu_mode => $mode );
 
@@ -121,6 +120,9 @@ sub bulk_feature_submit :Path('/bulk/feature/submit') :Args(0) {
         # append contents of file to form input
         $ids        .= $upload->slurp if $upload;
     }
+
+    # Must calculate this after looking at file contents
+    my $sha1 = sha1_hex($ids);
 
     unless ($ids) {
         $c->throw_client_error(public_message => 'At least one identifier must be given');
