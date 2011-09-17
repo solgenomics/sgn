@@ -31,7 +31,7 @@ sub view_genome_data : Chained('/organism/find_organism') PathPart('genome') {
     my ( $self, $c ) = @_;
 
     my $organism = $c->stash->{organism};
-    $c->throw_404 unless $organism->search_related('organismprops',
+    $c->throw_404 unless $organism && $organism->search_related('organismprops',
                              { 'type.name' => 'genome_page', 'me.value' => 1 },
                              { join => 'type' },
                          )->count;
