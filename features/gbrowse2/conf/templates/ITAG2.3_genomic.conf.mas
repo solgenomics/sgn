@@ -104,7 +104,8 @@ bgcolor         = yellow
 glyph           = generic
 label density   = 100
 bump density    = 100
-link         = /search/quick?term=$name
+link            = /search/quick?term=$name
+citation        = GenomeThreader alignments of SGN marker sequences.
 
 [GC:region]
 glyph        = dna
@@ -117,6 +118,7 @@ strand       = both
 fgcolor      = red
 axis_color   = blue
 key          = GC content
+citation     = Line graph of the relative GC content of the underlying DNA.
 
 #track to show DNA and GC content
 [DNA]
@@ -130,7 +132,7 @@ gc_window      = auto
 axis_color     = blue
 strand         = both
 key            = DNA/GC content
-citation       = A GC content graph of the reference sequence at low magnifications and the DNA sequence itself at higher magnifications.
+citation       = At high magnification, this track shows the genome's actual DNA base pairs.  At low magnification, it shows a line graph of the DNA's GC content.
 
 [TranslationF]
 glyph        = translation
@@ -143,7 +145,7 @@ fgcolor      = purple
 strand       = +1
 translation  = 3frame
 key          = 3-frame translation (forward)
-citation     = 3-frame translation of the underlying DNA sequence.  At lower magnifications, just displays vertical lines indicating the locations of stop codons.
+citation     = This track shows the 3-frame translation of the underlying DNA sequence.  At high magnification, it shows the actual translated amino acids.  At low magnification, it shows small vertical lines showing the locations of stop codons.
 
 [TranslationR]
 glyph        = translation
@@ -156,7 +158,7 @@ fgcolor      = blue
 strand       = -1
 translation  = 3frame
 key          = 3-frame translation (reverse)
-citation     = 3-frame translation of the underlying DNA sequence.  At high magnifications, draws the actual translated amino acids.  At lower magnifications, draws small vertical lines showing the locations of stop codons.
+citation     = This track shows the 3-frame translation of the underlying DNA sequence.  At high magnification, shows the actual translated amino acids.  At low magnification, shows small vertical lines showing the locations of stop codons.
 
 [Genes:region]
 feature      = gene:ITAG_eugene
@@ -171,7 +173,7 @@ category     = Gene models
 das category = transcription
 strand_arrow = 1
 height       = 7
-citation     = This track shows the spans of gene models annotated by EuGene, the integrative gene predictor for ITAG. (see <a href="http://www.ab.wur.nl/TomatoWiki/AnEugene000">EuGene on ITAG Wiki</a>, <a href="http://www.inra.fr/internet/Departements/MIA/T//EuGene/index.html">EuGene main page</a>)
+citation     = This track shows the spans of gene models annotated by EuGene, the integrative gene predictor for ITAG. (see <a href="http://www.ab.wur.nl/TomatoWiki/AnEugene000">EuGene on ITAG Wiki</a>, <a href="http://www.inra.fr/internet/Departements/MIA/T//EuGene/index.html">EuGene main page</a>).
 
 [mrna]
 feature      = mRNA:ITAG_eugene
@@ -186,7 +188,7 @@ category     = Gene models
 das category = transcription
 strand_arrow = 1
 height       = 10
-citation     = This track shows the mRNAs for gene models annotated by EuGene, the integrative gene predictor for ITAG. (see <a href="http://www.ab.wur.nl/TomatoWiki/AnEugene000">EuGene on ITAG Wiki</a>, <a href="http://www.inra.fr/internet/Departements/MIA/T//EuGene/index.html">EuGene main page</a>)
+citation     = This track shows the mRNAs for gene models annotated by EuGene, the integrative gene predictor for ITAG. (see <a href="http://www.ab.wur.nl/TomatoWiki/AnEugene000">EuGene on ITAG Wiki</a>, <a href="http://www.inra.fr/internet/Departements/MIA/T//EuGene/index.html">EuGene main page</a>).
 balloon click = sub { my $name = shift->name; $name =~ s/\.\d+\.\d+$//; "url:/api/v1/feature_xrefs?q=$name;exclude=gbrowse,gbrowse2" }
 
 [cds]
@@ -204,7 +206,7 @@ das category = translation
 strand_arrow = 1
 link         = <% $feature->cgi_url %>/gbrowse/ITAG2.3_protein/?name=$name
 height       = 20
-citation     = This track shows the CDS sequences for gene models annotated by EuGene, the integrative gene predictor for ITAG.  Provided by Stephane Rombauts and Jeffrey Fawcett, <a class="http" href="http://bioinformatics.psb.ugent.be/">Bioinformatics and Evolutionary Genomics</a>, <a class="http" href="http://www.psb.ugent.be">Plant Systems Biology, VIB, Ghent University</a>.  (see also <a href="http://www.ab.wur.nl/TomatoWiki/AnEugene000">EuGene on ITAG Wiki</a>, <a href="http://www.inra.fr/internet/Departements/MIA/T//EuGene/index.html">EuGene main page</a>)
+citation     = This track shows the CDS sequences for gene models annotated by EuGene, the integrative gene predictor for ITAG.  Provided by Stephane Rombauts and Jeffrey Fawcett, <a class="http" href="http://bioinformatics.psb.ugent.be/">Bioinformatics and Evolutionary Genomics</a>, <a class="http" href="http://www.psb.ugent.be">Plant Systems Biology, VIB, Ghent University</a>.  See also <a href="http://www.ab.wur.nl/TomatoWiki/AnEugene000">EuGene on ITAG Wiki</a>, <a href="http://www.inra.fr/internet/Departements/MIA/T//EuGene/index.html">EuGene main page</a>.
 
 #track to show DNA and GC content
 [peptides]
@@ -465,7 +467,7 @@ stranded     = 1
 fgcolor      = black
 bgcolor      = black
 link         = AUTO
-citation     = Repetitive regions found by running Repeatmasker at 'normal' stringency, meaning running it *with* the -nolow option, so that low-complexity and simple repeats are NOT masked.
+citation     = Repetitive regions found by running Repeatmasker at 'normal' stringency, meaning running it *with* the <tt>-nolow</tt> option, so that low-complexity and simple repeats are NOT masked.
 das category = similarity
 bump density = 100
 
@@ -478,7 +480,7 @@ stranded     = 1
 fgcolor      = black
 bgcolor      = black
 link         = AUTO
-citation     = Repetitive regions found by running Repeatmasker at 'aggressive' stringency, meaning running it *without* the -nolow option, so that low-complexity and simple repeats ARE masked.
+citation     = Repetitive regions found by running Repeatmasker at 'aggressive' stringency, meaning running it *without* the <tt>-nolow</tt> option, so that low-complexity and simple repeats ARE masked.
 das category = similarity
 bump density = 100
 
