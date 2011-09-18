@@ -130,20 +130,33 @@ gc_window      = auto
 axis_color     = blue
 strand         = both
 key            = DNA/GC content
-citation       = This track displays a GC content graph of the reference sequence at low magnifications and the DNA sequence itself at higher magnifications.
+citation       = A GC content graph of the reference sequence at low magnifications and the DNA sequence itself at higher magnifications.
 
-#track to show a 6-frame translation of the sequence
-[Translation]
-glyph          = translation
+[TranslationF]
+glyph        = translation
 global feature = 1
-height         = 40
-fgcolor        = purple
-category       = DNA
-start_codons   = 0
-stop_codons    = 1
-translation    = 6frame
-key            = 6-frame translation
-citation       = This track displays a six-frame translation of the reference DNA sequence.
+frame0       = cadetblue
+frame1       = blue
+frame2       = darkblue
+height       = 20
+fgcolor      = purple
+strand       = +1
+translation  = 3frame
+key          = 3-frame translation (forward)
+citation     = 3-frame translation of the underlying DNA sequence.  At lower magnifications, just displays vertical lines indicating the locations of stop codons.
+
+[TranslationR]
+glyph        = translation
+global feature = 1
+frame0       = darkred
+frame1       = red
+frame2       = crimson
+height       = 20
+fgcolor      = blue
+strand       = -1
+translation  = 3frame
+key          = 3-frame translation (reverse)
+citation     = 3-frame translation of the underlying DNA sequence.  At high magnifications, draws the actual translated amino acids.  At lower magnifications, draws small vertical lines showing the locations of stop codons.
 
 [Genes:region]
 feature      = gene:ITAG_eugene
