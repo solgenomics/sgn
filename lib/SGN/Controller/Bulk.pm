@@ -38,11 +38,12 @@ sub _build_cache {
 
 =head1 NAME
 
-SGN::Controller::Bulk - Bulk Feature Controller
+SGN::Controller::Bulk - Bulk Download Controller
 
 =head1 DESCRIPTION
 
-Catalyst Controller which allows bulk download of features.
+Catalyst Controller which takes care of bulk downloads. Currently
+supports features and genes.
 
 =cut
 
@@ -89,6 +90,29 @@ sub bulk_js_menu :Local {
 
     $c->stash( bulk_js_menu => modesel( \@mode_links, $modenum ) );
 
+}
+
+sub bulk_gene :Path('/bulk/gene') : Args(0) {
+    my ( $self, $c ) = @_;
+
+    $c->forward('bulk_js_menu');
+
+    $c->stash( template => 'bulk_gene.mason');
+}
+
+sub bulk_gene_submit :Path('/bulk/gene/submit') :Args(0) {
+    my ( $self, $c, $file ) = @_;
+    my $mode = $c->req->param('mode') || 'feature';
+
+    $c->stash( bulk_js_menu_mode => $mode );
+
+    my $req  = $c->req;
+
+    $c->forward('bulk_js_menu');
+    $c->stash( bulk_download_success => 0 );
+    $c->stash( bulk_download_stats   => 'Foo' );
+    $c->stash( sha1                  => 'deadbeef' );
+    $c->stash( template              => 'bulk_gene_download.mason');
 }
 
 sub bulk_feature :Path('/bulk/feature') :Args(0) {

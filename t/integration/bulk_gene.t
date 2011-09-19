@@ -1,0 +1,29 @@
+use strict;
+use warnings;
+use Test::More tests => 4;
+
+use lib 't/lib';
+use SGN::Test::Data qw/ create_test /;
+use Catalyst::Test 'SGN';
+use Digest::SHA1 qw/sha1_hex/;
+use Data::Dumper;
+
+use_ok 'SGN::Controller::Bulk';
+use aliased 'SGN::Test::WWW::Mechanize' => 'Mech';
+
+my $mech = Mech->new;
+
+$mech->with_test_level( local => sub {
+    my $poly_cvterm     = create_test('Cv::Cvterm',        { name => 'gene' });
+    my $poly_feature    = create_test('Sequence::Feature', { type => $poly_cvterm  });
+    diag "Created gene " . $poly_feature->name;
+    $mech->get('/bulk/gene');
+    $mech->submit_form_ok({
+        form_name => "bulk_gene",
+        fields    => {
+            ids => $poly_feature->name,
+        },
+    }, "submit bulk_gene with a single valid identifier");
+    $mech->content_unlike(qr/Caught exception/);
+    $mech->content_unlike(qr/Your query did not contain any valid identifiers/) or diag $mech->content;
+});
