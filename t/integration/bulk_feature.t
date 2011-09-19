@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 37;
+use Test::More tests => 39;
 
 use lib 't/lib';
 use SGN::Test::Data qw/ create_test /;
@@ -29,9 +29,9 @@ $mech->with_test_level( local => sub {
     $mech->submit_form_ok({
         form_name => "bulk_feature",
         fields    => {
-            ids => "\nSGN-E398616",
+            ids => "\nSGN-E398616  ",
         },
-    }, "submit bulk_feature form");
+    }, "submit bulk_feature form with leading+trailing whitespace");
     $mech->content_unlike(qr/Caught exception/);
 });
 
@@ -44,7 +44,7 @@ $mech->with_test_level( local => sub {
             ids => "SGN-E398616",
             feature_file => [ [ undef, 'ids.txt', Content => "AP009263\n" ] ],
         },
-    }, "submit bulk_feature form");
+    }, "submit bulk_feature form with file upload and textarea");
     my $sha1  = sha1_hex(<<ID_LIST);
 SGN-E398616
 AP009263

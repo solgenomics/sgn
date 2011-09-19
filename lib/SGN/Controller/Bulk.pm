@@ -5,6 +5,7 @@ use Cache::File;
 use Digest::SHA1 qw/sha1_hex/;
 use File::Path qw/make_path/;
 use CXGN::Page::FormattingHelpers qw/modesel/;
+use CXGN::Tools::Text qw/trim/;
 
 BEGIN { extends 'Catalyst::Controller' }
 
@@ -136,6 +137,9 @@ sub bulk_feature_submit :Path('/bulk/feature/submit') :Args(0) {
 
     # Must calculate this after looking at file contents
     my $sha1 = sha1_hex($ids);
+
+    # remove leading and trailing whitespace
+    $ids = trim($ids);
 
     unless ($ids) {
         $c->throw_client_error(public_message => 'At least one identifier must be given');
