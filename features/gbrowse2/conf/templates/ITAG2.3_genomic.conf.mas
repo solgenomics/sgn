@@ -158,7 +158,7 @@ fgcolor      = blue
 strand       = -1
 translation  = 3frame
 key          = 3-frame translation (reverse)
-citation     = This track shows the 3-frame translation of the underlying DNA sequence.  At high magnification, shows the actual translated amino acids.  At low magnification, shows small vertical lines showing the locations of stop codons.
+citation     = This track shows the 3-frame translation of the underlying DNA sequence.  At high magnification, it shows the actual translated amino acids.  At low magnification, it shows small vertical lines showing the locations of stop codons.
 
 [Genes:region]
 feature      = gene:ITAG_eugene
@@ -206,7 +206,7 @@ das category = translation
 strand_arrow = 1
 link         = <% $feature->cgi_url %>/gbrowse/ITAG2.3_protein/?name=$name
 height       = 20
-citation     = <p>This track shows the CDS sequences for gene models annotated by EuGene, the integrative gene predictor for ITAG. At high magnifications, shows a series of boxes that are color-coded to indicate the frame in which the translation occurs.  At low magnifications, shows the amino acid sequence of the resulting protein.</p> <p>Data produced by Stephane Rombauts and Jeffrey Fawcett, <a class="http" href="http://bioinformatics.psb.ugent.be/">Bioinformatics and Evolutionary Genomics</a>, <a class="http" href="http://www.psb.ugent.be">Plant Systems Biology, VIB, Ghent University</a>.  See also <a href="http://www.ab.wur.nl/TomatoWiki/AnEugene000">EuGene on ITAG Wiki</a>, <a href="http://www.inra.fr/internet/Departements/MIA/T//EuGene/index.html">EuGene main page</a>.</p>
+citation     = <p>This track shows the CDS sequences for gene models annotated by EuGene, the integrative gene predictor for ITAG. At high magnifications, it shows a series of boxes that are color-coded to indicate the frame in which the translation occurs.  At low magnifications, it shows the amino acid sequence of the resulting protein.</p> <p>Data produced by Stephane Rombauts and Jeffrey Fawcett, <a class="http" href="http://bioinformatics.psb.ugent.be/">Bioinformatics and Evolutionary Genomics</a>, <a class="http" href="http://www.psb.ugent.be">Plant Systems Biology, VIB, Ghent University</a>.  See also <a href="http://www.ab.wur.nl/TomatoWiki/AnEugene000">EuGene on ITAG Wiki</a>, <a href="http://www.inra.fr/internet/Departements/MIA/T//EuGene/index.html">EuGene main page</a>.</p>
 
 #track to show DNA and GC content
 [peptides]
