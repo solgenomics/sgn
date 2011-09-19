@@ -74,6 +74,7 @@ sub bulk_js_menu :Local {
         [ '/bulk/input.pl?mode=ftp',             'Full&nbsp;datasets<br />(FTP)' ],
         [ '/bulk/input.pl?mode=unigene_convert', 'Unigene ID Converter<br />(SGN-U)' ],
         [ '/bulk/feature',                       'Features' ],
+        [ '/bulk/gene',                          'Genes' ],
     );
 
     ### figure out which mode we're in ###
@@ -86,6 +87,7 @@ sub bulk_js_menu :Local {
     : $mode =~ /bac/i             ? 3
     : $mode =~ /ftp/i             ? 5
     : $mode =~ /feature/i         ? 7
+    : $mode =~ /gene/i            ? 8
     :                               0;    # clone search is default
 
     $c->stash( bulk_js_menu => modesel( \@mode_links, $modenum ) );
