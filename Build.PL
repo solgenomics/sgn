@@ -116,6 +116,7 @@ my $build = SGN::Build->new(
         'URI::Escape'                              => 0,
         'URI::FromHash'                            => 0,
         'XML::Generator'                           => 0,
+        'XML::Atom::Feed.pm'                       => 0,
         'XML::Twig'                                => 0,
         'YAML::Any'                                => 0,
         'WWW::Mechanize::TreeBuilder'              => 0,
