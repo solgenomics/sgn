@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 39;
+use Test::More tests => 42;
 
 use lib 't/lib';
 use SGN::Test::Data qw/ create_test /;
@@ -41,6 +41,8 @@ $mech->with_test_level( local => sub {
             ids => "\nSGN-E398616 BLARG",
         },
     }, "submit bulk_feature form with invalid identifiers");
+    $mech->content_contains('Your query was successful.');
+    $mech->content_contains('A total of 1 out of 2 sequence identifiers were found');
 });
 
 $mech->with_test_level( local => sub {
