@@ -55,7 +55,8 @@ sub bulk_download_stats :Local {
 A total of $seqs out of $seq_ids sequence identifiers were found.
 STATS
 
-    $c->stash( bulk_download_stats => $stats );
+    $c->stash( bulk_download_stats   => $stats );
+    $c->stash( bulk_download_success => $seqs );
 }
 
 sub bulk_js_menu :Local {
@@ -146,6 +147,8 @@ sub bulk_feature_submit :Path('/bulk/feature/submit') :Args(0) {
     }
 
     $c->stash( sequence_identifiers => [ split /\s+/, $ids ] );
+
+    $c->stash( bulk_query => 1 );
 
     $c->forward('Controller::Sequence', 'fetch_sequences');
 

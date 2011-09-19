@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 42;
+use Test::More tests => 48;
 
 use lib 't/lib';
 use SGN::Test::Data qw/ create_test /;
@@ -22,6 +22,30 @@ $mech->with_test_level( local => sub {
     submit_bulk_form();
     submit_bulk_form();
     #diag $mech->content;
+});
+
+$mech->with_test_level( local => sub {
+    $mech->get('/bulk/feature');
+    $mech->submit_form_ok({
+        form_name => "bulk_feature",
+        fields    => {
+            ids => "BAR",
+        },
+    }, "submit bulk_feature with a single invalid identifier");
+    $mech->content_unlike(qr/Caught exception/);
+    $mech->content_contains('Your query did not contain any valid identifiers. Please try again.');
+});
+
+$mech->with_test_level( local => sub {
+    $mech->get('/bulk/feature');
+    $mech->submit_form_ok({
+        form_name => "bulk_feature",
+        fields    => {
+            ids => "FOO\nBAR",
+        },
+    }, "submit bulk_feature with no valid identifiers");
+    $mech->content_unlike(qr/Caught exception/);
+    $mech->content_contains('Your query did not contain any valid identifiers. Please try again.');
 });
 
 $mech->with_test_level( local => sub {
