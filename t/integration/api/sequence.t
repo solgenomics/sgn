@@ -88,7 +88,9 @@ EOT
 {
     $mech->get("/api/v1/sequence/download/single/JUNK.fasta");
     is( $mech->status, 404, 'feature not found' );
-}
 
+    $mech->get("/api/v1/sequence/download/multi?s=" . $poly_feature->feature_id . '&s=JUNK');
+    is( $mech->status, 404, 'feature not found' );
+}
 
 done_testing;
