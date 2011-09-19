@@ -1,0 +1,30 @@
+<%args>
+    $bulk_js_menu
+</%args>
+<% $bulk_js_menu %>
+<form name="bulk_feature" action="/bulk/feature/submit/" method="post" enctype="multipart/form-data">
+<table summary="" cellpadding="10" width="100%"><tr><td valign="top" bgcolor="#EEEEEE" width="320">
+Enter a list of feature identifier or upload a file containing one identifer separated by whitespace (returns, spaces or tabs):<br />
+<table summary="" width="100%" cellpadding="0"><tr><td>
+<textarea name="ids" rows="10" cols="30"></textarea>
+</td>
+<td>
+<i>Example:</i>
+<pre style="border: 1px solid gray; width: 10em; height: 5em">
+SGN-E398616
+C06HBa0229B01.1
+AP009262
+</pre>
+</td></tr></table>
+<br />
+<br />
+
+And/or upload list file: <br /><input type="file" name="feature_file" />
+<br />
+<br />
+
+</td>
+</tr></table>
+
+<input type="submit" value="Submit" /><br />
+</form>

@@ -88,7 +88,16 @@ EOT
 {
     $mech->get("/api/v1/sequence/download/single/JUNK.fasta");
     is( $mech->status, 404, 'feature not found' );
-}
 
+    $mech->get("/api/v1/sequence/download/multi?s=" . $poly_feature->feature_id . '&s=JUNK');
+    is( $mech->status, 200, 'multi api query succeeds if any identifiers are valid');
+
+    $mech->get("/api/v1/sequence/download/multi?s=" . $poly_feature->feature_id);
+    is( $mech->status, 200, 'multi api query succeeds if given single id');
+
+    $mech->get("/api/v1/sequence/download/multi?s=JUNK");
+    is( $mech->status, 404, 'multi api query with only a single invalid id = 404');
+
+}
 
 done_testing;
