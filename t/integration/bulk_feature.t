@@ -33,6 +33,14 @@ $mech->with_test_level( local => sub {
         },
     }, "submit bulk_feature form with leading+trailing whitespace");
     $mech->content_unlike(qr/Caught exception/);
+
+    $mech->get('/bulk/feature');
+    $mech->submit_form_ok({
+        form_name => "bulk_feature",
+        fields    => {
+            ids => "\nSGN-E398616 BLARG",
+        },
+    }, "submit bulk_feature form with invalid identifiers");
 });
 
 $mech->with_test_level( local => sub {

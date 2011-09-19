@@ -49,8 +49,8 @@ Catalyst Controller which allows bulk download of features.
 sub bulk_download_stats :Local {
     my ( $self, $c ) = @_;
 
-    my $seqs    = scalar @{$c->stash->{sequences} || ()};
-    my $seq_ids = scalar @{$c->stash->{sequence_identifiers} || ()};
+    my $seqs    = scalar @{$c->stash->{sequences} || []};
+    my $seq_ids = scalar @{$c->stash->{sequence_identifiers} || []};
     my $stats   = <<STATS;
 A total of $seqs out of $seq_ids sequence identifiers were found.
 STATS
