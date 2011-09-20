@@ -73,7 +73,6 @@ sub org_news : Path('/github/org_news') Args(1) {
     $c->forward('fetch_org_news') or return;
 
     $c->stash->{template} = '/github/org_news.mas';
-    $c->forward('View::BareMason');
 }
 
 sub fetch_org_news : Private {
