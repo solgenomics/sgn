@@ -25,8 +25,13 @@ use CXGN::Phenome::Qtl;
 
 BEGIN { extends 'Catalyst::Controller'}  
 
-
 sub view : PathPart('qtl/view') Chained Args(1) {
+    my ($self, $c, $id) = @_;
+    $c->res->redirect("/qtl/population/$id");
+}
+
+
+sub population : PathPart('qtl/population') Chained Args(1) {
     my ( $self, $c, $id) = @_;
     
     if ( $id !~ /^\d+$/ ) 
@@ -43,7 +48,7 @@ sub view : PathPart('qtl/view') Chained Args(1) {
             if ( $c->stash->{is_qtl_pop} ) 
             {
                 my $userid = $c->user->get_object->get_sp_person_id if $c->user;          
-                $c->stash(template     => '/qtl/qtl_start/index.mas',                              
+                $c->stash(template     => '/qtl/population/index.mas',                              
                           pop          => CXGN::Phenome::Population->new($c->dbc->dbh, $id), 
                           referer      => $c->req->path,             
                           userid       => $userid,
@@ -72,7 +77,7 @@ sub view : PathPart('qtl/view') Chained Args(1) {
         }
         else 
         {
-            $c->throw_404("There is no QTL population for this $id");
+            $c->throw_404("There is no QTL population for $id");
         }
 
     }
