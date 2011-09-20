@@ -1,0 +1,88 @@
+<%doc>
+
+=head1 NAME
+
+org_news.mas - formats as HTML an arrayref of XML::Atom::Entry objects from a GitHub ATOM feed
+
+=head1 PARAMETERS
+
+=head2 entries
+
+Arrayref of L<XML::Atom::Entry> objects.
+
+=cut
+
+</%doc>
+<%args>
+  $entries
+</%args>
+<style>
+ .github_news a.img {
+   display: block;
+   margin: 0 8px 4px 0;
+   float: left;
+ }
+ .github_news .entry {
+    border-bottom: 1px solid #ccc;
+    margin-bottom: 1em;
+ }
+ .github_news a.title {
+   font-weight: bold;
+ }
+ .github_news ul {
+    margin: 1em 0 0 4px;
+ }
+ .github_news img.entry_thumb {
+   padding: 2px;
+   border: 1px solid #d0d0d0;
+ }
+ .github_news blockquote {
+   margin: 0.6em 1em 1em 1em;
+ }
+</style>
+<div class="github_news">
+% for (@$entries ) {
+  <& .entry, entry => $_ &>
+% }
+</div>
+<%def .entry>
+<%args>
+  $entry
+</%args>
+<div class="entry">
+% if( $thumbnail ) {
+   <a class="img" href="<% $entry->link->href %>">
+    <img class="entry_thumb" width="<% $thumbnail->getAttribute('width') %>" height="<% $thumbnail->getAttribute('height') %>" src="<% $thumbnail->getAttribute('url') %>" />
+   </a>
+% }
+    <a class="title" href="<% $entry->link->href %>"><% $entry->title %></a>
+%   my $published_dt = XML::Atom::Util::iso2dt($entry->published );
+%   my $now = DateTime->now;
+%   $_->set_second(0) for $now, $published_dt;
+    <div class="reltime">
+      <% DateTime::Format::Human::Duration->new->format_duration_between(
+             $now,
+             $published_dt,
+             past => '%s ago',
+             future => '%s in the future!',
+             no_time => 'just now',
+         )
+      %>
+    </div>
+    <% $munged_entry_body->($entry) %>
+</div>
+<%init>
+  my ( $thumbnail ) = $entry->elem->getChildrenByTagNameNS('http://search.yahoo.com/mrss/','thumbnail');
+</%init>
+</%def>
+<%once>
+  use DateTime::Format::Human::Duration ();
+  my $base_link = URI->new("https://github.com");
+  # sub that fixes links in the rss body to be relative to github.com
+  my $munged_entry_body = sub {
+      my $entry = shift;
+      (my $fixed = $entry->content->body ) =~ s/((?:href|src)=")([^"]+)(")/$1.URI->new($2)->abs($base_link).$3/eg;
+      return $fixed;
+  };
+</%once>
+
