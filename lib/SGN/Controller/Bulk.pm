@@ -87,7 +87,13 @@ sub bulk_js_menu :Local {
     : $mode =~ /feature/i         ? 7
     :                               0;    # clone search is default
 
-    $c->stash( bulk_js_menu => modesel( \@mode_links, $modenum ) );
+    $c->stash( bulk_js_menu =>
+                   $c->view('BareMason')->render( $c, '/page/page_title.mas', { title => 'Bulk download' })
+                   .<<EOH
+<div style="margin-bottom: 1em">Download Unigene or BAC information using a list of identifiers, or complete datasets with FTP.</div>
+EOH
+                  .modesel( \@mode_links, $modenum ),
+             );
 
 }
 
