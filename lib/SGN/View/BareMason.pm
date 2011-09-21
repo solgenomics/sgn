@@ -2,12 +2,24 @@ package SGN::View::BareMason;
 use Moose;
 extends 'SGN::View::Mason';
 
-around 'interp_args' => sub {
-    my $orig = shift;
-    my $args = shift->$orig( @_ );
-    $args->{autohandler_name} = '';
-    return $args;
-};
+# inherit all the munged interp_args settings from SGN::View::Mason,
+# then turn the autohandler off
+sub COMPONENT {
+    my ($class, $c, $args) = @_;
+
+    $args = $class->merge_config_hashes(
+        $class->config,
+        {
+          %$args,
+          interp_args => {
+            %{ $c->view('Mason')->interp_args },
+            autohandler_name => '',
+          },
+        },
+      );
+
+    return $class->new($c, $args);
+}
 
 =head1 NAME
 
