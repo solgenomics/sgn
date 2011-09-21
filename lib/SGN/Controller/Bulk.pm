@@ -99,7 +99,7 @@ sub bulk_feature :Path('/bulk/feature') :Args(0) {
 
     $c->forward('bulk_js_menu');
 
-    $c->stash( template => 'bulk.mason');
+    $c->stash( template => 'bulk.mas');
 
     # trigger cache creation
     $self->cache->get("");
@@ -157,7 +157,7 @@ sub bulk_feature_submit :Path('/bulk/feature/submit') :Args(0) {
     $c->forward('bulk_js_menu');
     $c->forward('bulk_download_stats');
 
-    $c->stash( template          => 'bulk_download.mason', sha1 => $sha1 );
+    $c->stash( template          => 'bulk_download.mas', sha1 => $sha1 );
 }
 
 
