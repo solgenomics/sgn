@@ -8,7 +8,7 @@ use Digest::SHA1 qw/sha1_hex/;
 use Data::Dumper;
 
 use_ok 'SGN::Controller::Bulk';
-use aliased 'SGN::Test::WWW::Mechanize' => 'Mech';
+use aliased 'SGN::Test::WWW::Mechanize' => 'Mech', skip_cgi => 1;
 
 my $mech = Mech->new;
 
