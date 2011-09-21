@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 48;
+use Test::More tests => 34;
 
 use lib 't/lib';
 use SGN::Test::Data qw/ create_test /;
@@ -66,7 +66,7 @@ $mech->with_test_level( local => sub {
         },
     }, "submit bulk_feature form with invalid identifiers");
     $mech->content_contains('Your query was successful.');
-    $mech->content_contains('A total of 1 out of 2 sequence identifiers were found');
+    $mech->content_contains('A total of 1 matching features were found for 2 identifiers provided');
 });
 
 $mech->with_test_level( local => sub {
@@ -85,15 +85,11 @@ AP009263
 ID_LIST
 
     my @flinks = $mech->find_all_links( url_regex => qr{/bulk/feature/download/$sha1\.fasta} );
-    my @tlinks = $mech->find_all_links( url_regex => qr{/bulk/feature/download/$sha1\.txt} );
 
     cmp_ok(@flinks, '==', 1, "found one FASTA download link for $sha1.fasta");
     $mech->links_ok( \@flinks );
 
-    cmp_ok(@tlinks, '==', 1, "found one text download link for $sha1.txt");
-    $mech->links_ok( \@tlinks );
-
-    for my $url (map { $_->url } (@tlinks,@flinks)) {
+    for my $url (map { $_->url } (@flinks)) {
         $mech->get( $url );
         my $length = length($mech->content);
         cmp_ok($length, '>', 0,"$url has a content length $length > 0");
@@ -136,15 +132,11 @@ IDS
 
     my $sha1  = sha1_hex($ids);
     my @flinks = $mech->find_all_links( url_regex => qr{/bulk/feature/download/$sha1\.fasta} );
-    my @tlinks = $mech->find_all_links( url_regex => qr{/bulk/feature/download/$sha1\.txt} );
 
     cmp_ok(@flinks, '==', 1, "found one FASTA download link for $sha1.fasta");
     $mech->links_ok( \@flinks );
 
-    cmp_ok(@tlinks, '==', 1, "found one text download link for $sha1.txt");
-    $mech->links_ok( \@tlinks );
-
-    for my $url (map { $_->url } (@tlinks,@flinks)) {
+    for my $url (map { $_->url } (@flinks)) {
         $mech->get( $url );
         my $length = length($mech->content);
         cmp_ok($length, '>', 0,"$url has a content length $length > 0");
@@ -154,9 +146,5 @@ IDS
     @flinks =  grep { $_ =~ qr{$sha1} } $mech->find_all_links(url_regex => qr{/bulk/feature/download/.*\.fasta} );
 
     cmp_ok(@flinks, '==', 0, "found no other fasta download links") or diag("Unexpected fasta download links" . Dumper [ map {$_->url} @flinks ]);
-
-    @tlinks =  grep { $_ =~ qr{$sha1} } $mech->find_all_links(url_regex => qr{/bulk/feature/download/.*\.txt} );
-
-    cmp_ok(@tlinks, '==', 0, "found no other txt download links") or diag("Unexpected txt download links" . Dumper [ map {$_->url} @tlinks ]);
 
 }
