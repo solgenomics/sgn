@@ -4,7 +4,6 @@ use Test::More tests => 34;
 
 use lib 't/lib';
 use SGN::Test::Data qw/ create_test /;
-use Catalyst::Test 'SGN';
 use Digest::SHA1 qw/sha1_hex/;
 use Data::Dumper;
 
