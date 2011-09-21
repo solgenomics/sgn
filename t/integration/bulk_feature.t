@@ -2,13 +2,14 @@ use strict;
 use warnings;
 use Test::More tests => 34;
 
-use lib 't/lib';
-use SGN::Test::Data qw/ create_test /;
 use Digest::SHA1 qw/sha1_hex/;
 use Data::Dumper;
 
-use_ok 'SGN::Controller::Bulk';
+use lib 't/lib';
+use SGN::Test::Data qw/ create_test /;
 use aliased 'SGN::Test::WWW::Mechanize' => 'Mech', skip_cgi => 1;
+
+use_ok 'SGN::Controller::Bulk';
 
 my $mech = Mech->new;
 
