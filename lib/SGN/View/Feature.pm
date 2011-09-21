@@ -251,6 +251,9 @@ sub mrna_and_protein_sequence {
     # own sequences (because the rows can act as Bio::PrimarySeqI's
     return [ $mrna_feature, $peptide ] if $peptide && $peptide->subseq(1,1) && $mrna_feature && $mrna_feature->subseq(1,1);
 
+    # if there *is* no peptide, just return the mrna feature
+    return [ $mrna_feature ] if !$peptide && $mrna_feature && $mrna_feature->subseq(1,1);
+
     my @exon_locations = _exon_rs( $mrna_feature )->all
         or return;
 
@@ -265,8 +268,8 @@ sub mrna_and_protein_sequence {
 
     return unless $mrna_seq->length > 0;
 
-    my $peptide_loc = _peptide_loc($peptide)->first
-        or return ( $mrna_seq, undef );
+    my $peptide_loc = $peptide && _peptide_loc($peptide)->first
+        or return [ $mrna_seq ];
 
     my $protein_seq = Bio::PrimarySeq->new(
         -id   => $mrna_feature->name,
