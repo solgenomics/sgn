@@ -107,10 +107,28 @@ sub bulk_gene_submit :Path('/bulk/gene/submit') :Args(0) {
     my $mode = $c->req->param('mode') || 'feature';
 
     $c->stash( bulk_js_menu_mode => $mode );
+    $c->forward('bulk_js_menu');
 
     my $req  = $c->req;
+    my $ids  = $req->param('ids');
 
-    $c->forward('bulk_js_menu');
+
+    if( $c->req->param('gene_file') ) {
+        my ($upload) = $c->req->upload('gene_file');
+        # always append contents of file with newline to form input to
+        # prevent smashing identifiers together
+        $ids        = "$ids\n" . $upload->slurp if $upload;
+    }
+
+    # Must calculate this after looking at file contents
+    my $sha1 = sha1_hex($ids);
+
+    # remove leading and trailing whitespace
+    $ids = trim($ids);
+
+    unless ($ids) {
+        $c->throw_client_error(public_message => 'At least one identifier must be given');
+    }
     $c->stash( bulk_download_success => 0 );
     $c->stash( bulk_download_stats   => 'Foo' );
     $c->stash( sha1                  => 'deadbeef' );

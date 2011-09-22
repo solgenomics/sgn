@@ -21,7 +21,7 @@ $mech->with_test_level( local => sub {
     $mech->submit_form_ok({
         form_name => "bulk_gene",
         fields    => {
-            ids => $poly_feature->name,
+            ids => "Solyc02g081670.1",
         },
     }, "submit bulk_gene with a single valid identifier");
     $mech->content_unlike(qr/Caught exception/);
