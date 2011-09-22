@@ -24,6 +24,6 @@ $mech->with_test_level( local => sub {
             ids => "Solyc02g081670.1",
         },
     }, "submit bulk_gene with a single valid identifier");
-    $mech->content_unlike(qr/Caught exception/);
+    $mech->content_unlike(qr/Caught exception/) or diag $mech->content;
     $mech->content_unlike(qr/Your query did not contain any valid identifiers/) or diag $mech->content;
 });

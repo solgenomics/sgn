@@ -129,6 +129,19 @@ sub bulk_gene_submit :Path('/bulk/gene/submit') :Args(0) {
     unless ($ids) {
         $c->throw_client_error(public_message => 'At least one identifier must be given');
     }
+
+    # TODO: this doesn't scale. Use a single OR clause?
+    for my $gene_id (split /\s+/, $ids) {
+        my $matching_features = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado')
+                                     ->resultset('Sequence::Feature')
+                                     ->search({ "me.name" => $gene_id },{
+                                        prefetch => [ 'type', 'featureloc_features' ],
+                                     });
+        my $f     = $matching_features->next;
+        my @mrnas = grep $_->type->name eq 'mRNA', $f->child_features;
+        $c->stash->{sequence_identifiers} = [ map { $_->name } @mrnas ];
+    }
+
     $c->stash( bulk_download_success => 0 );
     $c->stash( bulk_download_stats   => 'Foo' );
     $c->stash( sha1                  => 'deadbeef' );
