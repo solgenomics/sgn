@@ -45,7 +45,7 @@ sub feature_xrefs :Path('/api/v1/feature_xrefs') :Args(0) {
         $args->{exclude} = \@exclude;
     }
 
-    my $xrefs = [ map $c->feature_xrefs( $_, $args ), $c->req->param('q') ];
+    my $xrefs = [ map $c->feature_xrefs( $_, $args ), grep /\S/, $c->req->param('q') ];
     $c->stash(
         template => "/sitefeatures/mixed/xref_set/$type.mas",
 
