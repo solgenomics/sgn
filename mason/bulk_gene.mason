@@ -21,7 +21,15 @@ And/or upload list file: <br /><input type="file" name="gene_file" />
 <br />
 
 </td>
-</tr></table>
+<td valign="top" bgcolor="#EEEEEE" width="320">
+
+<b>Download gene information</b>:<br />
+<div style="padding-left: 1em">
+    <input type="radio" name="gene_type" value="cdna" checked="checked" />cDNA<br />
+    <input type="radio" name="gene_type" value="cds" checked="unchecked" />CDS <br />
+    <input type="radio" name="gene_type" value="protein" checked="unchecked" />Protein<br />
+</div>
+</td></tr></table>
 
 <input type="submit" value="Submit" /><br />
 </form>
