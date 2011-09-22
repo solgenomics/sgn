@@ -1,0 +1,54 @@
+# standard tracks that show details of the underlying DNA sequence
+
+[GC:region]
+glyph        = dna
+global feature = 1
+database     = main
+height       = 40
+gc_window    = auto
+do_gc        = 1
+strand       = both
+fgcolor      = red
+axis_color   = blue
+key          = GC content
+citation     = Line graph of the relative GC content of the underlying DNA.
+
+#track to show DNA and GC content
+[DNA]
+glyph          = dna
+global feature = 1
+height         = 40
+do_gc          = 1
+fgcolor        = red
+category       = DNA
+gc_window      = auto
+axis_color     = blue
+strand         = both
+key            = DNA/GC content
+citation       = At high magnification, this track shows the genome's actual DNA base pairs.  At low magnification, it shows a line graph of the DNA's GC content.
+
+[TranslationF]
+glyph        = translation
+global feature = 1
+frame0       = cadetblue
+frame1       = blue
+frame2       = darkblue
+height       = 20
+fgcolor      = purple
+strand       = +1
+translation  = 3frame
+key          = 3-frame translation (forward)
+citation     = This track shows the 3-frame translation of the underlying DNA sequence.  At high magnification, it shows the actual translated amino acids.  At low magnification, it shows small vertical lines showing the locations of stop codons.
+
+[TranslationR]
+glyph        = translation
+global feature = 1
+frame0       = darkred
+frame1       = red
+frame2       = crimson
+height       = 20
+fgcolor      = blue
+strand       = -1
+translation  = 3frame
+key          = 3-frame translation (reverse)
+citation     = This track shows the 3-frame translation of the underlying DNA sequence.  At high magnification, it shows the actual translated amino acids.  At low magnification, it shows small vertical lines showing the locations of stop codons.
