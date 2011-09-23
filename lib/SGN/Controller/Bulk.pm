@@ -177,7 +177,15 @@ sub bulk_gene_submit :Path('/bulk/gene/submit') :Args(0) {
         # depending on form values, push different data
         my @seqs = (map { mrna_and_protein_sequence($_) } @mrnas );
 
-        push @mps, map { $_->[$type eq 'protein' ? 1 : 0] } @seqs;
+        push @mps, map {
+            # TODO: this is hack. doesn't work for CDS
+            my $o = $_->[$type eq 'protein' ? 1 : 0];
+            Bio::PrimarySeq->new(
+                -id => $o->name,
+                -desc => $o->description,
+                -seq  => $o->seq,
+            );
+        } @seqs;
 
     }
     $c->stash( sha1                  => $sha1 );
@@ -202,9 +210,8 @@ sub bulk_gene_download :Path('/bulk/gene/download') :Args(1) {
 
     my $seqs = $self->gene_cache->thaw($sha1);
 
-    # TODO: Use View::SeqIO
-
-    $c->response->body( $seqs->[0]->residues );
+    $c->stash->{sequences} = $seqs;
+    $c->forward('View::SeqIO');
 }
 
 sub bulk_feature :Path('/bulk/feature') :Args(0) {
