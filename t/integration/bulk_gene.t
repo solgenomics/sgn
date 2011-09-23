@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 9;
+use Test::More tests => 11;
 
 use lib 't/lib';
 use SGN::Test::Data qw/ create_test /;
@@ -14,9 +14,18 @@ use aliased 'SGN::Test::WWW::Mechanize' => 'Mech';
 my $mech = Mech->new;
 
 $mech->with_test_level( local => sub {
-    my $poly_cvterm     = create_test('Cv::Cvterm',        { name => 'gene' });
-    my $poly_feature    = create_test('Sequence::Feature', { type => $poly_cvterm  });
-    diag "Created gene " . $poly_feature->name;
+    $mech->get('/bulk/gene');
+    $mech->submit_form_ok({
+        form_name => "bulk_gene",
+        fields    => {
+            ids       => "Solyc02g081670.1",
+            gene_type => '',
+        },
+    }, "submit bulk_gene with a single valid identifier");
+    $mech->content_like(qr/At least one data type must be chosen/) or diag $mech->content;
+});
+
+$mech->with_test_level( local => sub {
     $mech->get('/bulk/gene');
     $mech->submit_form_ok({
         form_name => "bulk_gene",

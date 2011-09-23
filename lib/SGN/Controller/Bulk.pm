@@ -131,6 +131,11 @@ sub bulk_gene_submit :Path('/bulk/gene/submit') :Args(0) {
 
     my $req  = $c->req;
     my $ids  = $req->param('ids');
+    my $type = $req->param('gene_type');
+
+    unless ($type) {
+        $c->throw_client_error(public_message => 'At least one data type must be chosen');
+    }
 
     if( $c->req->param('gene_file') ) {
         my ($upload) = $c->req->upload('gene_file');
