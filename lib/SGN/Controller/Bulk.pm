@@ -146,7 +146,9 @@ sub bulk_gene_submit :Path('/bulk/gene/submit') :Args(0) {
     }
 
     # Must calculate this after looking at file contents
-    my $sha1 = sha1_hex($ids);
+    # Take into account data type, because different data types for the same sequence list
+    # produce different results
+    my $sha1 = sha1_hex("$type $ids");
 
     # remove leading and trailing whitespace
     $ids = trim($ids);
@@ -173,7 +175,9 @@ sub bulk_gene_submit :Path('/bulk/gene/submit') :Args(0) {
         $success++ if @mrnas;
 
         # depending on form values, push different data
-        push @mps, (map { mrna_and_protein_sequence($_) } @mrnas );
+        my @seqs = (map { mrna_and_protein_sequence($_) } @mrnas );
+
+        push @mps, map { $_->[$type eq 'protein' ? 1 : 0] } @seqs;
 
     }
     $c->stash( sha1                  => $sha1 );
@@ -200,7 +204,7 @@ sub bulk_gene_download :Path('/bulk/gene/download') :Args(1) {
 
     # TODO: Use View::SeqIO
 
-    $c->response->body( $seqs->[0][0]->residues );
+    $c->response->body( $seqs->[0]->residues );
 }
 
 sub bulk_feature :Path('/bulk/feature') :Args(0) {
