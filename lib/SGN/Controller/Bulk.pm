@@ -131,6 +131,7 @@ sub bulk_gene_submit :Path('/bulk/gene/submit') :Args(0) {
     }
 
     # TODO: this doesn't scale. Use a single OR clause?
+    my $success = 0;
     for my $gene_id (split /\s+/, $ids) {
         my $matching_features = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado')
                                      ->resultset('Sequence::Feature')
@@ -142,12 +143,13 @@ sub bulk_gene_submit :Path('/bulk/gene/submit') :Args(0) {
         next unless $f->type->name eq 'gene';
 
         my @mrnas = grep $_->type->name eq 'mRNA', $f->child_features;
+        $success++ if @mrnas;
         my $mp    = [ map { mrna_and_protein_sequence($_) } @mrnas ];
 
         $c->log->debug("Found " . scalar(@mrnas) . " mrna seq ids");
     }
 
-    $c->stash( bulk_download_success => 0 );
+    $c->stash( bulk_download_success => $success );
     $c->stash( bulk_download_stats   => 'Foo' );
     $c->stash( sha1                  => 'deadbeef' );
     $c->stash( template              => 'bulk_gene_download.mason');
