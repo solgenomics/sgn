@@ -102,7 +102,6 @@ sub delegate_component
 
     $c->stash->{feature}     = $feature;
     $c->stash->{featurelocs} = $feature->featureloc_features;
-    $c->stash->{seq_download_url} = '/api/v1/sequence/download/single/'.$feature->feature_id;
 
     # look up site xrefs for this feature
     my @xrefs = map $c->feature_xrefs( $_, { exclude => 'featurepages' } ),

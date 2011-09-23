@@ -104,7 +104,11 @@
           blast_url => $blast_url,
         &>
      </div>
-
+     <div style="margin-top: 1em">
+        <& /feature/sequence_download.mas,
+             feature => $mrna,
+         &>
+     </div>
 % }
 
     </&>
@@ -128,7 +132,13 @@
           blast_url => $blast_url,
         &>
      </div>
-
+%    if( $protein_sequence->can('feature_id') ) {
+     <div style="margin-top: 1em">
+        <& /feature/sequence_download.mas,
+             feature => $protein_sequence,
+         &>
+     </div>
+%    }
 % }
 
     </&>

@@ -2,7 +2,6 @@
     $feature
     $featurelocs
     $blast_url => undef
-    $seq_download_url => undef
     $xrefs     => []
 </%args>
 
@@ -44,7 +43,6 @@
              <div style="margin-top: 1em">
                <& /feature/sequence_download.mas,
                     feature => $feature,
-                    download_url => $seq_download_url
                 &>
              </div>
           </div>

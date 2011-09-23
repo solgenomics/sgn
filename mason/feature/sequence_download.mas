@@ -2,7 +2,7 @@
   $feature
   $region        => undef
   $length        => undef
-  $download_url
+  $download_url  => '/api/v1/sequence/download/single/'.$feature->feature_id
 </%args>
 % if( $length > 0 ) {
 <a href="<% $download_url %>">Download sequence (<% Number::Bytes::Human::format_bytes( $length ) %>b)</a>\

@@ -1,7 +1,6 @@
 <%args>
   $feature
   $blast_url
-  $seq_download_url => ''
 </%args>
 <%perl>
 
@@ -17,7 +16,6 @@ if( $feature->residues && length $feature->residues < 200_000 ) {
     <div style="margin-top: 1em">
       <& /feature/sequence_download.mas,
            feature => $feature,
-           download_url => $seq_download_url
        &>
     </div>
   </div>
@@ -27,7 +25,7 @@ else {
   if( $feature->residues || $feature->search_featureprops('large_residues')->count ) {
 </%perl>
     <p class="warning">Sequence too large to display.</p>
-    <& /feature/sequence_download.mas, feature => $feature, download_url => $seq_download_url &>
+    <& /feature/sequence_download.mas, feature => $feature  &>
 <%perl>
   }
 }
