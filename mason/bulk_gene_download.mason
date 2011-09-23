@@ -14,7 +14,6 @@
 <% $bulk_download_stats %>
 </div>
 Download as <a href="/bulk/gene/download/<% $sha1 %>.fasta">Fasta</a>
-<a href="/bulk/gene/download/<% $sha1 %>.txt">Text</a>
 % } else {
     Your query did not contain any valid identifiers. Please try again.
 % }

@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 4;
+use Test::More tests => 6;
 
 use lib 't/lib';
 use SGN::Test::Data qw/ create_test /;
@@ -24,6 +24,11 @@ $mech->with_test_level( local => sub {
             ids => "Solyc02g081670.1",
         },
     }, "submit bulk_gene with a single valid identifier");
+    my $sha1 = sha1_hex("Solyc02g081670.1");
     $mech->content_unlike(qr/Caught exception/) or diag $mech->content;
     $mech->content_unlike(qr/Your query did not contain any valid identifiers/) or diag $mech->content;
+    my @flinks = $mech->find_all_links( url_regex => qr{/bulk/gene/download/$sha1\.fasta} );
+    cmp_ok(@flinks, '==', 1, "found one FASTA download link for $sha1.fasta");
+    $mech->links_ok( \@flinks );
+
 });

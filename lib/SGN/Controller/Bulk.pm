@@ -132,6 +132,7 @@ sub bulk_gene_submit :Path('/bulk/gene/submit') :Args(0) {
 
     # TODO: this doesn't scale. Use a single OR clause?
     my $success = 0;
+    my @mps;
     for my $gene_id (split /\s+/, $ids) {
         my $matching_features = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado')
                                      ->resultset('Sequence::Feature')
@@ -143,16 +144,37 @@ sub bulk_gene_submit :Path('/bulk/gene/submit') :Args(0) {
         next unless $f->type->name eq 'gene';
 
         my @mrnas = grep $_->type->name eq 'mRNA', $f->child_features;
-        $success++ if @mrnas;
-        my $mp    = [ map { mrna_and_protein_sequence($_) } @mrnas ];
-
         $c->log->debug("Found " . scalar(@mrnas) . " mrna seq ids");
+        $success++ if @mrnas;
+
+        my $mp  = [ map { mrna_and_protein_sequence($_) } @mrnas ];
+        push @mps, $mp;
+
     }
+    $c->stash( sha1                  => $sha1 );
+
+    # cache the sequences
+    $self->cache->freeze( $sha1 => [ @mps ] );
 
     $c->stash( bulk_download_success => $success );
-    $c->stash( bulk_download_stats   => 'Foo' );
-    $c->stash( sha1                  => 'deadbeef' );
+    $c->stash( bulk_download_stats   => <<STATS);
+Insert stats
+STATS
     $c->stash( template              => 'bulk_gene_download.mason');
+}
+
+sub bulk_gene_download :Path('/bulk/gene/download') :Args(1) {
+    my ( $self, $c, $sha1 ) = @_;
+
+    my $app            = $self->_app;
+    my $cache_dir      = $app->path_to($app->tempfiles_subdir(qw/cache bulk gene/));
+
+    $sha1 =~ s/\.(fasta|txt)$//g;
+
+    my $seqs = $self->cache->thaw($sha1);
+    $c->stash( sequences => $seqs->[1][0] );
+
+    $c->forward( 'View::SeqIO' );
 }
 
 sub bulk_feature :Path('/bulk/feature') :Args(0) {
