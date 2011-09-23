@@ -6,6 +6,7 @@ use Digest::SHA1 qw/sha1_hex/;
 use File::Path qw/make_path/;
 use CXGN::Page::FormattingHelpers qw/modesel/;
 use CXGN::Tools::Text qw/trim/;
+use SGN::View::Feature qw/mrna_and_protein_sequence/;
 
 BEGIN { extends 'Catalyst::Controller' }
 
@@ -112,7 +113,6 @@ sub bulk_gene_submit :Path('/bulk/gene/submit') :Args(0) {
     my $req  = $c->req;
     my $ids  = $req->param('ids');
 
-
     if( $c->req->param('gene_file') ) {
         my ($upload) = $c->req->upload('gene_file');
         # always append contents of file with newline to form input to
@@ -138,8 +138,13 @@ sub bulk_gene_submit :Path('/bulk/gene/submit') :Args(0) {
                                         prefetch => [ 'type', 'featureloc_features' ],
                                      });
         my $f     = $matching_features->next;
+        $c->log->debug("found feature type " . $f->type->name);
+        next unless $f->type->name eq 'gene';
+
         my @mrnas = grep $_->type->name eq 'mRNA', $f->child_features;
-        $c->stash->{sequence_identifiers} = [ map { $_->name } @mrnas ];
+        my $mp    = [ map { mrna_and_protein_sequence($_) } @mrnas ];
+
+        $c->log->debug("Found " . scalar(@mrnas) . " mrna seq ids");
     }
 
     $c->stash( bulk_download_success => 0 );
