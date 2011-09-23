@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 6;
+use Test::More tests => 7;
 
 use lib 't/lib';
 use SGN::Test::Data qw/ create_test /;
@@ -30,5 +30,7 @@ $mech->with_test_level( local => sub {
     my @flinks = $mech->find_all_links( url_regex => qr{/bulk/gene/download/$sha1\.fasta} );
     cmp_ok(@flinks, '==', 1, "found one FASTA download link for $sha1.fasta");
     $mech->links_ok( \@flinks );
+
+    map { cmp_ok(length($mech->get($_->url)->content), '>', 0, $_->url . " length > 0 ") } @flinks;
 
 });
