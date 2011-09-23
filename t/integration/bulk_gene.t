@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 20;
+use Test::More tests => 21;
 
 use lib 't/lib';
 use SGN::Test::Data qw/ create_test /;
@@ -83,8 +83,13 @@ $mech->with_test_level( local => sub {
     my @flinks = $mech->find_all_links( url_regex => qr{/bulk/gene/download/$sha1\.fasta} );
     cmp_ok(@flinks, '==', 1, "found one FASTA download link for $sha1.fasta");
     $mech->links_ok( \@flinks );
+    # TODO: Depends on live data.
+chomp(my $expected_sequence =<<SEQ);
+MEAFHHPPISFHFPYAFPIPTPTTNFLGTPNSSSVNGMIINTWMDSRIWSRLPHRLIDRIIAFLPPPAFFRARVVCKRFYGLIYSTHFLELYLQVSPKRNWFIFFKQKVPRNNIYKNVMNSSNSGVCSVEGYLFDPDNLCWYRLSFALIPQGFSPVSSSGGLICFVSDESGSKNILLCNPLVGSIIPLPPTLRPRLFPSIGLTITNTSIDIAVAGDDLISPYAVKNLTTESFHIDGNGFYSIWGTTSTLPRLCSFESGKMVHVQGRFYCMNFSPFSVLSYDIGTNNWCKIQAPMRRFLRSPSLVEGNGKVVLVAAVEKSKLNVPRSLRLWALQDCGTMWLEIERMPQQLYVQFAEVENGQGFSCVGHGEYVVIMIKNNSDKALLFDFCKKRWIWIPPCPFLGNNLDYGGVGSSNNYCGEFGVGGGELHGFGYDPRLAAPIGALLDQLTLPFQSFN*
+SEQ
     map {
         cmp_ok(length($mech->get($_->url)->content), '>', 0, $_->url . " length > 0 ");
         $mech->content_unlike(qr/Caught exception/) or diag $mech->content;
+        $mech->content_like(qr/$expected_sequence/, $_->url . " looks like expected sequence") or diag $mech->content;
     } @flinks;
 });
