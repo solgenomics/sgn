@@ -1,5 +1,6 @@
 package SGN::Controller::Bulk;
 use Moose;
+use 5.010;
 use namespace::autoclean;
 use Cache::File;
 use Digest::SHA1 qw/sha1_hex/;
@@ -133,8 +134,8 @@ sub bulk_gene_submit :Path('/bulk/gene/submit') :Args(0) {
     my $ids  = $req->param('ids');
     my $type = $req->param('gene_type');
 
-    unless ($type) {
-        $c->throw_client_error(public_message => 'At least one data type must be chosen');
+    unless ($type ~~ [qw/cdna cds protein/]) {
+        $c->throw_client_error(public_message => 'Invalid data type chosen');
     }
 
     if( $c->req->param('gene_file') ) {

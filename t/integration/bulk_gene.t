@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 11;
+use Test::More tests => 13;
 
 use lib 't/lib';
 use SGN::Test::Data qw/ create_test /;
@@ -22,7 +22,19 @@ $mech->with_test_level( local => sub {
             gene_type => '',
         },
     }, "submit bulk_gene with a single valid identifier");
-    $mech->content_like(qr/At least one data type must be chosen/) or diag $mech->content;
+    $mech->content_like(qr/Invalid data type chosen/) or diag $mech->content;
+});
+
+$mech->with_test_level( local => sub {
+    $mech->get('/bulk/gene');
+    $mech->submit_form_ok({
+        form_name => "bulk_gene",
+        fields    => {
+            ids       => "Solyc02g081670.1",
+            gene_type => 'not_valid',
+        },
+    }, "submit bulk_gene with a single valid identifier");
+    $mech->content_like(qr/Invalid data type chosen/) or diag $mech->content;
 });
 
 $mech->with_test_level( local => sub {
