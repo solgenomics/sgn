@@ -10,21 +10,40 @@ use SGN::View::Feature qw/mrna_and_protein_sequence/;
 
 BEGIN { extends 'Catalyst::Controller' }
 
-has cache => (
+has feature_cache => (
+    isa        => 'Cache::File',
+    lazy_build => 1,
+    is         => 'ro',
+);
+
+has gene_cache => (
     isa        => 'Cache::File',
     lazy_build => 1,
     is         => 'ro',
 );
 
 
-sub _build_cache {
+sub _build_feature_cache {
     my $self = shift;
 
     my $app            = $self->_app;
     my $cache_dir      = $app->path_to($app->tempfiles_subdir(qw/cache bulk feature/));
 
-    $app->log->debug("Bulk: creating new cache in $cache_dir");
+    _new_cache_file($app, $cache_dir);
+};
 
+sub _build_gene_cache {
+    my $self = shift;
+
+    my $app            = $self->_app;
+    my $cache_dir      = $app->path_to($app->tempfiles_subdir(qw/cache bulk gene/));
+
+    _new_cache_file($app, $cache_dir);
+};
+
+sub _new_cache_file {
+    my ($app, $cache_dir) = @_;
+    $app->log->debug("Bulk: creating new cache in $cache_dir");
     return Cache::File->new(
            cache_root       => $cache_dir,
            default_expires  => 'never',
@@ -34,7 +53,7 @@ sub _build_cache {
            # temporary, until we figure out locking issue
            lock_level       => Cache::File::LOCK_NFS,
           );
-};
+}
 
 
 =head1 NAME
@@ -147,14 +166,14 @@ sub bulk_gene_submit :Path('/bulk/gene/submit') :Args(0) {
         $c->log->debug("Found " . scalar(@mrnas) . " mrna seq ids");
         $success++ if @mrnas;
 
-        my $mp  = [ map { mrna_and_protein_sequence($_) } @mrnas ];
-        push @mps, $mp;
+        # depending on form values, push different data
+        push @mps, (map { mrna_and_protein_sequence($_) } @mrnas );
 
     }
     $c->stash( sha1                  => $sha1 );
 
     # cache the sequences
-    $self->cache->freeze( $sha1 => [ @mps ] );
+    $self->gene_cache->freeze( $sha1 , [ @mps ] );
 
     $c->stash( bulk_download_success => $success );
     $c->stash( bulk_download_stats   => <<STATS);
@@ -171,10 +190,11 @@ sub bulk_gene_download :Path('/bulk/gene/download') :Args(1) {
 
     $sha1 =~ s/\.(fasta|txt)$//g;
 
-    my $seqs = $self->cache->thaw($sha1);
-    $c->stash( sequences => $seqs->[1][0] );
+    my $seqs = $self->gene_cache->thaw($sha1);
 
-    $c->forward( 'View::SeqIO' );
+    # TODO: Use View::SeqIO
+
+    $c->response->body( $seqs->[0][0]->residues );
 }
 
 sub bulk_feature :Path('/bulk/feature') :Args(0) {
@@ -188,7 +208,7 @@ sub bulk_feature :Path('/bulk/feature') :Args(0) {
     $c->stash( template => 'bulk.mason');
 
     # trigger cache creation
-    $self->cache->get("");
+    $self->feature_cache->get("");
 }
 
 sub bulk_feature_download :Path('/bulk/feature/download') :Args(1) {
@@ -199,7 +219,7 @@ sub bulk_feature_download :Path('/bulk/feature/download') :Args(1) {
 
     $sha1 =~ s/\.(fasta|txt)$//g;
 
-    my $seqs = $self->cache->thaw($sha1);
+    my $seqs = $self->feature_cache->thaw($sha1);
 
     $c->stash( sequences => $seqs->[1] );
 
@@ -238,7 +258,7 @@ sub bulk_feature_submit :Path('/bulk/feature/submit') :Args(0) {
 
     $c->forward('Controller::Sequence', 'fetch_sequences');
 
-    $self->cache->freeze( $sha1 , [ $c->stash->{sequence_identifiers}, $c->stash->{sequences} ] );
+    $self->feature_cache->freeze( $sha1 , [ $c->stash->{sequence_identifiers}, $c->stash->{sequences} ] );
 
     $c->forward('bulk_js_menu');
     $c->forward('bulk_download_stats');

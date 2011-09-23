@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 7;
+use Test::More tests => 8;
 
 use lib 't/lib';
 use SGN::Test::Data qw/ create_test /;
@@ -31,6 +31,9 @@ $mech->with_test_level( local => sub {
     cmp_ok(@flinks, '==', 1, "found one FASTA download link for $sha1.fasta");
     $mech->links_ok( \@flinks );
 
-    map { cmp_ok(length($mech->get($_->url)->content), '>', 0, $_->url . " length > 0 ") } @flinks;
+    map {
+        cmp_ok(length($mech->get($_->url)->content), '>', 0, $_->url . " length > 0 ");
+        $mech->content_unlike(qr/Caught exception/) or diag $mech->content;
+    } @flinks;
 
 });
