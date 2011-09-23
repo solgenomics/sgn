@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 22;
+use Test::More tests => 24;
 use Test::Differences;
 
 use lib 't/lib';
@@ -13,6 +13,28 @@ use_ok 'SGN::Controller::Bulk';
 use aliased 'SGN::Test::WWW::Mechanize' => 'Mech';
 
 my $mech = Mech->new;
+
+$mech->with_test_level( local => sub {
+    $mech->get('/bulk/gene');
+    $mech->submit_form_ok({
+        form_name => "bulk_gene",
+        fields    => {
+            ids       => "Solyc02g081670.1 BLARG",
+            gene_type => 'cdna',
+        },
+    }, "submit bulk_gene with some invalid identifiers");
+});
+
+$mech->with_test_level( local => sub {
+    $mech->get('/bulk/gene');
+    $mech->submit_form_ok({
+        form_name => "bulk_gene",
+        fields    => {
+            ids       => "NYARLATHOTEP BLARG",
+            gene_type => 'cdna',
+        },
+    }, "submit bulk_gene with all invalid identifiers");
+});
 
 $mech->with_test_level( local => sub {
     $mech->get('/bulk/gene');
