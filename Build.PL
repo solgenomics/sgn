@@ -57,6 +57,7 @@ my $build = SGN::Build->new(
         'Data::Page'                               => 0,
         'Data::Visitor::Callback'                  => 0,
         'DateTime'                                 => 0,
+        # Remove the following dep when XML::Atom is fixed to depend on it and released
         'DateTime::TimeZone'                       => '1.31',
         'DateTime::Format::Flexible'               => 0,
         'DateTime::Format::Human::Duration'        => 0,
@@ -117,7 +118,7 @@ my $build = SGN::Build->new(
         'URI::Escape'                              => 0,
         'URI::FromHash'                            => 0,
         'XML::Generator'                           => 0,
-        'XML::Atom::Feed'                          => 0,
+        'XML::Atom'                                => 0,
         'XML::Twig'                                => 0,
         'YAML::Any'                                => 0,
         'WWW::Mechanize::TreeBuilder'              => 0,
