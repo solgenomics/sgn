@@ -11,7 +11,7 @@ JSAN.use('MochiKit.Async');
 JSAN.use('CXGN.Effects');
 JSAN.use('CXGN.Phenome.Tools');
 JSAN.use('jquery.blockUI');
-JSAN.use('jquery');
+
 
 
 var Qtl = {
@@ -101,7 +101,7 @@ var Qtl = {
     {
 	if (userid == null) 
             {
-                window.location="../../../solpeople/login.pl";
+                window.location="/solpeople/login.pl";
             } 
         else 
             {
@@ -120,9 +120,6 @@ var Qtl = {
             }          
     },
             
-
-
-
       
 }//
 
