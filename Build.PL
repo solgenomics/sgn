@@ -57,6 +57,7 @@ my $build = SGN::Build->new(
         'Data::Page'                               => 0,
         'Data::Visitor::Callback'                  => 0,
         'DateTime'                                 => 0,
+        'DateTime::TimeZone'                       => '1.31',
         'DateTime::Format::Flexible'               => 0,
         'DateTime::Format::Human::Duration'        => 0,
         'DBIx::Class'                              => 0,
