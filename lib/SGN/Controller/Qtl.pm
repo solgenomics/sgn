@@ -389,7 +389,7 @@ sub _link {
                    genotype_download  => qq |<a href="/qtl/download/genotype/$pop_id">Genotype data</a> |,
                    corre_download     => qq |<a href="/qtl/download/correlation/$pop_id">Correlation data</a> |,
                    acronym_download   => qq |<a href="/qtl/download/acronym/$pop_id">Trait-acronym key</a> |,
-                   qtl_analysis_page  => qq |<a href="/phenome/qtl_analysis.pl?population_id=$pop_id&amp;cvterm_id=$term_id" onclick="Qtl.waitPage();">$graph_icon</a> |,
+                   qtl_analysis_page  => qq |<a href="/phenome/qtl_analysis.pl?population_id=$pop_id&amp;cvterm_id=$term_id" onclick="Qtl.waitPage();Qtl.report()">$graph_icon</a> |,
             );
     }
     
@@ -434,22 +434,18 @@ sub _show_data {
 
 sub search_help : PathPart('search/qtl/help') Chained Args(0) {
     my ($self, $c) = @_;
-    $c->stash(template => '/qtl/search/help/index.mas',)
+    $c->stash(template => '/qtl/search/help/index.mas')
 }
 
 sub set_stat_option : PathPart('qtl/stat/option') Chained Args(0) {
-    my ($self, $c) =@_;
-
-    my $login_id = $c->user()->get_object->get_sp_person_id() if $c->user;
-    my $pop_id = $c->request->param('pop_id');
+    my ($self, $c)  = @_;
+    my $pop_id      = $c->request->param('pop_id');
     my $stat_params = $c->request->param('stat_params');
+    my $file        = $self->stat_options_file($c, $pop_id);
 
-    if ($login_id) 
+    if ($file) 
     {
-        my $qtl = CXGN::Phenome::Qtl->new($login_id);
-        my ($temp_qtl_dir, $temp_user_dir) = $qtl->create_user_qtl_dir($c); 
-                     
-        my $f = file( $temp_user_dir, "stat_options_pop_${pop_id}.txt" )->openw
+        my $f = file( $file )->openw
             or die "Can't create file: $! \n";
 
         if ( $stat_params eq 'default' ) 
@@ -465,6 +461,23 @@ sub set_stat_option : PathPart('qtl/stat/option') Chained Args(0) {
     $c->res->body({undef});                
 
 }
+
+sub stat_options_file {
+    my ($self, $c, $pop_id) = @_;
+    my $login_id            = $c->user()->get_object->get_sp_person_id() if $c->user;
+    
+    if ($login_id) 
+    {
+        my $qtl = CXGN::Phenome::Qtl->new($login_id);
+        my ($temp_qtl_dir, $temp_user_dir) = $qtl->create_user_qtl_dir($c);
+        return  catfile( $temp_user_dir, "stat_options_pop_${pop_id}.txt" );
+    }
+    else 
+    {
+        return;
+    }
+}
+
 
 ####
 1;
