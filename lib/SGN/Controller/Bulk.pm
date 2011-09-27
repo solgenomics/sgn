@@ -179,14 +179,20 @@ sub bulk_gene_submit :Path('/bulk/gene/submit') :Args(0) {
 
 
         my $type_index = {
-            mrna    => 0,
+            cdna    => 0,
             cds     => 1,
             protein => 2,
         };
 
         push @mps, map {
-            my $o = $_->[$type_index->{$type}];
-            Bio::PrimarySeq->new(
+            my $index = $type_index->{$type};
+
+            unless ($index) {
+                $c->throw_client_error(public_message => 'Invalid data type');
+            }
+
+            my $o = $_->[$index];
+            $o && Bio::PrimarySeq->new(
                 -id   => $o->name,
                 -desc => $o->description,
                 -seq  => $o->seq,

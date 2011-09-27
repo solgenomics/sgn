@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 24;
+use Test::More tests => 27;
 use Test::Differences;
 
 use lib 't/lib';
@@ -59,6 +59,19 @@ $mech->with_test_level( local => sub {
     }, "submit bulk_gene with a single valid identifier");
     $mech->content_like(qr/Invalid data type chosen/) or diag $mech->content;
 });
+$mech->with_test_level( local => sub {
+    $mech->get('/bulk/gene');
+    $mech->submit_form_ok({
+        form_name => "bulk_gene",
+        fields    => {
+            ids       => "Solyc02g081670.1",
+            gene_type => "cds",
+        },
+    }, "submit bulk_gene with a single valid identifier for cds");
+    my $sha1 = sha1_hex("cds Solyc02g081670.1");
+    $mech->content_unlike(qr/Caught exception/);
+    $mech->content_unlike(qr/Your query did not contain any valid identifiers/);
+});
 
 $mech->with_test_level( local => sub {
     $mech->get('/bulk/gene');
@@ -109,7 +122,7 @@ SEQ
     map {
         cmp_ok(length($mech->get($_->url)->content), '>', 0, $_->url . " length > 0 ");
         $mech->content_unlike(qr/Caught exception/) or diag $mech->content;
-        eq_or_diff($mech->content,$expected_sequence, $_->url . " looks like expected sequence");
+        $mech->content_contains($expected_sequence, $_->url . " looks like expected sequence");
     } @flinks;
 
 });
@@ -145,6 +158,6 @@ SEQ
         cmp_ok(length($mech->get($_->url)->content), '>', 0, $_->url . " length > 0 ");
         $mech->content_unlike(qr/Caught exception/) or diag $mech->content;
         $mech->content_unlike(qr/Unable to perform storage-dependent operations/);
-        eq_or_diff($mech->content,$expected_sequence, $_->url . " looks like expected sequence");
+        $mech->content_contains($expected_sequence, $_->url . " looks like expected sequence");
     } @flinks;
 });
