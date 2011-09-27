@@ -60,7 +60,6 @@ my $build = SGN::Build->new(
         # Remove the following dep when XML::Atom is fixed to depend on it and released
         'DateTime::TimeZone'                       => '1.31',
         'DateTime::Format::Flexible'               => 0,
-        'DateTime::Format::Human::Duration'        => 0,
         'DBIx::Class'                              => 0,
         'DBIx::Connector'                          => 0,
         'File::Flock'                              => 0,
@@ -86,7 +85,6 @@ my $build = SGN::Build->new(
         'Lingua::EN::Inflect'                      => 0,
         'List::Util'                               => 0,
         'LWP::UserAgent'                           => 0,
-        'LWP::Protocol::https'                     => 0,
         'Mail::Sendmail'                           => 0,
         'Math::Round::Var'                         => 0,
         'Memoize'                                  => 0,
