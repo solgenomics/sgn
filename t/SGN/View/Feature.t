@@ -4,7 +4,8 @@ use warnings;
 use base 'Test::Class';
 
 use Test::Class;
-use Test::More tests => 14;
+use Test::More tests => 15;
+use Test::Exception;
 
 use Data::Dump;
 use List::MoreUtils qw/ any /;
@@ -12,10 +13,10 @@ use List::MoreUtils qw/ any /;
 use lib 't/lib';
 use SGN::Test::Data qw/create_test/;
 
-
 use_ok('SGN::View::Feature', qw/
     feature_table related_stats cvterm_link
     feature_link organism_link
+    mrna_cds_protein_sequence
 / );
 
 sub make_fixture : Test(setup) {
@@ -26,6 +27,13 @@ sub make_fixture : Test(setup) {
 sub teardown : Test(teardown) {
     my $self = shift;
     # SGN::Test::Data objects self-destruct, don't clean them up here!
+}
+
+sub TEST_MRNA_CDS_PROTEIN_SEQUENCE : Tests {
+    my $self = shift;
+    my $f = $self->{feature};
+
+    lives_ok( sub { mrna_cds_protein_sequence($f) } );
 }
 
 sub TEST_FEATURE_TABLE : Tests {
