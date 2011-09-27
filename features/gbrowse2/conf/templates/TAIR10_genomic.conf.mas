@@ -73,6 +73,7 @@ feature     = mRNA
 glyph       = processed_transcript
 bgcolor     = goldenrod
 key         = Protein-coding gene models
+description = 1
 category    = Genes
 citation    = Protein-coding gene models.
 
@@ -80,6 +81,7 @@ citation    = Protein-coding gene models.
 feature     = ncRNA,miRNA,rRNA,snoRNA,snRNA,tRNA
 glyph       = processed_transcript
 key         = Noncoding RNAs
+description = 1
 category    = Genes
 citation    = Non-coding RNA gene models: ncRNAs, miRNAs, rRNAs, snoRNAs, snRNAs, and tRNAs.
 
@@ -87,6 +89,7 @@ citation    = Non-coding RNA gene models: ncRNAs, miRNAs, rRNAs, snoRNAs, snRNAs
 feature     = transposable_element_gene
 glyph       = gene
 key         = Transposable element genes
+description = 1
 category    = Genes
 citation    = Genes that are related to known transposable elements.
 
@@ -94,6 +97,7 @@ citation    = Genes that are related to known transposable elements.
 feature     = pseudogenic_transcript
 glyph       = processed_transcript
 key         = Pseudogenes
+description = 1
 category    = Genes
 citation    = Pseudogene models.
 
