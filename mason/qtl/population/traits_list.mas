@@ -1,7 +1,7 @@
 <%doc>
 
 =head1 NAME 
-qtl/qtl_form/trait_form.mas - a mason component for a traits file submission
+qtl/population/traits_list.mas - a mason component for displaying a traits list and links to qtl_analysis.pl
 
 =AUTHOR
 Isaak Y Tecle (iyt2@cornell.edu)

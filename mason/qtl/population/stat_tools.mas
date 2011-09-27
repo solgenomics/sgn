@@ -1,7 +1,7 @@
 <%doc>
 
 =head1 NAME 
-qtl/qtl_start/stat_tools.mas - a mason component for the stat parameters interface
+qtl/population/stat_tools.mas - a mason component for the interactive qtl analysis interface
 
 =AUTHOR
 Isaak Y Tecle (iyt2@cornell.edu)

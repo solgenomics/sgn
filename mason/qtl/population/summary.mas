@@ -1,8 +1,7 @@
 <%doc>
 
 =head1 NAME 
-qtl/qtl_form/stat_form.mas - a mason component for a QTL stat parameters 
-submission
+qtl/population/stat_form.mas - a mason component for displaying qtl population symmary data.
 
 =AUTHOR
 Isaak Y Tecle (iyt2@cornell.edu)

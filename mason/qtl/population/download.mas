@@ -2,7 +2,7 @@
 
 =head1 NAME 
 
-qtl/qtl_start/download.mas - a mason component for 
+qtl/population/download.mas - a mason component for 
 diplaying links to download pages of phenotype, genotype,
 correlation and trait acronmyms files.
 

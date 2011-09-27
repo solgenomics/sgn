@@ -1,7 +1,7 @@
 <%doc>
 
 =head1 NAME 
-qtl/qtl_start/correlation.mas - displays correlation heatmap 
+qtl/population/correlation.mas - displays correlation heatmap 
 and trait acronyms legend
 
 =AUTHOR
