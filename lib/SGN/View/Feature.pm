@@ -18,7 +18,7 @@ our @EXPORT_OK = qw/
     feature_link
     cvterm_link
     organism_link feature_length
-    mrna_and_protein_sequence
+    mrna_cds_protein_sequence
     description_featureprop_types
     get_description
     location_list_html
@@ -224,14 +224,14 @@ sub cvterm_link {
     return qq{<a href="/chado/cvterm.pl?cvterm_id=$id">$name</a>};
 }
 
-sub mrna_and_protein_sequence {
+sub mrna_cds_protein_sequence {
     my ($mrna_feature) = @_;
 
     # if we were actually passed a polypeptide, get its mrna(s) and
     # recurse
     if( $mrna_feature->type->name eq 'polypeptide' ) {
         return
-            map mrna_and_protein_sequence( $_ ),
+            map mrna_cds_protein_sequence( $_ ),
             $mrna_feature->search_related('feature_relationship_subjects',
                     { 'me.type_id' => {
                         -in => $mrna_feature->result_source->schema
@@ -283,9 +283,10 @@ sub mrna_and_protein_sequence {
         $_ = $_->revcom for $mrna_seq, $protein_seq;
     }
 
+    my $cds_seq  = $protein_seq;
     $protein_seq = $protein_seq->translate;
 
-    return [ $mrna_seq, $protein_seq ];
+    return [ $mrna_seq, $cds_seq, $protein_seq ];
 }
 
 sub _peptides_rs {

@@ -7,7 +7,7 @@ use Digest::SHA1 qw/sha1_hex/;
 use File::Path qw/make_path/;
 use CXGN::Page::FormattingHelpers qw/modesel/;
 use CXGN::Tools::Text qw/trim/;
-use SGN::View::Feature qw/mrna_and_protein_sequence/;
+use SGN::View::Feature qw/mrna_cds_protein_sequence/;
 
 BEGIN { extends 'Catalyst::Controller' }
 
@@ -175,13 +175,19 @@ sub bulk_gene_submit :Path('/bulk/gene/submit') :Args(0) {
         $success++ if @mrnas;
 
         # depending on form values, push different data
-        my @seqs = (map { mrna_and_protein_sequence($_) } @mrnas );
+        my @seqs = (map { mrna_cds_protein_sequence($_) } @mrnas );
+
+
+        my $type_index = {
+            mrna    => 0,
+            cds     => 1,
+            protein => 2,
+        };
 
         push @mps, map {
-            # TODO: this is hack. doesn't work for CDS
-            my $o = $_->[$type eq 'protein' ? 1 : 0];
+            my $o = $_->[$type_index->{$type}];
             Bio::PrimarySeq->new(
-                -id => $o->name,
+                -id   => $o->name,
                 -desc => $o->description,
                 -seq  => $o->seq,
             );
