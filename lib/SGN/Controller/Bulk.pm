@@ -125,7 +125,7 @@ sub bulk_gene :Path('/bulk/gene') : Args(0) {
 
 sub bulk_gene_submit :Path('/bulk/gene/submit') :Args(0) {
     my ( $self, $c, $file ) = @_;
-    my $mode = $c->req->param('mode') || 'feature';
+    my $mode = $c->req->param('mode') || 'gene';
 
     $c->stash( bulk_js_menu_mode => $mode );
     $c->forward('bulk_js_menu');
@@ -167,7 +167,12 @@ sub bulk_gene_submit :Path('/bulk/gene/submit') :Args(0) {
                                         prefetch => [ 'type', 'featureloc_features' ],
                                      });
         my $f     = $matching_features->next;
+
+        # abort if there are no matching features
+        next unless $f;
+
         $c->log->debug("found feature type " . $f->type->name);
+
         next unless $f->type->name eq 'gene';
 
         my @mrnas = grep $_->type->name eq 'mRNA', $f->child_features;
