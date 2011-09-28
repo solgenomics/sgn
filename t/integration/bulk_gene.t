@@ -83,6 +83,7 @@ $mech->with_test_level( local => sub {
     my $sha1 = sha1_hex("cdna Solyc02g081670");
     $mech->content_unlike(qr/Caught exception/) or diag $mech->content;
     $mech->content_unlike(qr/Your query did not contain any valid identifiers/);
+    $mech->content_unlike(qr/Invalid data type/);
     my @flinks = $mech->find_all_links( url_regex => qr{/bulk/gene/download/$sha1\.fasta} );
     cmp_ok(@flinks, '==', 1, "found one FASTA download link for $sha1.fasta");
     $mech->links_ok( \@flinks );
