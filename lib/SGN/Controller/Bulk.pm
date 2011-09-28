@@ -184,9 +184,7 @@ sub bulk_gene_submit :Path('/bulk/gene/submit') :Args(0) {
         $c->log->debug("Found " . scalar(@mrnas) . " mrna seq ids");
         $success++ if @mrnas;
 
-        # depending on form values, push different data
         my @seqs = (map { mrna_cds_protein_sequence($_) } @mrnas );
-
 
         my $type_index = {
             cdna    => 0,
@@ -198,7 +196,10 @@ sub bulk_gene_submit :Path('/bulk/gene/submit') :Args(0) {
             my $index = $type_index->{$type};
 
             unless ($index) {
-                $c->throw_client_error(public_message => 'Invalid data type');
+                $c->throw_client_error(
+                    public_message => 'Invalid data type',
+                    http_status    => 200,
+                );
             }
 
             my $o = $_->[$index];
