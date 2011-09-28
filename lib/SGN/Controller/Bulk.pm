@@ -84,7 +84,7 @@ STATS
 sub bulk_js_menu :Local {
     my ( $self, $c ) = @_;
 
-    my $mode = $c->stash->{bulk_js_menu_mode};
+    my $mode = $c->stash->{bulk_js_menu_mode} || '';
     # define urls of modes
     my @mode_links = (
         [ '/bulk/input.pl?mode=clone_search',    'Clone&nbsp;name<br />(SGN-C)' ],
@@ -124,18 +124,20 @@ sub bulk_gene :Path('/bulk/gene') : Args(0) {
 }
 
 sub bulk_gene_submit :Path('/bulk/gene/submit') :Args(0) {
-    my ( $self, $c, $file ) = @_;
-    my $mode = $c->req->param('mode') || 'gene';
+    my ( $self, $c ) = @_;
+    my $req  = $c->req;
+    my $ids  = $req->param('ids');
+    my $type = $req->param('gene_type');
+    my $mode = $req->param('mode') || 'gene';
 
     $c->stash( bulk_js_menu_mode => $mode );
     $c->forward('bulk_js_menu');
 
-    my $req  = $c->req;
-    my $ids  = $req->param('ids');
-    my $type = $req->param('gene_type');
-
-    unless ($type ~~ [qw/cdna cds protein/]) {
-        $c->throw_client_error(public_message => 'Invalid data type chosen');
+    unless ($type && $type ~~ [qw/cdna cds protein/]) {
+        $c->throw_client_error(
+            public_message => 'Invalid data type chosen',
+            http_status    => 200,
+        );
     }
 
     if( $c->req->param('gene_file') ) {
@@ -154,7 +156,10 @@ sub bulk_gene_submit :Path('/bulk/gene/submit') :Args(0) {
     $ids = trim($ids);
 
     unless ($ids) {
-        $c->throw_client_error(public_message => 'At least one identifier must be given');
+        $c->throw_client_error(
+            public_message => 'At least one identifier must be given',
+            http_status    => 200,
+        );
     }
 
     # TODO: this doesn't scale. Use a single OR clause?
@@ -261,7 +266,7 @@ sub bulk_feature_download :Path('/bulk/feature/download') :Args(1) {
 }
 
 sub bulk_feature_submit :Path('/bulk/feature/submit') :Args(0) {
-    my ( $self, $c, $file ) = @_;
+    my ( $self, $c ) = @_;
 
     my $req  = $c->req;
     my $ids  = $req->param('ids') || '';

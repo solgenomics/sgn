@@ -24,7 +24,6 @@ $mech->with_test_level( local => sub {
         },
     }, "submit bulk_gene with some invalid identifiers");
 });
-
 $mech->with_test_level( local => sub {
     $mech->get('/bulk/gene');
     $mech->submit_form_ok({
@@ -44,7 +43,7 @@ $mech->with_test_level( local => sub {
             ids       => "Solyc02g081670.1",
             gene_type => '',
         },
-    }, "submit bulk_gene with a single valid identifier");
+    }, "submit bulk_gene with a single valid identifier but invalid gene_type");
     $mech->content_like(qr/Invalid data type chosen/) or diag $mech->content;
 });
 
@@ -72,6 +71,7 @@ $mech->with_test_level( local => sub {
     $mech->content_unlike(qr/Caught exception/);
     $mech->content_unlike(qr/Your query did not contain any valid identifiers/);
 });
+
 
 $mech->with_test_level( local => sub {
     $mech->get('/bulk/gene');
