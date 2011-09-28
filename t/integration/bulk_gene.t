@@ -19,7 +19,7 @@ $mech->with_test_level( local => sub {
     $mech->submit_form_ok({
         form_name => "bulk_gene",
         fields    => {
-            ids       => "Solyc02g081670.1 BLARG",
+            ids       => "Solyc02g081670 BLARG",
             gene_type => 'cdna',
         },
     }, "submit bulk_gene with some invalid identifiers");
@@ -40,7 +40,7 @@ $mech->with_test_level( local => sub {
     $mech->submit_form_ok({
         form_name => "bulk_gene",
         fields    => {
-            ids       => "Solyc02g081670.1",
+            ids       => "Solyc02g081670",
             gene_type => '',
         },
     }, "submit bulk_gene with a single valid identifier but invalid gene_type");
@@ -52,7 +52,7 @@ $mech->with_test_level( local => sub {
     $mech->submit_form_ok({
         form_name => "bulk_gene",
         fields    => {
-            ids       => "Solyc02g081670.1",
+            ids       => "Solyc02g081670",
             gene_type => 'not_valid',
         },
     }, "submit bulk_gene with a single valid identifier");
@@ -63,11 +63,10 @@ $mech->with_test_level( local => sub {
     $mech->submit_form_ok({
         form_name => "bulk_gene",
         fields    => {
-            ids       => "Solyc02g081670.1",
+            ids       => "Solyc02g081670",
             gene_type => "cds",
         },
     }, "submit bulk_gene with a single valid identifier for cds");
-    my $sha1 = sha1_hex("cds Solyc02g081670.1");
     $mech->content_unlike(qr/Caught exception/);
     $mech->content_unlike(qr/Your query did not contain any valid identifiers/);
 });
@@ -77,7 +76,7 @@ $mech->with_test_level( local => sub {
     $mech->submit_form_ok({
         form_name => "bulk_gene",
         fields    => {
-            ids       => "Solyc02g081670.1",
+            ids       => "Solyc02g081670",
             gene_type => "cdna",
         },
     }, "submit bulk_gene with a single valid identifier for cdna");
@@ -131,7 +130,7 @@ $mech->with_test_level( local => sub {
     $mech->submit_form_ok({
         form_name => "bulk_gene",
         fields    => {
-            ids       => "Solyc02g081670.1",
+            ids       => "Solyc02g081670",
             gene_type => "protein",
         },
     }, "submit bulk_gene with a single valid identifier for protein");

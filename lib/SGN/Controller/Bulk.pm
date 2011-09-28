@@ -194,6 +194,7 @@ sub bulk_gene_submit :Path('/bulk/gene/submit') :Args(0) {
 
         push @mps, map {
             my $index = $type_index->{$type};
+            $c->log->debug("found $type with index $index");
 
             unless ($index) {
                 $c->throw_client_error(
@@ -203,6 +204,7 @@ sub bulk_gene_submit :Path('/bulk/gene/submit') :Args(0) {
             }
 
             my $o = $_->[$index];
+            $c->log->debug("Downgrading from BCS to Bioperl object " . $o->name);
             $o && Bio::PrimarySeq->new(
                 -id   => $o->name,
                 -desc => $o->description,
