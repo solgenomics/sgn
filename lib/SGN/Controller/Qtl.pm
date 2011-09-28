@@ -1,10 +1,8 @@
 =head1 NAME
 
-SGN::Controller::Qtl- controller for the qtl anlysis start page
+SGN::Controller::Qtl- controller for solQTL
 
 =cut
-
-
 
 
 package SGN::Controller::Qtl;
@@ -156,7 +154,7 @@ sub download_acronym : PathPart('qtl/download/acronym') Chained Args(1) {
 }
 
 
-sub _analyze_correlation : {
+sub _analyze_correlation  {
     my ($self, $c)      = @_;    
     my $pop_id          = $c->stash->{pop}->get_population_id();
     my $pheno_file      = $c->stash->{pop}->phenotype_file($c);
@@ -177,16 +175,16 @@ sub _analyze_correlation : {
         }
 
         my (undef, $heatmap_file)     = tempfile( "heatmap_${pop_id}-XXXXXX",
-                                              DIR      => $corre_temp_dir,
-                                              SUFFIX   =>'.png',
-                                              UNLINK   => 0,
-                                            );
+                                                  DIR      => $corre_temp_dir,
+                                                  SUFFIX   => '.png',
+                                                  UNLINK   => 0,
+                                                );
 
         my (undef, $corre_table_file) = tempfile( "corre_table_${pop_id}-XXXXXX",
-                                              DIR      => $corre_temp_dir,
-                                              SUFFIX   => '.txt',
-                                              UNLINK   => 0,
-                                            );
+                                                  DIR      => $corre_temp_dir,
+                                                  SUFFIX   => '.txt',
+                                                  UNLINK   => 0,
+                                                );
 
         my ( $corre_commands_temp, $corre_output_temp ) =
             map
@@ -196,8 +194,8 @@ sub _analyze_correlation : {
                     File::Spec->catfile(
                         CXGN::Tools::Run->temp_base($corre_temp_dir),
                         "corre_pop_${pop_id}-$_-XXXXXX"
-                    ),
-                    UNLINK =>0,
+                         ),
+                    UNLINK => 0,
                 );
             $filename
         } qw / in out /;
@@ -242,7 +240,7 @@ sub _analyze_correlation : {
         $heatmap_file  = $c->generated_file_uri("correlation",  $heatmap_file);
         $corre_table_file = fileparse($corre_table_file);
         $corre_table_file  = $c->generated_file_uri("correlation",  $corre_table_file);
-        
+       
         $c->stash( heatmap_file     => $heatmap_file, 
                    corre_table_file => $corre_table_file
                 );  
@@ -266,7 +264,7 @@ sub _correlation_output {
     my $corre_table     = $cache->get($key_t); 
    
     
-    unless  ($heatmap && -s $heatmap > 1) 
+    unless ($heatmap) 
     {
         $self->_analyze_correlation($c);
         $heatmap = $c->stash->{heatmap_file};
@@ -275,6 +273,7 @@ sub _correlation_output {
         $cache->set($key_t, "$corre_table", "24h");
         
     }
+   
     $c->stash( heatmap_file     => $heatmap,
                corre_table_file => $corre_table,
         );  
@@ -439,8 +438,8 @@ sub search_help : PathPart('search/qtl/help') Chained Args(0) {
 
 sub set_stat_option : PathPart('qtl/stat/option') Chained Args(0) {
     my ($self, $c)  = @_;
-    my $pop_id      = $c->request->param('pop_id');
-    my $stat_params = $c->request->param('stat_params');
+    my $pop_id      = $c->req->param('pop_id');
+    my $stat_params = $c->req->param('stat_params');
     my $file        = $self->stat_options_file($c, $pop_id);
 
     if ($file) 
