@@ -167,9 +167,10 @@ sub bulk_gene_submit :Path('/bulk/gene/submit') :Args(0) {
     my @mps;
     for my $gene_id (split /\s+/, $ids) {
         my $matching_features = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado')
-                                     ->resultset('Sequence::Feature')
-                                     ->search({ "me.name" => $gene_id },{
-                                        prefetch => [ 'type', 'featureloc_features' ],
+                                  ->resultset('Sequence::Feature')
+                                  ->search({ "me.name" => $gene_id },{
+                                        prefetch =>
+                                            [ qw/type featureloc_features/],
                                      });
         my $f     = $matching_features->next;
 
@@ -204,12 +205,18 @@ sub bulk_gene_submit :Path('/bulk/gene/submit') :Args(0) {
             }
 
             my $o = $_->[$index];
-            $c->log->debug("Downgrading from BCS to Bioperl object " . $o->name);
-            $o && Bio::PrimarySeq->new(
-                -id   => $o->name,
-                -desc => $o->description,
-                -seq  => $o->seq,
-            );
+            $c->log->debug("Got a $o at index $index");
+
+            if ($o->isa('Bio::PrimarySeq')) {
+                $o;
+            } else {
+                $c->log->debug("Downgrading from BCS to Bioperl object " . $o->name);
+                Bio::PrimarySeq->new(
+                    -id   => $o->name,
+                    -desc => $o->description,
+                    -seq  => $o->seq,
+                );
+            }
         } @seqs;
 
     }

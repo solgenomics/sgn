@@ -80,7 +80,7 @@ $mech->with_test_level( local => sub {
             gene_type => "cdna",
         },
     }, "submit bulk_gene with a single valid identifier for cdna");
-    my $sha1 = sha1_hex("cdna Solyc02g081670.1");
+    my $sha1 = sha1_hex("cdna Solyc02g081670");
     $mech->content_unlike(qr/Caught exception/) or diag $mech->content;
     $mech->content_unlike(qr/Your query did not contain any valid identifiers/);
     my @flinks = $mech->find_all_links( url_regex => qr{/bulk/gene/download/$sha1\.fasta} );
@@ -120,7 +120,7 @@ SEQ
     map {
         cmp_ok(length($mech->get($_->url)->content), '>', 0, $_->url . " length > 0 ");
         $mech->content_unlike(qr/Caught exception/) or diag $mech->content;
-        $mech->content_contains($expected_sequence, $_->url . " looks like expected sequence");
+        eq_or_diff($mech->content,$expected_sequence, $_->url . " looks like expected sequence");
     } @flinks;
 
 });
@@ -134,7 +134,7 @@ $mech->with_test_level( local => sub {
             gene_type => "protein",
         },
     }, "submit bulk_gene with a single valid identifier for protein");
-    my $sha1 = sha1_hex("protein Solyc02g081670.1");
+    my $sha1 = sha1_hex("protein Solyc02g081670");
     $mech->content_unlike(qr/Caught exception/) or diag $mech->content;
     $mech->content_unlike(qr/Your query did not contain any valid identifiers/);
     my @flinks = $mech->find_all_links( url_regex => qr{/bulk/gene/download/$sha1\.fasta} );
@@ -142,7 +142,7 @@ $mech->with_test_level( local => sub {
     $mech->links_ok( \@flinks );
     # TODO: Depends on live data.
 my $expected_sequence =<<SEQ;
->Solyc02g081670.1.1 polypeptide feature inferred from GFF3 feature
+>Solyc02g081670.1.1 protein sequence
 MEAFHHPPISFHFPYAFPIPTPTTNFLGTPNSSSVNGMIINTWMDSRIWSRLPHRLIDRI
 IAFLPPPAFFRARVVCKRFYGLIYSTHFLELYLQVSPKRNWFIFFKQKVPRNNIYKNVMN
 SSNSGVCSVEGYLFDPDNLCWYRLSFALIPQGFSPVSSSGGLICFVSDESGSKNILLCNP
@@ -156,6 +156,6 @@ SEQ
         cmp_ok(length($mech->get($_->url)->content), '>', 0, $_->url . " length > 0 ");
         $mech->content_unlike(qr/Caught exception/) or diag $mech->content;
         $mech->content_unlike(qr/Unable to perform storage-dependent operations/);
-        $mech->content_contains($expected_sequence, $_->url . " looks like expected sequence");
+        eq_or_diff($mech->content,$expected_sequence, $_->url . " looks like expected sequence");
     } @flinks;
 });
