@@ -67,7 +67,7 @@ my $image_subtitle =
 
 <&| /page/info_section.mas, title=>'Transcript Information', collapsible => 1 &>
 
-% my @links = map { qq|<a href="/content/library_info.pl?library=$_\">$_</a>| } @libraries;
+% my @links = map { qq|<a href="/content/library_info.pl?library=$_">$_</a>| } @libraries;
 
 <& /page/info_table.mas,
    data => [
@@ -103,5 +103,5 @@ Number of phenotyped lines (for all <% $common_name %> species combined): <% $ph
 </&>
 
 
-
+<& /page/comments.mas, object_type=>"organism", object_id=>$organism_id, referer=>$this_page &>
 
