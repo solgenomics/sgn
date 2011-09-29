@@ -28,7 +28,7 @@
 %    for my $seqs ( mrna_and_protein_sequence( $feature ) ) {
 %       if( $seqs->[1] ) {
         <&| /page/info_section.mas,
-                title         => 'Protein sequence',
+                title         => 'Polypeptide sequence',
                 subtitle      => 'translated polypeptide sequence',
                 collapsible   => 1,
                 collapsed     => 0,
