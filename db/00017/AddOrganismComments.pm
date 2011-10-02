@@ -14,7 +14,7 @@ see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
 
-Adds an "organism" type to the list of allowed page_types.
+Removes unnecessary database constraint.
 
 =head1 AUTHOR
 
@@ -36,7 +36,7 @@ use Moose;
 extends 'CXGN::Metadata::Dbpatch';
 
 
-has '+description' => ( default => 'Adds an organism page type for page comments on organism page' );
+has '+description' => ( default => 'Removes unnecessary database constraint.' );
 
 
 has '+prereq' => (
@@ -60,7 +60,7 @@ sub patch {
 
 ALTER TABLE sgn_people.forum_topic DROP CONSTRAINT chk_forum_topic_page_type;
 
-    ALTER TABLE sgn_people.forum_topic ADD CONSTRAINT chk_forum_topic_page_type  CHECK (page_type::text = 'BAC'::text OR page_type::text = 'EST'::text OR page_type::text = 'unigene'::text OR page_type::text = 'marker'::text OR page_type::text = 'map'::text OR page_type::text = 'bac_end'::text OR page_type::text = ''::text OR page_type IS NULL OR page_type::text = 'locus'::text OR page_type::text = 'individual'::text OR page_type::text = 'pub'::text OR page_type::text = 'allele'::text OR page_type::text = 'stock'::text OR page_type::text = 'sample'::text OR page_type::text = 'organism');
+
 
 
 EOSQL
@@ -72,3 +72,6 @@ print "You're done!\n";
 ####
 1; #
 ####
+
+
+# --     ALTER TABLE sgn_people.forum_topic ADD CONSTRAINT chk_forum_topic_page_type  CHECK (page_type::text = 'BAC'::text OR page_type::text = 'EST'::text OR page_type::text = 'unigene'::text OR page_type::text = 'marker'::text OR page_type::text = 'map'::text OR page_type::text = 'bac_end'::text OR page_type::text = ''::text OR page_type IS NULL OR page_type::text = 'locus'::text OR page_type::text = 'individual'::text OR page_type::text = 'pub'::text OR page_type::text = 'allele'::text OR page_type::text = 'stock'::text OR page_type::text = 'sample'::text OR page_type::text = 'organism');
