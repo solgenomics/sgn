@@ -39,6 +39,10 @@ the name of the database
 
 (optional) the map_id. If not present, will insert a brand new map (confirm dialog).
 
+=item -v 
+
+add data to map version provided. Conflicts with -i and -n.
+
 =item -n
 
 required if -i is not used. Provides the map name.
@@ -81,9 +85,9 @@ use CXGN::DB::InsertDBH;
 use Data::Dumper;
 
 
-our ($opt_H, $opt_D, $opt_i, $opt_r, $opt_n, $opt_f);
+our ($opt_H, $opt_D, $opt_i, $opt_r, $opt_n, $opt_f, $opt_v);
 
-getopts('H:D:i:rn:f');
+getopts('H:D:i:rn:fv:');
 
 my $map_id;
 my $map_file;
@@ -92,7 +96,7 @@ my $map_file;
 my $linkage_groups = [ qw | 1 2 3 4 5 6 7 8 9 10 11 12 | ];
 
 $map_id = $opt_i;
-
+my $map_version_id = $opt_v;
 $map_file = shift;
 
 if (!$opt_H && !$opt_D) {
@@ -106,7 +110,7 @@ if (!$opt_H && !$opt_D) {
                                             });
 
 eval {
-    if (!$map_id) {
+    if (!$map_id && !$map_version_id) {
 	print "No map_id was provided. Insert a new map? ";
 	my $key = <STDIN>;
 	if ($key =~ /Y/i) {
@@ -126,13 +130,21 @@ eval {
 
     # we are creating a new map version every time we run this script, 
     # as long as the transaction goes through
-    my $new_map_version = CXGN::Map::Version->
-	#new($dbh,{map_id=>$map_id});
-       new($dbh,{map_id=>$map_id},$linkage_groups);
-    # saving the new map version
-    my $map_version_id = $new_map_version->insert_into_database();
-    print "map version = " . $new_map_version->as_string() . "\n";
-    # make an object to give us the values from the spreadsheet
+    my $new_map_version;
+
+    if ($map_id) { 
+	$new_map_version = CXGN::Map::Version->
+	    #new($dbh,{map_id=>$map_id});
+	    new($dbh,{map_id=>$map_id},$linkage_groups);
+	# saving the new map version
+	$map_version_id = $new_map_version->insert_into_database();
+	print "map version = " . $new_map_version->as_string() . "\n";
+	# make an object to give us the values from the spreadsheet
+    }
+    elsif ($map_version_id) { 
+	$new_map_version = CXGN::Map::Version->
+	    new($dbh, {map_version_id=>$map_version_id});
+    }
     my $ss = CXGN::Tools::File::Spreadsheet->new($map_file);
     my @markers = $ss->row_labels(); # row labels are the marker names
     my @columns = $ss->column_labels(); # column labels are the headings for the data columns
