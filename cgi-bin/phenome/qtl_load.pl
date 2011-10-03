@@ -71,12 +71,10 @@ sub process_data {
     my $page = CXGN::Page->new( "SGN", "isaak" );
     my $dbh  = $self->get_dbh();
 
-    my $login        = CXGN::Login->new($dbh);
-    my $sp_person_id = $login->verify_session();
-
-    my $referring_page = "/phenome/qtl_form.pl";
-   # my $referring_page = $ENV{HTTP_REFERER};
-
+    my $login          = CXGN::Login->new($dbh);
+    my $sp_person_id   = $login->verify_session();
+    my $referring_page = $c->req->base . 'qtl/form';
+  
     my %args = $page->get_all_encoded_arguments();
     $args{pop_common_name_id} = $self->common_name_id();
 
@@ -96,10 +94,10 @@ sub process_data {
     my ( $pop_name, $desc, $pop_detail, $message );
 
     if ( $type eq 'begin' ) {
-        $type    = 'pop_form';
         $message = 'A user is at the QTL data upload Step 0 of 5';
         $self->send_email( '[QTL upload: Step 0]', $message, 'NA' );
-        $page->client_redirect("$referring_page?type=$type");
+        $c->res->redirect("$referring_page/pop_form");
+        $c->detach();
     }
 
     elsif ( $type eq 'pop_form' ) {
@@ -116,9 +114,8 @@ sub process_data {
         unless ( !$pop_id ) {
             $message = 'QTL population data uploaded: Step 1 of 5';
             $self->send_email( '[QTL upload: Step 1]', $message, $pop_id );
-            $type = 'trait_form';
-            $page->client_redirect(
-                "$referring_page?pop_id=$pop_id&amp;type=$type");
+            $c->res->redirect("$referring_page/trait_form/$pop_id");
+            $c->detach();
         }
     }
 
@@ -135,9 +132,8 @@ sub process_data {
         unless ( !-e $trait_file || !$trait_to_db ) {
             $message = 'QTL traits uploaded: Step 2 of 5';
             $self->send_email( '[QTL upload: Step 2]', $message, $pop_id );
-            $type = 'pheno_form';
-            $page->client_redirect(
-                "$referring_page?pop_id=$pop_id&amp;type=$type");
+            $c->res->redirect("$referring_page/pheno_form/$pop_id");
+            $c->detach();
 
         }
 
@@ -165,9 +161,9 @@ sub process_data {
         unless ( !-e $pheno_file || !$trait_values_to_db ) {
             $message = 'QTL phenotype data uploaded : Step 3 of 5';
             $self->send_email( '[QTL upload: Step 3]', $message, $pop_id );
-            $type = 'geno_form';
-            $page->client_redirect(
-                "$referring_page?pop_id=$pop_id&amp;type=$type");
+            $c->res->redirect("$referring_page/geno_form/$pop_id");
+            $c->detach();
+            
         }
     }
 
@@ -191,11 +187,9 @@ sub process_data {
                       $self->store_genotype( $geno_file, $map_version_id );
                     if ($genotype_uploaded) {
                         $message = 'QTL genotype data uploaded : Step 4 of 5';
-                        $self->send_email( '[QTL upload: Step 4]',
-                            $message, $pop_id );
-                        $type = 'stat_form';
-                        $page->client_redirect(
-                            "$referring_page?pop_id=$pop_id&amp;type=$type");
+                        $self->send_email( '[QTL upload: Step 4]', $message, $pop_id );
+                        $c->res->redirect("$referring_page/stat_form/$pop_id");
+                        $c->detach();
                     }
                     else {
                         die "There is a problem with your genotype data uploading\n";
@@ -1500,32 +1494,39 @@ sub load_stat_parameters {
     my $stat_param   = $qtl_obj->user_stat_parameters();
     my @missing      = $qtl_tools->check_stat_fields($stat_param);  
     my $pop_id       = $args_ref->{pop_id};
-   
-    my $stat_file;
+    
+    my ($stat_file, $type);
     if (@missing) {
         $self->error_page(@missing);
     }
     else {
         $stat_file = $qtl_obj->user_stat_file( $c, $pop_id );
+        $type = 'confirm';
     }
-       
-    if ($c->req->referer =~ /qtl_form/ ) {
-        unless ( !-e $stat_file ) {
-            my $qtlpage = $c->req->base . "qtl/id/$pop_id";
+ 
+    if ($type eq 'confirm') {
+        my $referer = $c->req->base . "qtl/form/stat_form/$pop_id";
+        if (-e $stat_file && $c->req->referer eq $referer) 
+        {
+            my $qtlpage = $c->req->base . "qtl/population/$pop_id";
             my $message =<<MSG;
             QTL statistical parameters set : Step 5 of 5;
             
-            QTL data upload for <a href="$qtlpage"> of your population </a> is completed.
+            QTL data upload for<a href="$qtlpage"> population $pop_id</a> is completed.
 MSG
 
             $self->send_email( '[QTL upload: Step 5]', $message, $pop_id );
-            $c->res->redirect("qtl_form.pl?pop_id=$pop_id&type=confirm");
+            $c->res->redirect("/qtl/form/confirm/$pop_id");
             $c->detach();
         }
-    } else {
+        else 
+        {
+            $c->res->redirect($c->req->referer);
+            $c->detach();
+        }
+    } else 
+    {
         $c->res->redirect($c->req->referer);
         $c->detach();
     }
- 
-
 }
