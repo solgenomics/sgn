@@ -383,7 +383,7 @@ sub _link {
         $c->stash( cvterm_page        => qq |<a href="/chado/cvterm.pl?cvterm_id=$cvterm_id">$trait_name</a> |,
                    trait_page         => qq |<a href="/phenome/trait.pl?trait_id=$trait_id">$trait_name</a> |,
                    owner_page         => qq |<a href="/solpeople/personal-info.pl?sp_person_id=$owner_id">$owner_name</a> |,
-                   guideline          => qq |<a href="http://docs.google.com/View?id=dgvczrcd_1c479cgfb">Guidelines</a> |,
+                   guideline          => $self->guideline,
                    phenotype_download => qq |<a href="/qtl/download/phenotype/$pop_id">Phenotype data</a> |,
                    genotype_download  => qq |<a href="/qtl/download/genotype/$pop_id">Genotype data</a> |,
                    corre_download     => qq |<a href="/qtl/download/correlation/$pop_id">Correlation data</a> |,
@@ -477,6 +477,53 @@ sub stat_options_file {
     }
 }
 
+    
+sub qtl_form : PathPart('qtl/form') Chained Args {
+    my ($self, $c, $type, $pop_id) = @_;  
+    
+    my $userid = $c->user()->get_object->get_sp_person_id() if $c->user;
+    
+    unless ($userid) 
+    {
+       $c->res->redirect($c->uri_for('/solpeople/login.pl'));     
+    }
+    
+    $type = 'intro' if !$type; 
+    
+    $c->stash( template => $self->get_template($c, $type),
+               pop_id   => $pop_id,
+               guide    => $self->guideline,
+               referer  => $c->req->path,
+               userid   => $userid
+            );   
+ 
+}
+
+sub templates {
+    my $self = shift;
+    my %template_of = ( intro      => '/qtl/qtl_form/intro.mas',
+                        pop_form   => '/qtl/qtl_form/pop_form.mas',
+                        pheno_form => '/qtl/qtl_form/pheno_form.mas',
+                        geno_form  => '/qtl/qtl_form/geno_form.mas',
+                        trait_form => '/qtl/qtl_form/trait_form.mas',
+                        stat_form  => '/qtl/qtl_form/stat_form.mas',
+                        confirm    => '/qtl/qtl_form/confirm.mas'
+                      );
+        return \%template_of;
+}
+
+
+sub get_template {
+    my ($self, $c, $type) = @_;
+    
+    $c->throw_404("form type argument is missing.") if !$type;
+    return $self->templates->{$type};
+}
+
+sub guideline {
+    my $self = shift;
+    return qq |<a href="http://docs.google.com/View?id=dgvczrcd_1c479cgfb">Guidelines</a> |;
+}
 
 ####
 1;
