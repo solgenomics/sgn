@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 36;
+use Test::More tests => 39;
 use Test::Differences;
 
 use lib 't/lib';
@@ -88,6 +88,18 @@ $mech->with_test_level( local => sub {
     my @flinks = $mech->find_all_links( url_regex => qr{/bulk/gene/download/$sha1\.fasta} );
     cmp_ok(@flinks, '==', 1, "found one FASTA download link for $gene_type $id $sha1.fasta");
     $mech->links_ok( \@flinks );
+
+# cds sequence for Solyc02g081670.1
+my $expected_sequence =<<SEQ;
+FOOBAR
+SEQ
+
+    map {
+        cmp_ok(length($mech->get($_->url)->content), '>', 0, $_->url . " length > 0 ");
+        $mech->content_unlike(qr/Caught exception/) or diag $mech->content;
+        eq_or_diff($mech->content,$expected_sequence, $_->url . " looks like expected sequence");
+    } @flinks;
+
 });
 
 $mech->with_test_level( local => sub {

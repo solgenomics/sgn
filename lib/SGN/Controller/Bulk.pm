@@ -7,7 +7,7 @@ use Digest::SHA1 qw/sha1_hex/;
 use File::Path qw/make_path/;
 use CXGN::Page::FormattingHelpers qw/modesel/;
 use CXGN::Tools::Text qw/trim/;
-use SGN::View::Feature qw/mrna_cds_protein_sequence/;
+use SGN::View::Feature qw/mrna_cds_protein_sequence get_description/;
 
 BEGIN { extends 'Catalyst::Controller' }
 
@@ -213,9 +213,10 @@ sub bulk_gene_submit :Path('/bulk/gene/submit') :Args(0) {
                 $o;
             } else {
                 $c->log->debug("Downgrading from BCS to Bioperl object " . $o->name);
-                Bio::PrimarySeq->new(
-                    -id   => $o->name,
-                    -desc => $o->description,
+                my $desc = get_description($o);
+                my $g    = Bio::PrimarySeq->new(
+                    -id   => $desc,
+                    -desc => $desc,
                     -seq  => $o->seq,
                 );
             }
