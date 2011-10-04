@@ -256,7 +256,7 @@ sub mrna_cds_protein_sequence {
 
     my $mrna_seq = Bio::PrimarySeq->new(
         -id   => $mrna_feature->name,
-        -desc => 'spliced cDNA sequence',
+        -desc => get_description($mrna_feature),
         -seq  => join( '', map {
             $_->srcfeature->subseq( $_->fmin+1, $_->fmax ),
          } @exon_locations
