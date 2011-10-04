@@ -1,4 +1,25 @@
 
+=head1 NAME
+
+load_qtl_loci.pl - load the qtls as loci
+
+=head1 DESCRIPTION
+
+Loads the QTL markers in a map file as loci into the locus database and attributes them to sp_person_id provided by -p option. It connects the loci to the map location. Note that the map needs to be loaded, using load_map_data.pl, before this script is run.
+
+=head1 SYNOPSYS
+
+perl load_qtl_loci.pl -H hostname -D dbname -p locus_owner_id -c common_name_id <-t> marker_file
+
+Note: with the -t flag, data is not actually stored (test run).
+The marker file is the same as for map loading (see load_map_data.pl).
+
+=head1 AUTHOR(S)
+
+Lukas Mueller <lam87@cornell.edu>
+
+=cut
+
 use Modern::Perl;
 
 use CXGN::Phenome::Locus;
@@ -35,7 +56,12 @@ while (<$F>) {
     
 	print STDERR "Setting locus name and symbol ($qtl)...\n";
 	$l->set_locus_name($qtl);
-	$l->set_locus_symbol($qtl);
+	my $symbol = $qtl;
+	if ($symbol =~ /.*\_(.*\d+\_\d+)/) { 
+	    $symbol = $1;
+	    $symbol =~ s/\_/\./g;
+	}
+	$l->set_locus_symbol($symbol);
 	$l->set_common_name_id($opts{c});
 	print STDERR "Setting description...\n";
 	$l->set_description($description);
