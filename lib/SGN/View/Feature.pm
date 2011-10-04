@@ -53,7 +53,7 @@ sub description_featureprop_types {
 }
 
 sub get_description {
-    my ($feature) = @_;
+    my ($feature, $plain) = @_;
 
     my $desc_types =
         description_featureprop_types( $feature )
@@ -67,6 +67,8 @@ sub get_description {
           ->first;
 
     return unless $description;
+
+    return $description if defined $plain;
 
     $description =~ s/(\S+)/my $id = $1; CXGN::Tools::Identifiers::link_identifier($id) || $id/ge;
 
@@ -256,7 +258,7 @@ sub mrna_cds_protein_sequence {
 
     my $mrna_seq = Bio::PrimarySeq->new(
         -id   => $mrna_feature->name,
-        -desc => get_description($mrna_feature),
+        -desc => get_description($mrna_feature, 1), # plain
         -seq  => join( '', map {
             $_->srcfeature->subseq( $_->fmin+1, $_->fmax ),
          } @exon_locations
