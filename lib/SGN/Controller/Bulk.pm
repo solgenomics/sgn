@@ -71,6 +71,8 @@ supports features and genes.
 sub bulk_download_stats :Local {
     my ( $self, $c ) = @_;
 
+    $c->log->debug("calculating bulk download stats");
+
     my $seqs    = scalar @{$c->stash->{sequences} || []};
     my $seq_ids = scalar @{$c->stash->{sequence_identifiers} || []};
     my $stats   = <<STATS;
@@ -123,6 +125,19 @@ sub bulk_gene :Path('/bulk/gene') : Args(0) {
     $c->stash( template => 'bulk_gene.mason');
 }
 
+sub bulk_gene_type_validate :Local :Args(0) {
+    my ( $self, $c ) = @_;
+    my $req  = $c->req;
+    my $type = $req->param('gene_type');
+
+    unless ($type && $type ~~ [qw/cdna cds protein/]) {
+        $c->throw_client_error(
+            public_message => 'Invalid data type chosen',
+            http_status    => 200,
+        );
+    }
+}
+
 sub bulk_gene_submit :Path('/bulk/gene/submit') :Args(0) {
     my ( $self, $c ) = @_;
     my $req  = $c->req;
@@ -135,12 +150,7 @@ sub bulk_gene_submit :Path('/bulk/gene/submit') :Args(0) {
 
     $c->log->debug("submitting query with type=$type");
 
-    unless ($type && $type ~~ [qw/cdna cds protein/]) {
-        $c->throw_client_error(
-            public_message => 'Invalid data type chosen',
-            http_status    => 200,
-        );
-    }
+    $c->forward('bulk_gene_type_validate');
 
     if( $c->req->param('gene_file') ) {
         my ($upload) = $c->req->upload('gene_file');
@@ -153,6 +163,7 @@ sub bulk_gene_submit :Path('/bulk/gene/submit') :Args(0) {
     # Take into account data type, because different data types for the same sequence list
     # produce different results
     my $sha1 = sha1_hex("$type $ids");
+    $c->stash( sha1                  => $sha1 );
 
     # remove leading and trailing whitespace
     $ids = trim($ids);
@@ -163,6 +174,21 @@ sub bulk_gene_submit :Path('/bulk/gene/submit') :Args(0) {
             http_status    => 200,
         );
     }
+
+    $c->forward('cache_gene_sequences');
+
+    $c->stash( bulk_download_stats   => <<STATS);
+Insert stats
+STATS
+    $c->stash( template              => 'bulk_gene_download.mason');
+}
+
+sub cache_gene_sequences :Local :Args(0) {
+    my ($self, $c) = @_;
+    my $req  = $c->req;
+    my $ids  = $req->param('ids');
+    my $type = $req->param('gene_type');
+    my $sha1 = $c->stash->{sha1};
 
     # TODO: this doesn't scale. Use a single OR clause?
     my $success = 0;
@@ -223,16 +249,10 @@ sub bulk_gene_submit :Path('/bulk/gene/submit') :Args(0) {
         } @seqs;
 
     }
-    $c->stash( sha1                  => $sha1 );
+    $c->stash( bulk_download_success => $success );
 
     # cache the sequences
     $self->gene_cache->freeze( $sha1 , [ @mps ] );
-
-    $c->stash( bulk_download_success => $success );
-    $c->stash( bulk_download_stats   => <<STATS);
-Insert stats
-STATS
-    $c->stash( template              => 'bulk_gene_download.mason');
 }
 
 sub bulk_gene_download :Path('/bulk/gene/download') :Args(1) {
@@ -308,13 +328,16 @@ sub bulk_feature_submit :Path('/bulk/feature/submit') :Args(0) {
 
     $c->stash( bulk_query => 1 );
 
+    $c->log->debug("fetching sequences");
     $c->forward('Controller::Sequence', 'fetch_sequences');
 
+    $c->log->debug("freezing sequences");
     $self->feature_cache->freeze( $sha1 , [ $c->stash->{sequence_identifiers}, $c->stash->{sequences} ] );
 
     $c->forward('bulk_js_menu');
     $c->forward('bulk_download_stats');
 
+    $c->log->debug("rendering bulk_download.mason");
     $c->stash( template          => 'bulk_download.mason', sha1 => $sha1 );
 }
 
