@@ -489,7 +489,12 @@ sub qtl_form : PathPart('qtl/form') Chained Args {
     }
     
     $type = 'intro' if !$type; 
-    
+   
+    if (!$pop_id and $type ne 'intro') 
+    {
+     $c->throw_404("Population id argument is missing");   
+    }
+
     $c->stash( template => $self->get_template($c, $type),
                pop_id   => $pop_id,
                guide    => $self->guideline,
