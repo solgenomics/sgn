@@ -1,6 +1,6 @@
 package SGN::Controller::Bulk;
-use Moose;
 use 5.010;
+use Moose;
 use namespace::autoclean;
 use Cache::File;
 use Digest::SHA1 qw/sha1_hex/;
@@ -133,6 +133,8 @@ sub bulk_gene_submit :Path('/bulk/gene/submit') :Args(0) {
     $c->stash( bulk_js_menu_mode => $mode );
     $c->forward('bulk_js_menu');
 
+    $c->log->debug("submitting query with type=$type");
+
     unless ($type && $type ~~ [qw/cdna cds protein/]) {
         $c->throw_client_error(
             public_message => 'Invalid data type chosen',
@@ -197,7 +199,7 @@ sub bulk_gene_submit :Path('/bulk/gene/submit') :Args(0) {
             my $index = $type_index->{$type};
             $c->log->debug("found $type with index $index");
 
-            unless ($index) {
+            unless (defined $index) {
                 $c->throw_client_error(
                     public_message => 'Invalid data type',
                     http_status    => 200,
