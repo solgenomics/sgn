@@ -283,7 +283,11 @@ sub mrna_cds_protein_sequence {
         $_ = $_->revcom for $mrna_seq, $protein_seq;
     }
 
-    my $cds_seq  = $protein_seq;
+    my $cds_seq  = Bio::PrimarySeq->new(
+                        -id   => $protein_seq->display_id,
+                        -desc => 'CDS sequence',
+                        -seq  => $protein_seq->seq,
+    );
     $protein_seq = $protein_seq->translate;
 
     return [ $mrna_seq, $cds_seq, $protein_seq ];
