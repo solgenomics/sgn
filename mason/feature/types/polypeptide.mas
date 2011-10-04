@@ -9,7 +9,7 @@
     use SGN::View::Feature qw/ type_name /;
 </%once>
 
-<& /page/page_title.mas, title => type_name($feature,'caps').' '. $feature->id &>
+<& /feature/page_title.mas, feature => $feature &>
 
 <&| /page/info_section.mas,
     title       => type_name($feature,'caps').' details',

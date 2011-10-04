@@ -15,7 +15,7 @@
     my @mrnas       = grep $_->type->name eq 'mRNA', $feature->child_features;
 </%perl>
 
-<& /page/page_title.mas, title => 'Gene '. $feature->name &>
+<& /feature/page_title.mas, feature => $feature &>
 
 <&| /page/info_section.mas,
     title       => 'Gene',
