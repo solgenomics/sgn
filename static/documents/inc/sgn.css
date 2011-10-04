@@ -1177,6 +1177,10 @@ div.info_table_fieldval {
 /*   font-family: monospace; */
   margin: 0.3em 0 0 0.6em;
 }
+div.info_table_fieldval > ul {
+    margin: 0;
+    padding-left: 2.5em;
+}
 
 caption.info_table,
 caption.sub_info_table {  
