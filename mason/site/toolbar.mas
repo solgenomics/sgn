@@ -32,6 +32,9 @@
     <div style="position: relative; text-align: left">
     <table cellspacing="0" cellpadding="0" id="maps" class="toolbar_popmenu">
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/cview/map.pl?map_id=9&amp;show_offsets=1&amp;show_ruler=1">Tomato-EXPEN 2000</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/cview/map.pl?map_id=31&amp;show_offsets=1&amp;show_ruler=1">Tomato-Kazusa/SolCAP</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/cview/map.pl?map_id=34&amp;show_offsets=1&amp;show_ruler=1">Tomato-QTLs</a></td></tr>
+       
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/cview/map.pl?map_id=p9&amp;show_offsets=1&amp;show_ruler=1">Tomato physical map</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/cview/map.pl?map_id=c9&amp;show_offsets=1&amp;show_ruler=1">Tomato FPC contig map</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/cview/map.pl?map_id=il6&amp;show_offsets=1&amp;show_ruler=1">Tomato IL map</a></td></tr>
@@ -42,6 +45,8 @@
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/cview/map.pl?map_id=11">Pepper-AC99</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/cview/map.pl?map_id=10">Pepper-FA03</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/cview/map.pl?map_id=3">Potato-TXB 1992</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/cview/map.pl?map_id=32">Potato-QTLs</a></td></tr>
+       
 
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/cview/map.pl?map_version_id=63">Eggplant COSII map</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/cview/map.pl?map_id=6">Eggplant-LXM 2002</a></td></tr>
