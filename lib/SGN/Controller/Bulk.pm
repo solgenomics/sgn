@@ -191,33 +191,34 @@ sub cache_gene_sequences :Local :Args(0) {
     my $type = $req->param('gene_type');
     my $sha1 = $c->stash->{sha1};
 
-    # TODO: this doesn't scale. Use a single OR clause?
     my $success = 0;
-    for my $gene_id (split /\s+/, $ids) {
-        my $matching_features = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado')
-                                  ->resultset('Sequence::Feature')
-                                  ->search({ "me.name" => $gene_id },{
-                                        prefetch => [ qw/type featureloc_features/],
-                                     });
-        my $f     = $matching_features->next;
+    my @gene_ids = split /\s+/, $ids;
+    my $matching_features = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado')
+                                ->resultset('Sequence::Feature')
+                                ->search({ "me.name" => \@gene_ids },{
+                                    prefetch => [ qw/type featureloc_features/],
+                                    });
+    my $f     = $matching_features->next;
 
-        # abort if there are no matching features
-        next unless $f;
+    # abort if there are no matching features
+    $c->throw_client_error(
+        public_message => 'At least one valid identifier must be given',
+        http_status    => 200,
+    ) unless $f;
 
-        $c->log->debug("found feature type " . $f->type->name);
+    $c->log->debug("found feature type " . $f->type->name);
 
-        next unless $f->type->name eq 'gene';
+    next unless $f->type->name eq 'gene';
 
-        my @mrnas = grep $_->type->name eq 'mRNA', $f->child_features;
-        $c->log->debug("Found " . scalar(@mrnas) . " mrna seq ids");
-        $success++ if @mrnas;
-        $c->stash( gene_mrnas => [ @mrnas ] );
+    my @mrnas = grep $_->type->name eq 'mRNA', $f->child_features;
+    $c->log->debug("Found " . scalar(@mrnas) . " mrna seq ids");
+    $success++ if @mrnas;
+    $c->stash( gene_mrnas => [ @mrnas ] );
 
-        $c->forward('convert_sequences_to_bioperl_objects');
+    $c->forward('convert_sequences_to_bioperl_objects');
 
-        $c->forward('populate_gene_sequences');
+    $c->forward('populate_gene_sequences');
 
-    }
     $c->stash( bulk_download_success => $success );
 
     $c->forward('freeze_sequences');

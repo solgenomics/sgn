@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 39;
+use Test::More tests => 40;
 use Test::Differences;
 
 use lib 't/lib';
@@ -33,6 +33,7 @@ $mech->with_test_level( local => sub {
             gene_type => 'cdna',
         },
     }, "submit bulk_gene with all invalid identifiers");
+    $mech->content_like(qr/At least one valid identifier must be given/);
 });
 
 $mech->with_test_level( local => sub {
