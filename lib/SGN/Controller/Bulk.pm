@@ -219,8 +219,13 @@ sub cache_gene_sequences :Local :Args(0) {
     }
     $c->stash( bulk_download_success => $success );
 
+    $c->forward('freeze_sequences');
+}
+
+sub freeze_sequences :Local {
+    my ($self, $c) = @_;
     # cache the sequences
-    $self->gene_cache->freeze( $sha1 , $c->stash->{gene_mps} || [ ] );
+    $self->gene_cache->freeze( $c->stash->{sha1} , $c->stash->{gene_mps} || [ ] );
 }
 
 sub populate_gene_sequences :Local {
