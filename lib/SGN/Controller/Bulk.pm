@@ -8,6 +8,7 @@ use File::Path qw/make_path/;
 use CXGN::Page::FormattingHelpers qw/modesel/;
 use CXGN::Tools::Text qw/trim/;
 use SGN::View::Feature qw/mrna_cds_protein_sequence get_description/;
+#use Carp::Always;
 
 BEGIN { extends 'Catalyst::Controller' }
 
@@ -192,13 +193,11 @@ sub cache_gene_sequences :Local :Args(0) {
 
     # TODO: this doesn't scale. Use a single OR clause?
     my $success = 0;
-    my @mps;
     for my $gene_id (split /\s+/, $ids) {
         my $matching_features = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado')
                                   ->resultset('Sequence::Feature')
                                   ->search({ "me.name" => $gene_id },{
-                                        prefetch =>
-                                            [ qw/type featureloc_features/],
+                                        prefetch => [ qw/type featureloc_features/],
                                      });
         my $f     = $matching_features->next;
 
@@ -214,45 +213,54 @@ sub cache_gene_sequences :Local :Args(0) {
         $success++ if @mrnas;
 
         my @seqs = (map { mrna_cds_protein_sequence($_) } @mrnas );
-
-        my $type_index = {
-            cdna    => 0,
-            cds     => 1,
-            protein => 2,
-        };
-
-        push @mps, map {
-            my $index = $type_index->{$type};
-            $c->log->debug("found $type with index $index");
-
-            unless (defined $index) {
-                $c->throw_client_error(
-                    public_message => 'Invalid data type',
-                    http_status    => 200,
-                );
-            }
-
-            my $o = $_->[$index];
-            $c->log->debug("Got a $o at index $index");
-
-            if ($o->isa('Bio::PrimarySeq')) {
-                $o;
-            } else {
-                $c->log->debug("Downgrading from BCS to Bioperl object " . $o->name);
-                my $desc = get_description($o);
-                my $g    = Bio::PrimarySeq->new(
-                    -id   => $desc,
-                    -desc => $desc,
-                    -seq  => $o->seq,
-                );
-            }
-        } @seqs;
+        $c->stash( gene_sequences => [ @seqs ] );
+        $c->forward('populate_gene_sequences');
 
     }
     $c->stash( bulk_download_success => $success );
 
     # cache the sequences
-    $self->gene_cache->freeze( $sha1 , [ @mps ] );
+    $self->gene_cache->freeze( $sha1 , $c->stash->{gene_mps} || [ ] );
+}
+
+sub populate_gene_sequences :Local {
+    my ($self, $c) = @_;
+    my $req        = $c->req;
+    my $type       = $req->param('gene_type');
+    my $type_index = {
+        cdna    => 0,
+        cds     => 1,
+        protein => 2,
+    };
+    my @mps;
+
+    push @mps, map {
+        my $index = $type_index->{$type};
+        $c->log->debug("found $type with index $index");
+
+        unless (defined $index) {
+            $c->throw_client_error(
+                public_message => 'Invalid data type',
+                http_status    => 200,
+            );
+        }
+
+        my $o = $_->[$index];
+        $c->log->debug("Got a $o at index $index");
+
+        if ($o->isa('Bio::PrimarySeq')) {
+            $o;
+        } else {
+            $c->log->debug("Downgrading from BCS to Bioperl object " . $o->name);
+            my $desc = get_description($o);
+            my $g    = Bio::PrimarySeq->new(
+                -id   => $desc,
+                -desc => $desc,
+                -seq  => $o->seq,
+            );
+        }
+    } @{ $c->stash->{gene_sequences} };
+    $c->stash( gene_mps => [ @mps ] );
 }
 
 sub bulk_gene_download :Path('/bulk/gene/download') :Args(1) {
