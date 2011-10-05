@@ -14,6 +14,7 @@ $phenotype_download
 $genotype_download
 $corre_download
 $acronym_download
+$genetic_map
 
 </%args>
 
@@ -68,6 +69,11 @@ if (!$pop->get_cvterm_acronyms($c)) { $acronym_download=undef;}
    corre_table_file    => $corre_table_file, 
    trait_acronym_pairs => $trait_acronym_pairs
  &>
+
+<& genetic_map.mas, 
+   genetic_map => $genetic_map
+&>
+
 <& download.mas, 
    phenotype_download => $phenotype_download,
    genotype_download  => $genotype_download,
