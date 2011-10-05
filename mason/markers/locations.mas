@@ -169,7 +169,7 @@ qq|<img src="$image_url" usemap="#map$count" border="0" alt="" />|;
 
 		    my %pcr_bands_by_name = ();
 		    my $sth = $dbh->prepare("SELECT organism.species || ' ' ||  stock.name FROM public.stock JOIN public.organism USING(organism_id) WHERE stock_id=?");
-		    
+
 		    foreach my $p (keys %$pcr_bands) { 
 
 		      $sth->execute($p);
@@ -280,7 +280,7 @@ qq|<img src="$image_url" usemap="#map$count" border="0" alt="" />|;
                         'Mg<sup>+2</sup> concentration' => $mg,
                         '__multicol'                    => 3,
                         '__tableattrs'                  => "width=\"100%\"",
-                      );
+                      ) if ($protocol ne 'SNP');
                     $locations_html .=
                       CXGN::Page::FormattingHelpers::info_table_html(
                         '__title' =>
@@ -292,7 +292,7 @@ qq|<img src="$image_url" usemap="#map$count" border="0" alt="" />|;
                        $indel => $indel_seq,
                        '__multicol'    => 2,
                       '__tableattrs'   => "width=\"100%\"",
-                      ) if $aspe || $indel;
+                      ) if $aspe || $indel || ($protocol eq "SNP");
                     $locations_html .= '</td></tr></table>';
                     push( @displayed_pcr, $pcr->pcr_experiment_id() );
                 }
