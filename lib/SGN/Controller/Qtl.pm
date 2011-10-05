@@ -53,7 +53,8 @@ sub population : PathPart('qtl/population') Chained Args(1) {
                     );
                 $self->_link($c);
                 $self->_show_data($c);           
-                $self->_list_traits($c);   
+                $self->_list_traits($c);
+                $self->genetic_map($c);
                 
                 if ( $id == 18 ) 
                 { 
@@ -528,6 +529,18 @@ sub get_template {
 sub guideline {
     my $self = shift;
     return qq |<a href="http://docs.google.com/View?id=dgvczrcd_1c479cgfb">Guidelines</a> |;
+}
+
+
+sub genetic_map {
+    my ($self, $c)  = @_;
+    my $mapv_id     = $c->stash->{pop}->mapversion_id();
+    my $map         = CXGN::Map->new( $c->dbc->dbh, { map_version_id => $mapv_id } );
+    my $map_name    = $map->get_long_name();
+    my $map_sh_name = $map->get_short_name();
+  
+    $c->stash( genetic_map => qq | <a href=/cview/map.pl?map_version_id=$mapv_id>$map_name ($map_sh_name)</a> | );
+
 }
 
 ####
