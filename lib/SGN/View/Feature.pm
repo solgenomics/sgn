@@ -278,8 +278,8 @@ sub mrna_and_protein_sequence {
         -seq  => $mrna_seq->seq,
        );
     my ( $trim_fmin, $trim_fmax ) = _calculate_cdna_utr_lengths(
-        $peptide_loc->to_range,
-        [ map $_->to_range, @exon_locations ],
+        _loc2range( $peptide_loc ),
+        [ map _loc2range( $_), @exon_locations ],
      );
 
     if( $trim_fmin || $trim_fmax ) {
@@ -293,6 +293,15 @@ sub mrna_and_protein_sequence {
     $protein_seq = $protein_seq->translate;
 
     return [ $mrna_seq, $protein_seq ];
+}
+sub _loc2range {
+    my ( $loc ) = @_;
+    return $loc->to_range if $loc->can('to_range');
+    return Bio::Range->new(
+        -start  => $loc->fmin + 1,
+        -end    => $loc->fmax,
+        -strand => $loc->strand,
+      );
 }
 
 # given the range of the peptide and the ranges of each of the exons
