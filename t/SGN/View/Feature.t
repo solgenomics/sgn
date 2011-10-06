@@ -4,7 +4,7 @@ use warnings;
 use base 'Test::Class';
 
 use Test::Class;
-use Test::More tests => 14;
+use Test::More tests => 17;
 
 use Data::Dump;
 use List::MoreUtils qw/ any /;
