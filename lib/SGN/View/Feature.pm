@@ -5,6 +5,7 @@ use warnings;
 use base 'Exporter';
 
 use HTML::Entities;
+use List::Util qw/ sum /;
 use List::MoreUtils qw/ any /;
 
 use Bio::Seq;
@@ -276,8 +277,11 @@ sub mrna_and_protein_sequence {
         -desc => 'protein sequence',
         -seq  => $mrna_seq->seq,
        );
-    my $trim_fmin = $peptide_loc->fmin         -  $exon_locations[0]->fmin;
-    my $trim_fmax = $exon_locations[-1]->fmax  -  $peptide_loc->fmax;
+    my ( $trim_fmin, $trim_fmax ) = _calculate_cdna_utr_lengths(
+        $peptide_loc->to_range,
+        [ map $_->to_range, @exon_locations ],
+     );
+
     if( $trim_fmin || $trim_fmax ) {
         $protein_seq = $protein_seq->trunc( 1+$trim_fmin, $mrna_seq->length - $trim_fmax );
     }
@@ -289,6 +293,44 @@ sub mrna_and_protein_sequence {
     $protein_seq = $protein_seq->translate;
 
     return [ $mrna_seq, $protein_seq ];
+}
+
+# given the range of the peptide and the ranges of each of the exons
+# (as Bio::RangeI's), calculate how many bases should be trimmed off
+# of each end of the cDNA (i.e. mRNA) seq to get the CDS seq
+sub _calculate_cdna_utr_lengths {
+    my ( $peptide, $exons ) = @_;
+
+    my ( $trim_fmin, $trim_fmax ) = ( 0, 0 );
+
+    # calculate trim_fmin if necessary
+    if( $exons->[0]->start < $peptide->start ) {
+
+        $trim_fmin =
+            sum
+            map {
+                $_->overlaps($peptide)
+                    ? $peptide->start - $_->start
+                    : $_->length
+            }
+            grep $_->start < $peptide->start, # find exons that overlap the UTR
+            @$exons
+    }
+
+    # calculate trim_fmax if necessary
+    if( $exons->[-1]->end > $peptide->end ) {
+        $trim_fmax =
+            sum
+            map {
+                $_->overlaps($peptide)
+                    ? $_->end - $peptide->end
+                    : $_->length
+            }
+            grep $_->end > $peptide->end, # find exons that overlap the UTR
+            @$exons
+    }
+
+    return ( $trim_fmin, $trim_fmax );
 }
 
 sub _peptides_rs {

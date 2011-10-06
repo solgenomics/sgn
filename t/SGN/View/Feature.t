@@ -36,6 +36,31 @@ sub TEST_FEATURE_TABLE : Tests {
     table_row_contains( $table_data->[0], 'not located', 'says feature is not located' );
     table_row_contains( $table_data->[0], $f->name, 'has feature name' );
 }
+
+sub TEST_UTR_LENGTHS : Tests {
+    my $self = shift;
+    local *_calc = sub {
+        SGN::View::Feature::_calculate_cdna_utr_lengths(
+            _make_range( @{+shift} ),
+            [ map { _make_range(@$_) } @_ ]
+        )
+    };
+
+    is_deeply( [ _calc( [6,10,1], [1,3,1], [5,10,1] ) ],
+               [ 4, 0 ]
+             );
+    is_deeply( [ _calc( [6,10,1], [1,3,1], [5,20,1] ) ],
+               [ 4, 10 ]
+             );
+    is_deeply( [ _calc( [1,10,1], [1,3,1], [5,20,1] ) ],
+               [ 0, 10 ]
+             );
+}
+
+sub _make_range {
+    Bio::Range->new( -start => shift, -end => shift, -strand => shift );
+}
+
 sub table_row_contains {
     my $row = shift;
     my $substr  = shift;
