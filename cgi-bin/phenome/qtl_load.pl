@@ -93,36 +93,20 @@ sub process_data {
 
     my ( $pop_name, $desc, $pop_detail, $message );
 
-    if ( $type eq 'begin' ) {
-        $message = 'A user is at the QTL data upload Step 0 of 5';
-        $self->send_email( '[QTL upload: Step 0]', $message, 'NA' );
-        $c->res->redirect("$referring_page/pop_form");
-        $c->detach();
+    if ( $type eq 'begin' ) 
+    {
+        $self->show_pop_form($referring_page);
     }
 
-    elsif ( $type eq 'pop_form' ) {
-        $pop_detail = $qtl_obj->user_pop_details();
-        my @error = $qtl_tools->check_pop_fields($pop_detail);
-
-        if (@error) {
-            $self->error_page(@error);
-        }
-        else {
-            ( $pop_id, $pop_name, $desc ) =
-              $self->load_pop_details($pop_detail);
-        }
-        unless ( !$pop_id ) {
-            $message = 'QTL population data uploaded: Step 1 of 5';
-            $self->send_email( '[QTL upload: Step 1]', $message, $pop_id );
-            $c->res->redirect("$referring_page/trait_form/$pop_id");
-            $c->detach();
-        }
+    elsif ( $type eq 'pop_form' ) 
+    {
+        $self->post_pop_form($referring_page, $qtl_obj, $qtl_tools);
     }
 
     elsif ( $type eq 'trait_form' ) {
 
-        my ( $trait_file, $trait_to_db );
-        if ( $args{'trait_file'} ) {
+         my ( $trait_file, $trait_to_db );
+         if ( $args{'trait_file'} ) {
             $trait_file = $self->trait_upload( $qtl_obj, $args{'trait_file'} );
             $trait_to_db = $self->store_traits($trait_file);
         }
@@ -1529,4 +1513,40 @@ MSG
         $c->res->redirect($c->req->referer);
         $c->detach();
     }
+}
+
+sub show_pop_form {
+    my ( $self ) = @_;
+    $self->send_email( '[QTL upload: Step 1]', 'A user is at the QTL data upload Step 1 of 5', 'NA' );    
+    $self->redirect_to_next_form($c->req->base . "/qtl/form/pop_form"); 
+}
+
+sub post_pop_form {
+    my ($self, $referring_page, $qtl_obj, $qtl_tools) = @_;
+
+    my $pop_detail = $qtl_obj->user_pop_details();    
+    my @error = $qtl_tools->check_pop_fields($pop_detail);
+    
+    my  ( $pop_id, $pop_name, $desc );
+    if (@error) 
+    {
+        $self->error_page(@error);
+    }
+    else 
+    {
+        ( $pop_id, $pop_name, $desc ) =
+            $self->load_pop_details($pop_detail);
+    }
+    
+    unless ( !$pop_id ) 
+    {
+        $self->send_email( '[QTL upload: Step 1]', 'QTL population data uploaded: Step 1 of 5 completed', $pop_id );
+        $self->redirect_to_next_form("$referring_page/trait_form/$pop_id");        
+    }
+}
+
+sub redirect_to_next_form {
+    my ($self, $next_form) = @_;
+    $c->res->redirect("$next_form");
+    $c->detach();    
 }
