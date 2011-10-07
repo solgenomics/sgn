@@ -491,7 +491,7 @@ sub qtl_form : PathPart('qtl/form') Chained Args {
     
     $type = 'intro' if !$type; 
    
-    if (!$pop_id and $type ne 'intro') 
+    if (!$pop_id and $type !~ /intro|pop_form/ ) 
     {
      $c->throw_404("Population id argument is missing");   
     }
