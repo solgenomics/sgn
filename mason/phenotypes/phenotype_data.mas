@@ -70,9 +70,10 @@ foreach my $term(sort keys %info ) {
   my $stat = Statistics::Descriptive::Sparse->new();
   $stat->add_data(@values);
   my $x = Number::Format->new();
-  my $mean_value = $x->round($stat->mean(), 4);
-  my $min = $x->round($stat->min, 4);
-  my $max = $x->round($stat->max, 4);
+#  my $x = sprintf "%1d", $value;
+  my $mean_value =  $x->round($stat->mean(), 4) || sprintf "%2d" ;
+  my $min = $x->round($stat->min, 4) || sprintf "%2d" ;
+  my $max = $x->round($stat->max, 4) || sprintf "%2d" ;
 
   push  @data,  [map {$_}
                  ( (tooltipped_text(qq|<a href="/chado/cvterm.pl?cvterm_id=$term_id">$term_name</a>|, $definition) ), $mean_value, $min, $max, scalar(@values)   ) ];
