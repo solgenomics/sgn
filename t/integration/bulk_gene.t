@@ -82,7 +82,7 @@ $mech->with_test_level( local => sub {
             gene_type => $gene_type,
         },
     }, "submit bulk_gene with a single valid identifier for cdna");
-    my $sha1 = sha1_hex("cds Solyc02g081670");
+    my $sha1 = sha1_hex("cds $id");
     $mech->content_unlike(qr/Caught exception/) or diag $mech->content;
     $mech->content_unlike(qr/Your query did not contain any valid identifiers/);
     $mech->content_unlike(qr/Invalid data type/);
@@ -137,7 +137,7 @@ $mech->with_test_level( local => sub {
             gene_type => $gene_type,
         },
     }, "submit bulk_gene with a single valid identifier for cdna");
-    my $sha1 = sha1_hex("cdna Solyc02g081670");
+    my $sha1 = sha1_hex("cdna $id");
     $mech->content_unlike(qr/Caught exception/) or diag $mech->content;
     $mech->content_unlike(qr/Your query did not contain any valid identifiers/);
     $mech->content_unlike(qr/Invalid data type/);
@@ -194,7 +194,7 @@ $mech->with_test_level( local => sub {
             gene_type => $gene_type,
         },
     }, "submit bulk_gene with a single valid identifier for protein");
-    my $sha1 = sha1_hex("protein Solyc02g081670");
+    my $sha1 = sha1_hex("protein $id");
     $mech->content_unlike(qr/Caught exception/) or diag $mech->content;
     $mech->content_unlike(qr/Your query did not contain any valid identifiers/);
     my @flinks = $mech->find_all_links( url_regex => qr{/bulk/gene/download/$sha1\.fasta} );

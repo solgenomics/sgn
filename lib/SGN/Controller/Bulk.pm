@@ -260,6 +260,12 @@ sub populate_gene_sequences :Local {
         }
 
         my $o = $_->[$index];
+        unless (defined $o) {
+            $c->throw_client_error(
+                public_message => 'Error generating data',
+                http_status    => 200,
+            );
+        }
         $c->log->debug("Got a $o at index $index");
 
         if ($o->isa('Bio::PrimarySeq')) {
