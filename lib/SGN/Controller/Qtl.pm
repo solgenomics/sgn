@@ -520,9 +520,7 @@ sub templates {
 
 
 sub get_template {
-    my ($self, $c, $type) = @_;
-    
-    $c->throw_404("form type argument is missing.") if !$type;
+    my ($self, $c, $type) = @_;        
     return $self->templates->{$type};
 }
 
