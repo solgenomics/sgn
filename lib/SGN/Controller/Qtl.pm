@@ -274,12 +274,15 @@ sub _correlation_output {
         $cache->set($key_t, "$corre_table", "24h");
         
     }
-   
+  
+    $heatmap     = undef if -z $c->get_conf('basepath')  . $heatmap;
+    $corre_table = undef if -z $c->get_conf('basepath') . $corre_table;
+    
     $c->stash( heatmap_file     => $heatmap,
                corre_table_file => $corre_table,
         );  
-    
-    $self->_get_trait_acronyms($c);
+ 
+    $self->_get_trait_acronyms($c) if $heatmap;
 }
 
 
@@ -540,6 +543,7 @@ sub genetic_map {
     $c->stash( genetic_map => qq | <a href=/cview/map.pl?map_version_id=$mapv_id>$map_name ($map_sh_name)</a> | );
 
 }
+
 
 ####
 1;
