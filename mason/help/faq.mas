@@ -52,6 +52,10 @@
                 <br />
                 <p><strong>Question:</strong> What does the color gradient in the Gbrowse tracks mean? <br />
                 <strong>Answer:</strong> The intensity of the color signifies the degree of match between the feature and the genome sequence, the white color signifies the lowest match whereas the darkest color signifies the strongest match. You can find more detailed explanation by following the '?' button on the track of your interest.
+
+		<p>
+		  <strong>Question:</strong> What do the identifiers of the format Solyc01g001010.1.1 mean?<br />
+		  <strong>Answer:</strong> These identifiers denote loci, predicted mRNA and protein sequences from the tomato genome sequencing project. "Solyc" is the 5 letter abbreviation of <i>Solanum lycopersicum</i>, the number before the g denotes the chromosome, g denotes that it is a gene, and the number is denotes the gene on the chromosome, starting at the top and counting in 10 increments. The first .1 denotes the version number of the locus (and if only the first number is given, denotes the locus), whereas the second .1 denotes the transcript (each locus can give rise the many transcripts), and also the proteins derived from these transcripts.
                 <br />
                 </p>
               </td>
