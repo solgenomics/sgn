@@ -44,7 +44,7 @@ Naama Menda <nm249@cornell.edu>
 
 <%once>
 use CXGN::Page::FormattingHelpers qw/ tooltipped_text columnar_table_html /;
-use Number::Format;
+
 use Statistics::Descriptive;
 use Scalar::Util qw(looks_like_number);
 
@@ -53,6 +53,7 @@ use Scalar::Util qw(looks_like_number);
 <%perl>
 
 my @data;
+my @qual_data;
 my %info; # hash of term names, since we can have multiple phenotypes of the same term
 my $graph_icon = qq |<img src="/documents/img/pop_graph.png"/> |;
 
@@ -64,7 +65,7 @@ foreach my $phenotype (@$phenotypes) {
 }
 my $count = 0;
 #display traits sorted by name
-##NEED TO SORT BY cvtermprop, then by name######
+##NEED TO SORT BY cvtermprop or by parent? , then by name######
 foreach my $term(sort keys %info ) {
   my ($term_name, $term_id, $definition) = split '\|' , $term;
   my @values; # all quantitative data does here
@@ -77,7 +78,7 @@ foreach my $term(sort keys %info ) {
   }
   my $stat = Statistics::Descriptive::Sparse->new();
   $stat->add_data(@values);
-  
+
   my $mean_value =  sprintf("%.2f", $stat->mean);
   my $min = sprintf("%.2f", $stat->min);
   my $max = sprintf("%.2f", $stat->max);
@@ -86,9 +87,13 @@ foreach my $term(sort keys %info ) {
   if (scalar(@values) ) {
     push  @data,  [map {$_}
                    ( (tooltipped_text(qq|<a href="/chado/cvterm.pl?cvterm_id=$term_id">$term_name</a>|, $definition) ), $mean_value, $min, $max, scalar(@values)   ) ];
-    
+
     push  @{ $data[$count] }, qq | <a href="/phenome/qtl_analysis.pl?stock_id=$object_id&amp;cvterm_id=$term_id"> $graph_icon</a> |    if $has_qtl;
     $count++;
+  }
+  if (scalar(@qual_values) ) {
+    push  @qual_data,  [map {$_}
+                        ( (tooltipped_text(qq|<a href="/chado/cvterm.pl?cvterm_id=$term_id">$term_name</a>|, $definition) ), join(', ' , @qual_values ) ) ];
   }
 }
 
@@ -113,6 +118,19 @@ push @headings , 'QTL(s)' if $has_qtl;
       __alt_width  =>1,
       __alt_offset =>3,
       __align =>'lrrrc',
+&>
+
+% }
+
+% if(@qual_data) {
+
+<& /page/columnar_table.mas,
+  headings => ["Qualitative Trait", "Value"],
+    data     => \@qual_data ,
+      __alt_freq   =>2,
+      __alt_width  =>1,
+      __alt_offset =>3,
+      __align =>'ll',
 &>
 
 % }
