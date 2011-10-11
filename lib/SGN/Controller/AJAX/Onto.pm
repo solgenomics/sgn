@@ -170,6 +170,7 @@ sub roots_GET {
             'SP',
             'SO',
             'PATO',
+	    'CO',
             );
     }
     else {
