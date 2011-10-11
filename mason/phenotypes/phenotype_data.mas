@@ -71,9 +71,9 @@ foreach my $term(sort keys %info ) {
   $stat->add_data(@values);
   my $x = Number::Format->new();
 #  my $x = sprintf "%1d", $value;
-  my $mean_value =  $x->round($stat->mean(), 4) || sprintf "%2d" ;
-  my $min = $x->round($stat->min, 4) || sprintf "%2d" ;
-  my $max = $x->round($stat->max, 4) || sprintf "%2d" ;
+  my $mean_value =  $x->round($stat->mean(), 2) || sprintf "%2d" ;
+  my $min = $x->round($stat->min, 2) || sprintf "%2d" ;
+  my $max = $x->round($stat->max, 2) || sprintf "%2d" ;
 
   push  @data,  [map {$_}
                  ( (tooltipped_text(qq|<a href="/chado/cvterm.pl?cvterm_id=$term_id">$term_name</a>|, $definition) ), $mean_value, $min, $max, scalar(@values)   ) ];
