@@ -74,10 +74,7 @@ sub children_GET {
         my $responsehash = $self->flatten_node($child_node, $relationship_node);
         push @response_list, $responsehash;
     }
-    
-    print STDERR "NOW SORTING LIST!!!!!!\n\n\n\n\n";
-    @response_list = sort { $a->{cvterm_name} cmp $b->{cvterm_name} } @response_list;
-
+    @response_list = sort { lc $a->{cvterm_name} cmp lc $b->{cvterm_name} } @response_list;
     $c->{stash}->{rest} = \@response_list;
 }
 
