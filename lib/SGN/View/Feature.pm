@@ -253,17 +253,28 @@ sub mrna_cds_protein_sequence {
     # own sequences (because the rows can act as Bio::PrimarySeqI's
     return [ $mrna_feature, $peptide ] if $peptide && $peptide->subseq(1,1) && $mrna_feature && $mrna_feature->subseq(1,1);
 
-    my @exon_locations = _exon_rs( $mrna_feature )->all
-        or return;
+    warn "Grabbing all exon locations " . localtime();
+    my @exon_locations = _exon_rs( $mrna_feature )->all or return;
+
+    warn("Found " .scalar(@exon_locations). " exon locations");
+
+    warn "Got all exon locations" . localtime();
+
+    my $description = get_description($mrna_feature, 1); # plain
+
+    my $mrna_sequence = join( '', map {
+            $_->srcfeature->subseq( $_->fmin+1, $_->fmax ),
+         } @exon_locations );
+
+    warn "Created mrna_sequence " . localtime();
 
     my $mrna_seq = Bio::PrimarySeq->new(
         -id   => $mrna_feature->name,
-        -desc => get_description($mrna_feature, 1), # plain
-        -seq  => join( '', map {
-            $_->srcfeature->subseq( $_->fmin+1, $_->fmax ),
-         } @exon_locations
-        ),
+        -desc => $description,
+        -seq  => $mrna_sequence,
     );
+
+    warn "Created mrna_seq " . localtime();
 
     return unless $mrna_seq->length > 0;
 
@@ -315,10 +326,12 @@ sub _peptides_rs {
            })
     }
 sub _peptide_loc {
-    shift->search_related( 'featureloc_features', {
+    my ($rs) = @_;
+    $rs->search_related( 'featureloc_features', {
             srcfeature_id => { -not => undef },
           },
-          { prefetch => 'srcfeature',
+          { # Don't prefetch srcfeatures, it significantly slows down the query
+            # prefetch => 'srcfeature',
             order_by => 'fmin',
           },
          );
@@ -327,8 +340,9 @@ sub _peptide_loc {
 sub _exon_rs {
     my ( $mrna_feature ) = @_;
 
-    $mrna_feature
-        ->feature_relationship_objects({
+    warn "entering exon_rs " . localtime();
+
+    my $rs = $mrna_feature->feature_relationship_objects({
             'me.type_id' => {
                 -in => _cvterm_rs( $mrna_feature, 'relationship', 'part_of' )
                          ->get_column('cvterm_id')
@@ -355,7 +369,9 @@ sub _exon_rs {
             prefetch => 'srcfeature',
             order_by => 'fmin',
           },
-         )
+         );
+    warn "created exon_rs " . localtime();
+    return $rs;
 }
 
 sub _cvterm_rs {
