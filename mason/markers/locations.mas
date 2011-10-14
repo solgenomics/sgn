@@ -122,7 +122,7 @@ if (    $experiments
                     '__tableattrs' => "width=\"$width\"",
                     '__multicol'   => $multicol,
                     'Chromosome'   => $loc->lg_name(),
-                    'Position    ' => sprintf( '%.2f cM', $loc->position() ),
+                    'Position    ' => sprintf( '%.2f', $loc->position() )." ".$map->get_units(),
                     'Confidence'   => $loc->confidence(),
                     'Protocol'     => $protocol
                 );
