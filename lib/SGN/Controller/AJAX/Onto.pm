@@ -289,6 +289,8 @@ sub cache_GET {
         $c->{stash}->{rest} = \%response;
         return;
     }
+    
+#    $self->add_cache_list(undef, $cvterm, $cvterm->type());
     while (my $p = $parents_rs->next()) {
         my $children_rs = $p->children();
         while (my $rel_rs = $children_rs->next()) { # returns a list of cvterm rows
@@ -318,12 +320,12 @@ sub add_cache_list :Private {
     my $child  = shift; # object
     my $relationship = shift; #object
 
-     my $unique_hashkey = $parent->cvterm_id()." ".$child->cvterm_id();
-     if (exists($self->{duplicates}->{$unique_hashkey})) {
+    my $unique_hashkey = $parent->cvterm_id()." ".$child->cvterm_id();
+    if (exists($self->{duplicates}->{$unique_hashkey})) {
         return;
-     }
-
-     $self->{duplicates}->{$unique_hashkey}++;
+    }
+    
+    $self->{duplicates}->{$unique_hashkey}++;
 
     my $hashref = $self->flatten_node($child, $relationship);
     ###$hashref->{parent} = $parent->get_full_accession();
