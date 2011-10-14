@@ -74,7 +74,7 @@ foreach my $lmo (@locus_marker_objs) {
 	    my $map_name       = $map->get_short_name();
 	    my $chromosome =
 	      CXGN::Cview::ChrMarkerImage->new(
-                 "", 100, 150, $locus->get_dbh(), $lg_name, $map, $marker_name,
+                 "", 250, 150, $locus->get_dbh(), $lg_name, $map, $marker_name,
                  $c->get_conf("basepath"),  $c->get_conf('tempfiles_subdir')."/cview",
                   );
 	    my ( $image_path, $image_url ) =
@@ -117,7 +117,7 @@ if ( scalar(@locus_marker_objs) == 0 && $lg_name ) {
     my $dummy_name;
     $dummy_name = "$arm arm" if $arm;
     my $chr_image =
-      CXGN::Cview::ChrMarkerImage->new( "", 150, 150, $locus->get_dbh(),
+      CXGN::Cview::ChrMarkerImage->new( "", 250, 150, $locus->get_dbh(),
 						  $lg_name, $map, $dummy_name, $c->get_conf("basepath"), $c->get_conf('tempfiles_subdir')."/cview");
 
      my ($chr) = $chr_image->get_chromosomes();
