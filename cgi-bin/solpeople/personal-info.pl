@@ -9,7 +9,7 @@
 
 use strict;
 use CXGN::Login;
-	
+
 my $contact_info_page = new SolPeoplePersonalInfoPage();
 
 package SolPeoplePersonalInfoPage;
@@ -20,6 +20,7 @@ use CXGN::People;
 use File::Spec;
 use HTML::Entities;
 use CXGN::Phenome::Locus;
+use Digest::MD5 qw | md5_hex |;
 
 use base qw | CXGN::Page::Form::SimpleFormPage |;
 
@@ -456,6 +457,9 @@ sub display_page
 	$page->jsan_use("CXGN.DynamicPreviewPane", "MochiKit.DOM", "MochiKit.Signal"); #include javascript modules
 	$page->header("Sol People: contact and research info");
 	print page_title_html("Personal info for " . $person->get_first_name() . " " . $person->get_last_name());
+
+	print qq { <img src="http://gravatar.com/avatar/}. md5_hex(lc($person->get_contact_email())). qq {" /><br /> };
+
 	print $self->get_actions_toolbar() . "<hr />\n";
 	print $self->get_form()->as_table_string();
 
