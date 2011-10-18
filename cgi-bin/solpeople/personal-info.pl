@@ -456,9 +456,18 @@ sub display_page
 	$page->add_style(text => ".invisible {display: none}");
 	$page->jsan_use("CXGN.DynamicPreviewPane", "MochiKit.DOM", "MochiKit.Signal"); #include javascript modules
 	$page->header("Sol People: contact and research info");
+
+	print qq{<table><tr valign="middle"><td width="670" align="center" valign="middle" ><br />};
+
 	print page_title_html("Personal info for " . $person->get_first_name() . " " . $person->get_last_name());
 
-	print qq { <img src="http://gravatar.com/avatar/}. md5_hex(lc($person->get_contact_email())). qq {" /><br /> };
+	print "</td><td>";
+
+	
+	print qq { <a href="http://gravatar.com/" class="footer" ><img src="http://gravatar.com/avatar/}. md5_hex(lc($person->get_contact_email())). qq {?d=mm" /></a></td>};
+	print "</td></tr></table>";
+
+
 
 	print $self->get_actions_toolbar() . "<hr />\n";
 	print $self->get_form()->as_table_string();
