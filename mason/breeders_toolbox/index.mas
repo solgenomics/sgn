@@ -180,6 +180,7 @@ with suggestions for improvements!</p>
 
 <&| /page/info_section.mas, title=>'Tutorials' &>
 <ul>
+  <li>The SGN Breeders Toolbox <a href="http://www.extension.org/pages/61208">webinar</a> by Joyce Van Eck</li>
   <li>Plant Breeding and Genomics at the <a href="http://www.extension.org/plant_breeding_genomics">eXtension</a> site</li>
   <li>Tomato Genome Browser <a href="http://www.extension.org/article/32485">Webinar</a> presented at the 2010 Tomato Disease Workshop by <a href="mailto:merk.9@osu.edu">Heather Merk</a></li>
   <li>Designing a CAPS Marker From a SNP Using The <a href="http://www.extension.org/article/32361">SGN CAPS Designer</a> by <a href="mailto:merk.9@osu.edu">Heather Merk</a></li>
@@ -207,7 +208,7 @@ with suggestions for improvements!</p>
 <li><b>Potato</b>
  <ul>
   <li><a href="/organism/Solanum_tuberosum/genome">Potato genome</a></li>
-  <li><a href="https://spreadsheets.google.com/spreadsheet/ccc?key=0AglmOi1fE8ZYdEtWaUV3S1FzUjNFVmt4X29fNU9HLXc&hl=en_US">Potato marker list</a> (work in progres by David Douches)<li>
+  <li><a href="https://spreadsheets.google.com/spreadsheet/ccc?key=0AglmOi1fE8ZYdEtWaUV3S1FzUjNFVmt4X29fNU9HLXc&hl=en_US">Potato marker list</a> (work in progres by David Douches)</li>
  </ul>
 </li>
 <li><b>Tomato</b>
