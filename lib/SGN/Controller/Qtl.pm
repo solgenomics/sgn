@@ -4,7 +4,6 @@ SGN::Controller::Qtl- controller for solQTL
 
 =cut
 
-
 package SGN::Controller::Qtl;
 
 use Moose;
@@ -16,6 +15,7 @@ use File::Copy;
 use File::Basename;
 use File::Slurp;
 use Try::Tiny;
+use URI::FromHash 'uri';
 use Cache::File;
 use Path::Class;
 use Bio::Chado::Schema;
@@ -543,6 +543,70 @@ sub genetic_map {
     $c->stash( genetic_map => qq | <a href=/cview/map.pl?map_version_id=$mapv_id>$map_name ($map_sh_name)</a> | );
 
 }
+
+
+sub search_results : PathPart('qtl/search/results') Chained Args(0) {
+    my ($self, $c) = @_;
+    my $trait = $c->req->param('trait');
+    $trait =~ s/(^\s+|\s+$)//g;
+    $trait =~ s/\s+/ /g;
+    
+    my $schema    = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");  
+    my $rs = $schema->resultset("Cv::Cvterm")->search(
+        { name => { 'LIKE' => '%'.$trait .'%'} },
+        { columns => [ qw/ cvterm_id name definition/ ] },
+        {page => $c->req->param('page') || 1,
+         rows => 10
+        }
+        );
+      
+    my $rows = $self->mark_qtl_traits($c, $rs);
+                                                        
+    $c->stash(template   => '/qtl/search/results.mas',
+              data       => $rows,
+              query      => $c->req->param('trait'),
+              pager      => $rs->pager,
+              page_links => sub {uri ( query => { trait => $c->req->param('trait'), page => shift } ) }
+        );
+}
+
+sub mark_qtl_traits {
+    my ($self, $c, $rs) = @_;
+    my @rows =();
+    
+    if (!$rs->single) 
+    {
+        return undef;
+    }
+    else 
+    {  
+        my $qtltool       = CXGN::Phenome::Qtl::Tools->new();
+        my $yes_mark = qq |<font size=4 color="#0033FF"> &#10003;</font> |;
+        my $no_mark  = qq |<font size=4 color="#FF0000"> X </font> |;
+
+        while (my $cv = $rs->next) 
+        {
+            my $id   = $cv->cvterm_id;
+            my $name = $cv->name;
+            my $def  = $cv->definition;
+
+            if (  $qtltool->is_from_qtl( $id ) ) 
+            {                         
+                push @rows, [ qq | <a href="/chado/cvterm.pl?cvterm_id=$id">$name</a> |, $def, $yes_mark ];
+           
+            }
+            else 
+            {
+                push @rows, [ qq | <a href="/chado/cvterm.pl?cvterm_id=$id">$name</a> |, $def, $no_mark ];
+            }      
+        } 
+        return \@rows;
+    } 
+}
+
+
+
+
 
 
 ####
