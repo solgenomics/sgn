@@ -544,6 +544,10 @@ sub genetic_map {
 
 }
 
+sub search_form : PathPart('qtl/search') Chained Args(0) {
+    my ($self, $c) = @_;
+    $c->res->redirect('/search/qtl');
+}
 
 sub search_results : PathPart('qtl/search/results') Chained Args(0) {
     my ($self, $c) = @_;
