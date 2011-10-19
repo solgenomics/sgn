@@ -273,7 +273,7 @@ sub mrna_and_protein_sequence {
         or return [ $mrna_seq ];
 
     my $protein_seq = Bio::PrimarySeq->new(
-        -id   => $mrna_feature->name,
+        -id   => $peptide->name,
         -desc => 'protein sequence',
         -seq  => $mrna_seq->seq,
        );
