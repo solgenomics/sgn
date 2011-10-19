@@ -269,7 +269,7 @@ sub phenotype_tab {
     );
 }
 sub qtl_tab {
-    return CXGN::Search::CannedForms->qtl_search_form();
+   return $c->render_mason('/qtl/search/form.mas'); 
 }
 sub trait_tab {
     return $c->render_mason('/ontology/traits.mas' );
