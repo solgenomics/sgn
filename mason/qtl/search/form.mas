@@ -14,7 +14,8 @@ foreach my $pop_obj (@qtl_pops) {
    my $pop_name = $pop_obj->get_name();
    $pop_links  .= qq |<a href="/qtl/population/$pop_id">$pop_name</a> <br /> |;     
 }
-    
+
+my $help = qq |(<a href="/qtl/search/help">help</a>) |;       
 </%perl>
 
 
@@ -32,7 +33,7 @@ foreach my $pop_obj (@qtl_pops) {
       </td>
     </tr>
     <tr>
-      <td>Search QTLs with trait name:
+      <td>Search QTLs with trait name <% $help %>:
       </td>
     </tr>
     <tr>
