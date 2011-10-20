@@ -549,6 +549,11 @@ sub search_form : PathPart('qtl/search') Chained Args(0) {
     $c->res->redirect('/search/qtl');
 }
 
+sub qtl_population : PathPart('qtl/population') Chained Args(0) {
+    my ($self, $c) = @_;
+    $c->res->redirect('/search/qtl');
+}
+
 sub search_results : PathPart('qtl/search/results') Chained Args(0) {
     my ($self, $c) = @_;
     my $trait = $c->req->param('trait');
@@ -584,7 +589,7 @@ sub mark_qtl_traits {
     }
     else 
     {  
-        my $qtltool       = CXGN::Phenome::Qtl::Tools->new();
+        my $qtltool  = CXGN::Phenome::Qtl::Tools->new();
         my $yes_mark = qq |<font size=4 color="#0033FF"> &#10003;</font> |;
         my $no_mark  = qq |<font size=4 color="#FF0000"> X </font> |;
 
