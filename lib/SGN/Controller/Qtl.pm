@@ -554,6 +554,11 @@ sub qtl_population : PathPart('qtl/population') Chained Args(0) {
     $c->res->redirect('/search/qtl');
 }
 
+sub search_help : PathPart('qtl/search/help') Chained Args(0) {
+    my ($self, $c) = @_;
+    $c->stash(template => '/qtl/search/help/index.mas');
+}
+
 sub search_results : PathPart('qtl/search/results') Chained Args(0) {
     my ($self, $c) = @_;
     my $trait = $c->req->param('trait');
