@@ -4,7 +4,7 @@ use warnings;
 use base 'Test::Class';
 
 use Test::Class;
-use Test::More tests => 17;
+use Test::More tests => 18;
 
 use Data::Dump;
 use List::MoreUtils qw/ any /;
@@ -35,6 +35,8 @@ sub TEST_FEATURE_TABLE : Tests {
     is( scalar(@$table_data), 1, 'got one row for the one, unlocated feature' );
     table_row_contains( $table_data->[0], 'not located', 'says feature is not located' );
     table_row_contains( $table_data->[0], $f->name, 'has feature name' );
+    table_row_contains( $table_data->[0], $f->organism->species, 'has species' );
+
 }
 
 sub TEST_UTR_LENGTHS : Tests {

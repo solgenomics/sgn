@@ -6,7 +6,7 @@ use base 'Exporter';
 
 use HTML::Entities;
 use List::Util qw/ sum /;
-use List::MoreUtils qw/ any /;
+use List::MoreUtils qw/ any uniq /;
 
 use Bio::Seq;
 
@@ -124,10 +124,14 @@ sub related_stats {
 }
 
 sub feature_table {
-    my ($features,$reference_sequence) = @_;
-    my @data;
-    my $na_html = '<span class="ghosted">n/a</span>';
+    my ( $features, $reference_sequence, $omit_columns ) = @_;
 
+    { no warnings 'uninitialized';
+      $omit_columns ||= [];
+      $omit_columns = [$omit_columns] unless ref $omit_columns eq 'ARRAY';
+    }
+
+    my @data;
     for my $f (sort { $a->name cmp $b->name } @$features) {
         my @ref_condition =
             $reference_sequence ? ( srcfeature_id => $reference_sequence->feature_id )
@@ -145,12 +149,13 @@ sub feature_table {
                 my $ref = $loc->srcfeature;
                 my ($start,$end) = ($loc->fmin+1, $loc->fmax);
                 push @data, [
+                    organism_link( $f->organism ),
                     cvterm_link($f->type),
                     feature_link($f),
                     ($ref ? $ref->name : '<span class="ghosted">null</span>').":$start..$end",
-                    commify_number( feature_length( $f, $loc ) ) || $na_html,
-                    $loc->strand ? ( $loc->strand == 1 ? '+' : '-' ) : $na_html,
-                    $loc->phase || $na_html,
+                    commify_number( feature_length( $f, $loc ) ) || undef,
+                    $loc->strand ? ( $loc->strand == 1 ? '+' : '-' ) : undef,
+                    $loc->phase || undef,
                     ];
             }
         }
@@ -160,15 +165,46 @@ sub feature_table {
                 $nl .= " on ".encode_entities( $reference_sequence->name )
             }
             push @data, [
+                organism_link( $f->organism ),
                 cvterm_link($f->type),
                 feature_link($f),
                 qq|<span class="ghosted">$nl</span>|,
-                commify_number( feature_length( $f, undef ) ) || $na_html,
-                ($na_html)x2,
+                commify_number( feature_length( $f, undef ) ) || undef,
+                undef,
+                undef,
             ];
         }
     }
-    return \@data;
+
+    my @headings = ( "Organism", "Type", "Name", "Location(s)", "Length", "Strand", "Phase" );
+
+    # omit any columns that are *all* undefined, or that we were
+    # requested to omit
+    my @cols_to_omit = uniq(
+        do {
+            my %heading_index = do { my $i = 0; map { lc $_ => $i++ } @headings };
+            (map {
+                my $i = $heading_index{lc $_};
+                defined $i or die "$_ column not found";
+                $i
+             } @$omit_columns
+            )
+        },
+      );
+    for my $t ( [\@headings], \@data ) {
+        for my $row ( @$t ) {
+            splice( @$row, $_, 1 ) for @cols_to_omit;
+        }
+    }
+
+    # make html for any other undef cells
+    for (@data) {
+        for (@$_) {
+            $_ = '<span class="ghosted">n/a</span>' unless defined;
+        }
+    }
+
+    return ( headings => \@headings, data => \@data );
 }
 
 # try to figure out the "length" of a feature, which will vary for different features
