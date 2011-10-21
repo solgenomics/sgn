@@ -276,6 +276,7 @@ sub project_metadata_prop_list {
             "genome_project_dates"                => "Project start, end",
             "genome_project_funding_agencies"     => "Funding Agencies",
 	    "genome_project_url"                  => "Project URL", 
+            "genome_project_genbank_link"                 => "Genbank link",
 	);
 
 }
