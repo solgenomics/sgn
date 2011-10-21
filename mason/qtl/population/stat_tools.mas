@@ -81,21 +81,6 @@ $userid
     Under development.
   </div>
 %}
-  <div id    ="waitmsg" 
-       style ="display:none; 
-              color:#f87431; 
-              font-weight: bold; 
-              font-style:italic; 
-              background-color:#fff;
-              width:200px;
-              word-wrap:break-word;
-              ">   
-    <pre>solQTL is running ..... 
-                Please wait ..... 
-                       This may take 
-                            a few minutes.
-    </pre>
-  </div>      
 </div>
  
- 
+ <& /qtl/waitmessage.mas &> 
