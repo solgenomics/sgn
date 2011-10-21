@@ -1,3 +1,6 @@
+
+<& /util/import_javascript.mas, classes => ["Prototype", "jquery", "thickbox"] &>
+
 <br />
 <& /page/page_title.mas, title=>"Afri-SOL: A new network of researchers working on African solanaceous plants" &>
 <div class="indentedcontent">
