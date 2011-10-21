@@ -275,14 +275,14 @@ sub _correlation_output {
         
     }
   
-    $heatmap     = undef if -z $c->get_conf('basepath')  . $heatmap;
+    $heatmap     = undef if -z $c->get_conf('basepath')  . $heatmap;   
     $corre_table = undef if -z $c->get_conf('basepath') . $corre_table;
     
     $c->stash( heatmap_file     => $heatmap,
                corre_table_file => $corre_table,
         );  
  
-    $self->_get_trait_acronyms($c) if $heatmap;
+    $self->_get_trait_acronyms($c);
 }
 
 
@@ -400,7 +400,14 @@ sub _link {
 
 sub _get_trait_acronyms {
     my ($self, $c) = @_;
-    $c->stash(trait_acronym_pairs => $c->stash->{pop}->get_cvterm_acronyms());
+    if ( $c->stash->{heatmap_file} ) 
+    {
+        $c->stash(trait_acronym_pairs => $c->stash->{pop}->get_cvterm_acronyms());
+    }
+    else 
+    {
+        $c->stash(trait_acronym_pairs => undef );
+    }
 }
 
 sub _get_owner_details {
