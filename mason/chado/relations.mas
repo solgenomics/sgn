@@ -43,11 +43,11 @@
     my %rels;
     push @{$rels{$_->[0]}{$_->[1]}}, $_->[2]
         for (
-          ( map [ $m->scomp('/chado/cvterm_link.mas', cvterm =>  $_->type, inflect => 'PL_V' ), 'downstream', $_->subject ], $principle->${\"${relationship_name}_objects"}()  ),
+          ( map [ $m->scomp('/chado/cvterm_link.mas', cvterm =>  $_->type, inflect => ( $_->type->name =~ /_of$/ ? 'PL_N' : 'PL_V' ) ), 'downstream', $_->subject ], $principle->${\"${relationship_name}_objects"}()  ),
           ( map [ $m->scomp('/chado/cvterm_link.mas', cvterm => $_->type ), 'upstream',   $_->object  ], $principle->${\"${relationship_name}_subjects"}() ),
         );
 
-    my $type = $principle->type ? $principle->type->name : 'dataset';
+    my $type = $principle->type ? $m->scomp('/chado/cvterm_link.mas', cvterm => $principle->type) : 'dataset';
 
 </%init>
 
@@ -57,7 +57,7 @@
 %         if( my $objects = $updown->{$direction} ) {
 
 
-% my ($is,$are) = $reltype =~ /part[ _]of/i ? (' is',' are') : ('','');
+% my ($is,$are) = $reltype =~ /\w+[ _]of/i ? (' is a',' are') : ('','');
 <&| /page/info_section.mas,
    title => $direction eq 'upstream' ? qq|$object_type_text this $type$is $reltype| : qq|$object_type_text that$are $reltype this $type|,
    is_subsection => 1,
