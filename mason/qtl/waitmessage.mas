@@ -1,0 +1,27 @@
+<%doc>
+
+=head1 NAME 
+qtl/waitmessage.mas - wait message while solqtl is running
+
+=AUTHOR
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc> 
+ 
+<div id    ="waitmsg" 
+       style ="display:none; 
+              color:#f87431; 
+              font-weight: bold; 
+              font-style:italic; 
+              background-color:#fff;
+              width:200px;
+              word-wrap:break-word;
+              ">   
+    <pre>solQTL is running ..... 
+                Please wait ..... 
+                       This may take 
+                            a few minutes.
+    </pre>
+  </div>      
