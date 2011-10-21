@@ -70,6 +70,7 @@
 
   <& /feature/related_features.mas,
       feature   => $feature,
+      omit_columns => ['organism'],
   &>
 
 </&>

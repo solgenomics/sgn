@@ -43,6 +43,7 @@
   <& /feature/related_features.mas,
       reference => $reference,
       feature   => $feature,
+      omit_columns => ['organism'],
   &>
 
 </&>
@@ -151,6 +152,7 @@
 
        <& /feature/related_features.mas,
              feature   => $mrna,
+             omit_columns => ['organism'],
        &>
 
     </&>
