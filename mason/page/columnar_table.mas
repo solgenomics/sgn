@@ -48,6 +48,7 @@ Lukas Mueller, based on Perl code by Rob Buels
   $frequency_tables => []
 </%args>
 <%once>
+  use Lingua::EN::Inflect ();
   use CXGN::Page::FormattingHelpers qw | columnar_table_html |;
 </%once>
 <%perl>
@@ -62,7 +63,7 @@ if( @$frequency_tables && @$data > 4) {
         my @stat_disp = map {
             [ $stats{$_}, $_ ]
         } sort keys %stats;
-        print '<div style="width: 30%; float: left; margin: 2px;">'.columnar_table_html( data => \@stat_disp, __caption => "$name frequency" ).'</div>';
+        print '<div style="width: 30%; float: left; margin: 2px;">'.columnar_table_html( data => \@stat_disp, __caption => Lingua::EN::Inflect::PL_N( $name ) ).'</div>';
     }
 }
 </%perl>
