@@ -27,40 +27,10 @@ with 'Catalyst::Component::ApplicationAttribute';
 
 =cut
 
-=head2 view_by_name
-
-View a feature by name.
-
-Public path: /feature/view/name/<feature name>
-
-=cut
-
-sub view_by_name :Path('/feature/view/name') Args(1) {
-    my ( $self, $c, $feature_name ) = @_;
-    $c->stash(
-        identifier_type => 'name',
-        identifier      => $feature_name,
-       );
-    $c->forward('view_feature');
-}
-
-=head2 view_id
-
-View a feature by ID number.
-
-Public path: /feature/view/id/<feature id number>
-
-=cut
-
-sub view_by_id :Path('/feature/view/id') Args(1) {
-    my ( $self, $c, $feature_id ) = @_;
-    $c->stash(
-        identifier_type => 'feature_id',
-        identifier      => $feature_id,
-       );
-    $feature_id =~ /^\d+$/ && $feature_id > 0
-        or $c->throw_client_error( public_message => 'Feature ID must be a positive integer.' );
-    $c->forward('view_feature');
+# deprecated old paths are now redirects
+sub view_by_name :Path('/feature/view/name') Path('/feature/view/id') Args(1) {
+    my ( $self, $c, $id ) = @_;
+    $c->res->redirect("/feature/$id/details",301);
 }
 
 =head2 search
@@ -96,11 +66,10 @@ sub search :Path('/feature/search') Args(0) {
 
 #######################################
 
-sub view_feature :Private {
+sub feature_details :PathPart('details') :Chained('get_feature') Args(0) {
     my ( $self, $c ) = @_;
 
-       $c->forward('get_general_data')
-    && $c->forward('get_type_specific_data')
+       $c->forward('get_type_specific_data')
     && $c->forward('choose_view');
 }
 
@@ -133,16 +102,24 @@ sub choose_view :Private {
     return 1;
 }
 
-sub get_general_data :Private {
-    my ($self, $c ) = @_;
+sub get_feature : Chained('/') CaptureArgs(1) PathPart('feature') {
+    my ($self, $c, $id ) = @_;
 
     $c->stash->{blast_url} = '/tools/blast/index.pl';
+
+    my $identifier_type = $c->stash->{identifier_type}
+        || $id =~ /[^-\d]/ ? 'name' : 'feature_id';
+
+    if( $identifier_type eq 'feature_id' ) {
+        $id > 0
+            or $c->throw_client_error( public_message => 'Feature ID must be a positive integer.' );
+    }
 
     my $matching_features =
         $self->_app->dbic_schema('Bio::Chado::Schema','sgn_chado')
              ->resultset('Sequence::Feature')
              ->search(
-                 { 'me.'.$c->stash->{identifier_type} => $c->stash->{identifier} },
+                 { 'me.'.$identifier_type => $id },
                  { prefetch => [ 'type', 'featureloc_features' ] },
                );
 
@@ -152,7 +129,7 @@ sub get_general_data :Private {
 
     my ( $feature ) = $matching_features->all;
     $c->stash->{feature} = $feature
-        or $c->throw_404('Feature not found');
+        or $c->throw_404( "Feature not found" );
 
     return 1;
 }

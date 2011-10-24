@@ -30,6 +30,6 @@ is($mech->status, 400, 'status is 400');
 $mech->content_contains("positive integer");
 
 $mech->get("/feature/view/id/JUNK");
-is($mech->status, 400, 'status is 400');
+is($mech->status, 404, 'status is 404');
 
 done_testing;
