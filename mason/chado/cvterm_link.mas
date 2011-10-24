@@ -14,7 +14,7 @@
 
         # before munging the name, use it as a prefix to the definition
         my $definition = $cvterm->definition;
-        if( $definition =~ /\S/ ) {
+        if( $definition && $definition =~ /\S/ ) {
             $definition = "$name: $definition";
         } else {
             $definition = '';
