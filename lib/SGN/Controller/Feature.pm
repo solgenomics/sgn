@@ -35,9 +35,13 @@ Public path: /feature/view/name/<feature name>
 
 =cut
 
-sub view_name :Path('/feature/view/name') Args(1) {
+sub view_by_name :Path('/feature/view/name') Args(1) {
     my ( $self, $c, $feature_name ) = @_;
-    $self->_view_feature($c, 'name', $feature_name);
+    $c->stash(
+        identifier_type => 'name',
+        identifier      => $feature_name,
+       );
+    $c->forward('view_feature');
 }
 
 =head2 view_id
@@ -48,9 +52,13 @@ Public path: /feature/view/id/<feature id number>
 
 =cut
 
-sub view_id :Path('/feature/view/id') Args(1) {
+sub view_by_id :Path('/feature/view/id') Args(1) {
     my ( $self, $c, $feature_id ) = @_;
-    $self->_view_feature($c, 'feature_id', $feature_id);
+    $c->stash(
+        identifier_type => 'feature_id',
+        identifier      => $feature_id,
+       );
+    $c->forward('view_feature');
 }
 
 =head2 search
@@ -84,10 +92,19 @@ sub search :Path('/feature/search') Args(0) {
     );
 }
 
-sub delegate_component
-{
-    my ($self, $c, $matching_features) = @_;
-    my $feature   = $matching_features->next;
+#######################################
+
+sub view_feature :Private {
+    my ( $self, $c ) = @_;
+
+       $c->forward('get_general_data')
+    && $c->forward('get_type_specific_data')
+    && $c->forward('choose_view');
+}
+
+sub choose_view :Private {
+    my ( $self, $c ) = @_;
+    my $feature   = $c->stash->{feature};
     my $type_name = lc $feature->type->name;
     my $template  = "/feature/types/default.mas";
 
@@ -110,40 +127,46 @@ sub delegate_component
         $c->stash->{type} = $type_name;
     }
     $c->stash->{template} = $template;
+
+    return 1;
 }
 
-sub validate
-{
-    my ($self, $c,$matching_features,$key, $val) = @_;
-    my $count = $matching_features->count;
-#   EVIL HACK: We need a disambiguation process
-#   $c->throw_client_error( public_message => "too many features where $key='$val'") if $count > 1;
-    $c->throw_404( "Feature not found") if $count < 1;
-}
-
-
-sub _validate_pair {
-    my ($self,$c,$key,$value) = @_;
-    $c->throw_client_error(
-        public_message  => "$value is not a valid value for $key",
-    )
-        if ($key =~ m/_id$/ and $value !~ m/\d+/);
-}
-
-sub _view_feature {
-    my ($self, $c, $key, $value) = @_;
+sub get_general_data :Private {
+    my ($self, $c ) = @_;
 
     $c->stash->{blast_url} = '/tools/blast/index.pl';
 
-    $self->_validate_pair($c,$key,$value);
-    my $matching_features = $self->_app->dbic_schema('Bio::Chado::Schema','sgn_chado')
-                                 ->resultset('Sequence::Feature')
-                                 ->search({ "me.$key" => $value },{
-                                     prefetch => [ 'type', 'featureloc_features' ],
-                                   });
+    my $matching_features =
+        $self->_app->dbic_schema('Bio::Chado::Schema','sgn_chado')
+             ->resultset('Sequence::Feature')
+             ->search(
+                 { 'me.'.$c->stash->{identifier_type} => $c->stash->{identifier} },
+                 { prefetch => [ 'type', 'featureloc_features' ] },
+               );
 
-    $self->validate($c, $matching_features, $key => $value);
-    $self->delegate_component($c, $matching_features);
+    if( $matching_features->count > 1 ) {
+        $c->throw_client_error( public_message => 'Multiple matching features' );
+    }
+
+    my ( $feature ) = $matching_features->all;
+    $c->stash->{feature} = $feature
+        or $c->throw_404('Feature not found');
+
+    return 1;
+}
+
+sub get_type_specific_data :Private {
+    my ( $self, $c ) = @_;
+
+    my $type_name = $c->stash->{feature}->type->name;
+
+    # look for an action with private path /feature/types/<type>/get_specific_data
+    my $action = $c->get_action( 'get_specific_data', $self->action_namespace."/types/$type_name" );
+    if( $action ) {
+        $c->forward( $action ) or return;
+    }
+
+    return 1;
 }
 
 
@@ -202,12 +225,10 @@ sub _make_feature_search_rs {
     }
 
     if( my $type = $form->param_value('feature_type') ) {
-        $self->_validate_pair($c,'type_id',$type);
         $rs = $rs->search({ 'type_id' => $type });
     }
 
     if( my $organism = $form->param_value('organism') ) {
-        $self->_validate_pair( $c, 'organism_id', $organism );
         $rs = $rs->search({ 'organism_id' => $organism });
     }
 
