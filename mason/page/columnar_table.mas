@@ -31,6 +31,8 @@ __alt_offset => 0,
 
 # also can generate simple frequency tables of the values in the given
 # columns, makes one table per column, printed before the main table.
+# These auxiliary frequency tables will only be printed if there are
+# more than 4 rows in the table.
 frequency_tables => ['col name','col name', ...],
 
 =head1 AUTHORS
@@ -49,7 +51,7 @@ Lukas Mueller, based on Perl code by Rob Buels
   use CXGN::Page::FormattingHelpers qw | columnar_table_html |;
 </%once>
 <%perl>
-if( @$frequency_tables ) {
+if( @$frequency_tables && @$data > 4) {
     my %heading_idx = do { my $i = 0; map {lc $_ => $i++} @$frequency_tables };
     for my $colname (@$frequency_tables) {
         my $idx = $heading_idx{ lc $colname };
