@@ -58,6 +58,8 @@ sub view_by_id :Path('/feature/view/id') Args(1) {
         identifier_type => 'feature_id',
         identifier      => $feature_id,
        );
+    $feature_id =~ /^\d+$/ && $feature_id > 0
+        or $c->throw_client_error( public_message => 'Feature ID must be a positive integer.' );
     $c->forward('view_feature');
 }
 
