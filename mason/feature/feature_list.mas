@@ -9,4 +9,4 @@
     use SGN::View::Feature qw/ feature_table /;
 </%init>
 
-<& /page/columnar_table.mas, feature_table( $features || $objects, $reference_sequence, $omit_columns ) &>
+<& /page/columnar_table.mas, %ARGS, feature_table( $features || $objects, $reference_sequence, $omit_columns ) &>
