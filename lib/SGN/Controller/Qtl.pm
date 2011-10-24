@@ -442,11 +442,6 @@ sub _show_data {
     }            
 }
 
-sub search_help : PathPart('search/qtl/help') Chained Args(0) {
-    my ($self, $c) = @_;
-    $c->stash(template => '/qtl/search/help/index.mas')
-}
-
 sub set_stat_option : PathPart('qtl/stat/option') Chained Args(0) {
     my ($self, $c)  = @_;
     my $pop_id      = $c->req->param('pop_id');
@@ -561,6 +556,11 @@ sub qtl_population : PathPart('qtl/population') Chained Args(0) {
     $c->res->redirect('/search/qtl');
 }
 
+sub search_help_redirect : PathPart('search/qtl/help') Chained Args(0) {
+    my ($self, $c) = @_;
+    $c->res->redirect('/qtl/search/help');
+}
+
 sub search_help : PathPart('qtl/search/help') Chained Args(0) {
     my ($self, $c) = @_;
     $c->stash(template => '/qtl/search/help/index.mas');
@@ -629,7 +629,7 @@ sub mark_qtl_traits {
 
 
 
-
+__PACKAGE__->meta->make_immutable;
 ####
 1;
 ####
