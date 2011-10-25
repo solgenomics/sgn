@@ -876,10 +876,13 @@ sub chromo_select {
 "SELECT distinct lg_name FROM linkage_group WHERE lg_name !~ '[0-9][a-z]'"
       );
 
-    @$chromolist = sort {
-        do       { $a =~ /(\d+)/; $1 }
-          <=> do { $b =~ /(\d+)/; $1 }
-    } @$chromolist;
+    {
+      no warnings 'uninitialized';
+      @$chromolist = sort {
+                do { $a =~ /(\d+)/; $1 }
+            <=> do { $b =~ /(\d+)/; $1 }
+      } @$chromolist;
+    }
 
     return $self->selectbox( 'chromos', $chromolist, 'multiple' );
 

@@ -93,7 +93,7 @@ sub search :Path('/search/') :Args() {
     # make /search/index.pl show the list of all kinds of searches
     $term = '' if $term && $term eq 'index.pl';
 
-    if( $term eq 'direct_search.pl' ) {
+    if( $term && $term eq 'direct_search.pl' ) {
         $term = $c->req->param('search');
         if ($term eq 'cvterm_name') {$term = 'qtl';}
         $c->res->redirect('/search/'.$term, 301 );

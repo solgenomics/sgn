@@ -177,7 +177,7 @@ sub get_img_src_tag {
     my $size = shift;
     my $url  = $self->get_image_url($size);
     my $name = $self->get_name();
-    if ( $size eq "original" ) {
+    if ( $size && $size eq "original" ) {
 
         my $static = $self->config()->get_conf("static_datasets_url");
 
@@ -188,7 +188,7 @@ sub get_img_src_tag {
           . $name
           . "\" /></a>";
     }
-    elsif ( $size eq "tiny" ) {
+    elsif ( $size && $size eq "tiny" ) {
         return
             "<img src=\""
           . ($url)
