@@ -30,44 +30,9 @@
     title       => 'Tree and alignment',
     collapsible => 1,
 &>
-  <style>
-    #gene_group_export > * { vertical-align: middle }
-  </style>
-  <div id="gene_group_export">
-       <button onclick="export_gene_group(<% $feature->feature_id %>)">
-            Export sequences to alignment viewer
-       </button>
-       <img width="16" height="16" id="gene_group_export_spinner" src="/img/spinner.gif" style="display: none" />
-       <span class="message">(may take a long time)</span>
-  </div>
 
-  <script type="text/javascript">
-    <& /util/import_javascript.mas, classes => 'jquery' &>
-    var myprotein;
-    function export_gene_group(feature_id) {
-        var spinner = jQuery('#gene_group_export img');
-        var message = jQuery('#gene_group_export .message');
-        var button  = jQuery('#gene_group_export button');
-        button.attr( 'disabled', true );
-        spinner.show();
-        message.html( 'fetching/calculating sequences (may take a long time) ... ');
-        jQuery.get( '/feature/'+feature_id+'/gene_group_protein_fasta', function(protein_fasta) {
-                myprotein = protein_fasta;
+  <& /feature/gene_group_export_to_alignment_viewer.mas, feature => $feature &>
 
-                spinner.hide();
-                message.html('sending to alignment viewer...');
-                var seqform = document.createElement('form');
-                seqform.method = 'POST';
-                seqform.action = '/tools/align_viewer/index.pl';
-                var seq_input = document.createElement('input');
-                seq_input.type = 'hidden';
-                seq_input.value = protein_fasta;
-                seq_input.name = 'seq_data';
-                seqform.appendChild(seq_input);
-                seqform.submit();
-        });
-    }
-  </script>
 </&>
 
 <&| /page/info_section.mas,
