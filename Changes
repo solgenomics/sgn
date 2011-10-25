@@ -2,12 +2,11 @@ Release date: NEXT
 Release tag: NEXT
 
 Changes:
- -Interactive Statistics
-   -Implements a dedicated QTL population page with an interface for setting QTL analysis parameters and running analysis with any set of ones own parameters. 
-   -Runs and displays correlation analysis. 
-   -Features tools to download QTL population phenotype, genotype and correlation data. 
-   -Implements 'wait page' feature while qtl analysis is running.
 
+ - Implements a dedicated QTL population page with an interface for setting QTL analysis parameters and running analysis with any set of ones own parameters. 
+ - Runs and displays correlation analysis. 
+ - Features tools to download QTL population phenotype, genotype and correlation data. 
+ - Implements 'wait page' feature while qtl analysis is running.
  - Redesign tomato genome project and data pages, splitting the tomato clone sequencing status report into its own page.
 
 ---
