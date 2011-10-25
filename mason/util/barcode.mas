@@ -1,0 +1,35 @@
+
+<%doc>
+
+Generate a barcode from an identifier. The identifer supplied should be as specific as possible, eg. SGN-A3939 for an accession (not just the number!).
+
+</%doc>
+
+<%args>
+$identifier
+$tempfile
+$tempuri
+$text => ''
+$format => ''
+</%args>
+
+<%perl>
+
+use GD;
+use GD::Barcode::Code39;
+
+my $barcode = GD::Barcode::Code39->new($identifier)-> plot(NoText=>1);
+my $label = GD::Image->new(my $width= 300, my $height=100);
+$label->filledRectangle( 0, 0, $width, $height, $label->colorAllocate(255,255, 255));
+
+my $x = int(($width - $barcode->width)/ 2);
+$label->copy($barcode, $x, 30, 0, 0, $barcode->width, $barcode->height);
+my $text_width = gdLargeFont->width()*length($text);
+$label->string(gdLargeFont,int(($width-$text_width)/2),10,$text, $label->colorAllocate(0, 0, 0));
+open(my $F, ">", $tempfile) || die "Can't open tempfile $tempfile"; 
+print $F $label->png();
+close($F);
+
+</%perl>
+
+<center><img src="<% $tempuri %>" /></center>
