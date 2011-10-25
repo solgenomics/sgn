@@ -107,7 +107,7 @@ sub TEST_FEATURE_LINK : Tests {
     my $self = shift;
     my $f          = $self->{feature};
     my ($id,$name) = ($f->feature_id,$f->name);
-    my $link       = qq{<a href="/feature/view/id/$id">$name</a>};
+    my $link       = qq{<a href="/feature/$id/details">$name</a>};
     is(feature_link($f),$link, 'feature_link on a feature');
     is(feature_link(),'<span class="ghosted">null</span>','feature_link returns a ghosted null when not given a feature');
 }

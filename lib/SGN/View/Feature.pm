@@ -244,7 +244,7 @@ sub feature_link {
     return '<span class="ghosted">null</span>' unless $feature;
     my $id   = $feature->feature_id;
     my $name = $feature->name;
-    return qq{<a href="/feature/view/id/$id">$name</a>};
+    return qq{<a href="/feature/$id/details">$name</a>};
 }
 
 sub organism_link {

@@ -32,7 +32,7 @@ my $poly_cvterm     = create_test('Cv::Cvterm', { name  => 'polypeptide' });
 my $poly_feature    = create_test('Sequence::Feature', { type => $poly_cvterm });
 my $poly_featureloc = create_test('Sequence::Featureloc', { feature => $poly_feature });
 
-for my $url ( "/feature/view/name/".$poly_feature->name,  "/feature/view/id/".$poly_feature->feature_id ) {
+for my $url ( "/feature/".$poly_feature->name.'/details',  "/feature/".$poly_feature->feature_id.'/details' ) {
 
     $mech->get_ok( $url );
     $mech->dbh_leak_ok;
