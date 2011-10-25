@@ -22,7 +22,7 @@ our ($auto_idq, $request_typeq, $cloneq, $clone_read_idq,
 
 our $page = CXGN::Page->new( "SGN EST Search Result", "Koni");
 
-my $dbh = CXGN::DB::Connection->new('sgn');
+my $dbh = CXGN::DB::Connection->new;
 
 $auto_idq = $dbh->prepare_cached("SELECT internal_id, internal_id_type, t1.comment, t2.comment from id_linkage as il LEFT OUTER JOIN types as t1 ON (t1.type_id=il.internal_id_type) LEFT OUTER JOIN types as t2 ON (t2.type_id=il.link_id_type) where il.link_id=?");
 
