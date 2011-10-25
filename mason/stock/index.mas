@@ -166,6 +166,7 @@ my $new_ontology_link = !$person_id ? qq|<a href="/solpeople/login.pl">[log-in t
 
 <&| /page/info_section.mas, title=>"Stock details" , subtitle => "<a href=/phenome/qtl_form.pl>New QTL population</a> | <a href=/stock/search/>Back to stock search</a>"  &>
 
+<table><tr><td width="400">
   <& /page/form.mas,
   object_type=>'stock',
   object_id=>"$stock_id",
@@ -176,8 +177,12 @@ my $new_ontology_link = !$person_id ? qq|<a href="/solpeople/login.pl">[log-in t
   page_url => "/stock/$stock_id/view/" ,
   alternate_new_button => '<a href ="/stock/0/new">[New]</a>'
   &>
+</td><td>
 
-
+% if ($barcode_tempfile) { 
+<& /util/barcode.mas, identifier => "SGN $stock_id", tempfile => $barcode_tempfile, tempuri => $barcode_tempuri, text=> "SGN:$stock_id ($uniquename)"  &>
+%}
+</td></tr></table>
 
 <div><b>Stock editors: </b> <% $editor_link %></div>
 <br />
@@ -199,14 +204,6 @@ my $new_ontology_link = !$person_id ? qq|<a href="/solpeople/login.pl">[log-in t
       <& /stock/stockprops.mas, props=> $stockprops, subset=> $metadata  &>
 </&>
 
-
-</&>
-
-<&| /page/info_section.mas, title=> "Barcode", collapsible=>1, collapsed=>0 &>
-
-% if ($barcode_tempfile) { 
-<& /util/barcode.mas, identifier => "SGN $stock_id", tempfile => $barcode_tempfile, tempuri => $barcode_tempuri, text=> "SGN:$stock_id ($uniquename)"  &>
-%}
 
 </&>
 
