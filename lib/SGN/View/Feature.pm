@@ -21,7 +21,7 @@ our @EXPORT_OK = qw/
     organism_link feature_length
     mrna_and_protein_sequence
     description_featureprop_types
-    get_description
+    get_descriptions
     location_list_html
     location_string
     location_string_with_strand
@@ -53,7 +53,7 @@ sub description_featureprop_types {
            })
 }
 
-sub get_description {
+sub get_descriptions {
     my ($feature) = @_;
 
     my $desc_types =
@@ -61,17 +61,18 @@ sub get_description {
             ->get_column('cvterm_id')
             ->as_query;
 
-    my $description =
-        $feature->search_related('featureprops', {
-            type_id => { -in => $desc_types },
-        })->get_column('value')
-          ->first;
+    my @descriptions =
+        $feature->search_related('featureprops',
+                                 { type_id => { -in => $desc_types } },
+                                 { order_by => 'rank' },
+                                )
+                ->get_column('value')
+                ->all;
 
-    return unless $description;
 
-    $description =~ s/(\S+)/my $id = $1; CXGN::Tools::Identifiers::link_identifier($id) || $id/ge;
+    s/(\S+)/my $id = $1; CXGN::Tools::Identifiers::link_identifier($id) || $id/ge for @descriptions;
 
-    return $description;
+    return @descriptions;
 }
 
 sub location_string {
