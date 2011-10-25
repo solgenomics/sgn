@@ -10,7 +10,7 @@
             Export sequences to alignment viewer
        </button>
        <img width="16" height="16" id="gene_group_export_spinner" src="/img/spinner.gif" style="display: none" />
-       <span class="message">(may take a long time)</span>
+       <span class="message">(may take a long time for large gene groups)</span>
   </div>
 
   <script type="text/javascript">
@@ -23,7 +23,7 @@
         var button  = jQuery('#gene_group_export button');
         button.attr( 'disabled', true );
         spinner.show();
-        message.html( 'fetching/calculating sequences (may take a long time) ... ');
+        message.html( 'fetching/calculating sequences ... ');
         jQuery.get( '/feature/'+feature_id+'/gene_group_protein_fasta', function(protein_fasta) {
                 myprotein = protein_fasta;
 
