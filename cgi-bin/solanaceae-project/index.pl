@@ -87,7 +87,8 @@ print blue_section_html('SOL Resources',<<EOHTML);
 <dt><a name="SOL_news" id="SOL_news"></a>SOL Newsletters</dt>
 <dd> 
     <ul>
-<li><a href="/static_content/solanaceae-project/docs/SOL_newsletter_Jun_11.pdf">June 2011</a> <b>(current issue)</b></li>
+<li><a href="/static_content/solanaceae-project/docs/SOL_newsletter_Oct_11.pdf">October 2011</a> <b>(current issue)</b></li>
+<li><a href="/static_content/solanaceae-project/docs/SOL_newsletter_Jun_11.pdf">June 2011</a> <b></b></li>
 <li><a href="/static_content/solanaceae-project/docs/SOL_newsletter_Mar_11.pdf">March 2011</a></li>
 <li><a href="/static_content/solanaceae-project/docs/SOL_newsletter_Oct_10.pdf">October 2010</a></li>
 <li><a href="/static_content/solanaceae-project/docs/SOL_newsletter_Jun_10.pdf">June 2010</a></li>
