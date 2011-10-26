@@ -15,8 +15,13 @@ BEGIN {
 }
 
 my $mech = SGN::Test::WWW::Mechanize->new;
+$mech->get_ok("/search/qtl", "Got qtl search page");
+$mech->get_ok("/qtl/search", "Got qtl search page, another url");
+$mech->get_ok("/qtl/search/results?trait=fruit+shape", "Got qtl search results page");
+$mech->get_ok("/qtl/search/help", "Got qtl search help page");
 
-$mech->get_ok("qtl/view/12", "Got qtl start page");
+$mech->get_ok("/qtl/view/12", "Got qtl population page - old url");
+$mech->get_ok("/qtl/population/12", "Got qtl population page");
 $mech->content_contains("Population summary", "there is population summary section");
 $mech->content_contains("Set Statistical Parameters", "there is statistical parameters section");
 $mech->content_contains("Analyze QTLs", "there is list of traits section");
@@ -37,5 +42,7 @@ $mech->content_contains("Acronyms key", "Got trait acronyms key");
 #      my $controller = SGN->Controller("Qtl");
 #      
 #});
+
+
 
 done_testing;
