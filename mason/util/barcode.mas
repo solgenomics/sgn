@@ -1,7 +1,22 @@
 
 <%doc>
 
-Generate a barcode from an identifier. The identifer supplied should be as specific as possible, eg. SGN-A3939 for an accession (not just the number!).
+=head1 /util/barcode.mas
+
+Generates a barcode from an identifier and prints text alongside the barcode
+
+=head1 Arguments
+
+ $identifier (required) - will be converted to barcode
+ $tempdir (required) - dir for tempfile
+ $tempuri (required) - url part of tempdir
+ $text - what's printed alongside barcode (human readable)
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>
+
+=cut
 
 </%doc>
 
@@ -26,14 +41,13 @@ if (! -e $cache_file.".label") {
   my $barcode_object = Barcode::Code128->new();
   $barcode_object->barcode($identifier);
   $barcode_object->font('large');
-$barcode_object->border(2);
-#  $barcode_object->width(300);
+  $barcode_object->border(2);
   $barcode_object->top_margin(30);
   $barcode_object->font_align("center");
   my  $barcode = $barcode_object ->gd_image();
   my $text_width = gdLargeFont->width()*length($text);
   $barcode->string(gdLargeFont,int(($barcode->width()-$text_width)/2),10,$text, $barcode->colorAllocate(0, 0, 0));
-
+  
   open(my $F, ">", $cache_file.".label") || die "Can't open tempfile $cache_file"; 
   print $F $barcode->png();
   close($F);
