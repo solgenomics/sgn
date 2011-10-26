@@ -7,7 +7,7 @@ Generate a barcode from an identifier. The identifer supplied should be as speci
 
 <%args>
 $identifier
-$tempfile
+$tempdir
 $tempuri
 $text => ''
 $format => ''
@@ -16,20 +16,28 @@ $format => ''
 <%perl>
 
 use GD;
-use GD::Barcode::Code39;
+use Barcode::Code128;
 
-my $barcode = GD::Barcode::Code39->new($identifier)-> plot(NoText=>1);
-my $label = GD::Image->new(my $width= 300, my $height=100);
-$label->filledRectangle( 0, 0, $width, $height, $label->colorAllocate(255,255, 255));
+my $cache_file = $tempdir."/barcode-".$identifier;
+my $cache_uri  = $tempuri."/barcode-".$identifier;
 
-my $x = int(($width - $barcode->width)/ 2);
-$label->copy($barcode, $x, 30, 0, 0, $barcode->width, $barcode->height);
-my $text_width = gdLargeFont->width()*length($text);
-$label->string(gdLargeFont,int(($width-$text_width)/2),10,$text, $label->colorAllocate(0, 0, 0));
-open(my $F, ">", $tempfile) || die "Can't open tempfile $tempfile"; 
-print $F $label->png();
-close($F);
+if (! -e $cache_file.".label") {
+  print STDERR "file does not exist..\n\n\n\n";
+  my $barcode_object = Barcode::Code128->new();
+  $barcode_object->barcode($identifier);
+  $barcode_object->font('large');
+$barcode_object->border(2);
+#  $barcode_object->width(300);
+  $barcode_object->top_margin(30);
+  $barcode_object->font_align("center");
+  my  $barcode = $barcode_object ->gd_image();
+  my $text_width = gdLargeFont->width()*length($text);
+  $barcode->string(gdLargeFont,int(($barcode->width()-$text_width)/2),10,$text, $barcode->colorAllocate(0, 0, 0));
 
+  open(my $F, ">", $cache_file.".label") || die "Can't open tempfile $cache_file"; 
+  print $F $barcode->png();
+  close($F);
+}
 </%perl>
 
-<center><img src="<% $tempuri %>" /></center>
+<center><img src="<% $cache_uri.'.label' %>" /></center>

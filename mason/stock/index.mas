@@ -26,7 +26,7 @@ a hashref with all the parameters needed for printing the stock page!
  locus_autocomplete_uri => '/ajax/locus/autocomplete/'
  cvterm_add_uri
  cvterm_autocomplete_uri => '/ajax/cvterm/autocomplete/'
- barcode_tempfile
+ barcode_tempdir
  barcode_tempuri 
 
 =back
@@ -46,7 +46,7 @@ $locus_add_uri => ''
 $locus_autocomplete_uri => undef
 $cvterm_add_uri => ''
 $cvterm_autocomplete_uri => undef
-$barcode_tempfile => undef
+$barcode_tempdir => undef
 $barcode_tempuri => undef
 </%args>
 
@@ -179,8 +179,8 @@ my $new_ontology_link = !$person_id ? qq|<a href="/solpeople/login.pl">[log-in t
   &>
 </td><td>
 
-% if ($barcode_tempfile) { 
-<& /util/barcode.mas, identifier => "SGN $stock_id", tempfile => $barcode_tempfile, tempuri => $barcode_tempuri, text=> "SGN:$stock_id ($uniquename)"  &>
+% if ($barcode_tempdir) { 
+<& /util/barcode.mas, identifier => "SGN $stock_id", tempdir => $barcode_tempdir, tempuri => $barcode_tempuri, text=> "SGN stock $stock_id ($uniquename)"  &>
 %}
 </td></tr></table>
 

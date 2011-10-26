@@ -157,7 +157,9 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
     my $image_ids = $self->_stock_images($stock);
     my $cview_tmp_dir = $c->tempfiles_subdir('cview');
 
-    my($barcode_tempfile, $barcode_tempuri) = $c->tempfile(TEMPLATE=>'barcode-XXXXXX');
+    my $barcode_tempuri  = $c->tempfiles_subdir('image');
+    my $barcode_tempdir = $c->get_conf('basepath')."/$barcode_tempuri";
+
 ################
     $c->stash(
         template => '/stock/index.mas',
@@ -187,7 +189,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
         },
         locus_add_uri  => $c->uri_for( '/ajax/stock/associate_locus' ),
         cvterm_add_uri => $c->uri_for( '/ajax/stock/associate_ontology'),
-	barcode_tempfile  => $barcode_tempfile,
+	barcode_tempdir  => $barcode_tempdir,
 	barcode_tempuri   => $barcode_tempuri,
         );
 }
