@@ -2,7 +2,7 @@ use strict;
 use warnings;
 
 use lib 't/lib';
-use SGN::Test::WWW::Mechanize;
+use SGN::Test::WWW::Mechanize skip_cgi => 1;
 use Test::More;
 
 my $m = SGN::Test::WWW::Mechanize->new();
@@ -15,15 +15,17 @@ $m->content_contains("Interactive maps");
 $tests++;
 my @map_links = $m->find_all_links( url_regex => qr/map.pl/ );
 
-foreach my $map (@map_links) {
+foreach my $map ( @map_links ) {
     my $link_text = $map->text();
 
     # skip maps with non-numeric ids if local data not available
     #
-    if ($map->url =~ /map.*?id=[a-zA-Z]+/ && $m->test_level() ne 'local') { 
+    if ($map->url =~ /map.*?id=[a-zA-Z]+/ && $m->test_level() ne 'remote' ) {
 	diag("Skipping $link_text\n");
 	next();
     }
+
+    diag "following '$link_text' link";
 
     $m->follow_link_ok( { text => $map->text() } );
     $tests++;
