@@ -242,7 +242,7 @@ sub family_tab {
 }
 
 sub marker_tab {
-  my $dbh   = CXGN::DB::Connection->new();
+  my $dbh   = $c->dbc->dbh;
   my $mform = CXGN::Search::CannedForms::MarkerSearch->new($dbh);
   return   '<form action="/search/markers/markersearch.pl">'
     . $mform->to_html() .
