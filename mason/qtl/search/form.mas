@@ -15,7 +15,7 @@ foreach my $pop_obj (@qtl_pops) {
    $pop_links  .= qq |<a href="/qtl/population/$pop_id">$pop_name</a> <br /> |;     
 }
 
-my $help = qq |(<a href="/qtl/search/help">help</a>) |;       
+my $help = qq |(<a href="/qtl/search/help">help</a>)|;       
 </%perl>
 
 
