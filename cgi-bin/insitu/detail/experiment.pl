@@ -13,6 +13,8 @@ use CXGN::Tag;
 use CXGN::Page::FormattingHelpers qw / blue_section_html page_title_html /;
 use CXGN::People::Person;
 
+use CatalystX::GlobalContext '$c';
+
 use base qw / CXGN::Page::Form::SimpleFormPage /;
 
 sub new { 
@@ -235,7 +237,7 @@ HTML
     my $i = 0;
     for ($i; $i< (my @image = $experiment->get_image_ids()); $i++) {
 	my $image_id = $image[$i];
-	my $image = SGN::Image->new($self->get_dbh(), $image_id);	
+	my $image = SGN::Image->new( $self->get_dbh(), $image_id, $c );
 	$assoc_imgs_html .= "<td valign=\"top\"><a href=\"/image/view/$image_id\">".$image->get_img_src_tag("small")."</a>&nbsp;<br />";
 
 	if ($self->get_action() eq "edit") { 
