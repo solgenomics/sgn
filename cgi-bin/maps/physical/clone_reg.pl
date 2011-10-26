@@ -742,6 +742,7 @@ sub editforms_html {
     )
   };
   my $t_edit = sub {
+    no warnings 'uninitialized';
     my ($name,$size,$text) = @_;
     ( qq|<form name="${name}_edit" onsubmit="alter_clone('$name',this.clone_id.value,{action: 'set_$name', val: this.val_input.value}); return false" style="display: inline">|,
       (
