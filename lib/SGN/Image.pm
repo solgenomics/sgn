@@ -48,6 +48,8 @@ use CXGN::DB::Connection;
 use SGN::Context;
 use CXGN::Tag;
 
+use CatalystX::GlobalContext '$c';
+
 use base qw| CXGN::Image |;
 
 =head2 new
@@ -63,17 +65,16 @@ use base qw| CXGN::Image |;
 =cut
 
 sub new {
-    my $class    = shift;
-    my $dbh      = shift;
-    my $image_id = shift;
+    my ( $class, $dbh, $image_id, $context ) = @_;
+    $context ||= $c;
 
-    my $c  = SGN::Context->new();
-    $dbh ||= $c->dbc->dbh;
+    my $self = $class->SUPER::new(
+        dbh       => $dbh || $context->dbc->dbh,
+        image_id  => $image_id,
+        image_dir => $context->get_conf('static_datasets_path')."/".$context->get_conf('image_dir'),
+      );
 
-    my $self = $class->SUPER::new(dbh=>$dbh, image_id=>$image_id, image_dir=>$c->get_conf('static_datasets_path')."/".$c->get_conf('image_dir') );
-
-    $self->config( $c );
-    $self->set_dbh($dbh);
+    $self->config( $context );
 
     return $self;
 }

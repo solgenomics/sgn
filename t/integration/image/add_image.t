@@ -11,7 +11,7 @@ use CXGN::Image;
 
 my $m = SGN::Test::WWW::Mechanize->new;
 
-my $test_file = 't/integration/image/tv_test_1.png';
+my $test_file = 't/data/tv_test_1.png';
 # test image upload
 #$m->get_ok('/image/add?type=test&type_id=1');
 
