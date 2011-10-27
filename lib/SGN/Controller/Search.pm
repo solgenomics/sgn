@@ -103,10 +103,8 @@ sub search :Path('/search/') :Args() {
     $c->stash->{term} = $term;
     my $tab_html      = $c->stash->{tab_html_function}($term);
 
-    my $response;
+    my $response = $tab_html;
     if ($term) {
-        $response  = $tab_html;
-
         # if it is an unknown search type, default to gene search
         unless ($c->stash->{name_to_num}->($term)) {
             $c->throw_404('Invalid search type');
@@ -115,7 +113,7 @@ sub search :Path('/search/') :Args() {
         $response .= $c->stash->{tab_functions}[$c->stash->{name_to_num}->($term)]();
     } else {
         my $tb = CXGN::Page::Toolbar::SGN->new();
-        $response = $tab_html . $tb->index_page('search');
+        $response .= $tb->index_page('search');
     }
 
     $c->stash(
