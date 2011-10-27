@@ -61,9 +61,13 @@ $mech->while_logged_in( { user_type=>'submitter' }, sub {
     $mech->get_ok("/stock/$stock_id/alleles");
     $mech->content_contains('html');
     $mech->content_contains($locus->locus_name);
-# hard delete the temp locus and its allele object
-    $locus->delete;
-                        } );
+} );
 
 done_testing();
-
+END {
+    if( $mech && $locus  ) {
+        my $write_dbh = $mech->context->dbc('sgn_test')->dbh;
+        $write_dbh->do( "DELETE FROM phenome.$_ WHERE locus_id = ?", undef, $locus->locus_id )
+            for "allele", "locus";
+    }
+}
