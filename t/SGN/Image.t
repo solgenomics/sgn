@@ -30,6 +30,7 @@ my $config = {
 $mock_context->mock( 'get_conf', sub { $config->{$_[1]} or die "$_[1] conf var not mocked" } );
 $mock_context->mock( 'config', sub { $config } );
 $mock_context->mock( 'dbc', sub { $context->dbc } );
+$mock_context->mock( 'test_mode', sub {1} );
 
 my $organism = create_test( 'Organism::Organism', {} );
 my $image = SGN::Image->new(undef, $organism->organism_id, $mock_context );
@@ -42,7 +43,7 @@ isa_ok($image, 'SGN::Image');
 lives_ok( sub { $image->process_image("t/data/tv_test_1.png", "organism", $organism->organism_id) }, 'process_image lives' );
 
 my $url = $image->get_image_url('medium');
-like($url, qr{medium}, 'getting a medium image');
+like($url, qr!^/fake_static_datasets_url/images/[a-f\d\/]+/medium\.jpg$!, 'getting a medium image');
 
 can_ok( $image, qw/get_organisms get_stocks get_experiments get_loci process_image config associate_experiment/);
 

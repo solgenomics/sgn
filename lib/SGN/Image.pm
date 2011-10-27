@@ -45,7 +45,6 @@ use File::Copy qw/ copy move /;
 use File::Basename qw/ basename /;
 use File::Spec;
 use CXGN::DB::Connection;
-use SGN::Context;
 use CXGN::Tag;
 
 use CatalystX::GlobalContext '$c';
@@ -96,7 +95,12 @@ sub get_image_url {
     my $self = shift;
     my $size = shift;
 
-    my $url = $self->config()->get_conf('static_datasets_url')."/".$self->config()->get_conf('image_dir')."/".$self->get_filename($size, 'partial')
+    if( $self->config->test_mode && ! -e $self->get_filename($size) ) {
+        # for performance, only try to stat the file if running in
+        # test mode. doing lots of file stats over NFS can actually be
+        # quite expensive.
+        return '/img/image_temporarily_unavailable.png';
+    }
 
 
 }
@@ -142,14 +146,9 @@ sub process_image {
 
 }
 
-=head2 config
+=head2 config, context, _app
 
- Usage:
- Desc:
- Ret:
- Args:
- Side Effects:
- Example:
+Get the Catalyst context object we are running with.
 
 =cut
 
@@ -160,6 +159,8 @@ sub config {
 
     return $self->{configuration_object};
 }
+*context = \&config;
+*_app    = \&config;
 
 =head2 get_img_src_tag
 
