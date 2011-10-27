@@ -44,6 +44,8 @@ use File::Temp qw/ tempfile tempdir /;
 use File::Copy qw/ copy move /;
 use File::Basename qw/ basename /;
 use File::Spec;
+use URI::FromHash ();
+
 use CXGN::DB::Connection;
 use CXGN::Tag;
 
@@ -102,6 +104,13 @@ sub get_image_url {
         return '/img/image_temporarily_unavailable.png';
     }
 
+    return URI::FromHash::uri(
+        path => [ '',
+                  $self->config()->get_conf('static_datasets_url'),
+                  $self->config()->get_conf('image_dir'),
+                  $self->get_filename($size, 'partial'),
+                ],
+        ).'';
 
 }
 
