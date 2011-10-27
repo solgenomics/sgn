@@ -53,9 +53,8 @@ sub search :Path('/feature/search') Args(0) {
     if( $form->submitted_and_valid ) {
         $results = $self->_make_feature_search_rs( $c, $form );
     }
-
-    $c->forward_to_mason_view(
-        '/feature/search.mas',
+    $c->stash(
+        template => '/feature/search.mas',
         form                  => $form,
         results               => $results,
         pagination_link_maker => sub {

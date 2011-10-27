@@ -69,9 +69,9 @@ document.glossary.getTerm.focus();
 DEFAULT
     }
 
-    $c->forward_to_mason_view(
-        '/search/search.mas',
-        content => $response,
+    $c->stash(
+        template => '/search/search.mas',
+        content  => $response,
     );
 
 }
@@ -99,7 +99,7 @@ sub search :Path('/search/') :Args() {
         $c->res->redirect('/search/'.$term, 301 );
         return;
     }
-    
+
     $c->stash->{term} = $term;
     my $tab_html      = $c->stash->{tab_html_function}($term);
 
@@ -113,16 +113,13 @@ sub search :Path('/search/') :Args() {
         }
 
         $response .= $c->stash->{tab_functions}[$c->stash->{name_to_num}->($term)]();
-        $c->forward_to_mason_view(
-            '/search/search.mas',
-            content => $response,
-        );
     } else {
         my $tb = CXGN::Page::Toolbar::SGN->new();
         $response = $tab_html . $tb->index_page('search');
     }
-    $c->forward_to_mason_view(
-        '/search/search.mas',
+
+    $c->stash(
+        template => '/search/search.mas',
         content => $response,
     );
 }
