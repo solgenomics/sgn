@@ -268,8 +268,7 @@ qq |<a href="/chado/cvterm.pl?cvterm_id=$cvterm_id" target="blank">$cvterm_name<
 if ( $type eq 'unigenes' ) {
 
     eval {
-        my @unigenes = $locus->get_unigenes();
-
+        my @unigenes = $locus->get_unigenes({current=>1});
         my $unigenes;
         my $common_name    = $locus->get_common_name();
         my %solcyc_species = (
@@ -291,19 +290,15 @@ if ( $type eq 'unigenes' ) {
             my $organism_name = $unigene_build->get_organism_group_name();
             my $build_nr      = $unigene->get_build_nr();
             my $nr_members    = $unigene->get_nr_members();
-            
             my $locus_unigene_id = $locus->get_locus_unigene_id($unigene_id);
-            
-	    my $unigene_obsolete_link = privileged( $login_user_type ) ? 
-		$c->render_mason("/locus/obsolete_locus_unigene.mas", id=>$locus_unigene_id ) 
-		: qq | <span class="ghosted">[Remove]</span> |;
 
-            my $status = $unigene->get_status();
-	    if ( $status eq 'C' ) {
-		$unigenes .=
-		    qq|<a href="/search/unigene.pl?unigene_id=$unigene_id">SGN-U$unigene_id</a> $organism_name -- build $build_nr -- $nr_members members $unigene_obsolete_link<br />|;
-            }
-	    
+	    my $unigene_obsolete_link = privileged( $login_user_type ) ?
+		$c->render_mason("/locus/obsolete_locus_unigene.mas", id=>$locus_unigene_id )
+		: qq | <span class="ghosted">[Remove]</span> |;
+            my $blast_link = "<a href='/tools/blast/?preload_id=" . $unigene_id . "&preload_type=15'>[Blast]</a>";
+            $unigenes .=
+                qq|<a href="/search/unigene.pl?unigene_id=$unigene_id">SGN-U$unigene_id</a> $organism_name -- build $build_nr -- $nr_members members $unigene_obsolete_link $blast_link<br />|;
+
             # get solcyc links from the unigene page...
             #
 	    foreach my $dbxref ( $unigene->get_dbxrefs() ) {
