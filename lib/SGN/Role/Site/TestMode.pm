@@ -42,8 +42,14 @@ variable is set to a true value.
 sub test_mode {
     my $c = shift;
     my $app_name = ref($c) || $c;
-    return $ENV{ uc($app_name).'_TEST_MODE' };
+    my $env_name = uc($app_name).'_TEST_MODE';
+    return _env($c)->{$env_name} ? 1 : 0;
 }
+sub _env {
+    my ( $c ) = @_;
+    return ref($c) ? $c->engine->env : \%ENV;
+}
+
 
 =head1 CONFIGURATION PATH REROOTING
 
