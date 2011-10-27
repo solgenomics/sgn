@@ -122,6 +122,8 @@ sub search :Path('/search/') :Args() {
         template => '/search/search.mas',
         content => $response,
     );
+
+    $c->forward('View::Mason');
 }
 
 ######### private actions and helper methods #########
