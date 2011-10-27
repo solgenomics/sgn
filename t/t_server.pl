@@ -19,7 +19,7 @@ GetOptions(
 require Carp::Always if $carpalways;
 
 my @test_args = @ARGV;
-@test_args = ('t') unless @test_args;
+@test_args = ( '--state=hot,all,save', 't' ) unless @test_args;
 
 if( my $server_pid = fork ) {
 
