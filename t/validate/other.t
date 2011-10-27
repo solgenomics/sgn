@@ -9,7 +9,6 @@ use Test::More;
 my %urls = (
         "homepage"                                 => "/",
 
-        "Trait list"                               => "/phenome/qtl_traits.pl?index=Z",
         'tomato bac tpf'                           => '/sequencing/agp.pl',
         'tomato bac tpf'                           => '/sequencing/tpf.pl',
         'tomato bac tpf chr 12'                    => '/sequencing/tpf.pl?chr=12',
