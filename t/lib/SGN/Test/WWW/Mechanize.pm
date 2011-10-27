@@ -117,6 +117,9 @@ BEGIN {
 }
 sub import {
     my ( $class, %args ) = @_;
+    for( keys %args ) {
+        { skip_cgi => 1 }->{$_} or die "invalid arg $_";
+    }
     $ENV{SGN_SKIP_CGI} = 1 if $args{skip_cgi};
 }
 
