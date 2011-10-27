@@ -30,8 +30,8 @@ my %urls = (
         "QTL detail page"                          => "/phenome/qtl.pl?population_id=12&term_id=47515&chr=7&&peak_marker=SSR286&lod=3.9&qtl=/img/image_temporarily_unavailable.png",
         "QTL individuals list page"                => "/phenome/indls_range_cvterm.pl?cvterm_id=47515&lower=151.762&upper=162.011&population_id=12",
 
-        "qtl search"                        => "/search/direct_search.pl?search=qtl",
-        "trait search"                      => "/search/direct_search.pl?search=trait",
+        "qtl search"                        => "/search/qtl",
+        "trait search"                      => "/search/trait",
         "breeders toolbox"                 => "/breeders/",
     );
 
