@@ -179,9 +179,10 @@ my $new_ontology_link = !$person_id ? qq|<a href="/solpeople/login.pl">[log-in t
   &>
 </td><td>
 
-% if ($barcode_tempdir) { 
-<& /util/barcode.mas, identifier => "SGN $stock_id", tempdir => $barcode_tempdir, tempuri => $barcode_tempuri, text=> "SGN stock $stock_id ($uniquename)"  &>
-%}
+<& /util/barcode.mas, identifier => "SGN $stock_id", text=> "SGN stock $stock_id ($uniquename)", format=>"code128"  &><br /><br />
+<& /util/barcode.mas, identifier => "http://solgenomics.net/stock/$stock_id/view", text=>"SGN stock $stock_id ($uniquename)", format=>"qrcode" &>
+
+
 </td></tr></table>
 
 <div><b>Stock editors: </b> <% $editor_link %></div>
