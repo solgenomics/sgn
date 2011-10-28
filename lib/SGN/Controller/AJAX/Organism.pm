@@ -206,10 +206,10 @@ sub metadata_form {
 
     my $data = {};
     if ($json) {
-        print STDERR "CONVERTING JSON...\n";
+        #print STDERR "CONVERTING JSON...\n";
         $data = $c->stash->{json}->jsonToObj($json); }
     else {
-        print STDERR "No JSON data provided...\n";
+        #print STDERR "No JSON data provided...\n";
 
     }
 
