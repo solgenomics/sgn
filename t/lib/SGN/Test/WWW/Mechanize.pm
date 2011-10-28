@@ -267,13 +267,18 @@ sub dbh_leak_ok {
     my $test_name = shift || '';
     $test_name .= ' ' if $test_name;
 
-    $self->with_test_level( local => sub {
-        my $before = $self->_db_connection_count;
-        my $url = $self->base;
-        $self->get( $url );
-        my $after  = $self->_db_connection_count;
-        cmp_ok( $after, '<=', $before, "did not leak any database connections: $test_name($url)");
-    }, 1 );
+  SKIP: {
+        $ENV{SGN_PARALLEL_TESTING}
+            and skip 'parallel testing, dbh leak check skipped', 1;
+
+        $self->with_test_level( local => sub {
+            my $before = $self->_db_connection_count;
+            my $url = $self->base;
+            $self->get( $url );
+            my $after  = $self->_db_connection_count;
+            cmp_ok( $after, '<=', $before, "did not leak any database connections: $test_name($url)");
+        }, 1 );
+    }
 }
 
 sub _db_connection_count {
