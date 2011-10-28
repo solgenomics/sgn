@@ -46,7 +46,6 @@ if( my $server_pid = fork ) {
     $app->process_args(
         '-lr',
         ( map { -I => $_ } @INC ),
-        '--state=hot,fast,all,save',
         @prove_args
         );
     exit( $app->run ? 0 : 1 );
