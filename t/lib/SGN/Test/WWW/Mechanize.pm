@@ -128,7 +128,7 @@ use Carp;
 use Test::More;
 
 use Data::UUID ();
-my $host_uuid = do { my $du = Data::UUID->new; my $u = $du->create; $du->to_string( $u ) };
+my $host_uuid = Data::UUID->new->create_str;
 
 use HTML::Lint;
 use Try::Tiny;
