@@ -18,8 +18,10 @@ GetOptions(
 
 require Carp::Always if $carpalways;
 
-my @test_args = @ARGV;
-@test_args = ( '--state=hot,all,save', 't' ) unless @test_args;
+my @prove_args = @ARGV;
+@prove_args = ( 't' ) unless @prove_args;
+
+my $parallel = (grep /^-j\d*$/, @ARGV) ? 1 : 0;
 
 if( my $server_pid = fork ) {
 
@@ -32,14 +34,20 @@ if( my $server_pid = fork ) {
       sleep 1 until !kill(0, $server_pid) || get 'http://localhost:3003';
     }
 
-    # now run the tests against it
+    # set up env vars for prove and the tests
     $ENV{SGN_TEST_SERVER} = 'http://localhost:3003';
+    if( $parallel ) {
+        $ENV{SGN_PARALLEL_TESTING} = 1;
+        $ENV{SGN_SKIP_LEAK_TEST}   = 1;
+    }
 
+    # now run the tests against it
     my $app = App::Prove->new;
     $app->process_args(
         '-lr',
         ( map { -I => $_ } @INC ),
-        @test_args
+        '--state=hot,fast,all,save',
+        @prove_args
         );
     exit( $app->run ? 0 : 1 );
 
@@ -49,7 +57,10 @@ if( my $server_pid = fork ) {
 
     # server process
     $ENV{SGN_TEST_MODE} = 1;
-    @ARGV = ( -p => 3003 );
+    @ARGV = (
+        -p => 3003,
+        ( $parallel ? ('--fork') : () ),
+     );
     Catalyst::ScriptRunner->run('SGN', 'Server');
     exit;
 
@@ -63,7 +74,7 @@ test_all.pl - start a dev server and run tests against it
 
 =head1 SYNOPSIS
 
-t/test_all.pl --carpalways -- -v t/mytest.t  t/mydiroftests/
+t/test_all.pl --carpalways -- -v -j5 t/mytest.t  t/mydiroftests/
 
 =head1 OPTIONS
 

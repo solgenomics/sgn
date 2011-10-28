@@ -127,6 +127,9 @@ sub import {
 use Carp;
 use Test::More;
 
+use Data::UUID ();
+my $host_uuid = do { my $du = Data::UUID->new; my $u = $du->create; $du->to_string( $u ) };
+
 use HTML::Lint;
 use Try::Tiny;
 
@@ -293,6 +296,11 @@ sub create_test_user {
         password   => 'testpassword',
         user_type  => $props{user_type} || 'user',
        );
+    if( $ENV{SGN_PARALLEL_TESTING} ) {
+        $_ .= "-$host_uuid-$$" for @u{qw{ first_name last_name user_name password }};
+        #use Data::Dump;
+        #warn "creating user ".Data::Dump::dump( \%u );
+    }
 
     $self->_delete_user( \%u );
 

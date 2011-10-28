@@ -17,6 +17,7 @@ my $build = SGN::Build->new(
 
     build_requires => {
         'Class::MethodMaker'             => 0,
+        'Data::UUID'                     => 0,
         'File::Temp'                     => 0,
         'HTML::Lint'                     => 0,
         'Parse::Deb::Control'            => 0,
