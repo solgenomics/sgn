@@ -51,21 +51,23 @@ use SGN::Test::WWW::Mechanize;
       $mech->find_link( text_regex => qr/phenotype data/i );
     ok( $phenotype_download_link, 'got a phenotype data download link' );
    
-    $mech->links_ok( $phenotype_download_link->url,
-        'phenotype data download link works' );
-    
+    my $url = defined $phenotype_download_link ? $phenotype_download_link->url : '';
+
+    $url ? $mech->links_ok( $url, 'phenotype data download link works' ) : ok(0, 'no phenotype url found');
+
     cmp_ok( length( $mech->content ),
         '>=', 1000,
         'got at least 1KB of data from the phenotype data download' );
 
-    my $genotype_download_link =
-      $mech->find_link( text_regex => qr/genotype data/i );
+    my $genotype_download_link = $mech->find_link( text_regex => qr/genotype data/i );
     
     ok( $genotype_download_link, 'got a genotype data  download link' );
-    
-    $mech->links_ok($genotype_download_link->url,
-        'genotype data download link works' );
-    
+
+    if ($genotype_download_link) {
+        $mech->links_ok($genotype_download_link->url, 'genotype data download link works' );
+    } else {
+        ok(0, 'no genotype download link');
+    }
     cmp_ok( length( $mech->content ),
         '>=', 1000,
         'got at least 1KB of data from the genotype data download' );
