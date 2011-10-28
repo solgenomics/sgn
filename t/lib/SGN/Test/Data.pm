@@ -230,7 +230,7 @@ sub _create_test_stock {
 
 sub _create_test_organism {
     my ($values) = @_;
-    $values->{genus}   ||= "organism_$num_organisms-$host_id-$$";
+    $values->{genus}   ||= "organism-$num_organisms-$host_id-$$";
     $values->{species} ||= $values->{genus} . ' fooii';
 
     my $organism = $schema->resultset('Organism::Organism')
