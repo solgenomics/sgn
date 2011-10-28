@@ -145,6 +145,12 @@ with 'WWW::Mechanize::TreeBuilder' => {
 };
 
 
+sub BUILD {
+    # increase timeout to 6 minutes.  remember that this mech is
+    # actually a distant child of LWP::UserAgent!
+    shift->timeout( 360 );
+}
+
 =head2 catalyst_app
 
 The name of the app under test.  Defaults to 'SGN'.
