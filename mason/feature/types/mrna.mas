@@ -84,12 +84,6 @@
      <& /sitefeatures/mixed/xref_set/link.mas,
         xrefs => $xrefs,
       &>
-
-     <& /feature/gbrowse_syn_search_link.mas,
-        feature => $feature,
-        featurelocs => $featurelocs,
-      &>
-
 </&>
 
 
