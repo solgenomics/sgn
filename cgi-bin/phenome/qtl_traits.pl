@@ -98,14 +98,7 @@ print info_section_html (
                               ),
                         );
 
-my $search = CXGN::Search::CannedForms::qtl_search_form();
 
-print info_section_html (
-                          title       => 'Search QTLs by trait names',
-                          contents    => $search,
-                          collapsible => 1,
-                          collapsed   => 0,
-                        );
 $page->footer();
 
 #############
