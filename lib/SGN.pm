@@ -124,7 +124,9 @@ __PACKAGE__->config(
 		},
 	    },
 	},
-    }
+    },
+
+    ( $ENV{SGN_TEST_MODE} ? ( test_mode => 1 ) : () ),
 );
 
 
