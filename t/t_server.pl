@@ -23,16 +23,32 @@ my @prove_args = @ARGV;
 
 my $parallel = (grep /^-j\d*$/, @ARGV) ? 1 : 0;
 
-if( my $server_pid = fork ) {
+my $server_pid = fork;
+unless( $server_pid ) {
+    # web server process
 
-    # wait for the test server to start
-    {
-      local $SIG{CHLD} = sub {
-          waitpid $server_pid, 0;
-          die "\nTest server failed to start.  Aborting.\n";
-      };
-      sleep 1 until !kill(0, $server_pid) || get 'http://localhost:3003';
-    }
+    $ENV{SGN_TEST_MODE} = 1;
+    @ARGV = (
+        -p => 3003,
+        ( $parallel ? ('--fork') : () ),
+     );
+    Catalyst::ScriptRunner->run('SGN', 'Server');
+    exit;
+}
+
+# wait for the test server to start
+{
+    local $SIG{CHLD} = sub {
+        waitpid $server_pid, 0;
+        die "\nTest server failed to start.  Aborting.\n";
+    };
+    sleep 1 until !kill(0, $server_pid) || get 'http://localhost:3003';
+}
+
+my $prove_pid = fork;
+unless( $prove_pid ) {
+    # test harness process
+
 
     # set up env vars for prove and the tests
     $ENV{SGN_TEST_SERVER} = 'http://localhost:3003';
@@ -50,20 +66,16 @@ if( my $server_pid = fork ) {
         );
     exit( $app->run ? 0 : 1 );
 
-    END { kill 15, $server_pid if $server_pid }
-
-} else {
-
-    # server process
-    $ENV{SGN_TEST_MODE} = 1;
-    @ARGV = (
-        -p => 3003,
-        ( $parallel ? ('--fork') : () ),
-     );
-    Catalyst::ScriptRunner->run('SGN', 'Server');
-    exit;
-
 }
+
+$SIG{CHLD} = 'IGNORE';
+$SIG{INT}  = sub { kill 15, $server_pid, $prove_pid };
+$SIG{KILL} = sub { kill 9, $server_pid, $prove_pid };
+
+
+waitpid $prove_pid, 0;
+END { kill 15, $server_pid if $server_pid }
+
 
 __END__
 
