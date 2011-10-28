@@ -114,8 +114,8 @@ sub associate_locus_GET :Args(0) {
     #phytoene synthase 1 (psy1)
     my $locus_input = $c->req->param('loci') ;
     if (!$locus_input) {
-        $c->stash->{rest} = { error => 'You did not pass loci param! ' };
-        $c->throw_client_error( public_message => 'need loci param' );
+        $self->status_bad_request($c, message => 'need loci param' );
+        return;
     }
     my ($locus_data, $allele_symbol) = split (/ Allele: / ,$locus_input);
     my $is_default = $allele_symbol ? 'f' : 't' ;

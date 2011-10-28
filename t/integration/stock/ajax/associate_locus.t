@@ -23,7 +23,7 @@ my $stock = create_test('Stock::Stock', {
 my $stock_id = $stock->stock_id;
 $mech->get('/ajax/stock/associate_locus');
 is $mech->status, 400, 'got an error';
-$mech->content_contains('Error');
+$mech->content_contains('error');
 $mech->content_contains('need loci param');
 
 #try to add a locus while not logged in
