@@ -9,10 +9,7 @@ my $mech = SGN::Test::WWW::Mechanize->new;
 
 $mech->with_test_level( local => sub {
 
-   my $org = create_test( 'Organism::Organism', {
-       species => 'Blargopodus maximus',
-       genus   => 'Blargopodus',
-   });
+   my $org = create_test( 'Organism::Organism' );
 
    $mech->get( '/organism/'.$org->species.'/genome' );
    is $mech->status, 404, 'got a 404 if the organism has no genome_page organismprop';
