@@ -17,6 +17,10 @@ package SGN;
 use Moose;
 use namespace::autoclean;
 
+BEGIN {
+    $ENV{WEB_PROJECT_NAME} = $ENV{PROJECT_NAME} = __PACKAGE__;
+}
+
 use SGN::Exception;
 
 use Catalyst::Runtime 5.80;
@@ -134,8 +138,6 @@ __PACKAGE__->config(
 after 'setup_finalize' => sub {
     my $self = shift;
 
-
-    $ENV{PROJECT_NAME} = $self->config->{name};
     $self->config->{basepath} = $self->config->{home};
 
     # all files written by web server should be group-writable
