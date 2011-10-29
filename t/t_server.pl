@@ -35,6 +35,7 @@ unless( $server_pid ) {
     Catalyst::ScriptRunner->run('SGN', 'Server');
     exit;
 }
+warn "$0: starting server with PID $server_pid.\n";
 
 # wait for the test server to start
 {
@@ -65,17 +66,17 @@ unless( $prove_pid ) {
         @prove_args
         );
     exit( $app->run ? 0 : 1 );
-
 }
 
 $SIG{CHLD} = 'IGNORE';
 $SIG{INT}  = sub { kill 15, $server_pid, $prove_pid };
 $SIG{KILL} = sub { kill 9, $server_pid, $prove_pid };
 
-
+warn "$0: started prove PID $prove_pid, waiting for it to finish.\n";
 waitpid $prove_pid, 0;
+warn "$0: prove finished, stopping server PID $server_pid.\n";
 END { kill 15, $server_pid if $server_pid }
-
+waitpid $server_pid, 0;
 
 __END__
 
