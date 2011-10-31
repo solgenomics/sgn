@@ -26,6 +26,7 @@ a hashref with all the parameters needed for printing the stock page!
  locus_autocomplete_uri => '/ajax/locus/autocomplete/'
  cvterm_add_uri
  cvterm_autocomplete_uri => '/ajax/cvterm/autocomplete/'
+ organism_autocomplete_uri => '/ajax/organism/autocomplete/'
 
 =back
 
@@ -44,6 +45,9 @@ $locus_add_uri => ''
 $locus_autocomplete_uri => undef
 $cvterm_add_uri => ''
 $cvterm_autocomplete_uri => undef
+$organism_autocomplete_uri => '/ajax/organism/autocomplete/'
+
+
 </%args>
 
 
@@ -152,11 +156,18 @@ foreach my $db_name ( keys %$dbxrefs ) {
 my $new_ontology_link = !$person_id ? qq|<a href="/solpeople/login.pl">[log-in to associate new ontology term]</a> | : '' ;
 
 </%perl>
-
-
 <& /util/import_javascript.mas, classes => ["jquery", "thickbox", "CXGN.Page.FormattingHelpers"] &>
 
 
+<script language="javascript">
+function jqueryStuff() { 
+   jQuery(function() {
+     jQuery("#species_name").autocomplete({
+        source: '/organism/autocomplete'
+     });
+  });
+}
+</script>
 <& /page/page_title.mas, title=> join( ': ', grep $_, ucfirst($type_name), $uniquename ) || 'Create a new stock' &>
 
 
