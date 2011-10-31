@@ -501,6 +501,14 @@ sub qtl_form : PathPart('qtl/form') Chained Args {
      $c->throw_404("Population id argument is missing");   
     }
 
+    if ($pop_id and $pop_id !~ /^([0-9]+)$/)  
+    {
+        $c->throw_404("<strong>$pop_id</strong> is not an accepted argument. 
+                        This form expects an all digit population id, instead of 
+                        <strong>$pop_id</strong>"
+                     );   
+    }
+
     $c->stash( template => $self->get_template($c, $type),
                pop_id   => $pop_id,
                guide    => $self->guideline,
