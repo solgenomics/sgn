@@ -274,7 +274,7 @@ sub populate_gene_sequences :Local {
         }
         $c->log->debug("Got a $o at index $index");
 
-        if ($o->isa('Bio::PrimarySeq')) {
+        unless( $o->isa('DBIx::Class::Row') ) {
             $o;
         } else {
             $c->log->debug("Downgrading from BCS to Bioperl object " . $o->name);
