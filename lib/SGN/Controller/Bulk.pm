@@ -284,7 +284,7 @@ sub populate_gene_sequences :Local {
             $o;
         } else {
             $c->log->debug("Downgrading from BCS to Bioperl object " . $o->name) if $c->debug;
-            my @desc = get_descriptions($o);
+            my @desc = get_descriptions($o,'plain');
             my $g    = Bio::PrimarySeq->new(
                 -id   => $o->id,
                 -desc => join(', ', @desc),
