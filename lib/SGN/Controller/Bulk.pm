@@ -200,21 +200,35 @@ sub cache_gene_sequences :Local :Args(0) {
     my $success = 0;
     my @gene_ids = split /\s+/, $ids;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $mrnas = $schema->resultset('Sequence::Feature')
-                       ->search({
-                           "me.name" => \@gene_ids,
-                           'me.type_id' => $schema->get_cvterm_or_die('sequence:gene')->cvterm_id,
-                         })
-                       ->search_related( 'feature_relationship_objects', {
-                           'feature_relationship_objects.type_id' => $schema->get_cvterm_or_die('relationship:part_of')->cvterm_id,
-                         })
-                       ->search_related( 'subject', {
-                           'subject.type_id' => $schema->get_cvterm_or_die('sequence:mRNA')->cvterm_id,
-                         },
-                         { prefetch => 'featureprops' },
-                        );
 
-    my @mrnas = $mrnas->all;
+    my $genes_by_name =
+        $schema->resultset('Sequence::Feature')
+               ->search({
+                   "me.name" => \@gene_ids,
+                   'me.type_id' => $schema->get_cvterm_or_die('sequence:gene')->cvterm_id,
+               });
+    my $genes_by_synonym =
+        $schema->resultset('Sequence::Synonym')
+               ->search({ 'me.name' => \@gene_ids })
+               ->search_related('feature_synonyms')
+               ->search_related('feature',{
+                   'feature.type_id' => $schema->get_cvterm_or_die('sequence:gene')->cvterm_id,
+                 });
+
+    my %seen_mrna;
+    my @mrnas =
+        grep !$seen_mrna{$_->feature_id}++,
+        map {
+            $_->search_related( 'feature_relationship_objects', {
+                    'feature_relationship_objects.type_id' => $schema->get_cvterm_or_die('relationship:part_of')->cvterm_id,
+                 })
+              ->search_related( 'subject', {
+                  'subject.type_id' => $schema->get_cvterm_or_die('sequence:mRNA')->cvterm_id,
+                 },
+                 { prefetch => 'featureprops' },
+                )
+        } ( $genes_by_name, $genes_by_synonym );
+
     $c->stash( gene_mrnas => \@mrnas );
     $c->forward('convert_sequences_to_bioperl_objects');
     $c->forward('populate_gene_sequences');
