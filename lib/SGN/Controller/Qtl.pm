@@ -237,14 +237,14 @@ sub _analyze_correlation  {
         copy( $corre_table_file, $corre_image_dir )
             or die "could not copy $corre_table_file to $corre_image_dir";
 
-        $heatmap_file = fileparse($heatmap_file);
-        $heatmap_file  = $c->generated_file_uri("correlation",  $heatmap_file);
-        $corre_table_file = fileparse($corre_table_file);
+        $heatmap_file      = fileparse($heatmap_file);
+        $heatmap_file      = $c->generated_file_uri("correlation",  $heatmap_file);
+        $corre_table_file  = fileparse($corre_table_file);
         $corre_table_file  = $c->generated_file_uri("correlation",  $corre_table_file);
        
         $c->stash( heatmap_file     => $heatmap_file, 
                    corre_table_file => $corre_table_file
-                );  
+                 );  
     } 
 }
 
@@ -280,7 +280,7 @@ sub _correlation_output {
     
     $c->stash( heatmap_file     => $heatmap,
                corre_table_file => $corre_table,
-        );  
+             );  
  
     $self->_get_trait_acronyms($c);
 }
@@ -580,23 +580,35 @@ sub search_results : PathPart('qtl/search/results') Chained Args(0) {
     $trait =~ s/(^\s+|\s+$)//g;
     $trait =~ s/\s+/ /g;
     
-    my $schema    = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");  
-    my $rs = $schema->resultset("Cv::Cvterm")->search(
-        { name => { 'LIKE' => '%'.$trait .'%'} },
-        { columns => [ qw/ cvterm_id name definition/ ] },
-        {page => $c->req->param('page') || 1,
-         rows => 10
-        }
-        );
+    if ($trait)
+    {
+        my $schema    = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");  
+        my $rs = $schema->resultset("Cv::Cvterm")->search(
+            { name => { 'LIKE' => '%'.$trait .'%'} },
+            { columns => [ qw/ cvterm_id name definition/ ] },
+            {page => $c->req->param('page') || 1,
+             rows => 10
+            }
+            );
       
-    my $rows = $self->mark_qtl_traits($c, $rs);
+        my $rows = $self->mark_qtl_traits($c, $rs);
                                                         
-    $c->stash(template   => '/qtl/search/results.mas',
-              data       => $rows,
-              query      => $c->req->param('trait'),
-              pager      => $rs->pager,
-              page_links => sub {uri ( query => { trait => $c->req->param('trait'), page => shift } ) }
-        );
+        $c->stash(template   => '/qtl/search/results.mas',
+                  data       => $rows,
+                  query      => $c->req->param('trait'),
+                  pager      => $rs->pager,
+                  page_links => sub {uri ( query => { trait => $c->req->param('trait'), page => shift } ) }
+            );
+    }
+    else 
+    {
+        $c->stash(template   => '/qtl/search/results.mas',
+                  data       => undef,
+                  query      => undef,
+                  pager      => undef,
+                  page_links => undef,
+            );
+    }
 }
 
 sub mark_qtl_traits {
