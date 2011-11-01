@@ -297,7 +297,8 @@ sub bulk_gene_download :Path('/bulk/gene/download') :Args(1) {
 
     $sha1 =~ s/\.(fasta|txt)$//g;
 
-    my $seqs = $self->gene_cache->thaw($sha1);
+    my $seqs = $self->gene_cache->thaw($sha1)
+        or $c->throw_404('Bulk dataset not found');
 
     $c->stash->{sequences} = $seqs;
     $c->forward('View::SeqIO');
@@ -325,7 +326,8 @@ sub bulk_feature_download :Path('/bulk/feature/download') :Args(1) {
 
     $sha1 =~ s/\.(fasta|txt)$//g;
 
-    my $seqs = $self->feature_cache->thaw($sha1);
+    my $seqs = $self->feature_cache->thaw($sha1)
+        or $c->throw_404('Bulk dataset not found');
 
     $c->stash( sequences => $seqs->[1] );
 
