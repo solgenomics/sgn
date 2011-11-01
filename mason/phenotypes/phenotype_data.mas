@@ -88,7 +88,7 @@ foreach my $term(sort keys %info ) {
     push  @data,  [map {$_}
                    ( (tooltipped_text(qq|<a href="/chado/cvterm.pl?cvterm_id=$term_id">$term_name</a>|, $definition) ), $mean_value, $min, $max, scalar(@values)   ) ];
 
-    push  @{ $data[$count] }, qq | <a href="/phenome/qtl_analysis.pl?stock_id=$object_id&amp;cvterm_id=$term_id"> $graph_icon</a> |    if $has_qtl;
+    push  @{ $data[$count] }, qq | <a href="/phenome/qtl_analysis.pl?stock_id=$object_id&amp;cvterm_id=$term_id" onClick="Qtl.waitPage()"> $graph_icon</a> |    if $has_qtl;
     $count++;
   }
   if (scalar(@qual_values) ) {
@@ -106,6 +106,8 @@ push @headings , 'QTL(s)' if $has_qtl;
 <script  language="javascript">
 
 </script>
+
+<& /util/import_javascript.mas, classes => [ "CXGN.Phenome.Qtl" ] &>
 
 <div id = "$div">
 
@@ -135,3 +137,5 @@ push @headings , 'QTL(s)' if $has_qtl;
 
 % }
 </div>
+
+<& /qtl/waitmessage.mas &>
