@@ -285,38 +285,24 @@ sub mrna_cds_protein_sequence {
                ->search_related('object');
     }
 
-    my @descriptions = get_descriptions( $mrna_feature, 1 ); #< no html
+    my $description = join ', ', get_descriptions( $mrna_feature, 'no html' );
 
     my $peptide = _peptides_rs( $mrna_feature )->first;
-
-    # if there *is* no peptide, just return the mrna feature
-    return [ $mrna_feature ] if !$peptide && $mrna_feature && $mrna_feature->subseq(1,1);
-
-    # just return the mrna and peptide rows if they both have their
-    # own sequences (because the rows can act as Bio::PrimarySeqI's
-    return [ $mrna_feature, undef, $peptide ] if $peptide && $peptide->subseq(1,1) && $mrna_feature && $mrna_feature->subseq(1,1);
 
     my @exon_locations = _exon_rs( $mrna_feature )->all
         or return;
 
-    my $mrna_sequence = join( '', map {
-        $_->srcfeature->subseq( $_->fmin+1, $_->fmax ),
-    } @exon_locations );
-
-    my $mrna_seq = Bio::PrimarySeq->new(
-        -id   => $mrna_feature->name,
-        -desc => join( ', ', @descriptions ),
-        -seq  => $mrna_sequence,
-    );
+    my $mrna_seq = $mrna_feature && $mrna_feature->subseq(1,1) ? $mrna_feature : _make_mrna_seq( $mrna_feature, $description, \@exon_locations );
 
     return unless $mrna_seq->length > 0;
 
     my $peptide_loc = $peptide && _peptide_loc($peptide)->first
         or return [ $mrna_seq ];
 
-    my $protein_seq = Bio::PrimarySeq->new(
-        -id   => $peptide->name,
-        -desc => join( ', ', @descriptions ),
+
+    my $cds_seq = Bio::PrimarySeq->new(
+        -id   => $mrna_seq->name,
+        -desc => $description,
         -seq  => $mrna_seq->seq,
        );
     my ( $trim_fmin, $trim_fmax ) = _calculate_cdna_utr_lengths(
@@ -325,22 +311,34 @@ sub mrna_cds_protein_sequence {
      );
 
     if( $trim_fmin || $trim_fmax ) {
-        $protein_seq = $protein_seq->trunc( 1+$trim_fmin, $mrna_seq->length - $trim_fmax );
+        $cds_seq = $cds_seq->trunc( 1+$trim_fmin, $mrna_seq->length - $trim_fmax );
     }
 
     if( $exon_locations[0]->strand == -1 ) {
-        $_ = $_->revcom for $mrna_seq, $protein_seq;
+        $_ = $_->revcom for $mrna_seq, $cds_seq;
     }
 
-    my $cds_seq  = Bio::PrimarySeq->new(
-                        -id   => $protein_seq->display_id,
-                        -desc => join( ', ', @descriptions ),
-                        -seq  => $protein_seq->seq,
-    );
-    $protein_seq = $protein_seq->translate;
+    my $protein_seq = $cds_seq->translate;
 
     return [ $mrna_seq, $cds_seq, $protein_seq ];
 }
+
+sub _make_mrna_seq {
+    my ( $mrna_feat, $description, $exons ) = @_;
+
+    my $mrna_sequence = join( '', map {
+        $_->srcfeature->subseq( $_->fmin+1, $_->fmax ),
+    } @$exons );
+
+    my $mrna_seq = Bio::PrimarySeq->new(
+        -id   => $mrna_feat->name,
+        -desc => $description,
+        -seq  => $mrna_sequence,
+    );
+
+    return $mrna_seq;
+}
+
 sub _loc2range {
     my ( $loc ) = @_;
     return $loc->to_range if $loc->can('to_range');

@@ -33,7 +33,7 @@ $mech->with_test_level( local => sub {
             gene_type => 'cdna',
         },
     }, "submit bulk_gene with all invalid identifiers");
-    $mech->content_like(qr/At least one valid identifier must be given/);
+    $mech->content_like(qr/did not contain any valid identifiers/);
 });
 
 $mech->with_test_level( local => sub {
@@ -93,7 +93,7 @@ $mech->with_test_level( local => sub {
 
 # cds sequence for Solyc02g081670.1
 my $expected_sequence =<<SEQ;
->Solyc02g081670.1.1 CDS sequence
+>Solyc02g081670.1.1 Fimbriata (Fragment) (AHRD V1 **-- Q6QVW9_MIMLE); contains Interpro domain(s)  IPR001810  Cyclin-like F-box 
 ATGGAAGCTTTTCATCATCCCCCTATTAGCTTTCACTTTCCCTATGCTTTTCCTATCCCA
 ACACCAACAACCAATTTTCTTGGAACTCCAAATTCATCATCAGTTAATGGAATGATCATC
 AACACTTGGATGGATAGTAGAATTTGGAGTAGACTTCCACATAGGCTTATTGATAGAATC
@@ -205,7 +205,7 @@ $mech->with_test_level( local => sub {
     $mech->links_ok( \@flinks );
     # TODO: Depends on live data.
 my $expected_sequence =<<SEQ;
->Solyc02g081670.1.1 protein sequence
+>Solyc02g081670.1.1 Fimbriata (Fragment) (AHRD V1 **-- Q6QVW9_MIMLE); contains Interpro domain(s)  IPR001810  Cyclin-like F-box 
 MEAFHHPPISFHFPYAFPIPTPTTNFLGTPNSSSVNGMIINTWMDSRIWSRLPHRLIDRI
 IAFLPPPAFFRARVVCKRFYGLIYSTHFLELYLQVSPKRNWFIFFKQKVPRNNIYKNVMN
 SSNSGVCSVEGYLFDPDNLCWYRLSFALIPQGFSPVSSSGGLICFVSDESGSKNILLCNP
