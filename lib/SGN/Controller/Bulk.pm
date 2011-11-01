@@ -199,34 +199,26 @@ sub cache_gene_sequences :Local :Args(0) {
 
     my $success = 0;
     my @gene_ids = split /\s+/, $ids;
-    my $matching_features = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado')
-                                ->resultset('Sequence::Feature')
-                                ->search({ "me.name" => \@gene_ids },{
-                                    prefetch => [ qw/type featureloc_features/],
-                                    });
-    my $f     = $matching_features->next;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $mrnas = $schema->resultset('Sequence::Feature')
+                       ->search({
+                           "me.name" => \@gene_ids,
+                           'me.type_id' => $schema->get_cvterm_or_die('sequence:gene')->cvterm_id,
+                         })
+                       ->search_related( 'feature_relationship_objects', {
+                           'feature_relationship_objects.type_id' => $schema->get_cvterm_or_die('relationship:part_of')->cvterm_id,
+                         })
+                       ->search_related( 'subject', {
+                           'subject.type_id' => $schema->get_cvterm_or_die('sequence:mRNA')->cvterm_id,
+                         },
+                         { prefetch => 'featureprops' },
+                        );
 
-    # abort if there are no matching features
-    $c->throw_client_error(
-        public_message => 'At least one valid identifier must be given',
-        http_status    => 200,
-    ) unless $f;
-
-    $c->log->debug("found feature type " . $f->type->name);
-
-    next unless $f->type->name eq 'gene';
-
-    my @mrnas = grep $_->type->name eq 'mRNA', $f->child_features;
-    $c->log->debug("Found " . scalar(@mrnas) . " mrna seq ids");
-    $success++ if @mrnas;
-    $c->stash( gene_mrnas => [ @mrnas ] );
-
+    my @mrnas = $mrnas->all;
+    $c->stash( gene_mrnas => \@mrnas );
     $c->forward('convert_sequences_to_bioperl_objects');
-
     $c->forward('populate_gene_sequences');
-
-    $c->stash( bulk_download_success => $success );
-
+    $c->stash( bulk_download_success => scalar(@mrnas) );
     $c->forward('freeze_sequences');
 }
 
