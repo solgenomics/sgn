@@ -180,6 +180,12 @@ description   = ITAG2.3 Release: protein annotations
 organism      = Solanum lycopersicum
 extended_description = ITAG Release 2.3 (2011-04-26) official annotations on the SL2.40 genome build by the International Tomato Annotation Group (ITAG).
 
+[TAIR10_genomic]
+path          = TAIR10_genomic.conf
+description   = TAIR10: A. thaliana genomic annotations
+organism      = Arabidopsis thaliana
+extended_description = Release 10 of the Arabidopsis genome annotation from The Arabidopsis Information Resource (TAIR).
+
 [ITAG2_genomic]
 path          = ITAG2_genomic.conf
 description   = ITAG2 Release: genomic annotations

@@ -763,21 +763,23 @@ span.paginate_nav_currpage {
   color: #c00000;
 }
 
-table.columnar_table { 
+table.columnar_table {
   border: 1px solid #cccccc;
+  clear: both;
 }
-table.columnar_table_noborder { 
+table.columnar_table_noborder {
+    clear: both;
 }
 td.columnar_table, th.columnar_table, th.columnar_table_noborder { 
   padding: 0.2em 0.6em 0.2em 0.6em;
   margin: 0;
   line-height: 1.4;
 }
-th.columnar_table { 
+th.columnar_table {
   border-bottom: 1px solid #aaa;
   background: #efefef;
 }
-table.columnar_table > caption {
+caption.columnar_table {
   font-weight: bold;
   text-align: left;
   padding: 2px;
@@ -1177,12 +1179,11 @@ div.info_table_fieldval {
 /*   font-family: monospace; */
   margin: 0.3em 0 0 0.6em;
 }
-td.sub_info_table_fieldval,  
-td.info_table_fieldval {  
-  padding: 0.5em 0.3em 0.3em 0.3em;
-/*   background: #F5F5F5; */
-/*   border: 1px solid #E5E5E5; */
+div.info_table_fieldval > ul {
+    margin: 0;
+    padding-left: 2.5em;
 }
+
 caption.info_table,
 caption.sub_info_table {  
   caption-side: bottom;

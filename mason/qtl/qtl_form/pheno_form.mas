@@ -1,7 +1,7 @@
 <%doc>
 
 =head1 NAME 
-qtl/qtl_form/trait_form.mas - a mason component for a traits file submission
+qtl/qtl_form/pheno_form.mas - a mason component for a phenotype data file submission
 
 =AUTHOR
 Isaak Y Tecle (iyt2@cornell.edu)
@@ -17,7 +17,7 @@ $guide
 
 </%args>
 
-<& /page/page_title.mas, title => "Step 2: Submit Phenotype Data" &>
+<& /page/page_title.mas, title => "Step 3: Submit Phenotype Data" &>
 <&| /page/info_section.mas, title => "Phenotype Dataset", subtitle => $guide &>
 
  <form action="/phenome/qtl_load.pl" method="POST" enctype="MULTIPART/FORM-DATA"> 

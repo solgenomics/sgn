@@ -482,6 +482,7 @@ sub simple_selectbox_html {
     $retstring =~ s/ +/ /;    #collapse spaces
     my $in_group = 0;
     foreach ( @{ $params{choices} } ) {
+        no warnings 'uninitialized';
         if ( !ref && s/^__// ) {
             $retstring .= qq{</optgroup>} if $in_group;
             $in_group = 1;
@@ -802,7 +803,7 @@ sub columnar_table_html {
       qq|<table class="columnar_table$noborder" $params{__tableattrs}>\n|;
 
     if( defined $params{__caption} ) {
-        $html .= "<caption>$params{__caption}</caption>\n";
+        $html .= "<caption class=\"columnar_table\">$params{__caption}</caption>\n";
     }
 
     unless ( defined $params{__alt_freq} ) {

@@ -1,3 +1,6 @@
+
+<& /util/import_javascript.mas, classes => ["Prototype", "jquery", "thickbox"] &>
+
 <br />
 <& /page/page_title.mas, title=>"Afri-SOL: A new network of researchers working on African solanaceous plants" &>
 <div class="indentedcontent">
@@ -17,7 +20,8 @@ The network is open to all researchers based in Africa and working on solanaceou
 <br /><br />
 Afri-SOL members welcome any suggestions from other Sol communities. 
 </div>
-<div class="indentedcontent">
+
+<&| /page/info_section.mas, title=>"Contact Information" &>
 For more information, contact:<br /><br />
 Damaris Achieng Odeny (PhD),<br />
 Agricultural Research Council, <br />
@@ -28,5 +32,8 @@ Onderstepoort<br />
 Tel: +27 125299227<br />
 Fax: +27 125654667<br />
 dodeny@arc.agric.za<br />
-</div>
+</&>
 
+<&| /page/info_section.mas, title=>"Images of <a href=\"/organism/23894/view/\">Solanum retroflexum</a>, an African Solanaceae species" &>
+<& /image/print_images.mas, images=>[29059 ,29060, 29061] &>
+</&>

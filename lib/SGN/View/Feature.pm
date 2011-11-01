@@ -5,7 +5,8 @@ use warnings;
 use base 'Exporter';
 
 use HTML::Entities;
-use List::MoreUtils qw/ any /;
+use List::Util qw/ sum /;
+use List::MoreUtils qw/ any uniq /;
 
 use Bio::Seq;
 
@@ -20,7 +21,7 @@ our @EXPORT_OK = qw/
     organism_link feature_length
     mrna_cds_protein_sequence
     description_featureprop_types
-    get_description
+    get_descriptions
     location_list_html
     location_string
     location_string_with_strand
@@ -52,27 +53,28 @@ sub description_featureprop_types {
            })
 }
 
-sub get_description {
-    my ($feature, $plain) = @_;
+sub get_descriptions {
+    my ( $feature, $plain ) = @_;
 
     my $desc_types =
         description_featureprop_types( $feature )
             ->get_column('cvterm_id')
             ->as_query;
 
-    my $description =
-        $feature->search_related('featureprops', {
-            type_id => { -in => $desc_types },
-        })->get_column('value')
-          ->first;
+    my @descriptions =
+        $feature->search_related('featureprops',
+                                 { type_id => { -in => $desc_types } },
+                                 { order_by => 'rank' },
+                                )
+                ->get_column('value')
+                ->all;
 
-    return unless $description;
 
-    return $description if defined $plain;
+    return @descriptions if defined $plain;
 
-    $description =~ s/(\S+)/my $id = $1; CXGN::Tools::Identifiers::link_identifier($id) || $id/ge;
+    s/(\S+)/my $id = $1; CXGN::Tools::Identifiers::link_identifier($id) || $id/ge for @descriptions;
 
-    return $description;
+    return @descriptions;
 }
 
 sub location_string {
@@ -125,10 +127,14 @@ sub related_stats {
 }
 
 sub feature_table {
-    my ($features,$reference_sequence) = @_;
-    my @data;
-    my $na_html = '<span class="ghosted">n/a</span>';
+    my ( $features, $reference_sequence, $omit_columns ) = @_;
 
+    { no warnings 'uninitialized';
+      $omit_columns ||= [];
+      $omit_columns = [$omit_columns] unless ref $omit_columns eq 'ARRAY';
+    }
+
+    my @data;
     for my $f (sort { $a->name cmp $b->name } @$features) {
         my @ref_condition =
             $reference_sequence ? ( srcfeature_id => $reference_sequence->feature_id )
@@ -146,12 +152,13 @@ sub feature_table {
                 my $ref = $loc->srcfeature;
                 my ($start,$end) = ($loc->fmin+1, $loc->fmax);
                 push @data, [
+                    organism_link( $f->organism ),
                     cvterm_link($f->type),
                     feature_link($f),
                     ($ref ? $ref->name : '<span class="ghosted">null</span>').":$start..$end",
-                    commify_number( feature_length( $f, $loc ) ) || $na_html,
-                    $loc->strand ? ( $loc->strand == 1 ? '+' : '-' ) : $na_html,
-                    $loc->phase || $na_html,
+                    commify_number( feature_length( $f, $loc ) ) || undef,
+                    $loc->strand ? ( $loc->strand == 1 ? '+' : '-' ) : undef,
+                    $loc->phase || undef,
                     ];
             }
         }
@@ -161,15 +168,46 @@ sub feature_table {
                 $nl .= " on ".encode_entities( $reference_sequence->name )
             }
             push @data, [
+                organism_link( $f->organism ),
                 cvterm_link($f->type),
                 feature_link($f),
                 qq|<span class="ghosted">$nl</span>|,
-                commify_number( feature_length( $f, undef ) ) || $na_html,
-                ($na_html)x2,
+                commify_number( feature_length( $f, undef ) ) || undef,
+                undef,
+                undef,
             ];
         }
     }
-    return \@data;
+
+    my @headings = ( "Organism", "Type", "Name", "Location(s)", "Length", "Strand", "Phase" );
+
+    # omit any columns that are *all* undefined, or that we were
+    # requested to omit
+    my @cols_to_omit = uniq(
+        do {
+            my %heading_index = do { my $i = 0; map { lc $_ => $i++ } @headings };
+            (map {
+                my $i = $heading_index{lc $_};
+                defined $i or die "$_ column not found";
+                $i
+             } @$omit_columns
+            )
+        },
+      );
+    for my $t ( [\@headings], \@data ) {
+        for my $row ( @$t ) {
+            splice( @$row, $_, 1 ) for @cols_to_omit;
+        }
+    }
+
+    # make html for any other undef cells
+    for (@data) {
+        for (@$_) {
+            $_ = '<span class="ghosted">n/a</span>' unless defined;
+        }
+    }
+
+    return ( headings => \@headings, data => \@data );
 }
 
 # try to figure out the "length" of a feature, which will vary for different features
@@ -209,7 +247,7 @@ sub feature_link {
     return '<span class="ghosted">null</span>' unless $feature;
     my $id   = $feature->feature_id;
     my $name = $feature->name;
-    return qq{<a href="/feature/view/id/$id">$name</a>};
+    return qq{<a href="/feature/$id/details">$name</a>};
 }
 
 sub organism_link {
@@ -253,20 +291,11 @@ sub mrna_cds_protein_sequence {
     # own sequences (because the rows can act as Bio::PrimarySeqI's
     return [ $mrna_feature, $peptide ] if $peptide && $peptide->subseq(1,1) && $mrna_feature && $mrna_feature->subseq(1,1);
 
-    warn "Grabbing all exon locations " . localtime();
-    my @exon_locations = _exon_rs( $mrna_feature )->all or return;
+    # if there *is* no peptide, just return the mrna feature
+    return [ $mrna_feature ] if !$peptide && $mrna_feature && $mrna_feature->subseq(1,1);
 
-    warn("Found " .scalar(@exon_locations). " exon locations");
-
-    warn "Got all exon locations" . localtime();
-
-    my $description = get_description($mrna_feature, 1); # plain
-
-    my $mrna_sequence = join( '', map {
-            $_->srcfeature->subseq( $_->fmin+1, $_->fmax ),
-         } @exon_locations );
-
-    warn "Created mrna_sequence " . localtime();
+    my @exon_locations = _exon_rs( $mrna_feature )->all
+        or return;
 
     my $mrna_seq = Bio::PrimarySeq->new(
         -id   => $mrna_feature->name,
@@ -278,16 +307,19 @@ sub mrna_cds_protein_sequence {
 
     return unless $mrna_seq->length > 0;
 
-    my $peptide_loc = _peptide_loc($peptide)->first
-        or return ( $mrna_seq, undef );
+    my $peptide_loc = $peptide && _peptide_loc($peptide)->first
+        or return [ $mrna_seq ];
 
     my $protein_seq = Bio::PrimarySeq->new(
-        -id   => $mrna_feature->name,
+        -id   => $peptide->name,
         -desc => 'protein sequence',
         -seq  => $mrna_seq->seq,
        );
-    my $trim_fmin = $peptide_loc->fmin         -  $exon_locations[0]->fmin;
-    my $trim_fmax = $exon_locations[-1]->fmax  -  $peptide_loc->fmax;
+    my ( $trim_fmin, $trim_fmax ) = _calculate_cdna_utr_lengths(
+        _loc2range( $peptide_loc ),
+        [ map _loc2range( $_), @exon_locations ],
+     );
+
     if( $trim_fmin || $trim_fmax ) {
         $protein_seq = $protein_seq->trunc( 1+$trim_fmin, $mrna_seq->length - $trim_fmax );
     }
@@ -304,6 +336,53 @@ sub mrna_cds_protein_sequence {
     $protein_seq = $protein_seq->translate;
 
     return [ $mrna_seq, $cds_seq, $protein_seq ];
+}
+sub _loc2range {
+    my ( $loc ) = @_;
+    return $loc->to_range if $loc->can('to_range');
+    return Bio::Range->new(
+        -start  => $loc->fmin + 1,
+        -end    => $loc->fmax,
+        -strand => $loc->strand,
+      );
+}
+
+# given the range of the peptide and the ranges of each of the exons
+# (as Bio::RangeI's), calculate how many bases should be trimmed off
+# of each end of the cDNA (i.e. mRNA) seq to get the CDS seq
+sub _calculate_cdna_utr_lengths {
+    my ( $peptide, $exons ) = @_;
+
+    my ( $trim_fmin, $trim_fmax ) = ( 0, 0 );
+
+    # calculate trim_fmin if necessary
+    if( $exons->[0]->start < $peptide->start ) {
+
+        $trim_fmin =
+            sum
+            map {
+                $_->overlaps($peptide)
+                    ? $peptide->start - $_->start
+                    : $_->length
+            }
+            grep $_->start < $peptide->start, # find exons that overlap the UTR
+            @$exons
+    }
+
+    # calculate trim_fmax if necessary
+    if( $exons->[-1]->end > $peptide->end ) {
+        $trim_fmax =
+            sum
+            map {
+                $_->overlaps($peptide)
+                    ? $_->end - $peptide->end
+                    : $_->length
+            }
+            grep $_->end > $peptide->end, # find exons that overlap the UTR
+            @$exons
+    }
+
+    return ( $trim_fmin, $trim_fmax );
 }
 
 sub _peptides_rs {

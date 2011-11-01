@@ -10,10 +10,11 @@ Enter a list of feature identifier or upload a file containing one identifer sep
 </td>
 <td>
 <i>Example:</i>
-<pre style="border: 1px solid gray; width: 10em; height: 5em">
+<pre style="border: 1px solid gray; padding: 5px">
 SGN-E398616
 C06HBa0229B01.1
 AP009262
+Solyc01g005080.2.1
 </pre>
 </td></tr></table>
 <br />

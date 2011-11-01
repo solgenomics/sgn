@@ -14,12 +14,6 @@ use HTML::FormFu;
 use URI::FromHash 'uri';
 use YAML::Any;
 
-has 'schema' => (
-    is       => 'rw',
-    isa      => 'DBIx::Class::Schema',
-    required => 0,
-);
-
 has 'default_page_size' => (
     is      => 'ro',
     default => 20,
@@ -33,32 +27,10 @@ with 'Catalyst::Component::ApplicationAttribute';
 
 =cut
 
-=head2 view_by_name
-
-View a feature by name.
-
-Public path: /feature/view/name/<feature name>
-
-=cut
-
-sub view_name :Path('/feature/view/name') Args(1) {
-    my ( $self, $c, $feature_name ) = @_;
-    $self->schema( $c->dbic_schema('Bio::Chado::Schema','sgn_chado') );
-    $self->_view_feature($c, 'name', $feature_name);
-}
-
-=head2 view_id
-
-View a feature by ID number.
-
-Public path: /feature/view/id/<feature id number>
-
-=cut
-
-sub view_id :Path('/feature/view/id') Args(1) {
-    my ( $self, $c, $feature_id ) = @_;
-    $self->schema( $c->dbic_schema('Bio::Chado::Schema','sgn_chado') );
-    $self->_view_feature($c, 'feature_id', $feature_id);
+# deprecated old paths are now redirects
+sub view_by_name :Path('/feature/view/name') Path('/feature/view/id') Args(1) {
+    my ( $self, $c, $id ) = @_;
+    $c->res->redirect("/feature/$id/details",301);
 }
 
 =head2 search
@@ -71,7 +43,6 @@ Public path: /feature/search
 
 sub search :Path('/feature/search') Args(0) {
     my ( $self, $c ) = @_;
-    $self->schema( $c->dbic_schema('Bio::Chado::Schema','sgn_chado') );
 
     my $req = $c->req;
     my $form = $self->_build_form;
@@ -82,9 +53,8 @@ sub search :Path('/feature/search') Args(0) {
     if( $form->submitted_and_valid ) {
         $results = $self->_make_feature_search_rs( $c, $form );
     }
-
-    $c->forward_to_mason_view(
-        '/feature/search.mas',
+    $c->stash(
+        template => '/feature/search.mas',
         form                  => $form,
         results               => $results,
         pagination_link_maker => sub {
@@ -93,16 +63,23 @@ sub search :Path('/feature/search') Args(0) {
     );
 }
 
-sub delegate_component
-{
-    my ($self, $c, $matching_features) = @_;
-    my $feature   = $matching_features->next;
+#######################################
+
+sub feature_details :PathPart('details') :Chained('get_feature') Args(0) {
+    my ( $self, $c ) = @_;
+
+       $c->forward('get_type_specific_data')
+    && $c->forward('choose_view');
+}
+
+sub choose_view :Private {
+    my ( $self, $c ) = @_;
+    my $feature   = $c->stash->{feature};
     my $type_name = lc $feature->type->name;
     my $template  = "/feature/types/default.mas";
 
     $c->stash->{feature}     = $feature;
     $c->stash->{featurelocs} = $feature->featureloc_features;
-    $c->stash->{seq_download_url} = '/api/v1/sequence/download/single/'.$feature->feature_id;
 
     # look up site xrefs for this feature
     my @xrefs = map $c->feature_xrefs( $_, { exclude => 'featurepages' } ),
@@ -120,40 +97,54 @@ sub delegate_component
         $c->stash->{type} = $type_name;
     }
     $c->stash->{template} = $template;
+
+    return 1;
 }
 
-sub validate
-{
-    my ($self, $c,$matching_features,$key, $val) = @_;
-    my $count = $matching_features->count;
-#   EVIL HACK: We need a disambiguation process
-#   $c->throw_client_error( public_message => "too many features where $key='$val'") if $count > 1;
-    $c->throw_404( "Feature not found") if $count < 1;
-}
-
-
-sub _validate_pair {
-    my ($self,$c,$key,$value) = @_;
-    $c->throw_client_error(
-        public_message  => "$value is not a valid value for $key",
-    )
-        if ($key =~ m/_id$/ and $value !~ m/\d+/);
-}
-
-sub _view_feature {
-    my ($self, $c, $key, $value) = @_;
+sub get_feature : Chained('/') CaptureArgs(1) PathPart('feature') {
+    my ($self, $c, $id ) = @_;
 
     $c->stash->{blast_url} = '/tools/blast/index.pl';
 
-    $self->_validate_pair($c,$key,$value);
-    my $matching_features = $self->schema
-                                ->resultset('Sequence::Feature')
-                                ->search({ "me.$key" => $value },{
-                                    prefetch => [ 'type', 'featureloc_features' ],
-                                });
+    my $identifier_type = $c->stash->{identifier_type}
+        || $id =~ /[^-\d]/ ? 'name' : 'feature_id';
 
-    $self->validate($c, $matching_features, $key => $value);
-    $self->delegate_component($c, $matching_features);
+    if( $identifier_type eq 'feature_id' ) {
+        $id > 0
+            or $c->throw_client_error( public_message => 'Feature ID must be a positive integer.' );
+    }
+
+    my $matching_features =
+        $self->_app->dbic_schema('Bio::Chado::Schema','sgn_chado')
+             ->resultset('Sequence::Feature')
+             ->search(
+                 { 'me.'.$identifier_type => $id },
+                 { prefetch => [ 'type', 'featureloc_features' ] },
+               );
+
+    if( $matching_features->count > 1 ) {
+        $c->throw_client_error( public_message => 'Multiple matching features' );
+    }
+
+    my ( $feature ) = $matching_features->all;
+    $c->stash->{feature} = $feature
+        or $c->throw_404( "Feature not found" );
+
+    return 1;
+}
+
+sub get_type_specific_data :Private {
+    my ( $self, $c ) = @_;
+
+    my $type_name = $c->stash->{feature}->type->name;
+
+    # look for an action with private path /feature/types/<type>/get_specific_data
+    my $action = $c->get_action( 'get_specific_data', $self->action_namespace."/types/$type_name" );
+    if( $action ) {
+        $c->forward( $action ) or return;
+    }
+
+    return 1;
 }
 
 
@@ -204,19 +195,18 @@ EOY
 sub _make_feature_search_rs {
     my ( $self, $c, $form ) = @_;
 
-    my $rs = $self->schema->resultset('Sequence::Feature');
+    my $rs = $self->_app->dbic_schema('Bio::Chado::Schema','sgn_chado')
+                        ->resultset('Sequence::Feature');
 
     if( my $name = $form->param_value('feature_name') ) {
         $rs = $rs->search({ 'lower(name)' => { like => '%'.lc( $name ).'%' }});
     }
 
     if( my $type = $form->param_value('feature_type') ) {
-        $self->_validate_pair($c,'type_id',$type);
         $rs = $rs->search({ 'type_id' => $type });
     }
 
     if( my $organism = $form->param_value('organism') ) {
-        $self->_validate_pair( $c, 'organism_id', $organism );
         $rs = $rs->search({ 'organism_id' => $organism });
     }
 
@@ -235,7 +225,7 @@ sub _organisms {
     my ($self) = @_;
     return [
         map [ $_->organism_id, $_->species ],
-        $self->schema
+        $self->_app->dbic_schema('Bio::Chado::Schema','sgn_chado')
              ->resultset('Organism::Organism')
              ->search(undef, { order_by => 'species' }),
     ];
@@ -246,7 +236,7 @@ sub _feature_types {
 
     return [
         map [$_->cvterm_id,$_->name],
-        $self->schema
+        $self->_app->dbic_schema('Bio::Chado::Schema','sgn_chado')
                 ->resultset('Sequence::Feature')
                 ->search_related(
                     'type',

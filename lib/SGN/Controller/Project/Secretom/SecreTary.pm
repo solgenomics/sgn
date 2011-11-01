@@ -80,27 +80,24 @@ my $st_output_action = $c->req->param("st_output_action");
 		$input .= $upload->slurp;
 	}
 
-# need to add the programs dir to PATH so secretary code can find tmpred
+        # need to add the programs dir to PATH so secretary code can find tmpred
 	local $ENV{PATH} =
 		$ENV{PATH} . ':' . $c->path_to( $c->config->{programs_subdir} );
 
-my ($STresults, $temp_file_handle) =  $self->_run_secretary( $input, $sort_it, $show_only_sp, $c );
+        my ($STresults, $temp_file_handle) =  $self->_run_secretary( $input, $sort_it, $show_only_sp, $c );
 
-# stash the results of the run
+        # stash the results of the run
 	@{ $c->stash }{qw{ STresults }} = ( $STresults );
 
-if($st_output_action eq 'st_out_download'){ # download the output
+        if( $st_output_action && $st_output_action eq 'st_out_download'){ # download the output
+            $c->stash->{download_filename} = $temp_file_handle->filename;
+            $c->forward('/download/download');
+        }
+        else { # display in browser
 
-$c->stash->{download_filename} = $temp_file_handle->filename;  
-$c->forward('/download/download');
-
-}
-else{ # display in browser
-
-# and set the template to use for output
-	$c->stash->{template} = '/secretom/secretary/result.mas';
-}
-
+            # and set the template to use for output
+            $c->stash->{template} = '/secretom/secretary/result.mas';
+        }
 }
 
 ############# helper subs ##########

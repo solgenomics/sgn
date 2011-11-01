@@ -168,7 +168,7 @@ sub process_ids
       @return_data = map ($row->{lc($_)}, @{$self -> {output_fields}});
       # the pesky manual annotation field contains carriage returns!!!
       foreach my $r (@return_data) {
-	$r =~ s/\n//g;
+	$r =~ s/\n//g if $r;
       }
       print $dump_fh (join "\t", @return_data)."\n";
     }

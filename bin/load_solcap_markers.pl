@@ -39,7 +39,7 @@ the name of the database
 
 =item p
 
-protocol (e.g. SSR, SNP, Indel, dCAPs, etc)
+protocol (e.g. SSR, SNP, Indel, dCAPs, GG, etc)
 
 =item -i
 
@@ -127,12 +127,12 @@ eval {
     my @columns = $ss->column_labels(); # column labels are the headings for the data columns
 
     # make sure the spreadsheet is how we expect it to be
-    @columns = qw | marker protocol Temp fwd rev  |
+    @columns = qw | marker protocol temp | #fwd rev  |
 	or die"Column headings are not as expected";
 
     for my $marker_name (@markers) {
 
-	print "marker: $marker_name\n";
+	print "\n\nMARKER: $marker_name\n";
 
         my @marker_ids =  CXGN::Marker::Tools::marker_name_to_ids($dbh,$marker_name);
         if (@marker_ids>1) { die "Too many IDs found for marker '$marker_name'" }
@@ -140,8 +140,10 @@ eval {
         my $marker_id = $marker_ids[0];
 
 	if(!$marker_id) {
-	    $marker_id = CXGN::Marker::Tools::insert_marker($dbh,$marker_name);
-	    print "marker added: $marker_id\n";
+	    print STDERR "Marker $marker_name does not exist in database. SKIPPING!\n";
+	    next();
+	    #$marker_id = CXGN::Marker::Tools::insert_marker($dbh,$marker_name);
+	    #print "marker added: $marker_id\n";
 	}
 	else {  print "marker_id found: $marker_id\n" }
 
@@ -151,22 +153,25 @@ eval {
 	    ? $ss->value_at($marker_name,'temp') : 55;
 	print "temp: $annealing_temp\n";
 
-	my $fwd = $ss->value_at($marker_name,'fwd')
-	    or die "No foward primer found for $marker_name";
-	print "fwd: $fwd\n";
-
-	my $primer_id_fwd = CXGN::Marker::Tools::get_sequence_id($dbh,$fwd);
-        $primer_id_fwd = CXGN::Marker::Tools::insert($dbh,"sequence","sequence_id",['sequence'], ($fwd)) if !$primer_id_fwd;
-	print "primer_id_fwd: $primer_id_fwd\n";
-
-	my $rev=$ss->value_at($marker_name,'rev')
-	    or die"No reverse primer found for $marker_name";
-	print "rev: $rev\n";
-	my $primer_id_rev = CXGN::Marker::Tools::get_sequence_id($dbh,$rev);
-          $primer_id_rev = CXGN::Marker::Tools::insert($dbh,"sequence","sequence_id",['sequence'], ($rev)) if !$primer_id_rev;
-	print "primer_id_rev: $primer_id_rev\n";
+	my ($primer_id_fwd, $primer_id_rev, $fwd, $rev); 
+	if ($protocol ne 'SNP') {  # SNP only has seq5 and seq3
+	    $fwd = $ss->value_at($marker_name,'fwd')
+		or die "No foward primer found for $marker_name";
+	    print "fwd: $fwd\n";
+	    
+	    $primer_id_fwd = CXGN::Marker::Tools::get_sequence_id($dbh,$fwd);
+	    $primer_id_fwd = CXGN::Marker::Tools::insert($dbh,"sequence","sequence_id",['sequence'], ($fwd)) if !$primer_id_fwd;
+	    print "primer_id_fwd: $primer_id_fwd\n";
+	    
+	    $rev=$ss->value_at($marker_name,'rev')
+		or warn "No reverse primer found for $marker_name";
+	    print "rev: $rev\n";
+	    $primer_id_rev = CXGN::Marker::Tools::get_sequence_id($dbh,$rev);
+	    $primer_id_rev = CXGN::Marker::Tools::insert($dbh,"sequence","sequence_id",['sequence'], ($rev)) if !$primer_id_rev;
+	    print "primer_id_rev: $primer_id_rev\n";
 
 	#my $protocol = $ss->value_at($marker_name,'protocol') ;
+	}
 	my ($pd, $primer_id_pd, $indel, $indel_id, $snp, $snp_id, $aspe1, $aspe2, $aspe1_id, $aspe2_id, $seq5, $seq5_id, $seq3, $seq3_id);
 
 	if (($protocol eq 'dCAPS') && ($pd = $ss->value_at($marker_name,'pd'))) {
@@ -181,7 +186,7 @@ eval {
             $indel_id = CXGN::Marker::Tools::insert($dbh,"sequence","sequence_id",['sequence'], ($indel)) if !$indel_id;
 	    print "indel: $indel_id\n";
         }
-        if (($protocol eq 'SNP') && ($snp = $ss->value_at($marker_name,'SNP'))) {
+        if (($protocol eq 'ASPE') && ($snp = $ss->value_at($marker_name,'ASPE'))) {
 	    print "snp: $snp\n";
 	    $snp_id = CXGN::Marker::Tools::get_sequence_id($dbh,$snp);
             $snp_id = CXGN::Marker::Tools::insert($dbh,"sequence","sequence_id",['sequence'], ($snp)) if !$snp_id;
@@ -202,7 +207,7 @@ eval {
 	    print "aspe2_id: $aspe2_id\n";
             }
         }
-        if ($protocol eq 'SNP' || $protocol eq 'Indel') {
+        if ($protocol eq 'ASPE' || $protocol eq 'Indel') {
             $seq3 = $ss->value_at($marker_name,'seq3');
             print "seq3: $seq3\n";
 	    $seq3_id = CXGN::Marker::Tools::get_sequence_id($dbh,$seq3);
@@ -215,6 +220,42 @@ eval {
             $seq5_id = CXGN::Marker::Tools::insert($dbh,"sequence","sequence_id",['sequence'], ($seq5)) if !$seq5_id;
 	    print "seq5_id: $seq5_id\n";
         }
+
+	if (($protocol eq 'SNP') && ($snp = $ss->value_at($marker_name,'SNP'))) {
+	    print "snp: $snp\n";
+	    $snp_id = CXGN::Marker::Tools::get_sequence_id($dbh,$snp);
+            $snp_id = CXGN::Marker::Tools::insert($dbh,"sequence","sequence_id",['sequence'], ($snp)) if !$snp_id;
+	    print "snp_id: $snp_id\n";
+
+#             $aspe1 = $ss->value_at($marker_name,'ASPE1');
+#             print "aspe1: $aspe1\n";
+# 	    if ($aspe1) {
+#             $aspe1_id = CXGN::Marker::Tools::get_sequence_id($dbh,$aspe1);
+#             $aspe1_id = CXGN::Marker::Tools::insert($dbh,"sequence","sequence_id",['sequence'], ($aspe1)) if !$aspe1_id;
+# 	    print "aspe1_id: $aspe1_id\n";
+#             }
+#             $aspe2 = $ss->value_at($marker_name,'ASPE2');
+#             if ($aspe2) {
+#             print "aspe2: $aspe2\n";
+# 	    $aspe2_id = CXGN::Marker::Tools::get_sequence_id($dbh,$aspe2);
+#             $aspe2_id = CXGN::Marker::Tools::insert($dbh,"sequence","sequence_id",['sequence'], ($aspe2)) if !$aspe2_id;
+# 	    print "aspe2_id: $aspe2_id\n";
+#             }
+         }
+	if ($protocol eq 'SNP' || $protocol eq 'Indel') {
+            $seq3 = $ss->value_at($marker_name,'seq3');
+            print "seq3: $seq3\n";
+	    $seq3_id = CXGN::Marker::Tools::get_sequence_id($dbh,$seq3);
+            $seq3_id = CXGN::Marker::Tools::insert($dbh,"sequence","sequence_id",['sequence'], ($seq3)) if !$seq3_id;
+	    print "seq3_id: $seq3_id\n";
+
+            $seq5 = $ss->value_at($marker_name,'seq5');
+            print "seq5: $seq5\n";
+	    $seq5_id = CXGN::Marker::Tools::get_sequence_id($dbh,$seq5);
+            $seq5_id = CXGN::Marker::Tools::insert($dbh,"sequence","sequence_id",['sequence'], ($seq5)) if !$seq5_id;
+	    print "seq5_id: $seq5_id\n";
+        }
+
 
 	my $band_size_a;
 	my $band_size_b;
@@ -273,21 +314,32 @@ eval {
         my $pcr_ex = CXGN::Marker::PCR::Experiment->new($dbh, $pcr_experiment_id);
         # set the sequence types
 
-        $pcr_ex->store_sequence('forward_primer', $fwd);
-        $pcr_ex->store_sequence('reverse_primer', $rev);
-        $pcr_ex->store_sequence('aspe_primer', $aspe1) if $aspe1;
-        $pcr_ex->store_sequence('aspe_primer', $aspe2) if $aspe2;
-        $pcr_ex->store_sequence('indel', $indel) if $indel;
-        $pcr_ex->store_sequence('SNP', $snp) if $snp;
-        $pcr_ex->store_sequence('five_prime_flanking_region', $seq5) if $seq5;
-        $pcr_ex->store_sequence('three_prime_flanking_region', $seq3) if $seq3;
+	print STDERR "MARKER_ID = $marker_id\n";
+	if (!$marker_id) { 
+	    warn "marker $marker_name is not in the database!!!!\n";
+	}
+	else {
+	    $pcr_ex->store_sequence('forward_primer', $fwd) if ($protocol ne 'SNP');
+	    $pcr_ex->store_sequence('reverse_primer', $rev) if ($protocol ne 'SNP');
+	    $pcr_ex->store_sequence('aspe_primer', $aspe1) if $aspe1;
+	    $pcr_ex->store_sequence('aspe_primer', $aspe2) if $aspe2;
+	    $pcr_ex->store_sequence('indel', $indel) if $indel;
+	    $pcr_ex->store_sequence('SNP', $snp) if $snp;
+	    $pcr_ex->store_sequence('five_prime_flanking_region', $seq5) if $seq5;
+	    $pcr_ex->store_sequence('three_prime_flanking_region', $seq3) if $seq3;
 
 
-	$pcr_ex->add_pcr_bands_for_stock($band_size_a, $opt_a) if $band_size_a;
-	$pcr_ex->add_pcr_bands_for_stock($band_size_b, $opt_b) if $band_size_b;
+	    $pcr_ex->add_pcr_bands_for_stock($band_size_a, $opt_a) if $band_size_a;
+	    $pcr_ex->add_pcr_bands_for_stock($band_size_b, $opt_b) if $band_size_b;
+	    print STDERR "Storing pcr_experiment_id $pcr_experiment_id for marker $marker_id ($pcr_ex->{marker_id})\n";
 
-	print STDERR "Storing pcr_experiment_id $pcr_experiment_id for marker $marker_id ($pcr_ex->{marker_id})\n";
-	$pcr_ex->store_unless_exists();
+	    $pcr_ex->store_unless_exists();
+	}
+
+	
+
+	
+
 
         print STDERR "Checking if map $map_id , marker $marker_id and protocol $protocol exist in marker_experiment\n";
         # check for existing marker_experiment and update if found

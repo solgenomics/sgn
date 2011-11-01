@@ -15,12 +15,11 @@ Jonathan "Duke" Leto
 use strict;
 use warnings;
 use Test::More tests => 10;
-use Test::WWW::Mechanize;
-use lib 't/lib';
-use SGN::Test;
 
-my $base_url = $ENV{SGN_TEST_SERVER};
-my $url      = "/phenome/locus_display.pl?locus_id=428";
+use lib 't/lib';
+use SGN::Test::WWW::Mechanize;
+
+my $url = "/phenome/locus_display.pl?locus_id=428";
 
 my @subsections = split /\n/,<<SUBSECTIONS;
 Locus details
@@ -35,13 +34,10 @@ Literature annotation
 Ontology annotations
 SUBSECTIONS
 
-my $mech = Test::WWW::Mechanize->new;
-$mech->get("$base_url/$url");
 
-test_subsections();
+my $mech = SGN::Test::WWW::Mechanize->new;
+$mech->get( $url );
 
-sub test_subsections {
-    for my $subsection (@subsections) {
-        $mech->content_contains($subsection, "$url contains $subsection");
-    }
+for my $subsection (@subsections) {
+    $mech->content_contains($subsection, "$url contains $subsection");
 }

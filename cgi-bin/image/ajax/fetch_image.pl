@@ -7,14 +7,13 @@ use JSON;
 use CXGN::DB::Connection;
 use SGN::Image;
 
+use CatalystX::GlobalContext '$c';
 
-my $dbh = CXGN::DB::Connection->new();
-
-eval { 
+eval {
     my $q = CGI->new();
     my ($image_id, $size) = ($q->param("image_id"), $q->param("size"));
     
-    my $image = SGN::Image->new($dbh, $image_id);
+    my $image = SGN::Image->new( undef, $image_id, $c );
     
     my $html = $image->get_img_src_tag($size);
     

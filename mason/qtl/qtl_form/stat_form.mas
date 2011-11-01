@@ -38,7 +38,7 @@ my $qtl_prob = tooltipped_text('QTL genotype probablity method:',
 </%perl>
 
 
-% if ( $referer =~ /^phenome\/qtl_form/ ) 
+% if ( $referer =~ /qtl\/form\/stat_form/) 
 %{
 <& /page/page_title.mas, 
    title => "Step 5: Submit Statistical Parameters" 

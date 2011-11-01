@@ -15,7 +15,7 @@
     my @mrnas       = grep $_->type->name eq 'mRNA', $feature->child_features;
 </%perl>
 
-<& /page/page_title.mas, title => 'Gene '. $feature->name &>
+<& /feature/page_title.mas, feature => $feature &>
 
 <&| /page/info_section.mas,
     title       => 'Gene',
@@ -43,6 +43,7 @@
   <& /feature/related_features.mas,
       reference => $reference,
       feature   => $feature,
+      omit_columns => ['organism'],
   &>
 
 </&>
@@ -104,7 +105,11 @@
           blast_url => $blast_url,
         &>
      </div>
-
+     <div style="margin-top: 1em">
+        <& /feature/sequence_download.mas,
+             feature => $mrna,
+         &>
+     </div>
 % }
 
     </&>
@@ -128,7 +133,13 @@
           blast_url => $blast_url,
         &>
      </div>
-
+%    if( $protein_sequence->can('feature_id') ) {
+     <div style="margin-top: 1em">
+        <& /feature/sequence_download.mas,
+             feature => $protein_sequence,
+         &>
+     </div>
+%    }
 % }
 
     </&>
@@ -141,6 +152,7 @@
 
        <& /feature/related_features.mas,
              feature   => $mrna,
+             omit_columns => ['organism'],
        &>
 
     </&>
@@ -156,10 +168,4 @@
         xrefs   => $xrefs,
         exclude => 'gbrowse2',
       &>
-
-     <& /feature/gbrowse_syn_search_link.mas,
-        feature => $feature,
-        featurelocs => $featurelocs,
-      &>
-
 </&>

@@ -2,7 +2,6 @@
     $feature
     $featurelocs
     $blast_url => undef
-    $seq_download_url => undef
     $xrefs     => []
 </%args>
 
@@ -10,7 +9,7 @@
     use SGN::View::Feature qw/ type_name /;
 </%once>
 
-<& /page/page_title.mas, title => type_name($feature,'caps').' '. $feature->id &>
+<& /feature/page_title.mas, feature => $feature &>
 
 <&| /page/info_section.mas,
     title       => type_name($feature,'caps').' details',
@@ -29,7 +28,7 @@
 %    for my $seqs ( mrna_cds_protein_sequence( $feature ) ) {
 %       if( $seqs->[2] ) {
         <&| /page/info_section.mas,
-                title         => 'Protein sequence',
+                title         => 'Polypeptide sequence',
                 subtitle      => 'translated polypeptide sequence',
                 collapsible   => 1,
                 collapsed     => 0,
@@ -43,8 +42,7 @@
              &>
              <div style="margin-top: 1em">
                <& /feature/sequence_download.mas,
-                    feature      => $feature,
-                    download_url => $seq_download_url
+                    feature  => $feature,
                 &>
              </div>
           </div>
@@ -73,6 +71,7 @@
 
   <& /feature/related_features.mas,
       feature   => $feature,
+      omit_columns => ['organism'],
   &>
 
 </&>
@@ -86,12 +85,6 @@
      <& /sitefeatures/mixed/xref_set/link.mas,
         xrefs => $xrefs,
       &>
-
-     <& /feature/gbrowse_syn_search_link.mas,
-        feature => $feature,
-        featurelocs => $featurelocs,
-      &>
-
 </&>
 
 

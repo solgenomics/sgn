@@ -1,0 +1,118 @@
+[GENERAL]
+database  = main
+plugins   = FastaDumper RestrictionAnnotator SequenceDumper TrackDumper
+
+reference class = Sequence
+
+search attributes = Note
+
+default features = loci:region loci coding noncoding transposable_element_genes pseudogenes
+
+# "automatic" classes to try when an unqualified identifier is given
+automatic classes = Sequence gene mRNA ncRNA miRNA rRNA snoRNA snRNA tRNA pseudogene pseudogenic_transcript
+
+# max and default segment sizes for detailed view
+max segment     = 500000
+default segment = 50000
+
+# zoom levels
+zoom levels    = 100 200 1000 2000 5000 10000 20000 40000 100000 200000 500000 1000000
+
+examples = AT1G03980.1 AT1G03980 TAIR10ch04:2626000..2648999 "Sulfite oxidase"
+
+# DAS configuration
+das mapmaster = SELF
+
+[main:database]
+db_adaptor = Bio::DB::SeqFeature::Store
+db_args     = -adaptor DBI::Pg
+              -dsn 'dbi:Pg:host=<% $feature->default_db_host %>;dbname=sfs_tair10_genomic'
+              -user '<% $feature->default_db_user %>'
+              -password '<% $feature->default_db_password %>'
+search options = default +autocomplete +fulltext
+
+### TRACK CONFIGURATION ####
+# the remainder of the sections configure individual tracks
+
+# das category allowable values
+#  repeat
+#  transcription
+#  translation
+#  variation
+#  experimental
+#  structural
+#  miscellaneous
+
+
+# Default glyph settings
+[TRACK DEFAULTS]
+glyph       = generic
+height      = 8
+bgcolor     = cyan
+fgcolor     = black
+label density = 25
+bump density  = 25
+balloon click = sub { my $name = shift->name; $name =~ s/\.\d+\.\d+$//; "url:/api/v1/feature_xrefs?q=$name;exclude=gbrowse,gbrowse2" }
+
+[loci:region]
+feature     = gene
+glyph       = generic
+bgcolor     = orangered
+key         = All loci
+
+[loci]
+feature     = gene
+glyph       = generic
+bgcolor     = orangered
+key         = All loci
+category    = Genes
+citation    = All TAIR loci, including coding genes, non-coding transcripts, transposable element genes, and pseudogenes.
+
+[coding]
+feature     = mRNA
+glyph       = processed_transcript
+bgcolor     = goldenrod
+key         = Protein-coding gene models
+description = 1
+category    = Genes
+citation    = Protein-coding gene models.
+
+[noncoding]
+feature     = ncRNA,miRNA,rRNA,snoRNA,snRNA,tRNA
+glyph       = processed_transcript
+key         = Noncoding RNAs
+description = 1
+category    = Genes
+citation    = Non-coding RNA gene models: ncRNAs, miRNAs, rRNAs, snoRNAs, snRNAs, and tRNAs.
+
+[transposable_element_genes]
+feature     = transposable_element_gene
+glyph       = gene
+key         = Transposable element genes
+description = 1
+category    = Genes
+citation    = Genes that are related to known transposable elements.
+
+[pseudogenes]
+feature     = pseudogenic_transcript
+glyph       = processed_transcript
+key         = Pseudogenes
+description = 1
+category    = Genes
+citation    = Pseudogene models.
+
+#track to show DNA and GC content
+[peptides]
+feature        = CDS
+glyph          = protein
+global feature = 1
+height         = 40
+do_gc          = 1
+fgcolor        = red
+category       = DNA
+axis_color     = blue
+strand         = both
+key            = KD plot/peptides
+citation       = This track displays a Kyte-Doolittle hydropathy plot of the protein sequence at low magnifications and the peptide sequence itself at higher magnifications.
+
+#include Standard_genomic.conf

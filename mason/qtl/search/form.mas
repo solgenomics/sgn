@@ -1,0 +1,60 @@
+<%doc>
+QTL search form.
+</%doc>
+
+<%perl>
+
+my $qtl_tool = CXGN::Phenome::Qtl::Tools->new();
+my $links = $qtl_tool->browse_traits();
+my @qtl_pops = $qtl_tool->has_qtl_data();
+
+my  $pop_links;
+foreach my $pop_obj (@qtl_pops) {
+   my $pop_id   = $pop_obj->get_population_id();
+   my $pop_name = $pop_obj->get_name();
+   $pop_links  .= qq |<a href="/qtl/population/$pop_id">$pop_name</a> <br /> |;     
+}
+
+my $help = qq |(<a href="/qtl/search/help">help</a>)|;       
+</%perl>
+
+
+<form  action= "/qtl/search/results" method="post">
+  <table align=center cellpadding=20px>
+    <tr>
+      <td>
+        <b>Browse traits with QTLs: <% $links %></b>
+      </td>
+    </tr>
+  </table>
+  <table>
+  <tr>
+      <td>&nbsp;
+      </td>
+    </tr>
+    <tr>
+      <td>Search QTLs with trait name <% $help %>:
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <input type="text" name="trait" size=24>
+        <input type="submit" value="Search">  
+      </td>
+       <td>
+         <a href="/qtl/form">[Submit new QTL data]</a>
+       </td> 
+    </tr>
+     <tr>
+      <td>&nbsp;
+      </td>
+    </tr>
+  </table>
+  <table align=center cellpadding=20px>
+    <tr>
+      <td>
+        <b>Browse QTL populations:</b><br/><% $pop_links %>
+      </td>
+    </tr>
+  </table>
+</form>

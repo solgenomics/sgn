@@ -6,6 +6,8 @@ my $image_ajax_form = CXGN::ImageAjaxForm->new();
 
 package CXGN::ImageAjaxForm;
 
+use CatalystX::GlobalContext '$c';
+
 use base "CXGN::Page::Form::AjaxFormPage";
 
 use JSON;
@@ -29,7 +31,7 @@ sub define_object {
     $self->set_object_name('image');
     $self->set_object_id( $args{object_id} );
     $self->set_object(
-        SGN::Image->new( $self->get_dbh(), $self->get_object_id() ) );
+        SGN::Image->new( $self->get_dbh(), $self->get_object_id(), $c ) );
     $self->set_primary_key("object_id");
     $self->set_owners( $self->get_object()->get_sp_person_id() );
     $self->set_json_hash(%json_hash);

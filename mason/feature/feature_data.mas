@@ -29,7 +29,7 @@
 <%once>
     use SGN::View::Feature qw/
         feature_link cvterm_link organism_link feature_length
-        get_description
+        get_descriptions
         location_list_html
         /;
     use CXGN::Page::FormattingHelpers qw/info_table_html/;
@@ -38,7 +38,7 @@
 </%once>
 <%init>
 
-    my $description  = join( '<hr />', grep $_, map get_description($_), @$description_from );
+    my $description  = join( '<br />', grep $_, map get_descriptions($_), @$description_from );
 
     my $length = commify_number( feature_length( $feature, $feature->search_related('featureloc_features') ) );
 

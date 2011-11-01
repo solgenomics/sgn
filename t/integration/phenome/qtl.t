@@ -23,13 +23,14 @@ use SGN::Test::WWW::Mechanize;
     $mech->get_ok( '/phenome/qtl.pl?population_id=12&term_id=39945&chr=3&peak_marker=T0581&lod=3.6&qtl=../data/qtl.png',
         'got a qtl detail page. (In case of failure, try to run qtl_analysis.t first)' );
     
-    $mech->content_contains($_) for ('QTL map', 
-    'QTL 95%', 'QTL markers\' genomic matches', 
-    'Browse QTL region', 
-    'QTL markers\' genetic positions',
-    'Population genetic map',
-    'User comments',
-);
+    $mech->content_contains($_) for (
+        'QTL map', 
+        'QTL 95%', 'QTL markers\' genomic matches', 
+        'Browse QTL region', 
+        'QTL markers\' genetic positions',
+        'Genetic map',
+        'User comments',
+        );
  my $qtl_image = $mech->find_image(alt_regex => qr/qtl for/i );  
  ok($qtl_image, 'There is a qtl image') 
 }

@@ -69,9 +69,9 @@ document.glossary.getTerm.focus();
 DEFAULT
     }
 
-    $c->forward_to_mason_view(
-        '/search/search.mas',
-        content => $response,
+    $c->stash(
+        template => '/search/search.mas',
+        content  => $response,
     );
 
 }
@@ -93,38 +93,35 @@ sub search :Path('/search/') :Args() {
     # make /search/index.pl show the list of all kinds of searches
     $term = '' if $term && $term eq 'index.pl';
 
-    if( $term eq 'direct_search.pl' ) {
+    if( $term && $term eq 'direct_search.pl' ) {
         $term = $c->req->param('search');
         if ($term eq 'cvterm_name') {$term = 'qtl';}
         $c->res->redirect('/search/'.$term, 301 );
         return;
     }
-    
+
     $c->stash->{term} = $term;
     my $tab_html      = $c->stash->{tab_html_function}($term);
 
-    my $response;
+    my $response = $tab_html;
     if ($term) {
-        $response  = $tab_html;
-
         # if it is an unknown search type, default to gene search
         unless ($c->stash->{name_to_num}->($term)) {
             $c->throw_404('Invalid search type');
         }
 
         $response .= $c->stash->{tab_functions}[$c->stash->{name_to_num}->($term)]();
-        $c->forward_to_mason_view(
-            '/search/search.mas',
-            content => $response,
-        );
     } else {
         my $tb = CXGN::Page::Toolbar::SGN->new();
-        $response = $tab_html . $tb->index_page('search');
+        $response .= $tb->index_page('search');
     }
-    $c->forward_to_mason_view(
-        '/search/search.mas',
+
+    $c->stash(
+        template => '/search/search.mas',
         content => $response,
     );
+
+    $c->forward('View::Mason');
 }
 
 ######### private actions and helper methods #########
@@ -242,7 +239,7 @@ sub family_tab {
 }
 
 sub marker_tab {
-  my $dbh   = CXGN::DB::Connection->new();
+  my $dbh   = $c->dbc->dbh;
   my $mform = CXGN::Search::CannedForms::MarkerSearch->new($dbh);
   return   '<form action="/search/markers/markersearch.pl">'
     . $mform->to_html() .
@@ -269,7 +266,7 @@ sub phenotype_tab {
     );
 }
 sub qtl_tab {
-    return CXGN::Search::CannedForms->qtl_search_form();
+   return $c->render_mason('/qtl/search/form.mas'); 
 }
 sub trait_tab {
     return $c->render_mason('/ontology/traits.mas' );

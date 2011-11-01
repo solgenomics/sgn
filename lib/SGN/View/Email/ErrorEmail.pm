@@ -141,6 +141,10 @@ sub make_email {
 
     my $type = ( grep $_->is_server_error, @{$c->stash->{email_errors}} ) ? 'E' : 'NB';
 
+    my $subject = '['.$c->config->{name}."]($type) ".$c->req->uri->path_query;
+    # clamp the subject line to be no longer than 115 chars
+    $subject = substr( $subject, 0, 110 ).'...' if 115 < length $subject;
+
     my $body = join '',
         # the errors
         "==== Error(s) ====\n\n",
@@ -152,7 +156,7 @@ sub make_email {
     return {
         to      => $self->default->{to},
         from    => $self->default->{from},
-        subject => '['.$c->config->{name}."]($type) ".$c->req->uri->path_query,
+        subject => $subject,
         body    => $body,
     };
 

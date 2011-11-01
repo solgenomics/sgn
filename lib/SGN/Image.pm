@@ -45,8 +45,9 @@ use File::Copy qw/ copy move /;
 use File::Basename qw/ basename /;
 use File::Spec;
 use CXGN::DB::Connection;
-use SGN::Context;
 use CXGN::Tag;
+
+use CatalystX::GlobalContext '$c';
 
 use base qw| CXGN::Image |;
 
@@ -63,17 +64,16 @@ use base qw| CXGN::Image |;
 =cut
 
 sub new {
-    my $class    = shift;
-    my $dbh      = shift;
-    my $image_id = shift;
+    my ( $class, $dbh, $image_id, $context ) = @_;
+    $context ||= $c;
 
-    my $c  = SGN::Context->new();
-    $dbh ||= $c->dbc->dbh;
+    my $self = $class->SUPER::new(
+        dbh       => $dbh || $context->dbc->dbh,
+        image_id  => $image_id,
+        image_dir => $context->get_conf('static_datasets_path')."/".$context->get_conf('image_dir'),
+      );
 
-    my $self = $class->SUPER::new(dbh=>$dbh, image_id=>$image_id, image_dir=>$c->get_conf('static_datasets_path')."/".$c->get_conf('image_dir') );
-
-    $self->config( $c );
-    $self->set_dbh($dbh);
+    $self->config( $context );
 
     return $self;
 }
@@ -95,9 +95,21 @@ sub get_image_url {
     my $self = shift;
     my $size = shift;
 
-    my $url = $self->config()->get_conf('static_datasets_url')."/".$self->config()->get_conf('image_dir')."/".$self->get_filename($size, 'partial')
+    if( $self->config->test_mode && ! -e $self->get_filename($size) ) {
+        # for performance, only try to stat the file if running in
+        # test mode. doing lots of file stats over NFS can actually be
+        # quite expensive.
+        return '/img/image_temporarily_unavailable.png';
+    }
 
-
+    my $url = join '/', (
+         '',
+         $self->config()->get_conf('static_datasets_url'),
+         $self->config()->get_conf('image_dir'),
+         $self->get_filename($size, 'partial'),
+     );
+    $url =~ s!//!/!g;
+    return $url;
 }
 
 =head2 process_image
@@ -141,14 +153,9 @@ sub process_image {
 
 }
 
-=head2 config
+=head2 config, context, _app
 
- Usage:
- Desc:
- Ret:
- Args:
- Side Effects:
- Example:
+Get the Catalyst context object we are running with.
 
 =cut
 
@@ -159,6 +166,8 @@ sub config {
 
     return $self->{configuration_object};
 }
+*context = \&config;
+*_app    = \&config;
 
 =head2 get_img_src_tag
 
@@ -177,7 +186,7 @@ sub get_img_src_tag {
     my $size = shift;
     my $url  = $self->get_image_url($size);
     my $name = $self->get_name();
-    if ( $size eq "original" ) {
+    if ( $size && $size eq "original" ) {
 
         my $static = $self->config()->get_conf("static_datasets_url");
 
@@ -188,7 +197,7 @@ sub get_img_src_tag {
           . $name
           . "\" /></a>";
     }
-    elsif ( $size eq "tiny" ) {
+    elsif ( $size && $size eq "tiny" ) {
         return
             "<img src=\""
           . ($url)

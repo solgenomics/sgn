@@ -6,11 +6,8 @@ use Modern::Perl;
 use lib 't/lib';
 use Test::More;
 
-
-BEGIN { $ENV{SGN_SKIP_CGI} = 1 } #< can skip compiling cgis, not using them here
 use SGN::Test::Data qw/create_test/;
-use SGN::Test::WWW::Mechanize;
-
+use SGN::Test::WWW::Mechanize skip_cgi => 1;
 
 my $mech = SGN::Test::WWW::Mechanize->new();
 
@@ -38,15 +35,13 @@ $mech->content_contains($term);
 $mech->content_contains($locus->locus_name);
 $mech->content_contains($locus->locus_symbol);
 
-#$allele->delete;
-#$locus->delete;
-# hard delete the temp locus and its allele object
-#
-my @queries = ("DELETE FROM phenome.allele WHERE locus_id = ?", "DELETE FROM phenome.locus WHERE locus_id=?");
-foreach my $q (@queries)  {
-    my $sth = $dbh->prepare($q);
-    my $success = $sth->execute($locus_id);
-    ok($success, "Hard delete of temp locus $locus_id test object ($q)");
+# delete test locus and allele objects we created
+END {
+    if( $mech && $locus_id  ) {
+        my $write_dbh = $mech->context->dbc('sgn_test')->dbh;
+        $write_dbh->do( "DELETE FROM phenome.$_ WHERE locus_id = ?", undef, $locus_id )
+            for "allele", "locus";
+    }
 }
 
 

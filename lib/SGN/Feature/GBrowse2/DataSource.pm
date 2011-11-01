@@ -43,7 +43,7 @@ sub _build__databases {
                 $adaptor->new( @args );
             };
             if( $@ ) {
-                warn $self->path->basename." [$dbname] not available\n";
+                warn $self->gbrowse->feature_name.": database [$dbname] in ".$self->path->basename." not available\n";
                 warn $@ if $self->debug;
                 ()
             } else {

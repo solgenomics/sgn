@@ -1,7 +1,7 @@
 <%doc>
 
 =head1 NAME 
-qtl/qtl_start/data_access.mas - displays if qtl data is private. 
+qtl/population/data_access.mas - a component for displaying a note for private qtl data.
 
 =AUTHOR
 Isaak Y Tecle (iyt2@cornell.edu)

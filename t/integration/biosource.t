@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 6;
+use Test::More tests => 7;
 
 use lib 't/lib';
 use SGN::Test::WWW::Mechanize;
@@ -42,12 +42,13 @@ if (defined $first_sample_row) {
     my $first_sample_name = $first_sample_row->get_column('sample_name');
 
     $mech->get_ok("/biosource/sample.pl?id=$first_sample_id");
-    $mech->content_like(qr/Sample: $first_sample_name/);
-    $mech->content_unlike(qr/ERROR PAGE/);
+    $mech->content_contains( $first_sample_name );
+    is( $mech->status, 200 );
+    $mech->content_unlike( qr/error/i );
 
     $mech->get_ok("/biosource/sample.pl?name=$first_sample_name");
-    $mech->content_like(qr/Sample: $first_sample_name/);
-    $mech->content_unlike(qr/ERROR PAGE/);
+    $mech->content_contains( $first_sample_name );
+    $mech->content_unlike( qr/error/i );
 
 }
 

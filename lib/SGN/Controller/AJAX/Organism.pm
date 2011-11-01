@@ -206,10 +206,10 @@ sub metadata_form {
 
     my $data = {};
     if ($json) {
-        print STDERR "CONVERTING JSON...\n";
+        #print STDERR "CONVERTING JSON...\n";
         $data = $c->stash->{json}->jsonToObj($json); }
     else {
-        print STDERR "No JSON data provided...\n";
+        #print STDERR "No JSON data provided...\n";
 
     }
 
@@ -276,6 +276,7 @@ sub project_metadata_prop_list {
             "genome_project_dates"                => "Project start, end",
             "genome_project_funding_agencies"     => "Funding Agencies",
 	    "genome_project_url"                  => "Project URL", 
+            "genome_project_genbank_link"                 => "Genbank link",
 	);
 
 }

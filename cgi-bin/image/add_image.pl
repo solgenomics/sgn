@@ -175,7 +175,7 @@ else {
 # create an new image object and go through the different 
 # possible actions. Emit error pages if needed.
 #
-my $image = SGN::Image->new($dbh);
+my $image = SGN::Image->new( $dbh, undef, $c );
 
 if ($args{action} eq "new") { 
     # check stuff

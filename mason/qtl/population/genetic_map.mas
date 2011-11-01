@@ -1,0 +1,35 @@
+<%doc>
+
+=head1 NAME
+ 
+qtl/population/genetic_map.mas - displays a link to the qtl population genetic map
+
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$genetic_map
+
+</%args>
+
+
+<&| /page/info_section.mas, 
+      collapsible => 1, 
+      collapsed   => 1, 
+      title       => "Genetic map" 
+&> 
+
+  <% $genetic_map %>
+
+</&>
+
+
+
+

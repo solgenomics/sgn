@@ -77,7 +77,7 @@ sub bulk_download_stats :Local {
     my $seqs    = scalar @{$c->stash->{sequences} || []};
     my $seq_ids = scalar @{$c->stash->{sequence_identifiers} || []};
     my $stats   = <<STATS;
-A total of $seqs out of $seq_ids sequence identifiers were found.
+A total of $seqs matching features were found for $seq_ids identifiers provided.
 STATS
 
     $c->stash( bulk_download_stats   => $stats );
@@ -114,7 +114,13 @@ sub bulk_js_menu :Local {
     : $mode =~ /gene/i            ? 8
     :                               0;    # clone search is default
 
-    $c->stash( bulk_js_menu => modesel( \@mode_links, $modenum ) );
+    $c->stash( bulk_js_menu =>
+                   $c->view('BareMason')->render( $c, '/page/page_title.mas', { title => 'Bulk download' })
+                   .<<EOH
+<div style="margin-bottom: 1em">Download Unigene or BAC information using a list of identifiers, or complete datasets with FTP.</div>
+EOH
+                  .modesel( \@mode_links, $modenum ),
+             );
 
 }
 
@@ -123,7 +129,7 @@ sub bulk_gene :Path('/bulk/gene') : Args(0) {
 
     $c->forward('bulk_js_menu');
 
-    $c->stash( template => 'bulk_gene.mason');
+    $c->stash( template => 'bulk_gene.mas');
 }
 
 sub bulk_gene_type_validate :Local :Args(0) {
@@ -181,7 +187,7 @@ sub bulk_gene_submit :Path('/bulk/gene/submit') :Args(0) {
     $c->stash( bulk_download_stats   => <<STATS);
 Insert stats
 STATS
-    $c->stash( template              => 'bulk_gene_download.mason');
+    $c->stash( template              => 'bulk_gene_download.mas');
 }
 
 sub cache_gene_sequences :Local :Args(0) {
@@ -305,7 +311,7 @@ sub bulk_feature :Path('/bulk/feature') :Args(0) {
 
     $c->forward('bulk_js_menu');
 
-    $c->stash( template => 'bulk.mason');
+    $c->stash( template => 'bulk.mas');
 
     # trigger cache creation
     $self->feature_cache->get("");
@@ -365,8 +371,7 @@ sub bulk_feature_submit :Path('/bulk/feature/submit') :Args(0) {
     $c->forward('bulk_js_menu');
     $c->forward('bulk_download_stats');
 
-    $c->log->debug("rendering bulk_download.mason");
-    $c->stash( template          => 'bulk_download.mason', sha1 => $sha1 );
+    $c->stash( template  => 'bulk_download.mas', sha1 => $sha1 );
 }
 
 

@@ -84,8 +84,8 @@ use HTML::Entities;
 use CXGN::Tools::Param qw/ hash2param /;
 use CatalystX::GlobalContext '$c';
 
-our $ALIGN_SEQ_COUNT_LIMIT        = 200;
-our $ALIGN_SEQ_TOTAL_LENGTH_LIMIT = 100_000;
+our $ALIGN_SEQ_COUNT_LIMIT        = 500;
+our $ALIGN_SEQ_TOTAL_LENGTH_LIMIT = 500_000;
 
 my $page = CXGN::Page->new( "SGN Alignment Analyzer", "Chenwei-Carpita" );
 $page->jsan_use("CXGN.Effects");

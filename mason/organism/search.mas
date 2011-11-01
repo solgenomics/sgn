@@ -88,6 +88,12 @@ div.paginate_nav {
   <% $form->render %>
 </&>
 
+<center>
+<div style="width:400px;text-align:left">
+<& /homepage/popular_species.mas, show_link => 0 &>
+</div>
+</center>
+
 <%init>
   use Number::Format;
   use CXGN::Page::FormattingHelpers qw/ columnar_table_html /;

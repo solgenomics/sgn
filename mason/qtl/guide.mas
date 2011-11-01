@@ -9,10 +9,5 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 </%doc>
 
-<%args>
+<a href="http://docs.google.com/View?id=dgvczrcd_1c479cgfb">Guidelines</a>
 
-$redir
-
-</%args>
-
-<% $redir %>
