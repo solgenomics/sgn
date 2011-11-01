@@ -45,7 +45,7 @@ sub _build_gene_cache {
 
 sub _new_cache_file {
     my ($app, $cache_dir) = @_;
-    $app->log->debug("Bulk: creating new cache in $cache_dir");
+    $app->log->debug("Bulk: creating new cache in $cache_dir") if $app->debug;
     return Cache::File->new(
            cache_root       => $cache_dir,
            default_expires  => 'never',
@@ -72,7 +72,7 @@ supports features and genes.
 sub bulk_download_stats :Local {
     my ( $self, $c ) = @_;
 
-    $c->log->debug("calculating bulk download stats");
+    $c->log->debug("calculating bulk download stats") if $c->debug;
 
     my $seqs    = scalar @{$c->stash->{sequences} || []};
     my $seq_ids = scalar @{$c->stash->{sequence_identifiers} || []};
@@ -155,7 +155,7 @@ sub bulk_gene_submit :Path('/bulk/gene/submit') :Args(0) {
     $c->stash( bulk_js_menu_mode => $mode );
     $c->forward('bulk_js_menu');
 
-    $c->log->debug("submitting query with type=$type");
+    $c->log->debug("submitting query with type=$type") if $c->debug;
 
     $c->forward('bulk_gene_type_validate');
 
@@ -248,7 +248,7 @@ sub populate_gene_sequences :Local {
 
     push @mps, map {
         my $index = $type_index->{$type};
-        $c->log->debug("found $type with index $index");
+        $c->log->debug("found $type with index $index") if $c->debug;
 
         unless (defined $index) {
             $c->throw_client_error(
@@ -264,12 +264,12 @@ sub populate_gene_sequences :Local {
                 http_status    => 200,
             );
         }
-        $c->log->debug("Got a $o at index $index");
+        $c->log->debug("Got a $o at index $index") if $c->debug;
 
         unless( $o->isa('DBIx::Class::Row') ) {
             $o;
         } else {
-            $c->log->debug("Downgrading from BCS to Bioperl object " . $o->name);
+            $c->log->debug("Downgrading from BCS to Bioperl object " . $o->name) if $c->debug;
             my @desc = get_descriptions($o);
             my $g    = Bio::PrimarySeq->new(
                 -id   => $o->id,
@@ -356,10 +356,10 @@ sub bulk_feature_submit :Path('/bulk/feature/submit') :Args(0) {
 
     $c->stash( bulk_query => 1 );
 
-    $c->log->debug("fetching sequences");
+    $c->log->debug("fetching sequences") if $c->debug;
     $c->forward('Controller::Sequence', 'fetch_sequences');
 
-    $c->log->debug("freezing sequences");
+    $c->log->debug("freezing sequences") if $c->debug;
     $self->feature_cache->freeze( $sha1 , [ $c->stash->{sequence_identifiers}, $c->stash->{sequences} ] );
 
     $c->forward('bulk_js_menu');
