@@ -1,10 +1,10 @@
 use strict;
 use warnings;
 
-my $population_indls_detail_page =
-  CXGN::Phenome::PopulationIndlsDetailPage->new();
+my $qtl_analysis_detail_page =
+  CXGN::Phenome::QtlAnalysisDetailPage->new();
 
-package CXGN::Phenome::PopulationIndlsDetailPage;
+package CXGN::Phenome::QtlAnalysisDetailPage;
 
 
 
@@ -57,7 +57,7 @@ sub new
 {
     my $class = shift;
     my $self  = $class->SUPER::new(@_);
-    $self->set_script_name("population_indls.pl");
+    $self->set_script_name("qtl_analysis.pl");
 
     return $self;
 }
@@ -244,7 +244,7 @@ EOS
 
     
     my $page =
-"../phenome/population_indls.pl?population_id=$population_id&amp;cvterm_id=$term_id";
+"../phenome/qtl_analysis.pl?population_id=$population_id&amp;cvterm_id=$term_id";
     $args{calling_page} = $page;
 
     my $pubmed;
