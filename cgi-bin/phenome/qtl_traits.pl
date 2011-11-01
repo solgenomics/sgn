@@ -26,7 +26,7 @@ use CXGN::Page::FormattingHelpers qw(
 
 use CXGN::DB::Connection;
 use CXGN::Chado::Cvterm;
-use CXGN::Search::CannedForms;
+
 
 my $page = CXGN::Page->new( "SGN QTL/Traits", "Isaak" );
 $page->header();
@@ -85,7 +85,7 @@ qq |<a href=/phenome/trait.pl?trait_id=$trait_id>$trait</a> |
 
 }
 
-print page_title_html('List Traits with QTLs');
+print page_title_html('List of traits with QTLs');
 
 print info_section_html (
                           title    => encode_entities( qq|Traits beginning with "$index"| ),
