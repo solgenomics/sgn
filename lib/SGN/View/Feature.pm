@@ -285,25 +285,29 @@ sub mrna_cds_protein_sequence {
                ->search_related('object');
     }
 
-    my $peptide = _peptides_rs( $mrna_feature )->first;
+    my @descriptions = get_descriptions( $mrna_feature, 1 ); #< no html
 
-    # just return the mrna and peptide rows if they both have their
-    # own sequences (because the rows can act as Bio::PrimarySeqI's
-    return [ $mrna_feature, $peptide ] if $peptide && $peptide->subseq(1,1) && $mrna_feature && $mrna_feature->subseq(1,1);
+    my $peptide = _peptides_rs( $mrna_feature )->first;
 
     # if there *is* no peptide, just return the mrna feature
     return [ $mrna_feature ] if !$peptide && $mrna_feature && $mrna_feature->subseq(1,1);
 
+    # just return the mrna and peptide rows if they both have their
+    # own sequences (because the rows can act as Bio::PrimarySeqI's
+    return [ $mrna_feature, undef, $peptide ] if $peptide && $peptide->subseq(1,1) && $mrna_feature && $mrna_feature->subseq(1,1);
+
     my @exon_locations = _exon_rs( $mrna_feature )->all
         or return;
 
+    my $mrna_sequence = join( '', map {
+        $_->srcfeature->subseq( $_->fmin+1, $_->fmax ),
+    } @exon_locations );
+
     my $mrna_seq = Bio::PrimarySeq->new(
         -id   => $mrna_feature->name,
-        -desc => $description,
+        -desc => join( ', ', @descriptions ),
         -seq  => $mrna_sequence,
     );
-
-    warn "Created mrna_seq " . localtime();
 
     return unless $mrna_seq->length > 0;
 
@@ -312,7 +316,7 @@ sub mrna_cds_protein_sequence {
 
     my $protein_seq = Bio::PrimarySeq->new(
         -id   => $peptide->name,
-        -desc => 'protein sequence',
+        -desc => join( ', ', @descriptions ),
         -seq  => $mrna_seq->seq,
        );
     my ( $trim_fmin, $trim_fmax ) = _calculate_cdna_utr_lengths(
@@ -330,7 +334,7 @@ sub mrna_cds_protein_sequence {
 
     my $cds_seq  = Bio::PrimarySeq->new(
                         -id   => $protein_seq->display_id,
-                        -desc => 'CDS sequence',
+                        -desc => join( ', ', @descriptions ),
                         -seq  => $protein_seq->seq,
     );
     $protein_seq = $protein_seq->translate;
@@ -419,8 +423,6 @@ sub _peptide_loc {
 sub _exon_rs {
     my ( $mrna_feature ) = @_;
 
-    warn "entering exon_rs " . localtime();
-
     my $rs = $mrna_feature->feature_relationship_objects({
             'me.type_id' => {
                 -in => _cvterm_rs( $mrna_feature, 'relationship', 'part_of' )
@@ -449,7 +451,6 @@ sub _exon_rs {
             order_by => 'fmin',
           },
          );
-    warn "created exon_rs " . localtime();
     return $rs;
 }
 

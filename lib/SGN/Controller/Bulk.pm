@@ -7,7 +7,7 @@ use Digest::SHA1 qw/sha1_hex/;
 use File::Path qw/make_path/;
 use CXGN::Page::FormattingHelpers qw/modesel/;
 use CXGN::Tools::Text qw/trim/;
-use SGN::View::Feature qw/mrna_cds_protein_sequence get_description/;
+use SGN::View::Feature qw/mrna_cds_protein_sequence get_descriptions/;
 #use Carp::Always;
 
 BEGIN { extends 'Catalyst::Controller' }
@@ -278,10 +278,10 @@ sub populate_gene_sequences :Local {
             $o;
         } else {
             $c->log->debug("Downgrading from BCS to Bioperl object " . $o->name);
-            my $desc = get_description($o);
+            my @desc = get_descriptions($o);
             my $g    = Bio::PrimarySeq->new(
-                -id   => $desc,
-                -desc => $desc,
+                -id   => $o->id,
+                -desc => "@desc",
                 -seq  => $o->seq,
             );
         }
