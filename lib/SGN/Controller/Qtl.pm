@@ -340,7 +340,6 @@ sub _list_traits {
                 );
 
             $self->_link($c);
-            my $graph_icon = $c->stash->{graph_icon};
             my $qtl_analysis_page = $c->stash->{qtl_analysis_page};
             my $cvterm_page = $c->stash->{cvterm_page};
             push  @phenotype,  [ map { $_ } ( $cvterm_page, $min, $max, $avg, $count, $qtl_analysis_page ) ];
@@ -377,12 +376,11 @@ sub _link {
         my $cvterm_id  = $c->stash->{cvterm_id};
         my $trait_name = $c->stash->{trait_name};
         my $term_id    = $trait_id ? $trait_id : $cvterm_id;
-        my $graph_icon = qq | <img src="/../../../documents/img/pop_graph.png" alt="run solqtl"/> |;
+        my $graph_icon = qq | <img src="/documents/img/pop_graph.png" alt="run solqtl"/> |;
     
         $self->_get_owner_details($c);
         my $owner_name = $c->stash->{owner_name};
-        my $owner_id   = $c->stash->{owner_id};
-    
+        my $owner_id   = $c->stash->{owner_id};   
    
         $c->stash( cvterm_page        => qq |<a href="/chado/cvterm.pl?cvterm_id=$cvterm_id">$trait_name</a> |,
                    trait_page         => qq |<a href="/phenome/trait.pl?trait_id=$trait_id">$trait_name</a> |,
