@@ -4,13 +4,13 @@ use Test::More tests => 43;
 use Test::Differences;
 
 use lib 't/lib';
+use aliased 'SGN::Test::WWW::Mechanize' => 'Mech';
 use SGN::Test::Data qw/ create_test /;
 use Catalyst::Test 'SGN';
 use Digest::SHA1 qw/sha1_hex/;
 use Data::Dumper;
 
 use_ok 'SGN::Controller::Bulk';
-use aliased 'SGN::Test::WWW::Mechanize' => 'Mech';
 
 my $mech = Mech->new;
 
