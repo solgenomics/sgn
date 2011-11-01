@@ -281,7 +281,7 @@ sub populate_gene_sequences :Local {
             my @desc = get_descriptions($o);
             my $g    = Bio::PrimarySeq->new(
                 -id   => $o->id,
-                -desc => "@desc",
+                -desc => join(', ', @desc),
                 -seq  => $o->seq,
             );
         }
