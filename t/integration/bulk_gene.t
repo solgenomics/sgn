@@ -1,20 +1,18 @@
 use strict;
 use warnings;
-use Test::More tests => 52;
+use Test::More tests => 51;
 use Test::Differences;
 
 use lib 't/lib';
-use aliased 'SGN::Test::WWW::Mechanize' => 'Mech';
+use SGN::Test::WWW::Mechanize skip_cgi => 1;
 use SGN::Test::Data qw/ create_test /;
 use Catalyst::Test 'SGN';
 use Digest::SHA1 qw/sha1_hex/;
 use Data::Dumper;
 
-use_ok 'SGN::Controller::Bulk';
+my $mech = SGN::Test::WWW::Mechanize->new;
 
-my $mech = Mech->new;
-
-$mech->with_test_level( local => sub {
+$mech->with_test_level( remote => sub {
     $mech->get('/bulk/gene');
     $mech->submit_form_ok({
         form_name => "bulk_gene",
@@ -24,7 +22,8 @@ $mech->with_test_level( local => sub {
         },
     }, "submit bulk_gene with some invalid identifiers");
 });
-$mech->with_test_level( local => sub {
+
+$mech->with_test_level( remote => sub {
     $mech->get('/bulk/gene');
     $mech->submit_form_ok({
         form_name => "bulk_gene",
@@ -36,7 +35,7 @@ $mech->with_test_level( local => sub {
     $mech->content_like(qr/did not contain any valid identifiers/);
 });
 
-$mech->with_test_level( local => sub {
+$mech->with_test_level( remote => sub {
     $mech->get('/bulk/gene');
     $mech->submit_form_ok({
         form_name => "bulk_gene",
@@ -48,7 +47,7 @@ $mech->with_test_level( local => sub {
     $mech->content_like(qr/Invalid data type chosen/);
 });
 
-$mech->with_test_level( local => sub {
+$mech->with_test_level( remote => sub {
     $mech->get('/bulk/gene');
     $mech->submit_form_ok({
         form_name => "bulk_gene",
@@ -60,7 +59,7 @@ $mech->with_test_level( local => sub {
     $mech->content_like(qr/Invalid data type chosen/);
 });
 
-$mech->with_test_level( local => sub {
+$mech->with_test_level( remote => sub {
     $mech->get('/bulk/gene');
     $mech->submit_form_ok({
         form_name => "bulk_gene",
@@ -72,7 +71,7 @@ $mech->with_test_level( local => sub {
     $mech->content_unlike(qr/Caught exception/);
     $mech->content_unlike(qr/Your query did not contain any valid identifiers/);
 });
-$mech->with_test_level( local => sub {
+$mech->with_test_level( remote => sub {
     my $id        = 'Solyc02g081670';
     my $gene_type = 'cds';
     $mech->get_ok('/bulk/gene');
@@ -128,7 +127,7 @@ SEQ
 
 });
 
-$mech->with_test_level( local => sub {
+$mech->with_test_level( remote => sub {
     my $id        = 'Solyc02g081670';
     my $gene_type = 'cdna';
     $mech->get_ok('/bulk/gene');
@@ -186,7 +185,7 @@ SEQ
 
 });
 
-$mech->with_test_level( local => sub {
+$mech->with_test_level( remote => sub {
     $mech->get('/bulk/gene');
     my $gene_type = 'protein';
     my $id        = "Solyc02g081670";
@@ -226,7 +225,7 @@ SEQ
 
 
 
-$mech->with_test_level( local => sub {
+$mech->with_test_level( remote => sub {
     $mech->get('/bulk/gene');
     my $gene_type = 'protein';
     my $id        = "Os01g0276000";
