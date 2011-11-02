@@ -48,7 +48,7 @@ sub test_mode {
 }
 sub _env {
     my ( $c ) = @_;
-    return ref($c) ? $c->engine->env : \%ENV;
+    return ref($c) && $c->engine->can('env') && $c->engine->env ? $c->engine->env : \%ENV;
 }
 
 
