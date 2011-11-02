@@ -1,7 +1,7 @@
+use Modern::Perl;
 use Test::More tests => 2;
 
-use CXGN::Transcript::DrawContigAlign::DepthData;
-use constant DepthData => 'CXGN::Transcript::DrawContigAlign::DepthData';
+use aliased 'CXGN::Transcript::DrawContigAlign::DepthData';
 
 my $depth = DepthData->new(2, 3);
 is($depth->position, 2, "DepthData position");
