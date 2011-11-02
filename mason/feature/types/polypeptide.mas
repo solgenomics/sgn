@@ -25,8 +25,8 @@
     &>
 </&>
 
-%    for my $seqs ( mrna_and_protein_sequence( $feature ) ) {
-%       if( $seqs->[1] ) {
+%    for my $seqs ( mrna_cds_protein_sequence( $feature ) ) {
+%       if( $seqs->[2] ) {
         <&| /page/info_section.mas,
                 title         => 'Polypeptide sequence',
                 subtitle      => 'translated polypeptide sequence',
@@ -35,14 +35,14 @@
         &>
           <div style="margin-left: 1em">
             <& /sequence/with_markup.mas,
-               seq       => $seqs->[1],
+               seq       => $seqs->[2],
                width     => 80,
                subdiv    => 10,
                blast_url => $blast_url,
              &>
              <div style="margin-top: 1em">
                <& /feature/sequence_download.mas,
-                    feature => $feature,
+                    feature  => $feature,
                 &>
              </div>
           </div>
@@ -89,5 +89,5 @@
 
 
 <%once>
-   use SGN::View::Feature qw/ mrna_and_protein_sequence /;
+   use SGN::View::Feature qw/ mrna_cds_protein_sequence /;
 </%once>
