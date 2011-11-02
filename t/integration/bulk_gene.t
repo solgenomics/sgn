@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 43;
+use Test::More tests => 52;
 use Test::Differences;
 
 use lib 't/lib';
@@ -59,6 +59,7 @@ $mech->with_test_level( local => sub {
     }, "submit bulk_gene with a single valid identifier");
     $mech->content_like(qr/Invalid data type chosen/);
 });
+
 $mech->with_test_level( local => sub {
     $mech->get('/bulk/gene');
     $mech->submit_form_ok({
@@ -222,3 +223,33 @@ SEQ
         eq_or_diff($mech->content,$expected_sequence, $_->url . " looks like expected sequence");
     } @flinks;
 });
+
+
+
+$mech->with_test_level( local => sub {
+    $mech->get('/bulk/gene');
+    my $gene_type = 'protein';
+    my $id        = "Os01g0276000";
+    $mech->submit_form_ok({
+        form_name => "bulk_gene",
+        fields    => {
+            ids  => "01g0274500\r\n Os01g0274601\r\n Os01g0274800\r\n Os01g0274901\r\n Os01g0275200\r\n Os01g0275300\r\n Os01g0275500\r\n Os01g0275600\r\n Os01g0275800\r\n Os01g0275900\r\n Os01g0275950\r\n Os01g0276000\r\n Os01g0276100\r\n Os01g0276200\r\n Os01g0276300\r\n Os01g0276400\r\n Os01g0276500\r\n Os01g0276600\r\n Os01g0276700\r\n Os01g0276800\r\n Os01g0276900\r\n",
+            gene_type => $gene_type,
+        },
+    }, "submit bulk_gene with a single valid identifier for protein");
+    my $sha1 = sha1_hex("protein $id");
+    $mech->content_unlike(qr/Caught exception/) or diag $mech->content;
+    $mech->content_unlike(qr/Your query did not contain any valid identifiers/);
+    $mech->content_unlike(qr/At least one valid identifier must be given/);
+    my @flinks = $mech->find_all_links( url_regex => qr{/bulk/gene/download/[a-f\d]+\.fasta} );
+    cmp_ok(@flinks, '==', 1, "found one FASTA download link for $gene_type $id $sha1.fasta");
+    $mech->links_ok( \@flinks );
+
+    for( @flinks ) {
+        cmp_ok(length($mech->get($_->url)->content), '>', 0, $_->url . " length > 0 ");
+        $mech->content_unlike(qr/Caught exception/) or diag $mech->content;
+        $mech->content_unlike(qr/Unable to perform storage-dependent operations/);
+    }
+});
+
+
