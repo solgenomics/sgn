@@ -325,9 +325,18 @@ sub mrna_cds_protein_sequence {
 sub _make_mrna_seq {
     my ( $mrna_feat, $description, $exons ) = @_;
 
-    my $mrna_sequence = join( '', map {
-        $_->srcfeature->subseq( $_->fmin+1, $_->fmax ),
-    } @$exons );
+    # NOTE: doing this subseq math in 0-based coords
+    my $span_start  = $exons->[0]->fmin;
+    my $span_end    = $exons->[-1]->fmax-1;
+
+    # 0 1 2 3 4 5 6 7 8  interbase (Chado)
+    #  G|C|C|A|T|G|T|A
+    #  0 1 2 3 4 5 6 7   0-based   (substr)
+    #  1 2 3 4 5 6 7 8   1-based   (BioPerl)
+
+    # recall: the exons are in sorted order
+    my $span_seq = $exons->[0]->srcfeature->subseq( $span_start+1, $span_end+1 ); #< 1-based
+    my $mrna_sequence = join '', map { substr($span_seq, $_->fmin - $span_start, $_->fmax - $_->fmin ) } @$exons;
 
     my $mrna_seq = Bio::PrimarySeq->new(
         -id   => $mrna_feat->name,
