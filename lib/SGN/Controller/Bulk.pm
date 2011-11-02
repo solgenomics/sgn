@@ -275,23 +275,17 @@ sub populate_gene_sequences :Local {
 
         my $o = $_->[$index];
         unless (defined $o) {
-            $c->throw_client_error(
-                public_message => 'Error generating data',
-                http_status    => 200,
-            );
-        }
-        $c->log->debug("Got a $o at index $index") if $c->debug;
-
-        unless( $o->isa('DBIx::Class::Row') ) {
-            $o;
-        } else {
+            ()  # if it's not defined, we don't have that type of seq for this gene
+        } elsif( $o->isa('DBIx::Class::Row') ) {
             $c->log->debug("Downgrading from BCS to Bioperl object " . $o->name) if $c->debug;
             my @desc = get_descriptions($o,'plain');
             my $g    = Bio::PrimarySeq->new(
-                -id   => $o->id,
+                -id   => $o->primary_id,
                 -desc => join(', ', @desc),
                 -seq  => $o->seq,
             );
+        } else {
+            $o
         }
     } @{ $c->stash->{gene_sequences} };
     $c->stash( gene_mps => [ @mps ] );
