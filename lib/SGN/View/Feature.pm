@@ -299,9 +299,8 @@ sub mrna_cds_protein_sequence {
     my $peptide_loc = $peptide && _peptide_loc($peptide)->first
         or return [ $mrna_seq ];
 
-
     my $cds_seq = Bio::PrimarySeq->new(
-        -id   => $mrna_seq->name,
+        -id   => $mrna_seq->display_name,
         -desc => $description,
         -seq  => $mrna_seq->seq,
        );
