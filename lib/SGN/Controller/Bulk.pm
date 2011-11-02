@@ -229,10 +229,12 @@ sub cache_gene_sequences :Local :Args(0) {
                 )
         } ( $genes_by_name, $genes_by_synonym );
 
-    $c->stash( gene_mrnas => \@mrnas );
+    $c->stash(
+        gene_mrnas            => \@mrnas,
+        bulk_download_success => scalar(@mrnas),
+      );
     $c->forward('convert_sequences_to_bioperl_objects');
     $c->forward('populate_gene_sequences');
-    $c->stash( bulk_download_success => scalar(@mrnas) );
     $c->forward('freeze_sequences');
 }
 
@@ -240,7 +242,7 @@ sub convert_sequences_to_bioperl_objects :Local {
     my ($self, $c) = @_;
     my @mrnas = @{$c->stash->{gene_mrnas}};
     my @seqs = (map { mrna_cds_protein_sequence($_) } @mrnas );
-    $c->stash( gene_sequences => [ @seqs ] );
+    $c->stash( gene_sequences => \@seqs );
 }
 
 sub freeze_sequences :Local {
