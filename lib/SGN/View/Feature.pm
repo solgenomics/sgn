@@ -286,32 +286,33 @@ sub mrna_cds_protein_sequence {
     }
 
     my $description = join ', ', get_descriptions( $mrna_feature, 'no html' );
-
     my $peptide     = _peptides_rs( $mrna_feature )->first;
-    my $peptide_loc = $peptide && _peptide_loc($peptide)->first;
 
     my @exon_locations = _exon_rs( $mrna_feature )->all;
-    if( ! @exon_locations ) {
+    unless( @exon_locations ) {
         # cannot calculate the cds and protein without exons, because
         # UTRs can sometimes have introns in them.  without knowing
         # the exon structure, we don't know how much to cut off of the
         # UTRs
         return [
-            $mrna_feature->subseq(1,1) ? $mrna_feature : undef,
+            $mrna_feature->subseq(1,1)        ? $mrna_feature : undef,
             undef,
-            $peptide && $peptide->subseq(1,1) ? $peptide : undef,
+            $peptide && $peptide->subseq(1,1) ? $peptide      : undef,
         ];
     }
 
-    my $mrna_seq = $mrna_feature && $mrna_feature->subseq(1,1) ? $mrna_feature : _make_mrna_seq( $mrna_feature, $description, \@exon_locations );
+    my $mrna_seq = $mrna_feature->subseq(1,1) ? $mrna_feature : _make_mrna_seq( $mrna_feature, $description, \@exon_locations );
+    my $peptide_loc = $peptide && _peptide_loc($peptide)->first;
 
     return unless $mrna_seq->length > 0;
+
+    return [ $mrna_seq, undef, undef ] unless $peptide && $peptide_loc;
 
     my $cds_seq = Bio::PrimarySeq->new(
         -id   => $mrna_seq->display_name,
         -desc => $description,
         -seq  => $mrna_seq->seq,
-       );
+     );
     my ( $trim_fmin, $trim_fmax ) = _calculate_cdna_utr_lengths(
         _loc2range( $peptide_loc ),
         [ map _loc2range( $_), @exon_locations ],
