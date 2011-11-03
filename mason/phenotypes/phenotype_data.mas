@@ -61,13 +61,22 @@ foreach my $phenotype (@$phenotypes) {
   #attr_id
   my ($observable) = $phenotype->observable;
   my $definition = $observable->definition || '';
-  push @ { $info{$observable->name."|". $observable->cvterm_id ."|". $definition} } , $phenotype;
+  my ($unit_cvterm) = $phenotype->search_related
+    ('phenotype_cvterms',
+     { 'cv.name' => 'unit.ontology' },
+     { prefetch => { 'cvterm' => 'cv' } }
+    )->single;
+  my $unit = $unit_cvterm->cvterm->name if $unit_cvterm;
+  push @ { $info{$observable->name."|". $observable->cvterm_id ."|". $definition . "|" . $unit} } , $phenotype;
 }
 my $count = 0;
 #display traits sorted by name
 ##NEED TO SORT BY cvtermprop or by parent? , then by name######
 foreach my $term(sort keys %info ) {
-  my ($term_name, $term_id, $definition) = split '\|' , $term;
+  my ($term_name, $term_id, $definition, $unit) = split '\|' , $term;
+  $unit = " ($unit)" if $unit;
+  $definition .= $definition . $unit if $unit;
+
   my @values; # all quantitative data does here
   my @qual_values; #all qualitative data goes here
   foreach my $i ( @{ $info{$term} } ) {
@@ -83,10 +92,9 @@ foreach my $term(sort keys %info ) {
   my $min = sprintf("%.2f", $stat->min);
   my $max = sprintf("%.2f", $stat->max);
 
-  #  my $mean_value =  $x->round($stat->mean(), 2) || sprintf "%2d" ;
   if (scalar(@values) ) {
     push  @data,  [map {$_}
-                   ( (tooltipped_text(qq|<a href="/chado/cvterm.pl?cvterm_id=$term_id">$term_name</a>|, $definition) ), $mean_value, $min, $max, scalar(@values)   ) ];
+                   ( (tooltipped_text(qq|<a href="/chado/cvterm.pl?cvterm_id=$term_id">$term_name</a> $unit|, $definition ) ), $mean_value, $min, $max, scalar(@values) ) ];
 
     push  @{ $data[$count] }, qq | <a href="/phenome/qtl_analysis.pl?stock_id=$object_id&amp;cvterm_id=$term_id" onClick="Qtl.waitPage()"> $graph_icon</a> |    if $has_qtl;
     $count++;
