@@ -10,7 +10,7 @@
 
 Parameters:
 
-=over 3
+=over 4
 
 =item phenotypes
 
@@ -23,6 +23,10 @@ div id (for using with javascript)
 =item has_qtl
 
 applies to qtl populations. Used for adding a link to the qtl page
+
+=item object_id
+
+the database id of the object with associated phenotyeps
 
 
 =back
@@ -57,6 +61,7 @@ my @qual_data;
 my %info; # hash of term names, since we can have multiple phenotypes of the same term
 my $graph_icon = qq |<img src="/documents/img/pop_graph.png"/> |;
 
+####
 foreach my $phenotype (@$phenotypes) {
   #attr_id
   my ($observable) = $phenotype->observable;
@@ -67,19 +72,25 @@ foreach my $phenotype (@$phenotypes) {
      { prefetch => { 'cvterm' => 'cv' } }
     )->single;
   my $unit = $unit_cvterm->cvterm->name if $unit_cvterm;
-  push @ { $info{$observable->name."|". $observable->cvterm_id ."|". $definition . "|" . $unit} } , $phenotype;
+  #push @ { $info{$observable->name."|". $observable->cvterm_id ."|". $definition . "|" . $unit} } , $phenotype;
+  push @ { $info{$observable->name}{phenotypes} } , $phenotype;
+  $info{$observable->name}{cvterm_id} = $observable->cvterm_id;
+  $info{$observable->name}{definition} = $definition;
+  $info{$observable->name}{unit} = $unit ;
 }
 my $count = 0;
 #display traits sorted by name
 ##NEED TO SORT BY cvtermprop or by parent? , then by name######
-foreach my $term(sort keys %info ) {
-  my ($term_name, $term_id, $definition, $unit) = split '\|' , $term;
+foreach my $term_name(sort keys %info ) {
+  my $term_id    = $info{$term_name}{cvterm_id};
+  my $definition = $info{$term_name}{definition};
+  my $unit       = $info{$term_name}{unit} ;
   $unit = " ($unit)" if $unit;
   $definition .= $definition . $unit if $unit;
 
   my @values; # all quantitative data does here
   my @qual_values; #all qualitative data goes here
-  foreach my $i ( @{ $info{$term} } ) {
+  foreach my $i ( @{ $info{$term_name}{phenotypes} } ) {
     my $value = $i->value;
 
     if (looks_like_number($value))  {  push @values, $value ; }

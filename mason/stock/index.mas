@@ -61,7 +61,6 @@ use CXGN::Chado::Publication;
 use CXGN::Cview::Map::SGN::Genotype;
 use CXGN::Cview::MapOverviews;
 
-
 my $stock = $stockref->{stock};
 my $stock_id = $stockref->{stock_id};
 my $action = $stockref->{action} || 'view';
@@ -116,7 +115,6 @@ my $direct_phenotypes = $stockref->{direct_phenotypes};
 
 # get all phenotypes of subjects
 my $members_phenotypes = $stockref->{members_phenotypes};
-
 
 ############################
 my $map_html = $stockref->{map_html};
