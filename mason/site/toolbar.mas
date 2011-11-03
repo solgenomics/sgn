@@ -101,9 +101,9 @@
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/tools/solcyc/">SolCyc Biochemical Pathways</a></td></tr>
        <tr><td class="toolbar_item_title">Bulk Query</td></tr>
 
-       <tr><td class="toolbar_item"><a class="toolbar_item" href="/bulk/input.pl">Unigene and BAC information</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/bulk/input.pl">Unigenes, BACs, genes, etc.</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/bulk/input.pl?mode=ftp">FTP Site</a></td></tr>
-       <tr><td class="toolbar_item"><a class="toolbar_item" href="/tools/convert/input.pl">ID Converter (SGN <=> TIGR)</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/tools/convert/input.pl">ID Conversion (SGN <=> TIGR)</a></td></tr>
        <tr><td class="toolbar_item_title">Other</td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/tools/onto/">SGN Ontology Browser [beta]</a></td></tr>
     </table>

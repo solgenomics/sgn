@@ -1,7 +1,7 @@
 package SGN::Controller::Feature::Types::gene_group;
 use Moose;
 
-use SGN::View::Feature qw/ mrna_and_protein_sequence /;
+use SGN::View::Feature qw/ mrna_cds_protein_sequence /;
 
 BEGIN { extends 'Catalyst::Controller' }
 
@@ -63,8 +63,8 @@ sub get_protein_sequences : Private {
 
     my @proteins;
     while( my $mrna = $member_mrnas->next ) {
-        if( my $seqs = mrna_and_protein_sequence( $mrna ) ) {
-            my ( undef, $protein_seq ) = @$seqs;
+        if( my $seqs = mrna_cds_protein_sequence( $mrna ) ) {
+            my ( undef, undef, $protein_seq ) = @$seqs;
             if( $protein_seq ) {
                 push @proteins, $protein_seq;
             } else {
