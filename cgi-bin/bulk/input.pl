@@ -52,6 +52,7 @@ my @mode_links = (
     [ '?mode=ftp',             'Full&nbsp;datasets<br />(FTP)' ],
     [ '?mode=unigene_convert', 'Unigene ID Converter<br />(SGN-U)' ],
     [ '/bulk/feature',         'Features' ],
+    [ '/bulk/gene',            'Genes' ],
 );
 
 ### figure out which mode we're in ###
