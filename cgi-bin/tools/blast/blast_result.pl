@@ -177,7 +177,7 @@ if($params{interface_type} eq 'simple' && $seq_count > 1) {
   $c->throw( is_error => 0,
              message  => <<EOM,
 The Simple BLAST interface is limited to one query sequence.  Please
-ruse the Advanced BLAST for multiple query sequences.
+use the Advanced BLAST for multiple query sequences.
 EOM
             );
 
