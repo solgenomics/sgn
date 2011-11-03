@@ -304,26 +304,24 @@ sub mrna_cds_protein_sequence {
     my $mrna_seq = $mrna_feature->subseq(1,1) ? $mrna_feature : _make_mrna_seq( $mrna_feature, $description, \@exon_locations );
     my $peptide_loc = $peptide && _peptide_loc($peptide)->first;
 
-    return unless $mrna_seq->length > 0;
-
-    return [ $mrna_seq, undef, undef ] unless $peptide && $peptide_loc;
+    # just return the mrna seq and nothing else if we have no peptide
+    # or the peptide is not located
+    unless( $peptide && $peptide_loc ) {
+        return [ $mrna_seq, undef, undef ] unless $peptide && $peptide_loc;
+    }
 
     my $cds_seq = Bio::PrimarySeq->new(
         -id   => $mrna_seq->display_name,
         -desc => $description,
         -seq  => $mrna_seq->seq,
      );
-    my ( $trim_fmin, $trim_fmax ) = _calculate_cdna_utr_lengths(
+    my ( $trim_from_left, $trim_from_right ) = _calculate_cdna_utr_lengths(
         _loc2range( $peptide_loc ),
         [ map _loc2range( $_), @exon_locations ],
      );
 
-    if( $trim_fmin || $trim_fmax ) {
-        $cds_seq = $cds_seq->trunc( 1+$trim_fmin, $mrna_seq->length - $trim_fmax );
-    }
-
-    if( $exon_locations[0]->strand == -1 ) {
-        $_ = $_->revcom for $mrna_seq, $cds_seq;
+    if( $trim_from_left || $trim_from_right ) {
+        $cds_seq = $cds_seq->trunc( 1+$trim_from_left, $mrna_seq->length - $trim_from_right );
     }
 
     my $protein_seq = $cds_seq->translate;
@@ -353,6 +351,8 @@ sub _make_mrna_seq {
         -seq  => $mrna_sequence,
     );
 
+    $mrna_seq = $mrna_seq->revcom if $exons->[0]->strand == -1;
+
     return $mrna_seq;
 }
 
@@ -372,12 +372,12 @@ sub _loc2range {
 sub _calculate_cdna_utr_lengths {
     my ( $peptide, $exons ) = @_;
 
-    my ( $trim_fmin, $trim_fmax ) = ( 0, 0 );
+    my ( $trim_left, $trim_right ) = ( 0, 0 );
 
     # calculate trim_fmin if necessary
     if( $exons->[0]->start < $peptide->start ) {
 
-        $trim_fmin =
+        $trim_left =
             sum
             map {
                 $_->overlaps($peptide)
@@ -390,7 +390,7 @@ sub _calculate_cdna_utr_lengths {
 
     # calculate trim_fmax if necessary
     if( $exons->[-1]->end > $peptide->end ) {
-        $trim_fmax =
+        $trim_right =
             sum
             map {
                 $_->overlaps($peptide)
@@ -401,7 +401,7 @@ sub _calculate_cdna_utr_lengths {
             @$exons
     }
 
-    return ( $trim_fmin, $trim_fmax );
+    return $exons->[0]->strand == -1 ? ($trim_right, $trim_left) : ( $trim_left, $trim_right );
 }
 
 sub _peptides_rs {

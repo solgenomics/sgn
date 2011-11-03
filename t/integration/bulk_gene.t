@@ -138,7 +138,7 @@ $mech->with_test_level( remote => sub {
             ids       => $id,
             gene_type => $gene_type,
         },
-    }, "submit bulk_gene with a single valid identifier for cdna");
+    }, "submit bulk_gene $id with a single valid identifier for cdna");
     my $sha1 = sha1_hex("cdna $id");
     $mech->content_unlike(qr/Caught exception/) or diag $mech->content;
     $mech->content_unlike(qr/Your query did not contain any valid identifiers/);
@@ -196,7 +196,7 @@ $mech->with_test_level( remote => sub {
             ids       => $id,
             gene_type => $gene_type,
         },
-    }, "submit bulk_gene with a single valid identifier for protein");
+    }, "submit bulk_gene $id with a single valid identifier for protein");
     my $sha1 = sha1_hex("protein $id");
     $mech->content_unlike(qr/Caught exception/) or diag $mech->content;
     $mech->content_unlike(qr/Your query did not contain any valid identifiers/);
@@ -234,7 +234,7 @@ $mech->with_test_level( remote => sub {
             ids       => $id,
             gene_type => $gene_type,
         },
-    }, "submit bulk_gene with a single valid identifier for protein");
+    }, "submit bulk_gene $id with a single valid identifier for protein");
     my $sha1 = sha1_hex("protein $id");
     $mech->content_unlike(qr/Caught exception/) or diag $mech->content;
     $mech->content_unlike(qr/Your query did not contain any valid identifiers/);
@@ -244,16 +244,19 @@ $mech->with_test_level( remote => sub {
     $mech->links_ok( \@flinks );
     # TODO: Depends on live data.
 my $expected_sequence = <<SEQ;
->Solyc02g092680.1.1 Subtilisin-like protease (AHRD V1 ***- A9XG40_TOBAC); contains Interpro domain(s)  IPR015500  Peptidase S8, subtilisin-related
-MSTYPLIVVVVVLVCLCHMSVAMEEKKTYIIHMAKSQMPATFDDHTHWYDASLKSVSESAEMIYVYNNVIHGFAARLTAQ
-EAESLKTQPGILSVLSEVIYQLHTTRTPLFLGLDNRPDVFNDSDAMSNVIIGILDSGIWPERRSFDDTGLGPVPESWKGE
-CESGINFSSAMCNRKLIGARYFSSGYEATLGPIDESKESKSPRDNEGHGTHTASTAAGSVVQGASLFGYASGTARGMAYR
-ARVAVYKVCWLGKCFGPDILAGMDKAIDDNVNVLSLSLGGEHFDFYSDDVAIGAFAAMEKGIMVSCSAGNAGPNQFSLAN
-QAPWITTVGAGTVDRDFPAYVSLGNGKNFSGVSLYAGDPLPSGMLPLVYAGNASNATNGNLCIMGTLIPEKVKGKIVLCD
-GGVNVRAEKGYVVKSAGGAGMIFANTNGLGLLADAHLLPAAAVGQLDGDEIKKYITSDPNPTATILFGGTMVGVQPAPIL
-AAFSSRGPNSITPEILKPDIIAPGVNILAGWSGAVGPTGLPEDDRRVEFNIISGTSMSCPHVSGLAALLKGVHPEWSPAA
-IRSALMTTAYTTYRNGGALLDVATGKPSTPFGHGAGHVDPVSAVNPGLVYDINADDYLNFLCALKYSPSQINIIARRNFT
-CDSSKIYSVTDLNYPSFSVAFPADTGSNTIRYSRTLTNVGPSGTYKVAVTLPDSSVEIIVEPETVSFTQINEKISYSVSF
+>Solyc02g092680.1.1 Subtilisin-like protease (AHRD V1 ***- A9XG40_TOBAC); contains Interpro domain(s)  IPR015500  Peptidase S8, subtilisin-related 
+MSTYPLIVVVVVLVCLCHMSVAMEEKKTYIIHMAKSQMPATFDDHTHWYDASLKSVSESA
+EMIYVYNNVIHGFAARLTAQEAESLKTQPGILSVLSEVIYQLHTTRTPLFLGLDNRPDVF
+NDSDAMSNVIIGILDSGIWPERRSFDDTGLGPVPESWKGECESGINFSSAMCNRKLIGAR
+YFSSGYEATLGPIDESKESKSPRDNEGHGTHTASTAAGSVVQGASLFGYASGTARGMAYR
+ARVAVYKVCWLGKCFGPDILAGMDKAIDDNVNVLSLSLGGEHFDFYSDDVAIGAFAAMEK
+GIMVSCSAGNAGPNQFSLANQAPWITTVGAGTVDRDFPAYVSLGNGKNFSGVSLYAGDPL
+PSGMLPLVYAGNASNATNGNLCIMGTLIPEKVKGKIVLCDGGVNVRAEKGYVVKSAGGAG
+MIFANTNGLGLLADAHLLPAAAVGQLDGDEIKKYITSDPNPTATILFGGTMVGVQPAPIL
+AAFSSRGPNSITPEILKPDIIAPGVNILAGWSGAVGPTGLPEDDRRVEFNIISGTSMSCP
+HVSGLAALLKGVHPEWSPAAIRSALMTTAYTTYRNGGALLDVATGKPSTPFGHGAGHVDP
+VSAVNPGLVYDINADDYLNFLCALKYSPSQINIIARRNFTCDSSKIYSVTDLNYPSFSVA
+FPADTGSNTIRYSRTLTNVGPSGTYKVAVTLPDSSVEIIVEPETVSFTQINEKISYSVSF
 TAPSKPPSTNVFGKIEWSDGTHLVTSPVAISWS*
 SEQ
     map {
