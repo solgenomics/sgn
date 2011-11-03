@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 51;
+use Test::More tests => 61;
 use Test::Differences;
 
 use lib 't/lib';
@@ -71,6 +71,7 @@ $mech->with_test_level( remote => sub {
     $mech->content_unlike(qr/Caught exception/);
     $mech->content_unlike(qr/Your query did not contain any valid identifiers/);
 });
+
 $mech->with_test_level( remote => sub {
     my $id        = 'Solyc02g081670';
     my $gene_type = 'cds';
@@ -214,6 +215,46 @@ SIWGTTSTLPRLCSFESGKMVHVQGRFYCMNFSPFSVLSYDIGTNNWCKIQAPMRRFLRS
 PSLVEGNGKVVLVAAVEKSKLNVPRSLRLWALQDCGTMWLEIERMPQQLYVQFAEVENGQ
 GFSCVGHGEYVVIMIKNNSDKALLFDFCKKRWIWIPPCPFLGNNLDYGGVGSSNNYCGEF
 GVGGGELHGFGYDPRLAAPIGALLDQLTLPFQSFN*
+SEQ
+    map {
+        cmp_ok(length($mech->get($_->url)->content), '>', 0, $_->url . " length > 0 ");
+        $mech->content_unlike(qr/Caught exception/) or diag $mech->content;
+        $mech->content_unlike(qr/Unable to perform storage-dependent operations/);
+        eq_or_diff($mech->content,$expected_sequence, $_->url . " looks like expected sequence");
+    } @flinks;
+});
+
+$mech->with_test_level( remote => sub {
+    $mech->get('/bulk/gene');
+    my $gene_type = 'protein';
+    my $id        = "Solyc02g092680";
+    $mech->submit_form_ok({
+        form_name => "bulk_gene",
+        fields    => {
+            ids       => $id,
+            gene_type => $gene_type,
+        },
+    }, "submit bulk_gene with a single valid identifier for protein");
+    my $sha1 = sha1_hex("protein $id");
+    $mech->content_unlike(qr/Caught exception/) or diag $mech->content;
+    $mech->content_unlike(qr/Your query did not contain any valid identifiers/);
+    $mech->content_unlike(qr/At least one valid identifier must be given/);
+    my @flinks = $mech->find_all_links( url_regex => qr{/bulk/gene/download/$sha1\.fasta} );
+    cmp_ok(@flinks, '==', 1, "found one FASTA download link for $gene_type $id $sha1.fasta");
+    $mech->links_ok( \@flinks );
+    # TODO: Depends on live data.
+my $expected_sequence = <<SEQ;
+>Solyc02g092680.1.1 Subtilisin-like protease (AHRD V1 ***- A9XG40_TOBAC); contains Interpro domain(s)  IPR015500  Peptidase S8, subtilisin-related
+MSTYPLIVVVVVLVCLCHMSVAMEEKKTYIIHMAKSQMPATFDDHTHWYDASLKSVSESAEMIYVYNNVIHGFAARLTAQ
+EAESLKTQPGILSVLSEVIYQLHTTRTPLFLGLDNRPDVFNDSDAMSNVIIGILDSGIWPERRSFDDTGLGPVPESWKGE
+CESGINFSSAMCNRKLIGARYFSSGYEATLGPIDESKESKSPRDNEGHGTHTASTAAGSVVQGASLFGYASGTARGMAYR
+ARVAVYKVCWLGKCFGPDILAGMDKAIDDNVNVLSLSLGGEHFDFYSDDVAIGAFAAMEKGIMVSCSAGNAGPNQFSLAN
+QAPWITTVGAGTVDRDFPAYVSLGNGKNFSGVSLYAGDPLPSGMLPLVYAGNASNATNGNLCIMGTLIPEKVKGKIVLCD
+GGVNVRAEKGYVVKSAGGAGMIFANTNGLGLLADAHLLPAAAVGQLDGDEIKKYITSDPNPTATILFGGTMVGVQPAPIL
+AAFSSRGPNSITPEILKPDIIAPGVNILAGWSGAVGPTGLPEDDRRVEFNIISGTSMSCPHVSGLAALLKGVHPEWSPAA
+IRSALMTTAYTTYRNGGALLDVATGKPSTPFGHGAGHVDPVSAVNPGLVYDINADDYLNFLCALKYSPSQINIIARRNFT
+CDSSKIYSVTDLNYPSFSVAFPADTGSNTIRYSRTLTNVGPSGTYKVAVTLPDSSVEIIVEPETVSFTQINEKISYSVSF
+TAPSKPPSTNVFGKIEWSDGTHLVTSPVAISWS*
 SEQ
     map {
         cmp_ok(length($mech->get($_->url)->content), '>', 0, $_->url . " length > 0 ");
