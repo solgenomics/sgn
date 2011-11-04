@@ -180,7 +180,7 @@ sub _set_exception_response {
     };
 
     # insert a JS pack in the error output if necessary
-    $self->forward('/js/insert_js_pack_html');
+    $self->forward('/insert_collected_html');
 
     # set our http status to the most severe error we have
     my ( $worst_status ) =

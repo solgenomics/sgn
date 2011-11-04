@@ -97,9 +97,11 @@ sub end : Private {
     # we tried to render a default view
     $c->res->content_type('text/html') unless $c->res->content_type;
 
-    # insert our javascript packages into the rendered view
     if( $c->res->content_type eq 'text/html' ) {
-        $c->forward('/js/insert_js_pack_html');
+        # insert any additional header html collected during rendering
+        $c->forward('insert_collected_html');
+
+        # tell caches our responses vary depending on the Cookie header
         $c->res->headers->push_header('Vary', 'Cookie');
     } else {
         $c->log->debug("skipping JS pack insertion for page with content type ".$c->res->content_type)
@@ -107,6 +109,39 @@ sub end : Private {
     }
 
 }
+
+sub insert_collected_html :Private {
+    my ( $self, $c ) = @_;
+
+    $c->forward('/js/resolve_javascript_classes');
+
+    my $head_html = join "\n", (
+        @{ $c->stash->{add_head_html} || [] },
+        ( map {
+            qq{<link rel="stylesheet" type="text/css" href="$_" />}
+          } @{ $c->stash->{css_files} || [] }
+        ),
+        ( map {
+            qq{<script src="$_" type="text/javascript">\n</script>}
+          } @{ $c->stash->{js_uris} || [] }
+        ),
+    );
+
+    return unless $head_html;
+
+    my $b = $c->res->body;
+    if( $b && $b =~ s{<!-- \s* INSERT_ADDITIONAL_HEAD \s* -->}{$head_html}ex ) {
+      $c->res->body( $b );
+
+      # we have changed the size of the body.  remove the
+      # content-length and let catalyst recalculate the content-length
+      # if it can
+      $c->res->headers->remove_header('content-length');
+
+      delete $c->stash->{$_} for qw( add_head_html add_css_files add_js_classes );
+  }
+}
+
 
 =head2 auto
 
