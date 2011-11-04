@@ -12,6 +12,7 @@ use CXGN::BlastDB;
 
 use lib 't/lib';
 use aliased 'SGN::Test::WWW::Mechanize';
+use SGN::Test qw/qsub_is_configured/;
 
 my $mech = Mechanize->new;
 
@@ -48,8 +49,7 @@ my %form = (
 );
 
 {
-    system("echo sleep 2 | qsub");
-    local $TODO = "qsub not configured properly" if $?;
+    local $TODO = "qsub not configured properly" if !qsub_is_configured();
 
     $mech->submit_form_ok( \%form, "PCR job submit form" );
 

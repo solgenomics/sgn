@@ -1,12 +1,13 @@
 
 =head1 NAME
 
-qtl_analysis.t - tests for cgi-bin/phenome/qtl_analysis.pl. This page takes 2 - 4 min to run R computations.
+qtl_analysis.t - tests for cgi-bin/phenome/qtl_analysis.pl
+
+This page takes a few minutes to run R computations.
 
 =head1 DESCRIPTION
 
 Tests for cgi-bin/phenome/qtl_analysis.pl
-
 
 =cut
 
@@ -15,8 +16,10 @@ use warnings;
 use Test::More;
 use lib 't/lib';
 use SGN::Test::WWW::Mechanize;
+use SGN::Test qw/qsub_is_configured/;
 
 {
+    local $TODO = "qsub not configured properly" if !qsub_is_configured();
     my $mech = SGN::Test::WWW::Mechanize->new;
 
     $mech->get_ok(
