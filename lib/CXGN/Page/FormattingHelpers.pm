@@ -342,7 +342,7 @@ sub html_string_linebreak_and_highlight {
             when the user clicks, rather than just when the next page loads.
             This turns out to make the interface feel way nicer and more responsive.
             If you mess with this function, make sure you check
-            modesel_switch_highlight in documents/inc/sgn.js
+            modesel_switch_highlight in /css/sgn.js
 
 =cut
 
@@ -377,28 +377,28 @@ qq|    <td id="${bid}_${leaf}" class="modesel_$leaf$sel">$content</td>\n|;
 
         $button->{contents} = [
             $tablecell->(
-                'tl', qq|<img src="/documents/img/modesel_tl$sel.gif" alt="" />|
+                'tl', qq|<img src="/img/modesel_tl$sel.gif" alt="" />|
               )
               . $tablecell->( 't', qq|| )
               . $tablecell->(
-                'tr', qq|<img src="/documents/img/modesel_tr$sel.gif" alt="" />|
+                'tr', qq|<img src="/img/modesel_tr$sel.gif" alt="" />|
               ),
             $tablecell->(
-                'l', qq|<img src="/documents/img/modesel_l$sel.gif" alt="" />|
+                'l', qq|<img src="/img/modesel_l$sel.gif" alt="" />|
               )
               . $tablecell->(
                 'c',
 qq|<a class="modesel$sel" onclick="CXGN.Page.FormattingHelpers.modesel_switch_highlight('$highlighted_id','$bid'); $button->{onclick}" href="$button->{url}">$button->{contents}</a>|
               )
               . $tablecell->(
-                'r', qq|<img src="/documents/img/modesel_r$sel.gif" alt="" />|
+                'r', qq|<img src="/img/modesel_r$sel.gif" alt="" />|
               ),
             $tablecell->(
-                'bl', qq|<img src="/documents/img/modesel_bl$sel.gif" alt="" />|
+                'bl', qq|<img src="/img/modesel_bl$sel.gif" alt="" />|
               )
               . $tablecell->( 'b', qq|| )
               . $tablecell->(
-                'br', qq|<img src="/documents/img/modesel_br$sel.gif" alt="" />|
+                'br', qq|<img src="/img/modesel_br$sel.gif" alt="" />|
               ),
         ];
     }

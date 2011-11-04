@@ -10,7 +10,7 @@ use SGN::Test::WWW::Mechanize skip_cgi => 1;
 my $mech = SGN::Test::WWW::Mechanize->new;
 
 { # test download_static
-  my $res = $mech->get( '/download/documents/inc/sgn.css' );
+  my $res = $mech->get( '/download/css/sgn.css' );
   is( $res->header('Content-disposition'), 'attachment; filename=sgn.css',
       'got the right disposition header from the static downloader' );
 
