@@ -115,22 +115,10 @@ sub insert_collected_html :Private {
 
     $c->forward('/js/resolve_javascript_classes');
 
-    my $head_html = join "\n", (
-        @{ $c->stash->{add_head_html} || [] },
-        ( map {
-            qq{<link rel="stylesheet" type="text/css" href="$_" />}
-          } @{ $c->stash->{css_files} || [] }
-        ),
-        ( map {
-            qq{<script src="$_" type="text/javascript">\n</script>}
-          } @{ $c->stash->{js_uris} || [] }
-        ),
-    );
-
-    return unless $head_html;
-
     my $b = $c->res->body;
-    if( $b && $b =~ s{<!-- \s* INSERT_ADDITIONAL_HEAD \s* -->}{$head_html}ex ) {
+    my $inserted_head_pre  = $b && $b =~ s{<!-- \s* INSERT_HEAD_PRE_HTML \s* --> }{ $self->_make_head_pre_html( $c )  }ex;
+    my $inserted_head_post = $b && $b =~ s{<!-- \s* INSERT_HEAD_POST_HTML \s* -->}{ $self->_make_head_post_html( $c ) }ex;
+    if( $inserted_head_pre || $inserted_head_post ) {
       $c->res->body( $b );
 
       # we have changed the size of the body.  remove the
@@ -142,6 +130,28 @@ sub insert_collected_html :Private {
   }
 }
 
+sub _make_head_pre_html {
+    my ( $self, $c ) = @_;
+    return join "\n", @{ $c->stash->{head_pre_html} || [] };
+}
+
+sub _make_head_post_html {
+    my ( $self, $c ) = @_;
+
+    my $head_post_html = join "\n", (
+        @{ $c->stash->{add_head_html} || [] },
+        ( map {
+            qq{<link rel="stylesheet" type="text/css" href="$_" />}
+          } @{ $c->stash->{css_uris} || [] }
+        ),
+        ( map {
+            qq{<script src="$_" type="text/javascript">\n</script>}
+          } @{ $c->stash->{js_uris} || [] }
+        ),
+    );
+
+    return $head_post_html;
+}
 
 =head2 auto
 
