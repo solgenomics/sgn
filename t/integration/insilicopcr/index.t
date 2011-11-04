@@ -47,22 +47,26 @@ my %form = (
     }
 );
 
-$mech->submit_form_ok( \%form, "PCR  job submit form" );
+{
+    system("echo sleep 2 | qsub");
+    local $TODO = "qsub not configured properly" if $?;
 
-while ( $mech->content =~ /please wait/i && $mech->content !~ /PCR Results/i ) {
-    sleep 1;
-    $mech->get( $mech->base );
-}
+    $mech->submit_form_ok( \%form, "PCR job submit form" );
 
-$mech->content_contains("PCR Results");
-$mech->content_contains("Note:");
-$mech->content_contains("PCR Report");
-$mech->content_contains("BLAST OUTPUT");
+    while ( $mech->content =~ /please wait/i && $mech->content !~ /PCR Results/i ) {
+        sleep 1;
+        $mech->get( $mech->base );
+    }
 
-unless ( $mech->content() =~ /No PCR Product Found/ ) {
+    $mech->content_contains("PCR Results");
+    $mech->content_contains("Note:");
+    $mech->content_contains("PCR Report");
+    $mech->content_contains("BLAST OUTPUT");
 
-    $mech->content_contains("Agarose");
-    $mech->content_contains("SGN-U510886");
+    unless ( $mech->content() =~ /No PCR Product Found/ ) {
+        $mech->content_contains("Agarose");
+        $mech->content_contains("SGN-U510886");
+    }
 }
 
 done_testing;
