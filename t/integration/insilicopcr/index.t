@@ -30,23 +30,24 @@ $mech->content_contains("Expectation value");
 $mech->content_contains("Substitution Matrix");
 $mech->content_contains("Filter query sequence");
 
-
 my %form = (
     form_name => 'PCRform',
-    fields => { fprimer => 'GGCGAGCCTTTAAATTAAAGGATCCCTTTGGAATAAAAAG',
-		rprimer => 'TGGCCCTTTTCCCTATTAAGAATTCCATCAGAAAGTTATTC',
-		productLength => '5000',
-		allowedMismatches => '0',
-		output_format => '8',
-		#database => $test_blastdb_id,
-		program => 'blastn',
-		expect => '1e-10',
-		matrix => 'BLOSUM62',
-		filterq => 'checked'
-    }
-    );
+    fields    => {
+        fprimer           => 'GGCGAGCCTTTAAATTAAAGGATCCCTTTGGAATAAAAAG',
+        rprimer           => 'TGGCCCTTTTCCCTATTAAGAATTCCATCAGAAAGTTATTC',
+        productLength     => '5000',
+        allowedMismatches => '0',
+        output_format     => '8',
 
-$mech->submit_form_ok(\%form, "PCR  job submit form" );
+        #database => $test_blastdb_id,
+        program => 'blastn',
+        expect  => '1e-10',
+        matrix  => 'BLOSUM62',
+        filterq => 'checked'
+    }
+);
+
+$mech->submit_form_ok( \%form, "PCR  job submit form" );
 
 while ( $mech->content =~ /please wait/i && $mech->content !~ /PCR Results/i ) {
     sleep 1;
@@ -58,7 +59,7 @@ $mech->content_contains("Note:");
 $mech->content_contains("PCR Report");
 $mech->content_contains("BLAST OUTPUT");
 
-unless ($mech->content() =~ /No PCR Product Found/){
+unless ( $mech->content() =~ /No PCR Product Found/ ) {
 
     $mech->content_contains("Agarose");
     $mech->content_contains("SGN-U510886");
