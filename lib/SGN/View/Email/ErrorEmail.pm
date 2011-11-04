@@ -30,6 +30,21 @@ before 'process' => sub {
     $c->log->debug('sending error email to '.$c->stash->{email}->{to}) if $c->debug;
 };
 
+=head1 CONFIGURATION
+
+=head2 maximum_body_size
+
+Maximum size in bytes of the email body to send.  Bodies larger than
+this will be truncated.  Default 400,000.
+
+=cut
+
+has 'maximum_body_size' => (
+    is  => 'rw',
+    isa => 'Int',
+    default => 400_000,
+  );
+
 =head1 ATTRIBUTES
 
 =head2 debug_filter_visitor
@@ -152,6 +167,15 @@ sub make_email {
 
         # all the necessary debug information
         ( map { ("\n==== $_->[0] ====\n\n", $_->[1], "\n") } $self->dump_these_strings( $c ) );
+
+    if( $self->maximum_body_size < length $body ) {
+        my $truncation_warning =
+            "\n<email body truncated, exceeded configured maximum_body_size of "
+            .$self->maximum_body_size." bytes>\n";
+
+        $body = substr( $body, 0, $self->maximum_body_size - length $truncation_warning )
+                . $truncation_warning;
+    }
 
     return {
         to      => $self->default->{to},
