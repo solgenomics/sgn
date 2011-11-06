@@ -17,6 +17,7 @@ my $build = SGN::Build->new(
 
     build_requires => {
         'Class::MethodMaker'             => 0,
+        'Data::UUID'                     => 0,
         'File::Temp'                     => 0,
         'HTML::Lint'                     => 0,
         'Parse::Deb::Control'            => 0,
@@ -33,7 +34,7 @@ my $build = SGN::Build->new(
         'version'                                  => '0.77',
         'autodie'                                  => 0,
         'IPC::System::Simple'                      => 0,         #< required for autodie :all
-        'Bio::Chado::Schema'                       => '0.09010',
+        'Bio::Chado::Schema'                       => '0.09020',
         'Bio::Root::Version'                       => '1.006001',
         'Bio::GMOD::Blast::Graph'                  => '0.01',
         'Bio::Graphics::FeatureFile'               => 0,

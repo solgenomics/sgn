@@ -25,10 +25,12 @@ sub new {
     return $self;
 }
 
-sub render { 
+sub render {
     my $self = shift;
-    
-    return " <input type=\"text\" id=\"" . $self->get_id() . "\" name=\"".$self->get_field_name()."\" value=\"".$self->get_contents()."\" size=\"".$self->get_length()."\" />\n";
+    my $id = $self->get_id;
+    my $input =  " <input type=\"text\" id=\"" . $self->get_id() . "\" name=\"".$self->get_field_name()."\" value=\"".$self->get_contents()."\" size=\"".$self->get_length()."\"  onclick=\"jqueryStuff()\" />\n";
+
+    return $input;
 }
 
 

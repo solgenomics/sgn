@@ -10,7 +10,7 @@
 
 Parameters:
 
-=over 3
+=over 4
 
 =item phenotypes
 
@@ -23,6 +23,10 @@ div id (for using with javascript)
 =item has_qtl
 
 applies to qtl populations. Used for adding a link to the qtl page
+
+=item object_id
+
+the database id of the object with associated phenotyeps
 
 
 =back
@@ -57,20 +61,36 @@ my @qual_data;
 my %info; # hash of term names, since we can have multiple phenotypes of the same term
 my $graph_icon = qq |<img src="/documents/img/pop_graph.png"/> |;
 
+####
 foreach my $phenotype (@$phenotypes) {
   #attr_id
   my ($observable) = $phenotype->observable;
   my $definition = $observable->definition || '';
-  push @ { $info{$observable->name."|". $observable->cvterm_id ."|". $definition} } , $phenotype;
+  my ($unit_cvterm) = $phenotype->search_related
+    ('phenotype_cvterms',
+     { 'cv.name' => 'unit.ontology' },
+     { prefetch => { 'cvterm' => 'cv' } }
+    )->single;
+  my $unit = $unit_cvterm->cvterm->name if $unit_cvterm;
+  #push @ { $info{$observable->name."|". $observable->cvterm_id ."|". $definition . "|" . $unit} } , $phenotype;
+  push @ { $info{$observable->name}{phenotypes} } , $phenotype;
+  $info{$observable->name}{cvterm_id} = $observable->cvterm_id;
+  $info{$observable->name}{definition} = $definition;
+  $info{$observable->name}{unit} = $unit ;
 }
 my $count = 0;
 #display traits sorted by name
 ##NEED TO SORT BY cvtermprop or by parent? , then by name######
-foreach my $term(sort keys %info ) {
-  my ($term_name, $term_id, $definition) = split '\|' , $term;
+foreach my $term_name(sort keys %info ) {
+  my $term_id    = $info{$term_name}{cvterm_id};
+  my $definition = $info{$term_name}{definition};
+  my $unit       = $info{$term_name}{unit} ;
+  $unit = " ($unit)" if $unit;
+  $definition .= $definition . $unit if $unit;
+
   my @values; # all quantitative data does here
   my @qual_values; #all qualitative data goes here
-  foreach my $i ( @{ $info{$term} } ) {
+  foreach my $i ( @{ $info{$term_name}{phenotypes} } ) {
     my $value = $i->value;
 
     if (looks_like_number($value))  {  push @values, $value ; }
@@ -83,12 +103,11 @@ foreach my $term(sort keys %info ) {
   my $min = sprintf("%.2f", $stat->min);
   my $max = sprintf("%.2f", $stat->max);
 
-  #  my $mean_value =  $x->round($stat->mean(), 2) || sprintf "%2d" ;
   if (scalar(@values) ) {
     push  @data,  [map {$_}
-                   ( (tooltipped_text(qq|<a href="/chado/cvterm.pl?cvterm_id=$term_id">$term_name</a>|, $definition) ), $mean_value, $min, $max, scalar(@values)   ) ];
+                   ( (tooltipped_text(qq|<a href="/chado/cvterm.pl?cvterm_id=$term_id">$term_name</a> $unit|, $definition ) ), $mean_value, $min, $max, scalar(@values) ) ];
 
-    push  @{ $data[$count] }, qq | <a href="/phenome/qtl_analysis.pl?stock_id=$object_id&amp;cvterm_id=$term_id"> $graph_icon</a> |    if $has_qtl;
+    push  @{ $data[$count] }, qq | <a href="/phenome/qtl_analysis.pl?stock_id=$object_id&amp;cvterm_id=$term_id" onClick="Qtl.waitPage()"> $graph_icon</a> |    if $has_qtl;
     $count++;
   }
   if (scalar(@qual_values) ) {
@@ -106,6 +125,8 @@ push @headings , 'QTL(s)' if $has_qtl;
 <script  language="javascript">
 
 </script>
+
+<& /util/import_javascript.mas, classes => [ "CXGN.Phenome.Qtl" ] &>
 
 <div id = "$div">
 
@@ -135,3 +156,5 @@ push @headings , 'QTL(s)' if $has_qtl;
 
 % }
 </div>
+
+<& /qtl/waitmessage.mas &>

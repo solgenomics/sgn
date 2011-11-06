@@ -237,14 +237,14 @@ sub _analyze_correlation  {
         copy( $corre_table_file, $corre_image_dir )
             or die "could not copy $corre_table_file to $corre_image_dir";
 
-        $heatmap_file = fileparse($heatmap_file);
-        $heatmap_file  = $c->generated_file_uri("correlation",  $heatmap_file);
-        $corre_table_file = fileparse($corre_table_file);
+        $heatmap_file      = fileparse($heatmap_file);
+        $heatmap_file      = $c->generated_file_uri("correlation",  $heatmap_file);
+        $corre_table_file  = fileparse($corre_table_file);
         $corre_table_file  = $c->generated_file_uri("correlation",  $corre_table_file);
        
         $c->stash( heatmap_file     => $heatmap_file, 
                    corre_table_file => $corre_table_file
-                );  
+                 );  
     } 
 }
 
@@ -280,7 +280,7 @@ sub _correlation_output {
     
     $c->stash( heatmap_file     => $heatmap,
                corre_table_file => $corre_table,
-        );  
+             );  
  
     $self->_get_trait_acronyms($c);
 }
@@ -340,7 +340,6 @@ sub _list_traits {
                 );
 
             $self->_link($c);
-            my $graph_icon = $c->stash->{graph_icon};
             my $qtl_analysis_page = $c->stash->{qtl_analysis_page};
             my $cvterm_page = $c->stash->{cvterm_page};
             push  @phenotype,  [ map { $_ } ( $cvterm_page, $min, $max, $avg, $count, $qtl_analysis_page ) ];
@@ -377,12 +376,11 @@ sub _link {
         my $cvterm_id  = $c->stash->{cvterm_id};
         my $trait_name = $c->stash->{trait_name};
         my $term_id    = $trait_id ? $trait_id : $cvterm_id;
-        my $graph_icon = qq | <img src="/../../../documents/img/pop_graph.png" alt="run solqtl"/> |;
+        my $graph_icon = qq | <img src="/documents/img/pop_graph.png" alt="run solqtl"/> |;
     
         $self->_get_owner_details($c);
         my $owner_name = $c->stash->{owner_name};
-        my $owner_id   = $c->stash->{owner_id};
-    
+        my $owner_id   = $c->stash->{owner_id};   
    
         $c->stash( cvterm_page        => qq |<a href="/chado/cvterm.pl?cvterm_id=$cvterm_id">$trait_name</a> |,
                    trait_page         => qq |<a href="/phenome/trait.pl?trait_id=$trait_id">$trait_name</a> |,
@@ -501,6 +499,14 @@ sub qtl_form : PathPart('qtl/form') Chained Args {
      $c->throw_404("Population id argument is missing");   
     }
 
+    if ($pop_id and $pop_id !~ /^([0-9]+)$/)  
+    {
+        $c->throw_404("<strong>$pop_id</strong> is not an accepted argument. 
+                        This form expects an all digit population id, instead of 
+                        <strong>$pop_id</strong>"
+                     );   
+    }
+
     $c->stash( template => $self->get_template($c, $type),
                pop_id   => $pop_id,
                guide    => $self->guideline,
@@ -572,23 +578,35 @@ sub search_results : PathPart('qtl/search/results') Chained Args(0) {
     $trait =~ s/(^\s+|\s+$)//g;
     $trait =~ s/\s+/ /g;
     
-    my $schema    = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");  
-    my $rs = $schema->resultset("Cv::Cvterm")->search(
-        { name => { 'LIKE' => '%'.$trait .'%'} },
-        { columns => [ qw/ cvterm_id name definition/ ] },
-        {page => $c->req->param('page') || 1,
-         rows => 10
-        }
-        );
+    if ($trait)
+    {
+        my $schema    = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");  
+        my $rs = $schema->resultset("Cv::Cvterm")->search(
+            { name => { 'LIKE' => '%'.$trait .'%'} },
+            { columns => [ qw/ cvterm_id name definition/ ] },
+            {page => $c->req->param('page') || 1,
+             rows => 10
+            }
+            );
       
-    my $rows = $self->mark_qtl_traits($c, $rs);
+        my $rows = $self->mark_qtl_traits($c, $rs);
                                                         
-    $c->stash(template   => '/qtl/search/results.mas',
-              data       => $rows,
-              query      => $c->req->param('trait'),
-              pager      => $rs->pager,
-              page_links => sub {uri ( query => { trait => $c->req->param('trait'), page => shift } ) }
-        );
+        $c->stash(template   => '/qtl/search/results.mas',
+                  data       => $rows,
+                  query      => $c->req->param('trait'),
+                  pager      => $rs->pager,
+                  page_links => sub {uri ( query => { trait => $c->req->param('trait'), page => shift } ) }
+            );
+    }
+    else 
+    {
+        $c->stash(template   => '/qtl/search/results.mas',
+                  data       => undef,
+                  query      => undef,
+                  pager      => undef,
+                  page_links => undef,
+            );
+    }
 }
 
 sub mark_qtl_traits {

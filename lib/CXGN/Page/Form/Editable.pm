@@ -217,8 +217,9 @@ sub store {
                 object
                 getter
                 setter
-					 set_if
-					 validate
+                set_if
+                validate
+                autocomplete
                required fields: field_name.
  Side Effects:
  Example:

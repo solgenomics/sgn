@@ -34,8 +34,9 @@ is in test mode.
 read-only sub, boolean telling whether the site is now running in
 test mode.
 
-By default, this attribute is true if the MYAPP_TEST_MODE environment
-variable is set to a true value.
+By default, this attribute is true if either the MYAPP_TEST_MODE
+environment variable is set to a true value, or if
+$c->config->{test_mode} is true.
 
 =cut
 
@@ -43,11 +44,11 @@ sub test_mode {
     my $c = shift;
     my $app_name = ref($c) || $c;
     my $env_name = uc($app_name).'_TEST_MODE';
-    return _env($c)->{$env_name} ? 1 : 0;
+    return _env($c)->{$env_name} || ref($c) && $c->config->{test_mode};
 }
 sub _env {
     my ( $c ) = @_;
-    return ref($c) ? $c->engine->env : \%ENV;
+    return ref($c) && $c->engine->can('env') && $c->engine->env ? $c->engine->env : \%ENV;
 }
 
 

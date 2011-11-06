@@ -24,7 +24,7 @@
     &>
 </&>
 
-%    for my $seqs ( mrna_and_protein_sequence( $feature ) ) {
+%    for my $seqs ( mrna_cds_protein_sequence( $feature ) ) {
 %       if( $seqs->[0] ) {
         <&| /page/info_section.mas,
                 title         => 'mRNA sequence',
@@ -88,5 +88,5 @@
 
 
 <%once>
-   use SGN::View::Feature qw/ mrna_and_protein_sequence /;
+   use SGN::View::Feature qw/ mrna_cds_protein_sequence /;
 </%once>

@@ -146,4 +146,3 @@ method increment { $self->depth($self->depth + 1); }
 
 no Moose;
 __PACKAGE__->meta->make_immutable;
-return 1;

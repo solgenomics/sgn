@@ -70,7 +70,7 @@ sub store {
     my $initial_stock_id = $stock_id;
 
     my $error;
-    $stock->set_organism_id($args{organism_id});
+    $stock->set_species($args{organism});
     $stock->set_type_id($args{type_id});
     $stock->set_name($args{name});
     $stock->set_uniquename($args{uniquename});
@@ -147,22 +147,9 @@ sub generate_form {
     my $form = $self->get_form();
 
     #########
-
-    my ($web_visible) = $stock->get_schema->resultset("Cv::Cvterm")->search(
-        { name => 'web visible' , }
-        );
-    my @species;
-    my @organism_ids;
-    if ($web_visible) {
-        my $organism_res = $stock->get_schema->resultset("Organism::Organismprop")->
-            search( { type_id => $web_visible->cvterm_id(), } )->
-            search_related('organism');
-        while (my $o = $organism_res->next() ) {
-            push @species, $o->species() ;
-            push @organism_ids, $o->organism_id();
-        }
-    }
-
+    my $organism_obj =  $bcs_stock->organism  if $bcs_stock;
+    my $species = $organism_obj ? $organism_obj->species : undef;
+    my $organism_id = $stock->get_organism_id;
     my ($stock_type) = $stock->get_schema->resultset("Cv::Cv")->search(
         { name => 'stock type' , }
         );
@@ -176,27 +163,18 @@ sub generate_form {
             push @type_ids, $cvterm->cvterm_id();
         }
     }
-    #not all stocks have an organism!
-    my ($species, $organism_id);
-    if ($stock->get_organism) {
-        $species = $stock->get_organism->species ;
-        $organism_id = $stock->get_organism->organism_id;
-    }
-    ##########
+          ##########
 
-    if ( $self->get_action =~ /new|store/ ) {
-        $self->get_form->add_select(
-            display_name       => "Organism ",
-            field_name         => "organism_id",
-            contents           => $stock->get_organism_id(),
-            length             => 20,
-            object             => $stock,
-            getter             => "get_organism_id",
-            setter             => "set_organism_id",
-            select_list_ref    => \@species,
-            select_id_list_ref => \@organism_ids,
+    if ( $self->get_action =~ /new|store|edit/ ) {
+        $form->add_field(
+            display_name => "Organism",
+            field_name   => "Organism",
+            id           => "species_name",
+            object       => $stock,
+            getter       => "get_species",
+            setter       => "set_species",
+            autocomplete => '/ajax/organism/autocomplete',
             );
-
         $self->get_form->add_select(
             display_name       => "Stock type",
             field_name         => "type_id",
@@ -208,7 +186,6 @@ sub generate_form {
             select_list_ref    => \@types,
             select_id_list_ref => \@type_ids,
             );
-
     }
     if ( $stock->get_is_obsolete()  ) {
         $form->add_label(
@@ -217,7 +194,7 @@ sub generate_form {
             contents     => 'OBSOLETE',
             );
     }
-    if ( $self->get_action =~ /view|edit/ ) {
+    if ( $self->get_action =~ /view/ ) {
         $form->add_label(
             display_name => "Organism",
             field_name   => "stock_organism",
@@ -266,22 +243,18 @@ sub generate_form {
         field_name => "action",
         contents   => "store",
         );
-
-    if ( $self->get_action() =~ /view|edit/ ) {
-        $form->from_database();
-        $form->add_hidden(
-            field_name => "organism_id",
-            contents   => $stock->get_organism_id,
-            );
+    if ($self->get_action =~ /view/ ) {
         $form->add_hidden(
             field_name => "type_id",
             contents   => $stock->get_type_id,
             );
     }
+    if ( $self->get_action() =~ /view|edit/ ) {
+        $form->from_database();
+    }
     elsif ( $self->get_action() =~ /store/ ) {
         my %json_hash = $self->get_json_hash() ;
         print $json_hash{html} ;
-
         $form->from_request( %args );
     }
 }

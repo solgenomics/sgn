@@ -1,3 +1,4 @@
+use Modern::Perl;
 use Data::Dumper;
 use File::Temp;
 

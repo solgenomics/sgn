@@ -71,11 +71,9 @@ sub new {
     my $class = shift;
     my $self = bless {}, $class;
     my %args = @_;
-#    print STDERR  "\nCLASS: $class.\n";
-#    foreach my $k (keys %args) { print  STDERR "Args to add_select $k, $args{$k}\n"; }
-    if (!$args{field_name}) { 
+    if (!$args{field_name}) {
 	my $args_list = "";
-	foreach my $k (keys %args) { 
+	foreach my $k (keys %args) {
 	    $args_list .= "$k ($args{$k}) | ";
 	}
 
@@ -96,7 +94,9 @@ sub new {
     $self->set_validate($args{validate});
     my $formatting = $args{formatting} || "";
     $self->set_formatting($formatting);
-    
+    my $autocomplete = $args{autocomplete} || "";
+    $self->set_autocomplete($autocomplete);
+
     return $self;
 }
 
@@ -533,6 +533,27 @@ sub set_validate {
   }
   $self->{validate}=$validation;
 }
+
+=head2 accessors get_autocomplete, set_autocomplete
+
+ Usage:
+ Desc:
+ Property
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_autocomplete {
+  my $self = shift;
+  return $self->{autocomplete}; 
+}
+
+sub set_autocomplete {
+  my $self = shift;
+  $self->{autocomplete} = shift;
+}
+
 
 =head2 validate
 

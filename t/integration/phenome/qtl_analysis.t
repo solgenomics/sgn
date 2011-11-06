@@ -1,12 +1,13 @@
 
 =head1 NAME
 
-qtl_analysis.t - tests for cgi-bin/phenome/qtl_analysis.pl. This page takes 2 - 4 min to run R computations.
+qtl_analysis.t - tests for cgi-bin/phenome/qtl_analysis.pl
+
+This page takes a few minutes to run R computations.
 
 =head1 DESCRIPTION
 
 Tests for cgi-bin/phenome/qtl_analysis.pl
-
 
 =cut
 
@@ -15,8 +16,10 @@ use warnings;
 use Test::More;
 use lib 't/lib';
 use SGN::Test::WWW::Mechanize;
+use SGN::Test qw/qsub_is_configured/;
 
 {
+    local $TODO = "qsub not configured properly" if !qsub_is_configured();
     my $mech = SGN::Test::WWW::Mechanize->new;
 
     $mech->get_ok(
@@ -51,21 +54,23 @@ use SGN::Test::WWW::Mechanize;
       $mech->find_link( text_regex => qr/phenotype data/i );
     ok( $phenotype_download_link, 'got a phenotype data download link' );
    
-    $mech->links_ok( $phenotype_download_link->url,
-        'phenotype data download link works' );
-    
+    my $url = defined $phenotype_download_link ? $phenotype_download_link->url : '';
+
+    $url ? $mech->links_ok( $url, 'phenotype data download link works' ) : ok(0, 'no phenotype url found');
+
     cmp_ok( length( $mech->content ),
         '>=', 1000,
         'got at least 1KB of data from the phenotype data download' );
 
-    my $genotype_download_link =
-      $mech->find_link( text_regex => qr/genotype data/i );
+    my $genotype_download_link = $mech->find_link( text_regex => qr/genotype data/i );
     
     ok( $genotype_download_link, 'got a genotype data  download link' );
-    
-    $mech->links_ok($genotype_download_link->url,
-        'genotype data download link works' );
-    
+
+    if ($genotype_download_link) {
+        $mech->links_ok($genotype_download_link->url, 'genotype data download link works' );
+    } else {
+        ok(0, 'no genotype download link');
+    }
     cmp_ok( length( $mech->content ),
         '>=', 1000,
         'got at least 1KB of data from the genotype data download' );

@@ -25,10 +25,10 @@ $owner_page
 &>   
   <p>
     The QTL data for this population is not public yet. If you are the 
-    owner or SGN curator, login to access the data. 
-    Others who would like to know more about this data,
+    data owner or SGN curator, login to access the data. 
+    Others who would like to know more about the data 
     can contact the owner of the data: <b><% $owner_page %></b> or 
-    email to SGN: <a href=mailto:sgn-feedback@sgn.cornell.edu>
+    SGN: <a href=mailto:sgn-feedback@sgn.cornell.edu>
     sgn-feedback@sgn.cornell.edu</a>.
   </p>
 </&>

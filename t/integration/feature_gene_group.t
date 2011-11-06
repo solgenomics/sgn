@@ -37,6 +37,7 @@ for ( [ $orgs[0], 4 ], [ $orgs[1], 2 ], [ $orgs[2], 5 ] ) {
 }
 
 my $mech = SGN::Test::WWW::Mechanize->new;
+$mech->get_ok('/feature/'.$group->name.'/details');
 $mech->get_ok('/feature/'.$group->name.'/gene_group_protein_fasta');
 $mech->content_contains('>feature_');
 $mech->content_contains('MMMMMMMMMM');

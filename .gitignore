@@ -26,3 +26,4 @@ MANIFEST*
 ./cgi-bin/secretom
 MYMETA.json
 tags
+.prove
