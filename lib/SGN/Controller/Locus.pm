@@ -105,10 +105,21 @@ sub view_locus : Chained('get_locus') PathPart('view') Args(0) {
     my $dbxrefs = $locus->get_dbxrefs;
     my $image_ids = $locus->get_figure_ids;
     my $cview_tmp_dir = $c->tempfiles_subdir('cview');
+
+    #########
+    my @locus_xrefs =
+        # 4. look up xrefs for all of them
+        map $c->feature_xrefs( $_, { exclude => 'locuspages' } ),
+        # 3. plus primary locus name
+        $locus->get_locus_name,
+        # 2. list of locus alias strings
+        map $_->get_locus_alias,
+        # 1. list of locus alias objects
+        $locus->get_locus_aliases( 'f', 'f' );
+    #########
 ################
     $c->stash(
         template => '/locus/index.mas',
-
         locusref => {
             action    => $action,
             locus_id  => $locus_id ,
@@ -125,6 +136,7 @@ sub view_locus : Chained('get_locus') PathPart('view') Args(0) {
             cview_tmp_dir  => $cview_tmp_dir,
             cview_basepath => $c->get_conf('basepath'),
             image_ids      => $image_ids,
+            xrefs      => \@locus_xrefs,
         },
         locus_add_uri  => $c->uri_for( '/ajax/stock/associate_locus' ),
         cvterm_add_uri => $c->uri_for( '/ajax/stock/associate_ontology')
