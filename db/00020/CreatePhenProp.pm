@@ -52,7 +52,7 @@ sub patch {
 
     $self->dbh->do(<<EOSQL);
 
-
+    set search_path to public;
 create table phenotypeprop (
        phenotypeprop_id serial not null,
        primary key (phenotypeprop_id),
