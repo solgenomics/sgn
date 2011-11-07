@@ -1,64 +1,187 @@
 <%args>
-  $results => undef
-  $form
-  $pagination_link_maker
 </%args>
-<%once>
-  use Number::Format;
-  use CXGN::Page::FormattingHelpers qw/ columnar_table_html /;
-  use SGN::View::Feature qw/feature_link/;
-</%once>
-<& /page/page_title.mas, title => 'Feature Search' &>
-<& /util/import_javascript.mas,
-    classes => [qw(jquery CXGN.Effects)]
-&>
 
-<!-- This CSS should probably go somewhere better -->
-<style>
-#feature_search_form .select span span {
-  white-space: nowrap;
-  float: left;
-  width: 10em;
-}
-#feature_search_form div label, #feature_search_form legend {
-  font-weight: bold;
-}
-#feature_search_form div.text label {
-  float: left;
-  width: 10em;
-}
+<& /page/page_title.mas, title => 'Feature search' &>
+<& /util/import_extjs.mas &>
 
-div.paginate_nav {
-  margin: 0 auto;
-  width: 80%;
-  white-space: nowrap;
-  text-align: center;
-}
-</style>
+<div id="search_grid" style="margin: 1em auto 1em auto; width: 700px"> </div>
 
-% if( $results ) {
-%   my $pager = $results->pager;
 
-  <&| /page/info_section.mas, title    => 'Search results',
-                              subtitle => 'results '
-                                          .$pager->first
-                                          .'-'.$pager->last
-                                          .' of '.Number::Format->new->format_number($pager->total_entries)
-   &>
-%   if( $results->count ) {
-     <% columnar_table_html(
-            headings => ['Feature Name','Feature Type'],
-            data     => [ map [feature_link($_),$_->type->name], $results->all ],
-        )
-      %>
-%   } else {
-     <h3 style="text-align: center">no matching results found</h3>
-%   }
-  </&>
+  <script type="text/javascript">
+      var do_feature_search = function() {}; //replaced later
+      var page_size = 50;
 
-  <& /page/pagination_control.mas, pager => $pager, link_maker => $pagination_link_maker &>
-% } else {
-<&| /page/info_section.mas, title => 'Search' &>
-  <% $form->render %>
+      Ext.Loader.setConfig({enabled: true});
+
+      Ext.require([
+          'Ext.grid.*',
+          'Ext.data.*',
+          'Ext.util.*',
+          'Ext.grid.PagingScroller'
+      ]);
+
+      Ext.onReady(function(){
+
+          Ext.define('Feature', {
+              extend: 'Ext.data.Model',
+              fields: [
+                  'feature_id', 'organism', 'name', 'type',
+              ],
+              idProperty: 'feature_id'
+          });
+
+          // create the Data Store
+          var store = Ext.create('Ext.data.Store', {
+              id:           'store',
+              pageSize:     page_size,
+              model:        'Feature',
+              remoteSort:   true,
+              autoLoad:     true,
+
+              // allow the grid to interact with the paging scroller by buffering
+              buffered:   true,
+
+              proxy: {
+                  type: 'ajax',
+                  url: '/search/features/search_service',
+                  extraParams: { page_size: page_size },
+                  reader: {
+                      root: 'data',
+                      totalProperty: 'totalCount',
+                      successProperty: 'success'
+                  },
+                  // sends single sort as multi parameter
+                  simpleSortMode: true
+              },
+
+              // data: [
+              //        function(){ var a = []; for(var i = 0; i<200; i++) { a.push( { feature_id: i, name: 'FooFeature_'+i, organism: 'Foobarius Fooii', type: 'gene_kelly' }); }; return a }()
+              // ],
+
+              sorters: [{
+                   property: 'feature_id',
+                   direction: 'ASC'
+              }]
+
+          });
+
+          // function renderFeature(value, p, record) {
+          //     return Ext.String.format(
+          //         '<a href="http://sencha.com/forum/showthread.php?t={2}" target="_blank">{0}</a>',
+          //         value,
+          //         record.data.forumtitle,
+          //         record.getId(),
+          //         record.data.forumid
+          //     );
+          // }
+
+          grid = Ext.create('Ext.grid.Panel', {
+              width:    700,
+              height:   400,
+              title:    'Matching Features',
+              store:    store,
+              loadMask: true,
+
+              // verticalScrollerType: 'paginggridscroller',
+              // disableSelection: true,
+              // invalidateScrollerOnRefresh: false,
+
+              dockedItems: [{
+                  xtype: 'pagingtoolbar',
+                  store: store,   // same store GridPanel is using
+                  dock: 'bottom',
+                  displayInfo: true
+              }],
+
+              viewConfig: {
+                  trackOver: false
+              },
+              // grid columns
+              columns:[
+              { id: 'feature_id',
+                text: 'ID',
+                dataIndex: 'feature_id',
+                width: 60,
+                sortable: true,
+              },
+              {
+                  // id assigned so we can apply custom css (e.g. .x-grid-cell-topic b { color:#333 })
+                  // TODO: This poses an issue in subclasses of Grid now because Headers are now Components
+                  // therefore the id will be registered in the ComponentManager and conflict. Need a way to
+                  // add additional CSS classes to the rendered cells.
+                  id: 'organism',
+                  text: "Organism",
+                  dataIndex: 'organism',
+                  width: 200,
+                  //renderer: renderTopic,
+                  sortable: true
+              },{
+                  text: "Type",
+                  dataIndex: 'type',
+                  width: 100,
+                  hidden: false,
+                  sortable: true
+              },{
+                  text: "Name",
+                  dataIndex: 'name',
+                  align: 'center',
+                  width: 200,
+                  sortable: true,
+                  flex: 1
+              }
+              ],
+              renderTo: document.getElementById('search_grid')
+          });
+
+          // trigger the data store load
+          //store.guaranteeRange(0, 40);
+          var param_mapping = {
+              name_input:     'name',
+              organism_input: 'organism',
+              type_input:     'type'
+          };
+          do_feature_search = function() {
+              for ( var id in param_mapping ) {
+                  var el = document.getElementById(id);
+                  if( el ) {
+                      if ( el.value.match(/[^\s]/) ) {
+                          store.proxy.extraParams[ param_mapping[id] ] = el.value;
+                      } else {
+                          delete store.proxy.extraParams[ param_mapping[id] ];
+                      }
+                  }
+              }
+
+              store.load();
+          };
+    });
+  </script>
+
+
+<&| /page/info_section.mas, title => 'Filter by' &>
+    <style type="text/css">
+          #search_form       { margin: 1em auto; width: 500px; text-align: center }
+          #search_form table { margin: 1em auto }
+          #search_form label { font-weight: bold; margin-right: 1em; }
+          #search_form td    { padding-bottom: 6px }
+    </style>
+    <div id="search_form">
+        <form onsubmit="do_feature_search(this); return false;">
+          <table>
+              <tr>
+                <td><label style="font-weight: bold" for="name_input">Name contains</label></td>
+                <td><input id="name_input" type="text" size="30" name="name" value="" /></td>
+              </tr>
+              <tr>
+                <td><label style="font-weight: bold" for="organism_input">Species contains</label></td>
+                <td><input id="organism_input" type="text" size="30" name="organism" value="" /></td>
+              </tr>
+              <tr>
+                <td><label style="font-weight: bold" for="type_input">Type is</label></td>
+                <td><input id="type_input" type="text" size="30" name="type" value="" /></td>
+              </tr>
+          </table>
+          <input style="padding: 3px" type="submit" value="Apply" />
+       </form>
+    </div>
 </&>
-% }
