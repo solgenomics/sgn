@@ -27,3 +27,5 @@ MANIFEST*
 MYMETA.json
 tags
 .prove
+static/ext-4.0.7-gpl/*
+
