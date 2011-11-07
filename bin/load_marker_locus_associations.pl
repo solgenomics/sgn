@@ -14,6 +14,7 @@ Lukas Mueller <lam87@cornell.edu>
 =cut
 
 use strict;
+use warnings;
 
 use Getopt::Std;
 use File::Slurp;
@@ -55,11 +56,14 @@ foreach my $line (@lmas) {
     if (@ids > 1) { 
 	warn "There are more than 1 loci associated with SNP $marker_name\n";
     }
-
+    
+    if (@ids == 0) { 
+	warn "Locus $locus_symbol not found.\n";
+    }
     foreach my $locus_id (@ids) { 
 	my $l = CXGN::Phenome::Locus->new($dbh, $locus_id);
 	
-	my $q = "INSERT INTO phenome.locus_marker (locus_id, marker_id) VALUES (?, ?)";
+	my $q = $dbh->prepare("INSERT INTO phenome.locus_marker (locus_id, marker_id) VALUES (?, ?)");
 	$q -> execute($locus_id, $marker_id);
 	print STDERR "Associated locus $locus_symbol ($locus_id) with marker $marker_name ($marker_id)\n";
     }
