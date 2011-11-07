@@ -56,7 +56,7 @@ use Scalar::Util qw(looks_like_number);
 
 <%perl>
 
-my @data;
+my %data;
 my @qual_data;
 my %info; # hash of term names, since we can have multiple phenotypes of the same term
 my $graph_icon = qq |<img src="/documents/img/pop_graph.png"/> |;
@@ -72,53 +72,58 @@ foreach my $phenotype (@$phenotypes) {
      { prefetch => { 'cvterm' => 'cv' } }
     )->single;
   my $unit = $unit_cvterm->cvterm->name if $unit_cvterm;
+  my ($method) = $phenotype->search_related('phenotypeprops',
+                                          { 'type.name' => 'method' },
+                                          { prefetch    => 'type' }
+                                         );
+  my $method_name = $method ? $method->value : 'Trait' ;
   #push @ { $info{$observable->name."|". $observable->cvterm_id ."|". $definition . "|" . $unit} } , $phenotype;
-  push @ { $info{$observable->name}{phenotypes} } , $phenotype;
-  $info{$observable->name}{cvterm_id} = $observable->cvterm_id;
-  $info{$observable->name}{definition} = $definition;
-  $info{$observable->name}{unit} = $unit ;
+  push @ { $info{$method_name}{$observable->name}{phenotypes} } , $phenotype;
+  $info{$method_name}{$observable->name}{cvterm_id} = $observable->cvterm_id;
+  $info{$method_name}{$observable->name}{definition} = $definition;
+  $info{$method_name}{$observable->name}{unit} = $unit ;
 }
 my $count = 0;
 #display traits sorted by name
 ##NEED TO SORT BY cvtermprop or by parent? , then by name######
-foreach my $term_name(sort keys %info ) {
-  my $term_id    = $info{$term_name}{cvterm_id};
-  my $definition = $info{$term_name}{definition};
-  my $unit       = $info{$term_name}{unit} ;
-  $unit = " ($unit)" if $unit;
-  $definition .= $definition . $unit if $unit;
+foreach my $method(sort keys %info ) {
+  foreach my $term_name(sort keys %{ $info{$method} } ) {
+    my $term_id    = $info{$method}{$term_name}{cvterm_id};
+    my $definition = $info{$method}{$term_name}{definition};
+    my $unit       = $info{$method}{$term_name}{unit} ;
+    $unit = " ($unit)" if $unit;
+    $definition .= $definition . $unit if $unit;
 
-  my @values; # all quantitative data does here
-  my @qual_values; #all qualitative data goes here
-  foreach my $i ( @{ $info{$term_name}{phenotypes} } ) {
-    my $value = $i->value;
+    my @values; # all quantitative data does here
+    my @qual_values; #all qualitative data goes here
+    foreach my $i ( @{ $info{$method}{$term_name}{phenotypes} } ) {
+      my $value = $i->value;
+      if (looks_like_number($value))  {  push @values, $value ; }
+      else { push @qual_values, $value ; }
+    }
+    my $stat = Statistics::Descriptive::Sparse->new();
+    $stat->add_data(@values);
 
-    if (looks_like_number($value))  {  push @values, $value ; }
-    else { push @qual_values, $value ; }
+    my $mean_value =  sprintf("%.2f", $stat->mean);
+    my $min = sprintf("%.2f", $stat->min);
+    my $max = sprintf("%.2f", $stat->max);
+
+    if (scalar(@values) ) {
+      push  @ { $data{$method}{phen} } ,  [map {$_}
+                     ( { width => "320" , content => (tooltipped_text(qq|<a href="/chado/cvterm.pl?cvterm_id=$term_id">$term_name</a> $unit|, $definition ) ) } , { width => "60", content => $mean_value }, { with => "60" , content => $min } , { width => "60" , content => $max }, { width => "40" , content => scalar(@values) } )  ];
+
+      push  @ { $data{$method}{phen}[$count] } , qq | <a href="/phenome/qtl_analysis.pl?stock_id=$object_id&amp;cvterm_id=$term_id" onClick="Qtl.waitPage()"> $graph_icon</a> |    if $has_qtl;
+      $count++;
+    }
+    if (scalar(@qual_values) ) {
+      push  @qual_data,  [map {$_}
+                          ( (tooltipped_text(qq|<a href="/chado/cvterm.pl?cvterm_id=$term_id">$term_name</a>|, $definition) )  , join(', ' , @qual_values ) ) ];
+    }
   }
-  my $stat = Statistics::Descriptive::Sparse->new();
-  $stat->add_data(@values);
 
-  my $mean_value =  sprintf("%.2f", $stat->mean);
-  my $min = sprintf("%.2f", $stat->min);
-  my $max = sprintf("%.2f", $stat->max);
-
-  if (scalar(@values) ) {
-    push  @data,  [map {$_}
-                   ( (tooltipped_text(qq|<a href="/chado/cvterm.pl?cvterm_id=$term_id">$term_name</a> $unit|, $definition ) ), $mean_value, $min, $max, scalar(@values) ) ];
-
-    push  @{ $data[$count] }, qq | <a href="/phenome/qtl_analysis.pl?stock_id=$object_id&amp;cvterm_id=$term_id" onClick="Qtl.waitPage()"> $graph_icon</a> |    if $has_qtl;
-    $count++;
-  }
-  if (scalar(@qual_values) ) {
-    push  @qual_data,  [map {$_}
-                        ( (tooltipped_text(qq|<a href="/chado/cvterm.pl?cvterm_id=$term_id">$term_name</a>|, $definition) ), join(', ' , @qual_values ) ) ];
-  }
+  @ { $data{$method}{headings} } = ("$method" , "Average", "Min", "Max", "Lines/repeats");
+  push @ { $data{$method}{headings} } , 'QTL(s)' if $has_qtl;
 }
-
-my @headings = ("Trait" , "Average", "Min", "Max", "Lines/repeats");
-push @headings , 'QTL(s)' if $has_qtl;
-
 
 </%perl>
 
@@ -130,17 +135,21 @@ push @headings , 'QTL(s)' if $has_qtl;
 
 <div id = "$div">
 
-% if(@data) {
+% foreach my $key( sort keys %data ) {
+%  my @data_points = @ { $data{$key}{phen} } ; # if $data{key}{phen};
+%  my @headings    = @ { $data{$key}{headings} };
+%  if (@data_points) {
 
 <& /page/columnar_table.mas,
-  headings => \@headings,
-    data     => \@data ,
-      __alt_freq   =>2,
-      __alt_width  =>1,
-      __alt_offset =>3,
-      __align =>'lrrrc',
+      headings   => \@headings,
+      data       => \@data_points,
+        __alt_freq   =>2,
+        __alt_width  =>1,
+        __alt_offset =>3,
+        __align =>'lrrrc',
 &>
 
+%   }
 % }
 
 % if(@qual_data) {

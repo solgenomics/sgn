@@ -67,7 +67,9 @@ if (!$marker) {
 
 <& /markers/basic_marker_info.mas, marker=>$marker, dbh=>$dbh &>
 
+<&| /page/info_section.mas, title=>"Locus associations" &>
 <& /markers/kfg.mas, marker=>$marker &>
+</&>
 
 <& /markers/rflp.mas, marker=>$marker &>
 

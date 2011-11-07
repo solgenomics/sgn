@@ -181,15 +181,27 @@ my $ontology_subtitle = $curator || $submitter || $sequencer  ?
 
 </%perl>
 
-                                          
-<& /util/import_javascript.mas, classes => ["Prototype", "jquery", "thickbox", "CXGN.Page.FormattingHelpers", "CXGN.Phenome.Locus", "CXGN.Phenome.Tools", "CXGN.Phenome.Locus.LocusPage", "CXGN.Sunshine.NetworkBrowser"] &>
+<& /util/import_javascript.mas, classes => ["Prototype","jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "CXGN.Phenome.Locus", "CXGN.Phenome.Tools", "CXGN.Phenome.Locus.LocusPage", "CXGN.Sunshine.NetworkBrowser"] &>
 
 
 <& /locus/initialize.mas, locus_id => $locus_id  &>
 
+
+<script language="javascript">
+function jqueryStuff() {
+   jQuery(function() {
+     jQuery("#genome_locus").autocomplete({
+        source: '/ajax/locus/genome_autocomplete'
+     });
+  });
+}
+</script>
+
+
 <& /page/page_title.mas, title=> "$common_name locus ".$locus->get_locus_name &>
 
 <&| /page/info_section.mas, title=>"Locus details" , subtitle => "$locus_xml | $editor_note | $guide_html" &>
+
 
   <& /page/form.mas,
   object_type          => 'locus',
