@@ -9,7 +9,7 @@
 
   <script type="text/javascript">
       var do_feature_search = function() {}; //replaced later
-      var page_size = 50;
+      var page_size = 500;
 
       Ext.Loader.setConfig({enabled: true});
 
