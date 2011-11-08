@@ -97,17 +97,17 @@ my $figure_subtitle =
 my $stock_subtitle =   $curator || $submitter || $sequencer ?
   '<a href="javascript:Tools.toggleContent(\'associateStockForm\', \'locus_accessions\')">[Associate accession]</a> ' :   '<span class= "ghosted">[Associate accession]</span> ';
 
-my $accessions = $locus->get_stock_ids; #stash ? 
+my $accessions = $locus->get_stock_ids;
 
-my @alleles = $locus->get_alleles();    #array of allele objects  ###stash ? 
+my @alleles = $locus->get_alleles(); #array of allele objects
 
 my $allele_subtitle = $curator || $submitter || $sequencer  ?
-  '<span class="ghosted">[Add new Allele]</span>'
-  : "<a href=\"/phenome/allele.pl?locus_id=$locus_id&amp;action=new\">[Add new allele]</a>";
+  "<a href=\"/phenome/allele.pl?locus_id=$locus_id&amp;action=new\">[Add new allele]</a>" :
+  '<span class="ghosted">[Add new Allele]</span>' ;
 
 my $al_subtitle = $curator || $submitter || $sequencer  ?
-  '<span class="ghosted">[Associate new locus]</span>'
-  : '<a href="javascript:Tools.toggleContent(\'associateLocusForm\', \'locus2locus\');Tools.getOrganisms()">[Associate new locus]</a> ';
+  '<a href="javascript:Tools.toggleContent(\'associateLocusForm\', \'locus2locus\');Tools.getOrganisms()">[Associate new locus]</a> ' :
+  '<span class="ghosted">[Associate new locus]</span>' ;
 
 my $collapsed = $locus->count_associated_loci() ? 1 : 0 ;
 
@@ -115,10 +115,10 @@ my $network_sub = $collapsed ?
   "View <b>$locus_name</b> relationships in the stand-alone <a href=\"/tools/networkbrowser/?type=locus&name=$locus_id\">network browser</a>" : '';
 
 my $new_unigene_link =  $curator || $submitter || $sequencer  ?
-  '<span class= "ghosted">[Associate new unigene]</span> '
-  : '<a href="javascript:Tools.toggleContent(\'associateUnigeneForm\', \'unigenes\' )">[Associate new unigene]</a>';
+  '<a href="javascript:Tools.toggleContent(\'associateUnigeneForm\', \'unigenes\' )">[Associate new unigene]</a>' :
+    '<span class= "ghosted">[Associate new unigene]</span> ';
 
-my %dbxrefs = $locus->get_all_dbxrefs();  #stash ? 
+my %dbxrefs = $locus->get_all_dbxrefs();
 
 my $tgrc;
 foreach ( @{ $dbxrefs{'tgrc'} } ) {
@@ -147,8 +147,8 @@ my @sgn_ref =  defined ( @{ $dbxrefs{SGN_ref} } ) ? @{ $dbxrefs{SGN_ref} } : () 
 my $pub_count = scalar (@sorted_pubs) ;
 
 my $pub_subtitle = $curator || $submitter || $sequencer  ?
-  qq|<span class=\"ghosted\">[Associate publication]</span>|
-  : qq|<a href="/chado/add_publication.pl?type=locus&amp;type_id=$locus_id&amp;refering_page=$this_page&amp;action=new"> [Associate publication] </a>|;
+  qq|<a href="/chado/add_publication.pl?type=locus&amp;type_id=$locus_id&amp;refering_page=$this_page&amp;action=new"> [Associate publication] </a>| :
+  qq|<span class=\"ghosted\">[Associate publication]</span>|;
 
 $pub_subtitle .=
   qq | <a href="javascript:void(0)"onclick="window.open('locus_pub_rank.pl?locus_id=$locus_id','publication_list','width=600,height=400,status=1,location=1,scrollbars=1')">[Matching publications]</a> |;
@@ -162,8 +162,8 @@ foreach  my $g  ( @{ $dbxrefs{'DB:GenBank_GI'} } )  {
     my $description = $g->[0]->get_description();
     my $feature_seq = $feature->get_residues;
     my $blast_link = qq |
-    <form style="display: inline" method="post" action="/tools/blast/index.pl"><input type="hidden" name="seq" value=">$gb_accession ($description)\n$feature_seq" /><input style="padding: 1px; line-height: 0.8" type="submit" value="BLAST" /></form>
-|;
+      <form style="display: inline" method="post" action="/tools/blast/index.pl"><input type="hidden" name="seq" value=">$gb_accession ($description)\n$feature_seq" /><input style="padding: 1px; line-height: 0.8" type="submit" value="BLAST" /></form>
+        |;
 
     $genbank .=
       qq|<a href="$url$gb_accession" target="blank">$gb_accession</a> $description $blast_link<br />|;
@@ -173,11 +173,11 @@ foreach  my $g  ( @{ $dbxrefs{'DB:GenBank_GI'} } )  {
 my $ont_count = $locus->count_ontology_annotations();
 
 my $ontology_subtitle = $curator || $submitter || $sequencer  ?
-  qq |<span class = "ghosted"> [Add ontology annotations]</span> |
-  :  qq|<a href="javascript:Tools.toggleContent('associateOntologyForm', 'locus_ontology')">[Add ontology annotations]</a> |;
-
+  qq|<a href="javascript:Tools.toggleContent('associateOntologyForm', 'locus_ontology')">[Add ontology annotations]</a> | :
+  qq |<span class = "ghosted"> [Add ontology annotations]</span> |;
 
 </%perl>
+
 
 <& /util/import_javascript.mas, classes => ["Prototype","jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "CXGN.Phenome.Locus", "CXGN.Phenome.Tools", "CXGN.Phenome.Locus.LocusPage", "CXGN.Sunshine.NetworkBrowser"] &>
 
