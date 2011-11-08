@@ -132,10 +132,11 @@ var Locus = {
     getAlleles: function(locus_id) {
 	$("associate_stock_button").disabled=false;
 	var stock_id = $('stock_select').value;
-        var d = new MochiKit.Async.doSimpleXMLHttpRequest("allele_browser.pl", {locus_id: locus_id, stock_id: stock_id});
-	d.addCallbacks(this.updateAlleleSelect);
+        new Ajax.Request("/phenome/allele_browser.pl", {
+		parameters: { locus_id: locus_id, stock_id: stock_id },
+		    onSuccess: this.updateAlleleSelect } );
     },
-
+    
     //Parse the ajax response to update the allele select box
     updateAlleleSelect: function(request) {
 	var select = $('allele_select');
@@ -170,15 +171,15 @@ var Locus = {
 	if (!allele_id) {  allele_id = $('allele_select').value; } 
 	var stock_id = $('stock_select').value;
 
-	new Ajax.Request("associate_allele.pl", {
+	new Ajax.Request("phenome/associate_allele.pl", {
 		parameters: {allele_id: allele_id, stock_id: stock_id, sp_person_id: sp_person_id}, 
 		    onSuccess: function(response) {
-				var json = response.responseText;
-				MochiKit.Logging.log("associateAllele response:  " , json);
-				var x = eval ("("+json+")");
-				MochiKit.Logging.log("associateAllele response:  " , json);
-				if (x.error) { alert(x.error); }
-				else { Tools.reloadPage(); }
+                    var json = response.responseText;
+                    MochiKit.Logging.log("associateAllele response:  " , json);
+                    var x = eval ("("+json+")");
+                    MochiKit.Logging.log("associateAllele response:  " , json);
+                    if (x.error) { alert(x.error); }
+                    else { Tools.reloadPage(); }
 		},
 		    });
     },
@@ -192,7 +193,9 @@ var Locus = {
 	    $('associate_stock_button').disabled = true;
 	}
         else{
-            new Ajax.Request("individual_browser.pl", {parameters: {stock_name: str,  type: type}, onSuccess: this.updateStockSelect});
+            new Ajax.Request("/phenome/individual_browser.pl", {
+                    parameters: {stock_name: str,  type: type}, 
+                    onSuccess: this.updateStockSelect});
 	}
     },
 
@@ -352,13 +355,13 @@ var Locus = {
 	//MochiKit.DOM.getElement("associate_locus_button").disabled=false;
 	var type = 'locus_relationship'; 
 	var locus_relationship_id = $('locus_relationship_select').value;
-	var d = new MochiKit.Async.doSimpleXMLHttpRequest("locus_browser.pl", {type: type} );	
-	d.addCallbacks(this.updateLocusRelationshipSelect);
+        new Ajax.Request('/phenome/locus_browser.pl', { parameters:
+                  {type: type },
+                      onSuccess: this.updateLocusRelationshipSelect });
     },
 
     updateLocusRelationshipSelect: function(request) {
 	var select = $('locus_relationship_select');
-		
         var responseText = request.responseText;
         var responseArray = responseText.split("|");
 	//the last element of the array is empty. Dont want this in the select box
@@ -384,6 +387,7 @@ var Locus = {
     	//MochiKit.DOM.getElement("associate_locus_button").disabled=false;
 	var type = 'locus_evidence_code';
 	var locus_evidence_code_id = $('locus_evidence_code_select').value;
+        
 	var d = new MochiKit.Async.doSimpleXMLHttpRequest("locus_browser.pl", {type: type}  );	
 	d.addCallbacks(this.updateLocusEvidenceCodeSelect);
     },
@@ -408,42 +412,33 @@ var Locus = {
 	   //document.evidence_code_select.options[i] = new Option(evidenceCodeObject[0], evidenceCodeObject[1]);
 	}
     },
-    
-     
-       
-    //#####################################
-    
-    
+
     //Make an ajax response that finds all the unigenes with unigene ids like the current value of the unigene id input
     getUnigenes: function(unigene_id, locus_id) {
 	if(unigene_id.length==0){
 	    var select = $('unigene_select');
-	    select.length=0;	
+	    select.length=0;
 	    $('associate_unigene_button').disabled = true;
-	} else {	
+	} else {
 	    var type = 'browse';
-	    new Ajax.Request('unigene_browser.pl', { parameters:
-		    {type: type, locus_id: locus_id, unigene_id: unigene_id}, 
-			onSuccess: this.updateUnigeneSelect }); 
+	    new Ajax.Request('/phenome/unigene_browser.pl', { parameters:
+		    {type: type, locus_id: locus_id, unigene_id: unigene_id},
+			onSuccess: this.updateUnigeneSelect });
 	}
     },
-    
+
     //Parse the ajax response and update the unigene  select box accordingly
     updateUnigeneSelect: function(response) {
 	var select = $('unigene_select');
-	//MochiKit.DOM.getElement('associate_unigene_button').disabled = true;
-	var json  = response.responseText;
+        var json  = response.responseText;
 	var x = eval ("("+json+")"); 
-	//var responseText = request.responseText;
-	var responseArray = x.response.split("|");
-	
+        var responseArray = x.response.split("|");
 	//the last element of the array is empty. Dont want this in the select box
 	responseArray.pop();
 
         select.length = responseArray.length;
         for (i=0; i < responseArray.length; i++) {
 	    var unigeneObject = responseArray[i].split("*");
-	    
 	    select[i].value = unigeneObject[0];
 	    if (typeof(unigeneObject[1]) != "undefined"){
 		select[i].text = unigeneObject[1];
@@ -451,11 +446,11 @@ var Locus = {
 	}
      },
 
-   
+
     //Make an ajax response that obsoletes the selected stock-allele association
     obsoleteStockAllele: function(stockprop_id)  {
 		var type= 'obsolete';
-		new Ajax.Request('individual_browser.pl', {parameters:
+		new Ajax.Request('/phenome/individual_browser.pl', {parameters:
                         {type: type, stockprop_id: stockprop_id }, onSuccess: Tools.reloadPage });
     },
     //Make an ajax response that finds all loci  with names/synonyms/symbols like the current value of the locus input
@@ -470,29 +465,29 @@ var Locus = {
 	    new Ajax.Request("/phenome/locus_browser.pl", {parameters: 
 		    {type: type, locus_name: str,object_id: object_id, organism: organism}, onSuccess: this.updateLocusSelect });		}
     },
-    
+
     //Parse the ajax response and update the locus select box accordingly
     updateLocusSelect: function(request) {
 	var select = $('locus_list');
 	$('merge_locus_button').disabled = true;
-	
+
 	var responseText = request.responseText;
 	var responseArray = responseText.split("|");
-	
+
 	//the last element of the array is empty. Dont want this in the select box
 	responseArray.pop();
-	
+
 	select.length = responseArray.length;
 	for (i=0; i < responseArray.length; i++) {
 	    var locusObject = responseArray[i].split("*");
-	    
+
 	    select[i].value = locusObject[0];
 	    if (typeof(locusObject[1]) != "undefined"){
 		select[i].text = locusObject[1];
 	    }
 	}
     },
-    
+
     //Logic on when to enable the merge locus button
     enableMergeButton: function() {
 	$("merge_locus_button").disabled=false;	    
@@ -501,7 +496,7 @@ var Locus = {
     //make an ajax response to merge locus x with the current locus
     mergeLocus: function(locus_id) {
 	var merged_locus_id = $('locus_list').value;
-	new Ajax.Request('merge_locus.pl', {
+	new Ajax.Request('/phenome/merge_locus.pl', {
 		parameters: { merged_locus_id: merged_locus_id, locus_id: locus_id}, 
 		    onSuccess: function(response) {
 		    var json  = response.responseText;
@@ -511,13 +506,12 @@ var Locus = {
 		    else {  window.location.reload() ; } 
 		},
 		    });
-	
     },
-    
+
     toggleVisible:function(elem){
         MochiKit.DOM.toggleElementClass("invisible", elem);
 	MochiKit.Logging.log("toggling visible element : " , elem);
-    },	
+    },
 
     makeVisible: function(elem) {
         MochiKit.DOM.removeElementClass(elem, "invisible");
@@ -529,7 +523,7 @@ var Locus = {
 	MochiKit.DOM.removeElementClass(elem, "visible");
         MochiKit.DOM.addElementClass(elem, "invisible");
     },
-	
+
     isVisible: function(elem) {
         // you may also want to check for
         // getElement(elem).style.display == "none"
@@ -539,12 +533,10 @@ var Locus = {
 	}else if  (MochiKit.DOM.hasElementClass(elem, "visible")) { 
 	    MochiKit.Logging.log("this element is visible: ", elem); 
 	}else {  MochiKit.Logging.log("this element does not have a visible/invisible element set: ", elem); } 
-	
+
 	return MochiKit.DOM.hasElementClass(elem, "visible") ;
     },
-    
-    
-    
+
     searchCvterms: function()  {	
 	Effects.showElement('ontology_search');
 	Effects.hideElement('cvterm_list');
@@ -557,7 +549,7 @@ var Locus = {
 	Effects.hideElement('ontology_search');
 	this.makeInvisible('ontology_search');
 	this.makeVisible('cvterm_list');
-	
+
 	new Ajax.Request("/phenome/locus_page/get_locus_cvterms.pl", {
 		parameters: {locus_id: locus_id }, 
 		    onSuccess: function(response) {
@@ -571,7 +563,7 @@ var Locus = {
 			//first count the # of hash keys. Need to declare first the length of the select menu 
 			for (key in x) keyCount++; 
 			select.length = keyCount;
-			
+
 			//now populate the select list from the hash. Need to iterate over the hash keys again...
 			var i=0;
 			for (dbxref_id in x) {
@@ -583,8 +575,7 @@ var Locus = {
 		}
 	});
     },
-    
-    
+
     //make an ajax response to add a dbxref to the locus
     addLocusDbxref: function(locus_id, dbxref_id) {
 	//var dbxref_id = $('dbxref_id').value;
