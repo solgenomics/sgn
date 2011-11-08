@@ -229,61 +229,50 @@ var Locus = {
     getEvidenceWith: function(locus_id)  {
 	var type = 'evidence_with';
 	var evidence_with_id = $('evidence_with_select').value;
-	new Ajax.Request('evidence_browser.pl', {parameters:
-    {type: type, locus_id: locus_id}, onSuccess:this.updateEvidenceWithSelect});
+	new Ajax.Request('/phenome/evidence_browser.pl', {
+                parameters:
+                {type: type, locus_id: locus_id},
+                    onSuccess: function(response) {
+                    var select = $('evidence_with_select');
+                    var responseText = response.responseText;
+                    var responseArray = responseText.split("|");
+                    //the last element of the array is empty. Dont want this in the select box
+                    responseArray.pop();
+                    responseArray.unshift("*--Optional: select an evidence identifier--");
+                    select.length = 0;
+                    select.length = responseArray.length;
+                    for (i=0; i < responseArray.length; i++) {
+                        var evidenceWithObject = responseArray[i].split("*");
+                        select[i].value = evidenceWithObject[0];
+                        select[i].text = evidenceWithObject[1];
+                    }
+                },
+                    } );
     },
-    
-    updateEvidenceWithSelect: function(request) {
-	var select = $('evidence_with_select');
-	
-        var responseText = request.responseText;
-        var responseArray = responseText.split("|");
-	//the last element of the array is empty. Dont want this in the select box
-	responseArray.pop();
-	responseArray.unshift("*--Optional: select an evidence identifier--");
 
-        select.length = 0;    
-	select.length = responseArray.length;
-	for (i=0; i < responseArray.length; i++) {
-	    var evidenceWithObject = responseArray[i].split("*");
-	    select[i].value = evidenceWithObject[0];
-	    select[i].text = evidenceWithObject[1];
-	}
-    },
-    
-    
-    getReference: function(locus_id) {
-	
+    getLocusReference: function(locus_id) {
 	var type = 'reference';
-	var reference_id = $('reference_select').value;
-	new Ajax.Request('evidence_browser.pl', { parameters:
-    {type: type, locus_id: locus_id}, onSuccess: this.updateReferenceSelect });
-	MochiKit.Logging.log("Locus.js getReference is calling UpdateReferenceSelect with locus_id", locus_id);
+	var reference_id = $('locus_reference_select').value;
+	new Ajax.Request('/phenome/evidence_browser.pl', { 
+                parameters:
+                {type: type, locus_id: locus_id},
+                    onSuccess: function(response) {
+                    var select = $('locus_reference_select');
+                    var responseText = response.responseText;
+                    var responseArray = responseText.split("|");
+                    //the last element of the array is empty. Dont want this in the select box
+                    responseArray.pop();
+                    responseArray.unshift("*--Optional: select supporting reference --");
+                    select.length = 0;
+                    select.length = responseArray.length;
+                    for (i=0; i < responseArray.length; i++) {
+                        var referenceObject = responseArray[i].split("*");
+                        select[i].value = referenceObject[0];
+                        select[i].text = referenceObject[1];
+                    }
+                },
+                    } )
     },
-    
-   
-    ///////////
-    ///////////
-    //////////
-
-    updateReferenceSelect: function(request) {
-	var select = $('reference_select');
-	
-        var responseText = request.responseText;
-        var responseArray = responseText.split("|");
-	//the last element of the array is empty. Dont want this in the select box
-	responseArray.pop();
-	responseArray.unshift("*--Optional: select supporting reference --");
-	
-        select.length = 0;    
-	select.length = responseArray.length;
-	for (i=0; i < responseArray.length; i++) {
-	    var referenceObject = responseArray[i].split("*");
-	    select[i].value = referenceObject[0];
-	    select[i].text = referenceObject[1];
-	}
-    },
-
     //##########
     toggleAssociateRegistry: function()
     {
@@ -291,13 +280,13 @@ var Locus = {
     },
     //#####################################LOCUS RELATIONSHIPS
 
-    getLocusReference: function(locus_id) {
-	var type = 'reference';
-	var reference_id = $('locus_reference_select').value;
-	new Ajax.Request('evidence_browser.pl', { parameters:
-	{type: type, locus_id: locus_id}, onSuccess: this.updateLocusReferenceSelect });
-	 MochiKit.Logging.log("Locus.js getLocusReference is calling UpdateReferenceSelect with locus_id", locus_id);
-    },
+    //    getLocusReference: function(locus_id) {
+    //	var type = 'reference';
+    //	var reference_id = $('locus_reference_select').value;
+    //	new Ajax.Request('/phenome/evidence_browser.pl', { parameters:
+    //           {type: type, locus_id: locus_id}, onSuccess: this.updateLocusReferenceSelect });
+    //	 MochiKit.Logging.log("Locus.js getLocusReference is calling UpdateReferenceSelect with locus_id", locus_id);
+    //},
 
     updateLocusReferenceSelect: function(request) {
 	var select = $('locus_reference_select');
@@ -314,7 +303,7 @@ var Locus = {
 	    select[i].text = referenceObject[1];
 	}
     },
-
+    /////////////////////////////
     getLocusRelationship: function() {
 	//MochiKit.DOM.getElement("associate_locus_button").disabled=false;
 	var type = 'locus_relationship'; 
@@ -347,29 +336,30 @@ var Locus = {
     },
 
     getLocusEvidenceCode: function() {
-    	//MochiKit.DOM.getElement("associate_locus_button").disabled=false;
 	var type = 'locus_evidence_code';
 	var locus_evidence_code_id = $('locus_evidence_code_select').value;
 
-	var d = new MochiKit.Async.doSimpleXMLHttpRequest("locus_browser.pl", {type: type}  );
-	d.addCallbacks(this.updateLocusEvidenceCodeSelect);
+        new Ajax.Request('/phenome/locus_browser.pl', {
+                parameters:
+                {type: type },
+                    onSuccess: function(response) {
+                    var select = $('locus_evidence_code_select');
+                    var responseText = response.responseText;
+                    var responseArray = responseText.split("|");
+                    //the last element of the array is empty. Dont want this in the select box
+                    responseArray.pop();
+                    responseArray.unshift("*--please select an evidence code--");
+                    select.length = 0;
+                    select.length = responseArray.length;
+                    for (i=0; i < responseArray.length; i++) {
+                        var locusevidenceCodeObject = responseArray[i].split("*");
+                        select[i].value = locusevidenceCodeObject[0];
+                        select[i].text = locusevidenceCodeObject[1];
+                    }
+                },
+                    } );
     },
 
-    updateLocusEvidenceCodeSelect: function(request) {
-	var select = $('locus_evidence_code_select');
-        var responseText = request.responseText;
-        var responseArray = responseText.split("|");
-	//the last element of the array is empty. Dont want this in the select box
-	responseArray.pop();
-	responseArray.unshift("*--please select an evidence code--");
-        select.length = 0;
-	select.length = responseArray.length;
-	for (i=0; i < responseArray.length; i++) {
-	    var locusevidenceCodeObject = responseArray[i].split("*");
-	   select[i].value = locusevidenceCodeObject[0];
-	   select[i].text = locusevidenceCodeObject[1];
-	}
-    },
     ////////////
     ////this is also in LocusPage.js - remove one of these
     /////////////

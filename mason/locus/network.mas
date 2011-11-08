@@ -1,11 +1,17 @@
 <%args>
+  $locus_id => undef
 </%args>
+
+
+<& /util/import_javascript.mas, classes => [ "CXGN.Phenome.Locus.LocusPage"] &>
+
 
 <table><tr><td><div id="locus_network" >[loading...]</div>
 </td></tr></table>
 
 <script language="javascript" type="text/javascript">
 <!--
-    locusPage.printLocusNetwork();
+    locusPage.printLocusNetwork( <% $locus_id %> );
+
 -->
 </script>

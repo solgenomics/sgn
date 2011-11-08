@@ -272,9 +272,9 @@ function jqueryStuff() {
 
 
 <&| /page/info_section.mas, title=>"Associated loci (" .  $locus->count_associated_loci() . ")", subtitle => "$al_subtitle", id=>"locus2locus", collapsible=>1, collapsed=>1 &>
-  
+
   <& /locus/associate_locus.mas, locus_id=>$locus_id &>
-    <& /locus/network.mas  &>
+    <& /locus/network.mas , locus_id => $locus_id  &>
 
 </&>
 

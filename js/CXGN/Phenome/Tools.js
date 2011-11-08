@@ -77,7 +77,7 @@ var Tools = {
     
     getOrganisms: function() {
 	var type = 'organism';
-	new Ajax.Request("locus_browser.pl", {parameters: 
+	new Ajax.Request("/phenome/locus_browser.pl", {parameters: 
 		{type: type}, onSuccess: function(response) {
 		    var select = $('organism_select');
 		    var responseText = response.responseText;
@@ -106,7 +106,7 @@ var Tools = {
 	    var organism = $('organism_select').value;
 	    
 	    MochiKit.Logging.log("getLoci is updating locus select...", locus_name);
-	    new Ajax.Request("locus_browser.pl", {parameters: 
+	    new Ajax.Request("/phenome/locus_browser.pl", {parameters: 
 		    {type: type, locus_name: locus_name,object_id: object_id, organism: organism}, 
 			onSuccess: function(response) {
 			var select = $('locus_select');

@@ -4,7 +4,6 @@ use strict;
 use warnings;
 
 use CXGN::Scrap::AjaxPage;
-use CXGN::DB::Connection;
 use CXGN::Login;
 use CXGN::Phenome::Locus;
 use CXGN::Phenome::Allele;
@@ -39,87 +38,73 @@ my $priv =  privileged($login_user_type);
 
 if ( $type eq 'network' ) {
     eval {
-
         ##########
-
         my @locus_groups = $locus->get_locusgroups();
-
         my $direction;
         my $al_count = 0;
         my $associated_loci;
         my %rel = ();
       GROUP: foreach my $group (@locus_groups) {
-            my $relationship = $group->get_relationship_name();
-            my @members      = $group->get_locusgroup_members();
-            my $members_info;
-            my $index = 0;
+          my $relationship = $group->get_relationship_name();
+          my @members      = $group->get_locusgroup_members();
+          my $members_info;
+          my $index = 0;
 
 #check if group has only 1 member. This means the locus itself is the only member (other members might have been obsolete)
-            if ( $group->count_members() == 1 ) { next GROUP; }
-          MEMBER: foreach my $member (@members) {
-                if ( $member->obsolete() == 1 ) {
-                    delete $members[$index];
-                    $index++;
-                    next MEMBER;
-                }
-                my (
-                    $organism,      $associated_locus_name,
-                    $gene_activity
-		    );
-                my $member_locus_id = $member->get_column('locus_id');
-
-                my $member_direction = $member->direction() || '';
-                my $lgm_id = $member->locusgroup_member_id();
-                if ( $member_locus_id == $locus_id ) {
-                    $direction = $member_direction;
-                }
-                else {
-                    $al_count++;
-                    my $associated_locus =
-                      CXGN::Phenome::Locus->new( $dbh, $member_locus_id );
-                    $associated_locus_name =
-                      $associated_locus->get_locus_name();
-                    $gene_activity = $associated_locus->get_gene_activity();
-                    $organism      = $associated_locus->get_common_name;
-
-		    my $lgm_obsolete_link =  $priv ?
-			    $c->render_mason("/locus/obsolete_locusgroup_member.mas", lgm_id=>$lgm_id) : qq | <span class="ghosted">[Remove]</span> |;
-                    ###########
-
-                    $members_info .=
-qq|$organism <a href="/phenome/locus_display.pl?locus_id=$member_locus_id">$associated_locus_name</a> $gene_activity $lgm_obsolete_link <br /> |
-                      if ( $associated_locus->get_obsolete() eq 'f' );
-
-                    #directional relationships
-                    if ( $member_direction eq 'subject' ) {
-                        $relationship = $relationship . ' of';
-                    }
-
-                }    #non-self members
+          if ( $group->count_members() == 1 ) { next GROUP; }
+        MEMBER: foreach my $member (@members) {
+            if ( $member->obsolete() == 1 ) {
+                delete $members[$index];
                 $index++;
-            }    #members
-            $rel{$relationship} .= $members_info if ( scalar(@members) > 1 );
-        }    #groups
+                next MEMBER;
+            }
+            my (
+                $organism,      $associated_locus_name,
+                $gene_activity
+                );
+            my $member_locus_id = $member->get_column('locus_id');
+            my $member_direction = $member->direction() || '';
+            my $lgm_id = $member->locusgroup_member_id();
+            if ( $member_locus_id == $locus_id ) {
+                $direction = $member_direction;
+            }
+            else {
+                $al_count++;
+                my $associated_locus =
+                    CXGN::Phenome::Locus->new( $dbh, $member_locus_id );
+                $associated_locus_name =
+                    $associated_locus->get_locus_name();
+                $gene_activity = $associated_locus->get_gene_activity();
+                $organism      = $associated_locus->get_common_name;
+                my $lgm_obsolete_link =  $priv ?
+                    $c->render_mason("/locus/obsolete_locusgroup_member.mas", lgm_id=>$lgm_id) : qq | <span class="ghosted">[Remove]</span> |;
+                ###########
+                $members_info .=
+                    qq|$organism <a href="/phenome/locus_display.pl?locus_id=$member_locus_id">$associated_locus_name</a> $gene_activity $lgm_obsolete_link <br /> |
+                    if ( $associated_locus->get_obsolete() eq 'f' );
+                #directional relationships
+                if ( $member_direction eq 'subject' ) {
+                    $relationship = $relationship . ' of';
+                }
+            }    #non-self members
+            $index++;
+        }    #members
+          $rel{$relationship} .= $members_info if ( scalar(@members) > 1 );
+      }    #groups
         foreach my $r ( keys %rel ) {
             $associated_loci .= info_table_html(
                 $r           => $rel{$r},
                 __border     => 0,
                 __tableattrs => 'width="100%"'
-            );
+                );
         }
-
         ################
         $error{"response"} = $associated_loci;
     };
-
     if ($@) {
         $error{"error"} = $@;
         CXGN::Contact::send_email( 'print_locus_page.pl died',
             $error{"error"}, 'sgn-bugs@sgn.cornell.edu' );
-
-    }
-    else {
-
     }
 }
 
@@ -127,14 +112,13 @@ qq|$organism <a href="/phenome/locus_display.pl?locus_id=$member_locus_id">$asso
 if ( $type eq 'ontology' ) {
 
     eval {
-        my %dbs = $locus->get_dbxref_lists()
-          ;    #hash of arrays. keys=dbname values= dbxref objects
+        #hash of arrays. keys=dbname values= dbxref objects
+        my %dbs = $locus->get_dbxref_lists();
         my (@alleles) = $locus->get_alleles();
 
 #add the allele dbxrefs to the locus dbxrefs hash...
 #This way the allele associated ontologies
 #it might be a good idea to pring a link to the allele next to each allele-derived annotation
-
         foreach my $a (@alleles) {
             my %a_dbs = $a->get_dbxref_lists();
 

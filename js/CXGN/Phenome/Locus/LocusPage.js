@@ -45,28 +45,21 @@ CXGN.Phenome.Locus.LocusPage.prototype = {
     /////////////////////////////////////////////////////
 
 
-    printLocusNetwork: function(locus_id) {	
+    printLocusNetwork: function(locus_id) {
 	if (!locus_id) locus_id = this.getLocusId();
 	var type = "network";
-	//locusPage.setLocusId(locus_id);
-	new Ajax.Request("/phenome/locus_page/print_locus_page.pl", {
-                method: 'get',
-		parameters: { type: type, locus_id: locus_id},
-		    onSuccess: this.processLocusNetworkResponse
+        new Ajax.Request("/phenome/locus_page/print_locus_page.pl", {
+                parameters: { type: type, locus_id: locus_id},
+		    onSuccess: function(response) {
+                    var json = response.responseText;
+                    var x =eval ("("+json+")");
+                    var e = $("locus_network").innerHTML=x.response;
+                    if ( x.error() ) { alert(x.error) ; }
+                },
 		    });
-	
     },
-    
-    
-    processLocusNetworkResponse: function (request) { 
-	var json = request.responseText;
-	var x =eval ("("+json+")");
-	var e = $("locus_network").innerHTML=x.response;
-	//alert('processing locus network...' );
-	if ( x.error() ) { alert(x.error) ; }
-    },
-    
-    
+
+
     //Make an ajax response that associates the selected locus with this locus
     associateLocus: function(locus_id) {
 	if (!locus_id)  locus_id = this.getLocusId(); 
@@ -75,16 +68,16 @@ CXGN.Phenome.Locus.LocusPage.prototype = {
 	var locus_relationship_id = $('locus_relationship_select').value;
 	var locus_evidence_code_id = $('locus_evidence_code_select').value;
 	var locus_reference_id = $('locus_reference_select').value ;
-	
-	new Ajax.Request('locus_browser.pl', {
-		parameters: {type: type, locus_id: locus_id, object_id: object_id, locus_relationship_id: locus_relationship_id, locus_evidence_code_id: locus_evidence_code_id, locus_reference_id: locus_reference_id}, 
+
+	new Ajax.Request('/phenome/locus_browser.pl', {
+		parameters: {type: type, locus_id: locus_id, object_id: object_id, locus_relationship_id: locus_relationship_id, locus_evidence_code_id: locus_evidence_code_id, locus_reference_id: locus_reference_id},
 		    onSuccess: function(response) {
 		    var json = response.responseText;
 		    MochiKit.Logging.log("associateLocus works! ", json);
 		    var x = eval ("("+json+")");
 		    MochiKit.Logging.log("associateLocus: " , json);
 		    if (x.error) { alert(x.error); }
-		    else { 
+		    else {
 			//alert('about to reprint locus network... ');
 			Tools.toggleContent('associateLocusForm', 'locus2locus');
 			locusPage.printLocusNetwork(locus_id);
@@ -92,12 +85,10 @@ CXGN.Phenome.Locus.LocusPage.prototype = {
 		},
 		    });
     },
-    
-    
     ////////////////////////////////////////////////
     obsoleteLocusgroupMember: function(lgm_id)  {
 	var type = 'obsolete' ;
-	new Ajax.Request("locus_browser.pl", {
+	new Ajax.Request("/phenome/locus_browser.pl", {
 		parameters: {type: type, lgm_id: lgm_id}, 
 		    onSuccess: function(response) {
 		    var json = response.responseText;
