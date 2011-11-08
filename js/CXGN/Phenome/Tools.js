@@ -8,9 +8,7 @@
 *
 */
 
-JSAN.use('MochiKit.DOM');
 JSAN.use('MochiKit.Visual');
-JSAN.use('MochiKit.Async');
 
 JSAN.use('CXGN.Effects');
 JSAN.use('CXGN.Phenome.Locus');
@@ -25,55 +23,45 @@ var Tools = {
 	    $('associate_button').disabled = true;
 	}
 	else {
-	    var d = new MochiKit.Async.doSimpleXMLHttpRequest("assign_owner.pl", {user_info: user_info});
-	    d.addCallbacks(this.updateUserSelect);
-	}
+            new Ajax.Request("/phenome/assign_owner.pl", {
+                    parameters:
+                    {user_info: user_info},
+                    onSuccess: function(response) {
+                        var select = $('user_select');
+                        //disable the button until an option is selected
+                        $('associate_button').disabled=true;
+                        var responseText = response.responseText;
+                        var responseArray = responseText.split("|");
+                        //last element of array is empty. dont want this in select box
+                        responseArray.pop();
+                        select.length = responseArray.length;
+                        for (i=0; i < responseArray.length; i++) {
+                            var userObject = responseArray[i].split("*");
+                            if (typeof(userObject[1]) != "undefined"){
+                                select[i].value = userObject[0];
+                                select[i].text = userObject[1];
+                            }
+                        }
+                    }, } );
+        }
     },
-    
-    updateUserTypeSelect: function() {
-	
-    },
-    
-    //
-    updateUserSelect: function(request) {
-	
-	var select = $('user_select');
-	
-	//disable the button until an option is selected
-	$('associate_button').disabled=true;
-	var responseText = request.responseText;
-	var responseArray = responseText.split("|");
-	
-	//last element of array is empty. dont want this in select box
-	responseArray.pop();
-	select.length = responseArray.length;
-	for (i=0; i < responseArray.length; i++) {
-	    var userObject = responseArray[i].split("*");
-	    
-	    if (typeof(userObject[1]) != "undefined"){
-		select[i].value = userObject[0];
-		select[i].text = userObject[1];
-	    }
-	}
-    },
-    
+
      //Logic on when to enable a  button
     enableButton: function(my_button) {
-	$(my_button).disabled=false;	    
+	$(my_button).disabled=false;
     },
     //Logic on when to disable a  button
     disableButton: function(my_button) {
-	$(my_button).disabled=true;	    
+	$(my_button).disabled=true;
     },
-    
+
     assignOwner: function(object_id, object_type) {
 	var sp_person_id = $('user_select').value;
 	new Ajax.Request("/phenome/assign_owner.pl", {parameters: 
 		{sp_person_id: sp_person_id, object_id: object_id, object_type: object_type}, 
 		    onSuccess: window.location.reload() } );
     },
-    
-    
+
     toggleAssignFormDisplay: function()    {	
 	MochiKit.Visual.toggle('assignOwnerForm', 'blind');
     },
