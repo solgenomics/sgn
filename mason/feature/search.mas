@@ -65,17 +65,17 @@
 
           });
 
-          // function renderFeature(value, p, record) {
-          //     return Ext.String.format(
-          //         '<a href="http://sencha.com/forum/showthread.php?t={2}" target="_blank">{0}</a>',
-          //         value,
-          //         record.data.forumtitle,
-          //         record.getId(),
-          //         record.data.forumid
-          //     );
-          // }
+          function featureLink(value,p,record) {
+              return Ext.String.format(
+                  '<a href="/feature/{0}/details" target="_blank">{1}</a>',
+                  record.getId(),
+                  value
+                  // record.getId(),
+                  // record.data.forumid
+              );
+          }
 
-          grid = Ext.create('Ext.grid.Panel', {
+          var grid = Ext.create('Ext.grid.Panel', {
               width:    700,
               height:   400,
               title:    'Matching Features',
@@ -113,7 +113,6 @@
                   text: "Organism",
                   dataIndex: 'organism',
                   width: 200,
-                  //renderer: renderTopic,
                   sortable: true
               },{
                   text: "Type",
@@ -127,7 +126,8 @@
                   align: 'center',
                   width: 200,
                   sortable: true,
-                  flex: 1
+                  flex: 1,
+                  renderer: featureLink
               }
               ],
               renderTo: document.getElementById('search_grid')
