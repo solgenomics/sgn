@@ -65,7 +65,6 @@ sub view_locus : Chained('get_locus') PathPart('view') Args(0) {
     my $curator     = $logged_user->check_roles('curator') if $logged_user;
     my $submitter   = $logged_user->check_roles('submitter') if $logged_user;
     my $sequencer   = $logged_user->check_roles('sequencer') if $logged_user;
-
     my $dbh = $c->dbc->dbh;
 
     ##################

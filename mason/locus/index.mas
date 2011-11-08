@@ -79,25 +79,23 @@ my $editor_note =
 my $guide_html =
   qq|<a href="http://docs.google.com/View?docid=ddhncntn_0cz2wj6">Annotation guidelines</a>|;
 
-my $common_name = $locus->get_common_name(); # stash?
-my @owners = $locus->get_owners(); # stash ? 
-my $owner_objects= $locus->get_owners(1); #stash ? 
+my $common_name = $locus->get_common_name();
+my @owners = $locus->get_owners();
+my $owner_objects= $locus->get_owners(1);
 
 my $locus_name = $locus->get_locus_name();
 
-my $registry = $locus->get_associated_registry(); #stash ? 
+my $registry = $locus->get_associated_registry();
 
-my @synonyms = $locus->get_locus_aliases('f','f'); #stash ? 
-my @figures = $locus->get_figure_ids(); #stash ? 
+my @synonyms = $locus->get_locus_aliases('f','f');
+my @figures = $locus->get_figure_ids();
 
 my $figure_subtitle =
   $curator || $submitter || $sequencer ?
-  "<span class= \"ghosted\">[Add notes, figures or images]</span> "
-  : " <a href=\"/image/add?type_id=$locus_id&type=locus&action=new&refering_page=$this_page\">[ Add notes, figures or images]</a>" ;
+  " <a href=\"/image/add?type_id=$locus_id&type=locus&action=new&refering_page=$this_page\">[ Add notes, figures or images]</a>" : "<span class= \"ghosted\">[Add notes, figures or images]</span> " ;
 
 my $stock_subtitle =   $curator || $submitter || $sequencer ?
-  '<span class= "ghosted">[Associate accession]</span> '
-  : '<a href="javascript:Tools.toggleContent(\'associateStockForm\', \'locus_accessions\')">[Associate accession]</a> ';
+  '<a href="javascript:Tools.toggleContent(\'associateStockForm\', \'locus_accessions\')">[Associate accession]</a> ' :   '<span class= "ghosted">[Associate accession]</span> ';
 
 my $accessions = $locus->get_stock_ids; #stash ? 
 
