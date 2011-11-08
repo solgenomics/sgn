@@ -226,7 +226,7 @@ function jqueryStuff() {
 
 <& /locus/locus_editor.mas, owners=>$owner_objects  &>
 % if ($locus_id) {
-  <a href="claim_locus_ownership.pl?locus_id=<% $locus_id %>&amp;action=confirm"> [Request editor privileges]</a><br /><br />
+  <a href="/phenome/claim_locus_ownership.pl?locus_id=<% $locus_id %>&amp;action=confirm"> [Request editor privileges]</a><br /><br />
 % }
   <& /locus/edits_info.mas, locus=>$locus  &>
         </td></tr>

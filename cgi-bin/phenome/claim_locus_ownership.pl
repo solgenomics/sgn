@@ -7,9 +7,10 @@ use CXGN::Login;
 use CXGN::People;
 use CXGN::Contact;
 use CXGN::Phenome::Locus;
-use CXGN::DB::Connection;
 
-my $dbh= CXGN::DB::Connection->new("phenome");
+use CatalystX::GlobalContext qw( $c );
+
+my $dbh = $c->dbc->dbh;
 
 my $page=CXGN::Page->new("claim_locus_ownership.pl","Naama");
 my %args=$page->get_all_encoded_arguments();
@@ -26,7 +27,7 @@ if ((grep { $_ =~ /^$sp_person_id$/ } @owners) ) {
     
 <h3>You are already the owner of the locus.<br>
     Next time you can click on the 'login' link in the top right corner of every SGN page.<br><br>
-<a href="locus_display.pl?locus_id=$locus_id">Go back</a> to the locus page.</h3> 
+<a href="/locus/$locus_id/view">Go back</a> to the locus page.</h3> 
 
 HEREDOC
     $page->footer();
