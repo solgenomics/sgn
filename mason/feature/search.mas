@@ -98,12 +98,6 @@
               },
               // grid columns
               columns:[
-              { id: 'feature_id',
-                text: 'ID',
-                dataIndex: 'feature_id',
-                width: 60,
-                sortable: true,
-              },
               {
                   // id assigned so we can apply custom css (e.g. .x-grid-cell-topic b { color:#333 })
                   // TODO: This poses an issue in subclasses of Grid now because Headers are now Components
