@@ -221,7 +221,7 @@ sub display_page {
     print qq { </center> };
 
     print qq { <a href = "/phenome/allele.pl?allele_id=$allele_id&amp;action=view">back to allele page</a><br> };
-    print qq { <a href="/locus/$locus/view">back to locus page</a> };
+    print qq { <a href="/locus/$locus_id/view">back to locus page</a> };
     $self->get_page()->footer();
 
 }
