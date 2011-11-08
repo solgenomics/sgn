@@ -11,16 +11,23 @@
 
 Parameters:
 
-=over 2
+=over 4
 
 =item person_id
 
-The ID of the logged in person 
+The ID of the logged in person
 
 =item locus_id
 
 a locus id
 
+=item owner
+
+boolean. If passed, a link to the registry form will be printed
+
+=item registry
+
+the existing registry name
 
 =back
 
@@ -28,7 +35,7 @@ a locus id
 
 Naama Menda <nm249@cornell.edu>
 
-=cut 
+=cut
 
 </%doc>
 
@@ -45,7 +52,7 @@ $registry => undef
 
 </%perl>
 
-% if (!$owner) { 
+% if (!$owner) {
 <span class = "ghosted"> [Associate registry name]</span>
 % } elsif ($registry) {
  <p>This locus is associated with registry name: <% $registry %> <br /></p>

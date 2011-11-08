@@ -61,7 +61,7 @@ my $curator   = $locusref->{curator};
 my $submitter = $locusref->{submitter};
 my $sequencer = $locusref->{sequencer};
 my $is_owner  = $locusref->{is_owner};
-my $owner     = $locusref->{owner};
+my $owners     = $locusref->{owners};
 my $dbh       = $locusref->{dbh};
 my $xrefs     = $locusref->{xrefs};
 
@@ -217,7 +217,7 @@ function jqueryStuff() {
 <table><tr><td>
       <table>
 	<tr><td>
-<& /locus/registry.mas , person_id=>"$person_id", locus_id=>"$locus_id" , owner=>"$owner", registry=>"$registry" &>
+<& /locus/registry.mas , person_id=>"$person_id", locus_id=>"$locus_id" , owner=>"$is_owner", registry=>"$registry" &>
 
 <& /locus/synonym.mas ,  locus_id=>"$locus_id" , synonyms=>\@synonyms &>
 
@@ -241,7 +241,7 @@ function jqueryStuff() {
 % if($locus_id) {
 
 
-% if($owner) {
+% if($is_owner) {
     <&| /page/info_section.mas, title=>"Locus history", collapsible=>1, collapsed=>1 &>
       <& /locus/history.mas, locus=>$locus  &>
 </&>
