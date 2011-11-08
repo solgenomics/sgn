@@ -59,7 +59,7 @@ foreach my $a (@$alleles) {
   my $a_person_id = $a->get_sp_person_id;
   my $allele_edit_link =
     ( $a_person_id && $user_id && ( $a_person_id == $user_id ) || ( $curator ) )
-    ? "<a href=\"allele.pl?action=edit&amp;allele_id=$allele_id\">[Edit]</a>"
+    ? "<a href=\"/phenome/allele.pl?action=edit&amp;allele_id=$allele_id\">[Edit]</a>"
 	: '<span class="ghosted">[Edit]</span> ';
 
   my $phenotype   = $a->get_allele_phenotype();
