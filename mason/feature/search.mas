@@ -33,8 +33,8 @@
           });
 
           // create the Data Store
-          var store = Ext.create('Ext.data.Store', {
-              id:           'store',
+          var feature_store = Ext.create('Ext.data.Store', {
+              id:           'feature_store',
               pageSize:     page_size,
               model:        'Feature',
               remoteSort:   true,
@@ -77,11 +77,11 @@
               );
           }
 
-          var grid = Ext.create('Ext.grid.Panel', {
+          var feature_grid = Ext.create('Ext.grid.Panel', {
               width:    700,
               height:   400,
               //title:    'Matching Features',
-              store:    store,
+              store:    feature_store,
               loadMask: true,
 
               // verticalScrollerType: 'paginggridscroller',
@@ -90,7 +90,7 @@
 
               dockedItems: [{
                   xtype: 'pagingtoolbar',
-                  store: store,   // same store GridPanel is using
+                  store: feature_store,   // same store GridPanel is using
                   dock: 'bottom',
                   displayInfo: true
               }],
@@ -141,14 +141,14 @@
                   var el = document.getElementById(id);
                   if( el ) {
                       if ( el.value.match(/[^\s]/) ) {
-                          store.proxy.extraParams[ param_mapping[id] ] = el.value;
+                          feature_store.proxy.extraParams[ param_mapping[id] ] = el.value;
                       } else {
-                          delete store.proxy.extraParams[ param_mapping[id] ];
+                          delete feature_store.proxy.extraParams[ param_mapping[id] ];
                       }
                   }
               }
 
-              store.load();
+              feature_store.load();
           };
     });
   </script>
@@ -168,7 +168,7 @@
                 <td><input id="name_input" type="text" size="30" name="name" value="" /></td>
               </tr>
               <tr>
-                <td><label style="font-weight: bold" for="organism_input">Species contains</label></td>
+                <td><label style="font-weight: bold" for="organism_input">Organism contains</label></td>
                 <td><input id="organism_input" type="text" size="30" name="organism" value="" /></td>
               </tr>
               <tr>
