@@ -4,7 +4,9 @@
 <& /page/page_title.mas, title => 'Feature search' &>
 <& /util/import_extjs.mas &>
 
-<div id="search_grid" style="margin: 1em auto 1em auto; width: 700px"> </div>
+<&| /page/info_section.mas, title => 'Matching features' &>
+   <div id="search_grid" style="margin: 1em auto 1em auto; width: 700px"> </div>
+</&>
 
 
   <script type="text/javascript">
@@ -78,7 +80,7 @@
           var grid = Ext.create('Ext.grid.Panel', {
               width:    700,
               height:   400,
-              title:    'Matching Features',
+              //title:    'Matching Features',
               store:    store,
               loadMask: true,
 
@@ -151,7 +153,6 @@
     });
   </script>
 
-
 <&| /page/info_section.mas, title => 'Filter by' &>
     <style type="text/css">
           #search_form       { margin: 1em auto; width: 500px; text-align: center }
@@ -179,3 +180,7 @@
        </form>
     </div>
 </&>
+
+
+
+
