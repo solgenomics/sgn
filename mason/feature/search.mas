@@ -128,7 +128,7 @@
                   dataIndex: 'locations',
                   align: 'center',
                   width: 200,
-                  sortable: true,
+                  sortable: false,
                   flex: 1,
                   renderer: function(value) {
                       return value.length > 0 ? value : '-'
