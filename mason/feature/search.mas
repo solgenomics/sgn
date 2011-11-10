@@ -13,6 +13,19 @@
 </&>
 
 
+<&| /page/info_section.mas, title => 'Filter by' &>
+    <style type="text/css">
+          #search_form       { margin: 1em auto; width: 500px; text-align: center }
+          #search_form table { margin: 1em auto }
+          #search_form label { font-weight: bold; margin-right: 1em; }
+          #search_form td    { padding-bottom: 6px }
+    </style>
+
+    <div id="search_form"></div>
+</&>
+
+% # now let the JS begin
+
 <script type="text/javascript">
     var do_feature_search = function() {}; //replaced later
     var page_size = 100;
@@ -240,6 +253,7 @@
                             valueField: 'feature_id',
                             width: 200,
                             listeners: {
+                                // when the srcfeature is set, set the max values of the range numbers to the srcfeature's length
                                 change: function( cbox, newValue, oldValue ) {
                                     var feature = cbox.getStore().getById( newValue );
                                     if( feature ) {
@@ -285,18 +299,3 @@
             srcfeatures_store.load();
   });
 </script>
-
-<&| /page/info_section.mas, title => 'Filter by' &>
-    <style type="text/css">
-          #search_form       { margin: 1em auto; width: 500px; text-align: center }
-          #search_form table { margin: 1em auto }
-          #search_form label { font-weight: bold; margin-right: 1em; }
-          #search_form td    { padding-bottom: 6px }
-    </style>
-
-    <div id="search_form"></div>
-</&>
-
-
-
-
