@@ -73,10 +73,6 @@
                 simpleSortMode: true
             },
 
-            // data: [
-            //        function(){ var a = []; for(var i = 0; i<200; i++) { a.push( { feature_id: i, name: 'FooFeature_'+i, organism: 'Foobarius Fooii', type: 'gene_kelly' }); }; return a }()
-            // ],
-
             sorters: [{
                  property: 'feature_id',
                  direction: 'ASC'
@@ -92,10 +88,6 @@
             store:    feature_store,
             loadMask: true,
 
-            // verticalScrollerType: 'paginggridscroller',
-            // disableSelection: true,
-            // invalidateScrollerOnRefresh: false,
-
             dockedItems: [{
                 xtype: 'pagingtoolbar',
                 store: feature_store,   // same store GridPanel is using
@@ -109,10 +101,6 @@
             // grid columns
             columns:[
             {
-                // id assigned so we can apply custom css (e.g. .x-grid-cell-topic b { color:#333 })
-                // TODO: This poses an issue in subclasses of Grid now because Headers are now Components
-                // therefore the id will be registered in the ComponentManager and conflict. Need a way to
-                // add additional CSS classes to the rendered cells.
                 id: 'organism',
                 text: "Organism",
                 dataIndex: 'organism',
@@ -136,8 +124,6 @@
                         '<a href="/feature/{0}/details" target="_blank">{1}</a>',
                         record.getId(),
                         value
-                        // record.getId(),
-                        // record.data.forumid
                      );
                 }
             },{
@@ -210,7 +196,6 @@
         };
 
         var feature_filter_form = Ext.create('Ext.form.Panel', {
-                //                height: 160,
               width: 500,
               bodyPadding: 10,
               defaultType: 'textfield',
@@ -239,7 +224,6 @@
                       xtype: 'fieldset',
                       title: 'Overlaps range',
                       width: 450,
-                      //                      columnWidth: 0.5,
                       layout: 'hbox',
                       defaultType: 'textfield',
                       defaults: feature_search_field_defaults,
