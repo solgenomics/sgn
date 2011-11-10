@@ -347,7 +347,6 @@ var Tools = {
     //Make an ajax response that obsoletes the selected ontology term-locus association
     obsoleteAnnotation: function(id, url, ontology_url)  {
         url = "/ajax/locus/obsolete_annotation";
-        alert("about to obsolete annotation " + id);
         new Ajax.Request(url, {
                 method: 'post',
                     parameters:
@@ -355,9 +354,8 @@ var Tools = {
                     onSuccess: function(response) {
 		    var json = response.responseText;
 		    var x =eval ("("+json+")");
-                    alert("response is " + x.response );
                     //var e = $("locus_ontology").innerHTML=x.response;
-                    var e = $("locus_ontology").innerHTML= Ontology.displayOntologies("locus_ontology" , ontology_url);
+                    var e = $("locus_ontology").innerHTML= Ontology.displayOntologies("ontology" , ontology_url);
 
 		    if ( x.error ) { alert(x.error) ; }
                 }
