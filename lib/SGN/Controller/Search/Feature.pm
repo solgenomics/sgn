@@ -2,6 +2,8 @@ package SGN::Controller::Search::Feature;
 use Moose;
 use namespace::autoclean;
 
+use SGN::View::Feature 'location_string';
+
 use URI::FromHash 'uri';
 use YAML::Any;
 use JSON;
@@ -51,10 +53,11 @@ sub search_json :Path('/search/features/search_service') Args(0) {
 
     my $total = $rs->count;
 
-    # do sorting and paging
+    # set up prefetching, sorting, and paging
     $rs = $rs->search(
         undef,
         {
+          #prefetch => [ 'type', 'organism', { 'featureloc_features' => 'srcfeature' } ],
           prefetch => [ 'type', 'organism' ],
           page => $params->{'page'} || 1,
           rows => $params->{'page_size'} || $self->default_page_size,
@@ -66,7 +69,7 @@ sub search_json :Path('/search/features/search_service') Args(0) {
                   'organism' => 'organism.species',
                   'name'     => 'me.name',
                 }->{lc $params->{'sort'}}
-                || 'feature_id'
+                || 'me.feature_id'
               )
           },
         },
@@ -81,6 +84,12 @@ sub search_json :Path('/search/features/search_service') Args(0) {
                 type       => $_->type->name,
                 name       => $_->name,
                 feature_id => $_->feature_id,
+                locations  => ( join( ',', map {
+                                    my $fl = $_;
+                                    location_string( $fl )
+                                } $_->featureloc_features
+                              ),
+                ),
             } }
             $rs->all
         ],
@@ -92,12 +101,11 @@ sub type_autocomplete : Path('/search/features/feature_types_service') {
     my ( $self, $c ) = @_;
 
     my $params = $c->req->params;
-    my $types = $c->dbc->dbh->selectall_arrayref(<<'', undef, $params->{limit} || 25 );
+    my $types = $c->dbc->dbh->selectall_arrayref(<<'' );
 SELECT cvterm_id, name
   FROM cvterm ct
  WHERE cvterm_id IN( SELECT DISTINCT type_id FROM feature )
 ORDER BY name
- LIMIT ?
 
     $c->res->content_type('text/json');
     $c->res->body( to_json( { success => JSON::true,

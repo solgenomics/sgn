@@ -11,7 +11,7 @@
 
   <script type="text/javascript">
       var do_feature_search = function() {}; //replaced later
-      var page_size = 500;
+      var page_size = 100;
 
       Ext.Loader.setConfig({enabled: true});
 
@@ -28,7 +28,7 @@
           Ext.define('Feature', {
               extend: 'Ext.data.Model',
               fields: [
-                  'feature_id', 'organism', 'name', 'type',
+                  'feature_id', 'organism', 'name', 'type', 'locations'
               ],
               idProperty: 'feature_id'
           });
@@ -68,15 +68,6 @@
 
           });
 
-          function featureLink(value,p,record) {
-              return Ext.String.format(
-                  '<a href="/feature/{0}/details" target="_blank">{1}</a>',
-                  record.getId(),
-                  value
-                  // record.getId(),
-                  // record.data.forumid
-              );
-          }
 
           var feature_grid = Ext.create('Ext.grid.Panel', {
               width:    700,
@@ -121,10 +112,28 @@
                   text: "Name",
                   dataIndex: 'name',
                   align: 'center',
+                  width: 150,
+                  sortable: true,
+                  flex: 1,
+                  renderer: function(value,p,record) {
+                      return Ext.String.format(
+                          '<a href="/feature/{0}/details" target="_blank">{1}</a>',
+                          record.getId(),
+                          value
+                          // record.getId(),
+                          // record.data.forumid
+                       );
+                  }
+              },{
+                  text: "Location(s)",
+                  dataIndex: 'locations',
+                  align: 'center',
                   width: 200,
                   sortable: true,
                   flex: 1,
-                  renderer: featureLink
+                  renderer: function(value) {
+                      return value.length > 0 ? value : '-'
+                  }
               }
               ],
               renderTo: document.getElementById('search_grid')
