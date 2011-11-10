@@ -246,8 +246,10 @@
                                          var srcfeature_end = Ext.getCmp('srcfeature_end');
                                          srcfeature_start.setMaxValue( len );
                                          srcfeature_end.setMaxValue( len );
-                                         srcfeature_start.setValue( 1 );
-                                         srcfeature_end.setValue( len );
+                                         if( ! srcfeature_start.getValue() )
+                                             srcfeature_start.setValue( 1 );
+                                         if( ! srcfeature_end.getValue() || srcfeature_end.getValue() > len )
+                                             srcfeature_end.setValue( len );
                                     }
                                 }
                             }
