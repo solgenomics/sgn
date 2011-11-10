@@ -13,213 +13,213 @@
 </&>
 
 
-  <script type="text/javascript">
-      var do_feature_search = function() {}; //replaced later
-      var page_size = 100;
+<script type="text/javascript">
+    var do_feature_search = function() {}; //replaced later
+    var page_size = 100;
 
-      Ext.Loader.setConfig({enabled: true});
+    Ext.Loader.setConfig({enabled: true});
 
-      Ext.require([
-          'Ext.grid.*',
-          'Ext.data.*',
-          'Ext.util.*',
-          'Ext.grid.PagingScroller'
-      ]);
+    Ext.require([
+        'Ext.grid.*',
+        'Ext.data.*',
+        'Ext.util.*',
+        'Ext.grid.PagingScroller'
+    ]);
 
-      // make the feature grid
-      Ext.onReady(function(){
+    // make the feature grid
+    Ext.onReady(function(){
 
-          Ext.define('Feature', {
-              extend: 'Ext.data.Model',
-              fields: [
-                  'feature_id', 'organism', 'name', 'type', 'locations'
-              ],
-              idProperty: 'feature_id'
-          });
+        Ext.define('Feature', {
+            extend: 'Ext.data.Model',
+            fields: [
+                'feature_id', 'organism', 'name', 'type', 'locations'
+            ],
+            idProperty: 'feature_id'
+        });
 
-          // create the Data Store
-          var feature_store = Ext.create('Ext.data.Store', {
-              id:           'feature_store',
-              pageSize:     page_size,
-              model:        'Feature',
-              remoteSort:   true,
-              autoLoad:     true,
+        // create the Data Store
+        var feature_store = Ext.create('Ext.data.Store', {
+            id:           'feature_store',
+            pageSize:     page_size,
+            model:        'Feature',
+            remoteSort:   true,
+            autoLoad:     true,
 
-              // allow the grid to interact with the paging scroller by buffering
-              buffered:   true,
+            // allow the grid to interact with the paging scroller by buffering
+            buffered:   true,
 
-              proxy: {
-                  type: 'ajax',
-                  url: '/search/features/search_service',
-                  reader: {
-                      root: 'data',
-                      totalProperty: 'totalCount',
-                      successProperty: 'success'
-                  },
-                  // sends single sort as multi parameter
-                  simpleSortMode: true
-              },
-
-              // data: [
-              //        function(){ var a = []; for(var i = 0; i<200; i++) { a.push( { feature_id: i, name: 'FooFeature_'+i, organism: 'Foobarius Fooii', type: 'gene_kelly' }); }; return a }()
-              // ],
-
-              sorters: [{
-                   property: 'feature_id',
-                   direction: 'ASC'
-              }]
-
-          });
-
-
-          var feature_grid = Ext.create('Ext.grid.Panel', {
-              width:    700,
-              height:   400,
-              //title:    'Matching Features',
-              store:    feature_store,
-              loadMask: true,
-
-              // verticalScrollerType: 'paginggridscroller',
-              // disableSelection: true,
-              // invalidateScrollerOnRefresh: false,
-
-              dockedItems: [{
-                  xtype: 'pagingtoolbar',
-                  store: feature_store,   // same store GridPanel is using
-                  dock: 'bottom',
-                  displayInfo: true
-              }],
-
-              viewConfig: {
-                  trackOver: false
-              },
-              // grid columns
-              columns:[
-              {
-                  // id assigned so we can apply custom css (e.g. .x-grid-cell-topic b { color:#333 })
-                  // TODO: This poses an issue in subclasses of Grid now because Headers are now Components
-                  // therefore the id will be registered in the ComponentManager and conflict. Need a way to
-                  // add additional CSS classes to the rendered cells.
-                  id: 'organism',
-                  text: "Organism",
-                  dataIndex: 'organism',
-                  width: 200,
-                  sortable: true
-              },{
-                  text: "Type",
-                  dataIndex: 'type',
-                  width: 100,
-                  hidden: false,
-                  sortable: true
-              },{
-                  text: "Name",
-                  dataIndex: 'name',
-                  align: 'center',
-                  width: 150,
-                  sortable: true,
-                  flex: 1,
-                  renderer: function(value,p,record) {
-                      return Ext.String.format(
-                          '<a href="/feature/{0}/details" target="_blank">{1}</a>',
-                          record.getId(),
-                          value
-                          // record.getId(),
-                          // record.data.forumid
-                       );
-                  }
-              },{
-                  text: "Location(s)",
-                  dataIndex: 'locations',
-                  align: 'left',
-                  width: 200,
-                  sortable: false,
-                  flex: 1,
-                  renderer: function(value) {
-                      return value.length > 0 ? value : '-'
-                  }
-              }
-              ],
-              renderTo: document.getElementById('search_grid')
-          });
-
-          // make the form for feature filtering
-          var feature_types_store =
-              Ext.create('Ext.data.Store', {
-                        fields: ['type_id', 'name'],
-                        proxy: {
-                            type: 'ajax',
-                            url: '/search/features/feature_types_service',
-                            reader: {
-                                root: 'data',
-                                totalProperty: 'totalCount',
-                                successProperty: 'success'
-                            },
-                            // sends single sort as multi parameter
-                            simpleSortMode: true
-                        }
-                    });
-
-          function applyFeatureFilters( form ) {
-              var data = form.getFieldValues();
-              // filter out any form fields that are just whitespace
-              for( var name in data ) {
-                  if( typeof data[name] == 'string' && ! data[name].match(/[^\s]/) ) {
-                      delete data[name];
-                  }
-              }
-              feature_store.proxy.extraParams = data;
-              feature_store.load();
-          };
-
-          var feature_filter_form = Ext.create('Ext.form.Panel', {
-                  //                height: 160,
-                width: 500,
-                bodyPadding: 10,
-                defaultType: 'textfield',
-                renderTo: document.getElementById('search_form'),
-                items: [
-                    {
-                        fieldLabel: 'Name contains',
-                        name: 'name'
-                    },
-                    {
-                        fieldLabel: 'Organism contains',
-                        name: 'organism'
-                    },
-                    {
-                        xtype: 'combobox',
-                        fieldLabel: 'Type is',
-                        name: 'type_id',
-                        store: feature_types_store,
-                        queryMode: 'local',
-                        displayField: 'name',
-                        valueField: 'type_id',
-                        listeners: {} // don't override the combobox's enter key
-                    }
-                ],
-                // make the ENTER key submit the form by default for all form fields
-                defaults: {
-                      maxLength: 100,
-                      width: 400,
-                      listeners: {
-                          specialkey: function(field, e){
-                              if (e.getKey() == e.ENTER) {
-                                  applyFeatureFilters( field.up('form').getForm() );
-                              }
-                          }
-                      }
+            proxy: {
+                type: 'ajax',
+                url: '/search/features/search_service',
+                reader: {
+                    root: 'data',
+                    totalProperty: 'totalCount',
+                    successProperty: 'success'
                 },
-                buttons: [
-                    {
-                        text: 'Apply',
-                        handler: function() { applyFeatureFilters( this.up('form').getForm() ) }
-                    }
-                ],
-            });
+                // sends single sort as multi parameter
+                simpleSortMode: true
+            },
 
-            feature_types_store.load();
-    });
-  </script>
+            // data: [
+            //        function(){ var a = []; for(var i = 0; i<200; i++) { a.push( { feature_id: i, name: 'FooFeature_'+i, organism: 'Foobarius Fooii', type: 'gene_kelly' }); }; return a }()
+            // ],
+
+            sorters: [{
+                 property: 'feature_id',
+                 direction: 'ASC'
+            }]
+
+        });
+
+
+        var feature_grid = Ext.create('Ext.grid.Panel', {
+            width:    700,
+            height:   400,
+            //title:    'Matching Features',
+            store:    feature_store,
+            loadMask: true,
+
+            // verticalScrollerType: 'paginggridscroller',
+            // disableSelection: true,
+            // invalidateScrollerOnRefresh: false,
+
+            dockedItems: [{
+                xtype: 'pagingtoolbar',
+                store: feature_store,   // same store GridPanel is using
+                dock: 'bottom',
+                displayInfo: true
+            }],
+
+            viewConfig: {
+                trackOver: false
+            },
+            // grid columns
+            columns:[
+            {
+                // id assigned so we can apply custom css (e.g. .x-grid-cell-topic b { color:#333 })
+                // TODO: This poses an issue in subclasses of Grid now because Headers are now Components
+                // therefore the id will be registered in the ComponentManager and conflict. Need a way to
+                // add additional CSS classes to the rendered cells.
+                id: 'organism',
+                text: "Organism",
+                dataIndex: 'organism',
+                width: 200,
+                sortable: true
+            },{
+                text: "Type",
+                dataIndex: 'type',
+                width: 100,
+                hidden: false,
+                sortable: true
+            },{
+                text: "Name",
+                dataIndex: 'name',
+                align: 'center',
+                width: 150,
+                sortable: true,
+                flex: 1,
+                renderer: function(value,p,record) {
+                    return Ext.String.format(
+                        '<a href="/feature/{0}/details" target="_blank">{1}</a>',
+                        record.getId(),
+                        value
+                        // record.getId(),
+                        // record.data.forumid
+                     );
+                }
+            },{
+                text: "Location(s)",
+                dataIndex: 'locations',
+                align: 'left',
+                width: 200,
+                sortable: false,
+                flex: 1,
+                renderer: function(value) {
+                    return value.length > 0 ? value : '-'
+                }
+            }
+            ],
+            renderTo: document.getElementById('search_grid')
+        });
+
+        // make the form for feature filtering
+        var feature_types_store =
+            Ext.create('Ext.data.Store', {
+                      fields: ['type_id', 'name'],
+                      proxy: {
+                          type: 'ajax',
+                          url: '/search/features/feature_types_service',
+                          reader: {
+                              root: 'data',
+                              totalProperty: 'totalCount',
+                              successProperty: 'success'
+                          },
+                          // sends single sort as multi parameter
+                          simpleSortMode: true
+                      }
+                  });
+
+        function applyFeatureFilters( form ) {
+            var data = form.getFieldValues();
+            // filter out any form fields that are just whitespace
+            for( var name in data ) {
+                if( typeof data[name] == 'string' && ! data[name].match(/[^\s]/) ) {
+                    delete data[name];
+                }
+            }
+            feature_store.proxy.extraParams = data;
+            feature_store.load();
+        };
+
+        var feature_filter_form = Ext.create('Ext.form.Panel', {
+                //                height: 160,
+              width: 500,
+              bodyPadding: 10,
+              defaultType: 'textfield',
+              renderTo: document.getElementById('search_form'),
+              items: [
+                  {
+                      fieldLabel: 'Name contains',
+                      name: 'name'
+                  },
+                  {
+                      fieldLabel: 'Organism contains',
+                      name: 'organism'
+                  },
+                  {
+                      xtype: 'combobox',
+                      fieldLabel: 'Type is',
+                      name: 'type_id',
+                      store: feature_types_store,
+                      queryMode: 'local',
+                      displayField: 'name',
+                      valueField: 'type_id',
+                      listeners: {} // don't override the combobox's enter key
+                  }
+              ],
+              // make the ENTER key submit the form by default for all form fields
+              defaults: {
+                    maxLength: 100,
+                    width: 400,
+                    listeners: {
+                        specialkey: function(field, e){
+                            if (e.getKey() == e.ENTER) {
+                                applyFeatureFilters( field.up('form').getForm() );
+                            }
+                        }
+                    }
+              },
+              buttons: [
+                  {
+                      text: 'Apply',
+                      handler: function() { applyFeatureFilters( this.up('form').getForm() ) }
+                  }
+              ],
+          });
+
+          feature_types_store.load();
+  });
+</script>
 
 <&| /page/info_section.mas, title => 'Filter by' &>
     <style type="text/css">
@@ -228,8 +228,8 @@
           #search_form label { font-weight: bold; margin-right: 1em; }
           #search_form td    { padding-bottom: 6px }
     </style>
-    <div id="search_form">
-    </div>
+
+    <div id="search_form"></div>
 </&>
 
 
