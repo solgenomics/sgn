@@ -176,4 +176,11 @@ sub get_locus_extended_info : Private {
 
 }
 
+#add the locus_dbxrefs to the stash.
+sub get_locus_dbxrefs : Private {
+    my ( $self, $c ) = @_;
+    my $locus = $c->stash->{locus};
+    my $locus_dbxrefs = $locus->get_dbxrefs;
+    $c->stash->{locus_dbxrefs} = $locus_dbxrefs;
+}
 __PACKAGE__->meta->make_immutable;
