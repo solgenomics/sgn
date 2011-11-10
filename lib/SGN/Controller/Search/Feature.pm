@@ -60,7 +60,7 @@ sub search_json :Path('/search/features/search_service') Args(0) {
           #prefetch => [ 'type', 'organism', { 'featureloc_features' => 'srcfeature' } ],
           prefetch => [ 'type', 'organism' ],
           page => $params->{'page'} || 1,
-          rows => $params->{'page_size'} || $self->default_page_size,
+          rows => $params->{'limit'} || $self->default_page_size,
           order_by => {
               '-'.(lc $params->{dir} || 'asc' )
               =>

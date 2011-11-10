@@ -47,7 +47,6 @@
               proxy: {
                   type: 'ajax',
                   url: '/search/features/search_service',
-                  extraParams: { page_size: page_size },
                   reader: {
                       root: 'data',
                       totalProperty: 'totalCount',
