@@ -161,8 +161,7 @@ sub display_ontologies_GET  {
             my $evidence_id = $href->{dbxref_ev_object}->get_object_dbxref_evidence_id;
             my $ontology_url = "/locus/$locus_id/ontologies/";
             if ( $href->{obsolete} eq 't' ) {
-                my $unobsolete =
-                    my $obsolete_link =  qq | <a href="javascript:"onclick="Tools.unobsoleteAnnotation(\'$evidence_id\')"/>[delete]</a> | if $privileged ;
+                my $unobsolete =  qq | <input type = "button" onclick= "javascript:Tools.toggleObsoleteAnnotation('0', \'$evidence_id\',  \'/ajax/locus/toggle_obsolete_annotation\', \'/locus/$locus_id/ontologies\')" value = "unobsolete" /> | if $privileged ;
                 push @obs_annot,
                 $href->{relationship} . " "
                     . $cvterm_link . " ("
@@ -172,7 +171,7 @@ sub display_ontologies_GET  {
             else {
                 my $ontology_details = $href->{relationship}
                 . qq| $cvterm_link ($db_name:<a href="$url$db_accession" target="blank"> $accession</a>)<br />|;
-                my $obsolete_link =  qq | <a href="#" onclick="javascript:Tools.obsoleteAnnotation(\'$evidence_id\', \'/locus/$locus_id/ontologies\')" >[delete]</a> | if $privileged ;
+                my $obsolete_link =  qq | <input type = "button" onclick="javascript:Tools.toggleObsoleteAnnotation('1', \'$evidence_id\',  \'/ajax/locus/toggle_obsolete_annotation\', \'/locus/$locus_id/ontologies\')" value ="delete" /> | if $privileged ;
 
                 ##################
                 # add an empty row if there is more than 1 evidence code
@@ -400,41 +399,26 @@ sub references_GET :Args(0) {
 
 
 
-sub obsolete_annotation : Path('/ajax/locus/obsolete_annotation') : ActionClass('REST') { }
+sub toggle_obsolete_annotation : Path('/ajax/locus/toggle_obsolete_annotation') : ActionClass('REST') { }
 
-sub obsolete_annotation_POST :Args(0) {
+sub toggle_obsolete_annotation_POST :Args(0) {
     my ($self, $c) = @_;
     my $locus = $c->stash->{locus};
     my $locus_dbxref_evidence_id = $c->request->body_parameters->{id};
+    my $obsolete = $c->request->body_parameters->{obsolete};
+
     my $response = {} ;
-    print STDERR "ABOUT TO obsolete locus_dbxref_evidence $locus_dbxref_evidence_id \n\n";
     if ($locus_dbxref_evidence_id && $c->user ) {
         my $locus_dbxref_evidence = $c->dbic_schema('CXGN::Phenome::Schema')->resultset('LocusDbxrefEvidence')->find( {
             locus_dbxref_evidence_id => $locus_dbxref_evidence_id });
         if ($locus_dbxref_evidence) {
-            $locus_dbxref_evidence->update( { obsolete => 1 } );
+            $locus_dbxref_evidence->update( { obsolete => $obsolete } );
             $response->{response} = "success";
         }else { $response->{error} = "No locus evidence found for locus_dbxref_evidence_id $locus_dbxref_evidence_id! "; }
         #set locus_dbxref_evidence to obsolete
     } else { $response->{error} = 'locus_dbxref_evidence $locus_dbxref_evidence_id does not exists! ';  }
     $c->stash->{rest} = $response;
 }
-
-
-sub unobsolete_annotation :Path('ajax/locus/unobsolete_annotation') : ActionClass('REST') { }
-
-sub unobsolete_annotation_POST :Args(1) {
-    my ($self, $c, $locus_dbxref_evidence_id) = @_;
-    my $locus = $c->stash->{locus};
-    
-    my $response ={} ;
-    if ($locus_dbxref_evidence_id) {
-        #set locus_dbxref_evidence to obsolete = 0
-       
-    } else { $response->{error} = 'locus_dbxref_evidence $locus_dbxref_evidence_id does not exists! '; }
-    $c->stash->{rest} = $response;
-}
-
 
 
 1;

@@ -345,21 +345,20 @@ var Tools = {
     },
 
     //Make an ajax response that obsoletes the selected ontology term-locus association
-    obsoleteAnnotation: function(id, url, ontology_url)  {
-        url = "/ajax/locus/obsolete_annotation";
-        new Ajax.Request(url, {
+    toggleObsoleteAnnotation: function(obsolete, id, obsolete_url, ontology_url)  {
+        new Ajax.Request(obsolete_url, {
                 method: 'post',
                     parameters:
-		{id: id },
+		{id: id , obsolete: obsolete },
                     onSuccess: function(response) {
 		    var json = response.responseText;
 		    var x =eval ("("+json+")");
                     //var e = $("locus_ontology").innerHTML=x.response;
-                    var e = $("locus_ontology").innerHTML= Ontology.displayOntologies("ontology" , ontology_url);
-
+                    //this should update the locus_ontology div
 		    if ( x.error ) { alert(x.error) ; }
                 }
         });
+        Ontology.displayOntologies("ontology" , ontology_url);
     },
 
 }

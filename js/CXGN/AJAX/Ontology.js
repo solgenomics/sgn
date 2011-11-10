@@ -65,7 +65,7 @@ var Ontology = {
         // setting some default values
         if (!relationship_uri)  relationship_uri = '/ajax/cvterm/relationships' ;
         if (!rel_div) rel_div = 'relationship_select' ;
-        
+
         jQuery(function() {
                 jQuery("#term_name").autocomplete({
                         source: autocomplete_url + "?db_name="+jQuery("#db_name").val(),
