@@ -128,9 +128,9 @@ FROM
       FROM featureloc
       GROUP BY srcfeature_id
       HAVING count(*) > 1
-      ORDER BY count(*) DESC
     ) as srcfeatures
 JOIN feature f ON srcfeature_id = f.feature_id
+ORDER BY f.name ASC
 ;
 
     $c->res->content_type('text/json');
