@@ -151,7 +151,7 @@ my $pub_subtitle = $curator || $submitter || $sequencer  ?
   qq|<span class=\"ghosted\">[Associate publication]</span>|;
 
 $pub_subtitle .=
-  qq | <a href="javascript:void(0)"onclick="window.open('locus_pub_rank.pl?locus_id=$locus_id','publication_list','width=600,height=400,status=1,location=1,scrollbars=1')">[Matching publications]</a> |;
+  qq | <a href="javascript:void(0)"onclick="window.open('/phenome/locus_pub_rank.pl?locus_id=$locus_id','publication_list','width=600,height=400,status=1,location=1,scrollbars=1')">[Matching publications]</a> |;
 
 my ($genbank, $gb_count);
 foreach  my $g  ( @{ $dbxrefs{'DB:GenBank_GI'} } )  {
@@ -173,7 +173,7 @@ foreach  my $g  ( @{ $dbxrefs{'DB:GenBank_GI'} } )  {
 my $ont_count = $locus->count_ontology_annotations();
 
 my $ontology_subtitle = $curator || $submitter || $sequencer  ?
-  qq|<a href="javascript:Tools.toggleContent('associateOntologyForm', 'locus_ontology')">[Add ontology annotations]</a> | :
+  qq|<a href="javascript:Tools.toggleContent('associate_cvterm_form', 'locus_ontology')">[Add ontology annotations]</a> | :
   qq |<span class = "ghosted"> [Add ontology annotations]</span> |;
 
 </%perl>
@@ -357,12 +357,20 @@ function jqueryStuff() {
 
 </&>
 
-<& /locus/ontology.mas,
-	title     => "Ontology annotations ($ont_count)" ,
-	subtitle  => $ontology_subtitle,
-	collapsed => 1,
-	locus_id  => $locus_id,
-&>
+
+<&| /page/info_section.mas,
+  title       =>"Ontology annotations ($ont_count)",
+  id          => "locus_ontology",
+  collapsible => 1,
+  collapsed   => 1,
+  subtitle    => $ontology_subtitle &>
+  <& /ontology/associate_ontology.mas,
+    object_id     => $locus_id ,
+    object_name   => "locus",
+    cvterm_add_uri=> $cvterm_add_uri,
+    ontology_url  => "/locus/$locus_id/ontologies/",
+    show_form     => $is_owner  &>
+</&>
 
 <&| /page/info_section.mas,
      title       => 'Related views',
