@@ -130,7 +130,7 @@
               },{
                   text: "Location(s)",
                   dataIndex: 'locations',
-                  align: 'center',
+                  align: 'left',
                   width: 200,
                   sortable: false,
                   flex: 1,
