@@ -103,91 +103,91 @@ CXGN.Phenome.Locus.LocusPage.prototype = {
     //locus ontology section
     /////////////////////////////////
 
-    printLocusOntology: function(locus_id) {	
+   //  printLocusOntology: function(locus_id) {	
 
-        jQuery(function() {
-          jQuery("#locus_ontology_show_details").show()
-          jQuery("#locus_ontology_show_details input").click(function() {
-             if( this.checked ) {
-               jQuery("#locus_ontology .evidence").show();
-               jQuery(this).addClass('active');
-             } else {
-               jQuery("#locus_ontology .evidence").hide();
-               jQuery(this).removeClass('active');
-             }
-          });
-        });
+//         jQuery(function() {
+//           jQuery("#locus_ontology_show_details").show()
+//           jQuery("#locus_ontology_show_details input").click(function() {
+//              if( this.checked ) {
+//                jQuery("#locus_ontology .evidence").show();
+//                jQuery(this).addClass('active');
+//              } else {
+//                jQuery("#locus_ontology .evidence").hide();
+//                jQuery(this).removeClass('active');
+//              }
+//           });
+//         });
 
         
-	if (!locus_id) locus_id = this.getLocusId();
-	var type = "ontology";
-	new Ajax.Request("/phenome/locus_page/print_locus_page.pl", {
-                method: 'get',
-		parameters: { type: type, locus_id: locus_id},
-		    onSuccess: function(response) {
-		    var json = response.responseText;
-		    var x =eval ("("+json+")");
-		    var e = $("locus_ontology").innerHTML=x.response;
-		    //alert('processing locus ontology...' );
- 		    if ( x.error ) { alert(x.error) ; }
-                    jQuery("#locus_ontology_show_details input").first()[0].disabled = false;
-                    jQuery("#locus_ontology .evidence").hide();
-		}
-	});
+// 	if (!locus_id) locus_id = this.getLocusId();
+// 	var type = "ontology";
+// 	new Ajax.Request("/phenome/locus_page/print_locus_page.pl", {
+//                 method: 'get',
+// 		parameters: { type: type, locus_id: locus_id},
+// 		    onSuccess: function(response) {
+// 		    var json = response.responseText;
+// 		    var x =eval ("("+json+")");
+// 		    var e = $("locus_ontology").innerHTML=x.response;
+// 		    //alert('processing locus ontology...' );
+//  		    if ( x.error ) { alert(x.error) ; }
+//                     jQuery("#locus_ontology_show_details input").first()[0].disabled = false;
+//                     jQuery("#locus_ontology .evidence").hide();
+// 		}
+// 	});
 	
-    },
+//     },
         
     //Make an ajax response that obsoletes the selected ontology_term_evidence-locus association
-    obsoleteAnnotEv: function(type, object_ev_id, action)  {
-	if (!action) { action = 'obsolete'; }
-	new Ajax.Request('obsolete_object_ev.pl', {parameters:
-		{object_ev_id: object_ev_id, type: type, action: action}, 
-		    onSuccess: function(response) {
-		    var json=response.responseText;
-		    var x= eval("("+json+")");
-		    var e=$("locus_ontology").innerHML=x.response;
-		    if (x.error) {alert(x.error); }
-		    else { locusPage.printLocusOntology(); }
-		}
-	    });
-    },
-    //Make an ajax response that unobsoletes the selected ontology term-locus association
-    unobsoleteAnnotEv: function(type, object_ev_id, action)  {
-	if (!action) { action = 'unobsolete'; }
-	this.obsoleteAnnotEv(type,object_ev_id, action);
-    },
+//     obsoleteAnnotEv: function(type, object_ev_id, action)  {
+// 	if (!action) { action = 'obsolete'; }
+// 	new Ajax.Request('obsolete_object_ev.pl', {parameters:
+// 		{object_ev_id: object_ev_id, type: type, action: action}, 
+// 		    onSuccess: function(response) {
+// 		    var json=response.responseText;
+// 		    var x= eval("("+json+")");
+// 		    var e=$("locus_ontology").innerHML=x.response;
+// 		    if (x.error) {alert(x.error); }
+// 		    else { locusPage.printLocusOntology(); }
+// 		}
+// 	    });
+//     },
+//     //Make an ajax response that unobsoletes the selected ontology term-locus association
+//     unobsoleteAnnotEv: function(type, object_ev_id, action)  {
+// 	if (!action) { action = 'unobsolete'; }
+// 	this.obsoleteAnnotEv(type,object_ev_id, action);
+//     },
 
 
      //Make an ajax response that associates the selected ontology term with this locus
-    associateOntology: function(locus_id) {
-	if (Locus.isVisible('cvterm_list')) {
-		var dbxref_id = $('cvterm_list_select').value;
-		MochiKit.Logging.log("Locus.js: cvterm_list_select.dbxfref_id=...", dbxref_id);
-	} else { 
-		var dbxref_id = $('ontology_select').value;
-		MochiKit.Logging.log("Locus.js: ontology_select.dbxfref_id=...", dbxref_id);
-	}
-	var type = 'locus';
-	var relationship_id = $('relationship_select').value;
-	var evidence_code_id = $('evidence_code_select').value;
-	var evidence_description_id = $('evidence_description_select').value;
-	var evidence_with_id = $('evidence_with_select').value;
-	var reference_id = $('reference_select').value;
+//     associateOntology: function(locus_id) {
+// 	if (Locus.isVisible('cvterm_list')) {
+// 		var dbxref_id = $('cvterm_list_select').value;
+// 		MochiKit.Logging.log("Locus.js: cvterm_list_select.dbxfref_id=...", dbxref_id);
+// 	} else { 
+// 		var dbxref_id = $('ontology_select').value;
+// 		MochiKit.Logging.log("Locus.js: ontology_select.dbxfref_id=...", dbxref_id);
+// 	}
+// 	var type = 'locus';
+// 	var relationship_id = $('relationship_select').value;
+// 	var evidence_code_id = $('evidence_code_select').value;
+// 	var evidence_description_id = $('evidence_description_select').value;
+// 	var evidence_with_id = $('evidence_with_select').value;
+// 	var reference_id = $('reference_select').value;
 	
-	new Ajax.Request('associate_ontology_term.pl', { parameters:
-		{type: type, object_id: locus_id, dbxref_id: dbxref_id,  relationship_id: relationship_id, evidence_code_id: evidence_code_id, evidence_description_id: evidence_description_id, evidence_with_id: evidence_with_id, reference_id: reference_id},
-		    onSuccess: function(response) {
-		    var json=response.responseText;
-		    var x= eval("("+json+")");
-		    var e=$("locus_ontology").innerHML=x.response;
-		    if (x.error) {alert(x.error); }
-		    else { 
-			Tools.toggleContent('associateOntologyForm', 'locus_ontology');
-			locusPage.printLocusOntology(); 
-		    }
-		}
-	});
-    },
+// 	new Ajax.Request('associate_ontology_term.pl', { parameters:
+// 		{type: type, object_id: locus_id, dbxref_id: dbxref_id,  relationship_id: relationship_id, evidence_code_id: evidence_code_id, evidence_description_id: evidence_description_id, evidence_with_id: evidence_with_id, reference_id: reference_id},
+// 		    onSuccess: function(response) {
+// 		    var json=response.responseText;
+// 		    var x= eval("("+json+")");
+// 		    var e=$("locus_ontology").innerHML=x.response;
+// 		    if (x.error) {alert(x.error); }
+// 		    else { 
+// 			Tools.toggleContent('associateOntologyForm', 'locus_ontology');
+// 			locusPage.printLocusOntology(); 
+// 		    }
+// 		}
+// 	});
+//     },
     
     //////////////////////////
     //Locus unigenes section

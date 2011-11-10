@@ -48,7 +48,7 @@ var Ontology = {
                         }
                     });
             });
-        
+        alert('reloading ontology info');
         jQuery.ajax( { url: url , dataType: "json",
                     success: function(response) {
                     var json = response;
