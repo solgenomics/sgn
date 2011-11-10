@@ -238,7 +238,7 @@
                   {
                       xtype: 'fieldset',
                       title: 'Overlaps range',
-                      width: 500,
+                      width: 450,
                       //                      columnWidth: 0.5,
                       layout: 'hbox',
                       defaultType: 'textfield',
