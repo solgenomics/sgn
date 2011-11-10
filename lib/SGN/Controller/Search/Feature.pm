@@ -46,7 +46,7 @@ sub search_json :Path('/search/features/search_service') Args(0) {
     $c->stash->{search_args} = {
         map {
             $_ => $params->{$_},
-        } qw( organism type type_id name )
+        } qw( organism type type_id name srcfeature_id srcfeature_start srcfeature_end )
     };
 
     my $rs = $c->forward('make_feature_search_rs');
@@ -84,6 +84,7 @@ sub search_json :Path('/search/features/search_service') Args(0) {
                 type       => $_->type->name,
                 name       => $_->name,
                 feature_id => $_->feature_id,
+                seqlen     => $_->seqlen,
                 locations  => ( join( ',', map {
                                     my $fl = $_;
                                     location_string( $fl )
@@ -100,7 +101,6 @@ sub search_json :Path('/search/features/search_service') Args(0) {
 sub type_autocomplete : Path('/search/features/feature_types_service') {
     my ( $self, $c ) = @_;
 
-    my $params = $c->req->params;
     my $types = $c->dbc->dbh->selectall_arrayref(<<'' );
 SELECT cvterm_id, name
   FROM cvterm ct
@@ -118,6 +118,30 @@ ORDER BY name
 
 }
 
+sub srcfeatures_autocomplete : Path('/search/features/srcfeatures_service') {
+    my ( $self, $c ) = @_;
+
+    my $srcfeatures = $c->dbc->dbh->selectall_arrayref(<<'' );
+SELECT srcfeature_id, f.name, f.seqlen, count
+FROM
+    ( SELECT srcfeature_id, count(*) as count
+      FROM featureloc
+      GROUP BY srcfeature_id
+      HAVING count(*) > 1
+      ORDER BY count(*) DESC
+    ) as srcfeatures
+JOIN feature f ON srcfeature_id = f.feature_id
+;
+
+    $c->res->content_type('text/json');
+    $c->res->body( to_json( { success => JSON::true,
+                              data => [
+                                  map +{ feature_id => $_->[0], name => $_->[1], seqlen => $_->[2], count => $_->[3] }, @{ $srcfeatures || [] }
+                              ],
+                             }
+                          )
+                 );
+}
 
 # assembles a DBIC resultset for the search based on the submitted
 # form values
@@ -147,6 +171,18 @@ sub make_feature_search_rs : Private {
         my $organism_rs = $schema->resultset('Organism::Organism')
                                  ->search({ species => { -ilike => '%'.$organism.'%' }});
         $rs = $rs->search({ 'me.organism_id' => { -in => $organism_rs->get_column('organism_id')->as_query } });
+    }
+
+    if( my $srcfeature_id = $args->{'srcfeature_id'} ) {
+        $rs = $rs->search({ 'featureloc_features.srcfeature_id' => $srcfeature_id }, { prefetch => 'featureloc_features' });
+    }
+
+    if( my $start = $args->{'srcfeature_start'} ) {
+        $rs = $rs->search({ 'featureloc_features.fmax' => { '>=' => $start } }, { prefetch => 'featureloc_features' });
+    }
+
+    if( my $end = $args->{'srcfeature_end'} ) {
+        $rs = $rs->search({ 'featureloc_features.fmin' => { '<=' => $end+1 } }, { prefetch => 'featureloc_features' });
     }
 
     $c->stash->{search_resultset} = $rs;

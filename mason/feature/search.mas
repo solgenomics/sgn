@@ -32,7 +32,7 @@
         Ext.define('Feature', {
             extend: 'Ext.data.Model',
             fields: [
-                'feature_id', 'organism', 'name', 'type', 'locations'
+                'feature_id', 'organism', 'name', 'type', 'seqlen', 'locations'
             ],
             idProperty: 'feature_id'
         });
@@ -103,12 +103,12 @@
                 id: 'organism',
                 text: "Organism",
                 dataIndex: 'organism',
-                width: 200,
+                width: 150,
                 sortable: true
             },{
                 text: "Type",
                 dataIndex: 'type',
-                width: 100,
+                width: 150,
                 hidden: false,
                 sortable: true
             },{
@@ -154,8 +154,20 @@
                               totalProperty: 'totalCount',
                               successProperty: 'success'
                           },
-                          // sends single sort as multi parameter
-                          simpleSortMode: true
+                      }
+                  });
+
+        var srcfeatures_store =
+             Ext.create('Ext.data.Store', {
+                      model: 'Feature',
+                      proxy: {
+                          type: 'ajax',
+                          url:  '/search/features/srcfeatures_service',
+                          reader: {
+                              root: 'data',
+                              totalProperty:   'totalCount',
+                              successProperty: 'success'
+                          },
                       }
                   });
 
@@ -169,6 +181,19 @@
             }
             feature_store.proxy.extraParams = data;
             feature_store.load();
+        };
+
+        // default field settings for the text fields that make the enter key submit the form
+        var feature_search_field_defaults = {
+                      maxLength: 100,
+                      width: 400,
+                      listeners: {
+                          specialkey: function(field, e){
+                              if (e.getKey() == e.ENTER) {
+                                  applyFeatureFilters( field.up('form').getForm() );
+                              }
+                          }
+                      }
         };
 
         var feature_filter_form = Ext.create('Ext.form.Panel', {
@@ -194,30 +219,70 @@
                       queryMode: 'local',
                       displayField: 'name',
                       valueField: 'type_id',
+                      typeAhead: true,
                       listeners: {} // don't override the combobox's enter key
-                  }
-              ],
-              // make the ENTER key submit the form by default for all form fields
-              defaults: {
-                    maxLength: 100,
-                    width: 400,
-                    listeners: {
-                        specialkey: function(field, e){
-                            if (e.getKey() == e.ENTER) {
-                                applyFeatureFilters( field.up('form').getForm() );
-                            }
-                        }
-                    }
-              },
-              buttons: [
+                  },
                   {
-                      text: 'Apply',
-                      handler: function() { applyFeatureFilters( this.up('form').getForm() ) }
+                      xtype: 'fieldset',
+                      title: 'Overlaps range',
+                      width: 500,
+                      //                      columnWidth: 0.5,
+                      layout: 'hbox',
+                      defaultType: 'textfield',
+                      defaults: feature_search_field_defaults,
+                      items: [
+                          {
+                            xtype: 'combobox',
+                            name:  'srcfeature_id',
+                            store: srcfeatures_store,
+                            queryMode: 'local',
+                            displayField: 'name',
+                            valueField: 'feature_id',
+                            width: 200,
+                            listeners: {
+                                change: function( cbox, newValue, oldValue ) {
+                                    var feature = cbox.getStore().getById( newValue );
+                                    if( feature ) {
+                                         var len = feature.raw.seqlen;
+                                         var srcfeature_start = Ext.getCmp('srcfeature_start');
+                                         var srcfeature_end = Ext.getCmp('srcfeature_end');
+                                         srcfeature_start.setMaxValue( len );
+                                         srcfeature_end.setMaxValue( len );
+                                         srcfeature_start.setValue( 1 );
+                                         srcfeature_end.setValue( len );
+                                    }
+                                }
+                            }
+                          },
+                          { xtype: 'numberfield',
+                            id: 'srcfeature_start',
+                            name: 'srcfeature_start',
+                            step: 1000,
+                            minValue: 1,
+                            width: 100
+                          },
+                          { xtype: 'numberfield',
+                            id: 'srcfeature_end',
+                            name: 'srcfeature_end',
+                            step: 1000,
+                            minValue: 1,
+                            width: 100
+                          },
+                      ]
                   }
-              ],
-          });
+                ],
+                // make the ENTER key submit the form by default for all form fields
+                defaults: feature_search_field_defaults,
+                buttons: [
+                    {
+                        text: 'Apply',
+                        handler: function() { applyFeatureFilters( this.up('form').getForm() ) }
+                    }
+                ],
+            });
 
-          feature_types_store.load();
+            feature_types_store.load();
+            srcfeatures_store.load();
   });
 </script>
 
