@@ -255,14 +255,14 @@
                           { xtype: 'numberfield',
                             id: 'srcfeature_start',
                             name: 'srcfeature_start',
-                            step: 1000,
+                            step: 10000,
                             minValue: 1,
                             width: 100
                           },
                           { xtype: 'numberfield',
                             id: 'srcfeature_end',
                             name: 'srcfeature_end',
-                            step: 1000,
+                            step: 10000,
                             minValue: 1,
                             width: 100
                           },
