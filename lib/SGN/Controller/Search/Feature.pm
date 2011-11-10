@@ -44,7 +44,7 @@ sub search_json :Path('/search/features/search_service') Args(0) {
     $c->stash->{search_args} = {
         map {
             $_ => $params->{$_},
-        } qw( organism type name )
+        } qw( organism type type_id name )
     };
 
     my $rs = $c->forward('make_feature_search_rs');
@@ -88,6 +88,29 @@ sub search_json :Path('/search/features/search_service') Args(0) {
 
 }
 
+sub type_autocomplete : Path('/search/features/feature_types_service') {
+    my ( $self, $c ) = @_;
+
+    my $params = $c->req->params;
+    my $types = $c->dbc->dbh->selectall_arrayref(<<'', undef, $params->{limit} || 25 );
+SELECT cvterm_id, name
+  FROM cvterm ct
+ WHERE cvterm_id IN( SELECT DISTINCT type_id FROM feature )
+ORDER BY name
+ LIMIT ?
+
+    $c->res->content_type('text/json');
+    $c->res->body( to_json( { success => JSON::true,
+                              data => [
+                                  map +{ type_id => $_->[0], name => $_->[1] }, @{ $types || [] }
+                              ],
+                             }
+                          )
+                 );
+
+}
+
+
 # assembles a DBIC resultset for the search based on the submitted
 # form values
 sub make_feature_search_rs : Private {
@@ -106,6 +129,10 @@ sub make_feature_search_rs : Private {
         my $type_rs = $schema->resultset('Cv::Cvterm')
                              ->search({ 'lower(name)' => lc $type });
         $rs = $rs->search({ 'me.type_id' => { -in => $type_rs->get_column('cvterm_id')->as_query }});
+    }
+
+    if( my $type_id = $args->{'type_id'} ) {
+        $rs = $rs->search({ 'me.type_id' => $type_id });
     }
 
     if( my $organism = $args->{'organism'} ) {

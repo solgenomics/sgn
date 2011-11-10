@@ -22,6 +22,7 @@
           'Ext.grid.PagingScroller'
       ]);
 
+      // make the feature grid
       Ext.onReady(function(){
 
           Ext.define('Feature', {
@@ -129,27 +130,82 @@
               renderTo: document.getElementById('search_grid')
           });
 
-          // trigger the data store load
-          //store.guaranteeRange(0, 40);
-          var param_mapping = {
-              name_input:     'name',
-              organism_input: 'organism',
-              type_input:     'type'
-          };
-          do_feature_search = function() {
-              for ( var id in param_mapping ) {
-                  var el = document.getElementById(id);
-                  if( el ) {
-                      if ( el.value.match(/[^\s]/) ) {
-                          feature_store.proxy.extraParams[ param_mapping[id] ] = el.value;
-                      } else {
-                          delete feature_store.proxy.extraParams[ param_mapping[id] ];
-                      }
+          // make the form for feature filtering
+          var feature_types_store =
+              Ext.create('Ext.data.Store', {
+                        fields: ['type_id', 'name'],
+                        proxy: {
+                            type: 'ajax',
+                            url: '/search/features/feature_types_service',
+                            reader: {
+                                root: 'data',
+                                totalProperty: 'totalCount',
+                                successProperty: 'success'
+                            },
+                            // sends single sort as multi parameter
+                            simpleSortMode: true
+                        }
+                    });
+
+          function applyFeatureFilters( form ) {
+              var data = form.getFieldValues();
+              // filter out any form fields that are just whitespace
+              for( var name in data ) {
+                  if( typeof data[name] == 'string' && ! data[name].match(/[^\s]/) ) {
+                      delete data[name];
                   }
               }
-
+              feature_store.proxy.extraParams = data;
               feature_store.load();
           };
+
+          var feature_filter_form = Ext.create('Ext.form.Panel', {
+                  //                height: 160,
+                width: 500,
+                bodyPadding: 10,
+                defaultType: 'textfield',
+                renderTo: document.getElementById('search_form'),
+                items: [
+                    {
+                        fieldLabel: 'Name contains',
+                        name: 'name'
+                    },
+                    {
+                        fieldLabel: 'Organism contains',
+                        name: 'organism'
+                    },
+                    {
+                        xtype: 'combobox',
+                        fieldLabel: 'Type is',
+                        name: 'type_id',
+                        store: feature_types_store,
+                        queryMode: 'local',
+                        displayField: 'name',
+                        valueField: 'type_id',
+                        listeners: {} // don't override the combobox's enter key
+                    }
+                ],
+                // make the ENTER key submit the form by default for all form fields
+                defaults: {
+                      maxLength: 100,
+                      width: 400,
+                      listeners: {
+                          specialkey: function(field, e){
+                              if (e.getKey() == e.ENTER) {
+                                  applyFeatureFilters( field.up('form').getForm() );
+                              }
+                          }
+                      }
+                },
+                buttons: [
+                    {
+                        text: 'Apply',
+                        handler: function() { applyFeatureFilters( this.up('form').getForm() ) }
+                    }
+                ],
+            });
+
+            feature_types_store.load();
     });
   </script>
 
@@ -161,23 +217,6 @@
           #search_form td    { padding-bottom: 6px }
     </style>
     <div id="search_form">
-        <form onsubmit="do_feature_search(this); return false;">
-          <table>
-              <tr>
-                <td><label style="font-weight: bold" for="name_input">Name contains</label></td>
-                <td><input id="name_input" type="text" size="30" name="name" value="" /></td>
-              </tr>
-              <tr>
-                <td><label style="font-weight: bold" for="organism_input">Organism contains</label></td>
-                <td><input id="organism_input" type="text" size="30" name="organism" value="" /></td>
-              </tr>
-              <tr>
-                <td><label style="font-weight: bold" for="type_input">Type is</label></td>
-                <td><input id="type_input" type="text" size="30" name="type" value="" /></td>
-              </tr>
-          </table>
-          <input style="padding: 3px" type="submit" value="Apply" />
-       </form>
     </div>
 </&>
 
