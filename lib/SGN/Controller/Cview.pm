@@ -221,6 +221,12 @@ sub map :Path("/cview/map.pl") :Args(0) {
     $c->stash->{marker_stats} = $marker_info{$c->stash->{map_version_id}};
 
     $c->stash->{chromosome_stats} = \@chr_stats;
+
+    $c->stash->{parent1_stock_id} = $map->get_parent1_stock_id();
+    $c->stash->{parent1_stock_name} = $map->get_parent1_stock_name();
+    $c->stash->{parent2_stock_id} = $map->get_parent2_stock_id();
+    $c->stash->{parent2_stock_name} = $map->get_parent2_stock_name();
+
     $c->stash->{template} = "/cview/map/index.mas";
     $c->forward("View::Mason");
 }
