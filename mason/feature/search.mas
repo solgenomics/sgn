@@ -1,11 +1,11 @@
 <%args>
 </%args>
 
-<& /page/page_title.mas, title => 'Feature Search' &>
+<& /page/page_title.mas, title => 'Genome Feature Search' &>
 <& /util/import_extjs.mas &>
 
 <div class="page_introduction">
-   Search for many types of sequence and annotation data.
+   Search for many types of genomic sequences and annotations.
 </div>
 
 <&| /page/info_section.mas, title => 'Matching features' &>
