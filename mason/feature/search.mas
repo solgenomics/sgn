@@ -64,6 +64,7 @@
             proxy: {
                 type: 'ajax',
                 url: '/search/features/search_service',
+                timeout: 60000,
                 reader: {
                     root: 'data',
                     totalProperty: 'totalCount',
