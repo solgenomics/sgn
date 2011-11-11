@@ -280,14 +280,6 @@ var Locus = {
     },
     //#####################################LOCUS RELATIONSHIPS
 
-    //    getLocusReference: function(locus_id) {
-    //	var type = 'reference';
-    //	var reference_id = $('locus_reference_select').value;
-    //	new Ajax.Request('/phenome/evidence_browser.pl', { parameters:
-    //           {type: type, locus_id: locus_id}, onSuccess: this.updateLocusReferenceSelect });
-    //	 MochiKit.Logging.log("Locus.js getLocusReference is calling UpdateReferenceSelect with locus_id", locus_id);
-    //},
-
     updateLocusReferenceSelect: function(request) {
 	var select = $('locus_reference_select');
         var responseText = request.responseText;
