@@ -180,7 +180,11 @@
                 }
             }
             feature_store.proxy.extraParams = data;
-            feature_store.load();
+            feature_store.load( function(records,operation,success) {
+                if( ! success ) {
+                  feature_store.removeAll();
+                }
+            });
         };
 
         // default field settings for the text fields that make the enter key submit the form
