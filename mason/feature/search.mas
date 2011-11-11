@@ -5,7 +5,7 @@
 <& /util/import_extjs.mas &>
 
 <div class="page_introduction">
-      Find gene models, gene groups, and other features.
+   Search for many types of sequence and annotation data.
 </div>
 
 <&| /page/info_section.mas, title => 'Matching features' &>
