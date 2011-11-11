@@ -25,7 +25,7 @@ use Try::Tiny;
 use CXGN::Phenome::Schema;
 use CXGN::Phenome::Allele;
 use CXGN::Chado::Stock;
-use CXGN::Page::FormattingHelpers qw/ columnar_table_html info_table_html /;
+use CXGN::Page::FormattingHelpers qw/ columnar_table_html info_table_html html_alternate_show /;
 use Scalar::Util qw(looks_like_number);
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -210,6 +210,7 @@ sub display_ontologies_GET  {
     $c->forward('/stock/get_stock_cvterms');
     my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
     my $stock = $c->stash->{stock};
+    my $stock_id = $stock->get_stock_id;
     my $sp_cvterms = $c->stash->{stock_cvterms}->{SP};
     my $po_cvterms = $c->stash->{stock_cvterms}->{PO} ;
     # should GO be here too?
@@ -267,6 +268,7 @@ sub display_ontologies_GET  {
         # to have an obsolete property with value = 0, meaning the annotation
         # is not obsolete.
         # build the unobsolete link
+        my $stock_cvterm_id = $_->stock_cvterm_id;
         my ($obsolete_prop) = $props->search(
             {
                 value => '1',
@@ -274,9 +276,7 @@ sub display_ontologies_GET  {
             },
             { join =>  'type' } , );
         if ($obsolete_prop) {
-            my $unobsolete = $privileged ? qq| <a href="/ajax/stock/unobsolete_annotation(| . $obsolete_prop->stock_cvtermprop_id . qq|)">[unobsolete]</a> | : undef;
-            ### NEED TO MAKE AN AJAX REQUEST  #############
-            # onclick: $obsolete_prop->update( {value => '0' } );
+            my $unobsolete =  qq | <input type = "button" onclick= "javascript:Tools.toggleObsoleteAnnotation('0', \'$stock_cvterm_id\',  \'/ajax/stock/toggle_obsolete_annotation\', \'/stock/$stock_id/ontologies\')" value = "unobsolete" /> | if $privileged ;
 
             # generate the list of obsolete annotations
             push @obs_annot,
@@ -288,7 +288,8 @@ sub display_ontologies_GET  {
             my $ontology_details = $rel_name
                 . qq| $cvterm_link ($db_name:<a href="$url$db_accession" target="blank"> $accession</a>)<br />|;
             # build the obsolete link if the user has  editing privileges
-            my $obsolete_link = $privileged ? qq| <a href="/ajax/stock/obsolete_annotation/| .$_->stock_cvterm_id . qq|/">[delete]</a> | : undef ;
+            my $obsolete_link =  qq | <input type = "button" onclick="javascript:Tools.toggleObsoleteAnnotation('1', \'$stock_cvterm_id\',  \'/ajax/stock/toggle_obsolete_annotation\', \'/stock/$stock_id/ontologies\')" value ="delete" /> | if $privileged ;
+
             my ($ev_with) = $props->search( {'type.name' => 'evidence_with'} , { join => 'type'  } )->single;
             my $ev_with_dbxref = $ev_with ? $schema->resultset("General::Dbxref")->find( { dbxref_id=> $ev_with->value } ) : undef;
             my $ev_with_url = $ev_with_dbxref ?  $ev_with_dbxref->urlprefix . $ev_with_dbxref->url . $ev_with_dbxref->accession : undef;
@@ -341,10 +342,18 @@ sub display_ontologies_GET  {
             );
     }
     #display ontology annotation form
+    my $print_obsoleted;
     if ( @obs_annot &&  $privileged ) {
-        ##NEED TO RE-WRITE print _obsoleted  $ontology_evidence .= print_obsoleted(@obs_annot);
+        my $obsoleted;
+        foreach my $term (@obs_annot) {
+            $obsoleted .= qq |$term  <br />\n |;
+        }
+        $print_obsoleted = html_alternate_show(
+            'obsoleted_terms', 'Show obsolete',
+            '',                qq|<div class="minorbox">$obsoleted</div> |,
+            );
     }
-    $hashref->{html} = $ontology_evidence;
+    $hashref->{html} = $ontology_evidence . $print_obsoleted;
     $c->stash->{rest} = $hashref;
 }
 
@@ -515,39 +524,38 @@ sub references_GET :Args(0) {
 
 
 
-sub obsolete_annotation :Path('ajax/stock/obsolete_annotation') : ActionClass('REST') { }
+sub toggle_obsolete_annotation : Path('/ajax/stock/toggle_obsolete_annotation') : ActionClass('REST') { }
 
-
-sub obsolete_annotation_POST :Args(1) {
-    my ($self, $c, $stock_cvtermprop_id) = @_;
+sub toggle_obsolete_annotation_POST :Args(0) {
+    my ($self, $c) = @_;
     my $stock = $c->stash->{stock};
-    my ($prop) = $stock->stock_cvterms->find_related->('stock_cvtermprops', { stock_cvtermprop_id => $stock_cvtermprop_id } );
-
-    my $response ={} ;
-    if ($prop && $c->user ) {
-        $prop->update( { value => '1' } ) ;
-         $c->stash->{rest} = ['success'];
-        return;
-    } else { $response->{error} = 'stock_cvtermprop $stock_cvtermprop_id does not exists! ';
-    }
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $obsolete_cvterm = $schema->resultset("Cv::Cvterm")->search(
+        { name => 'obsolete',
+          is_obsolete => 0 ,
+        } )->single; #should be one local term
+    my $stock_cvterm_id = $c->request->body_parameters->{id};
+    my $obsolete = $c->request->body_parameters->{obsolete};
+    my $response = {} ;
+    if ($stock_cvterm_id && $c->user ) {
+        my $stock_cvterm = $schema->resultset("Stock::StockCvterm")->find( { stock_cvterm_id => $stock_cvterm_id } );
+        if ($stock_cvterm) {
+            my ($prop) = $stock_cvterm->stock_cvtermprops( { type_id => $obsolete_cvterm->cvterm_id } ) if $obsolete_cvterm;
+            if ($prop) {
+                $prop->update( { value => $obsolete } ) ;
+            } else {
+                $stock_cvterm->create_stock_cvtermprops(
+                    { obsolete   => $obsolete },
+                    { autocreate => 1, cv_name => 'local'  },
+                    );
+            }
+            $response->{response} = "success";
+        }
+        else { $response->{error} = "No stock_cvtermp found for id $stock_cvterm_id ! "; }
+    } else { $response->{error} = 'stock_cvterm $stock_cvterm_id does not exists! ';  }
     $c->stash->{rest} = $response;
 }
 
-sub unobsolete_annotation :Path('ajax/stock/unobsolete_annotation') : ActionClass('REST') { }
-
-sub unobsolete_annotation_POST :Args(1) {
-    my ($self, $c, $stock_cvtermprop_id) = @_;
-    my $stock = $c->stash->{stock};
-    my ($prop) = $stock->stock_cvterms->find_related->('stock_cvtermprops', { stock_cvtermprop_id => $stock_cvtermprop_id } );
-
-    my $response ={} ;
-    if ($prop) {
-        $prop->update( { value => '0' } ) ;
-        $c->stash->{rest} = ['success'];
-        return;
-    } else { $response->{error} = 'stock_cvtermprop $stock_cvtermprop_id does not exists! '; }
-    $c->stash->{rest} = $response;
-}
 
 =head2 autocomplete
 
