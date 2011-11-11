@@ -27,7 +27,9 @@
 % # now let the JS begin
 
 <script type="text/javascript">
+
     var do_feature_search = function() {}; //replaced later
+
     var page_size = 100;
 
     Ext.Loader.setConfig({enabled: true});
@@ -134,8 +136,8 @@
                 width: 200,
                 sortable: false,
                 flex: 1,
-                renderer: function(value) {
-                    return value.length > 0 ? value : '-'
+                renderer: function( value ) {
+                    return value.length > 0 ? value : '-';
                 }
             }
             ],
@@ -157,6 +159,20 @@
                       }
                   });
 
+        var featureprop_types_store =
+            Ext.create('Ext.data.Store', {
+                      fields: ['type_id', 'name'],
+                      proxy: {
+                          type: 'ajax',
+                          url: '/search/features/featureprop_types_service',
+                          reader: {
+                              root: 'data',
+                              totalProperty: 'totalCount',
+                              successProperty: 'success'
+                          },
+                      }
+                  });
+
         var srcfeatures_store =
              Ext.create('Ext.data.Store', {
                       model: 'Feature',
@@ -167,7 +183,7 @@
                               root: 'data',
                               totalProperty:   'totalCount',
                               successProperty: 'success'
-                          },
+                          }
                       }
                   });
 
@@ -187,7 +203,9 @@
             });
         };
 
-        // default field settings for the text fields that make the enter key submit the form
+        // default field settings for the text fields that make the
+        // enter key submit the form
+
         var feature_search_field_defaults = {
                       maxLength: 100,
                       width: 400,
@@ -201,7 +219,7 @@
         };
 
         var feature_filter_form = Ext.create('Ext.form.Panel', {
-              width: 500,
+              width: 450,
               bodyPadding: 10,
               defaultType: 'textfield',
               renderTo: document.getElementById('search_form'),
@@ -228,9 +246,8 @@
                   {
                       xtype: 'fieldset',
                       title: 'Overlaps range',
-                      width: 450,
+                      width: 425,
                       layout: 'hbox',
-                      defaultType: 'textfield',
                       defaults: feature_search_field_defaults,
                       items: [
                           {
@@ -242,7 +259,9 @@
                             valueField: 'feature_id',
                             width: 200,
                             listeners: {
-                                // when the srcfeature is set, set the max values of the range numbers to the srcfeature's length
+                                // when the srcfeature is set, set the
+                                // max values of the range numbers to
+                                // the srcfeature's length
                                 change: function( cbox, newValue, oldValue ) {
                                     var feature = cbox.getStore().getById( newValue );
                                     if( feature ) {
@@ -274,6 +293,31 @@
                             width: 100
                           },
                       ]
+                  },
+                  {
+                      xtype: 'fieldset',
+                      title: 'Has property',
+                      width: 425,
+                      layout: 'hbox',
+                      defaultType: 'textfield',
+                      defaults: feature_search_field_defaults,
+                      items: [
+                        {
+                          xtype: 'combobox',
+                          name: 'proptype_id',
+                          width: 200,
+                          store: featureprop_types_store,
+                          queryMode: 'local',
+                          displayField: 'name',
+                          valueField: 'type_id',
+                          typeAhead: true,
+                          listeners: {} // don't override the combobox's enter key
+                        },{
+                          fieldLabel: 'With value',
+                          name: 'prop_value',
+                          width: 200
+                        }
+                      ]
                   }
                 ],
                 // make the ENTER key submit the form by default for all form fields
@@ -290,6 +334,8 @@
             });
 
             feature_types_store.load();
+            featureprop_types_store.load();
             srcfeatures_store.load();
   });
 </script>
+

@@ -46,7 +46,7 @@ sub search_json :Path('/search/features/search_service') Args(0) {
     $c->stash->{search_args} = {
         map {
             $_ => $params->{$_},
-        } qw( organism type type_id name srcfeature_id srcfeature_start srcfeature_end )
+        } qw( organism type type_id name srcfeature_id srcfeature_start srcfeature_end proptype_id prop_value )
     };
 
     my $rs = $c->forward('make_feature_search_rs');
@@ -57,7 +57,6 @@ sub search_json :Path('/search/features/search_service') Args(0) {
     $rs = $rs->search(
         undef,
         {
-          #prefetch => [ 'type', 'organism', { 'featureloc_features' => 'srcfeature' } ],
           prefetch => [ 'type', 'organism' ],
           page => $params->{'page'} || 1,
           rows => $params->{'limit'} || $self->default_page_size,
@@ -98,13 +97,26 @@ sub search_json :Path('/search/features/search_service') Args(0) {
 
 }
 
-sub type_autocomplete : Path('/search/features/feature_types_service') {
+sub feature_type_autocomplete : Path('/search/features/feature_types_service') {
+    my ( $self, $c ) = @_;
+    $c->stash->{typed_table} = 'feature';
+    $c->forward( 'type_autocomplete' );
+}
+
+sub featureprop_type_autocomplete : Path('/search/features/featureprop_types_service') {
+    my ( $self, $c ) = @_;
+    $c->stash->{typed_table} = 'featureprop';
+    $c->forward( 'type_autocomplete' );
+}
+
+sub type_autocomplete : Private {
     my ( $self, $c ) = @_;
 
-    my $types = $c->dbc->dbh->selectall_arrayref(<<'' );
+    my $table = $c->stash->{typed_table} || 'feature';
+    my $types = $c->dbc->dbh->selectall_arrayref(<<"" );
 SELECT cvterm_id, name
   FROM cvterm ct
- WHERE cvterm_id IN( SELECT DISTINCT type_id FROM feature )
+ WHERE cvterm_id IN( SELECT DISTINCT type_id FROM $table )
 ORDER BY name
 
     $c->res->content_type('text/json');
@@ -115,7 +127,6 @@ ORDER BY name
                              }
                           )
                  );
-
 }
 
 sub srcfeatures_autocomplete : Path('/search/features/srcfeatures_service') {
@@ -184,6 +195,14 @@ sub make_feature_search_rs : Private {
 
     if( my $end = $args->{'srcfeature_end'} ) {
         $rs = $rs->search({ 'featureloc_features.fmin' => { '<=' => $end+1 } }, $featureloc_prefetch );
+    }
+
+    if( my $proptype_id = $args->{'proptype_id'} ) {
+        $rs = $rs->search({ 'featureprops.type_id' => $proptype_id },{ prefetch => 'featureprops' });
+    }
+
+    if( my $prop_value = $args->{'prop_value'} ) {
+        $rs = $rs->search({ 'featureprops.value' => $prop_value },{ prefetch => 'featureprops' });
     }
 
     $c->stash->{search_resultset} = $rs;
