@@ -173,16 +173,17 @@ sub make_feature_search_rs : Private {
         $rs = $rs->search({ 'me.organism_id' => { -in => $organism_rs->get_column('organism_id')->as_query } });
     }
 
+    my $featureloc_prefetch = { prefetch => { 'featureloc_features' => 'srcfeature' }};
     if( my $srcfeature_id = $args->{'srcfeature_id'} ) {
-        $rs = $rs->search({ 'featureloc_features.srcfeature_id' => $srcfeature_id }, { prefetch => 'featureloc_features' });
+        $rs = $rs->search({ 'featureloc_features.srcfeature_id' => $srcfeature_id }, $featureloc_prefetch );
     }
 
     if( my $start = $args->{'srcfeature_start'} ) {
-        $rs = $rs->search({ 'featureloc_features.fmax' => { '>=' => $start } }, { prefetch => 'featureloc_features' });
+        $rs = $rs->search({ 'featureloc_features.fmax' => { '>=' => $start } }, $featureloc_prefetch );
     }
 
     if( my $end = $args->{'srcfeature_end'} ) {
-        $rs = $rs->search({ 'featureloc_features.fmin' => { '<=' => $end+1 } }, { prefetch => 'featureloc_features' });
+        $rs = $rs->search({ 'featureloc_features.fmin' => { '<=' => $end+1 } }, $featureloc_prefetch );
     }
 
     $c->stash->{search_resultset} = $rs;
