@@ -1,7 +1,7 @@
 <%args>
 </%args>
 
-<& /page/page_title.mas, title => 'Feature search' &>
+<& /page/page_title.mas, title => 'Feature Search' &>
 <& /util/import_extjs.mas &>
 
 <div class="page_introduction">
@@ -15,10 +15,8 @@
 
 <&| /page/info_section.mas, title => 'Filter by' &>
     <style type="text/css">
-          #search_form       { margin: 1em auto; width: 500px; text-align: center }
-          #search_form table { margin: 1em auto }
-          #search_form label { font-weight: bold; margin-right: 1em; }
-          #search_form td    { padding-bottom: 6px }
+      #search_form       { margin: 1em auto; width: 452px; }
+      #search_form label { font-weight: bold; padding: 0.3em }
     </style>
 
     <div id="search_form"></div>
@@ -112,7 +110,7 @@
             },{
                 text: "Type",
                 dataIndex: 'type',
-                width: 150,
+                width: 100,
                 hidden: false,
                 sortable: true
             },{
@@ -208,7 +206,7 @@
 
         var feature_search_field_defaults = {
                       maxLength: 100,
-                      width: 400,
+                      width: 350,
                       listeners: {
                           specialkey: function(field, e){
                               if (e.getKey() == e.ENTER) {
@@ -314,6 +312,7 @@
                           listeners: {} // don't override the combobox's enter key
                         },{
                           fieldLabel: 'With value',
+                          labelAlign: 'right',
                           name: 'prop_value',
                           width: 200
                         }
