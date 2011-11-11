@@ -656,6 +656,11 @@ sub qtl_traits : PathPart('qtl/traits') Chained Args(1) {
              );
 }
 
+sub all_qtl_traits : PathPart('qtl/traits') Chained Args(0) {
+    my ($self, $c) = @_;
+    $c->res->redirect('/search/qtl');
+}
+
 sub filter_qtl_traits {
     my ($self, $index) = @_;
 
