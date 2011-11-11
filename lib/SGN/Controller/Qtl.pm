@@ -647,13 +647,20 @@ sub mark_qtl_traits {
 
 sub qtl_traits : PathPart('qtl/traits') Chained Args(1) {
     my ($self, $c, $index) = @_;
-        
-    my $traits_list = $self->map_qtl_traits($c, $index);
     
-    $c->stash( template => '/qtl/traits/index.mas',
-               index    => $index,
-               traits_list => $traits_list
-             );
+    if ($index !~ /\w{1}/) 
+    {
+        my $traits_list = $self->map_qtl_traits($c, $index);
+    
+        $c->stash( template    => '/qtl/traits/index.mas',
+                   index       => $index,
+                   traits_list => $traits_list
+            );
+    }
+    else 
+    {
+        $c->res->redirect('/search/qtl');
+    }
 }
 
 sub all_qtl_traits : PathPart('qtl/traits') Chained Args(0) {
