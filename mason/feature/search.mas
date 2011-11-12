@@ -93,7 +93,8 @@
                 xtype: 'pagingtoolbar',
                 store: feature_store,   // same store GridPanel is using
                 dock: 'bottom',
-                displayInfo: true
+                displayInfo: true,
+                emptyMsg: 'No matching features'
             }],
 
             viewConfig: {
