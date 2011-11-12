@@ -1,6 +1,7 @@
 <%args>
   $content
 </%args>
+<& /page/page_title.mas, title => 'Search SGN' &>
 <div>
 <% $content %>
 </div>

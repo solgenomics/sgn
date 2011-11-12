@@ -202,7 +202,7 @@ sub make_feature_search_rs : Private {
     }
 
     if( my $prop_value = $args->{'prop_value'} ) {
-        $rs = $rs->search({ 'featureprops.value' => $prop_value },{ prefetch => 'featureprops' });
+        $rs = $rs->search({ 'featureprops.value' => { -ilike => '%'.$prop_value.'%' }},{ prefetch => 'featureprops' });
     }
 
     $c->stash->{search_resultset} = $rs;

@@ -311,7 +311,7 @@
                           typeAhead: true,
                           listeners: {} // don't override the combobox's enter key
                         },{
-                          fieldLabel: 'With value',
+                          fieldLabel: 'containing',
                           labelAlign: 'right',
                           name: 'prop_value',
                           width: 200
