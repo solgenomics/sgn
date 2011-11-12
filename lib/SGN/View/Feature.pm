@@ -179,7 +179,7 @@ sub feature_table {
         }
     }
 
-    my @headings = ( "Organism", "Type", "Name", "Location(s)", "Length", "Strand", "Phase" );
+    my @headings = ( "Organism", "Type", "Name", "Location", "Length", "Strand", "Phase" );
 
     # omit any columns that are *all* undefined, or that we were
     # requested to omit
