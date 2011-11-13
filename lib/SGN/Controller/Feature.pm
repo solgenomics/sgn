@@ -78,7 +78,7 @@ sub get_feature : Chained('/') CaptureArgs(1) PathPart('feature') {
           ->resultset('Sequence::Feature')
           ->search(
               { 'me.'.$identifier_type => $id },
-              { prefetch => [ 'type', 'featureloc_features' ] },
+              { prefetch => [ 'organism', 'type', 'featureloc_features'  ] },
             );
 
     if( $matching_features->count > 1 ) {
