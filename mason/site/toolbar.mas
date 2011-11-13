@@ -10,6 +10,7 @@
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/loci">Genes</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/phenotypes">Phenotypes</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/qtl">QTLs</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/features">Genome features</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/unigene">Unigenes</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/family">Families</a></td></tr>
        <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/markers">Markers</a></td></tr>

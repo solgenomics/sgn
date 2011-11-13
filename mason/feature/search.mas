@@ -1,7 +1,7 @@
 <%args>
 </%args>
 
-<& /page/page_title.mas, title => 'Genome Feature Search' &>
+<& /page/page_title.mas, title => 'Search genome features' &>
 <& /util/import_extjs.mas &>
 
 <div class="page_introduction">
