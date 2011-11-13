@@ -148,13 +148,18 @@ sub feature_table {
 
         if( @locations ) {
         # Add a row for every featureloc
+            my $first_location = 0;
             for my $loc (@locations) {
                 my $ref = $loc->srcfeature;
                 my ($start,$end) = ($loc->fmin+1, $loc->fmax);
                 push @data, [
-                    organism_link( $f->organism ),
-                    cvterm_link($f->type),
-                    feature_link($f),
+                    ( $first_location++
+                          ? ('','','')
+                          : ( organism_link( $f->organism ),
+                              cvterm_link($f->type),
+                              feature_link($f),
+                            )
+                    ),
                     ($ref ? $ref->name : '<span class="ghosted">null</span>').":$start..$end",
                     commify_number( feature_length( $f, $loc ) ) || undef,
                     $loc->strand ? ( $loc->strand == 1 ? '+' : '-' ) : undef,
@@ -181,6 +186,8 @@ sub feature_table {
 
     my @headings = ( "Organism", "Type", "Name", "Location", "Length", "Strand", "Phase" );
 
+    my @align = [ map 'l', @headings ];
+
     # omit any columns that are *all* undefined, or that we were
     # requested to omit
     my @cols_to_omit = uniq(
@@ -194,7 +201,7 @@ sub feature_table {
             )
         },
       );
-    for my $t ( [\@headings], \@data ) {
+    for my $t ( [\@headings], \@data, [\@align] ) {
         for my $row ( @$t ) {
             splice( @$row, $_, 1 ) for @cols_to_omit;
         }
@@ -207,7 +214,7 @@ sub feature_table {
         }
     }
 
-    return ( headings => \@headings, data => \@data );
+    return ( headings => \@headings, data => \@data, __align => \@align, __alt_freq => 0 , __border => 1 );
 }
 
 # try to figure out the "length" of a feature, which will vary for different features

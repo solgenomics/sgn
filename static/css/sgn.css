@@ -381,10 +381,10 @@ span.bgcolorselected a {
 
 /*for lists of things with alternating colored backgrounds*/
 .bgcoloralt2 {
-	background-color: #d5d5ff;
+	background-color: #f5f5ff;
 }
 .bgcoloralt1 { 
-        background-color: #f0f0ff;
+        background-color: #fcfcff;
 }
 /*to discreetly highlight an item*/
 .bgcolorselected {
@@ -780,8 +780,8 @@ td.columnar_table, th.columnar_table, th.columnar_table_noborder {
 }
 th.columnar_table {
   border-bottom: 1px solid #aaa;
-  background: #efefef;
 }
+
 caption.columnar_table {
   font-weight: bold;
   text-align: left;
