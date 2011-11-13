@@ -14,8 +14,8 @@
     my %rels;
     push @{$rels{$_->[0]}{$_->[1]}}, $_->[2]
         for (
-          ( map [ $m->scomp('/chado/cvterm_link.mas', cvterm =>  $_->type, inflect => ( $_->type->name =~ /_of$/ ? 'PL_N' : 'PL_V' ) ), 'downstream', $_->subject ], $principle->${\"${relationship_name}_objects"}()  ),
-          ( map [ $m->scomp('/chado/cvterm_link.mas', cvterm => $_->type ), 'upstream',   $_->object  ], $principle->${\"${relationship_name}_subjects"}() ),
+          ( map [ $m->scomp('/chado/cvterm_link.mas', cvterm =>  $_->type, inflect => ( $_->type->name =~ /_of$/ ? 'PL_N' : 'PL_V' ) ), 'downstream', $_->subject ], $principle->search_related("${relationship_name}_objects",undef, { prefetch => ['type','subject'] }) ),
+          ( map [ $m->scomp('/chado/cvterm_link.mas', cvterm => $_->type ), 'upstream',   $_->object  ], $principle->search_related("${relationship_name}_subjects",undef,{ prefetch => ['type','object'] }) ),
         );
 
     my $type = $principle->type ? $m->scomp('/chado/cvterm_link.mas', cvterm => $principle->type) : 'dataset';
