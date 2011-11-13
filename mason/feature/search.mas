@@ -45,7 +45,13 @@
         Ext.define('Feature', {
             extend: 'Ext.data.Model',
             fields: [
-                'feature_id', 'organism', 'name', 'type', 'seqlen', 'locations'
+                'feature_id',
+                'organism',
+                'name',
+                'type',
+                'seqlen',
+                'locations',
+                'description'
             ],
             idProperty: 'feature_id'
         });
@@ -81,6 +87,9 @@
 
         });
 
+        function hyphen_if_empty( value ) {
+            return value.length > 0 ? value : '-';
+        }
 
         var feature_grid = Ext.create('Ext.grid.Panel', {
             width:    700,
@@ -107,11 +116,12 @@
                 text: "Organism",
                 dataIndex: 'organism',
                 width: 150,
-                sortable: true
+                sortable: true,
+                flex: 1
             },{
                 text: "Type",
                 dataIndex: 'type',
-                width: 100,
+                width: 90,
                 hidden: false,
                 sortable: true
             },{
@@ -129,15 +139,21 @@
                      );
                 }
             },{
+                text: "Description",
+                dataIndex: 'description',
+                align: 'left',
+                width: 200,
+                sortable: false,
+                flex: 1,
+                renderer: hyphen_if_empty
+            },{
                 text: "Location(s)",
                 dataIndex: 'locations',
                 align: 'left',
                 width: 200,
                 sortable: false,
                 flex: 1,
-                renderer: function( value ) {
-                    return value.length > 0 ? value : '-';
-                }
+                renderer: hyphen_if_empty
             }
             ],
             renderTo: document.getElementById('search_grid')

@@ -2,7 +2,7 @@ package SGN::Controller::Search::Feature;
 use Moose;
 use namespace::autoclean;
 
-use SGN::View::Feature qw( location_string description_featureprop_types );
+use SGN::View::Feature qw( location_string description_featureprop_types get_descriptions );
 
 use URI::FromHash 'uri';
 use YAML::Any;
@@ -90,17 +90,18 @@ sub search_json :Path('/search/features/search_service') Args(0) {
         totalCount => $total,
         data => [
             map { {
-                organism   => $_->organism->species,
-                type       => $_->type->name,
-                name       => $_->name,
-                feature_id => $_->feature_id,
-                seqlen     => $_->seqlen,
-                locations  => ( join( ',', map {
+                organism    => $_->organism->species,
+                type        => $_->type->name,
+                name        => $_->name,
+                feature_id  => $_->feature_id,
+                seqlen      => $_->seqlen,
+                locations   => ( join( ',', map {
                                     my $fl = $_;
                                     location_string( $fl )
-                                } $_->featureloc_features
-                              ),
-                ),
+                                   } $_->featureloc_features
+                                 ),
+                               ),
+                description => join( ' ', get_descriptions( $_ ) ),
             } }
             $rs->all
         ],
