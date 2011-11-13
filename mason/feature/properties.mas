@@ -30,7 +30,7 @@
    if( %properties ) {
        for my $propname ( sort keys %properties ) {
            my $fps = $properties{$propname};
-           my $name = cvterm_link( $fps->[0]->type, 'ucfirst' );
+           my $name = $m->scomp('/chado/cvterm_link.mas', cvterm => $fps->[0]->type, caps => 'ucfirst' );
            my $value = @$fps > 1
                ? '<ul>'.(join '', map "<li>".encode_entities($_->value)."</li>", @$fps).'</ul>'
                : encode_entities($fps->[0]->value);
