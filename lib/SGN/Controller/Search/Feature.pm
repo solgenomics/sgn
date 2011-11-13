@@ -2,7 +2,7 @@ package SGN::Controller::Search::Feature;
 use Moose;
 use namespace::autoclean;
 
-use SGN::View::Feature 'location_string';
+use SGN::View::Feature qw( location_string description_featureprop_types );
 
 use URI::FromHash 'uri';
 use YAML::Any;
@@ -46,7 +46,18 @@ sub search_json :Path('/search/features/search_service') Args(0) {
     $c->stash->{search_args} = {
         map {
             $_ => $params->{$_},
-        } qw( organism type type_id name srcfeature_id srcfeature_start srcfeature_end proptype_id prop_value )
+        } qw(
+              organism
+              type
+              type_id
+              name
+              srcfeature_id
+              srcfeature_start
+              srcfeature_end
+              proptype_id
+              prop_value
+              description
+            )
     };
 
     my $rs = $c->forward('make_feature_search_rs');
@@ -203,6 +214,15 @@ sub make_feature_search_rs : Private {
 
     if( my $prop_value = $args->{'prop_value'} ) {
         $rs = $rs->search({ 'featureprops.value' => { -ilike => '%'.$prop_value.'%' }},{ prefetch => 'featureprops' });
+    }
+
+    if( my $desc = $args->{'description'} ) {
+        $rs = $rs->search({
+            'featureprops.value'   => { -ilike => '%'.$desc.'%' },
+            'featureprops.type_id' => { -in => [description_featureprop_types( $rs )->get_column('cvterm_id')->all] },
+            },{
+                prefetch => 'featureprops'
+            });
     }
 
     $c->stash->{search_resultset} = $rs;

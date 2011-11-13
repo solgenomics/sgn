@@ -243,6 +243,10 @@
                       listeners: {} // don't override the combobox's enter key
                   },
                   {
+                      fieldLabel: 'Description contains',
+                      name: 'description'
+                  },
+                  {
                       xtype: 'fieldset',
                       title: 'Overlaps range',
                       width: 425,
