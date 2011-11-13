@@ -15,7 +15,7 @@ my $dbh = CXGN::DB::Connection->new();
 
 my $DEBUG = 1;
 
-my @marker_types = ("COS","P","TM","RFLP - fwd","RFLP - rev","PCR - fwd","PCR - rev","COSII","EST clones","EST markers","Unigenes - singletons","Unigenes - real unigenes", "INDEL", "SNP");
+my @marker_types = ("COS","P","TM","RFLP - fwd","RFLP - rev","PCR - fwd","PCR - rev","COSII","EST clones","EST markers","Unigenes - singletons","Unigenes - contigs", "SNP", "SNP");
 
 my $map_version_id = $opt_v;
 
@@ -77,6 +77,12 @@ my @queries = (
 
 # unigenes - real unigenes
 "select alias, marker_id, seq as sequence from marker_alias inner join marker_derived_from using(marker_id) inner join unigene on(unigene_id=id_in_source and derived_from_source_id=3) LEFT JOIN unigene_consensi USING (consensi_id) $join where seq is not null and seq != '' $where",
+
+#SNP markers - left
+"select alias||'-5prime_flanking_region' as name, marker_id, sequence from marker_alias inner join pcr_experiment using(marker_id) inner join pcr_experiment_sequence using(pcr_experiment_id) join sequence using(sequence_id) $join join cvterm on (pcr_experiment_sequence.type_id=cvterm.cvterm_id) where sequence is not null $where and cvterm.name='five_prime_flanking_region'",
+
+#SNP markers - right
+"select alias||'-3prime_flanking_region' as name, marker_id, sequence from marker_alias inner join pcr_experiment using(marker_id) inner join pcr_experiment_sequence using(pcr_experiment_id) join sequence using(sequence_id) $join join cvterm on (pcr_experiment_sequence.type_id=cvterm.cvterm_id) where sequence is not null $where and cvterm.name='three_prime_flanking_region'"
 
 );
 
