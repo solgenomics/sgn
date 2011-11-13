@@ -25,6 +25,7 @@ use CXGN::Phylo::OrganismTree;
 use CXGN::Page::FormattingHelpers qw | tooltipped_text |;
 use CXGN::Tools::Text;
 use SGN::Image;
+use Data::Dumper;
 
 with 'Catalyst::Component::ApplicationAttribute';
 
@@ -612,7 +613,18 @@ sub _render_organism_tree {
             $species_names,
             $self->species_data_summary_cache,
            );
-
+	
+	my $cache = $self->species_data_summary_cache();
+	foreach my $n (@$species_names) { 
+	    my $ors = CXGN::Chado::Organism::get_organism_by_species($n, $schema);
+	    # $o is a resultset
+	    if ($ors) { 
+		my $genome_info = $cache->thaw($ors->organism_id())->{'Genome Information'};
+		if ($genome_info =~ /y/i) { 
+		    $tree->hilite_species([100,255,100], [$n]);
+		}
+	    }
+	}
         my $image_map_name = $root_species.'_map';
         my $image_map = $tree->get_renderer
             ->get_html_image_map( $image_map_name );
