@@ -207,7 +207,8 @@
 
         var feature_search_field_defaults = {
                       maxLength: 100,
-                      width: 350,
+                      width: 425,
+                      labelWidth: 130,
                       listeners: {
                           specialkey: function(field, e){
                               if (e.getKey() == e.ENTER) {
@@ -317,6 +318,7 @@
                           listeners: {} // don't override the combobox's enter key
                         },{
                           fieldLabel: 'containing',
+                          labelWidth: 75,
                           labelAlign: 'right',
                           name: 'prop_value',
                           width: 200
