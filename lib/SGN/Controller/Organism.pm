@@ -621,7 +621,7 @@ sub _render_organism_tree {
 	    if ($ors) { 
 		my $genome_info = $cache->thaw($ors->organism_id())->{'Genome Information'};
 		if ($genome_info =~ /y/i) { 
-		    $tree->hilite_species([100,255,100], [$n]);
+		    $tree->hilite_species([170,220,180], [$n]);
 		}
 	    }
 	}
