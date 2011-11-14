@@ -109,12 +109,18 @@ sub search_json :Path('/search/features/search_service') Args(0) {
     my $params = $c->req->params;
     my $total  = $rs->count;
 
-    # set up prefetching, sorting, and paging
+    # set up sorting and paging
     $rs = $c->stash->{search_resultset} = $rs->search(
         undef,
         {
-          page => $params->{'page'}  || 1,
-          rows => $params->{'limit'} || $self->default_page_size,
+            ( defined $params->{'page'}
+                  ? (
+                      page => $params->{'page'}  || 1,
+                      rows => $params->{'limit'} || $self->default_page_size,
+                    )
+                  : ()
+            ),
+
           order_by => {
               '-'.(lc $params->{dir} || 'asc' )
               =>
