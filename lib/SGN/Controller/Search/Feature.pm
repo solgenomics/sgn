@@ -84,6 +84,7 @@ sub format_search_args : Private {
         map {
             $_ => $params->{$_},
         } qw(
+
               organism
               type
               type_id
@@ -94,6 +95,9 @@ sub format_search_args : Private {
               proptype_id
               prop_value
               description
+
+              sort
+              dir
             )
     };
 }
@@ -109,31 +113,16 @@ sub search_json :Path('/search/features/search_service') Args(0) {
     my $params = $c->req->params;
     my $total  = $rs->count;
 
-    # set up sorting and paging
-    $rs = $c->stash->{search_resultset} = $rs->search(
-        undef,
-        {
-            ( defined $params->{'page'}
-                  ? (
-                      page => $params->{'page'}  || 1,
-                      rows => $params->{'limit'} || $self->default_page_size,
-                    )
-                  : ()
-            ),
-
-          order_by => {
-              '-'.(lc $params->{dir} || 'asc' )
-              =>
-              ( {
-                  'type'     => 'type.name',
-                  'organism' => 'organism.species',
-                  'name'     => 'me.name',
-                }->{lc $params->{'sort'}}
-                || 'me.feature_id'
-              )
-          },
-        },
-      );
+    # set up paging if specified
+    if( defined $params->{'page'} ) {
+        $rs = $c->stash->{search_resultset} = $rs->search(
+            undef,
+            {
+                page => $params->{'page'}  || 1,
+                rows => $params->{'limit'} || $self->default_page_size,
+            },
+         );
+    }
 
     $c->forward('assemble_result');
 
@@ -315,6 +304,25 @@ sub make_feature_search_rs : Private {
                 prefetch => 'featureprops'
             });
     }
+
+
+    # set the sort order
+    $rs = $c->stash->{search_resultset} = $rs->search(
+        undef,
+        {
+          order_by => {
+              '-'.(lc $args->{dir} || 'asc' )
+              =>
+              ( {
+                  'type'     => 'type.name',
+                  'organism' => 'organism.species',
+                  'name'     => 'me.name',
+              }->{lc $args->{'sort'}}
+                || 'me.feature_id'
+              )
+          },
+        },
+    );
 
     $c->stash->{search_resultset} = $rs;
 }

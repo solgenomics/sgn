@@ -39,13 +39,18 @@ SGN.Feature.Search = {
                 // get the filtering data from the store
                 var post_vars = Ext.clone( store.proxy.extraParams );
 
-                // filter out any form fields that are just whitespace
+                // filter out any form fields that are empty or just whitespace
                 for( var name in post_vars ) {
                     var value = post_vars[name];
                     if( value == null || typeof value == 'string' && ! value.match(/[^\s]/) ) {
                         delete post_vars[name];
                     }
                 }
+
+                // get the sort settings from the store
+                var sorter = store.sorters.first();
+                post_vars.sort = sorter.property;
+                post_vars.dir = sorter.direction;
 
                 return post_vars;
             }
@@ -283,7 +288,7 @@ SGN.Feature.Search = {
                 var data = form.getFieldValues();
                 // filter out any form fields that are just whitespace
                 for( var name in data ) {
-                    if( typeof data[name] == 'string' && ! data[name].match(/[^\s]/) ) {
+                    if( data[name] == null || typeof data[name] == 'string' && ! data[name].match(/[^\s]/) ) {
                         delete data[name];
                     }
                 }
