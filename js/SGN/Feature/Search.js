@@ -103,6 +103,33 @@ SGN.Feature.Search = {
                 return value.length > 0 ? value : '-';
             }
 
+            function export_to_bulk( bulk_url ) {
+                var search_query = get_search_query( feature_store );
+                search_query.fields = 'name';
+                Ext.Ajax.request({
+                    url: '/search/features/search_service',
+                    method: 'GET',
+                    params: search_query,
+                    success: function( response ) {
+                        // make a bulk-download URL populated with these IDs
+                        var features = Ext.JSON.decode( response.responseText ).data;
+                        var names = [];
+                        for( var i = 0; i < features.length; i++ ) {
+                            names.push( features[i].name );
+                        }
+                        names = names.join("\n");
+
+                        Ext.create( 'Ext.form.Panel', {
+                          url: bulk_url,
+                          standardSubmit: true,
+                          defaultType: 'textfield',
+                          hidden: true,
+                          items: [{ name: 'ids', value: names }]
+                        }).submit();
+                    }
+                 });
+            }
+
             var feature_grid = Ext.create('Ext.grid.Panel', {
                 width:    700,
                 height:   400,
@@ -121,8 +148,7 @@ SGN.Feature.Search = {
                           id: 'feature_export_toolbar_disabled_label',
                           text: 'Exporting limited to '+ Ext.util.Format.number( maximum_export_size, '0,000' )+' features.',
                           hidden: true
-                        },
-                        {
+                        },{
                             xtype: 'button',
                             text: 'Save as',
                             icon: '/img/icons/oxygen/16x16/media-floppy.png',
@@ -146,33 +172,16 @@ SGN.Feature.Search = {
                             menu: {
                                 items: [
                                     {
-                                        text: 'SGN bulk download',
+                                        text: 'bulk feature download',
                                         icon: '/img/icons/oxygen/16x16/document-export-table.png',
                                         handler: function() {
-                                            var search_query = get_search_query( feature_store );
-                                            search_query.fields = 'name';
-                                            Ext.Ajax.request({
-                                                url: '/search/features/search_service',
-                                                method: 'GET',
-                                                params: search_query,
-                                                success: function(response) {
-                                                    // make a bulk-download URL populated with these IDs
-                                                    var features = Ext.JSON.decode( response.responseText ).data;
-                                                    var names = [];
-                                                    for( var i = 0; i < features.length; i++ ) {
-                                                        names.push( features[i].name );
-                                                    }
-                                                    names = names.join("\n");
-
-                                                    Ext.create( 'Ext.form.Panel', {
-                                                      url: '/bulk/feature',
-                                                      standardSubmit: true,
-                                                      defaultType: 'textfield',
-                                                      hidden: true,
-                                                      items: [{ name: 'ids', value: names }]
-                                                    }).submit();
-                                                }
-                                             });
+                                            export_to_bulk( '/bulk/feature' );
+                                        }
+                                    },{
+                                        text: 'bulk gene download',
+                                        icon: '/img/icons/oxygen/16x16/document-export-table.png',
+                                        handler: function() {
+                                            export_to_bulk( '/bulk/gene' );
                                         }
                                     }
                                 ]
