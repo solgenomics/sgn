@@ -155,7 +155,7 @@ sub assemble_result : Private {
                        },
                      );
 
-    $c->stash->{search_result_fields} = [qw[
+    my $fields = $c->stash->{search_result_fields} = $c->req->params->{fields} || [qw[
             feature_id
             organism
             type
@@ -165,22 +165,29 @@ sub assemble_result : Private {
             description
         ]];
 
+    my %field_handlers = (
+        organism    => sub { shift->organism->species },
+        type        => sub { shift->type->name },
+        name        => sub { shift->name },
+        feature_id  => sub { shift->feature_id },
+        seqlen      => sub { shift->seqlen },
+        locations   => sub {
+            join( ',', map {
+                my $fl = $_;
+                location_string( $fl );
+               } shift->featureloc_features
+            )
+        },
+        description => sub { join ' ', get_descriptions( shift ) },
+    );
+
     my @result;
     while( my $feature = $rs->next ) {
         push @result,  {
-                organism    => $feature->organism->species,
-                type        => $feature->type->name,
-                name        => $feature->name,
-                feature_id  => $feature->feature_id,
-                seqlen      => $feature->seqlen,
-                locations   => ( join( ',', map {
-                                    my $fl = $_;
-                                    location_string( $fl );
-                                   } $feature->featureloc_features
-                                 ),
-                               ),
-                description => join( ' ', get_descriptions( $feature ) ),
-            };
+            map { $_ => $field_handlers{ $_ }->( $feature ) }
+            grep $field_handlers{$_}, # only try to make the fields we know how to make
+            @{ ref $fields ? $fields : [$fields] }
+        };
     }
 
     $c->stash->{search_result} = \@result;
