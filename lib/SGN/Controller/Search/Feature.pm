@@ -143,13 +143,13 @@ sub assemble_result : Private {
 
     my $rs = $c->stash->{search_resultset};
 
-    # make sure we prefetch a bunch of stuff
+    # make sure we prefetch some stuff
     $rs = $rs->search( undef,
                        {
                            prefetch => [
                                'type',
                                'organism',
-                               { 'featureloc_features' => 'srcfeature' },
+                               ( $rs->is_paged ? () : ( { 'featureloc_features' => 'srcfeature' } ) ),
                                #'featureprops',
                            ],
                        },
