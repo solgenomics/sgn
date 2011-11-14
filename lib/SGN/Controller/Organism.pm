@@ -6,6 +6,7 @@ organism data
 =cut
 
 package SGN::Controller::Organism;
+
 use Moose;
 use namespace::autoclean;
 
@@ -538,7 +539,7 @@ sub _species_summary_cache_configuration {
                 'Loci' => $org->get_loci_count,
                 'Phenotypes' => $org->get_phenotype_count,
                 'Maps Available' => $org->has_avail_map,
-                'Genome Information' => $org->has_avail_genome,
+                'Genome Information' => $org->has_avail_genome ? 'yes': 'no',
                 'Libraries' => scalar( $org->get_library_list ),
             });
         },
@@ -695,8 +696,6 @@ sub get_parentage {
     return @taxonomy;
 }
 
-
-
-
 __PACKAGE__->meta->make_immutable;
+
 1;
