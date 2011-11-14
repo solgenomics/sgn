@@ -308,9 +308,12 @@ sub bulk_gene_download :Path('/bulk/gene/download') :Args(1) {
 
 sub bulk_feature :Path('/bulk/feature') :Args(0) {
     my ( $self, $c ) = @_;
-    my $mode = $c->req->param('mode') || 'feature';
+    my $mode = $c->req->params->{'mode'} || 'feature';
 
     $c->stash( bulk_js_menu_mode => $mode );
+    if( my $ids = $c->req->params->{'ids'} ) {
+        $c->stash( prefill_ids => $ids );
+    }
 
     $c->forward('bulk_js_menu');
 
