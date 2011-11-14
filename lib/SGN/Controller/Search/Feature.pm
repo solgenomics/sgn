@@ -173,7 +173,7 @@ sub assemble_result : Private {
                } shift->featureloc_features
             )
         },
-        description => sub { join ' ', get_descriptions( shift ) },
+        description => sub { join ' ', get_descriptions( shift, 'no_html' ) },
     );
 
     my @result;
