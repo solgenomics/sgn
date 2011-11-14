@@ -22,7 +22,7 @@ use SGN::Test::WWW::Mechanize skip_cgi => 1;
 my $mech = SGN::Test::WWW::Mechanize->new;
 
 $mech->get_ok("/search/features");
-$mech->content_contains('Feature Search');
+$mech->content_like(qr/search/i);
 $mech->content_contains('<script', 'yep, there is some javascript in there, hah');
 $mech->html_lint_ok;
 
