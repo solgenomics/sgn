@@ -85,10 +85,13 @@
                     // enable or disable the export and save
                     // toolbar based on how many features matched
                     datachanged: function( store ) {
+                        var toolbar = Ext.getCmp('feature_export_toolbar');
                         if( store.getTotalCount() <= <% $maximum_export_size %> ) {
                             // enable the export toolbar
+                            toolbar.enable();
                         } else {
                             // disable the export toolbar
+                            toolbar.disable();
                         }
                     }
             },
@@ -126,6 +129,7 @@
                {
                 xtype: 'toolbar',
                 dock: 'top',
+                id: 'feature_export_toolbar',
                 items: [
                     '->',
                     {
