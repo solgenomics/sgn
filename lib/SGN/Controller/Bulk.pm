@@ -129,6 +129,10 @@ sub bulk_gene :Path('/bulk/gene') : Args(0) {
 
     $c->forward('bulk_js_menu');
 
+    if( my $ids = $c->req->params->{'ids'} ) {
+        $c->stash( prefill_ids => $ids );
+    }
+
     $c->stash( template => 'bulk_gene.mas');
 }
 
@@ -311,6 +315,7 @@ sub bulk_feature :Path('/bulk/feature') :Args(0) {
     my $mode = $c->req->params->{'mode'} || 'feature';
 
     $c->stash( bulk_js_menu_mode => $mode );
+
     if( my $ids = $c->req->params->{'ids'} ) {
         $c->stash( prefill_ids => $ids );
     }
