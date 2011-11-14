@@ -165,7 +165,33 @@
                             items: [
                                 {
                                     text: 'SGN bulk download',
-                                    handler: function() { alert('SGN bulk download!') }
+                                    icon: '/img/icons/oxygen/16x16/document-export-table.png',
+                                    handler: function() {
+                                        var search_query = get_search_query( feature_store );
+                                        search_query.fields = 'name';
+                                        Ext.Ajax.request({
+                                            url: '/search/features/search_service',
+                                            method: 'GET',
+                                            params: search_query,
+                                            success: function(response) {
+                                                // make a bulk-download URL populated with these IDs
+                                                var features = Ext.JSON.decode( response.responseText ).data;
+                                                var names = [];
+                                                for( var i = 0; i < features.length; i++ ) {
+                                                    names.push( features[i].name );
+                                                }
+                                                names = names.join("\n");
+
+                                                Ext.create( 'Ext.form.Panel', {
+                                                  url: '/bulk/feature',
+                                                  standardSubmit: true,
+                                                  defaultType: 'textfield',
+                                                  hidden: true,
+                                                  items: [{ name: 'ids', value: names }]
+                                                }).submit();
+                                            }
+                                         });
+                                    }
                                 }
                             ]
                         }
