@@ -137,7 +137,7 @@
                     '->',
                     { xtype: 'label',
                       id: 'feature_export_toolbar_disabled_label',
-                      text: 'More than '+ Ext.util.Format.number(<% $maximum_export_size %>,'0,000' )+' elements matched, exporting disabled.',
+                      text: 'Exporting limited to '+ Ext.util.Format.number(<% $maximum_export_size %>,'0,000' )+' features.',
                       hidden: true
                     },
                     {
