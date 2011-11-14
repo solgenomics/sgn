@@ -195,7 +195,7 @@ sub feature_table {
 
     my @headings = ( "Organism", "Type", "Name", "Location", "Length", "Strand", "Phase" );
 
-    my @align = [ map 'l', @headings ];
+    my @align = map 'l', @headings;
 
     # omit any columns that are *all* undefined, or that we were
     # requested to omit
