@@ -28,6 +28,13 @@ And/or upload list file: <br /><input type="file" name="feature_file" />
 <br />
 
 </td>
+<td valign="top" bgcolor="#EEEEEE" width="320">
+
+<b>Download feature information</b>:<br />
+<div style="padding-left: 1em">
+    <input type="checkbox" name="feature_sequence" onchange="this.checked='checked'" checked="checked" /> feature sequence <br />
+</div>
+</td>
 </tr></table>
 
 <input type="submit" value="Submit" /><br />
