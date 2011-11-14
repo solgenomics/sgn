@@ -86,12 +86,15 @@
                     // toolbar based on how many features matched
                     datachanged: function( store ) {
                         var toolbar = Ext.getCmp('feature_export_toolbar');
+                        var label = Ext.getCmp('feature_export_toolbar_disabled_label');
                         if( store.getTotalCount() <= <% $maximum_export_size %> ) {
                             // enable the export toolbar
                             toolbar.enable();
+                            label.hide();
                         } else {
                             // disable the export toolbar
                             toolbar.disable();
+                            label.show();
                         }
                     }
             },
@@ -132,6 +135,11 @@
                 id: 'feature_export_toolbar',
                 items: [
                     '->',
+                    { xtype: 'label',
+                      id: 'feature_export_toolbar_disabled_label',
+                      text: 'More than '+ Ext.util.Format.number(<% $maximum_export_size %>,'0,000' )+' elements matched, exporting disabled.',
+                      hidden: true
+                    },
                     {
                         xtype: 'button',
                         text: 'Save as',
