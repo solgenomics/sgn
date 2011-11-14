@@ -71,7 +71,7 @@ The search matched too many records, please make your search more specific.
     }
 
     $c->res->content_type( 'text/csv' );
-    $c->stash->{download_filename} = 'SGN_feature_export.csv';
+    $c->stash->{download_filename} = 'SGN_features.csv';
     $c->forward('/download/set_download_headers');
     $c->res->body( $body );
 }
