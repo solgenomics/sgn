@@ -491,8 +491,7 @@ span.toolbar_help {
 .infosectiontitle,
 .sub_infosectiontitle,
 .infosectiontitle_empty,
-.sub_infosectiontitle_empty,
-.x-panel-header-text
+.sub_infosectiontitle_empty
 { 
   font-weight: bold;
   vertical-align: middle;
