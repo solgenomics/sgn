@@ -166,7 +166,8 @@ How can a deeper understanding of the genetic basis of plant biodiversity be har
 
   <p>
   The tree below shows organisms that have been proposed for
-  sequencing by the SOL-100 project.
+  sequencing by the SOL-100 project. Highlighted species are already 
+  being sequenced.
   </p>
 
   <& /organism/tree.mas, organism_tree => $organism_tree &>
