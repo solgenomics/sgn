@@ -16,6 +16,11 @@ has 'default_page_size' => (
     default => 20,
 );
 
+has 'maximum_export_size' => (
+    is => 'ro',
+    default => 10_000,
+);
+
 =head1 PUBLIC ACTIONS
 
 =head2 search
@@ -35,11 +40,43 @@ sub search :Path('/search/features') Args(0) {
 
     $c->stash(
         template => '/feature/search.mas',
+        maximum_export_size => $self->maximum_export_size,
     );
     $c->forward('View::Mason');
 }
 
-sub search_json :Path('/search/features/search_service') Args(0) {
+sub csv_export_search : Path('/search/features/export_csv') {
+    my ( $self, $c ) = @_;
+
+    $c->forward('format_search_args');
+    $c->forward('make_feature_search_rs');
+
+    if( $c->stash->{search_resultset}->count > $self->maximum_export_size ) {
+        $c->throw_client_error( public_message => <<'' );
+The search matched too many records, please make your search more specific.
+
+    }
+
+    $c->forward('assemble_result');
+
+    my @headings = @{ $c->stash->{search_result_fields} || [] };
+    my $results = $c->stash->{search_result};
+    my $body = join( ',', map '"'.ucfirst($_).'"', @headings )."\n";
+    for my $r ( @$results ) {
+        no warnings 'uninitialized';
+        $body .= join( ',',
+                       map qq|"$r->{$_}"|,
+                       @headings
+                    )."\n";
+    }
+
+    $c->res->content_type( 'text/csv' );
+    $c->stash->{download_filename} = 'SGN_feature_export.csv';
+    $c->forward('/download/set_download_headers');
+    $c->res->body( $body );
+}
+
+sub format_search_args : Private {
     my ( $self, $c ) = @_;
 
     my $params = $c->req->params;
@@ -59,17 +96,24 @@ sub search_json :Path('/search/features/search_service') Args(0) {
               description
             )
     };
+}
 
-    my $rs = $c->forward('make_feature_search_rs');
+sub search_json :Path('/search/features/search_service') Args(0) {
+    my ( $self, $c ) = @_;
 
-    my $total = $rs->count;
+    $c->forward('format_search_args');
+    $c->forward('make_feature_search_rs');
+
+    my $rs = $c->stash->{search_resultset};
+
+    my $params = $c->req->params;
+    my $total  = $rs->count;
 
     # set up prefetching, sorting, and paging
-    $rs = $rs->search(
+    $rs = $c->stash->{search_resultset} = $rs->search(
         undef,
         {
-          prefetch => [ 'type', 'organism' ],
-          page => $params->{'page'} || 1,
+          page => $params->{'page'}  || 1,
           rows => $params->{'limit'} || $self->default_page_size,
           order_by => {
               '-'.(lc $params->{dir} || 'asc' )
@@ -85,28 +129,61 @@ sub search_json :Path('/search/features/search_service') Args(0) {
         },
       );
 
+    $c->forward('assemble_result');
+
     $c->res->body( to_json( {
         success    => JSON::true,
         totalCount => $total,
-        data => [
-            map { {
-                organism    => $_->organism->species,
-                type        => $_->type->name,
-                name        => $_->name,
-                feature_id  => $_->feature_id,
-                seqlen      => $_->seqlen,
+        data       => $c->stash->{search_result},
+    }));
+}
+
+sub assemble_result : Private {
+    my ( $self, $c ) = @_;
+
+    my $rs = $c->stash->{search_resultset};
+
+    # make sure we prefetch a bunch of stuff
+    $rs = $rs->search( undef,
+                       {
+                           prefetch => [
+                               'type',
+                               'organism',
+                               { 'featureloc_features' => 'srcfeature' },
+                               #'featureprops',
+                           ],
+                       },
+                     );
+
+    $c->stash->{search_result_fields} = [qw[
+            feature_id
+            organism
+            type
+            name
+            seqlen
+            locations
+            description
+        ]];
+
+    my @result;
+    while( my $feature = $rs->next ) {
+        push @result,  {
+                organism    => $feature->organism->species,
+                type        => $feature->type->name,
+                name        => $feature->name,
+                feature_id  => $feature->feature_id,
+                seqlen      => $feature->seqlen,
                 locations   => ( join( ',', map {
                                     my $fl = $_;
-                                    location_string( $fl )
-                                   } $_->featureloc_features
+                                    location_string( $fl );
+                                   } $feature->featureloc_features
                                  ),
                                ),
-                description => join( ' ', get_descriptions( $_ ) ),
-            } }
-            $rs->all
-        ],
-    }));
+                description => join( ' ', get_descriptions( $feature ) ),
+            };
+    }
 
+    $c->stash->{search_result} = \@result;
 }
 
 sub feature_type_autocomplete : Path('/search/features/feature_types_service') {

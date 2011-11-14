@@ -24,7 +24,7 @@ our @EXPORT_OK = qw/
     get_descriptions
     location_list_html
     location_string
-    location_string_with_strand
+    location_string_html
     type_name
 /;
 
@@ -77,7 +77,7 @@ sub get_descriptions {
     return @descriptions;
 }
 
-sub location_string {
+sub location_string_html {
     my ( $id, $start, $end, $strand ) = @_;
     if( @_ == 1 ) {
         my $loc = shift;
@@ -90,13 +90,22 @@ sub location_string {
     return "$id:$start..$end";
 }
 
-sub location_string_with_strand {
-    location_string( @_ )
+sub location_string {
+    my ( $id, $start, $end, $strand ) = @_;
+    if( @_ == 1 ) {
+        my $loc = shift;
+        $id     = $loc->srcfeature->name;
+        $start  = $loc->fmin+1;
+        $end    = $loc->fmax;
+        $strand = $loc->strand;
+    }
+    ( $start, $end ) = ( $end, $start ) if $strand && $strand == -1;
+    return "$id:$start..$end";
 }
 
 sub location_list_html {
     my ($feature, $featurelocs) = @_;
-    my @coords = map { location_string($_) }
+    my @coords = map { location_string_html($_) }
         ( $featurelocs ? $featurelocs->all
                        : $feature->featureloc_features->all)
         or return '<span class="ghosted">none</span>';

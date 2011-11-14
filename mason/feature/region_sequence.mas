@@ -39,7 +39,7 @@
                  &>
 
 %            } else { # otherwise, if the sequence is big
-                <p class="warning">Sequence region (<% location_string($loc) %>) too large to display.</p>
+                <p class="warning">Sequence region (<% location_string_html($loc) %>) too large to display.</p>
 %            }
 %            my ( $start, $end ) = $loc->strand == -1 ? ( $loc->fmax, $loc->fmin+1 ) : ( $loc->fmin+1, $loc->fmax );
              <% info_table_html(
@@ -61,7 +61,7 @@
 % }
 
 <%once>
-   use SGN::View::Feature qw/ location_string /;
+   use SGN::View::Feature qw/ location_string location_string_html /;
    use List::Util qw/ min max /;
    use List::MoreUtils qw/ pairwise /;
    use CXGN::Page::FormattingHelpers 'info_table_html';
@@ -121,10 +121,10 @@
     <form name="get_flanking_sequence" action="/api/v1/sequence/download/multi" method="GET">
       <input type="hidden" name="format" value="fasta" />
       <select name="s">
-%     for ( upstream_downstream_options( $loc ) ) {
-%        my ( $locstring, $description ) = @$_;
-          <option value="<% $locstring %>"><% $description %></option>
-%     }
+%       for ( upstream_downstream_options( $loc ) ) {
+%          my ( $locstring, $description ) = @$_;
+           <option value="<% $locstring %>"><% $description %></option>
+%       }
       </select>
       <input value="Download" type="submit" />
     </form>

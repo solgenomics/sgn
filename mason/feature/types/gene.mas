@@ -5,10 +5,7 @@
     $featurelocs
 </%args>
 <%once>
-    use SGN::View::Feature qw/
-    location_string_with_strand
-    mrna_cds_protein_sequence
-/;
+    use SGN::View::Feature 'mrna_cds_protein_sequence';
 </%once>
 <%perl>
     my $reference   = $featurelocs ? $featurelocs->single->srcfeature : undef ;
