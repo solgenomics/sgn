@@ -1,8 +1,8 @@
 var SGN;
 if( ! SGN ) SGN = {};
-if( ! SGN.Feature ) SGN.Feature = {};
+if( ! SGN.Search ) SGN.Search = {};
 
-SGN.Feature.Search = {
+SGN.Search.Feature = {
 
     set_up_feature_search: function( args ) {
         var maximum_export_size = args.maximum_export_size || 10000;
