@@ -103,7 +103,7 @@ sub search_index : Path('/search/index.pl') Path('/search') Args(0) {
     my ( $self, $c ) = @_;
 
     $c->stash(
-        content  => CXGN::Page::Toolbar::SGN->new->index_page('search'),
+        content  => $c->view('Toolbar')->index_page('search'),
      );
 }
 
