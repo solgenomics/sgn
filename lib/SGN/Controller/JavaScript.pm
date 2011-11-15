@@ -48,9 +48,11 @@ sub default :Path {
     my $rel_file = File::Spec->catfile( @args );
 
     # support caching with If-Modified-Since requests
-    my $ims = $c->req->headers->if_modified_since;
     my $full_file = File::Spec->catfile( $self->js_include_path->[0], $rel_file );
     my $modtime = (stat( $full_file ))[9];
+    $c->throw_404 unless $modtime;
+
+    my $ims = $c->req->headers->if_modified_since;
     if( $ims && $modtime && $ims >= $modtime ) {
         $c->res->status( RC_NOT_MODIFIED );
         $c->res->body(' ');
