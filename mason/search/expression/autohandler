@@ -1,0 +1,8 @@
+<& /page/mode_buttons.mas, buttons => [
+           ['/search/expression/template',   'Templates'   ],
+           ['/search/expression/experiment', 'Experiments' ],
+           ['/search/expression/platform',   'Platforms'   ],
+       ],
+&>
+
+% $m->call_next;

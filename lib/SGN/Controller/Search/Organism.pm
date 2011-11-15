@@ -1,7 +1,6 @@
 package SGN::Controller::Search::Organism;
 use Moose;
 use namespace::autoclean;
-use SGN::Controller::Search;
 
 BEGIN { extends 'Catalyst::Controller' }
 
@@ -18,7 +17,6 @@ has 'default_page_size' => (
 sub search : Path('/search/organisms') {
     my ($self, $c) = @_;
 
-    $c->forward('/search/stash_tab_data');
     $c->forward( 'get_taxa_choices' );
     $c->forward( 'build_form' );
 
@@ -31,8 +29,7 @@ sub search : Path('/search/organisms') {
     }
 
     $c->stash(
-        template =>  '/organism/search.mas',
-        tabs     => $c->stash->{tab_html_function}->('organisms'),
+        template =>  '/search/organisms.mas',
         form     => $form,
         results  => $results,
         pagination_link_maker => sub {

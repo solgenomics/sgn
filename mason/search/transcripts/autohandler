@@ -1,0 +1,8 @@
+<& /page/mode_buttons.mas, buttons => [
+         [ '/search/transcripts/unigene',     'Unigenes'  ],
+         [ '/search/transcripts/est',         'ESTs'      ],
+         [ '/search/transcripts/est_library', 'Libraries' ],
+       ],
+&>
+
+% $m->call_next;
