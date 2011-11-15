@@ -39,11 +39,11 @@ sub TEST_MRNA_CDS_PROTEIN_SEQUENCE : Tests {
 sub TEST_FEATURE_TABLE : Tests {
     my $self = shift;
     my $f = $self->{feature};
-    my $table_data = feature_table( [$f] );
-    is( scalar(@$table_data), 1, 'got one row for the one, unlocated feature' );
-    table_row_contains( $table_data->[0], 'not located', 'says feature is not located' );
-    table_row_contains( $table_data->[0], $f->name, 'has feature name' );
-    table_row_contains( $table_data->[0], $f->organism->species, 'has species' );
+    my %table_data = feature_table( [$f] );
+    is( scalar @{$table_data{data}}, 1, 'got one row for the one, unlocated feature' );
+    table_row_contains( $table_data{data}->[0], 'not located', 'says feature is not located' );
+    table_row_contains( $table_data{data}->[0], $f->name, 'has feature name' );
+    table_row_contains( $table_data{data}->[0], $f->organism->species, 'has species' );
 
 }
 
