@@ -353,6 +353,18 @@ sub modesel {
     my $numcols  = @$ar * 4 + 1;
     my $selected = shift;
 
+    if( $selected =~ /\D/ ) {
+        my $found = undef;
+        for( my $i = 0; $i < @$ar; $i++ ) {
+            my $link = $ar->[$i][0];
+            if( $selected =~  m! ^ $link (?: $ | [\?/] ) !x ) {
+                $found = $i;
+                last;
+            }
+        }
+        $selected = defined $found ? $found : 0;
+    }
+
     my @buttons =
       map {
         {
