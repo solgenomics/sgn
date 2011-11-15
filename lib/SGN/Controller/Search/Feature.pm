@@ -39,7 +39,7 @@ sub search :Path('/search/features') Args(0) {
     my ( $self, $c ) = @_;
 
     $c->stash(
-        template => '/feature/search.mas',
+        template => '/search/features.mas',
         maximum_export_size => $self->maximum_export_size,
     );
     $c->forward('View::Mason');
