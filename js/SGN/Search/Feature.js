@@ -261,7 +261,7 @@ SGN.Search.Feature = {
                                   root: 'data',
                                   totalProperty: 'totalCount',
                                   successProperty: 'success'
-                              },
+                              }
                           }
                       });
 
@@ -275,7 +275,7 @@ SGN.Search.Feature = {
                                   root: 'data',
                                   totalProperty: 'totalCount',
                                   successProperty: 'success'
-                              },
+                              }
                           }
                       });
 
@@ -402,7 +402,7 @@ SGN.Search.Feature = {
                                 step: 10000,
                                 minValue: 1,
                                 width: 100
-                              },
+                              }
                           ]
                       },
                       {
@@ -438,12 +438,17 @@ SGN.Search.Feature = {
                     buttons: [
                         {
                             text: 'Clear',
-                            handler: function() { var form = this.up('form').getForm(); form.reset() }
+                            handler: function() {
+                                var form = this.up('form').getForm();
+                                form.reset();
+                            }
                         },{
                             text: 'Apply',
-                            handler: function() { applyFeatureFilters( this.up('form').getForm() ) }
+                            handler: function() {
+                                applyFeatureFilters( this.up('form').getForm() );
+                            }
                         }
-                    ],
+                    ]
                 });
 
                 feature_types_store.load();
