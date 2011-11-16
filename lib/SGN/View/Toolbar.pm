@@ -29,6 +29,11 @@ sub default_toolbar_data {
                     desc => 'Gene search.'
                 },
                 {
+                    name => 'Genome features',
+                    link => '/search/features',
+                    desc => 'Search for many types of annotations and sequences.'
+                },
+                {
                     name => 'Phenotypes',
                     link => '/search/phenotypes/stock',
                     desc => 'Search for mutants, accessions, and traits.'
@@ -37,11 +42,6 @@ sub default_toolbar_data {
                     name => 'QTLs',
                     link => '/search/phenotypes/qtl',
                     desc => 'A web interface for uploading QTL raw data, on-the-fly QTL mapping and search interface for QTLs.'
-                },
-                {
-                    name => 'Genome features',
-                    link => '/search/features',
-                    desc => 'Search for many types of annotations and sequences.'
                 },
                 {
                     name => 'Unigenes',
