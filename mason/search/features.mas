@@ -2,7 +2,6 @@
   $maximum_export_size
 </%args>
 
-<& /page/page_title.mas, title => 'Search genome features' &>
 <& /util/import_extjs.mas &>
 <& /util/import_javascript.mas, classes => 'SGN.Search.Feature' &>
 

@@ -28,11 +28,11 @@ Lukas Mueller &st;lam87@cornell.edu&gt;. Based on Perl code by Rob Buels.
     ['/search/loci','Genes'],
     ['/search/phenotypes','QTLs & Phenotypes'],
     ['/search/transcripts','Transcripts'],
+    ['/search/features','Genome Features'],
     ['/search/family', 'Unigene Families' ],
     ['/search/markers','Markers'],
     ['/search/genomic/clones','Genomic Clones'],
     ['/search/images','Images'],
-    ['/search/directory','People'],
     ['/search/expression', 'Expression'],
 
    ]
