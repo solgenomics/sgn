@@ -50,7 +50,7 @@ nothing could be found.
 sub default :Path {
     my ( $self, $c ) = @_;
 
-    return 1 if $self->_do_redirects($c);
+    return 1 if $c->forward('/redirects/find_redirect');
 
     $c->throw_404;
 }
@@ -185,47 +185,7 @@ sub auto : Private {
 
 
 
-########### helper methods ##########3
-
-sub _do_redirects {
-    my ($self, $c) = @_;
-    my $path = $c->req->path;
-    my $query = $c->req->uri->query || '';
-    $query = "?$query" if $query;
-
-    $c->log->debug("searching for redirects ($path) ($query)") if $c->debug;
-
-    # if the path has multiple // in it, collapse them and redirect to
-    # the result
-    if(  $path =~ s!/{2,}!/!g ) {
-        $c->log->debug("redirecting multi-/ request to /$path$query") if $c->debug;
-        $c->res->redirect( "/$path$query", 301 );
-        return 1;
-    }
-
-    # try an internal redirect for index.pl files if the url has not
-    # already been found and does not have an extension
-    if( $path !~ m|\.\w{2,4}$| ) {
-        if( my $index_action = $self->_find_cgi_action( $c, "$path/index.pl" ) ) {
-            $c->log->debug("redirecting to action $index_action") if $c->debug;
-            my $uri = $c->uri_for_action($index_action, $c->req->query_parameters)
-                        ->rel( $c->uri_for('/') );
-            $c->res->redirect( "/$uri", 302 );
-            return 1;
-        }
-    }
-
-    # redirect away from cgi-bin URLs
-    elsif( $path =~ s!cgi-bin/!! ) {
-        $c->log->debug("redirecting cgi-bin url to /$path$query") if $c->debug;
-        $c->res->redirect( "/$path$query", 301 );
-        return 1;
-    }
-
-}
-
-
-############# helper subs ##########
+############# helper methods ##########
 
 sub _find_cgi_action {
     my ($self,$c,$path) = @_;

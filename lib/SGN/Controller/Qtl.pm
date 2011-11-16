@@ -489,7 +489,7 @@ sub qtl_form : PathPart('qtl/form') Chained Args {
     
     unless ($userid) 
     {
-       $c->res->redirect($c->uri_for('/solpeople/login.pl'));     
+       $c->res->redirect( '/solpeople/login.pl' );
     }
     
     $type = 'intro' if !$type; 
@@ -550,21 +550,6 @@ sub genetic_map {
   
     $c->stash( genetic_map => qq | <a href=/cview/map.pl?map_version_id=$mapv_id>$map_name ($map_sh_name)</a> | );
 
-}
-
-sub search_form : PathPart('qtl/search') Chained Args(0) {
-    my ($self, $c) = @_;
-    $c->res->redirect('/search/qtl');
-}
-
-sub qtl_population : PathPart('qtl/population') Chained Args(0) {
-    my ($self, $c) = @_;
-    $c->res->redirect('/search/qtl');
-}
-
-sub search_help_redirect : PathPart('search/qtl/help') Chained Args(0) {
-    my ($self, $c) = @_;
-    $c->res->redirect('/qtl/search/help');
 }
 
 sub search_help : PathPart('qtl/search/help') Chained Args(0) {
