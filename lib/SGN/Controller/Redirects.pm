@@ -18,6 +18,7 @@ my %paths = (
     # redirects from refactoring the search controller
     qw(
         /search/qtl                            /search/phenotypes/qtl
+        /trait/search                          /search/phenotypes/traits
         /search/trait                          /search/phenotypes/traits
         /search/phenotype                      /search/phenotypes/stock
         /search/unigene                        /search/transcripts/unigene
