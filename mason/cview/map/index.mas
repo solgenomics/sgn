@@ -71,6 +71,22 @@ whether the map knows how to overlay information on the map [boolean]
 
 whether the map is private [boolean]. Will cause the map to be shown only for logged in users who own the map.
 
+=item parent1_stock_id
+
+the stock_id of parent1
+
+=item parent1_stock_name
+
+the name of stock parent1
+
+=item parent2_stock_id
+
+the stock_id of parent2
+
+=item parent2_stock_name
+
+the name of stock parent2
+
 =back
 
 =head1 AUTHORS
@@ -108,6 +124,10 @@ $chromosome_stats => ''
 $message => ''
 $overview_image
 $can_overlay => 0
+$parent1_stock_id => ''
+$parent1_stock_name => '(unknown)'
+$parent2_stock_id => ''
+$parent2_stock_name => '(unknown)'
 </%args>
 
 <%perl>
@@ -167,6 +187,15 @@ $can_overlay => 0
 </&>
 
 % }
+
+% my ($stock1_link, $stock2_link) = ("", "");
+% $parent1_stock_id ?  $stock1_link='' : $stock1_link = "/stock/$parent1_stock_id/view";
+% $parent2_stock_id ?  $stock2_link='' : $stock2_link = "/stock/$parent2_stock_id/view";
+<&| /page/info_section.mas, title=>"Parents of mapping population" &>
+Parent 1 <a href="<% $stock1_link %>"><% $parent1_stock_name %></a><br />
+Parent 2 <a href="<% $stock2_link %>"><% $parent2_stock_name %></a><br />
+</&>
+
 
 % my $total = 0; 
 % my $html = '<table><tr><td></td><td width="30">&nbsp;</td><td>markers</td></tr>';

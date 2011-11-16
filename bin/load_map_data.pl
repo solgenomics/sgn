@@ -47,6 +47,12 @@ add data to map version provided. Conflicts with -i and -n.
 
 required if -i is not used. Provides the map name.
 
+=item -l
+
+specify name of linkage groups as a comma separated list:
+1,2,3,4,5,6,7,8,9,10,11,12
+default is names from one to twelve. 
+
 =item -f
 
 force to 'unknown' protocol type if no protocol is provided.
@@ -85,15 +91,22 @@ use CXGN::DB::InsertDBH;
 use Data::Dumper;
 
 
-our ($opt_H, $opt_D, $opt_i, $opt_r, $opt_n, $opt_f, $opt_v);
+our ($opt_H, $opt_D, $opt_i, $opt_r, $opt_n, $opt_f, $opt_v, $opt_l);
 
-getopts('H:D:i:rn:fv:');
+getopts('H:D:i:rn:fv:l:');
 
 my $map_id;
 my $map_file;
 # specify linkage groups
 # example: my $linkage_groups = ['1','2','3','4','5'];
-my $linkage_groups = [ qw | 1 2 3 4 5 6 7 8 9 10 11 12 | ];
+
+my $linkage_groups;
+if ($opt_l) { 
+    $linkage_groups = [ split /\s*\,\s*/, $opt_l ];
+}
+else {
+    $linkage_groups = [ qw | 1 2 3 4 5 6 7 8 9 10 11 12 | ];
+}
 
 $map_id = $opt_i;
 my $map_version_id = $opt_v;

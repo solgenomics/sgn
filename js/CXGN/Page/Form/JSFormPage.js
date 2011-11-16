@@ -10,8 +10,9 @@
 *JSFormPage.js object is instantiated from CXGN::Page::Form::AjaxFormPage.pm
 */
 
-JSAN.use('jquery');
+/**JSAN.use('jquery');
 JSAN.use('Prototype');
+*/
 
 if (!CXGN) CXGN = function() {};
 if (!CXGN.Page) CXGN.Page = function() {};
@@ -534,6 +535,6 @@ CXGN.Page.Form.JSFormPage.prototype = {
 
     setEditableFormId: function(editableFormId) {
 	this.editableFormId = editableFormId;
-    }
+    },
     ////
-}
+};

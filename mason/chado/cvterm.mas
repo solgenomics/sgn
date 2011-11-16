@@ -167,7 +167,7 @@ if ( @qtl_pops )
         collapsible => 1,
    &>
      <& /page/columnar_table.mas,
-        headings     => ["Analyze QTL", "Population description"], 
+        headings     => ["Analyze QTL in population", "Population description"], 
         data         => \@qtl_data,
         __alt_freq   => 2,
         __align      =>'l',

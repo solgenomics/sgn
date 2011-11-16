@@ -65,4 +65,38 @@ sub autocomplete_GET :Args(0) {
     $c->{stash}->{rest} = \@results;
 }
 
+=head2 genome_autocomplete
+
+Public Path: /ajax/locus/genome_autocomplete
+
+Autocomplete a genome locus name.  Takes a single GET param,
+C<term>, responds with a JSON array of completions for that term.
+Genome locus names are stored in the Chado feature table
+
+=cut
+
+sub genome_autocomplete : Local : ActionClass('REST') { }
+
+sub genome_autocomplete_GET :Args(0) {
+    my ( $self, $c ) = @_;
+    my $term = $c->req->param('term');
+    # trim and regularize whitespace
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my @results;
+    my @feature_names = $schema->resultset("Sequence::Feature")->search(
+        { 'me.name'        => { 'like' => 'Solyc%' },
+          'me.uniquename'  => { 'ilike' => '%' . $term  . '%' } ,
+          'type.name'      => 'gene' },
+        { prefetch    => 'type',
+          select      => 'me.name' ,
+          rows        => 20 ,}
+        )->get_column('me.name')->all;
+
+    $c->{stash}->{rest} = \@feature_names;
+}
+
+
+
 1;

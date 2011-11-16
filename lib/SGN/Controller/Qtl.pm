@@ -9,6 +9,7 @@ package SGN::Controller::Qtl;
 use Moose;
 use namespace::autoclean;
 use File::Spec::Functions;
+use List::MoreUtils qw /uniq/;
 use File::Temp qw / tempfile /;
 use File::Path qw / mkpath  /;
 use File::Copy;
@@ -629,8 +630,90 @@ sub mark_qtl_traits {
 }
 
 
+sub qtl_traits : PathPart('qtl/traits') Chained Args(1) {
+    my ($self, $c, $index) = @_;
+    
+    if ($index !~ /\w{1}/) 
+    {
+        my $traits_list = $self->map_qtl_traits($c, $index);
+    
+        $c->stash( template    => '/qtl/traits/index.mas',
+                   index       => $index,
+                   traits_list => $traits_list
+            );
+    }
+    else 
+    {
+        $c->res->redirect('/search/qtl');
+    }
+}
 
+sub all_qtl_traits : PathPart('qtl/traits') Chained Args(0) {
+    my ($self, $c) = @_;
+    $c->res->redirect('/search/qtl');
+}
 
+sub filter_qtl_traits {
+    my ($self, $index) = @_;
+
+    my $qtl_tools = CXGN::Phenome::Qtl::Tools->new();
+    my ( $all_traits, $all_trait_d ) = $qtl_tools->all_traits_with_qtl_data();
+  
+    my  @all_traits = sort { $a <=> $b } uniq (@{$all_traits});
+
+    my @traits_subgroup;
+    
+    foreach my $trait (@all_traits)
+    {
+        if ( $trait =~ /^$index/i )
+        {
+            push @traits_subgroup, $trait;
+        }
+    }
+    
+    return \@traits_subgroup;
+
+}
+
+sub map_qtl_traits {
+    my ($self, $c, $index) = @_;
+
+    my $traits_list = $self->filter_qtl_traits($index);
+    
+    my @traits_urls;
+    if (@{$traits_list})
+    {
+        foreach my $trait (@{$traits_list})
+        {
+            my $cvterm = CXGN::Chado::Cvterm::get_cvterm_by_name( $c->dbc->dbh, $trait );
+            my $cvterm_id = $cvterm->get_cvterm_id();
+            if ($cvterm_id)
+            {
+                push @traits_urls,
+                [
+                 map { $_ } 
+                 (
+                  qq |<a href=/chado/cvterm.pl?cvterm_id=$cvterm_id>$trait</a> |
+                 )
+                ];
+            }
+            else
+            {
+                my $t = CXGN::Phenome::UserTrait->new_with_name( $c->dbc->dbh, $trait );
+                my $trait_id = $t->get_user_trait_id();
+                push @traits_urls,
+                [
+                 map { $_ } 
+                 (
+                  qq |<a href=/phenome/trait.pl?trait_id=$trait_id>$trait</a> |
+                 )
+                ];
+            }
+        }
+    }
+   
+    return \@traits_urls;
+}
 
 __PACKAGE__->meta->make_immutable;
 ####

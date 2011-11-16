@@ -54,7 +54,7 @@ sol100.mas - SGN page for sol100 project organism data overview in a tree format
 <&| /page/info_section.mas,
   title         =>  'The questions',
   collapsible   => 1,
-  collapsed     => 0,
+  collapsed     => 1,
   &>
 
 <p>
@@ -166,7 +166,8 @@ How can a deeper understanding of the genetic basis of plant biodiversity be har
 
   <p>
   The tree below shows organisms that have been proposed for
-  sequencing by the SOL-100 project.
+  sequencing by the SOL-100 project. Highlighted species are already 
+  being sequenced.
   </p>
 
   <& /organism/tree.mas, organism_tree => $organism_tree &>
@@ -197,6 +198,10 @@ How can a deeper understanding of the genetic basis of plant biodiversity be har
 
   <b>Mathilde Causse, Jeanne Jacobs, Glenn Bryan, Harry Klee, Sanwen Huan, and Ren&eacute; Klein Lankhorst</b>
 
+</&>
+
+<&| /page/info_section.mas, title=>"Submit genome to SGN" &>
+If you are sequencing a SOL-100 genome, please submit the genome to SGN. <a href="mailto:sgn-feedback@solgenomics.net">Contact SGN</a> for more information.
 </&>
 
 
