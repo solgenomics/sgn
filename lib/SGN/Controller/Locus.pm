@@ -19,6 +19,17 @@ BEGIN { extends 'Catalyst::Controller' }
 with 'Catalyst::Component::ApplicationAttribute';
 
 
+has 'schema' => (
+    is       => 'rw',
+    isa      => 'DBIx::Class::Schema',
+    lazy_build => 1,
+);
+
+sub _build_schema {
+    shift->_app->dbic_schema( 'CXGN::Phenome::Schema' )
+}
+
+
 =head2 new_locus
 
 Public path: /locus/0/new
