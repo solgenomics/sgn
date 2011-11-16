@@ -148,8 +148,8 @@ sub view_locus : Chained('get_locus') PathPart('view') Args(0) {
             image_ids      => $image_ids,
             xrefs      => \@locus_xrefs,
         },
-        locus_add_uri  => $c->uri_for( '/ajax/stock/associate_locus' ),
-        cvterm_add_uri => $c->uri_for( '/ajax/stock/associate_ontology')
+        locus_add_uri  => $c->uri_for( '/ajax/locus/associate_locus' ),
+        cvterm_add_uri => $c->uri_for( '/ajax/locus/associate_ontology')
         );
 }
 
