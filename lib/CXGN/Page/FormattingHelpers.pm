@@ -362,7 +362,7 @@ sub modesel {
                 last;
             }
         }
-        $selected = defined $found ? $found : 0;
+        $selected = $found;
     }
 
     my @buttons =
