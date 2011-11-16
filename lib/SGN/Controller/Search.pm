@@ -87,7 +87,31 @@ sub old_direct_search : Path('/search/direct_search.pl') {
     my ( $self, $c ) = @_;
 
     my $term = $c->req->param('search');
-    if ($term eq 'cvterm_name') {$term = 'qtl';}
+    # map the old direct_search param to the new scheme
+    $term = {
+        cvterm_name => 'qtl',
+
+        qtl         => 'phenotypes/qtl',
+
+        # expression
+        platform    => 'expression/platform',
+        template    => 'expression/template',
+        experiment  => 'expression/experiment',
+
+        # transcripts
+        est_library => 'transcripts/est_library',
+        est         => 'transcripts/est',
+        unigene     => 'transcripts/unigene',
+        library     => 'transcripts/est_library',
+
+        template_experiment_platform => 'expression',
+
+        bacs        => 'genomic/clones',
+
+        phenotype_qtl_trait => 'phenotypes',
+
+
+    }->{$term} || $term;
     $c->res->redirect('/search/'.$term, 301 );
 }
 
