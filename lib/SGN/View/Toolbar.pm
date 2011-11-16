@@ -631,7 +631,7 @@ EOH
       . <<EOH
 
   <td class="toolbar_search toolbar_content">
-    <form class="quicksearch" action="/search/quick_search.pl">
+    <form name="quicksearch" class="quicksearch" action="/search/quick_search.pl">
       <input class="quicksearch field" type="text" name="term" size="14" />
       <input class="quicksearch imgbutton" type="image" src="/documents/img/sol_search_button.gif" value="sol search" />
     </form>
