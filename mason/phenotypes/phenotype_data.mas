@@ -67,6 +67,7 @@ foreach my $phenotype (@$phenotypes) {
      { prefetch => { 'cvterm' => 'cv' } }
     )->single;
   my $unit = $unit_cvterm->cvterm->name if $unit_cvterm;
+  no warnings 'uninitialized';
   push @ { $info{$observable->name."|". $observable->cvterm_id ."|". $definition . "|" . $unit} } , $phenotype;
 }
 my $count = 0;
