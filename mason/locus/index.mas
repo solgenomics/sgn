@@ -86,6 +86,8 @@ my $owner_objects= $locus->get_owners(1);
 my $locus_name = $locus->get_locus_name();
 
 my $registry = $locus->get_associated_registry();
+my $registry_subtitle =  $is_owner && $locus_id ?  qq| <a href="javascript:Tools.toggleContent('associateRegistryForm', 'locus_registry')">[Associate a registry name with this locus]</a> |
+  : qq|<span class = "ghosted"> [Associate registry name]</span>| ;
 
 my @synonyms = $locus->get_locus_aliases('f','f');
 my @figures = $locus->get_figure_ids();
@@ -106,7 +108,7 @@ my $allele_subtitle = $curator || $submitter || $sequencer  ?
   '<span class="ghosted">[Add new Allele]</span>' ;
 
 my $al_subtitle = $curator || $submitter || $sequencer  ?
-  '<a href="javascript:Tools.toggleContent(\'associateLocusForm\', \'locus2locus\');Tools.getOrganisms()">[Associate new locus]</a> ' :
+  '<a href="javascript:Tools.toggleContent(\'associateLocusForm\', \'locus_network\');Tools.getOrganisms()">[Associate new locus]</a> ' :
   '<span class="ghosted">[Associate new locus]</span>' ;
 
 my $collapsed = $locus->count_associated_loci() ? 1 : 0 ;
@@ -215,7 +217,6 @@ function jqueryStuff() {
 <table><tr><td>
       <table>
 	<tr><td>
-<& /locus/registry.mas , person_id=>"$person_id", locus_id=>"$locus_id" , owner=>"$is_owner", registry=>"$registry" &>
 
 <& /locus/synonym.mas ,  locus_id=>"$locus_id" , synonyms=>\@synonyms &>
 
@@ -236,8 +237,18 @@ function jqueryStuff() {
 </table>
 </&>
 
+
 % if($locus_id) {
 
+<&| /page/info_section.mas,
+  title       => "Registry name: $registry",
+  subtitle    => $registry_subtitle,
+  id          => "locus_registry",
+  collapsible => 1,
+  is_subsection => 1,
+  &>
+    <& /locus/registry.mas , person_id=>"$person_id", locus_id=>"$locus_id", registry => $registry , is_owner => $is_owner &>
+</&>
 
 % if($is_owner) {
     <&| /page/info_section.mas, title=>"Locus history", collapsible=>1, collapsed=>1 &>
@@ -271,14 +282,24 @@ function jqueryStuff() {
 </&>
 
 
-<&| /page/info_section.mas, title=>"Associated loci (" .  $locus->count_associated_loci() . ")", subtitle => "$al_subtitle", id=>"locus2locus", collapsible=>1, collapsed=>1 &>
+<&| /page/info_section.mas,
+ title       => "Associated loci (" .  $locus->count_associated_loci() . ")",
+ subtitle    => "$al_subtitle",
+ id          =>"locus_network",
+ collapsible =>1,
+ collapsed   =>1 &>
 
-  <& /locus/associate_locus.mas, locus_id=>$locus_id &>
+   <& /locus/associate_locus.mas, locus_id=>$locus_id &>
     <& /locus/network.mas , locus_id => $locus_id  &>
 
 </&>
 
-<&| /page/info_section.mas, title=>"Associated loci - graphical view", subtitle=>$network_sub, collapsible=>1, collapsed=>$collapsed &>
+<&| /page/info_section.mas,
+  title       => "Associated loci - graphical view",
+  subtitle    => $network_sub,
+  collapsible => 1,
+  collapsed   => $collapsed,
+  id          => "graphic_locus_network" &>
 
 %  print CXGN::Sunshine::Browser::include_on_page( 'locus', $locus_id ) if $network_sub ;
 
