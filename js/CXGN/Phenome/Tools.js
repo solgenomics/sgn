@@ -128,50 +128,6 @@ var Tools = {
 	}
     },
 
-    ////////////DEPRECATED//////////////////////////
-    //Make an ajax response that finds all the ontology terms with names/definitions/synonyms/accessions like the current value of the ontology input
-  //   getOntologies: function(str) {
-// 	if(str.length<4){
-// 	    var select = $('ontology_select').value;
-//             select.length=0;
-// 	    if ($('associate_ontology_button'))   $('associate_ontology_button').disabled = true;
-// 	}
-//         else{
-// 	    var db_name = $('cv_select').value;
-// 	    new Ajax.Request("/phenome/ontology_browser.pl", {
-// 		    parameters:
-// 		    {term_name: str, db_name: db_name}, 
-// 			onSuccess: function(response) {
-// 			var json = response.responseText;
-// 			var x =eval ("("+json+")");
-// 			if ( x.error ) { alert(x.error) ; }
-// 			else {
-// 			    //Parse the ajax response and update the ontology select box accordingly
-// 			    var select = $('ontology_select');
-// 			    if  ($('associate_ontology_button')) $('associate_ontology_button').disabled = true;
-// 			    var r = x.response;
-// 			    var responseArray = r.split("|");
-// 			    //the last element of the array is empty. Dont want this in the select box
-// 			    responseArray.pop();
-// 			    select.length = responseArray.length;
-// 			    for (i=0; i < responseArray.length; i++) {
-// 				var ontologyObject = responseArray[i].split("*");
-
-// 				select[i].value = ontologyObject[0];
-// 				if (typeof(ontologyObject[1]) != "undefined"){
-// 				    select[i].text = ontologyObject[1];
-// 				}
-// 				else{
-// 				    select[i].text = ontologyObject[0];
-// 				    select[i].value = null;
-// 				}
-// 			    }
-// 			}
-// 		    }
-// 	    });
-// 	}
-//     },
-
     //Make an ajax request for finding the available relationship types
     getRelationship: function() {
 	var type = 'relationship'; 
@@ -285,15 +241,16 @@ var Tools = {
     },
 
     //Make an ajax response that unobsoletes the selected ontology term-locus association
+    //this is also used in add_publication.pl - need to refactor.
     unobsoleteAnnot: function(type, type_dbxref_id)  {
-	var action = 'unobsolete';	
+	var action = 'unobsolete';
 	new Ajax.Request('/phenome/obsolete_object_dbxref.pl', {
 		method: 'get',
 		    parameters:
 		{object_dbxref_id: type_dbxref_id, type: type, action: action}, 
 		    onSuccess: function(response) {
 		    var json  = response.responseText;
-		    var x = eval ("("+json+")"); 
+		    var x = eval ("("+json+")");
 		    if (x.error) { alert(x.error); }
 		    else {  window.location.reload() ; }
 		},
@@ -305,22 +262,6 @@ var Tools = {
 		    alert (x);
 		},
 		    });
-    },
-
-    ////////////////////
-    //DEPRECATE THESE
-    /////////////////////////////////
-    //Make an ajax response that obsoletes the selected ontology_term_evidence-locus association
-    obsoleteAnnotEv: function(type, object_ev_id)  {
-	var action= 'obsolete';
-	new Ajax.Request('obsolete_object_ev.pl', {parameters:
-		{object_ev_id: object_ev_id, type: type, action: action}, onSuccess:this.reloadPage });
-    },
-    //Make an ajax response that unobsoletes the selected ontology term-locus association
-    unobsoleteAnnotEv: function(type, object_ev_id)  {
-	var action = 'unobsolete';	
-	new Ajax.Request('/phenome/obsolete_object_ev.pl', {parameters:
-		{object_ev_id: object_ev_id, type: type, action: action}, onSuccess:this.reloadPage });
     },
 
     /////////////////////////

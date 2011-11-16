@@ -10,11 +10,17 @@
 
 JSAN.use('MochiKit.DOM');
 JSAN.use('MochiKit.Visual');
-JSAN.use('MochiKit.Async');
+
 
 JSAN.use('CXGN.Effects');
 JSAN.use('CXGN.Phenome.Tools');
 JSAN.use('Prototype');
+
+
+JSAN.use('jquery');
+JSAN.use('jqueryui');
+JSAN.use('popup');
+
 
 var Locus = {
     //update the registry input box when an option is selected. Not sure if we should do this or not
@@ -117,6 +123,7 @@ var Locus = {
     },
     
     //Logic on when to enable the add registry button
+    //move to Tools.enableButton
     enableButton: function() {
 	var registry_name = $('registry_name').value;
 	var registry_symbol = $('registry_symbol').value;
@@ -273,11 +280,7 @@ var Locus = {
                 },
                     } )
     },
-    //##########
-    toggleAssociateRegistry: function()
-    {
-	MochiKit.Visual.toggle('associateRegistryForm', 'blind');
-    },
+
     //#####################################LOCUS RELATIONSHIPS
 
     updateLocusReferenceSelect: function(request) {
@@ -297,10 +300,9 @@ var Locus = {
     },
     /////////////////////////////
     getLocusRelationship: function() {
-	//MochiKit.DOM.getElement("associate_locus_button").disabled=false;
-	var type = 'locus_relationship'; 
+        var type = 'locus_relationship'; 
 	var locus_relationship_id = $('locus_relationship_select').value;
-        new Ajax.Request('/phenome/locus_browser.pl', { parameters:
+        new Ajax.Request('/phenome/locus_browser.pl', { parameters: //// move to the AJAX controller!
                   {type: type },
                       onSuccess: this.updateLocusRelationshipSelect });
     },
@@ -450,11 +452,6 @@ var Locus = {
 		    });
     },
 
-    toggleVisible:function(elem){
-        MochiKit.DOM.toggleElementClass("invisible", elem);
-	MochiKit.Logging.log("toggling visible element : " , elem);
-    },
-
     makeVisible: function(elem) {
         MochiKit.DOM.removeElementClass(elem, "invisible");
 	MochiKit.DOM.addElementClass(elem, "visible");
@@ -464,19 +461,6 @@ var Locus = {
     makeInvisible: function(elem) {
 	MochiKit.DOM.removeElementClass(elem, "visible");
         MochiKit.DOM.addElementClass(elem, "invisible");
-    },
-
-    isVisible: function(elem) {
-        // you may also want to check for
-        // getElement(elem).style.display == "none"
-	MochiKit.Logging.log("testing isVisible", elem);
-	if (MochiKit.DOM.hasElementClass(elem, "invisible")) {
-		MochiKit.Logging.log("this element is invisible: ", elem);
-	}else if  (MochiKit.DOM.hasElementClass(elem, "visible")) {
-	    MochiKit.Logging.log("this element is visible: ", elem);
-	}else {  MochiKit.Logging.log("this element does not have a visible/invisible element set: ", elem); } 
-
-	return MochiKit.DOM.hasElementClass(elem, "visible") ;
     },
 
     searchCvterms: function()  {
@@ -528,6 +512,53 @@ var Locus = {
 		    { type: type, object_id: locus_id, dbxref_id: dbxref_id, validate: validate}, onSuccess:Tools.reloadPage} );
 	}
     },
+    /////////////////////////////////////
+    /// locus network
+    /////////////////////////////////////
+    printLocusNetwork: function(locus_id, div_id) {
+        if (!div_id) div_id = 'locus_network';
+        jQuery.ajax( { url: "/locus/"+locus_id+"/network/" , dataType: "json",
+                       success: function(response) {
+                    var json = response;
+                    jQuery("#"+div_id).html(response.html);
+                    if ( response.error ) { alert(response.error) ; }
+                }
+            });
+    },
+
+    ////////////////////////////////////////////////////////////////////////////////////
+    //Make an ajax response that associates the selected locus with this locus
+    associateLocus: function(locus_id) {
+        var div_id = 'locus_network';
+        var object_id = $('locus_select').value;
+	var locus_relationship_id = $('locus_relationship_select').value;
+	var locus_evidence_code_id = $('locus_evidence_code_select').value;
+	var locus_reference_id = $('locus_reference_select').value ;
+        jQuery.ajax( {
+                type: 'POST',
+                    url: "/ajax/locus/associate_locus/",
+                    dataType: "json",
+                    data: 'object_id='+object_id+'&locus_relationship_id='+locus_relationship_id+'&locus_evidence_code_id='+locus_evidence_code_id+'&locus_reference_id='+locus_reference_id+'&locus_id='+locus_id ,
+                    success: function(response) {
+                    var json = response;
+                    if ( response.error ) { alert(response.error) ; }
+                },
+                    });
+        this.printLocusNetwork(locus_id, div_id);
+        Effects.hideElement('associateLocusForm');
+    },
+    ////////////////////////////////////////////////
+    obsoleteLocusgroupMember: function(lgm_id, locus_id, obsolete_url)  {
+        jQuery.ajax( { url: obsolete_url ,
+                       dataType: "json" ,
+                       type: 'POST',
+                       data: 'lgm_id='+lgm_id+'&locus_id'+locus_id,
+                       success: function(response) {
+                    var json = response;
+                    if ( response.error ) { alert(response.error) ; }
+                }
+            });
+        this.printLocusNetwork(locus_id);
+    },
 
 };//
-
