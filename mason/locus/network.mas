@@ -3,15 +3,14 @@
 </%args>
 
 
-<& /util/import_javascript.mas, classes => [ "CXGN.Phenome.Locus.LocusPage"] &>
+<& /util/import_javascript.mas, classes => [ "CXGN.Phenome.Locus"] &>
 
 
 <table><tr><td><div id="locus_network" >[loading...]</div>
 </td></tr></table>
 
 <script language="javascript" type="text/javascript">
-<!--
-    locusPage.printLocusNetwork( <% $locus_id %> );
 
--->
+  Locus.printLocusNetwork( <% $locus_id %> );
+
 </script>
