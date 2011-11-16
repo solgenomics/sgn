@@ -19,6 +19,7 @@ package SGN::Controller::AJAX::Locus;
 
 use Moose;
 
+use CXGN::Phenome::LocusgroupMember;
 use CXGN::Page::FormattingHelpers qw/ columnar_table_html info_table_html html_alternate_show /;
 use List::MoreUtils qw /any /;
 use Try::Tiny;
@@ -31,7 +32,6 @@ __PACKAGE__->config(
     stash_key => 'rest',
     map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
    );
-
 
 
 =head2 autocomplete
@@ -236,12 +236,12 @@ sub display_ontologies_GET  {
 ############
 sub associate_ontology:Path('/ajax/locus/associate_ontology') :ActionClass('REST') {}
 
-sub associate_ontology_POST :Args(0) {
+sub associate_ontology_GET :Args(0) {
     my ($self, $c) = @_;
     $c->stash->{rest} = { error => "Nothing here, it's a POST.." } ;
 }
-
-sub associate_ontology_GET :Args(0) {
+#########################change this to the locus object !! 
+sub associate_ontology_POST :Args(0) {
     my ( $self, $c ) = @_;
 
     my $params = map { $_ => $c->req->param($_) } qw/
@@ -416,9 +416,197 @@ sub toggle_obsolete_annotation_POST :Args(0) {
             $response->{response} = "success";
         }else { $response->{error} = "No locus evidence found for locus_dbxref_evidence_id $locus_dbxref_evidence_id! "; }
         #set locus_dbxref_evidence to obsolete
-    } else { $response->{error} = 'locus_dbxref_evidence $locus_dbxref_evidence_id does not exists! ';  }
+    } else { $response->{error} = "locus_dbxref_evidence $locus_dbxref_evidence_id does not exists! ";  }
     $c->stash->{rest} = $response;
 }
 
+sub locus_network : Chained('/locus/get_locus') :PathPart('network') : ActionClass('REST') { }
 
+sub locus_network_GET :Args(0) {
+    my ($self, $c) = @_;
+    my $locus = $c->stash->{locus};
+    my $locus_id = $locus->get_locus_id;
+    my $privileged;
+    if ($c->user) {
+        if ( $c->user->check_roles('curator') || $c->user->check_roles('submitter')  || $c->user->check_roles('sequencer') ) { $privileged = 1; }
+    }
+    my $dbh = $c->dbc->dbh;
+    my @locus_groups = $locus->get_locusgroups();
+    my $direction;
+    my $al_count = 0;
+    my $associated_loci;
+    my %rel = ();
+  GROUP: foreach my $group (@locus_groups) {
+      my $relationship = $group->get_relationship_name();
+      my @members      = $group->get_locusgroup_members();
+      my $members_info;
+      my $index = 0;
+
+#check if group has only 1 member. This means the locus itself is the only member (other members might have been obsolete)
+      if ( $group->count_members() == 1 ) { next GROUP; }
+    MEMBER: foreach my $member (@members) {
+        if ( $member->obsolete() == 1 ) {
+            delete $members[$index];
+            $index++;
+            next MEMBER;
+        }
+        my ($organism, $associated_locus_name, $gene_activity);
+        my $member_locus_id = $member->get_column('locus_id');
+        my $member_direction = $member->direction() || '';
+        my $lgm_id = $member->locusgroup_member_id();
+        if ( $member_locus_id == $locus_id ) {
+            $direction = $member_direction;
+        }
+        else {
+            $al_count++;
+            my $associated_locus =
+                CXGN::Phenome::Locus->new( $dbh, $member_locus_id );
+            $associated_locus_name =
+                $associated_locus->get_locus_name();
+            $gene_activity = $associated_locus->get_gene_activity();
+            $organism      = $associated_locus->get_common_name;
+            my $lgm_obsolete_link =  $privileged ?
+                qq | <input type = "button" onclick="javascript:Locus.obsoleteLocusgroupMember(\'$lgm_id\',  \'$locus_id\', \'/ajax/locus/obsolete_locusgroup_member\', \'/locus/$locus_id/network\')" value ="Remove" /> |
+                : qq| <span class="ghosted">[Remove]</span> |;
+            ###########
+            $members_info .=
+                qq|$organism <a href="/locus/$member_locus_id/view">$associated_locus_name</a> $gene_activity $lgm_obsolete_link <br /> |
+                if ( $associated_locus->get_obsolete() eq 'f' );
+            #directional relationships
+            if ( $member_direction eq 'subject' ) {
+                $relationship = $relationship . ' of';
+            }
+        }    #non-self members
+        $index++;
+    }    #members
+      $rel{$relationship} .= $members_info if ( scalar(@members) > 1 );
+  }    #groups
+    foreach my $r ( keys %rel ) {
+        $associated_loci .= info_table_html(
+            $r           => $rel{$r},
+            __border     => 0,
+            __tableattrs => 'width="100%"'
+            );
+    }
+    ################
+    $c->stash->{rest} = { html => $associated_loci } ;
+}
+
+
+sub associate_locus:Path('/ajax/locus/associate_locus') :ActionClass('REST') {}
+
+sub associate_locus_POST :Args(0) {
+    my ($self, $c) = @_;
+    my $schema = $c->dbic_schema('CXGN::Phenome::Schema');
+    my $privileged;
+    if ($c->user) {
+        if ( $c->user->check_roles('curator') || $c->user->check_roles('submitter')  || $c->user->check_roles('sequencer') ) { $privileged = 1; }
+    }
+    my $logged_person_id = $c->user->get_object->get_sp_person_id if $c->user;
+    my %params = map { $_ => $c->request->body_parameters->{$_} } qw/
+       locus_reference_id locus_evidence_code_id
+       object_id locus_relationship_id locus_id
+    /;
+    my $locus_id = $params{locus_id};
+    my $relationship;
+    if ($privileged) {
+        try {
+            my $bcs = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
+            my $cvterm = $bcs->resultset('Cv::Cvterm')->find( { cvterm_id => $params{locus_relationship_id} } );
+            $relationship=$cvterm->name();
+            my %directional_rel =
+                ('Downstream'=>1,
+                 'Inhibition'=>1,
+                 'Activation'=>1
+                );
+            my $directional= $directional_rel{$relationship};
+            my $lgm=CXGN::Phenome::LocusgroupMember->new($schema);
+            $lgm->set_locus_id($locus_id );
+            $lgm->set_evidence_id($params{locus_evidence_code_id});
+            $lgm->set_reference_id($params{locus_reference_id});
+            $lgm->set_sp_person_id($logged_person_id);
+            my $a_lgm=CXGN::Phenome::LocusgroupMember->new($schema);
+            $a_lgm->set_locus_id($params{object_id});
+            $a_lgm->set_evidence_id($params{locus_evidence_code_id});
+            $a_lgm->set_reference_id($params{locus_reference_id});
+            $a_lgm->set_sp_person_id($logged_person_id);
+
+            if ($directional) {
+                $lgm->set_direction('subject');
+                $a_lgm->set_direction('object')
+            }
+            my $locusgroup= $lgm->find_or_create_group($params{locus_relationship_id}, $a_lgm);
+            my $lg_id= $locusgroup->get_locusgroup_id();
+            $lgm->set_locusgroup_id($lg_id);
+            $a_lgm->set_locusgroup_id($lg_id);
+
+            my $lgm_id= $lgm->store();
+            my $algm_id=$a_lgm->store();
+            $c->stash->{rest} = ['success'];
+            return;
+        } catch {
+            $c->stash->{rest} = { error => "Failed: $_" };
+            # send an email to sgn bugs
+            $c->stash->{email} = {
+                to      => 'sgn-bugs@sgn.cornell.edu',
+                from    => 'sgn-bugs@sgn.cornell.edu',
+                subject => 'Associate locus failed! locus_id = $locus_id',
+                body    => '$_',
+            };
+            $c->forward( $c->view('Email') );
+            return;
+        };
+        # if you reached here this means associate_locus worked. Now send an email to sgn-db-curation
+        $c->stash->{email} = {
+            to      => 'sgn-db-curation@sgn.cornell.edu',
+            from    => 'sgn-bugs@sgn.cornell.edu',
+            subject => 'New locus associated with locus $locus_id',
+            body    => "User " . $c->user->get_object->get_first_name . " " . $c->user->get_object->get_last_name . "has associated locus $locus_id ($relationship) with locus " . $params{object_id} . "( /solgenomics.net/locus/$locus_id/view )",
+        };
+        $c->forward( $c->view('Email') );
+    } else {
+        $c->stash->{rest} = { error => 'No privileges for associating loci. You must have an sgn submitter account. Please contact sgn-feedback@solgenomics.net for upgrading your user account. ' };
+    }
+}
+
+
+sub obsolete_locusgroup_member : Path('/ajax/locus/obsolete_locusgroup_member') : ActionClass('REST') { }
+
+sub obsolete_locusgroup_member_POST :Args(0) {
+    my ($self, $c) = @_;
+    my $locus_id = $c->request->body_parameters->{locus_id};
+    my $lgm_id = $c->request->body_parameters->{lgm_id};
+    my $obsolete = $c->request->body_parameters->{obsolete};
+    my $schema = $c->dbic_schema('CXGN::Phenome::Schema');
+    my $response = {} ;
+    if ($lgm_id && $c->user ) {
+        my $lgm=CXGN::Phenome::LocusgroupMember->new($schema, $lgm_id);
+        if ($lgm->get_locusgroup_member_id) {
+            try {
+                $lgm->obsolete_lgm();
+            } catch {
+                $c->stash->{rest} = { error => "Failed: $_" };
+                $c->stash->{email} = {
+                    to      => 'sgn-bugs@sgn.cornell.edu',
+                    from    => 'sgn-bugs@sgn.cornell.edu',
+                    subject => " /ajax/locus/obsolete_locusgroup_member failed! locus_id = $locus_id, locusgroup_member_id = $lgm_id, obsolete = $obsolete",
+                    body    => '$_',
+                };
+                $c->forward( $c->view('Email') );
+                return;
+            };
+            $response->{response} = "success";
+            $c->stash->{email} = {
+                to      => 'sgn-db-curation@sgn.cornell.edu',
+                from    => 'sgn-bugs@sgn.cornell.edu',
+                subject => "[A locus group member has been obsoleted]",
+                body    => "User " . $c->user->get_object->get_first_name . " " . $c->user->get_object->get_last_name .  " has obsoleted locus group member $lgm_id \n ( /solgenomics.net/locus/$locus_id/view )",
+            };
+            $c->forward( $c->view('Email') );
+        }else { $response->{error} = "No locus group member  for locus group member_id $lgm_id! "; }
+    } else { $response->{error} = "locus group member  $lgm_id does not exists! ";  }
+    $c->stash->{rest} = $response;
+}
+####
 1;
+###

@@ -360,13 +360,13 @@ sub display_ontologies_GET  {
 ############
 sub associate_ontology:Path('/ajax/stock/associate_ontology') :ActionClass('REST') {}
 
-sub associate_ontology_POST :Args(0) {
+sub associate_ontology_GET :Args(0) {
     my ($self, $c) = @_;
-    $c->stash->{rest} = { error => "Nothing here, it's a POST.." } ;
+    $c->stash->{rest} = { error => "Nothing here, it's a GET.." } ;
 }
 
 
-sub associate_ontology_GET :Args(0) {
+sub associate_ontology_POST :Args(0) {
     my ( $self, $c ) = @_;
 
     my $params = map { $_ => $c->req->param($_) } qw/
