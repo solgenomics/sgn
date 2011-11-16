@@ -21,12 +21,17 @@ my %paths = (
         /trait/search                          /search/phenotypes/traits
         /search/trait                          /search/phenotypes/traits
         /search/phenotype                      /search/phenotypes/stock
+        /search/phenotype_qtl_trait            /search/phenotypes/stock
+
         /search/unigene                        /search/transcripts/unigene
         /search/platform                       /search/expression/platform
         /search/template_experiment_platform   /search/expression/template
+        /search/experiment                     /search/expression/experiment
         /search/est                            /search/transcripts/est
         /search/est_library                    /search/transcripts/est_library
+        /search/library                        /search/transcripts/est_library
         /search/bacs                           /search/genomic/clones
+        /search/marker                         /search/markers
       ),
 
     # qtl redirects

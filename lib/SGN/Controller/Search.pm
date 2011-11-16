@@ -92,6 +92,7 @@ sub old_direct_search : Path('/search/direct_search.pl') {
         cvterm_name => 'qtl',
 
         qtl         => 'phenotypes/qtl',
+        marker      => 'markers',
 
         # expression
         platform    => 'expression/platform',
@@ -129,6 +130,7 @@ sub search_index : Path('/search/index.pl') Path('/search') Args(0) {
     $c->stash(
         content  => $c->view('Toolbar')->index_page('search'),
      );
+    $c->forward('View::Mason');
 }
 
 sub family_search : Path('/search/family') Args(0) {
