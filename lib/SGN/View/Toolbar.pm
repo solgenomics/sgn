@@ -30,42 +30,42 @@ sub default_toolbar_data {
                 },
                 {
                     name => 'Phenotypes',
-                    link => '/search/direct_search.pl?search=phenotypes',
-                    desc => 'Phenotype search.'
+                    link => '/search/phenotypes/stock',
+                    desc => 'Search for mutants, accessions, and traits.'
                 },
                 {
                     name => 'QTLs',
-                    link => '/search/direct_search.pl?search=qtl',
+                    link => '/search/phenotypes/qtl',
                     desc => 'A web interface for uploading QTL raw data, on-the-fly QTL mapping and search interface for QTLs.'
                 },
                 {
                     name => 'Genome features',
-                    link => '/search/direct_search.pl?search=qtl',
+                    link => '/search/features',
                     desc => 'Search for many types of annotations and sequences.'
                 },
                 {
                     name => 'Unigenes',
-                    link => '/search/direct_search.pl?search=unigene',
+                    link => '/search/transcripts/unigene',
                     desc => 'Unigene search.'
                 },
                 {
-                    name => "Families",
-                    link => "/search/direct_search.pl?search=family",
-                    desc => "Family search."
+                    name => "Gene Families",
+                    link => "/search/family",
+                    desc => "Unigene family search."
                 },
                 {
                     name => 'Markers',
-                    link => '/search/direct_search.pl?search=markers',
+                    link => '/search/markers',
                     desc => 'Marker search.'
                 },
                 {
                     name => 'BACs',
-                    link => '/search/direct_search.pl?search=bacs',
+                    link => '/search/genomic/clones',
                     desc => 'BAC (Bacterial Artificial Chromosome) search.'
                 },
                 {
                     name => 'ESTs and libraries',
-                    link => '/search/direct_search.pl?search=est',
+                    link => '/search/transcripts/est',
                     desc =>
 'Find EST (Expressed Sequence Tag) libraries by keyword, e.g. library name, organism, tissue, development stage, or authors.'
                 },
@@ -77,12 +77,12 @@ sub default_toolbar_data {
                 },
                 {
                     name => 'Images',
-                    link => '/search/direct_search.pl?search=images',
+                    link => '/search/images',
                     desc => 'Search images contained in the SGN database.'
                 },
                 {
                     name => 'Expression',
-                    link => '/search/direct_search.pl?search=images',
+                    link => '/search/expression',
                     desc => 'Search images contained in the SGN database.'
                 },
                 {
@@ -352,7 +352,7 @@ sub default_toolbar_data {
                 },
 		{
                     name => 'solQTL: QTL Mapping',
-                    link => '/qtl',
+                    link => '/search/phenotypes/qtl',
                     desc =>
 'A web interface for uploading raw QTL data, on-the-fly QTL mapping, linking predicted QTLs to relevant genetic and genomic data in SGN, and search interface for QTLs.'
                 },
