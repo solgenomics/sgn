@@ -538,6 +538,9 @@ var Locus = {
                 type: 'POST',
                     url: "/ajax/locus/associate_locus/",
                     dataType: "json",
+                    /// make asynchronous since it takes long to finish the ajax request
+                    /// and we want to refresh the locus_network div only after the request is done
+                    async: false,
                     data: 'object_id='+object_id+'&locus_relationship_id='+locus_relationship_id+'&locus_evidence_code_id='+locus_evidence_code_id+'&locus_reference_id='+locus_reference_id+'&locus_id='+locus_id ,
                     success: function(response) {
                     var json = response;
