@@ -95,18 +95,20 @@ $ontology_url
 
 <& /util/import_javascript.mas, classes=>[qw[ jqueryui popup CXGN.AJAX.Ontology] ]&>
 
+
 % if ($show_form) {
 <div id="associate_cvterm_form" style="display: none">
   <b>Associate ontology term</b>
   <form name="cvterm_form" >
     <div id="cvterm_search"  >
       <select id = "db_name"  onchange = "jQuery('#term_name').val('---Type a term name---')" >
+        <option value ="">--Select Ontology--</option>
         <option value="GO">GO (gene ontology)</option>
         <option value="PO">PO (plant ontology)</option>
         <option value="SP">SP (Solanaceae phenotypes)</option>
       </select>
 
-      <input type="text" style="width: 60%" id="term_name" name="term_name" value="--Type a term name--" onchange = "Ontology.updateAutocomplete('<% $cvterm_autocomplete_uri %>')" />
+      <input type="text" style="width: 60%" id="term_name" name="term_name" value="--Type a term name--"  onclick = "Ontology.updateAutocomplete('<% $cvterm_autocomplete_uri %>')" />
       <input type="hidden" id="object_id" name="object_id" value="<% $object_id %>" />
 
       <div style="font-size: 80%; margin-left: 1em; color: #333">type a cvterm name</div>
@@ -158,7 +160,7 @@ $ontology_url
 <div id="ontology" >[loading...] </div>
 
 <script language="javascript">
-
+  
   Ontology.displayOntologies("ontology" , "<% $ontology_url %>");
 
 </script>
