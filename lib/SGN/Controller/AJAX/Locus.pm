@@ -499,6 +499,7 @@ sub associate_locus_POST :Args(0) {
     my ($self, $c) = @_;
     my $schema = $c->dbic_schema('CXGN::Phenome::Schema');
     my $privileged;
+    my $response;
     if ($c->user) {
         if ( $c->user->check_roles('curator') || $c->user->check_roles('submitter')  || $c->user->check_roles('sequencer') ) { $privileged = 1; }
     }
@@ -542,10 +543,10 @@ sub associate_locus_POST :Args(0) {
 
             my $lgm_id= $lgm->store();
             my $algm_id=$a_lgm->store();
-            $c->stash->{rest} = ['success'];
+            $response->{response} = 'success';
             return;
         } catch {
-            $c->stash->{rest} = { error => "Failed: $_" };
+            $response->{error} = "Failed: $_" ;
             # send an email to sgn bugs
             $c->stash->{email} = {
                 to      => 'sgn-bugs@sgn.cornell.edu',
@@ -565,8 +566,9 @@ sub associate_locus_POST :Args(0) {
         };
         $c->forward( $c->view('Email') );
     } else {
-        $c->stash->{rest} = { error => 'No privileges for associating loci. You must have an sgn submitter account. Please contact sgn-feedback@solgenomics.net for upgrading your user account. ' };
+        $response->{ error} = 'No privileges for associating loci. You must have an sgn submitter account. Please contact sgn-feedback@solgenomics.net for upgrading your user account. ' ;
     }
+    $c->stash->{rest} = $response;
 }
 
 
