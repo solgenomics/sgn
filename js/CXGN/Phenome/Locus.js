@@ -233,30 +233,6 @@ var Locus = {
     },
 
 
-    getEvidenceWith: function(locus_id)  {
-	var type = 'evidence_with';
-	var evidence_with_id = $('evidence_with_select').value;
-	new Ajax.Request('/phenome/evidence_browser.pl', {
-                parameters:
-                {type: type, locus_id: locus_id},
-                    onSuccess: function(response) {
-                    var select = $('evidence_with_select');
-                    var responseText = response.responseText;
-                    var responseArray = responseText.split("|");
-                    //the last element of the array is empty. Dont want this in the select box
-                    responseArray.pop();
-                    responseArray.unshift("*--Optional: select an evidence identifier--");
-                    select.length = 0;
-                    select.length = responseArray.length;
-                    for (i=0; i < responseArray.length; i++) {
-                        var evidenceWithObject = responseArray[i].split("*");
-                        select[i].value = evidenceWithObject[0];
-                        select[i].text = evidenceWithObject[1];
-                    }
-                },
-                    } );
-    },
-
     getLocusReference: function(locus_id) {
 	var type = 'reference';
 	var reference_id = $('locus_reference_select').value;
@@ -557,11 +533,40 @@ var Locus = {
                        type: 'POST',
                        data: 'lgm_id='+lgm_id+'&locus_id'+locus_id,
                        success: function(response) {
-                    var json = response;
                     if ( response.error ) { alert(response.error) ; }
                 }
             });
         this.printLocusNetwork(locus_id);
     },
+    ///////////////////////////////////////////////
+    ////locus unigenes
+    /////////////////////////////////////////////
+     printLocusUnigenes: function(locus_id) {
+        jQuery.ajax( {
+                url: '/locus/'+locus_id+'/unigenes/',
+                dataType: "json",
+                onSuccess: function(response) {
+                    jQuery("#locus_unigenes").html(response.unigenes);
+                    jQuery("#solcyc_links").html(response..solcyc);
+                    if ( response.error ) { alert(response.error) ; }
+                },
+            } );
+    },
+
+    //Make an ajax response that obsoletes the selected unigene-locus association
+    obsoleteLocusUnigene: function(locus_unigene_id, locus_id)  {
+        jQuery.ajax( { url: '/ajax/locus/obsolete_locus_unigene' ,
+                       dataType: "json" ,
+                       type: 'POST',
+                       data: 'locus_unigene_id='+locus_unigene_id+'&locus_id'+locus_id,
+                       success: function(response) {
+                    if ( response.error ) { alert(response.error) ; }
+                }
+            });
+        this.printLocusUnigene(locus_id);
+    },
+
+
+
 
 };//

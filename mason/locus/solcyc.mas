@@ -4,8 +4,8 @@
 
 <div id="solcyc_links" >[loading...]</div>
 <script language="javascript" type="text/javascript">
-  <!--
-      locusPage.printSolcycLinks(<% $locus_id %>);
-    -->
+
+  Locus.printLocusUnigenes( <% $locus_id %> );
+
 </script>
 

@@ -375,7 +375,7 @@ sub associate_ontology_POST :Args(0) {
     }
 }
 
-sub references : Chained('/locus/get_stock') :PathPart('references') : ActionClass('REST') { }
+sub references : Chained('/locus/get_locus') :PathPart('references') : ActionClass('REST') { }
 
 
 sub references_GET :Args(0) {
@@ -609,6 +609,126 @@ sub obsolete_locusgroup_member_POST :Args(0) {
     } else { $response->{error} = "locus group member  $lgm_id does not exists! ";  }
     $c->stash->{rest} = $response;
 }
+
+
+sub locus_unigenes : Chained('/locus/get_locus') :PathPart('unigenes') : ActionClass('REST') { }
+
+sub locus_unigenes_GET :Args(0) {
+    my ($self, $c) = @_;
+    my $locus = $c->stash->{locus};
+    my $locus_id = $locus->get_locus_id;
+    my $privileged;
+    if ($c->user) {
+        if ( $c->user->check_roles('curator') || $c->user->check_roles('submitter')  || $c->user->check_roles('sequencer') ) { $privileged = 1; }
+    }
+    my $dbh = $c->dbc->dbh;
+    my $response ={};
+    try {
+        my @unigenes = $locus->get_unigenes({current=>1});
+        my $unigenes;
+        my $common_name    = $locus->get_common_name();
+        my %solcyc_species = (
+            Tomato  => "LYCO",
+            Potato  => "POTATO",
+            Pepper  => "CAP",
+            Petunia => "PET",
+            Coffee  => "COFFEA"
+        );
+        if ( !@unigenes ) {
+            $unigenes = qq|<span class=\"ghosted\">none</span>|;
+        }
+        my @solcyc;
+        my ( $solcyc_links, $sequence_links );
+        my $solcyc_count = 0;
+        foreach my $unigene (@unigenes) {
+            my $unigene_id    = $unigene->get_unigene_id();
+            my $unigene_build = $unigene->get_unigene_build();
+            my $organism_name = $unigene_build->get_organism_group_name();
+            my $build_nr      = $unigene->get_build_nr();
+            my $nr_members    = $unigene->get_nr_members();
+            my $locus_unigene_id = $locus->get_locus_unigene_id($unigene_id);
+            #
+            my $unigene_obsolete_link = $privileged ?
+                qq | <input type = "button" onclick="javascript:Locus.obsoleteLocusUnigene(\'$locus_unigene_id\', \'/ajax/locus/obsolete_locus_unigene\', \'/locus/$locus_id/unigene\')" value ="Remove" /> |
+                : qq| <span class="ghosted">[Remove]</span> |;
+            #
+            my $blast_link = "<a href='/tools/blast/?preload_id=" . $unigene_id . "&preload_type=15'>[Blast]</a>";
+            $unigenes .=
+                qq|<a href="/search/unigene.pl?unigene_id=$unigene_id">SGN-U$unigene_id</a> $organism_name -- build $build_nr -- $nr_members members $unigene_obsolete_link $blast_link<br />|;
+
+            # get solcyc links from the unigene page...
+            #
+	    foreach my $dbxref ( $unigene->get_dbxrefs() ) {
+                if ( $dbxref->get_db_name() eq "solcyc_images" ) {
+                    my $url       = $dbxref->get_url();
+                    my $accession = $dbxref->get_accession();
+                    my ( $species, $reaction_id ) = split /\_\_/, $accession;
+                    my $description = $dbxref->get_description();
+                    unless ( grep { /^$accession$/ } @solcyc ) {
+                        push @solcyc, $accession;
+                        if ( $solcyc_species{$common_name} =~ /$species/i ) {
+                            $solcyc_count++;
+                            $solcyc_links .=
+                                qq |  <a href="http://solcyc.solgenomics.net/$species/NEW-IMAGE?type=REACTION-IN-PATHWAY&object=$reaction_id" border="0" ><img src="http://$url$accession.gif" border="0" width="25%" / ></a> |;
+                        }
+                    }
+                }
+            }
+        }
+
+        $response->{unigenes} = $unigenes;
+        $response->{solcyc}   = $solcyc_links;
+
+    } catch {
+        $response->{error} = "Failed: $_" ;
+        # send an email to sgn bugs
+        $c->stash->{email} = {
+            to      => 'sgn-bugs@sgn.cornell.edu',
+            from    => 'sgn-bugs@sgn.cornell.edu',
+            subject => 'locus_unigenes failed! locus_id = $locus_id',
+            body    => '$_',
+        };
+        $c->forward( $c->view('Email') );
+    };
+    $c->stash->{rest} = $response;
+}
+
+
+
+sub obsolete_locus_unigene : Path('/ajax/locus/obsolete_locus_unigene') : ActionClass('REST') { }
+
+sub obsolete_locus_unigene_POST :Args(0) {
+    my ($self, $c) = @_;
+    my $locus_unigene_id = $c->request->body_parameters->{locus_unigene_id};
+    my $locus_id = $c->request->body_parameters->{locus_id};
+    my $dbh = $c->dbc->dbh;
+    my $response = {} ;
+    try {
+        my $u_query="UPDATE phenome.locus_unigene SET obsolete='t' WHERE locus_unigene_id=?";
+        my $u_sth=$dbh->prepare($u_query);
+        $u_sth->execute($locus_unigene_id);
+    } catch {
+        $c->stash->{rest} = { error => "Failed: $_" };
+        $c->stash->{email} = {
+            to      => 'sgn-bugs@sgn.cornell.edu',
+            from    => 'sgn-bugs@sgn.cornell.edu',
+            subject => " /ajax/locus/obsolete_locus_unigene failed! locus_unigene_id = $locus_unigene_id",
+            body    => '$_',
+        };
+        $c->forward( $c->view('Email') );
+        return;
+    };
+    $response->{response} = "success";
+    $c->stash->{email} = {
+        to      => 'sgn-db-curation@sgn.cornell.edu',
+        from    => 'sgn-bugs@sgn.cornell.edu',
+        subject => "[A locus-unigene link has beed obsoleted] locus_id = $locus_id",
+        body    => "User " . $c->user->get_object->get_first_name . " " . $c->user->get_object->get_last_name .  " has obsoleted locus_unigene_id $locus_unigene_id \n ( /solgenomics.net/locus/$locus_id/view )",
+    };
+    $c->forward( $c->view('Email') );
+    $c->stash->{rest} = $response;
+}
+
 ####
 1;
 ###

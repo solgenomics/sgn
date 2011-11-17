@@ -32,19 +32,51 @@ CXGN.Phenome.Locus.LocusPage = function() {
 
 CXGN.Phenome.Locus.LocusPage.prototype = { 
 
-   
-    render: function() { 
-
-	this.printLocusUnigenes(this.getLocusId());
-    },
-
-
     //////////////////////////////////////////////
     /////////////////////////////////////////////////
     /////////////////////////////////////////////////////
 
 
-   
+    //Make an ajax response that associates the selected locus with this locus
+    associateLocus: function(locus_id) {
+	if (!locus_id)  locus_id = this.getLocusId(); 
+	var type = 'associate locus';
+	var object_id = $('locus_select').value;
+	var locus_relationship_id = $('locus_relationship_select').value;
+	var locus_evidence_code_id = $('locus_evidence_code_select').value;
+	var locus_reference_id = $('locus_reference_select').value ;
+
+	new Ajax.Request('/phenome/locus_browser.pl', {
+		parameters: {type: type, locus_id: locus_id, object_id: object_id, locus_relationship_id: locus_relationship_id, locus_evidence_code_id: locus_evidence_code_id, locus_reference_id: locus_reference_id},
+		    onSuccess: function(response) {
+		    var json = response.responseText;
+		    MochiKit.Logging.log("associateLocus works! ", json);
+		    var x = eval ("("+json+")");
+		    MochiKit.Logging.log("associateLocus: " , json);
+		    if (x.error) { alert(x.error); }
+		    else {
+			//alert('about to reprint locus network... ');
+			Tools.toggleContent('associateLocusForm', 'locus2locus');
+			locusPage.printLocusNetwork(locus_id);
+		    }
+		},
+		    });
+    },
+    ////////////////////////////////////////////////
+    obsoleteLocusgroupMember: function(lgm_id)  {
+	var type = 'obsolete' ;
+	new Ajax.Request("/phenome/locus_browser.pl", {
+		parameters: {type: type, lgm_id: lgm_id}, 
+		    onSuccess: function(response) {
+		    var json = response.responseText;
+		    var x = eval ("("+json+")");
+		    MochiKit.Logging.log("obsoleteLocusgroupMember response:  " , json);
+		    if (x.error) { alert(x.error); }
+		    else { locusPage.printLocusNetwork(); }
+		},
+		    });
+    },
+ 
     //////////////////////////
     //Locus unigenes section
     ///////////////////////////
@@ -91,22 +123,7 @@ CXGN.Phenome.Locus.LocusPage.prototype = {
 	    });
     },
     
-    ////////////////////////////////////////////////
-    //Make an ajax response that obsoletes the selected unigene-locus association
-    obsoleteLocusUnigene: function(locus_unigene_id)  {
-	var type= 'obsolete';
-	new Ajax.Request('unigene_browser.pl', {
-		parameters: {type: type, locus_unigene_id: locus_unigene_id},
-		    onSuccess: function(response) {
-		    var json = response.responseText;
-		    var x = eval ("("+json+")");
-		    MochiKit.Logging.log("obsoleteLocusUnigene response:  " , json);
-		    if (x.error) { alert(x.error); }
-		    else { locusPage.printLocusUnigenes(); }
-		},
-		    });
-    },
-    
+  
     //Make an ajax response that finds all the unigenes with unigene ids like the current value of the unigene id input
     getUnigenes: function(unigene_id, locus_id) {
 	if(unigene_id.length==0){
@@ -143,27 +160,7 @@ CXGN.Phenome.Locus.LocusPage.prototype = {
 	    }
 	}
     },
-    
-    printSolcycLinks: function(locus_id) {	
-	
-	if (!locus_id) locus_id = this.getLocusId();
-	this.printLocusUnigenes;
-	//var type = "solcyc";
-	//new Ajax.Request("/phenome/locus_page/print_locus_page.pl", {
-	//parameters: { type: type, locus_id: locus_id},
-	//    onSuccess: this.processLocusUnigenesResponse
-	//    });
-    },
-    /////////////////////////////////////////////
-    
-    setLocusId: function(locus_id) { 
-	this.locus_id = locus_id;
-    },
-    
-    getLocusId: function() { 
-	return this.locus_id;
-    },
-    
+  
 };
 
 

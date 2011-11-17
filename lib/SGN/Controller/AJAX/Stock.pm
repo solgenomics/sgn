@@ -388,7 +388,7 @@ sub associate_ontology_POST :Args(0) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $cvterm_rs = $schema->resultset('Cv::Cvterm');
     my ($pub_id) = $reference ? $reference :
-        $schema->resultset('Pub::Pub')->search( { title=> 'curator' } )->first->pub_id; # a pub for 'cuurator' should already be in the sgn database. can add here $curator_cvterm->create_with ... and then create the curator pub with type_id of $curator_cvterm
+        $schema->resultset('Pub::Pub')->search( { title=> 'curator' } )->first->pub_id; # a pub for 'curator' should already be in the sgn database. can add here $curator_cvterm->create_with ... and then create the curator pub with type_id of $curator_cvterm
 
     #solanaceae_phenotype--SP:000001--fruit size
     my ($cv_name, $db_accession, $cvterm_name)  = split /--/ , $ontology_input;
@@ -472,6 +472,7 @@ sub associate_ontology_POST :Args(0) {
                 $c->stash->{rest} = ['success'];
                 return;
             } catch {
+                print STDERR "***** associate_ontology failed! $_ \n\n";
                 $c->stash->{rest} = { error => "Failed: $_" };
                 # send an email to sgn bugs
                 $c->stash->{email} = {
@@ -484,6 +485,7 @@ sub associate_ontology_POST :Args(0) {
                 return;
             };
             # if you reached here this means associate_ontology worked. Now send an email to sgn-db-curation
+            print STDERR "***** User " . $logged_user->get_object->get_first_name . " " . $logged_user->get_object->get_last_name . "has stored a new ontology term for stock $stock_id\n\n";
             $c->stash->{email} = {
                 to      => 'sgn-db-curation@sgn.cornell.edu',
                 from    => 'sgn-bugs@sgn.cornell.edu',
