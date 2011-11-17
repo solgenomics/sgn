@@ -633,7 +633,7 @@ sub mark_qtl_traits {
 sub qtl_traits : PathPart('qtl/traits') Chained Args(1) {
     my ($self, $c, $index) = @_;
     
-    if ($index !~ /\w{1}/) 
+    if ($index =~ /^\w{1}$/) 
     {
         my $traits_list = $self->map_qtl_traits($c, $index);
     
