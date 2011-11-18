@@ -70,7 +70,7 @@ __PACKAGE__->config(
 
     # Static::Simple configuration
     static => {
-        dirs => [qw[ s static img documents static_content data ]],
+        dirs => [qw[ css s static img documents static_content data ]],
     },
 
     'Plugin::ConfigLoader' => {
