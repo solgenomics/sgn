@@ -4,6 +4,7 @@ use Test::More;
 
 use lib 't/lib';
 
+use SGN::Test qw/ qsub_is_configured /;
 use SGN::Test::WWW::Mechanize;
 use Catalyst::Test 'SGN';
 
@@ -33,8 +34,7 @@ $mech->get_ok("/qtl/traits/H", "qtl traits list page");
 
 
 {
-system("echo sleep 2 | qsub");
-local $TODO = 'qsub not configured' if $?;
+local $TODO = 'qsub not configured' unless qsub_is_configured();
 $mech->get_ok("/qtl/view/12", "Got qtl population page - old url");
 $mech->get_ok("/qtl/population/12", "Got qtl population page");
 $mech->content_contains("Population summary", "there is population summary section");
