@@ -95,11 +95,6 @@ sub default_toolbar_data {
                     link => '/help/faq.pl',
                     desc => 'Frequently asked questions from users of SGN.',
                 },
-                {
-                    name => 'Glossary',
-                    link => '/search/glossary',
-                    desc => 'Search a glossary of terms used on SGN.'
-                },
             ]
         },
         {
@@ -269,6 +264,12 @@ sub default_toolbar_data {
                     link => '/solanaceae-project/index.pl',
                     desc =>
 'Over the coming decade the International Solanaceae Genome Project (SOL) will create a coordianted network of knowledge about the Solanaceae family aimed at answering two of the most important questions about life and agriculture: How can a common set of genes/proteins give rise to such a wide range of morphologically and ecologically distinct organisms that occupy our planet? How can a deeper understanding of the genetic basis of diversity be harnessed to better meet the needs of society in an environmentally-friendly way? On this page, you will find more information about the strategy that will be used to answer these questions.'
+                },
+
+                {
+                    name => 'SOL-100 Project',
+                    link => '/organism/sol100/view',
+                    desc => 'The SOL community aims to create a common Solanaceae-based genomic framework that includes sequences and phenotypes of 100 genomes encompassing the phylogenetic diversity of the group.',
                 },
 
                 {
