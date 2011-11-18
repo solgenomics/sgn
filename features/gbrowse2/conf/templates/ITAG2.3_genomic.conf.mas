@@ -72,10 +72,10 @@ db_args     = -adaptor DBI::Pg
               -password '<% $feature->default_db_password %>'
 search options = default +autocomplete +fulltext
 
-
+# bigwig file showing RNA-Seq coverage, thanks to srs218
 [rnaseq_bigwig:database]
 db_adaptor    = Bio::DB::BigWig
-db_args       = -bigwig /data/prod/public/genomes/Solanum_lycopersicum/RNA_seq/SL2.40_all_rna_seq.v1.bigwig
+db_args       = -bigwig /data/prod/public/genomes/Solanum_lycopersicum/RNA_seq/curr/SL2.40_all_rna_seq.bigwig
 
 
 ### TRACK CONFIGURATION ####
@@ -734,6 +734,8 @@ citation    =
 
 ##### end dan bolser's ultra clone-end-mapping conf
 
+# track showing coverage of all aggregated RNA-Seq sets.  track conf
+# by srs218.
 [rnaseq_coverage]
 feature           = summary
 category          = RNA-Seq
