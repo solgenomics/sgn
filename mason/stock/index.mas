@@ -158,7 +158,7 @@ my $ontology_subtitle = $curator || $submitter || $sequencer  ?
 
 
 </%perl>
-<& /util/import_javascript.mas, classes => ["jquery", "thickbox", "CXGN.Page.FormattingHelpers"] &>
+<& /util/import_javascript.mas, classes => ["jquery", "thickbox", "CXGN.Phenome.Tools", "CXGN.Page.FormattingHelpers"] &>
 
 
 <script language="javascript">
