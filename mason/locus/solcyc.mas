@@ -2,7 +2,7 @@
     $locus_id
 </%args>
 
-<div id="solcyc_links" >[loading...]</div>
+<div id="solcyc" >[loading...]</div>
 <script language="javascript" type="text/javascript">
 
   Locus.printLocusUnigenes( <% $locus_id %> );

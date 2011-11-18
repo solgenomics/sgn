@@ -4,7 +4,7 @@
 $locus_id=>undef
 </%args>
 
-<div id="locus_unigenes" >[loading...]</div>
+<div id="unigenes" >[loading...]</div>
 
 <script language="javascript" type="text/javascript">
 
