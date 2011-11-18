@@ -756,4 +756,4 @@ min_color         = cyan
 #neg_color        = red
 key               = RNA-Seq coverage
 citation =
- Coverage histogram of all available RNA-Seq reads on the tomato genome.
+ Coverage histogram of all available RNA-Seq reads on the tomato genome.  Provided by Stephane Rombauts (VIB Ghent) and Susan Strickler (SGN).
