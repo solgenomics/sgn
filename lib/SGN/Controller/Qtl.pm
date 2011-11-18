@@ -658,21 +658,12 @@ sub filter_qtl_traits {
 
     my $qtl_tools = CXGN::Phenome::Qtl::Tools->new();
     my ( $all_traits, $all_trait_d ) = $qtl_tools->all_traits_with_qtl_data();
-  
-    my  @all_traits = sort { $a <=> $b } uniq (@{$all_traits});
 
-    my @traits_subgroup;
-    
-    foreach my $trait (@all_traits)
-    {
-        if ( $trait =~ /^$index/i )
-        {
-            push @traits_subgroup, $trait;
-        }
-    }
-    
-    return \@traits_subgroup;
-
+    return [
+        sort { $a cmp $b  }
+        grep { /^$index/i }
+        uniq @$all_traits
+    ];
 }
 
 sub map_qtl_traits {
