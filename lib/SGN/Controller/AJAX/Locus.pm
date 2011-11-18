@@ -22,6 +22,8 @@ use Moose;
 use CXGN::Phenome::LocusgroupMember;
 use CXGN::Page::FormattingHelpers qw/ columnar_table_html info_table_html html_alternate_show /;
 use List::MoreUtils qw /any /;
+use Scalar::Util qw(looks_like_number);
+
 use Try::Tiny;
 
 
@@ -649,7 +651,7 @@ sub locus_unigenes_GET :Args(0) {
             my $locus_unigene_id = $locus->get_locus_unigene_id($unigene_id);
             #
             my $unigene_obsolete_link = $privileged ?
-                qq | <input type = "button" onclick="javascript:Locus.obsoleteLocusUnigene(\'$locus_unigene_id\', \'/ajax/locus/obsolete_locus_unigene\', \'/locus/$locus_id/unigene\')" value ="Remove" /> |
+                qq | <input type = "button" onclick="javascript:Locus.obsoleteLocusUnigene(\'$locus_unigene_id\',  \'$locus_id\')" value ="Remove" /> |
                 : qq| <span class="ghosted">[Remove]</span> |;
             #
             my $blast_link = "<a href='/tools/blast/?preload_id=" . $unigene_id . "&preload_type=15'>[Blast]</a>";
@@ -689,8 +691,9 @@ sub locus_unigenes_GET :Args(0) {
             body    => '$_',
         };
         $c->forward( $c->view('Email') );
+        return;
     };
-    $c->stash->{rest} = $response;
+    $c->stash->{rest} = $response ;
 }
 
 
@@ -726,6 +729,62 @@ sub obsolete_locus_unigene_POST :Args(0) {
         body    => "User " . $c->user->get_object->get_first_name . " " . $c->user->get_object->get_last_name .  " has obsoleted locus_unigene_id $locus_unigene_id \n ( /solgenomics.net/locus/$locus_id/view )",
     };
     $c->forward( $c->view('Email') );
+    $c->stash->{rest} = $response;
+}
+
+sub associate_unigene : Chained('/locus/get_locus') :PathPart('associate_unigene') : ActionClass('REST') { }
+
+sub associate_unigene_POST :Args(0) {
+    my ($self, $c) = @_;
+    my  $locus   = $c->stash->{locus};
+    my $locus_id = $locus->get_locus_id;
+    my $response;
+    my $unigene_input = $c->request->body_parameters->{unigene_input};
+    my ($unigene_id, undef, undef) = split /--/ , $unigene_input;
+    # "SGN-U$unigene_id--build $build_id--$nr_members members";
+    $unigene_id =~ s/sgn-u//i ;
+    if ( !(looks_like_number($unigene_id)) ) {
+        $response->{ error} = "This does not look like a valid unigene id ($unigene_id). Check your input! \n " ;
+        $c->stash->{rest} = $response;
+        return;
+    }
+    my $dbh = $c->dbc->dbh;
+    my $privileged;
+    if ($c->user) {
+        if ( $c->user->check_roles('curator') || $c->user->check_roles('submitter')  || $c->user->check_roles('sequencer') ) { $privileged = 1; }
+    }
+    my $logged_person_id = $c->user->get_object->get_sp_person_id if $c->user;
+    if ($privileged) {
+        try {
+            print STDERR "****ABOUT TO ADD UNIGENE $unigene_id to locus $locus_id\n\n\n";
+            my $id = $locus->add_unigene($unigene_id, $logged_person_id);
+            print STDERR "**DONE id = $id \n\n\n";
+        } catch {
+            $response->{error} = "Failed: $_" ;
+            # send an email to sgn bugs
+            $c->stash->{email} = {
+                to      => 'sgn-bugs@sgn.cornell.edu',
+                from    => 'sgn-bugs@sgn.cornell.edu',
+                subject => 'Associate unigene failed! locus_id = $locus_id',
+                body    => '$_',
+            };
+            $c->forward( $c->view('Email') );
+            $c->stash->{rest} = $response;
+            return;
+        };
+        # if you reached here this means associate_unigene worked.
+        #Now send an email to sgn-db-curation
+        $c->stash->{email} = {
+            to      => 'sgn-db-curation@sgn.cornell.edu',
+            from    => 'sgn-bugs@sgn.cornell.edu',
+            subject => 'New unigene associated with locus $locus_id',
+            body    => "User " . $c->user->get_object->get_first_name . " " . $c->user->get_object->get_last_name . "has associated unigene $unigene_id  with locus $locus_id " . "( /solgenomics.net/locus/$locus_id/view )",
+        };
+        $c->forward( $c->view('Email') );
+        $response->{response} = "success";
+    } else {
+        $response->{ error} = 'No privileges for associating unigenes. You must have an sgn submitter account. Please contact sgn-feedback@solgenomics.net for upgrading your user account. ' ;
+    }
     $c->stash->{rest} = $response;
 }
 
