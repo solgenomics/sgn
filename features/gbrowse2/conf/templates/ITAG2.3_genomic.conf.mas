@@ -205,9 +205,11 @@ category     = Genome data and reagents
 glyph        = alignment
 bgcolor      = red
 fgcolor      = red
+min_score    = 0.85
+max_score    = 1
 link         = /search/quick?term=$name
 stranded     = 1
-citation     = This track shows regions of similarity with SGN Unigene (SGN-U) sequences.  (see <a href="http://www.ab.wur.nl/TomatoWiki/AnSgnUnigenes000">ITAG Wiki</a>).  Darker color indicates higher alignment score, and scores are normalized within the match.  Thus, a match with three parts will have the lowest-scoring part white and the highest-scoring part dark.
+citation     = This track shows regions of similarity with SGN Unigene (SGN-U) sequences.  (see <a href="http://www.ab.wur.nl/TomatoWiki/AnSgnUnigenes000">ITAG Wiki</a>).  Darker color indicates higher alignment score, with higher scores darker red and lower scores lighter red.
 das category = similarity
 
 [tomato_bacs]
