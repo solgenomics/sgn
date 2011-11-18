@@ -27,7 +27,21 @@ my $SIZELIMIT = 10000; # the maximal number of bytes in a post.
 my $page = CXGN::Page->new( "SGN Forum | Add Post", "Lukas");
 my $dbh = CXGN::DB::Connection->new();
 
-my $sp_person_id = CXGN::Login->new($dbh)->verify_session();
+#
+# get information about the poster
+#
+my ( $person, $name, $sp_person_id ) = do {
+    # to enable anonymous comments, change the verify_session to has_session
+    if( my $sp_person_id = CXGN::Login->new($dbh)->verify_session ) {
+        my $person = CXGN::People::Person -> new($dbh, $sp_person_id);
+        my $name = $person->get_first_name()." ".$person->get_last_name();
+        $sp_person_id = $person -> get_sp_person_id();
+        ( $person, $name, $sp_person_id )
+    } else {
+        ( (undef) x 3 )
+    }
+};
+
 
 my ($subject, $post_text, $parent_post_id, $topic_id, $page_type, $page_object_id, $refering_page, $action) = $page -> get_encoded_arguments("subject", "post_text", "parent_post_id", "topic_id", "page_type", "page_object_id", "refering_page", "action");
 
@@ -37,12 +51,6 @@ my ($subject, $post_text, $parent_post_id, $topic_id, $page_type, $page_object_i
 # 3) save
 # all other values for the action parameter will show the input as default.
 
-#
-# get information about the poster
-#
-my $person = CXGN::People::Person -> new($dbh, $sp_person_id);
-my $name = $person->get_first_name()." ".$person->get_last_name();
-my $sp_person_id = $person -> get_sp_person_id();
 
 my $parent_post = "";
 my $parent_subject = "";
@@ -236,13 +244,12 @@ else {
     <form method="post" action="add_post.pl">
 	
 	Steps: <b>Enter post</b> -> Review post -> Store post<br /><br /> 
-	You are logged in as <b>$name</b>.<br />
 	$parent_post_explain<br />
 	
 	Please enter your comment below. You can delete the post later if you are logged in.<br />
-	HTML tags are not supported. You can add links to your post by using square brackets as follows:<br />
-	[url]sgn.cornell.edu[/url].
-	This will appear as <a href="http://sgn.cornell.edu">sgn.cornell.edu</a> in the post.<br /><br />
+	HTML tags are not supported. You can add links to your post by using square brackets.  For example:<br />
+	<tt>[url]sgn.cornell.edu[/url]</tt> will appear as <a href="http://sgn.cornell.edu">sgn.cornell.edu</a> in the post.<br /><br />
+
 	Size limit per post is $SIZELIMIT characters, including spaces and punctuation.<br /><br />
 	<b>Note:</b> this service is provided as a courtesy. SGN reserves the right to delete posts at any time for any reason.
 	<br /><br />

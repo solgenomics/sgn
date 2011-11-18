@@ -285,11 +285,16 @@ sub get_html {
 
 	my $text = $p -> get_post_text();
 	my $date = $p -> get_formatted_post_time();
-	
-    	
+
+        my $poster_html = $sp_person_id
+            ? "<a href=\"/solpeople/personal-info.pl?action=view&amp;sp_person_id=$sp_person_id\">$name</a>$user_type"
+            : "anonymous";
+
 	$s .= "<tr><td><div class=\"boxbgcolor2\">
-                 
-                   <table summary=\"\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" width=\"100%\"><tr><td>Posted by <b><a href=\"/solpeople/personal-info.pl?action=view&amp;sp_person_id=$sp_person_id\">$name</a>$user_type</b> on $date  </td><td class=\"right\">$remove_link&nbsp;</td></tr></table></div>";
+
+                   <table summary=\"\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" width=\"100%\"><tr><td>Posted by <b>$poster_html</b> on $date  </td><td class=\"right\">$remove_link&nbsp;</td></tr></table>
+
+</div>";
 	$s .= "<div class=\"boxbgcolor5\"><div class=\"indentedcontent\">$text</div></div></td></tr>";
       }
       $s .= "</table></div>";
