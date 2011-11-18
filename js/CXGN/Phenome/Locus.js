@@ -330,41 +330,6 @@ var Locus = {
                     } );
     },
 
-    ////////////
-    ////this is also in LocusPage.js - remove one of these
-    /////////////
-    //Make an ajax response that finds all the unigenes with unigene ids like the current value of the unigene id input
-    getUnigenes: function(unigene_id, locus_id) {
-	if(unigene_id.length==0){
-	    var select = $('unigene_select');
-	    select.length=0;
-	    $('associate_unigene_button').disabled = true;
-	} else {
-	    var type = 'browse';
-	    new Ajax.Request('/phenome/unigene_browser.pl', { parameters:
-		    {type: type, locus_id: locus_id, unigene_id: unigene_id},
-			onSuccess: this.updateUnigeneSelect });
-	}
-    },
-
-    //Parse the ajax response and update the unigene  select box accordingly
-    updateUnigeneSelect: function(response) {
-	var select = $('unigene_select');
-        var json  = response.responseText;
-	var x = eval ("("+json+")"); 
-        var responseArray = x.response.split("|");
-	//the last element of the array is empty. Dont want this in the select box
-	responseArray.pop();
-
-        select.length = responseArray.length;
-        for (i=0; i < responseArray.length; i++) {
-	    var unigeneObject = responseArray[i].split("*");
-	    select[i].value = unigeneObject[0];
-	    if (typeof(unigeneObject[1]) != "undefined"){
-		select[i].text = unigeneObject[1];
-	    }
-	}
-     },
 
     /////////////currently not used - check 
     //Make an ajax response that obsoletes the selected stock-allele association
@@ -543,11 +508,11 @@ var Locus = {
     /////////////////////////////////////////////
      printLocusUnigenes: function(locus_id) {
         jQuery.ajax( {
-                url: '/locus/'+locus_id+'/unigenes/',
+                url: '/locus/'+locus_id+'/unigenes',
                 dataType: "json",
-                onSuccess: function(response) {
-                    jQuery("#locus_unigenes").html(response.unigenes);
-                    jQuery("#solcyc_links").html(response..solcyc);
+                success: function(response) {
+                    jQuery("#unigenes").html(response.unigenes);
+                    jQuery("#solcyc").html(response.solcyc);
                     if ( response.error ) { alert(response.error) ; }
                 },
             } );
@@ -558,15 +523,45 @@ var Locus = {
         jQuery.ajax( { url: '/ajax/locus/obsolete_locus_unigene' ,
                        dataType: "json" ,
                        type: 'POST',
-                       data: 'locus_unigene_id='+locus_unigene_id+'&locus_id'+locus_id,
+                       data: 'locus_unigene_id='+locus_unigene_id+'&locus_id='+locus_id,
                        success: function(response) {
                     if ( response.error ) { alert(response.error) ; }
                 }
             });
-        this.printLocusUnigene(locus_id);
+        this.printLocusUnigenes(locus_id);
+    },
+  //Make an ajax response that associates the selected unigene  with this locus
+    associateUnigene: function(locus_id) {
+	var unigene_input = $('unigene_input').value; // get this from autocomplete?
+        jQuery.ajax( {
+                type: 'POST',
+                    url: "/locus/"+locus_id+"/associate_unigene",
+                    dataType: "json",
+                    /// make asynchronous since it takes long to finish the ajax request
+                    /// and we want to refresh the locus_unigenes div only after the request is done
+                    async: false,
+                    data: 'locus_id='+locus_id+'&unigene_input='+unigene_input ,
+                    success: function(response) {
+                    if ( response.error ) { alert(response.error) ; }
+                },
+                    });
+        this.printLocusUnigenes(locus_id);
+        Effects.hideElement('associateUnigeneForm');
     },
 
-
-
+    //Make an ajax response that finds all the unigenes with unigene ids 
+    //like the current value of the unigene id input
+    getUnigenes: function(unigene_id, organism, current) {
+	if(unigene_id.length==0){
+            $('associate_unigene_button').disabled = true;
+        } else {
+            jQuery(function() {
+                    jQuery("#unigene_input").autocomplete({
+                            source: '/ajax/transcript/autocomplete' + "?organism="+organism+"&current="+current,
+                            change: $('associate_unigene_button').disabled = false
+                        });
+                });
+        }
+    },
 
 };//
