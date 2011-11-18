@@ -1309,4 +1309,8 @@ div.xref_rich_gbrowse2 img {
     background: #F2F3F5;
 }
 
-
+#page_report_a_problem {
+    margin: 5px 0 -10px 0;
+    font-size: 80%;
+    text-align: right;
+}
