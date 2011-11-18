@@ -47,8 +47,8 @@ Message body is required
 <textarea cols="77" rows="12" name="body"><% $body |h%></textarea>
 </td></tr>
 
-<tr><td colspan="2" align="center" valign="middle" style = "color:red; font-size: 15px; font-style:italic;">
-* fields are required!
+<tr><td colspan="2" align="center" valign="middle" style = "color:red; font-size: 90%; font-style:italic;">
+fields marked with <% '"*"' |h %> are required
 </td></tr>
 
 <tr><td colspan="2" align="center" valign="middle">
