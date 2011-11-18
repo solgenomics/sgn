@@ -3,7 +3,7 @@
 ** DEPRECATED - this is used only on the locus page.
 * The individual page is deprecated, and future pages should use
 * CXGN.AJAX.Ontology which is more generic
-* Function used in locus_display.pl
+* Function used in locus page
 * @author Naama Menda <nm249@cornell.edu>
 *
 */
@@ -40,7 +40,7 @@ var Locus = {
 	    select.length=0;
 	    $('associate_registry_button').disabled = true;
 	} else{
-	    new Ajax.Request("/phenome/registry_browser.pl", {
+	    new Ajax.Request("/phenome/registry_browser.pl", { //move to controller
 		    parameters: { registry_name: str },
 		    onSuccess: this.updateRegistrySelect
 		});
@@ -83,7 +83,7 @@ var Locus = {
 	    alert("You must enter a name for the new registry");
 	    return false;
 	}
-	new Ajax.Request("/phenome/add_registry.pl", {
+	new Ajax.Request("/phenome/add_registry.pl", { // move to controller
 		parameters: { registry_symbol: registry_symbol, registry_name: registry_name, registry_description: registry_description, sp_person_id: sp_person_id, locus_id: locus_id},
 		
 		onSuccess: function(response) {
@@ -100,7 +100,7 @@ var Locus = {
 //Make an ajax response that associates the selected registry with this locus
     associateRegistry: function(locus_id, sp_person_id) {
 	var registry_id =  $('registry_select').value;
-	new Ajax.Request("/phenome/associate_registry.pl", {
+	new Ajax.Request("/phenome/associate_registry.pl", { //move to controller
 		parameters: { registry_id: registry_id, locus_id: locus_id, sp_person_id: sp_person_id },
 		    onSuccess: Tools.reloadPage() //change this to
 		    //onSuccess: function(response) {
@@ -139,7 +139,7 @@ var Locus = {
     getAlleles: function(locus_id) {
 	$("associate_stock_button").disabled=false;
 	var stock_id = $('stock_select').value;
-        new Ajax.Request("/phenome/allele_browser.pl", {
+        new Ajax.Request("/phenome/allele_browser.pl", { //move to controller
 		parameters: { locus_id: locus_id, stock_id: stock_id },
 		    onSuccess: this.updateAlleleSelect } );
     },
@@ -178,7 +178,7 @@ var Locus = {
 	if (!allele_id) {  allele_id = $('allele_select').value; } 
 	var stock_id = $('stock_select').value;
 
-	new Ajax.Request("phenome/associate_allele.pl", {
+	new Ajax.Request("phenome/associate_allele.pl", { //move to controller
 		parameters: {allele_id: allele_id, stock_id: stock_id, sp_person_id: sp_person_id}, 
 		    onSuccess: function(response) {
                     var json = response.responseText;
@@ -200,7 +200,7 @@ var Locus = {
 	    $('associate_stock_button').disabled = true;
 	}
         else{
-            new Ajax.Request("/phenome/individual_browser.pl", {
+            new Ajax.Request("/phenome/individual_browser.pl", { //move to controller
                     parameters: {stock_name: str,  type: type}, 
                     onSuccess: this.updateStockSelect});
 	}
@@ -236,7 +236,7 @@ var Locus = {
     getLocusReference: function(locus_id) {
 	var type = 'reference';
 	var reference_id = $('locus_reference_select').value;
-	new Ajax.Request('/phenome/evidence_browser.pl', { 
+	new Ajax.Request('/phenome/evidence_browser.pl', {  // move 
                 parameters:
                 {type: type, locus_id: locus_id},
                     onSuccess: function(response) {
