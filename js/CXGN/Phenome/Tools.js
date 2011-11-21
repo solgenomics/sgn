@@ -177,7 +177,7 @@ var Tools = {
 
     /////////////////////////
     //toggle function. For toggling a collapsed section + a hidden ajax form.
-    //This function will display correctly the form and the span contents. e.g. locus_display.pl->associate_accession
+    //This function will display correctly the form and the span contents.
     toggleContent: function(form,span,style) {
 	if (!style) { style = 'inline'; }
 	var content= span + "_content";
