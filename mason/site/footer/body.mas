@@ -8,7 +8,7 @@
 
 
   <div id="page_report_a_problem">
-    Something wrong? <a href="/contact/form?subject=<% 'Problem with page '.$c->req->uri |u %>&body=<% "Hello SGN,\n\nI noticed a problem with the page at ".$c->req->uri.".\n\n<please fill in details here>\n" |u%>">Report a problem with this page.</a>
+    Something wrong? <a href="/contact/form?subject=<% 'Problem with page '.$c->req->uri |u %>&body=<% "Hello SGN,\n\nI noticed a problem with the page at ".$c->req->uri.".\n\n<please fill in details here>\n" |u%>">Report a problem</a>
   </div>
 
 </td></tr>

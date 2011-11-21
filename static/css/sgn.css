@@ -1310,6 +1310,12 @@ div.xref_rich_gbrowse2 img {
 }
 
 #page_report_a_problem {
-    margin: 8px 0 -10px 1px;
+    margin: 12px 0 -10px 1px;
     text-align: left;
+    font-size: 90%;
 }
+#page_report_a_problem a {
+    padding: 1px;
+    color: #666;
+}
+
