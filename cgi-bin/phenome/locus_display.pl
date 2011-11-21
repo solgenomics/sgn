@@ -16,7 +16,7 @@ my $locus_id = $cgi->param("locus_id") + 0;
 
 unless ($locus_id =~m /^\d+$/) {
     $c->throw( is_error=>0,
-               message => "No locus exists for identifier $locus_id",
+               message => "Invalid locus identifier $locus_id",
         );
 }
 print $cgi->redirect("/locus/$locus_id/view", 301);
