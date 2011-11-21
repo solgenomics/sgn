@@ -37,8 +37,8 @@ sub _build__databases {
             my $adaptor = $conf->setting( $dbname => 'db_adaptor' )
                 or confess "no db adaptor for [$_] in ".$self->path->basename;
             my @args = shellwords( $conf->setting( $dbname => 'db_args' ));
-            Class::MOP::load_class( $adaptor );
             my $conn = eval {
+                Class::MOP::load_class( $adaptor );
                 local $SIG{__WARN__} = sub { warn @_ if $self->debug };
                 $adaptor->new( @args );
             };

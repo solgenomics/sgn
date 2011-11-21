@@ -51,7 +51,7 @@ sub search :Path('/stock/search') Args(0) {
     my $form = HTML::FormFu->new(LoadFile($c->path_to(qw{forms stock stock_search.yaml})));
 
     $c->stash(
-        template                   => '/stock/search.mas',
+        template                   => '/search/phenotypes/stock.mas',
         request                    => $c->req,
         form                       => $form,
         form_opts                  => { stock_types => stock_types($self->schema), organisms => stock_organisms($self->schema)} ,

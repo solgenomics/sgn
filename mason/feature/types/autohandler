@@ -1,0 +1,5 @@
+% $m->call_next;
+
+% if( my $feature_id = eval { $m->request_args->{feature}->feature_id } ) {
+  <& /page/comments.mas, object_type=> "feature", object_id => $feature_id, referer=> $c->req->uri->as_string &>
+% }

@@ -16,7 +16,9 @@ SGN::Controller::Contact - controller for contact page
 sub form :Path('/contact/form') :Args(0) {
     my ($self, $c) = @_;
     my ($username, $useremail) = _load_user($c);
-    _build_form_page($self, $c, $username, $useremail);
+
+    my @prefill = grep defined, @{ $c->req->params }{'subject','body'};
+    _build_form_page($self, $c, $username, $useremail, @prefill );
 }
 
 #Loads the user if he has an account
@@ -25,7 +27,6 @@ sub _load_user {
     my $dbh = $c->dbc->dbh;
     my $user = $c->user_exists ? $c->user->get_object : CXGN::People::Person->new( $dbh, undef );
 
-    # TODO: we shouldn't have to dig into {user} here
     my $username  = join ' ', grep defined, $user->get_first_name, $user->get_last_name;
     my $useremail = $user->get_private_email;
 

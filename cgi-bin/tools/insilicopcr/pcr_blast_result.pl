@@ -37,7 +37,7 @@ use CXGN::BlastDB;
 use CXGN::Tools::Identifiers;
 use CXGN::Tools::List qw/distinct evens/;
 use CXGN::Page;
-use CXGN::Page::FormattingHelpers qw/page_title_html modesel info_table_html hierarchical_selectboxes_html simple_selectbox_html/;
+use CXGN::Page::FormattingHelpers qw/page_title_html info_table_html hierarchical_selectboxes_html /;
 use Bio::Seq;
 use CatalystX::GlobalContext '$c';
 

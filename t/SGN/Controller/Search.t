@@ -1,36 +1,47 @@
 use Modern::Perl;
 use lib 't/lib';
-use SGN::Test;
-use Test::Most;
 
-BEGIN { use_ok 'Catalyst::Test', 'SGN' }
-BEGIN { use_ok 'SGN::Controller::Search' }
+use SGN::Test::WWW::Mechanize skip_cgi => 1;
+use Test::Most;
 
 my @urls = qw{
             /search
             /search/
             /search/organisms
             /search/loci
-            /search/qtl
-            /search/trait
+            /search/phenotypes/qtl
             /search/phenotypes
-            /search/phenotype
-            /search/unigene
             /search/family
             /search/markers
-            /search/bacs
-            /search/est
-            /search/est_library
-            /search/library
             /search/images
             /search/directory
-            /search/template_experiment_platform
+
+            /search/qtl
+            /search/trait
+            /search/phenotype
+            /search/unigene
             /search/platform
+            /search/template_experiment_platform
+            /search/est
+            /search/est_library
+            /search/bacs
+
+            /search/phenotypes/qtl
+            /search/phenotypes/traits
+            /search/phenotypes/stock
+            /search/transcripts/unigene
+            /search/expression/platform
+            /search/expression/template
+            /search/transcripts/est
+            /search/transcripts/est_library
+            /search/genomic/clones
+
 };
 
-for my $url (@urls) {
-    my ($r) = request($url);
-    diag $r->content unless $r->is_success;
-    cmp_ok( $r->code,'eq',200, "GET $url succeeded with 200");
+my $mech = SGN::Test::WWW::Mechanize->new;
+for my $url ( @urls ) {
+    $mech->get_ok( $url );
+    $mech->html_lint_ok;
 }
+
 done_testing();

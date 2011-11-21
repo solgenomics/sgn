@@ -163,6 +163,33 @@ sub find_recursive_parent {
     return $nodes;
 }
 
+
+=head2 hilite_species
+
+ Usage:        $tree->hilite_species([255,0,0], ['Solanum lycopersicum']);
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub hilite_species {
+    my $self = shift;
+    my $color_ref = shift;
+    my $species_ref = shift;
+    
+    foreach my $s (@$species_ref) { 
+	my $n = $self->get_node_by_name($s);
+	$n->set_hilited(1);
+	$n->get_label()->set_hilite_color(@$color_ref);
+	$n->get_label()->set_hilite(1);
+    }
+}
+
+
+
 =head2 build_tree
 
  Usage:  $self->build_tree($root_species_name, $org_ids, $speciesinfo_cache)

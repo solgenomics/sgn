@@ -75,19 +75,21 @@ sub define_object
     # this page needs to be re-written with CXGN::Chado::Stock object
     # and without SimpleFormPage, since edits should be done on the parent page only
     #########################
-    if ($stock_id) {
-        $object = CXGN::Phenome::Population->new_with_stock_id($self->get_dbh, $stock_id);
-        $population_id = $object->get_population_id;
-    } else  {
-        $object = CXGN::Phenome::Population->new($self->get_dbh, $population_id) ;
+   
+    unless ( ($population_id and $population_id =~ /^\d+$/) || ($stock_id and $stock_id =~ /^\d+$/) )
+    {
+        $c->throw_404("A proper <strong>population id or stock id</strong> argument is missing");
     }
 
-        unless ( !$population_id || $population_id =~ m /^\d+$/ )
+    if ($stock_id) 
     {
-        $self->get_page->message_page(
-                          "No population exists for identifier $population_id");
+        $object = CXGN::Phenome::Population->new_with_stock_id($self->get_dbh, $stock_id);
+        $population_id = $object->get_population_id;
+    } else  
+    {
+        $object = CXGN::Phenome::Population->new($self->get_dbh, $population_id) ;
     }
-      
+    
     $self->set_object_id($population_id);
     $self->set_object(
                        CXGN::Phenome::Population->new(
@@ -99,12 +101,13 @@ sub define_object
     $self->set_owners( $self->get_object()->get_owners() );
     
     my $trait_id = $args{cvterm_id};
-    $trait_id =~ s/\D//;
+    $trait_id = undef if $trait_id =~ m/\D+/;
     
-    if ($trait_id) {
+    if ($trait_id) 
+    {
 	$self->set_trait_id($trait_id);
     } else {
-	die "A cvterm id argument is missing";
+	$c->throw_404("A proper <strong>cvterm id</strong> argument is missing");
     }
 
 

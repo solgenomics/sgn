@@ -6,7 +6,7 @@ reference class = Sequence
 
 search attributes = Note
 
-default features = mrna sgn_loci sgn_unigenes Markers:overview Genes:region Markers:region sgn_markers
+default features = mrna rnaseq_coverage sgn_unigenes sgn_loci Markers:overview Genes:region Markers:region sgn_markers
 
 # "automatic" classes to try when an unqualified identifier is given
 automatic classes = Sequence clone match nucleotide_motif
@@ -70,7 +70,12 @@ db_args     = -adaptor DBI::Pg
               -dsn 'dbi:Pg:host=<% $feature->default_db_host %>;dbname=sfs_itag2.3_genomic'
               -user '<% $feature->default_db_user %>'
               -password '<% $feature->default_db_password %>'
-search options = default +autocomplete +fulltext 
+search options = default +autocomplete +fulltext
+
+# bigwig file showing RNA-Seq coverage, thanks to srs218
+[rnaseq_bigwig:database]
+db_adaptor    = Bio::DB::BigWig
+db_args       = -bigwig /data/prod/public/genomes/Solanum_lycopersicum/RNA_seq/curr/SL2.40_all_rna_seq.bigwig
 
 
 ### TRACK CONFIGURATION ####
@@ -200,9 +205,11 @@ category     = Genome data and reagents
 glyph        = alignment
 bgcolor      = red
 fgcolor      = red
+min_score    = 0.85
+max_score    = 1
 link         = /search/quick?term=$name
 stranded     = 1
-citation     = This track shows regions of similarity with SGN Unigene (SGN-U) sequences.  (see <a href="http://www.ab.wur.nl/TomatoWiki/AnSgnUnigenes000">ITAG Wiki</a>).  Darker color indicates higher alignment score, and scores are normalized within the match.  Thus, a match with three parts will have the lowest-scoring part white and the highest-scoring part dark.
+citation     = This track shows regions of similarity with SGN Unigene (SGN-U) sequences.  (see <a href="http://www.ab.wur.nl/TomatoWiki/AnSgnUnigenes000">ITAG Wiki</a>).  Darker color indicates higher alignment score, with higher scores darker red and lower scores lighter red.
 das category = similarity
 
 [tomato_bacs]
@@ -728,3 +735,27 @@ citation    =
  href="http://www.compbio.dundee.ac.uk/">University of Dundee</a>.
 
 ##### end dan bolser's ultra clone-end-mapping conf
+
+# track showing coverage of all aggregated RNA-Seq sets.  track conf
+# by srs218.
+[rnaseq_coverage]
+feature           = summary
+category          = RNA-Seq
+database          = rnaseq_bigwig
+height            = 150
+glyph             = wiggle_whiskers
+autoscale         = z_score
+min_score         = 0
+#max_score        = 2000
+mean_color        = red
+mean_color_neg    = blue
+stdev_color       = orange
+stdev_color_neg   = lightblue
+max_color         = yellow
+min_color         = cyan
+#fgcolor          = black
+#pos_color        = black
+#neg_color        = red
+key               = RNA-Seq coverage
+citation =
+ Coverage histogram of all available RNA-Seq reads on the tomato genome.  Provided by Stephane Rombauts (VIB Ghent) and Susan Strickler (SGN).

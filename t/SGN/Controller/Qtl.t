@@ -4,6 +4,7 @@ use Test::More;
 
 use lib 't/lib';
 
+use SGN::Test qw/ qsub_is_configured /;
 use SGN::Test::WWW::Mechanize;
 use Catalyst::Test 'SGN';
 
@@ -19,6 +20,7 @@ $mech->get_ok("/search/qtl", "Got qtl search page");
 $mech->get_ok("/qtl/search", "Got qtl search page, another url");
 $mech->get_ok("/qtl/search/results?trait=fruit+shape", "Got qtl search results page");
 $mech->get_ok("/qtl/search/help", "Got qtl search help page");
+
 $mech->get_ok("/qtl/form", "intro qtl data submission webform");
 $mech->get_ok("/qtl/form/intro", "intro qtl data submission webform -intro");
 $mech->get_ok("/qtl/form/pop_form", "population detail -- qtl data submission webform");
@@ -28,9 +30,11 @@ $mech->get_ok("/qtl/form/geno_form/12", "genotype data -- qtl data submission we
 $mech->get_ok("/qtl/form/stat_form/12", "statistical parameters -- qtl data submission webform");
 $mech->get_ok("/qtl/form/confirm/12", "confirmation-- qtl data submission webform");
 
+$mech->get_ok("/qtl/traits/H", "qtl traits list page");
+
+
 {
-system("echo sleep 2 | qsub");
-local $TODO = 'qsub not configured' if $?;
+local $TODO = 'qsub not configured' unless qsub_is_configured();
 $mech->get_ok("/qtl/view/12", "Got qtl population page - old url");
 $mech->get_ok("/qtl/population/12", "Got qtl population page");
 $mech->content_contains("Population summary", "there is population summary section");

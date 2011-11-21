@@ -468,6 +468,7 @@ Execute the given code while logged in for each user_type.
 sub while_logged_in_all {
     my ($self,$sub) = @_;
     for ( qw/ user curator submitter sequencer genefamily_editor / ) {
+        diag "Running tests as $_ user_type";
         $self->while_logged_in( { user_type => $_ }, $sub );
     }
 }
@@ -479,12 +480,12 @@ sub log_in_ok {
     $self->content_contains("Login");
 
     my %form = (
-	form_name => 'login',
-	fields    => {
-	    username => $self->test_user->{user_name},
-	    pd       => $self->test_user->{password},
-	},
-       );
+        form_name => 'login',
+        fields    => {
+            username => $self->test_user->{user_name},
+            pd       => $self->test_user->{password},
+        },
+    );
 
     $self->submit_form_ok( \%form, "submitted login form" );
     $self->content_lacks('Incorrect username', 'did not get "Incorrect username"')

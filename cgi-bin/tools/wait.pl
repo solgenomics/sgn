@@ -112,7 +112,7 @@ Content-type: text/html
 <head>
 <title>Job running</title>
 <meta http-equiv="Refresh" content="3" />
-<link rel="stylesheet" href="/documents/inc/sgn.css" type="text/css" />
+<link rel="stylesheet" href="/css/sgn.css" type="text/css" />
 </head>
 <body>
     <style>
@@ -123,10 +123,10 @@ Content-type: text/html
         text-align: center;
       }
     </style>
-    <img src="/documents/img/sgn_logo_animated.gif" alt="SGN logo"/>
+    <img src="/img/sgn_logo_animated.gif" alt="SGN logo"/>
     <h2>$message</h2>
     <div>Please note: jobs are limited to 1 hour of run time.</div>
-    <img src="/documents/img/progressbar1.gif" alt="In Progress..."/>
+    <img src="/img/progressbar1.gif" alt="In Progress..."/>
 </body>
 </html>
 HTML

@@ -26,7 +26,7 @@ our @EXPORT_OK = qw/validate_urls request get ctx_request with_test_level qsub_i
 
 sub qsub_is_configured {
     no autodie;
-    system("echo sleep 2 | qsub");
+    system("echo sleep 1 | qsub -j oe -o /dev/null");
     return $? ? 0 : 1 ;
 }
 

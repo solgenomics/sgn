@@ -34,7 +34,7 @@ use POSIX;
 use CXGN::DB::Connection;
 use CXGN::Page;
 use CXGN::BlastDB;
-use CXGN::Page::FormattingHelpers qw/page_title_html modesel info_table_html hierarchical_selectboxes_html simple_selectbox_html/;
+use CXGN::Page::FormattingHelpers qw/page_title_html info_table_html hierarchical_selectboxes_html /;
 use CXGN::Page::UserPrefs;
 use CXGN::Tools::List qw/evens distinct/;
 

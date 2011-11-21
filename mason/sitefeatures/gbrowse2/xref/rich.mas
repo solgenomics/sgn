@@ -4,7 +4,7 @@
 
     <div class="xref xref_rich xref_rich_gbrowse2">
 
-        <a href="<% $xref->url %>">
+        <a href="<% $xref->url %>" title="click to view in genome browser">
            <img src="<% $xref->preview_image_url %>" />
         </a>
 

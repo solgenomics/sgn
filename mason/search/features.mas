@@ -1,0 +1,33 @@
+<%args>
+  $maximum_export_size
+</%args>
+
+<& /util/import_extjs.mas &>
+<& /util/import_javascript.mas, classes => 'SGN.Search.Feature' &>
+
+<div class="page_introduction">
+   Search for many types of genomic sequences and annotations.
+</div>
+
+<style type="text/css">
+  #search_form       { margin: 1em auto; width: 452px; }
+  #search_form label { font-weight: bold; padding: 0.3em }
+  a.fs_export { float: right; padding: 3px }
+</style>
+
+<&| /page/info_section.mas, title => 'Matching features' &>
+   <div id="search_grid" style="margin: 1em auto 1em auto; width: 700px"> </div>
+</&>
+
+<&| /page/info_section.mas, title => 'Filter by' &>
+    <div id="search_form"></div>
+</&>
+
+<script type="text/javascript">
+
+    SGN.Search.Feature.set_up_feature_search( {
+        maximum_export_size: <% $maximum_export_size %>
+    });
+
+</script>
+
