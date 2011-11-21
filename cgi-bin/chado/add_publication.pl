@@ -11,9 +11,7 @@ use CXGN::Page::FormattingHelpers qw / info_section_html page_title_html html_op
 use CXGN::Chado::Publication;
 use CXGN::Phenome::Locus;
 use CXGN::Phenome::Allele;
-use CXGN::Phenome::Population;
-use CXGN::Phenome::Individual;
-use CXGN::Phenome::Individual::IndividualDbxref;
+
 use CXGN::People;
 use CXGN::Contact;
 use CXGN::Tools::Pubmed;
@@ -62,19 +60,16 @@ sub store {
    
     my $action=$args{action};
     my $refering_page=$args{refering_page};
-    my $type= $args{type};  #locus or allele or population...?
+    my $type= $args{type};  #locus or allele or stock...?
     my $type_id = $args{type_id}; #the database id of the refering object (locus..)
     my $accession= sanitize_string($args{accession});
     my $script_name= $self->get_script_name();
 
     my ($locus, $allele, $pop, $ind, $stock);
 
-    if ($type eq 'locus') {  $locus= CXGN::Phenome::Locus->new($self->get_dbh(), $type_id);
-      }elsif ($type eq 'allele') { $allele= CXGN::Phenome::Allele->new($self->get_dbh(), $type_id);
-      }elsif ($type eq 'population') { $pop= CXGN::Phenome::Population->new($self->get_dbh(), $type_id);
-      }elsif ($type eq 'individual') { $ind= CXGN::Phenome::Individual->new($self->get_dbh(), $type_id);
-      }elsif ($type eq 'stock') { $stock= CXGN::Chado::Stock->new($self->get_schema(), $type_id);
-      }
+    if ($type eq 'locus') {  $locus= CXGN::Phenome::Locus->new($self->get_dbh(), $type_id); }
+    elsif ($type eq 'allele') { $allele= CXGN::Phenome::Allele->new($self->get_dbh(), $type_id); }
+    elsif ($type eq 'stock') { $stock= CXGN::Chado::Stock->new($self->get_schema(), $type_id); }
 
     my $pub_id;
     my $dbxref_id=undef;
@@ -100,19 +95,11 @@ sub store {
     }elsif ($type eq 'allele') {
 	$associated_publication= $allele->get_allele_dbxref($dbxref)->get_allele_dbxref_id();
 	$obsolete = $allele->get_allele_dbxref($dbxref)->get_obsolete();
-    }elsif ($type eq 'population') {
-	$associated_publication= $pop->get_population_dbxref($dbxref)->get_population_dbxref_id();
-	$obsolete = $pop->get_population_dbxref($dbxref)->get_obsolete();
-    }elsif ($type eq 'individual') {
-	$associated_publication= $ind->get_individual_dbxref($dbxref)->get_object_dbxref_id();
-	$obsolete = $ind->get_individual_dbxref($dbxref)->get_obsolete();
     }
 #	##the publication exists but not associated with the object
     if ($dbxref_id ) {
 	if ($type eq 'locus') {$locus->add_locus_dbxref($dbxref, $associated_publication, $sp_person_id); }
 	elsif ($type eq 'allele') { $allele->add_allele_dbxref($dbxref, $associated_publication, $sp_person_id);}
-	elsif ($type eq 'population') { $pop->add_population_dbxref($dbxref, $associated_publication, $sp_person_id);}
-	elsif ($type eq 'individual') { $ind->add_individual_dbxref($dbxref, $associated_publication, $sp_person_id);}
         elsif ($type eq 'stock') { $stock->get_object_row->find_or_create_related('stock_pubs' , {
             pub_id => $pub_id } );
         }
@@ -134,8 +121,6 @@ sub store {
     #store the new locus_dbxref..
     if ($type eq 'locus') { $locus->add_locus_dbxref($dbxref, undef, $sp_person_id); }
     elsif ($type eq 'allele') { $allele->add_allele_dbxref($dbxref, undef, $sp_person_id); }
-    elsif ($type eq 'population') { $pop->add_population_dbxref($dbxref, undef, $sp_person_id); }
-    elsif ($type eq 'individual') { $ind->add_individual_dbxref($dbxref, undef, $sp_person_id); }
     elsif ($type eq 'stock') { $stock->get_object_row->find_or_create_related('stock_pubs' , {
         pub_id => $publication->get_pub_id } );
     }
@@ -168,13 +153,6 @@ sub delete {
  	my $allele_dbxref_obj=CXGN::Phenome::AlleleDbxref->new($self->get_dbh, $args{object_dbxref_id});
 	$allele_dbxref_obj->delete();
 
-    } elsif ($type eq 'population') {
- 	my $pop_dbxref_obj=CXGN::Phenome::PopulationDbxref->new($self->get_dbh, $args{object_dbxref_id});
-	$pop_dbxref_obj->delete();
-
-    } elsif ($type eq 'individual') {
- 	my $ind_dbxref_obj=CXGN::Phenome::Individual::IndividualDbxref->new($self->get_dbh, $args{object_dbxref_id});
-	$ind_dbxref_obj->delete();
     } elsif ($type eq 'stock') {
  	#need to pass the stock_pub_id as object_pub_id arg
         $self->get_schema->resultset("Stock::StockPub")->find( { stock_pub_id => $args{object_pub_id} } )
@@ -211,12 +189,6 @@ sub delete_dialog {
         }elsif ($type eq 'allele') {
 	    my $allele = CXGN::Phenome::Allele->new($self->get_dbh(), $type_id);
 	    $object_name = $allele->get_allele_name();
-        }elsif ($type eq 'population') {
-	    my $pop = CXGN::Phenome::Population->new($self->get_dbh(), $type_id);
-	    $object_name = $pop->get_name();
-        }elsif ($type eq 'individual') {
-	    my $ind = CXGN::Phenome::Individual->new($self->get_dbh(), $type_id);
-	    $object_name = $ind->get_name();
         }
 	$object_dbxref_id= $args{object_dbxref_id};
     }
@@ -333,14 +305,6 @@ sub display_page {
 	$allele = CXGN::Phenome::Allele->new($self->get_dbh(), $args{type_id});
 	@dbxref_objs=$allele->get_all_allele_dbxrefs(); #array of dbxref objects
 	print "for allele '".$allele->get_allele_name()."'<br /><br />\n";
-    }elsif ($args{type} eq 'population') {
-	$pop = CXGN::Phenome::Population->new($self->get_dbh(), $args{type_id});
-	@dbxref_objs=$pop->get_all_population_dbxrefs(); #array of dbxref objects
-	print "for population '".$pop->get_name()."'<br /><br />\n";
-    }elsif ($args{type} eq 'individual') {
-	$ind = CXGN::Phenome::Individual->new($self->get_dbh(), $args{type_id});
-	@dbxref_objs=$ind->get_dbxrefs(); #array of dbxref objects
-	print "for individual '".$ind->get_name()."'<br /><br />\n";
     }
     elsif ($args{type} eq 'stock') {
 	$stock = CXGN::Chado::Stock->new($self->get_schema, $args{type_id});
@@ -373,15 +337,7 @@ sub display_page {
 	    #$name_dbxref_id= 'allele_dbxref_id';
 	    $object_dbxref_id= $allele->get_allele_dbxref($dbxref)->get_allele_dbxref_id();
 	    $obsolete= $allele->get_allele_dbxref($dbxref)->get_obsolete();
-	 }elsif  ($args{type} eq 'population') {
-	    #$name_dbxref_id= 'allele_dbxref_id';
-	    $object_dbxref_id= $pop->get_population_dbxref($dbxref)->get_population_dbxref_id();
-	    $obsolete= $pop->get_population_dbxref($dbxref)->get_obsolete();
-	 }elsif  ($args{type} eq 'individual') {
-	    #$name_dbxref_id= 'allele_dbxref_id';
-	    $object_dbxref_id= $ind->get_individual_dbxref($dbxref)->get_object_dbxref_id();
-	    $obsolete= $ind->get_individual_dbxref($dbxref)->get_obsolete();
-	}
+        }
 	if ($db_name eq 'SGN_ref') { $accession= $pub_id; }
 	if ($obsolete eq 'f') {
 	    if ($pub_id && $object_dbxref_id) {print "<a href= /chado/publication.pl?pub_id=$pub_id>$db_name:$accession</a>" . $pub->get_title() . " (" . $pub->get_pyear() . ") <b>" . $pub->get_authors_as_string() . "</b>" . qq { \n <a href="add_publication.pl?pub_id=$pub_id&amp;type=$args{type}&amp;type_id=$args{type_id}&amp;object_dbxref_id=$object_dbxref_id&amp;action=confirm_delete&amp;refering_page=$args{refering_page}">[Remove]</a> <br /><br />\n }; } 
@@ -458,7 +414,7 @@ sub confirm_store {
     my $self=shift;
     my %args=$self->get_args();
     my $refering_page=$args{refering_page};
-    my $type= $args{type};  #locus or allele or population...?
+    my $type= $args{type};  #locus or allele or stock...?
     my $type_id = $args{type_id}; #the database id of the refering object (locus..)
     my $accession= sanitize_string($args{accession});
     
@@ -610,21 +566,16 @@ sub send_publication_email {
     my $sp_person_id=$self->get_user()->get_sp_person_id();
 
     if ($type eq 'locus') {
-	$type_link = qq | /phenome/locus_display.pl?locus_id=$type_id|;
+	$type_link = qq | solgenomics.net/locus/$type_id/view|;
     }
     elsif ($type eq 'allele') {
-	$type_link = qq | /phenome/allele.pl?allele_id=$type_id|;
-    }
-    elsif ($type eq 'population') {
-	$type_link = qq | /population.pl?population_id=$type_id|;
-    }elsif ($type eq 'individual') {
-	$type_link = qq | /individual.pl?individual_id=$type_id|;
+	$type_link = qq | solgenomics.net/phenome/allele.pl?allele_id=$type_id|;
     }
     elsif ($type eq 'stock') {
-	$type_link = qq | /stock/view/id/$type_id|;
+	$type_link = qq | solgenomics.net/stock/view/id/$type_id|;
     }
 
-    my $user_link = qq | /solpeople/personal-info.pl?sp_person_id=$sp_person_id|;
+    my $user_link = qq | solgenomics.net/solpeople/personal-info.pl?sp_person_id=$sp_person_id|;
 
     my $usermail=$self->get_user()->get_contact_email();
     my $fdbk_body;
