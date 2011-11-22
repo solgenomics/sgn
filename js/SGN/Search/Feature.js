@@ -342,8 +342,10 @@ SGN.Search.Feature = {
                       {
                           xtype: 'combobox',
                           fieldLabel: 'Type is',
+                          id: 'feature_type_select',
                           name: 'type_id',
                           store: feature_types_store,
+                          disabled: true, // enabled when feature_types_store finishes loading
                           queryMode: 'local',
                           displayField: 'name',
                           valueField: 'type_id',
@@ -365,6 +367,8 @@ SGN.Search.Feature = {
                                 xtype: 'combobox',
                                 name:  'srcfeature_id',
                                 store: srcfeatures_store,
+                                disabled: true, // enabled when srcfeatures_store finishes load
+                                id: 'srcfeature_select',
                                 queryMode: 'local',
                                 displayField: 'name',
                                 valueField: 'feature_id',
@@ -416,8 +420,10 @@ SGN.Search.Feature = {
                             {
                               xtype: 'combobox',
                               name: 'proptype_id',
+                              id: 'featureprop_type_select',
                               width: 200,
                               store: featureprop_types_store,
+                              disabled: true, // enabled when featureprop_types_store finishes loading
                               queryMode: 'local',
                               displayField: 'name',
                               valueField: 'type_id',
@@ -451,9 +457,26 @@ SGN.Search.Feature = {
                     ]
                 });
 
-                feature_types_store.load();
-                featureprop_types_store.load();
-                srcfeatures_store.load();
+
+                // only enable the various comboboxes in the filtering
+                // form when their associated data stores finish
+                // loading.
+                feature_types_store.load(
+                    function( recs, op, success ) {
+                        if( success ) Ext.getCmp('feature_type_select').enable();
+                    }
+                );
+                featureprop_types_store.load(
+                    function( recs, op, success ) {
+                        if( success ) Ext.getCmp('featureprop_type_select').enable();
+                    }
+                );
+                srcfeatures_store.load(
+                    function( recs, op, success ) {
+                        if( success ) Ext.getCmp('srcfeature_select').enable();
+                    }
+                );
+
             });
     }
 };
