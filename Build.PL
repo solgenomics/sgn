@@ -84,6 +84,7 @@ my $build = SGN::Build->new(
         'JSON::XS'                                 => '2.24',
         'JSON::Any'                                => 0,
         'Lingua::EN::Inflect'                      => 0,
+        'List::AllUtils'                           => 0,
         'List::Util'                               => 0,
         'LWP::UserAgent'                           => 0,
         'Mail::Sendmail'                           => 0,

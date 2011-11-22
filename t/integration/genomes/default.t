@@ -52,7 +52,12 @@ $mech->with_test_level( local => sub {
    $mech->content_contains( 'BLARG1',     'BLARG1 assembly is listed');
    $mech->content_contains( 'ITAGblarg1', 'ITAGblarg1 annotation is listed');
 
+   $mech->get_ok( '/genomes', 'got genome index page' );
+   $mech->content_contains( $org->species, 'genome index page contains the test species' );
+
 });
+
+$mech->get_ok( '/genomes', 'got genome index page ok' );
 
 done_testing;
 
