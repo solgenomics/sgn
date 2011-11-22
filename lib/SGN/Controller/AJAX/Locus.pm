@@ -19,7 +19,10 @@ package SGN::Controller::AJAX::Locus;
 
 use Moose;
 
+use CXGN::Phenome::LocusDbxref;
+use CXGN::Phenome::Locus::LocusDbxrefEvidence;
 use CXGN::Phenome::LocusgroupMember;
+use CXGN::Chado::Publication;
 use CXGN::Page::FormattingHelpers qw/ columnar_table_html info_table_html html_alternate_show /;
 use List::MoreUtils qw /any /;
 use Scalar::Util qw(looks_like_number);
@@ -246,27 +249,30 @@ sub associate_ontology_GET :Args(0) {
 sub associate_ontology_POST :Args(0) {
     my ( $self, $c ) = @_;
 
-    my $params = map { $_ => $c->req->param($_) } qw/
-       object_id ontology_input relationship evidence_code evidence_description
-       evidence_with reference
-    /;
+    my $dbh = $c->dbc->dbh;
+     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema');
+    my $cvterm_rs = $schema->resultset('Cv::Cvterm');
 
-    my $stock_id       = $c->req->param('object_id');
+    my $locus_id       = $c->req->param('object_id');
     my $ontology_input = $c->req->param('term_name');
     my $relationship   = $c->req->param('relationship'); # a cvterm_id
+    my ($relationship_id) = $cvterm_rs->find( { cvterm_id => $relationship } )->dbxref_id;
     my $evidence_code  = $c->req->param('evidence_code'); # a cvterm_id
-    my $evidence_description = $c->req->param('evidence_description'); # a cvterm_id
-    my $evidence_with  = $c->req->param('evidence_with'); # a dbxref_id (type='evidence_with' value = 'dbxref_id'
+    my ($evidence_code_id) = $cvterm_rs->find( {cvterm_id => $evidence_code })->dbxref_id;
+    my $evidence_description = $c->req->param('evidence_description') || undef; # a cvterm_id
+    my ($evidence_description_id) = $cvterm_rs->find( {cvterm_id => $evidence_description })->dbxref_id if $evidence_description;
+    my $evidence_with = $c->req->param('evidence_with') || undef; # a dbxref_id (type='evidence_with' value = 'dbxref_id'
+    my ($evidence_with_id) = $cvterm_rs->find( { cvterm_id => $evidence_with } )->dbxref_id if $evidence_with && $evidence_with ne 'null';
     my $logged_user = $c->user;
     my $logged_person_id = $logged_user->get_object->get_sp_person_id if $logged_user;
 
-    my $reference = $c->req->param('reference'); # a pub_id
-
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $cvterm_rs = $schema->resultset('Cv::Cvterm');
-    my ($pub_id) = $reference ? $reference :
-        $schema->resultset('Pub::Pub')->search( { title=> 'curator' } )->first->pub_id; # a pub for 'cuurator' should already be in the sgn database. can add here $curator_cvterm->create_with ... and then create the curator pub with type_id of $curator_cvterm
-
+    my $reference = $c->req->param('reference');
+    my $reference_id = $reference ? $reference :
+        CXGN::Chado::Publication::get_curator_ref($dbh);
+##
+    my ($locus_dbxref, $locus_dbxref_id, $locus_dbxref_evidence);
+    ##
     #solanaceae_phenotype--SP:000001--fruit size
     my ($cv_name, $db_accession, $cvterm_name)  = split /--/ , $ontology_input;
     my ($db_name, $accession) = split ':' , $db_accession;
@@ -279,9 +285,9 @@ sub associate_ontology_POST :Args(0) {
         $c->stash->{rest} = { error => "no ontology term found for term $db_name : $accession" };
         return;
     }
-    my ($stock) = $c->stash->{stock} || $schema->resultset("Stock::Stock")->find( { stock_id => $stock_id } );
-
-    my  $cvterm_id = $cvterm->cvterm_id;
+    my $locus = CXGN::Phenome::Locus->new($dbh, $locus_id);
+    my $cvterm_id = $cvterm->cvterm_id;
+    my $dbxref_id  = $cvterm->dbxref_id;
     if (!$c->user) {
         $c->stash->{rest} = { error => 'Must be logged in for associating ontology terms! ' };
         return;
@@ -290,71 +296,49 @@ sub associate_ontology_POST :Args(0) {
         # if this fails, it will throw an acception and will (probably
         # rightly) be counted as a server error
         #########################################################
-        if ($stock && $cvterm_id) {
+        if ($locus->get_locus_id && $cvterm_id) {
             try {
-                #check if the stock_cvterm exists
-                my $s_cvterm_rs = $stock->search_related(
-                    'stock_cvterms', { cvterm_id => $cvterm_id, pub_id => $pub_id } );
-                # if it exists , we need to increment the rank
-                my $rank = 0;
-                if ($s_cvterm_rs->first) {
-                    $rank = $s_cvterm_rs->get_column('rank')->max + 1;
-                    # now check if the evidence codes already exists
-                    my ($rel_prop, $ev_prop, $desc_prop, $with_prop);
-                    my $eprops = $s_cvterm_rs->search_related('stock_cvtermprops');
-                    $rel_prop = $eprops->search( {
-                        type_id => $cvterm_rs->search( { name => 'relationship'})->single->cvterm_id,
-                        value => $relationship  })->first;
+                #check if the locus cvterm annotation exists. These annotations are stored in locus_dbxref
 
-                    $ev_prop = $eprops->search( {
-                        type_id =>   $cvterm_rs->search( { name => 'evidence_code'})->single->cvterm_id,
-                        value => $evidence_code })->first;
+                $locus_dbxref_id= CXGN::Phenome::LocusDbxref::locus_dbxref_exists($dbh,$locus_id, $dbxref_id);
+                $locus_dbxref=CXGN::Phenome::LocusDbxref->new($dbh, $locus_dbxref_id);
+                $locus_dbxref->set_locus_id($locus_id);
 
-                    $desc_prop = $eprops->search( {
-                        type_id =>  $cvterm_rs->search( { name => 'evidence description'})->single->cvterm_id,
-                        value => $evidence_description })->first if $evidence_description;
+                $locus_dbxref_evidence= CXGN::Phenome::Locus::LocusDbxrefEvidence->new($dbh);
 
-                    $with_prop = $eprops->search( {
-                        type_id =>  $cvterm_rs->search( { name => 'evidence_with'})->single->cvterm_id,
-                        value => $evidence_with })->first if $evidence_with;
+                $locus_dbxref->set_dbxref_id($dbxref_id);
+                $locus_dbxref->set_sp_person_id($logged_person_id);
 
-                    # return error if annotation + evidence exist
-                    if ($rel_prop && $ev_prop) {
-                        $c->stash->{rest} = { error => "Annotation exists with these evidence codes! " };
-                        return;
-                    }
-                }
-                # now store a new stock_cvterm
-                my $s_cvterm = $stock->create_related('stock_cvterms', {
-                    cvterm_id => $cvterm_id,
-                    pub_id    => $pub_id,
-                    rank      => $rank, } );
-#########
-                $s_cvterm->create_stock_cvtermprops(
-                    { 'relationship' => $relationship } , { db_name => 'OBO_REL', cv_name =>'relationship' } ) if looks_like_number($relationship);
-                $s_cvterm->create_stock_cvtermprops(
-                    { 'evidence_code' => $evidence_code } , { db_name => 'ECO', cv_name =>'evidence_code' } ) if looks_like_number($evidence_code);
-                 $s_cvterm->create_stock_cvtermprops(
-                     { 'evidence_description' => $evidence_description } , { cv_name =>'null', autocreate => 1 } ) if looks_like_number($evidence_description);
-                $s_cvterm->create_stock_cvtermprops(
-                    { 'evidence_with' => $evidence_with  } , { cv_name =>'local' , autocreate=>1} ) if looks_like_number($evidence_with);
-                # store the person loading the annotation 
-                $s_cvterm->create_stock_cvtermprops(
-                    { 'sp_person_id' => $logged_person_id  } , { cv_name =>'local' , autocreate=>1} );
-                #store today's date
-                my $val = "now()";
-                $s_cvterm->create_stock_cvtermprops(
-                    { 'create_date' =>  \$val   } , { cv_name =>'local' , autocreate=>1, allow_duplicate_values => 1} );
+                #this store should insert a new locus_dbxref if !$locus_dbxref_id
+                #update obsolete to 'f' if $locus_dbxref_id and obsolete ='t'
+                #do nothing if $locus_dbxref_id and obsolete = 'f'
+                my $obsolete = $locus_dbxref->get_obsolete();
 
+                #print STDERR "associate_ontology.pl is about to store a new $type _dbxref...\n";
+
+                #if the dbxref exists this should just return the database id to be used for
+                #storing a  dbxref_evidence
+                $locus_dbxref_id = $locus_dbxref->store;
+                #print STDERR "object_dbxref_id = $object_dbxref_id ! \n";
+                $locus_dbxref_evidence->set_object_dbxref_id($locus_dbxref_id);
+                $locus_dbxref_evidence->set_relationship_type_id($relationship_id);
+                $locus_dbxref_evidence->set_evidence_code_id($evidence_code_id);
+                $locus_dbxref_evidence->set_evidence_description_id($evidence_description_id);
+                $locus_dbxref_evidence->set_evidence_with($evidence_with_id);
+                $locus_dbxref_evidence->set_reference_id($reference_id);
+                $locus_dbxref_evidence->set_sp_person_id($logged_person_id);
+
+                my $locus_dbxref_evidence_id = $locus_dbxref_evidence->store ;
+
+##########################################
                 $c->stash->{rest} = ['success'];
-                return;
             } catch {
                 $c->stash->{rest} = { error => "Failed: $_" };
                 # send an email to sgn bugs
                 $c->stash->{email} = {
                     to      => 'sgn-bugs@sgn.cornell.edu',
                     from    => 'sgn-bugs@sgn.cornell.edu',
-                    subject => 'Associate ontology failed! Stock_id = $stock_id',
+                    subject => 'Associate ontology failed! locus_id = $locus_id',
                     body    => '$_',
                 };
                 $c->forward( $c->view('Email') );
@@ -364,13 +348,12 @@ sub associate_ontology_POST :Args(0) {
             $c->stash->{email} = {
                 to      => 'sgn-db-curation@sgn.cornell.edu',
                 from    => 'sgn-bugs@sgn.cornell.edu',
-                subject => 'New ontology term loaded. Stock $stock_id',
-                body    => "User " . $logged_user->get_object->get_first_name . " " . $logged_user->get_object->get_last_name . "has stored a new ontology term for stock $stock_id http://solgenomics.net/stock/$stock_id/view",
+                subject => 'New ontology term loaded. Locus $locus_id',
+                body    => "User " . $logged_user->get_object->get_first_name . " " . $logged_user->get_object->get_last_name . "has stored a new ontology term for locus $locus_id http://solgenomics.net/locus/$locus_id/view",
             };
             $c->forward( $c->view('Email') );
-
         } else {
-            $c->stash->{rest} = { error => 'need both valid stock_id and cvterm_id for adding an ontology term to this stock! ' };
+            $c->stash->{rest} = { error => 'need both valid locus_id and cvterm_id for adding an ontology term to this locus! ' };
         }
     } else {
         $c->stash->{rest} = { error => 'No privileges for adding new ontology terms. You must have an sgn submitter account. Please contact sgn-feedback@solgenomics.net for upgrading your user account. ' };
