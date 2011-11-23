@@ -512,7 +512,7 @@ qq { Download population: <span><a href="/qtl/download/phenotype/$population_id"
     }
 
     print info_section_html(
-                           title => 'Literature Annotation',
+                           title    => 'Publication(s)',
                            contents => $pubmed,
                            );
 
