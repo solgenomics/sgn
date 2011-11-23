@@ -274,13 +274,13 @@ sub default_toolbar_data {
 
                 {
                     name => 'International Tomato Sequencing Project',
-                    link => '/genomes/Solanum_lycopersicum/',
+                    link => '/organism/Solanum_lycopersicum/genome',
                     desc =>
 'The gene-rich euchromatic portion of the tomato genome is being sequenced by an international consortium. This page gives more information about the progress of the sequencing effort.'
                 },
                 {
                     name => '<i>Solanum pimpinellifolium</i> Project (CSHL)',
-                    link => '/genomes/Solanum_pimpinellifolium/',
+                    link => '/organism/Solanum_pimpinellifolium/genome',
                     desc => '',
                 },
                 {
