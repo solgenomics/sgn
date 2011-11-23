@@ -107,9 +107,9 @@ foreach my $method(sort keys %info ) {
     my $mean_value =  sprintf("%.2f", $stat->mean);
     my $min = sprintf("%.2f", $stat->min);
     my $max = sprintf("%.2f", $stat->max);
-
+    
     if (scalar(@values) ) {
-      push  @ { $data{$method}{phen} } ,  [map {$_}
+       push  @ { $data{$method}{phen} } ,  [map {$_}
                      ( { width => "320" , content => (tooltipped_text(qq|<a href="/chado/cvterm.pl?cvterm_id=$term_id">$term_name</a> $unit|, $definition ) ) } , { width => "60", content => $mean_value }, { with => "60" , content => $min } , { width => "60" , content => $max }, { width => "40" , content => scalar(@values) } )  ];
 
       push  @ { $data{$method}{phen}[$count] } , qq | <a href="/phenome/qtl_analysis.pl?stock_id=$object_id&amp;cvterm_id=$term_id" onClick="Qtl.waitPage()"> $graph_icon</a> |    if $has_qtl;
@@ -120,10 +120,9 @@ foreach my $method(sort keys %info ) {
                           ( (tooltipped_text(qq|<a href="/chado/cvterm.pl?cvterm_id=$term_id">$term_name</a>|, $definition) )  , join(', ' , @qual_values ) ) ];
     }
   }
-
-  @ { $data{$method}{headings} } = ("$method" , "Average", "Min", "Max", "Lines/repeats");
-  push @ { $data{$method}{headings} } , 'QTL(s)' if $has_qtl;
-}
+     @ { $data{$method}{headings} } = ("$method" , "Average", "Min", "Max", "Lines/repeats");
+     push @ { $data{$method}{headings} } , 'QTL(s)' if $has_qtl;
+}      
 
 </%perl>
 
@@ -136,7 +135,7 @@ foreach my $method(sort keys %info ) {
 <div id = "$div">
 
 % foreach my $key( sort keys %data ) {
-%  my @data_points = @ { $data{$key}{phen} } ; # if $data{key}{phen};
+%  my @data_points = @ { $data{$key}{phen} } if $data{key}{phen};
 %  my @headings    = @ { $data{$key}{headings} };
 %  if (@data_points) {
 
