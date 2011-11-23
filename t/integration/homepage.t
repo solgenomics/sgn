@@ -26,8 +26,9 @@ $mech->dbh_leak_ok;
 $mech->get_ok( '/' );
 
 # test for any broken local links
-{ my @links = grep !m|^https?://|, uniq map $_->attr('href'), $mech->findnodes('//a[@href]');
+{ my @links = grep !m"^(https?|mailto):", uniq map $_->attr('href'), $mech->findnodes('//a[@href]');
   for( @links ) {
+      diag "visiting $_";
       $mech->get_ok( $_ );
       $mech->back;
   }
