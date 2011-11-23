@@ -23,8 +23,9 @@ var Ontology = {
         var evidence_with = jQuery('#evidence_with_select').val();
         var reference = jQuery('#reference_select').val();
         jQuery.ajax({
-                url: cvterm_add_uri ,
-                    type:"POST",
+                type: 'POST',
+                    dataType: "json",
+                    url: cvterm_add_uri ,
                     data: 'term_name='+jQuery('#term_name').val()+'&object_id='+object_id+'&relationship='+relationship+'&evidence_code='+evidence_code+'&evidence_description='+evidence_description+'&evidence_with='+evidence_with+'&reference='+reference ,
                     success: function(response) {
                     var error = response.error;

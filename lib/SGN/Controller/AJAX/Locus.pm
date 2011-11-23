@@ -243,7 +243,7 @@ sub associate_ontology:Path('/ajax/locus/associate_ontology') :ActionClass('REST
 
 sub associate_ontology_GET :Args(0) {
     my ($self, $c) = @_;
-    $c->stash->{rest} = { error => "Nothing here, it's a POST.." } ;
+    $c->stash->{rest} = { error => "Nothing here, it's a GET.." } ;
 }
 #########################change this to the locus object !! 
 sub associate_ontology_POST :Args(0) {
@@ -314,8 +314,6 @@ sub associate_ontology_POST :Args(0) {
                 #do nothing if $locus_dbxref_id and obsolete = 'f'
                 my $obsolete = $locus_dbxref->get_obsolete();
 
-                #print STDERR "associate_ontology.pl is about to store a new $type _dbxref...\n";
-
                 #if the dbxref exists this should just return the database id to be used for
                 #storing a  dbxref_evidence
                 $locus_dbxref_id = $locus_dbxref->store;
@@ -365,24 +363,44 @@ sub references : Chained('/locus/get_locus') :PathPart('references') : ActionCla
 
 sub references_GET :Args(0) {
     my ($self, $c) = @_;
-    my $stock = $c->stash->{stock};
+    my $locus = $c->stash->{locus};
     # get a list of references
-    my $q =  "SELECT dbxref.dbxref_id, pub.pub_id, accession,title
-              FROM public.stock_pub
-              JOIN public.pub USING (pub_id)
-              JOIN public.pub_dbxref USING (pub_id)
-              JOIN public.dbxref USING (dbxref_id)
-              WHERE stock_id= ?";
+    my $q = "SELECT dbxref.dbxref_id, accession,title
+                                          FROM public.dbxref
+                                          JOIN public.pub_dbxref USING (dbxref_id)
+                                          JOIN public.pub USING (pub_id)
+                                          JOIN phenome.locus_dbxref USING (dbxref_id)
+                                          WHERE locus_id= ?
+                                          AND phenome.locus_dbxref.obsolete = 'f'";
     my $sth = $c->dbc->dbh->prepare($q);
-    $sth->execute($stock->get_stock_id);
+    $sth->execute($locus->get_locus_id);
     my $response_hash={};
-    while (my ($dbxref_id, $pub_id, $accession, $title) = $sth->fetchrow_array) {
-        $response_hash->{$pub_id} = $accession . ": " . $title;
+    while (my ($dbxref_id, $accession, $title) = $sth->fetchrow_array) {
+        $response_hash->{$dbxref_id} = $accession . ": " . $title;
     }
     $c->stash->{rest} = $response_hash;
 }
 
+sub evidences : Chained('/locus/get_locus') :PathPart('evidences') : ActionClass('REST') { }
 
+sub evidences_GET :Args(0) {
+    my ($self, $c) = @_;
+    my $locus = $c->stash->{locus};
+    # get a list of evidences
+    my $q = "SELECT dbxref.dbxref_id, accession,name, description
+                                          FROM public.dbxref
+                                          JOIN feature USING (dbxref_id)
+                                          JOIN phenome.locus_dbxref USING (dbxref_id)
+                                          WHERE locus_id= ?
+                                          AND phenome.locus_dbxref.obsolete = 'f'" ;
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute($locus->get_locus_id);
+    my $response_hash={};
+    while (my ($dbxref_id, $accession, $name, $description) = $sth->fetchrow_array) {
+        $response_hash->{$dbxref_id} = $name . ": " . $description;
+    }
+    $c->stash->{rest} = $response_hash;
+}
 
 sub toggle_obsolete_annotation : Path('/ajax/locus/toggle_obsolete_annotation') : ActionClass('REST') { }
 

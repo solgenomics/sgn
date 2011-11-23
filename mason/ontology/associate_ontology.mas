@@ -67,7 +67,8 @@ $cvterm_add_uri
 $relationships_uri => '/ajax/cvterm/relationships'
 $evidence_uri => '/ajax/cvterm/evidence'
 $evidence_description_uri => '/ajax/cvterm/evidence_description'
-$reference_uri => '/stock/'.$object_id.'/references'
+$reference_uri => undef
+$evidence_with_uri => undef
 $show_form => 0
 $div_id => 'ontology_terms'
 $ontology_url
@@ -120,7 +121,7 @@ $ontology_url
     </select>
     <b>Evidence code:</b>
     <select id="evidence_code_select" style="width: 100%"
-	    onchange="jQuery('#associate_ontology_button').removeAttr('disabled');Ontology.populateEvidence('evidence_description_select', '<% $evidence_description_uri %>' + '?evidence_code_id=' + jQuery('#evidence_code_select').val() );Ontology.getEvidenceWith();Ontology.populateEvidence('reference_select', '<% $reference_uri %>')">
+	    onchange="jQuery('#associate_ontology_button').removeAttr('disabled');Ontology.populateEvidence('evidence_description_select', '<% $evidence_description_uri %>' + '?evidence_code_id=' + jQuery('#evidence_code_select').val() );Ontology.populateEvidence('evidence_with_select', '<% $evidence_with_uri %>');Ontology.populateEvidence('reference_select', '<% $reference_uri %>')">
     </select>
 
     <b>Evidence description:</b>

@@ -391,6 +391,8 @@ function jqueryStuff() {
     object_name   => "locus",
     cvterm_add_uri=> $cvterm_add_uri,
     ontology_url  => "/locus/$locus_id/ontologies/",
+    reference_uri => "/locus/$locus_id/references",
+    evidence_with_uri => "/locus/$locus_id/evidences",
     show_form     => $is_owner  &>
 </&>
 
