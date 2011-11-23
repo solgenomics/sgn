@@ -669,7 +669,7 @@ qq | /phenome/indls_range_cvterm.pl?cvterm_id=$term_id&amp;lower=$lower&amp;uppe
     my $image_map = $cache->get_image_map_data();
     my $image     = $cache->get_image_tag();
     my $title =
-qq | Frequency distribution of experimental lines evaluated for $term_name. Bars represent the number of experimental lines with $term_name values greater than the lower limit but less or equal to the upper limit of the range. |;
+qq | Phenotype frequency distribution of experimental lines evaluated for $term_name. Bars represent the number of experimental lines with $term_name values greater than the lowest value but less or equal to the highest value of the range. |;
 
     return $image, $title, $image_map;
 }
