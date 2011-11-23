@@ -21,6 +21,14 @@ my $mech = SGN::Test::WWW::Mechanize->new;
     #die "$res";
     is( $mech->status, 404, 'gives a 404' );
 
+    $mech->get( '/js/CXGN/Page/' );
+    $mech->content_like( qr/not found/i, 'nonexistent js says not found' );
+    is( $mech->status, 404, 'gives a 404' );
+
+    $mech->get( '/js/CXGN/Page' );
+    $mech->content_like( qr/not found/i, 'nonexistent js says not found' );
+    is( $mech->status, 404, 'gives a 404' );
+
 }
 
 done_testing();

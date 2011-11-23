@@ -13,6 +13,8 @@ use Moose::Util::TypeConstraints;
 use HTTP::Status;
 use File::Spec;
 
+use Fcntl qw( S_ISREG S_ISLNK );
+
 use JSAN::ServerSide;
 use List::MoreUtils qw/ uniq first_index /;
 
@@ -49,8 +51,8 @@ sub default :Path {
 
     # support caching with If-Modified-Since requests
     my $full_file = File::Spec->catfile( $self->js_include_path->[0], $rel_file );
-    my $modtime = (stat( $full_file ))[9];
-    $c->throw_404 unless $modtime;
+    my ( $modtime ) = (stat( $full_file ))[9];
+    $c->throw_404 unless $modtime && -f _;
 
     my $ims = $c->req->headers->if_modified_since;
     if( $ims && $modtime && $ims >= $modtime ) {
@@ -80,7 +82,6 @@ sub resolve_javascript_classes :Private {
         s/\.js$//;
         s!\.!/!g;
     }
-
     # if prototype is present, move it to the front to prevent it
     # conflicting with jquery
     my $prototype_idx = first_index { /Prototype$/i } @files;
