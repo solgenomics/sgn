@@ -256,6 +256,7 @@ SGN.Search.Feature = {
                           fields: ['type_id', 'name'],
                           proxy: {
                               type: 'ajax',
+                              timeout: 60000,
                               url: '/search/features/feature_types_service',
                               reader: {
                                   root: 'data',
@@ -270,6 +271,7 @@ SGN.Search.Feature = {
                           fields: ['type_id', 'name'],
                           proxy: {
                               type: 'ajax',
+                              timeout: 60000,
                               url: '/search/features/featureprop_types_service',
                               reader: {
                                   root: 'data',
@@ -284,6 +286,7 @@ SGN.Search.Feature = {
                           model: 'Feature',
                           proxy: {
                               type: 'ajax',
+                              timeout: 60000,
                               url:  '/search/features/srcfeatures_service',
                               reader: {
                                   root: 'data',
