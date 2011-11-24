@@ -89,8 +89,11 @@ sub population : PathPart('qtl/population') Chained Args(1) {
 
 sub download_phenotype : PathPart('qtl/download/phenotype') Chained Args(1) {
     my ($self, $c, $id) = @_;
+    
+    $c->throw_404("<strong>$id</strong> is not a valid population id") if  $id =~ m/\D/;
+    
     my $pop             = CXGN::Phenome::Population->new($c->dbc->dbh, $id);
-    my $phenotype_file  = $pop->phenotype_file($c);
+    my $phenotype_file  = $pop->phenotype_file($c) if $pop;
     
     unless (!-e $phenotype_file || -s $phenotype_file <= 1)
     {
@@ -106,9 +109,12 @@ sub download_phenotype : PathPart('qtl/download/phenotype') Chained Args(1) {
 
 sub download_genotype : PathPart('qtl/download/genotype') Chained Args(1) {
     my ($self, $c, $id) = @_;
+    
+    $c->throw_404("<strong>$id</strong> is not a valid population id") if  $id =~ m/\D/;
+    
     my $pop             = CXGN::Phenome::Population->new($c->dbc->dbh, $id);        
     my $genotype_file   = $pop->genotype_file($c);
-   
+ 
     unless (!-e $genotype_file || -s $genotype_file <= 1)
     {
         my @geno_data;
@@ -124,6 +130,8 @@ sub download_genotype : PathPart('qtl/download/genotype') Chained Args(1) {
 sub download_correlation : PathPart('qtl/download/correlation') Chained Args(1) {
     my ($self, $c, $id) = @_;
     
+    $c->throw_404("<strong>$id</strong> is not a valid population id") if $id =~ m/\D/;
+
     $c->stash(pop => CXGN::Phenome::Population->new($c->dbc->dbh, $id)); 
     $self->_correlation_output($c);     
     my $corr_file = $c->stash->{corre_table_file};   
@@ -150,6 +158,9 @@ sub download_correlation : PathPart('qtl/download/correlation') Chained Args(1) 
 
 sub download_acronym : PathPart('qtl/download/acronym') Chained Args(1) {
     my ($self, $c, $id) = @_;
+
+    $c->throw_404("<strong>$id</strong> is not a valid population id") if  $id =~ m/\D/;
+   
     my $pop = CXGN::Phenome::Population->new($c->dbc->dbh, $id);    
     $c->stash->{'csv'}={ data => $pop->get_cvterm_acronyms};
     $c->forward("SGN::View::Download::CSV");
@@ -361,8 +372,8 @@ sub _is_qtl_pop {
         if ($pop_id == $id)
         {
             $c->stash->{is_qtl_pop} = 1;
-            last;
-        }       
+            last;        
+        }   
     }
 }
 
