@@ -145,7 +145,7 @@ sub _make_head_post_html {
           } @{ $c->stash->{css_uris} || [] }
         ),
         ( map {
-            qq{<script src="$_" type="text/javascript">\n</script>}
+            qq{<script src="$_" type="text/javascript"></script>}
           } @{ $c->stash->{js_uris} || [] }
         ),
     );
