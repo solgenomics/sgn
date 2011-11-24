@@ -43,7 +43,7 @@ sub population : PathPart('qtl/population') Chained Args(1) {
         my $rs = $schema->resultset('Population')->find($id);                             
         if ($rs)  
         { 
-            $self->_is_qtl_pop($c, $id);
+            $self->is_qtl_pop($c, $id);
             if ( $c->stash->{is_qtl_pop} ) 
             {
                 my $userid = $c->user->get_object->get_sp_person_id if $c->user;          
@@ -92,39 +92,55 @@ sub download_phenotype : PathPart('qtl/download/phenotype') Chained Args(1) {
     
     $c->throw_404("<strong>$id</strong> is not a valid population id") if  $id =~ m/\D/;
     
-    my $pop             = CXGN::Phenome::Population->new($c->dbc->dbh, $id);
-    my $phenotype_file  = $pop->phenotype_file($c) if $pop;
-    
-    unless (!-e $phenotype_file || -s $phenotype_file <= 1)
+    $self->is_qtl_pop($c, $id);
+    if ($c->stash->{is_qtl_pop})   
     {
-        my @pheno_data;
-        foreach ( read_file($phenotype_file) ) 
+        my $pop             = CXGN::Phenome::Population->new($c->dbc->dbh, $id);
+        my $phenotype_file  = $pop->phenotype_file($c);
+    
+        unless (!-e $phenotype_file || -s $phenotype_file <= 1)
         {
-            push @pheno_data, [ split(/,/) ];
+            my @pheno_data;
+            foreach ( read_file($phenotype_file) ) 
+            {
+                push @pheno_data, [ split(/,/) ];
+            }
+            $c->stash->{'csv'}={ data => \@pheno_data};
+            $c->forward("SGN::View::Download::CSV");
         }
-        $c->stash->{'csv'}={ data => \@pheno_data};
-        $c->forward("SGN::View::Download::CSV");
     }
+    else
+    {
+        $c->throw_404("<strong>$id</strong> is not a QTL population id");   
+    }       
 }
 
 sub download_genotype : PathPart('qtl/download/genotype') Chained Args(1) {
     my ($self, $c, $id) = @_;
     
     $c->throw_404("<strong>$id</strong> is not a valid population id") if  $id =~ m/\D/;
-    
-    my $pop             = CXGN::Phenome::Population->new($c->dbc->dbh, $id);        
-    my $genotype_file   = $pop->genotype_file($c);
- 
-    unless (!-e $genotype_file || -s $genotype_file <= 1)
+   
+    $self->is_qtl_pop($c, $id);
+    if ($c->stash->{is_qtl_pop})
     {
-        my @geno_data;
-        foreach ( read_file($genotype_file)) 
+        my $pop             = CXGN::Phenome::Population->new($c->dbc->dbh, $id);        
+        my $genotype_file   = $pop->genotype_file($c);
+ 
+        unless (!-e $genotype_file || -s $genotype_file <= 1)
         {
-            push @geno_data, [ split(/,/) ];
+            my @geno_data;
+            foreach ( read_file($genotype_file)) 
+            {
+                push @geno_data, [ split(/,/) ];
+            }
+            $c->stash->{'csv'}={ data => \@geno_data};
+            $c->forward("SGN::View::Download::CSV");
         }
-        $c->stash->{'csv'}={ data => \@geno_data};
-        $c->forward("SGN::View::Download::CSV");
     }
+    else
+    {
+        $c->throw_404("<strong>$id</strong> is not a QTL population id");   
+    }       
 }
 
 sub download_correlation : PathPart('qtl/download/correlation') Chained Args(1) {
@@ -132,38 +148,53 @@ sub download_correlation : PathPart('qtl/download/correlation') Chained Args(1) 
     
     $c->throw_404("<strong>$id</strong> is not a valid population id") if $id =~ m/\D/;
 
-    $c->stash(pop => CXGN::Phenome::Population->new($c->dbc->dbh, $id)); 
-    $self->_correlation_output($c);     
-    my $corr_file = $c->stash->{corre_table_file};   
-    my $base_path = $c->config->{basepath};
-    $corr_file    = $base_path . $corr_file;
-  
-    unless (!-e $corr_file || -s $corr_file <= 1) 
+    $self->is_qtl_pop($c, $id);
+    if ($c->stash->{is_qtl_pop})
     {
-        my @corr_data;
-        my $count=1;
-
-        foreach ( read_file($corr_file) )
+        $c->stash(pop => CXGN::Phenome::Population->new($c->dbc->dbh, $id)); 
+        $self->_correlation_output($c);     
+        my $corr_file = $c->stash->{corre_table_file};   
+        my $base_path = $c->config->{basepath};
+        $corr_file    = $base_path . $corr_file;
+  
+        unless (!-e $corr_file || -s $corr_file <= 1) 
         {
-            if ($count==1) { $_ = "Traits " . $_;}
-            s/\s/,/g;
-            push @corr_data, [ split (/,/) ];
-            $count++;
-        }
-    
-        $c->stash->{'csv'}={ data => \@corr_data };
-        $c->forward("SGN::View::Download::CSV");
-    }    
+            my @corr_data;
+            my $count=1;
+
+            foreach ( read_file($corr_file) )
+            {
+                if ($count==1) { $_ = "Traits " . $_;}
+                s/\s/,/g;
+                push @corr_data, [ split (/,/) ];
+                $count++;
+            }   
+            $c->stash->{'csv'}={ data => \@corr_data };
+            $c->forward("SGN::View::Download::CSV");
+        } 
+    }  
+    else
+    {
+            $c->throw_404("<strong>$id</strong> is not a QTL population id");   
+    }       
 }
 
 sub download_acronym : PathPart('qtl/download/acronym') Chained Args(1) {
     my ($self, $c, $id) = @_;
 
     $c->throw_404("<strong>$id</strong> is not a valid population id") if  $id =~ m/\D/;
-   
-    my $pop = CXGN::Phenome::Population->new($c->dbc->dbh, $id);    
-    $c->stash->{'csv'}={ data => $pop->get_cvterm_acronyms};
-    $c->forward("SGN::View::Download::CSV");
+    
+    $self->is_qtl_pop($c, $id);
+    if ($c->stash->{is_qtl_pop})
+    {
+        my $pop = CXGN::Phenome::Population->new($c->dbc->dbh, $id);    
+        $c->stash->{'csv'}={ data => $pop->get_cvterm_acronyms};
+        $c->forward("SGN::View::Download::CSV");
+    }
+    else
+    {
+        $c->throw_404("<strong>$id</strong> is not a QTL population id");   
+    }       
 }
 
 
@@ -360,8 +391,8 @@ sub _list_traits {
     $c->stash->{traits_list} = \@phenotype;
 }
 
-
-sub _is_qtl_pop {
+#given $c and a population id, checks if it is a qtl population and stashes true or false
+sub is_qtl_pop {
     my ($self, $c, $id) = @_;
     my $qtltool = CXGN::Phenome::Qtl::Tools->new();
     my @qtl_pops = $qtltool->has_qtl_data();
@@ -369,11 +400,9 @@ sub _is_qtl_pop {
     foreach my $qtl_pop ( @qtl_pops )
     {
         my $pop_id = $qtl_pop->get_population_id();
-        if ($pop_id == $id)
-        {
-            $c->stash->{is_qtl_pop} = 1;
-            last;        
-        }   
+        $pop_id == $id ? $c->stash(is_qtl_pop => 1) && last 
+                       : $c->stash(is_qtl_pop => 0)
+                       ;
     }
 }
 
