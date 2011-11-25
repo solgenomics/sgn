@@ -473,7 +473,7 @@ sub _stock_project_phenotypes {
         my @ph = map $_->phenotype, $exp->nd_experiment_phenotypes;
         my $project_desc = $project_descriptions{ $exp->nd_experiment_id }
             or die "no project found for exp ".$exp->nd_experiment_id;
-        push @{ $phenotypes{ $project_desc }}, @ph;
+        push @{ $phenotypes{ $project_desc }}, @ph if scalar(@ph);
     }
     return \%phenotypes;
 }

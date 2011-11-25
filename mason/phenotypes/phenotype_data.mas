@@ -135,7 +135,7 @@ foreach my $method(sort keys %info ) {
 <div id = "$div">
 
 % foreach my $key( sort keys %data ) {
-%  my @data_points = @ { $data{$key}{phen} } if $data{key}{phen};
+%  my @data_points = @ { $data{$key}{phen} } if $data{$key}{phen};
 %  my @headings    = @ { $data{$key}{headings} };
 %  if (@data_points) {
 
