@@ -603,15 +603,22 @@ sub search_results : PathPart('qtl/search/results') Chained Args(0) {
     my $trait = $c->req->param('trait');
     $trait =~ s/(^\s+|\s+$)//g;
     $trait =~ s/\s+/ /g;
-    
+               
     if ($trait)
     {
-        my $schema    = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");  
+        my $schema    = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+        my $cv_id = $schema->resultset("Cv::Cv")->search({name => 'solanaceae_phenotype'})->single->cv_id;
         my $rs = $schema->resultset("Cv::Cvterm")->search(
-            { name => { 'LIKE' => '%'.$trait .'%'} },
-            { columns => [ qw/ cvterm_id name definition/ ] },
-            {page => $c->req->param('page') || 1,
-             rows => 10
+            { name  => { 'LIKE' => '%'.$trait .'%'},
+              cv_id => $cv_id,            
+            },          
+            {
+              columns => [ qw/ cvterm_id name definition / ] 
+            },    
+            { 
+              page     => $c->req->param('page') || 1,
+              rows     => 10,
+              order_by => 'name'
             }
             );
       
