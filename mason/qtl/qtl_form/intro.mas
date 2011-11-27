@@ -45,7 +45,7 @@ my $links = $guide . '|' . $citation;
               <li>Genotype data file (tab delimited) and 
               <li>Statistical parameters.
               <li><i>Markers with their sequences need to be already in SGN. 
-                  Read <a href="/content/map_submissions.pl">here</a> on how 
+                  Read <a href="/cview/help/map_submission">here</a> on how 
                   to submit markers to SGN.</i>
             </ul>
 
