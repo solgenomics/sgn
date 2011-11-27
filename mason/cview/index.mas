@@ -60,7 +60,7 @@ foreach my $s (sort { @{$map_by_species->{$a}} <=> @{$map_by_species->{$b}} } ke
   $d .= "<br /><br />";
 }
 
-my $submit = qq | <b>[<a href="/content/map_submissions.pl">Submit New Map</a>]</b> |;
+my $submit = qq | <b>[<a href="/cview/help/map_submission">Submit New Map</a>]</b> |;
 
 </%perl>
 

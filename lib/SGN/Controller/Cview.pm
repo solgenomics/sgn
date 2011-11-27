@@ -308,5 +308,11 @@ sub maps :Path("/cview/view_maps.pl") :Args(0) {
     $c->forward("View::Mason");
 }
 
+sub map_submission :Path('/cview/help/map_submission') :Args(0) { 
+    my ($self, $c) = @_;
+    $c->stash->{template}='/cview/help/map_submission.mas';
+}
+
+
 
 1;
