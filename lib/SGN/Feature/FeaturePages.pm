@@ -55,7 +55,7 @@ sub _make_xref {
 
         text => $feature->name.' '.$feature->type->name.' feature details',
 
-        url => URI->new('/feature/view/id/'.$feature->feature_id),
+        url => URI->new('/feature/'.$feature->feature_id.'/details'),
 
     });
 }

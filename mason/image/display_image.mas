@@ -103,7 +103,6 @@ $size => 'large'
 #use JSON;
 use SGN::Image;
 use CXGN::Phenome::Individual;
-use CXGN::Page::FormattingHelpers qw | modesel |;
 
 my $image_full_size_url = $image->get_image_url("large");
 my $object_id = $image->get_image_id();

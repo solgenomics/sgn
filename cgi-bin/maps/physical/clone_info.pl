@@ -217,9 +217,9 @@ SPAN.colorme {
 </style>
 EOEXTRA
 
-my $az_name = $clone->clone_name;
-$page->header( "Clone $az_name", undef, $head_extra );
-print page_title_html("Clone $az_name");
+my $intl_name = $clone->intl_clone_name;
+$page->header( "Clone $intl_name", undef, $head_extra );
+print page_title_html("Clone $intl_name");
 
 print info_section_html(
     title       => 'Clone and library',

@@ -418,7 +418,7 @@ if (is.logical(permuvalue1) == FALSE)
   }
 }
 
-##########QTL EFFECTS - I ##############
+##########set the LOD cut-off for singificant qtls ##############
 LodThreshold<-c()
 
 if(is.null(permu) == FALSE)

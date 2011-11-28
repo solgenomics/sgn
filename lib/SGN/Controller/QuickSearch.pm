@@ -150,7 +150,7 @@ sub redirect_if_only_one_possible : Private {
     my ( $self, $c ) = @_;
 
     my @possible_urls = uniq(
-         grep $_ !~ m!^https?://!,
+         grep $_ !~ m!^https?://! && $_ !~ m!^/solpeople!,
          grep defined,
          ( map $_->{result}->[0],
            values %{$c->stash->{results}}

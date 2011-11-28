@@ -21,7 +21,14 @@ use lib 't/lib';
 use SGN::Test::WWW::Mechanize;
 
 use base 'Exporter';
-our @EXPORT_OK = qw/validate_urls request get ctx_request with_test_level/;
+our @EXPORT_OK = qw/validate_urls request get ctx_request with_test_level qsub_is_configured/;
+
+
+sub qsub_is_configured {
+    no autodie;
+    system("echo sleep 1 | qsub -j oe -o /dev/null");
+    return $? ? 0 : 1 ;
+}
 
 # do a little dance to only load Catalyst::Test if we've actually been
 # asked for any of its subs

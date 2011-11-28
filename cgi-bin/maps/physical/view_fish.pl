@@ -5,6 +5,8 @@ use CXGN::Fish;
 use CXGN::DB::Connection;
 use SGN::Image;
 
+use CatalystX::GlobalContext '$c';
+
 my $page = CXGN::Page->new("view_fish.pl","john,marty");
 my ($image_size) = $page->get_encoded_arguments('size');
 my ($clone_id) = $page->get_encoded_arguments('id');
@@ -27,7 +29,7 @@ my $dbh = CXGN::DB::Connection->new;
 # ensure that the image_id is a fish image
 my $image;
 if ($dbh->selectrow_array("select fish_result_id from fish_result_image where image_id = ?", undef, $image_id)) {
- $image = SGN::Image->new($dbh, $image_id);
+ $image = SGN::Image->new( $dbh, $image_id, $c );
 }
 
 if ($image) {

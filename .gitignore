@@ -25,3 +25,7 @@ t/data/data/prod/tmp/
 MANIFEST*
 ./cgi-bin/secretom
 MYMETA.json
+tags
+.prove
+static/ext-4.0.7-gpl/*
+

@@ -136,8 +136,12 @@ sub fetch_sequences :Private {
             push @sequences, $self->_feature_to_primaryseq( $feature, $strand, $start, $end );
             $found = 1;
         }
-
-        $found or $c->throw_404( sprintf('No sequence found with id "%s"', encode_entities( $id )) );
+        # if there is only one sequence identifier, not finding it should throw a 404
+        # otherwise, ignore it so bulk downloads via the multi api still work
+        # Bulk queries always ignore all invalid identifiers
+        if( @$sequence_idents == 1 and !$c->stash->{bulk_query} ){
+            $found or $c->throw_404( sprintf('No sequence found with id "%s"', encode_entities( $id )) );
+        }
     }
 
     $c->stash->{sequences} = \@sequences;

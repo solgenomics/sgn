@@ -21,5 +21,5 @@ JavaScript library names, including any necessary dependencies.
 </%args>
 <%perl>
   $classes = [ $classes ] unless ref $classes; #< coerce to arrayref
-  push @{ $c->stash->{pack_js} }, @$classes;
+  push @{ $c->stash->{js_classes} }, @$classes;
 </%perl>

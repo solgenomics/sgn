@@ -6,6 +6,8 @@ use SGN::Context;
 use base 'Exporter';
 use Test::More;
 
+use Data::UUID ();
+
 our $schema;
 
 sub import {
@@ -83,6 +85,8 @@ our $num_stocks      = 0;
 our $test_data       = [];
 our @EXPORT_OK = qw/ create_test /;
 
+my $host_id = Data::UUID->new->create_str;
+
 sub create_test {
     my ($pkg, $values) = @_;
     die "Must provide package name to create test object" unless $pkg;
@@ -117,7 +121,7 @@ sub _create_test_default {
 sub _create_test_db {
     my ($values) = @_;
     my $db = $schema->resultset('General::Db')
-           ->create( { name => $values->{name} || "db_$num_dbs-$$" } );
+           ->create( { name => $values->{name} || "db_$num_dbs-$host_id-$$" } );
     push @$test_data, $db;
     $num_dbs++;
     return $db;
@@ -128,7 +132,7 @@ sub _create_test_dbxref {
 
     $values->{db} ||= _create_test_db();
 
-    $values->{accession} ||= "dbxref_$num_dbxrefs-$$";
+    $values->{accession} ||= "dbxref_$num_dbxrefs-$host_id-$$";
     my @values = keys %$values;
 
     my $dbxref = $schema->resultset('General::Dbxref')
@@ -146,7 +150,7 @@ sub _create_test_dbxref {
 sub _create_test_cv {
     my ($values) = @_;
 
-    $values->{name}       ||= "cv_$num_cvs-$$";
+    $values->{name}       ||= "cv_$num_cvs-$host_id-$$";
     $values->{definition} ||= "semantics";
 
     my $cv = $schema->resultset('Cv::Cv')
@@ -160,7 +164,7 @@ sub _create_test_cv {
 sub _create_test_cvterm {
     my ($values) = @_;
 
-    $values->{name}   ||= "cvterm_$num_cvterms-$$";
+    $values->{name}   ||= "cvterm_$num_cvterms-$host_id-$$";
 
     my @values = keys %$values;
 
@@ -206,9 +210,9 @@ sub _create_test_cvtermpath {
 sub _create_test_stock {
     my ($values) = @_;
 
-    $values->{name}         ||= "stock_name_$num_stocks-$$";
-    $values->{uniquename}   ||= "stock_uniquename_$num_stocks-$$";
-    $values->{description}  ||= "stock_description_$num_stocks-$$";
+    $values->{name}         ||= "stock_name_$num_stocks-$host_id-$$";
+    $values->{uniquename}   ||= "stock_uniquename_$num_stocks-$host_id-$$";
+    $values->{description}  ||= "stock_description_$num_stocks-$host_id-$$";
 
     my @values = keys %$values;
 
@@ -226,7 +230,7 @@ sub _create_test_stock {
 
 sub _create_test_organism {
     my ($values) = @_;
-    $values->{genus}   ||= "organism_$num_organisms-$$";
+    $values->{genus}   ||= "organism-$num_organisms-$host_id-$$";
     $values->{species} ||= $values->{genus} . ' fooii';
 
     my $organism = $schema->resultset('Organism::Organism')
@@ -244,8 +248,8 @@ sub _create_test_feature {
     # provide some defaults for things we don't care about
     $values->{residues}   ||= 'ATCG';
     $values->{seqlen}     ||= length($values->{residues});
-    $values->{name}       ||= "feature_$num_features-$$";
-    $values->{uniquename} ||= "unique_feature_$num_features-$$";
+    $values->{name}       ||= "feature_$num_features-$host_id-$$";
+    $values->{uniquename} ||= "unique_feature_$num_features-$host_id-$$";
 
     my @values = keys %$values;
 

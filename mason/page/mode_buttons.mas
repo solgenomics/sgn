@@ -1,0 +1,11 @@
+<%args>
+  $buttons
+  $selected => $c->req->uri->path
+</%args>
+<% CXGN::Page::FormattingHelpers::modesel( $buttons, $selected ) %>
+<%init>
+  $selected = URI->new( $selected )->path;
+</%init>
+<%once>
+  use CXGN::Page::FormattingHelpers ();
+</%once>

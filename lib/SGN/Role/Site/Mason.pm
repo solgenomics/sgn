@@ -2,11 +2,14 @@ package SGN::Role::Site::Mason;
 
 use Moose::Role;
 use namespace::autoclean;
+
+use Carp;
 use File::Basename;
 use File::Path;
 use Path::Class;
-use HTML::Mason::Interp;
 use Scalar::Util qw/blessed/;
+
+use HTML::Mason::Interp;
 
 requires
     qw(
@@ -16,19 +19,22 @@ requires
        setup_finalize
       );
 
-
 =head2 forward_to_mason_view
 
-  Usage: $c->forward_to_mason_view( '/some/thing', foo => 'bar' );
-  Desc : call a Mason view with the given arguments and exit
-  Args : mason component name (with or without .mas extension),
-         hash-style list of arguments for the mason component
-  Ret  : nothing.  terminates the program afterward.
-  Side Effects: exits after calling the component
-
-  This replaces CXGN::MasonFactory->new->exec( ... )
+  Deprecated.  Do not use in new code.
 
 =cut
+
+# forward_to_mason_view
+
+#   Usage: $c->forward_to_mason_view( '/some/thing', foo => 'bar' );
+#   Desc : call a Mason view with the given arguments and exit
+#   Args : mason component name (with or without .mas extension),
+#          hash-style list of arguments for the mason component
+#   Ret  : nothing.  terminates the program afterward.
+#   Side Effects: exits after calling the component
+
+#   This replaces CXGN::MasonFactory->new->exec( ... )
 
 sub forward_to_mason_view {
     my $self = shift;
@@ -38,9 +44,7 @@ sub forward_to_mason_view {
         print $self->view('Mason')->render( $self, $comp, { %{$self->stash}, @args} );
         die ["EXIT\n",0]; #< weird thing for working with Catalyst's CGIBin controller
     } else {
-        $self->stash->{template} = $comp;
-        %{$self->stash} = ( %{$self->stash}, @args );
-        $self->view('Mason')->process( $self );
+        croak "forward_to_mason_view is deprecated, and only works in CGI scripts";
     }
 }
 

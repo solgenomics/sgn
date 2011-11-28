@@ -362,7 +362,7 @@ CXGN.Onto.Browser.prototype = {
 	this.workingMessage(true);
 
 	var pL = this.getParentsList(accession);
-        if (pL.length > 1) {
+        if (pL.length > 0) {
             var cache = this.fetchCachedChildren(accession);
             //MochiKit.Logging.log('Cache length now: '+cache.length);
             this.setCache(cache);

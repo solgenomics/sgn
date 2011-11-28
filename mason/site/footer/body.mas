@@ -6,11 +6,17 @@
 
 <!-- BEGIN FOOTER-->
 
-</td></tr>
 
+  <div id="page_report_a_problem">
+    Something wrong? <a href="/contact/form?subject=<% 'Problem with page '.$c->req->uri |u %>&body=<% "Hello SGN,\n\nI noticed a problem with the page at ".$c->req->uri.".\n\n<please fill in details here>\n" |u%>">Report a problem</a>
+  </div>
+
+</td></tr>
 <tr><td  id="pagecontent_footer">
+
     <table width="100%" cellspacing="0" cellpadding="0" id="pagefooter">
       <tr><td style="vertical-align: top; width: 370px; font-size:smaller" colspan="2" >
+
 	  SGN is supported by the <a class="footer" href="/about/tomato_project/">NSF (#0116076)</a>,
     <a class="footer" href="http://www.usda.gov">USDA CSREES</a> and hosted at the <a class="footer" href="http://bti.cornell.edu">Boyce Thompson Institute.</a>
     <br />

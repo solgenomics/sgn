@@ -342,7 +342,7 @@ sub html_string_linebreak_and_highlight {
             when the user clicks, rather than just when the next page loads.
             This turns out to make the interface feel way nicer and more responsive.
             If you mess with this function, make sure you check
-            modesel_switch_highlight in documents/inc/sgn.js
+            modesel_switch_highlight in /css/sgn.js
 
 =cut
 
@@ -352,6 +352,18 @@ sub modesel {
     my $ar       = shift;
     my $numcols  = @$ar * 4 + 1;
     my $selected = shift;
+
+    if( $selected =~ /\D/ ) {
+        my $found = undef;
+        for( my $i = 0; $i < @$ar; $i++ ) {
+            my $link = $ar->[$i][0];
+            if( $selected =~  m! ^ $link (?: $ | [\?/] ) !x ) {
+                $found = $i;
+                last;
+            }
+        }
+        $selected = $found;
+    }
 
     my @buttons =
       map {
@@ -377,28 +389,28 @@ qq|    <td id="${bid}_${leaf}" class="modesel_$leaf$sel">$content</td>\n|;
 
         $button->{contents} = [
             $tablecell->(
-                'tl', qq|<img src="/documents/img/modesel_tl$sel.gif" alt="" />|
+                'tl', qq|<img src="/img/modesel_tl$sel.gif" alt="" />|
               )
               . $tablecell->( 't', qq|| )
               . $tablecell->(
-                'tr', qq|<img src="/documents/img/modesel_tr$sel.gif" alt="" />|
+                'tr', qq|<img src="/img/modesel_tr$sel.gif" alt="" />|
               ),
             $tablecell->(
-                'l', qq|<img src="/documents/img/modesel_l$sel.gif" alt="" />|
+                'l', qq|<img src="/img/modesel_l$sel.gif" alt="" />|
               )
               . $tablecell->(
                 'c',
 qq|<a class="modesel$sel" onclick="CXGN.Page.FormattingHelpers.modesel_switch_highlight('$highlighted_id','$bid'); $button->{onclick}" href="$button->{url}">$button->{contents}</a>|
               )
               . $tablecell->(
-                'r', qq|<img src="/documents/img/modesel_r$sel.gif" alt="" />|
+                'r', qq|<img src="/img/modesel_r$sel.gif" alt="" />|
               ),
             $tablecell->(
-                'bl', qq|<img src="/documents/img/modesel_bl$sel.gif" alt="" />|
+                'bl', qq|<img src="/img/modesel_bl$sel.gif" alt="" />|
               )
               . $tablecell->( 'b', qq|| )
               . $tablecell->(
-                'br', qq|<img src="/documents/img/modesel_br$sel.gif" alt="" />|
+                'br', qq|<img src="/img/modesel_br$sel.gif" alt="" />|
               ),
         ];
     }
@@ -482,6 +494,7 @@ sub simple_selectbox_html {
     $retstring =~ s/ +/ /;    #collapse spaces
     my $in_group = 0;
     foreach ( @{ $params{choices} } ) {
+        no warnings 'uninitialized';
         if ( !ref && s/^__// ) {
             $retstring .= qq{</optgroup>} if $in_group;
             $in_group = 1;
@@ -802,7 +815,7 @@ sub columnar_table_html {
       qq|<table class="columnar_table$noborder" $params{__tableattrs}>\n|;
 
     if( defined $params{__caption} ) {
-        $html .= "<caption>$params{__caption}</caption>\n";
+        $html .= "<caption class=\"columnar_table\">$params{__caption}</caption>\n";
     }
 
     unless ( defined $params{__alt_freq} ) {

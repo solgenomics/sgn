@@ -1,0 +1,50 @@
+<%doc>
+
+=head1 NAME 
+qtl/population/stat_form.mas - a mason component for displaying qtl population symmary data.
+
+=AUTHOR
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$pop
+$owner_page
+
+</%args>
+
+
+<table>
+  <tr>
+    <td>
+      <& /page/columnar_table.mas,
+         data         => [['Name', $pop->get_name],
+                          ['Description', $pop->get_description],
+                          ['Owner', $owner_page],
+                         ],
+         __alt_freq   => 0,
+         __align      => "l",
+         __tableattrs => 'style="padding: 1px 225px 1px 1px"',   
+        &>
+    </td>    
+    <td>
+      <& /page/columnar_table.mas,        
+         data       => [['No. of lines', scalar $pop->get_individuals],
+                        ['No. of traits', scalar $pop->get_cvterms],
+                       ],
+        __alt_freq  => 1,
+        __align     => "l",
+       __tableattrs => 'style="padding: 1px"',    
+        &>
+    </td>
+  </tr>
+</table>
+    
+
+ 
+
+

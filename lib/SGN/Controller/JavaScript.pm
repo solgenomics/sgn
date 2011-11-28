@@ -1,7 +1,7 @@
 =head1 NAME
 
-SGN::Controller::JavaScript - controller for packing up and serving
-minified javascript
+SGN::Controller::JavaScript - controller for serving minified
+javascript
 
 =cut
 
@@ -10,17 +10,15 @@ use Moose;
 use namespace::autoclean;
 use Moose::Util::TypeConstraints;
 
+use HTTP::Status;
 use File::Spec;
 
-use Carp;
-use Digest::MD5 'md5_hex';
-use HTTP::Status;
+use Fcntl qw( S_ISREG S_ISLNK );
+
 use JSAN::ServerSide;
 use List::MoreUtils qw/ uniq first_index /;
-use Storable qw/ nfreeze /;
 
 BEGIN { extends 'Catalyst::Controller' }
-with 'Catalyst::Component::ApplicationAttribute';
 
 __PACKAGE__->config(
     namespace       => 'js',
@@ -38,56 +36,7 @@ __PACKAGE__->config(
        );
 }
 
-has '_package_defs' => (
-    is => 'ro',
-    lazy_build => 1,
-   ); sub _build__package_defs {
-       my $self = shift;
-
-       my $cache = Cache::File->new(
-           cache_root       => $self->_app->path_to( $self->_app->tempfiles_subdir('cache','js_packs') ),
-
-           default_expires  => 'never',
-           size_limit       => 1_000_000,
-           removal_strategy => 'Cache::RemovalStrategy::LRU',
-          );
-   }
-
-=head1 ACTIONS
-
-=head2 js_package
-
-Serve a minified, concatenated package of javascript, assembled and
-stored on the previous request.
-
-Args: package identifier (32-character hex)
-
-=cut
-
-sub js_package :Path('pack') :Args(1) {
-    my ( $self, $c, $key ) = @_;
-
-    # NOTE: you might think that we should cache the minified
-    # javascript too, but it turns out to not be much faster!
-
-    $c->stash->{js} = $self->_package_defs->thaw( $key );
-
-    $c->log->debug(
-         "JS: serving pack $key = ("
-        .(join ', ', @{ $c->stash->{js} || [] })
-        .')'
-       ) if $c->debug;
-
-    $c->forward('View::JavaScript');
-
-    # support caching with If-Modified-Since requests
-    my $ims = $c->req->headers->if_modified_since;
-    my $modtime = $c->res->headers->last_modified;
-    if( $ims && $modtime && $ims >= $modtime ) {
-        $c->res->status( RC_NOT_MODIFIED );
-        $c->res->body(' ');
-    }
-}
+=head1 PUBLIC ACTIONS
 
 =head2 default
 
@@ -98,101 +47,41 @@ Serve a single (minified) javascript file from our js path.
 sub default :Path {
     my ( $self, $c, @args ) = @_;
 
-    $c->stash->{js} = [  File::Spec->catfile( @args ) ];
-    $c->forward('View::JavaScript');
-}
+    my $rel_file = File::Spec->catfile( @args );
 
-=head2 end
+    # support caching with If-Modified-Since requests
+    my $full_file = File::Spec->catfile( $self->js_include_path->[0], $rel_file );
+    my ( $modtime ) = (stat( $full_file ))[9];
+    $c->throw_404 unless $modtime && -f _;
 
-forwards to View::JavaScript
-
-=cut
-
-sub end :Private {
-    my ( $self, $c ) = @_;
-
-    # handle missing JS with a 404
-    if( @{ $c->error } == 1 && $c->error->[0] =~ /^Can't open '/ ) {
-        warn $c->error->[0];
-
-        $c->clear_errors;
-
-        $c->res->status( 404 );
-        $c->res->content_type( 'text/html' );
-
-        $c->stash->{template} = "/site/error/404.mas";
-        $c->stash->{message}  = "Javascript not found";
-        $c->forward('View::Mason');
+    my $ims = $c->req->headers->if_modified_since;
+    if( $ims && $modtime && $ims >= $modtime ) {
+        $c->res->status( RC_NOT_MODIFIED );
+        $c->res->body(' ');
+    } else {
+        $c->stash->{js} = [ $rel_file ];
+        $c->forward('View::JavaScript');
     }
 }
 
-=head2 insert_js_pack_html
 
-Scans the current $c->res->body and inserts <script> includes for the
-current set of javascript includes in the $c->stash->{pack_js}
-arrayref.
+=head1 PRIVATE ACTIONS
 
-Replaces comments like:
-
-  <!-- INSERT_JS_PACK -->
-
-with:
-
-  <script src="(uri for js pack)" type="text/javascript">
-  </script>
+=head2 resolve_javascript_classes
 
 =cut
 
+sub resolve_javascript_classes :Private {
+    my ( $self, $c ) = @_;
 
-sub insert_js_pack_html :Private {
-  my ( $self, $c ) = @_;
-
-  my $js = $c->stash->{pack_js};
-  return unless $js && @$js;
-
-  my $b = $c->res->body;
-
-  my $pack_uri = $c->uri_for( $self->action_for_js_package( $js ) )->path_query;
-  if( $b && $b =~ s{<!-- \s* INSERT_JS_PACK \s* -->} {<script src="$pack_uri" type="text/javascript">\n</script>}x ) {
-      $c->res->body( $b );
-
-      # we have changed the size of the body.  remove the
-      # content-length and let catalyst recalculate the content-length
-      # if it can
-      $c->res->headers->remove_header('content-length');
-
-      delete $c->stash->{pack_js};
-  }
-}
-
-=head1 REGULAR METHODS
-
-=head2 action_for_js_package
-
-  Usage: $controller->action_for_js_package([ 'sgn', 'jquery' ])
-  Desc : get a list of (action,arguments) for getting a minified,
-         concatenated set of javascript containing the given libraries.
-  Args : arrayref of of JS libraries to include in the package
-  Ret  : list of ( $action, @arguments )
-  Side Effects: saves the list of js libs in a cache for subsequent
-                requests
-  Example:
-
-      $c->uri_for( $c->controller('JavaScript')->action_for_js_package([ 'sgn', 'jquery' ]))
-
-=cut
-
-sub action_for_js_package {
-    my ( $self, $files ) = @_;
-    @_ == 2 && ref $files && ref $files eq 'ARRAY' && @$files
-        or croak "action_for_js_package takes a single param, an arrayref of files";
+    my $files = $c->stash->{js_classes}
+        or return;
 
     my @files = uniq @$files; #< do not sort, load order might be important
     for (@files) {
         s/\.js$//;
         s!\.!/!g;
     }
-
     # if prototype is present, move it to the front to prevent it
     # conflicting with jquery
     my $prototype_idx = first_index { /Prototype$/i } @files;
@@ -201,31 +90,11 @@ sub action_for_js_package {
         unshift @files, $p;
     }
 
-
     # add in JSAN.use dependencies
     @files = $self->_resolve_jsan_dependencies( \@files );
 
-    my $key = md5_hex( join '!!', @files );
-
-    $self->_app->log->debug (
-         "JS: define pack $key = ("
-        .(join ', ', @files)
-        .')'
-       ) if $self->_app->debug;
-
-
-    # record files for this particular package of JS
-    if( $self->_package_defs->exists( $key ) ) {
-        $self->_app->log->debug("JS: key $key already exists in js_packs cache") if $self->_app->debug;
-    } else {
-        $self->_app->log->debug("JS: new key $key stored in js_packs cache") if $self->_app->debug;
-        $self->_package_defs->freeze( $key => \@files );
-    }
-
-    return $self->action_for('js_package'),  $key;
+    $c->stash->{js_uris} = \@files;
 }
-
-
 
 ########## helpers #########
 
@@ -239,7 +108,7 @@ sub _resolve_jsan_dependencies {
         $jsan->add( $f );
     }
 
-    return map { s!^\/fake_prefix/!!; $_ } $jsan->uris;
+    return $jsan->uris;
 }
 
 has _jsan_params => ( is => 'ro', isa => 'HashRef', lazy_build => 1 );
@@ -251,7 +120,7 @@ sub _build__jsan_params {
     -d $js_dir or die "configured js_include_path '$js_dir' does not exist!\n";
     return {
         js_dir     => "$js_dir",
-        uri_prefix => '/fake_prefix',
+        uri_prefix => '/js',
     };
 }
 sub new_jsan {
@@ -259,5 +128,4 @@ sub new_jsan {
 }
 
 
-__PACKAGE__->meta->make_immutable;
 1;

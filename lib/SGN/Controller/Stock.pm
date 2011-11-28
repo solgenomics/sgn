@@ -51,7 +51,7 @@ sub search :Path('/stock/search') Args(0) {
     my $form = HTML::FormFu->new(LoadFile($c->path_to(qw{forms stock stock_search.yaml})));
 
     $c->stash(
-        template                   => '/stock/search.mas',
+        template                   => '/search/phenotypes/stock.mas',
         request                    => $c->req,
         form                       => $form,
         form_opts                  => { stock_types => stock_types($self->schema), organisms => stock_organisms($self->schema)} ,
@@ -473,7 +473,7 @@ sub _stock_project_phenotypes {
         my @ph = map $_->phenotype, $exp->nd_experiment_phenotypes;
         my $project_desc = $project_descriptions{ $exp->nd_experiment_id }
             or die "no project found for exp ".$exp->nd_experiment_id;
-        push @{ $phenotypes{ $project_desc }}, @ph;
+        push @{ $phenotypes{ $project_desc }}, @ph if scalar(@ph);
     }
     return \%phenotypes;
 }

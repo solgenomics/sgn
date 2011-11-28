@@ -9,7 +9,6 @@ use CXGN::Searches::Images;
 use CXGN::Searches::Family;
 use CXGN::Unigene::Search;
 use CXGN::Phenome;
-use CXGN::Qtls;
 use CXGN::Publication;
 use CXGN::Chado::Cvterm;
 use CXGN::Searches::GemTemplate;
@@ -497,42 +496,6 @@ EOHTML
 }
 
 
-=head2 qtl_search_form
-
-  Desc: returns the qtl search form
-  Args: CXGN::Page object
-  Ret : string of HTML
-
-=cut
-
-sub qtl_search_form {
-
-    my $page = shift;
-    my $q    = shift;
-
-    $q ||= CXGN::Qtls->new->new_query;
-
-    my $form = $q->to_html;    
-    my $links = CXGN::Phenome::Qtl::Tools->new()->browse_traits();
-    my $trait_browser = "<table align=center cellpadding=20px><tr><td><b>Browse traits with QTLs: $links</b></td></tr></table>";
-   
-    return <<EOHTML;
-    $trait_browser
-<table class="search_form_title" summary="">
-<tr><td>
-    <h4><span class="search_form_title">QTL search </span></h4>
-  </td>
-  </tr></table>
-<form  action= "/search/qtl_search.pl" method="get">
-$form<br/>
-
-</form>
-
-
-EOHTML
-
-}
-
 =head2 publication_search_form
 
   Desc: returns the publication search form
@@ -876,10 +839,13 @@ sub chromo_select {
 "SELECT distinct lg_name FROM linkage_group WHERE lg_name !~ '[0-9][a-z]'"
       );
 
-    @$chromolist = sort {
-        do       { $a =~ /(\d+)/; $1 }
-          <=> do { $b =~ /(\d+)/; $1 }
-    } @$chromolist;
+    {
+      no warnings 'uninitialized';
+      @$chromolist = sort {
+                do { $a =~ /(\d+)/; $1 }
+            <=> do { $b =~ /(\d+)/; $1 }
+      } @$chromolist;
+    }
 
     return $self->selectbox( 'chromos', $chromolist, 'multiple' );
 

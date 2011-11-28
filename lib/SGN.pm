@@ -17,6 +17,10 @@ package SGN;
 use Moose;
 use namespace::autoclean;
 
+BEGIN {
+    $ENV{WEB_PROJECT_NAME} = $ENV{PROJECT_NAME} = __PACKAGE__;
+}
+
 use SGN::Exception;
 
 use Catalyst::Runtime 5.80;
@@ -66,7 +70,7 @@ __PACKAGE__->config(
 
     # Static::Simple configuration
     static => {
-        dirs => [qw[ s static img documents static_content data ]],
+        dirs => [qw[ css s static img documents static_content data ]],
     },
 
     'Plugin::ConfigLoader' => {
@@ -80,7 +84,7 @@ __PACKAGE__->config(
 
     # configure SGN::Role::Site::TestMode.  These are the
     # configuration keys that it will change so that they point into
-    # t/data   
+    # t/data
     'Plugin::TestMode' => {
         test_data_dir => __PACKAGE__->path_to('t','data'),
         reroot_conf   =>
@@ -103,28 +107,30 @@ __PACKAGE__->config(
 
     'Plugin::Cache'=>{
         backend => {
-            store =>"FastMmap",               
+            store =>"FastMmap",
         },
     },
-   
+
 
 
     'Plugin::Authentication' => {
 	default_realm => 'default',
-	realms => { 
+	realms => {
 	    default => {
-		credential => { 
+		credential => {
 		    class => '+SGN::Authentication::Credentials',
 		},
-		
-		store => { 
+
+		store => {
 		    class => "+SGN::Authentication::Store",
 		    user_class => "+SGN::Authentication::User",
 ###		    role_column => 'roles',
 		},
 	    },
 	},
-    }
+    },
+
+    ( $ENV{SGN_TEST_MODE} ? ( test_mode => 1 ) : () ),
 );
 
 
@@ -132,8 +138,6 @@ __PACKAGE__->config(
 after 'setup_finalize' => sub {
     my $self = shift;
 
-
-    $ENV{PROJECT_NAME} = $self->config->{name};
     $self->config->{basepath} = $self->config->{home};
 
     # all files written by web server should be group-writable

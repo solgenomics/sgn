@@ -1,0 +1,61 @@
+<%args>
+    $feature
+    $featurelocs
+    $blast_url => undef
+    $xrefs     => []
+    $protein_fasta => '';
+</%args>
+
+<%once>
+    use SGN::View::Feature qw/ type_name /;
+</%once>
+
+<& /feature/page_title.mas, feature => $feature &>
+
+<&| /page/info_section.mas,
+    title       => type_name($feature,'caps').' details',
+    subtitle    => $feature->is_obsolete ? 'WARNING: This feature is obsolete, new data is available.' : '',
+    collapsible => 1,
+&>
+   <& /feature/feature_data.mas,
+      feature     => $feature,
+      featurelocs => $featurelocs,
+    &>
+    <& /feature/properties.mas,
+       feature => $feature,
+    &>
+</&>
+
+<&| /page/info_section.mas,
+    title       => 'Tree and alignment',
+    collapsible => 1,
+&>
+
+  <& /feature/gene_group_export_to_alignment_viewer.mas, feature => $feature &>
+
+</&>
+
+<&| /page/info_section.mas,
+   title => 'Related features',
+   collapsible => 1,
+   hide_if_empty => 1,
+&>
+
+  <& /feature/related_features.mas,
+      feature   => $feature,
+      omit_columns => ['phase'],
+      frequency_tables => ['type','organism'],
+  &>
+</&>
+
+<&| /page/info_section.mas,
+     title => 'Related views',
+     empty_message => 'None found',
+     collapsible => 1,
+     is_empty => ! scalar @$xrefs,
+ &>
+     <& /sitefeatures/mixed/xref_set/link.mas,
+        xrefs => $xrefs,
+        empty_message => '',
+      &>
+</&>

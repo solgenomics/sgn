@@ -12,6 +12,7 @@ $schema
 <tr>
 <td width="300"><& homepage/news.mas &><br />
 
+<& homepage/popular_species.mas, show_link=>1 &><br />
 <& homepage/locus_of_the_week.mas &> <br />
 <& homepage/labs.mas &>
 </td><td width="300">
@@ -21,7 +22,12 @@ $schema
 
 <div class="boxbgcolor1">
 <div class="boxheading">Social Media</div>
+<div class="boxcontent">
+<a href="http://twitter.com/solgenomics" class="twitter-follow-button">@solgenomics</a>
+<script src="http://platform.twitter.com/widgets.js" type="text/javascript"></script> <br/>
+
 <iframe src="http://www.facebook.com/plugins/likebox.php?href=http%3A%2F%2Fwww.facebook.com%2Fpages%2FSolgenomics%2F149678171756825&amp;width=150&amp;colorscheme=light&amp;show_faces=false&amp;stream=false&amp;header=false&amp;height=62" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:292px; height:62px;" allowTransparency="true"></iframe>
+</div>
 </div>
 </td></tr>
 <tr><td colspan="2"></td><td>&nbsp;</td></tr>

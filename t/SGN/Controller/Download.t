@@ -6,13 +6,11 @@ use Data::Dumper;
 
 use lib 't/lib';
 
-BEGIN { $ENV{SGN_SKIP_CGI} = 1 } #< don't need to compile all the CGIs
-use SGN::Test qw/ request /;
-
+use SGN::Test::WWW::Mechanize skip_cgi => 1;
 my $mech = SGN::Test::WWW::Mechanize->new;
 
 { # test download_static
-  my $res = request( '/download/documents/inc/sgn.css' );
+  my $res = $mech->get( '/download/css/sgn.css' );
   is( $res->header('Content-disposition'), 'attachment; filename=sgn.css',
       'got the right disposition header from the static downloader' );
 

@@ -30,6 +30,21 @@ before 'process' => sub {
     $c->log->debug('sending error email to '.$c->stash->{email}->{to}) if $c->debug;
 };
 
+=head1 CONFIGURATION
+
+=head2 maximum_body_size
+
+Maximum size in bytes of the email body to send.  Bodies larger than
+this will be truncated.  Default 400,000.
+
+=cut
+
+has 'maximum_body_size' => (
+    is  => 'rw',
+    isa => 'Int',
+    default => 400_000,
+  );
+
 =head1 ATTRIBUTES
 
 =head2 debug_filter_visitor
@@ -141,6 +156,10 @@ sub make_email {
 
     my $type = ( grep $_->is_server_error, @{$c->stash->{email_errors}} ) ? 'E' : 'NB';
 
+    my $subject = '['.$c->config->{name}."]($type) ".$c->req->uri->path_query;
+    # clamp the subject line to be no longer than 115 chars
+    $subject = substr( $subject, 0, 110 ).'...' if 115 < length $subject;
+
     my $body = join '',
         # the errors
         "==== Error(s) ====\n\n",
@@ -149,10 +168,19 @@ sub make_email {
         # all the necessary debug information
         ( map { ("\n==== $_->[0] ====\n\n", $_->[1], "\n") } $self->dump_these_strings( $c ) );
 
+    if( $self->maximum_body_size < length $body ) {
+        my $truncation_warning =
+            "\n<email body truncated, exceeded configured maximum_body_size of "
+            .$self->maximum_body_size." bytes>\n";
+
+        $body = substr( $body, 0, $self->maximum_body_size - length $truncation_warning )
+                . $truncation_warning;
+    }
+
     return {
         to      => $self->default->{to},
         from    => $self->default->{from},
-        subject => '['.$c->config->{name}."]($type) ".$c->req->uri->path_query,
+        subject => $subject,
         body    => $body,
     };
 
@@ -230,18 +258,26 @@ error.  Example:
 sub summary_text {
     my ( $self, $c ) = @_;
 
-    my $client_ip       = ($c->req->header('X-Forwarded-For'))[0] || $c->req->address;
-    my $client_hostname = $self->reverse_dns
-        ? ' ('.(gethostbyaddr( inet_aton( $client_ip ), AF_INET ) || 'reverse DNS lookup failed').')'
-        : '';
+    my @client_ips = $c->req->header('X-Forwarded-For')
+                   ? ( map { split /\s*,\s*/, $_ } $c->req->header('X-Forwarded-For') )
+                   : ( $c->req->address );
+    my $client_addr_string = join ', ', (
+        $self->reverse_dns
+            ? ( map {
+                  my $client_ip = $_;
+                  "$client_ip (".(gethostbyaddr( inet_aton( $client_ip ), AF_INET ) || 'reverse DNS lookup failed').')'
+                } @client_ips
+              )
+            : @client_ips
+      );
 
     no warnings 'uninitialized';
     return join '', map "$_\n", (
       'Request    : '.$c->req->method.' '.$c->req->uri,
       'User-Agent : '.$c->req->user_agent,
       'Referrer   : '.$c->req->referer,
-      'Client Addr: '.$client_ip.$client_hostname,
-      'Process ID : '.$$,
+      'Client Addr: '.$client_addr_string,
+      'Worker PID : '.$$,
      );
 }
 

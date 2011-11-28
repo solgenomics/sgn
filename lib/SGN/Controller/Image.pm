@@ -14,7 +14,7 @@ sub view :Path('/image/view/') Args(1) {
     my $dbh = $c->dbc->dbh;
 
     my $image = $c->stash->{image} =
-        SGN::Image->new( $dbh, $image_id+0 );
+        SGN::Image->new( $dbh, $image_id+0, $c );
 
     $image->get_original_filename
         or $c->throw_404('Image not found.');
@@ -91,7 +91,7 @@ sub store :Path('/image/store') {
 
     $c->forward('require_logged_in');
 
-    my $image = SGN::Image->new($c->dbc->dbh());
+    my $image = SGN::Image->new( $c->dbc->dbh(), undef, $c );
 
     my $tempfile      = $c->req()->param('tempfile');
     my $filename      = $c->req()->param('filename');

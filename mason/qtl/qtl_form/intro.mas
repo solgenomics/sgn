@@ -18,13 +18,14 @@ $guide
 </%args>
 
 <%perl>
+
 my $citation = qq | <a href="http://www.biomedcentral.com/1471-2105/11/525/abstract">Citation</a> |;
 my $links = $guide . '|' . $citation;
 </%perl>
 
 <& /page/page_title.mas, title => "Step 0: Introduction" &>
 <&| /page/info_section.mas, title => "Introduction", subtitle => $links &>
- <form action="../../../phenome/qtl_load.pl" method="POST" enctype="MULTIPART/FORM-DATA">  
+ <form action="/phenome/qtl_load.pl" method="POST" enctype="MULTIPART/FORM-DATA">  
       <table cellspacing=20>
 	<tr>
           <td>	   
@@ -44,7 +45,7 @@ my $links = $guide . '|' . $citation;
               <li>Genotype data file (tab delimited) and 
               <li>Statistical parameters.
               <li><i>Markers with their sequences need to be already in SGN. 
-                  Read <a href="/content/map_submissions.pl">here</a> on how 
+                  Read <a href="/cview/help/map_submission">here</a> on how 
                   to submit markers to SGN.</i>
             </ul>
 

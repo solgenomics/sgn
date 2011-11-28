@@ -1,14 +1,12 @@
 <%args>
     $features => undef,
-    $objects => undef,
+    $objects  => undef,
     $reference_sequence => undef,
-    $limit => 100
+    $limit    => 100
+    $omit_columns => [],
 </%args>
 <%init>
-    use SGN::View::Feature qw/feature_table/;
+    use SGN::View::Feature qw/ feature_table /;
 </%init>
 
-<& /page/columnar_table.mas,
-    headings => [ "Type", "Name", "Location(s)", "Length", "Strand", "Phase" ],
-    data     => feature_table( $features || $objects, $reference_sequence ),
-&>
+<& /page/columnar_table.mas, %ARGS, feature_table( $features || $objects, $reference_sequence, $omit_columns ) &>

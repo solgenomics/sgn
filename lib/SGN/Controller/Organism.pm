@@ -6,6 +6,7 @@ organism data
 =cut
 
 package SGN::Controller::Organism;
+
 use Moose;
 use namespace::autoclean;
 
@@ -25,6 +26,7 @@ use CXGN::Phylo::OrganismTree;
 use CXGN::Page::FormattingHelpers qw | tooltipped_text |;
 use CXGN::Tools::Text;
 use SGN::Image;
+use Data::Dumper;
 
 with 'Catalyst::Component::ApplicationAttribute';
 
@@ -310,7 +312,7 @@ sub view_organism :Chained('find_organism') :PathPart('view') :Args(0) {
     $c->stash->{genome_size} = $organism->get_genome_size() || $na;
     $c->stash->{chromosome_number} = $organism->get_chromosome_number() || $na;
     my @image_ids = $organism->get_image_ids();
-    my @image_objects = map { SGN::Image->new($c->dbc->dbh, $_) } @image_ids;
+    my @image_objects = map { SGN::Image->new($c->dbc->dbh, $_, $c ) } @image_ids;
     $c->stash->{image_objects} = \@image_objects;
     $self->map_data($c);
     $self->transcript_data($c);
@@ -537,7 +539,7 @@ sub _species_summary_cache_configuration {
                 'Loci' => $org->get_loci_count,
                 'Phenotypes' => $org->get_phenotype_count,
                 'Maps Available' => $org->has_avail_map,
-                'Genome Information' => $org->has_avail_genome,
+                'Genome Information' => $org->has_avail_genome ? 'yes': 'no',
                 'Libraries' => scalar( $org->get_library_list ),
             });
         },
@@ -612,7 +614,18 @@ sub _render_organism_tree {
             $species_names,
             $self->species_data_summary_cache,
            );
-
+	
+	my $cache = $self->species_data_summary_cache();
+	foreach my $n (@$species_names) { 
+	    my $ors = CXGN::Chado::Organism::get_organism_by_species($n, $schema);
+	    # $o is a resultset
+	    if ($ors) { 
+		my $genome_info = $cache->thaw($ors->organism_id())->{'Genome Information'};
+		if ($genome_info =~ /y/i) { 
+		    $tree->hilite_species([170,220,180], [$n]);
+		}
+	    }
+	}
         my $image_map_name = $root_species.'_map';
         my $image_map = $tree->get_renderer
             ->get_html_image_map( $image_map_name );
@@ -683,8 +696,6 @@ sub get_parentage {
     return @taxonomy;
 }
 
-
-
-
 __PACKAGE__->meta->make_immutable;
+
 1;

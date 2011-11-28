@@ -132,38 +132,38 @@ sub store {
       
     my $action=$args{action};
     my $refering_page=$args{refering_page};
-    my $type= $args{type};  #locus or allele or...?
+    my $type= $args{type};  #locus or allele or stock or...?
     my $type_id = $args{type_id}; #the database id of the refering object (locus..)
-   
-    my $script_name= $self->get_script_name();    
+    my $script_name= $self->get_script_name();
     my $db_name= "SGN_ref";
-    
+
     #db_name, accession, and uniquename will not be changed when updating..
     if (!$publication->get_db_name()) {  $publication->set_db_name($db_name); }
-    print STDERR "adding db_name " . $publication->get_db_name() . "!!\n\n";
-    print STDERR "adding dbxref full_accession " .  "$db_name:" . $publication->get_title() . " (" .$publication->get_pyear() .")\n\n";
-    
     #########
     $publication->set_cvterm_name('journal'); #this should be implemented in the form framework- maybe a drop down list with publication types from cvterm table??
     ########
-    
+
     $self->SUPER::store(1);
-    
-    #my $dbxref_id= $publication->get_dbxref_id_by_db($db_name);
-    #my $dbxref= CXGN::Chado::Dbxref->new($self->get_dbh(), $dbxref_id);
+
     my @dbxrefs=$publication->get_dbxrefs();
     foreach my $dbxref(@dbxrefs) {
 	my ($locus, $allele);
-	if ($type eq 'locus') {  
-	    $locus= CXGN::Phenome::Locus->new($self->get_dbh(), $type_id); 
+	if ($type eq 'locus') {
+	    $locus= CXGN::Phenome::Locus->new($self->get_dbh(), $type_id);
 	    $locus->add_locus_dbxref($dbxref, undef, $sp_person_id);
 	}
-	elsif ($type eq 'allele') { 
+	elsif ($type eq 'allele') {
 	    $allele= CXGN::Phenome::Allele->new($self->get_dbh(), $type_id);
 	    $allele->add_allele_dbxref($dbxref, undef, $sp_person_id);
 	}
     }
     my $pub_id= $publication->get_pub_id();
+    if ($type eq 'stock' ) {
+        my $pub = $publication->bcs_pub;
+        $pub->find_or_create_related('stock_pubs', {
+            stock_id => $type_id
+                                     });
+    }
     if ($refering_page) {
 	$self->get_page()->client_redirect("/chado/add_publication.pl?type=$type&type_id=$type_id&refering_page=$refering_page&action=new");
     }else {
@@ -180,7 +180,7 @@ sub generate_form {
     my $type = $args{type};
     my $type_id = $args{type_id};
     my $refering_page= $args{refering_page};
-    
+
    my $author_example = tooltipped_text('Authors', 'Author names should be entered in the order of  last name, followed by "," then first name followed by ".". e.g Darwin, Charles. van Rijn, Henk. Giorgio,AB'); 
 
     $self->get_form()->add_textarea(
@@ -193,7 +193,7 @@ sub generate_form {
 				 columns => 80,
 				 rows => 1,
 			      );
-   
+
     $self->get_form()->add_field(
                                  display_name => "Series name",
                                  field_name  => "series_name",
@@ -233,9 +233,8 @@ sub generate_form {
 				  getter => "get_pages",
 				  setter => "set_pages",
 				  validate => 'string',
-				  );				     
-    
-    $self->get_form()->add_textarea (   
+        );
+    $self->get_form()->add_textarea (
 					display_name=> $author_example,
 					field_name => "author",
 					object => $publication,
@@ -243,8 +242,7 @@ sub generate_form {
 					setter => "set_author_string",
 					columns => 80,
 					rows =>1,
-					
-					);
+        );
     $self->get_form()->add_textarea (
 				     display_name=> "Abstract",
 				     field_name => "abstract",
@@ -254,34 +252,28 @@ sub generate_form {
 				     columns => 80,
 				     rows => =>12,
 				     );
-    
-    
     $self->get_form()->add_hidden (
                                    field_name => "pub_id",
 				   contents   =>$args{pub_id},
 				   object => $publication,
 				   getter => "get_pub_id",
 				   setter => "set_pub_id",
-				   );			
+        );
 
     $self->get_form()->add_hidden (
                                    field_name => "type",
 				   contents   => $type,
-			           
 				   );
-    
     $self->get_form()->add_hidden (
                                    field_name => "type_id",
 				   contents   =>$type_id,
-				   );                            
+        );
     $self->get_form()->add_hidden( 
 				   field_name=>"refering_page", 
 				   contents=>$refering_page,
-				   );				  
-    
-    
+        );
     $self->get_form()->add_hidden( field_name=>"action", contents=>"store" );
-    
+
     if ($self->get_action=~ /view|edit/) {
 	$self->get_form->from_database();
     }
@@ -291,7 +283,7 @@ sub generate_form {
     }
 }
 
-sub delete { 
+sub delete {
     my $self = shift;
     my %args = $self->get_args();
     $self->check_modify_privileges();
@@ -305,17 +297,13 @@ sub delete {
 	    $self->send_publication_email('delete');
 	}else { $self->get_page()->message_page($message) ; }
     }
-    
     $self->get_page()->message_page("Deleted publication $pub_id ($pub_title) from database");
 }
-
-
 
 
 #overriding to allow access only to curators
 sub check_modify_privileges { 
     my $self = shift;
-    
     # implement quite strict access controls by default
     # 
     my $person_id = $self->get_login()->verify_session();
@@ -397,45 +385,32 @@ sub get_ranked_loci {
 }
 
 
-    
 sub send_publication_email {
-
     my $self=shift;
     my %args= $self->get_args();
     my $refering_page=$args{refering_page};
-    my $type= $args{type};  #locus or...?
+    my $type= $args{type};  #locus or allele or stock or...?
     my $type_id = $args{type_id}; #the database id of the refering object (locus..)
     my $accession= $args{accession};
-   
-    
+
     my $action= $self->get_action();
-    my $locus = CXGN::Phenome::Locus->new($self->get_dbh(), $type_id);
-    my $locus_id=$locus->get_locus_id();
-    my $name= $locus->get_locus_name();
-    my $symbol= $locus->get_locus_symbol();
-    
-    
     my $username= $self->get_user()->get_first_name()." ".$self->get_user()->get_last_name();
     my $sp_person_id=$self->get_user()->get_sp_person_id();
 
-    my $locus_link= qq | http://sgn.cornell.edu/phenome/locus_display.pl?locus_id=$type_id|;
-    my $user_link = qq | http://sgn.cornell.edu/solpeople/personal-info.pl?sp_person_id=$sp_person_id|;
-   
+    my $user_link = qq | /solpeople/personal-info.pl?sp_person_id=$sp_person_id|;
+
     my $usermail=$self->get_user()->get_contact_email();
     my $fdbk_body;
     my $subject;
-   
-    
-if ($action eq 'store') {
 
-        $subject="[New non PubMed  publication associated with locus: $locus_id]";
-	$fdbk_body="$username($user_link) has associated a non pubmed publication $accession with locus:$locus_id"; 
-   }
-    elsif($action eq 'delete') {
-	$subject="[A publication-locus association removed from locus: $locus_id]";
-	$fdbk_body="$username ($user_link) has removed a publication from locus: $locus_id ($locus_link)"; 
+    if ($action eq 'store') {
+        $subject="[New non PubMed  publication associated with $type: $type_id]";
+        $fdbk_body="$username($user_link) has associated a non pubmed publication $accession with $type : $type_id";
     }
-    
+    elsif($action eq 'delete') {
+	$subject="[A publication-locus association removed from $type : $type_id]";
+	$fdbk_body="$username ($user_link) has removed a publication from $type : $type_id ";
+    }
     CXGN::Contact::send_email($subject,$fdbk_body, 'sgn-db-curation@sgn.cornell.edu');
 }
 
@@ -455,7 +430,7 @@ sub get_edit_link_html {
     my $script_name = $self->get_script_name();
     my $primary_key = $self->get_primary_key();
     my $object_id = $self->get_object_id();
-    
+
     my $user_id= $self->get_user()->get_sp_person_id();
     if (($self->get_user()->get_user_type() eq "curator") || ($self->get_user()->get_user_type() eq "submitter") || ( $self->get_user()->get_user_type() eq "sequencer") ) {
 	$edit_link = qq { <a href="$script_name?action=edit&amp;form=$form_name&amp;$primary_key=$object_id">[Edit]</a> };
@@ -577,7 +552,7 @@ sub rank_loci_now {
 	my $l_sth=$self->get_dbh()->prepare($get_loci_q);
 	$l_sth->execute($_, $_, $_, $_);
 	my (@loci)=$l_sth->fetchrow_array();
-	
+
 	##limiting the number of hits to 20 to keep this function from extremely slowing down the page.
 	if (scalar(@loci) > 20 ) { print STDERR " Found ". scalar(@loci) . "loci! skipping...\n"; next MATCH; }
      	else {  foreach(@loci) { $loci_subset{$_}++; } }

@@ -1,0 +1,34 @@
+<%doc>
+
+=head1 NAME 
+qtl/population/traits_list.mas - a mason component for displaying a traits list and links to qtl_analysis.pl
+
+=AUTHOR
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$traits_list
+
+</%args>
+
+<&| /page/info_section.mas, 
+  collapsible => 1, 
+  collapsed   => 1, 
+  title       => "Analyze QTLs" 
+&> 
+
+<& /page/columnar_table.mas,
+  headings     => ["Trait", "Min", "Max", "Ave", "No. of<br />Lines", "Analyze<br />QTL"], 
+  data         => $traits_list,
+  __alt_freq   =>2,
+  __alt_width  =>1,
+  __alt_offset =>3,
+  __align      =>'l',
+&>
+
+</&>

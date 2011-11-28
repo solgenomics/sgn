@@ -186,6 +186,12 @@ description   = PGSC DM 3.4 Release: genomic annotations
 organism      = Solanum tuberosum
 extended_description = Potato Genome Sequencing Consortium (PGSC) DM v3.4 annotation of the DM v3 genome build.
 
+[TAIR10_genomic]
+path          = TAIR10_genomic.conf
+description   = TAIR10: A. thaliana genomic annotations
+organism      = Arabidopsis thaliana
+extended_description = Release 10 of the Arabidopsis genome annotation from The Arabidopsis Information Resource (TAIR).
+
 [ITAG2_genomic]
 path          = ITAG2_genomic.conf
 description   = ITAG2 Release: genomic annotations

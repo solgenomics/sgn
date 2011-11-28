@@ -74,7 +74,7 @@ my @data = map {
    qq|<span id="proj_name_$clone_id">$projmap[$project_id]</span><span id="proj_id_$clone_id" style="display: none">$project_id</span>|,
 
    #the IL line
-   qq|<span id="il_name_$clone_id">|.($il_name || '-').qq|</span><span style="display: none" id="il_id_$clone_id">$il_id</span>|,
+   qq|<span id="il_name_$clone_id">|.($il_name || '-').qq|</span><span style="display: none" id="il_id_$clone_id">|.($il_id||'').'</span>',
 
    $can_edit ? edit_controls_html($clone_id,$il_id) : (),
   ]

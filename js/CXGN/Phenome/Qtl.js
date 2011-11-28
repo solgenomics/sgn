@@ -11,7 +11,7 @@ JSAN.use('MochiKit.Async');
 JSAN.use('CXGN.Effects');
 JSAN.use('CXGN.Phenome.Tools');
 JSAN.use('jquery.blockUI');
-JSAN.use('jquery');
+
 
 
 var Qtl = {
@@ -31,7 +31,7 @@ var Qtl = {
 	}
         else{
 	    var type = 'browse';
-	    var d = new MochiKit.Async.doSimpleXMLHttpRequest("organism_browser.pl", {organism: str, type: type});
+	    var d = new MochiKit.Async.doSimpleXMLHttpRequest("/phenome/organism_browser.pl", {organism: str, type: type});
 	    d.addCallbacks(this.updateTaxonSelect);
 	}
     },
@@ -65,7 +65,7 @@ var Qtl = {
       	var type = 'associate';
 	var organism_id = MochiKit.DOM.getElement('taxon_select').value;	
 
-	new Ajax.Request('organism_browser.pl', { parameters:
+	new Ajax.Request('/phenome/organism_browser.pl', { parameters:
 		{type: type, organism_id: organism_id}, onSuccess: Tools.reloadPage} );
 
 
@@ -101,7 +101,7 @@ var Qtl = {
     {
 	if (userid == null) 
             {
-                window.location="../../../solpeople/login.pl";
+                window.location="/solpeople/login.pl";
             } 
         else 
             {
@@ -119,10 +119,18 @@ var Qtl = {
                 jQuery.unblockUI();
             }          
     },
+
+     genericWaitPage: function() 
+    {
+        jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
+        jQuery.blockUI({message: 'Please wait....'});
+                       
+        if(location.reload()) 
+            {
+                jQuery.unblockUI();
+            }          
+    },
             
-
-
-
       
 }//
 

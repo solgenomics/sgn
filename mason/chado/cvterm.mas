@@ -36,7 +36,7 @@ use CXGN::Page::FormattingHelpers qw/
  page_title_html
  columnar_table_html
 /;
-use CXGN::Phenome::UserTrait;
+use CXGN::Phenome::Qtl::Tools;
 </%once>
 
 <%perl>
@@ -54,10 +54,27 @@ my @secondary_dbxrefs = $cvterm->get_secondary_dbxrefs();
 
 my @def_accessions = map( $_->get_db_name . ":" . $_->get_accession , @def_dbxrefs);
 
+my @qtl_pops = CXGN::Phenome::Qtl::Tools->new()->is_from_qtl( $cvterm_id );
+my @qtl_data;
+
+if ( @qtl_pops )
+ {
+    foreach my $pop (@qtl_pops)
+    {
+      my $pop_id   = $pop->get_population_id();
+      my $name     = $pop->get_name(); 
+      my $desc     = $pop->get_description();
+      my $qtl_link = qq | <a href="/phenome/qtl_analysis.pl?population_id=$pop_id&amp;cvterm_id=$cvterm_id" onClick="Qtl.waitPage()">$name</a> |;
+      push @qtl_data, [ $qtl_link, $desc ];
+    }
+ }
+
+
 </%perl>
 
 
-<& /util/import_javascript.mas, classes => [qw [CXGN.AJAX.Ontology  jquery]] &>
+<& /util/import_javascript.mas, classes => [qw [CXGN.AJAX.Ontology jquery CXGN.Phenome.Qtl] ] &>
+
 
 <script language="javascript">
   function recursiveAnnotations( a ) {
@@ -143,6 +160,21 @@ my @def_accessions = map( $_->get_db_name . ":" . $_->get_accession , @def_dbxre
 
 </&>
 
+% if ( @qtl_pops )
+% {
+    <&| /page/info_section.mas,
+        title       => "QTL analysis",
+        collapsible => 1,
+   &>
+     <& /page/columnar_table.mas,
+        headings     => ["Analyze QTL in population", "Population description"], 
+        data         => \@qtl_data,
+        __alt_freq   => 2,
+        __align      =>'l',
+     &>
+  </&>
+% }
+
 <&| /page/info_section.mas,
       title       => "Phenotyped accessions",
       collapsible => 1,
@@ -161,3 +193,5 @@ my @def_accessions = map( $_->get_db_name . ":" . $_->get_accession , @def_dbxre
 </div>
 
 </&>
+
+<& /qtl/waitmessage.mas &>

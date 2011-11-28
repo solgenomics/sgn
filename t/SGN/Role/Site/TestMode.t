@@ -94,6 +94,7 @@ done_testing;
 BEGIN {
     package mock_app;
     use Moose;
+    use Test::MockObject;
 
     has 'config' => (
         is => 'rw',
@@ -101,6 +102,12 @@ BEGIN {
        );
 
     with 'SGN::Role::Site::TestMode';
+
+    my $engine = Test::MockObject->new;
+    $engine->set_always( 'env', \%ENV );
+    sub engine {
+        $engine
+    }
 
     sub finalize_config {};
 

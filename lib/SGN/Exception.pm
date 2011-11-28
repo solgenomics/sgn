@@ -133,13 +133,14 @@ is_client_error and is_server_error are both false.
 has 'http_status' => (
     is  => 'ro',
     isa => 'Int',
-    default => sub {
-        my $self = shift;
-        $self->is_server_error ? 500 :
-        $self->is_client_error ? 400 :
-                                 200
-        },
+    lazy_build => 1,
 );
+sub _build_http_status {
+    my $self = shift;
+    $self->is_server_error ? 500 :
+    $self->is_client_error ? 400 :
+                             200
+}
 
 =head2 notify
 

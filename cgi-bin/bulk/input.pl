@@ -1,3 +1,4 @@
+
 =head1 NAME
 
   /bulk/input.pl
@@ -16,68 +17,64 @@
 
 =cut
 
-# Author: Lukas Mueller
-# modified by Caroline N. Nyenke (intern)
-
-# Modified June 27th, 2007 by Alexander Naydich and Matthew Crumb (interns)
-
-
-use strict;
+use Modern::Perl;
 use CXGN::Page;
-use CXGN::Page::FormattingHelpers qw/page_title_html modesel simple_selectbox_html/;
+use CXGN::Page::FormattingHelpers
+  qw/page_title_html modesel simple_selectbox_html/;
 use CXGN::DB::Connection;
 
-our $page = CXGN::Page->new( "Bulk download", "Lukas Mueller, Caroline Nyenke, Rob Buels");
+our $page = CXGN::Page->new( "Bulk download",
+    "Lukas Mueller, Caroline Nyenke, Rob Buels" );
 my $db = CXGN::DB::Connection->new();
 
-my ($mode, $debug) = $page->get_arguments(qw/mode debug/); #determine mode and whether debug is on
+my ( $mode, $debug ) =
+  $page->get_arguments(qw/mode debug/);  #determine mode and whether debug is on
 
-$page->header("Bulk download",'Bulk download'); #print page header and text below
+$page->header( "Bulk download", 'Bulk download' )
+  ;                                      #print page header and text below
 print <<EOH;
 <div style="margin-bottom: 1em">Download Unigene or BAC information using a list of identifiers, or complete datasets with FTP.</div>
 EOH
 
 # create tab categories
-my @mode_funcs = (\&clone_search,
-		  \&array_search,
-		  \&unigene_search,
-		  \&bac_search,
-		  \&bac_end_search,
-		  \&ftp_site,
-                  \&unigene_convert,
-		 );
+my @mode_funcs = (
+    \&clone_search,   \&array_search, \&unigene_search, \&bac_search,
+    \&bac_end_search, \&ftp_site,     \&unigene_convert,
+);
 
 # define urls of modes
 my @mode_links = (
-		  ['?mode=clone_search','Clone&nbsp;name<br />(SGN-C)'],
-		  ['?mode=microarray','Array&nbsp;spot&nbsp;ID<br />(SGN-S)'],
-		  ['?mode=unigene','Unigene&nbsp;ID<br />(SGN-U)'],
-		  ['?mode=bac','BACs'],
-		  ['?mode=bac_end','BAC&nbsp;ends'],
-		  ['?mode=ftp','Full&nbsp;datasets<br />(FTP)'],
-                  ['?mode=unigene_convert','Unigene ID Converter<br />(SGN-U)'],
-		 );
+    [ '?mode=clone_search',    'Clone&nbsp;name<br />(SGN-C)' ],
+    [ '?mode=microarray',      'Array&nbsp;spot&nbsp;ID<br />(SGN-S)' ],
+    [ '?mode=unigene',         'Unigene&nbsp;ID<br />(SGN-U)' ],
+    [ '?mode=bac',             'BACs' ],
+    [ '?mode=bac_end',         'BAC&nbsp;ends' ],
+    [ '?mode=ftp',             'Full&nbsp;datasets<br />(FTP)' ],
+    [ '?mode=unigene_convert', 'Unigene ID Converter<br />(SGN-U)' ],
+    [ '/bulk/feature',         'Features' ],
+    [ '/bulk/gene',            'Genes' ],
+);
 
 ### figure out which mode we're in ###
 my $modenum =
-      $mode =~ /clone_search/i    ? 0 :
-      $mode =~ /array/i           ? 1 :
-      $mode =~ /unigene_convert/i ? 6 :
-      $mode =~ /unigene/i         ? 2 :
-      $mode =~ /bac_end/i         ? 4 :
-      $mode =~ /bac/i             ? 3 :
-      $mode =~ /ftp/i             ? 5 :
-                                    0; #clone search is default
-
+    $mode =~ /clone_search/i    ? 0
+  : $mode =~ /array/i           ? 1
+  : $mode =~ /unigene_convert/i ? 6
+  : $mode =~ /unigene/i         ? 2
+  : $mode =~ /bac_end/i         ? 4
+  : $mode =~ /bac/i             ? 3
+  : $mode =~ /ftp/i             ? 5
+  : $mode =~ /feature/i         ? 7
+  :                               0;    #clone search is default
 
 ### print out the mode selection buttons at the top of the page ###
 ### prints out all @mode_links buttons, highlighting the current selected one###
-print modesel(\@mode_links,$modenum);
+print modesel( \@mode_links, $modenum );
 print qq|<div class="indentedcontent">\n|;
 
 ### call the appropriate function from the $mode_funcs list to print###
 ### out the download form, passing the $page object                      ###
-$mode_funcs[$modenum]($page,$db,$debug);
+$mode_funcs[$modenum]( $page, $db, $debug );
 
 print <<EOH;
 </div>
@@ -99,16 +96,15 @@ $page->footer();
 =cut
 
 #one parameter: a string to print, or not, as desired
-sub DEBUG
-{
-	print shift(@_);
+sub DEBUG {
+    print shift(@_);
 }
 
-
 sub ug_build_selectbox {
-  my ($db,$filter_sub) = @_;
-  my %builds;
-  my $sth =$db->prepare(q|SELECT 	ub.unigene_build_id,
+    my ( $db, $filter_sub ) = @_;
+    my %builds;
+    my $sth = $db->prepare(
+        q|SELECT 	ub.unigene_build_id,
 					ub.organism_group_id,
 					ub.build_nr,
 					g.group_id,
@@ -117,24 +113,30 @@ sub ug_build_selectbox {
 				WHERE 	ub.organism_group_id=g.group_id
 				  AND 	g.type=1
 				  AND 	ub.status='C'
-			 |);
-  $sth->execute();
-  while (my @row = $sth -> fetchrow_array()) {
-    if($filter_sub) {
-      next unless $filter_sub->(@row);
+			 |
+    );
+    $sth->execute();
+    while ( my @row = $sth->fetchrow_array() ) {
+        if ($filter_sub) {
+            next unless $filter_sub->(@row);
+        }
+
+        my ( $unigene_build_id, $organism_group_id, $build_nr, $group_id,
+            $species )
+          = @row;
+        $species =~ s/(\S)[a-z]+\s([a-z]+)/uc($1).'. '.$2/ei
+          ;    #< abbreviate the species names
+        $builds{$unigene_build_id} = "$species (build $build_nr)";
     }
 
-    my ($unigene_build_id, $organism_group_id, $build_nr, $group_id, $species) = @row;
-    $species =~ s/(\S)[a-z]+\s([a-z]+)/uc($1).'. '.$2/ei; #< abbreviate the species names
-    $builds{$unigene_build_id} = "$species (build $build_nr)"; 
-  }
-
-  return simple_selectbox_html( name => 'build_id',
-				label => 'Only include unigene build:',
-				choices => [ [all => 'include all'],
-					     (map [$_,$builds{$_}], keys %builds),
-					   ],
-			      );
+    return simple_selectbox_html(
+        name    => 'build_id',
+        label   => 'Only include unigene build:',
+        choices => [
+            [ all => 'include all' ],
+            ( map [ $_, $builds{$_} ], keys %builds ),
+        ],
+    );
 
 }
 
@@ -152,13 +154,13 @@ sub ug_build_selectbox {
 
 sub clone_search {
 
-	# displays the clone search input form
-	#
-	my ($page, $db, $debug) = @_;
+    # displays the clone search input form
+    #
+    my ( $page, $db, $debug ) = @_;
 
-	my $content="";
-	my $ug_build_select = ug_build_selectbox($db);
-	print <<HTML;
+    my $content         = "";
+    my $ug_build_select = ug_build_selectbox($db);
+    print <<HTML;
 <form name="bulkform" action="download.pl" method="post" enctype="multipart/form-data">
 
 <br />
@@ -188,21 +190,21 @@ And/or upload list file: <br /><input type="file" name="file" />
 
 HTML
 
-	print qq|</td><td valign="top" bgcolor="#EEEEEE" width="320">\n|;
-	output_list(); #print out checkboxes
+    print qq|</td><td valign="top" bgcolor="#EEEEEE" width="320">\n|;
+    output_list();    #print out checkboxes
 
-	print <<HTML;
+    print <<HTML;
 
 </td></tr></table>
 
 HTML
 
+    if ( $debug eq "1" ) {
+        print
+qq|<input type="checkbox" checked="checked" name="debug" /> print debug statements<br /><br />\n|;
+    }
 
-	if ($debug eq "1") {
-		print qq|<input type="checkbox" checked="checked" name="debug" /> print debug statements<br /><br />\n|;
-	}
-
-	print <<HTML;
+    print <<HTML;
 
 	<input type="hidden" name="idType" value="clone" />
 	<input type="reset" />&nbsp;&nbsp;
@@ -226,17 +228,25 @@ HTML
 =cut
 
 sub array_search {
-	#
-	# displays the array search input form
-	#
-	my ($page, $db, $debug) = @_;
 
-	my $content = "";
+    #
+    # displays the array search input form
+    #
+    my ( $page, $db, $debug ) = @_;
 
-	$page = CXGN::Page->new( "Bulk download", "Lukas Mueller");
+    my $content = "";
 
-	my $ug_select = ug_build_selectbox($db,sub {($_[4] =~ /lycopersicon|tomato/i && $_[4] !~ /demethylated/i) ? 1 : 0});
-	print <<HTML;
+    $page = CXGN::Page->new( "Bulk download", "Lukas Mueller" );
+
+    my $ug_select = ug_build_selectbox(
+        $db,
+        sub {
+            ( $_[4] =~ /lycopersicon|tomato/i && $_[4] !~ /demethylated/i )
+              ? 1
+              : 0;
+        }
+    );
+    print <<HTML;
 
 <form name="bulkform" action="download.pl" method="post" enctype="multipart/form-data">
 <br />
@@ -267,17 +277,16 @@ And/or upload list file: <br /><input type="file" name="file" />
 
 HTML
 
-	output_list();
+    output_list();
 
+    print "</td></tr></table>\n";
 
-	print "</td></tr></table>\n";
+    if ( $debug eq "1" ) {
+        print
+qq|<input type="checkbox" checked="checked" name="debug" /> print debug statements<br /><br />\n|;
+    }
 
-
-	if ($debug eq "1") {
-		print qq|<input type="checkbox" checked="checked" name="debug" /> print debug statements<br /><br />\n|;
-	}
-
-	print <<HTML
+    print <<HTML
 
 <input type="hidden" name="idType" value="microarray" />
 	<input type="reset" />&nbsp;&nbsp;
@@ -286,7 +295,7 @@ HTML
 
 HTML
 
-	;
+      ;
 
 }
 
@@ -303,22 +312,23 @@ HTML
 =cut
 
 sub unigene_search {
-	#
-	# displays the unigene input form
-	#
-	# Note: the unigene input form does not display the drop down of unigene builds, because a unigene ID is by definition mapped to a
-	# given build.
-	#
-	# This form supports to different types of unigene queries: getting information pertaining to unigenes themselves (annotations and seq)
-	# and unigene membership information. The two queries are distinguished by the unigene_mode radio control. Some adjustments have to
-	# be made in the download.pl program when distinguishing the two modes.
-	#
-	my ($page, $db, $debug) = @_;
 
-	my $content="";
-	my $ug_select = ug_build_selectbox($db);
+#
+# displays the unigene input form
+#
+# Note: the unigene input form does not display the drop down of unigene builds, because a unigene ID is by definition mapped to a
+# given build.
+#
+# This form supports to different types of unigene queries: getting information pertaining to unigenes themselves (annotations and seq)
+# and unigene membership information. The two queries are distinguished by the unigene_mode radio control. Some adjustments have to
+# be made in the download.pl program when distinguishing the two modes.
+#
+    my ( $page, $db, $debug ) = @_;
 
-	print <<HTML;
+    my $content   = "";
+    my $ug_select = ug_build_selectbox($db);
+
+    print <<HTML;
 
 <form name="bulkform" action="download.pl" method="post" enctype="multipart/form-data">
 
@@ -327,11 +337,7 @@ sub unigene_search {
 
 HTML
 
-	;
-
-
-
-	print <<HTML1
+    print <<HTML1
 
 <br />
 Enter a list of identifiers or upload a file containing one identifer separated by whitespace (returns, spaces or tabs):<br />
@@ -397,13 +403,14 @@ And/or upload list file: <br /><input type="file" name="file" />
 
 HTML1
 
-	;
+      ;
 
-	if ($debug eq "1") {
-		print qq|<input type="checkbox" checked="checked" name=debug /> print debug statements<br /><br />\n|;
-	}
+    if ( $debug eq "1" ) {
+        print
+qq|<input type="checkbox" checked="checked" name=debug /> print debug statements<br /><br />\n|;
+    }
 
-	print <<HTML2
+    print <<HTML2
 
 	<input type=hidden name="idType" value="unigene" />
 	<input type="reset" />&nbsp;&nbsp;
@@ -412,7 +419,7 @@ HTML1
 
 HTML2
 
-	;
+      ;
 
 }
 
@@ -429,17 +436,18 @@ HTML2
 =cut
 
 sub unigene_convert {
-	#
-	# displays the unigene converter input form
-	#
-	# Note: the unigene input form does not display the drop down of unigene builds, because a unigene ID is by definition mapped to a
-	# given build.
 
-	my ($page, $db, $debug) = @_;
+#
+# displays the unigene converter input form
+#
+# Note: the unigene input form does not display the drop down of unigene builds, because a unigene ID is by definition mapped to a
+# given build.
 
-	my $content="";
+    my ( $page, $db, $debug ) = @_;
 
-	print <<HTML;
+    my $content = "";
+
+    print <<HTML;
 
 <form name="bulkform" action="download.pl" method="post" enctype="multipart/form-data">
 
@@ -447,8 +455,7 @@ sub unigene_convert {
 <table summary="" cellpadding="10" width="100%"><tr><td valign="top" bgcolor="#EEEEEE" width="320">
 
 HTML
-	;
-	print <<HTML1
+    print <<HTML1
 
 <br />
 Enter a list of identifiers or upload a file containing one identifer separated by whitespace (returns, spaces or tabs):<br />
@@ -476,13 +483,14 @@ And/or upload list file: <br /><input type="file" name="file" />
 
 HTML1
 
-	;
+      ;
 
-	if ($debug eq "1") {
-		print qq|<input type="checkbox" checked="checked" name="debug" /> print debug statements<br /><br />\n|;
-	}
+    if ( $debug eq "1" ) {
+        print
+qq|<input type="checkbox" checked="checked" name="debug" /> print debug statements<br /><br />\n|;
+    }
 
-	print <<HTML2
+    print <<HTML2
 
 	<input type=hidden name="idType" value="unigene_convert" />
 	<input type="reset" />&nbsp;&nbsp;
@@ -491,12 +499,12 @@ HTML1
 
 HTML2
 
-	;
+      ;
 }
 
 #deprecated
 sub output_type {
-	print <<OUTPUT_TYPE;
+    print <<OUTPUT_TYPE;
 
 	Output type:<br />
 	<input type="radio" name="outputType" value="html" checked="checked" /> HTML<br />
@@ -510,7 +518,7 @@ OUTPUT_TYPE
 
 #method used by clone_name and microarray searches to display checkboxes
 sub output_list {
-	print <<OUTPUT_LIST;
+    print <<OUTPUT_LIST;
 
 	<b>Please select the information you would like for each identifier:</b><br />
 	<input type="checkbox" name="clone_name" checked="checked" /> clone name<br />
@@ -547,14 +555,13 @@ OUTPUT_LIST
 # new bac_search
 sub bac_search {
 
-	# displays the bac search input form
-	#
-	my ($page, $db, $debug) = @_;
+    # displays the bac search input form
+    #
+    my ( $page, $db, $debug ) = @_;
 
-	my $content="";
+    my $content = "";
 
-
-	print <<HTML;
+    print <<HTML;
 
 <form name="bulkform" action="download.pl" method="post" enctype="multipart/form-data">
 
@@ -600,12 +607,12 @@ And/or upload list file: <br /><input type="file" name="file" />
 </td></tr></table>
 HTML
 
+    if ( $debug eq "1" ) {
+        print
+qq|<input type="checkbox" checked="checked" name="debug" /> print debug statements<br /><br />\n|;
+    }
 
-	if ($debug eq "1") {
-		print qq|<input type="checkbox" checked="checked" name="debug" /> print debug statements<br /><br />\n|;
-	}
-
-	print <<HTML;
+    print <<HTML;
 
 	<input type="hidden" name="idType" value="bac" />
 	<input type="reset" />&nbsp;&nbsp;
@@ -631,14 +638,13 @@ HTML
 # new bac_end
 sub bac_end_search {
 
-	# displays the bac search input form
-	#
-	my ($page, $db, $debug) = @_;
+    # displays the bac search input form
+    #
+    my ( $page, $db, $debug ) = @_;
 
-	my $content="";
+    my $content = "";
 
-
-	print <<HTML;
+    print <<HTML;
 
 <form name="bulkform" action="download.pl" method="post" enctype="multipart/form-data">
 
@@ -691,12 +697,12 @@ And/or upload list file: <br /><input type="file" name="file" />
 </td></tr></table>
 HTML
 
+    if ( $debug eq "1" ) {
+        print
+qq|<input type="checkbox" checked="checked" name="debug" /> print debug statements<br /><br />\n|;
+    }
 
-	if ($debug eq "1") {
-		print qq|<input type="checkbox" checked="checked" name="debug" /> print debug statements<br /><br />\n|;
-	}
-
-	print <<HTML;
+    print <<HTML;
 
 	<input type="hidden" name="idType" value="bac_end" />
 	<input type="reset" />&nbsp;&nbsp;
@@ -706,8 +712,6 @@ HTML
 HTML
 
 }
-
-
 
 =head2 ftp_site
 
@@ -733,27 +737,35 @@ sub ftp_site {
 	<ul style="margin: 1em 0 0 0; list-style: none">
 	
 HTML
-	
-    my %ftplinks = ('unigene_builds'    => 'Sequence, quality, and membership information for all SGN unigene builds',
-		    'est_sequences'     => 'Sequence and quality files for all SGN ESTs, organized by library',
-		    'maps_and_markers'  => 'Marker sequences and marker position lists for all SGN maps',
-		    'physical_mapping'  => 'Raw data files for Tomato HindIII BAC library FPC and overgo analyses',
-		    'blast_annotations' => 'Highest-ranked hits vs. Genbank NR and Arabidopsis for all SGN unigenes.',
-		    'manual_annotations'=> 'Manual annotations for a number of SGN unigenes',
-		    'user_requests'     => 'Custom-generated datasets for individual users (mail special requests to <a href="mailto:sgn-feedback@sgn.cornell.edu">sgn-feedback</a>)',
-		    'tomato_genome'     => 'Tomato genomic data, including BAC end and full BAC sequences',
-                    'COSII'             => 'COSII marker data'
-		    );
 
-    foreach my $dir (sort keys %ftplinks) {
-	my $desc = $ftplinks{$dir};
-	print <<HTML;
+    my %ftplinks = (
+        'unigene_builds' =>
+'Sequence, quality, and membership information for all SGN unigene builds',
+        'est_sequences' =>
+          'Sequence and quality files for all SGN ESTs, organized by library',
+        'maps_and_markers' =>
+          'Marker sequences and marker position lists for all SGN maps',
+        'physical_mapping' =>
+'Raw data files for Tomato HindIII BAC library FPC and overgo analyses',
+        'blast_annotations' =>
+'Highest-ranked hits vs. Genbank NR and Arabidopsis for all SGN unigenes.',
+        'manual_annotations' =>
+          'Manual annotations for a number of SGN unigenes',
+        'user_requests' =>
+'Custom-generated datasets for individual users (mail special requests to <a href="mailto:sgn-feedback@sgn.cornell.edu">sgn-feedback</a>)',
+        'tomato_genome' =>
+          'Tomato genomic data, including BAC end and full BAC sequences',
+        'COSII' => 'COSII marker data'
+    );
+
+    foreach my $dir ( sort keys %ftplinks ) {
+        my $desc = $ftplinks{$dir};
+        print <<HTML;
 	<li><a class="folderlink" href="ftp://ftp.solgenomics.net/$dir"> $dir</a>
 	    <div class="folderdesc">$desc</div>
 	</li>
 HTML
     }
-
 
     print <<HTML;
         </ul>
@@ -765,17 +777,13 @@ HTML
 
 }
 
-
 =head1 BUGS
 
   None known.
 
-=head1 AUTHOR
+=head1 AUTHORS
 
-  Lukas Mueller, August 12, 2003
-  Modified and documented by Caroline Nyenke, August 11, 2005
-  Modified June 27th, 2007 by Alexander Naydich and Matthew Crumb
- 
+  Lukas Mueller, Caroline Nyenke, Alexander Naydich and Matthew Crumb
 
 =head1 SEE ALSO
 

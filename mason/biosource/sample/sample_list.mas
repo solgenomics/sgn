@@ -9,7 +9,7 @@
          my $o = $_;
          $o = $o->get_bssample_row unless $o->can('type');
          [
-          $m->scomp('/chado/cvterm_link.mas', cvterm => $o->type),
+          $o->type ? $m->scomp('/chado/cvterm_link.mas', cvterm => $o->type) : '<span class="ghosted">n/a</span>',
           $m->scomp('/biosource/sample_link.mas', sample => $o ),
          ]
        }@$objects

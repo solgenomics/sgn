@@ -200,6 +200,7 @@ jQuery(function($) { $('#sequence_input').attr('spellcheck',false) });
 
 sub hash2param {
   my %args = @_;
+  no warnings 'uninitialized';
   return join '&', map "$urlencode{$_}=$urlencode{$args{$_}}", distinct evens @_;
 }
 

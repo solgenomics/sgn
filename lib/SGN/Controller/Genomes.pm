@@ -17,6 +17,30 @@ with 'Catalyst::Component::ApplicationAttribute';
 
 =head1 PUBLIC ACTIONS
 
+=head1 list_genomes
+
+Public path: /genomes
+
+=cut
+
+sub list_genomes : Path( '/genomes' ) Args(0) {
+    my ( $self, $c ) = @_;
+
+    my $schema = $c->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' );
+
+    $c->stash(
+
+        genome_organisms => [
+            $schema->resultset('Organism::Organismprop')
+              ->search({ 'type.name' => 'genome_page' }, { join => 'type' })
+              ->search_related('organism')
+              ->all
+        ],
+
+        template         => '/genomes/index.mas',
+    );
+}
+
 =head2 view_genome_data
 
 Public path: /organism/<organism id or name>/genome
@@ -31,7 +55,7 @@ sub view_genome_data : Chained('/organism/find_organism') PathPart('genome') {
     my ( $self, $c ) = @_;
 
     my $organism = $c->stash->{organism};
-    $c->throw_404 unless $organism->search_related('organismprops',
+    $c->throw_404 unless $organism && $organism->search_related('organismprops',
                              { 'type.name' => 'genome_page', 'me.value' => 1 },
                              { join => 'type' },
                          )->count;

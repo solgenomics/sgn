@@ -1,0 +1,11 @@
+<%args>
+  $feature
+</%args>
+% if( $feature->organism && $feature->organism->species && $feature->organism->species !~ /^(any|all|none|null|nill?|\d+)$/i ) {
+  <& /page/page_title.mas, title => '<i>'.$feature->organism->species.'</i> '.type_name($feature).' '. $feature->id &>
+% } else {
+  <& /page/page_title.mas, title => type_name($feature,'caps').' '. $feature->id &>
+% }
+<%once>
+    use SGN::View::Feature qw/ type_name /;
+</%once>

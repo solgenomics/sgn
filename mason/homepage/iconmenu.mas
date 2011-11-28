@@ -25,7 +25,7 @@ pages.
 </%doc>
 
 <style type="text/css">
-    @import url("/documents/inc/icon_nav.css");
+    @import url("/css/icon_nav.css");
 
     #icon_nav {
         width: 720px;
@@ -139,7 +139,7 @@ pages.
 
 <div id="icon_nav">
 <ul>
-	<li class="MapsMarkers"><a href="/cview/" ><img src="/documents/img/soliconmenu/MapsMarkers.png" title="Maps and Markers" /></a>
+	<li class="MapsMarkers"><a href="/cview/" ><img src="/img/soliconmenu/MapsMarkers.png" title="Maps and Markers" /></a>
 
    		<ul>
         	  <div class="submenu MapsMarkersSubMenu">
@@ -147,12 +147,12 @@ pages.
                     <li><a href="/cview/view_chromosome.pl?show_offsets=1&show_ruler=1&show_offsets=1">Comparative viewer</a></li>
                     <li><a href="/search/direct_search.pl?search=markers">Search markers</a></li>
 		    <li><a href="">&nbsp;</a></li>
-		    <li><a href="/content/map_submissions.pl">Submit map information to SGN</a></li>
+		    <li><a href="/cview/help/map_submission">Submit map information to SGN</a></li>
 		  </div>
 		</ul>
 	</li>
 
-	<li class="Genes"><a href="/search/direct_search.pl?search=loci" style="background: none"><img src="/documents/img/soliconmenu/Genes.png" title="Genes" /></a>
+	<li class="Genes"><a href="/search/direct_search.pl?search=loci" style="background: none"><img src="/img/soliconmenu/Genes.png" title="Genes" /></a>
 	  <ul>
             <div class="submenu GenesSubMenu"  >
               <li><a href="/search/direct_search.pl?search=loci">Search loci</a></li>
@@ -166,7 +166,7 @@ pages.
 
 
 
-	<li class="Phenotypes"><a href="/search/direct_search.pl?search=phenotypes" style="background: none"><img src="/documents/img/soliconmenu/Phenotypes.png" alt="Phenotypes and QTLs" title="Phenotypes and QTLs" /></a>
+	<li class="Phenotypes"><a href="/search/direct_search.pl?search=phenotypes" style="background: none"><img src="/img/soliconmenu/Phenotypes.png" alt="Phenotypes and QTLs" title="Phenotypes and QTLs" /></a>
 	  <ul>
 	    <div class="submenu PhenotypesSubMenu">
               <li><a href="/search/direct_search.pl?search=phenotypes">Search phenotypes</a></li>
@@ -180,7 +180,7 @@ pages.
 
 	</li>
     
-    <li class="BreedersToolBox"><a href="/breeders/"><img src="/documents/img/soliconmenu/BreedersToolBox.png" alt="Breeders Toolbox" title="Click to access the Breeder's toolbox" /></a>
+    <li class="BreedersToolBox"><a href="/breeders/"><img src="/img/soliconmenu/BreedersToolBox.png" alt="Breeders Toolbox" title="Click to access the Breeder's toolbox" /></a>
     	<!--
 		<ul>
             <div class="submenu BreedersToolBoxSubMenu">
@@ -192,12 +192,12 @@ pages.
         -->
 	</li>
     
-    <li class="GenomesSequences"><a href="/genomes"><img src="/documents/img/soliconmenu/GenomesSequences.png" alt="GenomesSequences" alt="Genomes and Sequences" title="Genomes and Sequences" /></a>
+    <li class="GenomesSequences"><a href="/genomes"><img src="/img/soliconmenu/GenomesSequences.png" alt="GenomesSequences" alt="Genomes and Sequences" title="Genomes and Sequences" /></a>
       <ul>
             <div class="submenu GenomesSequencesSubMenu">
-            	<li><a href="/genomes/Solanum_lycopersicum">Tomato Genome Project</a></li>
+            	<li><a href="/organism/Solanum_lycopersicum/genome">Tomato Genome Project</a></li>
                 <li><a href="/organism/Solanum_lycopersicum/genome">Search/browse tomato genome</a></li>
-                <li><a href="/genomes/Solanum_pimpinellifolium/">Solanum pimpinellifolium genome</a></li>
+                <li><a href="/organism/Solanum_pimpinellifolium/genome">Solanum pimpinellifolium genome</a></li>
 		<li><a href=""></a>&nbsp;<li>
 		<li><a href="/sequencing/sol100.pl">SOL100 genomes</a></li>
             </div>
@@ -205,7 +205,7 @@ pages.
 
 	</li>
     
-    <li class="Pathways"><a href="http://solcyc.solgenomics.net/"><img src="/documents/img/soliconmenu/Pathways.png" alt="Pathways" alt="Pathways" title="Click to access SolCyc" /></a>
+    <li class="Pathways"><a href="http://solcyc.solgenomics.net/"><img src="/img/soliconmenu/Pathways.png" alt="Pathways" alt="Pathways" title="Click to access SolCyc" /></a>
     	<!--
 		<ul>
             <div class="submenu PathwaysSubMenu">

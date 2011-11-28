@@ -1,0 +1,59 @@
+<%args>
+  $feature
+</%args>
+
+  <style>
+    #gene_group_export > * { vertical-align: middle }
+  </style>
+  <div id="gene_group_export">
+       <button onclick="export_gene_group(<% $feature->feature_id %>)">
+            Export sequences to alignment viewer
+       </button>
+       <img width="16" height="16" id="gene_group_export_spinner" src="/img/spinner.gif" style="display: none" />
+       <span class="message">(may take a long time for large gene groups)</span>
+  </div>
+
+  <script type="text/javascript">
+    <& /util/import_javascript.mas, classes => 'jquery' &>
+    var myprotein;
+    jQuery(function($) { $('#gene_group_export button').attr('disabled',false) });
+    function export_gene_group(feature_id) {
+        var spinner = jQuery('#gene_group_export img');
+        var message = jQuery('#gene_group_export .message');
+        var button  = jQuery('#gene_group_export button');
+        button.attr( 'disabled', true );
+        spinner.show();
+        message.html( 'calculating and fetching sequences, please wait ... ');
+        jQuery.get( '/feature/'+feature_id+'/gene_group_protein_fasta', function(protein_fasta) {
+                myprotein = protein_fasta;
+
+                spinner.hide();
+                message.html('sending to alignment viewer...');
+
+                // make a hidden form to send sequences to the alignment viewer
+                var seqform = document.createElement('form');
+                seqform.method = 'POST';
+                seqform.action = '/tools/align_viewer/index.pl';
+                seqform.style.display = 'none';
+
+                // add our sequence data to it
+                var seq_input = document.createElement('input');
+                seq_input.type = 'hidden';
+                seq_input.value = protein_fasta;
+                seq_input.name = 'seq_data';
+                seqform.appendChild(seq_input);
+
+                // add a title for the alignment
+                var title = document.createElement('input');
+                title.type = 'hidden';
+                title.value = '<% $feature->type->name %> <% $feature->name %>';
+                title.name = 'title';
+                seqform.appendChild( title );
+
+                // add the form to the document and submit it
+                document.body.appendChild(seqform);
+                seqform.submit();
+                button.attr( 'disabled', false );
+        });
+    }
+  </script>

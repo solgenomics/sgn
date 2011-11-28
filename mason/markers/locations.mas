@@ -55,7 +55,7 @@ if (    $experiments
             unless ( grep { $_ == $loc->location_id() } @displayed_locs ) {
                 push( @displayed_locs, $loc->location_id() );
                 if ( $count > 1 ) {
-                    $locations_html .= '<br /><br /><br />';
+                    $locations_html .= '<br />';
                 }
                 $locations_html .=
 '<table width="100%" cellspacing="0" cellpadding="0" border="0"><tr>';
@@ -104,7 +104,7 @@ if (    $experiments
                         and defined($position) )
                     {
                         $map_url =
-"<a href=\"/cview/view_chromosome.pl?map_version_id=$map_version_id&amp;chr_nr=$lg_name&amp;cM=$position&amp;hilite=$marker_name$subscript&amp;zoom=1\">$map_name v$map_version_id</a>";
+"<a href=\"/cview/view_chromosome.pl?map_version_id=$map_version_id&amp;chr_nr=$lg_name&amp;cM=$position&amp;hilite=$marker_name$subscript&amp;zoom=1\">$map_name</a>";
                     }
                 }
                 else {
@@ -112,17 +112,16 @@ if (    $experiments
                       '<span class="ghosted">Map data not available</span>';
                 }
                 my $multicol = 1;
-                my $width    = "200px";
+                my $width    = "300px";
                 if ( $subscript and $multicol > 1 ) { $multicol++; }
                 my @locations = (
                     '__title' =>
-"<b>Map:</b> $map_url&nbsp;&nbsp;&nbsp;<span class=\"tinytype\">Loc. ID "
-                      . $loc->location_id()
-                      . "</span>",
+"<b>Map:</b> $map_url&nbsp;&nbsp;&nbsp;",
                     '__tableattrs' => "width=\"$width\"",
                     '__multicol'   => $multicol,
-                    'Chromosome'   => $loc->lg_name(),
-                    'Position    ' => sprintf( '%.2f cM', $loc->position() ),
+		    'Map version'  => $map_version_id." (location: ".$loc->location_id().")",
+		    'Chromosome'   => $loc->lg_name(),
+                    'Position    ' => sprintf( '%.2f', $loc->position() )." ".$map->get_units(),
                     'Confidence'   => $loc->confidence(),
                     'Protocol'     => $protocol
                 );
@@ -143,7 +142,7 @@ if (    $experiments
                     $hilite_name .= $subscript;
                 }
                 my $chromosome = CXGN::Cview::ChrMarkerImage->new(
-                     "", 150, 150, $dbh, $lg_name, $map, $hilite_name,
+                     "", 240, 150, $dbh, $lg_name, $map, $hilite_name,
                      $c->get_conf("basepath"),  $c->get_conf('tempfiles_subdir')."/cview",
                  );
                 my ( $image_path, $image_url ) =
@@ -169,7 +168,7 @@ qq|<img src="$image_url" usemap="#map$count" border="0" alt="" />|;
 
 		    my %pcr_bands_by_name = ();
 		    my $sth = $dbh->prepare("SELECT organism.species || ' ' ||  stock.name FROM public.stock JOIN public.organism USING(organism_id) WHERE stock_id=?");
-		    
+
 		    foreach my $p (keys %$pcr_bands) { 
 
 		      $sth->execute($p);
@@ -263,6 +262,7 @@ qq|<img src="$image_url" usemap="#map$count" border="0" alt="" />|;
                       $indel = "Indel";
                       $indel_seq = "<span class=\"indel\">$indel_seq</span>"
                     }
+		    $locations_html .= '<br />';
                     $locations_html .=
                       CXGN::Page::FormattingHelpers::info_table_html(
                         '__title' =>
@@ -280,7 +280,7 @@ qq|<img src="$image_url" usemap="#map$count" border="0" alt="" />|;
                         'Mg<sup>+2</sup> concentration' => $mg,
                         '__multicol'                    => 3,
                         '__tableattrs'                  => "width=\"100%\"",
-                      );
+                      ) if ($protocol ne 'SNP');
                     $locations_html .=
                       CXGN::Page::FormattingHelpers::info_table_html(
                         '__title' =>
@@ -292,7 +292,7 @@ qq|<img src="$image_url" usemap="#map$count" border="0" alt="" />|;
                        $indel => $indel_seq,
                        '__multicol'    => 2,
                       '__tableattrs'   => "width=\"100%\"",
-                      ) if $aspe || $indel;
+                      ) if $aspe || $indel || ($protocol eq "SNP");
                     $locations_html .= '</td></tr></table>';
                     push( @displayed_pcr, $pcr->pcr_experiment_id() );
                 }

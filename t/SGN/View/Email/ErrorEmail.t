@@ -15,6 +15,7 @@ $mech->with_test_level( process => sub {
 
     my ($res, $c) = ctx_request('/');
     $c->stash->{email_errors} = [ SGN::Exception->new( message => 'Fake test error!') ];
+    $c->view('Email::ErrorEmail')->maximum_body_size( 50000 );
     my $email = $c->view('Email::ErrorEmail')->make_email( $c );
 
     is( $email->{subject}, '[SGN](E) /', 'got a good subject line' );
@@ -22,7 +23,7 @@ $mech->with_test_level( process => sub {
     like( $email->{body}, qr/=== Request ===/, 'email body has a Request' );
     like( $email->{body}, qr/=== Summary ===/, 'email body has a Summary' );
     like( $email->{body}, qr/"<redacted>"/, 'redacted some stuff' );
-
+    like( $email->{body}, qr/email body truncated/, 'body was truncated' );
 });
 
 done_testing();

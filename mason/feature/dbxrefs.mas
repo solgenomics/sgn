@@ -52,7 +52,7 @@
   $d
 </%args>
 % if( $d->db->urlprefix && $d->db->url ) {
-   <a href="<% $d->db->urlprefix .  $d->db->url .  $d->accession |h%>"><% $d->accession |h%></a>
+   <a href="<% $d->db->urlprefix .  $d->db->url |h %><% $d->accession |uh %>"><% $d->accession |h%></a>
 % } else {
    <% $d->accession |h %>
 % }

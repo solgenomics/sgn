@@ -31,7 +31,7 @@ sub html_head {
 <head>
   <title>$page_title</title>
   <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
-  <link rel="stylesheet" href="/documents/inc/sgn.css" type="text/css" />
+  <link rel="stylesheet" href="/css/sgn.css" type="text/css" />
   <link rel="search" type="application/opensearchdescription+xml" title="SGN Sol Search" href="/documents/sgn_sol_search.xml" />
 
   <script language="JavaScript" type="text/javascript">
@@ -41,7 +41,7 @@ sub html_head {
     MochiKit = {__export__: false};
   </script>
 
-  <script language="JavaScript" src="/documents/inc/sgn.js" type="text/javascript"></script>
+  <script language="JavaScript" src="/css/sgn.js" type="text/javascript"></script>
 
   $extra_head_stuff
 </head>
@@ -106,10 +106,10 @@ HTML
 <table id="siteheader" cellpadding="0" cellspacing="0">
 <tr>
   <td rowspan="3" width="10" class="sunlogo">
-    <a href="/"><img src="/documents/img/sgn_logo_icon.png" width="70" height="69" border="0" alt="SGN Home" title="Sol Genomics Network Home" id="sgnlogo" /></a>
+    <a href="/"><img src="/img/sgn_logo_icon.png" width="70" height="69" border="0" alt="SGN Home" title="Sol Genomics Network Home" id="sgnlogo" /></a>
   </td>
   <td style="vertical-align: bottom">
-    <a href="/"><img id="sgntext" src="/documents/img/sgn_logo_text.png" width="230" height="21" border="0" alt="SGN Home" title="Sol Genomics Network Home" /></a>
+    <a href="/"><img id="sgntext" src="/img/sgn_logo_text.png" width="230" height="21" border="0" alt="SGN Home" title="Sol Genomics Network Home" /></a>
   </td>
   <td width="50%" class="clonecart">
      <div id="clone_shoppingcart">
@@ -192,7 +192,7 @@ td(
 
                      # BTI logo with link
                      a({class => 'footer', href=> 'http://bti.cornell.edu/'},
-                       img({ src => '/documents/img/bti_logo_bw.png',
+                       img({ src => '/img/bti_logo_bw.png',
                              (map {$_ => 'Boyce Thompson Institute'} 'alt', 'title'),
                              width => 91, height => 70, border => 0,
                            }),
@@ -200,7 +200,7 @@ td(
 
                      # NSF logo with link
                      a({class => 'footer', href=> 'http://www.nsf.gov/'},
-                       img({ src => '/documents/img/nsf_logo.png',
+                       img({ src => '/img/nsf_logo.png',
                              (map {$_ => 'National Science Foundation'} 'alt', 'title'),
                              width => 77, height => 76, border => 0,
                            }),
@@ -213,7 +213,7 @@ td(
 
                      # USDA CSREES logo with link
                      a({class => 'footer', href=> 'http://www.nifa.usda.gov/'},
-                       img({ src => '/documents/img/usda_nifa_h_2.jpg',
+                       img({ src => '/img/usda_nifa_h_2.jpg',
                              (map {$_ => 'USDA CSREES'} 'alt', 'title'),
                              width => 250, height => 44, border => 0,
                            }),
@@ -261,7 +261,6 @@ if(typeof(urchinTracker) == "function"){
 	urchinTracker();
  }
 </script>
-<script language="javascript" type="text/javascript" src="/documents/inc/wz_tooltip.js"></script>
 EOJS
 
 }

@@ -1,6 +1,5 @@
 use Test::Most;
 
-use FindBin;
 use lib 't/lib';
 
 use aliased 'SGN::Test::WWW::Mechanize';

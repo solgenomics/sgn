@@ -1,0 +1,68 @@
+<& "/page/page_title.mas", title => "SGN: Frequently Asked Questions (FAQ)" &>
+<table summary="" width="720" cellpadding="0" cellspacing="0"
+  border="0">
+    <tr>
+      <td>
+        <center>
+          <table summary="" width="720" cellpadding="0"
+          cellspacing="0" border="0">
+            <tr>
+              <td>
+                This page contains questions that SGN users ask and
+                are useful to the larger SGN user community. Please
+                <a href="mailto:sgn-feedback\@sgn.cornell.edu">let
+                us know</a> if you have a question that you think
+                should be added.
+
+                <p><strong>Question:</strong> Where can I order clones?<br />
+                <strong>Answer:</strong> This depends on the species and on
+                the specific library. For tomato clones, you can
+                use the clone ordering facility at the <a href=
+                "http://ted.bti.cornell.edu/order/">Boyce Thompson
+                Institute</a>. For potato clones that were
+                sequenced as part of the U.S. potato genome
+                project, the ordering is handled by the <a href=
+                "http://genome.arizona.edu/orders/">Arizona Genome
+                Institute</a>. For all other libraries, please
+                contact the library submitters given on the library
+                detail pages (use the <a href=
+                "/search/direct_search.pl?search=ESTs">Library
+                Search</a> page to find the library in
+                question).</p>
+
+                <p><strong>Question:</strong> The SGN pages look really
+                messed up on my browser.<br />
+                <strong>Answer:</strong> You are working with an old browser
+                that does not support style sheets, such as the
+                browsers of the Netscape 4.x series. SGN pages
+                require style sheets and javascript to be turned
+                on.</p>
+
+                <p><strong>Question:</strong> Can I submit my data to
+                SGN?<br />
+                <strong>Answer:</strong> Please send an email to <a href=
+                "mailto:sgn-feedback\@sgn.cornell.edu">sgn-feedback@sgn.cornell.edu</a>
+                with a description of the data you would like to
+                submit. We will then work with you to integrate
+                your data into the database and/or add it to the
+                FTP server.<br />
+                </p>
+                <p><strong>Question:</strong> Tomato genome has 12 chromosomes. However, some sequences are mapped to 'ch00'. What is 'ch00'? <br />
+                <strong>Answer:</strong> ch00 is a place holder for tomato sequences that could not be mapped to any of the 12 tomato chromosomes.
+                <br />
+                <p><strong>Question:</strong> What does the color gradient in the Gbrowse tracks mean? <br />
+                <strong>Answer:</strong> The intensity of the color signifies the degree of match between the feature and the genome sequence, the white color signifies the lowest match whereas the darkest color signifies the strongest match. You can find more detailed explanation by following the '?' button on the track of your interest.
+
+		<p>
+		  <strong>Question:</strong> What do the identifiers of the format Solyc01g001010.1.1 mean?<br />
+		  <strong>Answer:</strong> These identifiers denote loci, predicted mRNA and protein sequences from the tomato genome sequencing project. "Solyc" is the 5 letter abbreviation of <i>Solanum lycopersicum</i>, the 2 digit number following the 'Solyc' denotes the chromosome, 'g' denotes that the sequence is a gene, and the 6 digit number following the 'g' identifies the gene on the chromosome, starting at the top and counting in 10 increments. The first '.1' denotes the annotation version number of the locus (and if only the first number is given, denotes the locus), whereas the second '.1' denotes the transcript (a locus can give rise to many transcripts, splice variants), and also the proteins derived from these transcripts.
+                <br />
+                </p>
+              </td>
+            </tr>
+          </table>         
+        </center>
+      </td>
+    </tr>
+  </table>
+</center>

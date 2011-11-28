@@ -5,17 +5,14 @@
     $featurelocs
 </%args>
 <%once>
-    use SGN::View::Feature qw/
-    location_string_with_strand
-    mrna_and_protein_sequence
-/;
+    use SGN::View::Feature 'mrna_cds_protein_sequence';
 </%once>
 <%perl>
     my $reference   = $featurelocs ? $featurelocs->single->srcfeature : undef ;
     my @mrnas       = grep $_->type->name eq 'mRNA', $feature->child_features;
 </%perl>
 
-<& /page/page_title.mas, title => 'Gene '. $feature->name &>
+<& /feature/page_title.mas, feature => $feature &>
 
 <&| /page/info_section.mas,
     title       => 'Gene',
@@ -43,6 +40,7 @@
   <& /feature/related_features.mas,
       reference => $reference,
       feature   => $feature,
+      omit_columns => ['organism'],
   &>
 
 </&>
@@ -83,7 +81,7 @@
 
     </&>
 
-%   my ( $mrna_sequence, $protein_sequence ) = @{(mrna_and_protein_sequence( $mrna ))[0] || [] };
+%   my ( $mrna_sequence, $cds_sequence, $protein_sequence ) = @{(mrna_cds_protein_sequence( $mrna ))[0] || [] };
 
     <&| /page/info_section.mas,
             title         => 'cDNA sequence',
@@ -104,7 +102,11 @@
           blast_url => $blast_url,
         &>
      </div>
-
+     <div style="margin-top: 1em">
+        <& /feature/sequence_download.mas,
+             feature => $mrna,
+         &>
+     </div>
 % }
 
     </&>
@@ -128,7 +130,13 @@
           blast_url => $blast_url,
         &>
      </div>
-
+%    if( $protein_sequence->can('feature_id') ) {
+     <div style="margin-top: 1em">
+        <& /feature/sequence_download.mas,
+             feature => $protein_sequence,
+         &>
+     </div>
+%    }
 % }
 
     </&>
@@ -141,6 +149,7 @@
 
        <& /feature/related_features.mas,
              feature   => $mrna,
+             omit_columns => ['organism'],
        &>
 
     </&>
@@ -156,10 +165,4 @@
         xrefs   => $xrefs,
         exclude => 'gbrowse2',
       &>
-
-     <& /feature/gbrowse_syn_search_link.mas,
-        feature => $feature,
-        featurelocs => $featurelocs,
-      &>
-
 </&>

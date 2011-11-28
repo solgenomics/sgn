@@ -1,0 +1,39 @@
+<%doc>
+
+=head1 NAME 
+qtl/population/data_access.mas - a component for displaying a note for private qtl data.
+
+=AUTHOR
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$pop
+$owner_page
+
+</%args>
+
+
+<&| /page/info_section.mas, 
+  collapsible => 1, 
+  collapsed   => 0, 
+  title       => "Data access" 
+&>   
+  <p>
+    The QTL data for this population is not public yet. If you are the 
+    data owner or SGN curator, login to access the data. 
+    Others who would like to know more about the data 
+    can contact the owner of the data: <b><% $owner_page %></b> or 
+    SGN: <a href=mailto:sgn-feedback@sgn.cornell.edu>
+    sgn-feedback@sgn.cornell.edu</a>.
+  </p>
+</&>
+
+
+ 
+
+

@@ -35,6 +35,7 @@ sub clone_summary_html {
 
     return info_table_html( __title            => 'Clone',
 			    'Clone name'       => join('<br />',
+                                                       $this->intl_clone_name,
 						       $this->arizona_clone_name,
 						       ($this->chromosome_num ? ($this->clone_name_with_chromosome) :  ()),
 						       ($this->cornell_clone_name =~ /^P/ ? ($this->cornell_clone_name) : ()),

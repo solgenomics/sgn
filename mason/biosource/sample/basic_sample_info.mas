@@ -119,9 +119,13 @@ my $sample_name = $sample->get_sample_name();
 	     }
 	     else {
 		 my $external_accession = $dbxref_rel_data{'db.name'} . ": " . $dbxref_rel_data{'dbxref.accession'};
-		 my $external_link = $dbxref_rel_data{'db.urlprefix'} . $dbxref_rel_data{'db.url'} . $dbxref_rel_data{'dbxref.accession'};
-		 my $external_line = "<a href=$external_link>$external_accession</a><br>";
-		 push @external_links_html, $external_line;
+                 if( $dbxref_rel_data{'db.urlprefix'} &&  $dbxref_rel_data{'db.url'} ) {
+                     my $external_link = $dbxref_rel_data{'db.urlprefix'} . $dbxref_rel_data{'db.url'} . $dbxref_rel_data{'dbxref.accession'};
+                     my $external_line = "<a href=$external_link>$external_accession</a><br>";
+                     push @external_links_html, $external_line;
+                 } else {
+                     push @external_links_html, $external_accession;
+                 }
 	     }
 	 }
     }

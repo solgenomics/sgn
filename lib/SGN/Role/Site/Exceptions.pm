@@ -121,7 +121,7 @@ sub throw_404 {
         $throw{notify} = 1;
         $throw{developer_message} = "404 error seems to be our fault, referrer is '".$c->req->referer."'";
     } else {
-        $throw{public_message}  .= ' You may wish to contact the referring site and inform them of the error.';
+        $throw{public_message}  .= ' If you reached this page from a link on another site, you may wish to inform them that the link is incorrect.';
         $throw{is_client_error} = 1;
         $throw{is_server_error} = 0;
         $throw{notify} = 0;
@@ -180,7 +180,7 @@ sub _set_exception_response {
     };
 
     # insert a JS pack in the error output if necessary
-    $self->forward('/js/insert_js_pack_html');
+    $self->forward('/insert_collected_html');
 
     # set our http status to the most severe error we have
     my ( $worst_status ) =

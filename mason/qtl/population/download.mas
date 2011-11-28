@@ -1,0 +1,53 @@
+<%doc>
+
+=head1 NAME 
+
+qtl/population/download.mas - a mason component for 
+diplaying links to download pages of phenotype, genotype,
+correlation and trait acronmyms files.
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$phenotype_download
+$genotype_download
+$corre_download
+$acronym_download
+
+</%args>
+
+<&| /page/info_section.mas,
+    collapsible => 1, 
+    collapsed   => 1, 
+    title => 'Download',
+&>
+%if ($phenotype_download)
+%{
+<% $phenotype_download %> |
+%} 
+%if ($genotype_download) 
+%{
+<% $genotype_download %> |
+%} 
+
+%if ($corre_download) 
+%{
+ <% $corre_download %> |
+%}
+%if ($acronym_download)
+%{ 
+<% $acronym_download %>
+%}
+</&>
+    
+
+ 
+
+

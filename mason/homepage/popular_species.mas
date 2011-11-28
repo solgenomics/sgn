@@ -1,0 +1,19 @@
+
+<%args>
+$show_link=>1
+</%args>
+
+<div class="boxbgcolor1">
+<div class="boxheading">Popular species</div>
+<div class="boxcontent">
+<b>Tomato</b> (<a href="/organism/1/view/"><i>Solanum lycopersicum</i></a>, <a href="/organism/770/view"><i>S.&nbsp;pimpinellifolium</i></a>)<br />
+<b>Potato</b> (<a href="/organism/12/view"><i>Solanum tuberosum</i></a>, <a href="/organism/20850/view"><i>S.&nbsp;phureja</i></a>)<br />
+<b>Pepper</b> (<a href="/organism/13/view"><i>Capsicum annuum</i></a>)<br />
+<b>Coffee</b> (<a href="/organism/17/view"><i>Coffea canephora</i></a>, <a href="/organism/18/view"><i>C.&nbsp;arabica</i></a>)<br />
+<b>Nicotiana</b> (<a href="/organism/1490/view"><i>Nicotiana benthamiana</i></a>, <a href="/organism/941/view"><i>N. tabacum</i></a>)<br />
+<br />
+% if ($show_link) { 
+<a href="/search/organisms">Search other species...</a>
+%}
+</div>
+</div>
