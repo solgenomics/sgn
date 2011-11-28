@@ -598,30 +598,16 @@ sub search_help : PathPart('qtl/search/help') Chained Args(0) {
     $c->stash(template => '/qtl/search/help/index.mas');
 }
 
-sub search_results : PathPart('qtl/search/results') Chained Args(0) {
+sub show_search_results : PathPart('qtl/search/results') Chained Args(0) {
     my ($self, $c) = @_;
     my $trait = $c->req->param('trait');
     $trait =~ s/(^\s+|\s+$)//g;
     $trait =~ s/\s+/ /g;
                
-    if ($trait)
+    my $rs = $self->search_qtl_traits($c, $trait);
+
+    if ($rs)
     {
-        my $schema    = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
-        my $cv_id = $schema->resultset("Cv::Cv")->search({name => 'solanaceae_phenotype'})->single->cv_id;
-        my $rs = $schema->resultset("Cv::Cvterm")->search(
-            { name  => { 'LIKE' => '%'.$trait .'%'},
-              cv_id => $cv_id,            
-            },          
-            {
-              columns => [ qw/ cvterm_id name definition / ] 
-            },    
-            { 
-              page     => $c->req->param('page') || 1,
-              rows     => 10,
-              order_by => 'name'
-            }
-            );
-      
         my $rows = $self->mark_qtl_traits($c, $rs);
                                                         
         $c->stash(template   => '/qtl/search/results.mas',
@@ -640,6 +626,34 @@ sub search_results : PathPart('qtl/search/results') Chained Args(0) {
                   page_links => undef,
             );
     }
+}
+
+sub search_qtl_traits {
+    my ($self, $c, $trait) = @_;
+    
+    my $rs;
+    if ($trait)
+    {
+        my $schema    = $c->dbic_schema("Bio::Chado::Schema");
+        my $cv_id     = $schema->resultset("Cv::Cv")->search(
+            {name => 'solanaceae_phenotype'}
+            )->single->cv_id;
+
+        $rs = $schema->resultset("Cv::Cvterm")->search(
+            { name  => { 'LIKE' => '%'.$trait .'%'},
+              cv_id => $cv_id,            
+            },          
+            {
+              columns => [ qw/ cvterm_id name definition / ] 
+            },    
+            { 
+              page     => $c->req->param('page') || 1,
+              rows     => 10,
+              order_by => 'name'
+            }
+            );       
+    }
+    return $rs;      
 }
 
 sub mark_qtl_traits {
