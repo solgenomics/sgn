@@ -47,10 +47,10 @@ default  = \&link_detail_page_idents
 [main:database]
 db_adaptor = Bio::DB::SeqFeature::Store
 db_args     = -adaptor DBI::Pg
-              -dsn 'dbi:Pg:host=<% $feature->default_db_host %>;dbname=sfs_PGSC_DM3.4_genomic'
+              -dsn 'dbi:Pg:host=<% $feature->default_db_host %>;dbname=sfs_PGSC_DM_v3.4_gene_func_SL3.10'
               -user '<% $feature->default_db_user %>'
               -password '<% $feature->default_db_password %>'
-search options = default +autocomplete +fulltext 
+search options = default +autocomplete +fulltext
 
 ### TRACK CONFIGURATION ####
 # the remainder of the sections configure individual tracks
@@ -87,6 +87,7 @@ bump density  = 25
 
 [GC:region]
 glyph        = dna
+key          = GC content
 global feature = 1
 database     = main
 height       = 40
@@ -95,7 +96,7 @@ do_gc        = 1
 strand       = both
 fgcolor      = red
 axis_color   = blue
-key          = GC content
+
 
 #track to show DNA and GC content
 [DNA]
