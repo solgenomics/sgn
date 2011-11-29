@@ -29,3 +29,4 @@ tags
 .prove
 static/ext-4.0.7-gpl/*
 
+nytprof.out
