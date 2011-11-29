@@ -1209,7 +1209,7 @@ sub run_r
           tempfile(
                     File::Spec->catfile(
                                          CXGN::Tools::Run->temp_base(),
-                                         "population_indls.pl-$_-XXXXXX",
+                                         "qtl_analysis.pl-$_-XXXXXX",
                                        ),
                   );
         $filename
