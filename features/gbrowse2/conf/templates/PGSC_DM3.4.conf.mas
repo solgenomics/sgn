@@ -68,7 +68,7 @@ search options = default +autocomplete +fulltext
 # Default glyph settings
 [TRACK DEFAULTS]
 glyph       = generic
-height      = 8
+height      = 7
 bgcolor     = cyan
 fgcolor     = black
 label density = 25
@@ -126,17 +126,18 @@ translation    = 6frame
 key            = 6-frame translation
 citation       = This track displays a six-frame translation of the reference DNA sequence.
 
-[Genes:overview]
+[Gene_density:overview]
 feature      = gene
 key          = Gene density
 glyph        = generic
 fgcolor      = black
 bgcolor      = darkorange
+ignore_sub_part = mRNA
 category     = Genes
 das category = transcription
 strand_arrow = 1
 height       = 7
-citation     = This track shows the spans of gene models annotated by the PGSC.
+citation     = This track shows the spans of gene models annotated by the Beijing Genomics Institute (BGI).
 
 [Genes:region]
 feature      = gene
@@ -144,14 +145,31 @@ key          = Genes
 glyph        = generic
 fgcolor      = black
 bgcolor      = darkorange
+ignore_sub_part = mRNA
 stranded     = 1
 font2color   = blue
-title        = sub { (shift->attributes('Note'))[0] }
 category     = Genes
 das category = transcription
 strand_arrow = 1
 height       = 7
-citation     = This track shows the spans of gene models annotated by the PGSC.
+citation     = This track shows the spans of gene models annotated by the Beijing Genomics Institute (BGI).
+
+[Genes]
+feature      = gene
+key          = Genes
+glyph        = generic
+ignore_sub_part = mRNA
+fgcolor      = black
+bgcolor      = darkorange
+stranded     = 1
+font2color   = blue
+#title        = sub { (shift->attributes('Note'))[0] }
+category     = Genes
+das category = transcription
+description  = 1
+strand_arrow = 1
+height       = 7
+citation     = This track shows the spans of gene models annotated by the Beijing Genomics Institute (BGI).
 
 [mrna]
 feature      = mRNA
@@ -200,4 +218,3 @@ axis_color     = blue
 strand         = both
 key            = KD plot/peptides
 citation       = This track displays a Kyte-Doolittle hydropathy plot of the protein sequence at low magnifications and the peptide sequence itself at higher magnifications.
-
