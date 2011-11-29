@@ -73,6 +73,7 @@ bgcolor     = cyan
 fgcolor     = black
 label density = 25
 bump density  = 25
+show summary = 10000000
 
 #[Markers:region]
 #feature         = match:ITAG_sgn_markers
@@ -125,16 +126,28 @@ translation    = 6frame
 key            = 6-frame translation
 citation       = This track displays a six-frame translation of the reference DNA sequence.
 
+[Genes:overview]
+feature      = gene
+key          = Gene density
+glyph        = generic
+fgcolor      = black
+bgcolor      = darkorange
+category     = Genes
+das category = transcription
+strand_arrow = 1
+height       = 7
+citation     = This track shows the spans of gene models annotated by the PGSC.
+
 [Genes:region]
 feature      = gene
 key          = Genes
-glyph        = segments
+glyph        = generic
 fgcolor      = black
 bgcolor      = darkorange
 stranded     = 1
 font2color   = blue
 title        = sub { (shift->attributes('Note'))[0] }
-category     = Gene models
+category     = Genes
 das category = transcription
 strand_arrow = 1
 height       = 7
@@ -151,7 +164,7 @@ fgcolor      = black
 bgcolor      = goldenrod
 description  = sub { <% $feature->local_inc %>; require CXGN::Page::FormattingHelpers; CXGN::Page::FormattingHelpers::truncate_string((shift->parent->attributes('Note'))[0] || '', 70, '...') }
 font2color   = blue
-category     = Gene models
+category     = Genes
 das category = transcription
 height       = 10
 citation     = This track shows the mRNAs for gene models annotated by Cufflinks, run by the PGSC.
@@ -167,7 +180,7 @@ bgcolor      = yellow
 cds_only     = 1
 #label        = sub { shift->displa || (; $n =~ s/mRNA:/CDS:/; $n }
 stranded     = 1
-category     = Gene models
+category     = Genes
 das category = translation
 strand_arrow = 1
 link         = <% $feature->cgi_url %>/gbrowse/ITAG2.3_protein/?name=$name
@@ -182,7 +195,7 @@ global feature = 1
 height         = 40
 do_gc          = 1
 fgcolor        = red
-category       = Gene models
+category       = Genes
 axis_color     = blue
 strand         = both
 key            = KD plot/peptides
