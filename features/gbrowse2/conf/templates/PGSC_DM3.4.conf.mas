@@ -6,7 +6,7 @@ reference class = Sequence
 
 search attributes = Note
 
-default features = mrna cds exons
+default features = scaffolds:overview Gene_density:overview superscaffolds:region scaffolds:region Genes mrna cds
 
 # "automatic" classes to try when an unqualified identifier is given
 automatic classes = Sequence clone match nucleotide_motif
@@ -218,3 +218,55 @@ axis_color     = blue
 strand         = both
 key            = KD plot/peptides
 citation       = This track displays a Kyte-Doolittle hydropathy plot of the protein sequence at low magnifications and the peptide sequence itself at higher magnifications.
+
+
+#### Assembly tracks ####
+
+[superscaffolds:overview]
+feature = ultrascaffold
+key     = Superscaffolds
+glyph   = generic
+bgcolor = lightgray
+category = Assembly
+citation = This track shows the locations of superscaffolds from the PGSC 3.10 assembly.
+show summary = 0
+
+[superscaffolds:region]
+feature = ultrascaffold
+key     = Superscaffolds
+glyph   = generic
+bgcolor = lightgray
+category = Assembly
+citation = This track shows the locations of superscaffolds from the PGSC 3.10 assembly.
+
+[superscaffolds]
+feature = ultrascaffold
+key     = Superscaffolds
+glyph   = generic
+bgcolor = lightgray
+category = Assembly
+citation = This track shows the locations of superscaffolds from the PGSC 3.10 assembly.
+
+[scaffolds:overview]
+feature = superscaffold
+key     = Scaffold density
+glyph   = generic
+bgcolor = gray
+category = Assembly
+citation = This track shows the density of scaffolds from the PGSC 3.10 assembly.  Lighter colors indicate gaps or regions of low coverage.
+
+[scaffolds:region]
+feature = superscaffold
+key     = Scaffolds
+glyph   = generic
+bgcolor = gray
+category = Assembly
+citation = This track shows the locations of scaffolds from the PGSC 3.10 assembly.
+
+[scaffolds]
+feature = superscaffold
+key     = Scaffolds
+glyph   = generic
+bgcolor = gray
+category = Assembly
+citation = This track shows the locations of scaffolds from the PGSC 3.10 assembly.
