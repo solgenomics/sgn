@@ -32,15 +32,14 @@ use SGN::Test qw/qsub_is_configured/;
         'QTLs',
         'Phenotype Frequency Distribution',
         'Phenotype Data',
-        'Literature Annotation',
-        'User comments',        
+        'Publication(s)',
+        'User comments',
       );
-    
-   
 
-    my @qtl_images = $mech->find_all_images(alt_regex => qr/chromosome/i );    
+
+    my @qtl_images = $mech->find_all_images(alt_regex => qr/chromosome/i );
     cmp_ok( scalar(@qtl_images), '>=', 12, 'got 12 or more qtl map images' );
-         
+
    $mech->content_contains( 'lines', 'frequency distribution plot generated');
    $mech->content_contains( 'Trait data', 'Phenotype data table generated');
    $mech->content_contains( 'Abstract', 'abstract content');
@@ -49,11 +48,11 @@ use SGN::Test qw/qsub_is_configured/;
    $mech->content_contains( 'Abstract', 'abstract content for qtl pub');
    $mech->content_contains( 'Standard deviation', 'descriptive statistics for trait phenotype data');
 
-       
+
    my $phenotype_download_link =
       $mech->find_link( text_regex => qr/phenotype data/i );
     ok( $phenotype_download_link, 'got a phenotype data download link' );
-   
+
     my $url = defined $phenotype_download_link ? $phenotype_download_link->url : '';
 
     $url ? $mech->links_ok( $url, 'phenotype data download link works' ) : ok(0, 'no phenotype url found');
@@ -63,7 +62,7 @@ use SGN::Test qw/qsub_is_configured/;
         'got at least 1KB of data from the phenotype data download' );
 
     my $genotype_download_link = $mech->find_link( text_regex => qr/genotype data/i );
-    
+
     ok( $genotype_download_link, 'got a genotype data  download link' );
 
     if ($genotype_download_link) {
@@ -74,7 +73,7 @@ use SGN::Test qw/qsub_is_configured/;
     cmp_ok( length( $mech->content ),
         '>=', 1000,
         'got at least 1KB of data from the genotype data download' );
-   
+
 }
 
 done_testing;
