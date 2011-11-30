@@ -1,0 +1,29 @@
+<%doc>
+Displays SGN presentations schedule in workshops, conferences, weddings etc..
+
+add the schedule to /data/prod/public/sgn_homepage/sgn_events.txt
+make a link to '/sgn-events' in an event notice SGN is participating.
+
+</%doc>
+
+<%perl>
+
+use strict;
+use File::Spec;
+use CXGN::Tools::File;
+
+my $file = File::Spec->catfile($c->config->{'homepage_files_dir'}, 'sgn_events.txt');
+
+my $contents = "No SGN event is scheduled at the moment.<br /><br />";
+
+eval {
+  $contents = CXGN::Tools::File::get_sections($file);
+};
+
+
+</%perl>
+
+<div class="boxbgcolor1" style="margin:0px;">
+<div class="boxheading">SGN Presentations</div>
+<div class="boxcontent"><% $contents %></div>
+</div>

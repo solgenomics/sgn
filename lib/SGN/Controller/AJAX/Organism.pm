@@ -135,6 +135,7 @@ sub project_metadata :Chained('/organism/find_organism') :PathPart('metadata') :
                         },
                      );
                 }
+		$c->forward('/organism/invalidate_organism_tree_cache');
             }
             else {
                 $self->status_bad_request( $c, message => 'Form is not valid' );
@@ -188,6 +189,7 @@ sub project_metadata :Chained('/organism/find_organism') :PathPart('metadata') :
     }
     elsif ($action eq 'store')  {
         $self->status_ok( $c, entity => [ 'success' ] );
+
     }
     else {
 
