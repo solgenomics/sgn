@@ -49,10 +49,12 @@ my %paths = (
         /genomes/Solanum_pimpinellifolium/index.pl   /organism/Solanum_pimpinellifolium/genome
         /genomes/Solanum_pimpinellifolium.pl         /organism/Solanum_pimpinellifolium/genome
 
-        /genomes/Solanum_lycopersicum                /organism/Solanum_lycopersicum/genome
-        /genomes/Solanum_lycopersicum/               /organism/Solanum_lycopersicum/genome
-        /genomes/Solanum_lycopersicum/index.pl       /organism/Solanum_lycopersicum/genome
-        /genomes/Solanum_lycopersicum.pl             /organism/Solanum_lycopersicum/genome
+        /genomes/Solanum_lycopersicum                 /organism/Solanum_lycopersicum/genome
+        /genomes/Solanum_lycopersicum/                /organism/Solanum_lycopersicum/genome
+        /genomes/Solanum_lycopersicum/index.pl        /organism/Solanum_lycopersicum/genome
+        /genomes/Solanum_lycopersicum.pl              /organism/Solanum_lycopersicum/genome
+        /genomes/Solanum_lycopersicum/genome_data.pl  /organism/Solanum_lycopersicum/genome
+        /tomato/genome_data.pl                        /organism/Solanum_lycopersicum/genome
     ),
 );
 
