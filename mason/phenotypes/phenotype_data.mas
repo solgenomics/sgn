@@ -109,6 +109,7 @@ foreach my $method(sort keys %info ) {
     my $max = sprintf("%.2f", $stat->max);
     
     if (scalar(@values) ) {
+       no warnings 'uninitialized';
        push  @ { $data{$method}{phen} } ,  [map {$_}
                      ( { width => "320" , content => (tooltipped_text(qq|<a href="/chado/cvterm.pl?cvterm_id=$term_id">$term_name</a> $unit|, $definition ) ) } , { width => "60", content => $mean_value }, { with => "60" , content => $min } , { width => "60" , content => $max }, { width => "40" , content => scalar(@values) } )  ];
 
