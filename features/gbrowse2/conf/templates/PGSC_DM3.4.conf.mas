@@ -6,7 +6,7 @@ reference class = Sequence
 
 search attributes = Note
 
-default features = scaffolds:overview Gene_density:overview superscaffolds:region scaffolds:region Genes mrna cds
+default features = scaffolds:overview Gene_density:overview superscaffolds:region Genes:region scaffolds:region Genes mrna cds
 
 # "automatic" classes to try when an unqualified identifier is given
 automatic classes = Sequence clone match nucleotide_motif
