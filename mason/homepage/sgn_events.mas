@@ -14,7 +14,7 @@ use CXGN::Tools::File;
 
 my $file = File::Spec->catfile($c->config->{'homepage_files_dir'}, 'sgn_events.txt');
 
-my $contents = "No SGN event is at the moment.<br /><br />";
+my $contents = "No SGN event is scheduled at the moment.<br /><br />";
 
 eval {
   $contents = CXGN::Tools::File::get_sections($file);
