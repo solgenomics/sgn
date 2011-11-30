@@ -695,9 +695,8 @@ else {
                 if ($link) {
                     $n->get_label()->set_link($link);
                 }
-                if (
-                    identifier_namespace($name) =~ /(sgn_u)|(tair_gene_model)/ )
-                {
+                my $ns = identifier_namespace($name);
+                if ( $ns && $ns =~ /(sgn_u)|(tair_gene_model)/ ) {
                     my ( $gene, $annot );
                     eval {
 
