@@ -28,10 +28,10 @@ use SGN::Test qw/qsub_is_configured/;
 
     $mech->content_contains($_)
       for (
-        'Population Details',
+        'Population details',
         'QTLs',
-        'Phenotype Frequency Distribution',
-        'Phenotype Data',
+        'Phenotype frequency distribution',
+        'Download data',
         'Publication(s)',
         'User comments',
       );
