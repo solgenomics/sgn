@@ -322,7 +322,7 @@ qq|<div><a href="$url_pubmed$accession" target="blank">$pub_info</a> $title $abs
         }
     }
 
-    print info_section_html( title    => 'Population Details',
+    print info_section_html( title    => 'Population details',
                              contents => $population_html, );
 
     my $is_public = $population->get_privacy_status();
@@ -487,13 +487,15 @@ qq { Download population: <span><a href="/qtl/download/phenotype/$population_id"
                                  );
 
         print info_section_html( 
-	                        title    => 'Phenotype Frequency Distribution',
+	                        title    => 'Phenotype frequency distribution',
                                 contents => $plot_html, 
                                );
    
 	print info_section_html( 
-	                        title    => 'Phenotype Data', 
-	 	                contents => $data_view . " " . $data_download, 
+	                        title    => 'Download data', 
+	 	                contents => $data_view . " " . $data_download,
+                                collapsible => 1,
+                                collapsed   => 1,
 	 	               ); 
 
     }
@@ -512,8 +514,10 @@ qq { Download population: <span><a href="/qtl/download/phenotype/$population_id"
     }
 
     print info_section_html(
-                           title    => 'Publication(s)',
-                           contents => $pubmed,
+                           title       => 'Publication(s)',
+                           contents    => $pubmed,
+                           collapsible => 1,
+                           collapsed   => 1,
                            );
 
     if ($population_name)
@@ -635,8 +639,8 @@ qq | /phenome/indls_range_cvterm.pl?cvterm_id=$term_id&amp;lower=$lower&amp;uppe
         $graph->set_title_font('gdTinyFont');
         $graph->set(
                      title             => " ",
-                     x_label           => "Ranges for $term_name",
-                     y_label           => "Frequency",
+                     x_label           => "$term_name values",
+                     y_label           => "No. of observation units",
                      y_max_value       => $max,
                      x_all_ticks       => 1,
                      y_all_ticks       => 2,
