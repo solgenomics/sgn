@@ -52,7 +52,7 @@ print page_title_html("Intron Finder Results");
 
 $d->d("Runninge the intron finder command...\n");
 
-my ($protein_db) = CXGN::BlastDB->search( file_base => 'ath1/ATH1_pep' ) or die "could not find ath1/ATH1_pep BLAST database";
+my ($protein_db) = CXGN::BlastDB->search( file_base => 'ath/ATH_pep' ) or die "could not find ath/ATH_pep BLAST database";
 
 my $gene_feature_file =
   ( $page->get_conf('intron_finder_database')
