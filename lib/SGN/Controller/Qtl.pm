@@ -55,20 +55,8 @@ sub population : PathPart('qtl/population') Chained Args(1) {
                 $self->_link($c);
                 $self->_show_data($c);           
                 $self->_list_traits($c);
-                $self->genetic_map($c);
-                
-                if ( $id == 18 ) 
-                { 
-                    $c->stash(heatmap_file => undef,
-                              corre_table_file => undef,
-                        );
-                    $self->_get_trait_acronyms($c);
-                   
-                } 
-                else 
-                {
-                    $self->_correlation_output($c);
-                }
+                $self->genetic_map($c);                
+                $self->_correlation_output($c);
             } 
             else 
             {
