@@ -153,7 +153,7 @@ print page_title_html("In Silico PCR");
     		<b>Expectation value (<tt>-e</tt>)</b> 
     	</td>
         <td >
-        	<input type="text" size="10" value="1e-10" name="expect" />
+        	<input type="text" size="10" value="0.01" name="expect" />
         </td>
     </tr>
     <tr><td><b>Filter query sequence (DUST with blastn, SEG with others) (<tt>-F</tt>)</b></td>
