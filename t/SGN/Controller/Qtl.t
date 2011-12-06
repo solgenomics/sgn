@@ -31,7 +31,7 @@ $mech->get_ok("/qtl/form/stat_form/12", "statistical parameters -- qtl data subm
 $mech->get_ok("/qtl/form/confirm/12", "confirmation-- qtl data submission webform");
 
 $mech->get_ok("/qtl/traits/H", "qtl traits list page");
-
+$mech->get_ok("/qtl/submission/guide/", "qtl submission guide page");
 
 {
 local $TODO = 'qsub not configured' unless qsub_is_configured();
