@@ -1,0 +1,34 @@
+<%doc>
+
+=head1 NAME 
+
+traits_list.mas - a display for qtl data submission guidelines - population details section.
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<&| /page/info_section.mas, 
+   title      => "Step 2: Traits list",
+  collapsible => 1,
+  collapsed   => 1
+&>
+
+The traits list file needs to be in a text file and should look like the following format.<br/>
+
+<pre>
+  traits             definition                            unit
+  fruit perimeter    the maximum perimeter of the fruit    cm
+  fruit area         total area of the fruit               sq. cm
+  fruit weight
+</pre>
+
+
+The definition and unit are optional but would make the phenotype data more informative to users of the database.<br/>
+
+Use of the Solanaceae Phenotype Ontology is highly encouraged to allow cross-study comparative analysis but not required. <br/>  
+</&>

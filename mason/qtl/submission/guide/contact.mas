@@ -1,0 +1,23 @@
+<%doc>
+
+=head1 NAME 
+
+contact.mas - a display for qtl data submission guidelines - contact section.
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<&| /page/info_section.mas, 
+   title      => "Contact us",
+  collapsible => 1,
+  collapsed   => 1
+&>
+
+If you have any questions or feedback, please contact us at: <a href="mailto:sgn-feedback@solgenomics.net">sgn-feedback@solgenomics.net</a>. 
+
+</&>

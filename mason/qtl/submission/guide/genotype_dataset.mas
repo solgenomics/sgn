@@ -1,0 +1,49 @@
+<%doc>
+
+=head1 NAME 
+
+genotype_databaset.mas - a display for qtl data submission guidelines - genotype dataset section.
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<&| /page/info_section.mas, 
+   title      => "Step 4: Genotype dataset",
+  collapsible => 1,
+  collapsed   => 1
+&>
+
+The genotype dataset should be in a text file and in the following format. The plant names in the genotype dataset must be exactly the same as the ones submitted in the phenotype dataset file in the previous step.
+<ul>
+  <li><strong>First row</strong>: first column refers to the label of the rows of lines. The rest of the columns are marker names.
+</li>
+<li>
+<strong>Second row</strong>: first column is empty. The rest of the columns are chromosome names for the corresponding markers. 
+</li>
+<li>
+<p><strong>Third row</strong>: first column is empty. The rest of the columns are marker positions in their respective chromosomes.
+</li>
+<li>
+<p><strong>The rest of the rows</strong>: first column is the genotype name and the rest are the genotype values for each marker. 
+</li></ul>
+  
+<pre>
+ plant        M_1   M_2    M_3    M_4   M_5     M_6     M_7     M_8    M_9    M_10    M_11    M_12   
+              1     2      3      4     5       6       7       8      9      10      11      12   
+              0.99  24.84  40.41  49.99 52.80   70.11   70.80   80.62  81.39  84.93   92.68   93.64   
+ p-1          B      B      B      B    H       H       H       B      B      H       H       B  
+ p-2          A      B      B      B    B       H       H       H      H      H       H       B 
+ p-3          B      B      H      H    H       H       H       H      H      B       B       A  
+ p-4          B      B      B      H    H       H       H       B      B      B       B       H
+ p-5          H      H      H      H    H       B       H       H      H      H       H       H  
+ p-6          H      H      H      B    B       B       B       B      B      B       B       A
+ p-7          H      H      H      H    H       A       A       A      A      H       H       B
+</pre>
+
+
+</&>
