@@ -414,7 +414,7 @@ sub _link {
         $c->stash( cvterm_page        => qq |<a href="/chado/cvterm.pl?cvterm_id=$cvterm_id">$trait_name</a> |,
                    trait_page         => qq |<a href="/phenome/trait.pl?trait_id=$trait_id">$trait_name</a> |,
                    owner_page         => qq |<a href="/solpeople/personal-info.pl?sp_person_id=$owner_id">$owner_name</a> |,
-                   guideline          => $self->guideline,
+                   guideline          => qq |<a href="/qtl/submission/guide">Guideline</a> |,
                    phenotype_download => qq |<a href="/qtl/download/phenotype/$pop_id">Phenotype data</a> |,
                    genotype_download  => qq |<a href="/qtl/download/genotype/$pop_id">Genotype data</a> |,
                    corre_download     => qq |<a href="/qtl/download/correlation/$pop_id">Correlation data</a> |,
@@ -538,7 +538,7 @@ sub qtl_form : PathPart('qtl/form') Chained Args {
 
     $c->stash( template => $self->get_template($c, $type),
                pop_id   => $pop_id,
-               guide    => $self->guideline,
+               guide    => qq |<a href="/qtl/submission/guide">Guideline</a> |,
                referer  => $c->req->path,
                userid   => $userid
             );   
@@ -562,11 +562,6 @@ sub templates {
 sub get_template {
     my ($self, $c, $type) = @_;        
     return $self->templates->{$type};
-}
-
-sub guideline {
-    my $self = shift;
-    return qq |<a href="http://docs.google.com/View?id=dgvczrcd_1c479cgfb">Guidelines</a> |;
 }
 
 sub submission_guide : PathPart('qtl/submission/guide') Chained Args(0) {
