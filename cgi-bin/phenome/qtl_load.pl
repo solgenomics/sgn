@@ -1381,7 +1381,7 @@ sub population_exists {
 
 sub guideline {
     my $self = shift;
-    return qq |<a  href="http://docs.google.com/View?id=dgvczrcd_1c479cgfb">Guidelines</a> |;
+    return qq |<a  href="/qtl/submission/guide">Guidelines</a> |;
 }
 
 =head2 trait_columns
