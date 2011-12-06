@@ -569,6 +569,10 @@ sub guideline {
     return qq |<a href="http://docs.google.com/View?id=dgvczrcd_1c479cgfb">Guidelines</a> |;
 }
 
+sub submission_guide : PathPart('qtl/submission/guide') Chained Args(0) {
+    my ($self, $c) = @_;
+    $c->stash(template => '/qtl/submission/guide/index.mas');
+}
 
 sub genetic_map {
     my ($self, $c)  = @_;
