@@ -13,7 +13,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 </%doc>
 
 <&| /page/info_section.mas, 
-   title      => "Step 5: Statistical Parameters",
+   title      => "Step 5: Statistical parameters",
   collapsible => 1,
   collapsed   => 1
 &>
