@@ -18,13 +18,20 @@ Isaak Y Tecle (iyt2@cornell.edu)
 &>
 
 <p>
-  This document guides QTL data submitters on the process of loading the data, defining statistical parameters and finally the QTL mapping.
+  This document guides QTL data submitters on the process of loading the data, 
+  setting statistical parameters and finally the QTL mapping.
 </p>
 
+<& /qtl/qtl_form/general_intro.mas, 
+   guide => undef 
+&>
+<p> Detailed guide:</p>
 <& population_details.mas &>
 <& traits_list.mas &>
 <& phenotype_dataset.mas &>
 <& genotype_dataset.mas &>
 <& statistics.mas &>
 <& qtl_analysis.mas &>
+<& further_reading.mas &>
 <& contact.mas &>
+
