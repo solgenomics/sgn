@@ -15,7 +15,7 @@ my $mech = SGN::Test::WWW::Mechanize->new();
 my $dbh = $mech->context->dbc->dbh;
 my $schema = $mech->context->dbic_schema('CXGN::Phenome::Schema');
 
-
+my ($a_locus_id, $homolog_id) ; # need this for later when deleting the test data
 # instantiate an new locus object and save to database
 my $locus = $schema->resultset('Locus')->find_or_create(
     {
@@ -65,11 +65,11 @@ $mech->while_logged_in( { user_type=>'submitter' }, sub {
             locus_symbol => 'testing_111223',
             common_name_id=>1,
         });
-    my $a_locus_id = $a_locus->locus_id;
+    $a_locus_id = $a_locus->locus_id;
 
     #create cvterm for the relationship
     my $homolog_cvterm     = create_test('Cv::Cvterm', { name  => 'homolog' });
-    my $homolog_id = $homolog_cvterm->cvterm_id;
+    $homolog_id = $homolog_cvterm->cvterm_id;
     $mech->post("/ajax/locus/associate_locus" , { locus_id=>$locus_id , object_id=>$a_locus_id, locus_relationship_id=>$homolog_id } );
     #my %params = map { $_ => $c->request->body_parameters->{$_} } qw/
     #       locus_reference_id locus_evidence_code_id
@@ -107,9 +107,13 @@ END {
         my $write_dbh = $mech->context->dbc('sgn_test')->dbh;
         $write_dbh->do( "DELETE FROM phenome.$_ WHERE locus_id = ?", undef, $locus_id )
             for "allele", "locus";
+        if ($a_locus_id) {
+            $write_dbh->do( "DELETE FROM phenome.$_ WHERE locus_id = ?", undef, $a_locus_id )
+                for "allele", "locus";
+            $write_dbh->do( "DELETE FROM phenome.locusgroup WHERE relationship_id = ?", undef, $homolog_id );
+        }
     }
 }
-
 
 done_testing();
 
