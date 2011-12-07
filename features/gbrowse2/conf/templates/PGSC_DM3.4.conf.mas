@@ -74,6 +74,7 @@ fgcolor     = black
 label density = 25
 bump density  = 25
 show summary = 10000000
+balloon click = sub { my $name = shift->name; $name =~ s/\.\d+\.\d+$//; "url:/api/v1/feature_xrefs?q=$name;exclude=gbrowse,gbrowse2" }
 
 #[Markers:region]
 #feature         = match:ITAG_sgn_markers
