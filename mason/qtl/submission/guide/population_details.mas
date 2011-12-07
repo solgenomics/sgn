@@ -12,7 +12,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 </%doc>
 <&| /page/info_section.mas, 
-   title      => "Step 1:  Population Details",
+   title      => "Step 1:  Population details",
   collapsible => 1,
   collapsed   => 1
 &>
