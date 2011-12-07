@@ -32,7 +32,7 @@ my $corre_image = qq | <img src="$heatmap_file"  alt="correlation output for $na
   <&| /page/info_section.mas, 
       collapsible =>1, 
       collapsed   =>1, 
-      title       => "Pearson Correlation Analysis" &> 
+      title       => "Pearson correlation analysis" &> 
          <p>There is no correlation output for this population.</p>
   </&>
 %}
@@ -41,7 +41,7 @@ my $corre_image = qq | <img src="$heatmap_file"  alt="correlation output for $na
   <&| /page/info_section.mas, 
       collapsible => 1, 
       collapsed   => 1, 
-      title       => "Pearson Correlation Analysis" 
+      title       => "Pearson correlation analysis" 
   &> 
   
     <% $corre_image %> 

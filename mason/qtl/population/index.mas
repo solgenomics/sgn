@@ -49,7 +49,7 @@ if (!$pop->get_cvterm_acronyms($c)) { $acronym_download=undef;}
   <&| /page/info_section.mas, 
     collapsible => 1, 
     collapsed   => 0, 
-    title       => "Set Statistical Parameters"
+    title       => "Set statistical parameters"
   &>   
   <& stat_tools.mas, 
     pop_id     => $pop->get_population_id, 
