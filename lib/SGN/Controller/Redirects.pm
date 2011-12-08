@@ -39,6 +39,7 @@ my %paths = (
         /qtl/population    /search/phenotypes/qtl
         /qtl/search        /search/phenotypes/qtl
         /search/qtl/help   /qtl/search/help
+        /qtl/guide.pl      /qtl/submission/guide
     ),
 
     # genomes redirects
