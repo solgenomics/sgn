@@ -3,10 +3,12 @@
   Projects
   </div>
   <div class="boxcontent">
-  <ul>
-  <li><a href="/secretom">Secretom Project</a></li>
-  <li><a href="/organism/sol100/view">SOL-100 Project</a></li>
-  </ul>
+  <dl>
+
+  <dt><a href="/organism/sol100/view"><font style="font-weight:bold;font-size:18px">SOL-100 Project</font></a></dt>
+  <dd><a href="/organism/sol100/view">register</a> your Solanaceae genomes!</dd>
+  <dt><a href="/secretom">Secretom Project</a></dt>
+  </dl>
   </div>
   <div class="boxheading">
   Mirror Site
