@@ -1284,6 +1284,7 @@ ul.xref_link li {
 }
 
 div.xref_rich_gbrowse2 {
+  clear: both;
   border-radius: 6px;
   -moz-border-radius: 6px;
   -webkit-border-radius: 6px;
