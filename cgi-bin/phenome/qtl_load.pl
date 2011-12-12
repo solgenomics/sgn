@@ -1496,7 +1496,7 @@ MSG
 sub show_pop_form {
     my ( $self ) = @_;
     $self->send_email( '[QTL upload: Step 1]', 'A user is at the QTL data upload Step 1 of 5', 'NA' );    
-    $self->redirect_to_next_form($c->req->base . "/qtl/form/pop_form"); 
+    $self->redirect_to_next_form($c->req->base . "qtl/form/pop_form"); 
 }
 
 sub post_pop_form {
@@ -1519,7 +1519,7 @@ sub post_pop_form {
     unless ( !$pop_id ) 
     {
         $self->send_email( '[QTL upload: Step 1]', 'QTL population data uploaded: Step 1 of 5 completed', $pop_id );
-        $self->redirect_to_next_form($c->req->base . "/qtl/form/trait_form/$pop_id");        
+        $self->redirect_to_next_form($c->req->base . "qtl/form/trait_form/$pop_id");        
     }
 }
 
@@ -1542,7 +1542,7 @@ sub post_trait_form {
     if ( $pop_id & $traits_in_db) 
     {
         $self->send_email( '[QTL upload: Step 2]', 'QTL traits uploaded: Step 2 of 5', $pop_id );
-        $self->redirect_to_next_form($c->req->base ."/qtl/form/pheno_form/$pop_id");
+        $self->redirect_to_next_form($c->req->base . "qtl/form/pheno_form/$pop_id");
     }
 
 
