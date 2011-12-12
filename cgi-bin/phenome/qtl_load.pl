@@ -95,39 +95,17 @@ sub process_data {
 
     if ( $type eq 'begin' ) 
     {
-        $self->show_pop_form($referring_page);
+        $self->show_pop_form();
     }
 
     elsif ( $type eq 'pop_form' ) 
     {
-        $self->post_pop_form($referring_page, $qtl_obj, $qtl_tools);
+        $self->post_pop_form($qtl_obj, $qtl_tools);
     }
 
-    elsif ( $type eq 'trait_form' ) {
-
-         my ( $trait_file, $trait_to_db );
-         if ( $args{'trait_file'} ) {
-            $trait_file = $self->trait_upload( $qtl_obj, $args{'trait_file'} );
-            $trait_to_db = $self->store_traits($trait_file);
-        }
-        else {
-            $self->error_page('Traits file');
-        }
-        unless ( !-e $trait_file || !$trait_to_db ) {
-            $message = 'QTL traits uploaded: Step 2 of 5';
-            $self->send_email( '[QTL upload: Step 2]', $message, $pop_id );
-            $c->res->redirect("$referring_page/pheno_form/$pop_id");
-            $c->detach();
-
-        }
-
-        # else {
-        #	print "There is problem with your traits list. <br/>
-        #               Make sure (1) it is a tab delimited file,
-        #               <br/> (2) The headings are in the order of
-        #               trait->definition->unit.";
-        #	$page->footer();
-        #    }
+    elsif ( $type eq 'trait_form' ) 
+    {
+        $self->post_trait_form($qtl_obj, $args{'trait_file'}, $pop_id);
 
     }
 
@@ -1522,7 +1500,7 @@ sub show_pop_form {
 }
 
 sub post_pop_form {
-    my ($self, $referring_page, $qtl_obj, $qtl_tools) = @_;
+    my ($self, $qtl_obj, $qtl_tools) = @_;
 
     my $pop_detail = $qtl_obj->user_pop_details();    
     my @error = $qtl_tools->check_pop_fields($pop_detail);
@@ -1541,8 +1519,33 @@ sub post_pop_form {
     unless ( !$pop_id ) 
     {
         $self->send_email( '[QTL upload: Step 1]', 'QTL population data uploaded: Step 1 of 5 completed', $pop_id );
-        $self->redirect_to_next_form("$referring_page/trait_form/$pop_id");        
+        $self->redirect_to_next_form($c->req->base . "/qtl/form/trait_form/$pop_id");        
     }
+}
+
+sub post_trait_form {
+    my ($self, $qtl_obj, $trait_file, $pop_id) = @_;
+
+    if (!$trait_file) 
+    {
+        $self->error_page("Trait file");
+    }
+   
+    my $uploaded_file = $self->trait_upload( $qtl_obj, $trait_file);
+    
+    my $traits_in_db;
+    if ($uploaded_file) 
+    {
+        $traits_in_db = $self->store_traits($uploaded_file);
+    }
+    
+    if ( $pop_id & $traits_in_db) 
+    {
+        $self->send_email( '[QTL upload: Step 2]', 'QTL traits uploaded: Step 2 of 5', $pop_id );
+        $self->redirect_to_next_form($c->req->base ."/qtl/form/pheno_form/$pop_id");
+    }
+
+
 }
 
 sub redirect_to_next_form {
