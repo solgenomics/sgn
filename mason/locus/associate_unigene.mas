@@ -4,27 +4,25 @@
 
 <%args>
 $locus_id
+$common_name => undef
+$current     => undef
 </%args>
 
 <div id='associateUnigeneForm' style="display:none">
   <div id='unigene_search'>
     Unigene ID:
-    <input type="text" 
+    <input type="text"
 	   style="width: 50%"
 	   id="unigene_input"
-	   onkeyup="locusPage.getUnigenes(this.value, <% $locus_id %>)">
+	   onkeyup="Locus.getUnigenes(this.value, '<% $common_name %>', '<% $current %>' )"
+           onchange= "jQuery('#associate_unigene_button').disabled=true"
+      >
     <input type="button"
 	   id="associate_unigene_button"
 	   value="associate unigene"
            disabled="true"
-	   onclick="locusPage.associateUnigene('<% $locus_id %>');this.disabled=false;">
-    
-    <select id="unigene_select"
-	    style="width: 100%"
-	    onchange= "Tools.enableButton('associate_unigene_button');"
-	    size=5> 
-      
-    </select>
+	   onclick="Locus.associateUnigene('<% $locus_id %>')">
   </div>
 </div>
+
 

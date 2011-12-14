@@ -8,16 +8,19 @@
 
 Parameters:
 
-=over 1
+=over 3
 
 =item alleles
 
 arrayref of CXGN::Phenome::Allele objects
 
-=item user
+=item user_id
 
-logged in user (CXGN::People::Person object)
+logged in sp_person_id
 
+=item curator
+
+boolean. Is the logged user a curator?
 
 =back
 
@@ -29,8 +32,9 @@ Naama Menda <nm249@cornell.edu>
 </%doc>
 
 <%args>
-    $alleles
-    $user => undef
+  $alleles
+  $user_id
+  $curator
 </%args>
 
 <%perl>
@@ -52,10 +56,10 @@ foreach my $a (@$alleles) {
   my $allele_synonym_link =
     qq |<a href= "/phenome/allele_synonym.pl?allele_id=$allele_id&amp;action=new">$allele_synonyms</a> |;
 
-  my ($a_person_id, $u_person_id) = ($a->get_sp_person_id, $user->get_sp_person_id);
+  my $a_person_id = $a->get_sp_person_id;
   my $allele_edit_link =
-    ( $a_person_id && $u_person_id && ( $a_person_id == $u_person_id ) || ( $user->get_user_type() eq 'curator' ) )
-    ? "<a href=\"allele.pl?action=edit&amp;allele_id=$allele_id\">[Edit]</a>"
+    ( $a_person_id && $user_id && ( $a_person_id == $user_id ) || ( $curator ) )
+    ? "<a href=\"/phenome/allele.pl?action=edit&amp;allele_id=$allele_id\">[Edit]</a>"
 	: '<span class="ghosted">[Edit]</span> ';
 
   my $phenotype   = $a->get_allele_phenotype();

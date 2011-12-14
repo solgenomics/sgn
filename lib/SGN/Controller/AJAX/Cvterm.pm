@@ -2,7 +2,7 @@
 =head1 NAME
 
 SGN::Controller::AJAX::Cvterm - a REST controller class to provide the
-backend for objects linked with cvterms 
+backend for objects linked with cvterms
 
 =head1 DESCRIPTION
 

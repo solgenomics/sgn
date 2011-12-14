@@ -31,7 +31,7 @@ One of the major efforts at SGN is linking Solanaceae phenotype information with
 <li> <b><a href= "/search/direct_search.pl?search=loci">Search for the locus</a></b>.
  You can get <b>editor privileges</b> for any locus in the database.<br/> Obtaining editor privileges is easy! Simply click on the '[Request editor privileges]' link from any locus page (next to the 'Locus editor' name), or <a href="mailto:sgn-feedback.sgn.cornell.edu">send us an email</a> and an SGN curator will create an account for you.</li> 
 
-<li><b> Submit a new locus</b>. Your favorite Solanaceae locus is not found on SGN? We encourage you to <b>submit</b> information about genetic loci of the Solanaceae and related species <a href="locus_display.pl?action=new">here</a> (please notice that an <a href="/solpeople/new-account.pl">SGN account</a> is required for all data submissions). For large datasets, please <a href="mailto:sgn-feedback.sgn.cornell.edu">contact SGN</a>
+<li><b> Submit a new locus</b>. Your favorite Solanaceae locus is not found on SGN? We encourage you to <b>submit</b> information about genetic loci of the Solanaceae and related species <a href="/locus/0/view">here</a> (please notice that an <a href="/solpeople/new-account.pl">SGN account</a> is required for all data submissions). For large datasets, please <a href="mailto:sgn-feedback.sgn.cornell.edu">contact SGN</a>
 </li>
 </ul>
 <br/>

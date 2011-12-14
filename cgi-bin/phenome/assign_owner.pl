@@ -7,7 +7,7 @@ use CXGN::People::Person;
 use CXGN::Feed;
 use CatalystX::GlobalContext '$c';
 
-my $dbh = CXGN::DB::Connection->new();
+my $dbh = $c->dbc->dbh;
 
 my ( $login_person_id, $login_user_type ) =
   CXGN::Login->new($dbh)->verify_session();

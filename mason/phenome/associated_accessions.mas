@@ -58,7 +58,7 @@ my $more_html;
 my $more;    #count the number of accessions in the optional_show box
 my $count;   # a scalar for checking if there are accessions with images in the optional box
 
-my $schema = Bio::Chado::Schema->connect( sub { $dbh->get_actual_dbh->clone }, );
+my $schema = Bio::Chado::Schema->connect( sub { $dbh->clone }, );
 
 if (@$accessions) {
   $html      .= "<table>";
