@@ -3,13 +3,12 @@ use warnings;
 use strict;
 
 use CXGN::Page;
-use CXGN::DB::Connection;
 use CXGN::Login;
 use CXGN::People;
 use CXGN::Tools::WebImageCache;
 use CXGN::Phenome::Locus;
-use GD::Graph::lines; 
-use GD::Graph::linespoints; 
+use GD::Graph::lines;
+use GD::Graph::linespoints;
 use GD::Graph::area;
 use GD::Graph::bars;
 use CatalystX::GlobalContext '$c';
@@ -21,7 +20,8 @@ use CXGN::Page::FormattingHelpers qw/info_section_html
                                      html_optional_show
                                      html_alternate_show
                                     /;
-my $dbh = CXGN::DB::Connection->new();
+my $dbh = $c->dbc->dbh;
+
 my $logged_sp_person_id = CXGN::Login->new($dbh)->verify_session();
 
 my $page = CXGN::Page->new("Phenome annotation stats","Naama");
