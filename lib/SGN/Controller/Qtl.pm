@@ -255,6 +255,7 @@ sub _analyze_correlation  {
                 );
 
             $r_process->wait;
+            "sleep 5"
        }
         catch 
         {
