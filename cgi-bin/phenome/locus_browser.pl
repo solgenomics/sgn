@@ -39,9 +39,9 @@ if ($login_user_type eq 'curator' || $login_user_type eq 'submitter' || $login_u
 	}
 	print $list;
     }
-    
+
     if ($type eq 'browse locus') {
-	
+
 	if (!$organism) {  ($locus_name, $organism) = split(/,\s*/,  $locus_name); }
 	
 	$locus_name =~ /(\w+)/;
@@ -150,111 +150,7 @@ if ($login_user_type eq 'curator' || $login_user_type eq 'submitter' || $login_u
 	
     }
     
-    
-    elsif ($type eq 'associate locus') {
-	my %error = ();
-	my $json = JSON->new();
-	
-	
-	eval {
-	    my $cvterm=CXGN::Chado::Cvterm->new($dbh, $relationship_id);
-	    my $relationship=$cvterm->get_cvterm_name();
-	
-	    if (!$reference_id) {$reference_id = undef};
-	    
-	    my %directional_rel = 
-		('Downstream'=>1,
-		 'Inhibition'=>1,
-		 'Activation'=>1
-		);
-	    my $directional= $directional_rel{$relationship};
-	    
-	    my $lgm=CXGN::Phenome::LocusgroupMember->new($schema);
-	    $lgm->set_locus_id($subject_id);
-	    $lgm->set_evidence_id($evidence_id);
-	    $lgm->set_reference_id($reference_id);
-	    $lgm->set_sp_person_id($login_person_id);
-	    
-	    my $a_lgm=CXGN::Phenome::LocusgroupMember->new($schema);
-	    $a_lgm->set_locus_id($object_id);
-	    $a_lgm->set_evidence_id($evidence_id);
-	    $a_lgm->set_reference_id($reference_id);
-	    $a_lgm->set_sp_person_id($login_person_id);
-	    
-	    if ($directional) { 
-		$lgm->set_direction('subject');
-		$a_lgm->set_direction('object')
-	    }
-	    
-	    my $locusgroup= $lgm->find_or_create_group($relationship_id, $a_lgm);
- 	    my $lg_id= $locusgroup->get_locusgroup_id();
-	    $lgm->set_locusgroup_id($lg_id);
-	    $a_lgm->set_locusgroup_id($lg_id);
-	    
-	    my $lgm_id= $lgm->store();
-	    my $algm_id=$a_lgm->store();
-	    
-	    $error{"response"} = "Associated locus $subject_id ($relationship) with locus $object_id!";
-	};
-	if ($@) { 
-	    $error{"error"} = "Associateing locus $subject_id  with locus $object_id  failed! " . $@; 
-	    CXGN::Contact::send_email('locus_browser.pl died',$error{"error"}, 'sgn-bugs@sgn.cornell.edu');
-	    
-	}else  {
-	    
-	    my $person = CXGN::People::Person->new($dbh, $login_person_id);
-	    
-	    
-	    my $user_link = qq |http://www.sgn.cornell.edu/solpeople/personal-info.pl?sp_person_id=$login_person_id |;
-	    my $subject_locus_link= qq |http://www.sgn.cornell.edu/phenome/locus_display.pl?locus_id=$subject_id |;
-	    my $object_locus_link= qq |http://www.sgn.cornell.edu/phenome/locus_display.pl?locus_id=$object_id |;
-	    my $subject="[New locus2locus association created]";
-	    my $username= $person->get_first_name()." ".$person->get_last_name();
-	    my $fdbk_body="$username ($user_link) has associated locus $object_locus_link  \n to locus $subject_locus_link \n "; 
-	    
-	    CXGN::Contact::send_email($subject,$fdbk_body, 'sgn-db-curation@sgn.cornell.edu');
-	    CXGN::Feed::update_feed($subject,$fdbk_body);
-	}
-	
-	my $jobj = $json->objToJson(\%error); # replaced by 'encode' but not on the old version of JSON in Rubisco! 
-
-	print STDERR "JSON FORMAT: $jobj\n";
-	
-	print  $jobj;
-	
-#########
-    }   
-    elsif ($type eq 'obsolete') {
-	my %error = ();
-	my $json = JSON->new();
-	
-	my $lgm=CXGN::Phenome::LocusgroupMember->new($schema, $lgm_id);
-	eval {
-	    $lgm->obsolete_lgm();
-	};
-	
-	if ($@) {
-	    $error{"error"} = "Obsoleting locus group member $lgm_id failed! " . $@;
-	    CXGN::Contact::send_email('locus_browser.pl died',$error{"error"}, 'sgn-bugs@sgn.cornell.edu');
-	    
-	}else {
-	    $error{"response"} = "Obsoleting locus group member $lgm_id succeeded!";
-		    
-	    my $person = CXGN::People::Person->new($dbh, $login_person_id);
-	    
-	    my $user_link = qq |http://www.sgn.cornell.edu/solpeople/personal-info.pl?sp_person_id=$login_person_id |;
-	    
-	    my $subject="[A locus group member has been obsoleted]";
-	    my $username= $person->get_first_name()." ".$person->get_last_name();
-	    my $fdbk_body="$username ($user_link) has obsoleted locus group member $lgm_id \n "; 
-	    
-	    CXGN::Contact::send_email($subject,$fdbk_body, 'sgn-db-curation@sgn.cornell.edu');
-	    CXGN::Feed::update_feed($subject,$fdbk_body);
-	}
-	my $jobj = $json->objToJson(\%error);
-	print STDERR "JSON FORMAT: $jobj\n";
-	
-	print  $jobj;
-	
-    }
+    ##############################################
+########################################################
+#################################################
 }

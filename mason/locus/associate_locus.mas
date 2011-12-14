@@ -53,7 +53,7 @@ $locus_id
 	   id="associate_locus_button"
 	   value="Associate locus"
 	   disabled="true"
-	   onclick="locusPage.associateLocus('<% $locus_id %>');this.disabled=true;" />	
+	   onclick="Locus.associateLocus('<% $locus_id %>');this.disabled=true;" />	
     <select id="locus_select"
  	    style="width: 100%"
  	    name="locus_select"

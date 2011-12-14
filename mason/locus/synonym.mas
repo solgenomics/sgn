@@ -50,6 +50,6 @@ $synonyms=>undef
 % print join(' ' ,  map( $_->get_locus_alias(), @$synonyms )) ;
 
 % if ($locus_id) {
-<a href="locus_synonym.pl?locus_id=<% $locus_id %>&amp;action=new"> [Add/Remove]</a><br />
+<a href="/phenome/locus_synonym.pl?locus_id=<% $locus_id %>&amp;action=new"> [Add/Remove]</a><br />
 
 % }

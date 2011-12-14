@@ -23,8 +23,9 @@ var Ontology = {
         var evidence_with = jQuery('#evidence_with_select').val();
         var reference = jQuery('#reference_select').val();
         jQuery.ajax({
-                url: cvterm_add_uri ,
-                    type:"GET",
+                type: 'POST',
+                    dataType: "json",
+                    url: cvterm_add_uri ,
                     data: 'term_name='+jQuery('#term_name').val()+'&object_id='+object_id+'&relationship='+relationship+'&evidence_code='+evidence_code+'&evidence_description='+evidence_description+'&evidence_with='+evidence_with+'&reference='+reference ,
                     success: function(response) {
                     var error = response.error;
@@ -48,7 +49,6 @@ var Ontology = {
                         }
                     });
             });
-        
         jQuery.ajax( { url: url , dataType: "json",
                     success: function(response) {
                     var json = response;
@@ -62,23 +62,27 @@ var Ontology = {
             });
     },
 
-        updateAutocomplete: function(autocomplete_url, relationship_uri, rel_div) {
+    updateAutocomplete: function(autocomplete_url, relationship_uri, rel_div) {
         // setting some default values
+        if (!autocomplete_url) autocomplete_url = '/ajax/cvterm/autocomplete';
         if (!relationship_uri)  relationship_uri = '/ajax/cvterm/relationships' ;
         if (!rel_div) rel_div = 'relationship_select' ;
-        
-        jQuery(function() {
-                jQuery("#term_name").autocomplete({
-                        source: autocomplete_url + "?db_name="+jQuery("#db_name").val(),
-                            //wait: 2,
-                            change: Ontology.populateEvidence(rel_div, relationship_uri)
-                    });
-            });
+        var term = jQuery("#term_name").val();
+        var db_name = jQuery("#db_name").val();
+        if (term.length > 2 && db_name.length > 0 ) {
+            jQuery(function() {
+                    jQuery("#term_name").autocomplete({
+                            source: autocomplete_url + "?db_name="+db_name,
+                                //wait: 2,
+                                change: Ontology.populateEvidence(rel_div, relationship_uri)
+                                });
+                });
+        }
     },
-        ////
-        //Make an ajax request for finding the available objects for ontology evidence
-        //(relationships, evidence codes, evidence description
-        populateEvidence: function(div_id, uri, dummy_option) {
+    ////
+    //Make an ajax request for finding the available objects for ontology evidence
+    //(relationships, evidence codes, evidence description
+    populateEvidence: function(div_id, uri, dummy_option) {
         jQuery.ajax({ url: uri , method:"POST" ,
                       success: function(response) {
                     var error = response.error;
@@ -95,9 +99,9 @@ var Ontology = {
                 }
             });
     },
-        getEvidenceWith: function() {
+    getEvidenceWith: function() {
     },
-        getReference: function() {
+    getReference: function() {
     },
 
 }

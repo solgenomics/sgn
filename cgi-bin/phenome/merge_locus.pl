@@ -7,13 +7,14 @@ use CXGN::People::Person;
 use CXGN::Phenome::Locus;
 use CXGN::Feed;
 use CXGN::Contact;
+use CatalystX::GlobalContext '$c';
 
 use JSON;
 
 my %error = ();
 my $json = JSON->new();
 
-my $dbh = CXGN::DB::Connection->new();
+my $dbh = $c->dbc->dbh;
 my($login_person_id,$login_user_type)=CXGN::Login->new($dbh)->verify_session();
 
 #print STDERR "merge_locus.pl:login_person_id= $login_person_id\n";

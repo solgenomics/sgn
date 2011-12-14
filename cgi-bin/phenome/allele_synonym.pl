@@ -209,20 +209,19 @@ sub display_page {
 	}
 
     }
-  
+
     if (!@allele_synonyms) { print "<b>None found</b><br /><br />\n"; }
 
     print qq { <br /><br /><b>Add another allele synonym</b>: };
-    
+
     print qq { <center> };
-    
+
     $self->get_form()->as_table();
-    
+
     print qq { </center> };
-    
-    print qq { <a href = "allele.pl?allele_id=$allele_id&amp;action=view">back to allele page</a><br> };
-    print qq { <a href="locus_display.pl?locus_id=$locus_id&amp;action=view">back to locus page</a> };
-    
+
+    print qq { <a href = "/phenome/allele.pl?allele_id=$allele_id&amp;action=view">back to allele page</a><br> };
+    print qq { <a href="/locus/$locus_id/view">back to locus page</a> };
     $self->get_page()->footer();
-    
+
 }
