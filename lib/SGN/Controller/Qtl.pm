@@ -210,12 +210,14 @@ sub _analyze_correlation  {
                                                   DIR      => $corre_temp_dir,
                                                   SUFFIX   => '.png',
                                                   UNLINK   => 0,
+                                                  OPEN     => 0,
                                                 );
 
         my (undef, $corre_table_file) = tempfile( "corre_table_${pop_id}-XXXXXX",
                                                   DIR      => $corre_temp_dir,
                                                   SUFFIX   => '.txt',
                                                   UNLINK   => 0,
+                                                  OPEN     => 0,
                                                 );
 
         my ( $corre_commands_temp, $corre_output_temp ) =
@@ -228,6 +230,7 @@ sub _analyze_correlation  {
                         "corre_pop_${pop_id}-$_-XXXXXX"
                          ),
                     UNLINK => 0,
+                    OPEN   => 0,
                 );
             $filename
         } qw / in out /;
