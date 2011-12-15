@@ -99,7 +99,7 @@ sub genome_autocomplete_GET :Args(0) {
           select      => 'me.name' ,
           rows        => 20 ,}
         )->get_column('me.name')->all;
-
+    map ( s/\.\d+$// ,  @feature_names) ;
     $c->{stash}->{rest} = \@feature_names;
 }
 
