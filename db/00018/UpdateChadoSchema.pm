@@ -74,7 +74,7 @@ ALTER TABLE nd_experiment_stockprop ALTER COLUMN value TYPE text ;
 
 ALTER TABLE genotype ADD COLUMN type_id INT NOT NULL REFERENCES cvterm(cvterm_id) ON DELETE CASCADE;
 
-create table genotypeprop (
+create table public.genotypeprop (
 genotypeprop_id serial not null,
 primary key (genotypeprop_id),
 genotype_id int not null,
@@ -88,7 +88,7 @@ constraint genotypeprop_c1 unique (genotype_id,type_id,rank)
 create index genotypeprop_idx1 on genotypeprop (genotype_id);
 create index genotypeprop_idx2 on genotypeprop (type_id);
 
-create table cvprop (
+create table public.cvprop (
     cvprop_id serial not null,
     primary key (cvprop_id),
     cv_id int not null,
@@ -111,7 +111,7 @@ these are ordered in a list using rank, counting from zero. For
 properties that are single-valued rather than multi-valued, the
 default 0 value should be used.';
 
-create table chadoprop (
+create table public.chadoprop (
     chadoprop_id serial not null,
     primary key (chadoprop_id),
     type_id int not null,
