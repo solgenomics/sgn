@@ -341,26 +341,26 @@ eval {
 	
 
 
-        print STDERR "Checking if map $map_id , marker $marker_id and protocol $protocol exist in marker_experiment\n";
+        print STDERR "Checking if map_version_id=$map_version_id, map_id=$map_id , marker $marker_id and protocol $protocol exist in marker_experiment\n";
         # check for existing marker_experiment and update if found
 	my $q = "SELECT marker_experiment_id FROM marker_experiment "
 	    . "JOIN marker_location USING (location_id) JOIN map_version "
 	    . "USING (map_version_id) WHERE rflp_experiment_id is null "
-	    . "AND map_id = ? AND marker_id = ? AND protocol ilike ?";
+	    . "AND map_version_id = ? AND marker_id = ? AND protocol ilike ?";
 
 	my $sth = $dbh->prepare($q);
-	$sth->execute($map_id,$marker_id,$protocol);
+	$sth->execute($map_version_id,$marker_id,$protocol);
 	my @exp_id;
 	while (my ($id) = $sth->fetchrow_array()) {
             print "Found experiment id $id\n";
             push (@exp_id,$id);
         }
 
-	if (@exp_id) {
-	    if (@exp_id > 1) { print join(', ', @exp_id) and exit() }
+	foreach $exp_id (@exp_id) {
+	    #if (@exp_id > 1) { print STDERR join(', ', @exp_id)."\n\n"; }
             # this really should not be the case
             # update
-            my $marker_experiment_id = $exp_id[0];
+            my $marker_experiment_id = $exp_id;
             print STDERR "Updating marker_experiment $marker_experiment_id\n";
 	    my $u = "UPDATE marker_experiment set pcr_experiment_id = ? where marker_experiment_id = ?";
 	    $sth = $dbh->prepare($u);
