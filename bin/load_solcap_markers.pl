@@ -93,6 +93,7 @@ use CXGN::DB::Connection;
 use CXGN::DB::InsertDBH;
 use Data::Dumper;
 use CXGN::DB::SQLWrappers;
+use CXGN::Cview::Map::Tools;
 
 use Getopt::Std;
 
@@ -103,6 +104,7 @@ getopts('H:D:i:tp:m:a:b:');
 
 
 my $map_id = $opt_m || die "Must pass a -m option with  a valid sgn map_id!\n";
+
 my $protocol = $opt_p  || die "ERROR: No -p option passed for protocol name (SolCap markers are loaded with one file per protocol: SNP, Indel, SSR, CAPS)  \n";
 
 my $dbh = CXGN::DB::InsertDBH->new({
@@ -113,6 +115,8 @@ my $dbh = CXGN::DB::InsertDBH->new({
                                    });
 
 my $sql=CXGN::DB::SQLWrappers->new($dbh);
+
+my $map_version_id = CXGN::Cview::Map::Tools::find_current_version($dbh, $map_id);
 
 eval {
 
@@ -266,6 +270,7 @@ eval {
 	    $band_size_b = $ss->value_at($marker_name, $opt_b);
 	}
 
+	my $enzyme = $ss->value_at($marker_name, "enzyme");
 
         # check if data already in pcr_experiment and marker_experiment, and if not, add it
 	# there's a lot of stuff to check here.. I know these aren't in the database so will come back later
@@ -286,7 +291,7 @@ eval {
 	print STDERR "This marker ($marker_id) has marker_experiment_id $marker_experiment_id,pcr_experiment_id $pcr_experiment_id on $map_id\n";
 
 	print STDERR "marker_id: $marker_id, map_id=$map_id, stock_id=$stock_id\n";
-        my $pcr_exp_info=$sql->insert_unless_exists('pcr_experiment',{marker_id=>$marker_id,annealing_temp=>$annealing_temp,primer_id_fwd=>$primer_id_fwd, primer_id_rev=>$primer_id_rev, experiment_type_id=>$experiment_type_id,map_id=>$map_id,primer_id_pd=>$primer_id_pd }); #,stock_id => $stock_id } );
+        my $pcr_exp_info=$sql->insert_unless_exists('pcr_experiment',{marker_id=>$marker_id,annealing_temp=>$annealing_temp,primer_id_fwd=>$primer_id_fwd, primer_id_rev=>$primer_id_rev, experiment_type_id=>$experiment_type_id,map_id=>$map_id,primer_id_pd=>$primer_id_pd, additional_enzymes=> $enzyme }); #,stock_id => $stock_id } );
 
 
 
@@ -295,10 +300,10 @@ eval {
 	
 
 
-	my $pcr_experiment_id = $pcr_exp_info->{id};
+	$pcr_experiment_id = $pcr_exp_info->{id};
 
 	if ($marker_experiment_id) { 
-	    my $q = "UPDATE sgn.marker_experiment set pcr_experiment_id=? WHERE marker_experiment_id=?";
+	    $q = "UPDATE sgn.marker_experiment set pcr_experiment_id=? WHERE marker_experiment_id=?";
 	    my $s = $dbh->prepare($q);
 	    $s->execute($pcr_experiment_id,$marker_experiment_id);
 	}
@@ -315,6 +320,11 @@ eval {
         # set the sequence types
 
 	print STDERR "MARKER_ID = $marker_id\n";
+
+	if (!$stock_id) { 
+	    print STDERR "The marker $marker_name exists, but is not on this map...\n"; next();
+	}
+
 	if (!$marker_id) { 
 	    warn "marker $marker_name is not in the database!!!!\n";
 	}
@@ -336,11 +346,6 @@ eval {
 	    $pcr_ex->store_unless_exists();
 	}
 
-	
-
-	
-
-
         print STDERR "Checking if map_version_id=$map_version_id, map_id=$map_id , marker $marker_id and protocol $protocol exist in marker_experiment\n";
         # check for existing marker_experiment and update if found
 	my $q = "SELECT marker_experiment_id FROM marker_experiment "
@@ -356,7 +361,8 @@ eval {
             push (@exp_id,$id);
         }
 
-	foreach $exp_id (@exp_id) {
+	#  load the first experiment (several occurences here means multiple placed markers).
+	if (my $exp_id = shift(@exp_id)) { 
 	    #if (@exp_id > 1) { print STDERR join(', ', @exp_id)."\n\n"; }
             # this really should not be the case
             # update
@@ -371,10 +377,10 @@ eval {
         # if not loading map and experiments together, may want to match other protocols
 
         # if not, insert new marker_experiment
-	else {
+	else { 
             print "No experiment_id found for marker $marker_name. SKIPPING!!!\n";
             next();
-            my $names = ["marker_id", "pcr_experiment_id", "protocol"];
+            $names = ["marker_id", "pcr_experiment_id", "protocol"];
 	    my @fields = ($marker_id, $pcr_experiment_id, $protocol);
 	    # 'SSR' or 'unknown'?
 
