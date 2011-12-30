@@ -211,7 +211,8 @@ qq|<img src="$image_url" usemap="#map$count" border="0" alt="" />|;
                       || '<span class="ghosted">Unknown</span>';
                     my $rev = $pcr->rev_primer()
                       || '<span class="ghosted">Unknown</span>';
-                    my $enz = $pcr->enzyme() || 'unknown enzyme';
+                    my $enz = $pcr->enzyme()  || 'unknown enzyme' ;
+		    my $additional_enzymes = $pcr->additional_enzymes();
                     my $dcaps = $pcr->dcaps_primer();
                     $temp ||= '<span class="ghosted">Unknown</span>';
                     $mg   ||= '<span class="ghosted">Unknown</span>';
@@ -276,6 +277,7 @@ qq|<img src="$image_url" usemap="#map$count" border="0" alt="" />|;
                         $dcaps_left                     => $dcaps_right,
                        'Accessions and product sizes'  => $pcr_bands_html,
                         $digest_title                   => $digest_bands_html,
+			'Enzymes'                       => $additional_enzymes,
                         'Approximate temperature'       => $temp,
                         'Mg<sup>+2</sup> concentration' => $mg,
                         '__multicol'                    => 3,
