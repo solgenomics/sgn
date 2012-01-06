@@ -67,6 +67,8 @@ SELECT m.marker_id, me.protocol, ml.location_id, linkage_group.lg_name, linkage_
    LEFT JOIN linkage_group USING (lg_id)
   WHERE map_version.current_version = true;
 
+GRANT select ON sgn.marker_to_map TO web_usr;
+
 EOSQL
 
 print "You're done!\n";
