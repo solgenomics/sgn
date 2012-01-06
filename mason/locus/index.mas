@@ -72,7 +72,7 @@ my $pubs      = $locusref->{pubs};
 #my $this_page = "/phenome/locus_display.pl?locus_id=$locus_id";
 my $this_page = "/locus/$locus_id/view/";
 
-my $locus_xml = $locus_id ? qq |<a href = "generic_gene_page.pl?locus_id=$locus_id">Download GMOD XML</a>|
+my $locus_xml = $locus_id ? qq |<a href = "/phenome/generic_gene_page.pl?locus_id=$locus_id">Download GMOD XML</a>|
   : qq |<span class="ghosted">Download GMOD XML</span>|;
 my $editor_note =
   qq |<a href="/phenome/editors_note.pl">Note to Editors</a>|;
