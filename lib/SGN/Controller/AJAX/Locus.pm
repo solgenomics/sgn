@@ -336,8 +336,8 @@ sub associate_ontology_POST :Args(0) {
                 $c->stash->{email} = {
                     to      => 'sgn-bugs@sgn.cornell.edu',
                     from    => 'sgn-bugs@sgn.cornell.edu',
-                    subject => 'Associate ontology failed! locus_id = $locus_id',
-                    body    => '$_',
+                    subject => "Associate ontology failed! locus_id = $locus_id",
+                    body    => $_,
                 };
                 $c->forward( $c->view('Email') );
                 return;
@@ -345,8 +345,8 @@ sub associate_ontology_POST :Args(0) {
             # if you reached here this means associate_ontology worked. Now send an email to sgn-db-curation
             $c->stash->{email} = {
                 to      => 'sgn-db-curation@sgn.cornell.edu',
-                from    => 'sgn-bugs@sgn.cornell.edu',
-                subject => 'New ontology term loaded. Locus $locus_id',
+                from    => 'www-data@sgn-vm.sgn.cornell.edu',
+                subject => "New ontology term loaded. Locus $locus_id",
                 body    => "User " . $logged_user->get_object->get_first_name . " " . $logged_user->get_object->get_last_name . "has stored a new ontology term for locus $locus_id http://solgenomics.net/locus/$locus_id/view",
             };
             $c->forward( $c->view('Email') );
@@ -554,8 +554,8 @@ sub associate_locus_POST :Args(0) {
             $c->stash->{email} = {
                 to      => 'sgn-bugs@sgn.cornell.edu',
                 from    => 'sgn-bugs@sgn.cornell.edu',
-                subject => 'Associate locus failed! locus_id = $locus_id',
-                body    => '$_',
+                subject => "Associate locus failed! locus_id = $locus_id",
+                body    => $_,
             };
             $c->forward( $c->view('Email') );
             return;
@@ -563,8 +563,8 @@ sub associate_locus_POST :Args(0) {
         # if you reached here this means associate_locus worked. Now send an email to sgn-db-curation
         $c->stash->{email} = {
             to      => 'sgn-db-curation@sgn.cornell.edu',
-            from    => 'sgn-bugs@sgn.cornell.edu',
-            subject => 'New locus associated with locus $locus_id',
+            from    => 'www-data@sgn-vm.sgn.cornell.edu',
+            subject => "New locus associated with locus $locus_id",
             body    => "User " . $c->user->get_object->get_first_name . " " . $c->user->get_object->get_last_name . "has associated locus $locus_id ($relationship) with locus " . $params{object_id} . "( /solgenomics.net/locus/$locus_id/view )",
         };
         $c->forward( $c->view('Email') );
@@ -595,7 +595,7 @@ sub obsolete_locusgroup_member_POST :Args(0) {
                     to      => 'sgn-bugs@sgn.cornell.edu',
                     from    => 'sgn-bugs@sgn.cornell.edu',
                     subject => " /ajax/locus/obsolete_locusgroup_member failed! locus_id = $locus_id, locusgroup_member_id = $lgm_id, obsolete = $obsolete",
-                    body    => '$_',
+                    body    => $_,
                 };
                 $c->forward( $c->view('Email') );
                 return;
@@ -603,7 +603,7 @@ sub obsolete_locusgroup_member_POST :Args(0) {
             $response->{response} = "success";
             $c->stash->{email} = {
                 to      => 'sgn-db-curation@sgn.cornell.edu',
-                from    => 'sgn-bugs@sgn.cornell.edu',
+                from    => 'www-data@sgn-vm.sgn.cornell.edu',
                 subject => "[A locus group member has been obsoleted]",
                 body    => "User " . $c->user->get_object->get_first_name . " " . $c->user->get_object->get_last_name .  " has obsoleted locus group member $lgm_id \n ( /solgenomics.net/locus/$locus_id/view )",
             };
@@ -688,8 +688,8 @@ sub locus_unigenes_GET :Args(0) {
         $c->stash->{email} = {
             to      => 'sgn-bugs@sgn.cornell.edu',
             from    => 'sgn-bugs@sgn.cornell.edu',
-            subject => 'locus_unigenes failed! locus_id = $locus_id',
-            body    => '$_',
+            subject => "locus_unigenes failed! locus_id = $locus_id",
+            body    =>  $_,
         };
         $c->forward( $c->view('Email') );
         return;
@@ -717,7 +717,7 @@ sub obsolete_locus_unigene_POST :Args(0) {
             to      => 'sgn-bugs@sgn.cornell.edu',
             from    => 'sgn-bugs@sgn.cornell.edu',
             subject => " /ajax/locus/obsolete_locus_unigene failed! locus_unigene_id = $locus_unigene_id",
-            body    => '$_',
+            body    => $_,
         };
         $c->forward( $c->view('Email') );
         return;
@@ -725,7 +725,7 @@ sub obsolete_locus_unigene_POST :Args(0) {
     $response->{response} = "success";
     $c->stash->{email} = {
         to      => 'sgn-db-curation@sgn.cornell.edu',
-        from    => 'sgn-bugs@sgn.cornell.edu',
+        from    => 'www-data@sgn-vm.sgn.cornell.edu',
         subject => "[A locus-unigene link has beed obsoleted] locus_id = $locus_id",
         body    => "User " . $c->user->get_object->get_first_name . " " . $c->user->get_object->get_last_name .  " has obsoleted locus_unigene_id $locus_unigene_id \n ( /solgenomics.net/locus/$locus_id/view )",
     };
@@ -766,8 +766,8 @@ sub associate_unigene_POST :Args(0) {
             $c->stash->{email} = {
                 to      => 'sgn-bugs@sgn.cornell.edu',
                 from    => 'sgn-bugs@sgn.cornell.edu',
-                subject => 'Associate unigene failed! locus_id = $locus_id',
-                body    => '$_',
+                subject => "Associate unigene failed! locus_id = $locus_id",
+                body    => $_,
             };
             $c->forward( $c->view('Email') );
             $c->stash->{rest} = $response;
@@ -777,8 +777,8 @@ sub associate_unigene_POST :Args(0) {
         #Now send an email to sgn-db-curation
         $c->stash->{email} = {
             to      => 'sgn-db-curation@sgn.cornell.edu',
-            from    => 'sgn-bugs@sgn.cornell.edu',
-            subject => 'New unigene associated with locus $locus_id',
+            from    => 'www-data@sgn-vm.sgn.cornell.edu',
+            subject => "New unigene associated with locus $locus_id",
             body    => "User " . $c->user->get_object->get_first_name . " " . $c->user->get_object->get_last_name . "has associated unigene $unigene_id  with locus $locus_id " . "( /solgenomics.net/locus/$locus_id/view )",
         };
         $c->forward( $c->view('Email') );
