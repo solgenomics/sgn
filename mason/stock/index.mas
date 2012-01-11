@@ -116,6 +116,7 @@ my $direct_phenotypes = $stockref->{direct_phenotypes};
 # get all phenotypes of subjects
 my $members_phenotypes = $stockref->{members_phenotypes};
 
+my $direct_genotypes = $stockref->{direct_genotypes};
 ############################
 my $map_html = $stockref->{map_html};
 my $map;
@@ -296,6 +297,15 @@ function jqueryStuff() {
 
 <&| /page/info_section.mas, title=>"Genotype data ", collapsible => 1 , collapsed => 1 &>
 % print $map_html;
+
+% foreach my $project (keys %$direct_genotypes) {
+%  my $geno = $direct_genotypes->{$project} ;
+<&| /page/info_section.mas, title=>"Experiment: $project", is_subsection => 1, collapsible => 1 &>
+% my $val = $genotype->genotypeprops->first->value;
+% print $val;
+  </&>
+% }
+
 </&>
 
 <& /page/comments.mas, object_type=>'stock', object_id=>$stock_id, referer=>$this_page &>

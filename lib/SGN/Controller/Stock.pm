@@ -177,6 +177,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
             pubs      => $pubs,
             members_phenotypes => $c->stash->{members_phenotypes},
             direct_phenotypes  => $c->stash->{direct_phenotypes},
+            direct_genotypes   => $c->stash->{direct_genotypes},
             has_qtl_data   => $c->stash->{has_qtl_data},
             cview_tmp_dir  => $cview_tmp_dir,
             cview_basepath => $c->get_conf('basepath'),
@@ -257,6 +258,9 @@ sub get_stock_extended_info : Private {
 
     my ($members_phenotypes, $has_members_genotypes)  = $stock ? $self->_stock_members_phenotypes( $c->stash->{stock_row} ) : undef;
     $c->stash->{members_phenotypes} = $members_phenotypes;
+
+    my $direct_genotypes  = $stock ? $self->_stock_project_genotypes( $c->stash->{stock_row} ) : undef;
+    $c->stash->{direct_genotypes} = $direct_genotypes;
 
     my $stock_type;
     $stock_type = $stock->get_object_row->type->name if $stock->get_object_row;
@@ -498,6 +502,40 @@ SELECT COUNT( DISTINCT genotype_id )
     my $subject_phenotypes = $self->_stock_project_phenotypes( $subjects );
     return ( $subject_phenotypes, $has_members_genotypes );
 }
+
+###########
+# this sub gets all genotypes measured directly on this stock and
+# stores it in a hashref as { project_name => [ BCS::Genotype::Genotype, ... ]
+
+sub _stock_project_genotypes {
+    my ($self, $bcs_stock) = @_;
+    return {} unless $bcs_stock;
+
+    # hash of experiment_id => project(s) desc
+    my %project_descriptions =
+        map { $_->nd_experiment_id => join( ', ', map $_->project->description, $_->nd_experiment_projects ) }
+        $bcs_stock->search_related('nd_experiment_stocks')
+                  ->search_related('nd_experiment',
+                                   {},
+                                   { prefetch => { 'nd_experiment_projects' => 'project' } },
+                                   );
+    my $experiments = $bcs_stock->search_related('nd_experiment_stocks')
+                                ->search_related('nd_experiment',
+                                                 {},
+                                                 { prefetch => { nd_experiment_genotypes => 'genotype' } },
+                                                );
+    my %genotypes;
+    while (my $exp = $experiments->next) {
+        # there should be one project linked to the experiment ?
+        my @gen = map $_->genotype, $exp->nd_experiment_genotypes;
+        my $project_desc = $project_descriptions{ $exp->nd_experiment_id }
+            or die "no project found for exp ".$exp->nd_experiment_id;
+        push @{ $genotypes{ $project_desc }}, @gen if scalar(@gen);
+    }
+    return \%genotypes;
+}
+
+##############
 
 sub _stock_dbxrefs {
     my ($self,$stock) = @_;
