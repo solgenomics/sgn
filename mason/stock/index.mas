@@ -297,12 +297,12 @@ function jqueryStuff() {
 
 <&| /page/info_section.mas, title=>"Genotype data ", collapsible => 1 , collapsed => 1 &>
 % print $map_html;
-
 % foreach my $project (keys %$direct_genotypes) {
-%  my $geno = $direct_genotypes->{$project} ;
+%  my $genotypes = $direct_genotypes->{$project} ;
 <&| /page/info_section.mas, title=>"Experiment: $project", is_subsection => 1, collapsible => 1 &>
-% my $val = $genotype->genotypeprops->first->value;
-% print $val;
+% foreach my $genotype (@$genotypes) {
+%  print $genotype->description . "\n";
+% }       
   </&>
 % }
 

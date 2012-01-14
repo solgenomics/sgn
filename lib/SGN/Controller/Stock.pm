@@ -529,8 +529,18 @@ sub _stock_project_genotypes {
         # there should be one project linked to the experiment ?
         my @gen = map $_->genotype, $exp->nd_experiment_genotypes;
         my $project_desc = $project_descriptions{ $exp->nd_experiment_id }
-            or die "no project found for exp ".$exp->nd_experiment_id;
-        push @{ $genotypes{ $project_desc }}, @gen if scalar(@gen);
+	or die "no project found for exp ".$exp->nd_experiment_id;
+	#my @values;
+	#foreach my $genotype (@gen) {
+	    #my $genotype_id = $genotype->genotype_id;
+	    #my $vals = $self->schema->storage->dbh->selectcol_arrayref
+	    #	("SELECT value  FROM genotypeprop  WHERE genotype_id = ? ",
+	    #	 undef,
+	    #	 $genotype_id
+	    #	);
+	    #push @values, $vals->[0];
+	#}
+	push @{ $genotypes{ $project_desc }}, @gen if scalar(@gen);
     }
     return \%genotypes;
 }
