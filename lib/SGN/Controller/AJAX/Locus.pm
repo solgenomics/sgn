@@ -263,7 +263,7 @@ sub associate_ontology_POST :Args(0) {
     my $evidence_description = $c->req->param('evidence_description') || undef; # a cvterm_id
     my ($evidence_description_id) = $cvterm_rs->find( {cvterm_id => $evidence_description })->dbxref_id if $evidence_description;
     my $evidence_with = $c->req->param('evidence_with') || undef; # a dbxref_id (type='evidence_with' value = 'dbxref_id'
-    my ($evidence_with_id) = $cvterm_rs->find( { cvterm_id => $evidence_with } )->dbxref_id if $evidence_with && $evidence_with ne 'null';
+    my ($evidence_with_id) = $evidence_with if $evidence_with && $evidence_with ne 'null';
     my $logged_user = $c->user;
     my $logged_person_id = $logged_user->get_object->get_sp_person_id if $logged_user;
 
