@@ -85,7 +85,7 @@ sub relationships_GET :Args(0) {
     $relationship_query->execute();
     my $hashref={};
     while  ( my ($cvterm_id, $cvterm_name) = $relationship_query->fetchrow_array() ) {
-        $hashref->{$cvterm_id} = $cvterm_name;
+        $hashref->{$cvterm_name} = $cvterm_id;
     }
     $c->{stash}->{rest} = $hashref;
 }
@@ -105,7 +105,7 @@ sub evidence_GET :Args(0) {
     $query->execute();
     my $hashref={};
     while  ( my ($cvterm_id, $cvterm_name) = $query->fetchrow_array() ) {
-        $hashref->{$cvterm_id} = $cvterm_name;
+        $hashref->{$cvterm_name} = $cvterm_id;
     }
     $c->{stash}->{rest} = $hashref;
 }
@@ -124,7 +124,7 @@ sub evidence_description_GET :Args(0) {
     $query->execute($evidence_code_id);
     my $hashref={};
     while  ( my ($cvterm_id, $cvterm_name) = $query->fetchrow_array() ) {
-        $hashref->{$cvterm_id} = $cvterm_name;
+        $hashref->{$cvterm_name} = $cvterm_id;
     }
     $c->{stash}->{rest} = $hashref;
 }

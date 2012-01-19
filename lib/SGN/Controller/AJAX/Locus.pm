@@ -376,7 +376,7 @@ sub references_GET :Args(0) {
     $sth->execute($locus->get_locus_id);
     my $response_hash={};
     while (my ($dbxref_id, $accession, $title) = $sth->fetchrow_array) {
-        $response_hash->{$dbxref_id} = $accession . ": " . $title;
+        $response_hash->{$accession . ": " . $title} = $dbxref_id;
     }
     $c->stash->{rest} = $response_hash;
 }
@@ -397,7 +397,7 @@ sub evidences_GET :Args(0) {
     $sth->execute($locus->get_locus_id);
     my $response_hash={};
     while (my ($dbxref_id, $accession, $name, $description) = $sth->fetchrow_array) {
-        $response_hash->{$dbxref_id} = $name . ": " . $description;
+        $response_hash->{$name . ": " . $description} = $dbxref_id ;
     }
     $c->stash->{rest} = $response_hash;
 }

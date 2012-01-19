@@ -140,7 +140,7 @@ $ontology_url
              id="associate_ontology_button"
              value="associate term"
              disabled="true"
-             onclick="javascript:Ontology.submitCvtermForm('<% $cvterm_add_uri %>', '<% $ontology_url %>');this.disabled=true" />
+             onclick="javascript:Ontology.submitCvtermForm('<% $cvterm_add_uri %>', '<% $ontology_url %>');this.disabled=true;" />
     </div>
       </div>
 

@@ -268,6 +268,7 @@ function jqueryStuff() {
   cvterm_add_uri=> $cvterm_add_uri,
   ontology_url  => "/stock/$stock_id/ontologies/",
   reference_uri => "/stock/$stock_id/references/",
+  evidence_with_uri => "/stock/$stock_id/evidences/",
   show_form     => $is_owner  &>
 </&>
 

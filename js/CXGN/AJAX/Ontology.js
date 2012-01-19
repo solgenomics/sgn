@@ -89,11 +89,21 @@ var Ontology = {
                     if (error) { alert(error) ; }
                     var select = jQuery('#'+div_id);
                     ////
+                    var arraykeys=[];
+                    for(var k in response) {arraykeys.push(k); }
+                    arraykeys.sort();
+                    var outputarray=[];
+                    for(var i=0; i<arraykeys.length; i++) {
+                        outputarray[arraykeys[i]]=response[arraykeys[i]];
+                    }
+                    ////
                     var options = '';
                     if (!dummy_option) dummy_option = '--Please select one--';
                     options += '<option value="">' + dummy_option + '</option>';
-                    for ( var id in response) {
-                        options += '<option value="' + id + '">' + response[id]+ '</option>';
+                    for ( var j in outputarray) {
+                        if ( !(isNaN(outputarray[j])) ) {
+                            options += '<option value="' + outputarray[j] + '">' + j + '</option>';
+                        }
                     }
                     jQuery("#"+div_id).html(options);
                 }

@@ -378,8 +378,8 @@ sub associate_ontology_POST :Args(0) {
     my $ontology_input = $c->req->param('term_name');
     my $relationship   = $c->req->param('relationship'); # a cvterm_id
     my $evidence_code  = $c->req->param('evidence_code'); # a cvterm_id
-    my $evidence_description = $c->req->param('evidence_description'); # a cvterm_id
-    my $evidence_with  = $c->req->param('evidence_with'); # a dbxref_id (type='evidence_with' value = 'dbxref_id'
+    my $evidence_description = $c->req->param('evidence_description') || undef; # a cvterm_id
+    my $evidence_with  = $c->req->param('evidence_with') || undef; # a dbxref_id (type='evidence_with' value = 'dbxref_id'
     my $logged_user = $c->user;
     my $logged_person_id = $logged_user->get_object->get_sp_person_id if $logged_user;
 
@@ -519,12 +519,23 @@ sub references_GET :Args(0) {
     $sth->execute($stock->get_stock_id);
     my $response_hash={};
     while (my ($dbxref_id, $pub_id, $accession, $title) = $sth->fetchrow_array) {
-        $response_hash->{$pub_id} = $accession . ": " . $title;
+        $response_hash->{$accession . ": " . $title} = $pub_id ;
     }
     $c->stash->{rest} = $response_hash;
 }
 
 
+# nothing is returned here for now. This is just required for the integrity of the associate ontology form
+sub evidences : Chained('/stock/get_stock') :PathPart('evidences') : ActionClass('REST') { }
+
+sub evidences_GET :Args(0) {
+    my ($self, $c) = @_;
+    my $stock = $c->stash->{stock};
+    # get a list of evidences
+    my $response_hash={};
+    
+    $c->stash->{rest} = $response_hash;
+}
 
 sub toggle_obsolete_annotation : Path('/ajax/stock/toggle_obsolete_annotation') : ActionClass('REST') { }
 
