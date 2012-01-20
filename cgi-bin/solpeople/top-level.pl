@@ -12,8 +12,13 @@ use CXGN::Page::FormattingHelpers qw/info_section_html page_title_html
   info_table_html simple_selectbox_html
   html_optional_show/;
 
+our $c;
+use CatalystX::GlobalContext qw($c);
+
+
 my $page = CXGN::Page->new( "solpeople main menu", "john" );
 my $dbh = CXGN::DB::Connection->new();
+my $site_name = $c->config->{project_name};
 
 my $sp_person_id = CXGN::Login->new($dbh)->verify_session();
 
@@ -70,7 +75,7 @@ print <<END_HTML;
 </script>
 END_HTML
 
-print page_title_html("My SGN");
+print page_title_html("My $site_name");
 print qq|<div align="center">Welcome <b>$username</b></div>\n|;
 print
 qq|<div align="right" style="margin-bottom: 0.5em">Not $username? <a href="login.pl?logout=yes">[log out]</a></div>\n|;
