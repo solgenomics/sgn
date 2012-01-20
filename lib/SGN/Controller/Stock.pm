@@ -140,7 +140,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
         unsorted => 1,
                               } );
     my @intersection = $lc->get_intersection;
-    if ( @prop_roles  && !@intersection) { # if there is no match between user roles and stock visible_to_role props
+    if ( !$curator && @prop_roles  && !@intersection) { # if there is no match between user roles and stock visible_to_role props
         $c->throw(is_client_error => 0,
                   title             => 'Restricted page',
                   message           => "Stock $stock_id is not visible to your user!",
