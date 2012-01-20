@@ -73,7 +73,7 @@ my $s = posts_list($dbh, $sp_person_id, $topic_id, $page);
 #
 $page->header();
 
-print page_title_html("SOL Forum Topic: ".$topic->get_topic_name()."\n");
+print page_title_html("Forum Topic: ".$topic->get_topic_name()."\n");
 my $topic_started_by = "<br />This topic was started by <b><a href=\"/solpeople/personal-info.pl?sp_person_id=".
     ($topic_start_person->get_sp_person_id)."\">".
     ($topic_start_person->get_first_name()." ".$topic_start_person->get_last_name())."</a></b>.\n";

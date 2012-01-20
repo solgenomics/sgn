@@ -9,7 +9,7 @@ use CXGN::People::Forum;
 use CXGN::Contact;
 use CXGN::Page::FormattingHelpers qw /page_title_html blue_section_html/;
 
-my $page = CXGN::Page->new("SGN Forum Main", "Lukas");
+my $page = CXGN::Page->new("Forum Main", "Lukas");
 	
 my $dbh = CXGN::DB::Connection->new();
 my $sp_person_id = CXGN::Login->new($dbh)->has_session();
@@ -46,7 +46,7 @@ if ($topic_name) {
 
 $page -> header();
 
-print page_title_html("SOL Forum Topics");
+print page_title_html("Forum Topics");
 
 my $login_string="";
 
