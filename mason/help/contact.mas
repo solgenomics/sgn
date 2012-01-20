@@ -1,4 +1,8 @@
-<& "/page/page_title.mas", title => "Contact SGN" &>
+<%args>
+$website_name => "SGN"
+</%args>
+
+<& "/page/page_title.mas", title => "Contact $website_name" &>
 
 % #The form
 <form method="POST" action= "/contact/submit" name = "contactForm">

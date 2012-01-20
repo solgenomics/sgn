@@ -41,7 +41,8 @@ sub _build_form_page {
     $c->stash->{email}                    = $email if $email;
     $c->stash->{subject}                  = $subject if $subject;
     $c->stash->{body}                     = $body if $body;
-    $c->stash->{email_address_to_display} = $c->config->{feedback_email},
+    $c->stash->{email_address_to_display} = $c->config->{feedback_email};
+    $c->stash->{website_name}             = $c->config->{project_name};
     $c->stash->{template}                 = '/help/contact.mas';
 }
 
