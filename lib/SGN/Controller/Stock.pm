@@ -12,6 +12,7 @@ use namespace::autoclean;
 use YAML::Any qw/LoadFile/;
 
 use URI::FromHash 'uri';
+use List::Compare;
 
 use CXGN::Chado::Stock;
 use SGN::View::Stock qw/stock_link stock_organisms stock_types/;
@@ -109,7 +110,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
 
     my $logged_user = $c->user;
     my $person_id = $logged_user->get_object->get_sp_person_id if $logged_user;
-    my $curator = $logged_user->check_roles('curator') if $logged_user;
+    my $curator   = $logged_user->check_roles('curator') if $logged_user;
     my $submitter = $logged_user->check_roles('submitter') if $logged_user;
     my $sequencer = $logged_user->check_roles('sequencer') if $logged_user;
 
@@ -130,6 +131,24 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
         $c->throw_404( "No stock/accession exists for that identifier." );
     }
 
+    my $props = $self->_stockprops($stock);
+    # print message if the stock is visible only to certain user roles
+    my @logged_user_roles = $logged_user->roles if $logged_user;
+    my @prop_roles = @{ $props->{visible_to_role} } if  ref($props->{visible_to_role} );
+    my $lc = List::Compare->new( {
+        lists    => [\@logged_user_roles, \@prop_roles],
+        unsorted => 1,
+                              } );
+    my @intersection = $lc->get_intersection;
+    if ( @prop_roles  && !@intersection) { # if there is no match between user roles and stock visible_to_role props
+        $c->throw(is_client_error => 0,
+                  title             => 'Restricted page',
+                  message           => "Stock $stock_id is not visible to your user!",
+                  developer_message => 'only logged in users of certain roles can see this stock' . join(',' , @prop_roles),
+                  notify            => 0,   #< does not send an error email
+            );
+    }
+
     # print message if the stock is obsolete
     my $obsolete = $stock->get_is_obsolete();
     if ( $obsolete  && !$curator ) {
@@ -146,7 +165,6 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
     }
 
     ####################
-    my $props = $self->_stockprops($stock);
     my $is_owner;
     my $owner_ids = $c->stash->{owner_ids} || [] ;
     if ( $stock && ($curator || $person_id && ( grep /^$person_id$/, @$owner_ids ) ) ) {
