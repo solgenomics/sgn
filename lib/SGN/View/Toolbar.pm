@@ -4,7 +4,7 @@ use Moose;
 extends 'Catalyst::View';
 
 has 'toolbar_data' => (
-    is       => 'ro',
+    is       => 'rw',
     isa      => 'ArrayRef',
     required => 1,
     default  => \&default_toolbar_data
