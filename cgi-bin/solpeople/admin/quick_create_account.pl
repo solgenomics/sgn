@@ -100,7 +100,7 @@ print <<END_HTML;
 
 END_HTML
     }
-    $page->footer();
+
 }
 else
 {
