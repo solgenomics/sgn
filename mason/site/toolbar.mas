@@ -5,7 +5,7 @@
 jQuery( function() {
   CXGN.Page.Toolbar.addmenu('search');
   CXGN.Page.Toolbar.addmenu('maps');
-  CXGN.Page.Toolbar.addmenu('sequencing');
+  CXGN.Page.Toolbar.addmenu('genomes');
   CXGN.Page.Toolbar.addmenu('tools');
   CXGN.Page.Toolbar.hideall();
 });

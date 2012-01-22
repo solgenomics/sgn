@@ -240,7 +240,7 @@ sub default_toolbar_data {
             ]
         },
         {
-            name => 'sequencing',
+            name => 'genomes',
             link => '/about/tomato_sequencing/',
             desc => 'Read about sequencing projects.',
             menu => [
@@ -419,7 +419,7 @@ sub default_toolbar_data {
     my @headings=$tb->headings();
 
 Returns a list of the names of the main toolbar buttons
-('search','maps','sequencing','tools'). These can then be used to
+('search','maps','genomes','tools'). These can then be used to
 access other parts of this object.
 
 =cut
