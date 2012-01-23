@@ -377,6 +377,9 @@ sub _delete_user {
         $_->do( <<'', undef, $u_id, $u_id );
 DELETE FROM metadata.md_metadata WHERE create_person_id = ? OR modified_person_id = ?
 
+    $_->do( <<'', undef, $u_id);
+DELETE FROM metadata.md_image WHERE sp_person_id=?	
+
     });
 
     $dbc->txn( ping => sub {
