@@ -207,14 +207,14 @@ sub _analyze_correlation  {
         }
 
         my (undef, $heatmap_file)     = tempfile( "heatmap_${pop_id}-XXXXXX",
-                                                  DIR      => $corre_temp_dir,
+                                                  DIR      => $corre_image_dir,
                                                   SUFFIX   => '.png',
                                                   UNLINK   => 0,
                                                   OPEN     => 0,
                                                 );
 
         my (undef, $corre_table_file) = tempfile( "corre_table_${pop_id}-XXXXXX",
-                                                  DIR      => $corre_temp_dir,
+                                                  DIR      => $corre_image_dir,
                                                   SUFFIX   => '.txt',
                                                   UNLINK   => 0,
                                                   OPEN     => 0,
@@ -266,11 +266,6 @@ sub _analyze_correlation  {
             # die with a backtrace
             Carp::confess $err;
         };
-
-        copy( $heatmap_file, $corre_image_dir )
-            or die "could not copy $heatmap_file to $corre_image_dir";
-        copy( $corre_table_file, $corre_image_dir )
-            or die "could not copy $corre_table_file to $corre_image_dir";
 
         $heatmap_file      = fileparse($heatmap_file);
         $heatmap_file      = $c->generated_file_uri("temp_images",  $heatmap_file);
