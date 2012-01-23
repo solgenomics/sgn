@@ -147,8 +147,12 @@ sub process_image {
     }
     elsif ( $type eq "organism" ) {
         $self->associate_organism($type_id);
-    } else {
-        warn "type $type is like totally illegal! Not associating image with any object. Please check if your loading script links the image with an sgn object! \n";
+    } 
+    elsif ( $type eq "test") { 
+	# silent operation... everything is fine, it's a test!
+    }
+    else {
+        warn "type $type is not recognized as one of the legal types. Not associating image with any object. Please check if your loading script links the image with an sgn object! \n";
     }
 
 }
