@@ -109,24 +109,9 @@ sub process_data {
 
     }
 
-    elsif ( $type eq 'pheno_form' ) {
-
-        my ( $pheno_file, $trait_values_to_db );
-        if ( $args{'pheno_file'} ) {
-            $pheno_file = $self->pheno_upload( $qtl_obj, $args{'pheno_file'} );
-            $trait_values_to_db = $self->store_trait_values($pheno_file);
-        }
-        else {
-            $self->error_page('Phenotype dataset file');
-        }
-
-        unless ( !-e $pheno_file || !$trait_values_to_db ) {
-            $message = 'QTL phenotype data uploaded : Step 3 of 5';
-            $self->send_email( '[QTL upload: Step 3]', $message, $pop_id );
-            $c->res->redirect("$referring_page/geno_form/$pop_id");
-            $c->detach();
-            
-        }
+    elsif ( $type eq 'pheno_form' ) 
+    {
+        $self->post_pheno_form($qtl_obj, $args{'pheno_file'}, $pop_id);
     }
 
     elsif ( $type eq 'geno_form' ) {
@@ -599,18 +584,15 @@ sub store_traits {
             }
 
         };
-        if ($@) {
-            $dbh->rollback();
+        if ($@) {          
             print STDERR "An error occurred storing traits: $@\n";
+            $dbh->rollback();
             return 0;
         }
         else {
             print STDERR "Committing...traits\n";
             return 1;
-
-            #$dbh->commit();
         }
-
     }
 }
 
@@ -1531,7 +1513,7 @@ sub post_trait_form {
         $self->error_page("Trait file");
     }
    
-    my $uploaded_file = $self->trait_upload( $qtl_obj, $trait_file);
+    my $uploaded_file = $self->trait_upload($qtl_obj, $trait_file);
     
     my $traits_in_db;
     if ($uploaded_file) 
@@ -1539,10 +1521,36 @@ sub post_trait_form {
         $traits_in_db = $self->store_traits($uploaded_file);
     }
     
-    if ( $pop_id & $traits_in_db) 
+    if ($pop_id && $traits_in_db) 
     {
-        $self->send_email( '[QTL upload: Step 2]', 'QTL traits uploaded: Step 2 of 5', $pop_id );
+        $self->send_email('[QTL upload: Step 2]', 'QTL traits uploaded: Step 2 of 5', $pop_id);
         $self->redirect_to_next_form($c->req->base . "qtl/form/pheno_form/$pop_id");
+    }
+
+
+}
+
+
+sub post_pheno_form {
+    my ($self, $qtl_obj, $pheno_file, $pop_id) = @_;
+    
+    if (!$pheno_file) 
+    { 
+        $self->error_page('Phenotype dataset file'); 
+    } 
+   
+    my $uploaded_file = $self->pheno_upload($qtl_obj, $pheno_file);
+    
+    my  $phenotype_in_db;
+    if ($uploaded_file) 
+    {
+    $phenotype_in_db = $self->store_trait_values($uploaded_file);
+    }
+ 
+    if ($phenotype_in_db && $pop_id) 
+    {           
+        $self->send_email('[QTL upload: Step 3]', 'QTL phenotype data uploaded: Step 3 of 5', $pop_id);
+        $self->redirect_to_next_form($c->req->base . "qtl/form/geno_form/$pop_id"); 
     }
 
 
