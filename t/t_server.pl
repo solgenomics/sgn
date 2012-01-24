@@ -23,6 +23,8 @@ my @prove_args = @ARGV;
 
 my $parallel = (grep /^-j\d*$/, @ARGV) ? 1 : 0;
 
+$ENV{SGN_CONFIG_LOCAL_SUFFIX} = 'testing';
+
 my $server_pid = fork;
 unless( $server_pid ) {
     # web server process
