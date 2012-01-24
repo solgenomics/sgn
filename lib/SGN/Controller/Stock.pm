@@ -122,7 +122,8 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
 
     my $stock = $c->stash->{stock};
     my $stock_id = $stock ? $stock->get_stock_id : undef ;
-
+    my $stock_type = $stock ? $stock->get_object_row->type->name : undef ;
+    my $type = 1 if $stock_type && !$stock_type=~ m/population/;
     # print message if stock_id is not valid
     unless ( ( $stock_id =~ m /^\d+$/ ) || ($action eq 'new' && !$stock_id) ) {
         $c->throw_404( "No stock/accession exists for that identifier." );
@@ -172,7 +173,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
     }
     my $dbxrefs = $self->_dbxrefs($stock);
     my $pubs = $self->_stock_pubs($stock);
-    my $image_ids = $self->_stock_images($stock);
+    my $image_ids = $self->_stock_images($stock, $type);
     my $cview_tmp_dir = $c->tempfiles_subdir('cview');
 ################
     $c->stash(
@@ -611,11 +612,19 @@ sub _stock_pubs {
     return $pubs;
 }
 
+# get all images. Optional: include those of subject stocks
 sub _stock_images {
-    my ($self, $stock) = @_;
-    my $query = "select distinct image_id FROM phenome.stock_image
-                          WHERE stock_id = ?  ";
-    my $ids = $stock->get_schema->storage->dbh->selectcol_arrayref
+    my ($self, $stock, $r) = @_;
+    my $query = "select distinct image_id FROM phenome.stock_image WHERE stock_id = ?";
+    $query .=  " OR stock_id IN (SELECT subject_id FROM stock_relationship WHERE object_id = ? )" if $r;
+    my $ids = $r ?
+        $stock->get_schema->storage->dbh->selectcol_arrayref
+        ( $query,
+          undef,
+          $stock->get_stock_id,
+          $stock->get_stock_id,
+        ) :
+        $stock->get_schema->storage->dbh->selectcol_arrayref
         ( $query,
           undef,
           $stock->get_stock_id,
