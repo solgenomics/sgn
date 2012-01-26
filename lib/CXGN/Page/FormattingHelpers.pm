@@ -591,7 +591,7 @@ sub info_table_html {
     my @field_order = map { $last = !$last; $last ? ($_) : () } @_;
 
     #take out the reserved field names from the field order list
-    @field_order = grep { !$reserved{$_} } @field_order;
+    @field_order = grep { no warnings 'uninitialized'; !$reserved{$_} } @field_order;
 
     #figure out the multi-column wrapping
     my @fields_layout;    #2-D array of where in the table each field name
