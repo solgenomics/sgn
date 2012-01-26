@@ -7,12 +7,13 @@ use Carp;
 use lib 't/lib';
 use SGN::Test::WWW::Mechanize;
 use CXGN::Phenome::GenericGenePage;
-use CXGN::DB::Connection;
 
 $SIG{__DIE__} = \&Carp::confess;
 
-my $dbh = CXGN::DB::Connection->new({ dbargs => {AutoCommit => 1} });
+
 my $mech = SGN::Test::WWW::Mechanize->new;
+
+my $dbh = $mech->context->dbc->dbh();
 
 my $ggp = CXGN::Phenome::GenericGenePage
     ->new( -id => 428,
