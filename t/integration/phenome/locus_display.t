@@ -21,7 +21,6 @@ use SGN::Test;
 use SGN::Test::WWW::Mechanize;
 
 use CXGN::Phenome::Schema;
-use CXGN::DB::Connection;
 
 {
     my $mech = SGN::Test::WWW::Mechanize->new;
