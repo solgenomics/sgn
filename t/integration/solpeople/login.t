@@ -10,12 +10,11 @@ my $m = SGN::Test::WWW::Mechanize->new();
 plan skip_all => 'test requires at least "local" test level'
   unless $m->can_test_level('local');
 
-use_ok("CXGN::DB::Connection");
 use_ok("CXGN::People::Person");
 
 $m->get_ok('/');
 
-my $dbh = CXGN::DB::Connection->new();
+my $dbh = $m->context->dbc->dbh();
 
 # generate a new user for testing purposes
 # (to be deleted right afterwards)
@@ -42,7 +41,7 @@ my $u = CXGN::People::Person->new( $dbh, $u_id );
 END {
     if( $u ) {
         $u->hard_delete();
-        $u->get_dbh->commit unless $u->get_dbh->dbh_param('AutoCommit');
+        $dbh->commit; #unless $u->get_dbh->dbh_param('AutoCommit');
     }
 }
 
