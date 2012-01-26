@@ -57,7 +57,7 @@ $m->with_test_level( local => sub {
 	    $image_id=$1;
 	}
 
-	my $dbh = CXGN::DB::Connection->new();
+	my $dbh = $m->context->dbc->dbh();
 	my $i = CXGN::Image->new(dbh=>$dbh, image_id=>$image_id, image_dir=>$m->context->config->{'image_dir'});
 	diag "Deleting image_id $image_id\n";
 	$i->hard_delete();
