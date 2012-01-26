@@ -34,14 +34,14 @@ $login->set_user_type("user");
 
 $login->store();
 
-$dbh->commit();
+#$dbh->commit();
 
 my $u_id = CXGN::People::Person->get_person_by_username( $dbh, "testusername" );
 my $u = CXGN::People::Person->new( $dbh, $u_id );
 END {
     if( $u ) {
         $u->hard_delete();
-        $dbh->commit; #unless $u->get_dbh->dbh_param('AutoCommit');
+        #$dbh->commit; #unless $u->get_dbh->dbh_param('AutoCommit');
     }
 }
 
@@ -88,7 +88,7 @@ $m->content_contains("You have successfully logged out");
 #
 $login->set_user_type("curator");
 $login->store();
-$dbh->commit();
+#$dbh->commit();
 
 $m->get("/solpeople/login.pl");
 $m->submit_form_ok( \%form, "Login as curator form submission" );
