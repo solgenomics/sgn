@@ -2,12 +2,15 @@
 use strict;
 
 use Test::More qw | no_plan |;
-use CXGN::DB::Connection;
 
+use lib 't/lib';
+use SGN::Test::WWW::Mechanize;
 
 use_ok('CXGN::Cview::Map::SGN::Genetic');
 
-my $dbh = CXGN::DB::Connection->new();
+my $m = SGN::Test::WWW::Mechanize->new();
+
+my $dbh = $m->context->dbc->dbh();
 
 my $map = CXGN::Cview::Map::SGN::Genetic->new($dbh, 53);
 

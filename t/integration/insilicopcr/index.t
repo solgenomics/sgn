@@ -6,7 +6,6 @@ use IPC::Cmd qw/ can_run /;
 use List::MoreUtils qw/ all /;
 use Test::More;
 
-use CXGN::DB::Connection;
 use CXGN::Page;
 use CXGN::BlastDB;
 
