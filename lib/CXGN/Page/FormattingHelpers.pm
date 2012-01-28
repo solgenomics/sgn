@@ -591,8 +591,10 @@ sub info_table_html {
     my @field_order = map { $last = !$last; $last ? ($_) : () } @_;
 
     #take out the reserved field names from the field order list
+
     { no warnings 'uninitialized';
       @field_order = grep { !$reserved{$_} } @field_order;
+
     }
 
     #figure out the multi-column wrapping
