@@ -13,6 +13,8 @@ use YAML::Any qw/LoadFile/;
 
 use URI::FromHash 'uri';
 use List::Compare;
+use File::Temp qw / tempfile /;
+use File::Slurp;
 
 use CXGN::Chado::Stock;
 use SGN::View::Stock qw/stock_link stock_organisms stock_types/;
@@ -122,7 +124,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
 
     my $stock = $c->stash->{stock};
     my $stock_id = $stock ? $stock->get_stock_id : undef ;
-    my $stock_type = $stock ? $stock->get_object_row->type->name : undef ;
+    my $stock_type = $stock->get_object_row ? $stock->get_object_row->type->name : undef ;
     my $type = 1 if $stock_type && !$stock_type=~ m/population/;
     # print message if stock_id is not valid
     unless ( ( $stock_id =~ m /^\d+$/ ) || ($action eq 'new' && !$stock_id) ) {
@@ -208,6 +210,84 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
 }
 
 =head1 PRIVATE ACTIONS
+
+=head2 download_phenotypes
+
+=cut
+
+
+sub download_phenotypes : Chained('get_stock') PathPart('phenotypes') Args(0) {
+    my ($self, $c) = @_;
+    my $stock = $c->stash->{stock_row};
+    my $stock_id = $stock->stock_id;
+    if ($stock_id) {
+        my $tmp_dir = $c->get_conf('stock_tempfiles') ;
+        my $file_cache = Cache::File->new( cache_root => $tmp_dir );
+        $file_cache->purge();
+        my $key = "stock_" . $stock_id . "_phenotype_data";
+        my $phen_file = $file_cache->get($key);
+        my $filename = $tmp_dir . "/stock_" . $stock_id . "_phenotypes.csv";
+        unless ( -e $phen_file) {
+            my $phen_hashref; #hashref of hashes for the phenotype data
+            my %cvterms ; #hash for unique cvterms
+            ##############
+            my $phenotypes  =  $self->_stock_project_phenotypes( $stock );
+            my $subjects = $stock->search_related('stock_relationship_objects')
+                ->search_related('subject');
+            my $subject_phenotypes = $self->_stock_project_phenotypes( $subjects );
+            my %all_phenotypes = (%$phenotypes, %$subject_phenotypes);
+            my $replicate = 1;
+            my ($replicateprop) =  $stock->search_related(
+                'stockprops', {
+                    'type.name' => 'replicate'
+                }, { join => 'type' } );
+            $replicate = $replicateprop->value if $replicateprop;
+            foreach my $project (keys %all_phenotypes ) {
+                my $pheno = $all_phenotypes{$project} ;
+                foreach my $ph (@$pheno) {
+                    my ($phen_stock) = $ph->search_related('nd_experiment_phenotypes')->search_related('nd_experiment')->search_related('nd_experiment_stocks')->search_related('stock');
+                    my $hash_key = $project . "|" . $phen_stock->uniquename . "|" . $replicate ;
+                    my $cvterm = $ph->observable;
+                    $cvterms{$cvterm->name} = $cvterm->dbxref->db->name . ":" . $cvterm->dbxref->accession;
+                    my $accession = $cvterm->dbxref->accession;
+                    my $db_name = $cvterm->dbxref->db->name;
+                    $phen_hashref->{$hash_key}{uniquename} =  $ph->uniquename;
+                    $phen_hashref->{$hash_key}{$cvterm->name} = $ph->value;
+                    $phen_hashref->{$hash_key}{accession} = $db_name . ":" . $accession ;
+                    # $phen_hashref->{$hash_key}{year} = $year;
+                    $phen_hashref->{$hash_key}{project} = $project;
+                    $phen_hashref->{$hash_key}{stock} = $phen_stock->uniquename;
+                    $phen_hashref->{$hash_key}{stock_id} = $phen_stock->stock_id;
+                }
+            }
+            #write the header for the file
+            write_file( $filename, ("uniquename\tstock_id\tstock_name\t" ) ) ;
+            foreach my $term_name (sort { $cvterms{$a} cmp $cvterms{$b} } keys %cvterms )  {# sort ontology terms
+                my $ontology_id = $cvterms{$term_name};
+                write_file( $filename, {append => 1 }, ( $ontology_id . "|" . $term_name . "\t") ) ;
+            }
+            foreach my $key ( sort keys %$phen_hashref ) {
+                #print the unique key (row header)
+                # print some more columns with metadata
+                # print the value by cvterm name
+                write_file( $filename, {append => 1 }, ( "\n" , $key, "\t" ,$phen_hashref->{$key}{stock_id}, "\t", $phen_hashref->{$key}{stock}, "\t" ) ) ;
+                print STDERR "**writing stock id " .  $phen_hashref->{$key}{stock_id} . "to file\n";
+                foreach my $term_name ( sort { $cvterms{$a} cmp $cvterms{$b} } keys %cvterms ) {
+                    write_file( $filename, {append => 1 }, ( $phen_hashref->{$key}{$term_name}, "\t" ) );
+                }
+            }
+            $file_cache->set( $key, $filename, '30 days' );
+            $phen_file = $file_cache->get($key);
+        }
+        my @data;
+        foreach ( read_file($filename) ) {
+            push @data, [ split(/\t/) ];
+        }
+        $c->stash->{'csv'}={ data => \@data};
+        $c->forward("View::Download::CSV");
+        #stock    repeat	experiment	year	SP:0001	SP:0002
+    }
+}
 
 =head2 get_stock
 

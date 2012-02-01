@@ -115,7 +115,7 @@ my $direct_phenotypes = $stockref->{direct_phenotypes};
 
 # get all phenotypes of subjects
 my $members_phenotypes = $stockref->{members_phenotypes};
-
+my $p_download_link = qq|<a href = /stock/$stock_id/phenotypes>Download phenotypes</a>|;
 my $direct_genotypes = $stockref->{direct_genotypes};
 ############################
 my $map_html = $stockref->{map_html};
@@ -272,7 +272,7 @@ function jqueryStuff() {
   show_form     => $is_owner  &>
 </&>
 
-<&| /page/info_section.mas, title=>"Phenotype data " ,  collapsible => 1, collapsed => 1 &>
+<&| /page/info_section.mas, title=>"Phenotype data " ,  subtitle=>$p_download_link ,  collapsible => 1, collapsed => 1 &>
 % foreach my $project (keys %$direct_phenotypes) {
 %  my $pheno = $direct_phenotypes->{$project} ;
 <&| /page/info_section.mas, title=>"Experiment: $project", is_subsection => 1, collapsible => 1 &>
