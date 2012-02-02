@@ -14,13 +14,13 @@
 
 <p>Researchers at the Boyce Thompson Institute for Plant Research in Ithaca, NY, have assembled a draft sequence of the <i>Nicotiana benthamiana</i> genome. The draft genome sequence is accessible through BLAST on the SGN site.</p>
 
-<p><i>N. benthamiana</i> is a widely used model plant for plant defense and other research applications. It is particularly popular because genes can be silenced using a Virus-based approach called Virus-induced Gene Silencing (VIGS). However, without a genome sequence, the extent of inhibition in such assays has been unclear. With this new resource, scientists can now check precisely what genomic sequences their probes map to and which genes are being silenced.</p>
+<p><i>N. benthamiana</i> is a widely used model plant for plant defense and other research applications. It is particularly popular because it is amenable to an efficient RNAi approach referred to as Virus-based approach called Virus-induced Gene Silencing (VIGS). The draft genome sequence will allow better design of VIGS constructs to reduce the possibility of 'off-target' gene silencing.  The sequence will also be useful for identifying orthologs of tomato and potato genes, for comparative genomics with other Solanaceae species, and for the retrieval of promoter sequences. </p>
 
 <p><i>N. benthamiana</i> has a very complex genome consisting of n=19 chromosomes that is estimated at over 3.5GB in size and is difficult to sequence. Taxonomically, it is an old allotetraploid of the section <i>Suaveolentes</i> that formed from diploid parents from the section <i>Sylvestres</i> and the section <i>Noctiflorae</i>. It is native to Australia [1, 2].
 
 <h4>Sequencing approach</h4>
 
-Plants were grown in the green house and nuclear DNA was extracted from etiolated leaves. Two genomic libraries were prepared for the Illumina HiSeq-2000 sequencing machine. From the DNA, three distinct libraries were synthesized: a paired end library with an insert size of approximately 500 bp insert size, a mate-pair type library with an insert size of 2kb and a mate pair with an insert size of 5kb. Sequencing was performed using a full run with 4 lanes of the paired end library and 1 lane each of the mate pair libraries.
+Plants were grown in the green house and nuclear DNA was extracted from etiolated leaves. From the DNA, three distinct libraries were synthesized for use in a Illumina HiSeq-2000 sequencer: a paired end library with an insert size of approximately 500 bp insert size, a mate-pair type library with an insert size of 2kb and a mate pair with an insert size of 5kb. Sequencing was performed using a full run with 4 lanes of the paired end library and 1 lane each of the mate pair libraries.
 
 <h4>Accession sequenced</h4>
 
