@@ -241,17 +241,23 @@ sub download_phenotypes : Chained('get_stock') PathPart('phenotypes') Args(0) {
                 'stockprops', {
                     'type.name' => 'replicate'
                 }, { join => 'type' } );
-            $replicate = $replicateprop->value if $replicateprop;
+
             foreach my $project (keys %all_phenotypes ) {
                 my $pheno = $all_phenotypes{$project} ;
-                foreach my $ph (@$pheno) {
-                    my ($phen_stock) = $ph->search_related('nd_experiment_phenotypes')->search_related('nd_experiment')->search_related('nd_experiment_stocks')->search_related('stock');
-                    my $hash_key = $project . "|" . $phen_stock->uniquename . "|" . $replicate ;
-                    my $cvterm = $ph->observable;
+                my $replicate = 1;
+		my $cvterm_name;
+		my @sorted_phen = sort { $a->observable->name cmp $b->observable->name } @$pheno ;
+		foreach my $ph  (@sorted_phen) {
+		    my ($phen_stock) = $ph->search_related('nd_experiment_phenotypes')->search_related('nd_experiment')->search_related('nd_experiment_stocks')->search_related('stock');
+		    my $cvterm = $ph->observable;
+		    if ($cvterm_name eq $cvterm->name) { $replicate ++ ; } else { $replicate = 1 ; }
                     $cvterms{$cvterm->name} = $cvterm->dbxref->db->name . ":" . $cvterm->dbxref->accession;
                     my $accession = $cvterm->dbxref->accession;
                     my $db_name = $cvterm->dbxref->db->name;
-                    $phen_hashref->{$hash_key}{uniquename} =  $ph->uniquename;
+		    my $hash_key = $project . "|" . $replicate ; ##$phen_stock->uniquename . "|" . $replicate  ;
+		    $phen_hashref->{$hash_key}{replicate} = $replicate;
+		    $cvterm_name = $cvterm->name;
+		    $phen_hashref->{$hash_key}{uniquename} =  $ph->uniquename;
                     $phen_hashref->{$hash_key}{$cvterm->name} = $ph->value;
                     $phen_hashref->{$hash_key}{accession} = $db_name . ":" . $accession ;
                     # $phen_hashref->{$hash_key}{year} = $year;
