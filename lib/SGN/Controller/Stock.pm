@@ -221,8 +221,8 @@ sub download_phenotypes : Chained('get_stock') PathPart('phenotypes') Args(0) {
     my $stock = $c->stash->{stock_row};
     my $stock_id = $stock->stock_id;
     if ($stock_id) {
-        my $tmp_dir = $c->get_conf('stock_tempfiles') ;
-        my $file_cache = Cache::File->new( cache_root => $tmp_dir );
+        my $tmp_dir = $c->get_conf('basepath') . "/" . $c->get_conf('stock_tempfiles');
+        my $file_cache = Cache::File->new( cache_root => $tmp_dir  );
         $file_cache->purge();
         my $key = "stock_" . $stock_id . "_phenotype_data";
         my $phen_file = $file_cache->get($key);
