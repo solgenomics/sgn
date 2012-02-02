@@ -1,0 +1,82 @@
+
+<%doc>
+
+</%doc>
+
+<%args>
+
+
+</%args>
+
+
+
+<& /page/page_title.mas, title=>"<i>Nicotiana benthamiana</i> draft sequence" &>
+
+<p>Researchers at the Boyce Thompson Institute for Plant Research in Ithaca, NY, have assembled a draft sequence of the <i>Nicotiana benthamiana</i> genome. </p>
+
+<p><i>N. benthamiana</i> is a widely used model plant for plant defense and other research applications. It is particularly popular because genes can be silenced using a Virus-based approach called Virus-induced Gene Silencing (VIGS). However, without a genome sequence, the extent of inhibition in such assays has been unclear. With this new resource, scientists can now check precisely what genomic sequences their probes map to and which genes are being silenced.</p>
+
+<p><i>N. benthamiana</i> has a very complex genome consisting of n=19 chromosomes that is estimated at over 3.5GB in size and is difficult to sequence. Taxonomically, it is an old allotetraploid of the section <i>Suaveolentes</i> that formed from diploid parents from the section <i>Sylvestres</i> and the section <i>Noctiflorae</i>. It is native to Australia [1, 2].
+
+<h4>Sequencing approach</h4>
+
+Plants were grown in the green house and nuclear DNA was extracted from etyliolated leaves? at x? days old using the x protocol. Two genomic libraries were prepared for the Illumina HiSeq-2000 sequencing machine. The first library was a paired end library with an insert size of approximately 500 bp insert size. The second library was a mate-pair type library with an insert size of 2kb. The third library was mate pair with an insert size of 5kb. Sequencing was performed using a full run with 4 lanes of the paired end library and 1 lane each of the mate pair libraries.
+
+<h4>Accession sequenced</h4>
+
+The accession sequenced is referred to as "Nb-BTI", from a stock of plants used at BTI to conduct VIGS experiments. I
+
+<h4>Assembly Statistics</h4>
+
+<pre>
+N. benthamiana Genome v0.2 Contigs
+Contigs for Nicotiana benthamiana draft genome assembly version 0.2.
+This assembly was made with the run 1:lanes 1 and 2 (PE-500bp), 7 (MP-2Kb) and 8 (MP-5Kb) using SOAPdeNovo as assembler (Kmer 63)
+Stats:
+================================================================================
+  Sequence Count:     16,712,575    sequences
+  Total Length:    3,537,872,900    bp        (3.54 Gb)
+  Longest sequence:       48,701    bp        (ID = Niben.v0.2.Ctg33405712)
+  Shortest sequence:          64    bp        (ID = Niben.v0.2.Ctg2370702)
+  Average length:            211.69 bp
+  N90 length:                 67    bp
+  N90 index:          11,247,444    sequences
+  N50 length:                770    bp
+  N50 index:             800,022    sequences
+  N25 length:              2,769    bp
+  N25 index:             176,112    sequences
+================================================================================
+
+
+N. benthamiana Genome v0.2 Scaffolds + NrContigs
+Scaffolds and contigs that are not contained in any scaffold for Nicotiana benthamiana draft genome assembly version 0.2
+
+This assembly was made with the run 1:lanes 1 and 2 (PE-500bp), 7 (MP-2Kb) and 8 (MP-5Kb) using SOAPdeNovo as assembler (Kmer 63)
+Stats:
+================================================================================
+  Sequence Count:      3,594,233    sequences
+  Total Length:    3,135,589,426    bp        (3.13 Gb)
+  Longest sequence:      600,557    bp        (ID = Niben.v0.2.Scf1965)
+  Shortest sequence:         100    bp        (ID = Niben.v0.2.Ctg22772358)
+  Average length:            872.39 bp
+  N90 length:                154    bp
+  N90 index:           1,048,018    sequences
+  N50 length:             67,987    bp
+  N50 index:              12,865    sequences
+  N25 length:            126,359    bp
+  N25 index:               4,322    sequences
+================================================================================
+</pre>
+
+
+<h4>Tools</h4>
+
+The draft assembly can be analyzed using the <a href="/tools/blast">SGN BLAST</a> tool. There are no restrictions on the use of these data.
+
+<h4>References</h4>
+
+[1] Sandra Knapp, Mark W. Chase and James J. Clarkson (2004) Nomenclatural changes and a new sectional classification in Nicotiana (Solanaceae). Taxon 53, 73-82.
+
+[2] Michael M. Goodin, David Zaitlin, Rayapati A. Naidu, and Steven A. Lommel (2008) <i>Nicotiana benthamiana</i>: Its History and Future as a Model for Plant-Pathogen Interactions. MPMI Vol. 21, No. 8, 2008, pp. 1015â1026. doi:10.1094 / MPMI -21-8-1015
+
+
