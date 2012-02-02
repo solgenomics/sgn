@@ -12,7 +12,7 @@
 
 <& /page/page_title.mas, title=>"<i>Nicotiana benthamiana</i> draft sequence" &>
 
-<p>Researchers at the Boyce Thompson Institute for Plant Research in Ithaca, NY, have assembled a draft sequence of the <i>Nicotiana benthamiana</i> genome. </p>
+<p>Researchers at the Boyce Thompson Institute for Plant Research in Ithaca, NY, have assembled a draft sequence of the <i>Nicotiana benthamiana</i> genome. The draft genome sequence is accessible through BLAST on the SGN site.</p>
 
 <p><i>N. benthamiana</i> is a widely used model plant for plant defense and other research applications. It is particularly popular because genes can be silenced using a Virus-based approach called Virus-induced Gene Silencing (VIGS). However, without a genome sequence, the extent of inhibition in such assays has been unclear. With this new resource, scientists can now check precisely what genomic sequences their probes map to and which genes are being silenced.</p>
 
@@ -20,11 +20,11 @@
 
 <h4>Sequencing approach</h4>
 
-Plants were grown in the green house and nuclear DNA was extracted from etyliolated leaves? at x? days old using the x protocol. Two genomic libraries were prepared for the Illumina HiSeq-2000 sequencing machine. The first library was a paired end library with an insert size of approximately 500 bp insert size. The second library was a mate-pair type library with an insert size of 2kb. The third library was mate pair with an insert size of 5kb. Sequencing was performed using a full run with 4 lanes of the paired end library and 1 lane each of the mate pair libraries.
+Plants were grown in the green house and nuclear DNA was extracted from etiolated leaves. Two genomic libraries were prepared for the Illumina HiSeq-2000 sequencing machine. From the DNA, three distinct libraries were synthesized: a paired end library with an insert size of approximately 500 bp insert size, a mate-pair type library with an insert size of 2kb and a mate pair with an insert size of 5kb. Sequencing was performed using a full run with 4 lanes of the paired end library and 1 lane each of the mate pair libraries.
 
 <h4>Accession sequenced</h4>
 
-The accession sequenced is referred to as "Nb-BTI", from a stock of plants used at BTI to conduct VIGS experiments. I
+The accession sequenced is referred to as "Nb-BTI", from a stock of plants used at BTI to conduct VIGS experiments. Seeds can be obtained by contacting <a href="mailto:gbm7@cornell.edu">Prof. Greg Martin</a> directly.
 
 <h4>Assembly Statistics</h4>
 
@@ -71,12 +71,14 @@ Stats:
 
 <h4>Tools</h4>
 
-The draft assembly can be analyzed using the <a href="/tools/blast">SGN BLAST</a> tool. There are no restrictions on the use of these data.
+The draft assembly can be analyzed using the <a href="/tools/blast">SGN BLAST</a> tool. There are no restrictions on the use of these data except that full genome analyses cannot be published.
 
 <h4>References</h4>
 
-[1] Sandra Knapp, Mark W. Chase and James J. Clarkson (2004) Nomenclatural changes and a new sectional classification in Nicotiana (Solanaceae). Taxon 53, 73-82.
+<ol>
+<li>Sandra Knapp, Mark W. Chase and James J. Clarkson (2004) Nomenclatural changes and a new sectional classification in Nicotiana (Solanaceae). Taxon 53, 73-82.</li>
 
-[2] Michael M. Goodin, David Zaitlin, Rayapati A. Naidu, and Steven A. Lommel (2008) <i>Nicotiana benthamiana</i>: Its History and Future as a Model for Plant-Pathogen Interactions. MPMI Vol. 21, No. 8, 2008, pp. 1015â1026. doi:10.1094 / MPMI -21-8-1015
+<li>Michael M. Goodin, David Zaitlin, Rayapati A. Naidu, and Steven A. Lommel (2008) <i>Nicotiana benthamiana</i>: Its History and Future as a Model for Plant-Pathogen Interactions. MPMI Vol. 21, No. 8, 2008, pp 1026.</li>
+</ol>
 
 
