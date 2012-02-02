@@ -18,7 +18,7 @@ $prop_id=> ''
 }
 </style>
 
-
+<&| /page/info_section.mas, title=>'SOL-100 Genome sequencing project data', collapsible=>1 &>
 
 <& /page/form.mas,
   object_type          => 'organismprop', 
@@ -36,7 +36,7 @@ $prop_id=> ''
   
 &>
 
-
+</&>
   
 
 
