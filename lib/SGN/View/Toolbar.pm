@@ -246,16 +246,30 @@ sub default_toolbar_data {
             menu => [
                 {  name => 'Organisms' },
                 {
-                    name => 'Tomato genome',
+                    name => 'Tomato',
                     link => '/organism/Solanum_lycopersicum/genome',
                     desc =>
 'The gene-rich euchromatic portion of the tomato genome has been sequenced by an international consortium.',
                 },
                 {
-                    name => 'Potato genome',
+                    name => '<i>Solanum pimpinellifolium</i>',
+                    link => '/organism/Solanum_pimpinellifolium/genome',
+                    desc =>
+'Draft genome sequence of tomato\'s closest wild relative.',
+                },
+
+                {
+                    name => 'Potato',
                     link => '/organism/Solanum_tuberosum/genome',
                     desc => '',
                 },
+
+                {
+                    name => '<i>Nicotiana benthamiana</i>',
+                    link => '/organism/Nicotiana_benthamiana/genome',
+                    desc => 'Draft sequence for Nicotiana benthamiana, sequenced by labs at the Boyce Thompson Institute',
+                },
+
 
                 {   name => 'Projects', type => 'title'  },
 
