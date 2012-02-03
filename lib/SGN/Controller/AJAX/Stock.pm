@@ -478,8 +478,8 @@ sub associate_ontology_POST :Args(0) {
                 $c->stash->{email} = {
                     to      => 'sgn-bugs@sgn.cornell.edu',
                     from    => 'sgn-bugs@sgn.cornell.edu',
-                    subject => 'Associate ontology failed! Stock_id = $stock_id',
-                    body    => '$_',
+                    subject => "Associate ontology failed! Stock_id = $stock_id",
+                    body    => $_,
                 };
                 $c->forward( $c->view('Email') );
                 return;
@@ -488,8 +488,8 @@ sub associate_ontology_POST :Args(0) {
             print STDERR "***** User " . $logged_user->get_object->get_first_name . " " . $logged_user->get_object->get_last_name . "has stored a new ontology term for stock $stock_id\n\n";
             $c->stash->{email} = {
                 to      => 'sgn-db-curation@sgn.cornell.edu',
-                from    => 'sgn-bugs@sgn.cornell.edu',
-                subject => 'New ontology term loaded. Stock $stock_id',
+                from    => 'www-data@sgn-vm.sgn.cornell.edu',
+                subject => "New ontology term loaded. Stock $stock_id",
                 body    => "User " . $logged_user->get_object->get_first_name . " " . $logged_user->get_object->get_last_name . "has stored a new ontology term for stock $stock_id http://solgenomics.net/stock/$stock_id/view",
             };
             $c->forward( $c->view('Email') );
