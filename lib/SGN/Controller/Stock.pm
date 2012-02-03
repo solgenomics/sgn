@@ -15,6 +15,7 @@ use URI::FromHash 'uri';
 use List::Compare;
 use File::Temp qw / tempfile /;
 use File::Slurp;
+use JSON;
 
 use CXGN::Chado::Stock;
 use SGN::View::Stock qw/stock_link stock_organisms stock_types/;
@@ -294,6 +295,60 @@ sub download_phenotypes : Chained('get_stock') PathPart('phenotypes') Args(0) {
         #stock    repeat	experiment	year	SP:0001	SP:0002
     }
 }
+
+
+
+=head2 download_genotypes
+
+=cut
+
+
+sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
+    my ($self, $c) = @_;
+    my $stock = $c->stash->{stock_row};
+    my $stock_id = $stock->stock_id;
+    my $stock_name = $stock->uniquename;
+    if ($stock_id) {
+        my $tmp_dir = $c->get_conf('basepath') . "/" . $c->get_conf('stock_tempfiles');
+        my $file_cache = Cache::File->new( cache_root => $tmp_dir  );
+        $file_cache->purge();
+        my $key = "stock_" . $stock_id . "_genotype_data";
+        my $gen_file = $file_cache->get($key);
+        my $filename = $tmp_dir . "/stock_" . $stock_id . "_genotypes.csv";
+        unless ( -e $gen_file) {
+            my $gen_hashref; #hashref of hashes for the phenotype data
+            my %cvterms ; #hash for unique cvterms
+            ##############
+            my $genotypes =  $self->_stock_project_genotypes( $stock );
+            write_file($filename, qw[project marker $stock_name] );
+            foreach my $project (keys %$genotypes ) {
+                my $geno = $genotypes->{$project} ;
+                my $replicate = 1;
+		my $genotypeprop_rs = $geno->search_related('genotypeprops', {
+                    #this is the current genotype we have , add more here as necessary
+                    'type.name' => 'infinium array' } , {
+                        join => 'type' } );
+                while (my $prop = $genotypeprop_rs->next) {
+                    my $json_text = $prop->value ;
+                    my %genotype_values = decode_json($json_text);
+                    foreach my $marker_name (keys %genotype_values) {
+                        my $read = $genotype_values{$marker_name};
+                        write_file( $filename, ($project, "\t" , $marker_name, "\t", $read) );
+                    }
+                }
+            }
+            $file_cache->set( $key, $filename, '30 days' );
+            $gen_file = $file_cache->get($key);
+        }
+        my @data;
+        foreach ( read_file($filename) ) {
+            push @data, [ split(/\t/) ];
+        }
+        $c->stash->{'csv'}={ data => \@data};
+        $c->forward("View::Download::CSV");
+    }
+}
+
 
 =head2 get_stock
 
