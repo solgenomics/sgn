@@ -201,7 +201,7 @@ How can a deeper understanding of the genetic basis of plant biodiversity be har
 </&>
 
 <&| /page/info_section.mas, title=>"Submit genome to SGN" &>
-If you are sequencing a SOL-100 genome, please submit the genome to SGN. <a href="mailto:sgn-feedback@solgenomics.net">Contact SGN</a> for more information.
+If you are sequencing a SOL-100 genome, please submit the genome to SGN. <br /><br /><b>Submission to SGN requires prior submission to <a href="http://ncbi.nlm.nih.gov">Genbank</a></b> and a <b><a href="http://www.ncbi.nlm.nih.gov/genomes/static/gprj_help.html#what_projectID">Genbank Project ID</a></b>. Please contact <a href="mailto:smtwhite@ncbi.nlm.nih.gov">Brian Smith-White</a> at Genbank or <a href="mailto:sgn-feedback@solgenomics.net">SGN</a> for more information.
 </&>
 
 
