@@ -205,6 +205,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
             cview_basepath => $c->get_conf('basepath'),
             image_ids      => $image_ids,
             allele_count   => $c->stash->{allele_count},
+            ontology_count => $c->stash->{ontology_count},
         },
         locus_add_uri  => $c->uri_for( '/ajax/stock/associate_locus' ),
         cvterm_add_uri => $c->uri_for( '/ajax/stock/associate_ontology')
@@ -371,7 +372,7 @@ sub get_stock : Chained('/')  PathPart('stock')  CaptureArgs(1) {
 sub get_stock_cvterms : Private {
     my ( $self, $c ) = @_;
     my $stock = $c->stash->{stock};
-    my $stock_cvterms = $stock ? $self->_stock_cvterms($stock) : undef;
+    my $stock_cvterms = $stock ? $self->_stock_cvterms($stock, $c) : undef;
     $c->stash->{stock_cvterms} = $stock_cvterms;
 }
 
@@ -413,7 +414,7 @@ sub get_stock_extended_info : Private {
     my $dbxrefs  = $stock ?  $self->_stock_dbxrefs($stock) : undef ;
     $c->stash->{stock_dbxrefs} = $dbxrefs;
 
-    my $cvterms  = $stock ?  $self->_stock_cvterms($stock) : undef ;
+    my $cvterms  = $stock ?  $self->_stock_cvterms($stock, $c) : undef ;
     $c->stash->{stock_cvterms} = $cvterms;
 
     my $direct_phenotypes  = $stock ? $self->_stock_project_phenotypes( $c->stash->{stock_row} ) : undef;
@@ -725,16 +726,19 @@ sub _stock_dbxrefs {
 }
 
 sub _stock_cvterms {
-    my ($self,$stock) = @_;
+    my ($self,$stock, $c) = @_;
     my $bcs_stock = $stock->get_object_row;
     # hash of arrays. Keys are db names , values are lists of StockCvterm objects
     my $scvterms ;
+    my $count;
     if ($bcs_stock) {
         my $stock_cvterms = $bcs_stock->search_related("stock_cvterms");
         while ( my $scvterm =  $stock_cvterms->next ) {
+            $count++;
             push @{ $scvterms->{$scvterm->cvterm->dbxref->db->name} } , $scvterm;
         }
     }
+    $c->stash->{ontology_count} = $count ;
     return $scvterms;
 }
 

@@ -259,7 +259,7 @@ function jqueryStuff() {
 
 <&| /page/info_section.mas,
   id   => 'stock_ontology',
-  title=>"Ontology annotation",
+  title=>"Ontology annotation (" . $stockref->{ontology_count} . ")",
   collapsible=>1,
   collapsed=>1,
   subtitle=>$ontology_subtitle &>
