@@ -244,24 +244,25 @@ sub default_toolbar_data {
             link => '/about/tomato_sequencing/',
             desc => 'Read about sequencing projects.',
             menu => [
-                {  name => 'Organisms' },
+                {  name => 'Reference genomes' },
                 {
                     name => 'Tomato',
                     link => '/organism/Solanum_lycopersicum/genome',
                     desc =>
 'The gene-rich euchromatic portion of the tomato genome has been sequenced by an international consortium.',
                 },
-                {
-                    name => '<i>Solanum pimpinellifolium</i>',
-                    link => '/organism/Solanum_pimpinellifolium/genome',
-                    desc =>
-'Draft genome sequence of tomato\'s closest wild relative.',
-                },
 
                 {
                     name => 'Potato',
                     link => '/organism/Solanum_tuberosum/genome',
                     desc => '',
+                },
+		{ name => 'Draft genomes' },
+                {
+                    name => '<i>Solanum pimpinellifolium</i>',
+                    link => '/organism/Solanum_pimpinellifolium/genome',
+                    desc =>
+'Draft genome sequence of tomato\'s closest wild relative.',
                 },
 
                 {
