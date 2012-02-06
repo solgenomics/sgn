@@ -29,7 +29,7 @@ Seedlings were grown in the greenhouse and nuclear DNA was extracted from etiola
 
 <h4>Accession sequenced</h4>
 
-The accession sequenced is referred to as âNb-BTIâ. Â Seeds can be obtained by contacting Gregory Martin at <a href="mailto:gbm7@cornell.edu">gbm7@cornell.edu</a>.
+The accession sequenced is referred to as "Nb-BTI". Seeds can be obtained by contacting Gregory Martin at <a href="mailto:gbm7@cornell.edu">gbm7@cornell.edu</a>.
 
 <h4>Assembly Statistics</h4>
 
@@ -41,14 +41,14 @@ This assembly was made with the run 1: lanes 1 and 2 (PE-500bp), 7 (MP-2Kb) and 
 
 Statistics:
 ==================================================================
-Sequence Count:	16,712,575 Â sequences
-Total Length: 		3,537,872,900 bp Â (3.54 Gb)
+Sequence Count:	        16,712,575 sequences
+Total Length: 		3,537,872,900 bp (3.54 Gb)
 Longest sequence: 	48,701 bp (ID = Niben.v0.2.Ctg33405712)
 Shortest sequence:	64 Â Â Â bp ID = Niben.v0.2.Ctg2370702)
-Average length:	211.69 bp
+Average length:	        211.69 bp
 N90 length:		67 bp
 N90 index:		11,247,444 sequences
-N50 length: Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â  770 bp
+N50 length:             770 bp
 N50 index:		800,022 sequences
 N25 length:		2,769 bp
 N25 index:		176,112 sequences
@@ -63,11 +63,11 @@ This assembly was made with the run 1:  lanes 1 and 2 (PE-500bp), 7 (MP-2Kb) and
 
 Statistics:
 ===================================================================
-Sequence Count:		3,594,233 sequences
+Sequence Count:		        3,594,233 sequences
 Total Length:			3,135,589,426 bp (3.13 Gb)
 Longest sequence:		600,557 bp (ID = Niben.v0.2.Scf1965)
 Shortest sequence:		100 bp ID = Niben.v0.2.Ctg22772358)
-Average length:		872.39 bp
+Average length:		        872.39 bp
 N90 length:			154 bp
 N90 index:			1,048,018 sequences
 N50 length:			67,987 bp
@@ -99,4 +99,4 @@ Sequencing of the N. benthamiana genome was supported by funds from the Boyce Th
 
 <h4>Online tutorial</h4>
 
-An on-line tutorial of the VIGS procedure is available one the <a href="http://www.jove.com/video/1292/virus-induced-gene-silencing-vigs-in-nicotiana-benthamiana-and-tomato">JOVE site</a>.
+An on-line tutorial of the VIGS procedure is available on the <a href="http://www.jove.com/video/1292/virus-induced-gene-silencing-vigs-in-nicotiana-benthamiana-and-tomato">JOVE site</a>.
