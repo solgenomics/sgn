@@ -37,7 +37,7 @@ The accession sequenced is referred to as "Nb-BTI". Seeds can be obtained by con
 
 <pre>
 Contigs for Nicotiana benthamiana draft genome assembly version 0.3.
-This assembly was made with the run 1: 4 lanes of PE-500bp, lane 7 (MP-2Kb) and lane 8 (MP-5Kb) using SOAPdeNovo as assembler (Kmer 63).
+This assembly was made with the run 1: 5 lanes of PE-500bp, 1 lane of MP-2Kb and 1 lane of MP-5Kb, using SOAPdeNovo as assembler (Kmer 63).
 
 Statistics:
 ==========================================================
@@ -88,7 +88,7 @@ N25 index:	32376 sequences
 
 <h4>Tools</h4>
 
-The draft assembly can be analyzed using the SGN BLAST tool. There are no restrictions on the use of these data except that full genome analyses cannot be published.
+The draft assembly can be analyzed using the <a href="/tools/blast.pl?id=194">SGN BLAST</a> tool. There are no restrictions on the use of these data except that full genome analyses cannot be published.
 
 
 <h4>References</h4>
