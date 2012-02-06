@@ -204,6 +204,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
             cview_tmp_dir  => $cview_tmp_dir,
             cview_basepath => $c->get_conf('basepath'),
             image_ids      => $image_ids,
+            allele_count   => $c->stash->{allele_count},
         },
         locus_add_uri  => $c->uri_for( '/ajax/stock/associate_locus' ),
         cvterm_add_uri => $c->uri_for( '/ajax/stock/associate_ontology')
@@ -379,6 +380,8 @@ sub get_stock_allele_ids : Private {
     my $stock = $c->stash->{stock};
     my $allele_ids = $stock ? $self->_stock_allele_ids($stock) : undef;
     $c->stash->{allele_ids} = $allele_ids;
+    my $count = $allele_ids ? scalar( @$allele_ids ) : undef;
+    $c->stash->{allele_count} = $count ;
 }
 
 sub get_stock_owner_ids : Private {
