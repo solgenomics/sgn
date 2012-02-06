@@ -366,9 +366,9 @@ sub phenotype_data {
     my $c = shift;
 
     my $pheno_count = $c->stash->{organism}->get_phenotype_count();
-    my $common_name = $c->stash->{common_name};
+    my $organism_id = $c->stash->{organism}->get_organism_id;
     my $pheno_list =
-        qq|<a href="/search/phenotype_search.pl?wee9_common_name=$common_name">$pheno_count</a>|;
+        qq|<a href= "/stock/search?organism=$organism_id&search_submitted=1&submit=Search">$pheno_count</a>|;
     $c->stash->{phenotypes} = $pheno_list;
 }
 
