@@ -15,7 +15,7 @@ use URI::FromHash 'uri';
 use List::Compare;
 use File::Temp qw / tempfile /;
 use File::Slurp;
-use JSON;
+use JSON::Any;
 
 use CXGN::Chado::Stock;
 use SGN::View::Stock qw/stock_link stock_organisms stock_types/;
@@ -322,23 +322,25 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
             my %cvterms ; #hash for unique cvterms
             ##############
             my $genotypes =  $self->_stock_project_genotypes( $stock );
-            write_file($filename, qw[project marker $stock_name] );
+            write_file($filename, ("project\tmarker\t$stock_name\n") );
             foreach my $project (keys %$genotypes ) {
-                my $geno = $genotypes->{$project} ;
-                my $replicate = 1;
-		my $genotypeprop_rs = $geno->search_related('genotypeprops', {
-                    #this is the current genotype we have , add more here as necessary
-                    'type.name' => 'infinium array' } , {
-                        join => 'type' } );
-                while (my $prop = $genotypeprop_rs->next) {
-                    my $json_text = $prop->value ;
-                    my %genotype_values = decode_json($json_text);
-                    foreach my $marker_name (keys %genotype_values) {
-                        my $read = $genotype_values{$marker_name};
-                        write_file( $filename, ($project, "\t" , $marker_name, "\t", $read) );
-                    }
-                }
-            }
+                #my $genotype_ref = $genotypes->{$project} ;
+                #my $replicate = 1;
+		foreach my $geno (@ { $genotypes->{$project} } ) {
+		    my $genotypeprop_rs = $geno->search_related('genotypeprops', {
+			#this is the current genotype we have , add more here as necessary
+			'type.name' => 'infinium array' } , {
+			    join => 'type' } );
+		    while (my $prop = $genotypeprop_rs->next) {
+			my $json_text = $prop->value ;
+			my $genotype_values = JSON::Any->decode($json_text);
+			foreach my $marker_name (keys %$genotype_values) {
+			    my $read = $genotype_values->{$marker_name};
+			    write_file( $filename, { append => 1 } , ($project, "\t" , $marker_name, "\t", $read, "\n") );
+			}
+		    }
+		}
+	    }
             $file_cache->set( $key, $filename, '30 days' );
             $gen_file = $file_cache->get($key);
         }
