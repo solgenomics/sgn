@@ -13,6 +13,11 @@
 
 
 
+
+
+</style>
+
+
 <& /page/page_title.mas, title=>"Release of a draft genome sequence for <i>Nicotiana benthamiana</i>" &>
 
 <p>Scientists at the Boyce Thompson Institute for Plant Research (BTI) have released a draft sequence of the <i>Nicotiana benthamiana</i> genome which is accessible through the SGN BLAST tool and can be downloaded from an ftp site (see: http://solgenomics.net/). The project was funded by BTI and National Science Foundation grants IOS-1025642 and IOS-0343327.</p>
@@ -22,7 +27,62 @@
 <p>The draft sequence of <i>N. benthamiana</i> will allow better design of constructs for virus-induced gene-silencing (VIGS) in order to reduce the possibility of 'off-target' gene silencing [1]. The sequence will also be useful for identifying orthologs of tomato and potato genes, for comparative genomics with other Solanaceae species, and for the retrieval of promoter sequences.</p>
 
 <p><i>N. benthamiana</i> has a very complex genome consisting of n=19 chromosomes that is estimated at over 3.5GB in size. Taxonomically, it is an old allotetraploid of the section Suaveolentes that formed from diploid parents from the section Sylvestres and the section Noctiflorae. It is native to Australia [2, 3].</p>
+<br />
 
+<style type="text/css">
+
+
+.bigbutton {
+
+background-color: #3333DD;
+font-color: white;
+border: 1px solid gray;
+filter: alpha(opacity=90); /* IE */
+opacity: 0.9; /* standard */	
+width: 20em;
+padding: 10px;
+font-size: 12px;
+font-weight: bold;
+line-height: 16px; 
+white-space: nowrap;
+z-index: 1;
+}
+
+.blastbutton { 
+    position: ;
+    top: 10px;
+    left: 100px;
+    bottom: 100px;
+    right: 200px;
+    font-size: 18px;
+}
+
+
+.a { 
+color: white;
+text-decoration: none;
+}
+
+.a:link { 
+color: white;
+text-decoration: none;
+}
+.a:hover {
+font-color: blue;
+text-decoration: none;
+background-color: green;
+}
+
+.a:visited {
+text-decoration: none;
+color: white;
+
+}
+
+</style>
+
+<center><a class="bigbutton a" href="/tools/blast/index.pl?db_id=194">BLAST <i>N. benthamiana</i> genome</a>&nbsp;&nbsp;<a class="bigbutton a" href="ftp://ftp.solgenomics.net/genomes/Nicotiana_benthamiana">FTP Site</a></center>
+<br />
 <h4>Sequencing approach</h4>
 
 Seedlings were grown in the greenhouse and nuclear DNA was extracted from etiolated leaves. From the DNA, three distinct libraries were synthesized for use in a Illumina HiSeq-2000 sequencer:  1) a paired end library with an insert size of approximately 500 bp insert size; 2) a mate-pair type library with an insert size of 2kb; and 3) a mate pair with an insert size of 5kb.  Sequencing was performed using a full run with 4 lanes of the paired end library and 1 lane each of the mate pair libraries.
@@ -98,7 +158,7 @@ The draft assembly can be analyzed using the <a href="/tools/blast.pl?id=194">SG
 
 <li>Knapp, S. M. W. Chase and J. J. Clarkson (2004).  Nomenclatural changes and a new sectional classification in Nicotiana (Solanaceae). Taxon 53:73-82.</li>
 
-<li>3.Goodin, M. M., D. Zaitlin, R. A. Naidu, and S. A. Lommel (2008).  Nicotiana benthamiana: Its history and future as a model for plant-pathogen interactions.  Molecular Plant-Microbe Interactions 21:1026.</li>
+<li>Goodin, M. M., D. Zaitlin, R. A. Naidu, and S. A. Lommel (2008).  Nicotiana benthamiana: Its history and future as a model for plant-pathogen interactions.  Molecular Plant-Microbe Interactions 21:1026.</li>
 </ol>
 
 
