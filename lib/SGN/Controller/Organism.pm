@@ -364,12 +364,24 @@ sub qtl_data {
 sub phenotype_data {
     my $self = shift;
     my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema','sgn_chado');
+    my $organism = $c->stash->{organism};
+    my $organism_id = $organism->get_organism_id;
+    my $pheno_count = $organism->get_phenotype_count();
+    my $onto_count  = $schema->resultset("Stock::StockCvterm")->search_related('stock', {
+        organism_id => $organism_id } )->count;
+    my $trait_count = $schema->resultset("NaturalDiversity::NdExperimentPhenotype")->search_related('nd_experiment')->search_related('nd_experiment_stocks')->search_related('stock', { organism_id => $organism_id } )->count;
 
-    my $pheno_count = $c->stash->{organism}->get_phenotype_count();
-    my $organism_id = $c->stash->{organism}->get_organism_id;
     my $pheno_list =
         qq|<a href= "/stock/search?organism=$organism_id&search_submitted=1&submit=Search">$pheno_count</a>|;
-    $c->stash->{phenotypes} = $pheno_list;
+    $c->stash->{phenotypes}  = $pheno_list;
+    my $onto_list =
+        qq|<a href= "/stock/search?organism=$organism_id&search_submitted=1&submit=Search">$onto_count</a>|;
+    $c->stash->{onto_count}  = $onto_list;
+    my $trait_list =
+        qq|<a href= "/stock/search?organism=$organism_id&search_submitted=1&submit=Search">$trait_count</a>|;
+    $c->stash->{trait_count} = $trait_list;
+
 }
 
 

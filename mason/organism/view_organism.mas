@@ -18,6 +18,8 @@ $maps => ''
 $est_attribution => ''
 @libraries => ()
 $phenotypes => ''
+$onto_count => ''
+$trait_count => ''
 $loci => ''
 $qtl_data => undef
 $user_id => undef
@@ -79,7 +81,11 @@ my $image_subtitle =
 
 <&| /page/info_section.mas, title=>'Phenomic Details', collapsible=>1 &>
 
-Number of phenotyped lines (for all <% $common_name %> species combined): <% $phenotypes %>
+Number of phenotyped lines : <% $phenotypes %>
+<br />
+Number of traits scored  : <% $trait_count %>
+<br />
+Number of ontology annotations : <% $onto_count %>
 <br /><br />
 
 
