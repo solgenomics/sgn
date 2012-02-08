@@ -93,58 +93,58 @@ The accession sequenced is referred to as "Nb-BTI". Seeds can be obtained by con
 
 <h4>Assembly Statistics</h4>
 
-<i>N. benthamiana</i> Genome v0.3 Contigs
+<i>N. benthamiana</i> Genome v0.3 Contigs<br /><br />
 
-<pre>
+<font face="courier">
 Contigs for Nicotiana benthamiana draft genome assembly version 0.3.
 This assembly was made with the run 1: 5 lanes of PE-500bp, 1 lane of MP-2Kb and 1 lane of MP-5Kb, using SOAPdeNovo as assembler (Kmer 63).
-
-Statistics:
-==========================================================
-= REPORT: Niben.genome.v0.3.contigs                      =
-==========================================================
-Sequence Count:	3010735 sequences
-Total Length:	2899410662 bp
-Longest sequence:	103554 bp	(ID = Niben.v0.3.Ctg25014514)
-Shortest sequence:	201 bp		(ID = Niben.v0.3.Ctg6458060)
-Average length:	963.024199074312 bp
-N95 length:	233 bp
-N95 index:	2338365 sequences
-N90 length:	274 bp
-N90 index:	1763126 sequences
-N75 length:	619 bp
-N75 index:	606395 sequences
-N50 length:	4140 bp
-N50 index:	156329 sequences
-N25 length:	10316 bp
-N25 index:	43823 sequences
-==========================================================
-
-N. benthamiana Genome v0.3 Scaffolds + NrContigs
-
-Scaffolds and contigs that are not contained in any scaffold for Nicotiana benthamiana draft genome assembly version 0.3
-
-==========================================================
-= REPORT: Niben.genome.v0.3.scaffolds.nrcontigs          =
-==========================================================
-Sequence Count:	2770496 sequences
-Total Length:	2951043762 bp
-Longest sequence:	104967 bp	(ID = Niben.v0.3.Scf25287388)
-Shortest sequence:	201 bp		(ID = Niben.v0.3.Ctg6458060)
-Average length:	1065.16802839636 bp
-N95 length:	233 bp
-N95 index:	2087056 sequences
-N90 length:	276 bp
-N90 index:	1504209 sequences
-N75 length:	667 bp
-N75 index:	349603 sequences
-N50 length:	9243 bp
-N50 index:	94013 sequences
-N25 length:	15951 bp
-N25 index:	32376 sequences
-==========================================================
-
-</pre>
+<br />
+Statistics:<br />
+==========================================================<br />
+= REPORT: Niben.genome.v0.3.contigs                      =<br />
+==========================================================<br />
+Sequence Count:	3010735 sequences<br />
+Total Length:	2899410662 bp<br />
+Longest sequence:	103554 bp	(ID = Niben.v0.3.Ctg25014514)<br />
+Shortest sequence:	201 bp		(ID = Niben.v0.3.Ctg6458060)<br />
+Average length:	963.024199074312 bp<br />
+N95 length:	233 bp<br />
+N95 index:	2338365 sequences<br />
+N90 length:	274 bp<br />
+N90 index:	1763126 sequences<br />
+N75 length:	619 bp<br />
+N75 index:	606395 sequences<br />
+N50 length:	4140 bp<br />
+N50 index:	156329 sequences<br />
+N25 length:	10316 bp<br />
+N25 index:	43823 sequences<br />
+==========================================================<br />
+<br />
+N. benthamiana Genome v0.3 Scaffolds + NrContigs<br />
+<br />
+Scaffolds and contigs that are not contained in any scaffold for Nicotiana benthamiana draft genome assembly version 0.3<br />
+<br />
+==========================================================<br />
+= REPORT: Niben.genome.v0.3.scaffolds.nrcontigs          =<br />
+==========================================================<br />
+Sequence Count:	2770496 sequences<br />
+Total Length:	2951043762 bp<br />
+Longest sequence:	104967 bp	(ID = Niben.v0.3.Scf25287388)<br />
+Shortest sequence:	201 bp		(ID = Niben.v0.3.Ctg6458060)<br />
+Average length:	1065.16802839636 bp<br />
+N95 length:	233 bp<br />
+N95 index:	2087056 sequences<br />
+N90 length:	276 bp<br />
+N90 index:	1504209 sequences<br />
+N75 length:	667 bp<br />
+N75 index:	349603 sequences<br />
+N50 length:	9243 bp<br />
+N50 index:	94013 sequences<br />
+N25 length:	15951 bp<br />
+N25 index:	32376 sequences<br />
+==========================================================<br />
+<br />
+</font>
 
 <h4>Tools</h4>
 
