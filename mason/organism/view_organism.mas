@@ -55,7 +55,7 @@ my $image_subtitle =
 
 <& /organism/accessions.mas, accessions => $accessions &>
 
-% if ($taxon ne 'species') { return; }
+% if ($taxon ne 'species' && $taxon ne 'subspecies') { return; }
 
 <&| /page/info_section.mas, title=>'Metabolic details' &>
 <% $solcyc_link %>
