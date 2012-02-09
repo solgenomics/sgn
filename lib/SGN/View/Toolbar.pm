@@ -347,8 +347,13 @@ sub default_toolbar_data {
                     link => '/gbrowse/bin/gbrowse/',
                     desc => 'browse genomic annotations',
                 },
+		{
+		    name => 'Comparative Genome Browser',
+		    link => 'http://solgenomics.net/gbrowse2/bin/gbrowse_syn/sol2/?search_src=pot;name=ST3.10ch01:1..90000000',
+		    desc => 'Compare genomes using GBrowse_syn',
+		},
                 {
-                    name => 'Comparative Viewer',
+                    name => 'Comparative Map Viewer',
                     link =>
 '/cview/view_chromosome.pl?show_offsets=1&amp;show_ruler=1&amp;show_offsets=1',
                     desc =>
@@ -420,7 +425,7 @@ sub default_toolbar_data {
                 #Other
                 { name => "Other" },
                 {
-                    name => 'SGN Ontology Browser [beta]',
+                    name => 'SGN Ontology Browser',
                     link => '/tools/onto/',
                     desc => 'AJAX ontology browser.'
                 },
