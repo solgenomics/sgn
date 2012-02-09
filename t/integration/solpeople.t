@@ -26,7 +26,7 @@ my $mech = SGN::Test::WWW::Mechanize->new;
 $mech->while_logged_in_all( sub {
     my ($user_info) = @_;
     $mech->get_ok('/solpeople/top-level.pl');
-    $mech->content_contains('My SGN' );
+    $mech->content_contains('My '.$mech->context->get_conf("project_name") );
     $mech->content_contains('[log out]');
     $mech->content_contains('BLAST Watch');
     $mech->content_contains('User Status');
@@ -55,7 +55,7 @@ $mech->while_logged_in_all( sub {
 {
     my $url = '/solpeople/login.pl';
     $mech->get_ok("$base_url/$url?logout=yes");
-    $mech->content_like(qr/You have successfully logged out\. Thanks for using SGN\./ms);
+    $mech->content_like(qr/You have successfully logged out\. Thanks for using/ms);
 }
 
 done_testing;
