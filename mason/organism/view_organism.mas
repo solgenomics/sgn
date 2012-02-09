@@ -104,9 +104,9 @@ Number of ontology annotations : <% $onto_count %>
 </&>
 
 
-<&| /page/info_section.mas, title=>'SOL100 genome sequencing project data', collapsible=>1 &>
+
 <& /organism/project_metadata.mas, organism_id=>$organism_id &>
-</&>
+
 
 
 <& /page/comments.mas, object_type=>"organism", object_id=>$organism_id, referer=>$this_page &>
