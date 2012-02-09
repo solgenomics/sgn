@@ -175,7 +175,7 @@ sub get_locus : Chained('/')  PathPart('locus')  CaptureArgs(1) {
 sub get_locus_owner_ids : Private {
     my ( $self, $c ) = @_;
     my $locus = $c->stash->{locus};
-    my @owner_ids = $locus ? $locus->get_owners : undef;
+    my @owner_ids = $locus ? $locus->get_owners : ();
     $c->stash->{owner_ids} = \@owner_ids;
 }
 
