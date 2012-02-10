@@ -1,8 +1,11 @@
 package SGN::Controller::Image;
+
 use Moose;
 use namespace::autoclean;
 use File::Basename;
+use SGN::Image;
 use CXGN::Login;
+
 
 use URI::FromHash 'uri';
 
@@ -57,7 +60,7 @@ sub confirm :Path('/image/confirm') {
     if (! -e $tempfile) {
         die "No tempfile $tempfile\n";
     }
-
+    
     my $filename_validation_msg =  $self->validate_image_filename(basename($filename));
     if ( $filename_validation_msg )  { #if non-blank, there is a problem with Filename, print messages
 
