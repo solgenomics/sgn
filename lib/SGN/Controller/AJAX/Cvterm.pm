@@ -60,7 +60,7 @@ sub autocomplete_GET :Args(0) {
                LEFT JOIN cvtermsynonym USING (cvterm_id )
                WHERE db.name = ? AND (cvterm.name ilike ? OR cvtermsynonym.synonym ilike ? OR cvterm.definition ilike ?) AND cvterm.is_obsolete = 0
 GROUP BY cvterm.cvterm_id,cv.name, cvterm.name, dbxref.accession, db.name
-ORDER BY cv.name, cvterm.name";
+ORDER BY cv.name, cvterm.name limit 30";
     my $sth= $schema->storage->dbh->prepare($query);
     $sth->execute($db_name, "\%$term_name\%", "\%$term_name\%", "\%$term_name\%");
     my @response_list;
