@@ -149,7 +149,9 @@ sub process_image {
         $self->associate_organism($type_id);
     } 
     elsif ( $type eq "test") { 
-	# silent operation... everything is fine, it's a test!
+	# need to return something to make this function happy
+	return 1;
+	
     }
     else {
         warn "type $type is not recognized as one of the legal types. Not associating image with any object. Please check if your loading script links the image with an sgn object! \n";
