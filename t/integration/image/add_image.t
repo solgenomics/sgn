@@ -13,21 +13,20 @@ my $m = SGN::Test::WWW::Mechanize->new;
 
 my $test_file = 't/data/tv_test_1.png';
 # test image upload
-#$m->get_ok('/image/add?type=test&type_id=1');
+$m->get_ok('/image/add?type=test&type_id=1');
 
 $m->with_test_level( local => sub {
     $m->while_logged_in( { user_type => 'user' }, sub {
         my $user_info = shift;
 
         # test image upload
-        $m->get_ok('/image/add?type=test&type_id=1');
+        $m->get_ok('/image/add?action=new&type=test&type_id=1');
 
         my %form = (
             form_name => 'upload_image_form',
             fields => {
                 file => $test_file,
-                #		 type=>'locus',
-                #		 type_id=>'1',
+		type=>'test',
                 refering_page => 'http://google.com',
             },
            );
@@ -43,7 +42,7 @@ $m->with_test_level( local => sub {
 	my $store_form = { 
 	    form_name => 'store_image',
 	};
-
+	
 	$m->submit_form_ok($store_form, "Submitting the image for storage");
 	
 	$m->content_contains('SGN Image');
@@ -59,10 +58,10 @@ $m->with_test_level( local => sub {
 
 	my $dbh = $m->context->dbc->dbh();
 	my $i = CXGN::Image->new(dbh=>$dbh, image_id=>$image_id, image_dir=>$m->context->config->{'image_dir'});
-	diag "Deleting image_id $image_id\n";
+	#diag "Deleting image_id $image_id\n";
 	$i->hard_delete();
 
-	$dbh->commit();
+	#$dbh->commit();
 	$dbh->disconnect();
        
   });
