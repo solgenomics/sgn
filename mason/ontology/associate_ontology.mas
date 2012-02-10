@@ -96,14 +96,25 @@ $ontology_url
 
 <script language="javascript">
   jQuery(function() {
+       var db_name = jQuery('#db_name option:selected').attr("value");
        jQuery("#term_name").autocomplete({
-             source: '<% $cvterm_autocomplete_uri %>' + "?db_name=" + jQuery("#db_name").val(),
+             source: '<% $cvterm_autocomplete_uri %>' + "?db_name=" + db_name,
              //delay: 1000,
              autoFocus: true,
              minLength: 3,
              select: function(event, ui) { Ontology.populateEvidence('relationship_select', '/ajax/cvterm/relationships'); }
           });
-   });
+
+       jQuery("#db_name").change(function(){
+            db_name = jQuery('#db_name option:selected').attr("value");
+             jQuery("#term_name").autocomplete('option', 'source', '<% $cvterm_autocomplete_uri %>' + "?db_name=" + db_name);
+       });
+
+  });
+
+
+
+
 
 </script>
 
@@ -116,7 +127,7 @@ $ontology_url
     <div id="cvterm_search"  >
       <table width="100%">
         <tr><td width = "30%"><b>Select ontology</b><br />
-            <select id = "db_name" onchange = "jQuery('#term_name').val('')" >
+            <select id = "db_name" onchange = "jQuery('#term_name').val('');" >
               <option value="GO">GO (gene ontology)</option>
               <option value="PO">PO (plant ontology)</option>
               <option value="SP">SP (Solanaceae phenotypes)</option>
