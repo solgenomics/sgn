@@ -392,6 +392,11 @@ sub default_toolbar_data {
                     desc => 'In Silico PCR tool based on BLAST'
                 },
 
+		{ 
+		    name => 'Tomato Expression Database (TED)',
+		    link => '/ted',
+		    desc => 'The Tomato Expression Database',
+		},
                 #Systems Biology
                 { name => "Systems Biology" },
                 {
