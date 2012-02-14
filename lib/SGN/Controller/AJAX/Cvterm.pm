@@ -58,7 +58,7 @@ sub autocomplete_GET :Args(0) {
                JOIN dbxref USING (db_id ) JOIN cvterm USING (dbxref_id)
                JOIN cv USING (cv_id )
                LEFT JOIN cvtermsynonym USING (cvterm_id )
-               WHERE db.name = ? AND (cvterm.name ilike ? OR cvtermsynonym.synonym ilike ? OR cvterm.definition ilike ?) AND cvterm.is_obsolete = 0
+               WHERE db.name = ? AND (cvterm.name ilike ? OR cvtermsynonym.synonym ilike ? OR cvterm.definition ilike ?) AND cvterm.is_obsolete = 0 AND is_relationshiptype = 0
 GROUP BY cvterm.cvterm_id,cv.name, cvterm.name, dbxref.accession, db.name
 ORDER BY cv.name, cvterm.name limit 30";
     my $sth= $schema->storage->dbh->prepare($query);
