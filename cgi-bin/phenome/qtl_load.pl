@@ -1524,12 +1524,7 @@ sub post_pheno_form {
 }
 sub post_geno_form {
     my ($self, $qtl_obj, $geno_file, $pop_id) = @_;
-    
-    if (!$pop_id) 
-    {
-        $c->throw_404("Can't load genotype data for unknown population. Pop id is missing");
-    }
-    
+        
     if (!$geno_file) 
     { 
         $self->error_page('Genotype dataset file'); 
