@@ -1526,18 +1526,16 @@ sub post_geno_form {
     my ($self, $qtl_obj, $geno_file, $pop_id) = @_;
     
     if (!$pop_id) 
-   {
+    {
         $c->throw_404("Can't load genotype data for unknown population. Pop id is missing");
-   }
+    }
     
     if (!$geno_file) 
     { 
         $self->error_page('Genotype dataset file'); 
     } 
 
-
-    my ($map_id, $map_version_id);
-      
+    my ($map_id, $map_version_id);     
     my  $uploaded_file = $self->geno_upload( $qtl_obj, $geno_file);
     
     if ($uploaded_file)
@@ -1550,6 +1548,7 @@ sub post_geno_form {
     }
   
     my $genotype_uploaded;
+
     if ($map_version_id) 
     {
         my $result = $self->store_marker_and_position($uploaded_file, $map_version_id);
@@ -1559,16 +1558,18 @@ sub post_geno_form {
             $c->throw_404("Couldn't store markers and position.");
         }
                    
-        my $genotype_uploaded = $self->store_genotype($uploaded_file, $map_version_id);
-
-            
+        my $genotype_uploaded = $self->store_genotype($uploaded_file, $map_version_id);           
+        
         if ($genotype_uploaded) 
         {
             $self->send_email( '[QTL upload: Step 4]', 'QTL genotype data uploaded : Step 4 of 5', $pop_id );
             $self->redirect_to_next_form($c->req->base . "qtl/form/stat_form/$pop_id");
         }
-    }
-          
+        else 
+        {
+            $c->throw_404("failed storing genotype data.");
+        }        
+    }          
 }
 
 sub redirect_to_next_form {
