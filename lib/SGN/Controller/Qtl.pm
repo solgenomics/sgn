@@ -320,7 +320,7 @@ sub _list_traits {
     my ($self, $c) = @_;      
     my $population_id = $c->stash->{pop}->get_population_id();
     my @phenotype;  
-    
+   
     if ($c->stash->{pop}->get_web_uploaded()) 
     {
         my @traits = $c->stash->{pop}->get_cvterms();
@@ -331,27 +331,15 @@ sub _list_traits {
             my $trait_name = $trait->get_name();
             my $definition = $trait->get_definition();
             
-            my ($min, $max, $avg, $std, $count)= $c->stash->{pop}->get_pop_data_summary($trait_id);
+            my ($min, $max, $avg, $std, $count) = $c->stash->{pop}->get_pop_data_summary($trait_id);
             
             $c->stash( trait_id   => $trait_id,
                        trait_name => $trait_name
                 );
-            
-            my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-            my $cvterm = $schema->resultset('Cv::Cvterm')->find(name => $trait_name);
-            my $trait_link;
-                    
-            if ($cvterm)
-            {                
-                $c->stash(cvterm_id =>$cvterm->id);
-                $self->_link($c);
-                $trait_link = $c->stash->{cvterm_page};                
-            } else
-            {
-                $self->_link($c);
-                $trait_link = $c->stash->{trait_page};
-            }
-            
+                      
+            $self->_link($c);
+            my $trait_link = $c->stash->{trait_page};
+          
             my $qtl_analysis_page = $c->stash->{qtl_analysis_page}; 
             push  @phenotype,  [ map { $_ } ( $trait_link, $min, $max, $avg, $count, $qtl_analysis_page ) ];               
         }
