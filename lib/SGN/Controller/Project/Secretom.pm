@@ -2,7 +2,7 @@ package SGN::Controller::Project::Secretom;
 use Moose;
 use namespace::autoclean;
 use Carp;
-use MooseX::Types::Path::Class;
+use MooseX::Types::Path::Class qw | Dir |;
 
 use JSON::Any; my $json = JSON::Any->new;
 
@@ -15,7 +15,7 @@ __PACKAGE__->config(
 
 has 'static_dir' => (
     is    => 'rw',
-    isa    => 'Path::Class::Dir',
+    isa    => Dir,
     coerce => 1,
     default => sub {
         my $self = shift;
