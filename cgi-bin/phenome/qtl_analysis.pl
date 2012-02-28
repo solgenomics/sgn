@@ -1164,7 +1164,7 @@ sub crosstype_file {
                           from cross_type
                           where cross_type_id = ?
 
-    my $rqtl_cross_type = { 'Back cross' => 'bc',  'F2' => 'f2' }->{$cross_type}
+    my $rqtl_cross_type = { 'Back cross' => 'bc',  'F2' => 'f2', 'RIL' => 'ril' }->{$cross_type}
         or die "unknown cross_type '$cross_type' for population '$pop_id'";
 
     my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
