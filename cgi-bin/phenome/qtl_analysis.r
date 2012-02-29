@@ -311,7 +311,7 @@ if (cross == "f2")
 
   popdata<-jittermap(popdata)
 } else
-if (cross == "bc" | cross == "ril")
+if (cross == "bc" | cross == "rilsib" | cross == "rilself")
 {
   popdata<- read.cross("csvs",
                        genfile=genodata,
@@ -323,17 +323,14 @@ if (cross == "bc" | cross == "ril")
   popdata<-jittermap(popdata)
 }  
 
-if (cross == "ril")
+if (cross == "rilself")
   {
-    if (matingType == "selfing")
-      {
-        popdata<-convert2riself(popdata)
-      }
-    else
-      if (matingType == "sibling mating")
-        {
-          popdata<-convert2risib(popdata) 
-        }      
+    popdata<-convert2riself(popdata)
+  }
+else
+  if (cross == "rilsib")
+  {
+    popdata<-convert2risib(popdata)  
   }
 
 #calculates the qtl genotype probablity at
