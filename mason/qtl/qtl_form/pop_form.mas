@@ -55,14 +55,6 @@ my $parent_f = tooltipped_text('Female parent', 'format eg. Solanum lycopersicum
 	          <% $cross_options %>
              </select>
          </td>
-	 <td>Mating type (for RIL only)</td>
-	 <td> <select name="pop_mating_type">
-	         <option>
-                 <option>Selfing
-                 <option>Sibling mating
-             </select>
-         </td>
-         
      </tr>
      <tr>
 	<td>Population name<% $required %></td>
