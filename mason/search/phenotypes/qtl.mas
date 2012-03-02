@@ -14,10 +14,16 @@ foreach my $pop_obj (@qtl_pops) {
    my $pop_name = $pop_obj->get_name();
    $pop_links  .= qq |<a href="/qtl/population/$pop_id">$pop_name</a> <br /> |;     
 }
-
-my $help = qq |(<a href="/qtl/search/help">help</a>)|;       
+  
 </%perl>
 
+<p align="right">
+  [ 
+    <a href="/qtl/form">Submit QTL data</a> | 
+    <a href="/qtl/submission/guide">Submissin guide</a> | 
+    <a href="/qtl/search/help">Search help</a>
+  ]
+</p>
 
 <form  action= "/qtl/search/results" method="post">
   <table align=center cellpadding=20px>
@@ -33,7 +39,7 @@ my $help = qq |(<a href="/qtl/search/help">help</a>)|;
       </td>
     </tr>
     <tr>
-      <td>Search QTLs with trait name <% $help %>:
+      <td>Search QTLs with trait name:
       </td>
     </tr>
     <tr>
@@ -41,9 +47,6 @@ my $help = qq |(<a href="/qtl/search/help">help</a>)|;
         <input type="text" name="trait" size=24>
         <input type="submit" value="Search">  
       </td>
-       <td>
-         <a href="/qtl/form">[Submit new QTL data]</a>
-       </td> 
     </tr>
      <tr>
       <td>&nbsp;
