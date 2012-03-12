@@ -1,0 +1,18 @@
+
+<%args>
+$raw_blast_file => undef
+$coverage_graph => undef
+@unique_regions => ()
+</%args>
+
+<img src="$coverage_graph" />
+
+
+
+
+view <a href="$raw_blast_file">raw blast report</a>
+
+
+</table>
+
+
