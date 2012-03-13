@@ -326,9 +326,8 @@ if (cross == "bc" | cross == "rilsib" | cross == "rilself")
 if (cross == "rilself")
   {
     popdata<-convert2riself(popdata)
-  }
-else
-  if (cross == "rilsib")
+  } else
+if (cross == "rilsib")
   {
     popdata<-convert2risib(popdata)  
   }
