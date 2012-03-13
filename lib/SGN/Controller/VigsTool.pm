@@ -27,7 +27,12 @@ sub input :Path('/tools/vigs/') :Args(0) {
     my $dbh = CXGN::DB::Connection->new;
     our $prefs = CXGN::Page::UserPrefs->new( $dbh );
     
+    print STDERR "Generating the blast select list\n";
+
     my ($databases,$programs,$programs_js) = blast_db_prog_selects($c,$prefs);
+
+
+    print STDERR "stashing stuff...\n";
 
     $c->stash->{template} = '/tools/vigs/input.mas';
 
@@ -43,6 +48,7 @@ sub blast_db_prog_selects {
 
   sub opt {
     my $db = shift;
+    print STDERR "processing $db...\n";
     my $timestamp = $db->file_modtime
       or return '';
     $timestamp = strftime(' &nbsp;(%m-%d-%y)',gmtime $db->file_modtime);
@@ -52,12 +58,16 @@ sub blast_db_prog_selects {
   }
 
   my @db_choices = map {
-
+      
       print STDERR $c->get_conf('blast_db_path')." ". $_->name ."= ". join (",", $_->blast_dbs( web_interface_visible=>'t'))."\n\n";
-    my @dbs = map [$_,opt($_)], grep $_->file_modtime, $_->blast_dbs( web_interface_visible => 't');
 
-    @dbs || print STDERR "No databases available...". $_->name."\n";
-    @dbs ? ('__'.$_->name, @dbs) : ()
+      my @web_visible = $_->blast_dbs( web_interface_visible=>'t');
+      print STDERR "WEB VISIBLE ".join(",", @web_visible)."\n";
+
+      my @dbs = map [$_,opt($_)], grep $_->file_modtime, $_->blast_dbs( web_interface_visible => 't');
+      
+      @dbs || print STDERR "No databases available...". $_->name."\n";
+      @dbs ? ('__'.$_->name, @dbs) : ()
   } CXGN::BlastDB::Group->search_like(name => '%',{order_by => 'ordinal, name'});
 
   my @ungrouped_dbs = grep $_->file_modtime,CXGN::BlastDB->search( blast_db_group_id => undef, web_interface_visible => 't', {order_by => 'title'} );
@@ -238,8 +248,9 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
              #return '/data/shared/blast/databases/genbank/nr';
 	     #remember the file_base the user just blasted with
 	     
-	     #return -d => $basename;
-	     return -d => '/data/shared_local/blast/databases/tomato_genome/Slycopersicum_wgs_scaffolds_prerelease';
+	     return -d => $basename;
+	     
+
 	 },
 
 	 program =>
