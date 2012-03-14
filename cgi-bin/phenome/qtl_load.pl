@@ -644,8 +644,7 @@ sub store_trait_values {
     my $file         = shift;
     my $pop_id       = $self->get_population_id();
     my $sp_person_id = $self->get_sp_person_id();
-    my $dbh          = $self->get_dbh();
-
+    my $dbh          = $c->dbc->dbh;
     open( F, "<$file" ) || die "Can't open file $file.";
 
     my $header = <F>;
@@ -655,13 +654,12 @@ sub store_trait_values {
     my @trait = ();
     my ( $trait_name, $trait_id );
 
-    for ( my $i = 1 ; $i < @fields ; $i++ ) {
-
-        $trait[$i] =
-          CXGN::Phenome::UserTrait->new_with_name( $dbh, $fields[$i] );
+    for ( my $i = 1 ; $i < @fields ; $i++ ) 
+    {
+        $trait[$i] = CXGN::Phenome::UserTrait->new_with_name( $dbh, $fields[$i] );
+        my $id = $trait[$i]->get_user_trait_id();
         $trait_name = $trait[$i]->get_name();
         $trait_id   = $trait[$i]->get_user_trait_id();
-
     }
     eval {
         while (<F>)
@@ -685,7 +683,12 @@ sub store_trait_values {
                     qq | $individual_name $pop_id .":". $i |);
                 $phenotype->set_observable_id(
                     $trait[$i]->get_user_trait_id() );
-                $phenotype->set_value( $values[$i] );
+                
+                if ($values[$i] &&  $values[$i] =~ /NA|-/) 
+                {
+                    $values[$i] = undef;
+                }
+                $phenotype->set_value($values[$i]);
                 $phenotype->set_individual_id($individual_id);
                 $phenotype->set_sp_person_id($sp_person_id);
                 my $phenotype_id = $phenotype->store();
@@ -707,8 +710,6 @@ sub store_trait_values {
     else {
         print STDERR "Committing...trait values to tables public.phenotype 
                   and user_trait_id and phenotype_id to phenotype_user_trait\n";
-
-        #$dbh->commit();
         return 1;
 
     }
