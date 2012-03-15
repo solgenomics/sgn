@@ -45,7 +45,7 @@ print info_section_html( title => 'Lab members',
 					     ],
 					     [
 					      ['anuradha', 'Anuradha Pujar', 'Postdoc' ],
-					      ['isaak', 'Isaak Tecle', 'Postdoc' ],
+					      ['isaak', 'Isaak Y Tecle', 'Bioinformatics Consultant' ],
 					     ],
 					     [
 					      ['tom', 'Tom York', 'Postdoc' ],
