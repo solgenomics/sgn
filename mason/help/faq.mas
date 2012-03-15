@@ -64,9 +64,14 @@
 		  <strong>Answer:</strong> (1) You can enter multiple sequences to the <a href="/tools/intron_detection/find_introns.pl">form</a>. (2) If you are doing the blasting locally, try using the code below:<br/> <a href="https://github.com/solgenomics/sgn/blob/master/cgi-bin/tools/intron_detection/intron_finder_homology.pl"> code 1</a>, <a href="https://github.com/solgenomics/sgn/blob/master/lib/SGN/IntronFinder/Homology.pm">code 2</a>. 
                 <br />
                 </p>
-  <p>
+                <p>
 		  <strong>Question:</strong>What cultivar was used for the international tomato genome sequencing project ?<br />
 		  <strong>Answer:</strong> <a href="/stock/676/view">Heinz 1706</a>.
+                <br />
+                </p>
+                 <p>
+		  <strong>Question:</strong> How can I download annotation features on the tomato genome?<br />
+		  <strong>Answer:</strong> As an alternative to Gbrowse's download function, you can use this <a href="/search/features">tool</a> to select your region of interest and download the features using the download options at the top right of the page. 
                 <br />
                 </p>
               </td>
