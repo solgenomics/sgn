@@ -62,8 +62,6 @@ sub blast_db_prog_selects {
       print STDERR $c->get_conf('blast_db_path')." ". $_->name ."= ". join (",", $_->blast_dbs( web_interface_visible=>'t'))."\n\n";
 
       my @web_visible = $_->blast_dbs( web_interface_visible=>'t');
-      print STDERR "WEB VISIBLE ".join(",", @web_visible)."\n";
-
       my @dbs = map [$_,opt($_)], grep $_->file_modtime, $_->blast_dbs( web_interface_visible => 't');
       
       @dbs || print STDERR "No databases available...". $_->name."\n";
