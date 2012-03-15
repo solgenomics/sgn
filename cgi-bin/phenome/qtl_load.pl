@@ -657,7 +657,6 @@ sub store_trait_values {
     for ( my $i = 1 ; $i < @fields ; $i++ ) 
     {
         $trait[$i] = CXGN::Phenome::UserTrait->new_with_name( $dbh, $fields[$i] );
-        my $id = $trait[$i]->get_user_trait_id();
         $trait_name = $trait[$i]->get_name();
         $trait_id   = $trait[$i]->get_user_trait_id();
     }
