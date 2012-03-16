@@ -36,12 +36,14 @@ my %paths = (
 
     # qtl redirects
     qw(
-        /qtl/population        /search/phenotypes/qtl
-        /qtl/search            /search/phenotypes/qtl
-        /search/qtl/help       /qtl/search/help
-        /qtl/guide.pl          /qtl/submission/guide
-        /phenome/qtl_form.pl   /qtl/form
-        /qtl/submit            /qtl/form
+        /qtl/population           /search/phenotypes/qtl
+        /qtl/search               /search/phenotypes/qtl
+        /search/qtl/help          /qtl/search/help
+        /qtl/guide.pl             /qtl/submission/guide
+        /phenome/qtl_form.pl      /qtl/form
+        /qtl/submit               /qtl/form
+       /qtl/index.pl              /search/phenotypes/qtl
+       /qtl                      /search/phenotypes/qtl
     ),
 
     # genomes redirects

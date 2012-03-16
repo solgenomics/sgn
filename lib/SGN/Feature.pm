@@ -4,6 +4,9 @@ use Moose;
 use namespace::autoclean;
 use File::Spec;
 
+use MooseX::Types::Path::Class 'Dir';
+
+
 # our context object
 has 'context' => (
     documentation => 'our context class',
@@ -39,7 +42,7 @@ short plaintext description of the feature, user-visible.  May be used in defaul
 
 has 'feature_dir' => (
     is => 'ro',
-    isa => 'Path::Class::Dir',
+    isa => Dir,
     coerce => 1,
     lazy_build => 1,
    ); sub _build_feature_dir {

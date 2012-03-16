@@ -1,8 +1,7 @@
 package SGN::Feature::ITAG;
+
 use Moose;
-
-use MooseX::Types::Path::Class;
-
+use MooseX::Types::Path::Class qw | Dir |;
 use CXGN::ITAG::Release;
 use CXGN::ITAG::Pipeline;
 
@@ -10,14 +9,14 @@ extends 'SGN::Feature';
 
 has 'pipeline_base' => (
     is       => 'ro',
-    isa      => 'Path::Class::Dir',
+    isa      => Dir,
     required => 1,
     coerce   => 1,
 );
 
 has 'releases_base' => (
     is       => 'ro',
-    isa      => 'Path::Class::Dir',
+    isa      => Dir,
     required => 1,
     coerce   => 1,
 );
