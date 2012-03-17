@@ -12,7 +12,7 @@ $show_link=>1
 <tr><td><b>Pepper</b></td><td><a href="/organism/13/view"><i>Capsicum annuum</i></a></td></tr>
 <tr><td><b>Coffee</b></td><td><a href="/organism/17/view"><i>Coffea canephora</i></a>, <a href="/organism/18/view"><i>C.&nbsp;arabica</i></a></td></tr>
 <tr><td><b>Nicotiana</b></td><td><a href="/organism/1490/view"><i>Nicotiana benthamiana</i></a>, <a href="/organism/941/view"><i>N. tabacum</i></a></td></tr>
-<tr><td><b>Petunia</b></td><td><a href="/organism/1487/view"><i>Petunia axillaris</i>, <a href="/organism/22659/view"><i>P. x hybrida</i>, <a href="/organism/32709/view"><i>P. integrifolia</i> var inflata</a></td></tr></table>
+<tr><td><b>Petunia</b></td><td><a href="/organism/1487/view"><i>Petunia axillaris</i></a>, <a href="/organism/22659/view"><i>P. x hybrida</i></a>, <a href="/organism/32709/view"><i>P. integrifolia</i> var inflata</a></td></tr></table>
 <br />
 % if ($show_link) { 
 <a href="/search/organisms">Search other species...</a>
