@@ -21,7 +21,7 @@ use base 'Test::Class';
 use constant HAS_MUSCLE => sub { no warnings; system "muscle -version &>/dev/null"; $? == 0 ? 1 : 0 }->();
 use constant MUSCLE_TESTS => HAS_MUSCLE ? 3 : 0;
 
-use Test::Most tests => 9 + MUSCLE_TESTS;
+use Test::Most tests => 10 + MUSCLE_TESTS;
 use SGN::Test::WWW::Mechanize;
 
 sub make_fixture : Test(setup) {
@@ -65,7 +65,7 @@ sub BASIC : Tests {
 }
 sub INVALID_FASTA_INPUT : Tests {
     my $self = shift;
-    $self->get("/tools/align_viewer/index.pl");
+    $self->get_ok("/tools/align_viewer/index.pl");
     my $params = {
                form_name => "aligninput",
                fields    => {
