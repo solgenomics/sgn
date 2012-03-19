@@ -4,10 +4,10 @@
   </div>
   <div class="boxcontent">
   <dl>
-
-  <dt><a href="/organism/sol100/view"><font style="font-weight:bold;font-size:18px">SOL-100 Project</font></a></dt>
+  <dt><a href="/organism/sol100/view"><font style="font-weight:bold;font-size:18px">&nbsp;SOL-100 Project</font></a></dt>
   <dd><a href="/organism/sol100/view">register</a> your Solanaceae genomes!</dd>
-  <dt><a href="/secretom" alt="secretom"><img src="/documents/img/secretom/secretom_logo.jpg" border="0" /></a></dt>
+  <dt><a href="/secretom" alt="secretom"><img src="/documents/img/secretom/secretom_logo_smaller.jpg" width="80%" border="1" /></a></dt>
+  <dd>Secreted proteins project</dd>
   </dl>
   </div>
   <div class="boxheading">
