@@ -482,9 +482,9 @@ sub store_traits {
    		   
     my ( $trait, $trait_id, $trait_name, $unit, $unit_id );
 
-    if (   $fields[0] ne "traits"
-	   || $fields[1] ne "definition"
-	   || $fields[2] ne "unit" 
+    if (   $fields[0] !~ /trait|name/
+	   || $fields[1] !~ /definition/
+	   || $fields[2] !~ /unit/ 
 	)
     {
         my $error =
