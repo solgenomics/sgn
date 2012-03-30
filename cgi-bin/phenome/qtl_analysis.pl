@@ -1164,8 +1164,12 @@ sub crosstype_file {
                           from cross_type
                           where cross_type_id = ?
 
-    my $rqtl_cross_type = { 'Back cross' => 'bc',  'F2' => 'f2' }->{$cross_type}
-        or die "unknown cross_type '$cross_type' for population '$pop_id'";
+    my $rqtl_cross_type = { 'Back cross'        => 'bc',  
+                            'F2'                => 'f2', 
+                            'RIL (self-mating)' => 'rilself', 
+                            'RIL (sib-mating)'  => 'rilsib' 
+                          }->{$cross_type} 
+                          or die "unknown cross_type '$cross_type' for population '$pop_id'";
 
     my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
 	$self->cache_temp_path();
@@ -1879,3 +1883,4 @@ sub remove_permu_file {
         
     }
 }
+
