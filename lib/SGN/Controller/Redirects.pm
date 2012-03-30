@@ -42,8 +42,9 @@ my %paths = (
         /qtl/guide.pl             /qtl/submission/guide
         /phenome/qtl_form.pl      /qtl/form
         /qtl/submit               /qtl/form
-       /qtl/index.pl              /search/phenotypes/qtl
-       /qtl                      /search/phenotypes/qtl
+        /qtl/index.pl             /search/phenotypes/qtl
+        /qtl                      /search/phenotypes/qtl
+        /qtl/                     /search/phenotypes/qtl
     ),
 
     # genomes redirects
