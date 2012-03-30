@@ -1,18 +1,32 @@
 
 <%args>
-$raw_blast_file => undef
-$coverage_graph => undef
+%query_seqs => ()
+$raw_blast_url => undef
+$coverage_graph_url => undef
+$click_map_html => undef
 @unique_regions => ()
+$error => undef
+$fragment_size => undef
+@blast_matches => ()
 </%args>
 
-<img src="$coverage_graph" />
+% if ($error) { print "An error occurred. $error."}
 
+<center><b>Conservedness Histogram</b></center>
+<p>The histogram shows a count of hits <i>for each base</i> in the query sequence,
+but counts <i>only the domains BLAST finds</i>, meaning this is really more a function of region than of individual base.
+Within the graph, green shows exact base matches within conserved regions; blue shows non-matching bases within conserved regions. Gaps introduced into the query by BLAST are ignored; gaps introduced into target sequences are not.</p>
 
+% print "COVERAGE GRAPH = " .$coverage_graph_url;
 
+<div align="center" style="color: #777777">
+<img src="<% $coverage_graph_url %>" />
+</div>
 
-view <a href="$raw_blast_file">raw blast report</a>
+view <a href="<% $raw_blast_url %>">raw blast report</a>
 
+<h2>Sequences with perfect matches above $fragment_size bp</h2>
 
-</table>
-
-
+% foreach my $b (@blast_matches) {
+  <% $b %>
+%}

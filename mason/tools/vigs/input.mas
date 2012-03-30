@@ -8,7 +8,7 @@ $databases
 <& /page/page_title.mas, title => "VIGS Tool" &>
 
 <form method="post" action="/tools/vigs/result" name="PCRform" enctype="multipart/form-data">
-   <input type="hidden" name="outformat" value="8" />
+   <input type="hidden" name="outformat" value="0" />
   
   <table id="PCRinput" align="center" summary="" cellpadding="0" cellspacing="15" border="0">
 	<tr>
