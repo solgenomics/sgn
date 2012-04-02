@@ -682,8 +682,8 @@ sub store_trait_values {
                     qq | $individual_name $pop_id .":". $i |);
                 $phenotype->set_observable_id(
                     $trait[$i]->get_user_trait_id() );
-                
-                if ($values[$i] &&  $values[$i] =~ /NA|-/) 
+                if (!$values[$i]) {$values[$i] = undef;}
+                if ($values[$i] &&  $values[$i] =~ /NA|-|\s+/ig) 
                 {
                     $values[$i] = undef;
                 }
