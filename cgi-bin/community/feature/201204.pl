@@ -11,8 +11,9 @@ print <<HTML;
 
 <center><h1>Featured Lab: Maloof Lab, UC Davis, USA</h1>
 
-<a href="/community/feature/index.pl">past featured labs</a>
+(<a href="/community/feature/index.pl">past featured labs</a>)
 </center>
+<br />
 
 <center><img src="/static_content/community/feature/201204/Maloof_Lab.jpg" border="0" width="66%" /></center>
 <font style="font-style:italic">Maloof Lab: (Left to right). Back: Max Mumbach, Dan Fulop, Susan Bush, Christine Palmer, Amanda Schrager, Leonela Carriedo.  Middle: Mei Yi Zhang, Kazunari Nozue, Julin Maloof, Robert Harris, Guo Gui Ning.  Front: Upendra Devissetty, Mike Covington.</font>
