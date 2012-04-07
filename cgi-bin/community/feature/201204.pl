@@ -8,15 +8,19 @@ $p->header;
 
 print <<HTML;
 
-<h1>Maloof Lab, UC Davis, USA</h1>
 
-<img src="/static_content/community/feature/201204/Maloof_Lab.jpg" border="0" />
+<center><h1>Featured Lab: Maloof Lab, UC Davis, USA</h1>
+
+<a href="/community/feature/index.pl">past featured labs</a>
+</center>
+
+<center><img src="/static_content/community/feature/201204/Maloof_Lab.jpg" border="0" width="66%" /></center>
 <font style="font-style:italic">Maloof Lab: (Left to right). Back: Max Mumbach, Dan Fulop, Susan Bush, Christine Palmer, Amanda Schrager, Leonela Carriedo.  Middle: Mei Yi Zhang, Kazunari Nozue, Julin Maloof, Robert Harris, Guo Gui Ning.  Front: Upendra Devissetty, Mike Covington.</font>
 
 
 <p>Our research is focused on understanding the genetic and molecular basis of plant photomorphogenesis - how plant growth and development change in response to light.  A major part of our research is directed towards understanding the molecular basis for natural variation in light responses between populations and species. </p>
 
-<img src="/static_content/community/feature/201204/TomatoShade.jpg" />
+<center><img src="/static_content/community/feature/201204/TomatoShade.jpg" width="66%" /></center>
     <p>
 <font style="font-style:italic">Tomato Shade: Plants grown in simulated sun (left) or simulated shade (right).  S. chilense shows a stronger response than S. lycopersicum to simulated shade.</font></p>
 
@@ -27,7 +31,7 @@ print <<HTML;
 <p>We have found significant variation in photomorphogenesis and shade avoidance in tomato and its wild relatives.  For example S. lycopersicum var. M82 is a mild shade avoider whereas S. pennelli has a strong response.  We are using the S. pennellii X M82 introgression lines to map QTL and clone genes underlying this variation.  To aid in this effort, in collaboration with Neelima Sinha\'s group, we have performed extensive RNAseq of S. pennellii, M82, the introgression lines, and several other wild tomato relatives.  This has allowed us to define hundreds of thousands of SNPs differentiating these species and to study the patterns of nucleotide and gene expression differences.</p>
 <p>We also study shade avoidance and quantitative genetics in Arabidopsis thaliana and Brassica rapa.</p>
 
-<img src="/static_content/community/feature/201204/IL4_3.png" border="0" />
+<center><img src="/static_content/community/feature/201204/IL4_3.png" border="0" width="50%" /></center>
 
 <font style="font-style:italic"><p>IL4_3:  RNAseq analysis of the S. pennellii X M82 introgression line IL4_3.  Each segment around the circle represents a chromosome.  From outside to inside the rings show: log fold change of genes differentially expressed between M82 and IL4_3 (the black line represents 0); the genotype of each chromosomal region (blue = M82, green = S. pennellii); genes regulated in trans from the introgression (light green: transgressive expression; dark green: S. pennelli-like expression).</p></font>
 
