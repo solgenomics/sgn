@@ -27,7 +27,7 @@ print <<HTML;
 <p>We have found significant variation in photomorphogenesis and shade avoidance in tomato and its wild relatives.  For example S. lycopersicum var. M82 is a mild shade avoider whereas S. pennelli has a strong response.  We are using the S. pennellii X M82 introgression lines to map QTL and clone genes underlying this variation.  To aid in this effort, in collaboration with Neelima Sinha\'s group, we have performed extensive RNAseq of S. pennellii, M82, the introgression lines, and several other wild tomato relatives.  This has allowed us to define hundreds of thousands of SNPs differentiating these species and to study the patterns of nucleotide and gene expression differences.</p>
 <p>We also study shade avoidance and quantitative genetics in Arabidopsis thaliana and Brassica rapa.</p>
 
-<img src="sgn_static_content/community/feature/201204/IL4_3.png" border="0" />
+<img src="/static_content/community/feature/201204/IL4_3.png" border="0" />
 
 <font style="font-style:italic"><p>IL4_3:  RNAseq analysis of the S. pennellii X M82 introgression line IL4_3.  Each segment around the circle represents a chromosome.  From outside to inside the rings show: log fold change of genes differentially expressed between M82 and IL4_3 (the black line represents 0); the genotype of each chromosomal region (blue = M82, green = S. pennellii); genes regulated in trans from the introgression (light green: transgressive expression; dark green: S. pennelli-like expression).</p></font>
 
