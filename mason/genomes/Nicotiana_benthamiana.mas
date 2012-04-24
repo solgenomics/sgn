@@ -93,6 +93,49 @@ The accession sequenced is referred to as "Nb-BTI". Seeds can be obtained by con
 
 <h4>Assembly Statistics</h4>
 
+<i>N. benthamiana</i> Genome v0.42 Contigs<br /><br />
+
+==========================================================
+= REPORT: Niben.genome.v0.4.2.scaffolds.nrcontigs.fasta  =
+==========================================================
+Sequence Count: 141339 sequences
+Total Length:   2630346647 bp
+Longest sequence:       615591 bp       (ID = Niben.v0.4.1.Scf588)
+Shortest sequence:      201 bp          (ID = Niben.v0.4.1.Ctg23127767)
+Average length: 18610.1970935128 bp
+N95 length:     12828 bp
+N95 index:      37713 sequences
+N90 length:     23201 bp
+N90 index:      30261 sequences
+N75 length:     48209 bp
+N75 index:      18834 sequences
+N50 length:     89778 bp
+N50 index:      8897 sequences
+N25 length:     148847 bp
+N25 index:      3141 sequences
+==========================================================
+
+==========================================================
+= REPORT: Niben.genome.v0.4.2.contigs.fasta              =
+==========================================================
+Sequence Count: 461463 sequences
+Total Length:   2462490758 bp
+Longest sequence:       208210 bp       (ID = Niben.v0.4.1.Scf14070.Ctg1)
+Shortest sequence:      201 bp          (ID = Niben.v0.4.1.Ctg23128323)
+Average length: 5336.26912233483 bp
+N95 length:     1564 bp
+N95 index:      215459 sequences
+N90 length:     3403 bp
+N90 index:      163811 sequences
+N75 length:     8068 bp
+N75 index:      96046 sequences
+N50 length:     16480 bp
+N50 index:      42984 sequences
+N25 length:     29264 bp
+N25 index:      14540 sequences
+==========================================================
+
+
 <i>N. benthamiana</i> Genome v0.3 Contigs<br /><br />
 
 <font face="courier">
