@@ -759,3 +759,24 @@ min_color         = cyan
 key               = RNA-Seq coverage
 citation =
  Coverage histogram of all available RNA-Seq reads on the tomato genome.  Provided by Stephane Rombauts (VIB Ghent) and Susan Strickler (SGN).
+
+[mt_SNPs]
+feature       = SNP
+category      = SNPs
+glyph         = triangle
+point         = 1
+orient        = N
+height        = 6
+bgcolor       = blue
+fgcolor       = blue
+key           = Micro-Tom SNPs
+
+[mt_SNPs:100000]
+feature       = bin
+category      = SNPs
+glyph         = xyplot
+graph_type    = boxes
+scale         = right
+height        = 20
+group_on      = display_name
+
