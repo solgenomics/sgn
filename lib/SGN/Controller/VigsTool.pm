@@ -77,7 +77,7 @@ sub blast_db_prog_selects {
 		       tblastx => 'TBLASTX (protein to protein; both database and query are translated)',
 		       tblastn => 'TBLASTN (protein to nucleotide; database translated to protein)',
 	);
-    
+     
     my @program_choices = map {
 	my ($db) = @$_;
 	if($db->type eq 'protein') {
@@ -129,6 +129,7 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
     }
     
     # clean sequence 
+    $sequence =~ s/^>.*?\n(.*)/$1/; # remove first fasta line
     $sequence =~ s/[^a-zA-Z]//g;
     
     if (scalar (@errors) > 0){
@@ -290,10 +291,14 @@ sub view :Path('/tools/vigs/view') :Args(0) {
 
     my $query_io = Bio::SeqIO->new(-format=>'fasta', -file=>$query_file);
 
-    my %seqs = ();
-    while (my $s = $query_io->next_seq()) { 
-	$seqs{$s->id()} = $s->seq();
-    }
+    print STDERR "QUERY_FILE: $query_file\n";
+
+#    my %seqs = ();
+#    while (my $s = $query_io->next_seq()) { 
+#	$seqs{$s->id()} = $s->seq();
+#    }
+    
+    $c->stash->{query} = $query_io->next_seq();
 
     $c->stash->{template} = '/tools/vigs/view.mas';
     my $job_file_tempdir = $c->path_to( $c->tempfiles_subdir('blast') );
@@ -322,12 +327,15 @@ sub view :Path('/tools/vigs/view') :Args(0) {
 	graph_outfile => $graph_img_path,
     );
 	
-    my @single_coverage_regions = $graph2->get_regions(1);
-    my @double_coverage_regions = $graph2->get_regions(2);
-
     $c->stash->{error} = 'graphical display not available BLAST reports larger than 1 MB' if -s $raw_blast_path > 1_000_000;
 	
     my $errstr = $graph2->write_img();
+
+    my @single_coverage_regions = $graph2->get_regions(1);
+    my @double_coverage_regions = $graph2->get_regions(2);
+
+
+
     $errstr and die "<b>ERROR:</b> $errstr";
     
     $c->stash->{single_coverage_regions} = \@single_coverage_regions;
@@ -338,27 +346,33 @@ sub view :Path('/tools/vigs/view') :Args(0) {
   
     $c->stash->{raw_blast_url} = $raw_blast_url;
 
-    open(my $F, "<", $raw_blast_path) || die "Can't open the raw blast output file ($raw_blast_path)\n";
-
-    my $old_query = "";
-    while (<$F>) { 
- 	chomp;
- 	my ($query, $subject, $percent, $length, $mismatches, $gaps) = split/\t/;
- 	if (($percent == 100) && ($length >= $fragment_size)) { 
- 	    $matches{$query}++;
- 	}
- 	if ($query ne $old_query) { push @queries, $query; }
- 	$old_query = $query;
-     }
-     my @blast_results = ();
-     for (my $i=0; $i<@queries; $i++) { 
- 	push @blast_results, [$i, $matches{$queries[$i]} ];
-     }
-
-    $c->stash->{blast_matches} = \%matches;
+#    open(my $F, "<", $raw_blast_path) || die "Can't open the raw blast output file ($raw_blast_path)\n";
+    my $report = Bio::SearchIO->new( -file => $raw_blast_path, -format => 'blast' );
+    my $result = $report->next_result;
+    
+    my $query = $result->query_name();
+    while ( my $hit = $result->next_hit ) {
+	my $subject = $hit->accession();
+	while ( my $hsp = $hit->next_hsp ) {
+	    print STDERR "Parsing hsp...\n";
+	    my ($percent, $length, $gaps) = ($hit-> frac_identical("total"), $hsp->length("total"), $hsp->gaps());
+	    print STDERR "PERCENT $percent ($subject, $length)\n";
+	    my $mismatches = ($length- ($percent * $length));
+	    if (($percent >= 0.95) && ($length >= $fragment_size)) { 
+		$matches{$subject}++;
+	    }
+	    
+	}
+    }
+    my @blast_matches = ();
+    foreach my $k (keys %matches) { 
+	push @blast_matches, $k;
+    }
+    
+    $c->stash->{blast_matches} = \@blast_matches;
     $c->stash->{fragment_size} = $fragment_size;
 
-
+   
     ## Create rbase:
 
 # my $rbase = R::YapRI::Base->new();

@@ -1,10 +1,11 @@
 
 <%args>
-%query_seqs => ()
+$query
 $raw_blast_url => undef
 $coverage_graph_url => undef
 $click_map_html => undef
-@unique_regions => ()
+@single_coverage_regions => ()
+@double_coverage_regions => ()
 $error => undef
 $fragment_size => undef
 @blast_matches => ()
@@ -25,8 +26,20 @@ Within the graph, green shows exact base matches within conserved regions; blue 
 
 view <a href="<% $raw_blast_url %>">raw blast report</a>
 
-<h2>Sequences with perfect matches above $fragment_size bp</h2>
+% #print "QUERY: $query. ID=".$query->id()." SEQUENCE:".$query->seq()."<br />";
+
+<& /sequence/highlighted.mas, title=>'Single coverage regions in query', seq=>$query, highlight_coords=> \@single_coverage_regions, whole_seq=>1, highlight_description=>'Single coverage regions in the query are highlighted.', collapsable=>1, collapsed=>0 &>
+
+<& /sequence/highlighted.mas, title=>'Double coverage regions in query', seq=>$query, highlight_coords=> \@double_coverage_regions, whole_seq=>1, highlight_description=>'Regions with single or double coverage are are highlighted.', collapsable=>1, collapsed=>1 &>
+
+% #<h2>Single coverage regions</h2>
+
+% #foreach my $r (@single_coverage_regions) { 
+% #  print $r->[0]." ".$r->[1]."<br />\n";
+% #}
+
+<h2>Sequences with perfect matches above <% $fragment_size %> bp</h2>
 
 % foreach my $b (@blast_matches) {
-  <% $b %>
+%   print $b."<br />";
 %}
