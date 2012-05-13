@@ -23,19 +23,45 @@ use CXGN::Tools::List qw/evens distinct/;
 
 our %urlencode;
 
-sub input :Path('/tools/vigs/') :Args(0) { 
+sub input :Path('/tools/vigs/')  :Args(0) { 
     my ($self, $c) = @_;
     my $dbh = CXGN::DB::Connection->new;
+    our $prefs = CXGN::Page::UserPrefs->new( $dbh );
+
+
+    my @database_ids = split /\s+/, $c->config->{vigs_tool_blast_datasets};
+
+    print STDERR "DATABASE ID: ".join(",", @database_ids)."\n";
+    
+    my @databases;
+    foreach my $d (@database_ids) { 
+
+	my $bdb = CXGN::BlastDB->from_id($d);
+	if ($bdb) { push @databases, $bdb; }
+    }
+
+    $c->stash->{template} = '/tools/vigs/input.mas';
+
+    $c->stash->{databases} = \@databases;
+    
+}
+
+
+sub advanced :Path('/tools/vigs/advanced') :Args(0) { 
+
+    my ($self, $c) = @_;
+my $dbh = CXGN::DB::Connection->new;
     our $prefs = CXGN::Page::UserPrefs->new( $dbh );
     
     my ($databases,$programs,$programs_js) = blast_db_prog_selects($c,$prefs);
 
-    $c->stash->{template} = '/tools/vigs/input.mas';
+    $c->stash->{template} = '/tools/vigs/advanced.mas';
 
     $c->stash->{databases} = $databases;
     
     $c->stash->{programs} = $programs;
 }
+
 
 # this subroutine is copied exactly from the BLAST index.pl code
 #
@@ -123,6 +149,9 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
 	push @errors, "Fragment size ($fragment_size) should be greater than zero (~20 - 40 bp)\n";
     }
 
+
+
+
     #validating the primers input
     if (length($sequence) <= $fragment_size ){
 	push ( @errors , "Sequence should be at least $fragment_size in length.\n");
@@ -135,8 +164,44 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
     if (scalar (@errors) > 0){
 	user_error(join("<br />" , @errors));
     }
-    
+
+
+
+# generate a file with fragments of 'sequence' of length 'fragment_size'
+# for analysis with BWA.
     my ($seq_fh, $seq_filename) = tempfile( "seqXXXXXX",
+ 	
+                 DIR=> $c->config->{'cluster_shared_tempdir'},
+
+     );
+
+       my $seq = Bio::Seq->new(-seq=>$sequence, -id=>"temp");
+
+       my $io = Bio::SeqIO->new(-format=>'fasta', -file=>">".$seq_filename);
+
+       foreach my $i (1..$seq->length()-$fragment_size) { 
+
+	   my $subseq = $seq->subseq($i, $i + $fragment_size -1);
+
+	   my $subseq_obj = Bio::Seq->new(-seq=>$subseq, -display_id=>"temp-$i");
+
+   $io->write_seq($subseq_obj);
+
+     }
+    
+       $io->close();
+
+
+    print STDERR "DATABASE SELECTED: $params->{database}\n";
+    my $bdb = CXGN::BlastDB->from_id($params->{database});
+    print STDERR "\n\n\n".$bdb->dbpath()."\n\n\n";
+    my $basename = $bdb->full_file_basename;
+    
+
+    system('/data/shared/bin/bwa_wrapper.sh', $basename, $seq_filename, $seq_filename.".bwa.out");
+
+    
+    ($seq_fh, $seq_filename) = tempfile( "seqXXXXXX",
 					    DIR=> $c->config->{'cluster_shared_tempdir'},
 	);
     
@@ -186,10 +251,6 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
 	     
 	     #     warn "setting pref last_blast_db_fil
 	     #database object for specific ID_No
-	     print STDERR "DATABASE SELECTED: $params->{database}\n";
-	     my $bdb = CXGN::BlastDB->from_id($params->{database});
-	     print STDERR "\n\n\n".$bdb->dbpath()."\n\n\n";
-	     my $basename = $bdb->full_file_basename;
 	     
 	     #return "-d" => $c->config->{blastdb_location}."/".$params{database};
 	     
@@ -331,15 +392,18 @@ sub view :Path('/tools/vigs/view') :Args(0) {
 	
     my $errstr = $graph2->write_img();
 
-    my @single_coverage_regions = $graph2->get_regions(1);
-    my @double_coverage_regions = $graph2->get_regions(2);
+    my @regions;
+    foreach my $coverage (0..10) { 
+	@{$regions[$coverage]} = $graph2->get_regions($coverage);
+    }
+
+
 
 
 
     $errstr and die "<b>ERROR:</b> $errstr";
     
-    $c->stash->{single_coverage_regions} = \@single_coverage_regions;
-    $c->stash->{double_coverage_regions} = \@double_coverage_regions;
+    $c->stash->{regions} = \@regions;
 
     $c->stash->{coverage_graph_url} = $graph_img_url;
     $c->stash->{click_map_html} = $graph2->get_map_html(), #code for map element (should have the name used below in the image)
