@@ -6,9 +6,11 @@ use warnings FATAL => 'all';
 use Test::More tests=> 4;
 use Bio::SecreTary::Cleavage;
 use Bio::SeqIO;
-use File::Spec::Functions 'catfile';
+use File::Spec::Functions qw ' catfile catdir ';
+use FindBin;
 
 $ENV{PATH} .= ':programs';	#< XXX TODO: obviate the need for this
+my $testfiles_dir = catdir($FindBin::RealBin, 'data');
 
 my $id = "AT1G50920.1";
 my $sequence = "MVQYNFKRITVVPNGKEFVDIILSRTQRQTPTVVHKGYKINRLRQFYMRKVKYTQTNFHAKLSAIIDEFPRLEQIHPFYGDLLHVLYNKDHYKLALGQVNTARNLISKISKDYVKLLKYGDSLYRCKCLKVAALGRMCTVLKRITPSLAYLEQIRQHMARLPSIDPNTRTVLICGYPNVGKSSFMNKVTRADVDVQPYAFTTKSLFVGHTDYKYLRYQVIDTPGILDRPFEDRNIIEMCSITALAHLRAAVLFFLDISGSCGYTIAQQAALFHS*";
@@ -24,7 +26,7 @@ isa_ok( $cleavage_predictor_obj, 'Bio::SecreTary::Cleavage' );
 
 # test of 115 sequences from various species.
 
-my $fasta_infile = catfile( 't', 'data', 'AtBrRiceTomPopYST_115.fasta');
+my $fasta_infile = catfile( $testfiles_dir, 'AtBrRiceTomPopYST_115.fasta');
 
 
 # get input sequences and get predicted signal peptide length for each
@@ -53,7 +55,7 @@ push @subdomain_result_now, $subdomain;
 }
 
 # test cleavage site.
-my $cleavageout_infile = catfile( 't', 'data', 'AtBrRiceTomPopYST_115.cleavageout');
+my $cleavageout_infile = catfile( $testfiles_dir, 'AtBrRiceTomPopYST_115.cleavageout');
 
 #my @cleavage_result_standard = ();
 my @cleavage_result_standard = ();
@@ -86,7 +88,7 @@ $msg = "Expected results for " . scalar @cleavage_result_standard . " sequences,
 ok($OK, "Check cleavage prediction for 115 sequences. Result: $msg\n");
 
 # test subdomain prediction.
-my $subdomainout_infile = catfile( 't', 'data', 'AtBrRiceTomPopYST_115.domainout');
+my $subdomainout_infile = catfile( $testfiles_dir, 'AtBrRiceTomPopYST_115.domainout');
 my @subdomain_result_standard = ();
 if ( open my $fh, "<", $subdomainout_infile) {
   while (<$fh>) {
