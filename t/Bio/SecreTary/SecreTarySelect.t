@@ -10,9 +10,11 @@ use Bio::SecreTary::TMpred;
 use Bio::SecreTary::Cleavage;
 use Bio::SecreTary::SecreTaryAnalyse;
 use Bio::SecreTary::SecreTarySelect;
-use File::Spec::Functions 'catfile';
+use File::Spec::Functions qw ' catfile catdir ';
+use FindBin;
 
 $ENV{PATH} .= ':programs'; #< XXX TODO: obviate the need for this
+my $testfiles_dir = catdir($FindBin::RealBin, 'data');
 
 my $TMpred_obj = Bio::SecreTary::TMpred->new();
 my $cleavage_predictor_obj = Bio::SecreTary::Cleavage->new(); # _Cinline->new();
@@ -142,8 +144,8 @@ ok($categorize1_output =~ /^fail 0 -1 0 0 -1 0$/, 'Check categorize1 output (cas
 
 # test of 115 sequences from various species.
 
-my $fasta_infile = catfile( 't', 'data', 'AtBrRiceTomPopYST_115.fasta');
-my $stout_infile = catfile( 't', 'data', 'AtBrRiceTomPopYST_115.stout');
+my $fasta_infile = catfile( $testfiles_dir, 'AtBrRiceTomPopYST_115.fasta');
+my $stout_infile = catfile( $testfiles_dir, 'AtBrRiceTomPopYST_115.stout');
 
 my @category_result_standard = ();
 
