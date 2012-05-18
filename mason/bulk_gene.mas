@@ -1,0 +1,42 @@
+<%args>
+    $bulk_js_menu
+    $prefill_ids => ''
+</%args>
+<% $bulk_js_menu %>
+<form name="bulk_gene" action="/bulk/gene/submit/" method="post" enctype="multipart/form-data">
+<table summary="" cellpadding="10" width="100%"><tr><td valign="top" bgcolor="#EEEEEE" width="320">
+Enter a list of gene identifier or upload a file containing one identifer separated by whitespace (returns, spaces or tabs):<br />
+<table summary="" width="100%" cellpadding="0"><tr><td>
+<textarea name="ids" rows="10" cols="30">
+<% $prefill_ids |h %>
+</textarea>
+</td>
+<td>
+<i>Example:</i>
+<pre style="border: 1px solid gray; padding: 5px">
+Solyc01g005080.2
+AT1G56650.1
+PGSC0003DMG400012540
+Os02g0289500
+</pre>
+</td></tr></table>
+<br />
+<br />
+
+And/or upload list file: <br /><input type="file" name="gene_file" />
+<br />
+<br />
+
+</td>
+<td valign="top" bgcolor="#EEEEEE" width="320">
+
+<b>Download gene information</b>:<br />
+<div style="padding-left: 1em">
+    <input type="radio" name="gene_type" value="cdna" checked="checked" />cDNA sequence <br />
+    <input type="radio" name="gene_type" value="cds" checked="unchecked" />CDS sequence <br />
+    <input type="radio" name="gene_type" value="protein" checked="unchecked" />Protein sequence <br />
+</div>
+</td></tr></table>
+
+<input type="submit" value="Submit" /><br />
+</form>

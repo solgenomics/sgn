@@ -1,0 +1,22 @@
+<%doc>
+
+=head1 NAME 
+
+Further_reading.mas - a display for qtl data submission guidelines - reference section.
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+<&| /page/info_section.mas, 
+   title      => "Further reading",
+  collapsible => 1,
+  collapsed   => 1
+&>
+
+You can find detailed documentation of the tool here: <a href="http://www.biomedcentral.com/1471-2105/11/525/abstract">solQTL: a tool for QTL analysis, visualization and linking to genomes at SGN database</a>.
+
+</&>

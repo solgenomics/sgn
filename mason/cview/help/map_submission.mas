@@ -1,0 +1,109 @@
+
+<& /page/page_title.mas, title=>"Submitting maps to SGN" &>
+
+Maps can be submitted to SGN for inclusion in the comparative viewer and related tools. File formats are defined for these types of data: 
+<ol>
+<li> A <b>mapping file</b> which contains the information about the markers positions each linkage group.</li>
+<li> One or more <b>marker data files</b> describing the markers used. The file format describing each type of marker is different, so that for one map, many marker description files may be required.</li>
+<li> Marker <b>polymorphism survey data</b> can also be submitted, even if the markers are not mapped.</li>
+<li> <b>Accession information</b> is needed for accessions that are not already in the SGN database. </li>
+</ol> 
+
+<p>These files should be tab-delimited text files (In Excel, choose type "Text (tab delimited)" in the Save As dialog). To submit the files send them as email attachments to <a href="mailto:sgn-feedback\@sgn.cornell.edu">sgn-feedback\@sgn.cornell.edu</a>.
+<i>Please make sure to include the column headings</i>.</p>
+
+
+<h3>The mapping file</h3>
+<p>
+This file gives the location of the markers on the map. When submitting a map, be sure to also provide a marker data file and accession information. These are the columns defined for the mapping file:
+</p>
+
+<ul>
+<li><b>marker name</b>: Should be identical to the SGN marker name if already available on SGN.</li>
+<li><b>marker id</b>: (optional) If the marker is already in SGN, providing its marker id (SGN-M number) will allow us to process your map more quickly.</li>
+<li><b>linkage group</b>: The name or number of the chromosome or linkage group.</li>
+<li><b>position</b>: The position in cM on the linkage group.</li>
+<li><b>confidence</b>: Mapmaker's confidence for this marker - one of I, I(LOD2), F(LOD3), CF(LOD3). If your mapping software doesn't calculate a confidence, just omit this column.</li>
+<li><b>protocol</b>: The type of experiment used to map the marker. Currently we support CAPS, SSR, RFLP, SNP, and AFLP. We can accept most PCR-based markers; <a href="/contact/">contact SGN</a> if you would like to submit marker types that are not listed here.</li>
+</ul>
+
+<h3>The marker data file</h3>
+<p>This file has a different format for each marker type. Please provide these columns:</p>
+
+
+<p>
+CAPS markers (<b>Note: revised 10/2008</b>):
+</p>
+<pre>
+  marker_name. The marker name.
+  fwd primer. The sequence of the forward primer.
+  rev primer. The sequence of the reverse primer.
+  temperature. The annealing temperature used in the PCR.
+  Mg concentration. The Mg++ concentration used in the PCR.
+  enzyme. The enzyme used for digestion, if applicable.
+  band sizes of the undigested pcr products for the different parents, separated by a slash (see below)
+  digested band sizes for the different parents, using enzyme in column 6.
+  other enzymes. A list of other enzymes predicted to be useful for this marker
+</pre>
+<p>
+SSR markers:
+</p>
+<pre>
+  marker_name. The marker name.
+  fwd primer. The sequence of the forward primer.
+  rev primer. The sequence of the reverse primer.
+  temperature. The annealing temperature used in the PCR.
+  Mg concentration. The Mg++ concentration used in the PCR.
+  bands for parent 1. The band sizes for parent1 (see examples below).
+  bands for parent 2. The band sizes for parent2 (see examples below).
+  repeat motif. The repeat motif (for example AAT).
+</pre>
+<p>
+RFLP markers:
+</p>
+<pre>
+  marker_name. The marker name.
+  clone name. The clone used as a probe.
+  fwd sequence read name. The forward sequence read name. 
+  rev sequence read name. The reverse sequence read name.
+  bands for parent 1. The band sizes for parent1.
+  bands for parent 2. The band sizes for parent2.
+</pre>
+
+<p>
+For other types of markers, <a href="/contact/form">contact SGN</a>.
+</p>
+
+<h3>Polymorphism data</h3>
+<p>
+The polymorphism data file should have the following columns:
+</p>
+<pre>
+  marker name.
+  band sizes accession 1. (see example below).
+  band sizes accession 2.
+  band sizes accession 3.
+  band sizes accession 4.
+  ...
+  band sizes accession n.
+</pre>
+
+<h3>Accession information</h3>
+<p>
+We need the following information for each accession used in the mapping or polymorphism data files. (Some accessions are already in our database; <a href="/contact/form">Contact us</a> if you're not sure). This information can be sent in an email or text file.
+</p>
+<ul>
+<li>The accession's <b>identifier</b>, for example "TA210"</li>
+<li>The accession's <b>name</b> (optional), for example "Sunpear" </li>
+<li>The accession's <b>species</b> and (optional) <b>common name</b></li>
+</ul>
+
+<p>If you have identified the accessions in the files as "parent 1", "parent 2", etc, remember to state which accession is which.</p>
+
+<h4>Notes and examples</h4>
+
+<ol>
+<li>Marker names should either correspond to SGN marker names, if the markers are identical, or have a new name that is not yet in the SGN database, as the marker correspondences will be established on a name matching basis.</li>
+<li>The band sizes should be given separated by + symbols, if more than one band is detected, such as: 420+230. The original band size, prior to digestion, can be given in a separate column.</li>
+<li>For RFLP markers, if possible, provide sequence data for the clone, as chromatogram files (.ab1 or .scf). Usually, a forward and reverse read is taken. The file names can be indicated in the RFLP marker file.</li>
+</ol>

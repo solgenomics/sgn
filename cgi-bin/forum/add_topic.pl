@@ -214,7 +214,7 @@ sub review_topic {
     my $topic_name = $topic->get_topic_name();
     my $topic_desc = $topic->get_topic_description();
     my $topic_id   = $topic->get_forum_topic_id();
-    my $sort_order = $topic->get_sort_order();
+    my $sort_order = $topic->get_topic_sort_order();
 
     my $display_topic_desc = $topic->format_post_text($topic_desc);
 

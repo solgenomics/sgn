@@ -45,6 +45,7 @@
 
   <& /feature/related_features.mas,
       feature   => $feature,
+      omit_columns => ['organism'],
   &>
 
 </&>
@@ -72,10 +73,4 @@
         xrefs => $xrefs,
         empty_message => '',
       &>
-
-     <& /feature/gbrowse_syn_search_link.mas,
-        feature => $feature,
-        featurelocs => $featurelocs,
-      &>
-
 </&>

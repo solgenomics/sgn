@@ -50,7 +50,7 @@ nothing could be found.
 sub default :Path {
     my ( $self, $c ) = @_;
 
-    return 1 if $self->_do_redirects($c);
+    return 1 if $c->forward('/redirects/find_redirect');
 
     $c->throw_404;
 }
@@ -97,15 +97,60 @@ sub end : Private {
     # we tried to render a default view
     $c->res->content_type('text/html') unless $c->res->content_type;
 
-    # insert our javascript packages into the rendered view
     if( $c->res->content_type eq 'text/html' ) {
-        $c->forward('/js/insert_js_pack_html');
+        # insert any additional header html collected during rendering
+        $c->forward('insert_collected_html');
+
+        # tell caches our responses vary depending on the Cookie header
         $c->res->headers->push_header('Vary', 'Cookie');
     } else {
         $c->log->debug("skipping JS pack insertion for page with content type ".$c->res->content_type)
             if $c->debug;
     }
 
+}
+
+sub insert_collected_html :Private {
+    my ( $self, $c ) = @_;
+
+    $c->forward('/js/resolve_javascript_classes');
+
+    my $b = $c->res->body;
+    my $inserted_head_pre  = $b && $b =~ s{<!-- \s* INSERT_HEAD_PRE_HTML \s* --> }{ $self->_make_head_pre_html( $c )  }ex;
+    my $inserted_head_post = $b && $b =~ s{<!-- \s* INSERT_HEAD_POST_HTML \s* -->}{ $self->_make_head_post_html( $c ) }ex;
+    if( $inserted_head_pre || $inserted_head_post ) {
+      $c->res->body( $b );
+
+      # we have changed the size of the body.  remove the
+      # content-length and let catalyst recalculate the content-length
+      # if it can
+      $c->res->headers->remove_header('content-length');
+
+      delete $c->stash->{$_} for qw( add_head_html add_css_files add_js_classes );
+  }
+}
+
+sub _make_head_pre_html {
+    my ( $self, $c ) = @_;
+    return join "\n", @{ $c->stash->{head_pre_html} || [] };
+}
+
+sub _make_head_post_html {
+    my ( $self, $c ) = @_;
+
+    my $head_post_html = join "\n", (
+        @{ $c->stash->{add_head_html} || [] },
+        ( map {
+            qq{<link rel="stylesheet" type="text/css" href="$_" />}
+          } @{ $c->stash->{css_uris} || [] }
+        ),
+        ( map {
+            qq{<script src="$_" type="text/javascript"></script>}
+          } @{ $c->stash->{js_uris} || [] }
+        ),
+    );
+
+    return $head_post_html;
 }
 
 =head2 auto
@@ -140,47 +185,7 @@ sub auto : Private {
 
 
 
-########### helper methods ##########3
-
-sub _do_redirects {
-    my ($self, $c) = @_;
-    my $path = $c->req->path;
-    my $query = $c->req->uri->query || '';
-    $query = "?$query" if $query;
-
-    $c->log->debug("searching for redirects ($path) ($query)") if $c->debug;
-
-    # if the path has multiple // in it, collapse them and redirect to
-    # the result
-    if(  $path =~ s!/{2,}!/!g ) {
-        $c->log->debug("redirecting multi-/ request to /$path$query") if $c->debug;
-        $c->res->redirect( "/$path$query", 301 );
-        return 1;
-    }
-
-    # try an internal redirect for index.pl files if the url has not
-    # already been found and does not have an extension
-    if( $path !~ m|\.\w{2,4}$| ) {
-        if( my $index_action = $self->_find_cgi_action( $c, "$path/index.pl" ) ) {
-            $c->log->debug("redirecting to action $index_action") if $c->debug;
-            my $uri = $c->uri_for_action($index_action, $c->req->query_parameters)
-                        ->rel( $c->uri_for('/') );
-            $c->res->redirect( "/$uri", 302 );
-            return 1;
-        }
-    }
-
-    # redirect away from cgi-bin URLs
-    elsif( $path =~ s!cgi-bin/!! ) {
-        $c->log->debug("redirecting cgi-bin url to /$path$query") if $c->debug;
-        $c->res->redirect( "/$path$query", 301 );
-        return 1;
-    }
-
-}
-
-
-############# helper subs ##########
+############# helper methods ##########
 
 sub _find_cgi_action {
     my ($self,$c,$path) = @_;

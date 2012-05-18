@@ -89,6 +89,7 @@ if($experiments and @{$experiments}) {
 	$rev='<span class="ghosted">Unknown</span>';
       }  
       my $enz=$pcr->enzyme()||'unknown enzyme';                 
+      my $additional_enzymes= $pcr->additional_enzymes;
       $temp||='<span class="ghosted">Unknown</span>';
       $mg||='<span class="ghosted">Unknown</span>';
       my $digest_title="Digested band sizes (using $enz)";
@@ -103,6 +104,7 @@ if($experiments and @{$experiments}) {
 	 "Reverse primer (5'-3')"=>"<span class=\"sequence\">$rev</span>",
 	 'Accessions and product sizes'=>$pcr_bands_html,
 	 $digest_title=>$digest_bands_html,
+	 'Enzymes'               => $additional_enzymes,
 	 'Approximate temperature'=>$temp,
 	 'Mg<sup>+2</sup> concentration'=>$mg,
 	 '__multicol'=>3,

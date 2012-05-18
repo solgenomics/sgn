@@ -229,6 +229,7 @@ sub data_multiple {
   my ($self, $param) = @_;
   my ($thingy) = $self->data($param);
 
+  no warnings 'uninitialized';
   return (split /\0/, $thingy);
 
 }

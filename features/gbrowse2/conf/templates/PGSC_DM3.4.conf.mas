@@ -1,0 +1,272 @@
+[GENERAL]
+database  = main
+plugins   = FastaDumper RestrictionAnnotator SequenceDumper TrackDumper
+
+reference class = Sequence
+
+search attributes = Note
+
+default features = scaffolds:overview locus_density:overview superscaffolds:region loci:region scaffolds:region loci mrna cds
+
+# "automatic" classes to try when an unqualified identifier is given
+automatic classes = Sequence clone match nucleotide_motif
+
+# max and default segment sizes for detailed view
+max segment     = 500000
+default segment = 50000
+
+# zoom levels
+zoom levels    = 100 200 1000 2000 5000 10000 20000 40000 100000 200000 500000 1000000
+
+examples = PGSC0003DMT400000001  PGSC0003DMT400073004 "Sulfite oxidase" ST3.10ch01:78,074,606..78,077,499
+
+# DAS configuration
+
+das mapmaster = SELF
+
+init_code =
+  sub link_detail_page_idents {
+		my ($value,$tag_name,$feature) = @_;
+                return $value if $tag_name eq 'Position';
+                <% $feature->local_inc %>
+		require CXGN::Tools::Identifiers;
+		$value =~ s/(\S+)/CXGN::Tools::Identifiers::link_identifier($1) || $1/ge;
+                $value
+  }
+
+
+# run detail pages for most of the types through identifier regex
+# recognition
+% for (qw( match BAC BAC_clone BAC_end mRNA )) {
+
+[<% $_ %>:details]
+default  = \&link_detail_page_idents
+
+% }
+
+[main:database]
+db_adaptor = Bio::DB::SeqFeature::Store
+db_args     = -adaptor DBI::Pg
+              -dsn 'dbi:Pg:host=<% $feature->default_db_host %>;dbname=sfs_PGSC_DM_v3.4_gene_func_SL3.10'
+              -user '<% $feature->default_db_user %>'
+              -password '<% $feature->default_db_password %>'
+search options = default +autocomplete +fulltext
+
+### TRACK CONFIGURATION ####
+# the remainder of the sections configure individual tracks
+
+# das category allowable values
+#  repeat
+#  transcription
+#  translation
+#  variation
+#  experimental
+#  structural
+#  miscellaneous
+
+
+# Default glyph settings
+[TRACK DEFAULTS]
+glyph       = generic
+height      = 7
+bgcolor     = cyan
+fgcolor     = black
+label density = 25
+bump density  = 25
+show summary = 10000000
+balloon click = sub { my $name = shift->name; $name =~ s/\.\d+\.\d+$//; "url:/api/v1/feature_xrefs?q=$name;exclude=gbrowse,gbrowse2" }
+
+#[Markers:region]
+#feature         = match:ITAG_sgn_markers
+#ignore_sub_part = match_part
+#key             = Markers
+#fgcolor         = black
+#bgcolor         = yellow
+#glyph           = generic
+#label density   = 100
+#bump density    = 100
+#link         = /search/quick?term=$name
+
+[GC:region]
+glyph        = dna
+key          = GC content
+global feature = 1
+database     = main
+height       = 40
+gc_window    = auto
+do_gc        = 1
+strand       = both
+fgcolor      = red
+axis_color   = blue
+
+
+#track to show DNA and GC content
+[DNA]
+glyph          = dna
+global feature = 1
+height         = 40
+do_gc          = 1
+fgcolor        = red
+category       = DNA
+gc_window      = auto
+axis_color     = blue
+strand         = both
+key            = DNA/GC content
+citation       = This track displays a GC content graph of the reference sequence at low magnifications and the DNA sequence itself at higher magnifications.
+
+#track to show a 6-frame translation of the sequence
+[Translation]
+glyph          = translation
+global feature = 1
+height         = 40
+fgcolor        = purple
+category       = DNA
+start_codons   = 0
+stop_codons    = 1
+translation    = 6frame
+key            = 6-frame translation
+citation       = This track displays a six-frame translation of the reference DNA sequence.
+
+[locus_density:overview]
+feature      = gene
+key          = BGI locus density
+glyph        = generic
+fgcolor      = black
+bgcolor      = darkorange
+ignore_sub_part = mRNA
+category     = Genes
+das category = transcription
+strand_arrow = 1
+height       = 7
+citation     = This track shows the density of BGI Loci along the chromosome.  Lighter colors indicate regions containing fewer loci.
+
+[loci:region]
+feature      = gene
+key          = BGI loci
+glyph        = generic
+fgcolor      = black
+bgcolor      = darkorange
+ignore_sub_part = mRNA
+stranded     = 1
+font2color   = blue
+category     = Genes
+das category = transcription
+strand_arrow = 1
+height       = 7
+citation     = This track shows genetic loci from BGI annotation v3.4.  At high magnifications, draws a series of boxes that are color-coded to indicate the frame in which the translation occurs.  At low magnifications, draws the amino acid sequence of the resulting protein.  Amino acids that are created by a splice are optionally shown in a distinctive color.
+
+[loci]
+feature      = gene
+key          = BGI loci
+glyph        = generic
+ignore_sub_part = mRNA
+fgcolor      = black
+bgcolor      = darkorange
+stranded     = 1
+font2color   = blue
+#title        = sub { (shift->attributes('Note'))[0] }
+category     = Genes
+das category = transcription
+description  = 1
+strand_arrow = 1
+height       = 7
+citation     = This track shows genetic loci from BGI annotation v3.4.
+
+[mrna]
+feature      = mRNA
+key          = BGI gene models
+glyph        = processed_transcript
+ignore_sub_part = intron
+implied_utrs = 1
+adjust_exons = 1
+fgcolor      = black
+bgcolor      = goldenrod
+font2color   = blue
+category     = Genes
+das category = transcription
+height       = 10
+citation     = This track shows the mRNAs for gene models from the BGI v3.4 annotation.
+#balloon click = sub { my $name = shift->name; $name =~ s/\.\d+\.\d+$//; "url:/api/v1/feature_xrefs?q=$name;exclude=gbrowse,gbrowse2" }
+
+[cds]
+feature      = mRNA
+key          = BGI CDS
+title        = sub { my $n = shift->display_name; "click to browse annotations on $n protein product"}
+glyph        = CDS
+fgcolor      = black
+bgcolor      = yellow
+cds_only     = 1
+#label        = sub { shift->displa || (; $n =~ s/mRNA:/CDS:/; $n }
+stranded     = 1
+category     = Genes
+das category = translation
+strand_arrow = 1
+link         = <% $feature->cgi_url %>/gbrowse/ITAG2.3_protein/?name=$name
+height       = 20
+citation     = This track shows the CDS sequences for gene models annotated by BGI v3.4.
+
+#track to show DNA and GC content
+[peptides]
+feature        = CDS
+glyph          = protein
+global feature = 1
+height         = 40
+do_gc          = 1
+fgcolor        = red
+category       = Genes
+axis_color     = blue
+strand         = both
+key            = KD plot/peptides
+citation       = This track displays a Kyte-Doolittle hydropathy plot of the protein sequence at low magnifications and the peptide sequence itself at higher magnifications.
+
+
+#### Assembly tracks ####
+
+[superscaffolds:overview]
+feature = ultrascaffold
+key     = Superscaffolds
+glyph   = generic
+bgcolor = lightgray
+category = Assembly
+citation = This track shows the locations of superscaffolds from the PGSC 3.10 assembly.
+show summary = 0
+
+[superscaffolds:region]
+feature = ultrascaffold
+key     = Superscaffolds
+glyph   = generic
+bgcolor = lightgray
+category = Assembly
+citation = This track shows the locations of superscaffolds from the PGSC 3.10 assembly.
+
+[superscaffolds]
+feature = ultrascaffold
+key     = Superscaffolds
+glyph   = generic
+bgcolor = lightgray
+category = Assembly
+citation = This track shows the locations of superscaffolds from the PGSC 3.10 assembly.
+
+[scaffolds:overview]
+feature = superscaffold
+key     = Scaffold density
+glyph   = generic
+bgcolor = gray
+category = Assembly
+citation = This track shows the density of scaffolds from the PGSC 3.10 assembly.  Lighter colors indicate gaps or regions of low coverage.
+
+[scaffolds:region]
+feature = superscaffold
+key     = Scaffolds
+glyph   = generic
+bgcolor = gray
+category = Assembly
+citation = This track shows the locations of scaffolds from the PGSC 3.10 assembly.
+
+[scaffolds]
+feature = superscaffold
+key     = Scaffolds
+glyph   = generic
+bgcolor = gray
+category = Assembly
+citation = This track shows the locations of scaffolds from the PGSC 3.10 assembly.

@@ -67,8 +67,6 @@ pvalues<-round(pvalues,
                digits=2
                )
 
-pvalues[upper.tri(pvalues)]<-NA
-
 
 #rounding correlation coeficients into 2 decimal places
 coefficients<-round(coefficients,
@@ -80,19 +78,31 @@ allcordata<-round(allcordata,
                   )
 
 #remove rows and columns that are all "NA"
-coefficients<-coefficients[-which(apply(coefficients,
-                                   1,
-                                   function(x)all(is.na(x)))
-                             ),
-                           -which(apply(coefficients,
-                                   2,
-                                   function(x)all(is.na(x)))
-                             )
-                          ]
+if ( apply(coefficients,
+           1,
+           function(x)any(is.na(x))
+           )
+    ||
+    apply(coefficients,
+          2,
+          function(x)any(is.na(x))
+          )
+    )
+  {
+                                                            
+    coefficients<-coefficients[-which(apply(coefficients,
+                                            1,
+                                            function(x)all(is.na(x)))
+                                      ),
+                               -which(apply(coefficients,
+                                            2,
+                                            function(x)all(is.na(x)))
+                                      )
+                               ]
+  }
 
-
+pvalues[upper.tri(pvalues)]<-NA
 coefficients[upper.tri(coefficients)]<-NA
-
 
 png(file=heatmap,
     height=600,
@@ -119,7 +129,7 @@ heatmap.2(coefficients,
           cexCol = 1.25,
           margins = c(10, 6)
           )
-
+ 
 dev.off()
 
 write.table(coefficients,

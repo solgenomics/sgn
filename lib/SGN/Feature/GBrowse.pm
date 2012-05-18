@@ -11,7 +11,7 @@ use namespace::autoclean;
 extends 'SGN::Feature';
 
 use Moose::Util::TypeConstraints;
-use MooseX::Types::Path::Class;
+use MooseX::Types::Path::Class qw | Dir File |;
 use MooseX::Types::URI 'Uri';
 use HTML::Mason::Interp;
 
@@ -34,7 +34,7 @@ has '+description' => (
 
 has 'conf_dir' => ( documentation => 'directory where GBrowse will look for its conf files',
     is => 'ro',
-    isa => 'Path::Class::Dir',
+    isa => Dir,
     coerce => 1,
     lazy_build => 1,
    ); sub _build_conf_dir { my $self = shift; $self->tmpdir->subdir( 'rendered_conf' ) }
@@ -43,7 +43,7 @@ has 'conf_template_dir' => ( documentation => <<'EOD',
 directory for configuration templates, which will be rendered on a one-to-one basis into $self->conf_dir during setup()
 EOD
     is => 'ro',
-    isa => 'Path::Class::Dir',
+    isa => Dir,
     coerce => 1,
     lazy_build => 1,
    ); sub _build_conf_template_dir { shift->path_to('conf','templates') }
@@ -56,7 +56,7 @@ has 'static_url' => ( documentation => 'URL base for GBrowse static files',
 
 has 'static_dir' => (
     is => 'ro',
-    isa => 'Path::Class::Dir',
+    isa => Dir,
     coerce => 1,
     required => 1,
    );
@@ -69,14 +69,14 @@ has 'cgi_url' => (
    );
 has 'cgi_bin' => (
     is => 'ro',
-    isa => 'Path::Class::Dir',
+    isa => Dir,
     coerce => 1,
     required => 1,
    );
 
 has 'tmp_dir' => (
     is => 'ro',
-    isa => 'Path::Class::Dir',
+    isa => Dir,
     coerce => 1,
     required => 1,
    );
@@ -158,7 +158,7 @@ sub render_all_configs {
     $self->conf_template_dir->recurse(
         callback => sub {
             my ($child) = @_;
-            return if $child->is_dir || $child !~ /\.mas$/;
+            return if $child->is_dir || $child !~ /\.mas$/ || $child =~ /^#/ || $child =~ /~$/;
             push @template_files, $child;
         });
 

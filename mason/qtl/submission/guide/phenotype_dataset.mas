@@ -1,0 +1,36 @@
+<%doc>
+
+=head1 NAME 
+
+phenotype_databaset.mas - a display for qtl data submission guidelines - phenotype dataset section.
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<&| /page/info_section.mas, 
+   title      => "Step 3: Phenotype dataset",
+  collapsible => 1,
+  collapsed   => 1
+&>
+
+The phenotype dataset should be in a text file and in the following format. The traits names in the phenotype dataset must match exactly with the traits in the traits file, submitted in the previous step.
+
+<pre>
+                plant    fruit       fruit     fruit
+                         perimeter   area      weigh
+
+                p-1      76.71       420.72    21.89
+                p-2      83.24       482.62    26.29
+                p-3      57.71       232.42    16.29
+                p-4      71.08       360.42    20.7  
+                p-5      85.26       500.51    26.32
+                p-6      67.60       315.39    18.48
+                p-7      66.84       312.99    18.91
+</pre>
+
+</&>

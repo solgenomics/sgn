@@ -1,0 +1,47 @@
+<%doc>
+
+=head1 NAME 
+
+population_details.mas - a display for qtl data submission guidelines - population details section.
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+<&| /page/info_section.mas, 
+   title      => "Step 1:  Population details",
+  collapsible => 1,
+  collapsed   => 1
+&>
+
+<ul>
+  <li>
+    <strong> Select organism:</strong> fill in the common name of the species the population belongs to.
+  </li>
+  <li>
+    <strong> Cross type:</strong> at this stage only inter cross (F2) and backcross populations are supported.
+  </li>
+  <li>
+    <strong> Population name:</strong> provide a concise and precise name for the population. This will also serve as the genetic map name of the population.
+  </li>
+   <li>
+     <strong> Population description:</strong> provide an abstract style characterization of the population including experimental design highlights.
+   </li>
+   <li> 
+     <strong>Female and male parents:</strong> provide the common name or cultivar name of the parents.
+   </li>
+  <li>
+    <strong> Recurrent and donor parents:</strong> necessary in case of backcross population.
+  </li>
+  <li>
+    <strong> Do you want to make the data public:</strong> Choose 'Yes' or 'No' depending on whether you want to share the QTL data with the community or not.
+  </li> 
+  <li>
+    <strong> Parents need to be submitted in scientific name format eg.<i> Solanum lycopersicum</i> cv. moneymaker</strong>
+  </li> 
+</ul>  
+
+</&>

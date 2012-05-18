@@ -3,18 +3,24 @@
 ** DEPRECATED - this is used only on the locus page.
 * The individual page is deprecated, and future pages should use
 * CXGN.AJAX.Ontology which is more generic
-* Function used in locus_display.pl
+* Function used in locus page
 * @author Naama Menda <nm249@cornell.edu>
 *
 */
 
 JSAN.use('MochiKit.DOM');
 JSAN.use('MochiKit.Visual');
-JSAN.use('MochiKit.Async');
+
 
 JSAN.use('CXGN.Effects');
 JSAN.use('CXGN.Phenome.Tools');
 JSAN.use('Prototype');
+
+
+JSAN.use('jquery');
+JSAN.use('jqueryui');
+JSAN.use('popup');
+
 
 var Locus = {
     //update the registry input box when an option is selected. Not sure if we should do this or not
@@ -34,7 +40,7 @@ var Locus = {
 	    select.length=0;
 	    $('associate_registry_button').disabled = true;
 	} else{
-	    new Ajax.Request("/phenome/registry_browser.pl", {
+	    new Ajax.Request("/phenome/registry_browser.pl", { //move to controller
 		    parameters: { registry_name: str },
 		    onSuccess: this.updateRegistrySelect
 		});
@@ -77,7 +83,7 @@ var Locus = {
 	    alert("You must enter a name for the new registry");
 	    return false;
 	}
-	new Ajax.Request("/phenome/add_registry.pl", {
+	new Ajax.Request("/phenome/add_registry.pl", { // move to controller
 		parameters: { registry_symbol: registry_symbol, registry_name: registry_name, registry_description: registry_description, sp_person_id: sp_person_id, locus_id: locus_id},
 		
 		onSuccess: function(response) {
@@ -94,7 +100,7 @@ var Locus = {
 //Make an ajax response that associates the selected registry with this locus
     associateRegistry: function(locus_id, sp_person_id) {
 	var registry_id =  $('registry_select').value;
-	new Ajax.Request("/phenome/associate_registry.pl", {
+	new Ajax.Request("/phenome/associate_registry.pl", { //move to controller
 		parameters: { registry_id: registry_id, locus_id: locus_id, sp_person_id: sp_person_id },
 		    onSuccess: Tools.reloadPage() //change this to
 		    //onSuccess: function(response) {
@@ -117,6 +123,7 @@ var Locus = {
     },
     
     //Logic on when to enable the add registry button
+    //move to Tools.enableButton
     enableButton: function() {
 	var registry_name = $('registry_name').value;
 	var registry_symbol = $('registry_symbol').value;
@@ -132,10 +139,11 @@ var Locus = {
     getAlleles: function(locus_id) {
 	$("associate_stock_button").disabled=false;
 	var stock_id = $('stock_select').value;
-        var d = new MochiKit.Async.doSimpleXMLHttpRequest("allele_browser.pl", {locus_id: locus_id, stock_id: stock_id});
-	d.addCallbacks(this.updateAlleleSelect);
+        new Ajax.Request("/phenome/allele_browser.pl", { //move to controller
+		parameters: { locus_id: locus_id, stock_id: stock_id },
+		    onSuccess: this.updateAlleleSelect } );
     },
-
+    
     //Parse the ajax response to update the allele select box
     updateAlleleSelect: function(request) {
 	var select = $('allele_select');
@@ -170,15 +178,15 @@ var Locus = {
 	if (!allele_id) {  allele_id = $('allele_select').value; } 
 	var stock_id = $('stock_select').value;
 
-	new Ajax.Request("associate_allele.pl", {
+	new Ajax.Request("phenome/associate_allele.pl", { //move to controller
 		parameters: {allele_id: allele_id, stock_id: stock_id, sp_person_id: sp_person_id}, 
 		    onSuccess: function(response) {
-				var json = response.responseText;
-				MochiKit.Logging.log("associateAllele response:  " , json);
-				var x = eval ("("+json+")");
-				MochiKit.Logging.log("associateAllele response:  " , json);
-				if (x.error) { alert(x.error); }
-				else { Tools.reloadPage(); }
+                    var json = response.responseText;
+                    MochiKit.Logging.log("associateAllele response:  " , json);
+                    var x = eval ("("+json+")");
+                    MochiKit.Logging.log("associateAllele response:  " , json);
+                    if (x.error) { alert(x.error); }
+                    else { Tools.reloadPage(); }
 		},
 		    });
     },
@@ -192,7 +200,9 @@ var Locus = {
 	    $('associate_stock_button').disabled = true;
 	}
         else{
-            new Ajax.Request("individual_browser.pl", {parameters: {stock_name: str,  type: type}, onSuccess: this.updateStockSelect});
+            new Ajax.Request("/phenome/individual_browser.pl", { //move to controller
+                    parameters: {stock_name: str,  type: type}, 
+                    onSuccess: this.updateStockSelect});
 	}
     },
 
@@ -223,123 +233,40 @@ var Locus = {
     },
 
 
-    getEvidenceWith: function(locus_id)  {
-	var type = 'evidence_with';
-	var evidence_with_id = $('evidence_with_select').value;
-	new Ajax.Request('evidence_browser.pl', {parameters:
-    {type: type, locus_id: locus_id}, onSuccess:this.updateEvidenceWithSelect});
-    },
-    
-    updateEvidenceWithSelect: function(request) {
-	var select = $('evidence_with_select');
-	
-        var responseText = request.responseText;
-        var responseArray = responseText.split("|");
-	//the last element of the array is empty. Dont want this in the select box
-	responseArray.pop();
-	responseArray.unshift("*--Optional: select an evidence identifier--");
-
-        select.length = 0;    
-	select.length = responseArray.length;
-	for (i=0; i < responseArray.length; i++) {
-	    var evidenceWithObject = responseArray[i].split("*");
-	    select[i].value = evidenceWithObject[0];
-	    select[i].text = evidenceWithObject[1];
-	}
-    },
-    
-    
-    getReference: function(locus_id) {
-	
-	var type = 'reference';
-	var reference_id = $('reference_select').value;
-	new Ajax.Request('evidence_browser.pl', { parameters:
-    {type: type, locus_id: locus_id}, onSuccess: this.updateReferenceSelect });
-	MochiKit.Logging.log("Locus.js getReference is calling UpdateReferenceSelect with locus_id", locus_id);
-    },
-    
-    updateReferenceSelect: function(request) {
-	var select = $('reference_select');
-	
-        var responseText = request.responseText;
-        var responseArray = responseText.split("|");
-	//the last element of the array is empty. Dont want this in the select box
-	responseArray.pop();
-	responseArray.unshift("*--Optional: select supporting reference --");
-	
-        select.length = 0;    
-	select.length = responseArray.length;
-	for (i=0; i < responseArray.length; i++) {
-	    var referenceObject = responseArray[i].split("*");
-	    select[i].value = referenceObject[0];
-	    select[i].text = referenceObject[1];
-	}
-    },
-    /////////////////////////
-    //MOVED TO LocusPage!!!!!!!!!!!!!!!!!!
-    ////////////////////////////////////////////
-
-    //Make an ajax response that associates the selected ontology term with this locus
-    associateOntology: function(locus_id, sp_person_id) {
-	if (this.isVisible('cvterm_list')) {
-		var dbxref_id = $('cvterm_list_select').value;
-		MochiKit.Logging.log("Locus.js: cvterm_list_select.dbxfref_id=...", dbxref_id);
-	} else { 
-		var dbxref_id = $('ontology_select').value;
-		MochiKit.Logging.log("Locus.js: ontology_select.dbxfref_id=...", dbxref_id);
-	}
-	var type = 'locus';
-	var relationship_id = $('relationship_select').value;
-	var evidence_code_id = $('evidence_code_select').value;
-	var evidence_description_id = $('evidence_description_select').value;
-	var evidence_with_id = $('evidence_with_select').value;
-	var reference_id = $('reference_select').value;
-	
-	new Ajax.Request('associate_ontology_term.pl', { parameters:
-	{type: type, object_id: locus_id, dbxref_id: dbxref_id, sp_person_id: sp_person_id,  relationship_id: relationship_id, evidence_code_id: evidence_code_id, evidence_description_id: evidence_description_id, evidence_with_id: evidence_with_id, reference_id: reference_id}, onSuccess: this.ontologyResponse });
-	
-    },
-    
-    ontologyResponse: function(response) {
-	var responseText = response.responseText;
-	if (responseText) { alert(responseText); }	
-	else { 
-		MochiKit.Logging.log("about to reload page...", response );
-		window.location.reload();
-	}
-    },
-   
-    //
-    
-    
-    //##########
-    toggleAssociateRegistry: function()
-    {	
-	MochiKit.Visual.toggle('associateRegistryForm', 'blind');
-    },
-
-    
-    //#####################################LOCUS RELATIONSHIPS
-	
     getLocusReference: function(locus_id) {
-
 	var type = 'reference';
 	var reference_id = $('locus_reference_select').value;
-	new Ajax.Request('evidence_browser.pl', { parameters:
-	{type: type, locus_id: locus_id}, onSuccess: this.updateLocusReferenceSelect });
-	 MochiKit.Logging.log("Locus.js getLocusReference is calling UpdateReferenceSelect with locus_id", locus_id);
+	new Ajax.Request('/phenome/evidence_browser.pl', {  // move 
+                parameters:
+                {type: type, locus_id: locus_id},
+                    onSuccess: function(response) {
+                    var select = $('locus_reference_select');
+                    var responseText = response.responseText;
+                    var responseArray = responseText.split("|");
+                    //the last element of the array is empty. Dont want this in the select box
+                    responseArray.pop();
+                    responseArray.unshift("*--Optional: select supporting reference --");
+                    select.length = 0;
+                    select.length = responseArray.length;
+                    for (i=0; i < responseArray.length; i++) {
+                        var referenceObject = responseArray[i].split("*");
+                        select[i].value = referenceObject[0];
+                        select[i].text = referenceObject[1];
+                    }
+                },
+                    } )
     },
-    
+
+    //#####################################LOCUS RELATIONSHIPS
+
     updateLocusReferenceSelect: function(request) {
 	var select = $('locus_reference_select');
-	
         var responseText = request.responseText;
         var responseArray = responseText.split("|");
 	//the last element of the array is empty. Dont want this in the select box
 	responseArray.pop();
 	responseArray.unshift("*--Optional: select supporting reference --");
-	
-        select.length = 0;    
+        select.length = 0;
 	select.length = responseArray.length;
 	for (i=0; i < responseArray.length; i++) {
 	    var referenceObject = responseArray[i].split("*");
@@ -347,28 +274,26 @@ var Locus = {
 	    select[i].text = referenceObject[1];
 	}
     },
-
+    /////////////////////////////
     getLocusRelationship: function() {
-	//MochiKit.DOM.getElement("associate_locus_button").disabled=false;
-	var type = 'locus_relationship'; 
+        var type = 'locus_relationship'; 
 	var locus_relationship_id = $('locus_relationship_select').value;
-	var d = new MochiKit.Async.doSimpleXMLHttpRequest("locus_browser.pl", {type: type} );	
-	d.addCallbacks(this.updateLocusRelationshipSelect);
+        new Ajax.Request('/phenome/locus_browser.pl', { parameters: //// move to the AJAX controller!
+                  {type: type },
+                      onSuccess: this.updateLocusRelationshipSelect });
     },
 
     updateLocusRelationshipSelect: function(request) {
 	var select = $('locus_relationship_select');
-		
         var responseText = request.responseText;
         var responseArray = responseText.split("|");
 	//the last element of the array is empty. Dont want this in the select box
 	responseArray.pop();
-        select.length = 0;    
+        select.length = 0;
 	select.length = responseArray.length;
 	for (i=0; i < responseArray.length; i++)
 	{
 	    var locusRelationshipObject = responseArray[i].split("*");
-	    
 	    select[i].value = locusRelationshipObject[0];
 	    if (typeof(locusRelationshipObject[1]) != "undefined"){
 		select[i].text = locusRelationshipObject[1];
@@ -379,83 +304,38 @@ var Locus = {
 	    }
 	}
     },
-    
+
     getLocusEvidenceCode: function() {
-    	//MochiKit.DOM.getElement("associate_locus_button").disabled=false;
 	var type = 'locus_evidence_code';
 	var locus_evidence_code_id = $('locus_evidence_code_select').value;
-	var d = new MochiKit.Async.doSimpleXMLHttpRequest("locus_browser.pl", {type: type}  );	
-	d.addCallbacks(this.updateLocusEvidenceCodeSelect);
-    },
-    
-    updateLocusEvidenceCodeSelect: function(request) {
-	var select = $('locus_evidence_code_select');
-	
-        var responseText = request.responseText;
-        var responseArray = responseText.split("|");
-	//the last element of the array is empty. Dont want this in the select box
-	responseArray.pop();
-	responseArray.unshift("*--please select an evidence code--");
-        select.length = 0;    
-	select.length = responseArray.length;
-	
-	for (i=0; i < responseArray.length; i++) {
-	    var locusevidenceCodeObject = responseArray[i].split("*");
-	    
-	   select[i].value = locusevidenceCodeObject[0];
-	   select[i].text = locusevidenceCodeObject[1];
-	   
-	   //document.evidence_code_select.options[i] = new Option(evidenceCodeObject[0], evidenceCodeObject[1]);
-	}
-    },
-    
-     
-       
-    //#####################################
-    
-    
-    //Make an ajax response that finds all the unigenes with unigene ids like the current value of the unigene id input
-    getUnigenes: function(unigene_id, locus_id) {
-	if(unigene_id.length==0){
-	    var select = $('unigene_select');
-	    select.length=0;	
-	    $('associate_unigene_button').disabled = true;
-	} else {	
-	    var type = 'browse';
-	    new Ajax.Request('unigene_browser.pl', { parameters:
-		    {type: type, locus_id: locus_id, unigene_id: unigene_id}, 
-			onSuccess: this.updateUnigeneSelect }); 
-	}
-    },
-    
-    //Parse the ajax response and update the unigene  select box accordingly
-    updateUnigeneSelect: function(response) {
-	var select = $('unigene_select');
-	//MochiKit.DOM.getElement('associate_unigene_button').disabled = true;
-	var json  = response.responseText;
-	var x = eval ("("+json+")"); 
-	//var responseText = request.responseText;
-	var responseArray = x.response.split("|");
-	
-	//the last element of the array is empty. Dont want this in the select box
-	responseArray.pop();
 
-        select.length = responseArray.length;
-        for (i=0; i < responseArray.length; i++) {
-	    var unigeneObject = responseArray[i].split("*");
-	    
-	    select[i].value = unigeneObject[0];
-	    if (typeof(unigeneObject[1]) != "undefined"){
-		select[i].text = unigeneObject[1];
-	    }
-	}
-     },
+        new Ajax.Request('/phenome/locus_browser.pl', {
+                parameters:
+                {type: type },
+                    onSuccess: function(response) {
+                    var select = $('locus_evidence_code_select');
+                    var responseText = response.responseText;
+                    var responseArray = responseText.split("|");
+                    //the last element of the array is empty. Dont want this in the select box
+                    responseArray.pop();
+                    responseArray.unshift("*--please select an evidence code--");
+                    select.length = 0;
+                    select.length = responseArray.length;
+                    for (i=0; i < responseArray.length; i++) {
+                        var locusevidenceCodeObject = responseArray[i].split("*");
+                        select[i].value = locusevidenceCodeObject[0];
+                        select[i].text = locusevidenceCodeObject[1];
+                    }
+                },
+                    } );
+    },
 
-   
+
+    /////////////currently not used - check 
     //Make an ajax response that obsoletes the selected stock-allele association
     obsoleteStockAllele: function(stockprop_id)  {
 		var type= 'obsolete';
-		new Ajax.Request('individual_browser.pl', {parameters:
+		new Ajax.Request('/phenome/individual_browser.pl', {parameters:
                         {type: type, stockprop_id: stockprop_id }, onSuccess: Tools.reloadPage });
     },
     //Make an ajax response that finds all loci  with names/synonyms/symbols like the current value of the locus input
@@ -470,38 +350,38 @@ var Locus = {
 	    new Ajax.Request("/phenome/locus_browser.pl", {parameters: 
 		    {type: type, locus_name: str,object_id: object_id, organism: organism}, onSuccess: this.updateLocusSelect });		}
     },
-    
+
     //Parse the ajax response and update the locus select box accordingly
     updateLocusSelect: function(request) {
 	var select = $('locus_list');
 	$('merge_locus_button').disabled = true;
-	
+
 	var responseText = request.responseText;
 	var responseArray = responseText.split("|");
-	
+
 	//the last element of the array is empty. Dont want this in the select box
 	responseArray.pop();
-	
+
 	select.length = responseArray.length;
 	for (i=0; i < responseArray.length; i++) {
 	    var locusObject = responseArray[i].split("*");
-	    
+
 	    select[i].value = locusObject[0];
 	    if (typeof(locusObject[1]) != "undefined"){
 		select[i].text = locusObject[1];
 	    }
 	}
     },
-    
+
     //Logic on when to enable the merge locus button
     enableMergeButton: function() {
-	$("merge_locus_button").disabled=false;	    
+	$("merge_locus_button").disabled=false;
     },
-    
+
     //make an ajax response to merge locus x with the current locus
     mergeLocus: function(locus_id) {
 	var merged_locus_id = $('locus_list').value;
-	new Ajax.Request('merge_locus.pl', {
+	new Ajax.Request('/phenome/merge_locus.pl', {
 		parameters: { merged_locus_id: merged_locus_id, locus_id: locus_id}, 
 		    onSuccess: function(response) {
 		    var json  = response.responseText;
@@ -511,13 +391,7 @@ var Locus = {
 		    else {  window.location.reload() ; } 
 		},
 		    });
-	
     },
-    
-    toggleVisible:function(elem){
-        MochiKit.DOM.toggleElementClass("invisible", elem);
-	MochiKit.Logging.log("toggling visible element : " , elem);
-    },	
 
     makeVisible: function(elem) {
         MochiKit.DOM.removeElementClass(elem, "invisible");
@@ -529,35 +403,20 @@ var Locus = {
 	MochiKit.DOM.removeElementClass(elem, "visible");
         MochiKit.DOM.addElementClass(elem, "invisible");
     },
-	
-    isVisible: function(elem) {
-        // you may also want to check for
-        // getElement(elem).style.display == "none"
-	MochiKit.Logging.log("testing isVisible", elem);
-	if (MochiKit.DOM.hasElementClass(elem, "invisible")) {
-		MochiKit.Logging.log("this element is invisible: ", elem);
-	}else if  (MochiKit.DOM.hasElementClass(elem, "visible")) { 
-	    MochiKit.Logging.log("this element is visible: ", elem); 
-	}else {  MochiKit.Logging.log("this element does not have a visible/invisible element set: ", elem); } 
-	
-	return MochiKit.DOM.hasElementClass(elem, "visible") ;
-    },
-    
-    
-    
-    searchCvterms: function()  {	
+
+    searchCvterms: function()  {
 	Effects.showElement('ontology_search');
 	Effects.hideElement('cvterm_list');
 	this.makeVisible('ontology_search');
 	this.makeInvisible('cvterm_list');
     },
-    
+
     getCvtermsList: function(locus_id) {
 	Effects.showElement('cvterm_list');
 	Effects.hideElement('ontology_search');
 	this.makeInvisible('ontology_search');
 	this.makeVisible('cvterm_list');
-	
+
 	new Ajax.Request("/phenome/locus_page/get_locus_cvterms.pl", {
 		parameters: {locus_id: locus_id }, 
 		    onSuccess: function(response) {
@@ -571,7 +430,7 @@ var Locus = {
 			//first count the # of hash keys. Need to declare first the length of the select menu 
 			for (key in x) keyCount++; 
 			select.length = keyCount;
-			
+
 			//now populate the select list from the hash. Need to iterate over the hash keys again...
 			var i=0;
 			for (dbxref_id in x) {
@@ -583,8 +442,7 @@ var Locus = {
 		}
 	});
     },
-    
-    
+
     //make an ajax response to add a dbxref to the locus
     addLocusDbxref: function(locus_id, dbxref_id) {
 	//var dbxref_id = $('dbxref_id').value;
@@ -595,6 +453,115 @@ var Locus = {
 		    { type: type, object_id: locus_id, dbxref_id: dbxref_id, validate: validate}, onSuccess:Tools.reloadPage} );
 	}
     },
-    
-}//
-    
+    /////////////////////////////////////
+    /// locus network
+    /////////////////////////////////////
+    printLocusNetwork: function(locus_id, div_id) {
+        if (!div_id) div_id = 'locus_network';
+        jQuery.ajax( { url: "/locus/"+locus_id+"/network/" , dataType: "json",
+                       success: function(response) {
+                    var json = response;
+                    jQuery("#"+div_id).html(response.html);
+                    if ( response.error ) { alert(response.error) ; }
+                }
+            });
+    },
+
+    ////////////////////////////////////////////////////////////////////////////////////
+    //Make an ajax response that associates the selected locus with this locus
+    associateLocus: function(locus_id) {
+        var div_id = 'locus_network';
+        var object_id = $('locus_select').value;
+	var locus_relationship_id = $('locus_relationship_select').value;
+	var locus_evidence_code_id = $('locus_evidence_code_select').value;
+	var locus_reference_id = $('locus_reference_select').value ;
+        jQuery.ajax( {
+                type: 'POST',
+                    url: "/ajax/locus/associate_locus/",
+                    dataType: "json",
+                    /// make asynchronous since it takes long to finish the ajax request
+                    /// and we want to refresh the locus_network div only after the request is done
+                    async: false,
+                    data: 'object_id='+object_id+'&locus_relationship_id='+locus_relationship_id+'&locus_evidence_code_id='+locus_evidence_code_id+'&locus_reference_id='+locus_reference_id+'&locus_id='+locus_id ,
+                    success: function(response) {
+                    var json = response;
+                    if ( response.error ) { alert(response.error) ; }
+                },
+                    });
+        this.printLocusNetwork(locus_id, div_id);
+        Effects.hideElement('associateLocusForm');
+    },
+    ////////////////////////////////////////////////
+    obsoleteLocusgroupMember: function(lgm_id, locus_id, obsolete_url)  {
+        jQuery.ajax( { url: obsolete_url ,
+                       dataType: "json" ,
+                       type: 'POST',
+                       data: 'lgm_id='+lgm_id+'&locus_id'+locus_id,
+                       success: function(response) {
+                    if ( response.error ) { alert(response.error) ; }
+                }
+            });
+        this.printLocusNetwork(locus_id);
+    },
+    ///////////////////////////////////////////////
+    ////locus unigenes
+    /////////////////////////////////////////////
+     printLocusUnigenes: function(locus_id) {
+        jQuery.ajax( {
+                url: '/locus/'+locus_id+'/unigenes',
+                dataType: "json",
+                success: function(response) {
+                    jQuery("#unigenes").html(response.unigenes);
+                    jQuery("#solcyc").html(response.solcyc);
+                    if ( response.error ) { alert(response.error) ; }
+                },
+            } );
+    },
+
+    //Make an ajax response that obsoletes the selected unigene-locus association
+    obsoleteLocusUnigene: function(locus_unigene_id, locus_id)  {
+        jQuery.ajax( { url: '/ajax/locus/obsolete_locus_unigene' ,
+                       dataType: "json" ,
+                       type: 'POST',
+                       data: 'locus_unigene_id='+locus_unigene_id+'&locus_id='+locus_id,
+                       success: function(response) {
+                    if ( response.error ) { alert(response.error) ; }
+                }
+            });
+        this.printLocusUnigenes(locus_id);
+    },
+  //Make an ajax response that associates the selected unigene  with this locus
+    associateUnigene: function(locus_id) {
+	var unigene_input = $('unigene_input').value; // get this from autocomplete?
+        jQuery.ajax( {
+                type: 'POST',
+                    url: "/locus/"+locus_id+"/associate_unigene",
+                    dataType: "json",
+                    /// make asynchronous since it takes long to finish the ajax request
+                    /// and we want to refresh the locus_unigenes div only after the request is done
+                    async: false,
+                    data: 'locus_id='+locus_id+'&unigene_input='+unigene_input ,
+                    success: function(response) {
+                    if ( response.error ) { alert(response.error) ; }
+                },
+                    });
+        this.printLocusUnigenes(locus_id);
+        Effects.hideElement('associateUnigeneForm');
+    },
+
+    //Make an ajax response that finds all the unigenes with unigene ids 
+    //like the current value of the unigene id input
+    getUnigenes: function(unigene_id, organism, current) {
+	if(unigene_id.length==0){
+            $('associate_unigene_button').disabled = true;
+        } else {
+            jQuery(function() {
+                    jQuery("#unigene_input").autocomplete({
+                            source: '/ajax/transcript/autocomplete' + "?organism="+organism+"&current="+current,
+                            change: $('associate_unigene_button').disabled = false
+                        });
+                });
+        }
+    },
+
+};//

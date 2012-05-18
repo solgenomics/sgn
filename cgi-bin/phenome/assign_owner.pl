@@ -7,7 +7,7 @@ use CXGN::People::Person;
 use CXGN::Feed;
 use CatalystX::GlobalContext '$c';
 
-my $dbh = CXGN::DB::Connection->new();
+my $dbh = $c->dbc->dbh;
 
 my ( $login_person_id, $login_user_type ) =
   CXGN::Login->new($dbh)->verify_session();
@@ -112,20 +112,18 @@ if ( $login_user_type eq 'curator' ) {
             my $user =
               $person->get_first_name() . " " . $person->get_last_name();
             my $user_link =
-              qq |/solpeople/personal-info.pl?sp_person_id=$login_person_id|;
+              qq |solgenomics.net/solpeople/personal-info.pl?sp_person_id=$login_person_id|;
 
             my %links = (
-                'locus' => qq |/phenome/locus_display.pl?locus_id=$object_id|,
-                'individual' =>
-                  qq |/phenome/individual.pl?individual_id=$object_id|,
-                'stock' => qq |/stock/$object_id/view/|,
+                'locus' => qq |solgenomics.net/locus/$object_id/view/|,
+                'stock' => qq |solgenomics.net/stock/$object_id/view/|,
             );
             my $object_link = $links{$object_type};
             my $owner = CXGN::People::Person->new( $dbh, $sp_person_id );
             my $owner_name =
               $owner->get_first_name() . " " . $owner->get_last_name();
             my $owner_link =
-              qq |/solpeople/personal-info.pl?sp_person_id=$sp_person_id|;
+              qq |solgenomics.net/solpeople/personal-info.pl?sp_person_id=$sp_person_id|;
             my $fdbk_body =
 "curator $user ($user_link) has assigned a new owner ($owner_name, $owner_link) for $object_type $object_link \n ";
             CXGN::Contact::send_email( $subject, $fdbk_body,

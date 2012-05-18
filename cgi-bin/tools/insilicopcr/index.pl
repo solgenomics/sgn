@@ -34,7 +34,7 @@ use POSIX;
 use CXGN::DB::Connection;
 use CXGN::Page;
 use CXGN::BlastDB;
-use CXGN::Page::FormattingHelpers qw/page_title_html modesel info_table_html hierarchical_selectboxes_html simple_selectbox_html/;
+use CXGN::Page::FormattingHelpers qw/page_title_html info_table_html hierarchical_selectboxes_html /;
 use CXGN::Page::UserPrefs;
 use CXGN::Tools::List qw/evens distinct/;
 
@@ -153,7 +153,7 @@ print page_title_html("In Silico PCR");
     		<b>Expectation value (<tt>-e</tt>)</b> 
     	</td>
         <td >
-        	<input type="text" size="10" value="1e-10" name="expect" />
+        	<input type="text" size="10" value="0.01" name="expect" />
         </td>
     </tr>
     <tr><td><b>Filter query sequence (DUST with blastn, SEG with others) (<tt>-F</tt>)</b></td>

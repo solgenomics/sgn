@@ -299,6 +299,7 @@ cross<-scan(crossfile,
 
 
 popdata<-c()
+
 if (cross == "f2")
 {
   popdata<- read.cross("csvs",
@@ -310,7 +311,7 @@ if (cross == "f2")
 
   popdata<-jittermap(popdata)
 } else
-if (cross == "bc")
+if (cross == "bc" | cross == "rilsib" | cross == "rilself")
 {
   popdata<- read.cross("csvs",
                        genfile=genodata,
@@ -321,6 +322,15 @@ if (cross == "bc")
 
   popdata<-jittermap(popdata)
 }  
+
+if (cross == "rilself")
+  {
+    popdata<-convert2riself(popdata)
+  } else
+if (cross == "rilsib")
+  {
+    popdata<-convert2risib(popdata)  
+  }
 
 #calculates the qtl genotype probablity at
 #the specififed step size and probability level
@@ -418,7 +428,7 @@ if (is.logical(permuvalue1) == FALSE)
   }
 }
 
-##########QTL EFFECTS - I ##############
+##########set the LOD cut-off for singificant qtls ##############
 LodThreshold<-c()
 
 if(is.null(permu) == FALSE)
@@ -613,42 +623,48 @@ chrno<-chrno + 1;
                                 )    
                     }
               }
-
-            QtlEffects<-fitqtl(popdata,
-                               pheno.col=cv,
-                               QtlObj,
-                               formula=Eq,
-                               method="hk",                   
-                               get.ests=TRUE
-                               )
-            ResultModel<-attr(QtlEffects,
-                              "formula"
-                              )
-
-            Effects<-QtlEffects$ests$ests
-            QtlLodAnova<-QtlEffects$lod
-            ResultFull<-QtlEffects$result.full  
-            ResultDrop<-QtlEffects$result.drop
-
-            if (is.numeric(Effects))
+            
+            QtlEffects<-try(fitqtl(popdata,
+                                   pheno.col=cv,
+                                   QtlObj,
+                                   formula=Eq,
+                                   method="hk",                   
+                                   get.ests=TRUE
+                                   )          
+                            )
+           
+            if(class(QtlEffects) != 'try-error')
               {
-                Effects<-round(Effects,
-                               2
-                               )
-              }
-
-            if (is.numeric(ResultFull))
-              {
-                ResultFull<-round(ResultFull,
-                                  2
+               
+                ResultModel<-attr(QtlEffects,
+                                  "formula"
                                   )
-              }
 
-            if (is.numeric(ResultDrop))
-              {
-                ResultDrop<-round(ResultDrop,
-                                  2
-                                  )
+                Effects<-QtlEffects$ests$ests
+                QtlLodAnova<-QtlEffects$lod
+                ResultFull<-QtlEffects$result.full  
+                ResultDrop<-QtlEffects$result.drop
+                  
+                if (is.numeric(Effects))
+                  {
+                    Effects<-round(Effects,
+                                   2
+                                   )
+                  }
+
+                if (is.numeric(ResultFull))
+                  {
+                    ResultFull<-round(ResultFull,
+                                      2
+                                      )
+                  }
+
+                if (is.numeric(ResultDrop))
+                  {
+                    ResultDrop<-round(ResultDrop,
+                                      2
+                                      )
+                  }
               }
           }
       }

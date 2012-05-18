@@ -7,9 +7,7 @@ use Test::More;
 
 my %urls = (
         "main search page"          => "/search",
-        "direct qtl search"         => "/search/direct_search.pl?search=qtl",
-        "qtl_search"                => "/cgi-bin/search/qtl_search.pl",
-        "qtl search foo"            => "/search/qtl_search.pl?wf1a_cvterm_name=foo",
+        "direct qtl search"         => "/search/direct_search.pl?search=qtl",        
         "unigene search"            => "/search/direct_search.pl?search=unigene",
         "unigene search 2"          => "/search/ug-ad2.pl?w9e3_page=0&w9e3_sequence_name=SGN-U231977&w9e3_clone_name=&w9e3_membersrange=gt&w9e3_members1=&w9e3_members2=&w9e3_annotation=&w9e3_annot_type=blast&w9e3_lenrange=gt&w9e3_len1=&w9e3_len2=&w9e3_unigene_build_id=any",
         "unigene detail"            => "/search/unigene.pl?unigene_id=SGN-U231977&w9e3_page=0&w9e3_annot_type=blast&w9e3_unigene_build_id=any",

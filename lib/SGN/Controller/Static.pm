@@ -29,4 +29,9 @@ sub solanaceae_project_afri :Path('/solanaceae-project/afri-sol/') {
     $c->stash->{template} = '/links/afri_sol.mas';
 }
 
+
+sub sgn_events :Path('/sgn-events/') {
+    my ($self, $c) = @_;
+    $c->stash->{template} = '/homepage/sgn_events.mas';
+}
 1;

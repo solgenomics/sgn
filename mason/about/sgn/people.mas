@@ -33,35 +33,35 @@ $_</td>\n|}
 }
 sub ul(@) { "<ul>\n".( join '', map {"<li>$_</li>\n"} @_ )."</ul>\n"; }
 
-print info_section_html( title => 'Staff',
+print info_section_html( title => 'Lab members',
 			 contents =>
-			 info_section_html( title => 'Senior Staff',
+			 info_section_html( title => 'Staff',
 					    is_subsection => 1,
 					    contents => person_set 
-					    ([ 
-					       ['lukas','Lukas Mueller','Director'],
-					       ['naama','Naama Menda','Postdoctoral Fellow'],
-					       ['anuradha', 'Anuradha Pujar', 'Postdoctoral Fellow' ],
-],
-[
-					       ['isaak', 'Isaak Tecle', 'Postdoctoral Fellow' ],
-					       ['tom', 'Tom York', 'Postdoctoral Fellow' ],
-                                               ['aureliano', 'Aureliano Bombarely', 'Postdoctoral Fellow' ]
-					       ],
-					     ),
-					    )
-			 .info_section_html( title => 'Bioinformatics Analysts &amp System Administration',
-					     is_subsection => 1,
-					     contents => person_set
-					     ([ 
-						['robert','Robert Buels'],
-						['jonathan','Jonathan Leto'],
-						['joseph','Joseph Gosselin'],
-						],
-					      ),
-					     )
+					    ([
+					      ['lukas','Lukas Mueller','Director'],
+					     
+					      ['jeremy', 'Jeremy Edwards', 'Assistant Director'],
 
-			 .info_section_html( title => 'Interns',
+					     ],
+					     [
+					       ['naama','Naama Menda','Postdoc'],
+
+					      ['isaak', 'Isaak Y Tecle', 'Bioinformatics Consultant' ],
+					     ],
+					     [
+
+					      ['tom', 'Tom York', 'Postdoc' ],
+					      ['aureliano', 'Aureliano Bombarely', 'Postdoc' ],
+					     ],
+					     [					      
+					      ['suzy', 'Susan Strickler', 'Postdoc'],
+					      ['anuradha', 'Anuradha Pujar', 'Postdoc' ],
+],
+					    ),
+					  )
+			 
+  .info_section_html( title => 'Interns',
 					     is_subsection => 1,
 					     contents => 
 					     ul(
@@ -77,6 +77,9 @@ print info_section_html( title => 'Emeritus Staff',
 			 info_table_html( __multicol => 3, __border => 0,
 					 'Bioinformatics Analysts' =>
 					  ul(
+                                             'Robert Buels',
+					     'Joseph Gosselin',
+					     'Jonathan Leto',
                                              'Adri Mills',
                                              'Beth Skwarecki',
 					     'Dean Eckstrom',
@@ -92,6 +95,13 @@ print info_section_html( title => 'Emeritus Staff',
 					    ),
 					  'Interns' =>
 					  ul(
+					     'Jessica Jeffrey (2011)',
+					     'Dil Begum (2011)',
+					     'Samuel Moijueh (2011)',
+					     'Benjamin Gordon (2011)',
+					     'Jean Lee (2010)',
+					     'Dean Bobo (2010)',
+					     'Carolyn Ochoa (2010)',
                                              'Mallory Freeberg',
                                              'Carolyn Ochoa',
 					     'Johnathon Schulz',

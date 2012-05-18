@@ -2,17 +2,15 @@
 use strict;
 use warnings;
 
-use CXGN::DB::Connection;
 use Test::More;
-use Test::WWW::Mechanize;
 use lib 't/lib';
+use SGN::Test::WWW::Mechanize;
 use SGN::Test;
-
 use CXGN::People::Person;
 
-my $dbh = CXGN::DB::Connection->new();
+my $m = SGN::Test::WWW::Mechanize->new();
 
-my $m = Test::WWW::Mechanize->new();
+my $dbh = $m->context->dbc->dbh();
 
 my $server = $ENV{SGN_TEST_SERVER};
 
@@ -25,8 +23,6 @@ $m->get_ok($server."/solpeople/login.pl");
 if( my $u_id = CXGN::People::Person->get_person_by_username( $dbh, "genefamily_test_editor" ) ) {
     my $u = CXGN::People::Person->new( $dbh, $u_id );
     $u->hard_delete;
-    $dbh->commit unless $dbh->dbh_param('AutoCommit');
-
 }
 
 my $p = CXGN::People::Person->new($dbh);
@@ -41,7 +37,7 @@ $login->set_user_type("genefamily_editor");
 
 $login->store();
 
-$dbh->commit();
+## $dbh->commit(); ## auto commit is on, commit not necessary
 
 my %form = (
     form_name => 'login',

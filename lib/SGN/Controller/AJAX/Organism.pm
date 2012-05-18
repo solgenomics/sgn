@@ -135,6 +135,7 @@ sub project_metadata :Chained('/organism/find_organism') :PathPart('metadata') :
                         },
                      );
                 }
+		$c->forward('/organism/invalidate_organism_tree_cache');
             }
             else {
                 $self->status_bad_request( $c, message => 'Form is not valid' );
@@ -188,6 +189,7 @@ sub project_metadata :Chained('/organism/find_organism') :PathPart('metadata') :
     }
     elsif ($action eq 'store')  {
         $self->status_ok( $c, entity => [ 'success' ] );
+
     }
     else {
 
@@ -206,10 +208,10 @@ sub metadata_form {
 
     my $data = {};
     if ($json) {
-        print STDERR "CONVERTING JSON...\n";
+        #print STDERR "CONVERTING JSON...\n";
         $data = $c->stash->{json}->jsonToObj($json); }
     else {
-        print STDERR "No JSON data provided...\n";
+        #print STDERR "No JSON data provided...\n";
 
     }
 
@@ -276,7 +278,8 @@ sub project_metadata_prop_list {
             "genome_project_dates"                => "Project start, end",
             "genome_project_funding_agencies"     => "Funding Agencies",
 	    "genome_project_url"                  => "Project URL", 
-            "genome_project_genbank_link"                 => "Genbank link",
+            "genome_project_genbank_link"         => "Genbank link",
+	    "genome_project_contact_person"       => "Contact (name, email)",
 	);
 
 }

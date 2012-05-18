@@ -1,0 +1,42 @@
+<%doc>
+
+=head1 NAME 
+qtl/qtl_form/intro.mas - a mason component for displaying an introductory
+note for the qtl data submission
+
+=AUTHOR
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$guide
+
+</%args>
+
+% if (!$guide) {$guide = 'guidelines';}
+
+<p>The uploading of QTL data needs to be done in one session. 
+  Therefore, prepare your data files in the required format before 
+  starting the process. Please read the submission <% lc($guide) %> first. If you 
+  would like to have the formatting of your dataset checked 
+  beforehand, send your data to: <a href=mailto:iyt2\@cornell.edu>iyt2@cornell.edu</a>.
+</p> 
+        
+<p>Required data:</p>
+       
+<ul>
+  <li>Some basic information about the population,</li>
+  <li>Traits data file (tab delimited),</li>
+  <li>Phenotype data file (tab delimited),</li> 
+  <li>Genotype data file (tab delimited) and</li> 
+  <li>Statistical parameters.</li>
+  <li><i>Markers with their sequences need to be already in SGN. 
+      Read <a href="/cview/help/map_submission">here</a> on how 
+      to submit markers to SGN.
+  </i>
+</ul>
+

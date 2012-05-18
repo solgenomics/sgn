@@ -54,11 +54,11 @@ sub autocomplete_GET :Args(0) {
     $person =~ s/(^\s+|\s+)$//g;
     $person =~ s/\s+/ /g;
     my $q = "SELECT sp_person_id, first_name, last_name FROM sgn_people.sp_person
-             WHERE first_name ilike ? OR last_name ilike ?
+             WHERE lower(first_name) like ? OR lower(last_name) like ?
              LIMIT 20";
 
     my $sth = $c->dbc->dbh->prepare($q);
-    $sth->execute("\%$person\%" , "\%$person\%");
+    $sth->execute( lc "$person\%" , lc "$person\%" );
     my @results;
     while (my ($sp_person_id, $first_name, $last_name) = $sth->fetchrow_array ) {
         push @results , "$first_name, $last_name";

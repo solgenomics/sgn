@@ -1,10 +1,10 @@
 use strict;
 use warnings;
 
-my $population_indls_detail_page =
-  CXGN::Phenome::PopulationIndlsDetailPage->new();
+my $qtl_analysis_detail_page =
+  CXGN::Phenome::QtlAnalysisDetailPage->new();
 
-package CXGN::Phenome::PopulationIndlsDetailPage;
+package CXGN::Phenome::QtlAnalysisDetailPage;
 
 
 
@@ -31,7 +31,7 @@ use GD;
 use GD::Graph::bars;
 use GD::Graph::lines;
 use GD::Graph::points;
-use GD::Graph::Map;
+BEGIN { local $SIG{__WARN__} = sub {}; require GD::Graph::Map }
 use Statistics::Descriptive;
 use Math::Round::Var;
 use Number::Format;
@@ -57,7 +57,7 @@ sub new
 {
     my $class = shift;
     my $self  = $class->SUPER::new(@_);
-    $self->set_script_name("population_indls.pl");
+    $self->set_script_name("qtl_analysis.pl");
 
     return $self;
 }
@@ -75,19 +75,21 @@ sub define_object
     # this page needs to be re-written with CXGN::Chado::Stock object
     # and without SimpleFormPage, since edits should be done on the parent page only
     #########################
-    if ($stock_id) {
-        $object = CXGN::Phenome::Population->new_with_stock_id($self->get_dbh, $stock_id);
-        $population_id = $object->get_population_id;
-    } else  {
-        $object = CXGN::Phenome::Population->new($self->get_dbh, $population_id) ;
+   
+    unless ( ($population_id and $population_id =~ /^\d+$/) || ($stock_id and $stock_id =~ /^\d+$/) )
+    {
+        $c->throw_404("A proper <strong>population id or stock id</strong> argument is missing");
     }
 
-        unless ( !$population_id || $population_id =~ m /^\d+$/ )
+    if ($stock_id) 
     {
-        $self->get_page->message_page(
-                          "No population exists for identifier $population_id");
+        $object = CXGN::Phenome::Population->new_with_stock_id($self->get_dbh, $stock_id);
+        $population_id = $object->get_population_id;
+    } else  
+    {
+        $object = CXGN::Phenome::Population->new($self->get_dbh, $population_id) ;
     }
-      
+    
     $self->set_object_id($population_id);
     $self->set_object(
                        CXGN::Phenome::Population->new(
@@ -99,12 +101,13 @@ sub define_object
     $self->set_owners( $self->get_object()->get_owners() );
     
     my $trait_id = $args{cvterm_id};
-    $trait_id =~ s/\D//;
+    $trait_id = undef if $trait_id =~ m/\D+/;
     
-    if ($trait_id) {
+    if ($trait_id) 
+    {
 	$self->set_trait_id($trait_id);
     } else {
-	die "A cvterm id argument is missing";
+	$c->throw_404("A proper <strong>cvterm id</strong> argument is missing");
     }
 
 
@@ -244,7 +247,7 @@ EOS
 
     
     my $page =
-"../phenome/population_indls.pl?population_id=$population_id&amp;cvterm_id=$term_id";
+"../phenome/qtl_analysis.pl?population_id=$population_id&amp;cvterm_id=$term_id";
     $args{calling_page} = $page;
 
     my $pubmed;
@@ -319,7 +322,7 @@ qq|<div><a href="$url_pubmed$accession" target="blank">$pub_info</a> $title $abs
         }
     }
 
-    print info_section_html( title    => 'Population Details',
+    print info_section_html( title    => 'Population details',
                              contents => $population_html, );
 
     my $is_public = $population->get_privacy_status();
@@ -484,13 +487,15 @@ qq { Download population: <span><a href="/qtl/download/phenotype/$population_id"
                                  );
 
         print info_section_html( 
-	                        title    => 'Phenotype Frequency Distribution',
+	                        title    => 'Phenotype frequency distribution',
                                 contents => $plot_html, 
                                );
    
 	print info_section_html( 
-	                        title    => 'Phenotype Data', 
-	 	                contents => $data_view . " " . $data_download, 
+	                        title    => 'Download data', 
+	 	                contents => $data_view . " " . $data_download,
+                                collapsible => 1,
+                                collapsed   => 1,
 	 	               ); 
 
     }
@@ -509,8 +514,10 @@ qq { Download population: <span><a href="/qtl/download/phenotype/$population_id"
     }
 
     print info_section_html(
-                           title => 'Literature Annotation',
-                           contents => $pubmed,
+                           title       => 'Publication(s)',
+                           contents    => $pubmed,
+                           collapsible => 1,
+                           collapsed   => 1,
                            );
 
     if ($population_name)
@@ -632,8 +639,8 @@ qq | /phenome/indls_range_cvterm.pl?cvterm_id=$term_id&amp;lower=$lower&amp;uppe
         $graph->set_title_font('gdTinyFont');
         $graph->set(
                      title             => " ",
-                     x_label           => "Ranges for $term_name",
-                     y_label           => "Frequency",
+                     x_label           => "$term_name values",
+                     y_label           => "No. of observation units",
                      y_max_value       => $max,
                      x_all_ticks       => 1,
                      y_all_ticks       => 2,
@@ -666,7 +673,7 @@ qq | /phenome/indls_range_cvterm.pl?cvterm_id=$term_id&amp;lower=$lower&amp;uppe
     my $image_map = $cache->get_image_map_data();
     my $image     = $cache->get_image_tag();
     my $title =
-qq | Frequency distribution of experimental lines evaluated for $term_name. Bars represent the number of experimental lines with $term_name values greater than the lower limit but less or equal to the upper limit of the range. |;
+qq | Phenotype frequency distribution of experimental lines evaluated for $term_name. Bars represent the number of experimental lines with $term_name values greater than the lowest value but less or equal to the highest value of the range. |;
 
     return $image, $title, $image_map;
 }
@@ -1157,8 +1164,12 @@ sub crosstype_file {
                           from cross_type
                           where cross_type_id = ?
 
-    my $rqtl_cross_type = { 'Back cross' => 'bc',  'F2' => 'f2' }->{$cross_type}
-        or die "unknown cross_type '$cross_type' for population '$pop_id'";
+    my $rqtl_cross_type = { 'Back cross'        => 'bc',  
+                            'F2'                => 'f2', 
+                            'RIL (self-mating)' => 'rilself', 
+                            'RIL (sib-mating)'  => 'rilsib' 
+                          }->{$cross_type} 
+                          or die "unknown cross_type '$cross_type' for population '$pop_id'";
 
     my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
 	$self->cache_temp_path();
@@ -1206,7 +1217,7 @@ sub run_r
           tempfile(
                     File::Spec->catfile(
                                          CXGN::Tools::Run->temp_base(),
-                                         "population_indls.pl-$_-XXXXXX",
+                                         "qtl_analysis.pl-$_-XXXXXX",
                                        ),
                   );
         $filename
@@ -1872,3 +1883,4 @@ sub remove_permu_file {
         
     }
 }
+

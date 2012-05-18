@@ -1,26 +1,25 @@
 #!/usr/bin/perl
-
 use strict;
 use warnings;
+
 use Test::More;
+
 use lib 't/lib';
 use SGN::Test::WWW::Mechanize;
-use CXGN::DB::Connection;
-use Carp qw | verbose |;
 
 my $form_url = '/contact/form';
 my $mech = SGN::Test::WWW::Mechanize->new;
 
-form_basic_ok();
-submit_form_ok();
+form_basic_ok( $mech, $form_url );
+submit_form_ok( $mech, $form_url );
 
 $mech->while_logged_in(
     { user_type => 'user' },
     sub {
         my $user = shift;
-        form_basic_ok();
-        form_has_user_defaults( $user );
-        submit_form_ok();
+        form_basic_ok( $mech, $form_url );
+        form_has_user_defaults( $mech, $user );
+        submit_form_ok( $mech, $form_url );
     },
     );
 
@@ -29,8 +28,9 @@ exit;
 
 # check contact form displays OK
 sub form_basic_ok {
-  $mech->get_ok( $form_url );
-  $mech->content_contains( $_ ) for (
+    my ( $mech, $form_url ) = @_;
+    $mech->get_ok( $form_url );
+    $mech->content_contains( $_ ) for (
       'Name',
       'Email',
       'Subject',
@@ -42,12 +42,13 @@ sub form_basic_ok {
       );
 }
 sub form_has_user_defaults {
-    my ( $user ) = @_;
+    my ( $mech, $user ) = @_;
     $mech->form_name('contactForm');
     like $mech->value('name'), qr/$user->{first_name}/;
     like $mech->value('name'), qr/$user->{last_name}/;
 }
 sub submit_form_ok {
+    my ( $mech, $form_url ) = @_;
     $mech->get_ok( $form_url );
     # submit a blank form and check for 'required' messages'
     my @fieldnames = qw( name email subject body );

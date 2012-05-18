@@ -72,10 +72,9 @@ if (defined $id) {
 
    my $member_nr = $unigene->get_nr_members();
 
-   $member_content = info_section_html( title        => "mRNA member sequences (".$member_nr.")", 
+   $member_content = info_section_html( title        => "mRNA member sequences (".$member_nr.")",
                                         contents     => $alignment_image_html,
 					collapsible  => 1,
-					collapsed    => 1 
                                        );
 }
 

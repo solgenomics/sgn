@@ -10,12 +10,11 @@ my $m = SGN::Test::WWW::Mechanize->new();
 plan skip_all => 'test requires at least "local" test level'
   unless $m->can_test_level('local');
 
-use_ok("CXGN::DB::Connection");
 use_ok("CXGN::People::Person");
 
 $m->get_ok('/');
 
-my $dbh = CXGN::DB::Connection->new();
+my $dbh = $m->context->dbc->dbh();
 
 # generate a new user for testing purposes
 # (to be deleted right afterwards)
@@ -35,14 +34,14 @@ $login->set_user_type("user");
 
 $login->store();
 
-$dbh->commit();
+#$dbh->commit();
 
 my $u_id = CXGN::People::Person->get_person_by_username( $dbh, "testusername" );
 my $u = CXGN::People::Person->new( $dbh, $u_id );
 END {
     if( $u ) {
         $u->hard_delete();
-        $u->get_dbh->commit unless $u->get_dbh->dbh_param('AutoCommit');
+        #$dbh->commit; #unless $u->get_dbh->dbh_param('AutoCommit');
     }
 }
 
@@ -89,7 +88,7 @@ $m->content_contains("You have successfully logged out");
 #
 $login->set_user_type("curator");
 $login->store();
-$dbh->commit();
+#$dbh->commit();
 
 $m->get("/solpeople/login.pl");
 $m->submit_form_ok( \%form, "Login as curator form submission" );

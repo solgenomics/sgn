@@ -58,7 +58,7 @@ my $more_html;
 my $more;    #count the number of accessions in the optional_show box
 my $count;   # a scalar for checking if there are accessions with images in the optional box
 
-my $schema = Bio::Chado::Schema->connect( sub { $dbh->get_actual_dbh->clone }, );
+my $schema = Bio::Chado::Schema->connect( sub { $dbh->clone }, );
 
 if (@$accessions) {
   $html      .= "<table>";
@@ -75,7 +75,7 @@ if (@$accessions) {
     my @image_ids =
       $stock->get_image_ids();    #list of all associated image ids
     foreach my $image_id (@image_ids) {
-      $imageHash{$image_id} = CXGN::Image->new(dbh=>$dbh, image_id=>$image_id, image_dir=> $c->get_conf('static_datasets_path')."/".$c->get_conf('image_dir'));
+      $imageHash{$image_id} = SGN::Image->new( undef, $image_id, $c );
       push @{ $imageHoA{$stock_id} }, $image_id;
     }
     
@@ -111,7 +111,7 @@ if (@$accessions) {
 	if ( $image_count > 4 ) { $image_count = 4; }
 	for my $i ( 0 .. $image_count ) {
 	  my $image_id = $imageHoA{$stock_id}[$i];
-          my $image = SGN::Image->new($dbh, $image_id);
+          my $image = SGN::Image->new( $dbh, $image_id, $c );
 	  my $small_image  = $image->get_image_url("thumbnail");
 	  my $medium_image = $image->get_image_url("medium");
 	  my $image_page   = "/image/index.pl?image_id=$image_id";

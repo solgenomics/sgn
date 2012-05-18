@@ -21,7 +21,6 @@ use SGN::Test;
 use SGN::Test::WWW::Mechanize;
 
 use CXGN::Phenome::Schema;
-use CXGN::DB::Connection;
 
 {
     my $mech = SGN::Test::WWW::Mechanize->new;
@@ -42,7 +41,9 @@ use CXGN::DB::Connection;
        $mech->get_ok("/cgi-bin/phenome/locus_display.pl?locus_id=$test_id");
 
        $mech->content_contains("Locus editor");
-   }, 2 );
+       my $allele_id = $test_locus->alleles->first->allele_id();
+       $mech->get_ok("/cgi-bin/phenome/allele.pl?allele_id=$allele_id");
+   }, 3 );
 }
 
 done_testing;

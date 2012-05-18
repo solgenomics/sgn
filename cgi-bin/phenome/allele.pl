@@ -105,7 +105,7 @@ sub delete {
         print
 qq { Removed allele "$allele_symbol" association from locus "$locus_name". };
         print
-qq { <a href="locus_display.pl?locus_id=$locus_id&amp;action=view">back to locus</a> };
+qq { <a href="/locus/$locus_id/view">back to locus</a> };
     }
 
     $self->get_page()->footer();
@@ -251,7 +251,7 @@ sub display_page {
         my $stock_name = $stock->get_name();
         $stockHash{$stock_id} = $stock_name;
 
-        my @images = map SGN::Image->new( $self->get_dbh, $_ ), $stock->get_image_ids();
+        my @images = map SGN::Image->new( $self->get_dbh, $_, $c ), $stock->get_image_ids();
         foreach my $image (@images) {
             my $image_id    = $image->get_image_id();
             my $img_src_tag = $image->get_img_src_tag("thumbnail");
@@ -369,7 +369,7 @@ sub generate_form {
         $locus_name = $locus_obj->get_locus_name();
     }
     $locus_name =
-      qq|<a href= "locus_display.pl?locus_id=$locus_id">$locus_name</a>|;
+      qq|<a href= "/locus/$locus_id/view">$locus_name</a>|;
 
     $self->get_form()->add_label(
         display_name => "Locus name",
@@ -656,9 +656,9 @@ sub send_allele_email {
     my $sp_person_id = $self->get_user()->get_sp_person_id();
 
     my $locus_link =
-qq |http://www.sgn.cornell.edu/phenome/locus_display.pl?locus_id=$locus_id|;
+qq |http://solgenomics.net/locus/$locus_id/view|;
     my $user_link =
-qq |http://www.sgn.cornell.edu/solpeople/personal-info.pl?sp_person_id=$sp_person_id|;
+qq |http://solgenomics.net/solpeople/personal-info.pl?sp_person_id=$sp_person_id|;
     my $usermail = $self->get_user()->get_private_email();
     my $fdbk_body;
     if ( $action eq 'delete' ) {

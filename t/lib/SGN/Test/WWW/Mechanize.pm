@@ -117,12 +117,18 @@ BEGIN {
 }
 sub import {
     my ( $class, %args ) = @_;
+    for( keys %args ) {
+        { skip_cgi => 1 }->{$_} or die "invalid arg $_";
+    }
     $ENV{SGN_SKIP_CGI} = 1 if $args{skip_cgi};
 }
 
 
 use Carp;
 use Test::More;
+
+use Data::UUID ();
+my $host_uuid = Data::UUID->new->create_str;
 
 use HTML::Lint;
 use Try::Tiny;
@@ -138,6 +144,12 @@ with 'WWW::Mechanize::TreeBuilder' => {
     tree_class => 'HTML::TreeBuilder::XPath'
 };
 
+
+sub BUILD {
+    # increase timeout to 6 minutes.  remember that this mech is
+    # actually a distant child of LWP::UserAgent!
+    shift->timeout( 360 );
+}
 
 =head2 catalyst_app
 
@@ -261,13 +273,18 @@ sub dbh_leak_ok {
     my $test_name = shift || '';
     $test_name .= ' ' if $test_name;
 
-    $self->with_test_level( local => sub {
-        my $before = $self->_db_connection_count;
-        my $url = $self->base;
-        $self->get( $url );
-        my $after  = $self->_db_connection_count;
-        cmp_ok( $after, '<=', $before, "did not leak any database connections: $test_name($url)");
-    }, 1 );
+  SKIP: {
+        $ENV{SGN_PARALLEL_TESTING}
+            and skip 'parallel testing, dbh leak check skipped', 1;
+
+        $self->with_test_level( local => sub {
+            my $before = $self->_db_connection_count;
+            my $url = $self->base;
+            $self->get( $url );
+            my $after  = $self->_db_connection_count;
+            cmp_ok( $after, '<=', $before, "did not leak any database connections: $test_name($url)");
+        }, 1 );
+    }
 }
 
 sub _db_connection_count {
@@ -290,6 +307,11 @@ sub create_test_user {
         password   => 'testpassword',
         user_type  => $props{user_type} || 'user',
        );
+    if( $ENV{SGN_PARALLEL_TESTING} ) {
+        $_ .= "-$host_uuid-$$" for @u{qw{ first_name last_name user_name password }};
+        #use Data::Dump;
+        #warn "creating user ".Data::Dump::dump( \%u );
+    }
 
     $self->_delete_user( \%u );
 
@@ -354,6 +376,9 @@ sub _delete_user {
         my $u_id = CXGN::People::Person->get_person_by_username( $_, $u->{user_name} );
         $_->do( <<'', undef, $u_id, $u_id );
 DELETE FROM metadata.md_metadata WHERE create_person_id = ? OR modified_person_id = ?
+
+    $_->do( <<'', undef, $u_id);
+DELETE FROM metadata.md_image WHERE sp_person_id=?	
 
     });
 
@@ -446,6 +471,7 @@ Execute the given code while logged in for each user_type.
 sub while_logged_in_all {
     my ($self,$sub) = @_;
     for ( qw/ user curator submitter sequencer genefamily_editor / ) {
+        diag "Running tests as $_ user_type";
         $self->while_logged_in( { user_type => $_ }, $sub );
     }
 }
@@ -457,12 +483,12 @@ sub log_in_ok {
     $self->content_contains("Login");
 
     my %form = (
-	form_name => 'login',
-	fields    => {
-	    username => $self->test_user->{user_name},
-	    pd       => $self->test_user->{password},
-	},
-       );
+        form_name => 'login',
+        fields    => {
+            username => $self->test_user->{user_name},
+            pd       => $self->test_user->{password},
+        },
+    );
 
     $self->submit_form_ok( \%form, "submitted login form" );
     $self->content_lacks('Incorrect username', 'did not get "Incorrect username"')

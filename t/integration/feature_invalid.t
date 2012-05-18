@@ -21,16 +21,15 @@ use SGN::Test::WWW::Mechanize;
 
 my $mech = SGN::Test::WWW::Mechanize->new;
 
-$mech->get("/feature/view/name/JUNK");
-is($mech->status, 400, 'status is 400');
+$mech->get("/feature/JUNK/details");
+is($mech->status, 404, 'status is 404');
 $mech->content_contains("Feature not found");
 
-$mech->get("/feature/view/id/-1");
+$mech->get("/feature/-1/details");
 is($mech->status, 400, 'status is 400');
-$mech->content_contains("Feature not found");
+$mech->content_contains("positive integer");
 
-$mech->get("/feature/view/id/JUNK");
-is($mech->status, 400, 'status is 400');
-$mech->content_contains("JUNK is not a valid value for feature_id");
+$mech->get("/feature/JUNK/details");
+is($mech->status, 404, 'status is 404');
 
 done_testing;

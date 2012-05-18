@@ -50,7 +50,7 @@ my $parent_f = tooltipped_text('Female parent', 'format eg. Solanum lycopersicum
 <form action="/phenome/qtl_load.pl" method="POST" enctype="MULTIPART/FORM-DATA">        
      <table>
      <tr>
-	 <td>Cross type<% $required %></td>
+       <td>Cross type<% $required %></td>
 	 <td> <select name="pop_type">
 	          <% $cross_options %>
              </select>

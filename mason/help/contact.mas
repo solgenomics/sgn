@@ -1,4 +1,8 @@
-<& "/page/page_title.mas", title => "Contact SGN" &>
+<%args>
+$website_name => "SGN"
+</%args>
+
+<& "/page/page_title.mas", title => "Contact $website_name" &>
 
 % #The form
 <form method="POST" action= "/contact/submit" name = "contactForm">
@@ -27,7 +31,7 @@ my $defaultVal = {"name" => $name,
 % } else {
 <td align = "left" valign = "top"> 
 %}
-<input type="text" size="50" value="<% $$defaultVal{$info_category} %>"
+<input type="text" size="50" value="<% $$defaultVal{$info_category} |h%>"
 				name="<% $info_category %>" />
 </td></tr>
 % }     
@@ -44,11 +48,11 @@ Message body is required
 % } else {
 <td align = "left" valign = "top">
 % }
-<textarea cols="77" rows="12" name="body"><% $body %></textarea>
+<textarea cols="77" rows="12" name="body"><% $body |h%></textarea>
 </td></tr>
 
-<tr><td colspan="2" align="center" valign="middle" style = "color:red; font-size: 15px; font-style:italic;">
-* fields are required!
+<tr><td colspan="2" align="center" valign="middle" style = "color:red; font-size: 90%; font-style:italic;">
+fields marked with <% '"*"' |h %> are required
 </td></tr>
 
 <tr><td colspan="2" align="center" valign="middle">

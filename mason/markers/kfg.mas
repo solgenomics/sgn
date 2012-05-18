@@ -30,13 +30,15 @@ $marker
   my @loci = $marker->associated_loci();
 
 my $html = '';
-foreach my $l (@loci) { 
+foreach my $l (@loci) {
   my ($locus_id, $locus_name) = ($l->[0], $l->[1]);
 
-    $html .= qq{This marker is associated with the <a href="/phenome/locus_display.pl?locus_id=$locus_id">$locus_name</a> locus.<br />};
+    $html .= qq{This marker is associated with the <a href="/phenome/locus_display.pl?locus_id=$locus_id">$locus_name</a> locus.<br /><br />};
   }
 
-  return $html.'<br />';
+  
 
 
 </%perl>
+
+<% $html %>

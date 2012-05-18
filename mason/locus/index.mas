@@ -1,12 +1,51 @@
+<%doc>
+
+=head1 NAME
+
+/locus/index.mas - a page for displaying locus details
+
+=head1 DESCRIPTION
+
+parameters:
+
+=over 1
+
+=item $locusref
+
+a hashref with all the parameters needed for printing the locus page!
+
+ $locusref->{locus_id}
+ $locusref->{locus}
+ $locusref->{schema}
+
+ $locusref->{curator}  (boolean)
+ $locusref->{submitter} (boolean)
+ $locusref->{is_owner} (boolean)
+
+ locus_add_uri
+ locus_autocomplete_uri => '/ajax/locus/autocomplete/'
+ cvterm_add_uri
+ cvterm_autocomplete_uri => '/ajax/cvterm/autocomplete/'
+
+=back
+
+=head1 AUTHOR
+
+Naama Menda <nm249@cornell.edu>
+
+=cut
+
+</%doc>
+
+
 <%args>
-
-  $locus
-  $locus_id
-  $user => undef
-  $dbh
-  $xrefs
-
+  $locusref => undef
+  $locus_add_uri => ''
+  $locus_autocomplete_uri => undef
+  $cvterm_add_uri => ''
+  $cvterm_autocomplete_uri => undef
 </%args>
+
 <%once>
   use CXGN::Sunshine::Browser;
   use CXGN::Page::FormattingHelpers qw / html_optional_show info_table_html /;
@@ -14,11 +53,26 @@
 
 <%perl>
 
-my $user_type = $user ? $user->get_user_type : '';
-my $person_id = $user ? $user->get_sp_person_id : 0;
+my $locus     = $locusref->{locus};
+my $locus_id  = $locusref->{locus_id};
+my $action    = $locusref->{action} || 'view';
+my $person_id = $locusref->{person_id};
+my $curator   = $locusref->{curator};
+my $submitter = $locusref->{submitter};
+my $sequencer = $locusref->{sequencer};
+my $is_owner  = $locusref->{is_owner};
+my $owners     = $locusref->{owners};
+my $dbh       = $locusref->{dbh};
+my $xrefs     = $locusref->{xrefs};
 
-my $this_page = "/phenome/locus_display.pl?locus_id=$locus_id";
-my $locus_xml = $locus_id ? qq |<a href = "generic_gene_page.pl?locus_id=$locus_id">Download GMOD XML</a>|
+###check these params
+my $pubs      = $locusref->{pubs};
+# dbxrefs, unigenes , ontology
+
+#my $this_page = "/phenome/locus_display.pl?locus_id=$locus_id";
+my $this_page = "/locus/$locus_id/view/";
+
+my $locus_xml = $locus_id ? qq |<a href = "/phenome/generic_gene_page.pl?locus_id=$locus_id">Download GMOD XML</a>|
   : qq |<span class="ghosted">Download GMOD XML</span>|;
 my $editor_note =
   qq |<a href="/phenome/editors_note.pl">Note to Editors</a>|;
@@ -30,52 +84,41 @@ my @owners = $locus->get_owners();
 my $owner_objects= $locus->get_owners(1);
 
 my $locus_name = $locus->get_locus_name();
-my $owner;
-if ( $locus_name && ( $user_type eq 'curator' || $person_id && grep { $_ == $person_id } @owners  ) ) {  $owner = 1; }
+
 my $registry = $locus->get_associated_registry();
+my $registry_subtitle =  $is_owner && $locus_id ?  qq| <a href="javascript:Tools.toggleContent('associateRegistryForm', 'locus_registry')">[Associate a registry name with this locus]</a> |
+  : qq|<span class = "ghosted"> [Associate registry name]</span>| ;
 
 my @synonyms = $locus->get_locus_aliases('f','f');
 my @figures = $locus->get_figure_ids();
 
 my $figure_subtitle =
-  !(grep { /^$user_type$/ } ('curator', 'submitter', 'sequencer') ) ?
-  "<span class= \"ghosted\">[Add notes, figures or images]</span> "
-  : " <a href=\"/image/add?type_id=$locus_id&type=locus&action=new&refering_page=$this_page\">[ Add notes, figures or images]</a>" ;
+  $curator || $submitter || $sequencer ?
+  " <a href=\"/image/add?type_id=$locus_id&type=locus&action=new&refering_page=$this_page\">[ Add notes, figures or images]</a>" : "<span class= \"ghosted\">[Add notes, figures or images]</span> " ;
 
-my $stock_subtitle =
-  !(grep { /^$user_type$/ } ('curator', 'submitter', 'sequencer') ) ?
-  '<span class= "ghosted">[Associate accession]</span> '
-  : '<a href="javascript:Tools.toggleContent(\'associateStockForm\', \'locus_accessions\')">[Associate accession]</a> ';
+my $stock_subtitle =   $curator || $submitter || $sequencer ?
+  '<a href="javascript:Tools.toggleContent(\'associateStockForm\', \'locus_accessions\')">[Associate accession]</a> ' :   '<span class= "ghosted">[Associate accession]</span> ';
 
 my $accessions = $locus->get_stock_ids;
 
-my @alleles = $locus->get_alleles();    #array of allele objects
+my @alleles = $locus->get_alleles(); #array of allele objects
 
-my $allele_subtitle =
-  !(grep { /^$user_type$/ } ('curator', 'submitter', 'sequencer') ) ?
-  '<span class="ghosted">[Add new Allele]</span>'
-  : "<a href=\"/phenome/allele.pl?locus_id=$locus_id&amp;action=new\">[Add new allele]</a>";
+my $allele_subtitle = $curator || $submitter || $sequencer  ?
+  "<a href=\"/phenome/allele.pl?locus_id=$locus_id&amp;action=new\">[Add new allele]</a>" :
+  '<span class="ghosted">[Add new Allele]</span>' ;
 
-
-my $al_subtitle =
-  !(grep { /^$user_type$/ } ('curator', 'submitter', 'sequencer') ) ?
-  '<span class="ghosted">[Associate new locus]</span>'
-  : '<a href="javascript:Tools.toggleContent(\'associateLocusForm\', \'locus2locus\');Tools.getOrganisms()">[Associate new locus]</a> ';
+my $al_subtitle = $curator || $submitter || $sequencer  ?
+  '<a href="javascript:Tools.toggleContent(\'associateLocusForm\', \'locus_network\');Tools.getOrganisms()">[Associate new locus]</a> ' :
+  '<span class="ghosted">[Associate new locus]</span>' ;
 
 my $collapsed = $locus->count_associated_loci() ? 1 : 0 ;
 
 my $network_sub = $collapsed ?
   "View <b>$locus_name</b> relationships in the stand-alone <a href=\"/tools/networkbrowser/?type=locus&name=$locus_id\">network browser</a>" : '';
 
-#get list of current unigenes 
-my @unigenes= $locus->get_unigenes({ current=>1});
-
-
-my $new_unigene_link =
-  !(grep { /^$user_type$/ } ('curator', 'submitter', 'sequencer') ) ?
-  '<span class= "ghosted">[Associate new unigene]</span> '
-  : '<a href="javascript:Tools.toggleContent(\'associateUnigeneForm\', \'unigenes\' )">[Associate new unigene]</a>';
-
+my $new_unigene_link =  $curator || $submitter || $sequencer  ?
+  '<a href="javascript:Tools.toggleContent(\'associateUnigeneForm\', \'locus_unigenes\' )">[Associate new unigene]</a>' :
+    '<span class= "ghosted">[Associate new unigene]</span> ';
 
 my %dbxrefs = $locus->get_all_dbxrefs();
 
@@ -105,77 +148,112 @@ my @sgn_ref =  defined ( @{ $dbxrefs{SGN_ref} } ) ? @{ $dbxrefs{SGN_ref} } : () 
 @sorted_pubs = ( @sorted_pubs, @sgn_ref );
 my $pub_count = scalar (@sorted_pubs) ;
 
-my $pub_subtitle = !(grep { /^$user_type$/ } ('curator', 'submitter', 'sequencer') ) ? 	qq|<span class=\"ghosted\">[Associate publication]</span>|
-  : qq|<a href="/chado/add_publication.pl?type=locus&amp;type_id=$locus_id&amp;refering_page=$this_page&amp;action=new"> [Associate publication] </a>|;
+my $pub_subtitle = $curator || $submitter || $sequencer  ?
+  qq|<a href="/chado/add_publication.pl?type=locus&amp;type_id=$locus_id&amp;refering_page=$this_page&amp;action=new"> [Associate publication] </a>| :
+  qq|<span class=\"ghosted\">[Associate publication]</span>|;
 
 $pub_subtitle .=
-  qq | <a href="javascript:void(0)"onclick="window.open('locus_pub_rank.pl?locus_id=$locus_id','publication_list','width=600,height=400,status=1,location=1,scrollbars=1')">[Matching publications]</a> |;
+  qq | <a href="javascript:void(0)"onclick="window.open('/phenome/locus_pub_rank.pl?locus_id=$locus_id','publication_list','width=600,height=400,status=1,location=1,scrollbars=1')">[Matching publications]</a> |;
 
 my ($genbank, $gb_count);
 foreach  my $g  ( @{ $dbxrefs{'DB:GenBank_GI'} } )  {
   if ( $g->[1] eq '0' ) {
     my $url = $g->[0]->get_urlprefix() . $g->[0]->get_url();
-    my $gb_accession =
-      $locus->CXGN::Chado::Feature::get_feature_name_by_gi( $g->[0]->get_accession() );
+    my $feature = CXGN::Chado::Feature->new_with_accession($dbh, $g->[0]->get_accession);
+    my $gb_accession = $feature->get_name;
     my $description = $g->[0]->get_description();
+    my $feature_seq = $feature->get_residues;
+    my $blast_link = qq |
+      <form style="display: inline" method="post" action="/tools/blast/index.pl"><input type="hidden" name="seq" value=">$gb_accession ($description)\n$feature_seq" /><input style="padding: 1px; line-height: 0.8" type="submit" value="BLAST" /></form>
+        |;
+
     $genbank .=
-      qq|<a href="$url$gb_accession" target="blank">$gb_accession</a> $description<br />|;
+      qq|<a href="$url$gb_accession" target="blank">$gb_accession</a> $description $blast_link<br />|;
     $gb_count++;
   }
 }
 my $ont_count = $locus->count_ontology_annotations();
 
-my $ontology_subtitle =  !(grep { /^$user_type$/ } ('curator', 'submitter', 'sequencer') ) ?  qq |<span class = "ghosted"> [Add ontology annotations]</span> |
-  :  qq|<a href="javascript:Tools.toggleContent('associateOntologyForm', 'locus_ontology')">[Add ontology annotations]</a> |;
-
+my $ontology_subtitle = $curator || $submitter || $sequencer  ?
+  qq|<a href="javascript:Tools.toggleContent('associate_cvterm_form', 'locus_ontology')">[Add ontology annotations]</a> | :
+  qq |<span class = "ghosted"> [Add ontology annotations]</span> |;
 
 </%perl>
 
-<& /util/import_javascript.mas, classes => ["Prototype", "jquery", "thickbox", "CXGN.Page.FormattingHelpers", "CXGN.Phenome.Locus", "CXGN.Phenome.Tools", "CXGN.Phenome.Locus.LocusPage", "CXGN.Sunshine.NetworkBrowser"] &>
+
+<& /util/import_javascript.mas, classes => ["Prototype","jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "CXGN.Phenome.Locus", "CXGN.Phenome.Tools", "CXGN.Sunshine.NetworkBrowser"] &>
 
 
-<& /locus/initialize.mas, locus_id => $locus_id  &>
+<script language="javascript">
+function jqueryStuff() {
+   jQuery(function() {
+     jQuery("#genome_locus").autocomplete({
+        source: '/ajax/locus/genome_autocomplete'
+     });
+  });
+}
+</script>
+
 
 <& /page/page_title.mas, title=> "$common_name locus ".$locus->get_locus_name &>
 
 <&| /page/info_section.mas, title=>"Locus details" , subtitle => "$locus_xml | $editor_note | $guide_html" &>
-  
-  <& /page/form.mas, object_type=>'locus', object_id=>"$locus_id", form_name=> 'locus_form', server_side_script => '/jsforms/locus_ajax_form.pl', form_div_name=>'locus_details', js_object_name=> 'locusForm', page_url => '/phenome/locus_display.pl'  &>
 
+
+  <& /page/form.mas,
+  object_type          => 'locus',
+  object_id            => "$locus_id",
+  form_name            => 'locus_form',
+  server_side_script   => '/jsforms/locus_ajax_form.pl',
+  form_div_name        => 'locus_details',
+  js_object_name       => 'locusForm',
+  page_url             => "/locus/$locus_id/view/",
+  alternate_new_button => '<a href ="/locus/0/new">[New]</a>'
+  &>
 
 <table><tr><td>
       <table>
 	<tr><td>
-	    <& /locus/registry.mas , person_id=>"$person_id", locus_id=>"$locus_id" , owner=>"$owner", registry=>"$registry" &>
-	      <& /locus/synonym.mas ,  locus_id=>"$locus_id" , synonyms=>\@synonyms &>
+
+<& /locus/synonym.mas ,  locus_id=>"$locus_id" , synonyms=>\@synonyms &>
 
 <% $tgrc %>
 <% $tair %>
 
-  <& /locus/locus_editor.mas, owners=>$owner_objects  &>
+<& /locus/locus_editor.mas, owners=>$owner_objects  &>
 % if ($locus_id) {
-    <a href="claim_locus_ownership.pl?locus_id=<% $locus_id %>&amp;action=confirm"> [Request editor privileges]</a><br /><br />
+  <a href="/phenome/claim_locus_ownership.pl?locus_id=<% $locus_id %>&amp;action=confirm"> [Request editor privileges]</a><br /><br />
 % }
-    <& /locus/edits_info.mas, locus=>$locus  &>
-  </td></tr>
+  <& /locus/edits_info.mas, locus=>$locus  &>
+        </td></tr>
       </table>
     </td>
-  <td><table><tr><td>
-  <& /locus/map_location.mas, person_id=>"$person_id", locus=>$locus  &>
+    <td><table><tr><td>
+<& /locus/map_location.mas, person_id=>"$person_id", locus=>$locus  &>
   </td></tr></table></td></tr>
 </table>
-  </&>
+</&>
+
 
 % if($locus_id) {
 
+<&| /page/info_section.mas,
+  title       => "Registry name: $registry",
+  subtitle    => $registry_subtitle,
+  id          => "locus_registry",
+  collapsible => 1,
+  is_subsection => 1,
+  &>
+    <& /locus/registry.mas , person_id=>"$person_id", locus_id=>"$locus_id", registry => $registry , is_owner => $is_owner &>
+</&>
 
-% if($owner) {
+% if($is_owner) {
     <&| /page/info_section.mas, title=>"Locus history", collapsible=>1, collapsed=>1 &>
       <& /locus/history.mas, locus=>$locus  &>
 </&>
 
 % }
-% if ( $locus_name && ($user_type eq 'curator')) {
+% if ( $locus_name && $curator ) {
 <&| /page/info_section.mas, title=>"Curator tools",  collapsible=>1, collapsed=>1 &>
   <& /locus/merge_locus.mas , locus_id=>"$locus_id" , common_name=>"$common_name" &>
     <& /phenome/assign_owner.mas , object_id=>"$locus_id" , object_type=>"locus" &>
@@ -196,19 +274,29 @@ my $ontology_subtitle =  !(grep { /^$user_type$/ } ('curator', 'submitter', 'seq
 
 <&| /page/info_section.mas, title=>"Alleles (" .  scalar(@alleles)  . ")", subtitle => "$allele_subtitle", collapsible=>1, collapsed=>1 &>
 
-  <& /phenome/allele.mas, alleles=>\@alleles, user=>$user &>
+  <& /phenome/allele.mas, alleles=>\@alleles, user_id=>$person_id, curator=>$curator &>
 
 </&>
 
 
-<&| /page/info_section.mas, title=>"Associated loci (" .  $locus->count_associated_loci() . ")", subtitle => "$al_subtitle", id=>"locus2locus", collapsible=>1, collapsed=>1 &>
-  
-  <& /locus/associate_locus.mas, locus_id=>$locus_id &>
-    <& /locus/network.mas  &>
+<&| /page/info_section.mas,
+ title       => "Associated loci (" .  $locus->count_associated_loci() . ")",
+ subtitle    => "$al_subtitle",
+ id          =>"locus_network",
+ collapsible =>1,
+ collapsed   =>1 &>
+
+   <& /locus/associate_locus.mas, locus_id=>$locus_id &>
+    <& /locus/network.mas , locus_id => $locus_id  &>
 
 </&>
 
-<&| /page/info_section.mas, title=>"Associated loci - graphical view", subtitle=>$network_sub, collapsible=>1, collapsed=>$collapsed &>
+<&| /page/info_section.mas,
+  title       => "Associated loci - graphical view",
+  subtitle    => $network_sub,
+  collapsible => 1,
+  collapsed   => $collapsed,
+  id          => "graphic_locus_network" &>
 
 %  print CXGN::Sunshine::Browser::include_on_page( 'locus', $locus_id ) if $network_sub ;
 
@@ -217,12 +305,12 @@ my $ontology_subtitle =  !(grep { /^$user_type$/ } ('curator', 'submitter', 'seq
 
 <&| /page/info_section.mas,
     title       => "SolCyc links",
-  id          => "solcyc",
+  id          => "solcyc_links",
   collapsible => 1,
   collapsed   => 1,
   &>
-  <& /locus/solcyc.mas , locus_id=>$locus_id  &>
-
+% ## solcyc links are generated from the unigenes function in the ajax/locus controller ##
+  <div id="solcyc" >[loading...]</div>
 </&>
 
 
@@ -240,14 +328,18 @@ my $ontology_subtitle =  !(grep { /^$user_type$/ } ('curator', 'submitter', 'seq
 
 
    <&| /page/info_section.mas, title => "SGN Unigenes",
-       id => 'unigenes',
+       id => 'locus_unigenes',
        subtitle => $new_unigene_link,
        collapsible => 1,
        collapsed =>  0 ,
        is_subsection => 1,
     &>
-        <& /locus/associate_unigene.mas, locus_id=>$locus_id &>
-        <& /locus/locus_unigenes.mas &>
+      <& /locus/associate_unigene.mas,
+        locus_id    => $locus_id,
+        common_name => $common_name,
+        current     => 1
+       &>
+       <& /locus/locus_unigenes.mas, locus_id  => $locus_id  &>
     </&>
 
     <&| /page/info_section.mas, title => "GenBank accessions",
@@ -287,12 +379,22 @@ my $ontology_subtitle =  !(grep { /^$user_type$/ } ('curator', 'submitter', 'seq
 
 </&>
 
-<& /locus/ontology.mas,
-	title     => "Ontology annotations ($ont_count)" ,
-	subtitle  => $ontology_subtitle,
-	collapsed => 1,
-	locus_id  => $locus_id,
-&>
+
+<&| /page/info_section.mas,
+  title       =>"Ontology annotations ($ont_count)",
+  id          => "locus_ontology",
+  collapsible => 1,
+  collapsed   => 1,
+  subtitle    => $ontology_subtitle &>
+  <& /ontology/associate_ontology.mas,
+    object_id     => $locus_id ,
+    object_name   => "locus",
+    cvterm_add_uri=> $cvterm_add_uri,
+    ontology_url  => "/locus/$locus_id/ontologies/",
+    reference_uri => "/locus/$locus_id/references",
+    evidence_with_uri => "/locus/$locus_id/evidences",
+    show_form     => $is_owner  &>
+</&>
 
 <&| /page/info_section.mas,
      title       => 'Related views',

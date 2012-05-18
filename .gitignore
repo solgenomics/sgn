@@ -20,9 +20,13 @@ programs/*.o
 programs/draw_contigalign
 programs/fast_mapping
 sgn_local.conf
+sgn_testing.conf
 t/data/data/prod/tmp/
 *.log
 MANIFEST*
 ./cgi-bin/secretom
 MYMETA.json
 tags
+.prove
+
+nytprof.out

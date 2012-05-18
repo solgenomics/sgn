@@ -6,7 +6,7 @@ use base 'Exporter';
 
 use HTML::Entities;
 use List::Util qw/ sum /;
-use List::MoreUtils qw/ any /;
+use List::MoreUtils qw/ any uniq /;
 
 use Bio::Seq;
 
@@ -19,12 +19,12 @@ our @EXPORT_OK = qw/
     feature_link
     cvterm_link
     organism_link feature_length
-    mrna_and_protein_sequence
+    mrna_cds_protein_sequence
     description_featureprop_types
-    get_description
+    get_descriptions
     location_list_html
     location_string
-    location_string_with_strand
+    location_string_html
     type_name
 /;
 
@@ -53,28 +53,31 @@ sub description_featureprop_types {
            })
 }
 
-sub get_description {
-    my ($feature) = @_;
+sub get_descriptions {
+    my ( $feature, $plain ) = @_;
 
     my $desc_types =
         description_featureprop_types( $feature )
             ->get_column('cvterm_id')
             ->as_query;
 
-    my $description =
-        $feature->search_related('featureprops', {
-            type_id => { -in => $desc_types },
-        })->get_column('value')
-          ->first;
+    my @descriptions =
+        $feature->search_related('featureprops',
+                                 { type_id => { -in => $desc_types } },
+                                 { order_by => 'rank' },
+                                )
+                ->get_column('value')
+                ->all;
 
-    return unless $description;
 
-    $description =~ s/(\S+)/my $id = $1; CXGN::Tools::Identifiers::link_identifier($id) || $id/ge;
+    return @descriptions if defined $plain;
 
-    return $description;
+    s/(\S+)/my $id = $1; CXGN::Tools::Identifiers::link_identifier($id) || $id/ge for @descriptions;
+
+    return @descriptions;
 }
 
-sub location_string {
+sub location_string_html {
     my ( $id, $start, $end, $strand ) = @_;
     if( @_ == 1 ) {
         my $loc = shift;
@@ -87,13 +90,22 @@ sub location_string {
     return "$id:$start..$end";
 }
 
-sub location_string_with_strand {
-    location_string( @_ )
+sub location_string {
+    my ( $id, $start, $end, $strand ) = @_;
+    if( @_ == 1 ) {
+        my $loc = shift;
+        $id     = $loc->srcfeature->name;
+        $start  = $loc->fmin+1;
+        $end    = $loc->fmax;
+        $strand = $loc->strand;
+    }
+    ( $start, $end ) = ( $end, $start ) if $strand && $strand == -1;
+    return "$id:$start..$end";
 }
 
 sub location_list_html {
     my ($feature, $featurelocs) = @_;
-    my @coords = map { location_string($_) }
+    my @coords = map { location_string_html($_) }
         ( $featurelocs ? $featurelocs->all
                        : $feature->featureloc_features->all)
         or return '<span class="ghosted">none</span>';
@@ -124,10 +136,14 @@ sub related_stats {
 }
 
 sub feature_table {
-    my ($features,$reference_sequence) = @_;
-    my @data;
-    my $na_html = '<span class="ghosted">n/a</span>';
+    my ( $features, $reference_sequence, $omit_columns ) = @_;
 
+    { no warnings 'uninitialized';
+      $omit_columns ||= [];
+      $omit_columns = [$omit_columns] unless ref $omit_columns eq 'ARRAY';
+    }
+
+    my @data;
     for my $f (sort { $a->name cmp $b->name } @$features) {
         my @ref_condition =
             $reference_sequence ? ( srcfeature_id => $reference_sequence->feature_id )
@@ -141,16 +157,22 @@ sub feature_table {
 
         if( @locations ) {
         # Add a row for every featureloc
+            my $first_location = 0;
             for my $loc (@locations) {
                 my $ref = $loc->srcfeature;
                 my ($start,$end) = ($loc->fmin+1, $loc->fmax);
                 push @data, [
-                    cvterm_link($f->type),
-                    feature_link($f),
+                    ( $first_location++
+                          ? ('','','')
+                          : ( organism_link( $f->organism ),
+                              cvterm_link($f->type),
+                              feature_link($f),
+                            )
+                    ),
                     ($ref ? $ref->name : '<span class="ghosted">null</span>').":$start..$end",
-                    commify_number( feature_length( $f, $loc ) ) || $na_html,
-                    $loc->strand ? ( $loc->strand == 1 ? '+' : '-' ) : $na_html,
-                    $loc->phase || $na_html,
+                    commify_number( feature_length( $f, $loc ) ) || undef,
+                    $loc->strand ? ( $loc->strand == 1 ? '+' : '-' ) : undef,
+                    $loc->phase || undef,
                     ];
             }
         }
@@ -160,15 +182,48 @@ sub feature_table {
                 $nl .= " on ".encode_entities( $reference_sequence->name )
             }
             push @data, [
+                organism_link( $f->organism ),
                 cvterm_link($f->type),
                 feature_link($f),
                 qq|<span class="ghosted">$nl</span>|,
-                commify_number( feature_length( $f, undef ) ) || $na_html,
-                ($na_html)x2,
+                commify_number( feature_length( $f, undef ) ) || undef,
+                undef,
+                undef,
             ];
         }
     }
-    return \@data;
+
+    my @headings = ( "Organism", "Type", "Name", "Location", "Length", "Strand", "Phase" );
+
+    my @align = map 'l', @headings;
+
+    # omit any columns that are *all* undefined, or that we were
+    # requested to omit
+    my @cols_to_omit = uniq(
+        do {
+            my %heading_index = do { my $i = 0; map { lc $_ => $i++ } @headings };
+            (map {
+                my $i = $heading_index{lc $_};
+                defined $i or die "$_ column not found";
+                $i
+             } @$omit_columns
+            )
+        },
+      );
+    for my $t ( [\@headings], \@data, [\@align] ) {
+        for my $row ( @$t ) {
+            splice( @$row, $_, 1 ) for @cols_to_omit;
+        }
+    }
+
+    # make html for any other undef cells
+    for (@data) {
+        for (@$_) {
+            $_ = '<span class="ghosted">n/a</span>' unless defined;
+        }
+    }
+
+    return ( headings => \@headings, data => \@data, __align => \@align, __alt_freq => 0 , __border => 1 );
 }
 
 # try to figure out the "length" of a feature, which will vary for different features
@@ -208,7 +263,7 @@ sub feature_link {
     return '<span class="ghosted">null</span>' unless $feature;
     my $id   = $feature->feature_id;
     my $name = $feature->name;
-    return qq{<a href="/feature/view/id/$id">$name</a>};
+    return qq{<a href="/feature/$id/details">$name</a>};
 }
 
 sub organism_link {
@@ -225,14 +280,14 @@ sub cvterm_link {
     return qq{<a href="/chado/cvterm.pl?cvterm_id=$id">$name</a>};
 }
 
-sub mrna_and_protein_sequence {
+sub mrna_cds_protein_sequence {
     my ($mrna_feature) = @_;
 
     # if we were actually passed a polypeptide, get its mrna(s) and
     # recurse
     if( $mrna_feature->type->name eq 'polypeptide' ) {
         return
-            map mrna_and_protein_sequence( $_ ),
+            map mrna_cds_protein_sequence( $_ ),
             $mrna_feature->search_related('feature_relationship_subjects',
                     { 'me.type_id' => {
                         -in => $mrna_feature->result_source->schema
@@ -246,54 +301,77 @@ sub mrna_and_protein_sequence {
                ->search_related('object');
     }
 
-    my $peptide = _peptides_rs( $mrna_feature )->first;
+    my $description = join ', ', get_descriptions( $mrna_feature, 'no html' );
+    my $peptide     = _peptides_rs( $mrna_feature )->first;
 
-    # just return the mrna and peptide rows if they both have their
-    # own sequences (because the rows can act as Bio::PrimarySeqI's
-    return [ $mrna_feature, $peptide ] if $peptide && $peptide->subseq(1,1) && $mrna_feature && $mrna_feature->subseq(1,1);
+    my @exon_locations = _exon_rs( $mrna_feature )->all;
+    unless( @exon_locations ) {
+        # cannot calculate the cds and protein without exons, because
+        # UTRs can sometimes have introns in them.  without knowing
+        # the exon structure, we don't know how much to cut off of the
+        # UTRs
+        return [
+            $mrna_feature->subseq(1,1)        ? $mrna_feature : undef,
+            undef,
+            $peptide && $peptide->subseq(1,1) ? $peptide      : undef,
+        ];
+    }
 
-    # if there *is* no peptide, just return the mrna feature
-    return [ $mrna_feature ] if !$peptide && $mrna_feature && $mrna_feature->subseq(1,1);
+    my $mrna_seq = $mrna_feature->subseq(1,1) ? $mrna_feature : _make_mrna_seq( $mrna_feature, $description, \@exon_locations );
+    my $peptide_loc = $peptide && _peptide_loc($peptide)->first;
 
-    my @exon_locations = _exon_rs( $mrna_feature )->all
-        or return;
+    # just return the mrna seq and nothing else if we have no peptide
+    # or the peptide is not located
+    unless( $peptide && $peptide_loc ) {
+        return [ $mrna_seq, undef, undef ] unless $peptide && $peptide_loc;
+    }
 
-    my $mrna_seq = Bio::PrimarySeq->new(
-        -id   => $mrna_feature->name,
-        -desc => 'spliced cDNA sequence',
-        -seq  => join( '', map {
-            $_->srcfeature->subseq( $_->fmin+1, $_->fmax ),
-         } @exon_locations
-        ),
-    );
-
-    return unless $mrna_seq->length > 0;
-
-    my $peptide_loc = $peptide && _peptide_loc($peptide)->first
-        or return [ $mrna_seq ];
-
-    my $protein_seq = Bio::PrimarySeq->new(
-        -id   => $peptide->name,
-        -desc => 'protein sequence',
+    my $cds_seq = Bio::PrimarySeq->new(
+        -id   => $mrna_seq->display_name,
+        -desc => $description,
         -seq  => $mrna_seq->seq,
-       );
-    my ( $trim_fmin, $trim_fmax ) = _calculate_cdna_utr_lengths(
+     );
+    my ( $trim_from_left, $trim_from_right ) = _calculate_cdna_utr_lengths(
         _loc2range( $peptide_loc ),
         [ map _loc2range( $_), @exon_locations ],
      );
 
-    if( $trim_fmin || $trim_fmax ) {
-        $protein_seq = $protein_seq->trunc( 1+$trim_fmin, $mrna_seq->length - $trim_fmax );
+    if( $trim_from_left || $trim_from_right ) {
+        $cds_seq = $cds_seq->trunc( 1+$trim_from_left, $mrna_seq->length - $trim_from_right );
     }
 
-    if( $exon_locations[0]->strand == -1 ) {
-        $_ = $_->revcom for $mrna_seq, $protein_seq;
-    }
+    my $protein_seq = $cds_seq->translate;
 
-    $protein_seq = $protein_seq->translate;
-
-    return [ $mrna_seq, $protein_seq ];
+    return [ $mrna_seq, $cds_seq, $protein_seq ];
 }
+
+sub _make_mrna_seq {
+    my ( $mrna_feat, $description, $exons ) = @_;
+
+    # NOTE: doing this subseq math in 0-based coords
+    my $span_start  = $exons->[0]->fmin;
+    my $span_end    = $exons->[-1]->fmax-1;
+
+    # 0 1 2 3 4 5 6 7 8  interbase (Chado)
+    #  G|C|C|A|T|G|T|A
+    #  0 1 2 3 4 5 6 7   0-based   (substr)
+    #  1 2 3 4 5 6 7 8   1-based   (BioPerl)
+
+    # recall: the exons are in sorted order
+    my $span_seq = $exons->[0]->srcfeature->subseq( $span_start+1, $span_end+1 ); #< 1-based
+    my $mrna_sequence = join '', map { substr($span_seq, $_->fmin - $span_start, $_->fmax - $_->fmin ) } @$exons;
+
+    my $mrna_seq = Bio::PrimarySeq->new(
+        -id   => $mrna_feat->name,
+        -desc => $description,
+        -seq  => $mrna_sequence,
+    );
+
+    $mrna_seq = $mrna_seq->revcom if $exons->[0]->strand == -1;
+
+    return $mrna_seq;
+}
+
 sub _loc2range {
     my ( $loc ) = @_;
     return $loc->to_range if $loc->can('to_range');
@@ -310,12 +388,12 @@ sub _loc2range {
 sub _calculate_cdna_utr_lengths {
     my ( $peptide, $exons ) = @_;
 
-    my ( $trim_fmin, $trim_fmax ) = ( 0, 0 );
+    my ( $trim_left, $trim_right ) = ( 0, 0 );
 
     # calculate trim_fmin if necessary
     if( $exons->[0]->start < $peptide->start ) {
 
-        $trim_fmin =
+        $trim_left =
             sum
             map {
                 $_->overlaps($peptide)
@@ -328,7 +406,7 @@ sub _calculate_cdna_utr_lengths {
 
     # calculate trim_fmax if necessary
     if( $exons->[-1]->end > $peptide->end ) {
-        $trim_fmax =
+        $trim_right =
             sum
             map {
                 $_->overlaps($peptide)
@@ -339,7 +417,7 @@ sub _calculate_cdna_utr_lengths {
             @$exons
     }
 
-    return ( $trim_fmin, $trim_fmax );
+    return $exons->[0]->strand == -1 ? ($trim_right, $trim_left) : ( $trim_left, $trim_right );
 }
 
 sub _peptides_rs {
@@ -362,10 +440,12 @@ sub _peptides_rs {
            })
     }
 sub _peptide_loc {
-    shift->search_related( 'featureloc_features', {
+    my ($rs) = @_;
+    $rs->search_related( 'featureloc_features', {
             srcfeature_id => { -not => undef },
           },
-          { prefetch => 'srcfeature',
+          { # Don't prefetch srcfeatures, it significantly slows down the query
+            # prefetch => 'srcfeature',
             order_by => 'fmin',
           },
          );
@@ -374,8 +454,7 @@ sub _peptide_loc {
 sub _exon_rs {
     my ( $mrna_feature ) = @_;
 
-    $mrna_feature
-        ->feature_relationship_objects({
+    my $rs = $mrna_feature->feature_relationship_objects({
             'me.type_id' => {
                 -in => _cvterm_rs( $mrna_feature, 'relationship', 'part_of' )
                          ->get_column('cvterm_id')
@@ -402,7 +481,8 @@ sub _exon_rs {
             prefetch => 'srcfeature',
             order_by => 'fmin',
           },
-         )
+         );
+    return $rs;
 }
 
 sub _cvterm_rs {

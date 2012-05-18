@@ -20,7 +20,7 @@ display_toolbar("search");
 my $exp_search = CXGN::Insitu::ExperimentSearch->new();
 my $exp_query = $exp_search->new_query();
 
-$exp_query->debug(1);
+# $exp_query->debug(1);
 
 $exp_search->page_size(10);
 

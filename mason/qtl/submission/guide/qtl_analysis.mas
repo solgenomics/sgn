@@ -1,0 +1,23 @@
+<%doc>
+
+=head1 NAME 
+
+qtl_analysis.mas - a display for qtl data submission guidelines - qtl analysis section.
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<&| /page/info_section.mas, 
+   title      => "Step 6: QTL analysis",
+  collapsible => 1,
+  collapsed   => 1
+&>
+
+Now that the QTL data is uploaded to the database, you can proceed to perform the on-the-fly QTL analysis for one trait at a time. On the population page, click the graph icon under the 'QTL(s)' column and in a couple of minutes you will be taken to a page with the genome wide QTL mapping output. Further help can be found <a href="http://solgenomics.net/qtl/search/help">here</a>.
+
+</&>

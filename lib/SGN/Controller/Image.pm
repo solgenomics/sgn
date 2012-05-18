@@ -1,8 +1,11 @@
 package SGN::Controller::Image;
+
 use Moose;
 use namespace::autoclean;
 use File::Basename;
+use SGN::Image;
 use CXGN::Login;
+
 
 use URI::FromHash 'uri';
 
@@ -14,7 +17,7 @@ sub view :Path('/image/view/') Args(1) {
     my $dbh = $c->dbc->dbh;
 
     my $image = $c->stash->{image} =
-        SGN::Image->new( $dbh, $image_id+0 );
+        SGN::Image->new( $dbh, $image_id+0, $c );
 
     $image->get_original_filename
         or $c->throw_404('Image not found.');
@@ -57,7 +60,7 @@ sub confirm :Path('/image/confirm') {
     if (! -e $tempfile) {
         die "No tempfile $tempfile\n";
     }
-
+    
     my $filename_validation_msg =  $self->validate_image_filename(basename($filename));
     if ( $filename_validation_msg )  { #if non-blank, there is a problem with Filename, print messages
 
@@ -91,7 +94,7 @@ sub store :Path('/image/store') {
 
     $c->forward('require_logged_in');
 
-    my $image = SGN::Image->new($c->dbc->dbh());
+    my $image = SGN::Image->new( $c->dbc->dbh(), undef, $c );
 
     my $tempfile      = $c->req()->param('tempfile');
     my $filename      = $c->req()->param('filename');

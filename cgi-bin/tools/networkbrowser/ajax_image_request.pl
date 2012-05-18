@@ -5,15 +5,15 @@ use CatalystX::GlobalContext '$c';
 
 use File::Temp;
 use File::Spec;
-use CXGN::DB::Connection;
 use CXGN::Scrap::AjaxPage;
 use CXGN::Sunshine::Browser;
 use CXGN::Sunshine::Node;
 use CXGN::Tools::WebImageCache;
+use CatalystX::GlobalContext '$c';
 
 my $ajax_page = CXGN::Scrap::AjaxPage->new("Sunshine", "Lukas");
 
-my $dbh = CXGN::DB::Connection->new();
+my $dbh = $c->dbc->dbh;
 
 my ($name, $type, $level, $force, $hide_relationships, $hilite) = $ajax_page->get_arguments("name", "type", "level", "force", "hide", "hilite");
 

@@ -19,42 +19,28 @@ $guide
 
 <%perl>
 
-my $citation = qq | <a href="http://www.biomedcentral.com/1471-2105/11/525/abstract">Citation</a> |;
-my $links = $guide . '|' . $citation;
+my $links = $guide . '|' .  qq | <a href="http://www.biomedcentral.com/1471-2105/11/525/abstract">Citation</a> |;
+
 </%perl>
 
-<& /page/page_title.mas, title => "Step 0: Introduction" &>
-<&| /page/info_section.mas, title => "Introduction", subtitle => $links &>
+<& /page/page_title.mas, 
+   title => "Step 0: Introduction" 
+&>
+
+<&| /page/info_section.mas, 
+    title    => "Introduction", 
+    subtitle => $links 
+&>
  <form action="/phenome/qtl_load.pl" method="POST" enctype="MULTIPART/FORM-DATA">  
       <table cellspacing=20>
 	<tr>
           <td>	   
-            <p>The uploading of QTL data needs to be done in one session. 
-              Therefore, prepare your data files in the required format before 
-              starting the process. Please read the submission <% $guide %> first. If you 
-              would like to have the formatting of your dataset checked 
-              beforehand, send your data to: 
-              <a href=mailto:iyt2\@cornell.edu>iyt2@cornell.edu</a>.
-            </p>         
-            <p>What you need are:</p>
-       
-            <ul>
-              <li>Some basic information about the population,
-              <li>Traits data file (tab delimited),
-              <li>Phenotype data file (tab delimited), 
-              <li>Genotype data file (tab delimited) and 
-              <li>Statistical parameters.
-              <li><i>Markers with their sequences need to be already in SGN. 
-                  Read <a href="/content/map_submissions.pl">here</a> on how 
-                  to submit markers to SGN.</i>
-            </ul>
-
-            <p>If you have any problems uploading your data or remarks, 
-              please send your feedback to: 
-              <a href=mailto:sgn-feedback\@sgn.cornell.edu> 
+            <& general_intro.mas, guide =>$guide &>
+              <p>If you have any problems uploading your data or remarks, 
+                please send your feedback to: 
+                <a href=mailto:sgn-feedback\@sgn.cornell.edu> 
                 sgn-feedback@sgn.cornell.edu</a>. 
-            </p>
-      
+              </p>      
           </td>
         </tr>
         <tr> 

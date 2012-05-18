@@ -3,17 +3,18 @@ use warnings;
 
 use FindBin;
 use lib 't/lib';
-use SGN::Test qw/validate_urls/;
+
 use Test::More;
 
 use SGN::Test::WWW::Mechanize;
+use SGN::Test qw/validate_urls/;
+
 use CXGN::GEM::Schema;
 
 ## define a %url hash
 
 my %urls = ();
 
-my $base_url = $ENV{SGN_TEST_SERVER};
 my $mech = SGN::Test::WWW::Mechanize->new;
 
 ## This test are local test, so it will use the with_test_level function

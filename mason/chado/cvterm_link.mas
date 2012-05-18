@@ -5,12 +5,22 @@
   $inflect_count => undef
 </%args>
 \
-<a href="/chado/cvterm.pl?cvterm_id=<% $id |u %>"><% $name |h %></a>\
+<a title="<% $definition |h %>" href="/chado/cvterm.pl?cvterm_id=<% $id |u %>"><% $name |h %></a>\
 \
 <%init>
         use Lingua::EN::Inflect ();
 
         ( my $name = $cvterm->name ) =~ s/_/ /g;
+
+        # before munging the name, use it as a prefix to the definition
+        my $definition = $cvterm->definition;
+        if( $definition && $definition =~ /\S/ ) {
+            $definition = "$name: $definition";
+        } else {
+            $definition = '';
+        }
+
+        # now capitalize and/or inflect the cvterm name
         if( $caps ) {
             $name =~ s/(\S+)/lc($1) eq $1 ? ucfirst($1) : $1/e;
         }
@@ -22,4 +32,5 @@
                       |xe;
         }
         my $id   = $cvterm->id;
+
 </%init>

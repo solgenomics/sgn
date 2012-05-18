@@ -61,13 +61,23 @@ if (!$marker) {
   
 }
 
+my ($marker_name, @other_names) = $marker->name_that_marker();
+
 </%perl>
 
-<& /page/page_title.mas, title=> "SGN Marker ".($marker->get_name)[0] &>
+<& /page/page_title.mas, title=> "SGN Marker $marker_name" &>
 
 <& /markers/basic_marker_info.mas, marker=>$marker, dbh=>$dbh &>
 
+<&| /page/info_section.mas, title=>"Synonyms", collapsible=>1 &>
+% if (@other_names) { 
+    <% join "<br />", @other_names %>
+% }
+</&>
+
+<&| /page/info_section.mas, title=>"Locus associations", collapsible=>1 &>
 <& /markers/kfg.mas, marker=>$marker &>
+</&>
 
 <& /markers/rflp.mas, marker=>$marker &>
 

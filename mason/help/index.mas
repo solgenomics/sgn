@@ -78,7 +78,7 @@ Submitters are always accredited on each information page related to theur work 
 <a href="mailto:sgn-feedback@sgn.cornell.edu">Contact us</a> if you would like to use the community annotation tools and become a submitter or editor.
 <ul>
 <li>How do I contribute information on my <a href="/phenome/">favorite gene?</a></li>
-<li><a href="/content/phenotype_submissions.pl">Submit your phenotyped population</a> and we will add it to our <a href="/search/direct_search.pl?search=phenotypes">phenotype database</a></li>
+<li><a href="/cview/help/map_submission">Submit your phenotyped population</a> and we will add it to our <a href="/search/direct_search.pl?search=phenotypes">phenotype database</a></li>
 
 <li>To submit fluorescence in-situ hybridization (FISH) data, please follow the <a href="/content/fish.pl">these guidelines</a>.</li>
 <li>To submit genetic map data, please see the <a href="/content/map_submissions.pl">map and marker submission guidelines</a>.</li>

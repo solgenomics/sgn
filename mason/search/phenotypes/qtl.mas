@@ -1,0 +1,73 @@
+<%doc>
+QTL search form.
+</%doc>
+
+<%perl>
+
+my $qtl_tool = CXGN::Phenome::Qtl::Tools->new();
+my $links    = $qtl_tool->browse_traits();
+my @qtl_pops = $qtl_tool->has_qtl_data();
+
+my  $pop_links;
+
+foreach my $qtl_pop (@qtl_pops) 
+  {
+    my $is_public  = $qtl_pop->get_privacy_status();
+    my $owner_id   = $qtl_pop->get_sp_person_id();
+    my $user_type  = $c->user->get_object->get_user_type() if $c->user;
+    my $user_id    = $c->user->get_object->get_sp_person_id if $c->user;
+   
+    if ( $is_public || $user_type eq 'curator' || $user_id == $owner_id )
+      {
+        my $pop_id   = $qtl_pop->get_population_id();
+        my $pop_name = $qtl_pop->get_name();
+        $pop_links  .= qq |<a href="/qtl/population/$pop_id">$pop_name</a> <br /> |;     
+      }
+  }
+  
+</%perl>
+
+<p align="right">
+  [ 
+    <a href="/qtl/form">Submit QTL data</a> | 
+    <a href="/qtl/submission/guide">Submission guide</a> | 
+    <a href="/qtl/search/help">Search help</a>
+  ]
+</p>
+
+<form  action= "/qtl/search/results" method="post">
+  <table align=center cellpadding=20px>
+    <tr>
+      <td>
+        <b>Browse traits with QTLs: <% $links %></b>
+      </td>
+    </tr>
+  </table>
+  <table>
+  <tr>
+      <td>&nbsp;
+      </td>
+    </tr>
+    <tr>
+      <td>Search QTLs with trait name:
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <input type="text" name="trait" size=24>
+        <input type="submit" value="Search">  
+      </td>
+    </tr>
+     <tr>
+      <td>&nbsp;
+      </td>
+    </tr>
+  </table>
+  <table align=center cellpadding=20px>
+    <tr>
+      <td>
+        <b>Browse QTL populations:</b><br/><% $pop_links %>
+      </td>
+    </tr>
+  </table>
+</form>

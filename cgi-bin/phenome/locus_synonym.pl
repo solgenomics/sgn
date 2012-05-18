@@ -25,7 +25,6 @@ sub new {
 
 sub define_object { 
     my $self = shift;
-    
     # call set_object_id, set_object and set_primary_key here
     # with the appropriate parameters.
     #
@@ -33,7 +32,7 @@ sub define_object {
     $self->set_object_id($args{locus_alias_id});
     $self->set_object(CXGN::Phenome::LocusSynonym->new($self->get_dbh(), $self->get_object_id())
 		      );
-    $self->set_primary_key("locus_alias_id");		      
+    $self->set_primary_key("locus_alias_id");
     $self->set_owners();
 }
 
@@ -46,14 +45,10 @@ sub store {
 
     my $locus_synonym_id = $self->get_object_id();
     my %args = $self->get_args();
-    
-    
+
     my $not_new_locus_synonym = "";
-  #  print STDERR "*** STORING LOCUS SYNONYM ***\n";
     my ($existing_id, $obsolete) = CXGN::Phenome::LocusSynonym::exists_locus_synonym_named($self->get_dbh(), $args{locus_alias}, $args{locus_id});
-    print STDERR "******$existing_id, $obsolete\n";
     if ($existing_id && $obsolete == 0) { 
-	print STDERR "**Locus Synonym already exists...\n";
 
 	$self->get_page()->header();
 	print $not_new_locus_synonym = "Locus synonym '".$args{locus_alias}. "' already exists <br />";
@@ -64,7 +59,7 @@ sub store {
 	$self->SUPER::store(1);
 	$self->send_synonym_email();
     }
-     
+
     my $locus_id= $args{locus_id};
     $self->get_page()->client_redirect("/phenome/locus_synonym.pl?locus_id=$locus_id&action=new");
 }
@@ -93,12 +88,10 @@ sub delete {
 	$locus->remove_locus_alias($args{locus_alias_id});
 	$self->send_synonym_email('delete');
     }
-
-        
-    if ($locus) { 
+    if ($locus) {
 	my $locus_id= $args{locus_id};
 	$self->get_page()->client_redirect("/phenome/locus_synonym.pl?locus_id=$locus_id&action=new");
-    }	
+    }
 }
 
 sub generate_form { 
@@ -107,7 +100,7 @@ sub generate_form {
     my %args = $self->get_args();
     my $locus_synonym = $self->get_object();
     my $locus_synonym_id = $self->get_object_id();
-    
+
     $self->init_form();
 
     # generate the form with the appropriate values filled in.
@@ -117,7 +110,7 @@ sub generate_form {
     # if we store, only take the form parameters into account.
     # for new, we don't do anything - we present an empty form.
     #
-    
+
     # add form elements
     #
     $self->get_form()->add_field(display_name=>"Locus synonym: ", 
@@ -128,11 +121,10 @@ sub generate_form {
 				 setter=>"set_locus_alias", 
 				 validate=>"string"
 				 );
-    
-   
+
     $self->get_form()->add_hidden( field_name=>"action", contents=>"store" );
     $self->get_form()->add_hidden( field_name=>"locus_alias_id", contents=>$locus_synonym_id );
-    
+
     $self->get_form()->add_hidden( field_name=>"locus_id", 
 				   contents=>$args{locus_id}, 
 				   object=>$locus_synonym, 
@@ -145,7 +137,7 @@ sub generate_form {
 				   object     => $locus_synonym,
 				   setter     =>"set_sp_person_id", 
 				   );
-  
+
     # populate the form
     # (do nothing here because synonyms cannot be edited).
     #if ($self->get_action()=~/view|edit/i) { 
@@ -166,7 +158,7 @@ sub display_page {
     # generate an appropriate edit link
     #
     my $script_name = $self->get_script_name();
-    
+
     # generate some locus and/or image information
     #
     my $locus;
@@ -181,7 +173,7 @@ sub display_page {
     # render the form
     #
     $self->get_page()->header();
-    
+
     print page_title_html( qq { SGN <a href="/search/direct_search.pl?search=loci">genes</a> database } );
 
     print qq { <b>Locus synonyms</b> };
@@ -195,24 +187,21 @@ sub display_page {
 	    my $locus_synonym_id = $ls->get_locus_alias_id();
 	    print $ls->get_locus_alias(). qq { \n <a href="locus_synonym.pl?locus_id=$locus_id&amp;locus_alias_id=$locus_synonym_id&amp;action=confirm_delete">[Remove]</a> <br />\n };
 	}
-
     }
- 
+
     if (!@locus_synonyms && !@image_tags) { print "<b>None found</b><br /><br />\n"; }
 
     print qq { <br /><br /><b>Add another locus synonym</b>: };
-    
-    print qq { <center> };
-    
-    $self->get_form()->as_table();
-    
-    print qq { </center> };
-    
-    print qq { <a href="locus_display.pl?locus_id=$args{locus_id}&amp;action=view">back to locus page</a> };
-    
-    $self->get_page()->footer();
-    
 
+    print qq { <center> };
+
+    $self->get_form()->as_table();
+
+    print qq { </center> };
+
+    print qq { <a href="/locus/$args{locus_id}/view">back to locus page</a> };
+
+    $self->get_page()->footer();
 }
 
 
@@ -221,16 +210,16 @@ sub send_synonym_email {
     my $action=shift;
     my %args = $self->get_args();
     my $locus_id= $args{locus_id};
-    
+
     my $locus_synonym_id=$self->get_object()->get_locus_alias_id();
     my $locus_synonym_name= $self->get_object->get_locus_alias();
-   
+
     my $username= $self->get_user()->get_first_name()." ".$self->get_user()->get_last_name();
     my $sp_person_id=$self->get_user()->get_sp_person_id();
     my $usermail=$self->get_user()->get_private_email();
-    my $locus_link= qq |http://www.sgn.cornell.edu/phenome/locus_display.pl?locus_id=$locus_id|;
-    my $user_link = qq |http://www.sgn.cornell.edu/solpeople/personal-info.pl?sp_person_id=$sp_person_id|;
-    
+    my $locus_link= qq |http://solgenomics.net/locus/$locus_id/view|;
+    my $user_link = qq |http://solgenomics.net/solpeople/personal-info.pl?sp_person_id=$sp_person_id|;
+
     my $fdbk_body;
     my $subject;
     if ($action eq 'delete') {
@@ -239,8 +228,7 @@ sub send_synonym_email {
     else {
 	$subject="[New locus synonym stored] locus $locus_id";
 	$fdbk_body="$username ($user_link)\n has submitted a new synonym $locus_synonym_name \n for locus ($locus_link)\n"; }
-    
-    
+
     CXGN::Contact::send_email($subject,$fdbk_body, 'sgn-db-curation@sgn.cornell.edu');
     CXGN::Feed::update_feed($subject,$fdbk_body);
 }

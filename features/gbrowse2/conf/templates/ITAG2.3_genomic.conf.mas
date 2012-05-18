@@ -6,7 +6,7 @@ reference class = Sequence
 
 search attributes = Note
 
-default features = mrna sgn_loci sgn_unigenes Markers:overview Genes:region Markers:region sgn_markers
+default features = mrna rnaseq_coverage sgn_unigenes sgn_loci Markers:overview Genes:region Markers:region sgn_markers
 
 # "automatic" classes to try when an unqualified identifier is given
 automatic classes = Sequence clone match nucleotide_motif
@@ -70,7 +70,12 @@ db_args     = -adaptor DBI::Pg
               -dsn 'dbi:Pg:host=<% $feature->default_db_host %>;dbname=sfs_itag2.3_genomic'
               -user '<% $feature->default_db_user %>'
               -password '<% $feature->default_db_password %>'
-search options = default +autocomplete +fulltext 
+search options = default +autocomplete +fulltext
+
+# bigwig file showing RNA-Seq coverage, thanks to srs218
+[rnaseq_bigwig:database]
+db_adaptor    = Bio::DB::BigWig
+db_args       = -bigwig /data/prod/public/genomes/Solanum_lycopersicum/RNA_seq/curr/SL2.40_all_rna_seq.bigwig
 
 
 ### TRACK CONFIGURATION ####
@@ -200,9 +205,11 @@ category     = Genome data and reagents
 glyph        = alignment
 bgcolor      = red
 fgcolor      = red
+min_score    = 0.85
+max_score    = 1
 link         = /search/quick?term=$name
 stranded     = 1
-citation     = This track shows regions of similarity with SGN Unigene (SGN-U) sequences.  (see <a href="http://www.ab.wur.nl/TomatoWiki/AnSgnUnigenes000">ITAG Wiki</a>).  Darker color indicates higher alignment score, and scores are normalized within the match.  Thus, a match with three parts will have the lowest-scoring part white and the highest-scoring part dark.
+citation     = This track shows regions of similarity with SGN Unigene (SGN-U) sequences.  (see <a href="http://www.ab.wur.nl/TomatoWiki/AnSgnUnigenes000">ITAG Wiki</a>).  Darker color indicates higher alignment score, with higher scores darker red and lower scores lighter red.
 das category = similarity
 
 [tomato_bacs]
@@ -442,8 +449,8 @@ feature =
 glyph       = segments
 bgcolor     = red
 fgcolor     = red
-key         = DM BACs (linking)
-category    = Paired clone-end mapping (details)
+key         = Potato (DM) BAC ends (linking)
+category    = Clone end sequences (details)
 description = 1
 citation    = 
  BAC ends from the 'POTATO-B-01-100-110KB' library aligned using
@@ -464,8 +471,8 @@ bgcolor     = \&bes_color_by_length_flag
 fgcolor     = \&bes_color_by_length_flag
 fontcolor   = \&bes_color_by_length_flag
 connector   = \&bes_style_by_orientation_flag
-key         = DM BACs
-category    = Paired clone-end mapping (details)
+key         = Potato (DM) BAC ends
+category    = Clone end sequences (details)
 description = 1
 citation    = 
  BAC ends from the 'POTATO-B-01-100-110KB' library aligned using SSAHA2.
@@ -483,8 +490,8 @@ fgcolor     = \&bes_color_by_length_flag
 fontcolor   = \&bes_color_by_length_flag
 connector   = \&bes_style_by_orientation_flag
 height      = 7
-key         = DM BACs (problematic)
-category    = Paired clone-end mapping (problematic)
+key         = Potato (DM) BAC ends (problematic)
+category    = Clone end sequences (problematic)
 description = 1
 citation    = 
  BAC ends from the 'POTATO-B-01-100-110KB' library aligned using
@@ -498,8 +505,8 @@ feature =
 glyph       = segments
 bgcolor     = red
 fgcolor     = red
-key         = DM fosmids (linking)
-category    = Paired clone-end mapping (details)
+key         = Potato (DM) fosmid ends (linking)
+category    = Clone end sequences (details)
 description = 1
 citation    = 
  Fosmid ends from the 'POTATO-F-01-40KB' library aligned using SSAHA2.
@@ -520,8 +527,8 @@ fgcolor     = \&bes_color_by_length_flag
 bgcolor     = \&bes_color_by_length_flag
 fontcolor   = \&bes_color_by_length_flag
 connector   = \&bes_style_by_orientation_flag
-key         = DM fosmids
-category    = Paired clone-end mapping (details)
+key         = Potato (DM) fosmid ends
+category    = Clone end sequences (details)
 description = 1
 citation    = 
  Fosmid ends from the 'POTATO-F-01-40KB' library aligned using SSAHA2.
@@ -540,8 +547,8 @@ fgcolor     = \&bes_color_by_length_flag
 fontcolor   = \&bes_color_by_length_flag
 connector   = \&bes_style_by_orientation_flag
 height      = 7
-key         = DM Fosmids (problematic)
-category    = Paired clone-end mapping (problematic)
+key         = Potato (DM) fosmid ends (problematic)
+category    = Clone end sequences (problematic)
 description = 1
 citation    = 
  Fosmid ends from the 'POTATO-F-01-40KB' library aligned using SSAHA2.
@@ -556,8 +563,8 @@ feature =
 glyph       = segments
 bgcolor     = red
 fgcolor     = red
-key         = RH BAC (linking)
-category    = Paired clone-end mapping (details)
+key         = Potato (RH) BAC ends (linking)
+category    = Clone end sequences (details)
 description = 1
 citation    = 
  BAC ends from the 'RHPOTKEY' library aligned using SSAHA2.  The
@@ -578,8 +585,8 @@ bgcolor     = \&bes_color_by_length_flag
 fgcolor     = \&bes_color_by_length_flag
 fontcolor   = \&bes_color_by_length_flag
 connector   = \&bes_style_by_orientation_flag
-key         = RH BACs
-category    = Paired clone-end mapping (details)
+key         = Potato (RH) BAC ends
+category    = Clone end sequences (details)
 description = 1
 citation    = 
  BAC ends from the 'RHPOTKEY' library aligned using SSAHA2.  The clone
@@ -597,8 +604,8 @@ fgcolor     = \&bes_color_by_length_flag
 fontcolor   = \&bes_color_by_length_flag
 connector   = \&bes_style_by_orientation_flag
 height      = 7
-key         = RH BACs (problematic)
-category    = Paired clone-end mapping (problematic)
+key         = Potato (RH) BAC ends (problematic)
+category    = Clone end sequences (problematic)
 description = 1
 citation    = 
  BAC ends from the 'RHPOTKEY' library aligned using SSAHA2.
@@ -613,8 +620,8 @@ feature =
 glyph       = segments
 bgcolor     = red
 fgcolor     = red
-key         = SL BACs (linking)
-category    = Paired clone-end mapping (details)
+key         = Tomato BAC ends (linking)
+category    = Clone end sequences (details)
 description = 1
 citation    = 
  Clone ends from several tomato libraries aligned using SSAHA2.  The
@@ -635,8 +642,8 @@ bgcolor     = \&bes_color_by_length_flag
 fgcolor     = \&bes_color_by_length_flag
 fontcolor   = \&bes_color_by_length_flag
 connector   = \&bes_style_by_orientation_flag
-key         = SL BACs
-category    = Paired clone-end mapping (details)
+key         = Tomato BAC ends
+category    = Clone end sequences (details)
 description = 1
 citation    = 
  Clone ends from several tomato libraries aligned using SSAHA2.  The
@@ -655,8 +662,8 @@ fgcolor     = \&bes_color_by_length_flag
 fontcolor   = \&bes_color_by_length_flag
 connector   = \&bes_style_by_orientation_flag
 height      = 7
-key         = SL BACs (problematic)
-category    = Paired clone-end mapping (problematic)
+key         = Tomato BAC ends (problematic)
+category    = Clone end sequences (problematic)
 description = 1
 citation    = 
  Clone ends from several tomato libraries aligned using SSAHA2.  The
@@ -699,8 +706,8 @@ bgcolor     = \&bes_color_by_length_flag
 fgcolor     = \&bes_color_by_length_flag
 fontcolor   = \&bes_color_by_length_flag
 connector   = \&bes_style_by_orientation_flag
-key         = All clones
-category    = Paired clone-end mapping
+key         = All clone ends
+category    = Clone end sequences
 description = 1
 citation    = 
  Clone ends from several tomato and potato libraries aligned using
@@ -718,8 +725,8 @@ feature =
 glyph       = segments
 bgcolor     = red
 fgcolor     = red
-key         = All clones (linking)
-category    = Paired clone-end mapping
+key         = All clone ends (linking)
+category    = Clone end sequences
 description = 1
 citation    = 
  Clone ends from several tomato and potato libraries aligned using
@@ -728,3 +735,48 @@ citation    =
  href="http://www.compbio.dundee.ac.uk/">University of Dundee</a>.
 
 ##### end dan bolser's ultra clone-end-mapping conf
+
+# track showing coverage of all aggregated RNA-Seq sets.  track conf
+# by srs218.
+[rnaseq_coverage]
+feature           = summary
+category          = RNA-Seq
+database          = rnaseq_bigwig
+height            = 150
+glyph             = wiggle_whiskers
+autoscale         = z_score
+min_score         = 0
+#max_score        = 2000
+mean_color        = red
+mean_color_neg    = blue
+stdev_color       = orange
+stdev_color_neg   = lightblue
+max_color         = yellow
+min_color         = cyan
+#fgcolor          = black
+#pos_color        = black
+#neg_color        = red
+key               = RNA-Seq coverage
+citation =
+ Coverage histogram of all available RNA-Seq reads on the tomato genome.  Provided by Stephane Rombauts (VIB Ghent) and Susan Strickler (SGN).
+
+[mt_SNPs]
+feature       = SNP
+category      = SNPs
+glyph         = triangle
+point         = 1
+orient        = N
+height        = 6
+bgcolor       = blue
+fgcolor       = blue
+key           = Micro-Tom SNPs
+
+[mt_SNPs:100000]
+feature       = bin
+category      = SNPs
+glyph         = xyplot
+graph_type    = boxes
+scale         = right
+height        = 20
+group_on      = display_name
+

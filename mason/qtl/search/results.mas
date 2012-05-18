@@ -1,5 +1,5 @@
 <%doc>
-QTL search form.
+QTL search results view.
 </%doc>
 
 <%args>
@@ -15,8 +15,6 @@ $query
     title => 'QTL search results',
 &>
   
-
-
 % if ($data) 
 % { 
 
@@ -41,16 +39,25 @@ $query
 <&| /page/info_section.mas,
       title => 'Search Results',
 &>
+%if ( $query )
+%{
 <br>No results found for <i><strong>'<% $query %>'.</strong></i><br />
+%}
+%else
+%{
+<br>No results. Search again with with a trait name.<br />
+%}
 </&>
 %}
 
 <&| /page/info_section.mas,
-     title => 'Search Again',
-   collapsible => '1',
-   collapsed   =>1
+    title       => 'Search',
+    collapsible => '1',
+    collapsed   => 1
  &>
-<& form.mas &>
+
+<& /search/phenotypes/qtl.mas &>
+
 </&>
 
 

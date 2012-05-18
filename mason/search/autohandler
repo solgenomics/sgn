@@ -1,0 +1,41 @@
+<%doc>
+
+=head1 NAME
+
+searchtabs.mas - mason component that displays the tabs for the search page
+
+=head1 DESCRIPTION
+
+takes a parameter, search, specifying which search should be
+highlighted in the tabbar. Defaults to 'loci'. Current legal values
+are 'loci', 'phenotypes', 'trait', 'unigene', 'family', 'markers',
+'bacs', 'est_library', 'images', 'directory', for the different
+available searches.
+
+=head1 AUTHOR
+
+Lukas Mueller &st;lam87@cornell.edu&gt;. Based on Perl code by Rob Buels.
+
+=cut
+
+</%doc>
+
+<& /page/page_title.mas, title => 'Search SGN' &>
+
+<& /page/mode_buttons.mas, buttons => [
+
+    ['/search/organisms', 'Organisms'],
+    ['/search/loci','Genes'],
+    ['/search/features','Genome Features'],
+    ['/search/phenotypes','QTLs & Phenotypes'],
+    ['/search/transcripts','Transcripts'],
+    ['/search/family', 'Unigene Families' ],
+    ['/search/markers','Markers'],
+    ['/search/genomic/clones','Genomic Clones'],
+    ['/search/images','Images'],
+    ['/search/expression', 'Expression'],
+
+   ]
+&>
+
+% $m->call_next;

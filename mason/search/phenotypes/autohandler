@@ -1,0 +1,8 @@
+<& /page/mode_buttons.mas, buttons => [
+        ['/search/phenotypes/qtl',    'QTLs'],
+        ['/search/phenotypes/stock',  'Mutants & Accessions'],
+        ['/search/phenotypes/traits', 'Traits'],
+    ],
+&>
+
+% $m->call_next;

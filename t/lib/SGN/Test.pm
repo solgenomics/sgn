@@ -7,8 +7,7 @@ use File::Spec::Functions;
 use File::Temp;
 use File::Find;
 
-use List::Util qw/ min shuffle /;
-use List::MoreUtils qw/ uniq /;
+use List::AllUtils qw/ min shuffle uniq any /;
 use Test::More;
 use Exporter;
 
@@ -21,7 +20,14 @@ use lib 't/lib';
 use SGN::Test::WWW::Mechanize;
 
 use base 'Exporter';
-our @EXPORT_OK = qw/validate_urls request get ctx_request with_test_level/;
+our @EXPORT_OK = qw/validate_urls request get ctx_request with_test_level qsub_is_configured/;
+
+
+sub qsub_is_configured {
+    no autodie;
+    system("echo sleep 1 | qsub -j oe -o /dev/null");
+    return $? ? 0 : 1 ;
+}
 
 # do a little dance to only load Catalyst::Test if we've actually been
 # asked for any of its subs
@@ -122,9 +128,21 @@ sub _validate_single_url {
 
             # test for any broken images or other things that have a
             # src attr
-            { my @stuff = grep !m|^https?://|, uniq map $_->attr('src'), $mech->findnodes('//*[@src]');
-              for( @stuff ) {
-                  $mech->get_ok( $_ );
+            {
+              my @src =
+                  grep !m|^https?://|,
+                  uniq
+                  map $_->attr('src'),
+                  $mech->findnodes('//*[@src]');
+
+              my @todo_regexps = (
+                  qr!^/gbrowse/!,
+                );
+              for my $src ( @src ) {
+                  local $main::TODO = ( any { $src =~ $_ } @todo_regexps )
+                      ? 'this url is not always present on development machines'
+                      : undef;
+                  $mech->get_ok( $src );
                   $mech->back;
               }
             }

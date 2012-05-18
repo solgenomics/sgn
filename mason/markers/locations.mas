@@ -211,7 +211,8 @@ qq|<img src="$image_url" usemap="#map$count" border="0" alt="" />|;
                       || '<span class="ghosted">Unknown</span>';
                     my $rev = $pcr->rev_primer()
                       || '<span class="ghosted">Unknown</span>';
-                    my $enz = $pcr->enzyme() || 'unknown enzyme';
+                    my $enz = $pcr->enzyme()  || 'unknown enzyme' ;
+		    my $additional_enzymes = $pcr->additional_enzymes();
                     my $dcaps = $pcr->dcaps_primer();
                     $temp ||= '<span class="ghosted">Unknown</span>';
                     $mg   ||= '<span class="ghosted">Unknown</span>';
@@ -276,17 +277,33 @@ qq|<img src="$image_url" usemap="#map$count" border="0" alt="" />|;
                         $dcaps_left                     => $dcaps_right,
                        'Accessions and product sizes'  => $pcr_bands_html,
                         $digest_title                   => $digest_bands_html,
+			'Enzymes'                       => $additional_enzymes,
                         'Approximate temperature'       => $temp,
                         'Mg<sup>+2</sup> concentration' => $mg,
                         '__multicol'                    => 3,
                         '__tableattrs'                  => "width=\"100%\"",
                       ) if ($protocol ne 'SNP');
+                    my ($snpdb_format, $snpdb);
+                    if ($snp_nuc) {
+                      $snpdb = "SNPdb format";
+                      my @fives = @{ $pcr_seq->{five_prime_flanking_region} } ;
+                      my @threes = @{ $pcr_seq->{three_prime_flanking_region} } ;
+                      my @snps  =  @{ $pcr_seq->{SNP} };
+                      for my $i ( 0 .. (scalar( @snps ) -1 ) ) {
+                        my $snp_string =  $snps[$i] ;
+                        my $formatted = "[" . substr($snp_string, 0, 1) . "/" . substr($snp_string, -1) ."]";
+                        my $five_p = $fives[$i];
+                        my $three_p = $threes[$i];
+                        $snpdb_format .= $five_p . $formatted ."<BR />" .  $three_p . "<BR />";
+                      }
+                    }
                     $locations_html .=
                       CXGN::Page::FormattingHelpers::info_table_html(
                         '__title' =>
 "Assay data&nbsp;&nbsp;<span class=\"tinytype\"></span>",
-                       $three_prime       => $seq3,
                        $five_prime       => $seq5,
+                       $three_prime       => $seq3,
+                       $snpdb => $snpdb_format,
                        $aspe  => $aspe_primers,
                        $snp   => $snp_nuc,
                        $indel => $indel_seq,
@@ -294,8 +311,8 @@ qq|<img src="$image_url" usemap="#map$count" border="0" alt="" />|;
                       '__tableattrs'   => "width=\"100%\"",
                       ) if $aspe || $indel || ($protocol eq "SNP");
                     $locations_html .= '</td></tr></table>';
-                    push( @displayed_pcr, $pcr->pcr_experiment_id() );
-                }
+                    push( @displayed_pcr, $pcr->pcr_experiment_id() )
+                  }
             }
         }
     }

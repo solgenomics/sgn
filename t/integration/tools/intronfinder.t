@@ -12,14 +12,14 @@ BEGIN {
   use_ok( 'SGN::IntronFinder::Homology' );
 }
 
-my $ests_file = $FindBin::RealBin."/../data/ests.seq";
+my $ests_file = "t/data/ests.seq";
 open my $ests, '<', $ests_file
   or die "$! opening $ests_file";
 
 
 my $if_out;
 open my $if_fh, '>', \$if_out or die "$! opening filehandle to string";
-SGN::IntronFinder::Homology::find_introns_txt( $ests, $if_fh, 1e-50, "$FindBin::RealBin/../data/feature_file.txt", File::Spec->tmpdir, $FindBin::RealBin.'/../data/ath_prots');
+SGN::IntronFinder::Homology::find_introns_txt( $ests, $if_fh, 1e-50, "t/data/feature_file.txt", File::Spec->tmpdir, 't/data/ath_prots');
 
 
 #print $if_out;

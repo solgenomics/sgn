@@ -32,7 +32,7 @@ $marker
 use CXGN::Tools::Text;
 use CXGN::Marker::Tools;
 
-my @marker_names = $marker->get_name();
+my @marker_names = $marker->name_that_marker();
 my $dbh = $marker->{dbh};
 my $marker_id = $marker->marker_id();
 
@@ -50,5 +50,6 @@ if($collections and @{$collections}) {
 }
 
 </%perl>
-
-<div class="center">SGN-M<% $marker_id %><br /><% $collections_description %></div><br />
+<div class="center">SGN-M<% $marker_id %><br /><% $collections_description %>
+<br />
+</div>

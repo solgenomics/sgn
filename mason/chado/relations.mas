@@ -7,35 +7,6 @@
 
 <%init>
 
-    sub _chado_relations_related_stats {
-        my ($features) = @_;
-        my %stats;
-        my $total = scalar @$features;
-        my %types;
-        for my $f (@$features) {
-            my $t = $f->type;
-            my $id = $t ? $t->cvterm_id : 0;
-            $types{ $id } = $t if $t;
-            $stats{ $id }++;
-        }
-        my $data = [ ];
-        for my $k (sort keys %stats) {
-            push @$data, [
-                $stats{$k},
-                $types{$k} ? $m->scomp( '/chado/cvterm_link.mas',
-                                        cvterm => $types{$k},
-                                        inflect => 'PL_N',
-                                        inflect_count => $stats{$k}
-                                      )
-                           : '<span class="ghosted">n/a</span>',
-            ];
-        }
-        if( 1 < scalar keys %stats ) {
-            push @$data, [ $total, "<b>Total</b>" ];
-        }
-        return $data;
-    }
-
     # make a hash of relationship_type => {
     #    upstream   => \@list_of_objects
     #    downstream => \@list_of_objects
@@ -43,8 +14,8 @@
     my %rels;
     push @{$rels{$_->[0]}{$_->[1]}}, $_->[2]
         for (
-          ( map [ $m->scomp('/chado/cvterm_link.mas', cvterm =>  $_->type, inflect => ( $_->type->name =~ /_of$/ ? 'PL_N' : 'PL_V' ) ), 'downstream', $_->subject ], $principle->${\"${relationship_name}_objects"}()  ),
-          ( map [ $m->scomp('/chado/cvterm_link.mas', cvterm => $_->type ), 'upstream',   $_->object  ], $principle->${\"${relationship_name}_subjects"}() ),
+          ( map [ $m->scomp('/chado/cvterm_link.mas', cvterm =>  $_->type, inflect => ( $_->type->name =~ /_of$/ ? 'PL_N' : 'PL_V' ) ), 'downstream', $_->subject ], $principle->search_related("${relationship_name}_objects",undef, { prefetch => ['type','subject'] }) ),
+          ( map [ $m->scomp('/chado/cvterm_link.mas', cvterm => $_->type ), 'upstream',   $_->object  ], $principle->search_related("${relationship_name}_subjects",undef,{ prefetch => ['type','object'] }) ),
         );
 
     my $type = $principle->type ? $m->scomp('/chado/cvterm_link.mas', cvterm => $principle->type) : 'dataset';
@@ -62,14 +33,6 @@
    title => $direction eq 'upstream' ? qq|$object_type_text this $type$is $reltype| : qq|$object_type_text that$are $reltype this $type|,
    is_subsection => 1,
 &>
-%   if( @$objects > 4 ) {
-     <& /page/columnar_table.mas,
-         __tableattrs => qq|summary="$object_type_text summary" cellspacing="0" style="margin-bottom: 0.5em"|,
-         data         => _chado_relations_related_stats($objects),
-         __caption    => 'Summary',
-         __border     => 1,
-      &>
-%   }
     <& $list_component,
        %ARGS,
        objects => $objects,

@@ -12,6 +12,10 @@ use namespace::autoclean;
 use YAML::Any qw/LoadFile/;
 
 use URI::FromHash 'uri';
+use List::Compare;
+use File::Temp qw / tempfile /;
+use File::Slurp;
+use JSON::Any;
 
 use CXGN::Chado::Stock;
 use SGN::View::Stock qw/stock_link stock_organisms stock_types/;
@@ -51,7 +55,7 @@ sub search :Path('/stock/search') Args(0) {
     my $form = HTML::FormFu->new(LoadFile($c->path_to(qw{forms stock stock_search.yaml})));
 
     $c->stash(
-        template                   => '/stock/search.mas',
+        template                   => '/search/phenotypes/stock.mas',
         request                    => $c->req,
         form                       => $form,
         form_opts                  => { stock_types => stock_types($self->schema), organisms => stock_organisms($self->schema)} ,
@@ -109,7 +113,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
 
     my $logged_user = $c->user;
     my $person_id = $logged_user->get_object->get_sp_person_id if $logged_user;
-    my $curator = $logged_user->check_roles('curator') if $logged_user;
+    my $curator   = $logged_user->check_roles('curator') if $logged_user;
     my $submitter = $logged_user->check_roles('submitter') if $logged_user;
     my $sequencer = $logged_user->check_roles('sequencer') if $logged_user;
 
@@ -121,13 +125,32 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
 
     my $stock = $c->stash->{stock};
     my $stock_id = $stock ? $stock->get_stock_id : undef ;
-
+    my $stock_type = $stock->get_object_row ? $stock->get_object_row->type->name : undef ;
+    my $type = 1 if $stock_type && !$stock_type=~ m/population/;
     # print message if stock_id is not valid
     unless ( ( $stock_id =~ m /^\d+$/ ) || ($action eq 'new' && !$stock_id) ) {
         $c->throw_404( "No stock/accession exists for that identifier." );
     }
     unless ( $stock->get_object_row || !$stock_id && $action && $action eq 'new' ) {
         $c->throw_404( "No stock/accession exists for that identifier." );
+    }
+
+    my $props = $self->_stockprops($stock);
+    # print message if the stock is visible only to certain user roles
+    my @logged_user_roles = $logged_user->roles if $logged_user;
+    my @prop_roles = @{ $props->{visible_to_role} } if  ref($props->{visible_to_role} );
+    my $lc = List::Compare->new( {
+        lists    => [\@logged_user_roles, \@prop_roles],
+        unsorted => 1,
+                              } );
+    my @intersection = $lc->get_intersection;
+    if ( !$curator && @prop_roles  && !@intersection) { # if there is no match between user roles and stock visible_to_role props
+        $c->throw(is_client_error => 0,
+                  title             => 'Restricted page',
+                  message           => "Stock $stock_id is not visible to your user!",
+                  developer_message => 'only logged in users of certain roles can see this stock' . join(',' , @prop_roles),
+                  notify            => 0,   #< does not send an error email
+            );
     }
 
     # print message if the stock is obsolete
@@ -146,7 +169,6 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
     }
 
     ####################
-    my $props = $self->_stockprops($stock);
     my $is_owner;
     my $owner_ids = $c->stash->{owner_ids} || [] ;
     if ( $stock && ($curator || $person_id && ( grep /^$person_id$/, @$owner_ids ) ) ) {
@@ -154,7 +176,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
     }
     my $dbxrefs = $self->_dbxrefs($stock);
     my $pubs = $self->_stock_pubs($stock);
-    my $image_ids = $self->_stock_images($stock);
+    my $image_ids = $self->_stock_images($stock, $type);
     my $cview_tmp_dir = $c->tempfiles_subdir('cview');
 
     my $barcode_tempuri  = $c->tempfiles_subdir('image');
@@ -181,11 +203,14 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
             pubs      => $pubs,
             members_phenotypes => $c->stash->{members_phenotypes},
             direct_phenotypes  => $c->stash->{direct_phenotypes},
+            direct_genotypes   => $c->stash->{direct_genotypes},
             has_qtl_data   => $c->stash->{has_qtl_data},
             cview_tmp_dir  => $cview_tmp_dir,
             cview_basepath => $c->get_conf('basepath'),
             image_ids      => $image_ids,
-	    
+            allele_count   => $c->stash->{allele_count},
+            ontology_count => $c->stash->{ontology_count},
+
         },
         locus_add_uri  => $c->uri_for( '/ajax/stock/associate_locus' ),
         cvterm_add_uri => $c->uri_for( '/ajax/stock/associate_ontology'),
@@ -195,6 +220,146 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
 }
 
 =head1 PRIVATE ACTIONS
+
+=head2 download_phenotypes
+
+=cut
+
+
+sub download_phenotypes : Chained('get_stock') PathPart('phenotypes') Args(0) {
+    my ($self, $c) = @_;
+    my $stock = $c->stash->{stock_row};
+    my $stock_id = $stock->stock_id;
+    if ($stock_id) {
+        my $tmp_dir = $c->get_conf('basepath') . "/" . $c->get_conf('stock_tempfiles');
+        my $file_cache = Cache::File->new( cache_root => $tmp_dir  );
+        $file_cache->purge();
+        my $key = "stock_" . $stock_id . "_phenotype_data";
+        my $phen_file = $file_cache->get($key);
+        my $filename = $tmp_dir . "/stock_" . $stock_id . "_phenotypes.csv";
+        unless ( -e $phen_file) {
+            my $phen_hashref; #hashref of hashes for the phenotype data
+            my %cvterms ; #hash for unique cvterms
+            ##############
+            my $phenotypes  =  $self->_stock_project_phenotypes( $stock );
+            my $subjects = $stock->search_related('stock_relationship_objects')
+                ->search_related('subject');
+            my $subject_phenotypes = $self->_stock_project_phenotypes( $subjects );
+            my %all_phenotypes = (%$phenotypes, %$subject_phenotypes);
+            my $replicate = 1;
+            my ($replicateprop) =  $stock->search_related(
+                'stockprops', {
+                    'type.name' => 'replicate'
+                }, { join => 'type' } );
+
+            foreach my $project (keys %all_phenotypes ) {
+                my $pheno = $all_phenotypes{$project} ;
+                my $replicate = 1;
+		my $cvterm_name;
+		my @sorted_phen = sort { $a->observable->name cmp $b->observable->name } @$pheno ;
+		foreach my $ph  (@sorted_phen) {
+		    my ($phen_stock) = $ph->search_related('nd_experiment_phenotypes')->search_related('nd_experiment')->search_related('nd_experiment_stocks')->search_related('stock');
+		    my $cvterm = $ph->observable;
+		    if ($cvterm_name eq $cvterm->name) { $replicate ++ ; } else { $replicate = 1 ; }
+                    $cvterms{$cvterm->name} = $cvterm->dbxref->db->name . ":" . $cvterm->dbxref->accession;
+                    my $accession = $cvterm->dbxref->accession;
+                    my $db_name = $cvterm->dbxref->db->name;
+		    my $hash_key = $project . "|" . $replicate ; ##$phen_stock->uniquename . "|" . $replicate  ;
+		    $phen_hashref->{$hash_key}{replicate} = $replicate;
+		    $cvterm_name = $cvterm->name;
+		    $phen_hashref->{$hash_key}{uniquename} =  $ph->uniquename;
+                    $phen_hashref->{$hash_key}{$cvterm->name} = $ph->value;
+                    $phen_hashref->{$hash_key}{accession} = $db_name . ":" . $accession ;
+                    # $phen_hashref->{$hash_key}{year} = $year;
+                    $phen_hashref->{$hash_key}{project} = $project;
+                    $phen_hashref->{$hash_key}{stock} = $phen_stock->uniquename;
+                    $phen_hashref->{$hash_key}{stock_id} = $phen_stock->stock_id;
+                }
+            }
+            #write the header for the file
+            write_file( $filename, ("uniquename\tstock_id\tstock_name\t" ) ) ;
+            foreach my $term_name (sort { $cvterms{$a} cmp $cvterms{$b} } keys %cvterms )  {# sort ontology terms
+                my $ontology_id = $cvterms{$term_name};
+                write_file( $filename, {append => 1 }, ( $ontology_id . "|" . $term_name . "\t") ) ;
+            }
+            foreach my $key ( sort keys %$phen_hashref ) {
+                #print the unique key (row header)
+                # print some more columns with metadata
+                # print the value by cvterm name
+                write_file( $filename, {append => 1 }, ( "\n" , $key, "\t" ,$phen_hashref->{$key}{stock_id}, "\t", $phen_hashref->{$key}{stock}, "\t" ) ) ;
+                print STDERR "**writing stock id " .  $phen_hashref->{$key}{stock_id} . "to file\n";
+                foreach my $term_name ( sort { $cvterms{$a} cmp $cvterms{$b} } keys %cvterms ) {
+                    write_file( $filename, {append => 1 }, ( $phen_hashref->{$key}{$term_name}, "\t" ) );
+                }
+            }
+            $file_cache->set( $key, $filename, '30 days' );
+            $phen_file = $file_cache->get($key);
+        }
+        my @data;
+        foreach ( read_file($filename) ) {
+            push @data, [ split(/\t/) ];
+        }
+        $c->stash->{'csv'}={ data => \@data};
+        $c->forward("View::Download::CSV");
+        #stock    repeat	experiment	year	SP:0001	SP:0002
+    }
+}
+
+
+
+=head2 download_genotypes
+
+=cut
+
+
+sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
+    my ($self, $c) = @_;
+    my $stock = $c->stash->{stock_row};
+    my $stock_id = $stock->stock_id;
+    my $stock_name = $stock->uniquename;
+    if ($stock_id) {
+        my $tmp_dir = $c->get_conf('basepath') . "/" . $c->get_conf('stock_tempfiles');
+        my $file_cache = Cache::File->new( cache_root => $tmp_dir  );
+        $file_cache->purge();
+        my $key = "stock_" . $stock_id . "_genotype_data";
+        my $gen_file = $file_cache->get($key);
+        my $filename = $tmp_dir . "/stock_" . $stock_id . "_genotypes.csv";
+        unless ( -e $gen_file) {
+            my $gen_hashref; #hashref of hashes for the phenotype data
+            my %cvterms ; #hash for unique cvterms
+            ##############
+            my $genotypes =  $self->_stock_project_genotypes( $stock );
+            write_file($filename, ("project\tmarker\t$stock_name\n") );
+            foreach my $project (keys %$genotypes ) {
+                #my $genotype_ref = $genotypes->{$project} ;
+                #my $replicate = 1;
+		foreach my $geno (@ { $genotypes->{$project} } ) {
+		    my $genotypeprop_rs = $geno->search_related('genotypeprops', {
+			#this is the current genotype we have , add more here as necessary
+			'type.name' => 'infinium array' } , {
+			    join => 'type' } );
+		    while (my $prop = $genotypeprop_rs->next) {
+			my $json_text = $prop->value ;
+			my $genotype_values = JSON::Any->decode($json_text);
+			foreach my $marker_name (keys %$genotype_values) {
+			    my $read = $genotype_values->{$marker_name};
+			    write_file( $filename, { append => 1 } , ($project, "\t" , $marker_name, "\t", $read, "\n") );
+			}
+		    }
+		}
+	    }
+            $file_cache->set( $key, $filename, '30 days' );
+            $gen_file = $file_cache->get($key);
+        }
+        my @data;
+        foreach ( read_file($filename) ) {
+            push @data, [ split(/\t/) ];
+        }
+        $c->stash->{'csv'}={ data => \@data};
+        $c->forward("View::Download::CSV");
+    }
+}
+
 
 =head2 get_stock
 
@@ -216,7 +381,7 @@ sub get_stock : Chained('/')  PathPart('stock')  CaptureArgs(1) {
 sub get_stock_cvterms : Private {
     my ( $self, $c ) = @_;
     my $stock = $c->stash->{stock};
-    my $stock_cvterms = $stock ? $self->_stock_cvterms($stock) : undef;
+    my $stock_cvterms = $stock ? $self->_stock_cvterms($stock, $c) : undef;
     $c->stash->{stock_cvterms} = $stock_cvterms;
 }
 
@@ -225,6 +390,8 @@ sub get_stock_allele_ids : Private {
     my $stock = $c->stash->{stock};
     my $allele_ids = $stock ? $self->_stock_allele_ids($stock) : undef;
     $c->stash->{allele_ids} = $allele_ids;
+    my $count = $allele_ids ? scalar( @$allele_ids ) : undef;
+    $c->stash->{allele_count} = $count ;
 }
 
 sub get_stock_owner_ids : Private {
@@ -256,7 +423,7 @@ sub get_stock_extended_info : Private {
     my $dbxrefs  = $stock ?  $self->_stock_dbxrefs($stock) : undef ;
     $c->stash->{stock_dbxrefs} = $dbxrefs;
 
-    my $cvterms  = $stock ?  $self->_stock_cvterms($stock) : undef ;
+    my $cvterms  = $stock ?  $self->_stock_cvterms($stock, $c) : undef ;
     $c->stash->{stock_cvterms} = $cvterms;
 
     my $direct_phenotypes  = $stock ? $self->_stock_project_phenotypes( $c->stash->{stock_row} ) : undef;
@@ -264,6 +431,9 @@ sub get_stock_extended_info : Private {
 
     my ($members_phenotypes, $has_members_genotypes)  = $stock ? $self->_stock_members_phenotypes( $c->stash->{stock_row} ) : undef;
     $c->stash->{members_phenotypes} = $members_phenotypes;
+
+    my $direct_genotypes  = $stock ? $self->_stock_project_genotypes( $c->stash->{stock_row} ) : undef;
+    $c->stash->{direct_genotypes} = $direct_genotypes;
 
     my $stock_type;
     $stock_type = $stock->get_object_row->type->name if $stock->get_object_row;
@@ -480,7 +650,7 @@ sub _stock_project_phenotypes {
         my @ph = map $_->phenotype, $exp->nd_experiment_phenotypes;
         my $project_desc = $project_descriptions{ $exp->nd_experiment_id }
             or die "no project found for exp ".$exp->nd_experiment_id;
-        push @{ $phenotypes{ $project_desc }}, @ph;
+        push @{ $phenotypes{ $project_desc }}, @ph if scalar(@ph);
     }
     return \%phenotypes;
 }
@@ -506,6 +676,50 @@ SELECT COUNT( DISTINCT genotype_id )
     return ( $subject_phenotypes, $has_members_genotypes );
 }
 
+###########
+# this sub gets all genotypes measured directly on this stock and
+# stores it in a hashref as { project_name => [ BCS::Genotype::Genotype, ... ]
+
+sub _stock_project_genotypes {
+    my ($self, $bcs_stock) = @_;
+    return {} unless $bcs_stock;
+
+    # hash of experiment_id => project(s) desc
+    my %project_descriptions =
+        map { $_->nd_experiment_id => join( ', ', map $_->project->description, $_->nd_experiment_projects ) }
+        $bcs_stock->search_related('nd_experiment_stocks')
+                  ->search_related('nd_experiment',
+                                   {},
+                                   { prefetch => { 'nd_experiment_projects' => 'project' } },
+                                   );
+    my $experiments = $bcs_stock->search_related('nd_experiment_stocks')
+                                ->search_related('nd_experiment',
+                                                 {},
+                                                 { prefetch => { nd_experiment_genotypes => 'genotype' } },
+                                                );
+    my %genotypes;
+    while (my $exp = $experiments->next) {
+        # there should be one project linked to the experiment ?
+        my @gen = map $_->genotype, $exp->nd_experiment_genotypes;
+        my $project_desc = $project_descriptions{ $exp->nd_experiment_id }
+	or die "no project found for exp ".$exp->nd_experiment_id;
+	#my @values;
+	#foreach my $genotype (@gen) {
+	    #my $genotype_id = $genotype->genotype_id;
+	    #my $vals = $self->schema->storage->dbh->selectcol_arrayref
+	    #	("SELECT value  FROM genotypeprop  WHERE genotype_id = ? ",
+	    #	 undef,
+	    #	 $genotype_id
+	    #	);
+	    #push @values, $vals->[0];
+	#}
+	push @{ $genotypes{ $project_desc }}, @gen if scalar(@gen);
+    }
+    return \%genotypes;
+}
+
+##############
+
 sub _stock_dbxrefs {
     my ($self,$stock) = @_;
     my $bcs_stock = $stock->get_object_row;
@@ -521,16 +735,19 @@ sub _stock_dbxrefs {
 }
 
 sub _stock_cvterms {
-    my ($self,$stock) = @_;
+    my ($self,$stock, $c) = @_;
     my $bcs_stock = $stock->get_object_row;
     # hash of arrays. Keys are db names , values are lists of StockCvterm objects
     my $scvterms ;
+    my $count;
     if ($bcs_stock) {
         my $stock_cvterms = $bcs_stock->search_related("stock_cvterms");
         while ( my $scvterm =  $stock_cvterms->next ) {
+            $count++;
             push @{ $scvterms->{$scvterm->cvterm->dbxref->db->name} } , $scvterm;
         }
     }
+    $c->stash->{ontology_count} = $count ;
     return $scvterms;
 }
 
@@ -552,11 +769,19 @@ sub _stock_pubs {
     return $pubs;
 }
 
+# get all images. Optional: include those of subject stocks
 sub _stock_images {
-    my ($self, $stock) = @_;
-    my $query = "select distinct image_id FROM phenome.stock_image
-                          WHERE stock_id = ?  ";
-    my $ids = $stock->get_schema->storage->dbh->selectcol_arrayref
+    my ($self, $stock, $r) = @_;
+    my $query = "select distinct image_id FROM phenome.stock_image WHERE stock_id = ?";
+    $query .=  " OR stock_id IN (SELECT subject_id FROM stock_relationship WHERE object_id = ? )" if $r;
+    my $ids = $r ?
+        $stock->get_schema->storage->dbh->selectcol_arrayref
+        ( $query,
+          undef,
+          $stock->get_stock_id,
+          $stock->get_stock_id,
+        ) :
+        $stock->get_schema->storage->dbh->selectcol_arrayref
         ( $query,
           undef,
           $stock->get_stock_id,

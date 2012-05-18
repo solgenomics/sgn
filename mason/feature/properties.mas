@@ -28,19 +28,14 @@
      }
 
    if( %properties ) {
-       print info_table_html(
-           ( map {
-               my $fps = $properties{$_};
-               my $title = cvterm_link( $fps->[0]->type, 'ucfirst' );
-               if( @$fps > 1 ) {
-                   $title => '<ul>'.(join '', map "<li>".encode_entities($_->value)."</li>", @$fps).'</ul>';
-               } else {
-                   $title => encode_entities($fps->[0]->value);
-               }
-             }
-             sort keys %properties
-           ),
-           __border => 0,
-        );
+       for my $propname ( sort keys %properties ) {
+           my $fps = $properties{$propname};
+           my $name = $m->scomp('/chado/cvterm_link.mas', cvterm => $fps->[0]->type, caps => 'ucfirst' );
+           my $value = @$fps > 1
+               ? '<ul>'.(join '', map "<li>".encode_entities($_->value)."</li>", @$fps).'</ul>'
+               : encode_entities($fps->[0]->value);
+
+           print qq|<dl style="float: left; margin: 1em"><dt>$name</dt><dd>$value</dd></dl>\n|;
+       }
    }
 </%perl>

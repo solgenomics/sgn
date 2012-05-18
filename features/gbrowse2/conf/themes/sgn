@@ -1,4 +1,4 @@
-stylesheet          = /documents/inc/gbrowse2_sgn.css
+stylesheet          = /css/gbrowse2_sgn.css
 hilite fill         = beige
 hilite outline      = red
 overview bgcolor    = #fcfcfc

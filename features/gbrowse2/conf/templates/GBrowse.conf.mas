@@ -180,6 +180,12 @@ description   = ITAG2.3 Release: protein annotations
 organism      = Solanum lycopersicum
 extended_description = ITAG Release 2.3 (2011-04-26) official annotations on the SL2.40 genome build by the International Tomato Annotation Group (ITAG).
 
+[PGSC_DM3.4]
+path          = PGSC_DM3.4.conf
+description   = PGSC DM 3.4 Release: genomic annotations
+organism      = Solanum tuberosum
+extended_description = Potato Genome Sequencing Consortium (PGSC) DM v3.4 annotation of the DM v3 genome build.
+
 [TAIR10_genomic]
 path          = TAIR10_genomic.conf
 description   = TAIR10: A. thaliana genomic annotations

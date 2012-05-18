@@ -8,8 +8,6 @@ use Test::More;
 
 my %urls = (
         "homepage"                                 => "/",
-
-        "Trait list"                               => "/phenome/qtl_traits.pl?index=Z",
         'tomato bac tpf'                           => '/sequencing/agp.pl',
         'tomato bac tpf'                           => '/sequencing/tpf.pl',
         'tomato bac tpf chr 12'                    => '/sequencing/tpf.pl?chr=12',
@@ -45,8 +43,10 @@ my %urls = (
         "intron finder"                            => '/tools/intron_detection/find_introns.pl',
         "display intron"                           => '/tools/intron_detection/display_introns.pl',
         "about clustal file"                       => '/about/clustal_file.pl',
-        'chado cvterm page'     => '/chado/cvterm.pl?cvterm_id=47499',
-        "SGN pubs"              => "/help/publications.pl",
+        'chado cvterm page'                        => '/chado/cvterm.pl?cvterm_id=47499',
+        "SGN pubs"                                 => "/help/publications.pl",
+        "SGN events"                               => '/sgn-events',
+        "AFRI-SOL"                                 => '/solanaceae-project/afri-sol', 
 );
 
 validate_urls(\%urls, $ENV{ITERATIONS} || 1 );

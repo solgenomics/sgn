@@ -163,6 +163,15 @@ sub generate_form {
 	    );
     }
     $form->add_field(
+        display_name => "Locus",
+        field_name   => "Locus",
+        id           => "genome_locus",
+        object       => $locus,
+        getter       => "get_genome_locus",
+        setter       => "set_genome_locus",
+        autocomplete => '/ajax/locus/genome_autocomplete',
+        );
+    $form->add_field(
 	display_name => "Locus name ",
 	field_name   => "locus_name",
 	object       => $locus,
