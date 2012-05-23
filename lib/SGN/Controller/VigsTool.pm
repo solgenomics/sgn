@@ -46,7 +46,6 @@ sub input :Path('/tools/vigs/')  :Args(0) {
     
 }
 
-
 sub advanced :Path('/tools/vigs/advanced') :Args(0) { 
 
     my ($self, $c) = @_;
@@ -61,7 +60,6 @@ my $dbh = CXGN::DB::Connection->new;
     
     $c->stash->{programs} = $programs;
 }
-
 
 # this subroutine is copied exactly from the BLAST index.pl code
 #
@@ -150,46 +148,43 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
     }
 
 
-
-
-    #validating the primers input
     if (length($sequence) <= $fragment_size ){
 	push ( @errors , "Sequence should be at least $fragment_size in length.\n");
     }
     
     # clean sequence 
-    $sequence =~ s/^>.*?\n(.*)/$1/; # remove first fasta line
+    $sequence =~ s/^>(.*)\s?\n(.*)/$2/; # remove first fasta line
+    my $id = $1;
     $sequence =~ s/[^a-zA-Z]//g;
     
     if (scalar (@errors) > 0){
 	user_error(join("<br />" , @errors));
     }
 
-
-
-# generate a file with fragments of 'sequence' of length 'fragment_size'
-# for analysis with BWA.
-    my ($seq_fh, $seq_filename) = tempfile( "seqXXXXXX",
+    # generate a file with fragments of 'sequence' of length 'fragment_size'
+    # for analysis with BWA.
+    my ($seq_fh, $seq_filename) = tempfile( "vigsXXXXXX",
  	
                  DIR=> $c->config->{'cluster_shared_tempdir'},
 
      );
 
-       my $seq = Bio::Seq->new(-seq=>$sequence, -id=>"temp");
-
-       my $io = Bio::SeqIO->new(-format=>'fasta', -file=>">".$seq_filename);
-
-       foreach my $i (1..$seq->length()-$fragment_size) { 
-
-	   my $subseq = $seq->subseq($i, $i + $fragment_size -1);
-
-	   my $subseq_obj = Bio::Seq->new(-seq=>$subseq, -display_id=>"temp-$i");
-
-   $io->write_seq($subseq_obj);
-
-     }
     
-       $io->close();
+    my $seq = Bio::Seq->new(-seq=>$sequence, -id=> $id || "temp");
+
+    my $io = Bio::SeqIO->new(-format=>'fasta', -file=>">".$seq_filename.".fragments");
+    
+    foreach my $i (1..$seq->length()-$fragment_size) { 
+	
+	my $subseq = $seq->subseq($i, $i + $fragment_size -1);
+
+	my $subseq_obj = Bio::Seq->new(-seq=>$subseq, -display_id=>"temp-$i");
+	
+	$io->write_seq($subseq_obj);
+	
+    }
+    
+    $io->close();
 
 
     print STDERR "DATABASE SELECTED: $params->{database}\n";
@@ -198,14 +193,14 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
     my $basename = $bdb->full_file_basename;
     
 
-    system('/data/shared/bin/bwa_wrapper.sh', $basename, $seq_filename, $seq_filename.".bwa.out");
+    system('/data/shared/bin/bwa_wrapper.sh', $basename, $seq_filename.".fragments", $seq_filename.".bwa.out");
 
     
-    ($seq_fh, $seq_filename) = tempfile( "seqXXXXXX",
-					    DIR=> $c->config->{'cluster_shared_tempdir'},
-	);
+#    ($seq_fh, $seq_filename) = tempfile( "vigsXXXXXX",
+#					    DIR=> $c->config->{'cluster_shared_tempdir'},
+#	);
     
-    my $seq = Bio::Seq->new(-seq=>$sequence, -id=>"temp");
+    my $seq = Bio::Seq->new(-seq=>$sequence, -id=> $id || "temp");
     my $io = Bio::SeqIO->new(-format=>'fasta', -file=>">".$seq_filename);
     
     $io->write_seq($seq);
@@ -361,6 +356,8 @@ sub view :Path('/tools/vigs/view') :Args(0) {
     
     $c->stash->{query} = $query_io->next_seq();
 
+    $c->stash->{query_file} = $query_file;
+
     $c->stash->{template} = '/tools/vigs/view.mas';
     my $job_file_tempdir = $c->path_to( $c->tempfiles_subdir('blast') );
     
@@ -428,12 +425,15 @@ sub view :Path('/tools/vigs/view') :Args(0) {
 	    
 	}
     }
+
+    my @bwa_matches = `cut -f3 $query_file.bwa.out | sort -u`;
+
     my @blast_matches = ();
     foreach my $k (keys %matches) { 
 	push @blast_matches, $k;
     }
     
-    $c->stash->{blast_matches} = \@blast_matches;
+    $c->stash->{blast_matches} = \@bwa_matches;
     $c->stash->{fragment_size} = $fragment_size;
 
    
