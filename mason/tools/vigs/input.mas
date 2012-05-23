@@ -26,7 +26,7 @@ Sequence:
     		<textarea id="sequence" name="sequence" cols="60" rows="10"></textarea>
 
 <br />
-<select name="database">
+Database <select name="database">
 <%perl>
 foreach my $d (@databases) { 
 	print "<option value=\"".$d->id()."\">".$d->title()."</option><br />";
@@ -40,6 +40,7 @@ foreach my $d (@databases) {
 <input type="hidden" name="filterq" value='F' />
 <br />
 <br />
+Fragment size <input type="input" value="21" name="fragment_size" size="3" /><br /><br />
 <input type="reset" value="clear" />&nbsp; &nbsp; &nbsp;
 <input type="submit" value="VIGS Analysis" />
 
