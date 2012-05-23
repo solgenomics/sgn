@@ -5,7 +5,7 @@ $organism
 
 
 
-The tomato genome has been published in Nature on May 31, 2012.
+The tomato genome has been published in <a href="http://nature.com">Nature</a> on May 31, 2012.
 <br /><br />
 All 12 chromosomes were sequenced and annotated by an international project of over 350 scientists.
 
@@ -24,38 +24,44 @@ All data is openly and freely available on <a href="/">SGN</a>, <a href="http://
 <&| /page/info_section.mas, title=>'Download' &>
 
 <a href="ftp://ftp.solgenomics.net/tomato_genome">FTP site</a> | <a href="">Genome Browser</a> | <a href="/tools/blast/">BLAST</a>
-
 </&>
 
-
-<&| /page/info_section.mas,
-    title  => 'Press releases'
-&>
-
+<&| /page/info_section.mas, title  => 'Press releases' &>
 <a href="">Belgium</a> | 
 <a href="">Boyce Thompson Institute</a> | 
 <a href="">China</a> |
 <a href="">Korea</a> | 
 <a href="">Netherlands</a> |
- 
+<br /><br />
+
+<div class="bgboxcontent3">
+
+<img src="/documents/img/flags/Flag_of_South_Korea_small.png" height="18" />&nbsp;&nbsp;
+<img src="/documents/img/flags/Flag_of_China_small.png" height="18" />&nbsp;&nbsp;
+<img src="/documents/img/flags/Flag_of_the_United_Kingdom_small.png" height="18" />&nbsp;&nbsp;
+<img src="/documents/img/flags/Flag_of_India_small.png" height="18" />&nbsp;&nbsp;
+<img src="/documents/img/flags/Flag_of_France_small.png" height="18" />&nbsp;&nbsp;
+<img src="/documents/img/flags/Flag_of_Spain_small.png" height="18" />&nbsp;&nbsp;
+<img src="/documents/img/flags/Flag_of_Italy_small.png" height="18" />&nbsp;&nbsp;
+<img src="/documents/img/flags/Flag_of_the_Netherlands_small.png"  height="18" />&nbsp;&nbsp;
+<img src="/documents/img/flags/Flag_of_Japan_small.png" border="1" height="18" />&nbsp;&nbsp;
+<img src="/documents/img/flags/Flag_of_European_Union_small.png"  height="18" />&nbsp;&nbsp;
+<img src="/documents/img/flags/Flag_of_Belgium_small.png" height="18" />&nbsp;&nbsp;
+<img src="/documents/img/flags/Flag_of_Germany_small.png" height="18"  />&nbsp;&nbsp;
+<img src="/documents/img/flags/Flag_of_the_United_States_small.png" height="18" />&nbsp;&nbsp;
+</div>
+
 
 </&>
 
-<&| /page/info_section.mas, 
-   title   => 'Tomato Genome in the News',
-&>
-
-<a href="">The New York Times</a><br />
-<a href="">BBC</a>
-
+<&| /page/info_section.mas, title   => 'Tomato Genome in the News' &>
+  <a href="">The New York Times</a> | 
+  <a href="">BBC</a>
 </&>
-<&| /page/info_section.mas,
-    title=>'Project'
-&>
+
+<&| /page/info_section.mas, title=>'Project' &>
   <p> <& /genomes/Solanum_lycopersicum/project_background.mas &> </p>
-</&>
-
-
+  </&>
 
 <&| /page/info_section.mas,
       title       => 'Official annotation',
@@ -102,7 +108,6 @@ All data is openly and freely available on <a href="/">SGN</a>, <a href="http://
 <&| /page/info_section.mas, title => 'Links', collapsible => 1 &>
   <ul>
   <li><a href="http://tgrc.ucdavis.edu/Data/Acc/AccDetail.aspx?AccessionNum=LA4345">Heinz 1706 order link at TGRC</a> (the variety used in tomato genome sequencing project)</li>
-  <li><a href="http://tomato.cribi.unipd.it/files/bepindex.html">BAC Extension Tool</a> at the University of Padua, Italy.</li>
   <li><a href="http://www.genome.arizona.edu/fpc/tomato/">Tomato FPC pages</a> at University of Arizona, USA.</li>
   <li>Sanger FTP site with <a href="ftp://ftp.sanger.ac.uk/pub/tomato/map/">MboI BAC library FPC build</a></li>
   <li><a href="http://www.sanger.ac.uk/Software/">Software links at Sanger</a></li>
