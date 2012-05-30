@@ -1,13 +1,13 @@
 
 <%args>
 $query
-$raw_blast_url => undef
-$coverage_graph_url => undef
-$click_map_html => undef
+#$raw_blast_url => undef
+$graph_url => undef
+#$click_map_html => undef
 @regions => ()  # list of listrefs, index is coverage level
 $error => undef
 $fragment_size => undef
-@blast_matches => ()
+#@blast_matches => ()
 </%args>
 
 % use Data::Dumper;
@@ -20,19 +20,14 @@ $fragment_size => undef
 
 <& /page/page_title.mas, title=>"VIGS Tool Results" &>
 
-<center><b>Conservedness Histogram</b></center>
-<p>The histogram shows a count of hits <i>for each base</i> in the query sequence,
-but counts <i>only the domains BLAST finds</i>, meaning this is really more a function of region than of individual base.
-Within the graph, green shows exact base matches within conserved regions; blue shows non-matching bases within conserved regions. Gaps introduced into the query by BLAST are ignored; gaps introduced into target sequences are not.</p>
 
-% #print "COVERAGE GRAPH = " .$coverage_graph_url;
+% #print "COVERAGE GRAPH = " .$graph_url;
 % #print Dumper(\@regions);
 
 <div align="center" style="color: #777777">
-<img src="<% $coverage_graph_url %>" />
+<img src="<% $graph_url %>" />
 </div>
 
-view <a href="<% $raw_blast_url %>">raw blast report</a>
 
 % #print "QUERY: $query. ID=".$query->id()." SEQUENCE:".$query->seq()."<br />";
 <br /><br />
@@ -95,9 +90,6 @@ view <a href="<% $raw_blast_url %>">raw blast report</a>
 <span id="markup"></span>
 <h2>Sequences with perfect matches above <% $fragment_size %> bp</h2>
 
-% foreach my $b (@blast_matches) {
-%   print $b."<br />";
-%}
 
 <script>
 	hilite_sequence();

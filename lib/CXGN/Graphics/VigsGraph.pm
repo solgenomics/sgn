@@ -8,18 +8,21 @@ use Data::Dumper;
 has 'bwafile' => ( is=>'rw' );
 has 'fragment_size' => (is => 'rw', isa=>'Int', default=>21);
 has 'matches' => (is=>'rw', isa=>'Ref');
-has 'seq_window_size' => (is=>'rw', isa=>'Int');
+has 'seq_window_size' => (is=>'rw', isa=>'Int', default=>100);
 has 'query_seq' => (is=>'rw', isa=>'Str');
-
-has 'width' => (is=>'rw', isa=>'Int', default=>1200);
-has 'height'=> (is=>'rw', isa=>'Int', default=>1200);
+has 'step_size' => (is=>'rw', isa=>'Int', default=>4);
+has 'width' => (is=>'rw', isa=>'Int', default=>700);
+has 'height'=> (is=>'rw', isa=>'Int', default=>700);
+has 'coverage' => (is=>'rw', isa=>'Int', default=>1);
 
 sub parse { 
     my $self = shift;
     
+    warn("Parsing file ".$self->bwafile()."\n");
+
     open(my $F, "<", $self->bwafile()) || die "Can't open file ".$self->bwafile();
 
-    my $matches;
+    my $matches = {};
 
     while (<$F>) { 
 	if (/^\@SQ/) { 
@@ -34,7 +37,14 @@ sub parse {
 		$end_coord = $start_coord+$self->fragment_size() -1;
 	    }
 		
-	    push @{$matches->{$subject}}, [$start_coord, $end_coord];
+	    my $ms = CXGN::Graphics::VigsGraph::MatchSegment->new();
+	    $ms->start($start_coord);
+	    $ms->end($end_coord);
+	    $ms->id($subject);
+	    
+	    #print STDERR "PARSING: $start_coord, $end_coord, $subject\n";
+
+	    push @{$matches->{$subject}}, $ms;
 	}
     }
     $self->matches($matches);
@@ -53,28 +63,14 @@ sub matches_in_interval {
 	#print  $s."\n";
 	foreach my $m (@{$matches->{$s}}) { 
 #	    print STDERR "checking coords $m->[0], $m->[1] (start, end = $start, $end)\n";
-	    if ( ($start > $m->[0]) && ($start < $m->[1]) || ($end > $m->[0]) && ($end < $m->[1])) { 
+	    if ( ($m->start() > $start) && ( $m->start() < $end) || ($m->end() > $start ) && ($m->end() < $end)) { 
 		#print STDERR "Match found for sequence $s: $m->[0], $m->[1] ($start, $end)\n";
-		push @{$interval->{$s}}, [ $m->[0], $m->[1] ];
+		push @{$interval->{$s}}, $m;
 	    }
+
 	}
     }
     return $interval;
-}
-
-
-sub scan { 
-    my $self = shift;
-    
-    my $interval_matches;
-    
-    for (my $i=0; $i<length($self->query_seq())-$self->seq_window_size(); $i=$i+10) { 
-	my $interval = $self->matches_in_interval($i, $i+$self->seq_window_size-1);
-	push @$interval_matches, $interval;
-	
-    }
-    return $interval_matches;
-    
 }
 
 
@@ -84,23 +80,66 @@ sub sort_keys {
 
 sub get_best_vigs_seq { 
     my $self = shift;
-    my $coverage = shift;
 
-    my $im = $self->scan();
+    my @scores = ();
+    my @off_matches = ();
+    my $max_score = -100;
+    for (my $i=0; $i<length($self->query_seq())-$self->seq_window_size(); $i=$i+$self->step_size()) { 
+	my $interval = $self->matches_in_interval($i, $i+$self->seq_window_size-1);
+	
+	my @subjects = $self->subjects_by_match_count($interval);
+	
+	my $maximize = 0;
+	for (my $c =0; $c<$self->coverage; $c++) { 
+	    if (!defined($subjects[$c]->[1])) { last; }
+	    if (!$maximize) { $maximize = $subjects[$c]->[1];}
+	    else { 
+		$maximize *= $subjects[$c]->[1];
+	    }
+	}
+	my $minimize = 0;
+	foreach my $c ($self->coverage..@subjects-1) { 
+	    if (!defined($subjects[$c]->[1])) { next; }
+	    $minimize += $subjects[$c]->[1];
 
-    #print Dumper($im);
+	}
+	
 
-    my @counts;
+	my $score = $maximize - $minimize **2; 
+	if ($score > $max_score) { $max_score = $score; }
 
+	push @scores, $score;
+	push @off_matches, $minimize;
+	
+	#print STDERR "START: $i END: ".($i+$self->seq_window_size())." MAX: $maximize MIN: $minimize SCORE: $score\nMAX SCORE NOW: $max_score\n";
+	
+    }
 
-    foreach my $i (@$im) { 
-
-	foreach my $s (keys(%$i)) { 
-	    push @counts, [ $s, scalar(@{$i->{$s}}) ];    
+    my @suggested_sequences = ();
+    foreach my $i (0..@scores-1) { 
+       
+	if (!exists($off_matches[$i]) || !defined($off_matches[$i])) { next; }
+	#print STDERR "SCORE: $scores[$i]\n";
+	if ( ($scores[$i] == $max_score) && ($off_matches[$i]==0)) { 
+	    #print "SUGGESTED SEQUENCE IS IN INTERVAL $i\n";
+	    push @suggested_sequences, [ $i * $self->step_size(), $i * $self->step_size() + $self->seq_window_size() ];
 	}
     }
-    my @sorted = sort sort_keys @counts;
-    return @sorted;
+
+    return @suggested_sequences;
+
+#     my $best = 0;
+#     foreach my $i (0..@$interval_matches-1) { 
+# 	if (!defined($minimize[$i])) { 
+# 	    $optimum[$i] = $maximize[$i];
+# 	}
+# 	else { 
+# 	    $optimum[$i] = $maximize[$i] - ($minimize[$i] **2);
+# 	}
+# 	print "SEGMENT OPTIMUM: $optimum[$i]\n";
+# 	if ($optimum[$i] > $best) { $best = $optimum[$i]; }
+#     }
+    
 }
 
 sub subjects_by_match_count { 
@@ -110,12 +149,9 @@ sub subjects_by_match_count {
     foreach my $s (keys %$matches) { 
 	push @counts, [ $s, scalar(@{$matches->{$s}}) ];
     }
-    print Dumper(\@counts);
+    #print Dumper(\@counts);
     my @sorted = sort sort_keys @counts;
     
-
-    print "NOW SORTED...\n";
-    print Dumper(\@sorted);
     return @sorted;
 }
 
@@ -124,10 +160,12 @@ sub render {
     my $filename = shift;
 
     my $image = GD::Image->new($self->width, $self->height);
-    my $white = $image->colorResolve(255, 255, 255);
+    my $white = $image->colorAllocate(255,255,255);
+#    my $white = $image->colorResolve(255, 255, 255);
     my $red   = $image->colorResolve(255, 0, 0);
     my $color = $image->colorResolve(0, 0, 0);    
-    $image->rectangle(0, 0, $self->width, $self->height, $white);
+    #$image->rectangle(0, 0, $self->width, $self->height, $white);
+    $image->rectangle(0, 0, 200, 200, $white);
     my $x_len = length($self->query_seq());
 
     my $x_scale = $self->width / $x_len;
@@ -136,24 +174,24 @@ sub render {
 
 
     my $matches = $self->matches();
-    my $offset = 0;
+    my $offset = 10;
     my $track_height = 0;
     my @sorted = $self->subjects_by_match_count($self->matches);
     
-    print Dumper(\@sorted);
+    #print Dumper(\@sorted);
 
     foreach my $sorted (@sorted) {
 	my $max_tracks =0;
 	my $current_track = 0;
 	my @tracks = ();
-	print "Processing $sorted->[0]\n";
+	#print STDERR "Processing $sorted->[0]\n";
 	foreach my $i (@{$matches->{$sorted->[0]}}) { 
 	    my $t = 0;
 	    my $MAXTRACKS = $self->fragment_size();
 	    while ($t <= $MAXTRACKS) { 
 
-		if ($tracks[$t]->{end} <= $i->[0]) { 
-		    $tracks[$t]->{end} = $i->[1];
+		if ($tracks[$t]->{end} <= $i->start()) { 
+		    $tracks[$t]->{end} = $i->end();
 		    $current_track = $t;
 		    last();
 		}
@@ -169,10 +207,12 @@ sub render {
 	#	}
 	
 	    }
-	    $image->rectangle($i->[0] *  $x_scale, $offset + $current_track * $glyph_height, $i->[1] * $x_scale, $offset + ($current_track+1)*$glyph_height, $color);
+	    $image->rectangle($i->start() *  $x_scale, $offset + $current_track * $glyph_height, $i->end() * $x_scale, $offset + ($current_track+1)*$glyph_height, $red);
 
 	}
-	print "Done with $sorted->[0] - drawing red line.. at ".($offset + $max_tracks * $glyph_height)."\n";
+	#print STDERR "Done with $sorted->[0] - drawing red line.. at ".($offset + $max_tracks * $glyph_height)."\n";
+
+	$offset += 10;
 
 	$image->line(0, $offset + ($max_tracks+1) * $glyph_height, $self->width, $offset + ($max_tracks+1) * $glyph_height, $red);
 	
@@ -183,11 +223,35 @@ sub render {
 	
 
     }
+    # draw vertical grid of seq_window_size in size
+    for (my $x=0; $x < length($self->query_seq()); $x += $self->seq_window_size()) { 
+	$image->line($x * $x_scale, 0, $x * $x_scale, $self->height, $red);
+    }
     
+    my @suggested_sequences = $self->get_best_vigs_seq(1);
+    foreach my $s (@suggested_sequences) { 
+	$image->line($s->[0] * $x_scale, 0, $s->[0] * $x_scale, $self->height(), $color);
+	$image->line($s->[1] * $x_scale, 0, $s->[1] * $x_scale, $self->height(), $color);
+    }
+
+
     open(my $F, ">", $filename) || die "Can't open file $filename.";
     print $F $image->png();
     close($F);
 }
     
+
+package CXGN::Graphics::VigsGraph::MatchSegment;
+
+use Moose;
+
+has 'start' => (is => 'rw', isa=>'Int');
+has 'end'   => (is => 'rw', isa=>'Int');
+has 'id'    => (is => 'rw', isa=>'Str');
+has 'score' => (is => 'rw', isa=>'Int');
+has 'matches' => (is => 'rw', isa=>'Int');
+has 'offsite_matches' => (is => 'rw', isa=>'Int');
+
+
 	
 1;
