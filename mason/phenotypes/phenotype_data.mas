@@ -62,26 +62,35 @@ my %info; # hash of term names, since we can have multiple phenotypes of the sam
 my $graph_icon = qq |<img src="/documents/img/pop_graph.png"/> |;
 
 ####
-foreach my $phenotype (@$phenotypes) {
-  #attr_id
-  my ($observable) = $phenotype->observable;
-  my $definition = $observable->definition || '';
-  my ($unit_cvterm) = $phenotype->search_related
-    ('phenotype_cvterms',
-     { 'cv.name' => 'unit.ontology' },
-     { prefetch => { 'cvterm' => 'cv' } }
-    )->single;
-  my $unit = $unit_cvterm->cvterm->name if $unit_cvterm;
-  my ($method) = $phenotype->search_related('phenotypeprops',
-                                          { 'type.name' => 'method' },
-                                          { prefetch    => 'type' }
-                                         );
-  my $method_name = $method ? $method->value : 'Trait' ;
+#foreach my $phenotype (@$phenotypes) {
+if ($phenotypes) { 
+while ( my $phenotype = $phenotypes->next ) { 
+   #$phenotype is a resultset with the following column values
+   # qw/ stock_id value observable observable_id definition method_name type_name  accession db_name project_description cv_name unit_name ##  
+  
+  #first make sure phenotype_cvterm is a unit.ontology# Not sure this is necessary, since all we have (now) in phenotype_cvterm is units
+  ##### if $phenotype->get_column('cv_name') ne 'unit.ontology' || undef ;    
+  
+  my $unit_name = $phenotype->get_column('unit_name');
+  my $type_name = $phenotype->get_column('type_name');
+  my $method_name;
+  if ($type_name eq 'method') {
+     $method_name = $phenotype->get_column('method_name');
+  } elsif ( !$type_name ) {
+     $method_name =  'Trait' ;
+  } else { next; } #skip the row if a phenotypeprop was fetched , but it is not a 'mehtod' type.
+ 
   #push @ { $info{$observable->name."|". $observable->cvterm_id ."|". $definition . "|" . $unit} } , $phenotype;
-  push @ { $info{$method_name}{$observable->name}{phenotypes} } , $phenotype;
-  $info{$method_name}{$observable->name}{cvterm_id} = $observable->cvterm_id;
-  $info{$method_name}{$observable->name}{definition} = $definition;
-  $info{$method_name}{$observable->name}{unit} = $unit ;
+
+
+  my $observable_name = $phenotype->get_column('observable');
+  my $value =  $phenotype->get_column('value') ;
+  push @{ $info{$method_name}{$observable_name}{phenotypes}} , $phenotype->get_column('value') ;
+  $info{$method_name}{$observable_name}{cvterm_id} = $phenotype->get_column('observable_id');
+  $info{$method_name}{$observable_name}{definition} = $phenotype->get_column('definition');
+  $info{$method_name}{$observable_name}{unit} = $unit_name ;
+}
+
 }
 my $count = 0;
 #display traits sorted by name
@@ -97,7 +106,7 @@ foreach my $method(sort keys %info ) {
     my @values; # all quantitative data does here
     my @qual_values; #all qualitative data goes here
     foreach my $i ( @{ $info{$method}{$term_name}{phenotypes} } ) {
-      my $value = $i->value;
+      my $value = $i ;###->value;
       if (looks_like_number($value))  {  push @values, $value ; }
       else { push @qual_values, $value ; }
     }
