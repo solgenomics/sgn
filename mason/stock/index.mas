@@ -115,9 +115,9 @@ my $direct_phenotypes = $stockref->{direct_phenotypes};
 
 # get all phenotypes of subjects
 my $members_phenotypes = $stockref->{members_phenotypes};
-my $p_download_link ; #= qq|<a href = "/stock/$stock_id/phenotypes">Download phenotypes</a>| if ( (keys %$direct_phenotypes) || ( keys %$members_phenotypes) );
+my $p_download_link = qq|<a href = "/stock/$stock_id/phenotypes">Download phenotypes</a>| if ( (keys %$direct_phenotypes) || ( keys %$members_phenotypes) );
 my $direct_genotypes = $stockref->{direct_genotypes};
-my $g_download_link ; #= qq|<a href =  "/stock/$stock_id/genotypes">Download genotypes</a>| if (keys %$direct_genotypes) ;
+my $g_download_link = qq|<a href =  "/stock/$stock_id/genotypes">Download genotypes</a>| if (keys %$direct_genotypes) ;
 ############################
 my $map_html = $stockref->{map_html};
 my $map;
@@ -274,14 +274,24 @@ function jqueryStuff() {
 </&>
 
 <&| /page/info_section.mas, title=>"Phenotype data " ,  subtitle=>$p_download_link ,  collapsible => 1, collapsed => 1 &>
-% foreach my $project (keys %$direct_phenotypes) {
-%  my $pheno = $direct_phenotypes->{$project} ;
-<&| /page/info_section.mas, title=>"Experiment: $project", is_subsection => 1, collapsible => 1 &>
-    <& /phenotypes/phenotype_data.mas , phenotypes=>$pheno &>
+% # foreach my $project (keys %$direct_phenotypes) {
+%  # my $rs = $direct_phenotypes->{$project} ;
+% #my @pheno = $rs->all;
+% my $project;
+<&| /page/info_section.mas, 
+    title=>"Experiment: $project", 
+    is_subsection => 1, collapsible => 1 
+&>
+    <& /phenotypes/phenotype_data.mas , 
+      phenotypes=> $direct_phenotypes 
+    &>
   </&>
-% }
+% #### }
 
-% foreach my $key (keys %$members_phenotypes) {
+% #foreach my $key (keys %$members_phenotypes) {
+% #my $m_rs = $members_phenotypes->{$key};
+% #my @mpheno = $m_rs->all;
+% my $key;
 <&| /page/info_section.mas,
      title         => "Member phenotypes",
      subtitle      => $key,
@@ -289,12 +299,12 @@ function jqueryStuff() {
      collapsible   => 1,
  &>
     <& /phenotypes/phenotype_data.mas,
-         phenotypes => $members_phenotypes->{$key},
+         phenotypes => $members_phenotypes,
          object_id  => $stock_id,
          has_qtl    => $has_qtl_data,
      &>
   </&>
-% }
+% ###}
 </&>
 
 <&| /page/info_section.mas, title=>"Genotype data ", subtitle=> $g_download_link, collapsible => 1 , collapsed => 1 &>

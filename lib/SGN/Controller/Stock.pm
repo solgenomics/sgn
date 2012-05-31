@@ -241,14 +241,8 @@ sub download_phenotypes : Chained('get_stock') PathPart('phenotypes') Args(0) {
 
 	 my $subjects = $stock->search_related('stock_relationship_objects')
 	     ->search_related('subject');
-
-	my $rs = $subjects->search( { 'observable.name' => { '!=', undef } } , {
-            join => [ { nd_experiment_stocks => { nd_experiment => { 'nd_experiment_phenotypes' => {'phenotype' => { 'observable' => { 'dbxref' => 'db' }} }}}} , { nd_experiment_stocks => { nd_experiment => { nd_experiment_projects => 'project' } } } ],
-	    select    => [ 'stock_id', 'phenotype.value', 'observable.name', 'dbxref.accession' , 'db.name', 'project.description'  ],
-	    distinct  => 1,
-	    as        => ['stock_id' , 'value', 'observable', 'accession', 'db_name', 'project_description'],
-	    order_by  => [ 'project.description' , 'observable.name' ],
-				    } );
+	print STDERR "***download_phenotypes is CALLING stock_phenotypes_rs **\n\n";
+	my $rs =  $self->schema->resultset("Stock::Stock")->stock_phenotypes_rs($subjects);
 	my $phen_hashref;
 	#no warnings 'uninitialized';
 	#my @sorted = sort { $a->get_column('observable') cmp $b->get_column('observable') } $rs->all if $rs ;
@@ -419,10 +413,13 @@ sub get_stock_extended_info : Private {
 
     my $cvterms  = $stock ?  $self->_stock_cvterms($stock, $c) : undef ;
     $c->stash->{stock_cvterms} = $cvterms;
+    print STDERR "****fetching stock direct phenotypes\n\n";
+    my $stock_rs = ( $c->stash->{stock_row})->search_related('stock_relationship_subjects')
+	->search_related('subject');
 
-    my $direct_phenotypes  = $stock ? $self->_stock_project_phenotypes( $c->stash->{stock_row} ) : undef;
+    my $direct_phenotypes  = $stock ? $self->_stock_project_phenotypes( $self->schema->resultset("Stock::Stock")->search({ stock_id => $c->stash->{stock_row}->stock_id } ) ) : undef;
     $c->stash->{direct_phenotypes} = $direct_phenotypes;
-
+    print STDERR "******fetching stock members phenotypes\n";
     my ($members_phenotypes, $has_members_genotypes)  = $stock ? $self->_stock_members_phenotypes( $c->stash->{stock_row} ) : undef;
     $c->stash->{members_phenotypes} = $members_phenotypes;
 
@@ -624,6 +621,14 @@ sub _stock_project_phenotypes {
     my ($self, $bcs_stock) = @_;
 
     return {} unless $bcs_stock;
+    print STDERR "***_stock_project_phenotypes is  CALLING stock_phenotyeps_rs **\n\n";
+    my $rs =  $self->schema->resultset("Stock::Stock")->stock_phenotypes_rs($bcs_stock);
+    print STDERR "**returned stock rs";
+    return $rs;
+    #####END HERE #####
+
+
+
 
     # hash of experiment_id => project(s) desc
     my %project_descriptions =
@@ -646,7 +651,7 @@ sub _stock_project_phenotypes {
             or die "no project found for exp ".$exp->nd_experiment_id;
         push @{ $phenotypes{ $project_desc }}, @ph if scalar(@ph);
     }
-    return \%phenotypes;
+    #return \%phenotypes;
 }
 
 # this sub gets all phenotypes measured on all subjects of this stock.
@@ -666,6 +671,7 @@ SELECT COUNT( DISTINCT genotype_id )
     # the phenotypes of their related subjects
     my $subjects = $bcs_stock->search_related('stock_relationship_objects')
                              ->search_related('subject');
+    print STDERR "***stock_members_phenotypes is CALLING stock_phenotyeps_rs **\n\n";
     my $subject_phenotypes = $self->_stock_project_phenotypes( $subjects );
     return ( $subject_phenotypes, $has_members_genotypes );
 }
