@@ -413,13 +413,11 @@ sub get_stock_extended_info : Private {
 
     my $cvterms  = $stock ?  $self->_stock_cvterms($stock, $c) : undef ;
     $c->stash->{stock_cvterms} = $cvterms;
-    print STDERR "****fetching stock direct phenotypes\n\n";
     my $stock_rs = ( $c->stash->{stock_row})->search_related('stock_relationship_subjects')
 	->search_related('subject');
 
-    my $direct_phenotypes  = $stock ? $self->_stock_project_phenotypes( $self->schema->resultset("Stock::Stock")->search({ stock_id => $c->stash->{stock_row}->stock_id } ) ) : undef;
+    my $direct_phenotypes  = $stock ? $self->_stock_project_phenotypes($self->schema->resultset("Stock::Stock")->search_rs({ stock_id => $c->stash->{stock_row}->stock_id } ) ) : undef;
     $c->stash->{direct_phenotypes} = $direct_phenotypes;
-    print STDERR "******fetching stock members phenotypes\n";
     my ($members_phenotypes, $has_members_genotypes)  = $stock ? $self->_stock_members_phenotypes( $c->stash->{stock_row} ) : undef;
     $c->stash->{members_phenotypes} = $members_phenotypes;
 
@@ -621,37 +619,14 @@ sub _stock_project_phenotypes {
     my ($self, $bcs_stock) = @_;
 
     return {} unless $bcs_stock;
-    print STDERR "***_stock_project_phenotypes is  CALLING stock_phenotyeps_rs **\n\n";
-    my $rs =  $self->schema->resultset("Stock::Stock")->stock_phenotypes_rs($bcs_stock);
-    print STDERR "**returned stock rs";
-    return $rs;
-    #####END HERE #####
-
-
-
-
-    # hash of experiment_id => project(s) desc
-    my %project_descriptions =
-        map { $_->nd_experiment_id => join( ', ', map $_->project->description, $_->nd_experiment_projects ) }
-        $bcs_stock->search_related('nd_experiment_stocks')
-                  ->search_related('nd_experiment',
-                                   {},
-                                   { prefetch => { 'nd_experiment_projects' => 'project' } },
-                                   );
-    my $experiments = $bcs_stock->search_related('nd_experiment_stocks')
-                                ->search_related('nd_experiment',
-                                                 {},
-                                                 { prefetch => { nd_experiment_phenotypes => 'phenotype' } },
-                                                );
-    my %phenotypes;
-    while (my $exp = $experiments->next) {
-        # there should be one project linked to the experiment ?
-        my @ph = map $_->phenotype, $exp->nd_experiment_phenotypes;
-        my $project_desc = $project_descriptions{ $exp->nd_experiment_id }
-            or die "no project found for exp ".$exp->nd_experiment_id;
-        push @{ $phenotypes{ $project_desc }}, @ph if scalar(@ph);
+    my $exp_stocks_rs = $bcs_stock->search_related('nd_experiment_stocks')->search_related('nd_experiment');
+    my $rs =  $self->schema->resultset("Stock::Stock")->stock_phenotypes_rs($bcs_stock, $self->schema);
+    my %project_hashref;
+    while ( my $r = $rs->next) {
+	my $project_desc = $r->get_column('project_description');
+	push @{ $project_hashref{ $project_desc }}, $r;
     }
-    #return \%phenotypes;
+    return \%project_hashref;
 }
 
 # this sub gets all phenotypes measured on all subjects of this stock.
@@ -671,8 +646,7 @@ SELECT COUNT( DISTINCT genotype_id )
     # the phenotypes of their related subjects
     my $subjects = $bcs_stock->search_related('stock_relationship_objects')
                              ->search_related('subject');
-    print STDERR "***stock_members_phenotypes is CALLING stock_phenotyeps_rs **\n\n";
-    my $subject_phenotypes = $self->_stock_project_phenotypes( $subjects );
+    my $subject_phenotypes = $self->_stock_project_phenotypes($subjects );
     return ( $subject_phenotypes, $has_members_genotypes );
 }
 

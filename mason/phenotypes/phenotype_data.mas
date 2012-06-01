@@ -62,15 +62,14 @@ my %info; # hash of term names, since we can have multiple phenotypes of the sam
 my $graph_icon = qq |<img src="/documents/img/pop_graph.png"/> |;
 
 ####
-#foreach my $phenotype (@$phenotypes) {
-if ($phenotypes) { 
-while ( my $phenotype = $phenotypes->next ) { 
-   #$phenotype is a resultset with the following column values
+if ($phenotypes) { ###  && UNIVERSAL::isa($phenotypes,"UNIVERSAL"))  { 
+foreach my $phenotype (@$phenotypes) {
+  ###while ( my $phenotype = $phenotypes->next ) { 
+   #$phenotype is a list of row objects with the following column values
    # qw/ stock_id value observable observable_id definition method_name type_name  accession db_name project_description cv_name unit_name ##  
   
   #first make sure phenotype_cvterm is a unit.ontology# Not sure this is necessary, since all we have (now) in phenotype_cvterm is units
   ##### if $phenotype->get_column('cv_name') ne 'unit.ontology' || undef ;    
-  
   my $unit_name = $phenotype->get_column('unit_name');
   my $type_name = $phenotype->get_column('type_name');
   my $method_name;

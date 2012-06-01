@@ -111,7 +111,7 @@ foreach my $o_id (@$owners) {
 }
 
 #phenotypes measured directly on this stock
-my $direct_phenotypes = $stockref->{direct_phenotypes};
+my $direct_phenotypes = $stockref->{direct_phenotypes} || undef;
 
 # get all phenotypes of subjects
 my $members_phenotypes = $stockref->{members_phenotypes};
@@ -274,24 +274,20 @@ function jqueryStuff() {
 </&>
 
 <&| /page/info_section.mas, title=>"Phenotype data " ,  subtitle=>$p_download_link ,  collapsible => 1, collapsed => 1 &>
-% # foreach my $project (keys %$direct_phenotypes) {
-%  # my $rs = $direct_phenotypes->{$project} ;
-% #my @pheno = $rs->all;
-% my $project;
+% foreach my $project (keys %$direct_phenotypes) {
+%   my $rs = $direct_phenotypes->{$project} ;
 <&| /page/info_section.mas, 
     title=>"Experiment: $project", 
     is_subsection => 1, collapsible => 1 
 &>
     <& /phenotypes/phenotype_data.mas , 
-      phenotypes=> $direct_phenotypes 
+      phenotypes=> $rs 
     &>
   </&>
-% #### }
+% }
 
-% #foreach my $key (keys %$members_phenotypes) {
-% #my $m_rs = $members_phenotypes->{$key};
-% #my @mpheno = $m_rs->all;
-% my $key;
+% foreach my $key (keys %$members_phenotypes) {
+% my $m_rs = $members_phenotypes->{$key};
 <&| /page/info_section.mas,
      title         => "Member phenotypes",
      subtitle      => $key,
@@ -299,12 +295,12 @@ function jqueryStuff() {
      collapsible   => 1,
  &>
     <& /phenotypes/phenotype_data.mas,
-         phenotypes => $members_phenotypes,
+         phenotypes => $m_rs,
          object_id  => $stock_id,
          has_qtl    => $has_qtl_data,
      &>
   </&>
-% ###}
+% }
 </&>
 
 <&| /page/info_section.mas, title=>"Genotype data ", subtitle=> $g_download_link, collapsible => 1 , collapsed => 1 &>
