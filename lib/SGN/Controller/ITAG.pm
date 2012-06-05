@@ -65,11 +65,11 @@ sub download_release_file :Chained('get_release') :PathPart('download') :Args(1)
 
     # get and validate the name, email, and organization from the post data
     my $name = $c->req->params->{name};
-    $name && length($name) > 5
-        or $c->throw( public_message => 'Must provide both your first and last name, at least 6 letters in total length, to download ITAG bulk files.', is_client_error => 1 );
+#    $name && length($name) > 5
+#        or $c->throw( public_message => 'Must provide both your first and last name, at least 6 letters in total length, to download ITAG bulk files.', is_client_error => 1 );
     my $email = $c->req->params->{email};
-    $email && $email =~ /^[^@]+@[^@]+$/
-        or $c->throw( public_message => 'Must provide a real email address to download ITAG bulk files.', is_client_error => 1 );
+#    $email && $email =~ /^[^@]+@[^@]+$/
+#        or $c->throw( public_message => 'Must provide a real email address to download ITAG bulk files.', is_client_error => 1 );
 
     my $organization = $c->req->params->{organization};
 
@@ -83,6 +83,7 @@ sub download_release_file :Chained('get_release') :PathPart('download') :Args(1)
     $c->stash->{download_filename} = $c->stash->{itag_release}->get_file_info( $file_tag )->{file};
 
     $c->forward( '/download/reported_download' );
+    
 }
 
 # chaining root for fetching a specific ITAG release.  will 404 if the release is not found.
