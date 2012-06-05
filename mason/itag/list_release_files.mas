@@ -16,8 +16,8 @@ $itag_release
 %   my $rec = $files->{$key};
 %   next unless -f $rec->{file};
 
-%#    <dt><a class="itag_file_download" name="<% $key %>" href="#"><% basename( $rec->{file} ) %></a></dt>
-    <dt><a name="<% $key %>" href="#"><% basename( $rec->{file} ) %></a></dt>
+% # <dt><a class="itag_file_download" name="<% $key %>" href="#" ><% basename( $rec->{file} ) %></a></dt>
+    <dt><a name="<% $key %>" href="<% $url_stem."/".$key %>"><% basename( $rec->{file} ) %></a></dt>
     <dd><% $rec->{desc} %></dd>
 
 % }
