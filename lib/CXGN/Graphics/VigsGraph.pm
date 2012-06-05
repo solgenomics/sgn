@@ -13,7 +13,7 @@ has 'query_seq' => (is=>'rw', isa=>'Str');
 has 'step_size' => (is=>'rw', isa=>'Int', default=>4);
 has 'width' => (is=>'rw', isa=>'Int', default=>700);
 has 'height'=> (is=>'rw', isa=>'Int', default=>700);
-has 'coverage' => (is=>'rw', isa=>'Int', default=>1);
+
 
 sub parse { 
     my $self = shift;
@@ -42,7 +42,7 @@ sub parse {
 	    $ms->end($end_coord);
 	    $ms->id($subject);
 	    
-	    #print STDERR "PARSING: $start_coord, $end_coord, $subject\n";
+	    print STDERR "PARSING: $start_coord, $end_coord, $subject\n";
 
 	    push @{$matches->{$subject}}, $ms;
 	}
@@ -78,11 +78,14 @@ sub sort_keys {
     $b->[1] <=> $a->[1];
 }
 
-sub get_best_vigs_seq { 
+sub get_best_vigs_seqs { 
     my $self = shift;
-
+    my $coverage = shift;
+    
     my @scores = ();
     my @off_matches = ();
+    my @ids = ();
+
     my $max_score = -100;
     for (my $i=0; $i<length($self->query_seq())-$self->seq_window_size(); $i=$i+$self->step_size()) { 
 	my $interval = $self->matches_in_interval($i, $i+$self->seq_window_size-1);
@@ -90,7 +93,7 @@ sub get_best_vigs_seq {
 	my @subjects = $self->subjects_by_match_count($interval);
 	
 	my $maximize = 0;
-	for (my $c =0; $c<$self->coverage; $c++) { 
+	for (my $c =0; $c<$coverage; $c++) { 
 	    if (!defined($subjects[$c]->[1])) { last; }
 	    if (!$maximize) { $maximize = $subjects[$c]->[1];}
 	    else { 
@@ -98,7 +101,7 @@ sub get_best_vigs_seq {
 	    }
 	}
 	my $minimize = 0;
-	foreach my $c ($self->coverage..@subjects-1) { 
+	foreach my $c ($coverage..@subjects-1) { 
 	    if (!defined($subjects[$c]->[1])) { next; }
 	    $minimize += $subjects[$c]->[1];
 
@@ -107,26 +110,35 @@ sub get_best_vigs_seq {
 
 	my $score = $maximize - $minimize **2; 
 	if ($score > $max_score) { $max_score = $score; }
-
+	
 	push @scores, $score;
 	push @off_matches, $minimize;
-	
+	push @ids, $subjects[$coverage];
+
 	#print STDERR "START: $i END: ".($i+$self->seq_window_size())." MAX: $maximize MIN: $minimize SCORE: $score\nMAX SCORE NOW: $max_score\n";
 	
     }
 
-    my @suggested_sequences = ();
+    my @suggested_segments = ();
     foreach my $i (0..@scores-1) { 
        
 	if (!exists($off_matches[$i]) || !defined($off_matches[$i])) { next; }
 	#print STDERR "SCORE: $scores[$i]\n";
 	if ( ($scores[$i] == $max_score) && ($off_matches[$i]==0)) { 
 	    #print "SUGGESTED SEQUENCE IS IN INTERVAL $i\n";
-	    push @suggested_sequences, [ $i * $self->step_size(), $i * $self->step_size() + $self->seq_window_size() ];
+	    
+	    my $interval = CXGN::Graphics::VigsGraph::MatchSegment->new();
+	    $interval->start($i*  $self->step_size());
+	    $interval->end($i * $self->step_size() + $self->seq_window_size());
+	    $interval->offsite_matches($off_matches[$i]);
+	    $interval->score($scores[$i]);
+	    $interval->id($ids[$i]);
+			  
+	    push @suggested_segments, $interval;
 	}
     }
 
-    return @suggested_sequences;
+    return @suggested_segments;
 
 #     my $best = 0;
 #     foreach my $i (0..@$interval_matches-1) { 
@@ -158,14 +170,16 @@ sub subjects_by_match_count {
 sub render { 
     my $self = shift;
     my $filename = shift;
+    my $coverage = shift;
 
     my $image = GD::Image->new($self->width, $self->height);
     my $white = $image->colorAllocate(255,255,255);
-#    my $white = $image->colorResolve(255, 255, 255);
-    my $red   = $image->colorResolve(255, 0, 0);
+    my $red   = $image->colorResolve(180, 0, 0);
     my $color = $image->colorResolve(0, 0, 0);    
-    #$image->rectangle(0, 0, $self->width, $self->height, $white);
-    $image->rectangle(0, 0, 200, 200, $white);
+    my $blue = $image->colorResolve(0, 0, 180);
+
+    $image->filledRectangle(0, 0, $self->width, $self->height, $white);
+
     my $x_len = length($self->query_seq());
 
     my $x_scale = $self->width / $x_len;
@@ -180,17 +194,22 @@ sub render {
     
     #print Dumper(\@sorted);
 
-    foreach my $sorted (@sorted) {
+    for (my $track=0; $track< @sorted; $track++) {
 	my $max_tracks =0;
 	my $current_track = 0;
+
+	if ($track < $coverage) { $color = $blue; }
+	else { $color = $red; }
+	    
+
 	my @tracks = ();
 	#print STDERR "Processing $sorted->[0]\n";
-	foreach my $i (@{$matches->{$sorted->[0]}}) { 
+	foreach my $i (@{$matches->{$sorted[$track]->[0]}}) { 
 	    my $t = 0;
 	    my $MAXTRACKS = $self->fragment_size();
 	    while ($t <= $MAXTRACKS) { 
 
-		if ($tracks[$t]->{end} <= $i->start()) { 
+		if (!exists($tracks[$t]) || $tracks[$t]->{end} <= $i->start()) { 
 		    $tracks[$t]->{end} = $i->end();
 		    $current_track = $t;
 		    last();
@@ -216,11 +235,7 @@ sub render {
 
 	$image->line(0, $offset + ($max_tracks+1) * $glyph_height, $self->width, $offset + ($max_tracks+1) * $glyph_height, $red);
 	
-	$offset += $max_tracks * $glyph_height + 10;
-
-
-
-	
+	$offset += $max_tracks * $glyph_height + 10;	
 
     }
     # draw vertical grid of seq_window_size in size
@@ -228,10 +243,10 @@ sub render {
 	$image->line($x * $x_scale, 0, $x * $x_scale, $self->height, $red);
     }
     
-    my @suggested_sequences = $self->get_best_vigs_seq(1);
+    my @suggested_sequences = $self->get_best_vigs_seqs($coverage);
     foreach my $s (@suggested_sequences) { 
-	$image->line($s->[0] * $x_scale, 0, $s->[0] * $x_scale, $self->height(), $color);
-	$image->line($s->[1] * $x_scale, 0, $s->[1] * $x_scale, $self->height(), $color);
+	$image->line($s->start * $x_scale, 0, $s->start * $x_scale, $self->height(), $color);
+	$image->line($s->end * $x_scale, 0, $s->end * $x_scale, $self->height(), $color);
     }
 
 
@@ -247,7 +262,7 @@ use Moose;
 
 has 'start' => (is => 'rw', isa=>'Int');
 has 'end'   => (is => 'rw', isa=>'Int');
-has 'id'    => (is => 'rw', isa=>'Str');
+has 'id'    => (is => 'rw');
 has 'score' => (is => 'rw', isa=>'Int');
 has 'matches' => (is => 'rw', isa=>'Int');
 has 'offsite_matches' => (is => 'rw', isa=>'Int');

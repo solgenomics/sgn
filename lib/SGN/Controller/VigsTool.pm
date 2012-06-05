@@ -47,19 +47,6 @@ sub input :Path('/tools/vigs/')  :Args(0) {
     
 }
 
-sub advanced :Path('/tools/vigs/advanced') :Args(0) { 
-    my ($self, $c) = @_;
-    my $dbh = CXGN::DB::Connection->new;
-    our $prefs = CXGN::Page::UserPrefs->new( $dbh );
-    
-    my ($databases,$programs,$programs_js) = blast_db_prog_selects($c,$prefs);
-
-    $c->stash->{template} = '/tools/vigs/advanced.mas';
-
-    $c->stash->{databases} = $databases;
-    
-    $c->stash->{programs} = $programs;
-}
 
 # this subroutine is copied exactly from the BLAST index.pl code
 #
@@ -153,7 +140,7 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
     }
     
     # clean sequence 
-    $sequence =~ s/^>(.*)\s?\n(.*)/$2/; # remove first fasta line
+    $sequence =~ s/^>(.*?)\s?\n(.*)/$2/; # remove first fasta line
     my $id = $1;
     $sequence =~ s/[^a-zA-Z]//g;
     
@@ -169,17 +156,11 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
 
     
     my $query = Bio::Seq->new(-seq=>$sequence, -id=> $id || "temp");
-
-    my $io = Bio::SeqIO->new(-format=>'fasta', -file=>">".$seq_filename.".fragments");
-    
+    my $io = Bio::SeqIO->new(-format=>'fasta', -file=>">".$seq_filename.".fragments");    
     foreach my $i (1..$query->length()-$fragment_size) { 
-	
 	my $subseq = $query->subseq($i, $i + $fragment_size -1);
-
 	my $subseq_obj = Bio::Seq->new(-seq=>$subseq, -display_id=>"temp-$i");
-	
 	$io->write_seq($subseq_obj);
-	
     }
 
     $c->stash->{query} = $query;
@@ -191,7 +172,8 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
     my $bdb = CXGN::BlastDB->from_id($params->{database});
 
     my $basename = $bdb->full_file_basename;
-    print STDERR "\n\n\n".$bdb->dbpath()." - ".$basename." Outputfile: $seq_filename.bwa.out\n\n\n";    
+  
+    print STDERR "\n\nSYSTEM CALL: /data/shared/bin/bwa_wrapper.sh $basename $seq_filename.fragments $seq_filename.bwa.out\n\n";
 
     my $err = system('/data/shared/bin/bwa_wrapper.sh', $basename, $seq_filename.".fragments", $seq_filename.".bwa.out");
 
@@ -206,14 +188,12 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
     if (! -e $query_file) { die "Query file failed to be created."; }
 
 
-   my $file = $c->request->param('report_file');
- #   my $fragment_size = $c->request->param('fragment_size');
-#    my $query_file = $c->request->param('query_file');
+    my $file = $c->request->param('report_file');
     my $seq_window_size = $c->request->param('seq_window_size') || 300;
 
     $c->stash->{query_file} = $query_file;
 
-   $seq_filename =~ s/\%2F/\//g;
+    $seq_filename =~ s/\%2F/\//g;
 
     $c->stash->{template} = '/tools/vigs/view.mas';
     my $job_file_tempdir = $c->path_to( $c->tempfiles_subdir('blast') );
@@ -230,9 +210,7 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
     my $raw_blast_path = File::Spec->catfile($job_file_tempdir, $file);
     my $raw_blast_url  = File::Spec->catfile($c->tempfiles_subdir('blast'), $file);
     
-
-    #print STDERR "TEMP FILE PATH FOR PNG = $graph_img_path\n";
-    #print STDERR "RAW BLAST PATH = $raw_blast_path\n";
+    #print STDERR "PNG: $graph_img_path\n";
 
     my $vg = CXGN::Graphics::VigsGraph->new();
     $vg->bwafile($seq_filename.".bwa.out");
@@ -240,27 +218,37 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
     $vg->query_seq($query->seq());
     $vg->seq_window_size($seq_window_size);
     $vg->parse();    
-    $vg->render($graph_img_path);
+    my @regions = (); 
 
-    my $errstr;
-    my @regions;
+    foreach my $r (0..8) { 
+	my @best_coords = $vg->get_best_vigs_seqs($r);
+	push @regions, [ @best_coords ];
+    }
 
-    $errstr and die "<b>ERROR:</b> $errstr";
-    
+    my $best_coverage = -1;
+    my $coverage = -1;
+    foreach my $r (1..8) { 
+	if (scalar(@{$regions[$coverage]}) > $coverage) { 
+	    $best_coverage = $r;
+	    $coverage = scalar(@{$regions[$coverage]});
+	}
+    }
+
+
+    if ($coverage == -1) { 
+	$c->stash->{messages} = "No regions could be identified of length 300 that contained no n-mers in off-targets";
+    }
+
+    $vg->render($graph_img_path, $best_coverage);
+
     $c->stash->{regions} = \@regions;
-
     $c->stash->{graph_url} = $graph_img_url;
 
    my @bwa_matches = `cut -f3 $seq_filename.bwa.out | sort -u`;
 
     $c->stash->{blast_matches} = \@bwa_matches;
     $c->stash->{fragment_size} = $fragment_size;
-
-   
-    
 }
-
-
 
 sub user_error {
     my ($reason) = @_;

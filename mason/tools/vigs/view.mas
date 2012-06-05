@@ -7,27 +7,50 @@ $graph_url => undef
 @regions => ()  # list of listrefs, index is coverage level
 $error => undef
 $fragment_size => undef
-#@blast_matches => ()
+$messages => ""
+$errors => ""
+$coverage => 0
 </%args>
 
-% use Data::Dumper;
-% use JSON::Any;
-% my $json = JSON::Any->new;
+<%perl>
+use Data::Dumper;
+use JSON::Any;
+my $json = JSON::Any->new;
 
-% if ($error) { print "An error occurred. $error."}
+if ($error) { print "An error occurred. $error." }
+
+my @coords = ();
+   
+foreach my $c (@coords) { 
+	@coords = map { [ $_->start, $_->end ] } @$c;
+}
+
+my @ids = ();
+foreach my $s (@coords) { 
+	@ids = map { $_->id() } @$s;
+}
+
+
+print Dumper(\@coords);
+
+</%perl>
 
 <& /util/import_javascript.mas, classes => 'Text.Markup' &>
 
 <& /page/page_title.mas, title=>"VIGS Tool Results" &>
 
+<% $messages %><br /><br />
 
-% #print "COVERAGE GRAPH = " .$graph_url;
-% #print Dumper(\@regions);
+Coverage: <% $coverage %><br />
+
+
+<&| /page/info_section.mas, title=>"Distribution of $fragment_size-mers",    collapsible => 1,    collapsed   => 1 &>
 
 <div align="center" style="color: #777777">
 <img src="<% $graph_url %>" />
 </div>
 
+</&>
 
 % #print "QUERY: $query. ID=".$query->id()." SEQUENCE:".$query->seq()."<br />";
 <br /><br />
@@ -36,16 +59,21 @@ $fragment_size => undef
 	function hilite_sequence() { 
 
 	    var markup = new Text.Markup( { 'highlight' : [ '<span class="highlighted">', '</span>' ], 'break' : [ '<br />', '' ], 'space' : [ '<span>&nbsp;</span>', '' ] });
-	   // alert("hilite_sequence");
+	    //alert("hilite_sequence");
 	    var source_el = document.getElementById('query');
 	    var markup_el = document.getElementById('markup');
-	    var coverage_select = document.getElementById('coverage_select');
+	    //alert(source_el);
+    	    var coverage_select = document.getElementById('coverage_select');
+	    //alert('now we are here');
 	    var coverage = coverage_select.options[coverage_select.selectedIndex].value;
+	    //alert('coverage ='+coverage);
 
-	    var all_regions = <% $json->encode(\@regions) %>;
+	    var all_regions = <% $json->encode(\@coords) %>;
+
+	    //	    alert('regions = '+all_regions);
 
 	    var selected_regions = all_regions[coverage];
-	    //	alert('Coverage: '+coverage+' Selected regions: '+selected_regions);
+	   	//alert('Coverage: '+coverage+' Selected regions: '+selected_regions);
 	    var hilite_regions = [];
 	    for (var i=0; i<selected_regions.length; i++) { 
 	       hilite_regions[i]=[ 'highlight', selected_regions[i][0]-1, selected_regions[i][1]-1 ];
@@ -57,7 +85,7 @@ $fragment_size => undef
 	    var break_regions = [];
 	    for (var i=0; i<sequence.length; i=i+60) { 
 	        break_regions.push([ 'break', i, i ]);
-}
+ 	    }
 	//alert('Break regions: ' + break_regions);
 
 	var space_regions = [];
@@ -76,20 +104,26 @@ $fragment_size => undef
 
 </script>
 
-<b>Highlight coverage</b> <select id="coverage_select" name="coverage_select" onchange="hilite_sequence()" >
+<select id="coverage_select" onchange="javascript:hilite_sequence()">
 
 % foreach my $coverage (0..8) { 
 % my $selected;
 %   if ($coverage == 1) { $selected= qq { selected="1" }; }
-%    else { $selected = ""	     ; }
+%   else { $selected = ""; }
 %    print "<option value=\"$coverage\" $selected>$coverage</option>\n";
 % }
 
 </select>
+
 <span id="query" style="display:none" ><% $query->seq() %></span>
 <span id="markup"></span>
+
+
 <h2>Sequences with perfect matches above <% $fragment_size %> bp</h2>
 
+% foreach my $id (@ids) { 
+% print $id."<br />";
+% }
 
 <script>
 	hilite_sequence();
