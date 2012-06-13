@@ -1,5 +1,6 @@
 #!/usr/bin/perl
 
+
 =head1 NAME
 
 tree_browser/index.pl - the script controlling the tree browser tool 
@@ -53,8 +54,9 @@ my $request = shift;
 
 my $page = CXGN::Page->new( "SGN Tree Browser", "Lukas" );
 
-our ($align_temp_show, $newick_temp_show, $example_show, $native_commands) =
-    $page->get_encoded_arguments(qw/align_temp_show newick_temp_show example_show native_commands/);
+our ( $align_temp_show, $newick_temp_show, $example_show, $native_commands ) =
+  $page->get_encoded_arguments(
+    qw/align_temp_show newick_temp_show example_show native_commands/);
 
 my (
     $action,                $tree_string,
@@ -65,14 +67,13 @@ my (
     $preset,                $height,
     $reroot,                $show_orthologs,
     $show_species,          $collapse_single_species_subtrees,
-    $show_standard_species,
-    $use_html_path,         $show_skip_form,
-    $align_format,          $align_seq_data,
-    $align_temp_file,       $align_type,
-    $hide_alignment,        $tree_from_align,
-    $show_sigpep,           $show_domains,
-    $stored_genes,          $family_nr,
-    $i_value
+    $show_standard_species, $use_html_path,
+    $show_skip_form,        $align_format,
+    $align_seq_data,        $align_temp_file,
+    $align_type,            $hide_alignment,
+    $tree_from_align,       $show_sigpep,
+    $show_domains,          $stored_genes,
+    $family_nr,             $i_value
   )
   = $page->get_encoded_arguments(
     "action",                "tree_string",
@@ -83,14 +84,13 @@ my (
     "preset",                "height",
     "reroot",                "show_orthologs",
     "show_species",          "collapse_single_species_subtrees",
-    "show_standard_species",
-    "use_html_path",         "show_skip_form",
-    "align_format",          "align_seq_data",
-    "align_temp_file",       "align_type",
-    "hide_alignment",        "tree_from_align",
-    "show_sigpep",           "show_domains",
-    "stored_genes",          "family_nr",
-    "i_value"
+    "show_standard_species", "use_html_path",
+    "show_skip_form",        "align_format",
+    "align_seq_data",        "align_temp_file",
+    "align_type",            "hide_alignment",
+    "tree_from_align",       "show_sigpep",
+    "show_domains",          "stored_genes",
+    "family_nr",             "i_value"
   );
 my $tree_string_param = $tree_string;    #keep track of provided param
 
@@ -126,8 +126,8 @@ our %PARAM = (
 );
 
 our $HTML_ROOT_PATH = $c->path_to->stringify;
-our $DOC_PATH = $c->tempfiles_subdir('align_viewer');
-our $PATH     = $c->path_to( $DOC_PATH );
+our $DOC_PATH       = $c->tempfiles_subdir('align_viewer');
+our $PATH           = $c->path_to($DOC_PATH);
 
 our $CMD_QUICKTREE = "/data/prod/bin/quicktree";
 our $CMD_SREFORMAT = "/data/prod/bin/sreformat";
@@ -360,6 +360,7 @@ if ( defined $upload ) {
     if ($tree_obj) {
         $tree_string = $tree_obj->get_root()->recursive_generate_newick();
     }
+
     #print STDERR "TREE STRING= $tree_string\n";
 }
 
@@ -427,7 +428,8 @@ my $species_tree =
   ;    #construct Parse_newick for string $newick
 
 ## these aren't needed for the hard coded species tree, but may be needed if/when we allow other trees (user supplied)
-$species_tree->set_missing_species_from_names();    # if get_species() not defined get species from name
+$species_tree->set_missing_species_from_names()
+  ;    # if get_species() not defined get species from name
 $species_tree->impose_branch_length_minimum();
 $species_tree->collapse_tree();
 my $species_name_map = CXGN::Phylo::Species_name_map->new();
@@ -524,9 +526,7 @@ else {
     $species_tree->get_root()
       ->recursive_set_implicit_species_bits($spec_bit_hash);
 
-#reroot the gene tree
-# reroot the tree at the point which minimizes the variance of the root-leaf distances
-#print blue_section_html("tree style: $tree_style <br> \n");
+    #reroot the gene tree
 
     if ( $reroot and ( $reroot ne "Original" ) )
     {    # reroot the tree according to the selected method
@@ -808,7 +808,7 @@ else {
     #    $tree->layout();
 
     $browser->recursive_manage_labels( $browser->get_tree()->get_root() );
-    $tree->get_root()->recursive_propagate_properties();
+    $tree->get_root()->recursive_propagate_properties('hidden');
 
     my $DEFAULT_HEIGHT = 400;
     if ( !$height ) {
@@ -892,7 +892,7 @@ else {
     my $filename = File::Basename::basename($file);
     my $temp_url = "/documents/tempfiles/align_viewer/${filename}$unique.png";
 
- #   print "filename: $filename, temp url: $temp_url \n";
+    #   print "filename: $filename, temp url: $temp_url \n";
 
     # display the page
     #
@@ -1070,14 +1070,14 @@ qq|<a href="?align_temp_show=$align_filename&newick_temp_show=$filename">Tree br
 
     my $param_input_term = hash2hiddenpost( \%PARAM, {}, ["term"] );
 
-    my $original_link = qq|<a href="?$param_reset">&lt;&lt; See Original Tree</a>&nbsp;&nbsp;&nbsp;|;
+    my $original_link =
+qq|<a href="?$param_reset">&lt;&lt; See Original Tree</a>&nbsp;&nbsp;&nbsp;|;
     $original_link = ""
       if ( $upload || $tree_string_param || !$node_operations );
 
     my $w1 = "30%";
     my $w2 = "35%";
     my $w3 = "40%";
-
 
     my $treestyle_str = <<EOH;
 <td width="33%" >
@@ -1142,7 +1142,8 @@ EOH
 </td>
 EOH
 
-    my $show_species_str = qq|<td style="text-align:center"> <a href="?$param_show_species_toggle">$show_species_text</a> </td>|;
+    my $show_species_str =
+qq|<td style="text-align:center"> <a href="?$param_show_species_toggle">$show_species_text</a> </td>|;
 
     my $show_blen = <<EOH;
 <td style="text-align:center">
@@ -1154,7 +1155,8 @@ EOH
 </td>
 EOH
 
-    my $show_ortho = qq|<td  style="text-align:center"> <a href="?$param_orthologs_toggle">$ortho_text</a> </td>|;
+    my $show_ortho =
+qq|<td  style="text-align:center"> <a href="?$param_orthologs_toggle">$ortho_text</a> </td>|;
     my $collapse_single_species =
 qq|<td style="text-align:center"> <a href="?$param_collapse_toggle">$collapse_single_species_text</a> </td>|;
 
@@ -1221,23 +1223,25 @@ HTML
 HTML
 
     # print STDERR "term: $term.   param_input_term: $param_input_term \n";
-
+# my %unknown_species_leaves = ();
+ my $non_species_tree_leaf_node_names =
+              $browser->get_tree()->non_speciestree_leafnode_names();
     if ($show_orthologs) {
-#         if (0) {
-#             $species_tree->get_root()->recursive_implicit_species();
+        #         if (0) {
+        #             $species_tree->get_root()->recursive_implicit_species();
 
-#             $species_tree->get_root()
-#               ->recursive_set_implicit_species_bits($spec_bit_hash);
-#             $browser->get_tree()->get_root()->recursive_implicit_species();
+   #             $species_tree->get_root()
+   #               ->recursive_set_implicit_species_bits($spec_bit_hash);
+   #             $browser->get_tree()->get_root()->recursive_implicit_species();
 
-#             $browser->get_tree()->get_root()
-#               ->recursive_set_implicit_species_bits($spec_bit_hash);
-#             $browser->get_tree()->get_root()->recursive_implicit_names();
-#             $browser->get_tree()->get_root()
-#               ->recursive_set_speciation($species_tree);
-#             $browser->get_tree()->get_root()
-#               ->recursive_hilite_speciation_nodes($species_tree);
-#         }
+     #             $browser->get_tree()->get_root()
+     #               ->recursive_set_implicit_species_bits($spec_bit_hash);
+     #             $browser->get_tree()->get_root()->recursive_implicit_names();
+     #             $browser->get_tree()->get_root()
+     #               ->recursive_set_speciation($species_tree);
+     #             $browser->get_tree()->get_root()
+     #               ->recursive_hilite_speciation_nodes($species_tree);
+     #         }
 
         $browser->get_tree()->set_line_color( 0, 200, 0 );
         $browser->get_tree()->set_hilite_color( 100, 200, 200 );
@@ -1245,33 +1249,68 @@ HTML
         my @leaves = $browser->get_tree->get_leaves;
         $browser->get_tree->set_show_standard_species($show_species);
         my $ortho_hilite_only = 0;
-        my $first_cell_text = "Orthologs of&nbsp&nbsp";
+        my $first_cell_text   = "Orthologs of&nbsp&nbsp";
         @leaves = sort { $a->get_name cmp $b->get_name } @leaves;
         my $ostring = "";
         foreach my $leaf (@leaves) {
-
+		next if(exists $non_species_tree_leaf_node_names->{$leaf->get_name()});
             # next line to only show orthologs of highlighted nodes,
             # if any are highlighted
-            next unless    !$ortho_hilite_only
-                        || !@search_nodes
-                        || $leaf->get_label->get_hilite;
+            next
+              unless !$ortho_hilite_only
+                  || !@search_nodes
+                  || $leaf->get_label->get_hilite;
+
+            my @cand_orthologs = $leaf->collect_orthologs_of_leaf();
+
+            # keep only leaves whose species appear in species tree
+            my @orthologs              = ();
+#            my $non_species_tree_leaf_node_names =
+#              $browser->get_tree()->non_speciestree_leafnode_names();
+            if ( scalar keys %$non_species_tree_leaf_node_names > 0 ) {
+                foreach (@cand_orthologs) {
+                    if ( exists $non_species_tree_leaf_node_names->{$_} ) {
+         #               $unknown_species_leaves{$_} ;
+                    }
+                    else {
+                        push @orthologs, $_;
+                    }
+                }
+            }
+            else {
+                @orthologs = @cand_orthologs;
+            }
 
             my $the_name = $leaf->get_name;
             if ( $the_name =~ /([^{|]+)/ ) {
                 $the_name = $1;
-            }                   # i.e. trim off everything from the first pipe or { on
+            }    # i.e. trim off everything from the first pipe or { on
             $first_cell_text = "";
-            $ostring .= Tr(
-                td( $first_cell_text ),
-                td( "$the_name:&nbsp&nbsp&nbsp&nbsp"),
-                td( join( ",&nbsp ", sort $leaf->collect_orthologs_of_leaf ) ),
-               );
+	if(scalar @orthologs == 0){ push @orthologs, 'None'; }            
+$ostring .= Tr(
+                td($first_cell_text),
+                td("$the_name:&nbsp&nbsp&nbsp&nbsp"),
+                td( join( ",&nbsp ", sort @orthologs ) ),
+            );
         }
         $ostring = table($ostring);
 
         $browser->get_tree->show_newick_attribute("speciation");
         $browser->get_tree->show_newick_attribute("species");
         my $newick_string = $browser->get_tree->generate_newick();
+
+        if ( scalar keys %$non_species_tree_leaf_node_names > 0){ 
+
+	my $contents = join("  ", map { "$_\[species=" .  $non_species_tree_leaf_node_names->{$_}->get_species() . "]" } keys %$non_species_tree_leaf_node_names );
+
+print info_section_html(
+                title => 'Leaves not in species tree',
+                contents => $contents,
+               #   join( ", ",  keys %$non_species_tree_leaf_node_names),      # unknown_species_leaves ),
+                collapsible   => 'true',
+                empty_message => ''
+            );
+        }
 
         print info_section_html(
             title         => 'Ortholog pairs',
@@ -1300,7 +1339,8 @@ sub show_form {
     my $submit_preset = "";
     my $align_preset  = "";
     if ( -f $align_temp_show ) {
-        open my $af, '<', $align_temp_show or die "$! opening '$align_temp_show'";
+        open my $af, '<', $align_temp_show
+          or die "$! opening '$align_temp_show'";
         while (<$af>) {
             $align_preset .= $_;
         }
@@ -1308,25 +1348,33 @@ sub show_form {
 
     my $newick_preset = "";
     if ( -f $newick_temp_show ) {
-        open my $nf, '<', $newick_temp_show or die "$! opening '$newick_temp_show'";
+        open my $nf, '<', $newick_temp_show
+          or die "$! opening '$newick_temp_show'";
         while (<$nf>) {
             $newick_preset .= $_;
         }
     }
 
     my $title_preset = "";
+
     #print STDERR "Debug marker 702\n";
 
     if ($example_show) {
         $title_preset = "Arabidopsis Family Example";
-        if( open my $af, '<', "$HTML_ROOT_PATH/cgi-bin/tools/tree_browser/data/example_align_preset.txt" ) {
+        if ( open my $af, '<',
+"$HTML_ROOT_PATH/cgi-bin/tools/tree_browser/data/example_align_preset.txt"
+          )
+        {
             while (<$af>) {
                 $align_preset .= $_;
             }
             $submit_preset ||= "View Tree and Alignment";
         }
         else { $align_preset = "Example File Not Found" }
-        if( open my $nf, '<', "$HTML_ROOT_PATH/cgi-bin/tools/tree_browser/data/example_newick_preset.txt" ) {
+        if ( open my $nf, '<',
+"$HTML_ROOT_PATH/cgi-bin/tools/tree_browser/data/example_newick_preset.txt"
+          )
+        {
             while (<$nf>) {
                 $newick_preset .= $_;
             }
@@ -1335,86 +1383,105 @@ sub show_form {
             $newick_preset = "Example File Not Found";
         }
     }
-    print table({ style => 'margin: 0 auto'},
-                Tr( td( 'Enter a tree in',
-                        a( {href=> 'http://evolution.genetics.washington.edu/phylip/newicktree.html'},
-                           'newick',
-                         ),
-                        a( {href=> '?example_show=1'},
-                           'Show Me an Example',
-                         ),
-                      ),
-                  ),
-                Tr(
-                   td( start_form(),
-                       hidden( 'action', 'display'),
-                       dl( 
-                          dt('Title'),
-                          dd(textfield( -id   => 'title_box',
-                                        -size => 30,
-                                        -name => 'title',
-                                        -value => $title_preset,
-                                      ),
+    print table(
+        { style => 'margin: 0 auto' },
+        Tr(
+            td(
+                'Enter a tree in',
+                a(
+                    {
+                        href =>
+'http://evolution.genetics.washington.edu/phylip/newicktree.html'
+                    },
+                    'newick',
+                ),
+                a( { href => '?example_show=1' }, 'Show Me an Example', ),
+            ),
+        ),
+        Tr(
+            td(
+                start_form(),
+                hidden( 'action', 'display' ),
+                dl(
+                    dt('Title'),
+                    dd(
+                        textfield(
+                            -id    => 'title_box',
+                            -size  => 30,
+                            -name  => 'title',
+                            -value => $title_preset,
+                        ),
+                    ),
+                    dt('Newick'),
+                    dd(
+                        textarea(
+                            -name    => 'tree_string',
+                            -id      => 'tree_string_box',
+                            -rows    => 4,
+                            -columns => 80,
+                            -value   => $newick_preset,
+                        ),
+                    ),
+                    dt('Optional Alignment'),
+                    dd(
+                        { class => 'boxbgcolor5' },
+                        div(
+                            'Type:',
+                            radio_group(
+                                -name   => 'align_type',
+                                -labels => {
+                                    nt  => 'Nucleotide',
+                                    pep => 'Peptide',
+                                },
+                                -values  => [qw[ nt pep ]],
+                                -default => 'pep',
                             ),
-                          dt('Newick'),
-                          dd(textarea( -name => 'tree_string',
-                                       -id   => 'tree_string_box',
-                                       -rows => 4,
-                                       -columns => 80,
-                                       -value => $newick_preset,
-                                     ),
+                        ),
+                        div(
+                            'Format:',
+                            radio_group(
+                                -name   => 'format',
+                                -values => [qw[clustalw fasta]],
+                                -labels => {
+                                    clustalw => 'CLUSTAL alignment',
+                                    fasta    => 'Fasta (Gapped)',
+                                },
+                                -default => 'fasta',
                             ),
-                          dt('Optional Alignment'),
-                          dd( {class => 'boxbgcolor5'},
-                              div( 'Type:',
-                                   radio_group(  -name => 'align_type',
-                                                 -labels => { nt => 'Nucleotide',
-                                                              pep => 'Peptide',
-                                                            },
-                                                 -values => [qw[ nt pep ]],
-                                                 -default => 'pep',
-                                              ),
-                                 ),
-                              div( 'Format:',
-                                   radio_group( -name => 'format',
-                                                -values => [qw[clustalw fasta]],
-                                                -labels => { clustalw => 'CLUSTAL alignment',
-                                                             fasta => 'Fasta (Gapped)',
-                                                           },
-                                                -default => 'fasta',
-                                              ),
-                                 ),
-                              div( 'Input Sequences:' ),
-                              div( textarea(
-                                            -onBlur => <<EOJS,
+                        ),
+                        div('Input Sequences:'),
+                        div(
+                            textarea(
+                                -onBlur => <<EOJS,
 document.getElementById('tree_submit').value = document.getElementById('align_seq_data_box').value ? 'View Tree and Alignment' : 'View Tree';
 return false;
 EOJS
-                                            -name    => 'align_seq_data',
-                                            -id      => 'align_seq_data_box',
-                                            -rows    => 6,
-                                            -columns => 76,
-                                            -value   => $align_preset,
-                                           ),
-                                 ),
+                                -name    => 'align_seq_data',
+                                -id      => 'align_seq_data_box',
+                                -rows    => 6,
+                                -columns => 76,
+                                -value   => $align_preset,
                             ),
-                         ),
-                       CGI::reset( -value => 'Clear form',
-                                   -onClick => <<EOJS,
+                        ),
+                    ),
+                ),
+                CGI::reset(
+                    -value   => 'Clear form',
+                    -onClick => <<EOJS,
 document.getElementById('align_seq_data_box').value =
 document.getElementById('tree_string_box').value =
 document.getElementById('title_box').value = '';
 return false;
 EOJS
-                                 ),
-                       submit(
-                              -id => 'tree_submit',
-                              -value => $submit_preset || "View Tree",
-                             ),
-                       end_form(),
-                     ),
-                  ),
-               );
+                ),
+                submit(
+                    -id    => 'tree_submit',
+                    -value => $submit_preset || "View Tree",
+                ),
+                end_form(),
+            ),
+        ),
+    );
 
     $page->footer();
 }
@@ -1506,7 +1573,6 @@ sub input_err_page {
     $input_err_page->footer();
     exit;
 }
-
 
 # this one will have col headings ortholog group, leaf names, leaf species, agrees with species tree (distance)
 sub oglist_html_table {
