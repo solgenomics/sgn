@@ -19,7 +19,7 @@ unless ($individual_id =~m /^\d+$/) {
 my $individual = CXGN::Phenome::Individual->new($dbh, $individual_id) ;
 #redirecting to the stock page
 my $stock_id = $individual->get_stock_id;
-$c->throw(is_error=>1,
-          message=>"No individual exists for identifier  $individual_id)",
+$c->throw(is_error=>0,
+          message=>"No individual exists for identifier  $individual_id",
         ) if !$stock_id;
 print $cgi->redirect("/stock/$stock_id/view", 301);

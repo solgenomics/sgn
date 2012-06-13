@@ -22,7 +22,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
     <strong> Select organism:</strong> fill in the common name of the species the population belongs to.
   </li>
   <li>
-    <strong> Cross type:</strong> at this stage only inter cross (F2) and backcross populations are supported.
+    <strong> Cross type:</strong> at this stage only inter cross (F2), backcross, RIL (from both sibling mating and selfing) diploid populations are supported.
   </li>
   <li>
     <strong> Population name:</strong> provide a concise and precise name for the population. This will also serve as the genetic map name of the population.

@@ -1,0 +1,42 @@
+
+<%doc>
+
+=head1 NAME
+
+File viewer - displays the contents of a file
+
+=head1 DESCRIPTION
+
+Arguments: file. Fully qualified path to the file.
+
+=head1 AUTHOR
+
+Lukas Mueller
+
+=cut
+
+</%doc>
+
+
+<%args>
+
+$file
+
+</%args>
+
+<%perl>
+
+use File::Slurp qw | slurp |;
+
+my $contents = 'Content not available.';
+
+eval { 
+  $contents = slurp($file);
+};
+
+</%perl>
+
+<% $contents %>
+
+
+

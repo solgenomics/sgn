@@ -1166,8 +1166,8 @@ sub crosstype_file {
 
     my $rqtl_cross_type = { 'Back cross'        => 'bc',  
                             'F2'                => 'f2', 
-                            'RIL (self-mating)' => 'rilself', 
-                            'RIL (sib-mating)'  => 'rilsib' 
+                            'RIL (selfing)' => 'rilself', 
+                            'RIL (sibling mating)'  => 'rilsib' 
                           }->{$cross_type} 
                           or die "unknown cross_type '$cross_type' for population '$pop_id'";
 

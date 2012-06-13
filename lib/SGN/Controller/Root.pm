@@ -38,6 +38,7 @@ sub index :Path :Args(0) {
     # Hello World
     $c->stash->{template} = '/index.mas';
     $c->stash->{schema}   = $c->dbic_schema('SGN::Schema');
+    $c->stash->{static_content_path} = $c->config->{static_content_path};
 }
 
 =head2 default
