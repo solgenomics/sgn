@@ -5,12 +5,21 @@ package SGN::Controller::Barcode;
 use Moose;
 use GD;
 use Barcode::Code128;
-use GD::Barcode::QRcode;
+#use GD::Barcode::QRcode;
 use Tie::UrlEncoder;
 
 our %urlencode;
 
 BEGIN { extends 'Catalyst::Controller'; }
+
+
+sub index : Path('/barcode') Args(0) { 
+    my $self =shift;
+    my $c = shift;
+    
+    $c->stash->{template}='/barcode/index.mas';
+
+}
 
 sub code128_png :Path('/barcode/code128png') :Args(2) { 
     my $self = shift;
