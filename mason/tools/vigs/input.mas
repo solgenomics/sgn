@@ -33,14 +33,10 @@ foreach my $d (@databases) {
 	}     
 </%perl>
 </select>
-<input type="hidden" name="matrix" value="BLOSUM62" />
-<input type="hidden" name="expect" value="0.00001" />
-<input type="hidden" name="program" value="blastn" />
-<input type="hidden" name="outformat" value="0" />
-<input type="hidden" name="filterq" value='F' />
 <br />
 <br />
 Fragment size <input type="input" value="21" name="fragment_size" size="3" /><br /><br />
+Target sequence length <input type="input" value="300" name="seq_window_size" size="4" /><br /><br />
 <input type="reset" value="clear" />&nbsp; &nbsp; &nbsp;
 <input type="submit" value="VIGS Analysis" />
 

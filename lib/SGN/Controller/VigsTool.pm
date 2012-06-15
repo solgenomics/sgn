@@ -21,6 +21,7 @@ use CXGN::BlastDB;
 use CXGN::Page::FormattingHelpers qw| page_title_html info_table_html hierarchical_selectboxes_html |;
 use CXGN::Page::UserPrefs;
 use CXGN::Tools::List qw/evens distinct/;
+use CXGN::Tools::Run;
 
 our %urlencode;
 
@@ -129,7 +130,7 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
     
     my $sequence = $c->req->param("sequence");
     my $fragment_size = $c->req->param("fragment_size");
-    
+    my $seq_window_size = $c->req->param("seq_window_size");
     if (!$fragment_size) { 
 	push @errors, "Fragment size ($fragment_size) should be greater than zero (~20 - 40 bp)\n";
     }
@@ -167,6 +168,18 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
     
     $io->close();
 
+    my $query_file = $seq_filename;
+     my $seq = Bio::Seq->new(-seq=>$sequence, -id=> $id || "temp");
+    my $io = Bio::SeqIO->new(-format=>'fasta', -file=>">".$query_file);
+    
+     $io->write_seq($seq);
+     $io->close();
+
+    if (! -e $query_file) { die "Query file failed to be created."; }
+
+
+
+
 
     print STDERR "DATABASE SELECTED: $params->{database}\n";
     my $bdb = CXGN::BlastDB->from_id($params->{database});
@@ -175,28 +188,48 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
   
     print STDERR "\n\nSYSTEM CALL: /data/shared/bin/bwa_wrapper.sh $basename $seq_filename.fragments $seq_filename.bwa.out\n\n";
 
-    my $err = system('/data/shared/bin/bwa_wrapper.sh', $basename, $seq_filename.".fragments", $seq_filename.".bwa.out");
+    my $job = CXGN::Tools::Run->run_async('/data/shared/bin/bwa_wrapper.sh', $basename, $seq_filename.".fragments", $seq_filename.".bwa.out");
+    #my $count = 0;
 
-    print STDERR "SYSTEM CALL RETURN CODE: $err\n";
-    my $query_file = $seq_filename;
-     my $seq = Bio::Seq->new(-seq=>$sequence, -id=> $id || "temp");
-     $io = Bio::SeqIO->new(-format=>'fasta', -file=>">".$query_file);
+    my $id = $urlencode{basename($seq_filename)};
+
+    $job->wait();
+
+    $c->res->redirect("/tools/vigs/view/$id/$fragment_size/$seq_window_size/1");
+
+}
+
+# sub wait :Path('/wait') Args(1) { 
+#     my ($self, $c, $id) = @_;
+#     print $c->res->header;
+#     while (! -e "/data/shared/tmp/$id") { 
+# 	print "WAIT...\n";
+# 	sleep(3);
+#     }
+
+# }
+
+sub view :Path('/tools/vigs/view') Args(4) { 
+    my $self = shift;
+    my $c = shift;
     
-     $io->write_seq($seq);
-     $io->close();
+    my $seq_filename = shift;
+    my $fragment_size = shift || 300;
+    my $seq_window_size = shift;
+    my $coverage = shift;
 
-    if (! -e $query_file) { die "Query file failed to be created."; }
+    $seq_filename = "/data/prod/tmp/$seq_filename";
 
-
-    my $file = $c->request->param('report_file');
-    my $seq_window_size = $c->request->param('seq_window_size') || 300;
-
-    $c->stash->{query_file} = $query_file;
+    $c->stash->{query_file} = $seq_filename;
 
     $seq_filename =~ s/\%2F/\//g;
 
+    print $seq_filename;
+    my $io = Bio::SeqIO->new(-file=>$seq_filename, -format=>'fasta');
+    my $query = $io->next_seq();
+
+    $c->stash->{query} = $query;
     $c->stash->{template} = '/tools/vigs/view.mas';
-    my $job_file_tempdir = $c->path_to( $c->tempfiles_subdir('blast') );
     
 #    open(my $F, "<", $job_file_tempdir."/".$file) || die "Can't open file $file.";
     my %matches;
@@ -207,11 +240,6 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
     my $graph_img_path = File::Spec->catfile($c->config->{basepath}, $c->tempfiles_subdir('vigs'), $graph_img_filename);
     my $graph_img_url  = File::Spec->catfile($c->tempfiles_subdir('vigs'), $graph_img_filename);
 
-    my $raw_blast_path = File::Spec->catfile($job_file_tempdir, $file);
-    my $raw_blast_url  = File::Spec->catfile($c->tempfiles_subdir('blast'), $file);
-    
-    #print STDERR "PNG: $graph_img_path\n";
-
     my $vg = CXGN::Graphics::VigsGraph->new();
     $vg->bwafile($seq_filename.".bwa.out");
     $vg->fragment_size($fragment_size);
@@ -220,31 +248,16 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
     $vg->parse();    
     my @regions = (); 
 
-    foreach my $r (0..8) { 
-	my @best_coords = $vg->get_best_vigs_seqs($r);
-	push @regions, [ @best_coords ];
-    }
 
-    my $best_coverage = -1;
-    my $coverage = -1;
-    foreach my $r (1..8) { 
-	if (scalar(@{$regions[$coverage]}) > $coverage) { 
-	    $best_coverage = $r;
-	    $coverage = scalar(@{$regions[$coverage]});
-	}
-    }
-
-
-    if ($coverage == -1) { 
-	$c->stash->{messages} = "No regions could be identified of length 300 that contained no n-mers in off-targets";
-    }
-
-    $vg->render($graph_img_path, $best_coverage);
-
+    
+    
+    $vg->render($graph_img_path, $coverage);
+    
     $c->stash->{regions} = \@regions;
     $c->stash->{graph_url} = $graph_img_url;
+    $c->stash->{coverage} = $coverage;
 
-   my @bwa_matches = `cut -f3 $seq_filename.bwa.out | sort -u`;
+    my @bwa_matches = `cut -f3 $seq_filename.bwa.out | sort -u`;
 
     $c->stash->{blast_matches} = \@bwa_matches;
     $c->stash->{fragment_size} = $fragment_size;

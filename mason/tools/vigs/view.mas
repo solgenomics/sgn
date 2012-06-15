@@ -13,11 +13,14 @@ $coverage => 0
 </%args>
 
 <%perl>
+use strict;
+
 use Data::Dumper;
 use JSON::Any;
 my $json = JSON::Any->new;
 
-if ($error) { print "An error occurred. $error." }
+if ($errors) { print "An error occurred. $error." }
+if ($messages) { print $messages; }
 
 my @coords = ();
    
@@ -63,9 +66,9 @@ Coverage: <% $coverage %><br />
 	    var source_el = document.getElementById('query');
 	    var markup_el = document.getElementById('markup');
 	    //alert(source_el);
-    	    var coverage_select = document.getElementById('coverage_select');
+    	    //var coverage_select = document.getElementById('coverage_select');
 	    //alert('now we are here');
-	    var coverage = coverage_select.options[coverage_select.selectedIndex].value;
+	    //var coverage = coverage_select.options[coverage_select.selectedIndex].value;
 	    //alert('coverage ='+coverage);
 
 	    var all_regions = <% $json->encode(\@coords) %>;

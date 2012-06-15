@@ -79,17 +79,17 @@ my $matches = $vg->matches();
 
 is(scalar(keys(%$matches)), 57, "match count");
 
-#$vg->seq_window_size(600);
-#my $seq1 = $vg->get_best_vigs_seq(1);
 
-#$vg->seq_window_size(300);
-my $seq2 = $vg->get_best_vigs_seq();
+$vg->seq_window_size(200);
+my @seqs = $vg->get_best_vigs_seqs(1);
 
-$vg->render("/tmp/vigs_test.png");
+my ($best, $regions) = $vg->get_best_coverage();
+print "BEST COVERAGE: $best\n";
+
+$vg->render("/tmp/vigs_test.png", 1);
 
 ok(-s "/tmp/vigs_test.png" > 0, "image file size");
 
-$vg->get_best_vigs_seq(1);
 
 
 
