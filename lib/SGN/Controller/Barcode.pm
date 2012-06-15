@@ -90,10 +90,11 @@ sub qrcode_png :Path('/barcode/qrcodepng') :Args(2) {
     $c->res->body($image->png());			      
 }
 
-sub barcode_tool :Path('/barcode/tool') Args(2) { 
+sub barcode_tool :Path('/barcode/tool') Args(3) { 
     my $self = shift;
     my $c = shift;
     my $cvterm = shift;
+    my $tool_version = shift;
     my $values = shift;
 
     my ($db, $accession) = split /\:/, $cvterm;
@@ -116,8 +117,8 @@ sub barcode_tool :Path('/barcode/tool') Args(2) {
     $c->stash->{cvterm_name} = $cvterm_rs->first()->name();
     $c->stash->{cvterm_definition} = $cvterm_rs->first()->definition();
     $c->stash->{cvterm_values} = $values;
-    $c->stash->{tool_version} = "1.0";
-    $c->stash->{template} = '/barcode/tool.mas';
+    $c->stash->{tool_version} = $tool_version;
+    $c->stash->{template} = '/barcode/tool/tool.mas';
 #    $c->stash->{cvterm_synonym} = $cvterm_synonym_rs->synonym();
     $c->forward('View::Mason');
     
