@@ -21,13 +21,13 @@ my $hash = $urlencode{'#'};
 <h1>CASSAVABASE BARCODE TOOL</h1>
 
 Tool version: <% $tool_version %><br /><br />
+% my $version_string = "V$tool_version-$cvterm";
+<img src="/barcode/code128png/<% $version_string %>/<% $version_string %>" /><br />
 <font size="6"><% $cvterm %> - <% $cvterm_name %> <br /><% $cvterm_synonym %></font><br /><br />
-
 <div class="boxbgcolor5"><font size="4"><% $cvterm_definition %></font></div>
 
 <table border="0">
 % foreach my $v (@values) { 
-
 <tr><td style="vertical-align:middle"><font size="6">value = <% $v %></font></td><td><img src="/barcode/code128png/<% $cvterm %><% $hash %><% $v %>/<% $cvterm_name %>" /></td></tr>
 
 %}
