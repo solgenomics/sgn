@@ -1,12 +1,43 @@
 
-<h1>Sample barcode tool</h1>
+<h1>Sample barcode tools</h1>
 
 <ul>
-<li><a href="/barcode/tool/CO:0000103/0,1,2,3">Anthocyanin pigmentation</a></li>
-<li><a href="/barcode/tool/CO:0000109/5,10,15,20,25,30">Days to flower</a></li>
-<li><a href="/barcode/tool/CO:0000092/1,5,10,15">Percentage dry matter storage root</a></li>
-<li><a href="/barcode/tool/CO:0000014/1,2,3,4,5">Dry yield</a></li>
-<li><a href="/barcode/tool/CO:0000108/0,1">Female staminoids</a></li>
-<li><a href="/barcode/tool/CO:0000106/1,2,3,4,5,6,7,8,9,10">First apical branch height</a></li>
+<li><a href="/barcode/tool/CO:0000103/0.0/0,1,2,3">Anthocyanin pigmentation</a></li>
+<li><a href="/barcode/tool/CO:0000109/0.0/5,10,15,20,25,30">Days to flower</a></li>
+<li><a href="/barcode/tool/CO:0000092/0.0/1,5,10,15">Percentage dry matter storage root</a></li>
+<li><a href="/barcode/tool/CO:0000014/0.0/1,2,3,4,5">Dry yield</a></li>
+<li><a href="/barcode/tool/CO:0000108/0.0/0,1">Female staminoids</a></li>
+<li><a href="/barcode/tool/CO:0000106/0.0/1,2,3,4,5,6,7,8,9,10">First apical branch height</a></li>
 </ul>
 
+<br /><br />
+<hr />
+
+<h2>Generate continuous barcode</h2>
+
+<form action="/barcode/continuous_scale" >
+<table>
+<tr><td>Start value</td><td> <input name="start" value="0" size="4" /></td></tr>
+<tr><td>End value</td><td><input name="end" value="1000" size="4"  /></td></tr>
+<tr><td>Step</td><td><input name="step" value="10" size="4" /></td></tr>
+<tr><td>Step height&nbsp;&nbsp;&nbsp;</td><td><input name="height" value="10" size="4" /></td></tr>
+</table>
+<input type="submit" value="Create continuous barcode" />
+
+<form>
+<br />
+<br />
+<hr />
+
+<h2>Generate regular barcode</h2>
+<form action="/barcode/generate" >
+  Barcode text <input name="text" /><br />
+
+  <input type="radio" name="size" value="small" clicked /> small<br />
+  <input type="radio" name="size" value="large" /> large<br />
+
+  <input type="submit" value="Generate barcode" />
+  </form>
+
+
+  
