@@ -18,7 +18,7 @@ has 'height'=> (is=>'rw', isa=>'Int', default=>700);
 sub parse { 
     my $self = shift;
     
-    warn("Parsing file ".$self->bwafile()."\n");
+    #warn("Parsing file ".$self->bwafile()."\n");
 
     open(my $F, "<", $self->bwafile()) || die "Can't open file ".$self->bwafile();
 
@@ -42,7 +42,7 @@ sub parse {
 	    $ms->end($end_coord);
 	    $ms->id($subject);
 	    
-	    print STDERR "PARSING: $start_coord, $end_coord, $subject\n";
+	#    print STDERR "PARSING: $start_coord, $end_coord, $subject\n";
 
 	    push @{$matches->{$subject}}, $ms;
 	}
@@ -78,6 +78,29 @@ sub sort_keys {
     $b->[1] <=> $a->[1];
 }
 
+sub get_best_coverage { 
+    my $self = shift;
+
+    my @regions = ();
+    foreach my $r (0..7) { 
+	my @best_coords = $self->get_best_vigs_seqs($r+1);
+	print STDERR "coverage of $r: ".scalar(@best_coords)."\n";
+	push @regions, [ @best_coords ];
+    }
+
+    my $max_segments = -1;    
+    my $best_coverage = -1;
+    foreach my $r (0..7) { 
+	my $segments = scalar(@{$regions[$r]});
+	if ($segments > $max_segments) { 
+	    $max_segments = $segments;
+	    $best_coverage = $r;
+	}
+    }
+    
+    return ($best_coverage, \@regions);
+}
+
 sub get_best_vigs_seqs { 
     my $self = shift;
     my $coverage = shift;
@@ -107,7 +130,6 @@ sub get_best_vigs_seqs {
 
 	}
 	
-
 	my $score = $maximize - $minimize **2; 
 	if ($score > $max_score) { $max_score = $score; }
 	
@@ -124,7 +146,7 @@ sub get_best_vigs_seqs {
        
 	if (!exists($off_matches[$i]) || !defined($off_matches[$i])) { next; }
 	#print STDERR "SCORE: $scores[$i]\n";
-	if ( ($scores[$i] == $max_score) && ($off_matches[$i]==0)) { 
+	if ( ($scores[$i] >= $max_score * 0.7) && ($off_matches[$i]==0)) { 
 	    #print "SUGGESTED SEQUENCE IS IN INTERVAL $i\n";
 	    
 	    my $interval = CXGN::Graphics::VigsGraph::MatchSegment->new();
@@ -137,21 +159,7 @@ sub get_best_vigs_seqs {
 	    push @suggested_segments, $interval;
 	}
     }
-
     return @suggested_segments;
-
-#     my $best = 0;
-#     foreach my $i (0..@$interval_matches-1) { 
-# 	if (!defined($minimize[$i])) { 
-# 	    $optimum[$i] = $maximize[$i];
-# 	}
-# 	else { 
-# 	    $optimum[$i] = $maximize[$i] - ($minimize[$i] **2);
-# 	}
-# 	print "SEGMENT OPTIMUM: $optimum[$i]\n";
-# 	if ($optimum[$i] > $best) { $best = $optimum[$i]; }
-#     }
-    
 }
 
 sub subjects_by_match_count { 
@@ -177,14 +185,23 @@ sub render {
     my $red   = $image->colorResolve(180, 0, 0);
     my $color = $image->colorResolve(0, 0, 0);    
     my $blue = $image->colorResolve(0, 0, 180);
+    my $yellow = $image->colorResolve(255, 255, 0);
 
     $image->filledRectangle(0, 0, $self->width, $self->height, $white);
 
+    my @suggested_sequences = $self->get_best_vigs_seqs($coverage);
+   
     my $x_len = length($self->query_seq());
 
     my $x_scale = $self->width / $x_len;
     warn "X-scale: $x_scale\n";
     my $glyph_height = 3;
+
+    # hightlight the regions with the best segments
+    #
+    foreach my $s (@suggested_sequences) { 
+	$image->filledRectangle($s->start * $x_scale, 0, $s->end * $x_scale, $self->height, $yellow);
+    }
 
 
     my $matches = $self->matches();
@@ -224,10 +241,10 @@ sub render {
 	#	    $current_track = $t;
 	#	    last();
 	#	}
-	
+		
 	    }
 	    $image->rectangle($i->start() *  $x_scale, $offset + $current_track * $glyph_height, $i->end() * $x_scale, $offset + ($current_track+1)*$glyph_height, $red);
-
+	    
 	}
 	#print STDERR "Done with $sorted->[0] - drawing red line.. at ".($offset + $max_tracks * $glyph_height)."\n";
 
@@ -243,11 +260,6 @@ sub render {
 	$image->line($x * $x_scale, 0, $x * $x_scale, $self->height, $red);
     }
     
-    my @suggested_sequences = $self->get_best_vigs_seqs($coverage);
-    foreach my $s (@suggested_sequences) { 
-	$image->line($s->start * $x_scale, 0, $s->start * $x_scale, $self->height(), $color);
-	$image->line($s->end * $x_scale, 0, $s->end * $x_scale, $self->height(), $color);
-    }
 
 
     open(my $F, ">", $filename) || die "Can't open file $filename.";
