@@ -51,10 +51,19 @@ sub barcode_element : Path('/barcode/element/') :Args(2) {
     my $c = shift;
     my $text = shift;
     my $height = shift;
+    
+    my $size = $c->req->param("size");
+
+    my $scale = 1;
+    if ($size eq "large") { 
+	$scale = 2;
+    }
+
 
     my $barcode_object = Barcode::Code128->new();
     $barcode_object->barcode($text);
     $barcode_object->height(100);
+    $barcode_object->scale($scale);
     #$barcode_object->width(200);
     $barcode_object->font('large');
     $barcode_object->border(0);
@@ -169,6 +178,20 @@ Increment (pixels) <input name="height" />
 HTML
 
 $c->res->body($form);
+
 }
+
+sub generate_barcode : Path('/barcode/generate') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+
+    my $text = $c->req->param("text");
+    my $size = $c->req->param("size");
+
+    $c->stash->{template} = "/barcode/generate.mas";
+
+}
+
+
 
 1;
