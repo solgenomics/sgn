@@ -21,6 +21,35 @@ sub index : Path('/barcode') Args(0) {
 
 }
 
+sub barcode_image : Path('/barcode/image') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    
+    my $code = $c->req->param("code");
+    my $text = $c->req->param("text");
+    my $size = $c->req->param("size");
+    
+    my $scale = 2;
+    if ($size eq "small") { $scale = 1; }
+    if ($size eq "huge") { $scale = 3; }
+    
+    my $barcode_object = Barcode::Code128->new();
+    $barcode_object->barcode($code);
+    $barcode_object->font('large');
+    $barcode_object->border(2);
+    $barcode_object->scale($scale);
+    $barcode_object->top_margin(30);
+    $barcode_object->font_align("center");
+    my  $barcode = $barcode_object ->gd_image();
+    my $text_width = gdLargeFont->width()*length($text);
+    $barcode->string(gdLargeFont,int(($barcode->width()-$text_width)/2),10,$text, $barcode->colorAllocate(0, 0, 0));
+    $c->res->headers->content_type('image/png');
+    
+    $c->res->body($barcode->png());    
+}
+    
+
+#deprecated
 sub code128_png :Path('/barcode/code128png') :Args(2) { 
     my $self = shift;
     my $c = shift;
