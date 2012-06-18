@@ -1222,26 +1222,9 @@ HTML
 <a name="bottom">&nbsp;</a>
 HTML
 
-    # print STDERR "term: $term.   param_input_term: $param_input_term \n";
-# my %unknown_species_leaves = ();
  my $non_species_tree_leaf_node_names =
               $browser->get_tree()->non_speciestree_leafnode_names();
     if ($show_orthologs) {
-        #         if (0) {
-        #             $species_tree->get_root()->recursive_implicit_species();
-
-   #             $species_tree->get_root()
-   #               ->recursive_set_implicit_species_bits($spec_bit_hash);
-   #             $browser->get_tree()->get_root()->recursive_implicit_species();
-
-     #             $browser->get_tree()->get_root()
-     #               ->recursive_set_implicit_species_bits($spec_bit_hash);
-     #             $browser->get_tree()->get_root()->recursive_implicit_names();
-     #             $browser->get_tree()->get_root()
-     #               ->recursive_set_speciation($species_tree);
-     #             $browser->get_tree()->get_root()
-     #               ->recursive_hilite_speciation_nodes($species_tree);
-     #         }
 
         $browser->get_tree()->set_line_color( 0, 200, 0 );
         $browser->get_tree()->set_hilite_color( 100, 200, 200 );
@@ -1320,6 +1303,7 @@ print info_section_html(
         );
 
     }
+
 
     if ( $hilite && ( $height > ( $DEFAULT_HEIGHT + 200 ) ) ) {
         $node_control =~ s/href="(.*?)"/href="$1#bottom"/ig;
