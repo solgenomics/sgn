@@ -74,6 +74,11 @@
 		  <strong>Answer:</strong> As an alternative to Gbrowse's download function, you can use this <a href="/search/features">tool</a> to select your region of interest and download the features using the download options at the top right of the page. 
                 <br />
                 </p>
+                <p>
+		  <strong>Question:</strong> How can I convert tomato unigene ids between builds?<br />
+		  <strong>Answer: </strong>Use this <a href="ftp://ftp.solgenomics.net/unigene_builds/combined_species_assemblies/tomato_species/tomato_species_unigenes.v1.global_versionmapping.tab">file</a>, and read this <a href="ftp://ftp.solgenomics.net/unigene_builds/combined_species_assemblies/tomato_species/README_about_global_version_mapping.txt">key</a>. <b>Caveat</b>: a unigene may be split or merged with other unigene(s) in different builds. For unigenes of non-tomato species, look for for similarly named files higher up in the ftp directory.
+                <br />
+                </p>
               </td>
             </tr>
           </table>         
