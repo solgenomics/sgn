@@ -363,7 +363,13 @@ if ($shared_file) {
 #print STDERR "Done with shared file...\n";
 # for now, the species tree is just hard-coded:
 
-my $species_tree_newick = "(chlamydomonas[species=Chlamydomonas_reinhardtii]:1,
+my $species_tree_newick = "";
+if ( open my $nf, '<', "$HTML_ROOT_PATH/cgi-bin/tools/tree_browser/data/species_tree_newick.txt" ) {
+    while (<$nf>) {
+        $species_tree_newick .= $_;
+    }
+} else {
+    $species_tree_newick = "(chlamydomonas[species=Chlamydomonas_reinhardtii]:1,
 (physcomitrella[species=Physcomitrella_patens]:1,(selaginella[species=Selaginella_moellendorffii]:1,
 (loblolly_pine[species=Pinus_taeda]:1,(amborella[species=Amborella_trichopoda]:1,
 ((date_palm[species=Phoenix_dactylifera]:1,((foxtail_millet[species=Setaria_italica]:1,
@@ -395,6 +401,7 @@ woodland_strawberry[species=Fragaria_vesca]:1):1, cucumber[species=Cucumis_sativ
 ((castorbean[species=Ricinus_communis]:1,cassava[species=Manihot_esculenta]:1):1,
 (poplar[species=Populus_trichocarpa]:1,flax[species=Linum_usitatissimum]:1):1):1):1):1):1):1):1):1):1
 ):1):1):1)";
+}
 
 #print STDERR "species tree newick: \n", $species_tree_newick, "\n";
 
@@ -970,7 +977,6 @@ if ( !$browser->get_tree_string() ) {
     my $param_align_toggle     = hash2param( \%PARAM, { hide_alignment => $not_hide_alignment } );
     my $param_domain_toggle    = hash2param( \%PARAM, { show_domains   => $not_show_domains } );
     my $param_blen_toggle      = hash2param( \%PARAM, { show_blen      => $not_show_blen } );
-    my $xxxxxx                 = $show_orthologs;
     my $param_orthologs_toggle = hash2param( \%PARAM, { show_orthologs => $not_show_orthologs } );
     my $param_collapse_toggle = hash2param(
                                             \%PARAM,
@@ -979,7 +985,6 @@ if ( !$browser->get_tree_string() ) {
                                             }
                                           );
 
-#    $page->message_page("xxxxxx, show ortho, std spec: ", "[$xxxxxx], [$show_orthologs], [$show_standard_species]<br>");
     my $param_show_species_toggle = hash2param( \%PARAM, { show_species => $not_show_species } );
 
     #    my $param_reroot = hash2param(\%PARAM, { reroot => $reroot });
@@ -1194,7 +1199,7 @@ HTML
                             td("$the_name:&nbsp&nbsp&nbsp&nbsp"),
                             td( join( ",&nbsp ", sort @orthologs ) ),
                           );
-        } # end of loop over leaves.
+        }    # end of loop over leaves.
         $ostring = table($ostring);
 
         $browser->get_tree->show_newick_attribute("speciation");
@@ -1202,13 +1207,17 @@ HTML
         my $newick_string = $browser->get_tree->generate_newick();
 
         if ( scalar keys %$non_species_tree_leaf_node_names > 0 ) {
-	    my $not_in_species_tree = '';
-	    foreach (keys %$non_species_tree_leaf_node_names){
-		$not_in_species_tree .= Tr( 
-		    td(""),
-		    td("$_\[species=" . $non_species_tree_leaf_node_names->{$_}->get_species() . "]") );
-	    }
-	    $not_in_species_tree = table($not_in_species_tree);
+            my $not_in_species_tree = '';
+            foreach ( keys %$non_species_tree_leaf_node_names ) {
+                $not_in_species_tree .= Tr(
+                                            td(""),
+                                            td(
+                                                "$_\[species="
+                                                  . $non_species_tree_leaf_node_names->{$_}->get_species() . "]"
+                                              )
+                                          );
+            }
+            $not_in_species_tree = table($not_in_species_tree);
             print info_section_html(
                 title    => 'Leaves not in species tree',
                 contents => $not_in_species_tree,
