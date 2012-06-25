@@ -49,6 +49,7 @@ $cvterm_add_uri => ''
 $cvterm_autocomplete_uri => undef
 $barcode_tempdir => undef
 $barcode_tempuri => undef
+$identifier_prefix => 'SGN'
 $organism_autocomplete_uri => '/ajax/organism/autocomplete/'
 
 </%args>
@@ -193,8 +194,8 @@ function jqueryStuff() {
   &>
 </td><td>
 
-<& /util/barcode.mas, identifier => "SGN $stock_id", text=> "SGN stock $stock_id ($uniquename)", format=>"code128"  &><br /><br />
-<& /util/barcode.mas, identifier => "http://solgenomics.net/stock/$stock_id/view", text=>"SGN stock $stock_id ($uniquename)", format=>"qrcode" &>
+<& /util/barcode.mas, identifier => "$identifier_prefix $stock_id", text=> "$identifier_prefix stock $stock_id ($uniquename)", format=>"code128"  &><br /><br />
+% #<& /util/barcode.mas, identifier => "http://solgenomics.net/stock/$stock_id/view", text=>"SGN stock $stock_id ($uniquename)", format=>"qrcode" &>
 
 
 </td></tr></table>
