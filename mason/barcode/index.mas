@@ -3,14 +3,55 @@
 
 <ul>
 <li><a href="/barcode/tool/CO:0000103/0.0/0,1,2,3">Anthocyanin pigmentation</a></li>
-<li><a href="/barcode/tool/CO:0000109/0.0/5,10,15,20,25,30">Days to flower</a></li>
+
+<li><a href="/barcode/tool/CO:0000109/0.0/0,1">Days to flower</a></li>
+
 <li><a href="/barcode/tool/CO:0000092/0.0/1,5,10,15">Percentage dry matter storage root</a></li>
+
 <li><a href="/barcode/tool/CO:0000014/0.0/1,2,3,4,5">Dry yield</a></li>
+
 <li><a href="/barcode/tool/CO:0000108/0.0/0,1">Female staminoids</a></li>
+
 <li><a href="/barcode/tool/CO:0000106/0.0/1,2,3,4,5,6,7,8,9,10">First apical branch height</a></li>
+
+<li><a href="/barcode/tool/CO:0000111/0.0/0,1">Flowers present</a></li>
+
+<li><a href="/barcode/tool/CO:0000012/0.0/1,2,3,4,5,6,7,8,9,10">fresh root weight</a></li>
+
+<li><a href="/barcode/tool/CO:0000013/0.0/1,2,3,4,5,6,7,8,9,10">fresh root yield</a></li>
+
+<li><a href="/barcode/tool/CO:0000016/0.0/1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30">fresh shoot weight</a></li>
+
+<li><a href="/barcode/tool/CO:0000112/0.0/3,7">fruit exocarp texture</a></li>
+
+<li></li>
+<li></li>
+<li></li>
+<li></li>
+<li></li>
+<li></li>
+<li></li>
+<li></li>
+<li></li>
+
 </ul>
 
 <br /><br />
+<hr />
+
+<h2>Genrate Metadata barcodes</h2>
+<form action="/barcode/metadata" >
+  <table>
+    <tr><td>Operator name</td><td><input name="operator" /></td></tr>
+    <tr><td>Date</td><td><input name="date" /> (FORMAT: YYYY/MM/DD)</td></tr>
+  </table>
+
+  <input type="radio" name="size" value="small" clicked /> small<br />
+  <input type="radio" name="size" value="large" /> large<br />
+
+  <input type="submit" value="Generate barcode" />
+  </form>
+
 <hr />
 
 <h2>Generate continuous barcode</h2>
@@ -24,7 +65,7 @@
 </table>
 <input type="submit" value="Create continuous barcode" />
 
-<form>
+</form>
 <br />
 <br />
 <hr />

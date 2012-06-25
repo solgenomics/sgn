@@ -28,6 +28,7 @@ sub barcode_image : Path('/barcode/image') Args(0) {
     my $code = $c->req->param("code");
     my $text = $c->req->param("text");
     my $size = $c->req->param("size");
+    my $top  = $c->req->param("top") || 30;
     
     my $scale = 2;
     if ($size eq "small") { $scale = 1; }
@@ -38,7 +39,7 @@ sub barcode_image : Path('/barcode/image') Args(0) {
     $barcode_object->font('large');
     $barcode_object->border(2);
     $barcode_object->scale($scale);
-    $barcode_object->top_margin(30);
+    $barcode_object->top_margin($top);
     $barcode_object->font_align("center");
     my  $barcode = $barcode_object ->gd_image();
     my $text_width = gdLargeFont->width()*length($text);
@@ -213,14 +214,42 @@ $c->res->body($form);
 sub generate_barcode : Path('/barcode/generate') Args(0) { 
     my $self = shift;
     my $c = shift;
-
+    
     my $text = $c->req->param("text");
     my $size = $c->req->param("size");
 
-    $c->stash->{template} = "/barcode/generate.mas";
+    $c->stash->{text} = $text;
+    $c->stash->{size} = $size;
+
+    $c->stash->{template} = "/barcode/tool/generate.mas";
 
 }
 
+sub metadata_barcodes : Path('/barcode/metadata') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    
+    my $operator = $c->req->param("operator");
+    my $date     = $c->req->param("date");
+    my $size     = $c->req->param("size");
 
+    $c->stash->{operator} = $operator;
+    $c->stash->{date}     = $date;
+    $c->stash->{size}     = $size;
+    
+
+    $c->stash->{template} = '/barcode/tool/metadata.mas';
+}
+
+sub new_barcode_tool : Path('/barcode/tool/') Args(1) { 
+    my $self = shift;
+    my $c = shift;
+    
+    my $term = shift;
+
+    $c->stash->{template} = '/barcode/tool/'.$term.'.mas';
+
+
+}
 
 1;
