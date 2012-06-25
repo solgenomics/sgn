@@ -1,0 +1,48 @@
+
+<%args>
+$projects => undef
+@locations => ()
+$crosses => undef
+$user_id => undef
+</%args>
+
+<& /page/page_title.mas, title=>'Breeder Tools' &>
+
+<&| /page/info_section.mas, title=>'Trials', collapsible=>1, collapsed=>1 &>
+
+<& /breeders_toolbox/projects.mas, projects=>$projects &>
+<br />
+<&| /page/info_section.mas, title=>'Add new project', collapsible=>1, collapsed=>1, is_subsection=>1 &>
+  <& /breeders_toolbox/new_project.mas &>
+
+  </&>
+
+</&>
+
+<&| /page/info_section.mas, title=>'Locations',  collapsible=>1, collapsed=>0 &>
+
+<& /breeders_toolbox/location.mas, locations=>\@locations, user_id=>$user_id &>
+<br />
+<&| /page/info_section.mas, title=>'Add new location', collapsible=>1, collapsed=>1, is_subsection=>1 &>
+<& /breeders_toolbox/new_location.mas &>
+</&>
+
+</&>
+
+<&| /page/info_section.mas, title=>'Crosses',  collapsible=>1, collapsed=>0, subtitle=>'<a href="">New cross</a>' &>
+
+<a href="">Upload cross file</a><br />
+
+<hr>
+
+<& /breeders_toolbox/display_crosses.mas, user_id => $user_id &>
+
+
+</&>
+
+<&| /page/info_section.mas, title=>'Accessions & plots' &>
+
+<& /breeders_toolbox/accessions.mas, user_id=>$user_id &>
+
+
+</&>

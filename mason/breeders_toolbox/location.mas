@@ -1,0 +1,27 @@
+
+<%args>
+$user_id => undef
+@locations => ()
+</%args>
+
+
+
+<& /util/import_javascript.mas, classes => [ ] &>
+
+<script>
+
+  
+</script>
+
+<table>
+<%perl>
+
+  if (!@locations) { 
+    print "<tr><td>Not locations available for your account.</td></tr>";
+  }
+
+foreach my $loc (@locations) { 
+  print "<tr><td>".$loc->[1]."</td><td>(<a href=\"\">".$loc->[5]." plots</a>)</td></tr>";
+}
+</%perl>
+  </table>
