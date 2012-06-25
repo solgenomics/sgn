@@ -216,6 +216,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
         cvterm_add_uri => $c->uri_for( '/ajax/stock/associate_ontology'),
 	barcode_tempdir  => $barcode_tempdir,
 	barcode_tempuri   => $barcode_tempuri,
+	identifier_prefix => $c->config->{identifier_prefix},
         );
 }
 
@@ -808,15 +809,6 @@ sub _validate_pair {
     $c->throw( is_client_error => 1, public_message => "$value is not a valid value for $key" )
         if ($key =~ m/_id$/ and $value !~ m/\d+/);
 }
-
-sub make_cross :Path("/stock/cross/new") :Args(0) { 
-
-    my ($self, $c) = @_;
-
-    $c->stash->{template} = '/stock/cross.mas';
-}
-     
-    
 
 
 
