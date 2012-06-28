@@ -238,11 +238,13 @@ sub download_phenotypes : Chained('get_stock') PathPart('phenotypes') Args(0) {
         my $phen_file = $file_cache->get($key);
         my $filename = $tmp_dir . "/stock_" . $stock_id . "_phenotypes.csv";
 	
-
-	 my $subjects = $stock->search_related('stock_relationship_objects')
-	     ->search_related('subject');
 	print STDERR "***download_phenotypes is CALLING stock_phenotypes_rs **\n\n";
-	my $rs =  $self->schema->resultset("Stock::Stock")->stock_phenotypes_rs($subjects);
+	my $results = [];# listref for recursive subject stock_phenotypes resultsets     
+	#recursively get the stock_id and the ids of its subjects from stock_relationship
+	my $stock_rs = $self->schema->resultset("Stock::Stock")->search( { stock_id => $stock_id } );
+	$results =  $self->schema->resultset("Stock::Stock")->recursive_phenotypes_rs($stock_rs, $results);
+
+	################################################################################################
 	my $phen_hashref;
 	#no warnings 'uninitialized';
 	#my @sorted = sort { $a->get_column('observable') cmp $b->get_column('observable') } $rs->all if $rs ;
@@ -251,20 +253,22 @@ sub download_phenotypes : Chained('get_stock') PathPart('phenotypes') Args(0) {
 	my %cvterms;
 	#unless ( -e $phen_file) {  
 	#foreach my $r (@sorted) {
-	while ( my $r =  $rs->next )  {
-	    my $observable = $r->get_column('observable');
-	    next if !$observable;
-	    if ($cvterm_name eq $observable) { $replicate ++ ; } else { $replicate = 1 ; }
-	    $cvterm_name = $observable;
-	    my $accession = $r->get_column('accession');
-	    my $db_name = $r->get_column('db_name');
-	    my $project = $r->get_column('project_description') ;
-
-	    my $hash_key = $project . "|" . $replicate;
-	    $phen_hashref->{$hash_key}{accession} = $db_name . ":" . $accession ;
-	    $phen_hashref->{$hash_key}{$observable} = $r->get_column('value');
-	    $phen_hashref->{$hash_key}{stock_id} = $r->get_column('stock_id');
-	    $cvterms{$observable} =  $db_name . ":" . $accession ;
+	foreach my $rs (@$results) { 
+	    while ( my $r =  $rs->next )  {
+		my $observable = $r->get_column('observable');
+		next if !$observable;
+		if ($cvterm_name eq $observable) { $replicate ++ ; } else { $replicate = 1 ; }
+		$cvterm_name = $observable;
+		my $accession = $r->get_column('accession');
+		my $db_name = $r->get_column('db_name');
+		my $project = $r->get_column('project_description') ;
+		
+		my $hash_key = $project . "|" . $replicate;
+		$phen_hashref->{$hash_key}{accession} = $db_name . ":" . $accession ;
+		$phen_hashref->{$hash_key}{$observable} = $r->get_column('value');
+		$phen_hashref->{$hash_key}{stock_id} = $r->get_column('stock_id');
+		$cvterms{$observable} =  $db_name . ":" . $accession ;
+	    }
 	}
 	#write the header for the file
 	write_file( $filename, ("uniquename\tstock_id\t" ) ) ;
@@ -499,7 +503,7 @@ SELECT sp_person_id FROM sgn_people.sp_person
                 undef,
                 @$person_ids,
                 );
-            $rs = $rs->search({ 'me.stock_id' => { -in => $stock_ids } } );
+            $rs = $rs->search({ 'me.stock_id' => { '-in' => $stock_ids } } );
          } else {
              $rs = $rs->search({ name => '' });
          }
@@ -619,8 +623,7 @@ sub _stock_project_phenotypes {
     my ($self, $bcs_stock) = @_;
 
     return {} unless $bcs_stock;
-    my $exp_stocks_rs = $bcs_stock->search_related('nd_experiment_stocks')->search_related('nd_experiment');
-    my $rs =  $self->schema->resultset("Stock::Stock")->stock_phenotypes_rs($bcs_stock, $self->schema);
+    my $rs =  $self->schema->resultset("Stock::Stock")->stock_phenotypes_rs($bcs_stock);
     my %project_hashref;
     while ( my $r = $rs->next) {
 	my $project_desc = $r->get_column('project_description');
