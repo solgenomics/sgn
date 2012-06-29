@@ -19,7 +19,7 @@ use JSON::Any;
 
 use CXGN::Chado::Stock;
 use SGN::View::Stock qw/stock_link stock_organisms stock_types/;
-
+use Bio::Chado::NaturalDiversity::Reports;
 
 BEGIN { extends 'Catalyst::Controller' }
 with 'Catalyst::Component::ApplicationAttribute';
@@ -231,67 +231,25 @@ sub download_phenotypes : Chained('get_stock') PathPart('phenotypes') Args(0) {
     my $stock = $c->stash->{stock_row};
     my $stock_id = $stock->stock_id;
     if ($stock_id) {
-        my $tmp_dir = $c->get_conf('basepath') . "/" . $c->get_conf('stock_tempfiles');
-        my $file_cache = Cache::File->new( cache_root => $tmp_dir  );
-        $file_cache->purge();
-        my $key = "stock_" . $stock_id . "_phenotype_data";
-        my $phen_file = $file_cache->get($key);
-        my $filename = $tmp_dir . "/stock_" . $stock_id . "_phenotypes.csv";
+        #my $tmp_dir = $c->get_conf('basepath') . "/" . $c->get_conf('stock_tempfiles');
+        #my $file_cache = Cache::File->new( cache_root => $tmp_dir  );
+        #$file_cache->purge();
+        #my $key = "stock_" . $stock_id . "_phenotype_data";
+        #my $phen_file = $file_cache->get($key);
+        #my $filename = $tmp_dir . "/stock_" . $stock_id . "_phenotypes.csv";
 	
-	print STDERR "***download_phenotypes is CALLING stock_phenotypes_rs **\n\n";
 	my $results = [];# listref for recursive subject stock_phenotypes resultsets     
 	#recursively get the stock_id and the ids of its subjects from stock_relationship
 	my $stock_rs = $self->schema->resultset("Stock::Stock")->search( { stock_id => $stock_id } );
 	$results =  $self->schema->resultset("Stock::Stock")->recursive_phenotypes_rs($stock_rs, $results);
-
-	################################################################################################
-	my $phen_hashref;
-	#no warnings 'uninitialized';
-	#my @sorted = sort { $a->get_column('observable') cmp $b->get_column('observable') } $rs->all if $rs ;
-	my $cvterm_name;
-	my $replicate = 1;
-	my %cvterms;
-	#unless ( -e $phen_file) {  
-	#foreach my $r (@sorted) {
-	foreach my $rs (@$results) { 
-	    while ( my $r =  $rs->next )  {
-		my $observable = $r->get_column('observable');
-		next if !$observable;
-		if ($cvterm_name eq $observable) { $replicate ++ ; } else { $replicate = 1 ; }
-		$cvterm_name = $observable;
-		my $accession = $r->get_column('accession');
-		my $db_name = $r->get_column('db_name');
-		my $project = $r->get_column('project_description') ;
-		
-		my $hash_key = $project . "|" . $replicate;
-		$phen_hashref->{$hash_key}{accession} = $db_name . ":" . $accession ;
-		$phen_hashref->{$hash_key}{$observable} = $r->get_column('value');
-		$phen_hashref->{$hash_key}{stock_id} = $r->get_column('stock_id');
-		$cvterms{$observable} =  $db_name . ":" . $accession ;
-	    }
+	my $report = Bio::Chado::NaturalDiversity::Reports->new;
+	my $d = $report->phenotypes_by_trait($results);
+	
+	my @info  = split(/\n/ , $d);
+	my @data;
+	foreach (@info) { 
+	    push @data, [ split(/\t/) ] ;
 	}
-	#write the header for the file
-	write_file( $filename, ("uniquename\tstock_id\t" ) ) ;
-	foreach my $term_name (sort { $cvterms{$a} cmp $cvterms{$b} } keys %cvterms )  {# sort ontology terms
-	    my $ontology_id = $cvterms{$term_name};
-	    write_file( $filename, {append => 1 }, ( $ontology_id . "|" . $term_name . "\t") ) ;
-	}
-	foreach my $key ( sort keys %$phen_hashref ) {
-	    #print the unique key (row header)
-	    # print some more columns with metadata
-	    # print the value by cvterm name
-	    write_file( $filename, {append => 1 }, ( "\n" , $key, "\t" , $phen_hashref->{$key}{stock_id}, "\t" ) ) ; ###$phen_hashref->{$key}{stock}, "\t" ) ) ;
-	    foreach my $term_name ( sort { $cvterms{$a} cmp $cvterms{$b} } keys %cvterms ) {
-		write_file( $filename, {append => 1 }, ( $phen_hashref->{$key}{$term_name}, "\t" ) );
-	    }
-	}
-	$file_cache->set( $key, $filename, '30 days' );
-	$phen_file = $file_cache->get($key);
-        #}
-        my @data;
-        foreach ( read_file($filename) ) {
-            push @data, [ split(/\t/) ];
-        }
         $c->stash->{'csv'}={ data => \@data};
         $c->forward("View::Download::CSV");
         #stock    repeat	experiment	year	SP:0001	SP:0002
