@@ -1,27 +1,27 @@
 
-<& /page/page_title.mas, title=>"New Cross" &>
-
 Create a new cross by specifying the parents and the number of progeny. For each progeny, a new accession will be created with the proper pedigree settings.
 
 <br />
 <br />
 <form>
 
-<table cellspacing="0" cellpadding="5" >
+<table cellspacing="0" cellpadding="1" >
+<tr><td>Trial</td><td>
+<select><option>Trial 1</option><option>Trial 2</option></select></td></tr>
+<tr><td>Location</td><td>
+<select><option>Location 1</option></select></td></tr>
 <tr><td>Cross name</td><td><input type="text" name="cross_name" /></td></tr>
-<tr><td>Maternal parent or parent1</td><td><input type="text" name="parent1" /></td></tr>
-<tr><td>Paternal parent or parent2</td><td><input type="text" name="parent2" /></td></tr>
-<tr><td>Number of progeny</td><td><input type="text" name="progeny" /></td></tr>
+<tr><td>Maternal parent</td><td><input type="text" name="parent1" /></td></tr>
+<tr><td>Paternal parent</td><td><input type="text" name="parent2" /></td></tr>
+<tr><td>Number of progeny</td><td><input type="text" name="progeny" size="3" /></td></tr>
+<tr><td>Progeny naming</td><td>Prefix <input name="prefix" size="5" /> Suffix <input name="suffix" size="5" /></td></tr>
 </table>
-<input type="checkbox" /> Keep private to the following role 
+Keep private to role 
 <select>
+<option>none</option>
 <option>myrole</option>
 </select>
-<br /><br />
-Upload a file with desired identifiers &nbsp;&nbsp; <input type="file" />
 
-<br />
-<br /><br />
 <center><input type="submit" value="create cross" /></center>
 <br /><br />
 </form>

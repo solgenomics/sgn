@@ -10,9 +10,12 @@ $user_id => undef
 
 <&| /page/info_section.mas, title=>'Trials', collapsible=>1, collapsed=>1 &>
 
-<& /breeders_toolbox/projects.mas, projects=>$projects &>
-<br />
-<&| /page/info_section.mas, title=>'Add new project', collapsible=>1, collapsed=>1, is_subsection=>1 &>
+  <&| /page/info_section.mas, title=>'All trials', collapsible=>1, collapsed=>1, is_subsection=>1 &>
+    
+    <& /breeders_toolbox/projects.mas, projects=>$projects &>
+</&>
+
+<&| /page/info_section.mas, title=>'Add new trial', collapsible=>1, collapsed=>1, is_subsection=>1 &>
   <& /breeders_toolbox/new_project.mas &>
 
   </&>
@@ -29,15 +32,27 @@ $user_id => undef
 
 </&>
 
-<&| /page/info_section.mas, title=>'Crosses',  collapsible=>1, collapsed=>0, subtitle=>'<a href="">New cross</a>' &>
+<&| /page/info_section.mas, title=>'Crosses',  collapsible=>1, collapsed=>0 &>
+  
+  <&| /page/info_section.mas, title=>'Add new cross', collapsible=>1, collapsed=>1, is_subsection=>1 &>
+    
+    <& /breeders_toolbox/new_cross.mas &>
 
-<a href="">Upload cross file</a><br />
+    </&>
+      
+    <&| /page/info_section.mas, title=>'Upload cross file', collapsible=>1, collapsed=>1, is_subsection=>1 &>
+      
+      <& /breeders_toolbox/upload_crosses.mas &>
+	
+      </&>
+      
 
-<hr>
+      <&| /page/info_section.mas, title=>'View all crosses', collapsible=>1, collapsed=>1, is_subsection=>1 &>
+      
+      <& /breeders_toolbox/display_crosses.mas, user_id => $user_id &>
 
-<& /breeders_toolbox/display_crosses.mas, user_id => $user_id &>
 
-
+</&>
 </&>
 
 <&| /page/info_section.mas, title=>'Accessions & plots' &>

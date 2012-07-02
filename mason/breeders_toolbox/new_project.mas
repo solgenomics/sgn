@@ -4,9 +4,9 @@
 </%args>
 
 <form>
-Project name <input name="project_name" /><br />
+Trial name <input name="project_name" /><br />
 <br />
-Project description<br />
+Description<br />
 <textarea name="project_description" cols="60" >
 </textarea>
 <br />
