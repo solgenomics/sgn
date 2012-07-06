@@ -35,8 +35,10 @@ sub ACTION_build {
         die "make -C programs failed\!n";
    }
 
-   $self->check_R
-       or die "R dependency check failed, aborting.\n";
+   unless( $ENV{SGN_SHIPWRIGHT_BUILDING} ) {
+       $self->check_R
+           or die "R dependency check failed, aborting.\n";
+   }
 }
 
 # override install to just copy the whole dir into the install_base
