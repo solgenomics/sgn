@@ -19,7 +19,7 @@ use JSON::Any;
 
 use CXGN::Chado::Stock;
 use SGN::View::Stock qw/stock_link stock_organisms stock_types/;
-
+use Bio::Chado::NaturalDiversity::Reports;
 
 BEGIN { extends 'Catalyst::Controller' }
 with 'Catalyst::Component::ApplicationAttribute';
@@ -231,69 +231,25 @@ sub download_phenotypes : Chained('get_stock') PathPart('phenotypes') Args(0) {
     my $stock = $c->stash->{stock_row};
     my $stock_id = $stock->stock_id;
     if ($stock_id) {
-        my $tmp_dir = $c->get_conf('basepath') . "/" . $c->get_conf('stock_tempfiles');
-        my $file_cache = Cache::File->new( cache_root => $tmp_dir  );
-        $file_cache->purge();
-        my $key = "stock_" . $stock_id . "_phenotype_data";
-        my $phen_file = $file_cache->get($key);
-        my $filename = $tmp_dir . "/stock_" . $stock_id . "_phenotypes.csv";
+        #my $tmp_dir = $c->get_conf('basepath') . "/" . $c->get_conf('stock_tempfiles');
+        #my $file_cache = Cache::File->new( cache_root => $tmp_dir  );
+        #$file_cache->purge();
+        #my $key = "stock_" . $stock_id . "_phenotype_data";
+        #my $phen_file = $file_cache->get($key);
+        #my $filename = $tmp_dir . "/stock_" . $stock_id . "_phenotypes.csv";
 	
-
-	 my $subjects = $stock->search_related('stock_relationship_objects')
-	     ->search_related('subject');
-
-	my $rs = $subjects->search( { 'observable.name' => { '!=', undef } } , {
-            join => [ { nd_experiment_stocks => { nd_experiment => { 'nd_experiment_phenotypes' => {'phenotype' => { 'observable' => { 'dbxref' => 'db' }} }}}} , { nd_experiment_stocks => { nd_experiment => { nd_experiment_projects => 'project' } } } ],
-	    select    => [ 'stock_id', 'phenotype.value', 'observable.name', 'dbxref.accession' , 'db.name', 'project.description'  ],
-	    distinct  => 1,
-	    as        => ['stock_id' , 'value', 'observable', 'accession', 'db_name', 'project_description'],
-	    order_by  => [ 'project.description' , 'observable.name' ],
-				    } );
-	my $phen_hashref;
-	#no warnings 'uninitialized';
-	#my @sorted = sort { $a->get_column('observable') cmp $b->get_column('observable') } $rs->all if $rs ;
-	my $cvterm_name;
-	my $replicate = 1;
-	my %cvterms;
-	#unless ( -e $phen_file) {  
-	#foreach my $r (@sorted) {
-	while ( my $r =  $rs->next )  {
-	    my $observable = $r->get_column('observable');
-	    next if !$observable;
-	    if ($cvterm_name eq $observable) { $replicate ++ ; } else { $replicate = 1 ; }
-	    $cvterm_name = $observable;
-	    my $accession = $r->get_column('accession');
-	    my $db_name = $r->get_column('db_name');
-	    my $project = $r->get_column('project_description') ;
-
-	    my $hash_key = $project . "|" . $replicate;
-	    $phen_hashref->{$hash_key}{accession} = $db_name . ":" . $accession ;
-	    $phen_hashref->{$hash_key}{$observable} = $r->get_column('value');
-	    $phen_hashref->{$hash_key}{stock_id} = $r->get_column('stock_id');
-	    $cvterms{$observable} =  $db_name . ":" . $accession ;
+	my $results = [];# listref for recursive subject stock_phenotypes resultsets     
+	#recursively get the stock_id and the ids of its subjects from stock_relationship
+	my $stock_rs = $self->schema->resultset("Stock::Stock")->search( { stock_id => $stock_id } );
+	$results =  $self->schema->resultset("Stock::Stock")->recursive_phenotypes_rs($stock_rs, $results);
+	my $report = Bio::Chado::NaturalDiversity::Reports->new;
+	my $d = $report->phenotypes_by_trait($results);
+	
+	my @info  = split(/\n/ , $d);
+	my @data;
+	foreach (@info) { 
+	    push @data, [ split(/\t/) ] ;
 	}
-	#write the header for the file
-	write_file( $filename, ("uniquename\tstock_id\t" ) ) ;
-	foreach my $term_name (sort { $cvterms{$a} cmp $cvterms{$b} } keys %cvterms )  {# sort ontology terms
-	    my $ontology_id = $cvterms{$term_name};
-	    write_file( $filename, {append => 1 }, ( $ontology_id . "|" . $term_name . "\t") ) ;
-	}
-	foreach my $key ( sort keys %$phen_hashref ) {
-	    #print the unique key (row header)
-	    # print some more columns with metadata
-	    # print the value by cvterm name
-	    write_file( $filename, {append => 1 }, ( "\n" , $key, "\t" , $phen_hashref->{$key}{stock_id}, "\t" ) ) ; ###$phen_hashref->{$key}{stock}, "\t" ) ) ;
-	    foreach my $term_name ( sort { $cvterms{$a} cmp $cvterms{$b} } keys %cvterms ) {
-		write_file( $filename, {append => 1 }, ( $phen_hashref->{$key}{$term_name}, "\t" ) );
-	    }
-	}
-	$file_cache->set( $key, $filename, '30 days' );
-	$phen_file = $file_cache->get($key);
-        #}
-        my @data;
-        foreach ( read_file($filename) ) {
-            push @data, [ split(/\t/) ];
-        }
         $c->stash->{'csv'}={ data => \@data};
         $c->forward("View::Download::CSV");
         #stock    repeat	experiment	year	SP:0001	SP:0002
@@ -419,10 +375,11 @@ sub get_stock_extended_info : Private {
 
     my $cvterms  = $stock ?  $self->_stock_cvterms($stock, $c) : undef ;
     $c->stash->{stock_cvterms} = $cvterms;
+    my $stock_rs = ( $c->stash->{stock_row})->search_related('stock_relationship_subjects')
+	->search_related('subject');
 
-    my $direct_phenotypes  = $stock ? $self->_stock_project_phenotypes( $c->stash->{stock_row} ) : undef;
+    my $direct_phenotypes  = $stock ? $self->_stock_project_phenotypes($self->schema->resultset("Stock::Stock")->search_rs({ stock_id => $c->stash->{stock_row}->stock_id } ) ) : undef;
     $c->stash->{direct_phenotypes} = $direct_phenotypes;
-
     my ($members_phenotypes, $has_members_genotypes)  = $stock ? $self->_stock_members_phenotypes( $c->stash->{stock_row} ) : undef;
     $c->stash->{members_phenotypes} = $members_phenotypes;
 
@@ -504,7 +461,7 @@ SELECT sp_person_id FROM sgn_people.sp_person
                 undef,
                 @$person_ids,
                 );
-            $rs = $rs->search({ 'me.stock_id' => { -in => $stock_ids } } );
+            $rs = $rs->search({ 'me.stock_id' => { '-in' => $stock_ids } } );
          } else {
              $rs = $rs->search({ name => '' });
          }
@@ -624,29 +581,13 @@ sub _stock_project_phenotypes {
     my ($self, $bcs_stock) = @_;
 
     return {} unless $bcs_stock;
-
-    # hash of experiment_id => project(s) desc
-    my %project_descriptions =
-        map { $_->nd_experiment_id => join( ', ', map $_->project->description, $_->nd_experiment_projects ) }
-        $bcs_stock->search_related('nd_experiment_stocks')
-                  ->search_related('nd_experiment',
-                                   {},
-                                   { prefetch => { 'nd_experiment_projects' => 'project' } },
-                                   );
-    my $experiments = $bcs_stock->search_related('nd_experiment_stocks')
-                                ->search_related('nd_experiment',
-                                                 {},
-                                                 { prefetch => { nd_experiment_phenotypes => 'phenotype' } },
-                                                );
-    my %phenotypes;
-    while (my $exp = $experiments->next) {
-        # there should be one project linked to the experiment ?
-        my @ph = map $_->phenotype, $exp->nd_experiment_phenotypes;
-        my $project_desc = $project_descriptions{ $exp->nd_experiment_id }
-            or die "no project found for exp ".$exp->nd_experiment_id;
-        push @{ $phenotypes{ $project_desc }}, @ph if scalar(@ph);
+    my $rs =  $self->schema->resultset("Stock::Stock")->stock_phenotypes_rs($bcs_stock);
+    my %project_hashref;
+    while ( my $r = $rs->next) {
+	my $project_desc = $r->get_column('project_description');
+	push @{ $project_hashref{ $project_desc }}, $r;
     }
-    return \%phenotypes;
+    return \%project_hashref;
 }
 
 # this sub gets all phenotypes measured on all subjects of this stock.
@@ -666,7 +607,7 @@ SELECT COUNT( DISTINCT genotype_id )
     # the phenotypes of their related subjects
     my $subjects = $bcs_stock->search_related('stock_relationship_objects')
                              ->search_related('subject');
-    my $subject_phenotypes = $self->_stock_project_phenotypes( $subjects );
+    my $subject_phenotypes = $self->_stock_project_phenotypes($subjects );
     return ( $subject_phenotypes, $has_members_genotypes );
 }
 
