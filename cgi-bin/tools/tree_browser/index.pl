@@ -500,11 +500,16 @@ if ( !$browser->get_tree_string() ) {
 
     # species tree is already set up (check this is always true)
     my $spec_bit_hash = $tree->get_species_bithash($species_tree);
+
     $species_tree->get_root()->recursive_implicit_species();
     $species_tree->get_root()->recursive_set_implicit_species_bits($spec_bit_hash);
 
-    #reroot the gene tree
+$tree->get_root()->recursive_implicit_species();
+    $tree->get_root()->recursive_set_implicit_species_bits($spec_bit_hash); # 
+#print STDERR $tree->leaf_species_bit_pattern_string(), "\n\n\n";
+#print STDERR $species_tree->leaf_species_bit_pattern_string(), "\n\n";
 
+    #reroot the gene tree
     if ( $reroot and ( $reroot ne "Original" ) ) {    # reroot the tree according to the selected method
 
         my @new_root_point;
@@ -513,6 +518,8 @@ if ( !$browser->get_tree_string() ) {
         } elsif ( $reroot eq "Midpoint" ) {
             @new_root_point = $tree->find_point_closest_to_furthest_leaf();
         } elsif ( $reroot eq "MinDuplication" ) {
+# my @non_st_leaf_nodes = values %{$tree->non_speciestree_leafnode_names}; # return list of leaf node object
+# $tree->prune_leaves(@non_st_leaf_nodes);
             @new_root_point = $tree->find_mindl_node($species_tree);
         } elsif ( $reroot eq "MaxMin" ) {
             @new_root_point = $tree->find_point_furthest_from_leaves();
@@ -523,6 +530,8 @@ if ( !$browser->get_tree_string() ) {
     $tree->get_root()->recursive_implicit_names();
     $tree->get_root()->recursive_implicit_species();
     $tree->update_label_names();
+
+# print STDERR "rerooted tree:  \n", $tree->generate_newick(), "\n\n";
 
     #    if (0) {
     #        my $spec_bit_hash = $browser->get_tree()->get_species_bithash($species_tree);
