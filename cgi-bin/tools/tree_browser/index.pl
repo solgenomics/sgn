@@ -518,8 +518,6 @@ $tree->get_root()->recursive_implicit_species();
         } elsif ( $reroot eq "Midpoint" ) {
             @new_root_point = $tree->find_point_closest_to_furthest_leaf();
         } elsif ( $reroot eq "MinDuplication" ) {
-# my @non_st_leaf_nodes = values %{$tree->non_speciestree_leafnode_names}; # return list of leaf node object
-# $tree->prune_leaves(@non_st_leaf_nodes);
             @new_root_point = $tree->find_mindl_node($species_tree);
         } elsif ( $reroot eq "MaxMin" ) {
             @new_root_point = $tree->find_point_furthest_from_leaves();
