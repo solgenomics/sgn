@@ -10,6 +10,8 @@ $fragment_size => undef
 $messages => ""
 $errors => ""
 $coverage => 0
+$image_map => ""
+@ids => ()
 </%args>
 
 <%perl>
@@ -22,19 +24,14 @@ my $json = JSON::Any->new;
 if ($errors) { print "An error occurred. $error." }
 if ($messages) { print $messages; }
 
-my @coords = ();
-   
-foreach my $c (@coords) { 
-	@coords = map { [ $_->start, $_->end ] } @$c;
-}
-
-my @ids = ();
-foreach my $s (@coords) { 
-	@ids = map { $_->id() } @$s;
-}
 
 
-print Dumper(\@coords);
+#foreach my $s (@coords) { 
+#	@ids = map { $_->id() } @$s;
+#}
+
+
+print STDERR Dumper(\@regions);
 
 </%perl>
 
@@ -47,41 +44,44 @@ print Dumper(\@coords);
 Coverage: <% $coverage %><br />
 
 
-<&| /page/info_section.mas, title=>"Distribution of $fragment_size-mers",    collapsible => 1,    collapsed   => 1 &>
+<&| /page/info_section.mas, title=>"Distribution of $fragment_size-mers",    collapsible => 1,    collapsed   => 0 &>
 
 <div align="center" style="color: #777777">
-<img src="<% $graph_url %>" />
+<img src="<% $graph_url %>" usemap="#blabla" />
 </div>
+
+<% $image_map %>
 
 </&>
 
 % #print "QUERY: $query. ID=".$query->id()." SEQUENCE:".$query->seq()."<br />";
+% foreach my $level (@regions) {
+% #print STDERR "LEVEL!\n";
+%   foreach my $r (@$level) { 
+%  #     print STDERR "REF:". ref($r)."\n";
+%      if (ref($r)) { print join ("&nbsp;", $r->start, $r->end)."<br />"; 
+%     }
+%   }
+% } 
 <br /><br />
 
 <script>
 	function hilite_sequence() { 
 
 	    var markup = new Text.Markup( { 'highlight' : [ '<span class="highlighted">', '</span>' ], 'break' : [ '<br />', '' ], 'space' : [ '<span>&nbsp;</span>', '' ] });
-	    //alert("hilite_sequence");
+	    
 	    var source_el = document.getElementById('query');
 	    var markup_el = document.getElementById('markup');
-	    //alert(source_el);
-    	    //var coverage_select = document.getElementById('coverage_select');
-	    //alert('now we are here');
-	    //var coverage = coverage_select.options[coverage_select.selectedIndex].value;
-	    //alert('coverage ='+coverage);
+	    var regions = <% $json->encode(\@regions) %>;
 
-	    var all_regions = <% $json->encode(\@coords) %>;
 
-	    //	    alert('regions = '+all_regions);
-
-	    var selected_regions = all_regions[coverage];
-	   	//alert('Coverage: '+coverage+' Selected regions: '+selected_regions);
 	    var hilite_regions = [];
-	    for (var i=0; i<selected_regions.length; i++) { 
-	       hilite_regions[i]=[ 'highlight', selected_regions[i][0]-1, selected_regions[i][1]-1 ];
-}	       
 
+
+	    for (var i=0; i<regions.length; i++) { 
+		//alert("HERE " + regions[i]); //regions[i].join('X'));
+		hilite_regions[i]=[ 'highlight', regions[i][0]-1, regions[i][1]-1 ];
+            }	       
 
 	    var sequence = source_el.innerHTML;
 
@@ -89,45 +89,36 @@ Coverage: <% $coverage %><br />
 	    for (var i=0; i<sequence.length; i=i+60) { 
 	        break_regions.push([ 'break', i, i ]);
  	    }
-	//alert('Break regions: ' + break_regions);
 
-	var space_regions = [];
-	for (var i =0; i<sequence.length; i=i+6) { 
+            var space_regions = [];
+	    for (var i =0; i<sequence.length; i=i+6) { 
 	       space_regions.push(['space', i, i]);
-}	       
-
-	 var all_regions = break_regions.concat(hilite_regions, space_regions);
+            }	       
+	    	    
+	    var all_regions = break_regions.concat(hilite_regions, space_regions);
 
 	    var markedup_seq = markup.markup(all_regions, sequence);
-	    //alert('Markedup Seq: '+markedup_seq);
-	    markup_el.innerHTML='<font face="courier" size="3">'+markedup_seq+'</font>';
-	    	    	    	    //alert("HERE5!");			  	   
+					      //alert('Markedup Seq: '+markedup_seq);
+	    markup_el.innerHTML='<font face="courier" size="2">'+markedup_seq+'</font>';
+
 	}
 
 
 </script>
 
-<select id="coverage_select" onchange="javascript:hilite_sequence()">
-
-% foreach my $coverage (0..8) { 
-% my $selected;
-%   if ($coverage == 1) { $selected= qq { selected="1" }; }
-%   else { $selected = ""; }
-%    print "<option value=\"$coverage\" $selected>$coverage</option>\n";
-% }
-
-</select>
-
+<&| /page/info_section.mas, title=>"Sequence overview", collapsible => 1, collapsed   => 0 &>
+<center>
 <span id="query" style="display:none" ><% $query->seq() %></span>
 <span id="markup"></span>
+</center>
+</&>
 
-
-<h2>Sequences with perfect matches above <% $fragment_size %> bp</h2>
-
+<&| /page/info_section.mas, title=>"Sequences with perfect matches of $fragment_size-mers",    collapsible => 1,    collapsed   => 0 &>
 % foreach my $id (@ids) { 
-% print $id."<br />";
+% print $id->[0]." (".$id->[1].")<br />";
 % }
 
+</&>
 <script>
 	hilite_sequence();
 </script>

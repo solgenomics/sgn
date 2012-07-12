@@ -2,7 +2,7 @@
 use strict;
 
 use Test::More qw | no_plan |;
-
+use Data::Dumper;
 use CXGN::Graphics::VigsGraph;
 
 my $vg = CXGN::Graphics::VigsGraph->new();
@@ -80,16 +80,35 @@ my $matches = $vg->matches();
 is(scalar(keys(%$matches)), 57, "match count");
 
 
-$vg->seq_window_size(200);
-my @seqs = $vg->get_best_vigs_seqs(1);
+#$vg->seq_window_size(200);
+##my @seqs = $vg->get_best_vigs_seqs(1);
 
 my ($best, $regions) = $vg->get_best_coverage();
-print "BEST COVERAGE: $best\n";
+
+is($best, 1, "coverage test");
 
 $vg->render("/tmp/vigs_test.png", 1);
 
 ok(-s "/tmp/vigs_test.png" > 0, "image file size");
 
+my @targets = $vg->target_graph(1);
+#print STDERR join ",", @targets;
+is($targets[1], 1, "target array test 1");
+is($targets[22], 21, "target array test 2");
+is($targets[-1], 1, "target array test 3");
+
+my @off_targets = $vg->off_target_graph(1);
+#print STDERR join ",", @off_targets;
+is($off_targets[0], undef, "off target array test 1");
+is($off_targets[100], 2, "off target array test 2");
+is($off_targets[-1], 1, "off target array test 3");
+
+#print STDERR "\n";
+
+my @regions = $vg ->longest_vigs_sequence(1);
+#print Dumper(\@regions);
+is($regions[0]->[4], 2312, "best region start coord test");
+is($regions[0]->[5], 2569, "best region end coord test");
 
 
 

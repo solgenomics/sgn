@@ -36,7 +36,7 @@ foreach my $d (@databases) {
 <br />
 <br />
 Fragment size <input type="input" value="21" name="fragment_size" size="3" /><br /><br />
-Target sequence length <input type="input" value="300" name="seq_window_size" size="4" /><br /><br />
+<!-- Target sequence length <input type="input" value="300" name="seq_window_size" size="4" /><br /><br / -->
 <input type="reset" value="clear" />&nbsp; &nbsp; &nbsp;
 <input type="submit" value="VIGS Analysis" />
 

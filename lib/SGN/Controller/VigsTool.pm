@@ -51,66 +51,66 @@ sub input :Path('/tools/vigs/')  :Args(0) {
 
 # this subroutine is copied exactly from the BLAST index.pl code
 #
-sub blast_db_prog_selects {
-    my ($c,$prefs) = @_;
+# sub blast_db_prog_selects {
+#     my ($c,$prefs) = @_;
     
-    sub opt {
-	my $db = shift;
+#     sub opt {
+# 	my $db = shift;
 	
-	my $timestamp = $db->file_modtime
-	    or return '';
-	$timestamp = strftime(' &nbsp;(%m-%d-%y)',gmtime $db->file_modtime);
-	my $seq_count = $db->sequences_count;
+# 	my $timestamp = $db->file_modtime
+# 	    or return '';
+# 	$timestamp = strftime(' &nbsp;(%m-%d-%y)',gmtime $db->file_modtime);
+# 	my $seq_count = $db->sequences_count;
 	
-	[$db->blast_db_id, $db->title.$timestamp]
-    }
+# 	[$db->blast_db_id, $db->title.$timestamp]
+#     }
     
-    my @db_choices = map {
-	my @web_visible = $_->blast_dbs( web_interface_visible=>'t');
-	my @dbs = map [$_,opt($_)], grep $_->file_modtime, $_->blast_dbs( web_interface_visible => 't');
+#     my @db_choices = map {
+# 	my @web_visible = $_->blast_dbs( web_interface_visible=>'t');
+# 	my @dbs = map [$_,opt($_)], grep $_->file_modtime, $_->blast_dbs( web_interface_visible => 't');
 	
-	@dbs || print STDERR "No databases available...". $_->name."\n";
-	@dbs ? ('__'.$_->name, @dbs) : ()
-    } CXGN::BlastDB::Group->search_like(name => '%',{order_by => 'ordinal, name'});
+# 	@dbs || print STDERR "No databases available...". $_->name."\n";
+# 	@dbs ? ('__'.$_->name, @dbs) : ()
+#     } CXGN::BlastDB::Group->search_like(name => '%',{order_by => 'ordinal, name'});
     
-    my @ungrouped_dbs = grep $_->file_modtime,CXGN::BlastDB->search( blast_db_group_id => undef, web_interface_visible => 't', {order_by => 'title'} );
-    if(@ungrouped_dbs) {
-	push @db_choices, '__Other',  map [$_,opt($_)], @ungrouped_dbs;
-    }
+#     my @ungrouped_dbs = grep $_->file_modtime,CXGN::BlastDB->search( blast_db_group_id => undef, web_interface_visible => 't', {order_by => 'title'} );
+#     if(@ungrouped_dbs) {
+# 	push @db_choices, '__Other',  map [$_,opt($_)], @ungrouped_dbs;
+#     }
     
-    @db_choices or return '<span class="ghosted">The BLAST service is temporarily unavailable, we apologize for the inconvenience</span>';
+#     @db_choices or return '<span class="ghosted">The BLAST service is temporarily unavailable, we apologize for the inconvenience</span>';
     
-    my $selected_db_file_base = $prefs->get_pref('last_blast_db_file_base');
-    #warn "got pref last_blast_db_file_base '$selected_db_file_base'\n";
+#     my $selected_db_file_base = $prefs->get_pref('last_blast_db_file_base');
+#     #warn "got pref last_blast_db_file_base '$selected_db_file_base'\n";
     
-    my %prog_descs = ( blastn  => 'BLASTN (nucleotide to nucleotide)',
-		       blastx  => 'BLASTX (nucleotide to protein; query translated to protein)',
-		       blastp  => 'BLASTP (protein to protein)',
-		       tblastx => 'TBLASTX (protein to protein; both database and query are translated)',
-		       tblastn => 'TBLASTN (protein to nucleotide; database translated to protein)',
-	);
+#     my %prog_descs = ( blastn  => 'BLASTN (nucleotide to nucleotide)',
+# 		       blastx  => 'BLASTX (nucleotide to protein; query translated to protein)',
+# 		       blastp  => 'BLASTP (protein to protein)',
+# 		       tblastx => 'TBLASTX (protein to protein; both database and query are translated)',
+# 		       tblastn => 'TBLASTN (protein to nucleotide; database translated to protein)',
+# 	);
      
-    my @program_choices = map {
-	my ($db) = @$_;
-	if($db->type eq 'protein') {
-	    [map [$_,$prog_descs{$_}], 'blastx','blastp']
-	} else {
-	    [map [$_,$prog_descs{$_}], 'blastn','tblastx','tblastn']
-    }
-    } grep ref, @db_choices;
+#     my @program_choices = map {
+# 	my ($db) = @$_;
+# 	if($db->type eq 'protein') {
+# 	    [map [$_,$prog_descs{$_}], 'blastx','blastp']
+# 	} else {
+# 	    [map [$_,$prog_descs{$_}], 'blastn','tblastx','tblastn']
+#     }
+#     } grep ref, @db_choices;
     
-    @db_choices = map {ref($_) ? $_->[1] : $_} @db_choices;
+#     @db_choices = map {ref($_) ? $_->[1] : $_} @db_choices;
     
-    return hierarchical_selectboxes_html( parentsel => { name => 'database',
-							 choices =>
-							     \@db_choices,
-							     $selected_db_file_base ? (selected => $selected_db_file_base) : (),
-					  },
-					  childsel  => { name => 'program',
-					  },
-					  childchoices => \@program_choices
-	);
-}
+#     return hierarchical_selectboxes_html( parentsel => { name => 'database',
+# 							 choices =>
+# 							     \@db_choices,
+# 							     $selected_db_file_base ? (selected => $selected_db_file_base) : (),
+# 					  },
+# 					  childsel  => { name => 'program',
+# 					  },
+# 					  childchoices => \@program_choices
+# 	);
+# }
 
 
 
@@ -130,7 +130,7 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
     
     my $sequence = $c->req->param("sequence");
     my $fragment_size = $c->req->param("fragment_size");
-    my $seq_window_size = $c->req->param("seq_window_size");
+    #my $seq_window_size = $c->req->param("seq_window_size");
     if (!$fragment_size) { 
 	push @errors, "Fragment size ($fragment_size) should be greater than zero (~20 - 40 bp)\n";
     }
@@ -177,10 +177,6 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
 
     if (! -e $query_file) { die "Query file failed to be created."; }
 
-
-
-
-
     print STDERR "DATABASE SELECTED: $params->{database}\n";
     my $bdb = CXGN::BlastDB->from_id($params->{database});
 
@@ -195,28 +191,18 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
 
     $job->wait();
 
-    $c->res->redirect("/tools/vigs/view/$id/$fragment_size/$seq_window_size/1");
+    $c->res->redirect("/tools/vigs/view/?id=$id&fragment_size=$fragment_size&targets=0");
 
 }
 
-# sub wait :Path('/wait') Args(1) { 
-#     my ($self, $c, $id) = @_;
-#     print $c->res->header;
-#     while (! -e "/data/shared/tmp/$id") { 
-# 	print "WAIT...\n";
-# 	sleep(3);
-#     }
 
-# }
-
-sub view :Path('/tools/vigs/view') Args(4) { 
+sub view :Path('/tools/vigs/view') Args(0) { 
     my $self = shift;
     my $c = shift;
     
-    my $seq_filename = shift;
-    my $fragment_size = shift || 300;
-    my $seq_window_size = shift;
-    my $coverage = shift;
+    my $seq_filename = $c->req->param("id");
+    my $fragment_size = $c->req->param("fragment_size") || 21;
+    my $coverage = $c->req->param("targets");
 
     $seq_filename = "/data/prod/tmp/$seq_filename";
 
@@ -244,22 +230,32 @@ sub view :Path('/tools/vigs/view') Args(4) {
     $vg->bwafile($seq_filename.".bwa.out");
     $vg->fragment_size($fragment_size);
     $vg->query_seq($query->seq());
-    $vg->seq_window_size($seq_window_size);
+    #$vg->seq_window_size($seq_window_size);
     $vg->parse();    
-    my @regions = (); 
 
+    if (!$coverage) { 
+	$coverage = $vg->get_best_coverage;
+    }
 
+    #print STDERR "BEST COVERAGE: $coverage\n";
+    my @regions = $vg->longest_vigs_sequence($coverage);
     
+    #print STDERR "REGION: ", join ", ", @{$regions[0]};
+    #print STDERR "\n";
+
+    $vg->hilite_regions( [ [ $regions[0]->[4], $regions[0]->[5] ] ] );
     
-    $vg->render($graph_img_path, $coverage);
-    
-    $c->stash->{regions} = \@regions;
+    my $image_map = $vg->render($graph_img_path, $coverage);
+
+    $c->stash->{image_map} = $image_map;
+    $c->stash->{ids} = [ $vg->subjects_by_match_count($vg->matches()) ];
+    $c->stash->{regions} =  [ [ $regions[0]->[4], $regions[0]->[5] ] ];
     $c->stash->{graph_url} = $graph_img_url;
     $c->stash->{coverage} = $coverage;
 
-    my @bwa_matches = `cut -f3 $seq_filename.bwa.out | sort -u`;
+    #my @bwa_matches = `cut -f3 $seq_filename.bwa.out | sort -u`;
 
-    $c->stash->{blast_matches} = \@bwa_matches;
+    #$c->stash->{blast_matches} = \@bwa_matches;
     $c->stash->{fragment_size} = $fragment_size;
 }
 
