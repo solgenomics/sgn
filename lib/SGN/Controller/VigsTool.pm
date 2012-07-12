@@ -250,8 +250,10 @@ sub view :Path('/tools/vigs/view') Args(0) {
     $c->stash->{image_map} = $image_map;
     $c->stash->{ids} = [ $vg->subjects_by_match_count($vg->matches()) ];
     $c->stash->{regions} =  [ [ $regions[0]->[4], $regions[0]->[5] ] ];
+    $c->stash->{scores}  =  [ [ $regions[0]->[1] ] ];
     $c->stash->{graph_url} = $graph_img_url;
     $c->stash->{coverage} = $coverage;
+    $c->stash->{seq_filename} = basename($seq_filename);
 
     #my @bwa_matches = `cut -f3 $seq_filename.bwa.out | sort -u`;
 

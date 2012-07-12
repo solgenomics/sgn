@@ -1,10 +1,10 @@
 
 <%args>
 $query
-#$raw_blast_url => undef
 $graph_url => undef
-#$click_map_html => undef
-@regions => ()  # list of listrefs, index is coverage level
+$seq_filename
+@regions => ()  # list of listrefs, with start and end positions
+@scores => ()
 $error => undef
 $fragment_size => undef
 $messages => ""
@@ -24,14 +24,7 @@ my $json = JSON::Any->new;
 if ($errors) { print "An error occurred. $error." }
 if ($messages) { print $messages; }
 
-
-
-#foreach my $s (@coords) { 
-#	@ids = map { $_->id() } @$s;
-#}
-
-
-print STDERR Dumper(\@regions);
+#print STDERR Dumper(\@regions);
 
 </%perl>
 
@@ -39,9 +32,22 @@ print STDERR Dumper(\@regions);
 
 <& /page/page_title.mas, title=>"VIGS Tool Results" &>
 
+
+%if ($scores[0]->[0] == 0) { 
+    No results were found.
+% return;
+%}
+
 <% $messages %><br /><br />
 
-Coverage: <% $coverage %><br />
+<form action="/tools/vigs/view">
+Target sequences: 
+<input size="2" name="targets" value="<% $coverage %>" />
+<input type="hidden" name="id" value="<% $seq_filename %>" />
+<input type="hidden" name="fragment_size" value="<% $fragment_size %>" />
+<input type="submit" value="change" />
+
+</form><br />
 
 
 <&| /page/info_section.mas, title=>"Distribution of $fragment_size-mers",    collapsible => 1,    collapsed   => 0 &>
@@ -54,15 +60,6 @@ Coverage: <% $coverage %><br />
 
 </&>
 
-% #print "QUERY: $query. ID=".$query->id()." SEQUENCE:".$query->seq()."<br />";
-% foreach my $level (@regions) {
-% #print STDERR "LEVEL!\n";
-%   foreach my $r (@$level) { 
-%  #     print STDERR "REF:". ref($r)."\n";
-%      if (ref($r)) { print join ("&nbsp;", $r->start, $r->end)."<br />"; 
-%     }
-%   }
-% } 
 <br /><br />
 
 <script>
