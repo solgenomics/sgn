@@ -179,9 +179,10 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
 
     print STDERR "DATABASE SELECTED: $params->{database}\n";
     my $bdb = CXGN::BlastDB->from_id($params->{database});
-
+    
     my $basename = $bdb->full_file_basename;
-  
+    my $database_title = $bdb->title;
+
     print STDERR "\n\nSYSTEM CALL: /data/shared/bin/bwa_wrapper.sh $basename $seq_filename.fragments $seq_filename.bwa.out\n\n";
 
     my $job = CXGN::Tools::Run->run_async('/data/shared/bin/bwa_wrapper.sh', $basename, $seq_filename.".fragments", $seq_filename.".bwa.out");
@@ -191,7 +192,7 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
 
     $job->wait();
 
-    $c->res->redirect("/tools/vigs/view/?id=$id&fragment_size=$fragment_size&targets=0");
+    $c->res->redirect("/tools/vigs/view/?id=$id&fragment_size=$fragment_size&database=$database_title&targets=0");
 
 }
 
@@ -203,6 +204,7 @@ sub view :Path('/tools/vigs/view') Args(0) {
     my $seq_filename = $c->req->param("id");
     my $fragment_size = $c->req->param("fragment_size") || 21;
     my $coverage = $c->req->param("targets");
+    my $database = $c->req->param("database");
 
     $seq_filename = "/data/prod/tmp/$seq_filename";
 
@@ -254,10 +256,7 @@ sub view :Path('/tools/vigs/view') Args(0) {
     $c->stash->{graph_url} = $graph_img_url;
     $c->stash->{coverage} = $coverage;
     $c->stash->{seq_filename} = basename($seq_filename);
-
-    #my @bwa_matches = `cut -f3 $seq_filename.bwa.out | sort -u`;
-
-    #$c->stash->{blast_matches} = \@bwa_matches;
+    $c->stash->{database} = $database;
     $c->stash->{fragment_size} = $fragment_size;
 }
 

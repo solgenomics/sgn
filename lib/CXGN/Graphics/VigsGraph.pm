@@ -29,7 +29,19 @@ sub parse {
 	    next;
 	}
 
-	my ($seq_id, $code, $subject, $scoord, $what, $match) = split /\t/;
+	my ($seq_id, $code, $subject, $scoord, $what, $match, $more_matches) = (split /\t/)[0..5, 19];
+
+	my @additional_coords = ();
+	if (defined($more_matches)) { 
+	    my @additional = split ";", $more_matches;
+	    foreach my $a (@additional) { 
+		my ($id, $coord, $cigar, $n) = split ",", $a;
+		if ($cigar =~ /(\d+)M/ && $1 == $self->fragment_size()) { 
+		    push @additional_coords, [ $id, $coord ];
+		}
+	    }
+	}
+
 	if ($match=~/(\d+)M/ and $1 == $self->fragment_size()) { 
 	    my ($start_coord, $end_coord);
 	    if ($seq_id=~/(\d+)/)  {
@@ -41,10 +53,23 @@ sub parse {
 	    $ms->start($start_coord);
 	    $ms->end($end_coord);
 	    $ms->id($subject);
-	    
+	 
+
+		
+   
 	#    print STDERR "PARSING: $start_coord, $end_coord, $subject\n";
 
 	    push @{$matches->{$subject}}, $ms;
+
+	    foreach $a (@additional_coords) { 
+		my $ams = CXGN::Graphics::VigsGraph::MatchSegment->new();
+		$ams->start($start_coord);
+		$ams->end($end_coord);
+		$ams->id($a->[0]);
+		push @{$matches->{$subject}}, $ams;
+	    }
+	    
+
 	}
     }
     $self->matches($matches);
@@ -283,7 +308,6 @@ sub render {
 	$image->filledRectangle($start * $x_scale, 0, $end * $x_scale, $self->height, $yellow);
     }
 	
-
     my $matches = $self->matches();
     my $offset = 10;
     my $track_height = 0;
@@ -295,9 +319,8 @@ sub render {
 	my $max_tracks =0;
 	my $current_track = 0;
 
-	if ($track < $coverage) { $color = $blue; }
+	if ($track <= $coverage) { $color = $blue; }
 	else { $color = $red; }
-	    
 
 	my @tracks = ();
 	#print STDERR "Processing $sorted->[0]\n";
@@ -323,7 +346,7 @@ sub render {
 	#	}
 		
 	    }
-	    $image->rectangle($i->start() *  $x_scale, $offset + $current_track * $glyph_height, $i->end() * $x_scale, $offset + ($current_track+1)*$glyph_height, $red);
+	    $image->rectangle($i->start() *  $x_scale, $offset + $current_track * $glyph_height, $i->end() * $x_scale, $offset + ($current_track+1)*$glyph_height, $color);
 	    
 	}
 	#print STDERR "Done with $sorted->[0] - drawing red line.. at ".($offset + $max_tracks * $glyph_height)."\n";

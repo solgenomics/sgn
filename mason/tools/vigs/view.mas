@@ -3,6 +3,7 @@
 $query
 $graph_url => undef
 $seq_filename
+$database => 'unknown database'
 @regions => ()  # list of listrefs, with start and end positions
 @scores => ()
 $error => undef
@@ -40,6 +41,7 @@ if ($messages) { print $messages; }
 
 <% $messages %><br /><br />
 
+User sequence matched against <% $database %>.<br />
 <form action="/tools/vigs/view">
 Target sequences: 
 <input size="2" name="targets" value="<% $coverage %>" />
