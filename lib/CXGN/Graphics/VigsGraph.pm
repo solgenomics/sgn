@@ -36,7 +36,7 @@ sub parse {
 	    my @additional = split ";", $more_matches;
 	    foreach my $a (@additional) { 
 		my ($id, $coord, $cigar, $n) = split ",", $a;
-		if ($cigar =~ /(\d+)M/ && $1 == $self->fragment_size()) { 
+		if (defined($cigar) && $cigar =~ /(\d+)M/ && $1 == $self->fragment_size()) { 
 		    push @additional_coords, [ $id, $coord ];
 		}
 	    }
