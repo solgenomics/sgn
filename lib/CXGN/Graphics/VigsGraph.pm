@@ -286,6 +286,7 @@ sub render {
     my $red   = $image->colorResolve(180, 0, 0);
     my $color = $image->colorResolve(0, 0, 0);    
     my $blue = $image->colorResolve(0, 0, 180);
+    my $grey = $image->colorResolve(150,150,150);
     my $yellow = $image->colorResolve(255, 255, 0);
 
     $image->filledRectangle(0, 0, $self->width, $self->height, $white);
@@ -319,7 +320,7 @@ sub render {
 	my $max_tracks =0;
 	my $current_track = 0;
 
-	if ($track <= $coverage) { $color = $blue; }
+	if ($track < $coverage) { $color = $blue; }
 	else { $color = $red; }
 
 	my @tracks = ();
@@ -353,7 +354,7 @@ sub render {
 
 	$offset += 10;
 
-	$image->line(0, $offset + ($max_tracks+1) * $glyph_height, $self->width, $offset + ($max_tracks+1) * $glyph_height, $red);
+	$image->line(0, $offset + ($max_tracks+1) * $glyph_height, $self->width, $offset + ($max_tracks+1) * $glyph_height, $grey);
 
 	push @track_heights, $offset + ($max_tracks+1)  * $glyph_height;
 	push @track_names, $sorted[$track]->[0];
@@ -363,7 +364,7 @@ sub render {
     }
     # draw vertical grid of seq_window_size in size
     for (my $x=0; $x < length($self->query_seq()); $x += $self->seq_window_size()) { 
-	$image->line($x * $x_scale, 0, $x * $x_scale, $self->height, $red);
+	$image->line($x * $x_scale, 0, $x * $x_scale, $self->height, $grey);
     }
     
     # adjust image height
