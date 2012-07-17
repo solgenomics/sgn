@@ -405,6 +405,13 @@ sub default_toolbar_data {
                     desc => 'An interactive map of metabolic pathways.'
                 },
 
+                {
+                    name => 'Coffee Interactomic Data',
+                    link => '/tools/interactomics/',
+                    desc => 'Coffee Interactome Data with Cytoscape Web Start viewer.'
+                },
+
+
                 #Bulk Query
                 { name => 'Bulk Query' },
 
