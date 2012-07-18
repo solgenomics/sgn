@@ -407,7 +407,7 @@ sub default_toolbar_data {
 
                 {
                     name => 'Coffee Interactomic Data',
-                    link => '/tools/interactomics/',
+                    link => '/tools/interactomics',
                     desc => 'Coffee Interactome Data with Cytoscape Web Start viewer.'
                 },
 

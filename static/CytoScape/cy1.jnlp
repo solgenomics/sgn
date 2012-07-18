@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--codebase is root location for file, href is location of cy1.jnlp within codebase-->
-<jnlp codebase="http://localhost:3000/CytoScape/" href="cy1.jnlp">
+<jnlp codebase="http://localhost:3000/CytoScape" href="cy1.jnlp">
   <security>
     <all-permissions />
   </security>
@@ -20,9 +19,9 @@
     <jar href="lib/resolver.jar" />
     <jar href="lib/cytoscape-graph-dynamic.jar" />
     <jar href="lib/colt.jar" />
+    <jar href="lib/phoebe.jar" />
     <jar href="lib/activation.jar" />
     <jar href="lib/freehep-export-2.1.1.jar" />
-    <jar href="lib/phoebe.dnd.jar" />
     <jar href="lib/tclib.jar" />
     <jar href="lib/i4jruntime.jar" />
     <jar href="lib/FastInfoset.jar" />
@@ -33,7 +32,6 @@
     <jar href="lib/saaj-api.jar" />
     <jar href="lib/jaxws-tools.jar" />
     <jar href="lib/cytoscape-render-export.jar" />
-    <jar href="lib/mimepull.jar" />
     <jar href="lib/freehep-graphicsio-2.1.1.jar" />
     <jar href="lib/piccolo.jar" />
     <jar href="lib/itext-2.0.4.jar" />
@@ -46,8 +44,9 @@
     <jar href="lib/jhall.jar" />
     <jar href="lib/jaxb-api.jar" />
     <jar href="lib/junit.jar" />
+    <jar href="lib/jsr173_1.0_api.jar" />
     <jar href="lib/com-nerius-math-xform.jar" />
-    <jar href="lib/woodstox.jar" />
+    <jar href="lib/swing-layout-1.0.1.jar" />
     <jar href="lib/giny.jar" />
     <jar href="lib/undo.support.jar" />
     <jar href="lib/commons-cli-1.x-cytoscape-custom.jar" />
@@ -60,12 +59,12 @@
     <jar href="lib/stax-ex.jar" />
     <jar href="lib/ding.jar" />
     <jar href="lib/cytoscape-geom-rtree.jar" />
-    <jar href="lib/swing-layout-1.0.3.jar" />
     <jar href="lib/jsr250-api.jar" />
-    <jar href="lib/jsr173_api.jar" />
+    <jar href="lib/swingx-2006_10_27.jar" />
     <jar href="lib/cytoscape-graph-fixed.jar" />
     <jar href="lib/saaj-impl.jar" />
     <jar href="lib/cytoscape-task.jar" />
+    <jar href="lib/wizard.jar" />
     <jar href="lib/fing.jar" />
     <jar href="lib/coltginy.jar" />
     <jar href="lib/freehep-xml-2.1.1.jar" />
@@ -74,9 +73,7 @@
     <jar href="lib/freehep-graphicsio-java-2.1.1.jar" />
     <jar href="lib/jnlp.jar" />
     <jar href="lib/violinstrings-1.0.2.jar" />
-    <jar href="lib/swingx-beaninfo-1.0.jar" />
     <jar href="lib/concurrent.jar" />
-    <jar href="lib/swingx-1.0.jar" />
     <jar href="lib/streambuffer.jar" />
     <jar href="lib/looks-2.1.4.jar" />
     <jar href="lib/jsr181-api.jar" />
@@ -85,13 +82,11 @@
     <jar href="plugins/cPath.jar" />
     <jar href="plugins/yLayouts.jar" />
     <jar href="plugins/browser.jar" />
+    <jar href="plugins/GraphMerge.jar" />
     <jar href="plugins/CytoscapeEditor.jar" />
     <jar href="plugins/psi_mi.jar" />
-    <jar href="plugins/ncbiClient.jar" />
-    <jar href="plugins/biomartClient.jar" />
     <jar href="plugins/filter.jar" />
     <jar href="plugins/filters.jar" />
-    <jar href="plugins/AdvancedNetworkMerge.jar" />
     <jar href="plugins/ManualLayout.jar" />
     <jar href="plugins/linkout.jar" />
     <jar href="plugins/cpath2.jar" />
@@ -103,7 +98,7 @@
   <!--This starts-up Cytoscape, specify your plugins to load, and other command line arguments.  Plugins not specified here will not be loaded.-->
   <application-desc main-class="cytoscape.CyMain">
     <argument>-p</argument>
-    <argument>cytoscape.coreplugins.biopax.BiopaxPlugin</argument>
+    <argument>org.mskcc.biopax_plugin.plugin.BioPaxPlugIn</argument>
     <argument>-p</argument>
     <argument>org.cytoscape.coreplugin.cpath.plugin.CPathPlugIn</argument>
     <argument>-p</argument>
@@ -111,19 +106,15 @@
     <argument>-p</argument>
     <argument>browser.AttributeBrowserPlugin</argument>
     <argument>-p</argument>
+    <argument>GraphMerge.GraphMerge</argument>
+    <argument>-p</argument>
     <argument>cytoscape.editor.CytoscapeEditorPlugin</argument>
     <argument>-p</argument>
     <argument>org.cytoscape.coreplugin.psi_mi.plugin.PsiMiPlugIn</argument>
     <argument>-p</argument>
-    <argument>edu.ucsd.bioeng.idekerlab.ncbiclient.NCBIClientPlugin</argument>
-    <argument>-p</argument>
-    <argument>edu.ucsd.bioeng.idekerlab.biomartclient.BiomartClientPlugin</argument>
-    <argument>-p</argument>
     <argument>filter.cytoscape.CsFilter</argument>
     <argument>-p</argument>
     <argument>cytoscape.filters.FilterPlugin</argument>
-    <argument>-p</argument>
-    <argument>csplugins.network.merge.NetworkMergePlugin</argument>
     <argument>-p</argument>
     <argument>ManualLayout.ManualLayoutPlugin</argument>
     <argument>-p</argument>
@@ -138,8 +129,6 @@
     <argument>edu.ucsd.bioeng.coreplugin.tableImport.TableImportPlugin</argument>
     <argument>-p</argument>
     <argument>csplugins.layout.LayoutPlugin</argument>
-    <argument>-N</argument>
-    <argument>http://localhost:3000/CytoScape/coffee_PPI_cytoscape.cys</argument>
   </application-desc>
 </jnlp>
 
