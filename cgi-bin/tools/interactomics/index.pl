@@ -10,7 +10,7 @@ print qq{
 <table width="800px" cellpadding="10px">
 	<table width="100%">
 		<tr><td>
-		<a href="cy1.jnlp">Start Cytoscape</a>
+		<a href="/CytoScape/cy1.jnlp">Start Cytoscape</a>
 		</td></tr>
 	</table>
 	<table width="100%">
