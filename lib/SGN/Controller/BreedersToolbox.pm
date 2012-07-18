@@ -31,20 +31,17 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
     };
     if ($@) { 
     }
-
-    
-    
-
-
 }
 
-sub insert_new_location : Path("/breeders/location/insert") : Args(0) { 
-    my ($self, $c) = @_;
+sub insert_new_location :Path("/breeders/location/insert") Args(0) { 
+    my $self = shift;
+    my $c = shift;
     
-    my $description => $c->req->param("description");
-    my $longitude => $c->req->param("longitude");
-    my $latitude  => $c->req->param("latitude");
+    my $params = $c->request->parameters();
 
+    my $description = $params->{description};
+    my $longitude = $params->{longitude};
+    my $latitude  = $params->{latitude};
 
     if (! $c->user()) { # redirect
 	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
@@ -55,26 +52,26 @@ sub insert_new_location : Path("/breeders/location/insert") : Args(0) {
 
     my $exists = $schema->resultset('NaturalDiversity::NdGeolocation')->search( { description => $description } )->count();
 
+
+
     if ($exists > 0) { 
-	$c->res->body("The location \'$description\' already exists!");
+	$c->res->body("The location - $description - already exists!");
 	return;
     }
 
-    my $new_row = $schema->resultset('NaturalDiversity::NdGeolocation')->new( { 
-	description => $description,
-	longitude => $longitude,
-	latitude  => $latitude,
-							      });
+    my $new_row = $schema->resultset('NaturalDiversity::NdGeolocation')->new( 
+	{ 
+	    description => $description,
+	    longitude   => $longitude,
+	    latitude    => $latitude,
+	});
 
     $new_row->insert();
 
-    $c->res->body("Everything OK\n");
-
-   #$c->res->redirect( uri( path => '/breeders/home', query => { goto_url => $c->req->uri->path_query } ) );
+    $c->res->redirect( uri( path => '/breeders/home', query => { goto_url => $c->req->uri->path_query } ) );
     
 }
     
-     
 sub breeder_home :Path("/breeders/home") Args(0) { 
     my ($self , $c) = @_;
     if ($c->user()) { 
@@ -110,8 +107,8 @@ sub breeder_home :Path("/breeders/home") Args(0) {
 	    my ($count) = $sh->fetchrow_array();
 
 	    print STDERR "PLOTS: $count\n";
-
-	    if ($count > 0) { 
+	    
+	    #if ($count > 0) { 
 
 		push @locations,  [ $row->nd_geolocation_id, 
 				    $row->description,
@@ -121,7 +118,7 @@ sub breeder_home :Path("/breeders/home") Args(0) {
 				    $count, # number of experiments TBD
 				
 		];
-	    }
+	#}
 	}
 
 	$c->stash->{locations} = \@locations;

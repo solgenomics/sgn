@@ -3,6 +3,11 @@
 
 </%args>
 
-<form action="/breeders/location/insert" >
-Name <input name="description" size="8" /> Longitude <input name="longitude" size="4" /> Latitude <input name="latitude" size="4" />&nbsp;&nbsp;<input type="submit" value="add" />
+<form action="/breeders/location/insert/" >
+
+Name <input name="description" size="8" /> 
+Longitude <input name="longitude" size="4" /> 
+Latitude <input name="latitude" size="4" />&nbsp;&nbsp;
+<input type="submit" value="add" />
+
 </form>
