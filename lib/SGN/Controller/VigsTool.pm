@@ -185,7 +185,15 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
 
     print STDERR "\n\nSYSTEM CALL: /data/shared/bin/bwa_wrapper.sh $basename $seq_filename.fragments $seq_filename.bwa.out\n\n";
 
-    my $job = CXGN::Tools::Run->run_async('/data/shared/bin/bwa_wrapper.sh', $basename, $seq_filename.".fragments", $seq_filename.".bwa.out");
+    my $job = CXGN::Tools::Run->run_cluster('/data/shared/bin/bwa_wrapper.sh', $basename, $seq_filename.".fragments", $seq_filename.".bwa.out", 
+					    { temp_base   => $c->config->{'cluster_shared_tempdir'},
+					      queue       => $c->get_conf('web_cluster_queue'),
+					      working_dir => $c->get_conf('cluster_shared_tempdir'),
+					      # don't block and wait if the cluster looks full
+					      max_cluster_jobs => 1_000_000_000,
+
+
+					    });
     #my $count = 0;
 
     my $id = $urlencode{basename($seq_filename)};
@@ -206,7 +214,7 @@ sub view :Path('/tools/vigs/view') Args(0) {
     my $coverage = $c->req->param("targets");
     my $database = $c->req->param("database");
 
-    $seq_filename = "/data/prod/tmp/$seq_filename";
+    $seq_filename = File::Spec->catfile($c->config->{cluster_shared_tempdir}, $seq_filename);
 
     $c->stash->{query_file} = $seq_filename;
 
