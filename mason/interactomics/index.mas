@@ -2,33 +2,20 @@
 
 </%args>
 
-<html>
 
-<head>
-  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-  <title>Cytoscape Webstart</title>
-  <link href="css/cytoscape.css" media="screen" type="text/css" rel="stylesheet">
-  <link href="images/cyto.ico" rel="shortcut icon">	
-</head>
 
-<body id="body">
-<table width="800px" cellpadding="10px">
-	<tr><td>
+<& /page/page_title.mas, title => "CytoScape Interactome Viewer" &>
 
-	<table width="100%">
-		<tr class="titlebar"><td class="titlebar" background="images/cytoCrop.jpg" height="100px"/>
-		<h1 align="center"><font color="white">Cytoscape Webstart</h1>
-		</td></tr>
-	</table>
+
+This is a CytoScape Java Web Start app designed to preload with the coffee interactome data.  In order to use this app, please click the Launch Cytoscape button below, which will download the configuration file and load the java app from your browser.  The application itself will not be installed on your computer, but you should get full Cytoscape functionality, and be able to view, process, edit, and save the network shown.
+
+
 
 	<p>
 
-	<table width="100%">
-		<tr><td>
-		<a href="/CytoScape/cy1.jnlp">Start Cytoscape</a>
-		</td></tr>
-	</table>
-
+<center><button type="button"  onClick="window.location.href='/CytoScape/cy1.jnlp'">Launch CytoScape</button></center>
+	
+<br />
 
 	<table width="100%">
 		<tr><td>
@@ -66,5 +53,3 @@
 	</td></tr>
 </table>
 
-</body>
-</html>

@@ -1,0 +1,155 @@
+No User level deployment.properties found.
+Starting security dialog thread
+Using firefox's profiles file: /home/andrew/.mozilla/firefox/profiles.ini
+Found preferences file: /home/andrew/.mozilla/firefox/f9dbva6o.default/prefs.js
+Read 52 entries from Firefox's preferences
+JNLP file location: cy1.jnlp
+Status: CONNECTED DOWNLOADED STARTED +(CONNECTED DOWNLOADED STARTED) @ /home/andrew/cxgn/sgn/static/CytoScape/cy1.jnlp
+<?xml version="1.0" encoding="UTF-8"?>
+line: 2 <jnlp codebase="http://localhost:3000/CytoScape" href="cy1.jnlp">
+line: 3   <security>
+line: 4     <all-permissions />
+line: 5   </security>
+line: 6   <information>
+line: 7     <title>Cytoscape Webstart</title>
+line: 8     <vendor>Cytoscape Collaboration</vendor>
+line: 9     <homepage href="http://cytoscape.org" />
+line: 10     <offline-allowed />
+line: 11   </information>
+line: 12   <resources>
+line: 13     <j2se version="1.5+" max-heap-size="1024M" />
+line: 14     
+line: 15     <jar href="cytoscape.jar" />
+line: 16     <jar href="lib/cytoscape-geom-spacial.jar" />
+line: 17     <jar href="lib/freehep-util-2.0.2.jar" />
+line: 18     <jar href="lib/biojava-1.4.jar" />
+line: 19     <jar href="lib/resolver.jar" />
+line: 20     <jar href="lib/cytoscape-graph-dynamic.jar" />
+line: 21     <jar href="lib/colt.jar" />
+line: 22     <jar href="lib/phoebe.jar" />
+line: 23     <jar href="lib/activation.jar" />
+line: 24     <jar href="lib/freehep-export-2.1.1.jar" />
+line: 25     <jar href="lib/tclib.jar" />
+line: 26     <jar href="lib/i4jruntime.jar" />
+line: 27     <jar href="lib/FastInfoset.jar" />
+line: 28     <jar href="lib/jaxws-api.jar" />
+line: 29     <jar href="lib/jaxb-impl.jar" />
+line: 30     <jar href="lib/cytoscape-util-intr.jar" />
+line: 31     <jar href="lib/freehep-graphicsio-svg-2.1.1.jar" />
+line: 32     <jar href="lib/saaj-api.jar" />
+line: 33     <jar href="lib/jaxws-tools.jar" />
+line: 34     <jar href="lib/cytoscape-render-export.jar" />
+line: 35     <jar href="lib/freehep-graphicsio-2.1.1.jar" />
+line: 36     <jar href="lib/piccolo.jar" />
+line: 37     <jar href="lib/itext-2.0.4.jar" />
+line: 38     <jar href="lib/glf.jar" />
+line: 39     <jar href="lib/jdom-1.0.jar" />
+line: 40     <jar href="lib/freehep-io-2.0.2.jar" />
+line: 41     <jar href="lib/jaxws-rt.jar" />
+line: 42     <jar href="lib/freehep-jas-plotter-2.2.jar" />
+line: 43     <jar href="lib/freehep-swing-2.0.3.jar" />
+line: 44     <jar href="lib/jhall.jar" />
+line: 45     <jar href="lib/jaxb-api.jar" />
+line: 46     <jar href="lib/junit.jar" />
+line: 47     <jar href="lib/jsr173_1.0_api.jar" />
+line: 48     <jar href="lib/com-nerius-math-xform.jar" />
+line: 49     <jar href="lib/swing-layout-1.0.1.jar" />
+line: 50     <jar href="lib/giny.jar" />
+line: 51     <jar href="lib/undo.support.jar" />
+line: 52     <jar href="lib/commons-cli-1.x-cytoscape-custom.jar" />
+line: 53     <jar href="lib/freehep-graphicsio-ps-2.1.1.jar" />
+line: 54     <jar href="lib/sjsxp.jar" />
+line: 55     <jar href="lib/http.jar" />
+line: 56     <jar href="lib/cytoscape-cruft-obo.jar" />
+line: 57     <jar href="lib/cytoscape-render-stateful.jar" />
+line: 58     <jar href="lib/cytoscape-render-immed.jar" />
+line: 59     <jar href="lib/stax-ex.jar" />
+line: 60     <jar href="lib/ding.jar" />
+line: 61     <jar href="lib/cytoscape-geom-rtree.jar" />
+line: 62     <jar href="lib/jsr250-api.jar" />
+line: 63     <jar href="lib/swingx-2006_10_27.jar" />
+line: 64     <jar href="lib/cytoscape-graph-fixed.jar" />
+line: 65     <jar href="lib/saaj-impl.jar" />
+line: 66     <jar href="lib/cytoscape-task.jar" />
+line: 67     <jar href="lib/wizard.jar" />
+line: 68     <jar href="lib/fing.jar" />
+line: 69     <jar href="lib/coltginy.jar" />
+line: 70     <jar href="lib/freehep-xml-2.1.1.jar" />
+line: 71     <jar href="lib/l2fprod-common-all.jar" />
+line: 72     <jar href="lib/freehep-graphics2d-2.1.1.jar" />
+line: 73     <jar href="lib/freehep-graphicsio-java-2.1.1.jar" />
+line: 74     <jar href="lib/jnlp.jar" />
+line: 75     <jar href="lib/violinstrings-1.0.2.jar" />
+line: 76     <jar href="lib/concurrent.jar" />
+line: 77     <jar href="lib/streambuffer.jar" />
+line: 78     <jar href="lib/looks-2.1.4.jar" />
+line: 79     <jar href="lib/jsr181-api.jar" />
+line: 80     
+line: 81     <jar href="plugins/biopax.jar" />
+line: 82     <jar href="plugins/cPath.jar" />
+line: 83     <jar href="plugins/yLayouts.jar" />
+line: 84     <jar href="plugins/browser.jar" />
+line: 85     <jar href="plugins/GraphMerge.jar" />
+line: 86     <jar href="plugins/CytoscapeEditor.jar" />
+line: 87     <jar href="plugins/psi_mi.jar" />
+line: 88     <jar href="plugins/filter.jar" />
+line: 89     <jar href="plugins/filters.jar" />
+line: 90     <jar href="plugins/ManualLayout.jar" />
+line: 91     <jar href="plugins/linkout.jar" />
+line: 92     <jar href="plugins/cpath2.jar" />
+line: 93     <jar href="plugins/SBMLReader.jar" />
+line: 94     <jar href="plugins/quick_find.jar" />
+line: 95     <jar href="plugins/TableImport.jar" />
+line: 96     <jar href="plugins/AutomaticLayout.jar" />
+line: 97   </resources>
+line: 98   
+line: 99   <application-desc main-class="cytoscape.CyMain">
+line: 100     <argument>-p</argument>
+line: 101     <argument>org.mskcc.biopax_plugin.plugin.BioPaxPlugIn</argument>
+line: 102     <argument>-p</argument>
+line: 103     <argument>org.cytoscape.coreplugin.cpath.plugin.CPathPlugIn</argument>
+line: 104     <argument>-p</argument>
+line: 105     <argument>yfiles.YFilesLayoutPlugin</argument>
+line: 106     <argument>-p</argument>
+line: 107     <argument>browser.AttributeBrowserPlugin</argument>
+line: 108     <argument>-p</argument>
+line: 109     <argument>GraphMerge.GraphMerge</argument>
+line: 110     <argument>-p</argument>
+line: 111     <argument>cytoscape.editor.CytoscapeEditorPlugin</argument>
+line: 112     <argument>-p</argument>
+line: 113     <argument>org.cytoscape.coreplugin.psi_mi.plugin.PsiMiPlugIn</argument>
+line: 114     <argument>-p</argument>
+line: 115     <argument>filter.cytoscape.CsFilter</argument>
+line: 116     <argument>-p</argument>
+line: 117     <argument>cytoscape.filters.FilterPlugin</argument>
+line: 118     <argument>-p</argument>
+line: 119     <argument>ManualLayout.ManualLayoutPlugin</argument>
+line: 120     <argument>-p</argument>
+line: 121     <argument>linkout.LinkOutPlugin</argument>
+line: 122     <argument>-p</argument>
+line: 123     <argument>org.cytoscape.coreplugin.cpath2.plugin.CPathPlugIn2</argument>
+line: 124     <argument>-p</argument>
+line: 125     <argument>sbmlreader.SBMLReaderPlugin</argument>
+line: 126     <argument>-p</argument>
+line: 127     <argument>csplugins.quickfind.plugin.QuickFindPlugIn</argument>
+line: 128     <argument>-p</argument>
+line: 129     <argument>edu.ucsd.bioeng.coreplugin.tableImport.TableImportPlugin</argument>
+line: 130     <argument>-p</argument>
+line: 131     <argument>csplugins.layout.LayoutPlugin</argument>
+line: 132   </application-desc>
+line: 133 </jnlp>
+Status: CONNECT STARTED +(CONNECT STARTED) @ /CytoScape/cy1.jnlp
+Status: CONNECT DOWNLOAD STARTED +(DOWNLOAD) @ /CytoScape/cy1.jnlp
+
+line: 135 Status: CONNECTING DOWNLOAD STARTED +(CONNECTING) -(CONNECT) @ /CytoScape/cy1.jnlp
+All possible urls for location=http://localhost:3000/CytoScape/cy1.jnlp state=CONNECTING DOWNLOAD STARTED : [http://localhost:3000/CytoScape/cy1.jnlp, http://localhost:3000/CytoScape/cy1.jnlp]
+Selecting proxy for: http://localhost:3000/CytoScape/cy1.jnlp
+Browser proxy option "4" (Automatic) not supported yet.
+Browser selected proxies: [DIRECT]
+Selected proxies: [DIRECT]
+Selecting proxy for: socket://localhost:3000
+Browser proxy option "4" (Automatic) not supported yet.
+Browser selected proxies: [DIRECT]
+Selected proxies: [DIRECT]
+
+
