@@ -46,8 +46,11 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
     my $maternal = $c->req->param('maternal');
     my $paternal = $c->req->param('paternal');
     my $progeny_number = $c->req->param('progeny_number');
-    #my $private_to_role = $c->req->param('private_to_role');
-    #my $progeny_count = $c->req->param('progeny');
+    my $visible_to_role = $c->req->param('visible_to_role');
+
+    
+
+ 
 
     
     # get ID for $maternal
@@ -104,6 +107,14 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
       dbxref => 'male_parent',
     });
 
+      my $visible_to_role_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
+    { name   => 'visible_to_role',
+      cv => 'local',
+      db => 'null',
+    });
+
+
+
     my $increment = 1;
     while ($increment < $progeny_number + 1) {
       my $stock_name = $cross_name."-".$increment;
@@ -125,6 +136,13 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
 		object_id => $accession_stock->stock_id(),
 		subject_id => $male_parent_stock->stock_id(),
 	 					  } );
+      if ($visible_to_role ne "") {
+	my $accession_stock_prop = $schema->resultset("Stock::Stockprop")->find_or_create(
+	       { type_id =>$visible_to_role_cvterm->cvterm_id(),
+		 value => $visible_to_role,
+		 stock_id => $accession_stock->stock_id()
+		 });
+      }
       $increment++;
 
     }
@@ -189,8 +207,10 @@ sub breeder_home :Path("/breeders/home") Args(0) {
 
 	$c->stash->{projects} = \@projects;
 
+	#get roles
 
-	
+	my @roles = $c->user->roles();
+	$c->stash->{roles}=\@roles;
 
 	#get crosses
 
