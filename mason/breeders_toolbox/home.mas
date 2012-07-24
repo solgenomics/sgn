@@ -4,6 +4,7 @@ $projects => undef
 @locations => ()
 $crosses => undef
 $user_id => undef
+@stockrelationships => ()
 </%args>
 
 <& /page/page_title.mas, title=>'Breeder Tools' &>
@@ -36,7 +37,7 @@ $user_id => undef
   
   <&| /page/info_section.mas, title=>'Add new cross', collapsible=>1, collapsed=>1, is_subsection=>1 &>
     
-    <& /breeders_toolbox/new_cross.mas &>
+    <& /breeders_toolbox/new_cross.mas, locations=>\@locations,projects=>$projects  &>
 
     </&>
       
@@ -49,7 +50,7 @@ $user_id => undef
 
       <&| /page/info_section.mas, title=>'View all crosses', collapsible=>1, collapsed=>1, is_subsection=>1 &>
       
-      <& /breeders_toolbox/display_crosses.mas, user_id => $user_id &>
+      <& /breeders_toolbox/display_crosses.mas, user_id => $user_id, crosses=> \@stockrelationships &>
 
 
 </&>
