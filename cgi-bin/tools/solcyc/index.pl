@@ -17,7 +17,7 @@ print qq {
 SolCyc is a collection of Pathway Genome Databases (PGDBs) for Solanaceae species generated using <a href="http://bioinformatics.ai.sri.com/ptools/">Pathway Tools</a> software from <a href="http://www.sri.com">SRI International</a>, the same software that is used in <a href="http://www.arabidopsis.org/tools/aracyc/">AraCyc</a> for <i>Arabidopsis thaliana</i> and <a href="http://www.ecocyc.org">EcoCyc</a> for <i>E. coli</i>. 
 </p>
 <p>
-Currently, databases for tomato, potato, pepper and eggplant are available, generated from the annotated SGN unigene sequences. The initial automatic builds have received little or no human curation.
+Currently, databases for tomato, potato, and pepper are available, generated from the annotated SGN unigene sequences. The initial automatic builds have received little or no human curation. The eggplant database is not longer supported or available.
 </p>
 
 <ul>
@@ -27,7 +27,6 @@ Currently, databases for tomato, potato, pepper and eggplant are available, gene
 <li>CoffeaCyc (coffee): <a href="http://solcyc.solgenomics.net/COFFEA/server.html?">Query page</a> | <a href="http://solcyc.solgenomics.net/COFFEA/NEW-IMAGE?type=OVERVIEW&amp;force=t">Pathway overview diagram</a></li>
 <li>PetuniaCyc (petunia): <a href="http://solcyc.solgenomics.net/PET/server.html?">Query page</a> | <a href="http://solcyc.solgenomics.net/PET/NEW-IMAGE?type=OVERVIEW&amp;force=t">Pathway overview diagram</a></li>
 <li>NicotianaCyc (tobacco): <a href="http://solcyc.solgenomics.net/TOBACCO/server.html?">Query page</a> | <a href="http://solcyc.solgenomics.net/TOBACCO/NEW-IMAGE?type=OVERVIEW&amp;force=t">Pathway overview diagram</a></li>
-<li>SolaCyc (eggplant): <a href="http://solcyc.solgenomics.net/SOLA/server.html">Query page</a> | <a href="http://solcyc.solgenomics.net/SOLA/NEW-IMAGE?type=OVERVIEW&amp;force=t">Pathway overview diagram</a></li>
 </ul>
 
 <p>
