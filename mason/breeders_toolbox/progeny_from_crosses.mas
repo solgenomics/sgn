@@ -1,0 +1,9 @@
+
+<%args>
+$cross_name => undef
+</%args>
+
+
+<%perl>
+print "Created cross: $cross_name\n";
+</%perl>
