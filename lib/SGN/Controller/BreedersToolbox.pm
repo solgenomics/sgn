@@ -47,22 +47,7 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
     my $paternal = $c->req->param('paternal');
     my $progeny_number = $c->req->param('progeny_number');
     my $visible_to_role = $c->req->param('visible_to_role');
-
     
-
- 
-
-    
-    # get ID for $maternal
-    #my $schema = $c->dbic_schema('Bio::Chado::Schema');
-    
-    #eval { 
-#	my $maternal_id = $schema->resultset('Stock::Stock')->search( { stock_name => $maternal })->first->stock_id();
-	
-#	my $paternal_id = $schema->resultset('Stock::Stock')->search( { stock_name => $paternal })->first->stock_id();
-#    };
-
-
     my $organism = $schema->resultset("Organism::Organism")->find_or_create(
     {
 	genus   => 'Manihot',
@@ -76,7 +61,6 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
       db     => 'null',
       dbxref => 'accession',
     });
-
 
     my $cross_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
     { name   => 'cross',
@@ -150,6 +134,32 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
     }
 }
 
+
+sub insert_new_project : Path("/breeders/project/insert") Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    
+    my $params = $c->req->parameters();
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    
+    my $exists = $schema->resultset('Project::Project')->search(
+	{ name => $params->{project_name} } 
+	);
+    
+    my $new_row = $schema->resultset('Project::Project')->new(
+	{
+	    name => $params->{project_name},
+	    description => $params->{project_description},
+	}
+	);
+    
+    $new_row->insert();
+    
+    $c->res->redirect( uri( path => '/breeders/home', query => { goto_url => $c->req->uri->path_query } ) );
+
+}
+
 sub insert_new_location :Path("/breeders/location/insert") Args(0) { 
     my $self = shift;
     my $c = shift;
@@ -157,8 +167,8 @@ sub insert_new_location :Path("/breeders/location/insert") Args(0) {
     my $params = $c->request->parameters();
 
     my $description = $params->{description};
-    my $longitude = $params->{longitude};
-    my $latitude  = $params->{latitude};
+    my $longitude =   $params->{longitude};
+    my $latitude  =   $params->{latitude};
 
     if (! $c->user()) { # redirect
 	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
@@ -269,18 +279,11 @@ sub breeder_home :Path("/breeders/home") Args(0) {
 	}
 
 	$c->stash->{locations} = \@locations;
-
-
-
-
-
 	$c->stash->{template} = '/breeders_toolbox/home.mas';
     }
     else {
 	# redirect to login page
 	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
-      
-
     }
 }
 

@@ -3,7 +3,7 @@
 
 </%args>
 
-<form>
+<form action="/breeders/project/insert" >
 Trial name <input name="project_name" /><br />
 <br />
 Description<br />
