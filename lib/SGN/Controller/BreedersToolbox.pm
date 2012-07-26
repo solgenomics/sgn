@@ -53,6 +53,20 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
 	return;
     }
 
+
+    #check that progeny number is an integer less than maximum allowed
+    my $maximum_progeny_number = 1000;
+    if ((! $progeny_number =~ m/^\d+$/) or ($progeny_number > $maximum_progeny_number)){
+      #redirect to error page?
+      return;
+    }
+
+    #check that parent names are not blank
+    if ($maternal eq "" or $paternal eq "") {
+      return;
+    }
+
+
     my $organism = $schema->resultset("Organism::Organism")->find_or_create(
     {
 	genus   => 'Manihot',
