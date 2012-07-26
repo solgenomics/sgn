@@ -214,6 +214,7 @@ sub update :Path('/primer3/update') :Args(0) {
 	$SEQUENCE_TEMPLATE =~ s/[^a-zA-Z]*//g;
 
 	# Store Boulder-IO formatted input in text variable.
+
 	my $text =  qq(SEQUENCE_EXCLUDED_REGION=$SEQUENCE_EXCLUDED_REGION
 SEQUENCE_INCLUDED_REGION=$SEQUENCE_INCLUDED_REGION
 SEQUENCE_PRIMER_REVCOMP=$SEQUENCE_PRIMER_REVCOMP
@@ -378,7 +379,7 @@ PRIMER_PAIR_WT_LIBRARY_MISPRIMING=$PRIMER_PAIR_WT_LIBRARY_MISPRIMING
 	my $filename = "primer3.txt";
 	my $tempdir = File::Spec->catfile($c->config->{basepath}, $c->tempfiles_subdir('primer3'), $filename);
 
-	# Remove lines from text that do not have default or user-defined input
+
 	my @text = split("\n", $text);
 	my $filteredtext;
 	foreach my $item (@text) {
@@ -390,10 +391,8 @@ PRIMER_PAIR_WT_LIBRARY_MISPRIMING=$PRIMER_PAIR_WT_LIBRARY_MISPRIMING
 
 	write_file($tempdir, $filteredtext);
 
-	# Send input through primer3 program
 	system("primer3_core < $tempdir > $tempdir.results");
 
-	# Stash results.
 	open (RESULTS, "$tempdir.results");
 	my %results;
 	while (<RESULTS>) {
