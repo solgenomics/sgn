@@ -66,6 +66,23 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
       return;
     }
 
+    #check that parents exist in the database
+    if (! $schema->resultset("Stock::Stock")->find({name=>$maternal,})){
+      return;
+    }
+    if (! $schema->resultset("Stock::Stock")->find({name=>$paternal,})){
+      return;
+    }
+
+    my $male_parent_stock = $schema->resultset("Stock::Stock")->find(
+            { name       => $paternal,
+            } );
+
+    #check that cross name does not already exist
+    if ($schema->resultset("Stock::Stock")->find({name=>$cross_name."-1",})){
+      return;
+    }
+
 
     my $organism = $schema->resultset("Organism::Organism")->find_or_create(
     {
