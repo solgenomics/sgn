@@ -48,6 +48,11 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
     my $progeny_number = $c->req->param('progeny_number');
     my $visible_to_role = $c->req->param('visible_to_role');
     
+    if (! $c->user()) { # redirect
+	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	return;
+    }
+
     my $organism = $schema->resultset("Organism::Organism")->find_or_create(
     {
 	genus   => 'Manihot',
@@ -138,6 +143,12 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
 sub insert_new_project : Path("/breeders/project/insert") Args(0) { 
     my $self = shift;
     my $c = shift;
+
+    if (! $c->user()) { # redirect
+	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	return;
+    }
+
     
     my $params = $c->req->parameters();
 
