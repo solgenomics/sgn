@@ -57,6 +57,18 @@ $user_id => undef
 </&>
 </&>
 
+<&| /page/info_section.mas, title=>'Phenotypes' &>
+
+<&| /page/info_section.mas, title=>'Upload', is_subsection=>1, collapsible=>1, collapsed=>1 &>
+
+<& /breeders_toolbox/upload_phenotypes.mas, projects=>$projects, locations=>\@locations &>  
+
+</&>
+
+<a href="/search/phenotypes/stock">Phenotype search</a><br />
+
+</&>
+
 <&| /page/info_section.mas, title=>'Accessions & plots' &>
 
 <& /breeders_toolbox/accessions.mas, user_id=>$user_id &>
