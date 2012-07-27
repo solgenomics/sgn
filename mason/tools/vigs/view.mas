@@ -1,0 +1,123 @@
+
+<%args>
+$query
+$graph_url => undef
+$seq_filename
+$database => 'unknown database'
+@regions => ()  # list of listrefs, with start and end positions
+@scores => ()
+$error => undef
+$fragment_size => undef
+$messages => ""
+$errors => ""
+$coverage => 0
+$image_map => ""
+@ids => ()
+</%args>
+
+<%perl>
+use strict;
+
+use Data::Dumper;
+use JSON::Any;
+my $json = JSON::Any->new;
+
+if ($errors) { print "An error occurred. $error." }
+if ($messages) { print $messages; }
+
+#print STDERR Dumper(\@regions);
+
+</%perl>
+
+<& /util/import_javascript.mas, classes => 'Text.Markup' &>
+
+<& /page/page_title.mas, title=>"VIGS Tool Results" &>
+
+
+%if ($scores[0]->[0] == 0) { 
+    No results were found.
+% return;
+%}
+
+<% $messages %><br /><br />
+
+User sequence matched against <% $database %>.<br />
+<form action="/tools/vigs/view">
+Target sequences: 
+<input size="2" name="targets" value="<% $coverage %>" />
+<input type="hidden" name="id" value="<% $seq_filename %>" />
+<input type="hidden" name="fragment_size" value="<% $fragment_size %>" />
+<input type="submit" value="change" />
+
+</form><br />
+
+
+<&| /page/info_section.mas, title=>"Distribution of $fragment_size-mers",    collapsible => 1,    collapsed   => 0 &>
+
+<div align="center" style="color: #777777">
+<img src="<% $graph_url %>" usemap="#blabla" />
+</div>
+
+<% $image_map %>
+
+</&>
+
+<br /><br />
+
+<script>
+	function hilite_sequence() { 
+
+	    var markup = new Text.Markup( { 'highlight' : [ '<span class="highlighted">', '</span>' ], 'break' : [ '<br />', '' ], 'space' : [ '<span>&nbsp;</span>', '' ] });
+	    
+	    var source_el = document.getElementById('query');
+	    var markup_el = document.getElementById('markup');
+	    var regions = <% $json->encode(\@regions) %>;
+
+
+	    var hilite_regions = [];
+
+
+	    for (var i=0; i<regions.length; i++) { 
+		//alert("HERE " + regions[i]); //regions[i].join('X'));
+		hilite_regions[i]=[ 'highlight', regions[i][0]-1, regions[i][1]-1 ];
+            }	       
+
+	    var sequence = source_el.innerHTML;
+
+	    var break_regions = [];
+	    for (var i=0; i<sequence.length; i=i+60) { 
+	        break_regions.push([ 'break', i, i ]);
+ 	    }
+
+            var space_regions = [];
+	    for (var i =0; i<sequence.length; i=i+6) { 
+	       space_regions.push(['space', i, i]);
+            }	       
+	    	    
+	    var all_regions = break_regions.concat(hilite_regions, space_regions);
+
+	    var markedup_seq = markup.markup(all_regions, sequence);
+					      //alert('Markedup Seq: '+markedup_seq);
+	    markup_el.innerHTML='<font face="courier" size="2">'+markedup_seq+'</font>';
+
+	}
+
+
+</script>
+
+<&| /page/info_section.mas, title=>"Sequence overview", collapsible => 1, collapsed   => 0 &>
+<center>
+<span id="query" style="display:none" ><% $query->seq() %></span>
+<span id="markup"></span>
+</center>
+</&>
+
+<&| /page/info_section.mas, title=>"Sequences with perfect matches of $fragment_size-mers",    collapsible => 1,    collapsed   => 0 &>
+% foreach my $id (@ids) { 
+% print $id->[0]." (".$id->[1].")<br />";
+% }
+
+</&>
+<script>
+	hilite_sequence();
+</script>

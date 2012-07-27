@@ -280,6 +280,7 @@ sub project_metadata_prop_list {
 	    "genome_project_url"                  => "Project URL", 
             "genome_project_genbank_link"         => "Genbank link",
 	    "genome_project_contact_person"       => "Contact (name, email)",
+            "genome_project_seed_source"          => "Seed source",
 	);
 
 }

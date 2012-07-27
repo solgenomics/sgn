@@ -26,9 +26,8 @@ $refering_page => undef
 	    <input type="submit" value="Upload" />
 	 </form>
 
-     };
 
- %   if ($refering_page) { print "<a href=\"$refering_page\">Go back</a>"; }
+%   if ($refering_page) { print "<a href=\"$refering_page\">Go back</a>"; }
 
 
 
