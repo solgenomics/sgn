@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<jnlp codebase="http://localhost:3000/CytoScape" href="cy1.jnlp">
+<jnlp codebase="http://andrew.sgn.cornell.edu:3000/CytoScape" href="cy1.jnlp">
   <security>
     <all-permissions />
   </security>
@@ -129,8 +129,6 @@
     <argument>edu.ucsd.bioeng.coreplugin.tableImport.TableImportPlugin</argument>
     <argument>-p</argument>
     <argument>csplugins.layout.LayoutPlugin</argument>
-    <argument>-N</argument>
-    <argument>http://localhost:3000/CytoScape/coffee_PPI_cytoscape.cys</argument>
   </application-desc>
 </jnlp>
 
