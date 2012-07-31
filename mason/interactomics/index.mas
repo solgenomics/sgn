@@ -12,11 +12,11 @@ This is a CytoScape Java Web Start app designed to preload with the coffee inter
 
 
 	<p>
-<center><a href = "/CytoScape/cy1.jnlp">Click here</a>
+<center><a href = "/CytoScape/cy1.jnlp">This works.</a>
 
 <br />
 
-<center><button type="button"  onClick="window.location.href='/tools/interactomics/coffee'">Launch Cytoscape with Coffee Interactome Data</button></center>
+<center><button type="button"  onClick="window.location.href='/tools/interactomics/coffee.jnlp'">Try Getting This to Work</button></center>
 	
 <br />
 

@@ -129,6 +129,8 @@
     <argument>edu.ucsd.bioeng.coreplugin.tableImport.TableImportPlugin</argument>
     <argument>-p</argument>
     <argument>csplugins.layout.LayoutPlugin</argument>
+    <argument>-N</argument>
+    <argument>http://andrew.sgn.cornell.edu:3000/CytoScape/coffee.cys</argument>
   </application-desc>
 </jnlp>
 
