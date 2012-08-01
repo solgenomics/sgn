@@ -20,7 +20,7 @@ sub interactomics :Path("/tools/interactomics") :Args(0) {
 
 
 
-=head1 create_jnlp
+=head2 create_jnlp
 
   Usage: In an html form, pass it the file (.cys or other cytoscape compatible) location with name "Network" and call this URL with the form action.  
   Desc : Uses the current URL base and a file passed as a parameter to create the body of a jnlp file for loading CytoScape via Web Start with preloaded data.
