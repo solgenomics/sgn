@@ -23,30 +23,17 @@ sub interactomics :Path("/tools/interactomics") :Args(0) {
 
 }
 
-sub coffee :Path("/tools/interactomics/coffee.jnlp") :Args(0) {
+
+
+sub create_jnlp :Path("/tools/interactomics/coffee.jnlp") :Args(0) {
     my ($self, $c) = @_;
     
-    my $codebase = ($c->req->base)."/CytoScape/"; #creating codebase needed as absolute URL for client's machine.  Will be "solgenomics.net" on live site.
-
+    my $codebase = ($c->req->base)."/CytoScape/";
     
-
-    my $coffee_network = $codebase."coffee.cys";
-    
-    $c->res->content_type("application/x-java-jnlp-file");
-    
-    $c->res->body(create_jnlp($codebase,$coffee_network));
-    
-   # $c->serve_static_file($codebase);
-
-    #my $jnlp_location = $codebase."/CytoScape/cy1.jnlp";
-
-}
-
-sub create_jnlp {
-    my ($codebase,$file) = @_;
+    my $file = $c->req->param("Network");
     
     my $doc =  "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
-<jnlp codebase=\"".$codebase."\" href=\"cy1.jnlp\">
+<jnlp codebase=\"".$codebase."\" href=\"\">
   <security>
     <all-permissions />
   </security>
@@ -182,8 +169,9 @@ sub create_jnlp {
 </jnlp>";
 
 
+    $c->res->content_type("application/x-java-jnlp-file");
+    $c->res->body($doc);
     
-    return $doc;
 
 }
 
