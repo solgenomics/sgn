@@ -1132,7 +1132,7 @@ HTML
         my $ortho_hilite_only     = 1;
         my $ostring               = "";
         my $hilited_labels_only   = $ortho_hilite_only && @search_nodes;
-        my $leaf_ortholog_hashref = $browser->get_tree()->get_leaf_ortholog_hashref($hilited_labels_only);
+        my $leaf_ortholog_hashref = $browser->get_tree()->leaf_ortholog_table($hilited_labels_only);
         foreach my $the_name ( sort keys %$leaf_ortholog_hashref ) {
             my @orthologs = @{ $leaf_ortholog_hashref->{$the_name} };
             if ( $the_name =~ /([^{|]+)/ ) {
