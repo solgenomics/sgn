@@ -1,7 +1,13 @@
-# goes into lib/SGN/Controller/CytoScape.pm
-
-
 package SGN::Controller::Interactomics;
+
+
+=head1 NAME
+
+SGN::Controller::Interactomics - Provides and interface for loading of CytoScape via Web Start with interactomic data.
+
+
+=cut
+
 
 use Moose;
 use URI::FromHash 'uri';
@@ -9,6 +15,12 @@ use URI::FromHash 'uri';
 
 BEGIN { extends 'Catalyst::Controller'; }
 
+
+=head2
+
+   Loads SGN page for Web Start app.
+
+=cut
 
 
 sub interactomics :Path("/tools/interactomics") :Args(0) { 
@@ -20,7 +32,7 @@ sub interactomics :Path("/tools/interactomics") :Args(0) {
 
 
 
-=head1 create_jnlp
+=head2 create_jnlp
 
   Usage: In an html form, pass it the file (.cys or other cytoscape compatible) location with name "Network" and call this URL with the form action.  
   Desc : Uses the current URL base and a file passed as a parameter to create the body of a jnlp file for loading CytoScape via Web Start with preloaded data.
