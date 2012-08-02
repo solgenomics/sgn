@@ -503,27 +503,27 @@ if ( !$browser->get_tree_string() ) {
     my $spec_bit_hash = $tree->get_species_bithash($species_tree);
 
     # Use Orthologger module to do rerooting, ortholog finding.
-        # Orthologger wants:   mindl  maxmin  minmax  minvar
-        my $rrmtable =  # translate between reroot method names used in index.pl, and those used in Orthologger obj.
-          { 'MinVariance' => 'minvar', 'MinDuplication' => 'mindl', 'Midpoint' => 'minmax', 'MaxMin' => 'maxmin' };
+    # Orthologger wants:   mindl  maxmin  minmax  minvar
+    my $rrmtable =    # translate between reroot method names used in index.pl, and those used in Orthologger obj.
+      { 'MinVariance' => 'minvar', 'MinDuplication' => 'mindl', 'Midpoint' => 'minmax', 'MaxMin' => 'maxmin' };
 
-        my $orthologger_obj = CXGN::Phylo::Orthologger->new(
-            {
-              'gene_tree'     => $tree,
-              'species_tree'  => $species_tree,
-              'reroot_method' => $rrmtable->{$reroot},    #$reroot_method,
-            }
-        );
- $tree = $orthologger_obj->get_gene_tree();
+    my $orthologger_obj = CXGN::Phylo::Orthologger->new(
+        {
+          'gene_tree'     => $tree,
+          'species_tree'  => $species_tree,
+          'reroot_method' => $rrmtable->{$reroot},    #$reroot_method,
+        }
+    );
+    $tree = $orthologger_obj->get_gene_tree();
 
     if ($collapse_single_species_subtrees) {
-        $tree->collapse_unique_species_subtrees();         # this seems to be causing problems
-        $tree->get_root()->recursive_implicit_names();     # this is needed, but why?
+        $tree->collapse_unique_species_subtrees();        # this seems to be causing problems
+        $tree->get_root()->recursive_implicit_names();    # this is needed, but why?
         $tree->get_root()->recursive_implicit_species();
     }
     if ($show_orthologs) {
 
-        $tree->get_root()->recursive_implicit_names();     # this is needed, but why?
+        $tree->get_root()->recursive_implicit_names();    # this is needed, but why?
         $tree->get_root()->recursive_implicit_species();
 
         #    print STDERR "root implicit species: ", join(";", ($tree->get_root()->get_implicit_species())), "\n";
@@ -1129,79 +1129,20 @@ HTML
         $browser->get_tree()->set_hilite_color( 100, 200, 200 );
 
         $browser->get_tree->set_show_standard_species($show_species);
-        my $ortho_hilite_only = 1;
-        my $first_cell_text   = " "; #"Orthologs of&nbsp&nbsp";
-        my $ostring = "";
-
-############
- # 	if(0){
- #  my @leaves = $browser->get_tree->get_leaves;
- #  @leaves = sort { $a->get_name cmp $b->get_name } @leaves;
- #         foreach my $leaf (@leaves) {
- #             next if ( exists $non_species_tree_leaf_node_names->{ $leaf->get_name() } );
- #             # next line to only show orthologs of highlighted nodes,
- #             # if any are highlighted
- # print STDERR "$ortho_hilite_only ", scalar @search_nodes, " ", $leaf->get_label()->get_hilite(), "\n";
- #             next
- #               if $ortho_hilite_only
- #                   && @search_nodes
- #                   && !$leaf->get_label->get_hilite;
- # # unless !$ortho_hilite_only
- # #                   || !@search_nodes
- # #                   || $leaf->get_label->get_hilite;
-
- #             my @cand_orthologs = $leaf->collect_orthologs_of_leaf();
-
- #             # keep only leaves whose species appear in species tree
- #             my @orthologs = ();
-
- #             #            my $non_species_tree_leaf_node_names =
- #             #              $browser->get_tree()->non_speciestree_leafnode_names();
- #             if ( scalar keys %$non_species_tree_leaf_node_names > 0 ) {
- #                 foreach (@cand_orthologs) {
- #                     if ( exists $non_species_tree_leaf_node_names->{$_} ) {
-
- #                         #               $unknown_species_leaves{$_} ;
- #                     } else {
- #                         push @orthologs, $_;
- #                     }
- #                 }
- #             } else {
- #                 @orthologs = @cand_orthologs;
- #             }
-
- #             my $the_name = $leaf->get_name;
- #             if ( $the_name =~ /([^{|]+)/ ) {
- #                 $the_name = $1;
- #             }    # i.e. trim off everything from the first pipe or { on
- #             $first_cell_text = "Orthologs of ";
- #             if ( scalar @orthologs == 0 ) { push @orthologs, 'None'; }
- #             $ostring .= Tr( td($first_cell_text),
- #                             td("$the_name:&nbsp&nbsp&nbsp&nbsp"),
- #                             td( join( ",&nbsp ", sort @orthologs ) ),
- #                           );
- #         }    # end of loop over leaves.
- #       }else{
-	# use orthologger_obj
-	my $hilited_labels_only = $ortho_hilite_only && @search_nodes;
-  my $leaf_ortholog_hashref = $browser->get_tree()->get_leaf_ortholog_hashref($hilited_labels_only);
-  foreach my $the_name (sort keys %$leaf_ortholog_hashref) {
-   # $ortholog_str .= "orthologs of " . $leafname . ":  ";
-    my @orthologs = @{$leaf_ortholog_hashref->{$the_name}};
- #   $ortholog_str .= join(" ", @orthologs) . "\n";
-#  my $the_name = $leaf->get_name;
+        my $ortho_hilite_only     = 1;
+        my $ostring               = "";
+        my $hilited_labels_only   = $ortho_hilite_only && @search_nodes;
+        my $leaf_ortholog_hashref = $browser->get_tree()->get_leaf_ortholog_hashref($hilited_labels_only);
+        foreach my $the_name ( sort keys %$leaf_ortholog_hashref ) {
+            my @orthologs = @{ $leaf_ortholog_hashref->{$the_name} };
             if ( $the_name =~ /([^{|]+)/ ) {
                 $the_name = $1;
             }    # i.e. trim off everything from the first pipe or { on
-          #  $first_cell_text = "";
             if ( scalar @orthologs == 0 ) { push @orthologs, 'None'; }
-            $ostring .= Tr( td($first_cell_text),
-                            td("$the_name:&nbsp&nbsp&nbsp&nbsp"),
-                            td( join( ",&nbsp ", sort @orthologs ) ),
-                          );
-  }
-#      } # end of else
-##########################################
+            $ostring .= Tr( td(" "), td("$the_name:&nbsp&nbsp&nbsp&nbsp"), td( join( ",&nbsp ", sort @orthologs ) ), );
+
+        }
+
         $ostring = table($ostring);
 
         $browser->get_tree->show_newick_attribute("speciation");
@@ -1499,8 +1440,6 @@ sub oglist_html_table {
         $oglstring .= "<tr><td>No ortholog groups found.$row_end";
     } else {
         foreach my $o (@oglist) {
-
-#    print STDOUT "ZZZ tree copy root qrfd: [", $o->get_tree()->get_root()->get_attribute("qRF_distance"), "] [", $o->get_tree()->get_root()->get_attribute("subtree_leaves_match"), "]<br>\n";
 
             $o->get_ortholog_tree()->get_root()->recursive_implicit_species();
             my $og_row_string = $o->table_row_string();    # this can have multiple rows...
