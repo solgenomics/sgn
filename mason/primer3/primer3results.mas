@@ -1,0 +1,355 @@
+<%args>
+  $resultshash
+</%args>
+
+<%once>
+use POSIX qw/ceil/;
+</%once>
+
+<& /page/page_title.mas, title => "Primer 3" &>
+
+<HR></HR>
+
+<h1> Results </h1>
+
+Primer picking results for: <% $resultshash->{'SEQUENCE_ID'} %>
+
+<p>
+% if (exists $resultshash->{'PRIMER_MISPRIMING_LIBRARY'} ) {
+Using <% $resultshash->{'PRIMER_MISPRIMING_LIBRARY'} %> mispriming library
+% }
+% else {
+No mispriming library specified.
+% }
+<p>
+
+<p>
+% if (exists $resultshash->{'PRIMER_INTERNAL_MISHYB_LIBRARY'}) {
+Using <% $resultshash->{'PRIMER_INTERNAL_MISHYB_LIBRARY'} %> mispriming library
+% }
+% else {
+No hyb oligo mishyb library specified.
+% }
+</p>
+
+% if (exists $resultshash->{'PRIMER_INTERNAL_0_SEQUENCE'}) {
+<center>
+<table border=1" cellpadding=4 cellspacing=4>
+<tr><th>OLIGO</th><td>start</td><td>len</td><td>tm</td><td>qc%</td><td>any</td><td>3'</td><td>seq</td></tr>
+% my @left = split(',', $resultshash->{'PRIMER_LEFT_0'});
+% my @right = split(',', $resultshash->{'PRIMER_RIGHT_0'});
+% my @hybrid = split(',', $resultshash->{'PRIMER_INTERNAL_0'});
+
+<tr><th>LEFT PRIMER</th><td><% $left[0] %></td><td><% $left[1] %></td><td><% $resultshash->{'PRIMER_LEFT_0_TM'} %></td><td><% $resultshash->{'PRIMER_LEFT_0_GC_PERCENT'} %></td><td><% $resultshash->{'PRIMER_LEFT_0_SELF_ANY'} %></td><td> <% $resultshash->{'PRIMER_LEFT_0_SELF_END'} %></td><td><% $resultshash->{'PRIMER_LEFT_0_SEQUENCE'} %></td></tr>
+
+<tr><th>RIGHT PRIMER</th><td><% $right[0] %></td><td><% $right[1] %></td><td><% $resultshash->{'PRIMER_RIGHT_0_TM'} %></td><td><% $resultshash->{'PRIMER_RIGHT_0_GC_PERCENT'} %></td><td><% $resultshash->{'PRIMER_RIGHT_0_SELF_ANY'} %></td><td> <% $resultshash->{'PRIMER_RIGHT_0_SELF_END'} %></td><td><% $resultshash->{'PRIMER_RIGHT_0_SEQUENCE'} %></td></tr>
+
+<tr><th>HYB OLIGO</th><td><% $hybrid[0] %></td><td><% $hybrid[1] %></td><td><% $resultshash->{'PRIMER_INTERNAL_0_TM'} %></td><td><% $resultshash->{'PRIMER_INTERNAL_0_GC_PERCENT'} %></td><td><% $resultshash->{'PRIMER_INTERNAL_0_SELF_ANY'} %></td><td> <% $resultshash->{'PRIMER_INTERNAL_0_SELF_END'} %></td><td><% $resultshash->{'PRIMER_INTERNAL_0_SEQUENCE'} %></td></tr> 
+</table>
+</center>
+
+<p>
+SEQUENCE SIZE:  <% length($resultshash->{'SEQUENCE_TEMPLATE'}) %>
+</p>
+
+<p>
+% if (exists $resultshash->{'PRIMER_PAIR_0_PRODUCT_SIZE'}) {
+PRODUCT SIZE:  <% $resultshash->{'PRIMER_PAIR_0_PRODUCT_SIZE'} %>, PAIR ANY COMPL:  <% $resultshash->{'PRIMER_PAIR_0_COMPL_ANY'} %>, PAIR 3' COMPL:  <% $resultshash->{'PRIMER_PAIR_0_COMPL_END'} %>
+% }
+</p>
+
+<p>
+TARGETS {start, len}*:  <% $resultshash->{'SEQUENCE_TARGET'} %>
+</p>
+<p>
+EXCLUDED REGIONS {start, len}*: <% $resultshash->{'SEQUENCE_EXCLUDED_REGION'} %>
+</p>
+
+
+<p>
+<center>
+<table style="font-family:arial;">
+% my $sequence = $resultshash->{'SEQUENCE_TEMPLATE'};
+% my @seq = split(undef,$sequence);
+% my $numrows= ceil((length($sequence))/60);
+% my $line = -59;
+% my @excluded = split(',', $resultshash->{'SEQUENCE_EXCLUDED_REGION'});
+% my @target = split(',', $resultshash->{'SEQUENCE_TARGET'});
+% while ($numrows > 0) {
+%	$line += 60;
+	<tr>
+	<td> <b> <% $line %> </b> </td>
+%	foreach my $i ($line .. $line+59) {
+%		if (exists $seq[$i-1]) {
+			<td> <% $seq[$i-1] %> </td>
+%		}
+%	}
+	</tr>
+	<tr>
+	<td></td>
+%	foreach my $i ($line .. $line+59) {
+%		if ( ($i >= int($excluded[0])) && ($i <= (int($excluded[0]))+(int($excluded[1])-1)) ) {
+			<td style="color:red;"> X </td>
+%		}
+%		elsif ( $i >= (int($target[0])) && $i <= (int($target[0])+int($target[1])-1) ) {
+			<td> * </td>
+%		}
+%		elsif ( $i >= int($left[0]) && $i <= (int($left[0])+int($left[1])-1) ) {
+			<td style="color:blue;"> > </td>
+%		}
+%		elsif ( ($i <= int($right[0])) && ($i >= ((int($right[0]))-(int($right[1])-1))) ) {
+			<td style="color:blue;"> < </td>
+%		}
+%		elsif ( $i >= (int($hybrid[0])) && $i <= (int($hybrid[0])+int($hybrid[1])-1) ) {
+			<td style="color:green;"> ^ </td>
+%		}
+%		else {
+			<td> </td>
+%		}
+%	};
+	</tr>
+	<tr>
+	</tr>
+%	$numrows--;
+% }
+</table border=1">
+<table cellpadding=2>
+KEYS (in order of precedence)
+<tr><td style="color:red;">XXXXXX</td><td>excluded region</td></tr>
+<tr><td>******</td><td>target</td></tr>
+<tr><td style="color:blue;">>>>>>></td><td>left primer</td></tr>
+<tr><td style="color:blue;"><<<<<<</td><td>right primer</td></tr>
+<tr><td style="color:green;">^^^^^^</td><td>hyb oligo</td></tr>
+</table>
+</center>
+</p>
+% }
+% else {
+<HR></HR>
+<h1> No Acceptable Primers Were Found </h1>
+<p>
+The statistics below should indicate why no acceptable primers were found. Try relaxing various parameters, including the self-complementarity parameters and max and min oligo melting temperatures. For example, for very A-T-rich regions you might have to increase maximum primer size or decrease minimum melting temperature. 
+</p>
+% }
+
+% if (exists $resultshash->{'PRIMER_INTERNAL_1_SEQUENCE'}) {
+<HR></HR>
+<h5>Additional Oligos</h5>
+<table border=1" cellpadding=4 cellspacing=4>
+<tr><td>1</td><th>OLIGO</th><td>start</td><td>len</td><td>tm</td><td>qc%</td><td>any</td><td>3'</td><td>seq</td></tr>
+
+% my @left1 = split(',', $resultshash->{'PRIMER_LEFT_1'});
+% my @right1 = split(',', $resultshash->{'PRIMER_RIGHT_1'});
+% my @hybrid1 = split(',', $resultshash->{'PRIMER_INTERNAL_1'});
+
+<tr><td></td><th>LEFT PRIMER</th><td><% $left1[0] %></td><td><% $left1[1] %></td><td><% $resultshash->{'PRIMER_LEFT_1_TM'} %></td><td><% $resultshash->{'PRIMER_LEFT_1_GC_PERCENT'} %></td><td><% $resultshash->{'PRIMER_LEFT_1_SELF_ANY'} %></td><td> <% $resultshash->{'PRIMER_LEFT_1_SELF_END'} %></td><td><% $resultshash->{'PRIMER_LEFT_1_SEQUENCE'} %></td></tr>
+<tr><td></td><th>RIGHT PRIMER</th><td><% $right1[0] %></td><td><% $right1[1] %></td><td><% $resultshash->{'PRIMER_RIGHT_1_TM'} %></td><td><% $resultshash->{'PRIMER_RIGHT_1_GC_PERCENT'} %></td><td><% $resultshash->{'PRIMER_RIGHT_1_SELF_ANY'} %></td><td> <% $resultshash->{'PRIMER_RIGHT_1_SELF_END'} %></td><td><% $resultshash->{'PRIMER_RIGHT_1_SEQUENCE'} %></td></tr>
+
+<tr><td></td><th>HYB OLIGO</th><td><% $hybrid1[0] %></td><td><% $hybrid1[1] %></td><td><% $resultshash->{'PRIMER_INTERNAL_1_TM'} %></td><td><% $resultshash->{'PRIMER_INTERNAL_1_GC_PERCENT'} %></td><td><% $resultshash->{'PRIMER_INTERNAL_1_SELF_ANY'} %></td><td> <% $resultshash->{'PRIMER_INTERNAL_1_SELF_END'} %></td><td><% $resultshash->{'PRIMER_INTERNAL_1_SEQUENCE'} %></td></tr> 
+
+</table>
+
+<table>
+<tr><td></td><td>PRODUCT SIZE:  <% $resultshash->{'PRIMER_PAIR_1_PRODUCT_SIZE'} %>, PAIR ANY COMPL:  <% $resultshash->{'PRIMER_PAIR_1_COMPL_ANY'} %>, PAIR 3' COMPL:  <% $resultshash->{'PRIMER_PAIR_1_COMPL_END'} %> </td>
+</table>
+% }
+
+% if (exists $resultshash->{'PRIMER_INTERNAL_2_SEQUENCE'}) {
+<table border=2" cellpadding=4 cellspacing=4>
+<tr><td>2</td><th>OLIGO</th><td>start</td><td>len</td><td>tm</td><td>qc%</td><td>any</td><td>3'</td><td>seq</td></tr>
+
+% my @left2 = split(',', $resultshash->{'PRIMER_LEFT_2'});
+% my @right2 = split(',', $resultshash->{'PRIMER_RIGHT_2'});
+% my @hybrid2 = split(',', $resultshash->{'PRIMER_INTERNAL_2'});
+
+<tr><td></td><th>LEFT PRIMER</th><td><% $left2[0] %></td><td><% $left2[1] %></td><td><% $resultshash->{'PRIMER_LEFT_2_TM'} %></td><td><% $resultshash->{'PRIMER_LEFT_2_GC_PERCENT'} %></td><td><% $resultshash->{'PRIMER_LEFT_2_SELF_ANY'} %></td><td> <% $resultshash->{'PRIMER_LEFT_2_SELF_END'} %></td><td><% $resultshash->{'PRIMER_LEFT_2_SEQUENCE'} %></td></tr>
+<tr><td></td><th>RIGHT PRIMER</th><td><% $right2[0] %></td><td><% $right2[1] %></td><td><% $resultshash->{'PRIMER_RIGHT_2_TM'} %></td><td><% $resultshash->{'PRIMER_RIGHT_2_GC_PERCENT'} %></td><td><% $resultshash->{'PRIMER_RIGHT_2_SELF_ANY'} %></td><td> <% $resultshash->{'PRIMER_RIGHT_2_SELF_END'} %></td><td><% $resultshash->{'PRIMER_RIGHT_2_SEQUENCE'} %></td></tr>
+
+<tr><td></td><th>HYB OLIGO</th><td><% $hybrid2[0] %></td><td><% $hybrid2[1] %></td><td><% $resultshash->{'PRIMER_INTERNAL_2_TM'} %></td><td><% $resultshash->{'PRIMER_INTERNAL_2_GC_PERCENT'} %></td><td><% $resultshash->{'PRIMER_INTERNAL_2_SELF_ANY'} %></td><td> <% $resultshash->{'PRIMER_INTERNAL_2_SELF_END'} %></td><td><% $resultshash->{'PRIMER_INTERNAL_2_SEQUENCE'} %></td></tr> 
+
+</table>
+
+<table>
+<tr><td></td><td>PRODUCT SIZE:  <% $resultshash->{'PRIMER_PAIR_2_PRODUCT_SIZE'} %>, PAIR ANY COMPL:  <% $resultshash->{'PRIMER_PAIR_2_COMPL_ANY'} %>, PAIR 3' COMPL:  <% $resultshash->{'PRIMER_PAIR_2_COMPL_END'} %> </td>
+</table>
+% }
+
+% if (exists $resultshash->{'PRIMER_INTERNAL_3_SEQUENCE'}) {
+<table border=3" cellpadding=4 cellspacing=4>
+<tr><td>3</td><th>OLIGO</th><td>start</td><td>len</td><td>tm</td><td>qc%</td><td>any</td><td>3'</td><td>seq</td></tr>
+
+% my @left3 = split(',', $resultshash->{'PRIMER_LEFT_3'});
+% my @right3 = split(',', $resultshash->{'PRIMER_RIGHT_3'});
+% my @hybrid3 = split(',', $resultshash->{'PRIMER_INTERNAL_3'});
+
+<tr><td></td><th>LEFT PRIMER</th><td><% $left3[0] %></td><td><% $left3[1] %></td><td><% $resultshash->{'PRIMER_LEFT_3_TM'} %></td><td><% $resultshash->{'PRIMER_LEFT_3_GC_PERCENT'} %></td><td><% $resultshash->{'PRIMER_LEFT_3_SELF_ANY'} %></td><td> <% $resultshash->{'PRIMER_LEFT_3_SELF_END'} %></td><td><% $resultshash->{'PRIMER_LEFT_3_SEQUENCE'} %></td></tr>
+<tr><td></td><th>RIGHT PRIMER</th><td><% $right3[0] %></td><td><% $right3[1] %></td><td><% $resultshash->{'PRIMER_RIGHT_3_TM'} %></td><td><% $resultshash->{'PRIMER_RIGHT_3_GC_PERCENT'} %></td><td><% $resultshash->{'PRIMER_RIGHT_3_SELF_ANY'} %></td><td> <% $resultshash->{'PRIMER_RIGHT_3_SELF_END'} %></td><td><% $resultshash->{'PRIMER_RIGHT_3_SEQUENCE'} %></td></tr>
+
+<tr><td></td><th>HYB OLIGO</th><td><% $hybrid3[0] %></td><td><% $hybrid3[1] %></td><td><% $resultshash->{'PRIMER_INTERNAL_3_TM'} %></td><td><% $resultshash->{'PRIMER_INTERNAL_3_GC_PERCENT'} %></td><td><% $resultshash->{'PRIMER_INTERNAL_3_SELF_ANY'} %></td><td> <% $resultshash->{'PRIMER_INTERNAL_3_SELF_END'} %></td><td><% $resultshash->{'PRIMER_INTERNAL_3_SEQUENCE'} %></td></tr> 
+
+</table>
+
+<table>
+<tr><td></td><td>PRODUCT SIZE:  <% $resultshash->{'PRIMER_PAIR_3_PRODUCT_SIZE'} %>, PAIR ANY COMPL:  <% $resultshash->{'PRIMER_PAIR_3_COMPL_ANY'} %>, PAIR 3' COMPL:  <% $resultshash->{'PRIMER_PAIR_3_COMPL_END'} %> </td>
+</table>
+% }
+
+% if (exists $resultshash->{'PRIMER_INTERNAL_4_SEQUENCE'}) {
+<table border=4" cellpadding=4 cellspacing=4>
+<tr><td>4</td><th>OLIGO</th><td>start</td><td>len</td><td>tm</td><td>qc%</td><td>any</td><td>3'</td><td>seq</td></tr>
+
+% my @left4 = split(',', $resultshash->{'PRIMER_LEFT_4'});
+% my @right4 = split(',', $resultshash->{'PRIMER_RIGHT_4'});
+% my @hybrid4 = split(',', $resultshash->{'PRIMER_INTERNAL_4'});
+
+<tr><td></td><th>LEFT PRIMER</th><td><% $left4[0] %></td><td><% $left4[1] %></td><td><% $resultshash->{'PRIMER_LEFT_4_TM'} %></td><td><% $resultshash->{'PRIMER_LEFT_4_GC_PERCENT'} %></td><td><% $resultshash->{'PRIMER_LEFT_4_SELF_ANY'} %></td><td> <% $resultshash->{'PRIMER_LEFT_4_SELF_END'} %></td><td><% $resultshash->{'PRIMER_LEFT_4_SEQUENCE'} %></td></tr>
+<tr><td></td><th>RIGHT PRIMER</th><td><% $right4[0] %></td><td><% $right4[1] %></td><td><% $resultshash->{'PRIMER_RIGHT_4_TM'} %></td><td><% $resultshash->{'PRIMER_RIGHT_4_GC_PERCENT'} %></td><td><% $resultshash->{'PRIMER_RIGHT_4_SELF_ANY'} %></td><td> <% $resultshash->{'PRIMER_RIGHT_4_SELF_END'} %></td><td><% $resultshash->{'PRIMER_RIGHT_4_SEQUENCE'} %></td></tr>
+
+<tr><td></td><th>HYB OLIGO</th><td><% $hybrid4[0] %></td><td><% $hybrid4[1] %></td><td><% $resultshash->{'PRIMER_INTERNAL_4_TM'} %></td><td><% $resultshash->{'PRIMER_INTERNAL_4_GC_PERCENT'} %></td><td><% $resultshash->{'PRIMER_INTERNAL_4_SELF_ANY'} %></td><td> <% $resultshash->{'PRIMER_INTERNAL_4_SELF_END'} %></td><td><% $resultshash->{'PRIMER_INTERNAL_4_SEQUENCE'} %></td></tr> 
+
+</table>
+
+<table>
+<tr><td></td><td>PRODUCT SIZE:  <% $resultshash->{'PRIMER_PAIR_4_PRODUCT_SIZE'} %>, PAIR ANY COMPL:  <% $resultshash->{'PRIMER_PAIR_4_COMPL_ANY'} %>, PAIR 3' COMPL:  <% $resultshash->{'PRIMER_PAIR_4_COMPL_END'} %> </td>
+</table>
+% }
+
+% if (exists $resultshash->{'PRIMER_INTERNAL_5_SEQUENCE'}) {
+<table border=5" cellpadding=4 cellspacing=4>
+<tr><td>5</td><th>OLIGO</th><td>start</td><td>len</td><td>tm</td><td>qc%</td><td>any</td><td>3'</td><td>seq</td></tr>
+
+% my @left5 = split(',', $resultshash->{'PRIMER_LEFT_5'});
+% my @right5 = split(',', $resultshash->{'PRIMER_RIGHT_5'});
+% my @hybrid5 = split(',', $resultshash->{'PRIMER_INTERNAL_5'});
+
+<tr><td></td><th>LEFT PRIMER</th><td><% $left5[0] %></td><td><% $left5[1] %></td><td><% $resultshash->{'PRIMER_LEFT_5_TM'} %></td><td><% $resultshash->{'PRIMER_LEFT_5_GC_PERCENT'} %></td><td><% $resultshash->{'PRIMER_LEFT_5_SELF_ANY'} %></td><td> <% $resultshash->{'PRIMER_LEFT_5_SELF_END'} %></td><td><% $resultshash->{'PRIMER_LEFT_5_SEQUENCE'} %></td></tr>
+<tr><td></td><th>RIGHT PRIMER</th><td><% $right5[0] %></td><td><% $right5[1] %></td><td><% $resultshash->{'PRIMER_RIGHT_5_TM'} %></td><td><% $resultshash->{'PRIMER_RIGHT_5_GC_PERCENT'} %></td><td><% $resultshash->{'PRIMER_RIGHT_5_SELF_ANY'} %></td><td> <% $resultshash->{'PRIMER_RIGHT_5_SELF_END'} %></td><td><% $resultshash->{'PRIMER_RIGHT_5_SEQUENCE'} %></td></tr>
+
+<tr><td></td><th>HYB OLIGO</th><td><% $hybrid5[0] %></td><td><% $hybrid5[1] %></td><td><% $resultshash->{'PRIMER_INTERNAL_5_TM'} %></td><td><% $resultshash->{'PRIMER_INTERNAL_5_GC_PERCENT'} %></td><td><% $resultshash->{'PRIMER_INTERNAL_5_SELF_ANY'} %></td><td> <% $resultshash->{'PRIMER_INTERNAL_5_SELF_END'} %></td><td><% $resultshash->{'PRIMER_INTERNAL_5_SEQUENCE'} %></td></tr> 
+
+</table>
+
+<table>
+<tr><td></td><td>PRODUCT SIZE:  <% $resultshash->{'PRIMER_PAIR_5_PRODUCT_SIZE'} %>, PAIR ANY COMPL:  <% $resultshash->{'PRIMER_PAIR_5_COMPL_ANY'} %>, PAIR 3' COMPL:  <% $resultshash->{'PRIMER_PAIR_5_COMPL_END'} %> </td>
+</table>
+% }
+
+% if (exists $resultshash->{'PRIMER_INTERNAL_6_SEQUENCE'}) {
+<table border=6" cellpadding=4 cellspacing=4>
+<tr><td>6</td><th>OLIGO</th><td>start</td><td>len</td><td>tm</td><td>qc%</td><td>any</td><td>3'</td><td>seq</td></tr>
+
+% my @left6 = split(',', $resultshash->{'PRIMER_LEFT_6'});
+% my @right6 = split(',', $resultshash->{'PRIMER_RIGHT_6'});
+% my @hybrid6 = split(',', $resultshash->{'PRIMER_INTERNAL_6'});
+
+<tr><td></td><th>LEFT PRIMER</th><td><% $left6[0] %></td><td><% $left6[1] %></td><td><% $resultshash->{'PRIMER_LEFT_6_TM'} %></td><td><% $resultshash->{'PRIMER_LEFT_6_GC_PERCENT'} %></td><td><% $resultshash->{'PRIMER_LEFT_6_SELF_ANY'} %></td><td> <% $resultshash->{'PRIMER_LEFT_6_SELF_END'} %></td><td><% $resultshash->{'PRIMER_LEFT_6_SEQUENCE'} %></td></tr>
+<tr><td></td><th>RIGHT PRIMER</th><td><% $right6[0] %></td><td><% $right6[1] %></td><td><% $resultshash->{'PRIMER_RIGHT_6_TM'} %></td><td><% $resultshash->{'PRIMER_RIGHT_6_GC_PERCENT'} %></td><td><% $resultshash->{'PRIMER_RIGHT_6_SELF_ANY'} %></td><td> <% $resultshash->{'PRIMER_RIGHT_6_SELF_END'} %></td><td><% $resultshash->{'PRIMER_RIGHT_6_SEQUENCE'} %></td></tr>
+
+<tr><td></td><th>HYB OLIGO</th><td><% $hybrid6[0] %></td><td><% $hybrid6[1] %></td><td><% $resultshash->{'PRIMER_INTERNAL_6_TM'} %></td><td><% $resultshash->{'PRIMER_INTERNAL_6_GC_PERCENT'} %></td><td><% $resultshash->{'PRIMER_INTERNAL_6_SELF_ANY'} %></td><td> <% $resultshash->{'PRIMER_INTERNAL_6_SELF_END'} %></td><td><% $resultshash->{'PRIMER_INTERNAL_6_SEQUENCE'} %></td></tr> 
+
+</table>
+
+<table>
+<tr><td></td><td>PRODUCT SIZE:  <% $resultshash->{'PRIMER_PAIR_6_PRODUCT_SIZE'} %>, PAIR ANY COMPL:  <% $resultshash->{'PRIMER_PAIR_6_COMPL_ANY'} %>, PAIR 3' COMPL:  <% $resultshash->{'PRIMER_PAIR_6_COMPL_END'} %> </td>
+</table>
+% }
+
+% if (exists $resultshash->{'PRIMER_INTERNAL_7_SEQUENCE'}) {
+<table border=7" cellpadding=4 cellspacing=4>
+<tr><td>7</td><th>OLIGO</th><td>start</td><td>len</td><td>tm</td><td>qc%</td><td>any</td><td>3'</td><td>seq</td></tr>
+
+% my @left7 = split(',', $resultshash->{'PRIMER_LEFT_7'});
+% my @right7 = split(',', $resultshash->{'PRIMER_RIGHT_7'});
+% my @hybrid7 = split(',', $resultshash->{'PRIMER_INTERNAL_7'});
+
+<tr><td></td><th>LEFT PRIMER</th><td><% $left7[0] %></td><td><% $left7[1] %></td><td><% $resultshash->{'PRIMER_LEFT_7_TM'} %></td><td><% $resultshash->{'PRIMER_LEFT_7_GC_PERCENT'} %></td><td><% $resultshash->{'PRIMER_LEFT_7_SELF_ANY'} %></td><td> <% $resultshash->{'PRIMER_LEFT_7_SELF_END'} %></td><td><% $resultshash->{'PRIMER_LEFT_7_SEQUENCE'} %></td></tr>
+<tr><td></td><th>RIGHT PRIMER</th><td><% $right7[0] %></td><td><% $right7[1] %></td><td><% $resultshash->{'PRIMER_RIGHT_7_TM'} %></td><td><% $resultshash->{'PRIMER_RIGHT_7_GC_PERCENT'} %></td><td><% $resultshash->{'PRIMER_RIGHT_7_SELF_ANY'} %></td><td> <% $resultshash->{'PRIMER_RIGHT_7_SELF_END'} %></td><td><% $resultshash->{'PRIMER_RIGHT_7_SEQUENCE'} %></td></tr>
+
+<tr><td></td><th>HYB OLIGO</th><td><% $hybrid7[0] %></td><td><% $hybrid7[1] %></td><td><% $resultshash->{'PRIMER_INTERNAL_7_TM'} %></td><td><% $resultshash->{'PRIMER_INTERNAL_7_GC_PERCENT'} %></td><td><% $resultshash->{'PRIMER_INTERNAL_7_SELF_ANY'} %></td><td> <% $resultshash->{'PRIMER_INTERNAL_7_SELF_END'} %></td><td><% $resultshash->{'PRIMER_INTERNAL_7_SEQUENCE'} %></td></tr> 
+
+</table>
+
+<table>
+<tr><td></td><td>PRODUCT SIZE:  <% $resultshash->{'PRIMER_PAIR_7_PRODUCT_SIZE'} %>, PAIR ANY COMPL:  <% $resultshash->{'PRIMER_PAIR_7_COMPL_ANY'} %>, PAIR 3' COMPL:  <% $resultshash->{'PRIMER_PAIR_7_COMPL_END'} %> </td>
+</table>
+% }
+
+% if (exists $resultshash->{'PRIMER_INTERNAL_8_SEQUENCE'}) {
+<table border=8" cellpadding=4 cellspacing=4>
+<tr><td>8</td><th>OLIGO</th><td>start</td><td>len</td><td>tm</td><td>qc%</td><td>any</td><td>3'</td><td>seq</td></tr>
+
+% my @left8 = split(',', $resultshash->{'PRIMER_LEFT_8'});
+% my @right8 = split(',', $resultshash->{'PRIMER_RIGHT_8'});
+% my @hybrid8 = split(',', $resultshash->{'PRIMER_INTERNAL_8'});
+
+<tr><td></td><th>LEFT PRIMER</th><td><% $left8[0] %></td><td><% $left8[1] %></td><td><% $resultshash->{'PRIMER_LEFT_8_TM'} %></td><td><% $resultshash->{'PRIMER_LEFT_8_GC_PERCENT'} %></td><td><% $resultshash->{'PRIMER_LEFT_8_SELF_ANY'} %></td><td> <% $resultshash->{'PRIMER_LEFT_8_SELF_END'} %></td><td><% $resultshash->{'PRIMER_LEFT_8_SEQUENCE'} %></td></tr>
+<tr><td></td><th>RIGHT PRIMER</th><td><% $right8[0] %></td><td><% $right8[1] %></td><td><% $resultshash->{'PRIMER_RIGHT_8_TM'} %></td><td><% $resultshash->{'PRIMER_RIGHT_8_GC_PERCENT'} %></td><td><% $resultshash->{'PRIMER_RIGHT_8_SELF_ANY'} %></td><td> <% $resultshash->{'PRIMER_RIGHT_8_SELF_END'} %></td><td><% $resultshash->{'PRIMER_RIGHT_8_SEQUENCE'} %></td></tr>
+
+<tr><td></td><th>HYB OLIGO</th><td><% $hybrid8[0] %></td><td><% $hybrid8[1] %></td><td><% $resultshash->{'PRIMER_INTERNAL_8_TM'} %></td><td><% $resultshash->{'PRIMER_INTERNAL_8_GC_PERCENT'} %></td><td><% $resultshash->{'PRIMER_INTERNAL_8_SELF_ANY'} %></td><td> <% $resultshash->{'PRIMER_INTERNAL_8_SELF_END'} %></td><td><% $resultshash->{'PRIMER_INTERNAL_8_SEQUENCE'} %></td></tr> 
+
+</table>
+
+<table>
+<tr><td></td><td>PRODUCT SIZE:  <% $resultshash->{'PRIMER_PAIR_8_PRODUCT_SIZE'} %>, PAIR ANY COMPL:  <% $resultshash->{'PRIMER_PAIR_8_COMPL_ANY'} %>, PAIR 3' COMPL:  <% $resultshash->{'PRIMER_PAIR_8_COMPL_END'} %> </td>
+</table>
+% }
+
+% if (exists $resultshash->{'PRIMER_INTERNAL_9_SEQUENCE'}) {
+<table border=9" cellpadding=4 cellspacing=4>
+<tr><td>9</td><th>OLIGO</th><td>start</td><td>len</td><td>tm</td><td>qc%</td><td>any</td><td>3'</td><td>seq</td></tr>
+
+% my @left9 = split(',', $resultshash->{'PRIMER_LEFT_9'});
+% my @right9 = split(',', $resultshash->{'PRIMER_RIGHT_9'});
+% my @hybrid9 = split(',', $resultshash->{'PRIMER_INTERNAL_9'});
+
+<tr><td></td><th>LEFT PRIMER</th><td><% $left9[0] %></td><td><% $left9[1] %></td><td><% $resultshash->{'PRIMER_LEFT_9_TM'} %></td><td><% $resultshash->{'PRIMER_LEFT_9_GC_PERCENT'} %></td><td><% $resultshash->{'PRIMER_LEFT_9_SELF_ANY'} %></td><td> <% $resultshash->{'PRIMER_LEFT_9_SELF_END'} %></td><td><% $resultshash->{'PRIMER_LEFT_9_SEQUENCE'} %></td></tr>
+<tr><td></td><th>RIGHT PRIMER</th><td><% $right9[0] %></td><td><% $right9[1] %></td><td><% $resultshash->{'PRIMER_RIGHT_9_TM'} %></td><td><% $resultshash->{'PRIMER_RIGHT_9_GC_PERCENT'} %></td><td><% $resultshash->{'PRIMER_RIGHT_9_SELF_ANY'} %></td><td> <% $resultshash->{'PRIMER_RIGHT_9_SELF_END'} %></td><td><% $resultshash->{'PRIMER_RIGHT_9_SEQUENCE'} %></td></tr>
+
+<tr><td></td><th>HYB OLIGO</th><td><% $hybrid9[0] %></td><td><% $hybrid9[1] %></td><td><% $resultshash->{'PRIMER_INTERNAL_9_TM'} %></td><td><% $resultshash->{'PRIMER_INTERNAL_9_GC_PERCENT'} %></td><td><% $resultshash->{'PRIMER_INTERNAL_9_SELF_ANY'} %></td><td> <% $resultshash->{'PRIMER_INTERNAL_9_SELF_END'} %></td><td><% $resultshash->{'PRIMER_INTERNAL_9_SEQUENCE'} %></td></tr> 
+
+</table>
+
+<table>
+<tr><td></td><td>PRODUCT SIZE:  <% $resultshash->{'PRIMER_PAIR_9_PRODUCT_SIZE'} %>, PAIR ANY COMPL:  <% $resultshash->{'PRIMER_PAIR_9_COMPL_ANY'} %>, PAIR 3' COMPL:  <% $resultshash->{'PRIMER_PAIR_9_COMPL_END'} %> </td>
+</table>
+% }
+
+% if (exists $resultshash->{'PRIMER_INTERNAL_10_SEQUENCE'}) {
+<table border=10" cellpadding=4 cellspacing=4>
+<tr><td>10</td><th>OLIGO</th><td>start</td><td>len</td><td>tm</td><td>qc%</td><td>any</td><td>3'</td><td>seq</td></tr>
+
+% my @left10 = split(',', $resultshash->{'PRIMER_LEFT_10'});
+% my @right10 = split(',', $resultshash->{'PRIMER_RIGHT_10'});
+% my @hybrid10 = split(',', $resultshash->{'PRIMER_INTERNAL_10'});
+
+<tr><td></td><th>LEFT PRIMER</th><td><% $left10[0] %></td><td><% $left10[1] %></td><td><% $resultshash->{'PRIMER_LEFT_10_TM'} %></td><td><% $resultshash->{'PRIMER_LEFT_10_GC_PERCENT'} %></td><td><% $resultshash->{'PRIMER_LEFT_10_SELF_ANY'} %></td><td> <% $resultshash->{'PRIMER_LEFT_10_SELF_END'} %></td><td><% $resultshash->{'PRIMER_LEFT_10_SEQUENCE'} %></td></tr>
+<tr><td></td><th>RIGHT PRIMER</th><td><% $right10[0] %></td><td><% $right10[1] %></td><td><% $resultshash->{'PRIMER_RIGHT_10_TM'} %></td><td><% $resultshash->{'PRIMER_RIGHT_10_GC_PERCENT'} %></td><td><% $resultshash->{'PRIMER_RIGHT_10_SELF_ANY'} %></td><td> <% $resultshash->{'PRIMER_RIGHT_10_SELF_END'} %></td><td><% $resultshash->{'PRIMER_RIGHT_10_SEQUENCE'} %></td></tr>
+
+<tr><td></td><th>HYB OLIGO</th><td><% $hybrid10[0] %></td><td><% $hybrid10[1] %></td><td><% $resultshash->{'PRIMER_INTERNAL_10_TM'} %></td><td><% $resultshash->{'PRIMER_INTERNAL_10_GC_PERCENT'} %></td><td><% $resultshash->{'PRIMER_INTERNAL_10_SELF_ANY'} %></td><td> <% $resultshash->{'PRIMER_INTERNAL_10_SELF_END'} %></td><td><% $resultshash->{'PRIMER_INTERNAL_10_SEQUENCE'} %></td></tr> 
+
+</table>
+
+<table>
+<tr><td></td><td>PRODUCT SIZE:  <% $resultshash->{'PRIMER_PAIR_10_PRODUCT_SIZE'} %>, PAIR ANY COMPL:  <% $resultshash->{'PRIMER_PAIR_10_COMPL_ANY'} %>, PAIR 3' COMPL:  <% $resultshash->{'PRIMER_PAIR_10_COMPL_END'} %> </td>
+</table>
+% }
+
+<HR></HR>
+<h5> Statistics </h5>
+
+<p>
+LEFT:  <% $resultshash->{'PRIMER_LEFT_EXPLAIN'} %>
+</p>
+<p>
+RIGHT:  <% $resultshash->{'PRIMER_RIGHT_EXPLAIN'} %>
+</p>
+<p>
+HYB:  <% $resultshash->{'PRIMER_INTERNAL_EXPLAIN'} %>
+</p>
+<p>
+Pair Stats:  <% $resultshash->{'PRIMER_PAIR_EXPLAIN'} %>
+</p>
+
+% if (exists $resultshash->{'PRIMER_ERROR'}) {
+ERROR MESSAGE: <% $resultshash->{'PRIMER_ERROR'} %>
+% }
