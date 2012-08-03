@@ -255,6 +255,18 @@ organism     = Solanum lycopersicum
 extended_description = Tomato fingerprint contigs, 2006 build (from the Sanger Centre).
 restrict_xrefs = sub { my ($q) = @_; my $r = ref $q; return $r && $r eq 'HASH' || $q =~ /^(SGN-M|LE|SL|C\d\d)/  }
 
+[Vitis vinifera]
+path          = sfs_grape.conf
+description   = Grape Genome annotations
+organism      = Vitis vinifera
+extended_description = Annotations on grape genome (GSVIV12X).
+
+[Oryza Sativa]
+path          = sfs_rice.conf
+description   = Rice Genome annotations  
+organism      = Oryza sativa
+extended_description = Annotations on rice genomic sequences by the International Rice Genome Sequencing Project (IRGSP).
+
 # [yeast]
 # description = Test
 # path = yeast_simple.conf

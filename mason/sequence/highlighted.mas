@@ -14,6 +14,10 @@ sub-regions.
 
 the sequence [Bio::Seq object]
 
+=item title
+
+the title of this section. Default is sequence id.
+
 =item highlight_description
 
 short plain-text description of the meaning of the highlighted regions,
@@ -46,9 +50,12 @@ input form.
 
 =back
 
+=cut
+
 </%doc>
 
 <%args>
+$title => undef
 $seq
 $highlight_description => 'matches'
 $highlight_coords      => [ ]
@@ -56,15 +63,18 @@ $width     => 100
 $source    => '<span class="ghosted">not recorded</span>'
 $whole_seq => 0
 $blast_url => undef
+$collapsable => 0
+$collapsed => 0
 </%args>
 
-<&| /page/info_section.mas, title => $seq->id &>
+<&| /page/info_section.mas, title => $title || $seq->id(), collapsible=> $collapsable, collapsed=> $collapsed &>
 
     <% info_table_html( 'Sequence ID' => link_identifier($seq->id) || $seq->id,
                         'Length'      => commify_number( $seq->length ),
                         'Source'      => $source,
                         __multicol    => 3,
                         __border      => 0,
+			
                         )
     %>
     <% info_table_html( 'Description' => $seq->desc || '<span class="ghosted">none</span>',

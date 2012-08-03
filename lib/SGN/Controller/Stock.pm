@@ -281,13 +281,12 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
             my $genotypes =  $self->_stock_project_genotypes( $stock );
             write_file($filename, ("project\tmarker\t$stock_name\n") );
             foreach my $project (keys %$genotypes ) {
-                #my $genotype_ref = $genotypes->{$project} ;
-                #my $replicate = 1;
 		foreach my $geno (@ { $genotypes->{$project} } ) {
-		    my $genotypeprop_rs = $geno->search_related('genotypeprops', {
-			#this is the current genotype we have , add more here as necessary
-			'type.name' => 'infinium array' } , {
-			    join => 'type' } );
+		    my $genotypeprop_rs = $geno->search_related('genotypeprops' ); # , {
+		    #just check if the value type is JSON
+		    #this is the current genotype we have , add more here as necessary
+			#'type.name' => 'infinium array' } , {
+			#    join => 'type' } );
 		    while (my $prop = $genotypeprop_rs->next) {
 			my $json_text = $prop->value ;
 			my $genotype_values = JSON::Any->decode($json_text);

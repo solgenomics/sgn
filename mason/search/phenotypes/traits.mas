@@ -1,6 +1,5 @@
 <%args>
 
-  $roots   => 'Solanaceae phenotype ontology'
   $db_name => 'SP'
   $search  => 'traits'
 
