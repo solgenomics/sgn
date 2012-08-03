@@ -1,0 +1,33 @@
+code	|	name	|	preferred name	|	taxid
+1	|	Saccharomyces cerevisiae	|	 	|	4932
+1	|	Drosophila melanogaster	|	 	|	7227
+1	|	Mus musculus	|	 	|	10090
+1	|	Arabidopsis thaliana	|	 	|	3702
+1	|	Caenorhabditis elegans	|	 	|	6239
+1	|	Rattus norvegicus	|	 	|	10116
+1	|	Oryza sativa	|	 	|	4530
+1	|	Danio rerio	|	 	|	7955
+1	|	Dictyostelium discoideum	|	 	|	44689
+1	|	Candida albicans	|	 	|	5476
+2	|	Bacillus anthracis Ames	|	Bacillus anthracis str. Ames	|	198094
+1	|	Coxiella burnetii RSA 493	|	 	|	227377
+1	|	Campylobacter jejuni RM1221	|	 	|	195099
+1	|	Dehalococcoides ethenogenes 195	|	 	|	243164
+1	|	Geobacter sulfurreducens PCA	|	 	|	243231
+2	|	Listeria monocytogenes 4b F2365	|	Listeria monocytogenes str. 4b F2365	|	265669
+2	|	Methylococcus capsulatus Bath	|	Methylococcus capsulatus str. Bath	|	243233
+2	|	Pseudomonas syringae DC3000	|	Pseudomonas syringae pv. tomato str. DC3000	|	223283
+1	|	Shewanella oneidensis MR-1	|	 	|	211586
+1	|	Silicibacter pomeroyi DSS-3	|	 	|	246200
+1	|	Trypanosoma brucei	|	 	|	5691
+1	|	Vibrio cholerae	|	 	|	666
+1	|	Arabidopsis	|	 	|	3701
+2	|	Human	|	Homo sapiens	|	9606
+2+	|	Rat	|	Rattus	|	10114
+2+	|	Rat	|	Rattus norvegicus	|	10116
+2	|	Zebrafish	|	Danio rerio	|	7955
+1	|	Leishmania major	|	 	|	5664
+1	|	Plasmodium falciparum	|	 	|	5833
+1	|	Schizosaccharomyces pombe	|	 	|	4896
+1	|	Trypanosoma brucei	|	 	|	5691
+1	|	Glossina morsitans	|	 	|	7394

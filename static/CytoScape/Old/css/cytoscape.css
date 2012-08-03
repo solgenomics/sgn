@@ -1,0 +1,308 @@
+body,th,td,div,p,h1,h2,li,dt,dd {
+ font-family: Tahoma, "Gill Sans", Arial, sans-serif;
+}
+
+body {
+ margin: 0px;
+ color: #333333;
+ background-color: #ffffff;
+}
+
+#indent {
+ padding-left: 30px;
+}
+/* front page stuff */
+
+#feature {
+ height: 50px;
+ width: 100%;
+ color: #ffffff;
+ background-color: #2a5a8a;
+ background: url(../images/cytoCrop.jpg);
+ background-color: #5b6be2;
+ background-repeat: no-repeat;
+ background-position: top left;
+ border: none;
+ /* this bottom border is necessary to work around an opera 6 bug */
+ border-bottom: 1px solid #2a5a8a;
+}
+
+#feature td, #feature td p {
+ color: #ffffff;
+ font-size: 12px;
+}
+#feature td p {
+ padding-bottom: 0px;
+ margin-bottom: 0px;
+}
+#feature td h1 {
+ font-size: 36px;
+ font-family: Arial;
+}
+#feature a {
+ text-decoration: none;
+ font-weight: bold;
+ color: #ffffff;
+}
+#feature a:hover {
+ text-decoration: underline;
+}
+
+#feature #about {
+ width: 200px;
+}
+#feature #about p {
+ margin: 4px 0px;
+}
+
+#feature #article {
+ max-width: 440px;
+ margin-left: 10px;
+ margin-right: auto;
+ padding-right: 10px;
+}
+
+
+#code {
+ height: 50px;
+ width: 100%;
+ color: #333399;
+ font-family: Courier;
+ font-size: 14px;
+ font-weight: bold;
+}
+
+#links {
+ width: 100%;
+ color: #000000;
+ background-color: #ddeeee;
+ border: none;
+ border-bottom: 1px solid #999999;
+}
+/*/*/a{}
+#links {
+ padding: 0px;
+ border-spacing: 0px;
+}
+/* */
+#links td {
+ font-size: 12px;
+}
+#links td p, #products td li {
+ margin-top: 0px;
+ margin-bottom: 4px;
+}
+#links td h1 {
+ font-size: 14px;
+ margin: 0px;
+ padding: 0px;
+}
+
+#links td {
+ vertical-align: top;
+ border-left: 1px dotted #000000;
+ padding-left: 10px;
+ padding-top: 2px;
+}
+
+#links #first {
+ padding-left: 30px;
+ border-left: none;
+}
+
+#links #caption {
+ color: #000000;
+ background-color:  #99ccff;
+ padding-left: 30px;
+ text-align: left;
+ border: none;
+ border-bottom: 2px solid #1177cc;
+}
+#links h1 a {
+ text-decoration: none;
+}
+#links h1 a:hover {
+ color: #1177cc;
+ text-decoration: none;
+}
+#links a {
+ color: #000000;
+}
+#links a:hover {
+ color: #2299ee;
+ text-decoration: underline;
+}
+
+#links ul {
+ list-style-type: none;
+ list-style-image: none;
+ margin-top: 0px;
+ margin-left: 0px;
+ padding-left: 8px;
+}
+
+#content .item {
+ margin-bottom: 0px;
+ font-size: 12px;
+ #border: dotted gray 1px;
+ padding-left: 10px;
+ padding-bottom: 10px;
+ background: #FFFFFF   url(../images/blue_grad.png) ;
+ background-repeat: repeat-y;
+ border: 1px solid #b0d6fc;
+}
+#content .item h2 {
+ margin-bottom: 0px;
+ font-size: 14px;
+}
+#content .item h2 a:link {
+ color: #333333;
+ text-decoration: none;
+}
+#content .item h2 a:visited {
+ color: #333333;
+ text-decoration: none;
+}
+#content .item h2 a:hover {
+ color: #1177cc;
+ text-decoration: underline;
+}
+
+#content .item p {
+ font-size: 12px;
+ margin-top: 0px;
+ margin-bottom: 0px;
+}
+#content .item p img {
+ float: right;
+}
+
+#content .item .details {
+ font-size: smaller;
+ margin-top: 4px;
+}
+
+#prefooter {
+ font-size: smaller;
+ clear: both;
+ border: none;
+ background: #ffffff;
+
+ margin-top: 10px;
+ padding-left: 30px;
+ padding-top: 1px;
+ padding-bottom: 10px;
+ border-top: 2px solid #335599;
+ border-bottom: 2px solid #335599;
+}
+
+#footer {
+ font-size: smaller;
+ clear: both;
+ border: none;
+ background: #ddeeee;
+
+ margin-top: 20px;
+ padding-left: 30px;
+ padding-top: 10px;
+ padding-bottom: 10px;
+}
+
+#footer a:link {
+ color: #444444;
+}
+#footer a:active, .footer a:hover {
+ color: #005599;
+}
+#footer a:visited {
+ color: #777777;
+}
+
+.roundbox {
+	font-family: trebuchet MS, trebuchet, verdana, arial, sans-serif;
+	font-size: 11px;
+	padding: 5px;
+	-moz-border-radius: 10px;
+	border-radius: 10px;	
+}
+
+.roundbox h3 {
+	text-transform: uppercase;
+	margin: 2px;
+}
+
+.roundbox ul {
+	padding: 0px;
+	margin: 0.5em;
+	padding-left: 0.5em;
+	list-style: none;
+}
+	
+.roundbox li:before {
+	content: "\00BB \0020";
+}
+
+.blue {
+	background-color: #F0F8FF;
+	border: 1px solid #CCE6FF;
+}	
+.roundbox a {
+	text-decoration: none;
+}
+.blue_outline {
+	background-color: #FFFFFF;
+	border: 1px solid #CCE6FF;
+}
+.peach {
+	background-color: #FFFBEC;
+	border: 1px solid #FFE8A0;
+	}
+
+.peach a:link { color: #FFB200; }
+.peach a:visited { color: #AD9357; }
+
+.lavendar {
+	background-color: #F2BAF9;
+	border: 1px solid #D3A3D9;
+	}
+
+.slate {
+	background-color: #D8D8EC;
+	border: 1px solid #B5B5D8;
+	}
+
+.slate a:link { color: #5B5BB2; }
+.slate a:visited { color: #5E5E77; }
+
+.codebox {
+color: #333399;
+	font-family: Courier;
+	font-size: 14px;
+font-weight: bold;
+	padding: 5px;
+	-moz-border-radius: 10px;
+	border-radius: 10px;	
+}
+
+.codebox h3 {
+	color: #333399;
+}
+
+
+.codebox ul {
+	padding: 0px;
+	margin: 0.5em;
+	padding-left: 0.5em;
+	list-style: none;
+}
+	
+.codebox li:before {
+	content: "\00BB \0020";
+}
+
+
+.lightyellow {
+  background-color: #FDFDCA;
+	border: 1px solid #007100;
+}
+
