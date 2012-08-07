@@ -4,7 +4,7 @@ database      = main
 
 language = en
 
-region segment 
+#region segment = 0
 
 initial landmark = GSVIV12X_chr1:248000..257999
 
@@ -43,7 +43,6 @@ db_args       = -adaptor DBI::Pg
                 -user '<% $feature->default_db_user %>'
                 -password '<% $feature->default_db_password %>'
 search options = default +autocomplete
-#aggregators = mt_snp_density{bin:SNP}
 
 
 # Advanced feature: custom balloons

@@ -4,7 +4,7 @@ database      = main
 
 language = en
 
-region segment = 0
+#region segment = 0
 
 initial landmark = IRGSP_chr01build05r1:721000..750999
 
@@ -36,7 +36,7 @@ examples = IRGSP_chr01build05r1
 # database definitions
 #################################
 
-[annotations:database]
+[main:database]
 db_adaptor    = Bio::DB::SeqFeature::Store
 db_args       = -adaptor DBI::Pg
                 -dsn 'dbi:Pg:host=<% $feature->default_db_host %>;dbname=sfs_rice'
@@ -44,7 +44,6 @@ db_args       = -adaptor DBI::Pg
                 -password '<% $feature->default_db_password %>'
 
 search options = default +autocomplete
-#aggregators = mt_snp_density{bin:SNP}	
 
 # Advanced feature: custom balloons
 custom balloons = [balloon]
