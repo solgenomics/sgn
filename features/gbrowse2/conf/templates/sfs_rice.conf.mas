@@ -88,7 +88,7 @@ full_sequence = sub {
 # Default glyph settings
 [TRACK DEFAULTS]
 glyph       = generic
-database    = annotations
+database    = main
 height      = 8
 bgcolor     = cyan
 fgcolor     = black
@@ -151,7 +151,7 @@ glyph        = generic
 description  = 0
 height       = 6
 sixframe     = 1
-label        = sub {shift->name."reading frame"]
+label        = sub {shift->name."reading frame"}
 key          = CDS
 balloon click width     = 500
 balloon hover width     = 350
