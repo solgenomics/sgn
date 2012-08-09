@@ -267,6 +267,12 @@ description   = Rice Genome annotations
 organism      = Oryza sativa
 extended_description = Annotations on rice genomic sequences by the International Rice Genome Sequencing Project (IRGSP).
 
+[Tomato RNA-seq Data]
+path          = sfs_tomato_rnaseq.conf
+description   = Tomato RNA-seq data
+organism      = S. lycopersicum, S. pimpinellifolium, S. pennellii, S. habrochaites, Introgression Line 4-3.
+extended_description = Analyzed transcriptomic sequence data from various tissues and species, including SNP locations.
+
 # [yeast]
 # description = Test
 # path = yeast_simple.conf

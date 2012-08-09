@@ -1,0 +1,199 @@
+[GENERAL]
+description   = Solanum lycopersicum gh13  NGS reads mapped against S. lycopersicum Heinz 1706
+database      = annotations
+require	      = user sol_gbrowse_usr
+
+initial landmark = SL2.40ch01:143000..180000
+
+# bring in the special Submitter plugin for the rubber-band select menu                                           
+plugins   = AlignTwoSequences Aligner AttributeHiliter FastaDumper FilterTest PrimerDesigner MotifFinder RestrictionAnnotator SequenceDumper Submitter TrackDumper
+autocomplete = 1
+
+default tracks =  CDS
+	          gene
+	          #  mRNA
+                  exon
+		  #  Transp
+                  #  Centro:overview
+      	          GC:region
+	          Reads	
+		  SNP
+    	          CoverageXYplot
+
+# examples to show in the introduction
+examples = SL2.40ch01
+	   SL2.40ch02:45600..45700
+
+
+# "automatic" classes to try when an unqualified identifier is given
+#automatic classes = Symbol Gene Clone
+
+#################################
+# database definitions
+#################################
+
+[annotations:database]
+db_adaptor    = Bio::DB::SeqFeature::Store
+db_args       = -adaptor DBI::Pg 
+                -dsn	 dbi:Pg:database=sfs_tomato_test;host=vm-db.sgn.cornell.edu
+	        -user	 postgres
+		-pass	 Eise!Th9
+search options = default +autocomplete
+aggregators = mt_snp_density{bin:SNP}
+
+# Advanced feature: custom balloons
+custom balloons = [balloon]
+                  delayTime = 500
+
+                  [balloon500]
+		            maxWidth  = 500
+                  delayTime = 50
+
+
+# Advanced feature: an example of callbacks to be run remotely
+# by gbrowse_details for AJAX/iframe balloons
+[TOOLTIPS]
+intro = sub {
+                my $args  = shift;
+                my $feat  = $args->{feature};
+                my $name  = $feat->display_name;
+                my $type  = $feat->primary_tag;
+                my $class = $feat->class;
+                my $extra = join(' ',$feat->each_tag_value('Note')) if $feat->has_tag('Note');
+                my $n     = $type =~ /^[AEIOU]/i ? 'n' : '';
+                my $msg   = "Hello, I am $name, a$n $type of class $class";
+                $msg     .= "<br>I am described as a <i><b>$extra</b></i>" if $extra;
+                $msg     .= "<br>Click to see the sequence of $name";
+                return "<table><tr><th bgcolor='lightsteelblue'>$name</th><tr>" .
+                       "<tr><td>$msg</td></tr></table>";
+           }
+full_sequence = sub {
+	                my $args = shift;
+			     my $feat = $args->{feature};
+			     	  my $name  = $feat->display_name;
+				       my $seq = $feat->seq->seq;
+				       	    $seq =~ s/(\S{75})/$1\n/g;
+					    	   return "<pre style='font-size:8pt'>>$name\n$seq</pre>";
+               }
+
+
+# Default glyph settings
+[TRACK DEFAULTS]
+glyph       = generic
+database    = annotations
+height      = 8
+bgcolor     = cyan
+fgcolor     = black
+label density = 25
+bump density  = 100
+show summary  = 99999  # go into summary mode when zoomed out to 100k
+# default pop-up balloon
+balloon hover = <b>$name</b> is a $type spanning $ref from $start to $end. Click for more details.
+
+### TRACK CONFIGURATION ####
+# the remainder of the sections configure individual tracks
+
+[DNA/GC Content]
+glyph		= dna
+global feature	= 1
+database	= scaffolds
+height		= 40
+do_gc		= 1	
+gc_window	= auto
+strand		= both
+fgcolor		= red
+axis_color	= blue
+
+[Genes:region]
+feature      = gene
+glyph        = segments
+bgcolor      = yellow
+forwardcolor = yellow
+reversecolor = turquoise
+label	          = sub {shift->load_id}
+
+[repeat_region]
+feature       = repeat_region
+bgcolor       = darkorchid
+fgcolor       = darkorchid
+height        = 3
+connector     = solid
+bump          = 1
+strand_arrow  = 0
+label         = 0
+key           = Repeat region
+citation      = repeat_region
+category      = Analysis
+
+[mRNAs]
+feature      = mRNA
+glyph        = processed_transcript
+height       = 6
+key          = Gene models
+fgcolor      = black
+bgcolor      = goldenrod
+ignore_sub_part = intron exon
+strand_arrow = 1
+adjust_exons = 1
+
+[CDS]
+feature	     = CDS
+glyph	     = generic
+description  = 0
+height	     = 6
+sixframe     = 1
+label	     = sub {shift->name."reading frame"]
+key	     = CDS
+balloon click width	= 500
+balloon hover width	= 350
+citation      = This track shows CDS reading frame
+
+[Sly_SNPs]
+feature       = SNP_Sly
+glyph         = triangle
+point         = 1
+orient        = N
+height        = 6
+bgcolor       = blue
+fgcolor       = blue
+key           = S. lycopersicum SNP marks
+
+[Sha_SNPs]
+feature       = SNP_Sha
+glyph         = triangle
+point	      = 1
+orient	      = N
+height        = 6
+bgcolor       = blue
+fgcolor       = blue
+key           = S. habrochaites SNP marks
+
+[Spi_SNPs]
+feature       = SNP_Spi
+glyph         = triangle
+point         = 1
+orient        = N
+height        = 6
+bgcolor       = blue
+fgcolor       = blue
+key           = S. pimpinellifolium SNP marks
+
+[Spe_SNPs]
+feature       = SNP_Spe
+glyph         = triangle
+point         = 1
+orient        = N
+height        = 6
+bgcolor       = blue
+fgcolor       = blue
+key           = S. pennellii SNP marks
+
+[IL_SNPs]
+feature       = SNP_IL
+glyph         = triangle
+point         = 1
+orient        = N
+height        = 6
+bgcolor       = blue
+fgcolor       = blue
+key           = Introgression Line 4-3 SNP marks
