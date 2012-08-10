@@ -17,6 +17,7 @@ default tracks =  CDS
                   Genes:region
                   mRNAs
 		  DNA/GC_Content
+		  Gene_Families
                   exon
                   #  Transp
                   #  Centro:overview
@@ -58,7 +59,7 @@ custom balloons = [balloon]
 # by gbrowse_details for AJAX/iframe balloons
 [TOOLTIPS]
 intro = sub {
-                my $args  = shift;adds
+                my $args  = shift;
                 my $feat  = $args->{feature};
                 my $name  = $feat->display_name;
                 my $type  = $feat->primary_tag;
