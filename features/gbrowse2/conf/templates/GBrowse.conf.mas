@@ -257,13 +257,13 @@ restrict_xrefs = sub { my ($q) = @_; my $r = ref $q; return $r && $r eq 'HASH' |
 
 [Vitis vinifera]
 path          = sfs_grape.conf
-description   = Grape Genome annotations
+description   = Vitis vinifera genome annotations (GSVIV12X)
 organism      = Vitis vinifera
 extended_description = Annotations on grape genome (GSVIV12X).
 
-[Oryza Sativa]
+[Oryza sativa]
 path          = sfs_rice.conf
-description   = Rice Genome annotations  
+description   = Oryza sativa genome annotations (IRGSP Build05r1)
 organism      = Oryza sativa
 extended_description = Annotations on rice genomic sequences by the International Rice Genome Sequencing Project (IRGSP).
 

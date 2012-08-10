@@ -1,5 +1,5 @@
 [GENERAL]
-description   = Oryza sativa genome data
+description   = Oryza sativa genome data (IRGSP Build05r1)
 database      = main
 
 language = en
@@ -18,6 +18,7 @@ default tracks =  CDS
                   mRNAs
                   exon
 		  DNA/GC_Content
+		  Gene_Families
                   #  Transp
                   #  Centro:overview
                   GC:region
@@ -156,3 +157,36 @@ key          = CDS
 balloon click width     = 500
 balloon hover width     = 350
 citation      = This track shows CDS reading frame
+
+[Gene_Families]
+feature = gene_family_member
+glyph = generic
+description = 1
+height = 7
+key = Gene Families
+label = 1
+balloon hover = $name is a member of a gene family containing the gene in $ref spanning $start to $end. Click for more details.
+bgcolor = sub {
+               my $feature = shift;
+               my %attrs = $feature->attributes;
+               my ($species) = @{$attrs{'Note'}};
+               if ($species eq "Arabidopsis thaliana") {
+                     return "greenyellow";
+               }
+               elsif ($species eq "Vitis vinifera") {
+                     return "purple";
+               }
+               elsif ($species eq "Oryza sativa") {
+                     return "khaki";
+               }
+               elsif ($species eq "Solanum tuberosum") {
+                     return "peru";
+               }
+               elsif ($species eq "Solanum lycopersicum"){
+                     return "red"
+               }
+               else {
+                    return "lightskyblue";
+               }
+
+           }
