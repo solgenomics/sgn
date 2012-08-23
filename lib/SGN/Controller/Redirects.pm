@@ -28,6 +28,10 @@ my %paths = (
         /search/template_experiment_platform   /search/expression/template
         /search/experiment                     /search/expression/experiment
         /search/est                            /search/transcripts/est
+        /search/est                            /search/transcripts/est
+        /search/ests                            /search/transcripts/est
+        /search/EST                            /search/transcripts/est
+        /search/ESTs                            /search/transcripts/est
         /search/est_library                    /search/transcripts/est_library
         /search/library                        /search/transcripts/est_library
         /search/bacs                           /search/genomic/clones
