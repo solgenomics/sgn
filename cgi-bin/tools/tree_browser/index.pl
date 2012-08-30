@@ -407,7 +407,7 @@ woodland_strawberry[species=Fragaria_vesca]:1):1, cucumber[species=Cucumis_sativ
 #print STDERR "species tree newick: \n", $species_tree_newick, "\n";
 
 my $species_tree =
-  CXGN::Phylo::Parse_newick->new($species_tree_newick)->parse();    #construct Parse_newick for string $newick
+  CXGN::Phylo::Parse_newick->new($species_tree_newick)->parse( CXGN::Phylo::Tree->new("") );    #construct Parse_newick for string $newick
 
 ## these aren't needed for the hard coded species tree, but may be needed if/when we allow other trees (user supplied)
 $species_tree->set_missing_species_from_names();                    # if get_species() not defined get species from name
@@ -466,7 +466,7 @@ if ( !$browser->get_tree_string() ) {
 } else {
     my $tree_string = $browser->get_tree_string();
     my $parser      = CXGN::Phylo::Parse_newick->new($tree_string);
-    my $tree        = $parser->parse();
+    my $tree        = $parser->parse( CXGN::Phylo::Tree->new("") );
 
     if ( !$tree ) {
         my $error = $parser->get_error();
