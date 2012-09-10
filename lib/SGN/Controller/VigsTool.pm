@@ -201,7 +201,7 @@ system('/data/shared/bin/bwa_wrapper.sh', $basename, $seq_filename.".fragments",
 
     my $id = $urlencode{basename($seq_filename)};
 
-    $job->wait();
+    #$job->wait();
 
     $c->res->redirect("/tools/vigs/view/?id=$id&fragment_size=$fragment_size&database=$database_title&targets=0");
 
