@@ -35,6 +35,7 @@ my %paths = (
         /search/est_library                    /search/transcripts/est_library
         /search/library                        /search/transcripts/est_library
         /search/bacs                           /search/genomic/clones
+        /search/BACs                           /search/genomic/clones
         /search/marker                         /search/markers
       ),
 
