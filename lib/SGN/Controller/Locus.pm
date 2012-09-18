@@ -149,7 +149,8 @@ sub view_locus : Chained('get_locus') PathPart('view') Args(0) {
             xrefs      => \@locus_xrefs,
         },
         locus_add_uri  => $c->uri_for( '/ajax/locus/associate_locus' ),
-        cvterm_add_uri => $c->uri_for( '/ajax/locus/associate_ontology')
+        cvterm_add_uri => $c->uri_for( '/ajax/locus/associate_ontology'),
+        assign_owner_uri  => $c->uri_for( '/ajax/locus/assign_owner' ),
         );
 }
 
@@ -179,6 +180,12 @@ sub get_locus_owner_ids : Private {
     $c->stash->{owner_ids} = \@owner_ids;
 }
 
+sub get_locus_owner_objects : Private {
+    my ( $self, $c ) = @_;
+    my $locus = $c->stash->{locus};
+    my $owner_objects = $locus ? $locus->get_owners(1) : ();
+    $c->stash->{owner_objects} = $owner_objects;
+}
 
 sub get_locus_extended_info : Private {
     my ( $self, $c ) = @_;
