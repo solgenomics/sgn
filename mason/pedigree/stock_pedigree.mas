@@ -1,0 +1,56 @@
+<%doc>
+=head1 NAME
+
+stock_pedigree.mas
+
+=head1 DESCRIPTION
+
+This component can display a pedigree from related stocks from the stock_relationship table
+
+
+=head1 ARGUMENTS
+
+=over 1
+
+=item stock
+a Bio::Chado::Schema::Stock::Stock object
+
+=back
+=cut
+
+</%doc>
+
+<%args>
+  $stock_pedigree
+</%args>
+
+<%perl>
+
+my %pedigree=%$stock_pedigree;
+my %maternal_stock_pedigree;
+my %paternal_stock_pedigree;
+my $maternal_parent_name;
+my $paternal_parent_name;
+my $stock_name = $pedigree{'name'};
+if ($pedigree{'female_parent'}){
+  %maternal_stock_pedigree = %{$pedigree{'female_parent'}};
+  $maternal_parent_name = $maternal_stock_pedigree{'name'};
+}
+if ($pedigree{'male_parent'}){
+  %paternal_stock_pedigree = %{$pedigree{'male_parent'}};
+  $paternal_parent_name = $paternal_stock_pedigree{'name'};
+}
+
+
+
+print STDERR "\n stock name: $stock_name\n";
+print STDERR "\n maternal stock name: $maternal_parent_name\n";
+</%perl>
+
+
+<table>
+<%perl>
+print "<tr><td>Female Parent: $maternal_parent_name</td></tr>";
+print "<tr><td>Male Parent: $paternal_parent_name</td></tr>";
+</%perl>
+</table>

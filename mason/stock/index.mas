@@ -96,7 +96,11 @@ my $stockprops = $stockref->{props};
 
 my $metadata = ['variety', 'donor', 'donor institute', 'country', 'state' , 'adaptation' , 'notes'];
 
-my $pedigree= ['pedigree', 'male parent', 'female parent'];
+#my $pedigree= ['pedigree', 'male parent', 'female parent'];
+# get pedigree of stock
+my $stock_pedigree = $stockref->{stock_pedigree};
+
+
 my $experiment = ['year', 'location', 'replicate']; # these values should be in nd_experimentprop ?
 
 my $resources = ['solcap number' , 'synonym'];
@@ -211,11 +215,6 @@ function jqueryStuff() {
       <& /stock/stockprops.mas, props=> $stockprops , subset=> $resources  &>
 </&>
 
-<&| /page/info_section.mas, title => "Pedigree data" , collapsible=> 1, is_subsection => 1 &>
-      <& /stock/stockprops.mas, props=> $stockprops, subset=> $pedigree  &>
-</&>
-
-
     <&| /page/info_section.mas, title => "Additional information" , collapsible=> 1, is_subsection => 1 &>
       <& /stock/stockprops.mas, props=> $stockprops, subset=> $metadata  &>
 </&>
@@ -240,7 +239,18 @@ function jqueryStuff() {
 
 </&>
 
+
 % }
+
+
+% if ($type) {
+
+<&| /page/info_section.mas, title=>"Pedigree" , collapsible=>1, collapsed=>0 &>
+  <& /pedigree/stock_pedigree.mas, stock_pedigree => $stock_pedigree &>
+</&>
+
+% }
+
 
 % if ($type) {
 <&| /page/info_section.mas, title=>"Related stocks" , collapsible=>1, collapsed=>0 &>
