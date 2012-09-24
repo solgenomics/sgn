@@ -25,32 +25,210 @@ a Bio::Chado::Schema::Stock::Stock object
 </%args>
 
 <%perl>
+#recursively get pedigrees
+sub traverse_pedigree {
+  #my $self = shift;
+  my $pedigree_reference = shift;
+  my %pedigree=%$pedigree_reference;
+  my $current_node_id = $pedigree{'id'};
+  my $current_node_name = $pedigree{'name'};
+  print STDERR "\nTraversing female $current_node_id\n";
+  my %nodes;
+  my %node_shapes;
+  my %node_links;
+  my %joins;
+  my %joints;
+  my %selfs;
+  my %invisible_joins;
+  my $female_parent_name;
+  my $male_parent_name;
+  my $female_parent_id;
+  my $male_parent_id;
+  if ($pedigree{'female_parent'}) {
+    my %female_parent =  %{$pedigree{'female_parent'}};
+    $female_parent_id = $female_parent{'id'};
+    if ($female_parent{'name'}) {
+      $female_parent_name = $female_parent{'name'};
+    } else {
+      $female_parent_name = '';
+    }
+    my $female_parent_link = $female_parent{'link'};
+    my ($returned_nodes,$returned_node_links,$returned_node_shapes,$returned_joins,$returned_selfs, $returned_invisible_joins) = traverse_pedigree(\%female_parent);
+    @nodes{keys %$returned_nodes} = values %$returned_nodes;
+    @node_links{keys %$returned_node_links} = values %$returned_node_links;
+    @node_shapes{keys %$returned_node_shapes} = values %$returned_node_shapes;
+    @joins{keys %$returned_joins} = values %$returned_joins;
+    @invisible_joins{keys %$returned_invisible_joins} = values %$returned_invisible_joins;
+    @selfs{keys %$returned_selfs} = values %$returned_selfs;
+    $nodes{$female_parent_id} = $female_parent_name;
+    $node_shapes{$female_parent_id} = 'female';
+    $node_links{$female_parent_id} = $female_parent_link;
+    $joins{$female_parent_id} = $current_node_id;
+    print STDERR "\n:masonf: $female_parent_name\n";
+  }
+  if ($pedigree{'male_parent'}) {
+    my %male_parent =  %{$pedigree{'male_parent'}};
+    $male_parent_id = $male_parent{'id'};
+    if ($male_parent{'name'}) {
+      $male_parent_name = $male_parent{'name'};
+    } else {
+      $male_parent_name = '';
+    }
+    my $male_parent_link = $male_parent{'link'};
+    my ($returned_nodes,$returned_node_links,$returned_node_shapes,$returned_joins,$returned_selfs, $returned_invisible_joins) = traverse_pedigree(\%male_parent);
+    @nodes{keys %$returned_nodes} = values %$returned_nodes;
+    @node_shapes{keys %$returned_node_shapes} = values %$returned_node_shapes;
+    @node_links{keys %$returned_node_links} = values %$returned_node_links;
+    @joins{keys %$returned_joins} = values %$returned_joins;
+    @invisible_joins{keys %$returned_invisible_joins} = values %$returned_invisible_joins;
+    @selfs{keys %$returned_selfs} = values %$returned_selfs;
+    $nodes{$male_parent_id} = $male_parent_name;
+    $node_shapes{$male_parent_id} = 'male';
+    $node_links{$male_parent_id} = $male_parent_link;
+    $joins{$male_parent_id} = $current_node_id;
+    print STDERR "\n:masonm: $male_parent_name\n";
+  }
+  if ($female_parent_id && $male_parent_id) {
+    $invisible_joins{$female_parent_id} = $male_parent_id;
+  }
+  return (\%nodes,\%node_links,\%node_shapes,\%joins,\%selfs,\%invisible_joins);
+}
+######################################################
 
+
+
+use GraphViz2;
+my($graph) = GraphViz2 -> new
+  (
+   edge       => {color => 'black', constraint => 'true'},
+   global => {directed => 0},
+   graph      => {rankdir => 'TB', bgcolor => '#FAFAFA', ranksep => ".4", nodesep => 1, size => 6},
+   node       => {color => 'black', fontsize => 10, fontname => 'Helvetica', height => 0},
+  );
+#$graph->add_node(name => "Hello", shape => 'box');
+#$graph->add_node(name=> "world", shape => 'box');
+#$graph -> add_edge(from => 'Hello', to    => 'world', arrowsize => 2);
+#$graph -> run(format => 'svg');
+#print $graph->dot_output();
 my %pedigree=%$stock_pedigree;
-my %maternal_stock_pedigree;
-my %paternal_stock_pedigree;
-my $maternal_parent_name;
-my $paternal_parent_name;
-my $stock_name = $pedigree{'name'};
-if ($pedigree{'female_parent'}){
-  %maternal_stock_pedigree = %{$pedigree{'female_parent'}};
-  $maternal_parent_name = $maternal_stock_pedigree{'name'};
+my %nodes;
+my %node_shape;
+my %node_links;
+my %joins;
+my %joints;
+my %invisible_joins;
+my %selfs;
+my $current_node_id = $pedigree{'id'};
+my $current_node_name = $pedigree{'name'};
+my $female_parent_name;
+my $male_parent_name;
+my $female_parent_id;
+my $male_parent_id;
+$nodes{$current_node_id} = $current_node_name;
+$node_shape{$current_node_id} = 'root';
+if ($pedigree{'female_parent'}) {
+  my %female_parent =  %{$pedigree{'female_parent'}};
+  $female_parent_id = $female_parent{'id'};
+  if ($female_parent{'name'}) {
+    $female_parent_name = $female_parent{'name'};
+  } else {
+    $female_parent_name = '';
+  }
+  my $female_parent_link = $female_parent{'link'};
+  print STDERR "\nTraverse female parent $female_parent_name\n";
+  my ($returned_nodes,$returned_node_links,$returned_node_shapes,$returned_joins,$returned_selfs,$returned_invisible_joins) = traverse_pedigree(\%female_parent);
+  @nodes{keys %$returned_nodes} = values %$returned_nodes;
+  @node_links{keys %$returned_node_links} = values %$returned_node_links;
+  @node_shape{keys %$returned_node_shapes} = values %$returned_node_shapes;
+  @joins{keys %$returned_joins} = values %$returned_joins;
+  @invisible_joins{keys %$returned_invisible_joins} = values %$returned_invisible_joins;
+  @selfs{keys %$returned_selfs} = values %$returned_selfs;
+  $nodes{$female_parent_id} = $female_parent_name;
+  $node_links{$female_parent_id} = $female_parent_link;
+  $node_shape{$female_parent_id} = 'female';
+  $joins{$female_parent_id} = $current_node_id;
 }
-if ($pedigree{'male_parent'}){
-  %paternal_stock_pedigree = %{$pedigree{'male_parent'}};
-  $paternal_parent_name = $paternal_stock_pedigree{'name'};
+if ($pedigree{'male_parent'}) {
+  my %male_parent =  %{$pedigree{'male_parent'}};
+  $male_parent_id = $male_parent{'id'};
+  if ($male_parent{'name'}) {
+    $male_parent_name = $male_parent{'name'};
+  } else {
+    $male_parent_name = '';
+  }
+  my $male_parent_link = $male_parent{'link'};
+  my ($returned_nodes,$returned_node_links,$returned_node_shapes,$returned_joins,$returned_selfs,$returned_invisible_joins) = traverse_pedigree(\%male_parent);
+  @nodes{keys %$returned_nodes} = values %$returned_nodes;
+  @node_links{keys %$returned_node_links} = values %$returned_node_links;
+  @node_shape{keys %$returned_node_shapes} = values %$returned_node_shapes;
+  @joins{keys %$returned_joins} = values %$returned_joins;
+  @invisible_joins{keys %$returned_invisible_joins} = values %$returned_invisible_joins;
+  @selfs{keys %$returned_selfs} = values %$returned_selfs;
+  $nodes{$male_parent_id} = $male_parent_name;
+  $node_links{$male_parent_id} = $male_parent_link;
+  $node_shape{$male_parent_id} = 'male';
+  $joins{$male_parent_id} = $current_node_id;
+}
+if ($female_parent_id && $male_parent_id) {
+  $invisible_joins{$female_parent_id} = $male_parent_id;
 }
 
+ #Quick way to stop making duplicate node declarations in the Graphviz file.
+my %hashcheck;
+#Makes node declarations in the Graphviz file.
+foreach my $node_key (keys %nodes) {
+  unless ($hashcheck{$nodes{$node_key}}) {
+    $hashcheck{$nodes{$node_key}} = $nodes{$node_key};
+    #get link to stock id
+    my $stock_link = $node_links{$node_key};
+    print STDERR "\nmason name: $nodes{'node_key'} link: $stock_link\n";
+    if ($node_shape{$node_key} eq 'female') {
+      $graph -> add_node(name => $nodes{$node_key},  href => $stock_link, shape=>'oval');
+    } elsif ($node_shape{$node_key} eq 'male'){
+      $graph -> add_node(name => $nodes{$node_key},  href => $stock_link, shape=>'box');
+    }
+    else {
+      $graph -> add_node(name => $nodes{$node_key},  href => $stock_link, shape=>'house', color => 'blue');
+    }
+  }
+}
 
+# Hash that stores selfing edges already added in the loop
+my %self_joins;
+foreach my $join_key (keys %joins) {
+  #my $tailport;
+  #if ($node_shape{$join_key} eq 'female') { $tailport = 'e'; } else {$tailport = 'w';}
+  # Checks if an edge is a selfing-edge.
+  if (($selfs{$nodes{$join_key}}) && ($selfs{$nodes{$join_key}} eq $nodes{$joins{$join_key}})) {
+    my $edge_combo = $nodes{$join_key}.$nodes{$joins{$join_key}};
+    # Checks if a selfing edge was already added for two nodes. Selfing edges are denoted with a double line.
+    unless ($self_joins{$edge_combo}) {
+      $graph ->add_edge(from => $nodes{$join_key}, to => $nodes{$joins{$join_key}}, color=>'black:black');
+      $self_joins{$nodes{$join_key}.$nodes{$joins{$join_key}}} = 1;
+    }
+  }
+  # Else it is just a normal edge with a child comprised of two different parents.
+  else {
+    $graph ->add_edge(from => $nodes{$join_key}, to => $nodes{$joins{$join_key}});
+  }
+}
+foreach my $invisible_join_key (keys %invisible_joins) {
+  $graph -> push_subgraph(rank=>'same');
+  $graph ->add_edge(from => $nodes{$invisible_join_key}, to => $nodes{$invisible_joins{$invisible_join_key}}, style => 'invis', constraint=> 'false');
+  $graph -> pop_subgraph();
+}
 
-print STDERR "\n stock name: $stock_name\n";
-print STDERR "\n maternal stock name: $maternal_parent_name\n";
+$graph -> run(driver => 'dot',format => 'svg');
+print $graph->dot_output();
+
+#print STDERR "\n stock name: $stock_name\n";
+#print STDERR "\n maternal stock name: $maternal_parent_name\n";
 </%perl>
 
 
 <table>
 <%perl>
-print "<tr><td>Female Parent: $maternal_parent_name</td></tr>";
-print "<tr><td>Male Parent: $paternal_parent_name</td></tr>";
+#print "<tr><td>Female Parent: $maternal_parent_name</td></tr>";
+#print "<tr><td>Male Parent: $paternal_parent_name</td></tr>";
 </%perl>
 </table>

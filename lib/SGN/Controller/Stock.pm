@@ -388,7 +388,7 @@ sub get_stock_extended_info : Private {
     $c->stash->{direct_genotypes} = $direct_genotypes;
 
     #add pedigree to the stash
-    my $stock_pedigree = $stock ? $self->_stock_pedigree( $c->stash->{stock_row} ): undef;
+    my $stock_pedigree = $stock ? $self->_stock_pedigree( $c->stash->{stock_row}): undef;
     $c->stash->{stock_pedigree} = $stock_pedigree;
 
     my $stock_type;
@@ -736,6 +736,8 @@ sub _stock_pedigree {
   $pedigree{'name'} = $bcs_stock->name();
   $pedigree{'female_parent'} = undef;
   $pedigree{'male_parent'} = undef;
+  $pedigree{'link'} = "/stock/$pedigree{'id'}/view";
+  print "\nName:$pedigree{'name'}\n";
   #get cvterms for parent relationships
   my $cvterm_female_parent = $self->schema->resultset("Cv::Cvterm")->create_with(
     { name   => 'female_parent',
