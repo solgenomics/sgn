@@ -218,7 +218,7 @@ sub generate_barcode : Path('/barcode/generate') Args(0) {
     my $text = $c->req->param("text");
     my $size = $c->req->param("size");
 
-    $c->stash->{text} = $text;
+    $c->stash->{code} = $text;
     $c->stash->{size} = $size;
 
     $c->stash->{template} = "/barcode/tool/generate.mas";
