@@ -3,6 +3,7 @@ package SGN::Controller::Contact;
 use Moose;
 use namespace::autoclean;
 use CXGN::People;
+use Captcha::reCAPTCHA;
 
 BEGIN { extends 'Catalyst::Controller' }
 
@@ -36,22 +37,33 @@ sub _load_user {
 #Builds a form with $name, $email, $subject, $body in the right line
 #If any undef, assigns ''
 sub _build_form_page {
-    my ($self, $c, $name, $email, $subject, $body) = @_;
+    my ($self, $c, $name, $email, $subject, $body, $check) = @_;
     $c->stash->{name}                     = $name if $name;
     $c->stash->{email}                    = $email if $email;
     $c->stash->{subject}                  = $subject if $subject;
     $c->stash->{body}                     = $body if $body;
     $c->stash->{email_address_to_display} = $c->config->{feedback_email};
     $c->stash->{website_name}             = $c->config->{project_name};
+    $c->stash->{captcha_public_key}        = $c->config->{captcha_public_key};
     $c->stash->{template}                 = '/help/contact.mas';
 }
 
 sub submit :Path('/contact/submit') :Args(0)
 {
     my ($self, $c) = @_;
-    my ($name, $email, $subject, $body) =
-        map { $c->request->param($_) } qw/name email subject body/;
-    if ($name and $email and $subject and $body) {
+    my ($name, $email, $subject, $body, $challenge, $response) =
+        map { $c->request->param($_) } qw/name email subject body recaptcha_challenge_field recaptcha_response_field /;
+    
+    my $captcha = Captcha::reCAPTCHA->new;
+
+    my $result = $captcha->check_answer(
+        $c->config->{captcha_private_key}, $c->request->address(),
+        $challenge, $response
+    );
+
+    print STDERR "Captcha Result: ".$result->{is_valid}." (private key=".$c->config->{captcha_private_key}." Source address: ".$c->request->address()." Error: ".$result->{error}." ($challenge, $response)\n";
+
+    if ($name and $email and $subject and $body and $result->{is_valid} ) {
        $body = <<END_HEREDOC;
 From:
 $name <$email>
