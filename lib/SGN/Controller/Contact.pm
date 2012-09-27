@@ -63,7 +63,7 @@ sub submit :Path('/contact/submit') :Args(0)
 
     print STDERR "Captcha Result: ".$result->{is_valid}." (private key=".$c->config->{captcha_private_key}." Source address: ".$c->request->address()." Error: ".$result->{error}." ($challenge, $response)\n";
 
-    if ($name and $email and $subject and $body and $result->{is_valid} ) {
+    if ($name and $email and $subject and $body and ($result->{is_valid} || $ENV{SGN_TEST_MODE})) {
        $body = <<END_HEREDOC;
 From:
 $name <$email>
