@@ -4,7 +4,7 @@ unset PERL5LIB
 
 echo "PERL5LIB is now $PERL5LIB";
 
-export PERL5LIB=/usr/local/share/sgn/cassava/lib:/usr/local/share/sgn/bio-chado-schema/lib:/usr/local/share/sgn/local-lib:/usr/local/share/sgn/sgn/lib/:/usr/local/share/sgn/cxgn-corelibs/lib/:/usr/local/share/sgn/Phenome/lib/:/usr/local/share/sgn/tomato_genome/lib/:/usr/local/share/sgn/Cview/lib/:/usr/local/share/sgn/biosource/lib/:/usr/local/share/sgn/local-lib/lib/perl5
+export PERL5LIB=/usr/local/share/cassava-site/cassava/lib:/usr/local/share/cassava-site/sgn/lib/:/usr/local/share/cassava-site/cxgn-corelibs/lib/:/usr/local/share/cassava-site/Phenome/lib/:/usr/local/share/cassava-site/tomato_genome/lib/:/usr/local/share/cassava-site/Cview/lib/:/usr/local/share/cassava-site/biosource/lib/:/usr/local/share/cassava-site/local-lib/lib/perl5:/usr/local/share/cassava-site/ITAG/lib/
 
 echo "Starting catalyst server...";
     
@@ -12,7 +12,7 @@ echo "PERL5LIB is $PERL5LIB";
 
 mkdir /tmp/sgn-tmp
 
-screen ./bin/sgn_server.pl -r --fork
+screen -L ./bin/sgn_server.pl -r --fork
 
 exit;
 
