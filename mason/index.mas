@@ -7,7 +7,7 @@ $schema
 <tr><td colspan="2">
 <& homepage/iconmenu.mas &>
 </td></tr>
-<tr><td colspan="2"><& homepage/tomato_genome_publication.mas &></td></tr>
+<tr><td colspan="2"><& homepage/tomato_genome_publication_small.mas &></td></tr>
 <tr><td colspan="2"><& homepage/what_is_sgn.mas, what=>'textbox' &></td></tr>
 <tr>
 <td width="300"><& homepage/news.mas &><br />
