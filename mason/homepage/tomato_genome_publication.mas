@@ -38,5 +38,5 @@ if ($@) { print "ERROR $@\n"; }
 <div class="boxheading">Tomato Genome Published</div>
 <div class="boxcontent"><% $publication %>
 
-
+</div>
 </div>
