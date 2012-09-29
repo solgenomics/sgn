@@ -770,6 +770,7 @@ height        = 6
 bgcolor       = blue
 fgcolor       = blue
 key           = Micro-Tom SNPs
+citation      = This track shows SNPs between Micro-Tom and Heinz 1706. Micro-Tom genomic DNA was sequenced using Illumina Genome Analyser and reads were aligned to the Heinz 1706 reference genome. Data was provided by Martin Sergeant (University of Birmingham,UK), Sajjad Awan (University of Warwick, UK) and Andrew Thompson (Cranfield University, UK). The Micro-Tom accession was obtained from Lázaro E. P. Peres, University of São Paulo, Brazil.
 
 [mt_SNPs:100000]
 feature       = bin

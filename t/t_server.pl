@@ -34,13 +34,22 @@ unless( $server_pid ) {
         -p => 3003,
         ( $parallel ? ('--fork') : () ),
      );
+
+my $logfile = "logfile.$$.txt";
+print STDERR "Redirecting server STDERR to file $logfile..\n";
+open (STDERR, ">$logfile") || die "can't open logfile.";
+
     Catalyst::ScriptRunner->run('SGN', 'Server');
+
     exit;
 }
 warn "$0: starting web server with PID $server_pid.\n";
 
+
+
 # wait for the test server to start
 {
+
     local $SIG{CHLD} = sub {
         waitpid $server_pid, 0;
         die "\nTest server failed to start.  Aborting.\n";

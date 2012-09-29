@@ -1,10 +1,13 @@
 <%args>
 $website_name => "SGN"
+$captcha_public_key
 </%args>
 
 <& "/page/page_title.mas", title => "Contact $website_name" &>
 
 % #The form
+<% $ENV{REMOTE_ADDR} %>
+<% ##$captcha_public_key %>
 <form method="POST" action= "/contact/submit" name = "contactForm">
 <div style="margin-left: 30px">
 <table summary="" border="0" cellpadding="5" cellspacing="5">
@@ -55,6 +58,19 @@ Message body is required
 fields marked with <% '"*"' |h %> are required
 </td></tr>
 
+<tr><td>&nbsp;</td><td>
+<script type="text/javascript"
+     src="http://www.google.com/recaptcha/api/challenge?k=<% $captcha_public_key %>">
+  </script>
+  <noscript>
+     <iframe src="http://www.google.com/recaptcha/api/noscript?k=<% $captcha_public_key %>"
+         height="300" width="500" frameborder="0"></iframe><br>
+     <textarea name="recaptcha_challenge_field" rows="3" cols="40">
+     </textarea>
+     <input type="hidden" name="recaptcha_response_field"
+         value="manual_challenge">
+  </noscript>
+</td></tr>
 <tr><td colspan="2" align="center" valign="middle">
 <input type="submit" value="Submit" />
 </td></tr>

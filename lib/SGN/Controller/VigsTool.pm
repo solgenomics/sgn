@@ -185,20 +185,23 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
 
     print STDERR "\n\nSYSTEM CALL: /data/shared/bin/bwa_wrapper.sh $basename $seq_filename.fragments $seq_filename.bwa.out\n\n";
 
-    my $job = CXGN::Tools::Run->run_cluster('/data/shared/bin/bwa_wrapper.sh', $basename, $seq_filename.".fragments", $seq_filename.".bwa.out", 
-					    { temp_base   => $c->config->{'cluster_shared_tempdir'},
-					      queue       => $c->get_conf('web_cluster_queue'),
-					      working_dir => $c->get_conf('cluster_shared_tempdir'),
-					      # don't block and wait if the cluster looks full
-					      max_cluster_jobs => 1_000_000_000,
+#    my $job = CXGN::Tools::Run->run_cluster('/data/shared/bin/bwa_wrapper.sh', $basename, $seq_filename.".fragments", $seq_filename.".bwa.out", 
+					    # { temp_base   => $c->config->{'cluster_shared_tempdir'},
+					    #   queue       => $c->get_conf('web_cluster_queue'),
+					    #   working_dir => $c->get_conf('cluster_shared_tempdir'),
+					    #   # don't block and wait if the cluster looks full
+					    #   max_cluster_jobs => 1_000_000_000,
 
 
-					    });
+					    # });
+
+system('/data/shared/bin/bwa_wrapper.sh', $basename, $seq_filename.".fragments", $seq_filename.".bwa.out");
+
     #my $count = 0;
 
     my $id = $urlencode{basename($seq_filename)};
 
-    $job->wait();
+    #$job->wait();
 
     $c->res->redirect("/tools/vigs/view/?id=$id&fragment_size=$fragment_size&database=$database_title&targets=0");
 

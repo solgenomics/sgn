@@ -9,7 +9,7 @@
 
 =head1 SYPNOSIS
 
- load_fish_stuff.pl -i fishlist -t -D database -H host
+ load_fish_stuff.pl -i fishlist -t -D database -H host -I image_dir
  
 =head2 I<Flags:>
 
@@ -32,6 +32,10 @@
 
     B<host>
 
+=item -I
+
+    B<image_dir>  the directory to store the images  
+
 =back
 
 =cut
@@ -41,6 +45,8 @@
  This script loads fish data and images.  The columns in the csv files are expected to be in the following comma-delimited order:
 
     BAC_ID number,Photo_ID,SC_ID,SC_rel_len%,SC_AR,BAC_loc_arm,BAC%from_kc
+
+ Make sure to set DBHOST, DBNAME, DBUSER, and DBPASS accordingly.  Also, check dir that images are stored.
 
 =cut
 
@@ -66,11 +72,11 @@ use CXGN::DB::InsertDBH;
 use CXGN::Genomic::Clone;
 use CXGN::Image;
 
-our ($opt_i, $opt_D, $opt_H, $opt_t, $opt_h);
+our ($opt_i, $opt_D, $opt_H, $opt_I, $opt_t, $opt_h);
 
-getopts('i:D:H:t:h');
+getopts('i:D:H:I:th');
 
-if (!$opt_i && !$opt_D && !$opt_H  && !$opt_t && !$opt_h){
+if (!$opt_i && !$opt_D && !$opt_H && !$opt_I && !$opt_t && !$opt_h){
     print "Wrong script usage. Printing help\n\n";
     help();
 }
@@ -78,6 +84,9 @@ if (!$opt_i && !$opt_D && !$opt_H  && !$opt_t && !$opt_h){
 if ($opt_h) {
     help();
 }
+
+#Get dir to store images
+my $image_dir = $opt_I || die("INPUT ERROR: Image directory was not supplied (-I </dir/>).\n");
 
 #list of all "Locations.csv" files ex: 01-26-12/Tomato_10P/Tomato_10P_BAC_Locations.csv                                                
 my $master_file = $opt_i || die("INPUT ERROR: Input option was not supplied (-i <fish_list>).\n");
@@ -100,16 +109,23 @@ foreach my $file (@files) {
     my @fishinfo = read_file($file);
     
     foreach my $fi (@fishinfo) { 
-	
-	my $lib = "LE_HBA";
-	
-	if ($fi =~ m/"BAC ID number"/){
-	    next;     #should check that it is in this order: BAC ID number, etc
-	}
+	my $lib;
 
-	else {
+	if ($fi =~ m/^"/ || $fi =~ m/^,/){
+            next;     #should check that it is in this order: BAC ID number, etc                                                     
+	}
+	
+    	else {
+	    if ($fi =~ m/SL_EcoRI/i || $fi =~ m/SL_s/i || $fi =~ m/SL_MboI/i || $fi =~ m/SL_FOS/i){
+		$lib = '';
+	    }
+
+	    else {
+		$lib = "LE_HBA";
+	    }
+	    
 	    my ($bac_id, $photo_id, $sc_id, $sc_rel_len, $sc_ar, $bac_loc_arm, $per_from_kin) = split (/,/, $fi); 
-#Where do these go:  $sc_rel_len $sc_ar
+                      #$sc_rel_len and $sc_ar are not loaded
        
 	    my $clone_id = CXGN::Genomic::Clone->retrieve_from_clone_name("$lib$bac_id");
 	    
@@ -117,59 +133,70 @@ foreach my $file (@files) {
 		print STDERR "$lib$bac_id not found. Skipping!!!\n";
 		next; 
 	    }
+	    
+	    my @images = '';
+	    @images = glob("$path/*$bac_id/Photo_ID_$photo_id/*.jpg");
+	    my $num_images = @images;
 
-	    my @images = glob("$path/*$bac_id/Photo_ID_$photo_id/*.jpg");
-	    
-	    my $fish_result_id;
-	    
-	    $bac_loc_arm =~ tr/sSlL/PPQQ/;
-	    
-	    print STDERR "\n\nFound clone_id $clone_id for experiment $photo_id on $sc_id $bac_loc_arm,, at $per_from_kin".(join "\n",@images)."\n";
-	    if ($opt_t) { next;}
-	    
-	    eval { 
-		$fish_result_id = insert_fish_result(
-		    { 
-			dbh => $dbh,
-			chromo_num => $sc_id,
-		        chromo_arm => $bac_loc_arm,
-			experiment_name => $photo_id,
-		        percent_from_centromere => $per_from_kin,
-			fish_experimenter_name => 'fish_stack',  
-			    clone_id => $clone_id,
-		    }
-		    );
-		
-		print "this is fish result id " . $fish_result_id . "\n";
-		
-		my $image_id;
-		
-		foreach my $image(@images) { 
-		    my $i = CXGN::Image->new(dbh=>$dbh, image_dir=> '/data/prod/public/images/image_files_sandbox');
-		    if ($i->process_image($image, "fish", $fish_result_id)) { 
-			$i->set_description("FISH Localization of $bac_id on chromosome $sc_id arm $bac_loc_arm at $per_from_kin");
-			$i->set_sp_person_id(233);
-			$i->set_obsolete('f');
-			$i->store();
-			$image_id = $i->get_image_id();
-			
-			insert_fish_result_image($fish_result_id, $image_id);
-		    }
-		    
-		    else { 
-			print "Could not store image $image. Skipping!!!\n";
-		    }
-		}    
-	    };
-
-	    if ($@) { 
-		$dbh->rollback();
-		print STDERR "Saving of $bac_id, chr $sc_id arm $bac_loc_arm at dist $per_from_kin failed due to $@";
+	    #Check that there are 3 image files in the directory
+	    if ($num_images != 3){
+		print STDERR "Images in $path associated with experient $photo_id are missing. SKIPPING!\n";
+		next;
 	    }
+
+	    else {
+
+		my $fish_result_id;
+		
+		$bac_loc_arm =~ tr/sSlL/PPQQ/;
 	    
-	    else { 
-		print STDERR "Committing info for $sc_id.\n";
-		$dbh->commit();
+		print STDERR "\n\nFound clone_id $clone_id for experiment $photo_id on $sc_id $bac_loc_arm at $per_from_kin\n".(join "\n",@images)."\n";
+		if ($opt_t) { next;}
+		
+		eval { 
+		    $fish_result_id = insert_fish_result(
+			{ 
+			    dbh => $dbh,
+			    chromo_num => $sc_id,
+			    chromo_arm => $bac_loc_arm,
+			    experiment_name => $photo_id,
+			    percent_from_centromere => $per_from_kin / 100,  # in the db, stored as 0..1
+			    fish_experimenter_name => 'fish_stack',  
+			    clone_id => $clone_id,
+			}
+			);
+		    
+		    print "this is fish result id " . $fish_result_id . "\n";
+		    
+		    my $image_id;
+		    
+		    foreach my $image(@images) { 
+			my $i = CXGN::Image->new(dbh=>$dbh, image_dir=>$image_dir);                          #'/data/prod/public/images/image_files');
+			if ($i->process_image($image, "fish", $fish_result_id)) { 
+			    $i->set_description("FISH Localization of $bac_id on chromosome $sc_id arm $bac_loc_arm at $per_from_kin");
+			    $i->set_sp_person_id(233);
+			    $i->set_obsolete('f');
+			    $i->store();
+			    $image_id = $i->get_image_id();
+			    
+			    insert_fish_result_image($fish_result_id, $image_id);
+			}
+			
+			else { 
+			    print "Could not store image $image. Skipping!!!\n";
+			}
+		    }    
+		};
+		
+		if ($@) { 
+		    $dbh->rollback();
+		    print STDERR "Saving of $bac_id, chr $sc_id arm $bac_loc_arm at dist $per_from_kin failed due to $@";
+		}
+		
+		else { 
+		    print STDERR "Committing info for $sc_id.\n";
+		    $dbh->commit();
+		}
 	    }
 	}
     }
@@ -190,7 +217,12 @@ sub insert_fish_result {
    my $rows = $cdq->rows();
 
     #Insert the record if it is not already in database
-    if ( $rows == 0 ) {
+    if ($rows != 0){
+	print STDERR "This record " . $fd->{experiment_name} . " is already in database.  SKIPPING\n";
+	next;
+    }
+
+    else {
 	my $result_insert_query =        #fish_result is table name
 	    "INSERT INTO sgn.fish_result         
           (chromo_num, chromo_arm,
@@ -221,12 +253,6 @@ sub insert_fish_result {
 	my ($fish_result_id) = $frh->fetchrow_array();
 	
 	return $fish_result_id;
-    }
-
-    #If the record is already in the database skip it
-    else {
-	print STDERR "This record " . $fd->{experiment_name} . " is already in database.  SKIPPING\n";                              
-	next;
     }
 }
 
@@ -265,11 +291,11 @@ sub help {
 
     Usage:
      
-    load_fish_stuff.pl [-h] -i fish_list -t test -D database -H host 
+    load_fish_stuff.pl [-h] -i fish_list -t test -D database -H host -I image_dir
       
     Examples:
 
-    load_fish_stuff.pl -i fish_list.csv -t -D sandbox -H localhost 
+    load_fish_stuff.pl -i fish_list.csv -t -D sandbox -H localhost -I /data/prod/public/images/image_files_sandbox
 
     Flags:
 
@@ -277,6 +303,7 @@ sub help {
     -t <test>                     test mode, does not actually load data 
     -D <database>                 the database to load the fish data
     -H <host>
+    -I <image_dir>                the directory to store the images
     
 EOF
 exit (1);

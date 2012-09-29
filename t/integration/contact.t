@@ -2,6 +2,9 @@
 use strict;
 use warnings;
 
+# Note: this test depends on the env variable $SGN_TEST_MODE 
+# being set to 1 in the server process
+
 use Test::More;
 
 use lib 't/lib';
