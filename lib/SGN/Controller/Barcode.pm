@@ -12,13 +12,11 @@ our %urlencode;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
-
 sub index : Path('/barcode') Args(0) { 
     my $self =shift;
     my $c = shift;
     
     $c->stash->{template}='/barcode/index.mas';
-
 }
 
 sub barcode_image : Path('/barcode/image') Args(0) { 
@@ -89,7 +87,6 @@ sub barcode_element : Path('/barcode/element/') :Args(2) {
 	$scale = 2;
     }
 
-
     my $barcode_object = Barcode::Code128->new();
     $barcode_object->barcode($text);
     $barcode_object->height(100);
@@ -110,7 +107,6 @@ sub barcode_element : Path('/barcode/element/') :Args(2) {
     $c->res->headers->content_type('image/png');
     
     $c->res->body($barcode_slice->png());    
-
 }
 
 sub qrcode_png :Path('/barcode/qrcodepng') :Args(2) { 
@@ -136,7 +132,7 @@ sub barcode_tool :Path('/barcode/tool') Args(3) {
     my $tool_version = shift;
     my $values = shift;
 
-    my ($db, $accession) = split /\:/, $cvterm;
+    my ($db, $accession) = split ":", $cvterm;
 
     print STDERR "Searching $cvterm, DB $db...\n";
     my ($db_row) = $c->dbic_schema('Bio::Chado::Schema')->resultset('General::Db')->search( { name => $db } );
@@ -160,8 +156,6 @@ sub barcode_tool :Path('/barcode/tool') Args(3) {
     $c->stash->{template} = '/barcode/tool/tool.mas';
 #    $c->stash->{cvterm_synonym} = $cvterm_synonym_rs->synonym();
     $c->forward('View::Mason');
-    
-
 }
 
 sub continuous_scale : Path('/barcode/continuous_scale') Args(0) { 
