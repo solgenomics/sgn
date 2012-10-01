@@ -167,13 +167,17 @@ my $ontology_subtitle = $curator || $submitter || $sequencer  ?
   qq|<a href="javascript:Tools.toggleContent('associate_cvterm_form', 'stock_ontology')">[Add ontology annotations]</a> | :
   qq |<span class = "ghosted"> [Add ontology annotations]</span> |;
 
+my $add_phenotype_link = $curator || $submitter || $sequencer  ?
+  qq|<a href="javascript:Tools.toggleContent('add_phenotype_form', 'experiment_phenotypes')">[Add phenotype]</a> | :
+  qq |<span class = "ghosted"> [Add phenotype]</span> |;
+
 
 </%perl>
 <& /util/import_javascript.mas, classes => ["jquery", "thickbox", "CXGN.Phenome.Tools", "CXGN.Page.FormattingHelpers"] &>
 
 
 <script language="javascript">
-function jqueryStuff() { 
+function jqueryStuff() {
    jQuery(function() {
      jQuery("#species_name").autocomplete({
         source: '/organism/autocomplete'
@@ -307,14 +311,21 @@ function jqueryStuff() {
 <&| /page/info_section.mas, title=>"Phenotype data " ,  subtitle=>$p_download_link ,  collapsible => 1, collapsed => 1 &>
 % foreach my $project (keys %$direct_phenotypes) {
 %   my $rs = $direct_phenotypes->{$project} ;
-<&| /page/info_section.mas, 
-    title=>"Experiment: $project", 
-    is_subsection => 1, collapsible => 1 
-&>
-    <& /phenotypes/phenotype_data.mas , 
-      phenotypes=> $rs 
-    &>
-  </&>
+  <&| /page/info_section.mas,
+    id            => "experiment_phenotypes",
+    title         =>"Experiment: $project",
+    subtitle      => $add_phenotype_link,
+    is_subsection => 1,
+    collapsible   => 1
+  &>
+    <& /phenotypes/experiment_phenotype_form.mas,
+       stock_id   => $stock_id,
+       project_id => $project->project_id,
+      &>
+    <& /phenotypes/phenotype_data.mas ,
+      phenotypes=> $rs
+        &>
+</&>
 % }
 
 % foreach my $key (keys %$members_phenotypes) {

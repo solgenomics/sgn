@@ -1,0 +1,109 @@
+<%doc>
+
+=head1 NAME
+
+/phenotypes/experiment_phenotype_form.mas
+ a component for adding new nd_experiment_phenotype row using a AJAX
+
+=head1 DESCRIPTION
+
+
+Parameters:
+
+=over 1
+
+=item
+
+
+
+=back
+
+=head1 AUTHOR
+
+Naama Menda <nm249@cornell.edu>
+
+=cut
+
+
+</%doc>
+
+<%args>
+$stock_id
+$project_id
+$exp_phen_add_uri
+$cvterm_autocomplete_uri  => '/ajax/cvterm/autocomplete'
+$div_id => 'experiment_phenotypes'
+
+</%args>
+
+
+<script language="javascript">
+/////////experiment , geolocation , cvterm , phenotype value, unit
+  jQuery(function() {
+       var db_name = jQuery('#db_name option:selected').attr("value");
+       jQuery("#term_name").autocomplete({
+             source: '<% $cvterm_autocomplete_uri %>' + "?db_name=" + db_name,
+             autoFocus: true,
+             minLength: 3,
+             //select: function(event, ui) { Ontology.populateEvidence('relationship_select', '/ajax/cvterm/relationships'); }
+          });
+
+       jQuery("#db_name").change(function(){
+            db_name = jQuery('#db_name option:selected').attr("value");
+             jQuery("#term_name").autocomplete('option', 'source', '<% $cvterm_autocomplete_uri %>' + "?db_name=" + db_name);
+       });
+       jQuery("#unit_name").autocomplete({
+             source: '<% $cvterm_autocomplete_uri %>' + "?db_name=unit.ontology",
+             autoFocus: true,
+             minLength: 1,
+       });
+  });
+
+
+
+</script>
+
+<& /util/import_javascript.mas, classes=>[qw[ jqueryui popup] ]&>
+
+% if ($show_form) {
+<div id="add_phenotype_form" style="display: none">
+  <form name="new_phenotype_form" >
+    <div id="cvterm_search"  >
+      <table width="100%">
+        <tr><td width = "30%"><b>Select ontology</b><br />
+            <select id = "db_name" onchange = "jQuery('#term_name').val('');" >
+              <option value="SP">SP (Solanaceae phenotypes)</option>
+            </select>
+            </td>
+          <td><b>Type a term name</b><br /><input type="text" size ="60"  id="term_name" name="term_name" />
+            <input type="hidden" id="stock_id" name="stock_id" value="<% $stock_id %>" />
+        </td></tr>
+        <tr><td>
+            <input type="text" id="phenotype_value" name="phenotype_value" />
+        </tr></td>
+        <td> <input type="text" size ="10"  id="unit_name" name="unit_name" value="optional:unit name"/>
+          </td></tr>
+        <tr><td colspan = "2">
+            <div id="add_phenotype_button">
+              <input type="button"
+                     id="add_phenotye_button"
+                     value="Add phenotype"
+                     disabled="true"
+                     onclick="javascript:Ontology.submitCvtermForm('<% $cvterm_add_uri %>', '<% $ontology_url %>');this.disabled=true;" />
+            </div>
+        </td></tr>
+      </table>
+    </div>
+  </form>
+</div>
+
+% }
+
+
+
+
+<script language="javascript">
+
+  Ontology.displayOntologies("ontology" , "<% $ontology_url %>");
+
+</script>
