@@ -204,7 +204,6 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
             members_phenotypes => $c->stash->{members_phenotypes},
             direct_phenotypes  => $c->stash->{direct_phenotypes},
             direct_genotypes   => $c->stash->{direct_genotypes},
-	    stock_pedigree       => $c->stash->{stock_pedigree},
             has_qtl_data   => $c->stash->{has_qtl_data},
             cview_tmp_dir  => $cview_tmp_dir,
             cview_basepath => $c->get_conf('basepath'),
@@ -386,10 +385,6 @@ sub get_stock_extended_info : Private {
 
     my $direct_genotypes  = $stock ? $self->_stock_project_genotypes( $c->stash->{stock_row} ) : undef;
     $c->stash->{direct_genotypes} = $direct_genotypes;
-
-    #add pedigree to the stash
-    my $stock_pedigree = $stock ? $self->_stock_pedigree( $c->stash->{stock_row}): undef;
-    $c->stash->{stock_pedigree} = $stock_pedigree;
 
     my $stock_type;
     $stock_type = $stock->get_object_row->type->name if $stock->get_object_row;
@@ -729,52 +724,6 @@ sub _stock_images {
     return $ids;
 }
 
-sub _stock_pedigree {
-  my ($self,$bcs_stock) = @_;
-  my %pedigree;
-  $pedigree{'id'} = $bcs_stock->stock_id();
-  $pedigree{'name'} = $bcs_stock->name();
-  $pedigree{'female_parent'} = undef;
-  $pedigree{'male_parent'} = undef;
-  $pedigree{'link'} = "/stock/$pedigree{'id'}/view";
-  print "\nName:$pedigree{'name'}\n";
-  #get cvterms for parent relationships
-  my $cvterm_female_parent = $self->schema->resultset("Cv::Cvterm")->create_with(
-    { name   => 'female_parent',
-      cv     => 'stock relationship',
-      db     => 'null',
-      dbxref => 'female_parent',
-    });
-   my $cvterm_male_parent = $self->schema->resultset("Cv::Cvterm")->create_with(
-    { name   => 'male_parent',
-      cv     => 'stock relationship',
-      db     => 'null',
-      dbxref => 'male_parent',
-    });
-  #get the stock relationships for the stock, find stock relationships for types "female_parent" and "male_parent", and get the corresponding subject stock IDs and stocks.
-  my $stock_relationships = $bcs_stock->search_related("stock_relationship_objects");
-  my $female_parent_relationship = $stock_relationships->find({type_id => $cvterm_female_parent->cvterm_id()});
-  if ($female_parent_relationship) {
-    my $female_parent_stock_id = $female_parent_relationship->subject_id();
-    if ($female_parent_stock_id) {
-      my $female_parent_stock = $self->schema->resultset("Stock::Stock")->find({stock_id => $female_parent_stock_id});
-      if ($female_parent_stock) {
-	$pedigree{'female_parent'} = _stock_pedigree($self,$female_parent_stock);
-      }
-    }
-  }
-  my $male_parent_relationship = $stock_relationships->find({type_id => $cvterm_male_parent->cvterm_id()});
-  if ($male_parent_relationship) {
-    my $male_parent_stock_id = $male_parent_relationship->subject_id();
-    if ($male_parent_stock_id) {
-      my $male_parent_stock = $self->schema->resultset("Stock::Stock")->find({stock_id => $male_parent_stock_id});
-      if ($male_parent_stock) {
-	$pedigree{'male_parent'} = _stock_pedigree($self,$male_parent_stock);
-      }
-    }
-  }
-  return \%pedigree;
-}
 
 sub _stock_allele_ids {
     my ($self, $stock) = @_;
