@@ -16,11 +16,12 @@ Jeremy Edwards <jde22@cornell.edu>
 package SGN::Controller::Pedigree;
 
 use Moose;
-use GraphViz2;
+#use GraphViz2;
 use CXGN::Chado::Stock;
 use Bio::Chado::NaturalDiversity::Reports;
 use SGN::View::Stock qw/stock_link stock_organisms stock_types/;
 use SVG;
+use IPC::Run3;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -33,18 +34,39 @@ sub _build_schema {
   shift->_app->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' )
 }
 
-sub get_stock :  Path('/pedigree/svg')  Args(1) {
+sub stock_pedigree :  Path('/pedigree/svg')  Args(1) {
   my ($self, $c, $stock_id) = @_;
     my $stock = CXGN::Chado::Stock->new($self->schema, $stock_id);
   $c->stash->{stock} = $stock;
   my $stock_row = $self->schema->resultset('Stock::Stock')
     ->find({ stock_id => $stock_id });
   my $stock_pedigree = $self->_get_pedigree($stock_row);
-  my $stock_svg = $self->_view_pedigree($stock_pedigree);
+  my $stock_pedigree_svg = $self->_view_pedigree($stock_pedigree);
   my $is_owner = $self->_check_role($c);
   $c->response->content_type('image/svg+xml');
-  if ($stock_svg) {
-    $c->response->body($stock_svg);
+  if ($stock_pedigree_svg) {
+    $c->response->body($stock_pedigree_svg);
+  }
+  else {
+    my $blank_svg = SVG->new(width=>1,height=>1);
+    my $blank_svg_xml = $blank_svg->xmlify();
+    $c->response->body($blank_svg_xml);
+  }
+}
+
+sub stock_descendants :  Path('/descendants/svg')  Args(1) {
+  my ($self, $c, $stock_id) = @_;
+    my $stock = CXGN::Chado::Stock->new($self->schema, $stock_id);
+  $c->stash->{stock} = $stock;
+  my $stock_row = $self->schema->resultset('Stock::Stock')
+    ->find({ stock_id => $stock_id });
+  print STDERR "\n\ndesc stock id $stock_id\n";
+  my $stock_descedants = $self->_get_descendants($stock_row);
+  my $stock_descendants_svg = $self->_view_descendants($stock_descedants);
+  my $is_owner = $self->_check_role($c);
+  $c->response->content_type('image/svg+xml');
+  if ($stock_descendants_svg) {
+    $c->response->body($stock_descendants_svg);
   }
   else {
     my $blank_svg = SVG->new(width=>1,height=>1);
@@ -174,7 +196,61 @@ sub _get_pedigree {
   return \%pedigree;
 }
 
-sub traverse_pedigree {
+sub _get_descendants {
+  my ($self,$bcs_stock) = @_;
+  my %descendants;
+  my %progeny;
+  $descendants{'id'} = $bcs_stock->stock_id();
+  print STDERR "\n id in hash $descendants{'id'}\n";
+  $descendants{'name'} = $bcs_stock->name();
+  $descendants{'link'} = "/stock/$descendants{'id'}/view";
+  print "\nName:$descendants{'name'}\n";
+  #get cvterms for parent relationships
+  my $cvterm_female_parent = $self->schema->resultset("Cv::Cvterm")->create_with(
+										 { name   => 'female_parent',
+										   cv     => 'stock relationship',
+										   db     => 'null',
+										   dbxref => 'female_parent',
+										 });
+  my $cvterm_male_parent = $self->schema->resultset("Cv::Cvterm")->create_with(
+									       { name   => 'male_parent',
+										 cv     => 'stock relationship',
+										 db     => 'null',
+										 dbxref => 'male_parent',
+									       });
+  my $progeny_of_stock = $self->schema->resultset('Stock::Stock')
+    ->search_related("stock_relationship_objects",{ type_id => $cvterm_female_parent->cvterm_id(), subject_id => $bcs_stock->stock_id() });
+#  my $progeny_of_stock = $self->schema->resultset('Stock::Stock')
+#    ->search_related("stock_relationship_objects",{ type_id => {'-in' => [$cvterm_female_parent->cvterm_id(), $cvterm_male_parent->cvterm_id()]}, subject_id => $bcs_stock->stock_id() });
+  while (my $progeny_stock = $progeny_of_stock->next) {
+    if ($progeny_stock->descendants()) {
+      $progeny{$progeny_stock->stock_id()}=_get_descendants($self,$progeny_stock);
+    }
+  }
+
+  $descendants{'decendants'} = \%progeny;
+  return \%descendants;
+
+  #get the stock relationships for the stock, find stock relationships for types "female_parent" and "male_parent", and get the corresponding subject stock IDs and stocks.
+  #  my $stock_relationships = $bcs_stock->search_related("stock_relationship_objects");
+  # my $descendant_relationships = $stock_relationships->search({type_id => {'-in' => [$cvterm_female_parent->cvterm_id(), $cvterm_male_parent->cvterm_id()]}});
+  #  if ($descendant_relationships) {
+  #    while (my $descendant_relationship = $descendant_relationships->next) {
+  #     my $descendant_stock_id = $descendant_relationship->object_id();
+  #      if ($descendant_stock_id) {
+  #	my $descendant_stock = $self->schema->resultset("Stock::Stock")->find({stock_id => $descendant_stock_id});
+  #	#my $descendant_stock = $self->schema->resultset("Stock::Stock")->search({stock_id => $descendant_stock_id});
+  #	if ($descendant_stock) {
+  #	  $progeny{$descendant_stock_id} = _get_descendants($self,$descendant_stock);
+  #	}
+  #     }
+  #    }
+  #    $descendants{'decendants'} = \%progeny;
+  #    return \%descendants;
+  #  }
+}
+
+sub _traverse_pedigree {
   my $pedigree_reference = shift;
   my %pedigree=%$pedigree_reference;
   my $current_node_id = $pedigree{'id'};
@@ -199,7 +275,7 @@ sub traverse_pedigree {
       $female_parent_name = '';
     }
     my $female_parent_link = $female_parent{'link'};
-    my ($returned_nodes,$returned_node_links,$returned_node_shapes,$returned_joins,$returned_selfs, $returned_invisible_joins) = traverse_pedigree(\%female_parent);
+    my ($returned_nodes,$returned_node_links,$returned_node_shapes,$returned_joins,$returned_selfs, $returned_invisible_joins) = _traverse_pedigree(\%female_parent);
     @nodes{keys %$returned_nodes} = values %$returned_nodes;
     @node_links{keys %$returned_node_links} = values %$returned_node_links;
     @node_shapes{keys %$returned_node_shapes} = values %$returned_node_shapes;
@@ -220,7 +296,7 @@ sub traverse_pedigree {
       $male_parent_name = '';
     }
     my $male_parent_link = $male_parent{'link'};
-    my ($returned_nodes,$returned_node_links,$returned_node_shapes,$returned_joins,$returned_selfs, $returned_invisible_joins) = traverse_pedigree(\%male_parent);
+    my ($returned_nodes,$returned_node_links,$returned_node_shapes,$returned_joins,$returned_selfs, $returned_invisible_joins) = _traverse_pedigree(\%male_parent);
     @nodes{keys %$returned_nodes} = values %$returned_nodes;
     @node_shapes{keys %$returned_node_shapes} = values %$returned_node_shapes;
     @node_links{keys %$returned_node_links} = values %$returned_node_links;
@@ -237,18 +313,58 @@ sub traverse_pedigree {
   }
   return (\%nodes,\%node_links,\%node_shapes,\%joins,\%selfs,\%invisible_joins);
 }
+
+sub _traverse_descendants {
+  my $descendants_reference = shift;
+  my %descendants=%$descendants_reference;
+  my $current_node_id = $descendants{'id'};
+  my $current_node_name = $descendants{'name'};
+  my $current_node_link = $descendants{'link'};
+  my %nodes;
+  my %node_links;
+  my %joins;
+  my %joints;
+  my %selfs;
+  my $progeny_name;
+  my $progeny_id;
+  if ($descendants{'descendants'}) {
+    my %progeny =  %{$descendants{'descendants'}};
+    foreach my $progeny_stock_key (keys %progeny) {
+      my %progeny_stock = $progeny{$progeny_stock_key};
+      my $progeny_id = $progeny_stock{'id'};
+      my $progeny_name = $progeny_stock{'name'};
+      my $progeny_link = $progeny_stock{'link'};
+      if ($progeny_stock{'descendants'}) {
+	my %descendant_progeny = $progeny_stock{'descendants'};
+	my ($returned_nodes,$returned_node_links,$returned_joins,$returned_selfs) = _traverse_descendants(\%descendant_progeny);
+	@nodes{keys %$returned_nodes} = values %$returned_nodes;
+	@node_links{keys %$returned_node_links} = values %$returned_node_links;
+	@joins{keys %$returned_joins} = values %$returned_joins;
+	@selfs{keys %$returned_selfs} = values %$returned_selfs;
+	$nodes{$progeny_id} = $progeny_name;
+	$node_links{$progeny_id} = $progeny_link;
+	$joins{$current_node_id} = $progeny_id;
+      }
+    }
+  }
+  return (\%nodes,\%node_links,\%joins,\%selfs);
+}
+
 ######################################################
 
 sub _view_pedigree {
   my ($self, $pedigree_hashref) = @_;
   my %pedigree = %$pedigree_hashref;
-  my($graph) = GraphViz2 -> new
-    (
-     edge       => {color => 'black', constraint => 'true'},
-     global => {directed => 0},
-     graph      => {rankdir => 'TB', bgcolor => '#FAFAFA', ranksep => ".4", nodesep => 1, size => 6},
-     node       => {color => 'black', fontsize => 10, fontname => 'Helvetica', height => 0},
-    );
+  #my($graph) = GraphViz2 -> new
+  #  (
+  #   edge       => {color => 'black', constraint => 'true'},
+  #   global => {directed => 0},
+  #   graph      => {rankdir => 'TB', bgcolor => '#FAFAFA', ranksep => ".4", nodesep => 1, size => 6},
+  #   node       => {color => 'black', fontsize => 10, fontname => 'Helvetica', height => 0},
+  #  );
+  #graphviz input header
+  my $graphviz_input = 'graph Pedigree'."\n".'{'."\n".'graph [ bgcolor="#FAFAFA" nodesep="1" rankdir="TB" ranksep=".4" size="6" ]'."\n".'node [ color="black" fontname="Helvetica" fontsize="10" height="0" ]'."\n".
+'edge [ color="black" constraint="true" ]'."\n";
   my %nodes;
   my %node_shape;
   my %node_links;
@@ -273,7 +389,7 @@ sub _view_pedigree {
       $female_parent_name = '';
     }
     my $female_parent_link = $female_parent{'link'};
-    my ($returned_nodes,$returned_node_links,$returned_node_shapes,$returned_joins,$returned_selfs,$returned_invisible_joins) = traverse_pedigree(\%female_parent);
+    my ($returned_nodes,$returned_node_links,$returned_node_shapes,$returned_joins,$returned_selfs,$returned_invisible_joins) = _traverse_pedigree(\%female_parent);
     @nodes{keys %$returned_nodes} = values %$returned_nodes;
     @node_links{keys %$returned_node_links} = values %$returned_node_links;
     @node_shape{keys %$returned_node_shapes} = values %$returned_node_shapes;
@@ -294,7 +410,7 @@ sub _view_pedigree {
       $male_parent_name = '';
     }
     my $male_parent_link = $male_parent{'link'};
-    my ($returned_nodes,$returned_node_links,$returned_node_shapes,$returned_joins,$returned_selfs,$returned_invisible_joins) = traverse_pedigree(\%male_parent);
+    my ($returned_nodes,$returned_node_links,$returned_node_shapes,$returned_joins,$returned_selfs,$returned_invisible_joins) = _traverse_pedigree(\%male_parent);
     @nodes{keys %$returned_nodes} = values %$returned_nodes;
     @node_links{keys %$returned_node_links} = values %$returned_node_links;
     @node_shape{keys %$returned_node_shapes} = values %$returned_node_shapes;
@@ -321,11 +437,14 @@ sub _view_pedigree {
 	  next;
 	}
       if ($node_shape{$node_key} eq 'female') {
-	$graph -> add_node(name => $nodes{$node_key},  href => $stock_link, shape=>'oval', target=>"_top");
+	#$graph -> add_node(name => $nodes{$node_key},  href => $stock_link, shape=>'oval', target=>"_top");
+	$graphviz_input .= "\"".$nodes{$node_key}.'" [ color="black" shape="oval" href="'.$stock_link.'" target="_top" ] '."\n";
       } elsif ($node_shape{$node_key} eq 'male') {
-	$graph -> add_node(name => $nodes{$node_key},  href => $stock_link, shape=>'box', target=>"_top");
+	#$graph -> add_node(name => $nodes{$node_key},  href => $stock_link, shape=>'box', target=>"_top");
+	$graphviz_input .= "\"".$nodes{$node_key}.'" [ color="black" shape="box" href="'.$stock_link.'" target="_top" ] '."\n";
       } else {
-	$graph -> add_node(name => $nodes{$node_key},  href => $stock_link, shape=>'house', color => 'blue', target=>"_top");
+	#$graph -> add_node(name => $nodes{$node_key},  href => $stock_link, shape=>'house', color => 'blue', target=>"_top");
+	$graphviz_input .= "\"".$nodes{$node_key}.'" [ color="blue" shape="house" target="_top" ] '."\n";
       }
     }
   }
@@ -342,23 +461,122 @@ sub _view_pedigree {
       my $edge_combo = $nodes{$join_key}.$nodes{$joins{$join_key}};
       # Checks if a selfing edge was already added for two nodes. Selfing edges are denoted with a double line.
       unless ($self_joins{$edge_combo}) {
-	$graph ->add_edge(from => $nodes{$join_key}, to => $nodes{$joins{$join_key}}, color=>'black:black');
+	#$graph ->add_edge(from => $nodes{$join_key}, to => $nodes{$joins{$join_key}}, color=>'black:black');
+	$graphviz_input .= "\"".$nodes{$join_key}."\" -- \"".$nodes{$joins{$join_key}}."\" [color=>\"black:black\"\n";
 	$self_joins{$nodes{$join_key}.$nodes{$joins{$join_key}}} = 1;
       }
     }
     # Else it is just a normal edge with a child comprised of two different parents.
     else {
-      $graph ->add_edge(from => $nodes{$join_key}, to => $nodes{$joins{$join_key}});
+      #$graph ->add_edge(from => $nodes{$join_key}, to => $nodes{$joins{$join_key}});
+      $graphviz_input .= "\"".$nodes{$join_key}."\" -- \"".$nodes{$joins{$join_key}}."\"\n";
     }
   }
   foreach my $invisible_join_key (keys %invisible_joins) {
-    $graph -> push_subgraph(rank=>'same');
-    $graph ->add_edge(from => $nodes{$invisible_join_key}, to => $nodes{$invisible_joins{$invisible_join_key}}, style => 'invis', constraint=> 'false');
-    $graph -> pop_subgraph();
+    #$graph -> push_subgraph(rank=>'same');
+    #$graph ->add_edge(from => $nodes{$invisible_join_key}, to => $nodes{$invisible_joins{$invisible_join_key}}, style => 'invis', constraint=> 'false');
+    #$graph -> pop_subgraph();
   }
-  $graph -> run(driver => 'dot',format => 'svg');
+  $graphviz_input .= "}";
+  #$graph -> run(driver => 'dot',format => 'svg');
   if ($pedigree{'male_parent'} || $pedigree{'male_parent'}) {
-    return $graph->dot_output();
+    #print STDERR $graph->dot_input();
+    #return $graph->dot_output();
+
+    my @command = qw(dot -Tsvg);
+    my $graphviz_out = '';
+    run3 \@command, \$graphviz_input, \$graphviz_out;
+
+    #my $graphviz_result = capturex("dot", $graphviz_input);
+    return $graphviz_out;
+  }
+  else {
+    return undef;
+  }
+}
+
+sub _view_descendants {
+  my ($self, $descendants_hashref) = @_;
+  my %descendants = %$descendants_hashref;
+  #my($graph) = GraphViz2 -> new
+  #  (
+  #   edge       => {color => 'black', constraint => 'true'},
+  #   global => {directed => 0},
+  #   graph      => {rankdir => 'TB', bgcolor => '#FAFAFA', ranksep => ".4", nodesep => 1, size => 6},
+  #   node       => {color => 'black', fontsize => 10, fontname => 'Helvetica', height => 0},
+  #  );
+  my %nodes;
+  my %node_links;
+  my %joins;
+  my %joints;
+  my %selfs;
+  my $current_node_id = $descendants{'id'};
+  my $current_node_name = $descendants{'name'};
+  my $progeny_name;
+  my $progeny_id;
+  $nodes{$current_node_id} = $current_node_name;
+  if ($descendants{'descendants'}) {
+    my %progeny =  %{$descendants{'descendants'}};
+    foreach my $progeny_stock_key (keys %progeny) {
+      my %progeny_stock = $progeny{$progeny_stock_key};
+      my $progeny_id = $progeny_stock{'id'};
+      my $progeny_name = $progeny_stock{'name'};
+      my $progeny_link = $progeny_stock{'link'};
+      if ($progeny_stock{'descendants'}) {
+	my %descendant_progeny = $progeny_stock{'descendants'};
+	my ($returned_nodes,$returned_node_links,$returned_joins,$returned_selfs) = _traverse_descendants(\%descendant_progeny);
+	@nodes{keys %$returned_nodes} = values %$returned_nodes;
+	@node_links{keys %$returned_node_links} = values %$returned_node_links;
+	@joins{keys %$returned_joins} = values %$returned_joins;
+	@selfs{keys %$returned_selfs} = values %$returned_selfs;
+	$nodes{$progeny_id} = $progeny_name;
+	$node_links{$progeny_id} = $progeny_link;
+	$joins{$current_node_id} = $progeny_id;
+      }
+    }
+  }
+
+
+  #Quick way to stop making duplicate node declarations in the Graphviz file.
+  my %hashcheck;
+  #Makes node declarations in the Graphviz file.
+  foreach my $node_key (keys %nodes) {
+    unless ($hashcheck{$nodes{$node_key}}) {
+      $hashcheck{$nodes{$node_key}} = $nodes{$node_key};
+      #get link to stock id
+      my $stock_link = $node_links{$node_key};
+      unless ($nodes{$node_key}) {
+	  next;
+	}
+      #$graph -> add_node(name => $nodes{$node_key},  href => $stock_link, shape=>'oval', target=>"_top");
+    }
+  }
+  # Hash that stores selfing edges already added in the loop
+  my %self_joins;
+  foreach my $join_key (keys %joins) {
+    #my $tailport;
+    #if ($node_shape{$join_key} eq 'female') { $tailport = 'e'; } else {$tailport = 'w';}
+    unless ($nodes{$join_key} && $nodes{$joins{$join_key}}) {
+      next;
+    }
+    # Checks if an edge is a selfing-edge.
+    if (($selfs{$nodes{$join_key}}) && ($selfs{$nodes{$join_key}} eq $nodes{$joins{$join_key}})) {
+      my $edge_combo = $nodes{$join_key}.$nodes{$joins{$join_key}};
+      # Checks if a selfing edge was already added for two nodes. Selfing edges are denoted with a double line.
+      unless ($self_joins{$edge_combo}) {
+	#$graph ->add_edge(from => $nodes{$join_key}, to => $nodes{$joins{$join_key}}, color=>'black:black');
+	$self_joins{$nodes{$join_key}.$nodes{$joins{$join_key}}} = 1;
+      }
+    }
+    # Else it is just a normal edge with a child comprised of two different parents.
+    else {
+      #$graph ->add_edge(from => $nodes{$join_key}, to => $nodes{$joins{$join_key}});
+    }
+  }
+  #$graph -> run(driver => 'dot',format => 'svg');
+  if ($descendants{'descendants'}) {
+    #return $graph->dot_output();
+    return undef;
   }
   else {
     return undef;

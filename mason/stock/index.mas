@@ -254,6 +254,7 @@ function jqueryStuff() {
 
 
 
+
 % if ($type) {
 <&| /page/info_section.mas, title=>"Related stocks" , collapsible=>1, collapsed=>0 &>
   <& /stock/related_stocks.mas, stock => $stock_row &>
