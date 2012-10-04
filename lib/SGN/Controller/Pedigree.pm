@@ -60,7 +60,6 @@ sub stock_descendants :  Path('/descendants/svg')  Args(1) {
   $c->stash->{stock} = $stock;
   my $stock_row = $self->schema->resultset('Stock::Stock')
     ->find({ stock_id => $stock_id });
-  print STDERR "\n\ndesc stock id $stock_id\n";
   my $stock_descedants = $self->_get_descendants($stock_row);
   my $stock_descendants_svg = $self->_view_descendants($stock_descedants);
   my $is_owner = $self->_check_role($c);
@@ -172,7 +171,7 @@ sub _get_pedigree {
       dbxref => 'male_parent',
     });
   #get the stock relationships for the stock, find stock relationships for types "female_parent" and "male_parent", and get the corresponding subject stock IDs and stocks.
-  my $stock_relationships = $bcs_stock->search_related("stock_relationship_objects");
+  my $stock_relationships = $bcs_stock->search_related("stock_relationship_objects",undef,{ prefetch => ['type','subject'] });
   my $female_parent_relationship = $stock_relationships->find({type_id => $cvterm_female_parent->cvterm_id()});
   if ($female_parent_relationship) {
     my $female_parent_stock_id = $female_parent_relationship->subject_id();
@@ -201,10 +200,8 @@ sub _get_descendants {
   my %descendants;
   my %progeny;
   $descendants{'id'} = $bcs_stock->stock_id();
-  print STDERR "\n id in hash $descendants{'id'}\n";
   $descendants{'name'} = $bcs_stock->name();
   $descendants{'link'} = "/stock/$descendants{'id'}/view";
-  print "\nName:$descendants{'name'}\n";
   #get cvterms for parent relationships
   my $cvterm_female_parent = $self->schema->resultset("Cv::Cvterm")->create_with(
 										 { name   => 'female_parent',
@@ -218,36 +215,57 @@ sub _get_descendants {
 										 db     => 'null',
 										 dbxref => 'male_parent',
 									       });
-  my $progeny_of_stock = $self->schema->resultset('Stock::Stock')
-    ->search_related("stock_relationship_objects",{ type_id => $cvterm_female_parent->cvterm_id(), subject_id => $bcs_stock->stock_id() });
-#  my $progeny_of_stock = $self->schema->resultset('Stock::Stock')
-#    ->search_related("stock_relationship_objects",{ type_id => {'-in' => [$cvterm_female_parent->cvterm_id(), $cvterm_male_parent->cvterm_id()]}, subject_id => $bcs_stock->stock_id() });
-  while (my $progeny_stock = $progeny_of_stock->next) {
-    if ($progeny_stock->descendants()) {
-      $progeny{$progeny_stock->stock_id()}=_get_descendants($self,$progeny_stock);
-    }
-  }
 
-  $descendants{'decendants'} = \%progeny;
-  return \%descendants;
+  # #  my $related_to_stock = $self->schema->resultset('Stock::Stock')
+  # #    ->search_related("stock_relationship_objects",{type_id => $cvterm_female_parent->cvterm_id()});
+  #   #my $progeny_of_stock = $related_to_stock->search({subject_id => $bcs_stock->stock_id() });
 
-  #get the stock relationships for the stock, find stock relationships for types "female_parent" and "male_parent", and get the corresponding subject stock IDs and stocks.
-  #  my $stock_relationships = $bcs_stock->search_related("stock_relationship_objects");
-  # my $descendant_relationships = $stock_relationships->search({type_id => {'-in' => [$cvterm_female_parent->cvterm_id(), $cvterm_male_parent->cvterm_id()]}});
-  #  if ($descendant_relationships) {
-  #    while (my $descendant_relationship = $descendant_relationships->next) {
-  #     my $descendant_stock_id = $descendant_relationship->object_id();
-  #      if ($descendant_stock_id) {
-  #	my $descendant_stock = $self->schema->resultset("Stock::Stock")->find({stock_id => $descendant_stock_id});
-  #	#my $descendant_stock = $self->schema->resultset("Stock::Stock")->search({stock_id => $descendant_stock_id});
-  #	if ($descendant_stock) {
-  #	  $progeny{$descendant_stock_id} = _get_descendants($self,$descendant_stock);
-  #	}
+  #   my $stock_relationships = $self->schema->resultset('Stock::Stock')
+  #     ->search_related("stock_relationship_objects",{subject_id => $bcs_stock->stock_id() });
+  #   my $progeny_of_stock = $related_to_stock;
+
+  # #  my $progeny_of_stock = $related_to_stock->search({type_id => $cvterm_female_parent->cvterm_id()});
+  # #  my $progeny_of_stock = $self->schema->resultset('Stock::Stock')
+  # #    ->search_related("stock_relationship_objects",{subject_id => $bcs_stock->stock_id() })->search(type_id => {'-in' => [$cvterm_female_parent->cvterm_id(), $cvterm_male_parent->cvterm_id()]});
+  # #  my $progeny_of_stock = $self->schema->resultset('Stock::Stock')
+  # #    ->search_related("stock_relationship_objects",{ type_id => {'-in' => [$cvterm_female_parent->cvterm_id(), $cvterm_male_parent->cvterm_id()]}, subject_id => $bcs_stock->stock_id() });
+  #   if ($progeny_of_stock) {
+  #     while (my $progeny_stock = $progeny_of_stock->next) {
+  #       #if ($progeny_stock->descendants) {
+  # 	$progeny{$progeny_stock->stock_id()}=_get_descendants($self,$progeny_stock);
+  #       #}
   #     }
-  #    }
-  #    $descendants{'decendants'} = \%progeny;
-  #    return \%descendants;
-  #  }
+  #   }
+
+  #   $descendants{'decendants'} = \%progeny;
+  #   return \%descendants;
+
+  
+  #get the stock relationships for the stock, find stock relationships for types "female_parent" and "male_parent", and get the corresponding subject stock IDs and stocks.
+  
+
+  my $descendant_relationships = $bcs_stock->search_related("stock_relationship_subjects",undef,{ prefetch => ['type','object'] });
+  #my $descendant_relationships = $stock_relationships->search_related({type => $cvterm_female_parent});
+  
+  
+#my $stock_relationships = $bcs_stock->search_related("stock_relationship_subjects",undef,{ prefetch => ['type','object'] });
+  #  my $stock_relationships = $bcs_stock->search_related("stock_relationship_objects");
+  #my $descendant_relationships = $stock_relationships->search({type_id => $cvterm_female_parent->cvterm_id()});
+  #my $descendant_relationships = $stock_relationships->search({type_id => {'-in' => [$cvterm_female_parent->cvterm_id(), $cvterm_male_parent->cvterm_id()]}});
+  if ($descendant_relationships) {
+    while (my $descendant_relationship = $descendant_relationships->next) {
+      my $descendant_stock_id = $descendant_relationship->object_id();
+      if ($descendant_stock_id && (($descendant_relationship->type_id() == $cvterm_female_parent->cvterm_id()) || ($descendant_relationship->type_id() == $cvterm_male_parent->cvterm_id()))) {
+  	my $descendant_stock = $self->schema->resultset("Stock::Stock")->find({stock_id => $descendant_stock_id});
+  	#my $descendant_stock = $self->schema->resultset("Stock::Stock")->search({stock_id => $descendant_stock_id});
+  	if ($descendant_stock) {
+  	  $progeny{$descendant_stock_id} = _get_descendants($self,$descendant_stock);
+  	}
+      }
+    }
+    $descendants{'descendants'} = \%progeny;
+    return \%descendants;
+  }
 }
 
 sub _traverse_pedigree {
@@ -311,6 +329,9 @@ sub _traverse_pedigree {
   if ($female_parent_id && $male_parent_id) {
     $invisible_joins{$female_parent_id} = $male_parent_id;
   }
+  if ($female_parent_id eq $male_parent_id) {
+    $selfs{$female_parent_id}=1;
+  }
   return (\%nodes,\%node_links,\%node_shapes,\%joins,\%selfs,\%invisible_joins);
 }
 
@@ -328,22 +349,23 @@ sub _traverse_descendants {
   my $progeny_name;
   my $progeny_id;
   if ($descendants{'descendants'}) {
-    my %progeny =  %{$descendants{'descendants'}};
+    my $progeny_hashref =  $descendants{'descendants'};
+    my %progeny = %$progeny_hashref;
     foreach my $progeny_stock_key (keys %progeny) {
-      my %progeny_stock = $progeny{$progeny_stock_key};
+      my $progeny_stock_hashref = $progeny{$progeny_stock_key};
+      my %progeny_stock = %$progeny_stock_hashref;
       my $progeny_id = $progeny_stock{'id'};
       my $progeny_name = $progeny_stock{'name'};
       my $progeny_link = $progeny_stock{'link'};
       if ($progeny_stock{'descendants'}) {
-	my %descendant_progeny = $progeny_stock{'descendants'};
-	my ($returned_nodes,$returned_node_links,$returned_joins,$returned_selfs) = _traverse_descendants(\%descendant_progeny);
+	my ($returned_nodes,$returned_node_links,$returned_joins,$returned_selfs) = _traverse_descendants(\%progeny_stock);
 	@nodes{keys %$returned_nodes} = values %$returned_nodes;
 	@node_links{keys %$returned_node_links} = values %$returned_node_links;
 	@joins{keys %$returned_joins} = values %$returned_joins;
 	@selfs{keys %$returned_selfs} = values %$returned_selfs;
 	$nodes{$progeny_id} = $progeny_name;
 	$node_links{$progeny_id} = $progeny_link;
-	$joins{$current_node_id} = $progeny_id;
+	$joins{$progeny_id} = $current_node_id;
       }
     }
   }
@@ -496,6 +518,8 @@ sub _view_pedigree {
 }
 
 sub _view_descendants {
+  my $graphviz_input = 'graph Pedigree'."\n".'{'."\n".'graph [ bgcolor="#FAFAFA" nodesep="1" rankdir="BT" ranksep=".4" size="6" ]'."\n".'node [ color="black" fontname="Helvetica" fontsize="10" height="0" ]'."\n".
+'edge [ color="black" constraint="true" ]'."\n";
   my ($self, $descendants_hashref) = @_;
   my %descendants = %$descendants_hashref;
   #my($graph) = GraphViz2 -> new
@@ -516,22 +540,23 @@ sub _view_descendants {
   my $progeny_id;
   $nodes{$current_node_id} = $current_node_name;
   if ($descendants{'descendants'}) {
-    my %progeny =  %{$descendants{'descendants'}};
+    my $progeny_hashref =  $descendants{'descendants'};
+    my %progeny = %$progeny_hashref;
     foreach my $progeny_stock_key (keys %progeny) {
-      my %progeny_stock = $progeny{$progeny_stock_key};
+      my $progeny_stock_hashref = $progeny{$progeny_stock_key};
+      my %progeny_stock = %$progeny_stock_hashref;
       my $progeny_id = $progeny_stock{'id'};
       my $progeny_name = $progeny_stock{'name'};
       my $progeny_link = $progeny_stock{'link'};
       if ($progeny_stock{'descendants'}) {
-	my %descendant_progeny = $progeny_stock{'descendants'};
-	my ($returned_nodes,$returned_node_links,$returned_joins,$returned_selfs) = _traverse_descendants(\%descendant_progeny);
+	my ($returned_nodes,$returned_node_links,$returned_joins,$returned_selfs) = _traverse_descendants(\%progeny_stock);
 	@nodes{keys %$returned_nodes} = values %$returned_nodes;
 	@node_links{keys %$returned_node_links} = values %$returned_node_links;
 	@joins{keys %$returned_joins} = values %$returned_joins;
 	@selfs{keys %$returned_selfs} = values %$returned_selfs;
 	$nodes{$progeny_id} = $progeny_name;
 	$node_links{$progeny_id} = $progeny_link;
-	$joins{$current_node_id} = $progeny_id;
+	$joins{$progeny_id} = $current_node_id;
       }
     }
   }
@@ -548,7 +573,13 @@ sub _view_descendants {
       unless ($nodes{$node_key}) {
 	  next;
 	}
-      #$graph -> add_node(name => $nodes{$node_key},  href => $stock_link, shape=>'oval', target=>"_top");
+      if ($nodes{$node_key} eq $current_node_name) {
+	$graphviz_input .= "\"".$nodes{$node_key}.'" [ color="blue" shape="house" target="_top" ] '."\n";
+      }
+      else {
+	$graphviz_input .= "\"".$nodes{$node_key}.'" [ color="black" shape="oval" href="'.$stock_link.'" target="_top" ] '."\n";
+      }
+     #$graph -> add_node(name => $nodes{$node_key},  href => $stock_link, shape=>'oval', target=>"_top");
     }
   }
   # Hash that stores selfing edges already added in the loop
@@ -559,24 +590,32 @@ sub _view_descendants {
     unless ($nodes{$join_key} && $nodes{$joins{$join_key}}) {
       next;
     }
+    $graphviz_input .= "\"".$nodes{$join_key}."\" -- \"".$nodes{$joins{$join_key}}."\"\n";
+
     # Checks if an edge is a selfing-edge.
-    if (($selfs{$nodes{$join_key}}) && ($selfs{$nodes{$join_key}} eq $nodes{$joins{$join_key}})) {
-      my $edge_combo = $nodes{$join_key}.$nodes{$joins{$join_key}};
-      # Checks if a selfing edge was already added for two nodes. Selfing edges are denoted with a double line.
-      unless ($self_joins{$edge_combo}) {
-	#$graph ->add_edge(from => $nodes{$join_key}, to => $nodes{$joins{$join_key}}, color=>'black:black');
-	$self_joins{$nodes{$join_key}.$nodes{$joins{$join_key}}} = 1;
-      }
-    }
-    # Else it is just a normal edge with a child comprised of two different parents.
-    else {
-      #$graph ->add_edge(from => $nodes{$join_key}, to => $nodes{$joins{$join_key}});
-    }
+    # if (($selfs{$nodes{$join_key}}) && ($selfs{$nodes{$join_key}} eq $nodes{$joins{$join_key}})) {
+    #   my $edge_combo = $nodes{$join_key}.$nodes{$joins{$join_key}};
+    #   # Checks if a selfing edge was already added for two nodes. Selfing edges are denoted with a double line.
+    #   unless ($self_joins{$edge_combo}) {
+    # 	#$graph ->add_edge(from => $nodes{$join_key}, to => $nodes{$joins{$join_key}}, color=>'black:black');
+    # 	$graphviz_input .= "\"".$nodes{$join_key}."\" -- \"".$nodes{$joins{$join_key}}."\" [color=>\"black:black\"\n";
+    # 	$self_joins{$nodes{$join_key}.$nodes{$joins{$join_key}}} = 1;
+    #   }
+    # }
+    # # Else it is just a normal edge with a child comprised of two different parents.
+    # else {
+    #   #$graph ->add_edge(from => $nodes{$join_key}, to => $nodes{$joins{$join_key}});
+    #   $graphviz_input .= "\"".$nodes{$join_key}."\" -- \"".$nodes{$joins{$join_key}}."\"\n";
+    # }
   }
+  $graphviz_input .= "}\n";
   #$graph -> run(driver => 'dot',format => 'svg');
   if ($descendants{'descendants'}) {
     #return $graph->dot_output();
-    return undef;
+    my @command = qw(dot -Tsvg);
+    my $graphviz_out = '';
+    run3 \@command, \$graphviz_input, \$graphviz_out;
+    return $graphviz_out;
   }
   else {
     return undef;

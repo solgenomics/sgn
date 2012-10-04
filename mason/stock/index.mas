@@ -252,7 +252,13 @@ function jqueryStuff() {
 
 % }
 
+% if ($type) {
 
+<&| /page/info_section.mas, title=>"Descendants" , collapsible=>1, collapsed=>0 &>
+  <& /pedigree/stock_descendants.mas, stock_id => $stock_id &>
+</&>
+
+% }
 
 
 % if ($type) {

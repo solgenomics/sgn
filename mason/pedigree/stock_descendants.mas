@@ -1,0 +1,37 @@
+<%doc>
+=head1 NAME
+
+stock_descendants.mas
+
+=head1 DESCRIPTION
+
+This component displays descendants
+
+=head1 AUTHOR
+
+Jeremy Edwards <jde22@cornell.edu>
+
+=head1 ARGUMENTS
+
+=over 1
+
+=item stock
+a Bio::Chado::Schema::Stock::Stock object
+
+=back
+=cut
+
+</%doc>
+
+<%args>
+  $stock_id
+</%args>
+
+<center>
+<embed src="/descendants/svg/<% $stock_id %>"
+     type="image/svg+xml"
+     target="_top"
+     xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     pluginspage="http://www.adobe.com/svg/viewer/install/" />    
+</center>
