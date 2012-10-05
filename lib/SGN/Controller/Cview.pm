@@ -42,6 +42,7 @@ sub auto :Args(0) {
     $c->stash->{referer} = $c->req->referer();
     $c->stash->{tempdir} = $c->get_conf("tempfiles_subdir")."/cview";
     $c->stash->{basepath} = $c->get_conf("basepath");
+    $c->stash->{cview_db_backend} = $c->get_conf("cview_db_backend");
 
     $c->log->debug("BASEPATH: ".($c->stash->{basepath})) if $c->debug;
 

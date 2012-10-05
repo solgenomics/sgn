@@ -39,6 +39,7 @@ my $build = SGN::Build->new(
         'Bio::GMOD::Blast::Graph'                  => '0.01',
         'Bio::Graphics::FeatureFile'               => 0,
         'Cache::File'                              => 0,
+	'Captcha::reCAPTCHA'                       => 0,
         'Catalyst::Runtime'                        => '5.80024',
         'Catalyst::Controller::CGIBin'             => '0.029',
         'Catalyst::Controller::REST'               => 0,
