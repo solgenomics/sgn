@@ -74,10 +74,6 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
       return;
     }
 
-    my $male_parent_stock = $schema->resultset("Stock::Stock")->find(
-            { name       => $paternal,
-            } );
-
     #check that cross name does not already exist
     if ($schema->resultset("Stock::Stock")->find({name=>$cross_name."-1",})){
       return;
