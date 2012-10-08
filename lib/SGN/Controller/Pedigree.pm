@@ -385,7 +385,7 @@ sub _view_pedigree {
   #   node       => {color => 'black', fontsize => 10, fontname => 'Helvetica', height => 0},
   #  );
   #graphviz input header
-  my $graphviz_input = 'graph Pedigree'."\n".'{'."\n".'graph [ bgcolor="transparent" nodesep="1" rankdir="TB" ranksep=".4" size="6" ordering="out"]'."\n".'node [ color="black" fontname="Helvetica" fontsize="10" height="0" ]'."\n".
+  my $graphviz_input = 'graph Pedigree'."\n".'{'."\n".'graph [ bgcolor="transparent" nodesep="1" rankdir="TB" ranksep=".4" size="6" ordering="out" center="true"]'."\n".'node [ color="black" fontname="Helvetica" fontsize="10" height="0" ]'."\n".
 'edge [ color="black" constraint="true" ]'."\n";
   my %nodes;
   my %node_shape;
@@ -523,8 +523,8 @@ sub _view_pedigree {
 }
 
 sub _view_descendants {
-  my $graphviz_input = 'graph Pedigree'."\n".'{'."\n".'graph [ bgcolor="transparent" nodesep="1" rankdir="BT" ranksep=".4" size="6" ]'."\n".'node [ color="black" fontname="Helvetica" fontsize="10" height="0" ]'."\n".
-'edge [ color="black" constraint="true" ]'."\n";
+  my $graphviz_input = 'graph Pedigree'."\n".'{'."\n".'graph [ bgcolor="transparent" nodesep="1" rankdir="BT" ranksep=".4" size="6" center="true"]'."\n".'node [ color="black" fontname="Helvetica" fontsize="10" height="0" ]'."\n".
+    'edge [ color="black" constraint="true" ]'."\n";
   my ($self, $descendants_hashref) = @_;
   my %descendants = %$descendants_hashref;
   #my($graph) = GraphViz2 -> new
@@ -539,6 +539,7 @@ sub _view_descendants {
   my %joins;
   my %joints;
   my %selfs;
+  my %progeny;
   my $current_node_id = $descendants{'id'};
   my $current_node_name = $descendants{'name'};
   my $progeny_name;
@@ -546,22 +547,24 @@ sub _view_descendants {
   $nodes{$current_node_id} = $current_node_name;
   if ($descendants{'descendants'}) {
     my $progeny_hashref =  $descendants{'descendants'};
-    my %progeny = %$progeny_hashref;
-    foreach my $progeny_stock_key (keys %progeny) {
-      my $progeny_stock_hashref = $progeny{$progeny_stock_key};
-      my %progeny_stock = %$progeny_stock_hashref;
-      my $progeny_id = $progeny_stock{'id'};
-      my $progeny_name = $progeny_stock{'name'};
-      my $progeny_link = $progeny_stock{'link'};
-      if ($progeny_stock{'descendants'}) {
-	my ($returned_nodes,$returned_node_links,$returned_joins,$returned_selfs) = _traverse_descendants(\%progeny_stock);
-	@nodes{keys %$returned_nodes} = values %$returned_nodes;
-	@node_links{keys %$returned_node_links} = values %$returned_node_links;
-	@joins{keys %$returned_joins} = values %$returned_joins;
-	@selfs{keys %$returned_selfs} = values %$returned_selfs;
-	$nodes{$progeny_id} = $progeny_name;
-	$node_links{$progeny_id} = $progeny_link;
-	$joins{$progeny_id} = $current_node_id;
+    %progeny = %$progeny_hashref;
+    if ((scalar keys %progeny) >= 1) {
+      foreach my $progeny_stock_key (keys %progeny) {
+	my $progeny_stock_hashref = $progeny{$progeny_stock_key};
+	my %progeny_stock = %$progeny_stock_hashref;
+	my $progeny_id = $progeny_stock{'id'};
+	my $progeny_name = $progeny_stock{'name'};
+	my $progeny_link = $progeny_stock{'link'};
+	if ($progeny_stock{'descendants'}) {
+	  my ($returned_nodes,$returned_node_links,$returned_joins,$returned_selfs) = _traverse_descendants(\%progeny_stock);
+	  @nodes{keys %$returned_nodes} = values %$returned_nodes;
+	  @node_links{keys %$returned_node_links} = values %$returned_node_links;
+	  @joins{keys %$returned_joins} = values %$returned_joins;
+	  @selfs{keys %$returned_selfs} = values %$returned_selfs;
+	  $nodes{$progeny_id} = $progeny_name;
+	  $node_links{$progeny_id} = $progeny_link;
+	  $joins{$progeny_id} = $current_node_id;
+	}
       }
     }
   }
@@ -615,7 +618,7 @@ sub _view_descendants {
   }
   $graphviz_input .= "}\n";
   #$graph -> run(driver => 'dot',format => 'svg');
-  if ($descendants{'descendants'}) {
+  if ((scalar keys %progeny) >= 1) {
     #return $graph->dot_output();
     my @command = qw(dot -Tsvg);
     my $graphviz_out = '';
