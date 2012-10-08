@@ -385,7 +385,7 @@ sub _view_pedigree {
   #   node       => {color => 'black', fontsize => 10, fontname => 'Helvetica', height => 0},
   #  );
   #graphviz input header
-  my $graphviz_input = 'graph Pedigree'."\n".'{'."\n".'graph [ bgcolor="transparent" nodesep="1" rankdir="TB" ranksep=".4" size="6" ]'."\n".'node [ color="black" fontname="Helvetica" fontsize="10" height="0" ]'."\n".
+  my $graphviz_input = 'graph Pedigree'."\n".'{'."\n".'graph [ bgcolor="transparent" nodesep="1" rankdir="TB" ranksep=".4" size="6" ordering="out"]'."\n".'node [ color="black" fontname="Helvetica" fontsize="10" height="0" ]'."\n".
 'edge [ color="black" constraint="true" ]'."\n";
   my %nodes;
   my %node_shape;
@@ -450,6 +450,8 @@ sub _view_pedigree {
   #Quick way to stop making duplicate node declarations in the Graphviz file.
   my %hashcheck;
   #Makes node declarations in the Graphviz file.
+  my $graphviz_input_female_nodes;
+  my $graphviz_input_male_nodes;
   foreach my $node_key (keys %nodes) {
     unless ($hashcheck{$nodes{$node_key}}) {
       $hashcheck{$nodes{$node_key}} = $nodes{$node_key};
@@ -460,16 +462,19 @@ sub _view_pedigree {
 	}
       if ($node_shape{$node_key} eq 'female') {
 	#$graph -> add_node(name => $nodes{$node_key},  href => $stock_link, shape=>'oval', target=>"_top");
-	$graphviz_input .= "\"".$nodes{$node_key}.'" [ color="black" shape="oval" href="'.$stock_link.'" target="_top" ] '."\n";
+	$graphviz_input_female_nodes .= "\"".$nodes{$node_key}.'" [ color="black" shape="oval" href="'.$stock_link.'" target="_top" ] '."\n";
       } elsif ($node_shape{$node_key} eq 'male') {
 	#$graph -> add_node(name => $nodes{$node_key},  href => $stock_link, shape=>'box', target=>"_top");
-	$graphviz_input .= "\"".$nodes{$node_key}.'" [ color="black" shape="box" href="'.$stock_link.'" target="_top" ] '."\n";
+	$graphviz_input_male_nodes .= "\"".$nodes{$node_key}.'" [ color="black" shape="box" href="'.$stock_link.'" target="_top" ] '."\n";
       } else {
 	#$graph -> add_node(name => $nodes{$node_key},  href => $stock_link, shape=>'house', color => 'blue', target=>"_top");
 	$graphviz_input .= "\"".$nodes{$node_key}.'" [ color="blue" shape="house" target="_top" ] '."\n";
       }
     }
   }
+  #add females to the graphviz input first so that they are displayed on the left.
+  $graphviz_input .= $graphviz_input_female_nodes;
+  $graphviz_input .= $graphviz_input_male_nodes;
   # Hash that stores selfing edges already added in the loop
   my %self_joins;
   foreach my $join_key (keys %joins) {
