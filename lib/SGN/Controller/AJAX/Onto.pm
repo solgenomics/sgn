@@ -10,6 +10,12 @@ cache, that the SGN ontology browser relies on. Output is JSON, as a
 list of hashes, that has the following keys: accession, has_children,
 cvterm_name, cvterm_id, and for some functions, parent.
 
+The ontologies that should be displayed must be configured in the configuration file (sgn.conf or sgn_local.conf for SGN). Insert a line of the following format into the conf file:
+
+C<onto_root_namespaces  GO (Gene Ontology), PO (Plant Ontology), SO (Sequence Ontology), PATO (Phenotype and Trait Ontology), SP (Solanaceae Ontology)>
+
+where onto_root_namespaces is the conf key, "GO" the two letter code of the ontology (as it appears in the db database table), and in parenthesis is the human readable name of the ontology.
+
 =head1 AUTHOR
 
 Lukas Mueller <lam87@cornell.edu>
