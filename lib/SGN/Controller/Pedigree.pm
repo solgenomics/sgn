@@ -579,7 +579,7 @@ sub _view_descendants {
 	  next;
 	}
       if ($nodes{$node_key} eq $current_node_name) {
-	$graphviz_input .= "\"".$nodes{$node_key}.'" [ color="blue" shape="house" target="_top" ] '."\n";
+	$graphviz_input .= "\"".$nodes{$node_key}.'" [ color="blue" shape="invhouse" target="_top" ] '."\n";
       }
       else {
 	$graphviz_input .= "\"".$nodes{$node_key}.'" [ color="black" shape="oval" href="'.$stock_link.'" target="_top" ] '."\n";
