@@ -31,6 +31,8 @@ a Bio::Chado::Schema::Stock::Stock object
 <div>
 <object target="_top"
 	autosize="1"
+	width="auto"
+	height="auto"
         data="/descendants/svg/<% $stock_id %>" type="image/svg+xml">
     <!-- put content for old browsers or IE here, it
          will get displayed instead of the SVG. You can 

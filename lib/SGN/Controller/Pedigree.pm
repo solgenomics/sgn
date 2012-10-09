@@ -523,7 +523,7 @@ sub _view_pedigree {
 }
 
 sub _view_descendants {
-  my $graphviz_input = 'graph Pedigree'."\n".'{'."\n".'graph [ bgcolor="transparent" nodesep="1" rankdir="BT" ranksep=".4" center="true"  size ="7,12" ratio="compress" pad=".2"]'."\n".'node [ color="black" fontname="Helvetica" fontsize="10" height="0" ]'."\n".
+  my $graphviz_input = 'graph Pedigree'."\n".'{'."\n".'graph [ bgcolor="transparent" nodesep="1" rankdir="BT" ranksep=".4" center="true" ratio="compress" pad=".2" size="7,7"]'."\n".'node [ color="black" fontname="Helvetica" fontsize="10" height="0" ]'."\n".
     'edge [ color="black" constraint="true" ]'."\n";
   my ($self, $descendants_hashref) = @_;
   my %descendants = %$descendants_hashref;
@@ -582,7 +582,7 @@ sub _view_descendants {
 	  next;
 	}
       if ($nodes{$node_key} eq $current_node_name) {
-	$graphviz_input .= "\"".$nodes{$node_key}.'" [ color="blue" shape="invhouse" target="_top" ] '."\n";
+	$graphviz_input .= "\"".$nodes{$node_key}.'" [ color="blue" shape="invhouse" target="_top"] '."\n";
       }
       else {
 	$graphviz_input .= "\"".$nodes{$node_key}.'" [ color="black" shape="oval" href="'.$stock_link.'" target="_top" ] '."\n";
