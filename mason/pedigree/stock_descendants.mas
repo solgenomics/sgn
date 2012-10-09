@@ -28,9 +28,8 @@ a Bio::Chado::Schema::Stock::Stock object
 </%args>
 
 <center>
-<div>
+<div style="width:auto;height:7">
 <object target="_top"
-	autosize="1"
 	width="100%"
 	height="auto"
         data="/descendants/svg/<% $stock_id %>" type="image/svg+xml">
