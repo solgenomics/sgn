@@ -28,16 +28,16 @@ a Bio::Chado::Schema::Stock::Stock object
 </%args>
 
 <center>
-<div style="max-width:700px;max-height:700px;overflow:auto;height:intrinsic;width:700px;min-height:200px">
+<div style="max-width:700px;max-height:400px;overflow:auto">
 <object target="_top"
 	xmlns="http://www.w3.org/2000/svg"
 	xmlns:xlink="http://www.w3.org/1999/xlink"
 	pluginspage="http://www.adobe.com/svg/viewer/install/"
+	width="700px"
+	max-height="400px"
 	min-height="200px"
-	max-width="700px"
-	max-height="700px"
-	height="intrinsic"
-	width="intrinsic"
+	height="400px"
+	overflow="auto"
         data="/descendants/svg/<% $stock_id %>" type="image/svg+xml">
     <!-- put content for old browsers or IE here, it
          will get displayed instead of the SVG. You can 

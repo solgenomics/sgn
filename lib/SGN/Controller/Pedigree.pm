@@ -385,7 +385,7 @@ sub _view_pedigree {
   #   node       => {color => 'black', fontsize => 10, fontname => 'Helvetica', height => 0},
   #  );
   #graphviz input header
-  my $graphviz_input = 'graph Pedigree'."\n".'{'."\n".'graph [ bgcolor="transparent" nodesep=".4" rankdir="TB" ranksep="1" ordering="out" center="true" size="7,7" pad = ".2"]'."\n".'node [ color="black" fontname="Helvetica" fontsize="10"]'."\n".
+  my $graphviz_input = 'graph Pedigree'."\n".'{'."\n".'graph [ bgcolor="transparent" nodesep=".4" rankdir="TB" ranksep="1" center="true" pad=".2" viewPort="700,400"]'."\n".'node [ color="black" fontname="Helvetica" fontsize="10" ]'."\n".
 'edge [ color="black" constraint="true" ]'."\n";
   my %nodes;
   my %node_shape;
@@ -523,7 +523,7 @@ sub _view_pedigree {
 }
 
 sub _view_descendants {
-  my $graphviz_input = 'graph Pedigree'."\n".'{'."\n".'graph [ bgcolor="transparent" nodesep=".4" rankdir="BT" ranksep="1" center="true" pad=".2" size="7,7"]'."\n".'node [ color="black" fontname="Helvetica" fontsize="10" ]'."\n".
+  my $graphviz_input = 'graph Descendants'."\n".'{'."\n".'graph [ bgcolor="transparent" nodesep=".4" rankdir="BT" ranksep="1" center="true" pad=".2" viewPort="700,400"]'."\n".'node [ color="black" fontname="Helvetica" fontsize="10" ]'."\n".
     'edge [ color="black" constraint="true" ]'."\n";
   my ($self, $descendants_hashref) = @_;
   my %descendants = %$descendants_hashref;
