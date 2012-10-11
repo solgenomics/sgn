@@ -28,10 +28,11 @@ a Bio::Chado::Schema::Stock::Stock object
 </%args>
 
 <center>
-<div style="width:auto;height:7">
+<div style="width:7;height:7">
 <object target="_top"
-	width="100%"
-	height="auto"
+	xmlns="http://www.w3.org/2000/svg"
+	xmlns:xlink="http://www.w3.org/1999/xlink"
+	pluginspage="http://www.adobe.com/svg/viewer/install/"
         data="/descendants/svg/<% $stock_id %>" type="image/svg+xml">
     <!-- put content for old browsers or IE here, it
          will get displayed instead of the SVG. You can 

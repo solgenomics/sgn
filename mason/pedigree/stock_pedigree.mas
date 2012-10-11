@@ -28,10 +28,18 @@ a Bio::Chado::Schema::Stock::Stock object
 </%args>
 
 <center>
-<embed src="/pedigree/svg/<% $stock_id %>"
-     type="image/svg+xml"
-     target="_top"
-     xmlns="http://www.w3.org/2000/svg"
-     xmlns:xlink="http://www.w3.org/1999/xlink"
-     pluginspage="http://www.adobe.com/svg/viewer/install/" />    
+<div style="width:7;height:7;">
+<object target="_top"
+	xmlns="http://www.w3.org/2000/svg"
+	xmlns:xlink="http://www.w3.org/1999/xlink"
+	pluginspage="http://www.adobe.com/svg/viewer/install/"
+        data="/pedigree/svg/<% $stock_id %>" type="image/svg+xml">
+    <!-- put content for old browsers or IE here, it
+         will get displayed instead of the SVG. You can 
+         embed a raster version of the image here, but remember it 
+         will get loaded by the SVG capable browsers as well, 
+         even if they don't display it! That may slow your 
+         page down significantly. -->
+</object>
+</div>
 </center>
