@@ -24,9 +24,9 @@ use SGN::Test qw/qsub_is_configured/;
 
 
 ############################## 
-/phenome/qtl_analysis.pl page 
+#/phenome/qtl_analysis.pl page 
 ############################## 
-
+print STDERR "\n\n.....starting to test /phenome/qtl_analysis.pl.....\n\n";  
 
     $mech->get_ok(
         '/phenome/qtl_analysis.pl?population_id=12&cvterm_id=39945',
@@ -83,9 +83,9 @@ use SGN::Test qw/qsub_is_configured/;
 
 
 #################### 
-/phenome/qtl.pl page 
+#/phenome/qtl.pl page 
 #################### 
-
+    print STDERR "\n\n.....starting to test /phenome/qtl.pl.....\n\n";                 
     $mech->get_ok(
     '/phenome/qtl.pl?population_id=12&term_id=39945&chr=3&peak_marker=T0581&lod=3.6&qtl=../data/qtl.png',
     'got a qtl detail page (/phenome/qtl.pl).'
