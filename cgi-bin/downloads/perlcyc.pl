@@ -6,7 +6,7 @@ my $p = CXGN::Page->new();
 
 $p->header("PerlCyc.pm", "PerlCyc.pm");
 
-print info_section_html (title=>"Description", contents=><<HTML);
+print info_section_html (title=>"Description", contents=> <<HTML );
 
 
 PerlCyc is a Perl interface for <a href="http://bioinformatics.ai.sri.com/ptools/">Pathway Tools software</a>. It allows internal Pathay Tools Lisp functions to be accessed through Perl. <br /><br />
@@ -24,10 +24,9 @@ For a description of what the individual functions do, please
        use the optional arguments :all T to get the base pathways only (no
        super-pathways).
 
-
 HTML
 
-    print info_section_html (title=>"Installation", contents=><<HTML);
+    print info_section_html (title=>"Installation", contents=> <<HTML );
 
 Installation is standard as for any Perl module. If you downloaded the
        compressed tar file, uncompress and untar the file with the following
@@ -152,7 +151,7 @@ Object functions:
         lower-taxa-or-species-p org-frame
         get-class-all-subs
 </pre>
-       added 5/2008 per Suzanne's request:
+       added 5/2008 per Suzanne\'s request:
 <pre>
         genes-regulating-gene
         genes-regulated-by-gene
@@ -186,8 +185,7 @@ Object functions:
 
 HTML
 
-
-    print info_section_html(title=>"Requirements", contents=><<HTML);
+    print info_section_html(title=>"Requirements", contents=> <<HTML );
 
        To use the Perl module, you also need the socket_server.lisp program.
        In Pathway Tools version 8.0 or later, the server program can be
@@ -200,7 +198,7 @@ HTML
 
 HTML
 
-print    info_section_html (title=>"Download", contents=><<HTML);
+print    info_section_html (title=>"Download", contents=> <<HTML );
 
 Download [<a href="ftp://ftp.sgn.cornell.edu/programs/perlcyc/">FTP</a>]
 
@@ -262,15 +260,15 @@ VERSION HISTORY
              direct-inhibitors
 
 
-
        
 </pre>
 
+HTML
 
+    print info_section_html (title=>"Examples", contents=> <<HTML );
 
-    print info_section_html (title=>"Examples", contents=><<HTML);
+       Change product type for all genes that are in a pathway to "Enzyme"
 
-       Change product type for all genes that are in a pathway to 'Enzyme'
 <pre>
         use perlcyc;
 
@@ -347,11 +345,11 @@ VERSION HISTORY
         foreach my \$g (\@genes) {
           \$genesprocessed++;
           my \$common_name = \$cyc -> get_slot_value(\$g, "common-name");
-          if (\$common_name && (\$common_name ne "NIL")) {
+          if (\$common_name &amp;&amp; (\$common_name ne "NIL")) {
             \$cyc -> put_slot_value (\$g, "dblinks", "(TAIR \"\$common_name\")");
             \$added++;
           }
-          if ((!\$genesprocessed ==0) && (\$genesprocessed % 1000 == 0)) { print "\$genesprocessed ";}
+          if ((!\$genesprocessed ==0) &amp;&amp; (\$genesprocessed % 1000 == 0)) { print "\$genesprocessed ";}
         }
 
         print "Done. Processed \$genesprocessed genes and added \$added links. Thanks!\\n";
@@ -360,7 +358,7 @@ VERSION HISTORY
 
 HTML
 
-    print info_section_html(title=>"Troubleshooting", contents=><<HTML);
+    print info_section_html(title=>"Troubleshooting", contents=> <<HTML );
 
        If your program terminates with the following error message: "connect:
        No such file or directory at perlcyc.pm line 166."  then the
@@ -369,10 +367,11 @@ HTML
        server program.
 
        Please send bug reports and comments to LAM87\@cornell.edu
+
 HTML
 
+    print info_section_html(title=>"License", contents=> <<HTML );
 
-    print info_section_html(title=>"License", contents=><<HTML);
 <pre>
        According to the MIT License:<br />
        http://www.open-source.org/licenses/mit-license.php
