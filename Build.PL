@@ -107,6 +107,7 @@ my $build = SGN::Build->new(
         'SOAP::Transport::HTTP'                    => 0,
         'Statistics::Descriptive'                  => 0,
         'Storable'                                 => 0,
+	'SVG'                                      => 0,
         'Test::More'                               => 0,
         'Test::Class'                              => 0,
         'Test::WWW::Mechanize'                     => 1.3,
