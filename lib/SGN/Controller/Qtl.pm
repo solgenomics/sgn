@@ -198,39 +198,31 @@ sub _analyze_correlation  {
     
     if (-s $pheno_file) 
     {
-        foreach my $dir ($corre_temp_dir, $corre_image_dir)
-        {
-            unless (-d $dir)
-            {
-                mkpath ($dir, 0, 0755);
-            }
-        }
-
+        mkpath ([$corre_temp_dir, $corre_image_dir], 0, 0755);  
+    
         my (undef, $heatmap_file)     = tempfile( "heatmap_${pop_id}-XXXXXX",
-                                                  DIR      => $corre_image_dir,
+                                                  DIR      => $corre_temp_dir,
                                                   SUFFIX   => '.png',
                                                   UNLINK   => 0,
-                                                  OPEN     => 0,
                                                 );
 
         my (undef, $corre_table_file) = tempfile( "corre_table_${pop_id}-XXXXXX",
-                                                  DIR      => $corre_image_dir,
+                                                  DIR      => $corre_temp_dir,
                                                   SUFFIX   => '.txt',
                                                   UNLINK   => 0,
-                                                  OPEN     => 0,
                                                 );
 
+        CXGN::Tools::Run->temp_base($corre_temp_dir);
         my ( $corre_commands_temp, $corre_output_temp ) =
             map
         {
             my ( undef, $filename ) =
                 tempfile(
                     File::Spec->catfile(
-                        CXGN::Tools::Run->temp_base($corre_temp_dir),
-                        "corre_pop_${pop_id}-$_-XXXXXX"
+                        CXGN::Tools::Run->temp_base(),
+                        "corre_pop_${pop_id}-$_-XXXXXX",
                          ),
-                    UNLINK => 0,
-                    OPEN   => 0,
+                    UNLINK   => 0,
                 );
             $filename
         } qw / in out /;
@@ -266,11 +258,16 @@ sub _analyze_correlation  {
             # die with a backtrace
             Carp::confess $err;
         };
+        
+        copy($heatmap_file, $corre_image_dir)  
+            or die "could not copy $heatmap_file to $corre_image_dir";
+        copy($corre_table_file, $corre_image_dir) 
+            or die "could not copy $corre_table_file to $corre_image_dir";
 
         $heatmap_file      = fileparse($heatmap_file);
         $heatmap_file      = $c->generated_file_uri("temp_images",  $heatmap_file);
         $corre_table_file  = fileparse($corre_table_file);
-        $corre_table_file  = $c->generated_file_uri("temp_images",  $corre_table_file);
+        $corre_table_file  = $c->generated_file_uri("temp_images", $corre_table_file);
        
         $c->stash( heatmap_file     => $heatmap_file, 
                    corre_table_file => $corre_table_file
@@ -298,23 +295,24 @@ sub _correlation_output {
     unless ($heatmap) 
     {
         $self->_analyze_correlation($c);
-        $heatmap = $c->stash->{heatmap_file};
+
+        $heatmap = $c->stash->{heatmap_file};      
         $corre_table  = $c->stash->{corre_table_file};
+
         $cache->set($key_h, $heatmap, "30 days");
-        $cache->set($key_t, $corre_table, "30 days");
-        
+        $cache->set($key_t, $corre_table, "30 days");        
     }
-  
-    $heatmap     = undef if -z $c->get_conf('basepath')  . $heatmap;   
-    $corre_table = undef if -z $c->get_conf('basepath') . $corre_table;
+
+    $heatmap     = undef if -z $c->config->{'basepath'} . $heatmap;   
+    $corre_table = undef if -z $c->config->{'basepath'} . $corre_table;
     
     $c->stash( heatmap_file     => $heatmap,
                corre_table_file => $corre_table,
              );  
  
     $self->_get_trait_acronyms($c);
-}
 
+}
 
 sub _list_traits {
     my ($self, $c) = @_;      
