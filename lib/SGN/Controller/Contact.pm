@@ -45,14 +45,15 @@ sub _build_form_page {
     $c->stash->{email_address_to_display} = $c->config->{feedback_email};
     $c->stash->{website_name}             = $c->config->{project_name};
     $c->stash->{captcha_public_key}       = $c->config->{captcha_public_key};
+    $c->stash->{contact_form_human_question}           = $c->config->{contact_form_human_question};
     $c->stash->{template}                 = '/help/contact.mas';
 }
 
 sub submit :Path('/contact/submit') :Args(0)
 {
     my ($self, $c) = @_;
-    my ($name, $email, $subject, $body, $challenge, $response) =
-        map { $c->request->param($_) } qw/name email subject body recaptcha_challenge_field recaptcha_response_field /;
+    my ($name, $email, $subject, $body, $challenge, $response, $contact_form_human_question) =
+        map { $c->request->param($_) } qw/name email subject body recaptcha_challenge_field recaptcha_response_field contact_form_human_question /;
     
     my $captcha = Captcha::reCAPTCHA->new;
 
@@ -63,7 +64,7 @@ sub submit :Path('/contact/submit') :Args(0)
 
     print STDERR "Captcha Result: ".$result->{is_valid}." (private key=".$c->config->{captcha_private_key}." Source address: ".$c->request->address()." Error: ".$result->{error}." ($challenge, $response)\n";
 
-    if ($name and $email and $subject and $body and ($result->{is_valid} || $ENV{SGN_TEST_MODE})) {
+    if ($contact_form_human_question eq $c->config->{contact_form_human_answer} and $name and $email and $subject and $body and ($result->{is_valid} || $ENV{SGN_TEST_MODE})) {
 
 my $host = $c->request->hostname();
 my $client_ip = $c->request->address();

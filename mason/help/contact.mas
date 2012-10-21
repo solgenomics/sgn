@@ -14,7 +14,7 @@ $captcha_public_key
 
 % #Uses Perl to print out the fields with similar HTML tags
 <%perl>
-my $infoNeeded = ["name", "email", "subject"];
+my $infoNeeded = ["name", "email", "subject", ];
 my $defaultVal = {"name" => $name, 
                       "email" => $email,
                          "subject" => $subject};
@@ -38,6 +38,9 @@ my $defaultVal = {"name" => $name,
 				name="<% $info_category %>" />
 </td></tr>
 % }     
+
+
+
 % # Body uses a text_area so it is hardcoded.
 % # Like the other inputs, it will display a red message above saying 
 % # "Message needed."
@@ -54,9 +57,28 @@ Message body is required
 <textarea cols="77" rows="12" name="body"><% $body |h%></textarea>
 </td></tr>
 
+
+<tr><td>Are you human: What is <% $contact_form_human_question %>?</td>
+
+<td>
+% if (! $contact_form_human_question) { 
+<font style = "color:red; font-size: 10px;" align = "left" valign = "top">     
+"Are you human test?" is required </font>
+<br />
+% } 
+
+<input type="text" size="50" value="" 
+				name="contact_form_human_question" size="4" />
+</td></tr>
+
+
+
 <tr><td colspan="2" align="center" valign="middle" style = "color:red; font-size: 90%; font-style:italic;">
 fields marked with <% '"*"' |h %> are required
 </td></tr>
+
+
+
 
 <tr><td>&nbsp;</td><td>
 <script type="text/javascript"
@@ -110,6 +132,8 @@ EOH
   $body                     => ''
   %filled                   => (name => 1, email => 1, subject => 1, body => 1)
   $email_address_to_display => ''
+  $contact_form_human_question => ''
+
 </%args>
 <%once>
   use CXGN::Page::FormattingHelpers 'info_table_html';
