@@ -81,7 +81,7 @@ my $build = SGN::Build->new(
         'HTML::TreeBuilder::XPath'                 => 0,
         'IO::String'                               => 0,
         'Image::Size'                              => 0,
-        'JSAN::ServerSide'                         => '==0.06',
+        'JSAN::ServerSide'                         => '0.06',
         'JSON'                                     => 0,
         'JSON::XS'                                 => '2.24',
         'JSON::Any'                                => 0,
