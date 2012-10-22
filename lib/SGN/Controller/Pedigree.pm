@@ -291,8 +291,10 @@ sub _traverse_pedigree {
   if ($female_parent_id && $male_parent_id) {
     $invisible_joins{$female_parent_id} = $male_parent_id;
   }
-  if ($female_parent_id eq $male_parent_id) {
-    $selfs{$female_parent_id}=1;
+  if ($female_parent_id && $male_parent_id) {
+    if ($female_parent_id eq $male_parent_id) {
+      $selfs{$female_parent_id}=1;
+    }
   }
   return (\%nodes,\%node_links,\%node_shapes,\%joins,\%selfs,\%invisible_joins);
 }
