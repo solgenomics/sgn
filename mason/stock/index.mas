@@ -22,6 +22,8 @@ a hashref with all the parameters needed for printing the stock page!
  $stockref->{submitter} (boolean)
  $stockref->{is_owner} (boolean)
  $stockref->{props} (hash of arrayrefs of stockprops. Keys = prop name, value = prop value)
+ $stockref->{has_pedigree} (boolean)
+ $stockref->{has_descendants} (boolean)
  locus_add_uri
  locus_autocomplete_uri => '/ajax/locus/autocomplete/'
  cvterm_add_uri
@@ -73,6 +75,8 @@ my $curator = $stockref->{curator};
 my $submitter = $stockref->{submitter};
 my $sequencer = $stockref->{sequencer};
 my $pubs = $stockref->{pubs};
+my $has_pedigree = $stockref->{has_pedigree};
+my $has_descendants = $stockref->{has_descendants};
 
 my $schema = $stockref->{schema};
 my $dbh = $stockref->{dbh};
@@ -244,18 +248,30 @@ function jqueryStuff() {
 % }
 
 
-% if ($type) {
+% if ($has_pedigree==1) {
 
 <&| /page/info_section.mas, title=>"Pedigree" , collapsible=>1, collapsed=>0 &>
   <& /pedigree/stock_pedigree.mas, stock_id => $stock_id &>
 </&>
 
+% }  else {
+
+<&| /page/info_section.mas, title=>"Pedigree" , collapsible=>1, collapsed=>1 &>
+</&>
+
 % }
 
-% if ($type) {
+
+
+% if ($has_descendants==1) {
 
 <&| /page/info_section.mas, title=>"Descendants" , collapsible=>1, collapsed=>0 &>
   <& /pedigree/stock_descendants.mas, stock_id => $stock_id &>
+</&>
+
+% } else {
+
+<&| /page/info_section.mas, title=>"Descendants" , collapsible=>1, collapsed=>1 &>
 </&>
 
 % }
