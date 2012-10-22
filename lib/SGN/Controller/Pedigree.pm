@@ -36,7 +36,7 @@ sub _build_schema {
 
 sub stock_pedigree :  Path('/pedigree/svg')  Args(1) {
   my ($self, $c, $stock_id) = @_;
-    my $stock = CXGN::Chado::Stock->new($self->schema, $stock_id);
+  my $stock = CXGN::Chado::Stock->new($self->schema, $stock_id);
   $c->stash->{stock} = $stock;
   my $stock_row = $self->schema->resultset('Stock::Stock')
     ->find({ stock_id => $stock_id });
@@ -46,8 +46,7 @@ sub stock_pedigree :  Path('/pedigree/svg')  Args(1) {
   $c->response->content_type('image/svg+xml');
   if ($stock_pedigree_svg) {
     $c->response->body($stock_pedigree_svg);
-  }
-  else {
+  } else {
     my $blank_svg = SVG->new(width=>1,height=>1);
     my $blank_svg_xml = $blank_svg->xmlify();
     $c->response->body($blank_svg_xml);
@@ -56,7 +55,7 @@ sub stock_pedigree :  Path('/pedigree/svg')  Args(1) {
 
 sub stock_descendants :  Path('/descendants/svg')  Args(1) {
   my ($self, $c, $stock_id) = @_;
-    my $stock = CXGN::Chado::Stock->new($self->schema, $stock_id);
+  my $stock = CXGN::Chado::Stock->new($self->schema, $stock_id);
   $c->stash->{stock} = $stock;
   my $stock_row = $self->schema->resultset('Stock::Stock')
     ->find({ stock_id => $stock_id });
@@ -66,8 +65,7 @@ sub stock_descendants :  Path('/descendants/svg')  Args(1) {
   $c->response->content_type('image/svg+xml');
   if ($stock_descendants_svg) {
     $c->response->body($stock_descendants_svg);
-  }
-  else {
+  } else {
     my $blank_svg = SVG->new(width=>1,height=>1);
     my $blank_svg_xml = $blank_svg->xmlify();
     $c->response->body($blank_svg_xml);
@@ -136,17 +134,17 @@ sub _check_role  {
 }
 
 sub _stockprops {
-    my ($self,$stock) = @_;
+  my ($self,$stock) = @_;
 
-    my $bcs_stock = $stock->get_object_row();
-    my $properties ;
-    if ($bcs_stock) {
-        my $stockprops = $bcs_stock->search_related("stockprops");
-        while ( my $prop =  $stockprops->next ) {
-            push @{ $properties->{$prop->type->name} } ,   $prop->value ;
-        }
+  my $bcs_stock = $stock->get_object_row();
+  my $properties ;
+  if ($bcs_stock) {
+    my $stockprops = $bcs_stock->search_related("stockprops");
+    while ( my $prop =  $stockprops->next ) {
+      push @{ $properties->{$prop->type->name} } ,   $prop->value ;
     }
-    return $properties;
+  }
+  return $properties;
 }
 
 sub _get_pedigree {
@@ -159,17 +157,17 @@ sub _get_pedigree {
   $pedigree{'link'} = "/stock/$pedigree{'id'}/view";
   #get cvterms for parent relationships
   my $cvterm_female_parent = $self->schema->resultset("Cv::Cvterm")->create_with(
-    { name   => 'female_parent',
-      cv     => 'stock relationship',
-      db     => 'null',
-      dbxref => 'female_parent',
-    });
-   my $cvterm_male_parent = $self->schema->resultset("Cv::Cvterm")->create_with(
-    { name   => 'male_parent',
-      cv     => 'stock relationship',
-      db     => 'null',
-      dbxref => 'male_parent',
-    });
+										 { name   => 'female_parent',
+										   cv     => 'stock relationship',
+										   db     => 'null',
+										   dbxref => 'female_parent',
+										 });
+  my $cvterm_male_parent = $self->schema->resultset("Cv::Cvterm")->create_with(
+									       { name   => 'male_parent',
+										 cv     => 'stock relationship',
+										 db     => 'null',
+										 dbxref => 'male_parent',
+									       });
   #get the stock relationships for the stock, find stock relationships for types "female_parent" and "male_parent", and get the corresponding subject stock IDs and stocks.
   my $stock_relationships = $bcs_stock->search_related("stock_relationship_objects",undef,{ prefetch => ['type','subject'] });
   my $female_parent_relationship = $stock_relationships->find({type_id => $cvterm_female_parent->cvterm_id()});
@@ -215,49 +213,13 @@ sub _get_descendants {
 										 db     => 'null',
 										 dbxref => 'male_parent',
 									       });
-
-  # #  my $related_to_stock = $self->schema->resultset('Stock::Stock')
-  # #    ->search_related("stock_relationship_objects",{type_id => $cvterm_female_parent->cvterm_id()});
-  #   #my $progeny_of_stock = $related_to_stock->search({subject_id => $bcs_stock->stock_id() });
-
-  #   my $stock_relationships = $self->schema->resultset('Stock::Stock')
-  #     ->search_related("stock_relationship_objects",{subject_id => $bcs_stock->stock_id() });
-  #   my $progeny_of_stock = $related_to_stock;
-
-  # #  my $progeny_of_stock = $related_to_stock->search({type_id => $cvterm_female_parent->cvterm_id()});
-  # #  my $progeny_of_stock = $self->schema->resultset('Stock::Stock')
-  # #    ->search_related("stock_relationship_objects",{subject_id => $bcs_stock->stock_id() })->search(type_id => {'-in' => [$cvterm_female_parent->cvterm_id(), $cvterm_male_parent->cvterm_id()]});
-  # #  my $progeny_of_stock = $self->schema->resultset('Stock::Stock')
-  # #    ->search_related("stock_relationship_objects",{ type_id => {'-in' => [$cvterm_female_parent->cvterm_id(), $cvterm_male_parent->cvterm_id()]}, subject_id => $bcs_stock->stock_id() });
-  #   if ($progeny_of_stock) {
-  #     while (my $progeny_stock = $progeny_of_stock->next) {
-  #       #if ($progeny_stock->descendants) {
-  # 	$progeny{$progeny_stock->stock_id()}=_get_descendants($self,$progeny_stock);
-  #       #}
-  #     }
-  #   }
-
-  #   $descendants{'decendants'} = \%progeny;
-  #   return \%descendants;
-
-  
   #get the stock relationships for the stock, find stock relationships for types "female_parent" and "male_parent", and get the corresponding subject stock IDs and stocks.
-  
-
   my $descendant_relationships = $bcs_stock->search_related("stock_relationship_subjects",undef,{ prefetch => ['type','object'] });
-  #my $descendant_relationships = $stock_relationships->search_related({type => $cvterm_female_parent});
-  
-  
-#my $stock_relationships = $bcs_stock->search_related("stock_relationship_subjects",undef,{ prefetch => ['type','object'] });
-  #  my $stock_relationships = $bcs_stock->search_related("stock_relationship_objects");
-  #my $descendant_relationships = $stock_relationships->search({type_id => $cvterm_female_parent->cvterm_id()});
-  #my $descendant_relationships = $stock_relationships->search({type_id => {'-in' => [$cvterm_female_parent->cvterm_id(), $cvterm_male_parent->cvterm_id()]}});
   if ($descendant_relationships) {
     while (my $descendant_relationship = $descendant_relationships->next) {
       my $descendant_stock_id = $descendant_relationship->object_id();
       if ($descendant_stock_id && (($descendant_relationship->type_id() == $cvterm_female_parent->cvterm_id()) || ($descendant_relationship->type_id() == $cvterm_male_parent->cvterm_id()))) {
   	my $descendant_stock = $self->schema->resultset("Stock::Stock")->find({stock_id => $descendant_stock_id});
-  	#my $descendant_stock = $self->schema->resultset("Stock::Stock")->search({stock_id => $descendant_stock_id});
   	if ($descendant_stock) {
   	  $progeny{$descendant_stock_id} = _get_descendants($self,$descendant_stock);
   	}
@@ -386,7 +348,7 @@ sub _view_pedigree {
   #  );
   #graphviz input header
   my $graphviz_input = 'graph Pedigree'."\n".'{'."\n".'graph [ bgcolor="transparent" nodesep=".4" rankdir="TB" ranksep="1" center="true" pad=".2" viewPort="700,400"]'."\n".'node [ color="black" fontname="Helvetica" fontsize="10" ]'."\n".
-'edge [ color="black" constraint="true" ]'."\n";
+    'edge [ color="black" constraint="true" ]'."\n";
   my %nodes;
   my %node_shape;
   my %node_links;
@@ -458,8 +420,8 @@ sub _view_pedigree {
       #get link to stock id
       my $stock_link = $node_links{$node_key};
       unless ($nodes{$node_key}) {
-	  next;
-	}
+	next;
+      }
       if ($node_shape{$node_key} eq 'female') {
 	#$graph -> add_node(name => $nodes{$node_key},  href => $stock_link, shape=>'oval', target=>"_top");
 	$graphviz_input_female_nodes .= "\"".$nodes{$node_key}.'" [ color="black" shape="oval" href="'.$stock_link.'" target="_top" ] '."\n";
@@ -499,25 +461,13 @@ sub _view_pedigree {
       $graphviz_input .= "\"".$nodes{$join_key}."\" -- \"".$nodes{$joins{$join_key}}."\"\n";
     }
   }
-  foreach my $invisible_join_key (keys %invisible_joins) {
-    #$graph -> push_subgraph(rank=>'same');
-    #$graph ->add_edge(from => $nodes{$invisible_join_key}, to => $nodes{$invisible_joins{$invisible_join_key}}, style => 'invis', constraint=> 'false');
-    #$graph -> pop_subgraph();
-  }
   $graphviz_input .= "}";
-  #$graph -> run(driver => 'dot',format => 'svg');
   if ($pedigree{'male_parent'} || $pedigree{'male_parent'}) {
-    #print STDERR $graph->dot_input();
-    #return $graph->dot_output();
-
     my @command = qw(dot -Tsvg);
     my $graphviz_out = '';
     run3 \@command, \$graphviz_input, \$graphviz_out;
-
-    #my $graphviz_result = capturex("dot", $graphviz_input);
     return $graphviz_out;
-  }
-  else {
+  } else {
     return undef;
   }
 }
@@ -527,13 +477,6 @@ sub _view_descendants {
     'edge [ color="black" constraint="true" ]'."\n";
   my ($self, $descendants_hashref) = @_;
   my %descendants = %$descendants_hashref;
-  #my($graph) = GraphViz2 -> new
-  #  (
-  #   edge       => {color => 'black', constraint => 'true'},
-  #   global => {directed => 0},
-  #   graph      => {rankdir => 'TB', bgcolor => '#FAFAFA', ranksep => ".4", nodesep => 1, size => 6},
-  #   node       => {color => 'black', fontsize => 10, fontname => 'Helvetica', height => 0},
-  #  );
   my %nodes;
   my %node_links;
   my %joins;
@@ -579,42 +522,22 @@ sub _view_descendants {
       #get link to stock id
       my $stock_link = $node_links{$node_key};
       unless ($nodes{$node_key}) {
-	  next;
-	}
+	next;
+      }
       if ($nodes{$node_key} eq $current_node_name) {
 	$graphviz_input .= "\"".$nodes{$node_key}.'" [ color="blue" shape="invhouse" target="_top"] '."\n";
-      }
-      else {
+      } else {
 	$graphviz_input .= "\"".$nodes{$node_key}.'" [ color="black" shape="oval" href="'.$stock_link.'" target="_top" ] '."\n";
       }
-     #$graph -> add_node(name => $nodes{$node_key},  href => $stock_link, shape=>'oval', target=>"_top");
     }
   }
   # Hash that stores selfing edges already added in the loop
   my %self_joins;
   foreach my $join_key (keys %joins) {
-    #my $tailport;
-    #if ($node_shape{$join_key} eq 'female') { $tailport = 'e'; } else {$tailport = 'w';}
     unless ($nodes{$join_key} && $nodes{$joins{$join_key}}) {
       next;
     }
     $graphviz_input .= "\"".$nodes{$join_key}."\" -- \"".$nodes{$joins{$join_key}}."\"\n";
-
-    # Checks if an edge is a selfing-edge.
-    # if (($selfs{$nodes{$join_key}}) && ($selfs{$nodes{$join_key}} eq $nodes{$joins{$join_key}})) {
-    #   my $edge_combo = $nodes{$join_key}.$nodes{$joins{$join_key}};
-    #   # Checks if a selfing edge was already added for two nodes. Selfing edges are denoted with a double line.
-    #   unless ($self_joins{$edge_combo}) {
-    # 	#$graph ->add_edge(from => $nodes{$join_key}, to => $nodes{$joins{$join_key}}, color=>'black:black');
-    # 	$graphviz_input .= "\"".$nodes{$join_key}."\" -- \"".$nodes{$joins{$join_key}}."\" [color=>\"black:black\"\n";
-    # 	$self_joins{$nodes{$join_key}.$nodes{$joins{$join_key}}} = 1;
-    #   }
-    # }
-    # # Else it is just a normal edge with a child comprised of two different parents.
-    # else {
-    #   #$graph ->add_edge(from => $nodes{$join_key}, to => $nodes{$joins{$join_key}});
-    #   $graphviz_input .= "\"".$nodes{$join_key}."\" -- \"".$nodes{$joins{$join_key}}."\"\n";
-    # }
   }
   $graphviz_input .= "}\n";
   #$graph -> run(driver => 'dot',format => 'svg');
@@ -624,8 +547,7 @@ sub _view_descendants {
     my $graphviz_out = '';
     run3 \@command, \$graphviz_input, \$graphviz_out;
     return $graphviz_out;
-  }
-  else {
+  } else {
     return undef;
   }
 }
