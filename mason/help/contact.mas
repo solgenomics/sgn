@@ -67,7 +67,7 @@ Message body is required
 <br />
 % } 
 
-<input type="text" size="50" value="" 
+<input type="text" value="" 
 				name="contact_form_human_question" size="4" />
 </td></tr>
 
