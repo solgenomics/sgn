@@ -73,6 +73,7 @@ sub submit_form_ok {
             email   => 'test@example.com',
             subject => 'Testing contact form',
             body     => 'this is a test of the SGN contact form',
+	    contact_form_human_question => $mech->context->get_conf("contact_form_human_answer"),
         },
     });
     $mech->content_like(qr/your message has been sent/i);
