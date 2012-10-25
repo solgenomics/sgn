@@ -201,9 +201,10 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
             props     => $props,
             dbxrefs   => $dbxrefs,
             pubs      => $pubs,
-            members_phenotypes => $c->stash->{members_phenotypes},
-            direct_phenotypes  => $c->stash->{direct_phenotypes},
-            direct_genotypes   => $c->stash->{direct_genotypes},
+            members_phenotypes => $c->stash->{members_phenotypes}, #get rid
+            direct_phenotypes  => $c->stash->{direct_phenotypes}, #get rid
+            projects           => $c->stash->{projects},
+            direct_genotypes   => $c->stash->{direct_genotypes}, #replace? 
             has_qtl_data   => $c->stash->{has_qtl_data},
             cview_tmp_dir  => $cview_tmp_dir,
             cview_basepath => $c->get_conf('basepath'),
@@ -217,6 +218,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
 	barcode_tempdir  => $barcode_tempdir,
 	barcode_tempuri   => $barcode_tempuri,
 	identifier_prefix => $c->config->{identifier_prefix},
+        phenotype_add_uri => $c->uri_for( '/ajax/stock/add_phenotype' ),
         );
 }
 
@@ -238,17 +240,16 @@ sub download_phenotypes : Chained('get_stock') PathPart('phenotypes') Args(0) {
         #my $key = "stock_" . $stock_id . "_phenotype_data";
         #my $phen_file = $file_cache->get($key);
         #my $filename = $tmp_dir . "/stock_" . $stock_id . "_phenotypes.csv";
-	
-	my $results = [];# listref for recursive subject stock_phenotypes resultsets     
+
+	my $results = [];# listref for recursive subject stock_phenotypes resultsets
 	#recursively get the stock_id and the ids of its subjects from stock_relationship
 	my $stock_rs = $self->schema->resultset("Stock::Stock")->search( { stock_id => $stock_id } );
 	$results =  $self->schema->resultset("Stock::Stock")->recursive_phenotypes_rs($stock_rs, $results);
 	my $report = Bio::Chado::NaturalDiversity::Reports->new;
 	my $d = $report->phenotypes_by_trait($results);
-	
 	my @info  = split(/\n/ , $d);
 	my @data;
-	foreach (@info) { 
+	foreach (@info) {
 	    push @data, [ split(/\t/) ] ;
 	}
         $c->stash->{'csv'}={ data => \@data};
@@ -378,6 +379,9 @@ sub get_stock_extended_info : Private {
     my $stock_rs = ( $c->stash->{stock_row})->search_related('stock_relationship_subjects')
 	->search_related('subject');
 
+
+
+#####################################################################
     my $direct_phenotypes  = $stock ? $self->_stock_project_phenotypes($self->schema->resultset("Stock::Stock")->search_rs({ stock_id => $c->stash->{stock_row}->stock_id } ) ) : undef;
     $c->stash->{direct_phenotypes} = $direct_phenotypes;
     my ($members_phenotypes, $has_members_genotypes)  = $stock ? $self->_stock_members_phenotypes( $c->stash->{stock_row} ) : undef;
@@ -386,10 +390,31 @@ sub get_stock_extended_info : Private {
     my $direct_genotypes  = $stock ? $self->_stock_project_genotypes( $c->stash->{stock_row} ) : undef;
     $c->stash->{direct_genotypes} = $direct_genotypes;
 
+#################################################
     my $stock_type;
     $stock_type = $stock->get_object_row->type->name if $stock->get_object_row;
-    if ( ( grep { /^$stock_type/ } ('f2 population', 'backcross population') ) &&  $members_phenotypes && $has_members_genotypes ) { $c->stash->{has_qtl_data} = 1 ; }
+    #if ( ( grep { /^$stock_type/ } ('f2 population', 'backcross population') ) &&  $members_phenotypes && $has_members_genotypes ) { $c->stash->{has_qtl_data} = 1 ; }
+########################################################################
 
+    my $stock_projects_hashref = $stock ? $self->_stock_projects( $c->stash->{stock_row} ) : undef;
+    my ($has_phenotypes, $has_genotypes);
+    my @projects;
+    foreach my $key (keys %$stock_projects_hashref) {
+        $has_genotypes++ if $stock_projects_hashref->{$key}->{phenotypes};
+        $has_phenotypes++ if $stock_projects_hashref->{$key}->{genotypes};
+        push @projects , $stock_projects_hashref->{$key}->{project};
+    }
+    $c->stash->{projects} = \@projects;
+    if ( ( grep { /^$stock_type/ } ('f2 population', 'backcross population') ) &&  $has_phenotypes && $has_genotypes ) { $c->stash->{has_qtl_data} = 1 ; }
+    #get on the stash projects, recursive projects , has_qtl
+    my $stock_subject_projects = $stock ? $self->_stock_subject_projects( $c->stash->{stock_row} ) : undef;
+    my @subject_projects;
+    foreach my $hashref (@$stock_subject_projects) {
+        foreach my $skey(keys %$hashref) {
+            push @subject_projects, $hashref->{$skey}->{project};
+        }
+    }
+    $c->stash->{subject_projects} = \@subject_projects;
 }
 
 ############## HELPER METHODS ######################3
@@ -574,8 +599,26 @@ sub _dbxrefs {
     return $dbxrefs;
 }
 
+sub _stock_projects {
+    my ($self, $bcs_stock) = @_;
+    return {} unless $bcs_stock;
+    my $project_hashref =  $self->schema->resultset("Stock::Stock")->stock_projects($bcs_stock);
+
+    return $project_hashref;
+}
+sub _stock_subject_projects {
+    my ($self, $bcs_stock) = @_;
+    return {} unless $bcs_stock;
+    my $subjects = $bcs_stock->search_related('stock_relationship_objects')
+                             ->search_related('subject');
+    my $project_listref =  $self->schema->resultset("Stock::Stock")->stock_recursive_projects($bcs_stock);
+
+    return $project_listref;
+}
+
+######################################################################################################
 # this sub gets all phenotypes measured directly on this stock and
-# stores it in a hashref as { project_name => [ BCS::Phenotype::Phenotype, ... ]
+# stores it in a hashref as { project_description => [ BCS::Phenotype::Phenotype, ... ]
 
 sub _stock_project_phenotypes {
     my ($self, $bcs_stock) = @_;
@@ -588,7 +631,7 @@ sub _stock_project_phenotypes {
 	push @{ $project_hashref{ $project_desc }}, $r;
     }
     return \%project_hashref;
-}
+} # add project_id to the rs  
 
 # this sub gets all phenotypes measured on all subjects of this stock.
 # Subjects are in stock_relationship
@@ -652,7 +695,7 @@ sub _stock_project_genotypes {
     }
     return \%genotypes;
 }
-
+#################################################################################################
 ##############
 
 sub _stock_dbxrefs {
@@ -674,7 +717,7 @@ sub _stock_cvterms {
     my $bcs_stock = $stock->get_object_row;
     # hash of arrays. Keys are db names , values are lists of StockCvterm objects
     my $scvterms ;
-    my $count;
+    my $count = 0;
     if ($bcs_stock) {
         my $stock_cvterms = $bcs_stock->search_related("stock_cvterms");
         while ( my $scvterm =  $stock_cvterms->next ) {
