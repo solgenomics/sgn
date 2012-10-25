@@ -1,5 +1,5 @@
 <%args>
-$website_name => "SGN"
+$website_name => ''
 $captcha_public_key
 </%args>
 
@@ -61,14 +61,14 @@ Message body is required
 <tr><td>Are you human: What is <% $contact_form_human_question %>?</td>
 
 <td>
-% if (! $contact_form_human_question) { 
+% if (($contact_form_human_question  &&  !$contact_form_human_answer_correct)) { 
 <font style = "color:red; font-size: 10px;" align = "left" valign = "top">     
-"Are you human test?" is required </font>
+Either you are not human - or you are not very good at math! ;-)</font>
 <br />
 % } 
 
-<input type="text" value="" 
-				name="contact_form_human_question" size="4" />
+  <input type="text" value="" name="contact_form_human_answer" size="4" />
+
 </td></tr>
 
 
@@ -132,8 +132,9 @@ EOH
   $body                     => ''
   %filled                   => (name => 1, email => 1, subject => 1, body => 1)
   $email_address_to_display => ''
+  $contact_form_human_answer => ''
   $contact_form_human_question => ''
-
+  $contact_form_human_answer_correct => 0
 </%args>
 <%once>
   use CXGN::Page::FormattingHelpers 'info_table_html';

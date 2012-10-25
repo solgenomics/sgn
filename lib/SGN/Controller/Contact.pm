@@ -18,8 +18,12 @@ sub form :Path('/contact/form') :Args(0) {
     my ($self, $c) = @_;
     my ($username, $useremail) = _load_user($c);
 
+    my $answer = $c->req->param("contact_form_human_answer");
+    my $check = $c->config->{contact_form_human_answer} eq $answer;
+    print STDERR "CHECK = $check!!!\n\n";
+    
     my @prefill = grep defined, @{ $c->req->params }{'subject','body'};
-    _build_form_page($self, $c, $username, $useremail, @prefill );
+    _build_form_page($self, $c, $username, $useremail, $c->config->{contact_form_human_question}, $answer, $check, @prefill );
 }
 
 #Loads the user if he has an account
@@ -37,7 +41,7 @@ sub _load_user {
 #Builds a form with $name, $email, $subject, $body in the right line
 #If any undef, assigns ''
 sub _build_form_page {
-    my ($self, $c, $name, $email, $subject, $body, $check) = @_;
+    my ($self, $c, $name, $email, $human_question, $human_answer, $check, $subject, $body) = @_;
     $c->stash->{name}                     = $name if $name;
     $c->stash->{email}                    = $email if $email;
     $c->stash->{subject}                  = $subject if $subject;
@@ -45,7 +49,9 @@ sub _build_form_page {
     $c->stash->{email_address_to_display} = $c->config->{feedback_email};
     $c->stash->{website_name}             = $c->config->{project_name};
     $c->stash->{captcha_public_key}       = $c->config->{captcha_public_key};
-    $c->stash->{contact_form_human_question}           = $c->config->{contact_form_human_question};
+    $c->stash->{contact_form_human_question} = $c->config->{contact_form_human_question};
+    $c->stash->{contact_form_human_answer}   = $human_answer if $human_answer;
+    $c->stash->{contact_form_human_answer_correct} = $check;
     $c->stash->{template}                 = '/help/contact.mas';
 }
 
@@ -62,7 +68,8 @@ sub submit :Path('/contact/submit') :Args(0)
         $challenge, $response
     );
 
-    print STDERR "Captcha Result: ".$result->{is_valid}." (private key=".$c->config->{captcha_private_key}." Source address: ".$c->request->address()." Error: ".$result->{error}." ($challenge, $response)\n";
+    #print STDERR "Captcha Result: ".$result->{is_valid}." (private key=".$c->config->{captcha_private_key}." Source address: ".$c->request->address()." Error: ".$result->{error}." ($challenge, $response)\n";
+    my $project = $c->config->{project_name};
 
     if ($contact_form_human_question eq $c->config->{contact_form_human_answer} and $name and $email and $subject and $body and ($result->{is_valid} || $ENV{SGN_TEST_MODE})) {
 
@@ -70,6 +77,9 @@ my $host = $c->request->hostname();
 my $client_ip = $c->request->address();
 
        $body .= <<END_HEREDOC;
+
+This message sent from $project contact form
+
 From:
 $name <$email>
 
