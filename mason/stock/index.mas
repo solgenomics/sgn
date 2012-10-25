@@ -73,6 +73,7 @@ my $curator = $stockref->{curator};
 my $submitter = $stockref->{submitter};
 my $sequencer = $stockref->{sequencer};
 my $pubs = $stockref->{pubs};
+my $projects = $stockref->{projects};
 
 my $schema = $stockref->{schema};
 my $dbh = $stockref->{dbh};
@@ -308,25 +309,30 @@ function jqueryStuff() {
   show_form     => $is_owner  &>
 </&>
 
+
+
+
+
 <&| /page/info_section.mas, title=>"Phenotype data " ,  subtitle=>$p_download_link ,  collapsible => 1, collapsed => 1 &>
-% foreach my $project (keys %$direct_phenotypes) {
-%   my $rs = $direct_phenotypes->{$project} ;
+% foreach my $project (@$projects) {
+%   my $project_id = $project->project_id;
+%   my $description = $project->description;
   <&| /page/info_section.mas,
     id            => "experiment_phenotypes",
-    title         =>"Experiment: $project",
+    title         =>"Experiment: $description",
     subtitle      => $add_phenotype_link,
     is_subsection => 1,
     collapsible   => 1
   &>
-    <& /phenotypes/experiment_phenotype_form.mas,
+    <& /phenotypes/display_phenotypes.mas,
+       project_id => $project_id,
        stock_id   => $stock_id,
-       project_id => $project->project_id,
-      &>
-    <& /phenotypes/phenotype_data.mas ,
-      phenotypes=> $rs
-        &>
+       mode       => 'direct',
+       show_form     => $is_owner
+    &>
 </&>
 % }
+
 
 % foreach my $key (keys %$members_phenotypes) {
 % my $m_rs = $members_phenotypes->{$key};
@@ -344,6 +350,7 @@ function jqueryStuff() {
   </&>
 % }
 </&>
+
 
 <&| /page/info_section.mas, title=>"Genotype data ", subtitle=> $g_download_link, collapsible => 1 , collapsed => 1 &>
 % print $map_html;

@@ -29,20 +29,29 @@ Naama Menda <nm249@cornell.edu>
 </%doc>
 
 <%args>
+
+$db_name => 'SP'
 $stock_id
 $project_id => undef
 $exp_phen_add_uri => '/ajax/stock/add_phenotype'
-$display_phenontyeps_uri => '/ajax/stock/display_phenotypes'
+$display_phenotypes_uri => '/ajax/stock/phenotype_table'
 $cvterm_autocomplete_uri  => '/ajax/cvterm/autocomplete'
 $div_id => 'experiment_phenotypes'
 $mode => undef
 $show_form => 0
+$phenotype_div => 'phenotype_div'
 
 </%args>
 
 
+<& /util/import_javascript.mas, classes=>[qw[ jqueryui popup] ]&>
+<div id = "<% $phenotype_div %>" >&nbsp;Loading..</div>
+
 <script language="javascript">
-/////////experiment , geolocation , cvterm , phenotype value, unit
+  display_phenotypes("<% $phenotype_div %>" , "<% $mode %>" , "<% $project_id %>" );
+
+  /////////experiment , geolocation , cvterm , phenotype value, unit
+
   jQuery(function() {
        var db_name = jQuery('#db_name option:selected').attr("value");
        jQuery("#term_name").autocomplete({
@@ -68,19 +77,19 @@ $show_form => 0
      var db_name = jQuery("#db_name").val();
      var unit_name = jQuery("#unit_name").val();
 
-    jQuery.ajax({ url: "<% $exp_phen_add_uri %>" , method:"POST", data: 'stock_id='+<% $stock_id %>+'&project_id='+<% $project_id %>+'&term_name='+term_name+'&db_name='+db_name+'&unit_name='+unit_name ,
+    jQuery.ajax({ url: "<% $exp_phen_add_uri %>" , method:"POST", data: 'stock_id='+<% $stock_id %>+'&project_id=' + <% $project_id %> + '&term_name=' + term_name + '&db_name=' + db_name + '&unit_name=' + unit_name ,
      success: function(response) {
       var error = response.error;
       if (error) { alert(error) ; }
-      display_phenotypes( "<% $phenotypes_div %>" );
+      display_phenotypes( "<% $phenotype_div %>" );
      }
    } );
   }
-  function display_phenotypes(phenotypes_div, mode, project_id) {
-     jQuery.ajax( { url: "/<% $display_phenotypes_uri %>?stock_id=<%$stock_id%>&?mode="+mode+"&?project_id="+project_id ,
+  function display_phenotypes(phenotype_div, mode, project_id) {
+     jQuery.ajax( { url: "/stock/<% $stock_id %>/phenotype_table/?mode="+mode+"&project_id="+project_id ,
         dataType: "json",
         success: function(response) {
-             jQuery("#"+phenotypes_div).html(response.html);
+             jQuery("#"+phenotype_div).html(response.html);
        }
       } );
   }
@@ -89,9 +98,6 @@ $show_form => 0
 
 
 </script>
-
-<& /util/import_javascript.mas, classes=>[qw[ jqueryui popup] ]&>
-<div id = "<% $project_desc %>" >&nbsp;Loading..</div>
 
 % if ($show_form) {
 <div id="add_phenotype_form" style="display: none">
