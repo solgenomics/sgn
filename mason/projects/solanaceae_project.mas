@@ -37,7 +37,7 @@ framework. All texts and images can be used freely.</td>
 <&| /page/info_section.mas, title=>'SOL sites around the world' &>
 
 <ul>
-<li><a href="/solanaceae-project/afri-sol">AFRI-SOL</a> The African SOL initiative, focusing on African Solanaceae plants and information exchange.</li>
+<li><a href="http://www.afri-sol.net">AFRI-SOL</a> The African SOL initiative, focusing on African Solanaceae plants and information exchange.</li>
 <li><a href="http://cnia.inta.gov.ar/lat-sol/">Lat-SOL</a> - South American SOL laboratories<br /></li>
 <li><a href="http://www.srcuk.org/index.htm">SRCUK</a> - Solanaceae Research Community in the United Kingdom<br /></li>
 </ul>
@@ -73,7 +73,8 @@ framework. All texts and images can be used freely.</td>
 <&| /page/info_section.mas, title=>'SOL Newsletters' &>
 
   <ul>
-<li><a href="/static_content/solanaceae-project/docs/SOL_newsletter_Mar_12.pdf">March 2012</a> <b>(current issue)</b></li>
+<li><a href="/static_content/solanaceae-project/docs/SOL_newsletter_Oct_12.pdf">October 2012</a> <b>(current issue)</b></li>
+<li><a href="/static_content/solanaceae-project/docs/SOL_newsletter_Mar_12.pdf">March 2012</a> <b></b></li>
 <li><a href="/static_content/solanaceae-project/docs/SOL_newsletter_Oct_11.pdf">October 2011</a></li>
 <li><a href="/static_content/solanaceae-project/docs/SOL_newsletter_Jun_11.pdf">June 2011</a> <b></b></li>
 <li><a href="/static_content/solanaceae-project/docs/SOL_newsletter_Mar_11.pdf">March 2011</a></li>
