@@ -200,23 +200,27 @@ sub _analyze_correlation  {
     {
         mkpath ([$corre_temp_dir, $corre_image_dir], 0, 0755);  
     
-        my (undef, $heatmap_file)     = tempfile( "heatmap_${pop_id}-XXXXXX",
+        my ($fh_hm, $heatmap_file)     = tempfile( "heatmap_${pop_id}-XXXXXX",
                                                   DIR      => $corre_temp_dir,
                                                   SUFFIX   => '.png',
                                                   UNLINK   => 0,
                                                 );
+        $fh_hm->close;
+        
 
-        my (undef, $corre_table_file) = tempfile( "corre_table_${pop_id}-XXXXXX",
+        my ($fh_ct, $corre_table_file) = tempfile( "corre_table_${pop_id}-XXXXXX",
                                                   DIR      => $corre_temp_dir,
                                                   SUFFIX   => '.txt',
                                                   UNLINK   => 0,
                                                 );
-
+        $fh_ct->close;
+      
         CXGN::Tools::Run->temp_base($corre_temp_dir);
+        my ($fh_out, $filename);
         my ( $corre_commands_temp, $corre_output_temp ) =
             map
         {
-            my ( undef, $filename ) =
+            ($fh_out, $filename ) =
                 tempfile(
                     File::Spec->catfile(
                         CXGN::Tools::Run->temp_base(),
@@ -226,6 +230,8 @@ sub _analyze_correlation  {
                 );
             $filename
         } qw / in out /;
+
+        $fh_out->close;
 
         {
             my $corre_commands_file = $c->path_to('/cgi-bin/phenome/correlation.r');
