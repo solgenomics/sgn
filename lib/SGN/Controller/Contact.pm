@@ -18,12 +18,17 @@ sub form :Path('/contact/form') :Args(0) {
     my ($self, $c) = @_;
     my ($username, $useremail) = _load_user($c);
 
-    my $answer = $c->req->param("contact_form_human_answer");
-    my $check = $c->config->{contact_form_human_answer} eq $answer;
-    print STDERR "CHECK = $check!!!\n\n";
+   
+    $c->stash->{website_name} = $c->config->{project_name};
+    $c->stash->{contact_form_human_question}       = $c->config->{contact_form_human_question};
+    $c->stash->{contact_form_human_answer_correct} = 1;  # do not show warning on initial screen
+    $c->stash->{captcha_public_key}       = $c->config->{captcha_public_key};
+    $c->stash->{email_address_to_display} = $useremail;
+    $c->stash->{name} = $username;
     
-    my @prefill = grep defined, @{ $c->req->params }{'subject','body'};
-    _build_form_page($self, $c, $username, $useremail, $c->config->{contact_form_human_question}, $answer, $check, @prefill );
+     $c->stash->{template} = '/help/contact.mas';
+
+#    _build_form_page($self, $c, undef, undef, undef, undef, 1, undef, undef); #, $username, $useremail, $c->config->{contact_form_human_question}, $answer, $check, $c->req->param("subject"), $c->req->param("body") );
 }
 
 #Loads the user if he has an account
@@ -40,26 +45,26 @@ sub _load_user {
 
 #Builds a form with $name, $email, $subject, $body in the right line
 #If any undef, assigns ''
-sub _build_form_page {
-    my ($self, $c, $name, $email, $human_question, $human_answer, $check, $subject, $body) = @_;
-    $c->stash->{name}                     = $name if $name;
-    $c->stash->{email}                    = $email if $email;
-    $c->stash->{subject}                  = $subject if $subject;
-    $c->stash->{body}                     = $body if $body;
-    $c->stash->{email_address_to_display} = $c->config->{feedback_email};
-    $c->stash->{website_name}             = $c->config->{project_name};
-    $c->stash->{captcha_public_key}       = $c->config->{captcha_public_key};
-    $c->stash->{contact_form_human_question} = $c->config->{contact_form_human_question};
-    $c->stash->{contact_form_human_answer}   = $human_answer if $human_answer;
-    $c->stash->{contact_form_human_answer_correct} = $check;
-    $c->stash->{template}                 = '/help/contact.mas';
-}
+# sub _build_form_page {
+#     my ($self, $c, $name, $email, $human_question, $human_answer, $check, $subject, $body) = @_;
+#     $c->stash->{name}                     = $name if $name;
+#     $c->stash->{email}                    = $email if $email;
+#     $c->stash->{subject}                  = $subject if $subject;
+#     $c->stash->{body}                     = $body if $body;
+#     $c->stash->{email_address_to_display} = $c->config->{feedback_email};
+#     $c->stash->{website_name}             = $c->config->{project_name};
+#     $c->stash->{captcha_public_key}       = $c->config->{captcha_public_key};
+#     $c->stash->{contact_form_human_question} = $c->config->{contact_form_human_question};
+#     $c->stash->{contact_form_human_answer}   = $human_answer if $human_answer;
+#     $c->stash->{contact_form_human_answer_correct} = $check;
+#     $c->stash->{template}                 = '/help/contact.mas';
+# }
 
 sub submit :Path('/contact/submit') :Args(0)
 {
     my ($self, $c) = @_;
-    my ($name, $email, $subject, $body, $challenge, $response, $contact_form_human_question) =
-        map { $c->request->param($_) } qw/name email subject body recaptcha_challenge_field recaptcha_response_field contact_form_human_question /;
+    my ($name, $email, $subject, $body, $challenge, $response, $contact_form_human_answer) =
+        map { $c->request->param($_) } qw/name email subject body recaptcha_challenge_field recaptcha_response_field contact_form_human_answer /;
     
     my $captcha = Captcha::reCAPTCHA->new;
 
@@ -71,7 +76,7 @@ sub submit :Path('/contact/submit') :Args(0)
     #print STDERR "Captcha Result: ".$result->{is_valid}." (private key=".$c->config->{captcha_private_key}." Source address: ".$c->request->address()." Error: ".$result->{error}." ($challenge, $response)\n";
     my $project = $c->config->{project_name};
 
-    if ($contact_form_human_question eq $c->config->{contact_form_human_answer} and $name and $email and $subject and $body and ($result->{is_valid} || $ENV{SGN_TEST_MODE})) {
+    if ($contact_form_human_answer eq $c->config->{contact_form_human_answer} and $name and $email and $subject and $body and ($result->{is_valid} || $ENV{SGN_TEST_MODE})) {
 
 my $host = $c->request->hostname();
 my $client_ip = $c->request->address();
@@ -111,18 +116,29 @@ END_HEREDOC
        $c->stash->{message} = "Thank you. Your message has been sent.";
        $c->stash->{template} = "/generic_message.mas";
     } else {
-       my %info_fields = (
-            name    => $name,
-            email   => $email,
-            subject => $subject,
-            body    => $body
-        );
-       foreach my $category (keys %info_fields)
-       {
-         $c->stash->{filled}->{$category} = $info_fields{$category};
-       }
-       _build_form_page($self, $c, $name, $email, $subject, $body);
-    }
+    my %info_fields = (
+	name    => $name,
+	email   => $email,
+	subject => $subject,
+	body    => $body
+    );
+foreach my $category (keys %info_fields) {
+    $c->stash->{filled}->{$category} = $info_fields{$category};
+}
+
+$c->stash->{name} = $name;
+$c->stash->{email} = $email;
+$c->stash->{subject} = $subject;
+$c->stash->{body} = $body;
+$c->stash->{email_address_to_display} = $c->config->{feedback_email};
+$c->stash->{website_name} = $c->config->{project_name};
+$c->stash->{captcha_public_key} = $c->config->{captcha_public_key};
+$c->stash->{contact_form_human_question} = $c->config->{contact_form_human_question};
+$c->stash->{contact_form_human_answer}  = $contact_form_human_answer;
+$c->stash->{template} = '/help/contact.mas';
+
+#_build_form_page($self, $c, $name, $email, $c->config->{contact_form_human_question}, $contact_form_human_answer, 0, $subject, $body);
+}
 }
 
 __PACKAGE__->meta->make_immutable;

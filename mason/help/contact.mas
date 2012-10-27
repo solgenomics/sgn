@@ -58,15 +58,18 @@ Message body is required
 </td></tr>
 
 
-<tr><td>Are you human: What is <% $contact_form_human_question %>?</td>
+<tr><td><strong>Are you human?*</strong><br />What is <% $contact_form_human_question %>?</td>
 
 <td>
-% if (($contact_form_human_question  &&  !$contact_form_human_answer_correct)) { 
+% if (!$contact_form_human_answer_correct) { 
 <font style = "color:red; font-size: 10px;" align = "left" valign = "top">     
+% if (!$contact_form_human_answer) { 
+Prove that you are a human being is required<br /></font>
+% } else { 
 Either you are not human - or you are not very good at math! ;-)</font>
 <br />
-% } 
-
+%    }
+% }
   <input type="text" value="" name="contact_form_human_answer" size="4" />
 
 </td></tr>
