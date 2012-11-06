@@ -31,12 +31,16 @@ cortable<-grep("corre_table",
                value=TRUE
                )
 
+print(c("correlation table file:", cortable))
+
 heatmap<-grep("heatmap",
                allargs,
                ignore.case=TRUE,
                perl=TRUE,
                value=TRUE
                )
+
+print(c("heatmap file:", heatmap))
 
 #reading phenotype data into an R object
 phenodata<-read.csv(phenodata,
@@ -100,6 +104,9 @@ if ( apply(coefficients,
                                       )
                                ]
   }
+
+print("correlation coeffients:")
+print(coefficients)
 
 pvalues[upper.tri(pvalues)]<-NA
 coefficients[upper.tri(coefficients)]<-NA
