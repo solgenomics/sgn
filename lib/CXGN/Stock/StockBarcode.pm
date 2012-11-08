@@ -51,7 +51,7 @@ sub parse {
             $cvterm_accession = $1;
             $value = $2;
             if ($value) {
-                #do we allow multiple measurements per one plant per DAY ? 
+                #do we allow multiple measurements per one plant per DAY ?
                 $hashref->{$op_name}->{$date}->{$stock_id}->{$cvterm_accession} = $value;
             }
         }
@@ -59,7 +59,6 @@ sub parse {
             $value = $1;
             $hashref->{$op_name}->{$date}->{$stock_id}->{$cvterm_accession} .= $value;
         }
-        
         #OP:Lukas, 12:16:46, 12/11/2012
         #DATE:2012/11/12, 12:16:48, 12/11/2012
         #CB38783, 12:17:54, 12/11/2012
@@ -72,19 +71,16 @@ sub parse {
         #CO:0000014#4, 12:20:12, 12/11/2012
         ##1, 12:20:35, 12/11/2012
         ##2, 12:21:01, 12/11/2012
-
-        
-        #store file in tmpdir
-        #check file -> 
-        #ask user if wants to proceed
-        #store data
     }
+    $self->set_parsed_data($hashref);
 }
 
 sub verify {
     my $self = shift;
     #check is stock exists and if cvterm exists.
-    #print error only if stocks do not exist and the cvterms 
+    #print error only if stocks do not exist and the cvterms
+    my $data = $self->get_parsed_data;
+    
     my @errors;
     return @errors;
 }
@@ -94,3 +90,29 @@ sub store {
     my $schema = $self->schema;
 
 }
+
+=head2 accessors get_parsed_data, set_parsed_data
+
+ Usage:
+ Desc:
+ Property
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_parsed_data {
+  my $self = shift;
+  return $self->{parsed_data}; 
+}
+
+sub set_parsed_data {
+  my $self = shift;
+  $self->{parsed_data} = shift;
+}
+
+
+
+###
+1;#
+###
