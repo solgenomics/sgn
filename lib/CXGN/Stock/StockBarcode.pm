@@ -27,16 +27,19 @@ use Moose;
 use Bio::Chado::Schema;
 
 has 'schema' => (
-    is  => "rw",
+    is  => 'rw',
     isa =>  'DBIx::Class::Schema',
     );
 
+has 'parsed_data' => (
+    is => 'rw'
+    );
 
 sub parse {
     my $self = shift;
     my ($contents , $identifier_prefix, $db_name ) = shift;
     my $hashref; #hashref of hashrefs for storing the uploaded data , to be used for checking the fields
-    #$hashref->{$op_name}->{$date}->{$stock_name}->{$cvterm_id} = $value ;# multiple values oare overriden by last one? "unknown_date"
+    ## multiple values oare overriden by last one? "unknown_date"
     my ($op_name, $date, $stock_id, $cvterm_accession, $value);
     foreach my $line (@$contents) {
         my ($code, $time, $date) = split ",", $line;
@@ -72,16 +75,46 @@ sub parse {
         ##1, 12:20:35, 12/11/2012
         ##2, 12:21:01, 12/11/2012
     }
-    $self->set_parsed_data($hashref);
+    $self->parsed_data($hashref);
 }
 
 sub verify {
     my $self = shift;
+    my $schema = $self->schema;
     #check is stock exists and if cvterm exists.
     #print error only if stocks do not exist and the cvterms
-    my $data = $self->get_parsed_data;
-    
+    my $hashref = $self->parsed_data;
+    ## $hashref->{$op_name}->{$date}->{$stock_id}->{$cvterm_accession} = $value;
     my @errors;
+    foreach my $op (keys %$hashref) {
+        #keys %{$hashref->{normal_enemies}}
+        foreach my $date  (keys %{$hashref->{$op} } ) {
+            foreach my $stock_id (keys %{$hashref->{$op}->{$date} } ) {
+                #check if the stock exists
+                my $stock = $schema->resultset("Stock::Stock")->find( { stock_id => $stock_id } );
+                if (!$stock) { push @errors, "Stock $stock_id does not exist in the database!\n"; }
+                foreach my $cvterm_accession (keys %{$hashref->{$op}->{$date}->{$stock_id} } ) {
+                    my ($db_name, $accession) = split (/:/, $cvterm_accession);
+                    if (!$db_name) { push @errors, "could not find valid db_name in accession $cvterm_accession\n";}
+                    if (!$accession) { push @errors, "Could not find valid cvterm accession in $cvterm_accession\n";}
+                    #check if the cvterm exists
+                    my $db = $schema->resultset("General::Db")->search(
+                        { name => $db_name, } );
+                    if ($db) {
+                        my $dbxref = $db->search_related("dbxrefs", { accession => $accession, });
+                        if ($dbxref) {
+                            my $cvterm = $dbxref->search_related("cvterm")->single;
+                            if (!$cvterm) { push @errors, "NO cvterm found in the database for accession $cvterm_accession!\n"; }
+                        } else {
+                            push @errors, "No dbxref found for cvterm accession $accession\n";
+                        }
+                    } else {
+                        push @errors , "db_name $db_name does not exist in the database! \n";
+                    }
+                }
+            }
+        }
+    }
     return @errors;
 }
 
@@ -89,26 +122,6 @@ sub store {
     my $self = shift;
     my $schema = $self->schema;
 
-}
-
-=head2 accessors get_parsed_data, set_parsed_data
-
- Usage:
- Desc:
- Property
- Side Effects:
- Example:
-
-=cut
-
-sub get_parsed_data {
-  my $self = shift;
-  return $self->{parsed_data}; 
-}
-
-sub set_parsed_data {
-  my $self = shift;
-  $self->{parsed_data} = shift;
 }
 
 
