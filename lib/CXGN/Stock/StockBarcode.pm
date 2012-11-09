@@ -25,6 +25,7 @@ use strict;
 use warnings;
 use Moose;
 use Bio::Chado::Schema;
+use Try::Tiny;
 
 has 'schema' => (
     is  => 'rw',
@@ -121,81 +122,89 @@ sub store {
     my $self = shift;
     my $schema = $self->schema;
     my $hashref = $self->parsed_data;
-
-    # find the cvterm for a phenotyping experiment
-    my $pheno_cvterm = $schema->resultset('Cv::Cvterm')->create_with(
-        { name   => 'phenotyping experiment',
-          cv     => 'experiment type',
-          db     => 'null',
-          dbxref => 'phenotyping experiment',
-        });
-    ##
-    foreach my $op (keys %$hashref) {
-        foreach my $date  (keys %{$hashref->{$op} } ) {
-            foreach my $stock_id (keys %{$hashref->{$op}->{$date} } ) {
-                #check if the stock exists
-                foreach my $cvterm_accession (keys %{$hashref->{$op}->{$date}->{$stock_id} } ) {
-                    my $value = $hashref->{$op}->{$date}->{$stock_id}->{$cvterm_accession};
-                    my ($db_name, $accession) = split (/:/, $cvterm_accession);
-                    my $db = $schema->resultset("General::Db")->search(
-                        { name => $db_name, } );
-                    if ($db) {
-                        my $dbxref = $db->search_related("dbxrefs", { accession => $accession, });
-                        if ($dbxref) {
-                            my $cvterm = $dbxref->search_related("cvterm")->single;
-                            #now get the value and store the whole thing in the database!
-                            my $stock = $self->schema->resultset("Stock::Stock")->find( { stock_id => $stock_id});
-                            #my $project;
-                            my $location;
-                            my $year;
-                            my $geolocation = $schema->resultset("NaturalDiversity::NdGeolocation")->find_or_create(
-                                {
-                                    description => $location,
-                                    #latitude => $latitude,
-                                    #longitude => $longitude,
-                                    #geodetic_datum => $datum,
-                                    #altitude => $altitude,
-                                } ) ;
-                            #store a project- combination of location and year
-                            my $project = $schema->resultset("Project::Project")->find_or_create(
-                                {
-                                    name => "Cassava $location $year",
-                                    description => "Plants assayed at $location in $year",
-                                } ) ;
-                            ###store a new nd_experiment. One experiment per stock
-                            my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create(
-                                {
-                                    nd_geolocation_id => $geolocation->nd_geolocation_id(),
-                                    type_id => $pheno_cvterm->cvterm_id(),
-                                } );
-                            #link to the project
-                            $experiment->find_or_create_related('nd_experiment_projects', {
-                                project_id => $project->project_id()
-                                                                } );
-                            #link the experiment to the stock
-                            $experiment->find_or_create_related('nd_experiment_stocks' , {
-                                stock_id => $stock_id,
-                                type_id  =>  $pheno_cvterm->cvterm_id(),
-                                                                });
-                            #the date string is a property of the nd_experiment
-                            $experiment->create_nd_experimentprops(
-                                { date => $date } ,
-                                { autocreate => 1 , cv_name => 'local' }
-                                );
-                            my $uniquename = "Stock: " . $stock_id . ", trait: " . $cvterm->name . " date: $date" . " barcode operator = $op" ;
-                            my $phenotype = $cvterm->find_or_create_related(
-                                "phenotype_cvalues", {
-                                    observable_id => $cvterm->cvterm_id,
-                                    value => $value ,
-                                    uniquename => $uniquename,
-                                });
+    my $coderef = sub {
+        # find the cvterm for a phenotyping experiment
+        my $pheno_cvterm = $schema->resultset('Cv::Cvterm')->create_with(
+            { name   => 'phenotyping experiment',
+              cv     => 'experiment type',
+              db     => 'null',
+              dbxref => 'phenotyping experiment',
+            });
+        ##
+        foreach my $op (keys %$hashref) {
+            foreach my $date  (keys %{$hashref->{$op} } ) {
+                foreach my $stock_id (keys %{$hashref->{$op}->{$date} } ) {
+                    #check if the stock exists
+                    foreach my $cvterm_accession (keys %{$hashref->{$op}->{$date}->{$stock_id} } ) {
+                        my $value = $hashref->{$op}->{$date}->{$stock_id}->{$cvterm_accession};
+                        my ($db_name, $accession) = split (/:/, $cvterm_accession);
+                        my $db = $schema->resultset("General::Db")->search(
+                            { name => $db_name, } );
+                        if ($db) {
+                            my $dbxref = $db->search_related("dbxrefs", { accession => $accession, });
+                            if ($dbxref) {
+                                my $cvterm = $dbxref->search_related("cvterm")->single;
+                                #now get the value and store the whole thing in the database!
+                                my $stock = $self->schema->resultset("Stock::Stock")->find( { stock_id => $stock_id});
+                                #my $project;
+                                my $location;
+                                my $year;
+                                my $geolocation = $schema->resultset("NaturalDiversity::NdGeolocation")->find_or_create(
+                                    {
+                                        description => $location,
+                                        #latitude => $latitude,
+                                        #longitude => $longitude,
+                                        #geodetic_datum => $datum,
+                                        #altitude => $altitude,
+                                    } ) ;
+                                #store a project- combination of location and year
+                                my $project = $schema->resultset("Project::Project")->find_or_create(
+                                    {
+                                        name => "Cassava $location $year",
+                                        description => "Plants assayed at $location in $year",
+                                    } ) ;
+                                ###store a new nd_experiment. One experiment per stock
+                                my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create(
+                                    {
+                                        nd_geolocation_id => $geolocation->nd_geolocation_id(),
+                                        type_id => $pheno_cvterm->cvterm_id(),
+                                    } );
+                                #link to the project
+                                $experiment->find_or_create_related('nd_experiment_projects', {
+                                    project_id => $project->project_id()
+                                                                    } );
+                                #link the experiment to the stock
+                                $experiment->find_or_create_related('nd_experiment_stocks' , {
+                                    stock_id => $stock_id,
+                                    type_id  =>  $pheno_cvterm->cvterm_id(),
+                                                                    });
+                                #the date string is a property of the nd_experiment
+                                $experiment->create_nd_experimentprops(
+                                    { date => $date } ,
+                                    { autocreate => 1 , cv_name => 'local' }
+                                    );
+                                my $uniquename = "Stock: " . $stock_id . ", trait: " . $cvterm->name . " date: $date" . " barcode operator = $op" ;
+                                my $phenotype = $cvterm->find_or_create_related(
+                                    "phenotype_cvalues", {
+                                        observable_id => $cvterm->cvterm_id,
+                                        value => $value ,
+                                        uniquename => $uniquename,
+                                    });
+                            }
                         }
                     }
                 }
             }
         }
-    }
-
+    };
+    my $error;
+    try {
+        $schema->txn_do($coderef);
+    } catch {
+        # Transaction failed
+        $error =  "An error occured! Cannot store data! <br />" . $_ . "\n";
+    };
+    return $error;
 }
 
 ###
