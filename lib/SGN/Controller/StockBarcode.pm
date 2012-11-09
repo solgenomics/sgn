@@ -87,15 +87,16 @@ sub upload_barcode_output {
     my $db_name = $c->config->{trait_ontology_db_name};
     $sb->parse($contents, $identifier_prefix, $db_name);
     my @errors = $sb->verify;
-
-    $c->{template} = '/stock/barcode/upload_confirm.mas';
-    $c->{tempfile} = $tempfile;
-    $c->{errors} = \@errors;
-
+    $c->stash(
+        template => '/stock/barcode/upload_confirm.mas',
+        tempfile => $tempfile,
+        errors   => \@errors,
+        feedback_email => $c->config->{feedback_email},
+        );
 
 }
 
-sub store_barcode_output {
+sub store_barcode_output  : Path('/barcode/stock/store') :Args(0) {
     my ($self, $c) = shift;
     my $contents = $c->req->param('tempfile');
 
