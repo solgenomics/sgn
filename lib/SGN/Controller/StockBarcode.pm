@@ -2,6 +2,8 @@
 package SGN::Controller::StockBarcode;
 
 use Moose;
+
+use Bio::Chado::Schema::Result::Stock::Stock;
 use CXGN::Stock::StockBarcode;
 
 BEGIN { extends "Catalyst::Controller"; }
@@ -9,7 +11,7 @@ BEGIN { extends "Catalyst::Controller"; }
 use CXGN::ZPL;
 
 
-sub download_zdl_barcodes {
+sub download_zdl_barcodes : Path('/barcode/stock/download') :Args(0) {
     my $self = shift;
     my $c = shift;
 
@@ -18,24 +20,34 @@ sub download_zdl_barcodes {
 
     my $complete_list = $stock_names ."\n".$stock_names_file;
 
+    $complete_list =~ s/\r//g; 
     
     my @names = split /\n/, $complete_list;
 
-    my @non_existent;
+    my @not_found;
+    my @found;
     my @labels;
 
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    
     foreach my $name (@names) { 
 
+	# skip empty lines
+	#
 	if (!$name) { 
 	    next; 
 	}
 
-	my $stock = $c->dbic_schema('Stock::Stock')->find( { name=>$name });
+	my $stock = $schema->resultset("Stock::Stock")->find( { name=>$name });
+
+	if (!$stock) { 
+	    push @not_found, $name;
+	    next;
+	}
+
 	my $stock_id = $stock->stock_id();
 
-	if (!$stock_id) { 
-	    push @non_existent, $name;
-	}
+	push @found, $name;
 
 	# generate new label
 	#
@@ -46,12 +58,23 @@ sub download_zdl_barcodes {
 	push @labels, $label;
     }
 
-    foreach my $label (@labels) { 
-	print $label->render();
-    }
-	
-	
 
+    ####$c->res->content_type("text/download");
+
+    my $dir = $c->tempfiles_subdir('zpl');
+    my ($FH, $filename) = $c->tempfile(TEMPLATE=>"zpl/zpl-XXXXX", UNLINK=>0);
+
+    foreach my $label (@labels) { 
+	print STDERR "RENDERING LABEL ".$label->render()."\n";
+	print $FH $label->render();
+    }
+    close($FH);
+
+    $c->stash->{not_found} = \@not_found;
+    $c->stash->{found} = \@found;
+    $c->stash->{zpl_file} = $filename;
+    $c->stash->{template} = '/barcode/stock_download_result.mas';
+    
 }
 
 sub upload_barcode_output {
