@@ -1,6 +1,8 @@
 
-<h1>Sample barcode tools</h1>
+<& /page/page_title.mas, title=>"Barcode Tools" &>
 
+
+<&| /page/info_section.mas, title=>"Barcode Tools", collapsible=>1, collapsed=>0 &>
 <ul>
 <li><a href="/barcode/tool/CO:0000103/0.0/0,1,2,3">Anthocyanin pigmentation</a></li>
 
@@ -24,37 +26,34 @@
 
 <li><a href="/barcode/tool/CO:0000112/0.0/3,7">fruit exocarp texture</a></li>
 
+
 <li></li>
-<li></li>
-<li></li>
-<li></li>
-<li></li>
-<li></li>
-<li></li>
-<li></li>
-<li></li>
+
 
 </ul>
 
+</&>
 <br /><br />
-<hr />
 
-<h2>Genrate Metadata barcodes</h2>
+
+<&| /page/info_section.mas, title=>'Generate Metadata Barcode', collapsible=>1, collapsed=>0 &>
+
 <form action="/barcode/metadata" >
   <table>
     <tr><td>Operator name</td><td><input name="operator" /></td></tr>
     <tr><td>Date</td><td><input name="date" /> (FORMAT: YYYY/MM/DD)</td></tr>
   </table>
 
-  <input type="radio" name="size" value="small" clicked /> small<br />
-  <input type="radio" name="size" value="large" /> large<br />
+  <input type="radio" name="image_size" value="small" checked="1" /> small<br />
+  <input type="radio" name="image_size" value="large" /> large<br />
 
   <input type="submit" value="Generate barcode" />
   </form>
 
-<hr />
+</&>
 
-<h2>Generate continuous barcode</h2>
+
+<&| /page/info_section.mas, title=>'Generate Continuous Barcode', collapsible=>1, collapsed=>0 &>
 
 <form action="/barcode/continuous_scale" >
 <table>
@@ -68,17 +67,33 @@
 </form>
 <br />
 <br />
-<hr />
+</&>
 
-<h2>Generate regular barcode</h2>
+<&| /page/info_section.mas, title=>'Generate Barcode', collapsible=>1, collapsed=>0 &>
+
 <form action="/barcode/generate" >
   Barcode text <input name="text" /><br />
 
-  <input type="radio" name="size" value="small" clicked /> small<br />
-  <input type="radio" name="size" value="large" /> large<br />
+  <input type="radio" name="image_size" value="small" checked="1" /> small<br />
+  <input type="radio" name="image_size" value="large" /> large<br />
 
   <input type="submit" value="Generate barcode" />
   </form>
 
-
+</&>
   
+<&| /page/info_section.mas, title=>'Download Stock Barcodes', collapsible=>1, collapsed=>0 &>
+
+<form action="/barcode/stock/download" >
+
+Enter a list of stock names<br />
+<textarea name="stock_names" rows="10" cols="30">
+
+</textarea><br /><br />
+
+<input type="file" name="stock_names_file" /><br />
+<input type="submit" value="Download Barcodes" />
+
+</form>
+
+</&>
