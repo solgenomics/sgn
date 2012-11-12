@@ -13,7 +13,44 @@ sub download_zdl_barcodes {
     my $self = shift;
     my $c = shift;
 
-    #$c->schema('Stock::Stock')->
+    my $stock_names = $c->req->param("stock_names");
+    my $stock_names_file = $c->req->upload("stock_names_file");
+
+    my $complete_list = $stock_names ."\n".$stock_names_file;
+
+    
+    my @names = split /\n/, $complete_list;
+
+    my @non_existent;
+    my @labels;
+
+    foreach my $name (@names) { 
+
+	if (!$name) { 
+	    next; 
+	}
+
+	my $stock = $c->dbic_schema('Stock::Stock')->find( { name=>$name });
+	my $stock_id = $stock->stock_id();
+
+	if (!$stock_id) { 
+	    push @non_existent, $name;
+	}
+
+	# generate new label
+	#
+	my $label = CXGN::ZPL->new();
+	$label->start_format();
+	$label->barcode_code128($c->config->{identifier_prefix}.$stock_id);
+	$label->end_format();
+	push @labels, $label;
+    }
+
+    foreach my $label (@labels) { 
+	print $label->render();
+    }
+	
+	
 
 }
 
