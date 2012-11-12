@@ -1,5 +1,5 @@
 
-package ZPL;
+package CXGN::ZPL;
 
 use Moose;
 
@@ -162,9 +162,11 @@ sub add {
 sub render { 
     my $self = shift;
 
+    my $zpl = "";
     foreach my $c (@{$self->command_list()}) { 
-	print "$c\n";
+	 $zpl .= "$c\n";
     }
+    return $zpl;
 }
 
     
