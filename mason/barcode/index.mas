@@ -92,7 +92,8 @@ Enter a list of stock names<br />
 </textarea><br /><br />
 
 <input type="file" name="stock_names_file" /><br />
-<input type="submit" value="Download Barcodes" />
+<input type="reset" />&nbsp;&nbsp;<input type="submit" value="Download Barcodes" />
+
 
 </form>
 
