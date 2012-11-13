@@ -2,7 +2,6 @@
 package SGN::Controller::StockBarcode;
 
 use Moose;
-
 use Bio::Chado::Schema::Result::Stock::Stock;
 use CXGN::Stock::StockBarcode;
 
@@ -77,8 +76,8 @@ sub download_zdl_barcodes : Path('/barcode/stock/download') :Args(0) {
     
 }
 
-sub upload_barcode_output {
-    my ($self, $c) = shift;
+sub upload_barcode_output : Path('/breeders/phenotype/upload') :Args(0) {
+    my ($self, $c) = @_;
     my $upload = $c->req->upload('phenotype_file');
     my $contents = $upload->slurp;
     my $tempfile = $upload->tempname; #create a tempfile with the uploaded file
@@ -97,7 +96,7 @@ sub upload_barcode_output {
 }
 
 sub store_barcode_output  : Path('/barcode/stock/store') :Args(0) {
-    my ($self, $c) = shift;
+    my ($self, $c) = @_;
     my $contents = $c->req->param('tempfile');
 
     my $sb = CXGN::Stock::Barcode->new( { schema=> $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado') });
