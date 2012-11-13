@@ -4,6 +4,8 @@ package SGN::Controller::Barcode;
 
 use Moose;
 use GD;
+
+use DateTime;
 use Barcode::Code128;
 #use GD::Barcode::QRcode;
 use Tie::UrlEncoder;
@@ -16,6 +18,21 @@ sub index : Path('/barcode') Args(0) {
     my $self =shift;
     my $c = shift;
     
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+      # get projects
+    my @rows = $schema->resultset('Project::Project')->all();
+    my @projects = ();
+    foreach my $row (@rows) { 
+	push @projects, [ $row->project_id, $row->name, $row->description ];
+    }
+    $c->stash->{projects} = \@projects;
+    @rows = $schema->resultset('NaturalDiversity::NdGeolocation')->all();
+    my @locations = ();
+    foreach my $row (@rows) {
+	push @locations,  [ $row->nd_geolocation_id,$row->description ];
+    }
+    $c->stash->{locations} = \@locations;
+   
     $c->stash->{template}='/barcode/index.mas';
 }
 
@@ -26,12 +43,11 @@ sub barcode_image : Path('/barcode/image') Args(0) {
     my $code = $c->req->param("code");
     my $text = $c->req->param("text");
     my $size = $c->req->param("size");
-    my $top  = $c->req->param("top") || 30;
+    my $top  = $c->req->param("top");
     
     my $scale = 2;
     if ($size eq "small") { $scale = 1; }
-    if ($size eq "huge") { $scale = 3; }
-    
+    if ($size eq "huge") { $scale = 5; }
     my $barcode_object = Barcode::Code128->new();
     $barcode_object->barcode($code);
     $barcode_object->font('large');
@@ -222,15 +238,14 @@ sub generate_barcode : Path('/barcode/generate') Args(0) {
 sub metadata_barcodes : Path('/barcode/metadata') Args(0) { 
     my $self = shift;
     my $c = shift;
-    
-    my $operator = $c->req->param("operator");
-    my $date     = $c->req->param("date");
-    my $size     = $c->req->param("size");
 
-    $c->stash->{operator} = $operator;
-    $c->stash->{date}     = $date;
-    $c->stash->{size}     = $size;
     
+    
+    $c->stash->{operator} = $c->req->param("operator");
+    $c->stash->{date}     = $c->req->param("date");
+    $c->stash->{size}     = $c->req->param("size");
+    $c->stash->{project}  = $c->req->param("project");
+    $c->stash->{location} = $c->req->param("location");
 
     $c->stash->{template} = '/barcode/tool/metadata.mas';
 }
@@ -242,8 +257,6 @@ sub new_barcode_tool : Path('/barcode/tool/') Args(1) {
     my $term = shift;
 
     $c->stash->{template} = '/barcode/tool/'.$term.'.mas';
-
-
 }
 
 1;

@@ -2,14 +2,18 @@
 <%args>
 $operator
 $date
+$project
+$location
 $size => 'large'
 </%args>
 
 <%perl>
 use Tie::UrlEncoder;
+
 our %urlencode;
 my $encoded_operator = $urlencode{$operator};
 my $encoded_date     = $urlencode{$date};
+
 </%perl>
 
 <center>
@@ -21,7 +25,23 @@ my $encoded_date     = $urlencode{$date};
 <br />
 <br />
 
-<font size="7">Today's Date</font><br />
-
+<font size="7">Today's Date</font>
+<br />
 <img src="/barcode/image/?code=DATE:<% $encoded_date %>&size=<% $size %>" />
+
+<br />
+<br />
+
+<font size="7">Project</font>
+<br />
+<img src="/barcode/image/?code=PROJ:<% $project %>&size=<% $size %>" />
+
+<br />
+<br />
+
+<font size="7">Location</font>
+<br />
+<img src="/barcode/image/?code=LOC:<% $location %>&size=<% $size %>" />
+
+
 </center>

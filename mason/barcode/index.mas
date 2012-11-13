@@ -1,4 +1,20 @@
 
+<%doc>
+
+</%doc>
+
+<%args>
+@projects => ()   # [ id, name, description ]
+@locations => ()  # [ id, description ]
+</%args>
+
+<%perl>
+use DateTime;
+my $dt = DateTime->from_epoch( epoch=>time );
+my $date = join "/", ($dt->year, $dt->month, $dt->day);
+
+</%perl>
+
 <& /page/page_title.mas, title=>"Barcode Tools" &>
 
 
@@ -26,9 +42,7 @@
 
 <li><a href="/barcode/tool/CO:0000112/0.0/3,7">fruit exocarp texture</a></li>
 
-
 <li></li>
-
 
 </ul>
 
@@ -41,12 +55,15 @@
 <form action="/barcode/metadata" >
   <table>
     <tr><td>Operator name</td><td><input name="operator" /></td></tr>
-    <tr><td>Date</td><td><input name="date" /> (FORMAT: YYYY/MM/DD)</td></tr>
+    <tr><td>Date</td><td><input name="date" value="<% $date %>" /> (FORMAT: YYYY/MM/DD)</td></tr>
+    <tr><td>Location</td><td><& /page/html_select.mas, name=>'location', choices=>\@locations &></td></tr>
+    <tr><td>Project</td><td><& /page/html_select.mas, name=>'project', choices=>\@projects &></td></tr>
+
   </table>
 
   <input type="radio" name="image_size" value="small" checked="1" /> small<br />
   <input type="radio" name="image_size" value="large" /> large<br />
-
+  
   <input type="submit" value="Generate barcode" />
   </form>
 
