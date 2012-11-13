@@ -1,0 +1,26 @@
+
+
+<%args>
+@found => ()
+@not_found => ()
+$zpl_file => ''
+</%args>
+
+<& /page/page_title.mas, title=>'Download Barcodes' &>
+
+% if (!@not_found) { 
+  All stocks in the list have been found in the database. Please click the link below to download the barcode label file.<br />
+% }
+% else { 
+  The following <% scalar(@not_found) %> stocks were not found in the database:<br />
+%   foreach my $nf (@not_found) { 
+      <b><% $nf %></b>
+%   }
+    <br /><br />
+    The other <% scalar(@found) %> barcodes can be downloaded from the link below.
+% }
+
+
+<br /><br />
+<a href="<% $zpl_file %>" >Download ZPL file</a>
+
