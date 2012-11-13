@@ -23,5 +23,5 @@ my $encoded_date     = $urlencode{$date};
 
 <font size="7">Today's Date</font><br />
 
-<img src="/barcode/image/?code=DATE:<% $encoded_date %>&size=<% $size %> />
+<img src="/barcode/image/?code=DATE:<% $encoded_date %>&size=<% $size %>" />
 </center>
