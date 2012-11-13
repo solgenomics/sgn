@@ -27,7 +27,7 @@ $label => ''
 
 <%perl>
 use strict;
-use CXGN::Page::FormattingHelpers;
+use CXGN::Page::FormattingHelpers qw | simple_selectbox_html |;
 
 print simple_selectbox_html(
    name => $name,
