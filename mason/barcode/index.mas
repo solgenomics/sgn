@@ -56,8 +56,8 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
   <table>
     <tr><td>Operator name</td><td><input name="operator" /></td></tr>
     <tr><td>Date</td><td><input name="date" value="<% $date %>" /> (FORMAT: YYYY/MM/DD)</td></tr>
-    <tr><td>Location</td><td><& /page/html_select.mas, name=>'location', choices=>\@locations &></td></tr>
-    <tr><td>Project</td><td><& /page/html_select.mas, name=>'project', choices=>\@projects &></td></tr>
+    <tr><td>Location</td><td><& /page/html_select.mas, name=>'location', choices=>\@locations &> [<a href="/breeders/home">Add new location</a>]</td></tr> 
+    <tr><td>Project</td><td><& /page/html_select.mas, name=>'project', choices=>\@projects &> [<a href="/breeders/home">Add new project</a>]</td></tr>
 
   </table>
 
