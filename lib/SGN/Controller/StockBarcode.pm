@@ -81,7 +81,7 @@ sub upload_barcode_output : Path('/breeders/phenotype/upload') :Args(0) {
     my $upload = $c->req->upload('phenotype_file');
     my $contents = $upload->slurp;
     my $tempfile = $upload->tempname; #create a tempfile with the uploaded file
-    my $sb = CXGN::Stock::Barcode->new( { schema=> $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado') });
+    my $sb = CXGN::Stock::StockBarcode->new( { schema=> $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado') });
     my $identifier_prefix = $c->config->{identifier_prefix};
     my $db_name = $c->config->{trait_ontology_db_name};
     $sb->parse($contents, $identifier_prefix, $db_name);
