@@ -101,7 +101,7 @@ sub verify {
         foreach my $stock_id (keys %{$hashref->{$key}->{$date} } ) {
             #check if the stock exists
             my $stock = $schema->resultset("Stock::Stock")->find( { stock_id => $stock_id } );
-            if (!$stock) { push @errors, "Stock $stock_id does not exist in the database!\n"; }
+            if (!$stock->stock_id) { push @errors, "Stock $stock_id does not exist in the database!\n"; }
             foreach my $cvterm_accession (keys %{$hashref->{$key}->{$stock_id} } ) {
                 my ($db_name, $accession) = split (/:/, $cvterm_accession);
                 if (!$db_name) { push @errors, "could not find valid db_name in accession $cvterm_accession\n";}

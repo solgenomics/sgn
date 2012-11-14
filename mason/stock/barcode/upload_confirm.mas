@@ -19,6 +19,7 @@ Naama Menda <nm249@cornell.edu>
 @errors => ()
 $data => undef # formatted data to be printed on confirmation page
 $feedback_email
+$tempfile
 
 </%args>
 
@@ -26,7 +27,7 @@ $feedback_email
 
 my $err_string;
 
-if (@errors) {
+if (!@errors) {
     $err_string = "No errors found! Click the Confirm upload button to proceed";
 } else {
     $err_string .= "The following errors were found. Please correct and try again. <a href=\"mailto:$feedback_email\">Contact us</a> for assistance : <br />";
@@ -40,6 +41,8 @@ if (@errors) {
  <form action="/barcode/stock/store" method="POST" >
    <div> <% $err_string %> </div>
    <input type="hidden" name="type" value="confirm">
+   <input type="hidden" name="tempfile" value="<% $tempfile %>">
+
 %if (!@errors) {
    <input type = "submit" value = "Confirm upload">
 %}

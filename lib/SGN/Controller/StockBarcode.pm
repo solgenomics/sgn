@@ -81,13 +81,27 @@ sub upload_barcode_output : Path('/breeders/phenotype/upload') :Args(0) {
     my ($self, $c) = @_;
     my $upload = $c->req->upload('phenotype_file');
     my @contents = split /\n/, $upload->slurp;
+    my $basename = $upload->basename;
     my $tempfile = $upload->tempname; #create a tempfile with the uploaded file
+    if (! -e $tempfile) { 
+        die "The file does not exist!\n\n";
+    }
+    print STDERR "UPLOAD: basename = $basename, tempfile  = $tempfile \n\n";
+    my $archive_path = $c->config->{archive_path};
+   
+   
+    $tempfile = $archive_path . "/" . $basename ;
+    my $upload_err = $upload->copy_to($archive_path);
+    
+    print STDERR "....upload copy_to returns $upload_err .   archive_path =  $archive_path ,  tempfile  = $tempfile \n\n";
+
     my $sb = CXGN::Stock::StockBarcode->new( { schema=> $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado') });
     my $identifier_prefix = $c->config->{identifier_prefix};
     my $db_name = $c->config->{trait_ontology_db_name};
 
     $sb->parse(\@contents, $identifier_prefix, $db_name);
     my @errors = $sb->verify;
+    $c->stash->{tempfile} = $tempfile;
     $c->stash(
         template => '/stock/barcode/upload_confirm.mas',
         tempfile => $tempfile,
@@ -100,6 +114,7 @@ sub upload_barcode_output : Path('/breeders/phenotype/upload') :Args(0) {
 sub store_barcode_output  : Path('/barcode/stock/store') :Args(0) {
     my ($self, $c) = @_;
     my $filename = $c->req->param('tempfile');
+    print STDERR "@@@ file from param = $filename\n";
 
     my @contents = read_file($filename);
 
