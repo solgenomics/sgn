@@ -36,7 +36,7 @@ if (@errors) {
 </%perl>
 
 <& /page/page_title.mas, title => "Confirm barcode data upload" &>
-<&| /page/info_section.mas, title => "Confirm upload">
+<&| /page/info_section.mas, title => "Confirm upload" &>
  <form action="/barcode/stock/store" method="POST" >
    <div> <% $err_string %> </div>
    <input type="hidden" name="type" value="confirm">

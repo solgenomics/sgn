@@ -2,6 +2,7 @@
 package SGN::Controller::StockBarcode;
 
 use Moose;
+use File::Slurp;
 use Bio::Chado::Schema::Result::Stock::Stock;
 use CXGN::Stock::StockBarcode;
 
@@ -79,12 +80,13 @@ sub download_zdl_barcodes : Path('/barcode/stock/download') :Args(0) {
 sub upload_barcode_output : Path('/breeders/phenotype/upload') :Args(0) {
     my ($self, $c) = @_;
     my $upload = $c->req->upload('phenotype_file');
-    my $contents = $upload->slurp;
+    my @contents = split /\n/, $upload->slurp;
     my $tempfile = $upload->tempname; #create a tempfile with the uploaded file
     my $sb = CXGN::Stock::StockBarcode->new( { schema=> $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado') });
     my $identifier_prefix = $c->config->{identifier_prefix};
     my $db_name = $c->config->{trait_ontology_db_name};
-    $sb->parse($contents, $identifier_prefix, $db_name);
+
+    $sb->parse(\@contents, $identifier_prefix, $db_name);
     my @errors = $sb->verify;
     $c->stash(
         template => '/stock/barcode/upload_confirm.mas',
@@ -97,12 +99,14 @@ sub upload_barcode_output : Path('/breeders/phenotype/upload') :Args(0) {
 
 sub store_barcode_output  : Path('/barcode/stock/store') :Args(0) {
     my ($self, $c) = @_;
-    my $contents = $c->req->param('tempfile');
+    my $filename = $c->req->param('tempfile');
+
+    my @contents = read_file($filename);
 
     my $sb = CXGN::Stock::Barcode->new( { schema=> $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado') });
     my $identifier_prefix = $c->config->{identifier_prefix};
     my $db_name = $c->config->{trait_ontology_db_name};
-    $sb->parse($contents, $identifier_prefix, $db_name);
+    $sb->parse(\@contents, $identifier_prefix, $db_name);
     my $error = $sb->store;
 
     $c->stash(
