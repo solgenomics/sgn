@@ -100,7 +100,13 @@ sub upload_barcode_output : Path('/breeders/phenotype/upload') :Args(0) {
     my $db_name = $c->config->{trait_ontology_db_name};
 
     $sb->parse(\@contents, $identifier_prefix, $db_name);
-    my @errors = $sb->verify;
+    my $parse_errors = $sb->parse_errors;
+    $sb->verify;
+    my @verify_errors = $sb->verify_errors;
+    my @errors = @$parse_errors, @verify_errors;
+    foreach my $err (@errors) {
+        print STDERR "ERROR:: $err \n\n";
+    }
     $c->stash->{tempfile} = $tempfile;
     $c->stash(
         template => '/stock/barcode/upload_confirm.mas',

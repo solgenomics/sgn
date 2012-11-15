@@ -36,42 +36,69 @@ has 'parsed_data' => (
     is => 'rw'
     );
 
+has 'parse_errors' => (
+    is => 'rw'
+    );
+
+has 'verify_errors' => (
+    is => 'rw'
+    );
+
 sub parse {
     my $self = shift;
-    my ($contents , $identifier_prefix, $db_name ) = shift;
+    my @errors;
+    my ($contents , $identifier_prefix, $db_name ) = @_;
+    print STDERR "Identifier prefix = $identifier_prefix, db_name = $db_name\n";
     my $hashref; #hashref of hashrefs for storing the uploaded data , to be used for checking the fields
     ## multiple values are overriden by last one? "unknown_date"
-    my ($op_name, $project_id, $location_id, $stock_id, $cvterm_accession, $value);
+    my ($op_name, $project_id, $location_id, $stock_id, $cvterm_accession, $value, $date);
     foreach my $line (@$contents) {
-        my ($code, $time, $date) = split ",", $line;
+        my ($code, $time, $unused_date) = split ",", $line;
         if ($code =~ m/^O/) { #operator name
-            ($op_name, undef) = split(/:/, $code) ;
+            (undef, $op_name) = split(/:/, $code) ;
+            print STDERR "FOUND operator name $op_name\n";
+        }
+        if ($code =~ m/^D/) {
+            (undef, $date) = split(/:/, $code); #this date overrides the date recorded in each line
         }
         if ($code =~ m/^P/) { #project_id
-            ($project_id, undef) = split(/:/, $code) ;
+            print STDERR "Found project $code\n";
+            (undef, $project_id) = split(/:/, $code) ;
         }
         if ($code =~ m/^L/) { #nd_geolocation_id
-            ($location_id, undef) = split(/:/, $code) ;
+            print STDERR "Found location $code \n";
+            (undef, $location_id) = split(/:/, $code) ;
         }
-        if ($code =~m/^$identifier_prefix(\d+)/ ) {
+        if ($code =~ m/^$identifier_prefix(\d+)/ ) {
+            print STDERR "Found stock $code\n";
             $stock_id = $1;
         }
         if ($code =~ m/^($db_name:\d+)\#(.*)/ ) {
+            print STDERR "Found cvterm#value : $code \n";
             $cvterm_accession = $1;
             $value = $2;
             if ($value) {
+                print STDERR " ... parsing : $op_name \t $project_id \t $location_id \t $date .. stock_id = $stock_id accession = $cvterm_accession time = $time, value = $value \n\n";
                 #do we allow multiple measurements per one plant per DAY ?
                 $hashref->{$op_name . "\t" . $project_id . "\t" . $location_id . "\t" . $date}->{$stock_id}->{$cvterm_accession}->{time}  = $time;
                 $hashref->{$op_name . "\t" . $project_id . "\t" . $location_id . "\t" . $date}->{$stock_id}->{$cvterm_accession}->{value} = $value;
             }
         }
         if ($code =~ m/^\#(.*)/) { #this is for values types using the keypad, or by scanning multiples
+            print "Found keypad entry $code \n";
             $value = $1;
             $hashref->{$op_name . "\t" . $project_id . "\t" . $location_id . "\t" . $date}->{$stock_id}->{$cvterm_accession}->{time}  = $time; #replace the time to the latest recorded
             $hashref->{$op_name . "\t" . $project_id . "\t" . $location_id . "\t" . $date}->{$stock_id}->{$cvterm_accession}->{value} .= $value; #build the value string
         }
-        #OP:Lukas, 12:16:46, 12/11/2012
-        #DATE:2012/11/12, 12:16:48, 12/11/2012
+        if ($code !~ /^O|^P|^L|^D|^$identifier_prefix|^$db_name:\d+|^\#/ ) {
+            print STDERR  "Cannot find code ' $code ' in the database! \n\n";
+            push @errors, " Data ' $code ' cannot be stored in the database! \n Please check your barcode input\n";
+        }
+
+        #O:Lukas, 12:16:46, 12/11/2012
+        #P:1, 12:16:46, 12/11/2012
+        #L:1, 12:16:46, 12/11/2012
+        #D:2012/11/12, 12:16:48, 12/11/2012
         #CB38783, 12:17:54, 12/11/2012
         #CO:0000109#0, 12:18:06, 12/11/2012
         #CO:0000108#1, 12:18:51, 12/11/2012
@@ -84,6 +111,7 @@ sub parse {
         ##2, 12:21:01, 12/11/2012
     }
     $self->parsed_data($hashref);
+    $self->parse_errors(\@errors);
 }
 
 sub verify {
@@ -94,15 +122,21 @@ sub verify {
     my $hashref = $self->parsed_data;
     ##  $hashref->{$op_name . "\t" . $project_id . "\t" . $location_id . "\t" . $date}->{$stock_id}->{$cvterm_accession}->{time} = $time, ->{value} = $value
     my @errors;
+    my @verify;
     foreach my $key (keys %$hashref) {
-        my ($op, $project_id, $location_id, $date) = split /\t/, $key;
+        my ($op, $project_id, $location_id, $date) = split(/\t/, $key);
+        print STDERR "verify found key $key !!!!!!!\n\n";
+        print STDERR " ... . . . .op = $op, project_id = $project_id, location_id = $location_id, date = $date\n\n";
         if (!$project_id) { push @errors, "Did not scan a project name, will generate a new 'UNKNOWN' project"; }
         if (!$location_id) { push @errors, "Did not scan a location, will generate a new 'UNKNOWN' location"; }
         foreach my $stock_id (keys %{$hashref->{$key}->{$date} } ) {
             #check if the stock exists
+            print STDERR "Looking for stock_id $stock_id\n";
             my $stock = $schema->resultset("Stock::Stock")->find( { stock_id => $stock_id } );
             if (!$stock->stock_id) { push @errors, "Stock $stock_id does not exist in the database!\n"; }
             foreach my $cvterm_accession (keys %{$hashref->{$key}->{$stock_id} } ) {
+                #push @verify 
+                print STDERR "Looking for accession $cvterm_accession..\n";
                 my ($db_name, $accession) = split (/:/, $cvterm_accession);
                 if (!$db_name) { push @errors, "could not find valid db_name in accession $cvterm_accession\n";}
                 if (!$accession) { push @errors, "Could not find valid cvterm accession in $cvterm_accession\n";}
@@ -123,7 +157,10 @@ sub verify {
             }
         }
     }
-    return @errors;
+    foreach my $err (@errors) {
+        print STDERR " *!*!*!error = $err\n";
+    }
+    $self->verify_errors(\@errors);
 }
 
 sub store {
@@ -149,7 +186,7 @@ sub store {
                     my $value = $hashref->{$key}->{$stock_id}->{$cvterm_accession}->{value};
                     my ($db_name, $accession) = split (/:/, $cvterm_accession);
                     my $db = $schema->resultset("General::Db")->search(
-                        { name => $db_name, } );
+                        {'me.name' => $db_name, } );
                     if ($db) {
                         my $dbxref = $db->search_related("dbxrefs", { accession => $accession, });
                         if ($dbxref) {
@@ -159,7 +196,7 @@ sub store {
                             my $location;
                             if ($location_id) {
                                 $location = $schema->resultset("NaturalDiversity::NdGeolocation")->find(
-                                    { nd_geoloation_id => $location_id } );
+                                    { nd_geolocation_id => $location_id } );
                             } else {
                                 $location = "Unknown location";
                                 $location_id = $schema->resultset("NaturalDiversity::NdGeolocation")->find_or_create(
