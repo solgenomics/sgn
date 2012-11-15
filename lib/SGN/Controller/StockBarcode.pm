@@ -91,7 +91,7 @@ sub upload_barcode_output : Path('/breeders/phenotype/upload') :Args(0) {
    
    
     $tempfile = $archive_path . "/" . $basename ;
-    my $upload_err = $upload->copy_to($archive_path);
+    my $upload_err = $upload->copy_to($archive_path . "/" . $basename);
     
     print STDERR "....upload copy_to returns $upload_err .   archive_path =  $archive_path ,  tempfile  = $tempfile \n\n";
 
@@ -118,7 +118,7 @@ sub store_barcode_output  : Path('/barcode/stock/store') :Args(0) {
 
     my @contents = read_file($filename);
 
-    my $sb = CXGN::Stock::Barcode->new( { schema=> $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado') });
+    my $sb = CXGN::Stock::StockBarcode->new( { schema=> $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado') });
     my $identifier_prefix = $c->config->{identifier_prefix};
     my $db_name = $c->config->{trait_ontology_db_name};
     $sb->parse(\@contents, $identifier_prefix, $db_name);
