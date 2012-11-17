@@ -65,8 +65,7 @@ sub download_zdl_barcodes : Path('/barcode/stock/download') :Args(0) {
     my ($FH, $filename) = $c->tempfile(TEMPLATE=>"zpl/zpl-XXXXX", UNLINK=>0);
 
     foreach my $label (@labels) { 
-	print STDERR "RENDERING LABEL ".$label->render()."\n";
-	print $FH $label->render();
+        print $FH $label->render();
     }
     close($FH);
 
@@ -74,7 +73,7 @@ sub download_zdl_barcodes : Path('/barcode/stock/download') :Args(0) {
     $c->stash->{found} = \@found;
     $c->stash->{zpl_file} = $filename;
     $c->stash->{template} = '/barcode/stock_download_result.mas';
-    
+
 }
 
 sub upload_barcode_output : Path('/breeders/phenotype/upload') :Args(0) {
@@ -86,14 +85,10 @@ sub upload_barcode_output : Path('/breeders/phenotype/upload') :Args(0) {
     if (! -e $tempfile) { 
         die "The file does not exist!\n\n";
     }
-    print STDERR "UPLOAD: basename = $basename, tempfile  = $tempfile \n\n";
     my $archive_path = $c->config->{archive_path};
-   
-   
+
     $tempfile = $archive_path . "/" . $basename ;
     my $upload_err = $upload->copy_to($archive_path . "/" . $basename);
-    
-    print STDERR "....upload copy_to returns $upload_err .   archive_path =  $archive_path ,  tempfile  = $tempfile \n\n";
 
     my $sb = CXGN::Stock::StockBarcode->new( { schema=> $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado') });
     my $identifier_prefix = $c->config->{identifier_prefix};
@@ -104,14 +99,13 @@ sub upload_barcode_output : Path('/breeders/phenotype/upload') :Args(0) {
     $sb->verify;
     my $verify_errors = $sb->verify_errors;
     my @errors = @$parse_errors, @$verify_errors;
-    foreach my $err (@errors) {
-        print STDERR "ERROR:: $err \n\n";
-    }
+    my $warnings = $sb->warnings;
     $c->stash->{tempfile} = $tempfile;
     $c->stash(
         template => '/stock/barcode/upload_confirm.mas',
         tempfile => $tempfile,
         errors   => \@errors,
+        warnings => $warnings,
         feedback_email => $c->config->{feedback_email},
         );
 
@@ -120,8 +114,7 @@ sub upload_barcode_output : Path('/breeders/phenotype/upload') :Args(0) {
 sub store_barcode_output  : Path('/barcode/stock/store') :Args(0) {
     my ($self, $c) = @_;
     my $filename = $c->req->param('tempfile');
-    print STDERR "@@@ file from param = $filename\n";
-
+    
     my @contents = read_file($filename);
 
     my $sb = CXGN::Stock::StockBarcode->new( { schema=> $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado') });

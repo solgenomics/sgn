@@ -43,6 +43,9 @@ has 'parse_errors' => (
 has 'verify_errors' => (
     is => 'rw'
     );
+has 'warnings' => (
+    is => 'rw'
+    );
 
 sub parse {
     my $self = shift;
@@ -123,12 +126,13 @@ sub verify {
     ##  $hashref->{$op_name . "\t" . $project_id . "\t" . $location_id . "\t" . $date}->{$stock_id}->{$cvterm_accession}->{time} = $time, ->{value} = $value
     my @errors;
     my @verify;
+    my @warnings;
     foreach my $key (keys %$hashref) {
         my ($op, $project_id, $location_id, $date) = split(/\t/, $key);
         print STDERR "verify found key $key !!!!!!!\n\n";
         print STDERR " ... . . . .op = $op, project_id = $project_id, location_id = $location_id, date = $date\n\n";
-        if (!$project_id) { push @errors, "Did not scan a project name, will generate a new 'UNKNOWN' project"; }
-        if (!$location_id) { push @errors, "Did not scan a location, will generate a new 'UNKNOWN' location"; }
+        if (!$project_id) { push @warnings, "Did not scan a project name, will generate a new 'UNKNOWN' project"; }
+        if (!$location_id) { push @warnings, "Did not scan a location, will generate a new 'UNKNOWN' location"; }
         foreach my $stock_id (keys %{$hashref->{$key}->{$date} } ) {
             #check if the stock exists
             print STDERR "Looking for stock_id $stock_id\n";
@@ -160,6 +164,7 @@ sub verify {
     foreach my $err (@errors) {
         print STDERR " *!*!*!error = $err\n";
     }
+    $self->warnings(\@warnings);
     $self->verify_errors(\@errors);
 }
 

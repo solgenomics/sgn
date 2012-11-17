@@ -17,6 +17,7 @@ Naama Menda <nm249@cornell.edu>
 <%args>
 
 @errors => ()
+@warnings => ()
 $data => undef # formatted data to be printed on confirmation page
 $feedback_email
 $tempfile
@@ -27,6 +28,7 @@ $tempfile
 
 my $err_string;
 
+my $warning_string = join "<br />" , @warnings;
 if (!@errors) {
     $err_string = "No errors found! Click the Confirm upload button to proceed";
 } else {
@@ -39,7 +41,10 @@ if (!@errors) {
 <& /page/page_title.mas, title => "Confirm barcode data upload" &>
 <&| /page/info_section.mas, title => "Confirm upload" &>
  <form action="/barcode/stock/store" method="POST" >
-   <div> <% $err_string %> </div>
+   <h4>Warnings</h4><div> <% $warning_string %> </div>
+   <br />
+   <h4>Errors</h4><div> <% $err_string %> </div>
+   <br />
    <input type="hidden" name="type" value="confirm">
    <input type="hidden" name="tempfile" value="<% $tempfile %>">
 
