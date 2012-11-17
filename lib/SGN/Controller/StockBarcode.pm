@@ -102,8 +102,8 @@ sub upload_barcode_output : Path('/breeders/phenotype/upload') :Args(0) {
     $sb->parse(\@contents, $identifier_prefix, $db_name);
     my $parse_errors = $sb->parse_errors;
     $sb->verify;
-    my @verify_errors = $sb->verify_errors;
-    my @errors = @$parse_errors, @verify_errors;
+    my $verify_errors = $sb->verify_errors;
+    my @errors = @$parse_errors, @$verify_errors;
     foreach my $err (@errors) {
         print STDERR "ERROR:: $err \n\n";
     }
