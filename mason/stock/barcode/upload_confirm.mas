@@ -34,6 +34,8 @@ if (!@errors) {
 } else {
     $err_string .= "The following errors were found. Please correct and try again. <a href=\"mailto:$feedback_email\">Contact us</a> for assistance : <br />";
     $err_string .= join "<br />" , @errors;
+    $err_string .= "<h4>Cannot continue with uploading.</h4>";
+    $err_string .= qq|<a href="javascript:history.back()">Go back to upload page</a>|;
 }
 
 </%perl>

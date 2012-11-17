@@ -56,6 +56,7 @@ sub parse {
     ## multiple values are overriden by last one? "unknown_date"
     my ($op_name, $project_id, $location_id, $stock_id, $cvterm_accession, $value, $date);
     foreach my $line (@$contents) {
+        chomp $line;
         my ($code, $time, $unused_date) = split ",", $line;
         if ($code =~ m/^O/) { #operator name
             (undef, $op_name) = split(/:/, $code) ;
@@ -81,7 +82,7 @@ sub parse {
             $cvterm_accession = $1;
             $value = $2;
             if ($value) {
-                print STDERR " ... parsing : $op_name \t $project_id \t $location_id \t $date .. stock_id = $stock_id accession = $cvterm_accession time = $time, value = $value \n\n";
+                print STDERR " **** parse ... parsing : $op_name \t $project_id \t $location_id \t $date .. stock_id = $stock_id accession = $cvterm_accession time = $time, value = $value \n\n";
                 #do we allow multiple measurements per one plant per DAY ?
                 $hashref->{$op_name . "\t" . $project_id . "\t" . $location_id . "\t" . $date}->{$stock_id}->{$cvterm_accession}->{time}  = $time;
                 $hashref->{$op_name . "\t" . $project_id . "\t" . $location_id . "\t" . $date}->{$stock_id}->{$cvterm_accession}->{value} = $value;
@@ -129,24 +130,24 @@ sub verify {
     my @warnings;
     foreach my $key (keys %$hashref) {
         my ($op, $project_id, $location_id, $date) = split(/\t/, $key);
-        print STDERR "verify found key $key !!!!!!!\n\n";
-        print STDERR " ... . . . .op = $op, project_id = $project_id, location_id = $location_id, date = $date\n\n";
+        print STDERR "***** verify found key $key !!!!!!!\n\n";
+        print STDERR "verify :  ... . . . .op = $op, project_id = $project_id, location_id = $location_id, date = $date\n\n";
         if (!$project_id) { push @warnings, "Did not scan a project name, will generate a new 'UNKNOWN' project"; }
         if (!$location_id) { push @warnings, "Did not scan a location, will generate a new 'UNKNOWN' location"; }
-        foreach my $stock_id (keys %{$hashref->{$key}->{$date} } ) {
+        foreach my $stock_id (keys %{$hashref->{$key} } ) {
             #check if the stock exists
-            print STDERR "Looking for stock_id $stock_id\n";
+            print STDERR "verify .. Looking for stock_id $stock_id\n";
             my $stock = $schema->resultset("Stock::Stock")->find( { stock_id => $stock_id } );
-            if (!$stock->stock_id) { push @errors, "Stock $stock_id does not exist in the database!\n"; }
+            if (!$stock) { push @errors, "Stock $stock_id does not exist in the database!\n"; }
             foreach my $cvterm_accession (keys %{$hashref->{$key}->{$stock_id} } ) {
                 #push @verify 
-                print STDERR "Looking for accession $cvterm_accession..\n";
+                print STDERR "verify ... Looking for accession $cvterm_accession..\n";
                 my ($db_name, $accession) = split (/:/, $cvterm_accession);
                 if (!$db_name) { push @errors, "could not find valid db_name in accession $cvterm_accession\n";}
                 if (!$accession) { push @errors, "Could not find valid cvterm accession in $cvterm_accession\n";}
                 #check if the cvterm exists
                 my $db = $schema->resultset("General::Db")->search(
-                    { name => $db_name, } );
+                    { 'me.name' => $db_name, } );
                 if ($db) {
                     my $dbxref = $db->search_related("dbxrefs", { accession => $accession, });
                     if ($dbxref) {
@@ -161,10 +162,10 @@ sub verify {
             }
         }
     }
+    $self->warnings(\@warnings);
     foreach my $err (@errors) {
         print STDERR " *!*!*!error = $err\n";
     }
-    $self->warnings(\@warnings);
     $self->verify_errors(\@errors);
 }
 

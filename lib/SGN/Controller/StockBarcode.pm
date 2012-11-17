@@ -96,9 +96,9 @@ sub upload_barcode_output : Path('/breeders/phenotype/upload') :Args(0) {
 
     $sb->parse(\@contents, $identifier_prefix, $db_name);
     my $parse_errors = $sb->parse_errors;
-    $sb->verify;
+    $sb->verify; #calling the verify function
     my $verify_errors = $sb->verify_errors;
-    my @errors = @$parse_errors, @$verify_errors;
+    my @errors = (@$parse_errors, @$verify_errors);
     my $warnings = $sb->warnings;
     $c->stash->{tempfile} = $tempfile;
     $c->stash(
