@@ -121,13 +121,12 @@ sub store_barcode_output  : Path('/barcode/stock/store') :Args(0) {
     my $identifier_prefix = $c->config->{identifier_prefix};
     my $db_name = $c->config->{trait_ontology_db_name};
     $sb->parse(\@contents, $identifier_prefix, $db_name);
-    my $error = $sb->store;
-
+    $sb->store;
+    my $error = $sb->store_error;
     $c->stash(
         template => '/stock/barcode/confirm_store.mas',
         error    => $error,
         );
-
 }
 
 ###

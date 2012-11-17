@@ -46,6 +46,9 @@ has 'verify_errors' => (
 has 'warnings' => (
     is => 'rw'
     );
+has 'store_error' => (
+    is => 'rw'
+    );
 
 sub parse {
     my $self = shift;
@@ -181,57 +184,70 @@ sub store {
               db     => 'null',
               dbxref => 'phenotyping experiment',
             });
+        print STDERR " ***store: phenotyping experiment cvterm = " . $pheno_cvterm->cvterm_id . "\n";
         ##
         ##  $hashref->{$op_name . "\t" . $project_id . "\t" . $location_id . "\t" . $date}->{$stock_id}->{$cvterm_accession}->{time} = $time, ->{value} = $value
         foreach my $key (keys %$hashref) {
             my ($op, $project_id, $location_id, $date) = split /\t/, $key;
+            print STDERR " *** store: op = $op, project_id = $project_id, location_id = $location_id, date = $date\n";
             foreach my $stock_id (keys %{$hashref->{$key} } ) {
-                #check if the stock exists
+                print STDERR " *** store: loading information for stock $stock_id \n";
                 foreach my $cvterm_accession (keys %{$hashref->{$key}->{$stock_id} } ) {
+                    print STDERR " ** store: cvterm_accession = $cvterm_accession\n";
                     my $time = $hashref->{$key}->{$stock_id}->{$cvterm_accession}->{time};
                     my $value = $hashref->{$key}->{$stock_id}->{$cvterm_accession}->{value};
+                    print STDERR " ** store: time = $time, value = $value\n";
                     my ($db_name, $accession) = split (/:/, $cvterm_accession);
                     my $db = $schema->resultset("General::Db")->search(
                         {'me.name' => $db_name, } );
+                    print STDERR " ** store: found db $db_name , accession = $accession \n";
                     if ($db) {
                         my $dbxref = $db->search_related("dbxrefs", { accession => $accession, });
                         if ($dbxref) {
                             my $cvterm = $dbxref->search_related("cvterm")->single;
                             #now get the value and store the whole thing in the database!
                             my $stock = $self->schema->resultset("Stock::Stock")->find( { stock_id => $stock_id});
-                            my $location;
+                            my ($location, $project);
                             if ($location_id) {
                                 $location = $schema->resultset("NaturalDiversity::NdGeolocation")->find(
                                     { nd_geolocation_id => $location_id } );
                             } else {
-                                $location = "Unknown location";
-                                $location_id = $schema->resultset("NaturalDiversity::NdGeolocation")->find_or_create(
+                                my $location_desc = "Unknown location";
+                                $location = $schema->resultset("NaturalDiversity::NdGeolocation")->find_or_create(
                                     {
                                         description => $location,
-                                    } )->get_column('nd_geolocation_id') ;
+                                    } );
+                                $location_id = $location->get_column('nd_geolocation_id') ;
+                                print STDERR " ** store loaded location " . $location->description . "\n" ;
                             }
                             if (!$project_id) {
-                                $project_id = $schema->resultset("Project::Project")->find_or_create(
+                                $project = $schema->resultset("Project::Project")->find_or_create(
                                     {
                                         name => "Unknown project ($date)",
-                                        description => "Plants assayed at $location in date $date",
-                                    } )->get_column('project_id') ;
+                                        description => "Plants assayed at " . $location->description . " in date $date",
+                                    } );
+                                $project_id = $project->project_id ;
+                                print STDERR " ** store: loaded new project " . $project->name . "\n";
                             }
+                            print STDERR " ** store: location = $location_id, project = $project_id\n";
                             ###store a new nd_experiment. One experiment per stock
                             my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create(
                                 {
                                     nd_geolocation_id => $location_id,
                                     type_id => $pheno_cvterm->cvterm_id(),
                                 } );
+                            print STDERR " ** store: created new experiment " . $experiment->nd_experiment_id . "\n";
                             #link to the project
                             $experiment->find_or_create_related('nd_experiment_projects', {
                                 project_id => $project_id
                                                                 } );
+                            print STDERR " ** store: linking experiment " . $experiment->nd_experiment_id . " with project $project_id \n";
                             #link the experiment to the stock
                             $experiment->find_or_create_related('nd_experiment_stocks' , {
                                 stock_id => $stock_id,
-                                type_id  =>  $pheno_cvterm->cvterm_id(),
+                                type_id  =>  $pheno_cvterm->cvterm_id,
                                                                 });
+                            print STDERR " ** store: linking experiment " . $experiment->nd_experiment_id . " to stock $stock_id \n";
                             #the date and time string is a property of the nd_experiment
                             $experiment->create_nd_experimentprops(
                                 { date => $date } ,
@@ -241,6 +257,7 @@ sub store {
                                 { time => $time } ,
                                 { autocreate => 1 , cv_name => 'local' }
                                 );
+                            print STDERR " ***  store: created cvtermprops for date ($date) and time ($time)\n";
                             my $uniquename = "Stock: " . $stock_id . ", trait: " . $cvterm->name . " date: $date" . " barcode operator = $op" ;
                             my $phenotype = $cvterm->find_or_create_related(
                                 "phenotype_cvalues", {
@@ -248,6 +265,10 @@ sub store {
                                     value => $value ,
                                     uniquename => $uniquename,
                                 });
+                            print STDERR " ** store: added phenotype value $value , observable = " . $cvterm->name ." uniquename = $uniquename \n";
+                            #link the phenotpe to the experiment
+                            $experiment->find_or_create_related('nd_experiment_phenotypes' , {
+                                phenotype_id => $phenotype->phenotype_id });
                         }
                     }
                 }
@@ -262,7 +283,7 @@ sub store {
         # Transaction failed
         $error =  "An error occured! Cannot store data! <br />" . $_ . "\n";
     };
-    return $error;
+    $self->store_error($error);
 }
 
 ###
