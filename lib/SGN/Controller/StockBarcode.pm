@@ -123,9 +123,11 @@ sub store_barcode_output  : Path('/barcode/stock/store') :Args(0) {
     $sb->parse(\@contents, $identifier_prefix, $db_name);
     $sb->store;
     my $error = $sb->store_error;
+    my $message = $sb->store_message;
     $c->stash(
         template => '/stock/barcode/confirm_store.mas',
         error    => $error,
+        message  => $message,
         );
 }
 

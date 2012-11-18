@@ -49,6 +49,9 @@ has 'warnings' => (
 has 'store_error' => (
     is => 'rw'
     );
+has 'store_message' => (
+    is => 'rw'
+    );
 
 sub parse {
     my $self = shift;
@@ -84,7 +87,7 @@ sub parse {
             print STDERR "Found cvterm#value : $code \n";
             $cvterm_accession = $1;
             $value = $2;
-            if ($value) {
+            if ( defined($value) && ($value ne '') ) { #need to include 0
                 print STDERR " **** parse ... parsing : $op_name \t $project_id \t $location_id \t $date .. stock_id = $stock_id accession = $cvterm_accession time = $time, value = $value \n\n";
                 #do we allow multiple measurements per one plant per DAY ?
                 $hashref->{$op_name . "\t" . $project_id . "\t" . $location_id . "\t" . $date}->{$stock_id}->{$cvterm_accession}->{time}  = $time;
@@ -176,6 +179,8 @@ sub store {
     my $self = shift;
     my $schema = $self->schema;
     my $hashref = $self->parsed_data;
+    my $message;
+
     my $coderef = sub {
         # find the cvterm for a phenotyping experiment
         my $pheno_cvterm = $schema->resultset('Cv::Cvterm')->create_with(
@@ -207,6 +212,7 @@ sub store {
                             my $cvterm = $dbxref->search_related("cvterm")->single;
                             #now get the value and store the whole thing in the database!
                             my $stock = $self->schema->resultset("Stock::Stock")->find( { stock_id => $stock_id});
+                            my $stock_name = $stock->name;
                             my ($location, $project);
                             if ($location_id) {
                                 $location = $schema->resultset("NaturalDiversity::NdGeolocation")->find(
@@ -269,6 +275,7 @@ sub store {
                             #link the phenotpe to the experiment
                             $experiment->find_or_create_related('nd_experiment_phenotypes' , {
                                 phenotype_id => $phenotype->phenotype_id });
+                            $message .= "Added phenotype: trait= " . $cvterm->name . ", value = $value, to stock " . qq|<a href="/stock/$stock_id/view">$stock_name</a><br />| ;
                         }
                     }
                 }
@@ -284,6 +291,7 @@ sub store {
         $error =  "An error occured! Cannot store data! <br />" . $_ . "\n";
     };
     $self->store_error($error);
+    $self->store_message($message);
 }
 
 ###

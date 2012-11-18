@@ -17,6 +17,7 @@ Naama Menda <nm249@cornell.edu>
 $error => undef
 $data => undef # formatted data to be printed on confirmation page
 $feedback_email => undef
+$message => undef
 
 </%args>
 
@@ -26,6 +27,7 @@ $feedback_email => undef
 
 <& /page/page_title.mas, title => "Store uploaded barcode data" &>
 <&| /page/info_section.mas, title => "Upload status" &>
-    <div> <% $error %> </div>
+    <h4><div> <% $error %> </div></h4>
+    <div> <% $message %></div>
   </form>
 </&>
