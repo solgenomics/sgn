@@ -55,7 +55,7 @@ print<<END_HEREDOC;
 
     <p dir="ltr" style="text-align: left">For more information,
     please visit the Dr. Bradford's <a href=
-    "http://veghome.ucdavis.edu/veghome/Faculty/bradford/bradford.htm">website</a>
+    "http://www.plantsciences.ucdavis.edu/bradford/bradford.htm">website</a>
     at UC Davis.</p>
   </div>
 END_HEREDOC
