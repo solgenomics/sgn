@@ -4,6 +4,7 @@
 </%doc>
 
 <%args>
+@tools_def => ()
 @projects => ()   # [ id, name, description ]
 @locations => ()  # [ id, description ]
 </%args>
@@ -17,10 +18,9 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
 
 <& /page/page_title.mas, title=>"Barcode Tools" &>
 
-
 <&| /page/info_section.mas, title=>"Barcode Tools", collapsible=>1, collapsed=>0 &>
 
-<& /barcode/tool/list.mas &>
+<& /barcode/tool/list.mas, tools_def=>\@tools_def &>
 
 </&>
 <br /><br />

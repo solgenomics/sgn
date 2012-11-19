@@ -6,6 +6,7 @@ use Moose;
 use GD;
 
 use DateTime;
+use File::Slurp;
 use Barcode::Code128;
 #use GD::Barcode::QRcode;
 use Tie::UrlEncoder;
@@ -19,7 +20,7 @@ sub index : Path('/barcode') Args(0) {
     my $c = shift;
     
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-      # get projects
+    # get projects
     my @rows = $schema->resultset('Project::Project')->all();
     my @projects = ();
     foreach my $row (@rows) { 
@@ -31,9 +32,18 @@ sub index : Path('/barcode') Args(0) {
     foreach my $row (@rows) {
 	push @locations,  [ $row->nd_geolocation_id,$row->description ];
     }
+
+    # get tool description info
+    #
+    my @tools_def = read_file($c->path_to("../cassava/documents/barcode/tools.def"));
+
+    print STDERR join "\n", @tools_def;
+
+    $c->stash->{tools_def} = \@tools_def;
+
     $c->stash->{locations} = \@locations;
    
-    $c->stash->{template}='/barcode/index.mas';
+    $c->stash->{template} = '/barcode/index.mas';
 }
 
 sub barcode_image : Path('/barcode/image') Args(0) { 
@@ -162,8 +172,8 @@ sub barcode_tool :Path('/barcode/tool') Args(3) {
     my $cvterm_rs = $c->dbic_schema('Bio::Chado::Schema')->resultset('Cv::Cvterm')->search( { dbxref_id => $dbxref_rs->first->dbxref_id });
 
     my $cvterm_id = $cvterm_rs->first()->cvterm_id();
-   my $cvterm_synonym_rs = ""; #$c->dbic_schema('Bio::Chado::Schema')->resultset('Cv::Cvtermsynonym')->search->( { cvterm_id=>$cvterm_id });
-
+    my $cvterm_synonym_rs = ""; #$c->dbic_schema('Bio::Chado::Schema')->resultset('Cv::Cvtermsynonym')->search->( { cvterm_id=>$cvterm_id });
+    
     $c->stash->{cvterm} = $cvterm;
     $c->stash->{cvterm_name} = $cvterm_rs->first()->name();
     $c->stash->{cvterm_definition} = $cvterm_rs->first()->definition();
