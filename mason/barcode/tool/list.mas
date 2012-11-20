@@ -25,10 +25,44 @@ Lukas Mueller
 <table title="available barcode tools">
 <%perl>
 
-foreach my $tool (@tools_def) { 
-   my ($cvterm, $version, $values, $description) = split /\t/, $tool;
-   print qq{ <tr><td>$cvterm</td><td width="20">&nbsp;</td><td><a href=\"/barcode/tool/$cvterm/$version/$values\">$description</a></td></tr> };
+my @priority_tools;
+my @other_tools;
+
+foreach my $tool (@tools_def) {
+
+  if ($tool =~ /^\#/) { next; }
+  
+  my ($cvterm, $version, $priority, $values, $description) = split /\t/, $tool;
+  
+  print STDERR "TRAIT: $cvterm, $priority\n\n";
+
+  if ($priority) {
+    print STDERR "PRIORITY!!!!\n";
+    push @priority_tools, [ $cvterm, $version, $values, $description ];
+  }
+  else {
+    push @other_tools, [ $cvterm, $version, $values, $description ];
+  }
+}
+
+print qq { <table title="Priority Tools"> };
+print qq { <tr><td colspan="3"><h4>Priority Tools</h4></td></tr> };
+foreach my $t (@priority_tools) {
+  print qq{ <tr><td>$t->[0]</td><td width="20">&nbsp;</td><td><a href=\"/barcode/tool/$t->[0]/$t->[1]/$t->[2]\">$t->[3]</a></td></tr> };
 }
 
 </%perl>
 </table>
+<br /><br />
+<&| /page/info_section.mas, title=>"Other tools", is_subsection=>1, collapsible=>1, collapsed=>1 &>
+
+<table>
+
+<%perl>
+foreach my $t (@other_tools) {
+  print qq{ <tr><td>$t->[0]</td><td width="20">&nbsp;</td><td><a href=\"/barcode/tool/$t->[0]/$t->[1]/$t->[2]\">$t->[3]</a></td></tr> };
+}
+</%perl>
+</table>
+
+</&>
