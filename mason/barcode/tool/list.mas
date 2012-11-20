@@ -1,0 +1,34 @@
+
+<%doc>
+
+=head1 NAME /barcode/tool/list.mas
+
+Mason component that defines and lists available barcode tools.
+
+=head1 DESCRIPTION
+
+@tools_def: list of listrefs with cvterm, version, values, description, [ image_ids ] 
+
+=head1 AUTHOR
+
+Lukas Mueller
+
+=cut
+
+</%doc>
+
+<%args>
+@tools_def => ()
+</%args>
+
+
+<table title="available barcode tools">
+<%perl>
+
+foreach my $tool (@tools_def) { 
+   my ($cvterm, $version, $values, $description) = split /\t/, $tool;
+   print qq{ <tr><td>$cvterm</td><td width="20">&nbsp;</td><td><a href=\"/barcode/tool/$cvterm/$version/$values\">$description</a></td></tr> };
+}
+
+</%perl>
+</table>
