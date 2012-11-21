@@ -20,7 +20,7 @@ Lukas Mueller &st;lam87@cornell.edu&gt;. Based on Perl code by Rob Buels.
 
 </%doc>
 
-<& /page/page_title.mas, title => 'Search SGN' &>
+<& /page/page_title.mas, title => 'Search' &>
 
 <& /page/mode_buttons.mas, buttons => [
 
