@@ -128,7 +128,7 @@ sub generate_form {
     my $locusgroup = $self->get_object();
     my %args  = $self->get_args();
     my $form = $self->get_form();
-    my $dbh = $self->get_dbh();
+    my $relationship = $locusgroup->get_relationship_name;
 
     if ( $locusgroup->get_obsolete() eq 't' ) {
 	$form->add_label(
@@ -146,6 +146,11 @@ sub generate_form {
         setter       => "set_locusgroup_name",
         validate     => 'string',
         );
+    $form->add_label(
+        display_name => "Relationship",
+        field_name   => "relationship",
+        contents     => $relationship,
+	    );
     #$form->add_select(
 #	display_name       => "Chromosome ",
 #	field_name         => "lg_name",
@@ -188,7 +193,6 @@ sub generate_form {
 	#    field_name => "common_name_id",
 	#    contents   => $locus->get_common_name_id(),
 	#    );
-        
     }
     elsif ( $self->get_action() =~ /store/ ) {
 	$form->from_request( %args );

@@ -91,7 +91,7 @@ sub view_genefamily : Chained('get_genefamily') PathPart('view') Args(0) {
 
 =head1 PRIVATE ACTIONS
 
-=head2 get_locusgroup
+=head2 get_genefamily
 
 Chain root for fetching a locusgroup object to operate on.
 
@@ -107,7 +107,7 @@ sub get_genefamily : Chained('/')  PathPart('genefamily/manual')  CaptureArgs(1)
 
 sub get_genefamily_extended_info : Private {
     my ( $self, $c ) = @_;
-    #$c->forward('get_locus_owner_ids');
+    #$c->forward('get_genefamily_members');
 }
 
 
