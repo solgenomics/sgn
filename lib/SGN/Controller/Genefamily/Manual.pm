@@ -1,5 +1,12 @@
-
 package SGN::Controller::Genefamily::Manual;
+
+
+=head1 NAME
+
+SGN::Controller::Genefamily::Manual - Catalyst controller for pages dealing with
+manually curated gene families (aka 'locusgroup')
+
+=cut
 
 use Moose;
 
@@ -43,7 +50,7 @@ sub view_genefamily : Chained('get_genefamily') PathPart('view') Args(0) {
 
     ##################
 
-    ###Check if a locus page can be printed###
+    ###Check if a gene family page can be printed###
     my $genefamily_id = $genefamily ? $genefamily->get_locusgroup_id : undef ;
 
     # print message if locusgroup_id is not valid
@@ -60,14 +67,13 @@ sub view_genefamily : Chained('get_genefamily') PathPart('view') Args(0) {
         $is_owner = 1;
     }
     my $members = $genefamily->get_locusgroup_members;
-    #my $dbxrefs = $locus->get_dbxrefs;
     #########
     ################
     $c->stash(
         template => '/genefamily/manual/index.mas',
-        familyref => {
+        hashref => {
             action    => $action,
-            genefamily_id  => $genefamily_id ,
+            genefamily => $genefamily,
             curator   => $curator,
             submitter => $submitter,
             sequencer => $sequencer,
@@ -93,7 +99,16 @@ Path part: /genefamily/manual/<locusgroup_id>
 
 =cut
 
-sub get_locus : Chained('/')  PathPart('genefamily/manual/')  CaptureArgs(1) {
+sub get_genefamily : Chained('/')  PathPart('genefamily/manual')  CaptureArgs(1) {
     my ($self, $c, $locusgroup_id) = @_;
-    $c->stash->{genefamily} = CXGN::Phenome::LocusGroup->new($c->dbc->dbh, $locusgroup_id);
+    $c->stash->{genefamily} = CXGN::Phenome::LocusGroup->new($self->schema, $locusgroup_id);
 }
+
+
+sub get_genefamily_extended_info : Private {
+    my ( $self, $c ) = @_;
+    #$c->forward('get_locus_owner_ids');
+}
+
+
+__PACKAGE__->meta->make_immutable;
