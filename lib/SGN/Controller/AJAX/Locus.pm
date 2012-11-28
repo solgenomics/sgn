@@ -444,7 +444,7 @@ sub locus_network_GET :Args(0) {
       my @members      = $group->get_locusgroup_members();
       my $members_info;
       my $index = 0;
-
+      my %by_organism;
 #check if group has only 1 member. This means the locus itself is the only member (other members might have been obsolete)
       if ( $group->count_members() == 1 ) { next GROUP; }
     MEMBER: foreach my $member (@members) {
@@ -469,11 +469,10 @@ sub locus_network_GET :Args(0) {
             $gene_activity = $associated_locus->get_gene_activity();
             $organism      = $associated_locus->get_common_name;
             my $lgm_obsolete_link =  $privileged ?
-                qq | <input type = "button" onclick="javascript:Locus.obsoleteLocusgroupMember(\'$lgm_id\',  \'$locus_id\', \'/ajax/locus/obsolete_locusgroup_member\', \'/locus/$locus_id/network\')" value ="Remove" /> |
-                : qq| <span class="ghosted">[Remove]</span> |;
-            ###########
-            $members_info .=
-                qq|$organism <a href="/locus/$member_locus_id/view">$associated_locus_name</a> $gene_activity $lgm_obsolete_link <br /> |
+                qq|<a href="javascript:Locus.obsoleteLocusgroupMember(\'$lgm_id\', \'$locus_id\', \'/ajax/locus/obsolete_locusgroup_member\', \'/locus/$locus_id/netwrok\')">[Remove]</a>| : qq| <span class="ghosted">[Remove]</span> |;
+
+            $by_organism{$organism} .=
+                qq|<a href="/locus/$member_locus_id/view">$associated_locus_name</a> $lgm_obsolete_link <br /> |
                 if ( $associated_locus->get_obsolete() eq 'f' );
             #directional relationships
             if ( $member_direction eq 'subject' ) {
@@ -482,6 +481,13 @@ sub locus_network_GET :Args(0) {
         }    #non-self members
         $index++;
     }    #members
+      foreach my $common_name (sort keys %by_organism) {
+          $members_info .= info_table_html(
+              $common_name => $by_organism{$common_name},
+              __sub        => 1,
+              __border     => 0,
+              );
+      }
       $rel{$relationship} .= $members_info if ( scalar(@members) > 1 );
   }    #groups
     foreach my $r ( keys %rel ) {
