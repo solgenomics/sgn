@@ -42,15 +42,6 @@ my $genefamily = $hashref->{genefamily};
 my $gf_id = $genefamily->get_locusgroup_id;
 my $this_page = "/genefamily/manual/$gf_id/view/";
 
-my $members = $hashref->{members};
-my $members_html;
-
-while (my $m = $members->next) {
-      my $m_id = $m->get_column('locus_id');
-      my $m_locus_name = $m->locus_id->locus_name;
-      #my $common_name_id = $m->locus_id->common_name_id; 
-      $members_html .= qq|<a href="/locus/$m_id/view">$m_locus_name</a><br />|;
-}
 my $curator = $hashref->{curator};
 my $submitter = $hashref->{submitter};
 my $sequencer = $hashref->{sequencer};
@@ -100,11 +91,12 @@ function jqueryStuff() {
     title=>"Gene family members",
     subtitle => "$add_locus_link",
     collapsible=>1,
-    collapsed=>1
+    collapsed=>0
 &>
 
 <& /locus/associate_locus.mas, locus_id=>$locus_id &>
- <% $members_html %>
+<& /genefamily/manual/members.mas, locusgroup=>$genefamily &>
+
 
 </&>
 

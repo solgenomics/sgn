@@ -1,0 +1,54 @@
+<%doc>
+
+=head1 NAME
+
+/genefamily/manual/members.mas - a component for displaying members of a curated gene family
+
+=head1 DESCRIPTION
+
+
+Parameters:
+
+=over 1
+
+=item locusgroup
+
+a CXGN::Phenome::locusGroup object
+
+=back
+
+=head1 AUTHOR
+
+Naama Menda <nm249@cornell.edu>
+
+=cut
+
+
+</%doc>
+
+<%args>
+
+$locusgroup
+
+</%args>
+
+<%perl>
+use CXGN::Page::FormattingHelpers qw / html_optional_show info_table_html /;
+
+my %data;
+my $html;
+my $members = $locusgroup->get_cxgn_members;
+foreach my $locus (@$members) {
+      my $locus_id = $locus->get_locus_id;
+      my $locus_name = $locus->get_locus_name;
+      my $common_name = $locus->get_common_name;
+      $data{$common_name} .= qq|<a href="/locus/$locus_id/view">$locus_name</a><br />| ;
+}
+foreach my $common_name (sort keys %data) {
+           $html .= info_table_html( $common_name  => $data{$common_name},
+                                      '__border'   => 0, );
+}
+
+</%perl>
+
+<% $html %>
