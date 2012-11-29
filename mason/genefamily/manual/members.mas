@@ -44,7 +44,7 @@ foreach my $locus_id (keys %$members) {
       my $common_name = $locus->get_common_name;
       my $evidence = $members->{$locus_id}->{evidence};
       my $ref = $members->{$locus_id}->{reference};
-      $data{$common_name} .= qq|<a href="/locus/$locus_id/view">$locus_name</a> ($evidence $ref)<br />| ;
+      $data{$common_name} .= qq|<a href="/locus/$locus_id/view">$locus_name</a> ($evidence. $ref)<br />| ;
 }
 foreach my $common_name (sort keys %data) {
            $html .= info_table_html( $common_name  => $data{$common_name},
