@@ -1,0 +1,106 @@
+<%doc>
+
+=head1 NAME
+
+/genefamily/manual/add_locus.mas - a component for adding a locus to a locusgroup
+
+=head1 DESCRIPTION
+
+
+Parameters:
+
+=over 1
+
+=item locusgroup_id
+
+
+a database id
+
+
+
+=back
+
+=head1 AUTHOR
+
+Naama Menda <nm249@cornell.edu>
+
+=cut
+
+
+</%doc>
+
+<%args>
+
+$locusgroup_id
+$add_locus_uri => '/ajax/genefamily/manual/add'
+$members_div => 'locusgroup_members'
+$locus_autocomplete_uri => '/ajax/locus/autocomplete'
+</%args>
+
+<div id = "<% $members_div %>" >&nbsp;Loading..</div>
+
+<script language="javascript">
+  display_members("<% $members_div %>");
+
+ jQuery(function() {
+       var common_name_id = jQuery('#common_name option:selected').attr("value");
+       jQuery("#term_name").autocomplete({
+             source: '<% $locus_autocomplete_uri %>' + "?common_name_id=" + common_name_id + "&?mode=no_alleles",
+             //delay: 1000,
+             autoFocus: true,
+             minLength: 2,
+             select: function(event, ui) { Ontology.populateEvidence('relationship_select', '/ajax/cvterm/locus_relationships'); }
+          });
+
+       jQuery("#common_name").change(function(){
+            common_name_id = jQuery('#common_name option:selected').attr("value");
+             jQuery("#term_name").autocomplete('option', 'source', '<% $locus_autocomplete_uri %>' + "?mode=no_alleles" + "&$common_name_id=" + common_name_id  );
+       });
+
+  });
+
+  function submit_add_locus_form() {
+    //make an AJAX request with the form params
+    var locus = jQuery("#locus").val();
+    jQuery.ajax({ url: "<% $add_locus_uri %>" , method:"POST", data: 'locusgroup_id='+<% $locusgroup_id %>+'&locus='+locus ,
+     success: function(response) {
+      var error = response.error;
+      if (error) { alert(error) ; }
+      display_members( "<% $members_div %>" );
+     }
+   } );
+  }
+
+  function display_members(members_div) {
+     jQuery.ajax( { url: "/genefamily/manual/<% $locusgroup_id %>/members" , dataType: "json",
+         success: function(response) {
+           var json = response;
+           jQuery("#"+members_div).html(response.html);
+         }
+     } );
+  }
+</script>
+
+<& /util/import_javascript.mas, classes=>[qw[ jqueryui popup] ]&>
+
+
+<div id='associateLocusForm' style="display: none">
+  <div id='locus_search'>
+    <input type="text"
+	   style="width: 50%"
+	   id="term_name"
+           name="term_name" >
+    <select id = "common_name"  onchange="jQuery('#term_name').val('');"
+      </select>
+    </select>
+    <b>Reference:</b>
+    <select id="locus_reference_select" style="width: 100%">
+    </select>
+
+  <input type="button"
+	  id="associate_locus_button"
+	  value="Associate locus"
+	 disabled="true"
+         onclick="javascript:submit_add_locus_form();this.disabled=true;" />
+  </div>
+</div>

@@ -39,8 +39,8 @@ $locus_add_uri => '/ajax/locus/associate_locus'
 <%perl>
 
 my $genefamily = $hashref->{genefamily};
-my $gf_id = $genefamily->get_locusgroup_id;
-my $this_page = "/genefamily/manual/$gf_id/view/";
+my $locusgroup_id = $genefamily->get_locusgroup_id;
+my $this_page = "/genefamily/manual/$locusgroup_id/view/";
 
 my $curator = $hashref->{curator};
 my $submitter = $hashref->{submitter};
@@ -76,30 +76,31 @@ function jqueryStuff() {
 
   <& /page/form.mas,
   object_type          => 'locusgroup',
-  object_id            => "$gf_id",
+  object_id            => "$locusgroup_id",
   form_name            => 'genefamily_form',
   server_side_script   => '/jsforms/locusgroup_ajax_form.pl',
   form_div_name        => 'genefamily_details',
   js_object_name       => 'locusgroupForm',
-  page_url             => "/genefamily/$gf_id/view/",
+  page_url             => "/genefamily/$locusgroup_id/view/",
   alternate_new_button => ''
   &>
 
 </&>
 
 <&| /page/info_section.mas,
-    title=>"Gene family members",
-    subtitle => "$add_locus_link",
-    collapsible=>1,
-    collapsed=>0
+    title       => "Gene family members",
+    subtitle    => "$add_locus_link",
+    id          => "locus_network",
+    collapsible => 1,
+    collapsed   => 0
 &>
 
-<& /locus/associate_locus.mas, locus_id=>$locus_id &>
-<& /genefamily/manual/members.mas, locusgroup=>$genefamily &>
+<& /genefamily/manual/add_locus.mas, locusgroup_id=>$locusgroup_id &>
+% ### <& /genefamily/manual/members.mas, locusgroup=>$genefamily &>
 
 
 </&>
 
-<& /page/comments.mas, object_type=>'locusgroup', object_id=>$gf_id, referer=>$this_page &>
+<& /page/comments.mas, object_type=>'locusgroup', object_id=>$locusgroup_id, referer=>$this_page &>
 
 

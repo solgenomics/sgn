@@ -259,21 +259,6 @@ var Locus = {
 
     //#####################################LOCUS RELATIONSHIPS
 
-    updateLocusReferenceSelect: function(request) {
-	var select = $('locus_reference_select');
-        var responseText = request.responseText;
-        var responseArray = responseText.split("|");
-	//the last element of the array is empty. Dont want this in the select box
-	responseArray.pop();
-	responseArray.unshift("*--Optional: select supporting reference --");
-        select.length = 0;
-	select.length = responseArray.length;
-	for (i=0; i < responseArray.length; i++) {
-	    var referenceObject = responseArray[i].split("*");
-	    select[i].value = referenceObject[0];
-	    select[i].text = referenceObject[1];
-	}
-    },
     /////////////////////////////
     getLocusRelationship: function() {
         var type = 'locus_relationship'; 

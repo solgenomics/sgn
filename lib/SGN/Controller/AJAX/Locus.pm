@@ -50,9 +50,9 @@ C<term>, responds with a JSON array of completions for that term.
 
 sub autocomplete : Local : ActionClass('REST') { }
 
-sub autocomplete_GET :Args(0) {
+sub autocomplete_GET : Args(0) {
     my ( $self, $c ) = @_;
-
+    my $mode = $c->req->para('mode');
     my $term = $c->req->param('term');
     my $common_name_id = $c->req->param('common_name_id');
     # trim and regularize whitespace
@@ -60,13 +60,29 @@ sub autocomplete_GET :Args(0) {
     $term =~ s/\s+/ /g;
 
     my @results;
-    my $q =  "SELECT  locus_symbol, locus_name, allele_symbol, is_default FROM locus join allele using (locus_id) where (locus_name ilike '%$term%' OR  locus_symbol ilike '%$term%') and locus.obsolete = 'f' and allele.obsolete='f' limit 20"; #and common_name_id = ?
-    my $sth = $c->dbc->dbh->prepare($q);
-    $sth->execute;
-    while (my ($locus_symbol, $locus_name, $allele_symbol, $is_default) = $sth->fetchrow_array ) {
-        my $allele_data = "Allele: $allele_symbol"  if !$is_default  ;
-        no warnings 'uninitialized';
-        push @results , "$locus_name ($locus_symbol) $allele_data";
+    if ($mode eq "no_alleles") {
+        my $q = "SELECT locus_symbol, locus_name, locus_id FROM locus
+                 WHERE (locus_name ilike '%$term%' OR  locus_symbol ilike '%$term%')
+                 AND locus.obsolete = 'f' limit 20";
+        if ($common_name_id)  { $q .= " and common_name_id = $common_name_id "; }
+        my $sth = $c->dbc->dbh->prepare($q);
+        $sth->execute;
+        while (my ($locus_symbol, $locus_name, $locus_id) = $sth->fetchrow_array ) {
+            push @results , "$locus_name|$locus_symbol|$locus_id" ;
+        }
+    } else {
+        my $q =  "SELECT  locus_symbol, locus_name, allele_symbol, is_default
+                  FROM locus JOIN allele USING (locus_id)
+                  WHERE (locus_name ilike '%$term%' OR  locus_symbol ilike '%$term%')
+                  AND locus.obsolete = 'f' AND allele.obsolete='f' limit 20";
+        if ($common_name_id)  { $q .= " and common_name_id = $common_name_id "; }
+        my $sth = $c->dbc->dbh->prepare($q);
+        $sth->execute;
+        while (my ($locus_symbol, $locus_name, $allele_symbol, $is_default) = $sth->fetchrow_array ) {
+            my $allele_data = "Allele: $allele_symbol"  if !$is_default  ;
+            no warnings 'uninitialized';
+            push @results , "$locus_name ($locus_symbol) $allele_data";
+        }
     }
     $c->{stash}->{rest} = \@results;
 }
