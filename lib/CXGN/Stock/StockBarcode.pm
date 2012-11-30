@@ -63,6 +63,7 @@ sub parse {
     my ($op_name, $project_id, $location_id, $stock_id, $cvterm_accession, $value, $date);
     foreach my $line (@$contents) {
         chomp $line;
+	$line =~ s/\r//g;
         my ($code, $time, $unused_date) = split ",", $line;
         if ($code =~ m/^O/) { #operator name
             (undef, $op_name) = split(/:/, $code) ;
