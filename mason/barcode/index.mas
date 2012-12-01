@@ -77,13 +77,23 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
   
 <&| /page/info_section.mas, title=>'Download Stock Barcodes', collapsible=>1, collapsed=>0 &>
 
-<form action="/barcode/stock/download" method="post" enctype="multipart/form-data" />
+<form action="/barcode/stock/download/pdf" method="post" enctype="multipart/form-data" />
 
 Enter a list of stock names<br />
 <textarea name="stock_names" rows="10" cols="30">
 
 </textarea><br /><br />
 
+<table cellpadding="0" cellspacing="0">
+<tr><td>Labels per page</td><td width="10"></td><td><input name="labels_per_page" size="2" value="8" /></td></tr>
+<tr><td>Page format</td><td width="10"></td><td><select name="page format">
+<option value="A4">A4</option>
+<option value="Letter">Letter</option>
+</select>
+</td></tr>
+</table>
+
+Upload file with stock ids:<br />
 <input type="file" name="stock_names_file" /><br />
 <input type="reset" />&nbsp;&nbsp;<input type="submit" value="Download Barcodes" />
 

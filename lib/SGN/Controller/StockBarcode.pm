@@ -3,15 +3,17 @@ package SGN::Controller::StockBarcode;
 
 use Moose;
 use File::Slurp;
+use PDF::Create;
 use Bio::Chado::Schema::Result::Stock::Stock;
 use CXGN::Stock::StockBarcode;
+use Data::Dumper;
 
 BEGIN { extends "Catalyst::Controller"; }
 
 use CXGN::ZPL;
 
 
-sub download_zdl_barcodes : Path('/barcode/stock/download') :Args(0) {
+sub download_zpl_barcodes : Path('/barcode/stock/download/zpl') :Args(0) {
     my $self = shift;
     my $c = shift;
 
@@ -49,17 +51,15 @@ sub download_zdl_barcodes : Path('/barcode/stock/download') :Args(0) {
 
 	push @found, $name;
 
-	# generate new label
+	# generate new zdl label
 	#
 	my $label = CXGN::ZPL->new();
 	$label->start_format();
 	$label->barcode_code128($c->config->{identifier_prefix}.$stock_id);
 	$label->end_format();
 	push @labels, $label;
+
     }
-
-
-    ####$c->res->content_type("text/download");
 
     my $dir = $c->tempfiles_subdir('zpl');
     my ($FH, $filename) = $c->tempfile(TEMPLATE=>"zpl/zpl-XXXXX", UNLINK=>0);
@@ -71,9 +71,136 @@ sub download_zdl_barcodes : Path('/barcode/stock/download') :Args(0) {
 
     $c->stash->{not_found} = \@not_found;
     $c->stash->{found} = \@found;
-    $c->stash->{zpl_file} = $filename;
+    $c->stash->{file} = $filename;
+    $c->stash->{filetype} = "ZPL";
     $c->stash->{template} = '/barcode/stock_download_result.mas';
 
+}
+
+sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) { 
+    my ($self, $c) = @_;
+    
+    my $stock_names = $c->req->param("stock_names");
+    my $stock_names_file = $c->req->upload("stock_names_file");
+    my $labels_per_page = $c->req->param("labels_per_page");
+    my $page_format = $c->req->param("page_format") || "letter";
+
+    print STDERR "FILE  = ".Data::Dumper::Dumper($stock_names_file);
+    # read file if upload
+
+    if ($stock_names_file) { 
+	print STDERR "READING FILE...\n";
+	my $stock_file_contents = read_file($stock_names_file->{tempname});
+	$stock_names = $stock_names ."\n".$stock_file_contents;
+    }
+    $stock_names =~ s/\r//g; 
+    my @names = split /\n/, $stock_names;
+
+    my @not_found;
+    my @found;
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    
+    foreach my $name (@names) { 
+
+	# skip empty lines
+	#
+	if (!$name) { 
+	    next; 
+	}
+
+	my $stock = $schema->resultset("Stock::Stock")->find( { name=>$name });
+
+	if (!$stock) { 
+	    push @not_found, $name;
+	    next;
+	}
+
+	my $stock_id = $stock->stock_id();
+
+	push @found, [ $c->config->{identifier_prefix}.$stock_id, $name ];
+	print "STOCK FOUND: $stock_id, $name.\n";
+	
+    }
+
+    my $dir = $c->tempfiles_subdir('pdfs');
+    my ($FH, $filename) = $c->tempfile(TEMPLATE=>"pdfs/pdf-XXXXX", SUFFIX=>".pdf", UNLINK=>0);
+    print STDERR "FILENAME: $filename \n\n\n";
+    my $pdf = PDF::Create->new(filename=>$c->path_to($filename), 
+			       Author=>$c->config->{project_name},
+			       Title=>'Labels',
+			       CreationDate => [ localtime ], 
+			       Version=>1.2,
+	);
+
+    if (!$page_format) { $page_format = "Letter"; }
+    if (!$labels_per_page) { $labels_per_page = 8; }
+
+    print STDERR "PAGE FORMAT IS: $page_format. LABELS PER PAGE: $labels_per_page\n";
+
+    my $base_page = $pdf->new_page(Mediabox=>$pdf->get_page_size($page_format));
+    
+    my ($page_width, $page_height) = @{$pdf->get_page_size($page_format)}[2,3];
+
+    my $label_height = int($page_height / $labels_per_page);
+
+    my @pages;
+    foreach my $page (1..$self->label_to_page($labels_per_page, scalar(@found))) { 
+	print STDERR "Generating page $page...\n";
+	push @pages, $base_page->new_page();
+    }
+    
+    for (my $i=0; $i<@found; $i++) { 
+	my $label_count = $i + 1;
+
+	my $page_nr = $self->label_to_page($labels_per_page, $label_count);
+
+	my $label_on_page = ($label_count -1) % $labels_per_page;
+	
+	# generate barcode
+	#
+	my $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[0],  $found[$i]->[1],  'large',  20  ]);
+	my $image = $pdf->image($tempfile);
+	print STDERR "IMAGE: ".Data::Dumper::Dumper($image);
+
+	# note: pdf coord system zero is lower left corner
+	#
+	my $xpos = 100;
+	my $ypos = $page_height - ($label_on_page * $label_height);
+
+	my $final_barcode_width = 200;
+
+	my $scalex = $final_barcode_width / $image->{width};
+	my $scaley = $label_height / $image->{height};
+
+	if ($scalex < $scaley) { $scaley = $scalex; }
+	else { $scalex = $scaley; }
+
+	$pages[$page_nr-1]->line($page_width -100, $ypos, $page_width, $ypos);
+
+	$pages[$page_nr-1]->image(image=>$image, xpos=>$page_width - 2 * $final_barcode_width - 10, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
+
+	$pages[$page_nr-1]->image(image=>$image, xpos=>$page_width - $final_barcode_width - 5, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
+
+    }
+
+    $pdf->close();
+
+    $c->stash->{not_found} = \@not_found;
+    $c->stash->{found} = \@found;
+    $c->stash->{file} = $filename;
+    $c->stash->{filetype} = 'PDF';
+    $c->stash->{template} = '/barcode/stock_download_result.mas';
+}
+
+# maps the label number to a page number
+sub label_to_page { 
+    my $self = shift;
+    my $labels_per_page = shift;
+    my $label_count = shift;
+
+    my $page_count = int( ($label_count -1) / $labels_per_page) +1;
+    return $page_count;
 }
 
 sub upload_barcode_output : Path('/breeders/phenotype/upload') :Args(0) {
