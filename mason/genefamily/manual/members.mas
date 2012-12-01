@@ -1,0 +1,15 @@
+<%args>
+  $locusgroup_id
+  $members_div
+</%args>
+
+
+<& /util/import_javascript.mas, classes => [ "CXGN.Phenome.Locus"] &>
+
+<div id = "<% $members_div %>" >&nbsp;Loading..</div>
+
+<script language="javascript" type="text/javascript">
+
+ Locus.displayMembers("<% $members_div %>" , "<% $locusgroup_id %>");
+
+</script>
