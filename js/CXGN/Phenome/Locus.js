@@ -316,13 +316,6 @@ var Locus = {
     },
 
 
-    /////////////currently not used - check 
-    //Make an ajax response that obsoletes the selected stock-allele association
-    obsoleteStockAllele: function(stockprop_id)  {
-		var type= 'obsolete';
-		new Ajax.Request('/phenome/individual_browser.pl', {parameters:
-                        {type: type, stockprop_id: stockprop_id }, onSuccess: Tools.reloadPage });
-    },
     //Make an ajax response that finds all loci  with names/synonyms/symbols like the current value of the locus input
     getMergeLocus: function(str, object_id) {
 	if(str.length == 0){
@@ -456,22 +449,22 @@ var Locus = {
     //Make an ajax response that associates the selected locus with this locus
     associateLocus: function(locus_id) {
         var div_id = 'locus_network';
-        var object_id = $('locus_select').value;
-	var locus_relationship_id = $('locus_relationship_select').value;
-	var locus_evidence_code_id = $('locus_evidence_code_select').value;
-	var locus_reference_id = $('locus_reference_select').value ;
+        var locus_info = jQuery('#loci').val();
+        var locus_relationship_id = jQuery('#locus_relationship_select').val();
+        var locus_reference_id = jQuery('#locus_reference_select').val();
+        var locus_evidence_code_id = jQuery('#locus_evidence_code_select').val();
         jQuery.ajax( {
                 type: 'POST',
-                    url: "/ajax/locus/associate_locus/",
+                    url: "/ajax/locus/associate_locus",
                     dataType: "json",
                     /// make asynchronous since it takes long to finish the ajax request
                     /// and we want to refresh the locus_network div only after the request is done
                     async: false,
-                    data: 'object_id='+object_id+'&locus_relationship_id='+locus_relationship_id+'&locus_evidence_code_id='+locus_evidence_code_id+'&locus_reference_id='+locus_reference_id+'&locus_id='+locus_id ,
+                    data: 'locus_info='+locus_info+'&locus_relationship_id='+locus_relationship_id+'&locus_evidence_code_id='+locus_evidence_code_id+'&locus_reference_id='+locus_reference_id+'&locus_id='+locus_id ,
                     success: function(response) {
-                    var json = response;
-                    if ( response.error ) { alert(response.error) ; }
-                },
+                      var json = response;
+                      if ( response.error ) { alert(response.error) ; }
+                   },
                     });
         this.printLocusNetwork(locus_id, div_id);
         Effects.hideElement('associateLocusForm');
