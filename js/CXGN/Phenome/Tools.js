@@ -74,29 +74,35 @@ var Tools = {
     reloadPage: function() {
 	window.location.reload();
     },
-
+    ///////////////////////////////////////////////
     getOrganisms: function() {
-	var type = 'organism';
-	new Ajax.Request("/phenome/locus_browser.pl", {parameters: 
-		{type: type}, onSuccess: function(response) {
-		    var select = $('organism_select');
-		    var responseText = response.responseText;
-		    MochiKit.Logging.log("the response text is: " , responseText);
-		    var responseArray = responseText.split("|");
-		    //the last element of the array is empty. Dont want this in the select box
-		    responseArray.pop();
-		    select.length = 0;    
-		    select.length = responseArray.length;
-		    for (i=0; i < responseArray.length; i++) {
+        jQuery.ajax( {
+                type: 'GET',
+                url: "/ajax/locus/organisms/",
+                    dataType: "json",
+                    async: false,
+                    success: function(response) {
+                    var json = response;
+                    if ( response.error ) { alert(response.error) ; }
+                    var responseArray = response.html;
+                    var select = $('organism_select');
+                    select.length = 0;
+		    select.length = responseArray.length + 1;
+		    select[0].text = '--select--';
+                    for (i=1; i < responseArray.length; i++) {
 			select[i].value = responseArray[i];
 			select[i].text = responseArray[i];
-		    }
-		},
-				  });
+                    }
+                },
+            });
     },
+
+
+
     //Make an ajax response that finds all loci  with names/synonyms/symbols like the current value of the locus input
+    //////////////DEPRECATED////////////////
+    //////////////////////////////////////////
     getLoci: function(locus_name, object_id) {
-	MochiKit.Logging.log("getLoci is getting locus_name input ...", locus_name);
 	if(locus_name.length == 0){
 	    var select = $('locus_select');
 	    select.length=0;
