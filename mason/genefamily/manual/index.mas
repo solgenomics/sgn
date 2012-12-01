@@ -46,11 +46,12 @@ my $curator = $hashref->{curator};
 my $submitter = $hashref->{submitter};
 my $sequencer = $hashref->{sequencer};
 
+#############
 my $add_locus_link = $curator || $submitter || $sequencer  ?
   '<a href="javascript:Tools.toggleContent(\'associateLocusForm\', \'locus_network\');Tools.getOrganisms()">[Associate new locus]</a> ' :
   '<span class="ghosted">[Associate new locus]</span>' ;
+############
 
-my $locus_id;
 
 </%perl>
 
@@ -59,13 +60,8 @@ my $locus_id;
 
 
 <script language="javascript">
-function jqueryStuff() {
-   jQuery(function() {
-     jQuery("#locus").autocomplete({
-        source: '/ajax/locus/autocomplete'
-     });
-  });
-}
+
+
 </script>
 
 
@@ -96,7 +92,6 @@ function jqueryStuff() {
 &>
 
 <& /genefamily/manual/add_locus.mas, locusgroup_id=>$locusgroup_id &>
-% ### <& /genefamily/manual/members.mas, locusgroup=>$genefamily &>
 
 
 </&>
