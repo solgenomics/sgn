@@ -26,7 +26,8 @@ use CXGN::Chado::Publication;
 use CXGN::Page::FormattingHelpers qw/ columnar_table_html info_table_html html_alternate_show /;
 use List::MoreUtils qw /any /;
 use Scalar::Util qw(looks_like_number);
-
+use CXGN::Tools::Organism;
+use CXGN::Phenome::Schema;
 use Try::Tiny;
 
 
@@ -52,19 +53,27 @@ sub autocomplete : Local : ActionClass('REST') { }
 
 sub autocomplete_GET : Args(0) {
     my ( $self, $c ) = @_;
-    my $mode = $c->req->para('mode');
+    my $mode = $c->req->param('mode');
     my $term = $c->req->param('term');
     my $common_name_id = $c->req->param('common_name_id');
+    my $common_name = $c->req->param('common_name');
     # trim and regularize whitespace
     $term =~ s/(^\s+|\s+)$//g;
     $term =~ s/\s+/ /g;
 
+    if ($common_name) {
+        my $q = "SELECT common_name_id FROM sgn.common_name where common_name = ? ";
+        my $sth = $c->dbc->dbh->prepare($q);
+        $sth->execute($common_name);
+        ($common_name_id) = $sth->fetchrow_array ;
+    }
     my @results;
     if ($mode eq "no_alleles") {
         my $q = "SELECT locus_symbol, locus_name, locus_id FROM locus
                  WHERE (locus_name ilike '%$term%' OR  locus_symbol ilike '%$term%')
-                 AND locus.obsolete = 'f' limit 20";
-        if ($common_name_id)  { $q .= " and common_name_id = $common_name_id "; }
+                 AND locus.obsolete = 'f' ";
+        if ($common_name_id)  { $q .= " AND common_name_id = $common_name_id "; }
+        $q .= " LIMIT 20";
         my $sth = $c->dbc->dbh->prepare($q);
         $sth->execute;
         while (my ($locus_symbol, $locus_name, $locus_id) = $sth->fetchrow_array ) {
@@ -74,8 +83,9 @@ sub autocomplete_GET : Args(0) {
         my $q =  "SELECT  locus_symbol, locus_name, allele_symbol, is_default
                   FROM locus JOIN allele USING (locus_id)
                   WHERE (locus_name ilike '%$term%' OR  locus_symbol ilike '%$term%')
-                  AND locus.obsolete = 'f' AND allele.obsolete='f' limit 20";
-        if ($common_name_id)  { $q .= " and common_name_id = $common_name_id "; }
+                  AND locus.obsolete = 'f' AND allele.obsolete='f' ";
+        if ($common_name_id)  { $q .= " AND common_name_id = $common_name_id "; }
+        $q .= " LIMIT 20";
         my $sth = $c->dbc->dbh->prepare($q);
         $sth->execute;
         while (my ($locus_symbol, $locus_name, $allele_symbol, $is_default) = $sth->fetchrow_array ) {
@@ -520,6 +530,10 @@ sub locus_network_GET :Args(0) {
 
 sub associate_locus:Path('/ajax/locus/associate_locus') :ActionClass('REST') {}
 
+sub associate_locus_GET :Args(0) {
+    my ($self, $c) = @_;
+    $c->stash->{rest} = { error => "Nothing here, it's a GET.." } ;
+}
 sub associate_locus_POST :Args(0) {
     my ($self, $c) = @_;
     my $schema = $c->dbic_schema('CXGN::Phenome::Schema');
@@ -530,10 +544,16 @@ sub associate_locus_POST :Args(0) {
     }
     my $logged_person_id = $c->user->get_object->get_sp_person_id if $c->user;
     my %params = map { $_ => $c->request->body_parameters->{$_} } qw/
-       locus_reference_id locus_evidence_code_id
-       object_id locus_relationship_id locus_id
+       locus_info locus_reference_id locus_evidence_code_id
+       locus_relationship_id locus_id
     /;
     my $locus_id = $params{locus_id};
+    my $locus_info = $params{locus_info};
+    my ($locus_name,$locus_symbol,$a_locus_id) = split (/\|/ ,$locus_info);
+    if (!$locus_info || !$a_locus_id) {
+        #$self->status_bad_request($c, message => 'need loci param' );
+        $response->{error} .= "bad request. Invalid locus";
+    }
     my $relationship;
     if ($privileged) {
         try {
@@ -552,7 +572,7 @@ sub associate_locus_POST :Args(0) {
             $lgm->set_reference_id($params{locus_reference_id});
             $lgm->set_sp_person_id($logged_person_id);
             my $a_lgm=CXGN::Phenome::LocusgroupMember->new($schema);
-            $a_lgm->set_locus_id($params{object_id});
+            $a_lgm->set_locus_id($a_locus_id);
             $a_lgm->set_evidence_id($params{locus_evidence_code_id});
             $a_lgm->set_reference_id($params{locus_reference_id});
             $a_lgm->set_sp_person_id($logged_person_id);
@@ -571,7 +591,7 @@ sub associate_locus_POST :Args(0) {
             $response->{response} = 'success';
             return;
         } catch {
-            $response->{error} = "Failed: $_" ;
+            $response->{error} .= "Failed: $_" ;
             # send an email to sgn bugs
             $c->stash->{email} = {
                 to      => 'sgn-bugs@sgn.cornell.edu',
@@ -811,6 +831,24 @@ sub associate_unigene_POST :Args(0) {
     $c->stash->{rest} = $response;
 }
 
+=head2 organisms
+
+Public Path: /ajax/locus/organisms
+
+get a list of available organisms as stored in locus.common_name_id, 
+responds with a JSON array .
+
+=cut
+
+sub organisms : Local : ActionClass('REST') { }
+
+sub organisms_GET :Args(0) {
+    my ($self, $c) = @_;
+    my $response;
+    my ($organism_names_ref, $organism_ids_ref)=CXGN::Tools::Organism::get_existing_organisms( $c->dbc->dbh);
+    $response->{html} = $organism_names_ref;
+    $c->{stash}->{rest} = $response;
+}
 ####
 1;
 ###
