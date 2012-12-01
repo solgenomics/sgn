@@ -40,18 +40,18 @@ $locus_autocomplete_uri => '/ajax/locus/autocomplete'
 <script language="javascript">
 
  jQuery(function() {
-       var common_name_id = jQuery('#common_name option:selected').attr("value");
+       var common_name = jQuery('#organism_select option:selected').attr("value");
        jQuery("#term_name").autocomplete({
-             source: '<% $locus_autocomplete_uri %>' + "?common_name_id=" + common_name_id + "&?mode=no_alleles",
+             source: '<% $locus_autocomplete_uri %>' + "?common_name=" + common_name + "&mode=no_alleles",
              //delay: 1000,
              autoFocus: true,
              minLength: 2,
              select: function(event, ui) { Ontology.populateEvidence('relationship_select', '/ajax/cvterm/locus_relationships'); }
           });
 
-       jQuery("#common_name").change(function(){
-            common_name_id = jQuery('#common_name option:selected').attr("value");
-             jQuery("#term_name").autocomplete('option', 'source', '<% $locus_autocomplete_uri %>' + "?mode=no_alleles" + "&$common_name_id=" + common_name_id  );
+       jQuery("#organism_select").change(function(){
+            common_name = jQuery('#organism_select option:selected').attr("value");
+             jQuery("#term_name").autocomplete('option', 'source', '<% $locus_autocomplete_uri %>' + "?mode=no_alleles" + "&common_name=" + common_name  );
        });
 
   });
@@ -79,7 +79,7 @@ $locus_autocomplete_uri => '/ajax/locus/autocomplete'
 	   style="width: 50%"
 	   id="term_name"
            name="term_name" >
-    <select id = "common_name"  onchange="jQuery('#term_name').val('');"
+    <select id = "organism_select"  onchange="jQuery('#term_name').val('');"
       </select>
     </select>
     <b>Reference:</b>
