@@ -542,4 +542,13 @@ var Locus = {
         }
     },
 
+    displayMembers: function (div, locusgroup_id) {
+        jQuery.ajax( { url: "/genefamily/manual/" + locusgroup_id + "/members",
+                       dataType: "json",
+                       success: function(response) {
+                            jQuery("#"+div).html(response.html);
+                       }
+            } );
+    },
+
 };//

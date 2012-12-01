@@ -37,10 +37,7 @@ $members_div => 'locusgroup_members'
 $locus_autocomplete_uri => '/ajax/locus/autocomplete'
 </%args>
 
-<div id = "<% $members_div %>" >&nbsp;Loading..</div>
-
 <script language="javascript">
-  display_members("<% $members_div %>");
 
  jQuery(function() {
        var common_name_id = jQuery('#common_name option:selected').attr("value");
@@ -64,24 +61,16 @@ $locus_autocomplete_uri => '/ajax/locus/autocomplete'
     var locus = jQuery("#locus").val();
     jQuery.ajax({ url: "<% $add_locus_uri %>" , method:"POST", data: 'locusgroup_id='+<% $locusgroup_id %>+'&locus='+locus ,
      success: function(response) {
-      var error = response.error;
-      if (error) { alert(error) ; }
-      display_members( "<% $members_div %>" );
+         var error = response.error;
+         if (error) { alert(error) ; }
+         Locus.displayMembers( "<% $members_div %>", "<% $locusgroup_id %>" );
      }
    } );
   }
 
-  function display_members(members_div) {
-     jQuery.ajax( { url: "/genefamily/manual/<% $locusgroup_id %>/members" , dataType: "json",
-         success: function(response) {
-           var json = response;
-           jQuery("#"+members_div).html(response.html);
-         }
-     } );
-  }
 </script>
 
-<& /util/import_javascript.mas, classes=>[qw[ jqueryui popup] ]&>
+<& /util/import_javascript.mas, classes=>[qw[ jqueryui popup CXGN.Phenome.Locus] ]&>
 
 
 <div id='associateLocusForm' style="display: none">
