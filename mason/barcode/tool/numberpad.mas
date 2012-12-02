@@ -11,7 +11,7 @@ our %urlencode;
 Keypad
 
 <table border="1">
-<tr><td><% key(".") %></td><td colspan="2"><% key("0") %></td></tr>
+<tr><td><% key(".") %></td><td><% key("/") %></td><td><% key("0") %></td></tr>
 <tr><td><% key("1") %></td><td><% key("2") %></td><td><% key("3") %></td></tr>
 <tr><td><% key("4") %></td><td><% key("5") %></td><td><% key("6") %></td></tr>
 <tr><td><% key("7") %></td><td><% key("8") %></td><td><% key("9") %></td></tr>

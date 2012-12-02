@@ -40,11 +40,25 @@ sub index : Path('/barcode') Args(0) {
     print STDERR join "\n", @tools_def;
 
     $c->stash->{tools_def} = \@tools_def;
-
-    $c->stash->{locations} = \@locations;
-   
+    $c->stash->{locations} = \@locations;   
     $c->stash->{template} = '/barcode/index.mas';
 }
+
+
+=head2 barcode_image
+
+ URL:          mapped to URL /barcode/image
+ Params:       code : the code to represent in the barcode
+               text : human readable text 
+               size : either small, large
+               top  : pixels from the top
+ Desc:         creates the barcode image, sets the content type to 
+               image/png and returns the barcode image to the browser
+ Ret:
+ Side Effects:
+ Example:
+
+=cut
 
 sub barcode_image : Path('/barcode/image') Args(0) { 
     my $self = shift;
@@ -54,7 +68,59 @@ sub barcode_image : Path('/barcode/image') Args(0) {
     my $text = $c->req->param("text");
     my $size = $c->req->param("size");
     my $top  = $c->req->param("top");
+
+    my $barcode = $self->barcode($code, $text, $size, $top);
     
+    $c->res->headers->content_type('image/png');
+    
+    $c->res->body($barcode->png());    
+}
+
+
+sub barcode_tempfile_jpg : Path('/barcode/tempfile') Args(4) { 
+    my $self = shift;
+    my $c = shift;
+    
+    my $code = shift;
+    my $text = shift;
+    my $size = shift;
+    my $top = shift;
+
+    my $barcode = $self->barcode($code,
+				 $text,
+				 $size,
+				 $top,
+	);
+    
+    $c->tempfiles_subdir('barcode');
+    my ($file, $uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.jpg');
+
+    open(my $F, ">", $file) || die "Can't open file $file";
+    print $F $barcode->jpeg();
+    close($F);
+
+    return $file;
+}
+
+
+=head2 barcode
+
+ Usage:        $self->barcode($code, $text, $size, 30);
+ Desc:         generates a barcode
+ Ret:          a GD::Image object
+ Args:         $code, $text, $size, upper margin
+ Side Effects: none
+ Example:
+
+=cut
+
+sub barcode { 
+    my $self = shift;
+    my $code = shift;
+    my $text = shift;
+    my $size = shift;
+    my $top = shift;
+
     my $scale = 2;
     if ($size eq "small") { $scale = 1; }
     if ($size eq "huge") { $scale = 5; }
@@ -68,10 +134,13 @@ sub barcode_image : Path('/barcode/image') Args(0) {
     my  $barcode = $barcode_object ->gd_image();
     my $text_width = gdLargeFont->width()*length($text);
     $barcode->string(gdLargeFont,int(($barcode->width()-$text_width)/2),10,$text, $barcode->colorAllocate(0, 0, 0));
-    $c->res->headers->content_type('image/png');
-    
-    $c->res->body($barcode->png());    
+    return $barcode;
+
 }
+
+
+
+
     
 
 #deprecated
