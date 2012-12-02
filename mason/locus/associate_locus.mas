@@ -49,7 +49,7 @@ $locus_autocomplete_uri => '/ajax/locus/autocomplete'
          autoFocus: true,
          minLength: 1,
          select: function(event, ui) {
-                  Ontology.populateEvidence('locus_relationship_select', '/ajax/cvterm/relationships'); }
+                  Ontology.populateEvidence('locus_relationship_select', '/ajax/cvterm/locus_relationships'); }
      });
 
   jQuery("#organism_select").change(function(){
