@@ -545,9 +545,10 @@ sub associate_locus_POST :Args(0) {
     my $logged_person_id = $c->user->get_object->get_sp_person_id if $c->user;
     my %params = map { $_ => $c->request->body_parameters->{$_} } qw/
        locus_info locus_reference_id locus_evidence_code_id
-       locus_relationship_id locus_id
+       locus_relationship_id locus_id locusgroup_id
     /;
-    my $locus_id = $params{locus_id};
+    my $locus_id = $params{locus_id}; #locus_id is used when making locus-locus association from a locus page
+    my $locusgroup_id = $params{locusgroup_id} ; #used when adding a locus to an existing group , from the manual gene family page
     my $locus_info = $params{locus_info};
     my ($locus_name,$locus_symbol,$a_locus_id) = split (/\|/ ,$locus_info);
     if (!$locus_info || !$a_locus_id) {
@@ -849,6 +850,8 @@ sub organisms_GET :Args(0) {
     $response->{html} = $organism_names_ref;
     $c->{stash}->{rest} = $response;
 }
+
+
 ####
 1;
 ###
