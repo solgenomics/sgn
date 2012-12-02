@@ -85,7 +85,6 @@ $locus_autocomplete_uri => '/ajax/locus/autocomplete'
 
    function reset_form() {
          Effects.hideElement('associateLocusForm');
-         jQuery("#locus").val() = "";
          jQuery("#locus_evidence_code_select").html();
   }
 
@@ -100,7 +99,7 @@ $locus_autocomplete_uri => '/ajax/locus/autocomplete'
 	   style="width: 50%"
 	   id="locus"
            name="locus" >
-    <select id = "organism_select"  onchange=" onchange="jQuery('#locus').val('--type a locus name--');$('associate_locus_button').disabled=true""
+    <select id = "organism_select"  onchange="jQuery('#locus').val('--type a locus name--');$('associate_locus_button').disabled=true""
       </select>
     </select>
 
