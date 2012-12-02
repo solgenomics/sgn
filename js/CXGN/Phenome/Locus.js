@@ -65,9 +65,7 @@ var Locus = {
 	    }
 	}
     },
-    
-    
-        
+
     //Make an ajax response that adds a registry to the database and associates it with this locus
     addRegistry: function(locus_id, sp_person_id) {
 	var registry_name = $('registry_name').value;
@@ -231,90 +229,6 @@ var Locus = {
 	    }
 	}
     },
-
-
-    getLocusReference: function(locus_id) {
-	var type = 'reference';
-	var reference_id = $('locus_reference_select').value;
-	new Ajax.Request('/phenome/evidence_browser.pl', {  // move 
-                parameters:
-                {type: type, locus_id: locus_id},
-                    onSuccess: function(response) {
-                    var select = $('locus_reference_select');
-                    var responseText = response.responseText;
-                    var responseArray = responseText.split("|");
-                    //the last element of the array is empty. Dont want this in the select box
-                    responseArray.pop();
-                    responseArray.unshift("*--Optional: select supporting reference --");
-                    select.length = 0;
-                    select.length = responseArray.length;
-                    for (i=0; i < responseArray.length; i++) {
-                        var referenceObject = responseArray[i].split("*");
-                        select[i].value = referenceObject[0];
-                        select[i].text = referenceObject[1];
-                    }
-                },
-                    } )
-    },
-
-    //#####################################LOCUS RELATIONSHIPS
-
-    /////////////////////////////
-    getLocusRelationship: function() {
-        var type = 'locus_relationship'; 
-	var locus_relationship_id = $('locus_relationship_select').value;
-        new Ajax.Request('/phenome/locus_browser.pl', { parameters: //// move to the AJAX controller!
-                  {type: type },
-                      onSuccess: this.updateLocusRelationshipSelect });
-    },
-
-    updateLocusRelationshipSelect: function(request) {
-	var select = $('locus_relationship_select');
-        var responseText = request.responseText;
-        var responseArray = responseText.split("|");
-	//the last element of the array is empty. Dont want this in the select box
-	responseArray.pop();
-        select.length = 0;
-	select.length = responseArray.length;
-	for (i=0; i < responseArray.length; i++)
-	{
-	    var locusRelationshipObject = responseArray[i].split("*");
-	    select[i].value = locusRelationshipObject[0];
-	    if (typeof(locusRelationshipObject[1]) != "undefined"){
-		select[i].text = locusRelationshipObject[1];
-	    }
-	    else{
-		select[i].text = locusRelationshipObject[0];
-		select[i].value = null;
-	    }
-	}
-    },
-
-    getLocusEvidenceCode: function() {
-	var type = 'locus_evidence_code';
-	var locus_evidence_code_id = $('locus_evidence_code_select').value;
-
-        new Ajax.Request('/phenome/locus_browser.pl', {
-                parameters:
-                {type: type },
-                    onSuccess: function(response) {
-                    var select = $('locus_evidence_code_select');
-                    var responseText = response.responseText;
-                    var responseArray = responseText.split("|");
-                    //the last element of the array is empty. Dont want this in the select box
-                    responseArray.pop();
-                    responseArray.unshift("*--please select an evidence code--");
-                    select.length = 0;
-                    select.length = responseArray.length;
-                    for (i=0; i < responseArray.length; i++) {
-                        var locusevidenceCodeObject = responseArray[i].split("*");
-                        select[i].value = locusevidenceCodeObject[0];
-                        select[i].text = locusevidenceCodeObject[1];
-                    }
-                },
-                    } );
-    },
-
 
     //Make an ajax response that finds all loci  with names/synonyms/symbols like the current value of the locus input
     getMergeLocus: function(str, object_id) {
