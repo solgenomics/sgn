@@ -90,6 +90,26 @@ sub relationships_GET :Args(0) {
     $c->{stash}->{rest} = $hashref;
 }
 
+sub locus_relationships : Local : ActionClass('REST') { }
+
+sub locus_relationships_GET :Args(0) {
+    my ($self, $c) = @_;
+    my $query = $c->dbc->dbh->prepare(
+        "SELECT distinct(cvterm.cvterm_id), cvterm.name
+        FROM public.cvterm
+        JOIN public.cv USING (cv_id)
+        WHERE cv.name ='Locus Relationship' AND
+        cvterm.is_obsolete = 0
+        ORDER BY cvterm.name;
+    ");
+    $query->execute();
+    my $hashref={};
+    while  ( my ($cvterm_id, $cvterm_name) = $query->fetchrow_array() ) {
+        $hashref->{$cvterm_name} = $cvterm_id;
+    }
+    $c->{stash}->{rest} = $hashref;
+}
+
 =head2
 
 Public Path: /ajax/cvterm/evidence
