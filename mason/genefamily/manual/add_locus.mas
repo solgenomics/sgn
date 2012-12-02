@@ -78,8 +78,15 @@ $locus_autocomplete_uri => '/ajax/locus/autocomplete'
                var error = response.error;
                if (error) { alert(error) ; }
                 Locus.displayMembers( "<% $members_div %>", "<% $locusgroup_id %>" );
+                reset_form();
              }
      } );
+  }
+
+   function reset_form() {
+         Effects.hideElement('associateLocusForm');
+         jQuery("#locus").val() = "";
+         jQuery("#locus_evidence_code_select").html();
   }
 
 </script>
@@ -93,7 +100,7 @@ $locus_autocomplete_uri => '/ajax/locus/autocomplete'
 	   style="width: 50%"
 	   id="locus"
            name="locus" >
-    <select id = "organism_select"  onchange="jQuery('#term_name').val('');"
+    <select id = "organism_select"  onchange=" onchange="jQuery('#locus').val('--type a locus name--');$('associate_locus_button').disabled=true""
       </select>
     </select>
 
