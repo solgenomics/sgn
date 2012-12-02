@@ -6,10 +6,10 @@
 
 =head1 DESCRIPTION
 
-this component has dependencies on CXGN.Phenome.Locus and CXGN.Phenome.Tools
+this component has dependencies on CXGN.Phenome.Locus and CXGN.AJAX.Ontology
 you will have to import these javascript classes in your code that uses this component.
 
-<& /util/import_javascript.mas, classes => [CXGN.Phenome.Locus", "CXGN.Phenome.Tools"] &>
+<& /util/import_javascript.mas, classes => [CXGN.Phenome.Locus", "CXGN.AJAX.Ontology"] &>
 
 
 Parameters:
@@ -48,7 +48,8 @@ $locus_autocomplete_uri => '/ajax/locus/autocomplete'
 	 source: '<% $locus_autocomplete_uri %>' + "?common_name=" + common_name + "&mode=no_alleles",
          autoFocus: true,
          minLength: 1,
-        ////////// select: function(event, ui) { Ontology.populateEvidence('relationship_select', '/ajax/cvterm/relationships'); }
+         select: function(event, ui) {
+                  Ontology.populateEvidence('locus_relationship_select', '/ajax/cvterm/relationships'); }
      });
 
   jQuery("#organism_select").change(function(){
@@ -68,15 +69,14 @@ $locus_autocomplete_uri => '/ajax/locus/autocomplete'
 	   style="width: 50%"
 	   id="loci"
            value = "--type a locus name--"
-           onchange="Locus.getLocusRelationship()">
-    <select id = "organism_select"  onchange="jQuery('#loci').val('--type a locus name--');$('associate_locus_button').disabled=true">
+             <select id = "organism_select"  onchange="jQuery('#loci').val('--type a locus name--');$('associate_locus_button').disabled=true">
     </select>
-    
+
     <select id="locus_relationship_select" style="width: 50%"
-	    onchange="Locus.getLocusEvidenceCode()">
+	    onchange= "Ontology.populateEvidence('locus_evidence_code_select', '/ajax/cvterm/evidence', '--select an evidence code--');" >
     </select>
     <select id="locus_evidence_code_select" style="width: 50%"
-	    onchange="Locus.getLocusReference('<% $locus_id %>');$('associate_locus_button').disabled=false">
+	    onchange="Ontology.populateEvidence('locus_reference_select', '/locus/<% $locus_id %>/references', '--Optional: select supporting reference --');$('associate_locus_button').disabled=false">
     </select>
     <select id="locus_reference_select" style="width: 100%">
     </select>
