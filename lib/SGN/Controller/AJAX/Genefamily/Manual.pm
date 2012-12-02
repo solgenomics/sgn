@@ -21,6 +21,7 @@ use Moose;
 use List::MoreUtils qw /any /;
 use Try::Tiny;
 use CXGN::Phenome::Schema;
+use CXGN::Chado::Publication;
 
 use CXGN::Page::FormattingHelpers qw/ info_table_html html_alternate_show /;
 
@@ -72,8 +73,8 @@ sub add_member_POST :Args(0) {
     my $locusgroup_id = $c->req->param('locusgroup_id');
     my $locus_input   = $c->req->param('locus') ;
     my $evidence_id   = $c->req->param('evidence_id') ;
-    my $reference_id  = $c->req->param('reference_id') ;
-
+    my $reference_id  = $c->req->param('reference_id') ||
+        CXGN::Chado::Publication::get_curator_ref($c->dbc->dbh);
     if (!$locus_input) {
         $self->status_bad_request($c, message => 'need locus input param' );
         return;
