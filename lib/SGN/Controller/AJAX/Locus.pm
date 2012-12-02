@@ -555,6 +555,10 @@ sub associate_locus_POST :Args(0) {
         #$self->status_bad_request($c, message => 'need loci param' );
         $response->{error} .= "bad request. Invalid locus";
     }
+    my $reference_id = $params{'locus_reference_id'};
+    $reference_id = $reference_id ? $reference_id :
+        CXGN::Chado::Publication::get_curator_ref($c->dbc->dbh);
+##
     my $relationship;
     if ($privileged) {
         try {
@@ -570,12 +574,12 @@ sub associate_locus_POST :Args(0) {
             my $lgm=CXGN::Phenome::LocusgroupMember->new($schema);
             $lgm->set_locus_id($locus_id );
             $lgm->set_evidence_id($params{locus_evidence_code_id});
-            $lgm->set_reference_id($params{locus_reference_id});
+            $lgm->set_reference_id($reference_id);
             $lgm->set_sp_person_id($logged_person_id);
             my $a_lgm=CXGN::Phenome::LocusgroupMember->new($schema);
             $a_lgm->set_locus_id($a_locus_id);
             $a_lgm->set_evidence_id($params{locus_evidence_code_id});
-            $a_lgm->set_reference_id($params{locus_reference_id});
+            $a_lgm->set_reference_id($reference_id);
             $a_lgm->set_sp_person_id($logged_person_id);
 
             if ($directional) {
