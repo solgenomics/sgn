@@ -47,6 +47,7 @@ sub display_locusgroup_members_GET  {
         my $common_name = $locus->get_common_name;
         my $evidence = $members->{$locus_id}->{evidence};
         my $ref = $members->{$locus_id}->{reference};
+        no warnings 'uninitialized';
         $data{$common_name} .= qq|<a href="/locus/$locus_id/view">$locus_name</a> ($evidence. $ref)<br />| ;
     }
     foreach my $common_name (sort keys %data) {
@@ -77,7 +78,7 @@ sub add_member_POST :Args(0) {
         $self->status_bad_request($c, message => 'need locus input param' );
         return;
     }
-    my ($locus_name, $locus_symbol, $locus_id) = split (/|/ ,$locus_input);
+    my ($locus_name, $locus_symbol, $locus_id) = split (/\|/ ,$locus_input);
     my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema');
     my $locus = $phenome_schema
         ->resultset('Locus')
