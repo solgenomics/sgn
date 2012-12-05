@@ -84,15 +84,19 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     my $stock_names_file = $c->req->upload("stock_names_file");
     my $labels_per_page = $c->req->param("labels_per_page");
     my $page_format = $c->req->param("page_format") || "letter";
+    my $top_margin_mm = $c->req->param("top_margin");
+    my $bottom_margin_mm = $c->req->param("bottom_margin");
 
-    print STDERR "FILE  = ".Data::Dumper::Dumper($stock_names_file);
+    my $top_margin = $top_margin_mm * 2.846;     # convert mm into pixels
+    my $bottom_margin = $bottom_margin_mm * 2.846; 
+
     # read file if upload
 
     if ($stock_names_file) { 
-	print STDERR "READING FILE...\n";
 	my $stock_file_contents = read_file($stock_names_file->{tempname});
 	$stock_names = $stock_names ."\n".$stock_file_contents;
     }
+
     $stock_names =~ s/\r//g; 
     my @names = split /\n/, $stock_names;
 
@@ -142,7 +146,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     
     my ($page_width, $page_height) = @{$pdf->get_page_size($page_format)}[2,3];
 
-    my $label_height = int($page_height / $labels_per_page);
+    my $label_height = int( ($page_height - $top_margin - $bottom_margin) / $labels_per_page);
 
     my @pages;
     foreach my $page (1..$self->label_to_page($labels_per_page, scalar(@found))) { 
@@ -165,10 +169,8 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 
 	# note: pdf coord system zero is lower left corner
 	#
-	my $xpos = 100;
-	my $ypos = $page_height - ($label_on_page * $label_height);
 
-	my $final_barcode_width = 200;
+	my $final_barcode_width = 180;
 
 	my $scalex = $final_barcode_width / $image->{width};
 	my $scaley = $label_height / $image->{height};
@@ -176,11 +178,15 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 	if ($scalex < $scaley) { $scaley = $scalex; }
 	else { $scalex = $scaley; }
 
-	$pages[$page_nr-1]->line($page_width -100, $ypos, $page_width, $ypos);
+	my $label_boundary = $page_height - ($label_on_page * $label_height) - $top_margin;
 
-	$pages[$page_nr-1]->image(image=>$image, xpos=>$page_width - 2 * $final_barcode_width - 10, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
+	my $ypos = $label_boundary - int( ($label_height - $image->{height} * $scaley) /2);
 
-	$pages[$page_nr-1]->image(image=>$image, xpos=>$page_width - $final_barcode_width - 5, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
+	$pages[$page_nr-1]->line($page_width -100, $label_boundary, $page_width, $label_boundary);
+
+	$pages[$page_nr-1]->image(image=>$image, xpos=>$page_width - 2 * $final_barcode_width - 5, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
+
+	$pages[$page_nr-1]->image(image=>$image, xpos=>$page_width - $final_barcode_width - 5, ypos=>$ypos , xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
 
     }
 
