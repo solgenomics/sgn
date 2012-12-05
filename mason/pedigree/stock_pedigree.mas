@@ -27,25 +27,57 @@ a Bio::Chado::Schema::Stock::Stock object
   $stock_id
 </%args>
 
+<& /util/import_javascript.mas, classes => [ 'jqueryui' ] &>
+
+<!-- script>
+  //display_stock_pedigree();
+</script -->
 
 <center>
-<div style="max-width:700px;max-height:400px;overflow:auto">
-<object target="_top"
-	xmlns="http://www.w3.org/2000/svg"
-	xmlns:xlink="http://www.w3.org/1999/xlink"
-	pluginspage="http://www.adobe.com/svg/viewer/install/"
-	width="700px"
-	max-height="400px"
-	min-height="200px"
-	height="400px"
-	overflow="auto"
-        data="/pedigree/svg/<% $stock_id %>" type="image/svg+xml">
-    <!-- put content for old browsers or IE here, it
-         will get displayed instead of the SVG. You can 
-         embed a raster version of the image here, but remember it 
-         will get loaded by the SVG capable browsers as well, 
-         even if they don't display it! That may slow your 
-         page down significantly. -->
-</object>
+<div name="stock_pedigree" style="max-width:700px;max-height:400px;overflow:auto">
 </div>
 </center>
+
+<link rel="stylesheet" href="http://code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css" />
+    <script src="http://code.jquery.com/jquery-1.8.3.js"></script>
+    <script src="/resources/demos/external/jquery.bgiframe-2.1.2.js"></script>
+    <script src="http://code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
+    <link rel="stylesheet" href="/resources/demos/style.css" />
+    <script>
+    $(function() {
+        $( "#dialog" ).dialog();
+    });
+    </script>
+ 
+<div id="dialog" title="Basic dialog">
+    <p>This is the default dialog which is useful for displaying information. The dialog window can be moved, resized and closed with the 'x' icon.</p>
+</div>
+
+
+<script>
+  function add_parent() { 
+    alert("adding parent!");
+  }
+</script>
+
+<!-- script>
+  function display_stock_pedigree() {
+    var pedigree_object = 
+    '<object target="_top" '+
+	   'xmlns="http://www.w3.org/2000/svg"'+
+	   'xmlns:xlink="http://www.w3.org/1999/xlink"'+
+	   'pluginspage="http://www.adobe.com/svg/viewer/install/"'+
+	   'width="700px"'+
+	   'max-height="400px"'+
+	   'min-height="200px"'+
+	   'height="400px"'+
+	   'overflow="auto"'+
+	   'data="/pedigree/svg/<% $stock_id %>" type="image/svg+xml">'+
+    '</object>';
+  
+    var stock_div = document.getElementById('stock_pedigree');
+    stock_div.innerHTML(pedigree_object);
+
+  }
+
+</script -->

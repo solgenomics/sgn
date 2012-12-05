@@ -173,7 +173,7 @@ my $ontology_subtitle = $curator || $submitter || $sequencer  ?
 
 
 </%perl>
-<& /util/import_javascript.mas, classes => ["jquery", "thickbox", "CXGN.Phenome.Tools", "CXGN.Page.FormattingHelpers"] &>
+<& /util/import_javascript.mas, classes => ["jquery", "jqueryui", "thickbox", "CXGN.Phenome.Tools", "CXGN.Page.FormattingHelpers"] &>
 
 
 <script language="javascript">
@@ -250,16 +250,23 @@ function jqueryStuff() {
 
 % if ($has_pedigree==1) {
 
-<&| /page/info_section.mas, title=>"Pedigree" , collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, title=>"Pedigree" , collapsible=>1, collapsed=>0, subtitle=>'[Add parent]' &>
   <& /pedigree/stock_pedigree.mas, stock_id => $stock_id &>
 </&>
 
 % }  else {
 
-<&| /page/info_section.mas, title=>"Pedigree" , collapsible=>1, collapsed=>1 &>
+<&| /page/info_section.mas, title=>"Pedigree" , collapsible=>1, collapsed=>1, subtitle=>'[<a href="javascript:add_parent()">Add parent</a>]' &>
 </&>
 
 % }
+
+<script>
+  function add_parent() { 
+  alert("add parent!!!");
+  }
+</script>
+
 
 
 
