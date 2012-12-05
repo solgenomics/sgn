@@ -4,7 +4,7 @@
 @locations => ()
 </%args>
 
-<form action="/breeders/phenotype/upload" >
+<form action="/breeders/phenotype/upload" method="post"  enctype="multipart/form-data" >
 
 <table><tr><td>
 Trial:</td><td>
@@ -27,6 +27,7 @@ Location:
 <tr><td>
 Upload phenotype file
 </td><td>
+
  <input type="file" name="phenotype_file" /><br />
 <input type="radio" name="format" value="barcode" checked="1" /> Barcode format<br />
 <input type="radio" name="format" value="Spreadsheet" /> Spreadsheet (IBP format)<br />

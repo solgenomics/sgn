@@ -4,6 +4,9 @@ package SGN::Controller::Barcode;
 
 use Moose;
 use GD;
+
+use DateTime;
+use File::Slurp;
 use Barcode::Code128;
 #use GD::Barcode::QRcode;
 use Tie::UrlEncoder;
@@ -16,7 +19,31 @@ sub index : Path('/barcode') Args(0) {
     my $self =shift;
     my $c = shift;
     
-    $c->stash->{template}='/barcode/index.mas';
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    # get projects
+    my @rows = $schema->resultset('Project::Project')->all();
+    my @projects = ();
+    foreach my $row (@rows) { 
+	push @projects, [ $row->project_id, $row->name, $row->description ];
+    }
+    $c->stash->{projects} = \@projects;
+    @rows = $schema->resultset('NaturalDiversity::NdGeolocation')->all();
+    my @locations = ();
+    foreach my $row (@rows) {
+	push @locations,  [ $row->nd_geolocation_id,$row->description ];
+    }
+
+    # get tool description info
+    #
+    my @tools_def = read_file($c->path_to("../cassava/documents/barcode/tools.def"));
+
+    print STDERR join "\n", @tools_def;
+
+    $c->stash->{tools_def} = \@tools_def;
+
+    $c->stash->{locations} = \@locations;
+   
+    $c->stash->{template} = '/barcode/index.mas';
 }
 
 sub barcode_image : Path('/barcode/image') Args(0) { 
@@ -26,12 +53,11 @@ sub barcode_image : Path('/barcode/image') Args(0) {
     my $code = $c->req->param("code");
     my $text = $c->req->param("text");
     my $size = $c->req->param("size");
-    my $top  = $c->req->param("top") || 30;
+    my $top  = $c->req->param("top");
     
     my $scale = 2;
     if ($size eq "small") { $scale = 1; }
-    if ($size eq "huge") { $scale = 3; }
-    
+    if ($size eq "huge") { $scale = 5; }
     my $barcode_object = Barcode::Code128->new();
     $barcode_object->barcode($code);
     $barcode_object->font('large');
@@ -146,8 +172,8 @@ sub barcode_tool :Path('/barcode/tool') Args(3) {
     my $cvterm_rs = $c->dbic_schema('Bio::Chado::Schema')->resultset('Cv::Cvterm')->search( { dbxref_id => $dbxref_rs->first->dbxref_id });
 
     my $cvterm_id = $cvterm_rs->first()->cvterm_id();
-   my $cvterm_synonym_rs = ""; #$c->dbic_schema('Bio::Chado::Schema')->resultset('Cv::Cvtermsynonym')->search->( { cvterm_id=>$cvterm_id });
-
+    my $cvterm_synonym_rs = ""; #$c->dbic_schema('Bio::Chado::Schema')->resultset('Cv::Cvtermsynonym')->search->( { cvterm_id=>$cvterm_id });
+    
     $c->stash->{cvterm} = $cvterm;
     $c->stash->{cvterm_name} = $cvterm_rs->first()->name();
     $c->stash->{cvterm_definition} = $cvterm_rs->first()->definition();
@@ -222,15 +248,14 @@ sub generate_barcode : Path('/barcode/generate') Args(0) {
 sub metadata_barcodes : Path('/barcode/metadata') Args(0) { 
     my $self = shift;
     my $c = shift;
-    
-    my $operator = $c->req->param("operator");
-    my $date     = $c->req->param("date");
-    my $size     = $c->req->param("size");
 
-    $c->stash->{operator} = $operator;
-    $c->stash->{date}     = $date;
-    $c->stash->{size}     = $size;
     
+    
+    $c->stash->{operator} = $c->req->param("operator");
+    $c->stash->{date}     = $c->req->param("date");
+    $c->stash->{size}     = $c->req->param("size");
+    $c->stash->{project}  = $c->req->param("project");
+    $c->stash->{location} = $c->req->param("location");
 
     $c->stash->{template} = '/barcode/tool/metadata.mas';
 }
@@ -242,8 +267,6 @@ sub new_barcode_tool : Path('/barcode/tool/') Args(1) {
     my $term = shift;
 
     $c->stash->{template} = '/barcode/tool/'.$term.'.mas';
-
-
 }
 
 1;

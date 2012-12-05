@@ -1,0 +1,57 @@
+<%doc>
+
+=head1 NAME
+
+stock/barcode/upload_confirm.mas - a mason component for displaying a confirmation
+message of stock phenotyping data loaded from a barcode reader.
+page.
+
+=AUTHOR
+
+Naama Menda <nm249@cornell.edu>
+
+=cut
+
+</%doc>
+
+<%args>
+
+@errors => ()
+@warnings => ()
+$data => undef # formatted data to be printed on confirmation page
+$feedback_email
+$tempfile
+
+</%args>
+
+<%perl>
+
+my $err_string;
+
+my $warning_string = join "<br />" , @warnings;
+if (!@errors) {
+    $err_string = "No errors found! Click the Confirm upload button to proceed";
+} else {
+    $err_string .= "The following errors were found. Please correct and try again. <a href=\"mailto:$feedback_email\">Contact us</a> for assistance : <br />";
+    $err_string .= join "<br />" , @errors;
+    $err_string .= "<h4>Cannot continue with uploading.</h4>";
+    $err_string .= qq|<a href="javascript:history.back()">Go back to upload page</a>|;
+}
+
+</%perl>
+
+<& /page/page_title.mas, title => "Confirm barcode data upload" &>
+<&| /page/info_section.mas, title => "Confirm upload" &>
+ <form action="/barcode/stock/store" method="POST" >
+   <h4>Warnings</h4><div> <% $warning_string %> </div>
+   <br />
+   <h4>Errors</h4><div> <% $err_string %> </div>
+   <br />
+   <input type="hidden" name="type" value="confirm">
+   <input type="hidden" name="tempfile" value="<% $tempfile %>">
+
+%if (!@errors) {
+   <input type = "submit" value = "Confirm upload">
+%}
+ </form>
+</&>

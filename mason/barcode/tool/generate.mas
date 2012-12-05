@@ -1,0 +1,11 @@
+
+<%args>
+$code
+$text => ''
+$size => 'large'
+$top => 30
+</%args>
+
+<center>
+<img src="/barcode/image/?code=<% $code %>&text=<% $text %>&size=<% $size %>&top=<% $top %>" />
+</center>
