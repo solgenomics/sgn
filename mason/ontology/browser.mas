@@ -1,5 +1,25 @@
 <%doc>
 
+=head1 NAME
+
+/ontology/browser.mas - a mason component that displays an ontology browser
+
+=head1 DESCRITPION
+
+The ontology browser is relying on JavaScript and uses AJAX requests to pull in the data. The AJAX requests are handled by a Catalyst controller SGN::Controller::AJAX::Onto. The JavaScript code is in js/CXGN/Tools/Onto.js.
+
+To configure which ontologies should be displayed, insert a line of the following format into the catalysts local conf file (sgn_local.conf on SGN):
+
+C<onto_root_namespaces  GO (Gene Ontology), PO (Plant Ontology), SO (Sequence Ontology), PATO (Phenotype and Trait Ontology), SP (Solanaceae Ontology)>
+
+where onto_root_namespaces is the conf key, "GO" the two letter code of the ontology (as it appears in the db database table), and in parenthesis is the human readable name of the ontology.
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>
+
+=cut
+
 </%doc>
 
 <%args>

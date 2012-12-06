@@ -1,0 +1,41 @@
+
+<%doc>
+
+=head1 NAME
+
+html_select - create a html select menu
+
+=head1 SYNOPSYS
+
+<& /page/html_select.mas, name=>$name, $choices=> [ [ 1, "France"], [ 2, "Spain" ] ], label=>"select country", $id=>"27", params => 'onchange="alert('foo')", multiple=>0  &>
+
+Based on code by Robert Buels in CXGN::Page::FormattingHelpers.
+
+=cut
+
+</%doc>
+
+<%args>
+$name
+@choices
+$selected => ''
+$id => ''
+$multiple => ''
+$params => ''
+$label => ''
+</%args>
+
+<%perl>
+use strict;
+use CXGN::Page::FormattingHelpers qw | simple_selectbox_html |;
+
+print simple_selectbox_html(
+   name => $name,
+   choices => \@choices,
+   selected => $selected,
+   multiple => $multiple,
+   id => $id,
+   params => $params,
+   label => $label,
+);
+</%perl>

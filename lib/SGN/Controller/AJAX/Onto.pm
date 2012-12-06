@@ -10,6 +10,12 @@ cache, that the SGN ontology browser relies on. Output is JSON, as a
 list of hashes, that has the following keys: accession, has_children,
 cvterm_name, cvterm_id, and for some functions, parent.
 
+The ontologies that should be displayed must be configured in the configuration file (sgn.conf or sgn_local.conf for SGN). Insert a line of the following format into the conf file:
+
+C<onto_root_namespaces  GO (Gene Ontology), PO (Plant Ontology), SO (Sequence Ontology), PATO (Phenotype and Trait Ontology), SP (Solanaceae Ontology)>
+
+where onto_root_namespaces is the conf key, "GO" the two letter code of the ontology (as it appears in the db database table), and in parenthesis is the human readable name of the ontology.
+
 =head1 AUTHOR
 
 Lukas Mueller <lam87@cornell.edu>
@@ -135,6 +141,47 @@ sub parents_GET  {
     $c->{stash}->{rest} = \@response_list;
 }
 
+=head2 menu
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub menu  : Local : ActionClass('REST') { }
+
+sub menu_GET  {
+    my $self = shift;
+    my $c = shift;
+    
+    my $menudata = $c->config->{onto_root_namespaces};
+
+    print STDERR "MENUDATA: $menudata\n";
+    my @menuitems = split ",", $menudata;
+
+    my $menu = '<select name="cv_select">';
+
+    foreach my $mi (@menuitems) { 
+	print STDERR "MENU ITEM: $mi\n";
+	if ($mi =~ /\s*(\w+)?\s*(.*)$/) { 
+	    my $value = $1;
+	    my $name = $2;
+
+	    $menu .= qq { <option value="$value">$value $name</option>\n };
+	}
+    }
+    
+    $menu .= "</select>\n";
+    $c->stash->{rest} = [ $menu ];
+    
+}
+
+
+
 
 =head2 roots
 
@@ -174,7 +221,7 @@ sub roots_GET {
             );
     }
     else {
-        @namespaces = split /\%09/, $namespace; #split on tab?
+        @namespaces = split /\s+/, $namespace; #split on whitespace
     }
     my @roots = ();
     my $is_rel = 0;

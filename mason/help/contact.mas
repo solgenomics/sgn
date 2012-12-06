@@ -1,17 +1,20 @@
 <%args>
-$website_name => "SGN"
+$website_name => ''
+$captcha_public_key
 </%args>
 
 <& "/page/page_title.mas", title => "Contact $website_name" &>
 
 % #The form
+<% $ENV{REMOTE_ADDR} %>
+<% ##$captcha_public_key %>
 <form method="POST" action= "/contact/submit" name = "contactForm">
 <div style="margin-left: 30px">
 <table summary="" border="0" cellpadding="5" cellspacing="5">
 
 % #Uses Perl to print out the fields with similar HTML tags
 <%perl>
-my $infoNeeded = ["name", "email", "subject"];
+my $infoNeeded = ["name", "email", "subject", ];
 my $defaultVal = {"name" => $name, 
                       "email" => $email,
                          "subject" => $subject};
@@ -35,6 +38,9 @@ my $defaultVal = {"name" => $name,
 				name="<% $info_category %>" />
 </td></tr>
 % }     
+
+
+
 % # Body uses a text_area so it is hardcoded.
 % # Like the other inputs, it will display a red message above saying 
 % # "Message needed."
@@ -51,10 +57,45 @@ Message body is required
 <textarea cols="77" rows="12" name="body"><% $body |h%></textarea>
 </td></tr>
 
+
+<tr><td><strong>Are you human?*</strong><br />What is <% $contact_form_human_question %>?</td>
+
+<td>
+% if (!$contact_form_human_answer_correct) { 
+<font style = "color:red; font-size: 10px;" align = "left" valign = "top">     
+% if (!$contact_form_human_answer) { 
+Prove that you are a human being is required<br /></font>
+% } else { 
+Either you are not human - or you are not very good at math! ;-)</font>
+<br />
+%    }
+% }
+  <input type="text" value="" name="contact_form_human_answer" size="4" />
+
+</td></tr>
+
+
+
 <tr><td colspan="2" align="center" valign="middle" style = "color:red; font-size: 90%; font-style:italic;">
 fields marked with <% '"*"' |h %> are required
 </td></tr>
 
+
+
+
+<tr><td>&nbsp;</td><td>
+<script type="text/javascript"
+     src="http://www.google.com/recaptcha/api/challenge?k=<% $captcha_public_key %>">
+  </script>
+  <noscript>
+     <iframe src="http://www.google.com/recaptcha/api/noscript?k=<% $captcha_public_key %>"
+         height="300" width="500" frameborder="0"></iframe><br>
+     <textarea name="recaptcha_challenge_field" rows="3" cols="40">
+     </textarea>
+     <input type="hidden" name="recaptcha_response_field"
+         value="manual_challenge">
+  </noscript>
+</td></tr>
 <tr><td colspan="2" align="center" valign="middle">
 <input type="submit" value="Submit" />
 </td></tr>
@@ -94,6 +135,9 @@ EOH
   $body                     => ''
   %filled                   => (name => 1, email => 1, subject => 1, body => 1)
   $email_address_to_display => ''
+  $contact_form_human_answer => ''
+  $contact_form_human_question => ''
+  $contact_form_human_answer_correct => 0
 </%args>
 <%once>
   use CXGN::Page::FormattingHelpers 'info_table_html';

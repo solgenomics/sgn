@@ -1,6 +1,6 @@
 <& /page/mode_buttons.mas, buttons => [
         ['/search/phenotypes/qtl',    'QTLs'],
-        ['/search/phenotypes/stock',  'Mutants & Accessions'],
+        ['/search/phenotypes/stock',  'Mutants &amp; Accessions'],
         ['/search/phenotypes/traits', 'Traits'],
     ],
 &>

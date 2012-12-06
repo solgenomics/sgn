@@ -54,6 +54,40 @@ sub new_locus : Chained('get_locus') PathPart('new') Args(0) {
         );
 }
 
+
+sub view_by_name : Path('/locus/view/') Args(0) { 
+
+    my ($self, $c) = @_;
+
+    my $symbol = $c->req->param("symbol");
+    my $locusname  = $c->req->param("locus");
+    my $species = $c->req->param("species");
+
+    my $locus_id = undef;
+    my $locus = undef;
+    if ($symbol && $species) { 
+	$locus = $c->stash->{locus} = CXGN::Phenome::Locus->new_with_symbol_and_species($c->dbc->dbh, $symbol, $species);
+    }
+
+    if ($locusname) { 
+	$locus = $c->stash->{locus} = CXGN::Phenome::Locus->new_with_locusname($c->dbc->dbh, $locusname);
+    }
+    
+    if (defined($locus->get_locus_id())) { 
+	my $locus_id = $locus->get_locus_id();
+	$c->stash->{locus} = $locus;
+	$c->detach("/locus/view_locus", [ $locus_id] );    #("/locus/$locus_id/view");    
+    }
+    else { 
+	$c->stash->{template} = 'generic_message.mas';
+	$c->stash->{message} = "No locus was found for the identifier provided ($symbol $locusname $species).";
+	# forward to search page ?
+    }
+
+
+}
+
+
 =head2 view_locus
 
 Public path: /locus/<locus_id>/view
@@ -83,6 +117,8 @@ sub view_locus : Chained('get_locus') PathPart('view') Args(0) {
     ###Check if a locus page can be printed###
     my $locus_id = $locus ? $locus->get_locus_id : undef ;
 
+    print STDERR "LOCUS_ID: $locus_id ACTION: $action\n\n";
+
     # print message if locus_id is not valid
     unless ( ( $locus_id =~ m /^\d+$/ ) || ($action eq 'new' && !$locus_id) ) {
         $c->throw_404( "No locus exists for that identifier." );
@@ -101,6 +137,8 @@ sub view_locus : Chained('get_locus') PathPart('view') Args(0) {
                   notify            => 0,   #< does not send an error email
             );
     }
+
+
     # print message if locus_id does not exist
     if ( !$locus && $action ne 'new' && $action ne 'store' ) {
         $c->throw_404('No locus exists for this identifier');

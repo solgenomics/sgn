@@ -35,6 +35,10 @@ The map_id of the map that should be displayed when no map_id is provided.
 
 =item $show_offsets
 
+=item $cview_db_backend
+
+Provide the name of the cview db backend. Either cxgn or Cassava.
+
 =back
 
 =head1 AUTHOR
@@ -71,6 +75,7 @@ $cM_start => undef
 $cM_end => undef
 $confidence => undef
 $default_map_id => undef
+$cview_db_backend => 'cxgn'
 </%args>
 
 <%perl>
@@ -99,7 +104,7 @@ $viewer -> set_color_model($color_model);
 $viewer -> set_display_marker_type($marker_type);
 $viewer -> set_force($force);
 $viewer -> set_default_map_id($default_map_id);
-$viewer -> set_db_backend( { cview_db_backend => $c->{cview_db_backend}});
+$viewer -> set_db_backend($cview_db_backend);
 
 if ($map_chr_select) { 
     my ($comp_map_id, $comp_chr) = split / /, $map_chr_select; 

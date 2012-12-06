@@ -89,7 +89,7 @@ Seedlings were grown in the greenhouse and nuclear DNA was extracted from etiola
 
 <h4>Accession sequenced</h4>
 
-The accession sequenced is referred to as "Nb-BTI". Seeds can be obtained by contacting Gregory Martin at <a href="mailto:gbm7@cornell.edu">gbm7@cornell.edu</a>.
+The accession sequenced is referred to as "Nb-1". Seeds can be obtained by contacting Gregory Martin at <a href="mailto:gbm7@cornell.edu">gbm7@cornell.edu</a>.
 
 <h4>Assembly Statistics</h4>
 
@@ -204,6 +204,15 @@ The draft assembly can be analyzed using the <a href="/tools/blast.pl?id=194">SG
 <li>Goodin, M. M., D. Zaitlin, R. A. Naidu, and S. A. Lommel (2008).  Nicotiana benthamiana: Its history and future as a model for plant-pathogen interactions.  Molecular Plant-Microbe Interactions 21:1026.</li>
 </ol>
 
+<h4>Data Agreement</h4>
+
+By downloading the Nicotiana benthamiana genome information in this directory you 
+accept the following terms: The sequence information can be used freely 
+with the only restriction that a full genome analysis cannot be published based on 
+this data before publication by the sequencing collaborators. 
+<br /><br />
+Please contact Greg Martin (gbm7@cornell.edu) if you have any questions.
+
 
 <h4>Acknowledgments</h4>
 
@@ -212,3 +221,9 @@ Sequencing of the N. benthamiana genome was supported by funds from the Boyce Th
 <h4>Online tutorial</h4>
 
 An on-line tutorial of the VIGS procedure is available on the <a href="http://www.jove.com/video/1292/virus-induced-gene-silencing-vigs-in-nicotiana-benthamiana-and-tomato">JOVE site</a>.
+
+
+<h4>Links</h4>
+
+The Nicotiana benthamiana sequencing project in Austrialia/New Zealand can be accessed throught their <a href="http://sydney.edu.au/science/molecular_bioscience/sites/benthamiana/">website</a>.
+<br /><br />

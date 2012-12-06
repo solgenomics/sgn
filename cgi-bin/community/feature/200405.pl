@@ -21,7 +21,7 @@ print<<END_HEREDOC;
   <p>First approach was the collection of massive hot pepper ESTs
   from divergent cDNA libraries (detail information is shown in
   <a href=
-  "http://plant.pdrc.re.kr/ks200201/pepper.html">http://plant.pdrc.re.kr/ks200201/pepper.html</a>
+  "http://mglab.snu.ac.kr/">http://mglab.snu.ac.kr/</a>
   and <a href=
   "/content/sgn_data.pl">http://www.sgn.cornell.edu/content/sgn_data.pl</a>).
   We have got more than 10,000 unique hot pepper genes (<a href=
@@ -33,7 +33,7 @@ print<<END_HEREDOC;
   genes involved plant defense reaction. The pepper gene expression
   profiles were constructed as database and released to public
   (<a href=
-  "http://plant.pdrc.re.kr:7777/index.html">http://plant.pdrc.re.kr:7777/index.html</a>).
+  "http://mglab.snu.ac.kr/">http://mglab.snu.ac.kr/</a>).
   Currently we are building 10K cDNA microarray and getting more
   expression data from divergent stress situation, developmental
   stage and specific organs.</p>
@@ -67,21 +67,17 @@ print<<END_HEREDOC;
   <h2>Contact</h2>
 
   <p><strong>Dr. Doil Choi</strong><br />
-  Plant Genomics Laboratory, Genome Research Center,<br />
-  Korea Research Institute of Bioscience &amp; Biotechnology
-  (KRIBB)<br />
-  52 Oun-dong, Yusong-gu, Taejon, 305-333, Korea<br />
+  Plant Genomics Laboratory,<br />
+  CALS, Soul National University,<br />
+  3123-200 Gwanak-Campus, Seoul, Korea<br />
   <br />
-  Tel : +82-42-860-4340<br />
-  Fax : +82-42-860-4309<br />
+  Tel : +82-2-880-4568<br />
+  Fax : +82-2-873-2056<br />
   e-mail : <a href=
-  "mailto:doil\@kribb.re.kr">doil\@kribb.re.kr</a><br />
-  relevant web-site :<br />
+  "mailto:doil\@snu.ac.kr">doil\@snu.ac.kr</a><br />
+  relevant web-sites :<br />
   <a href=
-  "http://plant.pdrc.re.kr:7777/index.html">http://plant.pdrc.re.kr:7777/index.html</a><br />
-
-  <a href=
-  "http://plant.pdrc.re.kr/ks200201/pepper.html">http://plant.pdrc.re.kr/ks200201/pepper.html</a><br />
+  "http://mglab.snu.ac.kr/">http://mglab.snu.ac.kr/</a><br />
 
   <a href=
   "http://www.sgn.cornell.edu/content/sgn_data.pl">http://www.sgn.cornell.edu/content/sgn_data.pl</a><br />

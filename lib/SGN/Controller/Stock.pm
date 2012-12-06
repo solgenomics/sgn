@@ -210,12 +210,15 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
             image_ids      => $image_ids,
             allele_count   => $c->stash->{allele_count},
             ontology_count => $c->stash->{ontology_count},
+	    has_pedigree => $c->stash->{has_pedigree},
+	    has_descendants => $c->stash->{has_descendants},
 
         },
         locus_add_uri  => $c->uri_for( '/ajax/stock/associate_locus' ),
         cvterm_add_uri => $c->uri_for( '/ajax/stock/associate_ontology'),
 	barcode_tempdir  => $barcode_tempdir,
 	barcode_tempuri   => $barcode_tempuri,
+	identifier_prefix => $c->config->{identifier_prefix},
         );
 }
 
@@ -350,11 +353,27 @@ sub get_stock_owner_ids : Private {
     $c->stash->{owner_ids} = $owner_ids;
 }
 
+sub get_stock_has_pedigree : Private {
+    my ( $self, $c ) = @_;
+    my $stock = $c->stash->{stock};
+    my $has_pedigree = $stock ? $self->_stock_has_pedigree($stock) : undef;
+    $c->stash->{has_pedigree} = $has_pedigree;
+}
+
+sub get_stock_has_descendants : Private {
+    my ( $self, $c ) = @_;
+    my $stock = $c->stash->{stock};
+    my $has_descendants = $stock ? $self->_stock_has_descendants($stock) : undef;
+    $c->stash->{has_descendants} = $has_descendants;
+}
+
 sub get_stock_extended_info : Private {
     my ( $self, $c ) = @_;
     $c->forward('get_stock_cvterms');
     $c->forward('get_stock_allele_ids');
     $c->forward('get_stock_owner_ids');
+    $c->forward('get_stock_has_pedigree');
+    $c->forward('get_stock_has_descendants');
 
     # look up the stock again, this time prefetching a lot of data about its related stocks
     $c->stash->{stock_row} = $self->schema->resultset('Stock::Stock')
@@ -723,6 +742,7 @@ sub _stock_images {
     return $ids;
 }
 
+
 sub _stock_allele_ids {
     my ($self, $stock) = @_;
     my $ids = $stock->get_schema->storage->dbh->selectcol_arrayref
@@ -743,20 +763,65 @@ sub _stock_owner_ids {
     return $ids;
 }
 
+sub _stock_has_pedigree {
+  my ($self, $stock) = @_;
+  my $bcs_stock = $stock->get_object_row;
+  my $cvterm_female_parent = $self->schema->resultset("Cv::Cvterm")->create_with(
+										 { name   => 'female_parent',
+										   cv     => 'stock relationship',
+										   db     => 'null',
+										   dbxref => 'female_parent',
+										 });
+  my $cvterm_male_parent = $self->schema->resultset("Cv::Cvterm")->create_with(
+									       { name   => 'male_parent',
+										 cv     => 'stock relationship',
+										 db     => 'null',
+										 dbxref => 'male_parent',
+									       });
+
+  my $stock_relationships = $bcs_stock->search_related("stock_relationship_objects",undef,{ prefetch => ['type','subject'] });
+  my $female_parent_relationship = $stock_relationships->find({type_id => $cvterm_female_parent->cvterm_id()});
+  my $male_parent_relationship = $stock_relationships->find({type_id => $cvterm_male_parent->cvterm_id()});
+  if ($female_parent_relationship || $male_parent_relationship) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
+sub _stock_has_descendants {
+  my ($self, $stock) = @_;
+  my $bcs_stock = $stock->get_object_row;
+  my $cvterm_female_parent = $self->schema->resultset("Cv::Cvterm")->create_with(
+										 { name   => 'female_parent',
+										   cv     => 'stock relationship',
+										   db     => 'null',
+										   dbxref => 'female_parent',
+										 });
+  my $cvterm_male_parent = $self->schema->resultset("Cv::Cvterm")->create_with(
+									       { name   => 'male_parent',
+										 cv     => 'stock relationship',
+										 db     => 'null',
+										 dbxref => 'male_parent',
+									       });
+  my $descendant_relationships = $bcs_stock->search_related("stock_relationship_subjects",undef,{ prefetch => ['type','object'] });
+  if ($descendant_relationships) {
+    while (my $descendant_relationship = $descendant_relationships->next) {
+      my $descendant_stock_id = $descendant_relationship->object_id();
+      if ($descendant_stock_id && (($descendant_relationship->type_id() == $cvterm_female_parent->cvterm_id()) || ($descendant_relationship->type_id() == $cvterm_male_parent->cvterm_id()))) {
+	return 1;
+      } else {
+	return 0;
+      }
+    }
+  }
+}
+
 sub _validate_pair {
     my ($self,$c,$key,$value) = @_;
     $c->throw( is_client_error => 1, public_message => "$value is not a valid value for $key" )
         if ($key =~ m/_id$/ and $value !~ m/\d+/);
 }
-
-sub make_cross :Path("/stock/cross/new") :Args(0) { 
-
-    my ($self, $c) = @_;
-
-    $c->stash->{template} = '/stock/cross.mas';
-}
-     
-    
 
 
 

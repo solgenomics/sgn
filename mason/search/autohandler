@@ -20,14 +20,14 @@ Lukas Mueller &st;lam87@cornell.edu&gt;. Based on Perl code by Rob Buels.
 
 </%doc>
 
-<& /page/page_title.mas, title => 'Search SGN' &>
+<& /page/page_title.mas, title => 'Search' &>
 
 <& /page/mode_buttons.mas, buttons => [
 
     ['/search/organisms', 'Organisms'],
     ['/search/loci','Genes'],
     ['/search/features','Genome Features'],
-    ['/search/phenotypes','QTLs & Phenotypes'],
+    ['/search/phenotypes','QTLs &amp; Phenotypes'],
     ['/search/transcripts','Transcripts'],
     ['/search/family', 'Unigene Families' ],
     ['/search/markers','Markers'],

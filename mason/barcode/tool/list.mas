@@ -1,0 +1,68 @@
+
+<%doc>
+
+=head1 NAME /barcode/tool/list.mas
+
+Mason component that defines and lists available barcode tools.
+
+=head1 DESCRIPTION
+
+@tools_def: list of listrefs with cvterm, version, values, description, [ image_ids ] 
+
+=head1 AUTHOR
+
+Lukas Mueller
+
+=cut
+
+</%doc>
+
+<%args>
+@tools_def => ()
+</%args>
+
+
+<table title="available barcode tools">
+<%perl>
+
+my @priority_tools;
+my @other_tools;
+
+foreach my $tool (@tools_def) {
+
+  if ($tool =~ /^\#/) { next; }
+  
+  my ($cvterm, $version, $priority, $values, $description) = split /\t/, $tool;
+  
+  print STDERR "TRAIT: $cvterm, $priority\n\n";
+
+  if ($priority) {
+    print STDERR "PRIORITY!!!!\n";
+    push @priority_tools, [ $cvterm, $version, $values, $description ];
+  }
+  else {
+    push @other_tools, [ $cvterm, $version, $values, $description ];
+  }
+}
+
+print qq { <table title="Priority Tools"> };
+print qq { <tr><td colspan="3"><h4>Priority Tools</h4></td></tr> };
+foreach my $t (@priority_tools) {
+  print qq{ <tr><td>$t->[0]</td><td width="20">&nbsp;</td><td><a href=\"/barcode/tool/$t->[0]/$t->[1]/$t->[2]\">$t->[3]</a></td></tr> };
+}
+
+</%perl>
+</table>
+<br /><br />
+<&| /page/info_section.mas, title=>"Other tools", is_subsection=>1, collapsible=>1, collapsed=>1 &>
+
+<table>
+
+<%perl>
+foreach my $t (@other_tools) {
+  print qq{ <tr><td>$t->[0]</td><td width="20">&nbsp;</td><td><a href=\"/barcode/tool/$t->[0]/$t->[1]/$t->[2]\">$t->[3]</a></td></tr> };
+}
+</%perl>
+</table>
+
+</&>

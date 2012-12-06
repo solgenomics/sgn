@@ -169,8 +169,8 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
     $io->close();
 
     my $query_file = $seq_filename;
-     my $seq = Bio::Seq->new(-seq=>$sequence, -id=> $id || "temp");
-    my $io = Bio::SeqIO->new(-format=>'fasta', -file=>">".$query_file);
+    my $seq = Bio::Seq->new(-seq=>$sequence, -id=> $id || "temp");
+    $io = Bio::SeqIO->new(-format=>'fasta', -file=>">".$query_file);
     
      $io->write_seq($seq);
      $io->close();
@@ -199,7 +199,7 @@ system('/data/shared/bin/bwa_wrapper.sh', $basename, $seq_filename.".fragments",
 
     #my $count = 0;
 
-    my $id = $urlencode{basename($seq_filename)};
+    $id = $urlencode{basename($seq_filename)};
 
     #$job->wait();
 

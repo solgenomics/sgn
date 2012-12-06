@@ -1,0 +1,118 @@
+<%doc>
+
+=head1 NAME
+
+/genefamily/manual/add_locus.mas - a component for adding a locus to a locusgroup
+
+=head1 DESCRIPTION
+
+
+Parameters:
+
+=over 1
+
+=item locusgroup_id
+
+
+a database id
+
+
+
+=back
+
+=head1 AUTHOR
+
+Naama Menda <nm249@cornell.edu>
+
+=cut
+
+
+</%doc>
+
+<%args>
+
+$locusgroup_id
+$add_locus_uri => '/ajax/genefamily/manual/add'
+$members_div => 'locusgroup_members'
+$locus_autocomplete_uri => '/ajax/locus/autocomplete'
+</%args>
+
+
+<script language="javascript">
+
+ jQuery(function() {
+       var common_name = jQuery('#organism_select option:selected').attr("value");
+       jQuery("#locus").autocomplete({
+             source: '<% $locus_autocomplete_uri %>' + "?common_name=" + common_name + "&mode=no_alleles",
+             autoFocus: true,
+             minLength: 2,
+             select: function(event, ui) {
+                      Ontology.populateEvidence( 'locus_evidence_code_select', '/ajax/cvterm/evidence');
+               }
+          });
+
+       jQuery("#organism_select").change(function(){
+             common_name = jQuery('#organism_select option:selected').attr("value");
+             jQuery("#locus").autocomplete('option', 'source', '<% $locus_autocomplete_uri %>' + "?mode=no_alleles" + "&common_name=" + common_name  );
+       });
+
+  });
+
+  function update_references() {
+           var locus_info = jQuery("#locus").val();
+           var mySplitResult = locus_info.split("|");
+           var locus_id = mySplitResult[2];
+            Ontology.populateEvidence('locus_reference_select', '/locus/'+locus_id+'/references');
+  }
+
+  function submit_add_locus_form() {
+    //make an AJAX request with the form params
+    var locus = jQuery("#locus").val();
+    var reference_id = jQuery("#locus_reference_select").val();
+    var evidence_code_id = jQuery("#locus_evidence_code_select").val();
+    jQuery.ajax({
+            url: "<% $add_locus_uri %>" ,
+            type:"POST",
+            data: 'locusgroup_id='+<% $locusgroup_id %>+'&locus='+locus +'&evidence_id='+evidence_code_id +'&reference_id=' + reference_id,
+            success: function(response) {
+               var error = response.error;
+               if (error) { alert(error) ; }
+                Locus.displayMembers( "<% $members_div %>", "<% $locusgroup_id %>" );
+                reset_form();
+             }
+     } );
+  }
+
+   function reset_form() {
+         Effects.hideElement('associateLocusForm');
+         jQuery("#locus_evidence_code_select").html();
+  }
+
+</script>
+
+<& /util/import_javascript.mas, classes=>[qw[ jqueryui popup CXGN.Phenome.Locus CXGN.AJAX.Ontology ] ]&>
+
+
+<div id='associateLocusForm' style="display: none">
+  <div id='locus_search'>
+    <input type="text"
+	   style="width: 50%"
+	   id="locus"
+           name="locus" >
+    <select id = "organism_select"  onchange="jQuery('#locus').val('--type a locus name--');$('associate_locus_button').disabled=true""
+      </select>
+    </select>
+
+    <select id="locus_evidence_code_select" style="width: 50%"
+	    onchange="$('associate_locus_button').disabled=false;javascript:update_references()">
+    </select>
+    <select id="locus_reference_select" style="width: 100%">
+    </select>
+
+  <input type="button"
+	  id="associate_locus_button"
+	  value="Associate locus"
+	 disabled="true"
+         onclick="javascript:submit_add_locus_form();this.disabled=true;" />
+  </div>
+</div>

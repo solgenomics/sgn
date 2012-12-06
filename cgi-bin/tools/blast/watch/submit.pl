@@ -39,7 +39,7 @@ if ($sequence =~ />.+>/ ) { }
 
 my $seq_count = ($sequence =~ tr/>//);
 if($seq_count > 1) {
-    &user_error("Please submit only one query sequence at a time.");
+    &user_error($page,"Please submit only one query sequence at a time.");
 }
 
 if ($sequence !~ m/\s*>/) {

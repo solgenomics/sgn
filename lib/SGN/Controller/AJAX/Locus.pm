@@ -26,7 +26,8 @@ use CXGN::Chado::Publication;
 use CXGN::Page::FormattingHelpers qw/ columnar_table_html info_table_html html_alternate_show /;
 use List::MoreUtils qw /any /;
 use Scalar::Util qw(looks_like_number);
-
+use CXGN::Tools::Organism;
+use CXGN::Phenome::Schema;
 use Try::Tiny;
 
 
@@ -50,23 +51,48 @@ C<term>, responds with a JSON array of completions for that term.
 
 sub autocomplete : Local : ActionClass('REST') { }
 
-sub autocomplete_GET :Args(0) {
+sub autocomplete_GET : Args(0) {
     my ( $self, $c ) = @_;
-
+    my $mode = $c->req->param('mode');
     my $term = $c->req->param('term');
     my $common_name_id = $c->req->param('common_name_id');
+    my $common_name = $c->req->param('common_name');
     # trim and regularize whitespace
     $term =~ s/(^\s+|\s+)$//g;
     $term =~ s/\s+/ /g;
 
+    if ($common_name) {
+        my $q = "SELECT common_name_id FROM sgn.common_name where common_name = ? ";
+        my $sth = $c->dbc->dbh->prepare($q);
+        $sth->execute($common_name);
+        ($common_name_id) = $sth->fetchrow_array ;
+    }
     my @results;
-    my $q =  "SELECT  locus_symbol, locus_name, allele_symbol, is_default FROM locus join allele using (locus_id) where (locus_name ilike '%$term%' OR  locus_symbol ilike '%$term%') and locus.obsolete = 'f' and allele.obsolete='f' limit 20"; #and common_name_id = ?
-    my $sth = $c->dbc->dbh->prepare($q);
-    $sth->execute;
-    while (my ($locus_symbol, $locus_name, $allele_symbol, $is_default) = $sth->fetchrow_array ) {
-        my $allele_data = "Allele: $allele_symbol"  if !$is_default  ;
-        no warnings 'uninitialized';
-        push @results , "$locus_name ($locus_symbol) $allele_data";
+    if ($mode eq "no_alleles") {
+        my $q = "SELECT locus_symbol, locus_name, locus_id FROM locus
+                 WHERE (locus_name ilike '%$term%' OR  locus_symbol ilike '%$term%')
+                 AND locus.obsolete = 'f' ";
+        if ($common_name_id)  { $q .= " AND common_name_id = $common_name_id "; }
+        $q .= " LIMIT 20";
+        my $sth = $c->dbc->dbh->prepare($q);
+        $sth->execute;
+        while (my ($locus_symbol, $locus_name, $locus_id) = $sth->fetchrow_array ) {
+            push @results , "$locus_name|$locus_symbol|$locus_id" ;
+        }
+    } else {
+        my $q =  "SELECT  locus_symbol, locus_name, allele_symbol, is_default
+                  FROM locus JOIN allele USING (locus_id)
+                  WHERE (locus_name ilike '%$term%' OR  locus_symbol ilike '%$term%')
+                  AND locus.obsolete = 'f' AND allele.obsolete='f' ";
+        if ($common_name_id)  { $q .= " AND common_name_id = $common_name_id "; }
+        $q .= " LIMIT 20";
+        my $sth = $c->dbc->dbh->prepare($q);
+        $sth->execute;
+        while (my ($locus_symbol, $locus_name, $allele_symbol, $is_default) = $sth->fetchrow_array ) {
+            my $allele_data = "Allele: $allele_symbol"  if !$is_default  ;
+            no warnings 'uninitialized';
+            push @results , "$locus_name ($locus_symbol) $allele_data";
+        }
     }
     $c->{stash}->{rest} = \@results;
 }
@@ -444,7 +470,7 @@ sub locus_network_GET :Args(0) {
       my @members      = $group->get_locusgroup_members();
       my $members_info;
       my $index = 0;
-
+      my %by_organism;
 #check if group has only 1 member. This means the locus itself is the only member (other members might have been obsolete)
       if ( $group->count_members() == 1 ) { next GROUP; }
     MEMBER: foreach my $member (@members) {
@@ -469,11 +495,10 @@ sub locus_network_GET :Args(0) {
             $gene_activity = $associated_locus->get_gene_activity();
             $organism      = $associated_locus->get_common_name;
             my $lgm_obsolete_link =  $privileged ?
-                qq | <input type = "button" onclick="javascript:Locus.obsoleteLocusgroupMember(\'$lgm_id\',  \'$locus_id\', \'/ajax/locus/obsolete_locusgroup_member\', \'/locus/$locus_id/network\')" value ="Remove" /> |
-                : qq| <span class="ghosted">[Remove]</span> |;
-            ###########
-            $members_info .=
-                qq|$organism <a href="/locus/$member_locus_id/view">$associated_locus_name</a> $gene_activity $lgm_obsolete_link <br /> |
+                qq|<a href="javascript:Locus.obsoleteLocusgroupMember(\'$lgm_id\', \'$locus_id\', \'/ajax/locus/obsolete_locusgroup_member\', \'/locus/$locus_id/netwrok\')">[Remove]</a>| : qq| <span class="ghosted">[Remove]</span> |;
+
+            $by_organism{$organism} .=
+                qq|<a href="/locus/$member_locus_id/view">$associated_locus_name</a> $lgm_obsolete_link <br /> |
                 if ( $associated_locus->get_obsolete() eq 'f' );
             #directional relationships
             if ( $member_direction eq 'subject' ) {
@@ -482,6 +507,13 @@ sub locus_network_GET :Args(0) {
         }    #non-self members
         $index++;
     }    #members
+      foreach my $common_name (sort keys %by_organism) {
+          $members_info .= info_table_html(
+              $common_name => $by_organism{$common_name},
+              __sub        => 1,
+              __border     => 0,
+              );
+      }
       $rel{$relationship} .= $members_info if ( scalar(@members) > 1 );
   }    #groups
     foreach my $r ( keys %rel ) {
@@ -498,6 +530,10 @@ sub locus_network_GET :Args(0) {
 
 sub associate_locus:Path('/ajax/locus/associate_locus') :ActionClass('REST') {}
 
+sub associate_locus_GET :Args(0) {
+    my ($self, $c) = @_;
+    $c->stash->{rest} = { error => "Nothing here, it's a GET.." } ;
+}
 sub associate_locus_POST :Args(0) {
     my ($self, $c) = @_;
     my $schema = $c->dbic_schema('CXGN::Phenome::Schema');
@@ -508,10 +544,21 @@ sub associate_locus_POST :Args(0) {
     }
     my $logged_person_id = $c->user->get_object->get_sp_person_id if $c->user;
     my %params = map { $_ => $c->request->body_parameters->{$_} } qw/
-       locus_reference_id locus_evidence_code_id
-       object_id locus_relationship_id locus_id
+       locus_info locus_reference_id locus_evidence_code_id
+       locus_relationship_id locus_id locusgroup_id
     /;
-    my $locus_id = $params{locus_id};
+    my $locus_id = $params{locus_id}; #locus_id is used when making locus-locus association from a locus page
+    my $locusgroup_id = $params{locusgroup_id} ; #used when adding a locus to an existing group , from the manual gene family page
+    my $locus_info = $params{locus_info};
+    my ($locus_name,$locus_symbol,$a_locus_id) = split (/\|/ ,$locus_info);
+    if (!$locus_info || !$a_locus_id) {
+        #$self->status_bad_request($c, message => 'need loci param' );
+        $response->{error} .= "bad request. Invalid locus";
+    }
+    my $reference_id = $params{'locus_reference_id'};
+    $reference_id = $reference_id ? $reference_id :
+        CXGN::Chado::Publication::get_curator_ref($c->dbc->dbh);
+##
     my $relationship;
     if ($privileged) {
         try {
@@ -527,12 +574,12 @@ sub associate_locus_POST :Args(0) {
             my $lgm=CXGN::Phenome::LocusgroupMember->new($schema);
             $lgm->set_locus_id($locus_id );
             $lgm->set_evidence_id($params{locus_evidence_code_id});
-            $lgm->set_reference_id($params{locus_reference_id});
+            $lgm->set_reference_id($reference_id);
             $lgm->set_sp_person_id($logged_person_id);
             my $a_lgm=CXGN::Phenome::LocusgroupMember->new($schema);
-            $a_lgm->set_locus_id($params{object_id});
+            $a_lgm->set_locus_id($a_locus_id);
             $a_lgm->set_evidence_id($params{locus_evidence_code_id});
-            $a_lgm->set_reference_id($params{locus_reference_id});
+            $a_lgm->set_reference_id($reference_id);
             $a_lgm->set_sp_person_id($logged_person_id);
 
             if ($directional) {
@@ -549,7 +596,7 @@ sub associate_locus_POST :Args(0) {
             $response->{response} = 'success';
             return;
         } catch {
-            $response->{error} = "Failed: $_" ;
+            $response->{error} .= "Failed: $_" ;
             # send an email to sgn bugs
             $c->stash->{email} = {
                 to      => 'sgn-bugs@sgn.cornell.edu',
@@ -789,6 +836,7 @@ sub associate_unigene_POST :Args(0) {
     $c->stash->{rest} = $response;
 }
 
+<<<<<<< HEAD
 sub display_owners : Chained('/locus/get_locus') :PathPart('owners') : ActionClass('REST') { }
 
 sub display_owners_GET  {
@@ -891,6 +939,24 @@ sub assign_owner_POST :Args(0) {
         $response->{ error} = 'No privileges for assigning new owner. You must be an SGN curator' ;
     }
     $c->stash->{rest} = $response;
+
+=head2 organisms
+
+Public Path: /ajax/locus/organisms
+
+get a list of available organisms as stored in locus.common_name_id, 
+responds with a JSON array .
+
+=cut
+
+sub organisms : Local : ActionClass('REST') { }
+
+sub organisms_GET :Args(0) {
+    my ($self, $c) = @_;
+    my $response;
+    my ($organism_names_ref, $organism_ids_ref)=CXGN::Tools::Organism::get_existing_organisms( $c->dbc->dbh);
+    $response->{html} = $organism_names_ref;
+    $c->{stash}->{rest} = $response;
 }
 
 

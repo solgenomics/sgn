@@ -10,7 +10,7 @@
 JSAN.use('jquery');
 JSAN.use('jqueryui');
 JSAN.use('popup');
-
+JSAN.use('CXGN.Phenome.Tools');
 
 var Ontology = {
     submitCvtermForm: function(cvterm_add_uri, ontology_url) {
@@ -23,15 +23,17 @@ var Ontology = {
         var evidence_with = jQuery('#evidence_with_select').val();
         var reference = jQuery('#reference_select').val();
         jQuery.ajax({
-                type: 'POST',
+                url: cvterm_add_uri ,
+                    type: 'POST',
                     dataType: "json",
-                    url: cvterm_add_uri ,
+                    async: false,
                     data: 'term_name='+jQuery('#term_name').val()+'&object_id='+object_id+'&relationship='+relationship+'&evidence_code='+evidence_code+'&evidence_description='+evidence_description+'&evidence_with='+evidence_with+'&reference='+reference ,
                     success: function(response) {
                     var error = response.error;
                     if (error) { alert(error) ; }
                 }
             } );
+        Tools.toggleContent('associate_cvterm_form', 'locus_ontology')
         jQuery("#ontology").html( this.displayOntologies( "ontology" , ontology_url) );
     },
 
