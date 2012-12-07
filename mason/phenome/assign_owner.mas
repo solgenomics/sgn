@@ -53,10 +53,7 @@ Naama Menda <nm249@cornell.edu>
   $owners_div => 'object_owners'
 </%args>
 
-<div id = "<% $owners_div %>" >&nbsp;Loading..</div>
-
 <script language="javascript">
-  display_owners("<% $owners_div %>");
 
   jQuery(function() {
      jQuery("#sp_person").autocomplete({
@@ -74,40 +71,33 @@ Naama Menda <nm249@cornell.edu>
            success: function(response) {
                var error = response.error;
                if (error) { alert(error) ; }
-               display_owners( "<% $owners_div %>" );
+       	       display_owners( "<% $owners_div %>" );
            }
        } );
   }
-
-  function display_owners(owners_div) {
-  jQuery.ajax( { url: "/<% $object_type %>/<% $object_id %>/owners" , dataType: "json",
-      success: function(response) {
-       var json = response;
-       jQuery("#"+owners_div).html(response.html);
-      }
-  } );
-}
 
 </script>
 
 
 % if ($show_form) {
+
+ <&| /page/optional_show.mas, title => "Assign owner" &>
+ 
 <div id="associate_owner_form">
-  <b>Assign owner</b>Notice: 'user' account will be updated to 'submitter'
+  Notice: 'user' account will be updated to 'submitter'
   <div id="person_search" >
     <form name="owner_form" >
-      <input type="text" style="width: 50%" id="sp_person" name="sp_person" />
+      <input type="text" style="width: 70%" id="sp_person" name="sp_person" value = "type first or last name"/>
       <input type="hidden" id="object_id" name="object_id" value="<% $object_id %>" />
-
-      <input
+       <input
          type="button"
          name = "assign_owner"
          onclick="javascript:submit_owner_form()"
-         value = "Assign owner"
-         />
-      <div style="font-size: 80%; margin-left: 1em; color: #333">type first or last name</div>
+         value = "Assign owner" />
     </form>
   </div>
 </div>
+
+</&>
 
 % }

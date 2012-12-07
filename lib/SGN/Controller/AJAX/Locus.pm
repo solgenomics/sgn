@@ -836,7 +836,6 @@ sub associate_unigene_POST :Args(0) {
     $c->stash->{rest} = $response;
 }
 
-<<<<<<< HEAD
 sub display_owners : Chained('/locus/get_locus') :PathPart('owners') : ActionClass('REST') { }
 
 sub display_owners_GET  {
@@ -889,16 +888,15 @@ sub assign_owner_POST :Args(0) {
     my $sp_person = $params{sp_person};
     my ($first_name, $last_name , $sp_person_id) = split ',' , $sp_person;
     my $locus_id  = $params{object_id};
-    print STDERR "****POSTING : locus_id = $locus_id, person_id = $sp_person_id \n";
     if ($privileged && $locus_id) {
         my $dbh = $c->dbc->dbh;
         my $new_owner = CXGN::People::Person->new( $dbh, $sp_person_id );
         try {
             #if the new owner is not a submitter, assign that role
             if ( !$new_owner->has_role('submitter') ) {
-                $new_owner->add_role('submitter');
+		$new_owner->add_role('submitter');
             }
-            $schema->resultset('locus_owner')->find_or_create(
+            my $new_locus_owner = $schema->resultset('LocusOwner')->find_or_create(
                 {
                     sp_person_id => $sp_person_id,
                     locus_id     => $locus_id,
@@ -923,10 +921,11 @@ sub assign_owner_POST :Args(0) {
                 body    => $_,
             };
             $c->forward( $c->view('Email') );
-            return;
+	    $c->stash->{rest} = $response;
         };
         # if you reached here this means assign_owner worked. Now send an email to sgn-db-curation
-        my $owner_link =
+        $response->{response} = "success";
+	my $owner_link =
             qq |/solpeople/personal-info.pl?sp_person_id=$sp_person_id|;
         $c->stash->{email} = {
             to      => 'sgn-db-curation@sgn.cornell.edu',
@@ -936,9 +935,10 @@ sub assign_owner_POST :Args(0) {
         };
         $c->forward( $c->view('Email') );
     } else {
-        $response->{ error} = 'No privileges for assigning new owner. You must be an SGN curator' ;
+        $response->{error} = 'No privileges for assigning new owner. You must be an SGN curator' ;
     }
     $c->stash->{rest} = $response;
+}
 
 =head2 organisms
 
