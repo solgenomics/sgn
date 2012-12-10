@@ -86,8 +86,8 @@ Enter a list of stock names<br />
 
 <table cellpadding="0" cellspacing="0">
 <tr><td>Labels per page</td><td width="10"></td><td><input name="labels_per_page" size="2" value="10" /></td></tr>
-<tr><td>Top margin (mm)</td><td></td><td><input name="top_margin" size="2" value="17" /></td></tr>
-<tr><td>Bottom margin (mm)</td><td></td><td><input name="bottom_margin" size="2" value="5" /></td></tr>
+<tr><td>Top margin (mm)</td><td></td><td><input name="top_margin" size="2" value="12" /></td></tr>
+<tr><td>Bottom margin (mm)</td><td></td><td><input name="bottom_margin" size="2" value="12" /></td></tr>
 <tr><td>Page format</td><td width="10"></td><td><select name="page format">
 <option value="A4">A4</option>
 <option value="Letter" selected="1">Letter</option>
