@@ -45,6 +45,8 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
     #my $location = $c->req->param('location_id');
     my $maternal = $c->req->param('maternal');
     my $paternal = $c->req->param('paternal');
+    my $prefix = $c->req->param('prefix');
+    my $suffix = $c->req->param('suffix');
     my $progeny_number = $c->req->param('progeny_number');
     my $visible_to_role = $c->req->param('visible_to_role');
     
@@ -133,7 +135,7 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
 
     my $increment = 1;
     while ($increment < $progeny_number + 1) {
-      my $stock_name = $cross_name."-".$increment;
+	my $stock_name = $prefix.$cross_name."-".$increment.$suffix;
       my $accession_stock = $schema->resultset("Stock::Stock")->find_or_create(
             { organism_id => $organism_id,
               name       => $stock_name,
