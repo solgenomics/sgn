@@ -570,7 +570,7 @@ sub toggle_obsolete_annotation_POST :Args(0) {
 }
 
 
-=head2 autocomplete
+=head2 trait_autocomplete
 
 Public Path: /ajax/stock/trait_autocomplete
 
@@ -598,6 +598,109 @@ sub trait_autocomplete_GET :Args(0) {
     }
     $c->{stash}->{rest} = \@response_list;
 }
+
+
+=head2 stock_autocomplete
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub stock_autocomplete : Local : ActionClass('REST') { } 
+
+sub stock_autocomplete_GET :Args(0) { 
+    my ($self, $c) = @_;
+
+    my $term = $c->req->param('term');
+
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+
+    my @response_list;
+    my $q = "select distinct(name) from stock where name ilike ?";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute($term.'%');
+    while (my ($stock_name) = $sth->fetchrow_array) { 
+	push @response_list, $stock_name;
+    }
+
+    print STDERR "stock_autocomplete RESPONSELIST = ".join ", ", @response_list;
+    
+    $c->{stash}->{rest} = \@response_list;
+}
+
+
+=head2 add_stock_parent
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub add_stock_parent : Local : ActionClass('REST') { }
+
+sub add_stock_parent_GET :Args(0) { 
+    my ($self, $c) = @_;
+
+
+    if (!$c->user() && !$c->user()->roles() eq "submitter") { 
+	$c->stash->{rest} = {error =>  "you need to be logged in to use this functionality, or insufficient privileges." };
+	return;
+    }
+
+    my $stock_id = $c->req->param('stock_id');
+    my $parent_name = $c->req->param('parent_name');
+    my $parent_type = $c->req->param('parent_type');
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+
+    
+
+    my $cvterm_name = "";
+    if ($parent_type eq "male") { 
+	$cvterm_name = "male_parent";
+    }
+    elsif ($parent_type eq "female") { 
+	$cvterm_name = "female_parent";
+    }
+    
+    my $type_id_row = $schema->resultset("Cv::Cvterm")->find( { name=> $cvterm_name } );
+
+    my $cvterm_id;
+    if ($type_id_row) { 
+	$cvterm_id = $type_id_row->cvterm_id;
+    }
+
+    print STDERR "PARENT_NAME = $parent_name STOCK_ID $stock_id  $cvterm_name\n";
+
+    my $stock = $schema->resultset("Stock::Stock")->find( { stock_id => $stock_id });
+    my $parent = $schema->resultset("Stock::Stock")->find( { name => $parent_name } );
+
+    my $new_row = $schema->resultset("Stock::StockRelationship")->new( { subject_id => $parent->stock_id,
+									object_id  => $stock->stock_id,
+									type_id    => $cvterm_id,
+								      });
+    eval { 
+	$new_row->insert();
+    };
+
+    if ($@) { 
+	$c->stash->{rest} = { error => "An error occurred: $@"};
+    }
+
+    $c->stash->{rest} = 0;
+									
+}
+
 
 
 1;
