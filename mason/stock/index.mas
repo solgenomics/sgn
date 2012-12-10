@@ -247,24 +247,73 @@ function jqueryStuff() {
 
 % }
 
-
+% my $collapsible = 0; 
 % if ($has_pedigree==1) {
-
-<&| /page/info_section.mas, title=>"Pedigree" , collapsible=>1, collapsed=>0, subtitle=>'[Add parent]' &>
-  <& /pedigree/stock_pedigree.mas, stock_id => $stock_id &>
-</&>
-
-% }  else {
-
-<&| /page/info_section.mas, title=>"Pedigree" , collapsible=>1, collapsed=>1, subtitle=>'[<a href="javascript:add_parent()">Add parent</a>]' &>
-</&>
-
+%  $collapsible = 1;
 % }
 
+<&| /page/info_section.mas, title=>"Pedigree" , collapsible=> $collapsible, collapsed=>0, subtitle=>'[<a id="add_parent_link" >Add parent</a>]' &>
+  <& /pedigree/stock_pedigree.mas, stock_id => $stock_id, has_pedigree => $has_pedigree &>
+</&>
+
+
+<div id="add_parent_dialog" title="Add parent" >
+  Enter the name of an accession that is a known parent of stock named "<% $stockref->{stock}->get_name() %>":<br />
+
+<input type="text" id="stock_autocomplete" name="stock_autocomplete" /><br />
+<br />
+Parent is<br />
+<input type="radio" id="parent_type" value="female" checked="1" /> female<br />
+<input type="radio" id="parent_type" value="male" /> male<br />
+<input type="radio" id="parent_type" value="unknown" /> unknown<br />
+
+</div>
+
+
+
+
+
 <script>
-  function add_parent() { 
-  alert("add parent!!!");
-  }
+  
+  //alert( document.getElementById("add_parent_dialog").innerHTML );
+  
+    jQuery("#add_parent_dialog").dialog( {
+      autoOpen: false,
+      buttons: { "Cancel" :  function() { jQuery("#add_parent_dialog").dialog("close"); }, "Submit": function() { associate_parent() }  },
+      modal: true 
+    });
+    
+    jQuery("#add_parent_link").click( function () { 
+     jQuery("#add_parent_dialog" ).dialog("open");
+    });
+
+
+    jQuery("#stock_autocomplete").autocomplete({
+      source: '/ajax/stock/stock_autocomplete'
+    });
+
+    function associate_parent() { 
+      var parent_type = document.getElementById("parent_type").value;
+      var parent_name = document.getElementById("stock_autocomplete").value;
+      if (!parent_name) { alert("We need a name here, sorry!"); return; }
+      var stock_id = "<% $stockref->{stock}->get_stock_id %>";
+      jQuery.ajax({
+        url: '/ajax/stock/add_stock_parent',
+        dataType: "json",
+        type: 'GET',
+        data: 'stock_id='+stock_id+'&parent_name='+parent_name+'&parent_type='+parent_type,
+       success: function(response) { 
+         if (response.error) { alert(response.error); }
+         else { 
+           jQuery("#add_parent_dialog").dialog("close");
+           alert("The parent has been added.");
+         }
+       }
+} );
+    jQuery("#add_parent_dialog").dialog("close");
+    alert("all done!");
+}
+
 </script>
 
 
