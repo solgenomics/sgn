@@ -22,6 +22,7 @@ use Bio::Chado::NaturalDiversity::Reports;
 use SGN::View::Stock qw/stock_link stock_organisms stock_types/;
 use SVG;
 use IPC::Run3;
+use Data::Dumper;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -41,7 +42,9 @@ sub stock_pedigree :  Path('/pedigree/svg')  Args(1) {
   my $stock_row = $self->schema->resultset('Stock::Stock')
     ->find({ stock_id => $stock_id });
   my $stock_pedigree = $self->_get_pedigree($stock_row);
+  print STDERR "STOCK PEDIGREE: ". Data::Dumper::Dumper($stock_pedigree);
   my $stock_pedigree_svg = $self->_view_pedigree($stock_pedigree);
+  print STDERR "SVG: $stock_pedigree_svg\n\n";
   my $is_owner = $self->_check_role($c);
   $c->response->content_type('image/svg+xml');
   if ($stock_pedigree_svg) {
@@ -464,7 +467,7 @@ sub _view_pedigree {
     }
   }
   $graphviz_input .= "}";
-  if ($pedigree{'male_parent'} || $pedigree{'male_parent'}) {
+  if ($pedigree{'male_parent'} || $pedigree{'female_parent'}) {
     my @command = qw(dot -Tsvg);
     my $graphviz_out = '';
     run3 \@command, \$graphviz_input, \$graphviz_out;
