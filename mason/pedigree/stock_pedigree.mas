@@ -16,7 +16,10 @@ Jeremy Edwards <jde22@cornell.edu>
 =over 1
 
 =item stock
-a Bio::Chado::Schema::Stock::Stock object
+
+$stock_id - the id of the stock for which pedigree information will be displayed
+
+$has_pedigree - whether the stock has pedigree information.
 
 =back
 =cut
@@ -27,6 +30,65 @@ a Bio::Chado::Schema::Stock::Stock object
 $stock_id
 $has_pedigree
 </%args>
+
+<div id="add_parent_dialog" title="Add parent" >
+  Enter the name of an accession that is a known parent of this stock:<br />
+
+<input type="text" id="stock_autocomplete" name="stock_autocomplete" /><br />
+<br />
+Parent is<br />
+<input type="radio" id="female" name="parent_type" value="female"  /> female<br />
+<input type="radio" id="male" name="parent_type" value="male" /> male<br />
+<input type="radio" id="unknown" name="parent_type" value="unknown" /> unknown<br />
+
+</div>
+
+<script>
+  
+  //alert( document.getElementById("add_parent_dialog").innerHTML );
+  
+    jQuery("#add_parent_dialog").dialog( {
+      autoOpen: false,
+      buttons: { "Cancel" :  function() { jQuery("#add_parent_dialog").dialog("close"); }, "Submit": function() { associate_parent() }  },
+      modal: true 
+    });
+    
+    jQuery("#add_parent_link").click( function () { 
+     jQuery("#add_parent_dialog" ).dialog("open");
+    });
+
+    jQuery("#stock_autocomplete").autocomplete({
+      source: '/ajax/stock/stock_autocomplete'
+    });
+
+    jQuery("#parent_type").buttonset();
+
+    function associate_parent() { 
+      var parent_type = document.getElementById("parent_type").value;
+      var parent_name = document.getElementById("stock_autocomplete").value;
+      if (!parent_name) { alert("We need a name here, sorry!"); return; }
+      var stock_id = "<% $stock_id %>";
+      jQuery.ajax({
+        url: '/ajax/stock/add_stock_parent',
+        dataType: "json",
+        type: 'GET',
+        data: 'stock_id='+stock_id+'&parent_name='+parent_name+'&parent_type='+parent_type,
+       success: function(response) { 
+         if (response.error) { alert(response.error); }
+         else { 
+           jQuery("#add_parent_dialog").dialog("close");
+           alert("The parent has been added.");
+         }
+       }
+} );
+    jQuery("#add_parent_dialog").dialog("close");
+    alert("all done!");
+}
+
+</script>
+
+
+
 
 % if (!$has_pedigree) { return; }
 
