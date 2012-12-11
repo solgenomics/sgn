@@ -650,12 +650,16 @@ sub add_stock_parent : Local : ActionClass('REST') { }
 sub add_stock_parent_GET :Args(0) { 
     my ($self, $c) = @_;
 
+
+    print STDERR "Add_stock_parent function...\n";
     if (!$c->user()) { 
+	print STDERR "User not logged in... not associating stocks.\n";
 	$c->stash->{rest} = {error => "You need to be logged in to add pedigree information." };
 	return;
     }
 
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) { 
+	print STDERR "User does not have sufficient privileges.\n";
 	$c->stash->{rest} = {error =>  "you have insufficient privileges to add pedigree information." };
 	return;
     }
@@ -666,6 +670,7 @@ sub add_stock_parent_GET :Args(0) {
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
 
+
     my $cvterm_name = "";
     if ($parent_type eq "male") { 
 	$cvterm_name = "male_parent";
@@ -675,6 +680,19 @@ sub add_stock_parent_GET :Args(0) {
     }
     
     my $type_id_row = $schema->resultset("Cv::Cvterm")->find( { name=> $cvterm_name } );
+
+    # check if a parent of this parent_type is already associated with this stock
+    #
+    my $previous_parent = $schema->resultset("Stock::StockRelationship")->find( { type_id => $type_id_row->cvterm_id,
+										  object_id => $stock_id });
+
+    if ($previous_parent) {
+	print STDERR "The stock ".$previous_parent->subject_id." is already associated with stock $stock_id - returning.\n";
+	$c->stash->{rest} = { error => "A $parent_type parent with id ".$previous_parent->subject_id." is already associated with this stock. Please specify another parent." };
+	return;
+    }
+
+
 
     my $cvterm_id;
     if ($type_id_row) { 

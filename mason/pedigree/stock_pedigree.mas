@@ -81,24 +81,20 @@ Parent is<br />
         data: 'stock_id='+stock_id+'&parent_name='+parentName+'&parent_type='+parentType,
         error: function(response) { alert("An error occurred. Please try again later!"+response); },
         parseerror: function(response) { alert("A parse error occurred. Please try again."+response); },
-        complete: function(response) { 
+        success: function(response) { 
           if (response.error) { alert(response.error); }
           else {
-
-            alert("The parent has been added.");
+            jQuery("#add_pardent_dialog").dialog("close");
+            alert("The parent has been added. ["+response.error+"]");
           }
-        },
-        success: function(response) { 
-          alert("The parent has been added.");
-          jQuery("#add_pardent_dialog").dialog("close");
-        }    
-
-      
+        }, 
+        //complete: function(response) { 
+        //     alert(response.error);
+        //}
+      });
+  alert("DONE with processing"); 
   
-     } );
-  //alert("DONE with processing"); 
-  
-     document.location.reload(); // reload the entire page, because pedigree info is in several places. 
+     //document.location.reload(); // reload the entire page, because pedigree info is in several places. 
    }
 
 </script>
