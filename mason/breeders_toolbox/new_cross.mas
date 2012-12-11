@@ -5,6 +5,8 @@
 @roles => ()
 </%args>
 
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui' ] &>
+
 Create a new cross by specifying the parents and the number of progeny. For each progeny, a new accession will be created with the proper pedigree settings.
 
 
@@ -32,11 +34,22 @@ foreach my $location (@locations) {
 </%perl>
 </select></td></tr>
 <tr><td>Cross name</td><td><input type="text" name="cross_name" /></td></tr>
-<tr><td>Maternal parent</td><td><input type="text" name="maternal" /></td></tr>
-<tr><td>Paternal parent</td><td><input type="text" name="paternal" /></td></tr>
+<tr><td>Maternal parent</td><td><div class="ui-widget"><input id="maternal_parent" type="text" name="maternal" /></div></td></tr>
+<tr><td>Paternal parent</td><td><div class="ui-widget"><input id="paternal_parent" type="text" name="paternal" /></div></td></tr>
 <tr><td>Number of progeny</td><td><input type="text" name="progeny_number" size="3" /></td></tr>
 <tr><td>Progeny naming</td><td>Prefix <input name="prefix" size="5" /> Suffix <input name="suffix" size="5" /></td></tr>
 </table>
+
+<script>
+  jQuery("#maternal_parent").autocomplete( { 
+    source: '/ajax/stock/stock_autocomplete'
+});
+
+  jQuery("#paternal_parent").autocomplete( { 
+    source: '/ajax/stock/stock_autocomplete'
+});
+</script>
+
 Keep private to role 
 <select name="visible_to_role">
 <option value = "" >none</option>
