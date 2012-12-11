@@ -37,9 +37,8 @@ $has_pedigree
 <input type="text" id="stock_autocomplete" name="stock_autocomplete" /><br />
 <br />
 Parent is<br />
-<input type="radio" id="female" name="parent_type" value="female"  /> female<br />
+<input type="radio" id="female" name="parent_type" value="female" checked="1"  /> female<br />
 <input type="radio" id="male" name="parent_type" value="male" /> male<br />
-<input type="radio" id="unknown" name="parent_type" value="unknown" /> unknown<br />
 
 </div>
 
@@ -63,27 +62,44 @@ Parent is<br />
 
     jQuery("#parent_type").buttonset();
 
+  //alert("Done setting up");
+
     function associate_parent() { 
-      var parent_type = document.getElementById("parent_type").value;
-      var parent_name = document.getElementById("stock_autocomplete").value;
-      if (!parent_name) { alert("We need a name here, sorry!"); return; }
+      var parentType = "";
+      parentType = jQuery("#add_parent_dialog").find("input:checked").val();
+      //alert("PARENTTYPE="+parentType);
+      var parentName = jQuery("#stock_autocomplete").val();
+      //alert("Parent name = "+parentName);
+
+      if (!parentName) { alert("We need a name here, sorry!"); return; }
       var stock_id = "<% $stock_id %>";
+      alert("Sending AJAX request.. /ajax/stock/add_stock_parent?stock_id="+stock_id+"&parent_name="+parentName+"&parent_type="+parentType);
       jQuery.ajax({
         url: '/ajax/stock/add_stock_parent',
         dataType: "json",
         type: 'GET',
-        data: 'stock_id='+stock_id+'&parent_name='+parent_name+'&parent_type='+parent_type,
-       success: function(response) { 
-         if (response.error) { alert(response.error); }
-         else { 
-           jQuery("#add_parent_dialog").dialog("close");
-           alert("The parent has been added.");
-         }
-       }
-} );
-    jQuery("#add_parent_dialog").dialog("close");
-    alert("all done!");
-}
+        data: 'stock_id='+stock_id+'&parent_name='+parentName+'&parent_type='+parentType,
+        error: function(response) { alert("An error occurred. Please try again later!"+response); },
+        parseerror: function(response) { alert("A parse error occurred. Please try again."+response); },
+        complete: function(response) { 
+          if (response.error) { alert(response.error); }
+          else {
+
+            alert("The parent has been added.");
+          }
+        },
+        success: function(response) { 
+          alert("The parent has been added.");
+          jQuery("#add_pardent_dialog").dialog("close");
+        }    
+
+      
+  
+     } );
+  //alert("DONE with processing"); 
+  
+     document.location.reload(); // reload the entire page, because pedigree info is in several places. 
+   }
 
 </script>
 
@@ -108,7 +124,7 @@ Parent is<br />
 	min-height="200px"
 	height="400px"
 	overflow="auto"
-	data="/pedigree/svg/<% $stock_id %>" type="image/svg+xml">
+	data="/pedigree/svg/<% $stock_id %>?<% rand() %>" type="image/svg+xml">
 </object>
 
 </div>
