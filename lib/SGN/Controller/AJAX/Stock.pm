@@ -655,7 +655,7 @@ sub add_stock_parent_GET :Args(0) {
 	return;
     }
 
-    if (!($c->user()->roles() eq "submitter" || $c->user->roles() eq "curator") ) { 
+    if (!($c->user()->roles() eq "submitter" &&  $c->user->roles() eq "curator") ) { 
 	$c->stash->{rest} = {error =>  "you have insufficient privileges to add pedigree information." };
 	return;
     }
