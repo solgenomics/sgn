@@ -83,19 +83,20 @@ Enter a list of stock names<br />
 <textarea name="stock_names" rows="10" cols="30">
 
 </textarea><br /><br />
-
+ 
 <table cellpadding="0" cellspacing="0">
-<tr><td>Labels per page</td><td width="10"></td><td><input name="labels_per_page" size="2" value="10" /></td></tr>
-<tr><td>Top margin (mm)</td><td></td><td><input name="top_margin" size="2" value="12" /></td></tr>
-<tr><td>Bottom margin (mm)</td><td></td><td><input name="bottom_margin" size="2" value="12" /></td></tr>
+<tr><td>Label rows per page</td><td width="10"></td><td><input name="labels_per_page" size="2" value="10" /></td><td>Labels per row </td><td width="10"></td><td><input name="labels_per_row" size="2" value="1" /></td></tr>
+<tr><td>Top margin (mm)</td><td></td><td><input name="top_margin" size="2" value="12" /></td><td>Left margin (mm)</td><td></td><td><input name="left_margin" size="2" value="0" /></td></tr>
+<tr><td>Bottom margin (mm)</td><td></td><td><input name="bottom_margin" size="2" value="12" /></td><td>Right margin (mm)</td><td></td><td><input name="right_margin" size="2" value="0" /></td></tr>
+
 <tr><td>Page format</td><td width="10"></td><td><select name="page format">
 <option value="A4">A4</option>
 <option value="Letter" selected="1">Letter</option>
 </select>
-</td></tr>
+</td><td><input type="checkbox" name="duplicate_labels_per_row" /> print duplicate labels per row</td></tr>
 </table>
 
-Upload file with stock ids:<br />
+Upload file with stock names:<br />
 <input type="file" name="stock_names_file" /><br />
 <input type="reset" />&nbsp;&nbsp;<input type="submit" value="Download Barcodes" />
 
