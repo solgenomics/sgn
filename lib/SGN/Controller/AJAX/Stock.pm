@@ -13,7 +13,6 @@ Add new stock properties, stock dbxrefs and so on.
 Lukas Mueller <lam87@cornell.edu>
 Naama Menda <nm249@cornell.edu>
 
-
 =cut
 
 package SGN::Controller::AJAX::Stock;
@@ -651,9 +650,13 @@ sub add_stock_parent : Local : ActionClass('REST') { }
 sub add_stock_parent_GET :Args(0) { 
     my ($self, $c) = @_;
 
+    if (!$c->user()) { 
+	$c->stash->{rest} = {error => "You need to be logged in to add pedigree information." };
+	return;
+    }
 
-    if (!$c->user() && !$c->user()->roles() eq "submitter") { 
-	$c->stash->{rest} = {error =>  "you need to be logged in to use this functionality, or insufficient privileges." };
+    if (!($c->user()->roles() eq "submitter" || $c->user->roles() eq "curator") ) { 
+	$c->stash->{rest} = {error =>  "you have insufficient privileges to add pedigree information." };
 	return;
     }
 
@@ -662,8 +665,6 @@ sub add_stock_parent_GET :Args(0) {
     my $parent_type = $c->req->param('parent_type');
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
-
-    
 
     my $cvterm_name = "";
     if ($parent_type eq "male") { 
