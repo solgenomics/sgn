@@ -96,12 +96,23 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
       dbxref => 'accession',
     });
 
-    my $cross_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-    { name   => 'cross',
-      cv     => 'stock relationship',
-      db     => 'null',
-      dbxref => 'cross',
+#    my $population_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
+#      { name   => 'member',
+#      cv     => 'stock type',
+#      db     => 'null',
+#      dbxref => 'member',
+#    });
+
+    my $population_cvterm = $schema->resultset("Cv::Cvterm")->find(
+      { name   => 'population',
     });
+
+#    my $cross_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
+#    { name   => 'cross',
+#      cv     => 'stock relationship',
+#      db     => 'null',
+#      dbxref => 'cross',
+#    });
 
     my $female_parent_stock = $schema->resultset("Stock::Stock")->find(
             { name       => $maternal,
@@ -111,6 +122,12 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
             { name       => $paternal,
             } );
 
+    my $population_stock = $schema->resultset("Stock::Stock")->find_or_create(
+            { organism_id => $organism_id,
+	      name       => $cross_name,
+	      uniquename => $cross_name,
+	      type_id => $population_cvterm->cvterm_id,
+            } );
       my $female_parent = $schema->resultset("Cv::Cvterm")->create_with(
     { name   => 'female_parent',
       cv     => 'stock relationship',
@@ -125,34 +142,42 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
       dbxref => 'male_parent',
     });
 
+      my $population_members = $schema->resultset("Cv::Cvterm")->create_with(
+    { name   => 'cross_name',
+      cv     => 'stock relationship',
+      db     => 'null',
+      dbxref => 'cross_name',
+    });
+
       my $visible_to_role_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
     { name   => 'visible_to_role',
       cv => 'local',
       db => 'null',
     });
 
-
-
     my $increment = 1;
     while ($increment < $progeny_number + 1) {
 	my $stock_name = $prefix.$cross_name."-".$increment.$suffix;
-      my $accession_stock = $schema->resultset("Stock::Stock")->find_or_create(
+      my $accession_stock = $schema->resultset("Stock::Stock")->create(
             { organism_id => $organism_id,
               name       => $stock_name,
               uniquename => $stock_name,
               type_id     => $accession_cvterm->cvterm_id,
             } );
-
       $accession_stock->find_or_create_related('stock_relationship_objects', {
 		type_id => $female_parent->cvterm_id(),
 		object_id => $accession_stock->stock_id(),
 		subject_id => $female_parent_stock->stock_id(),
 	 					  } );
-
       $accession_stock->find_or_create_related('stock_relationship_objects', {
 		type_id => $male_parent->cvterm_id(),
 		object_id => $accession_stock->stock_id(),
 		subject_id => $male_parent_stock->stock_id(),
+	 					  } );
+      $accession_stock->find_or_create_related('stock_relationship_objects', {
+		type_id => $population_members->cvterm_id(),
+		object_id => $accession_stock->stock_id(),
+		subject_id => $population_stock->stock_id(),
 	 					  } );
       if ($visible_to_role ne "") {
 	my $accession_stock_prop = $schema->resultset("Stock::Stockprop")->find_or_create(
