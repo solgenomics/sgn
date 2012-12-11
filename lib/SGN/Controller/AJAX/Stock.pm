@@ -655,7 +655,7 @@ sub add_stock_parent_GET :Args(0) {
 	return;
     }
 
-    if (!($c->user()->roles() eq "submitter" &&  $c->user->roles() eq "curator") ) { 
+    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) { 
 	$c->stash->{rest} = {error =>  "you have insufficient privileges to add pedigree information." };
 	return;
     }
@@ -686,6 +686,12 @@ sub add_stock_parent_GET :Args(0) {
     my $stock = $schema->resultset("Stock::Stock")->find( { stock_id => $stock_id });
     my $parent = $schema->resultset("Stock::Stock")->find( { name => $parent_name } );
 
+    if (!$stock) { $c->stash->{rest} = { error => "Stock with $stock_id is not found in the database!"}; return; }
+    if (!$parent) { $c->stash->{rest} = { error => "Stock with name $parent_name is not in the database!"}; return; }
+   
+
+		  
+
     my $new_row = $schema->resultset("Stock::StockRelationship")->new( { subject_id => $parent->stock_id,
 									object_id  => $stock->stock_id,
 									type_id    => $cvterm_id,
@@ -698,7 +704,7 @@ sub add_stock_parent_GET :Args(0) {
 	$c->stash->{rest} = { error => "An error occurred: $@"};
     }
 
-    $c->stash->{rest} = 0;
+    $c->stash->{rest} = { error => '', };
 									
 }
 
