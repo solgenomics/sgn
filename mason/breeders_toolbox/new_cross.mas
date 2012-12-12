@@ -9,15 +9,11 @@
 
 Create a new cross by specifying the parents and the number of progeny. For each progeny, a new accession will be created with the proper pedigree settings.
 
+<div id="create_cross" title="Add cross" >
 
-<br />
-<br />
-<form action="/stock/cross/generate" >
 <table cellspacing="0" cellpadding="1" >
-
-
 <tr><td>Trial</td><td>
-<select name="trial_id">
+<select id="trial" name="trial">
 <%perl>
 foreach my $project (@projects) {
 	print "<option value=".@$project[0].">".@$project[1]."</option>";
@@ -25,19 +21,18 @@ foreach my $project (@projects) {
 </%perl>
 </select></td></tr>
 <tr><td>Location</td><td>
-<select>
-
+<select id="location" name="location">
 <%perl>
 foreach my $location (@locations) {
 	print "<option value=".@$location[0].">".@$location[1]."</option>";
 }
 </%perl>
 </select></td></tr>
-<tr><td>Cross name</td><td><input type="text" name="cross_name" /></td></tr>
+<tr><td>Cross name</td><td><input type="text" id="cross_name" name="cross_name" /></td></tr>
 <tr><td>Maternal parent</td><td><div class="ui-widget"><input id="maternal_parent" type="text" name="maternal" /></div></td></tr>
 <tr><td>Paternal parent</td><td><div class="ui-widget"><input id="paternal_parent" type="text" name="paternal" /></div></td></tr>
-<tr><td>Number of progeny</td><td><input type="text" name="progeny_number" size="3" /></td></tr>
-<tr><td>Progeny naming</td><td>Prefix <input name="prefix" size="5" /> Suffix <input name="suffix" size="5" /></td></tr>
+<tr><td>Number of progeny</td><td><input type="text" id="progeny_number" name="progeny_number" size="3" /></td></tr>
+<tr><td>Progeny naming</td><td>Prefix <input id="prefix" name="prefix" size="5" /> Suffix <input id="suffix" name="suffix" size="5" /></td></tr>
 </table>
 
 <script>
@@ -51,7 +46,7 @@ foreach my $location (@locations) {
 </script>
 
 Keep private to role 
-<select name="visible_to_role">
+<select id="visible_to_role" name="visible_to_role">
 <option value = "" >none</option>
 <%perl>
 foreach my $role (@roles) {
@@ -60,6 +55,55 @@ foreach my $role (@roles) {
 </%perl>
 </select>
 
-<center><input type="submit" value="create cross" /></center>
-<br /><br />
-</form>
+</div>
+
+
+<script>
+  
+
+   jQuery("#create_cross").dialog( {
+      autoOpen: false,
+      buttons: { "Cancel" :  function() { jQuery("#create_cross").dialog("close"); }, "Submit": function() { add_cross() }  },
+      modal: true 
+    });
+    
+    jQuery("#add_cross_link").click( function () { 
+     jQuery("#create_cross" ).dialog("open");
+    });
+
+    function add_cross() { 
+   
+      var crossName = jQuery("#cross_name").val();
+      var maternalParent = jQuery("#maternal_parent").val();
+      var paternalParent = jQuery("#paternal_parent").val();
+      var progenyNumber = jQuery("#progeny_number").val();
+      var prefix = jQuery("#prefix").val();
+      var suffix = jQuery("#suffix").val();
+      var visibleToRole = jQuery("#visible_to_role").val();
+      var location = jQuery("#location").val();
+      var trial = jQuery("#trial").val();
+      if (!crossName) { alert("We need a cross name here, sorry!"); return; }
+       alert("Sending AJAX request.. /ajax/cross/add_cross");
+      jQuery.ajax({
+        url: '/ajax/cross/add_cross',
+        dataType: "json",
+        type: 'GET',
+        data: 'cross_name='+crossName+'&maternal_parent='+maternalParent+'&paternal_parent='+paternalParent+'&progeny_number='+progenyNumber+'&prefix='+prefix+'&suffix='+suffix+'&visible_to_role'+visibleToRole+'&trial='+trial+'&location='+location,
+        error: function(response) { alert("An error occurred. Please try again later!"+response); },
+        parseerror: function(response) { alert("A parse error occurred. Please try again."+response); },
+        success: function(response) { 
+          if (response.error) { alert(response.error); }
+          else {
+            jQuery("#create_cross").dialog("close");
+            alert("The cross has been added. ["+response.error+"]");
+          }
+        }, 
+        //complete: function(response) { 
+        //     alert(response.error);
+        //}
+      });
+  alert("DONE with processing"); 
+   }
+
+</script>
+

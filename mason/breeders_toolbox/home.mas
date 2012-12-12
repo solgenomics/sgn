@@ -34,28 +34,10 @@ $user_id => undef
 
 </&>
 
-<&| /page/info_section.mas, title=>'Crosses',  collapsible=>1, collapsed=>0 &>
-  
-  <&| /page/info_section.mas, title=>'Add new cross', collapsible=>1, collapsed=>1, is_subsection=>1 &>
-    
-    <& /breeders_toolbox/new_cross.mas, locations=>\@locations,projects=>$projects,roles=>\@roles  &>
-
-    </&>
-      
-    <&| /page/info_section.mas, title=>'Upload cross file', collapsible=>1, collapsed=>1, is_subsection=>1 &>
-      
-      <& /breeders_toolbox/upload_crosses.mas &>
-	
-      </&>
-      
-
-      <&| /page/info_section.mas, title=>'View all crosses', collapsible=>1, collapsed=>1, is_subsection=>1 &>
-      
-      <& /breeders_toolbox/display_crosses.mas, user_id => $user_id, crosses=> \@stockrelationships &>
-
-
+<&| /page/info_section.mas, title=>"Crosses" , collapsible=>1, collapsed=>0, subtitle=>'[<a id="add_cross_link" >Add cross</a>]' &>
+  <& /breeders_toolbox/new_cross.mas, locations=>\@locations,projects=>$projects,roles=>\@roles &>
 </&>
-</&>
+
 
 <&| /page/info_section.mas, title=>'Phenotypes' &>
 
