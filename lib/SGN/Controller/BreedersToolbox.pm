@@ -77,10 +77,14 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
     }
 
     #check that cross name does not already exist
-    if ($schema->resultset("Stock::Stock")->find({name=>$cross_name."-1",})){
+    if ($schema->resultset("Stock::Stock")->find({name=>$cross_name})){
       return;
     }
 
+    #check that progeny do not already exist
+    if ($schema->resultset("Stock::Stock")->find({name=>$prefix.$cross_name.$suffix."-1",})){
+      return;
+    }
 
     my $organism = $schema->resultset("Organism::Organism")->find_or_create(
     {
