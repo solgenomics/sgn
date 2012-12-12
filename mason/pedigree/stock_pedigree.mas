@@ -73,28 +73,26 @@ Parent is<br />
 
       if (!parentName) { alert("We need a name here, sorry!"); return; }
       var stock_id = "<% $stock_id %>";
-      alert("Sending AJAX request.. /ajax/stock/add_stock_parent?stock_id="+stock_id+"&parent_name="+parentName+"&parent_type="+parentType);
+      //alert("Sending AJAX request.. /ajax/stock/add_stock_parent?stock_id="+stock_id+"&parent_name="+parentName+"&parent_type="+parentType);
       jQuery.ajax({
         url: '/ajax/stock/add_stock_parent',
         dataType: "json",
         type: 'GET',
+        async: false,
         data: 'stock_id='+stock_id+'&parent_name='+parentName+'&parent_type='+parentType,
         error: function(response) { alert("An error occurred. Please try again later!"+response); },
         parseerror: function(response) { alert("A parse error occurred. Please try again."+response); },
         success: function(response) { 
           if (response.error) { alert(response.error); }
           else {
-            jQuery("#add_pardent_dialog").dialog("close");
             alert("The parent has been added. ["+response.error+"]");
+            jQuery("#add_parent_dialog").dialog("close");
+            document.location.reload(); // reload the entire page, because pedigree info is in several places. 
           }
         }, 
-        //complete: function(response) { 
-        //     alert(response.error);
-        //}
       });
-  alert("DONE with processing"); 
-  
-     //document.location.reload(); // reload the entire page, because pedigree info is in several places. 
+ 
+
    }
 
 </script>
