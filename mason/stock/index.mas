@@ -251,8 +251,10 @@ function jqueryStuff() {
 % if ($has_pedigree==1) {
 %  $collapsible = 1;
 % }
+% my $add_parent_link = "Add parent";
+% if ($person_id && $submitter) { $add_parent_link = qq | <a id="add_parent_link" >Add parent</a> |; }
 
-<&| /page/info_section.mas, title=>"Pedigree" , collapsible=> $collapsible, collapsed=>0, subtitle=>'[<a id="add_parent_link" >Add parent</a>]' &>
+<&| /page/info_section.mas, title=>"Pedigree" , collapsible=> $collapsible, collapsed=>0, subtitle=>"[$add_parent_link]" &>
   <& /pedigree/stock_pedigree.mas, stock_id => $stock_id, has_pedigree => $has_pedigree &>
 </&>
 

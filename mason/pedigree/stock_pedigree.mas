@@ -32,9 +32,9 @@ $has_pedigree
 </%args>
 
 <div id="add_parent_dialog" title="Add parent" >
-  Enter the name of an accession that is a known parent of this stock:<br />
-
-<input type="text" id="stock_autocomplete" name="stock_autocomplete" /><br />
+  Enter the name of an accession that is a known parent of this stock<br />
+<br />
+<b>Stock name</b> <input type="text" id="stock_autocomplete" name="stock_autocomplete" /><br />
 <br />
 Parent is<br />
 <input type="radio" id="female" name="parent_type" value="female" checked="1"  /> female<br />
