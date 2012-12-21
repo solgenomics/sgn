@@ -1,0 +1,27 @@
+
+<%args>
+$user_id => undef
+@cross_populations => ()
+</%args>
+
+
+
+<& /util/import_javascript.mas, classes => [ ] &>
+
+<script>
+
+  
+</script>
+
+<table>
+<%perl>
+
+  if (!@cross_populations) { 
+    print "<tr><td>No crosses available for your account.</td></tr>";
+  }
+
+foreach my $cross_pop (@cross_populations) { 
+  print "<tr><td><a href=/stock/".$cross_pop->[1]."/view>".$cross_pop->[0]."</a></td></tr>";
+}
+</%perl>
+  </table>

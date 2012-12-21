@@ -7,8 +7,6 @@
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui' ] &>
 
-Create a new cross by specifying the parents and the number of progeny. For each progeny, a new accession will be created with the proper pedigree settings.
-
 <div id="create_cross" title="Add cross" >
 
 <table cellspacing="0" cellpadding="1" >

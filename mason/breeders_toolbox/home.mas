@@ -5,6 +5,7 @@ $projects => undef
 $crosses => undef
 $user_id => undef
 @stockrelationships => ()
+@cross_populations => ()
 @roles => ()
 </%args>
 
@@ -36,6 +37,7 @@ $user_id => undef
 
 <&| /page/info_section.mas, title=>"Crosses" , collapsible=>1, collapsed=>0, subtitle=>'[<a id="add_cross_link" >Add cross</a>]' &>
   <& /breeders_toolbox/new_cross.mas, locations=>\@locations,projects=>$projects,roles=>\@roles &>
+  <& /breeders_toolbox/crosses.mas, cross_populations=>\@cross_populations, user_id=>$user_id &>
 </&>
 
 

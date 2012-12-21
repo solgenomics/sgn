@@ -128,9 +128,14 @@ sub add_cross_GET :Args(0) {
       dbxref => 'accession',
     });
 
+    #my $population_cvterm = $schema->resultset("Cv::Cvterm")->find(
+    #  { name   => 'population',
+    #});
+
     my $population_cvterm = $schema->resultset("Cv::Cvterm")->find(
-      { name   => 'population',
+      { name   => 'cross',
     });
+
 
     my $female_parent_stock = $schema->resultset("Stock::Stock")->find(
             { name       => $maternal,
