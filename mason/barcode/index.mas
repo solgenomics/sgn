@@ -46,8 +46,9 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
 </&>
 
 
-<&| /page/info_section.mas, title=>'Generate Continuous Barcode', collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, title=>'Generate Continuous Barcode', collapsible=>1, collapsed=>1 &>
 
+<h3>Note: This tool is experimental</h3>
 <form action="/barcode/continuous_scale" >
 <table>
 <tr><td>Start value</td><td> <input name="start" value="0" size="4" /></td></tr>
@@ -62,13 +63,13 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
 <br />
 </&>
 
-<&| /page/info_section.mas, title=>'Generate Barcode', collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, title=>'Generate Barcode', collapsible=>1, collapsed=>1 &>
 
 <form action="/barcode/generate" >
   Barcode text <input name="text" /><br />
 
-  <input type="radio" name="image_size" value="small" checked="1" /> small<br />
-  <input type="radio" name="image_size" value="large" /> large<br />
+  <input type="radio" name="size" value="small" checked="1" /> small<br />
+  <input type="radio" name="size" value="large" /> large<br />
 
   <input type="submit" value="Generate barcode" />
   </form>
@@ -84,17 +85,10 @@ Enter a list of stock names<br />
 
 </textarea><br /><br />
  
-<table cellpadding="0" cellspacing="0">
-<tr><td>Label rows per page</td><td width="10"></td><td><input name="labels_per_page" size="2" value="10" /></td><td>Labels per row </td><td width="10"></td><td><input name="labels_per_row" size="2" value="1" /></td></tr>
-<tr><td>Top margin (mm)</td><td></td><td><input name="top_margin" size="2" value="12" /></td><td>Left margin (mm)</td><td></td><td><input name="left_margin" size="2" value="0" /></td></tr>
-<tr><td>Bottom margin (mm)</td><td></td><td><input name="bottom_margin" size="2" value="12" /></td><td>Right margin (mm)</td><td></td><td><input name="right_margin" size="2" value="0" /></td></tr>
+<& /barcode/printer_settings.mas &>
 
-<tr><td>Page format</td><td width="10"></td><td><select name="page format">
-<option value="A4">A4</option>
-<option value="Letter" selected="1">Letter</option>
-</select>
-</td><td><input type="checkbox" name="duplicate_labels_per_row" /> print duplicate labels per row</td></tr>
-</table>
+<input type="checkbox" name="duplicate_labels_per_row" checked="1" disabled="1" /> print duplicate labels per row<br /><br />
+
 
 Upload file with stock names:<br />
 <input type="file" name="stock_names_file" /><br />
@@ -102,5 +96,19 @@ Upload file with stock names:<br />
 
 
 </form>
+
+</&>
+
+
+<&| /page/info_section.mas, title=>'Generate unique barcodes', collapsible=>1, collapsed=>0 &>
+
+<form action="/barcode/unique" >
+
+  Number of label pages to print <input type="text" name="label_pages" /><br /><br />
+
+  <& /barcode/printer_settings.mas &>
+    <br />
+  <input type="submit" value="Generate barcodes" />
+  </form>
 
 </&>

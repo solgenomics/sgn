@@ -10,6 +10,7 @@ use File::Slurp;
 use Barcode::Code128;
 #use GD::Barcode::QRcode;
 use Tie::UrlEncoder;
+use PDF::LabelPage;
 
 our %urlencode;
 
@@ -95,7 +96,7 @@ sub barcode_tempfile_jpg : Path('/barcode/tempfile') Args(4) {
     $c->tempfiles_subdir('barcode');
     my ($file, $uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.jpg');
 
-    open(my $F, ">", $file) || die "Can't open file $file";
+    open(my $F, ">", $file) || die "Can't open file $file $@";
     print $F $barcode->jpeg();
     close($F);
 
@@ -106,7 +107,7 @@ sub barcode_tempfile_jpg : Path('/barcode/tempfile') Args(4) {
 =head2 barcode
 
  Usage:        $self->barcode($code, $text, $size, 30);
- Desc:         generates a barcode
+ Desc:         generates a barcode (GD image)
  Ret:          a GD::Image object
  Args:         $code, $text, $size, upper margin
  Side Effects: none
@@ -338,4 +339,97 @@ sub new_barcode_tool : Path('/barcode/tool/') Args(1) {
     $c->stash->{template} = '/barcode/tool/'.$term.'.mas';
 }
 
+sub generate_unique_barcodes : Path('/barcode/unique') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    
+    my $label_pages = $c->req->param("label_pages");
+    my $label_rows = $c->req->param("label_rows") || 10;
+    my $label_cols  = $c->req->param("label_cols") || 1;
+    my $page_format = $c->req->param("page_format") || "letter";
+    my $top_margin_mm = $c->req->param("top_margin");
+    my $left_margin_mm = $c->req->param("left_margin");
+    my $bottom_margin_mm = $c->req->param("bottom_margin");
+    my $right_margin_mm = $c->req->param("right_margin");
+
+    # convert mm into pixels
+    #
+    my ($top_margin, $left_margin, $bottom_margin, $right_margin) = map { int($_ * 2.846) } ($top_margin_mm, 
+											$left_margin_mm, 
+											$bottom_margin_mm, 
+											$right_margin_mm); 
+    my $total_labels = $label_pages * $label_cols * $label_rows;
+
+
+    my $dir = $c->tempfiles_subdir('pdfs');
+    my ($FH, $filename) = $c->tempfile(TEMPLATE=>"pdfs/pdf-XXXXX", SUFFIX=>".pdf", UNLINK=>0);
+    print STDERR "FILENAME: $filename \n\n\n";
+    my $pdf = PDF::Create->new(filename=>$c->path_to($filename), 
+			       Author=>$c->config->{project_name},
+			       Title=>'Labels',
+			       CreationDate => [ localtime ], 
+			       Version=>1.2,
+	);
+
+    if (!$page_format) { $page_format = "Letter"; }
+
+    print STDERR "PAGE FORMAT IS: $page_format. LABEL ROWS: $label_rows, COLS: $label_cols. TOTAL LABELS: $total_labels\n";
+
+    my @pages = ();
+    my $page = PDF::LabelPage->new( { top_margin=>$top_margin, bottom_margin=>$bottom_margin, left_margin=>$left_margin, right_margin=>$right_margin, pdf=>$pdf, cols => $label_cols, rows => $label_rows });
+
+
+
+    foreach my $label_count (1..$total_labels) { 
+	
+	my $label_code = $page->generate_label_code();
+
+	my $label_on_page = ($label_count -1) % ($label_rows + $label_cols);
+	
+	# generate barcode
+	#
+	my $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $label_code, $label_code ,  'large',  20  ]);
+	my $image = $pdf->image($tempfile);
+	print STDERR "IMAGE: ".Data::Dumper::Dumper($image);
+
+	# note: pdf coord system zero is lower left corner
+	#
+
+	if ($page->need_more_labels()) { 
+	    print STDERR "ADDING LABEL...\n";
+	    $page->add_label($image);
+	}
+	
+	else { 
+	    print STDERR "CREATING NEW PAGE...\n";
+	    push @pages, $page;
+	
+	    $page = PDF::LabelPage->new({ top_margin=>$top_margin, bottom_margin=>$bottom_margin, left_margin=>$left_margin, right_margin=>$right_margin, pdf=>$pdf, cols => $label_cols, rows => $label_rows });
+	}
+	
+
+
+
+#	$pages[$page_nr-1]->image(image=>$image, xpos=>$page_width - $final_barcode_width - 5, ypos=>$ypos , xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
+
+    }
+
+    foreach my $p (@pages) { 
+	$page->render();
+    }
+
+    $pdf->close();
+
+    #$c->stash->{not_found} = \@not_found;
+    #$c->stash->{found} = \@found;
+    $c->stash->{file} = $filename;
+    $c->stash->{filetype} = 'PDF';
+    $c->stash->{template} = '/barcode/unique_barcode_download.mas';
+}
+
+
+
+
 1;
+
+
