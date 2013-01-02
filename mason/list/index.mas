@@ -1,0 +1,22 @@
+
+
+<& /util/import_javascript.mas, classes => [ 'CXGN.List' ] &>
+
+<& /page/page_title.mas, title=>"Available lists" &>
+<div id="list_div">
+
+</div>
+
+
+
+<script>
+  
+  var list = new CXGN.List;
+
+  list.renderLists('list_div');
+
+</script>
+
+			    
+
+  
