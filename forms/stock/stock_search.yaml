@@ -30,6 +30,7 @@ elements:
 
     - type: Text
       name: stock_name
+      id:   stock_name
       label: Stock name
       size: 30
 

@@ -50,6 +50,9 @@ div.paginate_nav {
      jQuery("#onto").autocomplete({
         source: '<% $onto_autocomplete_uri %>' + "?db_name=SP"
      });
+     jQuery("#stock_name").autocomplete({
+        source: '/ajax/stock/stock_autocomplete',
+     });
   });
 </script>
 

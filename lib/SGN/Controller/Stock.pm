@@ -145,23 +145,31 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
                               } );
     my @intersection = $lc->get_intersection;
     if ( !$curator && @prop_roles  && !@intersection) { # if there is no match between user roles and stock visible_to_role props
-        $c->throw(is_client_error => 0,
-                  title             => 'Restricted page',
-                  message           => "Stock $stock_id is not visible to your user!",
-                  developer_message => 'only logged in users of certain roles can see this stock' . join(',' , @prop_roles),
-                  notify            => 0,   #< does not send an error email
-            );
+       # $c->throw(is_client_error => 0,
+       #           title             => 'Restricted page',
+       #           message           => "Stock $stock_id is not visible to your user!",
+       #           developer_message => 'only logged in users of certain roles can see this stock' . join(',' , @prop_roles),
+       #           notify            => 0,   #< does not send an error email
+       #     );
+
+	$c->stash->{template} = "generic_message.mas";
+	$c->stash->{message}  = "You do not have sufficient privileges to view the page of stock with database id $stock_id. You may need to log in to view this page.";
+	return;
     }
 
     # print message if the stock is obsolete
     my $obsolete = $stock->get_is_obsolete();
     if ( $obsolete  && !$curator ) {
-        $c->throw(is_client_error => 0,
-                  title             => 'Obsolete stock',
-                  message           => "Stock $stock_id is obsolete!",
-                  developer_message => 'only curators can see obsolete stock',
-                  notify            => 0,   #< does not send an error email
-            );
+        #$c->throw(is_client_error => 0,
+        #          title             => 'Obsolete stock',
+        #          message           => "Stock $stock_id is obsolete!",
+        #          developer_message => 'only curators can see obsolete stock',
+        #          notify            => 0,   #< does not send an error email
+        #    );
+
+	$c->stash->{template} = "generic_message.mas";
+	$c->stash->{message}  = "The stock with database id $stock_id has been deleted. It can no longer be viewed.";
+	return;
     }
     # print message if stock_id does not exist
     if ( !$stock && $action ne 'new' && $action ne 'store' ) {

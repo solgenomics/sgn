@@ -16,7 +16,10 @@ Jeremy Edwards <jde22@cornell.edu>
 =over 1
 
 =item stock
-a Bio::Chado::Schema::Stock::Stock object
+
+$stock_id - the id of the stock for which pedigree information will be displayed
+
+$has_pedigree - whether the stock has pedigree information.
 
 =back
 =cut
@@ -24,14 +27,90 @@ a Bio::Chado::Schema::Stock::Stock object
 </%doc>
 
 <%args>
-  $stock_id
+$stock_id
+$has_pedigree
 </%args>
+
+<div id="add_parent_dialog" title="Add parent" >
+  Enter the name of an accession that is a known parent of this stock<br />
+<br />
+<b>Stock name</b> <input type="text" id="stock_autocomplete" name="stock_autocomplete" /><br />
+<br />
+Parent is<br />
+<input type="radio" id="female" name="parent_type" value="female" checked="1"  /> female<br />
+<input type="radio" id="male" name="parent_type" value="male" /> male<br />
+
+</div>
+
+<script>
+  
+  //alert( document.getElementById("add_parent_dialog").innerHTML );
+  
+    jQuery("#add_parent_dialog").dialog( {
+      autoOpen: false,
+      buttons: { "Cancel" :  function() { jQuery("#add_parent_dialog").dialog("close"); }, "Submit": function() { associate_parent() }  },
+      modal: true 
+    });
+    
+    jQuery("#add_parent_link").click( function () { 
+     jQuery("#add_parent_dialog" ).dialog("open");
+    });
+
+    jQuery("#stock_autocomplete").autocomplete({
+      source: '/ajax/stock/stock_autocomplete'
+    });
+
+    jQuery("#parent_type").buttonset();
+
+  //alert("Done setting up");
+
+    function associate_parent() { 
+      var parentType = "";
+      parentType = jQuery("#add_parent_dialog").find("input:checked").val();
+      //alert("PARENTTYPE="+parentType);
+      var parentName = jQuery("#stock_autocomplete").val();
+      //alert("Parent name = "+parentName);
+
+      if (!parentName) { alert("We need a name here, sorry!"); return; }
+      var stock_id = "<% $stock_id %>";
+      //alert("Sending AJAX request.. /ajax/stock/add_stock_parent?stock_id="+stock_id+"&parent_name="+parentName+"&parent_type="+parentType);
+      jQuery.ajax({
+        url: '/ajax/stock/add_stock_parent',
+        dataType: "json",
+        type: 'GET',
+        async: false,
+        data: 'stock_id='+stock_id+'&parent_name='+parentName+'&parent_type='+parentType,
+        error: function(response) { alert("An error occurred. Please try again later!"+response); },
+        parseerror: function(response) { alert("A parse error occurred. Please try again."+response); },
+        success: function(response) { 
+          if (response.error) { alert(response.error); }
+          else {
+            alert("The parent has been added. ["+response.error+"]");
+            jQuery("#add_parent_dialog").dialog("close");
+            document.location.reload(); // reload the entire page, because pedigree info is in several places. 
+          }
+        }, 
+      });
+ 
+
+   }
+
+</script>
+
+
+
+
+% if (!$has_pedigree) { return; }
+
+<& /util/import_javascript.mas, classes => [ 'jqueryui' ] &>
 
 
 <center>
-<div style="max-width:700px;max-height:400px;overflow:auto">
-<object target="_top"
-	xmlns="http://www.w3.org/2000/svg"
+<div name="stock_pedigree" style="max-width:700px;max-height:400px;overflow:auto">
+
+
+<object target="_top" 
+   xmlns="http://www.w3.org/2000/svg"
 	xmlns:xlink="http://www.w3.org/1999/xlink"
 	pluginspage="http://www.adobe.com/svg/viewer/install/"
 	width="700px"
@@ -39,13 +118,10 @@ a Bio::Chado::Schema::Stock::Stock object
 	min-height="200px"
 	height="400px"
 	overflow="auto"
-        data="/pedigree/svg/<% $stock_id %>" type="image/svg+xml">
-    <!-- put content for old browsers or IE here, it
-         will get displayed instead of the SVG. You can 
-         embed a raster version of the image here, but remember it 
-         will get loaded by the SVG capable browsers as well, 
-         even if they don't display it! That may slow your 
-         page down significantly. -->
+	data="/pedigree/svg/<% $stock_id %>?<% rand() %>" type="image/svg+xml">
 </object>
+
 </div>
 </center>
+  
+
