@@ -2,6 +2,8 @@
 
 package SGN::Controller::AJAX::Phenome;
 
+use Moose;
+
 use JSON::Any;
 
 BEGIN { extends 'Catalyst::Controller::REST'; }
