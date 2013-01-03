@@ -82,16 +82,23 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     
     my $stock_names = $c->req->param("stock_names");
     my $stock_names_file = $c->req->upload("stock_names_file");
-    my $labels_per_page = $c->req->param("labels_per_page");
+    my $labels_per_page = $c->req->param("labels_per_page") || 10;
+    my $labels_per_row  = $c->req->param("labels_per_row") || 1;
     my $page_format = $c->req->param("page_format") || "letter";
     my $top_margin_mm = $c->req->param("top_margin");
+    my $left_margin_mm = $c->req->param("left_margin");
     my $bottom_margin_mm = $c->req->param("bottom_margin");
+    my $right_margin_mm = $c->req->param("right_margin");
 
-    my $top_margin = $top_margin_mm * 2.846;     # convert mm into pixels
-    my $bottom_margin = $bottom_margin_mm * 2.846; 
+    # convert mm into pixels
+    #
+    my ($top_margin, $left_margin, $bottom_margin, $right_margin) = map { $_ * 2.846 } ($top_margin_mm, 
+											$left_margin_mm, 
+											$bottom_margin_mm, 
+											$right_margin_mm);   
 
     # read file if upload
-
+    #
     if ($stock_names_file) { 
 	my $stock_file_contents = read_file($stock_names_file->{tempname});
 	$stock_names = $stock_names ."\n".$stock_file_contents;
@@ -169,8 +176,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 
 	# note: pdf coord system zero is lower left corner
 	#
-
-	my $final_barcode_width = 180;
+	my $final_barcode_width = ($page_width - $right_margin - $left_margin) / $labels_per_row;
 
 	my $scalex = $final_barcode_width / $image->{width};
 	my $scaley = $label_height / $image->{height};
@@ -184,9 +190,12 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 
 	$pages[$page_nr-1]->line($page_width -100, $label_boundary, $page_width, $label_boundary);
 
-	$pages[$page_nr-1]->image(image=>$image, xpos=>$page_width - 2 * $final_barcode_width - 5, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
+	foreach my $label_count (1..$labels_per_row) { 
+	    $pages[$page_nr-1]->image(image=>$image, xpos=>$left_margin + ($label_count -1) * $final_barcode_width, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
 
-	$pages[$page_nr-1]->image(image=>$image, xpos=>$page_width - $final_barcode_width - 5, ypos=>$ypos , xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
+	}
+
+#	$pages[$page_nr-1]->image(image=>$image, xpos=>$page_width - $final_barcode_width - 5, ypos=>$ypos , xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
 
     }
 

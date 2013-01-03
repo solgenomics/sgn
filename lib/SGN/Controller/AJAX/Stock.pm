@@ -125,6 +125,7 @@ sub associate_locus_GET :Args(0) {
     my ($allele) = $c->dbic_schema('CXGN::Phenome::Schema')
         ->resultset('Locus')
         ->search({
+            locus_name   => $locus_name,
             locus_symbol => $locus_symbol,
                  } )
         ->search_related('alleles' , {
