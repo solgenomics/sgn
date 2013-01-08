@@ -340,6 +340,18 @@ sub new_barcode_tool : Path('/barcode/tool/') Args(1) {
     $c->stash->{template} = '/barcode/tool/'.$term.'.mas';
 }
 
+sub cross_tool : Path('/barcode/tool/cross') { 
+    my $self = shift;
+    my $c = shift;
+    $c->stash->{template} = '/barcode/tool/cross.mas';
+}
+
+sub dna_tool   : Path('/barcode/tool/dna/') { 
+    my $self =shift;
+    my $c = shift;
+    $c->stash->{template} = '/barcode/tool/dna.mas';
+}
+
 sub generate_unique_barcode_labels : Path('/barcode/unique') Args(0) { 
     my $self = shift;
     my $c = shift;

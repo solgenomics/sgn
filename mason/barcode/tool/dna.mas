@@ -1,0 +1,14 @@
+
+<h1>Cassavabase DNA extraction tool</h1>
+
+<table>
+<tr><th>ROW</th><th>COLUMN</th></tr>
+<tr><td>
+% foreach my $row ('A'..'H') { 
+<& /barcode/tool/generate.mas, code=>$row &>
+%}
+</td><td>
+% foreach my $col (1..12) { 
+  <& /barcode/tool/generate.mas, code=>$col &>
+%}
+</td></tr></table>

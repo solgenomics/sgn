@@ -22,8 +22,20 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
 
 <& /barcode/tool/list.mas, tools_def=>\@tools_def &>
 
-</&>
 <br /><br />
+
+</&>
+
+<&| /page/info_section.mas, title=>"Procedural tools", collapsible=>1, collapsed=>1 &>
+
+<a href="/barcode/tool/cross">Cross tool</a><br />
+
+<a href="/barcode/tool/dna">DNA extraction tool</a><br />
+
+<br /><br />
+
+</&>
+
 
 
 <&| /page/info_section.mas, title=>'Generate Metadata Barcode', collapsible=>1, collapsed=>0 &>

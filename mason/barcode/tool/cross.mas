@@ -1,0 +1,17 @@
+
+<br />
+<br />
+<center>
+<h1>CassavaBase Cross Tool</h1>
+<br />
+<br />
+
+<div class="boxbgcolor5"><font size="4">First, scan the MALE barcode below, followed by the barcode of the male parent, followed by a unique tag. Later, scan the FEMALE barcode, followed by the barcode of the female parent, followed by the unique tag used for the male parent.</font></div>
+
+<br /><br />
+<table border="0" cellpadding="10">
+<tr><td><& /barcode/tool/generate.mas, code=>"MALE", &></td><td valign="middle"><br /><br /><div class="boxbgcolor5">scan barcode of male parent</div></td><td valign="middle"><br /><br /><div class="boxbgcolor5">scan unique barcode</div></td></tr>
+
+<tr><td><& /barcode/tool/generate.mas, code=>"FEMALE", &></td><td><br /><br /><div class="boxbgcolor5">scan barcode of female parent</div></td><td><br /><br /><div class="boxbgcolor5">scan unique barcode</div></td></tr>
+</table>
+<br />
