@@ -11,6 +11,7 @@ use Barcode::Code128;
 #use GD::Barcode::QRcode;
 use Tie::UrlEncoder;
 use PDF::LabelPage;
+use Math::Base36 ':all';
 
 our %urlencode;
 
@@ -339,7 +340,7 @@ sub new_barcode_tool : Path('/barcode/tool/') Args(1) {
     $c->stash->{template} = '/barcode/tool/'.$term.'.mas';
 }
 
-sub generate_unique_barcodes : Path('/barcode/unique') Args(0) { 
+sub generate_unique_barcode_labels : Path('/barcode/unique') Args(0) { 
     my $self = shift;
     my $c = shift;
     
@@ -376,16 +377,13 @@ sub generate_unique_barcodes : Path('/barcode/unique') Args(0) {
     print STDERR "PAGE FORMAT IS: $page_format. LABEL ROWS: $label_rows, COLS: $label_cols. TOTAL LABELS: $total_labels\n";
 
     my @pages = ();
-    my $page = PDF::LabelPage->new( { top_margin=>$top_margin, bottom_margin=>$bottom_margin, left_margin=>$left_margin, right_margin=>$right_margin, pdf=>$pdf, cols => $label_cols, rows => $label_rows });
-
-
+    push @pages, PDF::LabelPage->new( { top_margin=>$top_margin, bottom_margin=>$bottom_margin, left_margin=>$left_margin, right_margin=>$right_margin, pdf=>$pdf, cols => $label_cols, rows => $label_rows });
 
     foreach my $label_count (1..$total_labels) { 
-	
-	my $label_code = $page->generate_label_code();
+	my $label_code = $self->generate_label_code($c);
 
-	my $label_on_page = ($label_count -1) % ($label_rows + $label_cols);
-	
+	print STDERR "LABEL CODE: $label_code\n";
+
 	# generate barcode
 	#
 	my $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $label_code, $label_code ,  'large',  20  ]);
@@ -395,27 +393,23 @@ sub generate_unique_barcodes : Path('/barcode/unique') Args(0) {
 	# note: pdf coord system zero is lower left corner
 	#
 
-	if ($page->need_more_labels()) { 
+	if ($pages[-1]->need_more_labels()) { 
 	    print STDERR "ADDING LABEL...\n";
-	    $page->add_label($image);
+	    $pages[-1]->add_label($image);
 	}
 	
 	else { 
 	    print STDERR "CREATING NEW PAGE...\n";
-	    push @pages, $page;
 	
-	    $page = PDF::LabelPage->new({ top_margin=>$top_margin, bottom_margin=>$bottom_margin, left_margin=>$left_margin, right_margin=>$right_margin, pdf=>$pdf, cols => $label_cols, rows => $label_rows });
+	    push @pages, PDF::LabelPage->new({ top_margin=>$top_margin, bottom_margin=>$bottom_margin, left_margin=>$left_margin, right_margin=>$right_margin, pdf=>$pdf, cols => $label_cols, rows => $label_rows });
+
+	    $pages[-1]->add_label($image);
 	}
-	
-
-
-
-#	$pages[$page_nr-1]->image(image=>$image, xpos=>$page_width - $final_barcode_width - 5, ypos=>$ypos , xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
 
     }
 
     foreach my $p (@pages) { 
-	$page->render();
+	$p->render();
     }
 
     $pdf->close();
@@ -428,6 +422,24 @@ sub generate_unique_barcodes : Path('/barcode/unique') Args(0) {
 }
 
 
+
+sub generate_label_code { 
+    my $self = shift;
+    my $c = shift;
+
+    my $dbh = $c->dbc->dbh();
+
+    my $h = $dbh->prepare("SELECT nextval('phenome.unique_barcode_label_id_seq')");
+    $h->execute();
+    my ($next_val) = $h->fetchrow_array();
+
+    print STDERR "nextval is $next_val\n";
+    
+    my $encoded = Math::Base36::encode_base36($next_val, 7);
+
+    return $encoded;
+    
+}
 
 
 1;
