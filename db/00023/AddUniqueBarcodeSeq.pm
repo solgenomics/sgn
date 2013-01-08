@@ -61,9 +61,9 @@ sub patch {
 --do your SQL here
 --
 
-CREATE SEQUENCE unique_barcode_label_id_seq;
+CREATE SEQUENCE phenome.unique_barcode_label_id_seq;
 
-GRANT usage on unique_barcode_label_id_seq to web_usr;
+GRANT usage on phenome.unique_barcode_label_id_seq to web_usr;
 
 EOSQL
 
