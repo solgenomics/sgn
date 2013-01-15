@@ -343,6 +343,7 @@ sub new_barcode_tool : Path('/barcode/tool/') Args(1) {
 sub cross_tool : Path('/barcode/tool/cross') { 
     my $self = shift;
     my $c = shift;
+
     $c->stash->{template} = '/barcode/tool/cross.mas';
 }
 
@@ -355,6 +356,12 @@ sub dna_tool   : Path('/barcode/tool/dna/') {
 sub generate_unique_barcode_labels : Path('/barcode/unique') Args(0) { 
     my $self = shift;
     my $c = shift;
+
+    if (! $c->user()) { 	
+	$c->stash->{template} = 'generic_message.mas';
+	$c->stash->{message} = 'You must be logged in to use the unique barcode tool.';
+	return;
+    }
     
     my $label_pages = $c->req->param("label_pages");
     my $label_rows = $c->req->param("label_rows") || 10;
