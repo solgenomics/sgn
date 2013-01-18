@@ -11,33 +11,24 @@ $user_id => undef
 
 <& /page/page_title.mas, title=>'Breeder Tools' &>
 
-<&| /page/info_section.mas, title=>'Trials', collapsible=>1, collapsed=>1 &>
-
-  <&| /page/info_section.mas, title=>'All trials', collapsible=>1, collapsed=>1, is_subsection=>1 &>
+<&| /page/info_section.mas, title=>'Trials', collapsible=>1, collapsed=>1, subtitle=>'[<a id="add_project_link">Add trial</a>]' &>
     
     <& /breeders_toolbox/projects.mas, projects=>$projects &>
-</&>
-
-<&| /page/info_section.mas, title=>'Add new trial', collapsible=>1, collapsed=>1, is_subsection=>1 &>
-  <& /breeders_toolbox/new_project.mas &>
-
-  </&>
 
 </&>
 
-<&| /page/info_section.mas, title=>'Locations',  collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, title=>'Locations',  collapsible=>1, collapsed=>0, subtitle=>'[<a id="add_location_link">Add location</a>]' &>
 
 <& /breeders_toolbox/location.mas, locations=>\@locations, user_id=>$user_id &>
-<br />
-<&| /page/info_section.mas, title=>'Add new location', collapsible=>1, collapsed=>1, is_subsection=>1 &>
-<& /breeders_toolbox/new_location.mas &>
-</&>
 
 </&>
+
 
 <&| /page/info_section.mas, title=>"Crosses" , collapsible=>1, collapsed=>0, subtitle=>'[<a id="add_cross_link" >Add cross</a>]' &>
+
   <& /breeders_toolbox/new_cross.mas, locations=>\@locations,projects=>$projects,roles=>\@roles &>
   <& /breeders_toolbox/crosses.mas, cross_populations=>\@cross_populations, user_id=>$user_id &>
+
 </&>
 
 
@@ -59,3 +50,4 @@ $user_id => undef
 
 
 </&>
+

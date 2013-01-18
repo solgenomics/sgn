@@ -8,10 +8,55 @@ $user_id => undef
 
 <& /util/import_javascript.mas, classes => [ ] &>
 
-<script>
 
-  
+<div id="add_location_dialog"  class="ui-widget" >
+
+Name <input id="location_description" size="8" /> 
+Longitude <input name="longitude" size="4" /> 
+Latitude <input name="latitude" size="4" />
+
+</div>
+
+<script>
+  jQuery('#add_location_dialog').dialog( {
+     autoOpen: false,
+     buttons:  { "Cancel" : function() { jQuery('#add_location_dialog').dialog("close"); }, 
+                     "Add": function() { save_location_info(); } },
+     modal: true,
+     width: 500,
+     height: 300,
+     title: "Add new location"
+
+});
+
+  jQuery('#add_location_link').click( function() { open_location_dialog() } );
+
+  function open_location_dialog() { 
+     jQuery('#add_location_dialog').dialog("open");
+  }
+
+  function save_location_info() { 
+     var desc = jQuery('#location_description').val();
+     var longitude = jQuery('#longitude').val();
+     var latitude = jQuery('#latitude').val();
+
+     if (desc == '') { alert('Description is required.');  return; }
+   
+     new jQuery.ajax( {
+       type: 'GET',
+       url: '/breeders/location/insert',
+       data: { 'description': desc,  'longitude':longitude, 'latitude':latitude },
+
+     }).done(alert("Done saving location info"));
+     jQuery('#add_location_dialog').dialog("close");
+  }
+    
+
 </script>
+
+
+
+
 
 <table>
 <%perl>
