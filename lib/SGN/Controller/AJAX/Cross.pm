@@ -58,12 +58,13 @@ sub add_cross_GET :Args(0) {
     $c->stash->{cross_name} = $cross_name;
     my $trial_id = $c->req->param('trial_id');
     $c->stash->{trial_id} = $trial_id;
-    #my $location = $c->req->param('location_id');
+    my $location_id = $c->req->param('location_id');
     my $maternal = $c->req->param('maternal_parent');
     my $paternal = $c->req->param('paternal_parent');
     my $prefix = $c->req->param('prefix');
     my $suffix = $c->req->param('suffix');
     my $progeny_number = $c->req->param('progeny_number');
+    my $flower_number = $c->req->param('flower_number');
     my $visible_to_role = $c->req->param('visible_to_role');
 
     if (!$c->user()) { 
@@ -121,6 +122,18 @@ sub add_cross_GET :Args(0) {
     } );
     my $organism_id = $organism->organism_id();
 
+
+
+    my $geolocation = $schema->resultset("NaturalDiversity::NdGeolocation")->find_or_create(
+           {
+                nd_geolocation_id => $location_id,
+           } ) ;
+
+    my $project = $schema->resultset("Project::Project")->find_or_create(
+            {
+                project_id => $trial_id,
+            } ) ;
+
     my $accession_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
       { name   => 'accession',
       cv     => 'stock type',
@@ -177,6 +190,41 @@ sub add_cross_GET :Args(0) {
       cv => 'local',
       db => 'null',
     });
+
+   my $flower_number_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
+      { name   => 'flower_number',
+	cv     => 'local',
+	db     => 'null',
+	dbxref => 'flower_number',
+    });
+
+    my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create(
+            {
+                nd_geolocation_id => $geolocation->nd_geolocation_id(),
+                type_id => $population_cvterm->cvterm_id(),
+            } );
+
+    #link to the project
+    $experiment->find_or_create_related('nd_experiment_projects', {
+	    project_id => $project->project_id()
+                                            } );
+
+    #link the experiment to the stock
+    $experiment->find_or_create_related('nd_experiment_stocks' , {
+	    stock_id => $population_stock->stock_id(),
+	    type_id  =>  $population_cvterm->cvterm_id(),
+                                           });
+
+    #set flower number in experimentprop
+    $experiment->find_or_create_related('nd_experimentprops' , {
+	    nd_experiment_id => $experiment->nd_experiment_id(),
+	    type_id  =>  $flower_number_cvterm->cvterm_id(),
+	    value  =>  $flower_number,
+                                           });
+
+
+
+
 
     my $increment = 1;
     while ($increment < $progeny_number + 1) {
