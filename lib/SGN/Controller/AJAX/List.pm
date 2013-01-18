@@ -88,12 +88,8 @@ sub available_lists : Path('/list/available') Args(0) {
     my @lists = ();
     while (my ($id, $name, $desc) = $h->fetchrow_array()) { 
 	push @lists, [ $id, $name, $desc ] ;
-
     }
-
     $c->stash->{rest} = \@lists;
-    
-
 }
 
 sub add_element :Path('/list/add_element') Args(0) { 
@@ -105,7 +101,7 @@ sub add_element :Path('/list/add_element') Args(0) {
 
     my $user_id = $self->get_user($c);
     if (!$user_id) { 
-	$c->stash->{rest} = { error => "You must be logged in the add elements to a list" };
+	$c->stash->{rest} = { error => "You must be logged in to add elements to a list" };
 	return;
     }
 
@@ -133,9 +129,6 @@ sub add_element :Path('/list/add_element') Args(0) {
     else { 
 	$c->stash->{rest} = [ "SUCCESS" ];
     }
-
-    
-
 }
 
 sub delete_list :Path('/list/delete') Args(0) { 
@@ -207,10 +200,12 @@ sub get_user {
     my $c = shift;
 
     my $user = $c->user;
-    
-    my $user_object = $c->user->get_object();
-    
-    return $user_object->get_sp_person_id();
+ 
+    if ($user) { 
+	my $user_object = $c->user->get_object();
+	return $user_object->get_sp_person_id();
+    }
+    return undef;
 
 }
     

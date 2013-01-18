@@ -1,4 +1,7 @@
 
+<%args>
+$user_id
+</%args>
 
 <& /util/import_javascript.mas, classes => [ 'CXGN.List' ] &>
 
@@ -7,7 +10,10 @@
 
 </div>
 
-
+% if (! $user_id) { 
+  <& /generic_message.mas, message=>"Login required for viewing your lists" &>
+% return;
+% }
 
 <script>
   
@@ -15,6 +21,15 @@
 
   list.renderLists('list_div');
 
+</script>
+
+
+<textarea id="test_area" cols="40" rows="20" >
+
+</textarea>
+<br />
+<script>
+pasteListMenu("test_area");
 </script>
 
 			    

@@ -46,7 +46,9 @@ sub phenotype_select : Path('/phenome/select') {
 
 sub list_test : Path('/list/test') { 
     my ($self, $c) = @_;
+    
     $c->stash->{template}= '/list/index.mas';
+    $c->stash->{user_id} = $c->user();
 }
 
 1;
