@@ -73,11 +73,11 @@ sub add_cross_GET :Args(0) {
 	return;
     }
 
-#    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) { 
-#	print STDERR "User does not have sufficient privileges.\n";
-#	$c->stash->{rest} = {error =>  "you have insufficient privileges to add a cross." };
-#	return;
-#    }
+    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) { 
+	print STDERR "User does not have sufficient privileges.\n";
+	$c->stash->{rest} = {error =>  "you have insufficient privileges to add a cross." };
+	return;
+    }
 
 
     #check that progeny number is an integer less than maximum allowed
