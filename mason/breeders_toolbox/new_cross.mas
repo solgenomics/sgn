@@ -62,7 +62,9 @@ foreach my $role (@roles) {
    jQuery("#create_cross").dialog( {
       autoOpen: false,
       buttons: { "Cancel" :  function() { jQuery("#create_cross").dialog("close"); }, "Submit": function() { add_cross() }  },
-      modal: true 
+      modal: true,
+      width: 600,
+      height: 360
     });
     
     jQuery("#add_cross_link").click( function () { 
