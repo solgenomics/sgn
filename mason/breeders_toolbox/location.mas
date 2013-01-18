@@ -24,7 +24,7 @@ Latitude <input name="latitude" size="4" />
                      "Add": function() { save_location_info(); } },
      modal: true,
      width: 500,
-     height: 300,
+     height: 150,
      title: "Add new location"
 
 });
