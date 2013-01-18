@@ -215,13 +215,14 @@ sub add_cross_GET :Args(0) {
 	    type_id  =>  $population_cvterm->cvterm_id(),
                                            });
 
-    #set flower number in experimentprop
-    $experiment->find_or_create_related('nd_experimentprops' , {
-	    nd_experiment_id => $experiment->nd_experiment_id(),
-	    type_id  =>  $flower_number_cvterm->cvterm_id(),
-	    value  =>  $flower_number,
-                                           });
-
+    if ($flower_number) {
+      #set flower number in experimentprop
+      $experiment->find_or_create_related('nd_experimentprops' , {
+								  nd_experiment_id => $experiment->nd_experiment_id(),
+								  type_id  =>  $flower_number_cvterm->cvterm_id(),
+								  value  =>  $flower_number,
+								 });
+    }
 
 
 
@@ -250,7 +251,7 @@ sub add_cross_GET :Args(0) {
 		object_id => $accession_stock->stock_id(),
 		subject_id => $population_stock->stock_id(),
 	 					  } );
-      if ($visible_to_role ne "") {
+      if ($visible_to_role) {
 	my $accession_stock_prop = $schema->resultset("Stock::Stockprop")->find_or_create(
 	       { type_id =>$visible_to_role_cvterm->cvterm_id(),
 		 value => $visible_to_role,
