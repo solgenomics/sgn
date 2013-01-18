@@ -216,15 +216,15 @@ sub insert_new_project : Path("/breeders/project/insert") Args(0) {
 	{ name => $params->{project_name} } 
 	);
     
-    my $new_row = $schema->resultset('Project::Project')->new(
+    my $project = $schema->resultset('Project::Project')->find_or_create(
 	{
 	    name => $params->{project_name},
 	    description => $params->{project_description},
 	}
 	);
     
-    $new_row->insert();
-    
+    my $projectprop_year = $project->create_projectprops( { 'project year' => $params->{year},}, {autocreate=>1}); #cv_name => 'project_property' } );
+
     $c->res->redirect( uri( path => '/breeders/home', query => { goto_url => $c->req->uri->path_query } ) );
 
 }
