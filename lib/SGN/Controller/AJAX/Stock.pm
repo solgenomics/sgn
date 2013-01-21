@@ -26,6 +26,8 @@ use CXGN::Phenome::Schema;
 use CXGN::Phenome::Allele;
 use CXGN::Chado::Stock;
 use CXGN::Page::FormattingHelpers qw/ columnar_table_html info_table_html html_alternate_show /;
+use CXGN::Phenome::DumpGenotypes;
+
 use Scalar::Util qw(looks_like_number);
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -599,6 +601,22 @@ sub trait_autocomplete_GET :Args(0) {
     }
     $c->{stash}->{rest} = \@response_list;
 }
+
+
+sub generate_genotype_matrix : Path('/phenome/genotype/matrix/generate') :Args(1) { 
+    my $self = shift;
+    my $c = shift;
+    my $group = shift;
+
+    my $file = $c->config->{genotype_dump_file} || "/tmp/genotype_dump_file";
+    
+    CXGN::Phenome::DumpGenotypes::dump_genotypes($c->dbc->dbh, $file);
+
+
+    $c->stash->{rest}= [ 1];
+
+}
+
 
 
 1;
