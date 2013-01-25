@@ -7,6 +7,53 @@
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui' ] &>
 
+
+
+
+<div id="upload_crosses_dialog"  class="ui-widget" >
+<b>
+Upload a tab-delimited file of crosses with the following columns:<br>
+</b>
+<br>
+Female parent name<br>
+Male parent name<br>
+Number of progeny to create (optional)<br>
+Number of flowers (optional)<br><br><br>
+
+<table>
+<tr><td>Trial</td><td>
+<select id="trial" name="trial">
+<%perl>
+foreach my $project (@projects) {
+	print "<option value=".@$project[0].">".@$project[1]."</option>";
+}
+</%perl>
+</select></td></tr>
+<tr><td>Location</td><td>
+<select id="location" name="location">
+<%perl>
+foreach my $location (@locations) {
+	print "<option value=".@$location[0].">".@$location[1]."</option>";
+}
+</%perl>
+</select></td></tr>
+<tr><td>File</td><td><input type="file" id="file" name="file" value="Choose file" /></td></tr>
+</td></tr>
+</table>
+Keep private to role 
+<select id="visible_to_role" name="visible_to_role">
+<option value = "" >none</option>
+<%perl>
+foreach my $role (@roles) {
+	print "<option value=".$role.">".$role."</option>";
+}
+</%perl>
+</select>
+</div>
+
+
+
+
 <div id="create_cross" title="Add cross" >
 
 <table cellspacing="0" cellpadding="1" >
@@ -105,6 +152,21 @@ foreach my $role (@roles) {
         //}
       });
   alert("DONE with processing"); 
+   }
+
+   jQuery("#upload_crosses_dialog").dialog( {
+      autoOpen: false,
+      buttons: { "Cancel" :  function() { jQuery("#upload_crosses_dialog").dialog("close"); }, "Submit": function() { read_cross_upload() }  },
+      modal: true,
+      width: 600,
+      height: 360
+    });
+    
+    jQuery("#upload_crosses_link").click( function () { 
+     jQuery("#upload_crosses_dialog" ).dialog("open");
+    });
+
+    function read_cross_upload() { 
    }
 
 </script>

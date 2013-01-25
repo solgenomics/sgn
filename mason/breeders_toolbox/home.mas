@@ -11,7 +11,7 @@ $user_id => undef
 
 <& /page/page_title.mas, title=>'Breeder Tools' &>
 
-<&| /page/info_section.mas, title=>'Trials', collapsible=>1, collapsed=>1, subtitle=>'[<a id="experimental_design_link">Field plot design</a>]  [<a id="add_project_link">Add trial</a>]' &>
+<&| /page/info_section.mas, title=>'Trials', collapsible=>1, collapsed=>1, subtitle=>'[<a id="experimental_design_link">Field plot design</a>]    [<a id="add_project_link">Add trial</a>]' &>
     
     <& /breeders_toolbox/projects.mas, projects=>$projects &>
 
@@ -24,7 +24,7 @@ $user_id => undef
 </&>
 
 
-<&| /page/info_section.mas, title=>"Crosses" , collapsible=>1, collapsed=>0, subtitle=>'[<a id="add_cross_link" >Add cross</a>]' &>
+<&| /page/info_section.mas, title=>"Crosses" , collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_crosses_link" >Upload crosses</a>]    [<a id="add_cross_link" >Add cross</a>]' &>
 
   <& /breeders_toolbox/new_cross.mas, locations=>\@locations,projects=>$projects,roles=>\@roles &>
   <& /breeders_toolbox/crosses.mas, cross_populations=>\@cross_populations, user_id=>$user_id &>
