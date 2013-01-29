@@ -24,7 +24,7 @@ $user_id
 </script>
 
 
-<textarea id="test_area" cols="40" rows="20" >
+<textarea id="test_area" cols="40" rows="5" >
 
 </textarea>
 <br />
@@ -32,6 +32,17 @@ $user_id
 pasteListMenu("test_area");
 </script>
 
+<form action="javascript:addNewList('new_list_name')">
+Create new list <input type="text" id="new_list_name" on/>
+<input type="submit" name="add" />
+</form>
+
+
+<textarea name="add_to_list" >
+</textarea>
+<script>
+addToListMenu('add_to_list');
 			    
+</script>
 
   

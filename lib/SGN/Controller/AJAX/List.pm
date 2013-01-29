@@ -16,7 +16,7 @@ sub get_list :Path('/list/get') Args(0) {
     my $self = shift;
     my $c = shift;
 
-    my $name = $c->req->param("name");
+    my $list_id = $c->req->param("list_id");
 
     my $user_id = $self->get_user($c);
     if (!$user_id) { 
@@ -24,10 +24,10 @@ sub get_list :Path('/list/get') Args(0) {
 	return;
     }
 
-    my $q = "SELECT list_item_id, content from sgn_people.list join sgn_people.list_item using(list_id) WHERE name=?";
+    my $q = "SELECT list_item_id, content from sgn_people.list join sgn_people.list_item using(list_id) WHERE list_id=?";
 
     my $h = $c->dbc->dbh()->prepare($q);
-    $h->execute($name);
+    $h->execute($list_id);
     my @list = ();
     while (my ($id, $content) = $h->fetchrow_array()) { 
 	push @list, [ $id, $content ];
@@ -81,22 +81,22 @@ sub available_lists : Path('/list/available') Args(0) {
 	return;
     }
 
-    my $q = "SELECT list_id, name, description FROM sgn_people.list WHERE owner=?";
+    my $q = "SELECT list_id, name, description, count(distinct(list_item_id)) FROM sgn_people.list left join sgn_people.list_item using(list_id) WHERE owner=? GROUP BY list_id, name, description ORDER BY name";
     my $h = $c->dbc->dbh()->prepare($q);
     $h->execute($user_id);
 
     my @lists = ();
-    while (my ($id, $name, $desc) = $h->fetchrow_array()) { 
-	push @lists, [ $id, $name, $desc ] ;
+    while (my ($id, $name, $desc, $item_count) = $h->fetchrow_array()) { 
+	push @lists, [ $id, $name, $desc, $item_count ] ;
     }
     $c->stash->{rest} = \@lists;
 }
 
-sub add_element :Path('/list/add_element') Args(0) { 
+sub add_item :Path('/list/item/add') Args(0) { 
     my $self = shift;
     my $c = shift;
 
-    my $name = $c->req->param("name");
+    my $list_id = $c->req->param("list_id");
     my $element = $c->req->param("element");
 
     my $user_id = $self->get_user($c);
@@ -109,11 +109,9 @@ sub add_element :Path('/list/add_element') Args(0) {
 	$c->stash->{rest} = { error => "You must provide an element to add to the list" };
 	return;
     }
-
-    my $list_id = $self->exists_list($c, $name);
     
     if (!$list_id) { 
-	$c->stash->{rest} = { error => "List $name does not exist. Please create the list first before adding elements." };
+	$c->stash->{rest} = { error => "Please specify a list_id." };
 	return;
     }
 
@@ -135,7 +133,7 @@ sub delete_list :Path('/list/delete') Args(0) {
     my $self = shift;
     my $c = shift;
 
-    my $name = $c->req->param("name");
+    my $list_id = $c->req->param("list_id");
     
     my $user_id = $self->get_user($c);
     if (!$user_id) { 
@@ -143,54 +141,75 @@ sub delete_list :Path('/list/delete') Args(0) {
 	return;
     }
     
-    my $q = "DELETE FROM sgn_people.list WHERE name=?";
+    my $q = "DELETE FROM sgn_people.list WHERE list_id=?";
     
     eval { 
 	my $h = $c->dbc->dbh()->prepare($q);
-	$h->execute($name);
+	$h->execute($list_id);
     };
     if ($@) { 
-	$c->stash->{rest} = { error => "An error occurred while deleting list $name: $@" };
+	$c->stash->{rest} = { error => "An error occurred while deleting list with id $list_id: $@" };
 	return;
     }
     else { 
 	$c->stash->{rest} =  [ 1 ];
     }
-
-
-    
-    
-
 }
 
 
-sub exists_list { 
+sub exists_list : Path('/list/exists') Args(0) { 
     my $self =shift;
     my $c = shift;
-    my $name = shift;
+    my $name = $c->req->param("name");
 
     my $user_id = $self->get_user($c);
-    if (!$user_id) { return 0; }
+    if (!$user_id) { 
+	$c->stash->{rest} = { error => 'You need to be logged in to use lists.' };
+    }
     my $q = "SELECT list_id FROM sgn_people.list where name = ? and owner=?";
     my $h = $c->dbc->dbh()->prepare($q);
     $h->execute($name, $user_id);
     my ($list_id) = $h->fetchrow_array();
 
     if ($list_id) { 
-	return $list_id;
+	$c->stash->{rest} = { list_id => $list_id };
     }
     else { 
-	return 0;
+	$c->stash->{rest} = { list_id => undef };
     }
 }
     
-    
-    
 
-sub remove_element :Path('/list/remove_element') Args(0) { 
+sub list_size : Path('/list/size') Args(0) { 
     my $self = shift;
     my $c = shift;
+    my $list_id = $c->req->param("list_id"); 
+    my $h = $c->dbc->dbh->prepare("SELECT count(*) from sgn_people.list_item WHERE list_id=?");
+    $h->execute($list_id);
+    my ($count) = $h->fetchrow_array();
+    $c->stash->{rest} = { count => $count };
+}    
+    
 
+sub remove_element :Path('/list/item/remove') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    
+    my $list_id = $c->req->param("list_id");
+    my $item_id = $c->req->param("item_id");
+    
+    
+    my $h = $c->dbc->dbh()->prepare("DELETE FROM sgn_people.list_item where list_id=? and item_id=?");
+
+    eval { 
+	$h->execute($list_id, $item_id);
+    };
+    if ($@) { 
+	$c->stash->{rest} = { error => "An error occurred. $@\n", };
+	return;
+    }
+    $c->stash->{rest} = [ 1 ];
+    
 }
     
 
@@ -206,6 +225,5 @@ sub get_user {
 	return $user_object->get_sp_person_id();
     }
     return undef;
-
 }
     
