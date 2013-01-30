@@ -271,5 +271,99 @@ sub add_cross_GET :Args(0) {
 }
 
 
+#/ajax/cross/upload_cross
+
+=head2 upload_cross
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+# sub upload_cross : Local : ActionClass('REST') { }
+
+# sub upload_cross_GET :Args(0) { 
+#     my ($self, $c) = @_;
+#     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+#     my $file_name = $c->req->param('file_name');
+#     $c->stash->{file_name} = $file_name;
+
+#     if (!$c->user()) { 
+# 	print STDERR "User not logged in... not adding a cross.\n";
+# 	$c->stash->{rest} = {error => "You need to be logged in to add a cross." };
+# 	return;
+#     }
+
+#     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) { 
+# 	print STDERR "User does not have sufficient privileges.\n";
+# 	$c->stash->{rest} = {error =>  "you have insufficient privileges to add a cross." };
+# 	return;
+#     }
+
+#     print STDERR "loading cross file: $file_name\n";
+
+
+#     if ($@) { 
+# 	$c->stash->{rest} = { error => "An error occurred: $@"};
+#     }
+
+#     $c->stash->{rest} = { error => '', };
+									
+# }
+
+
+# sub upload_cross :  Path('/cross/upload_cross')  Args(0) {
+#   # my ($self, $c) = @_;
+#   # my $file_name = $c->req->upload('file_name');
+#   # my $basename = $file_name->basename;
+#   # my $tempfile = $file_name->tempname;
+#   #  print STDERR "loading cross file: $tempfile Basename: $basename\n";
+#   #$c->stash->{rest} = { error => '', };
+#   #$c->stash->{tempfile} = $tempfile;
+#   #  $c->stash(
+#   #      template => '/breeders_toolbox/upload_crosses2.mas',
+#   #      tempfile => $tempfile,
+#   #      );
+# }
+
+# sub upload_barcode_output : Path('/breeders/cross/uploads') :Args(0) {
+#     my ($self, $c) = @_;
+#     my $upload = $c->req->upload('file_name');
+#     my @contents = split /\n/, $upload->slurp;
+#     my $basename = $upload->basename;
+#     my $tempfile = $upload->tempname; #create a tempfile with the uploaded file
+#     if (! -e $tempfile) { 
+#         die "The file does not exist!\n\n";
+#     }
+#     my $archive_path = $c->config->{archive_path};
+
+#     $tempfile = $archive_path . "/" . $basename ;
+#     my $upload_err = $upload->copy_to($archive_path . "/" . $basename);
+
+#     my $sb = CXGN::Stock::StockBarcode->new( { schema=> $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado') });
+#     my $identifier_prefix = $c->config->{identifier_prefix};
+#     my $db_name = $c->config->{trait_ontology_db_name};
+
+#     $sb->parse(\@contents, $identifier_prefix, $db_name);
+#     my $parse_errors = $sb->parse_errors;
+#     $sb->verify; #calling the verify function
+#     my $verify_errors = $sb->verify_errors;
+#     my @errors = (@$parse_errors, @$verify_errors);
+#     my $warnings = $sb->warnings;
+#     $c->stash->{tempfile} = $tempfile;
+#     $c->stash(
+#         template => '/stock/barcode/upload_confirm.mas',
+#         tempfile => $tempfile,
+#         errors   => \@errors,
+#         warnings => $warnings,
+#         feedback_email => $c->config->{feedback_email},
+#         );
+
+#}
+
 
 1;

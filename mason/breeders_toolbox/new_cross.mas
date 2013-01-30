@@ -12,34 +12,11 @@
 
 <div id="upload_crosses_dialog"  class="ui-widget" >
 <b>
-Upload a tab-delimited file of crosses with the following columns:<br>
+Upload a list of crosses:<br>
 </b>
 <br>
-Female parent name<br>
-Male parent name<br>
-Number of progeny to create (optional)<br>
-Number of flowers (optional)<br><br><br>
-
+<form action="/cross/upload_cross"  method="post"  enctype="multipart/form-data" id="upload_form" >
 <table>
-<tr><td>Trial</td><td>
-<select id="trial" name="trial">
-<%perl>
-foreach my $project (@projects) {
-	print "<option value=".@$project[0].">".@$project[1]."</option>";
-}
-</%perl>
-</select></td></tr>
-<tr><td>Location</td><td>
-<select id="location" name="location">
-<%perl>
-foreach my $location (@locations) {
-	print "<option value=".@$location[0].">".@$location[1]."</option>";
-}
-</%perl>
-</select></td></tr>
-<tr><td>File</td><td><input type="file" id="file" name="file" value="Choose file" /></td></tr>
-</td></tr>
-</table>
 Keep private to role 
 <select id="visible_to_role" name="visible_to_role">
 <option value = "" >none</option>
@@ -49,6 +26,11 @@ foreach my $role (@roles) {
 }
 </%perl>
 </select>
+<input type="file" name="upload_file" value="Choose file" id="upload_file"/><br />
+<input type="radio" name="format_type" value="barcode" /> Barcode format<br />
+<input type="radio" name="format_type" value="spreadsheet" checked="checked"/> Spreadsheet (IBP format)<br />
+</table>
+</form>
 </div>
 
 
@@ -154,20 +136,26 @@ foreach my $role (@roles) {
   alert("DONE with processing"); 
    }
 
+
    jQuery("#upload_crosses_dialog").dialog( {
       autoOpen: false,
       buttons: { "Cancel" :  function() { jQuery("#upload_crosses_dialog").dialog("close"); }, "Submit": function() { read_cross_upload() }  },
       modal: true,
       width: 600,
-      height: 360
+      height: 200
     });
     
     jQuery("#upload_crosses_link").click( function () { 
      jQuery("#upload_crosses_dialog" ).dialog("open");
     });
-
+   
     function read_cross_upload() { 
-   }
+      var formatType = jQuery('input[name=format_type]:checked').val();
+      var uploadFile = jQuery("#upload_file").val();
+      if (!uploadFile) { alert("Please select a file");return;}
+      else if (!(formatType == "barcode" || formatType == "spreadsheet")) {alert("Please choose a format");return;}
+      else { jQuery("#upload_form").submit();}
+    }
 
 </script>
 
