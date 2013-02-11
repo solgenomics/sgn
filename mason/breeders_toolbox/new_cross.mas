@@ -17,7 +17,13 @@ Upload a list of crosses:<br>
 <br>
 <form action="/cross/upload_cross"  method="post"  enctype="multipart/form-data" id="upload_form" >
 <table>
-Keep private to role 
+<tr><td><input type="file" name="upload_file" value="Choose file" id="upload_file"/><br /></td></tr>
+<tr><td>
+<input type="radio" name="format_type" value="barcode" /> Barcode format<br />
+<input type="radio" name="format_type" value="spreadsheet" checked="checked"/> Spreadsheet<br />
+</td></tr>
+<tr><td>
+Keep private to role
 <select id="visible_to_role" name="visible_to_role">
 <option value = "" >none</option>
 <%perl>
@@ -26,9 +32,7 @@ foreach my $role (@roles) {
 }
 </%perl>
 </select>
-<input type="file" name="upload_file" value="Choose file" id="upload_file"/><br />
-<input type="radio" name="format_type" value="barcode" /> Barcode format<br />
-<input type="radio" name="format_type" value="spreadsheet" checked="checked"/> Spreadsheet (IBP format)<br />
+</td></tr>
 </table>
 </form>
 </div>
@@ -142,7 +146,7 @@ foreach my $role (@roles) {
       buttons: { "Cancel" :  function() { jQuery("#upload_crosses_dialog").dialog("close"); }, "Submit": function() { read_cross_upload() }  },
       modal: true,
       width: 600,
-      height: 200
+      height: 250
     });
     
     jQuery("#upload_crosses_link").click( function () { 
