@@ -67,8 +67,8 @@ sub upload_cross :  Path('/cross/upload_cross')  Args(0) {
 	 $first_row[6] ne 'prefix' ||
 	 $first_row[7] ne 'suffix' ||
 	 $first_row[8] ne 'number_of_flowers') {
-       $error = "Header line is incorrect";
-       print STDERR "header is incorrect\n";
+       $error = "Header line is incorrect. Header should contain the following tab-delimited fields:\ncross_name\nmaternal_parent\npaternal_parent\ncross_trial\ncross_location\nnumber_of_progeny\nprefix\nsuffix\nnumber_of_flowers\n";
+       print STDERR "$error\n";
      }
      else {
        my $line_number = 0;
@@ -76,10 +76,10 @@ sub upload_cross :  Path('/cross/upload_cross')  Args(0) {
 	 $line_number++;
 	 my @row = split /\t/, $line;
 	 if (scalar(@row) < 5) {
-	   $errors{$line_number} = "Line $line_number has too few columns";
+	   $errors{$line_number} = "Line $line_number has too few columns\n";
 	 }
 	 elsif (!$row[0] || !$row[1] || !$row[2] || !$row[3] || !$row[4]) {
-	   $errors{$line_number} = "Line $line_number is missing a required field";
+	   $errors{$line_number} = "Line $line_number is missing a required field\n";
 	 }
 	 else {
 	   my %cross;
@@ -92,8 +92,13 @@ sub upload_cross :  Path('/cross/upload_cross')  Args(0) {
 	   if ($row[6]) {$cross{'prefix'} = $row[6];}
 	   if ($row[7]) {$cross{'suffix'} = $row[7];}
 	   if ($row[8]) {$cross{'number_of_flowers'} = $row[8];}
-	   _verify_cross(%cross, \%errors);
-	   #if ($verification
+	   my $verification = _verify_cross($c,\%cross, \%errors, $line_number);
+	   if ($verification) {
+	     print STDERR "Verified\n";
+	   }
+	   else {
+	     print STDERR "Not verified\n";
+	   }
 	 }
        }
      }
@@ -116,11 +121,61 @@ sub upload_cross :  Path('/cross/upload_cross')  Args(0) {
 }
 
 sub _verify_cross {
-  #my $self = shift;
-  my %cross = shift;
+  my $c = shift;
+  my $cross_ref = shift;
   my $error_ref = shift;
-  my %verify_errors = %$error_ref;
-  print STDERR "name: ".$cross{'cross_name'}."\n";
+  my $line_number = shift;
+  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+  my $is_verified = 0;
+  my $cross_name = $cross_ref->{'cross_name'};
+  my $maternal_parent = $cross_ref->{'maternal_parent'};
+  my $paternal_parent = $cross_ref->{'paternal_parent'};
+  my $cross_trial = $cross_ref->{'cross_trial'};
+  my $cross_location = $cross_ref->{'cross_location'};
+  my $max_progeny = 20000;
+  my $max_flowers = 10000;
+  #print STDERR "name: ".$cross_ref->{'cross_name'}."\n";
+  if (! $schema->resultset("Stock::Stock")->find({name=>$maternal_parent,})){
+    $error_ref->{$line_number} .= "Line number $line_number, Maternal parent $maternal_parent does not exist in database\n";
+    }
+  if (! $schema->resultset("Stock::Stock")->find({name=>$paternal_parent,})){
+    $error_ref->{$line_number} .= "Line number $line_number, Paternal parent $paternal_parent does not exist in database\n";
+    }
+  if (! $schema->resultset("Project::Project")->find({name=>$cross_trial,})){
+    $error_ref->{$line_number} .= "Line number $line_number, Trial $cross_trial does not exist in database\n";
+    }
+  if (! $schema->resultset("NaturalDiversity::NdGeolocation")->find({description=>$cross_location,})){
+    $error_ref->{$line_number} .= "Line number $line_number, Location $cross_location does not exist in database\n";
+    }
+  #check that cross name does not already exist
+  if ($schema->resultset("Stock::Stock")->find({name=>$cross_name})){
+    $error_ref->{$line_number} .= "Line number $line_number, Cross $cross_name already exists in database\n";
+  }
+  if ($cross_ref->{'number_of_progeny'}) {
+    if ($cross_ref->{'number_of_progeny'}  =~ /^[0-9]+$/) { #is an integer
+      if ($cross_ref->{'number_of_progeny'} > $max_progeny || $cross_ref->{'number_of_progeny'} < 1) {
+	$error_ref->{$line_number} .= "Line number $line_number, Number of progeny ". $cross_ref->{'number_of_progeny'}." exceeds the maximum of $max_progeny or is invalid\n";
+      }
+    } else {
+      $error_ref->{$line_number} .= "Line number $line_number, Number of progeny ". $cross_ref->{'number_of_progeny'}." is not an integer\n";
+    }
+  }
+  if ($cross_ref->{'number_of_flowers'}) {
+    if ($cross_ref->{'number_of_flowers'}  =~ /^[0-9]+$/) { #is an integer
+      if ($cross_ref->{'number_of_flowers'} > $max_flowers || $cross_ref->{'number_of_flowers'} < 1) {
+	$error_ref->{$line_number} .= "Line number $line_number, Number of flowers ". $cross_ref->{'number_of_flowers'}." exceeds the maximum of $max_flowers or is invalid\n";
+      }
+    } else {
+      $error_ref->{$line_number} .= "Line number $line_number, Number of flowers ". $cross_ref->{'number_of_flowers'}." is not an integer\n";
+    }
+  }
+  if ($cross_ref->{'prefix'} =~ m/\-/) {
+	$error_ref->{$line_number} .= "Line number $line_number, Prefix ". $cross_ref->{'prefix'}." contains an illegal character: -\n";
+  }
+  if ($cross_ref->{'suffix'} =~ m/\-/) {
+	$error_ref->{$line_number} .= "Line number $line_number, Suffix ". $cross_ref->{'suffix'}." contains an illegal character: -\n";
+  }
+  if ($error_ref->{$line_number}) {print %{$error_ref}->{$line_number}."\n";return;} else {return 1;}
 }
 
 1;

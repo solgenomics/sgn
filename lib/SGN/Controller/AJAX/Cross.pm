@@ -81,9 +81,9 @@ sub add_cross_GET :Args(0) {
 
 
     #check that progeny number is an integer less than maximum allowed
-    my $maximum_progeny_number = 1000;
-    if ((! $progeny_number =~ m/^\d+$/) or ($progeny_number > $maximum_progeny_number)){
-      $c->stash->{rest} = {error =>  "progeny number exceeds the maximum of $maximum_progeny_number." };
+    my $maximum_progeny_number = 20000;
+    if ((! $progeny_number =~ m/^\d+$/) or ($progeny_number > $maximum_progeny_number) or ($progeny_number < 1)){
+      $c->stash->{rest} = {error =>  "progeny number exceeds the maximum of $maximum_progeny_number or is invalid." };
       return;
     }
 
