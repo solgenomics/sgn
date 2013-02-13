@@ -47,8 +47,8 @@ sub upload_cross :  Path('/cross/upload_cross')  Args(0) {
    my $format_type = $c->req->param('format_type');
    my $basename = $upload->basename;
    my $tempfile = $upload->tempname;
-   my $error;
-   my %errors;
+   my $header_error;
+   my %line_errors;
    my %upload_data;
    my @contents = split /\n/, $upload->slurp;
    print STDERR "loading cross file: $tempfile Basename: $basename $format_type $visible_to_role\n";
@@ -61,14 +61,14 @@ sub upload_cross :  Path('/cross/upload_cross')  Args(0) {
      if ($first_row[0] ne 'cross_name' ||
 	 $first_row[1] ne 'maternal_parent' ||
 	 $first_row[2] ne 'paternal_parent' ||
-	 $first_row[3] ne 'cross_trial' ||
-	 $first_row[4] ne 'cross_location' ||
+	 $first_row[3] ne 'trial' ||
+	 $first_row[4] ne 'location' ||
 	 $first_row[5] ne 'number_of_progeny' ||
 	 $first_row[6] ne 'prefix' ||
 	 $first_row[7] ne 'suffix' ||
 	 $first_row[8] ne 'number_of_flowers') {
-       $error = "Header line is incorrect. Header should contain the following tab-delimited fields:\ncross_name\nmaternal_parent\npaternal_parent\ncross_trial\ncross_location\nnumber_of_progeny\nprefix\nsuffix\nnumber_of_flowers\n";
-       print STDERR "$error\n";
+       $header_error = "<b>Error in header:</b><br>Header should contain the following tab-delimited fields:<br>cross_name<br>maternal_parent<br>paternal_parent<br>trial<br>location<br>number_of_progeny<br>prefix<br>suffix<br>number_of_flowers<br>";
+       print STDERR "$header_error\n";
      }
      else {
        my $line_number = 0;
@@ -76,10 +76,10 @@ sub upload_cross :  Path('/cross/upload_cross')  Args(0) {
 	 $line_number++;
 	 my @row = split /\t/, $line;
 	 if (scalar(@row) < 5) {
-	   $errors{$line_number} = "Line $line_number has too few columns\n";
+	   $line_errors{$line_number} = "Line $line_number has too few columns\n";
 	 }
 	 elsif (!$row[0] || !$row[1] || !$row[2] || !$row[3] || !$row[4]) {
-	   $errors{$line_number} = "Line $line_number is missing a required field\n";
+	   $line_errors{$line_number} = "Line $line_number is missing a required field\n";
 	 }
 	 else {
 	   my %cross;
@@ -92,8 +92,8 @@ sub upload_cross :  Path('/cross/upload_cross')  Args(0) {
 	   if ($row[6]) {$cross{'prefix'} = $row[6];}
 	   if ($row[7]) {$cross{'suffix'} = $row[7];}
 	   if ($row[8]) {$cross{'number_of_flowers'} = $row[8];}
-	   my $verification = _verify_cross($c,\%cross, \%errors, $line_number);
-	   if ($verification) {
+	   my $line_verification = _verify_cross($c,\%cross, \%line_errors, $line_number);
+	   if ($line_verification) {
 	     print STDERR "Verified\n";
 	   }
 	   else {
@@ -103,21 +103,34 @@ sub upload_cross :  Path('/cross/upload_cross')  Args(0) {
        }
      }
 
-
-
-     $c->stash(
-	       tempfile => $tempfile,
-	       template => '/breeders_toolbox/upload_crosses_confirm_spreadsheet.mas',
-	      );
+#     $c->stash(
+#	       tempfile => $tempfile,
+#	       template => '/breeders_toolbox/upload_crosses_confirm_spreadsheet.mas',
+#	      );
    } elsif ($format_type eq "barcode") {
-     $c->stash(
-	       tempfile => $tempfile,
-	       template => '/breeders_toolbox/upload_crosses_confirm_barcode.mas',
-	      );
+#     $c->stash(
+#	       tempfile => $tempfile,
+#	       template => '/breeders_toolbox/upload_crosses_confirm_barcode.mas',
+#	      );
    }
    else {
      print STDERR "Upload file format type $format_type not recognized\n";
    }
+
+   if (%line_errors || $header_error) {
+
+
+     $c->stash(
+	       file_name => $basename,
+	       header_error => $header_error,
+	       line_errors_ref => \%line_errors,
+	       template => '/breeders_toolbox/upload_crosses_file_error.mas',
+	       );
+     #print STDERR "there are errors in the upload file\n$line_errors_string";
+   }
+
+
+
 }
 
 sub _verify_cross {
@@ -136,44 +149,44 @@ sub _verify_cross {
   my $max_flowers = 10000;
   #print STDERR "name: ".$cross_ref->{'cross_name'}."\n";
   if (! $schema->resultset("Stock::Stock")->find({name=>$maternal_parent,})){
-    $error_ref->{$line_number} .= "Line number $line_number, Maternal parent $maternal_parent does not exist in database\n";
+    $error_ref->{$line_number} .= "Line number $line_number, Maternal parent $maternal_parent does not exist in database\n <br>";
     }
   if (! $schema->resultset("Stock::Stock")->find({name=>$paternal_parent,})){
-    $error_ref->{$line_number} .= "Line number $line_number, Paternal parent $paternal_parent does not exist in database\n";
+    $error_ref->{$line_number} .= "Line number $line_number, Paternal parent $paternal_parent does not exist in database\n <br>";
     }
   if (! $schema->resultset("Project::Project")->find({name=>$cross_trial,})){
-    $error_ref->{$line_number} .= "Line number $line_number, Trial $cross_trial does not exist in database\n";
+    $error_ref->{$line_number} .= "Line number $line_number, Trial $cross_trial does not exist in database\n <br>";
     }
   if (! $schema->resultset("NaturalDiversity::NdGeolocation")->find({description=>$cross_location,})){
-    $error_ref->{$line_number} .= "Line number $line_number, Location $cross_location does not exist in database\n";
+    $error_ref->{$line_number} .= "Line number $line_number, Location $cross_location does not exist in database\n <br>";
     }
   #check that cross name does not already exist
   if ($schema->resultset("Stock::Stock")->find({name=>$cross_name})){
-    $error_ref->{$line_number} .= "Line number $line_number, Cross $cross_name already exists in database\n";
+    $error_ref->{$line_number} .= "Line number $line_number, Cross $cross_name already exists in database\n <br>";
   }
   if ($cross_ref->{'number_of_progeny'}) {
     if ($cross_ref->{'number_of_progeny'}  =~ /^[0-9]+$/) { #is an integer
       if ($cross_ref->{'number_of_progeny'} > $max_progeny || $cross_ref->{'number_of_progeny'} < 1) {
-	$error_ref->{$line_number} .= "Line number $line_number, Number of progeny ". $cross_ref->{'number_of_progeny'}." exceeds the maximum of $max_progeny or is invalid\n";
+	$error_ref->{$line_number} .= "Line number $line_number, Number of progeny ". $cross_ref->{'number_of_progeny'}." exceeds the maximum of $max_progeny or is invalid\n <br>";
       }
     } else {
-      $error_ref->{$line_number} .= "Line number $line_number, Number of progeny ". $cross_ref->{'number_of_progeny'}." is not an integer\n";
+      $error_ref->{$line_number} .= "Line number $line_number, Number of progeny ". $cross_ref->{'number_of_progeny'}." is not an integer\n <br>";
     }
   }
   if ($cross_ref->{'number_of_flowers'}) {
     if ($cross_ref->{'number_of_flowers'}  =~ /^[0-9]+$/) { #is an integer
       if ($cross_ref->{'number_of_flowers'} > $max_flowers || $cross_ref->{'number_of_flowers'} < 1) {
-	$error_ref->{$line_number} .= "Line number $line_number, Number of flowers ". $cross_ref->{'number_of_flowers'}." exceeds the maximum of $max_flowers or is invalid\n";
+	$error_ref->{$line_number} .= "Line number $line_number, Number of flowers ". $cross_ref->{'number_of_flowers'}." exceeds the maximum of $max_flowers or is invalid\n <br>";
       }
     } else {
-      $error_ref->{$line_number} .= "Line number $line_number, Number of flowers ". $cross_ref->{'number_of_flowers'}." is not an integer\n";
+      $error_ref->{$line_number} .= "Line number $line_number, Number of flowers ". $cross_ref->{'number_of_flowers'}." is not an integer\n <br>";
     }
   }
   if ($cross_ref->{'prefix'} =~ m/\-/) {
-	$error_ref->{$line_number} .= "Line number $line_number, Prefix ". $cross_ref->{'prefix'}." contains an illegal character: -\n";
+	$error_ref->{$line_number} .= "Line number $line_number, Prefix ". $cross_ref->{'prefix'}." contains an illegal character: -\n <br>";
   }
   if ($cross_ref->{'suffix'} =~ m/\-/) {
-	$error_ref->{$line_number} .= "Line number $line_number, Suffix ". $cross_ref->{'suffix'}." contains an illegal character: -\n";
+	$error_ref->{$line_number} .= "Line number $line_number, Suffix ". $cross_ref->{'suffix'}." contains an illegal character: -\n <br>";
   }
   if ($error_ref->{$line_number}) {print %{$error_ref}->{$line_number}."\n";return;} else {return 1;}
 }
