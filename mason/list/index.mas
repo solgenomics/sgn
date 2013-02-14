@@ -16,8 +16,8 @@ $user_id
 % }
 
 <script>
-  
-  var list = new CXGN.List;
+  alert("hello");  
+  var list = new CXGN.List();
 
   list.renderLists('list_div');
 
@@ -38,7 +38,7 @@ Create new list <input type="text" id="new_list_name" on/>
 </form>
 
 
-<textarea name="add_to_list" >
+<textarea id="add_to_list" >
 </textarea>
 <script>
 addToListMenu('add_to_list');
