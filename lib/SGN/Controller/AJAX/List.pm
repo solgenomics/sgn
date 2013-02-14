@@ -11,7 +11,6 @@ __PACKAGE__->config(
     map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
    );
 
-
 sub get_list :Path('/list/get') Args(0) { 
     my $self = shift;
     my $c = shift;
@@ -34,9 +33,7 @@ sub get_list :Path('/list/get') Args(0) {
     }
 
     $c->stash->{rest} = \@list;
-
 }
-
 
 sub new_list :Path('/list/new') Args(0) { 
     my $self = shift;
@@ -65,11 +62,7 @@ sub new_list :Path('/list/new') Args(0) {
     else { 
 	$c->stash->{rest}  = [ 1 ];
     }
-    
-    
-
 }
-
 
 sub available_lists : Path('/list/available') Args(0) { 
     my $self = shift;
@@ -178,8 +171,30 @@ sub exists_list : Path('/list/exists') Args(0) {
 	$c->stash->{rest} = { list_id => undef };
     }
 }
-    
 
+sub exists_item : Path('/list/exists_item') :Args(0) { 
+    my $self =shift;
+    my $c = shift;
+    my $list_id = $c->req->param("list_id");
+    my $name = $c->req->param("name");
+
+    my $user_id = $self->get_user($c);
+    if (!$user_id) { 
+	$c->stash->{rest} = { error => 'You need to be logged in to use lists.' };
+    }
+    my $q = "SELECT list_item_id FROM sgn_people.list join sgn_people.list_item using(list_id) where list.list_id =? and content = ? and owner=?";
+    my $h = $c->dbc->dbh()->prepare($q);
+    $h->execute($list_id, $name, $user_id);
+    my ($list_item_id) = $h->fetchrow_array();
+
+    if ($list_item_id) { 
+	$c->stash->{rest} = { list_item_id => $list_item_id };
+    }
+    else { 
+	$c->stash->{rest} = { list_item_id => 0 };
+    }
+}
+    
 sub list_size : Path('/list/size') Args(0) { 
     my $self = shift;
     my $c = shift;
@@ -199,7 +214,7 @@ sub remove_element :Path('/list/item/remove') Args(0) {
     my $item_id = $c->req->param("item_id");
     
     
-    my $h = $c->dbc->dbh()->prepare("DELETE FROM sgn_people.list_item where list_id=? and item_id=?");
+    my $h = $c->dbc->dbh()->prepare("DELETE FROM sgn_people.list_item where list_id=? and list_item_id=?");
 
     eval { 
 	$h->execute($list_id, $item_id);
@@ -209,11 +224,8 @@ sub remove_element :Path('/list/item/remove') Args(0) {
 	return;
     }
     $c->stash->{rest} = [ 1 ];
-    
 }
     
-
-
 sub get_user { 
     my $self = shift;
     my $c = shift;
