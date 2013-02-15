@@ -16,7 +16,6 @@ $user_id
 % }
 
 <script>
-  alert("hello");  
   var list = new CXGN.List();
 
   list.renderLists('list_div');
