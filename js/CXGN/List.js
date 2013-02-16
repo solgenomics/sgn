@@ -34,7 +34,7 @@ CXGN.List.prototype = {
 
     newList: function(name) { 
 	var oldListId = this.existsList(name);
-	alert("OLD LIST ID = "+oldListId);
+	//alert("OLD LIST ID = "+oldListId);
 	if (oldListId == null) { 
 	    jQuery.ajax( { 
 		url: '/list/new',
@@ -46,7 +46,7 @@ CXGN.List.prototype = {
 		    }
 		}
 	    });
-	    alert("stored list");
+	    //alert("stored list");
 	    return 1;
 	}
 	alert("an error occurred");
@@ -97,6 +97,7 @@ CXGN.List.prototype = {
     deleteList: function(list_id) { 
 	jQuery.ajax( { 
 	    url: 'list/delete',
+	    async: false,
 	    data: { 'list_id': list_id }
 	});
     },
@@ -105,7 +106,7 @@ CXGN.List.prototype = {
 	//alert("render lists...");
 	var lists = this.availableLists();
 	var html = '';
-	html = html + '<input id="add_list_input" type="text" /><input id="add_list_button" type="button" value="add list" /><br />';
+	html = html + '<input id="add_list_input" type="text" /><input id="add_list_button" type="button" value="new list" /><br />';
 
 	if (lists.length==0) { 
 	    html = html + "None";
@@ -129,9 +130,9 @@ CXGN.List.prototype = {
 	jQuery('#add_list_button').click( 
 	    function() { 
 		var lo = new CXGN.List();
-		alert("click");
+		//alert("click");
 		var name = jQuery('#add_list_input').val();
-		alert("here "+name);
+		//alert("here "+name);
 		lo.newList(name);
 		lo.renderLists(div);
 	    });
@@ -155,7 +156,7 @@ CXGN.List.prototype = {
 	html = html + '<input type="text" id="dialog_add_list_item" /><input id="dialog_add_list_item_button" type="submit" value="add" /><br />';
 	
 	for(var n=0; n<items.length; n++) { 
-	    html = html + items[n][1] + '   <input id="delete_'+items[n][0]+'" type="button" value="remove" /><br />';
+	    html = html + items[n][1] + '   <input id="'+items[n][0]+'" type="button" value="remove" /><br />';
 	    
 	}
 	
@@ -164,16 +165,18 @@ CXGN.List.prototype = {
 
 	for (var n=0; n<items.length; n++) { 
 	    var list_item_id = items[n][0];
-	    alert('constructing button '+list_item_id);
-	    jQuery('#delete_'+items[n][0]).click(
+	    //alert('constructing button '+list_item_id);
+	    jQuery('#'+items[n][0]).click(
 		function() { 
-		    alert("ID = "+this.id);
+		    //alert("ID = "+this.id);
 		    var lo = new CXGN.List();
 		    var i = lo.availableLists();
 		    
-		    alert(i.join(",")); //+'removing n= '+n+' item '+ i[n][0] + ' ' + i[n][1]);
+		    //alert(i.join(",")); //+'removing n= '+n+' item '+ i[n][0] + ' ' + i[n][1]);
 		    lo.removeItem(list_id, this.id );
+		    alert("REMOVED ITEM "+this.id);
 		    lo.renderItems(div, list_id);
+		    lo.renderLists('list_dialog');
 		});
 	}
 	
@@ -229,6 +232,7 @@ CXGN.List.prototype = {
 		duplicates.push(list[n]);
 	    }
 	}
+	lo.renderLists('list_dialog');
 	alert('Duplicate items ('+ duplicates.join(",") + ') were not stored');
     },
 
@@ -248,6 +252,7 @@ function setUpLists() {
 	height: 300,
 	width: 500,
 	autoOpen: false,
+	title: 'Available lists',
 	buttons: { "Done" :  function() { 
 	    jQuery('#list_dialog').dialog("close"); }
 		 },
@@ -272,7 +277,12 @@ function setUpLists() {
 	autoOpen: false,
 	buttons: { 
             "Yes" : function() {
+		var lo = new CXGN.List();
+		var list_id = jQuery('#delete_dialog_list_id').html();
+		lo.deleteList(list_id);
+		alert("Deleted list "+list_id);
 	        jQuery('#confirm_delete_dialog').dialog("close"); 
+		lo.renderLists('list_dialog');
 	    }, 
             "No"  : function() {
 		jQuery('#confirm_delete_dialog').dialog("close"); 
@@ -334,6 +344,7 @@ function addToListMenu(div) {
 	    var text = jQuery('textarea#'+div).val();
 	    var list_id = jQuery('#'+div+'_list_select').val();
 	    lo.addToList(list_id, text);
+	    lo.renderLists('list_dialog');
 	}
     );
 }
@@ -361,16 +372,21 @@ function addTextToList(div, list_id) {
     if (id == 0) { 
 	alert('Item "'+item+'" was not added because it already exists');
     }
+    lo.renderLists('list_dialog');
 }
 
 function deleteList(list_id) { 
-    //alert("deleting list...");
+    var lo = new CXGN.List();
+    var list_name = lo.listNameById(list_id);
+    jQuery('#delete_dialog_list_name').html(list_name);
+    jQuery('#delete_dialog_list_id').html(list_id);
     jQuery('#confirm_delete_dialog').dialog("open");
 }
 	
 function deleteItemLink(list_item_id) { 
     var lo = new CXGN.List();
     lo.deleteItem(list_item_id);
+    lo.renderLists('list_dialog');
     //alert('Deleted '+list_item_id);
 }
 	
@@ -378,7 +394,6 @@ function showListItems(div, list_id) {
     var l = new CXGN.List();
     jQuery('#'+div).dialog("open");
     l.renderItems('list_item_dialog', list_id);
-
 }
 
 function addNewList(div_id) { 
