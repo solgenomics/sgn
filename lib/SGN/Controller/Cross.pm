@@ -50,6 +50,7 @@ sub upload_cross :  Path('/cross/upload_cross')  Args(0) {
    my $header_error;
    my %line_errors;
    my %upload_data;
+   my $file_error = 0;
    my @contents = split /\n/, $upload->slurp;
    print STDERR "loading cross file: $tempfile Basename: $basename $format_type $visible_to_role\n";
    $c->stash->{tempfile} = $tempfile;
@@ -140,8 +141,35 @@ sub upload_cross :  Path('/cross/upload_cross')  Args(0) {
 	       );
      #print STDERR "there are errors in the upload file\n$line_errors_string";
    }
-
-
+   else {#file is valid
+     foreach my $line (@contents) {
+       my %cross;
+       my @row = split /\t/, $line;
+       $cross{'cross_name'} = $row[0];
+       $cross{'maternal_parent'} = $row[1];
+       $cross{'paternal_parent'} = $row[2];
+       $cross{'cross_trial'} = $row[3];
+       $cross{'cross_location'} = $row[4];
+       if ($row[5]) {
+	 $cross{'number_of_progeny'} = $row[5];
+       }
+       if ($row[6]) {
+	 $cross{'prefix'} = $row[6];
+       }
+       if ($row[7]) {
+	 $cross{'suffix'} = $row[7];
+       }
+       if ($row[8]) {
+	 $cross{'number_of_flowers'} = $row[8];
+       }
+       $cross{'visible_to_role'} = $visible_to_role;
+       _add_cross($c,\%cross);
+     }
+     #get results from this function;
+     $c->stash(
+	       template => '/breeders_toolbox/upload_crosses_confirm_spreadsheet.mas',
+	      );
+   }
 
 }
 
