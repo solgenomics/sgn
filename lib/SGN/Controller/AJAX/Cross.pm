@@ -64,7 +64,7 @@ sub add_cross_GET :Args(0) {
     my $prefix = $c->req->param('prefix');
     my $suffix = $c->req->param('suffix');
     my $progeny_number = $c->req->param('progeny_number');
-    my $flower_number = $c->req->param('flower_number');
+    my $number_of_flowers = $c->req->param('number_of_flowers');
     my $visible_to_role = $c->req->param('visible_to_role');
 
     if (!$c->user()) { 
@@ -191,11 +191,11 @@ sub add_cross_GET :Args(0) {
       db => 'null',
     });
 
-   my $flower_number_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
-      { name   => 'flower_number',
+   my $number_of_flowers_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
+      { name   => 'number_of_flowers',
 	cv     => 'local',
 	db     => 'null',
-	dbxref => 'flower_number',
+	dbxref => 'number_of_flowers',
     });
 
     my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create(
@@ -215,12 +215,12 @@ sub add_cross_GET :Args(0) {
 	    type_id  =>  $population_cvterm->cvterm_id(),
                                            });
 
-    if ($flower_number) {
+    if ($number_of_flowers) {
       #set flower number in experimentprop
       $experiment->find_or_create_related('nd_experimentprops' , {
 								  nd_experiment_id => $experiment->nd_experiment_id(),
-								  type_id  =>  $flower_number_cvterm->cvterm_id(),
-								  value  =>  $flower_number,
+								  type_id  =>  $number_of_flowers_cvterm->cvterm_id(),
+								  value  =>  $number_of_flowers,
 								 });
     }
 
