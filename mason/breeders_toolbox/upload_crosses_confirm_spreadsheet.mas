@@ -1,4 +1,12 @@
 <%args>
+$number_of_crosses_added => undef
+$number_of_unique_parents => undef
 </%args>
 
-Spreadsheet feature not implemented yet
+
+<%perl>
+print "<br><b>Number of crossed added:</b> $number_of_crosses_added<br>";
+print "<b>Number of unique parents in added crosses</b>: $number_of_unique_parents\n";
+</%perl>
+
+

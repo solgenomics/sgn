@@ -142,6 +142,9 @@ sub upload_cross :  Path('/cross/upload_cross')  Args(0) {
      #print STDERR "there are errors in the upload file\n$line_errors_string";
    }
    else {#file is valid
+     my $number_of_crosses_added = 0;
+     my $number_of_unique_parents = 0;
+     my %unique_parents;
      foreach my $line (@contents) {
        my %cross;
        my @row = split /\t/, $line;
@@ -164,9 +167,17 @@ sub upload_cross :  Path('/cross/upload_cross')  Args(0) {
        }
        $cross{'visible_to_role'} = $visible_to_role;
        _add_cross($c,\%cross);
+       $number_of_crosses_added++;
+       $unique_parents{$cross{'maternal_parent'}} = 1;
+       $unique_parents{$cross{'paternal_parent'}} = 1;
      }
-     #get results from this function;
+
+     foreach my $parent (keys %unique_parents) {
+       $number_of_unique_parents++;
+     }
      $c->stash(
+	       number_of_crosses_added => $number_of_crosses_added,
+	       number_of_unique_parents => $number_of_unique_parents,
 	       template => '/breeders_toolbox/upload_crosses_confirm_spreadsheet.mas',
 	      );
    }
