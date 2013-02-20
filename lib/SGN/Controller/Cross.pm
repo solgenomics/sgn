@@ -108,6 +108,7 @@ sub upload_cross :  Path('/cross/upload_cross')  Args(0) {
 	   my $line_verification = _verify_cross($c,\%cross, \%line_errors, $line_number);
 	   if ($line_verification) {
 	     print STDERR "Verified\n";
+	     $upload_data{$line_number}=\%cross;
 	   }
 	   else {
 	     print STDERR "Not verified\n";
@@ -178,6 +179,7 @@ sub upload_cross :  Path('/cross/upload_cross')  Args(0) {
      $c->stash(
 	       number_of_crosses_added => $number_of_crosses_added,
 	       number_of_unique_parents => $number_of_unique_parents,
+	       upload_data_ref => \%upload_data,
 	       template => '/breeders_toolbox/upload_crosses_confirm_spreadsheet.mas',
 	      );
    }
