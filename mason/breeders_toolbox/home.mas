@@ -7,6 +7,8 @@ $user_id => undef
 @stockrelationships => ()
 @cross_populations => ()
 @roles => ()
+$number_of_crosses_added => undef
+$number_of_unique_parents => undef
 </%args>
 
 <& /page/page_title.mas, title=>'Breeder Tools' &>
@@ -50,4 +52,5 @@ $user_id => undef
 
 
 </&>
+
 

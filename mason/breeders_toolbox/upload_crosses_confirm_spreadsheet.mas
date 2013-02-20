@@ -3,10 +3,58 @@ $number_of_crosses_added => undef
 $number_of_unique_parents => undef
 </%args>
 
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui' ] &>
 
+
+
+
+
+
+<div id="verify_uploaded_data_dialog"  class="ui-widget" >
 <%perl>
 print "<br><b>Number of crossed added:</b> $number_of_crosses_added<br>";
-print "<b>Number of unique parents in added crosses</b>: $number_of_unique_parents\n";
+print "<b>Number of unique parents in added crosses</b>: $number_of_unique_parents<br><br>";
 </%perl>
+<button id="view_uploaded_data_link" >View uploaded data</button>
+</div>
 
+<div id="display_uploaded_data_dialog"  class="ui-widget" >
+<table>
+<tr><td>table data<br /></td></tr>
+<tr><td>more table data<br /></td></tr>
+</table>
+</div>
 
+<script>
+
+   jQuery("#verify_uploaded_data_dialog").dialog( {
+      autoOpen: true,
+      buttons: { "Cancel" :  function() { jQuery("#verify_uploaded_data_dialog").dialog("close"); }, "Submit": function() { submit_cross_upload() }},
+      modal: true,
+      width: 600,
+      height: 250
+    });
+
+    jQuery("#view_uploaded_data_link").click( function () { 
+      autoOpen: true,
+     jQuery("#display_uploaded_data_dialog" ).dialog("open");
+    })
+
+   jQuery("#display_uploaded_data_dialog").dialog( {
+      autoOpen: false,
+      buttons: { "OK" :  function() { jQuery("#display_uploaded_data_dialog").dialog("close"); },},
+      modal: true,
+      width: 600,
+      height: 250
+    });
+
+    function submit_cross_upload() { 
+    }
+
+</script>
+
+<%perl>
+if ($number_of_crosses_added) {
+  print '<object id="view_uploaded_data_link"></object>';
+}
+</%perl>
