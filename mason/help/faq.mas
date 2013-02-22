@@ -79,6 +79,11 @@
 		  <strong>Answer: </strong>Use this <a href="ftp://ftp.solgenomics.net/unigene_builds/combined_species_assemblies/tomato_species/tomato_species_unigenes.v1.global_versionmapping.tab">file</a>, and read this <a href="ftp://ftp.solgenomics.net/unigene_builds/combined_species_assemblies/tomato_species/README_about_global_version_mapping.txt">key</a>. <b>Caveat</b>: a unigene may be split or merged with other unigene(s) in different builds. For unigenes of non-tomato species, look for similarly named files higher up in the ftp directory.
                 <br />
                 </p>
+ <p>
+		  <strong>Question:</strong> How can I map tomato gene model ids (ITAG_2.3 annotation) to their corresponding SGN unigene ids (unigine build #2)?<br />
+		  <strong>Answer: </strong>Use this <a href="ftp://ftp.solgenomics.net/unigene_builds/combined_species_assemblies/tomato_species/unigene_annotations/tomato_species_unigenes.v2.Solyc_ITAG2.3.genemodels.map.txt">file</a>, and read this <a href="ftp://ftp.solgenomics.net/unigene_builds/combined_species_assemblies/tomato_species/README_about_global_version_mapping.txt">note</a>.
+                <br />
+                </p>
               </td>
             </tr>
           </table>         
