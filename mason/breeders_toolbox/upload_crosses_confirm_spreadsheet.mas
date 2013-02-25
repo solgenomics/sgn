@@ -8,12 +8,18 @@ $upload_data_ref => undef
 
 
 
+<article>
+  <header>
+    <h1>Upload cross file verification</h1>
+  </header>
+</article>
+<a id="return_to_home"  href="/breeders/home" >Return to breeders tools</button>
 
 
 
 <div id="verify_uploaded_data_dialog"  class="ui-widget" >
 <%perl>
-print "<br><b>Number of crossed added:</b> $number_of_crosses_added<br>";
+print "<br><b>Number of crosses added:</b> $number_of_crosses_added<br>";
 print "<b>Number of unique parents in added crosses</b>: $number_of_unique_parents<br><br>";
 </%perl>
 <button id="view_uploaded_data_link" >View uploaded data</button>
@@ -69,7 +75,7 @@ foreach my $key (sort { $a <=> $b} keys %upload_data) {
     });
 
     jQuery("#view_uploaded_data_link").click( function () { 
-      autoOpen: true,
+      autoOpen: false,
      jQuery("#display_uploaded_data_dialog" ).dialog("open");
     })
 
@@ -77,8 +83,8 @@ foreach my $key (sort { $a <=> $b} keys %upload_data) {
       autoOpen: false,
       buttons: { "OK" :  function() { jQuery("#display_uploaded_data_dialog").dialog("close"); },},
       modal: true,
-      width: 600,
-      height: 250
+      width: 1000,
+      height: 300
     });
 
     function submit_cross_upload() { 
