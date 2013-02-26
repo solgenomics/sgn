@@ -379,8 +379,8 @@ CXGN.Onto.Browser.prototype = {
     
     showParentage: function(accession) {
 	this.setSearchTerm(accession);
-	if (accession.length < 5) { 
-	    alert('The search text must be longer than 4 characters');
+	if (accession.length < 3) { 
+	    alert('The search text must be longer than 2 characters');
 	    return;
 	}
 	this.workingMessage(true);
@@ -541,8 +541,8 @@ CXGN.Onto.Browser.prototype = {
     getOntologies: function(db_name, search_string) {
 	this.workingMessage(true);
         o.setSelected(db_name);
-	if(search_string.length<4){
-	    alert('The search text must be longer than 4 characters');
+	if(search_string.length<3){
+	    alert('The search text must be longer than 2 characters');
 	}
         else{
 	    new Ajax.Request('/ajax/onto/match', {

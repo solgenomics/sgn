@@ -1,0 +1,1421 @@
+/* NOTE: SGN blue is #ccccff */
+/********************     GENERAL SITE STYLES     **********************/
+/*various places on the site use various headline size tags, so let's try to make them all the same*/
+@charset "UTF-8";
+
+body {
+	background-color: white;
+	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+	font-size: 14px;
+	line-height: 18px;
+	margin: 0;
+} 
+dt { 
+  font-weight: bold;
+  margin-bottom: 0.1em;
+}
+dd { 
+  margin-bottom: 0.5em;
+  margin-left: 2.5em;
+}
+dt.sub { /* used for a second sublevel of dictionary terms */
+  font-weight: normal;
+  font-style: italic;
+}
+
+/* where to put the title image  */
+td.sgnlogo { 
+  vertical-align: top;
+}
+img {
+  border: 0;
+}
+
+img#sgnlogo { 
+  margin: -7px 6px 0 0;
+}
+img#sgntext { 
+  margin: 0 0 2px 12px;
+}
+td.toplink { 
+  text-align: right;
+  vertical-align: middle;
+  padding: 0 18px 0 0;
+  white-space: nowrap;
+}
+a.toplink:link, a.toplink:visited, a.toplink:active {
+  color: black;
+  padding: 0;
+  text-decoration: none;
+  line-height: 1.1;
+}
+a.toplink:hover {
+  padding: 0px 0px 0px 0px;
+  text-decoration: underline;
+}
+
+a.mytools, a.mytools:link, a.mytools:visited { 
+  font-weight: bold;
+  text-decoration: underline;
+  color: black;
+  padding: 0.1em 0.3em 0.1em 0.3em;
+  line-height: 1.38;
+  margin-left: 1em;
+}
+a.external, a[href ^="http:"] { 
+	background: url(/documents/img/external.png) center right no-repeat;
+	padding-right: 13px;
+}
+
+a.footer {
+	background: none;
+	padding-right: 2px;
+}
+
+a[href ^="mailto:"]  { 
+	background: url(/documents/img/mail_icon.gif) center right no-repeat;
+	padding-right: 16px;
+}
+#pagefooter { 
+  line-height: 1.5;
+  border-top: 3px solid #c0c0c0;
+  padding-top: 12px;
+  margin-top: 15px;
+}
+
+#pagefooter a, #pagefooter a:active, #pagefooter a:link, #pagefooter a:visited { 
+  color: #666666;
+}
+
+#quicksearch_form { 
+  margin: 10px 0px 0px 0px;
+}
+
+td.clonecart { 
+  vertical-align: middle;
+  text-align: center;
+}
+#clone_shoppingcart { 
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+/* this is a centered page title, like 'BAC P00343' or 'Marker TM2' or whatever */
+#pagetitle { 
+  text-align: center;
+  margin: 0;
+  padding: 0;
+}
+#pagetitle > h3 {
+  text-align: center;
+  margin-top: 0;
+  padding: 0;
+}
+
+/* Developer Toolbar Style */
+div.devbar {
+	width: 100%;
+        padding: 5px;
+        margin: -8px 0 13px -5px;
+
+	text-align: center;
+	background-color: #eef;
+	border-bottom: 2px solid #905;
+}
+/**Everything visible is in a table, use this to style fonts**/
+table.devbar {
+	font-size:1.0em;
+}
+
+/* general div to make something a little more indented */
+div.indentedcontent, div.indented_content, div.page_introduction {
+  margin: 0.3em 1em 2em 2em;
+}
+div.page_introduction {
+  padding: 0.3em;
+}
+
+/* same effect as above, except for table cells.  Don't make new pages that use this. */
+td.indentedcontent, td.indented_content {
+  padding: 1em 1em 2em 2em;
+}
+/*generic text-align tags*/
+.center { 
+  text-align:center;
+}
+.right { 
+  text-align:right;
+}
+.left { 
+  text-align:left;
+}
+
+/* the little tables at the top of search forms with */
+/* the title of the search and a "select random" link */
+table.search_form_title { 
+  width: 100%;
+}
+span.search_form_title { 
+  font-weight: bold;
+  margin-bottom: 1em;
+  display: block;
+}
+a.search_form_random {
+  font-size: 75%;
+}
+a.search_form_random:before {
+  content: '[';
+}
+a.search_form_random:after {
+  content: ']';
+}
+
+/*****************************     LINKS     ************************************************************/
+/*                                                                                                      */
+
+a:link  {
+  color:#954A09;
+  text-decoration:none;
+}
+a:active  {
+  color:#954A09;
+  text-decoration:none;
+}
+a:visited  {
+  color:#CE8E00;
+  text-decoration:none;
+}
+a:hover { 
+    color:#CE8E00;
+  text-decoration:underline;
+}
+a.hidevisited:link  {
+  color:#954A09;
+  text-decoration:none;
+}
+a.hidevisited:active {
+  color:#954A09;
+  text-decoration:none;
+}
+a.hidevisited:visited  {
+  color:#954A09;
+  text-decoration:none;
+}
+a.hidevisited:hover {
+  color:#954A09;
+  text-decoration:underline;
+}
+a.quicksearch_hit { 
+  font-weight: bold;
+/*   background: #ccccff;  */
+/*   border: 1px solid #9f9fc7; */
+}
+
+/*makes a submit button that looks more like a link*/
+input.linkstyle { 
+  color:#954A09;
+  text-decoration:none;
+  background:#ffffff;
+  border:0;
+  font-size:12px;
+}
+/*makes a submit button that looks more like a link*/
+input.linkstyle:hover { 
+  color:#954A09;
+  text-decoration:underline;
+  background:#ffffff;
+  border:0;
+  font-size:12px;
+}
+
+/* for little "what's this" links leading to help pages */
+a.context_help {
+  font-size: 80%;
+  letter-spacing: -1px;
+  font-weight: normal;
+}
+a.context_help:before { 
+  content: '(';
+  color: black;
+}
+a.context_help:after { 
+  content: ')';
+  color: black;
+}
+
+/*****************************     FONTS     ************************************************************/
+/*Don't add one if you can use one that's already here. It will keep our fonts more consistent.         */
+
+pre {
+	font-family: bitstream vera sans mono, monospace;
+	font-size: 12px;
+	line-height: 13px;
+}
+/* sequences should be displayed in a monospace font */
+.sequence, .monospace { 
+	font-family: bitstream vera sans mono, monospace;
+}
+.sequence .methionine { 
+  color: #0033cc;
+  font-weight: bold;
+}
+.sequence .stop_codon { 
+  color: red;
+  font-weight: bold;
+}
+.sequence .orf { 
+  background: #ddd;
+}
+.sequence .longest_orf { 
+  background: yellow;
+}
+.threeframe_translate .frame { 
+  font-weight: bold;
+}
+
+
+/*some old style used by koni in est.pl and unigene.pl*/
+.fix {
+	letter-spacing: 0px;
+	font-family: bitstream vera sans mono, monospace;
+	font-size: 12px;
+	line-height: 13px;
+}
+.fieldname {
+	font-weight: bold;
+	line-height: 1.2;
+}
+/* example text used in search pages */
+.searchexample { 
+	font-style: italic;
+	font-size: 10px;
+}
+.tinytype { 
+	font-size: 10px;
+}
+.notes { 
+	font-style:italic;
+}
+.mono {
+	font-family: monospace;
+}
+
+/*****************************     TEXT AND BACKGROUND COLORS     ***************************************/
+/*Don't add one if you can use one that's already here. It will keep our color scheme more consistent.  */
+
+/*bgcolorstatuses 1-4 show statuses with color (used on BAC registry, for instance) 
+
+span.bgcolorstatus1, 
+span.bgcolorstatus2, 
+span.bgcolorstatus3, 
+span.bgcolorstatus4, 
+span.bgcoloralt, 
+span.bgcolorselected a { 
+  padding-left: 0.2em;
+  padding-right: 0.2em;
+  line-height: 1.3;
+  border: 1px solid #444444;
+}
+
+*/
+
+.bgcolorstatus1 a, .bgcolorstatus1 span.nolink { 
+	background-color: #dddddd;
+	margin: 0;
+	padding: 2px;
+	border: 1px solid black;
+}
+.bgcolorstatus2 a, .bgcolorstatus2 span.nolink { 
+	background-color: #ffff66;
+	margin: 0;
+	padding: 2px;	
+	border: 1px solid black;
+}
+.bgcolorstatus3 a, .bgcolorstatus3 span.nolink { 
+	background-color: #66ff66;
+	margin: 0;
+	padding: 2px;
+	border: 1px solid black;
+}
+.bgcolorstatus4 a, .bgcolorstatus4 span.nolink { 
+	background-color: #9999ff;
+	margin: 0;
+	padding: 2px;
+	border: 1px solid black;
+}
+
+/*for lists of things with alternating colored backgrounds*/
+.bgcoloralt2 {
+	background-color: #f5f5ff;
+}
+.bgcoloralt1 { 
+        background-color: #fcfcff;
+}
+/*to discreetly highlight an item*/
+.bgcolorselected {
+	background-color: #ccccff;
+}
+/*use class="sgnblue" instead of bgcolor="sgnblue"*/
+.sgnblue {
+	background-color: #ccffcc;
+}
+/*important warning*/
+.alert { 
+	font-weight: bolder;
+	color: #ffffff;
+	background-color: #ff0000;
+}
+/*not quite so important warning*/
+.warning { 
+    color: #d22;
+    background-color: none;
+}
+.news { 
+	color: #ff0000;
+}
+/* used to highlight things in yellow, like bad regions of sequences */
+.highlighted, .badseq { 
+	background: yellow;
+}
+/* used to indicate something is disabled or relatively unimportant. just like, um, ghosts */
+.ghosted { 
+  color: gray;
+}
+/* used for special notices that are unusual, and to which the user's attention should be drawn */
+.specialnote { 
+  font-size: 110%;
+}
+div.specialnote { 
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+/* for things you want to put in a subtly set-off box */
+div.minorbox { 
+  border: 1px solid #cccccc;
+}
+div.deprecated {
+	padding:3px; 
+	margin-left:5px;
+	margin-bottom:10px; 
+	border:1px dashed #772222; 
+	background-color:#e5e5e5;
+	color:#600;
+	text-align:center; 
+	font-size:1.2em; 
+}
+
+span.help {
+  cursor: help;
+  border-bottom: 1px dashed #666;
+}
+
+span.toolbar_help {
+/*nothing different*/
+}
+
+/*****************************     INFO SECTIONS     *******************************************************/
+/*
+   You will probably not need these, because you can 
+   just call the info_section_html() function that uses them
+*/
+
+/* 
+  these make a blue box like we like to use to divide
+  info pages into sections.
+*/
+.infosectionhead,
+.infosectionhead_empty,
+.sub_infosectionhead,
+.sub_infosectionhead_empty
+{
+  width: 99%;
+  background: #e3e3cc; /* NOT SGN-blue! -- cassava blue! */
+  text-align:left;
+  margin-bottom: 6px;
+  margin-left: 5px;
+  padding: 1px 0px 3px 2px;
+/*         margin-right: 1em; */
+  border: 1px solid #9f9fc7;
+}
+/* sub-infosections have a gray heading */
+.sub_infosectionhead,
+.sub_infosectionhead_empty
+{ 
+  background: #efefef;
+  border-color: #c2c2c2;
+  border-width: 1px;
+}
+
+/* empty infosections don't have such a big bottom margin */
+.infosectionhead_empty,
+.sub_infosectionhead_empty
+{ 
+  margin-bottom: 0.5em;
+}
+
+.infosectiontitle,
+.sub_infosectiontitle,
+.infosectiontitle_empty,
+.sub_infosectiontitle_empty
+{ 
+  font-weight: bold;
+  vertical-align: middle;
+  color: black;
+  font-size: 12px;
+}
+td.infosectionsubtitle,
+td.sub_infosectionsubtitle,
+td.infosectionsubtitle_empty,
+td.sub_infosectionsubtitle_empty
+ {
+  width: 10%;
+  white-space: nowrap;
+  text-align: right;
+}
+td.infosectionsubtitle_empty,
+td.sub_infosectionsubtitle_empty
+{ 
+  color: #444444;
+  font-size: 90%;
+}
+div.infosectioncontent,
+div.sub_infosectioncontent
+{ 
+  margin: 0.4em 1em 2em 2em;
+}
+td.infosection_emptymessage,
+td.sub_infosection_emptymessage
+{ 
+  color: #444444;
+  width: 200px;
+  padding-left: 2em;
+}
+
+
+/*************     COLLAPSIBLE THINGS (used by CXGN::Page::Widgets::collapser)     ********************/
+
+a.collapser { 
+  color: black;
+}
+a.collapser:hover { 
+  text-decoration: none;
+}
+a.collapser img { 
+  border: 0;
+  padding: 0 5px 0 2px;
+  position: relative;
+  top: 1px;
+}
+
+/*************     TABBED PAGES     ********************/
+/* You will probably not need these, because you can 
+   just call the tabset function that uses them        */
+
+/*  styles for a set of tabs generated with SGN::tabset  */
+/*  like those on bulk download and direct search  */
+/*  classes to make a rounded box with some fill around an */
+/*  element  */
+
+table.modesel { 
+  padding: 0;
+  
+}
+td.modesel_c,  td.modesel_c_hi { 
+  text-align: center; 
+  vertical-align: middle;
+/*   width: 8em; */
+}
+td.modesel_spacer {
+  padding: 0;
+  height: 6px;
+  font-size: 1px;
+  width: 15px;
+  line-height: 0.1;
+}
+hr.modesel { 
+  border: 0;
+  border-bottom: 2px solid #c0c0c0;
+  margin-top: 15px;
+}
+a.modesel, a.modesel:visited, a.modesel_hi, a.modesel_hi:visited { 
+  display: block;
+  color: #202020;
+  margin: -3px -2px -1px -2px;
+  padding: 2px;
+/*   position: absolute; */
+  z-index: 30;
+}
+a.modesel:hover, a.modesel_hi:hover { 
+  text-decoration: none;
+}
+a.modesel_hi { 
+  color: black;
+}
+
+td.modesel_tl, td.modesel_tl_hi { 
+  padding: 0;
+  height: 7px;
+  width: 6px;
+}
+td.modesel_bl { 
+  padding: 0;
+  height: 7px;
+  width: 6px;
+}
+td.modesel_bl_hi { 
+  padding: 0;
+  height: 7px;
+  width: 6px;
+}
+td.modesel_tr, td.modesel_tr_hi { 
+  padding: 0;
+  height: 7px;
+  width: 6px;
+  font-size: 1px;
+  line-height: 0.1;
+}
+td.modesel_br { 
+  padding: 0;
+  height: 7px;
+  width: 6px;
+}
+td.modesel_br_hi {
+  padding: 0;
+  height: 7px;
+  width: 6px;
+}
+td.modesel_l, td.modesel_l_hi { 
+  padding: 0;
+  width: 6px;
+  height: 10px;
+  vertical-align: top;
+}
+td.modesel_t, td.modesel_t_hi {   
+  padding: 0;
+  height: 7px;
+  font-size: 1px;
+  line-height: 0.1;
+}
+td.modesel_r, td.modesel_r_hi {  
+  padding: 0;
+  width: 6px;
+  height: 10px;
+  vertical-align: top;
+}
+td.modesel_b { 
+  padding: 0;
+
+  height: 7px;
+  font-size: 1px;
+  line-height: 0.1;
+}
+td.modesel_b_hi { 
+  padding: 0;
+
+  height: 7px;
+  font-size: 1px;
+  line-height: 0.1;
+}
+
+/* now for the background images */
+td.modesel_l_hi {       background: url(/documents/img/modesel_l_back_hi.gif) repeat-y top right; }
+td.modesel_r_hi {       background: url(/documents/img/modesel_r_back_hi.gif) repeat-y top left; }
+td.modesel_t_hi {       background: url(/documents/img/modesel_t_hi.gif) repeat-x bottom left; }
+td.modesel_b_hi {       background: url(/documents/img/modesel_b_hi.gif) repeat-x top left; }
+td.modesel_c_hi { 
+  background: #bbbbe5 url(/documents/img/modesel_content_back_hi.gif) repeat-x top left; 
+/*   padding-top: 2px; */
+}
+td.modesel_l {       background: url(/documents/img/modesel_l_back.gif) repeat-y top left; }
+td.modesel_r {       background: url(/documents/img/modesel_r_back.gif) repeat-y top left; }
+td.modesel_t {       background: url(/documents/img/modesel_t.gif) repeat-x bottom left; }
+td.modesel_b {       background: url(/documents/img/modesel_b.gif) repeat-x top left; }
+td.modesel_c { 
+  background: #dbdbdb  url(/documents/img/modesel_content_back.gif) repeat-x top left; 
+}
+
+/*****************************     MULTILEVEL SELECT BOX     *****************************************/
+
+a.multilevel_modesel, a.multilevel_modesel:visited, a.multilevel_modesel_active,  a.multilevel_modesel_active:visited,
+a.multilevel_modesel_parent, a.multilevel_modesel_parent:visited, a.multilevel_modesel_parent_active,  a.multilevel_modesel_parent_active:visited
+ {
+  border: 1px solid black;
+  border-radius: 3px;
+  -moz-border-radius: 3px;
+  -webkit-border-radius: 3px;
+  -khtml-border-radius: 3px;
+  font-size: 14px;
+  padding: 2px 0 2px 0;
+  font-family: Arial, sans-serif;
+  margin-bottom: 1px;
+  text-decoration: none;
+  color: black;
+  display: block;	
+  width: 90%;
+  background: #e6e6e6 url(/documents/img/gr_wht_trans.png) top left repeat-x;
+}
+
+a.multilevel_modesel, a.multilevel_modesel:visited,
+a.multilevel_modesel_parent, a.multilevel_modesel_parent:visited {
+  background: #e6e6e6 url(/documents/img/gr_wht_trans_2.png) top left repeat-x;
+}
+
+a.multilevel_modesel_parent_active {
+  position: relative;
+  top: 4px;
+  height: 24px;	
+}
+
+div.multilevel_modesel, div.multilevel_modesel_active {
+  margin: -1px auto 0 auto;
+}
+div.multilevel_modesel td, div.multilevel_modesel_active td {
+  text-align: center;
+  vertical-align: top;
+}
+div.multilevel_modesel table, div.multilevel_modesel_active table {
+  margin: 0 auto 0 auto;
+}
+div.multilevel_modesel {
+  display: none;
+}
+div.multilevel_modesel_active {
+  position: relative;
+}
+
+div.multilevel_modesel_level_1 {
+  border: 1px solid black;
+  background-color: #c2c2ff; 
+  z-index: 1;
+}
+div.multilevel_modesel_level_2 {
+  border: 1px solid black;
+  background-color: #9797c7;
+  z-index: 2;
+}
+
+div.multilevel_modesel_level_0 a.multilevel_modesel_active,
+div.multilevel_modesel_level_0 a.multilevel_modesel_parent_active {
+  background-color: #c2c2ff;
+}
+div.multilevel_modesel_level_1 a.multilevel_modesel_active,
+div.multilevel_modesel_level_1 a.multilevel_modesel_parent_active {
+ background-color: #9797c7;
+}
+
+div.multilevel_modesel_level_2 a.multilevel_modesel_active,
+div.multilevel_modesel_level_2 a.multilevel_modesel_parent_active {
+  background-color: #76769b;
+}
+
+
+/*****************************     PAGINATED SEARCH RESULTS     *****************************************/
+
+/* for pagination next page and previous page */
+/* buttons on search pages */
+a.paginate_nav, span.paginate_nav_currpage, span.paginate_nav_ghosted {
+  padding: 0.16em;
+  font-size: larger;
+  font-weight: bold;
+  line-height: 2.1;
+}
+span.paginate_nav_ghosted {
+  color: #cccccc;
+}
+span.paginate_summary { 
+}
+span.paginate_nav_currpage { 
+  font-weight: bolder;
+  border: 1px solid black;
+  color: #c00000;
+}
+
+table.columnar_table {
+  border: 1px solid #cccccc;
+  clear: both;
+}
+table.columnar_table_noborder {
+    clear: both;
+}
+td.columnar_table, th.columnar_table, th.columnar_table_noborder { 
+  padding: 0.2em 0.6em 0.2em 0.6em;
+  margin: 0;
+  line-height: 1.4;
+}
+th.columnar_table {
+  border-bottom: 1px solid #aaa;
+}
+
+caption.columnar_table {
+  font-weight: bold;
+  text-align: left;
+  padding: 2px;
+}
+
+/* styles for paginated search results pages like bacsearch.pl and markersearch.pl*/
+#searchresults { 
+  text-align: center;
+}
+a.stealth { 
+  text-decoration: none;
+  color: black;
+}
+.hilite { 
+  background: yellow;
+}
+
+/*****************************     HOME PAGE STUFF     *********************/
+/*Feel free to use elsewhere if you like.                                  */
+.boxheading
+{ 
+	font-size:14px;
+	color: #A2AD00;
+        line-height:16px;
+	font-weight:bolder;
+	border-style:solid;
+	border-bottom-width:1px;
+	border-top-width:0px;
+	border-left-width:0px;
+	border-right-width:0px;
+	border-color:#999999;
+}
+.boxcontent
+{ 
+	margin-top:10px;
+	margin-left:10px;    
+}
+.boxsubcontent
+{ 
+	margin-top:7px;
+	margin-left:7px;
+	margin-bottom:12px;
+}
+.subheading
+{ 
+	font-weight:bolder;
+}
+.boxbgcolor1
+{ 
+	padding:10px;
+	background-color:#ffffff;
+}
+.boxbgcolor2
+{ 
+	padding:10px;
+	padding-bottom:0px;
+	background-color:#f0f0ff;
+	border-style:solid;
+	border-color:#999999;
+	border-width:1px;
+}
+.boxbgcolor3
+{
+	padding:10px;
+	background-color:#ccccff;
+	border-style:solid;
+	border-color:#999999;
+	border-width:1px;
+	height:190px;
+}
+.boxbgcolor4
+{
+	padding:10px;
+	background-color:#cccccc;
+	border-style:solid;
+	border-color:#999999;
+	border-width:1px;
+}
+.boxbgcolor5
+{
+	padding:10px;
+	background-color:#ffffff;
+	border-style:solid;
+	border-color:#999999;
+	border-width:1px;
+}
+.boxbgcolor6
+{       padding:10px;
+        background-color:#ffffaa;
+	border-style:solid;
+	border-color: #888888;
+	border-width: 1px;
+}
+
+/***********   TOOLBARS W/DROPDOWN MENUS ****************/
+
+table#siteheader { 
+  margin: 0 auto 3px auto;
+  width: 740px;
+}
+
+table.toolbar { 
+  width: 100%;
+  margin: 0;
+}
+
+td.toolbar_l, td.toolbar_r { 
+  width: 10px;
+}
+td.toolbar_content { 
+  background: white url(/documents/img/toolbar_content_back.gif) repeat-x top left;
+  padding: 3px 23px 3px 4px;
+  color: black;
+  font-size: 125%;
+  text-align: left;
+  font-family: "Bitstream Vera Sans",Arial,Helvetica,sans-serif;
+}
+td.toolbar_search { 
+  text-align: right;
+  width: 1%;
+  white-space: nowrap;
+  padding: 0 0.35em 0 1em;
+  vertical-align: top;
+}
+a.toolbar_menuname, a.toolbar_menuname:link, a.toolbar_menuname:visited { 
+  color: black;
+  display: block;
+}
+
+table.toolbar_popmenu { 
+  position: absolute;
+  visibility: hidden;
+  z-index: 99;
+  border-top: 1px solid #a6a6a6;
+  border-right: 1px solid #666666;
+  border-bottom: 2px solid black;
+  border-left: 1px solid #666666;
+  text-align: left;
+  margin-left: auto;
+  margin-right: auto;
+  background: #f2f2f2;
+  line-height: 1.1;
+}
+a.toolbar_item_first, a.toolbar_item_first:link, a.toolbar_item_first:visited, a.toolbar_item_first:active,
+a.toolbar_item, a.toolbar_item:link, a.toolbar_item:visited, a.toolbar_item:active, span.toolbar_item {
+  text-decoration: none;
+  color: #222;
+  border: 1px solid #f2f2f2;
+  padding: 0.2em 0.5em 0.2em 0.5em;
+  margin: 0;
+  display: block;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+td.toolbar_item_title { 
+  padding: 4px 2px 2px 2px;
+  font-weight: bold;
+  color: #373737;
+}
+
+span.toolbar_item {
+  font-weight: bold;
+  padding-left: 0.1em;
+}
+
+td.toolbar_item {
+  border-top: 1px solid #cfcfcf;
+}
+
+a.toolbar_item:hover,
+a.toolbar_item_first:hover { 
+  background: #ccccff;
+  border: 1px solid #666666;
+  color: black;
+}
+
+form.quicksearch { 
+  margin: 0;
+  padding: 0;
+}
+input.quicksearch.field { 
+  border: 1px solid #a0a0a0;
+  background: white;
+  padding: 0 0.1em 0 0.15em;
+  height: 18px;
+  font-family: "Charter","Bitstream Vera Serif",Times,serif;
+  font-size: 13px;
+  margin-top: 3px;
+  vertical-align: top;
+}
+input.quicksearch.imgbutton { 
+  margin: 4px -11px 0 0;
+  z-index: 2;
+  position: relative;
+}
+
+
+/*****************************     ODDS AND ENDS     ****************************************************/
+/*If you can't find what you need above, you can make a custom style here.                              */
+
+.developererrorbox
+{
+    width:740px;
+    padding:10px;
+    background-color:#f0f0ff;
+    border-style:solid;
+    border-color:#ff0000;
+    border-width:1px;
+}
+
+table#developer_message_table { 
+  width: 740px;
+  margin-bottom: 7px;
+}
+.invisible, .noshow {
+  display: none;
+}
+
+div.optional_show
+{                                                             
+  margin: 0.2em 0 1.3em 0;
+  border: 1px solid gray;
+  border-radius: 6px;
+  -moz-border-radius: 6px;
+  -webkit-border-radius: 6px;
+  background: #eee;
+}                           
+div.optional_show > h3 { 
+  font-weight: normal;
+  padding: 6px 15px;
+  margin: 0;
+  padding: 3px;
+  padding-bottom: 6px;
+  font-size: 100%;
+  cursor: pointer;
+}
+div.optional_show > div { 
+  background: white;
+  margin: 0 10px 10px 10px;
+}
+div.optional_show > h3 > .title { 
+  margin-left: 20px;
+}
+
+div.optional_show > h3 > .icon { 
+  background-image: url(/img/ui-icons.png);
+  width: 16px;
+  height: 16px;
+  position: absolute;
+  background-position: -32px -16px;
+}
+div.optional_show > h3.active > .icon { 
+  background-position: -64px -16px;
+}
+
+
+/*style for displaying a link instead of a button for 'optional_show' contents */ 
+a.abstract_optional_show {
+  color: blue;
+  cursor: pointer;
+  white-space: nowrap;
+}
+div.abstract_optional_show {
+  background: #f0f0ff;
+  border: 1px solid #9F9FC7;
+  margin: 0.2em 1em 0.2em 1em;
+  padding: 0.2em 0.5em 0.2em 1em;
+}
+
+/* style for displaying lists of links to file folders */
+/* currently used on bulk download ftp listing */
+a.folderlink:before {
+	content:   url(/documents/img/folder_yellow_3.png); 
+	vertical-align: -8px;
+}
+a.folderlink { 
+	font-weight: bold;
+	margin-bottom: 2em;
+	/*   vertical-align: top; */
+}
+.folderdesc { 
+	margin-left: 50px;
+	color: #999999;
+	font-size: smaller;
+	/*   font-style: italic; */
+}
+
+li.folderlink { 
+	margin-bottom: 0.4em;
+}
+
+
+/* styles for displaying automatic (i.e. BLAST) annotation hits */
+td.blasthit_type { 
+  vertical-align: middle;
+  text-align: right;
+}
+span.blasthit_type { 
+  font-size: smaller;
+}
+span.blasthit_db,
+a.blasthit_db     {
+  font-weight: bold;
+}
+a.blasthit_db {
+  color: black;
+  text-decoration: underline;
+}
+a.blasthit_db:hover {
+  background: #eeeeff;
+}
+td.blasthit_db { 
+  background: #ccccff;
+  padding-bottom: 3px;
+}
+span.blasthit_statname { 
+  font-weight: bold;
+  margin-left: 0.5em;
+}
+span.blasthit_statname:after { 
+  content: ':';
+}
+span.blasthit_statval { 
+  
+}
+span.blasthit_id { 
+  font-family: monospace;
+}
+td.blasthit_id { 
+  padding: 6px;
+  padding-left: 8px;
+  background: #EDEDFF;
+  vertical-align: middle;
+}
+td.blasthit_defline { 
+  padding: 3px;
+  padding-left: 8px;
+  background: #f8f8ff;
+  font-family: monospace;
+}
+td.blasthit_stats { 
+  padding: 3px;
+  vertical-align: middle;
+  font-size: smaller;
+}
+table.blasthit { 
+  margin: 4px;
+  border: 1px solid #cccccc;
+
+}
+
+
+/* styles for little info tables generated with CXGN::FormattingHelpers::info_table_html */
+table.sub_info_table,
+table.info_table {  
+  border: 1px solid #DDDDDD;
+  margin: 0.1em;
+}
+
+table.sub_info_table_noborder,
+table.info_table_noborder { 
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+table.sub_info_table,
+table.sub_info_table_noborder { 
+}
+
+th.sub_info_table,
+th.info_table {  
+/*   padding: 0 0.3em 0.4em 0.3em; */
+  padding: 0.2em 0.2em 0.1em 0.3em;
+  white-space: nowrap;
+  border-bottom: 1px solid #DDDDDD;
+  background: #F5F5F5;
+}
+
+span.info_table_fieldname {
+  font-weight: bold;
+}
+span.sub_info_table_fieldname { 
+  font-size: 90%;
+  font-weight: bold;
+  color: #333333;
+}
+
+td.info_table_field {
+  padding: 0.6em 0.5em 0.3em 1em;
+}
+td.sub_info_table_field {
+  padding: 0 0.3em 0.3em 0;
+}
+
+div.sub_info_table_fieldval,
+div.info_table_fieldval {  
+/*   font-family: monospace; */
+  margin: 0.3em 0 0 0.6em;
+}
+div.info_table_fieldval > ul {
+    margin: 0;
+    padding-left: 2.5em;
+}
+
+caption.info_table,
+caption.sub_info_table {  
+  caption-side: bottom;
+}
+span.subinfo:after { 
+  content: ': ';
+}
+
+
+/* styles for numerical range input in FormattingHelpers */
+table.nri { 
+  display: inline;
+}
+span.nri_units { 
+  margin: 0;
+  line-height: 1.0;
+  vertical-align: middle;
+}
+
+/* Styles for SOL forum */
+.topicbox {
+	padding:1px;
+	background-color:#f0f0ff;
+	border-style:solid;
+	border-color:#999999;
+	border-width:1px;
+	
+}
+
+.topicdescbox { 
+	padding:1px;
+	background-color:#ffffee;
+	border-style:solid;
+	border-top:0px;
+	border-color:#999999;
+	border-width:1px;
+}
+
+/* styles for gbrowse (CGI::Toggle) */
+.el_hidden  {display:none}
+.el_visible {display:inline}
+.ctl_hidden {
+  cursor: pointer;
+  display: none;
+}
+.ctl_visible {
+  cursor: pointer;
+  display: inline;
+}
+.tctl      {  text-decoration:underline; }
+
+
+/* Re-style the inline MochiKit Logging Pane!: */
+div#_MochiKit_LoggingPane {
+	text-align:left; /* appears centered otherwise, weird */
+}
+
+
+div.publication_embedded { 
+  text-align: justify;
+}
+/* publication styles */
+div.publication_embedded .detail { 
+  padding: 0.5em 2em;
+  border: 1px solid gray;
+  background: #eee;
+}
+
+div.publication_embedded .citation { 
+  font-weight: bold;
+  font-style: italic;
+  background: #ddd;
+  padding: 0.3em 4px;
+}
+
+.species_binomial {
+  font-style: italic;
+}
+
+
+#affiliated_sites ul {
+  margin: 0;
+  padding-left: 1em;
+}
+#affiliated_sites li {
+  padding-bottom: 1em;
+}
+
+/* styles for standard renderings of CrossReference objects */
+
+ul.xref_link {
+  padding-left: 0;
+}
+ul.xref_link li {
+  list-style: none outside none;
+}
+
+div.xref_rich_gbrowse2 {
+  clear: both;
+  border-radius: 6px;
+  -moz-border-radius: 6px;
+  -webkit-border-radius: 6px;
+  border: 1px outset #666;
+  padding-bottom: 8px;
+  margin: 10px;
+}
+div.xref_rich_gbrowse2 hr {
+  width: 95%;
+}
+
+div.xref_rich_gbrowse2 img {
+  margin-top: 12px;
+  border: 0;
+}
+
+
+/* styles for jquery.simpletooltip */
+
+#simpleTooltip {
+    padding: 7px;
+    border: 1px solid #A6A7AB;
+    background: #F2F3F5;
+}
+
+#page_report_a_problem {
+    margin: 20px 0 -10px 1px;
+    text-align: left;
+    font-size: 90%;
+    clear: both;
+}
+#page_report_a_problem a {
+    padding: 1px;
+    color: #666;
+}
+
+
+
+/* cassavabase additions */
+
+
+/* CSS Document */
+
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 10px 0;
+  font-family: 'Lato', sans-serif;
+  font-weight: bold;
+  color: #A2AD00;
+  text-rendering: optimizelegibility;
+}
+
+h1 {font-size: 30px; line-height: 36px; margin: 0;}			
+h2 {font-size: 24px; line-height: 36px; }		
+h3 {font-size: 16px; line-height: 27px; }
+h4,
+h5,
+h6 {line-height: 18px; }
+h4 {font-size: 14px; }		
+h5 {font-size: 12px; }		
+h6 {font-size: 11px; color: #999999; text-transform: uppercase; }
+
+a.btn {
+  background: none;
+  display: inline-block;
+  *display: inline;
+  padding: 4px 10px 4px;
+  margin-bottom: 0;
+  *margin-left: .3em;
+  font-size: 13px;
+  line-height: 18px;
+  *line-height: 20px;
+  color: #fff;
+  text-align: center;
+  vertical-align: middle;
+  cursor: pointer;
+  background-color: #9E75BF;
+  *background-color: #9E75BF;
+  border: 1px solid #cccccc;
+  *border: 0;
+  border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
+  border-color: #e6e6e6 #e6e6e6 #bfbfbf;
+  border-bottom-color: #b3b3b3;
+  *zoom: 1;
+
+
+
+  -webkit-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+	 -moz-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+		  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+  -webkit-transition: background-color .3s ease;
+
+}
+
+a.btn:hover {
+  color: #333333;
+  background: none;
+  text-decoration: none;
+  background-color: #e6e6e6;
+  *background-color: #d9d9d9;
+  /* Buttons in IE7 don't get borders, so darken on hover */
+
+  background-position: 0 -15px;
+  -webkit-transition: background-position 0.1s linear;
+	 -moz-transition: background-position 0.1s linear;
+	  -ms-transition: background-position 0.1s linear;
+	   -o-transition: background-position 0.1s linear;
+		  transition: background-position 0.1s linear;
+}
+
+a {color: #954A09; text-decoration: none; background: none;}		
+a:hover {color: #CE8E00; text-decoration: underline; }
+
+hr {
+  margin: 18px 0;
+  border: 0;
+  border-top: 1px solid #eeeeee;
+  border-bottom: 1px solid #ffffff;
+}
+
+
+		
+#header {width:100%; background-color:#FFFFFF; color:#fff; height:45px;}
+#footer {width:960px; min-height:60px; margin:0px auto; }		
+
+#footer.white {background-color:#fff;}
+
+#footer.earth {background-color:#472A2B; width:100%;}
+#footer.earth p {color:#e6e4d1;}
+#footer.earth a {color:#f2f2f2;}
+#footer.earth a:hover {color:#fff;}	
+			
+
+#footer .block {margin-left:30px; float:left;}
+#footer .first {margin-left:0 !important;}
+#footer .wide {width:460px;}
+#footer .small {width:220px;}
+
+#footer ul {padding:0;}
+#footer ul li {list-style: none outside none;margin: 0 0 6px 0; padding: 0;}		
+
+.container { width:960px; margin:0px auto; }	
+
+.well {
+	background-color: #F5F5F5;
+	border: 1px solid rgba(0, 0, 0, 0.05);
+	border-radius: 4px 4px 4px 4px;
+	box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05) inset;
+	margin: 20px 0;
+	min-height: 600px;
+	padding: 19px;
+}	
+.is-padded {padding: 20px 10px; }
+
+.photo {margin:20px;}
+
+.pull-right {float: right;}
+.pull-left {float: left;}
+
+.divider { 
+    background: url("/static/img/cross-pattern.png") repeat; color: #333333;
+}

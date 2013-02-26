@@ -123,7 +123,7 @@ of the species range; (400)1000-3000 m.</td>
 <td><em>Solanum peruvianum</em> L.</td>
 <td><em>Lycopersicon peruvianum</em> (L.) Miller</td>
 <td>In lomas formations and occasionally in coastal deserts from central Peru to N Chile, 
-sea level to 600 m. Occasionally occurs as a week at field edges in coastal river valleys.</td>
+sea level to 600 m. Occasionally occurs as a weed at field edges in coastal river valleys.</td>
 </tr>
 
 <tr align="center" valign="top">
