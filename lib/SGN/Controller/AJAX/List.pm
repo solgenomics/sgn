@@ -23,6 +23,16 @@ sub get_list :Path('/list/get') Args(0) {
 	return;
     }
 
+    my $list = $self->retrieve_list($c, $list_id);
+
+    $c->stash->{rest} = $list;
+}
+
+sub retrieve_list { 
+    my $self = shift;
+    my $c = shift;
+    my $list_id = shift;
+
     my $q = "SELECT list_item_id, content from sgn_people.list join sgn_people.list_item using(list_id) WHERE list_id=?";
 
     my $h = $c->dbc->dbh()->prepare($q);
@@ -30,9 +40,15 @@ sub get_list :Path('/list/get') Args(0) {
     my @list = ();
     while (my ($id, $content) = $h->fetchrow_array()) { 
 	push @list, [ $id, $content ];
-    }
+    }my $q = "SELECT list_item_id, content from sgn_people.list join sgn_people.list_item using(list_id) WHERE list_id=?";
 
-    $c->stash->{rest} = \@list;
+    my $h = $c->dbc->dbh()->prepare($q);
+    $h->execute($list_id);
+    my @list = ();
+    while (my ($id, $content) = $h->fetchrow_array()) { 
+	push @list, [ $id, $content ];
+    }
+    return \@list;
 }
 
 sub new_list :Path('/list/new') Args(0) { 
@@ -224,6 +240,29 @@ sub remove_element :Path('/list/item/remove') Args(0) {
 	return;
     }
     $c->stash->{rest} = [ 1 ];
+}
+
+sub download_list :Path('/list/download') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+
+    my $user_id = $self->get_user($c);
+    if (!$user_id) { 
+	$c->stash->{template} = 'generic_message.mas';
+	$c->stash->{message} = 'You need to be logged in to download lists.';
+
+	
+	return;
+    }
+
+    my $list_id = $c->req->param("list_id");
+
+    my $list = $self->retrieve_list($c, $list_id);
+	
+    $c->res->content_type("text/download");
+
+    $c->res->body(join "\n", map { $_->[1] }  @$list);
+
 }
     
 sub get_user { 
