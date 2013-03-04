@@ -216,11 +216,26 @@ function jqueryStuff() {
 	<tr><td>
 
 <& /locus/synonym.mas ,  locus_id=>"$locus_id" , synonyms=>\@synonyms &>
-
+</td></tr>
+<tr><td>
 <% $tgrc %>
 <% $tair %>
-
-<& /locus/locus_editor.mas, owners=>$owner_objects  &>
+</td></tr>
+<tr><td>
+<& /phenome/display_owners.mas,
+   object_id => $locus_id,
+   object_type => "locus"
+&>
+</td></tr>
+<tr><td>
+<& /phenome/assign_owner.mas,
+  object_id     => $locus_id,
+  object_type   => "locus",
+  owner_add_uri => "/ajax/locus/assign_owner",
+  show_form     => $curator
+ &>
+</td></tr>
+<tr><td>
 % if ($locus_id) {
   <a href="/phenome/claim_locus_ownership.pl?locus_id=<% $locus_id %>&amp;action=confirm"> [Request editor privileges]</a><br /><br />
 % }
@@ -256,7 +271,6 @@ function jqueryStuff() {
 % if ( $locus_name && $curator ) {
 <&| /page/info_section.mas, title=>"Curator tools",  collapsible=>1, collapsed=>1 &>
   <& /locus/merge_locus.mas , locus_id=>"$locus_id" , common_name=>"$common_name" &>
-    <& /phenome/assign_owner.mas , object_id=>"$locus_id" , object_type=>"locus" &>
 
 </&>
 % }

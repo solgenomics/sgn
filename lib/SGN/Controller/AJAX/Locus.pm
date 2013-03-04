@@ -836,6 +836,110 @@ sub associate_unigene_POST :Args(0) {
     $c->stash->{rest} = $response;
 }
 
+sub display_owners : Chained('/locus/get_locus') :PathPart('owners') : ActionClass('REST') { }
+
+sub display_owners_GET  {
+    my ($self, $c) = @_;
+    $c->forward('/locus/get_locus_owner_objects');
+    my $owners = $c->stash->{owner_objects};
+    my $dbh = $c->dbc->dbh;
+    my $locus = $c->stash->{locus};
+    my $owners_html;
+
+    my $hashref;
+    foreach my $person (@$owners) {
+        my $first_name = $person->get_first_name();
+        my $last_name  = $person->get_last_name();
+        my $id = $person->get_sp_person_id();
+        if ($person->get_user_type() eq 'curator' && scalar(@$owners) == 1  ) {
+            $owners_html .= '<b>No editor assigned</b>';
+        } else {
+            $owners_html .=
+                qq |<a href="/solpeople/personal-info.pl?sp_person_id=$id">$first_name $last_name</a>;|;
+        }
+    }
+    chop $owners_html;
+
+    $hashref->{html} = "<p>Locus editors: $owners_html </p> ";
+    $c->stash->{rest} = $hashref;
+}
+
+sub assign_owner:Path('/ajax/locus/assign_owner') :ActionClass('REST') {}
+
+sub assign_owner_GET :Args(0) {
+    my ($self, $c) = @_;
+    $c->stash->{rest} = { error => "Nothing here, it's a GET.." } ;
+}
+sub assign_owner_POST :Args(0) {
+    my ($self, $c) = @_;
+    my $schema = $c->dbic_schema('CXGN::Phenome::Schema');
+    my $privileged;
+    my $response;
+    my $logged_person_id;
+    if ($c->user) {
+        if ( $c->user->check_roles('curator') ) { $privileged = 1; }
+        $logged_person_id = $c->user->get_object->get_sp_person_id ;
+    }
+
+    my %params = map { $_ => $c->request->body_parameters->{$_} } qw/
+       sp_person
+       object_id
+    /;
+    my $sp_person = $params{sp_person};
+    my ($first_name, $last_name , $sp_person_id) = split ',' , $sp_person;
+    my $locus_id  = $params{object_id};
+    if ($privileged && $locus_id) {
+        my $dbh = $c->dbc->dbh;
+        my $new_owner = CXGN::People::Person->new( $dbh, $sp_person_id );
+        try {
+            #if the new owner is not a submitter, assign that role
+            if ( !$new_owner->has_role('submitter') ) {
+		$new_owner->add_role('submitter');
+            }
+            my $new_locus_owner = $schema->resultset('LocusOwner')->find_or_create(
+                {
+                    sp_person_id => $sp_person_id,
+                    locus_id     => $locus_id,
+                    granted_by   => $logged_person_id
+                });
+            #if the current owner of the locus is a logged-in SGN curator, do an obsolete
+            my $remove_curator_query =
+                "UPDATE phenome.locus_owner SET obsolete='t', modified_date= now()
+                  WHERE locus_id=? AND sp_person_id IN
+                    (SELECT sp_person_id FROM sgn_people.sp_person_roles WHERE sp_role_id  = (SELECT sp_role_id FROM sgn_people.sp_roles WHERE name = 'curator') )";
+            my $remove_curator_sth =
+                $dbh->prepare($remove_curator_query);
+            $remove_curator_sth->execute($locus_id);
+        }
+        catch {
+            $response->{error} = "Failed: $_" ;
+            # send an email to sgn bugs
+            $c->stash->{email} = {
+                to      => 'sgn-bugs@sgn.cornell.edu',
+                from    => 'sgn-bugs@sgn.cornell.edu',
+                subject => "assign_owner failed! locus_id = $locus_id",
+                body    => $_,
+            };
+            $c->forward( $c->view('Email') );
+	    $c->stash->{rest} = $response;
+        };
+        # if you reached here this means assign_owner worked. Now send an email to sgn-db-curation
+        $response->{response} = "success";
+	my $owner_link =
+            qq |/solpeople/personal-info.pl?sp_person_id=$sp_person_id|;
+        $c->stash->{email} = {
+            to      => 'sgn-db-curation@sgn.cornell.edu',
+            from    => 'www-data@sgn-vm.sgn.cornell.edu',
+            subject => "New owner $sp_person assigned to locus $locus_id",
+            body    => "Curator " . $c->user->get_object->get_first_name . " " . $c->user->get_object->get_last_name . "has assigned owner $sp_person ($owner_link) to locus $locus_id"  . "( /solgenomics.net/locus/$locus_id/view )",
+        };
+        $c->forward( $c->view('Email') );
+    } else {
+        $response->{error} = 'No privileges for assigning new owner. You must be an SGN curator' ;
+    }
+    $c->stash->{rest} = $response;
+}
+
 =head2 organisms
 
 Public Path: /ajax/locus/organisms

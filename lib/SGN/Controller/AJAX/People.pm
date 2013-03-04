@@ -46,8 +46,8 @@ Autocomplete a person name.  Takes a single GET param,
 
 sub autocomplete : Local : ActionClass('REST') { }
 
-sub autocomplete_GET :Args(0) {
-    my ( $self, $c ) = @_;
+sub autocomplete_GET :Args(1) {
+    my ( $self, $c , $print_id ) = @_;
 
     my $person = $c->req->param('term');
     # trim and regularize whitespace
@@ -61,7 +61,8 @@ sub autocomplete_GET :Args(0) {
     $sth->execute( lc "$person\%" , lc "$person\%" );
     my @results;
     while (my ($sp_person_id, $first_name, $last_name) = $sth->fetchrow_array ) {
-        push @results , "$first_name, $last_name";
+        $sp_person_id = $print_id ? "," . $sp_person_id : undef;
+        push @results , "$first_name, $last_name $sp_person_id";
     }
     $c->{stash}->{rest} = \@results;
 }
