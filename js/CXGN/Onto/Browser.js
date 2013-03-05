@@ -98,6 +98,7 @@ CXGN.Onto.Browser.prototype = {
 	this.setSearchResults('');
         this.setRootNodes(rootNodes);
 	this.fetchRoots(rootNodes);
+	this.fetchMenuItems();
 	this.hideSearchButton();
 	this.setSearchResponseCount(0);
 	this.render();
@@ -151,6 +152,27 @@ CXGN.Onto.Browser.prototype = {
 	    });
     },
 
+    fetchMenuItems: function() { 
+		new Ajax.Request("/ajax/onto/menu", {
+		parameters:   { },
+		asynchronous: false,
+		method: 'get',
+		on503: function() {
+		    alert('An error occurred! The database may currently be unavailable. Please check back later.');
+		},
+		onSuccess: function(request) {
+		    var json = request.responseText;
+		    //MochiKit.Logging.log('COMPLETE!');
+		    var x = eval("("+json+")");
+		    //MochiKit.Logging.log('RESPONSETEXT = ' + x);
+		    if (x.error ) { alert(x.error) ; }
+		    o.menu = x;
+
+		}
+	    });
+    },
+
+
     workingMessage: function(status) {
 	//MochiKit.Logging.log('the working message = ' , status );
 	var w = document.getElementById('working');
@@ -194,13 +216,15 @@ CXGN.Onto.Browser.prototype = {
         //print the select drop-down only if you not rendering a specific cv
 
         if (!nameSpace) {
-            s += '<select id="cv_select" >';
-            s += '<option value="GO" ' + o.isSelected("GO") +'>GO (gene ontology)</option>';
-            s += '<option value="PO" ' + o.isSelected("PO") +'>PO (plant ontology)</option>';
-            s += '<option value="SP" ' + o.isSelected("SP") +'>SP (Solanaceae phenotypes)</option>';
-            s += '<option value="PATO" ' + o.isSelected("PATO") +'>PATO (Phenotype and trait)</option>';
-            s += '<option value="SO" ' + o.isSelected("SO") +'>SO (Sequence ontology)</option>';
-            s += '</select>';
+            // s += '<select id="cv_select" >';
+            // s += '<option value="GO" ' + o.isSelected("GO") +'>GO (gene ontology)</option>';
+            // s += '<option value="PO" ' + o.isSelected("PO") +'>PO (plant ontology)</option>';
+            // s += '<option value="SP" ' + o.isSelected("SP") +'>SP (Solanaceae phenotypes)</option>';
+            // s += '<option value="PATO" ' + o.isSelected("PATO") +'>PATO (Phenotype and trait)</option>';
+            // s += '<option value="SO" ' + o.isSelected("SO") +'>SO (Sequence ontology)</option>';
+            // s += '</select>';
+
+	    s += o.menu;
         } else {
             o.isSelected(nameSpace);
         }

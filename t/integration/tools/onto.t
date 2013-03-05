@@ -66,7 +66,7 @@ $parsed_content = $j->jsonToObj($contents);
 @accession_list  = map ( ${$_}{accession} , @$parsed_content);
 
 ok(  grep(/^$new_term/, @accession_list) ,  'cached parent accession test');
-is( scalar(@accession_list) , 23 , 'number of parents test');
+is( scalar(@accession_list) , 24 , 'number of parents test');
 
 ##
 

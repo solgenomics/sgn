@@ -13,6 +13,7 @@ $refering_page => undef
   <& /page/page_title.mas, title=>"Upload Image" &>
 
   <p class="boxbgcolor2">Note: By pressing the "Upload" button, you are considered to be the copyright owner of the image being uploaded and that you grant a non-exclusive license to display and use the image on webpages and materials related to this website.<br /></p>
+
         <p> Supported file formats include .jpg. .jpeg, .gif, .png, .pdf, .ps,
 	.eps <br></p>
 	<form name="upload_image_form" action="/image/confirm" method="post" enctype="multipart/form-data" >
@@ -25,5 +26,8 @@ $refering_page => undef
 	    <input type="submit" value="Upload" />
 	 </form>
 
-%    if ($refering_page) { print "<a href=\"$refering_page\">Go back</a>"; }
+
+%   if ($refering_page) { print "<a href=\"$refering_page\">Go back</a>"; }
+
+
 

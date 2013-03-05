@@ -58,7 +58,7 @@ sub autocomplete_GET :Args(0) {
                JOIN dbxref USING (db_id ) JOIN cvterm USING (dbxref_id)
                JOIN cv USING (cv_id )
                LEFT JOIN cvtermsynonym USING (cvterm_id )
-               WHERE db.name = ? AND (cvterm.name ilike ? OR cvtermsynonym.synonym ilike ? OR cvterm.definition ilike ?) AND cvterm.is_obsolete = 0
+               WHERE db.name = ? AND (cvterm.name ilike ? OR cvtermsynonym.synonym ilike ? OR cvterm.definition ilike ?) AND cvterm.is_obsolete = 0 AND is_relationshiptype = 0
 GROUP BY cvterm.cvterm_id,cv.name, cvterm.name, dbxref.accession, db.name
 ORDER BY cv.name, cvterm.name limit 30";
     my $sth= $schema->storage->dbh->prepare($query);
@@ -90,18 +90,46 @@ sub relationships_GET :Args(0) {
     $c->{stash}->{rest} = $hashref;
 }
 
+sub locus_relationships : Local : ActionClass('REST') { }
+
+sub locus_relationships_GET :Args(0) {
+    my ($self, $c) = @_;
+    my $query = $c->dbc->dbh->prepare(
+        "SELECT distinct(cvterm.cvterm_id), cvterm.name
+        FROM public.cvterm
+        JOIN public.cv USING (cv_id)
+        WHERE cv.name ='Locus Relationship' AND
+        cvterm.is_obsolete = 0
+        ORDER BY cvterm.name;
+    ");
+    $query->execute();
+    my $hashref={};
+    while  ( my ($cvterm_id, $cvterm_name) = $query->fetchrow_array() ) {
+        $hashref->{$cvterm_name} = $cvterm_id;
+    }
+    $c->{stash}->{rest} = $hashref;
+}
+
+=head2
+
+Public Path: /ajax/cvterm/evidence
+
+get a list of available evidence codes from cvterms
+responds with a JSON array .
+
+=cut
+
 sub evidence : Local : ActionClass('REST') { }
 
 sub evidence_GET :Args(0) {
     my ($self, $c) = @_;
-    my $query = $c->dbc->dbh->prepare("SELECT distinct(cvterm.cvterm_id), cvterm.name
-                                       FROM public.cvterm_relationship
-                                      JOIN public.cvterm ON (cvterm.cvterm_id= cvterm_relationship.subject_id)
-                                       WHERE
-                                       object_id= (select cvterm_id from cvterm where name = 'evidence_code') AND
-                                       cvterm.is_obsolete = 0
-                                       ORDER BY cvterm.name;
-                                      ");
+    my $query = $c->dbc->dbh->prepare(
+        "SELECT distinct(cvterm.cvterm_id), cvterm.name
+         FROM public.cvterm_relationship
+         JOIN public.cvterm ON (cvterm.cvterm_id= cvterm_relationship.subject_id)
+         WHERE object_id= (select cvterm_id FROM cvterm where name = 'evidence_code')
+         AND cvterm.is_obsolete = 0
+         ORDER BY cvterm.name" );
     $query->execute();
     my $hashref={};
     while  ( my ($cvterm_id, $cvterm_name) = $query->fetchrow_array() ) {

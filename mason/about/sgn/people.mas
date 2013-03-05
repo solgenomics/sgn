@@ -40,20 +40,23 @@ print info_section_html( title => 'Lab members',
 					    contents => person_set 
 					    ([
 					      ['lukas','Lukas Mueller','Director'],
-					      ['naama','Naama Menda','Postdoc'],
+					     
+					      ['jeremy', 'Jeremy Edwards', 'Assistant Director'],
 
 					     ],
 					     [
-					      ['anuradha', 'Anuradha Pujar', 'Postdoc' ],
-					      ['isaak', 'Isaak Tecle', 'Postdoc' ],
+					       ['naama','Naama Menda','Postdoc'],
+
+					      ['isaak', 'Isaak Y Tecle', 'Bioinformatics Consultant' ],
 					     ],
 					     [
+
 					      ['tom', 'Tom York', 'Postdoc' ],
 					      ['aureliano', 'Aureliano Bombarely', 'Postdoc' ],
 					     ],
 					     [					      
-					      ['robert','Robert Buels', 'Software Engineering Lead'],
 					      ['suzy', 'Susan Strickler', 'Postdoc'],
+					      ['anuradha', 'Anuradha Pujar', 'Postdoc' ],
 ],
 					    ),
 					  )
@@ -74,6 +77,7 @@ print info_section_html( title => 'Emeritus Staff',
 			 info_table_html( __multicol => 3, __border => 0,
 					 'Bioinformatics Analysts' =>
 					  ul(
+                                             'Robert Buels',
 					     'Joseph Gosselin',
 					     'Jonathan Leto',
                                              'Adri Mills',

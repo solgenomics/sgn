@@ -25,6 +25,7 @@ if (!-e $pop->phenotype_file($c)) { $phenotype_download=undef; }
 if (!-e $pop->genotype_file($c)) { $genotype_download=undef; }
 if (!$pop->get_cvterm_acronyms($c)) { $acronym_download=undef;}
 
+my $submit_new = qq | <a href="/qtl/form">Submit QTL population</a> |;
 </%perl>
 
 <& /page/page_title.mas, 
@@ -34,7 +35,8 @@ if (!$pop->get_cvterm_acronyms($c)) { $acronym_download=undef;}
 <&| /page/info_section.mas, 
   collapsible => 1, 
   collapsed   => 0, 
-  title       => "Population summary" 
+  title       => "Population summary",
+  subtitle    => $submit_new
   &>
  
   <& summary.mas,

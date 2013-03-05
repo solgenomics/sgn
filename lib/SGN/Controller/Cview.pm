@@ -19,7 +19,6 @@ use CXGN::Cview::Map::Tools;
 use CXGN::Cview::MapOverviews::Generic;
 use CXGN::Phenome::Population;
 use CXGN::People::Person;
-#use CXGN::Login;
 use CXGN::Map;
 
 has 'cview_default_map_id' => ( 
@@ -43,6 +42,7 @@ sub auto :Args(0) {
     $c->stash->{referer} = $c->req->referer();
     $c->stash->{tempdir} = $c->get_conf("tempfiles_subdir")."/cview";
     $c->stash->{basepath} = $c->get_conf("basepath");
+    $c->stash->{cview_db_backend} = $c->get_conf("cview_db_backend");
 
     $c->log->debug("BASEPATH: ".($c->stash->{basepath})) if $c->debug;
 
@@ -60,7 +60,7 @@ sub index :Path("/cview") :Args(0) {
     
     $c->stash->{template} = '/cview/index.mas';
 
-    my $map_factory = CXGN::Cview::MapFactory->new($c->dbc->dbh);
+    my $map_factory = CXGN::Cview::MapFactory->new($c->dbc->dbh, $c);
     my @maps = $map_factory->get_system_maps();
     
     my %map_by_species;

@@ -2,6 +2,9 @@
 use strict;
 use warnings;
 
+# Note: this test depends on the env variable $SGN_TEST_MODE 
+# being set to 1 in the server process
+
 use Test::More;
 
 use lib 't/lib';
@@ -70,6 +73,7 @@ sub submit_form_ok {
             email   => 'test@example.com',
             subject => 'Testing contact form',
             body     => 'this is a test of the SGN contact form',
+	    contact_form_human_answer => $mech->context->get_conf("contact_form_human_answer"),
         },
     });
     $mech->content_like(qr/your message has been sent/i);

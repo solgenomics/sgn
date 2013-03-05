@@ -29,7 +29,15 @@ specifies the version of the map to be displayed. Either map_id or map_version_i
 
 The offset (usually in cM, but not always) that should be displayed zoomed in.
 
+=item $default_map_id
+
+The map_id of the map that should be displayed when no map_id is provided.
+
 =item $show_offsets
+
+=item $cview_db_backend
+
+Provide the name of the cview db backend. Either cxgn or Cassava.
 
 =back
 
@@ -66,6 +74,8 @@ $hilite => undef
 $cM_start => undef
 $cM_end => undef
 $confidence => undef
+$default_map_id => undef
+$cview_db_backend => 'cxgn'
 </%args>
 
 <%perl>
@@ -93,6 +103,8 @@ $viewer -> set_comp_chr($comp_chr);
 $viewer -> set_color_model($color_model);
 $viewer -> set_display_marker_type($marker_type);
 $viewer -> set_force($force);
+$viewer -> set_default_map_id($default_map_id);
+$viewer -> set_db_backend($cview_db_backend);
 
 if ($map_chr_select) { 
     my ($comp_map_id, $comp_chr) = split / /, $map_chr_select; 

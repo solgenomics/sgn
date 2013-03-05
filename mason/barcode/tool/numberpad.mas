@@ -1,0 +1,34 @@
+
+<%doc>
+
+</%doc>
+
+<%perl>
+use Tie::UrlEncoder;
+our %urlencode;
+</%perl>
+
+Keypad
+
+<table border="1">
+<tr><td><% key(".") %></td><td><% key("/") %></td><td><% key("0") %></td></tr>
+<tr><td><% key("1") %></td><td><% key("2") %></td><td><% key("3") %></td></tr>
+<tr><td><% key("4") %></td><td><% key("5") %></td><td><% key("6") %></td></tr>
+<tr><td><% key("7") %></td><td><% key("8") %></td><td><% key("9") %></td></tr>
+</table>
+
+
+
+</td></tr>
+</table>
+
+
+
+%sub key { 
+%  my $key = shift;
+
+
+<& /barcode/tool/generate.mas, code=>$urlencode{'#'}.$key, text=>"$key", size=>'large', top=>30  &> 
+%  return undef;
+% }
+

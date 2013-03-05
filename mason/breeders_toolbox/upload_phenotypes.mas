@@ -1,0 +1,36 @@
+
+<%args>
+@projects => ()
+@locations => ()
+</%args>
+
+<form action="/breeders/phenotype/upload" method="post"  enctype="multipart/form-data" >
+
+<table><tr><td>
+Trial:</td><td>
+<select name="project">
+% foreach my $p (@projects) {
+<option name="<% $p->[0] %>"><% $p->[1] %></option><br />
+% }
+</select>
+<br />
+</td></tr>
+<tr><td>
+Location:
+</td><td>
+<select>
+% foreach my $l (@locations) { 
+<option name="<% $l->[0] %>"><% $l->[1] %></option><br />
+% }
+</select>
+</td></tr>
+<tr><td>
+Upload phenotype file
+</td><td>
+
+ <input type="file" name="phenotype_file" /><br />
+<input type="radio" name="format" value="barcode" checked="1" /> Barcode format<br />
+<input type="radio" name="format" value="Spreadsheet" /> Spreadsheet (IBP format)<br />
+</td></tr></table>
+<input type="submit" value="Upload" />
+</form>

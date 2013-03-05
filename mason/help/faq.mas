@@ -1,3 +1,4 @@
+
 <& "/page/page_title.mas", title => "SGN: Frequently Asked Questions (FAQ)" &>
 <table summary="" width="720" cellpadding="0" cellspacing="0"
   border="0">
@@ -56,6 +57,26 @@
 		<p>
 		  <strong>Question:</strong> What do the identifiers of the format Solyc01g001010.1.1 mean?<br />
 		  <strong>Answer:</strong> These identifiers denote loci, predicted mRNA and protein sequences from the tomato genome sequencing project. "Solyc" is the 5 letter abbreviation of <i>Solanum lycopersicum</i>, the 2 digit number following the 'Solyc' denotes the chromosome, 'g' denotes that the sequence is a gene, and the 6 digit number following the 'g' identifies the gene on the chromosome, starting at the top and counting in 10 increments. The first '.1' denotes the annotation version number of the locus (and if only the first number is given, denotes the locus), whereas the second '.1' denotes the transcript (a locus can give rise to many transcripts, splice variants), and also the proteins derived from these transcripts.
+                <br />
+                </p>
+                <p>
+		  <strong>Question:</strong>How can I use the SGN Intron Finder tool for a batch of sequences?<br />
+		  <strong>Answer:</strong> (1) You can enter multiple sequences to the <a href="/tools/intron_detection/find_introns.pl">form</a>. (2) If you are doing the blasting locally, try using the code below:<br/> <a href="https://github.com/solgenomics/sgn/blob/master/cgi-bin/tools/intron_detection/intron_finder_homology.pl"> code 1</a>, <a href="https://github.com/solgenomics/sgn/blob/master/lib/SGN/IntronFinder/Homology.pm">code 2</a>. 
+                <br />
+                </p>
+                <p>
+		  <strong>Question:</strong>What cultivar was used for the international tomato genome sequencing project ?<br />
+		  <strong>Answer:</strong> <a href="/stock/676/view">Heinz 1706</a>.
+                <br />
+                </p>
+                 <p>
+		  <strong>Question:</strong> How can I download annotation features on the tomato genome?<br />
+		  <strong>Answer:</strong> As an alternative to Gbrowse's download function, you can use this <a href="/search/features">tool</a> to select your region of interest and download the features using the download options at the top right of the page. 
+                <br />
+                </p>
+                <p>
+		  <strong>Question:</strong> How can I convert tomato unigene ids between builds?<br />
+		  <strong>Answer: </strong>Use this <a href="ftp://ftp.solgenomics.net/unigene_builds/combined_species_assemblies/tomato_species/tomato_species_unigenes.v1.global_versionmapping.tab">file</a>, and read this <a href="ftp://ftp.solgenomics.net/unigene_builds/combined_species_assemblies/tomato_species/README_about_global_version_mapping.txt">key</a>. <b>Caveat</b>: a unigene may be split or merged with other unigene(s) in different builds. For unigenes of non-tomato species, look for similarly named files higher up in the ftp directory.
                 <br />
                 </p>
               </td>

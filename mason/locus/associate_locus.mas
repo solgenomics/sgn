@@ -6,10 +6,10 @@
 
 =head1 DESCRIPTION
 
-this component has dependencies on CXGN.Phenome.Locus and CXGN.Phenome.Tools
+this component has dependencies on CXGN.Phenome.Locus and CXGN.AJAX.Ontology
 you will have to import these javascript classes in your code that uses this component.
 
-<& /util/import_javascript.mas, classes => [CXGN.Phenome.Locus", "CXGN.Phenome.Tools"] &>
+<& /util/import_javascript.mas, classes => [CXGN.Phenome.Locus", "CXGN.AJAX.Ontology"] &>
 
 
 Parameters:
@@ -37,42 +37,55 @@ Naama Menda <nm249@cornell.edu>
 <%args>
 
 $locus_id
+$locus_autocomplete_uri => '/ajax/locus/autocomplete'
 
 </%args>
 
+<script language="javascript">
+  jQuery(function() {
+     var common_name = jQuery('#organism_select option:selected').attr("value");
+     jQuery("#loci").autocomplete({
+	 source: '<% $locus_autocomplete_uri %>' + "?common_name=" + common_name + "&mode=no_alleles",
+         autoFocus: true,
+         minLength: 1,
+         select: function(event, ui) {
+                  Ontology.populateEvidence('locus_relationship_select', '/ajax/cvterm/locus_relationships'); }
+     });
+
+  jQuery("#organism_select").change(function(){
+             common_name = jQuery('#organism_select option:selected').attr("value");
+             jQuery("#loci").autocomplete('option', 'source', '<% $locus_autocomplete_uri %>' + "?common_name=" + common_name + "&mode=no_alleles");
+       });
+  });
+
+
+</script>
+
+
 <div id='associateLocusForm' style="display: none">
   <div id='locus_search'>
-    <input type="text" 
+    <form name="loci_form" >
+      <input type="text"
 	   style="width: 50%"
-	   id="locus_input"
-	   onkeyup="Tools.getLoci(this.value, <% $locus_id %>)" />
-    <select id = "organism_select"  onchange="Tools.getLoci( $('locus_input').value, <% $locus_id %>)"> 
-    </select> 
-    
-    <input type="button"
-	   id="associate_locus_button"
-	   value="Associate locus"
-	   disabled="true"
-	   onclick="Locus.associateLocus('<% $locus_id %>');this.disabled=true;" />	
-    <select id="locus_select"
- 	    style="width: 100%"
- 	    name="locus_select"
-	    size=10 
-	    onchange="Locus.getLocusRelationship()">
-    </select>
-    
-    <b>Relationship type:</b>
-    <select id="locus_relationship_select" style="width: 100%"
-	    onchange="Locus.getLocusEvidenceCode()">
-    </select>
-    <b>Evidence code:</b>
-    <select id="locus_evidence_code_select" style="width: 100%"
-	    onchange="Locus.getLocusReference('<% $locus_id %>');$('associate_locus_button').disabled=false">
-    </select>	
-    <b>Reference:</b>
-    <select id="locus_reference_select" style="width: 100%">
-    </select>	
-    
+	   id="loci"
+           value = "--type a locus name--" >
+      <select id = "organism_select"  onchange="jQuery('#loci').val('--type a locus name--');$('associate_locus_button').disabled=true">
+      </select>
+
+      <select id="locus_relationship_select" style="width: 50%"
+	      onchange= "Ontology.populateEvidence('locus_evidence_code_select', '/ajax/cvterm/evidence', '--select an evidence code--');" >
+      </select>
+      <select id="locus_evidence_code_select" style="width: 50%"
+	      onchange="Ontology.populateEvidence('locus_reference_select', '/locus/<% $locus_id %>/references', '--Optional: select supporting reference --');$('associate_locus_button').disabled=false">
+      </select>
+      <select id="locus_reference_select" style="width: 100%">
+      </select>
+      <input type="button"
+	     id="associate_locus_button"
+	     value="Associate locus"
+	     disabled="true"
+	     onclick="Locus.associateLocus('<% $locus_id %>');this.disabled=true;" />
+    </form>
   </div>
 </div>
 

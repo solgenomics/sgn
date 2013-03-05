@@ -29,14 +29,14 @@ if ($messages) { print $messages; }
 
 </%perl>
 
-<& /util/import_javascript.mas, classes => 'Text.Markup' &>
+<& /util/import_javascript.mas, classes => [ 'Text.Markup', 'sprintf'] &>
 
 <& /page/page_title.mas, title=>"VIGS Tool Results" &>
 
 
 %if ($scores[0]->[0] == 0) { 
-    No results were found.
-% return;
+  Note: No results were found.
+
 %}
 
 <% $messages %><br /><br />
@@ -98,7 +98,21 @@ Target sequences:
 
 	    var markedup_seq = markup.markup(all_regions, sequence);
 					      //alert('Markedup Seq: '+markedup_seq);
-	    markup_el.innerHTML='<font face="courier" size="2">'+markedup_seq+'</font>';
+
+            //insert line numbers
+            var line_length = 60;
+            var current_pos = 1;
+	    var lines = markedup_seq.split('<br />');
+            var final_seq = '';
+	    var leading_spaces = new Array('', '', '', '', '', ''); 
+	    for (var i=1; i<lines.length; i++) { 
+               leading_str = leading_spaces.slice(0,Math.ceil(6-(Math.log(current_pos)/Math.log(10)))).join('&nbsp;');  // poor man's sprintf
+		leading_str2 = leading_spaces.slice(0,Math.ceil(6-(Math.log(current_pos +line_length -1)/Math.log(10)))).join('&nbsp;');													
+               final_seq = final_seq + leading_str + current_pos + ' ' + lines[i] + ' ' + leading_str2 + ( current_pos + line_length - 1) + '<br />';
+               current_pos += line_length;
+            }
+
+	    markup_el.innerHTML='<font face="courier" size="2">'+final_seq+'</font>';
 
 	}
 
@@ -106,10 +120,12 @@ Target sequences:
 </script>
 
 <&| /page/info_section.mas, title=>"Sequence overview", collapsible => 1, collapsed   => 0 &>
-<center>
+
 <span id="query" style="display:none" ><% $query->seq() %></span>
-<span id="markup"></span>
-</center>
+<div id="markup" style="align:left;"> 
+
+</div>
+
 </&>
 
 <&| /page/info_section.mas, title=>"Sequences with perfect matches of $fragment_size-mers",    collapsible => 1,    collapsed   => 0 &>

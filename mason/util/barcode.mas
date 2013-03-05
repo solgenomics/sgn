@@ -1,0 +1,53 @@
+
+<%doc>
+
+=head1 NAME
+
+/util/barcode.mas - generate a barcode from an identifier and prints text alongside the barcode
+
+=head1 DESCRIPTION
+
+This mason component calls SGN::Controller::Barcode.
+
+Arguments:
+
+ $identifier (required) - will be converted to barcode
+ $text - what's printed alongside barcode (human readable)
+
+ 
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>
+
+=cut
+
+</%doc>
+
+<%args>
+$identifier
+$text => ''
+$format => ''
+</%args>
+
+<%perl>
+
+our %urlencode;
+use Tie::UrlEncoder;
+
+my $encoded_id = $urlencode{$identifier};
+my $encoded_text = $urlencode{$text};
+my $link;
+
+if ($format eq "code128") { 
+  $link = "/barcode/code128png/$encoded_id/$encoded_text";
+}
+
+if ($format eq "qrcode") { 
+  my $info = "http://solgenomics.net/stock/$identifier/view";
+  $link = "/barcode/qrcodepng/$info/$encoded_text";
+}
+
+
+</%perl>
+
+<center><img src="<% $link %>" /></center>

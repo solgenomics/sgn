@@ -5,19 +5,35 @@ QTL search form.
 <%perl>
 
 my $qtl_tool = CXGN::Phenome::Qtl::Tools->new();
-my $links = $qtl_tool->browse_traits();
+my $links    = $qtl_tool->browse_traits();
 my @qtl_pops = $qtl_tool->has_qtl_data();
 
 my  $pop_links;
-foreach my $pop_obj (@qtl_pops) {
-   my $pop_id   = $pop_obj->get_population_id();
-   my $pop_name = $pop_obj->get_name();
-   $pop_links  .= qq |<a href="/qtl/population/$pop_id">$pop_name</a> <br /> |;     
-}
 
-my $help = qq |(<a href="/qtl/search/help">help</a>)|;       
+foreach my $qtl_pop (@qtl_pops) 
+  {
+    my $is_public  = $qtl_pop->get_privacy_status();
+    my $owner_id   = $qtl_pop->get_sp_person_id();
+    my $user_type  = $c->user->get_object->get_user_type() if $c->user;
+    my $user_id    = $c->user->get_object->get_sp_person_id if $c->user;
+   
+    if ( $is_public || $user_type eq 'curator' || $user_id == $owner_id )
+      {
+        my $pop_id   = $qtl_pop->get_population_id();
+        my $pop_name = $qtl_pop->get_name();
+        $pop_links  .= qq |<a href="/qtl/population/$pop_id">$pop_name</a> <br /> |;     
+      }
+  }
+  
 </%perl>
 
+<p align="right">
+  [ 
+    <a href="/qtl/form">Submit QTL data</a> | 
+    <a href="/qtl/submission/guide">Submission guide</a> | 
+    <a href="/qtl/search/help">Search help</a>
+  ]
+</p>
 
 <form  action= "/qtl/search/results" method="post">
   <table align=center cellpadding=20px>
@@ -33,7 +49,7 @@ my $help = qq |(<a href="/qtl/search/help">help</a>)|;
       </td>
     </tr>
     <tr>
-      <td>Search QTLs with trait name <% $help %>:
+      <td>Search QTLs with trait name:
       </td>
     </tr>
     <tr>
@@ -41,9 +57,6 @@ my $help = qq |(<a href="/qtl/search/help">help</a>)|;
         <input type="text" name="trait" size=24>
         <input type="submit" value="Search">  
       </td>
-       <td>
-         <a href="/qtl/form">[Submit new QTL data]</a>
-       </td> 
     </tr>
      <tr>
       <td>&nbsp;

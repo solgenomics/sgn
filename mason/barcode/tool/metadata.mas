@@ -1,0 +1,47 @@
+
+<%args>
+$operator
+$date
+$project
+$location
+$size => 'large'
+</%args>
+
+<%perl>
+use Tie::UrlEncoder;
+
+our %urlencode;
+my $encoded_operator = $urlencode{$operator};
+my $encoded_date     = $urlencode{$date};
+
+</%perl>
+
+<center>
+<h1>CASSAVABASE METADATA BARCODE SHEET</h1>
+<font size="7">Operator</font><br />
+
+<img src="/barcode/image/?code=O:<% $encoded_operator %>&size=<% $size %>" />
+
+<br />
+<br />
+
+<font size="7">Today's Date</font>
+<br />
+<img src="/barcode/image/?code=D:<% $encoded_date %>&size=<% $size %>" />
+
+<br />
+<br />
+
+<font size="7">Project</font>
+<br />
+<img src="/barcode/image/?code=P:<% $project %>&size=<% $size %>" />
+
+<br />
+<br />
+
+<font size="7">Location</font>
+<br />
+<img src="/barcode/image/?code=L:<% $location %>&size=<% $size %>" />
+
+
+</center>

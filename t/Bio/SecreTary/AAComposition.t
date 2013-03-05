@@ -17,8 +17,13 @@ my @aas =    ("A", "C", "D", "E", "F",
 
 my $sequence = 'MVQYNFKRITVVPNGKEFVDIILSRTQRQTPTVVHKGYKINRLRQFYMRKVKYTQTNFHAKLSAIIDEFPRLEQIHPFYGDLLHVLYNKDHYKLALGQVNTARNLISKISKDYVKLLKYGDSLYRCKCLKVAALGRMCTVLKRITPSLAYLEQIRQHMARLPSIDPNTRTVLICGYPNVGKSSFMNKVTRADVDVQPYAFTTKSLFVGHTDYKYLRYQVIDTPGILDRPFEDRNIIEMCSITALAHLRAAVLFFLDISGSCGYTIAQQAALFHS';
 
+#my ($tbs_array_ref, $min_tbs, $max_tbs) = Bio::SecreTary::AAComposition::total_beta_strand($sequence, 11);
+#print"tbs min, max, array: $min_tbs  $max_tbs  \n"; # , join(" ", @$tbs_array_ref), "\n";
+#my ($bs_array_ref, $min_bs, $max_bs) = Bio::SecreTary::AAComposition::beta_sheet($sequence, 11);
+#print"bs min, max, array: $min_bs  $max_bs  \n"; # , join(" ", @$bs_array_ref), "\n";
+#my ($bt_array_ref, $min_bt, $max_bt) = Bio::SecreTary::AAComposition::beta_turn($sequence, 11);
+#print"bt min, max, array: $min_bt  $max_bt \n"; # , join(" ", @$bt_array_ref), "\n";
 
-# $sequence = 'MVIQRNSILLLIIIFASSISTCRSNVIDDNLFKQVYDNILEQEFAHDFQAYLSYLSKNIESNNNIDKVDKNGIKVINVLSFGAKGDGKTYDNIAFEQAWNEACSSRTPVQFVVPKNKNYLLKQITFSGPCRSSISVKIFGSLEASSKISDYKDRRLWIAFDSVQNLVVGGGGTINGNGQVWWPSSCKINKSLPCRDAPTALTFWNCKNLKVNNLKSKNAQQIHIKFESCTNVVASNLMINASAKSPNTDGVHVSNTQYIQISDTIIGTGDDCISIVSGSQNVQATNITCGPGHGISIGSLGSGNSEAYVSNVTVNEAKIIGAENGVRIKTWQGGSGQASNIKFLNVEMQDVKYPIIIDQNYCDRVEPCIQQFSAVQVKNVVYENIKGTSATKVAIKFDCSTNFPCEGIIMENINLVGESGKPSEATCKNVHFNNAEHVTPHCTSLEISEDEALLYNY'; # this one has 603 Nitrogens, 691 Oxygens 
 my $aa_frequency_hashref = Bio::SecreTary::AAComposition::aa_frequencies($sequence);
 
 my $aa_counts = aa_count_string($aa_frequency_hashref);

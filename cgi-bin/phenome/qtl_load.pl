@@ -114,45 +114,14 @@ sub process_data {
         $self->post_pheno_form($qtl_obj, $args{'pheno_file'}, $pop_id);
     }
 
-    elsif ( $type eq 'geno_form' ) {
-        my ( $geno_file, $map_id, $map_version_id );
-        if ( $args{'geno_file'} ) {
-            $geno_file = $self->geno_upload( $qtl_obj, $args{'geno_file'} );
-            ( $map_id, $map_version_id ) = $self->store_map($geno_file);
-        }
-        else {
-            $self->error_page('Genotype dataset file');
-        }
-
-        unless ( !$geno_file || !$map_id || !$map_version_id ) {
-            if ($map_version_id) {
-                my $result =
-                  $self->store_marker_and_position( $geno_file,
-                    $map_version_id );
-                unless ( !$result ) {
-                    my $genotype_uploaded =
-                      $self->store_genotype( $geno_file, $map_version_id );
-                    if ($genotype_uploaded) {
-                        $message = 'QTL genotype data uploaded : Step 4 of 5';
-                        $self->send_email( '[QTL upload: Step 4]', $message, $pop_id );
-                        $c->res->redirect("$referring_page/stat_form/$pop_id");
-                        $c->detach();
-                    }
-                    else {
-                        die "There is a problem with your genotype data uploading\n";
-                    }
-                }
-            }
-            else {
-                die "Can't store markers. No map version id\n";
-            }
-
-        }    #else { die "Failed storing map data\n";}
+    elsif ( $type eq 'geno_form' ) 
+    {
+        $self->post_geno_form($qtl_obj, $args{'geno_file'}, $pop_id);  
     }
 
-    elsif ( $type eq 'stat_form' ) {
-        $self->load_stat_parameters($args_ref);
-#add checks
+    elsif ( $type eq 'stat_form' ) 
+    {
+        $self->post_stat_form($args_ref);
     }
 }
 
@@ -513,9 +482,9 @@ sub store_traits {
    		   
     my ( $trait, $trait_id, $trait_name, $unit, $unit_id );
 
-    if (   $fields[0] ne "traits"
-	   || $fields[1] ne "definition"
-	   || $fields[2] ne "unit" 
+    if (   $fields[0] !~ /trait|name/
+	   || $fields[1] !~ /definition/
+	   || $fields[2] !~ /unit/ 
 	)
     {
         my $error =
@@ -675,8 +644,7 @@ sub store_trait_values {
     my $file         = shift;
     my $pop_id       = $self->get_population_id();
     my $sp_person_id = $self->get_sp_person_id();
-    my $dbh          = $self->get_dbh();
-
+    my $dbh          = $c->dbc->dbh;
     open( F, "<$file" ) || die "Can't open file $file.";
 
     my $header = <F>;
@@ -686,13 +654,11 @@ sub store_trait_values {
     my @trait = ();
     my ( $trait_name, $trait_id );
 
-    for ( my $i = 1 ; $i < @fields ; $i++ ) {
-
-        $trait[$i] =
-          CXGN::Phenome::UserTrait->new_with_name( $dbh, $fields[$i] );
+    for ( my $i = 1 ; $i < @fields ; $i++ ) 
+    {
+        $trait[$i] = CXGN::Phenome::UserTrait->new_with_name( $dbh, $fields[$i] );
         $trait_name = $trait[$i]->get_name();
         $trait_id   = $trait[$i]->get_user_trait_id();
-
     }
     eval {
         while (<F>)
@@ -716,7 +682,12 @@ sub store_trait_values {
                     qq | $individual_name $pop_id .":". $i |);
                 $phenotype->set_observable_id(
                     $trait[$i]->get_user_trait_id() );
-                $phenotype->set_value( $values[$i] );
+                if (!$values[$i]) {$values[$i] = undef;}
+                if ($values[$i] &&  $values[$i] =~ /NA|-|\s+/ig) 
+                {
+                    $values[$i] = undef;
+                }
+                $phenotype->set_value($values[$i]);
                 $phenotype->set_individual_id($individual_id);
                 $phenotype->set_sp_person_id($sp_person_id);
                 my $phenotype_id = $phenotype->store();
@@ -738,8 +709,6 @@ sub store_trait_values {
     else {
         print STDERR "Committing...trait values to tables public.phenotype 
                   and user_trait_id and phenotype_id to phenotype_user_trait\n";
-
-        #$dbh->commit();
         return 1;
 
     }
@@ -1429,7 +1398,7 @@ qq |\nQTL population id: $pop_id \nQTL data owner: $username ($user_profile) |;
 }
 
 
-sub load_stat_parameters {
+sub post_stat_form {
     my ($self, $args_ref) = @_;
     
     my $sp_person_id = $self->get_sp_person_id();
@@ -1453,15 +1422,13 @@ sub load_stat_parameters {
         if (-e $stat_file && $c->req->referer eq $referer) 
         {
             my $qtlpage = $c->req->base . "qtl/population/$pop_id";
-            my $message =<<MSG;
-            QTL statistical parameters set : Step 5 of 5;
-            
-            QTL data upload for<a href="$qtlpage"> population $pop_id</a> is completed.
-MSG
+            my $message = qq | QTL statistical parameters set: Step 5 of 5. 
+                               QTL data upload for<a href="$qtlpage">population 
+                               $pop_id</a> is completed. |;
 
             $self->send_email( '[QTL upload: Step 5]', $message, $pop_id );
-            $c->res->redirect("/qtl/form/confirm/$pop_id");
-            $c->detach();
+            $self->redirect_to_next_form($c->req->base . "qtl/form/confirm/$pop_id");
+         
         }
         else 
         {
@@ -1555,9 +1522,54 @@ sub post_pheno_form {
 
 
 }
+sub post_geno_form {
+    my ($self, $qtl_obj, $geno_file, $pop_id) = @_;
+        
+    if (!$geno_file) 
+    { 
+        $self->error_page('Genotype dataset file'); 
+    } 
+
+    my ($map_id, $map_version_id);     
+    my  $uploaded_file = $self->geno_upload( $qtl_obj, $geno_file);
+    
+    if ($uploaded_file)
+    {
+        ( $map_id, $map_version_id ) = $self->store_map($uploaded_file);
+    }
+    else 
+    {
+        $self->error_page('Genotype dataset file');
+    }
+  
+    my $genotype_uploaded;
+
+    if ($map_version_id) 
+    {
+        my $result = $self->store_marker_and_position($uploaded_file, $map_version_id);
+        
+        unless ($result)  
+        {
+            $c->throw_404("Couldn't store markers and position.");
+        }
+                   
+        my $genotype_uploaded = $self->store_genotype($uploaded_file, $map_version_id);           
+        
+        if ($genotype_uploaded) 
+        {
+            $self->send_email( '[QTL upload: Step 4]', 'QTL genotype data uploaded : Step 4 of 5', $pop_id );
+            $self->redirect_to_next_form($c->req->base . "qtl/form/stat_form/$pop_id");
+        }
+        else 
+        {
+            $c->throw_404("failed storing genotype data.");
+        }        
+    }          
+}
 
 sub redirect_to_next_form {
     my ($self, $next_form) = @_;
     $c->res->redirect("$next_form");
     $c->detach();    
 }
+

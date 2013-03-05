@@ -1,0 +1,6 @@
+
+<%args>
+
+</%args>
+
+Upload cross file <input type="file" />

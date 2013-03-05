@@ -3,21 +3,26 @@ $markers
 </%args>
 <%init>
   
-my @xrefs;
-  foreach my $marker (@$markers) 
+my (@xrefs, @xrefs_latest);
+
+if ($markers->[0]) 
   {
-    my @xrefs_m = map {
-      $_->xrefs({
-                 -types   => ['match'],
-                 -name    => 'SGN-M'.$marker->marker_id,
-                 -aliases => 1,
-                })
-    } $c->enabled_feature('gbrowse2');
-     push @xrefs, @xrefs_m;
-}
-my @xrefs_latest = grep {
-  $_->data_source->description =~ /itag2\.3/i
-} @xrefs;
+    foreach my $marker (@$markers) 
+      {
+        my @xrefs_m = map {
+          $_->xrefs({
+                     -types   => ['match'],
+                     -name    => 'SGN-M'.$marker->marker_id,
+                     -aliases => 1,
+                    })
+        } $c->enabled_feature('gbrowse2');
+        push @xrefs, @xrefs_m;
+      }
+    @xrefs_latest = grep {
+      $_->data_source->description =~ /itag2\.3/i
+    } @xrefs;
+
+  }
 
 </%init>
 

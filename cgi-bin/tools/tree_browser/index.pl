@@ -385,13 +385,40 @@ if ($shared_file) {
 }
 
 #print STDERR "Done with shared file...\n";
-# for now, the species tree is just hard-coded for species relevant to sgn:
-my $species_tree_newick =
-"(((((((((tomato[species=Solanum_lycopersicum]:1, potato[species=Solanum_tuberosum]:1):1, eggplant[species=Solanum_melongena]:1):1, pepper[species=Capsicum_annuum]:1):1, tobacco[species=Nicotiana_tabacum]:1):1, petunia[species=Petunia]:1):1, sweet_potato[species=Ipomoea_batatas]:1):1,(arabica_coffee[species=Coffea_arabica]:1,robusta_coffee[species=Coffea_canephora]:1):1):1, snapdragon[species=Antirrhinum]:1):1,arabidopsis[species=Arabidopsis_thaliana]:1)";
+# for now, the species tree is just hard-coded:
 
-$species_tree_newick =
-"((brachypodium[species=Brachypodium_distachyon]:1, (rice[species=Oryza_sativa]):1):1, "
-  . $species_tree_newick . ":1)";
+my $species_tree_newick = "(chlamydomonas[species=Chlamydomonas_reinhardtii]:1,
+(physcomitrella[species=Physcomitrella_patens]:1,(selaginella[species=Selaginella_moellendorffii]:1,
+(loblolly_pine[species=Pinus_taeda]:1,(amborella[species=Amborella_trichopoda]:1,
+((date_palm[species=Phoenix_dactylifera]:1,((foxtail_millet[species=Setaria_italica]:1,
+(sorghum[species=Sorghum_bicolor]:1,maize[species=Zea_mays]:1):1):1,
+(rice[species=Oryza_sativa]:1,(brachypodium[species=Brachypodium_distachyon]:1,
+(wheat[species=Triticum_aestivum]:1,barley[species=Hordeum_vulgare]:1):1):1):1):1):1,
+(columbine[species=Aquilegia_coerulea]:1,
+((((((((((tomato[species=Solanum_lycopersicum]:1, potato[species=Solanum_tuberosum]:1):1, 
+eggplant[species=Solanum_melongena]:1):1, pepper[species=Capsicum_annuum]:1):1, 
+tobacco[species=Nicotiana_tabacum]:1):1, petunia[species=Petunia]:1):1, 
+sweet_potato[species=Ipomoea_batatas]:1):1,
+(arabica_coffee[species=Coffea_arabica]:1,robusta_coffee[species=Coffea_canephora]:1):1):1, 
+snapdragon[species=Antirrhinum]:1):1,
+((sunflower[species=Helianthus_annuus]:1,lettuce[species=Lactuca_sativa]:1):1,
+carrot[species=Daucus_carota]:1):1):1,(grape[species=Vitis_vinifera]:1,
+((eucalyptus[species=Eucalyptus_grandis]:1,
+((orange[species=Citrus_sinensis]:1, clementine[species=Citrus_clementina]:1):1,
+((cacao[species=Theobroma_cacao]:1,cotton[species=Gossypium_raimondii]:1):1,
+(papaya[species=Carica_papaya]:1,(turnip[species=Brassica_rapa]:1,
+(salt_cress[species=Thellungiella_parvula]:1,(red_shepherds_purse[species=Capsella_rubella]:1,
+(arabidopsis_thaliana[species=Arabidopsis_thaliana]:1,arabidopsis_lyrata[species=Arabidopsis_lyrata]:1):1)
+:1):1):1):1):1):1):1,
+(((peanut[species=Arachis_hypogaea]:1,
+((soy[species=Glycine_max]:1,pigeon_pea[species=Cajanus_cajan]:1):1,
+(medicago[species=Medicago_truncatula]:1,lotus[species=Lotus_japonicus]:1):1):1):1,
+(hemp[species=Cannabis_sativa]:1,
+(((apple[species=Malus_domestica]:1,peach[species=Prunus_persica]:1):1,
+woodland_strawberry[species=Fragaria_vesca]:1):1, cucumber[species=Cucumis_sativus]:1):1):1):1,
+((castorbean[species=Ricinus_communis]:1,cassava[species=Manihot_esculenta]:1):1,
+(poplar[species=Populus_trichocarpa]:1,flax[species=Linum_usitatissimum]:1):1):1):1):1):1):1):1):1):1
+):1):1):1)";
 
 #print STDERR "species tree newick: \n", $species_tree_newick, "\n";
 
@@ -400,8 +427,7 @@ my $species_tree =
   ;    #construct Parse_newick for string $newick
 
 ## these aren't needed for the hard coded species tree, but may be needed if/when we allow other trees (user supplied)
-$species_tree->set_missing_species_from_names()
-  ;    # if get_species() not defined get species from name
+$species_tree->set_missing_species_from_names();    # if get_species() not defined get species from name
 $species_tree->impose_branch_length_minimum();
 $species_tree->collapse_tree();
 my $species_name_map = CXGN::Phylo::Species_name_map->new();
@@ -865,6 +891,8 @@ else {
 
     my $filename = File::Basename::basename($file);
     my $temp_url = "/documents/tempfiles/align_viewer/${filename}$unique.png";
+
+ #   print "filename: $filename, temp url: $temp_url \n";
 
     # display the page
     #

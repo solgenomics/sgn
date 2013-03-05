@@ -13,8 +13,8 @@ has 'query_seq' => (is=>'rw', isa=>'Str');
 has 'step_size' => (is=>'rw', isa=>'Int', default=>4);
 has 'width' => (is=>'rw', isa=>'Int', default=>700);
 has 'height'=> (is=>'rw', isa=>'Int', default=>2400);
-
-
+has 'font' => (is =>'rw', isa=>'GD::Font');
+has 'ruler_height' => (is => 'ro', isa=>'Int', default=>20);
 sub parse { 
     my $self = shift;
     
@@ -36,7 +36,7 @@ sub parse {
 	    my @additional = split ";", $more_matches;
 	    foreach my $a (@additional) { 
 		my ($id, $coord, $cigar, $n) = split ",", $a;
-		if ($cigar =~ /(\d+)M/ && $1 == $self->fragment_size()) { 
+		if (defined($cigar) && $cigar =~ /(\d+)M/ && $1 == $self->fragment_size()) { 
 		    push @additional_coords, [ $id, $coord ];
 		}
 	    }
@@ -288,6 +288,10 @@ sub render {
     my $blue = $image->colorResolve(0, 0, 180);
     my $grey = $image->colorResolve(150,150,150);
     my $yellow = $image->colorResolve(255, 255, 0);
+    my $black  = $image->colorResolve(0, 0, 0);
+
+    my $font = GD::Font->Small();
+    $self->font($font);
 
     $image->filledRectangle(0, 0, $self->width, $self->height, $white);
 
@@ -308,14 +312,16 @@ sub render {
 	print STDERR "LONGEST REGION: $start, $end\n";
 	$image->filledRectangle($start * $x_scale, 0, $end * $x_scale, $self->height, $yellow);
     }
-	
+    
     my $matches = $self->matches();
-    my $offset = 10;
+    my $offset = $self->ruler_height + 10;
     my $track_height = 0;
     my @sorted = $self->subjects_by_match_count($self->matches);
     
     #print Dumper(\@sorted);
 
+    $self->draw_ruler($image, $x_len, $x_scale);
+    
     for (my $track=0; $track< @sorted; $track++) {
 	my $max_tracks =0;
 	my $current_track = 0;
@@ -362,19 +368,20 @@ sub render {
 	$offset += $max_tracks * $glyph_height + 10;	
 
     }
+
     # draw vertical grid of seq_window_size in size
+    #
     for (my $x=0; $x < length($self->query_seq()); $x += $self->seq_window_size()) { 
-	$image->line($x * $x_scale, 0, $x * $x_scale, $self->height, $grey);
+	$image->line($x * $x_scale, 15, $x * $x_scale, $self->height, $grey);
     }
     
     # adjust image height
-
+    #
     if ($offset > 2400) { $offset = 2400; }
     my $cropped = GD::Image->new($image->width, $offset);
     $cropped->copy($image, 0, 0, 0, 0, $image->width(), $offset);
 
     $image = $cropped;
-
 
     open(my $F, ">", $filename) || die "Can't open file $filename.";
     print $F $image->png();
@@ -392,9 +399,75 @@ sub render {
     $image_map .= qq{ </map> };
 
     return $image_map;
+}
 
+sub draw_ruler { 
+    my $self = shift;
+    my $image = shift;
+
+    my $seq_length = shift;
+    my $scale = shift;
+    
+    my $black = $image->colorResolve(0, 0, 0);
+
+    $image->line(0, $self->ruler_height, $seq_length * $scale, $self->ruler_height, $black);
+
+    # tick lines
+    #
+    if ($seq_length > 1000) { 
+	foreach my $tick (int($seq_length / 1000)) { 
+	    $image->line($tick * 1000 * $scale, 1, $tick * 1000 * $scale, 5, $black);
+	}
+
+    }
+    
+    if ($seq_length > 100 && $seq_length < 3000) { 
+	foreach my $tick (0 .. int($seq_length / 100)) { 
+	    $image->line($tick * 100 * $scale, 0, $tick * 100 * $scale, 5, $black);
+	}
+    }
+    
+    if ($seq_length > 10 && $seq_length < 200) { 
+	foreach my $tick (0.. int($seq_length / 10)) { 
+	    $image->line($tick * 10 * $scale, 1, $tick * 10 * $scale+1, 5, $black);
+	}
+    }
+    
+    # tick labels
+    #
+    if ($seq_length < 4000) { 
+	$self->write_ticks($image, $seq_length, $scale, 200);
+    }
+
+    if ($seq_length < 1400) { 
+	
+	foreach my $tick (0 .. int($seq_length /100) ) { 
+	    $self->write_ticks($image, $seq_length, $scale, 100); #$image->string($self->font(), $tick * 100 * $scale+1, 1, $tick * 100, $black);
+	}
+    }
+
+    if ($seq_length < 200) { 
+	foreach my $tick (0.. int($seq_length/10) ) { 
+	    $self->write_ticks($image, $seq_length, $scale, 10); #$image->string($self->font(), $tick*10*$scale, 2, $tick * 10, $black);
+	}
+    }
 }
     
+
+sub write_ticks { 
+    my $self =shift;
+    my $image = shift;
+    my $seq_length = shift;
+    my $scale = shift;
+    my $nucleotide_interval = shift;
+
+    my $black = $image->colorAllocate(0,0,0);
+    foreach my $tick (1..int($seq_length/$nucleotide_interval)) { 
+	$image->string($self->font(), $tick * $nucleotide_interval * $scale + 2, 4, $tick * $nucleotide_interval, $black);
+    }
+}
+
+
 
 package CXGN::Graphics::VigsGraph::MatchSegment;
 

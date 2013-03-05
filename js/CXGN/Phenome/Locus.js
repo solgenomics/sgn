@@ -65,9 +65,7 @@ var Locus = {
 	    }
 	}
     },
-    
-    
-        
+
     //Make an ajax response that adds a registry to the database and associates it with this locus
     addRegistry: function(locus_id, sp_person_id) {
 	var registry_name = $('registry_name').value;
@@ -232,112 +230,6 @@ var Locus = {
 	}
     },
 
-
-    getLocusReference: function(locus_id) {
-	var type = 'reference';
-	var reference_id = $('locus_reference_select').value;
-	new Ajax.Request('/phenome/evidence_browser.pl', {  // move 
-                parameters:
-                {type: type, locus_id: locus_id},
-                    onSuccess: function(response) {
-                    var select = $('locus_reference_select');
-                    var responseText = response.responseText;
-                    var responseArray = responseText.split("|");
-                    //the last element of the array is empty. Dont want this in the select box
-                    responseArray.pop();
-                    responseArray.unshift("*--Optional: select supporting reference --");
-                    select.length = 0;
-                    select.length = responseArray.length;
-                    for (i=0; i < responseArray.length; i++) {
-                        var referenceObject = responseArray[i].split("*");
-                        select[i].value = referenceObject[0];
-                        select[i].text = referenceObject[1];
-                    }
-                },
-                    } )
-    },
-
-    //#####################################LOCUS RELATIONSHIPS
-
-    updateLocusReferenceSelect: function(request) {
-	var select = $('locus_reference_select');
-        var responseText = request.responseText;
-        var responseArray = responseText.split("|");
-	//the last element of the array is empty. Dont want this in the select box
-	responseArray.pop();
-	responseArray.unshift("*--Optional: select supporting reference --");
-        select.length = 0;
-	select.length = responseArray.length;
-	for (i=0; i < responseArray.length; i++) {
-	    var referenceObject = responseArray[i].split("*");
-	    select[i].value = referenceObject[0];
-	    select[i].text = referenceObject[1];
-	}
-    },
-    /////////////////////////////
-    getLocusRelationship: function() {
-        var type = 'locus_relationship'; 
-	var locus_relationship_id = $('locus_relationship_select').value;
-        new Ajax.Request('/phenome/locus_browser.pl', { parameters: //// move to the AJAX controller!
-                  {type: type },
-                      onSuccess: this.updateLocusRelationshipSelect });
-    },
-
-    updateLocusRelationshipSelect: function(request) {
-	var select = $('locus_relationship_select');
-        var responseText = request.responseText;
-        var responseArray = responseText.split("|");
-	//the last element of the array is empty. Dont want this in the select box
-	responseArray.pop();
-        select.length = 0;
-	select.length = responseArray.length;
-	for (i=0; i < responseArray.length; i++)
-	{
-	    var locusRelationshipObject = responseArray[i].split("*");
-	    select[i].value = locusRelationshipObject[0];
-	    if (typeof(locusRelationshipObject[1]) != "undefined"){
-		select[i].text = locusRelationshipObject[1];
-	    }
-	    else{
-		select[i].text = locusRelationshipObject[0];
-		select[i].value = null;
-	    }
-	}
-    },
-
-    getLocusEvidenceCode: function() {
-	var type = 'locus_evidence_code';
-	var locus_evidence_code_id = $('locus_evidence_code_select').value;
-
-        new Ajax.Request('/phenome/locus_browser.pl', {
-                parameters:
-                {type: type },
-                    onSuccess: function(response) {
-                    var select = $('locus_evidence_code_select');
-                    var responseText = response.responseText;
-                    var responseArray = responseText.split("|");
-                    //the last element of the array is empty. Dont want this in the select box
-                    responseArray.pop();
-                    responseArray.unshift("*--please select an evidence code--");
-                    select.length = 0;
-                    select.length = responseArray.length;
-                    for (i=0; i < responseArray.length; i++) {
-                        var locusevidenceCodeObject = responseArray[i].split("*");
-                        select[i].value = locusevidenceCodeObject[0];
-                        select[i].text = locusevidenceCodeObject[1];
-                    }
-                },
-                    } );
-    },
-
-
-    /////////////currently not used - check 
-    //Make an ajax response that obsoletes the selected stock-allele association
-    obsoleteStockAllele: function(stockprop_id)  {
-		var type= 'obsolete';
-		new Ajax.Request('/phenome/individual_browser.pl', {parameters:
-                        {type: type, stockprop_id: stockprop_id }, onSuccess: Tools.reloadPage });
-    },
     //Make an ajax response that finds all loci  with names/synonyms/symbols like the current value of the locus input
     getMergeLocus: function(str, object_id) {
 	if(str.length == 0){
@@ -471,22 +363,22 @@ var Locus = {
     //Make an ajax response that associates the selected locus with this locus
     associateLocus: function(locus_id) {
         var div_id = 'locus_network';
-        var object_id = $('locus_select').value;
-	var locus_relationship_id = $('locus_relationship_select').value;
-	var locus_evidence_code_id = $('locus_evidence_code_select').value;
-	var locus_reference_id = $('locus_reference_select').value ;
+        var locus_info = jQuery('#loci').val();
+        var locus_relationship_id = jQuery('#locus_relationship_select').val();
+        var locus_reference_id = jQuery('#locus_reference_select').val();
+        var locus_evidence_code_id = jQuery('#locus_evidence_code_select').val();
         jQuery.ajax( {
                 type: 'POST',
-                    url: "/ajax/locus/associate_locus/",
+                    url: "/ajax/locus/associate_locus",
                     dataType: "json",
                     /// make asynchronous since it takes long to finish the ajax request
                     /// and we want to refresh the locus_network div only after the request is done
                     async: false,
-                    data: 'object_id='+object_id+'&locus_relationship_id='+locus_relationship_id+'&locus_evidence_code_id='+locus_evidence_code_id+'&locus_reference_id='+locus_reference_id+'&locus_id='+locus_id ,
+                    data: 'locus_info='+locus_info+'&locus_relationship_id='+locus_relationship_id+'&locus_evidence_code_id='+locus_evidence_code_id+'&locus_reference_id='+locus_reference_id+'&locus_id='+locus_id ,
                     success: function(response) {
-                    var json = response;
-                    if ( response.error ) { alert(response.error) ; }
-                },
+                      var json = response;
+                      if ( response.error ) { alert(response.error) ; }
+                   },
                     });
         this.printLocusNetwork(locus_id, div_id);
         Effects.hideElement('associateLocusForm');
@@ -562,6 +454,15 @@ var Locus = {
                         });
                 });
         }
+    },
+
+    displayMembers: function (div, locusgroup_id) {
+        jQuery.ajax( { url: "/genefamily/manual/" + locusgroup_id + "/members",
+                       dataType: "json",
+                       success: function(response) {
+                            jQuery("#"+div).html(response.html);
+                       }
+            } );
     },
 
 };//

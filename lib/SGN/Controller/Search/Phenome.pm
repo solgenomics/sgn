@@ -22,11 +22,17 @@ sub stock_search : Path('/search/phenotypes/stock') Args(0) {
 }
 
 sub qtl_search : Path('/search/phenotypes/qtl') Path('/search/phenotypes') Args(0) {
-    $_[1]->stash->{template} = '/search/phenotypes/qtl.mas';
+    my $self = shift;
+    my $c = shift;
+    $c->stash->{template} = '/search/phenotypes/qtl.mas';
 }
 
 sub trait_search : Path('/search/phenotypes/traits') Args(0) {
-    $_[1]->stash->{template} = '/search/phenotypes/traits.mas';
+    my $self = shift;
+    my $c = shift;
+    my $db_name = $c->config->{trait_ontology_db_name} || 'SP';
+    $c->stash->{db_name} = $db_name;
+    $c->stash->{template} = '/search/phenotypes/traits.mas';
 }
 
 

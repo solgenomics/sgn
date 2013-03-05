@@ -198,43 +198,45 @@ sub _analyze_correlation  {
     
     if (-s $pheno_file) 
     {
-        foreach my $dir ($corre_temp_dir, $corre_image_dir)
-        {
-            unless (-d $dir)
-            {
-                mkpath ($dir, 0, 0755);
-            }
-        }
-
-        my (undef, $heatmap_file)     = tempfile( "heatmap_${pop_id}-XXXXXX",
-                                                  DIR      => $corre_image_dir,
+        mkpath ([$corre_temp_dir, $corre_image_dir], 0, 0755);  
+    
+        my ($fh_hm, $heatmap_file)     = tempfile( "heatmap_${pop_id}-XXXXXX",
+                                                  DIR      => $corre_temp_dir,
                                                   SUFFIX   => '.png',
                                                   UNLINK   => 0,
-                                                  OPEN     => 0,
                                                 );
-
-        my (undef, $corre_table_file) = tempfile( "corre_table_${pop_id}-XXXXXX",
-                                                  DIR      => $corre_image_dir,
+        $fh_hm->close;
+        
+        print STDERR "\nheatmap tempfile: $heatmap_file\n";
+       
+        my ($fh_ct, $corre_table_file) = tempfile( "corre_table_${pop_id}-XXXXXX",
+                                                  DIR      => $corre_temp_dir,
                                                   SUFFIX   => '.txt',
                                                   UNLINK   => 0,
-                                                  OPEN     => 0,
                                                 );
-
+        $fh_ct->close;
+        
+        print STDERR "\ncorrelation coefficients tempfile: $corre_table_file\n";
+        
+        CXGN::Tools::Run->temp_base($corre_temp_dir);
+        my ($fh_out, $filename);
         my ( $corre_commands_temp, $corre_output_temp ) =
             map
         {
-            my ( undef, $filename ) =
+            ($fh_out, $filename ) =
                 tempfile(
                     File::Spec->catfile(
-                        CXGN::Tools::Run->temp_base($corre_temp_dir),
-                        "corre_pop_${pop_id}-$_-XXXXXX"
+                        CXGN::Tools::Run->temp_base(),
+                        "corre_pop_${pop_id}-$_-XXXXXX",
                          ),
-                    UNLINK => 0,
-                    OPEN   => 0,
+                    UNLINK   => 0,
                 );
             $filename
         } qw / in out /;
 
+        $fh_out->close;
+        print STDERR "\ncorrelation r output  tempfile: $corre_output_temp\n";
+        
         {
             my $corre_commands_file = $c->path_to('/cgi-bin/phenome/correlation.r');
             copy( $corre_commands_file, $corre_commands_temp )
@@ -242,6 +244,7 @@ sub _analyze_correlation  {
         }
         try 
         {
+            print STDERR "\nsubmitting correlation job to the cluster..\n";
             my $r_process = CXGN::Tools::Run->run_cluster(
                 'R', 'CMD', 'BATCH',
                 '--slave',
@@ -255,10 +258,12 @@ sub _analyze_correlation  {
                 );
 
             $r_process->wait;
-            "sleep 5"
+            sleep 5;
+            print STDERR "\ndone with correlation analysis..\n";
        }
         catch 
-        {
+        {  
+            print STDERR "\nsubmitting correlation job to the cluster gone wrong....\n";
             my $err = $_;
             $err =~ s/\n at .+//s; #< remove any additional backtrace
             #     # try to append the R output
@@ -266,12 +271,20 @@ sub _analyze_correlation  {
             # die with a backtrace
             Carp::confess $err;
         };
+        
+        copy($heatmap_file, $corre_image_dir)  
+            or die "could not copy $heatmap_file to $corre_image_dir";
+        copy($corre_table_file, $corre_image_dir) 
+            or die "could not copy $corre_table_file to $corre_image_dir";
 
         $heatmap_file      = fileparse($heatmap_file);
         $heatmap_file      = $c->generated_file_uri("temp_images",  $heatmap_file);
         $corre_table_file  = fileparse($corre_table_file);
-        $corre_table_file  = $c->generated_file_uri("temp_images",  $corre_table_file);
-       
+        $corre_table_file  = $c->generated_file_uri("temp_images", $corre_table_file);
+        
+        print STDERR "\nheatmap tempfile after copying to the apps static dir : $heatmap_file\n";
+        print STDERR "\ncorrelation coefficients after copying to the apps static dir: $corre_table_file\n";
+        
         $c->stash( heatmap_file     => $heatmap_file, 
                    corre_table_file => $corre_table_file
                  );  
@@ -294,33 +307,36 @@ sub _correlation_output {
     my $heatmap         = $cache->get($key_h);
     my $corre_table     = $cache->get($key_t); 
    
-    
+     print STDERR "\ncached heatmap file: $heatmap\n";
+     print STDERR "\ncached correlation coefficients files: $corre_table\n";
+
     unless ($heatmap) 
     {
         $self->_analyze_correlation($c);
-        $heatmap = $c->stash->{heatmap_file};
+
+        $heatmap = $c->stash->{heatmap_file};      
         $corre_table  = $c->stash->{corre_table_file};
+
         $cache->set($key_h, $heatmap, "30 days");
-        $cache->set($key_t, $corre_table, "30 days");
-        
+        $cache->set($key_t, $corre_table, "30 days");        
     }
-  
-    $heatmap     = undef if -z $c->get_conf('basepath')  . $heatmap;   
-    $corre_table = undef if -z $c->get_conf('basepath') . $corre_table;
+
+    $heatmap     = undef if -z $c->config->{'basepath'} . $heatmap;   
+    $corre_table = undef if -z $c->config->{'basepath'} . $corre_table;
     
     $c->stash( heatmap_file     => $heatmap,
                corre_table_file => $corre_table,
              );  
  
     $self->_get_trait_acronyms($c);
-}
 
+}
 
 sub _list_traits {
     my ($self, $c) = @_;      
     my $population_id = $c->stash->{pop}->get_population_id();
     my @phenotype;  
-    
+   
     if ($c->stash->{pop}->get_web_uploaded()) 
     {
         my @traits = $c->stash->{pop}->get_cvterms();
@@ -331,27 +347,15 @@ sub _list_traits {
             my $trait_name = $trait->get_name();
             my $definition = $trait->get_definition();
             
-            my ($min, $max, $avg, $std, $count)= $c->stash->{pop}->get_pop_data_summary($trait_id);
+            my ($min, $max, $avg, $std, $count) = $c->stash->{pop}->get_pop_data_summary($trait_id);
             
             $c->stash( trait_id   => $trait_id,
                        trait_name => $trait_name
                 );
-            
-            my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-            my $cvterm = $schema->resultset('Cv::Cvterm')->find(name => $trait_name);
-            my $trait_link;
-                    
-            if ($cvterm)
-            {                
-                $c->stash(cvterm_id =>$cvterm->id);
-                $self->_link($c);
-                $trait_link = $c->stash->{cvterm_page};                
-            } else
-            {
-                $self->_link($c);
-                $trait_link = $c->stash->{trait_page};
-            }
-            
+                      
+            $self->_link($c);
+            my $trait_link = $c->stash->{trait_page};
+          
             my $qtl_analysis_page = $c->stash->{qtl_analysis_page}; 
             push  @phenotype,  [ map { $_ } ( $trait_link, $min, $max, $avg, $count, $qtl_analysis_page ) ];               
         }

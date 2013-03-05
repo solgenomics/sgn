@@ -1,0 +1,77 @@
+
+<%args>
+$projects => undef
+@locations => ()
+$crosses => undef
+$user_id => undef
+@stockrelationships => ()
+@roles => ()
+</%args>
+
+<& /page/page_title.mas, title=>'Breeder Tools' &>
+
+<&| /page/info_section.mas, title=>'Trials', collapsible=>1, collapsed=>1 &>
+
+  <&| /page/info_section.mas, title=>'All trials', collapsible=>1, collapsed=>1, is_subsection=>1 &>
+    
+    <& /breeders_toolbox/projects.mas, projects=>$projects &>
+</&>
+
+<&| /page/info_section.mas, title=>'Add new trial', collapsible=>1, collapsed=>1, is_subsection=>1 &>
+  <& /breeders_toolbox/new_project.mas &>
+
+  </&>
+
+</&>
+
+<&| /page/info_section.mas, title=>'Locations',  collapsible=>1, collapsed=>0 &>
+
+<& /breeders_toolbox/location.mas, locations=>\@locations, user_id=>$user_id &>
+<br />
+<&| /page/info_section.mas, title=>'Add new location', collapsible=>1, collapsed=>1, is_subsection=>1 &>
+<& /breeders_toolbox/new_location.mas &>
+</&>
+
+</&>
+
+<&| /page/info_section.mas, title=>'Crosses',  collapsible=>1, collapsed=>0 &>
+  
+  <&| /page/info_section.mas, title=>'Add new cross', collapsible=>1, collapsed=>1, is_subsection=>1 &>
+    
+    <& /breeders_toolbox/new_cross.mas, locations=>\@locations,projects=>$projects,roles=>\@roles  &>
+
+    </&>
+      
+    <&| /page/info_section.mas, title=>'Upload cross file', collapsible=>1, collapsed=>1, is_subsection=>1 &>
+      
+      <& /breeders_toolbox/upload_crosses.mas &>
+	
+      </&>
+      
+
+      <&| /page/info_section.mas, title=>'View all crosses', collapsible=>1, collapsed=>1, is_subsection=>1 &>
+      
+      <& /breeders_toolbox/display_crosses.mas, user_id => $user_id, crosses=> \@stockrelationships &>
+
+
+</&>
+</&>
+
+<&| /page/info_section.mas, title=>'Phenotypes' &>
+
+<&| /page/info_section.mas, title=>'Upload', is_subsection=>1, collapsible=>1, collapsed=>1 &>
+
+<& /breeders_toolbox/upload_phenotypes.mas, projects=>$projects, locations=>\@locations &>  
+
+</&>
+
+<a href="/search/phenotypes/stock">Phenotype search</a><br />
+
+</&>
+
+<&| /page/info_section.mas, title=>'Accessions & plots' &>
+
+<& /breeders_toolbox/accessions.mas, user_id=>$user_id &>
+
+
+</&>

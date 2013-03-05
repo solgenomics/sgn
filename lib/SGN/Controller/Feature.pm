@@ -51,7 +51,7 @@ sub choose_view :Private {
     }
     $c->stash->{xrefs} = \@xrefs;
 
-    if ($c->view('Mason')->component_exists("/feature/types/$type_name.mas")) {
+    if ($c->view('Mason')->component_exists("/feature/types/$type_name.mas")) { 
         $template         = "/feature/types/$type_name.mas";
         $c->stash->{type} = $type_name;
     }

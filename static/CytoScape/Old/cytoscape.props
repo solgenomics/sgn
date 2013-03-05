@@ -1,0 +1,26 @@
+#Cytoscape Property File
+secondaryViewThreshold=30000
+defaultSpeciesName=Saccharomyces cerevisiae
+defaultWebBrowser=
+viewThreshold=10000
+defaultVisualStyle=default
+canonicalizeNames=true
+render.coarseDetailThreshold=2000
+render.nodeBorderThreshold=200
+render.nodeLabelThreshold=100
+render.edgeArrowThreshold=300
+render.edgeLabelThreshold=120
+maximizeViewOnCreate=false
+proxy.server=
+proxy.server.port=
+proxy.server.type=
+cytoscape.version.number=@version@
+exportTextAsShape=true
+vizmapper.cntMapperUpperLimit=2000
+undo.limit=10
+defaultPluginDownloadUrl=http://cytoscape.org/plugins/plugins.xml
+logger.console=false
+cytoscape.debug=false
+nestedNetworkSnapshotSize=400
+moduleNetworkViewCreationThreshold=0
+

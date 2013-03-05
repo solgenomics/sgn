@@ -192,7 +192,7 @@ pages.
         -->
 	</li>
     
-    <li class="GenomesSequences"><a href="/genomes"><img src="/img/soliconmenu/GenomesSequences.png" alt="GenomesSequences" alt="Genomes and Sequences" title="Genomes and Sequences" /></a>
+    <li class="GenomesSequences"><a href="/genomes"><img src="/img/soliconmenu/GenomesSequences.png" alt="Genomes and Sequences" title="Genomes and Sequences" /></a>
       <ul>
             <div class="submenu GenomesSequencesSubMenu">
             	<li><a href="/organism/Solanum_lycopersicum/genome">Tomato Genome Project</a></li>
@@ -205,7 +205,7 @@ pages.
 
 	</li>
     
-    <li class="Pathways"><a href="http://solcyc.solgenomics.net/"><img src="/img/soliconmenu/Pathways.png" alt="Pathways" alt="Pathways" title="Click to access SolCyc" /></a>
+    <li class="Pathways"><a href="http://solcyc.solgenomics.net/"><img src="/img/soliconmenu/Pathways.png" alt="Pathways" title="Click to access SolCyc" /></a>
     	<!--
 		<ul>
             <div class="submenu PathwaysSubMenu">

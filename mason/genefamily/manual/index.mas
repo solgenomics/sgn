@@ -1,0 +1,100 @@
+<%doc>
+
+=head1 NAME
+
+/genefamily/manual/index.mas - a component for displaying manually curated gene families
+
+=head1 DESCRIPTION
+
+
+Parameters:
+
+=over 2
+
+=item hashref
+
+hashref with all the parameters needed for printing the curated gene family page
+
+=item locus_add_uri
+ uri for adding a locus to the gene family
+
+=back
+
+=head1 AUTHOR
+
+Naama Menda <nm249@cornell.edu>
+
+=cut
+
+
+</%doc>
+
+<%args>
+
+$hashref
+$locus_add_uri => '/ajax/locus/associate_locus'
+$members_div   => 'locusgroup_members'
+
+</%args>
+
+<%perl>
+
+my $genefamily = $hashref->{genefamily};
+my $locusgroup_id = $genefamily->get_locusgroup_id;
+my $this_page = "/genefamily/manual/$locusgroup_id/view/";
+
+my $curator = $hashref->{curator};
+my $submitter = $hashref->{submitter};
+my $sequencer = $hashref->{sequencer};
+
+#############
+my $add_locus_link = $curator || $submitter || $sequencer  ?
+  '<a href="javascript:Tools.toggleContent(\'associateLocusForm\', \'locus_network\');Tools.getOrganisms()">[Associate new locus]</a> ' :
+  '<span class="ghosted">[Associate new locus]</span>' ;
+############
+
+
+</%perl>
+
+
+<& /util/import_javascript.mas, classes => ["CXGN.Page.FormattingHelpers", "CXGN.Phenome.Locus", "CXGN.Phenome.Tools", "CXGN.Sunshine.NetworkBrowser"] &>
+
+
+<script language="javascript">
+</script>
+
+
+<& /page/page_title.mas, title=> "Gene family ". $genefamily->get_locusgroup_name &>
+
+<&| /page/info_section.mas, title=>"Gene family details"  &>
+
+
+  <& /page/form.mas,
+  object_type          => 'locusgroup',
+  object_id            => "$locusgroup_id",
+  form_name            => 'genefamily_form',
+  server_side_script   => '/jsforms/locusgroup_ajax_form.pl',
+  form_div_name        => 'genefamily_details',
+  js_object_name       => 'locusgroupForm',
+  page_url             => "/genefamily/$locusgroup_id/view/",
+  alternate_new_button => ''
+  &>
+
+</&>
+
+<&| /page/info_section.mas,
+    title       => "Gene family members",
+    subtitle    => "$add_locus_link",
+    id          => "locus_network",
+    collapsible => 1,
+    collapsed   => 0
+&>
+
+  <& /genefamily/manual/add_locus.mas, locusgroup_id=>$locusgroup_id &>
+    <& /genefamily/manual/members.mas , locusgroup_id => $locusgroup_id, members_div => $members_div  &>
+
+</&>
+
+<& /page/comments.mas, object_type=>'locusgroup', object_id=>$locusgroup_id, referer=>$this_page &>
+
+

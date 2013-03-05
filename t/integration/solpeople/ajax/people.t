@@ -25,7 +25,7 @@ my $person = $mech->create_test_user(
     );
 my $sp_person_id = $person->{id};
 
-my $term = 'Tes';
+my $term = 'tes';
 $mech->get_ok("/ajax/people/autocomplete?term=$term");
 
 

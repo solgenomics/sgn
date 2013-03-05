@@ -1,0 +1,1758 @@
+---
+# indicator is the field that is used to test for form submission
+indicator: submit
+# Start listing the form elements
+action: update
+elements:
+
+    - type: Block
+      tag: p
+      elements:
+        - type: Block
+          tag: table
+          elements:
+            - type: Block
+              tag: tr
+              elements:
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Select
+                      label: "Paste source sequence below (5'->3', string of ACGTNacgtn -- other letters treated as N -- numbers and blanks ignored). FASTA format ok. Please N-out undesirable sequence (vector, ALUs, LINEs, etc.) or use a Mispriming Library (repeat library):"
+                      name: PRIMER_MISPRIMING_LIBRARY
+                      attributes:
+                          title: "This selection indicates what mispriming library (if any) Primer3 should use to screen for interspersed repeats or for other sequence to avoid as a location for primers. The human and rodent libraries on the web page are adapted from Repbase (J. Jurka, A.F.A. Smit, C. Pethiyagoda, et al., 1995-1996) ftp://ftp.ncbi.nih.gov/repository/repbase). The human library is humrep.ref concatenated with simple.ref, translated to FASTA format. There are two rodent libraries. One is rodrep.ref translated to FASTA format, and the other is rodrep.ref concatenated with simple.ref, translated to FASTA format.
+
+The Drosophila library is the concatenation of two libraries from the Berkeley Drosophila Genome Project:
+
+    1. A library of transposable elements The transposable elements of the Drosophila melanogaster euchromatin - a genomics perspective J.S. Kaminker, C.M. Bergman, B. Kronmiller, J. Carlson, R. Svirskas, S. Patel, E. Frise, D.A. Wheeler, S.E. Lewis, G.M. Rubin, M. Ashburner and S.E. Celniker Genome Biology (2002) 3(12):research0084.1-0084.20, http://www.fruitfly.org/p_disrupt/datasets/ASHBURNER/D_mel_transposon_sequence_set.fasta
+
+    2. A library of repetitive DNA sequences http://www.fruitfly.org/sequence/sequence_db/na_re.dros. "
+                      options: 
+                        - [ '', 'NONE' ]
+                        - [ 'static/documents/primer3-libraries/human.txt', 'HUMAN' ]
+                        - [ 'static/documents/primer3-libraries/rodent_and_simple.txt', 'RODENT_AND_SIMPLE' ]
+                        - [ 'static/documents/primer3-libraries/rodent.txt', 'RODENT' ]
+                        - [ 'static/documents/primer3-libraries/drosophila.txt', 'DROSOPHILA' ]
+
+            - type: Block
+              tag: tr
+              elements:
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Textarea
+                      name: SEQUENCE_TEMPLATE
+                      cols: 100
+                      rows: 10
+     
+
+
+
+
+##### Pick left primer, internal oligo, right primer #####
+
+    - type: Block
+      tag: p
+      elements:
+        - type: Block
+          tag: table border="1"
+          elements:
+            - type: Block
+              tag: tr
+              elements:
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Checkbox
+                      name: PRIMER_PICK_LEFT_PRIMER
+                      label: "Pick left primer, or use left primer below:" 
+                      default: 1
+                - type: Block
+                  tag: td
+                  elements: 
+                    - type: Checkbox
+                      name: PRIMER_PICK_INTERNAL_OLIGO
+                      label: "Pick hybridization probe (internal oligo), or use oligo below:"
+                      default: 0
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Checkbox
+                      name: PRIMER_PICK_RIGHT_PRIMER
+                      label: "Pick right primer, or use right primer below (5' to 3' on opposite strand): "
+                      default: 1
+            - type: Block
+              tag: tr
+              elements:
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Text
+                      name: SEQUENCE_PRIMER
+                      attributes:
+                          size: 30                    
+                - type: Block
+                  tag: td
+                  elements: 
+                    - type: Text
+                      name: SEQUENCE_INTERNAL_OLIGO
+                      attributes:
+                          size: 30   
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Text
+                      name: SEQUENCE_PRIMER_REVCOMP
+                      attributes:
+                          size: 30   
+
+
+###### Sequence ID, Targets, Excluded Regions Table ######
+
+    - type: Block
+      tag: p
+      elements:
+        - type: Block
+          tag: table
+          elements:  
+            - type: Block
+              tag: tr
+              elements:
+                - type: Block
+                  tag: td style="color:blue;"
+                  elements:
+                    - type: Block
+                      content: "Sequence Id:"
+                      attributes:
+                          title: An identifier that is reproduced in the output to enable you to identify the chosen primers.
+                - type: Block
+                  tag: td
+                  elements: 
+                    - type: Text
+                      name: SEQUENCE_ID
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Block
+                      content: "A string to identify your output."
+            - type: Block
+              tag: tr
+              elements:
+                - type: Block
+                  tag: td style="color:blue;"
+                  elements:
+                    - type: Block
+                      content: "Targets:"
+                      attributes:
+                          title: "If one or more Targets is specified then a legal primer pair must flank at least one of them. A Target might be a simple sequence repeat site (for example a CA repeat) or a single-base-pair polymorphism. The value should be a space-separated list of
+
+start,length
+
+pairs where start is the index of the first base of a Target, and length is its length."
+                - type: Block
+                  tag: td
+                  elements: 
+                    - type: Text
+                      name: SEQUENCE_TARGET 
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Block
+                      content: "E.g. 50,2 requires primers to surround the 2 bases at positions 50 and 51."
+            - type: Block
+              tag: tr
+              elements:
+                - type: Block
+                  tag: td style="color:blue;"
+                  elements:
+                    - type: Block
+                      content: "Excluded Regions: "
+                      attributes:
+                          title: "Primer oligos may not overlap any region specified in this tag. The associated value must be a space-separated list of
+
+start,length
+
+pairs where start is the index of the first base of the excluded region, and length is its length. This tag is useful for tasks such as excluding regions of low sequence quality or for excluding regions containing repetitive elements such as ALUs or LINEs."
+                - type: Block
+                  tag: td
+                  elements: 
+                    - type: Text
+                      name: SEQUENCE_EXCLUDED_REGION 
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Block
+                      content: "E.g. 401,7 68,3 forbids selection of primers in the 7 bases starting at 401 and the 3 bases at 68."
+
+    - type: Block
+      tag: p
+      elements:
+        - type: Block
+          tag: table
+          elements:
+            - type: Block
+              tag: tr
+              elements:
+                - type: Block
+                  tag: td style="color:blue;"
+                  elements:
+                    - type: Block
+                      content: "Product Size Ranges:"
+                      attributes:
+                          title: "A list of product size ranges, for example
+
+150-250 100-300 301-400
+
+Primer3 first tries to pick primers in the first range. If that is not possible, it goes to the next range and tries again. It continues in this way until it has either picked all necessary primers or until there are no more ranges. For technical reasons this option makes much lighter computational demands than the Product Size option."
+                - type: Block
+                  tag: td
+                  elements: 
+                    - type: Text
+                      name: PRIMER_PRODUCT_SIZE_RANGE
+                      default: 100-300
+                      attributes:
+                        size: 70
+
+
+
+##### Number to Return, Max 3' Stability, ... #####
+
+    - type: Block
+      tag: p
+      elements:
+        - type: Block
+          tag: table
+          elements:
+            - type: Block
+              tag: tr
+              elements:
+                - type: Block
+                  tag: td style="color:blue;"
+                  elements:
+                    - type: Block
+                      content: "Number to Return (max 10):"
+                      attributes:
+                          title: "The maximum number of primer pairs to return. Primer pairs returned are sorted by their 'quality', in other words by the value of the objective function (where a lower number indicates a better primer pair). Caution: setting this parameter to a large value will increase running time."
+                - type: Block
+                  tag: td
+                  elements: 
+                    - type: Text
+                      name: PRIMER_NUM_RETURN
+                      default: 5
+                - type: Block
+                  tag: td style="color:blue;"
+                  elements:
+                    - type: Block
+                      content: "Max 3' Stability:"
+                      attributes:
+                          title: "The maximum stability for the last five 3' bases of a left or right primer. Bigger numbers mean more stable 3' ends. The value is the maximum delta G (kcal/mol) for duplex disruption for the five 3' bases as calculated using the Nearest-Neighbor parameter values specified by the option of 'Table of thermodynamic parameters'. For example if the table of thermodynamic parameters suggested by SantaLucia 1998, DOI:10.1073/pnas.95.4.1460 is used the deltaG values for the most stable and for the most labile 5mer duplex are 6.86 kcal/mol (GCGCG) and 0.86 kcal/mol (TATAT) respectively. If the table of thermodynamic parameters suggested by Breslauer et al. 1986, 10.1073/pnas.83.11.3746 is used the deltaG values for the most stable and for the most labile 5mer are 13.4 kcal/mol (GCGCG) and 4.6 kcal/mol (TATAC) respectively."
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Text
+                      name: PRIMER_MAX_END_STABILITY
+                      default: 9.0
+            - type: Block
+              tag: tr
+              elements:
+                - type: Block
+                  tag: td style="color:blue;"
+                  elements:
+                    - type: Block
+                      content: "Max Repeat Mispriming:"
+                      attributes:
+                          title: "The maximum allowed weighted similarity with any sequence in Mispriming Library. Default is 12."
+                - type: Block
+                  tag: td
+                  elements: 
+                    - type: Text
+                      name: PRIMER_MAX_LIBRARY_MISPRIMING
+                      default: 12.00
+                - type: Block
+                  tag: td style="color:blue;"
+                  elements:
+                    - type: Block
+                      content: "Pair Max Repeat Mispriming:"
+                      attributes:
+                          title: "The maximum allowed sum of similarities of a primer pair (one similarity for each primer) with any single sequence in Mispriming Library. Library sequence weights are not used in computing the sum of similarities."
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Text
+                      name: PRIMER_PAIR_MAX_LIBRARY_MISPRIMING
+                      default: 24.00
+            - type: Block
+              tag: tr
+              elements:
+                - type: Block
+                  tag: td style="color:blue;"
+                  elements:
+                    - type: Block
+                      content: "Max Template Mispriming: " 
+                      attributes:
+                          title: "The maximum allowed similarity to ectopic sites in the sequence from which you are designing the primers. The scoring system is the same as used for Max Mispriming, except that an ambiguity code is never treated as a consensus." 
+                - type: Block
+                  tag: td
+                  elements: 
+                    - type: Text
+                      name: PRIMER_MAX_TEMPLATE_MISPRIMING
+                      default: 12.00
+                - type: Block
+                  tag: td style="color:blue;"
+                  elements:
+                    - type: Block
+                      content: "Pair Max Template Mispriming: "
+                      attributes:
+                          title: "The maximum allowed summed similarity of both primers to ectopic sites in the sequence from which you are designing the primers. The scoring system is the same as used for Max Mispriming, except that an ambiguity code is never treated as a consensus."
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Text
+                      name: PRIMER_PAIR_MAX_TEMPLATE_MISPRIMING
+                      default: 24.00
+
+    - type: Submit
+      name: submit
+      value: Pick Primers
+
+    - type: Block
+      tag: h2
+      elements:
+        - type: Block
+          content: "General Primer Picking Conditions"
+
+    - type: Block
+      tag: p
+      elements:
+        - type: Block
+          tag: table
+          elements:
+            - type: Block
+              tag: tr
+              elements:
+                - type: Block
+                  tag: td style="color:blue;"
+                  elements:
+                    - type: Block
+                      content: "Primer Size"
+                      attributes:
+                          title: "Minimum, Optimum, and Maximum lengths (in bases) of a primer oligo. Primer3 will not pick primers shorter than Min or longer than Max, and with default arguments will attempt to pick primers close with size close to Opt. Min cannot be smaller than 1. Max cannot be larger than 36. (This limit is governed by maximum oligo size for which melting-temperature calculations are valid.) Min cannot be greater than Max."
+                - type: Block
+                  tag: td
+                  elements: 
+                    - type: Text
+                      name: PRIMER_MIN_SIZE
+                      label: Min
+                      default: 18
+                      attributes:
+                          size: 10
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Text
+                      name: PRIMER_OPT_SIZE
+                      label: Opt
+                      default: 20
+                      attributes:
+                          size: 10
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Text
+                      name: PRIMER_MAX_SIZE
+                      label: Max
+                      default: 27
+                      attributes:
+                          size: 10
+            - type: Block
+              tag: tr
+              elements:
+                - type: Block
+                  tag: td style="color:blue;"
+                  elements:
+                    - type: Block
+                      content: "Primer Tm"
+                      attributes:
+                          title: "Minimum, Optimum, and Maximum melting temperatures (Celsius) for a primer oligo. Primer3 will not pick oligos with temperatures smaller than Min or larger than Max, and with default conditions will try to pick primers with melting temperatures close to Opt.
+
+By default Primer3 uses the oligo melting temperature formula and the table of thermodynamic parameters given in Breslauer et al. 1986, DOI:10.1073/pnas.83.11.3746 For more information see caption Table of thermodynamic parameters"
+                - type: Block
+                  tag: td
+                  elements: 
+                    - type: Text
+                      name: PRIMER_MIN_TM
+                      label: Min
+                      default: 57.0
+                      attributes:
+                          size: 10
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Text
+                      name: PRIMER_OPT_TM
+                      label: Opt
+                      default: 60.0
+                      attributes:
+                          size: 10
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Text
+                      name: PRIMER_MAX_TM
+                      label: Max
+                      default: 63.0
+                      attributes:
+                          size: 10
+                - type: Block
+                  tag: td style="color:blue;"
+                  elements:
+                    - type: Block
+                      content: "Max Tm Difference"
+                      attributes:
+                          title: "Maximum acceptable (unsigned) difference between the melting temperatures of the left and right primers."
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Text
+                      name: PRIMER_PAIR_MAX_DIFF_TM
+                      default: 100.0
+                      attributes:
+                          size: 10
+            - type: Block
+              tag: tr
+              elements:
+                - type: Block
+                  tag: td style="color:blue;"
+                  elements:
+                    - type: Block
+                      content: "Product Tm"
+                      attributes:
+                          title: "The minimum, optimum, and maximum melting temperature of the amplicon. Primer3 will not pick a product with melting temperature less than min or greater than max. If Opt is supplied and the Penalty Weights for Product Size are non-0 Primer3 will attempt to pick an amplicon with melting temperature close to Opt.
+
+The maximum allowed melting temperature of the amplicon. Primer3 calculates product Tm calculated using the formula from Bolton and McCarthy, PNAS 84:1390 (1962) as presented in Sambrook, Fritsch and Maniatis, Molecular Cloning, p 11.46 (1989, CSHL Press).
+
+    Tm = 81.5 + 16.6(log10([Na+])) + .41*(%GC) - 600/length, 
+
+where [Na+] is the molar sodium concentration, (%GC) is the percent of Gs and Cs in the sequence, and length is the length of the sequence.
+
+A similar formula is used by the prime primer selection program in GCG (http://www.accelrys.com/products/gcg/), which instead uses 675.0 / length in the last term (after F. Baldino, Jr, M.-F. Chesselet, and M.E. Lewis, Methods in Enzymology 168:766 (1989) eqn (1) on page 766 without the mismatch and formamide terms). The formulas here and in Baldino et al. assume Na+ rather than K+. According to J.G. Wetmur, Critical Reviews in BioChem. and Mol. Bio. 26:227 (1991) 50 mM K+ should be equivalent in these formulae to .2 M Na+. Primer3 uses the same salt concentration value for calculating both the primer melting temperature and the oligo melting temperature. If you are planning to use the PCR product for hybridization later this behavior will not give you the Tm under hybridization conditions."
+                - type: Block
+                  tag: td
+                  elements: 
+                    - type: Text
+                      name: PRIMER_PRODUCT_MIN_TM
+                      label: Min
+                      attributes:
+                          size: 10 
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Text
+                      name: PRIMER_PRODUCT_OPT_TM
+                      label: Opt
+                      attributes:
+                          size: 10
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Text
+                      name: PRIMER_PRODUCT_MAX_TM
+                      label: Max
+                      attributes:
+                          size: 10
+                - type: Block
+                  tag: td style="color:blue;"
+                  elements:
+                    - type: Block
+                      content: "Table of Thermodynamic Parameters"
+                      attributes:
+                          title: "Option for the table of Nearest-Neighbor thermodynamic parameters and for the method of melting temperature calculation. Two different tables of thermodynamic parameters are available:
+
+    Breslauer et al. 1986, DOI:10.1073/pnas.83.11.3746 In that case the formula for melting temperature calculation suggested by Rychlik et al. 1990 is used (this is used until Primer3 version 1.0.1). This is the default value of Primer3 (for backward compatibility).
+    SantaLucia 1998, DOI:10.1073/pnas.95.4.1460 This is the recommended value.
+
+For specifying the salt correction method for melting temperature calculation see Salt correction formula."
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Select
+                      name: PRIMER_TM_FORMULA
+                      options:
+                        - ['0', 'Breslauer et al. 1986' ]
+                        - ['1', 'SantaLucia' ]
+            - type: Block
+              tag: tr
+              elements:
+                - type: Block
+                  tag: td style="color:blue;"
+                  elements:
+                    - type: Block
+                      content: "Primer GC%"
+                      attributes:
+                          title: "Minimum, Optimum, and Maximum percentage of Gs and Cs in any primer or oligo."
+                - type: Block
+                  tag: td
+                  elements: 
+                    - type: Text
+                      name: PRIMER_MIN_GC
+                      label: Min
+                      default: 20.0
+                      attributes:
+                          size: 10
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Text
+                      name: PRIMER_OPT_GC_PERCENT
+                      label: Opt
+                      attributes:
+                          size: 10
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Text
+                      name: PRIMER_MAX_GC
+                      label: Max
+                      default: 80.0
+                      attributes:
+                          size: 10
+
+##### Max Self Complementarity, Max #Ns's, ... #####
+
+    - type: Block
+      tag: p
+      elements:
+        - type: Block
+          tag: table
+          elements:
+            - type: Block
+              tag: tr
+              elements:
+                - type: Block
+                  tag: td style="color:blue;"
+                  elements:
+                    - type: Block
+                      content: "Max Self Complementarity:"
+                      attributes:
+                          title: "The maximum allowable local alignment score when testing a single primer for (local) self-complementarity and the maximum allowable local alignment score when testing for complementarity between left and right primers. Local self-complementarity is taken to predict the tendency of primers to anneal to each other without necessarily causing self-priming in the PCR. The scoring system gives 1.00 for complementary bases, -0.25 for a match of any base (or N) with an N, -1.00 for a mismatch, and -2.00 for a gap. Only single-base-pair gaps are allowed. Scores are non-negative, and a score of 0.00 indicates that there is no reasonable local alignment between two oligos. "
+                - type: Block
+                  tag: td
+                  elements: 
+                    - type: Text
+                      name: PRIMER_MAX_SELF_ANY
+                      default: 8.00
+                - type: Block
+                  tag: td style="color:blue;"
+                  elements:
+                    - type: Block
+                      content: Max 3' Self Complementarity
+                      attributes:
+                          title: "The maximum allowable 3'-anchored global alignment score when testing a single primer for self-complementarity, and the maximum allowable 3'-anchored global alignment score when testing for complementarity between left and right primers. The 3'-anchored global alignment score is taken to predict the likelihood of PCR-priming primer-dimers."
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Text
+                      name: PRIMER_MAX_SELF_END
+                      default: 3.00
+            - type: Block
+              tag: tr
+              elements:
+                - type: Block
+                  tag: td style="color:blue;"
+                  elements:
+                    - type: Block
+                      content: "Max #N's:"
+                      attributes:
+                          title: "Maximum number of unknown bases (N) allowable in any primer."
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Text
+                      name: PRIMER_MAX_NS_ACCEPTED
+                      default: 0
+                - type: Block
+                  tag: td style="color:blue;"
+                  elements:
+                    - type: Block
+                      content: "Max Poly-X:"
+                      attributes:
+                          title: "The maximum allowable length of a mononucleotide repeat, for example AAAAAA."
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Text
+                      name: PRIMER_MAX_POLY_X
+                      default: 5
+            - type: Block
+              tag: tr
+              elements:
+                - type: Block
+                  tag: td style="color:blue;"
+                  elements:
+                    - type: Block
+                      content: "Inside Target Penalty:"
+                      attributes:
+                          title: "Non-default values valid only for sequences with 0 or 1 target regions. If the primer is part of a pair that spans a target and overlaps the target, then multiply this value times the number of nucleotide positions by which the primer overlaps the (unique) target to get the 'position penalty'. The effect of this parameter is to allow Primer3 to include overlap with the target as a term in the objective function."
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Text
+                      name: PRIMER_INSIDE_PENALTY
+                - type: Block
+                  tag: td style="color:blue;"
+                  elements:
+                    - type: Block
+                      content: "Outside Target Penalty:"
+                      attributes:
+                          title: "Non-default values valid only for sequences with 0 or 1 target regions. If the primer is part of a pair that spans a target and does not overlap the target, then multiply this value times the number of nucleotide positions from the 3' end to the (unique) target to get the 'position penalty'. The effect of this parameter is to allow Primer3 to include nearness to the target as a term in the objective function."
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Text
+                      name: PRIMER_OUTSIDE_PENALTY
+                      default: 0
+            - type: Block
+              tag: tr
+              elements:
+                - type: Block
+                  tag: td style="color:blue;"
+                  elements:
+                    - type: Block
+                      content: "First Base Index:"
+                      attributes:
+                          title: "The index of the first base in the input sequence. For input and output using 1-based indexing (such as that used in GenBank and to which many users are accustomed) set this parameter to 1. For input and output using 0-based indexing set this parameter to 0. (This parameter also affects the indexes in the contents of the files produced when the primer file flag is set.) In the WWW interface this parameter defaults to 1."
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Text
+                      name: PRIMER_FIRST_BASE_INDEX
+                      default: 1
+                - type: Block
+                  tag: td style="color:blue;"
+                  elements:
+                    - type: Block
+                      content: "GC Clamp:"
+                      attributes:
+                          title: "Require the specified number of consecutive Gs and Cs at the 3' end of both the left and right primer. (This parameter has no effect on the hybridization oligo if one is requested.)"
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Text
+                      name: PRIMER_GC_CLAMP
+                      default: 0
+            - type: Block
+              tag: tr
+              elements:
+                - type: Block
+                  tag: td style="color:blue;"
+                  elements:
+                    - type: Block
+                      content: "Concentration of monovalent cations:"
+                      attributes:
+                          title: "The millimolar concentration of salt (usually KCl) in the PCR. Primer3 uses this argument to calculate oligo melting temperatures."
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Text
+                      name: PRIMER_SALT_MONOVALENT
+                      default: 50.0
+                - type: Block
+                  tag: td style="color:blue;"
+                  elements:
+                    - type: Block
+                      content: "Salt correction formula:"
+                      attributes:
+                          title: "Option for specifying the salt correction formula for the melting temperature calculation. There are three different options available: (1) Schildkraut and Lifson 1965, DOI:10.1002/bip.360030207 (this is used until the version 1.0.1 of Primer3).The default value of Primer3 version 1.1.0 (for backward compatibility) (2) SantaLucia 1998, DOI:10.1073/pnas.95.4.1460 This is the recommended value. (3) Owczarzy et al. 2004, DOI:10.1021/bi034621r"
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Select
+                      name: PRIMER_SALT_CORRECTIONS
+                      options:
+                        - ['0', 'Schildkraut and Lifson 1965' ]
+                        - ['1', 'SantaLucia 1998' ]
+                        - ['2', 'Owczarzy et. 2004' ]
+            - type: Block
+              tag: tr
+              elements:
+                - type: Block
+                  tag: td style="color:blue;"
+                  elements:
+                    - type: Block
+                      content: "Concentration of divalent cations:"
+                      attributes:
+                          title: "The millimolar concentration of divalent salt cations (usually MgCl2+ in the PCR). Primer3 converts concentration of divalent cations to concentration of monovalent cations using formula suggested in the paper Ahsen et al., 2001.
+According to the formula concentration of desoxynucleotide triphosphate [dNTP] must be smaller than concentration of divalent cations. The concentration of dNTPs is included to the formula beacause of some magnesium is bound by the dNTP. Attained concentration of monovalent cations is used to calculate oligo/primer melting temperature. See Concentration of dNTPs to specify the concentration of dNTPs."
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Text
+                      name: PRIMER_SALT_DIVALENT
+                      default: 0
+                - type: Block
+                  tag: td style="color:blue;"
+                  elements:
+                    - type: Block
+                      content: "Concentration of dNTPs:"
+                      attributes:
+                          title: "The millimolar concentration of deoxyribonucleotide triphosphate. This argument is considered only if Concentration of divalent cations is specified."
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Text
+                      name: PRIMER_DNTP_CONC
+                      default: 0.0
+
+    - type: Block
+      tag: table
+      elements:    
+        - type: Block
+          tag: tr
+          elements:
+            - type: Block
+              tag: td style="color:blue;"
+              elements:
+                - type: Block
+                  content: "Annealing Oligo Concentration:"
+                  attributes: 
+                      title: "The nanomolar concentration of annealing oligos in the PCR. Primer3 uses this argument to calculate oligo melting temperatures. The default (50nM) works well with the standard protocol used at the Whitehead/MIT Center for Genome Research--0.5 microliters of 20 micromolar concentration for each primer oligo in a 20 microliter reaction with 10 nanograms template, 0.025 units/microliter Taq polymerase in 0.1 mM each dNTP, 1.5mM MgCl2, 50mM KCl, 10mM Tris-HCL (pH 9.3) using 35 cycles with an annealing temperature of 56 degrees Celsius. This parameter corresponds to 'c' in Rychlik, Spencer and Rhoads' equation (ii) (Nucleic Acids Research, vol 18, num 21) where a suitable value (for a lower initial concentration of template) is 'empirically determined'. The value of this parameter is less than the actual concentration of oligos in the reaction because it is the concentration of annealing oligos, which in turn depends on the amount of template (including PCR product) in a given cycle. This concentration increases a great deal during a PCR; fortunately PCR seems quite robust for a variety of oligo melting temperatures."
+            - type: Block
+              tag: td
+              elements:
+                - type: Text
+                  name: PRIMER_DNA_CONC
+                  default: 50.0
+            - type: Block
+              tag: td
+              elements:
+                - type: Block
+                  content: "(Not the concentration of oligos in the reaction mix but of those annealing to template.)"
+
+    - type: Block
+      tag: p
+      elements:
+        - type: Block
+          tag: table
+          elements:
+            - type: Block
+              tag: tr
+              elements:
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Checkbox
+                      name: PRIMER_LIBERAL_BASE
+                      label: Liberal Base
+                      default: 1
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Checkbox
+                      name: PRIMER_LIB_AMBIGUITY_CODES_CONSENSUS
+                      label: Do not treat ambiguity codes in libraries as consensus
+                      default: 1
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Checkbox
+                      name: PRIMER_LOWERCASE_MASKING
+                      label: Lowercase masking
+                      default: 0
+
+    - type: Submit
+      name: submit
+      value: Pick Primers
+
+
+    - type: Block
+      tag: h2
+      elements:
+        - type: Block
+          content: "Other Per-Sequence Inputs"
+
+
+    - type: Block
+      tag: p
+      elements:
+       - type: Block
+         tag: table
+         elements:
+           - type: Block
+             tag: tr
+             elements:
+               - type: Block
+                 tag: td style="color:blue;"
+                 elements:
+                   - type: Block
+                     content: "Included Region:"
+                     attributes:
+                         title: "A sub-region of the given sequence in which to pick primers. For example, often the first dozen or so bases of a sequence are vector, and should be excluded from consideration. The value for this parameter has the form
+start,length
+where start is the index of the first base to consider, and length is the number of subsequent bases in the primer-picking region."
+               - type: Block
+                 tag: td
+                 elements: 
+                   - type: Text
+                     name: SEQUENCE_INCLUDED_REGION
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Block
+                     content: "E.g. 20,400: only pick primers in the 400 base region starting at position 20."
+           - type: Block
+             tag: tr
+             elements:
+               - type: Block
+                 tag: td style="color:blue;"
+                 elements:
+                   - type: Block
+                     content: "Start Codon Position:"
+                     attributes:
+                         title: "This parameter should be considered EXPERIMENTAL at this point. Please check the output carefully; some erroneous inputs might cause an error in Primer3. Index of the first base of a start codon. This parameter allows Primer3 to select primer pairs to create in-frame amplicons e.g. to create a template for a fusion protein. Primer3 will attempt to select an in-frame left primer, ideally starting at or to the left of the start codon, or to the right if necessary. Negative values of this parameter are legal if the actual start codon is to the left of available sequence. If this parameter is non-negative Primer3 signals an error if the codon at the position specified by this parameter is not an ATG. A value less than or equal to -10^6 indicates that Primer3 should ignore this parameter. Primer3 selects the position of the right primer by scanning right from the left primer for a stop codon. Ideally the right primer will end at or after the stop codon."
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Text
+                     name: SEQUENCE_START_CODON_POSITION
+                     default: -1000000
+    - type: Block
+      tag: h3 style="color:blue;"
+      elements:
+        - type: Block
+          content: "Sequence Quality"
+          attributes:
+              title: "A list of space separated integers. There must be exactly one integer for each base in the Source Sequence if this argument is non-empty. High numbers indicate high confidence in the base call at that position and low numbers indicate low confidence in the base call at that position."
+    - type: Textarea
+      name: SEQUENCE_QUALITY
+      cols: 100
+      rows: 10
+    - type: Block
+      tag: table
+      elements:
+        - type: Block
+          tag: tr
+          elements:
+            - type: Block
+              tag: td style="color:blue;"
+              elements:
+                - type: Block
+                  content: "Min Sequence Quality:"
+                  attributes:
+                      title: "The minimum sequence quality (as specified by Sequence Quality) allowed within a primer."
+            - type: Block
+              tag: td
+              elements:
+                - type: Text
+                  name: PRIMER_MIN_QUALITY
+                  default: 0
+            - type: Block
+              tag: td style="color:blue;"
+              elements:
+                - type: Block
+                  content: "Min End Sequence Quality:"
+                  attributes:
+                      title: "The minimum sequence quality (as specified by Sequence Quality) allowed within the 3' pentamer of a primer."
+            - type: Block
+              tag: td
+              elements:
+                - type: Text
+                  name: PRIMER_MIN_END_QUALITY
+                  default: 0
+        - type: Block
+          tag: tr
+          elements:
+            - type: Block
+              tag: td style="color:blue;"
+              elements:
+                - type: Block
+                  content: "Sequence Quality Range Min:"
+                  attributes:
+                      title: "The minimum legal sequence quality (used for interpreting Min Sequence Quality and Min 3' Sequence Quality)."
+            - type: Block
+              tag: td
+              elements:
+                - type: Text
+                  name: PRIMER_QUALITY_RANGE_MIN
+                  default: 0
+            - type: Block
+              tag: td style="color:blue;"
+              elements:
+                - type: Block
+                  content: "Sequence Quality Range Max:"
+                  attributes:
+                      title: "The maximum legal sequence quality (used for interpreting Min Sequence Quality and Min 3' Sequence Quality)."
+            - type: Block
+              tag: td
+              elements:
+                - type: Text
+                  name: PRIMER_QUALITY_RANGE_MAX
+                  default: 100
+
+    - type: Block
+      tag: HR
+      elements:
+        - type: Block 
+
+    - type: Block
+      tag: h1 style="color:blue;"
+      elements:
+        - type: Block
+          content: "Penalties"
+          attributes:
+              title: "This section describes 'penalty weights', which allow the user to modify the criteria that Primer3 uses to select the 'best' primers. There are two classes of weights: 
+
+(1) For some parameters there is a 'Lt' (less than) and a 'Gt' (greater than) weight. These are the weights that Primer3 uses when the value is less or greater than (respectively) the specified optimum. 
+
+(2) For the remaining parameters the optimum is understood and the actual value can only vary in one direction from the optimum.
+
+The following weights are treated specially: Position Penalty Weight, Primer Weight, Hyb Oligo Weight.
+
+The following govern the weight given to various parameters of primer pairs (or primer pairs plus hyb oligo): Tm Difference, Primer-Primer Complementarity, Primer-Primer 3' Complementarity, Primer Pair Mispriming Similarity."
+
+    - type: Block
+      tag: h2
+      elements:
+        - type: Block
+          content: "Objective Function Penalty Weights for Primers"
+
+    - type: Block
+      tag: p
+      elements:
+       - type: Block
+         tag: table
+         elements:
+           - type: Block
+             tag: tr
+             elements:
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Block
+                     content: "Tm"
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Text
+                     name: PRIMER_WT_TM_LT
+                     default: 1.0
+                     label: "LT:" 
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Text
+                     name: PRIMER_WT_TM_GT
+                     default: 1.0
+                     label: "GT:"
+           - type: Block
+             tag: tr
+             elements:
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Block
+                     content: "Size"
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Text
+                     name: PRIMER_WT_SIZE_LT
+                     default: 1.0
+                     label: "LT:"
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Text
+                     name: PRIMER_WT_SIZE_GT
+                     default: 1.0
+                     label: "GT:"
+           - type: Block
+             tag: tr
+             elements:
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Block
+                     content: "GC%"
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Text
+                     name: PRIMER_WT_GC_PERCENT_LT
+                     default: 0.0
+                     label: "LT:"
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Text
+                     name: PRIMER_WT_GC_PERCENT_GT
+                     default: 0.0
+                     label: "GT:"
+
+    - type: Block
+      tag: p
+      elements:
+       - type: Block
+         tag: table
+         elements:
+           - type: Block
+             tag: tr
+             elements:
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Block
+                     content: "Self Complementarity:"
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Text
+                     name: PRIMER_WT_SELF_ANY
+                     default: 0.0
+           - type: Block
+             tag: tr
+             elements:
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Block
+                     content: "3' Self Complementarity:"
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Text
+                     name: PRIMER_WT_SELF_END
+                     default: 0.0
+           - type: Block
+             tag: tr
+             elements:
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Block
+                     content: "#N's:"
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Text
+                     name: PRIMER_WT_NUM_NS
+                     default: 0.0
+           - type: Block
+             tag: tr
+             elements:
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Block
+                     content: "Mispriming:"
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Text
+                     name: PRIMER_WT_LIBRARY_MISPRIMING
+                     default: 0.0
+           - type: Block
+             tag: tr
+             elements:
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Block
+                     content: "Sequence Quality:"
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Text
+                     name: PRIMER_WT_SEQ_QUAL
+                     default: 0.0
+           - type: Block
+             tag: tr
+             elements:
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Block
+                     content: "End Sequence Quality:"
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Text
+                     name: PRIMER_WT_END_QUAL
+                     default: 0.0
+           - type: Block
+             tag: tr
+             elements:
+               - type: Block
+                 tag: td style="color:blue;"
+                 elements:
+                   - type: Block
+                     content: "Position Penalty:"
+                     attributes:
+                         title: "Determines the overall weight of the position penalty in calculating the penalty for a primer." 
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Text
+                     name: PRIMER_WT_POS_PENALTY
+                     default: 0.0
+           - type: Block
+             tag: tr
+             elements:
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Block
+                     content: "End Stability:"
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Text
+                     name: PRIMER_WT_END_STABILITY
+                     default: 0.0
+           - type: Block
+             tag: tr
+             elements:
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Block
+                     content: "Template Mispriming:"
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Text
+                     name: PRIMER_WT_TEMPLATE_MISPRIMING
+                     default: 0.0
+
+##### Objective Function Penalty Weights for Primer Pairs #####
+
+    - type: Block
+      tag: h2
+      elements:
+        - type: Block
+          content: "Objective Function Penalty Weights for Primer Pairs"
+
+
+    - type: Block
+      tag: p
+      elements:
+       - type: Block
+         tag: table
+         elements:
+           - type: Block
+             tag: tr
+             elements:
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Block
+                     content: "Product Size"
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Text
+                     name: PRIMER_PAIR_WT_PRODUCT_SIZE_LT
+                     default: 0.0
+                     label: "LT:" 
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Text
+                     name: PRIMER_PAIR_WT_PRODUCT_SIZE_GT
+                     default: 0.0
+                     label: "GT:"
+           - type: Block
+             tag: tr
+             elements:
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Block
+                     content: "Product Tm"
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Text
+                     name: PRIMER_PAIR_WT_PRODUCT_TM_LT
+                     default: 0.0
+                     label: "LT:"
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Text
+                     name: PRIMER_PAIR_WT_PRODUCT_TM_GT
+                     default: 0.0
+                     label: "GT:"
+
+    - type: Block
+      tag: p
+      elements:
+       - type: Block
+         tag: table
+         elements:
+           - type: Block
+             tag: tr
+             elements:
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Block
+                     content: "Tm Difference:"
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Text
+                     name: PRIMER_PAIR_WT_DIFF_TM
+                     default: 0.0
+           - type: Block
+             tag: tr
+             elements:
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Block
+                     content: "Any Complementarity:"
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Text
+                     name: PRIMER_PAIR_WT_COMPL_ANY
+                     default: 0.0
+           - type: Block
+             tag: tr
+             elements:
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Block
+                     content: "3' Complementarity:"
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Text
+                     name: PRIMER_PAIR_WT_COMPL_END
+                     default: 0.0
+           - type: Block
+             tag: tr
+             elements:
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Block
+                     content: "Pair Mispriming:"
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Text
+                     name: PRIMER_PAIR_WT_LIBRARY_MISPRIMING
+                     default: 0.0
+           - type: Block
+             tag: tr
+             elements:
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Block
+                     content: "Primer Penalty Weight:"
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Text
+                     name: PRIMER_PAIR_WT_PR_PENALTY
+                     default: 1.0
+           - type: Block
+             tag: tr
+             elements:
+               - type: Block
+                 tag: td style="color:blue;"
+                 elements:
+                   - type: Block
+                     content: "Hyb Oligo Penalty Weight:"
+                     attributes:
+                         title: "Determines the weight of the hyb oligo penalty in calculating the penalty of a primer pair plus hyb oligo."
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Text
+                     name: PRIMER_PAIR_WT_IO_PENALTY
+                     default: 0.0
+           - type: Block
+             tag: tr
+             elements:
+               - type: Block
+                 tag: td style="color:blue;"
+                 elements:
+                   - type: Block
+                     content: "Primer Pair Template Mispriming Weight:"
+                     attributes:
+                         title: Determines the weight of the 2 primer penalties in calculating the primer pair penalty.
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Text
+                     name: PRIMER_PAIR_WT_TEMPLATE_MISPRIMING
+                     default: 0.0
+
+
+
+######### Hyp Oligo Per-Sequence Inputs
+
+    - type: Block
+      tag: HR
+      elements:
+        - type: Block    
+
+    - type: Block
+      tag: h1 style="color:blue;"
+      elements:
+        - type: Block
+          content: "Hyb Oligos (Internal Oligos)"
+          attributes:
+              title: "Parameters governing choice of internal oligos are analogous to the parameters governing choice of primer pairs. The exception is Max 3' Complementarity which is meaningless when applied to internal oligos used for hybridization-based detection, since primer-dimer will not occur. We recommend that Max 3' Complementarity be set at least as high as Max Complementarity." 
+
+    - type: Block
+      tag: h2
+      elements:
+        - type: Block
+          content: "Hyb Oligo (Internal Oligo) Per-Sequence Inputs"
+
+    - type: Block
+      tag: p
+      elements:
+       - type: Block
+         tag: table
+         elements:
+           - type: Block
+             tag: tr
+             elements:
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Block
+                     content: "Hyb Oligo Excluded Region:"
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Text
+                     name: SEQUENCE_INTERNAL_EXCLUDED_REGION
+
+
+######## Hyb Oligo Gen Conditions
+
+    - type: Block
+      tag: h2
+      elements:
+        - type: Block
+          content: "Hyb Oligo (Internal Oligo) General Conditions"
+
+    - type: Block
+      tag: p
+      elements:
+       - type: Block
+         tag: table
+         elements:
+           - type: Block
+             tag: tr
+             elements:
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Block
+                     content: "Hyb Oligo Size"
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Text
+                     name: PRIMER_INTERNAL_MIN_SIZE
+                     default: 18
+                     label: "Min:" 
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Text
+                     name: PRIMER_INTERNAL_OPT_SIZE
+                     default: 20
+                     label: "Opt:"
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Text
+                     name: PRIMER_INTERNAL_MAX_SIZE
+                     default: 27
+                     label: "Max:"
+           - type: Block
+             tag: tr
+             elements:
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Block
+                     content: "Hyb Oligo Tm"
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Text
+                     name: PRIMER_INTERNAL_MIN_TM
+                     default: 57.0
+                     label: "Min:"
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Text
+                     name: PRIMER_INTERNAL_OPT_TM
+                     default: 60.0
+                     label: "Opt:"
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Text
+                     name: PRIMER_INTERNAL_MAX_TM
+                     default: 63.0
+                     label: "Max:"
+           - type: Block
+             tag: tr
+             elements:
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Block
+                     content: "Hyb Oligo GC%"
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Text
+                     name: PRIMER_INTERNAL_MIN_GC
+                     default: 20.0
+                     label: "Min:"
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Text
+                     name: PRIMER_INTERNAL_OPT_GC_PERCENT
+                     label: "Opt:"
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Text
+                     name: PRIMER_INTERNAL_MAX_GC
+                     default: 80.0
+                     label: "Max:"
+
+
+
+
+    - type: Block
+      tag: p
+      elements:
+        - type: Block
+          tag: table
+          elements:
+            - type: Block
+              tag: tr
+              elements:
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Block
+                      content: "Hyb Oligo Self Complementarity:"
+                - type: Block
+                  tag: td
+                  elements: 
+                    - type: Text
+                      name: PRIMER_INTERNAL_MAX_SELF_ANY
+                      default: 12.00
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Block
+                      content: "Hyb Oligo Max 3' Self Complementarity:"
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Text
+                      name: PRIMER_INTERNAL_MAX_SELF_END
+                      default: 12.00
+            - type: Block
+              tag: tr
+              elements:
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Block
+                      content: "Max #N's:"
+                      attributes:
+                          title: "Maximum number of unknown bases (N) allowable in any primer."
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Text
+                      name: PRIMER_INTERNAL_MAX_NS_ACCEPTED
+                      default: 0
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Block
+                      content: "Hyb Oligo Max Poly-X:"
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Text
+                      name: PRIMER_INTERNAL_MAX_POLY_X
+                      default: 5
+            - type: Block
+              tag: tr
+              elements:
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Block
+                      content: "Hyb Oligo Mishyb Library:"
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Select
+                      name: PRIMER_INTERNAL_MISHYB_LIBRARY
+                      options: 
+                        - [ '', 'NONE' ]
+                        - [ 'static/documents/primer3-libraries/human.txt', 'HUMAN' ]
+                        - [ 'static/documents/primer3-libraries/rodent_and_simple.txt', 'RODENT_AND_SIMPLE' ]
+                        - [ 'static/documents/primer3-libraries/rodent.txt', 'RODENT' ]
+                        - [ 'static/documents/primer3-libraries/drosophila.txt', 'DROSOPHILA' ]
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Block
+                      content: "Hyb Oligo Max Mishyb:"
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Text
+                      name: PRIMER_INTERNAL_MAX_LIBRARY_MISHYB
+                      default: 12.00
+            - type: Block
+              tag: tr
+              elements:
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Block
+                      content: "Hyb Oligo Min Sequence Quality:"
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Text
+                      name: PRIMER_INTERNAL_MIN_QUALITY
+                      default: 0
+            - type: Block
+              tag: tr
+              elements:
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Block
+                      content: "Hyb Oligo Conc of Monovalent Cations:"
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Text
+                      name: PRIMER_INTERNAL_SALT_MONOVALENT
+                      default: 50.0
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Block
+                      content: "Hyb Oligo DNA Concentration:"
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Text
+                      name: PRIMER_INTERNAL_DNA_CONC
+                      default: 50.0
+            - type: Block
+              tag: tr
+              elements:
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Block
+                      content: "Hyb Oligo Conc of Divalent Cations:"
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Text
+                      name: PRIMER_INTERNAL_SALT_DIVALENT
+                      default: 0.0
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Block
+                      content: "Hyb Oligo [dNTP]:"
+                - type: Block
+                  tag: td
+                  elements:
+                    - type: Text
+                      name: PRIMER_INTERNAL_DNTP_CONC
+                      default: 0.0
+
+
+
+##### Obj Function penalty wts for hyp oligos ######
+
+    - type: Block
+      tag: h2
+      elements:
+        - type: Block
+          content: "Objective Function Penalty Weights for Hyb Oligos (Internal Oligos)"
+
+    - type: Block
+      tag: p
+      elements:
+       - type: Block
+         tag: table
+         elements:
+           - type: Block
+             tag: tr
+             elements:
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Block
+                     content: "Hyb Oligo Tm"
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Text
+                     name: PRIMER_INTERNAL_WT_TM_LT
+                     default: 1.0
+                     label: "Lt:" 
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Text
+                     name: PRIMER_INTERNAL_WT_TM_GT
+                     default: 1.0
+                     label: "Gt:"
+           - type: Block
+             tag: tr
+             elements:
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Block
+                     content: "Hyb Oligo Size"
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Text
+                     name: PRIMER_INTERNAL_WT_SIZE_LT
+                     default: 1.0
+                     label: "Lt:"
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Text
+                     name: PRIMER_INTERNAL_WT_SIZE_GT
+                     default: 1.0
+                     label: "Gt:"
+           - type: Block
+             tag: tr
+             elements:
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Block
+                     content: "Hyb Oligo GC%"
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Text
+                     name: PRIMER_INTERNAL_WT_GC_PERCENT_LT
+                     default: 0.0
+                     label: "Lt:"
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Text
+                     name: PRIMER_INTERNAL_WT_GC_PERCENT_GT
+                     default: 0.0
+                     label: "Gt:"
+
+
+    - type: Block
+      tag: p
+      elements:
+       - type: Block
+         tag: table
+         elements:
+           - type: Block
+             tag: tr
+             elements:
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Block
+                     content: "Hyb Oligo Self Complementarity:"
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Text
+                     name: PRIMER_INTERNAL_WT_SELF_ANY
+                     default: 0.0
+           - type: Block
+             tag: tr
+             elements:
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Block
+                     content: "Hyb Oligo #N's:"
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Text
+                     name: PRIMER_INTERNAL_WT_NUM_NS
+                     default: 0.0
+           - type: Block
+             tag: tr
+             elements:
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Block
+                     content: "Hyb Oligo Mishybing:"
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Text
+                     name: PRIMER_INTERNAL_WT_LIBRARY_MISHYB
+                     default: 0.0
+           - type: Block
+             tag: tr
+             elements:
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Block
+                     content: "Hyb Oligo Sequence Quality:"
+               - type: Block
+                 tag: td
+                 elements:
+                   - type: Text
+                     name: PRIMER_INTERNAL_WT_SEQ_QUAL
+                     default: 0.0
+
+    - type: Hidden
+      name: PRIMER_EXPLAIN_FLAG
+      value: 1
+
+    - type: Hidden
+      name: PRIMER_TASK
+      value: 'pick_detection_primers'
+
+    - type: Submit
+      name: submit
+      value: Pick Primers
+
+
+
+

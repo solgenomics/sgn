@@ -299,6 +299,7 @@ cross<-scan(crossfile,
 
 
 popdata<-c()
+
 if (cross == "f2")
 {
   popdata<- read.cross("csvs",
@@ -310,7 +311,7 @@ if (cross == "f2")
 
   popdata<-jittermap(popdata)
 } else
-if (cross == "bc")
+if (cross == "bc" | cross == "rilsib" | cross == "rilself")
 {
   popdata<- read.cross("csvs",
                        genfile=genodata,
@@ -321,6 +322,15 @@ if (cross == "bc")
 
   popdata<-jittermap(popdata)
 }  
+
+if (cross == "rilself")
+  {
+    popdata<-convert2riself(popdata)
+  } else
+if (cross == "rilsib")
+  {
+    popdata<-convert2risib(popdata)  
+  }
 
 #calculates the qtl genotype probablity at
 #the specififed step size and probability level

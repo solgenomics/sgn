@@ -37,7 +37,7 @@ framework. All texts and images can be used freely.</td>
 <&| /page/info_section.mas, title=>'SOL sites around the world' &>
 
 <ul>
-<li><a href="/solanaceae-project/afri-sol">AFRI-SOL</a> The African SOL initiative, focusing on African Solanaceae plants and information exchange.</li>
+<li><a href="http://www.afri-sol.net">AFRI-SOL</a> The African SOL initiative, focusing on African Solanaceae plants and information exchange.</li>
 <li><a href="http://cnia.inta.gov.ar/lat-sol/">Lat-SOL</a> - South American SOL laboratories<br /></li>
 <li><a href="http://www.srcuk.org/index.htm">SRCUK</a> - Solanaceae Research Community in the United Kingdom<br /></li>
 </ul>
@@ -45,6 +45,8 @@ framework. All texts and images can be used freely.</td>
 <a name="news" id="news"></a>
 
 </&>
+
+<!--
 
 <&| /page/info_section.mas, title=>'News' &>
 
@@ -63,18 +65,17 @@ framework. All texts and images can be used freely.</td>
 <li>The California Tomato Research Institute, Inc. (CTRI) announces the formation of <a href="/community/snp_consortium/index.pl"> Tomato Public SNP Consortium </a></li>
 </ul>
 
+-->
+
 </&>
 
-<&| /page/info_section.mas, title=>'SOL Resources' &>
-<dl>
-<dt>SOL Bioinformatics pages</dt>
-<dd><a href="sol-bioinformatics/index.pl">SOL bioinformatics pages</a> with
-     meeting notes, powerpoint slides, etc
-</dd>
-<dt><a name="SOL_news" id="SOL_news"></a>SOL Newsletters</dt>
-<dd> 
-    <ul>
-<li><a href="/static_content/solanaceae-project/docs/SOL_newsletter_Oct_11.pdf">October 2011</a> <b>(current issue)</b></li>
+<a name="sol_newsletters">
+<&| /page/info_section.mas, title=>'SOL Newsletters' &>
+
+  <ul>
+<li><a href="/static_content/solanaceae-project/docs/SOL_newsletter_Oct_12.pdf">October 2012</a> <b>(current issue)</b></li>
+<li><a href="/static_content/solanaceae-project/docs/SOL_newsletter_Mar_12.pdf">March 2012</a> <b></b></li>
+<li><a href="/static_content/solanaceae-project/docs/SOL_newsletter_Oct_11.pdf">October 2011</a></li>
 <li><a href="/static_content/solanaceae-project/docs/SOL_newsletter_Jun_11.pdf">June 2011</a> <b></b></li>
 <li><a href="/static_content/solanaceae-project/docs/SOL_newsletter_Mar_11.pdf">March 2011</a></li>
 <li><a href="/static_content/solanaceae-project/docs/SOL_newsletter_Oct_10.pdf">October 2010</a></li>
@@ -108,11 +109,21 @@ framework. All texts and images can be used freely.</td>
 		<li><a href="/static_content/solanaceae-project/docs/SOL_newsletter_Dec_04.pdf">December 2004</a></li>
 		<li><a href="/static_content/solanaceae-project/docs/SOL_newsletter_Nov_04.pdf">November 2004</a></li>
 	</ul>
-</dd>
-</dl>
-<dl>
+
+
+</&>
+
+<!-- 
 <dt>Seed BAC Selection Guidelines</dt>
 <dd><a  href="/static_content/solanaceae-project/docs/Guideline_v2.pdf">[pdf]</a>&nbsp;<a  href="seed_bac_selection.pl">[html]</a></dd>
+
+-->
+
+
+<&| /page/info_section.mas, title=>'SOL White Paper' &>
+
+<dl>
+
 <dt>Updated whitepaper [Sept 4, 2004]</dt>
 
 <dd>The updated whitepaper is now conveniently available in 5
@@ -140,7 +151,7 @@ parts:
     <td><!-- a  href="/static_content/solanaceae-project/docs/tomato-standards.pdf" -->
     <a href="http://docs.google.com/View?docid=dggs4r6k_1dd5p56">[Google doc]</a></td>
     <td>Part V &ndash; Bioinformatics Standards and Guidelines
-<table><tr><td class="boxbgcolor4">Available as a Google document. <br />You can request edit privileges by <a href="mailto:sgn-feedback\@sgn.cornell.edu">contacting us</a>.</td></tr></table><br />
+<!-- table><tr><td class="boxbgcolor4">Available as a Google document. <br />You can request edit privileges by <a href="mailto:sgn-feedback\@sgn.cornell.edu">contacting us</a>.</td></tr></table --><br />
     </td>
     <td></td>
   </tr><tr>
@@ -152,6 +163,11 @@ parts:
 </div>
 </dd>
 
+</&>
+
+
+
+<!-- 
 <dt><a name="callforbacs" id="callforbacs">Call for BACs -
 Sequencing your favorite BACs as part of SOL [March 11,
 2004]</a></dt>
@@ -161,9 +177,10 @@ part of the SOL tomato genome project, please submit it using
 <a href="call_for_BACS.pl">these instructions</a>. BACs that
 are anchored to a genetic map are considered with high
 priority.</dd>
-<dt>International Solanaceae Meeting [11/15/2003]
-</dt>
-<dd>
+
+-->
+<&| /page/info_section.mas, title=>"International Solanaceae Meeting, Nov 15, 2003" &>
+
 Location: Washington, D.C. (Holiday Inn Dulles International)<br />
 <br />
 Date: November 3, 2003<br />
@@ -189,8 +206,15 @@ Complete meeting summary:
 <a  href="/static_content/solanaceae-project/summary.pdf">[pdf (U.S. letter)]</a> 
 <a  href="/static_content/solanaceae-project/summary_A4.pdf">[pdf (A4)]</a> 
 <a  href="/static_content/solanaceae-project/summary.doc">[doc]</a>
-</dd>
-</dl>
+
+</&>
+
+
+<&| /page/info_section.mas, title=>"SOL Bioinformatics pages" &>
+
+Refer to the <a href="sol-bioinformatics/index.pl">SOL bioinformatics pages</a> with
+     meeting notes, powerpoint slides, etc
 
 
 </&>
+

@@ -22,10 +22,14 @@ a hashref with all the parameters needed for printing the stock page!
  $stockref->{submitter} (boolean)
  $stockref->{is_owner} (boolean)
  $stockref->{props} (hash of arrayrefs of stockprops. Keys = prop name, value = prop value)
+ $stockref->{has_pedigree} (boolean)
+ $stockref->{has_descendants} (boolean)
  locus_add_uri
  locus_autocomplete_uri => '/ajax/locus/autocomplete/'
  cvterm_add_uri
  cvterm_autocomplete_uri => '/ajax/cvterm/autocomplete/'
+ barcode_tempdir
+ barcode_tempuri 
  organism_autocomplete_uri => '/ajax/organism/autocomplete/'
 
 =back
@@ -45,8 +49,10 @@ $locus_add_uri => ''
 $locus_autocomplete_uri => undef
 $cvterm_add_uri => ''
 $cvterm_autocomplete_uri => undef
+$barcode_tempdir => undef
+$barcode_tempuri => undef
+$identifier_prefix => 'SGN'
 $organism_autocomplete_uri => '/ajax/organism/autocomplete/'
-
 
 </%args>
 
@@ -69,6 +75,8 @@ my $curator = $stockref->{curator};
 my $submitter = $stockref->{submitter};
 my $sequencer = $stockref->{sequencer};
 my $pubs = $stockref->{pubs};
+my $has_pedigree = $stockref->{has_pedigree};
+my $has_descendants = $stockref->{has_descendants};
 
 my $schema = $stockref->{schema};
 my $dbh = $stockref->{dbh};
@@ -92,7 +100,12 @@ my $stockprops = $stockref->{props};
 
 my $metadata = ['variety', 'donor', 'donor institute', 'country', 'state' , 'adaptation' , 'notes'];
 
-my $pedigree= ['pedigree', 'male parent', 'female parent'];
+#my $pedigree= ['pedigree', 'male parent', 'female parent'];
+# get pedigree of stock
+#my $stock_pedigree = $stockref->{stock_pedigree};
+#my $stock_descendants = $stockref->{stock_descendants};
+
+
 my $experiment = ['year', 'location', 'replicate']; # these values should be in nd_experimentprop ?
 
 my $resources = ['solcap number' , 'synonym'];
@@ -111,11 +124,11 @@ foreach my $o_id (@$owners) {
 }
 
 #phenotypes measured directly on this stock
-my $direct_phenotypes = $stockref->{direct_phenotypes};
+my $direct_phenotypes = $stockref->{direct_phenotypes} || undef;
 
 # get all phenotypes of subjects
 my $members_phenotypes = $stockref->{members_phenotypes};
-my $p_download_link = qq|<a href = "/stock/$stock_id/phenotypes">Download phenotypes</a>| if ( (keys %$direct_phenotypes) || ( keys %$members_phenotypes) );
+my $p_download_link = qq|<span class = \"ghosted\">[Download phenotypes]</span>| if ( (keys %$direct_phenotypes) || ( keys %$members_phenotypes) );
 my $direct_genotypes = $stockref->{direct_genotypes};
 my $g_download_link = qq|<a href =  "/stock/$stock_id/genotypes">Download genotypes</a>| if (keys %$direct_genotypes) ;
 ############################
@@ -177,6 +190,7 @@ function jqueryStuff() {
 
 <&| /page/info_section.mas, title=>"Stock details" , subtitle => "<a href=/phenome/qtl_form.pl>New QTL population</a> | <a href=/stock/search/>Back to stock search</a>"  &>
 
+<table><tr><td width="400">
   <& /page/form.mas,
   object_type=>'stock',
   object_id=>"$stock_id",
@@ -187,6 +201,13 @@ function jqueryStuff() {
   page_url => "/stock/$stock_id/view/" ,
   alternate_new_button => '<a href ="/stock/0/new">[New]</a>'
   &>
+</td><td>
+
+<& /util/barcode.mas, identifier => "$identifier_prefix"."$stock_id", text=> "$identifier_prefix stock $stock_id ($uniquename)", format=>"code128"  &><br /><br />
+% #<& /util/barcode.mas, identifier => "http://solgenomics.net/stock/$stock_id/view", text=>"SGN stock $stock_id ($uniquename)", format=>"qrcode" &>
+
+
+</td></tr></table>
 
 <div><b>Stock editors: </b> <% $editor_link %></div>
 <br />
@@ -198,11 +219,6 @@ function jqueryStuff() {
    <&| /page/info_section.mas, title => "Synonyms" , is_subsection => 1 &>
       <& /stock/stockprops.mas, props=> $stockprops , subset=> $resources  &>
 </&>
-
-<&| /page/info_section.mas, title => "Pedigree data" , collapsible=> 1, is_subsection => 1 &>
-      <& /stock/stockprops.mas, props=> $stockprops, subset=> $pedigree  &>
-</&>
-
 
     <&| /page/info_section.mas, title => "Additional information" , collapsible=> 1, is_subsection => 1 &>
       <& /stock/stockprops.mas, props=> $stockprops, subset=> $metadata  &>
@@ -228,7 +244,38 @@ function jqueryStuff() {
 
 </&>
 
+
 % }
+
+
+% if ($has_pedigree==1) {
+
+<&| /page/info_section.mas, title=>"Pedigree" , collapsible=>1, collapsed=>0 &>
+  <& /pedigree/stock_pedigree.mas, stock_id => $stock_id &>
+</&>
+
+% }  else {
+
+<&| /page/info_section.mas, title=>"Pedigree" , collapsible=>1, collapsed=>1 &>
+</&>
+
+% }
+
+
+
+% if ($has_descendants==1) {
+
+<&| /page/info_section.mas, title=>"Descendants" , collapsible=>1, collapsed=>0 &>
+  <& /pedigree/stock_descendants.mas, stock_id => $stock_id &>
+</&>
+
+% } else {
+
+<&| /page/info_section.mas, title=>"Descendants" , collapsible=>1, collapsed=>1 &>
+</&>
+
+% }
+
 
 % if ($type) {
 <&| /page/info_section.mas, title=>"Related stocks" , collapsible=>1, collapsed=>0 &>
@@ -275,13 +322,19 @@ function jqueryStuff() {
 
 <&| /page/info_section.mas, title=>"Phenotype data " ,  subtitle=>$p_download_link ,  collapsible => 1, collapsed => 1 &>
 % foreach my $project (keys %$direct_phenotypes) {
-%  my $pheno = $direct_phenotypes->{$project} ;
-<&| /page/info_section.mas, title=>"Experiment: $project", is_subsection => 1, collapsible => 1 &>
-    <& /phenotypes/phenotype_data.mas , phenotypes=>$pheno &>
+%   my $rs = $direct_phenotypes->{$project} ;
+<&| /page/info_section.mas, 
+    title=>"Experiment: $project", 
+    is_subsection => 1, collapsible => 1 
+&>
+    <& /phenotypes/phenotype_data.mas , 
+      phenotypes=> $rs 
+    &>
   </&>
 % }
 
 % foreach my $key (keys %$members_phenotypes) {
+% my $m_rs = $members_phenotypes->{$key};
 <&| /page/info_section.mas,
      title         => "Member phenotypes",
      subtitle      => $key,
@@ -289,7 +342,7 @@ function jqueryStuff() {
      collapsible   => 1,
  &>
     <& /phenotypes/phenotype_data.mas,
-         phenotypes => $members_phenotypes->{$key},
+         phenotypes => $m_rs,
          object_id  => $stock_id,
          has_qtl    => $has_qtl_data,
      &>

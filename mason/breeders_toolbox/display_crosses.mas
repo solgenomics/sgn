@@ -1,0 +1,24 @@
+
+<%args>
+@crosses => ()
+</%args>
+
+<& /util/import_javascript.mas, classes => [ ] &>
+
+<script>
+
+  
+</script>
+
+<table>
+<%perl>
+
+  if (!@crosses) { 
+    print "<tr><td>No crosses available for your account.</td></tr>";
+  }
+
+foreach my $cross (@crosses) { 
+  print "<tr><td>".$cross->[0]."</td></tr>";
+}
+</%perl>
+  </table>
