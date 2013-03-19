@@ -156,7 +156,7 @@ CXGN.List.prototype = {
 	var list_name = this.listNameById(list_id);
 
 	var html = '<h4>List '+list_name+'</h4>';
-	html = html + '<input type="text" id="dialog_add_list_item" /><input id="dialog_add_list_item_button" type="submit" value="add" /><br />';
+	html = html + '<textarea id="dialog_add_list_item" ></textarea><input id="dialog_add_list_item_button" type="submit" value="add" /><br />';
 	
 	for(var n=0; n<items.length; n++) { 
 	    html = html + items[n][1] + '   <input id="'+items[n][0]+'" type="button" value="remove" /><br />';
@@ -185,7 +185,7 @@ CXGN.List.prototype = {
 	
 	jQuery('#dialog_add_list_item_button').click(
 	    function() { 
-		addTextToList('dialog_add_list_item', list_id);
+		addMultipleItemsToList('dialog_add_list_item', list_id);
 		var lo = new CXGN.List();
 		lo.renderItems(div, list_id);
 	    }
@@ -374,6 +374,29 @@ function addTextToList(div, list_id) {
     var id = lo.addItem(list_id, item);
     if (id == 0) { 
 	alert('Item "'+item+'" was not added because it already exists');
+    }
+    lo.renderLists('list_dialog');
+}
+
+function addMultipleItemsToList(div, list_id) { 
+    var lo = new CXGN.List();
+    var content = jQuery('#'+div).val();
+    if (content == '') { 
+	alert("No items - Please enter items to add to the list.");
+	return;
+    }
+    var items = content.split("\n");
+    
+    alert("ITEMS: "+items.length);
+    var duplicates = new Array();
+    for (var n=0; n<items.length; n++) { 
+	var id = lo.addItem(list_id, items[n]);
+	if (id == 0) { 
+	    duplicates.push(items[n]);
+	}
+    }
+    if (duplicates.length >0) { 
+	alert("The following items were not added because they are already in the list: "+ duplicates.join(", "));
     }
     lo.renderLists('list_dialog');
 }
