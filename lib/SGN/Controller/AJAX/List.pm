@@ -250,7 +250,6 @@ sub download_list :Path('/list/download') Args(0) {
     if (!$user_id) { 
 	$c->stash->{template} = 'generic_message.mas';
 	$c->stash->{message} = 'You need to be logged in to download lists.';
-
 	
 	return;
     }
@@ -259,7 +258,8 @@ sub download_list :Path('/list/download') Args(0) {
 
     my $list = $self->retrieve_list($c, $list_id);
 	
-    $c->res->content_type("text/download");
+    $c->res->headers()->title("cassavabase_list\_$list_id");
+    $c->res->content_type("application/text");
 
     $c->res->body(join "\n", map { $_->[1] }  @$list);
 
