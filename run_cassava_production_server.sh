@@ -12,7 +12,7 @@ echo "PERL5LIB is $PERL5LIB";
 
 mkdir /tmp/sgn-tmp
 
-screen -L ./bin/sgn_server.pl -r --fork
+screen ./bin/sgn_server.pl -r --fork
 
 exit;
 
