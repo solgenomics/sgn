@@ -27,6 +27,7 @@ use CXGN::Phenome::Allele;
 use CXGN::Chado::Stock;
 use CXGN::Page::FormattingHelpers qw/ columnar_table_html info_table_html html_alternate_show /;
 use Scalar::Util qw(looks_like_number);
+use Data::Dumper;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -73,7 +74,8 @@ sub add_cross_GET :Args(0) {
 	return;
     }
 
-    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) { 
+    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+        print STDERR "User's roles: ".Dumper($c->user()->roles)."\n";
 	print STDERR "User does not have sufficient privileges.\n";
 	$c->stash->{rest} = {error =>  "you have insufficient privileges to add a cross." };
 	return;
@@ -82,9 +84,11 @@ sub add_cross_GET :Args(0) {
 
     #check that progeny number is an integer less than maximum allowed
     my $maximum_progeny_number = 20000;
-    if ((! $progeny_number =~ m/^\d+$/) or ($progeny_number > $maximum_progeny_number) or ($progeny_number < 1)){
-      $c->stash->{rest} = {error =>  "progeny number exceeds the maximum of $maximum_progeny_number or is invalid." };
-      return;
+    if ($progeny_number) {
+      if ((! $progeny_number =~ m/^\d+$/) or ($progeny_number > $maximum_progeny_number) or ($progeny_number < 1)) {
+	$c->stash->{rest} = {error =>  "progeny number exceeds the maximum of $maximum_progeny_number or is invalid." };
+	return;
+      }
     }
 
     #check that parent names are not blank
@@ -228,39 +232,42 @@ sub add_cross_GET :Args(0) {
 
 
     my $increment = 1;
-    while ($increment < $progeny_number + 1) {
+    if ($progeny_number) {
+      while ($increment < $progeny_number + 1) {
 	my $stock_name = $prefix.$cross_name."-".$increment.$suffix;
-      my $accession_stock = $schema->resultset("Stock::Stock")->create(
-            { organism_id => $organism_id,
-              name       => $stock_name,
-              uniquename => $stock_name,
-              type_id     => $accession_cvterm->cvterm_id,
-            } );
-      $accession_stock->find_or_create_related('stock_relationship_objects', {
-		type_id => $female_parent->cvterm_id(),
-		object_id => $accession_stock->stock_id(),
-		subject_id => $female_parent_stock->stock_id(),
-	 					  } );
-      $accession_stock->find_or_create_related('stock_relationship_objects', {
-		type_id => $male_parent->cvterm_id(),
-		object_id => $accession_stock->stock_id(),
-		subject_id => $male_parent_stock->stock_id(),
-	 					  } );
-      $accession_stock->find_or_create_related('stock_relationship_objects', {
-		type_id => $population_members->cvterm_id(),
-		object_id => $accession_stock->stock_id(),
-		subject_id => $population_stock->stock_id(),
-	 					  } );
-      if ($visible_to_role) {
-	my $accession_stock_prop = $schema->resultset("Stock::Stockprop")->find_or_create(
-	       { type_id =>$visible_to_role_cvterm->cvterm_id(),
-		 value => $visible_to_role,
-		 stock_id => $accession_stock->stock_id()
-		 });
-      }
-      $increment++;
+	my $accession_stock = $schema->resultset("Stock::Stock")->create(
+									 { organism_id => $organism_id,
+									   name       => $stock_name,
+									   uniquename => $stock_name,
+									   type_id     => $accession_cvterm->cvterm_id,
+									 } );
+	$accession_stock->find_or_create_related('stock_relationship_objects', {
+										type_id => $female_parent->cvterm_id(),
+										object_id => $accession_stock->stock_id(),
+										subject_id => $female_parent_stock->stock_id(),
+									       } );
+	$accession_stock->find_or_create_related('stock_relationship_objects', {
+										type_id => $male_parent->cvterm_id(),
+										object_id => $accession_stock->stock_id(),
+										subject_id => $male_parent_stock->stock_id(),
+									       } );
+	$accession_stock->find_or_create_related('stock_relationship_objects', {
+										type_id => $population_members->cvterm_id(),
+										object_id => $accession_stock->stock_id(),
+										subject_id => $population_stock->stock_id(),
+									       } );
+	if ($visible_to_role) {
+	  my $accession_stock_prop = $schema->resultset("Stock::Stockprop")->find_or_create(
+											    { type_id =>$visible_to_role_cvterm->cvterm_id(),
+											      value => $visible_to_role,
+											      stock_id => $accession_stock->stock_id()
+											    });
+	}
+	$increment++;
 
+      }
     }
+
 
     if ($@) { 
 	$c->stash->{rest} = { error => "An error occurred: $@"};
