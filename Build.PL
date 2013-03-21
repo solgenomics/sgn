@@ -90,6 +90,7 @@ my $build = SGN::Build->new(
         'List::Util'                               => 0,
         'LWP::UserAgent'                           => 0,
         'Mail::Sendmail'                           => 0,
+	'Math::Base36'                             => 0,
         'Math::Round::Var'                         => 0,
         'Memoize'                                  => 0,
         'Modern::Perl'                             => 0,

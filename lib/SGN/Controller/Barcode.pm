@@ -10,6 +10,8 @@ use File::Slurp;
 use Barcode::Code128;
 #use GD::Barcode::QRcode;
 use Tie::UrlEncoder;
+use PDF::LabelPage;
+use Math::Base36 ':all';
 
 our %urlencode;
 
@@ -95,7 +97,7 @@ sub barcode_tempfile_jpg : Path('/barcode/tempfile') Args(4) {
     $c->tempfiles_subdir('barcode');
     my ($file, $uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.jpg');
 
-    open(my $F, ">", $file) || die "Can't open file $file";
+    open(my $F, ">", $file) || die "Can't open file $file $@";
     print $F $barcode->jpeg();
     close($F);
 
@@ -106,7 +108,7 @@ sub barcode_tempfile_jpg : Path('/barcode/tempfile') Args(4) {
 =head2 barcode
 
  Usage:        $self->barcode($code, $text, $size, 30);
- Desc:         generates a barcode
+ Desc:         generates a barcode (GD image)
  Ret:          a GD::Image object
  Args:         $code, $text, $size, upper margin
  Side Effects: none
@@ -338,4 +340,127 @@ sub new_barcode_tool : Path('/barcode/tool/') Args(1) {
     $c->stash->{template} = '/barcode/tool/'.$term.'.mas';
 }
 
+sub cross_tool : Path('/barcode/tool/cross') { 
+    my $self = shift;
+    my $c = shift;
+
+    $c->stash->{template} = '/barcode/tool/cross.mas';
+}
+
+sub dna_tool   : Path('/barcode/tool/dna/') { 
+    my $self =shift;
+    my $c = shift;
+    $c->stash->{template} = '/barcode/tool/dna.mas';
+}
+
+sub generate_unique_barcode_labels : Path('/barcode/unique') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+
+    if (! $c->user()) { 	
+	$c->stash->{template} = 'generic_message.mas';
+	$c->stash->{message} = 'You must be logged in to use the unique barcode tool.';
+	return;
+    }
+    
+    my $label_pages = $c->req->param("label_pages");
+    my $label_rows = $c->req->param("label_rows") || 10;
+    my $label_cols  = $c->req->param("label_cols") || 1;
+    my $page_format = $c->req->param("page_format") || "letter";
+    my $top_margin_mm = $c->req->param("top_margin");
+    my $left_margin_mm = $c->req->param("left_margin");
+    my $bottom_margin_mm = $c->req->param("bottom_margin");
+    my $right_margin_mm = $c->req->param("right_margin");
+
+    # convert mm into pixels
+    #
+    my ($top_margin, $left_margin, $bottom_margin, $right_margin) = map { int($_ * 2.846) } ($top_margin_mm, 
+											$left_margin_mm, 
+											$bottom_margin_mm, 
+											$right_margin_mm); 
+    my $total_labels = $label_pages * $label_cols * $label_rows;
+
+
+    my $dir = $c->tempfiles_subdir('pdfs');
+    my ($FH, $filename) = $c->tempfile(TEMPLATE=>"pdfs/pdf-XXXXX", SUFFIX=>".pdf", UNLINK=>0);
+    print STDERR "FILENAME: $filename \n\n\n";
+    my $pdf = PDF::Create->new(filename=>$c->path_to($filename), 
+			       Author=>$c->config->{project_name},
+			       Title=>'Labels',
+			       CreationDate => [ localtime ], 
+			       Version=>1.2,
+	);
+
+    if (!$page_format) { $page_format = "Letter"; }
+
+    print STDERR "PAGE FORMAT IS: $page_format. LABEL ROWS: $label_rows, COLS: $label_cols. TOTAL LABELS: $total_labels\n";
+
+    my @pages = ();
+    push @pages, PDF::LabelPage->new( { top_margin=>$top_margin, bottom_margin=>$bottom_margin, left_margin=>$left_margin, right_margin=>$right_margin, pdf=>$pdf, cols => $label_cols, rows => $label_rows });
+
+    foreach my $label_count (1..$total_labels) { 
+	my $label_code = $self->generate_label_code($c);
+
+	print STDERR "LABEL CODE: $label_code\n";
+
+	# generate barcode
+	#
+	my $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $label_code, $label_code ,  'large',  20  ]);
+	my $image = $pdf->image($tempfile);
+	print STDERR "IMAGE: ".Data::Dumper::Dumper($image);
+
+	# note: pdf coord system zero is lower left corner
+	#
+
+	if ($pages[-1]->need_more_labels()) { 
+	    print STDERR "ADDING LABEL...\n";
+	    $pages[-1]->add_label($image);
+	}
+	
+	else { 
+	    print STDERR "CREATING NEW PAGE...\n";
+	
+	    push @pages, PDF::LabelPage->new({ top_margin=>$top_margin, bottom_margin=>$bottom_margin, left_margin=>$left_margin, right_margin=>$right_margin, pdf=>$pdf, cols => $label_cols, rows => $label_rows });
+
+	    $pages[-1]->add_label($image);
+	}
+
+    }
+
+    foreach my $p (@pages) { 
+	$p->render();
+    }
+
+    $pdf->close();
+
+    #$c->stash->{not_found} = \@not_found;
+    #$c->stash->{found} = \@found;
+    $c->stash->{file} = $filename;
+    $c->stash->{filetype} = 'PDF';
+    $c->stash->{template} = '/barcode/unique_barcode_download.mas';
+}
+
+
+
+sub generate_label_code { 
+    my $self = shift;
+    my $c = shift;
+
+    my $dbh = $c->dbc->dbh();
+
+    my $h = $dbh->prepare("SELECT nextval('phenome.unique_barcode_label_id_seq')");
+    $h->execute();
+    my ($next_val) = $h->fetchrow_array();
+
+    print STDERR "nextval is $next_val\n";
+    
+    my $encoded = Math::Base36::encode_base36($next_val, 7);
+
+    return $encoded;
+    
+}
+
+
 1;
+
+

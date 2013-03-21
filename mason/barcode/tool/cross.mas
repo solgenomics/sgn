@@ -1,0 +1,20 @@
+
+<br />
+<br />
+<center>
+<h1>CassavaBase Cross Tool</h1>
+<br />
+<br />
+
+<div class="boxbgcolor5"><font size="4">For each cross, scan the CROSS barcode, then the FEMALE barcode below, followed by the barcode of the female parent. Then, scan the MALE barcode, followed by the barcode of the male parent. (Note: the male and female information can be scanned in any order).</font></div>
+
+<br /><br />
+<table border="0" cellpadding="10">
+
+<& /barcode/tool/generate.mas, code=>"CROSS", &>
+<tr><td><& /barcode/tool/generate.mas, code=>"FEMALE", &></td><td valign="middle"><br /><br /><div class="boxbgcolor5">scan barcode of female parent</div></td><td valign="middle"><br /><br /></td></tr>
+
+<tr><td><& /barcode/tool/generate.mas, code=>"MALE", &></td><td><br /><br /><div class="boxbgcolor5">scan barcode of male parent</div></td><td><br /><br /></td></tr>
+<tr><td><& /barcode/tool/generate.mas, code=>"FLOWERS", &></td><td><br /><br /><div class="boxbgcolor5">Enter number of flowers</div></td><td><br /><br /></td></tr>
+</table>
+<br />

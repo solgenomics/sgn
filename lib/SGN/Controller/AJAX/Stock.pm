@@ -725,8 +725,8 @@ sub add_stock_parent_GET :Args(0) {
     }
 
     $c->stash->{rest} = { error => '', };
-}									
-
+									
+}
 
 sub generate_genotype_matrix : Path('/phenome/genotype/matrix/generate') :Args(1) { 
     my $self = shift;
@@ -739,6 +739,7 @@ sub generate_genotype_matrix : Path('/phenome/genotype/matrix/generate') :Args(1
 
 
     $c->stash->{rest}= [ 1];
+
 
 }
 

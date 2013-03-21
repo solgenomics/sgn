@@ -1,0 +1,8 @@
+
+<%args>
+$file
+</%args>
+
+Download unique barcodes as a PDF file:
+
+<a href="<% $file %>">Download</a>

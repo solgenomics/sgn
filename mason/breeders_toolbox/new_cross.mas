@@ -7,6 +7,39 @@
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui' ] &>
 
+
+
+
+<div id="upload_crosses_dialog"  class="ui-widget" >
+<b>
+Upload a list of crosses:<br>
+</b>
+<br>
+<form action="/cross/upload_cross"  method="post"  enctype="multipart/form-data" id="upload_form" >
+<table>
+<tr><td><input type="file" name="upload_file" value="Choose file" id="upload_file"/><br /></td></tr>
+<tr><td>
+<input type="radio" name="format_type" value="barcode" /> Barcode format<br />
+<input type="radio" name="format_type" value="spreadsheet" checked="checked"/> Spreadsheet<br />
+</td></tr>
+<tr><td>
+Keep private to role
+<select id="visible_to_role" name="visible_to_role">
+<option value = "" >none</option>
+<%perl>
+foreach my $role (@roles) {
+	print "<option value=".$role.">".$role."</option>";
+}
+</%perl>
+</select>
+</td></tr>
+</table>
+</form>
+</div>
+
+
+
+
 <div id="create_cross" title="Add cross" >
 
 <table cellspacing="0" cellpadding="1" >
@@ -29,8 +62,10 @@ foreach my $location (@locations) {
 <tr><td>Cross name</td><td><input type="text" id="cross_name" name="cross_name" /></td></tr>
 <tr><td>Maternal parent</td><td><div class="ui-widget"><input id="maternal_parent" type="text" name="maternal" /></div></td></tr>
 <tr><td>Paternal parent</td><td><div class="ui-widget"><input id="paternal_parent" type="text" name="paternal" /></div></td></tr>
-<tr><td>Number of progeny</td><td><input type="text" id="progeny_number" name="progeny_number" size="3" /></td></tr>
+<tr><td>Number of progeny</td><td><div class="ui-widget"><input type="text" id="progeny_number" name="progeny_number" size="3" /></div></td></tr>
+<tr><td>Number of flowers</td><td><input type="text" id="flower_number" name="flower_number" size="3" /></td></tr>
 <tr><td>Progeny naming</td><td>Prefix <input id="prefix" name="prefix" size="5" /> Suffix <input id="suffix" name="suffix" size="5" /></td></tr>
+
 </table>
 
 <script>
@@ -62,7 +97,9 @@ foreach my $role (@roles) {
    jQuery("#create_cross").dialog( {
       autoOpen: false,
       buttons: { "Cancel" :  function() { jQuery("#create_cross").dialog("close"); }, "Submit": function() { add_cross() }  },
-      modal: true 
+      modal: true,
+      width: 600,
+      height: 360
     });
     
     jQuery("#add_cross_link").click( function () { 
@@ -75,6 +112,7 @@ foreach my $role (@roles) {
       var maternalParent = jQuery("#maternal_parent").val();
       var paternalParent = jQuery("#paternal_parent").val();
       var progenyNumber = jQuery("#progeny_number").val();
+      var flowerNumber = jQuery("#flower_number").val();
       var prefix = jQuery("#prefix").val();
       var suffix = jQuery("#suffix").val();
       var visibleToRole = jQuery("#visible_to_role").val();
@@ -86,7 +124,7 @@ foreach my $role (@roles) {
         url: '/ajax/cross/add_cross',
         dataType: "json",
         type: 'GET',
-        data: 'cross_name='+crossName+'&maternal_parent='+maternalParent+'&paternal_parent='+paternalParent+'&progeny_number='+progenyNumber+'&prefix='+prefix+'&suffix='+suffix+'&visible_to_role'+visibleToRole+'&trial='+trial+'&location='+location,
+        data: 'cross_name='+crossName+'&maternal_parent='+maternalParent+'&paternal_parent='+paternalParent+'&progeny_number='+progenyNumber+'&flower_number='+flowerNumber+'&prefix='+prefix+'&suffix='+suffix+'&visible_to_role'+visibleToRole+'&trial_id='+trial+'&location_id='+location,
         error: function(response) { alert("An error occurred. Please try again later!"+response); },
         parseerror: function(response) { alert("A parse error occurred. Please try again."+response); },
         success: function(response) { 
@@ -102,6 +140,27 @@ foreach my $role (@roles) {
       });
   alert("DONE with processing"); 
    }
+
+
+   jQuery("#upload_crosses_dialog").dialog( {
+      autoOpen: false,
+      buttons: { "Cancel" :  function() { jQuery("#upload_crosses_dialog").dialog("close"); }, "Submit": function() { read_cross_upload() }  },
+      modal: true,
+      width: 600,
+      height: 250
+    });
+    
+    jQuery("#upload_crosses_link").click( function () { 
+     jQuery("#upload_crosses_dialog" ).dialog("open");
+    });
+   
+    function read_cross_upload() { 
+      var formatType = jQuery('input[name=format_type]:checked').val();
+      var uploadFile = jQuery("#upload_file").val();
+      if (!uploadFile) { alert("Please select a file");return;}
+      else if (!(formatType == "barcode" || formatType == "spreadsheet")) {alert("Please choose a format");return;}
+      else { jQuery("#upload_form").submit();}
+    }
 
 </script>
 

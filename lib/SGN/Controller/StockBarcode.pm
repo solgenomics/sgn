@@ -82,8 +82,8 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     
     my $stock_names = $c->req->param("stock_names");
     my $stock_names_file = $c->req->upload("stock_names_file");
-    my $labels_per_page = $c->req->param("labels_per_page") || 10;
-    my $labels_per_row  = $c->req->param("labels_per_row") || 1;
+    my $labels_per_page = $c->req->param("label_rows") || 10;
+    my $labels_per_row  = $c->req->param("label_cols") || 1;
     my $page_format = $c->req->param("page_format") || "letter";
     my $top_margin_mm = $c->req->param("top_margin");
     my $left_margin_mm = $c->req->param("left_margin");
