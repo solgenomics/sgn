@@ -3,6 +3,8 @@
 $projects
 </%args>
 
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui' ] &>
+
 <div id="add_project_dialog"  class="ui-widget" >
 
 <table><tr><td>Trial name</td><td><input name="project_name" /></td></tr>
@@ -64,7 +66,7 @@ $projects
 <tr><td>Increment</td><td><input id="increment" name="increment" /></td></tr>
 </td></tr>
 </table>
-</div
+</div>
 
 
 <script>

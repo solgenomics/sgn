@@ -68,7 +68,7 @@ foreach my $key (sort { $a <=> $b} keys %upload_data) {
 
    jQuery("#verify_uploaded_data_dialog").dialog( {
       autoOpen: true,
-      buttons: { "Cancel" :  function() { jQuery("#verify_uploaded_data_dialog").dialog("close"); }, "Submit": function() { submit_cross_upload() }},
+      buttons: { "Close" :  function() { jQuery("#verify_uploaded_data_dialog").dialog("close"); }},
       modal: true,
       width: 600,
       height: 250

@@ -62,9 +62,10 @@ foreach my $location (@locations) {
 <tr><td>Cross name</td><td><input type="text" id="cross_name" name="cross_name" /></td></tr>
 <tr><td>Maternal parent</td><td><div class="ui-widget"><input id="maternal_parent" type="text" name="maternal" /></div></td></tr>
 <tr><td>Paternal parent</td><td><div class="ui-widget"><input id="paternal_parent" type="text" name="paternal" /></div></td></tr>
-<tr><td>Number of progeny</td><td><input type="text" id="progeny_number" name="progeny_number" size="3" /></td></tr>
+<tr><td>Number of progeny</td><td><div class="ui-widget"><input type="text" id="progeny_number" name="progeny_number" size="3" /></div></td></tr>
 <tr><td>Number of flowers</td><td><input type="text" id="flower_number" name="flower_number" size="3" /></td></tr>
 <tr><td>Progeny naming</td><td>Prefix <input id="prefix" name="prefix" size="5" /> Suffix <input id="suffix" name="suffix" size="5" /></td></tr>
+
 </table>
 
 <script>
