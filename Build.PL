@@ -105,6 +105,7 @@ my $build = SGN::Build->new(
         'MooseX::Singleton'                        => 0,
         'Number::Format'                           => 0,
         'namespace::autoclean'                     => 0,
+	'Params::Util'                             => 0,
 	'PDF::Create'                              => 0,
         'SOAP::Transport::HTTP'                    => 0,
         'Statistics::Descriptive'                  => 0,
