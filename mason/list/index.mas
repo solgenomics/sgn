@@ -1,0 +1,47 @@
+
+<%args>
+$user_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'CXGN.List' ] &>
+
+<& /page/page_title.mas, title=>"Available lists" &>
+<div id="list_div">
+
+</div>
+
+% if (! $user_id) { 
+  <& /generic_message.mas, message=>"Login required for viewing your lists" &>
+% return;
+% }
+
+<script>
+  var list = new CXGN.List();
+
+  list.renderLists('list_div');
+
+</script>
+
+
+<textarea id="test_area" cols="40" rows="5" >
+
+</textarea>
+<br />
+<script>
+pasteListMenu("test_area");
+</script>
+
+<form action="javascript:addNewList('new_list_name')">
+Create new list <input type="text" id="new_list_name" on/>
+<input type="submit" name="add" />
+</form>
+
+
+<textarea id="add_to_list" >
+</textarea>
+<script>
+addToListMenu('add_to_list');
+			    
+</script>
+
+  
