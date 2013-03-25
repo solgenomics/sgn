@@ -20,8 +20,8 @@ if ($conf->{is_mirror}) {
 }
 
 
-my ($first_name, $last_name, $username, $password, $confirm_password, $email_address)
-  = $page->get_arguments(qw(first_name last_name username password confirm_password email_address));
+my ($first_name, $last_name, $username, $password, $confirm_password, $email_address, $organization)
+  = $page->get_arguments(qw(first_name last_name username password confirm_password email_address organization));
 
 if ($username) {
   #
@@ -46,6 +46,11 @@ if ($username) {
   if ("$password" ne "$confirm_password") {
     push @fail, "Password and confirm password do not match.";
   }
+
+  if (!$organization) { 
+      push @fail, "'Organization' is required.'";
+  }
+
   if ($password eq $username) {
     push @fail, "Password must not be the same as your username.";
   }
@@ -76,6 +81,7 @@ if ($username) {
   $new_user -> set_pending_email($email_address);
   $new_user -> set_confirm_code($confirm_code);
   $new_user -> set_disabled('unconfirmed account');
+  $new_user -> set_organization($organization);
   $new_user -> store();
 
   #this is being added because the person object still uses two different objects, despite the fact that we've merged the tables
@@ -151,6 +157,7 @@ END_HEREDOC
   <tr><td colspan="2"><br /></td></tr>
   <tr><td>First name</td><td><input type="text" name="first_name" size="40" value="" /></td></tr>
   <tr><td>Last name</td><td><input type="text" name="last_name" size="40" value="" /></td></tr>
+  <tr><td>Organization</td><td><input type="text" name="organization" size="40" value="" /></td></tr>
   <tr><td>Username</td><td><input type="text" name="username" size="12" value="" /></td></tr>
   <tr><td colspan="2" style="font-size: 80%">Username must be at least 7 characters long.</td></tr>
   <tr><td>Password</td><td><input type="password" name="password" size="12" value="" /></td></tr>
