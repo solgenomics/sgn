@@ -173,8 +173,8 @@ eval {
 	# and convert the name into a canonical form so we can find it
 	# if it already exists with a different spelling or something
 	#
-        my ($marker_name,$subscript) = 
-	    CXGN::Marker::Tools::clean_marker_name($dirty_marker_name);
+        my ($marker_name,$subscript) = ($dirty_marker_name, "");
+	    #CXGN::Marker::Tools::clean_marker_name($dirty_marker_name);
 
 	# get as many IDs as you can for a marker with a name like this
 	#
@@ -201,9 +201,10 @@ eval {
             # if we are making a new marker
 	    # make a modifiable marker object and start to populate it
 	    #
+	    print "Loading new marker id from marker $marker_name\n";
             $marker = CXGN::Marker::Modifiable->new($dbh);
             $marker->set_marker_name($marker_name); #give it a name
-            print "Loading new marker id from marker $marker_name\n";
+
 
 	    # marker must exist before locations can be added for it. 
 	    # this is a db constraint. if you didn't do this, this script 
@@ -236,9 +237,8 @@ eval {
 #	    print $me->{protocol}."\n";
 #	}
 
-	my $chromosome=$ss->value_at($dirty_marker_name,'LINKAGE_GROUP') 
-	    # get chromosome from spreadsheet
-	    or die"No chromosome found for $marker_name"; 
+	my $chromosome=$ss->value_at($dirty_marker_name,'LINKAGE_GROUP');	    # get chromosome from spreadsheet
+	if (!defined($chromosome)) {  die"No chromosome found for $marker_name"; }
 
 	if (! str_in($chromosome, @$linkage_groups)) { 
 	    print STDERR "$marker_name skipped because linkage_group is $chromosome...\n";
