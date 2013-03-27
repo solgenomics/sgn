@@ -247,7 +247,7 @@ EOF
 		   'Substitution Matrix' => simple_selectbox_html( name => 'matrix',
 								    choices => [ [ 'BLOSUM62', 'BLOSUM62 (default)' ],
 										 [ 'BLOSUM80', 'BLOSUM80 (recent divergence)' ],
-										 [ 'BLOSUM45', 'BLOSUM80 (ancient divergence)' ],
+										 [ 'BLOSUM45', 'BLOSUM45 (ancient divergence)' ],
 										 'PAM30',
 										 'PAM70',
 									       ],
