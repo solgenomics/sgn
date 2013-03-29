@@ -61,7 +61,7 @@ foreach my $role (@roles) {
 <tr id="get_doubled_haploid_parent" style = "display: none"><td>Doubled haploid parent</td><td><input id="doubled_haploid_parent" type="text" name="doubled_haploid_parent" size="40"/></td></tr>
 <tr id="get_bulk_maternal_population" style = "display: none"><td>Bulked maternal <em>population</em></td><td><input id="bulked_maternal_population" type="text" name="bulked_maternal_population" size="40"/></td></tr>
 <tr id="get_bulk_paternal_parent" style = "display: none"><td>Bulked paternal parent</td><td><input id="bulked_paternal_parent" type="text" name="bulked_paternal_parent" size="40"/></td></tr>
-<tr id="get_bulk_open_maternal_population" style = "display: none"><td>Bulked paternal <em>population</em></td><td><input id="bulked_open_maternal_population" type="text" name="bulked_open_maternal_population" size="40"/></td></tr>
+<tr id="get_bulk_open_maternal_population" style = "display: none"><td>Bulked maternal <em>population</em></td><td><input id="bulked_open_maternal_population" type="text" name="bulked_open_maternal_population" size="40"/></td></tr>
 
 <tr id="select_bulk_open_paternal_population" style = "display: none">
   <td>Specify paternal population<input id="specify_bulk_open_paternal_population_checkbox" type="checkbox"/></td>
