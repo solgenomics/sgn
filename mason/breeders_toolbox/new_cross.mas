@@ -8,8 +8,6 @@
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui' ] &>
 
 
-
-
 <div id="upload_crosses_dialog"  class="ui-widget" >
 <b>
 Upload a list of crosses:<br>
@@ -42,6 +40,47 @@ foreach my $role (@roles) {
 
 <div id="create_cross" title="Add cross" >
 <table cellspacing="0" cellpadding="1" >
+
+<tr><td>Cross name</td><td><input type="text" id="cross_name" name="cross_name" size="40"/></td></tr>
+<tr><td>Cross type</td><td>
+<select id="cross_type">
+<option value = "biparental">biparental</option>
+<option value = "self">self</option>
+<option value = "open">open pollinated</option>
+<option value = "bulk">bulk</option>
+<option value = "bulk_self">bulk selfed</option>
+<option value = "bulk_open">bulk and open pollinated</option>
+<option value = "doubled_haploid">doubled haplotype</option>
+</select>
+</td>
+</tr>
+<tr id="get_maternal_parent" ><td>Maternal parent</td><td><input id="maternal_parent" type="text" name="maternal" size="40"/></td></tr>
+<tr id="get_paternal_parent" ><td>Paternal parent</td><td><input id="paternal_parent" type="text" name="paternal" size="40"/></td></tr>
+<tr id="get_selfed_parent" style = "display: none"><td>Selfed parent</td><td><input id="selfed_parent" type="text" name="selfed_parent" size="40"/></td></tr>
+<tr id="get_bulked_selfed_population" style = "display: none"><td>Bulked selfed <em>population</em></td><td><input id="bulked_selfed_population" type="text" name="bulked_selfed_population" size="40"/></td></tr>
+<tr id="get_doubled_haploid_parent" style = "display: none"><td>Doubled haploid parent</td><td><input id="doubled_haploid_parent" type="text" name="doubled_haploid_parent" size="40"/></td></tr>
+<tr id="get_bulk_maternal_population" style = "display: none"><td>Bulked maternal <em>population</em></td><td><input id="bulked_maternal_population" type="text" name="bulked_maternal_population" size="40"/></td></tr>
+<tr id="get_bulk_paternal_parent" style = "display: none"><td>Bulked paternal parent</td><td><input id="bulked_paternal_parent" type="text" name="bulked_paternal_parent" size="40"/></td></tr>
+<tr id="get_bulk_open_maternal_population" style = "display: none"><td>Bulked paternal <em>population</em></td><td><input id="bulked_open_maternal_population" type="text" name="bulked_open_maternal_population" size="40"/></td></tr>
+
+<tr id="select_bulk_open_paternal_population" style = "display: none">
+  <td>Specify paternal population<input id="specify_bulk_open_paternal_population_checkbox" type="checkbox"/></td>
+  <td id="get_bulk_open_paternal_population" style = "display: none">
+      <input id="bulk_paternal_population" type="text" name="bulk_paternal_population" size="40"/>
+  </td>
+</tr>
+
+
+<tr id="get_open_pollinated_maternal_parent" style = "display: none"><td>Open pollinated maternal parent</td><td><input id="open_pollinated_maternal_parent" type="text" name="open_pollinated_maternal_parent" size="40"/></td></tr>
+
+<tr id="get_open_pollinated_population" style = "display: none">
+  <td>Specify paternal population<input id="specify_paternal_population_checkbox" type="checkbox"/></td>
+  <td id="get_paternal_population" style = "display: none">
+    <input id="paternal_population" type="text" name="paternal_parent_population" size="40"/>
+  </td>
+</tr>
+
+
 <tr><td>Trial</td><td><select id="trial" name="trial">
 <%perl>
 foreach my $project (@projects) {
@@ -49,6 +88,7 @@ foreach my $project (@projects) {
 }
 </%perl>
 </select></td></tr>
+
 <tr><td>Location</td><td>
 <select id="location" name="location">
 <%perl>
@@ -57,31 +97,39 @@ foreach my $location (@locations) {
 }
 </%perl>
 </select></td></tr>
-<tr><td>Cross name</td><td><input type="text" id="cross_name" name="cross_name" /></td></tr>
-<tr><td>Maternal parent</td><td><div class="ui-widget"><input id="maternal_parent" type="text" name="maternal" /></div></td></tr>
-<tr><td>Paternal parent</td><td><div class="ui-widget"><input id="paternal_parent" type="text" name="paternal" /></div></td></tr>
 
-<tr><td>Data access restrictions</td>
-<td><select id="visible_to_role" name="visible_to_role">
+<tr><td><br></td></tr>
+
+<tr>
+<td>Specify number of flowers<input id= "flower_number_checkbox" type="checkbox" /></td>
+<td id="get_flower_number" style="display: none">How many flowers?<input type="text" id="flower_number" size="4" /></td>
+</tr>
+
+<tr>
+<td>Specify number of seeds<input id= "seed_number_checkbox" type="checkbox" /></td>
+<td id="get_seed_number" style="display: none">How many seeds?<input type="text" id="seed_number" size="4" /></td>
+</tr>
+
+<tr>
+<td>Create accessions for progeny<input id="create_progeny_checkbox" type="checkbox"/></td>
+<td id="create_progeny_number" style = "display: none"> How many progeny?<input type="text" id="progeny_number" size="4" /></td>
+</tr>
+<tr id="use_prefix_suffix" style = "display: none">
+<td>Use prefix and/or suffix<input id="use_prefix_suffix_checkbox" type="checkbox" /></td>
+<td id="get_prefix_suffix" style = "display: none">Prefix <input id="prefix" name="prefix" size="5" /> Suffix <input id="suffix" name="suffix" size="5" /></td>
+</tr>
+
+<tr><td>Data access restrictions<input id="data_access_checkbox" type="checkbox"/></td>
+<td id="show_visible_to_role_selection" style="display: none">
+<select id="visible_to_role">
 <option value = "" >none</option>
 <%perl>
 foreach my $role (@roles) {
 	print "<option value=".$role.">".$role."</option>";
 }
 </%perl>
-</select></td>
-</tr>
-
-<tr><td>Number of flowers</td><td><input type="text" id="flower_number" name="flower_number" size="3" /></td></tr>
-
-<tr>
-<td>Create accessions for progeny<input id="create_progeny_checkbox" type="checkbox"/></td>
-<td id="create_progeny_number" style = "display: none"> How many progeny?<input type="text" id="progeny_number" size="3" /></td>
-</tr>
-
-<tr id="use_prefix_suffix" style = "display: none">
-<td>Use prefix and/or suffix<input id="use_prefix_suffix_checkbox" type="checkbox" /></td>
-<td id="get_prefix_suffix" style = "display: none">Prefix <input id="prefix" name="prefix" size="5" /> Suffix <input id="suffix" name="suffix" size="5" /></td>
+</select>
+</td>
 </tr>
 
 </table>
@@ -97,20 +145,49 @@ foreach my $role (@roles) {
   jQuery("#paternal_parent").autocomplete( { 
     source: '/ajax/stock/stock_autocomplete'
 });
-</script>
 
-
-<script>
-  
-
+  jQuery("#paternal_parent_populaton").autocomplete( { 
+    source: '/ajax/stock/stock_autocomplete'
+});
 
    jQuery("#create_cross").dialog( {
       autoOpen: false,
       buttons: { "Cancel" :  function() { jQuery("#create_cross").dialog("close"); }, "Submit": function() { add_cross() }  },
       modal: true,
-      width: 600,
-      height: 360
+      width: 500,
+      height: 380
     });
+
+   jQuery("#cross_type").change(function(){
+      jQuery("#get_maternal_parent").toggle(jQuery("#cross_type").val()=="biparental");  // show if biparental is cross type selected
+      jQuery("#get_paternal_parent").toggle(jQuery("#cross_type").val()=="biparental");  // show if biparental is cross type selected
+      jQuery("#get_selfed_parent").toggle(jQuery("#cross_type").val()=="self");  // show if self is cross type selected
+      jQuery("#get_bulked_selfed_population").toggle(jQuery("#cross_type").val()=="bulk_self");  // show if self is cross type selected
+      jQuery("#get_open_pollinated_maternal_parent").toggle(jQuery("#cross_type").val()=="open");  // show if open is cross type selected
+      jQuery("#get_open_pollinated_population").toggle(jQuery("#cross_type").val()=="open");  // show if open is cross type selected
+      jQuery("#get_bulk_maternal_population").toggle(jQuery("#cross_type").val()=="bulk");  // show if biparental is cross type selected
+      jQuery("#get_bulk_paternal_parent").toggle(jQuery("#cross_type").val()=="bulk");  // show if biparental is cross type selected
+      jQuery("#get_bulk_open_maternal_population").toggle(jQuery("#cross_type").val()=="bulk_open");
+      jQuery("#select_bulk_open_paternal_population").toggle(jQuery("#cross_type").val()=="bulk_open");
+      jQuery("#get_doubled_haploid_parent").toggle(jQuery("#cross_type").val()=="doubled_haploid");  // show if doubled haploid is cross type selected
+
+   });
+
+   jQuery("#specify_paternal_population_checkbox").change(function(){
+      jQuery("#get_paternal_population").toggle(this.checked);  // show if it is checked, otherwise hide
+   });
+
+   jQuery("#specify_bulk_open_paternal_population_checkbox").change(function(){
+      jQuery("#get_bulk_open_paternal_population").toggle(this.checked);  // show if it is checked, otherwise hide
+   });
+
+   jQuery("#flower_number_checkbox").change(function(){
+      jQuery("#get_flower_number").toggle(this.checked);  // show if it is checked, otherwise hide
+   });
+
+   jQuery("#seed_number_checkbox").change(function(){
+      jQuery("#get_seed_number").toggle(this.checked);  // show if it is checked, otherwise hide
+   });
 
    jQuery("#create_progeny_checkbox").change(function(){
       jQuery("#create_progeny_number").toggle(this.checked);  // show if it is checked, otherwise hide
@@ -119,6 +196,10 @@ foreach my $role (@roles) {
     
    jQuery("#use_prefix_suffix_checkbox").change(function(){
       jQuery("#get_prefix_suffix").toggle(this.checked);  // show if it is checked, otherwise hide
+   });
+
+   jQuery("#data_access_checkbox").change(function(){
+      jQuery("#show_visible_to_role_selection").toggle(this.checked);  // show if it is checked, otherwise hide
    });
 
     jQuery("#add_cross_link").click( function () { 
