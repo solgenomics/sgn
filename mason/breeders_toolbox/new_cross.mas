@@ -23,7 +23,8 @@ Upload a list of crosses:<br>
 <input type="radio" name="format_type" value="spreadsheet" checked="checked"/> Spreadsheet<br />
 </td></tr>
 <tr><td>
-Data access restrictions:
+<div style="display: none">
+Data access restrictions
 <select disabled id="visible_to_role" name="visible_to_role">
 <option value = "" >none</option>
 <%perl>
@@ -32,6 +33,7 @@ foreach my $role (@roles) {
 }
 </%perl>
 </select>
+</div>
 </td></tr>
 </table>
 </form>
