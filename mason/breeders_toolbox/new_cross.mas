@@ -44,13 +44,13 @@ foreach my $role (@roles) {
 <tr><td>Cross name</td><td><input type="text" id="cross_name" name="cross_name" size="40"/></td></tr>
 <tr><td>Cross type</td><td>
 <select id="cross_type">
-<option value = "biparental">biparental</option>
-<option value = "self">self</option>
-<option value = "open">open pollinated</option>
-<option value = "bulk">bulk</option>
-<option value = "bulk_self">bulk selfed</option>
-<option value = "bulk_open">bulk and open pollinated</option>
-<option value = "doubled_haploid">doubled haplotype</option>
+<option value = "biparental" title="An individual plant pollinated by another individual plant">biparental</option>
+<option value = "self" title="A self pollinated individual plant">self</option>
+<option value = "open" title="An individual plant pollinated by a group of plants or open pollinated (pollen may be from a group with known or unknown members)">open pollinated</option>
+<option value = "bulk" title="A group of plants (usually a related family) pollinated by an individual plant">bulk</option>
+<option value = "bulk_self" title="A group of plants (usually a related family) that are self pollinated (each individual selfed, not combined pollen)">bulk selfed</option>
+<option value = "bulk_open" title="A group of plants (usually a related family) that are pollinated by another group of plants or open pollinated (pollen may be from a group with known or unknown members)">bulk and open pollinated</option>
+<option value = "doubled_haploid" title="Plants derived from doubling the chromosome number of haploid tissue">doubled haplotype</option>
 </select>
 </td>
 </tr>
@@ -111,7 +111,7 @@ foreach my $location (@locations) {
 </tr>
 
 <tr>
-<td>Create accessions for progeny<input id="create_progeny_checkbox" type="checkbox"/></td>
+<td title="You may choose to create accessions for the progeny of the cross at this time.">Create accessions for progeny<input id="create_progeny_checkbox" type="checkbox"/></td>
 <td id="create_progeny_number" style = "display: none"> How many progeny?<input type="text" id="progeny_number" size="4" /></td>
 </tr>
 <tr id="use_prefix_suffix" style = "display: none">
