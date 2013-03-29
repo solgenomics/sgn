@@ -40,13 +40,9 @@ foreach my $role (@roles) {
 </div>
 
 
-
-
 <div id="create_cross" title="Add cross" >
-
 <table cellspacing="0" cellpadding="1" >
-<tr><td>Trial</td><td>
-<select id="trial" name="trial">
+<tr><td>Trial</td><td><select id="trial" name="trial">
 <%perl>
 foreach my $project (@projects) {
 	print "<option value=".@$project[0].">".@$project[1]."</option>";
@@ -64,11 +60,34 @@ foreach my $location (@locations) {
 <tr><td>Cross name</td><td><input type="text" id="cross_name" name="cross_name" /></td></tr>
 <tr><td>Maternal parent</td><td><div class="ui-widget"><input id="maternal_parent" type="text" name="maternal" /></div></td></tr>
 <tr><td>Paternal parent</td><td><div class="ui-widget"><input id="paternal_parent" type="text" name="paternal" /></div></td></tr>
-<tr><td>Number of progeny</td><td><div class="ui-widget"><input type="text" id="progeny_number" name="progeny_number" size="3" /></div></td></tr>
+
+<tr><td>Data access restrictions</td>
+<td><select id="visible_to_role" name="visible_to_role">
+<option value = "" >none</option>
+<%perl>
+foreach my $role (@roles) {
+	print "<option value=".$role.">".$role."</option>";
+}
+</%perl>
+</select></td>
+</tr>
+
 <tr><td>Number of flowers</td><td><input type="text" id="flower_number" name="flower_number" size="3" /></td></tr>
-<tr><td>Progeny naming</td><td>Prefix <input id="prefix" name="prefix" size="5" /> Suffix <input id="suffix" name="suffix" size="5" /></td></tr>
+
+<tr>
+<td>Create accessions for progeny<input id="create_progeny_checkbox" type="checkbox"/></td>
+<td id="create_progeny_number" style = "display: none"> How many progeny?<input type="text" id="progeny_number" size="3" /></td>
+</tr>
+
+<tr id="use_prefix_suffix" style = "display: none">
+<td>Use prefix and/or suffix<input id="use_prefix_suffix_checkbox" type="checkbox" /></td>
+<td id="get_prefix_suffix" style = "display: none">Prefix <input id="prefix" name="prefix" size="5" /> Suffix <input id="suffix" name="suffix" size="5" /></td>
+</tr>
 
 </table>
+</div>
+
+
 
 <script>
   jQuery("#maternal_parent").autocomplete( { 
@@ -80,21 +99,10 @@ foreach my $location (@locations) {
 });
 </script>
 
-Keep private to role 
-<select id="visible_to_role" name="visible_to_role">
-<option value = "" >none</option>
-<%perl>
-foreach my $role (@roles) {
-	print "<option value=".$role.">".$role."</option>";
-}
-</%perl>
-</select>
-
-</div>
-
 
 <script>
   
+
 
    jQuery("#create_cross").dialog( {
       autoOpen: false,
@@ -103,7 +111,16 @@ foreach my $role (@roles) {
       width: 600,
       height: 360
     });
+
+   jQuery("#create_progeny_checkbox").change(function(){
+      jQuery("#create_progeny_number").toggle(this.checked);  // show if it is checked, otherwise hide
+      jQuery("#use_prefix_suffix").toggle(this.checked);  // show if it is checked, otherwise hide
+   });
     
+   jQuery("#use_prefix_suffix_checkbox").change(function(){
+      jQuery("#get_prefix_suffix").toggle(this.checked);  // show if it is checked, otherwise hide
+   });
+
     jQuery("#add_cross_link").click( function () { 
      jQuery("#create_cross" ).dialog("open");
     });
