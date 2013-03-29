@@ -30,6 +30,7 @@ my $p_id = $p->store();
 my $login = CXGN::People::Login->new( $dbh, $p_id );
 $login->set_username("testusername");
 $login->set_password("testpassword");
+$login->set_organization("testorganization");
 $login->set_user_type("user");
 
 $login->store();
@@ -62,8 +63,9 @@ my %form = (
 
 $m->submit_form_ok( \%form, "Login form submission test" );
 $m->content_contains("testfirstname");
-
+$m->content_contains("testorganization");
 $m->get('/solpeople/top-level.pl');
+
 $m->follow_link_ok({ url_regex => qr/personal-info\.pl/ });
 $m->submit_form_ok({
         form_number => 2,
