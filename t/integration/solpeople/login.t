@@ -18,23 +18,24 @@ my $dbh = $m->context->dbc->dbh();
 
 # generate a new user for testing purposes
 # (to be deleted right afterwards)
+#
 if( my $u_id = CXGN::People::Person->get_person_by_username( $dbh, "testusername" ) ) {
     CXGN::People::Person->new( $dbh, $u_id )->hard_delete;
 }
-#
+
 my $p = CXGN::People::Person->new($dbh);
 $p->set_first_name("testfirstname");
 $p->set_last_name("testlastname");
+$p->set_organization("testorganization");
 my $p_id = $p->store();
 
 my $login = CXGN::People::Login->new( $dbh, $p_id );
 $login->set_username("testusername");
 $login->set_password("testpassword");
+
 $login->set_user_type("user");
 
 $login->store();
-
-#$dbh->commit();
 
 my $u_id = CXGN::People::Person->get_person_by_username( $dbh, "testusername" );
 my $u = CXGN::People::Person->new( $dbh, $u_id );
@@ -63,8 +64,10 @@ my %form = (
 $m->submit_form_ok( \%form, "Login form submission test" );
 $m->content_contains("testfirstname");
 
-$m->get('/solpeople/top-level.pl');
+$m->get_ok('/solpeople/top-level.pl');
+
 $m->follow_link_ok({ url_regex => qr/personal-info\.pl/ });
+
 $m->submit_form_ok({
         form_number => 2,
         fields => {
@@ -88,7 +91,6 @@ $m->content_contains("You have successfully logged out");
 #
 $login->set_user_type("curator");
 $login->store();
-#$dbh->commit();
 
 $m->get("/solpeople/login.pl");
 $m->submit_form_ok( \%form, "Login as curator form submission" );
