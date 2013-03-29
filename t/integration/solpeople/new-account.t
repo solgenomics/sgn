@@ -27,6 +27,7 @@ $mech->with_test_level( local => sub {
 	    last_name  => "Testman",
 	    username   => "testtesttest",
 	    password   => "test-pass",
+	    organization => "test-organization",
 	    confirm_password => "test-pass",
 	    email_address => "lam87\@cornell.edu",
 	},
@@ -35,13 +36,14 @@ $mech->with_test_level( local => sub {
     ok($mech->submit_form(%form), "submit form test");
     
     $mech->content_contains("created", "Account creation test");
-    
+    #print STDERR $mech->content();
     
 # generate the same account again to test if it detects duplicated usernames
     
     $mech->get_ok($new_account_page);
     ok($mech->submit_form(%form), "submit duplicate username test");
     
+    #print "CONTENTS: ". $mech->content();
     $mech->content_contains("already in use", "Duplicate username test");
     
 # remove the user just created
