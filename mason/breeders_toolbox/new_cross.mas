@@ -41,7 +41,7 @@ foreach my $role (@roles) {
 <div id="create_cross" title="Add cross" >
 <table cellspacing="0" cellpadding="1" >
 
-<tr><td>Cross name</td><td><input type="text" id="cross_name" name="cross_name" size="40"/></td></tr>
+<tr><td>Cross name</td><td><input type="text" id="cross_name" name="cross_name" size="30"/></td></tr>
 <tr><td>Cross type</td><td>
 <select id="cross_type">
 <option value = "biparental" title="An individual plant pollinated by another individual plant">biparental</option>
@@ -54,33 +54,33 @@ foreach my $role (@roles) {
 </select>
 </td>
 </tr>
-<tr id="get_maternal_parent" ><td>Maternal parent</td><td><input id="maternal_parent" type="text" name="maternal" size="40"/></td></tr>
-<tr id="get_paternal_parent" ><td>Paternal parent</td><td><input id="paternal_parent" type="text" name="paternal" size="40"/></td></tr>
-<tr id="get_selfed_parent" style = "display: none"><td>Selfed parent</td><td><input id="selfed_parent" type="text" name="selfed_parent" size="40"/></td></tr>
-<tr id="get_bulked_selfed_population" style = "display: none"><td>Bulked selfed <em>population</em></td><td><input id="bulked_selfed_population" type="text" name="bulked_selfed_population" size="40"/></td></tr>
-<tr id="get_doubled_haploid_parent" style = "display: none"><td>Doubled haploid parent</td><td><input id="doubled_haploid_parent" type="text" name="doubled_haploid_parent" size="40"/></td></tr>
-<tr id="get_bulk_maternal_population" style = "display: none"><td>Bulked maternal <em>population</em></td><td><input id="bulked_maternal_population" type="text" name="bulked_maternal_population" size="40"/></td></tr>
-<tr id="get_bulk_paternal_parent" style = "display: none"><td>Bulked paternal parent</td><td><input id="bulked_paternal_parent" type="text" name="bulked_paternal_parent" size="40"/></td></tr>
-<tr id="get_bulk_open_maternal_population" style = "display: none"><td>Bulked maternal <em>population</em></td><td><input id="bulked_open_maternal_population" type="text" name="bulked_open_maternal_population" size="40"/></td></tr>
+<tr id="get_maternal_parent" ><td>Maternal parent</td><td><input id="maternal_parent" type="text" name="maternal" size="30"/></td></tr>
+<tr id="get_paternal_parent" ><td>Paternal parent</td><td><input id="paternal_parent" type="text" name="paternal" size="30"/></td></tr>
+<tr id="get_selfed_parent" style = "display: none"><td>Selfed parent</td><td><input id="selfed_parent" type="text" name="selfed_parent" size="30"/></td></tr>
+<tr id="get_bulked_selfed_population" style = "display: none"><td>Bulked selfed <em>population</em></td><td><input id="bulked_selfed_population" type="text" name="bulked_selfed_population" size="30"/></td></tr>
+<tr id="get_doubled_haploid_parent" style = "display: none"><td>Doubled haploid parent</td><td><input id="doubled_haploid_parent" type="text" name="doubled_haploid_parent" size="30"/></td></tr>
+<tr id="get_bulk_maternal_population" style = "display: none"><td>Bulked maternal <em>population</em></td><td><input id="bulked_maternal_population" type="text" name="bulked_maternal_population" size="30"/></td></tr>
+<tr id="get_bulk_paternal_parent" style = "display: none"><td>Bulked paternal parent</td><td><input id="bulked_paternal_parent" type="text" name="bulked_paternal_parent" size="30"/></td></tr>
+<tr id="get_bulk_open_maternal_population" style = "display: none"><td>Bulked maternal <em>population</em></td><td><input id="bulked_open_maternal_population" type="text" name="bulked_open_maternal_population" size="30"/></td></tr>
 
 <tr id="select_bulk_open_paternal_population" style = "display: none">
   <td>Specify paternal population<input id="specify_bulk_open_paternal_population_checkbox" type="checkbox"/></td>
   <td id="get_bulk_open_paternal_population" style = "display: none">
-      <input id="bulk_paternal_population" type="text" name="bulk_paternal_population" size="40"/>
+      <input id="bulk_paternal_population" type="text" name="bulk_paternal_population" size="30"/>
   </td>
 </tr>
 
 
-<tr id="get_open_pollinated_maternal_parent" style = "display: none"><td>Open pollinated maternal parent</td><td><input id="open_pollinated_maternal_parent" type="text" name="open_pollinated_maternal_parent" size="40"/></td></tr>
+<tr id="get_open_pollinated_maternal_parent" style = "display: none"><td>Open pollinated maternal parent</td><td><input id="open_pollinated_maternal_parent" type="text" name="open_pollinated_maternal_parent" size="30"/></td></tr>
 
 <tr id="get_open_pollinated_population" style = "display: none">
   <td>Specify paternal population<input id="specify_paternal_population_checkbox" type="checkbox"/></td>
   <td id="get_paternal_population" style = "display: none">
-    <input id="paternal_population" type="text" name="paternal_parent_population" size="40"/>
+    <input id="paternal_population" type="text" name="paternal_parent_population" size="30"/>
   </td>
 </tr>
 
-
+<tr><td><br></td></tr>
 <tr><td>Trial</td><td><select id="trial" name="trial">
 <%perl>
 foreach my $project (@projects) {
@@ -154,8 +154,8 @@ foreach my $role (@roles) {
       autoOpen: false,
       buttons: { "Cancel" :  function() { jQuery("#create_cross").dialog("close"); }, "Submit": function() { add_cross() }  },
       modal: true,
-      width: 500,
-      height: 380
+      width: 550,
+      height: 400
     });
 
    jQuery("#cross_type").change(function(){
@@ -245,7 +245,7 @@ foreach my $role (@roles) {
       autoOpen: false,
       buttons: { "Cancel" :  function() { jQuery("#upload_crosses_dialog").dialog("close"); }, "Submit": function() { read_cross_upload() }  },
       modal: true,
-      width: 600,
+      width: 500,
       height: 250
     });
     
