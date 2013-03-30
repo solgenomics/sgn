@@ -218,7 +218,7 @@ foreach my $role (@roles) {
       var visibleToRole = jQuery("#visible_to_role").val();
       var location = jQuery("#location").val();
       var trial = jQuery("#trial").val();
-      if (!crossName) { alert("We need a cross name here, sorry!"); return; }
+      if (!crossName) { alert("A cross name is required"); return; }
        alert("Sending AJAX request.. /ajax/cross/add_cross");
       jQuery.ajax({
         url: '/ajax/cross/add_cross',
