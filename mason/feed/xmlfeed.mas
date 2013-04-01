@@ -1,0 +1,18 @@
+
+<%args>
+$uri
+</%args>
+
+<%perl>
+
+use XML::Feed;
+
+my $feed = XML::Feed->parse(URI->new($uri));
+
+foreach my $e ($feed->entries) { 
+  print "<a  href=\"".$e->link()."\">".$e->title."</a><br /><br />";
+  #print $e->summary()->body()."<br />\n";
+}
+</%perl>
+
+
