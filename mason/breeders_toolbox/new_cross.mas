@@ -66,7 +66,7 @@ foreach my $role (@roles) {
 <tr id="select_bulk_open_paternal_population" style = "display: none">
   <td>Specify paternal population<input id="specify_bulk_open_paternal_population_checkbox" type="checkbox"/></td>
   <td id="get_bulk_open_paternal_population" style = "display: none">
-      <input id="bulk_paternal_population" type="text" name="bulk_paternal_population" size="30"/>
+      <input id="bulked_open_paternal_population" type="text" name="bulked_open_paternal_population" size="30"/>
   </td>
 </tr>
 
@@ -76,7 +76,7 @@ foreach my $role (@roles) {
 <tr id="get_open_pollinated_population" style = "display: none">
   <td>Specify paternal population<input id="specify_paternal_population_checkbox" type="checkbox"/></td>
   <td id="get_paternal_population" style = "display: none">
-    <input id="paternal_population" type="text" name="paternal_parent_population" size="30"/>
+    <input id="paternal_population" type="text" name="paternal_population" size="30"/>
   </td>
 </tr>
 
@@ -197,7 +197,7 @@ foreach my $role (@roles) {
    jQuery("#use_prefix_suffix_checkbox").change(function(){
       jQuery("#get_prefix_suffix").toggle(this.checked);  // show if it is checked, otherwise hide
    });
-
+  
    jQuery("#data_access_checkbox").change(function(){
       jQuery("#show_visible_to_role_selection").toggle(this.checked);  // show if it is checked, otherwise hide
    });
@@ -232,7 +232,7 @@ foreach my $role (@roles) {
 
       //open pollinated
       var openPollinatedMaternalParent = jQuery("#open_pollinated_maternal_parent").val(); //open pollinated maternal parent
-      var paternalParentPopulation = jQuery("#paternal_parent_population").val();  //open pollinated paternal parent (may not be specified)
+      var paternalParentPopulation = jQuery("#paternal_population").val();  //open pollinated paternal parent (may not be specified)
 
       //bulk
       var bulkedMaternalPopulation = jQuery("#bulked_maternal_population").val();  //bulked maternal population
@@ -243,14 +243,14 @@ foreach my $role (@roles) {
 
       //open pollinated bulk
       var bulkedOpenMaternalPopulation = jQuery("#bulked_open_maternal_population").val();  //bulked open pollinated maternal population
-      var bulkedPaternalPopulation = jQuery("#bulk_paternal_population").val();  //bulked paternal parent population (may not be specified)
+      var bulkedOpenPaternalPopulation = jQuery("#bulked_open_paternal_population").val();  //bulked paternal parent population (may not be specified)
 
       //set maternal and paternal parents based on cross type
       if (crossType =="self") { maternalParent = selfedParent; paternalParent = selfedParent; }
       if (crossType =="open") { maternalParent = openPollinatedMaternalParent; paternalParent = paternalParentPopulation; }  //paternal parent may not be specified
       if (crossType =="bulk") { maternalParent = bulkedMaternalPopulation; paternalParent = bulkedPaternalParent; } 
       if (crossType =="bulk_self") { maternalParent = bulkedSelfedPopulation; paternalParent = bulkedSelfedPopulation; }  
-      if (crossType =="bulk_open") { maternalParent = bulkedOpenMaternalPopulation; paternalParent = bulkedPaternalPopulation; }  //paternal population may not be specified
+      if (crossType =="bulk_open") { maternalParent = bulkedOpenMaternalPopulation; paternalParent = bulkedOpenPaternalPopulation; }  //paternal population may not be specified
       if (crossType =="doubled_haploid") { maternalParent = doubledHaploidParent; paternalParent = doubledHaploidParent; }
 
 

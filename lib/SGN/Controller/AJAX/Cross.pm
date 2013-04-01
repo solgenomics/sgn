@@ -70,6 +70,13 @@ sub add_cross_GET :Args(0) {
     my $number_of_seeds = $c->req->param('number_of_seeds');
     my $visible_to_role = $c->req->param('visible_to_role');
 
+    my $paternal_parent_not_required;
+    if ($cross_type eq "open" || $cross_type eq "bulk_open") {
+      $paternal_parent_not_required = 1;
+    }
+
+    print STDERR "\nMaternal: $maternal Paternal: $paternal Cross Type: $cross_type\n";
+
     if (!$c->user()) { 
 	print STDERR "User not logged in... not adding a cross.\n";
 	$c->stash->{rest} = {error => "You need to be logged in to add a cross." };
@@ -86,16 +93,22 @@ sub add_cross_GET :Args(0) {
 
     #check that progeny number is an integer less than maximum allowed
     my $maximum_progeny_number = 20000;
-    if ($progeny_number) {33
+    if ($progeny_number) {
       if ((! $progeny_number =~ m/^\d+$/) or ($progeny_number > $maximum_progeny_number) or ($progeny_number < 1)) {
 	$c->stash->{rest} = {error =>  "progeny number exceeds the maximum of $maximum_progeny_number or is invalid." };
 	return;
       }
     }
 
-    #check that parent names are not blank
-    if ($maternal eq "" or $paternal eq "") {
-      $c->stash->{rest} = {error =>  "parent names cannot be blank." };
+    #check that maternal name is not blank
+    if ($maternal eq "") {
+      $c->stash->{rest} = {error =>  "maternal parent name cannot be blank." };
+      return;
+    }
+
+    #if required, check that paternal parent name is not blank;
+    if ($paternal eq "" && !$paternal_parent_not_required) {
+      $c->stash->{rest} = {error =>  "paternal parent name cannot be blank." };
       return;
     }
 
@@ -104,6 +117,7 @@ sub add_cross_GET :Args(0) {
       $c->stash->{rest} = {error =>  "maternal parent does not exist." };
       return;
     }
+
     if (! $schema->resultset("Stock::Stock")->find({name=>$paternal,})){
       $c->stash->{rest} = {error =>  "paternal parent does not exist." };
       return;
