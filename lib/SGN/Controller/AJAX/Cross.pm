@@ -66,6 +66,7 @@ sub add_cross_GET :Args(0) {
     my $suffix = $c->req->param('suffix');
     my $progeny_number = $c->req->param('progeny_number');
     my $number_of_flowers = $c->req->param('number_of_flowers');
+    my $number_of_seeds = $c->req->param('number_of_seeds');
     my $visible_to_role = $c->req->param('visible_to_role');
 
     if (!$c->user()) { 
@@ -202,6 +203,14 @@ sub add_cross_GET :Args(0) {
 	dbxref => 'number_of_flowers',
     });
 
+   my $number_of_seeds_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
+      { name   => 'number_of_seeds',
+	cv     => 'local',
+	db     => 'null',
+	dbxref => 'number_of_seeds',
+    });
+
+
     my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create(
             {
                 nd_geolocation_id => $geolocation->nd_geolocation_id(),
@@ -228,8 +237,13 @@ sub add_cross_GET :Args(0) {
 								 });
     }
 
-
-
+    if ($number_of_seeds) {
+      $experiment->find_or_create_related('nd_experimentprops' , {
+								  nd_experiment_id => $experiment->nd_experiment_id(),
+								  type_id  =>  $number_of_seeds_cvterm->cvterm_id(),
+								  value  =>  $number_of_seeds,
+								 });
+    }
 
     my $increment = 1;
     if ($progeny_number) {

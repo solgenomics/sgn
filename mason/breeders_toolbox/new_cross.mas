@@ -213,6 +213,7 @@ foreach my $role (@roles) {
       var paternalParent = jQuery("#paternal_parent").val();
       var progenyNumber = jQuery("#progeny_number").val();
       var flowerNumber = jQuery("#flower_number").val();
+      var seedNumber = jQuery("#seed_number").val();
       var prefix = jQuery("#prefix").val();
       var suffix = jQuery("#suffix").val();
       var visibleToRole = jQuery("#visible_to_role").val();
@@ -224,7 +225,7 @@ foreach my $role (@roles) {
         url: '/ajax/cross/add_cross',
         dataType: "json",
         type: 'GET',
-        data: 'cross_name='+crossName+'&maternal_parent='+maternalParent+'&paternal_parent='+paternalParent+'&progeny_number='+progenyNumber+'&flower_number='+flowerNumber+'&prefix='+prefix+'&suffix='+suffix+'&visible_to_role'+visibleToRole+'&trial_id='+trial+'&location_id='+location,
+        data: 'cross_name='+crossName+'&maternal_parent='+maternalParent+'&paternal_parent='+paternalParent+'&progeny_number='+progenyNumber+'&flower_number='+flowerNumber+'&seed_number='+seedNumber+'&prefix='+prefix+'&suffix='+suffix+'&visible_to_role'+visibleToRole+'&trial_id='+trial+'&location_id='+location,
         error: function(response) { alert("An error occurred. Please try again later!"+response); },
         parseerror: function(response) { alert("A parse error occurred. Please try again."+response); },
         success: function(response) { 
