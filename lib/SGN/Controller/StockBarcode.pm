@@ -227,6 +227,7 @@ sub upload_barcode_output : Path('/breeders/phenotype/upload') :Args(0) {
     if (! -e $tempfile) { 
         die "The file does not exist!\n\n";
     }
+    print STDERR "***Basename= $basename, tempfile = $tempfile \n\n";
     my $archive_path = $c->config->{archive_path};
 
     $tempfile = $archive_path . "/" . $basename ;
