@@ -146,7 +146,39 @@ foreach my $role (@roles) {
     source: '/ajax/stock/stock_autocomplete'
 });
 
-  jQuery("#paternal_parent_populaton").autocomplete( { 
+  jQuery("#selfed_parent").autocomplete( { 
+    source: '/ajax/stock/stock_autocomplete'
+});
+
+  jQuery("#doubled_haploid_parent").autocomplete( { 
+    source: '/ajax/stock/stock_autocomplete'
+});
+
+  jQuery("#open_pollinated_maternal_parent").autocomplete( { 
+    source: '/ajax/stock/stock_autocomplete'
+});
+
+  jQuery("#paternal_population").autocomplete( { 
+    source: '/ajax/stock/stock_autocomplete'
+});
+
+  jQuery("#bulked_maternal_population").autocomplete( { 
+    source: '/ajax/stock/stock_autocomplete'
+});
+
+  jQuery("#bulked_paternal_parent").autocomplete( { 
+    source: '/ajax/stock/stock_autocomplete'
+});
+
+  jQuery("#bulked_selfed_population").autocomplete( { 
+    source: '/ajax/stock/stock_autocomplete'
+});
+
+  jQuery("#bulked_open_maternal_population").autocomplete( { 
+    source: '/ajax/stock/stock_autocomplete'
+});
+
+  jQuery("#bulked_open_paternal_population").autocomplete( { 
     source: '/ajax/stock/stock_autocomplete'
 });
 
