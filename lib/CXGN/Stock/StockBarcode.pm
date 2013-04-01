@@ -59,12 +59,13 @@ sub parse {
     my ($contents , $identifier_prefix, $db_name ) = @_;
     print STDERR "Identifier prefix = $identifier_prefix, db_name = $db_name\n";
     my $hashref; #hashref of hashrefs for storing the uploaded data , to be used for checking the fields
-    ## multiple values are overriden by last one? "unknown_date"
-    my ($op_name, $project_id, $location_id, $stock_id, $cvterm_accession, $value, $date);
+    ## multiple values are kept
+    my ($op_name, $project_id, $location_id, $stock_id, $cvterm_accession, $value, $date, $count);
     foreach my $line (@$contents) {
         chomp $line;
 	$line =~ s/\r//g;
-        my ($code, $time, $unused_date) = split ",", $line;
+        $line =~ s/\s+/ /g;
+        my ($code, $quantity_not_used, $time, $unused_date) = split ",", $line;
         if ($code =~ m/^O/) { #operator name
             (undef, $op_name) = split(/:/, $code) ;
             print STDERR "FOUND operator name $op_name\n";
@@ -84,24 +85,30 @@ sub parse {
             print STDERR "Found stock $code\n";
             $stock_id = $1;
         }
-        if ($code =~ m/^($db_name:\d+)\#(.*)/ ) {
-            print STDERR "Found cvterm#value : $code \n";
-            $cvterm_accession = $1;
-            $value = $2;
-            if ( defined($value) && ($value ne '') ) { #need to include 0
-                print STDERR " **** parse ... parsing : $op_name \t $project_id \t $location_id \t $date .. stock_id = $stock_id accession = $cvterm_accession time = $time, value = $value \n\n";
-                #do we allow multiple measurements per one plant per DAY ?
-                $hashref->{$op_name . "\t" . $project_id . "\t" . $location_id . "\t" . $date}->{$stock_id}->{$cvterm_accession}->{time}  = $time;
-                $hashref->{$op_name . "\t" . $project_id . "\t" . $location_id . "\t" . $date}->{$stock_id}->{$cvterm_accession}->{value} = $value;
-            }
+        if ($code =~ m/^($db_name:\d+)/ ) {
+            print STDERR "Found cvterm : $code \n";
+            $cvterm_accession = $code;
+
         }
-        if ($code =~ m/^\#(.*)/) { #this is for values types using the keypad, or by scanning multiples
+        ################################
+        #values are recorded only manualy and not from the barcode.
+        ##################################
+            #if ( defined($value) && ($value ne '') ) { #need to include 0
+            #    print STDERR " **** parse ... parsing : $op_name \t $project_id \t $location_id \t $date .. stock_id = $stock_id accession = $cvterm_accession time = $time, value = $value \n\n";
+            #    #do we allow multiple measurements per one plant per DAY ?
+            #    $hashref->{$op_name . "\t" . $project_id . "\t" . $location_id . "\t" . $date}->{$stock_id}->{$cvterm_accession}->{time}  = $time;
+            #    $hashref->{$op_name . "\t" . $project_id . "\t" . $location_id . "\t" . $date}->{$stock_id}->{$cvterm_accession}->{value} = $value;
+            #}
+        ########################################
+        # values are typed  using the keypad.
+        if ($code =~ m/^[\d.]+$/) {
+            $count++;
             print "Found keypad entry $code \n";
-            $value = $1;
-            $hashref->{$op_name . "\t" . $project_id . "\t" . $location_id . "\t" . $date}->{$stock_id}->{$cvterm_accession}->{time}  = $time; #replace the time to the latest recorded
-            $hashref->{$op_name . "\t" . $project_id . "\t" . $location_id . "\t" . $date}->{$stock_id}->{$cvterm_accession}->{value} .= $value; #build the value string
+            $value = $code;
+            $hashref->{join("\t", $op_name , $project_id , $location_id , $date , $count)}->{$stock_id}->{$cvterm_accession}->{time}  = $time; #replace the time to the latest recorded
+            $hashref->{join("\t", $op_name , $project_id , $location_id , $date, $count)}->{$stock_id}->{$cvterm_accession}->{value} = $value; # one value per line.
         }
-        if ($code !~ /^O|^P|^L|^D|^$identifier_prefix|^$db_name:\d+|^\#/ ) {
+        if ($code !~ /^O|^P|^L|^D|^$identifier_prefix|^$db_name:\d+|^\d/ ) {
             print STDERR  "Cannot find code ' $code ' in the database! \n\n";
             push @errors, " Data ' $code ' cannot be stored in the database! \n Please check your barcode input\n";
         }
@@ -136,7 +143,7 @@ sub verify {
     my @verify;
     my @warnings;
     foreach my $key (keys %$hashref) {
-        my ($op, $project_id, $location_id, $date) = split(/\t/, $key);
+        my ($op, $project_id, $location_id, $date, $count) = split(/\t/, $key);
         print STDERR "***** verify found key $key !!!!!!!\n\n";
         print STDERR "verify :  ... . . . .op = $op, project_id = $project_id, location_id = $location_id, date = $date\n\n";
         if (!$project_id) { push @warnings, "Did not scan a project name, will generate a new 'UNKNOWN' project"; }
@@ -194,7 +201,7 @@ sub store {
         ##
         ##  $hashref->{$op_name . "\t" . $project_id . "\t" . $location_id . "\t" . $date}->{$stock_id}->{$cvterm_accession}->{time} = $time, ->{value} = $value
         foreach my $key (keys %$hashref) {
-            my ($op, $project_id, $location_id, $date) = split /\t/, $key;
+            my ($op, $project_id, $location_id, $date, $count) = split /\t/, $key;
             print STDERR " *** store: op = $op, project_id = $project_id, location_id = $location_id, date = $date\n";
             foreach my $stock_id (keys %{$hashref->{$key} } ) {
                 print STDERR " *** store: loading information for stock $stock_id \n";
