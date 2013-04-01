@@ -209,8 +209,7 @@ foreach my $role (@roles) {
     function add_cross() { 
    
       var crossName = jQuery("#cross_name").val();
-      var maternalParent = jQuery("#maternal_parent").val();
-      var paternalParent = jQuery("#paternal_parent").val();
+      var crossType = jQuery("#cross_type").val();
       var progenyNumber = jQuery("#progeny_number").val();
       var flowerNumber = jQuery("#flower_number").val();
       var seedNumber = jQuery("#seed_number").val();
@@ -219,13 +218,50 @@ foreach my $role (@roles) {
       var visibleToRole = jQuery("#visible_to_role").val();
       var location = jQuery("#location").val();
       var trial = jQuery("#trial").val();
+
+
+      //biparental
+      var maternalParent = jQuery("#maternal_parent").val();  //biparental cross maternal parent
+      var paternalParent = jQuery("#paternal_parent").val();  //biparental cross paternal parent
+
+      //selfed
+      var selfedParent = jQuery("#selfed_parent").val(); //selfed parent
+
+      //doulbed haploid
+      var doubledHaploidParent = jQuery("#doubled_haploid_parent").val();  //doubled haploid parent
+
+      //open pollinated
+      var openPollinatedMaternalParent = jQuery("#open_pollinated_maternal_parent").val(); //open pollinated maternal parent
+      var paternalParentPopulation = jQuery("#paternal_parent_population").val();  //open pollinated paternal parent (may not be specified)
+
+      //bulk
+      var bulkedMaternalPopulation = jQuery("#bulked_maternal_population").val();  //bulked maternal population
+      var bulkedPaternalParent = jQuery("#bulked_paternal_parent").val();  //bulked paternal parent (may not be specified)
+
+      //selfed bulk
+      var bulkedSelfedPopulation = jQuery("#bulked_selfed_population").val();  //selfed bulk
+
+      //open pollinated bulk
+      var bulkedOpenMaternalPopulation = jQuery("#bulked_open_maternal_population").val();  //bulked open pollinated maternal population
+      var bulkedPaternalPopulation = jQuery("#bulk_paternal_population").val();  //bulked paternal parent population (may not be specified)
+
+      //set maternal and paternal parents based on cross type
+      if (crossType =="self") { maternalParent = selfedParent; paternalParent = selfedParent; }
+      if (crossType =="open") { maternalParent = openPollinatedMaternalParent; paternalParent = paternalParentPopulation; }  //paternal parent may not be specified
+      if (crossType =="bulk") { maternalParent = bulkedMaternalPopulation; paternalParent = bulkedPaternalParent; } 
+      if (crossType =="bulk_self") { maternalParent = bulkedSelfedPopulation; paternalParent = bulkedSelfedPopulation; }  
+      if (crossType =="bulk_open") { maternalParent = bulkedOpenMaternalPopulation; paternalParent = bulkedPaternalPopulation; }  //paternal population may not be specified
+      if (crossType =="doubled_haploid") { maternalParent = doubledHaploidParent; paternalParent = doubledHaploidParent; }
+
+
       if (!crossName) { alert("A cross name is required"); return; }
        alert("Sending AJAX request.. /ajax/cross/add_cross");
+  
       jQuery.ajax({
         url: '/ajax/cross/add_cross',
         dataType: "json",
         type: 'GET',
-        data: 'cross_name='+crossName+'&maternal_parent='+maternalParent+'&paternal_parent='+paternalParent+'&progeny_number='+progenyNumber+'&flower_number='+flowerNumber+'&seed_number='+seedNumber+'&prefix='+prefix+'&suffix='+suffix+'&visible_to_role'+visibleToRole+'&trial_id='+trial+'&location_id='+location,
+        data: 'cross_name='+crossName+'&cross_type='+crossType+'&maternal_parent='+maternalParent+'&paternal_parent='+paternalParent+'&progeny_number='+progenyNumber+'&flower_number='+flowerNumber+'&seed_number='+seedNumber+'&prefix='+prefix+'&suffix='+suffix+'&visible_to_role'+visibleToRole+'&trial_id='+trial+'&location_id='+location,
         error: function(response) { alert("An error occurred. Please try again later!"+response); },
         parseerror: function(response) { alert("A parse error occurred. Please try again."+response); },
         success: function(response) { 

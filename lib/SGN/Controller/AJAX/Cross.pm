@@ -56,6 +56,7 @@ sub add_cross_GET :Args(0) {
     my ($self, $c) = @_;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $cross_name = $c->req->param('cross_name');
+    my $cross_type = $c->req->param('cross_type');
     $c->stash->{cross_name} = $cross_name;
     my $trial_id = $c->req->param('trial_id');
     $c->stash->{trial_id} = $trial_id;
@@ -85,7 +86,7 @@ sub add_cross_GET :Args(0) {
 
     #check that progeny number is an integer less than maximum allowed
     my $maximum_progeny_number = 20000;
-    if ($progeny_number) {
+    if ($progeny_number) {33
       if ((! $progeny_number =~ m/^\d+$/) or ($progeny_number > $maximum_progeny_number) or ($progeny_number < 1)) {
 	$c->stash->{rest} = {error =>  "progeny number exceeds the maximum of $maximum_progeny_number or is invalid." };
 	return;
