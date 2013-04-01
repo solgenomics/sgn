@@ -75,7 +75,7 @@ sub add_cross_GET :Args(0) {
       $paternal_parent_not_required = 1;
     }
 
-    print STDERR "\nMaternal: $maternal Paternal: $paternal Cross Type: $cross_type\n";
+    print STDERR "Adding Cross... Maternal: $maternal Paternal: $paternal Cross Type: $cross_type\n";
 
     if (!$c->user()) { 
 	print STDERR "User not logged in... not adding a cross.\n";
@@ -135,15 +135,6 @@ sub add_cross_GET :Args(0) {
       return;
     }
 
-    my $organism = $schema->resultset("Organism::Organism")->find_or_create(
-    {
-	genus   => 'Manihot',
-	species => 'Manihot esculenta',
-    } );
-    my $organism_id = $organism->organism_id();
-
-
-
     my $geolocation = $schema->resultset("NaturalDiversity::NdGeolocation")->find_or_create(
            {
                 nd_geolocation_id => $location_id,
@@ -153,6 +144,7 @@ sub add_cross_GET :Args(0) {
             {
                 project_id => $trial_id,
             } ) ;
+
 
     my $accession_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
       { name   => 'accession',
@@ -174,6 +166,8 @@ sub add_cross_GET :Args(0) {
             { name       => $maternal,
             } );
 
+    my $organism_id = $female_parent_stock->organism_id();
+
     my $male_parent_stock = $schema->resultset("Stock::Stock")->find(
             { name       => $paternal,
             } );
@@ -184,6 +178,7 @@ sub add_cross_GET :Args(0) {
 	      uniquename => $cross_name,
 	      type_id => $population_cvterm->cvterm_id,
             } );
+
       my $female_parent = $schema->resultset("Cv::Cvterm")->create_with(
     { name   => 'female_parent',
       cv     => 'stock relationship',
