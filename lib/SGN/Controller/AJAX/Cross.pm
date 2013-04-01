@@ -225,6 +225,13 @@ sub add_cross_GET :Args(0) {
 	dbxref => 'number_of_seeds',
     });
 
+   my $cross_type_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
+      { name   => 'cross_type',
+	cv     => 'local',
+	db     => 'null',
+	dbxref => 'cross_type',
+    });
+
 
     my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create(
             {
@@ -242,6 +249,14 @@ sub add_cross_GET :Args(0) {
 	    stock_id => $population_stock->stock_id(),
 	    type_id  =>  $population_cvterm->cvterm_id(),
                                            });
+
+    if ($cross_type) {
+      $experiment->find_or_create_related('nd_experimentprops' , {
+								  nd_experiment_id => $experiment->nd_experiment_id(),
+								  type_id  =>  $cross_type_cvterm->cvterm_id(),
+								  value  =>  $cross_type,
+								 });
+    }
 
     if ($number_of_flowers) {
       #set flower number in experimentprop
