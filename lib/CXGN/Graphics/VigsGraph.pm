@@ -15,61 +15,35 @@ has 'width' => (is=>'rw', isa=>'Int', default=>700);
 has 'height'=> (is=>'rw', isa=>'Int', default=>2400);
 has 'font' => (is =>'rw', isa=>'GD::Font');
 has 'ruler_height' => (is => 'ro', isa=>'Int', default=>20);
+
 sub parse { 
     my $self = shift;
     
-    #warn("Parsing file ".$self->bwafile()."\n");
+    # warn("Parsing file ".$self->bwafile()."\n");
 
-    open(my $F, "<", $self->bwafile()) || die "Can't open file ".$self->bwafile();
+    open(my $bt2_fh, "<", $self->bwafile()) || die "Can't open file ".$self->bwafile();
 
     my $matches = {};
-
-    while (<$F>) { 
-	if (/^\@SQ/) { 
-	    next;
-	}
-
-	my ($seq_id, $code, $subject, $scoord, $what, $match, $more_matches) = (split /\t/)[0..5, 19];
-
-	my @additional_coords = ();
-	if (defined($more_matches)) { 
-	    my @additional = split ";", $more_matches;
-	    foreach my $a (@additional) { 
-		my ($id, $coord, $cigar, $n) = split ",", $a;
-		if (defined($cigar) && $cigar =~ /(\d+)M/ && $1 == $self->fragment_size()) { 
-		    push @additional_coords, [ $id, $coord ];
-		}
-	    }
-	}
-
-	if ($match=~/(\d+)M/ and $1 == $self->fragment_size()) { 
+    
+    # parse Bowtie2 file
+    while (my $line = <$bt2_fh>) { 
+	my ($seq_id, $code, $subject, $scoord) = (split /\t/, $line);
+	
+	# get perfect matches 
+	if ($line =~ /XM:i:0/) { 
 	    my ($start_coord, $end_coord);
 	    if ($seq_id=~/(\d+)/)  {
 		$start_coord = $1;
 		$end_coord = $start_coord+$self->fragment_size() -1;
 	    }
-		
+	    
+	    # new match sequence object
 	    my $ms = CXGN::Graphics::VigsGraph::MatchSegment->new();
 	    $ms->start($start_coord);
 	    $ms->end($end_coord);
 	    $ms->id($subject);
-	 
-
-		
-   
-	#    print STDERR "PARSING: $start_coord, $end_coord, $subject\n";
 
 	    push @{$matches->{$subject}}, $ms;
-
-	    foreach $a (@additional_coords) { 
-		my $ams = CXGN::Graphics::VigsGraph::MatchSegment->new();
-		$ams->start($start_coord);
-		$ams->end($end_coord);
-		$ams->id($a->[0]);
-		push @{$matches->{$subject}}, $ams;
-	    }
-	    
-
 	}
     }
     $self->matches($matches);
