@@ -45,7 +45,7 @@ foreach my $d (@databases) {
 </select>
 <br />
 <br />
-<!-- Upload expression file <input type="file" name="file" />
+<!-- Upload expression file <input type="file" name="expression_file" />
 <br />
 <br /> -->
 
@@ -67,7 +67,7 @@ foreach my $d (@databases) {
 
          &nbsp;&nbsp;Or:<br />
          &nbsp;&nbsp;acgtagctagctgatcat<br />
-         &nbsp;&nbsp;Or paste a valid a gene ID like <i>Solyc01g005080.2</i> or <i>NbS00038998g001.1</i><br /><br />
+         &nbsp;&nbsp;Or paste a valid gene ID like <i>Solyc01g005080.2</i> or <i>NbS00038998g001.1</i><br /><br />
          
          2. Choose fragment size<br />
          3. Choose database<br />

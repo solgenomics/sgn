@@ -57,7 +57,7 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
     my $sequence = $c->req->param("sequence");
     my $fragment_size = $c->req->param("fragment_size");
 
-    #--------------------------------------------------------------------------- clean sequence 
+    # clean the sequence 
     # more than one sequence pasted
     if ($sequence =~ tr/>/>/ > 1) {
 	push ( @errors , "Please, paste only one sequence at time.\n");	
@@ -73,8 +73,8 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
     }
     $sequence = join("",@seq);
     
-    print STDERR "*********************\nseq:$sequence\n*********************\n";
-    #---------------------------------------------------- Check input sequence and fragment size    
+    # print STDERR "*********************\nseq:$sequence\n*********************\n";
+    # Check input sequence and fragment size    
     if (length($sequence) < 15) { 
 	push ( @errors , "You should paste a valid sequence (15 bp or longer) in the VIGS Tool Sequence window.\n");	
     }
@@ -89,7 +89,7 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
 	push @errors, "Fragment size ($fragment_size) should be a value between 15-30 bp.\n";
     }
 
-    #--------------------------------------- Send error message to the web if something is wrong
+    # Send error message to the web if something is wrong
     if (scalar (@errors) > 0){
 	user_error(join("<br />" , @errors));
 	my $sample = substr($sequence,0,49);
@@ -98,11 +98,11 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
        	$c->throw( message => "$user_errors", is_error => 0);
     }
 
-    #------------------- generate a file with fragments of 'sequence' of length 'fragment_size'
-    #------------------- for analysis with Bowtie2.
+    # generate a file with fragments of 'sequence' of length 'fragment_size'
+    # for analysis with Bowtie2.
     my ($seq_fh, $seq_filename) = tempfile("vigsXXXXXX", DIR=> $c->config->{'cluster_shared_tempdir'},);
 
-    #----------------------------------------------------- Lets create the fragment fasta file
+    # Lets create the fragment fasta file
     my $query = Bio::Seq->new(-seq=>$sequence, -id=> $id || "temp");
     my $io = Bio::SeqIO->new(-format=>'fasta', -file=>">".$seq_filename.".fragments");    
     foreach my $i (1..$query->length()-$fragment_size) { 
@@ -114,7 +114,7 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
     $c->stash->{query} = $query;
     $io->close();
 
-    #-------------------------------------------------------- Lets create the query fasta file
+    # Lets create the query fasta file
     my $query_file = $seq_filename;
     my $seq = Bio::Seq->new(-seq=>$sequence, -id=> $id || "temp");
     $io = Bio::SeqIO->new(-format=>'fasta', -file=>">".$query_file);
@@ -124,7 +124,7 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
 
     if (! -e $query_file) { die "Query file failed to be created."; }
 
-    #------------------------------------------------------------ get arguments to Run Bowtie2
+    # get arguments to Run Bowtie2
     print STDERR "DATABASE SELECTED: $params->{database}\n";
     my $bdb = CXGN::BlastDB->from_id($params->{database});
     
@@ -132,14 +132,13 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
     my $basename = $c->config->{blast_db_path};
     my $database = $bdb->file_base;
     my $database_fullpath = File::Spec->catfile($basename, $database);
-    print STDERR "BASENAME: $basename\n";
+#    print STDERR "BASENAME: $basename\n";
     my $database_title = $bdb->title;
 
     # THIS IS A TMP VARIABLE FOR DEVELOPING
 #    $basename = "/home/noe/cxgn/blast_dbs/niben_bt2_index";
     
-    #----------------------------------------------------------------------------- run bowtie2
-    print STDERR "\n\nSYSTEM CALL: /data/shared/bin/bt2_wrapper.sh $basename $seq_filename.fragments $seq_filename.bt2.out\n\n";
+    # run bowtie2
 
     my $bowtie2_path = $c->config->{bowtie2_path};
     
@@ -156,7 +155,7 @@ sub calculate :Path('/tools/vigs/result') :Args(0) {
 	   " -S ". $query_file.".bt2.out",
 	);
 
-    print STDERR "COMMAND: ".(join ", ",@command)."\n";
+    print STDERR "Bowtie2 COMMAND: ".(join ", ",@command)."\n";
     
     my $err = system(@command);
 
