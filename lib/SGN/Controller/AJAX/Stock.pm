@@ -753,7 +753,13 @@ Store a new phenotype and link with nd_experiment_stock
 
 =cut
 
-sub add_phenotype : Local : ActionClass('REST') { }
+
+sub add_phenotype :PATH('/ajax/stock/add_phenotype') : ActionClass('REST') { }
+
+sub add_phenotype_GET :Args(0) {
+    my ($self, $c) = @_;
+    $c->stash->{rest} = { error => "Nothing here, it's a GET.." } ;
+}
 
 sub add_phenotype_POST {
     my ( $self, $c ) = @_;
