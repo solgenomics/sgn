@@ -1,0 +1,92 @@
+<%doc>
+=head1 NAME
+
+add_phenotype.mas
+
+=head1 DESCRIPTION
+
+print form for adding a single phenotype to a stock
+
+=head1 AUTHOR
+
+Naama Menda <nm249@cornell.edu>
+
+=head1 ARGUMENTS
+
+=over 1
+
+=item stock_id
+
+the id of the stock
+
+=item trait_ontology_db_name
+the default db name for the server  trait ontology
+
+=back
+=cut
+
+</%doc>
+
+<%args>
+$stock_id
+$db_name
+</%args>
+
+<div id="add_phenotype_form" title="Add phenotype" >
+ <br />
+<b>Trait name</b> <input type="text" id="trait_autocomplete" name="trait_autocomplete" /><br />
+<br />
+<b>Value</b> <input type ="text" id="phenotype_value"<br />
+<b>
+<input type="hidden" id="stock_id" name="stock_id" value="$stock_id" />
+
+</div>
+
+<script>
+  alert( document.getElementById("add_phenotype_form").innerHTML );
+
+  jQuery("#add_phenotype_form").dialog( {
+      autoOpen: false,
+      buttons: { "Cancel" :  function() { jQuery("#add_phenotype_form").dialog("close"); }, "Submit": function() { associate_phenotype() }  },
+      modal: true
+    });
+
+  jQuery("#add_phenotype_link").click( function () {
+     jQuery("#add_phenotype_form" ).dialog("open");
+    });
+
+    jQuery("#trait_autocomplete").autocomplete({
+      source: '/ajax/cvterm/autocomplete?db_name='+ '<% $trait_ontology_db_name %>'
+    });
+
+    function associate_phenotype() {
+      var trait = "";
+      var trait = jQuery("#trait_autocomplete").val();
+
+      if (!trait) { alert("Must choose a trait name!"); return; }
+      var stock_id = "<% $stock_id %>";
+      var phenotype_value = jQuery("#phenotye_value").val();
+      jQuery.ajax({
+        url: '/ajax/stock/add_phenotype',
+        dataType: "json",
+        method: "POST",
+        async: false,
+        data: 'stock_id='+stock_id+'&trait='trait+'&phenotype_value='+phenotype_value,
+        error: function(response) { alert("An error occurred. Please try again later!"+response); },
+        parseerror: function(response) { alert("A parse error occurred. Please try again."+response); },
+        success: function(response) {
+          if (response.error) { alert(response.error); }
+          else {
+            alert("The phenotype has been added. ["+response.error+"]");
+            jQuery("#add_phenotype_form").dialog("close");
+            document.location.reload(); // reload the entire page, might be faster then rendering phenotype section with AJAX
+          }
+        },
+      });
+
+   }
+
+</script>
+
+<& /util/import_javascript.mas, classes => [ 'jqueryui' ] &>
+

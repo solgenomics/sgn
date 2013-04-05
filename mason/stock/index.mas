@@ -77,6 +77,7 @@ my $sequencer = $stockref->{sequencer};
 my $pubs = $stockref->{pubs};
 my $has_pedigree = $stockref->{has_pedigree};
 my $has_descendants = $stockref->{has_descendants};
+my $trait_ontology_db_name = $stockref->{trait_ontology_db_name};
 
 my $schema = $stockref->{schema};
 my $dbh = $stockref->{dbh};
@@ -170,6 +171,8 @@ foreach my $db_name ( keys %$dbxrefs ) {
 my $ontology_subtitle = $curator || $submitter || $sequencer  ?
   qq|<a href="javascript:Tools.toggleContent('associate_cvterm_form', 'stock_ontology')">[Add ontology annotations]</a> | :
   qq |<span class = "ghosted"> [Add ontology annotations]</span> |;
+
+my $add_phenotype_link =  $curator || $submitter || $sequencer  ? qq| <a id="add_phenotype_link" >Add phenotype</a> :   qq |<span class = "ghosted"> [Add phenotype]</span> |;
 
 
 </%perl>
@@ -322,12 +325,19 @@ function jqueryStuff() {
 <&| /page/info_section.mas, title=>"Phenotype data " ,  subtitle=>$p_download_link ,  collapsible => 1, collapsed => 1 &>
 % foreach my $project (keys %$direct_phenotypes) {
 %   my $rs = $direct_phenotypes->{$project} ;
-<&| /page/info_section.mas, 
-    title=>"Experiment: $project", 
-    is_subsection => 1, collapsible => 1 
+
+<&| /page/info_section.mas,
+    title=>"Experiment: $project",
+    subtitle => $add_phenotype_link,
+    is_subsection => 1, collapsible => 1
 &>
-    <& /phenotypes/phenotype_data.mas , 
-      phenotypes=> $rs 
+    <& /stock/add_phenotype.mas,
+      stock_id => $stock_id ,
+      trait_ontology_db_name => $trait_ontology_db_name,
+      project=>$project
+    &>
+  <& /phenotypes/phenotype_data.mas ,
+      phenotypes=> $rs
     &>
   </&>
 % }
