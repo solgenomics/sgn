@@ -35,7 +35,7 @@ CXGN.List.prototype = {
     newList: function(name) { 
 	var oldListId = this.existsList(name);
 	//alert("OLD LIST ID = "+oldListId);
-	if (oldListId == null) { 
+	if (oldListId === null) { 
 	    jQuery.ajax( { 
 		url: '/list/new',
 		async: false,
@@ -72,11 +72,11 @@ CXGN.List.prototype = {
     //(due to duplicates)
     addItem: function(list_id, item) { 
 	var exists_item_id = this.existsItem(list_id,item);
-	if (exists_item_id ==0 ) { 
+	if (exists_item_id ===0 ) { 
 	    jQuery.ajax( { 
 		async: false,
 		url: '/list/item/add',
-		data:  { 'list_id': list_id, 'element': item },
+		data:  { 'list_id': list_id, 'element': item }
 	    });
 	    var new_list_item_id = this.existsItem(list_id,item);
 	    return new_list_item_id;
@@ -110,7 +110,7 @@ CXGN.List.prototype = {
 	
 
 
-	if (lists.length==0) { 
+	if (lists.length===0) { 
 	    html = html + "None";
 	    jQuery('#'+div).html(html);
 
@@ -190,10 +190,6 @@ CXGN.List.prototype = {
 		lo.renderItems(div, list_id);
 	    }
 	);
-
-	
-	
-	//alert("DONE renderItems " + div);
     },
     
     existsList: function(name) { 
@@ -204,10 +200,8 @@ CXGN.List.prototype = {
 	    data: { 'name': name },
 	    success: function(response) { 
 		list_id = response.list_id;
-		//alert('List ID='+list_id);
 	    }
 	});
-	//alert('"exists"='+list_id);
 	return list_id;
     },
 
