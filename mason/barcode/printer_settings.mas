@@ -10,7 +10,7 @@
 
 <tr>
 <td>Number of label rows </td><td><input name="label_rows" size="3" value="10" ></td>
-<td>Number of label columns per page </td><td><input type="label_cols" size="3" value="3" ></td>
+<td>Number of label columns per page </td><td><input name="label_cols" size="3" value="3" ></td>
 </tr>
 
 <tr>
