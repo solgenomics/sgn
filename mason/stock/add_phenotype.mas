@@ -33,11 +33,9 @@ $trait_ontology_db_name
 </%args>
 
 <div id="add_phenotype_form" title="Add phenotype" >
- <br />
-<b>Trait name</b> <input type="text" id="trait_autocomplete" name="trait_autocomplete" /><br />
-<br />
+<b>Trait name</b> <input type="text" id="trait_autocomplete" name="trait_autocomplete" />
 <b>Value</b> <input type ="text" id="phenotype_value"<br />
-<b>
+<input type="button" name = "associate_phenotype" onclick="javascript:associate_phenotype()" value = "Submit" />
 <input type="hidden" id="stock_id" name="stock_id" value="$stock_id" />
 
 </div>
