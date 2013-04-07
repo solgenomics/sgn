@@ -137,7 +137,7 @@ foreach my $role (@roles) {
 
 
 
-<script>
+<script defer="defer" >
   jQuery("#maternal_parent").autocomplete( { 
     source: '/ajax/stock/stock_autocomplete'
 });
