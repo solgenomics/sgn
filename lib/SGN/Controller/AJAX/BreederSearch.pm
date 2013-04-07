@@ -29,11 +29,14 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
     my $c2_data    = $c->req->param("c2_data");
     my $c3_data    = $c->req->param("c3_data");
 
+
     my $req_data   = $c->req->param("req_data");
 
     my $stocks = undef;
 
     my $error = "";
+
+    
 
     foreach $criterion ($criterion1, $criterion2, $criterion3) { 
 	if (any $criterion { $criterion eq $_ } qw | program year location |) { 
@@ -42,6 +45,15 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
 	    return;
 	}
     }
+
+        my $data_tainted = 0;
+    foreach my $d ($c1_data, $c2_data, $c3_data) { 
+	if ($d !~ /^[\d,]+$/g) { 
+	    $data_tainted =1;
+	}
+    }
+    if ($data_tainted) { $c->stash->{rest} = { error => "Data contains illegal characters" };return; }
+
 
     my $dbh = $c->dbic->dbh();
     my $q = "";  # get the primary requested data
@@ -72,24 +84,26 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
 	}
     }
 
-    $dbh->do("CREATE TEMP TABLE temp_project (temp_project_id bigint, name varchar(255))");
-    $dbh->do("CREATE TEMP TABLE temp_year    (temp_year_id bigint, year varchar(20))");
-    $dbh->do("CREATE TEMP TABLE temp_location(temp_location_id bigint, description varchar(255))");
-    $dbh->do("CREATE TEMP TABLE temp_stock   (temp_stock_id 
+
+    # another idea: one could use temp tables to store the data in a more accessible format...
+    # $dbh->do("CREATE TEMP TABLE temp_project (temp_project_id bigint, name varchar(255))");
+    # $dbh->do("CREATE TEMP TABLE temp_year    (temp_year_id bigint, year varchar(20))");
+    # $dbh->do("CREATE TEMP TABLE temp_location(temp_location_id bigint, description varchar(255))");
+    # $dbh->do("CREATE TEMP TABLE temp_stock   (temp_stock_id 
 
 
     if ($criterion1 eq "program" && $criterion2 eq "location" && !$criterion3) { 
 
 	if ($req_data eq "year") { 
-	    $q = "SELECT distinct(projectprop.value) FROM project join projectprop using(project_id) JOIN nd_experiment_project on (nd_experiment_project.project_id= project.project_id) join nd_experiment using(nd_experiment_id) join nd_geolocation using(nd_geolocation_id) WHERE projectprop.type_id=(SELECT cvterm_id as type_id FROM cvterm WHERE name='project year') and project.project_id in (?) and nd_geolocation.nd_geolocation_id in (?) group by nd_experiment.nd_experiment_id, projectprop.value";
+	    $q = "SELECT distinct(projectprop.value) FROM project join projectprop using(project_id) JOIN nd_experiment_project on (nd_experiment_project.project_id= project.project_id) join nd_experiment using(nd_experiment_id) join nd_geolocation using(nd_geolocation_id) WHERE projectprop.type_id=(SELECT cvterm_id as type_id FROM cvterm WHERE name='project year') and project.project_id in ($c1_data) and nd_geolocation.nd_geolocation_id in ($c2_data) group by nd_experiment.nd_experiment_id, projectprop.value";
 
-	    $sq = "SELECT distinct(stock.stock_id, stock.name) FROM project join projectprop using(project_id) JOIN nd_experiment_project on (nd_experiment_project.project_id= project.project_id) join nd_experiment using(nd_experiment_id) join nd_geolocation using(nd_geolocation_id) JOIN nd_experiment_stock using(nd_experiment_id) JOIN stock using(stock_id) WHERE project.project_id in (?) and nd_geolocation_id in (?) group by stock.stock_id, stock.name";
+	    $sq = "SELECT distinct(stock.stock_id, stock.name) FROM project join projectprop using(project_id) JOIN nd_experiment_project on (nd_experiment_project.project_id= project.project_id) join nd_experiment using(nd_experiment_id) join nd_geolocation using(nd_geolocation_id) JOIN nd_experiment_stock using(nd_experiment_id) JOIN stock using(stock_id) WHERE project.project_id in ($c1_data) and nd_geolocation_id in ($c2_data) group by stock.stock_id, stock.name";
 	}
     }
 
 
     if ($criterion1 eq "program" && $criterion2 eq "location" && $criterion3 eq "year") { 
-	$q = "SELECT distinct(stock.stock_id, stock_name) FROM project join projectprop using(project_id) JOIN nd_experiment_project on (nd_experiment_project.project_id=project.project_id) join nd_experiment using(nd_experiment_id) join nd_geolocation using(nd_geolocation_id) JOIN nd_experiment_stock using(nd_experiment_id) JOIN stock using(stock_id) WHERE project.project_id in (?) and 
+	$q = "SELECT distinct(stock.stock_id, stock.name) FROM project join projectprop using(project_id) JOIN nd_experiment_project on (nd_experiment_project.project_id=project.project_id) join nd_experiment using(nd_experiment_id) join nd_geolocation using(nd_geolocation_id) JOIN nd_experiment_stock using(nd_experiment_id) JOIN stock using(stock_id) WHERE project.project_id in ($c1_data) and nd_geolocation.nd_geolocation_id in ($c2_data) and projectprop.value in ($c3_data)"; 
     }
 
     if ($criterion1 eq "year" && !$criterion2  && !$criterion3) { 
