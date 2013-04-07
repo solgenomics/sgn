@@ -108,7 +108,8 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
 
     if ($criterion1 eq "year" && !$criterion2  && !$criterion3) { 
 	if ($req_data eq "location") { 
-	    
+	    $q = "SELECT distinct(value) FROM project join projectprop using(project_id) JOIN nd_experiment_project USING(project_id) join nd_experiment USING (nd_experiment_id) join nd_geolocation using(nd_geolocation_id) where projectprop.type_id=$type_id and projectprop.value in ($c1_data) order by projectprop.value";
+	    $sq = "SELECT distinct(stock_id, stock_name) FROM 
 	}
 
 	if ($req_data eq "program") { 
