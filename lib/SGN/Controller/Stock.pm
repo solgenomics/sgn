@@ -556,6 +556,39 @@ SELECT sp_person_id FROM sgn_people.sp_person
                              distinct => 1
                            } );
     }
+    ###search for stocks involved in nd_experiments (phenotyping and genotyping)
+    if ( my $project = $c->req->param('project') ) {
+        $rs = $rs->search(
+            {
+                'lower(project.name)' => { -like  => lc($project) },
+            },
+            { join => { nd_experiment_stocks => { nd_experiment => 'nd_experiment_project' } },
+              columns => [ qw/stock_id uniquename type_id organism_id / ],
+              distinct => 1
+            } );
+    }
+    if ( my $location = $c->req->param('location') ) {
+        $rs = $rs->search(
+            {
+                'lower(nd_geolocation.description)' => { -like  => lc($location) },
+            },
+            { join => { nd_experiment_stocks => { nd_experiment => 'nd_geolocation' } },
+              columns => [ qw/stock_id uniquename type_id organism_id / ],
+              distinct => 1
+            } );
+    }
+    if ( my $year = $c->req->param('year') ) {
+        $rs = $rs->search(
+            {
+                'lower(projectprop.value)' => { -like  => lc($year) },
+            },
+            { join => { nd_experiment_stocks => { nd_experiment => { 'nd_experiment_project' => 'nd_experimentprops' } } },
+              columns => [ qw/stock_id uniquename type_id organism_id / ],
+              distinct => 1
+            } );
+    }
+    #########
+    ##########
     if ( my $has_image = $c->req->param('has_image') ) {
     }
     if ( my $has_locus = $c->req->param('has_locus') ) {
