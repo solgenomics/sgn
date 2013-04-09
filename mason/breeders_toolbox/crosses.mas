@@ -8,10 +8,6 @@ $user_id => undef
 
 <& /util/import_javascript.mas, classes => [ ] &>
 
-<script>
-
-  
-</script>
 
 <table>
 <%perl>

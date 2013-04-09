@@ -69,7 +69,7 @@ $projects
 </div>
 
 
-<script>
+<script defer="defer">
   jQuery('#add_project_dialog').dialog( {
      autoOpen: false,
      buttons:  { "Cancel" : function() { jQuery('#add_project_dialog').dialog("close"); }, 

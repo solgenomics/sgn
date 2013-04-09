@@ -17,7 +17,7 @@ Latitude <input name="latitude" size="4" />
 
 </div>
 
-<script>
+<script defer="defer">
   jQuery('#add_location_dialog').dialog( {
      autoOpen: false,
      buttons:  { "Cancel" : function() { jQuery('#add_location_dialog').dialog("close"); }, 

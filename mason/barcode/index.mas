@@ -103,8 +103,9 @@ Enter a list of stock names<br />
 
 
 Upload file with stock names:<br />
-<input type="file" name="stock_names_file" /><br />
-<input type="reset" />&nbsp;&nbsp;<input type="submit" value="Download Barcodes" />
+<input type="file" name="stock_names_file" /><br /><br />
+<input type="reset" />&nbsp;&nbsp;
+<input type="submit" value="Download Barcodes" />
 
 
 </form>

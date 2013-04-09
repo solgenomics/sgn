@@ -58,7 +58,7 @@ $field_designs
 </div>
 
 
-<script>
+<script defer="defer" >
     
   jQuery('#experimental_design_dialog').dialog( {
      autoOpen: false,

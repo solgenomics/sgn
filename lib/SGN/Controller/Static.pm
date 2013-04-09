@@ -51,4 +51,9 @@ sub list_test : Path('/list/test') {
     $c->stash->{user_id} = $c->user();
 }
 
+sub usage_policy : Path('/usage_policy') { 
+    my ($self, $c) = @_;
+    $c->stash->{template} = '/usage_policy.mas';
+}
+
 1;
