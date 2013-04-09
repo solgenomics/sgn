@@ -198,36 +198,6 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
 }
 
 
-sub insert_new_project : Path("/breeders/project/insert") Args(0) { 
-    my $self = shift;
-    my $c = shift;
-
-    if (! $c->user()) { # redirect
-	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
-	return;
-    }
-
-    
-    my $params = $c->req->parameters();
-
-    my $schema = $c->dbic_schema('Bio::Chado::Schema');
-    
-    my $exists = $schema->resultset('Project::Project')->search(
-	{ name => $params->{project_name} } 
-	);
-    
-    my $project = $schema->resultset('Project::Project')->find_or_create(
-	{
-	    name => $params->{project_name},
-	    description => $params->{project_description},
-	}
-	);
-    
-    my $projectprop_year = $project->create_projectprops( { 'project year' => $params->{year},}, {autocreate=>1}); #cv_name => 'project_property' } );
-
-    $c->res->redirect( uri( path => '/breeders/home', query => { goto_url => $c->req->uri->path_query } ) );
-
-}
 
 sub insert_new_location :Path("/breeders/location/insert") Args(0) { 
     my $self = shift;
