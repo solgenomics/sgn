@@ -13,8 +13,9 @@
 use DateTime;
 my $dt = DateTime->from_epoch( epoch=>time );
 my $date = join "/", ($dt->year, $dt->month, $dt->day);
-
 </%perl>
+
+%# <& /util/import_javascript.mas, classes => [ 'CXGN.List' ] &>
 
 <& /page/page_title.mas, title=>"Barcode Tools" &>
 
@@ -100,21 +101,24 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
 <form action="/barcode/stock/download/pdf" method="post" enctype="multipart/form-data" />
 
 Enter a list of stock names<br />
-<textarea name="stock_names" rows="10" cols="30">
+<textarea id="stock_names" name="stock_names" rows="10" cols="30">
 
-</textarea><br /><br />
+</textarea>
+<script defer="defer">
+    pasteListMenu('stock_names');
+</script>
+
+
+<br /><br />
  
 <& /barcode/printer_settings.mas &>
 
 <input type="checkbox" name="duplicate_labels_per_row" checked="1" disabled="1" /> print duplicate labels per row<br /><br />
 
-
 Upload file with stock names:<br />
 <input type="file" name="stock_names_file" /><br /><br />
 <input type="reset" />&nbsp;&nbsp;
 <input type="submit" value="Download Barcodes" />
-
-
 </form>
 
 </&>
