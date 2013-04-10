@@ -602,6 +602,39 @@ sub trait_autocomplete_GET :Args(0) {
     $c->{stash}->{rest} = \@response_list;
 }
 
+=head2 project_autocomplete
+
+Public Path: /ajax/stock/project_autocomplete
+
+Autocomplete a project name.  Takes a single GET param,
+C<term>, responds with a JSON array of completions for that term.
+Finds only projects that are linked with a stock
+
+=cut
+
+sub project_autocomplete : Local : ActionClass('REST') { }
+
+sub project_autocomplete_GET :Args(0) {
+    my ( $self, $c ) = @_;
+
+    my $term = $c->req->param('term');
+    # trim and regularize whitespace
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+    my @response_list;
+    my $q = "SELECT  distinct project.name FROM
+  nd_experiment_stock JOIN
+  nd_experiment_project USING (nd_experiment_id) JOIN
+  project USING (project_id)
+  WHERE project.name ilike ?";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute( '%'.$term.'%');
+    while  (my ($project_name) = $sth->fetchrow_array ) {
+        push @response_list, $project_name;
+    }
+    $c->{stash}->{rest} = \@response_list;
+}
+
 =head2 stock_autocomplete
 
  Usage:
