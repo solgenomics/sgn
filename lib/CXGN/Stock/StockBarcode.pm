@@ -66,7 +66,8 @@ sub parse {
 	$line =~ s/\r//g;
         $line =~ s/\s+/ /g;
         my ($code, $quantity_not_used, $time, $unused_date) = split ",", $line;
-        if ($code =~ m/^O/) { #operator name
+	$code =~ s/^\s+|\s+$//g;
+	if ($code =~ m/^O/) { #operator name
             (undef, $op_name) = split(/:/, $code) ;
             print STDERR "FOUND operator name $op_name\n";
         }
@@ -101,7 +102,7 @@ sub parse {
             #}
         ########################################
         # values are typed  using the keypad.
-        if ($code =~ m/^[\d.]+$/) {
+        if ($code =~ m/^\d+\.?\d*/) {
             $count++;
             print "Found keypad entry $code \n";
             $value = $code;
@@ -161,12 +162,14 @@ sub verify {
                 if (!$accession) { push @errors, "Could not find valid cvterm accession in $cvterm_accession\n";}
                 #check if the cvterm exists
                 my $db = $schema->resultset("General::Db")->search(
-                    { 'me.name' => $db_name, } );
-                if ($db) {
-                    my $dbxref = $db->search_related("dbxrefs", { accession => $accession, });
-                    if ($dbxref) {
-                        my $cvterm = $dbxref->search_related("cvterm")->single;
-                        if (!$cvterm) { push @errors, "NO cvterm found in the database for accession $cvterm_accession!\n"; }
+                    { 'me.name' => $db_name } );
+		if ($db->count) {
+                    my $dbxref = $db->search_related('dbxrefs', { accession => $accession } );
+
+                    if ($dbxref->count) {
+                        my $cvterm = $dbxref->search_related("cvterm", {} )->single;
+                        if (!$cvterm) { push @errors, "NO cvterm found in the database for accession $cvterm_accession!\n db_name = '" .  $db_name  . "' , accession = '" .  $accession . "' \n";
+			}
                     } else {
                         push @errors, "No dbxref found for cvterm accession $accession\n";
                     }

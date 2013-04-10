@@ -227,14 +227,14 @@ sub upload_barcode_output : Path('/breeders/phenotype/upload') :Args(0) {
     if (! -e $tempfile) { 
         die "The file does not exist!\n\n";
     }
-    print STDERR "***Basename= $basename, tempfile = $tempfile \n\n";
+    print STDERR "***Basename= $basename, tempfile = $tempfile \n\n"; ##OK
     my $archive_path = $c->config->{archive_path};
-
+ 
     $tempfile = $archive_path . "/" . $basename ;
-    my $upload_err = $upload->copy_to($archive_path . "/" . $basename);
-
-
-    if ($upload_err) { die "Could not upload!\n $upload_err" ; }
+    print STDERR "**tempfile = $tempfile \n\n"; ##OK
+    #chack for write permissions in $archive_path !    
+    my $upload_success = $upload->copy_to($archive_path . "/" . $basename); #returns false for failure, true for success
+    if (!$upload_success) { die "Could not upload!\n $upload_success" ; }
     my $sb = CXGN::Stock::StockBarcode->new( { schema=> $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado') });
     my $identifier_prefix = $c->config->{identifier_prefix};
     my $db_name = $c->config->{trait_ontology_db_name};
