@@ -38,42 +38,49 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
 
 
 
-<&| /page/info_section.mas, title=>'Generate Metadata Barcode', collapsible=>1, collapsed=>0 &>
+%#<&| /page/info_section.mas, title=>'Generate Metadata Barcode', collapsible=>1, %#collapsed=>0 &>
 
-<form action="/barcode/metadata" >
-  <table>
-    <tr><td>Operator name</td><td><input name="operator" /></td></tr>
-    <tr><td>Date</td><td><input name="date" value="<% $date %>" /> (FORMAT: YYYY/MM/DD)</td></tr>
-    <tr><td>Location</td><td><& /page/html_select.mas, name=>'location', choices=>\@locations &> [<a href="/breeders/home">Add new location</a>]</td></tr> 
-    <tr><td>Project</td><td><& /page/html_select.mas, name=>'project', choices=>\@projects &> [<a href="/breeders/home">Add new project</a>]</td></tr>
+%#<form action="/barcode/metadata" >
+%#  <table>
+%#    <tr><td>Operator name</td><td><input name="operator" /></td></tr>
+%#    <tr><td>Date</td><td><input name="date" value="<% $date %>" /> (FORMAT: YYYY/MM/DD)</td></tr>
+%#    <tr><td>Location</td><td><& /page/html_select.mas, name=>'location', choices=>\@locations &> [<a href="/breeders/home">Add new location</a>]</td></tr>
+%#    <tr><td>Project</td><td><& /page/html_select.mas, name=>'project', choices=>\@projects &> [<a href="/breeders/home">Add new project</a>]</td></tr>
 
-  </table>
+%#  </table>
 
-  <input type="radio" name="image_size" value="small" checked="1" /> small<br />
-  <input type="radio" name="image_size" value="large" /> large<br />
+%#  <input type="radio" name="image_size" value="small" checked="1" /> small<br />
+%#  <input type="radio" name="image_size" value="large" /> large<br />
   
-  <input type="submit" value="Generate barcode" />
-  </form>
+%#  <input type="submit" value="Generate barcode" />
+%#  </form>
+
+%#</&>
+
+
+<&| /page/info_section.mas, title=>'Metadata &amp; Multibarcode tool', collapsible=>1, collapsed=>0 &>
+
+  <& /barcode/multi_tool_input.mas, locations=>\@locations, projects=>\@projects, available_cvterms => \@tools_def &>
 
 </&>
 
 
-<&| /page/info_section.mas, title=>'Generate Continuous Barcode', collapsible=>1, collapsed=>1 &>
+%#<&| /page/info_section.mas, title=>'Generate Continuous Barcode', collapsible=>1, collapsed=>1 &>
 
-<h3>Note: This tool is experimental</h3>
-<form action="/barcode/continuous_scale" >
-<table>
-<tr><td>Start value</td><td> <input name="start" value="0" size="4" /></td></tr>
-<tr><td>End value</td><td><input name="end" value="1000" size="4"  /></td></tr>
-<tr><td>Step</td><td><input name="step" value="10" size="4" /></td></tr>
-<tr><td>Step height&nbsp;&nbsp;&nbsp;</td><td><input name="height" value="10" size="4" /></td></tr>
-</table>
-<input type="submit" value="Create continuous barcode" />
+%#<h3>Note: This tool is experimental</h3>
+%#<form action="/barcode/continuous_scale" >
+%#<table>
+%#<tr><td>Start value</td><td> <input name="start" value="0" size="4" /></td></tr>
+%#<tr><td>End value</td><td><input name="end" value="1000" size="4"  /></td></tr>
+%#<tr><td>Step</td><td><input name="step" value="10" size="4" /></td></tr>
+%#<tr><td>Step height&nbsp;&nbsp;&nbsp;</td><td><input name="height" value="10" size="4" /></td></tr>
+%#</table>
+%#<input type="submit" value="Create continuous barcode" />
 
-</form>
-<br />
-<br />
-</&>
+%#</form>
+%#<br />
+%#<br />
+%#</&>
 
 <&| /page/info_section.mas, title=>'Generate Barcode', collapsible=>1, collapsed=>1 &>
 
@@ -113,15 +120,15 @@ Upload file with stock names:<br />
 </&>
 
 
-<&| /page/info_section.mas, title=>'Generate unique barcodes', collapsible=>1, collapsed=>0 &>
+%#<&| /page/info_section.mas, title=>'Generate unique barcodes', collapsible=>1, collapsed=>0 &>
 
-<form action="/barcode/unique" >
+%#<form action="/barcode/unique" >
 
-  Number of label pages to print <input type="text" name="label_pages" /><br /><br />
+%#  Number of label pages to print <input type="text" name="label_pages" /><br /><br />
 
-  <& /barcode/printer_settings.mas &>
-    <br />
-  <input type="submit" value="Generate barcodes" />
-  </form>
+%#  <& /barcode/printer_settings.mas &>
+%#    <br />
+%#  <input type="submit" value="Generate barcodes" />
+%#  </form>
 
-</&>
+%#</& >
