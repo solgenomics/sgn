@@ -377,3 +377,131 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
 
 }
     
+
+sub get_stock_union { 
+    my $self = shift;
+    my $c = shift;
+
+    my $criteria_list = shift;
+
+    my ($locations_ref, $years_ref, $projects_ref) = @_;
+
+    my %queries = (
+	location => 'SELECT distinct(stock.stock_id), stock.name FROM nd_geolocation JOIN nd_experiment using(nd_geolocation_id) JOIN nd_experiment_stock using(nd_experiment_id) join stock using(stock_id) WHERE nd_geolocation.nd_geolocation_id in (?)',
+	
+	year     => 'SELECT distinct(stock.stock_id), stock.name FROM projectprop JOIN nd_experiment_project using(project_id) JOIN nd_experiment using(nd_experiment_id) JOIN stock using(stock_id) WHERE projectprop.value in (?)',
+
+	project  => 'SELECT distinct(stock.stock_id), stock.name FROM project JOIN nd_experiment_project using(project_id) JOIN nd_experiment using(nd_experiment_id) JOIN stock using(stock_id) WHERE project.project_id in (?)',
+
+	);
+
+    my @query;
+    foreach my $criterion (@$criteria_list) { 
+	push @query, $queries{$criterion};
+    }
+    my $query = join (" UNION ", @query);
+    
+    my $h = $c->dbc->dbh->prepare($query);
+    $h->execute();
+
+    my @stocks;
+    while (my ($stock_id, $stock_name) = $h->fetchrow_array()) { 
+	push @stocks, [ $stock_id, $stock_name ];
+    }
+    return \@stocks;
+}
+
+sub get_location_union { 
+    my $self = shift;
+    my $c = shift;
+    
+    my $criteria_list = shift;
+    
+    my ($locations_ref, $years_ref, $projects_ref) = @_;
+    
+    my %queries = (
+	year => "SELECT distinct(nd_geolocation.nd_geolocation_id), nd_geolocation.description FROM nd_geolocation join nd_experiment using(nd_geolocation_id) JOIN nd_experiment_projectprop using(project_id) where projectprop.values in ($years_ref)",
+	projects => "SELECT distinct(nd_geolocation.nd_geolocation_id), nd_geolocation.description FROM nd_geolocation JOIN nd_experiment using(nd_geolocation_id) JOIN nd_experiment_project using(nd_experiment_id) JOIN project using(project_id) WHERE project.project_id in ($projects_ref)",
+	);
+
+        my @query;
+    foreach my $criterion (@$criteria_list) { 
+	push @query, $queries{$criterion};
+    }
+    my $query = join (" UNION ", @query);
+    
+    my $h = $c->dbc->dbh->prepare($query);
+    $h->execute();
+
+    my @stocks;
+    while (my ($lod_id, $loc_name) = $h->fetchrow_array()) { 
+	push @locations, [ $loc_id, $loc_name ];
+    }
+    return \@stocks;
+}
+
+sub get_year_union { 
+
+        my $self = shift;
+    my $c = shift;
+    
+    my $criteria_list = shift;
+    
+    my ($locations_ref, $years_ref, $projects_ref) = @_;
+    
+    my %queries = (
+	year => "SELECT distinct(nd_geolocation.nd_geolocation_id), nd_geolocation.description FROM nd_geolocation join nd_experiment using(nd_geolocation_id) JOIN nd_experiment_projectprop using(project_id) where projectprop.values in ($years_ref)",
+	projects => "SELECT distinct(nd_geolocation.nd_geolocation_id), nd_geolocation.description FROM nd_geolocation JOIN nd_experiment using(nd_geolocation_id) JOIN nd_experiment_project using(nd_experiment_id) JOIN project using(project_id) WHERE project.project_id in ($projects_ref)",
+	);
+
+        my @query;
+    foreach my $criterion (@$criteria_list) { 
+	push @query, $queries{$criterion};
+    }
+    my $query = join (" UNION ", @query);
+    
+    my $h = $c->dbc->dbh->prepare($query);
+    $h->execute();
+
+    my @stocks;
+    while (my ($lod_id, $loc_name) = $h->fetchrow_array()) { 
+	push @locations, [ $loc_id, $loc_name ];
+    }
+    return \@stocks;
+
+
+}
+
+sub get_project_union {
+
+
+        my $self = shift;
+    my $c = shift;
+    
+    my $criteria_list = shift;
+    
+    my ($locations_ref, $years_ref, $projects_ref) = @_;
+    
+    my %queries = (
+	year => "SELECT distinct(nd_geolocation.nd_geolocation_id), nd_geolocation.description FROM nd_geolocation join nd_experiment using(nd_geolocation_id) JOIN nd_experiment_projectprop using(project_id) where projectprop.values in ($years_ref)",
+	projects => "SELECT distinct(nd_geolocation.nd_geolocation_id), nd_geolocation.description FROM nd_geolocation JOIN nd_experiment using(nd_geolocation_id) JOIN nd_experiment_project using(nd_experiment_id) JOIN project using(project_id) WHERE project.project_id in ($projects_ref)",
+	);
+
+        my @query;
+    foreach my $criterion (@$criteria_list) { 
+	push @query, $queries{$criterion};
+    }
+    my $query = join (" UNION ", @query);
+    
+    my $h = $c->dbc->dbh->prepare($query);
+    $h->execute();
+
+    my @stocks;
+    while (my ($lod_id, $loc_name) = $h->fetchrow_array()) { 
+	push @locations, [ $loc_id, $loc_name ];
+    }
+    return \@stocks;
+
+}
+    
+    
