@@ -635,6 +635,39 @@ sub project_autocomplete_GET :Args(0) {
     $c->{stash}->{rest} = \@response_list;
 }
 
+=head2 geolocation_autocomplete
+
+Public Path: /ajax/stock/geolocation_autocomplete
+
+Autocomplete a geolocation description.  Takes a single GET param,
+C<term>, responds with a JSON array of completions for that term.
+Finds only locations that are linked with a stock
+
+=cut
+
+sub geolocation_autocomplete : Local : ActionClass('REST') { }
+
+sub geolocation_autocomplete_GET :Args(0) {
+    my ( $self, $c ) = @_;
+
+    my $term = $c->req->param('term');
+    # trim and regularize whitespace
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+    my @response_list;
+    my $q = "SELECT  distinct nd_geolocation.description FROM
+  nd_experiment_stock JOIN
+  nd_experiment USING (nd_experiment_id) JOIN
+  nd_geolocation USING (nd_geolocation_id)
+  WHERE nd_geolocation.description ilike ?";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute( '%'.$term.'%');
+    while  (my ($location) = $sth->fetchrow_array ) {
+        push @response_list, $location;
+    }
+    $c->{stash}->{rest} = \@response_list;
+}
+
 =head2 stock_autocomplete
 
  Usage:
