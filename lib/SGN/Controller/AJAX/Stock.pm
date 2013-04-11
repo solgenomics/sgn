@@ -647,7 +647,7 @@ Finds only year projectprops that are linked with a stock
 
 sub project_year_autocomplete : Local : ActionClass('REST') { }
 
-sub project__year_autocomplete_GET :Args(0) {
+sub project_year_autocomplete_GET :Args(0) {
     my ( $self, $c ) = @_;
 
     my $term = $c->req->param('term');
