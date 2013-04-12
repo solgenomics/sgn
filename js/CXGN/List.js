@@ -96,7 +96,7 @@ CXGN.List.prototype = {
 
     deleteList: function(list_id) { 
 	jQuery.ajax( { 
-	    url: 'list/delete',
+	    url: '/list/delete',
 	    async: false,
 	    data: { 'list_id': list_id }
 	});
