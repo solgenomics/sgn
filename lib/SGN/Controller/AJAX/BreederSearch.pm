@@ -40,7 +40,9 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
     print STDERR "C1: $c1_data. C2: $c2_data. C3: $c3_data\n";
 
 
-    my $req_data   = $c->req->param("req_data");
+
+
+#    my $req_data   = $c->req->param("req_data");
 
     my $stocks = undef;
 
@@ -59,6 +61,8 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
     }
 
 
+
+
     # another idea: one could use temp tables to store the data in a more accessible format...
     # $dbh->do("CREATE TEMP TABLE temp_project (temp_project_id bigint, name varchar(255))");
     # $dbh->do("CREATE TEMP TABLE temp_year    (temp_year_id bigint, year varchar(20))");
@@ -74,6 +78,14 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
     my $h = $dbh->prepare($q);
     $h->execute();
     my ($type_id) = $h->fetchrow_array();
+
+
+    if ($select1 && !$select2 &&!$select3) { 
+	
+    }
+
+
+
 
 
     # if (!$select1 && !$select2 && !$select3) { 
@@ -101,278 +113,278 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
     #if ($data_tainted) { $c->stash->{rest} = { error => "Data contains illegal characters" };return; }
 
 
-    if ($select1 && !$select2 && !$select3) { 
-	if ($select1 eq "project") { 
-	    $q = "SELECT distinct(project.project_id), project.name FROM project order by project.name";
-	}
-	if ($select1 eq "year") { 
-	    $q = "SELECT distinct(value), value FROM projectprop 
-                   JOIN cvterm on (type_id=cvterm_id)
-                   WHERE cvterm.name='project year' order by value";
-	}
-	if ($select1 eq "location") { 
+  #   if ($select1 && !$select2 && !$select3) { 
+  # 	if ($select1 eq "project") { 
+  # 	    $q = "SELECT distinct(project.project_id), project.name FROM project order by project.name";
+  # 	}
+  # 	if ($select1 eq "year") { 
+  # 	    $q = "SELECT distinct(value), value FROM projectprop 
+  #                  JOIN cvterm on (type_id=cvterm_id)
+  #                  WHERE cvterm.name='project year' order by value";
+  # 	}
+  # 	if ($select1 eq "location") { 
 
-	    $q = "SELECT nd_geolocation_id, description FROM nd_geolocation order by description";
-	}
+  # 	    $q = "SELECT nd_geolocation_id, description FROM nd_geolocation order by description";
+  # 	}
 	
 	
-    }
+  #   }
 
-    if ( ($select1 eq "project") && $select2 && !$select3) { 
+  #   if ( ($select1 eq "project") && $select2 && !$select3) { 
 
-	#$sq = "SELECT stock_id FROM stock order by stock.name"; # still report all the stocks
+  # 	#$sq = "SELECT stock_id FROM stock order by stock.name"; # still report all the stocks
 
-	if ($select2 eq "year") { 
-	    $q = "SELECT distinct(projectprop.value), projectprop.value FROM project 
-                  JOIN projectprop using(project_id) 
-                  JOIN cvterm on (type_id=cvterm_id) 
-                  WHERE cvterm.name='project year' and project_id in ($c1_data)  order by projectprop.value";
-	    $sq ="SELECT distinct(stock_id), stock.uniquename FROM project 
-                  JOIN projectprop using(project_id) 
-                  JOIN cvterm on (type_id=cvterm_id) 
-                  JOIN nd_experiment_project on (project.project_id=nd_experiment_project.project_id)
-                  JOIN nd_experiment_stock USING (nd_experiment_id)
-                  JOIN stock USING (stock_id) 
-                  WHERE cvterm.name='project year' and project.project_id in ($c1_data)  order by stock.uniquename";
-	}
-	if ($select2 eq "location") { 
-	    $q = "SELECT distinct(nd_geolocation.nd_geolocation_id), nd_geolocation.description FROM project 
-                  JOIN nd_experiment_project using(project_id) 
-                  JOIN nd_experiment using(nd_experiment_id) 
-                  JOIN nd_geolocation using(nd_geolocation_id) 
-                  WHERE project_id in ($c1_data) order by nd_geolocation.description"; 
-	}
-    }
+  # 	if ($select2 eq "year") { 
+  # 	    $q = "SELECT distinct(projectprop.value), projectprop.value FROM project 
+  #                 JOIN projectprop using(project_id) 
+  #                 JOIN cvterm on (type_id=cvterm_id) 
+  #                 WHERE cvterm.name='project year' and project_id in ($c1_data)  order by projectprop.value";
+  # 	    $sq ="SELECT distinct(stock_id), stock.uniquename FROM project 
+  #                 JOIN projectprop using(project_id) 
+  #                 JOIN cvterm on (type_id=cvterm_id) 
+  #                 JOIN nd_experiment_project on (project.project_id=nd_experiment_project.project_id)
+  #                 JOIN nd_experiment_stock USING (nd_experiment_id)
+  #                 JOIN stock USING (stock_id) 
+  #                 WHERE cvterm.name='project year' and project.project_id in ($c1_data)  order by stock.uniquename";
+  # 	}
+  # 	if ($select2 eq "location") { 
+  # 	    $q = "SELECT distinct(nd_geolocation.nd_geolocation_id), nd_geolocation.description FROM project 
+  #                 JOIN nd_experiment_project using(project_id) 
+  #                 JOIN nd_experiment using(nd_experiment_id) 
+  #                 JOIN nd_geolocation using(nd_geolocation_id) 
+  #                 WHERE project_id in ($c1_data) order by nd_geolocation.description"; 
+  # 	}
+  #   }
 
-    if ($select1 eq "year" && $select2  && !$select3) { 
-	if ($select2 eq "location") { 
-	    $q =  "SELECT distinct(nd_geolocation.nd_geolocation_id), nd_geolocation.description FROM project 
-                   JOIN projectprop using(project_id) 
-                   JOIN nd_experiment_project USING(project_id) 
-                   JOIN nd_experiment USING (nd_experiment_id) 
-                   JOIN nd_geolocation using(nd_geolocation_id) 
-                   WHERE projectprop.type_id=$type_id and projectprop.value in ($c1_data) order by nd_geolocation.description";
+  #   if ($select1 eq "year" && $select2  && !$select3) { 
+  # 	if ($select2 eq "location") { 
+  # 	    $q =  "SELECT distinct(nd_geolocation.nd_geolocation_id), nd_geolocation.description FROM project 
+  #                  JOIN projectprop using(project_id) 
+  #                  JOIN nd_experiment_project USING(project_id) 
+  #                  JOIN nd_experiment USING (nd_experiment_id) 
+  #                  JOIN nd_geolocation using(nd_geolocation_id) 
+  #                  WHERE projectprop.type_id=$type_id and projectprop.value in ($c1_data) order by nd_geolocation.description";
 
-	    $sq = "SELECT distinct(stock_id), stock.uniquename FROM project 
-                   JOIN projectprop using(project_id) 
-                   JOIN nd_experiment_project USING(project_id) 
-                   JOIN nd_experiment USING (nd_experiment_id) 
-                   JOIN nd_geolocation using(nd_geolocation_id) 
-                   JOIN nd_experiment_stock on(nd_experiment.nd_experiment_id=nd_experiment_stock.nd_experiment_id) 
-                   JOIN stock using(stock_id) 
-                   WHERE projectprop.type_id=$type_id and projectprop.value in ($c1_data) order by stock.uniquename";
-	}
+  # 	    $sq = "SELECT distinct(stock_id), stock.uniquename FROM project 
+  #                  JOIN projectprop using(project_id) 
+  #                  JOIN nd_experiment_project USING(project_id) 
+  #                  JOIN nd_experiment USING (nd_experiment_id) 
+  #                  JOIN nd_geolocation using(nd_geolocation_id) 
+  #                  JOIN nd_experiment_stock on(nd_experiment.nd_experiment_id=nd_experiment_stock.nd_experiment_id) 
+  #                  JOIN stock using(stock_id) 
+  #                  WHERE projectprop.type_id=$type_id and projectprop.value in ($c1_data) order by stock.uniquename";
+  # 	}
 
-	if ($select2 eq "project") { 
-	    $q = "SELECT distinct(project.project_id), project.name
-                  FROM project join projectprop using(project_id) 
-                  WHERE projectprop.value in ($c1_data) order by project.name";
-	    $sq= "SELECT distinct(stock_id), stock.uniquename FROM project 
-                  JOIN projectprop using(project_id) 
-                  JOIN nd_experiment_project on (nd_experiment_project.project_id=project.project_id) 
-                  JOIN nd_experiment_stock using(nd_experiment_id)
-                  JOIN stock using(stock_id)
-                  WHERE projectprop.type_id=$type_id and projectprop.value in ($c1_data) order by stock.uniquename";
+  # 	if ($select2 eq "project") { 
+  # 	    $q = "SELECT distinct(project.project_id), project.name
+  #                 FROM project join projectprop using(project_id) 
+  #                 WHERE projectprop.value in ($c1_data) order by project.name";
+  # 	    $sq= "SELECT distinct(stock_id), stock.uniquename FROM project 
+  #                 JOIN projectprop using(project_id) 
+  #                 JOIN nd_experiment_project on (nd_experiment_project.project_id=project.project_id) 
+  #                 JOIN nd_experiment_stock using(nd_experiment_id)
+  #                 JOIN stock using(stock_id)
+  #                 WHERE projectprop.type_id=$type_id and projectprop.value in ($c1_data) order by stock.uniquename";
 	    
-	}
+  # 	}
 
-    }
+  #   }
 
-    if ($select1 eq "year" && $select2 eq "location" && $select3) { 
-	if ($select3 eq "project") { 
-	    $q = "SELECT distinct(project.project_id), project.name FROM projectprop 
-                  JOIN project using(project_id) 
-                  JOIN nd_experiment_project on (nd_experiment_project.project_id=project.project_id)
-                  JOIN nd_experiment using(nd_experiment_id) 
-                  JOIN nd_geolocation using(nd_geolocation_id) WHERE projectprop.type_id=$type_id and projectprop.value in ($c1_data) order by project.name";
-	    $sq= "SELECT distinct(stock.stock_id), stock.name FROM projectprop 
-                  JOIN project using(project_id) 
-                  JOIN nd_experiment_project on (nd_experiment_project.project_id=project.project_id)
-                  JOIN nd_experiment using(nd_experiment_id) 
-                  JOIN nd_geolocation using(nd_geolocation_id)
-                  JOIN nd_experiment_stock on(nd_experiment.nd_experiment_id=nd_experiment_stock.nd_experiment_id)
-                  JOIN stock using(stock_id)
-                  WHERE projectprop.type_id=$type_id and projectprop.value in ($c1_data) and nd_geolocation.nd_geolocation_id in ($c2_data) order by stock.name";
-	}	
-    }
+  #   if ($select1 eq "year" && $select2 eq "location" && $select3) { 
+  # 	if ($select3 eq "project") { 
+  # 	    $q = "SELECT distinct(project.project_id), project.name FROM projectprop 
+  #                 JOIN project using(project_id) 
+  #                 JOIN nd_experiment_project on (nd_experiment_project.project_id=project.project_id)
+  #                 JOIN nd_experiment using(nd_experiment_id) 
+  #                 JOIN nd_geolocation using(nd_geolocation_id) WHERE projectprop.type_id=$type_id and projectprop.value in ($c1_data) order by project.name";
+  # 	    $sq= "SELECT distinct(stock.stock_id), stock.name FROM projectprop 
+  #                 JOIN project using(project_id) 
+  #                 JOIN nd_experiment_project on (nd_experiment_project.project_id=project.project_id)
+  #                 JOIN nd_experiment using(nd_experiment_id) 
+  #                 JOIN nd_geolocation using(nd_geolocation_id)
+  #                 JOIN nd_experiment_stock on(nd_experiment.nd_experiment_id=nd_experiment_stock.nd_experiment_id)
+  #                 JOIN stock using(stock_id)
+  #                 WHERE projectprop.type_id=$type_id and projectprop.value in ($c1_data) and nd_geolocation.nd_geolocation_id in ($c2_data) order by stock.name";
+  # 	}	
+  #   }
 
-    if ($select1 eq "location" && $select2 && !$select3) { 
+  #   if ($select1 eq "location" && $select2 && !$select3) { 
 
-     	if ($select2 eq "year") { 
-    	    $q = "SELECT distinct(projectprop.projectprop_id), projectprop.value FROM projectprop 
-                  JOIN nd_experiment_project using(project_id) 
-                  JOIN nd_experiment using(nd_experiment_id) 
-                  JOIN nd_geolocation using(nd_geolocation_id)
-                  WHERE projectprop.type_id=$type_id and nd_geolocation.nd_geolocation_id in ($c1_data) order by projectprop.value";
+  #    	if ($select2 eq "year") { 
+  #   	    $q = "SELECT distinct(projectprop.projectprop_id), projectprop.value FROM projectprop 
+  #                 JOIN nd_experiment_project using(project_id) 
+  #                 JOIN nd_experiment using(nd_experiment_id) 
+  #                 JOIN nd_geolocation using(nd_geolocation_id)
+  #                 WHERE projectprop.type_id=$type_id and nd_geolocation.nd_geolocation_id in ($c1_data) order by projectprop.value";
 
-    	    $sq= "SELECT distinct(stock.stock_id), stock.uniquename FROM projectprop
-                  JOIN nd_experiment_project using(project_id) 
-                  JOIN nd_experiment using(nd_experiment_id) 
-                  JOIN nd_geolocation using(nd_geolocation_id)
-                  JOIN nd_experiment_stock on (nd_experiment.nd_experiment_id=nd_experiment_stock.nd_experiment_id)
-                  JOIN stock using(stock_id)
-                  WHERE projectprop.type_id=$type_id and nd_geolocation.nd_geolocation_id in ($c1_data) order by stock.uniquename";
-    	}
+  #   	    $sq= "SELECT distinct(stock.stock_id), stock.uniquename FROM projectprop
+  #                 JOIN nd_experiment_project using(project_id) 
+  #                 JOIN nd_experiment using(nd_experiment_id) 
+  #                 JOIN nd_geolocation using(nd_geolocation_id)
+  #                 JOIN nd_experiment_stock on (nd_experiment.nd_experiment_id=nd_experiment_stock.nd_experiment_id)
+  #                 JOIN stock using(stock_id)
+  #                 WHERE projectprop.type_id=$type_id and nd_geolocation.nd_geolocation_id in ($c1_data) order by stock.uniquename";
+  #   	}
 
-    	if ($select2 eq "project") { 
-    	    $q = "SELECT distinct(project.project_id), project.name FROM project 
-                  JOIN nd_experiment_project using(project_id)
-                  JOIN nd_experiment using(nd_experiment_id) 
-                  JOIN nd_geolocation using(nd_geolocation_id)
-                  WHERE nd_geolocation.nd_geolocation_id in ($c1_data) order by project.name";
+  #   	if ($select2 eq "project") { 
+  #   	    $q = "SELECT distinct(project.project_id), project.name FROM project 
+  #                 JOIN nd_experiment_project using(project_id)
+  #                 JOIN nd_experiment using(nd_experiment_id) 
+  #                 JOIN nd_geolocation using(nd_geolocation_id)
+  #                 WHERE nd_geolocation.nd_geolocation_id in ($c1_data) order by project.name";
 
-    	    $sq="SELECT distinct(stock.stock_id), stock.uniquename FROM project 
-                  JOIN nd_experiment_project using(project_id)
-                  JOIN nd_experiment using(nd_experiment_id) 
-                  JOIN nd_geolocation using(nd_geolocation_id)
-                  JOIN nd_experiment_stock ON (nd_experiment_stock.nd_experiment_id=nd_experiment.nd_experiment_id)
-                  JOIN stock using(stock_id)
-                  WHERE nd_geolocation.nd_geolocation_id in ($c1_data) order by stock.uniquename";
-    	}
+  #   	    $sq="SELECT distinct(stock.stock_id), stock.uniquename FROM project 
+  #                 JOIN nd_experiment_project using(project_id)
+  #                 JOIN nd_experiment using(nd_experiment_id) 
+  #                 JOIN nd_geolocation using(nd_geolocation_id)
+  #                 JOIN nd_experiment_stock ON (nd_experiment_stock.nd_experiment_id=nd_experiment.nd_experiment_id)
+  #                 JOIN stock using(stock_id)
+  #                 WHERE nd_geolocation.nd_geolocation_id in ($c1_data) order by stock.uniquename";
+  #   	}
 
-    }
+  #   }
 
-    # third possibility: location, project and year. location year and project. 
-    #                    project, location and year. project year, location
-    #                    year, project, location. year, location, project
+  #   # third possibility: location, project and year. location year and project. 
+  #   #                    project, location and year. project year, location
+  #   #                    year, project, location. year, location, project
 
-    my $c3_data_clause = "";
-    if ($c3_data) { 
-	if ($select3 eq "year") { $c3_data_clause = " and projectprop.value in ($c3_data) "; }
-	if ($select3 eq "project") { $c3_data_clause = " and project.project_id in ($c3_data) "; }
-	if ($select3 eq "location") { $c3_data_clause = " and nd_geolocation.nd_geolocation_id in ($c3_data) "; }
-    }
+  #   my $c3_data_clause = "";
+  #   if ($c3_data) { 
+  # 	if ($select3 eq "year") { $c3_data_clause = " and projectprop.value in ($c3_data) "; }
+  # 	if ($select3 eq "project") { $c3_data_clause = " and project.project_id in ($c3_data) "; }
+  # 	if ($select3 eq "location") { $c3_data_clause = " and nd_geolocation.nd_geolocation_id in ($c3_data) "; }
+  #   }
 
-    if (($select1 eq "location") && ($select2 eq "project") && $select3) { 
-	if ($select3 eq "year") {
-	    $q = "SELECT  distinct(projectprop.value), projectprop.value FROM project 
-                  JOIN projectprop USING(project_id)
-                  JOIN nd_experiment_project on (nd_experiment_project.project_id=project.project_id) 
-                  JOIN nd_experiment using(nd_experiment_id) 
-                  JOIN nd_geolocation using(nd_geolocation_id)
-                  WHERE projectprop.type_id=$type_id and nd_geolocation.nd_geolocation_id in ($c1_data) and project.project_id in ($c2_data)  order by projectprop.value";
+  #   if (($select1 eq "location") && ($select2 eq "project") && $select3) { 
+  # 	if ($select3 eq "year") {
+  # 	    $q = "SELECT  distinct(projectprop.value), projectprop.value FROM project 
+  #                 JOIN projectprop USING(project_id)
+  #                 JOIN nd_experiment_project on (nd_experiment_project.project_id=project.project_id) 
+  #                 JOIN nd_experiment using(nd_experiment_id) 
+  #                 JOIN nd_geolocation using(nd_geolocation_id)
+  #                 WHERE projectprop.type_id=$type_id and nd_geolocation.nd_geolocation_id in ($c1_data) and project.project_id in ($c2_data)  order by projectprop.value";
 
-	    $sq= "SELECT distinct(stock.stock_id), stock.uniquename FROM project
-                  JOIN projectprop using (project_id)
-                  JOIN nd_experiment_project on(nd_experiment_project.project_id=project.project_id) 
-                  JOIN nd_experiment using(nd_experiment_id) 
-                  JOIN nd_geolocation using(nd_geolocation_id)
-                  JOIN nd_experiment_stock on (nd_experiment.nd_experiment_id=nd_experiment_stock.nd_experiment_id)
-                  JOIN stock using(stock_id)
-                  WHERE projectprop.type_id=$type_id and nd_geolocation.nd_geolocation_id in ($c1_data) and project.project_id in ($c2_data) $c3_data_clause  order by stock.uniquename";
+  # 	    $sq= "SELECT distinct(stock.stock_id), stock.uniquename FROM project
+  #                 JOIN projectprop using (project_id)
+  #                 JOIN nd_experiment_project on(nd_experiment_project.project_id=project.project_id) 
+  #                 JOIN nd_experiment using(nd_experiment_id) 
+  #                 JOIN nd_geolocation using(nd_geolocation_id)
+  #                 JOIN nd_experiment_stock on (nd_experiment.nd_experiment_id=nd_experiment_stock.nd_experiment_id)
+  #                 JOIN stock using(stock_id)
+  #                 WHERE projectprop.type_id=$type_id and nd_geolocation.nd_geolocation_id in ($c1_data) and project.project_id in ($c2_data) $c3_data_clause  order by stock.uniquename";
 	    
-	}
-    }
+  # 	}
+  #   }
 
-    if (($select1 eq "location") && ($select2 eq "year") && $select3) { 
-	if ($select3 eq "project") { 
-	    $q = "SELECT  distinct(project.project_id), project.name FROM project 
-                  JOIN projectprop USING (project_id)
-                  JOIN nd_experiment_project on (nd_experiment_project.project_id=project.project_id) 
-                  JOIN nd_experiment using(nd_experiment_id) 
-                  JOIN nd_geolocation using(nd_geolocation_id)
-                  WHERE projectprop.type_id=$type_id and nd_geolocation.nd_geolocation_id in ($c1_data) and projectprop.value  in ($c2_data) order by project.name";
+  #   if (($select1 eq "location") && ($select2 eq "year") && $select3) { 
+  # 	if ($select3 eq "project") { 
+  # 	    $q = "SELECT  distinct(project.project_id), project.name FROM project 
+  #                 JOIN projectprop USING (project_id)
+  #                 JOIN nd_experiment_project on (nd_experiment_project.project_id=project.project_id) 
+  #                 JOIN nd_experiment using(nd_experiment_id) 
+  #                 JOIN nd_geolocation using(nd_geolocation_id)
+  #                 WHERE projectprop.type_id=$type_id and nd_geolocation.nd_geolocation_id in ($c1_data) and projectprop.value  in ($c2_data) order by project.name";
 	    
-	    $sq= "SELECT distinct(stock.stock_id), stock.uniquename FROM projectprop
-                  JOIN project using (project_id)
-                  JOIN nd_experiment_project on(nd_experiment_project.project_id=project.project_id) 
-                  JOIN nd_experiment using(nd_experiment_id) 
-                  JOIN nd_geolocation using(nd_geolocation_id)
-                  JOIN nd_experiment_stock on (nd_experiment.nd_experiment_id=nd_experiment_stock.nd_experiment_id)
-                  JOIN stock using(stock_id)
-                  WHERE projectprop.type_id=$type_id and nd_geolocation.nd_geolocation_id in ($c1_data) and projectprop.value in ($c2_data) $c3_data_clause order by stock.uniquename";
-	}	    
-    }   
+  # 	    $sq= "SELECT distinct(stock.stock_id), stock.uniquename FROM projectprop
+  #                 JOIN project using (project_id)
+  #                 JOIN nd_experiment_project on(nd_experiment_project.project_id=project.project_id) 
+  #                 JOIN nd_experiment using(nd_experiment_id) 
+  #                 JOIN nd_geolocation using(nd_geolocation_id)
+  #                 JOIN nd_experiment_stock on (nd_experiment.nd_experiment_id=nd_experiment_stock.nd_experiment_id)
+  #                 JOIN stock using(stock_id)
+  #                 WHERE projectprop.type_id=$type_id and nd_geolocation.nd_geolocation_id in ($c1_data) and projectprop.value in ($c2_data) $c3_data_clause order by stock.uniquename";
+  # 	}	    
+  #   }   
 
-    if (($select1 eq "project") && ($select2 eq "location") && $select3) { 
-	if ($select3 eq "year") { 
-	    $q = "SELECT  distinct(projectprop.value), projectprop.value FROM project 
-                  JOIN projectprop USING(project_id)
-                  JOIN nd_experiment_project on (nd_experiment_project.project_id=project.project_id) 
-                  JOIN nd_experiment using(nd_experiment_id) 
-                  JOIN nd_geolocation using(nd_geolocation_id)
-                  WHERE projectprop.type_id=$type_id and project.project_id in ($c1_data) and nd_geolocation.nd_geolocation_id in ($c2_data) ";
+  #   if (($select1 eq "project") && ($select2 eq "location") && $select3) { 
+  # 	if ($select3 eq "year") { 
+  # 	    $q = "SELECT  distinct(projectprop.value), projectprop.value FROM project 
+  #                 JOIN projectprop USING(project_id)
+  #                 JOIN nd_experiment_project on (nd_experiment_project.project_id=project.project_id) 
+  #                 JOIN nd_experiment using(nd_experiment_id) 
+  #                 JOIN nd_geolocation using(nd_geolocation_id)
+  #                 WHERE projectprop.type_id=$type_id and project.project_id in ($c1_data) and nd_geolocation.nd_geolocation_id in ($c2_data) ";
 	    
-	    $sq= "SELECT distinct(stock.stock_id), stock.uniquename FROM projectprop
-                  JOIN project using (project_id)
-                  JOIN nd_experiment_project on(nd_experiment_project.project_id=project.project_id) 
-                  JOIN nd_experiment using(nd_experiment_id) 
-                  JOIN nd_geolocation using(nd_geolocation_id)
-                  JOIN nd_experiment_stock on (nd_experiment.nd_experiment_id=nd_experiment_stock.nd_experiment_id)
-                  JOIN stock using(stock_id)
-                  WHERE projectprop.type_id=$type_id and project.project_id in ($c1_data) and nd_geolocation.nd_geolocation_id in ($c2_data) $c3_data_clause order by stock.uniquename";
-	}	    
-    }   
+  # 	    $sq= "SELECT distinct(stock.stock_id), stock.uniquename FROM projectprop
+  #                 JOIN project using (project_id)
+  #                 JOIN nd_experiment_project on(nd_experiment_project.project_id=project.project_id) 
+  #                 JOIN nd_experiment using(nd_experiment_id) 
+  #                 JOIN nd_geolocation using(nd_geolocation_id)
+  #                 JOIN nd_experiment_stock on (nd_experiment.nd_experiment_id=nd_experiment_stock.nd_experiment_id)
+  #                 JOIN stock using(stock_id)
+  #                 WHERE projectprop.type_id=$type_id and project.project_id in ($c1_data) and nd_geolocation.nd_geolocation_id in ($c2_data) $c3_data_clause order by stock.uniquename";
+  # 	}	    
+  #   }   
 
-    if (($select1 eq "year") && ($select2 eq "project") && $select3) { 
-	if ($select3 eq "location") { 
+  #   if (($select1 eq "year") && ($select2 eq "project") && $select3) { 
+  # 	if ($select3 eq "location") { 
 
-	    ##MODIFY
-	    $q = "SELECT  distinct(nd_geolocation.nd_geolocation_id), nd_geolocation.description FROM project 
-                  JOIN projectprop USING(project_id)
-                  JOIN nd_experiment_project on (nd_experiment_project.project_id=project.project_id) 
-                  JOIN nd_experiment using(nd_experiment_id) 
-                  JOIN nd_geolocation using(nd_geolocation_id)
-                  WHERE projectprop.type_id=$type_id and project.project_id in ($c1_data) and projectprop.value in ($c2_data) order by nd_geolocation.description ";
+  # 	    ##MODIFY
+  # 	    $q = "SELECT  distinct(nd_geolocation.nd_geolocation_id), nd_geolocation.description FROM project 
+  #                 JOIN projectprop USING(project_id)
+  #                 JOIN nd_experiment_project on (nd_experiment_project.project_id=project.project_id) 
+  #                 JOIN nd_experiment using(nd_experiment_id) 
+  #                 JOIN nd_geolocation using(nd_geolocation_id)
+  #                 WHERE projectprop.type_id=$type_id and project.project_id in ($c1_data) and projectprop.value in ($c2_data) order by nd_geolocation.description ";
 	    
-	    ##MODIFY
-	    $sq= "SELECT distinct(stock.stock_id), stock.uniquename FROM project
-                  JOIN projectprop using (project_id)
-                  JOIN nd_experiment_project on(nd_experiment_project.project_id=project.project_id) 
-                  JOIN nd_experiment using(nd_experiment_id) 
-                  JOIN nd_geolocation using(nd_geolocation_id)
-                  JOIN nd_experiment_stock on (nd_experiment.nd_experiment_id=nd_experiment_stock.nd_experiment_id)
-                  JOIN stock using(stock_id)
-                  WHERE projectprop.type_id=$type_id and project.project_id in ($c1_data) and projectprop.value in ($c2_data) order by stock.uniquename";
-	}	    
-    }   
+  # 	    ##MODIFY
+  # 	    $sq= "SELECT distinct(stock.stock_id), stock.uniquename FROM project
+  #                 JOIN projectprop using (project_id)
+  #                 JOIN nd_experiment_project on(nd_experiment_project.project_id=project.project_id) 
+  #                 JOIN nd_experiment using(nd_experiment_id) 
+  #                 JOIN nd_geolocation using(nd_geolocation_id)
+  #                 JOIN nd_experiment_stock on (nd_experiment.nd_experiment_id=nd_experiment_stock.nd_experiment_id)
+  #                 JOIN stock using(stock_id)
+  #                 WHERE projectprop.type_id=$type_id and project.project_id in ($c1_data) and projectprop.value in ($c2_data) order by stock.uniquename";
+  # 	}	    
+  #   }   
 
-    if (($select1 eq "year") && ($select2 eq "location") && $select3) { 
-	if ($select3 eq "project") { 
-	    ## MODIFY
-	    $q = "SELECT  distinct(nd_geolocation.nd_geolocation_id), nd_geolocation.description FROM project 
-                  JOIN projectprop USING(project_id)
-                  JOIN nd_experiment_project on (nd_experiment_project.project_id=project.project_id) 
-                  JOIN nd_experiment using(nd_experiment_id) 
-                  JOIN nd_geolocation using(nd_geolocation_id)
-                  WHERE projectprop.type_id=$type_id and project.project_id in ($c1_data) and projectprop.value in ($c2_data) order by nd_geolocation.description ";
+  #   if (($select1 eq "year") && ($select2 eq "location") && $select3) { 
+  # 	if ($select3 eq "project") { 
+  # 	    ## MODIFY
+  # 	    $q = "SELECT  distinct(nd_geolocation.nd_geolocation_id), nd_geolocation.description FROM project 
+  #                 JOIN projectprop USING(project_id)
+  #                 JOIN nd_experiment_project on (nd_experiment_project.project_id=project.project_id) 
+  #                 JOIN nd_experiment using(nd_experiment_id) 
+  #                 JOIN nd_geolocation using(nd_geolocation_id)
+  #                 WHERE projectprop.type_id=$type_id and project.project_id in ($c1_data) and projectprop.value in ($c2_data) order by nd_geolocation.description ";
 	    
-	    ##MODIFY
-	    $sq= "SELECT distinct(stock.stock_id), stock.uniquename FROM project
-                  JOIN projectprop using (project_id)
-                  JOIN nd_experiment_project on(nd_experiment_project.project_id=project.project_id) 
-                  JOIN nd_experiment using(nd_experiment_id) 
-                  JOIN nd_geolocation using(nd_geolocation_id)
-                  JOIN nd_experiment_stock on (nd_experiment.nd_experiment_id=nd_experiment_stock.nd_experiment_id)
-                  JOIN stock using(stock_id)
-                  WHERE projectprop.type_id=$type_id and project.project_id in ($c1_data) and projectprop.value in ($c2_data) order by stock.uniquename";
-	}	    
+  # 	    ##MODIFY
+  # 	    $sq= "SELECT distinct(stock.stock_id), stock.uniquename FROM project
+  #                 JOIN projectprop using (project_id)
+  #                 JOIN nd_experiment_project on(nd_experiment_project.project_id=project.project_id) 
+  #                 JOIN nd_experiment using(nd_experiment_id) 
+  #                 JOIN nd_geolocation using(nd_geolocation_id)
+  #                 JOIN nd_experiment_stock on (nd_experiment.nd_experiment_id=nd_experiment_stock.nd_experiment_id)
+  #                 JOIN stock using(stock_id)
+  #                 WHERE projectprop.type_id=$type_id and project.project_id in ($c1_data) and projectprop.value in ($c2_data) order by stock.uniquename";
+  # 	}	    
     
 
-    print STDERR "Q: $q\n\n";
+  #   print STDERR "Q: $q\n\n";
 
-    my @list = ();
-    $h = $dbh->prepare($q);
-    $h->execute();
-    while (my ($id, $name) = $h->fetchrow_array()) { 
-	push @list, [ $id, $name ];
-    }
+  #   my @list = ();
+  #   $h = $dbh->prepare($q);
+  #   $h->execute();
+  #   while (my ($id, $name) = $h->fetchrow_array()) { 
+  # 	push @list, [ $id, $name ];
+  #   }
 
-  print STDERR "SQ: $sq\n\n";
-    my @stocks = ();
-    if ($sq) { 
-	$h = $dbh->prepare($sq);
-	$h->execute();
-	while (my ($id, $name) = $h->fetchrow_array()) { 
-	    push @stocks, [ $id, $name ];
-	}
-    }
+  # print STDERR "SQ: $sq\n\n";
+  #   my @stocks = ();
+  #   if ($sq) { 
+  # 	$h = $dbh->prepare($sq);
+  # 	$h->execute();
+  # 	while (my ($id, $name) = $h->fetchrow_array()) { 
+  # 	    push @stocks, [ $id, $name ];
+  # 	}
+  #   }
 
-    my $response = { list => \@list, 
-		  stocks    => \@stocks,
-    };
+  #   my $response = { list => \@list, 
+  # 		  stocks    => \@stocks,
+  #   };
 
-    $c->stash->{rest} = $response;
+  #   $c->stash->{rest} = $response;
     
 
 }
@@ -392,6 +404,8 @@ sub get_stock_union {
 	year     => 'SELECT distinct(stock.stock_id), stock.name FROM projectprop JOIN nd_experiment_project using(project_id) JOIN nd_experiment using(nd_experiment_id) JOIN stock using(stock_id) WHERE projectprop.value in (?)',
 
 	project  => 'SELECT distinct(stock.stock_id), stock.name FROM project JOIN nd_experiment_project using(project_id) JOIN nd_experiment using(nd_experiment_id) JOIN stock using(stock_id) WHERE project.project_id in (?)',
+
+	'' => 'SELECT stock_id, stock.name FROM stock',
 
 	);
 
@@ -422,6 +436,8 @@ sub get_location_union {
     my %queries = (
 	year => "SELECT distinct(nd_geolocation.nd_geolocation_id), nd_geolocation.description FROM nd_geolocation join nd_experiment using(nd_geolocation_id) JOIN nd_experiment_projectprop using(project_id) where projectprop.values in ($years_ref)",
 	projects => "SELECT distinct(nd_geolocation.nd_geolocation_id), nd_geolocation.description FROM nd_geolocation JOIN nd_experiment using(nd_geolocation_id) JOIN nd_experiment_project using(nd_experiment_id) JOIN project using(project_id) WHERE project.project_id in ($projects_ref)",
+	
+	'' => 'SELECT nd_geolocation_id, description FROM nd_geolocation',
 	);
 
         my @query;
@@ -433,16 +449,15 @@ sub get_location_union {
     my $h = $c->dbc->dbh->prepare($query);
     $h->execute();
 
-    my @stocks;
-    while (my ($lod_id, $loc_name) = $h->fetchrow_array()) { 
+    my @locations;
+    while (my ($loc_id, $loc_name) = $h->fetchrow_array()) { 
 	push @locations, [ $loc_id, $loc_name ];
     }
-    return \@stocks;
+    return \@locations;
 }
 
 sub get_year_union { 
-
-        my $self = shift;
+    my $self = shift;
     my $c = shift;
     
     my $criteria_list = shift;
@@ -450,8 +465,9 @@ sub get_year_union {
     my ($locations_ref, $years_ref, $projects_ref) = @_;
     
     my %queries = (
-	year => "SELECT distinct(nd_geolocation.nd_geolocation_id), nd_geolocation.description FROM nd_geolocation join nd_experiment using(nd_geolocation_id) JOIN nd_experiment_projectprop using(project_id) where projectprop.values in ($years_ref)",
-	projects => "SELECT distinct(nd_geolocation.nd_geolocation_id), nd_geolocation.description FROM nd_geolocation JOIN nd_experiment using(nd_geolocation_id) JOIN nd_experiment_project using(nd_experiment_id) JOIN project using(project_id) WHERE project.project_id in ($projects_ref)",
+	year => "SELECT distinct(projectprop.value), projectprop.value FROM projectprop JOIN nd_experiment_project USING project_id JOIN nd_experiment using(nd_geolocation_id) JOIN nd_experiment_projectprop using(project_id) where projectprop.values in ($years_ref)",
+	projects => "SELECT distinct(projectprop.value), projectprop.value FROM projectprop JOIN nd_experiment_project USING project_id JOIN nd_experiment using(nd_geolocation_id) JOIN nd_experiment_project using(nd_experiment_id) JOIN project using(project_id) WHERE project.project_id in ($projects_ref)",
+	'' => "SELECT distinct(projectprop.value), projectprop.value FROM projectprop WHERE type_id=$type_id";
 	);
 
         my @query;
@@ -463,11 +479,11 @@ sub get_year_union {
     my $h = $c->dbc->dbh->prepare($query);
     $h->execute();
 
-    my @stocks;
-    while (my ($lod_id, $loc_name) = $h->fetchrow_array()) { 
-	push @locations, [ $loc_id, $loc_name ];
+    my @years;
+    while (my ($year, $year) = $h->fetchrow_array()) { 
+	push @years, [ $year, $year ];
     }
-    return \@stocks;
+    return \@years;
 
 
 }
