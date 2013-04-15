@@ -220,7 +220,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
             ontology_count => $c->stash->{ontology_count},
 	    has_pedigree => $c->stash->{has_pedigree},
 	    has_descendants => $c->stash->{has_descendants},
-            trait_ontology_db_name => $c->get_conf->{trait_ontology_db_name},
+            trait_ontology_db_name => $c->get_conf('trait_ontology_db_name'),
 
         },
         locus_add_uri  => $c->uri_for( '/ajax/stock/associate_locus' ),
