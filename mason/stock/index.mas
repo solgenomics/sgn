@@ -172,7 +172,7 @@ my $ontology_subtitle = $curator || $submitter || $sequencer  ?
   qq|<a href="javascript:Tools.toggleContent('associate_cvterm_form', 'stock_ontology')">[Add ontology annotations]</a> | :
   qq |<span class = "ghosted"> [Add ontology annotations]</span> |;
 
-my $add_phenotype_link =  $curator || $submitter || $sequencer  ? qq| <a id="add_phenotype_link" >Add phenotype</a> :   qq |<span class = "ghosted"> [Add phenotype]</span> |;
+my $add_phenotype_link =  $curator || $submitter || $sequencer  ? qq| <a id="add_phenotype_link" >Add phenotype</a> | :   qq |<span class = "ghosted"> [Add phenotype]</span> |;
 
 
 </%perl>
