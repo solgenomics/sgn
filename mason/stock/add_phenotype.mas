@@ -1,4 +1,5 @@
 <%doc>
+
 =head1 NAME
 
 add_phenotype.mas
@@ -13,7 +14,7 @@ Naama Menda <nm249@cornell.edu>
 
 =head1 ARGUMENTS
 
-=over 1
+=over 2
 
 =item stock_id
 
@@ -23,29 +24,32 @@ the id of the stock
 the default db name for the server  trait ontology
 
 =back
+
 =cut
 
 </%doc>
 
 <%args>
+
 $stock_id
 $trait_ontology_db_name
+$uri => "/ajax/cvterm/autocomplete?db_name=CO"
+
 </%args>
 
 
 <& /util/import_javascript.mas, classes => [ 'jqueryui' ] &>
 
 <script language="javascript">
-     
-      jQuery(function() {
-      	 jQuery("#trait_autocomplete").autocomplete({
-		source: '/ajax/cvterm/autocomplete' + '?db_name=' + '<% $trait_ontology_db_name %>'
-     	  });
-      });
+  
+  jQuery(function() {
+     jQuery("#trait_name").autocomplete({
+      source: '<% $uri %>'
+     });
+  });
 
-
-    function associate_phenotype() {
-      var trait = jQuery("#trait_autocomplete").val();
+   function associate_phenotype() {
+      var trait = jQuery("#trait_name").val();
       if (!trait) { alert("Must choose a trait name!"); return; }
       var stock_id = '<% $stock_id %>';
       var phenotype_value = jQuery("#phenotye_value").val();
@@ -64,18 +68,20 @@ $trait_ontology_db_name
            //jQuery("#add_phenotype_form").dialog("close");
             document.location.reload(); // reload the entire page, might be faster then rendering phenotype section with AJAX
           }
-        },
+        }
       });
-   }
+}
 
 </script>
 
-
-<div id="add_phenotype_form"  style="display: none" >
-     <form name = "add_phenotype">
-      <b>Trait name</b> <input type="text" id="trait_autocomplete" name="trait_autocomplete" />
-      <b>Value</b> <input type ="text" id="phenotype_value"<br />
-      <input type="hidden" id="stock_id" name="stock_id" value="<% $stock_id %>"/>
-      <input type="button" id="associate_phenotype_button" value="Submit" onclick="javascript:associate_phenotype()" />
-     </form>
+<div id="add_phenotype_form">
+     <b>Add a phenotype to the experiment</b>
+     <div id="phenotype_add">
+     	  <form name = "add_phenotype" >
+      	  	<b>Trait name</b><input type="text" id="trait_name" name="trait_name" />
+      		<b>Value</b> <input type="text" id="phenotype_value" />
+      		<input type="hidden" id="stock_id" name="stock_id" value="<% $stock_id %>" />
+    	        <input type="button" name="associate_phenotype_button" id="associate_phenotype_button" value="Submit" onclick="javascript:associate_phenotype()" />
+     	</form>
+	</div>
 </div>
