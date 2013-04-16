@@ -15,7 +15,7 @@ my $dt = DateTime->from_epoch( epoch=>time );
 my $date = join "/", ($dt->year, $dt->month, $dt->day);
 </%perl>
 
-%# <& /util/import_javascript.mas, classes => [ 'CXGN.List' ] &>
+<& /util/import_javascript.mas, classes => ['jquery.cookie' ] &>
 
 <& /page/page_title.mas, title=>"Barcode Tools" &>
 
@@ -101,11 +101,14 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
 <form action="/barcode/stock/download/pdf" method="post" enctype="multipart/form-data" />
 
 Enter a list of stock names<br />
-<textarea id="stock_names" name="stock_names" rows="10" cols="30">
-
-</textarea>
+<textarea id="stock_names" name="stock_names" rows="10" cols="30"></textarea>
 <script defer="defer">
+  if (jQuery.cookie("sgn_session_id")) {
     pasteListMenu('stock_names');
+  }
+  else { 
+    document.write('Log in for lists.');
+  }
 </script>
 
 
