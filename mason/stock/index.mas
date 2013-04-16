@@ -172,7 +172,7 @@ my $ontology_subtitle = $curator || $submitter || $sequencer  ?
   qq|<a href="javascript:Tools.toggleContent('associate_cvterm_form', 'stock_ontology')">[Add ontology annotations]</a> | :
   qq |<span class = "ghosted"> [Add ontology annotations]</span> |;
 
-my $add_phenotype_link =  $curator || $submitter || $sequencer  ? qq| <a id="add_phenotype_link" >Add phenotype</a> | :   qq |<span class = "ghosted"> [Add phenotype]</span> |;
+my $add_phenotype_link =  $curator || $submitter || $sequencer  ? qq| <a href="javascript:Tools.toggleContent('add_phenotype_form', 'stock_phenotype')" >[Add phenotype]</a> | :   qq |<span class = "ghosted"> [Add phenotype]</span> |;
 
 
 </%perl>
@@ -327,9 +327,11 @@ function jqueryStuff() {
 %   my $rs = $direct_phenotypes->{$project} ;
 
 <&| /page/info_section.mas,
-    title=>"Experiment: $project",
+    id       => "stock_phenotype",
+    title    =>"Experiment: $project",
     subtitle => $add_phenotype_link,
-    is_subsection => 1, collapsible => 1
+    is_subsection => 1,
+    collapsible => 1
 &>
     <& /stock/add_phenotype.mas,
       stock_id => $stock_id ,
