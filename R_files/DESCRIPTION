@@ -6,5 +6,5 @@ Author: Robert Buels <rmb32@cornell.edu>
 Maintainer: Robert Buels <rmb32@cornell.edu>
 Description: The code behind the Sol Genomics Network (sgn.cornell.edu)
         website.
-Depends: R (>= 2.14.0), qtl (>= 1.24-9), gplots (>= 2.10.1), ltm (>= 0.9-7), RColorBrewer (>= 1.0.5)
+Depends: R (>= 2.14.0), qtl (>= 1.24-9), gplots (>= 2.10.1), ltm (>= 0.9-7), RColorBrewer (>= 1.0.5), rrBLUP (>=3.8), plyr (>=1.7.1), mail(>=1.0), stats(>=2.14.0), imputation(>=1.3) 
 License: Artistic-3
