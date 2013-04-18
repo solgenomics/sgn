@@ -1,0 +1,53 @@
+<%doc>
+
+=head1 NAME
+ 
+population/multiple_traits_output.mas - displays multiple traits GS analysis output and links to traits' GS detailed output pages
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$trait_pages
+$analyzed_traits
+$pop_id
+$model_data
+$download_prediction
+$prediction_pop_id
+$list_of_prediction_pops
+
+</%args>
+
+<%perl>
+
+</%perl>
+
+
+<& /model/model_summary.mas, 
+     model_data => $model_data
+&>
+% if ($download_prediction eq 'N/A')
+%{
+
+  <& rank_genotypes.mas, 
+     analyzed_traits   => $analyzed_traits,
+     pop_id            => $pop_id,
+     prediction_pop_id => $prediction_pop_id    
+  &>
+
+%}
+
+<& /population/selection_populations.mas, 
+   download_prediction     => $download_prediction,
+   analyzed_traits         => $analyzed_traits,
+   pop_id                  => $pop_id,
+   prediction_pop_id       => $prediction_pop_id,
+   list_of_prediction_pops => $list_of_prediction_pops
+&>
+

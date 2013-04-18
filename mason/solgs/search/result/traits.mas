@@ -1,0 +1,55 @@
+<%doc>
+solgs search results view.
+</%doc>
+
+<%args>
+
+$result
+$query
+$pager
+$page_links
+$form =>undef;
+
+</%args>
+
+<& /page/page_title.mas,
+    title => 'Traits with genomic selection data',
+&>
+  
+% if ($result) 
+% { 
+
+<&| /page/info_section.mas,
+      title => 'Search Results',
+&>
+  <& /page/columnar_table.mas,
+     headings    => ['Select trait',  'Name', 'Definition'],
+    data         => $result,
+    __alt_freq   => 2,
+    __alt_width  => 1,
+    __align      => 'l'
+  &>
+
+  <& /page/pagination_control.mas, 
+     pager     => $pager, 
+    link_maker => $page_links 
+  &> 
+  </&>
+  
+%}
+%else
+%{
+<&| /page/info_section.mas,
+      title => 'Search Results',
+&>
+%if ( $query )
+%{
+<br>No results found for <i><strong>'<% $query %>'.</strong></i><br />
+%}
+%else
+%{
+<br>No results. Search again with a trait name.<br />
+%}
+</&>
+%}
+

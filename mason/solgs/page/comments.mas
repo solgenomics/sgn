@@ -1,0 +1,83 @@
+
+<%doc>
+
+=head1 NAME
+/page/comments.mas - a mason component to provide page comments
+
+=head1 DESCRIPTION
+
+Adds the user page comment feature to a web page. Users can peruse the comments, logged-in users can provide comments.
+
+Only show for entities that have completely numeric identifiers.
+
+Note: this code depends on the sgn.js script, which should be included in every SGN page.
+
+=head2 Arguments
+
+=over 10
+
+=item object_type
+
+The type of object being commented on.
+
+=item object_id
+
+The identifier of the object being commented on.
+
+=item referer
+
+The page uri which displays these page comments.
+
+=back
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu> - based on previous SGN Perl code.
+
+=cut
+
+</%doc>
+
+<%args>
+$object_id
+$object_type
+$referer
+</%args>
+
+<& /util/import_javascript.mas, classes=>[ 'CXGN.Page.Comments', 'MochiKit.Async' ] &>
+
+<%perl>
+
+our %urlencode;
+use Tie::UrlEncoder;
+use CXGN::Page::FormattingHelpers qw / info_section_html / ;
+
+if ($object_id!~/^\d+$/) { return; }
+
+
+    # object_type would be something like "marker" or "bac"
+    # object_id would be the marker_id or the clone_id
+
+    my $placeholder = info_section_html(
+        title=>"User comments",
+        contents=>qq{<!-- check for comments only shows up when AJAX is not enabled
+     (old browsers, buggy ajax) -->
+Please wait, checking for comments.  (If comments do not show up, access them <a href="/forum/return_comments.pl?type=$object_type&amp;id=$object_id">here</a>)}
+    );
+
+my $encoded_referer = $urlencode{ $referer || '' };
+
+
+
+</%perl>
+
+
+<span class="noshow" id="referer"><% $encoded_referer %></span>
+<span class="noshow" id="commentstype"><% $object_type %></span>
+<span class="noshow" id="commentsid"><% $object_id %></span>
+<div id="commentsarea">
+  <% $placeholder %>
+</div>
+
+
+

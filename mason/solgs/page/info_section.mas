@@ -1,0 +1,167 @@
+<%doc>
+
+=head1 NAME
+
+info_section.mas
+
+=head1 SYNOPSIS
+
+ <&| info_section.mas, title => 'Search Results',
+                      subtitle      => '3 matches',
+                      empty_message => 'No matching monkeys found',
+                      is_subsection => 0,
+  &>
+
+  HTML and Mason contents of the info section,
+  as much stuff as you want.
+
+ </&>
+
+
+
+=head1 DESCRIPTION
+
+Displays a paragraph with a title bar and provides a way to collapse
+the content. A mason wrapper around
+CXGN::Page::FormattingHelpers::info_section_html.
+
+=head1 ARGUMENTS
+
+=over 14
+
+=item $title
+
+the title to be displayed in the title bar. Required.
+
+=item $subtitle
+
+a subtitle that goes next to the title. Optional.
+
+=item $empty_message
+
+The message that should appear when $contents is empty.
+
+=item $is_empty
+
+if true, forces this info_section to be drawn in the empty state,
+content will not be shown.
+
+=item $hide_if_empty
+
+if true, hide the info section completely (do not print anything) if
+it is empty
+
+=item $collapsible
+
+boolean - default false, a true value makes the section collapsible
+(with javascript)
+
+=item $collapsed
+
+boolean - a true value will draw the section in the collapsed state
+
+=item $is_subsection
+
+boolean - a true value will draw the section as a subsection, with
+slighly altered title bar and text rendering.
+
+=item $align
+
+if set, add a text-align: $align CSS property to the div holding the
+main content
+
+=back
+
+=head1 SEE ALSO
+
+L<CXGN::Page::FormattingHelpers>
+
+=head1 AUTHOR
+
+Lukas Mueller, based on the Perl code from Rob Buels.
+
+
+=cut
+
+</%doc>
+
+<%args>
+    $title
+    $subtitle      => ""
+    $empty_message => "None"
+    $collapsible   => 0
+    $collapsed     => 0
+    $id            => ""
+    $is_empty      => 0
+    $is_subsection => 0
+    $align         => ''
+    $contents      => ''
+    $hide_if_empty => 0
+</%args>
+
+% my $sub = $is_subsection ? 'sub_' : '';
+
+<a class="info_section_anchor<% $sub ? ' info_subsection_anchor' : '' %>" name="<% anchor_name( $title ) %>"></a>
+
+<%perl>
+
+    $contents ||= $m->content || '';
+
+    #if we have been given content, and we aren't told that this section
+    #is supposed to be empty, print a full section
+    if ( $contents =~ /\S/ && !$is_empty ) {
+        $align &&= qq| style="text-align: $align|;
+        $id ||= "sgnc" . int( rand(10000) );
+        $contents = <<EOC;
+<div class="${sub}infosectioncontent" $align>
+$contents
+</div>
+EOC
+
+        if ( $collapsible ) {
+            ( $title, $contents ) = collapser(
+                {
+                    linktext            => $title,
+                    hide_state_linktext => $title,
+                    content             => $contents,
+                    collapsed           => $collapsed,
+                    id                  => $id,
+                }
+            );
+        }
+        $subtitle ||= '';
+        my $title_bar = <<EOHTML;
+<table cellspacing="0" cellpadding="0" class="${sub}infosectionhead" summary=""><tr><td class="${sub}infosectiontitle">$title</td><td class="${sub}infosectionsubtitle">$subtitle&nbsp;</td></tr></table>
+EOHTML
+        print "$title_bar\n$contents\n";
+    }
+
+    #otherwise, if it's actually empty, just print a collapsed section
+    #with the empty message
+    elsif( $hide_if_empty ) {
+        # print nothing
+    }
+    else {
+        my $maybe_subtitle =
+          $subtitle
+          ? qq|<td class="${sub}infosectionsubtitle_empty" align="right">$subtitle&nbsp;</td>|
+          : '';
+        print <<EOT;
+<table cellspacing="0" cellpadding="0" class="${sub}infosectionhead_empty" summary=""><tr><td class="${sub}infosectiontitle_empty">$title</td><td class="${sub}infosection_emptymessage">$empty_message</td>$maybe_subtitle</tr></table>
+EOT
+    }
+</%perl>
+
+<%once>
+  use CXGN::Page::Widgets qw/collapser/;
+  use HTML::Entities;
+
+  no warnings 'redefine';
+  sub anchor_name {
+      local $_ = lc shift;
+      s/<[^>]+>//g; # strip html tags
+      s/\s+/_/g;    # whitespace to underscores
+      s/\W//g;      # remove any weird chars
+      return $_;
+  }
+</%once>

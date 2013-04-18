@@ -1,0 +1,77 @@
+<%args>
+
+$pop_id
+$show_data => 1;
+$traits_form
+$all_traits_file
+$no_traits_selected
+$project_name
+$project_desc
+$stocks_no
+$markers_no
+$traits_no
+
+</%args>
+
+<%perl>
+
+#my $submit_new = qq | <a href="/submit/intro">Submit GS population</a> |;
+
+</%perl>
+
+<& /util/import_javascript.mas, classes => ["solGS.solGS"] &>
+
+<& /page/page_title.mas, 
+   title => "Select any combination of traits from training population \"$project_name\" to build a GS model and predict GEBVs for."
+&>
+
+<&| /page/info_section.mas, 
+    collapsible => 1, 
+    collapsed   => 0, 
+    title       => "Population summary",
+  &>
+
+ <& /population/summary.mas,
+    project_id   => $pop_id,
+    project_name => $project_name,
+    project_desc => $project_desc,
+    stocks_no    => $stocks_no,
+    markers_no   => $markers_no,
+    traits_no    => $traits_no
+ &>
+
+</&>
+
+% if ($show_data) 
+%{
+ 
+
+<&| /page/info_section.mas, 
+      collapsible => 1, 
+      collapsed   => 0, 
+      title       => "Traits"
+&>
+       
+<& population/select_traits.mas, 
+     pop_id             => $pop_id,
+     traits_form        => $traits_form,
+     all_traits_file    => $all_traits_file,
+     no_traits_selected => $no_traits_selected
+&>
+
+</&>
+
+%}
+% else
+%{
+
+<&| /page/info_section.mas, 
+    collapsible => 1, 
+    collapsed   => 0, 
+    title       => "Data Accessibility",
+  &>
+
+<p>This is private data.</p>
+
+</&>
+%}

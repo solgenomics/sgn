@@ -1,0 +1,34 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" href="/static/sgn.css" type="text/css" />
+  <link rel="stylesheet" href="/static/solgs_formfu.css" type="text/css" />
+ 
+  <& /header/js.mas &>
+
+</head>
+<body>
+<div id="outercontainer">
+  <a name="top"></a>
+  <table id="pagecontent_t" summary="" width="740" cellpadding="0" cellspacing="0" border="0">
+  <tr>
+    <td id="pagecontent_td">
+      <& /header/header.mas &>
+        <p>&nbsp</p>
+% $m->call_next;
+
+<!--add your site's footer stuff here-->
+    </td>
+  </tr>
+  <tr>
+    <td>
+         <p>&nbsp</p>
+        <& /footer/footer.mas &>
+    </td>
+  </tr>
+  </table>
+</div>
+</body>
+</html>

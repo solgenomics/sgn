@@ -1,0 +1,75 @@
+<%doc>
+
+=head1 NAME
+ 
+population/select_traits.mas - lists traits to select for GS analysis
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$traits_form
+$pop_id
+$all_traits_file
+$no_traits_selected
+
+</%args>
+
+<%perl>
+
+open FH, "<", $all_traits_file or die "Can't open $all_traits_file: $!\n";
+my $headers = <FH>; 
+my $trait_rows;
+
+while (<FH>)
+  {
+    my ($trait, $id) = split (/\t/);      
+    my $trait_link   = qq | <a href="/trait/$id/populaton/$pop_id" onclick="solGS.waitPage()">$trait</a> |;     
+    my $row          = <<ROW;    
+    <tr>
+      <td>
+        <input type  = "checkbox" 
+               name  = "trait_id"
+               value = $id > $trait_link
+      </td>
+    </tr> 
+ROW
+
+    $trait_rows .=  $row;
+
+  }
+
+my $message;
+if ($no_traits_selected eq 'none') 
+  {
+    $message = qq | <p style="color:red">Please select one or more traits to analyze.</p> |;
+  }
+
+</%perl>
+
+<& /util/import_javascript.mas, classes => ["solGS.solGS"] &>
+
+<% $message %>
+
+
+<form action="/analyze/traits/population/<%$pop_id %>" method="POST">
+  <table>
+    <% $trait_rows %>
+    <tr>   
+      <td>
+        <input type    = "submit" 
+               value   = "Run GS"
+               name    = "runGS"
+               onclick = "solGS.waitPage()"
+               >
+      </td>
+   </tr>
+  </table>
+</form>
+
