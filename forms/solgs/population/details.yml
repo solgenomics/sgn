@@ -1,0 +1,37 @@
+action: "/form/population/details"
+method: "POST"
+enctype: "multipart/form-data"
+
+auto_fieldset: 1
+
+elements:
+   - type: Text
+     name: pop_name
+     label: Name
+     size: 42
+     constraints:
+       - type: Required
+         message: Please give a name to your population.                           
+   - type: Textarea 
+     name: pop_desc
+     label: Description
+     rows: 5 
+     cols: 44
+     constraints:
+        - type: Required
+          message: Please describe your population.  
+   - type: Multi
+     name: pop_is_public
+     label: Do you want to make the data public
+   - type: Radiogroup
+     name: pop_is_public
+     values: [Yes, No]
+     default_empty_value: Yes
+     attrs:
+       class: vertical
+   - type: Hidden 
+     name: type 
+     value: pop_form
+   - type: Submit
+     name: submit
+     value: Submit
