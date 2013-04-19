@@ -79,8 +79,9 @@ sub upload_cross :  Path('/cross/upload_cross')  Args(0) {
 	 $first_row[5] ne 'number_of_progeny' ||
 	 $first_row[6] ne 'prefix' ||
 	 $first_row[7] ne 'suffix' ||
-	 $first_row[8] ne 'number_of_flowers') {
-       $header_error = "<b>Error in header:</b><br>Header should contain the following tab-delimited fields:<br>cross_name<br>maternal_parent<br>paternal_parent<br>trial<br>location<br>number_of_progeny<br>prefix<br>suffix<br>number_of_flowers<br>";
+	 $first_row[8] ne 'number_of_flowers' ||
+	 $first_row[9] ne 'number_of_seeds') {
+       $header_error = "<b>Error in header:</b><br>Header should contain the following tab-delimited fields:<br>cross_name<br>maternal_parent<br>paternal_parent<br>trial<br>location<br>number_of_progeny<br>prefix<br>suffix<br>number_of_flowers<br>number_of_seeds<br>";
        print STDERR "$header_error\n";
      }
      else {
@@ -105,6 +106,7 @@ sub upload_cross :  Path('/cross/upload_cross')  Args(0) {
 	   if ($row[6]) {$cross{'prefix'} = $row[6];}
 	   if ($row[7]) {$cross{'suffix'} = $row[7];}
 	   if ($row[8]) {$cross{'number_of_flowers'} = $row[8];}
+	   if ($row[9]) {$cross{'number_of_seeds'} = $row[9];}
 	   my $line_verification = _verify_cross($c,\%cross, \%line_errors, $line_number);
 	   if ($line_verification) {
 	     print STDERR "Verified\n";
@@ -166,6 +168,9 @@ sub upload_cross :  Path('/cross/upload_cross')  Args(0) {
        if ($row[8]) {
 	 $cross{'number_of_flowers'} = $row[8];
        }
+       if ($row[9]) {
+	 $cross{'number_of_seeds'} = $row[9];
+       }
        $cross{'visible_to_role'} = $visible_to_role;
        _add_cross($c,\%cross);
        $number_of_crosses_added++;
@@ -200,6 +205,7 @@ sub _verify_cross {
   my $cross_location = $cross_ref->{'cross_location'};
   my $max_progeny = 20000;
   my $max_flowers = 10000;
+  my $max_seeds = 10000;
   #print STDERR "name: ".$cross_ref->{'cross_name'}."\n";
   if (! $schema->resultset("Stock::Stock")->find({name=>$maternal_parent,})){
     $error_ref->{$line_number} .= "Line number $line_number, Maternal parent $maternal_parent does not exist in database\n <br>";
@@ -235,6 +241,15 @@ sub _verify_cross {
       $error_ref->{$line_number} .= "Line number $line_number, Number of flowers ". $cross_ref->{'number_of_flowers'}." is not an integer\n <br>";
     }
   }
+  if ($cross_ref->{'number_of_seeds'}) {
+    if ($cross_ref->{'number_of_seeds'}  =~ /^[0-9]+$/) { #is an integer
+      if ($cross_ref->{'number_of_seeds'} > $max_seeds || $cross_ref->{'number_of_seeds'} < 1) {
+	$error_ref->{$line_number} .= "Line number $line_number, Number of seeds ". $cross_ref->{'number_of_seeds'}." exceeds the maximum of $max_seeds or is invalid\n <br>";
+      }
+    } else {
+      $error_ref->{$line_number} .= "Line number $line_number, Number of seeds ". $cross_ref->{'number_of_seeds'}." is not an integer\n <br>";
+    }
+  }
   if ($cross_ref->{'prefix'} =~ m/\-/) {
 	$error_ref->{$line_number} .= "Line number $line_number, Prefix ". $cross_ref->{'prefix'}." contains an illegal character: -\n <br>";
   }
@@ -258,6 +273,7 @@ sub _add_cross {
   my $prefix = $cross{'prefix'};#check if exists
   my $suffix = $cross{'suffix'};#check if exists
   my $number_of_flowers = $cross{'number_of_flowers'};#check if exists
+  my $number_of_seeds = $cross{'number_of_seeds'};#check if exists
   my $visible_to_role = $cross{'visible_to_role'};
 ######################################################
   ###get organism from $c instead
@@ -320,6 +336,12 @@ sub _add_cross {
 									     db     => 'null',
 									     dbxref => 'number_of_flowers',
 									   });
+  my $number_of_seeds_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
+									   { name   => 'number_of_seeds',
+									     cv     => 'local',
+									     db     => 'null',
+									     dbxref => 'number_of_seeds',
+									   });
   my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create(
 										{
 										 nd_geolocation_id => $geolocation->nd_geolocation_id(),
@@ -340,6 +362,14 @@ sub _add_cross {
 								nd_experiment_id => $experiment->nd_experiment_id(),
 								type_id  =>  $number_of_flowers_cvterm->cvterm_id(),
 								value  =>  $number_of_flowers,
+							       });
+  }
+  if ($number_of_seeds) {
+    #set seed number in experimentprop
+    $experiment->find_or_create_related('nd_experimentprops' , {
+								nd_experiment_id => $experiment->nd_experiment_id(),
+								type_id  =>  $number_of_seeds_cvterm->cvterm_id(),
+								value  =>  $number_of_seeds,
 							       });
   }
   ############
