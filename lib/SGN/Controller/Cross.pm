@@ -275,14 +275,6 @@ sub _add_cross {
   my $number_of_flowers = $cross{'number_of_flowers'};#check if exists
   my $number_of_seeds = $cross{'number_of_seeds'};#check if exists
   my $visible_to_role = $cross{'visible_to_role'};
-######################################################
-  ###get organism from $c instead
-  my $organism = $schema->resultset("Organism::Organism")->find_or_create(
-									  {
-									   genus   => 'Manihot',
-									   species => 'Manihot esculenta',
-									  } );
-  my $organism_id = $organism->organism_id();
   my $geolocation = $schema->resultset("NaturalDiversity::NdGeolocation")->find({description=>$location,});
   my $project = $schema->resultset("Project::Project")->find({name=>$trial,});
   my $accession_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
@@ -298,6 +290,8 @@ sub _add_cross {
   my $female_parent_stock = $schema->resultset("Stock::Stock")->find(
 								     { name       => $maternal_parent,
 								     } );
+  my $organism_id = $female_parent_stock->organism_id();
+
   my $male_parent_stock = $schema->resultset("Stock::Stock")->find(
 								   { name       => $paternal_parent,
 								   } );

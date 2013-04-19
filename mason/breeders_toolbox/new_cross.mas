@@ -140,8 +140,6 @@ foreach my $role (@roles) {
 <script defer="defer" >
 
  jQuery(document).ready(function() {
-   // put all your jQuery goodness in here.
-
 
   jQuery("#maternal_parent").autocomplete( { 
     source: '/ajax/stock/stock_autocomplete'
