@@ -71,6 +71,8 @@ $projects
 
 <script defer="defer">
 
+ jQuery(document).ready(function() {
+
   jQuery('#add_project_dialog').dialog( {
      autoOpen: false,
      modal: true,
@@ -202,7 +204,7 @@ $projects
      }).done(alert("Done saving project info"));
      jQuery('#add_project_dialog').dialog("close");
   }
-  
+});  
 
 </script>
 

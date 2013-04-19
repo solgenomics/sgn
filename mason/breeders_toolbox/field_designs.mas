@@ -60,6 +60,8 @@ $field_designs
 
 <script defer="defer" >
     
+jQuery(document).ready(function() {
+
   jQuery('#experimental_design_dialog').dialog( {
      autoOpen: false,
      buttons:  { "Cancel" : function() { jQuery('#experimental_design_dialog').dialog("close"); }, 
@@ -142,6 +144,7 @@ $field_designs
      jQuery('#add_project_dialog').dialog("close");
   }
   
+});
 
 </script>
 

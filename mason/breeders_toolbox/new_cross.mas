@@ -138,6 +138,11 @@ foreach my $role (@roles) {
 
 
 <script defer="defer" >
+
+ jQuery(document).ready(function() {
+   // put all your jQuery goodness in here.
+
+
   jQuery("#maternal_parent").autocomplete( { 
     source: '/ajax/stock/stock_autocomplete'
 });
@@ -329,6 +334,8 @@ foreach my $role (@roles) {
       else if (!(formatType == "barcode" || formatType == "spreadsheet")) {alert("Please choose a format");return;}
       else { jQuery("#upload_form").submit();}
     }
+
+ });
 
 </script>
 
