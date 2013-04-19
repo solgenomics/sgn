@@ -9,6 +9,11 @@ use XML::Feed;
 
 my $feed = XML::Feed->parse(URI->new($uri));
 
+if (! $feed) { 
+  print "The news feed is currently not available.<br />\n";
+  return;
+}
+
 foreach my $e ($feed->entries) { 
   print "<a  href=\"".$e->link()."\">".$e->title."</a><br /><br />";
   #print $e->summary()->body()."<br />\n";

@@ -242,28 +242,7 @@ sub remove_element :Path('/list/item/remove') Args(0) {
     $c->stash->{rest} = [ 1 ];
 }
 
-sub download_list :Path('/list/download') Args(0) { 
-    my $self = shift;
-    my $c = shift;
 
-    my $user_id = $self->get_user($c);
-    if (!$user_id) { 
-	$c->stash->{template} = 'generic_message.mas';
-	$c->stash->{message} = 'You need to be logged in to download lists.';
-	
-	return;
-    }
-
-    my $list_id = $c->req->param("list_id");
-
-    my $list = $self->retrieve_list($c, $list_id);
-	
-    $c->res->headers()->title("cassavabase_list\_$list_id");
-    $c->res->content_type("application/text");
-
-    $c->res->body(join "\n", map { $_->[1] }  @$list);
-
-}
     
 sub get_user { 
     my $self = shift;

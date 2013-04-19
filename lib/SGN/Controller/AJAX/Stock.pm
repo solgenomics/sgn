@@ -28,6 +28,7 @@ use CXGN::Page::FormattingHelpers qw/ columnar_table_html info_table_html html_a
 use CXGN::Phenome::DumpGenotypes;
 
 use Scalar::Util qw(looks_like_number);
+use DateTime;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -740,9 +741,84 @@ sub generate_genotype_matrix : Path('/phenome/genotype/matrix/generate') :Args(1
 
     $c->stash->{rest}= [ 1];
 
-
 }
 
+
+=head2 add_phenotype
+
+
+L<Catalyst::Action::REST> action.
+
+Store a new phenotype and link with nd_experiment_stock
+
+=cut
+
+
+sub add_phenotype :PATH('/ajax/stock/add_phenotype') : ActionClass('REST') { }
+
+sub add_phenotype_GET :Args(0) {
+    my ($self, $c) = @_;
+    $c->stash->{rest} = { error => "Nothing here, it's a GET.." } ;
+}
+
+sub add_phenotype_POST {
+    my ( $self, $c ) = @_;
+    my $response;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    if (  any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
+        my $req = $c->req;
+
+        my $stock_id = $c->req->param('stock_id');
+        my $project_id = $c->req->param('project_id');
+        my $geolocation_id = $c->req->param('geolocation_id');
+        my $observable_id = $c->req->param('observable_id');
+        my $value = $c->req->param('value');
+        my $date = DateTime->now;
+        my $user =  $c->user->get_object->get_sp_person_id;
+        try {
+            # find the cvterm for a phenotyping experiment
+            my $pheno_cvterm = $schema->resultset('Cv::Cvterm')->create_with(
+                { name   => 'phenotyping experiment',
+                  cv     => 'experiment type',
+                  db     => 'null',
+                  dbxref => 'phenotyping experiment',
+                });
+
+            #create the new phenotype
+            my $phenotype = $schema->resultset("Phenotype::Phenotype")->find_or_create(
+	        {
+                    observable_id => $observable_id, #cvterm
+                    value => $value ,
+                    uniquename => "Stock: $stock_id, Observable id: $observable_id. Uploaded by web form by $user on $date" ,
+                });
+            #create a new nd_experiment
+            my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create(
+                {
+                    nd_geolocation_id => $geolocation_id,
+                    type_id => $pheno_cvterm->cvterm_id(),
+                } );
+            #link to the project
+            $experiment->find_or_create_related('nd_experiment_projects', {
+                project_id => $project_id,
+                                                } );
+            #link the experiment to the stock
+            $experiment->find_or_create_related('nd_experiment_stocks' , {
+                stock_id => $stock_id,
+                type_id  =>  $pheno_cvterm->cvterm_id(),
+                                                });
+            #link the phenotype with the nd_experiment
+            my $nd_experiment_phenotype = $experiment->find_or_create_related(
+                'nd_experiment_phenotypes', {
+                    phenotype_id => $phenotype->phenotype_id()
+                } );
+
+            $response = { message => "stock_id $stock_id and project_id $project_id associated with cvterm $observable_id , phenotype value $value (phenotype_id = " . $phenotype->phenotype_id . "\n" , }
+        } catch {
+            $response = { error => "Failed: $_" }
+        };
+    }  else {  $c->stash->{rest} = { error => 'user does not have a curator/sequencer/submitter account' };
+    }
+}
 
 
 1;
