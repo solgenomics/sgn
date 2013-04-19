@@ -20,15 +20,15 @@ window.onload = function initialize() {
        success: function(response) { 
            if (response.error) { 
                alert(response.error);
-         } 
+           } 
            else {
                var  c1_html = format_options_list(response.list)
            }
 	   jQuery('#c1_data').html(c1_html);
-	   	jQuery('#c2_data').html('');
-	jQuery('#c3_data').html('');
-	jQuery('#stock_data').html('');
-
+	   jQuery('#c2_data').html('');
+	   jQuery('#c3_data').html('');
+	   jQuery('#stock_data').html('');
+	   
 	   
        }
 	});
