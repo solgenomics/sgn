@@ -562,7 +562,7 @@ SELECT sp_person_id FROM sgn_people.sp_person
             {
                 'lower(project.name)' => { -like  => lc($project) },
             },
-            { join => { nd_experiment_stocks => { nd_experiment => 'nd_experiment_projects' } },
+            { join => { nd_experiment_stocks => { nd_experiment => { 'nd_experiment_projects' => 'project' } } },
               columns => [ qw/stock_id uniquename type_id organism_id / ],
               distinct => 1
             } );
