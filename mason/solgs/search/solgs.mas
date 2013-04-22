@@ -60,7 +60,7 @@ $gs_traits_index
     title       => "Select a training population",
   &>
 
-<& /population/project_details_form.mas,
+<& /solgs/population/project_details_form.mas,
    result     => $result,
    pager      => $pager,
    page_links => $page_links,
