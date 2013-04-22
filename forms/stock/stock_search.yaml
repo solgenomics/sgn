@@ -101,7 +101,7 @@ elements:
       container_attributes:
         class: advanced
 
- - type: Text
+    - type: Text
       name: project
       id: project
       label: Project
@@ -109,7 +109,7 @@ elements:
       container_attributes:
         class: advanced
 
- - type: Text
+    - type: Text
       name: location
       id: location
       label: Project location
@@ -117,7 +117,7 @@ elements:
       container_attributes:
         class: advanced
 
- - type: Text
+    - type: Text
       name: year
       id: year
       label: Project year
