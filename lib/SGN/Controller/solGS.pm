@@ -1,4 +1,4 @@
-package solGS::Controller::Root;
+package SGN::Controller::solGS;
 
 use Moose;
 use namespace::autoclean;
@@ -57,12 +57,14 @@ sub index :Path :Args(0) {
 
 sub submit :Path('/submit/intro') :Args(0) {
     my ($self, $c) = @_;
-    $c->stash(template=>'/submit/intro.mas');
+    $c->stash(template=>'/solgs/submit/intro.mas');
 }
 
 
-sub details_form : Path('/form/population/details') Args(0) FormConfig('population/details.yml')  {
+sub details_form : Path('/form/population/details') Args(0) {
     my ($self, $c) = @_;
+
+    $self->load_yaml_file($c, 'population/details.yml');
     my $form = $c->stash->{form}; 
    
     if ($form->submitted_and_valid ) 
@@ -77,8 +79,10 @@ sub details_form : Path('/form/population/details') Args(0) FormConfig('populati
     }
 }
 
-sub phenotype_form : Path('/form/population/phenotype') Args(0) FormConfig('population/phenotype.yml') {
+sub phenotype_form : Path('/form/population/phenotype') Args(0) {
     my ($self, $c) = @_;
+    
+    $self->load_yaml_file($c, 'population/phenotype.yml');
     my $form = $c->stash->{form};
 
     if ($form->submitted_and_valid) 
@@ -95,8 +99,10 @@ sub phenotype_form : Path('/form/population/phenotype') Args(0) FormConfig('popu
 }
 
 
-sub genotype_form : Path('/form/population/genotype') Args(0) FormConfig('population/genotype.yml') {
+sub genotype_form : Path('/form/population/genotype') Args(0) {
     my ($self, $c) = @_;
+
+    $self->load_yaml_file($c, 'population/genotype.yml');
     my $form = $c->stash->{form};
 
     if ($form->submitted_and_valid) 
@@ -113,10 +119,28 @@ sub genotype_form : Path('/form/population/genotype') Args(0) FormConfig('popula
 }
 
 
-sub search : Path('/search/solgs') Args() FormConfig('search/solgs.yml') {
-    my ($self, $c) = @_;
-    my $form = $c->stash->{form};
+sub load_yaml_file {
+    my ($self, $c, $file) = @_;
 
+    $file =~ s/\.\w+//;
+    $file =~ s/(^\/)//;
+   
+    my $form = $self->form;
+    my $yaml_dir = '/forms/solgs';
+ 
+    $form->load_config_filestem($c->path_to(catfile($yaml_dir, $file)));
+    $form->process;
+    
+    $c->stash->{form} = $form;
+
+}
+
+
+sub search : Path('/search/solgs') Args() {
+    my ($self, $c) = @_;
+  
+    $self->load_yaml_file($c, 'search/solgs.yml');
+    my $form = $c->stash->{form};
     $self->gs_traits_index($c);
     my $gs_traits_index = $c->stash->{gs_traits_index};
     
@@ -132,7 +156,7 @@ sub search : Path('/search/solgs') Args() FormConfig('search/solgs.yml') {
     }        
     else
     {
-        $c->stash(template        => '/search/solgs.mas',
+        $c->stash(template        => '/solgs/search/solgs.mas',
                   form            => $form,
                   message         => $query,
                   gs_traits_index => $gs_traits_index,
@@ -256,7 +280,7 @@ sub get_projects_details {
 }
 
 
-sub show_search_result_traits : Path('/search/result/traits') Args(1)  FormConfig('search/solgs.yml'){
+sub show_search_result_traits : Path('/search/result/traits') Args(1) {
     my ($self, $c, $query) = @_;
   
     my @rows;
@@ -290,7 +314,9 @@ sub show_search_result_traits : Path('/search/result/traits') Args(1)  FormConfi
         $self->projects_links($c, $project_rs);
         my $projects = $c->stash->{projects_pages};
         
+        $self->load_yaml_file($c, 'search/solgs.yml');
         my $form = $c->stash->{form};
+
         $c->stash(template        => '/search/solgs.mas',
                   form            => $form,
                   message         => $query,
@@ -2071,31 +2097,31 @@ Attempt to render a view, if needed.
 
 =cut
 
-sub render : ActionClass('RenderView') {}
+# sub render : ActionClass('RenderView') {}
 
 
-sub end : Private {
-    my ( $self, $c ) = @_;
+# sub end : Private {
+#     my ( $self, $c ) = @_;
 
-    return if @{$c->error};
+#     return if @{$c->error};
 
-    # don't try to render a default view if this was handled by a CGI
-    $c->forward('render') unless $c->req->path =~ /\.pl$/;
+#     # don't try to render a default view if this was handled by a CGI
+#     $c->forward('render') unless $c->req->path =~ /\.pl$/;
 
-    # enforce a default text/html content type regardless of whether
-    # we tried to render a default view
-    $c->res->content_type('text/html') unless $c->res->content_type;
+#     # enforce a default text/html content type regardless of whether
+#     # we tried to render a default view
+#     $c->res->content_type('text/html') unless $c->res->content_type;
 
-    # insert our javascript packages into the rendered view
-    if( $c->res->content_type eq 'text/html' ) {
-        $c->forward('/js/insert_js_pack_html');
-        $c->res->headers->push_header('Vary', 'Cookie');
-    } else {
-        $c->log->debug("skipping JS pack insertion for page with content type ".$c->res->content_type)
-            if $c->debug;
-    }
+#     # insert our javascript packages into the rendered view
+#     if( $c->res->content_type eq 'text/html' ) {
+#         $c->forward('/js/insert_js_pack_html');
+#         $c->res->headers->push_header('Vary', 'Cookie');
+#     } else {
+#         $c->log->debug("skipping JS pack insertion for page with content type ".$c->res->content_type)
+#             if $c->debug;
+#     }
 
-}
+# }
 
 =head2 auto
 
