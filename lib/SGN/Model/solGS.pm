@@ -1,4 +1,4 @@
-package solGS::Model::solGS;
+package SGN::Model::solGS;
 
 use Moose;
 use namespace::autoclean;
