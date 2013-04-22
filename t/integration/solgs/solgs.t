@@ -12,13 +12,8 @@ use strict;
 use warnings;
 use lib 't/lib';
 use Test::More;
-use Test::WWW::Mechanize;
+use SGN::Test::WWW::Mechanize;
 
-
-   
-my $mech = Test::WWW::Mechanize->new();
-
-$mech->get_ok('/search', 'Got search page');
 
 BEGIN { use_ok( 'SGN::Test::WWW::Mechanize' ) or 
             BAIL_OUT('Could not load SGN::Test::WWW::Mechanize');
@@ -34,7 +29,7 @@ BEGIN { use_ok(  'SGN::Controller::solGS'  ) or
 BEGIN { use_ok(  'SGN::Model::solGS'  ) or
         BAIL_OUT( 'Could not load SGN::Model::solGS');   
 }
-BEGIN { use_ok(  'SGN::Controller::Stock'  ) or
+BEGIN { use_ok(  'SGN::Controller::solgsStock'  ) or
         BAIL_OUT( 'Could not load SGN::Controller::solgsStock');   
 }   
 
@@ -44,7 +39,6 @@ my $mech = SGN::Test::WWW::Mechanize->new;
 #$mech->{catalyst_debug} = 0;
 #$mech->{catalyst_info} = 0;
 #$mech->get_ok($solgs_server_name, 'homepage loaded');
-#$mech->get_ok('/', 'homepage loaded');
 $mech->get_ok('/search/solgs', 'search page');
 $mech->content_contains('Search for a trait', 'search trait section');
 $mech->content_contains('Browse by traits', 'traits index');
@@ -63,8 +57,7 @@ my @traits_pop= $mech->find_all_links( url_regex => qr/search\/result\/populatio
 $mech->links_ok( \@traits_pop, 'links to search page for populations evaluated for a trait work.' );
 $mech->get_ok($traits_pop[0], 'a link to populations evaluated for a trait  search page works');
 $mech->get_ok($traits_pop[0], $traits_pop[0]->url);
-$mech->content_contains('GS training populations', 'training populations section');
-
+$mech->content_contains('select a training population to calculate GEBV', 'list of training populations for a trait section');
 # diag('Please wait..this may take a few minutes..');
 # my @training_pops = $mech->find_all_links(url_regex=> qr/trait\/70682\/population/);
 
@@ -151,3 +144,5 @@ $mech->content_contains($_)
 
 
 done_testing()
+
+
