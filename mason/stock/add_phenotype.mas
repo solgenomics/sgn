@@ -33,7 +33,7 @@ the default db name for the server  trait ontology
 
 $stock_id
 $trait_ontology_db_name
-$uri => "/ajax/cvterm/autocomplete?db_name=CO"
+$uri => "/ajax/cvterm/autocomplete"
 
 </%args>
 
@@ -42,14 +42,20 @@ $uri => "/ajax/cvterm/autocomplete?db_name=CO"
 
 <script language="javascript">
   
+  test("test_alert");
+
+  
+  function test(message) {
+  	   alert(message);
+}
   jQuery(function() {
-     jQuery("#trait_name").autocomplete({
-      source: '<% $uri %>'
+     jQuery("#trait_ontology_name").autocomplete({
+      source: '<% $uri %>' + '?db_name=' + '<% $trait_ontology_db_name %>
      });
   });
 
    function associate_phenotype() {
-      var trait = jQuery("#trait_name").val();
+      var trait = jQuery("#trait_ontology_name").val();
       if (!trait) { alert("Must choose a trait name!"); return; }
       var stock_id = '<% $stock_id %>';
       var phenotype_value = jQuery("#phenotye_value").val();
@@ -75,10 +81,9 @@ $uri => "/ajax/cvterm/autocomplete?db_name=CO"
 </script>
 
 <div id="add_phenotype_form">
-     <b>Add a phenotype to the experiment</b>
      <div id="phenotype_add">
      	  <form name = "add_phenotype" >
-      	  	<b>Trait name</b><input type="text" id="trait_name" name="trait_name" />
+      	  	<b>Trait name</b><input type="text" id="trait_ontology_name" name="trait_ontology_name" />
       		<b>Value</b> <input type="text" id="phenotype_value" />
       		<input type="hidden" id="stock_id" name="stock_id" value="<% $stock_id %>" />
     	        <input type="button" name="associate_phenotype_button" id="associate_phenotype_button" value="Submit" onclick="javascript:associate_phenotype()" />
