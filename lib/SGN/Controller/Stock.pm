@@ -562,7 +562,7 @@ SELECT sp_person_id FROM sgn_people.sp_person
             {
                 'lower(project.name)' => { -like  => lc($project) },
             },
-            { join => { nd_experiment_stocks => { nd_experiment => 'nd_experiment_project' } },
+            { join => { nd_experiment_stocks => { nd_experiment => 'nd_experiment_projects' } },
               columns => [ qw/stock_id uniquename type_id organism_id / ],
               distinct => 1
             } );
@@ -580,13 +580,14 @@ SELECT sp_person_id FROM sgn_people.sp_person
     if ( my $year = $c->req->param('year') ) {
         $rs = $rs->search(
             {
-                'lower(projectprop.value)' => { -like  => lc($year) },
+                'lower(projectprops.value)' => { -like  => lc($year) },
             },
-            { join => { nd_experiment_stocks => { nd_experiment => { 'nd_experiment_project' => 'nd_experimentprops' } } },
+            { join => { nd_experiment_stocks => { nd_experiment => { 'nd_experiment_projects' => { 'project' => 'projectprops' } } } },
               columns => [ qw/stock_id uniquename type_id organism_id / ],
               distinct => 1
             } );
     }
+
     #########
     ##########
     if ( my $has_image = $c->req->param('has_image') ) {
