@@ -121,7 +121,7 @@ elements:
       name: year
       id: year
       label: Project year
-      size: 50
+      size: 15
       container_attributes:
         class: advanced
 
