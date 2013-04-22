@@ -343,7 +343,7 @@ sub population : Regex('^population/([\d]+)(?:/([\w+]+))?'){
         $self->get_all_traits($c);
         $self->project_description($c, $pop_id);
 
-        $c->stash->{template} = '/population.mas';
+        $c->stash->{template} = '/solgs/population.mas';
       
         if ($action && $action =~ /selecttraits/ ) {
             $c->stash->{no_traits_selected} = 'none';
@@ -404,10 +404,8 @@ sub project_description {
 
 sub select_traits   {
     my ($self, $c) = @_;
-    my $traits_form = $self->form;
-    $traits_form->load_config_file('population/traits.yml');
-    
-    $c->stash->{traits_form} = $traits_form;
+  
+    $self->load_yaml_file($c, 'population/traits.yml');
  
 }
 
