@@ -2,7 +2,7 @@
 
 $pop_id
 $show_data => 1;
-$traits_form
+$form
 $all_traits_file
 $no_traits_selected
 $project_name
@@ -31,7 +31,7 @@ $traits_no
     title       => "Population summary",
   &>
 
- <& /population/summary.mas,
+ <& /solgs/population/summary.mas,
     project_id   => $pop_id,
     project_name => $project_name,
     project_desc => $project_desc,
@@ -52,9 +52,9 @@ $traits_no
       title       => "Traits"
 &>
        
-<& population/select_traits.mas, 
+<& /solgs/population/select_traits.mas, 
      pop_id             => $pop_id,
-     traits_form        => $traits_form,
+     traits_form        => $form,
      all_traits_file    => $all_traits_file,
      no_traits_selected => $no_traits_selected
 &>
