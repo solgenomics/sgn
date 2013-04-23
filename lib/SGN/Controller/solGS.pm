@@ -57,7 +57,7 @@ sub index :Path :Args(0) {
 
 sub submit :Path('/solgs/submit/intro') :Args(0) {
     my ($self, $c) = @_;
-    $c->stash(template=>'/solgs/submit/intro.mas');
+    $c->stash(template=> $self->template('/submit/intro.mas'));
 }
 
 
@@ -73,7 +73,7 @@ sub details_form : Path('/solgs/form/population/details') Args(0) {
     }
     else 
     {
-        $c->stash(template =>'/form/population/details.mas',
+        $c->stash(template => $self->template('/form/population/details.mas'),
                   form     => $form
             );
     }
@@ -91,7 +91,7 @@ sub phenotype_form : Path('/solgs/form/population/phenotype') Args(0) {
     }        
     else
     {
-        $c->stash(template => '/form/population/phenotype.mas',
+        $c->stash(template => $self->template('/form/population/phenotype.mas'),
                   form     => $form
             );
     }
@@ -111,7 +111,7 @@ sub genotype_form : Path('/solgs/form/population/genotype') Args(0) {
     }        
     else
     {
-        $c->stash(template => '/form/population/genotype.mas',
+        $c->stash(template => $self->template('/form/population/genotype.mas'),
                   form     => $form
             );
     }
@@ -132,6 +132,16 @@ sub load_yaml_file {
     $form->process;
     
     $c->stash->{form} = $form;
+
+}
+
+sub template {
+    my ($self, $file) = @_;
+
+    $file =~ s/(^\/)//; 
+    my $dir = '/solgs';
+ 
+    return  catfile($dir, $file);
 
 }
 
@@ -156,7 +166,7 @@ sub search : Path('/solgs/search') Args() {
     }        
     else
     {
-        $c->stash(template        => '/solgs/search/solgs.mas',
+        $c->stash(template        => $self->template('/search/solgs.mas'),
                   form            => $form,
                   message         => $query,
                   gs_traits_index => $gs_traits_index,
@@ -223,7 +233,7 @@ sub show_search_result_pops : Path('/solgs/search/result/populations') Args(1) {
     {
         $self->get_trait_name($c, $trait_id);
        
-        $c->stash(template   => '/search/result/populations.mas',
+        $c->stash(template   =>$self->template('/search/result/populations.mas'),
                   result     => \@projects_list,
                   form       => $form,
                   trait_id   => $trait_id,
@@ -298,7 +308,7 @@ sub show_search_result_traits : Path('/solgs/search/result/traits') Args(1) {
 
     if (@rows)
     {
-       $c->stash(template   => '/search/result/traits.mas',
+       $c->stash(template   => $self->template('/search/result/traits.mas'),
                  result     => \@rows,
                  query      => $query,
                  pager      => $result->pager,
@@ -317,7 +327,7 @@ sub show_search_result_traits : Path('/solgs/search/result/traits') Args(1) {
         $self->load_yaml_file($c, 'search/solgs.yml');
         my $form = $c->stash->{form};
 
-        $c->stash(template        => '/search/solgs.mas',
+        $c->stash(template        => $self->template('/search/solgs.mas'),
                   form            => $form,
                   message         => $query,
                   gs_traits_index => $gs_traits_index,
@@ -343,7 +353,7 @@ sub population : Regex('^solgs/population/([\d]+)(?:/([\w+]+))?'){
         $self->get_all_traits($c);
         $self->project_description($c, $pop_id);
 
-        $c->stash->{template} = '/solgs/population.mas';
+        $c->stash->{template} = $self->template('/population.mas');
       
         if ($action && $action =~ /selecttraits/ ) {
             $c->stash->{no_traits_selected} = 'none';
@@ -425,7 +435,7 @@ sub trait :Path('/solgs/trait') Args(3) {
         $self->get_trait_name($c, $trait_id);
         $self->trait_phenotype_stat($c);
         
-        $c->stash->{template} = "/population/trait.mas";
+        $c->stash->{template} = $self->template('/population/trait.mas');
     }
     else 
     {
@@ -1270,7 +1280,7 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\d]+)(?:/([\d+]+))?
      
      my @model_desc = ([qq | <a href="/solgs/population/$pop_id">$project_name</a> |, $project_desc, \@trait_pages]);
      
-     $c->stash->{template}    = '/population/multiple_traits_output.mas';
+     $c->stash->{template}    = $self->template('/population/multiple_traits_output.mas');
      $c->stash->{trait_pages} = \@trait_pages;
      $c->stash->{model_data}  = \@model_desc;
 
@@ -1733,7 +1743,7 @@ sub gs_traits : PathPart('gs/traits') Chained Args(1) {
         $self->hyperlink_traits($c, $traits_gr);
         my $traits_urls = $c->stash->{traits_urls};
         
-        $c->stash( template    => '/search/traits/list.mas',
+        $c->stash( template    => $self->template('/search/traits/list.mas'),
                    index       => $index,
                    traits_list => $traits_urls
             );
@@ -1906,14 +1916,14 @@ sub get_rrblup_output :Private{
     if (scalar(@traits) == 1) 
     {
         $self->gs_files($c);
-        $c->stash->{template} = 'population/trait.mas';
+        $c->stash->{template} = $self->template('population/trait.mas');
     }
     
     if (scalar(@traits) > 1)    
     {
        
         $self->analyzed_traits($c);
-        $c->stash->{template}    = '/population/multiple_traits_output.mas'; 
+        $c->stash->{template}    = $self->template('/population/multiple_traits_output.mas'); 
         $c->stash->{trait_pages} = \@trait_pages;
     }
 
