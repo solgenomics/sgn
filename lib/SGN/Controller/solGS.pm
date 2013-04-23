@@ -55,13 +55,13 @@ sub index :Path :Args(0) {
 }
 
 
-sub submit :Path('/submit/intro') :Args(0) {
+sub submit :Path('/solgs/submit/intro') :Args(0) {
     my ($self, $c) = @_;
     $c->stash(template=>'/solgs/submit/intro.mas');
 }
 
 
-sub details_form : Path('/form/population/details') Args(0) {
+sub details_form : Path('/solgs/form/population/details') Args(0) {
     my ($self, $c) = @_;
 
     $self->load_yaml_file($c, 'population/details.yml');
@@ -69,7 +69,7 @@ sub details_form : Path('/form/population/details') Args(0) {
    
     if ($form->submitted_and_valid ) 
     {
-        $c->res->redirect('/form/population/phenotype');
+        $c->res->redirect('/solgs/form/population/phenotype');
     }
     else 
     {
@@ -79,7 +79,7 @@ sub details_form : Path('/form/population/details') Args(0) {
     }
 }
 
-sub phenotype_form : Path('/form/population/phenotype') Args(0) {
+sub phenotype_form : Path('/solgs/form/population/phenotype') Args(0) {
     my ($self, $c) = @_;
     
     $self->load_yaml_file($c, 'population/phenotype.yml');
@@ -87,7 +87,7 @@ sub phenotype_form : Path('/form/population/phenotype') Args(0) {
 
     if ($form->submitted_and_valid) 
     {
-      $c->res->redirect('/form/population/genotype');
+      $c->res->redirect('/solgs/form/population/genotype');
     }        
     else
     {
@@ -99,7 +99,7 @@ sub phenotype_form : Path('/form/population/phenotype') Args(0) {
 }
 
 
-sub genotype_form : Path('/form/population/genotype') Args(0) {
+sub genotype_form : Path('/solgs/form/population/genotype') Args(0) {
     my ($self, $c) = @_;
 
     $self->load_yaml_file($c, 'population/genotype.yml');
@@ -107,7 +107,7 @@ sub genotype_form : Path('/form/population/genotype') Args(0) {
 
     if ($form->submitted_and_valid) 
     {
-      $c->res->redirect('/population/12');
+      $c->res->redirect('/solgs/population/12');
     }        
     else
     {
@@ -136,7 +136,7 @@ sub load_yaml_file {
 }
 
 
-sub search : Path('/search/solgs') Args() {
+sub search : Path('/solgs/search') Args() {
     my ($self, $c) = @_;
   
     $self->load_yaml_file($c, 'search/solgs.yml');
@@ -152,7 +152,7 @@ sub search : Path('/search/solgs') Args() {
     if ($form->submitted_and_valid) 
     {
         $query = $form->param_value('search.search_term');
-        $c->res->redirect("/search/result/traits/$query");       
+        $c->res->redirect("/solgs/search/result/traits/$query");       
     }        
     else
     {
@@ -194,7 +194,7 @@ sub projects_links {
 }
 
 
-sub show_search_result_pops : Path('/search/result/populations') Args(1) {
+sub show_search_result_pops : Path('/solgs/search/result/populations') Args(1) {
     my ($self, $c, $trait_id) = @_;
      
     my $projects_rs = $c->model('solGS')->search_populations($c, $trait_id);
@@ -213,7 +213,7 @@ sub show_search_result_pops : Path('/search/result/populations') Args(1) {
         my $pr_location = $projects->{$pr_id}{project_location};
         my $checkbox;
        # my $checkbox = qq |<form> <input type="checkbox" name="project" value="$pr_id" /> </form> |;
-        push @projects_list, [ $checkbox, qq|<a href="/trait/$trait_id/population/$pr_id" onclick="solGS.waitPage()">$pr_name</a>|, 
+        push @projects_list, [ $checkbox, qq|<a href="/solgs/trait/$trait_id/population/$pr_id" onclick="solGS.waitPage()">$pr_name</a>|, 
                                $pr_desc, $pr_location, $pr_year
         ];
     }
@@ -234,7 +234,7 @@ sub show_search_result_pops : Path('/search/result/populations') Args(1) {
     }
     else
     {
-        $c->res->redirect('/search/solgs');     
+        $c->res->redirect('/solgs/search');     
     }
 
 }
@@ -280,7 +280,7 @@ sub get_projects_details {
 }
 
 
-sub show_search_result_traits : Path('/search/result/traits') Args(1) {
+sub show_search_result_traits : Path('/solgs/search/result/traits') Args(1) {
     my ($self, $c, $query) = @_;
   
     my @rows;
@@ -293,7 +293,7 @@ sub show_search_result_traits : Path('/search/result/traits') Args(1) {
         my $def  = $row->definition;
         #my $checkbox = qq |<form> <input type="checkbox" name="trait" value="$name" /> </form> |;
         my $checkbox;
-        push @rows, [ $checkbox, qq |<a href="/search/result/populations/$id">$name</a>|, $def];      
+        push @rows, [ $checkbox, qq |<a href="/solgs/search/result/populations/$id">$name</a>|, $def];      
     }
 
     if (@rows)
@@ -330,7 +330,7 @@ sub show_search_result_traits : Path('/search/result/traits') Args(1) {
 } 
 
 
-sub population : Regex('^population/([\d]+)(?:/([\w+]+))?'){
+sub population : Regex('^/solgs/population/([\d]+)(?:/([\w+]+))?'){
     my ($self, $c) = @_;
    
     my ($pop_id, $action) = @{$c->req->captures};
@@ -410,7 +410,7 @@ sub select_traits   {
 }
 
 
-sub trait :Path('/trait') Args(3) {
+sub trait :Path('/solgs/trait') Args(3) {
     my ($self, $c, $trait_id, $key, $pop_id) = @_;
    
     if ($pop_id && $trait_id)
@@ -584,7 +584,7 @@ sub blups_file {
 }
 
 
-sub download_blups :Path('/download/blups/pop') Args(3) {
+sub download_blups :Path('/solgs/download/blups/pop') Args(3) {
     my ($self, $c, $pop_id, $trait, $trait_id) = @_;   
  
     $self->get_trait_name($c, $trait_id);
@@ -605,7 +605,7 @@ sub download_blups :Path('/download/blups/pop') Args(3) {
 }
 
 
-sub download_marker_effects :Path('/download/marker/pop') Args(3) {
+sub download_marker_effects :Path('/solgs/download/marker/pop') Args(3) {
     my ($self, $c, $pop_id, $trait, $trait_id) = @_;   
  
     $self->get_trait_name($c, $trait_id);
@@ -705,7 +705,7 @@ sub combined_gebvs_file {
 }
 
 
-sub download_validation :Path('/download/validation/pop') Args(3) {
+sub download_validation :Path('/solgs/download/validation/pop') Args(3) {
     my ($self, $c, $pop_id, $trait, $trait_id) = @_;   
  
     $self->get_trait_name($c, $trait_id);
@@ -725,10 +725,10 @@ sub download_validation :Path('/download/validation/pop') Args(3) {
 }
 
  
-sub prediction_population :Path('/model') Args(3) {
+sub prediction_population :Path('/solgs/model') Args(3) {
     my ($self, $c, $model_id, $pop, $prediction_id) = @_;
  
-    $c->res->redirect("/analyze/traits/population/$model_id/$prediction_id");
+    $c->res->redirect("/solgs/analyze/traits/population/$model_id/$prediction_id");
 
 }
 
@@ -746,7 +746,7 @@ sub prediction_pop_gebvs_file {
 }
 
 
-sub download_prediction_GEBVs :Path('/download/prediction/model') Args(4) {
+sub download_prediction_GEBVs :Path('/solgs/download/prediction/model') Args(4) {
     my ($self, $c, $pop_id, $prediction, $prediction_id, $trait_id) = @_;   
  
     $self->get_trait_name($c, $trait_id);
@@ -972,7 +972,7 @@ sub mean_gebvs_file {
    
 }
 
-sub download_ranked_genotypes :Path('/download/ranked/genotypes/pop') Args(2) {
+sub download_ranked_genotypes :Path('/solgs/download/ranked/genotypes/pop') Args(2) {
     my ($self, $c, $pop_id, $genotypes_file) = @_;   
  
     $c->stash->{pop_id} = $pop_id;
@@ -1103,7 +1103,7 @@ sub list_of_prediction_pops {
 }
 
 
-sub traits_to_analyze :Regex('^analyze/traits/population/([\d]+)(?:/([\d+]+))?') {
+sub traits_to_analyze :Regex('^/solgs/analyze/traits/population/([\d]+)(?:/([\d+]+))?') {
     my ($self, $c) = @_; 
    
     my ($pop_id, $prediction_id) = @{$c->req->captures};
@@ -1122,12 +1122,12 @@ sub traits_to_analyze :Regex('^analyze/traits/population/([\d]+)(?:/([\d+]+))?')
 
     if (!@selected_traits)
     {
-        $c->res->redirect("/population/$pop_id/selecttraits");
+        $c->res->redirect("/solgs/population/$pop_id/selecttraits");
     }
     elsif (scalar(@selected_traits) == 1)
     {
         $single_trait_id = $selected_traits[0]; 
-        $c->res->redirect("/trait/$single_trait_id/population/$pop_id");
+        $c->res->redirect("/solgs/trait/$single_trait_id/population/$pop_id");
     }
     elsif(scalar(@selected_traits) > 1)
     {
@@ -1194,12 +1194,12 @@ sub traits_to_analyze :Regex('^analyze/traits/population/([\d]+)(?:/([\d+]+))?')
   
     }
 
-    $c->res->redirect("/traits/all/population/$pop_id/$prediction_id");
+    $c->res->redirect("/solgs/traits/all/population/$pop_id/$prediction_id");
 
 }
 
 
-sub all_traits_output :Regex('^traits/all/population/([\d]+)(?:/([\d+]+))?') {
+sub all_traits_output :Regex('^/solgs/traits/all/population/([\d]+)(?:/([\d+]+))?') {
      my ($self, $c) = @_;
      
      my ($pop_id, $pred_pop_id) = @{$c->req->captures};
@@ -1224,7 +1224,7 @@ sub all_traits_output :Regex('^traits/all/population/([\d]+)(?:/([\d+]+))?') {
  
      if (!@analyzed_traits) 
      {
-         $c->res->redirect("/population/$pop_id/selecttraits/");
+         $c->res->redirect("/solgs/population/$pop_id/selecttraits/");
      }
    
      my @trait_pages;
@@ -1260,7 +1260,7 @@ sub all_traits_output :Regex('^traits/all/population/([\d]+)(?:/([\d+]+))?') {
          my @accuracy_value = grep {/Average/} read_file(catfile($dir, $validation_file[0]));
          @accuracy_value    = split(/\t/,  $accuracy_value[0]);
 
-         push @trait_pages,  [ qq | <a href="/trait/$trait_id/population/$pop_id" onclick="solGS.waitPage()">$trait_name</a>|, $accuracy_value[1] ];
+         push @trait_pages,  [ qq | <a href="/solgs/trait/$trait_id/population/$pop_id" onclick="solGS.waitPage()">$trait_name</a>|, $accuracy_value[1] ];
      }
 
 
@@ -1268,7 +1268,7 @@ sub all_traits_output :Regex('^traits/all/population/([\d]+)(?:/([\d+]+))?') {
      my $project_name = $c->stash->{project_name};
      my $project_desc = $c->stash->{project_desc};
      
-     my @model_desc = ([qq | <a href="/population/$pop_id">$project_name</a> |, $project_desc, \@trait_pages]);
+     my @model_desc = ([qq | <a href="/solgs/population/$pop_id">$project_name</a> |, $project_desc, \@trait_pages]);
      
      $c->stash->{template}    = '/population/multiple_traits_output.mas';
      $c->stash->{trait_pages} = \@trait_pages;
@@ -1326,7 +1326,7 @@ sub all_traits_output :Regex('^traits/all/population/([\d]+)(?:/([\d+]+))?') {
 }
 
 
-sub phenotype_graph :Path('/phenotype/graph') Args(0) {
+sub phenotype_graph :Path('/solgs/phenotype/graph') Args(0) {
     my ($self, $c) = @_;
 
     my $pop_id   = $c->req->param('pop_id');
@@ -1716,7 +1716,7 @@ sub hyperlink_traits {
     my @traits_urls;
     foreach my $tr (@$traits)
     {
-        push @traits_urls, [ qq | <a href="/search/result/traits/$tr">$tr</a> | ];
+        push @traits_urls, [ qq | <a href="/solgs/search/result/traits/$tr">$tr</a> | ];
     }
     $c->stash->{traits_urls} = \@traits_urls;
 }
@@ -1899,7 +1899,7 @@ sub get_rrblup_output :Private{
            $self->run_rrblup_trait($c, $tr);
            
            my $trait_id = $c->model('solGS')->get_trait_id($c, $trait_name);
-           push @trait_pages, [ qq | <a href="/trait/$trait_id/population/$pop_id" onclick="solGS.waitPage()">$tr</a>| ];
+           push @trait_pages, [ qq | <a href="/solgs/trait/$trait_id/population/$pop_id" onclick="solGS.waitPage()">$tr</a>| ];
        }    
     }
 
@@ -2118,8 +2118,8 @@ Attempt to render a view, if needed.
 #         $c->log->debug("skipping JS pack insertion for page with content type ".$c->res->content_type)
 #             if $c->debug;
 #     }
-
-# }
+    
+#}
 
 =head2 auto
 
@@ -2134,6 +2134,7 @@ sub auto : Private {
     weaken $c->stash->{c};
 
     $self->get_solgs_dirs($c);
+  
     # gluecode for logins
     #
 #  #   unless( $c->config->{'disable_login'} ) {
