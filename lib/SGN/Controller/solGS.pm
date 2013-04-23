@@ -184,7 +184,7 @@ sub projects_links {
         
         my $checkbox;
        # my $checkbox = qq |<form> <input type="checkbox" name="project" value="$pr_id" /> </form> |;
-        push @projects_pages, [ $checkbox, qq|<a href="/population/$pr_id" onclick="solGS.waitPage()">$pr_name</a>|, 
+        push @projects_pages, [ $checkbox, qq|<a href="/solgs/population/$pr_id" onclick="solGS.waitPage()">$pr_name</a>|, 
                                $pr_desc, $pr_location, $pr_year
         ];
     }
@@ -330,7 +330,7 @@ sub show_search_result_traits : Path('/solgs/search/result/traits') Args(1) {
 } 
 
 
-sub population : Regex('^/solgs/population/([\d]+)(?:/([\w+]+))?'){
+sub population : Regex('^solgs/population/([\d]+)(?:/([\w+]+))?'){
     my ($self, $c) = @_;
    
     my ($pop_id, $action) = @{$c->req->captures};
@@ -1103,7 +1103,7 @@ sub list_of_prediction_pops {
 }
 
 
-sub traits_to_analyze :Regex('^/solgs/analyze/traits/population/([\d]+)(?:/([\d+]+))?') {
+sub traits_to_analyze :Regex('^solgs/analyze/traits/population/([\d]+)(?:/([\d+]+))?') {
     my ($self, $c) = @_; 
    
     my ($pop_id, $prediction_id) = @{$c->req->captures};
@@ -1199,7 +1199,7 @@ sub traits_to_analyze :Regex('^/solgs/analyze/traits/population/([\d]+)(?:/([\d+
 }
 
 
-sub all_traits_output :Regex('^/solgs/traits/all/population/([\d]+)(?:/([\d+]+))?') {
+sub all_traits_output :Regex('^solgs/traits/all/population/([\d]+)(?:/([\d+]+))?') {
      my ($self, $c) = @_;
      
      my ($pop_id, $pred_pop_id) = @{$c->req->captures};
@@ -1682,7 +1682,7 @@ sub gs_traits_index {
     my $trait_index;
     foreach my $v_i (@valid_indices) 
     {
-        $trait_index .= qq | <a href=/gs/traits/$v_i>$v_i</a> |;
+        $trait_index .= qq | <a href=/solgs/gs/traits/$v_i>$v_i</a> |;
 	unless ($v_i eq $valid_indices[-1]) 
         {
 	    $trait_index .= " | ";
