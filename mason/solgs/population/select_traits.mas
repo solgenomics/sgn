@@ -13,30 +13,25 @@ Isaak Y Tecle (iyt2@cornell.edu)
 </%doc>
 
 <%args>
-
 $traits_form
 $pop_id
-$all_traits_file
 $no_traits_selected
+$pop_traits_links_ids
 
 </%args>
 
 <%perl>
 
-open FH, "<", $all_traits_file or die "Can't open $all_traits_file: $!\n";
-my $headers = <FH>; 
 my $trait_rows;
 
-while (<FH>)
+foreach (@$pop_traits_links_ids)
   {
-    my ($trait, $id) = split (/\t/);      
-    my $trait_link   = qq | <a href="/trait/$id/populaton/$pop_id" onclick="solGS.waitPage()">$trait</a> |;     
     my $row          = <<ROW;    
     <tr>
       <td>
         <input type  = "checkbox" 
                name  = "trait_id"
-               value = $id > $trait_link
+               value = $_->{trait_id} > $_->{trait_link}
       </td>
     </tr> 
 ROW
@@ -58,7 +53,7 @@ if ($no_traits_selected eq 'none')
 <% $message %>
 
 
-<form action="/analyze/traits/population/<%$pop_id %>" method="POST">
+<form action="/solgs/analyze/traits/population/<%$pop_id %>" method="POST">
   <table>
     <% $trait_rows %>
     <tr>   
