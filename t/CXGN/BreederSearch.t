@@ -20,5 +20,31 @@ foreach my $r (@$results) {
     print "\n";
 }
 
+$criteria_list = [ 'location', 'year' ];
+
+$dataref = { year => { location => 3 } };
+
+$results = $bs->get_intersect($criteria_list, $dataref);
+
+foreach my $r (@$results) { 
+    print join ", ", @$r;
+    print "\n";
+}
+
+$criteria_list = [ 'location', 'year', 'project' ];
+$dataref = {};
+$dataref = { project => { location => 3, 
+			year     => '2006/07',
+	     }
+};
+
+$results = $bs ->get_intersect($criteria_list, $dataref);
+
+foreach my $r (@$results) { 
+    print join ", ", @$r;
+    print "\n";
+}
+
+
 
 

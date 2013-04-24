@@ -44,9 +44,9 @@ sub get_intersect {
 	},
 	
 	year => {
-	    location => "SELECT distinct(projectprop.value), projectprop.value FROM projectprop JOIN nd_experiment_project USING (project_id) JOIN nd_experiment using(nd_geolocation_id) JOIN nd_experiment_projectprop using(project_id) where nd_geolocation_id in ($dataref->{year}->{location})",
+	    location => "SELECT distinct(projectprop.value), projectprop.value FROM projectprop JOIN nd_experiment_project USING (project_id) JOIN nd_experiment using(nd_experiment_id) JOIN nd_geolocation USING (nd_geolocation_id) where nd_geolocation_id in ($dataref->{year}->{location})",
 
-	    projects => "SELECT distinct(projectprop.value), projectprop.value FROM projectprop JOIN nd_experiment_project USING project_id JOIN nd_experiment using(nd_geolocation_id) JOIN nd_experiment_project using(nd_experiment_id) JOIN project using(project_id) WHERE project.project_id in ($dataref->{year}->{project})",
+	    project => "SELECT distinct(projectprop.value), projectprop.value FROM projectprop JOIN nd_experiment_project USING project_id JOIN nd_experiment using(nd_geolocation_id) JOIN nd_experiment_project using(nd_experiment_id) JOIN project using(project_id) WHERE project.project_id in ($dataref->{year}->{project})",
 
 	    '' => "SELECT distinct(projectprop.value), projectprop.value FROM projectprop WHERE type_id=$type_id",
 
@@ -54,6 +54,13 @@ sub get_intersect {
 	    
 	    
 	},
+
+
+	project => { 
+	    location => "SELECT distinct(project_id), project.name FROM project JOIN nd_experiment_project USING(project_id) JOIN nd_experiment USING(nd_experiment_id) JOIN nd_geolocation USING(nd_geolocation_id) WHERE nd_geolocation_id in ($dataref->{trial}->{location})",
+	    year => "SELECT distinct(project_id), project.name FROM project JOIN projectprop USING (project_id) WHERE projectprop.value in ($dataref->{project}->{location}",
+	    trial => "SELECT project_id, project.name FROM project", 
+	}
 	);
     
     my @query;
