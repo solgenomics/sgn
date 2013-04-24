@@ -28,7 +28,7 @@ $traits_no
   <tr>
     <td>
       <& /page/columnar_table.mas,
-         data         => [['Name', qq |<a href="/population/$project_id">$project_name</a> |],
+         data         => [['Name', qq |<a href="/solgs/population/$project_id">$project_name</a> |],
                           ['Description', $project_desc],
                           ['Owner', 'NextGen Cassava'],
                          ],
