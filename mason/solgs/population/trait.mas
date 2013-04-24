@@ -62,7 +62,7 @@ $descriptive_stat
     title       => "Trait phenotype data"
 &> 
   
-<& /population/trait_phenotype_data.mas,
+<& /solgs/population/trait_phenotype_data.mas,
    pop_id           => $pop_id,
    trait_id         => $trait_id,
    descriptive_stat => $descriptive_stat,
@@ -73,19 +73,19 @@ $descriptive_stat
 % if ($show_data) 
 %{
 
-<& /model/top_blups.mas, 
+<& /solgs/model/top_blups.mas, 
    top_blups          => $top_blups,
    blups_download_url => $blups_download_url,
    pop_id             => $pop_id,
   trait_id            => $trait_id
 &>
 
-<& /model/marker_effects.mas, 
+<& /solgs/model/marker_effects.mas, 
    top_marker_effects          => $top_marker_effects,
    marker_effects_download_url => $marker_effects_download_url
 &>
 
-<& /model/accuracy.mas, 
+<& /solgs/model/accuracy.mas, 
    accuracy_report        => $accuracy_report,
   validation_download_url => $validation_download_url
 &>
