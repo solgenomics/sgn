@@ -3,13 +3,13 @@
 $pop_id
 $show_data => 1;
 $form
-$all_traits_file
 $no_traits_selected
 $project_name
 $project_desc
 $stocks_no
 $markers_no
 $traits_no
+$pop_traits_links_ids
 
 </%args>
 
@@ -53,10 +53,10 @@ $traits_no
 &>
        
 <& /solgs/population/select_traits.mas, 
-     pop_id             => $pop_id,
-     traits_form        => $form,
-     all_traits_file    => $all_traits_file,
-     no_traits_selected => $no_traits_selected
+     pop_id                  => $pop_id,
+     traits_form             => $form,
+     pop_traits_links_ids    => $pop_traits_links_ids,
+     no_traits_selected      => $no_traits_selected
 &>
 
 </&>
