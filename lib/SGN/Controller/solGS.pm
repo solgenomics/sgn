@@ -646,10 +646,10 @@ sub download_urls {
         ($ranked_genos_file) = fileparse($ranked_genos_file);
     }
     
-    my $blups_url      = qq | <a href="/download/blups/pop/$pop_id/trait/$trait_id">Download all GEBVs</a> |;
-    my $marker_url     = qq | <a href="/download/marker/pop/$pop_id/trait/$trait_id">Download all marker effects</a> |;
-    my $validation_url = qq | <a href="/download/validation/pop/$pop_id/trait/$trait_id">Download model accuracy report</a> |;
-    my $ranked_genotypes_url = qq | <a href="/download/ranked/genotypes/pop/$pop_id/$ranked_genos_file">Download all ranked genotypes</a> |;
+    my $blups_url      = qq | <a href="/solgs/download/blups/pop/$pop_id/trait/$trait_id">Download all GEBVs</a> |;
+    my $marker_url     = qq | <a href="/solgs/download/marker/pop/$pop_id/trait/$trait_id">Download all marker effects</a> |;
+    my $validation_url = qq | <a href="/solgs/download/validation/pop/$pop_id/trait/$trait_id">Download model accuracy report</a> |;
+    my $ranked_genotypes_url = qq | <a href="/solgs/download/ranked/genotypes/pop/$pop_id/$ranked_genos_file">Download all ranked genotypes</a> |;
    
     $c->stash(blups_download_url            => $blups_url,
               marker_effects_download_url   => $marker_url,
@@ -817,7 +817,7 @@ sub download_prediction_urls {
 
         
         $download_url   .= " | " if $download_url;
-        $download_url   .= qq | <a href="/download/prediction/model/$pop_id/prediction/$prediction_id/$trait_id">$trait_name</a> |;
+        $download_url   .= qq | <a href="/solgs/download/prediction/model/$pop_id/prediction/$prediction_id/$trait_id">$trait_name</a> |;
     }
     
     $c->stash->{download_prediction} = $download_url;
