@@ -1495,6 +1495,34 @@ sub add_trait_ids {
     
     write_file($traits_file, $table);
 
+    $self->pop_traits_links_ids($c);
+
+}
+
+
+
+sub pop_traits_links_ids {
+    my ($self, $c) = @_;
+
+    my $pop_id = $c->stash->{pop_id};
+    my $all_traits_file =  $c->stash->{all_traits_file};
+    
+    open FH, "<", $all_traits_file or die "Can't open $all_traits_file: $!\n";
+   
+    my $headers = <FH>; 
+    my @traits;
+   
+    while (<FH>)
+    {
+        my ($trait_name, $trait_id) = split (/\t/);      
+        my $trait_link   = qq | <a href="/solgs/trait/$trait_id/populaton/$pop_id" onclick="solGS.waitPage()">$trait_name</a> |;
+
+        push @traits, ({trait_link => $trait_link, trait_id =>$trait_id});
+ 
+    }
+    
+    $c->stash->{pop_traits_links_ids} = \@traits;
+
 }
 
 
