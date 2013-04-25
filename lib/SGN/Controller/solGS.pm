@@ -1412,7 +1412,7 @@ sub trait_phenotype_stat {
 
 #sends an array of trait gebv data to an ajax request
 #with a population id and trait id parameters
-sub gebv_graph :Path('/trait/gebv/graph') Args(0) {
+sub gebv_graph :Path('/solgs/trait/gebv/graph') Args(0) {
     my ($self, $c) = @_;
 
     my $pop_id   = $c->req->param('pop_id');

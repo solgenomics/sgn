@@ -17,7 +17,7 @@ jQuery(window).load( function() {
         var traitId = jQuery('input[name=trait_id]').val();
    
         var params = 'pop_id' + '=' + popId + '&' + 'trait_id' + '=' + traitId;
-        var action = '/trait/gebv/graph';
+        var action = '/solgs/trait/gebv/graph';
        
         var graphArray      = [];
         graphArray[0]       = [];  
