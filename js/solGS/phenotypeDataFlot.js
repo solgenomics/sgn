@@ -16,7 +16,7 @@ jQuery(window).load( function() {
         var traitId = jQuery('input[name=trait_id]').val();
       
         var params = 'pop_id' + '=' + popId + '&' + 'trait_id' + '=' + traitId;
-        var action = '/phenotype/graph';
+        var action = '/solgs/phenotype/graph';
      
         var phenoPlotData        = [];
         phenoPlotData[0]         = [];  
