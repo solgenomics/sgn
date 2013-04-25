@@ -76,7 +76,7 @@ ROW
 </div>
  
 
-<& /model/top_genotypes.mas &> 
+<& /solgs/model/top_genotypes.mas &> 
 
 </div>
 
