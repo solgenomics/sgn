@@ -29,7 +29,7 @@ $list_of_prediction_pops
 </%perl>
 
 
-<& /model/model_summary.mas, 
+<& /solgs/model/model_summary.mas, 
      model_data => $model_data
 &>
 % if ($download_prediction eq 'N/A')
@@ -43,7 +43,7 @@ $list_of_prediction_pops
 
 %}
 
-<& /population/selection_populations.mas, 
+<& /solgs/population/selection_populations.mas, 
    download_prediction     => $download_prediction,
    analyzed_traits         => $analyzed_traits,
    pop_id                  => $pop_id,
