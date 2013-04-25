@@ -33,7 +33,7 @@ $descriptive_stat
   &>
 
 
-<link rel="stylesheet" href="/static/flot.css" type="text/css" />
+<link rel="stylesheet" href="/static/solgs/flot.css" type="text/css" />
 
 <& /page/page_title.mas, 
    title => "Genomic Selection Model for $trait_abbr in $project_name"
