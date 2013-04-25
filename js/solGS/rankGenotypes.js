@@ -104,9 +104,9 @@ var rankGenotypes = {
            
             if (prediction_pop_id && isNaN(prediction_pop_id) == true) {
                   
-                    action = '/traits/all/population/' + pop_id;
+                    action = '/solgs/traits/all/population/' + pop_id;
             }else{
-                action = '/traits/all/population/' + pop_id +  '/' + prediction_pop_id;
+                action = '/solgs/traits/all/population/' + pop_id +  '/' + prediction_pop_id;
             }
 
             jQuery.ajax({
