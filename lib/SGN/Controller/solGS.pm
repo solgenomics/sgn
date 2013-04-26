@@ -1720,7 +1720,7 @@ sub gs_traits_index {
     my $trait_index;
     foreach my $v_i (@valid_indices) 
     {
-        $trait_index .= qq | <a href=/solgs/gs/traits/$v_i>$v_i</a> |;
+        $trait_index .= qq | <a href=/solgs/traits/$v_i>$v_i</a> |;
 	unless ($v_i eq $valid_indices[-1]) 
         {
 	    $trait_index .= " | ";
@@ -1760,7 +1760,7 @@ sub hyperlink_traits {
 }
 
 
-sub gs_traits : PathPart('gs/traits') Chained Args(1) {
+sub gs_traits : Path('/solgs/traits') Args(1) {
     my ($self, $c, $index) = @_;
     
     if ($index =~ /^\w{1}$/) 
