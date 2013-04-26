@@ -49,10 +49,10 @@ The root page (/)
 =cut
 
 
-sub index :Path :Args(0) {
-    my ($self, $c) = @_;     
-    $c->forward('search');
-}
+# sub index :Path :Args(0) {
+#     my ($self, $c) = @_;     
+#     $c->forward('search');
+# }
 
 
 sub submit :Path('/solgs/submit/intro') :Args(0) {
