@@ -5,9 +5,8 @@
 */
 
 //JSAN.use('MochiKit.LoggingPane');
-JSAN.use('jquery');
+JSAN.use('flot.jquery');
 JSAN.use('Prototype');
-//JSAN.use('jquery.flot');
 
 
 jQuery(window).load( function() {
