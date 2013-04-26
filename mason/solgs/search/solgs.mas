@@ -30,6 +30,8 @@ $gs_traits_index
  if ($current_page > 1) { $collapse = 0; }
 
 </%perl>
+ 
+<link rel="stylesheet" href="/css/solgs/solgs_formfu.css" type="text/css" />
 
 <& /util/import_javascript.mas, classes => ["solGS.solGS"] &>
 
