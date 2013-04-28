@@ -29,7 +29,7 @@ $trait_name
       title => "select a training population to calculate GEBVs for $trait_name",
 &>
 
-<& /population/project_details_form.mas,
+<& /solgs/population/project_details_form.mas,
    result     => $result,
    pager      => $pager,
    page_links => $page_links
