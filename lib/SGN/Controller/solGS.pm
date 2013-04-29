@@ -1138,6 +1138,7 @@ sub traits_to_analyze :Regex('^solgs/analyze/traits/population/([\d]+)(?:/([\d+]
     {
         $single_trait_id = $selected_traits[0]; 
         $c->res->redirect("/solgs/trait/$single_trait_id/population/$pop_id");
+        $c->detach;
     }
     elsif(scalar(@selected_traits) > 1)
     {
@@ -1262,7 +1263,7 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\d]+)(?:/([\d+]+))?
          
          my $dir = $c->stash->{solgs_cache_dir};
          opendir my $dh, $dir or die "can't open $dir: $!\n";
-    
+        
          my @validation_file  = grep { /cross_validation_${trait_abbr}_${pop_id}/ && -f "$dir/$_" } 
                                 readdir($dh);   
          closedir $dh; 
