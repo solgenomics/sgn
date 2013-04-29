@@ -33,27 +33,24 @@ BEGIN { use_ok(  'SGN::Controller::solgsStock'  ) or
         BAIL_OUT( 'Could not load SGN::Controller::solgsStock');   
 }   
 
-#my $solgs_server_name = $ENV{SOLGS_TEST_SERVER};
 
 my $mech = SGN::Test::WWW::Mechanize->new;
-#$mech->{catalyst_debug} = 0;
-#$mech->{catalyst_info} = 0;
-#$mech->get_ok($solgs_server_name, 'homepage loaded');
+
 $mech->get_ok('/solgs/search', 'search page');
 $mech->content_contains('Search for a trait', 'search trait section');
 $mech->content_contains('Browse by traits', 'traits index');
 
-my @traits_indices = $mech->find_all_links( url_regex => qr/solgs/gs\/traits/i );
+my @traits_indices = $mech->find_all_links( url_regex => qr/solgs\/traits/ );
 $mech->links_ok( \@traits_indices, 'trait indices links work' );
 $mech->get_ok($traits_indices[0], 'a page for a list of traits starting with a certain letter');
 $mech->content_contains('Traits beginning with', 'traits list section');
 
-my @traits_list= $mech->find_all_links( url_regex => qr/solgs/search\/result\/traits/i );
+my @traits_list= $mech->find_all_links( url_regex => qr/solgs\/search\/result\/traits/i );
 $mech->links_ok( \@traits_list, 'links to traits starting with a certain letter work.' );
 $mech->get_ok($traits_list[0], 'a link to a traits search page works');
 $mech->content_contains('Traits with genomic selection data',  'Traits with genomic selection data');
 
-my @traits_pop= $mech->find_all_links( url_regex => qr/solgs/search\/result\/populations/i );
+my @traits_pop= $mech->find_all_links( url_regex => qr/solgs\/search\/result\/populations/i );
 $mech->links_ok( \@traits_pop, 'links to search page for populations evaluated for a trait work.' );
 $mech->get_ok($traits_pop[0], 'a link to populations evaluated for a trait  search page works');
 $mech->get_ok($traits_pop[0], $traits_pop[0]->url);
@@ -124,7 +121,7 @@ $mech->content_contains($_)
       );
 
 diag("Please wait... this may a few minutes..");
-my @traits= $mech->find_all_links( url_regex => qr/solgs/trait/ );
+my @traits= $mech->find_all_links( url_regex => qr/solgs\/trait/ );
 my $no_traits = scalar(@traits);
 cmp_ok($no_traits, '>=', 1, "this population has $no_traits traits for GS analysis");
 
