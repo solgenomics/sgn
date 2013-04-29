@@ -609,7 +609,7 @@ sub download_blups :Path('/solgs/download/blups/pop') Args(3) {
         my @blups =  map { [ split(/\t/) ] }  read_file($blups_file);
     
         $c->stash->{'csv'}={ data => \@blups };
-        $c->forward("solGS::View::Download::CSV");
+        $c->forward("SGN::View::Download::CSV");
     } 
 
 }
@@ -629,7 +629,7 @@ sub download_marker_effects :Path('/solgs/download/marker/pop') Args(3) {
         my @effects =  map { [ split(/\t/) ] }  read_file($markers_file);
     
         $c->stash->{'csv'}={ data => \@effects };
-        $c->forward("solGS::View::Download::CSV");
+        $c->forward("SGN::View::Download::CSV");
     } 
 
 }
@@ -729,7 +729,7 @@ sub download_validation :Path('/solgs/download/validation/pop') Args(3) {
         my @validation =  map { [ split(/\t/) ] }  read_file($validation_file);
     
         $c->stash->{'csv'}={ data => \@validation };
-        $c->forward("solGS::View::Download::CSV");
+        $c->forward("SGN::View::Download::CSV");
     }
  
 }
@@ -771,7 +771,7 @@ sub download_prediction_GEBVs :Path('/solgs/download/prediction/model') Args(4) 
         my @prediction_gebvs =  map { [ split(/\t/) ] }  read_file($prediction_gebvs_file);
     
         $c->stash->{'csv'}={ data => \@prediction_gebvs };
-        $c->forward("solGS::View::Download::CSV");
+        $c->forward("SGN::View::Download::CSV");
     }
  
 }
@@ -994,7 +994,7 @@ sub download_ranked_genotypes :Path('/solgs/download/ranked/genotypes/pop') Args
         my @ranks =  map { [ split(/\t/) ] }  read_file($genotypes_file);
     
         $c->stash->{'csv'}={ data => \@ranks };
-        $c->forward("solGS::View::Download::CSV");
+        $c->forward("SGN::View::Download::CSV");
     } 
 
 }
