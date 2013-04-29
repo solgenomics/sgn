@@ -35,12 +35,14 @@ $list_of_prediction_pops
 % if ($download_prediction eq 'N/A')
 %{
 
-  <& rank_genotypes.mas, 
+%if(scalar(@$analyzed_traits) > 1)
+%{
+    <& rank_genotypes.mas, 
      analyzed_traits   => $analyzed_traits,
      pop_id            => $pop_id,
      prediction_pop_id => $prediction_pop_id    
-  &>
-
+   &>
+%}
 %}
 
 <& /solgs/population/selection_populations.mas, 
