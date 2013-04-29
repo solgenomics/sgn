@@ -58,6 +58,12 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
 
 %#</&>
 
+<&| /page/info_section.mas, title=>'Excel Sheet Download',  collapsible=>1, collapsed=>0 &>
+
+<& /barcode/excel_download.mas, locations=>\@locations, projects=>\@projects, available_cvterms => \@tools_def  &>
+
+</&>
+
 
 <&| /page/info_section.mas, title=>'Metadata &amp; Multibarcode tool', collapsible=>1, collapsed=>0 &>
 
