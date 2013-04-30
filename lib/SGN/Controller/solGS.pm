@@ -1390,20 +1390,23 @@ sub trait_phenotype_stat {
     my $stat = Statistics::Descriptive::Full->new();
     $stat->add_data(@pheno_data);
     
-    my $min  = $stat->min; 
-    my $max  = $stat->max; 
-    my $mean = $stat->mean;
-    my $std  = $stat->standard_deviation;
-    my $cnt  = $stat->count;
+    my $min    = $stat->min; 
+    my $max    = $stat->max; 
+    my $mean   = $stat->mean;
+    my $std    = $stat->standard_deviation;
+    my $cnt    = $stat->count;
+    my $median = $stat->median;
     
     my $round = Math::Round::Var->new(0.01);
-    $std  = $round->round($std);
-    $mean = $round->round($mean);
+    $std    = $round->round($std);
+    $mean   = $round->round($mean);
+    $median = $round->round($median);
 
     my @desc_stat =  ( [ 'No. of genotypes', $cnt ], 
                        [ 'Minimum', $min ], 
                        [ 'Maximum', $max ],
                        [ 'Mean', $mean ],
+                       [ 'Median', $median],
                        [ 'Standard deviation', $std ]
         );
    
