@@ -303,13 +303,19 @@ function show_lists() {
 }
 
 
-function pasteListMenu (div_name) { 
+function pasteListMenu (div_name, menu_div) { 
     var lo = new CXGN.List();
 
-    var html = lo.listSelect(div_name);
+    var html='';
 
-    html = html + '<input type="button" value="paste" onclick="javascript:pasteList(\''+div_name+'\')" /><br />';
-    document.write(html);
+    if (jQuery.cookie("sgn_session_id")) {
+	html = lo.listSelect(div_name);
+	html = html + '<input type="button" value="paste" onclick="javascript:pasteList(\''+div_name+'\')" /><br />';
+    }
+    else { 
+	html = html + 'please log in for lists';
+    }
+    jQuery('#'+menu_div).html(html);
 }
 
 function pasteList(div_name) { 

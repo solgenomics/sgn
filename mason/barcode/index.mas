@@ -108,13 +108,12 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
 
 Enter a list of stock names<br />
 <textarea id="stock_names" name="stock_names" rows="10" cols="30"></textarea>
+<div id="list_menu_location_1"></div>
 <script defer="defer">
-  if (jQuery.cookie("sgn_session_id")) {
-    pasteListMenu('stock_names');
-  }
-  else { 
-    document.write('Log in for lists.');
-  }
+
+  jQuery(document).ready(function() {
+      pasteListMenu('stock_names', 'list_menu_location_1');
+  });
 </script>
 
 
