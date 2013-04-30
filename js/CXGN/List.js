@@ -330,9 +330,9 @@ function pasteList(div_name) {
     // textify list
     var list_text = '';
     for (var n=0; n<list_content.length; n++) { 
-	list_text = list_text + list_content[n][1]+'\n';
+	list_text = list_text + list_content[n][1]+"\r\n";
     }
-    jQuery('#'+div_name).html(list_text);
+    jQuery('#'+div_name).text(list_text);
 }
 
 function addToListMenu(div) { 
