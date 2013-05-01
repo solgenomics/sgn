@@ -11,7 +11,7 @@ my $bs = CXGN::BreederSearch->new(dbh=>$dbh);
 
 my $criteria_list = [ 'year', 'location' ];
 
-my $dataref = { location => { year=> '\'2006/07\'' } };
+my $dataref = { location => { year=> "'2006/07'" } };
 
 my $results = $bs->get_intersect($criteria_list, $dataref);
 
@@ -34,7 +34,7 @@ foreach my $r (@$results) {
 $criteria_list = [ 'location', 'year', 'project' ];
 $dataref = {};
 $dataref = { project => { location => 3, 
-			year     => '2006/07',
+			year     => "'2006/07'",
 	     }
 };
 
