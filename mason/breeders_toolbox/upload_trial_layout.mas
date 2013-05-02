@@ -1,0 +1,113 @@
+
+<%args>
+@projects => ()
+@locations => ()
+@roles => ()
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form' ] &>
+
+
+
+<div id="upload_trial_layout_dialog"  class="ui-widget" >
+<b>
+Upload a list of genotype names, plot names, and replicate identifiers:<br>
+</b>
+<br>
+<div id="content">
+<form method="post" action="/trial/upload_trial_layout"  enctype="multipart/form-data" id="upload_trial_layout_form" >
+<table>
+<input type="file" name="inputTypeFile" id="inputTypeFile" value="foo"/>
+<tr><td>
+<input type="radio" name="format_type" value="barcode" /> Barcode format<br />
+<input type="radio" name="format_type" value="spreadsheet" checked="checked"/> Spreadsheet<br />
+</td></tr>
+<tr><td>
+<div style="display: none">
+Data access restrictions
+<select disabled id="visible_to_role" name="visible_to_role">
+<option value = "" >none</option>
+<%perl>
+foreach my $role (@roles) {
+	print "<option value=".$role.">".$role."</option>";
+}
+</%perl>
+</select>
+</div>
+</td></tr>
+</table>
+</form>
+</div>
+</div>
+
+
+
+
+
+<script defer="defer" >
+
+ jQuery(document).ready(function() {
+
+   jQuery("#upload_trial_layout_dialog").dialog( {
+      autoOpen: false,
+      buttons: { "Cancel" :  function() { jQuery("#upload_trial_layout_dialog").dialog("close"); }, "Submit": function() { read_trial_layout_upload() }  },
+      modal: true,
+      width: 500,
+      height: 250
+    });
+    
+    jQuery("#upload_trial_layout_link").click( function () { 
+     jQuery("#upload_trial_layout_dialog" ).dialog("open");
+    });
+   
+    function read_trial_layout_upload() { 
+      //var formatType = jQuery('input[name=format_type]:checked').val();
+      var uploadFile = jQuery("#inputTypeFile").val();
+      if (!uploadFile) { alert("Please select a file");return;}
+      else { jQuery("#upload_trial_layout_form").submit();}
+    }
+
+   jQuery('#upload_trial_layout_form').iframePostForm
+	({
+           json : false,
+           post : function ()
+	   {
+              var message;
+              //alert("You selected a file");
+              if (!jQuery('.message').length)
+                {
+                  alert("no message");
+                }
+
+              var formatType = jQuery('input[name=format_type]:checked').val();
+              var uploadTrialLayoutFile = jQuery("#inputTypeFile").val();
+              alert(jQuery('input[type=radio]').val());
+              alert(uploadTrialLayoutFile);
+              if (uploadTrialLayoutFile.length)
+              {
+                alert("something about a file length");
+              }
+              else
+              {
+                alert("no length");
+              }
+           },
+           complete : function (response)
+           {
+              alert("submit complete");
+              if (!response.success)
+              {
+                 alert("no success");
+              }
+              else
+              {
+                 alert("success");
+              }
+           }
+        });
+
+
+ });
+
+</script>
+
