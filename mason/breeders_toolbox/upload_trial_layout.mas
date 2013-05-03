@@ -8,34 +8,34 @@
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form' ] &>
 
 
-
 <div id="upload_trial_layout_dialog"  class="ui-widget" >
-<b>
-Upload a list of genotype names, plot names, and replicate identifiers:<br>
-</b>
 <br>
 <div id="content">
-<form method="post" action="/trial/upload_trial_layout"  enctype="multipart/form-data" id="upload_trial_layout_form" >
-<table>
-<input type="file" name="inputTypeFile" id="inputTypeFile" value="foo"/>
-<tr><td>
-<input type="radio" name="format_type" value="barcode" /> Barcode format<br />
-<input type="radio" name="format_type" value="spreadsheet" checked="checked"/> Spreadsheet<br />
-</td></tr>
-<tr><td>
-<div style="display: none">
-Data access restrictions
-<select disabled id="visible_to_role" name="visible_to_role">
-<option value = "" >none</option>
+<form method="post" action="/trial/upload_trial_layout"  enctype="multipart/form-data" encoding="multipart/form-data" name="upload_trial_layout_form" id="upload_trial_layout_form" >
+<dl>
+
+<dt><label for="inputTypeFile">Upload file:</label></dt>
+<dd><input type="file" name="inputTypeFile" id="inputTypeFile" encoding="multipart/form-data"/></dd>
+<br><br>
+<dt><label for="trial">Select trial:</label></dt>
+<dd><select id="trial" name="trial" id="trial">
 <%perl>
-foreach my $role (@roles) {
-	print "<option value=".$role.">".$role."</option>";
+foreach my $project (@projects) {
+	print "<option value=".@$project[0].">".@$project[1]."</option>";
 }
 </%perl>
-</select>
-</div>
-</td></tr>
-</table>
+</select></dd>
+<br><br>
+<dt><label for="location">Select Location:</label></dt>
+<dd><select id="location" name="location" id="location">
+<%perl>
+foreach my $location (@locations) {
+	print "<option value=".@$location[0].">".@$location[1]."</option>";
+}
+</%perl>
+</select></dd>
+
+</dl>
 </form>
 </div>
 </div>
@@ -46,6 +46,17 @@ foreach my $role (@roles) {
 
 <script defer="defer" >
 
+jQuery('input[type=\"file\"]').each(function(i, it) {
+jQuery(it).closest('form').attr('enctype', 'multipart/form-data').attr('encoding', 'multipart/form-data');
+});
+
+
+jQuery( "form#upload_trial_layout_form" )
+.attr( "enctype", "multipart/form-data" )
+.attr( "encoding", "multipart/form-data" );
+
+
+
  jQuery(document).ready(function() {
 
    jQuery("#upload_trial_layout_dialog").dialog( {
@@ -53,7 +64,8 @@ foreach my $role (@roles) {
       buttons: { "Cancel" :  function() { jQuery("#upload_trial_layout_dialog").dialog("close"); }, "Submit": function() { read_trial_layout_upload() }  },
       modal: true,
       width: 500,
-      height: 250
+      height: 400,
+      title: 'Upload a layout of plots for a trial',
     });
     
     jQuery("#upload_trial_layout_link").click( function () { 
@@ -69,7 +81,7 @@ foreach my $role (@roles) {
 
    jQuery('#upload_trial_layout_form').iframePostForm
 	({
-           json : false,
+           json : true,
            post : function ()
 	   {
               var message;
@@ -95,6 +107,8 @@ foreach my $role (@roles) {
            complete : function (response)
            {
               alert("submit complete");
+              alert(response.error); 
+              alert(response);
               if (!response.success)
               {
                  alert("no success");

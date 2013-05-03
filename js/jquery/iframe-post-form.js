@@ -12,6 +12,12 @@
 **/
 (function ($)
 {
+
+
+    $('input[type=\"file\"]').each(function(i, it) {
+	$(it).closest('form').attr('enctype', 'multipart/form-data').attr('encoding', 'multipart/form-data');
+    });
+
 	$.fn.iframePostForm = function (options)
 	{
 		var response,
