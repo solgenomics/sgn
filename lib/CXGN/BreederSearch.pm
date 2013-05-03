@@ -7,7 +7,6 @@ use Data::Dumper;
 
 has 'dbh' => ( 
     is  => 'rw',
-    isa => 'CXGN::DB::Connection',
     required => 1,
     );
 
@@ -22,15 +21,15 @@ sub get_intersect {
     
     my %queries = ( 
 	stock => {
-	    location => "SELECT distinct(stock.stock_id), stock.name FROM nd_geolocation JOIN nd_experiment using(nd_geolocation_id) JOIN nd_experiment_stock using(nd_experiment_id) join stock using(stock_id) WHERE nd_geolocation.nd_geolocation_id in ($dataref->{stock}->{location})",
+	    location => "SELECT distinct(stock.stock_id), stock.uniquename FROM nd_geolocation JOIN nd_experiment using(nd_geolocation_id) JOIN nd_experiment_stock using(nd_experiment_id) join stock using(stock_id) WHERE nd_geolocation.nd_geolocation_id in ($dataref->{stock}->{location})",
 	    
-	    year     => "SELECT distinct(stock.stock_id), stock.name FROM projectprop JOIN nd_experiment_project using(project_id) JOIN nd_experiment using(nd_experiment_id) JOIN stock using(stock_id) WHERE projectprop.value in ($dataref->{stock}->{year})",
+	    year     => "SELECT distinct(stock.stock_id), stock.uniquename FROM projectprop JOIN nd_experiment_project using(project_id) JOIN nd_experiment_stock using(nd_experiment_id) JOIN stock using(stock_id) WHERE projectprop.value in ($dataref->{stock}->{year})",
 	    
-	    project  => "SELECT distinct(stock.stock_id), stock.name FROM project JOIN nd_experiment_project using(project_id) JOIN nd_experiment using(nd_experiment_id) JOIN stock using(stock_id) WHERE project.project_id in ($dataref->{stock}->{project})",
+	    project  => "SELECT distinct(stock.stock_id), stock.uniquename FROM project JOIN nd_experiment_project using(project_id) JOIN nd_experiment_stock using(nd_experiment_id) JOIN stock using(stock_id) WHERE project.project_id in ($dataref->{stock}->{project})",
 	    
-	    trait    => "SELECT distinct(stock.stock_id), stock.name FROM phenotype JOIN nd_experiment_phenotype using(phenotype_id) JOIN nd_experiment_stock USING (nd_experiment_id) WHERE phenotype.cvalue_id in ($dataref->{stock}->{trait})",
+	    trait    => "SELECT distinct(stock.stock_id), stock.uniquename FROM phenotype JOIN nd_experiment_phenotype using(phenotype_id) JOIN nd_experiment_stock USING (nd_experiment_id) WHERE phenotype.cvalue_id in ($dataref->{stock}->{trait})",
 	    
-	    stock    => "SELECT stock_id, stock.name FROM stock",
+	    stock    => "SELECT distinct(stock_id), stock.uniquename FROM stock",
 	    
 	},
 
@@ -49,7 +48,7 @@ sub get_intersect {
 	year => {
 	    location => "SELECT distinct(projectprop.value), projectprop.value FROM projectprop JOIN nd_experiment_project USING (project_id) JOIN nd_experiment using(nd_experiment_id) JOIN nd_geolocation USING (nd_geolocation_id) where nd_geolocation_id in ($dataref->{year}->{location})",
 	    
-	    project  => "SELECT distinct(projectprop.value), projectprop.value FROM projectprop JOIN nd_experiment_project USING project_id JOIN nd_experiment using(nd_geolocation_id) JOIN nd_experiment_project using(nd_experiment_id) JOIN project using(project_id) WHERE project.project_id in ($dataref->{year}->{project})",
+	    project  => "SELECT distinct(projectprop.value), projectprop.value FROM projectprop JOIN  project using(project_id) WHERE project.project_id in ($dataref->{year}->{project})",
 	    
 	    year     => "SELECT distinct(projectprop.value), projectprop.value FROM projectprop WHERE type_id=$type_id",
 	    
@@ -69,18 +68,18 @@ sub get_intersect {
 	    
 	    stock    => "SELECT distinct(project_id), project.name FROM project JOIN nd_experiment_project USING(project_id) JOIN nd_experiment_stock USING(nd_experiment_id) WHERE stock_id in ($dataref->{project}->{stock})",
 	    
-	    trait    => "SELECT distinct(project_id, project.name FROM project JOIN nd_experiment_project USING(project_id) JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenotype USING phenotype_id WHERE cvalue_id in ($dataref->{project}->{trait})",
+	    trait    => "SELECT distinct(project_id), project.name FROM project JOIN nd_experiment_project USING(project_id) JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenotype USING phenotype_id WHERE cvalue_id in ($dataref->{project}->{trait})",
 	    
 	},
 	
 	trait  => { 
-	    location => "SELECT distinct(cvterm_id), cvterm.name FROM cvterm JOIN phenotype on (cdata_id=cvterm_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_geolocation USING(nd_experiment_id)  WHERE nd_geolocation.nd_geolocation_id in ($dataref->{trait}->{location}",
+	    location => "SELECT distinct(cvterm_id), cvterm.name FROM cvterm JOIN phenotype on (cvalue_id=cvterm_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_geolocation USING(nd_experiment_id)  WHERE nd_geolocation.nd_geolocation_id in ($dataref->{trait}->{location}",
 	    
-	    year => "SELECT distinct(cvterm_id), cvterm.name FROM cvterm JOIN phenotype on (cdata_id=cvterm_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) JOIN projectprop USING(project_id) WHERE projectprop.type_id=$type_id and projectprop.value IN ($dataref->{trait}->{year})", 
+	    year => "SELECT distinct(cvterm_id), cvterm.name FROM cvterm JOIN phenotype on (cvalue_id=cvterm_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) JOIN projectprop USING(project_id) WHERE projectprop.type_id=$type_id and projectprop.value IN ($dataref->{trait}->{year})", 
 	    
-	    project => "SELECT distinct(cvterm_id), cvterm.name FROM cvterm JOIN phenotype on (cdata_id=cvterm_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) JOIN project USING(project_id) WHERE project.project_id in ($dataref->{trait}->{project})",
+	    project => "SELECT distinct(cvterm_id), cvterm.name FROM cvterm JOIN phenotype on (cvalue_id=cvterm_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) JOIN project USING(project_id) WHERE project.project_id in ($dataref->{trait}->{project})",
 	    
-	    trait => "SELECT distinct(cvterm_id), cvterm.name FROM cvterm JOIN phenotype on (cdata_id=cvterm_id) JOIN nd_experiment_phenotype USING(phenotype_id)",
+	    trait => "SELECT distinct(cvterm_id), cvterm.name FROM phenotype JOIN cvterm on (cvalue_id=cvterm_id)",
 	    
 	},
 	);
@@ -89,10 +88,12 @@ sub get_intersect {
     my $item = $criteria_list->[-1];
     print STDERR "criteria_list = ".join(",",@$criteria_list)."\n";
     
+    push @query, $queries{$item}->{$item}; # make the empty query work
+
     print STDERR "DATAREF = ".Data::Dumper::Dumper($dataref);
     foreach my $criterion (@$criteria_list) { 
-	if ($queries{$item}->{$criterion}) { 
-	    print STDERR "ITEM: $item. CRIT: $criterion\n";
+	if (exists($queries{$item}->{$criterion}) && $queries{$item}->{$criterion} && $dataref->{$item}->{$criterion}) { 
+	    print STDERR "ITEM: $item. CRIT: $criterion. DATA: $queries{$item}->{$criterion}\n";
 	    push @query, $queries{$item}{$criterion};
 	}
     }
@@ -107,9 +108,12 @@ sub get_intersect {
     while (my ($id, $name) = $h->fetchrow_array()) { 
 	push @results, [ $id, $name ];
     }
+    
     return \@results;
     
 }
+
+
 
 
 sub get_type_id { 
