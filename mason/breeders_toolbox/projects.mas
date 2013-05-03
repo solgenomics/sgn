@@ -218,7 +218,7 @@ $projects
 
 
 foreach my $p (@$projects){ 
-   print "<tr><td>$p->[1]</td><td>$p->[2]</td></tr>\n";
+   print "<tr><td><a href=\"/breeders_toolbox/trial/$p->[0]\">$p->[1]</td><td>$p->[2]</td></tr>\n";
 }
 </%perl>
 </table>
