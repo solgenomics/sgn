@@ -61,7 +61,7 @@
 </tr>
 </table>
 
-<script>
+<script defer="defer">
 
 setUpLists();
 

@@ -1,0 +1,41 @@
+
+<%args>
+@locations
+@projects
+@available_cvterms
+</%args>
+
+<%perl>
+use DateTime;
+my $dt = DateTime->from_epoch( epoch=>time );
+my $date = join "/", ($dt->year, $dt->month, $dt->day);
+</%perl>
+
+
+<form method="GET" action="/barcode/multitool">
+<table>
+
+<tr><td>Operator </td><td><input id="operator" name="operator" /></td></tr>
+<tr><td>Date </td><td><input id="date" name="date" value="<% $date %>" /> (format: YYYY/MM/DD)</td></tr>
+<tr><td>Location</td><td>
+    <& /page/html_select.mas, name=>'location', choices=>\@locations &> [<a href="/breeders/home">Add new location</a>]</td></tr> 
+<tr><td>Project</td><td>
+    <& /page/html_select.mas, name=>'project', choices=>\@projects &> [<a href="/breeders/home">Add new project</a>]</td></tr>
+</table>
+
+
+<select multiple id="cvterms" name="cvterms" size="15">
+<%perl>
+foreach my $t (@available_cvterms) {
+   if ($t =~ /\#/) { next; }
+   my ($cvterm, $version, $priority, $values, $description) = split /\t/, $t;
+   if ($priority) { 
+     print qq { <option value="$cvterm">$description</option> };
+   }
+}
+</%perl>
+</select>
+
+<input type="submit" value="generate form" />
+
+</form>

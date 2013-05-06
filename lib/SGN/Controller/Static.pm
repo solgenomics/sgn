@@ -23,6 +23,10 @@ use Moose;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
+sub genomic_selection :Path('/gs') { 
+    my ($self, $c) = @_;
+    $c->stash->{template} = '/tools/gs.mas';
+}
 
 sub solanaceae_project_afri :Path('/solanaceae-project/afri-sol/') { 
     my ($self, $c) = @_;

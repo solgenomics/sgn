@@ -28,6 +28,7 @@ use CXGN::Page::FormattingHelpers qw/ columnar_table_html info_table_html html_a
 use CXGN::Phenome::DumpGenotypes;
 
 use Scalar::Util qw(looks_like_number);
+use DateTime;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -601,6 +602,106 @@ sub trait_autocomplete_GET :Args(0) {
     $c->{stash}->{rest} = \@response_list;
 }
 
+=head2 project_autocomplete
+
+Public Path: /ajax/stock/project_autocomplete
+
+Autocomplete a project name.  Takes a single GET param,
+C<term>, responds with a JSON array of completions for that term.
+Finds only projects that are linked with a stock
+
+=cut
+
+sub project_autocomplete : Local : ActionClass('REST') { }
+
+sub project_autocomplete_GET :Args(0) {
+    my ( $self, $c ) = @_;
+
+    my $term = $c->req->param('term');
+    # trim and regularize whitespace
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+    my @response_list;
+    my $q = "SELECT  distinct project.name FROM
+  nd_experiment_stock JOIN
+  nd_experiment_project USING (nd_experiment_id) JOIN
+  project USING (project_id)
+  WHERE project.name ilike ?";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute( '%'.$term.'%');
+    while  (my ($project_name) = $sth->fetchrow_array ) {
+        push @response_list, $project_name;
+    }
+    $c->{stash}->{rest} = \@response_list;
+}
+
+=head2 project_year_autocomplete
+
+Public Path: /ajax/stock/project_year_autocomplete
+
+Autocomplete a project year value.  Takes a single GET param,
+C<term>, responds with a JSON array of completions for that term.
+Finds only year projectprops that are linked with a stock
+
+=cut
+
+sub project_year_autocomplete : Local : ActionClass('REST') { }
+
+sub project_year_autocomplete_GET :Args(0) {
+    my ( $self, $c ) = @_;
+
+    my $term = $c->req->param('term');
+    # trim and regularize whitespace
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+    my @response_list;
+    my $q = "SELECT  distinct value FROM
+  nd_experiment_stock JOIN
+  nd_experiment_project USING (nd_experiment_id) JOIN
+  projectprop USING (project_id) JOIN
+  cvterm on cvterm_id = projectprop.type_id
+  WHERE cvterm.name ilike ? AND value ilike ?";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute( '%year%' , '%'.$term.'%');
+    while  (my ($project_name) = $sth->fetchrow_array ) {
+        push @response_list, $project_name;
+    }
+    $c->{stash}->{rest} = \@response_list;
+}
+
+=head2 geolocation_autocomplete
+
+Public Path: /ajax/stock/geolocation_autocomplete
+
+Autocomplete a geolocation description.  Takes a single GET param,
+C<term>, responds with a JSON array of completions for that term.
+Finds only locations that are linked with a stock
+
+=cut
+
+sub geolocation_autocomplete : Local : ActionClass('REST') { }
+
+sub geolocation_autocomplete_GET :Args(0) {
+    my ( $self, $c ) = @_;
+
+    my $term = $c->req->param('term');
+    # trim and regularize whitespace
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+    my @response_list;
+    my $q = "SELECT  distinct nd_geolocation.description FROM
+  nd_experiment_stock JOIN
+  nd_experiment USING (nd_experiment_id) JOIN
+  nd_geolocation USING (nd_geolocation_id)
+  WHERE nd_geolocation.description ilike ?";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute( '%'.$term.'%');
+    while  (my ($location) = $sth->fetchrow_array ) {
+        push @response_list, $location;
+    }
+    $c->{stash}->{rest} = \@response_list;
+}
+
 =head2 stock_autocomplete
 
  Usage:
@@ -740,9 +841,84 @@ sub generate_genotype_matrix : Path('/phenome/genotype/matrix/generate') :Args(1
 
     $c->stash->{rest}= [ 1];
 
-
 }
 
+
+=head2 add_phenotype
+
+
+L<Catalyst::Action::REST> action.
+
+Store a new phenotype and link with nd_experiment_stock
+
+=cut
+
+
+sub add_phenotype :PATH('/ajax/stock/add_phenotype') : ActionClass('REST') { }
+
+sub add_phenotype_GET :Args(0) {
+    my ($self, $c) = @_;
+    $c->stash->{rest} = { error => "Nothing here, it's a GET.." } ;
+}
+
+sub add_phenotype_POST {
+    my ( $self, $c ) = @_;
+    my $response;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    if (  any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
+        my $req = $c->req;
+
+        my $stock_id = $c->req->param('stock_id');
+        my $project_id = $c->req->param('project_id');
+        my $geolocation_id = $c->req->param('geolocation_id');
+        my $observable_id = $c->req->param('observable_id');
+        my $value = $c->req->param('value');
+        my $date = DateTime->now;
+        my $user =  $c->user->get_object->get_sp_person_id;
+        try {
+            # find the cvterm for a phenotyping experiment
+            my $pheno_cvterm = $schema->resultset('Cv::Cvterm')->create_with(
+                { name   => 'phenotyping experiment',
+                  cv     => 'experiment type',
+                  db     => 'null',
+                  dbxref => 'phenotyping experiment',
+                });
+
+            #create the new phenotype
+            my $phenotype = $schema->resultset("Phenotype::Phenotype")->find_or_create(
+	        {
+                    observable_id => $observable_id, #cvterm
+                    value => $value ,
+                    uniquename => "Stock: $stock_id, Observable id: $observable_id. Uploaded by web form by $user on $date" ,
+                });
+            #create a new nd_experiment
+            my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create(
+                {
+                    nd_geolocation_id => $geolocation_id,
+                    type_id => $pheno_cvterm->cvterm_id(),
+                } );
+            #link to the project
+            $experiment->find_or_create_related('nd_experiment_projects', {
+                project_id => $project_id,
+                                                } );
+            #link the experiment to the stock
+            $experiment->find_or_create_related('nd_experiment_stocks' , {
+                stock_id => $stock_id,
+                type_id  =>  $pheno_cvterm->cvterm_id(),
+                                                });
+            #link the phenotype with the nd_experiment
+            my $nd_experiment_phenotype = $experiment->find_or_create_related(
+                'nd_experiment_phenotypes', {
+                    phenotype_id => $phenotype->phenotype_id()
+                } );
+
+            $response = { message => "stock_id $stock_id and project_id $project_id associated with cvterm $observable_id , phenotype value $value (phenotype_id = " . $phenotype->phenotype_id . "\n" , }
+        } catch {
+            $response = { error => "Failed: $_" }
+        };
+    }  else {  $c->stash->{rest} = { error => 'user does not have a curator/sequencer/submitter account' };
+    }
+}
 
 
 1;

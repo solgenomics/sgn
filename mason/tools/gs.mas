@@ -1,0 +1,18 @@
+
+<%args>
+
+</%args>
+<br />
+<& /page/page_title.mas, title=>"Genomic Selection" &>
+
+Note: This tool is not yet available.
+<ul>
+<li><h4>Generate Model</h4></li>
+<li><h4>Predict Breeding Values</h4></li>
+
+</ul>
+
+<br />
+<br />
+<br />
+<br />

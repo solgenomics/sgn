@@ -53,6 +53,17 @@ div.paginate_nav {
      jQuery("#stock_name").autocomplete({
         source: '/ajax/stock/stock_autocomplete',
      });
+     jQuery("#project").autocomplete({
+        source: '/ajax/stock/project_autocomplete',
+     });
+     jQuery("#location").autocomplete({
+        source: '/ajax/stock/geolocation_autocomplete',
+     });
+     jQuery("#year").autocomplete({
+        source: '/ajax/stock/project_year_autocomplete',
+     });
+
+
   });
 </script>
 

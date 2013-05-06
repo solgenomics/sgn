@@ -1,5 +1,4 @@
 
-
 package SGN::Controller::Barcode;
 
 use Moose;
@@ -253,6 +252,53 @@ sub barcode_tool :Path('/barcode/tool') Args(3) {
     $c->stash->{template} = '/barcode/tool/tool.mas';
 #    $c->stash->{cvterm_synonym} = $cvterm_synonym_rs->synonym();
     $c->forward('View::Mason');
+}
+
+
+sub barcode_multitool :Path('/barcode/multitool') Args(0) { 
+
+    my $self  =shift;
+    my $c = shift;
+  
+    $c->stash->{operator} = $c->req->param('operator');
+    $c->stash->{date}     = $c->req->param('date');
+    $c->stash->{project}  = $c->req->param('project');
+    $c->stash->{location} = $c->req->param('location');
+
+    my @cvterms = $c->req->param('cvterms');
+
+    my $cvterm_data = [];
+
+    foreach my $cvterm (@cvterms) { 
+
+	my ($db, $accession) = split ":", $cvterm;
+
+	print STDERR "Searching $cvterm, DB $db...\n";
+	my ($db_row) = $c->dbic_schema('Bio::Chado::Schema')->resultset('General::Db')->search( { name => $db } );
+	
+	print STDERR $db_row->db_id;
+	print STDERR "DB_ID for $db: $\n";
+	
+	
+	my $dbxref_rs = $c->dbic_schema('Bio::Chado::Schema')->resultset('General::Dbxref')->search_rs( { accession=>$accession, db_id=>$db_row->db_id } );
+	
+	my $cvterm_rs = $c->dbic_schema('Bio::Chado::Schema')->resultset('Cv::Cvterm')->search( { dbxref_id => $dbxref_rs->first->dbxref_id });
+	
+	my $cvterm_id = $cvterm_rs->first()->cvterm_id();
+	my $cvterm_synonym_rs = ""; #$c->dbic_schema('Bio::Chado::Schema')->resultset('Cv::Cvtermsynonym')->search->( { cvterm_id=>$cvterm_id });
+
+	push @$cvterm_data, { cvterm => $cvterm,
+			      cvterm_name => $cvterm_rs->first()->name(),
+			      cvterm_definition => $cvterm_rs->first->definition,
+	};
+
+    }
+
+    $c->stash->{cvterms} = $cvterm_data;
+
+    $c->stash->{template} = '/barcode/tool/multi_tool.mas';
+    
+    
 }
 
 sub continuous_scale : Path('/barcode/continuous_scale') Args(0) { 

@@ -13,8 +13,9 @@
 use DateTime;
 my $dt = DateTime->from_epoch( epoch=>time );
 my $date = join "/", ($dt->year, $dt->month, $dt->day);
-
 </%perl>
+
+<& /util/import_javascript.mas, classes => ['jquery.cookie' ] &>
 
 <& /page/page_title.mas, title=>"Barcode Tools" &>
 
@@ -38,42 +39,55 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
 
 
 
-<&| /page/info_section.mas, title=>'Generate Metadata Barcode', collapsible=>1, collapsed=>0 &>
+%#<&| /page/info_section.mas, title=>'Generate Metadata Barcode', collapsible=>1, %#collapsed=>0 &>
 
-<form action="/barcode/metadata" >
-  <table>
-    <tr><td>Operator name</td><td><input name="operator" /></td></tr>
-    <tr><td>Date</td><td><input name="date" value="<% $date %>" /> (FORMAT: YYYY/MM/DD)</td></tr>
-    <tr><td>Location</td><td><& /page/html_select.mas, name=>'location', choices=>\@locations &> [<a href="/breeders/home">Add new location</a>]</td></tr> 
-    <tr><td>Project</td><td><& /page/html_select.mas, name=>'project', choices=>\@projects &> [<a href="/breeders/home">Add new project</a>]</td></tr>
+%#<form action="/barcode/metadata" >
+%#  <table>
+%#    <tr><td>Operator name</td><td><input name="operator" /></td></tr>
+%#    <tr><td>Date</td><td><input name="date" value="<% $date %>" /> (FORMAT: YYYY/MM/DD)</td></tr>
+%#    <tr><td>Location</td><td><& /page/html_select.mas, name=>'location', choices=>\@locations &> [<a href="/breeders/home">Add new location</a>]</td></tr>
+%#    <tr><td>Project</td><td><& /page/html_select.mas, name=>'project', choices=>\@projects &> [<a href="/breeders/home">Add new project</a>]</td></tr>
 
-  </table>
+%#  </table>
 
-  <input type="radio" name="image_size" value="small" checked="1" /> small<br />
-  <input type="radio" name="image_size" value="large" /> large<br />
+%#  <input type="radio" name="image_size" value="small" checked="1" /> small<br />
+%#  <input type="radio" name="image_size" value="large" /> large<br />
   
-  <input type="submit" value="Generate barcode" />
-  </form>
+%#  <input type="submit" value="Generate barcode" />
+%#  </form>
+
+%#</&>
+
+<&| /page/info_section.mas, title=>'Excel Sheet Download',  collapsible=>1, collapsed=>0 &>
+
+<& /barcode/excel_download.mas, locations=>\@locations, projects=>\@projects, available_cvterms => \@tools_def  &>
 
 </&>
 
 
-<&| /page/info_section.mas, title=>'Generate Continuous Barcode', collapsible=>1, collapsed=>1 &>
+<&| /page/info_section.mas, title=>'Metadata &amp; Multibarcode tool', collapsible=>1, collapsed=>0 &>
 
-<h3>Note: This tool is experimental</h3>
-<form action="/barcode/continuous_scale" >
-<table>
-<tr><td>Start value</td><td> <input name="start" value="0" size="4" /></td></tr>
-<tr><td>End value</td><td><input name="end" value="1000" size="4"  /></td></tr>
-<tr><td>Step</td><td><input name="step" value="10" size="4" /></td></tr>
-<tr><td>Step height&nbsp;&nbsp;&nbsp;</td><td><input name="height" value="10" size="4" /></td></tr>
-</table>
-<input type="submit" value="Create continuous barcode" />
+  <& /barcode/multi_tool_input.mas, locations=>\@locations, projects=>\@projects, available_cvterms => \@tools_def &>
 
-</form>
-<br />
-<br />
 </&>
+
+
+%#<&| /page/info_section.mas, title=>'Generate Continuous Barcode', collapsible=>1, collapsed=>1 &>
+
+%#<h3>Note: This tool is experimental</h3>
+%#<form action="/barcode/continuous_scale" >
+%#<table>
+%#<tr><td>Start value</td><td> <input name="start" value="0" size="4" /></td></tr>
+%#<tr><td>End value</td><td><input name="end" value="1000" size="4"  /></td></tr>
+%#<tr><td>Step</td><td><input name="step" value="10" size="4" /></td></tr>
+%#<tr><td>Step height&nbsp;&nbsp;&nbsp;</td><td><input name="height" value="10" size="4" /></td></tr>
+%#</table>
+%#<input type="submit" value="Create continuous barcode" />
+
+%#</form>
+%#<br />
+%#<br />
+%#</&>
 
 <&| /page/info_section.mas, title=>'Generate Barcode', collapsible=>1, collapsed=>1 &>
 
@@ -93,34 +107,40 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
 <form action="/barcode/stock/download/pdf" method="post" enctype="multipart/form-data" />
 
 Enter a list of stock names<br />
-<textarea name="stock_names" rows="10" cols="30">
+<textarea id="stock_names" name="stock_names" rows="10" cols="30"></textarea>
+<div id="list_menu_location_1"></div>
+<script defer="defer">
 
-</textarea><br /><br />
+  jQuery(document).ready(function() {
+      pasteListMenu('stock_names', 'list_menu_location_1');
+  });
+</script>
+
+
+<br /><br />
  
 <& /barcode/printer_settings.mas &>
 
 <input type="checkbox" name="duplicate_labels_per_row" checked="1" disabled="1" /> print duplicate labels per row<br /><br />
 
-
 Upload file with stock names:<br />
-<input type="file" name="stock_names_file" /><br />
-<input type="reset" />&nbsp;&nbsp;<input type="submit" value="Download Barcodes" />
-
-
+<input type="file" name="stock_names_file" /><br /><br />
+<input type="reset" />&nbsp;&nbsp;
+<input type="submit" value="Download Barcodes" />
 </form>
 
 </&>
 
 
-<&| /page/info_section.mas, title=>'Generate unique barcodes', collapsible=>1, collapsed=>0 &>
+%#<&| /page/info_section.mas, title=>'Generate unique barcodes', collapsible=>1, collapsed=>0 &>
 
-<form action="/barcode/unique" >
+%#<form action="/barcode/unique" >
 
-  Number of label pages to print <input type="text" name="label_pages" /><br /><br />
+%#  Number of label pages to print <input type="text" name="label_pages" /><br /><br />
 
-  <& /barcode/printer_settings.mas &>
-    <br />
-  <input type="submit" value="Generate barcodes" />
-  </form>
+%#  <& /barcode/printer_settings.mas &>
+%#    <br />
+%#  <input type="submit" value="Generate barcodes" />
+%#  </form>
 
-</&>
+%#</& >
