@@ -42,7 +42,7 @@
   <select multiple id="stock_data" size="15"></select>
 
   <script defer="defer">
-    addToListMenu('stock_data');
+    addSelectToListMenu('stock_data');
   </script>
 
 </td>
