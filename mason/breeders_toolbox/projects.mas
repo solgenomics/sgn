@@ -10,9 +10,28 @@ $projects
 <table><tr><td>Trial name</td><td><input id="add_project_name" /></td></tr>
 <tr><td>Year</td><td><input id="add_project_year" /></td></tr>
 <tr><td colspan="2">Description</td></tr>
-<tr><td colspan="2"><textarea id="add_project_description" cols="60" >
+<tr><td colspan="2">
+<textarea id="add_project_description" cols="60" >
 </textarea>
-</td></tr></table>
+</td></tr>
+
+<tr><td>
+  <div id="format_type_radio">
+    <input type="radio" id="format_radio1" name="radio" class="format_type" value="empty" checked="checked"/><label for="radio1">Create empty trial</label><br>
+    <input type="radio" id="format_radio2" name="radio" class="format_type" value="create_with_upload"/><label for="radio2">Create from uploaded file</label><br>
+    <input type="radio" id="format_radio3" name="radio" class="format_type" value="create_with_design_tool" disabled="disabled"/><label for="radio3">Create using experimental design tool</label><br>
+  </div>
+</td></tr>
+
+
+
+</table>
+
+<div id="get_file_upload_data" style = "display: none">
+<br>
+<dt><label for="inputTypeFile">Upload file:</label></dt>
+<dd><input type="file" name="inputTypeFile" id="inputTypeFile" encoding="multipart/form-data"/></dd>
+</div>
 
 </div>
 
@@ -73,6 +92,22 @@ $projects
 
  jQuery(document).ready(function() {
 
+
+ jQuery("#format_type_radio").change(function(){
+     var method_to_use = jQuery('.format_type:checked').val();
+     if (method_to_use == "create_with_upload") {
+       jQuery("#get_file_upload_data").show();
+       jQuery( "#add_project_dialog" ).dialog( "option", "height", 350 );
+     } else {
+       jQuery("#get_file_upload_data").hide();
+       jQuery( "#add_project_dialog" ).dialog( "option", "height", 300 );
+}
+   
+     //jQuery("#get_file_upload_data").toggle();  // show if it is checked, otherwise hide
+
+   });
+
+
   jQuery('#add_project_dialog').dialog( {
      autoOpen: false,
      modal: true,
@@ -85,13 +120,23 @@ $projects
                                 var name = jQuery('#add_project_name').val();
                                 var year = jQuery('#add_project_year').val();
                                 var desc = jQuery('textarea#add_project_description').val();
+                                var method_to_use = jQuery('.format_type:checked').val();
 
-  //alert('Name and year = '+ name + ' ' + year);
+                                //alert('Name and year = '+ name + ' ' + year);
+
                                 if (name === '' || year === '' || desc === '') { alert('Name, year and description are required.'); return; }
 
-                                save_project_info(name, year, desc); 
+                                if (method_to_use = 'empty') {
+                                   alert('adding a project');
+                                   save_project_info(name, year, desc); 
+                                }
+
+                                if (method_to_use = 'create_from_upload') {
+                                   alert('file upload will happen here');
+                                }
+
                                 jQuery( this).dialog("close"); 
-                                location.reload();
+                                //location.reload();
                              } 
                }
 
