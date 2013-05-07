@@ -3,10 +3,11 @@
 $projects
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form',] &>
 
 <div id="add_project_dialog"  class="ui-widget" >
 
+<form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="create_new_trial_form" >
 <table><tr><td>Trial name</td><td><input id="add_project_name" /></td></tr>
 <tr><td>Year</td><td><input id="add_project_year" /></td></tr>
 <tr><td colspan="2">Description</td></tr>
@@ -22,18 +23,17 @@ $projects
     <input type="radio" id="format_radio3" name="radio" class="format_type" value="create_with_design_tool" disabled="disabled"/><label for="radio3">Create using experimental design tool</label><br>
   </div>
 </td></tr>
-
-
-
 </table>
-
 <div id="get_file_upload_data" style = "display: none">
 <br>
-<dt><label for="inputTypeFile">Upload file:</label></dt>
-<dd><input type="file" name="inputTypeFile" id="inputTypeFile" encoding="multipart/form-data"/></dd>
+<dt><label for="trial_upload_file">Upload file:</label></dt>
+<dd><input type="file" name="trial_upload_file" id="trial_upload_file" encoding="multipart/form-data"/></dd>
+</div>
+</form>
 </div>
 
-</div>
+
+
 
 <div id="experimental_design_dialog"  class="ui-widget" >
 <table><tr><td>Experiment name</td><td><input name="project_name" /></td></tr>
@@ -100,7 +100,7 @@ $projects
        jQuery( "#add_project_dialog" ).dialog( "option", "height", 350 );
      } else {
        jQuery("#get_file_upload_data").hide();
-       jQuery( "#add_project_dialog" ).dialog( "option", "height", 300 );
+       jQuery( "#add_project_dialog" ).dialog( "height", "height", 300 );
 }
    
      //jQuery("#get_file_upload_data").toggle();  // show if it is checked, otherwise hide
@@ -126,16 +126,21 @@ $projects
 
                                 if (name === '' || year === '' || desc === '') { alert('Name, year and description are required.'); return; }
 
-                                if (method_to_use = 'empty') {
+                                if (method_to_use == "empty") {
                                    alert('adding a project');
                                    save_project_info(name, year, desc); 
                                 }
 
-                                if (method_to_use = 'create_from_upload') {
+                                if (method_to_use == "create_with_upload") {
                                    alert('file upload will happen here');
-                                }
+                                   var uploadFile = jQuery("#trial_upload_file").val();
+                                   jQuery('#create_new_trial_form').attr("action","/trial/upload_trial_layout");
 
-                                jQuery( this).dialog("close"); 
+                                   if (!uploadFile) { alert("Please select a file");return;}
+                                      else { jQuery("#create_new_trial_form").submit();}
+                                }
+                               
+                                //jQuery( this).dialog("close"); 
                                 //location.reload();
                              } 
                }
@@ -250,6 +255,53 @@ $projects
      jQuery('#add_project_dialog').dialog("close");
   }
 });  
+
+
+
+jQuery('#create_new_trial_form').iframePostForm
+	({
+           json : true,
+           post : function ()
+	   {
+              var message;
+              //alert("You selected a file");
+              if (!jQuery('.message').length)
+                {
+                  alert("no message");
+                }
+
+              var formatType = jQuery('input[name=format_type]:checked').val();
+              var uploadTrialLayoutFile = jQuery("#trial_upload_file").val();
+              alert(jQuery('input[type=radio]').val());
+              alert(uploadTrialLayoutFile);
+              if (uploadTrialLayoutFile.length)
+              {
+                alert("something about a file length");
+              }
+              else
+              {
+                alert("no length");
+              }
+           },
+           complete : function (response)
+           {
+              alert("submit complete");
+              alert(response.error); 
+              alert(response);
+              if (!response.success)
+              {
+                 alert("no success");
+              }
+              else
+              {
+                 alert("success");
+              }
+           }
+        });
+
+
+
+
 
 </script>
 

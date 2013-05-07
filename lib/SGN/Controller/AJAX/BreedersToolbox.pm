@@ -45,7 +45,7 @@ sub insert_new_project : Path("/ajax/breeders/project/insert") Args(0) {
 	}
 	);
     
-    my $projectprop_year = $project->create_projectprops( { 'project year' => $params->{year},}, {autocreate=>1}); #cv_name => 'project_property' } );
+    #my $projectprop_year = $project->create_projectprops( { 'project year' => $params->{year},}, {autocreate=>1}); #cv_name => 'project_property' } );
 
     
 

@@ -70,8 +70,8 @@ sub upload_trial_layout_POST : Args(0) {
   my ($self, $c) = @_;
   print STDERR "\n\n\n Running submit controller\n";
 
-  my $upload = $c->req->upload('inputTypeFile');
-  my $file_name = $c->req->param('inputTypeFile');
+  my $upload = $c->req->upload('trial_upload_file');
+  my $file_name = $c->req->param('trial_upload_file');
   print STDERR "form submit: $file_name\n";
   
   my @contents = split /\n/, $upload->slurp;
