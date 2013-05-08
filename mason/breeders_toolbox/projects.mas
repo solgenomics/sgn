@@ -20,7 +20,7 @@ $projects
   <div id="format_type_radio">
     <input type="radio" id="format_radio1" name="radio" class="format_type" value="empty" checked="checked"/><label for="radio1">Create empty trial</label><br>
     <input type="radio" id="format_radio2" name="radio" class="format_type" value="create_with_upload"/><label for="radio2">Create from uploaded file</label><br>
-    <input type="radio" id="format_radio3" name="radio" class="format_type" value="create_with_design_tool" disabled="disabled"/><label for="radio3">Create using experimental design tool</label><br>
+    <input type="radio" id="format_radio3" name="radio" class="format_type" value="create_with_design_tool" disabled="disabled"/><label for="radio3">Create using trial design tool</label><br>
   </div>
 </td></tr>
 </table>
@@ -132,12 +132,11 @@ $projects
                                 }
 
                                 if (method_to_use == "create_with_upload") {
-                                   alert('file upload will happen here');
                                    var uploadFile = jQuery("#trial_upload_file").val();
                                    jQuery('#create_new_trial_form').attr("action","/trial/upload_trial_layout");
+                                   if (uploadFile === '') { alert("Please select a file");return;}
 
-                                   if (!uploadFile) { alert("Please select a file");return;}
-                                      else { jQuery("#create_new_trial_form").submit();}
+                                   jQuery("#create_new_trial_form").submit();
                                 }
                                
                                 //jQuery( this).dialog("close"); 
@@ -263,39 +262,16 @@ jQuery('#create_new_trial_form').iframePostForm
            json : true,
            post : function ()
 	   {
-              var message;
-              //alert("You selected a file");
-              if (!jQuery('.message').length)
-                {
-                  alert("no message");
-                }
-
-              var formatType = jQuery('input[name=format_type]:checked').val();
               var uploadTrialLayoutFile = jQuery("#trial_upload_file").val();
-              alert(jQuery('input[type=radio]').val());
-              alert(uploadTrialLayoutFile);
-              if (uploadTrialLayoutFile.length)
+              if (uploadTrialLayoutFile === '')
               {
-                alert("something about a file length");
-              }
-              else
-              {
-                alert("no length");
+                alert("No file selected");
               }
            },
            complete : function (response)
            {
               alert("submit complete");
-              alert(response.error); 
-              alert(response);
-              if (!response.success)
-              {
-                 alert("no success");
-              }
-              else
-              {
-                 alert("success");
-              }
+              if (response.error) {alert(response.error);return;} else {alert(response);}
            }
         });
 

@@ -68,38 +68,97 @@ sub upload_trial_layout :  Path('/trial/upload_trial_layout') : ActionClass('RES
 ###sub upload_trial_layout :  Path('/trial/upload_trial_layout')  Args(0) {
 sub upload_trial_layout_POST : Args(0) {
   my ($self, $c) = @_;
-  print STDERR "\n\n\n Running submit controller\n";
-
+  my @contents;
   my $upload = $c->req->upload('trial_upload_file');
-  my $file_name = $c->req->param('trial_upload_file');
-  print STDERR "form submit: $file_name\n";
-  
-  my @contents = split /\n/, $upload->slurp;
-  print STDERR $contents[0] . " is the first line\n";
-  #my ($self, $c, $stock_id) = @_;
-  # my $stock = CXGN::Chado::Stock->new($self->schema, $stock_id);
-  # $c->stash->{stock} = $stock;
-  # my $stock_row = $self->schema->resultset('Stock::Stock')
-  #   ->find({ stock_id => $stock_id });
-  # my $stock_pedigree = $self->_get_pedigree($stock_row);
-  # print STDERR "STOCK PEDIGREE: ". Data::Dumper::Dumper($stock_pedigree);
-  # my $stock_pedigree_svg = $self->_view_pedigree($stock_pedigree);
-  # print STDERR "SVG: $stock_pedigree_svg\n\n";
-  # my $is_owner = $self->_check_role($c);
-  # $c->response->content_type('image/svg+xml');
-  # if ($stock_pedigree_svg) {
-  #   $c->response->body($stock_pedigree_svg);
-  # } else {
-     my $blank_svg = SVG->new(width=>1,height=>1);
-     my $blank_svg_xml = $blank_svg->xmlify();
-   my $the_result = "{ error => 'here is a result', }";
-   $c->stash->{rest} = {error => "Can you really see this?" };
-   #$c->response->body($the_result);
-     #$c->response->body($blank_svg_xml);
-  # }
+  my $header_line;
+  my @header_contents;
+
+  if (!$c->user()) {
+    $c->stash->{rest} = {error => "You need to be logged in to upload a file." };
+    return;
+  }
+
+  if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+    $c->stash->{rest} = {error =>  "You have insufficient privileges to upload a file." };
+    return;
+  }
+
+  if (!$upload) {
+    $c->stash->{rest} = {error => "File upload failed: no file name received"};
+    return;
+  }
+
+  try {
+    @contents = split /\n/, $upload->slurp;
+  } catch {
+    $c->stash->{rest} = {error => "File upload failed: $_"};
+    return;
+  };
+
+  #verify header
+  try {
+  $header_line = shift(@contents);
+  @header_contents = split /\t/, $header_line;
+  _verify_trial_layout_header(\@header_contents);
+  } catch {
+    $c->stash->{rest} = {error => "File upload failed: Wrong column names in header"};
+    print STDERR "header error $_\n";
+    return;
+  };
+
+
+
+
+
+  print STDERR  "First line is:\n" . $contents[0] . "\n";
+
+  #$c->stash->{rest} = {error => "Can you really see this?" };
 }
 
 
+
+sub _verify_trial_layout_header {
+  my $header_content_ref = shift;
+  my @header_contents = @{$header_content_ref};
+  #my $header_error;
+  if ($header_contents[0] ne 'plot_name' ||
+      $header_contents[1] ne 'block_number' ||
+      $header_contents[2] ne 'rep_number' ||
+      $header_contents[3] ne 'stock_name') {
+      #$header_error = "Wrong column names in header";
+    die ("Wrong column names in header\n");
+    return;
+  }
+  if (@header_contents != 4) {
+    #$header_error = "Wrong number of columns in header";
+    die ("Wrong number of columns in header\n");
+    return;
+  }
+  return;
+}
+
+sub _verify_trial_layout_file {
+  my $self = shift;
+  #my $first_line = shift(@contents);
+  #my @first_row;
+
+
+
+  #    if ($first_row[0] ne 'cross_name' ||
+  # 	 $first_row[1] ne 'cross_type' ||
+  # 	 $first_row[2] ne 'maternal_parent' ||
+  # 	 $first_row[3] ne 'paternal_parent' ||
+  # 	 $first_row[4] ne 'trial' ||
+  # 	 $first_row[5] ne 'location' ||
+  # 	 $first_row[6] ne 'number_of_progeny' ||
+  # 	 $first_row[7] ne 'prefix' ||
+  # 	 $first_row[8] ne 'suffix' ||
+  # 	 $first_row[9] ne 'number_of_flowers' ||
+  # 	 $first_row[10] ne 'number_of_seeds') {
+  #      $header_error = "<b>Error in header:</b><br>Header should contain the following tab-delimited fields:<br>cross_name<br>cross_type<br>maternal_parent<br>paternal_parent<br>trial<br>location<br>number_of_progeny<br>prefix<br>suffix<br>number_of_flowers<br>number_of_seeds<br>";
+  #      print STDERR "$header_error\n";
+  #    }
+}
 
 
 
