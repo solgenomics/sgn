@@ -1,0 +1,56 @@
+<%args>
+ $exception
+ $show_dev_message => 0
+ $project_name
+ $contact_email
+</%args>
+
+% $exception = [ $exception ] unless ref $exception eq 'ARRAY';
+% for my $e (@$exception) {
+
+<h1 style="text-align: center">
+   <% $e->title || ( $e->is_server_error ? 'Server Error' : $e->is_client_error ? 'Error' : 'Message' ) %>
+</h1>
+
+<div style="margin: auto; width: 60%">
+    <p>
+% if( $e->public_message ) {
+    <% $e->public_message . ( $e->public_message =~ /\.\s*$/ ? '' : '.' ) %>
+% } else {
+    Our apologies, there was an error processing your request.  
+% }
+    </p>
+
+    <p>
+% if( $e->notify ) {
+    An error report has been sent to the <% $project_name %> development team.
+% }
+
+% if( $e->is_client_error || $e->is_server_error and $contact_email ) {
+    If the problem persists, please contact us at <a href="mailto:<% $contact_email %>"><% $contact_email %>.</a>
+%   if( $e->is_server_error ) {
+      We will keep you informed of our progress in resolving it.
+%   }
+   </p>
+
+% }
+
+</div>
+
+%   if( $show_dev_message && $e->can('developer_message') && defined $e->developer_message ) {
+    <style>
+       pre {
+            white-space: pre-wrap;       /* css-3 */
+            white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+            white-space: -pre-wrap;      /* Opera 4-6 */
+            white-space: -o-pre-wrap;    /* Opera 7 */
+            word-wrap: break-word;       /* Internet Explorer 5.5+ */
+        }
+     </style>
+
+    <div style="margin: 1em 0; border: 2px solid orange; padding: 0 1em 1em 1em">
+      <h3>Developer message:</h3>
+        <pre><% defined $e->developer_message ? $e->developer_message : 'none provided' | h %></pre>
+    </div>
+%   }
+% }

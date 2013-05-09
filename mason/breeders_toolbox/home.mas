@@ -53,9 +53,10 @@ $field_designs => undef
 %#<& /breeders_toolbox/accessions.mas, user_id=>$user_id &>
 %#</&>
 
-<&| /page/info_section.mas, title=>'Field plot designs', collapsible=>1, collapsed=>1, subtitle=>'[<a id="experimental_design_link">Field plot design</a>]' &>
-    
-    <& /breeders_toolbox/field_designs.mas, field_designs=>$field_designs &>
+
+<&| /page/info_section.mas, title=>'Search Wizard', collapsible=>1, collapsed=>1 &>
+
+<& /breeders_toolbox/breeder_search.mas &>
 
 </&>
 

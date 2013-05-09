@@ -1,0 +1,11 @@
+<%args>
+$message
+</%args>
+
+<div style="text-align: center; margin: 2em 0">
+   <h1 style="margin-bottom: 1em">404 - not found</h1>
+
+   <div>
+     <% $message %>
+   </div>
+</div>

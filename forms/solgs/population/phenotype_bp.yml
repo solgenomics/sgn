@@ -1,0 +1,27 @@
+action: "/form/population/phenotype"
+method: "POST"
+enctype: "multipart/form-data"
+
+auto_fieldset: 1
+ 
+elements:
+   - type: Multi
+     name: pheno
+     elements:
+       - type: File
+         name: pheno_file
+         size: 40
+         constraints:
+            - type: File::Size
+              minimum: 1
+            - type: Required
+              message: please, provide a valid phenotype file                     
+       - type: Hidden
+         name: type
+         value: pheno_form
+       - type: Hidden
+         name: pop_id 
+         value:  
+       - type: Submit
+         name: submit
+         value: Submit

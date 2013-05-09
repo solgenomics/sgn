@@ -1,0 +1,136 @@
+<table class="toolbar" summary="" cellspacing="0" cellpadding="0">
+<tr class="toolbar_content">
+  <td class="toolbar_l"><img src="/documents/img/toolbar_l.gif" alt="" /></td>
+  <td class="toolbar_content" onmouseover="CXGN.Page.Toolbar.showmenu('search')" onmouseout="CXGN.Page.Toolbar.hidemenu()" style="text-align: left">
+
+    <a class="toolbar_menuname" href="/search">search</a>
+    <div style="position: relative; text-align: left">
+    <table cellspacing="0" cellpadding="0" id="search" class="toolbar_popmenu">
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/organisms">Organisms</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/loci">Genes</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/phenotypes">Phenotypes</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/qtl">QTLs</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/unigene">Unigenes</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/family">Families</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/markers">Markers</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/bacs">BACs</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/est">ESTs and libraries</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/insitu/">Insitu database</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/images">Images</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/template">Expression</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/directory">People</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/help/faq.pl">FAQ</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/search/glossarysearch.pl">Glossary</a></td></tr>
+      
+    </table>
+
+    </div>
+  </td>
+  <td class="toolbar_content" onmouseover="CXGN.Page.Toolbar.showmenu('maps')" onmouseout="CXGN.Page.Toolbar.hidemenu()" style="text-align: center">
+    <a class="toolbar_menuname" href="/cview/">maps</a>
+
+    <div style="position: relative; text-align: left">
+    <table cellspacing="0" cellpadding="0" id="maps" class="toolbar_popmenu">
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/cview/map.pl?map_id=9&amp;show_offsets=1&amp;show_ruler=1">Tomato-EXPEN 2000</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/cview/map.pl?map_id=31&amp;show_offsets=1&amp;show_ruler=1">Tomato-Kazusa/SolCAP</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/cview/map.pl?map_id=34&amp;show_offsets=1&amp;show_ruler=1">Tomato-QTLs</a></td></tr>
+       
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/cview/map.pl?map_id=p9&amp;show_offsets=1&amp;show_ruler=1">Tomato physical map</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/cview/map.pl?map_id=c9&amp;show_offsets=1&amp;show_ruler=1">Tomato FPC contig map</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/cview/map.pl?map_id=il6&amp;show_offsets=1&amp;show_ruler=1">Tomato IL map</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/cview/map.pl?map_id=13">Tomato FISH map</a></td></tr>
+
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/cview/map.pl?map_id=agp">Tomato AGP map</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/cview/map.pl?map_version_id=58">Pepper COSII map</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/cview/map.pl?map_id=11">Pepper-AC99</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/cview/map.pl?map_id=10">Pepper-FA03</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/cview/map.pl?map_id=3">Potato-TXB 1992</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/cview/map.pl?map_id=32">Potato-QTLs</a></td></tr>
+       
+
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/cview/map.pl?map_version_id=63">Eggplant COSII map</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/cview/map.pl?map_id=6">Eggplant-LXM 2002</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/cview/map.pl?map_id=15">Tobacco SSR 2007</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/cview/map.pl?map_id=7&amp;show_offsets=1&amp;show_ruler=1">Arabidopsis COSII</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/cview/view_chromosome.pl?show_offsets=1&amp;show_ruler=1&amp;show_offsets=1">Comparative viewer...</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/cview/index.pl">See all available maps...</a></td></tr>
+
+    </table>
+
+    </div>
+  </td>
+  <td class="toolbar_content" onmouseover="CXGN.Page.Toolbar.showmenu('sequencing')" onmouseout="CXGN.Page.Toolbar.hidemenu()" style="text-align: center">
+    <a class="toolbar_menuname" href="/about/tomato_sequencing/">genomes</a>
+    <div style="position: relative; text-align: left">
+
+    <table cellspacing="0" cellpadding="0" id="sequencing" class="toolbar_popmenu">
+       <tr><td class="toolbar_item_title" >Organisms</td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/organism/Solanum_lycopersicum/genome">Tomato genome</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/organism/Solanum_tuberosum/genome">Potato genome</a></td></tr>
+       <tr><td class="toolbar_item_title" >Projects</td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/solanaceae-project/index.pl">Solanaceae project (SOL)</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/organism/sol100/view">SOL-100 Project</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/genomes/Solanum_lycopersicum/">International Tomato Sequencing Project</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/genomes/Solanum_pimpinellifolium/"><i>Solanum pimpinellifolium</i> Project (CSHL)</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/about/us_tomato_sequencing.pl">U.S. tomato sequencing project</a></td></tr>
+    </table>
+
+    </div>
+  </td>
+  <td class="toolbar_content" onmouseover="CXGN.Page.Toolbar.showmenu('tools')" onmouseout="CXGN.Page.Toolbar.hidemenu()" style="text-align: center">
+
+    <a class="toolbar_menuname" href="/tools/">tools</a>
+    <div style="position: relative; text-align: left">
+    <table cellspacing="0" cellpadding="0" id="tools" class="toolbar_popmenu">
+       <tr><td class="toolbar_item_title">Sequence Analysis</td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/tools/blast/">BLAST</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/tools/align_viewer/">Alignment Analyzer</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/tools/tree_browser/">Tree Browser</a></td></tr>
+
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/tools/intron_detection/find_introns.pl">Intron Finder</a></td></tr>
+       <tr><td class="toolbar_item_title">Mapping</td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/gbrowse/bin/gbrowse">Genome Browser</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/cview/view_chromosome.pl?show_offsets=1&amp;show_ruler=1&amp;show_offsets=1">Comparative Map Viewer</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/tools/caps_designer/caps_input.pl">CAPS Designer</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/tools/seedbac/">Seed BAC Finder</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/qtl">solQTL: QTL Mapping</a></td></tr>
+       <tr><td class="toolbar_item_title">Molecular Biology</td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/tools/sigpep_finder/input.pl">Signal Peptide Finder</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/tools/insilicopcr">In Silico PCR</a></td></tr>
+       <tr><td class="toolbar_item_title">Systems Biology</td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/tools/solcyc/">SolCyc Biochemical Pathways</a></td></tr>
+       <tr><td class="toolbar_item_title">Bulk Query</td></tr>
+
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/bulk/input.pl">Unigene and BAC information</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/bulk/input.pl?mode=ftp">FTP Site</a></td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/tools/convert/input.pl">ID Converter (SGN <=> TIGR)</a></td></tr>
+       <tr><td class="toolbar_item_title">Other</td></tr>
+       <tr><td class="toolbar_item"><a class="toolbar_item" href="/tools/onto/">SGN Ontology Browser [beta]</a></td></tr>
+    </table>
+
+    </div>
+  </td>
+
+  <td class="toolbar_search toolbar_content">
+    <form name="quicksearch" class="quicksearch" action="/search/quick">
+      <input type="hidden" name="showtimes" value="" />
+      <input class="quicksearch field" type="text" name="term" value="<% $m->request_args->{'quick_search_term'} || '' |h%>" size="14" />
+      <input class="quicksearch imgbutton" type="image" src="/documents/img/sol_search_button.gif" value="sol search" />
+    </form>
+
+  </td>
+  <td class="toolbar_r" height="1">
+    <img src="/documents/img/toolbar_r.gif" alt="" />
+  </td>
+</tr>
+</table>
+<& /util/import_javascript.mas, classes => ['CXGN.Page.Toolbar','jquery'] &>
+<script language="JavaScript" type="text/javascript">
+jQuery( function() {
+  CXGN.Page.Toolbar.addmenu('search');
+  CXGN.Page.Toolbar.addmenu('maps');
+  CXGN.Page.Toolbar.addmenu('sequencing');
+  CXGN.Page.Toolbar.addmenu('tools');
+  CXGN.Page.Toolbar.hideall();
+});
+</script>
