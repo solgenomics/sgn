@@ -13,10 +13,11 @@ window.onload = function initialize() {
 
     jQuery('#select1').change(function() { 
 	var select1 = jQuery( this ).val();
-	 alert('Getting the data...'+select1);
+	//alert('Getting the data...'+select1);
 	jQuery.ajax( { 
 	    url: '/ajax/breeder/search',
-	    async: false,
+	    async: true,
+	    timeout: 60000,
 	    data: {'select1':select1},
 	    success: function(response) { 
            if (response.error) { 
@@ -29,7 +30,7 @@ window.onload = function initialize() {
 	   jQuery('#c1_data').html(c1_html);
 	   jQuery('#c2_data').html('');
 	   jQuery('#c3_data').html('');
-	   jQuery('#stock_data').html('');
+
 	   
 	   
        }
@@ -43,13 +44,18 @@ window.onload = function initialize() {
     });
     
     jQuery('#c1_data').change(function() { 
+	jQuery('#select2').val('please select');
+	jQuery('#select3').val('please select');
 	jQuery('#c2_data').html('');
 	jQuery('#c3_data').html('');
 	jQuery('#stock_data').html('');
-
+	var select1 = jQuery('#select1').val();
+	var c1_data = jQuery('#c1_data').val() || [];
+	//alert("HELLO!");
 	jQuery.ajax( { 
 	    url: '/ajax/breeder/search',
-	    async: false,
+	    async: true,
+	    timeout: 60000,
 	    data: {'select1':select1, 'c1_data': c1_data.join(",")  },
 	    success: function(response) { 
 		if (response.error) { 
@@ -69,13 +75,16 @@ window.onload = function initialize() {
  	var select1 = jQuery('#select1').val();
 	var select2 = jQuery('#select2').val();
 	var c1_data = jQuery('#c1_data').val() || [];
+	jQuery('#select3').val('please select');
+	jQuery('#c2_data').val('');
 //	alert('Select1: '+select1+', select2: '+select2+' c1_data = '+c1_data.join(","));
 	
 	var c2_data = '';
 	var stock_data = '';
 	jQuery.ajax( { 
 	    url: '/ajax/breeder/search',
-	    async: false,
+	    async: true,
+	    timeout: 60000,
 	    data: {'select1':select1, 'select2':select2, 'c1_data': c1_data.join(",") },
 	    success: function(response) { 
 		if (response.error) { 
@@ -105,9 +114,16 @@ window.onload = function initialize() {
     jQuery('#c2_data').change(function() { 
 	jQuery('#c3_data').html('');
 	jQuery('#stock_data').html('');
+
+	var select1 = jQuery('#select1').val();
+	var select2 = jQuery('#select2').val();
+	var c1_data = jQuery('#c1_data').val() || [];
+	var c2_data = jQuery('#c2_data').val() || [];
+
 	jQuery.ajax( { 
 	    url: '/ajax/breeder/search',
-	    async: false,
+	    async: true,
+	    timeout: 60000,
 	    data: {'select1':select1, 'c1_data': c1_data.join(","), 'select2':select2, 'c2_data':c2_data.join(",")  },
 	    success: function(response) { 
 		if (response.error) { 
@@ -137,7 +153,8 @@ window.onload = function initialize() {
 	jQuery('#stock_data').html('');
 	jQuery.ajax( { 
 	    url: '/ajax/breeder/search',
-	    async: false,
+	    async: true,
+	    timeout: 60000,
 	    data: {'select1':select1, 'select2':select2, 'c1_data': c1_data.join(","),  'c2_data': c2_data.join(","), 'select3':select3 },
 	    success: function(response) { 
 		if (response.error) { 
@@ -148,8 +165,13 @@ window.onload = function initialize() {
 		    update_stocks(response.stocks);
 		    jQuery('#c3_data').html(c3_html);
 		}
+	    },
+	    error: function(response) { 
+		alert("An error occurred. Timeout?");
 	    }
 	});
+
+
     });
     
     jQuery('#c3_data').change(function() { 
@@ -166,7 +188,8 @@ window.onload = function initialize() {
 
     	jQuery.ajax( { 
 	    url: '/ajax/breeder/search',
-	    async: false,
+	    async: true,
+	    timeout: 30000,
 	    data: {'select1':select1, 'select2':select2, 'c1_data': c1_data.join(","),  'c2_data': c2_data.join(","), 'select3':select3, 'c3_data': c3_data.join(",") },
 	    success: function(response) { 
 		if (response.error) { 
@@ -175,6 +198,9 @@ window.onload = function initialize() {
 		else {
 		    update_stocks(response.stocks);
 		}		
+	    },
+	    error: function(response) { 
+		alert("an error occurred. (possible timeout)");
 	    }
 	});
     });    
