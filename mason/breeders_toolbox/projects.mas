@@ -1,6 +1,8 @@
 
 <%args>
-$projects
+@projects => ()
+@locations => ()
+@roles => ()
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form',] &>
@@ -8,8 +10,23 @@ $projects
 <div id="add_project_dialog"  class="ui-widget" >
 
 <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="create_new_trial_form" >
-<table><tr><td>Trial name</td><td><input id="add_project_name" /></td></tr>
-<tr><td>Year</td><td><input id="add_project_year" /></td></tr>
+<table><tr><td>Trial name</td><td><input id="add_project_name" name="add_project_name" /></td></tr>
+<tr><td>Year(s)</td><td><input id="add_project_year" name="add_project_year"/></td></tr>
+
+
+
+
+<tr><td>Location</td><td>
+<select id="add_project_location" name="add_project_location">
+<%perl>
+foreach my $location (@locations) {
+	print "<option value=".@$location[1].">".@$location[1]."</option>";
+}
+</%perl>
+</select></td></tr>
+
+
+
 <tr><td colspan="2">Description</td></tr>
 <tr><td colspan="2">
 <textarea id="add_project_description" cols="60" >
@@ -37,7 +54,7 @@ $projects
 
 <div id="experimental_design_dialog"  class="ui-widget" >
 <table><tr><td>Experiment name</td><td><input name="project_name" /></td></tr>
-<tr><td>Year</td><td><input id="project_year" name="year" /></td></tr>
+<tr><td>Year</td><td><input id="project_year" name="add_project_year" /></td></tr>
 <tr><td>Design</td><td>
 <select id="Design" name="design">
 <option value=CRD>Completely Randomized</option>
@@ -88,6 +105,13 @@ $projects
 </div>
 
 
+<div id="upload_trial_error_display"  class="ui-widget" >
+<table>
+<tbody>
+</tbody>
+</table>
+</div>
+
 <script defer="defer">
 
  jQuery(document).ready(function() {
@@ -97,10 +121,10 @@ $projects
      var method_to_use = jQuery('.format_type:checked').val();
      if (method_to_use == "create_with_upload") {
        jQuery("#get_file_upload_data").show();
-       jQuery( "#add_project_dialog" ).dialog( "option", "height", 350 );
+       jQuery( "#add_project_dialog" ).dialog( "option", "height", 400 );
      } else {
        jQuery("#get_file_upload_data").hide();
-       jQuery( "#add_project_dialog" ).dialog( "height", "height", 300 );
+       jQuery( "#add_project_dialog" ).dialog( "option", "height", 320 );
 }
    
      //jQuery("#get_file_upload_data").toggle();  // show if it is checked, otherwise hide
@@ -112,7 +136,7 @@ $projects
      autoOpen: false,
      modal: true,
      width: 500,
-     height: 300,
+     height: 320,
      title: "Add new trial",
 
      buttons:  { "Cancel" : function() { jQuery('#add_project_dialog').dialog("close"); }, 
@@ -270,8 +294,35 @@ jQuery('#create_new_trial_form').iframePostForm
            },
            complete : function (response)
            {
-              alert("submit complete");
-              if (response.error) {alert(response.error);return;} else {alert(response);}
+
+            if (response.error_string) {
+               //alert(response.error_string);
+                jQuery( "#upload_trial_error_display tbody" ).html('');
+               jQuery( "#upload_trial_error_display tbody" ).append(response.error_string);
+
+               jQuery(function() {
+                 jQuery( "#upload_trial_error_display" ).dialog({
+                 modal: true,
+                 title: "Errors in uploaded file",
+                 buttons: {
+                  Ok: function() {
+                  jQuery( this ).dialog( "close" );
+                  }
+                 }
+               });
+              });
+             return;
+             }
+
+              if (response.error) {
+                alert(response.error);
+                return;
+              } 
+
+            if (response.success) {
+               alert("File uploaded successfully");
+              }
+
            }
         });
 
@@ -290,7 +341,7 @@ jQuery('#create_new_trial_form').iframePostForm
 
 
 
-foreach my $p (@$projects){ 
+foreach my $p (@projects){ 
    print "<tr><td><a href=\"/breeders_toolbox/trial/$p->[0]\">$p->[1]</td><td>$p->[2]</td></tr>\n";
 }
 </%perl>

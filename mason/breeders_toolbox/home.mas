@@ -17,7 +17,7 @@ $field_designs => undef
 
 <&| /page/info_section.mas, title=>'Trials', collapsible=>1, collapsed=>1, subtitle=>'[<a id="add_project_link">Add trial</a>]' &>
     
-    <& /breeders_toolbox/projects.mas, projects=>$projects &>
+    <& /breeders_toolbox/projects.mas, projects=>$projects,locations=>\@locations&>
     <& /breeders_toolbox/upload_trial_layout.mas, locations=>\@locations,projects=>$projects,roles=>\@roles &>
 
 </&>

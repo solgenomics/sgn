@@ -106,8 +106,11 @@ jQuery( "form#upload_trial_layout_form" )
            },
            complete : function (response)
            {
-              alert("submit complete");
-              alert(response.error); 
+              if (response.error) {
+                alert(response.error);
+              } else {
+                alert("Upload successful");
+              }
               alert(response);
               if (!response.success)
               {
@@ -117,6 +120,7 @@ jQuery( "form#upload_trial_layout_form" )
               {
                  alert("success");
               }
+              alert("something");
            }
         });
 

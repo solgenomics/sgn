@@ -22,15 +22,12 @@ use Moose;
 use List::MoreUtils qw /any /;
 use Try::Tiny;
 use CXGN::Phenome::Schema;
-#use CXGN::Phenome::Allele;
 use CXGN::Chado::Stock;
-#use CXGN::Page::FormattingHelpers qw/ columnar_table_html info_table_html html_alternate_show /;
 use Scalar::Util qw(looks_like_number);
 use File::Slurp;
+use Data::Dumper;
 
-#BEGIN { extends 'Catalyst::Controller'; }
 BEGIN { extends 'Catalyst::Controller::REST' }
-
 
 __PACKAGE__->config(
     default   => 'application/json',
@@ -47,72 +44,78 @@ sub _build_schema {
   shift->_app->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' )
 }
 
-#sub upload_trial_layout :  Local :ActionClass('REST') {}
-#sub upload_trial_layout :  PATH('/trial/upload_trial_layout') :ActionClass('REST') {}
-
-#sub upload_trial_layout_GET :Args(0) {
-#sub upload_cross :  Path('/cross/upload_cross')  Args(0) {
-
-
-
-
-#sub add_cross_GET :Args(0) {
-
-
-
-
-
-
 sub upload_trial_layout :  Path('/trial/upload_trial_layout') : ActionClass('REST') { }
 
-###sub upload_trial_layout :  Path('/trial/upload_trial_layout')  Args(0) {
 sub upload_trial_layout_POST : Args(0) {
   my ($self, $c) = @_;
   my @contents;
+  my $error = 0;
   my $upload = $c->req->upload('trial_upload_file');
   my $header_line;
   my @header_contents;
+  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
-  if (!$c->user()) {
+  if (!$c->user()) {  #user must be logged in
     $c->stash->{rest} = {error => "You need to be logged in to upload a file." };
     return;
   }
 
-  if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+  if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {  #user must have privileges to add a trial
     $c->stash->{rest} = {error =>  "You have insufficient privileges to upload a file." };
     return;
   }
 
-  if (!$upload) {
+  if (!$upload) { #upload file required
     $c->stash->{rest} = {error => "File upload failed: no file name received"};
     return;
   }
 
-  try {
+  try { #get file contents
     @contents = split /\n/, $upload->slurp;
   } catch {
     $c->stash->{rest} = {error => "File upload failed: $_"};
-    return;
+    $error = 1;
   };
+  if ($error) {return;}
 
-  #verify header
-  try {
+  if (@contents < 2) { #upload file must contain at least one line of data plus a header
+    $c->stash->{rest} = {error => "File upload failed: contains less than two lines"};
+    return;
+  }
+
   $header_line = shift(@contents);
   @header_contents = split /\t/, $header_line;
+
+  try { #verify header contents
   _verify_trial_layout_header(\@header_contents);
   } catch {
-    $c->stash->{rest} = {error => "File upload failed: Wrong column names in header"};
-    print STDERR "header error $_\n";
-    return;
+    $c->stash->{rest} = {error => "File upload failed: $_"};
+    $error = 1;
   };
+  if ($error) {return;}
+
+  #verify location
+  if (! $schema->resultset("NaturalDiversity::NdGeolocation")->find({description=>$c->req->param('add_project_location'),})){
+    $c->stash->{rest} = {error => "File upload failed: location not found"};
+    return;
+    }
 
 
+  try { #verify contents of file
+  _verify_trial_layout_contents($self, $c, \@contents);
+  } catch {
+    my %error_hash = %{$_};
+    print STDERR "the error hash:\n".Dumper(%error_hash)."\n";
+    #my $error_string = Dumper(%error_hash);
+    my $error_string = _formatted_string_from_error_hash(\%error_hash);
 
-
+     $c->stash->{rest} = {error => "File upload failed: missing or invalid content (see details that follow..)", error_string => "$error_string"};
+    $error = 1;
+  };
+  if ($error) {return;}
 
   print STDERR  "First line is:\n" . $contents[0] . "\n";
-
-  #$c->stash->{rest} = {error => "Can you really see this?" };
+  print STDERR "You shouldn't see this if there is an error in the upload\n";
 }
 
 
@@ -120,61 +123,166 @@ sub upload_trial_layout_POST : Args(0) {
 sub _verify_trial_layout_header {
   my $header_content_ref = shift;
   my @header_contents = @{$header_content_ref};
-  #my $header_error;
   if ($header_contents[0] ne 'plot_name' ||
       $header_contents[1] ne 'block_number' ||
       $header_contents[2] ne 'rep_number' ||
       $header_contents[3] ne 'stock_name') {
-      #$header_error = "Wrong column names in header";
     die ("Wrong column names in header\n");
-    return;
   }
   if (@header_contents != 4) {
-    #$header_error = "Wrong number of columns in header";
     die ("Wrong number of columns in header\n");
-    return;
   }
   return;
 }
 
-sub _verify_trial_layout_file {
+sub _verify_trial_layout_contents {
   my $self = shift;
-  #my $first_line = shift(@contents);
-  #my @first_row;
+  my $c = shift;
+  my $contents_ref = shift;
+  my @contents = @{$contents_ref};
+  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+  my $year = $c->req->param('add_project_year');
+  my $location = $c->req->param('add_project_location');
+  my $project_name = $c->req->param('add_project_name');
+  my $line_number = 1;
+  my %error_hash;
+  my %plot_name_errors;
+  my %block_number_errors;
+  my %rep_number_errors;
+  my %stock_name_errors;
+  my %column_number_errors;
+  foreach my $content_line (@contents) {
+    print STDERR "verifying line $line_number\n";
+    my @line_contents = split /\t/, $content_line;
+    if (@line_contents != 4) {
+      my $column_count = scalar(@line_contents);
+      $column_number_errors{$line_number} = "Line $line_number: wrong number of columns, expected 4, found $column_count";
+      $line_number++;
+      print STDERR "count: $column_count\n";
+      next;
+    }
+    my $plot_name = $line_contents[0];
+    my $block_number = $line_contents[1];
+    my $rep_number = $line_contents[2];
+    my $stock_name = $line_contents[3];
 
 
 
-  #    if ($first_row[0] ne 'cross_name' ||
-  # 	 $first_row[1] ne 'cross_type' ||
-  # 	 $first_row[2] ne 'maternal_parent' ||
-  # 	 $first_row[3] ne 'paternal_parent' ||
-  # 	 $first_row[4] ne 'trial' ||
-  # 	 $first_row[5] ne 'location' ||
-  # 	 $first_row[6] ne 'number_of_progeny' ||
-  # 	 $first_row[7] ne 'prefix' ||
-  # 	 $first_row[8] ne 'suffix' ||
-  # 	 $first_row[9] ne 'number_of_flowers' ||
-  # 	 $first_row[10] ne 'number_of_seeds') {
-  #      $header_error = "<b>Error in header:</b><br>Header should contain the following tab-delimited fields:<br>cross_name<br>cross_type<br>maternal_parent<br>paternal_parent<br>trial<br>location<br>number_of_progeny<br>prefix<br>suffix<br>number_of_flowers<br>number_of_seeds<br>";
-  #      print STDERR "$header_error\n";
-  #    }
+    #if (! $schema->resultset("Stock::Stock")->find({name=>$stock_name,})){
+    #  $stock_name_errors{$line_number} = "Line $line_number: stock name $stock_name not found";
+    #}
+
+    if (!$stock_name) {
+      $stock_name_errors{$line_number} = "Line $line_number: stock name is missing";
+    } else {
+      my $stock_rs = $schema->resultset("Stock::Stock")->search( #make sure stock name exists and returns a unique result
+								{
+								 -or => [
+									 'lower(me.uniquename)' => { like => lc($stock_name) },
+									 -and => [
+										  'lower(type.name)'       => { like => '%synonym%' },
+										  'lower(stockprops.value)' => { like => lc($stock_name) },
+										 ],
+									],
+								},
+								{
+								 join => { 'stockprops' => 'type'} ,
+								 distinct => 1
+								}
+							       );
+      if ($stock_rs->count >1 ) {
+	print STDERR "ERROR: found multiple accessions for name $stock_name! \n";
+	my $error_string = "Line $line_number:  multiple accessions found for stock name $stock_name (";
+	while ( my $st = $stock_rs->next) {
+	  print STDERR "stock name = " . $st->uniquename . "\n";
+	  my $error_string .= $st->uniquename.",";
+	}
+	$stock_name_errors{$line_number} = $error_string;
+      } elsif ($stock_rs->count == 1) {
+	print STDERR "Found stock name $stock_name\n";
+      } else {
+	$stock_name_errors{$line_number} = "Line $line_number: stock name $stock_name not found";
+      }
+    }
+
+    if (!$plot_name) {
+      $plot_name_errors{$line_number} = "Line $line_number: plot name is missing";
+    } else {
+      my $unique_plot_name = $project_name."_".$stock_name."_plot_".$plot_name."_block_".$block_number."_rep_".$rep_number."_".$year."_".$location;
+      print STDERR "Unique plot:  $unique_plot_name\n";
+      if ($schema->resultset("Stock::Stock")->find({uniquename=>$unique_plot_name,})) {
+	$plot_name_errors{$line_number} = "Line $line_number: plot name $unique_plot_name is not unique";
+      }
+    }
+
+    #check for valid block number
+    if (!$block_number) {
+      $block_number_errors{$line_number} = "Line $line_number: block number is missing";
+    } else {
+      if (!($block_number =~ /^\d+?$/)) {
+	$block_number_errors{$line_number} = "Line $line_number: block number $block_number is not an integer";
+      } elsif ($block_number < 1 || $block_number > 1000000) {
+	$block_number_errors{$line_number} = "Line $line_number: block number $block_number is out of range";
+      }
+    }
+
+    #check for valid rep number
+    if (!$rep_number) {
+      $rep_number_errors{$line_number} = "Line $line_number: rep number is missing";
+    } else {
+      if (!($rep_number =~ /^\d+?$/)) {
+	$rep_number_errors{$line_number} = "Line $line_number: rep number $rep_number is not an integer";
+      } elsif ($rep_number < 1 || $rep_number > 1000000) {
+	$rep_number_errors{$line_number} = "Line $line_number: rep number $block_number is out of range";
+      }
+    }
+
+    $line_number++;
+  }
+
+  if (%plot_name_errors) {$error_hash{'plot_name_errors'}=\%plot_name_errors;}
+  if (%block_number_errors) {$error_hash{'block_number_errors'}=\%block_number_errors;}
+  if (%rep_number_errors) {$error_hash{'rep_number_errors'}=\%rep_number_errors;}
+  if (%stock_name_errors) {$error_hash{'stock_name_errors'}=\%stock_name_errors;}
+  if (%column_number_errors) {$error_hash{'column_number_errors'}=\%column_number_errors;}
+  if (%error_hash) {
+    die (\%error_hash);
+  }
+  return;
 }
 
 
+sub _formatted_string_from_error_hash {
+  my $error_hash_ref = shift;
+  my %error_hash = %{$error_hash_ref};
+  my $error_string ;
+  if ($error_hash{column_number_errors}) {
+    $error_string .= "<b>Column number errors</b><br><br>"._formatted_string_from_error_hash_by_type(\%{$error_hash{column_number_errors}})."<br><br>";
+  }
+  if ($error_hash{stock_name_errors}) {
+    $error_string .= "<b>Stock name errors</b><br><br>"._formatted_string_from_error_hash_by_type(\%{$error_hash{stock_name_errors}})."<br><br>";
+  }
+  if ($error_hash{'plot_name_errors'}) {
+    $error_string .= "<b>Plot name errors</b><br><br>"._formatted_string_from_error_hash_by_type(\%{$error_hash{'plot_name_errors'}})."<br><br>";
+  }
+  if ($error_hash{'block_number_errors'}) {
+    $error_string .= "<b>Block number errors</b><br><br>"._formatted_string_from_error_hash_by_type(\%{$error_hash{'block_number_errors'}})."<br><br>";
+  }
+  if ($error_hash{'rep_number_errors'}) {
+    $error_string .= "<b>Rep number errors</b><br><br>"._formatted_string_from_error_hash_by_type(\%{$error_hash{'rep_number_errors'}})."<br><br>";
+  }
+  return $error_string;
+}
 
+sub _formatted_string_from_error_hash_by_type {
+  my $error_hash_ref = shift;
+  my %error_hash = %{$error_hash_ref};
+  my $error_string;
+  foreach my $key (sort { $a <=> $b} keys %error_hash) {
+    $error_string .= $error_hash{$key} . "<br>";
+  }
+  return $error_string;
+}
 
-
-
-# sub upload_trial_layout : PATH('/trial/upload_trial_layout') : Args(0) {
-#    my ($self, $c) = @_;
-#    #my @response_list;
-#    my $the_result = { error => 'here is a result', };
-#    #push @response_list, $the_result;
-#    #$c->stash->{rest} = \@response_list;
-#    $c->stash->{rest} = {error => "Testing the error" };
-#    $c->response->body($the_result);
-#    return;
-
-# }
 
 1;
