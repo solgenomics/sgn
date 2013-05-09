@@ -1,0 +1,38 @@
+<%doc>
+
+displays list of GS populations evaluated for a trait.
+
+</%doc>
+
+<%args>
+
+$result
+$form
+$pager
+$page_links
+$query
+$trait_id
+
+</%args>
+
+<& /page/columnar_table.mas,
+     headings    => ['',  'Projects', 'Description', 'location', 'Year' ],
+     data        => $result,
+    __alt_freq   => 2,
+    __alt_width  => 1,
+    __align      => 'l'
+ &>
+ 
+  <& /page/pagination_control.mas, 
+     pager     => $pager, 
+    link_maker => $page_links 
+  &> 
+
+</&>
+
+
+
+
+
+
+

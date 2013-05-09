@@ -1,0 +1,29 @@
+<%doc>
+
+=head1 NAME 
+
+error.mas - error display
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$error
+
+</%args>
+
+
+<& /page/page_title.mas, title => "Oops..something is missing" &>
+<&| /page/info_section.mas,
+  title => "Error occured!",
+&>
+
+<% $error %>
+
+</&>

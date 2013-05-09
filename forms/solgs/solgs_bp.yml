@@ -1,0 +1,29 @@
+<%doc>
+
+=head1 NAME 
+
+/search/solgs.mas - a view for solgs search form - startpage for GEBV prediction model building
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$form
+
+</%args>
+
+
+<& /page/page_title.mas, title => "solGS: model build stage 1 of &#8734 " &>
+<&| /page/info_section.mas,
+  title => "Search for a trait ",
+&>
+
+<% $form %>
+
+</&>

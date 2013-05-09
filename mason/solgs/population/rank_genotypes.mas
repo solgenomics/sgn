@@ -1,0 +1,83 @@
+<%doc>
+
+=head1 NAME
+ 
+population/rank_genotypes.mas - displays a form for ranking genotypes based on weighted GEBVs of multiple traits
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$pop_id
+$prediction_pop_id
+$analyzed_traits
+
+</%args>
+
+<%perl>
+
+my $trait_rows;
+my $cnt = 1;
+
+foreach (@$analyzed_traits)
+{    
+  if ($_) 
+    {
+      my $rw_b = qq | <tr> | if $cnt == 1;
+      my $rw_e = qq | </tr> | if $cnt == 3;
+      my $row  = <<ROW;    
+                   $rw_b                     
+                   <td>
+                     $_: <input type  = "text" 
+                                name  = $_
+                                size  = 5px
+                                >
+                   </td>      
+                 $rw_e
+ROW
+  
+      $cnt++;   
+      $cnt = 0 if $cnt == 3; 
+      $trait_rows .=  $row;
+    }
+}
+
+</%perl>
+
+<& /util/import_javascript.mas, classes => [ "solGS.rankGenotypes"] &>
+
+<&| /page/info_section.mas, 
+    collapsible => 1, 
+    collapsed   => 0, 
+    title       => "Rank Genotypes based on GEBV of multiple traits"
+&> 
+  
+<p>Fill in the relative weight you want to apply to each trait.</p>
+<div id="mulitple_traits">
+ <div id="rel_gebv_form">
+   <table>
+     <% $trait_rows %>
+     <tr>      
+       <td>
+         <input type    = "submit" 
+                value   = "rank"
+                name    = "rank"
+                id      = "rank_genotypes"               
+                onclick = "rankGenotypes.gebvWeights('<% $pop_id %>', '<% $prediction_pop_id %>')" >
+       </td>     
+     </tr>
+   </table>
+</div>
+ 
+
+<& /solgs/model/top_genotypes.mas &> 
+
+</div>
+
+</&>

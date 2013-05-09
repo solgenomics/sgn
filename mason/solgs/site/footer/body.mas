@@ -1,0 +1,20 @@
+<%init>
+  my $feedback_email = eval{ $c->get_conf('email') };
+$feedback_email = $feedback_email ? qq|<a class="footer" href="mailto:$feedback_email">$feedback_email</a>|
+  : '<span style="font-weight: bold; color: red">[email not set]</b>';
+</%init>
+
+<!-- BEGIN FOOTER-->
+</td>
+</tr>
+<tr>
+  <td>
+    <hr/>
+    <!--add your site's footer here-->
+    <% $feedback_email %>
+    <hr/>
+  </td>
+</tr>
+</table>
+</div>
+
