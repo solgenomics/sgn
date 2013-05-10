@@ -1246,6 +1246,7 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\d]+)(?:/([\d+]+))?
      {
          my $acronym_pairs = $self->get_acronym_pairs($c);
          my $trait_name;
+         my $trait_id;
          if ($acronym_pairs)
          {
              foreach my $r (@$acronym_pairs) 
@@ -1256,14 +1257,16 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\d]+)(?:/([\d+]+))?
                      $trait_name =~ s/\n//g;
                      $c->stash->{trait_name} = $trait_name;
                      $c->stash->{trait_abbr} = $r->[0];
+                     $trait_id   =  $c->model('solGS')->get_trait_id($c, $trait_name);
+
                  }
              }
 
          }
 
-         my $trait_id   = $c->model('solGS')->get_trait_id($c, $trait_name);
+         $self->get_trait_name($c, $trait_id);
          my $trait_abbr = $c->stash->{trait_abbr}; 
-         
+        
          my $dir = $c->stash->{solgs_cache_dir};
          opendir my $dh, $dir or die "can't open $dir: $!\n";
         
@@ -1615,15 +1618,23 @@ sub analyzed_traits {
     my $dir = $c->stash->{solgs_cache_dir};
     opendir my $dh, $dir or die "can't open $dir: $!\n";
     
-    my @files  = map { $_ =~ /($pop_id)/ ? $_ : 0 } 
-                 grep { /gebv_kinship_[a-zA-Z0-9]/ && -f "$dir/$_" } 
-                 readdir($dh);   
-    closedir $dh;                     
+   
+   my @all_files =   grep { /gebv_kinship_[a-zA-Z0-9]/ && -f "$dir/$_" } 
+                  readdir($dh); 
+    closedir $dh;
+
+    my @traits_files = grep {/($pop_id)/} @all_files;
     
-    my @traits = map { s/gebv|kinship|_|($pop_id)//g ? $_ : 0} @files;
-  
+    my @traits;
+    foreach  (@traits_files) 
+    {                     
+        $_ =~ s/gebv_kinship_//;
+        $_ =~ s/$pop_id|_//g;
+        push @traits, $_;
+    }
+
     $c->stash->{analyzed_traits} = \@traits;
-    $c->stash->{analyzed_traits_files} = \@files;
+    $c->stash->{analyzed_traits_files} = \@traits_files;
 }
 
 
