@@ -2169,31 +2169,31 @@ Run for every request to the site.
 
 =cut
 
-sub auto : Private {
-    my ($self, $c) = @_;
-    CatalystX::GlobalContext->set_context( $c );
-    $c->stash->{c} = $c;
-    weaken $c->stash->{c};
+# sub auto : Private {
+#     my ($self, $c) = @_;
+#     CatalystX::GlobalContext->set_context( $c );
+#     $c->stash->{c} = $c;
+#     weaken $c->stash->{c};
 
-    $self->get_solgs_dirs($c);
+#     $self->get_solgs_dirs($c);
   
-    # gluecode for logins
-    #
-#  #   unless( $c->config->{'disable_login'} ) {
-   #      my $dbh = $c->dbc->dbh;
-   #      if ( my $sp_person_id = CXGN::Login->new( $dbh )->has_session ) {
+#     # gluecode for logins
+#     #
+# #  #   unless( $c->config->{'disable_login'} ) {
+#    #      my $dbh = $c->dbc->dbh;
+#    #      if ( my $sp_person_id = CXGN::Login->new( $dbh )->has_session ) {
 
-   #          my $sp_person = CXGN::People::Person->new( $dbh, $sp_person_id);
+#    #          my $sp_person = CXGN::People::Person->new( $dbh, $sp_person_id);
 
-   #          $c->authenticate({
-   #              username => $sp_person->get_username(),
-   #              password => $sp_person->get_password(),
-   #          });
-   #      }
-   # }
+#    #          $c->authenticate({
+#    #              username => $sp_person->get_username(),
+#    #              password => $sp_person->get_password(),
+#    #          });
+#    #      }
+#    # }
 
-    return 1;
-}
+#     return 1;
+# }
 
 
 
