@@ -382,6 +382,12 @@ sub default_toolbar_data {
                     desc =>
 'A web interface for uploading raw QTL data, on-the-fly QTL mapping, linking predicted QTLs to relevant genetic and genomic data in SGN, and search interface for QTLs.'
                 },
+                {
+                    name => 'solGS: Genomic Selection',
+                    link => '/solgs/search',
+                    desc =>
+                        'Builds genomic selection models and predicts genomic estimated breeding values. Prediction is done using Ridge Regression - Best Linear Unbiased Prediction (RR-BLUP).'
+                },
                 #Molecular Biology
                 { name => "Molecular Biology" },
 
