@@ -151,12 +151,15 @@ sub search : Path('/solgs/search') Args() {
   
     $self->load_yaml_file($c, 'search/solgs.yml');
     my $form = $c->stash->{form};
+    
     $self->gs_traits_index($c);
     my $gs_traits_index = $c->stash->{gs_traits_index};
     
     my $project_rs = $c->model('solGS')->all_projects($c);
     $self->projects_links($c, $project_rs);
     my $projects = $c->stash->{projects_pages};
+
+   
 
     my $query;
     if ($form->submitted_and_valid) 
@@ -1869,7 +1872,7 @@ sub genotype_file  {
     my $pop_id     = $c->stash->{pop_id};
     
     die "Population id must be provided to get the genotype data set." if !$pop_id;
-  
+   
     my $file_cache  = Cache::File->new(cache_root => $c->stash->{solgs_cache_dir});
     $file_cache->purge();
    
@@ -2163,37 +2166,18 @@ Attempt to render a view, if needed.
     
 #}
 
-=head2 auto
+=head2 begin
 
-Run for every request to the site.
+Run for every request.
 
 =cut
 
-# sub auto : Private {
-#     my ($self, $c) = @_;
-#     CatalystX::GlobalContext->set_context( $c );
-#     $c->stash->{c} = $c;
-#     weaken $c->stash->{c};
+sub begin : Private {
+    my ($self, $c) = @_;
 
-#     $self->get_solgs_dirs($c);
+    $self->get_solgs_dirs($c);
   
-#     # gluecode for logins
-#     #
-# #  #   unless( $c->config->{'disable_login'} ) {
-#    #      my $dbh = $c->dbc->dbh;
-#    #      if ( my $sp_person_id = CXGN::Login->new( $dbh )->has_session ) {
-
-#    #          my $sp_person = CXGN::People::Person->new( $dbh, $sp_person_id);
-
-#    #          $c->authenticate({
-#    #              username => $sp_person->get_username(),
-#    #              password => $sp_person->get_password(),
-#    #          });
-#    #      }
-#    # }
-
-#     return 1;
-# }
+}
 
 
 
