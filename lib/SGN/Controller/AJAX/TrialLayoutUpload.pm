@@ -114,11 +114,148 @@ sub upload_trial_layout_POST : Args(0) {
   };
   if ($error) {return;}
 
+  print STDERR "adding to database\n";
+  try { #add file contents to the database
+    _add_trial_layout_to_database($self,$c,\@contents);
+  } catch {
+    $c->stash->{rest} = {error => "File upload failed: $_"};
+    print "add error $_\n";
+  };
+
+  if ($error) {
+    print "there was an error\n";
+    return;
+  } else {
+     $c->stash->{rest} = {success => "1"};
+  }
+
+
+
   print STDERR  "First line is:\n" . $contents[0] . "\n";
   print STDERR "You shouldn't see this if there is an error in the upload\n";
 }
 
+sub _add_trial_layout_to_database {
+  my $self = shift;
+  my $c = shift;
+  my $contents_ref = shift;
+  my @contents = @{$contents_ref};
+  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+  my $year = $c->req->param('add_project_year');
+  my $location = $c->req->param('add_project_location');
+  my $project_name = $c->req->param('add_project_name');
+  my $project_description = $c->req->param('add_project_description');
 
+  print STDERR "loc: $location\n";
+
+my $plot_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
+    { name   => 'plot',
+      cv     => 'stock type',
+      db     => 'null',
+      dbxref => 'plot',
+    });
+
+my $geolocation = $schema->resultset("NaturalDiversity::NdGeolocation")->find_or_create(
+    {
+        description => $location, #add this as an option
+    } ) ;
+
+my $organism = $schema->resultset("Organism::Organism")->find_or_create(
+    {
+	genus   => 'Manihot',
+	species => 'Manihot esculenta',
+    } );
+
+
+
+#???????????????????????
+my $plot_exp_cvterm = $schema->resultset('Cv::Cvterm')->create_with(
+    { name   => 'plot experiment',
+      cv     => 'experiment type',
+      db     => 'null',
+      dbxref => 'plot experiment',
+    });
+
+  #create project
+  my $project = $schema->resultset('Project::Project')->find_or_create(
+	{
+	    name => $project_name,
+	 description => $location,
+	}
+	);
+
+ my $projectprop_year = $project->create_projectprops( { 'project year' => $year,}, {autocreate=>1});
+
+  print STDERR "sub for adding to database\n";
+  print "project: $project_name\n";
+  print "project desc: $project_description\n";
+
+
+
+
+my $organism_id = $organism->organism_id();
+
+
+
+
+  foreach my $content_line (@contents) {
+    my @line_contents = split /\t/, $content_line;
+    my $plot_name = $line_contents[0];
+    my $block_number = $line_contents[1];
+    my $rep_number = $line_contents[2];
+    my $stock_name = $line_contents[3];
+    my $stock;
+    my $stock_rs = $schema->resultset("Stock::Stock")->search(
+								{
+								 -or => [
+									 'lower(me.uniquename)' => { like => lc($stock_name) },
+									 -and => [
+										  'lower(type.name)'       => { like => '%synonym%' },
+										  'lower(stockprops.value)' => { like => lc($stock_name) },
+										 ],
+									],
+								},
+								{
+								 join => { 'stockprops' => 'type'} ,
+								 distinct => 1
+								}
+							       );
+      if ($stock_rs->count >1 ) {
+	die ("multiple stocks found matching $stock_name");
+      } elsif ($stock_rs->count == 1) {
+	$stock = $stock_rs->first;
+      } else {
+	die ("no stocks found matching $stock_name");
+      }
+
+
+    my $unique_plot_name = $project_name."_".$stock_name."_plot_".$plot_name."_block_".$block_number."_rep_".$rep_number."_".$year."_".$location;
+
+      my $plot = $schema->resultset("Stock::Stock")->find_or_create(
+            { organism_id => $stock->organism_id(),
+	      name       => $unique_plot_name,
+	      uniquename => $unique_plot_name,
+	      type_id => $plot_cvterm->cvterm_id,
+            } );
+
+    my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create(
+            {
+                nd_geolocation_id => $geolocation->nd_geolocation_id(),
+                type_id => $plot_exp_cvterm->cvterm_id(),
+            } );
+
+#link to the project
+        $experiment->find_or_create_related('nd_experiment_projects', {
+            project_id => $project->project_id()
+                                            } );
+        #link the experiment to the stock
+        $experiment->find_or_create_related('nd_experiment_stocks' , {
+            stock_id => $plot->stock_id(),
+            type_id  =>  $plot_exp_cvterm->cvterm_id(),
+                                            });
+
+    }
+}
 
 sub _verify_trial_layout_header {
   my $header_content_ref = shift;
@@ -165,6 +302,7 @@ sub _verify_trial_layout_contents {
     my $block_number = $line_contents[1];
     my $rep_number = $line_contents[2];
     my $stock_name = $line_contents[3];
+
 
 
 

@@ -9,7 +9,7 @@
 
 <div id="add_project_dialog"  class="ui-widget" >
 
-<form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="create_new_trial_form" >
+<form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="create_new_trial_form" name="create_new_trial_form" >
 <table><tr><td>Trial name</td><td><input id="add_project_name" name="add_project_name" /></td></tr>
 <tr><td>Year(s)</td><td><input id="add_project_year" name="add_project_year"/></td></tr>
 
@@ -29,7 +29,7 @@ foreach my $location (@locations) {
 
 <tr><td colspan="2">Description</td></tr>
 <tr><td colspan="2">
-<textarea id="add_project_description" cols="60" >
+<textarea id="add_project_description" name="add_project_description" form="create_new_trial_form" cols="60" >
 </textarea>
 </td></tr>
 
