@@ -2138,10 +2138,10 @@ sub cache_file {
     $c->stash->{$cache_data->{stash_key}} = $file;
 }
 
-sub default :Path {
-    my ( $self, $c ) = @_; 
-    $c->forward('search');
-}
+#sub default :Path {
+#    my ( $self, $c ) = @_; 
+#    $c->forward('search');
+#}
 
 
 
