@@ -1107,7 +1107,7 @@ sub list_of_prediction_pops {
     my ($self, $c, $training_pop_id, $download_prediction) = @_;
    
     my $prediction_pop_id = 268;
-    my $pred_pop_name = qq | <a href="/model/$training_pop_id/prediction/$prediction_pop_id" onclick="solGS.waitPage()">Barley prediction population test</a> |;
+    my $pred_pop_name = qq | <a href="/solgs/model/$training_pop_id/prediction/$prediction_pop_id" onclick="solGS.waitPage()">Barley prediction population test</a> |;
 
     my $pred_pop = [ ['', $pred_pop_name, 'barley prediction population from crosses...', 'F1', '2013', $download_prediction]];
     
