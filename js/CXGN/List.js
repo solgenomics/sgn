@@ -335,7 +335,7 @@ function pasteList(div_name) {
     jQuery('#'+div_name).text(list_text);
 }
 
-function addTextToListMenu(div) { 
+function addToListMenu(div) { 
     var lo = new CXGN.List();
     var html = lo.listSelect(div);
     html = html + '<input id="'+div+'_button" type="button" value="add to list" />';
@@ -344,31 +344,13 @@ function addTextToListMenu(div) {
     
     jQuery('#'+div+'_button').click( 
 	function() { 
-	    var text = jQuery('textarea#div').val();
+	    var text = jQuery('textarea#'+div).val();
 	    var list_id = jQuery('#'+div+'_list_select').val();
 	    lo.addToList(list_id, text);
 	    lo.renderLists('list_dialog');
 	}
     );
 }
-
-function addSelectToListMenu(div) { 
-    var lo = new CXGN.List();
-    var html = lo.listSelect(div);
-    html = html + '<input id="'+div+'_button" type="button" value="add to list" />';
-    
-    document.write(html);
-    
-    jQuery('#'+div+'_button').click( 
-	function() { 
-	    var selected_items = jQuery('#'+div).val();
-	    var list_id = jQuery('#'+div+'_list_select').val();
-            addArrayToList(selected_items, list_id);
-	    lo.renderLists('list_dialog');
-	}
-    );
-}
-
 
 // add the text in a div to a list
 function addDivToList(div_name) { 
@@ -401,7 +383,7 @@ function addMultipleItemsToList(div, list_id) {
     var content = jQuery('#'+div).val();
     if (content == '') { 
 	alert("No items - Please enter items to add to the list.");
-return;
+	return;
     }
     var items = content.split("\n");
     
@@ -416,21 +398,7 @@ return;
     if (duplicates.length >0) { 
 	alert("The following items were not added because they are already in the list: "+ duplicates.join(", "));
     }
-lo.renderLists('list_dialog');
-}
-
-function addArrayToList(items, list_id) { 
-var lo = new CXGN.List();
-   var duplicates = new Array();
-    for (var n=0; n<items.length; n++) { 
-	var id = lo.addItem(list_id, items[n]);
-	if (id == 0) { 
-	    duplicates.push(items[n]);
-	}
-    }
-    if (duplicates.length >0) { 
-	alert("The following items were not added because they are already in the list: "+ duplicates.join(", "));
-    }
+    lo.renderLists('list_dialog');
 }
 
 function deleteList(list_id) { 
