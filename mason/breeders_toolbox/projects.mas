@@ -114,221 +114,248 @@ foreach my $location (@locations) {
 
 <script defer="defer">
 
- jQuery(document).ready(function() {
-
-
- jQuery("#format_type_radio").change(function(){
-     var method_to_use = jQuery('.format_type:checked').val();
-     if (method_to_use == "create_with_upload") {
-       jQuery("#get_file_upload_data").show();
-       jQuery( "#add_project_dialog" ).dialog( "option", "height", 400 );
-     } else {
-       jQuery("#get_file_upload_data").hide();
-       jQuery( "#add_project_dialog" ).dialog( "option", "height", 320 );
-}
-   
-     //jQuery("#get_file_upload_data").toggle();  // show if it is checked, otherwise hide
-
-   });
-
-
-  jQuery('#add_project_dialog').dialog( {
-     autoOpen: false,
-     modal: true,
-     width: 500,
-     height: 320,
-     title: "Add new trial",
-
-     buttons:  { "Cancel" : function() { jQuery('#add_project_dialog').dialog("close"); }, 
-                     "Add": function() { 
-                                var name = jQuery('#add_project_name').val();
-                                var year = jQuery('#add_project_year').val();
-                                var desc = jQuery('textarea#add_project_description').val();
-                                var method_to_use = jQuery('.format_type:checked').val();
-
-                                //alert('Name and year = '+ name + ' ' + year);
-
-                                if (name === '' || year === '' || desc === '') { alert('Name, year and description are required.'); return; }
-
-                                if (method_to_use == "empty") {
-                                   alert('adding a project');
-                                   save_project_info(name, year, desc); 
-                                }
-
-                                if (method_to_use == "create_with_upload") {
-                                   var uploadFile = jQuery("#trial_upload_file").val();
-                                   jQuery('#create_new_trial_form').attr("action","/trial/upload_trial_layout");
-                                   if (uploadFile === '') { alert("Please select a file");return;}
-
-                                   jQuery("#create_new_trial_form").submit();
-                                }
-                               
-                                //jQuery( this).dialog("close"); 
-                                //location.reload();
-                             } 
-               }
-
-});
-
-  jQuery('#add_project_link').click( function() { open_project_dialog() } );
-
-  function open_project_dialog() { 
-     jQuery('#add_project_dialog').dialog("open");
-  }
-
-  function save_project_info(name, year, desc) { 
-     alert('data = '+name +' '+year+' '+desc);
-     new jQuery.ajax( {
-       type: 'GET',
-       async: false,
-       url: '/ajax/breeders/project/insert',
-       data: { 'project_name': name,  'project_description': desc, 'year': year },
-       success: function(response) { 
-                  if (response.error) { alert(response.error); }
-                  else { alert('The trial information was saved.'); 
-                  }
-                },
-  error: function() { alert('An error occurred. sorry'); }
-
-       
-
-  });
-     
-  }
-    
-  jQuery('#experimental_design_dialog').dialog( {
-     autoOpen: false,
-     buttons:  { "Cancel" : function() { jQuery('#experimental_design_dialog').dialog("close"); }, 
-                     "Continue": function() { continue_design(); } },
-     modal: true,
-     width: 500,
-     height: 300,
-     title: "Field plot design"
-
-});
-
-  jQuery('#completely_randomized_design_dialog').dialog( {
-     autoOpen: false,
-     buttons:  { "Cancel" : function() { jQuery('#completely_randomized_design_dialog').dialog("close"); }, 
-                     "Create": function() { create_design(); } },
-     modal: true,
-     width: 500,
-     height: 300,
-     title: "Completely randomized field plot design"
-
-});
-
-  jQuery('#complete_block_design_dialog').dialog( {
-     autoOpen: false,
-     buttons:  { "Cancel" : function() { jQuery('#complete_block_design_dialog').dialog("close"); }, 
-                     "Create": function() { create_design(); } },
-     modal: true,
-     width: 500,
-     height: 300,
-     title: "Complete randomized block field plot design"
-
-});
-
-  jQuery('#incomplete_block_design_dialog').dialog( {
-     autoOpen: false,
-     buttons:  { "Cancel" : function() { jQuery('#incomplete_block_design_dialog').dialog("close"); }, 
-                     "Create": function() { create_design(); } },
-     modal: true,
-     width: 500,
-     height: 300,
-     title: "Incomplete randomized block field plot design"
-
-});
-
-  jQuery('#experimental_design_link').click( function() { open_experimental_design_dialog() } );
-
-  function open_experimental_design_dialog() { 
-      
-
-     jQuery('#experimental_design_dialog').dialog("open");
-  }
-
-
-  function continue_design() {
-      var design = jQuery('#Design').val();
-      if (design == 'CRD') {
-           jQuery('#completely_randomized_design_dialog').dialog("open");
-      }
-      if (design == 'CBD') {
-           jQuery('#complete_block_design_dialog').dialog("open");
-      }
-      if (design == 'IBD') {
-           jQuery('#incomplete_block_design_dialog').dialog("open");
-      }
-  }
-
-  function create_design() { 
-     var name = jQuery('#project_name').val();
-     var year = jQuery('#project_year').val();
-     var desc = jQuery('#project_description').val();
-
-      if (name == '' || year == '') { alert('Name and year are required.');  return; }
-   
-     new jQuery.ajax( {
-       type: 'GET',
-       url: '/breeders/project/insert',
-       data: { 'project_name': name,  'project_description': desc, 'year': year },
-
-     }).done(alert("Done saving project info"));
-     jQuery('#add_project_dialog').dialog("close");
-  }
-});  
-
-
-
-jQuery('#create_new_trial_form').iframePostForm
-	({
-           json : true,
-           post : function ()
-	   {
-              var uploadTrialLayoutFile = jQuery("#trial_upload_file").val();
-              if (uploadTrialLayoutFile === '')
-              {
-                alert("No file selected");
-              }
-           },
-           complete : function (response)
-           {
-
-            if (response.error_string) {
-               //alert(response.error_string);
-                jQuery( "#upload_trial_error_display tbody" ).html('');
-               jQuery( "#upload_trial_error_display tbody" ).append(response.error_string);
-
-               jQuery(function() {
-                 jQuery( "#upload_trial_error_display" ).dialog({
-                 modal: true,
-                 title: "Errors in uploaded file",
-                 buttons: {
-                  Ok: function() {
-                  jQuery( this ).dialog( "close" );
-                  }
-                 }
-               });
-              });
-             return;
-             }
-
-              if (response.error) {
-                alert(response.error);
-                return;
-              } 
-
-            if (response.success) {
-               alert("File uploaded successfully");
-              }
-
-           }
+jQuery(document).ready(function() {
+    jQuery("#format_type_radio").change(function() {
+        var method_to_use = jQuery('.format_type:checked').val();
+        if (method_to_use == "create_with_upload") {
+            jQuery("#get_file_upload_data").show();
+            jQuery("#add_project_dialog").dialog("option", "height", 400);
+        } else {
+            jQuery("#get_file_upload_data").hide();
+            jQuery("#add_project_dialog").dialog("option", "height", 320);
+        }
+        //jQuery("#get_file_upload_data").toggle();  // show if it is checked, otherwise hide
         });
 
+    jQuery('#add_project_dialog').dialog({
+        autoOpen: false,
+        modal: true,
+        width: 500,
+        height: 320,
+        title: "Add new trial",
+        buttons: {
+            "Cancel": function() {
+                jQuery('#add_project_dialog').dialog("close");
+            },
+            "Add": function() {
+                var name = jQuery('#add_project_name').val();
+                var year = jQuery('#add_project_year').val();
+                var desc = jQuery('textarea#add_project_description').val();
+                var method_to_use = jQuery('.format_type:checked').val();
+                if (name === '' || year === '' || desc === '') {
+                    alert('Name, year and description are required.');
+                    return;
+                }
+                if (method_to_use == "empty") {
+                    alert('adding a project');
+                    save_project_info(name, year, desc);
+                }
+                if (method_to_use == "create_with_upload") {
+                    var uploadFile = jQuery("#trial_upload_file").val();
+                    jQuery('#create_new_trial_form').attr("action", "/trial/upload_trial_layout");
+                    if (uploadFile === '') {
+                        alert("Please select a file");
+                        return;
+                    }
 
+                    jQuery("#create_new_trial_form").submit();
+                }
 
+                //jQuery( this).dialog("close"); 
+                //location.reload();
+                }
+        }
 
+    });
+
+    jQuery('#add_project_link').click(function() {
+        open_project_dialog()
+        });
+
+    function open_project_dialog() {
+        jQuery('#add_project_dialog').dialog("open");
+    }
+
+    function save_project_info(name, year, desc) {
+        alert('data = ' + name + ' ' + year + ' ' + desc);
+        new jQuery.ajax({
+            type: 'GET',
+            async: false,
+            url: '/ajax/breeders/project/insert',
+            data: {
+                'project_name': name,
+                'project_description': desc,
+                'year': year
+            },
+            success: function(response) {
+                if (response.error) {
+                    alert(response.error);
+                } else {
+                    alert('The trial information was saved.');
+                }
+            },
+            error: function() {
+                alert('An error occurred. sorry');
+            }
+
+        });
+
+    }
+
+    jQuery('#experimental_design_dialog').dialog({
+        autoOpen: false,
+        buttons: {
+            "Cancel": function() {
+                jQuery('#experimental_design_dialog').dialog("close");
+            },
+            "Continue": function() {
+                continue_design();
+            }
+        },
+        modal: true,
+        width: 500,
+        height: 300,
+        title: "Field plot design"
+
+    });
+
+    jQuery('#completely_randomized_design_dialog').dialog({
+        autoOpen: false,
+        buttons: {
+            "Cancel": function() {
+                jQuery('#completely_randomized_design_dialog').dialog("close");
+            },
+            "Create": function() {
+                create_design();
+            }
+        },
+        modal: true,
+        width: 500,
+        height: 300,
+        title: "Completely randomized field plot design"
+
+    });
+
+    jQuery('#complete_block_design_dialog').dialog({
+        autoOpen: false,
+        buttons: {
+            "Cancel": function() {
+                jQuery('#complete_block_design_dialog').dialog("close");
+            },
+            "Create": function() {
+                create_design();
+            }
+        },
+        modal: true,
+        width: 500,
+        height: 300,
+        title: "Complete randomized block field plot design"
+
+    });
+
+    jQuery('#incomplete_block_design_dialog').dialog({
+        autoOpen: false,
+        buttons: {
+            "Cancel": function() {
+                jQuery('#incomplete_block_design_dialog').dialog("close");
+            },
+            "Create": function() {
+                create_design();
+            }
+        },
+        modal: true,
+        width: 500,
+        height: 300,
+        title: "Incomplete randomized block field plot design"
+
+    });
+
+    jQuery('#experimental_design_link').click(function() {
+        open_experimental_design_dialog()
+        });
+
+    function open_experimental_design_dialog() {
+
+        jQuery('#experimental_design_dialog').dialog("open");
+    }
+
+    function continue_design() {
+        var design = jQuery('#Design').val();
+        if (design == 'CRD') {
+            jQuery('#completely_randomized_design_dialog').dialog("open");
+        }
+        if (design == 'CBD') {
+            jQuery('#complete_block_design_dialog').dialog("open");
+        }
+        if (design == 'IBD') {
+            jQuery('#incomplete_block_design_dialog').dialog("open");
+        }
+    }
+
+    function create_design() {
+        var name = jQuery('#project_name').val();
+        var year = jQuery('#project_year').val();
+        var desc = jQuery('#project_description').val();
+
+        if (name == '' || year == '') {
+            alert('Name and year are required.');
+            return;
+        }
+
+        new jQuery.ajax({
+            type: 'GET',
+            url: '/breeders/project/insert',
+            data: {
+                'project_name': name,
+                'project_description': desc,
+                'year': year
+            },
+
+            }).done(alert("Done saving project info"));
+        jQuery('#add_project_dialog').dialog("close");
+    }
+});
+
+jQuery('#create_new_trial_form').iframePostForm({
+    json: true,
+    post: function() {
+        var uploadTrialLayoutFile = jQuery("#trial_upload_file").val();
+        if (uploadTrialLayoutFile === '') {
+            alert("No file selected");
+        }
+    },
+    complete: function(response) {
+
+        if (response.error_string) {
+            //alert(response.error_string);
+            jQuery("#upload_trial_error_display tbody").html('');
+            jQuery("#upload_trial_error_display tbody").append(response.error_string);
+
+            jQuery(function() {
+                jQuery("#upload_trial_error_display").dialog({
+                    modal: true,
+                    title: "Errors in uploaded file",
+                    buttons: {
+                        Ok: function() {
+                            jQuery(this).dialog("close");
+                        }
+                    }
+                });
+            });
+            return;
+        }
+
+        if (response.error) {
+            alert(response.error);
+            return;
+        }
+
+        if (response.success) {
+            alert("File uploaded successfully");
+        }
+
+    }
+});
 
 </script>
 
