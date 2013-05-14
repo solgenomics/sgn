@@ -26,6 +26,7 @@ jQuery(document).ready(function() {
      buttons:  { "Cancel" : function() { jQuery('#add_location_dialog').dialog("close"); }, 
                      "Add": function() { save_location_info(); } },
      modal: true,
+     position: ['top', 75],
      width: 500,
      height: 150,
      title: "Add new location"

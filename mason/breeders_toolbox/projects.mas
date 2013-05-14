@@ -48,7 +48,6 @@ foreach my $location (@locations) {
 </div>
 
 <div id="trial_design_info" style = "display: none">
-<br>
 <hr/>
 <dt><label for="select_list">List of stocks to include:</label></dt>
 <dd>
@@ -152,12 +151,14 @@ foreach my $location (@locations) {
 jQuery(document).ready(function() {
     jQuery("#format_type_radio").change(function() {
         var method_to_use = jQuery('.format_type:checked').val();
-        if (method_to_use == "create_with_upload") {
+        if (method_to_use == "empty") {
+	    jQuery("#add_project_dialog").dialog("option", "height", 350);
+	}
+	if (method_to_use == "create_with_upload") {
             jQuery("#get_file_upload_data").show();
             jQuery("#add_project_dialog").dialog("option", "height", 400);
         } else {
             jQuery("#get_file_upload_data").hide();
-            jQuery("#add_project_dialog").dialog("option", "height", 320);
         }
         if (method_to_use == "create_with_design_tool") {
 	    var list = new CXGN.List();
@@ -166,22 +167,22 @@ jQuery(document).ready(function() {
             jQuery("#add_project_dialog").dialog("option", "height", 600);
 	} else {
 	    jQuery("trial_design_info").hide();
-            jQuery("#add_project_dialog").dialog("option", "height", 320);
 	}
         });
 
     jQuery("#select_design_method").change(function() {
 	//var design_method = "CRD";
 	var design_method = jQuery("#select_design_method").val();
-	alert(design_method);
 	if (design_method == "CRD") {
 	    jQuery("#completely_randomized_design_info").show();
+	    jQuery("#add_project_dialog").dialog("option", "height", 600);
 	}
 	else {
 	    jQuery("#completely_randomized_design_info").hide();
 	}
 	if (design_method == "CBD") {
 	    jQuery("#randomized_block_design_info").show();
+	    jQuery("#add_project_dialog").dialog("option", "height", 640);
 	}
 	else {
 	    jQuery("#randomized_block_design_info").hide();
@@ -193,7 +194,8 @@ jQuery(document).ready(function() {
         autoOpen: false,
         modal: true,
         width: 500,
-        height: 320,
+        height: 350,
+	position: ['top', 75],
         title: "Add new trial",
         buttons: {
             "Cancel": function() {
