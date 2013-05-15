@@ -1,4 +1,4 @@
-action: "/search/solgs"
+action: "/solgs/search"
 method: "POST"
 enctype: "multipart/form-data"
 
