@@ -7,143 +7,127 @@
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form','CXGN.List',] &>
 
-<div id="add_project_dialog"  class="ui-widget" >
+<div id="add_project_dialog" class="ui-widget">
+  <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="create_new_trial_form" name="create_new_trial_form">
+    <table>
+      <tr>
+        <td>Trial name</td>
+        <td>
+          <input id="add_project_name" name="add_project_name" />
+        </td>
+      </tr>
+      <tr>
+        <td>Year(s)</td>
+        <td>
+          <input id="add_project_year" name="add_project_year" />
+        </td>
+      </tr>
+      <tr>
+        <td>Location</td>
+        <td>
+          <select id="add_project_location" name="add_project_location">
+            <%perl>foreach my $location (@locations) { print "
+              <option value=".@$location[1].">".@$location[1]."</option>"; }</%perl>
+          </select>
+        </td>
+      </tr>
+      <tr>
+        <td colspan="2">Description</td>
+      </tr>
+      <tr>
+        <td colspan="2">
+          <textarea id="add_project_description" name="add_project_description" form="create_new_trial_form" cols="60"></textarea>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <div id="format_type_radio">
+            <input type="radio" id="format_radio1" name="radio" class="format_type" value="empty" checked="checked" />
+            <label for="radio1">Create empty trial</label>
+            <br>
+            <input type="radio" id="format_radio2" name="radio" class="format_type" value="create_with_upload" />
+            <label for="radio2">Create from uploaded file</label>
+            <br>
+            <input type="radio" id="format_radio3" name="radio" class="format_type" value="create_with_design_tool" />
+            <label for="radio3">Create using trial design tool</label>
+            <br>
+          </div>
+        </td>
+      </tr>
+    </table>
+    <div id="get_file_upload_data" style="display: none">
+      <br>
+      
+      <dt><label for="trial_upload_file">Upload file:</label></dt>
 
-<form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="create_new_trial_form" name="create_new_trial_form" >
-<table><tr><td>Trial name</td><td><input id="add_project_name" name="add_project_name" /></td></tr>
-<tr><td>Year(s)</td><td><input id="add_project_year" name="add_project_year"/></td></tr>
+      <dd>
+        <input type="file" name="trial_upload_file" id="trial_upload_file" encoding="multipart/form-data" />
+      </dd>
+    </div>
+    <div id="trial_design_info" style="display: none">
+      <hr> <dt><label for="select_design_method">Design type:</label></dt>
 
+      <dd>
+        <select id="select_design_method" name="select_design_method" placeholder="method">
+          <option value=CRD>Completely Randomized</option>
+          <option value=CBD>Complete Block</option>
+          <option value=ALP>Alpha Lattice</option>
+          <option value=AUG>Augmented</option>
+        </select>
+      </dd> 
+      
+      <dt><label for="select_list">List of stocks to include:</label></dt>
 
+      <dd>
+        <div id="select_list" name="select_list"></div>
+      </dd>
+      <div id="list_of_checks_secton" style="display: none"> 
 
+	<dt><label for="select_list_of_checks">List of stocks to include as checks:</label></dt>
 
-<tr><td>Location</td><td>
-<select id="add_project_location" name="add_project_location">
-<%perl>
-foreach my $location (@locations) {
-	print "<option value=".@$location[1].">".@$location[1]."</option>";
-}
-</%perl>
-</select></td></tr>
-
-
-
-<tr><td colspan="2">Description</td></tr>
-<tr><td colspan="2">
-<textarea id="add_project_description" name="add_project_description" form="create_new_trial_form" cols="60" >
-</textarea>
-</td></tr>
-
-<tr><td>
-  <div id="format_type_radio">
-    <input type="radio" id="format_radio1" name="radio" class="format_type" value="empty" checked="checked"/><label for="radio1">Create empty trial</label><br>
-    <input type="radio" id="format_radio2" name="radio" class="format_type" value="create_with_upload"/><label for="radio2">Create from uploaded file</label><br>
-    <input type="radio" id="format_radio3" name="radio" class="format_type" value="create_with_design_tool"/><label for="radio3">Create using trial design tool</label><br>
-  </div>
-</td></tr>
-</table>
-<div id="get_file_upload_data" style = "display: none">
-<br>
-<dt><label for="trial_upload_file">Upload file:</label></dt>
-<dd><input type="file" name="trial_upload_file" id="trial_upload_file" encoding="multipart/form-data"/></dd>
+        <dd>
+          <div id="select_list_of_checks" name="select_list_of_checks"></div>
+        </dd>
+      </div>
+      <div id="design_info" name="design_info">
+	<div id="rep_count_section">
+	  <label for id="rep_count" style="display: inline-block; width: 200px;">Number of replicates:</label>
+	  <input id="rep_count" name="rep_count" />
+	  <br>
+	</div>
+        <div id="block_number_section" style="display: none" >
+	  <label for id="block_number" style="display: inline-block; width: 200px;">Number of blocks:</label>
+	  <input id="block_number" name="block_number" />
+	  <br>
+       	</div>
+        <div id="block_size_section" style="display: none">
+	  <label for id="block_size" style="display: inline-block; width: 200px;">Block size:</label>
+          <input id="block_size" name="block_size" />
+	  <br>
+        </div>
+        <div id="max_block_size_section" style="display: none">
+	  <label for id="max_block_size" style="display: inline-block; width: 200px;">Maximum block size:</label>
+          <input id="max_block_size" name="block_size" />
+	  <br>
+	</div>
+	  <label for id="plot_prefix" style="display: inline-block; width: 200px;">Plot name prefix:</label>
+	  <input id="plot_prefix" name="plot_prefix" />
+	  <br>
+	  <label for id="start_number" style="display: inline-block; width: 200px;">Plot start number:</label>
+          <input id="start_number" name="start_number" />
+	  <br>
+	  <label for id="increment" style="display: inline-block; width: 200px;">Plot number increment:</label>
+          <input id="increment" name="increment" />
+	  <br>
+      </div>
+    </div>
+  </form>
 </div>
 
-<div id="trial_design_info" style = "display: none">
-<hr/>
-<dt><label for="select_list">List of stocks to include:</label></dt>
-<dd>
-<div id="select_list" name="select_list">
-</div>
-</dd>
-
-<dt><label for="select_design_method">Design type:</label></dt>
-<dd>
-<select id="select_design_method" name="select_design_method">
-<option value=CRD>Completely Randomized</option>
-<option value=CBD>Complete Block</option>
-<option value=ALP>Alpha Lattice</option>
-<option value=AUG>Augmented</option>
-</select>
-</dd>
-
-<div id="completely_randomized_design_info" name="completely_randomized_design_info" >
-<table>
-<tr><td>Replications per stock</td><td><input id="rep_count" name="rep_count" /></td></tr>
-<tr><td>Plot name prefix</td><td><input id="plot_prefix" name="plot_prefix" /></td></tr>
-<tr><td>Plot start number</td><td><input id="start_number" name="start_number" /></td></tr>
-<tr><td>Plot number increment</td><td><input id="increment" name="increment" /></td></tr>
-</td></tr>
-</table>
-</div>
-
-<div id="randomized_block_design_info" name="randomized_block_design_info" style="display: none" >
-<table>
-<tr><td>Replications per stock</td><td><input id="rep_count" name="rep_count" /></td></tr>
-<tr><td>Number of blocks</td><td><input id="block_number" name="block_number" /></td></tr>
-<tr><td>Plot name prefix</td><td><input id="plot_prefix" name="plot_prefix" /></td></tr>
-<tr><td>Plot start number</td><td><input id="start_number" name="start_number" /></td></tr>
-<tr><td>Plot number increment</td><td><input id="increment" name="increment" /></td></tr>
-</td></tr>
-</table>
-</div>
-
-
-
-</div>
-</form>
-</div>
-
-
-
-
-<div id="experimental_design_dialog"  class="ui-widget" >
-<table><tr><td>Experiment name</td><td><input name="project_name" /></td></tr>
-<tr><td>Year</td><td><input id="project_year" name="add_project_year" /></td></tr>
-<tr><td>Design</td><td>
-<select id="Design" name="design">
-<option value=CRD>Completely Randomized</option>
-<option value=CBD>Complete Block</option>
-<option value=IBD>Incomplete Block</option>
-</select>
-<tr><td colspan="2">Description</td></tr>
-<tr><td colspan="2"><textarea name="project_description" cols="60" >
-</textarea>
-</td></tr>
-</table>
-</div>
-
-
-
-<div id="complete_block_design_dialog"  class="ui-widget" >
-<table>
-<tr><td>Number of breeding lines</td><td><input id="line_count" name="line_count" /></td></tr>
-<tr><td>Replications per line in each block</td><td><input id="rep_count" name="rep_count" /></td></tr>
-<tr><td>Number of blocks</td><td><input id="blocks" name="blocks" /></td></tr>
-<tr><td>Prefix</td><td><input id="prefix" name="prefix" /></td></tr>
-<tr><td>Start number</td><td><input id="start_number" name="start_number" /></td></tr>
-<tr><td>Increment</td><td><input id="increment" name="increment" /></td></tr>
-</td></tr>
-</table>
-</div>
-
-<div id="incomplete_block_design_dialog"  class="ui-widget" >
-<table>
-<tr><td>Number of breeding lines</td><td><input id="line_count" name="line_count" /></td></tr>
-<tr><td>Replications per line in each block</td><td><input id="rep_count" name="rep_count" /></td></tr>
-<tr><td>Number of blocks</td><td><input id="blocks" name="blocks" /></td></tr>
-<tr><td>Number of lines per block</td><td><input id="blocks" name="blocks" /></td></tr>
-<tr><td>Prefix</td><td><input id="prefix" name="prefix" /></td></tr>
-<tr><td>Start number</td><td><input id="start_number" name="start_number" /></td></tr>
-<tr><td>Increment</td><td><input id="increment" name="increment" /></td></tr>
-</td></tr>
-</table>
-</div>
-
-
-<div id="upload_trial_error_display"  class="ui-widget" >
-<table>
-<tbody>
-</tbody>
-</table>
+<div id="upload_trial_error_display" class="ui-widget">
+  <table>
+    <tbody></tbody>
+  </table>
 </div>
 
 <script defer="defer">
@@ -162,7 +146,18 @@ jQuery(document).ready(function() {
         }
         if (method_to_use == "create_with_design_tool") {
 	    var list = new CXGN.List();
-	    jQuery("#select_list").html(list.listSelect());
+	    jQuery("#select_list").html(list.listSelect("select_list"));
+	    jQuery("<option>", { text: '', value: '', selected: true }).prependTo("#select_list_list_select");
+	    jQuery("#select_list_list_select").one('mousedown',function(){
+		jQuery("option:first",this).remove();
+	    });
+
+	    jQuery("<option>", { text: '', value: '', selected: true }).prependTo("#select_design_method");
+	    jQuery("#select_design_method").one('mousedown',function(){
+		jQuery("option:first",this).remove();
+	    });
+
+
             jQuery("#trial_design_info").show();
             jQuery("#add_project_dialog").dialog("option", "height", 600);
 	} else {
@@ -174,18 +169,21 @@ jQuery(document).ready(function() {
 	//var design_method = "CRD";
 	var design_method = jQuery("#select_design_method").val();
 	if (design_method == "CRD") {
-	    jQuery("#completely_randomized_design_info").show();
 	    jQuery("#add_project_dialog").dialog("option", "height", 600);
-	}
-	else {
-	    jQuery("#completely_randomized_design_info").hide();
-	}
-	if (design_method == "CBD") {
-	    jQuery("#randomized_block_design_info").show();
+    	    jQuery("#rep_count_section").show();
+    	    jQuery("#block_number_section").hide();
+    	    jQuery("#block_size_section").hide();
+    	    jQuery("#max_block_section").hide();
+	} else if (design_method == "CBD") {
 	    jQuery("#add_project_dialog").dialog("option", "height", 640);
+    	    jQuery("#rep_count_section").hide();
+    	    jQuery("#block_number_section").show();
+    	    jQuery("#block_size_section").hide();
+    	    jQuery("#max_block_section").hide();
 	}
 	else {
-	    jQuery("#randomized_block_design_info").hide();
+	    //jQuery("#randomized_block_design_info").hide();
+	    alert("Unknown design method");
 	}
         });
 
