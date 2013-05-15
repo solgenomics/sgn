@@ -119,27 +119,11 @@ if (sum(is.na(phenoTrait)) > 0)
     phenoTrait2<-phenoTrait[1:10, ]
     print(phenoTrait2)
 
-    #impute phenotype values for obs with missing values,
-    #based on mean of neighbouring 50 (arbitrary) obs
-    phenoTrait <-kNNImpute(phenoTrait, 50)
-    phenoTrait <-as.data.frame(phenoTrait)
-
-    #extract columns with imputed values
-    phenoTrait <- subset(phenoTrait,
-                         select = grep("^x", names(phenoTrait))
-                         )
-
-    phenoTrait2<-phenoTrait[543:563, ]
-    print(phenoTrait2)
-
-    #remove prefix 'x.' from imputed columns
-    names(phenoTrait) <- sub("x.", "", names(phenoTrait))
-
-    phenoTrait <- as.data.frame(phenoTrait)
-
-    #convert trait column into numeric
-    phenoTrait[, trait] <-sapply(phenoTrait[, trait], as.numeric)
-  
+    #fill in for missing data with trait mean value
+    phenoTrait[, trait]  <- replace (phenoTrait[, trait],
+                                         is.na(phenoTrait[, trait]),
+                                         mean(phenoTrait[, trait], na.rm =TRUE)
+                                         )  
   }
 
 #calculate mean of reps/plots of the same accession and
