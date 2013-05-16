@@ -350,8 +350,8 @@ genotypeGroups <- rep(1:10, reps) [- (nrow(phenoTrait) %% 10)]
 set.seed(4567)                                   
 genotypeGroups <- genotypeGroups[order (runif(nrow(phenoTrait))) ]                     
 
-##convert genotype values from [1,2] to [0,1]
-genoDataMatrix <- genoDataMatrix - 1
+##convert genotype values from [0, 1,2] to [-1, 0,1]
+#genoDataMatrix <- genoDataMatrix - 1
 
 validationAll <- c()
 
@@ -383,7 +383,7 @@ print("BLUP for prediction pop")
 
   validation <- paste("validation", i, sep = ".")
 
-  cvTest <- paste("Test", i, sep = " ")
+  cvTest <- paste("CV test", i, sep = " ")
 
   if (class(accuracy) != "try-error")
     {
